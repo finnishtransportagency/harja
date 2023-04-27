@@ -1,0 +1,1771 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "urn:harja",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "turvallisuuspoikkeamat": {
+            "id": "urn:harja/turvallisuuspoikkeamat",
+            "type": "array",
+            "items": {
+                "properties": {
+                    "poikkeamatoimenpide": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "otsikko": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/definitions/xs:string"
+                                        },
+                                        {
+                                            "maxLength": 300
+                                        }
+                                    ],
+                                    "description": "Otsikko"
+                                },
+                                "kuvaus": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/definitions/xs:string"
+                                        },
+                                        {
+                                            "maxLength": 5000
+                                        }
+                                    ],
+                                    "description": "Kuvaus"
+                                },
+                                "vastuuhenkilokayttajatunnus": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/definitions/xs:string"
+                                        },
+                                        {
+                                            "maxLength": 256
+                                        }
+                                    ],
+                                    "description": "Toimenpiteen vastuuhenkilö (käyttäjätunnus)."
+                                },
+                                "vastuuhenkiloetunimi": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/definitions/xs:string"
+                                        },
+                                        {
+                                            "maxLength": 200
+                                        }
+                                    ],
+                                    "description": "Toimenpiteen vastuuhenkilön etunimi."
+                                },
+                                "vastuuhenkilosukunimi": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/definitions/xs:string"
+                                        },
+                                        {
+                                            "maxLength": 200
+                                        }
+                                    ],
+                                    "description": "Toimenpiteen vastuuhenkilön sukunimi."
+                                },
+                                "vastuuhenkilosposti": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/definitions/xs:string"
+                                        },
+                                        {
+                                            "maxLength": 254
+                                        }
+                                    ],
+                                    "description": "Toimenpiteen vastuuhenkilön sähköpostiosoite."
+                                },
+                                "toteuttaja": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/definitions/xs:string"
+                                        },
+                                        {
+                                            "maxLength": 256
+                                        }
+                                    ],
+                                    "description": "Toteuttaja"
+                                },
+                                "toteutus": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/definitions/xs:string"
+                                        },
+                                        {
+                                            "maxLength": 5000
+                                        }
+                                    ],
+                                    "description": "Toteutus"
+                                },
+                                "tila": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/definitions/xs:int"
+                                        },
+                                        {
+                                        }
+                                    ],
+                                    "description": "Tila 0 = Avoin: toimenpide toteuttamatta 1 = Siirretty: toimenpide siirretty esimerkiksi toisen hankkeen tai organisaation toteutettavaksi 2 = Suljettu: toimenpide toteutettu",
+                                    "enum": [
+                                        0,
+                                        1,
+                                        2
+                                    ]
+                                },
+                                "pakollinen": {
+                                    "description": "Pakollisuus",
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/definitions/xs:boolean"
+                                        }
+                                    ]
+                                },
+                                "maarapvm": {
+                                    "description": "Määräpäivä",
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/definitions/xs:date"
+                                        }
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "tila",
+                                "vastuuhenkilosposti",
+                                "vastuuhenkilosukunimi",
+                                "vastuuhenkiloetunimi",
+                                "vastuuhenkilokayttajatunnus"
+                            ]
+                        },
+                        "minItems": 0
+                    },
+                    "tapahtumankasittely": {
+                        "type": "object",
+                        "properties": {
+                            "otsikko": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 400
+                                    }
+                                ],
+                                "description": "Otsikko"
+                            },
+                            "luontipvm": {
+                                "description": "Ilmoituksen kirjauspäivä.",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:date"
+                                    }
+                                ]
+                            },
+                            "ilmoittaja": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 80
+                                    }
+                                ],
+                                "description": "Ilmoituksen laatija"
+                            },
+                            "ilmoittajaorganisaatio": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 80
+                                    }
+                                ],
+                                "description": "Ilmoituksen laatijan organisaatio"
+                            },
+                            "vuorossaolija": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 80
+                                    }
+                                ],
+                                "description": "Vuorossa olija Vuorossa olijan nimi, jos eri kuin laatija."
+                            },
+                            "ilmoitettupoliisille": {
+                                "description": "Ilmoitettu poliisille",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:boolean"
+                                    }
+                                ]
+                            },
+                            "tila": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                    }
+                                ],
+                                "description": "Poikkeamailmituksen tila.",
+                                "enum": [
+                                    "Avoin",
+                                    "Käsitelty",
+                                    "Täydennetty",
+                                    "Suljettu",
+                                    "Arkistoitu"
+                                ]
+                            },
+                            "lisatiedot": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 2000
+                                    }
+                                ],
+                                "description": "Lisätietoja Mikäli tapahtumaan halutaan liittää enemmän lisätietoa, se voidaan kirjata lisätietoihin, kuten viittaukset muihin selvityksiin, esim. urakoitsijan omaan järjestelmään tehdyn poikkeamailmoituksen numero."
+                            }
+                        },
+                        "required": [
+                            "tila"
+                        ]
+                    },
+                    "syytjaseuraukset": {
+                        "type": "object",
+                        "properties": {
+                            "arviosyista": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 2000
+                                    }
+                                ],
+                                "description": "Arvio tapahtumaan johtaneista syistä Kirjataan mahdollisimman tarkasti, mikä aiheutti onnettomuuden tai vaaratilanteen ja miksi se tapahtui. Kirjauksessa tulee käydä esille mitkä koneet, laitteet tai materiaalit ovat liittyneet tapahtumaan tai sen syntyyn, ovatko ympäristö, organisaation toiminta- ja johtamistavat tai työmenetelmät vaikuttaneet tapahtumaan tai aiheuttaneet tapahtuman."
+                            },
+                            "tapahtumaanliittyy": {
+                                "type": "array",
+                                "items": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/definitions/xs:long"
+                                        },
+                                        {
+                                        }
+                                    ],
+                                    "description": "Tapahtumaan liittyy 1 = Henkilövahinkoja 2 = Vaarallisia aineita 4 = Kalusto- laite- tai materiaalivahinkoja 8 = Tietoturvan tai -suojan vaarantuminen",
+                                    "enum": [
+                                        "1",
+                                        "2",
+                                        "4",
+                                        "8"
+                                    ]
+                                },
+                                "minItems": 0
+                            },
+                            "seuraukset": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 2000
+                                    }
+                                ],
+                                "description": "Aiheutuneet seuraukset Kirjataan tarkasti tapahtumasta tai vaaratilanteesta aiheutuneet seuraukset (vahingot)."
+                            },
+                            "liikennekatkonkesto": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                        "minimum": 0,
+                                        "exclusiveMinimum": false
+                                    }
+                                ],
+                                "description": "Liikennekatkon kesto tunteina"
+                            },
+                            "tehtava": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 200
+                                    }
+                                ],
+                                "description": "Kirjataan tarkasti, mitä oltiin tekemässä. Tämä kenttä on käytössä, jos tyyppi-kentän arvo on 4"
+                            },
+                            "ammatti": {
+                                "description": "Tekijän ammatti. Tämä kenttä on käytössä, jos tyyppi-kentän arvo on 4",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    }
+                                ]
+                            },
+                            "ammattimuutarkenne": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 200
+                                    }
+                                ],
+                                "description": "Ammatti-kentän tarkenne Tämä kenttä on käytössä, jos ammatti-kentän arvo on \"Muu työntekijä\""
+                            },
+                            "vammanlaatu": {
+                                "description": "Aiheutuneen vamman laatu Tämä kenttä on käytössä, jos tyyppi-kentän arvo on 4",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/vammanlaatuType"
+                                    }
+                                ]
+                            },
+                            "vahingoittunutruumiinosa": {
+                                "description": "Vahingoittunut ruumiinosa Tämä kenttä on käytössä, jos tyyppi-kentän arvo on 4",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/vahingoittunutruumiinosaType"
+                                    }
+                                ]
+                            },
+                            "sairauspoissaolot": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                        "minimum": 0,
+                                        "exclusiveMinimum": false
+                                    }
+                                ],
+                                "description": "Sairauspoissaolopäivien lukumäärä Tämä kenttä on käytössä, jos tyyppi-kentän arvo on 4"
+                            },
+                            "sairauspoissaolojatkuu": {
+                                "description": "Jatkuuko sairauspoissaolo edelleen Tämä kenttä on pakollinen, jos tyyppi-kentällä on jokin seuraavista arvoista: 4",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:boolean"
+                                    }
+                                ]
+                            },
+                            "sairaalahoitovuorokaudet": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                        "minimum": 0,
+                                        "exclusiveMinimum": false
+                                    }
+                                ],
+                                "description": "Sairaalahoitovuorokausien lukumäärä Tämä kenttä on käytössä, jos tyyppi-kentällä on jokin seuraavista arvoista: 4"
+                            },
+                            "juurisyy1": {
+                                "description": "Poikkeaman 1. juurisyy",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/juurisyyType"
+                                    }
+                                ]
+                            },
+                            "juurisyy1selite": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 200
+                                    }
+                                ],
+                                "description": "Juurisyyn 1. juurisyyn selite."
+                            },
+                            "juurisyy2": {
+                                "description": "Poikkeaman 2. juurisyy",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/juurisyyType"
+                                    }
+                                ]
+                            },
+                            "juurisyy2selite": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 200
+                                    }
+                                ],
+                                "description": "Juurisyyn 2 selite."
+                            },
+                            "juurisyy3": {
+                                "description": "Poikkeaman 3. juurisyy",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/juurisyyType"
+                                    }
+                                ]
+                            },
+                            "juurisyy3selite": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 200
+                                    }
+                                ],
+                                "description": "Juurisyyn 3 selite."
+                            },
+                            "toimenpiteet": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 2000
+                                    }
+                                ],
+                                "description": "Korjaavat toimenpiteet Tehtävät ja/tai korjaavat toimenpiteet, joita havainnon kirjaaja esittää poikkeaman käsittelyn pohjaksi."
+                            }
+                        }
+                    },
+                    "tapahtumapaikka": {
+                        "type": "object",
+                        "properties": {
+                            "tapahtumapaikkaradalla": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                    }
+                                ],
+                                "description": "Tapahtumapaikka radalla 1 = Tapahtui liikennepaikalla 2 = Tapahtui liikennepaikkojen välillä 3 = Tapahtui muualla kuin liikennepaikalla tai liikennepaikkavälillä",
+                                "enum": [
+                                    "1",
+                                    "2",
+                                    "3"
+                                ]
+                            },
+                            "ratapaikka": {
+                                "description": "Rataosan, liikennepaikan, tai liikennepaikanosan koodi.",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/ratapaikkaType"
+                                    }
+                                ]
+                            },
+                            "paikantarkenne": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                    }
+                                ],
+                                "description": "Tarkempi tapahtumapaikka 1 = Ratapiha 2 = Rata-alue 4 = Lastausalue 8 = Asemalaituri 16 = Piha-alue 32 = Tiealue 64 = Junakalusto 128 = Terminaali 256 = Halli 512 = Asema 1024 = Tuotantolaitos 2048 = Työmaa 4096 = Tieliikenneajoneuvo 8192 = Asiakkaan tilat 16384 = Ravintola/kioski 32768 = Toimisto",
+                                "enum": [
+                                    "1",
+                                    "2",
+                                    "4",
+                                    "8",
+                                    "16",
+                                    "32",
+                                    "64",
+                                    "128",
+                                    "256",
+                                    "512",
+                                    "1024",
+                                    "2048",
+                                    "4096",
+                                    "8192",
+                                    "16384",
+                                    "32768"
+                                ]
+                            },
+                            "kmsijainti": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                        "minimum": 0,
+                                        "exclusiveMinimum": false,
+                                        "maximum": 9999999,
+                                        "exclusiveMaximum": false
+                                    }
+                                ],
+                                "description": "Tarkka sijainti ratametreinä, jos tapahtuma tapahtui liikennepaikkojen välillä. Tämä kenttä on käytössä, jos tapahtumapaikkaradalla-kentän arvo on 2"
+                            },
+                            "paikka": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 200
+                                    }
+                                ],
+                                "description": "Tarkempi kuvaus tapahtumapaikasta"
+                            },
+                            "tapahtumaalue": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                    }
+                                ],
+                                "description": "Tapahtuma-alue 1 = Etelä-Suomi 2 = Länsi-Suomi 4 = Itä-Suomi 8 = Pohjois-Suomi",
+                                "enum": [
+                                    "1",
+                                    "2",
+                                    "4",
+                                    "8"
+                                ]
+                            },
+                            "tielet": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                        "minimum": 0,
+                                        "exclusiveMinimum": false
+                                    }
+                                ]
+                            },
+                            "tieaet": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                        "minimum": 0,
+                                        "exclusiveMinimum": false
+                                    }
+                                ]
+                            },
+                            "tielosa": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                        "minimum": 0,
+                                        "exclusiveMinimum": false
+                                    }
+                                ]
+                            },
+                            "tieaosa": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                        "minimum": 0,
+                                        "exclusiveMinimum": false
+                                    }
+                                ]
+                            },
+                            "tienumero": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                        "minimum": 0,
+                                        "exclusiveMinimum": false
+                                    }
+                                ]
+                            },
+                            "tienimi": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 200
+                                    }
+                                ]
+                            },
+                            "eureffine": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:double"
+                                    },
+                                    {
+                                        "minimum": 0,
+                                        "exclusiveMinimum": false
+                                    }
+                                ]
+                            },
+                            "eureffinn": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:double"
+                                    },
+                                    {
+                                        "minimum": 0,
+                                        "exclusiveMinimum": false
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "tapahtumantiedot": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                        "minimum": 1,
+                                        "exclusiveMinimum": false
+                                    }
+                                ],
+                                "description": "Poikkeamailmoituksen yksilöivä tunnistenumero TURI-järjestelmässä."
+                            },
+                            "sampohankenimi": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 300
+                                    }
+                                ],
+                                "description": "Poikkeamailmoitusta koskevan hankkeen nimi Väyläviraston Sampo-järjestelmässä."
+                            },
+                            "sampohankeid": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 32
+                                    }
+                                ],
+                                "description": "Poikkeamailmoitusta koskevan hankkeen tunniste Väyläviraston Sampo-järjestelmässä."
+                            },
+                            "tilaajanvastuuhenkilokayttajatunnus": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 256
+                                    }
+                                ],
+                                "description": "Hankeen tilaajan yhteyshenkilö (käyttäjätunnus)."
+                            },
+                            "tilaajanvastuuhenkiloetunimi": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 200
+                                    }
+                                ],
+                                "description": "Hankeen tilaajan yhteyshenkilön etunimi.."
+                            },
+                            "tilaajanvastuuhenkilosukunimi": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 200
+                                    }
+                                ],
+                                "description": "Hankeen tilaajan yhteyshenkilön sukunimi."
+                            },
+                            "tilaajanvastuuhenkilosposti": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 254
+                                    }
+                                ],
+                                "description": "Hankeen tilaajan yhteyshenkilön sähköpostiosoite."
+                            },
+                            "sampourakkanimi": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 300
+                                    }
+                                ],
+                                "description": "Poikkeamailmoitusta koskevan urakan nimi Väyläviraston Sampo-järjestelmässä."
+                            },
+                            "sampourakkaid": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 32
+                                    }
+                                ],
+                                "description": "Poikkeamailmoitusta koskevan urakan tunniste Väyläviraston Sampo-järjestelmässä."
+                            },
+                            "urakanarvpaattymispvm": {
+                                "description": "Urakan arvioitu päättymisajankohta.",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:date"
+                                    }
+                                ]
+                            },
+                            "urakanpaattymispvm": {
+                                "description": "Urakan päättymispäivä.",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:date"
+                                    }
+                                ]
+                            },
+                            "urakkavaylamuoto": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    }
+                                ],
+                                "description": "Urakan väylämuoto: tie/rautatie/vesi.",
+                                "enum": [
+                                    "Tie",
+                                    "Rautatie",
+                                    "Vesiväylä"
+                                ]
+                            },
+                            "urakkatyyppi": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    }
+                                ],
+                                "description": "Urakan tyyppi.",
+                                "enum": [
+                                    "hoito",
+                                    "paallystys",
+                                    "paikkaus",
+                                    "tiemerkinta",
+                                    "valaistus",
+                                    "siltakorjaus",
+                                    "tekniset-laitteet",
+                                    "vesivayla-hoito",
+                                    "vesivayla-ruoppaus",
+                                    "vesivayla-turvalaitteiden-korjaus",
+                                    "vesivayla-kanavien-hoito",
+                                    "vesivayla-kanavien-korjaus",
+                                    "kunnossapito-paallysrakenne",
+                                    "kunnossapito-sahkorata",
+                                    "kunnossapito-turvalaite",
+                                    "yllapito"
+                                ]
+                            },
+                            "elyalue": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                    }
+                                ],
+                                "description": "ELY-alue.",
+                                "enum": [
+                                    "UUD ELY",
+                                    "VAR ELY",
+                                    "PIR ELY",
+                                    "KAS ELY",
+                                    "KES ELY",
+                                    "POS ELY",
+                                    "EPO ELY",
+                                    "POP ELY",
+                                    "LAP ELY",
+                                    "KAN ELY",
+                                    "SV ELY",
+                                    "MV ELY"
+                                ]
+                            },
+                            "alueurakkanro": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 16
+                                    }
+                                ],
+                                "description": "Poikkeamailmoitusta koskevan urakan alueurakkanumero."
+                            },
+                            "tyyppi": {
+                                "type": "array",
+                                "items": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/definitions/xs:long"
+                                        }
+                                    ],
+                                    "description": "Poikkeaman tyyppi. Syötä ilmoitusta koskevan poikkeaman tyyppi (voit valita useita vaihtoehtoja). 8 = Työtapaturma 16 = Muuu turvallisuuspoikkeama 32 = Vaaratilanne 64 = Turvallisuushavainto",
+                                    "enum": [
+                                        8,
+                                        16,
+                                        32,
+                                        64
+                                    ]
+                                }
+                            },
+                            "tapahtumapvm": {
+                                "description": "Tapahtuman päivä. Milloin tapaturma tai vaaratilanne tapahtui.",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:date"
+                                    }
+                                ]
+                            },
+                            "tapahtumaaika": {
+                                "description": "Tapahtuman kellonaika.",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:time"
+                                    }
+                                ]
+                            },
+                            "junanumero": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                        "minimum": 0,
+                                        "exclusiveMinimum": false
+                                    }
+                                ],
+                                "description": "Junanumero"
+                            },
+                            "syy": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                    }
+                                ],
+                                "description": "Tapahtuman välitön syy 1 = Tekninen vika 2 = Virheellinen toiminta 4 = Ulkopuolinen syy 8 = Muu syy 16 = Ei tiedossa",
+                                "enum": [
+                                    "1",
+                                    "2",
+                                    "4",
+                                    "8",
+                                    "16"
+                                ]
+                            },
+                            "teknisenviantyyppi": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                    }
+                                ],
+                                "description": "Teknisen vian tyyppi 1 = Vika liikkuvassa kalustossa 2 = Vika radassa 4 = Vika turvalaitteissa 8 = Muu tekninen vika Tämä kenttä on käytössä, jos syy-kentän arvo on 1",
+                                "enum": [
+                                    "1",
+                                    "2",
+                                    "4",
+                                    "8"
+                                ]
+                            },
+                            "virheentyyppi": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                    }
+                                ],
+                                "description": "Virheellisen toiminnan tyyppi 1 = Virhe yksikön kuljettamisessa 2 = Virhe kulkutien turvaamisessa 4 = Virhe ratatyön suojaamisessa 8 = Muu virhetoiminto Tämä kenttä on käytössä, jos syy-kentän arvo on 2",
+                                "enum": [
+                                    "1",
+                                    "2",
+                                    "4",
+                                    "8"
+                                ]
+                            },
+                            "ulkopuolisensyyntyyppi": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:int"
+                                    },
+                                    {
+                                    }
+                                ],
+                                "description": "Ulkopuolisen syyn tyyppi 1 = Tieliikenne 2 = Este radalla 4 = Rikollinen teko 8 = Muu ulkopuolinen syy Tämä kenttä on käytössä, jos syy-kentän arvo on 4",
+                                "enum": [
+                                    "1",
+                                    "2",
+                                    "4",
+                                    "8"
+                                ]
+                            },
+                            "muunsyynkuvaus": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 200
+                                    }
+                                ],
+                                "description": "Muun syyn kuvaus Tämä kenttä on käytössä, jos syy-kentän arvo on 8"
+                            },
+                            "kuvaus": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 2000
+                                    }
+                                ],
+                                "description": "Tapahtuman kuvaus Tämä kenttä on käytössä, jos syy-kentän arvo on 8"
+                            }
+                        },
+                        "required": [
+                            "tapahtumapvm",
+                            "kuvaus",
+                            "sampourakkaid",
+                            "sampourakkanimi",
+                            "tilaajanvastuuhenkilosposti",
+                            "tilaajanvastuuhenkilosukunimi",
+                            "tilaajanvastuuhenkiloetunimi",
+                            "tilaajanvastuuhenkilokayttajatunnus",
+                            "sampohankeid",
+                            "sampohankenimi"
+                        ]
+                    },
+                    "lahde": {
+                        "type": "object",
+                        "properties": {
+                            "lahdejarjestelma": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 300
+                                    }
+                                ],
+                                "description": "Poikkeamailmoituksen lähdejärjestelmä."
+                            },
+                            "lahdeid": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/definitions/xs:string"
+                                    },
+                                    {
+                                        "maxLength": 10
+                                    }
+                                ],
+                                "description": "Poikkeamailmoituksen tunniste lähdejärjestelmässä."
+                            }
+                        }
+                    },
+                    "poikkeamaliite": {
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "tiedosto",
+                                "tiedostonimi"
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "tiedosto": {
+                                    "$ref": "#/definitions/xs:base64Binary"
+                                },
+                                "tiedostonimi": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/definitions/xs:string"
+                                        },
+                                        {
+                                            "maxLength": 256
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "minItems": 0
+                    }
+                },
+                "definitions": {
+                    "ratapaikkaType": {
+                        "allOf": [
+                            {
+                                "$ref": "#/definitions/xs:string"
+                            },
+                            {
+                            }
+                        ],
+                        "enum": [
+                            "yksityisraide",
+                            "Äht",
+                            "Ahv",
+                            "Ajo",
+                            "Äki",
+                            "Äki-Hpj",
+                            "Alh",
+                            "Alv",
+                            "Äm",
+                            "Apt",
+                            "Arl",
+                            "Aro",
+                            "Arp",
+                            "Äs",
+                            "Atl",
+                            "Dmv",
+                            "Dra",
+                            "Ela",
+                            "Eli",
+                            "Eno",
+                            "Epo",
+                            "Epz",
+                            "Erv",
+                            "Esso",
+                            "Ha",
+                            "Haa",
+                            "Has",
+                            "Hau",
+                            "Häv",
+                            "Hd",
+                            "Hek",
+                            "Hgs",
+                            "Hh",
+                            "Hir",
+                            "Hj",
+                            "Hk",
+                            "Hkh",
+                            "Hki",
+                            "Hki-Ri",
+                            "Hki-Tku",
+                            "Hko",
+                            "Hko-Kll",
+                            "Hkp",
+                            "Hks",
+                            "Hl",
+                            "Hls",
+                            "Hlt",
+                            "Hm",
+                            "Hma",
+                            "Hmk",
+                            "Hna",
+                            "Hnh",
+                            "Hnk",
+                            "Hnkt",
+                            "Hno",
+                            "Hnv",
+                            "Höl",
+                            "Hos",
+                            "Hp",
+                            "Hpj",
+                            "Hpk",
+                            "Hpk-Jy",
+                            "Hpl",
+                            "Hpl-Vks",
+                            "Hps",
+                            "Hr",
+                            "Hrv",
+                            "Hsi",
+                            "Hsl",
+                            "Hva",
+                            "Hvn",
+                            "Hvs",
+                            "Hy",
+                            "Hy-Kr",
+                            "Hys",
+                            "Ii",
+                            "Ikä",
+                            "Iko",
+                            "Ikr",
+                            "Iky",
+                            "Ila",
+                            "Ilm",
+                            "Ilm-Yv",
+                            "Ilo",
+                            "Imk",
+                            "Imkr",
+                            "Imr",
+                            "Imt",
+                            "Imt-Imkr",
+                            "In",
+                            "Isg",
+                            "Isv",
+                            "Ita",
+                            "Itr",
+                            "Jal",
+                            "Jäs",
+                            "Jäs-Kla",
+                            "Jj",
+                            "Jk",
+                            "Jki",
+                            "Jns",
+                            "Jns-Ilo",
+                            "Jor",
+                            "Jp",
+                            "Jpa",
+                            "Jr",
+                            "Jri",
+                            "Jri-Hma",
+                            "Jrs",
+                            "Jsj",
+                            "Jsk",
+                            "Jts",
+                            "Jut",
+                            "Jvs",
+                            "Jy",
+                            "Jy-Äki",
+                            "Jy-Pmt",
+                            "Ka",
+                            "Kaj",
+                            "Kaj-Lam",
+                            "Kan",
+                            "Kao",
+                            "Käp",
+                            "Kar",
+                            "Kas",
+                            "Kau",
+                            "Ke",
+                            "Kea",
+                            "Ke-Hlt",
+                            "Kek",
+                            "Kem",
+                            "Kem-Ajo",
+                            "Ker",
+                            "Ke-Sld",
+                            "Keu",
+                            "Ke-Vsa",
+                            "Kgs",
+                            "Kha",
+                            "Khg",
+                            "Khi",
+                            "Khk",
+                            "Kia",
+                            "Kiä",
+                            "Kii",
+                            "Kij",
+                            "Kil",
+                            "Kiö",
+                            "Kis",
+                            "Kit",
+                            "Kjä",
+                            "Kjä-Kls",
+                            "Kji",
+                            "Kjr",
+                            "Kki",
+                            "Kki-Pri",
+                            "Kki-Rma",
+                            "Kkn",
+                            "Kko",
+                            "Kla",
+                            "Klh",
+                            "Kli",
+                            "Klk",
+                            "Kll",
+                            "Kln",
+                            "Klo",
+                            "Klr",
+                            "Kls",
+                            "Klv",
+                            "Kml",
+                            "Kmm",
+                            "Kn",
+                            "Knh",
+                            "Kni",
+                            "Kns",
+                            "Kn-Säk",
+                            "Kö",
+                            "Koh",
+                            "Koi",
+                            "Kok",
+                            "Kök",
+                            "Kok-Yksv",
+                            "Kom",
+                            "Kon",
+                            "Kon-Äm",
+                            "Kon-Vur",
+                            "Kos",
+                            "Kpa",
+                            "Kpi",
+                            "Kpl",
+                            "Kpy",
+                            "Kr",
+                            "Kra",
+                            "Kr-Hnk",
+                            "Krm",
+                            "Krn",
+                            "Krö",
+                            "Krr",
+                            "Krs",
+                            "Kru",
+                            "Krv",
+                            "Ksa",
+                            "Ksi",
+                            "Ksk",
+                            "Ksu",
+                            "Kta",
+                            "Kth",
+                            "Kti",
+                            "Ktn",
+                            "Ktp",
+                            "Kts",
+                            "Ktt",
+                            "Ktu",
+                            "Ku",
+                            "Kua",
+                            "Kuk",
+                            "Kuo",
+                            "Kuot",
+                            "Kut",
+                            "Kuu",
+                            "Kuv",
+                            "Kuv-Pmt",
+                            "Kv",
+                            "Kvh",
+                            "Kvj",
+                            "Kv-Jns",
+                            "Kv-Kts",
+                            "Kv-Kuk",
+                            "Kvla",
+                            "Kvt",
+                            "Kvu",
+                            "Kvy",
+                            "Ky",
+                            "Kyn",
+                            "Kyt",
+                            "Lä",
+                            "Laa",
+                            "Läh",
+                            "Lai",
+                            "Lak",
+                            "Lam",
+                            "Läp",
+                            "Lau",
+                            "Lä-Vnar",
+                            "Lh",
+                            "Lh-Ha",
+                            "Lh-Lvs",
+                            "Lh-Muk",
+                            "Lhn",
+                            "Li",
+                            "Li-Eli",
+                            "Lis",
+                            "Lis-Pas",
+                            "Lk",
+                            "Lka",
+                            "Lkl",
+                            "Lla",
+                            "Lla-Kjä",
+                            "Lla-Trr",
+                            "Llh",
+                            "Llh-Kki",
+                            "Lm",
+                            "Lma",
+                            "Lmk",
+                            "Lna",
+                            "Lo",
+                            "Loh",
+                            "Loj",
+                            "Lol",
+                            "Lo-Loj",
+                            "Lpa",
+                            "Lpä",
+                            "Lpj",
+                            "Lpn",
+                            "Lpo",
+                            "Lpr",
+                            "Lpv",
+                            "Lr",
+                            "Lr-Mst",
+                            "Lrs",
+                            "Ltk",
+                            "Lts",
+                            "Lui",
+                            "Luo",
+                            "Lus",
+                            "Lvs",
+                            "Lvt",
+                            "Lyö",
+                            "Mäk",
+                            "Män",
+                            "Mas",
+                            "Mat",
+                            "Md",
+                            "Mel",
+                            "Mh",
+                            "Mi",
+                            "Mis",
+                            "Mjj",
+                            "Mka",
+                            "Mki",
+                            "Mko",
+                            "Ml",
+                            "Mla",
+                            "Mlä",
+                            "Mlk",
+                            "Mlo",
+                            "Mn",
+                            "Mne",
+                            "Mnk",
+                            "Mn-Tko",
+                            "Mr",
+                            "Mri",
+                            "Mrk",
+                            "Mrl",
+                            "Msä",
+                            "Mso",
+                            "Mst",
+                            "Mtv",
+                            "Muk",
+                            "Mul",
+                            "Mur",
+                            "Mur-Otm",
+                            "Mur-Tlv",
+                            "Muu",
+                            "My",
+                            "Myl",
+                            "Myn",
+                            "Myr",
+                            "Mys",
+                            "Myt",
+                            "Myt-Rst",
+                            "Nal",
+                            "När",
+                            "Nii",
+                            "Nlä",
+                            "Nm",
+                            "Nmä",
+                            "Nmp",
+                            "Nnl",
+                            "Nns",
+                            "Nns-Pko-Kiö",
+                            "Noa",
+                            "Nok",
+                            "Nok-Lla",
+                            "Nri",
+                            "Nrl",
+                            "Nrlr",
+                            "Nrlr-Sä",
+                            "Nrm",
+                            "Nrm-Kon",
+                            "Nsl",
+                            "Nth",
+                            "Nup",
+                            "Nvl",
+                            "Ohm",
+                            "Oi",
+                            "Ol",
+                            "Olk",
+                            "Ol-Kon",
+                            "Olli",
+                            "Olli-Prv",
+                            "Olt",
+                            "Om",
+                            "Ont",
+                            "Ori",
+                            "Ot",
+                            "Otm",
+                            "Ot-Ots",
+                            "Ots",
+                            "Ou",
+                            "Ov",
+                            "Ovk",
+                            "Ov-Sk",
+                            "Pa",
+                            "Par",
+                            "Pas",
+                            "Pel",
+                            "Ph",
+                            "Phä",
+                            "Pik",
+                            "Pjm",
+                            "Pkk",
+                            "Pkl",
+                            "Pko",
+                            "Pku",
+                            "Pky",
+                            "Pky-Par",
+                            "Pl",
+                            "Pla",
+                            "Plp",
+                            "Plt",
+                            "Plu",
+                            "Pm",
+                            "Pmi",
+                            "Pmk",
+                            "Pm-Kon",
+                            "Pmla",
+                            "Pm-Sul",
+                            "Pmt",
+                            "Pnä",
+                            "Pna-Pts",
+                            "Po",
+                            "Poh",
+                            "Poi",
+                            "Por",
+                            "Pp",
+                            "Pri",
+                            "Pri-Mn",
+                            "Pri-Rsn",
+                            "Prl",
+                            "Prv",
+                            "Psj",
+                            "Psk",
+                            "Psl",
+                            "Pslt",
+                            "Pti",
+                            "Pto",
+                            "Pts",
+                            "Pts-Alh",
+                            "Pun",
+                            "Pur",
+                            "Pus",
+                            "Pvi",
+                            "Pye",
+                            "Pye-Pyk",
+                            "Pyk",
+                            "Rah",
+                            "Rai",
+                            "Rai-Nnl",
+                            "Ras",
+                            "Rat",
+                            "Ree",
+                            "Rha",
+                            "Rhe",
+                            "Rhe-Rat",
+                            "Rhl",
+                            "Ri",
+                            "Rila",
+                            "Rio",
+                            "Rit",
+                            "Rit-Kuv",
+                            "Rit-Tpe",
+                            "Rjä",
+                            "Rjp",
+                            "Rjr",
+                            "Rjv",
+                            "Rki",
+                            "Rkl",
+                            "Rlä",
+                            "Rm",
+                            "Rma",
+                            "Rmi",
+                            "Rnn",
+                            "Roi",
+                            "Röy",
+                            "Rpa",
+                            "Rph",
+                            "Rpo",
+                            "Rsn",
+                            "Rst",
+                            "Ry",
+                            "Sä",
+                            "Saa",
+                            "Säk",
+                            "Sam",
+                            "Sau",
+                            "Sav",
+                            "Sgy",
+                            "Sij",
+                            "Sij-Vnj",
+                            "Sim",
+                            "Sip",
+                            "Siu",
+                            "Sj",
+                            "Sk",
+                            "Skä",
+                            "Ski",
+                            "Skm",
+                            "Skt",
+                            "Skt-Ksk",
+                            "Skt-Ol",
+                            "Skt-Vs",
+                            "Skv",
+                            "Sld",
+                            "Sll",
+                            "Sln",
+                            "Slo",
+                            "Smä",
+                            "Smj",
+                            "Smj-Vns",
+                            "Smv",
+                            "Snj",
+                            "Snj-Isv",
+                            "Snm",
+                            "Soa",
+                            "Sor",
+                            "Spä",
+                            "Spj",
+                            "Spl",
+                            "Sr",
+                            "Srj",
+                            "Sta",
+                            "Sti",
+                            "Stö",
+                            "Sul",
+                            "Sul-Nrm",
+                            "Suo",
+                            "Svi",
+                            "Syr",
+                            "Ta",
+                            "Tap",
+                            "Te",
+                            "Tja",
+                            "Tja-Rhe",
+                            "Tk",
+                            "Tkk",
+                            "Tkl",
+                            "Tko",
+                            "Tku",
+                            "Tkut",
+                            "Tku-Ukp",
+                            "Tl",
+                            "Tl-Tku",
+                            "Tlv",
+                            "Tl-Vi",
+                            "Tms",
+                            "Tmu",
+                            "Tna",
+                            "Toh",
+                            "Toi",
+                            "Tol",
+                            "Tom",
+                            "Tor",
+                            "Tör",
+                            "Tor-Kli",
+                            "Tor-Röy",
+                            "Tpe",
+                            "Tpe-Jy",
+                            "Tpet",
+                            "Tpet-Sk",
+                            "Tpv",
+                            "Trä",
+                            "Tri",
+                            "Trk",
+                            "Trl",
+                            "Trr",
+                            "Trv",
+                            "Tsl",
+                            "Tu",
+                            "Tua",
+                            "Tus",
+                            "Tuu",
+                            "Tuv",
+                            "Tv",
+                            "Uim",
+                            "Ukä",
+                            "Ukp",
+                            "Ukp-Hgs",
+                            "Ur",
+                            "Uti",
+                            "Utj",
+                            "Vaa",
+                            "Var",
+                            "Var-Kmm",
+                            "Vhj",
+                            "Vi",
+                            "Via",
+                            "Vih",
+                            "Vin",
+                            "Vjo",
+                            "Vjr",
+                            "Vk",
+                            "Vka",
+                            "Vkh",
+                            "Vki",
+                            "Vko",
+                            "Vks",
+                            "Vkt",
+                            "Vkt-Lhn",
+                            "Vlh",
+                            "Vlm",
+                            "Vlp",
+                            "Vlp-Män",
+                            "Vma",
+                            "Vmo",
+                            "Vn",
+                            "Vna",
+                            "Vnar",
+                            "Vnat",
+                            "Vnj",
+                            "Vns",
+                            "Vra",
+                            "Vrm",
+                            "Vs",
+                            "Vsa",
+                            "Vsk",
+                            "Vsl",
+                            "Vso",
+                            "Vs-Vsk",
+                            "Vt",
+                            "Vti",
+                            "Vtr",
+                            "Vur",
+                            "Vus",
+                            "Ykst",
+                            "Yksv",
+                            "Ylk",
+                            "Ylö",
+                            "Ylv",
+                            "Yly",
+                            "Ypy",
+                            "Yst",
+                            "Ytr",
+                            "Yv"
+                        ]
+                    },
+                    "vahingoittunutruumiinosaType": {
+                        "allOf": [
+                            {
+                                "$ref": "#/definitions/xs:string"
+                            },
+                            {
+                            }
+                        ],
+                        "enum": [
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5",
+                            "6",
+                            "7",
+                            "8",
+                            "9",
+                            "10",
+                            "11",
+                            "12",
+                            "13"
+                        ]
+                    },
+                    "ammattiType": {
+                        "allOf": [
+                            {
+                                "$ref": "#/definitions/xs:string"
+                            },
+                            {
+                            }
+                        ],
+                        "enum": [
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5",
+                            "6",
+                            "7",
+                            "8",
+                            "9",
+                            "10",
+                            "11",
+                            "12",
+                            "13",
+                            "14",
+                            "15",
+                            "16",
+                            "17",
+                            "18",
+                            "19",
+                            "20",
+                            "21",
+                            "22",
+                            "23",
+                            "24",
+                            "25",
+                            "26",
+                            "27",
+                            "28",
+                            "29",
+                            "30"
+                        ]
+                    },
+                    "vammanlaatuType": {
+                        "allOf": [
+                            {
+                                "$ref": "#/definitions/xs:string"
+                            },
+                            {
+                            }
+                        ],
+                        "enum": [
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5",
+                            "6",
+                            "7",
+                            "8",
+                            "9",
+                            "10",
+                            "11",
+                            "12",
+                            "13",
+                            "14"
+                        ]
+                    },
+                    "juurisyyType": {
+                        "allOf": [
+                            {
+                                "$ref": "#/definitions/xs:string"
+                            },
+                            {
+                            }
+                        ],
+                        "enum": [
+                            "0",
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5",
+                            "6",
+                            "7"
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "syytjaseuraukset",
+                    "tapahtumapaikka",
+                    "tapahtumantiedot",
+                    "lahde"
+                ],
+                "$schema": "http://json-schema.org/draft-04/schema#"
+            }
+        }
+    }
+}
