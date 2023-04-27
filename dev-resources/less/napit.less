@@ -1,7 +1,7 @@
 .nappi(@vari, @tausta, @reunus: @tausta,
        @vari-osoitettaessa: @vari, @tausta-osoitettaessa: @tausta,
        @reunus-osoitettaessa: @reunus, @fontin-paino: normal,
-       @vari-disabled: @harmaa7, @tausta-disabled: @harmaa10, @reunus-disabled: @harmaa7) {
+       @vari-disabled: @black-lighter, @tausta-disabled: @white-darker, @reunus-disabled: @white-darker) {
     .btn();
 
     &.keskitettava {
@@ -16,7 +16,9 @@
     &.btn-sm { .btn-sm(); }
     &.btn-lg { .btn-lg(); }
 
-    .button-variant(@vari; @tausta; @reunus);
+    color: @vari;
+    background-color: @tausta;
+    border-color: @reunus;
 
     font-weight: @fontin-paino;
 
@@ -77,9 +79,9 @@
         @tausta-osoitettaessa: @blue-lighter;
         @reunus:               rgba(0,0,0,0);
         @fontin-paino:         600;
-        @vari-disabled:        #858585;
+        @vari-disabled:        @black-lighter;
         @tausta-disabled:      rgba(0,0,0,0);
-        @reunus-disabled:      rgba(0,0,0,0);
+        @reunus-disabled:      @white-darker;
     );
 }
 

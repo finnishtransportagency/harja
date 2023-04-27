@@ -42,7 +42,7 @@
 
 (defn- palauteohje-kayttooikeus [palaute-tyyppi]
   [:div
-   [:p "Jos käyttäjältä puuttuu käyttäjätunnukset Harjaan, ole yhteydessä oman organisaatiosi pääkäyttäjään."]
+   [:p "Jos käyttäjältä puuttuu käyttäjätunnukset Harjaan, ole yhteydessä oman organisaatiosi pääkäyttäjään. Jos et tiedä kuka organisaatiosi pääkäyttäjä on, ole yhteydessä Väyläviraston Käyttövaltuushallintaan osoitteessa jl_kvhtuki@vayla.fi"]
    [:p
     [:span "Mikäli et pääse suorittamaan Harjassa jotain tehtävää, johon sinulla tulisi olla oikeus, klikkaa "]
     [modal/modal-linkki

@@ -458,27 +458,27 @@
 
 (defn- footer-vasemmat-napit [e! toteumalomake muokkaustila?]
   ;; Poista tallennus käytöstä kun paikkauskohde on valmis
-  (let [voi-tallentaa? (and (::tila/validi? toteumalomake) (not (= "valmis" (:paikkauskohde-tila toteumalomake))))]
+  (let [voi-tallentaa? (and (::tila/validi? toteumalomake) (not (= "valmis" (:paikkauskohde-tila toteumalomake))))
+        tuotu-excelista? (= (:lahde toteumalomake) "excel")]
     [:div
      ;; Lomake on auki
      (when muokkaustila?
-       [:div
-        [napit/tallenna
-         "Tallenna muutokset"
-         #(e! (t-toteumalomake/->TallennaToteuma (lomake/ilman-lomaketietoja toteumalomake)))
-         {:disabled (not voi-tallentaa?) :paksu? true}]
-        ;; Toteuman on pakko olla tietokannassa, ennenkuin sen voi poistaa
-        ;; Ja paikkauskohde ei saa olla "valmis" tilassa
-        (when (and (:id toteumalomake) (not (= "valmis" (:paikkauskohde-tila toteumalomake))))
-          [napit/yleinen-toissijainen
-           "Poista toteuma"
-           (t-paikkauskohteet/nayta-modal
-             (str "Poistetaanko toteuma ?")
-             "Toimintoa ei voi perua."
-             [napit/yleinen-toissijainen "Poista toteuma" #(e! (t-toteumalomake/->PoistaToteuma
-                                                                 (lomake/ilman-lomaketietoja toteumalomake))) {:paksu? true}]
-             [napit/yleinen-toissijainen "Säilytä toteuma" modal/piilota! {:paksu? true}])
-           {:ikoni (ikonit/livicon-trash) :paksu? true}])])]))
+       [napit/tallenna
+        "Tallenna muutokset"
+        #(e! (t-toteumalomake/->TallennaToteuma (lomake/ilman-lomaketietoja toteumalomake)))
+        {:disabled (not voi-tallentaa?) :paksu? true}])
+     ;; Toteuman on pakko olla tietokannassa, ennenkuin sen voi poistaa
+     ;; Ja paikkauskohde ei saa olla "valmis" tilassa
+     (when (and (:id toteumalomake) (not (= "valmis" (:paikkauskohde-tila toteumalomake))) (or muokkaustila? tuotu-excelista?))
+       [napit/yleinen-toissijainen
+        "Poista toteuma"
+        (t-paikkauskohteet/nayta-modal
+          (str "Poistetaanko toteuma ?")
+          "Toimintoa ei voi perua."
+          [napit/yleinen-toissijainen "Poista toteuma" #(e! (t-toteumalomake/->PoistaToteuma
+                                                              (lomake/ilman-lomaketietoja toteumalomake))) {:paksu? true}]
+          [napit/yleinen-toissijainen "Säilytä toteuma" modal/piilota! {:paksu? true}])
+        {:ikoni (ikonit/livicon-trash) :paksu? true}])]))
 
 (defn- toteumalomake-header [toteumalomake tyomenetelmat]
   [:div.ei-borderia.lukutila
@@ -490,6 +490,14 @@
     [:h4 {:style {:margin-bottom 0}} (:paikkauskohde-nimi toteumalomake)]
     [:div.pieni-teksti (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat)]
     [:hr]]])
+
+(defn- lahde-info [toteumalomake]
+  (when (and (:lahde toteumalomake) (not= (:lahde toteumalomake) "harja-ui"))
+    [:label.ei-marginia
+     (case (:lahde toteumalomake)
+       "harja-api" "Tuotu rajapinnan kautta"
+       "excel" "Tuotu excelillä"
+       nil)]))
 
 (defn toteumalomake [e! app]
   (let [toteumalomake (:toteumalomake app)
@@ -521,6 +529,7 @@
                        ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
                        ;; Tarkistetaan ensin, että mitkä näapit tulevat vasemmalle
                        [footer-vasemmat-napit e! toteumalomake muokkaustila?]
+                       [lahde-info toteumalomake]
                        [napit/yleinen-toissijainen
                         (if muokkaustila? "Peruuta" "Sulje")
                         #(e! (t-toteumalomake/->SuljeToteumaLomake))
