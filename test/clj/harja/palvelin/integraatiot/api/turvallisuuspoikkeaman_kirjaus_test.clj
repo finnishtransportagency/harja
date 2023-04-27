@@ -207,7 +207,7 @@
   (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         vastaus (api-tyokalut/get-kutsu [(str "/api/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
-                  "analytiikka-testeri" portti)]
+                  "olematonkäyttäjä" portti)]
     (is (= 500 (:status vastaus)))
     (is (str/includes? (:body vastaus) "tuntematon-kayttaja"))))
 
