@@ -42,15 +42,15 @@ WHERE ulompi_i.id IN
 
       -- Tarkasta että ilmoituksen valitysajankohta sopii hakuehtoihin. Tarkastellaan ilmoituksen urakkaan välittymistä.
       ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
-       (:loppu_annettu IS FALSE AND sisempi_i."valitetty-urakkaan"  >= :alku) OR
-       (:alku_annettu IS FALSE AND sisempi_i."valitetty-urakkaan"  <= :loppu) OR
-       (sisempi_i."valitetty-urakkaan"  BETWEEN :alku AND :loppu)) AND
+       (:loppu_annettu IS FALSE AND sisempi_i."valitetty-urakkaan"  >= :alku::TIMESTAMP) OR
+       (:alku_annettu IS FALSE AND sisempi_i."valitetty-urakkaan"  <= :loppu::TIMESTAMP) OR
+       (sisempi_i."valitetty-urakkaan" BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP)) AND
 
       -- Tarkasta että ilmoituksen toimenpiteiden aloitus sopii hakuehtoihin
       ((:toimenpiteet_alku_annettu IS FALSE AND :toimenpiteet_loppu_annettu IS FALSE) OR
-       (:toimenpiteet_loppu_annettu IS FALSE AND sisempi_i."toimenpiteet-aloitettu"  >= :toimenpiteet_alku) OR
-       (:toimenpiteet_alku_annettu IS FALSE AND sisempi_i."toimenpiteet-aloitettu"  <= :toimenpiteet_loppu) OR
-       (sisempi_i."toimenpiteet-aloitettu"  BETWEEN :toimenpiteet_alku AND :toimenpiteet_loppu)) AND
+       (:toimenpiteet_loppu_annettu IS FALSE AND sisempi_i."toimenpiteet-aloitettu"  >= :toimenpiteet_alku::TIMESTAMP) OR
+       (:toimenpiteet_alku_annettu IS FALSE AND sisempi_i."toimenpiteet-aloitettu"  <= :toimenpiteet_loppu::TIMESTAMP) OR
+       (sisempi_i."toimenpiteet-aloitettu" BETWEEN :toimenpiteet_alku::TIMESTAMP AND :toimenpiteet_loppu::TIMESTAMP)) AND
 
       -- Tarkista ilmoituksen tilat
       ((:kuittaamattomat IS TRUE AND sisempi_i.tila = 'kuittaamaton' :: ilmoituksen_tila) OR
