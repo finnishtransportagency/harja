@@ -368,31 +368,62 @@
          (tiedot/suuntavalinta-str {:ylos {:edelliset-alukset [{:foo :bar}]}} :alas))))
 
 (deftest nayta-edelliset
-  (is (true? (tiedot/nayta-edelliset-alukset? {:valittu-liikennetapahtuma {:valittu-suunta :alas
+  (is (true? (tiedot/nayta-edelliset-alukset? {:haetut-sopimukset [{::sop/id 1
+                                                                    ::sop/ketjutus true}]
+                                               :valittu-liikennetapahtuma {::lt/sopimus {::sop/id 1}
+                                                                           :valittu-suunta :alas
+                                                                           ::lt/id -1
+                                                                           ::lt/kohde {:foo :bar}}
+                                               :edellisten-haku-kaynnissa? false
+                                               :edelliset {:alas {}}})))
+  
+  (is (false? (tiedot/nayta-edelliset-alukset? {:haetut-sopimukset [{::sop/id 1
+                                                                    ::sop/ketjutus false}]
+                                               :valittu-liikennetapahtuma {::lt/sopimus {::sop/id 1}
+                                                                           :valittu-suunta :alas
                                                                            ::lt/id -1
                                                                            ::lt/kohde {:foo :bar}}
                                                :edellisten-haku-kaynnissa? false
                                                :edelliset {:alas {}}})))
 
-  (is (false? (tiedot/nayta-edelliset-alukset? {:valittu-liikennetapahtuma {:valittu-suunta :alas
-                                                                           ::lt/id -1}
-                                               :edellisten-haku-kaynnissa? false
-                                               :edelliset {:alas {}}})))
-  (is (false? (tiedot/nayta-edelliset-alukset? {:valittu-liikennetapahtuma {:valittu-suunta :alas
+  (is (false? (tiedot/nayta-edelliset-alukset? {:haetut-sopimukset [{::sop/id 1
+                                                                     ::sop/ketjutus true}]
+                                                :valittu-liikennetapahtuma {::lt/sopimus {::sop/id 1}
+                                                                            :valittu-suunta :alas
+                                                                            ::lt/id -1}
+                                                :edellisten-haku-kaynnissa? false
+                                                :edelliset {:alas {}}})))
+  
+  (is (false? (tiedot/nayta-edelliset-alukset? {:haetut-sopimukset [{::sop/id 1
+                                                                     ::sop/ketjutus true}]
+                                                :valittu-liikennetapahtuma {::lt/sopimus {::sop/id 1}
+                                                                            :valittu-suunta :alas
                                                                             ::lt/id -1
                                                                             ::lt/kohde {:foo :bar}}
                                                 :edellisten-haku-kaynnissa? true
                                                 :edelliset {:alas {}}})))
-  (is (false? (tiedot/nayta-edelliset-alukset? {:valittu-liikennetapahtuma {:valittu-suunta :alas
+  
+  (is (false? (tiedot/nayta-edelliset-alukset? {:haetut-sopimukset [{::sop/id 1
+                                                                     ::sop/ketjutus true}]
+                                                :valittu-liikennetapahtuma {::lt/sopimus {::sop/id 1}
+                                                                            :valittu-suunta :alas
                                                                             ::lt/id -1
                                                                             ::lt/kohde {:foo :bar}}
                                                 :edellisten-haku-kaynnissa? false
                                                 :edelliset {}})))
-  (is (false? (tiedot/nayta-edelliset-alukset? {:valittu-liikennetapahtuma {::lt/id -1
+  
+  (is (false? (tiedot/nayta-edelliset-alukset? {:haetut-sopimukset [{::sop/id 1
+                                                                     ::sop/ketjutus true}]
+                                                :valittu-liikennetapahtuma {::lt/sopimus {::sop/id 1}
+                                                                            ::lt/id -1
                                                                             ::lt/kohde {:foo :bar}}
                                                 :edellisten-haku-kaynnissa? false
                                                 :edelliset {:alas {}}})))
-  (is (false? (tiedot/nayta-edelliset-alukset? {:valittu-liikennetapahtuma {:valittu-suunta :alas
+  
+  (is (false? (tiedot/nayta-edelliset-alukset? {:haetut-sopimukset [{::sop/id 1
+                                                                     ::sop/ketjutus true}]
+                                                :valittu-liikennetapahtuma {::lt/sopimus {::sop/id 1}
+                                                                            :valittu-suunta :alas
                                                                             ::lt/id 1
                                                                             ::lt/kohde {:foo :bar}}
                                                 :edellisten-haku-kaynnissa? false

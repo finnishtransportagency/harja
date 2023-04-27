@@ -254,6 +254,7 @@
                         ;; voi jäädä kohteiden luonti, vaikka siirryttäisikiin esim integraatiolokiin
                         (not= (valittu-valilehti :hallinta) :toteumatyokalu)
                         (not= (valittu-valilehti :hallinta) :vesivayla-hallinta)
+                        (not= (valittu-valilehti :hallinta) :vesivaylasopimuksien-liikenne-ketjutus)
                         (not= (valittu-valilehti :vesivayla-hallinta) :kanavaurakoiden-kohteiden-luonti))
                       :hidden
 

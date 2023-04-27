@@ -61,6 +61,29 @@ FROM sopimus s
 WHERE s.harjassa_luotu IS TRUE
 ORDER BY s.alkupvm DESC, s.nimi;
 
+-- name: hae-vesivayla-kanavien-hoito-sopimukset
+SELECT
+  k.ketjutus_kaytossa AS ketjutus,
+  s.id,
+  u.tyyppi,
+  s.nimi,
+  s.alkupvm,
+  s.loppupvm,
+  u.nimi AS urakka_nimi,
+  u.id AS urakka_id
+FROM sopimus s
+  LEFT JOIN urakka u ON s.urakka = u.id
+  LEFT JOIN kan_lt_ketjutus_aktivointi k ON k.sopimus_id = s.id
+WHERE u.tyyppi = 'vesivayla-kanavien-hoito' 
+ORDER BY s.alkupvm DESC, s.nimi;
+
+-- name: luo-tai-paivita-ketjutus!
+INSERT INTO kan_lt_ketjutus_aktivointi (sopimus_id, ketjutus_kaytossa) VALUES (:sopimus_id, :ketjutus_kaytossa)
+ON CONFLICT (sopimus_id) DO UPDATE SET ketjutus_kaytossa = :ketjutus_kaytossa;
+
+-- name: poista-sopimuksen-liikenne-ketjutus!
+UPDATE kan_lt_ketjutus_aktivointi SET ketjutus_kaytossa=:ketjutus_kaytossa WHERE sopimus_id = :sopimus_id;
+
 -- name: liita-sopimukset-urakkaan!
 UPDATE sopimus s SET urakka=:urakka
 WHERE id IN (:sopimukset)
