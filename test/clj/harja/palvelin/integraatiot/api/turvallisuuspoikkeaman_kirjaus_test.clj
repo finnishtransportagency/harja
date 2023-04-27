@@ -12,7 +12,11 @@
             [clj-time.coerce :as c]
             [clj-time.core :as t]
             [harja.kyselyt.konversio :as konv]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import (java.net URLEncoder)
+           (java.text SimpleDateFormat)
+           (java.util TimeZone)
+           (java.util Date)))
 
 (def kayttaja "yit-rakennus")
 
@@ -23,7 +27,7 @@
     :turi (component/using
             (turi/->Turi {})
             [:db :integraatioloki :liitteiden-hallinta])
-    :api-turvallisuuspoikkeama (component/using (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
+    :api-turvallisuuspoikkeama (component/using (turvallisuuspoikkeama/->Turvallisuuspoikkeama true)
                                                 [:http-palvelin :db :integraatioloki :liitteiden-hallinta :turi])))
 
 (use-fixtures :once jarjestelma-fixture)
@@ -198,3 +202,33 @@
     (cheshire/decode (:body vastaus) true)
     (is (not= 200 (:status vastaus)) "Onnea 60-vuotias Harja!")
     (is (str/includes? (:body vastaus) "Tapahtumapäivämäärä ei voi olla tulevaisuudessa"))))
+
+(deftest hae-turvallisuuspoikkeamat-ei-kayttoikeutta
+  (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        vastaus (api-tyokalut/get-kutsu [(str "/api/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
+                  "analytiikka-testeri" portti)]
+    (is (= 500 (:status vastaus)))
+    (is (str/includes? (:body vastaus) "tuntematon-kayttaja"))))
+
+(deftest hae-turvallisuuspoikkeamat-onnistuu
+  (let [;; Luo väliaikainen käyttäjä
+        _ (u (str "INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, \"analytiikka-oikeus\") VALUES
+          ('etunimi','sukunimi', 'analytiikka-testeri', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'), true)"))
+
+        ;; Luo väliaikainen turvallisuuspoikkeama
+        urakka (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
+        _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
+                  kayttaja portti
+                  (-> "test/resurssit/api/turvallisuuspoikkeama.json"
+                    slurp
+                    (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
+                    (.replace "__TAPAHTUMAPAIVAMAARA__" "2016-01-30T12:00:00Z")))
+
+        alkuaika (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 50000)
+        loppuaika (nykyhetki-iso8061-formaatissa-tulevaisuuteen 10)
+        vastaus (api-tyokalut/get-kutsu [(str "/api/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
+                  "analytiikka-testeri" portti)]
+    (is (= 200 (:status vastaus)))
+    ;; Tarkistetaan vain, että saadaan pitkä vastaus
+    (is (< 1000 (count (:body vastaus))))))
