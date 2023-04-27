@@ -471,8 +471,8 @@
                                         edelliset]}]
 
   (let [sopimus-id (-> valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
-        ketjutus-kaytossa? (first (filter (fn[asd]
-                                            (= sopimus-id (::sop/id asd))) haetut-sopimukset))
+        ketjutus-kaytossa? (first (filter (fn[sopimus]
+                                            (= sopimus-id (::sop/id sopimus))) haetut-sopimukset))
         ketjutus-kaytossa? (boolean (::sop/ketjutus ketjutus-kaytossa?))]
 
     ;; Onko ketjutus käytössä tällä sopimuksella/urakalla?

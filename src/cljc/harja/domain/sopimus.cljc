@@ -67,7 +67,7 @@
   (s/coll-of (s/keys :req [::id ::nimi ::reimari-diaarinro ::alkupvm ::loppupvm ::paasopimus-id])))
 
 (s/def ::hae-vesivayla-kanavien-hoito-sopimukset-vastaus
-  (s/coll-of (s/keys :req [::id ::tyyppi ::sampoid ::nimi ::alkupvm ::loppupvm])))
+  (s/coll-of (s/keys :req [::id ::tyyppi ::nimi ::alkupvm ::loppupvm])))
 
 ;; Tallennukset
 

@@ -7,7 +7,6 @@
 (defonce tila (atom {}))
 
 (defrecord ValitseSopimus [sopimus])
-(defrecord Nakymassa? [nakymassa?])
 (defrecord TallennaKetjutus [sopimus kaytossa?])
 (defrecord KetjutusTallennettu [vastaus])
 (defrecord KetjutusEiTallennettu [virhe])
@@ -20,10 +19,6 @@
   ValitseSopimus
   (process-event [{sopimus :sopimus} app]
     (assoc app :valittu-sopimus sopimus))
-
-  Nakymassa?
-  (process-event [{nakymassa? :nakymassa?} app]
-    (assoc app :nakymassa? nakymassa?))
 
   HaeSopimukset
   (process-event [_ app]
