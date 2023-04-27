@@ -81,19 +81,6 @@
   [{:tehtava-id id-ib-rampit :maara 6.66}
    {:tehtava-id 666 :maara 999}])
 
-;; TODO: hae urkakkanumerot älä kovakoodaa, muuta käyttäjä urakanvalvojaksi
-
-
-;; jos tehtävähierarkian tehtävien tiedoissa tapahtuu muutoksia, tämä testi feilaa ja täytyy päivittää
-(deftest tehtavahierarkian-haku
-  (let [hierarkia (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :tehtavahierarkia
-                                  +kayttaja-jvh+
-                                  {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})]
-    #_(is (= (count hierarkia) 108) "Hierarkiassa on 108 osaa.")
-    (is (= (:tehtava (first (filter #(= rumpujen-korjaus (:tehtava-id %)) hierarkia))) "Soratien rumpujen korjaus ja uusiminen  Ø> 600  <=800 mm") "Tehtävähierarkiassa palautuu tietoja.")))
-
-
 
 (deftest tehtavaryhmat-ja-toimenpiteet-testi
   (let [tr-tp-lkm (ffirst

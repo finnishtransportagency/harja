@@ -127,45 +127,6 @@ FROM tehtavaryhma tr
      OR (tr.yksiloiva_tunniste IS NOT NULL AND tr.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'))
  order by tr.jarjestys;
 
--- name: hae-tehtavahierarkia
--- Palauttaa tehtävähierarkian kokonaisuudessaan.
--- Käytä tehtävä- ja määräluettelossa hierarkian hakemiseen SQL-lausetta: hae-tehtavahierarkia-maarineen.
-SELECT tr1.jarjestys               as "otsikon-jarjestys",
-       tpk4.jarjestys              as "jarjestys",
-       tpk4.id                     as "tehtava-id",
-       tr3.otsikko                 as "otsikko",
-       tpk3.nimi                   as "Toimenpide",
-       tpk3.koodi                  as "Toimenpidekoodi",
-       tr1.nimi                    as "ylataso",
-       tr1.id                      as "ylataso-id",
-       tr2.nimi                    as "valitaso",
-       tr2.id                      as "valitaso-id",
-       tr3.nimi                    as "alataso",
-       tr3.id                      as "alataso-id",
-       tpk4.nimi                   as "tehtava",
-       tpk4.suunnitteluyksikko     as "yksikko",
-       tpk4.api_seuranta           as "API-seuranta",
-       tpk4.api_tunnus             as "API-tunnus",
-       tpk4.poistettu              as "Poistettu",
-       tpk4.piilota                as "Piilota", -- älä näytä riviä käyttäjälle
-       tpk4.ensisijainen           as "Ensisijainen",
-       tpk4.voimassaolo_alkuvuosi  as "voimassaolo_alkuvuosi",
-       tpk4.voimassaolo_loppuvuosi as "voimassaolo_loppuvuosi"
-FROM tehtavaryhma tr1
-       JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
-       JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo
-       LEFT JOIN toimenpidekoodi tpk4
-                 ON tr3.id = tpk4.tehtavaryhma and tpk4.taso = 4 AND tpk4.ensisijainen is true AND
-                    tpk4.poistettu is not true AND tpk4.piilota is not true
-       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
-       JOIN toimenpideinstanssi tpi on tpk3.id = tpi.toimenpide
-       JOIN urakka u on tpi.urakka = u.id AND u.id = :urakka
-WHERE tr1.emo is null
-  AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
-  AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
-  AND tpk4.suunnitteluyksikko IS not null AND tpk4.suunnitteluyksikko != 'euroa' -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
-ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
-
 -- name: hae-sopimuksen-tehtavamaarat-urakalle
 select st.maara                    as "sopimuksen-tehtavamaara",
        st.tehtava                  as "tehtava",
