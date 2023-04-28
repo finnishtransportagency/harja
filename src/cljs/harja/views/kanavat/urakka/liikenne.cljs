@@ -21,6 +21,7 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.tiedot.kanavat.urakka.liikenne :as tiedot]
+            [harja.tiedot.vesivaylat.hallinta.liikennetapahtumien-ketjutus :as hallinta-tiedot]
             [harja.views.urakka.valinnat :as suodattimet]
             [harja.ui.grid.protokollat :as grid-protokollat]
 
@@ -567,9 +568,11 @@
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
-    (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
-                           (tiedot/nakymaan e! valinnat))
-                      #(e! (tiedot/->Nakymassa? false)))
+    (komp/sisaan-ulos #(do
+                         (e! (tiedot/->Nakymassa? true))
+                         (e! (hallinta-tiedot/->HaeSopimukset))
+                         (tiedot/nakymaan e! valinnat))
+      #(e! (tiedot/->Nakymassa? false)))
 
     (fn [e! {:keys [valittu-liikennetapahtuma] :as app}]
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
