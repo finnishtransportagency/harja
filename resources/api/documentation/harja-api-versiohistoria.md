@@ -1,8 +1,8 @@
 <b>Nykyinen versio: 1.0.59</b>
-<b>Julkaistu: 27.04.2023</b>
+<b>Julkaistu: 01.05.2023</b>
 
 <b>Versiohistoria:</b>
-- Versionumero 1.0.59 Julkaistu 25.04.2023
+- Versionumero 1.0.59 Julkaistu 01.05.2023
     - Lisätty vedos työmaapaivakirja rajapinnoista. Ei vielä toteutettu.
 - Versionumero 1.0.58 Julkaistu 12.04.2023
     - Päivitetty yhteystietorajapinnan kuvaus vastaamaan todellisuutta. Sahkoposti-elementin nimi on email.
