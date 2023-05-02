@@ -1340,12 +1340,12 @@
                   [:label.control-label
                    [:span
                     [:span.kentan-label otsikko]
-                    (when pakollinen? [:span.required-tahti " *"])]])
+                    (when pakollinen? [:span.required-tahti])]])
                 komponentti
                 (when alaotsikko?
                   [:span
                    [:span.kentan-label otsikko]
-                   (when pakollinen? [:span.required-tahti " *"])])])]
+                   (when pakollinen? [:span.required-tahti])])])]
     (fn [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
          piste? vaadi-vali?]
      [:div
