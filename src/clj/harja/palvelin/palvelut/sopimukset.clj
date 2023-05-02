@@ -24,6 +24,19 @@
                                            :inner {:urakka {:ns :harja.domain.urakka}}})]
         vastaus)))
 
+(defn vesivayla-kanavien-hoito-sopimukset-vastaus [db]
+  (let [sopimukset (into []
+                     (map konv/alaviiva->rakenne)
+                     (q/hae-vesivayla-kanavien-hoito-sopimukset db))
+        
+        vastaus (namespacefy sopimukset {:ns :harja.domain.sopimus
+                                         :inner {:urakka {:ns :harja.domain.urakka}}})]
+    vastaus))
+
+(defn hae-vesivayla-kanavien-hoito-sopimukset [db user]
+  (when (ominaisuus-kaytossa? :vesivayla)
+    (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
+    (vesivayla-kanavien-hoito-sopimukset-vastaus db)))
 
 (defn- paivita-sopimusta! [db user sopimus]
   (let [id (::sopimus/id sopimus)
@@ -79,27 +92,57 @@
          ::sopimus/loppupvm (:loppupvm tallennettu-sopimus)
          ::sopimus/paasopimus-id (:paasopimus-id tallennettu-sopimus)}))))
 
+(defn tallenna-ketjutus [db user {:keys [tiedot kaytossa?] :as asd}]
+  (when (ominaisuus-kaytossa? :vesivayla)
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
+
+    (let [sopimus_id (::sopimus/id tiedot)
+          sampoid (::sopimus/sampoid tiedot)]
+
+      (if kaytossa?
+        (q/luo-tai-paivita-ketjutus! db {:sopimus_id sopimus_id
+                                         :sampoid sampoid
+                                         :ketjutus_kaytossa kaytossa?})
+        (q/poista-sopimuksen-liikenne-ketjutus! db {:sopimus_id sopimus_id
+                                                    :ketjutus_kaytossa kaytossa?}))
+      (vesivayla-kanavien-hoito-sopimukset-vastaus db))))
+
 (defrecord Sopimukset []
   component/Lifecycle
-  (start [{http :http-palvelin
-           db :db :as this}]
+  (start [{http :http-palvelin db :db :as this}]
+
     (julkaise-palvelu http
-                      :hae-harjassa-luodut-sopimukset
-                      (fn [user _]
-                        (hae-harjassa-luodut-sopimukset db user))
-                      {:vastaus-spec ::sopimus/hae-harjassa-luodut-sopimukset-vastaus})
+      :hae-harjassa-luodut-sopimukset
+      (fn [user _]
+        (hae-harjassa-luodut-sopimukset db user))
+      {:vastaus-spec ::sopimus/hae-harjassa-luodut-sopimukset-vastaus})
+
     (julkaise-palvelu http
-                      :tallenna-sopimus
-                      (fn [user tiedot]
-                        (tallenna-sopimus db user tiedot))
-                      {:kysely-spec ::sopimus/tallenna-sopimus-kysely
-                       :vastaus-spec ::sopimus/tallenna-sopimus-vastaus})
+      :hae-vesivayla-kanavien-hoito-sopimukset
+      (fn [user _]
+        (hae-vesivayla-kanavien-hoito-sopimukset db user))
+      {:vastaus-spec ::sopimus/hae-vesivayla-kanavien-hoito-sopimukset-vastaus})
+
+    (julkaise-palvelu http
+      :tallenna-sopimus
+      (fn [user tiedot]
+        (tallenna-sopimus db user tiedot))
+      {:kysely-spec ::sopimus/tallenna-sopimus-kysely
+       :vastaus-spec ::sopimus/tallenna-sopimus-vastaus})
+
+    (julkaise-palvelu http
+      :tallenna-ketjutus
+      (fn [user tiedot]
+        (tallenna-ketjutus db user tiedot)))
 
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http
-                     :hae-harjassa-luodut-sopimukset
-                     :tallenna-sopimus)
+    (poista-palvelut
+      http
+      :hae-harjassa-luodut-sopimukset
+      :hae-vesivayla-kanavien-hoito-sopimukset
+      :tallenna-sopimus
+      :tallenna-ketjutus)
 
     this))

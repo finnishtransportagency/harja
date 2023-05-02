@@ -49,6 +49,13 @@
 (defn resetoi-tila []
   (reset! tila tila-arvot))
 
+(defn paivita-liikennenakyma []
+  ;; Kun kohteita/osia/urakkaliitoksia muokataan, resetoidaan liikennenäkymän tiedot
+  ;; Eli pakotetaan näkymän uudelleenlataus, jotta uudet teidot tulevat näkyviin ja vältymme erroreilta
+  (resetoi-tila)
+  (reset! nav/valittu-hallintayksikko-id nil)
+  (reset! nav/valittu-urakka-id nil))
+
 (defn uusi-tapahtuma
   ([]
    (uusi-tapahtuma istunto/kayttaja u/valittu-sopimusnumero nav/valittu-urakka (pvm/nyt)))
@@ -459,14 +466,24 @@
            (str ", " (count (get-in edelliset [suunta :edelliset-alukset])) " lähestyvää alusta")))))
 
 (defn nayta-edelliset-alukset? [{:keys [valittu-liikennetapahtuma
+                                        haetut-sopimukset
                                         edellisten-haku-kaynnissa?
                                         edelliset]}]
-  (boolean
-    (and (::lt/kohde valittu-liikennetapahtuma)
-         (not edellisten-haku-kaynnissa?)
-         (or (:alas edelliset) (:ylos edelliset))
-         (some? (:valittu-suunta valittu-liikennetapahtuma))
-         (not (id-olemassa? (::lt/id valittu-liikennetapahtuma))))))
+
+  (let [sopimus-id (-> valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
+        ketjutus-kaytossa? (first (filter (fn[sopimus]
+                                            (= sopimus-id (::sop/id sopimus))) haetut-sopimukset))
+        ketjutus-kaytossa? (boolean (::sop/ketjutus ketjutus-kaytossa?))]
+
+    ;; Onko ketjutus käytössä tällä sopimuksella/urakalla?
+    (if ketjutus-kaytossa?
+      (boolean
+        (and (::lt/kohde valittu-liikennetapahtuma)
+          (not edellisten-haku-kaynnissa?)
+          (or (:alas edelliset) (:ylos edelliset))
+          (some? (:valittu-suunta valittu-liikennetapahtuma))
+          (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))))
+      false)))
 
 (defn nayta-suunnan-ketjutukset? [{:keys [valittu-liikennetapahtuma]} suunta tiedot]
   (boolean

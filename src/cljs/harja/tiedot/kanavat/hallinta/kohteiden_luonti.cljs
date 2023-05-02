@@ -38,13 +38,6 @@
 (defonce karttataso-kohteenosat-kohteen-luonnissa (r/cursor tila [:karttataso-nakyvissa?]))
 (def uusi-kohde {})
 
-(defn paivita-liikennenakyma []
-  ;; Kun kohteita/osia/urakkaliitoksia muokataan, resetoidaan liikennenäkymän tiedot
-  ;; Eli pakotetaan näkymän uudelleenlataus, jotta uudet teidot tulevat näkyviin ja vältymme erroreilta
-  (liikenne/resetoi-tila)
-  (reset! nav/valittu-hallintayksikko-id nil)
-  (reset! nav/valittu-urakka-id nil))
-
 ;; Yleiset
 
 (defrecord Nakymassa? [nakymassa?])
@@ -308,7 +301,7 @@
 
   PaivitaKohteidenUrakkaliitokset
   (process-event [_ app]
-    (paivita-liikennenakyma)
+    (liikenne/paivita-liikennenakyma)
     (tt/post! :liita-kohteet-urakkaan
       {:liitokset (:uudet-urakkaliitokset app)}
       {:onnistui ->LiitoksetPaivitetty
@@ -345,7 +338,7 @@
 
   TallennaKohdekokonaisuudet
   (process-event [{kokonaisuudet :kokonaisuudet} app]
-    (paivita-liikennenakyma)
+    (liikenne/paivita-liikennenakyma)
     (if-not (:kohdekokonaisuuksien-tallennus-kaynnissa? app)
       (-> app
         (tt/post! :tallenna-kohdekokonaisuudet
@@ -385,7 +378,7 @@
 
   TallennaKohde
   (process-event [{kohde :kohde} app]
-    (paivita-liikennenakyma)
+    (liikenne/paivita-liikennenakyma)
     (if-not (:kohteen-tallennus-kaynnissa? app)
       (-> app
         (tt/post! :tallenna-kohde
