@@ -8,121 +8,59 @@
 
 -- Aja aina R_Toimenpidekoodit ennen näitä inserttejä
 
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '1.0 TALVIHOITO',	'Talvihoito',	NULL,	'ylataso',	1, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '1.0 TALVIHOITO',	'Välitaso Talvihoito',	(select id from tehtavaryhma where nimi = 'Talvihoito'),	'valitaso',	1, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Talvihoito');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '1.0 TALVIHOITO',	'Talvihoito (A)',	(select id from tehtavaryhma where nimi = 'Välitaso Talvihoito'),	'alataso',	1, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Välitaso Talvihoito');
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '1.0 TALVIHOITO',	'Muut talvihoitotyöt',	(select id from tehtavaryhma where nimi = 'Talvihoito'),	'valitaso',	22, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Talvihoito');
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '1.0 TALVIHOITO',	'Liukkaudentorjunta',	(select id from tehtavaryhma where nimi = 'Talvihoito'),	'valitaso',	25, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Talvihoito');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '1.0 TALVIHOITO',	'Talvisuola (B1)',	(select id from tehtavaryhma where nimi = 'Liukkaudentorjunta'),	'alataso',	25, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Liukkaudentorjunta');
 
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.1 LIIKENNEYMPÄRISTÖN HOITO',	'Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen',	NULL,	'ylataso',	35, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.1 LIIKENNEYMPÄRISTÖN HOITO',	'Välitaso Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen',	(select id from tehtavaryhma where nimi = 'Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen'),	'valitaso',	35, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.1 LIIKENNEYMPÄRISTÖN HOITO',	'Liikennemerkit ja liikenteenohjauslaitteet (L)',	(select id from tehtavaryhma where nimi = 'Välitaso Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen'),	'alataso',	35, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Välitaso Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen');
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.1 LIIKENNEYMPÄRISTÖN HOITO',	'Vakiokokoiset liikennemerkit',	(select id from tehtavaryhma where nimi = 'Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen'),	'valitaso',	39, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen');
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.1 LIIKENNEYMPÄRISTÖN HOITO',	'Opastustaulut ja viitat',	(select id from tehtavaryhma where nimi = 'Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen'),	'valitaso',	42, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen');
 
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.2 LIIKENNEYMPÄRISTÖN HOITO',	'Tie-, levähdys- ja liitännäisalueiden puhtaanapito ja kalusteiden hoito',	NULL,	'ylataso',	48, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.2 LIIKENNEYMPÄRISTÖN HOITO',	'Välitaso Tie-, levähdys- ja liitännäisalueiden puhtaanapito ja kalusteiden hoito',	(select id from tehtavaryhma where nimi = 'Tie-, levähdys- ja liitännäisalueiden puhtaanapito ja kalusteiden hoito'),	'valitaso',	48, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Tie-, levähdys- ja liitännäisalueiden puhtaanapito ja kalusteiden hoito');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.2 LIIKENNEYMPÄRISTÖN HOITO',	'Puhtaanapito (P)',	(select id from tehtavaryhma where nimi = 'Välitaso Tie-, levähdys- ja liitännäisalueiden puhtaanapito ja kalusteiden hoito'),	'alataso',	48, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Välitaso Tie-, levähdys- ja liitännäisalueiden puhtaanapito ja kalusteiden hoito');
 
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.3 LIIKENNEYMPÄRISTÖN HOITO',	'Viheralueiden hoito',	NULL,	'ylataso',	62, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.3 LIIKENNEYMPÄRISTÖN HOITO',	'Vesakon raivaus ja runkopuun poisto',	(select id from tehtavaryhma where nimi = 'Viheralueiden hoito'),	'valitaso',	62, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Viheralueiden hoito');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.3 LIIKENNEYMPÄRISTÖN HOITO',	'Vesakonraivaukset ja puun poisto (V)',	(select id from tehtavaryhma where nimi = 'Vesakon raivaus ja runkopuun poisto'),	'alataso',	62, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Vesakon raivaus ja runkopuun poisto');
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.3 LIIKENNEYMPÄRISTÖN HOITO',	'Nurmetus, puiden ja pensaiden hoito, muut viheralueiden hoidon työt',	(select id from tehtavaryhma where nimi = 'Viheralueiden hoito'),	'valitaso',	65, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Viheralueiden hoito');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.3 LIIKENNEYMPÄRISTÖN HOITO',	'Nurmetukset ja muut vihertyöt (N)',	(select id from tehtavaryhma where nimi = 'Nurmetus, puiden ja pensaiden hoito, muut viheralueiden hoidon työt'),	'alataso',	65, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Nurmetus, puiden ja pensaiden hoito, muut viheralueiden hoidon työt');
 
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.4 LIIKENNEYMPÄRISTÖN HOITO',	'Kuivatusjärjestelmän kaivojen, putkistojen ja pumppaamoiden hoito',	NULL,	'ylataso',	79, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.4 LIIKENNEYMPÄRISTÖN HOITO',	'Kuivatusjärjestelmän kaivojen, putkistojen ja pumppaamoiden hoito, rumpujen tarkastus ja hoito',	(select id from tehtavaryhma where nimi = 'Kuivatusjärjestelmän kaivojen, putkistojen ja pumppaamoiden hoito'),	'valitaso',	79, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Kuivatusjärjestelmän kaivojen, putkistojen ja pumppaamoiden hoito');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.4 LIIKENNEYMPÄRISTÖN HOITO',	'Kuivatusjärjestelmät (K)',	(select id from tehtavaryhma where nimi = 'Kuivatusjärjestelmän kaivojen, putkistojen ja pumppaamoiden hoito, rumpujen tarkastus ja hoito'),	'alataso',	79, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi = 'Kuivatusjärjestelmän kaivojen, putkistojen ja pumppaamoiden hoito, rumpujen tarkastus ja hoito');
 
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.5 LIIKENNEYMPÄRISTÖN HOITO',	'Rumpujen kunnossapito ja uusiminen',	NULL,	'ylataso',	86, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.5 LIIKENNEYMPÄRISTÖN HOITO',	'Rumpujen kunnossapito ja uusiminen (päällystetty tie)',	(select id from tehtavaryhma where nimi =  'Rumpujen kunnossapito ja uusiminen'),	'valitaso',	86, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Rumpujen kunnossapito ja uusiminen');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.5 LIIKENNEYMPÄRISTÖN HOITO',	'Rummut, päällystetiet (R)',	(select id from tehtavaryhma where nimi =  'Rumpujen kunnossapito ja uusiminen (päällystetty tie)'),	'alataso',	141, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Rumpujen kunnossapito ja uusiminen (päällystetty tie)');
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.5 LIIKENNEYMPÄRISTÖN HOITO',	'Rumpujen kunnossapito ja uusiminen (soratie)',	(select id from tehtavaryhma where nimi =  'Rumpujen kunnossapito ja uusiminen'),	'valitaso',	142, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE)
-ON CONFLICT (nimi) DO UPDATE set emo = 	(select id from tehtavaryhma where nimi =  'Rumpujen kunnossapito ja uusiminen');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.5 LIIKENNEYMPÄRISTÖN HOITO',	'Rummut, soratiet (S)',	(select id from tehtavaryhma where nimi =  'Rumpujen kunnossapito ja uusiminen (soratie)'),	'alataso',	142, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Rumpujen kunnossapito ja uusiminen (soratie)');
 
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.6 LIIKENNEYMPÄRISTÖN HOITO',	'Kaiteiden, riista- ja suoja-aitojen sekä kiveysten kunnossapito',	NULL,	'ylataso',	97, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.6 LIIKENNEYMPÄRISTÖN HOITO',	'Välitaso Kaiteiden, riista- ja suoja-aitojen sekä kiveysten kunnossapito',	(select id from tehtavaryhma where nimi =  'Kaiteiden, riista- ja suoja-aitojen sekä kiveysten kunnossapito'),	'valitaso',	97, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Kaiteiden, riista- ja suoja-aitojen sekä kiveysten kunnossapito');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.6 LIIKENNEYMPÄRISTÖN HOITO',	'Kaiteet, aidat ja kivetykset (U)',	(select id from tehtavaryhma where nimi =  'Välitaso Kaiteiden, riista- ja suoja-aitojen sekä kiveysten kunnossapito'),	'alataso',	97, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Välitaso Kaiteiden, riista- ja suoja-aitojen sekä kiveysten kunnossapito');
 
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.7 LIIKENNEYMPÄRISTÖN HOITO',	'Päällysteiden paikkaus',	NULL,	'ylataso',	102, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.7 LIIKENNEYMPÄRISTÖN HOITO',	'Välitaso Päällysteiden paikkaus',	(select id from tehtavaryhma where nimi =  'Päällysteiden paikkaus'),	'valitaso',	102, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Päällysteiden paikkaus');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.7 LIIKENNEYMPÄRISTÖN HOITO',	'Kuumapäällyste (Y1)',	(select id from tehtavaryhma where nimi =  'Välitaso Päällysteiden paikkaus'),	'alataso',	102, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Välitaso Päällysteiden paikkaus');
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.7 LIIKENNEYMPÄRISTÖN HOITO',	'Sillan päällysteen korjaus',	(select id from tehtavaryhma where nimi =  'Päällysteiden paikkaus'),	'valitaso',	109, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Päällysteiden paikkaus');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.7 LIIKENNEYMPÄRISTÖN HOITO',	'Siltapäällysteet (H)',	(select id from tehtavaryhma where nimi =  'Sillan päällysteen korjaus'),	'alataso',	109, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Sillan päällysteen korjaus');
 
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.8 LIIKENNEYMPÄRISTÖN HOITO',	'Päällystettyjen teiden sorapientareen kunnossapito',	NULL,	'ylataso',	116, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.8 LIIKENNEYMPÄRISTÖN HOITO',	'Välitaso Päällystettyjen teiden sorapientareen kunnossapito',	(select id from tehtavaryhma where nimi =  'Päällystettyjen teiden sorapientareen kunnossapito'),	'valitaso',	116, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Päällystettyjen teiden sorapientareen kunnossapito');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.8 LIIKENNEYMPÄRISTÖN HOITO',	'Sorapientareet (O)',	(select id from tehtavaryhma where nimi =  'Välitaso Päällystettyjen teiden sorapientareen kunnossapito'),	'alataso',	116, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Välitaso Päällystettyjen teiden sorapientareen kunnossapito');
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.9 LIIKENNEYMPÄRISTÖN HOITO',	'Siltojen ja laitureiden hoito',	NULL,	'ylataso',	121, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.9 LIIKENNEYMPÄRISTÖN HOITO',	'Välitaso Siltojen ja laitureiden hoito',	(select id from tehtavaryhma where nimi =  'Siltojen ja laitureiden hoito'),	'valitaso',	121, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Siltojen ja laitureiden hoito');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '2.9 LIIKENNEYMPÄRISTÖN HOITO',	'Sillat ja laiturit (I)',	(select id from tehtavaryhma where nimi =  'Välitaso Siltojen ja laitureiden hoito'),	'alataso',	121, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Välitaso Siltojen ja laitureiden hoito');
 
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '3 SORATEIDEN HOITO',	'Sorateiden hoito',	NULL,	'ylataso',	124, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '3 SORATEIDEN HOITO',	'Välitaso Sorateiden hoito',	(select id from tehtavaryhma where nimi =  'Sorateiden hoito'),	'valitaso',	124, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Sorateiden hoito');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '3 SORATEIDEN HOITO',	'Sorateiden hoito (C)',	(select id from tehtavaryhma where nimi =  'Välitaso Sorateiden hoito'),	'alataso',	128, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Välitaso Sorateiden hoito');
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '3 SORATEIDEN HOITO',	'Sorateiden pinnan hoito',	(select id from tehtavaryhma where nimi =  'Sorateiden hoito'),	'valitaso',	124, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Sorateiden hoito');
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '3 SORATEIDEN HOITO',	'Muut sorateiden hoidon tehtävät',	(select id from tehtavaryhma where nimi =  'Sorateiden hoito'),	'valitaso',	129, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Sorateiden hoito');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '3 SORATEIDEN HOITO',	'Sorastus (M)',	(select id from tehtavaryhma where nimi =  'Muut sorateiden hoidon tehtävät'),	'alataso',	129, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Muut sorateiden hoidon tehtävät');
 
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '5 KORJAAMINEN',	'Avo-ojitus, soratiet (Z)',	(select id from tehtavaryhma where nimi =  'Sorateiden pinnan hoito'),	'alataso',	124, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set otsikko = '5 KORJAAMINEN', emo = (select id from tehtavaryhma where nimi =  'Sorateiden pinnan hoito');
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '5 KORJAAMINEN',	'MHU Ylläpito',	NULL,	'ylataso',	139, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '5 KORJAAMINEN',	'Välitaso MHU Ylläpito',	(select id from tehtavaryhma where nimi =  'MHU Ylläpito'),	'valitaso',	139, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'MHU Ylläpito');
 
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '5 KORJAAMINEN',	'Runkokelirikot',	NULL,	'ylataso',	146, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '5 KORJAAMINEN',	'Välitaso Runkokelirikot',	(select id from tehtavaryhma where nimi =  'Runkokelirikot'),	'valitaso',	146, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Pohjavesisuojaukset');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '5 KORJAAMINEN',	'RKR-korjaus (Q)',	(select id from tehtavaryhma where nimi =  'Välitaso MHU Ylläpito'),	'alataso',	146, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = 	(select id from tehtavaryhma where nimi =  'Välitaso Runkokelirikot');
 
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '5 KORJAAMINEN',	'Ojitus',	(select id from tehtavaryhma where nimi =  'MHU Ylläpito'),	'valitaso',	139, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'MHU Ylläpito');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '5 KORJAAMINEN',	'Avo-ojitus, päällystetyt tiet (X)',	(select id from tehtavaryhma where nimi =  'Ojitus'),	'alataso',	143, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Ojitus');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '5 KORJAAMINEN',	'Avo-ojitus, soratiet (Z)',	(select id from tehtavaryhma where nimi =  'Ojitus'),	'alataso',	144, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Ojitus');
 
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '5 KORJAAMINEN',	'Pohjavesisuojaukset',	NULL,	'ylataso',	152, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '5 KORJAAMINEN',	'Välitaso Pohjavesisuojaukset',	(select id from tehtavaryhma where nimi =  'Pohjavesisuojaukset'),	'valitaso',	152, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Pohjavesisuojaukset');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '5 KORJAAMINEN',	'Muut, MHU ylläpito (F)',	(select id from tehtavaryhma where nimi =  'Välitaso Pohjavesisuojaukset'),	'alataso',	152, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT DO NOTHING;
 
@@ -142,31 +80,17 @@ VALUES ('5 KORJAAMINEN', 'Muut, liikenneympäristön hoito (F)',
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), FALSE)
     ON CONFLICT (nimi) DO UPDATE SET emo = (SELECT id FROM tehtavaryhma WHERE nimi = 'Välitaso Pohjavesisuojaukset');
 
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Muut liik.ymp.hoitosasiat',	NULL,	'ylataso',	155, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Välitaso Muut liik.ymp.hoitosasiat',	(select id from tehtavaryhma where nimi =  'Muut liik.ymp.hoitosasiat'),	'valitaso',	155, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = 	(select id from tehtavaryhma where nimi =  'Muut liik.ymp.hoitosasiat');
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Välitaso Pysäkkikatosten ylläpito',	(select id from tehtavaryhma where nimi =  'Muut liik.ymp.hoitosasiat'),	'valitaso',	157, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = 	(select id from tehtavaryhma where nimi =  'Muut liik.ymp.hoitosasiat');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'ELY-rahoitteiset, liikenneympäristön hoito (E)',	(select id from tehtavaryhma where nimi =  'Välitaso Muut liik.ymp.hoitosasiat'),	'alataso',	155, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Välitaso Muut liik.ymp.hoitosasiat');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'ELY-rahoitteiset, ylläpito (E)',	(select id from tehtavaryhma where nimi =  'Välitaso Pysäkkikatosten ylläpito'),	'alataso',	157, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Välitaso Pysäkkikatosten ylläpito');
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Johto- ja hallintokorvaukseen sisältyvät tehtävät',	NULL,	'ylataso',	161, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Välitaso Johto- ja hallintokorvaukseen sisältyvät tehtävät',	(select id from tehtavaryhma where nimi =  'Johto- ja hallintokorvaukseen sisältyvät tehtävät'),	'valitaso',	161, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Johto- ja hallintokorvaukseen sisältyvät tehtävät');
 
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Johto- ja hallintokorvaus (J)',	(select id from tehtavaryhma where nimi =  'Välitaso Johto- ja hallintokorvaukseen sisältyvät tehtävät'),	'alataso',	161, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Välitaso Johto- ja hallintokorvaukseen sisältyvät tehtävät');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Hoidonjohtopalkkio (G)',	(select id from tehtavaryhma where nimi =  'Välitaso Johto- ja hallintokorvaukseen sisältyvät tehtävät'),	'alataso',	161, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Välitaso Johto- ja hallintokorvaukseen sisältyvät tehtävät');
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Erillishankinnat erillishinnoin',	NULL,	'valitaso',	165, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Välitaso Erillishankinnat erillishinnoin',	(select id from tehtavaryhma where nimi =  'Erillishankinnat erillishinnoin'),	'valitaso',	165, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Erillishankinnat erillishinnoin');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Erillishankinnat (W)',	(select id from tehtavaryhma where nimi =  'Välitaso Erillishankinnat erillishinnoin'),	'alataso',	165, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Välitaso Erillishankinnat erillishinnoin');
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Hoitovuoden päättäminen',	NULL,	'ylataso',	168, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE) ON CONFLICT DO NOTHING;
-INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Välitaso Hoitovuoden päättäminen',	(select id from tehtavaryhma where nimi =  'Hoitovuoden päättäminen'),	'valitaso',	168, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
-ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Hoitovuoden päättäminen');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Hoitovuoden päättäminen / Tavoitepalkkio',	(select id from tehtavaryhma where nimi =  'Välitaso Hoitovuoden päättäminen'),	'alataso',	168, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
 ON CONFLICT (nimi) DO UPDATE set emo = (select id from tehtavaryhma where nimi =  'Välitaso Hoitovuoden päättäminen');
 INSERT into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ( '6 MUUTA',	'Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä',	(select id from tehtavaryhma where nimi =  'Välitaso Hoitovuoden päättäminen'),	'alataso',	169, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)
@@ -216,20 +140,7 @@ ON CONFLICT (nimi) DO UPDATE SET emo = (select id from tehtavaryhma where nimi =
 
 
 ---- dummy
-insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ('9 LISÄTYÖT', 'Lisätyöt', null, 'ylataso', 990, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE) on conflict do nothing;
-insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ('9 LISÄTYÖT', 'Välitaso Lisätyöt', (select id from tehtavaryhma where otsikko = '9 LISÄTYÖT' and nimi = 'Lisätyöt'), 'valitaso', 991, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)  on conflict do nothing;
 insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ('9 LISÄTYÖT', 'Alataso Lisätyöt', (select id from tehtavaryhma where otsikko = '9 LISÄTYÖT' and nimi = 'Välitaso Lisätyöt'), 'alataso', 992, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)  on conflict do nothing;
--- Samaan kastiin kuuluu myös '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' - se on saatava näkymään määrien toteumat sivulla
-insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES
-('4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA', 'Liikenteen varmistaminen', null,
- 'ylataso', 993, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'),
- FALSE)  on conflict do nothing;
-insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES
-('4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA', 'Välitaso Liikenteen varmistaminen',
- (select id from tehtavaryhma where otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' and nimi = 'Liikenteen varmistaminen'),
- 'valitaso', 994, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'),
- FALSE)  on conflict do nothing;
-
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --- MHU: Uudet tehtävät. Näille ei löydynyt vastaavuutta vanhoista tehtävistä. -----------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
