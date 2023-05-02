@@ -151,7 +151,6 @@ where st.urakka = :urakka-id
 -- Äkillistä hoitotyötä ja Kolmansien osapuolten aiheuttaminen vahinkojen korjausta ei suunnitella tehtävälistalla.
 SELECT ut.urakka                   as "urakka",
        ut."hoitokauden-alkuvuosi"  as "hoitokauden-alkuvuosi",
-       tr1.jarjestys               as "otsikon-jarjestys",
        tpk4.jarjestys              as "jarjestys",
        tpk4.id                     as "tehtava-id",
        ut.maara                    as "suunniteltu-maara",
@@ -159,8 +158,6 @@ SELECT ut.urakka                   as "urakka",
        tr3.otsikko                 as "otsikko",
        tpk3.nimi                   as "Toimenpide",
        tpk3.koodi                  as "Toimenpidekoodi",
-       tr1.nimi                    as "ylataso",
-       tr2.nimi                    as "valitaso",
        tr3.nimi                    as "alataso",
        tpk4.nimi                   as "tehtava",
        tpk4.suunnitteluyksikko     as "yksikko",
@@ -172,10 +169,8 @@ SELECT ut.urakka                   as "urakka",
        tpk4.voimassaolo_alkuvuosi  as "voimassaolo_alkuvuosi",
        tpk4.voimassaolo_loppuvuosi as "voimassaolo_loppuvuosi",
        tpk4.aluetieto              as "aluetieto",
-       sp.tallennettu              as "sopimus-tallennettu"  
-FROM tehtavaryhma tr1
-       JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
-       JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo
+       sp.tallennettu              as "sopimus-tallennettu"
+FROM tehtavaryhma tr3
        LEFT JOIN toimenpidekoodi tpk4
                  ON tr3.id = tpk4.tehtavaryhma AND tpk4.taso = 4 AND tpk4.ensisijainen is true AND
                     tpk4.poistettu is not true AND tpk4.piilota is not true AND (tpk4.yksiloiva_tunniste NOT IN
@@ -194,7 +189,7 @@ FROM tehtavaryhma tr1
                        ON tpk4.id = ut.tehtava AND ut.urakka = :urakka AND (ut."hoitokauden-alkuvuosi" in (:hoitokausi) OR tpk4.aluetieto IS TRUE)
        LEFT JOIN sopimuksen_tehtavamaarat_tallennettu sp on sp.urakka = :urakka,
      urakka u
-WHERE tr1.emo is null
+WHERE tr3.tyyppi = 'alataso'
   AND u.id = :urakka
   AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
