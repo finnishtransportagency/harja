@@ -56,6 +56,7 @@
         conj 
         {:id valitaso-id
          :nimi otsikko
+         :taso 3
          :sopimus-tallennettu sopimus-tallennettu
          :tehtavat []})
       (update :tasot distinct)
