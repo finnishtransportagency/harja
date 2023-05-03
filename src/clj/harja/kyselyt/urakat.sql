@@ -1096,3 +1096,9 @@ SELECT id, sampoid, nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke
        urakkanro as alueurakkanro, tyyppi, poistettu, velho_oid, luotu, muokattu
 FROM urakka
 ORDER BY alkupvm ASC;
+
+-- name: hae-valaistusurakan-geometria
+-- Simplifoidaan hieman geometriaa, koska niitä voi olla niin paljon.
+SELECT ST_Simplify(v.alue, 20, true) as alue
+  FROM valaistusurakka v
+       JOIN urakka u ON u.id = :id AND u.urakkanro = v.valaistusurakkanro;
