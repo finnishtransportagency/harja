@@ -51,35 +51,75 @@
                        (e! (tiedot/->TallennaGeometria-ainestot aineistot ch))
                        (go (<! ch))))}
         [{:otsikko "Nimi"
-          :nimi
-          ::geometria-aineistot/nimi
-          :tyyppi
-          :string
+          :nimi ::geometria-aineistot/nimi
+          :tyyppi :string
+          :leveys 1
           :validoi [[:ei-tyhja "Anna aineiston nimi"]]}
          {:otsikko "Tiedostonimi"
-          :nimi
-          ::geometria-aineistot/tiedostonimi
-          :tyyppi
-          :string
+          :nimi ::geometria-aineistot/tiedostonimi
+          :tyyppi :string
+          :leveys 1
           :validoi [[:ei-tyhja "Anna aineiston tiedostonimi"]]}
          {:otsikko "Voimassaolo alkaa"
-          :nimi
-          ::geometria-aineistot/voimassaolo-alkaa
-          :tyyppi
-          :pvm-aika
+          :nimi ::geometria-aineistot/voimassaolo-alkaa
+          :tyyppi :pvm-aika
           :fmt pvm/pvm-opt
+          :leveys 1
           :validoi [#(when (aineiston-voimassaolot-epavalidit? (vals %3))
                       "Aineiston voimassaolo ei saa olla päällekkäin saman aineiston toisen voimassaolon kanssa")]}
          {:otsikko "Voimassaolo päättyy"
-          :nimi
-          ::geometria-aineistot/voimassaolo-paattyy
-          :tyyppi
-          :pvm-aika
+          :nimi ::geometria-aineistot/voimassaolo-paattyy
+          :tyyppi :pvm-aika
           :fmt pvm/pvm-opt
+          :leveys 1
           :validoi [#(when (aineiston-voimassaolot-epavalidit? (vals %3))
                       "Aineiston voimassaolo ei saa olla päällekkäin saman aineiston toisen voimassaolon kanssa")
                     [:pvm-kentan-jalkeen ::geometria-aineistot/voimassaolo-alkaa "Lopun on oltava alun jälkeen"]]}]
         geometria-aineistot]])))
+
+(defn geometriapaivitykset [e! app]
+  (komp/luo
+    (komp/sisaan #(e! (tiedot/->HaeGeometriapaivitykset)))
+    (fn [e! {:keys [geometriapaivitykset haku-kaynnissa?] :as app}]
+      [:div
+       [grid/grid
+        {:otsikko "Geometriapaivitykset"
+         :voi-lisata? (constantly true)
+         :voi-muokata? (constantly true)
+         :voi-poistaa? (constantly true)
+         :voi-kumota? false
+         :piilota-toiminnot? false
+         :tyhja "Ei geometriapäivityksia"
+         :jarjesta ::geometria-aineistot/nimi
+         :tunniste ::geometria-aineistot/id}
+        [{:otsikko "Nimi"
+          :nimi ::geometria-aineistot/nimi
+          :tyyppi :string
+          :leveys 1}
+         {:otsikko "Viimeisen päivitys"
+          :nimi ::geometria-aineistot/viimeisen_paivitys
+          :tyyppi :pvm-aika
+          :fmt pvm/pvm-opt
+          :leveys 1}
+         {:otsikko "Seuraava päivitys"
+          :nimi ::geometria-aineistot/seuraava_paivitys
+          :tyyppi :pvm-aika
+          :fmt pvm/pvm-opt
+          :leveys 1}
+         {:otsikko "Edellinen päivitys"
+          :nimi ::geometria-aineistot/edellinen_paivitysyritys
+          :tyyppi :pvm-aika
+          :fmt pvm/pvm-opt
+          :leveys 1}
+         {:otsikko "Käytössä"
+          :nimi ::geometria-aineistot/kaytossa
+          :tyyppi :string
+          :leveys 1}
+         {:otsikko "Lisätiedot"
+          :nimi ::geometria-aineistot/lisatieto
+          :tyyppi :string
+          :leveys 1}]
+        geometriapaivitykset]])))
 
 (defn jarjestelma-asetukset* [e! app]
   (komp/luo
@@ -89,7 +129,8 @@
     (fn [e! app]
       [:div
        [debug app]
-       [geometria-aineistot e! app]])))
+       [geometria-aineistot e! app]
+       [geometriapaivitykset e! app]])))
 
 (defn jarjestelma-asetukset []
   [tuck tiedot/tila jarjestelma-asetukset*])
