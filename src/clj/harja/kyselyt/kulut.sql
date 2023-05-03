@@ -81,7 +81,6 @@ select tr3.id as "tehtavaryhma",
        tr3.nimi as "nimi"
 from tehtavaryhma tr3
          left join kohdistukset_ajalla kohd on tr3.id = kohd.tehtavaryhma
-where tr3.tyyppi = 'alataso'
 group by tr3.nimi, tr3.id, tr3.jarjestys
 order by tr3.jarjestys;
 

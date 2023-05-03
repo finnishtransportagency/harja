@@ -92,7 +92,7 @@
                                     JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                                     JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id and tpi.urakka = "
                          @oulun-maanteiden-hoitourakan-2019-2024-id
-                         "WHERE tr3.tyyppi = 'alataso' AND (tr3.yksiloiva_tunniste IS NULL\n                                                 OR (tr3.yksiloiva_tunniste IS NOT NULL AND tr3.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'))")))
+                         "WHERE (tr3.yksiloiva_tunniste IS NULL\n                                                 OR (tr3.yksiloiva_tunniste IS NOT NULL AND tr3.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'))")))
         tehtavaryhmat-toimenpiteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                      :tehtavaryhmat-ja-toimenpiteet
                                      +kayttaja-jvh+

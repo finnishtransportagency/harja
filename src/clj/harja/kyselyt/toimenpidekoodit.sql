@@ -226,7 +226,6 @@ SELECT exists(
 -- name: hae-tehtavaryhmat
 SELECT id, nimi, jarjestys
 FROM tehtavaryhma
-WHERE tyyppi = 'alataso'
 ORDER BY jarjestys;
 
 -- name: listaa-tehtavat
