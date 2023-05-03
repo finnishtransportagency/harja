@@ -354,7 +354,7 @@
            :lisatyo lisatyo-skeema
            maaramitattava-skeema) ;; Default arvona oletetaan sen olevan määrämitattava
          (when (= (count toteumat) 1)
-           {:otsikko "Sijainti *"})
+           {:otsikko "Sijainti"})
          (when (= (count toteumat) 1)
            [{:nimi [0 :tierekisteriosoite]
              ::ui-lomake/col-luokka ""
