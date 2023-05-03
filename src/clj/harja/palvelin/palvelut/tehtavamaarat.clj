@@ -24,12 +24,6 @@
     (q/hae-suunnitellut-hoitokauden-tehtavamaarat-urakassa db {:urakka urakka-id
                                                                :hoitokausi hoitokauden-alkuvuosi})))
 
-(defn hae-tehtavahierarkia
-  "Palauttaa tehtävähierarkian kokonaisuudessaan ilman urakkaan liittyviä tietoja."
-  [db user {:keys [urakka-id]}]
-  (into []
-        (q/hae-tehtavahierarkia db {:urakka urakka-id})))
-
 (defn tehtavaryhmat-ja-toimenpiteet
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
@@ -134,14 +128,6 @@
                  (reduce (ryhmittele-tehtavat-valitasojen-perusteella (:idt valitasot))
                    (:tasot valitasot) 
                    tehtavat))))))
-
-(defn hae-tehtavat
-  "Urakan tehtävähierarkia ilman määriä"
-  [db user {:keys [urakka-id]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
-  (let [kannasta (into [] (q/hae-tehtavahierarkia db {:urakka urakka-id}))
-        hierarkia (muodosta-hierarkia kannasta)]
-    hierarkia))
 
 (defn hae-tehtavahierarkia-koko-urakan-ajalle
   "Haetaan kaikkien hoitokausien tehtävämäärät"
@@ -394,14 +380,6 @@
         (fn [user tiedot]
           (hae-sopimuksen-tila db user tiedot)))
       (julkaise-palvelu
-        :tehtavat
-        (fn [user tiedot]
-          (hae-tehtavat db user tiedot)))
-      (julkaise-palvelu
-        :tehtavahierarkia
-        (fn [user tiedot]
-          (hae-tehtavahierarkia db user tiedot)))
-      (julkaise-palvelu
         :tehtavamaarat-hierarkiassa
         (fn [user tiedot]
           (hae-tehtavahierarkia-maarineen db user tiedot)))
@@ -430,8 +408,6 @@
   (stop [this]
     (poista-palvelu (:http-palvelin this) :tallenna-sopimuksen-tila)
     (poista-palvelu (:http-palvelin this) :hae-sopimuksen-tila)
-    (poista-palvelu (:http-palvelin this) :tehtavat)
-    (poista-palvelu (:http-palvelin this) :tehtavahierarkia)
     (poista-palvelu (:http-palvelin this) :tehtavamaarat-hierarkiassa)
     (poista-palvelu (:http-palvelin this) :tehtavamaarat)
     (poista-palvelu (:http-palvelin this) :tallenna-tehtavamaarat)

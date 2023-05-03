@@ -241,7 +241,7 @@
                                                   AND kk.kulu IN (select id from kulu where tyyppi = 'laskutettava'
                                                   AND erapaiva >= '2020-03-01'::DATE AND erapaiva <= '2020-03-31'::DATE)
                                                   AND kk.toimenpideinstanssi = "hallinnolliset-toimenpiteet-tpi-id "
-                                                  AND tehtavaryhma NOT IN (SELECT id FROM tehtavaryhma WHERE emo = (SELECT id FROM tehtavaryhma WHERE nimi = 'Välitaso Hoitovuoden päättäminen'));")))
+                                                  AND tehtavaryhma NOT IN (SELECT id FROM tehtavaryhma WHERE nimi ILIKE 'Hoitovuoden päättäminen%');")))
           kustannusarvioidut-tyot (ffirst (q (str "SELECT COALESCE(SUM(kat.summa_indeksikorjattu), 0) AS summa
                                                      FROM kustannusarvioitu_tyo kat
                                                     WHERE kat.toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "

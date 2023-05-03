@@ -538,8 +538,8 @@ SELECT t.id        AS toteuma_id,
        tt.maara                   AS toteutunut,
        t.alkanut                  AS toteuma_aika,
        tk.suunnitteluyksikko      AS yksikko,
-       tr3.otsikko                AS toimenpide_otsikko,
-       tr3.id                     AS toimenpide_id,
+       tr.otsikko                 AS toimenpide_otsikko,
+       tr.id                      AS toimenpide_id,
        tt.id                      AS toteuma_tehtava_id,
        tt.lisatieto               AS lisatieto,
        t.tyyppi                   AS tyyppi,
@@ -553,22 +553,19 @@ SELECT t.id        AS toteuma_id,
          toimenpidekoodi tk,
          toteuma t,
          kayttaja k,
-         tehtavaryhma tr1
-             JOIN tehtavaryhma tr2 ON tr2.id = tr1.emo
-             JOIN tehtavaryhma tr3 ON tr3.id = tr2.emo
+         tehtavaryhma tr
     WHERE t.id = :id
       AND tk.id = tt.toimenpidekoodi
       AND t.id = tt.toteuma
       AND t.poistettu = FALSE
       AND tt.poistettu = FALSE
       AND t.luoja = k.id
-      AND tr1.id = tk.tehtavaryhma;
+      AND tr.id = tk.tehtavaryhma;
 
 -- name: listaa-urakan-toteutumien-toimenpiteet
 -- Listaa kaikki toimenpiteet (tehtäväryhmät) määrien toteumille. Ehtona toimii emo is null ja tyyppi 'ylataso'
 SELECT DISTINCT ON (tr.otsikko) otsikko, tr.id
     FROM tehtavaryhma tr
-    WHERE tr.tyyppi = 'alataso'
     ORDER BY otsikko ASC, tr.id ASC;
 
 -- name: listaa-maarien-toteumien-toimenpiteiden-tehtavat
