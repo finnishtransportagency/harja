@@ -242,6 +242,6 @@ SELECT t.id, t.nimi, t.voimassaolo_alkuvuosi, t.voimassaolo_loppuvuosi, t.jarjes
 
 -- name: listaa-tehtavaryhmat
 -- Listataan tehtäväryhmät APIa varten
-SELECT id, nimi, otsikko, tyyppi, jarjestys, poistettu, versio, yksiloiva_tunniste, luotu, muokattu
+SELECT id, nimi, otsikko, jarjestys, poistettu, versio, yksiloiva_tunniste, luotu, muokattu
   FROM tehtavaryhma
  ORDER BY otsikko ASC, nimi ASC;
