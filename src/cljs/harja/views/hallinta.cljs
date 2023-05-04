@@ -16,7 +16,6 @@
             [harja.views.hallinta.raporttien-suoritustieto :as raporttien-suoritustieto]
             [harja.views.hallinta.jarjestelma-asetukset :as jarjestelma-asetukset]
             [harja.views.hallinta.toteumatyokalu-nakyma :as toteumatyokalu-nakyma]
-            [harja.views.hallinta.rajoitusaluepituus :as rajoitusaluepituus]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
             [harja.tiedot.istunto :as istunto]))
 
