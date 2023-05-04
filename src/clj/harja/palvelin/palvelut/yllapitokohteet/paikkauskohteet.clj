@@ -606,6 +606,10 @@
                                             :loppuet let}))
     paikkaus))
 
+(defn- tee-pituus [{::tr/keys [tie aosa aet losa let] :as paikkaus} db]
+  (assoc paikkaus :pituus
+    (:pituus (paikkaus-q/laske-paikkauskohteen-pituus db {:tie tie :aosa aosa :aet aet :losa losa :let let}))))
+
 (defn- tee-massamenekki [{pinta-ala ::paikkaus/pinta-ala
                           massamaara ::paikkaus/massamaara :as paikkaus}]
   (assoc paikkaus ::paikkaus/massamenekki
@@ -613,6 +617,15 @@
             (number? pinta-ala)
             (number? massamaara))
       (paikkaus/massamaara-ja-pinta-ala->massamenekki massamaara pinta-ala))))
+
+(defn- tee-pinta-ala [{pituus :pituus
+                       leveys ::paikkaus/leveys :as paikkaus}]
+  (cond-> paikkaus
+    (and (number? pituus) (number? leveys))
+    (assoc ::paikkaus/pinta-ala (* pituus leveys))
+
+    true
+    (dissoc :pituus)))
 
 (defn- muuta-arvot [paikkaus avaimet fn]
   (reduce #(update % %2 fn) paikkaus avaimet))
@@ -657,7 +670,7 @@
     (not (s/valid? ::paikkaus/raekoko raekoko)) (conj "Raekoko puuttuu tai on virheellinen")
     (not (s/valid? ::paikkaus/urapaikkaus-kuulamylly kuulamylly)) (conj "Kuulamylly puuttuu tai on virheellinen")
     (not (s/valid? ::paikkaus/massamaara massamaara)) (conj "Massamäärä puuttuu tai on virheellinen")
-    (not (s/valid? ::paikkaus/pinta-ala pinta-ala)) (conj "Pinta-ala puuttuu tai on virheellinen")
+    (not (s/valid? ::paikkaus/pinta-ala pinta-ala)) (conj "Pinta-alaa ei voitu laskea!")
     (and
       (s/valid? ::paikkaus/alkuaika alkuaika)
       (s/valid? ::paikkaus/alkuaika alkuaika)
@@ -681,7 +694,9 @@
                                  (muuta-arvot intattavat-avaimet #(when (number? %) (int %)))
                                  (muuta-arvot bigdecattavat-avaimet #(when (number? %) (bigdec %)))
                                  (yrita-tehda-sijainti db)
+                                 (tee-pituus db)
                                  tee-tr-osoite
+                                 tee-pinta-ala
                                  tee-tienkohta
                                  tee-massamenekki
                                  (assoc
