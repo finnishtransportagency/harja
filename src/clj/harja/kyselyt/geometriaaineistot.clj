@@ -1,9 +1,8 @@
 (ns harja.kyselyt.geometriaaineistot
   (:require
     [harja.domain.geometriaaineistot :as ga]
-    [specql.core :refer [fetch update! insert! upsert! delete!]]
+    [specql.core :refer [fetch upsert! delete!]]
     [specql.op :as op]
-    [jeesql.core :refer [defqueries]]
     [harja.pvm :as pvm]))
 
 (defn tallenna-urakan-tyotunnit [db geometria-aineistot]
@@ -16,10 +15,13 @@
            geometria-aineistot))
 
 (defn hae-geometria-aineistot [db]
-  (fetch db ::ga/geometria-aineistot ga/kaikki-kentat {}))
+  (fetch db ::ga/geometria-aineistot ga/geometria-aineistot-kaikki-kentat {}))
+
+(defn hae-geometriapaivitykset [db]
+  (fetch db ::ga/geometriapaivitys ga/geometriapaivitys-kaikki-kentat {}))
 
 (defn hae-voimassaoleva-geometria-aineisto [db nimi]
-      (first (fetch db ::ga/geometria-aineistot ga/kaikki-kentat
+      (first (fetch db ::ga/geometria-aineistot ga/geometria-aineistot-kaikki-kentat
                 (op/and
                   {::ga/nimi nimi}
                   (op/or {::ga/voimassaolo-alkaa op/null?}

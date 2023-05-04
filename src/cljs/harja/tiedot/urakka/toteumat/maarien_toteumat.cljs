@@ -43,7 +43,6 @@
 (defrecord TehtavatHakuOnnistui [vastaus parametrit])
 (defrecord TehtavatHakuEpaonnistui [vastaus])
 
-(defrecord HaeTehtavat [parametrit])
 (defrecord LahetaLomake [lomake])
 (defrecord LisaaToteuma [lomake])
 (defrecord PaivitaLomake [lomake polku indeksi])
@@ -116,14 +115,8 @@
                                   (re-find #"LIIKENNEYMPÄRISTÖN HOITO" otsikko) "Liikenneympäristön hoito|l.ymp.hoito"
                                   (re-find #"SORATEIDEN HOITO" otsikko) "Soratiet|sorateiden"
                                   :else ""))
-         parametrit {:polku :tehtavat
-                     :filtteri (case tyyppi
-                                 ;; TODO: saako tähän jonkin filtterin sitä varten, ettei pystyis kirjaamaan määrämitattavia äkillisille ja korjauksille
-                                 ;; :maaramitattava
-
-                                 :lisatyo
+         parametrit {:filtteri (if (= :lisatyo tyyppi)
                                  #(re-find (re-pattern (str "(" toimenpide-re-string ")")) (:tehtava %))
-
                                  (constantly true))}]
      (tuck-apurit/post! rajapinta
                         {:otsikko otsikko
@@ -279,10 +272,6 @@
           (assoc-in app [:hakufiltteri polku] arvo)
           (assoc-in app [:toteutuneet-maarat-grouped] (ryhmittele-tehtavat (:toteutuneet-maarat app)
                                                                            (:hakufiltteri app)))))
-  HaeTehtavat
-  (process-event [{{:keys [toimenpide]} :parametrit} app]
-    (hae-tehtavat-tyypille app toimenpide)
-    app)
 
   LahetaLomake
   (process-event [{lomake :lomake} app]

@@ -258,5 +258,6 @@
        :sheet-nimi (str "Tehtävämäärät " (:nimi urakkatiedot) " " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))}
       otsikot
       rivit]
+     [:teksti (str "Raportin nopeuttamiseksi tiedot päivitetään öisin, eli raportin suorituspäivän kirjaukset näkyvät raportilla seuraavana päivänä.")]
      [:teksti (str "Mikäli suunnitellun määrän yksikkö on eri kuin saman tehtävän toteutuneen määrän yksikkö, näytetään tällä raportilla toteutunut määrä, mutta ei suunniteltua määrää. Tällaisia tehtäviä ovat esimerkiksi monet liukkaudentorjuntaan liittyvät työt, joihin Tehtävä- ja määräluettelossa suunnitellaan materiaalimääriä.")]
      [:teksti (str "Toteutuneita materiaalimääriä voi tarkastella materiaali- ja ympäristöraportilla.")]]))
