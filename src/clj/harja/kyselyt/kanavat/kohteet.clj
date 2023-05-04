@@ -9,6 +9,7 @@
             [specql.rel :as rel]
             [taoensso.timbre :as log]
             [jeesql.core :refer [defqueries]]
+            [clojure.string :as str]
 
             [harja.id :refer [id-olemassa?]]
             [harja.pvm :as pvm]
@@ -89,17 +90,68 @@
                                         {::m/poistettu? false})})
     (partial hae-kohteiden-urakkatiedot db user))))
 
-(defn hae-urakan-kohteet [db user urakka-id]
-  (->>
-    (sort-by :harja.domain.kanavat.kohde/jarjestys (specql/fetch db
-                  ::kohde/kohde
-                  (set/union
-                    kohde/perustiedot
-                    kohde/kohteen-kohdekokonaisuus
-                    kohde/kohteenosat)
-                  {::m/poistettu? false}))
-    (hae-kohteiden-urakkatiedot db user urakka-id)
-    (remove (comp empty? ::kohde/urakat))))
+(defn lue-postgres-vector [s]
+  (when (seq s)
+    (str/split s #"\s+")))
+
+(defn lue-postgres-object 
+  [^org.postgresql.util.PGobject x]
+  (when-let [val (.getValue x)]
+    (mapv read-string (lue-postgres-vector val))))
+
+(defn hae-urakan-kohteet 
+  "Kohdekokonaisuus sekä kohteenosat pitää järjestää etelästä pohjoiseen
+  ryhmitettynä kohdekokonaisuuden mukaan"
+  [db user urakka-id]
+  (let [kohteet (->>
+                  (reverse
+                    (sort-by :harja.domain.kanavat.kohde/jarjestys (specql/fetch db ::kohde/kohde
+                                                                     (set/union
+                                                                       kohde/perustiedot
+                                                                       kohde/kohteen-kohdekokonaisuus
+                                                                       kohde/kohteenosat)
+                                                                     {::m/poistettu? false})))
+                  (group-by #(-> % :harja.domain.kanavat.kohde/kohdekokonaisuus :harja.domain.kanavat.kohdekokonaisuus/id)))
+
+        #_#_kohteet (->> kohteet
+                      (sort-by #(-> % second :harja.domain.kanavat.kohde/kohdekokonaisuus :harja.domain.kanavat.kohdekokonaisuus/id)))
+
+        kohteet (reverse (->> kohteet
+                           (sort-by (fn [kohde]
+                                      (let [kohteen-tiedot (-> kohde second first)
+                                            kohteen-sijainti (:harja.domain.kanavat.kohde/sijainti kohteen-tiedot)
+                                            kohteen-sijainti (if-not (nil? kohteen-sijainti)
+                                                               (second (lue-postgres-object kohteen-sijainti))
+                                                               nil)]
+
+                                        (if-not (nil? kohteen-sijainti)
+                                          kohteen-sijainti
+                                          (:harja.domain.kanavat.kohde/id kohteen-tiedot)))))))
+
+        ;; _ (println (keys asdd))
+
+        kohteet (doall (into [] (map (fn[kokonaisuus]
+                                       (map (fn [kohde] kohde)
+                                         (second kokonaisuus))) kohteet)))
+        kohteet-atom (atom ())
+
+        _ (dorun (doseq [y kohteet]
+                   (doseq [x y]
+                     (swap! kohteet-atom conj x))))
+
+        _ (println "\n \n ")
+
+        _ (dorun (doseq [x @kohteet-atom]
+                   (let [nimi (:harja.domain.kanavat.kohde/nimi x)
+                         kokonaisuus (:harja.domain.kanavat.kohdekokonaisuus/id (:harja.domain.kanavat.kohde/kohdekokonaisuus x))
+                         _ (println "[" kokonaisuus "] Nimi: " nimi)])))
+
+        kohteet @kohteet-atom]
+    ;; Vastaus
+    (->>
+      kohteet
+      (hae-kohteiden-urakkatiedot db user urakka-id)
+      (remove (comp empty? ::kohde/urakat)))))
 
 (defn hae-urakan-kohteet-mukaanlukien-poistetut [db user urakka-id]
   (->>
