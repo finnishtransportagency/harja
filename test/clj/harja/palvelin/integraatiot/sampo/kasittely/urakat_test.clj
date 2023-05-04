@@ -69,7 +69,24 @@
 
   (let [osat (urakat/pura-alueurakkanro "TESTI" "T--0FF666")]
     (is (nil? (:tyypit osat)) "Tyyppiä ei ole päätelty")
-    (is (nil? (:alueurakkanro osat)) "Alueurakkanumeroa ei ole otettu")))
+    (is (nil? (:alueurakkanro osat)) "Alueurakkanumeroa ei ole otettu"))
+
+  ;; Alueurakkanumero voi olla myös sampo-id ainakin valaistusurakoiden tapauksessa
+  (let [osat (urakat/pura-alueurakkanro "TESTI" "TYS-PR00051720")]
+    (is (= "TYS" (:tyypit osat)))
+    (is (= "PR00051720" (:alueurakkanro osat))))
+
+  (let [osat (urakat/pura-alueurakkanro "TESTI" "TYS-!PR00051720")]
+    (is (= "TYS" (:tyypit osat)))
+    (is (nil? (:alueurakkanro osat))))
+
+  (let [osat (urakat/pura-alueurakkanro "TESTI" "TYS--PR00051720")]
+    (is (nil? (:tyypit osat)))
+    (is (nil? (:alueurakkanro osat))))
+
+  (let [osat (urakat/pura-alueurakkanro "TESTI" "TYSPR00051720")]
+    (is (nil? (:tyypit osat)))
+    (is (nil? (:alueurakkanro osat)))))
 
 (deftest harjassa-luodun-urakan-kasittely
   (u "UPDATE urakka SET harjassa_luotu = true WHERE id = (select id from urakka where sampoid = '1242141-OULU2') ;")
