@@ -102,10 +102,4 @@
   :koulutusvideot
   (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-koulutusvideot)
     ^{:key "koulutusvideot"}
-    [koulutusvideot/nakyma])
-
-   "Tarkista rajoitusalueiden pituudet"
-   :rajoitusaluepituus
-   (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-koulutusvideot)
-     ^{:key ":rajoitusaluepituus"}
-     [rajoitusaluepituus/rajoitusaluepituus-nakyma])])
+    [koulutusvideot/nakyma])])
