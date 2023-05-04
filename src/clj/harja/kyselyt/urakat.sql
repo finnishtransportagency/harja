@@ -960,9 +960,7 @@ WHERE u.urakkanro = :urakka
                  'tiemerkinta',
                  'valaistus',
                  'tekniset-laitteet',
-                 'siltakorjaus',
-                 'paikkaus'
-                 )
+                 'siltakorjaus')
 ORDER BY CASE WHEN u.tyyppi = 'hoito' THEN 1
               WHEN u.tyyppi = 'teiden-hoito' THEN 2
               WHEN u.tyyppi = 'paallystys' THEN 3
@@ -970,7 +968,6 @@ ORDER BY CASE WHEN u.tyyppi = 'hoito' THEN 1
               WHEN u.tyyppi = 'valaistus' THEN 5
               WHEN u.tyyppi = 'tekniset-laitteet' THEN 6
               WHEN u.tyyppi = 'siltakorjaus' THEN 7
-              WHEN u.tyyppi = 'paikkaus' THEN 8
              END;
 
 -- name: onko-kaynnissa-urakkanro?
