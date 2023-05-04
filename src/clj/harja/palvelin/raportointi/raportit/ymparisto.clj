@@ -176,7 +176,9 @@ ilmoittaman kokonaismateriaalimäärän erotusta.\n\nPoikkeamaa on yleensä aina
 reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
 
 (def hoitoluokka-puuttuu-info
-  [:p [:b "Hoitoluokka puuttuu:\n\n"] "Materiaalimäärä, johon sidottuja reittipisteitä ei ole voitu kohdistaa millekään talvihoitoluokitetulle tielle"])
+  [:div
+   [:p [:b "Ei kohdistu hoitoluokkiin:"]]
+   [:p "Koneellisesti raportoitu materiaalimäärä, jonka sijaintitiedot ovat hoitoluokitettujen teiden ulkopuolella"]])
 
 ;; Prosentti, jonka yli menevät poikkeamat korostetaan punaisella.
 (def poikkeama-varoitus-raja 5)
