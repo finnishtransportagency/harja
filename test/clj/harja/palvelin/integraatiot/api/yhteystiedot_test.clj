@@ -77,6 +77,23 @@
       (is (sisaltaa-roolin? yhteyshenkilot "ELY urakanvalvoja"))
       (is (sisaltaa-roolin? yhteyshenkilot "Kunnossapitopäällikkö")))))
 
+;; Varmista, ettei kanavaurakkaa löydetä
+(deftest tarkista-ettei-kanavaurakkaa-loydy
+  (let [kanavaurakat
+        (q-map (str "select urakkanro from urakka
+                     where loppupvm > 'NOW()'
+                     AND tyyppi in ('vesivayla-hoito', 'vesivayla-ruoppaus', 'vesivayla-turvalaitteiden-korjaus', 'vesivayla-kanavien-hoito', 'vesivayla-kanavien-korjaus')
+                     AND urakkanro is not null"))
+        kanava-urakkanumero (:urakkanro (first kanavaurakat))]
+    (with-fake-http
+      [(str "http://localhost:" portti (str "/api/urakat/yhteystiedot/" kanava-urakkanumero)) :allow
+       fim-url fim-vastaus]
+      (let [vastaus (api-tyokalut/get-kutsu (str "/api/urakat/yhteystiedot/" kanava-urakkanumero) livi-jarjestelmakayttaja portti)
+            odotettu-vastaus (format "{\"virheet\":[{\"virhe\":{\"koodi\":\"tuntematon-urakka\",\"viesti\":\"Urakkanumerolla: %s ei löydy voimassa olevaa urakkaa Harjassa.\"}}]}" kanava-urakkanumero)
+            data (walk/keywordize-keys (cheshire/decode (:body vastaus)))]
+        (is (= 400 (:status vastaus)) "Haku epäonnistui epävalidilla urakkanumerolla")
+        (is (= odotettu-vastaus (:body vastaus)))))))
+
 (deftest tarkista-oikeudet-rajapintaan
   (let [vastaus (api-tyokalut/get-kutsu "/api/urakat/yhteystiedot/13371" urakoitsija-jarjestelmakayttaja portti)]
     (is (= 403 (:status vastaus)) "Urakoitsijan järjestelmätunnuksella ei ole oikeutta palveluun")))
