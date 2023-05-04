@@ -22,6 +22,7 @@
             [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
             [harja.domain.oikeudet :as oikeudet]))
 
+(defqueries "harja/kyselyt/kanavat/kohteet.sql")
 
 (defn- hae-kohteiden-urakkatiedot* [user kohteet linkit]
   (let [kohde-ja-urakat (->> linkit
@@ -100,10 +101,13 @@
     (mapv read-string (lue-postgres-vector val))))
 
 (defn hae-urakan-kohteet 
-  "Kohdekokonaisuus sekä kohteenosat pitää järjestää etelästä pohjoiseen
-  ryhmitettynä kohdekokonaisuuden mukaan"
+  "Kohdekokonaisuus sekä kohteenosat pitää järjestää etelästä pohjoiseen ryhmitettynä"
   [db user urakka-id]
-  (let [kohteet (->>
+
+  (let [kohteet-atom (atom ())
+        ;; Ryhmitellään kohdekokonaisuus id:n mukaan ja joka ryhmän kohteet jarjestys- sarakkeen mukaan
+        ;; Jarjestys- sarake tulee proseduurista paivita_kanavakohteiden_jarjestys() joka ajetaan aina kun kohteita päivitetään
+        kohteet (->>
                   (reverse
                     (sort-by :harja.domain.kanavat.kohde/jarjestys (specql/fetch db ::kohde/kohde
                                                                      (set/union
@@ -112,10 +116,8 @@
                                                                        kohde/kohteenosat)
                                                                      {::m/poistettu? false})))
                   (group-by #(-> % :harja.domain.kanavat.kohde/kohdekokonaisuus :harja.domain.kanavat.kohdekokonaisuus/id)))
-
-        #_#_kohteet (->> kohteet
-                      (sort-by #(-> % second :harja.domain.kanavat.kohde/kohdekokonaisuus :harja.domain.kanavat.kohdekokonaisuus/id)))
-
+        ;; Järjestetään vielä kaikki ryhmät, etelästä pohjoiseen
+        ;; Luetaan postgresin sijainti objektista Y arvo (etelä/pohjoinen), ja sortataan sen mukaan
         kohteet (reverse (->> kohteet
                            (sort-by (fn [kohde]
                                       (let [kohteen-tiedot (-> kohde second first)
@@ -127,27 +129,16 @@
                                         (if-not (nil? kohteen-sijainti)
                                           kohteen-sijainti
                                           (:harja.domain.kanavat.kohde/id kohteen-tiedot)))))))
-
-        ;; _ (println (keys asdd))
-
+        ;; Ryhmitys tekee ryhmän vectoreita mikä puretaan muotoon joka toimii liikenne/toimenpide välilehdellä
         kohteet (doall (into [] (map (fn[kokonaisuus]
                                        (map (fn [kohde] kohde)
                                          (second kokonaisuus))) kohteet)))
-        kohteet-atom (atom ())
-
         _ (dorun (doseq [y kohteet]
                    (doseq [x y]
                      (swap! kohteet-atom conj x))))
-
-        _ (println "\n \n ")
-
-        _ (dorun (doseq [x @kohteet-atom]
-                   (let [nimi (:harja.domain.kanavat.kohde/nimi x)
-                         kokonaisuus (:harja.domain.kanavat.kohdekokonaisuus/id (:harja.domain.kanavat.kohde/kohdekokonaisuus x))
-                         _ (println "[" kokonaisuus "] Nimi: " nimi)])))
-
         kohteet @kohteet-atom]
-    ;; Vastaus
+    
+    ;; Filtteröidään / Liitetään urakkatiedot ja palautetaan vastaus
     (->>
       kohteet
       (hae-kohteiden-urakkatiedot db user urakka-id)
@@ -216,6 +207,10 @@
                         ::kok/kohdekokonaisuus
                         (merge {::m/luoja-id (:id user)}
                                (dissoc kokonaisuus ::kok/id)))))))
+
+(defn paivita-jarjestys! [db]
+  ;; Päivitetään kohteiden järjestys kun kohteita muokataan
+  (paivita-kohteiden-jarjestys db))
 
 (defn merkitse-kohde-poistetuksi! [db user kohde-id]
   (specql/update! db
