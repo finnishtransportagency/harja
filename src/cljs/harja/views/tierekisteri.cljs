@@ -507,6 +507,7 @@
       ;; Keskitä
       (when (not (empty? suola-pisteet))
         (tiedot-kartta/keskita-kartta-alueeseen! (harja.geo/extent-monelle suola-pisteet))))))
+
 (defn- urakan-rajoitusalueet []
   (let []
     (fn []
@@ -560,6 +561,57 @@
                                 (let []
                                   (hae-ja-nayta-suolat @suola-urakka @suola-alkupaiva @suola-loppupaiva)))}
           "Piirrä suolatoteuat kartalle"]]]])))
+
+(defonce urakan-geo-nimet  (r/atom []))
+(defn- hae-ja-nayta-urakan-geometriat [urakka-id]
+  (go
+    (let [;; Poista atomista löytyvät geometriat
+          _ (doall (for [p @urakan-geo-nimet]
+                     (tasot/poista-geometria! p)))
+          ;; Hae geometriat
+          urakan-geometriat (<! (k/post! :debug-hae-urakan-geometriat {:urakka-id urakka-id}))
+          ;; Lisää uudet geometria atomiin
+          _ (map-indexed
+              (fn [idx g]
+                (when (:alue g)
+                  (swap! urakan-geo-nimet conj (keyword (str "urakka-" idx)))))
+              urakan-geometriat)]
+      ;; Piirrä geometriat kartalle
+      (doseq [[idx s] (map-indexed vector urakan-geometriat)]
+        (when (:alue s)
+          (tasot/nayta-geometria! (keyword (str "urakka-" idx))
+            {:type :urakan-geometriat
+             :nimi "Urakan geometriat"
+             :alue (assoc (:alue s)
+                     ;:fill "black"
+                     :radius 3
+                     :stroke {:color "blue"
+                              :width 1})})))
+      ;; Keskitä - Ikävä kyllä keskittäminen ei toimi valaistusurakoille.
+      ;; Keskittäminen on ilmeisesti kartalle raskastoimenpide, joten otetaan se nyt tässä vaiheessa kokonaan pois käytöstä.
+      #_ (when (not (empty? urakan-geometriat))
+        (tiedot-kartta/keskita-kartta-alueeseen! (harja.geo/extent-monelle urakan-geometriat))))))
+(defn- urakan-geometriat []
+  (let [urakka-id (r/atom nil)]
+    (fn []
+      [:div.lomake
+       [:div.row.lomakerivi
+        [:div.form-group.col-xs-12.col-sm-6.col-md-5.col-lg-4
+         [:label.control-label "Urakka-id:"]
+         [:input {:type :text
+                  :class "form-control"
+                  :value @urakka-id
+                  :on-change #(reset! urakka-id (-> % .-target .-value))}]]]
+
+
+       [:div.row.lomakerivi
+        [:div.form-group.col-xs-12.col-sm-6.col-md-5.col-lg-4
+         [:button {:on-click #(do
+                                (let []
+                                  (hae-ja-nayta-urakan-geometriat @urakka-id)))}
+          "Piirrä urakan geometriat kartalle"]]]])))
+
+
 (defn tierekisteri []
   (komp/luo
    (komp/lippu-arvo false true kartta-tiedot/pida-geometriat-nakyvilla?)
@@ -607,7 +659,10 @@
       [urakan-rajoitusalueet]
       [:hr]
       [:h3 "Visualisoi suolatoteumat kartalle"]
-      [urakan-suolat]])))
+      [urakan-suolat]
+      [:hr]
+      [:h3 "Visualisoi urakan geometria kartalle"]
+      [urakan-geometriat]])))
 
 ;; eism tie 20
 ;; x: 431418, y: 7213120
