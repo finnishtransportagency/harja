@@ -79,11 +79,8 @@ select tr3.id as "tehtavaryhma",
        sum(kohd.summa) as "summa",
        tr3.jarjestys as "jarjestys",
        tr3.nimi as "nimi"
-from tehtavaryhma tr1
-       join tehtavaryhma tr2 on tr1.id = tr2.emo
-       join tehtavaryhma tr3 on tr2.id = tr3.emo
-       left join kohdistukset_ajalla kohd on tr3.id = kohd.tehtavaryhma
-where tr1.emo is null
+from tehtavaryhma tr3
+         left join kohdistukset_ajalla kohd on tr3.id = kohd.tehtavaryhma
 group by tr3.nimi, tr3.id, tr3.jarjestys
 order by tr3.jarjestys;
 
