@@ -20,7 +20,8 @@
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.geo :as geo]))
 
 (defqueries "harja/kyselyt/kanavat/kohteet.sql")
 
@@ -91,15 +92,6 @@
                                         {::m/poistettu? false})})
     (partial hae-kohteiden-urakkatiedot db user))))
 
-(defn lue-postgres-vector [s]
-  (when (seq s)
-    (str/split s #"\s+")))
-
-(defn lue-postgres-object 
-  [^org.postgresql.util.PGobject x]
-  (when-let [val (.getValue x)]
-    (mapv read-string (lue-postgres-vector val))))
-
 (defn hae-urakan-kohteet 
   "Kohdekokonaisuus sekä kohteenosat pitää järjestää etelästä pohjoiseen ryhmitettynä"
   [db user urakka-id]
@@ -122,12 +114,13 @@
                            (sort-by (fn [kohde]
                                       (let [kohteen-tiedot (-> kohde second first)
                                             kohteen-sijainti (:harja.domain.kanavat.kohde/sijainti kohteen-tiedot)
-                                            kohteen-sijainti (if-not (nil? kohteen-sijainti)
-                                                               (second (lue-postgres-object kohteen-sijainti))
-                                                               nil)]
+                                            kohteen-sijainti (geo/pg->clj kohteen-sijainti)
+                                            kohteen-sijainti-y (if-not (nil? kohteen-sijainti)
+                                                                 (-> kohteen-sijainti :coordinates second)
+                                                                 nil)]
 
-                                        (if-not (nil? kohteen-sijainti)
-                                          kohteen-sijainti
+                                        (if-not (nil? kohteen-sijainti-y)
+                                          kohteen-sijainti-y
                                           (:harja.domain.kanavat.kohde/id kohteen-tiedot)))))))
         ;; Ryhmitys tekee ryhmän vectoreita mikä puretaan muotoon joka toimii liikenne/toimenpide välilehdellä
         kohteet (doall (into [] (map (fn[kokonaisuus]
