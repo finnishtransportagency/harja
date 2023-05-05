@@ -42,8 +42,11 @@
                                (when
                                  (and
                                    ;; Annetaan hieman vapauksia kenttien nimille
-                                   (or (= "Nro." (first rivi))
-                                       (= "Nro" (first rivi)))
+                                   (or
+                                     (= "Nro." (first rivi))
+                                     (= "Nro" (first rivi))
+                                     (= "Nro *" (first rivi))
+                                     (= "Nro. *" (first rivi)))
                                    (or (= "Kohde" (second rivi))
                                        (= "Kohteen nimi *" (second rivi))))
                                  idx))
