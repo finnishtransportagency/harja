@@ -274,11 +274,11 @@
 (defn- lahde [data]
   {:lahde
    {:lahdejarjestelma "Harja"
-    :lahdeid (:id data)}})
+    :lahdeid (str (:id data))}})
 
-(defn poikkeamatyypit->numerot [tyypit]
+(defn poikkeamatyypit->tekstit [tyypit]
   (for [tyyppi tyypit]
-    (turi-sanoma/poikkeamatyyppi->numero tyyppi)))
+    (turi-sanoma/poikkeamatyyppi->teksti tyyppi)))
 
 (defn- tapahtumatiedot [{:keys [turi-id hanke-nimi hanke-sampoid tilaajanvastuuhenkilo-kayttajatunnus
                                 tilaajanvastuuhenkilo-etunimi tilaajanvastuuhenkilo-sukunimi
@@ -291,7 +291,7 @@
        {:elyalue (str urakka-ely " ELY")})
      (when-let [turi-id turi-id]
        {:id turi-id})
-     {:tyyppi (poikkeamatyypit->numerot tyyppi)}
+     {:tyyppi (poikkeamatyypit->tekstit tyyppi)}
      {
       :sampohankenimi hanke-nimi
       :sampohankeid hanke-sampoid
@@ -385,15 +385,15 @@
       :sairaalahoitovuorokaudet (or (:sairaalavuorokaudet data) 0)}
      ;; Juuri syyt
      (when (:juurisyy1 data)
-       {:juurisyy1 (turpodomain/juurisyyn-koodi (:juurisyy1 data))})
+       {:juurisyy1 (turpodomain/juurisyy->teksti (:juurisyy1 data))})
      (when (and (:juurisyy1 data) (:juurisyy1-selite data))
        {:juurisyy1selite (xml/escape-xml-varten (:juurisyy1-selite data))})
      (when (:juurisyy2 data)
-       {:juurisyy2 (turpodomain/juurisyyn-koodi (:juurisyy2 data))})
+       {:juurisyy2 (turpodomain/juurisyy->teksti (:juurisyy2 data))})
      (when (and (:juurisyy2 data) (:juurisyy2-selite data))
        {:juurisyy2selite (xml/escape-xml-varten (:juurisyy2-selite data))})
      (when (:juurisyy3 data)
-       {:juurisyy3 (turpodomain/juurisyyn-koodi (:juurisyy3 data))})
+       {:juurisyy3 (turpodomain/juurisyy->teksti (:juurisyy3 data))})
      (when (and (:juurisyy3 data) (:juurisyy3-selite data))
        {:juurisyy3selite (xml/escape-xml-varten (:juurisyy3-selite data))}))})
 
@@ -416,7 +416,7 @@
                                        :vastuuhenkilosukunimi vastuuhenkilosukunimi
                                        :vastuuhenkilosposti vastuuhenkilosposti
                                        :toteuttaja (xml/escape-xml-varten toteuttaja)
-                                       :tila (turi-sanoma/korjaava-toimenpide-tila->numero tila)})}]
+                                       :tila (turi-sanoma/korjaava-toimenpide-tila->teksti tila)})}]
     tulos))
 
 (defn- poikkeamaliite [{:keys [liitteet]}]
@@ -435,8 +435,7 @@
     (poikkeamatoimenpide turvallisuuspoikkeama)
     (poikkeamaliite turvallisuuspoikkeama)))
 (defn hae-turvallisuuspoikkeamat [db {:keys [alkuaika loppuaika] :as parametrit} kayttaja]
-  (let [_ (println "hae-turvallisuuspoikkeamat :: parametrit" (pr-str parametrit))
-        _ (println "hae-turvallisuuspoikkeamat :: parametrit" (pr-str parametrit))
+  (let [_ (log/debug "hae-turvallisuuspoikkeamat :: parametrit" (pr-str parametrit))
         turpot (turvallisuuspoikkeamat/hae-turvallisuuspoikkeamat-lahetettavaksi-analytiikalle db {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
                                                                                               :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
         ;; Konvertoidaan turpot sellaiseen muotoon, että ne voidaan kääntää kutsukäsittelyssä jsoniksi. Tässä vaiheessa ne ovat mäppeineä nimestään huolimatta
@@ -479,8 +478,7 @@
     (julkaise-reitti
       http :hae-turvallisuuspoikkeamat
       (GET "/api/turvallisuuspoikkeamat/:alkuaika/:loppuaika" request
-        ;; TODO: HOX!!!! ihan väärä integraatio tallennetaan kantaan
-        (kasittele-get-kutsu db integraatioloki :lisaa-turvallisuuspoikkeama request
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-turvallisuuspoikkeamat request
           json-skeemat/+turvallisuuspoikkeamien-vastaus+
           (fn [parametrit kayttaja db]
             (hae-turvallisuuspoikkeamat db parametrit kayttaja))

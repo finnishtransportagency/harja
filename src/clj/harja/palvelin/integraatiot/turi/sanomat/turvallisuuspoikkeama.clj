@@ -20,6 +20,12 @@
    :turvallisuushavainto 64
    :muu 16})
 
+(def poikkeamatyyppi->teksti
+  {:tyotapaturma "Työtapaturma"
+   :vaaratilanne "Vaaratilanne"
+   :turvallisuushavainto "Turvallisuushavainto"
+   :muu "Muu turvallisuuspoikkeama"})
+
 (defn poikkeamatyypit->numerot [tyypit]
   (for [tyyppi tyypit]
     [:tyyppi (poikkeamatyyppi->numero tyyppi)]))
@@ -104,6 +110,12 @@
    :siirretty 1
    :suljettu 2
    :toteutettu 2})
+
+(def korjaava-toimenpide-tila->teksti
+  {:avoin "Avoin"
+   :siirretty "Siirretty"
+   :suljettu "Suljettu"
+   :toteutettu "Toteutettu"})
 
 (def turvallisuuspoikkeaman-tila
   {:avoin "Avoin"
