@@ -171,12 +171,22 @@
      :materiaali materiaali-kaikki-talvisuola-yhteensa}))
 
 (def poikkeama-info
-  [:p [:b "Poikkeamalla "] "tarkoitetaan hoitoluokille kohdistettujen materiaalimäärien ja urakoitsijan 
-ilmoittaman kokonaismateriaalimäärän erotusta.\n\nPoikkeamaa on yleensä aina jonkin verran, sillä
-reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
+  [:div
+   [:p [:b "Poikkeama:"]]
+
+   [:p "Poikkeama on päärivin kokonaissumman ja alarivien yhteenlasketun summan erotus."]
+   [:p
+    "Poikkeamaa syntyy " [:b "reiteiltä saadun lähtötiedon epätarkkuuden takia."]]
+   [:p "Reittitietoa raportoidessaan urakoitsijat ilmoittavat reittitoteumien materiaalimäärän kahtena erillisenä tietona:"]
+   [:ul
+    [:li "koko reitin materiaalimäärä"]
+    [:li "reitin yksittäisille gps-pisteille kohdistuneet määrät."]]
+   [:p "Jos reitille ilmoitettu kokonaismateriaalimäärä ei täsmää gps-pisteille kohdistuneiden määrien summan kanssa, syntyy poikkeamaa (+/-)."]])
 
 (def hoitoluokka-puuttuu-info
-  [:p [:b "Hoitoluokka puuttuu:\n\n"] "Materiaalimäärä, johon sidottuja reittipisteitä ei ole voitu kohdistaa millekään talvihoitoluokitetulle tielle"])
+  [:div
+   [:p [:b "Ei kohdistu hoitoluokkiin:"]]
+   [:p "Koneellisesti raportoitu materiaalimäärä, jonka sijaintitiedot ovat hoitoluokitettujen teiden ulkopuolella"]])
 
 ;; Prosentti, jonka yli menevät poikkeamat korostetaan punaisella.
 (def poikkeama-varoitus-raja 5)
