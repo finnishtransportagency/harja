@@ -570,7 +570,7 @@
         paikkaukset-jalkeen (hae-paikkaukset urakka-id (:id paikkauskohde))]
     (is (= (:status lue-excelista) 400))
     (is (= (count paikkaukset-ennen) 0) "Paikkauskohteella ei pitäisi olla paikkauksia ennen excel-tuontia")
-    (is (= (get virheet1 "5") ["Pinta-ala puuttuu tai on virheellinen"]))
+    (is (= (get virheet1 "5") ["Massamäärä puuttuu tai on virheellinen"]))
     (is (= virheet2 "Excelin otsikot eivät täsmää pohjaan"))
     (is (= (count paikkaukset-jalkeen) 0) "Excel-tuonnista ei pitäisi tulla paikkausta")))
 
