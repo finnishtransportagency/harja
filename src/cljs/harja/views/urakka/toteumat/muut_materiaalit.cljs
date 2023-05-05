@@ -2,6 +2,7 @@
   (:require [harja.views.urakka.valinnat :as valinnat]
             [reagent.core :refer [atom wrap]]
             [harja.loki :refer [log]]
+            [harja.fmt :as fmt]
             [harja.ui.lomake :refer [lomake] :as lomake]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.pvm :as pvm]
@@ -345,15 +346,17 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
     [{:tyyppi :vetolaatikon-tila :leveys 1}
      {:otsikko "Nimi" :nimi :materiaali_nimi :hae (comp :nimi :materiaali) :leveys 10}
      {:otsikko "Yksik\u00ADkö" :nimi :materiaali_yksikko :hae (comp :yksikko :materiaali) :leveys 2}
-     {:otsikko "Suunniteltu määrä" :nimi :sovittu_maara :hae :maara :leveys 4 :tasaa :oikea}
-     {:otsikko "Käytetty määrä" :nimi :toteutunut_maara :hae :kokonaismaara :leveys 4 :tasaa :oikea}
+     {:otsikko "Suunniteltu määrä" :nimi :sovittu_maara :hae :maara
+      :tyyppi :numero :desimaalien-maara 2 :leveys 4 :tasaa :oikea}
+     {:otsikko "Käytetty määrä" :nimi :toteutunut_maara :hae :kokonaismaara
+      :tyyppi :numero :desimaalien-maara 2 :leveys 4 :tasaa :oikea}
      {:otsikko "Jäljellä" :nimi :materiaalierotus :tyyppi :komponentti :tasaa :oikea
       :muokattava? (constantly false) :leveys 4
       :komponentti
       (fn [{:keys [maara kokonaismaara]}]
         (if-not maara
           [:span]
-          (let [erotus (- maara kokonaismaara)]
+          (let [erotus (fmt/desimaaliluku-opt (- maara kokonaismaara) 2)]
             (if (>= erotus 0)
               [:span.materiaalierotus.materiaalierotus-positiivinen erotus]
               [:span.materiaalierotus.materiaalierotus-negatiivinen erotus]))))}]
