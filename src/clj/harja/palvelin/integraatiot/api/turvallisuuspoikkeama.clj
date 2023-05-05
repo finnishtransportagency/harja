@@ -461,9 +461,9 @@
     tulos))
 
 (defn- poikkeamaliite [{:keys [liitteet]}]
-  {:poikkeamaliite (for [{:keys [nimi data]} liitteet]
+  {:poikkeamaliite (for [{:keys [nimi pikkukuva]} liitteet]
                      {:tiedostonimi (when nimi (xml/escape-xml-varten nimi))
-                      :tiedosto (when data (String. (liitteet/enkoodaa-base64 data)))})})
+                      :tiedosto (when pikkukuva (String. (liitteet/enkoodaa-base64 pikkukuva)))})})
 
 (defn- turvallisuuspoikkeamaviesti-json [turvallisuuspoikkeama]
   (merge
