@@ -115,7 +115,7 @@
                                             kohteen-sijainti (:harja.domain.kanavat.kohde/sijainti kohteen-tiedot)
                                             kohteen-sijainti (geo/pg->clj kohteen-sijainti)
                                             kohteen-sijainti-y (if-not (nil? kohteen-sijainti)
-                                                                 (-> kohteen-sijainti :coordinates first)
+                                                                 (-> kohteen-sijainti :coordinates second)
                                                                  nil)]
 
                                         (if-not (nil? kohteen-sijainti-y)
