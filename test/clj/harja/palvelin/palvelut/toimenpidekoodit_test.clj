@@ -77,3 +77,17 @@
     (is (every?
           #(contains? (first (get koodit-tasoittain 4)) %)
           odotetut-avaimet-taso-4) "Löytyy oikeat avaimet tasolta 4")))
+
+
+
+(deftest tehtavaryhmien-haku-toimii
+  (let [[[_ taso1-lkm] [_ taso2-lkm] [_ taso3-lkm] [_ taso4-lkm]] (q "select taso, count(*) from toimenpidekoodi\nWHERE piilota IS NOT TRUE\nGROUP BY taso ORDER BY taso")
+        tehtavaryhmat (kutsu-palvelua (:http-palvelin jarjestelma)
+                                          :hae-tehtavaryhmat +kayttaja-jvh+)
+        odotetut-avaimet-tehtavaryhmat #{:id
+                                         :nimi
+                                         :jarjestys}]
+    (is (> (count tehtavaryhmat) 40) "Tehtäväryhmiä oikea määrä") ;; laitetaan yli 40, niin ei mene testi koko ajan rikki jos tulee uusia
+    (is (every?
+          #(contains? (first tehtavaryhmat) %)
+          odotetut-avaimet-tehtavaryhmat) "Löytyy oikeat avaimet tasolta 4")))
