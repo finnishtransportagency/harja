@@ -96,10 +96,9 @@
   "Kohdekokonaisuus sekä kohteenosat pitää järjestää etelästä pohjoiseen ryhmitettynä"
   [db user urakka-id]
 
-  (let [kohteet-atom (atom ())
-        ;; Ryhmitellään kohdekokonaisuus id:n mukaan ja joka ryhmän kohteet jarjestys- sarakkeen mukaan
-        ;; Jarjestys- sarake tulee proseduurista paivita_kanavakohteiden_jarjestys() joka ajetaan aina kun kohteita päivitetään
-        kohteet (->>
+  ;; Ryhmitellään kohdekokonaisuus id:n mukaan ja joka ryhmän kohteet jarjestys- sarakkeen mukaan
+  ;; Jarjestys- sarake tulee proseduurista paivita_kanavakohteiden_jarjestys() joka ajetaan aina kun kohteita päivitetään
+  (let [kohteet (->>
                   (reverse
                     (sort-by :harja.domain.kanavat.kohde/jarjestys (specql/fetch db ::kohde/kohde
                                                                      (set/union
@@ -116,20 +115,17 @@
                                             kohteen-sijainti (:harja.domain.kanavat.kohde/sijainti kohteen-tiedot)
                                             kohteen-sijainti (geo/pg->clj kohteen-sijainti)
                                             kohteen-sijainti-y (if-not (nil? kohteen-sijainti)
-                                                                 (-> kohteen-sijainti :coordinates second)
+                                                                 (-> kohteen-sijainti :coordinates first)
                                                                  nil)]
 
                                         (if-not (nil? kohteen-sijainti-y)
                                           kohteen-sijainti-y
                                           (:harja.domain.kanavat.kohde/id kohteen-tiedot)))))))
         ;; Ryhmitys tekee ryhmän vectoreita mikä puretaan muotoon joka toimii liikenne/toimenpide välilehdellä
-        kohteet (doall (into [] (map (fn[kokonaisuus]
-                                       (map (fn [kohde] kohde)
-                                         (second kokonaisuus))) kohteet)))
-        _ (dorun (doseq [y kohteet]
-                   (doseq [x y]
-                     (swap! kohteet-atom conj x))))
-        kohteet @kohteet-atom]
+        kohteet (->> kohteet
+                  (map second)
+                  (apply concat)
+                  (reverse))]
     
     ;; Filtteröidään / Liitetään urakkatiedot ja palautetaan vastaus
     (->>
