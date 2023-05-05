@@ -1209,7 +1209,7 @@ WHERE (:rajaa_tienumerolla = FALSE OR vt.tr_numero = :tienumero)
   AND (:tietolajit :: VARCHAR [] IS NULL OR
            vt.tietolaji = ANY (:tietolajit :: VARCHAR []))
 ORDER BY vt.luotu DESC
-    LIMIT 501;
+    LIMIT 2001;
 
 
 -- name: hae-kokonaishintaisen-toteuman-tiedot
