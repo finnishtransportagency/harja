@@ -43,4 +43,5 @@
       {:otsikko (str "Määrätoteumat ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))
        :sheet-nimi "Määrätoteumat"}
       otsikot
-      rivit]]))
+      rivit]
+     [:teksti (str "Raportin nopeuttamiseksi tiedot päivitetään öisin, eli raportin suorituspäivän kirjaukset näkyvät raportilla seuraavana päivänä.")]]))

@@ -197,6 +197,7 @@
     xls/row-seq
     (take 4)
     (map xls/cell-seq)
+    (map #(take 17 %))
     (map (partial map xls/read-cell))))
 
 (def urem-excel-pohjan-otsikot
@@ -220,8 +221,8 @@
                         (map xls/cell-seq)
                         (mapv
                           (fn [rivi]
-                            ;; Ei lueta rivejä sarakkeita 18. (R) jälkeen.
-                            (let [rivi (take 18 rivi)]
+                            ;; Ei lueta rivejä sarakkeita 17. (Q) jälkeen.
+                            (let [rivi (take 17 rivi)]
                               {:rivi (inc (.getRowIndex (first rivi)))
                                :paikkaus (map-indexed (fn [indeksi arvo]
                                                         (if (or
