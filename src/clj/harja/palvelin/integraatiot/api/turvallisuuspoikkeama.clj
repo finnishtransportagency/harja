@@ -2,6 +2,7 @@
   "Turvallisuuspoikkeaman kirjaaminen urakalle"
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
+            [clojure.spec.alpha :as s]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer
              [tee-kirjausvastauksen-body kasittele-kutsu kasittele-get-kutsu]]
@@ -10,6 +11,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-turvallisuuspoikkeamalle]]
+            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.konversio :as konv]
@@ -25,8 +27,45 @@
             [harja.domain.turvallisuuspoikkeama :as turpodomain]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet]
             [harja.tyokalut.xml :as xml]
+
             [clojure.core.async :as async])
+  (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
+
+
+;; Sallitaan ajalle kaksi eri formaattia
+(def pvm-aika-muoto1 "yyyy-MM-dd'T'HH:mm:ssX")
+(def pvm-aika-muoto2 "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+(defn valid-aikamuoto? [string]
+  (try
+    (if (< (count string) 25)
+      (inst? (.parse (SimpleDateFormat. pvm-aika-muoto1) string))
+      (inst? (.parse (SimpleDateFormat. pvm-aika-muoto2) string)))
+    (catch Exception e
+      false)))
+(s/def ::alkuaika #(and (string? %) (> (count %) 20) (valid-aikamuoto? %)))
+(s/def ::loppuaika #(and (string? %) (> (count %) 20) (valid-aikamuoto? %)))
+
+
+
+(defn- tarkista-turpohaun-parametrit [parametrit]
+  (parametrivalidointi/tarkista-parametrit
+    parametrit
+    {:alkuaika "Alkuaika puuttuu"
+     :loppuaika "Loppuaika puuttuu"})
+  (when (not (s/valid? ::alkuaika (:alkuaika parametrit)))
+    (virheet/heita-viallinen-apikutsu-poikkeus
+      {:koodi virheet/+puutteelliset-parametrit+
+       :viesti (format "Alkuaika väärässä muodossa: %s
+       Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX tai yyyy-MM-dd'T'HH:mm:ss.SSSX tai yyyy-MM-dd'T'HH:mm:ss.SSSZ
+       esim: 2005-01-01T03:00:00+03 tai 2005-01-01T03:00:00.123+03 tai 2005-01-01T00:00:00.123Z" (:alkuaika parametrit))}))
+  (when (not (s/valid? ::loppuaika (:loppuaika parametrit)))
+    (virheet/heita-viallinen-apikutsu-poikkeus
+      {:koodi virheet/+puutteelliset-parametrit+
+       :viesti (format "Loppuaika väärässä muodossa: %s
+       Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX tai yyyy-MM-dd'T'HH:mm:ss.SSSX tai yyyy-MM-dd'T'HH:mm:ss.SSSZ
+       esim: 2005-01-02T03:00:00+03 tai 2005-01-01T03:00:00.123+03 tai 2005-01-01T00:00:00.123Z" (:loppuaika parametrit))})))
+
 
 (defn tarkista-ammatin-selitteen-tallennus [turvallisuuspoikkeamat]
   (when (some #(and (not= (get-in % [:henkilovahinko :tyontekijanammatti]) "muu_tyontekija")
@@ -435,7 +474,9 @@
     (poikkeamatoimenpide turvallisuuspoikkeama)
     (poikkeamaliite turvallisuuspoikkeama)))
 (defn hae-turvallisuuspoikkeamat [db {:keys [alkuaika loppuaika] :as parametrit} kayttaja]
-  (let [_ (log/debug "hae-turvallisuuspoikkeamat :: parametrit" (pr-str parametrit))
+  (log/debug "hae-turvallisuuspoikkeamat :: parametrit" (pr-str parametrit))
+  (tarkista-turpohaun-parametrit parametrit)
+  (let [
         turpot (turvallisuuspoikkeamat/hae-turvallisuuspoikkeamat-lahetettavaksi-analytiikalle db {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
                                                                                               :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
         ;; Konvertoidaan turpot sellaiseen muotoon, että ne voidaan kääntää kutsukäsittelyssä jsoniksi. Tässä vaiheessa ne ovat mäppeineä nimestään huolimatta

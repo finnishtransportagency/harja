@@ -1,5 +1,5 @@
 (ns harja.palvelin.integraatiot.api.turvallisuuspoikkeaman-kirjaus-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer [deftest is use-fixtures testing]]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.liitteet :as liitteet]
             [com.stuartsierra.component :as component]
@@ -93,6 +93,28 @@
                   WHERE turvallisuuspoikkeama = " turpo-id ";"))
         toimenpide
         (mapv #(assoc % 1 (c/from-sql-date (get % 1))) toimenpide)))
+
+(defn valiaikainen-kayttaja [kayttajanimi]
+  (let [; Tarkista, että onko moista käyttäjää vielä olemassa
+        kayttajat (q-map (format "SELECT * FROM kayttaja WHERE kayttajanimi = '%s'" kayttajanimi))
+        _ (when (empty? kayttajat)
+            (u (format "INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, \"analytiikka-oikeus\") VALUES
+          ('etunimi','sukunimi', '%s', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'), true)"
+                 kayttajanimi)))]))
+
+(defn poista-viimeisin-turpo []
+  (let [;; Viimeisin turpo id
+        id (:id (first (q-map (str "select id FROM turvallisuuspoikkeama order by id desc limit 1"))))
+        ;; Haetaan mahdollinen liite-id
+        liite-tulos (q-map (format "SELECT liite as liite_id FROM turvallisuuspoikkeama_liite WHERE turvallisuuspoikkeama = %s" id))
+        liite-id (when-not (empty? liite-tulos)
+                   (:liite_id (first liite-tulos)))
+        _ (u (format "DELETE FROM turvallisuuspoikkeama_liite WHERE turvallisuuspoikkeama = %s", id))
+        _ (when liite-id
+            (u (format "DELETE FROM liite WHERE id = %s", liite-id)))
+        _ (u (format "DELETE FROM turvallisuuspoikkeama_kommentti WHERE turvallisuuspoikkeama = %s", id))
+        _ (u (format "DELETE FROM korjaavatoimenpide WHERE turvallisuuspoikkeama = %s", id))
+        _ (u (format "DELETE FROM turvallisuuspoikkeama WHERE id = %s", id))]))
 
 (deftest tallenna-turvallisuuspoikkeama
   (let [ulkoinen-id 757577
@@ -210,23 +232,71 @@
 
 (deftest hae-turvallisuuspoikkeamat-onnistuu
   (let [;; Luo väliaikainen käyttäjä
-        _ (u (str "INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, \"analytiikka-oikeus\") VALUES
-          ('etunimi','sukunimi', 'analytiikka-testeri', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'), true)"))
+        _ (valiaikainen-kayttaja "analytiikka-testeri")
 
         ;; Luo väliaikainen turvallisuuspoikkeama
+        tapahtuma-paiva "2016-01-30T12:00:01Z"
+        tapahtuma-paiva1 "2016-01-30"
         urakka (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
-        _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
+        valiaikainen-turpo (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
                   kayttaja portti
                   (-> "test/resurssit/api/turvallisuuspoikkeama.json"
                     slurp
                     (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
-                    (.replace "__TAPAHTUMAPAIVAMAARA__" "2016-01-30T12:00:00Z")))
+                    (.replace "__TAPAHTUMAPAIVAMAARA__" tapahtuma-paiva)))
 
         ;; Hae turvallisuuspoikkeamat uuden apin kautta
         alkuaika (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 50000)
         loppuaika (nykyhetki-iso8061-formaatissa-tulevaisuuteen 10)
         vastaus (api-tyokalut/get-kutsu [(str "/api/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
-                  "analytiikka-testeri" portti)]
+                  "analytiikka-testeri" portti)
+
+        ;; Poista väliaikainen turvallisuuspoikkeama
+        _ (poista-viimeisin-turpo)]
     (is (= 200 (:status vastaus)))
     ;; Tarkistetaan vain, että saadaan pitkä vastaus
     (is (< 1000 (count (:body vastaus))))))
+
+(deftest hae-turvallisuuspoikkeamat-epaonnistuu
+  (let [;; Luo väliaikainen käyttäjä
+        _ (valiaikainen-kayttaja "analytiikka-testeri")
+
+        ;; Luo väliaikainen turvallisuuspoikkeama
+        urakka (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
+        _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
+            kayttaja portti
+            (-> "test/resurssit/api/turvallisuuspoikkeama.json"
+              slurp
+              (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
+              (.replace "__TAPAHTUMAPAIVAMAARA__" "2016-01-30T12:00:00Z")))]
+    (testing "Alkuaika on väärässä muodossa "
+      (let [alkuaika "234"
+            loppuaika (nykyhetki-iso8061-formaatissa-tulevaisuuteen 10)
+            vastaus (api-tyokalut/get-kutsu [(str "/api/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
+                      "analytiikka-testeri" portti)
+            odotettu-vastaus "{\"virheet\":[{\"virhe\":{\"koodi\":\"puutteelliset-parametrit\",\"viesti\":\"Alkuaika väärässä muodossa: 234\\n       Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX tai yyyy-MM-dd'T'HH:mm:ss.SSSX tai yyyy-MM-dd'T'HH:mm:ss.SSSZ\\n       esim: 2005-01-01T03:00:00+03 tai 2005-01-01T03:00:00.123+03 tai 2005-01-01T00:00:00.123Z\"}}]}"]
+        (is (= 400 (:status vastaus)))
+        (is (= odotettu-vastaus (:body vastaus)))))
+    (testing "Loppuaika on väärässä muodossa "
+      (let [alkuaika (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 50000)
+            loppuaika "234"
+            vastaus (api-tyokalut/get-kutsu [(str "/api/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
+                      "analytiikka-testeri" portti)
+            odotettu-vastaus "{\"virheet\":[{\"virhe\":{\"koodi\":\"puutteelliset-parametrit\",\"viesti\":\"Loppuaika väärässä muodossa: 234\\n       Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX tai yyyy-MM-dd'T'HH:mm:ss.SSSX tai yyyy-MM-dd'T'HH:mm:ss.SSSZ\\n       esim: 2005-01-02T03:00:00+03 tai 2005-01-01T03:00:00.123+03 tai 2005-01-01T00:00:00.123Z\"}}]}"]
+        (is (= 400 (:status vastaus)))
+        (is (= odotettu-vastaus (:body vastaus)))))
+    (testing "Haussa on paljon asioita väärin "
+      (let [alkuaika "Mies joka tunki koodia päivämäärään."
+            loppuaika "Voi olla autuaan tietämätön väärästä päätöksestään."
+            vastaus (try (api-tyokalut/get-kutsu [(str "/api/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
+                           "234" portti)
+                      (catch Exception e
+                        e))]
+        (is (str/includes? vastaus "URISyntaxException"))))
+
+    ;; Poista väliaikainen turvallisuuspoikkeama
+    _ (poista-viimeisin-turpo)
+    ))
+
+(deftest tarkista-tiedosto
+  )
