@@ -10,6 +10,7 @@
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [clj-time.coerce :as c]
             [clj-time.core :as t]
+            [clojure.data.json :as json]
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as str])
   (:import (java.text SimpleDateFormat)
@@ -25,7 +26,7 @@
             (turi/->Turi {})
             [:db :integraatioloki :liitteiden-hallinta])
     :api-turvallisuuspoikkeama (component/using (turvallisuuspoikkeama/->Turvallisuuspoikkeama true)
-                                                [:http-palvelin :db :integraatioloki :liitteiden-hallinta :turi])))
+                                 [:http-palvelin :db :integraatioloki :liitteiden-hallinta :turi])))
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -69,17 +70,17 @@
                         juurisyy3, juurisyy3_selite
                         FROM turvallisuuspoikkeama
                         WHERE ulkoinen_id = " ulkoinen-id
-                        " LIMIT 1;")))
-        turpo
-        ;; Tapahtumapvm ja käsittely -> clj-time
-        (assoc turpo 2 (c/from-sql-date (get turpo 2)))
-        (assoc turpo 3 (c/from-sql-date (get turpo 3)))
-        ;; Vahinkoluokittelu -> set
-        (assoc turpo 13 (into #{} (when-let [arvo (get turpo 13)]
-                                    (.getArray arvo))))
-        ;; Tyyppi -> set
-        (assoc turpo 15 (into #{} (when-let [arvo (get turpo 15)]
-                                    (.getArray arvo))))))
+                    " LIMIT 1;")))
+    turpo
+    ;; Tapahtumapvm ja käsittely -> clj-time
+    (assoc turpo 2 (c/from-sql-date (get turpo 2)))
+    (assoc turpo 3 (c/from-sql-date (get turpo 3)))
+    ;; Vahinkoluokittelu -> set
+    (assoc turpo 13 (into #{} (when-let [arvo (get turpo 13)]
+                                (.getArray arvo))))
+    ;; Tyyppi -> set
+    (assoc turpo 15 (into #{} (when-let [arvo (get turpo 15)]
+                                (.getArray arvo))))))
 
 (defn hae-korjaavat-toimenpiteet [turpo-id]
   (as-> (q (str "SELECT
@@ -91,8 +92,8 @@
                   tila
                   FROM korjaavatoimenpide
                   WHERE turvallisuuspoikkeama = " turpo-id ";"))
-        toimenpide
-        (mapv #(assoc % 1 (c/from-sql-date (get % 1))) toimenpide)))
+    toimenpide
+    (mapv #(assoc % 1 (c/from-sql-date (get % 1))) toimenpide)))
 
 (defn valiaikainen-kayttaja [kayttajanimi]
   (let [; Tarkista, että onko moista käyttäjää vielä olemassa
@@ -122,11 +123,11 @@
         liitteiden-maara-ennen (first (first (q "select count(id) FROM liite")))
         tp-kannassa-ennen-pyyntoa (ffirst (q (str "SELECT COUNT(*) FROM turvallisuuspoikkeama;")))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
-                                         kayttaja portti
-                                         (-> "test/resurssit/api/turvallisuuspoikkeama.json"
-                                             slurp
-                                             (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
-                                             (.replace "__TAPAHTUMAPAIVAMAARA__" "2016-01-30T12:00:00Z")))]
+                  kayttaja portti
+                  (-> "test/resurssit/api/turvallisuuspoikkeama.json"
+                    slurp
+                    (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
+                    (.replace "__TAPAHTUMAPAIVAMAARA__" "2016-01-30T12:00:00Z")))]
     (cheshire/decode (:body vastaus) true)
     (is (= 200 (:status vastaus)))
 
@@ -172,24 +173,24 @@
       (is (= (nth uusin-tp 30) "Liukas tie keskellä metsää."))
       (is (= (count korjaavat-toimenpiteet) 1))
       (is (match (first korjaavat-toimenpiteet)
-                 ["Kaadetaan risteystä pimentävä pensaikko"
-                  (_ :guard #(and (= (t/year %) 2016)
-                                  (= (t/month %) 1)
-                                  (= (t/day %) 30)))
-                  "Kaadetaan pensaikko"
-                  nil
-                  "Erkki Esimerkki"
-                  "avoin"]
-                 true))
+            ["Kaadetaan risteystä pimentävä pensaikko"
+             (_ :guard #(and (= (t/year %) 2016)
+                          (= (t/month %) 1)
+                          (= (t/day %) 30)))
+             "Kaadetaan pensaikko"
+             nil
+             "Erkki Esimerkki"
+             "avoin"]
+            true))
 
       ;; Myös päivitys toimii
       (let [vanhat-korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)
             _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
-                                       kayttaja portti
-                                       (-> "test/resurssit/api/turvallisuuspoikkeama.json"
-                                           slurp
-                                           (.replace "__PAIKKA__" "Liukas tie metsän reunalla.")
-                                           (.replace "__TAPAHTUMAPAIVAMAARA__" "2016-01-30T12:00:00Z")))
+                kayttaja portti
+                (-> "test/resurssit/api/turvallisuuspoikkeama.json"
+                  slurp
+                  (.replace "__PAIKKA__" "Liukas tie metsän reunalla.")
+                  (.replace "__TAPAHTUMAPAIVAMAARA__" "2016-01-30T12:00:00Z")))
             uusin-paivitetty-tp (hae-turvallisuuspoikkeama-ulkoisella-idlla ulkoinen-id)
             turpo-id (first uusin-paivitetty-tp)
             korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)
@@ -213,16 +214,16 @@
 (deftest tallenna-turvallisuuspoikkeama-tulevaisuuteen-kaatuu
   (let [urakka (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
-                                         kayttaja portti
-                                         (-> "test/resurssit/api/turvallisuuspoikkeama.json"
-                                             slurp
-                                             (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
-                                             (.replace "__TAPAHTUMAPAIVAMAARA__" "2066-10-01T00:00:00Z")))]
+                  kayttaja portti
+                  (-> "test/resurssit/api/turvallisuuspoikkeama.json"
+                    slurp
+                    (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
+                    (.replace "__TAPAHTUMAPAIVAMAARA__" "2066-10-01T00:00:00Z")))]
     (cheshire/decode (:body vastaus) true)
     (is (not= 200 (:status vastaus)) "Onnea 60-vuotias Harja!")
     (is (str/includes? (:body vastaus) "Tapahtumapäivämäärä ei voi olla tulevaisuudessa"))))
 
-(deftest hae-turvallisuuspoikkeamat-ei-kayttoikeutta
+(deftest hae-turvallisuuspoikkeamat-analytiikalle-ei-kayttoikeutta
   (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         vastaus (api-tyokalut/get-kutsu [(str "/api/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
@@ -230,20 +231,19 @@
     (is (= 500 (:status vastaus)))
     (is (str/includes? (:body vastaus) "tuntematon-kayttaja"))))
 
-(deftest hae-turvallisuuspoikkeamat-onnistuu
+(deftest hae-turvallisuuspoikkeamat-analytiikalle-onnistuu
   (let [;; Luo väliaikainen käyttäjä
         _ (valiaikainen-kayttaja "analytiikka-testeri")
 
         ;; Luo väliaikainen turvallisuuspoikkeama
         tapahtuma-paiva "2016-01-30T12:00:01Z"
-        tapahtuma-paiva1 "2016-01-30"
         urakka (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
-        valiaikainen-turpo (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
-                  kayttaja portti
-                  (-> "test/resurssit/api/turvallisuuspoikkeama.json"
-                    slurp
-                    (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
-                    (.replace "__TAPAHTUMAPAIVAMAARA__" tapahtuma-paiva)))
+        _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
+                             kayttaja portti
+                             (-> "test/resurssit/api/turvallisuuspoikkeama.json"
+                               slurp
+                               (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
+                               (.replace "__TAPAHTUMAPAIVAMAARA__" tapahtuma-paiva)))
 
         ;; Hae turvallisuuspoikkeamat uuden apin kautta
         alkuaika (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 50000)
@@ -257,7 +257,7 @@
     ;; Tarkistetaan vain, että saadaan pitkä vastaus
     (is (< 1000 (count (:body vastaus))))))
 
-(deftest hae-turvallisuuspoikkeamat-epaonnistuu
+(deftest hae-turvallisuuspoikkeamat-analytiikalle-epaonnistuu
   (let [;; Luo väliaikainen käyttäjä
         _ (valiaikainen-kayttaja "analytiikka-testeri")
 
@@ -298,5 +298,106 @@
     _ (poista-viimeisin-turpo)
     ))
 
-(deftest tarkista-tiedosto
-  )
+(deftest hae-turpot-analytiikalle-tiedosto-onnistuu
+  (let [;; Luo väliaikainen käyttäjä
+        _ (valiaikainen-kayttaja "analytiikka-testeri")
+
+        tapahtumahetki (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 10)
+        alkuaika (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 11)
+        loppuaika (nykyhetki-iso8061-formaatissa-tulevaisuuteen 1)
+
+        ;; Luo väliaikainen turvallisuuspoikkeama
+        urakka (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
+        _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
+            kayttaja portti
+            (-> "test/resurssit/api/turvallisuuspoikkeama.json"
+              slurp
+              (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
+              (.replace "__TAPAHTUMAPAIVAMAARA__" tapahtumahetki)))
+
+        ;; Hae apista
+        vastaus (api-tyokalut/get-kutsu [(str "/api/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
+                  "analytiikka-testeri" portti)
+        vastaus-body (-> (:body vastaus)
+                       (json/read-str)
+                       (clojure.walk/keywordize-keys))]
+
+    ;; Poista väliaikainen turvallisuuspoikkeama
+    _ (poista-viimeisin-turpo)
+    ;; Oletetaan että ensimmäisellä on tiedosto
+    (is (not (nil? (:tiedosto (first (:poikkeamaliite (first (:turvallisuuspoikkeamat vastaus-body))))))))))
+
+(defn- next-row
+  [previous current other-seq]
+  (reduce
+    (fn [row [diagonal above other]]
+      (let [update-val (if (= other current)
+                         diagonal
+                         (inc (min diagonal above (peek row))))]
+        (conj row update-val)))
+    [(inc (first previous))]
+    (map vector previous (next previous) other-seq)))
+(defn lahes-sama?
+  "Laske Levenshtein Distance kahden tekstin välille ja kerro, onko se sallitun thresholdin puitteissa"
+  [s1 s2]
+  (let [;; Hyväksyy osimoilleen samat
+        threshold 0.4
+        matka (cond
+                (and (empty? s1) (empty? s2)) 0
+                (empty? s1) (count s2)
+                (empty? s2) (count s1)
+                :else (peek
+                        (reduce (fn [previous current] (next-row previous current s2))
+                          (map #(identity %2) (cons nil s2) (range))
+                          s1)))
+        _ (println "s1" s1 "s2" s2 "ero: " (/ matka (float (count s1))))
+        ero (/ matka (float (count s1)))]
+    (< ero threshold)))
+
+(def laske-ero [])
+(deftest hae-turpot-analytiikalle-kaikki-tiedot-onnistuu
+  (let [;; Luo väliaikainen käyttäjä
+        _ (valiaikainen-kayttaja "analytiikka-testeri")
+
+        tapahtumahetki (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 10)
+        alkuaika (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 11)
+        loppuaika (nykyhetki-iso8061-formaatissa-tulevaisuuteen 1)
+
+        ;; Luo väliaikainen turvallisuuspoikkeama
+        urakka (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
+        _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
+            kayttaja portti
+            (-> "test/resurssit/api/turvallisuuspoikkeama.json"
+              slurp
+              (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
+              (.replace "__TAPAHTUMAPAIVAMAARA__" tapahtumahetki)))
+
+        lahetetty-turpo (first (:turvallisuuspoikkeamat (-> (slurp "test/resurssit/api/turvallisuuspoikkeama.json")
+                                                          (json/read-str)
+                                                          (clojure.walk/keywordize-keys))))
+        ;; Hae apista
+        vastaus (api-tyokalut/get-kutsu [(str "/api/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
+                  "analytiikka-testeri" portti)
+        vastaus-body (-> (:body vastaus)
+                       (json/read-str)
+                       (clojure.walk/keywordize-keys))
+        turpo (first (:turvallisuuspoikkeamat vastaus-body))]
+
+    ;; Poista väliaikainen turvallisuuspoikkeama
+    _ (poista-viimeisin-turpo)
+    (is (true? (lahes-sama? (get-in lahetetty-turpo [:juurisyy1 :juurisyy]) (get-in turpo [:syytjaseuraukset :juurisyy1]))))
+    (is (= (:kuvaus lahetetty-turpo) (get-in turpo [:tapahtumantiedot :kuvaus])))
+    (is (lahes-sama? (get-in lahetetty-turpo [:henkilovahinko :tyontekijanammatti]) (get-in turpo [:syytjaseuraukset :ammatti])))
+    (is (= (get-in lahetetty-turpo [:henkilovahinko :ammatinselite]) (get-in turpo [:syytjaseuraukset :ammattimuutarkenne])))
+    (is (= (get-in lahetetty-turpo [:henkilovahinko :sairauspoissaolopaivat]) (get-in turpo [:syytjaseuraukset :sairauspoissaolot])))
+    (is (= (get-in lahetetty-turpo [:seuraukset]) (get-in turpo [:syytjaseuraukset :seuraukset])))
+    (is (= (get-in lahetetty-turpo [:vaylamuoto]) (str/lower-case (get-in turpo [:tapahtumantiedot :urakkavaylamuoto]))))
+    (is (= (get-in lahetetty-turpo [:otsikko]) (get-in turpo [:tapahtumankasittely :otsikko])))
+    (is (= (get-in lahetetty-turpo [:korjaavatToimenpiteet 0 :otsikko]) (get-in turpo [:poikkeamatoimenpide 0 :otsikko])))
+    (is (= (get-in lahetetty-turpo [:korjaavatToimenpiteet 0 :toteuttaja]) (get-in turpo [:poikkeamatoimenpide 0 :toteuttaja])))
+    (is (= (get-in lahetetty-turpo [:korjaavatToimenpiteet 0 :kuvaus]) (get-in turpo [:poikkeamatoimenpide 0 :kuvaus])))
+    ;; Lähetettävässä datassa voi olla useita vammautuneita paikkoja. Meidän järjestelmä tukee vain yhtä
+    (is (lahes-sama? (first (get-in lahetetty-turpo [:henkilovahinko :vahingoittuneetRuumiinosat])) (str/lower-case (get-in turpo [:syytjaseuraukset :vahingoittunutruumiinosa]))))
+    ;; Myöskään vammoja tallennetaan vain yksi, vaikka niitä lähetettäisiin useita
+    (is (lahes-sama? (first (get-in lahetetty-turpo [:henkilovahinko :aiheutuneetVammat])) (str/lower-case (get-in turpo [:syytjaseuraukset :vammanlaatu]))))
+    ))
