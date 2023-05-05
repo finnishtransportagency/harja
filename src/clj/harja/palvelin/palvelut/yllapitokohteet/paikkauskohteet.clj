@@ -88,6 +88,23 @@
 (defn- validi-paikkauskohteen-tila? [tila]
   (boolean (some #(= tila %) ["ehdotettu" "tilattu" "hylatty" "valmis" "hyvaksytty"])))
 
+(defn- validoi-ulkoinen-id
+  "Varmistetaan, että samalla ulkoisella id:llä ei ole aiempaa paikkauskohdetta."
+  [db validointivirheet uusi-kohde vanha-kohde]
+  (let [kohteet-tietokannasta (paikkaus-q/hae-paikkauskohteet-ulkoisella-idlla
+                                db
+                                {:id (if (= (:id uusi-kohde) (:id vanha-kohde))
+                                       (:id uusi-kohde)
+                                       nil)
+                                 :ulkoinen-id (konversio/konvertoi->int (:ulkoinen-id uusi-kohde))
+                                 :urakka-id (:urakka-id uusi-kohde)})]
+    (if (empty? kohteet-tietokannasta)
+      validointivirheet
+      (conj validointivirheet
+        (str "Paikkauskohteen Nro: '" (konversio/konvertoi->int (:ulkoinen-id uusi-kohde)) "' on jo käytössä.
+        Numeron täytyy olla yksilöllinen.
+        Samalla numerolla löytyy kohde: '" (:nimi (first kohteet-tietokannasta)) "' alkanut: " (pvm/pvm (:alkupvm (first kohteet-tietokannasta))))))))
+
 (s/def ::nimi (s/and string? #(validi-nimi? %)))
 (s/def ::alkupvm (s/and #(inst? %) #(validi-aika? %)))
 (s/def ::loppupvm (s/and #(inst? %) #(validi-aika? %)))
@@ -98,7 +115,7 @@
 (s/def ::ulkoinen-id (s/and number? pos?))
 (s/def ::yksikko paikkaus/paikkauskohteiden-yksikot)
 
-(defn paikkauskohde-validi? [kohde vanha-kohde rooli]
+(defn paikkauskohde-validi? [db kohde vanha-kohde rooli]
   (let [validointivirheet (as-> #{} virheet
                                 (if (s/valid? ::nimi (:nimi kohde))
                                   virheet
@@ -126,13 +143,14 @@
                                   (conj virheet "Paikkauskohteen suunnitellun määrän yksikössä virhe"))
                                 (if (s/valid? ::ulkoinen-id (:ulkoinen-id kohde))
                                   virheet
-                                  (conj virheet "Paikkauskohteen ulkoinen-id puuttuu"))
+                                  (conj virheet "Paikkauskohteen Nro puuttuu"))
                                 (if (and (s/valid? ::alkupvm (:alkupvm kohde))
                                          (s/valid? ::loppupvm (:loppupvm kohde)))
                                   (validi-pvm-vali? virheet (:alkupvm kohde) (:loppupvm kohde))
                                   virheet)
                                 (tr-validointi/validoi-tieosoite virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde))
-                                (validi-paikkauskohteen-tilamuutos? virheet kohde vanha-kohde rooli))]
+                                (validi-paikkauskohteen-tilamuutos? virheet kohde vanha-kohde rooli)
+                            (validoi-ulkoinen-id db virheet kohde vanha-kohde))]
     validointivirheet))
 
 (defn- laheta-sahkoposti [fim email sampo-id roolit viestin-otsikko viestin-vartalo]
@@ -413,7 +431,7 @@
         ;; Haetaan urakan sampo-id sähköpostin lähetystä varten
         urakka-sampo-id (urakat-q/hae-urakan-sampo-id db (:urakka-id kohde))
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
-        validointivirheet (paikkauskohde-validi? kohde vanha-kohde kayttajarooli) ;;rooli on null?
+        validointivirheet (paikkauskohde-validi? db kohde vanha-kohde kayttajarooli) ;;rooli on null?
         kohde (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
         ;; Mikäli paikkauskohde halutaan raportoida pot lomakkeella, tehdään samalla yllapitokohde tauluun merkintä
         kohde (tarkista-pot-raportointi db kohde vanha-kohde (:id user))

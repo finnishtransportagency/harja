@@ -34,20 +34,21 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(def default-paikkauskohde {:ulkoinen-id (rand-int 39823)
-                            :nimi "testinimi"
-                            :alkupvm (pvm/->pvm "01.01.2020")
-                            :loppupvm (pvm/->pvm "01.02.2020")
-                            :paikkauskohteen-tila "valmis"
-                            :tie 22
-                            :aosa 1
-                            :losa 2
-                            :aet 10
-                            :let 20
-                            :yksikko "jm"
-                            :suunniteltu-hinta 1000.00
-                            :suunniteltu-maara 100
-                            :tyomenetelma 8})
+(defn default-paikkauskohde [ulkoinen-id]
+  {:ulkoinen-id ulkoinen-id
+   :nimi "testinimi"
+   :alkupvm (pvm/->pvm "01.01.2020")
+   :loppupvm (pvm/->pvm "01.02.2020")
+   :paikkauskohteen-tila "valmis"
+   :tie 22
+   :aosa 1
+   :losa 2
+   :aet 10
+   :let 20
+   :yksikko "jm"
+   :suunniteltu-hinta 1000.00
+   :suunniteltu-maara 100
+   :tyomenetelma 8})
 
 (deftest paikkauskohteet-urakalle-testi
   (let [_ (hae-kemin-paallystysurakan-2019-2023-id)
@@ -106,7 +107,7 @@
 (deftest luo-uusi-paikkauskohde-testi
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
-                     default-paikkauskohde)
+                (default-paikkauskohde (rand-int 999999)))
 
         kohde-id (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :tallenna-paikkauskohde-urakalle
@@ -121,7 +122,7 @@
 (deftest luo-uusi-paikkauskohde-virheellisin-tiedoin-testi
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         ;; Poistetaan kohteelta nimi
-        kohde (dissoc (merge {:urakka-id urakka-id} default-paikkauskohde)
+        kohde (dissoc (merge {:urakka-id urakka-id} (default-paikkauskohde (rand-int 999999)))
                       :nimi)]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :tallenna-paikkauskohde-urakalle
@@ -135,7 +136,7 @@
         ;; ja nimi vaihdetaan sellaiseksi, että helppo tunnistaa, onko poisto onnistunut
         nimi "Tämä kemin kohde tulee poistumaan"
         urakka-id @kemin-alueurakan-2019-2023-id
-        kohde (merge default-paikkauskohde
+        kohde (merge (default-paikkauskohde (rand-int 999999))
                      {:urakka-id urakka-id
                       :nimi nimi})
         ;; Luodaan paikkauskohde tietokantaan
@@ -170,7 +171,7 @@
         ;; ja nimi vaihdetaan sellaiseksi, että helppo tunnistaa, onko poisto onnistunut
         nimi "Tämä kemin kohde tulee poistumaan"
         urakka-id @kemin-alueurakan-2019-2023-id
-        kohde (merge default-paikkauskohde
+        kohde (merge (default-paikkauskohde (rand-int 999999))
                      {:urakka-id urakka-id
                       :nimi nimi})
         ;; Luodaan paikkauskohde tietokantaan
@@ -210,7 +211,7 @@
 (deftest paikkauskohde-tilamuutokset-testi
   (let [urakoitsija (kemin-alueurakan-2019-2023-paakayttaja)
         tilaaja (lapin-paallystyskohteiden-tilaaja)
-        kohde (merge default-paikkauskohde
+        kohde (merge (default-paikkauskohde (rand-int 999999))
                      {:urakka-id @kemin-alueurakan-2019-2023-id
                       :nimi "Tilamuutosten testikohde: ehdotettu"
                       :paikkauskohteen-tila "ehdotettu"})
@@ -223,8 +224,7 @@
         ehdotettu2 (kutsu-palvelua (:http-palvelin jarjestelma)
                                    :tallenna-paikkauskohde-urakalle
                                    urakoitsija
-                                   (assoc default-paikkauskohde
-                                     :ulkoinen-id (rand-int 39823)
+                                   (assoc (default-paikkauskohde (rand-int 999999))
                                      :urakka-id @kemin-alueurakan-2019-2023-id
                                      :paikkauskohteen-tila "ehdotettu"
                                      :nimi "Tilamuutosten testikohde: ehdotettu2"))
@@ -232,8 +232,7 @@
         tilattu (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-paikkauskohde-urakalle
                                 urakoitsija
-                                (assoc default-paikkauskohde
-                                  :ulkoinen-id (rand-int 39823)
+                                (assoc (default-paikkauskohde (rand-int 999999))
                                   :urakka-id @kemin-alueurakan-2019-2023-id
                                   :paikkauskohteen-tila "tilattu"
                                   :nimi "Tilamuutosten testikohde: tilattu"))
@@ -241,8 +240,7 @@
         hylatty (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-paikkauskohde-urakalle
                                 urakoitsija
-                                (assoc default-paikkauskohde
-                                  :ulkoinen-id (rand-int 39823)
+                                (assoc (default-paikkauskohde (rand-int 999999))
                                   :urakka-id @kemin-alueurakan-2019-2023-id
                                   :paikkauskohteen-tila "hylatty"
                                   :nimi "Tilamuutosten testikohde: hylatty"))
@@ -250,8 +248,7 @@
         valmis (kutsu-palvelua (:http-palvelin jarjestelma)
                                :tallenna-paikkauskohde-urakalle
                                urakoitsija
-                               (assoc default-paikkauskohde
-                                 :ulkoinen-id (rand-int 339823)
+                               (assoc (default-paikkauskohde (rand-int 999999))
                                  :urakka-id @kemin-alueurakan-2019-2023-id
                                  :paikkauskohteen-tila "valmis"
                                  :nimi "Tilamuutosten testikohde: valmis"))]
@@ -392,7 +389,7 @@
 (deftest tallenna-paikkaussoiro-kasin-test
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
-                     default-paikkauskohde)
+                (default-paikkauskohde (rand-int 999999)))
         tyomenetelmat @paikkauskohde-tyomenetelmat
         kayttaja-id (:id +kayttaja-jvh+)
         paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -446,7 +443,7 @@
 (deftest tallenna-levittimella-tehty-paikkaussoiro-kasin-test
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
-                     default-paikkauskohde)
+                (default-paikkauskohde (rand-int 999999)))
         tyomenetelmat @paikkauskohde-tyomenetelmat
 
         paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -457,11 +454,7 @@
         tallennettu-paikkaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-kasinsyotetty-paikkaus
                                              +kayttaja-jvh+
-                                             paikkaus)
-        saatu-tyomenetelma (hae-tyomenetelman-arvo :lyhenne :id
-                                                   (::paikkaus/tyomenetelma tallennettu-paikkaus)
-                                                   tyomenetelmat)
-        ]
+                                             paikkaus)]
     (is (= 1 (::paikkaus/tyomenetelma tallennettu-paikkaus))) ;; AB-paikkaus levittimellä
     (is (= (:id paikkauskohde) (::paikkaus/paikkauskohde-id tallennettu-paikkaus)))))
 
@@ -469,7 +462,7 @@
 
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
-                     default-paikkauskohde)
+                (default-paikkauskohde (rand-int 999999)))
         paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :tallenna-paikkauskohde-urakalle
                                       +kayttaja-jvh+
@@ -498,7 +491,7 @@
 (deftest poista-kasin-lisatty-paikkaus-test
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
-                     default-paikkauskohde)
+                (default-paikkauskohde (rand-int 999999)))
         paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :tallenna-paikkauskohde-urakalle
                                       +kayttaja-jvh+
@@ -523,7 +516,7 @@
 (deftest lisaa-urem-paikkaus-excelista
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
-                default-paikkauskohde)
+                (default-paikkauskohde (rand-int 999999)))
         paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
                         :tallenna-paikkauskohde-urakalle
                         +kayttaja-jvh+
@@ -545,7 +538,7 @@
 (deftest lisaa-urem-paikkaus-excelista-epaonnistuu
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
-                default-paikkauskohde)
+                (default-paikkauskohde (rand-int 999999)))
         paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
                         :tallenna-paikkauskohde-urakalle
                         +kayttaja-jvh+
