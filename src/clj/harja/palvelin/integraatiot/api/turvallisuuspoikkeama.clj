@@ -365,17 +365,18 @@
        (when (:alkuetaisyys tieosoite) {:tieaet (:alkuetaisyys tieosoite)})
        (when (:loppuetaisyys tieosoite) {:tielet (:loppuetaisyys tieosoite)}))}))
 
-(defn- vammat->numerot [vammat]
-  ;; TODO: Turi tukee tällä hetkellä vain yhtä arvoa tässä.
-  ;; Lähetetään (satunnainen) ensimmäinen arvo ja myöhemmin toivottavasti kaikki.
-  (let [vamma (take 1 vammat)] ;; pudota take 1 pois, jos halutaan kaikki
-    {:vammanlaatu (turi-sanoma/vamma->numero vamma)}))
+(defn- vammat->tekstit
+  "Tietokantaan ei koskaan tallenneta enempää kuin yksi vamma. Mutta, jos se joskus korjaantuu, niin lähetetään kaikki saadut vammat."
+  [vammat]
+  {:vammanlaatu
+   (for [vamma vammat]
+     (turi-sanoma/vamma->teksti vamma))})
 
-(defn- vahingoittuneet-ruumiinosat->numerot [vahingoittuneet-ruumiinosat]
+(defn- vahingoittuneet-ruumiinosat->tekstit [vahingoittuneet-ruumiinosat]
   ;; TODO: Turi tukee tällä hetkellä vain yhtä arvoa tässä.
   ;; Lähetetään (satunnainen) ensimmäinen arvo ja myöhemmin toivottavasti kaikki.
-  (let [vahingoittunut-ruumiinosa (take 1 vahingoittuneet-ruumiinosat)]
-    {:vahingoittunutruumiinosa (turi-sanoma/vahingoittunut-ruumiinosa->numero vahingoittunut-ruumiinosa)}))
+  (let [vahingoittunut-ruumiinosa (first vahingoittuneet-ruumiinosat)]
+    {:vahingoittunutruumiinosa (turi-sanoma/vahingoittunut-ruumiinosa->teksti vahingoittunut-ruumiinosa)}))
 
 (def ammatti->teksti
   {:aluksen_paallikko "Aluksen päällikkö"
@@ -417,8 +418,9 @@
        {:ammatti (ammatti->teksti (:tyontekijanammatti data))})
      (when-let [ammatti-muu (:tyontekijanammattimuu data)]
        {:ammattimuutarkenne ammatti-muu})
-     (vammat->numerot (:vammat data))
-     (vahingoittuneet-ruumiinosat->numerot (:vahingoittuneetruumiinosat data))
+     (vammat->tekstit (:vammat data))
+     ;; Puhutaan yksikököstä, koska tietokantaan ei tallenneta koskaan kuin yksi, vaikka niitä voisi olla useitakin
+     (vahingoittuneet-ruumiinosat->tekstit (:vahingoittuneetruumiinosat data))
      {:sairauspoissaolot (or (:sairauspoissaolopaivat data) 0)
       :sairauspoissaolojatkuu (true? (:sairauspoissaolojatkuu data))
       :sairaalahoitovuorokaudet (or (:sairaalavuorokaudet data) 0)}
