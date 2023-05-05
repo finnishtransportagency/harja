@@ -66,7 +66,7 @@
 
 (defn suodata-alukset-nimen-alulla [alukset nimi]
   (filter #(and
-             (nimi)
+             (::nimi %)
              (str/starts-with?
                (str/lower-case (::nimi %))
                (str/lower-case nimi)))
