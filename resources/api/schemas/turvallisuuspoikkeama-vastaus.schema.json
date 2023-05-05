@@ -183,24 +183,27 @@
                                 "description": "Ammatti-kentän tarkenne Tämä kenttä on käytössä, jos ammatti-kentän arvo on \"Muu työntekijä\""
                             },
                             "vammanlaatu": {
-                                "description": "Aiheutuneen vamman laatu Tämä kenttä on käytössä, jos tyyppi-kentän arvo on 4",
-                                "type": "string",
-                                "enum": [
-                                    "Haavat ja pinnalliset vammat",
-                                    "Luunmurtumat",
-                                    "Sijoiltaan menot, nyrjahdykset ja venahdykset",
-                                    "Amputoitumiset ja irti repeamiset",
-                                    "Tärähdykset ja sisaiset vammat/ruhjevammat",
-                                    "Palovammat, syöpymät ja paleltumat",
-                                    "Myrkytykset ja tulehdukset",
-                                    "Hukkuminen ja tukehtuminen",
-                                    "Äänen ja värähtelyn vaikutukset",
-                                    "Äärilampotilojen valon ja säteilyn vaikutukset",
-                                    "Sokki",
-                                    "Useita samantasoisia vammoja",
-                                    "Muut",
-                                    "Eitietoa"
-                                ]
+                                "description": "Aiheutuneen vamman laatu Tämä kenttä on käytössä, jos tyyppi-kentän arvo on 4. Otetaan poikkeuksellisesti array muodossa vammat mukaan.",
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "enum": [
+                                        "Haavat ja pinnalliset vammat",
+                                        "Luunmurtumat",
+                                        "Sijoiltaan menot, nyrjahdykset ja venahdykset",
+                                        "Amputoitumiset ja irti repeamiset",
+                                        "Tärähdykset ja sisaiset vammat/ruhjevammat",
+                                        "Palovammat, syöpymät ja paleltumat",
+                                        "Myrkytykset ja tulehdukset",
+                                        "Hukkuminen ja tukehtuminen",
+                                        "Äänen ja värähtelyn vaikutukset",
+                                        "Äärilampotilojen valon ja säteilyn vaikutukset",
+                                        "Sokki",
+                                        "Useita samantasoisia vammoja",
+                                        "Muut",
+                                        "Ei tietoa"
+                                    ]
+                                }
                             },
                             "vahingoittunutruumiinosa": {
                                 "description": "Vahingoittunut ruumiinosa Tämä kenttä on käytössä, jos tyyppi-kentän arvo on 4",
