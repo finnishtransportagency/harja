@@ -259,11 +259,6 @@
       (tallenna-liitteet-turvallisuuspoikkeamalle db liitteiden-hallinta urakka-id tp-id kirjaaja liitteet)
       tp-id)))
 
-(defn laheta-poikkeamat-turin [turi idt]
-  (when turi
-    (doseq [id idt]
-      (turi/laheta-turvallisuuspoikkeama turi id))))
-
 (defn kirjaa-turvallisuuspoikkeama [liitteiden-hallinta turi db {id :id} {turvallisuuspoikkeamat :turvallisuuspoikkeamat} kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
     (log/debug (format "Kirjataan: %s uutta turvallisuuspoikkeamaa urakalle id: %s kayttäjän: %s (id: %s) tekemänä."
@@ -274,10 +269,9 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
 
 
-    (let [idt (mapv (fn [turvallisuuspoikkeama]
-                      (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama))
-                    turvallisuuspoikkeamat)]
-      (async/thread (laheta-poikkeamat-turin turi idt)))
+    (mapv (fn [turvallisuuspoikkeama]
+            (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama))
+      turvallisuuspoikkeamat)
     (vastaus turvallisuuspoikkeamat)))
 
 (defrecord Turvallisuuspoikkeama []

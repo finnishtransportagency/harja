@@ -24,16 +24,6 @@
       (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset kayttaja urakka-id)
       (q/tallenna-urakan-tyotunnit db tyotunnit)))
 
-  (doseq [{urakka-id ::ut/urakka-id
-           vuosi ::ut/vuosi
-           vuosikolmannes ::ut/vuosikolmannes}
-          urakan-tyotunnit]
-    (try
-      (turi/laheta-urakan-vuosikolmanneksen-tyotunnit turi urakka-id vuosi vuosikolmannes)
-      (catch Exception e
-        (log/error (format "Urakan (id: %s) työtuntien (vuosi: %s, kolmannes: %s) lähettäminen epäonnistui"
-                           urakka-id vuosi vuosikolmannes)))))
-
   (hae-urakan-tyotunnit db kayttaja urakka-id))
 
 (defn hae-urakan-kuluvan-vuosikolmanneksen-tyotunnit [db kayttaja urakka-id]
