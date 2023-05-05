@@ -6,16 +6,13 @@
             [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [cheshire.core :as cheshire]
-            [taoensso.timbre :as log]
             [clojure.core.match :refer [match]]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [clj-time.coerce :as c]
             [clj-time.core :as t]
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as str])
-  (:import (java.net URLEncoder)
-           (java.text SimpleDateFormat)
-           (java.util TimeZone)
+  (:import (java.text SimpleDateFormat)
            (java.util Date)))
 
 (def kayttaja "yit-rakennus")
@@ -225,6 +222,7 @@
                     (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
                     (.replace "__TAPAHTUMAPAIVAMAARA__" "2016-01-30T12:00:00Z")))
 
+        ;; Hae turvallisuuspoikkeamat uuden apin kautta
         alkuaika (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 50000)
         loppuaika (nykyhetki-iso8061-formaatissa-tulevaisuuteen 10)
         vastaus (api-tyokalut/get-kutsu [(str "/api/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
