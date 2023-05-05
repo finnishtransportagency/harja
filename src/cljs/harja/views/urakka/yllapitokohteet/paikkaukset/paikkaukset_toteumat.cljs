@@ -163,7 +163,7 @@
      [:div
       (when validointivirheet
         [:<>
-         [:p "Tuotua exceliä ei voitu lukea. Varmista, että käytät HARJAsta ladattua pohjaa, jonka sarakkeita A-R ei ole muokattu, ja paikkaukset alkavat riviltä 5."]
+         [:p "Tuotua exceliä ei voitu lukea. Varmista, että käytät HARJAsta ladattua pohjaa, jonka sarakkeita A-Q ei ole muokattu, ja paikkaukset alkavat riviltä 5."]
          [:<>
           [:br]
           (for* [[rivi virheet] validointivirheet]
@@ -179,7 +179,7 @@
       (when excel-luku-virhe
         [:<>
          [:br]
-         [:p "Tuotu excel ei näytä oikeanlaiselta. Varmista, että käytät HARJAsta ladattua pohjaa, jonka sarakkeita A-R tai otsikkorivejä ei ole muokattu."]])]]))
+         [:p "Tuotu excel ei näytä oikeanlaiselta. Varmista, että käytät HARJAsta ladattua pohjaa, jonka sarakkeita A-Q tai otsikkorivejä ei ole muokattu."]])]]))
 
 
 (def ohje-teksti-tilaajalle
