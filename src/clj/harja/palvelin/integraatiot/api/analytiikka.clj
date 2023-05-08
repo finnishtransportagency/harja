@@ -2,11 +2,12 @@
   "Analytiikkaportaalille endpointit"
   (:require [com.stuartsierra.component :as component]
             [clojure.spec.alpha :as s]
+            [clojure.string :as str]
             [compojure.core :refer [GET]]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kevyesti-get-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kevyesti-get-kutsu kasittele-get-kutsu]]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.kyselyt.konversio :as konversio]
@@ -17,8 +18,10 @@
             [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
-            [clojure.string :as str]
-            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit])
+            [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
+            [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat])
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -28,7 +31,7 @@
 (s/def ::alkuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
 (s/def ::loppuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
 
-(defn- tarkista-toteumahaun-parametrit [parametrit]
+(defn- tarkista-haun-parametrit [parametrit]
   (parametrivalidointi/tarkista-parametrit
     parametrit
     {:alkuaika "Alkuaika puuttuu"
@@ -116,7 +119,7 @@
   "Haetaan toteumat annettujen alku- ja loppuajan puitteissa.
   koordinaattimuutos-parametrilla voidaan hakea lisäksi reittipisteet EPSG:4326-muodossa."
   [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
-  (tarkista-toteumahaun-parametrit parametrit)
+  (tarkista-haun-parametrit parametrit)
   (let [;; Materiaalikoodeja ei ole montaa, mutta niitä on vaikea yhdistää tietokantalauseeseen tehokkaasti
         ;; joten hoidetaan se koodilla
         materiaalikoodit (materiaalit-kyselyt/hae-materiaalikoodit db)
@@ -458,6 +461,22 @@
                                 urakat)]
     suunnitellut-tehtavat))
 
+(defn hae-turvallisuuspoikkeamat [db {:keys [alkuaika loppuaika] :as parametrit} kayttaja]
+  (log/debug "hae-turvallisuuspoikkeamat :: parametrit" (pr-str parametrit))
+  (tarkista-haun-parametrit parametrit)
+  (let [
+        turpot (turvallisuuspoikkeamat/hae-turvallisuuspoikkeamat-lahetettavaksi-analytiikalle db {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                                                                                                   :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
+        ;; Konvertoidaan turpot sellaiseen muotoon, että ne voidaan kääntää kutsukäsittelyssä jsoniksi. Tässä vaiheessa ne ovat mäppeineä nimestään huolimatta
+        json-turbot (map
+                      #(analytiikka-sanomat/turvallisuuspoikkeamaviesti-json %)
+                      (konversio/sarakkeet-vektoriin
+                        (into [] turvallisuuspoikkeamat/turvallisuuspoikkeama-xf turpot)
+                        {:korjaavatoimenpide :korjaavattoimenpiteet
+                         :liite :liitteet
+                         :kommentti :kommentit}))]
+    {:turvallisuuspoikkeamat json-turbot}))
+
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
   (start [{http :http-palvelin db :db-replica integraatioloki :integraatioloki :as this}]
@@ -550,6 +569,15 @@
             (palauta-organisaatiot db parametrit kayttaja))
           ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
           (not kehitysmoodi?))))
+    (julkaise-reitti
+      http :analytiikka-turvallisuuspoikkeamat
+      (GET "/api/analytiikka/turvallisuuspoikkeamat/:alkuaika/:loppuaika" request
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-turvallisuuspoikkeamat request
+          json-skeemat/+turvallisuuspoikkeamien-vastaus+
+          (fn [parametrit kayttaja db]
+            (hae-turvallisuuspoikkeamat db parametrit kayttaja))
+          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
+          (not kehitysmoodi?))))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -562,5 +590,6 @@
       :analytiikka-suunnitellut-materiaalit-hoitovuosi
       :analytiikka-suunnitellut-materiaalit-urakka
       :analytiikka-suunnitellut-tehtavamaarat-hoitovuosi
-      :analytiikka-suunnitellut-tehtavamaarat-urakka)
+      :analytiikka-suunnitellut-tehtavamaarat-urakka
+      :analytiikka-turvallisuuspoikkeamat)
     this))

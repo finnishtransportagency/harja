@@ -20,12 +20,6 @@
    :turvallisuushavainto 64
    :muu 16})
 
-(def poikkeamatyyppi->teksti
-  {:tyotapaturma "Työtapaturma"
-   :vaaratilanne "Vaaratilanne"
-   :turvallisuushavainto "Turvallisuushavainto"
-   :muu "Muu turvallisuuspoikkeama"})
-
 (defn poikkeamatyypit->numerot [tyypit]
   (for [tyyppi tyypit]
     [:tyyppi (poikkeamatyyppi->numero tyyppi)]))
@@ -78,22 +72,6 @@
    :muut 13
    :ei_tietoa 14})
 
-(def vamma->teksti
-  {:haavat_ja_pinnalliset_vammat "Haavat ja pinnalliset vammat"
-   :luunmurtumat "Luunmurtumat"
-   :sijoiltaan_menot_nyrjahdykset_ja_venahdykset "Sijoiltaan menot, nyrjahdykset ja venahdykset"
-   :amputoitumiset_ja_irti_repeamiset "Amputoitumiset ja irti repeamiset"
-   :tarahdykset_ja_sisaiset_vammat_ruhjevammat "Tärähdykset ja sisaiset vammat/ruhjevammat"
-   :palovammat_syopymat_ja_paleltumat "Palovammat, syöpymät ja paleltumat"
-   :myrkytykset_ja_tulehdukset "Myrkytykset ja tulehdukset"
-   :hukkuminen_ja_tukehtuminen "Hukkuminen ja tukehtuminen"
-   :aanen_ja_varahtelyn_vaikutukset "Äänen ja värähtelyn vaikutukset"
-   :aarilampotilojen_valon_ja_sateilyn_vaikutukset "Äärilampotilojen valon ja säteilyn vaikutukset"
-   :sokki "Sokki"
-   :useita_samantasoisia_vammoja "Useita samantasoisia vammoja"
-   :muut "Muut"
-   :ei_tietoa "Ei tietoa"})
-
 (defn- vammat->numerot [vammat]
   ;; TODO: Turi tukee tällä hetkellä vain yhtä arvoa tässä.
   ;; Lähetetään (satunnainen) ensimmäinen arvo ja myöhemmin toivottavasti kaikki.
@@ -115,21 +93,6 @@
    :koko_keho 12
    :ei_tietoa 13})
 
-(def vahingoittunut-ruumiinosa->teksti
-  {:paan_alue "Pään alue"
-   :silmat "Silmät"
-   :niska_ja_kaula "Niska ja kaula"
-   :selka "Selkä"
-   :vartalo "Vartalo"
-   :sormi_kammen "Sormi/kammen"
-   :ranne "Ranne"
-   :muu_kasi "Muu käsi"
-   :nilkka "Nilkka"
-   :jalkatera_ja_varvas "Jalkaterä ja varvas"
-   :muu_jalka "Muu jalka"
-   :koko_keho "Koko keho"
-   :ei_tietoa "Ei tietoa"})
-
 (defn- vahingoittuneet-ruumiinosat->numerot [vahingoittuneet-ruumiinosat]
   ;; TODO: Turi tukee tällä hetkellä vain yhtä arvoa tässä.
   ;; Lähetetään (satunnainen) ensimmäinen arvo ja myöhemmin toivottavasti kaikki.
@@ -141,12 +104,6 @@
    :siirretty 1
    :suljettu 2
    :toteutettu 2})
-
-(def korjaava-toimenpide-tila->teksti
-  {:avoin "Avoin"
-   :siirretty "Siirretty"
-   :suljettu "Suljettu"
-   :toteutettu "Toteutettu"})
 
 (def turvallisuuspoikkeaman-tila
   {:avoin "Avoin"
