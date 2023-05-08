@@ -100,19 +100,19 @@
   ;; Jarjestys- sarake tulee proseduurista paivita_kanavakohteiden_jarjestys() joka ajetaan aina kun kohteita päivitetään
   (let [kohteet (->>
                   (reverse
-                    (sort-by :harja.domain.kanavat.kohde/jarjestys (specql/fetch db ::kohde/kohde
+                    (sort-by ::kohde/jarjestys (specql/fetch db ::kohde/kohde
                                                                      (set/union
                                                                        kohde/perustiedot
                                                                        kohde/kohteen-kohdekokonaisuus
                                                                        kohde/kohteenosat)
                                                                      {::m/poistettu? false})))
-                  (group-by #(-> % :harja.domain.kanavat.kohde/kohdekokonaisuus :harja.domain.kanavat.kohdekokonaisuus/id)))
+                  (group-by #(-> % ::kohde/kohdekokonaisuus ::kok/id)))
         ;; Järjestetään vielä kaikki ryhmät, etelästä pohjoiseen
         ;; Luetaan postgresin sijainti objektista Y arvo (etelä/pohjoinen), ja sortataan sen mukaan
         kohteet (reverse (->> kohteet
                            (sort-by (fn [kohde]
                                       (let [kohteen-tiedot (-> kohde second first)
-                                            kohteen-sijainti (:harja.domain.kanavat.kohde/sijainti kohteen-tiedot)
+                                            kohteen-sijainti (::kohde/sijainti kohteen-tiedot)
                                             kohteen-sijainti (geo/pg->clj kohteen-sijainti)
                                             kohteen-sijainti-y (if-not (nil? kohteen-sijainti)
                                                                  (-> kohteen-sijainti :coordinates second)
@@ -120,7 +120,7 @@
 
                                         (if-not (nil? kohteen-sijainti-y)
                                           kohteen-sijainti-y
-                                          (:harja.domain.kanavat.kohde/id kohteen-tiedot)))))))
+                                          (::kohde/id kohteen-tiedot)))))))
         ;; Ryhmitys tekee ryhmän vectoreita mikä puretaan muotoon joka toimii liikenne/toimenpide välilehdellä
         kohteet (->> kohteet
                   (map second)
