@@ -468,14 +468,14 @@
         turpot (turvallisuuspoikkeamat/hae-turvallisuuspoikkeamat-lahetettavaksi-analytiikalle db {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
                                                                                                    :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
         ;; Konvertoidaan turpot sellaiseen muotoon, että ne voidaan kääntää kutsukäsittelyssä jsoniksi. Tässä vaiheessa ne ovat mäppeineä nimestään huolimatta
-        json-turbot (map
+        json-turpot (map
                       #(analytiikka-sanomat/turvallisuuspoikkeamaviesti-json %)
                       (konversio/sarakkeet-vektoriin
                         (into [] turvallisuuspoikkeamat/turvallisuuspoikkeama-xf turpot)
                         {:korjaavatoimenpide :korjaavattoimenpiteet
                          :liite :liitteet
                          :kommentti :kommentit}))]
-    {:turvallisuuspoikkeamat json-turbot}))
+    {:turvallisuuspoikkeamat json-turpot}))
 
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
