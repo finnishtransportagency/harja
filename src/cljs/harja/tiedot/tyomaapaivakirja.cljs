@@ -20,7 +20,6 @@
 
   HaeTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (println "\n Vastaus: " vastaus)
     (assoc app :tiedot vastaus))
 
   HaeTiedotEpaonnistui
