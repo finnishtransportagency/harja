@@ -7,6 +7,7 @@
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
             [harja.views.urakka.toteutus :as toteutus]
+            [harja.views.urakka.tyomaapaivakirja :as tyomaapaivakirja]
             [harja.views.urakka.laskutus :as laskutus]
             [harja.views.vesivaylat.urakka.laskutus :as laskutus-vesivaylat]
             [harja.views.urakka.yllapitokohteet.paallystyksen-kohdeluettelo :as paallystyksen-kohdeluettelo]
@@ -47,6 +48,11 @@
     :toimenpiteet (and (oikeudet/urakat-vesivaylatoimenpiteet id)
                        (urakka/vesivaylaurakkatyyppi? tyyppi)
                        (istunto/ominaisuus-kaytossa? :vesivayla))
+    ;; TODO 
+    :tyomaapaivakirja (and (oikeudet/urakat-paikkaukset id)
+                         (#{:hoito :teiden-hoito} tyyppi))
+    
+
     :vv-materiaalit (and
                       (oikeudet/urakat-vesivayla-materiaalit id)
                       (urakka/vesivaylaurakkatyyppi? tyyppi))
@@ -152,6 +158,12 @@
        (when (valilehti-mahdollinen? :toimenpiteet ur)
          ^{:key "toimenpiteet"}
          [toimenpiteet/toimenpiteet ur])
+
+       "Työmaapäiväkirja"
+       :tyomaapaivakirja
+       (when (valilehti-mahdollinen? :tyomaapaivakirja ur)
+         ^{:key "tyomaapaivakirja"}
+         [tyomaapaivakirja/tyomaapiavakirja ur])
 
        "Liikenne"
        :liikenne
