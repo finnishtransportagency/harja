@@ -55,6 +55,7 @@
 (defn tallenna-kohdekokonaisuudet [db user tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-kanavat user)
   (q/tallenna-kohdekokonaisuudet! db user tiedot)
+  (q/paivita-jarjestys! db)
   (hae-kohdekokonaisuudet-ja-kohteet db user))
 
 (defn hae-kohteenosat [db user]
@@ -64,6 +65,7 @@
 (defn tallenna-kohde! [db user tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-kanavat user)
   (q/tallenna-kohde! db user tiedot)
+  (q/paivita-jarjestys! db)
   (hae-kohdekokonaisuudet-ja-kohteet db user))
 
 (defrecord Kohteet []
