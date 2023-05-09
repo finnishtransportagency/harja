@@ -499,14 +499,14 @@
                      tallenna))
         [:th.toiminnot {:width "40px"} " "])]]))
 
-(defn- aseta-leijuvan-otsikkorivin-sarakkeet! [taulun-id leveys-atomi scroll-atomi leijuva-tr oikea-tr
+(defn- aseta-leijuvan-otsikkorivin-sarakkeet! [leijuva-otsikkorivi oikea-taulu leveys-atomi scroll
                                                ensimmainen-sarake-sticky?]
-  (reset! leveys-atomi (dom/elementin-leveys (js/document.getElementById taulun-id)))
-  (let [leijuvat-sarakkeet (array-seq (.getElementsByTagName leijuva-tr "th"))
-        oikeat-sarakkeet (array-seq (.getElementsByTagName oikea-tr "th"))]
+  (reset! leveys-atomi (dom/elementin-leveys oikea-taulu))
+  (let [leijuvat-sarakkeet (array-seq (.getElementsByTagName leijuva-otsikkorivi "th"))
+        oikeat-sarakkeet (array-seq (.getElementsByTagName oikea-taulu "th"))]
     (when ensimmainen-sarake-sticky?
-      (set! (.-transform (.-style (first leijuvat-sarakkeet))) (str "translateX(" @scroll-atomi "px)"))
-      (set! (.-transform (.-style (second leijuvat-sarakkeet))) (str "translateX(" @scroll-atomi "px)")))
+      (set! (.-transform (.-style (first leijuvat-sarakkeet))) (str "translateX(" scroll "px)"))
+      (set! (.-transform (.-style (second leijuvat-sarakkeet))) (str "translateX(" scroll "px)")))
 
     (loop [leijuvat-sarakkeet leijuvat-sarakkeet
            oikeat-sarakkeet oikeat-sarakkeet]
@@ -514,27 +514,30 @@
         (set! (.-width (first leijuvat-sarakkeet)) (.-offsetWidth (first oikeat-sarakkeet)))
         (recur (rest leijuvat-sarakkeet) (rest oikeat-sarakkeet))))))
 
-(defn- leijuva-otsikkorivi [taulun-id ensimmainen-sarake-sticky? & _]
+(defn- leijuva-otsikkorivi [taulukon-ref-atom rootin-ref-atom ensimmainen-sarake-sticky? & _]
   (let [taulukon-leveys (atom 0)
         taulukon-scroll (atom 0)
-        aseta-taulukon-scroll! (fn [_ tapahtuma] (reset! taulukon-scroll (.-scrollLeft (.-target tapahtuma))))
+        aseta-taulukon-scroll! (fn [_ tapahtuma] (reset! taulukon-scroll (some-> tapahtuma
+                                                                           .-target
+                                                                           .-scrollLeft)))
         aseta-leijuvan-otsikkorivin-sarakkeet! (fn [this & _]
-                                                 (aseta-leijuvan-otsikkorivin-sarakkeet!
-                                                   taulun-id
-                                                   taulukon-leveys
-                                                   taulukon-scroll
-                                                   (r/dom-node this)
-                                                   (js/document.getElementById taulun-id)
-                                                   ensimmainen-sarake-sticky?))]
+                                                 (when @taulukon-ref-atom
+                                                   (aseta-leijuvan-otsikkorivin-sarakkeet!
+                                                     (r/dom-node this)
+                                                     @taulukon-ref-atom
+                                                     taulukon-leveys
+                                                     @taulukon-scroll
+                                                     ensimmainen-sarake-sticky?)))]
     (komp/luo
       (komp/piirretty (fn [this]
-                        (reset! taulukon-scroll (.-scrollLeft (.-parentElement (r/dom-node this))))
-                        (aseta-leijuvan-otsikkorivin-sarakkeet! this)))
-      (komp/dom-kuuntelija (.-parentElement (js/document.getElementById taulun-id))
+                        (when @rootin-ref-atom
+                          (reset! taulukon-scroll (.-scrollLeft @rootin-ref-atom))
+                          (aseta-leijuvan-otsikkorivin-sarakkeet! this))))
+      (komp/dom-kuuntelija @rootin-ref-atom
         EventType/SCROLL aseta-taulukon-scroll!)
       {:component-did-update aseta-leijuvan-otsikkorivin-sarakkeet!}
 
-      (fnc [_ _ opts skeema nayta-toimintosarake? piilota-toiminnot? tallenna esta-tiivis-grid?
+      (fnc [_ _ _ opts skeema nayta-toimintosarake? piilota-toiminnot? tallenna esta-tiivis-grid?
             avattavat-rivit-auki]
         @avattavat-rivit-auki
         [:table.grid
@@ -874,7 +877,8 @@
            taulukko-validointi taulukko-varoitus taulukko-huomautus piilota-border?] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
   (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
-        taulukon-id (gensym)
+        taulukon-ref (atom nil)
+        taulukon-rootin-ref (atom nil)
         muokatut (atom nil) ;; muokattu datajoukko
         jarjestys (atom nil) ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
@@ -1234,11 +1238,12 @@
                               skeema
                               tiedot))
            [:div.panel-body
-            {:class (str (when reunaviiva? "livi-grid-reunaviiva"))}
+            {:class (str (when reunaviiva? "livi-grid-reunaviiva"))
+             :ref #(when % (reset! taulukon-rootin-ref %))}
             (when @kiinnita-otsikkorivi?
               ^{:key "kiinnitettyotsikko"}
               (if sivuttain-rullattava?
-                [leijuva-otsikkorivi taulukon-id ensimmainen-sarake-sticky? opts skeema nayta-toimintosarake?
+                [leijuva-otsikkorivi taulukon-ref taulukon-rootin-ref ensimmainen-sarake-sticky? opts skeema nayta-toimintosarake?
                  piilota-toiminnot? tallenna esta-tiivis-grid? avattavat-rivit-auki]
                 [:table.grid
                  {:style {:position "fixed"
@@ -1252,7 +1257,7 @@
               (ajax-loader)
               ^{:key "taulukkodata"}
               [:table.grid
-               {:id taulukon-id}
+               {:ref #(when % (reset! taulukon-ref %))}
                [otsikkorivi {:opts opts :skeema skeema
                              :nayta-toimintosarake? nayta-toimintosarake? :piilota-toiminnot? piilota-toiminnot?
                              :tallenna tallenna :esta-tiivis-grid? esta-tiivis-grid?}]
