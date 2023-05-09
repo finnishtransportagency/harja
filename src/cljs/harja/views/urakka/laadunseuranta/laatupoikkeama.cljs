@@ -230,8 +230,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
         pakolliset-hoito-muistutus))))
 
 (defn- tarkasta-sanktiorivi [sanktiorivi nakyma]
-  (let [kentat (map #(get-in sanktiorivi %)
-                    (pakolliset-kentat nakyma (sanktio-domain/muu-kuin-muistutus? sanktiorivi)))]
+  (let [sanktio-poistettu? (:poistettu sanktiorivi)
+        ;; Jos sanktio on poistettu, niin pakollisia kenttiä ei ole
+        kentat (when-not sanktio-poistettu? (map #(get-in sanktiorivi %)
+                                              (pakolliset-kentat nakyma (sanktio-domain/muu-kuin-muistutus? sanktiorivi))))]
     (every? some? kentat)))
 
 (defn- sanktiorivit-ok? [laatupoikkeama nakyma]

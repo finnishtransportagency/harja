@@ -240,9 +240,7 @@
            :himmennyksen-sisalto [yleiset/ajax-loader]}
           [:div
            [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
-           (when (false? (:lahetysonnistunut @turvallisuuspoikkeama))
-             (lomake/yleinen-varoitus (str "Turvallisuuspoikkeaman lähettäminen TURI:iin epäonnistui "
-                                        (pvm/pvm-aika (:lahetetty @turvallisuuspoikkeama)))))
+
            [lomake/lomake
             {:otsikko (if (:id @turvallisuuspoikkeama) "Muokkaa turvallisuuspoikkeamaa" "Luo uusi turvallisuuspoikkeama")
              :muokkaa! #(let [tarkistettu-lomakedata (if (= (:vaaralliset-aineet %) #{:vaarallisten-aineiden-vuoto})
@@ -263,8 +261,7 @@
                              :virheviesti "Turvallisuuspoikkeaman tallennus epäonnistui."
                              :disabled (and (not (voi-tallentaa? tp @toimenpiteet-virheet))
                                          (not (:uusi-liite tp)))}]
-                           [:div [lomake/nayta-puuttuvat-pakolliset-kentat tp]]
-                           [yleiset/vihje "Turvallisuuspoikkeama lähetetään automaattisesti TURI:iin aina tallentaessa"]])}
+                           [:div [lomake/nayta-puuttuvat-pakolliset-kentat tp]]])}
             [{:otsikko "Tapahtuman otsikko"
               :nimi :otsikko
               :tyyppi :string

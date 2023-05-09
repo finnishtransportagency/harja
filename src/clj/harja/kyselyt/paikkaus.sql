@@ -461,3 +461,11 @@ SELECT nimi, lyhenne
 SELECT id, lyhenne
   FROM paikkauskohde_tyomenetelma
  WHERE lyhenne IS NOT NULL;
+
+-- name: hae-paikkauskohteet-ulkoisella-idlla
+SELECT p.id, p.nimi, p.valmistumispvm, p.alkupvm
+  FROM paikkauskohde p
+ WHERE (:id::INT is null OR
+        (:id::INT is not null AND p.id != :id))
+   AND p."ulkoinen-id" = :ulkoinen-id
+   AND p."urakka-id" = :urakka-id;
