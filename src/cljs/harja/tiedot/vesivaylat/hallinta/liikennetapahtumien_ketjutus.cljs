@@ -2,9 +2,11 @@
   (:require [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
             [reagent.core :refer [atom]]
-            [harja.ui.viesti :as viesti]))
+            [harja.ui.viesti :as viesti]
+            [harja.tiedot.kanavat.urakka.liikenne :as liikenne]))
 
-(defonce tila (atom {}))
+(defonce tila (atom {:haettu-urakka-id -1
+                     :haettu-sopimus-id -1}))
 
 (defrecord ValitseSopimus [sopimus])
 (defrecord TallennaKetjutus [sopimus kaytossa?])
@@ -21,14 +23,24 @@
     (assoc app :valittu-sopimus sopimus))
 
   HaeSopimukset
-  (process-event [{sopimus-id :sopimus-id urakka-id :urakka-id} app]
-    (-> app
-      (assoc :sopimuksien-haku-kaynnissa? true)
-      (tuck-apurit/post! :hae-vesivayla-kanavien-hoito-sopimukset
-        {:sopimus-id sopimus-id
-         :urakka-id urakka-id}
-        {:onnistui ->SopimuksetHaettu
-         :epaonnistui ->SopimuksetEiHaettu})))
+  (process-event [{sopimus-id :sopimus-id urakka-id :urakka-id} 
+                  {:keys [haettu-urakka-id haettu-sopimus-id] :as app}]
+    ;; Jos valitun urakan sopimusta ei ole vielä haettu
+    (if (or
+          (and (= urakka-id -1) (= sopimus-id -1))
+          (and
+            (not= haettu-urakka-id urakka-id)
+            (not= haettu-sopimus-id sopimus-id)))
+      (-> app
+        (assoc :haettu-urakka-id urakka-id)
+        (assoc :haettu-sopimus-id sopimus-id)
+        (assoc :sopimuksien-haku-kaynnissa? true)
+        (tuck-apurit/post! :hae-vesivayla-kanavien-hoito-sopimukset
+          {:sopimus-id sopimus-id
+           :urakka-id urakka-id}
+          {:onnistui ->SopimuksetHaettu
+           :epaonnistui ->SopimuksetEiHaettu}))
+      app))
 
   SopimuksetHaettu
   (process-event [{sopimukset :sopimukset} app]
@@ -52,6 +64,7 @@
 
   KetjutusTallennettu
   (process-event [{vastaus :vastaus} app]
+    (liikenne/paivita-liikennenakyma)
     (-> app
       (assoc :haetut-sopimukset vastaus)
       (assoc :tallennus-kaynnissa? false)))

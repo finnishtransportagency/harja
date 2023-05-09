@@ -23,6 +23,7 @@
             [harja.tiedot.kanavat.urakka.liikenne :as tiedot]
             [harja.views.urakka.valinnat :as suodattimet]
             [harja.ui.grid.protokollat :as grid-protokollat]
+            [harja.tiedot.vesivaylat.hallinta.liikennetapahtumien-ketjutus :as hallinta-tiedot]
 
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.oikeudet :as oikeudet]
@@ -365,7 +366,7 @@
                    :vaihtoehto-nayta (partial tiedot/suuntavalinta-str edelliset)
                    :aseta (fn [rivi arvo]
                             (:valittu-liikennetapahtuma (e! (tiedot/->AsetaSuunnat arvo))))}]))))]
-        (when (tiedot/nayta-edelliset-alukset? e! app)
+        (when (tiedot/nayta-edelliset-alukset? app)
           (for* [[suunta tiedot] (dissoc edelliset :tama)]
             (when (tiedot/nayta-suunnan-ketjutukset? app suunta tiedot)
               (lomake/rivi
@@ -576,7 +577,11 @@
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
       (if-not valittu-liikennetapahtuma
         [liikennetapahtumataulukko e! app @kanavaurakka/kanavakohteet]
-        [liikennetapahtumalomake e! app @kanavaurakka/kanavakohteet]))))
+        (do
+          (let [sopimus-id (-> app :valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
+                urakka-id @nav/valittu-urakka-id]
+            (e! (hallinta-tiedot/->HaeSopimukset sopimus-id urakka-id))
+            [liikennetapahtumalomake e! app @kanavaurakka/kanavakohteet]))))))
 
 (defn liikennetapahtumat [e! app]
   [liikenne* e! app {:aikavali @u/valittu-aikavali}])
