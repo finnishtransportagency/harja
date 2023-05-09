@@ -3,32 +3,39 @@
   (:require [reagent.core :refer [atom] :as reagent]
             [tuck.core :as tuck]
             [harja.ui.viesti :as viesti]
-            [harja.tyokalut.tuck :as tuck-apurit]))
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.pvm :as pvm]))
 
 (defonce tila (atom {:tiedot []
-                     :valitut-rivit []}))
+                     :valitut-rivit []
+                     :valinnat {:aikavali (pvm/paivamaaran-hoitokausi (pvm/nyt))
+                                :hakumuoto :kaikki}}))
 
 (def suodattimet {:kaikki nil
                   :myohastyneet 1
                   :puuttuvat 2})
 
-(defrecord HaeTiedot [])
-(defrecord HaeTiedotOnnistui [vastaus])
-(defrecord HaeTiedotEpaonnistui [vastaus])
+(defrecord HaeTiedot[])
+(defrecord PaivitaAikavali[uudet])
+(defrecord PaivitaHakumuoto[uudet])
+(defrecord HaeTiedotOnnistui[vastaus])
+(defrecord HaeTiedotEpaonnistui[vastaus])
 
-(defn suodata-rivit [valinta]
-  (let [items (filter (fn [rivi]
-                        ;; Tietokanta palauttaa mock dataa random numeron 0-2
-                        ;; Rivin valinta palauttaa avaimen (:kaikki / :myohastyneet / :puuttuvat)
-                        ;; Verrataan tietokannan palauttamaa lukua ja avaimia
-                        (let [toimituksen-tila (:tila rivi)
-                              suodattimet (get suodattimet valinta)]
-                          (or
-                            ;; Palauta valitut tulokset tai kaikki
-                            (= suodattimet toimituksen-tila)
-                            (nil? suodattimet)))) (:tiedot @tila))
-        _ (-> tila
-            (swap! assoc :valitut-rivit items))]))
+(defn suodata-rivit-aikavalilla [valinnat]
+  ;; Annetaan parametrina tilan :valinnat josta luetaan hakumuoto & valittu aikaväli
+  (let [rivit (filter (fn [rivi]
+                        (let [tyopaiva (:alkupvm rivi)
+                              aikavali (:aikavali valinnat)
+                              valittu-hakumuoto (get suodattimet (-> @tila :valinnat :hakumuoto))
+                              rivin-toimitustila (:tila rivi)]
+                          (and
+                            ;; Onko "TYÖPÄIVÄ"- sarake valitun aikavälin välissä
+                            (pvm/valissa? tyopaiva (first aikavali) (second aikavali))
+                            (or
+                              ;; Vastaako valittu hakumuoto rivin toimituksen tilaa 
+                              (= valittu-hakumuoto nil)
+                              (= valittu-hakumuoto rivin-toimitustila))))) (:tiedot @tila))]
+    rivit))
 
 (extend-protocol tuck/Event
   HaeTiedot
@@ -48,4 +55,18 @@
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "HaeTiedotEpaonnistui :: vastaus: " (pr-str vastaus))
     (viesti/nayta-toast! (str "HaeTiedotEpaonnistui \n Vastaus: " (pr-str vastaus)) :varoitus)
-    app))
+    app)
+
+  PaivitaAikavali
+  (process-event [{u :uudet} app]
+    (let [uudet-valinnat (merge (:valinnat app) u)]
+      (-> app
+        (assoc :valinnat uudet-valinnat)
+        (assoc :valitut-rivit (suodata-rivit-aikavalilla uudet-valinnat)))))
+
+  PaivitaHakumuoto
+  (process-event [u app]
+    (let [uudet-valinnat (:uudet u)]
+      (-> app
+        (assoc-in [:valinnat :hakumuoto] uudet-valinnat)
+        (assoc :valitut-rivit (suodata-rivit-aikavalilla (-> @tila :valinnat)))))))

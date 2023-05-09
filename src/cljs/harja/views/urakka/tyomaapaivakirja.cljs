@@ -11,8 +11,6 @@
             [harja.pvm :as pvm])
   (:require-macros [harja.atom :refer [reaction-writable]]))
 
-(def valittu-hakumuoto (reaction-writable :kaikki))
-
 (defonce haun-valinnat
   {:kaikki "Kaikki"
    :myohastyneet "Myöhästyneet"
@@ -23,9 +21,11 @@
                        {:class "myohassa" :selitys "Myöhässä"}
                        {:class "puuttuu" :selitys "Puuttuu"}])
 
-(defn nakyma [e! {:keys [valitut-rivit]}]
-  (let [aikavali-atom (atom ())
+(def valittu-hakumuoto (reaction-writable :kaikki))
 
+(defn nakyma [e! {:keys [valitut-rivit valinnat] :as tiedot}]
+  (let [aikavali-atom (atom (:aikavali valinnat))
+        
         ;; Mikäli kirjaus puuttuu, tee oranssi tausta
         ;; TODO
         ;; Lisää tähän tieto mikäli toimitus puuttuu
@@ -36,11 +36,24 @@
         toimituksen-tila-fn (fn [arvo _rivi]
                               ;; TODO 
                               ;; Lisää tähän toimituksen tilan tiedot
+                              ;; LESS class sekä selitys->toimituksen-tila
                               (let [toimitus-tiedot (get toimituksen-tila (:tila arvo))]
-
                                 [:span {:class "paivakirja-toimitus"}
                                  [:div {:class (str "pallura " (:class toimitus-tiedot))}]
                                  [:span {:class "kohta"} (:selitys toimitus-tiedot)]]))]
+
+    (add-watch aikavali-atom
+      :aikavali-haku
+      (fn [_ _ vanha uusi]
+        (when-not (and (pvm/sama-pvm? (first vanha) (first uusi))
+                    (pvm/sama-pvm? (second vanha) (second uusi)))
+          (e! (tiedot/->PaivitaAikavali {:aikavali uusi})))))
+    
+    (add-watch valittu-hakumuoto
+      :aikavali-haku
+      (fn [_ _ vanha uusi]
+        (when-not (= vanha uusi)
+          (e! (tiedot/->PaivitaHakumuoto uusi)))))
 
     [:<>
      [:div.row.filtterit {:style {:padding "16px"}}
@@ -55,7 +68,6 @@
                            :vaihtoehdot (into [] (keys haun-valinnat))
                            :vayla-tyyli? true
                            :nayta-rivina? true
-                           :valitse-fn #(tiedot/suodata-rivit %)
                            :vaihtoehto-nayta haun-valinnat}
         valittu-hakumuoto]]]
 
