@@ -33,9 +33,9 @@
                                          :inner {:urakka {:ns :harja.domain.urakka}}})]
     vastaus))
 
-(defn hae-vesivayla-kanavien-hoito-sopimukset [db user]
+(defn hae-vesivayla-kanavien-hoito-sopimukset [db]
   (when (ominaisuus-kaytossa? :vesivayla)
-    (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
+    (oikeudet/ei-oikeustarkistusta!)
     (vesivayla-kanavien-hoito-sopimukset-vastaus db)))
 
 (defn- paivita-sopimusta! [db user sopimus]
@@ -119,8 +119,8 @@
 
     (julkaise-palvelu http
       :hae-vesivayla-kanavien-hoito-sopimukset
-      (fn [user _]
-        (hae-vesivayla-kanavien-hoito-sopimukset db user))
+      (fn [_ _]
+        (hae-vesivayla-kanavien-hoito-sopimukset db))
       {:vastaus-spec ::sopimus/hae-vesivayla-kanavien-hoito-sopimukset-vastaus})
 
     (julkaise-palvelu http
