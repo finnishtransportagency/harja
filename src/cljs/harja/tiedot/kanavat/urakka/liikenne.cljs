@@ -479,6 +479,7 @@
                                             (= sopimus-id (::sop/id sopimus))) haetut-sopimukset))
         ketjutus-kaytossa? (boolean (::sop/ketjutus ketjutus-kaytossa?))]
 
+    ;; test
     ;; Onko ketjutus käytössä tällä sopimuksella/urakalla?
     (if ketjutus-kaytossa?
       (boolean
