@@ -65,7 +65,9 @@
   (first (@aluslajit* laji)))
 
 (defn suodata-alukset-nimen-alulla [alukset nimi]
-  (filter #(str/starts-with?
-             (str/lower-case (::nimi %))
-             (str/lower-case nimi))
-          alukset))
+  (filter #(and
+             (::nimi %)
+             (str/starts-with?
+               (str/lower-case (::nimi %))
+               (str/lower-case nimi)))
+    alukset))
