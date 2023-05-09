@@ -159,6 +159,7 @@
          ^{:key "toimenpiteet"}
          [toimenpiteet/toimenpiteet ur])
 
+       ;; TODO 
        "Työmaapäiväkirja"
        :tyomaapaivakirja
        (when (valilehti-mahdollinen? :tyomaapaivakirja ur)
