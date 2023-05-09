@@ -499,40 +499,40 @@
                      tallenna))
         [:th.toiminnot {:width "40px"} " "])]]))
 
-(defn- aseta-faux-otsikkorivin-sarakkeet! [taulun-id leveys-atomi scroll-atomi faux-tr oikea-tr
-                                           ensimmainen-sarake-sticky?]
+(defn- aseta-leijuvan-otsikkorivin-sarakkeet! [taulun-id leveys-atomi scroll-atomi leijuva-tr oikea-tr
+                                               ensimmainen-sarake-sticky?]
   (reset! leveys-atomi (dom/elementin-leveys (js/document.getElementById taulun-id)))
-  (let [faux-sarakkeet (array-seq (.getElementsByTagName faux-tr "th"))
+  (let [leijuvat-sarakkeet (array-seq (.getElementsByTagName leijuva-tr "th"))
         oikeat-sarakkeet (array-seq (.getElementsByTagName oikea-tr "th"))]
     (when ensimmainen-sarake-sticky?
-      (set! (.-transform (.-style (first faux-sarakkeet))) (str "translateX(" @scroll-atomi "px)"))
-      (set! (.-transform (.-style (second faux-sarakkeet))) (str "translateX(" @scroll-atomi "px)")))
+      (set! (.-transform (.-style (first leijuvat-sarakkeet))) (str "translateX(" @scroll-atomi "px)"))
+      (set! (.-transform (.-style (second leijuvat-sarakkeet))) (str "translateX(" @scroll-atomi "px)")))
 
-    (loop [faux-sarakkeet faux-sarakkeet
+    (loop [leijuvat-sarakkeet leijuvat-sarakkeet
            oikeat-sarakkeet oikeat-sarakkeet]
-      (when-not (empty? faux-sarakkeet)
-        (set! (.-width (first faux-sarakkeet)) (.-offsetWidth (first oikeat-sarakkeet)))
-        (recur (rest faux-sarakkeet) (rest oikeat-sarakkeet))))))
+      (when-not (empty? leijuvat-sarakkeet)
+        (set! (.-width (first leijuvat-sarakkeet)) (.-offsetWidth (first oikeat-sarakkeet)))
+        (recur (rest leijuvat-sarakkeet) (rest oikeat-sarakkeet))))))
 
-(defn- faux-otsikkorivi [taulun-id ensimmainen-sarake-sticky?  & _]
+(defn- leijuva-otsikkorivi [taulun-id ensimmainen-sarake-sticky? & _]
   (let [taulukon-leveys (atom 0)
         taulukon-scroll (atom 0)
         aseta-taulukon-scroll! (fn [_ tapahtuma] (reset! taulukon-scroll (.-scrollLeft (.-target tapahtuma))))
-        aseta-faux-otsikkorivin-sarakkeet! (fn [this & _]
-                                             (aseta-faux-otsikkorivin-sarakkeet!
-                                               taulun-id
-                                               taulukon-leveys
-                                               taulukon-scroll
-                                               (r/dom-node this)
-                                               (js/document.getElementById taulun-id)
-                                               ensimmainen-sarake-sticky?))]
+        aseta-leijuvan-otsikkorivin-sarakkeet! (fn [this & _]
+                                                 (aseta-leijuvan-otsikkorivin-sarakkeet!
+                                                   taulun-id
+                                                   taulukon-leveys
+                                                   taulukon-scroll
+                                                   (r/dom-node this)
+                                                   (js/document.getElementById taulun-id)
+                                                   ensimmainen-sarake-sticky?))]
     (komp/luo
       (komp/piirretty (fn [this]
                         (reset! taulukon-scroll (.-scrollLeft (.-parentElement (r/dom-node this))))
-                        (aseta-faux-otsikkorivin-sarakkeet! this)))
+                        (aseta-leijuvan-otsikkorivin-sarakkeet! this)))
       (komp/dom-kuuntelija (.-parentElement (js/document.getElementById taulun-id))
         EventType/SCROLL aseta-taulukon-scroll!)
-      {:component-did-update aseta-faux-otsikkorivin-sarakkeet!}
+      {:component-did-update aseta-leijuvan-otsikkorivin-sarakkeet!}
 
       (fnc [_ _ opts skeema nayta-toimintosarake? piilota-toiminnot? tallenna esta-tiivis-grid?
             avattavat-rivit-auki]
@@ -1238,8 +1238,8 @@
             (when @kiinnita-otsikkorivi?
               ^{:key "kiinnitettyotsikko"}
               (if sivuttain-rullattava?
-                [faux-otsikkorivi taulukon-id ensimmainen-sarake-sticky? opts skeema nayta-toimintosarake? piilota-toiminnot?
-                 tallenna esta-tiivis-grid? avattavat-rivit-auki]
+                [leijuva-otsikkorivi taulukon-id ensimmainen-sarake-sticky? opts skeema nayta-toimintosarake?
+                 piilota-toiminnot? tallenna esta-tiivis-grid? avattavat-rivit-auki]
                 [:table.grid
                  {:style {:position "fixed"
                           :top 0
