@@ -21,7 +21,6 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.tiedot.kanavat.urakka.liikenne :as tiedot]
-            [harja.tiedot.vesivaylat.hallinta.liikennetapahtumien-ketjutus :as hallinta-tiedot]
             [harja.views.urakka.valinnat :as suodattimet]
             [harja.ui.grid.protokollat :as grid-protokollat]
 
@@ -366,7 +365,7 @@
                    :vaihtoehto-nayta (partial tiedot/suuntavalinta-str edelliset)
                    :aseta (fn [rivi arvo]
                             (:valittu-liikennetapahtuma (e! (tiedot/->AsetaSuunnat arvo))))}]))))]
-        (when (tiedot/nayta-edelliset-alukset? app)
+        (when (tiedot/nayta-edelliset-alukset? e! app)
           (for* [[suunta tiedot] (dissoc edelliset :tama)]
             (when (tiedot/nayta-suunnan-ketjutukset? app suunta tiedot)
               (lomake/rivi
@@ -570,7 +569,6 @@
                                     (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do
                          (e! (tiedot/->Nakymassa? true))
-                         (e! (hallinta-tiedot/->HaeSopimukset))
                          (tiedot/nakymaan e! valinnat))
       #(e! (tiedot/->Nakymassa? false)))
 

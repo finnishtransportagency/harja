@@ -17,6 +17,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.hallintayksikot :as hallintayksikot]
             [harja.tiedot.raportit :as raporttitiedot]
+            [harja.tiedot.vesivaylat.hallinta.liikennetapahtumien-ketjutus :as hallinta-tiedot]
 
             [harja.domain.urakka :as ur]
             [harja.domain.sopimus :as sop]
@@ -465,12 +466,15 @@
          (when (suunta edelliset)
            (str ", " (count (get-in edelliset [suunta :edelliset-alukset])) " lähestyvää alusta")))))
 
-(defn nayta-edelliset-alukset? [{:keys [valittu-liikennetapahtuma
-                                        haetut-sopimukset
-                                        edellisten-haku-kaynnissa?
-                                        edelliset]}]
+(defn nayta-edelliset-alukset? [e! {:keys [valittu-liikennetapahtuma
+                                           edellisten-haku-kaynnissa?
+                                           edelliset]}]
 
   (let [sopimus-id (-> valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
+        urakka-id @nav/valittu-urakka-id
+        ;; Hae valitun urakan sopimukset
+        haetut-sopimukset (e! (hallinta-tiedot/->HaeSopimukset sopimus-id urakka-id))
+        haetut-sopimukset (:haetut-sopimukset haetut-sopimukset)
         ketjutus-kaytossa? (first (filter (fn[sopimus]
                                             (= sopimus-id (::sop/id sopimus))) haetut-sopimukset))
         ketjutus-kaytossa? (boolean (::sop/ketjutus ketjutus-kaytossa?))]

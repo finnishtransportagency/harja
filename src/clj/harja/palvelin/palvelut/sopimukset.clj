@@ -24,19 +24,18 @@
                                            :inner {:urakka {:ns :harja.domain.urakka}}})]
         vastaus)))
 
-(defn vesivayla-kanavien-hoito-sopimukset-vastaus [db]
-  (let [sopimukset (into []
-                     (map konv/alaviiva->rakenne)
-                     (q/hae-vesivayla-kanavien-hoito-sopimukset db))
-        
+(defn vesivayla-kanavien-hoito-sopimukset-vastaus [db sopimus-id urakka-id]
+  (let [sopimukset (into [] (q/hae-vesivayla-kanavien-hoito-sopimukset db {:sopimus-id sopimus-id
+                                                                           :urakka-id urakka-id}))
+
         vastaus (namespacefy sopimukset {:ns :harja.domain.sopimus
                                          :inner {:urakka {:ns :harja.domain.urakka}}})]
     vastaus))
 
-(defn hae-vesivayla-kanavien-hoito-sopimukset [db]
+(defn hae-vesivayla-kanavien-hoito-sopimukset [db user {:keys [sopimus-id urakka-id]}]
   (when (ominaisuus-kaytossa? :vesivayla)
-    (oikeudet/ei-oikeustarkistusta!)
-    (vesivayla-kanavien-hoito-sopimukset-vastaus db)))
+    (oikeudet/voi-lukea? oikeudet/urakat-kanavat-kanavakohteet urakka-id user)
+    (vesivayla-kanavien-hoito-sopimukset-vastaus db sopimus-id urakka-id)))
 
 (defn- paivita-sopimusta! [db user sopimus]
   (let [id (::sopimus/id sopimus)
@@ -105,7 +104,7 @@
                                          :ketjutus_kaytossa kaytossa?})
         (q/poista-sopimuksen-liikenne-ketjutus! db {:sopimus_id sopimus_id
                                                     :ketjutus_kaytossa kaytossa?}))
-      (vesivayla-kanavien-hoito-sopimukset-vastaus db))))
+      (vesivayla-kanavien-hoito-sopimukset-vastaus db -1 -1))))
 
 (defrecord Sopimukset []
   component/Lifecycle
@@ -119,8 +118,8 @@
 
     (julkaise-palvelu http
       :hae-vesivayla-kanavien-hoito-sopimukset
-      (fn [_ _]
-        (hae-vesivayla-kanavien-hoito-sopimukset db))
+      (fn [user tiedot]
+        (hae-vesivayla-kanavien-hoito-sopimukset db user tiedot))
       {:vastaus-spec ::sopimus/hae-vesivayla-kanavien-hoito-sopimukset-vastaus})
 
     (julkaise-palvelu http

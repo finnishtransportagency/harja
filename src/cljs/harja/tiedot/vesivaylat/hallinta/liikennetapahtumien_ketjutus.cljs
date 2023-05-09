@@ -10,7 +10,7 @@
 (defrecord TallennaKetjutus [sopimus kaytossa?])
 (defrecord KetjutusTallennettu [vastaus])
 (defrecord KetjutusEiTallennettu [virhe])
-(defrecord HaeSopimukset [])
+(defrecord HaeSopimukset [sopimus-id urakka-id])
 (defrecord SopimuksetHaettu [sopimukset])
 (defrecord SopimuksetEiHaettu [virhe])
 
@@ -21,11 +21,12 @@
     (assoc app :valittu-sopimus sopimus))
 
   HaeSopimukset
-  (process-event [_ app]
+  (process-event [{sopimus-id :sopimus-id urakka-id :urakka-id} app]
     (-> app
       (assoc :sopimuksien-haku-kaynnissa? true)
       (tuck-apurit/post! :hae-vesivayla-kanavien-hoito-sopimukset
-        {}
+        {:sopimus-id sopimus-id
+         :urakka-id urakka-id}
         {:onnistui ->SopimuksetHaettu
          :epaonnistui ->SopimuksetEiHaettu})))
 
