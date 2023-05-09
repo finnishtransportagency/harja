@@ -499,6 +499,54 @@
                      tallenna))
         [:th.toiminnot {:width "40px"} " "])]]))
 
+(defn- aseta-faux-otsikkorivin-sarakkeet! [taulun-id leveys-atomi scroll-atomi faux-tr oikea-tr
+                                           ensimmainen-sarake-sticky?]
+  (reset! leveys-atomi (dom/elementin-leveys (js/document.getElementById taulun-id)))
+  (let [faux-sarakkeet (array-seq (.getElementsByTagName faux-tr "th"))
+        oikeat-sarakkeet (array-seq (.getElementsByTagName oikea-tr "th"))]
+    (when ensimmainen-sarake-sticky?
+      (set! (.-transform (.-style (first faux-sarakkeet))) (str "translateX(" @scroll-atomi "px)"))
+      (set! (.-transform (.-style (second faux-sarakkeet))) (str "translateX(" @scroll-atomi "px)")))
+
+    (loop [faux-sarakkeet faux-sarakkeet
+           oikeat-sarakkeet oikeat-sarakkeet]
+      (when-not (empty? faux-sarakkeet)
+        (set! (.-width (first faux-sarakkeet)) (.-offsetWidth (first oikeat-sarakkeet)))
+        (recur (rest faux-sarakkeet) (rest oikeat-sarakkeet))))))
+
+(defn- faux-otsikkorivi [taulun-id ensimmainen-sarake-sticky?  & _]
+  (let [taulukon-leveys (atom 0)
+        taulukon-scroll (atom 0)
+        aseta-taulukon-scroll! (fn [_ tapahtuma] (reset! taulukon-scroll (.-scrollLeft (.-target tapahtuma))))
+        aseta-faux-otsikkorivin-sarakkeet! (fn [this & _]
+                                             (aseta-faux-otsikkorivin-sarakkeet!
+                                               taulun-id
+                                               taulukon-leveys
+                                               taulukon-scroll
+                                               (r/dom-node this)
+                                               (js/document.getElementById taulun-id)
+                                               ensimmainen-sarake-sticky?))]
+    (komp/luo
+      (komp/piirretty (fn [this]
+                        (reset! taulukon-scroll (.-scrollLeft (.-parentElement (r/dom-node this))))
+                        (aseta-faux-otsikkorivin-sarakkeet! this)))
+      (komp/dom-kuuntelija (.-parentElement (js/document.getElementById taulun-id))
+        EventType/SCROLL aseta-taulukon-scroll!)
+      {:component-did-update aseta-faux-otsikkorivin-sarakkeet!}
+
+      (fnc [_ _ opts skeema nayta-toimintosarake? piilota-toiminnot? tallenna esta-tiivis-grid?
+            avattavat-rivit-auki]
+        @avattavat-rivit-auki
+        [:table.grid
+         {:style {:width @taulukon-leveys
+                  :position :fixed
+                  :top 0
+                  :z-index 100
+                  :transform (str "translateX(-" @taulukon-scroll "px)")}}
+         [otsikkorivi {:opts opts :skeema skeema
+                       :nayta-toimintosarake? nayta-toimintosarake? :piilota-toiminnot? piilota-toiminnot?
+                       :tallenna tallenna :esta-tiivis-grid? esta-tiivis-grid?}]]))))
+
 (defn- toggle-valiotsikko [valiotsikko-id piilotetut-valiotsikot]
   (if (@piilotetut-valiotsikot valiotsikko-id)
     (swap! piilotetut-valiotsikot disj valiotsikko-id)
@@ -826,6 +874,7 @@
            taulukko-validointi taulukko-varoitus taulukko-huomautus piilota-border?] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
   (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
+        taulukon-id (gensym)
         muokatut (atom nil) ;; muokattu datajoukko
         jarjestys (atom nil) ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
@@ -1074,7 +1123,6 @@
         kasittele-otsikkorivin-kiinnitys (fn [this]
                                            (if (and
                                                  (empty? @vetolaatikot-auki) ;; Jottei naulattu otsikkorivi peitä sisältöä
-                                                 (empty? @avattavat-rivit-auki) ;; Jottei naulattu otsikkorivi peitä sisältöä
                                                  (> (dom/elementin-korkeus (r/dom-node this)) @dom/korkeus)
                                                  (< (dom/elementin-etaisyys-viewportin-ylareunaan (r/dom-node this)) -20)
                                                  (pos? (dom/elementin-etaisyys-viewportin-ylareunaan-alareunasta (r/dom-node this))))
@@ -1189,18 +1237,22 @@
             {:class (str (when reunaviiva? "livi-grid-reunaviiva"))}
             (when @kiinnita-otsikkorivi?
               ^{:key "kiinnitettyotsikko"}
-              [:table.grid
-               {:style {:position "fixed"
-                        :top 0
-                        :width @kiinnitetyn-otsikkorivin-leveys
-                        :z-index 200}}
-               [otsikkorivi {:opts opts :skeema skeema
-                             :nayta-toimintosarake? nayta-toimintosarake? :piilota-toiminnot? piilota-toiminnot?
-                             :tallenna tallenna}]])
+              (if sivuttain-rullattava?
+                [faux-otsikkorivi taulukon-id ensimmainen-sarake-sticky? opts skeema nayta-toimintosarake? piilota-toiminnot?
+                 tallenna esta-tiivis-grid? avattavat-rivit-auki]
+                [:table.grid
+                 {:style {:position "fixed"
+                          :top 0
+                          :width @kiinnitetyn-otsikkorivin-leveys
+                          :z-index 200}}
+                 [otsikkorivi {:opts opts :skeema skeema
+                               :nayta-toimintosarake? nayta-toimintosarake? :piilota-toiminnot? piilota-toiminnot?
+                               :tallenna tallenna}]]))
             (if (nil? tiedot)
               (ajax-loader)
               ^{:key "taulukkodata"}
               [:table.grid
+               {:id taulukon-id}
                [otsikkorivi {:opts opts :skeema skeema
                              :nayta-toimintosarake? nayta-toimintosarake? :piilota-toiminnot? piilota-toiminnot?
                              :tallenna tallenna :esta-tiivis-grid? esta-tiivis-grid?}]
