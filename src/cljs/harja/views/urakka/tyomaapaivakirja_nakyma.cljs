@@ -6,11 +6,11 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
             [harja.pvm :as pvm]
-            [harja.views.urakka.tyomaapaivakirja.tyomaapaivakirja-vahvuus :as vahvuus]
-            [harja.views.urakka.tyomaapaivakirja.tyomaapaivakirja-saatiedot :as saatiedot]
-            [harja.views.urakka.tyomaapaivakirja.tyomaapaivakirja-keliolosuhteet :as keliolosuhteet]
-            [harja.views.urakka.tyomaapaivakirja.tyomaapaivakirja-kalusto :as kalusto]
-            [harja.views.urakka.tyomaapaivakirja.tyomaapaivakirja-muut-toimenpiteet :as muut-toimenpiteet]))
+            [harja.views.urakka.tyomaapaivakirja.vahvuus :as vahvuus]
+            [harja.views.urakka.tyomaapaivakirja.saatiedot :as saatiedot]
+            [harja.views.urakka.tyomaapaivakirja.keliolosuhteet :as keliolosuhteet]
+            [harja.views.urakka.tyomaapaivakirja.kalusto-ja-toimenpiteet :as kalusto]
+            [harja.views.urakka.tyomaapaivakirja.muut-toimenpiteet :as muut-toimenpiteet]))
 
 (def toimituksen-tila [{:class "ok" :selitys "Ok"}
                        {:class "myohassa" :selitys "Myöhässä"}

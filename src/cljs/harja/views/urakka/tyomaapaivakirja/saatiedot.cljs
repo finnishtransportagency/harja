@@ -1,4 +1,4 @@
-(ns harja.views.urakka.tyomaapaivakirja.tyomaapaivakirja-saatiedot
+(ns harja.views.urakka.tyomaapaivakirja.saatiedot
   "Työmaapäiväkirja näkymän Sääasemien tieto- gridit"
   (:require [harja.tiedot.tyomaapaivakirja :as tiedot]
             [harja.ui.grid :as grid]

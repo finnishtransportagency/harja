@@ -1,5 +1,5 @@
-(ns harja.views.urakka.tyomaapaivakirja.tyomaapaivakirja-keliolosuhteet
-  "Työmaapäiväkirja näkymän poikkeukselliset keliolosuhteet"
+(ns harja.views.urakka.tyomaapaivakirja.muut-toimenpiteet
+  "Työmaapäiväkirja näkymän muut toimenpiteet"
   (:require [harja.tiedot.tyomaapaivakirja :as tiedot]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
@@ -7,13 +7,11 @@
             [harja.ui.napit :as napit]
             [harja.pvm :as pvm]))
 
-(defn poikkeukselliset-keliolosuhteet-grid []
+(defn muut-toimenpiteet-grid []
   [:div {:style {:padding-top "10px"}}
-   [:h2 "Poikkeukselliset paikalliset keliolosuhteet"]
+   [:h2 "Muut toimenpiteet"]
    [:div {:class "flex-gridit"}
     [:div
-     [:h3 {:class "gridin-otsikko"} "Omat havainnot"]
-
      [grid/grid {:tyhja "Ei Tietoja."
                  :tunniste :id
                  :voi-kumota? false
@@ -21,27 +19,19 @@
                  :piilota-toiminnot? true
                  :jarjesta :id}
 
-      [{:otsikko "Klo"
+      [{:otsikko "Aikaväli"
         :otsikkorivi-luokka "nakyma-otsikko"
         :tyyppi :string
         :nimi :alkupvm
-        :leveys 0.1}
+        :leveys 0.023}
 
-       {:otsikko "Paikka"
+       {:otsikko "Toimenpide"
         :otsikkorivi-luokka "nakyma-otsikko"
         :tyyppi :string
         :nimi :nimi
         :solun-luokka (fn [_ _]
                         "nakyma-valkoinen-solu")
-        :leveys 0.33}
-       
-       {:otsikko "Havainto"
-        :otsikkorivi-luokka "nakyma-otsikko"
-        :tyyppi :string
-        :nimi :nimi
-        :solun-luokka (fn [_ _]
-                        "nakyma-valkoinen-solu")
-        :leveys 1}]
+        :leveys 0.3}]
       ;; TODO
       ;; Gridille jokin atomi 
       [{:id 0 :alkupvm "00:00" :nimi "Test"}]]]]])

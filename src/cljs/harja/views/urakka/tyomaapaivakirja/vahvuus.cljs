@@ -1,4 +1,4 @@
-(ns harja.views.urakka.tyomaapaivakirja.tyomaapaivakirja-vahvuus
+(ns harja.views.urakka.tyomaapaivakirja.vahvuus
   "Työmaapäiväkirja näkymän Vahvuus- gridit"
   (:require [harja.tiedot.tyomaapaivakirja :as tiedot]
             [harja.ui.grid :as grid]
