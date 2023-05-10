@@ -10,7 +10,9 @@
             [harja.views.urakka.tyomaapaivakirja.saatiedot :as saatiedot]
             [harja.views.urakka.tyomaapaivakirja.keliolosuhteet :as keliolosuhteet]
             [harja.views.urakka.tyomaapaivakirja.kalusto-ja-toimenpiteet :as kalusto]
-            [harja.views.urakka.tyomaapaivakirja.muut-toimenpiteet :as muut-toimenpiteet]))
+            [harja.views.urakka.tyomaapaivakirja.muut-toimenpiteet :as muut-toimenpiteet]
+            [harja.views.urakka.tyomaapaivakirja.vahingot :as vahingot]
+            [harja.views.urakka.tyomaapaivakirja.liikenteenohjaukset :as liikenne]))
 
 (def toimituksen-tila [{:class "ok" :selitys "Ok"}
                        {:class "myohassa" :selitys "Myöhässä"}
@@ -56,4 +58,8 @@
       (kalusto/kalusto-ja-tien-toimenpiteet-grid)
       ;; Muut toimenpiteet
       (muut-toimenpiteet/muut-toimenpiteet-grid)
+      ;; Vahingot
+      (vahingot/vahingot-ja-onnettomuudet)
+      ;; Tilapäiset liikenteenohjaukset
+      (liikenne/tilapaiset-liikenteenohjaukset)
       ]]))
