@@ -7,7 +7,6 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [cheshire.core :as cheshire]
             [clojure.core.match :refer [match]]
-            [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [clj-time.coerce :as c]
             [clj-time.core :as t]
             [clojure.data.json :as json]
@@ -22,11 +21,8 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :liitteiden-hallinta (component/using (liitteet/->Liitteet nil) [:db])
-    :turi (component/using
-            (turi/->Turi {})
-            [:db :integraatioloki :liitteiden-hallinta])
     :api-turvallisuuspoikkeama (component/using (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
-                                 [:http-palvelin :db :integraatioloki :liitteiden-hallinta :turi])))
+                                                [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
 
 (use-fixtures :once jarjestelma-fixture)
 
