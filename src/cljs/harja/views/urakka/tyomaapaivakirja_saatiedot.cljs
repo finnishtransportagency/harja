@@ -76,7 +76,7 @@
         :leveys 1}]
       ;; TODO 
       ;; Gridille jokin atomi 
-      [{:id 0 :alkupvm "00:00 - 00:00" :nimi "Test"}]]]
+      [{:id 0 :alkupvm "00:00" :nimi "Test"}]]]
 
     [:div
      [:h3 {:class "gridin-otsikko"} "Tie 4, Oulu, Osoite"]
@@ -143,4 +143,4 @@
         :leveys 1}]
       ;; TODO 
       ;; Gridille jokin atomi 
-      [{:id 0 :alkupvm "00:00 - 00:00" :nimi "Test"}]]]]])
+      [{:id 0 :alkupvm "00:00" :nimi "Test"}]]]]])

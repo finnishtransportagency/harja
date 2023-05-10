@@ -7,7 +7,8 @@
             [harja.ui.napit :as napit]
             [harja.pvm :as pvm]
             [harja.views.urakka.tyomaapaivakirja-vahvuus :as vahvuus]
-            [harja.views.urakka.tyomaapaivakirja-saatiedot :as saatiedot]))
+            [harja.views.urakka.tyomaapaivakirja-saatiedot :as saatiedot]
+            [harja.views.urakka.tyomaapaivakirja-keliolosuhteet :as keliolosuhteet]))
 
 (def toimituksen-tila [{:class "ok" :selitys "Ok"}
                        {:class "myohassa" :selitys "Myöhässä"}
@@ -47,6 +48,8 @@
       (vahvuus/vahvuus-grid)
       ;; Sääasemien tiedot
       (saatiedot/saatiedot-grid)
+      ;; Poikkeukselliset keliolosuhteet
+      (keliolosuhteet/poikkeukselliset-keliolosuhteet-grid)
       
       
       ]]))
