@@ -25,8 +25,26 @@
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
-(s/def ::alkuvuosi #(and (string? %) (= (count %) 4) (number? (Integer/parseInt %)) (pos? (Integer/parseInt %))))
-(s/def ::loppuvuosi #(and (string? %) (= (count %) 4) (number? (Integer/parseInt %)) (pos? (Integer/parseInt %))))
+(s/def ::alkuvuosi #(and (or
+                           (string? %)
+                           (integer? %))
+                      (= (count (str %)) 4)
+                      (if (string? %)
+                        (number? (Integer/parseInt %))
+                        (number? %))
+                      (if (string? %)
+                        (pos? (Integer/parseInt %))
+                        (pos? %))))
+(s/def ::loppuvuosi #(and (or
+                            (string? %)
+                            (integer? %))
+                       (= (count (str %)) 4)
+                       (if (string? %)
+                         (number? (Integer/parseInt %))
+                         (number? %))
+                       (if (string? %)
+                         (pos? (Integer/parseInt %))
+                         (pos? %))))
 (s/def ::urakka-id #(and (string? %) (not (nil? (konversio/konvertoi->int %))) (pos? (konversio/konvertoi->int %))))
 (s/def ::alkuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
 (s/def ::loppuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
@@ -220,7 +238,7 @@
 (defn- tarkista-parametrit-urakka-aikavali [parametrit]
   (let [pakolliset {:urakka-id "Urakka-id puuttuu"}
         alkuvuosi (konversio/konvertoi->int (:alkuvuosi parametrit))
-        loppuvuosi (konversio/konvertoi->int (:alkuvuosi parametrit))]
+        loppuvuosi (konversio/konvertoi->int (:loppuvuosi parametrit))]
     (parametrivalidointi/tarkista-parametrit parametrit pakolliset)
     (when (or (and
                 (not (nil? (:alkuvuosi parametrit)))
@@ -230,13 +248,14 @@
               (and (not (nil? alkuvuosi)) (not (nil? loppuvuosi)) (> alkuvuosi loppuvuosi))))
       (virheet/heita-viallinen-apikutsu-poikkeus
         {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Alkuvuodessa: '%s' virhe. Anna muodossa: 2015 ja varmista, että se on pienempi, kuin loppuvuosi." (:alkuvuosi parametrit))}))
+         :viesti (format "Alkuvuodessa: '%s' virhe. Anna muodossa: 2014 ja varmista, että se on pienempi, kuin loppuvuosi." (:alkuvuosi parametrit))}))
     (when (or (and
                 (not (nil? (:loppuvuosi parametrit)))
                 (not (s/valid? ::loppuvuosi (:loppuvuosi parametrit))))
             (and
+              (not (nil? (:alkuvuosi parametrit)))
               (not (nil? (:loppuvuosi parametrit)))
-              (and (not (nil? alkuvuosi)) (not (nil? loppuvuosi)) (> alkuvuosi loppuvuosi))))
+              (> alkuvuosi loppuvuosi)))
       (virheet/heita-viallinen-apikutsu-poikkeus
         {:koodi virheet/+puutteelliset-parametrit+
          :viesti (format "Loppuvuodessa: '%s' virhe. Anna muodossa: 2023 ja varmista, että se on suurempi, kuin alkuvuosi" (:loppuvuosi parametrit))}))
@@ -377,15 +396,22 @@
         urakat (urakat-kyselyt/listaa-urakat-analytiikalle-hoitovuosittain db {:alkuvuosi alkuvuosi
                                                                                :loppuvuosi loppuvuosi})
         suunnitellut-materiaalit (mapv (fn [urakka]
-                                         {:urakka (:nimi urakka)
-                                          :urakka-id (:id urakka)
-                                          :vuosittaiset-suunnitelmat
-                                          (palauta-urakan-suunnitellut-materiaalimaarat db
-                                            {:alkuvuosi alkuvuosi
-                                             :loppuvuosi loppuvuosi
-                                             ;; Validaation yksinkertaistamiseksi välitetään kaikki stringinä
-                                             :urakka-id (str (:id urakka))}
-                                            kayttaja)})
+                                         (let [;; Rajoitetaan urakalta haettavia tietoja urakan voimassaoloon
+                                               min-vuosi (if (< (konversio/konvertoi->int alkuvuosi) (pvm/vuosi (:alkupvm urakka)))
+                                                           (pvm/vuosi (:alkupvm urakka))
+                                                           alkuvuosi)
+                                               max-vuosi (if (> (konversio/konvertoi->int loppuvuosi) (pvm/vuosi (:loppupvm urakka)))
+                                                           (pvm/vuosi (:loppupvm urakka))
+                                                           loppuvuosi)]
+                                           {:urakka (:nimi urakka)
+                                            :urakka-id (:id urakka)
+                                            :vuosittaiset-suunnitelmat
+                                            (palauta-urakan-suunnitellut-materiaalimaarat db
+                                              {:alkuvuosi min-vuosi
+                                               :loppuvuosi max-vuosi
+                                               ;; Validaation yksinkertaistamiseksi välitetään kaikki stringinä
+                                               :urakka-id (str (:id urakka))}
+                                              kayttaja)}))
                                    urakat)]
     suunnitellut-materiaalit))
 
@@ -449,15 +475,22 @@
         urakat (urakat-kyselyt/listaa-urakat-analytiikalle-hoitovuosittain db {:alkuvuosi alkuvuosi
                                                                                :loppuvuosi loppuvuosi})
         suunnitellut-tehtavat (mapv (fn [urakka]
-                                      {:urakka (:nimi urakka)
-                                       :urakka-id (:id urakka)
-                                       :vuosittaiset-suunnitelmat
-                                       (palauta-urakan-suunnitellut-tehtavamaarat db
-                                         {:alkuvuosi alkuvuosi
-                                          :loppuvuosi loppuvuosi
-                                          ;; Validaation yksinkertaistamiseksi välitetään kaikki stringinä
-                                          :urakka-id (str (:id urakka))}
-                                         kayttaja)})
+                                      (let [;; Rajoitetaan urakalta haettavia tietoja urakan voimassaoloon
+                                            min-vuosi (if (< (konversio/konvertoi->int alkuvuosi) (pvm/vuosi (:alkupvm urakka)))
+                                                        (pvm/vuosi (:alkupvm urakka))
+                                                        alkuvuosi)
+                                            max-vuosi (if (> (konversio/konvertoi->int loppuvuosi) (pvm/vuosi (:loppupvm urakka)))
+                                                        (pvm/vuosi (:loppupvm urakka))
+                                                        loppuvuosi)]
+                                       {:urakka (:nimi urakka)
+                                        :urakka-id (:id urakka)
+                                        :vuosittaiset-suunnitelmat
+                                        (palauta-urakan-suunnitellut-tehtavamaarat db
+                                          {:alkuvuosi min-vuosi
+                                           :loppuvuosi max-vuosi
+                                           ;; Validaation yksinkertaistamiseksi välitetään kaikki stringinä
+                                           :urakka-id (str (:id urakka))}
+                                          kayttaja)}))
                                 urakat)]
     suunnitellut-tehtavat))
 

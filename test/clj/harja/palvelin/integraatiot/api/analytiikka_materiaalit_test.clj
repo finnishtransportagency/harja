@@ -17,7 +17,7 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja-yit
     :api-analytiikka (component/using
-                       (api-analytiikka/->Analytiikka true)
+                       (api-analytiikka/->Analytiikka false)
                        [:http-palvelin :db-replica :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
@@ -271,6 +271,18 @@
     ;; Pitäisi olla useamman urakan tiedot
     (is (= (count urakat-sql) (count encoodattu-body)))))
 
+(deftest hae-suunnitellut-materiaalimaarat-kaikille-voimassaoleville-urakoille-palauttaa-voimassaolovuosien-mukaiset-materiaalit
+  (let [alkuvuosi 2000
+        loppuvuosi 2040
+        ;; Hae suunnitellut materiaalit
+        vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-materiaalit/%s/%s" alkuvuosi loppuvuosi)] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
+
+    (is (= 200 (:status vastaus)))
+    (is (not (nil? encoodattu-body)))
+    ;; Varmista, että yhdeltäkään urakalta ei löydy 40 riviä vuosittaisia materiaaleja
+    (is (every? (fn [urakka] (if (> 12 (count (:vuosittaiset-suunnitelmat urakka))) true false)) encoodattu-body))))
+
 (deftest hae-suunnitellut-tehtavamaarat-alueurakalle-onnistuu
   (let [;; Ota hoitourakka (alueurakka)
         urakka-id (hae-urakan-id-nimella "Aktiivinen Oulu Testi")
@@ -317,10 +329,7 @@
   (let [;; Ota hoitourakka (alueurakka)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
-        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
         alkupvm (:alkupvm urakan-tiedot)
-        loppupvm (pvm/ajan-muokkaus alkupvm true 1 :vuosi)
-        loppupvm (pvm/ajan-muokkaus loppupvm false 1 :paiva)
 
         ;; Poista suunnitellut määrät urakka_tehtavamaara -taulusta
         _ (u (format "DELETE from urakka_tehtavamaara where urakka = %s" urakka-id))
@@ -419,11 +428,25 @@
     (is (= soratie-tehtava (:tehtava (first (:suunnitellut-tehtavat (first (:vuosittaiset-suunnitelmat (second urakoiden-tehtavat))))))))
     (is (= sorateiden-maara (:maara (first (:suunnitellut-tehtavat (first (:vuosittaiset-suunnitelmat (second urakoiden-tehtavat))))))))))
 
+(deftest hae-suunnitellut-tehtavamaarat-kaikille-voimassaoleville-urakoille-palauttaa-voimassaolovuosien-mukaiset-tehtavamaarat
+  (let [alkuvuosi 2000
+        loppuvuosi 2040
+        ;; Hae suunnitellut materiaalit
+        vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" alkuvuosi loppuvuosi)] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
+
+    (is (= 200 (:status vastaus)))
+    (is (not (nil? encoodattu-body)))
+    ;; Varmista, että yhdeltäkään urakalta ei löydy 40 riviä vuosittaisia tehtäviä
+    (is (every? (fn [urakka] (if (> 12 (count (:vuosittaiset-suunnitelmat urakka))) true false)) encoodattu-body))))
+
 (deftest hae-suunnitellut-tehtavamaarat-epaonnistuu
   (let [;; Haetaan apista tulokset
         uri-error-vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" "haku-alkaa" " haku-paattyy")] kayttaja-analytiikka portti)
         uri-virhe (:error uri-error-vastaus)
-        virheellinen-kayttaja-vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" "haku-alkaa" "haku-paattyy")] kayttaja-analytiikka portti)
+        virheellinen-kayttaja-vastaus (api-tyokalut/get-kutsu
+                                        [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" 2004 2024)]
+                                        kayttaja-yit portti)
         vaara-vuodet-vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" "l" 200)] kayttaja-analytiikka portti)]
     (is (not (nil? uri-virhe)))
     (is (str/includes? uri-virhe "java.net.URISyntaxException"))
