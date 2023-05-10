@@ -1,5 +1,5 @@
-(ns harja.views.urakka.tyomaapaivakirja.vahingot
-  "Työmaapäiväkirja näkymän vahingot"
+(ns harja.views.urakka.tyomaapaivakirja.muut-huomiot
+  "Työmaapäiväkirja näkymän muut huomiot"
   (:require [harja.tiedot.tyomaapaivakirja :as tiedot]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
@@ -7,9 +7,9 @@
             [harja.ui.napit :as napit]
             [harja.pvm :as pvm]))
 
-(defn vahingot-ja-onnettomuudet []
+(defn muut-huomiot []
   [:div {:style {:padding-top "20px"}}
-   [:h2 "Vahingot ja onnettomuudet"]
+   [:h2 "Muut huomiot"]
    [:hr]
-   [:h7 {:class "tieto-rivi"} "Vahinko: Rekka törmännyt keskikaiteeseen Vt 4 4/400/100-200, Kaide vaurioitunut 100 metriä"]
+
    [:hr]])

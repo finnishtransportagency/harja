@@ -29,7 +29,9 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
-            [harja.domain.urakka :as urakka])
+            [harja.domain.urakka :as urakka]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.domain.roolit :as roolit])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -49,9 +51,11 @@
                        (urakka/vesivaylaurakkatyyppi? tyyppi)
                        (istunto/ominaisuus-kaytossa? :vesivayla))
     ;; TODO 
-    :tyomaapaivakirja (and (oikeudet/urakat-paikkaukset id)
+    :tyomaapaivakirja (and 
+                         (k/kehitysymparistossa?)
+                         (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava)
+                         (oikeudet/urakat-paikkaukset id)
                          (#{:hoito :teiden-hoito} tyyppi))
-    
 
     :vv-materiaalit (and
                       (oikeudet/urakat-vesivayla-materiaalit id)

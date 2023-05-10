@@ -8,7 +8,7 @@
             [harja.pvm :as pvm]))
 
 (defn maastotoimeksiannot-grid []
-  [:div {:style {:padding-top "10px"}}
+  [:div {:style {:padding-top "20px"}}
    [:h2 "Viranomaispäätöksiin liittyvät maastotoimeksiannot"]
    [:div {:class "flex-gridit"}
     [:div

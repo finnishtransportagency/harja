@@ -13,7 +13,10 @@
             [harja.views.urakka.tyomaapaivakirja.muut-toimenpiteet :as muut-toimenpiteet]
             [harja.views.urakka.tyomaapaivakirja.vahingot :as vahingot]
             [harja.views.urakka.tyomaapaivakirja.liikenteenohjaukset :as liikenne]
-            [harja.views.urakka.tyomaapaivakirja.maastotoimeksiannot :as maastotoimeksiannot]))
+            [harja.views.urakka.tyomaapaivakirja.maastotoimeksiannot :as maastotoimeksiannot]
+            [harja.views.urakka.tyomaapaivakirja.yhteydenotot :as yhteydenotot]
+            [harja.views.urakka.tyomaapaivakirja.muut-huomiot :as muut-huomiot]
+            [harja.views.urakka.tyomaapaivakirja.kommentit :as kommentit]))
 
 (def toimituksen-tila [{:class "ok" :selitys "Ok"}
                        {:class "myohassa" :selitys "Myöhässä"}
@@ -38,7 +41,7 @@
 
        [:span "Saapunut 11.10.2022 05:45"]
        [:span "Päivitetty 11.10.2022 05:45"]
-       [:a {:href "url"} "Näytä muutoshistoria"]
+       [:a "Näytä muutoshistoria"]
 
        [:span {:class "paivakirja-toimitus"}
         [:div {:class (str "pallura " (:class toimitus-tiedot))}]
@@ -65,4 +68,10 @@
       (liikenne/tilapaiset-liikenteenohjaukset)
       ;; Viranomaispäätöksiin liittyvät maastotoimeksiannot
       (maastotoimeksiannot/maastotoimeksiannot-grid)
-      ]]))
+      ;; Yhteydenotot ja palautteet, jotka edellyttävät toimenpiteitä
+      (yhteydenotot/yhteydenotot)
+      ;; Muut huomiot
+      (muut-huomiot/muut-huomiot)]
+     
+     ;; Kommentit
+     (kommentit/kommentit)]))
