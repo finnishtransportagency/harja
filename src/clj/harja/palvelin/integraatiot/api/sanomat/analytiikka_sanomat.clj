@@ -1,7 +1,6 @@
 (ns harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat
   (:require [harja.geo :as geo]
             [harja.tyokalut.xml :as xml]
-            [harja.palvelin.integraatiot.turi.sanomat.turvallisuuspoikkeama :as turi-sanoma]
             [harja.domain.turvallisuuspoikkeama :as turpodomain]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet]))
 
@@ -153,11 +152,42 @@
        (when (:alkuetaisyys tieosoite) {:tieaet (:alkuetaisyys tieosoite)})
        (when (:loppuetaisyys tieosoite) {:tielet (:loppuetaisyys tieosoite)}))}))
 
+(def ammatti->numero
+  {:aluksen_paallikko 1
+   :asentaja 2
+   :asfalttityontekija 3
+   :harjoittelija 4
+   :hitsaaja 5
+   :kunnossapitotyontekija 6
+   :kansimies 7
+   :kiskoilla_liikkuvan_tyokoneen_kuljettaja 8
+   :konemies 9
+   :kuorma-autonkuljettaja 10
+   :liikenteenohjaaja 11
+   :mittamies 12
+   :panostaja 13
+   :peramies 14
+   :porari 15
+   :rakennustyontekija 16
+   :ratatyontekija 17
+   :ratatyosta_vastaava 18
+   :sukeltaja 19
+   :sahkotoiden_ammattihenkilo 20
+   :tilaajan_edustaja 21
+   :turvalaiteasentaja 22
+   :turvamies 23
+   :tyokoneen_kuljettaja 24
+   :tyonjohtaja 25
+   :valvoja 26
+   :veneenkuljettaja 27
+   :vaylanhoitaja 28
+   :muu_tyontekija 29
+   :tyomaan_ulkopuolinen 30})
 (defn- syyt-ja-seuraukset [data]
   {:syytjaseuraukset
    (merge
      {:seuraukset (xml/escape-xml-varten (:seuraukset data))}
-     (when (turi-sanoma/ammatti->numero (:tyontekijanammatti data))
+     (when (ammatti->numero (:tyontekijanammatti data))
        {:ammatti (ammatti->teksti (:tyontekijanammatti data))})
      (when-let [ammatti-muu (:tyontekijanammattimuu data)]
        {:ammattimuutarkenne ammatti-muu})
@@ -181,11 +211,17 @@
      (when (and (:juurisyy3 data) (:juurisyy3-selite data))
        {:juurisyy3selite (xml/escape-xml-varten (:juurisyy3-selite data))}))})
 
+(def turvallisuuspoikkeaman-tila
+  {:avoin "Avoin"
+   :kasitelty "Käsitelty"
+   :taydennetty "Täydennetty"
+   :suljettu "Suljettu"})
+
 (defn- tapahtumakasittely [{:keys [tapahtuman-otsikko luotu tila]}]
   {:tapahtumankasittely
    {:otsikko (xml/escape-xml-varten tapahtuman-otsikko)
     :luontipvm (xml/formatoi-paivamaara luotu)
-    :tila (turi-sanoma/turvallisuuspoikkeaman-tila tila)}})
+    :tila (turvallisuuspoikkeaman-tila tila)}})
 
 (defn- poikkeamatoimenpide [{korjaavat-toimenpiteet :korjaavattoimenpiteet}]
   (let [tulos {:poikkeamatoimenpide (for [{:keys [otsikko kuvaus
