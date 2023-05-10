@@ -22,20 +22,12 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
-(defn- luo-valiaikainen-kayttaja []
-  (u (str "INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, \"analytiikka-oikeus\") VALUES
-          ('etunimi','sukunimi', 'analytiikka-testeri', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'), true)")))
-
 (deftest hae-materiaalit-yksinkertainen-onnistuu-test
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/materiaalit")] kayttaja-analytiikka portti)]
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/materiaalit")] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))))
 
 (deftest hae-materiaalit-onnistuu-test
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-        materiaalit-kannasta (q-map (str "SELECT id FROM materiaalikoodi"))
+  (let [materiaalit-kannasta (q-map (str "SELECT id FROM materiaalikoodi"))
         materiaaliluokat-kannasta (q-map (str "SELECT id FROM materiaaliluokka"))
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/materiaalit")] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
@@ -44,15 +36,11 @@
     (is (= (count materiaaliluokat-kannasta) (count (:materiaaliluokat encoodattu-body))))))
 
 (deftest hae-tehtavat-yksinkertainen-onnistuu-test
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/tehtavat")] kayttaja-analytiikka portti)]
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/tehtavat")] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))))
 
 (deftest hae-tehtavat-onnistuu-test
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-        tehtavat-kannasta (q-map
+  (let [tehtavat-kannasta (q-map
                             (str "SELECT t.id
                                     FROM toimenpidekoodi t
                                          LEFT JOIN toimenpidekoodi emo ON t.emo = emo.id AND t.taso = 4
@@ -65,30 +53,22 @@
     (is (= (count tehtavaryhmat-kannasta) (count (:tehtavaryhmat encoodattu-body))))))
 
 (deftest hae-urakat-yksinkertainen-onnistuu-test
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/urakat")] kayttaja-analytiikka portti)]
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/urakat")] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))))
 
 (deftest hae-urakat-onnistuu-test
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-        urakat-kannasta (q-map (str "SELECT id FROM urakka"))
+  (let [urakat-kannasta (q-map (str "SELECT id FROM urakka"))
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/urakat")] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (count urakat-kannasta) (count (:urakat encoodattu-body))))))
 
 (deftest hae-organisaatiot-yksinkertainen-onnistuu-test
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/organisaatiot")] kayttaja-analytiikka portti)]
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/organisaatiot")] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))))
 
 (deftest hae-organisaatiot-onnistuu-test
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-        organisaatiot-kannasta (q-map (str "SELECT id FROM organisaatio"))
+  (let [organisaatiot-kannasta (q-map (str "SELECT id FROM organisaatio"))
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/organisaatiot")] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
@@ -96,9 +76,7 @@
 
 
 (deftest varmista-toteumien-vaatimat-materiaalit-loytyy
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-        ;; Aseta tiukka hakuväli, josta löytyy vain vähän toteumia
+  (let [;; Aseta tiukka hakuväli, josta löytyy vain vähän toteumia
         alkuaika "2004-01-01T00:00:00+03"
         loppuaika "2004-12-31T21:00:00+03"
         toteumavastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti)
@@ -125,10 +103,7 @@
     (is (= odotetut-materiaalitiedot materiaalitiedot))))
 
 (deftest hae-suunnitellut-materiaalimaarat-alueurakalle-onnistuu-test
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-
-        ;; Ota hoitourakka (alueurakka)
+  (let [;; Ota hoitourakka (alueurakka)
         urakka-id (hae-urakan-id-nimella "Aktiivinen Oulu Testi")
         urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
@@ -189,8 +164,6 @@
                                       :alkuvuosi "mitään"} kayttaja-analytiikka)
                                    (catch Exception e
                                      e))
-        ; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
         vastaus-urakka-vaarin (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-materiaalit/%s" "mitään")] kayttaja-analytiikka portti)]
 
     (is (str/includes? vastaus-urakka-id-puuttuu "Urakka-id puuttuu"))
@@ -199,10 +172,7 @@
 
 
 (deftest hae-suunnitellut-materiaalimaarat-MH-urakalle-onnistuu-test
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-
-        ;; Ota hoitourakka (alueurakka)
+  (let [;; Ota hoitourakka (alueurakka)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
@@ -265,9 +235,7 @@
     (is (= maara (:maara (second ensimmainen-hoitovuosi))))))
 
 (deftest hae-suunnitellut-materiaalimaarat-kaikille-urakoille-epaonnistuu-vaara-osoite
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-        alkuvuosi 2021
+  (let [alkuvuosi 2021
         ;; Hae suunnitellut materiaalit
         vastaus (try
                   (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-materiaalit/%s/" alkuvuosi)] kayttaja-analytiikka portti)
@@ -278,9 +246,7 @@
     (is (str/includes? vastaus "Todennusvirhe"))))
 
 (deftest hae-suunnitellut-materiaalimaarat-kaikille-urakoille-epaonnistuu-vaarat-vuodet
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-        alkuvuosi 2030
+  (let [alkuvuosi 2030
         loppuvuosi 2022
         ;; Hae suunnitellut materiaalit
         vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-materiaalit/%s/%s" alkuvuosi loppuvuosi)] kayttaja-analytiikka portti)
@@ -290,9 +256,7 @@
     (is (not (nil? encoodattu-body)))))
 
 (deftest hae-suunnitellut-materiaalimaarat-kaikille-voimassaoleville-urakoille-onnistuu
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-        alkuvuosi 2021
+  (let [alkuvuosi 2021
         loppuvuosi 2022
         ;; Hae suunnitellut materiaalit
         vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-materiaalit/%s/%s" alkuvuosi loppuvuosi)] kayttaja-analytiikka portti)
@@ -308,10 +272,7 @@
     (is (= (count urakat-sql) (count encoodattu-body)))))
 
 (deftest hae-suunnitellut-tehtavamaarat-alueurakalle-onnistuu
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-
-        ;; Ota hoitourakka (alueurakka)
+  (let [;; Ota hoitourakka (alueurakka)
         urakka-id (hae-urakan-id-nimella "Aktiivinen Oulu Testi")
         urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
@@ -353,10 +314,7 @@
     (is (= soratie-tehtava (:tehtava (second ekan-vuoden-suunnitelmat))))))
 
 (deftest hae-suunnitellut-tehtavamaarat-mhurakalle-onnistuu
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-
-        ;; Ota hoitourakka (alueurakka)
+  (let [;; Ota hoitourakka (alueurakka)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
@@ -399,10 +357,7 @@
     (is (= ajorata1-tehtava (:tehtava (second ekan-vuoden-suunnitelmat))))))
 
 (deftest hae-suunnitellut-tehtavamaarat-ajanjaksolle-onnistuu
-  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-
-        ;; Ota hoitourakka (alueurakka)
+  (let [;; Ota hoitourakka (alueurakka)
         oulu-urakka-id (hae-urakan-id-nimella "Aktiivinen Oulu Testi")
         oulu-urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id oulu-urakka-id}))
         oulu-sopimus-id (hae-annetun-urakan-paasopimuksen-id oulu-urakka-id)
@@ -468,12 +423,7 @@
   (let [;; Haetaan apista tulokset
         uri-error-vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" "haku-alkaa" " haku-paattyy")] kayttaja-analytiikka portti)
         uri-virhe (:error uri-error-vastaus)
-
         virheellinen-kayttaja-vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" "haku-alkaa" "haku-paattyy")] kayttaja-analytiikka portti)
-
-        ; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
-        _ (luo-valiaikainen-kayttaja)
-
         vaara-vuodet-vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" "l" 200)] kayttaja-analytiikka portti)]
     (is (not (nil? uri-virhe)))
     (is (str/includes? uri-virhe "java.net.URISyntaxException"))
