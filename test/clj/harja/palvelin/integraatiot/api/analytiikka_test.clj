@@ -263,32 +263,6 @@
     ;; Oletetaan että ensimmäisellä on tiedosto
     (is (not (nil? (:tiedosto (first (:poikkeamaliite (first (:turvallisuuspoikkeamat vastaus-body))))))))))
 
-(defn- next-row
-  [previous current other-seq]
-  (reduce
-    (fn [row [diagonal above other]]
-      (let [update-val (if (= other current)
-                         diagonal
-                         (inc (min diagonal above (peek row))))]
-        (conj row update-val)))
-    [(inc (first previous))]
-    (map vector previous (next previous) other-seq)))
-(defn lahes-sama?
-  "Laske Levenshtein Distance kahden tekstin välille ja kerro, onko se sallitun thresholdin puitteissa"
-  [s1 s2]
-  (let [;; Hyväksyy osimoilleen samat
-        threshold 0.4
-        matka (cond
-                (and (empty? s1) (empty? s2)) 0
-                (empty? s1) (count s2)
-                (empty? s2) (count s1)
-                :else (peek
-                        (reduce (fn [previous current] (next-row previous current s2))
-                          (map #(identity %2) (cons nil s2) (range))
-                          s1)))
-        ero (/ matka (float (count s1)))]
-    (< ero threshold)))
-
 (deftest hae-turpot-analytiikalle-kaikki-tiedot-onnistuu
   (let [tapahtumahetki (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 10)
         alkuaika (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 11)
