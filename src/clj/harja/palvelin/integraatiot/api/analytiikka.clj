@@ -248,7 +248,7 @@
               (and (not (nil? alkuvuosi)) (not (nil? loppuvuosi)) (> alkuvuosi loppuvuosi))))
       (virheet/heita-viallinen-apikutsu-poikkeus
         {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Alkuvuodessa: '%s' virhe. Anna muodossa: 2014 ja varmista, että se on pienempi, kuin loppuvuosi." (:alkuvuosi parametrit))}))
+         :viesti (format "Alkuvuodessa: '%s' virhe. Anna muodossa: 2015 ja varmista, että se on pienempi, kuin loppuvuosi." (:alkuvuosi parametrit))}))
     (when (or (and
                 (not (nil? (:loppuvuosi parametrit)))
                 (not (s/valid? ::loppuvuosi (:loppuvuosi parametrit))))
