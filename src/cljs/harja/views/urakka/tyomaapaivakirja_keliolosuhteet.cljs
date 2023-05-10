@@ -8,7 +8,6 @@
             [harja.pvm :as pvm]))
 
 (defn poikkeukselliset-keliolosuhteet-grid []
-
   [:div {:style {:padding-top "10px"}}
    [:h2 "Poikkeukselliset paikalliset keliolosuhteet"]
    [:div {:class "flex-gridit"}
@@ -45,4 +44,4 @@
         :leveys 1}]
       ;; TODO
       ;; Gridille jokin atomi 
-      [{:id 0 :alkupvm "00:00 - 00:00" :nimi "Test"}]]]]])
+      [{:id 0 :alkupvm "00:00" :nimi "Test"}]]]]])

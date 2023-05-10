@@ -8,7 +8,8 @@
             [harja.pvm :as pvm]
             [harja.views.urakka.tyomaapaivakirja-vahvuus :as vahvuus]
             [harja.views.urakka.tyomaapaivakirja-saatiedot :as saatiedot]
-            [harja.views.urakka.tyomaapaivakirja-keliolosuhteet :as keliolosuhteet]))
+            [harja.views.urakka.tyomaapaivakirja-keliolosuhteet :as keliolosuhteet]
+            [harja.views.urakka.tyomaapaivakirja-kalusto :as kalusto]))
 
 (def toimituksen-tila [{:class "ok" :selitys "Ok"}
                        {:class "myohassa" :selitys "Myöhässä"}
@@ -50,6 +51,8 @@
       (saatiedot/saatiedot-grid)
       ;; Poikkeukselliset keliolosuhteet
       (keliolosuhteet/poikkeukselliset-keliolosuhteet-grid)
-      
+      ;; Kalusto ja tielle tehdyt toimenpiteet
+      (kalusto/kalusto-ja-tien-toimenpiteet-grid)
+
       
       ]]))
