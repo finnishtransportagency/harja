@@ -6,7 +6,6 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
             [harja.palvelin.komponentit.liitteet :as liitteet]
-            [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.palvelin.integraatiot.api.analytiikka :as api-analytiikka]
@@ -21,14 +20,11 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja-yit
     :liitteiden-hallinta (component/using (liitteet/->Liitteet nil) [:db])
-    :turi (component/using
-            (turi/->Turi {})
-            [:db :integraatioloki :liitteiden-hallinta])
     :api-analytiikka (component/using
                        (api-analytiikka/->Analytiikka false)
                        [:http-palvelin :db-replica :integraatioloki])
     :api-turvallisuuspoikkeama (component/using (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
-                                 [:http-palvelin :db :integraatioloki :liitteiden-hallinta :turi])))
+                                 [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
 
 (use-fixtures :each jarjestelma-fixture)
 
