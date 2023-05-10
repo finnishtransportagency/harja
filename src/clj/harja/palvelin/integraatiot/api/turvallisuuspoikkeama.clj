@@ -2,12 +2,12 @@
   "Turvallisuuspoikkeaman kirjaaminen urakalle"
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
+            [clojure.spec.alpha :as s]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer
-             [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus
-              tee-kirjausvastauksen-body]]
+             [tee-kirjausvastauksen-body kasittele-kutsu kasittele-get-kutsu]]
+            [harja.pvm :as pvm]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-turvallisuuspoikkeamalle]]
@@ -17,7 +17,6 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [clj-time.core :as t]
@@ -259,12 +258,7 @@
       (tallenna-liitteet-turvallisuuspoikkeamalle db liitteiden-hallinta urakka-id tp-id kirjaaja liitteet)
       tp-id)))
 
-(defn laheta-poikkeamat-turin [turi idt]
-  (when turi
-    (doseq [id idt]
-      (turi/laheta-turvallisuuspoikkeama turi id))))
-
-(defn kirjaa-turvallisuuspoikkeama [liitteiden-hallinta turi db {id :id} {turvallisuuspoikkeamat :turvallisuuspoikkeamat} kirjaaja]
+(defn kirjaa-turvallisuuspoikkeama [liitteiden-hallinta db {id :id} {turvallisuuspoikkeamat :turvallisuuspoikkeamat} kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
     (log/debug (format "Kirjataan: %s uutta turvallisuuspoikkeamaa urakalle id: %s kayttäjän: %s (id: %s) tekemänä."
                        (count turvallisuuspoikkeamat)
@@ -274,15 +268,14 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
 
 
-    (let [idt (mapv (fn [turvallisuuspoikkeama]
-                      (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama))
-                    turvallisuuspoikkeamat)]
-      (async/thread (laheta-poikkeamat-turin turi idt)))
+    (mapv (fn [turvallisuuspoikkeama]
+            (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama))
+      turvallisuuspoikkeamat)
     (vastaus turvallisuuspoikkeamat)))
 
 (defrecord Turvallisuuspoikkeama []
   component/Lifecycle
-  (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta turi :turi
+  (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta
            integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
       http :lisaa-turvallisuuspoikkeama
@@ -290,9 +283,10 @@
         (kasittele-kutsu db integraatioloki :lisaa-turvallisuuspoikkeama request
                          json-skeemat/turvallisuuspoikkeamien-kirjaus json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
-                           (kirjaa-turvallisuuspoikkeama liitteiden-hallinta turi db parametrit data kayttaja)))))
+                           (kirjaa-turvallisuuspoikkeama liitteiden-hallinta db parametrit data kayttaja)))))
     this)
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-turvallisuuspoikkeama)
+    (poista-palvelut http :hae-turvallisuuspoikkeamat)
     this))

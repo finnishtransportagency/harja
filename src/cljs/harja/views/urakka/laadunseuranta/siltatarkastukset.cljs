@@ -108,7 +108,7 @@
      [:h3 {:class (when (or on-poistettu? (not urakan-vastuulla?)) "poistettu")} (:siltanimi silta)]
      [yleiset/tietoja {}
       "Sillan tunnus: " (:siltatunnus silta)
-      "Poistettu: " (when on-poistettu? (pvm/pvm (or (:loppupvm silta) (:lakkautuspvm silta))))
+      "Poistettu: " (when on-poistettu? (pvm/pvm-opt (or (:loppupvm silta) (:lakkautuspvm silta))))
       "Siirtynyt urakkaan:" (when-not urakan-vastuulla?
                               [:span (:vastuu-urakka-nimi silta) " " [siirtynyt-urakkaan-info]])
       "Edellinen tarkastus: " (tarkastuksen-tekija-ja-aika silta)
