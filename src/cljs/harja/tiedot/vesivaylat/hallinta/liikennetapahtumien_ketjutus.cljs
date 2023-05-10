@@ -2,15 +2,17 @@
   (:require [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
             [reagent.core :refer [atom]]
-            [harja.ui.viesti :as viesti]))
+            [harja.ui.viesti :as viesti]
+            [harja.tiedot.kanavat.urakka.liikenne :as liikenne]))
 
-(defonce tila (atom {}))
+(defonce tila (atom {:haettu-urakka-id nil
+                     :haettu-sopimus-id nil}))
 
 (defrecord ValitseSopimus [sopimus])
 (defrecord TallennaKetjutus [sopimus kaytossa?])
 (defrecord KetjutusTallennettu [vastaus])
 (defrecord KetjutusEiTallennettu [virhe])
-(defrecord HaeSopimukset [])
+(defrecord HaeSopimukset [sopimus-id urakka-id])
 (defrecord SopimuksetHaettu [sopimukset])
 (defrecord SopimuksetEiHaettu [virhe])
 
@@ -21,13 +23,30 @@
     (assoc app :valittu-sopimus sopimus))
 
   HaeSopimukset
-  (process-event [_ app]
-    (-> app
-      (assoc :sopimuksien-haku-kaynnissa? true)
-      (tuck-apurit/post! :hae-vesivayla-kanavien-hoito-sopimukset
-        {}
-        {:onnistui ->SopimuksetHaettu
-         :epaonnistui ->SopimuksetEiHaettu})))
+  (process-event [{sopimus-id :sopimus-id urakka-id :urakka-id} 
+                  {:keys [haettu-urakka-id haettu-sopimus-id] :as app}]
+    ;; Jos valitun urakan sopimusta ei ole vielä haettu
+    (if (or
+          ;; Haetaan kaikki sopimukset (hallinta)
+          (and
+            (nil? urakka-id)
+            (nil? sopimus-id))
+          ;; Haetaan liikennevälilehdellä tietyn urakan sopimus
+          (and
+            (some? sopimus-id)
+            (some? urakka-id)
+            (not= haettu-urakka-id urakka-id)
+            (not= haettu-sopimus-id sopimus-id)))
+      (-> app
+        (assoc :haettu-urakka-id urakka-id)
+        (assoc :haettu-sopimus-id sopimus-id)
+        (assoc :sopimuksien-haku-kaynnissa? true)
+        (tuck-apurit/post! :hae-vesivayla-kanavien-hoito-sopimukset
+          {:sopimus-id sopimus-id
+           :urakka-id urakka-id}
+          {:onnistui ->SopimuksetHaettu
+           :epaonnistui ->SopimuksetEiHaettu}))
+      app))
 
   SopimuksetHaettu
   (process-event [{sopimukset :sopimukset} app]
@@ -51,6 +70,7 @@
 
   KetjutusTallennettu
   (process-event [{vastaus :vastaus} app]
+    (liikenne/paivita-liikennenakyma)
     (-> app
       (assoc :haetut-sopimukset vastaus)
       (assoc :tallennus-kaynnissa? false)))

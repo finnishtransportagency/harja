@@ -466,8 +466,8 @@
            (str ", " (count (get-in edelliset [suunta :edelliset-alukset])) " lähestyvää alusta")))))
 
 (defn nayta-edelliset-alukset? [{:keys [valittu-liikennetapahtuma
-                                        haetut-sopimukset
                                         edellisten-haku-kaynnissa?
+                                        haetut-sopimukset
                                         edelliset]}]
 
   (let [sopimus-id (-> valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
