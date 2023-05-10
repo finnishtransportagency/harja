@@ -75,8 +75,8 @@ FROM sopimus s
   LEFT JOIN urakka u ON s.urakka = u.id
   LEFT JOIN kan_lt_ketjutus_aktivointi k ON k.sopimus_id = s.id
 WHERE u.tyyppi = 'vesivayla-kanavien-hoito' 
-AND ( :urakka-id < 0 OR (:urakka-id = u.id) ) 
-AND ( :sopimus-id < 0 OR (:sopimus-id = s.id) ) 
+AND ( :urakka-id :: INTEGER IS NULL OR (:urakka-id = u.id) ) 
+AND ( :sopimus-id :: INTEGER IS NULL OR (:sopimus-id = s.id) ) 
 ORDER BY s.alkupvm DESC, s.nimi;
 
 -- name: luo-tai-paivita-ketjutus!

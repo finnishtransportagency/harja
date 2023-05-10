@@ -24,13 +24,13 @@
                                            :inner {:urakka {:ns :harja.domain.urakka}}})]
         vastaus)))
 
-(defn vesivayla-kanavien-hoito-sopimukset-vastaus [db sopimus-id urakka-id]
+(defn vesivayla-kanavien-hoito-sopimukset-vastaus
+  [db sopimus-id urakka-id]
   (let [sopimukset (into [] (q/hae-vesivayla-kanavien-hoito-sopimukset db {:sopimus-id sopimus-id
-                                                                           :urakka-id urakka-id}))
-
-        vastaus (namespacefy sopimukset {:ns :harja.domain.sopimus
-                                         :inner {:urakka {:ns :harja.domain.urakka}}})]
-    vastaus))
+                                                                           :urakka-id urakka-id}))]
+    (namespacefy sopimukset
+      {:ns :harja.domain.sopimus
+       :inner {:urakka {:ns :harja.domain.urakka}}})))
 
 (defn hae-vesivayla-kanavien-hoito-sopimukset [db user {:keys [sopimus-id urakka-id]}]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -104,7 +104,7 @@
                                          :ketjutus_kaytossa kaytossa?})
         (q/poista-sopimuksen-liikenne-ketjutus! db {:sopimus_id sopimus_id
                                                     :ketjutus_kaytossa kaytossa?}))
-      (vesivayla-kanavien-hoito-sopimukset-vastaus db -1 -1))))
+      (vesivayla-kanavien-hoito-sopimukset-vastaus db nil nil))))
 
 (defrecord Sopimukset []
   component/Lifecycle

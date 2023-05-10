@@ -43,9 +43,8 @@
   (komp/luo
     (komp/sisaan
       #(do
-         ;; Postgresiin eikä rajapintaan voi antaa nil arvoa
-         ;; Annetaan -1 = Hae kaikki
-         (e! (tiedot/->HaeSopimukset -1 -1))))
+         ;; nil = Hae kaikki
+         (e! (tiedot/->HaeSopimukset nil nil))))
 
     (fn [e! {:keys [haetut-sopimukset sopimuksien-haku-kaynnissa?]}]
       [:div

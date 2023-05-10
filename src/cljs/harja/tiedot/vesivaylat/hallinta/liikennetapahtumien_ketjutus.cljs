@@ -5,8 +5,8 @@
             [harja.ui.viesti :as viesti]
             [harja.tiedot.kanavat.urakka.liikenne :as liikenne]))
 
-(defonce tila (atom {:haettu-urakka-id -1
-                     :haettu-sopimus-id -1}))
+(defonce tila (atom {:haettu-urakka-id nil
+                     :haettu-sopimus-id nil}))
 
 (defrecord ValitseSopimus [sopimus])
 (defrecord TallennaKetjutus [sopimus kaytossa?])
@@ -27,10 +27,16 @@
                   {:keys [haettu-urakka-id haettu-sopimus-id] :as app}]
     ;; Jos valitun urakan sopimusta ei ole vielä haettu
     (if (or
-          (and (= urakka-id -1) (= sopimus-id -1))
+          ;; Haetaan kaikki sopimukset (hallinta)
+          (and
+            (= urakka-id nil)
+            (= sopimus-id nil))
+          ;; Haetaan liikennevälilehdellä tietyn urakan sopimus
           (and
             (not= haettu-urakka-id urakka-id)
-            (not= haettu-sopimus-id sopimus-id)))
+            (not= haettu-sopimus-id sopimus-id)
+            (not= sopimus-id nil)
+            (not= urakka-id nil)))
       (-> app
         (assoc :haettu-urakka-id urakka-id)
         (assoc :haettu-sopimus-id sopimus-id)
