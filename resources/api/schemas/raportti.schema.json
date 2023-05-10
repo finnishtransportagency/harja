@@ -21,7 +21,7 @@
         },
         "alueurakkanumero": {
           "id": "urn:harja/raportti/alueurakkanumero",
-          "type": "integer",
+          "type": ["string", "integer"],
           "required": true
         },
         "materiaaliraportti": {
