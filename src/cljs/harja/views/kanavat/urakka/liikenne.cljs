@@ -21,9 +21,9 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.tiedot.kanavat.urakka.liikenne :as tiedot]
-            [harja.tiedot.vesivaylat.hallinta.liikennetapahtumien-ketjutus :as hallinta-tiedot]
             [harja.views.urakka.valinnat :as suodattimet]
             [harja.ui.grid.protokollat :as grid-protokollat]
+            [harja.tiedot.vesivaylat.hallinta.liikennetapahtumien-ketjutus :as hallinta-tiedot]
 
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.oikeudet :as oikeudet]
@@ -570,7 +570,6 @@
                                     (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do
                          (e! (tiedot/->Nakymassa? true))
-                         (e! (hallinta-tiedot/->HaeSopimukset))
                          (tiedot/nakymaan e! valinnat))
       #(e! (tiedot/->Nakymassa? false)))
 
@@ -578,7 +577,11 @@
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
       (if-not valittu-liikennetapahtuma
         [liikennetapahtumataulukko e! app @kanavaurakka/kanavakohteet]
-        [liikennetapahtumalomake e! app @kanavaurakka/kanavakohteet]))))
+        (do
+          (let [sopimus-id (-> app :valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
+                urakka-id @nav/valittu-urakka-id]
+            (e! (hallinta-tiedot/->HaeSopimukset sopimus-id urakka-id))
+            [liikennetapahtumalomake e! app @kanavaurakka/kanavakohteet]))))))
 
 (defn liikennetapahtumat [e! app]
   [liikenne* e! app {:aikavali @u/valittu-aikavali}])
