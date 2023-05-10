@@ -29,14 +29,14 @@
     (if (or
           ;; Haetaan kaikki sopimukset (hallinta)
           (and
-            (= urakka-id nil)
-            (= sopimus-id nil))
+            (nil? urakka-id)
+            (nil? sopimus-id))
           ;; Haetaan liikennevälilehdellä tietyn urakan sopimus
           (and
+            (some? sopimus-id)
+            (some? urakka-id)
             (not= haettu-urakka-id urakka-id)
-            (not= haettu-sopimus-id sopimus-id)
-            (not= sopimus-id nil)
-            (not= urakka-id nil)))
+            (not= haettu-sopimus-id sopimus-id)))
       (-> app
         (assoc :haettu-urakka-id urakka-id)
         (assoc :haettu-sopimus-id sopimus-id)
