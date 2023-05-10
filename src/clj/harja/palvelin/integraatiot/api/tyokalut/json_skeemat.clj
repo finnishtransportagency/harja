@@ -34,6 +34,7 @@
 
 (def +turvallisuuspoikkeamien-kirjaus+ "api/schemas/turvallisuuspoikkeamien-kirjaus-request.schema.json")
 (def turvallisuuspoikkeamien-kirjaus (tee-validaattori "api/schemas/turvallisuuspoikkeamien-kirjaus-request.schema.json"))
+(def +turvallisuuspoikkeamien-vastaus+ "api/schemas/turvallisuuspoikkeama-vastaus.schema.json")
 
 (def +tielupien-haku+ "api/schemas/tielupien-haku-request.schema.json")
 (def tielupien-haku (tee-validaattori "api/schemas/tielupien-haku-request.schema.json"))
