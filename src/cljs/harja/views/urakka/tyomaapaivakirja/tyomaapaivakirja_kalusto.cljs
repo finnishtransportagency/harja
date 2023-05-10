@@ -1,4 +1,4 @@
-(ns harja.views.urakka.tyomaapaivakirja-kalusto
+(ns harja.views.urakka.tyomaapaivakirja.tyomaapaivakirja-kalusto
   "Työmaapäiväkirja näkymän kalusto ja tien toimenpiteet"
   (:require [harja.tiedot.tyomaapaivakirja :as tiedot]
             [harja.ui.grid :as grid]

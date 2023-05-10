@@ -1,4 +1,4 @@
-(ns harja.views.urakka.tyomaapaivakirja-keliolosuhteet
+(ns harja.views.urakka.tyomaapaivakirja.tyomaapaivakirja-keliolosuhteet
   "Työmaapäiväkirja näkymän poikkeukselliset keliolosuhteet"
   (:require [harja.tiedot.tyomaapaivakirja :as tiedot]
             [harja.ui.grid :as grid]
