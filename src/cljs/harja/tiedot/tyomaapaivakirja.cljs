@@ -7,7 +7,8 @@
             [harja.pvm :as pvm]))
 
 (defonce tila (atom {:tiedot []
-                     :valitut-rivit []
+                     :nayta-rivit []
+                     :valittu-rivi nil
                      :valinnat {:aikavali (pvm/paivamaaran-hoitokausi (pvm/nyt))
                                 :hakumuoto :kaikki}}))
 
@@ -16,6 +17,8 @@
                   :puuttuvat 2})
 
 (defrecord HaeTiedot[])
+(defrecord ValitseRivi[rivi])
+(defrecord PoistaRiviValinta[])
 (defrecord PaivitaAikavali[uudet])
 (defrecord PaivitaHakumuoto[uudet])
 (defrecord HaeTiedotOnnistui[vastaus])
@@ -49,7 +52,7 @@
   (process-event [{vastaus :vastaus} app]
     (-> app
       (assoc :tiedot vastaus)
-      (assoc :valitut-rivit vastaus)))
+      (assoc :nayta-rivit vastaus)))
 
   HaeTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -62,11 +65,21 @@
     (let [uudet-valinnat (merge (:valinnat app) u)]
       (-> app
         (assoc :valinnat uudet-valinnat)
-        (assoc :valitut-rivit (suodata-rivit-aikavalilla uudet-valinnat)))))
+        (assoc :nayta-rivit (suodata-rivit-aikavalilla uudet-valinnat)))))
 
   PaivitaHakumuoto
   (process-event [u app]
     (let [uudet-valinnat (:uudet u)]
       (-> app
         (assoc-in [:valinnat :hakumuoto] uudet-valinnat)
-        (assoc :valitut-rivit (suodata-rivit-aikavalilla (-> @tila :valinnat)))))))
+        (assoc :nayta-rivit (suodata-rivit-aikavalilla (-> @tila :valinnat))))))
+
+  ValitseRivi
+  (process-event [{rivi :rivi} app]
+    (-> app
+      (assoc :valittu-rivi rivi)))
+
+  PoistaRiviValinta
+  (process-event [_ app]
+    (-> app
+      (assoc :valittu-rivi nil))))
