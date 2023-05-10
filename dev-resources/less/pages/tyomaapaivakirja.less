@@ -38,5 +38,37 @@
 }
 
 .tyomaa-haku-suodatin {
-    width: 45%;
+    width: 50%;
+}
+
+.nakyma-otsikko-tiedot {
+    display: flex;
+    flex-direction: row;
+    color: @black-light;
+
+    > * {
+        margin-top: 10px;
+        margin-left: 20px;
+    }
+
+    :first-child {
+        margin-left: 0px;
+    }
+}
+
+.vahvuus-gridit {
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+
+    .nakyma-otsikko {
+        background: @harmaa-vaalea;
+    }
+
+    // Meillä ei käytetä ollenkaan valkoista taustaa?
+    // Toisin kun figmassa sanotaan
+    // Käytetäänkö @harjan-taustavari ?
+    .nakyma-valkoinen-solu {
+        background: #FFFFFF;
+    }
 }

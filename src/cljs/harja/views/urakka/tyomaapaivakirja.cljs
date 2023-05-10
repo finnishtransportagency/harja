@@ -20,10 +20,6 @@
    :puuttuvat "Puuttuvat (0123)"
    :kommentoidut "Kommentoidut (0123)"})
 
-(def toimituksen-tila [{:class "ok" :selitys "Ok"}
-                       {:class "myohassa" :selitys "Myöhässä"}
-                       {:class "puuttuu" :selitys "Puuttuu"}])
-
 (def valittu-hakumuoto (reaction-writable :kaikki))
 
 (defn tyomaapaivakirja-listaus [e! {:keys [nayta-rivit valinnat] :as tiedot}]
@@ -40,7 +36,7 @@
                               ;; TODO 
                               ;; Lisää tähän toimituksen tilan tiedot
                               ;; LESS class sekä selitys->toimituksen-tila
-                              (let [toimitus-tiedot (get toimituksen-tila (:tila arvo))]
+                              (let [toimitus-tiedot (get nakyma/toimituksen-tila (:tila arvo))]
                                 [:span {:class "paivakirja-toimitus"}
                                  [:div {:class (str "pallura " (:class toimitus-tiedot))}]
                                  [:span {:class "kohta"} (:selitys toimitus-tiedot)]]))]
@@ -58,7 +54,7 @@
         (when-not (= vanha uusi)
           (e! (tiedot/->PaivitaHakumuoto uusi)))))
 
-    [:<>
+    [:div {:style {:padding "48px 60px"}}
      [:h1 {:class "header-yhteiset"} "Työmaapäiväkirja"]
 
      [:div.row.filtterit {:style {:padding "16px"}}
@@ -82,8 +78,7 @@
                  :piilota-toiminnot? true
                  :jarjesta :id
                  :mahdollista-rivin-valinta? true
-                 :rivi-klikattu #(e! (tiedot/->ValitseRivi %))
-                 }
+                 :rivi-klikattu #(e! (tiedot/->ValitseRivi %))}
 
       [{:otsikko-komp (fn [_ _]
                         [:div {:class "tyopaiva"} "Työpäivä"
@@ -126,7 +121,7 @@
         :komponentti (fn [arvo rivi]
                        ;; TODO
                        ;; Lisää kommenttien määrä tähän
-                       [:div
+                       [:a
                         [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "1"]])
         :leveys 1
         :solun-luokka solu-fn}]
