@@ -1750,3 +1750,34 @@
   "Anna määrä parametriin, että montako minuuttia siirretään tulevaisuuteen."
   [maara]
   (.format (SimpleDateFormat. "yyyy-MM-dd HH:mm:ss.SSS") (Date. (+ (.getTime (Date.)) (* maara 60000)))))
+
+(defn- seuraava-rivi
+  [edellinen nykyinen loput-seq]
+  (reduce
+    (fn [rivi [diagonal ylapuolinen muut]]
+      (let [paivitettava-arvo (if (= muut nykyinen)
+                                diagonal
+                                (inc (min diagonal ylapuolinen (peek rivi))))]
+        (conj rivi paivitettava-arvo)))
+    [(inc (first edellinen))]
+    (map vector edellinen (next edellinen) loput-seq)))
+(defn lahes-sama?
+  "Laske Levenshtein Distance -arvon kahden tekstin välille ja kertoo, onko se sallitun thresholdin puitteissa.
+  Nyt thresholdina on 0.4 mikä tarkoittaa, että 40% sanasta/tekstistä täytyy täsmätä. Tällä verrataan yksittäisiä sanoja
+  tai pitkiä lauseita ja pituus näyttelee isoa roolia, joten thresholdi on nyt suuri. Koska yksittäisten sanojen
+  pituus on lyhyt.
+
+  Voit jatkokehittää tätä ottamaan vastaan thresholdin parametrina tai suhteessa vertailtavan sanan pituuteen."
+  [s1 s2]
+  (let [;; Hyväksyy osimoilleen samat
+        threshold 0.4
+        matka (cond
+                (and (empty? s1) (empty? s2)) 0
+                (empty? s1) (count s2)
+                (empty? s2) (count s1)
+                :else (peek
+                        (reduce (fn [edellinen nykyinen] (seuraava-rivi edellinen nykyinen s2))
+                          (map #(identity %2) (cons nil s2) (range))
+                          s1)))
+        ero (/ matka (float (count s1)))]
+    (< ero threshold)))
