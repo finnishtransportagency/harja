@@ -46,14 +46,6 @@
         _ (u (format "DELETE FROM korjaavatoimenpide WHERE turvallisuuspoikkeama = %s", id))
         _ (u (format "DELETE FROM turvallisuuspoikkeama WHERE id = %s", id))]))
 
-(defn valiaikainen-kayttaja [kayttajanimi]
-  (let [; Tarkista, että onko moista käyttäjää vielä olemassa
-        kayttajat (q-map (format "SELECT * FROM kayttaja WHERE kayttajanimi = '%s'" kayttajanimi))
-        _ (when (empty? kayttajat)
-            (u (format "INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, \"analytiikka-oikeus\") VALUES
-          ('etunimi','sukunimi', '%s', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'), true)"
-                 kayttajanimi)))]))
-
 (defn sisaltaa-perustiedot [vastaus]
   (is (str/includes? vastaus "tyokone"))
   (is (str/includes? vastaus "materiaalit"))
@@ -63,9 +55,7 @@
   (is (str/includes? vastaus "muutostiedot")))
 
 (deftest hae-toteumat-test-yksinkertainen-onnistuu
-  (let [;; Luo väliaikainen käyttäjä
-        _ (valiaikainen-kayttaja "analytiikka-testeri")
-        ;; Aseta tiukka hakuväli, josta löytyy vain vähän toteumia
+  (let [; Aseta tiukka hakuväli, josta löytyy vain vähän toteumia
         alkuaika "2004-01-01T00:00:00+03"
         loppuaika "2004-12-31T21:00:00+03"
         vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))]
@@ -73,9 +63,7 @@
     (sisaltaa-perustiedot (:body @vastaus))))
 
 (deftest hae-toteumat-test-reitillinen-onnistuu
-  (let [;; Luo väliaikainen käyttäjä
-        _ (valiaikainen-kayttaja "analytiikka-testeri")
-        alkuaika "2015-01-19T00:00:00+03"
+  (let [alkuaika "2015-01-19T00:00:00+03"
         loppuaika "2015-01-19T21:00:00+03"
         vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))]
     (is (= 200 (:status @vastaus)))
@@ -91,9 +79,7 @@
     (is (str/includes? (:body vastaus) "tuntematon-kayttaja"))))
 
 (deftest hae-toteumat-test-vaara-paivamaaraformaatti
-  (let [;; Luo väliaikainen käyttäjä
-        _ (valiaikainen-kayttaja "analytiikka-testeri")
-        alkuaika "2005-01-01T00:00:00"
+  (let [alkuaika "2005-01-01T00:00:00"
         loppuaika "2005-12-31T21:00:00+03"
         vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))]
     (is (= 400 (:status @vastaus)))
@@ -101,9 +87,7 @@
 
 
 (deftest hae-toteumat-test-poistettu-onnistuu
-  (let [;; Luo väliaikainen käyttäjä
-        _ (valiaikainen-kayttaja "analytiikka-testeri")
-        ;; Aseta hakuväli, josta löytyy suunnilleen kaikki toteumat, koska ci putkessa luontipäiväksi asettuu tietokannan luonti päivä,
+  (let [;; Aseta hakuväli, josta löytyy suunnilleen kaikki toteumat, koska ci putkessa luontipäiväksi asettuu tietokannan luonti päivä,
         paiva-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/luo-pvm 2000 1 1)))
         paiva-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/nyt)))
         _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
@@ -133,9 +117,6 @@
 (deftest materiaalin-maara-muuttuu
   (let [paiva-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/luo-pvm 2000 1 1)))
         paiva-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/nyt)))
-
-        ;; Luo väliaikainen käyttäjä
-        _ (valiaikainen-kayttaja "analytiikka-testeri")
 
         ;; Haetaan alkuperäinen tieto
         alkup-vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paiva-alussa "/" paiva-lopussa)] kayttaja-analytiikka portti)
@@ -183,19 +164,25 @@
     (is (= alkup-maara lopullinen-maara))
     (is (= uusi-maara muokattu-maara))))
 
-(deftest hae-turvallisuuspoikkeamat-analytiikalle-ei-kayttoikeutta
+(deftest hae-turvallisuuspoikkeamat-analytiikalle-ei-kayttajaa
   (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
                   "olematonkäyttäjä" portti)]
+    ;; Harjan käyttöoikeuksien tarkistuksessa on virhe, joka aiheuttaa 500 errorin, jos käytetään haussa käyttäjää, jota ei ole olemassa.
     (is (= 500 (:status vastaus)))
     (is (str/includes? (:body vastaus) "tuntematon-kayttaja"))))
 
-(deftest hae-turvallisuuspoikkeamat-analytiikalle-onnistuu
-  (let [;; Luo väliaikainen käyttäjä
-        _ (valiaikainen-kayttaja "analytiikka-testeri")
+(deftest hae-turvallisuuspoikkeamat-analytiikalle-ei-kayttoikeutta
+  (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
+                  kayttaja-yit portti)]
+    (is (= 403 (:status vastaus)))
+    (is (str/includes? (:body vastaus) "tuntematon-kayttaja"))))
 
-        ;; Luo väliaikainen turvallisuuspoikkeama
+(deftest hae-turvallisuuspoikkeamat-analytiikalle-onnistuu
+  (let [;; Luo väliaikainen turvallisuuspoikkeama
         tapahtuma-paiva "2016-01-30T12:00:01Z"
         urakka (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
@@ -218,10 +205,7 @@
     (is (< 1000 (count (:body vastaus))))))
 
 (deftest hae-turvallisuuspoikkeamat-analytiikalle-epaonnistuu
-  (let [;; Luo väliaikainen käyttäjä
-        _ (valiaikainen-kayttaja "analytiikka-testeri")
-
-        ;; Luo väliaikainen turvallisuuspoikkeama
+  (let [;; Luo väliaikainen turvallisuuspoikkeama
         urakka (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
             "yit-rakennus" portti
@@ -255,14 +239,10 @@
         (is (str/includes? vastaus "URISyntaxException"))))
 
     ;; Poista väliaikainen turvallisuuspoikkeama
-    _ (poista-viimeisin-turpo)
-    ))
+    _ (poista-viimeisin-turpo)))
 
 (deftest hae-turpot-analytiikalle-tiedosto-onnistuu
-  (let [;; Luo väliaikainen käyttäjä
-        _ (valiaikainen-kayttaja "analytiikka-testeri")
-
-        tapahtumahetki (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 10)
+  (let [tapahtumahetki (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 10)
         alkuaika (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 11)
         loppuaika (nykyhetki-iso8061-formaatissa-tulevaisuuteen 1)
 
@@ -310,15 +290,11 @@
                         (reduce (fn [previous current] (next-row previous current s2))
                           (map #(identity %2) (cons nil s2) (range))
                           s1)))
-        _ (println "s1" s1 "s2" s2 "ero: " (/ matka (float (count s1))))
         ero (/ matka (float (count s1)))]
     (< ero threshold)))
 
 (deftest hae-turpot-analytiikalle-kaikki-tiedot-onnistuu
-  (let [;; Luo väliaikainen käyttäjä
-        _ (valiaikainen-kayttaja "analytiikka-testeri")
-
-        tapahtumahetki (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 10)
+  (let [tapahtumahetki (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 10)
         alkuaika (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 11)
         loppuaika (nykyhetki-iso8061-formaatissa-tulevaisuuteen 1)
 

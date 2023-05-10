@@ -170,10 +170,10 @@
                             "tehtava": {
                                 "type": "string",
                                 "maxLength": 2000,
-                                "description": "Kirjataan tarkasti, mitä oltiin tekemässä. Tämä kenttä on käytössä, jos tyyppi-kentän arvo on 4"
+                                "description": "Kirjataan tarkasti, mitä oltiin tekemässä."
                             },
                             "ammatti": {
-                                "description": "Tekijän ammatti. Tämä kenttä on käytössä, jos tyyppi-kentän arvo on 4",
+                                "description": "Tekijän ammatti.",
                                 "type": "string",
                                 "maxLength": 200
                             },
@@ -183,7 +183,7 @@
                                 "description": "Ammatti-kentän tarkenne Tämä kenttä on käytössä, jos ammatti-kentän arvo on \"Muu työntekijä\""
                             },
                             "vammanlaatu": {
-                                "description": "Aiheutuneen vamman laatu Tämä kenttä on käytössä, jos tyyppi-kentän arvo on 4. Otetaan poikkeuksellisesti array muodossa vammat mukaan.",
+                                "description": "Aiheutuneen vamman laatu. Otetaan poikkeuksellisesti array muodossa vammat mukaan.",
                                 "type": "array",
                                 "items": {
                                     "type": "string",
@@ -206,7 +206,7 @@
                                 }
                             },
                             "vahingoittunutruumiinosa": {
-                                "description": "Vahingoittunut ruumiinosa Tämä kenttä on käytössä, jos tyyppi-kentän arvo on 4",
+                                "description": "Vahingoittunut ruumiinosa.",
                                 "type": "string",
                                 "enum": [
                                     "Pään alue",
@@ -228,17 +228,17 @@
                                 "type": "integer",
                                 "minimum": 0,
                                 "exclusiveMinimum": false,
-                                "description": "Sairauspoissaolopäivien lukumäärä Tämä kenttä on käytössä, jos tyyppi-kentän arvo on 4"
+                                "description": "Sairauspoissaolopäivien lukumäärä."
                             },
                             "sairauspoissaolojatkuu": {
-                                "description": "Jatkuuko sairauspoissaolo edelleen Tämä kenttä on pakollinen, jos tyyppi-kentällä on jokin seuraavista arvoista: 4",
+                                "description": "Jatkuuko sairauspoissaolo edelleen.",
                                 "type": "boolean"
                             },
                             "sairaalahoitovuorokaudet": {
                                 "type": "integer",
                                 "minimum": 0,
                                 "exclusiveMinimum": false,
-                                "description": "Sairaalahoitovuorokausien lukumäärä Tämä kenttä on käytössä, jos tyyppi-kentällä on jokin seuraavista arvoista: 4"
+                                "description": "Sairaalahoitovuorokausien lukumäärä."
                             },
                             "juurisyy1": {
                                 "description": "Poikkeaman 1. juurisyy",
@@ -348,7 +348,7 @@
                                 "exclusiveMinimum": false,
                                 "maximum": 9999999,
                                 "exclusiveMaximum": false,
-                                "description": "Tarkka sijainti ratametreinä, jos tapahtuma tapahtui liikennepaikkojen välillä. Tämä kenttä on käytössä, jos tapahtumapaikkaradalla-kentän arvo on 2"
+                                "description": "Tarkka sijainti ratametreinä, jos tapahtuma tapahtui liikennepaikkojen välillä. Tämä kenttä on käytössä, jos tapahtumapaikkaradalla-kentän arvo on: Tapahtui liikennepaikkojen välillä"
                             },
                             "paikka": {
                                 "type": "string",
@@ -557,7 +557,7 @@
                             },
                             "teknisenviantyyppi": {
                                 "type": "string",
-                                "description": "Teknisen vian tyyppi 1 = Vika liikkuvassa kalustossa 2 = Vika radassa 4 = Vika turvalaitteissa 8 = Muu tekninen vika Tämä kenttä on käytössä, jos syy-kentän arvo on 1",
+                                "description": "Teknisen vian tyyppi 1 = Vika liikkuvassa kalustossa 2 = Vika radassa 4 = Vika turvalaitteissa 8 = Muu tekninen vika Tämä kenttä on käytössä, jos syy-kentän arvo on: Tekninen vika",
                                 "enum": [
                                     "Vika liikkuvassa kalustossa",
                                     "Vika radassa",
@@ -567,7 +567,7 @@
                             },
                             "virheentyyppi": {
                                 "type": "string",
-                                "description": "Virheellisen toiminnan tyyppi 1 = Virhe yksikön kuljettamisessa 2 = Virhe kulkutien turvaamisessa 4 = Virhe ratatyön suojaamisessa 8 = Muu virhetoiminto Tämä kenttä on käytössä, jos syy-kentän arvo on 2",
+                                "description": "Virheellisen toiminnan tyyppi 1 = Virhe yksikön kuljettamisessa 2 = Virhe kulkutien turvaamisessa 4 = Virhe ratatyön suojaamisessa 8 = Muu virhetoiminto Tämä kenttä on käytössä, jos syy-kentän arvo on: Virheellinen toiminta",
                                 "enum": [
                                     "Virhe yksikön kuljettamisessa",
                                     "Virhe kulkutien turvaamisessa",
@@ -577,7 +577,7 @@
                             },
                             "ulkopuolisensyyntyyppi": {
                                 "type": "string",
-                                "description": "Ulkopuolisen syyn tyyppi 1 = Tieliikenne 2 = Este radalla 4 = Rikollinen teko 8 = Muu ulkopuolinen syy Tämä kenttä on käytössä, jos syy-kentän arvo on 4",
+                                "description": "Ulkopuolisen syyn tyyppi 1 = Tieliikenne 2 = Este radalla 4 = Rikollinen teko 8 = Muu ulkopuolinen syy Tämä kenttä on käytössä, jos syy-kentän arvo on: Ulkopuolinen syy",
                                 "enum": [
                                     "Tieliikenne",
                                     "Este radalla",
@@ -588,12 +588,12 @@
                             "muunsyynkuvaus": {
                                 "type": "string",
                                 "maxLength": 200,
-                                "description": "Muun syyn kuvaus Tämä kenttä on käytössä, jos syy-kentän arvo on 8"
+                                "description": "Muun syyn kuvaus Tämä kenttä on käytössä, jos syy-kentän arvo on: Muu syy"
                             },
                             "kuvaus": {
                                 "type": "string",
                                 "maxLength": 2000,
-                                "description": "Tapahtuman kuvaus Tämä kenttä on käytössä, jos syy-kentän arvo on 8"
+                                "description": "Tapahtuman kuvaus Tämä kenttä on käytössä, jos syy-kentän arvo on: Muu syy"
                             }
                         },
                         "required": [
