@@ -66,7 +66,7 @@
   (if filtteri "✓" "-"))
 
 (defn filtteri-selitys-str [filtteri]
-  (if (and filtteri (> (count filtteri) 0)) (str filtteri) "-"))
+  (if (and filtteri (or (not (string? filtteri)) (seq filtteri))) (str filtteri) "-"))
 
 (defn- filtterit-taulukko [{:keys [sheet-nimi valitetty-urakkaan-vakioaikavali
                                    toimenpiteet-aloitettu-vakioaikavali hakuehto
