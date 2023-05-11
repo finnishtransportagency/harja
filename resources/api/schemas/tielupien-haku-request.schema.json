@@ -11,7 +11,7 @@
     },
     "alueurakkanumero": {
       "id": "urn:harja/alueurakkanumero",
-      "type": "integer"
+      "type": ["string", "integer"]
     }
   }
 }
