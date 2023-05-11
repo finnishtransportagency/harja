@@ -43,7 +43,8 @@
   (komp/luo
     (komp/sisaan
       #(do
-         (e! (tiedot/->HaeSopimukset))))
+         ;; nil = Hae kaikki
+         (e! (tiedot/->HaeSopimukset nil nil))))
 
     (fn [e! {:keys [haetut-sopimukset sopimuksien-haku-kaynnissa?]}]
       [:div

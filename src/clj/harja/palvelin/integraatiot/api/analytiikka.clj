@@ -2,11 +2,12 @@
   "Analytiikkaportaalille endpointit"
   (:require [com.stuartsierra.component :as component]
             [clojure.spec.alpha :as s]
+            [clojure.string :as str]
             [compojure.core :refer [GET]]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kevyesti-get-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kevyesti-get-kutsu kasittele-get-kutsu]]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.kyselyt.konversio :as konversio]
@@ -17,18 +18,38 @@
             [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
-            [clojure.string :as str]
-            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit])
+            [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
+            [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat])
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
-(s/def ::alkuvuosi #(and (string? %) (= (count %) 4) (number? (Integer/parseInt %)) (pos? (Integer/parseInt %))))
-(s/def ::loppuvuosi #(and (string? %) (= (count %) 4) (number? (Integer/parseInt %)) (pos? (Integer/parseInt %))))
+(s/def ::alkuvuosi #(and (or
+                           (string? %)
+                           (integer? %))
+                      (= (count (str %)) 4)
+                      (if (string? %)
+                        (number? (Integer/parseInt %))
+                        (number? %))
+                      (if (string? %)
+                        (pos? (Integer/parseInt %))
+                        (pos? %))))
+(s/def ::loppuvuosi #(and (or
+                            (string? %)
+                            (integer? %))
+                       (= (count (str %)) 4)
+                       (if (string? %)
+                         (number? (Integer/parseInt %))
+                         (number? %))
+                       (if (string? %)
+                         (pos? (Integer/parseInt %))
+                         (pos? %))))
 (s/def ::urakka-id #(and (string? %) (not (nil? (konversio/konvertoi->int %))) (pos? (konversio/konvertoi->int %))))
 (s/def ::alkuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
 (s/def ::loppuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
 
-(defn- tarkista-toteumahaun-parametrit [parametrit]
+(defn- tarkista-haun-parametrit [parametrit]
   (parametrivalidointi/tarkista-parametrit
     parametrit
     {:alkuaika "Alkuaika puuttuu"
@@ -116,7 +137,7 @@
   "Haetaan toteumat annettujen alku- ja loppuajan puitteissa.
   koordinaattimuutos-parametrilla voidaan hakea lisäksi reittipisteet EPSG:4326-muodossa."
   [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
-  (tarkista-toteumahaun-parametrit parametrit)
+  (tarkista-haun-parametrit parametrit)
   (let [;; Materiaalikoodeja ei ole montaa, mutta niitä on vaikea yhdistää tietokantalauseeseen tehokkaasti
         ;; joten hoidetaan se koodilla
         materiaalikoodit (materiaalit-kyselyt/hae-materiaalikoodit db)
@@ -217,7 +238,7 @@
 (defn- tarkista-parametrit-urakka-aikavali [parametrit]
   (let [pakolliset {:urakka-id "Urakka-id puuttuu"}
         alkuvuosi (konversio/konvertoi->int (:alkuvuosi parametrit))
-        loppuvuosi (konversio/konvertoi->int (:alkuvuosi parametrit))]
+        loppuvuosi (konversio/konvertoi->int (:loppuvuosi parametrit))]
     (parametrivalidointi/tarkista-parametrit parametrit pakolliset)
     (when (or (and
                 (not (nil? (:alkuvuosi parametrit)))
@@ -232,8 +253,9 @@
                 (not (nil? (:loppuvuosi parametrit)))
                 (not (s/valid? ::loppuvuosi (:loppuvuosi parametrit))))
             (and
+              (not (nil? (:alkuvuosi parametrit)))
               (not (nil? (:loppuvuosi parametrit)))
-              (and (not (nil? alkuvuosi)) (not (nil? loppuvuosi)) (> alkuvuosi loppuvuosi))))
+              (> alkuvuosi loppuvuosi)))
       (virheet/heita-viallinen-apikutsu-poikkeus
         {:koodi virheet/+puutteelliset-parametrit+
          :viesti (format "Loppuvuodessa: '%s' virhe. Anna muodossa: 2023 ja varmista, että se on suurempi, kuin alkuvuosi" (:loppuvuosi parametrit))}))
@@ -374,15 +396,22 @@
         urakat (urakat-kyselyt/listaa-urakat-analytiikalle-hoitovuosittain db {:alkuvuosi alkuvuosi
                                                                                :loppuvuosi loppuvuosi})
         suunnitellut-materiaalit (mapv (fn [urakka]
-                                         {:urakka (:nimi urakka)
-                                          :urakka-id (:id urakka)
-                                          :vuosittaiset-suunnitelmat
-                                          (palauta-urakan-suunnitellut-materiaalimaarat db
-                                            {:alkuvuosi alkuvuosi
-                                             :loppuvuosi loppuvuosi
-                                             ;; Validaation yksinkertaistamiseksi välitetään kaikki stringinä
-                                             :urakka-id (str (:id urakka))}
-                                            kayttaja)})
+                                         (let [;; Rajoitetaan urakalta haettavia tietoja urakan voimassaoloon
+                                               min-vuosi (if (< (konversio/konvertoi->int alkuvuosi) (pvm/vuosi (:alkupvm urakka)))
+                                                           (pvm/vuosi (:alkupvm urakka))
+                                                           alkuvuosi)
+                                               max-vuosi (if (> (konversio/konvertoi->int loppuvuosi) (pvm/vuosi (:loppupvm urakka)))
+                                                           (pvm/vuosi (:loppupvm urakka))
+                                                           loppuvuosi)]
+                                           {:urakka (:nimi urakka)
+                                            :urakka-id (:id urakka)
+                                            :vuosittaiset-suunnitelmat
+                                            (palauta-urakan-suunnitellut-materiaalimaarat db
+                                              {:alkuvuosi min-vuosi
+                                               :loppuvuosi max-vuosi
+                                               ;; Validaation yksinkertaistamiseksi välitetään kaikki stringinä
+                                               :urakka-id (str (:id urakka))}
+                                              kayttaja)}))
                                    urakat)]
     suunnitellut-materiaalit))
 
@@ -446,17 +475,40 @@
         urakat (urakat-kyselyt/listaa-urakat-analytiikalle-hoitovuosittain db {:alkuvuosi alkuvuosi
                                                                                :loppuvuosi loppuvuosi})
         suunnitellut-tehtavat (mapv (fn [urakka]
-                                      {:urakka (:nimi urakka)
-                                       :urakka-id (:id urakka)
-                                       :vuosittaiset-suunnitelmat
-                                       (palauta-urakan-suunnitellut-tehtavamaarat db
-                                         {:alkuvuosi alkuvuosi
-                                          :loppuvuosi loppuvuosi
-                                          ;; Validaation yksinkertaistamiseksi välitetään kaikki stringinä
-                                          :urakka-id (str (:id urakka))}
-                                         kayttaja)})
+                                      (let [;; Rajoitetaan urakalta haettavia tietoja urakan voimassaoloon
+                                            min-vuosi (if (< (konversio/konvertoi->int alkuvuosi) (pvm/vuosi (:alkupvm urakka)))
+                                                        (pvm/vuosi (:alkupvm urakka))
+                                                        alkuvuosi)
+                                            max-vuosi (if (> (konversio/konvertoi->int loppuvuosi) (pvm/vuosi (:loppupvm urakka)))
+                                                        (pvm/vuosi (:loppupvm urakka))
+                                                        loppuvuosi)]
+                                       {:urakka (:nimi urakka)
+                                        :urakka-id (:id urakka)
+                                        :vuosittaiset-suunnitelmat
+                                        (palauta-urakan-suunnitellut-tehtavamaarat db
+                                          {:alkuvuosi min-vuosi
+                                           :loppuvuosi max-vuosi
+                                           ;; Validaation yksinkertaistamiseksi välitetään kaikki stringinä
+                                           :urakka-id (str (:id urakka))}
+                                          kayttaja)}))
                                 urakat)]
     suunnitellut-tehtavat))
+
+(defn hae-turvallisuuspoikkeamat [db {:keys [alkuaika loppuaika] :as parametrit} kayttaja]
+  (log/debug "hae-turvallisuuspoikkeamat :: parametrit" (pr-str parametrit))
+  (tarkista-haun-parametrit parametrit)
+  (let [
+        turpot (turvallisuuspoikkeamat/hae-turvallisuuspoikkeamat-lahetettavaksi-analytiikalle db {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                                                                                                   :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
+        ;; Konvertoidaan turpot sellaiseen muotoon, että ne voidaan kääntää kutsukäsittelyssä jsoniksi. Tässä vaiheessa ne ovat mäppeineä nimestään huolimatta
+        json-turpot (map
+                      #(analytiikka-sanomat/turvallisuuspoikkeamaviesti-json %)
+                      (konversio/sarakkeet-vektoriin
+                        (into [] turvallisuuspoikkeamat/turvallisuuspoikkeama-xf turpot)
+                        {:korjaavatoimenpide :korjaavattoimenpiteet
+                         :liite :liitteet
+                         :kommentti :kommentit}))]
+    {:turvallisuuspoikkeamat json-turpot}))
 
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
@@ -550,6 +602,15 @@
             (palauta-organisaatiot db parametrit kayttaja))
           ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
           (not kehitysmoodi?))))
+    (julkaise-reitti
+      http :analytiikka-turvallisuuspoikkeamat
+      (GET "/api/analytiikka/turvallisuuspoikkeamat/:alkuaika/:loppuaika" request
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-turvallisuuspoikkeamat request
+          json-skeemat/+turvallisuuspoikkeamien-vastaus+
+          (fn [parametrit kayttaja db]
+            (hae-turvallisuuspoikkeamat db parametrit kayttaja))
+          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
+          (not kehitysmoodi?))))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -562,5 +623,6 @@
       :analytiikka-suunnitellut-materiaalit-hoitovuosi
       :analytiikka-suunnitellut-materiaalit-urakka
       :analytiikka-suunnitellut-tehtavamaarat-hoitovuosi
-      :analytiikka-suunnitellut-tehtavamaarat-urakka)
+      :analytiikka-suunnitellut-tehtavamaarat-urakka
+      :analytiikka-turvallisuuspoikkeamat)
     this))
