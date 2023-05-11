@@ -515,7 +515,7 @@ WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
 SELECT
   tt.toimenpidekoodi AS toimenpidekoodi,
   (SELECT nimi
-   FROM toimenpidekoodi tpk
+   FROM tehtava tpk
    WHERE id = tt.toimenpidekoodi) AS toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
@@ -655,7 +655,7 @@ WHERE
 -- name: hae-toimenpidekoodit
 SELECT
   id
-FROM toimenpidekoodi
+FROM tehtava
 WHERE suoritettavatehtava :: TEXT IN (:toimenpiteet);
 
 -- name: hae-tietyomaat

@@ -65,7 +65,7 @@ WHERE
                 FROM urakka
                 WHERE hallintayksikko = :hallintayksikko))
   AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                    FROM toimenpidekoodi tpk
+                                                    FROM tehtava tpk
                                                     WHERE tpk.emo = :tpi))
   AND t.alkanut BETWEEN :alku AND :loppu;
 
@@ -123,7 +123,7 @@ WHERE
                 FROM urakka
                 WHERE hallintayksikko = :hallintayksikko))
   AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                    FROM toimenpidekoodi tpk
+                                                    FROM tehtava tpk
                                                     WHERE tpk.emo = :tpi))
   AND t.alkanut BETWEEN :alku AND :loppu
 GROUP BY hy.id, t.tyyppi;
@@ -173,7 +173,7 @@ WHERE
     END))
   AND u.id IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
   AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                    FROM toimenpidekoodi tpk
+                                                    FROM tehtava tpk
                                                     WHERE tpk.emo = :tpi))
   AND t.alkanut BETWEEN :alku AND :loppu
 GROUP BY u.id, t.tyyppi;

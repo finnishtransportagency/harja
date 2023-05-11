@@ -26,7 +26,7 @@ SELECT
   tpk.id,
   tpk.nimi,
   tpk.yksikko
-FROM toimenpidekoodi tpk
+FROM tehtava tpk
 WHERE
   NOT poistettu AND
   id IN (
@@ -87,7 +87,7 @@ FROM toteuma tot
   JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
 WHERE tot.urakka = :urakka
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM tehtava tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, t4.yksikko, vuosi, kuukausi, t4.id
 ORDER BY t4.nimi, t4.yksikko;
@@ -110,7 +110,7 @@ WHERE tot.urakka IN (SELECT id
                            AND (TRUE IN (SELECT UNNEST(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[]))
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM tehtava tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi
 ORDER BY t4.nimi, yksikko;
@@ -136,7 +136,7 @@ WHERE tot.urakka IN (SELECT id
                            AND (TRUE IN (SELECT UNNEST(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[]))
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM tehtava tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id
 ORDER BY t4.nimi, yksikko;
@@ -158,7 +158,7 @@ WHERE tot.urakka IN (SELECT id
                            WHERE (TRUE IN (SELECT UNNEST(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[]))
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM tehtava tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi
 ORDER BY t4.nimi, yksikko;
@@ -183,7 +183,7 @@ WHERE tot.urakka IN (SELECT id
                            WHERE (TRUE IN (SELECT UNNEST(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[]))
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM tehtava tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id
 ORDER BY t4.nimi, yksikko;
@@ -200,7 +200,7 @@ FROM toteuma tot
 WHERE tot.urakka = :urakka
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                        FROM toimenpidekoodi tpk
+                                                        FROM tehtava tpk
                                                         WHERE tpk.emo = :tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, t4.id
@@ -222,7 +222,7 @@ WHERE tot.urakka IN (SELECT id
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                        FROM toimenpidekoodi tpk
+                                                        FROM tehtava tpk
                                                         WHERE tpk.emo = :tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, t4.yksikko;
@@ -246,7 +246,7 @@ WHERE tot.urakka IN (SELECT id
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                        FROM toimenpidekoodi tpk
+                                                        FROM tehtava tpk
                                                         WHERE tpk.emo = :tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, t4.yksikko, u.id
@@ -267,7 +267,7 @@ WHERE tot.urakka IN (SELECT id
                           AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                        FROM toimenpidekoodi tpk
+                                                        FROM tehtava tpk
                                                         WHERE tpk.emo = :tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, t4.yksikko
@@ -291,7 +291,7 @@ WHERE tot.urakka IN (SELECT id
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                        FROM toimenpidekoodi tpk
+                                                        FROM tehtava tpk
                                                         WHERE tpk.emo = :tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, t4.yksikko, u.id
@@ -311,7 +311,7 @@ FROM toteuma tot
   JOIN toimenpideinstanssi tpi ON (tpi.toimenpide = t4.emo AND tpi.urakka = :urakka)
 WHERE tot.urakka = :urakka
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM tehtava tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY pvm, t4.nimi, tpi.nimi, tehtava_id
 ORDER BY pvm ASC, t4.nimi;

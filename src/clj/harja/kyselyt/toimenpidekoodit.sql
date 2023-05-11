@@ -1,41 +1,64 @@
 -- name: hae-kaikki-toimenpidekoodit
 -- Listaa kaikki toimenpidekoodit.
 SELECT
-  t.id,
-  t.koodi,
-  t.nimi,
-  t.emo,
-  t.taso,
-  t.voimassaolo_alkuvuosi as "voimassaolon-alkuvuosi",
-  t.voimassaolo_loppuvuosi as "voimassaolon-loppuvuosi",
-  t.yksikko,
-  t.jarjestys,
-  t.hinnoittelu,
-  t.tehtavaryhma,
-  t.poistettu,
-  t.luoja        AS luoja_id,
-  k.kayttajanimi AS luoja_kayttajanimi,
-  k.etunimi      AS luoja_etunimi,
-  k.sukunimi     AS luoja_sukunimi,
-  api_seuranta   AS "api-seuranta"
-FROM toimenpidekoodi t
-  LEFT JOIN kayttaja k ON t.luoja = k.id
-  WHERE t.piilota IS NOT TRUE;
+    t.id,
+    t.koodi,
+    t.nimi,
+    t.emo,
+    t.taso,
+    t.poistettu,
+    t.luoja        AS luoja_id,
+    k.kayttajanimi AS luoja_kayttajanimi,
+    k.etunimi      AS luoja_etunimi,
+    k.sukunimi     AS luoja_sukunimi,
+    -- toimenpiteillä ei ole seuraavia kenttiä, UNION:n takia null-fillataan ne:
+    NULL as "voimassaolon-alkuvuosi",
+    NULL as "voimassaolon-loppuvuosi",
+    NULL as yksikko,
+    NULL as jarjestys,
+    NULL as hinnoittelu,
+    NULL as tehtavaryhma,
+    NULL as "api-seuranta"
+  FROM toimenpide t
+           LEFT JOIN kayttaja k ON t.luoja = k.id
+ WHERE t.piilota IS NOT TRUE
+ UNION
+SELECT
+    t.id,
+    t.koodi,
+    t.nimi,
+    t.emo,
+    t.taso,
+    t.poistettu,
+    t.luoja        AS luoja_id,
+    k.kayttajanimi AS luoja_kayttajanimi,
+    k.etunimi      AS luoja_etunimi,
+    k.sukunimi     AS luoja_sukunimi,
+    t.voimassaolo_alkuvuosi as "voimassaolon-alkuvuosi",
+    t.voimassaolo_loppuvuosi as "voimassaolon-loppuvuosi",
+    t.yksikko,
+    t.jarjestys,
+    t.hinnoittelu,
+    t.tehtavaryhma,
+    api_seuranta   AS "api-seuranta"
+  FROM tehtava t
+           LEFT JOIN kayttaja k ON t.luoja = k.id
+ WHERE t.piilota IS NOT TRUE;
 
 -- name: lisaa-toimenpidekoodi<!
 -- Lisää uuden 4. tason toimenpidekoodin (tehtäväkoodi).
-INSERT INTO toimenpidekoodi (nimi, emo, taso, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi, yksikko, hinnoittelu, api_seuranta, tehtavaryhma, luoja, luotu, muokattu)
+INSERT INTO tehtava (nimi, emo, taso, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi, yksikko, hinnoittelu, api_seuranta, tehtavaryhma, luoja, luotu, muokattu)
 VALUES (:nimi, :emo, 4, :voimassaolon-alkuvuosi, :voimassaolon-loppuvuosi, :yksikko, :hinnoittelu :: hinnoittelutyyppi [], :apiseuranta, :tehtavaryhma, :kayttajaid, NOW(), NOW());
 
 -- name: poista-toimenpidekoodi!
 -- Poistaa (merkitsee poistetuksi) annetun toimenpidekoodin.
-UPDATE toimenpidekoodi
+UPDATE tehtava
 SET poistettu = TRUE, muokkaaja = :kayttajaid, muokattu = NOW()
 WHERE id = :id;
 
 -- name: muokkaa-toimenpidekoodi!
 -- Muokkaa annetun toimenpidekoodin nimen.
-UPDATE toimenpidekoodi
+UPDATE tehtava
 SET muokkaaja         = :kayttajaid,
     muokattu          = NOW(),
     poistettu         = :poistettu,
@@ -51,7 +74,7 @@ WHERE id = :id;
 -- name: viimeisin-muokkauspvm
 -- Antaa MAX(muokattu) päivämäärän toimenpidekoodeista
 SELECT MAX(muokattu) AS muokattu
-FROM toimenpidekoodi;
+FROM tehtava;
 
 --name: hae-neljannen-tason-toimenpidekoodit
 SELECT
@@ -61,30 +84,17 @@ SELECT
   emo,
   taso,
   yksikko
-FROM toimenpidekoodi
+FROM tehtava
 WHERE poistettu IS NOT TRUE AND
       piilota IS NOT TRUE AND
       emo = :emo;
-
---name: hae-emon-nimi
-SELECT nimi
-FROM toimenpidekoodi
-WHERE id = (SELECT emo
-            FROM toimenpidekoodi
-            WHERE id = :id);
 
 -- name: onko-olemassa?
 -- single?: true
 -- Ei karsi piilotettuja toimenpidekoodeja tarkistuksesta. Tämä auttaa ongelmanselvitystä Sampo-integraatiossa.
 SELECT exists(SELECT id
-              FROM toimenpidekoodi
+              FROM toimenpide
               WHERE koodi = :toimenpidekoodi);
-
--- name: onko-olemassa-idlla?
--- single?: true
-SELECT exists(SELECT id
-              FROM toimenpidekoodi
-              WHERE id = :id AND piilota IS NOT TRUE);
 
 -- name: hae-apin-kautta-seurattavat-yksikkohintaiset-tehtavat
 SELECT tpk4.id         as "harja-id",
@@ -93,8 +103,8 @@ SELECT tpk4.id         as "harja-id",
        tpk4.yksikko,
        tpk4.voimassaolo_alkuvuosi,
        tpk4.voimassaolo_loppuvuosi
-FROM toimenpidekoodi tpk4
-         JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+FROM tehtava tpk4
+         JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
          JOIN toimenpideinstanssi tpi on tpk3.id = tpi.toimenpide
          JOIN urakka u on tpi.urakka = u.id AND u.id = :urakka
 WHERE tpk4.poistettu IS NOT TRUE
@@ -111,8 +121,8 @@ SELECT tpk4.id         as "harja-id",
        tpk4.yksikko,
        tpk4.voimassaolo_alkuvuosi,
        tpk4.voimassaolo_loppuvuosi
-FROM toimenpidekoodi tpk4
-         JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+FROM tehtava tpk4
+         JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
          JOIN toimenpideinstanssi tpi on tpk3.id = tpi.toimenpide
          JOIN urakka u on tpi.urakka = u.id AND u.id = :urakka
 WHERE tpk4.poistettu IS NOT TRUE
@@ -125,17 +135,17 @@ WHERE tpk4.poistettu IS NOT TRUE
 
 -- name: hae-tehtavan-id
 SELECT tk4.id
-FROM toimenpidekoodi tk4
-  JOIN toimenpidekoodi tk3 ON tk4.emo=tk3.id
+FROM tehtava tk4
+  JOIN toimenpide tk3 ON tk4.emo=tk3.id
 WHERE tk4.nimi=:nimi AND
-      tk3.koodi IN (select koodi from toimenpidekoodi where id IN
+      tk3.koodi IN (select koodi from toimenpide where id IN
                                     (select toimenpide from toimenpideinstanssi where urakka = :urakkaid))
 LIMIT 1;
 
 -- name: hae-tehtava-apitunnisteella
 -- single?: true
 SELECT tpk4.id
-FROM toimenpidekoodi tpk4,
+FROM tehtava tpk4,
      urakka u
 WHERE api_tunnus = :apitunnus
   AND u.id = :urakka
@@ -146,8 +156,8 @@ WHERE api_tunnus = :apitunnus
 -- name: hae-hinnoittelu
 -- Suljetaan pois tehtävät, joille ei saa kirjata toteumia.
 SELECT tpk4.hinnoittelu as hinnoittelu
-FROM toimenpidekoodi tpk4
-         JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+FROM tehtava tpk4
+         JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
          JOIN toimenpideinstanssi tpi on tpk3.id = tpi.toimenpide
          JOIN urakka u on tpi.urakka = u.id AND u.id = :urakka
 WHERE tpk4.api_tunnus = :apitunnus and tpk4.piilota IS NOT TRUE
@@ -156,7 +166,7 @@ WHERE tpk4.api_tunnus = :apitunnus and tpk4.piilota IS NOT TRUE
 -- Tehtävä on piilotettu, jos sitä ei käytetä mistään urakasta.
 -- Hoidon päällystyksen paikkauksen vanhat koodit TUOTANNOSSA.
                                     and tpk4.id not in
-                                        (select id from toimenpidekoodi where id in (
+                                        (select id from tehtava where id in (
                                           1417,
                                           1418,
                                           1420,
@@ -220,7 +230,7 @@ WHERE tpk4.api_tunnus = :apitunnus and tpk4.piilota IS NOT TRUE
 -- Piilota = koodi täysin käytöstä poistettu (poistettu = voi olla käytössä jo alkaneissa urakoissa)
 SELECT exists(
     SELECT id
-    FROM toimenpidekoodi
+    FROM toimenpide
     WHERE koodi = :koodi AND piilota IS NOT TRUE);
 
 -- name: hae-tehtavaryhmat
@@ -235,8 +245,8 @@ SELECT t.id, t.nimi, t.voimassaolo_alkuvuosi, t.voimassaolo_loppuvuosi, t.jarjes
        t.suoritettavatehtava, t.tehtavaryhma, t.ensisijainen, t.yksiloiva_tunniste,
        t.kasin_lisattava_maara, t."raportoi-tehtava?", t.materiaaliluokka_id,
        t.materiaalikoodi_id, t.aluetieto, t.piilota, t.poistettu, t.luotu, t.muokattu
-  FROM toimenpidekoodi t
-       LEFT JOIN toimenpidekoodi emo ON t.emo = emo.id AND t.taso = 4
+  FROM tehtava t
+       LEFT JOIN toimenpide emo ON t.emo = emo.id AND t.taso = 4
  WHERE (t.poistettu IS FALSE and t.taso in (1,2,3) OR (t.taso = 4 AND emo.poistettu IS FALSE) OR (t.taso = 4 AND emo.poistettu IS TRUE AND t.poistettu IS FALSE))
  ORDER BY nimi ASC;
 

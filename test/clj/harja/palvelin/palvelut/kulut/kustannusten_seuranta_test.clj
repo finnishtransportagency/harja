@@ -121,7 +121,7 @@
         FROM kustannusarvioitu_tyo kt
         WHERE kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
           AND (kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)')
-               OR kt.tehtava IN (SELECT id FROM toimenpidekoodi WHERE (yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' OR yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'))
+               OR kt.tehtava IN (SELECT id FROM tehtava WHERE (yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' OR yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'))
                )
           AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE);"))
 
@@ -181,7 +181,7 @@
           WHERE s.urakka = " urakka "
           AND kt.sopimus = s.id
           AND kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
-            AND kt.tehtava = (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+            AND kt.tehtava = (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
           AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE);"))
 
 (defn- johto-ja-hallintokorvaukset-toteutuneet-sql-haku [urakka alkupvm loppupvm hoitokauden-alkuvuosi]
@@ -189,7 +189,7 @@
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
         FROM kulu_kohdistus lk
-                 LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
+                 LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
                  JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
              toimenpidekoodi tk,
@@ -230,7 +230,7 @@
       WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
       WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
      END AS toimenpide
-  FROM toimenpidekoodi tk,
+  FROM toimenpide tk,
        kustannusarvioitu_tyo kt,
        toimenpideinstanssi tpi,
        sopimus s
@@ -260,7 +260,7 @@ UNION ALL
       WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
       WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
     END AS toimenpide
-  FROM toimenpidekoodi tk,
+  FROM toimenpide tk,
     kiinteahintainen_tyo kt,
     toimenpideinstanssi tpi
   WHERE tpi.urakka = " urakka "

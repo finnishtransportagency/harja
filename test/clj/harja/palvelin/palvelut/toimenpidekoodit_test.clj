@@ -40,7 +40,8 @@
   (= (count (get palvelusta taso)) kannasta (get kovakoodattu taso)))
 
 (deftest toimenpidekoodien-haku-toimii
-  (let [[[_ taso1-lkm] [_ taso2-lkm] [_ taso3-lkm] [_ taso4-lkm]] (q "select taso, count(*) from toimenpidekoodi\nWHERE piilota IS NOT TRUE\nGROUP BY taso ORDER BY taso")
+  (let [[[_ taso1-lkm] [_ taso2-lkm] [_ taso3-lkm] [_ taso4-lkm]]
+        (q "select taso, count(*) from toimenpide WHERE piilota IS NOT TRUE GROUP BY taso UNION select taso, count(*) from tehtava WHERE piilota IS NOT TRUE GROUP BY taso ORDER BY taso;")
         koodit-tasoittain (group-by
                             :taso
                             (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -58,12 +59,13 @@
                                              :yksikko
                                              :jarjestys
                                              :hinnoittelu
-                                             :tehtavaryhma})]
+                                             :tehtavaryhma
+                                             :api-seuranta})]
+    (is (= (count (get koodit-tasoittain 1)) taso1-lkm (get odotetut-tasojen-lkmt 1)) "Tason 1 koodien lukumäärä")
+    (is (= (count (get koodit-tasoittain 2)) taso2-lkm (get odotetut-tasojen-lkmt 2)) "Tason 2 koodien lukumäärä")
+    (is (= (count (get koodit-tasoittain 3)) taso3-lkm (get odotetut-tasojen-lkmt 3)) "Tason 3 koodien lukumäärä")
+    (is (= (count (get koodit-tasoittain 4)) taso4-lkm (get odotetut-tasojen-lkmt 4)) "Tason 4 koodien lukumäärä")
 
-    (is (tason-lukumaarat-samat koodit-tasoittain taso1-lkm odotetut-tasojen-lkmt 1) "Tason 1 koodien lukumäärä")
-    (is (tason-lukumaarat-samat koodit-tasoittain taso2-lkm odotetut-tasojen-lkmt 2) "Tason 2 koodien lukumäärä")
-    (is (tason-lukumaarat-samat koodit-tasoittain taso3-lkm odotetut-tasojen-lkmt 3) "Tason 3 koodien lukumäärä")
-    (is (tason-lukumaarat-samat koodit-tasoittain taso4-lkm odotetut-tasojen-lkmt 4) "Tason 4 koodien lukumäärä")
 
     (is (every?
           #(contains? (first (get koodit-tasoittain 1)) %)

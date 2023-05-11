@@ -128,7 +128,7 @@ SELECT
   k.lahetetty              AS kustannussuunnitelma_lahetetty,
   -- Tuotenumero
   (SELECT emo.tuotenumero
-   FROM toimenpidekoodi emo
+   from toimenpide emo
    WHERE emo.id = tpk.emo) AS tuotenumero,
 
   -- Kustannussuunnitelman summa
@@ -151,7 +151,7 @@ SELECT
               WHERE
                 yht.urakka = :urakkaid AND
                 yht.tehtava IN (SELECT id
-                                FROM toimenpidekoodi
+                                FROM tehtava
                                 WHERE emo = tpk.id))
 
       --  Kanavaurakoiden muutos ja lisätyöt
@@ -164,7 +164,7 @@ SELECT
            WHERE
              yht.urakka = :urakkaid AND
              yht.tehtava IN (SELECT id
-                             FROM toimenpidekoodi
+                             FROM tehtava
                              WHERE emo = tpk.id))
 
       -- Kaikki muut kustannussuunnitelmat
@@ -197,7 +197,7 @@ SELECT
     k.lahetetty              AS kustannussuunnitelma_lahetetty,
     -- Tuotenumero
     (SELECT emo.tuotenumero
-     FROM toimenpidekoodi emo
+     from toimenpide emo
      WHERE emo.id = tpk.emo) AS tuotenumero,
     -- Kustannussuunnitelman summa
     COALESCE((SELECT SUM(COALESCE(summa_indeksikorjattu, summa, 0))
@@ -259,7 +259,7 @@ SELECT
 
   -- Tuotenumero
   (SELECT emo.tuotenumero
-   FROM toimenpidekoodi emo
+   from toimenpide emo
    WHERE emo.id = tpk.emo) AS tuotenumero,
 
   -- Kustannussuunnitelman summa
@@ -271,7 +271,7 @@ SELECT
     THEN (SELECT SUM(yht.maara * yht.yksikkohinta)
           FROM yksikkohintainen_tyo yht
           WHERE yht.urakka = u.id AND yht.tehtava IN (SELECT id
-                                                      FROM toimenpidekoodi
+                                                      FROM tehtava
                                                       WHERE emo = tpk.id))
   ELSE 1
   END                      AS kustannussuunnitelma_summa

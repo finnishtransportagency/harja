@@ -71,7 +71,7 @@ SELECT
   o.id           AS hallintayksikko_id,
   o.nimi         AS hallintayksikko_nimi,
   o.elynumero    AS hallintayksikko_elynumero,
-  (SELECT nimi FROM toimenpidekoodi WHERE id = (SELECT emo FROM toimenpidekoodi WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2
+  (SELECT nimi FROM toimenpide WHERE id = (SELECT emo FROM toimenpide WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2
 FROM sanktio s
   LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
   JOIN sanktiotyyppi st ON s.tyyppi = st.id

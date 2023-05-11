@@ -152,7 +152,7 @@
                                                          AND tr.otsikko = '2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen'
                                                          AND ut.urakka = " urakka-id))
         oulun-mhu-urakan-maarien-toteuma-muuta (q (str "SELECT *
-                                                         FROM toimenpidekoodi tk,
+                                                         FROM tehtava tk,
                                                               tehtavaryhma tr,
                                                               urakka u
                                                          WHERE tk.tehtavaryhma = tr.id

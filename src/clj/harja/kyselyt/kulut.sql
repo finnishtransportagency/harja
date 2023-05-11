@@ -259,7 +259,7 @@ WHERE kulu = :id
   AND id = :kohdistuksen-id;
 
 -- name: hae-tehtavan-nimi
-SELECT nimi FROM toimenpidekoodi
+SELECT nimi FROM tehtava
 WHERE id = :id AND poistettu IS NOT TRUE;
 
 -- name: hae-tehtavaryhman-nimi

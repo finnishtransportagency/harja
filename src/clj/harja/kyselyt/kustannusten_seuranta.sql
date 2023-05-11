@@ -44,7 +44,7 @@ SELECT coalesce(SUM(kt.summa), 0)                     AS budjetoitu_summa,
            ELSE 'hankintakustannukset'
            END                                        AS paaryhma,
        kt.indeksikorjaus_vahvistettu                  AS indeksikorjaus_vahvistettu
-FROM toimenpidekoodi tk,
+from tehtava tk,
      kustannusarvioitu_tyo kt
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = kt.tehtava
          LEFT JOIN tehtavaryhma tr ON tk_tehtava.tehtavaryhma = tr.id,
@@ -88,7 +88,7 @@ SELECT kt.summa                                  AS budjetoitu_summa,
        tk_tehtava.jarjestys                      AS jarjestys,
        'hankintakustannukset'                    AS paaryhma,
        kt.indeksikorjaus_vahvistettu             AS indeksikorjaus_vahvistettu
-FROM toimenpidekoodi tk,
+from tehtava tk,
      kiinteahintainen_tyo kt
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = kt.tehtava,
      toimenpideinstanssi tpi
@@ -119,7 +119,7 @@ SELECT kt.summa                                  AS budjetoitu_summa,
        0                                         AS jarjestys,
        'erillishankinnat'                        AS paaryhma,
        kt.indeksikorjaus_vahvistettu             AS indeksikorjaus_vahvistettu
-FROM toimenpidekoodi tk,
+from tehtava tk,
      kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id,
      sopimus s
@@ -148,7 +148,7 @@ SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        0                                              AS jarjestys,
        'hoidonjohdonpalkkio'                          AS paaryhma,
        kt.indeksikorjaus_vahvistettu                  AS indeksikorjaus_vahvistettu
-FROM toimenpidekoodi tk,
+from tehtava tk,
      kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id,
      sopimus s
@@ -156,10 +156,10 @@ WHERE s.urakka = :urakka
   AND kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
   AND (kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)')
     OR kt.tehtava = (SELECT id
-                     FROM toimenpidekoodi
+                     from tehtava
                      WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744') -- Hoitourakan työnjohto
     OR kt.tehtava = (SELECT id
-                     FROM toimenpidekoodi
+                     from tehtava
                      WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8')) -- Hoidonjohtopalkkio
   AND kt.sopimus = s.id
   AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
@@ -205,14 +205,14 @@ SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        160                                            AS jarjestys,
        'johto-ja-hallintakorvaus'                     AS paaryhma,
        kt.indeksikorjaus_vahvistettu                  AS indeksikorjaus_vahvistettu
-FROM toimenpidekoodi tk,
+from tehtava tk,
      kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
          LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = kt.tehtava,
      sopimus s
 WHERE s.urakka = :urakka
   AND kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
-  AND kt.tehtava = (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+  AND kt.tehtava = (SELECT id from tehtava WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
   AND kt.sopimus = s.id
   AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND tpi.toimenpide = tk.id

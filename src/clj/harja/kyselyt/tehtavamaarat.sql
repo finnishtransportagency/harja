@@ -199,7 +199,7 @@ ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
 -- name: hae-validit-tehtava-idt
 SELECT id as "tehtava-id", yksikko as "yksikko"
-FROM toimenpidekoodi
+FROM tehtava
 WHERE tehtavaryhma IS NOT NULL
   and yksikko is not null
   AND poistettu IS NOT TRUE

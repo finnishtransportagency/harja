@@ -622,7 +622,7 @@ WHERE id = :kohdeid;
 
 --name: hae-kanavatoimenpiteen-nimi
 SELECT nimi
-FROM toimenpidekoodi
+FROM tehtava
 WHERE id = :tehtavaid;
 
 --name: hae-urakan-nimi

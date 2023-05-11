@@ -35,5 +35,5 @@ SET likainen = TRUE,
     muokattu = current_timestamp
 WHERE toimenpideinstanssi IN (SELECT id
                               FROM toimenpideinstanssi
-                              WHERE id = :toimenpideinstanssi and toimenpide = (select id from toimenpidekoodi where koodi = '23151') -- MHU ja HJU Hoidon johto
+                              WHERE id = :toimenpideinstanssi and toimenpide = (select id from toimenpide where koodi = '23151') -- MHU ja HJU Hoidon johto
                                 AND loppupvm > current_timestamp - INTERVAL '3 months');

@@ -54,7 +54,7 @@
         _ (luo-valiaikainen-kayttaja)
         tehtavat-kannasta (q-map
                             (str "SELECT t.id
-                                    FROM toimenpidekoodi t
+                                    FROM tehtava t
                                          LEFT JOIN toimenpidekoodi emo ON t.emo = emo.id AND t.taso = 4
                                    WHERE (t.poistettu IS FALSE and t.taso in (1,2,3) OR (t.taso = 4 AND emo.poistettu IS FALSE) OR (t.taso = 4 AND emo.poistettu IS TRUE AND t.poistettu IS FALSE))"))
         tehtavaryhmat-kannasta (q-map (str "SELECT id FROM tehtavaryhma"))
@@ -231,14 +231,14 @@
         ;; Luo materiaalin suunnittelua
         ;; Lisää tehtävälle suunniteltu määrä
         tehtava-nimi "Liukkaudentorjunta hiekoituksella"
-        tehtava-id (:id (first (q-map (format "SELECT id FROM toimenpidekoodi WHERE nimi = '%s'" tehtava-nimi))))
+        tehtava-id (:id (first (q-map (format "SELECT id FROM tehtava WHERE nimi = '%s'" tehtava-nimi))))
         _ (u (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
         (%s, %s, %s, %s)" urakka-id (pvm/vuosi alkupvm) tehtava-id maara))
 
         ;; Luo suolalle suunnitelma
         talvisuolaraja 500
         suolaustehtava "Suolaus"
-        tehtava-id (:id (first (q-map (format "SELECT id FROM toimenpidekoodi WHERE nimi = '%s'" suolaustehtava))))
+        tehtava-id (:id (first (q-map (format "SELECT id FROM tehtava WHERE nimi = '%s'" suolaustehtava))))
         _ (u (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
         (%s, %s, %s, %s)" urakka-id (pvm/vuosi alkupvm) tehtava-id talvisuolaraja))
         ;; Merkataan vielä, että tarjouksen tiedot on tallennettu
@@ -324,7 +324,7 @@
 
         ;; Luo tehtavan suunnittelua yksikkohintainen_tyo tauluun
         soratie-tehtava "Sorateiden kaventaminen"
-        sorateiden-kaventaminen-tehtava-id (:id (first (q-map (format "SELECT id FROM toimenpidekoodi WHERE nimi = '%s';" soratie-tehtava))))
+        sorateiden-kaventaminen-tehtava-id (:id (first (q-map (format "SELECT id FROM tehtava WHERE nimi = '%s';" soratie-tehtava))))
         sorateiden-maara 800
         _ (u (format "INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus, luotu, muokattu)
                       VALUES ('%s'::DATE, '%s'::DATE, %s, 'tonni', '8', %s, %s, %s, NOW(), NOW())"
@@ -332,7 +332,7 @@
 
         ;; Luo tehtavan suunnittelua yksikkohintainen_tyo tauluun
         kelirikko-tehtava "Kelirikon hoito ja routaheitt. tas. mursk."
-        kelirikon-hoito-tehtava-id (:id (first (q-map (format "SELECT id FROM toimenpidekoodi WHERE nimi = '%s';" kelirikko-tehtava))))
+        kelirikon-hoito-tehtava-id (:id (first (q-map (format "SELECT id FROM tehtava WHERE nimi = '%s';" kelirikko-tehtava))))
         kelirikon-maara 234
         _ (u (format "INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus, luotu, muokattu)
                       VALUES ('%s'::DATE, '%s'::DATE, %s, 'tonni', '8', %s, %s, %s, NOW(), NOW())"
@@ -370,14 +370,14 @@
         ;; Lisää suunniteltu tehtävä
         pysakkimaara 12
         pysakki-tehtava "Pysäkkikatosten puhdistus"
-        pysakkitehtava-id (:id (first (q-map (format "SELECT id FROM toimenpidekoodi WHERE nimi = '%s'" pysakki-tehtava))))
+        pysakkitehtava-id (:id (first (q-map (format "SELECT id FROM tehtava WHERE nimi = '%s'" pysakki-tehtava))))
         _ (u (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
         (%s, %s, %s, %s)" urakka-id (pvm/vuosi alkupvm) pysakkitehtava-id pysakkimaara))
 
         ;; Lisää suunniteltu tehtävä
         ajoratamaara 80000
         ajorata1-tehtava "Ise 2-ajorat."
-        ajkoratatehtava-id (:id (first (q-map (format "SELECT id FROM toimenpidekoodi WHERE nimi = '%s'" ajorata1-tehtava))))
+        ajkoratatehtava-id (:id (first (q-map (format "SELECT id FROM tehtava WHERE nimi = '%s'" ajorata1-tehtava))))
         _ (u (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
         (%s, %s, %s, %s)" urakka-id (pvm/vuosi alkupvm) ajkoratatehtava-id ajoratamaara))
 
@@ -425,7 +425,7 @@
 
         ;; Luo tehtavan suunnittelua yksikkohintainen_tyo tauluun
         soratie-tehtava "Sorateiden kaventaminen"
-        sorateiden-kaventaminen-tehtava-id (:id (first (q-map (format "SELECT id FROM toimenpidekoodi WHERE nimi = '%s';" soratie-tehtava))))
+        sorateiden-kaventaminen-tehtava-id (:id (first (q-map (format "SELECT id FROM tehtava WHERE nimi = '%s';" soratie-tehtava))))
         sorateiden-maara 800
         _ (u (format "INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus, luotu, muokattu)
                       VALUES ('%s'::DATE, '%s'::DATE, %s, 'tonni', '8', %s, %s, %s, NOW(), NOW())"
@@ -434,7 +434,7 @@
         ;; Lisää suunniteltu tehtävä ii:n urakalle
         pysakkimaara 12
         pysakki-tehtava "Pysäkkikatosten puhdistus"
-        pysakkitehtava-id (:id (first (q-map (format "SELECT id FROM toimenpidekoodi WHERE nimi = '%s'" pysakki-tehtava))))
+        pysakkitehtava-id (:id (first (q-map (format "SELECT id FROM tehtava WHERE nimi = '%s'" pysakki-tehtava))))
         _ (u (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
         (%s, %s, %s, %s)" ii-urakka-id
                ;; Aseta vuosi oulun urakalta, jotta saadaan hausta nätti. Tämä tosi hajoaa, jos iin urakan vuodet loppuu joskus kesken

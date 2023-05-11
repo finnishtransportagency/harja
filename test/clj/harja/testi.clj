@@ -865,7 +865,7 @@
                    toimenpide = (select id from toimenpidekoodi where koodi = '" toimenpidekoodi "');"))))
 
 (defn hae-toimenpidekoodin-id [nimi koodi]
-  (ffirst (q (str "SELECT id from toimenpidekoodi where nimi = '" nimi "' AND emo = (select id from toimenpidekoodi WHERE koodi = '" koodi "');"))))
+  (ffirst (q (str "SELECT id from tehtava where nimi = '" nimi "' AND emo = (select id from toimenpidekoodi WHERE koodi = '" koodi "');"))))
 
 (defn hae-tehtavaryhman-id [nimi]
   (ffirst (q (str "SELECT id from tehtavaryhma where nimi = '" nimi "';"))))

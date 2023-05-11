@@ -119,7 +119,7 @@ FROM (SELECT
                                  AND t.tyyppi = :tyyppi :: toteumatyyppi
                                  AND t.poistettu IS NOT TRUE)
             AND tt.toimenpidekoodi IN (SELECT id
-                                       FROM toimenpidekoodi tk
+                                       FROM tehtava tk
                                        WHERE (:toimenpide :: INTEGER IS NULL
                                               OR tk.emo = (SELECT toimenpide
                                                            FROM toimenpideinstanssi
@@ -155,7 +155,7 @@ WHERE urakka = :urakka
 SELECT t4.id,
        t4.nimi,
        t4.yksikko
-FROM toimenpidekoodi t4
+FROM tehtava t4
          LEFT JOIN toimenpideinstanssi tpi on t4.emo = tpi.toimenpide
          LEFT JOIN urakka u on u.id = tpi.urakka
 WHERE t4.taso = 4
@@ -178,7 +178,7 @@ SELECT
   t.suorittajan_ytunnus,
   t.lisatieto,
   (SELECT nimi
-   FROM toimenpidekoodi tpk
+   FROM tehtava tpk
    WHERE id = tt.toimenpidekoodi) AS toimenpide
 FROM toteuma_tehtava tt
   INNER JOIN toteuma t ON tt.toteuma = t.id
@@ -198,10 +198,10 @@ SELECT
   t.lisatieto                     AS lisatieto,
   t.alkanut,
   (SELECT nimi
-   FROM toimenpidekoodi tpk
+   FROM tehtava tpk
    WHERE id = tt.toimenpidekoodi) AS nimi,
   (SELECT id
-   FROM toimenpidekoodi tpk
+   FROM tehtava tpk
    WHERE id = tt.toimenpidekoodi) AS toimenpidekoodi_id
 FROM toteuma_tehtava tt
   INNER JOIN toteuma t ON tt.toteuma = t.id
@@ -277,7 +277,7 @@ SELECT
   t.lisatieto,
   k.jarjestelma                   AS jarjestelmanlisaama,
   (SELECT nimi
-   FROM toimenpidekoodi tpk
+   FROM tehtava tpk
    WHERE id = tt.toimenpidekoodi) AS toimenpide,
   t.tr_numero,
   t.tr_alkuosa,
@@ -461,7 +461,7 @@ SELECT tk.id                    AS toimenpidekoodi_id,
            WHEN tr_alataso.otsikko = '9 LISÄTYÖT'
                THEN 'lisatyo'
            ELSE 'kokonaishintainen' END AS tyyppi
-FROM toimenpidekoodi tk
+FROM tehtava tk
      -- Alataso on linkitetty toimenpidekoodiin
      JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma AND (:tehtavaryhma::TEXT IS NULL OR tr_alataso.otsikko = :tehtavaryhma)
      LEFT JOIN urakka_tehtavamaara ut ON ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
@@ -574,7 +574,7 @@ SELECT DISTINCT ON (tr.otsikko) otsikko, tr.id
 SELECT tk.id AS id,
        tk.nimi AS tehtava,
        tk.suunnitteluyksikko AS yksikko
-FROM toimenpidekoodi tk
+FROM tehtava tk
          JOIN urakka u ON :urakka = u.id
          JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
                                           AND (:otsikko::TEXT IS NULL OR tr_alataso.otsikko = :otsikko)
@@ -703,7 +703,7 @@ WHERE
 -- single?: true
 SELECT EXISTS(SELECT * FROM materiaalikoodi WHERE nimi = ANY(ARRAY_REMOVE(ARRAY[:materiaalit]::TEXT[], null))
     AND materiaalityyppi IN ('talvisuola', 'formiaatti'))
-OR EXISTS(SELECT * FROM toimenpidekoodi WHERE id = ANY(ARRAY_REMOVE(ARRAY[:tehtavat]::INT[], null)) AND nimi = 'Suolaus');
+OR EXISTS(SELECT * FROM tehtava WHERE id = ANY(ARRAY_REMOVE(ARRAY[:tehtavat]::INT[], null)) AND nimi = 'Suolaus');
 
 -- name: hae-pisteen-hoitoluokat
 -- Talvihoitoluokilta estetään hoitoluokat 9, 10 ja 11, jotka ovat kevyen liikenteen väyliä, koska
@@ -1102,7 +1102,7 @@ FROM -- Haetaan toteuma tehtävät summattuna
             AND t.poistettu IS NOT TRUE) t ON t.id = tt.toteuma
    WHERE tt.poistettu IS NOT TRUE
          AND tt.toimenpidekoodi IN (SELECT id
-                                    FROM toimenpidekoodi tk
+                                    from tehtava tk
                                     WHERE (:toimenpide :: INTEGER IS NULL OR
                                            tk.emo = (SELECT toimenpide
                                                      FROM toimenpideinstanssi

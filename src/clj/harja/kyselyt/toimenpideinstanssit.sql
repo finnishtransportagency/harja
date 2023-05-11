@@ -5,7 +5,7 @@ INSERT INTO toimenpideinstanssi (sampoid, nimi, alkupvm, loppupvm, vastuuhenkilo
 VALUES (:sampoid, :nimi, :alkupvm, :loppupvm, :vastuuhenkilo_id, :talousosasto_id, :talousosasto_polku, :tuote_id,
                   :tuote_polku, :urakka_sampoid,
                   (SELECT id
-                   FROM toimenpidekoodi
+                   from toimenpide
                    WHERE koodi = :sampo_toimenpidekoodi),
         (SELECT id
          FROM urakka
@@ -15,11 +15,11 @@ VALUES (:sampoid, :nimi, :alkupvm, :loppupvm, :vastuuhenkilo_id, :talousosasto_i
 -- Luo uuden ylläpidon toimenpideinstanssin.
 INSERT INTO toimenpideinstanssi (nimi, alkupvm, loppupvm, toimenpide, urakka)
 VALUES ((SELECT nimi
-         FROM toimenpidekoodi
+         from toimenpide
          WHERE koodi = :toimenpidekoodi),
         :alkupvm, :loppupvm,
         (SELECT id
-         FROM toimenpidekoodi
+         from toimenpide
          WHERE koodi = :toimenpidekoodi),
         :urakkaid);
 
@@ -29,7 +29,7 @@ SELECT exists(
     SELECT id
     FROM toimenpideinstanssi
     WHERE toimenpide = (SELECT id
-                        FROM toimenpidekoodi
+                        from toimenpide
                         WHERE koodi = :sampo_toimenpidekoodi) AND
           sampoid != :sampo_toimenpide_id AND
           urakka_sampoid = :urakka_sampoid);
@@ -48,7 +48,7 @@ SET
   tuotepolku        = :tuote_polku,
   urakka_sampoid    = :urakka_sampoid,
   toimenpide        = (SELECT id
-                       FROM toimenpidekoodi
+                       from toimenpide
                        WHERE koodi = :sampo_toimenpidekoodi),
   urakka            = (SELECT id
                        FROM urakka
@@ -80,7 +80,7 @@ WHERE urakka = :urakka AND toimenpide = :tp;
 -- Hakee urakan toimenpideinstanssin urakan ja 3. tason toimenpidekoodin koodin mukaan
 SELECT *
 FROM toimenpideinstanssi
-WHERE urakka = :urakka AND toimenpide = (select id from toimenpidekoodi where koodi = :koodi);
+WHERE urakka = :urakka AND toimenpide = (select id from toimenpide where koodi = :koodi);
 
 
 -- name: hae-hoidon-maksuerattomat-toimenpideistanssit
@@ -91,7 +91,7 @@ SELECT
 FROM toimenpideinstanssi tpi
   JOIN urakka ON tpi.urakka = urakka.id
   JOIN toimenpidekoodi tpk ON tpk.id = (SELECT emo
-                                        FROM toimenpidekoodi
+                                        from toimenpide
                                         WHERE id = tpi.toimenpide)
 WHERE tpi.id NOT IN (SELECT DISTINCT toimenpideinstanssi
                      FROM maksuera
@@ -105,7 +105,7 @@ WHERE tpi.id NOT IN (SELECT DISTINCT toimenpideinstanssi
 SELECT exists(SELECT id
               FROM toimenpideinstanssi
               WHERE urakka = :urakka AND toimenpide = (SELECT id
-                                                       FROM toimenpidekoodi
+                                                       from toimenpide
                                                        WHERE koodi = :toimenpidekoodi));
 
 -- name: urakan-toimenpideinstanssi-idt
