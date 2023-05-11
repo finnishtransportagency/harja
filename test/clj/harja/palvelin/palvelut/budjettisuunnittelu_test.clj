@@ -268,7 +268,7 @@
                                 :sorateiden-hoito "23124"
                                 :mhu-korvausinvestointi "14301"
                                 :mhu-johto "23151")
-              toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
+              toimenpide-id (ffirst (q (str "SELECT id FROM toimenpide WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
               data-kannassa (q-map (str "SELECT vuosi, kuukausi, summa, summa_indeksikorjattu, luotu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))]
           (is (every? :luotu data-kannassa) "Luomisaika ei tallennettu")
@@ -307,7 +307,7 @@
                                 :sorateiden-hoito "23124"
                                 :mhu-korvausinvestointi "14301"
                                 :mhu-johto "23151")
-              toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
+              toimenpide-id (ffirst (q (str "SELECT id from toimenpide where taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
               data-kannassa (q-map (str "SELECT vuosi, kuukausi, summa, summa_indeksikorjattu, muokattu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))
               [vanha-summa vanhat-ajat] (some (fn [{v-tpa :toimenpide-avain
@@ -426,7 +426,7 @@
                                 :sorateiden-hoito "23124"
                                 :mhu-korvausinvestointi "14301"
                                 :mhu-johto "23151")
-              toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
+              toimenpide-id (ffirst (q (str "SELECT id from toimenpide where taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
               data-kannassa (map (fn [data]
                                    (-> data
@@ -487,7 +487,7 @@
                                 :sorateiden-hoito "23124"
                                 :mhu-korvausinvestointi "14301"
                                 :mhu-johto "23151")
-              toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
+              toimenpide-id (ffirst (q (str "SELECT id from toimenpide where taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
               data-kannassa (map (fn [data]
                                    (-> data

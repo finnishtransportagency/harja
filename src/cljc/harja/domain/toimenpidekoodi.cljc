@@ -16,7 +16,7 @@
 
 (define-tables
   ["hinnoittelutyyppi" ::hinnoittelutype (specql.transform/transform (specql.transform/to-keyword))]
-  ["toimenpidekoodi" ::toimenpidekoodi
+  ["tehtava" ::toimenpidekoodi
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
    {"yksiloiva_tunniste" ::yksiloiva-tunniste}
    #?(:clj {::yksiloiva-tunniste (specql.transform/transform (harja.kyselyt.specql/->UUIDTransform))})

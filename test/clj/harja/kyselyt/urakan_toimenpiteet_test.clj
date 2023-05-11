@@ -29,8 +29,8 @@
           urakka-id @oulun-alueurakan-2005-2010-id
           maara-kannassa (ffirst (q
                                    (str "SELECT count(*)
-                                           FROM toimenpidekoodi t4
-                                                LEFT JOIN toimenpidekoodi t3 ON t3.id=t4.emo
+                                           FROM tehtava t4
+                                                LEFT JOIN toimenpide t3 ON t3.id=t4.emo
                                            WHERE t4.taso = 4 AND
                                                 (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= 2005) AND
                                                 (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= 2005) AND
@@ -52,8 +52,8 @@
        urakka-id @pudasjarven-alueurakan-id
           maara-kannassa (ffirst (q
                                    (str "SELECT count(*)
-                                           FROM toimenpidekoodi t4
-                                                LEFT JOIN toimenpidekoodi t3 ON t3.id=t4.emo
+                                           FROM tehtava t4
+                                                LEFT JOIN toimenpide t3 ON t3.id=t4.emo
                                            WHERE t4.taso = 4 AND
                                             (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= 2007) AND
                                             (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= 2007) AND
@@ -68,8 +68,8 @@
                urakka-id @oulun-alueurakan-2005-2010-id
                maara-kannassa (ffirst (q
                                         (str "SELECT count(*)
-                                           FROM toimenpidekoodi t4
-                                                LEFT JOIN toimenpidekoodi t3 ON t3.id=t4.emo
+                                           FROM tehtava t4
+                                                LEFT JOIN toimenpide t3 ON t3.id=t4.emo
                                            WHERE t4.taso = 4 AND
                                             (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= 2005) AND
                                             (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= 2005) AND

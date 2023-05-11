@@ -641,10 +641,10 @@
 
 (defn hae-vaylanhoito-ei-yksiloity-tpk-id []
   (ffirst (q (str "SELECT id
-                     FROM toimenpidekoodi t4
-                    WHERE t4.nimi = 'Ei yksilöity' and t4.taso = 4 AND t4.emo = (select id from toimenpidekoodi t3 WHERE t3.nimi = 'Laaja toimenpide' and t3.taso = 3
-                          AND t3.emo = (select id from toimenpidekoodi t2 WHERE t2.nimi = 'Vesiliikenteen käyttöpalvelut' and t2.taso = 2
-                          AND t2.emo = (SELECT id FROM toimenpidekoodi t1 WHERE t1.nimi = 'Käyttö, meri' AND t1.taso = 1)));"))))
+                     FROM tehtava t4
+                    WHERE t4.nimi = 'Ei yksilöity' and t4.taso = 4 AND t4.emo = (select id from toimenpide t3 WHERE t3.nimi = 'Laaja toimenpide' and t3.taso = 3
+                          AND t3.emo = (select id from toimenpide t2 WHERE t2.nimi = 'Vesiliikenteen käyttöpalvelut' and t2.taso = 2
+                          AND t2.emo = (SELECT id FROM toimenpide t1 WHERE t1.nimi = 'Käyttö, meri' AND t1.taso = 1)));"))))
 
 
 (defn hae-kohde-soskua []
@@ -858,14 +858,14 @@
 
 (defn hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi [toimenpidekoodi]
   (ffirst (q (str "SELECT id from toimenpideinstanssi where urakka = (select id FROM urakka WHERE  nimi = 'Oulun MHU 2019-2024') AND
-                   toimenpide = (select id from toimenpidekoodi where koodi = '" toimenpidekoodi "');"))))
+                   toimenpide = (select id from toimenpide where koodi = '" toimenpidekoodi "');"))))
 
 (defn hae-toimenpideinstanssi-id [urakka-id toimenpidekoodi]
   (ffirst (q (str "SELECT id from toimenpideinstanssi where urakka = " urakka-id " AND
-                   toimenpide = (select id from toimenpidekoodi where koodi = '" toimenpidekoodi "');"))))
+                   toimenpide = (select id from toimenpide where koodi = '" toimenpidekoodi "');"))))
 
 (defn hae-toimenpidekoodin-id [nimi koodi]
-  (ffirst (q (str "SELECT id from tehtava where nimi = '" nimi "' AND emo = (select id from toimenpidekoodi WHERE koodi = '" koodi "');"))))
+  (ffirst (q (str "SELECT id from tehtava where nimi = '" nimi "' AND emo = (select id from toimenpide WHERE koodi = '" koodi "');"))))
 
 (defn hae-tehtavaryhman-id [nimi]
   (ffirst (q (str "SELECT id from tehtavaryhma where nimi = '" nimi "';"))))
@@ -964,9 +964,9 @@
 
 (defn hae-liikenneympariston-hoidon-toimenpidekoodin-id []
   (ffirst (q (str "SELECT id
-  FROM toimenpidekoodi
+  FROM toimenpide
   WHERE nimi = 'Liikenneympäristön hoito laaja TPI' AND taso = 3\nAND
-  emo = (select id FROM toimenpidekoodi WHERE taso = 2 AND nimi = 'Liikenneympäristön hoito');"))))
+  emo = (select id from toimenpide where taso = 2 AND nimi = 'Liikenneympäristön hoito');"))))
 
 (defn hae-muhoksen-paallystysurakan-tpi-id []
   (ffirst (q (str "SELECT id

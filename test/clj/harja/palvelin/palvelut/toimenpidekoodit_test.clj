@@ -83,9 +83,8 @@
 
 
 (deftest tehtavaryhmien-haku-toimii
-  (let [[[_ taso1-lkm] [_ taso2-lkm] [_ taso3-lkm] [_ taso4-lkm]] (q "select taso, count(*) from toimenpidekoodi\nWHERE piilota IS NOT TRUE\nGROUP BY taso ORDER BY taso")
-        tehtavaryhmat (kutsu-palvelua (:http-palvelin jarjestelma)
-                                          :hae-tehtavaryhmat +kayttaja-jvh+)
+  (let [tehtavaryhmat (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :hae-tehtavaryhmat +kayttaja-jvh+)
         odotetut-avaimet-tehtavaryhmat #{:id
                                          :nimi
                                          :jarjestys}]
