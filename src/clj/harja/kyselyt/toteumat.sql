@@ -14,7 +14,7 @@ SELECT
   k.jarjestelma AS jarjestelman_lisaama,
   (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
    FROM toteuma_tehtava tt
-     LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+     LEFT JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
    WHERE tt.toteuma = t.id
          AND tt.poistettu IS NOT TRUE)
                 AS tehtavat
@@ -65,8 +65,8 @@ FROM toteuma t
   LEFT JOIN kayttaja k ON k.id = t.luoja
   LEFT JOIN organisaatio o ON o.id = k.organisaatio
   JOIN toteuma_tehtava tt ON (tt.toteuma = t.id AND tt.poistettu IS NOT TRUE)
-  JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-  LEFT JOIN toimenpidekoodi emo ON tpk.emo = emo.id
+  JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
+  LEFT JOIN toimenpide emo ON tpk.emo = emo.id
   LEFT JOIN toimenpideinstanssi tpi ON emo.id = tpi.toimenpide
                                        AND tpi.urakka = t.urakka
 WHERE
@@ -127,7 +127,7 @@ FROM (SELECT
                                              AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava))
             AND tt.poistettu IS NOT TRUE
       GROUP BY toimenpidekoodi) x
-  JOIN toimenpidekoodi tk ON x.tpk_id = tk.id
+  JOIN tehtava tk ON x.tpk_id = tk.id
 ORDER BY nimi;
 
 -- name: hae-toteuman-toteuma-materiaalit-ja-tehtavat
@@ -245,7 +245,7 @@ SELECT
   k.kayttajanimi,
   k.jarjestelma      AS jarjestelmasta
 FROM toteuma_tehtava tt
-  JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi
+  JOIN tehtava tpk ON tpk.id = tt.toimenpidekoodi
   INNER JOIN toteuma t ON tt.toteuma = t.id
                           AND urakka = :urakka
                           AND sopimus = :sopimus
@@ -502,7 +502,7 @@ SELECT 0 as id,
 FROM toteuma t
      JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.urakka_id = :urakka AND tt.poistettu = FALSE
      LEFT JOIN toteuma_materiaali tm on tm.toteuma = t.id AND tm.urakka_id = :urakka AND tm.poistettu = FALSE
-     JOIN toimenpidekoodi tk ON tk.id = tt.toimenpidekoodi AND tt.toimenpidekoodi = :toimenpidekoodi-id
+     JOIN tehtava tk ON tk.id = tt.toimenpidekoodi AND tt.toimenpidekoodi = :toimenpidekoodi-id
      JOIN kayttaja k ON k.id = t.luoja AND k.jarjestelma = true
 WHERE t.urakka = :urakka
   AND t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
@@ -517,7 +517,7 @@ SELECT t.id,
 FROM toteuma t
      JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.urakka_id = :urakka AND tt.poistettu = FALSE
      LEFT JOIN toteuma_materiaali tm on tm.toteuma = t.id AND tm.urakka_id = :urakka AND tm.poistettu = FALSE
-     JOIN toimenpidekoodi tk ON tk.id = tt.toimenpidekoodi AND tt.toimenpidekoodi = :toimenpidekoodi-id
+     JOIN tehtava tk ON tk.id = tt.toimenpidekoodi AND tt.toimenpidekoodi = :toimenpidekoodi-id
      JOIN kayttaja k ON k.id = t.luoja AND k.jarjestelma = FALSE
 WHERE t.urakka = :urakka
   AND t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
@@ -670,8 +670,8 @@ WHERE
   tyyppi = :tyyppi :: maksueratyyppi AND
   toimenpideinstanssi IN (SELECT tpi.id
                           FROM toimenpideinstanssi tpi
-                            JOIN toimenpidekoodi emo ON emo.id = tpi.toimenpide
-                            JOIN toimenpidekoodi tpk ON tpk.emo = emo.id
+                            JOIN toimenpide emo ON emo.id = tpi.toimenpide
+                            JOIN tehtava tpk ON tpk.emo = emo.id
                           WHERE tpk.id = :toimenpidekoodi AND tpi.urakka = :urakka AND tpi.loppupvm > current_timestamp - INTERVAL '3 months');
 
 -- name: merkitse-toteumatehtavien-maksuerat-likaisiksi!
@@ -682,8 +682,8 @@ WHERE
   numero IN (SELECT m.numero
              FROM maksuera m
                JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi AND tpi.loppupvm > current_timestamp - INTERVAL '3 months'
-               JOIN toimenpidekoodi emo ON emo.id = tpi.toimenpide
-               JOIN toimenpidekoodi tpk ON tpk.emo = emo.id
+               JOIN toimenpide emo ON emo.id = tpi.toimenpide
+               JOIN tehtava tpk ON tpk.emo = emo.id
                JOIN toteuma_tehtava tt ON tt.toimenpidekoodi = tpk.id
                JOIN toteuma t ON t.id = tt.toteuma
              WHERE tt.id IN (:toteuma_tehtava_idt) AND t.tyyppi :: TEXT = m.tyyppi :: TEXT);
@@ -975,7 +975,7 @@ SELECT
   tpk.nimi                           AS tehtava_toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
-  JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+  JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
 WHERE
   t.urakka = :urakka-id
   AND (:toteuma-id :: INTEGER IS NULL OR t.id = :toteuma-id)
@@ -999,7 +999,7 @@ SELECT
   tk.nimi                            AS tehtava_toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
-  JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
+  JOIN tehtava tk ON tt.toimenpidekoodi = tk.id
 WHERE
   t.urakka = :urakka-id
   AND (:toteuma-id :: INTEGER IS NULL OR t.id = :toteuma-id)
@@ -1032,7 +1032,7 @@ SELECT
       alkupiste(t.reitti), loppupiste(t.reitti), 1) :: TEXT AS tierekisteriosoite
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
-  JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
+  JOIN tehtava tk ON tt.toimenpidekoodi = tk.id
   LEFT JOIN toteuma_materiaali tm ON t.id = tm.toteuma AND tm.poistettu = FALSE
   LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
 WHERE
@@ -1061,9 +1061,8 @@ SELECT
   tk.id              AS tehtava_id
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
-  JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
+  JOIN tehtava tk ON tt.toimenpidekoodi = tk.id
   LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
-  LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
   LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
 WHERE
   t.urakka = :urakkaid
@@ -1123,7 +1122,7 @@ SELECT
   tt.maara           AS maara,
   tk.yksikko         AS yksikko
 FROM toteuma_tehtava tt
-  INNER JOIN toimenpidekoodi tk
+  INNER JOIN tehtava tk
     ON tk.id = tt.toimenpidekoodi
 WHERE
   tt.toteuma = :toteuma_id AND tt.poistettu IS NOT TRUE;
@@ -1203,7 +1202,7 @@ FROM varustetoteuma vt
      JOIN toteuma t ON vt.toteuma = t.id AND t.sopimus = :sopimus and t.urakka = :urakka
                         and t.alkanut between :alkupvm and :loppupvm and t.poistettu = false
      LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id  AND tt.poistettu = FALSE
-     LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+     LEFT JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
      left join kayttaja k on vt.luoja = k.id
 WHERE (:rajaa_tienumerolla = FALSE OR vt.tr_numero = :tienumero)
   AND (:tietolajit :: VARCHAR [] IS NULL OR
@@ -1238,8 +1237,8 @@ FROM toteuma t
                      AND t.poistettu IS NOT TRUE
   LEFT JOIN toteuma_tehtava tt ON t.id = tt.toteuma
                                   AND tt.poistettu IS NOT TRUE
-  LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-  LEFT JOIN toimenpidekoodi emo ON tpk.emo = emo.id
+  LEFT JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
+  LEFT JOIN toimenpide emo ON tpk.emo = emo.id
   LEFT JOIN toimenpideinstanssi tpi ON emo.id = tpi.toimenpide
                                        AND tpi.urakka = t.urakka
 WHERE
@@ -1394,8 +1393,8 @@ SELECT t.alkanut, t.urakka AS "urakka-id", u.hallintayksikko AS "hallintayksikko
   FROM toteuma t
        JOIN urakka u ON t.urakka = u.id
        LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
-       LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-       LEFT JOIN toimenpidekoodi tpk3 ON tpk.emo = tpk3.id
+       LEFT JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
+       LEFT JOIN toimenpide tpk3 ON tpk.emo = tpk3.id
        JOIN urakan_hoitokaudet(t.urakka) hk ON (t.alkanut BETWEEN hk.alkupvm AND hk.loppupvm)
  WHERE t.id = :toteuma-id
    AND (:tarkista-urakka? = FALSE

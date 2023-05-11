@@ -507,7 +507,7 @@ FROM toteuma_tehtava tt
                     AND tt.toimenpidekoodi IN (:toimenpidekoodit)
                     AND tt.poistettu IS NOT TRUE
                     AND t.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+  JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
 
@@ -562,7 +562,7 @@ FROM toteuma_tehtava tt
                     AND tt.toimenpidekoodi IN (:toimenpidekoodit)
                     AND tt.poistettu IS NOT TRUE
                     AND t.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+  JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
   LEFT JOIN toteuma_materiaali tm ON t.id = tm.toteuma AND tm.poistettu IS NOT TRUE
   LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL)

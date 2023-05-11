@@ -90,7 +90,7 @@ SELECT
   urakka.tyyppi AS urakkatyyppi
 FROM toimenpideinstanssi tpi
   JOIN urakka ON tpi.urakka = urakka.id
-  JOIN toimenpidekoodi tpk ON tpk.id = (SELECT emo
+  JOIN toimenpide tpk ON tpk.id = (SELECT emo
                                         from toimenpide
                                         WHERE id = tpi.toimenpide)
 WHERE tpi.id NOT IN (SELECT DISTINCT toimenpideinstanssi

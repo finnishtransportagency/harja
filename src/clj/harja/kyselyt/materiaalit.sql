@@ -151,7 +151,7 @@ SELECT SUM(rtmaarat.tehtavamaara) AS kokonaismaara,
        'paikkausmateriaali'::MATERIAALITYYPPI AS materiaalityyppi
   FROM raportti_toteuma_maarat rtmaarat
     JOIN urakka u ON u.id = rtmaarat.urakka_id
-    LEFT JOIN toimenpidekoodi tk ON tk.id = rtmaarat.toimenpidekoodi
+    LEFT JOIN tehtava tk ON tk.id = rtmaarat.toimenpidekoodi
  WHERE u.id = :urakka
    AND (rtmaarat.alkanut BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP)
    AND rtmaarat.toimenpidekoodi IN (SELECT tpk4.id
@@ -194,7 +194,7 @@ SELECT SUM(rtmaarat.tehtavamaara) AS kokonaismaara,
        'paikkausmateriaali'::MATERIAALITYYPPI AS materiaalityyppi
   FROM raportti_toteuma_maarat rtmaarat
            JOIN urakka u ON (u.id = rtmaarat.urakka_id AND u.urakkanro IS NOT NULL)
-           LEFT JOIN toimenpidekoodi tk ON tk.id = rtmaarat.toimenpidekoodi
+           LEFT JOIN tehtava tk ON tk.id = rtmaarat.toimenpidekoodi
  WHERE u.hallintayksikko = :hallintayksikko
    AND u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
    AND (rtmaarat.alkanut BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP)
@@ -241,7 +241,7 @@ SELECT SUM(rtmaarat.tehtavamaara) AS kokonaismaara,
   FROM raportti_toteuma_maarat rtmaarat
            JOIN urakka u ON (u.id = rtmaarat.urakka_id AND u.urakkanro IS NOT NULL)
            JOIN organisaatio o ON u.hallintayksikko = o.id
-           LEFT JOIN toimenpidekoodi tk ON tk.id = rtmaarat.toimenpidekoodi
+           LEFT JOIN tehtava tk ON tk.id = rtmaarat.toimenpidekoodi
  WHERE u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
    AND (rtmaarat.alkanut BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP)
    AND rtmaarat.toimenpidekoodi IN (SELECT tpk4.id

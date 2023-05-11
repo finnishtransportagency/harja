@@ -175,7 +175,7 @@ FROM maksuera m
   JOIN urakka u ON u.id = tpi.urakka
   JOIN sopimus s ON s.urakka = u.id AND s.paasopimus IS NULL
   JOIN kustannussuunnitelma k ON m.numero = k.maksuera
-  JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
+  JOIN toimenpide tpk ON tpi.toimenpide = tpk.id
 WHERE tpi.urakka = :urakkaid;
 
 -- name: hae-teiden-hoidon-urakan-maksuerat
@@ -227,7 +227,7 @@ FROM maksuera m
          JOIN urakka u ON u.id = tpi.urakka
          JOIN sopimus s ON s.urakka = u.id AND s.paasopimus IS NULL
          JOIN kustannussuunnitelma k ON m.numero = k.maksuera
-         JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
+         JOIN toimenpide tpk ON tpi.toimenpide = tpk.id
 WHERE tpi.urakka = :urakkaid;
 
 
@@ -280,7 +280,7 @@ FROM maksuera m
   JOIN urakka u ON u.id = tpi.urakka
   JOIN sopimus s ON s.urakka = u.id AND s.paasopimus IS NULL
   JOIN kustannussuunnitelma k ON m.numero = k.maksuera
-  JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
+  JOIN toimenpide tpk ON tpi.toimenpide = tpk.id
 WHERE m.numero = :numero;
 
 -- name: hae-maksueran-ja-kustannussuunnitelman-tilat

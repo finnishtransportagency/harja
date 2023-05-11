@@ -4,8 +4,8 @@
 WITH urakan_toimenpideinstanssi_23150 AS
          (SELECT tpi.id AS id
           FROM toimenpideinstanssi tpi
-                   JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                   JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                   JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+                   JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
                maksuera m
           WHERE tpi.urakka = :urakka
             AND m.toimenpideinstanssi = tpi.id
@@ -46,7 +46,7 @@ SELECT coalesce(SUM(kt.summa), 0)                     AS budjetoitu_summa,
        kt.indeksikorjaus_vahvistettu                  AS indeksikorjaus_vahvistettu
 from tehtava tk,
      kustannusarvioitu_tyo kt
-         LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = kt.tehtava
+         LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = kt.tehtava
          LEFT JOIN tehtavaryhma tr ON tk_tehtava.tehtavaryhma = tr.id,
      toimenpideinstanssi tpi,
      sopimus s
@@ -90,7 +90,7 @@ SELECT kt.summa                                  AS budjetoitu_summa,
        kt.indeksikorjaus_vahvistettu             AS indeksikorjaus_vahvistettu
 from tehtava tk,
      kiinteahintainen_tyo kt
-         LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = kt.tehtava,
+         LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = kt.tehtava,
      toimenpideinstanssi tpi
 WHERE tpi.urakka = :urakka
   AND kt.toimenpideinstanssi = tpi.id
@@ -208,7 +208,7 @@ SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
 from tehtava tk,
      kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
-         LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = kt.tehtava,
+         LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = kt.tehtava,
      sopimus s
 WHERE s.urakka = :urakka
   AND kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
@@ -259,7 +259,7 @@ SELECT 0                          AS budjetoitu_summa,
            END                    AS paaryhma,
        NOW()                     AS indeksikorjaus_vahvistettu -- kuluja ei indeksivahvisteta, joten ne on aina "true"
 FROM kulu_kohdistus lk
-         LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
+         LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
      toimenpideinstanssi tpi,
      toimenpidekoodi tk,
@@ -325,7 +325,7 @@ SELECT 0                          AS budjetoitu_summa,
            END                   AS paaryhma,
        NOW()                     AS indeksikorjaus_vahvistettu -- kuluja ei indeksivahvisteta, joten ne on aina "true"
 FROM kulu_kohdistus lk
-         LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
+         LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
      toimenpideinstanssi tpi,
      toimenpidekoodi tk,
@@ -373,7 +373,7 @@ SELECT 0                                            AS budjetoitu_summa,
            END                                      AS paaryhma,
        t.indeksikorjaus_vahvistettu                 AS indeksikorjaus_vahvistettu
     FROM toteutuneet_kustannukset t
-         LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = t.tehtava
+         LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = t.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma,
      toimenpideinstanssi tpi,
      toimenpidekoodi tk

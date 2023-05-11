@@ -136,8 +136,8 @@ SELECT exists(SELECT maksuera
 SELECT exists(SELECT numero
               FROM maksuera m
                 JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
-                JOIN toimenpidekoodi tpk3 ON tpi.toimenpide = tpk3.id
-                JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id
+                JOIN toimenpide tpk3 ON tpi.toimenpide = tpk3.id
+                JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id
               WHERE m.numero = :numero AND tpk2.tuotenumero IS NOT NULL);
 
 -- name: harja.kyselyt.kustannussuunnitelmat/hae-urakka-maksueranumerolla
