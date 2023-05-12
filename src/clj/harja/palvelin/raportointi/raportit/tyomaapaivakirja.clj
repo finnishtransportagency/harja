@@ -32,14 +32,14 @@
      rivit]))
 
 
-(defn suorita [_ _ parametrit]
+(defn suorita [_ _ {:keys [valittu-rivi] :as parametrit}]
   (let [ _ (println "\n \n Params T: " parametrit)
-        
-
         otsikko "Test"]
 
     [:raportti {:nimi otsikko
                 :piilota-otsikko? true}
+     
+     [:tyomaapaivakirja-header valittu-rivi]
 
      (taulukko {:tiedot parametrit
                 :sheet-nimi "ilmoitukset"})]))

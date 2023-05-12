@@ -2,6 +2,7 @@
   ;; Tänne voi laittaa mm yksittäisten raporttien funktioita
 
   (:require [harja.ui.raportti :as raportointi]
+            [harja.ui.ikonit :as ikonit]
             [harja.fmt :as fmt]))
 
 (defmethod raportointi/muodosta-html :tyomaa-laskutusyhteenveto-yhteensa [[_ kyseessa-kk-vali? hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str]]
@@ -21,3 +22,25 @@
        [:span {:class "laskutus-yhteensa"} laskutettu-str]
        [:h1 (str (fmt/euro laskutettu))]])
     ]])
+
+(defmethod raportointi/muodosta-html :tyomaapaivakirja-header [[_ valittu-rivi]]
+  [:div {:style {:padding "48px 92px 72px"}}
+   [:p (str valittu-rivi)]
+
+   [:h3 {:class "header-yhteiset"} "UUD MHU 2022–2027"]
+   [:h1 {:class "header-yhteiset"} "Työmaapäiväkirja 9.10.2022"]
+
+   [:div {:class "nakyma-otsikko-tiedot"}
+
+    [:span "Saapunut 11.10.2022 05:45"]
+    [:span "Päivitetty 11.10.2022 05:45"]
+    [:a "Näytä muutoshistoria"]
+
+    [:span {:class "paivakirja-toimitus"}
+     [:div {:class (str "pallura " "myohassa")}]
+     [:span {:class "kohta"} "Myöhässä"]]
+
+    [:a
+     [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "2 kommenttia"]]]
+
+   [:hr]])
