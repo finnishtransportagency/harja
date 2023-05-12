@@ -52,6 +52,9 @@ schemas:
  - raportti-materiaaliraportti-response: !include schemas/raportti.schema.json
  - tyomaapaivakirja-kirjaus-request: !include schemas/tyomaapaivakirja-kirjaus-request.schema.json
  - tyomaapaivakirja-paivitys-request: !include schemas/tyomaapaivakirja-paivitys-request.schema.json
+ - tyomaapaivakirja-kirjaus-ok-response: !include schemas/tyomaapaivakirja-kirjaus-response.schema.json
+ - tyomaapaivakirja-kirjaus-nok-response: !include schemas/tyomaapaivakirja-kirjaus-response.schema.json
+
 
 
 securitySchemes:
@@ -1088,7 +1091,7 @@ documentation:
               application/json:
                 example: !include examples/tyomaapaivakirja-kirjaus-nok-response.json
                 schema: tyomaapaivakirja-kirjaus-nok-response
-      /{tyomaapaivakirja-id}:
+      /{tyomaapaivakirjaid}:
         put:
           is: [secured]
           description: Ei vielä toteutettu - Työmaapäiväkirjan päivittäminen. Korvaa edeltävän version.
