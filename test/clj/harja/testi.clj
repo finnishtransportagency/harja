@@ -1577,6 +1577,8 @@
   = avulla. Tarkistaa myös, että kaikki arvot ovat olemassa. Odotetussa mäpissa saa olla
   ylimääräisiä avaimia."
   [odotetut saadut]
+  (println "Jarno odotetut " odotetut)
+  (println "Jarno saadut " saadut)
   (doseq [k (keys odotetut)
           :let [odotettu-arvo (get odotetut k)
                 saatu-arvo (get saadut k ::ei-olemassa)]]

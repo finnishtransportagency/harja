@@ -1111,7 +1111,7 @@ FROM -- Haetaan toteuma tehtävät summattuna
   JOIN -- Otetaan mukaan käyttäjät järjestelmätietoa varten
   kayttaja k ON x.luoja = k.id
   JOIN -- Otetaan mukaan toimenpidekoodi nimeä ja yksikköä varten
-  toimenpidekoodi tk ON x.toimenpidekoodi = tk.id
+  tehtava tk ON x.toimenpidekoodi = tk.id
 ORDER BY pvm DESC;
 
 -- name: hae-toteuman-tehtavat

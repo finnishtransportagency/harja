@@ -638,8 +638,8 @@ BEGIN
 
     johto_ja_hallintakorvaus_toimenpideinstanssi_id := (SELECT tpi.id AS id
                                                      FROM toimenpideinstanssi tpi
-                                                              JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                                                              JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                                                              JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+                                                              JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
                                                           maksuera m
                                                      WHERE tpi.urakka = ur
                                                        AND m.toimenpideinstanssi = tpi.id
@@ -649,8 +649,8 @@ BEGIN
     -- Loopataan urakan toimenpideinstanssien läpi
     FOR t IN SELECT tpk2.nimi AS nimi, tpk2.koodi AS tuotekoodi, tpi.id AS tpi, tpk3.id AS tpk3_id, m.numero AS maksuera_numero
                  FROM toimenpideinstanssi tpi
-                          JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                          JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                          JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+                          JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
                       maksuera m
                  WHERE tpi.urakka = ur AND m.toimenpideinstanssi = tpi.id
         LOOP

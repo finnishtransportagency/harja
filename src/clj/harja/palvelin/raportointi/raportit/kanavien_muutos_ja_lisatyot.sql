@@ -30,7 +30,7 @@
    ktp.huoltokohde                                                AS huoltokohde_id,
    NULL                                                           AS materiaali_id
  FROM kan_toimenpide ktp
-   JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+   JOIN tehtava tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
    LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
@@ -86,7 +86,7 @@ UNION
    ktp.huoltokohde                                                                AS huoltokohde_id,
    hinnoiteltu_tyo."materiaali-id"                                                AS materiaali_id
  FROM kan_toimenpide ktp
-   JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+   JOIN tehtava tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
    LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
@@ -131,7 +131,7 @@ UNION
    ktp.huoltokohde                                                AS huoltokohde_id,
    NULL                                                           AS materiaali_id
  FROM kan_toimenpide ktp
-   JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+   JOIN tehtava tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
    LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
@@ -188,7 +188,7 @@ UNION
    ktp.huoltokohde                                                                AS huoltokohde_id,
    hinnoiteltu_tyo."materiaali-id"                                                AS materiaali_id
  FROM kan_toimenpide ktp
-   JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+   JOIN tehtava tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
    LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
@@ -234,7 +234,7 @@ UNION
    ktp.huoltokohde                                                AS huoltokohde_id,
    NULL                                                           AS materiaali_id
  FROM kan_toimenpide ktp
-   JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+   JOIN tehtava tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
    LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
@@ -291,7 +291,7 @@ UNION
    ktp.huoltokohde                                                                AS huoltokohde_id,
    hinnoiteltu_tyo."materiaali-id"                                                AS materiaali_id
  FROM kan_toimenpide ktp
-   JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+   JOIN tehtava tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
    LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
@@ -336,7 +336,7 @@ UNION
    ktp.huoltokohde                                                AS huoltokohde_id,
    NULL                                                           AS materiaali_id
  FROM kan_toimenpide ktp
-   JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+   JOIN tehtava tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
    LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
@@ -394,7 +394,7 @@ UNION
    ktp.huoltokohde                                                                AS huoltokohde_id,
    hinnoiteltu_tyo."materiaali-id"                                                AS materiaali_id
  FROM kan_toimenpide ktp
-   JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+   JOIN tehtava tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
    LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
@@ -441,7 +441,7 @@ UNION
    NULL                                                           AS materiaali_id
  FROM kan_toimenpide ktp
    JOIN urakka u ON (u.id = ktp.urakka)
-   JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+   JOIN tehtava tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
    LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
@@ -496,7 +496,7 @@ UNION
    hinnoiteltu_tyo."materiaali-id"                                                AS materiaali_id
  FROM kan_toimenpide ktp
    JOIN urakka u ON (u.id = ktp.urakka)
-   JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+   JOIN tehtava tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
    LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
@@ -540,7 +540,7 @@ UNION
    ktp.huoltokohde                                                AS huoltokohde_id,
    NULL                                                           AS materiaali_id
  FROM kan_toimenpide ktp
-   JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+   JOIN tehtava tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
    LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)
@@ -596,7 +596,7 @@ UNION
    ktp.huoltokohde                                                                AS huoltokohde_id,
    hinnoiteltu_tyo."materiaali-id"                                                AS materiaali_id
  FROM kan_toimenpide ktp
-   JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+   JOIN tehtava tpk ON (tpk.id = ktp.toimenpidekoodi)
    JOIN kan_huoltokohde hk ON (ktp.huoltokohde = hk.id)
    JOIN kan_kohde k ON (ktp."kohde-id" = k.id)
    LEFT OUTER JOIN kan_kohteenosa ko ON (ktp."kohteenosa-id" = ko.id)

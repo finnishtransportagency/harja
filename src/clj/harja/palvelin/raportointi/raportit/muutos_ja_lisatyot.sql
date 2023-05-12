@@ -43,7 +43,7 @@ FROM toteuma_tehtava tt
   JOIN toteuma t ON (tt.toteuma = t.id AND
                      t.tyyppi::TEXT IN (:tyotyypit) AND
                      t.poistettu IS NOT TRUE)
-  JOIN toimenpidekoodi tpk4 ON tpk4.id = tt.toimenpidekoodi
+  JOIN tehtava tpk4 ON tpk4.id = tt.toimenpidekoodi
   JOIN toimenpideinstanssi tpi
     ON (tpi.toimenpide = tpk4.emo AND tpi.urakka = t.urakka)
   LEFT JOIN muutoshintainen_tyo mht
@@ -97,7 +97,7 @@ FROM toteuma_tehtava tt
   JOIN toteuma t ON (tt.toteuma = t.id AND
                      t.tyyppi::TEXT  IN (:tyotyypit) AND
                      t.poistettu IS NOT TRUE)
-  JOIN toimenpidekoodi tpk4 ON tpk4.id = tt.toimenpidekoodi
+  JOIN tehtava tpk4 ON tpk4.id = tt.toimenpidekoodi
   JOIN toimenpideinstanssi tpi
     ON (tpi.toimenpide = tpk4.emo AND tpi.urakka = t.urakka)
   LEFT JOIN muutoshintainen_tyo mht
@@ -153,7 +153,7 @@ FROM toteuma_tehtava tt
   JOIN toteuma t ON (tt.toteuma = t.id AND
                      t.tyyppi::TEXT  IN (:tyotyypit) AND
                      t.poistettu IS NOT TRUE)
-  JOIN toimenpidekoodi tpk4 ON tpk4.id = tt.toimenpidekoodi
+  JOIN tehtava tpk4 ON tpk4.id = tt.toimenpidekoodi
   JOIN toimenpideinstanssi tpi
     ON (tpi.toimenpide = tpk4.emo AND tpi.urakka = t.urakka)
   LEFT JOIN muutoshintainen_tyo mht

@@ -35,7 +35,7 @@ SELECT
   +
   (SELECT COALESCE(SUM(tyo.maara * yht.yksikkohinta), 0)
    FROM vv_tyo tyo
-     JOIN toimenpidekoodi tpk ON tyo."toimenpidekoodi-id" = tpk.id
+     JOIN tehtava tpk ON tyo."toimenpidekoodi-id" = tpk.id
      JOIN yksikkohintainen_tyo yht ON tpk.id = yht.tehtava
                                       -- Suunnitteluaika osuu annetun aikavälin sisälle
                                       AND yht.alkupvm <= :alkupvm
@@ -106,7 +106,7 @@ SELECT
     +
   (SELECT COALESCE(SUM(tyo.maara * yht.yksikkohinta), 0)
    FROM vv_tyo tyo
-     JOIN toimenpidekoodi tpk ON tyo."toimenpidekoodi-id" = tpk.id
+     JOIN tehtava tpk ON tyo."toimenpidekoodi-id" = tpk.id
      JOIN yksikkohintainen_tyo yht ON tpk.id = yht.tehtava
                                       -- Suunnitteluaika osuu annetun aikavälin sisälle
                                       AND yht.alkupvm <= :alkupvm
