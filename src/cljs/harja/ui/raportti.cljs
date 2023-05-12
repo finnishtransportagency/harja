@@ -129,15 +129,15 @@
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
 
-(defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
-                                               rivi-ennen
-                                               piilota-border?
-                                               raportin-tunniste
-                                               tyhja
-                                               korosta-rivit korostustyyli
-                                               oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
-                                               avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?]}
-                                     sarakkeet data]]
+(defn generoi-gridi [otsikko viimeinen-rivi-yhteenveto?
+                     rivi-ennen
+                     piilota-border?
+                     raportin-tunniste
+                     tyhja
+                     korosta-rivit korostustyyli
+                     oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
+                     avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?
+                     sarakkeet data]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
     [grid/grid {:otsikko (or otsikko "")
                 :tunniste (fn [rivi]
@@ -153,106 +153,127 @@
                 :piilota-border? piilota-border?
                 :raportin-tunniste raportin-tunniste}
      (into []
-           (map-indexed
-            (fn [i sarake]
-              (let [raporttielementteja? (raportti-domain/sarakkeessa-raporttielementteja? i data)
-                    format-fn (formatoija-fmt-mukaan (:fmt sarake))]
-                (merge
-                  {:hae #(get % i)
-                   :leveys (:leveys sarake)
-                   :otsikko (:otsikko sarake)
-                   :reunus (:reunus sarake)
-                   :pakota-rivitys? (:pakota-rivitys? sarake)
-                   :otsikkorivi-luokka (str (:otsikkorivi-luokka sarake)
-                                         (case (:tasaa-otsikko sarake)
-                                           :keskita " grid-header-keskita"
-                                           :oikea " grid-header-oikea"
-                                           ""))
-                   :solun-luokka (fn [arvo _rivi]
+       (map-indexed
+         (fn [i sarake]
+           (let [raporttielementteja? (raportti-domain/sarakkeessa-raporttielementteja? i data)
+                 format-fn (formatoija-fmt-mukaan (:fmt sarake))]
+             (merge
+               {:hae #(get % i)
+                :leveys (:leveys sarake)
+                :otsikko (:otsikko sarake)
+                :reunus (:reunus sarake)
+                :pakota-rivitys? (:pakota-rivitys? sarake)
+                :otsikkorivi-luokka (str (:otsikkorivi-luokka sarake)
+                                      (case (:tasaa-otsikko sarake)
+                                        :keskita " grid-header-keskita"
+                                        :oikea " grid-header-oikea"
+                                        ""))
+                :solun-luokka (fn [arvo _rivi]
                                    ;; Jos rivi on tässä nimiavaruudessa määritetty komponentti, rivin optioissa voi
                                    ;; olla avain :varoitus?, jolloin piirretään solu punaisella taustalla ja tekstillä.
-                                   (str
-                                     (when (:varoitus? (and (vector? arvo) (second arvo)))
-                                       " solu-varoitus ")
-                                     (when (:korosta-hennosti? (and (vector? arvo) (second arvo)))
-                                       " hennosti-korostettu-solu ")
-                                     (when (true? (:ala-korosta? (and (vector? arvo) (second arvo))))
-                                       " solun-korostus-estetty ")))
-                   :luokka (:sarakkeen-luokka sarake)
-                   :nimi (str "sarake" i)
-                   :fmt format-fn
+                                (str
+                                  (when (:varoitus? (and (vector? arvo) (second arvo)))
+                                    " solu-varoitus ")
+                                  (when (:korosta-hennosti? (and (vector? arvo) (second arvo)))
+                                    " hennosti-korostettu-solu ")
+                                  (when (true? (:ala-korosta? (and (vector? arvo) (second arvo))))
+                                    " solun-korostus-estetty ")))
+                :luokka (:sarakkeen-luokka sarake)
+                :nimi (str "sarake" i)
+                :fmt format-fn
                    ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
-                   :tyyppi (cond
-                             (= (:tyyppi sarake) :vetolaatikon-tila) :vetolaatikon-tila
-                             (= (:tyyppi sarake) :avattava-rivi) :avattava-rivi
-                             raporttielementteja? :komponentti
-                             :else :string)
-                   :tasaa (if (or (oikealle-tasattavat-kentat i)
-                                (raportti-domain/numero-fmt? (:fmt sarake)))
-                            :oikea
-                            (:tasaa sarake))}
-                 (when raporttielementteja?
-                   {:komponentti
-                    (fn [rivi]
-                      (let [elementti (get rivi i)
-                            liite? (if (vector? elementti)
-                                     (= :liitteet (first elementti))
-                                     false)] ;; Normaalisti komponenteissa toinen elementti on mappi, mutta liitteissä vektori.
-                        (muodosta-html
-                         (if (and (raportti-domain/formatoi-solu? elementti) (not liite?))
-                           (raportti-domain/raporttielementti-formatterilla elementti
-                                                                            formatoija-fmt-mukaan
-                                                                            (:fmt sarake))
-                           elementti))))}))))
-            sarakkeet))
+                :tyyppi (cond
+                          (= (:tyyppi sarake) :vetolaatikon-tila) :vetolaatikon-tila
+                          (= (:tyyppi sarake) :avattava-rivi) :avattava-rivi
+                          raporttielementteja? :komponentti
+                          :else :string)
+                :tasaa (if (or (oikealle-tasattavat-kentat i)
+                             (raportti-domain/numero-fmt? (:fmt sarake)))
+                         :oikea
+                         (:tasaa sarake))}
+               (when raporttielementteja?
+                 {:komponentti
+                  (fn [rivi]
+                    (let [elementti (get rivi i)
+                          liite? (if (vector? elementti)
+                                   (= :liitteet (first elementti))
+                                   false)] ;; Normaalisti komponenteissa toinen elementti on mappi, mutta liitteissä vektori.
+                      (muodosta-html
+                        (if (and (raportti-domain/formatoi-solu? elementti) (not liite?))
+                          (raportti-domain/raporttielementti-formatterilla elementti
+                            formatoija-fmt-mukaan
+                            (:fmt sarake))
+                          elementti))))}))))
+         sarakkeet))
      (if (empty? data)
        [(grid/otsikko (or tyhja "Ei tietoja"))]
        (let [viimeinen-rivi (last data)]
          (into []
-               (map-indexed (fn [index rivi]
-                              (if-let [otsikko (:otsikko rivi)]
-                                (grid/otsikko otsikko)
-                                (let [[rivi optiot]
-                                      (if (map? rivi)
-                                        [(:rivi rivi) rivi]
-                                        [rivi {}])
-                                      isanta-rivin-id (:isanta-rivin-id optiot)
-                                      lihavoi? (:lihavoi? optiot)
-                                      korosta? (:korosta? optiot)
-                                      korosta-hennosti? (:korosta-hennosti? optiot)
-                                      korosta-harmaa? (:korosta-harmaa? optiot)
-                                      valkoinen? (:valkoinen? optiot)
-                                      rivin-luokka (:rivin-luokka optiot)
-                                      mappina (assoc
-                                                (zipmap (range (count sarakkeet))
-                                                        rivi)
-                                                ::rivin-indeksi index)]
-                                  (cond-> mappina
-                                          (and viimeinen-rivi-yhteenveto?
-                                               (= viimeinen-rivi rivi))
-                                          (assoc :yhteenveto true)
+           (map-indexed (fn [index rivi]
+                          (if-let [otsikko (:otsikko rivi)]
+                            (grid/otsikko otsikko)
+                            (let [[rivi optiot]
+                                  (if (map? rivi)
+                                    [(:rivi rivi) rivi]
+                                    [rivi {}])
+                                  isanta-rivin-id (:isanta-rivin-id optiot)
+                                  lihavoi? (:lihavoi? optiot)
+                                  korosta? (:korosta? optiot)
+                                  korosta-hennosti? (:korosta-hennosti? optiot)
+                                  korosta-harmaa? (:korosta-harmaa? optiot)
+                                  valkoinen? (:valkoinen? optiot)
+                                  rivin-luokka (:rivin-luokka optiot)
+                                  mappina (assoc
+                                            (zipmap (range (count sarakkeet))
+                                              rivi)
+                                            ::rivin-indeksi index)]
+                              (cond-> mappina
+                                (and viimeinen-rivi-yhteenveto?
+                                  (= viimeinen-rivi rivi))
+                                (assoc :yhteenveto true)
 
-                                          korosta-hennosti?
-                                          (assoc :korosta-hennosti true)
-                                    
-                                          korosta-harmaa?
-                                          (assoc :korosta-harmaa true)
-                                    
-                                          valkoinen?
-                                          (assoc :valkoinen true)
+                                korosta-hennosti?
+                                (assoc :korosta-hennosti true)
 
-                                          (or korosta? (when korosta-rivit (korosta-rivit index)))
-                                          (assoc :korosta true)
+                                korosta-harmaa?
+                                (assoc :korosta-harmaa true)
 
-                                          lihavoi?
-                                          (assoc :lihavoi true)
+                                valkoinen?
+                                (assoc :valkoinen true)
 
-                                          rivin-luokka
-                                          (assoc :rivin-luokka rivin-luokka)
+                                (or korosta? (when korosta-rivit (korosta-rivit index)))
+                                (assoc :korosta true)
 
-                                          isanta-rivin-id
-                                          (assoc :isanta-rivin-id isanta-rivin-id))))))
-               data)))]))
+                                lihavoi?
+                                (assoc :lihavoi true)
+
+                                rivin-luokka
+                                (assoc :rivin-luokka rivin-luokka)
+
+                                isanta-rivin-id
+                                (assoc :isanta-rivin-id isanta-rivin-id))))))
+           data)))]))
+
+(defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
+                                               rivi-ennen
+                                               piilota-border?
+                                               raportin-tunniste
+                                               tyhja
+                                               korosta-rivit korostustyyli
+                                               oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
+                                               avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?]}
+                                     
+                                     sarakkeet data]]
+  (generoi-gridi otsikko viimeinen-rivi-yhteenveto?
+                 rivi-ennen
+                 piilota-border?
+                 raportin-tunniste
+                 tyhja
+                 korosta-rivit korostustyyli
+                 oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
+                 avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?
+                 sarakkeet data)
+  )
 
 (defmethod muodosta-html :otsikko-title [[_ teksti]]
   [:h1 teksti])

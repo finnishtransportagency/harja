@@ -150,8 +150,12 @@
 (defn suorita-tyomaapaivakirja-raportti [e!]
   (if-let [tiedot @raportin-tiedot]
     [:<>
+     ;; Takaisin nappi 
      [napit/takaisin "Takaisin" #(e! (tiedot/->PoistaRiviValinta)) {:luokka "nappi-reunaton"}]
-     [muodosta-html (assoc-in tiedot [1 :tunniste] raportti-avain)]]
+     ;; Päiväkirjanäkymän padding
+     [:div {:style {:padding "48px 92px 72px"}}
+      ;; Raportin html
+      [muodosta-html (assoc-in tiedot [1 :tunniste] raportti-avain)]]]
     [yleiset/ajax-loader "Ladataan tietoja..."]))
 
 (defn tyomaapiavakirja* [e! _]

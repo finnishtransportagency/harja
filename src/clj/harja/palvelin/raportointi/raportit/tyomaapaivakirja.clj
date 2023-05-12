@@ -12,7 +12,7 @@
   [test lihavoi?]
   (let []
     (rivi
-      [:varillinen-teksti {:arvo ""}]
+      [:varillinen-teksti {:arvo "AaAa"}]
       [:varillinen-teksti {:arvo (str test) :lihavoi? lihavoi?}])))
 
 
@@ -33,13 +33,28 @@
 
 
 (defn suorita [_ _ {:keys [valittu-rivi] :as parametrit}]
-  (let [ _ (println "\n \n Params T: " parametrit)
-        otsikko "Test"]
+  (let [_ (println "\n \n Params T: " parametrit)
+        otsikko "Test"
+
+        rivit (into []
+                (remove nil?
+                  [(taulukon-rivi "Rivi 1" true)
+                   (taulukon-rivi "Rivi 2" true)]))
+        taulukon-optiot {:piilota-border? false
+                         :viimeinen-rivi-yhteenveto? false}
+        taulukon-otsikot (rivi
+                           {:otsikko "Otsikko 1" :leveys 12 :tyyppi :varillinen-teksti}
+                           {:otsikko "Otsikko 2" :leveys 48 :tyyppi :varillinen-teksti})
+
+        taulukko-1 {:otsikko-vasen "Päivystäjät" :optiot-vasen taulukon-optiot :otsikot-vasen taulukon-otsikot :rivit-vasen rivit}
+        taulukko-2 {:otsikko-oikea "Työnjohtajat" :optiot-oikea taulukon-optiot :otsikot-oikea taulukon-otsikot :rivit-oikea rivit}]
+
 
     [:raportti {:nimi otsikko
                 :piilota-otsikko? true}
-     
+
      [:tyomaapaivakirja-header valittu-rivi]
 
-     (taulukko {:tiedot parametrit
-                :sheet-nimi "ilmoitukset"})]))
+     ;; Päivystäjät, Työnjohtajat
+     [:otsikko-heading "Vahvuus"]
+     [:gridit-vastakkain taulukko-1 taulukko-2]]))
