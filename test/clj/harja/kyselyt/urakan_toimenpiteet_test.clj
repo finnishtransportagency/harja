@@ -76,11 +76,11 @@
                                                 t3.id in (SELECT toimenpide FROM toimenpideinstanssi WHERE urakka = "
                                              @oulun-alueurakan-2005-2010-id ")")))
                lahtotilanne (count (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id))
-               _ (u "UPDATE toimenpidekoodi SET voimassaolo_alkuvuosi = 2015, voimassaolo_loppuvuosi = 2025 WHERE nimi = 'Graffitien poisto'")
+               _ (u "UPDATE tehtava SET voimassaolo_alkuvuosi = 2015, voimassaolo_loppuvuosi = 2025 WHERE nimi = 'Graffitien poisto'")
                tehtava-tulossa (count (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id))
-               _ (u "UPDATE toimenpidekoodi SET voimassaolo_alkuvuosi = 2000, voimassaolo_loppuvuosi = 2004 WHERE nimi = 'Graffitien poisto'")
+               _ (u "UPDATE tehtava SET voimassaolo_alkuvuosi = 2000, voimassaolo_loppuvuosi = 2004 WHERE nimi = 'Graffitien poisto'")
                tehtava-mennyt (count (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id))
-               _ (u "UPDATE toimenpidekoodi SET voimassaolo_alkuvuosi = 2005, voimassaolo_loppuvuosi = 2007 WHERE nimi = 'Graffitien poisto'")
+               _ (u "UPDATE tehtava SET voimassaolo_alkuvuosi = 2005, voimassaolo_loppuvuosi = 2007 WHERE nimi = 'Graffitien poisto'")
                tehtava-voimassa (count (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id))]
 
               (is (= maara-kannassa lahtotilanne) "Määrittelemättömien tehtävien määrä on odotettu.")

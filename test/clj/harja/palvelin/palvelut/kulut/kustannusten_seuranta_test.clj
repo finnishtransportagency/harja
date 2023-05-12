@@ -62,8 +62,8 @@
   (str "WITH urakan_toimenpideinstanssi_23150 AS
          (SELECT tpi.id AS id
           FROM toimenpideinstanssi tpi
-                   JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                   JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                   JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+                   JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
                maksuera m
           WHERE tpi.urakka = " urakka "
             AND m.toimenpideinstanssi = tpi.id
@@ -83,7 +83,7 @@
         FROM kulu_kohdistus lk
                  JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
-             toimenpidekoodi tk,
+             toimenpide tk,
              kulu l
         WHERE l.urakka = " urakka "
           AND l.erapaiva BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE
@@ -99,7 +99,7 @@
         FROM toteutuneet_kustannukset t
               JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma AND tr.nimi = 'Erillishankinnat (W)',
              toimenpideinstanssi tpi,
-             toimenpidekoodi tk
+             toimenpide tk
         WHERE t.urakka_id = " urakka "
           AND (concat(t.vuosi, '-', t.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
           AND t.toimenpideinstanssi = tpi.id
@@ -111,8 +111,8 @@
   (str "WITH urakan_toimenpideinstanssi_23150 AS
          (SELECT tpi.id AS id
           FROM toimenpideinstanssi tpi
-                   JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                   JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                   JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+                   JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
                maksuera m
           WHERE tpi.urakka = " urakka "
             AND m.toimenpideinstanssi = tpi.id
@@ -130,10 +130,10 @@
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
         FROM kulu_kohdistus lk
-                 LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
+                 LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
                  JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
-             toimenpidekoodi tk,
+             toimenpide tk,
              kulu l
         WHERE l.urakka = " urakka "
           AND l.erapaiva BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE
@@ -148,9 +148,9 @@
         0 AS budjetoitu_summa
         FROM toteutuneet_kustannukset t
               LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
-              LEFT JOIN toimenpidekoodi tk_tehtava ON t.tehtava = tk_tehtava.id,
+              LEFT JOIN tehtava tk_tehtava ON t.tehtava = tk_tehtava.id,
              toimenpideinstanssi tpi,
-             toimenpidekoodi tk
+             toimenpide tk
         WHERE t.urakka_id = " urakka "
           AND (concat(t.vuosi, '-', t.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
           AND t.toimenpideinstanssi = tpi.id
@@ -163,8 +163,8 @@
   (str "WITH urakan_toimenpideinstanssi_23150 AS
                (SELECT tpi.id AS id
                 FROM toimenpideinstanssi tpi
-                         JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                         JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                         JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+                         JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
                      maksuera m
                 WHERE tpi.urakka = " urakka "
                   AND m.toimenpideinstanssi = tpi.id
@@ -192,7 +192,7 @@
                  LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
                  JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
-             toimenpidekoodi tk,
+             toimenpide tk,
              kulu l
         WHERE l.urakka = " urakka "
           AND l.erapaiva BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE
@@ -209,7 +209,7 @@
               LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
               LEFT JOIN toimenpidekoodi tk_tehtava ON t.tehtava = tk_tehtava.id,
              toimenpideinstanssi tpi,
-             toimenpidekoodi tk
+             toimenpide tk
         WHERE t.urakka_id = " urakka "
           AND (concat(t.vuosi, '-', t.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
           AND t.toimenpideinstanssi = tpi.id
@@ -294,7 +294,7 @@ UNION ALL
              LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
              LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
             toimenpideinstanssi tpi,
-           toimenpidekoodi tk,
+           toimenpide tk,
            kulu l
        WHERE l.urakka = " urakka "
          AND l.erapaiva BETWEEN '" alkupvm "' ::DATE AND '" loppupvm "'::DATE
@@ -327,7 +327,7 @@ UNION ALL
                  LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
                  LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
-             toimenpidekoodi tk,
+             toimenpide tk,
              kulu l
         WHERE l.urakka = " urakka "
           AND l.erapaiva BETWEEN '" alkupvm "' ::DATE AND '" loppupvm "'::DATE
@@ -358,8 +358,8 @@ UNION ALL
             AND ek.sopimus = s.id
             AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
                                             FROM toimenpideinstanssi tpi
-                                                 JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                                                 JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                                                 JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+                                                 JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
                                                  maksuera m
                                            WHERE tpi.urakka = "urakka"
                                              AND m.toimenpideinstanssi = tpi.id
@@ -373,8 +373,8 @@ UNION ALL
     "WITH urakan_toimenpideinstanssi_23150 AS
              (SELECT tpi.id AS id
               FROM toimenpideinstanssi tpi
-                       JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                       JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                       JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+                       JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
                    maksuera m
               WHERE tpi.urakka = %s
                 AND m.toimenpideinstanssi = tpi.id
