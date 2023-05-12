@@ -1,6 +1,5 @@
 (ns harja.ui.tyokalut.raportti-tyokalut
   ;; Tänne voi laittaa mm yksittäisten raporttien funktioita
-
   (:require [harja.ui.raportti :as raportointi]
             [harja.ui.ikonit :as ikonit]
             [harja.fmt :as fmt]))
@@ -44,7 +43,6 @@
      [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "2 kommenttia"]]]
 
    [:hr]])
-
 
 (defmethod raportointi/muodosta-html :gridit-vastakkain [[_
                                                           {:keys [otsikko-vasen optiot-vasen otsikot-vasen rivit-vasen]}
@@ -117,3 +115,19 @@
          sivuttain-rullattava?
          ensimmainen-sarake-sticky?
          otsikot-oikea rivit-oikea))]]])
+
+(defmethod raportointi/muodosta-html :tyomaapaivakirjan-kommentit [[_]]
+  ;; Työmaakokouksen laskutusyhteenvedon footer
+  [:div.row.filtterit {:style {:padding "20px 92px 72px"}}
+   [:h2 "Kommentit"]
+
+   [:div {:class "kommentin-tiedot"}
+    [:span "10.10.2022 15:45"]
+    [:span "Timo Tilaaja"]]
+
+   [:div {:class "kommentti"}
+    [:h7 {:class "tieto-rivi"} "Tästähän puuttuu nelostien rekka-kolari"]]
+
+   [:div {:class "kommentti-lisaa"}
+    [:a
+     [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Lisää kommentti"]]]])
