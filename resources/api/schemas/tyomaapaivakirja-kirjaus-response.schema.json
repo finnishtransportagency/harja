@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-03/schema#",
+    "type": "object",
+    "properties": {
+        "status": {
+            "type": "string",
+            "enum": ["OK","VIRHE"],
+            "required": true
+        },
+        "tyomaapaivakirja-id": {
+            "type": "integer",
+            "required": false
+        },
+        "virheet": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "required": false
+        }
+    },
+    "additionalProperties": false
+}
