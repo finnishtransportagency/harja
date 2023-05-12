@@ -13,7 +13,9 @@
    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.kalusto :as kalusto]
    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.muut-toimenpiteet :as muut]
    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.vahingot :as vahingot]
-   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.liikenneohjaukset :as liikenneohjaukset]))
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.liikenneohjaukset :as liikenneohjaukset]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.maastotoimeksiannot :as maastotoimeksiannot]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteydenotot :as yhteydenotot]))
 
 (defn suorita [_ _ {:keys [valittu-rivi] :as parametrit}]
   (let [_ (println "\n \n Params T: " parametrit)
@@ -39,4 +41,8 @@
      (vahingot/vahingot)
      ;; Tilapäiset liikenteenohjaukset
      (liikenneohjaukset/liikenneohjaukset)
+     ;; Viranomaispäätöksiin liittyvät maastotoimeksiannot
+     (maastotoimeksiannot/maastotoimeksiannot-taulukko)
+     ;; Yhteydenotot ja palautteet, jotka edellyttävät toimenpiteitä
+     (yhteydenotot/yhteydenotot-ja-palautteet)
      ]))
