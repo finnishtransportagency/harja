@@ -6,7 +6,9 @@
    [harja.domain.tierekisteri :as tr-domain]
    [clojure.string :as str]
    [harja.pvm :as pvm]
-   [taoensso.timbre :as log]))
+   [taoensso.timbre :as log]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.saatiedot :as saatiedot]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.vahvuus :as vahvuus]))
 
 (defn- taulukon-rivi
   [test lihavoi?]
@@ -31,23 +33,9 @@
 
      rivit]))
 
-
 (defn suorita [_ _ {:keys [valittu-rivi] :as parametrit}]
   (let [_ (println "\n \n Params T: " parametrit)
-        otsikko "Test"
-
-        rivit (into []
-                (remove nil?
-                  [(taulukon-rivi "Rivi 1" true)
-                   (taulukon-rivi "Rivi 2" true)]))
-        taulukon-optiot {:piilota-border? false
-                         :viimeinen-rivi-yhteenveto? false}
-        taulukon-otsikot (rivi
-                           {:otsikko "Otsikko 1" :leveys 12 :tyyppi :varillinen-teksti}
-                           {:otsikko "Otsikko 2" :leveys 48 :tyyppi :varillinen-teksti})
-
-        taulukko-1 {:otsikko-vasen "Päivystäjät" :optiot-vasen taulukon-optiot :otsikot-vasen taulukon-otsikot :rivit-vasen rivit}
-        taulukko-2 {:otsikko-oikea "Työnjohtajat" :optiot-oikea taulukon-optiot :otsikot-oikea taulukon-otsikot :rivit-oikea rivit}]
+        otsikko "Test"]
 
 
     [:raportti {:nimi otsikko
@@ -56,5 +44,8 @@
      [:tyomaapaivakirja-header valittu-rivi]
 
      ;; Päivystäjät, Työnjohtajat
-     [:otsikko-heading "Vahvuus"]
-     [:gridit-vastakkain taulukko-1 taulukko-2]]))
+     (vahvuus/vahvuus-gridit)
+     ;; Sääasemien tiedot
+     (saatiedot/saatietojen-taulukot)
+     
+     ]))
