@@ -126,7 +126,7 @@
     [:span "Timo Tilaaja"]]
 
    [:div {:class "kommentti"}
-    [:h7 {:class "tieto-rivi"} "Tästähän puuttuu nelostien rekka-kolari"]]
+    [:h1 {:class "tieto-rivi"} "Tästähän puuttuu nelostien rekka-kolari"]]
 
    [:div {:class "kommentti-lisaa"}
     [:a

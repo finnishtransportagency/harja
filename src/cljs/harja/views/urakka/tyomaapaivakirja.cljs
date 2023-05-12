@@ -155,7 +155,10 @@
      ;; Päiväkirjanäkymän padding
      [:div {:style {:padding "48px 92px 72px"}}
       ;; Raportin html
-      [muodosta-html (assoc-in tiedot [1 :tunniste] raportti-avain)]]]
+      [muodosta-html (assoc-in tiedot [1 :tunniste] raportti-avain)]]
+     ;; Sticky bar (Edellinen - Seuraava) Tallenna PDF 
+     [:div {:class "ala-valinnat-sticky"}
+      [:p "test"]]]
     [yleiset/ajax-loader "Ladataan tietoja..."]))
 
 (defn tyomaapiavakirja* [e! _]
