@@ -8,30 +8,12 @@
    [harja.pvm :as pvm]
    [taoensso.timbre :as log]
    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.saatiedot :as saatiedot]
-   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.vahvuus :as vahvuus]))
-
-(defn- taulukon-rivi
-  [test lihavoi?]
-  (let []
-    (rivi
-      [:varillinen-teksti {:arvo "AaAa"}]
-      [:varillinen-teksti {:arvo (str test) :lihavoi? lihavoi?}])))
-
-
-(defn- taulukko [{:keys [otsikot tiedot]}]
-  (let [rivit (into []
-                (remove nil?
-                  [(taulukon-rivi "Test 1" true)
-                   (taulukon-rivi "Test 2" true)]))]
-
-    [:taulukko {:piilota-border? true
-                :viimeinen-rivi-yhteenveto? false}
-
-     (rivi
-       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 12 :tyyppi :varillinen-teksti}
-       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 48 :tyyppi :varillinen-teksti})
-
-     rivit]))
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.vahvuus :as vahvuus]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.keliolosuhteet :as keliolosuhteet]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.kalusto :as kalusto]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.muut-toimenpiteet :as muut]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.vahingot :as vahingot]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.liikenneohjaukset :as liikenneohjaukset]))
 
 (defn suorita [_ _ {:keys [valittu-rivi] :as parametrit}]
   (let [_ (println "\n \n Params T: " parametrit)
@@ -44,8 +26,17 @@
      [:tyomaapaivakirja-header valittu-rivi]
 
      ;; Päivystäjät, Työnjohtajat
-     (vahvuus/vahvuus-gridit)
+     (vahvuus/vahvuus-taulukot)
      ;; Sääasemien tiedot
      (saatiedot/saatietojen-taulukot)
-     
+     ;; Poikkeukselliset keliolosuhteet
+     (keliolosuhteet/poikkeukselliset-keliolosuhteet-taulukko)
+     ;; Kalusto ja tielle tehdyt toimenpiteet
+     (kalusto/kalusto-taulukko)
+     ;; Muut toimenpiteet
+     (muut/muut-toimenpiteet-taulukko)
+     ;; Vahingot ja onnettomuudet
+     (vahingot/vahingot)
+     ;; Tilapäiset liikenteenohjaukset
+     (liikenneohjaukset/liikenneohjaukset)
      ]))

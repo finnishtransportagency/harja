@@ -25,6 +25,7 @@
         taulukko-2 {:otsikko-oikea "Työnjohtajat" :optiot-oikea taulukon-optiot :otsikot-oikea taulukon-otsikot :rivit-oikea rivit}]
     [taulukko-1 taulukko-2]))
 
-(defn vahvuus-gridit []
-  [:otsikko-heading "Vahvuus"]
-  [:gridit-vastakkain (first (vahvuus-taulukkojen-parametrit)) (second (vahvuus-taulukkojen-parametrit))])
+(defn vahvuus-taulukot []
+  (into ()
+    [[:gridit-vastakkain (first (vahvuus-taulukkojen-parametrit)) (second (vahvuus-taulukkojen-parametrit))]
+     [:otsikko-heading "Vahvuus test"]]))

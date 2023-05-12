@@ -30,5 +30,6 @@
     [taulukko-1 taulukko-2]))
 
 (defn saatietojen-taulukot []
-  [:otsikko-heading "Sääasemien tiedot"]
-  [:gridit-vastakkain (first (saatiedot-taulukkojen-parametrit)) (second (saatiedot-taulukkojen-parametrit))])
+  (into ()
+    [[:gridit-vastakkain (first (saatiedot-taulukkojen-parametrit)) (second (saatiedot-taulukkojen-parametrit))]
+     [:otsikko-heading "Sääasemien tiedot"]]))

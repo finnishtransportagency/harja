@@ -1,0 +1,16 @@
+(ns harja.palvelin.raportointi.raportit.tyomaapaivakirja.liikenneohjaukset
+  "Työmaapäiväkirja -näkymän tilapäiset liikenneohjaukset"
+  (:require
+   [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
+   [harja.domain.ely :as ely]
+   [harja.domain.tierekisteri :as tr-domain]
+   [clojure.string :as str]
+   [harja.pvm :as pvm]
+   [taoensso.timbre :as log]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
+
+(defn liikenneohjaukset []
+  (into ()
+    [[:jakaja true]
+     [:teksti "Liikenne poikki onnettomuuden takia klo 08:45 - 9:22: Vt 4 4/400/100-200. Kiertotie 847/4/0-2000. Käytetty liikenteenohjausvaunua ohjaukseen."]
+     [:jakaja true]]))

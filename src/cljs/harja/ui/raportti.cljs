@@ -287,9 +287,11 @@
 (defmethod muodosta-html :otsikko-heading-small [[_ teksti]]
   [:h4 {:style {:font-size "1rem"}} teksti])
 
-(defmethod muodosta-html :jakaja [_]
-  [:hr {:style {:margin-top "30px"
-                :margin-bottom "30px"}}])
+(defmethod muodosta-html :jakaja [ei-valitysta]
+  (if ei-valitysta
+    [:hr]
+    [:hr {:style {:margin-top "30px"
+                  :margin-bottom "30px"}}]))
 
 (defmethod muodosta-html :otsikko-kuin-pylvaissa [[_ teksti]]
   [:h3 teksti])

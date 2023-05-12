@@ -12,5 +12,21 @@
   [test lihavoi?]
   (let []
     (rivi
-      [:varillinen-teksti {:arvo "AaAa"}]
+      [:varillinen-teksti {:arvo "Test"}]
       [:varillinen-teksti {:arvo (str test) :lihavoi? lihavoi?}])))
+
+(defn taulukko [{:keys [otsikot tiedot]}]
+  (let [rivit (into []
+                (remove nil?
+                  [(taulukon-rivi "Test 1" true)
+                   (taulukon-rivi "Test 2" true)]))]
+
+    [:taulukko {:piilota-border? false
+                :viimeinen-rivi-yhteenveto? false}
+     
+     ;; :otsikkorivi-luokka
+     (rivi
+       {:otsikko "Test" :leveys 12 :tyyppi :varillinen-teksti}
+       {:otsikko "Test" :leveys 48 :tyyppi :varillinen-teksti})
+
+     rivit]))
