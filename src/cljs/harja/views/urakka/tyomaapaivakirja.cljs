@@ -5,13 +5,17 @@
             [harja.ui.valinnat :as valinnat]
             [harja.ui.kentat :as kentat]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.napit :as napit]
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.navigaatio :as nav]
             [harja.views.urakka.tyomaapaivakirja-nakyma :as nakyma]
+            [harja.ui.raportti :refer [muodosta-html]]
+            [harja.tiedot.raportit :as raportit]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.napit :as napit]
             [harja.pvm :as pvm])
-  (:require-macros [harja.atom :refer [reaction-writable]]))
+  (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
+                   [reagent.ratom :refer [reaction]]))
 
 ;; TODO 
 (defonce haun-valinnat
@@ -20,6 +24,7 @@
    :puuttuvat "Puuttuvat (0123)"
    :kommentoidut "Kommentoidut (0123)"})
 
+(defonce raportti-avain :tyomaapaivakirja-nakyma)
 (def valittu-hakumuoto (reaction-writable :kaikki))
 
 (defn tyomaapaivakirja-listaus [e! {:keys [nayta-rivit valinnat] :as tiedot}]
@@ -127,6 +132,28 @@
         :solun-luokka solu-fn}]
       nayta-rivit]]))
 
+(defonce raportin-parametrit
+  (reaction (let [ur @nav/valittu-urakka]
+              (raportit/urakkaraportin-parametrit
+                (:id ur)
+                raportti-avain
+                {:urakkatyyppi (:tyyppi ur)
+                 :valittu-rivi (:valittu-rivi @tiedot/tila)
+                 }))))
+
+(defonce raportin-tiedot
+  (reaction<! [p @raportin-parametrit]
+    {:nil-kun-haku-kaynnissa? true}
+    (when p
+      (raportit/suorita-raportti p))))
+
+(defn suorita-tyomaapaivakirja-raportti [e!]
+  (if-let [tiedot @raportin-tiedot]
+    [:<>
+     [napit/takaisin "Takaisin" #(e! (tiedot/->PoistaRiviValinta)) {:luokka "nappi-reunaton"}]
+     [muodosta-html (assoc-in tiedot [1 :tunniste] raportti-avain)]]
+    [yleiset/ajax-loader "Ladataan tietoja..."]))
+
 (defn tyomaapiavakirja* [e! _]
   (komp/luo
    (komp/sisaan
@@ -136,7 +163,7 @@
    (fn [e! {:keys [valittu-rivi] :as tiedot}]
      [:div
       (if valittu-rivi
-        [nakyma/tyomaapaivakirja-nakyma e! tiedot]
+        [suorita-tyomaapaivakirja-raportti e!]
         [tyomaapaivakirja-listaus e! tiedot])])))
 
 (defn tyomaapiavakirja [ur]
