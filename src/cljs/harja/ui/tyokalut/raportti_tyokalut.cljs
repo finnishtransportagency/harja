@@ -34,8 +34,7 @@
 
     [:span "Saapunut 11.10.2022 05:45"]
     [:span "Päivitetty 11.10.2022 05:45"]
-    [:a.klikattava {:on-click #(.setTimeout js/window (fn [] (siirrin/kohde-elementti-id "Kommentit")) 150)} 
-     "Näytä muutoshistoria"]
+    [:a.klikattava "Näytä muutoshistoria"]
 
     [:span.paivakirja-toimitus
      [:div {:class (str "pallura " "myohassa")}]
@@ -124,17 +123,25 @@
   [:div.row.filtterit {:id "Kommentit" :style {:padding "20px 92px 72px" :margin-top "80px"}}
    [:h2 "Kommentit"]
 
+   ;; Kommentin päiväys ja nimi
    [:div.alarivi-tiedot
     [:span "10.10.2022 15:45"]
     [:span "Timo Tilaaja"]]
 
+   ;; Itse kommentti
    [:div.kommentti
-    [:h1 {:class "tieto-rivi"} "Tästähän puuttuu nelostien rekka-kolari"]]
+    [:h1 {:class "tieto-rivi"} "Tästähän puuttuu nelostien rekka-kolari"]
+    [:span.klikattava.kommentti-poista {:on-click (fn[]
+                                                    (println "Klikattu poista kommentti"))} (ikonit/action-delete)]]
 
+
+   ;; Muutoshistoria tiedot
    [:div.alarivi-tiedot
     [:span "11.10.2022 07:45"]
-    [:span "Tauno Työnjohtaja"]]
+    [:span "Tauno Työnjohtaja"]
+    [:span.muutos-info "Jälkikäteismerkintä urakoitsijajärjestelmästä"]]
 
+   ;; Muutoshistoria
    [:div.kommentti.muutos
     [:h1 {:class "tieto-rivi"} "Työmaapäiväkirja päivitetty 11.10.2022 08:10: lisätty rekka-kolari."]
     [:a.klikattava.info-rivi "Näytä muutoshistoria"]]

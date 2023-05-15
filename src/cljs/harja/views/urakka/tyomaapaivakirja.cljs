@@ -35,7 +35,7 @@
         ;; Lisää tähän oikea toiminnallisuus mikäli toimitus puuttuu (tekee "puuttuu-tausta" tekee oranssin solun taustan)
         ;; Tällä hetkellä :tila tulee tyomaapaivakirja.sql joka on randomisti generoitu
         solu-fn (fn [arvo _rivi]
-                  (when (= (:tila _rivi) 2) "puuttuu-tausta"))
+                  (when (= (:tila arvo) 2) "puuttuu-tausta"))
 
         ;; Toimituksen tila
         toimituksen-tila-fn (fn [arvo _rivi]
@@ -84,6 +84,7 @@
                  :piilota-toiminnot? true
                  :jarjesta :id
                  :mahdollista-rivin-valinta? true
+                 :rivin-luokka solu-fn
                  :rivi-klikattu #(e! (tiedot/->ValitseRivi %))}
 
       [{:otsikko-komp (fn [_ _]
@@ -92,47 +93,42 @@
         :tyyppi :komponentti
         :komponentti (fn [arvo rivi]
                        (str (pvm/pvm (:alkupvm arvo))))
-        :luokka "bold text-nowrap"
-        :leveys 0.5
-        :solun-luokka solu-fn}
+        :luokka "semibold text-nowrap"
+        :leveys 0.3}
 
        {:otsikko "Saapunut"
         :tyyppi :komponentti
         :komponentti (fn [arvo rivi]
                        (str (pvm/pvm-aika-klo (:loppupvm arvo))))
         :luokka "text-nowrap"
-        :leveys 1
-        :solun-luokka solu-fn}
+        :leveys 0.5}
 
        {:otsikko "Viim. muutos"
         :tyyppi :komponentti
         :komponentti (fn [arvo rivi]
                        (str (pvm/pvm-aika-klo (:loppupvm arvo))))
         :luokka "text-nowrap"
-        :leveys 1
-        :solun-luokka solu-fn}
+        :leveys 0.5}
 
        {:otsikko "Urakka"
         :tyyppi :string
         :nimi :nimi
-        :leveys 1
-        :solun-luokka solu-fn}
+        :leveys 1}
 
        {:otsikko "Toimituksen tila"
         :tyyppi :komponentti
         :komponentti toimituksen-tila-fn
-        :leveys 0.5
-        :solun-luokka solu-fn}
+        :leveys 0.5}
 
        {:otsikko "Kommentit"
         :tyyppi :komponentti
         :komponentti (fn [arvo rivi]
                        ;; TODO
                        ;; Lisää kommenttien määrä tähän
-                       [:a
-                        [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "1"]])
-        :leveys 1
-        :solun-luokka solu-fn}]
+                       [:span
+                        [:a.ei-tekstityylia {:style {:margin-right "5px"}}
+                         [ikonit/livicon-kommentti]] "1"])
+        :leveys 0.5}]
       nayta-rivit]]))
 
 (defonce raportin-parametrit

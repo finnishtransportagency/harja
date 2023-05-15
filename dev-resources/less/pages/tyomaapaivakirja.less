@@ -1,6 +1,7 @@
 .paivakirja-toimitus {
     display: flex;
     align-items: center;
+    white-space: nowrap;
 
     .kohta {
         padding-left: 10px;
@@ -91,7 +92,7 @@
     font-weight: 400;
 }
 
-.ei-huomioita {
+.ei-tietoja {
     font-weight: 400;
     font-size: 14px;
     line-height: 20px;
@@ -101,8 +102,21 @@
     width: 100% !important;
 }
 
+.muutos-info {
+    color: @black-lighter;
+    font-style: italic;
+}
+
+.kommentti-poista {
+    transform: scale(0.88);
+}
+
 .klikattava {
     cursor: pointer;
+}
+
+.ei-tekstityylia {
+    text-decoration: none !important;
 }
 
 .alarivi-tiedot {

@@ -18,7 +18,7 @@
 
 (defn placeholder-ei-tietoja [teksti]
   [:varillinen-teksti
-   {:kustomi-tyyli "ei-huomioita"
+   {:kustomi-tyyli "ei-tietoja"
     :arvo teksti}])
 
 (defn taulukko [{:keys [gridin-otsikko rivin-tiedot rivit oikealle-tasattavat]}]
