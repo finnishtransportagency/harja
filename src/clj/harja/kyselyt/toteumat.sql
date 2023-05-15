@@ -550,7 +550,7 @@ SELECT t.id        AS toteuma_id,
        t.tr_loppuosa              as sijainti_loppu,
        t.tr_loppuetaisyys         as sijainti_loppuetaisyys
     FROM toteuma_tehtava tt,
-         toimenpidekoodi tk,
+         tehtava tk,
          toteuma t,
          kayttaja k,
          tehtavaryhma tr

@@ -262,7 +262,7 @@ FROM kulu_kohdistus lk
          LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
      toimenpideinstanssi tpi,
-     toimenpidekoodi tk,
+     toimenpide tk,
      kulu l
 WHERE l.urakka = :urakka
   AND l.erapaiva BETWEEN :alkupvm::DATE AND :loppupvm::DATE
@@ -328,7 +328,7 @@ FROM kulu_kohdistus lk
          LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
      toimenpideinstanssi tpi,
-     toimenpidekoodi tk,
+     toimenpide tk,
      kulu l
 WHERE l.urakka = :urakka
   AND l.erapaiva BETWEEN :alkupvm::DATE AND :loppupvm::DATE
@@ -376,7 +376,7 @@ SELECT 0                                            AS budjetoitu_summa,
          LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = t.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma,
      toimenpideinstanssi tpi,
-     toimenpidekoodi tk
+     toimenpide tk
 WHERE t.urakka_id = :urakka
   AND (concat(t.vuosi, '-', t.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND t.toimenpideinstanssi = tpi.id
