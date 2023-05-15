@@ -2,23 +2,24 @@
   ;; Tänne voi laittaa mm yksittäisten raporttien funktioita
   (:require [harja.ui.raportti :as raportointi]
             [harja.ui.ikonit :as ikonit]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.ui.nakymasiirrin :as siirrin]))
 
 (defmethod raportointi/muodosta-html :tyomaa-laskutusyhteenveto-yhteensa [[_ kyseessa-kk-vali? hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str]]
   ;; Työmaakokouksen laskutusyhteenvedon footer
   [:div
-   [:div {:class "tyomaakokous-footer"}
+   [:div.tyomaakokous-footer
     [:h3 (str "Laskutus yhteensä " hoitokausi)]
 
     (if kyseessa-kk-vali?
-      [:div {:class "sisalto"}
-       [:span {:class "laskutus-yhteensa"} laskutettu-str]
-       [:span {:class "laskutus-yhteensa"} laskutetaan-str]
+      [:div.sisalto
+       [:span.laskutus-yhteensa laskutettu-str]
+       [:span.laskutus-yhteensa laskutetaan-str]
        [:h1 (str (fmt/euro laskutettu))]
-       [:h1 [:span {:class "vahvistamaton"} (str (fmt/euro laskutetaan))]]]
+       [:h1 [:span.vahvistamaton(str (fmt/euro laskutetaan))]]]
 
-      [:div {:class "sisalto-ei-kk-vali"}
-       [:span {:class "laskutus-yhteensa"} laskutettu-str]
+      [:div.sisalto-ei-kk-vali
+       [:span.laskutus-yhteensa laskutettu-str]
        [:h1 (str (fmt/euro laskutettu))]])
     ]])
 
@@ -26,20 +27,22 @@
   [:<>
    [:p (str valittu-rivi)]
 
-   [:h3 {:class "header-yhteiset"} "UUD MHU 2022–2027"]
-   [:h1 {:class "header-yhteiset"} "Työmaapäiväkirja 9.10.2022"]
+   [:h3.header-yhteiset "UUD MHU 2022–2027"]
+   [:h1.header-yhteiset "Työmaapäiväkirja 9.10.2022"]
 
-   [:div {:class "nakyma-otsikko-tiedot"}
+   [:div.nakyma-otsikko-tiedot
 
     [:span "Saapunut 11.10.2022 05:45"]
     [:span "Päivitetty 11.10.2022 05:45"]
-    [:a "Näytä muutoshistoria"]
+    [:a.klikattava {:on-click #(.setTimeout js/window (fn [] (siirrin/kohde-elementti-id "Kommentit")) 150)} 
+     "Näytä muutoshistoria"]
 
-    [:span {:class "paivakirja-toimitus"}
+    [:span.paivakirja-toimitus
      [:div {:class (str "pallura " "myohassa")}]
-     [:span {:class "kohta"} "Myöhässä"]]
+     [:span.kohta "Myöhässä"]]
 
-    [:a
+    ;; Kommentti- nappi scrollaa alas kommentteihin
+    [:a.klikattava {:on-click #(.setTimeout js/window (fn [] (siirrin/kohde-elementti-id "Kommentit")) 150)}
      [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "2 kommenttia"]]]
 
    [:hr]])
@@ -49,9 +52,9 @@
                                                           {:keys [otsikko-oikea optiot-oikea otsikot-oikea rivit-oikea]}]]
   ;; Tekee 2 taulukkoa vierekkän
   [:<>
-   [:div {:class "flex-gridit"}
+   [:div.flex-gridit
     [:div
-     [:h3 {:class "gridin-otsikko"} otsikko-vasen]
+     [:h3.gridin-otsikko otsikko-vasen]
      (let [{otsikko :otsikko
             viimeinen-rivi-yhteenveto? :viimeinen-rivi-yhteenveto?
             rivi-ennen :rivi-ennen
@@ -84,7 +87,7 @@
          otsikot-vasen rivit-vasen))]
 
     [:div
-     [:h3 {:class "gridin-otsikko"} otsikko-oikea]
+     [:h3.gridin-otsikko otsikko-oikea]
      (let [{otsikko :otsikko
             viimeinen-rivi-yhteenveto? :viimeinen-rivi-yhteenveto?
             rivi-ennen :rivi-ennen
@@ -118,16 +121,25 @@
 
 (defmethod raportointi/muodosta-html :tyomaapaivakirjan-kommentit [[_]]
   ;; Työmaakokouksen laskutusyhteenvedon footer
-  [:div.row.filtterit {:style {:padding "20px 92px 72px"}}
+  [:div.row.filtterit {:id "Kommentit" :style {:padding "20px 92px 72px" :margin-top "80px"}}
    [:h2 "Kommentit"]
 
-   [:div {:class "kommentin-tiedot"}
+   [:div.alarivi-tiedot
     [:span "10.10.2022 15:45"]
     [:span "Timo Tilaaja"]]
 
-   [:div {:class "kommentti"}
+   [:div.kommentti
     [:h1 {:class "tieto-rivi"} "Tästähän puuttuu nelostien rekka-kolari"]]
 
-   [:div {:class "kommentti-lisaa"}
-    [:a
+   [:div.alarivi-tiedot
+    [:span "11.10.2022 07:45"]
+    [:span "Tauno Työnjohtaja"]]
+
+   [:div.kommentti.muutos
+    [:h1 {:class "tieto-rivi"} "Työmaapäiväkirja päivitetty 11.10.2022 08:10: lisätty rekka-kolari."]
+    [:a.klikattava.info-rivi "Näytä muutoshistoria"]]
+
+   [:div.kommentti-lisaa
+    [:a.klikattava {:on-click (fn[]
+                                (println "Klikattu lisää kommentti"))}
      [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Lisää kommentti"]]]])

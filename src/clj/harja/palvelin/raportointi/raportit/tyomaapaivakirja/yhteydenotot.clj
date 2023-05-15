@@ -11,11 +11,13 @@
 
 (defn yhteydenotot-ja-palautteet []
   (into ()
+    ;; Jos tietoja ei ole, käytä: 
+    ;; (yhteiset/placeholder-ei-tietoja "Ei palautteita")
     [[:jakaja true]
-     
-     [:teksti "Väyläviraston siltainsinööri haluaisi käydä silloilla x ja y tekemässä erikoistarkastuksen"]
+
+     (yhteiset/body-teksti "Väyläviraston siltainsinööri haluaisi käydä silloilla x ja y tekemässä erikoistarkastuksen")
      [:jakaja true]
-     [:teksti "Kaupungin kunnossapitopäällikkö otti yhteyttä viherhoidon rajoista"]
+     (yhteiset/body-teksti "Kaupungin kunnossapitopäällikkö otti yhteyttä viherhoidon rajoista")
      [:jakaja true]
 
-     [:otsikko-heading "Yhteydenotot ja palautteet, jotka edellyttävät toimenpiteitä"]]))
+     (yhteiset/sektio-otsikko "Yhteydenotot ja palautteet, jotka edellyttävät toimenpiteitä")]))

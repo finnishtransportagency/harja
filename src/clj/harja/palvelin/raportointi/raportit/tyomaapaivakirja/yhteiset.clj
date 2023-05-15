@@ -8,25 +8,23 @@
    [harja.pvm :as pvm]
    [taoensso.timbre :as log]))
 
-(defn taulukon-rivi
-  [test lihavoi?]
-  (let []
-    (rivi
-      [:varillinen-teksti {:arvo "Test"}]
-      [:varillinen-teksti {:arvo (str test) :lihavoi? lihavoi?}])))
+(defn body-teksti [teksti]
+  [:varillinen-teksti
+   {:kustomi-tyyli "body-text"
+    :arvo teksti}])
 
-(defn taulukko [{:keys [otsikot tiedot]}]
-  (let [rivit (into []
-                (remove nil?
-                  [(taulukon-rivi "Test 1" true)
-                   (taulukon-rivi "Test 2" true)]))]
+(defn sektio-otsikko [otsikko]
+  [:otsikko-heading otsikko {:padding-top "50px"}])
 
-    [:taulukko {:piilota-border? false
-                :viimeinen-rivi-yhteenveto? false}
-     
-     ;; :otsikkorivi-luokka
-     (rivi
-       {:otsikko "Test" :leveys 12 :tyyppi :varillinen-teksti}
-       {:otsikko "Test" :leveys 48 :tyyppi :varillinen-teksti})
+(defn placeholder-ei-tietoja [teksti]
+  [:varillinen-teksti
+   {:kustomi-tyyli "ei-huomioita"
+    :arvo teksti}])
 
-     rivit]))
+(defn taulukko [{:keys [gridin-otsikko rivin-tiedot rivit oikealle-tasattavat]}]
+  [:taulukko {:otsikko gridin-otsikko
+              :oikealle-tasattavat-kentat (or oikealle-tasattavat #{})
+              :tyhja "Ei Tietoja."
+              :piilota-border? false
+              :viimeinen-rivi-yhteenveto? false}
+   rivin-tiedot rivit])

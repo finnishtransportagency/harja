@@ -49,5 +49,5 @@
      ;; Muut huomiot
      (muut-huomiot/muut-huomiot)
 
-     ;; Kommentit (ei renderöidä raporttiin)
+     ;; Kommentit (nämäkin pitäisi saada PDF raporttiin)
      [:tyomaapaivakirjan-kommentit _]]))

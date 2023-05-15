@@ -9,23 +9,42 @@
    [taoensso.timbre :as log]
    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
 
+(defn- vahvuus-rivi [aikavali nimi]
+  (rivi
+    [:varillinen-teksti {:arvo aikavali}]
+    [:varillinen-teksti {:arvo nimi}]))
+
 (defn vahvuus-taulukkojen-parametrit []
-  (let [taulukon-optiot {:piilota-border? false
+  (let [taulukon-optiot {:tyhja "Ei Tietoja."
+                         :piilota-border? false
                          :viimeinen-rivi-yhteenveto? false}
         taulukon-otsikot (rivi
-                           {:otsikko "Otsikko 1" :leveys 12 :tyyppi :varillinen-teksti}
-                           {:otsikko "Otsikko 2" :leveys 48 :tyyppi :varillinen-teksti})
-        rivit (into []
-                (remove nil?
-                  [(yhteiset/taulukon-rivi "Rivi 1" true)
-                   (yhteiset/taulukon-rivi "Rivi 2" true)
-                   (yhteiset/taulukon-rivi "Rivi 3" true)]))
+                           {:otsikko "Aikaväli" 
+                            :otsikkorivi-luokka "nakyma-otsikko" 
+                            :sarakkeen-luokka "vaalen-tumma-tausta" 
+                            :leveys 0.17
+                            :tyyppi :varillinen-teksti}
+                           {:otsikko "Nimi" 
+                            :otsikkorivi-luokka "nakyma-otsikko" 
+                            :sarakkeen-luokka "nakyma-valkoinen-solu"
+                            :leveys 1
+                            :tyyppi :varillinen-teksti})
+        ;; Vasemman taulukon rivit (Päivystäjät)
+        rivit-v (into []
+                  [(vahvuus-rivi "0:00" "Päivi Päivystäjä")
+                   (vahvuus-rivi "0:01" "Petri Päivystäjä")
+                   (vahvuus-rivi "0:02" "Paula Päivystäjä")])
+        
+        ;; Työnjohtajat
+        rivit-o (into []
+                  [(vahvuus-rivi "0:00" "Tauno Työnjohtaja")
+                   (vahvuus-rivi "0:01" "Tarja Työnjohtaja")])
 
-        taulukko-1 {:otsikko-vasen "Päivystäjät" :optiot-vasen taulukon-optiot :otsikot-vasen taulukon-otsikot :rivit-vasen rivit}
-        taulukko-2 {:otsikko-oikea "Työnjohtajat" :optiot-oikea taulukon-optiot :otsikot-oikea taulukon-otsikot :rivit-oikea rivit}]
+        taulukko-1 {:otsikko-vasen "Päivystäjät" :optiot-vasen taulukon-optiot :otsikot-vasen taulukon-otsikot :rivit-vasen rivit-v}
+        taulukko-2 {:otsikko-oikea "Työnjohtajat" :optiot-oikea taulukon-optiot :otsikot-oikea taulukon-otsikot :rivit-oikea rivit-o}]
     [taulukko-1 taulukko-2]))
 
 (defn vahvuus-taulukot []
   (into ()
     [[:gridit-vastakkain (first (vahvuus-taulukkojen-parametrit)) (second (vahvuus-taulukkojen-parametrit))]
-     [:otsikko-heading "Vahvuus test"]]))
+     (yhteiset/sektio-otsikko "Vahvuus")]))

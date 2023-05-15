@@ -30,6 +30,7 @@
 
 .tyopaiva {
     display: flex;
+    white-space: nowrap;
 
     :first-child {
         width: 20px;
@@ -61,15 +62,8 @@
     flex-direction: row;
     gap: 40px;
 
-    .nakyma-otsikko {
-        background: @harmaa-vaalea;
-    }
-
-    // Meillä ei käytetä ollenkaan valkoista taustaa?
-    // Toisin kun figmassa sanotaan
-    // Käytetäänkö @harjan-taustavari ?
     .nakyma-valkoinen-solu {
-        background: #FFFFFF;
+        background: @white-default;
     }
 
     .gridin-otsikko {
@@ -77,12 +71,41 @@
     }
 }
 
+.info-rivi {
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.nakyma-otsikko {
+    background: @harmaa-vaalea !important;
+}
+
+.vaalen-tumma-tausta {
+    background: @white-dark
+}
+
 .tieto-rivi {
     font-size: 14px;
     font-weight: 400;
 }
 
-.kommentin-tiedot {
+.ei-huomioita {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    display: flex;
+    justify-content: center;
+    color: @black-lighter !important;
+    width: 100% !important;
+}
+
+.klikattava {
+    cursor: pointer;
+}
+
+.alarivi-tiedot {
     display: flex;
     flex-direction: row;
     gap: 20px;
@@ -94,28 +117,98 @@
 }
 
 .kommentti {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
     padding: 16px;
-    // Sama homma tässä, toisin kun figmassa sanotaan
-    // Käytetäänkö @harjan-taustavari ?
-    background: white;
+    gap: 10px;
+    width: 100%;
+    height: 52px;
+    background: @white-default;
+}
+
+.muutos {
+    background: @white-darker;
 }
 
 .kommentti-lisaa {
     font-size: 14px;
     font-weight: bold;
     padding: 20px 0px 20px;
+    margin-top: 20px;
 }
 
 .ala-valinnat-sticky {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
     align-items: flex-start;
-    padding: 24px;
-    gap: 24px;
     background: @blue-dark;
+    padding: 24px;
+    gap: 30px;
     bottom: 0;
     height: 84px;
     position: sticky;
     width: 100%;
+    font-size: 14px;
+
+    .napit {
+        display: flex;
+        flex-direction: row;
+        align-items: center;    
+        justify-content: center;
+        gap: 5px;
+        width: 120px;
+        height: 45px;
+        border-style: solid;
+        border-radius: 5px;
+        border-color: @white-default;
+        border-width: 2px;
+        color: @white-default;
+
+        * > {
+            row-gap: 20px;
+        }
+
+        .nuoli {
+            transform: scale(1.0);
+            color: @white-default;
+            margin-top: 2px;
+        }
+    }
+    
+    .ei-reunoja {
+        border-style: none;
+    }
+
+    .napit:hover {
+        background-color: @blue-default;
+    }
+
+    .napit:active {
+        background-color: @sininen5;
+    }
+
+    // Flexin 3 viimeistä diviä
+    // (Tallenna / Lähetä / Takaisin)
+    div:nth-last-child(-n+3) {
+        margin-left: 30px;
+        width: 180px;
+    }
+
+    // Sulje nappi float oikealla
+    div:last-child {
+        margin-left: auto;
+    }
+}
+
+.sulje {
+    color: @blue-dark;
+    height: 18.4px;
+    width: 18.4px;
+    left: 2.8px;
+    top: 2.79px;
+    position: relative;
+    float: right;
+    transform: scale(2.0);
 }

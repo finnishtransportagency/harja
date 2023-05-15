@@ -278,8 +278,8 @@
 (defmethod muodosta-html :otsikko-title [[_ teksti]]
   [:h1 teksti])
 
-(defmethod muodosta-html :otsikko-heading [[_ teksti]]
-  [:h2 {:style {:font-size "1.25rem"}} teksti])
+(defmethod muodosta-html :otsikko-heading [[_ teksti tyyli]]
+  [:h2 {:style (merge {:font-size "1.25rem"} tyyli)} teksti])
 
 (defmethod muodosta-html :otsikko [[_ teksti]]
   [:h3 teksti])
