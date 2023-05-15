@@ -147,3 +147,6 @@
 
 (def +tyomaapaivakirja-paivitys-request+ "api/schemas/tyomaapaivakirja-paivitys-request.schema.json")
 (def tyomaapaivakirja-paivitys-request (tee-validaattori +tyomaapaivakirja-paivitys-request+))
+
+(def +tyomaapaivakirja-kirjaus-response+ "api/schemas/tyomaapaivakirja-kirjaus-response.schema.json")
+(def tyomaapaivakirja-kirjaus-response (tee-validaattori +tyomaapaivakirja-kirjaus-response+))
