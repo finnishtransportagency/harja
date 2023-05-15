@@ -44,7 +44,7 @@ SELECT coalesce(SUM(kt.summa), 0)                     AS budjetoitu_summa,
            ELSE 'hankintakustannukset'
            END                                        AS paaryhma,
        kt.indeksikorjaus_vahvistettu                  AS indeksikorjaus_vahvistettu
-from tehtava tk,
+from toimenpide tk,
      kustannusarvioitu_tyo kt
          LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = kt.tehtava
          LEFT JOIN tehtavaryhma tr ON tk_tehtava.tehtavaryhma = tr.id,
@@ -88,7 +88,7 @@ SELECT kt.summa                                  AS budjetoitu_summa,
        tk_tehtava.jarjestys                      AS jarjestys,
        'hankintakustannukset'                    AS paaryhma,
        kt.indeksikorjaus_vahvistettu             AS indeksikorjaus_vahvistettu
-from tehtava tk,
+from toimenpide tk,
      kiinteahintainen_tyo kt
          LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = kt.tehtava,
      toimenpideinstanssi tpi
@@ -119,7 +119,7 @@ SELECT kt.summa                                  AS budjetoitu_summa,
        0                                         AS jarjestys,
        'erillishankinnat'                        AS paaryhma,
        kt.indeksikorjaus_vahvistettu             AS indeksikorjaus_vahvistettu
-from tehtava tk,
+from toimenpide tk,
      kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id,
      sopimus s
@@ -148,7 +148,7 @@ SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        0                                              AS jarjestys,
        'hoidonjohdonpalkkio'                          AS paaryhma,
        kt.indeksikorjaus_vahvistettu                  AS indeksikorjaus_vahvistettu
-from tehtava tk,
+from toimenpide tk,
      kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id,
      sopimus s
@@ -205,7 +205,7 @@ SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        160                                            AS jarjestys,
        'johto-ja-hallintakorvaus'                     AS paaryhma,
        kt.indeksikorjaus_vahvistettu                  AS indeksikorjaus_vahvistettu
-from tehtava tk,
+from toimenpide tk,
      kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
          LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = kt.tehtava,
