@@ -21,7 +21,7 @@
    {"emo" ::emo-id}
    {::toimenpidekoodi-join (specql.rel/has-one
                              ::emo-id
-                             ::toimenpidekoodi
+                             ::toimenpide
                              ::id)}]
   ["tehtava" ::toimenpidekoodi
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
@@ -30,7 +30,7 @@
    {"emo" ::emo-id}
    {::toimenpidekoodi-join (specql.rel/has-one
                              ::emo-id
-                             ::toimenpidekoodi
+                             ::toimenpide
                              ::id)}])
 
 (def perustiedot #{::id ::nimi})
