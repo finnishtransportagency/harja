@@ -43,7 +43,7 @@
   (let [tehtavat-kannasta (q-map
                             (str "SELECT t.id
                                     FROM tehtava t
-                                         LEFT JOIN toimenpidekoodi emo ON t.emo = emo.id AND t.taso = 4
+                                         LEFT JOIN toimenpide emo ON t.emo = emo.id AND t.taso = 4
                                    WHERE (t.poistettu IS FALSE and t.taso in (1,2,3) OR (t.taso = 4 AND emo.poistettu IS FALSE) OR (t.taso = 4 AND emo.poistettu IS TRUE AND t.poistettu IS FALSE))"))
         tehtavaryhmat-kannasta (q-map (str "SELECT id FROM tehtavaryhma"))
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/tehtavat")] kayttaja-analytiikka portti)

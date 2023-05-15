@@ -435,7 +435,7 @@
                                  (q-map (str "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.summa, kt.summa_indeksikorjattu, kt.luotu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
                                                 tk.yksiloiva_tunniste AS tk_yt, tr.yksiloiva_tunniste AS tr_yt
                                          FROM kustannusarvioitu_tyo kt
-                                           LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
+                                           LEFT JOIN tehtava tk ON tk.id = kt.tehtava
                                            LEFT JOIN tehtavaryhma tr ON tr.id = kt.tehtavaryhma
                                          WHERE kt.toimenpideinstanssi=" toimenpideinstanssi ";")))
               tallennetun-asian-data-kannassa (filter #(tallennetun-asian-data? tallennettava-asia %) data-kannassa)]
@@ -497,7 +497,7 @@
                                                      kt.muokattu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
                                                      tk.yksiloiva_tunniste AS tk_yt, tr.yksiloiva_tunniste AS tr_yt
                                               FROM kustannusarvioitu_tyo kt
-                                                LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
+                                                LEFT JOIN tehtava tk ON tk.id = kt.tehtava
                                                 LEFT JOIN tehtavaryhma tr ON tr.id = kt.tehtavaryhma
                                               WHERE kt.toimenpideinstanssi=" toimenpideinstanssi ";")))
               tallennetun-asian-data-kannassa (filter #(tallennetun-asian-data? tallennettava-asia %) data-kannassa)

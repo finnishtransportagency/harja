@@ -207,7 +207,7 @@
         0 AS budjetoitu_summa
         FROM toteutuneet_kustannukset t
               LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
-              LEFT JOIN toimenpidekoodi tk_tehtava ON t.tehtava = tk_tehtava.id,
+              LEFT JOIN tehtava tk_tehtava ON t.tehtava = tk_tehtava.id,
              toimenpideinstanssi tpi,
              toimenpide tk
         WHERE t.urakka_id = " urakka "
@@ -291,7 +291,7 @@ UNION ALL
            WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
        END                 AS toimenpide
        FROM kulu_kohdistus lk
-             LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
+             LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
              LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
             toimenpideinstanssi tpi,
            toimenpide tk,
@@ -324,7 +324,7 @@ UNION ALL
                  WHEN tk.koodi = '23151' THEN 'MHU Hoidonjohto'
              END                 AS toimenpide
         FROM kulu_kohdistus lk
-                 LEFT JOIN toimenpidekoodi tk_tehtava ON tk_tehtava.id = lk.tehtava
+                 LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
                  LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
              toimenpide tk,
@@ -399,7 +399,7 @@ UNION ALL
       'sanktiot' AS paaryhma
       FROM sanktio s
            JOIN toimenpideinstanssi tpi ON tpi.urakka = %s AND tpi.id = s.toimenpideinstanssi
-           JOIN sanktiotyyppi st ON s.tyyppi = st.id\n     JOIN toimenpidekoodi tpk ON tpk.id = st.toimenpidekoodi
+           JOIN sanktiotyyppi st ON s.tyyppi = st.id\n     JOIN toimenpide tpk ON tpk.id = st.toimenpidekoodi
      WHERE s.perintapvm BETWEEN '%s'::DATE AND '%s'::DATE
        AND s.poistettu = FALSE
      GROUP BY s.tyyppi, s.indeksi" urakka urakka alkupvm loppupvm))

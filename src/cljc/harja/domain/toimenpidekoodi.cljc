@@ -16,6 +16,13 @@
 
 (define-tables
   ["hinnoittelutyyppi" ::hinnoittelutype (specql.transform/transform (specql.transform/to-keyword))]
+  ["toimenpide" ::toimenpide
+   harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
+   {"emo" ::emo-id}
+   {::toimenpidekoodi-join (specql.rel/has-one
+                             ::emo-id
+                             ::toimenpidekoodi
+                             ::id)}]
   ["tehtava" ::toimenpidekoodi
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
    {"yksiloiva_tunniste" ::yksiloiva-tunniste}

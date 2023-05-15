@@ -530,8 +530,10 @@
                                                  ::ur/urakka
                                                  #{::ur/alkupvm ::ur/loppupvm ::ur/indeksi}
                                                  {::ur/id urakka-id}))
+          _ (println "Jarno toimenpide avain " toimenpide-avain)
           toimenpide (mhu/toimenpide-avain->toimenpide toimenpide-avain)
-          {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpidekoodi
+          _ (println "Jarno toimenpide " toimenpide)
+          {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpide
                                             #{::tpk/id}
                                             {::tpk/taso 3
                                              ::tpk/koodi toimenpide}))
@@ -806,7 +808,7 @@
                                   (first (fetch db ::tpk/toimenpidekoodi
                                            #{::tpk/id}
                                            {::tpk/yksiloiva-tunniste tehtava})))
-          {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpidekoodi
+          {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpide
                                             #{::tpk/id}
                                             {::tpk/taso 3
                                              ::tpk/koodi toimenpide}))
