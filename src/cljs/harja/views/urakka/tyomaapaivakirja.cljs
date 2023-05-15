@@ -195,7 +195,7 @@
 
     [yleiset/ajax-loader "Ladataan tietoja..."]))
 
-(defn tyomaapiavakirja* [e! _]
+(defn tyomaapaivakirja* [e! _]
   (komp/luo
    (komp/sisaan
     #(do
@@ -212,7 +212,7 @@
           (e! (tiedot/->PaivitaAikavali (:aikavali @tiedot/tila)))
           [tyomaapaivakirja-listaus e! tiedot]))])))
 
-(defn tyomaapiavakirja [ur]
+(defn tyomaapaivakirja [ur]
   ;; TODO.. Käytä urakka parametria jossain?
   ;; (Esim raportin parametreissa)
-  [tuck tiedot/tila tyomaapiavakirja*])
+  [tuck tiedot/tila tyomaapaivakirja*])
