@@ -530,9 +530,7 @@
                                                  ::ur/urakka
                                                  #{::ur/alkupvm ::ur/loppupvm ::ur/indeksi}
                                                  {::ur/id urakka-id}))
-          _ (println "Jarno toimenpide avain " toimenpide-avain)
           toimenpide (mhu/toimenpide-avain->toimenpide toimenpide-avain)
-          _ (println "Jarno toimenpide " toimenpide)
           {toimenpide-id ::tpk/id} (first (fetch db ::tpk/toimenpide
                                             #{::tpk/id}
                                             {::tpk/taso 3
