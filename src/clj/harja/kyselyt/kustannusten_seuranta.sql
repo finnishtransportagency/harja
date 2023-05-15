@@ -286,7 +286,7 @@ SELECT 0                          AS budjetoitu_summa,
        lk.maksueratyyppi::TEXT    AS maksutyyppi,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
-           WHEN tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'toimistokulut'
+           WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'toimistokulut'
            WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'toimistokulut'
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
            WHEN lk.tehtavaryhma IS NULL AND lk.tehtava IS NULL AND lk.maksueratyyppi::TEXT = 'lisatyo'
@@ -302,7 +302,7 @@ SELECT 0                          AS budjetoitu_summa,
            END                   AS tehtava_nimi,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'Erillishankinnat'
-           WHEN tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'Johto- ja Hallintakorvaus'
+           WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'Johto- ja Hallintakorvaus'
            WHEN tr.yksiloiva_tunniste = '55c920e7-5656-4bb0-8437-1999add714a3' THEN 'Tavoitepalkkio'
            WHEN tr.yksiloiva_tunniste = '19907c24-dd26-460f-9cb4-2ed974b891aa' THEN 'Urakoitsija maksaa tavoitehinnan ylityksestä'
            WHEN tr.yksiloiva_tunniste = 'be34116b-2264-43e0-8ac8-3762b27a9557' THEN 'Urakoitsija maksaa kattohinnan ylityksestä'
@@ -314,7 +314,7 @@ SELECT 0                          AS budjetoitu_summa,
        MIN(tk_tehtava.jarjestys) AS jarjestys,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
-           WHEN tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'johto-ja-hallintakorvaus'
+           WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'johto-ja-hallintakorvaus'
            WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'johto-ja-hallintakorvaus'
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
            WHEN lk.tehtavaryhma IS NULL AND lk.tehtava IS NULL AND lk.maksueratyyppi::TEXT = 'lisatyo'
@@ -339,7 +339,7 @@ WHERE l.urakka = :urakka
   AND tpi.toimenpide = tk.id
   -- Näillä toimenpidekoodi.koodi rajauksilla rajataan Hankintakustannukset ulos
   AND tk.koodi = '23151'
-GROUP BY tehtava_nimi, tr.nimi, tr.yksiloiva_tunniste, lk.maksueratyyppi, toimenpideryhma, toimenpide, paaryhma, tk.yksiloiva_tunniste
+GROUP BY tehtava_nimi, tr.nimi, tr.yksiloiva_tunniste, lk.maksueratyyppi, toimenpideryhma, toimenpide, paaryhma, tk_tehtava.yksiloiva_tunniste
 UNION ALL
 -- Osa toteutuneista erillishankinnoista, hoidonjohdonpalkkioista ja johdon- hallintakorvauksesta
 -- siirretään kustannusarvoitu_tyo taulusta toteutuneet_kustannukset tauluun aina kuukauden viimeisenä päivänä.
@@ -358,7 +358,7 @@ SELECT 0                                            AS budjetoitu_summa,
        coalesce(tr.nimi, tk_tehtava.nimi)           AS tehtava_nimi,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'Erillishankinnat'
-           WHEN tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'Johto- ja Hallintakorvaus'
+           WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'Johto- ja Hallintakorvaus'
            END                                      AS toimenpide,
        MIN(t.luotu)                                 AS luotu,
        MIN(concat(t.vuosi, '-', t.kuukausi, '-01')) AS ajankohta,
@@ -383,7 +383,7 @@ WHERE t.urakka_id = :urakka
   AND tpi.toimenpide = tk.id
   -- Rajataan vain hoidon johto toimenpiteeseen
   AND tk.koodi = '23151'
-GROUP BY tehtava_nimi, toimenpideryhma, paaryhma, tr.nimi, tk.yksiloiva_tunniste, tk_tehtava.yksiloiva_tunniste, indeksikorjaus_vahvistettu
+GROUP BY tehtava_nimi, toimenpideryhma, paaryhma, tr.nimi, tk_tehtava.yksiloiva_tunniste, indeksikorjaus_vahvistettu
 UNION ALL
 -- Budjetoidut bonukset eli tilaajan rahavaraukset - Jotka tulee toimenpideinstanssille, joka saadaan, kun käytetään
 -- toimenpidekoodia 23150

@@ -81,6 +81,7 @@
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
         FROM kulu_kohdistus lk
+                 LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
                  JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
              toimenpide tk,
@@ -91,12 +92,13 @@
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
           AND tr.nimi = 'Erillishankinnat (W)'
-          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+          AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
         UNION ALL
         SELECT
         coalesce(sum(t.summa_indeksikorjattu), 0) AS toteutunut_summa,
         0 AS budjetoitu_summa
         FROM toteutuneet_kustannukset t
+              LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = t.tehtava
               JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma AND tr.nimi = 'Erillishankinnat (W)',
              toimenpideinstanssi tpi,
              toimenpide tk
@@ -104,7 +106,7 @@
           AND (concat(t.vuosi, '-', t.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
           AND t.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
-          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')")]
+          AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')")]
     haku-str))
 
 (defn- hoidonjohdonpalkkio-budjetoidut-sql-haku [urakka alkupvm loppupvm]
@@ -141,7 +143,7 @@
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
           AND tr.nimi = 'Hoidonjohtopalkkio (G)'
-          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+          AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
         UNION ALL
         SELECT
           coalesce(sum(t.summa_indeksikorjattu), 0) AS toteutunut_summa,
@@ -156,7 +158,7 @@
           AND t.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
           AND (tr.nimi = 'Hoidonjohtopalkkio (G)' OR tk_tehtava.yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' OR tk_tehtava.yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8')
-          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');")]
+          AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');")]
     haku-str))
 
 (defn- johto-ja-hallintokorvaukset-budjetoidut-sql-haku [urakka alkupvm loppupvm]
@@ -199,8 +201,8 @@
           AND lk.kulu = l.id
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
-          AND (tr.nimi = 'Johto- ja hallintokorvaus (J)' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
-          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+          AND (tr.nimi = 'Johto- ja hallintokorvaus (J)' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+          AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
         UNION ALL
         SELECT
         coalesce(sum(t.summa_indeksikorjattu), 0) AS toteutunut_summa,
@@ -215,7 +217,7 @@
           AND t.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
           AND (tr.nimi = 'Johto- ja hallintokorvaus (J)' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
-          AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');"))
+          AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');"))
 
 (defn- hankintakustannukset-budjetoitu-sql-haku [urakka alkupvm loppupvm]
   (str "
