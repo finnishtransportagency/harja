@@ -60,10 +60,11 @@
         (when-not (= vanha uusi)
           (e! (tiedot/->PaivitaHakumuoto uusi)))))
 
-    [:div {:style {:padding "48px 60px"}}
-     [:h1 {:class "header-yhteiset"} "Työmaapäiväkirja"]
+    [:div.tyomaapaivakirja
+    [:div.paivakirja-listaus
+     [:h1.header-yhteiset "Työmaapäiväkirja"]
 
-     [:div.row.filtterit {:style {:padding "16px"}}
+     [:div.row.filtterit
       [valinnat/aikavali aikavali-atom {:otsikko "Aikaväli"
                                         :for-teksti "filtteri-aikavali"
                                         :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta "}
@@ -126,10 +127,10 @@
                        ;; TODO
                        ;; Lisää kommenttien määrä tähän
                        [:span
-                        [:a.ei-tekstityylia {:style {:margin-right "5px"}}
+                        [:a.ei-tekstityylia.kommentti-valistys
                          [ikonit/livicon-kommentti]] "1"])
         :leveys 0.5}]
-      nayta-rivit]]))
+      nayta-rivit]]]))
 
 (defonce raportin-parametrit
   (reaction (let [ur @nav/valittu-urakka]
@@ -148,9 +149,9 @@
 
 (defn suorita-tyomaapaivakirja-raportti [e!]
   (if-let [tiedot @raportin-tiedot]
-    [:<>
-     ;; Päiväkirjanäkymän padding
-     [:div {:style {:padding "48px 92px 72px"}}
+    [:div.tyomaapaivakirja
+     ;; Päiväkirjanäkymä 
+     [:div.paivakirja-nakyma
       ;; Takaisin nappi 
       [:div.klikattava {:class "sulje" :on-click #(do
                                                     (e! (tiedot/->PoistaRiviValinta))
@@ -161,7 +162,7 @@
 
       ;; Raportin html
       [muodosta-html (assoc-in tiedot [1 :tunniste] raportti-avain)]]
-     
+
      ;; Sticky bar (Edellinen - Seuraava) Tallenna PDF 
      [:div.ala-valinnat-sticky
 

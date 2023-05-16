@@ -120,7 +120,7 @@
 
 (defmethod raportointi/muodosta-html :tyomaapaivakirjan-kommentit [[_]]
   ;; Työmaakokouksen laskutusyhteenvedon footer
-  [:div.row.filtterit {:id "Kommentit" :style {:padding "20px 92px 72px" :margin-top "80px"}}
+  [:div.row.filtterit.kommentit-valistys {:id "Kommentit"}
    [:h2 "Kommentit"]
 
    ;; Kommentin päiväys ja nimi
@@ -130,7 +130,7 @@
 
    ;; Itse kommentti
    [:div.kommentti
-    [:h1 {:class "tieto-rivi"} "Tästähän puuttuu nelostien rekka-kolari"]
+    [:h1.tieto-rivi "Tästähän puuttuu nelostien rekka-kolari"]
     [:span.klikattava.kommentti-poista {:on-click (fn[]
                                                     (println "Klikattu poista kommentti"))} (ikonit/action-delete)]]
 
@@ -143,7 +143,7 @@
 
    ;; Muutoshistoria
    [:div.kommentti.muutos
-    [:h1 {:class "tieto-rivi"} "Työmaapäiväkirja päivitetty 11.10.2022 08:10: lisätty rekka-kolari."]
+    [:h1.tieto-rivi "Työmaapäiväkirja päivitetty 11.10.2022 08:10: lisätty rekka-kolari."]
     [:a.klikattava.info-rivi "Näytä muutoshistoria"]]
 
    [:div.kommentti-lisaa
