@@ -41,6 +41,8 @@ ALTER TABLE toimenpideinstanssi DROP CONSTRAINT urakka_toimenpide_toimenpide_fke
 ALTER TABLE toimenpideinstanssi ADD CONSTRAINT toimenpideinstanssi_toimenpide_fkey FOREIGN KEY (toimenpide) REFERENCES toimenpide (id);
 
 -- Poistetaan tasojen 1, 2 ja 3 toimenpidekoodit
+-- toteuma_tehtava tarvii indeksin toimenpidekoodiin (eli tehtävään) - paitsi useiden hakujen myötä missä se on WHERE-ehtona, myös ao. DELETE hidastuu patologiseksi ilman indeksiä.
+CREATE INDEX toteuma_tehtava_tehtava_idx ON toteuma_tehtava (toimenpidekoodi);
 DELETE FROM tehtava WHERE taso < 4;
 
 
