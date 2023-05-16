@@ -26,24 +26,18 @@
                      ". Kesto: "
                      (float (/ (- (System/currentTimeMillis) aloitusaika-ms) 1000)) " sekuntia")))))
 
-(defn hae-varustetoteumat-velhosta [integraatioloki db asetukset]
-  (lukko/yrita-ajaa-lukon-kanssa
-    db
-    "tuo-uudet-varustetoteumat-velhosta"
-    #(suorita-ja-kirjaa-alku-loppu-ajat
-       (fn [] (varusteet/tuo-uudet-varustetoteumat-velhosta integraatioloki db asetukset))
-       "tuo-uudet-varustetoteumat-velhosta")))
-
-(defn tee-varustetoteuma-haku-tehtava-fn [{:keys [db asetukset integraatioloki]} suoritusaika]
-  (if suoritusaika
-    (do
-      (log/debug "Ajastetaan varustetoteumien tuonti Tievelhosta tehtäväksi joka päivä kello: " (-> asetukset :velho :varustetoteuma-suoritusaika))
-      (ajastettu-tehtava/ajasta-paivittain
-        suoritusaika
-        (do
-          (log/info "ajasta-paivittain :: varustetoteumien tuonti :: Alkaa " (pvm/nyt))
-          (fn [_] (hae-varustetoteumat-velhosta integraatioloki db asetukset)))))
-    (constantly nil)))
+(defn tee-varustetoteuma-haku-tehtava-fn [{:keys [db] :as this} suoritusaika]
+  (log/debug "Ajastetaan varustetoteumien tuonti Tievelhosta tehtäväksi joka päivä kello: " suoritusaika)
+  (ajastettu-tehtava/ajasta-paivittain
+    suoritusaika
+    (fn [_]
+      (lukko/yrita-ajaa-lukon-kanssa
+        db
+        "tuo-uudet-varustetoteumat-ja-urakat-velhosta"
+        #(do
+           (log/info "ajasta-paivittain :: varustetoteumien tuonti :: Alkaa " (pvm/nyt))
+           (paivita-mhu-urakka-oidt-velhosta this)
+           (tuo-uudet-varustetoteumat-velhosta this))))))
 
 (defrecord Velho [asetukset]
   component/Lifecycle
