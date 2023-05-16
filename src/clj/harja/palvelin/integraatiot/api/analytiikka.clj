@@ -4,6 +4,13 @@
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [compojure.core :refer [GET]]
+            [compojure.core :refer :all]
+            [compojure.route :refer :all]
+            [ring.util.response :refer [file-response header content-type]]
+            [clojure.java.io :as io]
+            [clojure.data.json :as json]
+            [cheshire.core :as cheshire]
+            [harja.tyokalut.spec-apurit :as spec-apurit]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
@@ -199,6 +206,12 @@
                            (konversio/alaviiva->rakenne toteuma))
                       toteumat)})]
     toteumat))
+
+(defn- wrappaa-toteumat
+  "Funktio jää näin hieman keskeneräiseksi"
+  [db parametrit kayttaja]
+  (let [toteumat (palauta-toteumat db parametrit kayttaja )]
+   {:reittitoteumat toteumat}))
 
 (defn palauta-materiaalit
   "Haetaan materiaalit ja palautetaan ne json muodossa"
@@ -510,6 +523,24 @@
                          :kommentti :kommentit}))]
     {:turvallisuuspoikkeamat json-turpot}))
 
+;; Valmistele streamausta
+(defonce lataus-kaynnissa? (atom false))
+
+;; Valmistellaan streamausta
+(defn stream-file [db request]
+  (reset! lataus-kaynnissa? true)
+  (println "Saving data to disk..." (format "data-%s.json" (subs (:alkuaika (:params request)) 0 10)))
+  (let [alkums (clj-time.coerce/to-long (pvm/nyt))
+        file (io/file (format "data-%s.json" (subs (:alkuaika (:params request)) 0 10)))]
+    (with-open [writer (io/writer file)]
+      ;; TODO: Ota käyttöön wrappaa-toteumat
+      (doseq [batch (partition-all 10 (palauta-toteumat db (:params request) nil))]
+        (doseq [entry batch]
+          (println "Kirjoitetaan batch tiedostoon :: koko " (count batch))
+          (cheshire/encode-stream (spec-apurit/poista-nil-avaimet entry false) writer))))
+    (println "done! Kesot ms: " (- (clj-time.coerce/to-long (pvm/nyt)) alkums ))
+    (reset! lataus-kaynnissa? false)))
+
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
   (start [{http :http-palvelin db :db-replica integraatioloki :integraatioloki :as this}]
@@ -522,6 +553,21 @@
             (palauta-toteumat db parametrit kayttaja))
           ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
           (not kehitysmoodi?))))
+
+    (julkaise-reitti
+      http :analytiikka-toteumat
+      (GET "/api/analytiikka/toteumat-stream/:alkuaika/:loppuaika" request
+        (do
+          (when-not @lataus-kaynnissa?
+            (println "request: " (pr-str request))
+            (future (stream-file db request)))
+          (if @lataus-kaynnissa?
+            {:status 409
+             :headers {"Content-Type" "text/plain"}
+             :body "Latauspyyntö menossa. Yritä myöhemmin uudestaan"}
+            {:status 200
+             :headers {"Content-Type" "text/plain"}
+             :body "200 OK"}))))
 
     (julkaise-reitti
       http :analytiikka-suunnitellut-materiaalit-hoitovuosi

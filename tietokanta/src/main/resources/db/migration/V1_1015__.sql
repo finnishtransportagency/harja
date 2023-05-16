@@ -1,0 +1,3 @@
+ALTER TABLE ilmoitus
+    ADD COLUMN aihe INTEGER,
+    ADD COLUMN tarkenne INTEGER;
