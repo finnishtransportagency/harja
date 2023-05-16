@@ -60,4 +60,7 @@ indent_size = 2
 # ij_less_use_double_quotes = true
 # ij_less_value_alignment = 0
 
+[*.yml]
+indent_size = 2
+
 
