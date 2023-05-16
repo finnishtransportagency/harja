@@ -34,18 +34,18 @@
         ;; TODO
         ;; Lisää tähän oikea toiminnallisuus mikäli toimitus puuttuu (tekee "puuttuu-tausta" tekee oranssin solun taustan)
         ;; Tällä hetkellä :tila tulee tyomaapaivakirja.sql joka on randomisti generoitu
-        solu-fn (fn [arvo _rivi]
+        solu-fn (fn [arvo rivi]
                   (when (= (:tila arvo) 2) "puuttuu-tausta"))
 
         ;; Toimituksen tila
-        toimituksen-tila-fn (fn [arvo _rivi]
+        toimituksen-tila-fn (fn [arvo rivi]
                               ;; TODO 
                               ;; Lisää tähän toimituksen tilan tiedot
                               ;; Tällä hetkellä :tila tulee tyomaapaivakirja.sql joka on randomisti generoitu
                               (let [toimitus-tiedot (get nakyma/toimituksen-tila (:tila arvo))]
-                                [:span {:class "paivakirja-toimitus"}
+                                [:span.paivakirja-toimitus
                                  [:div {:class (str "pallura " (:class toimitus-tiedot))}]
-                                 [:span {:class "kohta"} (:selitys toimitus-tiedot)]]))]
+                                 [:span.toimituksen-selite (:selitys toimitus-tiedot)]]))]
 
     (add-watch aikavali-atom
       :aikavali-haku
