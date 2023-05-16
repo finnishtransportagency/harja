@@ -22,8 +22,6 @@ jobs:
                     role-to-assume: 'arn:aws:iam::823195919183:role/cicd-github-harja-infra-admin'
                     role-duration-seconds: 3600
                     role-skip-session-tagging: true
-            -   name: Set up Docker
-                uses: docker/setup-docker@v1
 
             -   name: Authenticate with AWS ECR
                 id: login-ecr
