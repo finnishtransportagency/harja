@@ -52,6 +52,9 @@ schemas:
  - raportti-materiaaliraportti-response: !include schemas/raportti.schema.json
  - tyomaapaivakirja-kirjaus-request: !include schemas/tyomaapaivakirja-kirjaus-request.schema.json
  - tyomaapaivakirja-paivitys-request: !include schemas/tyomaapaivakirja-paivitys-request.schema.json
+ - tyomaapaivakirja-kirjaus-ok-response: !include schemas/tyomaapaivakirja-kirjaus-response.schema.json
+ - tyomaapaivakirja-kirjaus-nok-response: !include schemas/tyomaapaivakirja-kirjaus-response.schema.json
+
 
 
 securitySchemes:
@@ -1076,19 +1079,19 @@ documentation:
           200:
             body:
               application/json:
-                example: !include examples/onnistunut-kirjaus-response.json
-                schema: kirjaus-response
+                example: !include examples/tyomaapaivakirja-kirjaus-ok-response.json
+                schema: tyomaapaivakirja-kirjaus-ok-response
           400:
             body:
               application/json:
-                example: !include examples/virhe-response.json
-                schema: virhe-response
+                example: !include examples/tyomaapaivakirja-kirjaus-nok-response.json
+                schema: tyomaapaivakirja-kirjaus-nok-response
           500:
             body:
               application/json:
-                example: !include examples/virhe-response.json
-                schema: virhe-response
-      /{id}:
+                example: !include examples/tyomaapaivakirja-kirjaus-nok-response.json
+                schema: tyomaapaivakirja-kirjaus-nok-response
+      /{tyomaapaivakirjaid}:
         put:
           is: [secured]
           description: Ei vielä toteutettu - Työmaapäiväkirjan päivittäminen. Korvaa edeltävän version.
