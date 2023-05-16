@@ -174,6 +174,8 @@ SELECT
   i.lisatieto,
   i.ilmoitustyyppi,
   i.selitteet,
+  i.aihe,
+  i.tarkenne,
   i.urakkatyyppi,
   i.tila,
 
@@ -419,7 +421,9 @@ INSERT INTO ilmoitus
  viestiid,
  vastaanotettu,
  "vastaanotettu-alunperin",
- "valitetty-urakkaan")
+ "valitetty-urakkaan",
+ aihe,
+ tarkenne)
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -436,7 +440,9 @@ VALUES
    :viestiid,
    :vastaanotettu :: TIMESTAMPTZ,
    :vastaanotettu-alunperin :: TIMESTAMPTZ,
-   :valitetty-urakkaan :: TIMESTAMP);
+   :valitetty-urakkaan :: TIMESTAMP,
+   :aihe,
+   :tarkenne);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
@@ -455,7 +461,9 @@ SET urakka               = :urakka,
     selitteet = :selitteet :: TEXT [],
     tunniste = :tunniste,
     muokattu = NOW(),
-    viestiid = :viestiid
+    viestiid = :viestiid,
+    aihe = :aihe,
+    tarkenne = :tarkenne
 WHERE id = :id;
 
 -- name: paivita-ilmoituksen-urakka!
