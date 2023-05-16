@@ -23,7 +23,7 @@
             [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
             [harja.views.ilmoituskuittaukset :as kuittaukset]
-            [harja.views.ilmoituksen-tiedot :as it]
+            [harja.views.ilmoitukset.ilmoituksen-tiedot :as it]
             [harja.views.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset-view]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.ui.valinnat :as valinnat]

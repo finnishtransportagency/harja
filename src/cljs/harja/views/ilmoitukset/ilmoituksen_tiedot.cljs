@@ -1,4 +1,4 @@
-(ns harja.views.ilmoituksen-tiedot
+(ns harja.views.ilmoitukset.ilmoituksen-tiedot
   (:require [harja.ui.yleiset :as yleiset]
             [harja.pvm :as pvm]
             [harja.ui.bootstrap :as bs]
@@ -27,6 +27,47 @@
         [ikonit/livicon-warning-sign] "Virka-apupyyntö"])
      (parsi-selitteet (filter #(not= % :virkaApupyynto) selitteet))]))
 
+(defn selitteen-sisaltavat-yleiset-tiedot [ilmoitus]
+  [yleiset/tietoja {:piirra-viivat? true
+                    :class "body-text"
+                    :tietorivi-luokka "padding-8 css-grid css-grid-colums-12rem-9"}
+   "Urakka " (:urakkanimi ilmoitus)
+   "Id " (:ilmoitusid ilmoitus)
+   "Tunniste " (:tunniste ilmoitus)
+   "Ilmoitettu " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
+   "Tiedotettu HARJAan " (pvm/pvm-aika-sek (:valitetty ilmoitus))
+   "Tiedotettu urakkaan " (pvm/pvm-aika-sek (:valitetty-urakkaan ilmoitus))
+   "Yhteydenottopyyntö " (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")
+   "Sijainti " (tr-domain/tierekisteriosoite-tekstina (:tr ilmoitus))
+   "Otsikko " (:otsikko ilmoitus)
+   "Paikan kuvaus " (:paikankuvaus ilmoitus)
+   "Lisatieto " (when (:lisatieto ilmoitus) (:lisatieto ilmoitus))
+   "Selitteet " [selitelista ilmoitus]
+   "Toimenpiteet aloitettu " (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))
+   "Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")])
+
+(defn aiheen-sisaltavat-yleiset-tiedot [ilmoitus]
+  [yleiset/tietoja {:piirra-viivat? true
+                    :class "body-text"
+                    :tietorivi-luokka "padding-8 css-grid css-grid-colums-12rem-9"}
+   "Urakka " (:urakkanimi ilmoitus)
+   "Id " (:ilmoitusid ilmoitus)
+   "Tunniste " (:tunniste ilmoitus)
+   "Ilmoitettu " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
+   "Tiedotettu HARJAan " (pvm/pvm-aika-sek (:valitetty ilmoitus))
+   "Tiedotettu urakkaan " (pvm/pvm-aika-sek (:valitetty-urakkaan ilmoitus))
+   "Yhteydenottopyyntö " (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")
+   "Sijainti " (tr-domain/tierekisteriosoite-tekstina (:tr ilmoitus))
+   "Paikan kuvaus " (:paikankuvaus ilmoitus)
+   "Aihe " (:aihe ilmoitus)
+   "Tarkenne " (:tarkenne ilmoitus)
+   "Otsikko " (:otsikko ilmoitus)
+   "Kuvaus " (when (:lisatieto ilmoitus) (:lisatieto ilmoitus))
+   "Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")
+   (when when (:toimenpiteet-aloitettu ilmoitus) "Toimenpiteet aloitettu ")
+   (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))
+   ])
+
 (defn ilmoitus [e! ilmoitus]
   (let [nayta-valitykset? (atom false)]
     (fn [e! ilmoitus]
@@ -34,25 +75,9 @@
        [bs/panel {}
         (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
         [:span
-         [yleiset/tietoja {:piirra-viivat? true
-                           :class "body-text"
-                           :tietorivi-luokka "padding-8 css-grid css-grid-colums-12rem-9"}
-          "Urakka " (:urakkanimi ilmoitus)
-          "Id " (:ilmoitusid ilmoitus)
-          "Tunniste " (:tunniste ilmoitus)
-          "Ilmoitettu " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
-          "Tiedotettu HARJAan " (pvm/pvm-aika-sek (:valitetty ilmoitus))
-          "Tiedotettu urakkaan " (pvm/pvm-aika-sek (:valitetty-urakkaan ilmoitus))
-          "Yhteydenottopyyntö " (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")
-          "Sijainti " (tr-domain/tierekisteriosoite-tekstina (:tr ilmoitus))
-          "Otsikko " (:otsikko ilmoitus)
-          "Paikan kuvaus " (:paikankuvaus ilmoitus)
-          "Lisatieto " (when (:lisatieto ilmoitus)
-                            (:lisatieto ilmoitus))
-          "Selitteet " [selitelista ilmoitus]
-          "Toimenpiteet aloitettu " (when (:toimenpiteet-aloitettu ilmoitus)
-                                       (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))
-          "Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
+         (if-not (:aihe ilmoitus)
+           [selitteen-sisaltavat-yleiset-tiedot ilmoitus]
+           [aiheen-sisaltavat-yleiset-tiedot ilmoitus])
          [:br]
          [yleiset/tietoja {:piirra-viivat? true
                            :class "body-text"
