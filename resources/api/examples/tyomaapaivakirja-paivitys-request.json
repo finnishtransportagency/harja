@@ -8,7 +8,8 @@
       }
     },
     "viestintunniste": {
-      "id": 123
+      "id": 123,
+      "versio": 2
     },
     "lahetysaika": "2016-01-30T12:00:00+02:00"
   },
@@ -122,10 +123,13 @@
     "muut-kirjaukset": {
       "kuvaus": "Huomatus vielä että kiire tuli hommissa"
     },
-    "tilaajan-yhteydenotot": {
-      "kuvaus": "Tilaajan huomautukset työmaapäiväkirjaan",
-      "nimi": "Tiia Tilaaja"
-    },
+    "tilaajan-yhteydenotot": [
+      {
+        "tilaajan-yhteydenotto": {
+          "kuvaus": "Tilaajan huomautukset työmaapäiväkirjaan"
+        }
+      }
+    ],
     "urakoitsijan-merkinnat": {
       "kuvaus": "Urakoitsijan merkinnät jälkikäteen",
       "nimi": "Ulla Urakoitsija"
