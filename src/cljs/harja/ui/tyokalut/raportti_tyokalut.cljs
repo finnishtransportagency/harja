@@ -38,7 +38,7 @@
 
     [:span.paivakirja-toimitus
      [:div {:class (str "pallura " "myohassa")}]
-     [:span.kohta "Myöhässä"]]
+     [:span.toimituksen-selite "Myöhässä"]]
 
     ;; Kommentti- nappi scrollaa alas kommentteihin
     [:a.klikattava {:on-click #(.setTimeout js/window (fn [] (siirrin/kohde-elementti-id "Kommentit")) 150)}

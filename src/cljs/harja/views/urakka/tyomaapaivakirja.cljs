@@ -7,7 +7,6 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
-            [harja.views.urakka.tyomaapaivakirja-nakyma :as nakyma]
             [harja.ui.raportti :refer [muodosta-html]]
             [harja.tiedot.raportit :as raportit]
             [harja.tiedot.navigaatio :as nav]
@@ -25,6 +24,10 @@
    :puuttuvat "Puuttuvat (123)"
    :kommentoidut "Kommentoidut (123)"})
 
+(def toimituksen-tila [{:class "ok" :selitys "Ok"}
+                       {:class "myohassa" :selitys "Myöhässä"}
+                       {:class "puuttuu" :selitys "Puuttuu"}])
+
 (defonce raportti-avain :tyomaapaivakirja-nakyma)
 (def valittu-hakumuoto (reaction-writable :kaikki))
 
@@ -34,15 +37,15 @@
         ;; TODO
         ;; Lisää tähän oikea toiminnallisuus mikäli toimitus puuttuu (tekee "puuttuu-tausta" tekee oranssin solun taustan)
         ;; Tällä hetkellä :tila tulee tyomaapaivakirja.sql joka on randomisti generoitu
-        solu-fn (fn [arvo rivi]
+        solu-fn (fn [arvo _]
                   (when (= (:tila arvo) 2) "puuttuu-tausta"))
 
         ;; Toimituksen tila
-        toimituksen-tila-fn (fn [arvo rivi]
+        toimituksen-tila-fn (fn [arvo _]
                               ;; TODO 
                               ;; Lisää tähän toimituksen tilan tiedot
                               ;; Tällä hetkellä :tila tulee tyomaapaivakirja.sql joka on randomisti generoitu
-                              (let [toimitus-tiedot (get nakyma/toimituksen-tila (:tila arvo))]
+                              (let [toimitus-tiedot (get toimituksen-tila (:tila arvo))]
                                 [:span.paivakirja-toimitus
                                  [:div {:class (str "pallura " (:class toimitus-tiedot))}]
                                  [:span.toimituksen-selite (:selitys toimitus-tiedot)]]))]
@@ -92,21 +95,21 @@
                         [:div.tyopaiva "Työpäivä"
                          [:div [ikonit/action-sort-descending]]])
         :tyyppi :komponentti
-        :komponentti (fn [arvo rivi]
+        :komponentti (fn [arvo _]
                        (str (pvm/pvm (:alkupvm arvo))))
         :luokka "semibold text-nowrap"
         :leveys 0.3}
 
        {:otsikko "Saapunut"
         :tyyppi :komponentti
-        :komponentti (fn [arvo rivi]
+        :komponentti (fn [arvo _]
                        (str (pvm/pvm-aika-klo (:loppupvm arvo))))
         :luokka "text-nowrap"
         :leveys 0.5}
 
        {:otsikko "Viim. muutos"
         :tyyppi :komponentti
-        :komponentti (fn [arvo rivi]
+        :komponentti (fn [arvo _]
                        (str (pvm/pvm-aika-klo (:loppupvm arvo))))
         :luokka "text-nowrap"
         :leveys 0.5}
@@ -123,7 +126,7 @@
 
        {:otsikko "Kommentit"
         :tyyppi :komponentti
-        :komponentti (fn [arvo rivi]
+        :komponentti (fn [_ _]
                        ;; TODO
                        ;; Lisää kommenttien määrä tähän
                        [:span
