@@ -15,7 +15,8 @@
   "tyomaapaivakirja": {
     "tunniste": {
       "id": "päiväkirjan sivun id urakoitsijan järjestelmässä",
-      "versio": 1
+      "versio": 1,
+      "paivamaara": "2023-05-31"
     },
     "saatiedot": [
       {
