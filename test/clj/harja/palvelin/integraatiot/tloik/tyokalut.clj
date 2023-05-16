@@ -170,6 +170,10 @@
   <x>443199</x>
   <y>7377324</y>
   </sijainti>
+  <luokittelu>
+    <aihe>1</aihe>
+    <tarkenne>1</tarkenne>
+  </luokittelu>
   <ilmoittaja>
   <etunimi>Uuno</etunimi>
   <sukunimi>Urakoitsija</sukunimi>
