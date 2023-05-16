@@ -12,9 +12,12 @@ permissions:
   contents: read
 
 jobs:
-  build-and-diff:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Assume role with OIDC
         uses: aws-actions/configure-aws-credentials@master
         with:
@@ -33,5 +36,5 @@ jobs:
           ECR_REPOSITORY: harja-ecr-repository
           IMAGE_TAG: latest
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./mockup-server
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --file .github/workflows/mockup-server/Dockerfile .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
