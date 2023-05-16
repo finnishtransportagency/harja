@@ -6,14 +6,11 @@
     white-space: nowrap;
 
     .kohta {
-        padding-left: 10px;
+        padding-left: @valistys-8;
     }
-
     .pallura {
         height: 8px;
         width: 8px;
-        left: 2px;
-        top: 2px;
         border-radius: 10px;
     }
     .ok {
@@ -37,7 +34,7 @@
 
     :first-child {
         width: 20px;
-        padding-left: 5px;
+        padding-left: @valistys-4;
     }
 }
 
@@ -51,8 +48,8 @@
     color: @black-light;
 
     > * {
-        margin-top: 10px;
-        margin-left: 20px;
+        margin-top: @valistys-12;
+        margin-left: @valistys-24;
     }
 
     :first-child {
@@ -125,7 +122,7 @@
     display: flex;
     flex-direction: row;
     gap: 20px;
-    padding: 10px 0px 10px;
+    padding: @valistys-12 0px @valistys-12;
 
     :first-child {
         font-weight: bold;
@@ -137,7 +134,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: 16px;
+    padding: @valistys-16;
     gap: 10px;
     width: 100%;
     height: 52px;
@@ -151,8 +148,8 @@
 .kommentti-lisaa {
     font-size: 14px;
     font-weight: bold;
-    padding: 20px 0px 20px;
-    margin-top: 20px;
+    padding: @valistys-24 0px @valistys-24;
+    margin-top: @valistys-24;
 }
 
 .ala-valinnat-sticky {
@@ -160,13 +157,14 @@
     flex-direction: row;
     align-items: flex-start;
     background: @blue-dark;
-    padding: 24px;
+    padding: @valistys-24;
     gap: 30px;
     bottom: 0;
     height: 84px;
-    position: sticky;
-    width: 100%;
+    position: fixed;
     font-size: 14px;
+    left: 0;
+    right: 0;
 
     .napit {
         display: flex;
@@ -208,7 +206,7 @@
     // Flexin 3 viimeistä diviä
     // (Tallenna / Lähetä / Takaisin)
     div:nth-last-child(-n+3) {
-        margin-left: 30px;
+        margin-left: @valistys-32;
         width: 180px;
     }
 

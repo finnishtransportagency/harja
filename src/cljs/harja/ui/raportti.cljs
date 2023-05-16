@@ -264,7 +264,7 @@
                                                avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?]}
                                      
                                      sarakkeet data]]
-  (generoi-gridi otsikko viimeinen-rivi-yhteenveto?
+  [generoi-gridi otsikko viimeinen-rivi-yhteenveto?
                  rivi-ennen
                  piilota-border?
                  raportin-tunniste
@@ -272,7 +272,7 @@
                  korosta-rivit korostustyyli
                  oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
                  avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?
-                 sarakkeet data)
+                 sarakkeet data]
   )
 
 (defmethod muodosta-html :otsikko-title [[_ teksti]]

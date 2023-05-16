@@ -68,7 +68,7 @@
             avattavat-rivit :avattavat-rivit
             sivuttain-rullattava? :sivuttain-rullattava?
             ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?} optiot-vasen]
-       (raportointi/generoi-gridi
+       [raportointi/generoi-gridi
          otsikko
          viimeinen-rivi-yhteenveto?
          rivi-ennen
@@ -83,7 +83,7 @@
          avattavat-rivit
          sivuttain-rullattava?
          ensimmainen-sarake-sticky?
-         otsikot-vasen rivit-vasen))]
+         otsikot-vasen rivit-vasen])]
 
     [:div
      [:h3.gridin-otsikko otsikko-oikea]
@@ -101,7 +101,7 @@
             avattavat-rivit :avattavat-rivit
             sivuttain-rullattava? :sivuttain-rullattava?
             ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?} optiot-oikea]
-       (raportointi/generoi-gridi
+       [raportointi/generoi-gridi
          otsikko
          viimeinen-rivi-yhteenveto?
          rivi-ennen
@@ -116,7 +116,7 @@
          avattavat-rivit
          sivuttain-rullattava?
          ensimmainen-sarake-sticky?
-         otsikot-oikea rivit-oikea))]]])
+         otsikot-oikea rivit-oikea])]]])
 
 (defmethod raportointi/muodosta-html :tyomaapaivakirjan-kommentit [[_]]
   ;; Työmaakokouksen laskutusyhteenvedon footer
