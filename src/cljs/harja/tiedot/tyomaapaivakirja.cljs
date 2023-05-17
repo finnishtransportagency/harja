@@ -9,6 +9,7 @@
 (defonce tila (atom {:tiedot []
                      :nayta-rivit []
                      :valittu-rivi nil
+                     :viimeksi-valittu nil
                      :valinnat {:aikavali (pvm/paivamaaran-hoitokausi (pvm/nyt))
                                 :hakumuoto :kaikki}}))
 
@@ -77,7 +78,8 @@
   ValitseRivi
   (process-event [{rivi :rivi} app]
     (-> app
-      (assoc :valittu-rivi rivi)))
+      (assoc :valittu-rivi rivi)
+      (assoc :viimeksi-valittu rivi)))
 
   PoistaRiviValinta
   (process-event [_ app]

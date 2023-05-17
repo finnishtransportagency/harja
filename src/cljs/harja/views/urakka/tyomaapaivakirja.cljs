@@ -1,5 +1,5 @@
 (ns harja.views.urakka.tyomaapaivakirja
-  "Työmaapäiväkirja urakka välilehti"
+  "Työmaapäiväkirja urakka välilehti (listaus)"
   (:require [tuck.core :refer [tuck]]
             [harja.tiedot.tyomaapaivakirja :as tiedot]
             [harja.ui.valinnat :as valinnat]
@@ -38,7 +38,13 @@
         ;; Lisää tähän oikea toiminnallisuus mikäli toimitus puuttuu (tekee "puuttuu-tausta" tekee oranssin solun taustan)
         ;; Tällä hetkellä :tila tulee tyomaapaivakirja.sql joka on randomisti generoitu
         solu-fn (fn [arvo _]
-                  (when (= (:tila arvo) 2) "puuttuu-tausta"))
+                  (let [rivin-id (:id arvo)
+                        viimeksi-klikattu-id (-> @tiedot/tila :viimeksi-valittu :id)]
+                    ;; Kun käyttäjä klikkaa riviä, vaihda tämän rivin väriä
+                    ;; ja scrollaa tähän luokkaan kun poistutaan näkymästä takaisin listaukseen
+                    (if (= viimeksi-klikattu-id rivin-id)
+                      "viimeksi-valittu-tausta"
+                      (when (= (:tila arvo) 2) "puuttuu-tausta"))))
 
         ;; Toimituksen tila
         toimituksen-tila-fn (fn [arvo _]
@@ -158,9 +164,8 @@
       ;; Takaisin nappi 
       [:div.klikattava {:class "sulje" :on-click #(do
                                                     (e! (tiedot/->PoistaRiviValinta))
-                                                    ;; Rullaa sivu ylös TODO: Tähän voi laittaa viimeksi klikatun elementin IDn
-                                                    ;; jolloin rullataan käyttäjä listaukseen sille riville mistä viimeksi klikattiin
-                                                    (.setTimeout js/window (fn [] (siirrin/kohde-elementti-id "")) 150))}
+                                                    ;; Rullataan käyttäjä viimeksi klikatulle riville
+                                                    (.setTimeout js/window (fn [] (siirrin/kohde-elementti-luokka "viimeksi-valittu-tausta")) 150))}
        [ikonit/harja-icon-navigation-close]]
 
       ;; Raportin html
@@ -191,9 +196,8 @@
 
       [:div.napit.ei-reunoja.klikattava {:on-click #(do
                                                       (e! (tiedot/->PoistaRiviValinta))
-                                                      ;; Rullaa sivu ylös TODO: Tähän voi laittaa viimeksi klikatun elementin IDn
-                                                      ;; jolloin rullataan käyttäjä listaukseen sille riville mistä viimeksi klikattiin
-                                                      (.setTimeout js/window (fn [] (siirrin/kohde-elementti-id "")) 150))}
+                                                      ;; Rullataan käyttäjä viimeksi klikatulle riville
+                                                      (.setTimeout js/window (fn [] (siirrin/kohde-elementti-luokka "viimeksi-valittu-tausta")) 150))}
        [:span.nuoli [ikonit/harja-icon-navigation-close]]
        [:span "Sulje"]]]]
 
