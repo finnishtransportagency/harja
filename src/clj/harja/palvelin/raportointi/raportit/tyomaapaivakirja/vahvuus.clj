@@ -42,4 +42,4 @@
 (defn vahvuus-taulukot []
   (into ()
     [[:gridit-vastakkain (first (vahvuus-taulukkojen-parametrit)) (second (vahvuus-taulukkojen-parametrit))]
-     (yhteiset/sektio-otsikko "Vahvuus")]))
+     (yhteiset/osion-otsikko "Vahvuus")]))

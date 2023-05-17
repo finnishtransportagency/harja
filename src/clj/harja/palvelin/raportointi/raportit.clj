@@ -99,11 +99,9 @@
     :urakkatyyppi #{:teiden-hoito}}
    
    {:nimi         :tyomaapaivakirja-nakyma
-    :parametrit   [{:tyyppi "urakka", :konteksti nil, :pakollinen true, :nimi "Urakka"}]
-    :konteksti    #{"hallintayksikko" "urakka"}
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :kuvaus       "Työmaapäiväkirja"
-    :suorita      #'harja.palvelin.raportointi.raportit.tyomaapaivakirja/suorita
-    :urakkatyyppi #{:teiden-hoito}}
+    :suorita      #'harja.palvelin.raportointi.raportit.tyomaapaivakirja/suorita}
 
    {:nimi :tehtavamaarat
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]

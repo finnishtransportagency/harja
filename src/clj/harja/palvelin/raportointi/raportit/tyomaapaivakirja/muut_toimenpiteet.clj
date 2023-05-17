@@ -21,4 +21,4 @@
                           (muut-toimenpiteet-rivi "04:00" "-")])}]
     (into ()
       [(yhteiset/taulukko tiedot)
-       (yhteiset/sektio-otsikko "Muut toimenpiteet")])))
+       (yhteiset/osion-otsikko "Muut toimenpiteet")])))

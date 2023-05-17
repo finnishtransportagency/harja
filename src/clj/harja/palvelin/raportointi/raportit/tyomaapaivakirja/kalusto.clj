@@ -23,4 +23,4 @@
                           (kalusto-rivi "01:00" "6" "-" "Pistehiekoitus (01:23 - 02:15), Suolaus (00:22 - 01:12)")])}]
     (into ()
       [(yhteiset/taulukko tiedot)
-       (yhteiset/sektio-otsikko "Kalusto ja tielle tehdyt toimenpiteet")])))
+       (yhteiset/osion-otsikko "Kalusto ja tielle tehdyt toimenpiteet")])))

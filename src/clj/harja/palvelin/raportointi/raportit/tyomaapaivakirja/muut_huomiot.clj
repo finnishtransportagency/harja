@@ -14,4 +14,4 @@
        
        [:jakaja true]
 
-       (yhteiset/sektio-otsikko "Muut huomiot")])))
+       (yhteiset/osion-otsikko "Muut huomiot")])))

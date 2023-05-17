@@ -19,4 +19,4 @@
                           (maatoimeksianto-rivi "Siirtoajoneuvo siirto paikasta 4/200/300 kunnan xxx varastoon" "5,0 h")])}]
     (into ()
       [(yhteiset/taulukko tiedot)
-       (yhteiset/sektio-otsikko "Viranomaispäätöksiin liittyvät maastotoimeksiannot")])))
+       (yhteiset/osion-otsikko "Viranomaispäätöksiin liittyvät maastotoimeksiannot")])))

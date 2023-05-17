@@ -44,4 +44,4 @@
 (defn saatietojen-taulukot []
   (into ()
     [[:gridit-vastakkain (first (saatiedot-taulukkojen-parametrit)) (second (saatiedot-taulukkojen-parametrit))]
-     (yhteiset/sektio-otsikko "Sääasemien tiedot")]))
+     (yhteiset/osion-otsikko "Sääasemien tiedot")]))

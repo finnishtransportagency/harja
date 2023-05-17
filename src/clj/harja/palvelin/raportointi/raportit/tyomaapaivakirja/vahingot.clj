@@ -10,4 +10,4 @@
     [[:jakaja true]
      (yhteiset/body-teksti "Vahinko: Rekka törmännyt keskikaiteeseen Vt 4 4/400/100-200, Kaide vaurioitunut 100 metriä")
      [:jakaja true]
-     (yhteiset/sektio-otsikko "Vahingot ja onnettomuudet")]))
+     (yhteiset/osion-otsikko "Vahingot ja onnettomuudet")]))

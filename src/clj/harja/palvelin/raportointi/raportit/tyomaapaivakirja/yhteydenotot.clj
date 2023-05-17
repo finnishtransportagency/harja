@@ -14,4 +14,4 @@
      (yhteiset/body-teksti "Kaupungin kunnossapitopäällikkö otti yhteyttä viherhoidon rajoista")
      [:jakaja true]
 
-     (yhteiset/sektio-otsikko "Yhteydenotot ja palautteet, jotka edellyttävät toimenpiteitä")]))
+     (yhteiset/osion-otsikko "Yhteydenotot ja palautteet, jotka edellyttävät toimenpiteitä")]))

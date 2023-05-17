@@ -129,15 +129,14 @@
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
 
-(defn generoi-gridi [otsikko viimeinen-rivi-yhteenveto?
-                     rivi-ennen
-                     piilota-border?
-                     raportin-tunniste
-                     tyhja
-                     korosta-rivit korostustyyli
-                     oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
-                     avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?
-                     sarakkeet data]
+(defn grid [otsikko viimeinen-rivi-yhteenveto?
+            rivi-ennen piilota-border?
+            raportin-tunniste tyhja
+            korosta-rivit korostustyyli
+            oikealle-tasattavat-kentat vetolaatikot 
+            esta-tiivis-grid? avattavat-rivit 
+            sivuttain-rullattava? ensimmainen-sarake-sticky?
+            sarakkeet data]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
     [grid/grid {:otsikko (or otsikko "")
                 :tunniste (fn [rivi]
@@ -262,18 +261,16 @@
                                                korosta-rivit korostustyyli
                                                oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
                                                avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?]}
-                                     
+
                                      sarakkeet data]]
-  [generoi-gridi otsikko viimeinen-rivi-yhteenveto?
-                 rivi-ennen
-                 piilota-border?
-                 raportin-tunniste
-                 tyhja
-                 korosta-rivit korostustyyli
-                 oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
-                 avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?
-                 sarakkeet data]
-  )
+  [grid otsikko viimeinen-rivi-yhteenveto?
+   rivi-ennen piilota-border?
+   raportin-tunniste tyhja
+   korosta-rivit korostustyyli
+   oikealle-tasattavat-kentat vetolaatikot 
+   esta-tiivis-grid? avattavat-rivit 
+   sivuttain-rullattava? ensimmainen-sarake-sticky?
+   sarakkeet data])
 
 (defmethod muodosta-html :otsikko-title [[_ teksti]]
   [:h1 teksti])

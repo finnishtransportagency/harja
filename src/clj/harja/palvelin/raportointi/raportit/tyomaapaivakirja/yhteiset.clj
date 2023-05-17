@@ -6,7 +6,7 @@
    {:kustomi-tyyli "body-text"
     :arvo teksti}])
 
-(defn sektio-otsikko [otsikko]
+(defn osion-otsikko [otsikko]
   [:otsikko-heading otsikko {:padding-top "50px"}])
 
 (defn placeholder-ei-tietoja [teksti]

@@ -20,4 +20,4 @@
                          [(keliolosuhteet-rivi "0:00" "Vt 4 Pateniemi" "Alijäähtynyttä vettä Pateniemen alueella")])}]
     (into ()
       [(yhteiset/taulukko tiedot)
-       (yhteiset/sektio-otsikko "Poikkeukselliset paikalliset keliolosuhteet")])))
+       (yhteiset/osion-otsikko "Poikkeukselliset paikalliset keliolosuhteet")])))
