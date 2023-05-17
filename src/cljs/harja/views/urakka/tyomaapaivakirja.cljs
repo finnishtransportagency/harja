@@ -28,9 +28,7 @@
 (def valittu-hakumuoto (reaction-writable :kaikki))
 
 (defn tyomaapaivakirja-listaus [e! {:keys [nayta-rivit valinnat] :as tiedot}]
-  (let [aikavali-atom (atom (:aikavali valinnat))
-
-        ;; TODO
+  (let [;; TODO
         ;; Lisää tähän oikea toiminnallisuus mikäli toimitus puuttuu (tekee "puuttuu-tausta" tekee oranssin solun taustan)
         ;; Tällä hetkellä :tila tulee tyomaapaivakirja.sql joka on randomisti generoitu
         solu-fn (fn [arvo _]
@@ -52,90 +50,77 @@
                                  [:div {:class (str "pallura " (:class toimitus-tiedot))}]
                                  [:span.toimituksen-selite (:selitys toimitus-tiedot)]]))]
 
-    (add-watch aikavali-atom
-      :aikavali-haku
-      (fn [_ _ vanha uusi]
-        (when-not (and (pvm/sama-pvm? (first vanha) (first uusi))
-                    (pvm/sama-pvm? (second vanha) (second uusi)))
-          (e! (tiedot/->PaivitaAikavali {:aikavali uusi})))))
-
-    (add-watch valittu-hakumuoto
-      :aikavali-haku
-      (fn [_ _ vanha uusi]
-        (when-not (= vanha uusi)
-          (e! (tiedot/->PaivitaHakumuoto uusi)))))
-
     [:div.tyomaapaivakirja
-    [:div.paivakirja-listaus
-     [:h1.header-yhteiset "Työmaapäiväkirja"]
+     [:div.paivakirja-listaus
+      [:h1.header-yhteiset "Työmaapäiväkirja"]
 
-     [:div.row.filtterit
-      [valinnat/aikavali aikavali-atom {:otsikko "Aikaväli"
-                                        :for-teksti "filtteri-aikavali"
-                                        :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta "}
-                                        :ikoni-sisaan? true
-                                        :vayla-tyyli? true}]
+      [:div.row.filtterit
+       [valinnat/aikavali tiedot/aikavali-atom {:otsikko "Aikaväli"
+                                                :for-teksti "filtteri-aikavali"
+                                                :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta "}
+                                                :ikoni-sisaan? true
+                                                :vayla-tyyli? true}]
 
-      [:div.tyomaa-haku-suodatin
-       [kentat/tee-kentta {:tyyppi :radio-group
-                           :vaihtoehdot (into [] (keys haun-valinnat))
-                           :vayla-tyyli? true
-                           :nayta-rivina? true
-                           :vaihtoehto-nayta haun-valinnat}
-        valittu-hakumuoto]]]
+       [:div.tyomaa-haku-suodatin
+        [kentat/tee-kentta {:tyyppi :radio-group
+                            :vaihtoehdot (into [] (keys haun-valinnat))
+                            :vayla-tyyli? true
+                            :nayta-rivina? true
+                            :vaihtoehto-nayta haun-valinnat}
+         valittu-hakumuoto]]]
 
-     [grid/grid {:tyhja "Ei Tietoja."
-                 :tunniste :id
-                 :voi-kumota? false
-                 :piilota-toiminnot? true
-                 :jarjesta :id
-                 :mahdollista-rivin-valinta? true
-                 :rivin-luokka solu-fn
-                 :rivi-klikattu #(e! (tiedot/->ValitseRivi %))}
+      [grid/grid {:tyhja "Ei Tietoja."
+                  :tunniste :id
+                  :voi-kumota? false
+                  :piilota-toiminnot? true
+                  :jarjesta :id
+                  :mahdollista-rivin-valinta? true
+                  :rivin-luokka solu-fn
+                  :rivi-klikattu #(e! (tiedot/->ValitseRivi %))}
 
-      [{:otsikko-komp (fn [_ _]
-                        [:div.tyopaiva "Työpäivä"
-                         [:div [ikonit/action-sort-descending]]])
-        :tyyppi :komponentti
-        :komponentti (fn [arvo _]
-                       (str (pvm/pvm (:alkupvm arvo))))
-        :luokka "semibold text-nowrap"
-        :leveys 0.3}
+       [{:otsikko-komp (fn [_ _]
+                         [:div.tyopaiva "Työpäivä"
+                          [:div [ikonit/action-sort-descending]]])
+         :tyyppi :komponentti
+         :komponentti (fn [arvo _]
+                        (str (pvm/pvm (:alkupvm arvo))))
+         :luokka "semibold text-nowrap"
+         :leveys 0.3}
 
-       {:otsikko "Saapunut"
-        :tyyppi :komponentti
-        :komponentti (fn [arvo _]
-                       (str (pvm/pvm-aika-klo (:loppupvm arvo))))
-        :luokka "text-nowrap"
-        :leveys 0.5}
+        {:otsikko "Saapunut"
+         :tyyppi :komponentti
+         :komponentti (fn [arvo _]
+                        (str (pvm/pvm-aika-klo (:loppupvm arvo))))
+         :luokka "text-nowrap"
+         :leveys 0.5}
 
-       {:otsikko "Viim. muutos"
-        :tyyppi :komponentti
-        :komponentti (fn [arvo _]
-                       (str (pvm/pvm-aika-klo (:loppupvm arvo))))
-        :luokka "text-nowrap"
-        :leveys 0.5}
+        {:otsikko "Viim. muutos"
+         :tyyppi :komponentti
+         :komponentti (fn [arvo _]
+                        (str (pvm/pvm-aika-klo (:loppupvm arvo))))
+         :luokka "text-nowrap"
+         :leveys 0.5}
 
-       {:otsikko "Urakka"
-        :tyyppi :string
-        :nimi :nimi
-        :leveys 1}
+        {:otsikko "Urakka"
+         :tyyppi :string
+         :nimi :nimi
+         :leveys 1}
 
-       {:otsikko "Toimituksen tila"
-        :tyyppi :komponentti
-        :komponentti toimituksen-tila-fn
-        :leveys 0.5}
+        {:otsikko "Toimituksen tila"
+         :tyyppi :komponentti
+         :komponentti toimituksen-tila-fn
+         :leveys 0.5}
 
-       {:otsikko "Kommentit"
-        :tyyppi :komponentti
-        :komponentti (fn [_ _]
+        {:otsikko "Kommentit"
+         :tyyppi :komponentti
+         :komponentti (fn [_ _]
                        ;; TODO
                        ;; Lisää kommenttien määrä tähän
-                       [:span
-                        [:a.ei-tekstityylia.kommentti-valistys
-                         [ikonit/livicon-kommentti]] "1"])
-        :leveys 0.5}]
-      nayta-rivit]]]))
+                        [:span
+                         [:a.ei-tekstityylia.kommentti-valistys
+                          [ikonit/livicon-kommentti]] "1"])
+         :leveys 0.5}]
+       nayta-rivit]]]))
 
 (defn suorita-tyomaapaivakirja-raportti [e!]
   (if-let [tiedot @tiedot/raportin-tiedot]
@@ -189,8 +174,26 @@
     (komp/lippu tiedot/nakymassa?)
     (komp/sisaan-ulos
       #(do
+         
+         (add-watch tiedot/aikavali-atom
+           :aikavali-haku
+           (fn [_ _ vanha uusi]
+             (when-not (and (pvm/sama-pvm? (first vanha) (first uusi))
+                         (pvm/sama-pvm? (second vanha) (second uusi)))
+               (e! (tiedot/->PaivitaAikavali {:aikavali uusi})))))
+
+         (add-watch valittu-hakumuoto
+           :valituu-hakumuoto
+           (fn [_ _ vanha uusi]
+             (when-not (= vanha uusi)
+               (e! (tiedot/->PaivitaHakumuoto uusi)))))
+
          (e! (tiedot/->HaeTiedot)))
-      #(e! (tiedot/->PoistaRiviValinta)))
+      
+      #(do
+         (remove-watch tiedot/aikavali-atom :aikavali-haku)
+         (remove-watch valittu-hakumuoto :valituu-hakumuoto)
+         (e! (tiedot/->PoistaRiviValinta))))
 
     (fn [e! {:keys [valittu-rivi] :as tiedot}]
       [:div

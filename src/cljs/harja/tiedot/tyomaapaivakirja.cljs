@@ -7,7 +7,7 @@
             [harja.pvm :as pvm]
             [harja.tiedot.raportit :as raportit]
             [harja.tiedot.navigaatio :as nav])
-  (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
+  (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
 (def nakymassa? (atom false))
@@ -23,6 +23,7 @@
                   :myohastyneet 1
                   :puuttuvat 2})
 
+(def aikavali-atom (atom (:aikavali (:valinnat @tila))))
 (defonce raportti-avain :tyomaapaivakirja-nakyma)
 
 (defonce raportin-parametrit
@@ -37,7 +38,6 @@
   (reaction<! [p @raportin-parametrit]
     {:nil-kun-haku-kaynnissa? true}
     (when (and p @nakymassa?)
-      (println "Suoritetaan raportti")
       (raportit/suorita-raportti p))))
 
 (defrecord HaeTiedot [])
