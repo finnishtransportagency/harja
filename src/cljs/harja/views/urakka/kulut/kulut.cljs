@@ -1126,14 +1126,13 @@
            kuukaudet (pvm/aikavalin-kuukausivalit
                       [hk-alkupvm
                        hk-loppupvm])]
-       [:div#vayla.kulujen-kohdistus
-        [debug/debug app]
+       [:div#vayla.kulujen-kohdistus.margin-top-16
         (if syottomoodi
           [:div
            [kulujen-syottolomake e! app]]
           [:div
            [:div.flex-row
-            [:h2 "Kulujen kohdistus"]
+            [:h1 "Kulujen kohdistus"]
             ^{:key "raporttixls"}
             [:form {:style {:margin-left "auto"}
                     :target "_blank" :method "POST"
