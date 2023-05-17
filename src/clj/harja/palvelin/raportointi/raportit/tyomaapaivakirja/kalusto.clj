@@ -18,9 +18,8 @@
                                 {:otsikko "Peruskalusto (KA/TR)" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.3 :tyyppi :varillinen-teksti}
                                 {:otsikko "Lisäkalusto" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.3 :tyyppi :varillinen-teksti}
                                 {:otsikko "Toimenpide" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 1 :tyyppi :varillinen-teksti})
-                :rivit (into []
-                         [(kalusto-rivi "00:00" "6" "-" "Pistehiekoitus (01:23 - 02:15), Suolaus (00:22 - 01:12)")
-                          (kalusto-rivi "01:00" "6" "-" "Pistehiekoitus (01:23 - 02:15), Suolaus (00:22 - 01:12)")])}]
+                :rivit [(kalusto-rivi "00:00" "6" "-" "Pistehiekoitus (01:23 - 02:15), Suolaus (00:22 - 01:12)")
+                        (kalusto-rivi "01:00" "6" "-" "Pistehiekoitus (01:23 - 02:15), Suolaus (00:22 - 01:12)")]}]
     (into ()
       [(yhteiset/taulukko tiedot)
        (yhteiset/osion-otsikko "Kalusto ja tielle tehdyt toimenpiteet")])))
