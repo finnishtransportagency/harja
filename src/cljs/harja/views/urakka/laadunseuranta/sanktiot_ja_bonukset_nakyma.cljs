@@ -225,7 +225,8 @@
      #_[harja.ui.debug/debug sanktiot]
 
      [:div.header-rivi
-      [:h1 {:style {:width "545px"}} (if yllapitourakka? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")]
+      [:div.laadunseuranta-otsikko
+       [:h1 {:style {:width "545px"}} (if yllapitourakka? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")]]
       [:div.header-export
        [:div
         ^{:key "raporttixls"}
