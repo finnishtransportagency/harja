@@ -1,252 +1,252 @@
 @import "../yleiset";
 
 .tyomaapaivakirja {
-        
-    .paivakirja-nakyma {
-        padding: 48px 92px 72px;
+
+  .paivakirja-nakyma {
+    padding: 48px 92px 72px;
+  }
+
+  .paivakirja-listaus {
+    padding: @valistys-48 @valistys-64;
+
+    .row.filtterit {
+      padding: @valistys-16;
+    }
+  }
+
+  .paivakirja-toimitus {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+
+    .toimituksen-selite {
+      padding-left: @valistys-8;
+    }
+    .pallura {
+      height: 8px;
+      width: 8px;
+      border-radius: 10px;
+    }
+    .ok {
+      background: @green-default;
+    }
+    .myohassa {
+      background: @lemon-default;
+    }
+    .puuttuu {
+      background: @red-dark;
+    }
+  }
+
+  .puuttuu-tausta {
+    background: @lemon-light;
+  }
+
+  .tyopaiva {
+    display: flex;
+    white-space: nowrap;
+
+    :first-child {
+      width: 20px;
+      padding-left: @valistys-4;
+    }
+  }
+
+  .tyomaa-haku-suodatin {
+    width: 50%;
+  }
+
+  .nakyma-otsikko-tiedot {
+    display: flex;
+    flex-direction: row;
+    color: @black-light;
+
+    > * {
+      margin-top: @valistys-12;
+      margin-left: @valistys-24;
     }
 
-    .paivakirja-listaus {
-        padding: @valistys-48 @valistys-64;
+    :first-child {
+      margin-left: 0px;
+    }
+  }
 
-        .row.filtterit {
-            padding: @valistys-16;
-        }
+  .flex-gridit {
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+
+    .nakyma-valkoinen-solu {
+      background: @white-default;
     }
 
-    .paivakirja-toimitus {
-        display: flex;
-        align-items: center;
-        white-space: nowrap;
+    .gridin-otsikko {
+      margin: 0;
+    }
+  }
 
-        .toimituksen-selite {
-            padding-left: @valistys-8;
-        }
-        .pallura {
-            height: 8px;
-            width: 8px;
-            border-radius: 10px;
-        }
-        .ok {
-            background: @green-default;
-        }
-        .myohassa {
-            background: @lemon-default;
-        }
-        .puuttuu {
-            background: @red-dark;
-        }
+  .info-rivi {
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .nakyma-otsikko {
+    background: @harmaa-vaalea !important;
+  }
+
+  .vaalen-tumma-tausta {
+    background: @white-dark
+  }
+
+  .tieto-rivi {
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  .ei-tietoja {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    display: flex;
+    justify-content: center;
+    color: @black-lighter !important;
+    width: 100% !important;
+  }
+
+  .muutos-info {
+    color: @black-lighter;
+    font-style: italic;
+  }
+
+  .kommentti-poista {
+    transform: scale(0.88);
+  }
+
+  .klikattava {
+    cursor: pointer;
+  }
+
+  .ei-tekstityylia {
+    text-decoration: none !important;
+  }
+
+  .alarivi-tiedot {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    padding: @valistys-12 0px @valistys-12;
+
+    :first-child {
+      font-weight: bold;
+    }
+  }
+
+  .kommentit-valistys {
+    margin-top: 80px;
+    padding: 20px 92px 72px;
+  }
+
+  .kommentti {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: @valistys-16;
+    gap: 10px;
+    width: 100%;
+    height: 52px;
+    background: @white-default;
+  }
+
+  .kommentti-valistys {
+    margin-right: @valistys-4;
+  }
+
+  .muutos {
+    background: @white-darker;
+  }
+
+  .kommentti-lisaa {
+    font-size: 14px;
+    font-weight: bold;
+    padding: @valistys-24 0px @valistys-24;
+    margin-top: @valistys-24;
+  }
+
+  .ala-valinnat-sticky {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    background: @blue-dark;
+    padding: @valistys-24;
+    gap: 30px;
+    bottom: 0;
+    height: 84px;
+    position: fixed;
+    font-size: 14px;
+    left: 0;
+    right: 0;
+
+    .napit {
+      display: flex;
+      flex-direction: row;
+      align-items: center;    
+      justify-content: center;
+      gap: 5px;
+      width: 120px;
+      height: 45px;
+      border-style: solid;
+      border-radius: 5px;
+      border-color: @white-default;
+      border-width: 2px;
+      color: @white-default;
+
+    * > {
+      row-gap: 20px;
     }
 
-    .puuttuu-tausta {
-        background: @lemon-light;
+    .nuoli {
+      transform: scale(1.0);
+      color: @white-default;
+      margin-top: 2px;
+    }
     }
 
-    .tyopaiva {
-        display: flex;
-        white-space: nowrap;
-
-        :first-child {
-            width: 20px;
-            padding-left: @valistys-4;
-        }
+    .ei-reunoja {
+      border-style: none;
     }
 
-    .tyomaa-haku-suodatin {
-        width: 50%;
+    .napit:hover {
+      background-color: @blue-default;
     }
 
-    .nakyma-otsikko-tiedot {
-        display: flex;
-        flex-direction: row;
-        color: @black-light;
-
-        > * {
-            margin-top: @valistys-12;
-            margin-left: @valistys-24;
-        }
-
-        :first-child {
-            margin-left: 0px;
-        }
+    .napit:active {
+      background-color: @sininen5;
     }
 
-    .flex-gridit {
-        display: flex;
-        flex-direction: row;
-        gap: 40px;
-
-        .nakyma-valkoinen-solu {
-            background: @white-default;
-        }
-
-        .gridin-otsikko {
-            margin: 0;
-        }
+    // Flexin 3 viimeistä diviä
+    // (Tallenna / Lähetä / Takaisin)
+    div:nth-last-child(-n+3) {
+      margin-left: @valistys-32;
+      width: 180px;
     }
 
-    .info-rivi {
-        font-style: normal;
-        font-weight: 400;
-        font-size: 14px;
-        line-height: 20px;
+    // Sulje nappi float oikealla
+    div:last-child {
+      margin-left: auto;
     }
+  }
 
-    .nakyma-otsikko {
-        background: @harmaa-vaalea !important;
-    }
-
-    .vaalen-tumma-tausta {
-        background: @white-dark
-    }
-
-    .tieto-rivi {
-        font-size: 14px;
-        font-weight: 400;
-    }
-
-    .ei-tietoja {
-        font-weight: 400;
-        font-size: 14px;
-        line-height: 20px;
-        display: flex;
-        justify-content: center;
-        color: @black-lighter !important;
-        width: 100% !important;
-    }
-
-    .muutos-info {
-        color: @black-lighter;
-        font-style: italic;
-    }
-
-    .kommentti-poista {
-        transform: scale(0.88);
-    }
-
-    .klikattava {
-        cursor: pointer;
-    }
-
-    .ei-tekstityylia {
-        text-decoration: none !important;
-    }
-
-    .alarivi-tiedot {
-        display: flex;
-        flex-direction: row;
-        gap: 20px;
-        padding: @valistys-12 0px @valistys-12;
-
-        :first-child {
-            font-weight: bold;
-        }
-    }
-
-    .kommentit-valistys {
-        margin-top: 80px;
-        padding: 20px 92px 72px;
-    }
-
-    .kommentti {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        padding: @valistys-16;
-        gap: 10px;
-        width: 100%;
-        height: 52px;
-        background: @white-default;
-    }
-
-    .kommentti-valistys {
-        margin-right: @valistys-4;
-    }
-
-    .muutos {
-        background: @white-darker;
-    }
-
-    .kommentti-lisaa {
-        font-size: 14px;
-        font-weight: bold;
-        padding: @valistys-24 0px @valistys-24;
-        margin-top: @valistys-24;
-    }
-
-    .ala-valinnat-sticky {
-        display: flex;
-        flex-direction: row;
-        align-items: flex-start;
-        background: @blue-dark;
-        padding: @valistys-24;
-        gap: 30px;
-        bottom: 0;
-        height: 84px;
-        position: fixed;
-        font-size: 14px;
-        left: 0;
-        right: 0;
-
-        .napit {
-            display: flex;
-            flex-direction: row;
-            align-items: center;    
-            justify-content: center;
-            gap: 5px;
-            width: 120px;
-            height: 45px;
-            border-style: solid;
-            border-radius: 5px;
-            border-color: @white-default;
-            border-width: 2px;
-            color: @white-default;
-
-            * > {
-                row-gap: 20px;
-            }
-
-            .nuoli {
-                transform: scale(1.0);
-                color: @white-default;
-                margin-top: 2px;
-            }
-        }
-        
-        .ei-reunoja {
-            border-style: none;
-        }
-
-        .napit:hover {
-            background-color: @blue-default;
-        }
-
-        .napit:active {
-            background-color: @sininen5;
-        }
-
-        // Flexin 3 viimeistä diviä
-        // (Tallenna / Lähetä / Takaisin)
-        div:nth-last-child(-n+3) {
-            margin-left: @valistys-32;
-            width: 180px;
-        }
-
-        // Sulje nappi float oikealla
-        div:last-child {
-            margin-left: auto;
-        }
-    }
-
-    .sulje {
-        color: @blue-dark;
-        height: 18.4px;
-        width: 18.4px;
-        left: 2.8px;
-        top: 2.79px;
-        position: relative;
-        float: right;
-        transform: scale(2.0);
-    }
+  .sulje {
+    color: @blue-dark;
+    height: 18.4px;
+    width: 18.4px;
+    left: 2.8px;
+    top: 2.79px;
+    position: relative;
+    float: right;
+    transform: scale(2.0);
+  }
 }
