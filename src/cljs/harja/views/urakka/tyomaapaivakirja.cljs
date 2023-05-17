@@ -8,13 +8,10 @@
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
             [harja.ui.raportti :refer [muodosta-html]]
-            [harja.tiedot.raportit :as raportit]
-            [harja.tiedot.navigaatio :as nav]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.nakymasiirrin :as siirrin]
             [harja.pvm :as pvm])
-  (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
-                   [reagent.ratom :refer [reaction]]))
+  (:require-macros [harja.atom :refer [reaction-writable]]))
 
 ;; TODO 
 ;; Lisää tähän oikeat arvot
@@ -28,7 +25,6 @@
                        {:class "myohassa" :selitys "Myöhässä"}
                        {:class "puuttuu" :selitys "Puuttuu"}])
 
-(defonce raportti-avain :tyomaapaivakirja-nakyma)
 (def valittu-hakumuoto (reaction-writable :kaikki))
 
 (defn tyomaapaivakirja-listaus [e! {:keys [nayta-rivit valinnat] :as tiedot}]
@@ -141,23 +137,8 @@
         :leveys 0.5}]
       nayta-rivit]]]))
 
-(defonce raportin-parametrit
-  (reaction (let [ur @nav/valittu-urakka]
-              (raportit/urakkaraportin-parametrit
-                (:id ur)
-                raportti-avain
-                {:urakkatyyppi (:tyyppi ur)
-                 :valittu-rivi (:valittu-rivi @tiedot/tila)
-                 }))))
-
-(defonce raportin-tiedot
-  (reaction<! [p @raportin-parametrit]
-    {:nil-kun-haku-kaynnissa? true}
-    (when p
-      (raportit/suorita-raportti p))))
-
 (defn suorita-tyomaapaivakirja-raportti [e!]
-  (if-let [tiedot @raportin-tiedot]
+  (if-let [tiedot @tiedot/raportin-tiedot]
     [:div.tyomaapaivakirja
      ;; Päiväkirjanäkymä 
      [:div.paivakirja-nakyma
@@ -169,10 +150,10 @@
        [ikonit/harja-icon-navigation-close]]
 
       ;; Raportin html
-      [muodosta-html (assoc-in tiedot [1 :tunniste] raportti-avain)]]
+      [muodosta-html (assoc-in tiedot [1 :tunniste] tiedot/raportti-avain)]]
 
      ;; Sticky bar (Edellinen - Seuraava) Tallenna PDF 
-     [:div.ala-valinnat-sticky
+     [:div.ala-valinnat-fixed
 
       [:div.napit.klikattava
        [:span.nuoli
@@ -205,20 +186,22 @@
 
 (defn tyomaapaivakirja* [e! _]
   (komp/luo
-   (komp/sisaan
-    #(do
-       (e! (tiedot/->HaeTiedot))))
-   
-   (fn [e! {:keys [valittu-rivi] :as tiedot}]
-     [:div
-      (if valittu-rivi
+    (komp/lippu tiedot/nakymassa?)
+    (komp/sisaan-ulos
+      #(do
+         (e! (tiedot/->HaeTiedot)))
+      #(e! (tiedot/->PoistaRiviValinta)))
+
+    (fn [e! {:keys [valittu-rivi] :as tiedot}]
+      [:div
+       (if valittu-rivi
         ;; Jos valittu rivi, näytä päiväkirjanäkymä (tehty raporttien puolelle)
-        [suorita-tyomaapaivakirja-raportti e!]
+         [suorita-tyomaapaivakirja-raportti e!]
 
         ;; Mikäli ei valittua riviä, päivitä aikavälivalinta ja näytä listaus
-        (do
-          (e! (tiedot/->PaivitaAikavali (:aikavali @tiedot/tila)))
-          [tyomaapaivakirja-listaus e! tiedot]))])))
+         (do
+           (e! (tiedot/->PaivitaAikavali (:aikavali @tiedot/tila)))
+           [tyomaapaivakirja-listaus e! tiedot]))])))
 
 (defn tyomaapaivakirja [ur]
   ;; TODO.. Käytä urakka parametria jossain?

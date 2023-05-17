@@ -4,7 +4,13 @@
             [tuck.core :as tuck]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.tiedot.raportit :as raportit]
+            [harja.tiedot.navigaatio :as nav])
+  (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
+                   [reagent.ratom :refer [reaction]]))
+
+(def nakymassa? (atom false))
 
 (defonce tila (atom {:tiedot []
                      :nayta-rivit []
@@ -17,13 +23,30 @@
                   :myohastyneet 1
                   :puuttuvat 2})
 
-(defrecord HaeTiedot[])
-(defrecord ValitseRivi[rivi])
-(defrecord PoistaRiviValinta[])
-(defrecord PaivitaAikavali[uudet])
-(defrecord PaivitaHakumuoto[uudet])
-(defrecord HaeTiedotOnnistui[vastaus])
-(defrecord HaeTiedotEpaonnistui[vastaus])
+(defonce raportti-avain :tyomaapaivakirja-nakyma)
+
+(defonce raportin-parametrit
+  (reaction (let [ur @nav/valittu-urakka]
+              (raportit/urakkaraportin-parametrit
+                (:id ur)
+                raportti-avain
+                {:urakkatyyppi (:tyyppi ur)
+                 :valittu-rivi (:valittu-rivi @tila)}))))
+
+(defonce raportin-tiedot
+  (reaction<! [p @raportin-parametrit]
+    {:nil-kun-haku-kaynnissa? true}
+    (when (and p @nakymassa?)
+      (println "Suoritetaan raportti")
+      (raportit/suorita-raportti p))))
+
+(defrecord HaeTiedot [])
+(defrecord ValitseRivi [rivi])
+(defrecord PoistaRiviValinta [])
+(defrecord PaivitaAikavali [uudet])
+(defrecord PaivitaHakumuoto [uudet])
+(defrecord HaeTiedotOnnistui [vastaus])
+(defrecord HaeTiedotEpaonnistui [vastaus])
 
 (defn suodata-rivit-aikavalilla [valinnat]
   ;; Annetaan parametrina tilan :valinnat josta luetaan hakumuoto & valittu aikaväli
