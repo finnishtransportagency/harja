@@ -174,7 +174,6 @@
     (komp/lippu tiedot/nakymassa?)
     (komp/sisaan-ulos
       #(do
-         
          (add-watch tiedot/aikavali-atom
            :aikavali-haku
            (fn [_ _ vanha uusi]
