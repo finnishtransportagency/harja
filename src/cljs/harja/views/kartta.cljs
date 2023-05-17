@@ -274,7 +274,7 @@
                                       :width      "100%"
                                       :z-index    100}}
       (if (= :S koko)
-        [:button.btn-xs.nappi-ensisijainen.nappi-avaa-kartta.pull-right
+        [:button.btn-xs.nappi-toissijainen.nappi-avaa-kartta.pull-right
          {:on-click #(nav/vaihda-kartan-koko! :L)}
          (ikonit/expand) " Näytä kartta"]
         [:span
@@ -287,7 +287,7 @@
                                                            :XL :M))}
           ikoni muuta-kokoa-teksti]
 
-         [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)
+         [:button.btn-xs.nappi-toissijainen {:on-click #(nav/vaihda-kartan-koko! :S)
                                              :data-cy "piilota-kartta"}
           (ikonit/compress) " Piilota kartta"]])]]))
 
