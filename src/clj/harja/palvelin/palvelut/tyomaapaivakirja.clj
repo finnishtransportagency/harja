@@ -10,13 +10,13 @@
 
 (defrecord Tyomaapaivakirja []
   component/Lifecycle
-  (start [this]
-    (julkaise-palvelu (:http-palvelin this)
+  (start [{:keys [http-palvelin db] :as this}]
+    (julkaise-palvelu http-palvelin
       :tyomaapaivakirja-hae
       (fn [user _]
-        (tyomaapaivakirja-hae (:db this) user)))
+        (tyomaapaivakirja-hae db user)))
     this)
 
-  (stop [this]
-    (poista-palvelut (:http-palvelin this) :tyomaapaivakirja-hae)
+  (stop [{:keys [http-palvelin] :as this}]
+    (poista-palvelut http-palvelin :tyomaapaivakirja-hae)
     this))
