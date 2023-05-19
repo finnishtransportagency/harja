@@ -37,7 +37,7 @@
                        (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
                        @istunto/kayttaja)
             nayta-paallystysilmoitukset? (nayta-paallystysilmoitukset? (:id ur))]
-        [:span.kohdeluettelo
+        [:span.paikkaukset
          [bs/tabs {:style :tabs :classes "tabs-taso2"
                    :active (nav/valittu-valilehti-atom :kohdeluettelo-paikkaukset)}
 
