@@ -451,11 +451,11 @@
                         (second valittu-kuukausi)
                         (pvm/iso8601 (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi))))
         valikatselmus-tekematta? (t-yhteiset/valikatselmus-tekematta? app)]
-    [:div.kustannusten-seuranta
+    [:div.kustannusten-seuranta.margin-top-16
      ;[debug/debug app]
      [:div
       [:div.row.header
-       [:div.col-xs-12
+       [:div
         [:h1 "Kustannusten seuranta"]
         [:p.urakka (:nimi @nav/valittu-urakka)]
         [:p "Tavoite- ja kattohinnat sekä budjetit on suunniteltu Suunnittelu-puolella.

@@ -90,8 +90,7 @@
                :prosentti "11%"})
 
 (defn- ryhmitellyt-taulukko [e! app r toteumat]
-  (let [
-        row-index-atom (r/atom 0)
+  (let [row-index-atom (r/atom 0)
         ll
         (mapcat
           (fn [[tehtavaryhma rivit]]
@@ -182,7 +181,7 @@
                         [:td {:colSpan "5"} tehtavaryhma]]]
                       muodostetut)))
           r)]
-    [:div.table-default
+    [:div.table-default.margin-top-16
      [:table
       [:thead.table-default-header
        [:tr
@@ -232,8 +231,8 @@
        (gstring/unescapeEntities "&ensp;&#x2022;&ensp; Kirjaa tällä välilehdellä vain sellaisten tehtävien toteumat, jotka eivät ole materiaaleja (liikennemerkkien kappale- ja neliömäärät, rumpujen metrit jne.) \t
        &ensp;&#x2022;&ensp; Materiaalien toteumat tuodaan Harjaan rajapinnan kautta tai kirjataan käsin Muut materiaalit-välilehdeltä. \t
        &ensp;&#x2022;&ensp; Rahavarausten käyttö kirjataan kuluihin. Kirjatut rahavaraukset näkyvät Kustannusten seuranta-välilehdellä \t") "70%"]]
-     [:div.row
-      [:div.col-xs-12.col-md-6 {:style {:margin-left "-15px"}}
+     [:div.row {:style {:margin-left "-15px"}}
+      [:div.col-xs-12.col-md-6
        [:label.alasvedon-otsikko-vayla "Toimenpide"]
        [yleiset/livi-pudotusvalikko {:valinta valittu-toimenpide
                                      :vayla-tyyli? true

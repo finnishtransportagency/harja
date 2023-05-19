@@ -246,16 +246,19 @@
 
      [ilmoitusten-hakuehdot e! valinnat-nyt]
      [:div
-      [kentat/tee-kentta {:tyyppi :checkbox
-                          :teksti "Äänimerkki uusista ilmoituksista"}
-       tiedot/aanimerkki-uusista-ilmoituksista?]
+      [:div.margin-top-16
+       [kentat/tee-kentta {:tyyppi :checkbox
+                           :teksti "Äänimerkki uusista ilmoituksista"}
+        tiedot/aanimerkki-uusista-ilmoituksista?]]
 
       ;; FIXME: Tämä on väliaikainen toiminto WS-kuuntelijan testikäyttöä varten.
       ;;        Käyttäjä voi aktivoida/deaktivoida WS-kuuntelun.
       ;;        Asetus tallennnetaan localstorageen, jolloin valittu asetus on aktiivinen myös refreshin jälkeen.
-      [kentat/tee-kentta {:tyyppi :checkbox
-                          :teksti "Aktivoi kokeellinen ilmoitusten reaaliaikahaku (testikäyttö)"}
-       tiedot/ws-kuuntelija-ominaisuus?]
+
+      [:div.margin-top-16
+       [kentat/tee-kentta {:tyyppi :checkbox
+                           :teksti "Aktivoi kokeellinen ilmoitusten reaaliaikahaku (testikäyttö)"}
+        tiedot/ws-kuuntelija-ominaisuus?]]
 
       [vihjeet ws-ilmoitusten-kuuntelu]
 
