@@ -56,7 +56,7 @@
       :muokkaa! #(e! (tiedot/->PaivitaLomaketta %))
       :footer-fn (fn [bonus]
                    [:<>
-                    [:span.nappiwrappi.row
+                    [:span.nappiwrappi.flex-row
                      [:div.col-xs-8 {:style {:padding-left "0"}}
                       (when-not lukutila?
                         [napit/yleinen-ensisijainen "Tallenna" #(e! (tiedot/->TallennaBonus))

@@ -128,6 +128,7 @@
    [kentat/tee-otsikollinen-kentta
     {:otsikko "Näytä lajit"
      :otsikon-tag :div
+     :luokka ""
      :kentta-params {:tyyppi :checkbox-group
                      :vaihtoehdot lajisuodattimet
                      :vaihtoehto-nayta #(:teksti (tiedot/lajisuodatin-tiedot %))
@@ -136,26 +137,29 @@
      :arvo-atom tiedot/sanktio-bonus-suodattimet}]])
 
 (defn- suodattimet-ja-toiminnot [valittu-urakka sivupaneeli-auki?-atom lajisuodattimet]
-  [:div.flex-row.tasaa-alkuun
-   [valinnat/urakkavalinnat {:urakka valittu-urakka}
-    ^{:key "urakkavalinnat"}
-    [urakka-valinnat/urakan-hoitokausi-ja-kuukausi valittu-urakka {:kuukausi-otsikko "Käsittelykuukausi"}]]
+  [:div.flex-row
+   [:div
+    [valinnat/urakkavalinnat {:urakka valittu-urakka}
+       ^{:key "urakkavalinnat"}
+       [urakka-valinnat/urakan-hoitokausi-ja-kuukausi valittu-urakka {:kuukausi-otsikko "Käsittelykuukausi"}]]]
 
-   [lajisuodatin-valinnat lajisuodattimet]
-   (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
-                   (:id valittu-urakka))]
-     (yleiset/wrap-if
-       (not oikeus?)
-       [yleiset/tooltip {} :%
-        (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-          oikeudet/urakat-laadunseuranta-sanktiot)]
-       ^{:key "Lisää uusi"}
-       [:div.lisaa-nappi
-        [napit/uusi "Lisää uusi"
-         #(do
-            (reset! sivupaneeli-auki?-atom true)
-            (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi valittu-urakka))))
-         {:disabled (not oikeus?)}]]))])
+   [:div {:style {"flex-grow" 2}}
+    [lajisuodatin-valinnat lajisuodattimet]]
+   [:div {:style {"flex-grow" 1}}
+    (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
+                    (:id valittu-urakka))]
+      (yleiset/wrap-if
+        (not oikeus?)
+        [yleiset/tooltip {} :%
+         (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+           oikeudet/urakat-laadunseuranta-sanktiot)]
+        ^{:key "Lisää uusi"}
+        [:div.lisaa-nappi
+         [napit/uusi "Lisää uusi"
+          #(do
+             (reset! sivupaneeli-auki?-atom true)
+             (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi valittu-urakka))))
+          {:disabled (not oikeus?)}]]))]])
 
 
 (defn valitse-sanktio-tai-bonus! [rivi sanktio-atom]
@@ -221,7 +225,8 @@
      #_[harja.ui.debug/debug sanktiot]
 
      [:div.header-rivi
-      [:h1 {:style {:width "545px"}} (if yllapitourakka? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")]
+      [:div.laadunseuranta-otsikko
+       [:h1 {:style {:width "545px"}} (if yllapitourakka? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")]]
       [:div.header-export
        [:div
         ^{:key "raporttixls"}
