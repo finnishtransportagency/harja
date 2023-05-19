@@ -464,7 +464,7 @@
                        (nollaa-muokkaustiedot!)
                        (when peruuta (peruuta))
                        nil)}
-         [ui-ikonit/ikoni-ja-teksti (ui-ikonit/livicon-ban) "Peruuta"]])])
+         [ui-ikonit/ikoni-ja-teksti (ui-ikonit/harja-icon-status-denied) "Peruuta"]])])
    (when nayta-otsikko? [:h6.panel-title otsikko])
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])])
 
