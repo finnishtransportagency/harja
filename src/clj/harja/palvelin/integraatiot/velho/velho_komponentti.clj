@@ -47,7 +47,7 @@
       (assoc this :varustetoteuma-tuonti-tehtava (tee-varustetoteuma-haku-tehtava-fn this suoritusaika))))
   (stop [this]
     (log/info "Sammutetaan tuo-uudet-varustetoteumat-velhosta -komponentti.")
-    (let [varustetoteuma-tuonti-tehtava-cancel (:varustetoteuma-tuonti-tehtava this)]
+    (when-let [varustetoteuma-tuonti-tehtava-cancel (:varustetoteuma-tuonti-tehtava this)]
       (varustetoteuma-tuonti-tehtava-cancel))
     (dissoc this :varustetoteuma-tuonti-tehtava))
 
