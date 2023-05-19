@@ -1142,8 +1142,9 @@
                                               :urakka-nimi (-> @tila/yleiset :urakka :nimi)
                                               :alkupvm (or (first haun-kuukausi) haun-alkupvm)
                                               :loppupvm (or (second haun-kuukausi) haun-loppupvm)})}]
-             [:button {:type "submit"
-                       :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]
+             [napit/tallenna "Tallenna Excel" (constantly true)
+              {:ikoni (ikonit/harja-icon-action-download) :luokka "nappi-toissijainen" :type "submit"
+               :esta-prevent-default? true}]]
             ^{:key "raporttipdf"}
             [:form {:style {:margin-left "16px"
                             :margin-right "64px"}
@@ -1154,13 +1155,14 @@
                                               :urakka-nimi (-> @tila/yleiset :urakka :nimi)
                                               :alkupvm (or (first haun-kuukausi) haun-alkupvm)
                                               :loppupvm (or (second haun-kuukausi) haun-loppupvm)})}]
-             [:button {:type "submit"
-                       :class #{"button-secondary-default" "suuri"}} "Tallenna PDF"]]
+             [napit/tallenna "Tallenna PDF" (constantly true)
+              {:ikoni (ikonit/harja-icon-action-download) :luokka "nappi-toissijainen" :type "submit"
+               :esta-prevent-default? true}] ]
+
             [napit/yleinen-ensisijainen
              "Uusi kulu"
              #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
-             {:vayla-tyyli? true
-              :luokka "suuri"}]]
+             {:ikoni [ikonit/harja-icon-action-add]}]]
 
            [:div.flex-row {:style {:justify-content "flex-start"}}
             [valinnat/kuukausi {:nil-valinta yleiset/valitse-text
