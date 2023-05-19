@@ -2,6 +2,7 @@
   ;; Tänne voi laittaa mm yksittäisten raporttien funktioita
   (:require [harja.ui.raportti :as raportointi]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.debug :refer [debug]]
             [harja.fmt :as fmt]
             [harja.ui.nakymasiirrin :as siirrin]))
 
@@ -25,7 +26,7 @@
 
 (defmethod raportointi/muodosta-html :tyomaapaivakirja-header [[_ valittu-rivi]]
   [:<>
-   [:p (str valittu-rivi)]
+   [:div [debug valittu-rivi]]
 
    [:h3.header-yhteiset "UUD MHU 2022–2027"]
    [:h1.header-yhteiset "Työmaapäiväkirja 9.10.2022"]
