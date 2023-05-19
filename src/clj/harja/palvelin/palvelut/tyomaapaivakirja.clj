@@ -4,8 +4,8 @@
             [harja.kyselyt.tyomaapaivakirja :as q]
             [harja.domain.oikeudet :as oikeudet]))
 
-(defn tyomaapaivakirja-hae [db user]
-  (oikeudet/ei-oikeustarkistusta!)
+(defn tyomaapaivakirja-hae [db user tiedot]
+  (oikeudet/voi-lukea? oikeudet/raportit-tyomaapaivakirja (:urakka-id tiedot) user)
   (into [] (q/hae-tiedot db)))
 
 (defrecord Tyomaapaivakirja []
@@ -13,8 +13,8 @@
   (start [{:keys [http-palvelin db] :as this}]
     (julkaise-palvelu http-palvelin
       :tyomaapaivakirja-hae
-      (fn [user _]
-        (tyomaapaivakirja-hae db user)))
+      (fn [user tiedot]
+        (tyomaapaivakirja-hae db user tiedot)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]

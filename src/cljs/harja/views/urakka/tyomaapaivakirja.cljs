@@ -10,7 +10,8 @@
             [harja.ui.raportti :refer [muodosta-html]]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.nakymasiirrin :as siirrin]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tiedot.navigaatio :as nav])
   (:require-macros [harja.atom :refer [reaction-writable]]))
 
 ;; TODO 
@@ -187,7 +188,7 @@
              (when-not (= vanha uusi)
                (e! (tiedot/->PaivitaHakumuoto uusi)))))
 
-         (e! (tiedot/->HaeTiedot)))
+         (e! (tiedot/->HaeTiedot @nav/valittu-urakka-id)))
       
       #(do
          (remove-watch tiedot/aikavali-atom :aikavali-haku)
@@ -205,7 +206,5 @@
            (e! (tiedot/->PaivitaAikavali (:aikavali @tiedot/tila)))
            [tyomaapaivakirja-listaus e! tiedot]))])))
 
-(defn tyomaapaivakirja [ur]
-  ;; TODO.. Käytä urakka parametria jossain?
-  ;; (Esim raportin parametreissa)
+(defn tyomaapaivakirja []
   [tuck tiedot/tila tyomaapaivakirja*])

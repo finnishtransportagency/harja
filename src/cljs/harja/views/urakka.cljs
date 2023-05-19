@@ -168,7 +168,7 @@
        :tyomaapaivakirja
        (when (valilehti-mahdollinen? :tyomaapaivakirja ur)
          ^{:key "tyomaapaivakirja"}
-         [tyomaapaivakirja/tyomaapaivakirja ur])
+         [tyomaapaivakirja/tyomaapaivakirja])
 
        "Liikenne"
        :liikenne

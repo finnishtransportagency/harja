@@ -40,7 +40,7 @@
     (when (and p @nakymassa?)
       (raportit/suorita-raportti p))))
 
-(defrecord HaeTiedot [])
+(defrecord HaeTiedot [urakka-id])
 (defrecord ValitseRivi [rivi])
 (defrecord PoistaRiviValinta [])
 (defrecord PaivitaAikavali [uudet])
@@ -66,9 +66,9 @@
 
 (extend-protocol tuck/Event
   HaeTiedot
-  (process-event [_ app]
+  (process-event [{urakka-id :urakka-id} app]
     (tuck-apurit/post! app :tyomaapaivakirja-hae
-      {}
+      {:urakka-id urakka-id}
       {:onnistui ->HaeTiedotOnnistui
        :epaonnistui ->HaeTiedotEpaonnistui}))
 
