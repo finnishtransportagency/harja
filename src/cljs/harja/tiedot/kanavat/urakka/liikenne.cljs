@@ -190,22 +190,33 @@
             (let [suuntia-olemassa? (pos? (hae-sulutuksen-suunta tapahtuma haluttu-toiminto haluttu-suunta))
                   toiminnot (filter (fn [toiminto]
                                       (or
-                                       (and
-                                        suuntia-olemassa?
-                                        (= haluttu-toiminto (::toiminto/toimenpide toiminto)))
+                                        (and
+                                          suuntia-olemassa?
+                                          (= haluttu-toiminto (::toiminto/toimenpide toiminto)))
 
-                                       (and
-                                        haluttu-toiminto
-                                        (= haluttu-toiminto (::toiminto/toimenpide toiminto))
-                                        (= haluttu-suunta nil))
+                                        (and
+                                          haluttu-toiminto
+                                          (= haluttu-toiminto (::toiminto/toimenpide toiminto))
+                                          (= haluttu-suunta nil))
 
-                                       (and
-                                        haluttu-palvelumuoto
-                                        (= haluttu-palvelumuoto (::toiminto/palvelumuoto toiminto))
-                                        (= haluttu-suunta nil)
-                                        (= haluttu-toiminto nil))))
-                                    (::lt/toiminnot tapahtuma))]
-              (+ acc (count toiminnot)))) 0 tapahtumat))
+                                         (and
+                                          haluttu-palvelumuoto
+                                          (= haluttu-palvelumuoto (::toiminto/palvelumuoto toiminto))
+                                          (= haluttu-suunta nil)
+                                          (= haluttu-toiminto nil))))
+                              (::lt/toiminnot tapahtuma))]
+
+              ;; Jos lasketaan itsepalveluita, palautetaan tapahtuman 'lkm' arvo (itsepalveluiden määrä)
+              (if (and
+                    (some? (first toiminnot))
+                    (= haluttu-palvelumuoto :itse))
+                (let [itsepalvelu-maara (-> (filter #(= (::toiminto/palvelumuoto %) :itse) toiminnot)
+                                          first
+                                          ::toiminto/lkm
+                                          int)]
+                  (+ acc itsepalvelu-maara))
+                (+ acc (count toiminnot)))
+              )) 0 tapahtumat))
 
 (defn tapahtumat-haettu [app tulos]
   (let [sulutukset-alas (laske-yhteenveto tulos :sulutus :alas nil)
