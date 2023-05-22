@@ -461,6 +461,20 @@
     (pvm-vali vali)
     ""))
 
+(defn hoitovuoden-jarjestysluku-ja-vuodet
+  "Näyttää hoitokauden esim 1.10.2022 - 30.9.2023 formaatissa 2. hoitovuosi (2022 — 2023)"
+  [valittu-hk hoitovuodet]
+  (let [monesko (first (keep-indexed (fn [i hk]
+                                 (when (= hk valittu-hk)
+                                   (inc (int i))))
+                               hoitovuodet))]
+    (str (when monesko (str monesko ". "))
+         "hoitovuosi ("
+      (pvm/vuosi (first valittu-hk))
+        "\u2014"
+        (pvm/vuosi (second valittu-hk))
+         ")")))
+
 #?(:cljs
    (def desimaali-fmt
      (memoize (fn [min-desimaalit max-desimaalit]
