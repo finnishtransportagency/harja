@@ -50,8 +50,8 @@ SELECT up."hoitokauden-alkuvuosi"
 -- single?: true
 SELECT tpi.id AS id
 FROM toimenpideinstanssi tpi
-         JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-         JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+         JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+         JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
      maksuera m
 WHERE tpi.urakka = :urakka-id
   AND m.toimenpideinstanssi = tpi.id

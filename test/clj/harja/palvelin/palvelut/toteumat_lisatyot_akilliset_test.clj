@@ -90,7 +90,7 @@
                                              :maara 1M}]})
 (defn hae-default-lisatyon-tehtava []
   (let [res (first (q
-                     (str "SELECT id,nimi,yksikko FROM toimenpidekoodi where nimi = 'Lisätyö (talvihoito)'")))]
+                     (str "SELECT id,nimi,yksikko FROM tehtava where nimi = 'Lisätyö (talvihoito)'")))]
     {:id (first res)
      :otsikko (second res)
      :yksikko (nth res 2)}))
