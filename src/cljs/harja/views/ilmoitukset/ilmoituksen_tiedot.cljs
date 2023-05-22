@@ -64,9 +64,8 @@
    "Otsikko " (:otsikko ilmoitus)
    "Kuvaus " (when (:lisatieto ilmoitus) (:lisatieto ilmoitus))
    "Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")
-   (when when (:toimenpiteet-aloitettu ilmoitus) "Toimenpiteet aloitettu ")
-   (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))
-   ])
+   (when (:toimenpiteet-aloitettu ilmoitus) "Toimenpiteet aloitettu ")
+   (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))])
 
 (defn ilmoitus [e! ilmoitus]
   (let [nayta-valitykset? (atom false)]
