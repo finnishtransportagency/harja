@@ -82,7 +82,6 @@
 
         ;; Tehtävien ja toimenpiteiden mäppääminen on tehty todella vaikeaksi yllä olevan tietokantahaun kautta, joten tehdään niille erillinen haku
         sql-tehtavat (q-map (format "SELECT (SELECT string_agg(t.tehtavat::TEXT, ', ')) as tehtavat FROM tyomaapaivakirja_tieston_toimenpide t WHERE t.tyomaapaivakirja_id = %s" tid))
-        _ (println "sql-tehtavat: " (pr-str sql-tehtavat))
         tehtavat (mapv
                    (fn [tehtava]
                      (let [tehtava (-> tehtava
@@ -172,14 +171,15 @@
   (is (= (get-in typa-db [:tyonjohtajat 0 :nimi]) (get-in typa-data [:tyomaapaivakirja :tyonjohtajan-tiedot 0 :tyonjohtaja :nimi]))))
 
 (defn varmista-ensitallennus [typa-db]
-  ;; Varmistetaan työmaapäiväkirjan tiedot
-  (is (not (nil? (:muokattu typa-db))))
-  (is (not (nil? (:muokkaaja typa-db)))))
+  ;; Varmistetaan ensitallennus, eli muokatut tiedot on nill
+  (is (nil? (:muokattu typa-db)))
+  (is (nil? (:muokkaaja typa-db))))
 
 (defn varmista-muokatut-tiedot [typa-db typa-data saa-asema]
 
   ;; Työmaapäiväkirjaa on muokattu
   (is (not (nil? (:muokattu typa-db))))
+  (is (not (nil? (:muokkaaja typa-db))))
   ;; Työmaapäiväkirjan muokattuaika ei ole sama kuin luontiaika
   (is (not= (:muokattu typa-db) (:luotu typa-db)))
 

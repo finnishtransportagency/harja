@@ -20,7 +20,7 @@
   (parametrivalidointi/tarkista-parametrit
     parametrit
     {:id "Urakka-id puuttuu"})
-  (when (not (s/valid? ::urakka-id (:id parametrit)))
+  (when (not (s/valid? ::urakka-id (konv/konvertoi->int (:id parametrit))))
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
        :viesti (format "Urakka-id muodossa: %s. Anna muodossa: 1" (:id parametrit))})))
