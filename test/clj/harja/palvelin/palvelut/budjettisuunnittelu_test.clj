@@ -268,7 +268,7 @@
                                 :sorateiden-hoito "23124"
                                 :mhu-korvausinvestointi "14301"
                                 :mhu-johto "23151")
-              toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
+              toimenpide-id (ffirst (q (str "SELECT id FROM toimenpide WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
               data-kannassa (q-map (str "SELECT vuosi, kuukausi, summa, summa_indeksikorjattu, luotu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))]
           (is (every? :luotu data-kannassa) "Luomisaika ei tallennettu")
@@ -307,7 +307,7 @@
                                 :sorateiden-hoito "23124"
                                 :mhu-korvausinvestointi "14301"
                                 :mhu-johto "23151")
-              toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
+              toimenpide-id (ffirst (q (str "SELECT id from toimenpide where taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
               data-kannassa (q-map (str "SELECT vuosi, kuukausi, summa, summa_indeksikorjattu, muokattu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))
               [vanha-summa vanhat-ajat] (some (fn [{v-tpa :toimenpide-avain
@@ -426,7 +426,7 @@
                                 :sorateiden-hoito "23124"
                                 :mhu-korvausinvestointi "14301"
                                 :mhu-johto "23151")
-              toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
+              toimenpide-id (ffirst (q (str "SELECT id from toimenpide where taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
               data-kannassa (map (fn [data]
                                    (-> data
@@ -435,7 +435,7 @@
                                  (q-map (str "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.summa, kt.summa_indeksikorjattu, kt.luotu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
                                                 tk.yksiloiva_tunniste AS tk_yt, tr.yksiloiva_tunniste AS tr_yt
                                          FROM kustannusarvioitu_tyo kt
-                                           LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
+                                           LEFT JOIN tehtava tk ON tk.id = kt.tehtava
                                            LEFT JOIN tehtavaryhma tr ON tr.id = kt.tehtavaryhma
                                          WHERE kt.toimenpideinstanssi=" toimenpideinstanssi ";")))
               tallennetun-asian-data-kannassa (filter #(tallennetun-asian-data? tallennettava-asia %) data-kannassa)]
@@ -487,7 +487,7 @@
                                 :sorateiden-hoito "23124"
                                 :mhu-korvausinvestointi "14301"
                                 :mhu-johto "23151")
-              toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
+              toimenpide-id (ffirst (q (str "SELECT id from toimenpide where taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
               data-kannassa (map (fn [data]
                                    (-> data
@@ -497,7 +497,7 @@
                                                      kt.muokattu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
                                                      tk.yksiloiva_tunniste AS tk_yt, tr.yksiloiva_tunniste AS tr_yt
                                               FROM kustannusarvioitu_tyo kt
-                                                LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
+                                                LEFT JOIN tehtava tk ON tk.id = kt.tehtava
                                                 LEFT JOIN tehtavaryhma tr ON tr.id = kt.tehtavaryhma
                                               WHERE kt.toimenpideinstanssi=" toimenpideinstanssi ";")))
               tallennetun-asian-data-kannassa (filter #(tallennetun-asian-data? tallennettava-asia %) data-kannassa)

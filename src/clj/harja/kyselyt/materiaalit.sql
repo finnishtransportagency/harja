@@ -151,12 +151,12 @@ SELECT SUM(rtmaarat.tehtavamaara) AS kokonaismaara,
        'paikkausmateriaali'::MATERIAALITYYPPI AS materiaalityyppi
   FROM raportti_toteuma_maarat rtmaarat
     JOIN urakka u ON u.id = rtmaarat.urakka_id
-    LEFT JOIN toimenpidekoodi tk ON tk.id = rtmaarat.toimenpidekoodi
+    LEFT JOIN tehtava tk ON tk.id = rtmaarat.toimenpidekoodi
  WHERE u.id = :urakka
    AND (rtmaarat.alkanut BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP)
    AND rtmaarat.toimenpidekoodi IN (SELECT tpk4.id
-                                      FROM toimenpidekoodi tpk4
-                                               JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+                                      FROM tehtava tpk4
+                                               JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
                                     -- Päällysteiden paikkaus tehtävät
                                      WHERE tpk3.koodi = '20107'
                                        AND tpk4.poistettu IS NOT TRUE
@@ -194,13 +194,13 @@ SELECT SUM(rtmaarat.tehtavamaara) AS kokonaismaara,
        'paikkausmateriaali'::MATERIAALITYYPPI AS materiaalityyppi
   FROM raportti_toteuma_maarat rtmaarat
            JOIN urakka u ON (u.id = rtmaarat.urakka_id AND u.urakkanro IS NOT NULL)
-           LEFT JOIN toimenpidekoodi tk ON tk.id = rtmaarat.toimenpidekoodi
+           LEFT JOIN tehtava tk ON tk.id = rtmaarat.toimenpidekoodi
  WHERE u.hallintayksikko = :hallintayksikko
    AND u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
    AND (rtmaarat.alkanut BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP)
    AND rtmaarat.toimenpidekoodi IN (SELECT tpk4.id
-                                      FROM toimenpidekoodi tpk4
-                                               JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+                                      FROM tehtava tpk4
+                                               JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
                                            -- Päällysteiden paikkaus tehtävät
                                      WHERE tpk3.koodi = '20107'
                                        AND tpk4.poistettu IS NOT TRUE
@@ -241,12 +241,12 @@ SELECT SUM(rtmaarat.tehtavamaara) AS kokonaismaara,
   FROM raportti_toteuma_maarat rtmaarat
            JOIN urakka u ON (u.id = rtmaarat.urakka_id AND u.urakkanro IS NOT NULL)
            JOIN organisaatio o ON u.hallintayksikko = o.id
-           LEFT JOIN toimenpidekoodi tk ON tk.id = rtmaarat.toimenpidekoodi
+           LEFT JOIN tehtava tk ON tk.id = rtmaarat.toimenpidekoodi
  WHERE u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
    AND (rtmaarat.alkanut BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP)
    AND rtmaarat.toimenpidekoodi IN (SELECT tpk4.id
-                                      FROM toimenpidekoodi tpk4
-                                               JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+                                      FROM tehtava tpk4
+                                               JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
                                            -- Päällysteiden paikkaus tehtävät
                                      WHERE tpk3.koodi = '20107'
                                        AND tpk4.poistettu IS NOT TRUE
@@ -449,7 +449,7 @@ FROM materiaalikoodi;
 
 -- name: hae-suolauksen-toimenpidekoodi
 SELECT id
-  FROM toimenpidekoodi
+  FROM tehtava
  WHERE nimi = 'Suolaus' AND taso = 4;
 
 -- name: hae-suolatoteumat-tr-valille

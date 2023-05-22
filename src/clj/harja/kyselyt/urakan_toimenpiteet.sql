@@ -18,10 +18,10 @@ SELECT        u.id, tpi.nimi,
        t1.id                     AS t1_id,
        t1.koodi                  AS t1_koodi,
        t1.nimi                   AS t1_nimi
-FROM toimenpidekoodi t4
-         LEFT JOIN toimenpidekoodi t3 ON t3.id = t4.emo
-         LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
-         LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
+FROM tehtava t4
+         LEFT JOIN toimenpide t3 ON t3.id = t4.emo
+         LEFT JOIN toimenpide t2 ON t2.id = t3.emo
+         LEFT JOIN toimenpide t1 ON t1.id = t2.emo
          LEFT JOIN toimenpideinstanssi tpi ON t3.id = tpi.toimenpide AND tpi.urakka = :urakka
          JOIN urakka u on tpi.urakka = u.id
 WHERE t4.taso = 4
@@ -44,17 +44,17 @@ SELECT
   t1.nimi        AS t1_nimi,
   t1.koodi       AS t1_koodi
 FROM toimenpideinstanssi tpi
-  LEFT JOIN toimenpidekoodi t3 ON tpi.toimenpide = t3.id
-  LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
-  LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
+  LEFT JOIN toimenpide t3 ON tpi.toimenpide = t3.id
+  LEFT JOIN toimenpide t2 ON t2.id = t3.emo
+  LEFT JOIN toimenpide t1 ON t1.id = t2.emo
 WHERE urakka = :urakka;
 
 -- name: hae-mh-urakoiden-toimenpiteet
 -- Hakee kaikki 2.tason toimenpiteet mh-urakoille
 SELECT DISTINCT on (t2.nimi) t2.nimi, t2.koodi
 FROM toimenpideinstanssi tpi
-         LEFT JOIN toimenpidekoodi t3 ON tpi.toimenpide = t3.id
-         LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
+         LEFT JOIN toimenpide t3 ON tpi.toimenpide = t3.id
+         LEFT JOIN toimenpide t2 ON t2.id = t3.emo
          LEFT JOIN urakka u ON tpi.urakka = u.id
 WHERE urakka IN (:urakat) AND u.tyyppi='teiden-hoito';
 
@@ -77,10 +77,10 @@ SELECT t4.id                     AS t4_id,
        t1.id                     AS t1_id,
        t1.koodi                  AS t1_koodi,
        t1.nimi                   AS t1_nimi
-FROM toimenpidekoodi t4
-         LEFT JOIN toimenpidekoodi t3 ON t3.id = t4.emo
-         LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
-         LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
+FROM tehtava t4
+         LEFT JOIN toimenpide t3 ON t3.id = t4.emo
+         LEFT JOIN toimenpide t2 ON t2.id = t3.emo
+         LEFT JOIN toimenpide t1 ON t1.id = t2.emo
          LEFT JOIN toimenpideinstanssi tpi ON t3.id = tpi.toimenpide AND tpi.urakka = :urakka
          JOIN urakka u on tpi.urakka = u.id
 WHERE t4.taso = 4
@@ -111,10 +111,10 @@ SELECT
     t1.id                AS t1_id,
     t1.koodi             AS t1_koodi,
     t1.nimi              AS t1_nimi
-FROM toimenpidekoodi t4
-         LEFT JOIN toimenpidekoodi t3 ON t3.id = t4.emo
-         LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
-         LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
+FROM tehtava t4
+         LEFT JOIN toimenpide t3 ON t3.id = t4.emo
+         LEFT JOIN toimenpide t2 ON t2.id = t3.emo
+         LEFT JOIN toimenpide t1 ON t1.id = t2.emo
          LEFT JOIN toimenpideinstanssi tpi ON t3.id = tpi.toimenpide
          JOIN urakka u on tpi.urakka = u.id
 WHERE t4.taso = 4 AND t4.hinnoittelu @> ARRAY ['kokonaishintainen'::hinnoittelutyyppi]
@@ -144,10 +144,10 @@ SELECT tpi.id                    AS tpi_id,
        t1.id                     AS t1_id,
        t1.koodi                  AS t1_koodi,
        t1.nimi                   AS t1_nimi
-FROM toimenpidekoodi t4
-         LEFT JOIN toimenpidekoodi t3 ON t3.id = t4.emo
-         LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
-         LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
+FROM tehtava t4
+         LEFT JOIN toimenpide t3 ON t3.id = t4.emo
+         LEFT JOIN toimenpide t2 ON t2.id = t3.emo
+         LEFT JOIN toimenpide t1 ON t1.id = t2.emo
          LEFT JOIN toimenpideinstanssi tpi ON t3.id = tpi.toimenpide AND tpi.urakka = :urakka
          JOIN urakka u on tpi.urakka = u.id
 WHERE t4.taso = 4
@@ -182,10 +182,10 @@ SELECT
   t1.id                AS t1_id,
   t1.koodi             AS t1_koodi,
   t1.nimi              AS t1_nimi
-FROM toimenpidekoodi t4
-         LEFT JOIN toimenpidekoodi t3 ON t3.id = t4.emo
-         LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
-         LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
+FROM tehtava t4
+         LEFT JOIN toimenpide t3 ON t3.id = t4.emo
+         LEFT JOIN toimenpide t2 ON t2.id = t3.emo
+         LEFT JOIN toimenpide t1 ON t1.id = t2.emo
          LEFT JOIN toimenpideinstanssi tpi ON t3.id = tpi.toimenpide AND tpi.urakka = :urakka
          JOIN urakka u on tpi.urakka = u.id
 WHERE t4.taso = 4
@@ -201,6 +201,6 @@ ORDER BY t4.jarjestys;
 
 --name: hae-tuote-kolmostason-toimenpidekoodilla
 SELECT tpk2.id, tpk2.nimi
-FROM toimenpidekoodi tpk3
-  JOIN toimenpidekoodi tpk2 ON tpk2.id = tpk3.emo
+FROM toimenpide tpk3
+  JOIN toimenpide tpk2 ON tpk2.id = tpk3.emo
 WHERE tpk3.id = :id;
