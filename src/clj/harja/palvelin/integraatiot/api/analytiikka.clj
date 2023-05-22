@@ -68,7 +68,8 @@
         loppuaika-pvm (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (:loppuaika parametrit))
         aikavali-sekunteina (pvm/aikavali-sekuntteina alkuaika-pvm loppuaika-pvm)
         syotetty-aikavali-tunteina-str (str (int (/ aikavali-sekunteina 60 60)))
-        paiva-sekunteina 86400]
+        paiva-sekunteina 90000] ;; Käytetään 25 tuntia
+    ;; Jos pyydetty aikaväli ylittää 25 tuntia, palautetaan virhe
     (when (> aikavali-sekunteina paiva-sekunteina)
       (virheet/heita-viallinen-apikutsu-poikkeus
         {:koodi virheet/+puutteelliset-parametrit+
@@ -148,11 +149,9 @@
   "Haetaan toteumat annettujen alku- ja loppuajan puitteissa.
   koordinaattimuutos-parametrilla voidaan hakea lisäksi reittipisteet EPSG:4326-muodossa."
   [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
-  (println "Parametrit: " parametrit)
   (tarkista-haun-parametrit parametrit)
   (let [;; Materiaalikoodeja ei ole montaa, mutta niitä on vaikea yhdistää tietokantalauseeseen tehokkaasti
         ;; joten hoidetaan se koodilla
-        _ (println "Parametrit jälkeen: " parametrit)
         materiaalikoodit (materiaalit-kyselyt/hae-materiaalikoodit db)
         ;; Haetaan reittitoteumat tietokannasta
         alkudb (System/currentTimeMillis)

@@ -52,8 +52,8 @@
 
 (deftest hae-toteumat-test-yksinkertainen-onnistuu
   (let [; Aseta tiukka hakuväli, josta löytyy vain vähän toteumia
-        alkuaika "2004-01-01T00:00:00+03"
-        loppuaika "2004-12-31T21:00:00+03"
+        alkuaika "2004-10-19T00:00:00+03"
+        loppuaika "2004-10-20T00:00:00+03"
         vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))]
     (is (= 200 (:status @vastaus)))
     (sisaltaa-perustiedot (:body @vastaus))))
@@ -83,52 +83,48 @@
 
 
 (deftest hae-toteumat-test-poistettu-onnistuu
-  (let [;; Aseta hakuväli, josta löytyy suunnilleen kaikki toteumat, koska ci putkessa luontipäiväksi asettuu tietokannan luonti päivä,
-        paiva-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/luo-pvm 2000 1 1)))
-        paiva-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/nyt)))
-        _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
-        vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paiva-alussa "/" paiva-lopussa)] kayttaja-analytiikka portti))
-        vastaus-body (-> (:body @vastaus)
-                       (json/read-str)
-                       (clojure.walk/keywordize-keys))
-
-        ;; Merkitään kaikki saman aikavälin toteumat poistetuiksi
-        _ (u (str "UPDATE toteuma SET poistettu = true, muokattu = NOW() WHERE alkanut >= '2004-01-01T00:00:00+03' AND alkanut <= '2004-12-31T21:00:00+03'"))
+  (let [;; Merkitään toteuma poistetuksi
+        _ (u (str "UPDATE toteuma SET poistettu = true, muokattu = NOW() WHERE id = 9;"))
         ;; Päivitetään analytiikka_toteumat taulun tiedot
         _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
         ;; Haetaan poistetut, jotka on muuttuneet tänään (eli muokkauksen jälkeen)
-        poistetut (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paiva-alussa "/" paiva-lopussa)] kayttaja-analytiikka portti))
-        _ (u (str "UPDATE toteuma SET poistettu = false, muokattu = null WHERE alkanut >= '2004-01-01T00:00:00+03' AND alkanut <= '2004-12-31T21:00:00+03'"))
+        paivan-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/nyt)))
+        paivan-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/nyt)))
+        
+        poistetut (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paivan-alussa "/" paivan-lopussa)] kayttaja-analytiikka portti))
+        _ (u (str "UPDATE toteuma SET poistettu = false, muokattu = null WHERE id = 9;"))
         _ (Thread/sleep 3500)
         poistetut-body (-> (:body @poistetut)
                          (json/read-str)
                          (clojure.walk/keywordize-keys))]
-    (is (= 200 (:status @vastaus)))
     (is (= 200 (:status @poistetut)))
-    (sisaltaa-perustiedot (:body @vastaus))
     (sisaltaa-perustiedot (:body @poistetut))
-    (is (= (count (:reittitoteumat vastaus-body)) (count (:reittitoteumat poistetut-body))))
     (is (= true (:poistettu (first (:reittitoteumat poistetut-body)))))))
 
 (deftest materiaalin-maara-muuttuu
-  (let [paiva-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/luo-pvm 2000 1 1)))
-        paiva-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/nyt)))
+  (let [paiva-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/luo-pvm 2004 9 19)))
+        paiva-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/luo-pvm 2004 9 19)))
+
+        nyt-paivan-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/nyt)))
+        nyt-paivan-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/nyt)))
 
         ;; Haetaan alkuperäinen tieto
         alkup-vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paiva-alussa "/" paiva-lopussa)] kayttaja-analytiikka portti)
         alkup-vastaus-body (-> (:body alkup-vastaus)
                              (json/read-str)
                              (clojure.walk/keywordize-keys))
+        
         toteuma-9 (first (filter
                            #(when (= 9 (get-in % [:toteuma :tunniste :id]))
                               %)
                            (:reittitoteumat alkup-vastaus-body)))
+        
         ;; Muokkaa materiaalin muokattu aikaa ja määrää
         uusi-maara 114022
         _ (u (format "UPDATE toteuma_materiaali set muokattu = NOW(), maara=%s where toteuma=9" uusi-maara))
         _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
 
-        muokattu-vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paiva-alussa "/" paiva-lopussa)] kayttaja-analytiikka portti))
+        muokattu-vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" nyt-paivan-alussa "/" nyt-paivan-lopussa)] kayttaja-analytiikka portti))
         muokattu-vastaus-body (-> (:body @muokattu-vastaus)
                                 (json/read-str)
                                 (clojure.walk/keywordize-keys))
@@ -142,7 +138,7 @@
         _ (u (str "UPDATE toteuma_materiaali set muokattu = NOW(), maara=25 where toteuma=9"))
         _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
 
-        vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paiva-alussa "/" paiva-lopussa)] kayttaja-analytiikka portti))
+        vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" nyt-paivan-alussa "/" nyt-paivan-lopussa)] kayttaja-analytiikka portti))
         vastaus-body (-> (:body @vastaus)
                        (json/read-str)
                        (clojure.walk/keywordize-keys))
@@ -189,8 +185,8 @@
               (.replace "__TAPAHTUMAPAIVAMAARA__" tapahtuma-paiva)))
 
         ;; Hae turvallisuuspoikkeamat uuden apin kautta
-        alkuaika (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 50000)
-        loppuaika (nykyhetki-iso8061-formaatissa-tulevaisuuteen 10)
+        alkuaika (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 50)
+        loppuaika (nykyhetki-iso8061-formaatissa-tulevaisuuteen 1)
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
                   "analytiikka-testeri" portti)
 
