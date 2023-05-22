@@ -29,6 +29,141 @@
 (defn validoi-tyomaapaivakirja [data]
   )
 
+(defn- tallenna-kalusto [db data versio tyomaapaivakirja-id urakka-id]
+  (doseq [k (get-in data [:kaluston-kaytto])
+          :let [kalusto (:kalusto k)
+                kalusto (-> kalusto
+                          (assoc :aloitus (aika-string->java-sql-date (:aloitus kalusto)))
+                          (assoc :lopetus (aika-string->java-sql-date (:lopetus kalusto)))
+                          (merge {:versio versio
+                                  :tyomaapaivakirja_id tyomaapaivakirja-id
+                                  :urakka_id urakka-id}))]]
+    (tyomaapaivakirja-kyselyt/lisaa-kalusto<! db kalusto)))
+
+(defn- tallenna-paivystajat [db data versio tyomaapaivakirja-id urakka-id]
+  (doseq [p (get-in data [:paivystajan-tiedot])
+          :let [paivystaja (:paivystaja p)
+                paivystaja (-> paivystaja
+                             (assoc :aloitus (aika-string->java-sql-date (:aloitus paivystaja)))
+                             (assoc :lopetus (aika-string->java-sql-date (:lopetus paivystaja))))]]
+    (tyomaapaivakirja-kyselyt/lisaa-paivystaja<! db (merge
+                                                      paivystaja
+                                                      {:versio versio
+                                                       :tyomaapaivakirja_id tyomaapaivakirja-id
+                                                       :urakka_id urakka-id}))))
+
+(defn- tallenna-tyonjohtajat [db data versio tyomaapaivakirja-id urakka-id]
+  (doseq [j (get-in data [:tyonjohtajan-tiedot])
+          :let [johtaja (:tyonjohtaja j)
+                johtaja (-> johtaja
+                          (assoc :aloitus (aika-string->java-sql-date (:aloitus johtaja)))
+                          (assoc :lopetus (aika-string->java-sql-date (:lopetus johtaja))))]]
+    (tyomaapaivakirja-kyselyt/lisaa-tyonjohtaja<! db (merge
+                                                       johtaja
+                                                       {:versio versio
+                                                        :tyomaapaivakirja_id tyomaapaivakirja-id
+                                                        :urakka_id urakka-id}))))
+
+(defn- tallenna-saatiedot [db data versio tyomaapaivakirja-id urakka-id]
+  (doseq [s (get-in data [:saatiedot])
+          :let [saa (:saatieto s)
+                saa (-> saa
+                      (assoc :havaintoaika (aika-string->java-sql-date (:havaintoaika saa)))
+                      (assoc :aseman-tietojen-paivityshetki (aika-string->java-sql-date (:aseman-tietojen-paivityshetki saa))))]]
+    (tyomaapaivakirja-kyselyt/lisaa-saatiedot<! db (merge
+                                                     saa
+                                                     {:versio versio
+                                                      :tyomaapaivakirja_id tyomaapaivakirja-id
+                                                      :urakka_id urakka-id}))))
+
+(defn- tallenna-poikkeussaa [db data versio tyomaapaivakirja-id urakka-id]
+  (doseq [p (get-in data [:poikkeukselliset-saahavainnot])
+          :let [poikkeus (:poikkeuksellinen-saahavainto p)
+                poikkeus (-> poikkeus
+                           (assoc :havaintoaika (aika-string->java-sql-date (:havaintoaika poikkeus))))]]
+    (tyomaapaivakirja-kyselyt/lisaa-poikkeussaa<! db (merge
+                                                       poikkeus
+                                                       {:versio versio
+                                                        :tyomaapaivakirja_id tyomaapaivakirja-id
+                                                        :urakka_id urakka-id}))))
+
+(defn- tallenna-toimenpiteet [db data versio tyomaapaivakirja-id urakka-id]
+  (doseq [t (get-in data [:tieston-toimenpiteet])
+          :let [toimenpide (:tieston-toimenpide t)
+                toimenpide (-> toimenpide
+                             (assoc :aloitus (aika-string->java-sql-date (:aloitus toimenpide)))
+                             (assoc :lopetus (aika-string->java-sql-date (:lopetus toimenpide)))
+                             (assoc :tyyppi "yleinen")
+                             (assoc :toimenpiteet nil) ;; Ei voida lisätä toimenpiteitä.
+                             (assoc :tehtavat (->
+                                                (map (comp :id :tehtava) (:tehtavat toimenpide))
+                                                (konv/seq->array))))]]
+    (tyomaapaivakirja-kyselyt/lisaa-tie-toimenpide<! db (merge
+                                                          toimenpide
+                                                          {:versio versio
+                                                           :tyomaapaivakirja_id tyomaapaivakirja-id
+                                                           :urakka_id urakka-id}))))
+
+(defn- tallenna-muut-toimenpiteet [db data versio tyomaapaivakirja-id urakka-id]
+  (doseq [t (get-in data [:tieston-muut-toimenpiteet])
+          :let [toimenpide (:tieston-muu-toimenpide t)
+                toimenpide (-> toimenpide
+                             (assoc :aloitus (aika-string->java-sql-date (:aloitus toimenpide)))
+                             (assoc :lopetus (aika-string->java-sql-date (:lopetus toimenpide)))
+                             (assoc :tyyppi "muu")
+                             (assoc :tehtavat nil) ;; Ei voida lisätä tehtäviä
+                             (assoc :toimenpiteet (->
+                                                    (map (comp :kuvaus :tehtava) (:tehtavat toimenpide))
+                                                    (konv/seq->array))))]]
+    (tyomaapaivakirja-kyselyt/lisaa-tie-toimenpide<! db (merge
+                                                          toimenpide
+                                                          {:versio versio
+                                                           :tyomaapaivakirja_id tyomaapaivakirja-id
+                                                           :urakka_id urakka-id}))))
+
+(defn- tallenna-onnettomuudet [db data versio tyomaapaivakirja-id urakka-id]
+  (doseq [o (get-in data [:onnettomuudet])]
+    (tyomaapaivakirja-kyselyt/lisaa-tapahtuma<! db (merge
+                                                     (:onnettomuus o)
+                                                     {:versio versio
+                                                      :tyomaapaivakirja_id tyomaapaivakirja-id
+                                                      :urakka_id urakka-id
+                                                      :tyyppi "onnettomuus"}))))
+
+(defn- tallenna-liikenteenohjaus-muutokset [db data versio tyomaapaivakirja-id urakka-id]
+  (doseq [l (get-in data [:liikenteenohjaus-muutokset])]
+    (tyomaapaivakirja-kyselyt/lisaa-tapahtuma<! db (merge
+                                                     (:liikenteenohjaus-muutos l)
+                                                     {:versio versio
+                                                      :tyomaapaivakirja_id tyomaapaivakirja-id
+                                                      :urakka_id urakka-id
+                                                      :tyyppi "liikenteenohjausmuutos"}))))
+
+(defn- tallenna-palautteet [db data versio tyomaapaivakirja-id urakka-id]
+  (doseq [p (get-in data [:palautteet])]
+    (tyomaapaivakirja-kyselyt/lisaa-tapahtuma<! db (merge
+                                                     (:palaute p)
+                                                     {:versio versio
+                                                      :tyomaapaivakirja_id tyomaapaivakirja-id
+                                                      :urakka_id urakka-id
+                                                      :tyyppi "palaute"}))))
+
+(defn- tallenna-tapahtuma [db data versio tyomaapaivakirja-id urakka-id paa-avain toissijainen-avain tyyppi]
+  (doseq [v (paa-avain data)]
+    (tyomaapaivakirja-kyselyt/lisaa-tapahtuma<! db (merge
+                                                     (toissijainen-avain v)
+                                                     {:versio versio
+                                                      :tyomaapaivakirja_id tyomaapaivakirja-id
+                                                      :urakka_id urakka-id
+                                                      :tyyppi tyyppi}))))
+
+(defn- tallenna-muut-kirjaukset [db data versio tyomaapaivakirja-id urakka-id]
+  (tyomaapaivakirja-kyselyt/lisaa-tapahtuma<! db {:kuvaus (get-in data [:muut-kirjaukset :kuvaus])
+                                                  :versio versio
+                                                  :tyomaapaivakirja_id tyomaapaivakirja-id
+                                                  :urakka_id urakka-id
+                                                  :tyyppi "muut_kirjaukset"}))
+
 (defn tallenna-tyomaapaivakirja [db urakka-id data kayttaja tyomaapaivakirja-id]
   (let [tyomaapaivakirja-id (konv/konvertoi->int tyomaapaivakirja-id)
         versio (get-in data [:tunniste :versio]) ; Jokaiselle payloadilla on oma versionsa
@@ -46,160 +181,20 @@
                               ;; ELSE: Lisää uusi
                               (:id (tyomaapaivakirja-kyselyt/lisaa-tyomaapaivakirja<! db tyomaapaivakirja)))
 
-        ;; Tallennetaan kalusto
-        kalustot (get-in data [:kaluston-kaytto])
-        _ (doall (for [k kalustot
-                       :let [kalusto (:kalusto k)
-                             kalusto (-> kalusto
-                                       (assoc :aloitus (aika-string->java-sql-date (:aloitus kalusto)))
-                                       (assoc :lopetus (aika-string->java-sql-date (:lopetus kalusto)))
-                                       (merge {:versio versio
-                                               :tyomaapaivakirja_id tyomaapaivakirja-id
-                                               :urakka_id urakka-id}))]]
-                   (tyomaapaivakirja-kyselyt/lisaa-kalusto<! db kalusto)))
-        ;; Tallennetaan päivystäjä
-        paivystajat (get-in data [:paivystajan-tiedot])
-        _ (doall (for [p paivystajat
-                       :let [paivystaja (:paivystaja p)
-                             paivystaja (-> paivystaja
-                                          (assoc :aloitus (aika-string->java-sql-date (:aloitus paivystaja)))
-                                          (assoc :lopetus (aika-string->java-sql-date (:lopetus paivystaja))))]]
-                   (tyomaapaivakirja-kyselyt/lisaa-paivystaja<! db (merge
-                                                                     paivystaja
-                                                                     {:versio versio
-                                                                      :tyomaapaivakirja_id tyomaapaivakirja-id
-                                                                      :urakka_id urakka-id}))))
-
-        ;; Tallennetaan työnjohtaja
-        tyonjohtajat (get-in data [:tyonjohtajan-tiedot])
-        _ (doall (for [j tyonjohtajat
-                       :let [johtaja (:tyonjohtaja j)
-                             johtaja (-> johtaja
-                                       (assoc :aloitus (aika-string->java-sql-date (:aloitus johtaja)))
-                                       (assoc :lopetus (aika-string->java-sql-date (:lopetus johtaja))))]]
-                   (tyomaapaivakirja-kyselyt/lisaa-tyonjohtaja<! db (merge
-                                                                      johtaja
-                                                                      {:versio versio
-                                                                       :tyomaapaivakirja_id tyomaapaivakirja-id
-                                                                       :urakka_id urakka-id}))))
-
-        ;; Tallennetaan sää
-        saatiedot (get-in data [:saatiedot])
-        _ (doall (for [s saatiedot
-                       :let [saa (:saatieto s)
-                             saa (-> saa
-                                   (assoc :havaintoaika (aika-string->java-sql-date (:havaintoaika saa)))
-                                   (assoc :aseman-tietojen-paivityshetki (aika-string->java-sql-date (:aseman-tietojen-paivityshetki saa))))]]
-                   (tyomaapaivakirja-kyselyt/lisaa-saatiedot<! db (merge
-                                                                    saa
-                                                                    {:versio versio
-                                                                     :tyomaapaivakirja_id tyomaapaivakirja-id
-                                                                     :urakka_id urakka-id}))))
-
-        ;; Tallennetaan poikkeuksellinen sää
-        poikkeussaa (get-in data [:poikkeukselliset-saahavainnot])
-        _ (doall (for [p poikkeussaa
-                       :let [poikkeus (:poikkeuksellinen-saahavainto p)
-                             poikkeus (-> poikkeus
-                                        (assoc :havaintoaika (aika-string->java-sql-date (:havaintoaika poikkeus))))]]
-                   (tyomaapaivakirja-kyselyt/lisaa-poikkeussaa<! db (merge
-                                                                      poikkeus
-                                                                      {:versio versio
-                                                                       :tyomaapaivakirja_id tyomaapaivakirja-id
-                                                                       :urakka_id urakka-id}))))
-
-        ;; Tallennetaan tiestön toimenpiteet
-        tieston-toimenpiteet (get-in data [:tieston-toimenpiteet])
-        _ (doall (for [t tieston-toimenpiteet
-                       :let [toimenpide (:tieston-toimenpide t)
-                             toimenpide (-> toimenpide
-                                          (assoc :aloitus (aika-string->java-sql-date (:aloitus toimenpide)))
-                                          (assoc :lopetus (aika-string->java-sql-date (:lopetus toimenpide)))
-                                          (assoc :tyyppi "yleinen")
-                                          (assoc :toimenpiteet nil) ;; Ei voida lisätä toimenpiteitä.
-                                          (assoc :tehtavat (->
-                                                             (map (comp :id :tehtava) (:tehtavat toimenpide))
-                                                             (konv/seq->array))))]]
-                   (tyomaapaivakirja-kyselyt/lisaa-tie-toimenpide<! db (merge
-                                                                         toimenpide
-                                                                         {:versio versio
-                                                                          :tyomaapaivakirja_id tyomaapaivakirja-id
-                                                                          :urakka_id urakka-id}))))
-        ;; Tallennetaan muut toimenpiteet
-        muut-toimenpiteet (get-in data [:tieston-muut-toimenpiteet])
-        _ (doall (for [t muut-toimenpiteet
-                       :let [toimenpide (:tieston-muu-toimenpide t)
-                             toimenpide (-> toimenpide
-                                          (assoc :aloitus (aika-string->java-sql-date (:aloitus toimenpide)))
-                                          (assoc :lopetus (aika-string->java-sql-date (:lopetus toimenpide)))
-                                          (assoc :tyyppi "muu")
-                                          (assoc :tehtavat nil) ;; Ei voida lisätä tehtäviä
-                                          (assoc :toimenpiteet (->
-                                                                 (map (comp :kuvaus :tehtava) (:tehtavat toimenpide))
-                                                                 (konv/seq->array))))]]
-                   (tyomaapaivakirja-kyselyt/lisaa-tie-toimenpide<! db (merge
-                                                                         toimenpide
-                                                                         {:versio versio
-                                                                          :tyomaapaivakirja_id tyomaapaivakirja-id
-                                                                          :urakka_id urakka-id}))))
-
-        ;; Tallennetaan onnettomuudet
-        onnettomuudet (get-in data [:onnettomuudet])
-        _ (doall (for [o onnettomuudet]
-                   (tyomaapaivakirja-kyselyt/lisaa-tapahtuma<! db (merge
-                                                                    (:onnettomuus o)
-                                                                    {:versio versio
-                                                                     :tyomaapaivakirja_id tyomaapaivakirja-id
-                                                                     :urakka_id urakka-id
-                                                                     :tyyppi "onnettomuus"}))))
-
-        ;; Tallennetaan liikenteenohjaus muutokset
-        liikenteenohjaus-muutokset (get-in data [:liikenteenohjaus-muutokset])
-        _ (doall (for [l liikenteenohjaus-muutokset]
-                   (tyomaapaivakirja-kyselyt/lisaa-tapahtuma<! db (merge
-                                                                    (:liikenteenohjaus-muutos l)
-                                                                    {:versio versio
-                                                                     :tyomaapaivakirja_id tyomaapaivakirja-id
-                                                                     :urakka_id urakka-id
-                                                                     :tyyppi "liikenteenohjausmuutos"}))))
-
-        ;; Tallennetaan palautteet
-        palautteet (get-in data [:palautteet])
-        _ (doall (for [p palautteet]
-                   (tyomaapaivakirja-kyselyt/lisaa-tapahtuma<! db (merge
-                                                                    (:palaute p)
-                                                                    {:versio versio
-                                                                     :tyomaapaivakirja_id tyomaapaivakirja-id
-                                                                     :urakka_id urakka-id
-                                                                     :tyyppi "palaute"}))))
-
-        ;; Tallennetaan viranomaisen avustaminen
-        viranomaisen-avustaminen (get-in data [:viranomaisen-avustaminen])
-        _ (doall (for [v viranomaisen-avustaminen]
-                   (tyomaapaivakirja-kyselyt/lisaa-tapahtuma<! db (merge
-                                                                    (:viranomaisen-avustus v)
-                                                                    {:versio versio
-                                                                     :tyomaapaivakirja_id tyomaapaivakirja-id
-                                                                     :urakka_id urakka-id
-                                                                     :tyyppi "viranomaisen_avustus"}))))
-
-        ;; Tallennetaan tilaan yhteydenotot
-        tilaajan-yhteydenotot (get-in data [:tilaajan-yhteydenotot])
-        _ (doall (for [t tilaajan-yhteydenotot]
-                   (tyomaapaivakirja-kyselyt/lisaa-tapahtuma<! db (merge
-                                                                    (:tilaajan-yhteydenotto t)
-                                                                    {:versio versio
-                                                                     :tyomaapaivakirja_id tyomaapaivakirja-id
-                                                                     :urakka_id urakka-id
-                                                                     :tyyppi "tilaajan-yhteydenotto"}))))
-
-        ;; Tallennetaan muut kirjaukset
-        muut_kirjaukset (get-in data [:muut-kirjaukset :kuvaus])
-        _ (tyomaapaivakirja-kyselyt/lisaa-tapahtuma<! db {:kuvaus muut_kirjaukset
-                                                          :versio versio
-                                                          :tyomaapaivakirja_id tyomaapaivakirja-id
-                                                          :urakka_id urakka-id
-                                                          :tyyppi "muut_kirjaukset"})]
+        ;; Tallennetaan jokainen osio omalla versionumerolla.
+        _ (tallenna-kalusto db data versio tyomaapaivakirja-id urakka-id)
+        _ (tallenna-paivystajat db data versio tyomaapaivakirja-id urakka-id)
+        _ (tallenna-tyonjohtajat db data versio tyomaapaivakirja-id urakka-id)
+        _ (tallenna-saatiedot db data versio tyomaapaivakirja-id urakka-id)
+        _ (tallenna-poikkeussaa db data versio tyomaapaivakirja-id urakka-id)
+        _ (tallenna-toimenpiteet db data versio tyomaapaivakirja-id urakka-id)
+        _ (tallenna-muut-toimenpiteet db data versio tyomaapaivakirja-id urakka-id)
+        _ (tallenna-onnettomuudet db data versio tyomaapaivakirja-id urakka-id)
+        _ (tallenna-liikenteenohjaus-muutokset db data versio tyomaapaivakirja-id urakka-id)
+        _ (tallenna-palautteet db data versio tyomaapaivakirja-id urakka-id)
+        _ (tallenna-tapahtuma db data versio tyomaapaivakirja-id urakka-id :viranomaisen-avustaminen :viranomaisen-avustus "viranomaisen_avustus")
+        _ (tallenna-tapahtuma db data versio tyomaapaivakirja-id urakka-id :tilaajan-yhteydenotot :tilaajan-yhteydenotto "tilaajan-yhteydenotto")
+        _ (tallenna-muut-kirjaukset db data versio tyomaapaivakirja-id urakka-id)]
     tyomaapaivakirja-id))
 
 (defn kirjaa-tyomaapaivakirja [db {:keys [id tid] :as parametrit} data kayttaja]
