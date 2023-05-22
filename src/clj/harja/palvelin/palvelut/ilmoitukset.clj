@@ -57,12 +57,16 @@
         vaaditut-kuittaukset (filter
                                (fn [kuittaus]
                                  (and
-                                   (or (pvm/ennen? (c/from-sql-time (:kuitattu kuittaus)) ilmoitusaika) ;; Automaattinen vastaanottokuittaus on tallentanut kuittauksia hitusen ennen kuin ilmoituksen vastaanottoaika on rekisteröitynyt. Nämä ilmoitukset eivät saa näkyä myöhästyneinä.
-                                       (pvm/valissa?
-                                         (c/from-sql-time (:kuitattu kuittaus))
-                                         ilmoitusaika
-                                         (t/plus ilmoitusaika vaadittu-kuittausaika)
-                                         false))
+                                   (or
+                                     ;; Automaattinen vastaanottokuittaus on tallentanut kuittauksia hitusen ennen
+                                     ;; kuin ilmoituksen vastaanottoaika on rekisteröitynyt.
+                                     ;; Nämä ilmoitukset eivät saa näkyä myöhästyneinä.
+                                     (pvm/ennen? (c/from-sql-time (:kuitattu kuittaus)) ilmoitusaika)
+                                     (pvm/valissa?
+                                       (c/from-sql-time (:kuitattu kuittaus))
+                                       ilmoitusaika
+                                       (t/plus ilmoitusaika vaadittu-kuittausaika)
+                                       false))
                                    (= (:kuittaustyyppi kuittaus) vaadittu-kuittaustyyppi)))
                                kuittaukset)
         myohassa? (and vaadittu-aika-kulunut?
