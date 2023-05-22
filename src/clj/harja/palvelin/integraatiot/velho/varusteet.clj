@@ -106,8 +106,6 @@
     (assert (some? alkupvm) "`alkupvm` on pakollinen")
     urakka-id))
 
-(def +urakka-memoize-ttl+ (* 10 60 1000))
-
 (defn hae-id->urakka-pvm-map
   "Hakee urakan päivämäärätietoja sellaisille urakoille, joille on olemassa velho_oid (ovat siis velhosta löytyviä MHU urakoita).
   Palauttaa:

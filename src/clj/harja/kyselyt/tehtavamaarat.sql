@@ -6,7 +6,7 @@ SELECT ut.urakka                  as "urakka",
        ut.maara                   as "maara",
        tk.aluetieto               as "aluetieto?"
 FROM urakka_tehtavamaara ut
-     JOIN toimenpidekoodi tk on tk.id = ut.tehtava
+     JOIN tehtava tk on tk.id = ut.tehtava
 WHERE ut.urakka = :urakka
   AND ut."hoitokauden-alkuvuosi" = :hoitokausi
   AND ut.poistettu IS NOT TRUE;
@@ -67,8 +67,8 @@ from toimenpideinstanssi tpi
        join organisaatio o
             on o.id = u.hallintayksikko
             on u.id = tpi.urakka
-       join toimenpidekoodi tpk on tpi.toimenpide = tpk.emo AND tpk.yksikko NOT ilike 'euro%' AND tpk."raportoi-tehtava?" = TRUE
-       join toimenpidekoodi tpk3 on tpi.toimenpide = tpk3.id
+       join tehtava tpk on tpi.toimenpide = tpk.emo AND tpk.yksikko NOT ilike 'euro%' AND tpk."raportoi-tehtava?" = TRUE
+       join toimenpide tpk3 on tpi.toimenpide = tpk3.id
        left join suunnitelmat
                  on suunnitelmat.tehtava = tpk.id
                    and suunnitelmat.urakka = tpi.urakka
@@ -116,10 +116,10 @@ SELECT distinct tpk3.id       as "toimenpide-id",
                 tr.jarjestys as "jarjestys",
                 tpi.id        as "toimenpideinstanssi"
 FROM tehtavaryhma tr
-       LEFT JOIN toimenpidekoodi tpk4
+       LEFT JOIN tehtava tpk4
                  ON tr.id = tpk4.tehtavaryhma and tpk4.taso = 4 AND tpk4.ensisijainen is true AND
                     tpk4.poistettu is not true AND tpk4.piilota is not true
-       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+       JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
        JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id and tpi.urakka = :urakka
  WHERE tr.nimi not like ('%Lisätyöt%')
    -- Jätetään tehtäväryhmä: Tilaajan rahavaraus (T3) pois, koska se lisätään bonuksista
@@ -133,7 +133,7 @@ select st.maara                    as "sopimuksen-tehtavamaara",
        st.hoitovuosi               as "hoitovuosi",
        tpk.aluetieto               as "aluetieto"
 from sopimus_tehtavamaara st
-       join toimenpidekoodi tpk on st.tehtava = tpk.id
+       JOIN tehtava tpk on st.tehtava = tpk.id
 where st.urakka = :urakka;
 
 -- name: hae-sopimuksen-tehtavamaaran-maara
@@ -142,7 +142,7 @@ select st.maara                    as "sopimuksen-maara",
        st.hoitovuosi               as "hoitokauden-alkuvuosi",
        tpk.aluetieto               as "aluetieto?"
 from sopimus_tehtavamaara st
-         join toimenpidekoodi tpk on st.tehtava = tpk.id
+         JOIN tehtava tpk on st.tehtava = tpk.id
 where st.urakka = :urakka-id
   and st.tehtava = :tehtava-id;
 
@@ -171,7 +171,7 @@ SELECT ut.urakka                   as "urakka",
        tpk4.aluetieto              as "aluetieto",
        sp.tallennettu              as "sopimus-tallennettu"
 FROM tehtavaryhma tr3
-       LEFT JOIN toimenpidekoodi tpk4
+       LEFT JOIN tehtava tpk4
                  ON tr3.id = tpk4.tehtavaryhma AND tpk4.taso = 4 AND tpk4.ensisijainen is true AND
                     tpk4.poistettu is not true AND tpk4.piilota is not true AND (tpk4.yksiloiva_tunniste NOT IN
                                                                                  (
@@ -184,7 +184,7 @@ FROM tehtavaryhma tr3
                                                                                    -- ei ehkä samassa järjestyksessä, mutta nuo tehtävät
                                                                                    ) or tpk4.yksiloiva_tunniste is null)
                                                                                    AND tpk4.suunnitteluyksikko IS NOT NULL
-       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+       JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
        LEFT OUTER JOIN urakka_tehtavamaara ut
                        ON tpk4.id = ut.tehtava AND ut.urakka = :urakka AND (ut."hoitokauden-alkuvuosi" in (:hoitokausi) OR tpk4.aluetieto IS TRUE)
        LEFT JOIN sopimuksen_tehtavamaarat_tallennettu sp on sp.urakka = :urakka,
@@ -199,7 +199,7 @@ ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
 -- name: hae-validit-tehtava-idt
 SELECT id as "tehtava-id", yksikko as "yksikko"
-FROM toimenpidekoodi
+FROM tehtava
 WHERE tehtavaryhma IS NOT NULL
   and yksikko is not null
   AND poistettu IS NOT TRUE
@@ -222,7 +222,7 @@ SELECT
     ut.luotu
 FROM urakka_tehtavamaara ut
          JOIN urakka u ON ut.urakka = u.id AND u.urakkanro IS NOT NULL
-         JOIN toimenpidekoodi tk ON ut.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
+         JOIN tehtava tk ON ut.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
          JOIN materiaaliluokka ml ON tk.materiaaliluokka_id = ml.id
          LEFT JOIN materiaalikoodi mk ON tk.materiaalikoodi_id = mk.id
          JOIN sopimuksen_tehtavamaarat_tallennettu stt on u.id = stt.urakka AND stt.tallennettu IS TRUE
@@ -239,7 +239,7 @@ select sum(yt.maara) as "maara", tk.nimi as "tehtava", tk.id as "tehtava-id", MA
            END
            AS "hoitokauden-alkuvuosi"
 from yksikkohintainen_tyo yt
-     join toimenpidekoodi tk on yt.tehtava = tk.id
+     JOIN tehtava tk on yt.tehtava = tk.id
 where yt.urakka = :urakka-id
   -- Yksikköhintainen työ taulussa tehtävät on suunniteltu erikseen hoitokauden alkuosalle ja loppuosalle
   -- joten käytetään varmuuden vuoksi overlaps funktiota, joka palauttaa tiedot, mikäli edes osa suunnitellusta
@@ -258,7 +258,7 @@ SELECT
     ut.muokattu,
     ut.luotu
 FROM urakka_tehtavamaara ut
-         JOIN toimenpidekoodi tk ON ut.tehtava = tk.id AND tk.materiaaliluokka_id IS NULL AND tk.materiaalikoodi_id IS NULL
+         JOIN tehtava tk ON ut.tehtava = tk.id AND tk.materiaaliluokka_id IS NULL AND tk.materiaalikoodi_id IS NULL
          JOIN sopimuksen_tehtavamaarat_tallennettu stt on ut.urakka = stt.urakka AND stt.tallennettu IS TRUE
 WHERE ut.poistettu IS NOT TRUE
   AND ut.urakka = :urakka-id

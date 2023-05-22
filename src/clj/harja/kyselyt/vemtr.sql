@@ -43,8 +43,8 @@ select (SELECT maara FROM toteumat t WHERE t.toimenpidekoodi = tehtava.id AND t.
            END)                      AS "toimenpide-jarjestys"
 from toimenpideinstanssi tpi
        join urakka u on tpi.urakka = u.id
-       join toimenpidekoodi emo on emo.id = tpi.toimenpide
-       join toimenpidekoodi tehtava on tehtava.emo = tpi.toimenpide AND tehtava.yksikko NOT ILIKE 'euro%' AND tehtava."raportoi-tehtava?" = TRUE
+       join toimenpide emo on emo.id = tpi.toimenpide
+       join tehtava on tehtava.emo = tpi.toimenpide AND tehtava.yksikko NOT ILIKE 'euro%' AND tehtava."raportoi-tehtava?" = TRUE
        left join tyot on tyot.tehtava = tehtava.id and tyot.urakka = u.id
        join organisaatio o on o.id = u.hallintayksikko
 where tpi.urakka in (select id from urakat)

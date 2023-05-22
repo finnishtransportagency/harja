@@ -16,8 +16,7 @@
     [harja.kyselyt.specql-db :refer [define-tables]]
     ]
         :cljs [[specql.impl.registry]])
-    [clojure.set :as set]
-    [clojure.string :as str])
+    [clojure.set :as set])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
