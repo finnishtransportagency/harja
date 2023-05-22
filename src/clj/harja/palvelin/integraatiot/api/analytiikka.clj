@@ -61,7 +61,18 @@
   (when (not (s/valid? ::loppuaika (:loppuaika parametrit)))
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
-       :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-02T00:00:00+03" (:loppuaika parametrit))})))
+       :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-02T00:00:00+03" (:loppuaika parametrit))}))
+
+  ;; Rajoitetaan toteumien haku yhteen vuorokauteen, muuten meillä voi mennä tuotannosta levyt tukkoon
+  (let [alkuaika-pvm (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (:alkuaika parametrit))
+        loppuaika-pvm (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (:loppuaika parametrit))
+        aikavali-sekunteina (pvm/aikavali-sekuntteina alkuaika-pvm loppuaika-pvm)
+        syotetty-aikavali-tunteina-str (str (int (/ aikavali-sekunteina 60 60)))
+        paiva-sekunteina 86400]
+    (when (> aikavali-sekunteina paiva-sekunteina)
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Aikaväli ylittää sallitun rajan. Syötetty aikaväli: %s tuntia. Sallittu aikaväli max. 24 tuntia." syotetty-aikavali-tunteina-str)}))))
 
 (def db-tehtavat->avaimet
   {:f1 :id
@@ -137,9 +148,11 @@
   "Haetaan toteumat annettujen alku- ja loppuajan puitteissa.
   koordinaattimuutos-parametrilla voidaan hakea lisäksi reittipisteet EPSG:4326-muodossa."
   [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
+  (println "Parametrit: " parametrit)
   (tarkista-haun-parametrit parametrit)
   (let [;; Materiaalikoodeja ei ole montaa, mutta niitä on vaikea yhdistää tietokantalauseeseen tehokkaasti
         ;; joten hoidetaan se koodilla
+        _ (println "Parametrit jälkeen: " parametrit)
         materiaalikoodit (materiaalit-kyselyt/hae-materiaalikoodit db)
         ;; Haetaan reittitoteumat tietokannasta
         alkudb (System/currentTimeMillis)
