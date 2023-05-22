@@ -5,7 +5,7 @@
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn tyomaapaivakirja-hae [db user tiedot]
-  (oikeudet/voi-lukea? oikeudet/raportit-tyomaapaivakirja (:urakka-id tiedot) user)
+  (oikeudet/vaadi-lukuoikeus oikeudet/raportit-tyomaapaivakirja user (:urakka-id tiedot))
   (into [] (q/hae-tiedot db)))
 
 (defrecord Tyomaapaivakirja []
