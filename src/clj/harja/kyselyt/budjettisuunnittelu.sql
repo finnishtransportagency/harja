@@ -221,7 +221,7 @@ with muuttuneet as (
                      -- Johto- ja hallintokorvaus (J)
                      tr.yksiloiva_tunniste is not null and tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'
                      -- MHU ja HJU Hoidon johto
-                     and tpi.toimenpide = (select id from toimenpidekoodi where koodi = '23151'))
+                     and tpi.toimenpide = (select id from toimenpide where koodi = '23151'))
          ) indeksikorjaus
     where vanha is distinct from uusi
 )

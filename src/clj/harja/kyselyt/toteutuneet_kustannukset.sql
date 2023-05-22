@@ -6,7 +6,7 @@ SELECT count(*) as maara
  WHERE kt."siirretty?" = false
    AND (kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c') -- Erillishankinnat (W)
      OR kt.tehtava in (SELECT id
-                      FROM toimenpidekoodi t
+                      FROM tehtava t
                       WHERE t.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' -- "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne."
                          OR t.yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744') -- Hoitourakan työnjohto
      )

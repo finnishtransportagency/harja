@@ -1,178 +1,178 @@
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2005-10-01', '2005-12-31', 3, 'vrk', 525.50, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2006-01-01', '2006-09-30', 9, 'vrk', 525.50, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2005-10-01', '2005-12-31', 525.73, 'km', 525.50, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Pensaiden poisto'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2006-01-01', '2006-09-30', 1525.321, 'km', 525.50, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Pensaiden poisto'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 525.73, 'km', 525.50, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Pensaiden poisto'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2005-10-01', '2005-12-31', 3, 'vrk', 525.50, (SELECT id FROM tehtava WHERE taso=4 AND nimi='Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2006-01-01', '2006-09-30', 9, 'vrk', 525.50, (SELECT id FROM tehtava WHERE taso=4 AND nimi='Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2005-10-01', '2005-12-31', 525.73, 'km', 525.50, (SELECT id FROM tehtava WHERE taso=4 AND nimi='Pensaiden poisto'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2006-01-01', '2006-09-30', 1525.321, 'km', 525.50, (SELECT id FROM tehtava WHERE taso=4 AND nimi='Pensaiden poisto'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 525.73, 'km', 525.50, (SELECT id FROM tehtava WHERE taso=4 AND nimi='Pensaiden poisto'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null));
 
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2016-10-01', '2016-12-31', 3, 'vrk', 525.50, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2017-01-01', '2017-09-30', 9, 'vrk', 525.50, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2016-10-01', '2016-12-31', 3, 'vrk', 525.50, (SELECT id FROM tehtava WHERE taso=4 AND nimi='Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2017-01-01', '2017-09-30', 9, 'vrk', 525.50, (SELECT id FROM tehtava WHERE taso=4 AND nimi='Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null));
 
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 3, 'vrk', 525.50, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012') AND paasopimus IS null));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2014-01-01', '2014-09-30', 9, 'vrk', 525.50, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012') AND paasopimus IS null));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 866.0, 'km', 525.50, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Pensaiden poisto'), (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012') AND paasopimus IS null));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 3, 'vrk', 525.50, (SELECT id FROM tehtava WHERE taso=4 AND nimi='Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012') AND paasopimus IS null));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2014-01-01', '2014-09-30', 9, 'vrk', 525.50, (SELECT id FROM tehtava WHERE taso=4 AND nimi='Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'), (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012') AND paasopimus IS null));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 866.0, 'km', 525.50, (SELECT id FROM tehtava WHERE taso=4 AND nimi='Pensaiden poisto'), (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012') AND paasopimus IS null));
 
 -- Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 20, 'm2', 1, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 7 mm: Pyörätien jatkeet ja suojatiet'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'kpl', 2, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Nopeusrajoitusmerkinnät'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'kpl', 5, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Väistämisviivan yksi kolmio hainhammas'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 60, 'm2', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Pysäytysviiva'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'm2', 4, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Sulkualueet'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'm2', 2, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Pyörätien jatkeet ja suojatiet'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 50, 'kpl', 2, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Nuoli, pitkä (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Nuoli, lyhyt (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 400, 'm2', 4, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Linjamerkinnät massalla paksuus 7 mm: Keskiviiva, ajokaistaviiva, ohjausviiva valkoinen'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 190, 'm2', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Linjamerkinnät massalla paksuus 7 mm: Reunaviiva ja reunaviivan jatke'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'm2', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Linjamerkinnät massalla, paksuus 3 mm: Sulkuviiva ja varoitusviiva keltainen'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 2000, 'm2', 4, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Linjamerkinnät massalla, paksuus 3 mm: Keskiviiva, ajokaistaviiva, ohjausviiva valkoinen'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'm2', 2, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Linjamerkinnät massalla, paksuus 3mm: Reunaviiva ja reunaviivan jatke'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 20, 'm2', 2, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Muut pienmerkinnät'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Nuolet ja nopeusrajoitusmerkinnät ja väistämisviivat'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'm2', 2, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Sulkualueet'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 200, 'm2', 1, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Linjamerkinnän upotusjyrsintä'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 60, 'jm', 4.5, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Täristävät merkinnät: sini-aallonmuotoinen jyrsintä, reunaviiva, 2 ajr tie: lev 30 cm, aallonpit 60 cm, syv 6 mm aallonharjalla, syv 13 mm aallon pohjalla'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'jm', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Täristävät merkinnät: sini-aallonmuotoinen jyrsintä, reunaviiva, 1 ajr tie: lev 30 cm, aallonpit 60 cm, syv 6 mm aallonharjalla, syv 13 mm aallon pohjalla'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'jm', 2, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Täristävät merkinnät: sylinterijyrsintä, reunaviiva, 2 ajr tie: lev 30 cm, pit 13-15 cm, merkintäväli 60 cm, syvyys 15 mm'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'jm', 2, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Täristävät merkinnät: sylinterijyrsintä, keskiviiva, 1 ajr tie: lev 30 cm, pit 13-15 cm, merkintäväli 60 cm, syvyys 15 mm'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 50, 'jm', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Täristävät merkinnät: sylinterijyrsintä, reunaviiva, 1 ajr tie: lev 30 cm, pit 13-15 cm, merkintäväli 60 cm, syvyys 15 mm'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 20, 'm2', 1, null, (SELECT id FROM tehtava WHERE nimi = 'Pienmerkinnät massalla paksuus 7 mm: Pyörätien jatkeet ja suojatiet'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'kpl', 2, null, (SELECT id FROM tehtava WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Nopeusrajoitusmerkinnät'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'kpl', 5, null, (SELECT id FROM tehtava WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Väistämisviivan yksi kolmio hainhammas'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 60, 'm2', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Pysäytysviiva'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'm2', 4, null, (SELECT id FROM tehtava WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Sulkualueet'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'm2', 2, null, (SELECT id FROM tehtava WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Pyörätien jatkeet ja suojatiet'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 50, 'kpl', 2, null, (SELECT id FROM tehtava WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Nuoli, pitkä (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Pienmerkinnät massalla paksuus 3 mm: Nuoli, lyhyt (1-, 2- ja 3-kärkiset sekä ajokaistan päättymisnuoli)'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 400, 'm2', 4, null, (SELECT id FROM tehtava WHERE nimi = 'Linjamerkinnät massalla paksuus 7 mm: Keskiviiva, ajokaistaviiva, ohjausviiva valkoinen'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 190, 'm2', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Linjamerkinnät massalla paksuus 7 mm: Reunaviiva ja reunaviivan jatke'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'm2', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Linjamerkinnät massalla, paksuus 3 mm: Sulkuviiva ja varoitusviiva keltainen'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 2000, 'm2', 4, null, (SELECT id FROM tehtava WHERE nimi = 'Linjamerkinnät massalla, paksuus 3 mm: Keskiviiva, ajokaistaviiva, ohjausviiva valkoinen'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'm2', 2, null, (SELECT id FROM tehtava WHERE nimi = 'Linjamerkinnät massalla, paksuus 3mm: Reunaviiva ja reunaviivan jatke'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 20, 'm2', 2, null, (SELECT id FROM tehtava WHERE nimi = 'Muut pienmerkinnät'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Nuolet ja nopeusrajoitusmerkinnät ja väistämisviivat'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'm2', 2, null, (SELECT id FROM tehtava WHERE nimi = 'Sulkualueet'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 200, 'm2', 1, null, (SELECT id FROM tehtava WHERE nimi = 'Linjamerkinnän upotusjyrsintä'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 60, 'jm', 4.5, null, (SELECT id FROM tehtava WHERE nimi = 'Täristävät merkinnät: sini-aallonmuotoinen jyrsintä, reunaviiva, 2 ajr tie: lev 30 cm, aallonpit 60 cm, syv 6 mm aallonharjalla, syv 13 mm aallon pohjalla'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 40, 'jm', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Täristävät merkinnät: sini-aallonmuotoinen jyrsintä, reunaviiva, 1 ajr tie: lev 30 cm, aallonpit 60 cm, syv 6 mm aallonharjalla, syv 13 mm aallon pohjalla'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'jm', 2, null, (SELECT id FROM tehtava WHERE nimi = 'Täristävät merkinnät: sylinterijyrsintä, reunaviiva, 2 ajr tie: lev 30 cm, pit 13-15 cm, merkintäväli 60 cm, syvyys 15 mm'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 30, 'jm', 2, null, (SELECT id FROM tehtava WHERE nimi = 'Täristävät merkinnät: sylinterijyrsintä, keskiviiva, 1 ajr tie: lev 30 cm, pit 13-15 cm, merkintäväli 60 cm, syvyys 15 mm'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2013-10-01', '2013-12-31', 50, 'jm', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Täristävät merkinnät: sylinterijyrsintä, reunaviiva, 1 ajr tie: lev 30 cm, pit 13-15 cm, merkintäväli 60 cm, syvyys 15 mm'), (SELECT id FROM urakka WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM sopimus WHERE nimi = 'Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
 
 -- Tievalaistuksen palvelusopimus 2015-2020: sopimuskausi 2015
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 286, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen ryhmävaihto: SpNa 50 - 100 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 4455, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen ryhmävaihto: SpNa 150 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 0, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen ryhmävaihto: PpNa 35 - 180 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 0, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen ryhmävaihto: Monimetalli 35 - 150 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 0, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen ryhmävaihto: Monimetalli 250 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 0, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen ryhmävaihto: Loistelamppu'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 286, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen ryhmävaihto: SpNa 50 - 100 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 4455, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen ryhmävaihto: SpNa 150 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 0, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen ryhmävaihto: PpNa 35 - 180 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 0, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen ryhmävaihto: Monimetalli 35 - 150 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 0, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen ryhmävaihto: Monimetalli 250 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 0, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen ryhmävaihto: Loistelamppu'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
 
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 0, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen yksittäisvaihto: Hg 50 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 20, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen yksittäisvaihto: SpNa 50 - 100 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 120, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen yksittäisvaihto: SpNa 150 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 35, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen yksittäisvaihto: Sytytin'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 0, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen yksittäisvaihto: PpNa 35  - 180 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 5, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen yksittäisvaihto: Monimetalli 35 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 2, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen yksittäisvaihto: Loistelamppu'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 2, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen yksittäisvaihto: LED-yksikkö VP 2221/2223 valaisimeen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 0, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen yksittäisvaihto: Hg 50 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 20, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen yksittäisvaihto: SpNa 50 - 100 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 120, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen yksittäisvaihto: SpNa 150 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 35, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen yksittäisvaihto: Sytytin'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 0, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen yksittäisvaihto: PpNa 35  - 180 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 5, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen yksittäisvaihto: Monimetalli 35 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 2, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen yksittäisvaihto: Loistelamppu'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 2, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen yksittäisvaihto: LED-yksikkö VP 2221/2223 valaisimeen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
 
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 7, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Jalustan vaihto SJ 4'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 7, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Teräskartiopylväs HE3 h=10m V=2,5m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 20, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Myötäävä puupylväs h=10m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 15, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Puupylväsvarsi V= 1.0 - 2,5m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 5, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin SpNa 50 - 70 W, lamppuineen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 50, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin SpNa 100 - 250 W, lamppuineen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 20, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin SpNa 100 - 250 W, 2-tehokuristin ja tehonvaihtorele, lamppuineen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 0, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin LED, h=6 m, K4'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 0, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin LED, h=10 m, AL4a'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 2, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin LED VP 2221/2223 M1 - M3'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 10, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Maajakokeskus'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 15, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Haruksen uusiminen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 7, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Jalustan vaihto SJ 4'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 7, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Teräskartiopylväs HE3 h=10m V=2,5m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 20, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Myötäävä puupylväs h=10m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 15, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Puupylväsvarsi V= 1.0 - 2,5m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 5, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin SpNa 50 - 70 W, lamppuineen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 50, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin SpNa 100 - 250 W, lamppuineen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 20, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin SpNa 100 - 250 W, 2-tehokuristin ja tehonvaihtorele, lamppuineen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 0, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin LED, h=6 m, K4'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 0, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin LED, h=10 m, AL4a'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 2, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin LED VP 2221/2223 M1 - M3'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 10, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Maajakokeskus'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 15, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Haruksen uusiminen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
 
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 50, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden korjaus: Puupylvään oikaisu'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 80, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden korjaus: Metallipylvään oikaisu alle 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 5, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden korjaus: Metallipylvään oikaisu yli 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 100, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden korjaus: Valaisinvarsien suuntaus alle 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 5, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden korjaus: Valaisinvarsien suuntaus yli 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 50, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden korjaus: Puupylvään oikaisu'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 80, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden korjaus: Metallipylvään oikaisu alle 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 5, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden korjaus: Metallipylvään oikaisu yli 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 100, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden korjaus: Valaisinvarsien suuntaus alle 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 5, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden korjaus: Valaisinvarsien suuntaus yli 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
 
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 1500, 'h', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Asentaja'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 150, 'h', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Tr- kaivuri'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 50, 'h', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Törmäysvaimennin'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 360, 'h', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Kuorma-auto nosturilla'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 360, 'h', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Nostolava alle 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 20, 'h', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Nostolava yli 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 1500, 'h', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Asentaja'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 150, 'h', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Tr- kaivuri'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 50, 'h', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Törmäysvaimennin'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 360, 'h', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Kuorma-auto nosturilla'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 360, 'h', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Nostolava alle 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2015-01-01','2015-12-31', 20, 'h', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Nostolava yli 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
 
 -- Tievalaistuksen palvelusopimus 2015-2020: sopimuskausi 2016
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 386, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen ryhmävaihto: SpNa 50 - 100 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 6173, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen ryhmävaihto: SpNa 150 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 0, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen ryhmävaihto: PpNa 35 - 180 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 16, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen ryhmävaihto: Monimetalli 35 - 150 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 0, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen ryhmävaihto: Monimetalli 250 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 0, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen ryhmävaihto: Loistelamppu'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 386, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen ryhmävaihto: SpNa 50 - 100 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 6173, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen ryhmävaihto: SpNa 150 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 0, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen ryhmävaihto: PpNa 35 - 180 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 16, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen ryhmävaihto: Monimetalli 35 - 150 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 0, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen ryhmävaihto: Monimetalli 250 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 0, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen ryhmävaihto: Loistelamppu'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
 
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 0, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen yksittäisvaihto: Hg 50 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 25, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen yksittäisvaihto: SpNa 50 - 100 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 140, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen yksittäisvaihto: SpNa 150 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 45, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen yksittäisvaihto: Sytytin'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 0, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen yksittäisvaihto: PpNa 35  - 180 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 5, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen yksittäisvaihto: Monimetalli 35 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 2, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen yksittäisvaihto: Loistelamppu'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 2, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Lamppujen yksittäisvaihto: LED-yksikkö VP 2221/2223 valaisimeen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 0, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen yksittäisvaihto: Hg 50 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 25, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen yksittäisvaihto: SpNa 50 - 100 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 140, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen yksittäisvaihto: SpNa 150 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 45, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen yksittäisvaihto: Sytytin'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 0, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen yksittäisvaihto: PpNa 35  - 180 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 5, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen yksittäisvaihto: Monimetalli 35 - 400 W'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 2, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen yksittäisvaihto: Loistelamppu'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 2, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Lamppujen yksittäisvaihto: LED-yksikkö VP 2221/2223 valaisimeen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
 
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 10, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Jalustan vaihto SJ 4'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 10, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Teräskartiopylväs HE3 h=10m V=2,5m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 25, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Myötäävä puupylväs h=10m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 20, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Puupylväsvarsi V= 1.0 - 2,5m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 10, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin SpNa 50 - 70 W, lamppuineen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 65, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin SpNa 100 - 250 W, lamppuineen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 25, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin SpNa 100 - 250 W, 2-tehokuristin ja tehonvaihtorele, lamppuineen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 0, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin LED, h=6 m, K4'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 56, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin LED, h=10 m, AL4a'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 2, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin LED VP 2221/2223 M1 - M3'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 10, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Maajakokeskus'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 20, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden vaihto: Haruksen uusiminen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 10, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Jalustan vaihto SJ 4'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 10, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Teräskartiopylväs HE3 h=10m V=2,5m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 25, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Myötäävä puupylväs h=10m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 20, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Puupylväsvarsi V= 1.0 - 2,5m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 10, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin SpNa 50 - 70 W, lamppuineen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 65, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin SpNa 100 - 250 W, lamppuineen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 25, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin SpNa 100 - 250 W, 2-tehokuristin ja tehonvaihtorele, lamppuineen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 0, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin LED, h=6 m, K4'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 56, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin LED, h=10 m, AL4a'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 2, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Valaisin LED VP 2221/2223 M1 - M3'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 10, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Maajakokeskus'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 20, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden vaihto: Haruksen uusiminen'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
 
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 60, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden korjaus: Puupylvään oikaisu'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 90, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden korjaus: Metallipylvään oikaisu alle 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 5, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden korjaus: Metallipylvään oikaisu yli 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 130, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden korjaus: Valaisinvarsien suuntaus alle 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 5, 'kpl', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Valaistuslaitteiden korjaus: Valaisinvarsien suuntaus yli 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 60, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden korjaus: Puupylvään oikaisu'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 90, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden korjaus: Metallipylvään oikaisu alle 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 5, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden korjaus: Metallipylvään oikaisu yli 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 130, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden korjaus: Valaisinvarsien suuntaus alle 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 5, 'kpl', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Valaistuslaitteiden korjaus: Valaisinvarsien suuntaus yli 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
 
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 1800, 'h', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Asentaja'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 150, 'h', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Tr- kaivuri'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 50, 'h', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Törmäysvaimennin'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 450, 'h', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Kuorma-auto nosturilla'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 450, 'h', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Nostolava alle 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 20, 'h', 3, null, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Nostolava yli 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 1800, 'h', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Asentaja'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 150, 'h', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Tr- kaivuri'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 50, 'h', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Törmäysvaimennin'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 450, 'h', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Kuorma-auto nosturilla'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 450, 'h', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Nostolava alle 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
+INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2016-01-01','2016-12-31', 20, 'h', 3, null, (SELECT id FROM tehtava WHERE nimi = 'Nostolava yli 13 m'), (SELECT id FROM urakka WHERE nimi = 'Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM sopimus WHERE nimi = 'Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020'));
 
 -- talvihoidon laaja toimenpide Oulun ja Pudasjärven urakoille
 -- talvihoidon  laaja toimenpide 23104
 -- soratien hoidon laaja toimenpide 23124
 -- hoitokausi 2005-2006
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'Oulu Talvihoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), 'Oulu Liikenneympäristön hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), 'Oulu Sorateiden hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id from toimenpide where koodi='23104'), 'Oulu Talvihoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id from toimenpide where koodi='23116'), 'Oulu Liikenneympäristön hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id from toimenpide where koodi='23124'), 'Oulu Sorateiden hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'Oulu Talvihoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), 'Oulu Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), 'Oulu Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id from toimenpide where koodi='23104'), 'Oulu Talvihoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id from toimenpide where koodi='23116'), 'Oulu Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id from toimenpide where koodi='23124'), 'Oulu Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'Pudasjärvi Talvihoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), 'Pudasjärvi Sorateiden hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), 'Pudasjärvi Liikenneympäristön hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (SELECT id from toimenpide where koodi='23104'), 'Pudasjärvi Talvihoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (SELECT id from toimenpide where koodi='23124'), 'Pudasjärvi Sorateiden hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (SELECT id FROM toimenpide WHERE koodi='23116'), 'Pudasjärvi Liikenneympäristön hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'Pori Talvihoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), 'Pori Sorateiden hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), 'Pori Liikenneympäristön hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), (SELECT id FROM toimenpide WHERE koodi='23104'), 'Pori Talvihoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), (SELECT id FROM toimenpide WHERE koodi='23124'), 'Pori Sorateiden hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), (SELECT id FROM toimenpide WHERE koodi='23116'), 'Pori Liikenneympäristön hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), (SELECT loppupvm FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 
-INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun tiemerkinnän palvelusopimus 2017-2024'), (SELECT id FROM toimenpidekoodi WHERE taso=3 AND koodi='20123'), 'Tiemerkinnän TP', (SELECT alkupvm FROM urakka WHERE nimi='Oulun tiemerkinnän palvelusopimus 2017-2024'),(SELECT loppupvm FROM urakka WHERE nimi='Oulun tiemerkinnän palvelusopimus 2017-2024'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Pirkanmaan tiemerkinnän palvelusopimus 2013-2018'), (SELECT id FROM toimenpidekoodi WHERE taso=3 AND koodi='20123'), 'Pirkanmaan Tiemerkinnän TP', '2013-01-01','2018-12-31', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka'), (SELECT id FROM toimenpidekoodi WHERE taso=3 AND koodi='20101'), 'Muhos Ajoradan päällyste TP', '2017-01-01','2024-12-31', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Porintien päällystysurakka'), (SELECT id FROM toimenpidekoodi WHERE taso=3 AND koodi='20101'), 'Porintien Ajoradan päällyste TP', '2007-01-01','2012-12-31', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun valaistuksen palvelusopimus 2013-2050'), (SELECT id FROM toimenpidekoodi WHERE taso=3 AND koodi='20172'), 'Oulu Valaistuksen korjaus TP', '2013-01-01','2018-12-31', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Kempeleen valaistusurakka'), (SELECT id FROM toimenpidekoodi WHERE taso=3 AND koodi='20172'), 'Kempele Valaistuksen korjaus TP', '2007-10-01','2012-09-30', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM toimenpidekoodi WHERE taso=3 AND koodi='20123'), 'Valaistuksen korjaus TP', '2013-10-01','2015-09-30', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM toimenpidekoodi WHERE taso=3 AND koodi='20172'), 'Oulu Valaistuksen korjaus TP', '2015-01-01','2020-12-31', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun tiemerkinnän palvelusopimus 2017-2024'), (SELECT id FROM toimenpide WHERE taso=3 AND koodi='20123'), 'Tiemerkinnän TP', (SELECT alkupvm FROM urakka WHERE nimi='Oulun tiemerkinnän palvelusopimus 2017-2024'),(SELECT loppupvm FROM urakka WHERE nimi='Oulun tiemerkinnän palvelusopimus 2017-2024'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Pirkanmaan tiemerkinnän palvelusopimus 2013-2018'), (SELECT id FROM toimenpide WHERE taso=3 AND koodi='20123'), 'Pirkanmaan Tiemerkinnän TP', '2013-01-01','2018-12-31', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka'), (SELECT id FROM toimenpide WHERE taso=3 AND koodi='20101'), 'Muhos Ajoradan päällyste TP', '2017-01-01','2024-12-31', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Porintien päällystysurakka'), (SELECT id FROM toimenpide WHERE taso=3 AND koodi='20101'), 'Porintien Ajoradan päällyste TP', '2007-01-01','2012-12-31', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Oulun valaistuksen palvelusopimus 2013-2050'), (SELECT id FROM toimenpide WHERE taso=3 AND koodi='20172'), 'Oulu Valaistuksen korjaus TP', '2013-01-01','2018-12-31', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Kempeleen valaistusurakka'), (SELECT id FROM toimenpide WHERE taso=3 AND koodi='20172'), 'Kempele Valaistuksen korjaus TP', '2007-10-01','2012-09-30', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'), (SELECT id FROM toimenpide WHERE taso=3 AND koodi='20123'), 'Valaistuksen korjaus TP', '2013-10-01','2015-09-30', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tievalaistuksen palvelusopimus 2015-2020'), (SELECT id FROM toimenpide WHERE taso=3 AND koodi='20172'), 'Oulu Valaistuksen korjaus TP', '2015-01-01','2020-12-31', 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 -- Luodaan Kajaanin, Vantaan ja Espoon urakalle tärkeimmät toimenpideinstanssit
 INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
 VALUES
-  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'Kajaani Talvihoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
-  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), 'Kajaani Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
-  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), 'Kajaani Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
-  ((SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'Vantaa Talvihoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
-  ((SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), 'Vantaa Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
-  ((SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), 'Vantaa Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
-  ((SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'Espoo Talvihoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
-  ((SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), 'Espoo Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
-  ((SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), 'Espoo Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT id FROM toimenpide WHERE koodi='23104'), 'Kajaani Talvihoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT id FROM toimenpide WHERE koodi='23116'), 'Kajaani Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
+  ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT id FROM toimenpide WHERE koodi='23124'), 'Kajaani Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
+  ((SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT id FROM toimenpide WHERE koodi='23104'), 'Vantaa Talvihoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
+  ((SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT id FROM toimenpide WHERE koodi='23116'), 'Vantaa Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
+  ((SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT id FROM toimenpide WHERE koodi='23124'), 'Vantaa Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
+  ((SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT id FROM toimenpide WHERE koodi='23104'), 'Espoo Talvihoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
+  ((SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT id FROM toimenpide WHERE koodi='23116'), 'Espoo Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
+  ((SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT id FROM toimenpide WHERE koodi='23124'), 'Espoo Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 
 -- Luodaan Raaseporin urakalle tärkeimmät toimenpideinstanssit
 INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
 VALUES
-    ((SELECT id FROM urakka WHERE nimi = 'UUD Raasepori  MHU 2021- 2026, P'), (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'Raasepori Talvihoito TP 2021-2026', (SELECT alkupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), (SELECT loppupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
-    ((SELECT id FROM urakka WHERE nimi = 'UUD Raasepori  MHU 2021- 2026, P'), (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), 'Raasepori Liikenneympäristön hoito TP 2021-2026', (SELECT alkupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), (SELECT loppupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
-    ((SELECT id FROM urakka WHERE nimi = 'UUD Raasepori  MHU 2021- 2026, P'), (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), 'Raasepori Sorateiden hoito TP 2021-2026', (SELECT alkupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), (SELECT loppupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+    ((SELECT id FROM urakka WHERE nimi = 'UUD Raasepori  MHU 2021- 2026, P'), (SELECT id FROM toimenpide WHERE koodi='23104'), 'Raasepori Talvihoito TP 2021-2026', (SELECT alkupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), (SELECT loppupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
+    ((SELECT id FROM urakka WHERE nimi = 'UUD Raasepori  MHU 2021- 2026, P'), (SELECT id FROM toimenpide WHERE koodi='23116'), 'Raasepori Liikenneympäristön hoito TP 2021-2026', (SELECT alkupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), (SELECT loppupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
+    ((SELECT id FROM urakka WHERE nimi = 'UUD Raasepori  MHU 2021- 2026, P'), (SELECT id FROM toimenpide WHERE koodi='23124'), 'Raasepori Sorateiden hoito TP 2021-2026', (SELECT alkupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), (SELECT loppupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 
 
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'Tampere Talvihoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT loppupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), 'Tampere Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT loppupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), 'Tampere Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT loppupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT id FROM toimenpide WHERE koodi='23104'), 'Tampere Talvihoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT loppupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT id FROM toimenpide WHERE koodi='23116'), 'Tampere Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT loppupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT id FROM toimenpide WHERE koodi='23124'), 'Tampere Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT loppupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 
 
 INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus) VALUES (2005, 10, 3500, '2005-10-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Oulu Talvihoito TP'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012') AND paasopimus IS null));
@@ -226,7 +226,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
         'Kauppamerenkulun kustannukset TP',
         (SELECT id
-         FROM toimenpidekoodi
+         FROM toimenpide
          WHERE nimi = 'Kauppamerenkulun kustannukset'), '2016-08-01', '2017-07-30');
 
 INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
@@ -241,7 +241,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
         'Muun vesiliikenteen kustannukset TP',
         (SELECT id
-         FROM toimenpidekoodi
+         FROM toimenpide
          WHERE nimi = 'Muun vesiliikenteen kustannukset'), '2016-08-01', '2017-07-30');
 
 INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
@@ -256,7 +256,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
         'Urakan yhteiset kustannukset TP',
         (SELECT id
-         FROM toimenpidekoodi
+         FROM toimenpide
          WHERE nimi = 'Urakan yhteiset kustannukset'), '2016-08-01', '2017-07-30');
 
 INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
@@ -272,7 +272,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Pyhäselän urakka'),
         'Kauppamerenkulun kustannukset TP',
         (SELECT id
-         FROM toimenpidekoodi
+         FROM toimenpide
          WHERE nimi = 'Kauppamerenkulun kustannukset'), '2016-08-01', '2017-07-30');
 
 INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
@@ -287,7 +287,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Pyhäselän urakka'),
         'Muun vesiliikenteen kustannukset TP',
         (SELECT id
-         FROM toimenpidekoodi
+         FROM toimenpide
          WHERE nimi = 'Muun vesiliikenteen kustannukset'), '2016-08-01', '2017-07-30');
 
 INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
@@ -302,7 +302,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Pyhäselän urakka'),
         'Urakan yhteiset kustannukset TP',
         (SELECT id
-         FROM toimenpidekoodi
+         FROM toimenpide
          WHERE nimi = 'Urakan yhteiset kustannukset'), '2016-08-01', '2017-07-30');
 
 INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
@@ -318,7 +318,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Rentoselän urakka'),
         'Kauppamerenkulun kustannukset TP',
         (SELECT id
-         FROM toimenpidekoodi
+         FROM toimenpide
          WHERE nimi = 'Kauppamerenkulun kustannukset'), '2016-08-01', '2017-07-30');
 
 INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
@@ -333,7 +333,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Rentoselän urakka'),
         'Muun vesiliikenteen kustannukset TP',
         (SELECT id
-         FROM toimenpidekoodi
+         FROM toimenpide
          WHERE nimi = 'Muun vesiliikenteen kustannukset'), '2016-08-01', '2017-07-30');
 
 INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
@@ -348,7 +348,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Rentoselän urakka'),
         'Urakan yhteiset kustannukset TP',
         (SELECT id
-         FROM toimenpidekoodi
+         FROM toimenpide
          WHERE nimi = 'Urakan yhteiset kustannukset'), '2016-08-01', '2017-07-30');
 
 INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
@@ -388,13 +388,13 @@ INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpidein
 INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2018, 7, 102.4, '2018-07-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset TP' AND urakka = (select id from urakka where nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')), (SELECT id FROM sopimus where nimi = 'Helsingin väyläyksikön pääsopimus' AND paasopimus IS NULL));
 
 INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2017-08-01', '2018-07-31', null, 'h', 1, null, (SELECT id
-                                                                                                                                                                             FROM toimenpidekoodi
+                                                                                                                                                                             FROM tehtava
                                                                                                                                                                              WHERE nimi = 'Henkilöstö: Ammattimies' AND koodi ILIKE('VV%')), (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'), (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'));
 INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2017-08-01', '2018-07-31', null, 'h', 2, null, (SELECT id
-                                                                                                                                                                             FROM toimenpidekoodi
+                                                                                                                                                                             FROM tehtava
                                                                                                                                                                              WHERE nimi = 'Henkilöstö: Sukeltaja, sis. merkinantajan ja sukellusvälineet' AND koodi ILIKE('VV%')), (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'), (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'));
 INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2017-08-01', '2018-07-31', null, 'h', 3, null, (SELECT id
-                                                                                                                                                                             FROM toimenpidekoodi
+                                                                                                                                                                             FROM tehtava
                                                                                                                                                                              WHERE nimi = 'Henkilöstö: Työnjohto' AND koodi ILIKE('VV%')), (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'), (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'));
 
 -- Pyhäselän suunnitellut työt
@@ -412,13 +412,13 @@ INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpidein
 INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 3, 2.4, '2017-03-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset TP' AND urakka = (select id from urakka where nimi = 'Pyhäselän urakka')), (SELECT id FROM sopimus where nimi = 'Pyhäselän pääsopimus' AND paasopimus IS NULL));
 
 INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2017-08-01', '2018-07-31', null, 'h', 1, null, (SELECT id
-                                                                                                                                                                             FROM toimenpidekoodi
+                                                                                                                                                                             FROM tehtava
                                                                                                                                                                              WHERE nimi = 'Henkilöstö: Ammattimies' AND koodi ILIKE('VV%')), (SELECT id FROM urakka WHERE nimi = 'Pyhäselän urakka'), (SELECT id FROM sopimus WHERE nimi = 'Pyhäselän pääsopimus'));
 INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2017-08-01', '2018-07-31', null, 'h', 2, null, (SELECT id
-                                                                                                                                                                             FROM toimenpidekoodi
+                                                                                                                                                                             FROM tehtava
                                                                                                                                                                              WHERE nimi = 'Henkilöstö: Sukeltaja, sis. merkinantajan ja sukellusvälineet' AND koodi ILIKE('VV%')), (SELECT id FROM urakka WHERE nimi = 'Pyhäselän urakka'), (SELECT id FROM sopimus WHERE nimi = 'Pyhäselän pääsopimus'));
 INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2017-08-01', '2018-07-31', null, 'h', 3, null, (SELECT id
-                                                                                                                                                                             FROM toimenpidekoodi
+                                                                                                                                                                             FROM tehtava
                                                                                                                                                                              WHERE nimi = 'Henkilöstö: Työnjohto' AND koodi ILIKE('VV%')), (SELECT id FROM urakka WHERE nimi = 'Pyhäselän urakka'), (SELECT id FROM sopimus WHERE nimi = 'Pyhäselän pääsopimus'));
 
 
@@ -438,20 +438,20 @@ INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpidein
 INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 3, 2.4, '2017-03-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset TP' AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')), (SELECT id FROM sopimus where nimi = 'Rentoselän pääsopimus' AND paasopimus IS NULL));
 
 INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2017-08-01', '2018-07-31', null, 'h', 1, null, (SELECT id
-                                                                                                                                                                             FROM toimenpidekoodi
+                                                                                                                                                                             FROM tehtava
                                                                                                                                                                              WHERE nimi = 'Henkilöstö: Ammattimies' AND koodi ILIKE('VV%')), (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), (SELECT id FROM sopimus WHERE nimi = 'Rentoselän pääsopimus'));
 INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2017-08-01', '2018-07-31', null, 'h', 2, null, (SELECT id
-                                                                                                                                                                             FROM toimenpidekoodi
+                                                                                                                                                                             FROM tehtava
                                                                                                                                                                              WHERE nimi = 'Henkilöstö: Sukeltaja, sis. merkinantajan ja sukellusvälineet' AND koodi ILIKE('VV%')), (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), (SELECT id FROM sopimus WHERE nimi = 'Rentoselän pääsopimus'));
 INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2017-08-01', '2018-07-31', null, 'h', 3, null, (SELECT id
-                                                                                                                                                                             FROM toimenpidekoodi
+                                                                                                                                                                             FROM tehtava
                                                                                                                                                                              WHERE nimi = 'Henkilöstö: Työnjohto' AND koodi ILIKE('VV%')), (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), (SELECT id FROM sopimus WHERE nimi = 'Rentoselän pääsopimus'));
 
 
 -- Kanavien toimenpideinstanssit
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Saimaan kanava'), (SELECT id FROM toimenpidekoodi WHERE koodi='27105'), 'Saimaan kanava, sopimukseen kuuluvat työt, TP', (SELECT alkupvm FROM urakka WHERE nimi='Saimaan kanava'), (SELECT loppupvm FROM urakka WHERE nimi='Saimaan kanava'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm) VALUES ((SELECT id FROM urakka WHERE nimi='Saimaan kanava'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Erikseen tilatut työt' AND emo = (SELECT id FROM toimenpidekoodi WHERE nimi = 'Väylänhoito')), 'Testitoimenpideinstanssi', '2017-01-01', '2090-01-01');
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Joensuun kanava'), (SELECT id FROM toimenpidekoodi WHERE koodi='27105'), 'Joensuun kanava, sopimukseen kuuluvat työt, TP', (SELECT alkupvm FROM urakka WHERE nimi='Joensuun kanava'), (SELECT loppupvm FROM urakka WHERE nimi='Joensuun kanava'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Saimaan kanava'), (SELECT id FROM toimenpide WHERE koodi='27105'), 'Saimaan kanava, sopimukseen kuuluvat työt, TP', (SELECT alkupvm FROM urakka WHERE nimi='Saimaan kanava'), (SELECT loppupvm FROM urakka WHERE nimi='Saimaan kanava'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm) VALUES ((SELECT id FROM urakka WHERE nimi='Saimaan kanava'), (SELECT id FROM toimenpide WHERE nimi = 'Erikseen tilatut työt' AND emo = (SELECT id FROM toimenpide WHERE nimi = 'Väylänhoito')), 'Testitoimenpideinstanssi', '2017-01-01', '2090-01-01');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Joensuun kanava'), (SELECT id FROM toimenpide WHERE koodi='27105'), 'Joensuun kanava, sopimukseen kuuluvat työt, TP', (SELECT alkupvm FROM urakka WHERE nimi='Joensuun kanava'), (SELECT loppupvm FROM urakka WHERE nimi='Joensuun kanava'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 
 INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 8, 0.3, '2016-08-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Saimaan kanava') AND paasopimus IS null));
 INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 1, 1.8, '2017-01-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Saimaan kanava') AND paasopimus IS null));
@@ -495,49 +495,49 @@ $$
         INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
                                          talousosasto_id, talousosastopolku)
         VALUES (urakka_id,
-                (SELECT id FROM toimenpidekoodi WHERE koodi = '23104'), 'Oulu MHU Talvihoito TP',
+                (SELECT id FROM toimenpide WHERE koodi = '23104'), 'Oulu MHU Talvihoito TP',
                 (SELECT alkupvm FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'),
                 (SELECT loppupvm FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'), 'tuotepolku', 'sampoid',
                 'talousosastoid', 'talousosastopolku');
         INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
                                          talousosasto_id, talousosastopolku)
         VALUES (urakka_id,
-                (SELECT id FROM toimenpidekoodi WHERE koodi = '23116'), 'Oulu MHU Liikenneympäristön hoito TP',
+                (SELECT id FROM toimenpide WHERE koodi = '23116'), 'Oulu MHU Liikenneympäristön hoito TP',
                 (SELECT alkupvm FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'),
                 (SELECT loppupvm FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'), 'tuotepolku', 'sampoid',
                 'talousosastoid', 'talousosastopolku');
         INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
                                          talousosasto_id, talousosastopolku)
         VALUES (urakka_id,
-                (SELECT id FROM toimenpidekoodi WHERE koodi = '23124'), 'Oulu MHU Soratien hoito TP',
+                (SELECT id FROM toimenpide WHERE koodi = '23124'), 'Oulu MHU Soratien hoito TP',
                 (SELECT alkupvm FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'),
                 (SELECT loppupvm FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'), 'tuotepolku', 'sampoid',
                 'talousosastoid', 'talousosastopolku');
         INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
                                          talousosasto_id, talousosastopolku)
         VALUES (urakka_id,
-                (SELECT id FROM toimenpidekoodi WHERE koodi = '23151'), 'Oulu MHU Hallinnolliset toimenpiteet TP',
+                (SELECT id FROM toimenpide WHERE koodi = '23151'), 'Oulu MHU Hallinnolliset toimenpiteet TP',
                 (SELECT alkupvm FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'),
                 (SELECT loppupvm FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'), 'tuotepolku', 'sampoid',
                 'talousosastoid', 'talousosastopolku');
         INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
                                          talousosasto_id, talousosastopolku)
         VALUES (urakka_id,
-                (SELECT id FROM toimenpidekoodi WHERE koodi = '20107'), 'Oulu MHU Päällystepaikkaukset TP',
+                (SELECT id FROM toimenpide WHERE koodi = '20107'), 'Oulu MHU Päällystepaikkaukset TP',
                 (SELECT alkupvm FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'),
                 (SELECT loppupvm FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'), 'tuotepolku', 'sampoid',
                 'talousosastoid', 'talousosastopolku');
         INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
                                          talousosasto_id, talousosastopolku)
         VALUES (urakka_id,
-                (SELECT id FROM toimenpidekoodi WHERE koodi = '20191'), 'Oulu MHU MHU Ylläpito TP',
+                (SELECT id FROM toimenpide WHERE koodi = '20191'), 'Oulu MHU MHU Ylläpito TP',
                 (SELECT alkupvm FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'),
                 (SELECT loppupvm FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'), 'tuotepolku', 'sampoid',
                 'talousosastoid', 'talousosastopolku');
         INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
                                          talousosasto_id, talousosastopolku)
         VALUES (urakka_id,
-                (SELECT id FROM toimenpidekoodi WHERE koodi = '14301'), 'Oulu MHU MHU Korvausinvestointi TP',
+                (SELECT id FROM toimenpide WHERE koodi = '14301'), 'Oulu MHU MHU Korvausinvestointi TP',
                 (SELECT alkupvm FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'),
                 (SELECT loppupvm FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'), 'tuotepolku', 'sampoid',
                 'talousosastoid', 'talousosastopolku');
@@ -552,7 +552,7 @@ $$
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu)
         VALUES (2020, 6, 500, testidata_indeksikorjaa(500, 2020, 6, urakka_id),
                 'akillinen-hoitotyo'::TOTEUMATYYPPI,
-                (select id from toimenpidekoodi where yksiloiva_tunniste = '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID),
+                (select id from tehtava where yksiloiva_tunniste = '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID),
                 null, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP'), sopimus_id, NOW());
 
 
@@ -578,49 +578,49 @@ $$
         INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
                                          talousosasto_id, talousosastopolku)
         VALUES (urakka_id,
-                (SELECT id FROM toimenpidekoodi WHERE koodi = '23104'), 'Kittilä MHU Talvihoito TP',
+                (SELECT id FROM toimenpide WHERE koodi = '23104'), 'Kittilä MHU Talvihoito TP',
                 (SELECT alkupvm FROM urakka WHERE id=urakka_id),
                 (SELECT loppupvm FROM urakka WHERE id=urakka_id), 'tuotepolku', 'sampoid',
                 'talousosastoid', 'talousosastopolku');
         INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
                                          talousosasto_id, talousosastopolku)
         VALUES (urakka_id,
-                (SELECT id FROM toimenpidekoodi WHERE koodi = '23116'), 'Kittilä MHU Liikenneympäristön hoito TP',
+                (SELECT id FROM toimenpide WHERE koodi = '23116'), 'Kittilä MHU Liikenneympäristön hoito TP',
                 (SELECT alkupvm FROM urakka WHERE id=urakka_id),
                 (SELECT loppupvm FROM urakka WHERE id=urakka_id), 'tuotepolku', 'sampoid',
                 'talousosastoid', 'talousosastopolku');
         INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
                                          talousosasto_id, talousosastopolku)
         VALUES (urakka_id,
-                (SELECT id FROM toimenpidekoodi WHERE koodi = '23124'), 'Kittilä MHU Soratien hoito TP',
+                (SELECT id FROM toimenpide WHERE koodi = '23124'), 'Kittilä MHU Soratien hoito TP',
                 (SELECT alkupvm FROM urakka WHERE id=urakka_id),
                 (SELECT loppupvm FROM urakka WHERE id=urakka_id), 'tuotepolku', 'sampoid',
                 'talousosastoid', 'talousosastopolku');
         INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
                                          talousosasto_id, talousosastopolku)
         VALUES (urakka_id,
-                (SELECT id FROM toimenpidekoodi WHERE koodi = '23151'), 'Kittilä MHU Hallinnolliset toimenpiteet TP',
+                (SELECT id FROM toimenpide WHERE koodi = '23151'), 'Kittilä MHU Hallinnolliset toimenpiteet TP',
                 (SELECT alkupvm FROM urakka WHERE id=urakka_id),
                 (SELECT loppupvm FROM urakka WHERE id=urakka_id), 'tuotepolku', 'sampoid',
                 'talousosastoid', 'talousosastopolku');
         INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
                                          talousosasto_id, talousosastopolku)
         VALUES (urakka_id,
-                (SELECT id FROM toimenpidekoodi WHERE koodi = '20107'), 'Kittilä MHU Päällystepaikkaukset TP',
+                (SELECT id FROM toimenpide WHERE koodi = '20107'), 'Kittilä MHU Päällystepaikkaukset TP',
                 (SELECT alkupvm FROM urakka WHERE id=urakka_id),
                 (SELECT loppupvm FROM urakka WHERE id=urakka_id), 'tuotepolku', 'sampoid',
                 'talousosastoid', 'talousosastopolku');
         INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
                                          talousosasto_id, talousosastopolku)
         VALUES (urakka_id,
-                (SELECT id FROM toimenpidekoodi WHERE koodi = '20191'), 'Kittilä MHU MHU Ylläpito TP',
+                (SELECT id FROM toimenpide WHERE koodi = '20191'), 'Kittilä MHU MHU Ylläpito TP',
                 (SELECT alkupvm FROM urakka WHERE id=urakka_id),
                 (SELECT loppupvm FROM urakka WHERE id=urakka_id), 'tuotepolku', 'sampoid',
                 'talousosastoid', 'talousosastopolku');
         INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid,
                                          talousosasto_id, talousosastopolku)
         VALUES (urakka_id,
-                (SELECT id FROM toimenpidekoodi WHERE koodi = '14301'), 'Kittilä MHU MHU Korvausinvestointi TP',
+                (SELECT id FROM toimenpide WHERE koodi = '14301'), 'Kittilä MHU MHU Korvausinvestointi TP',
                 (SELECT alkupvm FROM urakka WHERE id=urakka_id),
                 (SELECT loppupvm FROM urakka WHERE id=urakka_id), 'tuotepolku', 'sampoid',
                 'talousosastoid', 'talousosastopolku');
@@ -646,12 +646,12 @@ BEGIN
   -- URAKAN TOIMENPIDEINSTANSSIT
   FOR i IN 1..6 LOOP
     INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
-       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpide WHERE koodi=toimenpidekoodit[i]),
                urakan_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
                (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
   END LOOP;
   INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
-       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi='23151'),
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpide WHERE koodi='23151'),
                urakan_nimi || ' ' || 'MHU ja HJU Hoidon johto', (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
                (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
   -- URAKAN KIINTEÄHINTAISET TYÖT (eli suunnitellut hankinnat)
@@ -698,7 +698,7 @@ BEGIN
                         testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, urakka_id),
                         'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                         (SELECT id
-                           FROM toimenpidekoodi
+                           FROM tehtava
                           WHERE yksiloiva_tunniste = CASE
                                                          WHEN (toimenpidenimi = 'Talvihoito TP')
                                                              THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
@@ -715,7 +715,7 @@ BEGIN
                         testidata_indeksikorjaa(20000, urakan_alkuvuosi, i, urakka_id),
                         'akillinen-hoitotyo'::TOTEUMATYYPPI,
                         (SELECT id
-                           FROM toimenpidekoodi
+                           FROM tehtava
                           WHERE yksiloiva_tunniste = CASE
                                                          WHEN (toimenpidenimi = 'Talvihoito TP')
                                                              THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
@@ -749,7 +749,7 @@ BEGIN
                           testidata_indeksikorjaa(100, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
                           'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                           (SELECT id
-                             FROM toimenpidekoodi
+                             FROM tehtava
                             WHERE yksiloiva_tunniste = CASE
                                                            WHEN (toimenpidenimi = 'Talvihoito TP')
                                                                THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
@@ -766,7 +766,7 @@ BEGIN
                           testidata_indeksikorjaa(20000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
                           'akillinen-hoitotyo'::TOTEUMATYYPPI,
                           (SELECT id
-                             FROM toimenpidekoodi
+                             FROM tehtava
                             WHERE yksiloiva_tunniste = CASE
                                                            WHEN (toimenpidenimi = 'Talvihoito TP')
                                                                THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
@@ -800,7 +800,7 @@ BEGIN
                         testidata_indeksikorjaa(100, (5 + urakan_alkuvuosi), i, urakka_id),
                         'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                         (SELECT id
-                           FROM toimenpidekoodi
+                           FROM tehtava
                           WHERE yksiloiva_tunniste = CASE
                                                          WHEN (toimenpidenimi = 'Talvihoito TP')
                                                              THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
@@ -817,7 +817,7 @@ BEGIN
                         testidata_indeksikorjaa(20000, (5 + urakan_alkuvuosi), i, urakka_id),
                         'akillinen-hoitotyo'::TOTEUMATYYPPI,
                         (SELECT id
-                           FROM toimenpidekoodi
+                           FROM tehtava
                           WHERE yksiloiva_tunniste = CASE
                                                          WHEN (toimenpidenimi = 'Talvihoito TP')
                                                              THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
@@ -860,7 +860,7 @@ BEGIN
                 (urakan_alkuvuosi, i, 9000,
                  testidata_indeksikorjaa(9000, urakan_alkuvuosi, i, urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
@@ -868,7 +868,7 @@ BEGIN
                 (urakan_alkuvuosi, i, 9100,
                  testidata_indeksikorjaa(9100, urakan_alkuvuosi, i, urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -888,7 +888,7 @@ BEGIN
                 ((vuosi_ + urakan_alkuvuosi), i, 9000,
                  testidata_indeksikorjaa(9000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
@@ -896,7 +896,7 @@ BEGIN
                 ((vuosi_ + urakan_alkuvuosi), i, 9100,
                  testidata_indeksikorjaa(9100, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -916,7 +916,7 @@ BEGIN
                 ((5 + urakan_alkuvuosi), i, 9000,
                  testidata_indeksikorjaa(9000, (5 + urakan_alkuvuosi), i, urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
@@ -924,7 +924,7 @@ BEGIN
                 ((5 + urakan_alkuvuosi), i, 9100,
                  testidata_indeksikorjaa(9100, (5 + urakan_alkuvuosi), i, urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -951,12 +951,12 @@ BEGIN
   -- URAKAN TOIMENPIDEINSTANSSIT
   FOR i IN 1..6 LOOP
     INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
-       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpide WHERE koodi=toimenpidekoodit[i]),
                urakan_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
                (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
   END LOOP;
   INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
-       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi='23151'),
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpide WHERE koodi='23151'),
                urakan_nimi || ' ' || 'MHU ja HJU Hoidon johto', (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
                (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
   -- URAKAN KIINTEÄHINTAISET TYÖT (eli suunnitellut hankinnat)
@@ -996,7 +996,7 @@ BEGIN
                         testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, urakka_id),
                         'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                         (SELECT id
-                           FROM toimenpidekoodi
+                           FROM tehtava
                           WHERE yksiloiva_tunniste = CASE
                                                          WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
                                                              THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
@@ -1009,7 +1009,7 @@ BEGIN
                         testidata_indeksikorjaa(20000, urakan_alkuvuosi, i, urakka_id),
                         'akillinen-hoitotyo'::TOTEUMATYYPPI,
                         (SELECT id
-                           FROM toimenpidekoodi
+                           FROM tehtava
                           WHERE yksiloiva_tunniste = CASE
                                                          WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
                                                              THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
@@ -1022,7 +1022,7 @@ BEGIN
                         testidata_indeksikorjaa(10000, urakan_alkuvuosi, i, urakka_id),
                         'muut-rahavaraukset'::TOTEUMATYYPPI,
                         (SELECT id
-                           FROM toimenpidekoodi
+                           FROM tehtava
                           WHERE yksiloiva_tunniste = CASE
                                                          WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
                                                              -- Tunneleiden hoito Liikenneympäristön hoito toimenpiteelle
@@ -1053,7 +1053,7 @@ BEGIN
                           testidata_indeksikorjaa(100, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
                           'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                           (SELECT id
-                             FROM toimenpidekoodi
+                             FROM tehtava
                             WHERE yksiloiva_tunniste = CASE
                                                            WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
                                                                THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
@@ -1066,7 +1066,7 @@ BEGIN
                           testidata_indeksikorjaa(20000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
                           'akillinen-hoitotyo'::TOTEUMATYYPPI,
                           (SELECT id
-                             FROM toimenpidekoodi
+                             FROM tehtava
                             WHERE yksiloiva_tunniste = CASE
                                                            WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
                                                                THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
@@ -1079,7 +1079,7 @@ BEGIN
                           testidata_indeksikorjaa(10000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
                           'muut-rahavaraukset'::TOTEUMATYYPPI,
                           (SELECT id
-                             FROM toimenpidekoodi
+                             FROM tehtava
                             WHERE yksiloiva_tunniste = CASE
                                                            WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
                                                                -- Tunneleiden hoito Liikenneympäristön hoito toimenpiteelle
@@ -1110,7 +1110,7 @@ BEGIN
                         testidata_indeksikorjaa(100, (5 + urakan_alkuvuosi), i, urakka_id),
                         'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                         (SELECT id
-                           FROM toimenpidekoodi
+                           FROM tehtava
                           WHERE yksiloiva_tunniste = CASE
                                                          WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
                                                              THEN '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID
@@ -1123,7 +1123,7 @@ BEGIN
                         testidata_indeksikorjaa(20000, (5 + urakan_alkuvuosi), i, urakka_id),
                         'akillinen-hoitotyo'::TOTEUMATYYPPI,
                         (SELECT id
-                           FROM toimenpidekoodi
+                           FROM tehtava
                           WHERE yksiloiva_tunniste = CASE
                                                          WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
                                                              THEN '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'::UUID
@@ -1136,7 +1136,7 @@ BEGIN
                         testidata_indeksikorjaa(10000, (5 + urakan_alkuvuosi), i, urakka_id),
                         'muut-rahavaraukset'::TOTEUMATYYPPI,
                         (SELECT id
-                           FROM toimenpidekoodi
+                           FROM tehtava
                           WHERE yksiloiva_tunniste = CASE
                                                          WHEN (toimenpidenimi = 'Liikenneympäristön hoito TP')
                                                              -- Tunneleiden hoito Liikenneympäristön hoito toimenpiteelle
@@ -1171,7 +1171,7 @@ BEGIN
                   testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, urakka_id),
                   'muut-rahavaraukset'::TOTEUMATYYPPI,
                   (SELECT id
-                     FROM toimenpidekoodi
+                     FROM tehtava
                     WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
                   NULL,
                   (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1182,7 +1182,7 @@ BEGIN
                   testidata_indeksikorjaa(4000, urakan_alkuvuosi, i, urakka_id),
                   'muut-rahavaraukset'::TOTEUMATYYPPI,
                   (SELECT id
-                     FROM toimenpidekoodi
+                     FROM tehtava
                     WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
                   NULL,
                   (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1197,7 +1197,7 @@ BEGIN
                     testidata_indeksikorjaa(5000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
                     'muut-rahavaraukset'::TOTEUMATYYPPI,
                     (SELECT id
-                       FROM toimenpidekoodi
+                       FROM tehtava
                       WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
                     NULL,
                     (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1208,7 +1208,7 @@ BEGIN
                     testidata_indeksikorjaa(4000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
                     'muut-rahavaraukset'::TOTEUMATYYPPI,
                     (SELECT id
-                       FROM toimenpidekoodi
+                       FROM tehtava
                       WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
                     NULL,
                     (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1223,7 +1223,7 @@ BEGIN
                   testidata_indeksikorjaa(5000, (5 + urakan_alkuvuosi), i, urakka_id),
                   'muut-rahavaraukset'::TOTEUMATYYPPI,
                   (SELECT id
-                     FROM toimenpidekoodi
+                     FROM tehtava
                     WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
                   NULL,
                   (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1234,7 +1234,7 @@ BEGIN
                   testidata_indeksikorjaa(4000, (5 + urakan_alkuvuosi), i, urakka_id),
                   'muut-rahavaraukset'::TOTEUMATYYPPI,
                   (SELECT id
-                     FROM toimenpidekoodi
+                     FROM tehtava
                     WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
                   NULL,
                   (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1260,7 +1260,7 @@ BEGIN
                 (urakan_alkuvuosi, i, 9000,
                  testidata_indeksikorjaa(9000, urakan_alkuvuosi, i, urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
@@ -1268,7 +1268,7 @@ BEGIN
                 (urakan_alkuvuosi, i, 9100,
                  testidata_indeksikorjaa(9100, urakan_alkuvuosi, i, urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -1288,7 +1288,7 @@ BEGIN
                 ((vuosi_ + urakan_alkuvuosi), i, 9000,
                  testidata_indeksikorjaa(9000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
@@ -1296,7 +1296,7 @@ BEGIN
                 ((vuosi_ + urakan_alkuvuosi), i, 9100,
                  testidata_indeksikorjaa(9100, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -1316,7 +1316,7 @@ BEGIN
                 ((5 + urakan_alkuvuosi), i, 9000,
                  testidata_indeksikorjaa(9000, (5 + urakan_alkuvuosi), i, urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
@@ -1324,7 +1324,7 @@ BEGIN
                 ((5 + urakan_alkuvuosi), i, 9100,
                  testidata_indeksikorjaa(9100, (5 + urakan_alkuvuosi), i, urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -1420,12 +1420,12 @@ BEGIN
   -- URAKAN TOIMENPIDEINSTANSSIT
   FOR i IN 1..6 LOOP
     INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
-       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpide WHERE koodi=toimenpidekoodit[i]),
                urakan_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
                (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
   END LOOP;
   INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
-       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi='23151'),
+       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpide WHERE koodi='23151'),
                urakan_nimi || ' ' || 'MHU ja HJU Hoidon johto', (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
                (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
   -- URAKAN KIINTEÄHINTAISET TYÖT (eli suunnitellut hankinnat)
@@ -1469,7 +1469,7 @@ BEGIN
                         testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, urakka_id),
                         'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                         (SELECT id
-                           FROM toimenpidekoodi
+                           FROM tehtava
                           WHERE yksiloiva_tunniste = CASE
                                                          WHEN (toimenpidenimi = 'Talvihoito TP')
                                                              THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
@@ -1486,7 +1486,7 @@ BEGIN
                         testidata_indeksikorjaa(20000, urakan_alkuvuosi, i, urakka_id),
                         'akillinen-hoitotyo'::TOTEUMATYYPPI,
                         (SELECT id
-                           FROM toimenpidekoodi
+                           FROM tehtava
                           WHERE yksiloiva_tunniste = CASE
                                                          WHEN (toimenpidenimi = 'Talvihoito TP')
                                                              THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
@@ -1520,7 +1520,7 @@ BEGIN
                           testidata_indeksikorjaa(100, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
                           'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                           (SELECT id
-                             FROM toimenpidekoodi
+                             FROM tehtava
                             WHERE yksiloiva_tunniste = CASE
                                                            WHEN (toimenpidenimi = 'Talvihoito TP')
                                                                THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
@@ -1537,7 +1537,7 @@ BEGIN
                           testidata_indeksikorjaa(20000, (vuosi_ + urakan_alkuvuosi), i, urakka_id),
                           'akillinen-hoitotyo'::TOTEUMATYYPPI,
                           (SELECT id
-                             FROM toimenpidekoodi
+                             FROM tehtava
                             WHERE yksiloiva_tunniste = CASE
                                                            WHEN (toimenpidenimi = 'Talvihoito TP')
                                                                THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
@@ -1571,7 +1571,7 @@ BEGIN
                         testidata_indeksikorjaa(100, (5 + urakan_alkuvuosi), i, urakka_id),
                         'vahinkojen-korjaukset'::TOTEUMATYYPPI,
                         (SELECT id
-                           FROM toimenpidekoodi
+                           FROM tehtava
                           WHERE yksiloiva_tunniste = CASE
                                                          WHEN (toimenpidenimi = 'Talvihoito TP')
                                                              THEN '49b7388b-419c-47fa-9b1b-3797f1fab21d'::UUID
@@ -1588,7 +1588,7 @@ BEGIN
                         testidata_indeksikorjaa(20000, (5 + urakan_alkuvuosi), i, urakka_id),
                         'akillinen-hoitotyo'::TOTEUMATYYPPI,
                         (SELECT id
-                           FROM toimenpidekoodi
+                           FROM tehtava
                           WHERE yksiloiva_tunniste = CASE
                                                          WHEN (toimenpidenimi = 'Talvihoito TP')
                                                              THEN '1f12fe16-375e-49bf-9a95-4560326ce6cf'::UUID
@@ -1625,7 +1625,7 @@ BEGIN
                   testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, urakka_id),
                   'muut-rahavaraukset'::TOTEUMATYYPPI,
                   (SELECT id
-                     FROM toimenpidekoodi
+                     FROM tehtava
                     WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
                   NULL,
                   (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1636,7 +1636,7 @@ BEGIN
                   testidata_indeksikorjaa(4000, urakan_alkuvuosi, i, urakka_id),
                   'muut-rahavaraukset'::TOTEUMATYYPPI,
                   (SELECT id
-                     FROM toimenpidekoodi
+                     FROM tehtava
                     WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
                   NULL,
                   (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1651,7 +1651,7 @@ BEGIN
                     testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, (vuosi_ + urakan_alkuvuosi)),
                     'muut-rahavaraukset'::TOTEUMATYYPPI,
                     (SELECT id
-                       FROM toimenpidekoodi
+                       FROM tehtava
                       WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
                     NULL,
                     (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1662,7 +1662,7 @@ BEGIN
                     testidata_indeksikorjaa(4000, urakan_alkuvuosi, i, (vuosi_ + urakan_alkuvuosi)),
                     'muut-rahavaraukset'::TOTEUMATYYPPI,
                     (SELECT id
-                       FROM toimenpidekoodi
+                       FROM tehtava
                       WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
                     NULL,
                     (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1677,7 +1677,7 @@ BEGIN
                   testidata_indeksikorjaa(5000, urakan_alkuvuosi, i, (5 + urakan_alkuvuosi)),
                   'muut-rahavaraukset'::TOTEUMATYYPPI,
                   (SELECT id
-                     FROM toimenpidekoodi
+                     FROM tehtava
                     WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'),
                   NULL,
                   (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1688,7 +1688,7 @@ BEGIN
                   testidata_indeksikorjaa(4000, urakan_alkuvuosi, i, (5 + urakan_alkuvuosi)),
                   'muut-rahavaraukset'::TOTEUMATYYPPI,
                   (SELECT id
-                     FROM toimenpidekoodi
+                     FROM tehtava
                     WHERE yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'),
                   NULL,
                   (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
@@ -1714,7 +1714,7 @@ BEGIN
                 (urakan_alkuvuosi, i, 9000,
                  testidata_indeksikorjaa(9000, urakan_alkuvuosi, i,  urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
@@ -1722,7 +1722,7 @@ BEGIN
                 (urakan_alkuvuosi, i, 9100,
                  testidata_indeksikorjaa(9100, urakan_alkuvuosi, i,  urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -1742,7 +1742,7 @@ BEGIN
                 ((vuosi_ + urakan_alkuvuosi), i, 9000,
                  testidata_indeksikorjaa(9000, (vuosi_ + urakan_alkuvuosi), i,  urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
@@ -1750,7 +1750,7 @@ BEGIN
                 ((vuosi_ + urakan_alkuvuosi), i, 9100,
                  testidata_indeksikorjaa(9100, (vuosi_ + urakan_alkuvuosi), i,  urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -1770,7 +1770,7 @@ BEGIN
                 ((5 + urakan_alkuvuosi), i, 9000,
                  testidata_indeksikorjaa(9000, (5 + urakan_alkuvuosi), i,  urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus),
@@ -1778,7 +1778,7 @@ BEGIN
                 ((5 + urakan_alkuvuosi), i, 9100,
                  testidata_indeksikorjaa(9100, (5 + urakan_alkuvuosi), i,  urakka_id),
                 'laskutettava-tyo'::TOTEUMATYYPPI,
-                (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
+                (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'::UUID),
                 NULL,
                 (SELECT id FROM toimenpideinstanssi WHERE nimi = toimenpideinstanssin_nimi),
                 urakan_sopimus);
@@ -1868,23 +1868,23 @@ BEGIN
   FOREACH urakan_nimi SLICE 0 IN ARRAY urakat LOOP
       FOR i IN 1..7 LOOP
         INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
-           VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
+           VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpide WHERE koodi=toimenpidekoodit[i]),
                    urakan_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
                    (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
       END LOOP;
   END LOOP;
 END $$;
 
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'Oulu Aktiivinen Talvihoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT loppupvm FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), 'Oulu Aktiivinen Liikenneympäristön hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT loppupvm FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), 'Oulu Aktiivinen Sorateiden hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT loppupvm FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM toimenpide WHERE koodi='23104'), 'Oulu Aktiivinen Talvihoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT loppupvm FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM toimenpide WHERE koodi='23116'), 'Oulu Aktiivinen Liikenneympäristön hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT loppupvm FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM toimenpide WHERE koodi='23124'), 'Oulu Aktiivinen Sorateiden hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT loppupvm FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 
 -- Toimenpidekoodi-taulun apitunnus-kentän testaamista varten
-INSERT into toimenpidekoodi (nimi, tehtavaryhma, hinnoittelu, yksikko, jarjestys, api_seuranta, api_tunnus, emo, luotu, luoja, taso, ensisijainen, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi) VALUES
+INSERT into tehtava (nimi, tehtavaryhma, hinnoittelu, yksikko, jarjestys, api_seuranta, api_tunnus, emo, luotu, luoja, taso, ensisijainen, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi) VALUES
 ('Apitunnus-testitehtävä', (select id from tehtavaryhma where nimi = 'Talvihoito (A)'),	'{kokonaishintainen,yksikkohintainen}' :: hinnoittelutyyppi [], 'kpl',	999, TRUE, 987654,
-(select id from toimenpidekoodi where koodi = '23104'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE, null, null);
+(select id from toimenpide where koodi = '23104'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE, null, null);
 
-INSERT into toimenpidekoodi (nimi, tehtavaryhma, hinnoittelu, yksikko, jarjestys, api_seuranta, api_tunnus, emo, luotu, luoja, taso, ensisijainen, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi) VALUES
+INSERT into tehtava (nimi, tehtavaryhma, hinnoittelu, yksikko, jarjestys, api_seuranta, api_tunnus, emo, luotu, luoja, taso, ensisijainen, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi) VALUES
 ('Apitunnus-testitehtävä, tupla', (select id from tehtavaryhma where nimi = 'Talvihoito (A)'),	'{kokonaishintainen,yksikkohintainen}' :: hinnoittelutyyppi [], 'kpl',	998, TRUE, 1370,
- (select id from toimenpidekoodi where koodi = '23104'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE, 1999, 2003);
-INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Utajärven päällystysurakka'), (SELECT id FROM toimenpidekoodi WHERE taso=3 AND nimi='Päällystyksen yksikköhintaiset työt'), 'Utajärven Päällystyksen yksikköhintaiset työt', (SELECT alkupvm FROM urakka WHERE nimi='Utajärven päällystysurakka'),(SELECT loppupvm FROM urakka WHERE nimi='Utajärven päällystysurakka'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+ (select id from toimenpide where koodi = '23104'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE, 1999, 2003);
+INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Utajärven päällystysurakka'), (SELECT id FROM toimenpide WHERE taso=3 AND nimi='Päällystyksen yksikköhintaiset työt'), 'Utajärven Päällystyksen yksikköhintaiset työt', (SELECT alkupvm FROM urakka WHERE nimi='Utajärven päällystysurakka'),(SELECT loppupvm FROM urakka WHERE nimi='Utajärven päällystysurakka'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');

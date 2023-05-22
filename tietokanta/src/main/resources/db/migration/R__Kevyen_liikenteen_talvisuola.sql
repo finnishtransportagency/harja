@@ -8,7 +8,7 @@ DECLARE
     uusi_trp                 RECORD;
     maara                    INT   := 0;
     suolaus_tpk              INT   := (SELECT id
-                                       FROM toimenpidekoodi
+                                       FROM tehtava
                                        WHERE nimi = 'Suolaus');
     suolaus_materiaalikoodit INT[] := (SELECT ARRAY_AGG(id)
                                        FROM materiaalikoodi

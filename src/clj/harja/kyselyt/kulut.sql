@@ -35,7 +35,7 @@ from (select tr.nimi      as "nimi",
              kt.summa     as "summa"
       from kustannusarvioitu_tyo kt
              join toimenpideinstanssi tpi on kt.toimenpideinstanssi = tpi.id and tpi.urakka = :urakka
-             join toimenpidekoodi tpk
+             join tehtava tpk
              join tehtavaryhma tr on tr.id = tpk.tehtavaryhma
                   on tpk.id = kt.tehtava and tpk.nimi = 'Hoidonjohtopalkkio'
       where format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE between :alkupvm::DATE and :loppupvm::DATE
@@ -46,7 +46,7 @@ from (select tr.nimi      as "nimi",
              kt.summa     as "summa"
       from kustannusarvioitu_tyo kt
              join toimenpideinstanssi tpi on kt.toimenpideinstanssi = tpi.id and tpi.urakka = :urakka
-             join toimenpidekoodi tpk
+             JOIN tehtava tpk
              join tehtavaryhma tr
                   on tpk.tehtavaryhma = tr.id and tr.yksiloiva_tunniste in ('a6614475-1950-4a61-82c6-fda0fd19bb54') -- Tilaajan varaukset -tehtäväryhmän yksilöivä tunniste
                   on tpk.id = kt.tehtava
@@ -259,7 +259,7 @@ WHERE kulu = :id
   AND id = :kohdistuksen-id;
 
 -- name: hae-tehtavan-nimi
-SELECT nimi FROM toimenpidekoodi
+SELECT nimi FROM tehtava
 WHERE id = :id AND poistettu IS NOT TRUE;
 
 -- name: hae-tehtavaryhman-nimi
