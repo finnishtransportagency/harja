@@ -103,6 +103,7 @@
     [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
     [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
+    [harja.palvelin.palvelut.tyomaapaivakirja :as tyomaapaivakirja]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -512,6 +513,10 @@
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
                                 [:http-palvelin :db])
+      
+      :tyomaapaivakirja (component/using
+              (tyomaapaivakirja/->Tyomaapaivakirja)
+              [:http-palvelin :db])
 
       :valikatselmukset (component/using
                           (valikatselmukset/->Valikatselmukset)

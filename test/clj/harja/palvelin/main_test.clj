@@ -158,7 +158,8 @@
     :api-sampo
     :harja-status
     :rajoitusalue-pituudet
-    :api-tyomaapaivakirja})
+    :api-tyomaapaivakirja
+    :tyomaapaivakirja})
 
 (def ei-statusta
   #{:metriikka
@@ -226,7 +227,8 @@
     :harja-status
     :info
     :rajoitusalue-pituudet
-    :api-tyomaapaivakirja})
+    :api-tyomaapaivakirja
+    :tyomaapaivakirja})
 
 (def hidas-ok-status #{:itmf})
 
