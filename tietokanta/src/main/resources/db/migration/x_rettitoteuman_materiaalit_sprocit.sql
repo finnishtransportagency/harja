@@ -15,11 +15,11 @@
                                 join toteuma_tehtava tt on t.id = tt.toteuma
                            -- join toteuma_materiaali tm on t.id = tm.toteuma
                                 join toteuman_reittipisteet tr on tt.toteuma = tr.toteuma
-                                join toimenpidekoodi t2 on tt.toimenpidekoodi = t2.id and t2.id in
+                                join toimenpide t2 on tt.toimenpidekoodi = t2.id and t2.id in
                            /*(17299, 17359, 1367, 1368, 19910,
                             1369, 17365, 1412, 1413, 17365,
                             1412, 1413, 7067) */
-                                                                                          (select id from toimenpidekoodi where emo = 13720)
+                                                                                          (select id from toimenpide where emo = 13720)
                        WHERE t.alkanut > '2019-01-01')
             LOOP
                 WHILE (i < array_length(reitti.reittipisteet, 1))

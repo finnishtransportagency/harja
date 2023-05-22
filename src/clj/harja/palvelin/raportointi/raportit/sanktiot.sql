@@ -39,8 +39,8 @@ FROM urakka u
                                     OR
                                      lp.yllapitokohde IS NOT NULL AND
                                      (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE)
-     LEFT JOIN toimenpidekoodi tehtava on tpi.toimenpide = tehtava.id
-     LEFT JOIN toimenpidekoodi toimenpide on tehtava.emo = toimenpide.id
+     LEFT JOIN tehtava tehtava on tpi.toimenpide = tehtava.id
+     LEFT JOIN toimenpide toimenpide on tehtava.emo = toimenpide.id
 WHERE u.alkupvm < :loppu::DATE AND u.loppupvm > :alku::DATE
     AND ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka) -- varmistaa ettei testiurakka tule mukaan alueraportteihin
     AND (:urakka::INTEGER IS NOT NULL OR (
@@ -71,7 +71,7 @@ SELECT
   o.id           AS hallintayksikko_id,
   o.nimi         AS hallintayksikko_nimi,
   o.elynumero    AS hallintayksikko_elynumero,
-  (SELECT nimi FROM toimenpidekoodi WHERE id = (SELECT emo FROM toimenpidekoodi WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2
+  (SELECT nimi FROM toimenpide WHERE id = (SELECT emo FROM toimenpide WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2
 FROM sanktio s
   LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
   JOIN sanktiotyyppi st ON s.tyyppi = st.id
@@ -143,8 +143,8 @@ FROM erilliskustannus ek
     AND (u.tyyppi = 'hoito' OR (u.tyyppi = 'teiden-hoito'
         AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
                                       FROM toimenpideinstanssi tpi
-                                               JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                                               JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                                               JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+                                               JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
                                            maksuera m
                                       WHERE tpi.urakka = u.id
                                         AND m.toimenpideinstanssi = tpi.id

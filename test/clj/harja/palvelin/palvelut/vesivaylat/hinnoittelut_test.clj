@@ -126,7 +126,7 @@
     (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
           urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           toimenpidekoodi-id (ffirst (q "SELECT id
-                                        FROM toimenpidekoodi
+                                        from tehtava
                                         WHERE nimi = 'Henkilöstö: Ammattimies'"))
           hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
           tyot-ennen (ffirst (q "SELECT COUNT(*) FROM vv_tyo WHERE poistettu IS NOT TRUE"))
@@ -196,7 +196,7 @@
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
         urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         toimenpidekoodi-id (ffirst (q "SELECT id
-                                        FROM toimenpidekoodi
+                                        from tehtava
                                         WHERE nimi = 'Henkilöstö: Ammattimies'"))
         insert-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id

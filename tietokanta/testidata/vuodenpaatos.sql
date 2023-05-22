@@ -74,7 +74,7 @@ $$
 
                 -- JJHK, muut kulut
                 tpk := (SELECT id
-                        FROM toimenpidekoodi
+                        FROM tehtava
                         WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'); -- Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.
                 indeksikorjattu_summa := (SELECT testidata_indeksikorjaa(3.50, vuosi_, kuukausi_, urakka_id_));
                 INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, toimenpideinstanssi,
@@ -86,7 +86,7 @@ $$
 
                 -- HJ-palkkio
                 tpk := (SELECT id
-                        FROM toimenpidekoodi
+                        FROM tehtava
                         WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8'); -- Hoidonjohtopalkkio
                 indeksikorjattu_summa := (SELECT testidata_indeksikorjaa(7000, vuosi_, kuukausi_, urakka_id_));
                 INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, toimenpideinstanssi,

@@ -12,7 +12,7 @@ SELECT
        tk.nimi AS tehtavanimi,
        tpi.id AS toimenpideinstanssi
   FROM muutoshintainen_tyo mt
-       JOIN toimenpidekoodi tk ON mt.tehtava = tk.id
+       JOIN tehtava tk ON mt.tehtava = tk.id
        JOIN toimenpideinstanssi tpi ON tk.emo = tpi.toimenpide
  WHERE mt.urakka = :urakka AND tpi.urakka = mt.urakka
        AND mt.poistettu != true;

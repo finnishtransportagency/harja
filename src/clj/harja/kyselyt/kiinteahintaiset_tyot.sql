@@ -14,7 +14,7 @@ SELECT kht.id,
        tpik.koodi AS "toimenpiteen-koodi"
 FROM kiinteahintainen_tyo kht
        LEFT JOIN toimenpideinstanssi tpi ON kht.toimenpideinstanssi = tpi.id
-       LEFT JOIN toimenpidekoodi tpik ON tpik.id = tpi.toimenpide
+       LEFT JOIN toimenpide tpik ON tpik.id = tpi.toimenpide
 WHERE tpi.urakka = :urakka
 ORDER BY vuosi, kuukausi;
 
@@ -35,5 +35,5 @@ SET likainen = TRUE,
     muokattu = current_timestamp
 WHERE toimenpideinstanssi IN (SELECT id
                               FROM toimenpideinstanssi
-                              WHERE id = :toimenpideinstanssi and toimenpide = (select id from toimenpidekoodi where koodi = '23151') -- MHU ja HJU Hoidon johto
+                              WHERE id = :toimenpideinstanssi and toimenpide = (select id from toimenpide where koodi = '23151') -- MHU ja HJU Hoidon johto
                                 AND loppupvm > current_timestamp - INTERVAL '3 months');
