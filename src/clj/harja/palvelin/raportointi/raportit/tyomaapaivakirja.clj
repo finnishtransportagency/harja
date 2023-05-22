@@ -13,9 +13,7 @@
    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.muut-huomiot :as muut-huomiot]))
 
 (defn suorita [_ _ {:keys [valittu-rivi] :as parametrit}]
-  (let [_ (println "\n \n Params T: " parametrit)
-        otsikko "Test"]
-
+  (let [otsikko "Työmaapäiväkirja"]
 
     [:raportti {:nimi otsikko
                 :piilota-otsikko? true}
