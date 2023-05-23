@@ -16,7 +16,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
-            [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot])
+            [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
+            [harja.kyselyt.palautejarjestelma :as palautejarjestelma-q])
   (:import (java.util Date)))
 
 (def ilmoitus-xf
@@ -427,6 +428,10 @@
     (q/peruuta-ilmoitusten-toimenpiteiden-aloitukset! db idt)
     (q/tallenna-ilmoitusten-toimenpiteiden-aloitukset! db idt)))
 
+(defn hae-ilmoitusten-aiheet-ja-tarkenteet [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/ilmoitukset-ilmoitukset user)
+  (palautejarjestelma-q/hae-aiheet-ja-tarkenteet db))
+
 (defrecord Ilmoitukset []
   component/Lifecycle
   (start [{db :db
@@ -453,6 +458,9 @@
     (julkaise-palvelu http :peruuta-ilmoituksen-toimenpiteiden-aloitus
                       (fn [user idt]
                         (tallenna-ilmoituksen-toimenpiteiden-aloitus db user idt true)))
+    (julkaise-palvelu http :hae-ilmoitusten-aiheet-ja-tarkenteet
+      (fn [user _]
+        (hae-ilmoitusten-aiheet-ja-tarkenteet db user)))
     this)
 
   (stop [this]

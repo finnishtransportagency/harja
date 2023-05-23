@@ -22,3 +22,13 @@
     "jarjestys" ::jarjestys
     "kaytossa" ::kaytossa?
     "aihe_id" ::aihe-id}])
+
+(def domain->api
+  {::aihe :aihe
+   ::aihe-id :aihe-id
+   ::nimi :nimi
+   ::jarjestys :jarjestys
+   ::kaytossa? :kaytossa?
+   ::tarkenteet :tarkenteet
+   ::tarkenne :tarkenne
+   ::tarkenne-id :tarkenne-id})
