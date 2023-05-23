@@ -16,7 +16,7 @@ SELECT
   tk.id   AS tehtavan_id,
   tk.nimi AS tehtavan_nimi
 FROM yksikkohintainen_tyo yt
-  LEFT JOIN toimenpidekoodi tk ON yt.tehtava = tk.id
+  LEFT JOIN tehtava tk ON yt.tehtava = tk.id
 WHERE urakka = :urakka
 ORDER BY tk.nimi;
 
@@ -26,7 +26,7 @@ SELECT
   tpk.id,
   tpk.nimi,
   tpk.yksikko
-FROM toimenpidekoodi tpk
+FROM tehtava tpk
 WHERE
   NOT poistettu AND
   id IN (
@@ -68,8 +68,8 @@ SET likainen = TRUE,
 WHERE maksuera IN (SELECT m.numero
                    FROM maksuera m
                      JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi AND tpi. loppupvm > current_timestamp - INTERVAL '3 months'
-                     JOIN toimenpidekoodi emo ON emo.id = tpi.toimenpide
-                     JOIN toimenpidekoodi tpk ON tpk.emo = emo.id
+                     JOIN toimenpide emo ON emo.id = tpi.toimenpide
+                     JOIN tehtava tpk ON tpk.emo = emo.id
                    WHERE m.tyyppi = 'yksikkohintainen' AND tpi.urakka = :urakka AND tpk.id IN (:tehtavat));
 
 -- name: hae-yksikkohintaiset-tyot-kuukausittain-urakalle
@@ -84,10 +84,10 @@ SELECT
   SUM(tt.maara) as toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
+  JOIN tehtava t4 ON tt.toimenpidekoodi=t4.id
 WHERE tot.urakka = :urakka
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM tehtava tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, t4.yksikko, vuosi, kuukausi, t4.id
 ORDER BY t4.nimi, t4.yksikko;
@@ -103,14 +103,14 @@ SELECT
   SUM(tt.maara) as toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
+  JOIN tehtava t4 ON tt.toimenpidekoodi=t4.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
                      WHERE hallintayksikko = :hallintayksikko
                            AND (TRUE IN (SELECT UNNEST(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[]))
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM tehtava tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi
 ORDER BY t4.nimi, yksikko;
@@ -128,7 +128,7 @@ SELECT
   SUM(tt.maara) as toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
+  JOIN tehtava t4 ON tt.toimenpidekoodi=t4.id
   JOIN urakka u ON tot.urakka = u.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
@@ -136,7 +136,7 @@ WHERE tot.urakka IN (SELECT id
                            AND (TRUE IN (SELECT UNNEST(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[]))
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM tehtava tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id
 ORDER BY t4.nimi, yksikko;
@@ -152,13 +152,13 @@ SELECT
   SUM(tt.maara) as toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma = tot.id AND tt.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi = t4.id
+  JOIN tehtava t4 ON tt.toimenpidekoodi = t4.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
                            WHERE (TRUE IN (SELECT UNNEST(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[]))
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM tehtava tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi
 ORDER BY t4.nimi, yksikko;
@@ -176,14 +176,14 @@ SELECT
   SUM(tt.maara) as toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
+  JOIN tehtava t4 ON tt.toimenpidekoodi=t4.id
   JOIN urakka u ON tot.urakka = u.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
                            WHERE (TRUE IN (SELECT UNNEST(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[]))
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM tehtava tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, yksikko, vuosi, kuukausi, u.id
 ORDER BY t4.nimi, yksikko;
@@ -196,11 +196,11 @@ SELECT
   SUM(tt.maara)              AS toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma = tot.id AND tt.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi = t4.id
+  JOIN tehtava t4 ON tt.toimenpidekoodi = t4.id
 WHERE tot.urakka = :urakka
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                        FROM toimenpidekoodi tpk
+                                                        FROM tehtava tpk
                                                         WHERE tpk.emo = :tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, t4.id
@@ -214,7 +214,7 @@ SELECT
   SUM(tt.maara)                  AS toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma = tot.id AND tt.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi = t4.id
+  JOIN tehtava t4 ON tt.toimenpidekoodi = t4.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
                      WHERE hallintayksikko = :hallintayksikko
@@ -222,7 +222,7 @@ WHERE tot.urakka IN (SELECT id
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                        FROM toimenpidekoodi tpk
+                                                        FROM tehtava tpk
                                                         WHERE tpk.emo = :tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, t4.yksikko;
@@ -237,7 +237,7 @@ SELECT
   SUM(tt.maara)                  AS toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma = tot.id AND tt.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi = t4.id
+  JOIN tehtava t4 ON tt.toimenpidekoodi = t4.id
   JOIN urakka u ON tot.urakka = u.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
@@ -246,7 +246,7 @@ WHERE tot.urakka IN (SELECT id
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                        FROM toimenpidekoodi tpk
+                                                        FROM tehtava tpk
                                                         WHERE tpk.emo = :tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, t4.yksikko, u.id
@@ -260,14 +260,14 @@ SELECT
   SUM(tt.maara)                  AS toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma = tot.id AND tt.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi = t4.id
+  JOIN tehtava t4 ON tt.toimenpidekoodi = t4.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
                      WHERE (TRUE IN (SELECT UNNEST(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[]))
                           AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                        FROM toimenpidekoodi tpk
+                                                        FROM tehtava tpk
                                                         WHERE tpk.emo = :tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, t4.yksikko
@@ -283,7 +283,7 @@ SELECT
   SUM(tt.maara)                  AS toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma = tot.id AND tt.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi = t4.id
+  JOIN tehtava t4 ON tt.toimenpidekoodi = t4.id
   JOIN urakka u ON tot.urakka = u.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
@@ -291,7 +291,7 @@ WHERE tot.urakka IN (SELECT id
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
       AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                        FROM toimenpidekoodi tpk
+                                                        FROM tehtava tpk
                                                         WHERE tpk.emo = :tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY t4.nimi, t4.yksikko, u.id
@@ -307,11 +307,11 @@ SELECT date_trunc('day', tot.alkanut) AS pvm,
   SUM(tt.maara)                  AS toteutunut_maara
 FROM toteuma tot
   JOIN toteuma_tehtava tt ON tt.toteuma=tot.id AND tt.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi t4 ON tt.toimenpidekoodi=t4.id
+  JOIN tehtava t4 ON tt.toimenpidekoodi=t4.id
   JOIN toimenpideinstanssi tpi ON (tpi.toimenpide = t4.emo AND tpi.urakka = :urakka)
 WHERE tot.urakka = :urakka
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
-      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM toimenpidekoodi tpk WHERE tpk.emo=:tpi))
+      AND (:rajaa_tpi = false OR tt.toimenpidekoodi IN (SELECT tpk.id FROM tehtava tpk WHERE tpk.emo=:tpi))
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY pvm, t4.nimi, tpi.nimi, tehtava_id
 ORDER BY pvm ASC, t4.nimi;

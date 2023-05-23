@@ -507,7 +507,7 @@ FROM toteuma_tehtava tt
                     AND tt.toimenpidekoodi IN (:toimenpidekoodit)
                     AND tt.poistettu IS NOT TRUE
                     AND t.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+  JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
 
@@ -515,7 +515,7 @@ WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
 SELECT
   tt.toimenpidekoodi AS toimenpidekoodi,
   (SELECT nimi
-   FROM toimenpidekoodi tpk
+   FROM tehtava tpk
    WHERE id = tt.toimenpidekoodi) AS toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
@@ -562,7 +562,7 @@ FROM toteuma_tehtava tt
                     AND tt.toimenpidekoodi IN (:toimenpidekoodit)
                     AND tt.poistettu IS NOT TRUE
                     AND t.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+  JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
   LEFT JOIN toteuma_materiaali tm ON t.id = tm.toteuma AND tm.poistettu IS NOT TRUE
   LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL)
@@ -655,7 +655,7 @@ WHERE
 -- name: hae-toimenpidekoodit
 SELECT
   id
-FROM toimenpidekoodi
+FROM tehtava
 WHERE suoritettavatehtava :: TEXT IN (:toimenpiteet);
 
 -- name: hae-tietyomaat

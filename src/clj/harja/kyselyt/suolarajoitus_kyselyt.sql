@@ -275,7 +275,7 @@ select * from leikkaavat_pohjavesialueet(:tie::int, :aosa::int, :aet::int, :losa
 SELECT ut.maara as talvisuolan_kayttoraja
   FROM urakka_tehtavamaara ut
  WHERE ut.tehtava = (SELECT id
-                       FROM toimenpidekoodi
+                       from tehtava
                       WHERE taso = 4
                         AND suunnitteluyksikko = 'kuivatonnia'
                         AND suoritettavatehtava = 'suolaus')

@@ -90,8 +90,8 @@ DECLARE
 BEGIN
   FOREACH toimenpide_koodi_ IN ARRAY toimenpide_koodit
   LOOP
-    toimenpide_nimi_ = (SELECT nimi FROM toimenpidekoodi WHERE taso = 3 AND koodi=toimenpide_koodi_);
-    toimenpide_id_ = (SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi=toimenpide_koodi_);
+    toimenpide_nimi_ = (SELECT nimi FROM toimenpide WHERE taso = 3 AND koodi=toimenpide_koodi_);
+    toimenpide_id_ = (SELECT id FROM toimenpide WHERE taso = 3 AND koodi=toimenpide_koodi_);
     FOREACH urakka_ IN ARRAY urakat
     LOOP
       FOREACH tyyppi_ IN ARRAY tyypit
