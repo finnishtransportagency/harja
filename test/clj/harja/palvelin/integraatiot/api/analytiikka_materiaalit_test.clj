@@ -77,8 +77,8 @@
 
 (deftest varmista-toteumien-vaatimat-materiaalit-loytyy
   (let [;; Aseta tiukka hakuväli, josta löytyy vain vähän toteumia
-        alkuaika "2004-01-01T00:00:00+03"
-        loppuaika "2004-12-31T21:00:00+03"
+        alkuaika "2004-10-19T00:00:00+03"
+        loppuaika "2004-10-20T00:00:00+03"
         toteumavastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti)
         toteuma-body (cheshire/decode (:body toteumavastaus) true)
         toteuma (:toteuma (first (:reittitoteumat toteuma-body)))
