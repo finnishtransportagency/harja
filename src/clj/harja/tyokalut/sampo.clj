@@ -66,17 +66,17 @@
          " null, "                                          ;; tuotenumero
 
          (if (and emo (not= emo koodi))
-           (str " (SELECT nimi FROM toimenpidekoodi WHERE koodi='" emo "') ")
+           (str " (SELECT nimi FROM toimenpide WHERE koodi='" emo "') ")
            " NULL ")                                        ;; emon nimi
          ", "
 
          (if (and emo (not= emo koodi))
-           (str " (SELECT koodi FROM toimenpidekoodi WHERE koodi='" emo "') ")
+           (str " (SELECT koodi FROM toimenpide WHERE koodi='" emo "') ")
            " NULL ")                                        ;; emon koodi
          ", "
 
          (if (and emo (not= emo koodi))
-           (str " (SELECT taso FROM toimenpidekoodi WHERE koodi='" emo "') ")
+           (str " (SELECT taso FROM toimenpide WHERE koodi='" emo "') ")
            " NULL ")                                        ;; emon taso
 
          ");\n")))

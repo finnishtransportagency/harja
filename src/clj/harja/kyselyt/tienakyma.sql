@@ -15,7 +15,7 @@ SELECT t.id,
   t.suorittajan_nimi AS suorittaja_nimi,
   (SELECT array_agg(row(tt.toimenpidekoodi, tt.maara, tpk.yksikko, tpk.nimi))
    FROM toteuma_tehtava tt
-     JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+     JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
    WHERE tt.toteuma = t.id) as tehtavat,
   t.tr_numero AS tierekisteriosoite_numero,
   t.tr_alkuosa AS tierekisteriosoite_alkuosa,

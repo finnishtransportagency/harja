@@ -23,12 +23,12 @@ SELECT
   id,
   nimi,
   yksikko
-FROM toimenpidekoodi
+from tehtava
 WHERE
   NOT poistettu AND
   id IN
   (SELECT DISTINCT (id)
-   FROM toimenpidekoodi
+   from tehtava
    WHERE emo IN
          (SELECT DISTINCT (tpi.toimenpide)
           FROM kokonaishintainen_tyo kht

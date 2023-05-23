@@ -174,7 +174,7 @@ $$
         sopimus_id := (SELECT id FROM sopimus WHERE urakka = urakka_id AND paasopimus IS NULL); --MHU Oulu sopimus
         tpi := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP');
         kayttaja_id := (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio');
-        toimenpidekoodi_hoidonjohtopalkkio := (SELECT id FROM toimenpidekoodi WHERE nimi = 'Hoidonjohtopalkkio');
+        toimenpidekoodi_hoidonjohtopalkkio := (SELECT id FROM tehtava WHERE nimi = 'Hoidonjohtopalkkio');
         tehtavaryhma_erillishankinnat := (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');
         tehtavaryhma_hjpalkkiot := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
         tehtavaryhma_johto_hallintokorvaus := (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)');

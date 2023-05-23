@@ -86,10 +86,10 @@
   (let [tr-tp-lkm (ffirst
                     (q (str "SELECT count(distinct tr3.id)
                                FROM tehtavaryhma tr3
-                                    LEFT JOIN toimenpidekoodi tpk4 ON tr3.id = tpk4.tehtavaryhma
+                                    LEFT JOIN tehtava tpk4 ON tr3.id = tpk4.tehtavaryhma
                                             AND tpk4.taso = 4 AND tpk4.ensisijainen is true
                                             AND tpk4.poistettu is not true AND tpk4.piilota is not true
-                                    JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+                                    JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
                                     JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id and tpi.urakka = "
                          @oulun-maanteiden-hoitourakan-2019-2024-id
                          "WHERE (tr3.yksiloiva_tunniste IS NULL\n                                                 OR (tr3.yksiloiva_tunniste IS NOT NULL AND tr3.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'))")))
