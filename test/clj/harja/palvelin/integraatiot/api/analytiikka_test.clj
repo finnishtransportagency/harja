@@ -50,6 +50,25 @@
   (is (str/includes? vastaus "tehtava"))
   (is (str/includes? vastaus "muutostiedot")))
 
+(deftest hae-toteumat-test-aikaraja-ylittyy
+  ;; Rajapinta rajoitettu hakemaan max 24h aikavälin
+  ;; Testataan että rajoitus toimii 
+  (let [alkuaika "2004-10-19T00:00:00+03"
+        loppuaika "2004-10-20T00:00:00+03"
+        vastaus-ok (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))
+
+        ;; Asetetaan ajaksi yli 24 tuntia
+        alkuaika "2004-10-19T00:00:00+03"
+        loppuaika "2004-10-21T00:00:00+03"
+        vastaus-epaonnistuu (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))]
+    
+    ;; Ensimmäinen kutsi pitäisi mennä läpi
+    (is (= 200 (:status @vastaus-ok)))
+    (sisaltaa-perustiedot (:body @vastaus-ok))
+    ;; Toisen pitäisi epäonnistua ja antaa virhekoodin
+    (is (= 400 (:status @vastaus-epaonnistuu)))
+    (is (str/includes? (-> @vastaus-epaonnistuu :body) "Aikaväli ylittää sallitun rajan"))))
+
 (deftest hae-toteumat-test-yksinkertainen-onnistuu
   (let [; Aseta tiukka hakuväli, josta löytyy vain vähän toteumia
         alkuaika "2004-10-19T00:00:00+03"

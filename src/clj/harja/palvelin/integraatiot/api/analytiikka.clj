@@ -64,8 +64,8 @@
        :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-02T00:00:00+03" (:loppuaika parametrit))}))
 
   ;; Rajoitetaan toteumien haku yhteen vuorokauteen, muuten meillä voi mennä tuotannosta levyt tukkoon
-  (let [alkuaika-pvm (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (:alkuaika parametrit))
-        loppuaika-pvm (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (:loppuaika parametrit))
+  (let [alkuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) (:alkuaika parametrit))
+        loppuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) (:loppuaika parametrit))
         aikavali-sekunteina (pvm/aikavali-sekuntteina alkuaika-pvm loppuaika-pvm)
         syotetty-aikavali-tunteina-str (str (int (/ aikavali-sekunteina 60 60)))
         paiva-sekunteina 90000] ;; Käytetään 25 tuntia
