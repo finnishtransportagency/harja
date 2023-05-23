@@ -544,7 +544,7 @@
                                           :vayla-tyyli? true
                                           :data-cy "hoitokausi-valinta"
                                           :valitse-fn #(e! (suolarajoitukset-tiedot/->ValitseHoitovuosi %))
-                                          :format-fn #(str "01.10." % " - 30.9." (inc %))
+                                          :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitovuodet)
                                           :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
              hoitovuodet]]]]
 
