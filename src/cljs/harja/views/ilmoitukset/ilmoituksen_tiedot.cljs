@@ -13,6 +13,7 @@
             [harja.views.ilmoituskuittaukset :as kuittaukset]
             [harja.ui.ikonit :as ikonit]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.palautejarjestelma-domain :as palautejarjestelma]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.tiedot.ilmoitukset.viestit :as v]
@@ -46,7 +47,8 @@
    "Toimenpiteet aloitettu " (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))
    "Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")])
 
-(defn aiheen-sisaltavat-yleiset-tiedot [ilmoitus]
+(defn aiheen-sisaltavat-yleiset-tiedot [ilmoitus aiheet-ja-tarkenteet]
+  (println "jere testaa::" palautejarjestelma/hae-aihe aiheet-ja-tarkenteet (:aihe ilmoitus))
   [yleiset/tietoja {:piirra-viivat? true
                     :class "body-text"
                     :tietorivi-luokka "padding-8 css-grid css-grid-colums-12rem-9"}
@@ -59,24 +61,24 @@
    "Yhteydenottopyyntö " (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")
    "Sijainti " (tr-domain/tierekisteriosoite-tekstina (:tr ilmoitus))
    "Paikan kuvaus " (:paikankuvaus ilmoitus)
-   "Aihe " (:aihe ilmoitus)
-   "Tarkenne " (:tarkenne ilmoitus)
+   "Aihe " (palautejarjestelma/hae-aihe aiheet-ja-tarkenteet (:aihe ilmoitus))
+   "Tarkenne " (palautejarjestelma/hae-tarkenne aiheet-ja-tarkenteet (:aihe ilmoitus) (:tarkenne ilmoitus))
    "Otsikko " (:otsikko ilmoitus)
    "Kuvaus " (when (:lisatieto ilmoitus) (:lisatieto ilmoitus))
    "Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")
    (when (:toimenpiteet-aloitettu ilmoitus) "Toimenpiteet aloitettu ")
    (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))])
 
-(defn ilmoitus [e! ilmoitus]
+(defn ilmoitus [_e! _ilmoitus _aiheet-ja-tarkenteet]
   (let [nayta-valitykset? (atom false)]
-    (fn [e! ilmoitus]
+    (fn [e! ilmoitus aiheet-ja-tarkenteet]
       [:div
        [bs/panel {}
         (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
         [:span
          (if-not (:aihe ilmoitus)
            [selitteen-sisaltavat-yleiset-tiedot ilmoitus]
-           [aiheen-sisaltavat-yleiset-tiedot ilmoitus])
+           [aiheen-sisaltavat-yleiset-tiedot ilmoitus aiheet-ja-tarkenteet])
          [:br]
          [yleiset/tietoja {:piirra-viivat? true
                            :class "body-text"

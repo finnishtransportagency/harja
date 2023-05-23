@@ -6,6 +6,7 @@
              [kuittausvaatimukset-str ilmoitustyypin-lyhenne-ja-nimi
               +ilmoitusten-selitteet+ kuittaustyypin-selite kuittaustyypin-lyhenne
               tilan-selite vaikutuksen-selite] :as domain]
+            [harja.domain.palautejarjestelma-domain :as palautejarjestelma]
             [harja.tuck-remoting.ilmoitukset-ohjain :as ilmoitukset-ws]
             [harja.ui.bootstrap :as bs]
             [harja.ui.debug :as debug]
@@ -63,12 +64,12 @@
                  "Uusien ilmoitusten reaaliaikahaku aktiivinen"
                  (str "Uusia ilmoituksia haetaan " (/ tiedot/taustahaun-viive-ms 1000) " sekunnin välein."))]]]])
 
-(defn ilmoituksen-tiedot [e! ilmoitus]
+(defn ilmoituksen-tiedot [e! ilmoitus aiheet-ja-tarkenteet]
   [:div
    [:span
     [:div.margin-vertical-16
      [napit/takaisin "Listaa ilmoitukset" #(e! (v/->PoistaIlmoitusValinta)) {:luokka "nappi-reunaton"} ]]
-    [it/ilmoitus e! ilmoitus]]])
+    [it/ilmoitus e! ilmoitus aiheet-ja-tarkenteet]]])
 
 (defn- kuittaus-tooltip [{:keys [kuittaustyyppi kuitattu kuittaaja] :as kuittaus} napin-kuittaustyypi kuitattu? oikeus?]
   (let [selite (kuittaustyypin-selite (or kuittaustyyppi napin-kuittaustyypi))]
@@ -220,13 +221,16 @@
    [:div.harmaa-teksti "Tunniste"]
    [:span (or tunniste "-")]])
 
+
+
 (defn ilmoitusten-paanakyma
   [e! {ws-ilmoitusten-kuuntelu :ws-ilmoitusten-kuuntelu
        valinnat-nyt :valinnat
        kuittaa-monta :kuittaa-monta
        haetut-ilmoitukset :ilmoitukset
        ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
-       pikakuittaus :pikakuittaus :as ilmoitukset}]
+       pikakuittaus :pikakuittaus
+       aiheet-ja-tarkenteet :aiheet-ja-tarkenteet :as ilmoitukset}]
 
   (let [{valitut-ilmoitukset :ilmoitukset :as kuittaa-monta-nyt} kuittaa-monta
         valitse-ilmoitus! (when kuittaa-monta-nyt
@@ -239,8 +243,12 @@
         vapaa-loppuaika (-> valinnat-nyt :valitetty-urakkaan-loppuaika)
         tuntia-sitten (pvm/tuntia-sitten tunteja-valittu)
         valittu-alkupvm (if tunteja-valittu tuntia-sitten vapaa-alkuaika)
-        valittu-loppupvm (if tunteja-valittu (pvm/nyt) vapaa-loppuaika)]
-    
+        valittu-loppupvm (if tunteja-valittu (pvm/nyt) vapaa-loppuaika)
+        ilmoituksilla-aihe-ja-tarkenne? (every? #(and
+                                                   (some? (:tarkenne %))
+                                                   (some? (:aihe %)))  haetut-ilmoitukset)]
+
+
     [:span.ilmoitukset
      [debug/debug ilmoitukset]
 
@@ -327,10 +335,15 @@
          :tyyppi :komponentti
          :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))
          :otsikkorivi-luokka "tyyppi" :leveys ""}
-        {:otsikko "Selite" :nimi :selitteet
-         :tyyppi :komponentti
-         :komponentti it/selitelista
-         :otsikkorivi-luokka "selite" :leveys ""}
+        (if ilmoituksilla-aihe-ja-tarkenne?
+          {:otsikko "Tarkenne" :nimi :tarkenne
+           :tyyppi :string
+           :hae #(palautejarjestelma/hae-tarkenne aiheet-ja-tarkenteet (:aihe %) (:tarkenne %))
+           :otsikkorivi-luokka "selite" :leveys ""}
+          {:otsikko "Selite" :nimi :selitteet
+           :tyyppi :komponentti
+           :komponentti it/selitelista
+           :otsikkorivi-luokka "selite" :leveys ""})
         {:otsikko "Lisätieto" :nimi :lisatieto :otsikkorivi-luokka "lisatieto"
          :leveys ""
          :luokka "lisatieto-rivi"
@@ -387,6 +400,7 @@
           (e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu valinnat))
           (e! (ilmoitukset-ws/->KatkaiseYhteys)))))
     (komp/sisaan-ulos #(do
+                         (e! (v/->HaeAiheetJaTarkenteet))
                          (notifikaatiot/pyyda-notifikaatiolupa)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                          (nav/vaihda-kartan-koko! :M)
@@ -414,11 +428,11 @@
                          ;;        Otetaan tämä ehtolause pois käytöstä, jos WS-kuuntelu koetaan testeissä vakaaksi.
                          (when @tiedot/ws-kuuntelija-ominaisuus?
                            (e! (ilmoitukset-ws/->KatkaiseYhteys)))))
-    (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
+    (fn [e! {:keys [valittu-ilmoitus aiheet-ja-tarkenteet] :as ilmoitukset}]
       [:span
        [kartta/kartan-paikka]
        (if (and @nav/valittu-ilmoitus-id valittu-ilmoitus)
-         [ilmoituksen-tiedot e! valittu-ilmoitus]
+         [ilmoituksen-tiedot e! valittu-ilmoitus aiheet-ja-tarkenteet]
          [ilmoitusten-paanakyma e! ilmoitukset])])))
 
 (defn ilmoitukset []

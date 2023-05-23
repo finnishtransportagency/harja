@@ -1,10 +1,10 @@
 (ns harja.domain.palautejarjestelma-domain
   (:require
     [specql.rel :as rel]
-    #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]]
-                 :cljs [[specql.impl.registry]]))
+    [clojure.spec.alpha]
+    #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]]))
   #?(:cljs
-    (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
+     (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
   ["palautejarjestelma_aihe" ::aihe
@@ -32,3 +32,18 @@
    ::tarkenteet :tarkenteet
    ::tarkenne :tarkenne
    ::tarkenne-id :tarkenne-id})
+
+(defn hae-aihe [aiheet-ja-tarkenteet aihe]
+  (->> aiheet-ja-tarkenteet
+    (filter #(= aihe (:aihe-id %)))
+    first
+    :nimi))
+
+(defn hae-tarkenne [aiheet-ja-tarkenteet aihe tarkenne]
+  (->> aiheet-ja-tarkenteet
+    (filter #(= aihe (:aihe-id %)))
+    first
+    :tarkenteet
+    (filter #(= tarkenne (:tarkenne-id %)))
+    first
+    :nimi))
