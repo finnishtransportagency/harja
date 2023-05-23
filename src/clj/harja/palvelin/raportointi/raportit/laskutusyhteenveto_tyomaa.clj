@@ -40,7 +40,7 @@
                               (= "Hoidonjohto" otsikko)
                               [(rivi-taulukolle data kyseessa-kk-vali? "Johto- ja hallintokorvaukset" :johtojahallinto_hoitokausi_yht :johtojahallinto_val_aika_yht false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Erillishankinnat" :erillishankinnat_hoitokausi_yht :erillishankinnat_val_aika_yht false)
-                               (rivi-taulukolle data kyseessa-kk-vali? "Hoidojohtopalkkio" :hjpalkkio_hoitokausi_yht :hjpalkkio_val_aika_yht false)
+                               (rivi-taulukolle data kyseessa-kk-vali? "Hoidonjohtopalkkio" :hjpalkkio_hoitokausi_yht :hjpalkkio_val_aika_yht false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :hoidonjohto_hoitokausi_yht :hoidonjohto_val_aika_yht true)]
 
                               (= "Äkilliset hoitotyöt ja vahinkojen korjaukset" otsikko)
