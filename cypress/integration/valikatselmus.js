@@ -14,6 +14,6 @@ describe('Välikatselmus aukeaa', () => {
         cy.contains('Tee välikatselmus').click()
         cy.contains('Välikatselmuksen päätökset')
         cy.contains('Iin MHU 2021-2026')
-        cy.contains('1. hoitovuosi (2021—2022)')
+        cy.contains('1. hoitovuosi (01.10.2021 - 30.09.2022')
     })
 })
