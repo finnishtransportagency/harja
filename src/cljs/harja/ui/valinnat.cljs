@@ -67,7 +67,8 @@
    [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                  :vayla-tyyli? true
                                  :valitse-fn tuck-event
-                                 :format-fn #(if % (fmt/pvm-vali-opt %) "Valitse")}
+                                 :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet) "Valitse") ;#(if % (fmt/pvm-vali-opt %) "Valitse")
+                                 }
     hoitokaudet]])
 
 (defn hoitokausi

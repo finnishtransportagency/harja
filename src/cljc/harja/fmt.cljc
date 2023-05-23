@@ -463,27 +463,20 @@
 
 (defn hoitokauden-jarjestysluku-ja-vuodet
   "Näyttää hoitokauden esim 1.10.2022 - 30.9.2023 formaatissa '2. hoitovuosi (2022 — 2023)'.
-  Olettaa saavansa parametrit:
-  valittu-hk: [pp.kk.vvvv pp.kk.vvvv]
-  hoitovuodet: [[pp.kk.vvvv pp.kk.vvvv]...]"
+  Olettaa saavansa parametrit joko kaikki päivämäärinä tai kaikki vuosina:
+  valittu-hk: [pp.kk.vvvv pp.kk.vvvv] TAI vvvv
+  hoitovuodet: [[pp.kk.vvvv pp.kk.vvvv]...] TAI [2012 2013 2014 2015 2016]"
   [valittu-hk hoitovuodet]
-  (let [monesko (first (keep-indexed (fn [i hk]
-                                 (when (= hk valittu-hk)
-                                   (inc (int i))))
-                               hoitovuodet))]
-    (str (when monesko (str monesko ". "))
-         "hoitovuosi (" (pvm/vuosi (first valittu-hk)) "\u2014" (pvm/vuosi (second valittu-hk)) ")")))
-
-(defn hoitovuoden-jarjestysluku-ja-vuodet
-  "Näyttää hoitovuoden esim 2022 formaatissa: '2. hoitovuosi (2022 — 2023)'. Olettaa saavansa:
-  valittu-hk: 2022
-  hoitovuodet: [2012 2013 2014 2015 2016]"
-  [valittu-hk hoitovuodet]
+  (assert (or (and (int? valittu-hk) (every? int? hoitovuodet))
+              (and (vector? valittu-hk) (every? vector? hoitovuodet))) "Kaikkien parametrien on oltava joko numeroita tai pvm:n sisältäviä vektoreita.")
   (let [monesko (first (keep-indexed (fn [i hk]
                                        (when (= hk valittu-hk)
                                          (inc (int i))))
-                         hoitovuodet))]
-    (str (when monesko (str monesko ". ")) "hoitovuosi (" valittu-hk "\u2014" (inc valittu-hk) ")")))
+                                     hoitovuodet))
+        hk-fmt #(if (int? %)
+                 (str % "\u2014" (inc %))
+                 (str (pvm/vuosi (first %)) "\u2014" (pvm/vuosi (second %))))]
+    (str (when monesko (str monesko ". ")) "hoitovuosi (" (hk-fmt valittu-hk) ")")))
 
 #?(:cljs
    (def desimaali-fmt
