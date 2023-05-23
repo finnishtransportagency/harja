@@ -461,8 +461,11 @@
     (pvm-vali vali)
     ""))
 
-(defn hoitovuoden-jarjestysluku-ja-vuodet
-  "Näyttää hoitokauden esim 1.10.2022 - 30.9.2023 formaatissa 2. hoitovuosi (2022 — 2023)"
+(defn hoitokauden-jarjestysluku-ja-vuodet
+  "Näyttää hoitokauden esim 1.10.2022 - 30.9.2023 formaatissa '2. hoitovuosi (2022 — 2023)'.
+  Olettaa saavansa parametrit:
+  valittu-hk: [pp.kk.vvvv pp.kk.vvvv]
+  hoitovuodet: [[pp.kk.vvvv pp.kk.vvvv]...]"
   [valittu-hk hoitovuodet]
   (let [monesko (first (keep-indexed (fn [i hk]
                                  (when (= hk valittu-hk)
