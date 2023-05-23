@@ -114,7 +114,7 @@
 (deftest hoitovuoden-vuosimuodon-formatointi
   (let [hoitovuodet [2020 2021 2022 2023 2024]
         valittu-hk 2021]
-    (is (= (fmt/hoitovuoden-jarjestysluku-ja-vuodet-vuodesta valittu-hk hoitovuodet)
+    (is (= (fmt/hoitovuoden-jarjestysluku-ja-vuodet valittu-hk hoitovuodet)
           "2. hoitovuosi (2021—2022)"))))
 
 (deftest hoitovuoden-vuosimuodon-formatointi-huono-input
@@ -122,5 +122,5 @@
         ;; Valittu hoitokausi ei ole annettujen hoitokausien sisällä
         valittu-hk 2019]
     ;; Saadaan hiotovuosi, mutta ei järjestysnumeroa
-    (is (= (fmt/hoitovuoden-jarjestysluku-ja-vuodet-vuodesta valittu-hk hoitovuodet)
+    (is (= (fmt/hoitovuoden-jarjestysluku-ja-vuodet valittu-hk hoitovuodet)
           "hoitovuosi (2019—2020)"))))
