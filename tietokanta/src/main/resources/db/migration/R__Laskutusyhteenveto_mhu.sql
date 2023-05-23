@@ -264,8 +264,8 @@ BEGIN
     -- Hoidon johdon palkkiot koostuvat tehtäväryhmästä 'Hoidonjohtopalkkio (G)'
     -- sekä toimenpidekoodista 'Hoitourakan työnjohto' JA 'Hoidonjohtopalkkio'
     tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
-    toimenpidekoodi_id_hu_tyonjohto := (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744');
-    toimenpidekoodi_id_hj_palkkio := (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8');
+    toimenpidekoodi_id_hu_tyonjohto := (SELECT id FROM tehtava WHERE yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744');
+    toimenpidekoodi_id_hj_palkkio := (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8');
 
     hj_palkkio_laskutettu := 0.0;
     hj_palkkio_laskutetaan := 0.0;
@@ -369,7 +369,7 @@ BEGIN
     tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)');
     -- kustannusarvioitu_tyo taulusta haetaan toimenpidekoodin perusteella - Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.
     toimistotarvike_koodi :=
-            (SELECT id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');
+            (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');
 
     RAISE NOTICE 'hoidon_johto_yhteenveto: toimenpidekoodi %' , toimenpide_koodi;
     johto_ja_hallinto_laskutettu := 0.0;
@@ -638,8 +638,8 @@ BEGIN
 
     johto_ja_hallintakorvaus_toimenpideinstanssi_id := (SELECT tpi.id AS id
                                                      FROM toimenpideinstanssi tpi
-                                                              JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                                                              JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                                                              JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+                                                              JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
                                                           maksuera m
                                                      WHERE tpi.urakka = ur
                                                        AND m.toimenpideinstanssi = tpi.id
@@ -649,8 +649,8 @@ BEGIN
     -- Loopataan urakan toimenpideinstanssien läpi
     FOR t IN SELECT tpk2.nimi AS nimi, tpk2.koodi AS tuotekoodi, tpi.id AS tpi, tpk3.id AS tpk3_id, m.numero AS maksuera_numero
                  FROM toimenpideinstanssi tpi
-                          JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                          JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                          JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+                          JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
                       maksuera m
                  WHERE tpi.urakka = ur AND m.toimenpideinstanssi = tpi.id
         LOOP

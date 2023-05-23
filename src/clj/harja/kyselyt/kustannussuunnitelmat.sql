@@ -88,7 +88,7 @@ SELECT
   jhk.vuosi as vuosi,
   Sum(COALESCE((jhk.tunnit * jhk.tuntipalkka), 0)) AS summa
 FROM maksuera m
-       JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi and tpi.toimenpide = (select id from toimenpidekoodi where koodi = '23151') -- hoidon johto
+       JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi and tpi.toimenpide = (select id from toimenpide where koodi = '23151') -- hoidon johto
        JOIN johto_ja_hallintokorvaus jhk on tpi.urakka = jhk."urakka-id"
 WHERE m.numero = :maksuera GROUP BY jhk.vuosi;
 
@@ -98,10 +98,10 @@ SELECT
   Sum(arvioitu_kustannus)        AS summa
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
-  JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
+  JOIN toimenpide tpk ON tpi.toimenpide = tpk.id
   JOIN yksikkohintainen_tyo yht ON yht.tehtava IN
                                    (SELECT id
-                                    FROM toimenpidekoodi
+                                    FROM tehtava
                                     WHERE emo = tpk.id)
                                    AND
                                    yht.urakka = tpi.urakka
@@ -115,10 +115,10 @@ SELECT
   Sum(COALESCE(yht.maara, 0) * COALESCE(yht.yksikkohinta, 0)) AS summa
 FROM maksuera m
        JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
-       JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
+       JOIN toimenpide tpk ON tpi.toimenpide = tpk.id
        JOIN yksikkohintainen_tyo yht ON yht.tehtava IN
                                         (SELECT id
-                                         FROM toimenpidekoodi
+                                         FROM tehtava
                                          WHERE emo = tpk.id)
   AND
                                         yht.urakka = tpi.urakka
@@ -136,8 +136,8 @@ SELECT exists(SELECT maksuera
 SELECT exists(SELECT numero
               FROM maksuera m
                 JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
-                JOIN toimenpidekoodi tpk3 ON tpi.toimenpide = tpk3.id
-                JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id
+                JOIN toimenpide tpk3 ON tpi.toimenpide = tpk3.id
+                JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id
               WHERE m.numero = :numero AND tpk2.tuotenumero IS NOT NULL);
 
 -- name: harja.kyselyt.kustannussuunnitelmat/hae-urakka-maksueranumerolla

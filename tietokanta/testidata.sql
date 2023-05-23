@@ -227,7 +227,7 @@ INSERT INTO analytiikka_toteumat (
            t.poistettu                                                                as poistettu
     FROM toteuma t
              LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
-             LEFT JOIN toimenpidekoodi tkoodi ON tkoodi.id = tt.toimenpidekoodi
+             LEFT JOIN tehtava tkoodi ON tkoodi.id = tt.toimenpidekoodi
              LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
              LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
              JOIN urakka u on t.urakka = u.id

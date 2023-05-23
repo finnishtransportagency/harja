@@ -2,8 +2,8 @@
 SELECT kt.id
 FROM kan_toimenpide kt
   LEFT JOIN kan_kohde kh ON kt."kohde-id" = kh.id
-  JOIN toimenpidekoodi tpk4 ON kt.toimenpidekoodi = tpk4.id
-  JOIN toimenpidekoodi tpk3 ON tpk3.id = tpk4.emo
+  JOIN tehtava tpk4 ON kt.toimenpidekoodi = tpk4.id
+  JOIN toimenpide tpk3 ON tpk3.id = tpk4.emo
 WHERE kt.urakka = :urakka AND
       kt.sopimus = :sopimus AND
       (kt.pvm BETWEEN :alkupvm AND :loppupvm) AND

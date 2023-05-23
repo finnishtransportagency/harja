@@ -29,8 +29,8 @@
           urakka-id @oulun-alueurakan-2005-2010-id
           maara-kannassa (ffirst (q
                                    (str "SELECT count(*)
-                                           FROM toimenpidekoodi t4
-                                                LEFT JOIN toimenpidekoodi t3 ON t3.id=t4.emo
+                                           FROM tehtava t4
+                                                LEFT JOIN toimenpide t3 ON t3.id=t4.emo
                                            WHERE t4.taso = 4 AND
                                                 (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= 2005) AND
                                                 (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= 2005) AND
@@ -52,8 +52,8 @@
        urakka-id @pudasjarven-alueurakan-id
           maara-kannassa (ffirst (q
                                    (str "SELECT count(*)
-                                           FROM toimenpidekoodi t4
-                                                LEFT JOIN toimenpidekoodi t3 ON t3.id=t4.emo
+                                           FROM tehtava t4
+                                                LEFT JOIN toimenpide t3 ON t3.id=t4.emo
                                            WHERE t4.taso = 4 AND
                                             (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= 2007) AND
                                             (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= 2007) AND
@@ -68,19 +68,19 @@
                urakka-id @oulun-alueurakan-2005-2010-id
                maara-kannassa (ffirst (q
                                         (str "SELECT count(*)
-                                           FROM toimenpidekoodi t4
-                                                LEFT JOIN toimenpidekoodi t3 ON t3.id=t4.emo
+                                           FROM tehtava t4
+                                                LEFT JOIN toimenpide t3 ON t3.id=t4.emo
                                            WHERE t4.taso = 4 AND
                                             (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= 2005) AND
                                             (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= 2005) AND
                                                 t3.id in (SELECT toimenpide FROM toimenpideinstanssi WHERE urakka = "
                                              @oulun-alueurakan-2005-2010-id ")")))
                lahtotilanne (count (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id))
-               _ (u "UPDATE toimenpidekoodi SET voimassaolo_alkuvuosi = 2015, voimassaolo_loppuvuosi = 2025 WHERE nimi = 'Graffitien poisto'")
+               _ (u "UPDATE tehtava SET voimassaolo_alkuvuosi = 2015, voimassaolo_loppuvuosi = 2025 WHERE nimi = 'Graffitien poisto'")
                tehtava-tulossa (count (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id))
-               _ (u "UPDATE toimenpidekoodi SET voimassaolo_alkuvuosi = 2000, voimassaolo_loppuvuosi = 2004 WHERE nimi = 'Graffitien poisto'")
+               _ (u "UPDATE tehtava SET voimassaolo_alkuvuosi = 2000, voimassaolo_loppuvuosi = 2004 WHERE nimi = 'Graffitien poisto'")
                tehtava-mennyt (count (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id))
-               _ (u "UPDATE toimenpidekoodi SET voimassaolo_alkuvuosi = 2005, voimassaolo_loppuvuosi = 2007 WHERE nimi = 'Graffitien poisto'")
+               _ (u "UPDATE tehtava SET voimassaolo_alkuvuosi = 2005, voimassaolo_loppuvuosi = 2007 WHERE nimi = 'Graffitien poisto'")
                tehtava-voimassa (count (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id))]
 
               (is (= maara-kannassa lahtotilanne) "Määrittelemättömien tehtävien määrä on odotettu.")
