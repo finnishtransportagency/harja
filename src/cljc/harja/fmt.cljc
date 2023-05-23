@@ -461,19 +461,29 @@
     (pvm-vali vali)
     ""))
 
-(defn hoitovuoden-jarjestysluku-ja-vuodet
-  "Näyttää hoitokauden esim 1.10.2022 - 30.9.2023 formaatissa 2. hoitovuosi (2022 — 2023)"
+(defn hoitokauden-jarjestysluku-ja-vuodet
+  "Näyttää hoitokauden esim 1.10.2022 - 30.9.2023 formaatissa '2. hoitovuosi (2022 — 2023)'.
+  Olettaa saavansa parametrit:
+  valittu-hk: [pp.kk.vvvv pp.kk.vvvv]
+  hoitovuodet: [[pp.kk.vvvv pp.kk.vvvv]...]"
   [valittu-hk hoitovuodet]
   (let [monesko (first (keep-indexed (fn [i hk]
                                  (when (= hk valittu-hk)
                                    (inc (int i))))
                                hoitovuodet))]
     (str (when monesko (str monesko ". "))
-         "hoitovuosi ("
-      (pvm/vuosi (first valittu-hk))
-        "\u2014"
-        (pvm/vuosi (second valittu-hk))
-         ")")))
+         "hoitovuosi (" (pvm/vuosi (first valittu-hk)) "\u2014" (pvm/vuosi (second valittu-hk)) ")")))
+
+(defn hoitovuoden-jarjestysluku-ja-vuodet
+  "Näyttää hoitovuoden esim 2022 formaatissa: '2. hoitovuosi (2022 — 2023)'. Olettaa saavansa:
+  valittu-hk: 2022
+  hoitovuodet: [2012 2013 2014 2015 2016]"
+  [valittu-hk hoitovuodet]
+  (let [monesko (first (keep-indexed (fn [i hk]
+                                       (when (= hk valittu-hk)
+                                         (inc (int i))))
+                         hoitovuodet))]
+    (str (when monesko (str monesko ". ")) "hoitovuosi (" valittu-hk "\u2014" (inc valittu-hk) ")")))
 
 #?(:cljs
    (def desimaali-fmt

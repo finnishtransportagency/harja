@@ -92,21 +92,35 @@
   (is (= (fmt/desimaaliluku 123.123456789012 nil nil false) "123,123456789") "max-desimaalit oletusarvo on 10")
   (is (= (fmt/desimaaliluku 777777777.1234567 nil 7 true) "777 777 777,1234567") "ryhmittely toimii"))
 
-(deftest hoitovuoden-formatointi
-  (let [hoitovuodet [[(pvm/->pvm "1.10.2020") (pvm/->pvm "30.9.2021")]
+(deftest hoitokauden-formatointi
+  (let [hoitokaudet [[(pvm/->pvm "1.10.2020") (pvm/->pvm "30.9.2021")]
                      [(pvm/->pvm "1.10.2021") (pvm/->pvm "30.9.2022")]
                      [(pvm/->pvm "1.10.2022") (pvm/->pvm "30.9.2023")]
                      [(pvm/->pvm "1.10.2023") (pvm/->pvm "30.9.2024")]]
         valittu-hk [(pvm/->pvm "1.10.2021") (pvm/->pvm "30.9.2022")]]
-    (is (= (fmt/hoitovuoden-jarjestysluku-ja-vuodet valittu-hk hoitovuodet)
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitokaudet)
            "2. hoitovuosi (2021—2022)"))))
 
-(deftest hoitovuoden-formatointi-huono-input
-  (let [hoitovuodet [[(pvm/->pvm "1.10.2020") (pvm/->pvm "30.9.2021")]
+(deftest hoitokauden-formatointi-huono-input
+  (let [hoitokaudet [[(pvm/->pvm "1.10.2020") (pvm/->pvm "30.9.2021")]
                      [(pvm/->pvm "1.10.2021") (pvm/->pvm "30.9.2022")]
                      [(pvm/->pvm "1.10.2022") (pvm/->pvm "30.9.2023")]
                      [(pvm/->pvm "1.10.2023") (pvm/->pvm "30.9.2024")]]
         ;; tähän input joka ei ole hoitokausi -> silti näytettävä hoitokausi oikein vaikka järjestysnumeroa ei saada
         valittu-hk [(pvm/->pvm "5.10.2021") (pvm/->pvm "4.9.2022")]]
-    (is (= (fmt/hoitovuoden-jarjestysluku-ja-vuodet valittu-hk hoitovuodet)
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitokaudet)
            "hoitovuosi (2021—2022)"))))
+
+(deftest hoitovuoden-vuosimuodon-formatointi
+  (let [hoitovuodet [2020 2021 2022 2023 2024]
+        valittu-hk 2021]
+    (is (= (fmt/hoitovuoden-jarjestysluku-ja-vuodet valittu-hk hoitovuodet)
+          "2. hoitovuosi (2021—2022)"))))
+
+(deftest hoitovuoden-vuosimuodon-formatointi-huono-input
+  (let [hoitovuodet [2020 2021 2022 2023 2024]
+        ;; Valittu hoitokausi ei ole annettujen hoitokausien sisällä
+        valittu-hk 2019]
+    ;; Saadaan hiotovuosi, mutta ei järjestysnumeroa
+    (is (= (fmt/hoitovuoden-jarjestysluku-ja-vuodet valittu-hk hoitovuodet)
+          "hoitovuosi (2019—2020)"))))
