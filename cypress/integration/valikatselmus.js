@@ -10,7 +10,7 @@ describe('Välikatselmus aukeaa', () => {
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Iin MHU 2021-2026', {timeout}).click()
         cy.get('[data-cy=tabs-taso1-Kulut]').click()
         cy.get('[data-cy="tabs-taso2-Kustannusten seuranta"]').click()
-        cy.get('[data-cy=hoitokausi-valinta]').valinnatValitse({valinta: '01.10.2021-30.09.2022'})
+        cy.get('[data-cy=hoitokausi-valinta]').valinnatValitse({valinta: '1. hoitovuosi (2021—2022)'})
         cy.contains('Tee välikatselmus').click()
         cy.contains('Välikatselmuksen päätökset')
         cy.contains('Iin MHU 2021-2026')
