@@ -595,7 +595,7 @@
 
       :urakan-tyotunnit (component/using
                           (urakan-tyotunnit/->UrakanTyotunnit)
-                          [:db  :http-palvelin :turi])
+                          [:db :http-palvelin])
 
       :hairioilmoitukset (component/using
                            (hairioilmoitukset/->Hairioilmoitukset)
@@ -698,7 +698,7 @@
 
       :api-urakan-tyotunnit (component/using
                               (api-urakan-tyotunnit/->UrakanTyotunnit)
-                              [:http-palvelin :db :integraatioloki :turi])
+                              [:http-palvelin :db :integraatioloki])
       :api-tieluvat (component/using
                       (api-tieluvat/->Tieluvat)
                       [:http-palvelin :db :integraatioloki :liitteiden-hallinta])

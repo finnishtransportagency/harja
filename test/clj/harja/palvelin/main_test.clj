@@ -41,8 +41,7 @@
                                             :toimenpidejono tloik-tyokalut/+tloik-ilmoitustoimenpideviestijono+
                                             :toimenpidekuittausjono tloik-tyokalut/+tloik-ilmoitustoimenpidekuittausjono+
                                             :toimenpideviestijono tloik-tyokalut/+tloik-toimenpideviestijono+})
-                             (assoc-in [:turi :turvallisuuspoikkeamat-url] "")
-                             (assoc-in [:turi :urakan-tyotunnit-url] ""))]
+                             (assoc-in [:turi :turvallisuuspoikkeamat-url] ""))]
     asetukset-datana
     #_(str asetukset-datana)))
 

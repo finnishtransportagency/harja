@@ -242,7 +242,7 @@
            (not (nil? juurisyy1)))))
 
 (defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
-  (let [{:keys [id urakka urakan-tyotunnit]} tp]
+  (let [{:keys [id urakka]} tp]
     (log/debug "Tallennetaan turvallisuuspoikkeama " id " urakkaan " urakka)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user urakka)
     ;; Tarkista kaiken varalta, että annettu turpo-id kuuluu annettuun urakkaan
@@ -251,14 +251,7 @@
     (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti urakka)]
       (when turi
         ;; Turi-lähetystä ei pidä sitoa transaktioon, muuten voi jäädä jumiin.
-        (turi/laheta-turvallisuuspoikkeama turi id)
-        (when (and (asetukset/ominaisuus-kaytossa? :urakan-tyotunnit) urakan-tyotunnit)
-          (let [kolmannes (urakan-tyotunnit-d/kuluva-vuosikolmannes)]
-            (turi/laheta-urakan-vuosikolmanneksen-tyotunnit
-              turi
-              urakka
-              (::urakan-tyotunnit-d/vuosi kolmannes)
-              (::urakan-tyotunnit-d/vuosikolmannes kolmannes))))))
+        (turi/laheta-turvallisuuspoikkeama turi id)))
 
     (hae-urakan-turvallisuuspoikkeamat db
                                        user
