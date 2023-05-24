@@ -40,7 +40,9 @@
                                             :ilmoituskuittausjono tloik-tyokalut/+tloik-ilmoituskuittausjono+
                                             :toimenpidejono tloik-tyokalut/+tloik-ilmoitustoimenpideviestijono+
                                             :toimenpidekuittausjono tloik-tyokalut/+tloik-ilmoitustoimenpidekuittausjono+
-                                            :toimenpideviestijono tloik-tyokalut/+tloik-toimenpideviestijono+}))]
+                                            :toimenpideviestijono tloik-tyokalut/+tloik-toimenpideviestijono+})
+                             (assoc-in [:turi :turvallisuuspoikkeamat-url] "")
+                             (assoc-in [:turi :urakan-tyotunnit-url] ""))]
     asetukset-datana
     #_(str asetukset-datana)))
 
@@ -98,7 +100,7 @@
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
     :integraatioloki :solita-sahkoposti :api-sahkoposti :fim :tloik :tierekisteri :labyrintti
-    :digiroad-integraatio :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
+    :turi :digiroad-integraatio :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
     :muut-tyot :kulut :toteumat :yllapitototeumat :paallystys :maaramuutokset
@@ -167,7 +169,7 @@
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
     :integraatioloki :solita-sahkoposti :api-sahkoposti :fim :tierekisteri :labyrintti
-    :digiroad-integraatio :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
+    :turi :digiroad-integraatio :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
     :muut-tyot :kulut :toteumat :yllapitototeumat :paallystys :maaramuutokset
