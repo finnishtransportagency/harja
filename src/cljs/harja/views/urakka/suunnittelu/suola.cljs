@@ -38,7 +38,6 @@
                    [harja.tyokalut.ui :refer [for*]]))
 
 (defn- rajoituksen-poiston-varmistus-modaali [e! {:keys [lomake-tila urakka poista-kaikilta-vuosilta?-atom] :as parametrit}]
-  (prn "Jarno urakka " (urakka/hoito-tai-sopimuskaudet urakka))
   [:div
    [:div "Olet poistamassa rajoitusalueen seuraavilta hoitovuosilta:"]
 
@@ -58,11 +57,9 @@
                        @poista-kaikilta-vuosilta?-atom
                        (:kopioidaan-tuleville-vuosille? lomake-tila))
                      urakka)]
-        ;; FIXME: Listataan hoitovuodet aikaväleineä, koska sivulla hoitovuoden voi vielä tällä hetkellä valita vanhan mallisesti vain aikavälinä
-        ;;        Kun hoitovuosivalinta UI-komponenttia päivitetään Harjassa yleisesti, voisi tässä näyttää hoitovuosien järjestysnumeroja, kuten on speksattu.
-        [:li (fmt/hoitokauden-jarjestysluku-ja-vuodet vuosi
-                                                      (mapv #(pvm/vuosi (first %))
-                                                            (urakka/hoito-tai-sopimuskaudet urakka)))])]
+            [:li (fmt/hoitokauden-jarjestysluku-ja-vuodet vuosi
+                                                          (mapv #(pvm/vuosi (first %))
+                                                                (urakka/hoito-tai-sopimuskaudet urakka)))])]
      ;; Vain yksi poistettava rajoitus
      [:ul
       [:li
