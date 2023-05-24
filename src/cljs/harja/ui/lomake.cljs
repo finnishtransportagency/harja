@@ -42,7 +42,9 @@
              {:ulkoasu :oletus} skeemat)))
 
 (defn palstat
-  "Asetetaan annetut skeemat samaan vertikaaliseen palstaan"
+  "Asetetaan annetut skeemat samaan vertikaaliseen palstaan
+  Flex-optiolla voidaan tehdä käärivästä luokasta flex, kts. luokka lomakepalsta-flex,
+  ja kentille voidaan passata ::col/luokka-arvoksi kokonainen tai puolikas, jolla voidaan säädellä rivitystä."
   [{:keys [lukumaara puolikas flex?]} & palstan-optiot-ja-skeemat]
   (->Palstat {:lukumaara lukumaara
               :puolikas puolikas
