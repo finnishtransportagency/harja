@@ -1,3 +1,7 @@
+ALTER TABLE ilmoitus
+    ADD COLUMN aihe INTEGER,
+    ADD COLUMN tarkenne INTEGER;
+
 CREATE TABLE palautejarjestelma_aihe
 (
     ulkoinen_id INTEGER PRIMARY KEY,
