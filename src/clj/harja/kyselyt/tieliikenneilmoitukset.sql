@@ -64,7 +64,9 @@ WHERE ulompi_i.id IN
       (:tyypit_annettu IS FALSE OR sisempi_i.ilmoitustyyppi :: TEXT IN (:tyypit)) AND
 
       -- Tarkasta vapaatekstihakuehto
-      (:teksti_annettu IS FALSE OR (sisempi_i.otsikko LIKE :teksti OR sisempi_i.paikankuvaus LIKE :teksti OR sisempi_i.lisatieto LIKE :teksti)) AND
+      (:teksti_annettu IS FALSE OR (sisempi_i.otsikko LIKE :teksti OR sisempi_i.paikankuvaus LIKE :teksti OR sisempi_i.lisatieto LIKE :teksti) OR
+       (SELECT nimi from palautejarjestelma_tarkenne WHERE ulkoinen_id = sisempi_i.tarkenne) LIKE :teksti OR
+       (SELECT nimi from palautejarjestelma_aihe WHERE ulkoinen_id = sisempi_i.aihe) LIKE :teksti) AND
 
       -- Tarkasta selitehakuehto
       (:selite_annettu IS FALSE OR (sisempi_i.selitteet @> ARRAY [:selite :: TEXT])) AND
@@ -82,7 +84,13 @@ WHERE ulompi_i.id IN
       -- Rajaa ilmoittajan puhelinnumerolla
       (:ilmoittaja-puhelin::TEXT IS NULL OR
        sisempi_i.ilmoittaja_matkapuhelin
-           LIKE :ilmoittaja-puhelin)
+           LIKE :ilmoittaja-puhelin) AND
+
+       -- Rajaa aiheella ja tarkenteella
+      (:aihe::INTEGER IS NULL OR
+       sisempi_i.aihe = :aihe) AND
+      (:tarkenne::INTEGER IS NULL OR
+       sisempi_i.tarkenne = :tarkenne)
        ORDER BY sisempi_i."valitetty-urakkaan" DESC
        LIMIT :max-maara::INTEGER)
 ORDER BY ulompi_i."valitetty-urakkaan" DESC, it.kuitattu DESC;

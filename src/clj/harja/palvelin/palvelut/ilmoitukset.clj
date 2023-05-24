@@ -122,7 +122,8 @@
   ([db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit
                     kuittaustyypit hakuehto selite
                     aloituskuittauksen-ajankohta tr-numero tunniste
-                    ilmoittaja-nimi ilmoittaja-puhelin vaikutukset] :as hakuehdot}
+                    ilmoittaja-nimi ilmoittaja-puhelin vaikutukset
+                    aihe tarkenne] :as hakuehdot}
     max-maara]
    (let [valitetty-urakkaan-aikavali (or (:aikavali hakuehdot) (aikavaliehto hakuehdot :valitetty-urakkaan-vakioaikavali :valitetty-urakkaan-alkuaika :valitetty-urakkaan-loppuaika))
          valitetty-urakkaan-aikavali-alku (when (first valitetty-urakkaan-aikavali)
@@ -207,6 +208,8 @@
                                                           (str "%" ilmoittaja-nimi "%"))
                                        :ilmoittaja-puhelin (when-not (str/blank? ilmoittaja-puhelin)
                                                              (str "%" ilmoittaja-puhelin "%"))
+                                       :aihe aihe
+                                       :tarkenne tarkenne
                                        :max-maara max-maara}))
              {:kuittaus :kuittaukset}))
          ilmoitukset (mapv
