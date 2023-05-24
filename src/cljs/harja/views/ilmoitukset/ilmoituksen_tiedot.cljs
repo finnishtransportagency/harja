@@ -62,7 +62,7 @@
    "Sijainti " (tr-domain/tierekisteriosoite-tekstina (:tr ilmoitus))
    "Paikan kuvaus " (:paikankuvaus ilmoitus)
    "Aihe " (palautejarjestelma/hae-aihe aiheet-ja-tarkenteet (:aihe ilmoitus))
-   "Tarkenne " (palautejarjestelma/hae-tarkenne aiheet-ja-tarkenteet (:aihe ilmoitus) (:tarkenne ilmoitus))
+   "Tarkenne " (palautejarjestelma/hae-tarkenne aiheet-ja-tarkenteet (:tarkenne ilmoitus))
    "Otsikko " (:otsikko ilmoitus)
    "Kuvaus " (when (:lisatieto ilmoitus) (:lisatieto ilmoitus))
    "Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")

@@ -39,11 +39,10 @@
     first
     :nimi))
 
-(defn hae-tarkenne [aiheet-ja-tarkenteet aihe tarkenne]
+(defn hae-tarkenne [aiheet-ja-tarkenteet tarkenne]
   (->> aiheet-ja-tarkenteet
-    (filter #(= aihe (:aihe-id %)))
-    first
-    :tarkenteet
+    (map :tarkenteet)
+    flatten
     (filter #(= tarkenne (:tarkenne-id %)))
     first
     :nimi))

@@ -166,17 +166,18 @@
        :valinta-nayta #(or (palautejarjestelma/hae-aihe aiheet-ja-tarkenteet %) "Ei rajoitusta")})
     (when ilmoituksilla-aihe-ja-tarkenne?
       (let [valittu-aihe (:aihe valinnat-nyt)
-            tarkenteet (when valittu-aihe (:tarkenteet (first (filter #(= valittu-aihe (:aihe-id %)) aiheet-ja-tarkenteet))))]
+            tarkenteet (filter
+                         #(or (nil? valittu-aihe)
+                            (= valittu-aihe (:aihe-id %)))
+                         (flatten (map :tarkenteet aiheet-ja-tarkenteet)))]
         {:nimi :tarkenne
          :palstoja 2
          :rivi-luokka "grid-column-end-span-2"
          ::lomake/col-luokka "width-full"
          :otsikko "Tarkenne"
          :jos-tyhja (cond
-                      (nil? valittu-aihe)
-                      "Valitse aihe ensin"
                       (empty? tarkenteet)
-                      "Valitulla aiheella ei ole tarkenteita"
+                      "Aiheella ei tarkenteita"
                       :else
                       "")
          :vayla-tyyli? true
@@ -184,7 +185,7 @@
          :valinnat (if (seq tarkenteet)
                      (into [nil] (map :tarkenne-id tarkenteet))
                      [])
-         :valinta-nayta #(or (palautejarjestelma/hae-tarkenne aiheet-ja-tarkenteet (:aihe valinnat-nyt) %) "Ei valintaa")}))
+         :valinta-nayta #(or (palautejarjestelma/hae-tarkenne aiheet-ja-tarkenteet %) "Ei valintaa")}))
     (when-not ilmoituksilla-aihe-ja-tarkenne?
       {:nimi :selite
        :palstoja 2
@@ -397,7 +398,7 @@
         (if ilmoituksilla-aihe-ja-tarkenne?
           {:otsikko "Tarkenne" :nimi :tarkenne
            :tyyppi :string
-           :hae #(palautejarjestelma/hae-tarkenne aiheet-ja-tarkenteet (:aihe %) (:tarkenne %))
+           :hae #(palautejarjestelma/hae-tarkenne aiheet-ja-tarkenteet (:tarkenne %))
            :otsikkorivi-luokka "selite" :leveys ""}
           {:otsikko "Selite" :nimi :selitteet
            :tyyppi :komponentti
