@@ -116,7 +116,7 @@
           [:span (kuittaustyypin-lyhenne kuittaustyyppi)]]
          [kuittaus-tooltip (last (kuittaukset-tyypin-mukaan kuittaustyyppi)) kuittaustyyppi kuitattu? oikeus?]])]]))
 
-(defn ilmoitusten-hakuehdot [e! valinnat-nyt aiheet-ja-tarkenteet ilmoituksilla-aihe-ja-tarkenne?]
+(defn ilmoitusten-hakuehdot [e! valinnat-nyt aiheet-ja-tarkenteet]
   (let [valittu-aihe (:aihe valinnat-nyt)
         tarkenteet (filter
                      #(or (nil? valittu-aihe)
@@ -133,8 +133,7 @@
          :loppuaika :valitetty-urakkaan-loppuaika}
         false
         {:rivi-luokka "grid-column-end-span-2"
-         ::lomake/col-luokka "width-full"
-         :aikavalitsin-flex? true
+         :aikavalivalitsin-flex? true
          :palstoja 2
          :vayla-tyyli? true})
       (valinnat/aikavalivalitsin "Toimenpiteet aloitettu"
@@ -145,7 +144,7 @@
          :loppuaika :toimenpiteet-aloitettu-loppuaika}
         false
         {:rivi-luokka "grid-column-end-span-2"
-         ::lomake/col-luokka "width-full"
+         :aikavalivalitsin-flex? true
          :palstoja 2
          :vayla-tyyli? true})
       {:nimi :hakuehto :otsikko "Hakusana"

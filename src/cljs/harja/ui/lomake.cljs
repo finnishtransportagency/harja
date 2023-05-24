@@ -43,9 +43,10 @@
 
 (defn palstat
   "Asetetaan annetut skeemat samaan vertikaaliseen palstaan"
-  [{:keys [lukumaara puolikas]} & palstan-optiot-ja-skeemat]
+  [{:keys [lukumaara puolikas flex?]} & palstan-optiot-ja-skeemat]
   (->Palstat {:lukumaara lukumaara
-              :puolikas puolikas} (remove nil? palstan-optiot-ja-skeemat)))
+              :puolikas puolikas
+              :flex? flex?} (remove nil? palstan-optiot-ja-skeemat)))
 
 (defn palstoja? [x]
   (instance? Palstat x))
@@ -463,7 +464,8 @@ ja kaikki pakolliset kentät on täytetty"
                                     muokkaa muokkaa-kenttaa-fn
                                     varoitukset muokatut virheet huomautukset rivi-opts]}]
   [:div {:key (str "div-nayta-palsta" (first (:skeemat palsta)))
-         :class (str "lomakepalsta col-xs-12 col-md-5 " (if (-> palsta :optiot :puolikas) "puolikas" ""))}
+         :class ["lomakepalsta" (when (-> palsta :optiot :puolikas) "puolikas")
+                 (when (-> palsta :optiot :flex?) "lomakepalsta-flex")]}
    (when (-> palsta :optiot :otsikko)
      [:h3 (-> palsta :optiot :otsikko)])
    (for [{:keys [nimi muokattava?] :as p} (remove nil? (:skeemat palsta))]
@@ -491,16 +493,18 @@ ja kaikki pakolliset kentät on täytetty"
         col-luokka (when rivi?
                      (col-luokat (count skeemat)))
         ]
-    [(cond
-       palstoitettu?
-       :div.row.lomakepalstat
+    [:div
+     {:class (cond-> []
+               (some? luokat)
+               (concat luokat)
 
-       (some? luokat)
-       (keyword (str "div." (string/join "." luokat)))
+               (and (empty? luokat) palstoitettu?)
+               (conj "lomakepalstat"
+                 (:rivi-luokka (first (:skeemat (first skeemat)))))
 
-       :else
-       (keyword (str "div.row.lomakerivi" (when (:rivi-luokka (first skeemat))
-                                            (str "." (:rivi-luokka (first skeemat)))))))
+
+               (empty? luokat)
+               (conj "row" (:rivi-luokka (first skeemat))))}
      (doall
        (for [{:keys [nimi muokattava?] :as s} skeemat
              :let [muokattava? (and voi-muokata?
