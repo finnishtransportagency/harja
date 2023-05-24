@@ -140,7 +140,7 @@
            vuosi-vika (if ur (pvm/vuosi (:loppupvm ur)) (pvm/vuosi (pvm/nyt)))
            raportin-nimi (raportin-nimi-avain (:tyyppi ur))]
 
-       [:span.laskutusyhteenveto
+       [:div.laskutusyhteenveto.margin-top-16
         [:div.flex-row.alkuun
 
          ;; MHU / HJU -urakoille näytetään valinnat työmaakokous & tuotekohtainen yhteenveto

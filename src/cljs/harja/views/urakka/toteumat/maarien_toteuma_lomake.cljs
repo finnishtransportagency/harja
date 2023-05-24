@@ -184,7 +184,7 @@
                             (r/partial paivita! :tierekisteriosoite indeksi))]]
                   [:div.row
                    [kentat/tee-kentta
-                    {::ui-lomake/col-luokka ""
+                    {:label-luokka          "ei-sijaintia-checkbox-monta"
                      :vayla-tyyli?          true
                      :teksti                "Kyseiseen tehtävään ei ole sijaintia"
                      :tyyppi                :checkbox}
@@ -366,7 +366,7 @@
              :sijainti (r/wrap sijainti (constantly true))
              :lataa-piirrettaessa-koordinaatit? true}
             {:nimi [::t/toteumat 0 ::t/ei-sijaintia]
-             ::ui-lomake/col-luokka ""
+             ::ui-lomake/col-luokka "ei-sijaintia-checkbox"
              :teksti "Kyseiseen tehtävään ei ole sijaintia"
              :tyyppi :checkbox}]))]
       lomake]]))

@@ -15,7 +15,8 @@
   "tyomaapaivakirja": {
     "tunniste": {
       "id": "päiväkirjan sivun id urakoitsijan järjestelmässä",
-      "versio": 2
+      "versio": 1,
+      "paivamaara": "2023-05-31"
     },
     "saatiedot": [
       {
@@ -130,9 +131,12 @@
     "muut-kirjaukset": {
       "kuvaus": "Huomatus vielä että kiire tuli hommissa"
     },
-    "tilaajan-yhteydenotot": {
-      "kuvaus": "Tilaajan huomautukset työmaapäiväkirjaan",
-      "nimi": "Tiia Tilaaja"
-    }
+    "tilaajan-yhteydenotot": [
+      {
+        "tilaajan-yhteydenotto": {
+          "kuvaus": "Tilaajan huomautukset työmaapäiväkirjaan"
+        }
+      }
+    ]
   }
 }

@@ -140,22 +140,22 @@ VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Talvisuolaus Ylikiimingissä'
         ARRAY [
             -- kelvi
             ROW ('2018-10-15 13:00.00', st_makepoint(460185.66, 7212072.31)::POINT, 10, NULL,
-                ARRAY [((SELECT id FROM toimenpidekoodi WHERE nimi = 'Suolaus'), 0.785)]::reittipiste_tehtava[],
+                ARRAY [((SELECT id FROM tehtava WHERE nimi = 'Suolaus'), 0.785)]::reittipiste_tehtava[],
                 ARRAY [((SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'),
                         0.785)]::reittipiste_materiaali[])::reittipistedata,
             -- kelvi
             ROW ('2018-10-15 13:01.00', st_makepoint(460213.40, 7212061.69) ::POINT, 10, NULL,
-                ARRAY [((SELECT id FROM toimenpidekoodi WHERE nimi = 'Suolaus'), 0.785)]::reittipiste_tehtava[],
+                ARRAY [((SELECT id FROM tehtava WHERE nimi = 'Suolaus'), 0.785)]::reittipiste_tehtava[],
                 ARRAY [((SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'),
                         0.785)]::reittipiste_materiaali[])::reittipistedata,
             -- ajoväylä
             ROW ('2018-10-15 13:02.00', st_makepoint(460242.71, 7212056.21) ::POINT, 6, NULL,
-                ARRAY [((SELECT id FROM toimenpidekoodi WHERE nimi = 'Suolaus'), 0.785)]::reittipiste_tehtava[],
+                ARRAY [((SELECT id FROM tehtava WHERE nimi = 'Suolaus'), 0.785)]::reittipiste_tehtava[],
                 ARRAY [((SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'),
                         0.785)]::reittipiste_materiaali[])::reittipistedata,
             -- ajoväylä
             ROW ('2018-10-15 13:03.00', st_makepoint(460279.10, 7212042.28) ::POINT, 6, NULL,
-                ARRAY [((SELECT id FROM toimenpidekoodi WHERE nimi = 'Suolaus'), 0.785)]::reittipiste_tehtava[],
+                ARRAY [((SELECT id FROM tehtava WHERE nimi = 'Suolaus'), 0.785)]::reittipiste_tehtava[],
                 ARRAY [((SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'),
                         0.785)]::reittipiste_materiaali[])::reittipistedata
             ]::reittipistedata[]);

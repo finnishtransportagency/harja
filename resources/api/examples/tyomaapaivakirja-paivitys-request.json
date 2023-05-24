@@ -15,7 +15,8 @@
   "tyomaapaivakirja": {
     "tunniste": {
       "id": "päiväkirjan sivun id urakoitsijan järjestelmässä",
-      "versio": 2
+      "versio": 2,
+      "paivamaara": "2023-05-31"
     },
     "saatiedot": [
       {
@@ -100,32 +101,43 @@
     ],
     "liikenteenohjaus-muutokset": [
       {
-        "kuvaus": "Paljon muutoksia"
+        "liikenteenohjaus-muutos": {
+          "kuvaus": "Paljon muutoksia"
+        }
       }
     ],
     "onnettomuudet": [
       {
-        "kuvaus": "Onnettomuus tiellä 4"
+        "onnettomuus": {
+          "kuvaus": "Onnettomuus tiellä 4"
+        }
       }
     ],
     "viranomaisen-avustaminen": [
       {
-        "kuvaus": "Katselmointi pidetty hyvässä ymmärryksessä",
-        "tunnit": 4.75
+        "viranomaisen-avustus": {
+          "kuvaus": "Katselmointi pidetty hyvässä ymmärryksessä",
+          "tunnit": 4.75
+        }
       }
     ],
     "palautteet": [
       {
-        "kuvaus": "Esimerkki palaute"
+        "palaute": {
+          "kuvaus": "Esimerkki palaute"
+        }
       }
     ],
     "muut-kirjaukset": {
       "kuvaus": "Huomatus vielä että kiire tuli hommissa"
     },
-    "tilaajan-yhteydenotot": {
-      "kuvaus": "Tilaajan huomautukset työmaapäiväkirjaan",
-      "nimi": "Tiia Tilaaja"
-    },
+    "tilaajan-yhteydenotot": [
+      {
+        "tilaajan-yhteydenotto": {
+          "kuvaus": "Tilaajan huomautukset työmaapäiväkirjaan"
+        }
+      }
+    ],
     "urakoitsijan-merkinnat": {
       "kuvaus": "Urakoitsijan merkinnät jälkikäteen",
       "nimi": "Ulla Urakoitsija"

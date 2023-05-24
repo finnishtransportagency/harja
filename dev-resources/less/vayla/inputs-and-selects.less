@@ -188,13 +188,21 @@ label {
             border-radius:4px;
         }
         > * {
-          align-self: center;
+          align-items: stretch;
           padding-left: 8px;
           padding-right: 8px;
           flex: 1;
           display: flex;
           min-height: 30px;
           justify-content: space-between;
+
+          // Hack, että saadaan monimutkainen checkbox-elementin sisältö asettumaan keskelle list-itemissä
+          // TODO: List itemien sisällölle pudotusvalikossa pitäisi tehdä kokonaisvaltainen remontti,
+          //       eikä niiden tyylejä pitäisi joutua muokkaamaan ulkoa päin tällä tavalla.
+          & div.boolean * {
+              display: flex;
+              align-items: center;
+          }
         }
         a {
           color: inherit;

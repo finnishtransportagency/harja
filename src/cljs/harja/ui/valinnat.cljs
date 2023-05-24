@@ -54,7 +54,7 @@
                               (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur)) "Urakkavuosi"
                               :default "Sopimuskausi")]
    [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
-                         :format-fn #(if % (fmt/pvm-vali-opt %) "Valitse")
+                         :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % @hoitokaudet) "Valitse")
                          :valitse-fn valitse-fn}
     @hoitokaudet]])
 
@@ -67,7 +67,8 @@
    [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                  :vayla-tyyli? true
                                  :valitse-fn tuck-event
-                                 :format-fn #(if % (fmt/pvm-vali-opt %) "Valitse")}
+                                 :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet) "Valitse") ;#(if % (fmt/pvm-vali-opt %) "Valitse")
+                                 }
     hoitokaudet]])
 
 (defn hoitokausi

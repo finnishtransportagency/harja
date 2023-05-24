@@ -15,7 +15,8 @@
             [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.roolit :as roolit]
-            [harja.tiedot.istunto :as istunto]))
+            [harja.tiedot.istunto :as istunto]
+            [harja.fmt :as fmt]))
 
 (defn sarakkeiden-leveys [sarake]
   (case sarake
@@ -57,7 +58,7 @@
            [:label.alasvedon-otsikko "Hoitokausi"]
            [yleiset/livi-pudotusvalikko {:valinta hoitokausi
                                          :valitse-fn #(e! (t/->ValitseTaso % :hoitokausi))
-                                         :format-fn pvm/hoitokausi-str-alkuvuodesta
+                                         :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet)
                                          :disabled (or
                                                      (not sopimukset-syotetty?)
                                                      (disabloitu-alasveto? hoitokaudet))

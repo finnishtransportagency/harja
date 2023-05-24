@@ -255,6 +255,8 @@ jobs:
             echo +++++++++++++++++++
             echo
             cd /tmp/cypress-run && npx cypress run
+      - store_test_results:
+          path: /tmp/cypress-run/cypress/test-results
       - store_artifacts:
           path: /tmp/cypress-run/cypress/screenshots
       - store_artifacts:

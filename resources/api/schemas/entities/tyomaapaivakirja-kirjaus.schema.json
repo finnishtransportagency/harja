@@ -18,8 +18,15 @@
                 "versio": {
                     "id": "urn:harja/tunniste/versio",
                     "required": true,
-                    "description": "Päiväkirjan sivun versionumero urakoitsijan järjestelmästä, alkaa numerosta 1...n",
+                    "description": "Päiväkirjan versionumero urakoitsijan järjestelmästä, alkaa numerosta 1...n. Nostetaan yhdellä ylöspäin jokaisella päivityskerralla.",
                     "type": "integer"
+                },
+                "paivamaara": {
+                    "id": "urn:harja/tunniste/paivamaara",
+                    "required": true,
+                    "description": "Työmaapäiväkirjan päivä, jolta päiväkirja on tehty.",
+                    "type": "string",
+                    "format": "date"
                 }
             }
         },
@@ -447,19 +454,21 @@
         },
         "tilaajan-yhteydenotot": {
             "id": "urn:harja/tilaajan-yhteydenotot",
-            "type": "object",
+            "type": "array",
             "required": false,
             "description": "Tilaajan huomautukset työmaapäiväkirjaan.",
-            "properties": {
-                "kuvaus": {
-                    "id": "urn:harja/tilaajan-yhteydenotot/kuvaus",
-                    "required": true,
-                    "type": "string"
-                },
-                "nimi": {
-                    "id": "urn:harja/tilaajan-yhteydenotot/nimi",
-                    "required": true,
-                    "type": "string"
+            "items": {
+                "id": "urn:harja/tilaajan-yhteydenotot/0",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "tilaajan-yhteydenotto": {
+                        "kuvaus": {
+                            "id": "urn:harja/tilaajan-yhteydenotot/kuvaus",
+                            "required": true,
+                            "type": "string"
+                        }
+                    }
                 }
             }
         }
