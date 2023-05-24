@@ -38,11 +38,3 @@
   (fetch db ::ut/urakan-tyotunnit ut/kaikki-kentat
          (op/or {::ut/lahetetty op/null?}
                 {::ut/lahetys-onnistunut false})))
-
-(defn lokita-lahetys [db urakka-id vuosi vuosikolmannes onnistunut?]
-  (update! db ::ut/urakan-tyotunnit
-           {::ut/lahetys-onnistunut onnistunut?
-            ::ut/lahetetty (konv/sql-timestamp (pvm/nyt))}
-           {::ut/urakka-id urakka-id
-            ::ut/vuosi vuosi
-            ::ut/vuosikolmannes vuosikolmannes}))
