@@ -117,40 +117,45 @@
          [kuittaus-tooltip (last (kuittaukset-tyypin-mukaan kuittaustyyppi)) kuittaustyyppi kuitattu? oikeus?]])]]))
 
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt aiheet-ja-tarkenteet ilmoituksilla-aihe-ja-tarkenne?]
-  [lomake/lomake
-   {:luokka "css-grid sm-css-block css-grid-columns-12x1 css-grid-columns-gap-16 padding-horizontal-16"
-    :muokkaa! #(e! (v/->AsetaValinnat %))}
-   [(valinnat/aikavalivalitsin "Tiedotettu urakkaan aikavälillä"
-      tiedot/aikavalit
-      (merge valinnat-nyt {:palstoita-vapaa-aikavali? true})
-      {:vakioaikavali :valitetty-urakkaan-vakioaikavali
-       :alkuaika      :valitetty-urakkaan-alkuaika
-       :loppuaika     :valitetty-urakkaan-loppuaika}
-      false
-      {:rivi-luokka "grid-column-end-span-2"
+  (let [valittu-aihe (:aihe valinnat-nyt)
+        tarkenteet (filter
+                     #(or (nil? valittu-aihe)
+                        (= valittu-aihe (:aihe-id %)))
+                     (flatten (map :tarkenteet aiheet-ja-tarkenteet)))]
+    [lomake/lomake
+     {:luokka "css-grid sm-css-block css-grid-columns-12x1 css-grid-columns-gap-16 padding-horizontal-16"
+      :muokkaa! #(e! (v/->AsetaValinnat %))}
+     [(valinnat/aikavalivalitsin "Tiedotettu urakkaan aikavälillä"
+        tiedot/aikavalit
+        (merge valinnat-nyt {:palstoita-vapaa-aikavali? true})
+        {:vakioaikavali :valitetty-urakkaan-vakioaikavali
+         :alkuaika :valitetty-urakkaan-alkuaika
+         :loppuaika :valitetty-urakkaan-loppuaika}
+        false
+        {:rivi-luokka "grid-column-end-span-2"
+         ::lomake/col-luokka "width-full"
+         :aikavalitsin-flex? true
+         :palstoja 2
+         :vayla-tyyli? true})
+      (valinnat/aikavalivalitsin "Toimenpiteet aloitettu"
+        tiedot/toimenpiteiden-aikavalit
+        (merge valinnat-nyt {:palstoita-vapaa-aikavali? true})
+        {:vakioaikavali :toimenpiteet-aloitettu-vakioaikavali
+         :alkuaika :toimenpiteet-aloitettu-alkuaika
+         :loppuaika :toimenpiteet-aloitettu-loppuaika}
+        false
+        {:rivi-luokka "grid-column-end-span-2"
+         ::lomake/col-luokka "width-full"
+         :palstoja 2
+         :vayla-tyyli? true})
+      {:nimi :hakuehto :otsikko "Hakusana"
+       :placeholder "Hae tekstillä..."
+       :tyyppi :string
+       :vayla-tyyli? true
+       :pituus-max 64
+       :rivi-luokka "grid-column-end-span-4"
        ::lomake/col-luokka "width-full"
-       :palstoja 2
-       :vayla-tyyli? true})
-    (valinnat/aikavalivalitsin "Toimenpiteet aloitettu"
-      tiedot/toimenpiteiden-aikavalit
-      (merge valinnat-nyt {:palstoita-vapaa-aikavali? true})
-      {:vakioaikavali :toimenpiteet-aloitettu-vakioaikavali
-       :alkuaika :toimenpiteet-aloitettu-alkuaika
-       :loppuaika :toimenpiteet-aloitettu-loppuaika}
-      false
-      {:rivi-luokka "grid-column-end-span-2"
-       ::lomake/col-luokka "width-full"
-       :palstoja 2
-       :vayla-tyyli? true})
-    {:nimi :hakuehto :otsikko "Hakusana"
-     :placeholder "Hae tekstillä..."
-     :tyyppi :string
-     :vayla-tyyli? true
-     :pituus-max 64
-     :rivi-luokka "grid-column-end-span-4"
-     ::lomake/col-luokka "width-full"
-     :palstoja 2}
-    (when ilmoituksilla-aihe-ja-tarkenne?
+       :palstoja 2}
       {:nimi :aihe
        :palstoja 2
        :rivi-luokka "grid-column-end-span-2"
@@ -163,114 +168,97 @@
        :valinnat (if
                    (seq aiheet-ja-tarkenteet) (into [nil] (map :aihe-id aiheet-ja-tarkenteet))
                    [])
-       :valinta-nayta #(or (palautejarjestelma/hae-aihe aiheet-ja-tarkenteet %) "Ei rajoitusta")})
-    (when ilmoituksilla-aihe-ja-tarkenne?
-      (let [valittu-aihe (:aihe valinnat-nyt)
-            tarkenteet (filter
-                         #(or (nil? valittu-aihe)
-                            (= valittu-aihe (:aihe-id %)))
-                         (flatten (map :tarkenteet aiheet-ja-tarkenteet)))]
-        {:nimi :tarkenne
-         :palstoja 2
-         :rivi-luokka "grid-column-end-span-2"
-         ::lomake/col-luokka "width-full"
-         :otsikko "Tarkenne"
-         :jos-tyhja (cond
-                      (empty? tarkenteet)
-                      "Aiheella ei tarkenteita"
-                      :else
-                      "")
-         :vayla-tyyli? true
-         :tyyppi :valinta
-         :valinnat (if (seq tarkenteet)
-                     (into [nil] (map :tarkenne-id tarkenteet))
-                     [])
-         :valinta-nayta #(or (palautejarjestelma/hae-tarkenne aiheet-ja-tarkenteet %) "Ei valintaa")}))
-    (when-not ilmoituksilla-aihe-ja-tarkenne?
-      {:nimi :selite
+       :valinta-nayta #(or (palautejarjestelma/hae-aihe aiheet-ja-tarkenteet %) "Ei rajoitusta")}
+      {:nimi :tarkenne
+       :palstoja 2
+       :rivi-luokka "grid-column-end-span-2"
+       ::lomake/col-luokka "width-full"
+       :otsikko "Tarkenne"
+       :jos-tyhja (cond
+                    (empty? tarkenteet)
+                    "Aiheella ei tarkenteita"
+                    :else
+                    "")
+       :vayla-tyyli? true
+       :tyyppi :valinta
+       :valinnat (if (seq tarkenteet)
+                   (into [nil] (map :tarkenne-id tarkenteet))
+                   [])
+       :valinta-nayta #(or (palautejarjestelma/hae-tarkenne aiheet-ja-tarkenteet %) "Ei valintaa")}
+      {:nimi :tr-numero
+       :palstoja 2
+       :rivi-luokka "grid-column-end-span-1"
+       ::lomake/col-luokka "width-full"
+       :vayla-tyyli? true
+       :otsikko "Tienumero"
+       :placeholder "Rajaa tienumerolla"
+       :tyyppi :positiivinen-numero :kokonaisluku? true}
+      {:nimi :tunniste
+       :palstoja 2
+       :rivi-luokka "grid-column-end-span-2"
+       ::lomake/col-luokka "width-full"
+       :vayla-tyyli? true
+       :otsikko "Tunniste"
+       :placeholder "Rajaa tunnisteella"
+       :tyyppi :string}
+      {:nimi :ilmoittaja-nimi
+       :palstoja 2
+       :rivi-luokka "grid-column-end-span-5"
+       ::lomake/col-luokka "width-full"
+       :vayla-tyyli? true
+       :otsikko "Ilmoittajan nimi"
+       :placeholder "Rajaa ilmoittajan nimellä"
+       :tyyppi :string}
+      {:nimi :ilmoittaja-puhelin
        :palstoja 2
        :rivi-luokka "grid-column-end-span-4"
        ::lomake/col-luokka "width-full"
-       :otsikko "Selite"
-       :placeholder "Hae ja valitse selite"
-       :tyyppi :haku
-       :hae-kun-yli-n-merkkia 0
-       :nayta second :fmt second
-       :lahde selitehaku})
-    {:nimi :tr-numero
-     :palstoja 2
-     :rivi-luokka "grid-column-end-span-1"
-     ::lomake/col-luokka "width-full"
-     :vayla-tyyli? true
-     :otsikko "Tienumero"
-     :placeholder "Rajaa tienumerolla"
-     :tyyppi :positiivinen-numero :kokonaisluku? true}
-    {:nimi :tunniste
-     :palstoja 2
-     :rivi-luokka "grid-column-end-span-2"
-     ::lomake/col-luokka "width-full"
-     :vayla-tyyli? true
-     :otsikko "Tunniste"
-     :placeholder "Rajaa tunnisteella"
-     :tyyppi :string}
-    {:nimi :ilmoittaja-nimi
-     :palstoja 2
-     :rivi-luokka "grid-column-end-span-5"
-     ::lomake/col-luokka "width-full"
-     :vayla-tyyli? true
-     :otsikko "Ilmoittajan nimi"
-     :placeholder "Rajaa ilmoittajan nimellä"
-     :tyyppi :string}
-    {:nimi :ilmoittaja-puhelin
-     :palstoja 2
-     :rivi-luokka "grid-column-end-span-4"
-     ::lomake/col-luokka "width-full"
-     :vayla-tyyli? true
-     :otsikko "Ilmoittajan puhelinnumero"
-     :placeholder "Rajaa ilmoittajan puhelinnumerolla"
-     :tyyppi :puhelin}
-    {:nimi :tilat
-     :otsikko "Tila"
-     :tyyppi :checkbox-group
-     :vayla-tyyli? true
-     :vaihtoehdot tiedot/tila-filtterit
-     :palstoja 2
-     :rivi-luokka "grid-column-end-span-3"
-     ::lomake/col-luokka "width-full"
-     :vaihtoehto-nayta tilan-selite}
-    {:nimi :tyypit
-     :otsikko "Tyyppi"
-     :tyyppi :checkbox-group
-     :vayla-tyyli? true
-     :palstoja 2
-     :rivi-luokka "grid-column-end-span-3"
-     ::lomake/col-luokka "width-full"
-     :vaihtoehdot [:toimenpidepyynto :tiedoitus :kysely]
-     :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi}
-    {:nimi :vaikutukset
-     :otsikko "Vaikutukset"
-     :tyyppi :checkbox-group
-     :palstoja 1
-     :rivi-luokka "grid-column-end-span-3"
-     ::lomake/col-luokka "width-full"
-     :vayla-tyyli? true
-     :vaihtoehdot tiedot/vaikutukset-filtterit
-     :vaihtoehto-nayta vaikutuksen-selite
-     :vihje kuittausvaatimukset-str}
-    {:nimi :aloituskuittauksen-ajankohta
-     :otsikko "Aloituskuittaus annettu"
-     :rivi-luokka "grid-column-end-span-2"
-     ::lomake/col-luokka "width-full"
-     :vayla-tyyli? true
-     :tyyppi :radio-group
-     :palstoja 2
-     :vaihtoehdot [:kaikki :alle-tunti :myohemmin]
-     :vaihtoehto-nayta (fn [arvo]
-                         ({:kaikki "Älä rajoita aloituskuittauksella"
-                           :alle-tunti "Alle tunnin kuluessa"
-                           :myohemmin "Yli tunnin päästä"}
-                          arvo))}]
-   valinnat-nyt])
+       :vayla-tyyli? true
+       :otsikko "Ilmoittajan puhelinnumero"
+       :placeholder "Rajaa ilmoittajan puhelinnumerolla"
+       :tyyppi :puhelin}
+      {:nimi :tilat
+       :otsikko "Tila"
+       :tyyppi :checkbox-group
+       :vayla-tyyli? true
+       :vaihtoehdot tiedot/tila-filtterit
+       :palstoja 2
+       :rivi-luokka "grid-column-end-span-3"
+       ::lomake/col-luokka "width-full"
+       :vaihtoehto-nayta tilan-selite}
+      {:nimi :tyypit
+       :otsikko "Tyyppi"
+       :tyyppi :checkbox-group
+       :vayla-tyyli? true
+       :palstoja 2
+       :rivi-luokka "grid-column-end-span-3"
+       ::lomake/col-luokka "width-full"
+       :vaihtoehdot [:toimenpidepyynto :tiedoitus :kysely]
+       :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi}
+      {:nimi :vaikutukset
+       :otsikko "Vaikutukset"
+       :tyyppi :checkbox-group
+       :palstoja 1
+       :rivi-luokka "grid-column-end-span-3"
+       ::lomake/col-luokka "width-full"
+       :vayla-tyyli? true
+       :vaihtoehdot tiedot/vaikutukset-filtterit
+       :vaihtoehto-nayta vaikutuksen-selite
+       :vihje kuittausvaatimukset-str}
+      {:nimi :aloituskuittauksen-ajankohta
+       :otsikko "Aloituskuittaus annettu"
+       :rivi-luokka "grid-column-end-span-2"
+       ::lomake/col-luokka "width-full"
+       :vayla-tyyli? true
+       :tyyppi :radio-group
+       :palstoja 2
+       :vaihtoehdot [:kaikki :alle-tunti :myohemmin]
+       :vaihtoehto-nayta (fn [arvo]
+                           ({:kaikki "Älä rajoita aloituskuittauksella"
+                             :alle-tunti "Alle tunnin kuluessa"
+                             :myohemmin "Yli tunnin päästä"}
+                            arvo))}]
+     valinnat-nyt]))
 
 (defn ilmoitustyypin-selite [ilmoitustyyppi]
   (let [tyyppi (domain/ilmoitustyypin-lyhenne ilmoitustyyppi)]
@@ -281,7 +269,14 @@
    [:div.harmaa-teksti "Tunniste"]
    [:span (or tunniste "-")]])
 
-
+(defn- tarkenne-tai-selite-teksti [aiheet-ja-tarkenteet {:keys [tarkenne selitteet]}]
+  (or (palautejarjestelma/hae-tarkenne aiheet-ja-tarkenteet tarkenne)
+    (when selitteet
+      (str
+        (if (= 1 (count selitteet))
+          "Selite:\n"
+          "Selitteet:\n")
+        (domain/parsi-selitteet selitteet)))))
 
 (defn ilmoitusten-paanakyma
   [e! {ws-ilmoitusten-kuuntelu :ws-ilmoitusten-kuuntelu
@@ -395,15 +390,11 @@
          :tyyppi :komponentti
          :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))
          :otsikkorivi-luokka "tyyppi" :leveys ""}
-        (if ilmoituksilla-aihe-ja-tarkenne?
-          {:otsikko "Tarkenne" :nimi :tarkenne
-           :tyyppi :string
-           :hae #(palautejarjestelma/hae-tarkenne aiheet-ja-tarkenteet (:tarkenne %))
-           :otsikkorivi-luokka "selite" :leveys ""}
-          {:otsikko "Selite" :nimi :selitteet
-           :tyyppi :komponentti
-           :komponentti it/selitelista
-           :otsikkorivi-luokka "selite" :leveys ""})
+        {:otsikko "Tarkenne" :nimi :tarkenne
+         :tyyppi :string
+         :luokka "white-space-pre"
+         :hae (partial tarkenne-tai-selite-teksti aiheet-ja-tarkenteet)
+         :otsikkorivi-luokka "selite" :leveys ""}
         {:otsikko "Lisätieto" :nimi :lisatieto :otsikkorivi-luokka "lisatieto"
          :leveys ""
          :luokka "lisatieto-rivi"
