@@ -74,8 +74,8 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
   })
 
   it('Hoitokautta voi vaihtaa', () => {
-    let hoitokausiNyt = kuluvaHoitovuosi();
-    let hoitokausiViimeinen = kuluvaHoitovuosi(1);
+    let hoitokausiNyt = "3. hoitovuosi (2022—2023)";
+    let hoitokausiViimeinen = "4. hoitovuosi (2023—2024)";
 
     cy.server()
     cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
