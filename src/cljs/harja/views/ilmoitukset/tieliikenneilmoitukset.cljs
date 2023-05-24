@@ -394,7 +394,7 @@
          :luokka "white-space-pre"
          :hae (partial tarkenne-tai-selite-teksti aiheet-ja-tarkenteet)
          :otsikkorivi-luokka "selite" :leveys ""}
-        {:otsikko "Lisätieto" :nimi :lisatieto :otsikkorivi-luokka "lisatieto"
+        {:otsikko "Kuvaus" :nimi :lisatieto :otsikkorivi-luokka "lisatieto"
          :leveys ""
          :luokka "lisatieto-rivi"
          :solun-tooltip (fn [rivi]
