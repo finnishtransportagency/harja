@@ -57,15 +57,15 @@
                        @poista-kaikilta-vuosilta?-atom
                        (:kopioidaan-tuleville-vuosille? lomake-tila))
                      urakka)]
-        ;; FIXME: Listataan hoitovuodet aikaväleineä, koska sivulla hoitovuoden voi vielä tällä hetkellä valita vanhan mallisesti vain aikavälinä
-        ;;        Kun hoitovuosivalinta UI-komponenttia päivitetään Harjassa yleisesti, voisi tässä näyttää hoitovuosien järjestysnumeroja, kuten on speksattu.
-        [:li (pvm/hoitokausi-str-alkuvuodesta vuosi)])]
+            [:li (fmt/hoitokauden-jarjestysluku-ja-vuodet vuosi
+                                                          (mapv #(pvm/vuosi (first %))
+                                                                (urakka/hoito-tai-sopimuskaudet urakka)))])]
      ;; Vain yksi poistettava rajoitus
      [:ul
       [:li
-       (pvm/hoitokausi-str-alkuvuodesta
-         ;; Lomakkeella valittu hoitokausi
-         (:hoitokauden-alkuvuosi lomake-tila))]])
+       (fmt/hoitokauden-jarjestysluku-ja-vuodet (:hoitokauden-alkuvuosi lomake-tila)
+                                                (mapv #(pvm/vuosi (:alkupvm %))
+                                                      (urakka/hoito-tai-sopimuskaudet urakka)))]])
    [:div
     [kentat/tee-kentta
      {:tyyppi :checkbox
@@ -216,7 +216,7 @@
         muokkaustila? (boolean (:rajoitusalue_id rajoituslomake))
         disabled? (or (not (get-in app [:lomake ::tila/validi?]))  (:hae-tiedot-kaynnissa? app) (not saa-muokata?))]
     [:div.lomake-rajoitusalue
-       #_ [debug/debug (:lomake app)]
+        [debug/debug (:lomake app)]
      [lomake/lomake
       {:ei-borderia? true
        :voi-muokata? saa-muokata?
