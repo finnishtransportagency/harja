@@ -52,8 +52,6 @@
 (defn- navigointivalikko
   "Navigointivalikko, joka näyttää vierityslinkit osioon ja tiedon siitä onko osio vahvistettu vai ei."
   [avaimet hoitokausi {:keys [urakka indeksit-saatavilla?]} tiedot]
-  (println "Jarno hoitokausi " hoitokausi)
-  (println "Jarno urakka " urakka)
   [:<>
    [:div.flex-row
     [:div
