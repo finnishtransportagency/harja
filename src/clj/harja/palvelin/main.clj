@@ -29,6 +29,7 @@
     [harja.palvelin.integraatiot.digiroad.digiroad-komponentti :as digiroad-integraatio]
     [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
+    [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
     [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
     [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
@@ -309,6 +310,10 @@
                       (labyrintti/luo-labyrintti (:labyrintti asetukset)))
                     [:http-palvelin :db :integraatioloki])
 
+      :turi (component/using
+              (turi/->Turi (:turi asetukset))
+              [:db :integraatioloki :liitteiden-hallinta])
+
       :yha-integraatio (component/using
                          (yha-integraatio/->Yha (:yha asetukset))
                          [:db :integraatioloki])
@@ -512,11 +517,11 @@
 
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
-                                [:http-palvelin :db])
-      
+                                [:http-palvelin :db :turi])
+
       :tyomaapaivakirja (component/using
-              (tyomaapaivakirja/->Tyomaapaivakirja)
-              [:http-palvelin :db])
+                          (tyomaapaivakirja/->Tyomaapaivakirja)
+                          [:http-palvelin :db])
 
       :valikatselmukset (component/using
                           (valikatselmukset/->Valikatselmukset)
@@ -590,7 +595,7 @@
 
       :urakan-tyotunnit (component/using
                           (urakan-tyotunnit/->UrakanTyotunnit)
-                          [:db  :http-palvelin])
+                          [:db :http-palvelin])
 
       :hairioilmoitukset (component/using
                            (hairioilmoitukset/->Hairioilmoitukset)
@@ -665,7 +670,7 @@
       :api-turvallisuuspoikkeama (component/using
                                    (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
                                    [:http-palvelin :db :integraatioloki
-                                    :liitteiden-hallinta])
+                                    :liitteiden-hallinta :turi])
       :api-suolasakkojen-lahetys (component/using
                                    (suolasakkojen-lahetys/->SuolasakkojenLahetys)
                                    [:db])
