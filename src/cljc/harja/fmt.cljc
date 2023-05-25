@@ -464,17 +464,32 @@
 (defn hoitokauden-jarjestysluku-ja-vuodet
   "Näyttää hoitokauden esim 1.10.2022 - 30.9.2023 formaatissa '2. hoitovuosi (2022 — 2023)'.
   Olettaa saavansa parametrit joko kaikki päivämäärinä tai kaikki vuosina:
-  valittu-hk: [pp.kk.vvvv pp.kk.vvvv] TAI vvvv
-  hoitovuodet: [[pp.kk.vvvv pp.kk.vvvv]...] TAI [2012 2013 2014 2015 2016]"
+  valittu-hk: [pp.kk.vvvv pp.kk.vvvv] TAI vvvv tai järjestysnumero, esim. 2
+  hoitovuodet: [[pp.kk.vvvv pp.kk.vvvv]...] TAI [2012 2013 2014 2015 2016] TAI järjestysnumerot, esim. [1 2 3 4 5)"
   [valittu-hk hoitovuodet]
   (assert (or (and (int? valittu-hk) (every? int? hoitovuodet))
-              (and (vector? valittu-hk) (every? vector? hoitovuodet))) "Kaikkien parametrien on oltava joko numeroita tai pvm:n sisältäviä vektoreita.")
+              (and (int? valittu-hk) (> valittu-hk 0) (< valittu-hk 10) (every? vector? hoitovuodet))
+              (and (vector? valittu-hk) (every? vector? hoitovuodet))) "Kaikkien parametrien on oltava joko numeroita tai pvm:n sisältäviä vektoreita. Myös hoitokauden järjestysluku ja vektori ")
+  (when (and (int? valittu-hk) (< valittu-hk 10) (every? vector? hoitovuodet))
+    (assert (<= valittu-hk (count hoitovuodet)) "Indeksi yli rajojen - osoitin suurempi kuin hoitovuosien lukumäärä. "))
+
   (let [monesko (first (keep-indexed (fn [i hk]
-                                       (when (= hk valittu-hk)
-                                         (inc (int i))))
+                                       (if (< valittu-hk 10)
+                                         valittu-hk
+                                         (when (= hk valittu-hk)
+                                          (inc (int i)))))
                                      hoitovuodet))
-        hk-fmt #(if (int? %)
-                 (str % "\u2014" (inc %))
+        hk-fmt #(cond
+                  ;; valittu-hk on vuosiluku
+                  (and (int? %) (> % 2000))
+                  (str % "\u2014" (inc %))
+
+                  ;; valittu-hk on järjestysluku, esim kustannussuunnitelmassa, eli 1, 2, 3, ...
+                  (and (int? %) (< % 10) (get hoitovuodet (dec %)))
+                  (str (pvm/vuosi (first (get hoitovuodet (dec %)))) "\u2014"
+                       (pvm/vuosi (second (get hoitovuodet (dec %)))))
+
+                  (pvm/pvm? %) ;; valittu-hk on pvm
                  (str (pvm/vuosi (first %)) "\u2014" (pvm/vuosi (second %))))]
     (str (when monesko (str monesko ". ")) "hoitovuosi (" (hk-fmt valittu-hk) ")")))
 
