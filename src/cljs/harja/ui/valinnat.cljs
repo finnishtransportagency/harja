@@ -667,7 +667,8 @@
 
 (defn hoitovuosi-jarjestysluvulla
   [hoitovuosien-jarjestysluvut valittu valitse-fn urakan-hoitokaudet optiot]
-  [:div {:class (or (:wrapper-luokka optiot) "col-xs-6.col-md-3")}
+  [:div {:data-cy "hoitokausi-jarjestysluvulla"
+         :class (or (:wrapper-luokka optiot) "col-xs-6.col-md-3")}
    [:label.alasvedon-otsikko-vayla "Hoitovuosi"]
    [yleiset/livi-pudotusvalikko {:valinta valittu
                                  :vayla-tyyli? true
