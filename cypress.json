@@ -7,5 +7,6 @@
     "reporterOptions": {
         "mochaFile": "/tmp/cypress-run/cypress/test-results/results-[hash].xml",
         "toConsole": true
-    }
+    },
+    "nodeVersion": "bundled"
 }

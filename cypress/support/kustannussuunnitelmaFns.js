@@ -408,5 +408,5 @@ export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
 
 export function valitseHoitokausi(nykyinenHoitokausi, uusiHoitokausi) {
     cy.get('[data-cy="hoitokausi-jarjestysluvulla"]').contains(nykyinenHoitokausi).click();
-    cy.get('[data-cy="hoitokausi-jarjestysluvulla"]').contains('button', uusiHoitokausi).click();
+    cy.get('[data-cy="hoitokausi-jarjestysluvulla"]').contains('span', uusiHoitokausi).click();
 }
