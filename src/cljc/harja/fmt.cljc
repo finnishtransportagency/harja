@@ -474,7 +474,8 @@
     (assert (<= valittu-hk (count hoitovuodet)) "Indeksi yli rajojen - osoitin suurempi kuin hoitovuosien lukumäärä. "))
 
   (let [monesko (first (keep-indexed (fn [i hk]
-                                       (if (< valittu-hk 10)
+                                       (if (and (int? valittu-hk)
+                                                (< valittu-hk 10))
                                          valittu-hk
                                          (when (= hk valittu-hk)
                                           (inc (int i)))))
@@ -489,8 +490,8 @@
                   (str (pvm/vuosi (first (get hoitovuodet (dec %)))) "\u2014"
                        (pvm/vuosi (second (get hoitovuodet (dec %)))))
 
-                  (pvm/pvm? %) ;; valittu-hk on pvm
-                 (str (pvm/vuosi (first %)) "\u2014" (pvm/vuosi (second %))))]
+                  :else ;; valittu-hk on pvm
+                  (str (pvm/vuosi (first %)) "\u2014" (pvm/vuosi (second %))))]
     (str (when monesko (str monesko ". ")) "hoitovuosi (" (hk-fmt valittu-hk) ")")))
 
 #?(:cljs
