@@ -52,12 +52,19 @@
 (defn- navigointivalikko
   "Navigointivalikko, joka näyttää vierityslinkit osioon ja tiedon siitä onko osio vahvistettu vai ei."
   [avaimet hoitokausi {:keys [urakka indeksit-saatavilla?]} tiedot]
+  (println "Jarno hoitokausi " hoitokausi)
+  (println "Jarno urakka " urakka)
   [:<>
    [:div.flex-row
     [:div
      [:h1 "Kustannussuunnitelma"]
      [:div.pieni-teksti urakka]]
-    [valinnat/hoitovuosi-rivivalitsin (range 1 6) hoitokausi #(e! (tuck-apurit/->MuutaTila [:suodattimet :hoitokauden-numero] %1))]]
+    (let [hoitokaudet (urakka/hoito-tai-sopimuskaudet urakka)]
+      [valinnat/hoitovuosi-jarjestysluvulla (into [] (range 1 (inc (count hoitokaudet))))
+       hoitokausi
+       #(e! (tuck-apurit/->MuutaTila [:suodattimet :hoitokauden-numero] %1))
+       hoitokaudet
+       {}])]
    [:div#tilayhteenveto.hintalaskuri
     ;; Taulukon rivit
     (into [:<>]
@@ -221,7 +228,7 @@
         [navigointivalikko
          avaimet
          hoitokausi
-         {:urakka (-> @tila/yleiset :urakka :nimi)
+         {:urakka (:urakka @tila/yleiset)
           :soluja (count summa-tavoite-ja-kattohinta)
           :indeksit-saatavilla? indeksit-saatavilla?}
          {::t/hankintakustannukset {:nimi "Hankintakustannukset"
