@@ -131,8 +131,12 @@
                      [(pvm/->pvm "1.10.2022") (pvm/->pvm "30.9.2023")]
                      [(pvm/->pvm "1.10.2023") (pvm/->pvm "30.9.2024")]]]
     (is (thrown? AssertionError  (fmt/hoitokauden-jarjestysluku-ja-vuodet 0 hoitovuodet)))
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet 1 hoitovuodet)
+           "1. hoitovuosi (2020—2021)"))
     (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet 2 hoitovuodet)
            "2. hoitovuosi (2021—2022)"))
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet 3 hoitovuodet)
+           "3. hoitovuosi (2022—2023)"))
     (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet 4 hoitovuodet)
            "4. hoitovuosi (2023—2024)"))
     (is (thrown? AssertionError (fmt/hoitokauden-jarjestysluku-ja-vuodet 0 hoitovuodet)))))
