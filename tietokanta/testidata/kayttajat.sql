@@ -5,12 +5,6 @@ INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES
   ((SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), 'jarjestelmavastuuhenkilo'),
   ((SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), 'liikennepaivystaja');
 
-INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisaatio, jarjestelma, "analytiikka-oikeus") VALUES
-('jvh-api','Jalmari','Järjestelmävastuuhenkilö','jalmari@example.com', '040123456789', (SELECT id FROM organisaatio WHERE lyhenne='Livi'), true, true);
-INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES
-                                                 ((SELECT id FROM kayttaja WHERE kayttajanimi='jvh-api'), 'jarjestelmavastuuhenkilo'),
-                                                 ((SELECT id FROM kayttaja WHERE kayttajanimi='jvh-api'), 'liikennepaivystaja');
-
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) VALUES ('antero','Antero','Asfalttimies','antero@example.com','0401111111', (SELECT id FROM organisaatio WHERE nimi='Skanska Asfaltti Oy'));
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) VALUES ('veeti','Veeti','Velmu','vetsku@example.com','0401111523', (SELECT id FROM organisaatio WHERE nimi='Skanska Asfaltti Oy'));
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) VALUES ('paajehu','Pekka','Pääjehu','paajehu@example.com','0401112345', (SELECT id FROM organisaatio WHERE nimi='Skanska Asfaltti Oy'));
