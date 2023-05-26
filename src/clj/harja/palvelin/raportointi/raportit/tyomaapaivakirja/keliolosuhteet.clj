@@ -10,13 +10,18 @@
     [:varillinen-teksti {:arvo paikka}]
     [:varillinen-teksti {:arvo havainto}]))
 
-(defn poikkeukselliset-keliolosuhteet-taulukko []
+(defn poikkeukselliset-keliolosuhteet-taulukko [poikkeussaat]
   (let [tiedot {:gridin-otsikko "Omat havainnot"
                 :rivin-tiedot (rivi
                                 {:otsikko "Klo" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "vaalen-tumma-tausta" :leveys 0.098 :tyyppi :varillinen-teksti}
                                 {:otsikko "Paikka" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.33 :tyyppi :varillinen-teksti}
                                 {:otsikko "Havainto" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 1 :tyyppi :varillinen-teksti})
-                :rivit [(keliolosuhteet-rivi "0:00" "Vt 4 Pateniemi" "Alijäähtynyttä vettä Pateniemen alueella")]}]
+                :rivit (mapv
+                         #(keliolosuhteet-rivi
+                            (harja.pvm/aika (:havaintoaika %))
+                            (:paikka %)
+                            (:kuvaus %))
+                         poikkeussaat)}]
     (into ()
       [(yhteiset/taulukko tiedot)
        (yhteiset/osion-otsikko "Poikkeukselliset paikalliset keliolosuhteet")])))
