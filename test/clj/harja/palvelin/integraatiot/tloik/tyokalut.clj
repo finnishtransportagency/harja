@@ -165,15 +165,15 @@
   <paikanKuvaus>Jossain kentällä.</paikanKuvaus>
   <lisatieto>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lisatieto>
   <yhteydenottopyynto>false</yhteydenottopyynto>
+  <luokittelu
+  <aihe>1</aihe>
+  <tarkenne>1</tarkenne>
+  </luokittelu>
   <sijainti>
   <tienumero>79</tienumero>
   <x>443199</x>
   <y>7377324</y>
   </sijainti>
-  <luokittelu>
-    <aihe>1</aihe>
-    <tarkenne>1</tarkenne>
-  </luokittelu>
   <ilmoittaja>
   <etunimi>Uuno</etunimi>
   <sukunimi>Urakoitsija</sukunimi>
