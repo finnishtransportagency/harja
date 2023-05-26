@@ -30,7 +30,7 @@ INSERT INTO tyomaapaivakirja_tyonjohtaja (urakka_id, tyomaapaivakirja_id, versio
 VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :aloitus, :lopetus, :nimi);
 
 -- name: lisaa-saatiedot<!
-INSERT INTO tyomaapaivakirja_saa (urakka_id, tyomaapaivakirja_id, versio, havaintoaika, aseman_tunniste,
+INSERT INTO tyomaapaivakirja_saaasema (urakka_id, tyomaapaivakirja_id, versio, havaintoaika, aseman_tunniste,
                                   aseman_tietojen_paivityshetki, ilman_lampotila, tien_lampotila,
                                   keskituuli, sateen_olomuoto, sadesumma)
 VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :havaintoaika, :aseman-tunniste, :aseman-tietojen-paivityshetki,

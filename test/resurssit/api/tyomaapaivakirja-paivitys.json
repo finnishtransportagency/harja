@@ -30,6 +30,18 @@
                     "sateen-olomuoto": 23.0,
                     "sadesumma": 5
                 }
+            },
+            {
+                "saatieto": {
+                    "havaintoaika": "2016-01-30T14:00:00+02:00",
+                    "aseman-tunniste": "101500",
+                    "aseman-tietojen-paivityshetki": "2016-01-30T14:00:00+02:00",
+                    "ilman-lampotila": 19.0,
+                    "tien-lampotila": 5.0,
+                    "keskituuli": 17,
+                    "sateen-olomuoto": 23.0,
+                    "sadesumma": 3
+                }
             }
         ],
         "poikkeukselliset-saahavainnot": [

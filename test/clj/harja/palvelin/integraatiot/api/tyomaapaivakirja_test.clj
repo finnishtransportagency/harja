@@ -38,7 +38,7 @@
                       (SELECT array_agg(row(k.aloitus, k.lopetus, k.tyokoneiden_lkm, k.lisakaluston_lkm)) FROM tyomaapaivakirja_kalusto k WHERE k.tyomaapaivakirja_id = %s AND k.versio = %s) as kalustot,
                       (SELECT array_agg(row(p.aloitus, p.lopetus, p.nimi)) FROM tyomaapaivakirja_paivystaja p WHERE p.tyomaapaivakirja_id = %s AND p.versio = %s) as paivystajat,
                       (SELECT array_agg(row(p.havaintoaika, p.paikka, p.kuvaus)) FROM tyomaapaivakirja_poikkeussaa p WHERE p.tyomaapaivakirja_id = %s AND p.versio = %s) as poikkeussaat,
-                      (SELECT array_agg(row(s.havaintoaika, s.aseman_tunniste, s.aseman_tietojen_paivityshetki, s.ilman_lampotila, s.tien_lampotila, s.keskituuli, s.sateen_olomuoto, s.sadesumma)) FROM tyomaapaivakirja_saa s WHERE s.tyomaapaivakirja_id = %s AND s.versio = %s) as saat,
+                      (SELECT array_agg(row(s.havaintoaika, s.aseman_tunniste, s.aseman_tietojen_paivityshetki, s.ilman_lampotila, s.tien_lampotila, s.keskituuli, s.sateen_olomuoto, s.sadesumma)) FROM tyomaapaivakirja_saaasema s WHERE s.tyomaapaivakirja_id = %s AND s.versio = %s) as saat,
                       (SELECT array_agg(row(t.tyyppi, t.kuvaus)) FROM tyomaapaivakirja_tapahtuma t WHERE t.tyomaapaivakirja_id = %s AND t.versio = %s) as tapahtumat,
                       (SELECT array_agg(row(tt.tyyppi, tt.aloitus, tt.lopetus)) FROM tyomaapaivakirja_tieston_toimenpide tt WHERE tt.tyomaapaivakirja_id = %s AND tt.versio = %s) as tieston_toimenpiteet,
                       (SELECT array_agg(row(t.aloitus, t.lopetus, t.nimi)) FROM tyomaapaivakirja_tyonjohtaja t WHERE t.tyomaapaivakirja_id = %s AND t.versio = %s) as tyonjohtajat
