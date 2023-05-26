@@ -13,7 +13,7 @@
     "nimi" ::nimi
     "jarjestys" ::jarjestys
     "kaytossa" ::kaytossa?
-    ::tarkenteet (rel/has-many
+    ::tarkenteet (specql.rel/has-many
                     ::aihe-id
                     ::tarkenne
                     ::aihe-id)}]
