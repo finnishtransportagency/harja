@@ -394,7 +394,7 @@
          :otsikkorivi-luokka "tyyppi" :leveys ""}
         {:otsikko "Tarkenne" :nimi :tarkenne
          :tyyppi :string
-         :luokka "white-space-pre"
+         :luokka "pitka-teksti"
          :hae (partial tarkenne-tai-selite-teksti aiheet-ja-tarkenteet)
          :otsikkorivi-luokka "selite" :leveys ""}
         {:otsikko "Kuvaus" :nimi :lisatieto :otsikkorivi-luokka "lisatieto"
