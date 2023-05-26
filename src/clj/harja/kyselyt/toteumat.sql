@@ -898,6 +898,13 @@ WHERE urakka_id = :urakka
   AND ulkoinen_oid = :ulkoinen_oid
 ORDER BY v.alkupvm;
 
+-- name: paivita-varustetoteumat-oidilla-ulkoiset
+UPDATE varustetoteuma_ulkoiset
+SET velho_varustetoimenpiteet = velho_varustetoimenpiteet || ARRAY[:velho_varustetoimenpiteet]::text[]
+WHERE ulkoinen_oid = :ulkoinen_oid 
+AND alkupvm = :alkupvm
+RETURNING *;
+
 -- name: luo-varustetoteuma-ulkoiset<!
 -- Luo uuden Velhosta tuodun varustetoteuman
 INSERT INTO varustetoteuma_ulkoiset (ulkoinen_oid,

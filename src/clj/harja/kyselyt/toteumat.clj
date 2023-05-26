@@ -54,6 +54,9 @@
         toteumat-clj-sijainneilla (map #(update % :sijainti geo/pg->clj) toteumat)]
     toteumat-clj-sijainneilla))
 
+(defn paivita-varustetoteumat-oidilla-ulkoiset [db ulkoiset-oidit]
+  (hae-varustetoteumat-oidilla-ulkoiset db ulkoiset-oidit))
+
 ;; Partitiointimuutoksen jälkeen toteumataulusta pitää hakea uusin id aina INSERT:n
 ;; jälkeen. Käytetään tätä funktiota sovelluksen puolella, API-puolella on omansa.
 (defn luo-uusi-toteuma

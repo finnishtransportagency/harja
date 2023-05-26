@@ -18,7 +18,8 @@
             [clojure.set :as set]
             [clojure.string :as str]
             [org.httpkit.client :as http]
-            [clojure.core.memoize :as memo])
+            [clojure.core.memoize :as memo]
+            [harja.kyselyt.konversio :as konv])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-varustetoteuma-haussa+ ::velho-virhe-varustetoteuma-haussa)
@@ -368,7 +369,9 @@
               {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
               {tila :tila oidit :oidit} (jasenna-varusteiden-oidit url body headers tallenna-virhe-fn)]
           (when (and tila (not-empty oidit))
-            (let [oidit-alijoukot (partition
+            (let [oidit (take 10 oidit) ; TODO: Poista tämä dev-feedback nopeutus
+                  _ (prn "oidit" oidit)
+                  oidit-alijoukot (partition
                                     +kohde-haku-maksimi-koko+
                                     +kohde-haku-maksimi-koko+
                                     nil
@@ -440,13 +443,89 @@
                                                            urakka-pvmt-idlla-fn
                                                            kohde)))
 
+(defn- hae-kohteet-velhosta
+  "Pyytää Velhosta joukon kohteita tunnisteiden avulla."
+  [token kohteet-url oid-joukko konteksti]
+  (let [otsikot {"Content-Type" "application/json"
+                 "Authorization" (str "Bearer " token)}
+        http-asetukset {:metodi :POST
+                        :otsikot otsikot
+                        :url kohteet-url}
+        oid-joukko-json (json/write-str oid-joukko)
+        {vastaus :body
+         _ :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset oid-joukko-json)]
+    vastaus))
+
+(defn- hae-oidt-velhosta
+  [token oid-url konteksti]
+  (let [otsikot {"Authorization" (str "Bearer " token)}
+        http-asetukset {:metodi :GET
+                        :otsikot otsikot
+                        :url oid-url}
+        {vastaus :body
+         _ :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
+        oid-lista (json/read-str vastaus)]
+    (when (empty? oid-lista) (log/error "Velho palautti tyhjän OID listan"))
+    (set oid-lista)))
+
+(defn- jasenna-urakka-kohteet
+  [urakka-kohteet-ndjson]
+  (map #(try
+          (json/read-str % :key-fn keyword)
+          (catch Throwable t (log/error
+                               (str "JSON jäsennys epäonnistui. JSON (alku 200 mki): '"
+                                 (subs % 0 (min 199 (count %))) "'"))
+            nil))
+    (str/split-lines urakka-kohteet-ndjson)))
+
+; TODO: Lisää virheen käsittely
+(defn- hae-ja-palauta-valimaiset-varustetoimenpiteet-velhosta [token
+                                                               varuste-toimenpiteet-oid-url
+                                                               varuste-toimenpiteet-kohteet-url
+                                                               konteksti]
+  (when token
+    (let [_ (log/debug "Varusteiden oidien hakemiseen käytetty url: " varuste-toimenpiteet-oid-url)
+          oid-joukko (hae-oidt-velhosta token varuste-toimenpiteet-oid-url konteksti)
+          _ (log/debug "oid-joukko" (count oid-joukko))]
+      (when (seq oid-joukko)
+        (let [vastaus (hae-kohteet-velhosta token varuste-toimenpiteet-kohteet-url oid-joukko konteksti)
+              kohteet (jasenna-urakka-kohteet vastaus)]
+          kohteet)))))
+
+;; TODO: Tämä on vain testausta varten
+(defn kasittele-valimaiset-toimenpiteet [valimaiset-toimenpiteet]
+  (let [oidit (map #(-> %
+                      (assoc-in  [:ominaisuudet :toimenpiteen-kohde] "1.2.246.578.4.3.12.512.310173995")
+                      (assoc-in  [:version-voimassaolo :alku] "2019-11-30")) valimaiset-toimenpiteet)
+        _ (log/debug "TÄMÄ ON TESTI INJEKTIO : välimäiset-oidit" (count oidit))]
+    oidit))
+
+
+(defn paivita-varustetoteumat-valimaisille-kohteille [valimaiset-toimenpiteet db]
+  (let [paivitetyt-kohteet (map (fn [valimainen-toimepide]
+                                  (let [varuste-oid (get-in valimainen-toimepide [:ominaisuudet :toimenpiteen-kohde])
+                                        alkupvm (-> (get-in valimainen-toimepide [:version-voimassaolo :alku])
+                                                  varuste-vastaanottosanoma/velho-pvm->pvm
+                                                  varuste-vastaanottosanoma/aika->sql)
+                                        paivitetty-varuste (q-toteumat/paivita-varustetoteumat-oidilla-ulkoiset db {:ulkoinen_oid varuste-oid
+                                                                                                                    :toteuma "lisatty" ;TODO: Oikea päättely tähän
+                                                                                                                    :velho_varustetoimenpiteet "varustetoimenpide/vtp02" ;; TODO Oikea päättely & varmista että ei tule duplikaatti arvoja
+                                                                                                                    :alkupvm alkupvm})]
+                                    paivitetty-varuste)) valimaiset-toimenpiteet)
+        _ (log/debug "Päivitettiin välimäiset toimenpiteet onnistuneesti" (count paivitetyt-kohteet) "/ " (count valimaiset-toimenpiteet) "kohteelle." paivitetyt-kohteet)]
+    paivitetyt-kohteet))
+
 (defn tuo-uudet-varustetoteumat-velhosta
   [integraatioloki
    db
    {:keys [token-url
            varuste-api-juuri-url
            varuste-kayttajatunnus
-           varuste-salasana] :as asetukset}]
+           varuste-salasana
+           varuste-toimenpiteet-oid-url
+           varuste-toimenpiteet-kohteet-url] 
+    :or {varuste-toimenpiteet-oid-url "https://apiv2stgvelho.testivaylapilvi.fi/toimenpiderekisteri/api/v1/tunnisteet/toimenpiteet/valimaiset-varustetoimenpiteet"
+         varuste-toimenpiteet-kohteet-url "https://apiv2stgvelho.testivaylapilvi.fi/toimenpiderekisteri/api/v1/kohteet"} :as asetukset}]
   (try+
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "velho" "varustetoteumien-haku" nil
@@ -454,10 +533,15 @@
         (let [token-fn (fn [] (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana konteksti))
               token (token-fn)]
           (if token
-            (let [tulos (map
+            (let [valimaiset-toimenpiteet (hae-ja-palauta-valimaiset-varustetoimenpiteet-velhosta token varuste-toimenpiteet-oid-url varuste-toimenpiteet-kohteet-url konteksti)
+                  _ (log/debug "Haettuja välimäisiä toimenpiteitä: " (count valimaiset-toimenpiteet))
+                  fake-toimenpiteet (kasittele-valimaiset-toimenpiteet valimaiset-toimenpiteet)
+                  _ (paivita-varustetoteumat-valimaisille-kohteille fake-toimenpiteet db)
+                  tulos (map
                           (fn [tietolahde]
                             (let [tietolahteen-kohdeluokka (:kohdeluokka tietolahde)
                                   viimeksi-haettu (hae-viimeisin-hakuaika-lahteelle db tietolahteen-kohdeluokka)
+                                  _ (log/debug "Viimeksi haettu: " viimeksi-haettu "Kohdeluokka: " tietolahteen-kohdeluokka)
                                   tallenna-hakuaika-fn (partial tallenna-viimeisin-hakuaika-kohdeluokalle db tietolahteen-kohdeluokka)
                                   tallenna-virhe-fn (partial lokita-ja-tallenna-hakuvirhe db)
                                   virhe-oidit-fn (partial virhe-oidit db)
@@ -554,15 +638,6 @@
          _ :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset oid-joukko-json)]
     vastaus))
 
-(defn- jasenna-urakka-kohteet
-  [urakka-kohteet-ndjson]
-  (map #(try
-          (json/read-str % :key-fn keyword)
-          (catch Throwable t (lokita-urakkahakuvirhe
-                               (str "JSON jäsennys epäonnistui. JSON (alku 200 mki): '"
-                                    (subs % 0 (min 199 (count %))) "'"))
-                             nil))
-       (str/split-lines urakka-kohteet-ndjson)))
 
 (defn- tarkasta-urakka-kohteet-joukko
   [urakka-kohteet oid-joukko]
