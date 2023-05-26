@@ -472,6 +472,11 @@
   [pvm]
   (formatoi iso8601-aikaleimalla pvm))
 
+#?(:cljs
+   (defn iso8601-timestamp-str->iso8601-str
+     [teksti]
+     (formatoi iso8601-format (df/parse (df/formatter "yyyy-MM-dd'T'HH:mm:ss'Z'") teksti))))
+
 (defn iso8601
   "Palauttaa tekstimuodossa päivämäärän, joka sopii esim tietokantahakuihin. Päivämäärä
   palautetaan siis esimerkiksi muodossa 2030-01-15"
@@ -1145,6 +1150,10 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 #?(:cljs
    (defn tunnin-paasta [tuntia]
      (t/plus (nyt) (t/hours tuntia))))
+
+#?(:cljs
+   (defn pvm-plus-tuntia [aika tuntia]
+     (t/plus aika (t/hours tuntia))))
 
 #?(:clj
    (defn tuntia-sitten [tuntia]
