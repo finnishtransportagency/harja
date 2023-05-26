@@ -1,6 +1,7 @@
 (ns harja.domain.palautejarjestelma-domain
   (:require
     [specql.rel :as rel]
+    [harja.kyselyt.specql]
     [clojure.spec.alpha]
     #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]]))
   #?(:cljs
