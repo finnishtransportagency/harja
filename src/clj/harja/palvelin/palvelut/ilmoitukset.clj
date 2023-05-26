@@ -49,10 +49,27 @@
          (str mista " " (pr-str mille))
          (str ilman))))
 
-(defn ilmoitus-myohassa? [{:keys [ilmoitustyyppi kuittaukset valitetty-urakkaan]}]
-  (let [ilmoitusaika (c/from-sql-time valitetty-urakkaan)
+
+(def urakka-kesakausi-alkupvm-oletus (str (pvm/vuosi (t/now)) "-05-01"))
+(def urakka-kesakausi-loppupvm-oletus (str (pvm/vuosi (t/now)) "-09-30"))
+(defn urakan-kausi [kesakausi-alkupvm kesakausi-loppupvm]
+  (assert (string? kesakausi-alkupvm) "Parametrin 'kesakausi-alkupvm' tulee olla string")
+  (assert (string? kesakausi-loppupvm) "Parametrin 'kesakausi-loppupvm' tulee olla string")
+
+  (let [nyt (t/now)
+        alkupvm (pvm/iso-8601->pvm kesakausi-alkupvm)
+        loppupvm (pvm/iso-8601->pvm kesakausi-loppupvm)]
+    (if (pvm/valissa? nyt alkupvm loppupvm)
+      :kesa
+      :talvi)))
+
+(defn ilmoitus-myohassa? [{:keys [urakka-kesakausi-alkupvm urakka-kesakausi-loppupvm ilmoitustyyppi kuittaukset valitetty-urakkaan]}]
+  (let [urakka-kesakausi-alkupvm (or urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm-oletus)
+        urakka-kesakausi-loppupvm (or urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm-oletus)
+        kausi (urakan-kausi urakka-kesakausi-alkupvm urakka-kesakausi-loppupvm)
+        ilmoitusaika (c/from-sql-time valitetty-urakkaan)
         vaadittu-kuittaustyyppi (get-in ilmoitukset-domain/kuittausvaatimukset [ilmoitustyyppi :kuittaustyyppi])
-        vaadittu-kuittausaika (get-in ilmoitukset-domain/kuittausvaatimukset [ilmoitustyyppi :kuittausaika])
+        vaadittu-kuittausaika (get-in ilmoitukset-domain/kuittausvaatimukset [ilmoitustyyppi :kuittausaika kausi])
         vaadittu-aika-kulunut? (t/after? (t/now) (t/plus ilmoitusaika vaadittu-kuittausaika))
         vaaditut-kuittaukset (filter
                                (fn [kuittaus]

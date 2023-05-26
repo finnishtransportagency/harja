@@ -71,17 +71,25 @@
 
 ;; Jos muutat näitä, päivitä myös kuittausvaatimukset-str!
 (def kuittausvaatimukset
-  {:kysely           {:kuittaustyyppi :lopetus
-                      :kuittausaika   (t/hours 72)}
+  {;; URK (kysely)
+   :kysely {:kuittaustyyppi :lopetus
+            :kuittausaika {:talvi (t/hours 72)
+                           :kesa (t/hours 72)}}
+
+   ;; TPP (toimenpidepyyntö)
    :toimenpidepyynto {:kuittaustyyppi :vastaanotto
-                      :kuittausaika   (t/minutes 10)}
-   :tiedoitus        {:kuittaustyyppi :vastaanotto
-                      :kuittausaika   (t/hours 1)}})
+                      :kuittausaika {:talvi (t/minutes 10)
+                                     :kesa (t/minutes 10)}}
+   ;; TUR (tiedoksi)
+   :tiedoitus {:kuittaustyyppi :vastaanotto
+               :kuittausaika {:talvi (t/hours 1)
+                              ;; TODO: Toteuta erikoistapaus "Seuraavan arkipäivän aamuna klo 9" VHAR-7367
+                              :kesa (t/hours 1)}}})
 
 (def kuittausvaatimukset-str
   ["URK lopetus 72h sisällä."
    "TPP vastaanotto 10min sisällä."
-   "TUR vastaanotto 1h sisällä."])
+   "TUR vastaanotto talvikaudella 1h sisällä ja kesällä seuraavan arkipäivän aamuna klo 9."])
 
 
 (defn ilmoitustyypin-lyhenne-ja-nimi
