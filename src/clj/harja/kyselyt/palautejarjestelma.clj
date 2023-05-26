@@ -19,7 +19,9 @@
       (as-> aihe aihe
         (set/rename-keys aihe palautejarjestelma/domain->api)
         (update aihe :tarkenteet
-          #(map (fn [tarkenne] (set/rename-keys tarkenne palautejarjestelma/domain->api)) %))))
+          #(map (fn [tarkenne] (set/rename-keys tarkenne palautejarjestelma/domain->api)) %))
+        (update aihe :tarkenteet
+          #(filter :kaytossa? %))))
     (fetch db ::palautejarjestelma/aihe
       (conj (columns ::palautejarjestelma/aihe)
         [::palautejarjestelma/tarkenteet (columns ::palautejarjestelma/tarkenne)])

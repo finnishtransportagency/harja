@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xs:schema
+    version="1.0"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="subsubjects">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="subsubject" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="active" type="xs:integer"/>
+                            <xs:element name="name" type="xs:string"/>
+                            <xs:element name="id" type="xs:integer"/>
+                            <xs:element name="subject_id" type="xs:integer"/>
+                            <xs:element name="locale" type="xs:string"/>
+                            <xs:element name="order" type="xs:integer"/>
+                            <xs:element name="tloik" type="xs:integer"/>
+                            <xs:element name="palautevayla" type="xs:integer"/>
+                            <xs:element name="mobiilisovellus" type="xs:integer"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

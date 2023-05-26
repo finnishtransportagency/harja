@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<subjects>
+    <subject>
+        <active>1</active>
+        <name>Aihe 1</name>
+        <id>1</id>
+        <locale>fi</locale>
+        <order>100</order>
+        <tloik>0</tloik>
+        <palautevayla>1</palautevayla>
+        <mobiilisovellus>0</mobiilisovellus>
+    </subject>
+    <subject>
+        <active>1</active>
+        <name>Aihe 2</name>
+        <id>2</id>
+        <locale>fi</locale>
+        <order>200</order>
+        <tloik>1</tloik>
+        <palautevayla>1</palautevayla>
+        <mobiilisovellus>0</mobiilisovellus>
+    </subject>
+    <subject>
+        <active>0</active>
+        <name>Aihe 3, ei käytössä</name>
+        <id>3</id>
+        <locale>fi</locale>
+        <order>300</order>
+        <tloik>1</tloik>
+        <palautevayla>1</palautevayla>
+        <mobiilisovellus>0</mobiilisovellus>
+    </subject>
+</subjects>
