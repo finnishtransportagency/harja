@@ -7,7 +7,7 @@
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
             [harja.views.urakka.toteutus :as toteutus]
-            [harja.views.urakka.tyomaapaivakirja :as tyomaapaivakirja]
+            [harja.views.urakka.tyomaapaivakirja.paivakirja :as paivakirja]
             [harja.views.urakka.laskutus :as laskutus]
             [harja.views.vesivaylat.urakka.laskutus :as laskutus-vesivaylat]
             [harja.views.urakka.yllapitokohteet.paallystyksen-kohdeluettelo :as paallystyksen-kohdeluettelo]
