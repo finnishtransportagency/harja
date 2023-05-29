@@ -360,14 +360,19 @@
                                               (when (raporttivienti :pdf)
                                                 pdf-nappi))
               aseta-parametrit! (fn [id]
-                                  (let [input (-> js/document
-                                                  (.getElementById id)
-                                                  (aget "parametrit"))
-                                        parametrit raporttiparametrit]
-                                    (set! (.-value input)
-                                          (tr/clj->transit parametrit))
-                                    true))
-              
+                                  ;; Meillä voi olla tallenna- nappeja ylhäällä sekä alhaalla eli yhteensä 4 kpl
+                                  ;; Tässä käy niin että tulee 2 paria nappia samoilla IDllä, täytyy antaa kaikille napeille raporttiparametrit
+                                  ;; Loopataan document.querySelectorAll('[id=elementin-id]');
+                                  ;; -> asetetaan elementin parametrit arvo raporttiparametreihin 
+                                  (let [kaikki-raporttielementit (.querySelectorAll js/document (str "[id=" id "]"))]
+                                    (doall (map (fn [elementti]
+                                                  (let [input (aget elementti "parametrit")
+                                                        parametrit raporttiparametrit]
+                                                    (set! (.-value input)
+                                                      (tr/clj->transit parametrit))
+                                                    true))
+                                             (array-seq kaikki-raporttielementit)))))
+
               raportin-napin-tyyli (if raporttivienti-lapinakyva? :button.nappi-toissijainen :button.nappi-ensisijainen)]
           
           (if (not (empty? raporttivienti))

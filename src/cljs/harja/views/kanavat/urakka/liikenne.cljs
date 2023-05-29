@@ -554,7 +554,7 @@
                 [ajax-loader-pieni "Päivitetään listaa.."]
                 [liikennetapahtumien-yhteenveto])
      :tunniste (juxt ::lt/id ::lt-alus/id)
-     :sivuta grid/vakiosivutus
+     :sivuta 100
      :rivi-klikattu #(e! (tiedot/->ValitseTapahtuma %))
      :tyhja (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
               [ajax-loader "Haku käynnissä"]
