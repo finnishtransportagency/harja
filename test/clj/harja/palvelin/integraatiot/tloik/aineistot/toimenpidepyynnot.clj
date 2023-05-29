@@ -45,6 +45,10 @@
      <otsikko>Urakoitsijaviesti</otsikko>
      <paikanKuvaus>Tämä tarkentaa sijaintia todella hirmuisesti!</paikanKuvaus>
      <yhteydenottopyynto>true</yhteydenottopyynto>
+     <luokittelu>
+     <aihe>4</aihe>
+     <tarkenne>403</tarkenne>
+     </luokittelu>
      " sijainti "
      " ilmoittaja "
      <lahettaja>
@@ -80,6 +84,10 @@
         ajaa.
       </lisatieto>
       <yhteydenottopyynto>false</yhteydenottopyynto>
+     <luokittelu>
+     <aihe>3</aihe>
+     <tarkenne>302</tarkenne>
+     </luokittelu>
       "sijainti-xml"
       <ilmoittaja>
         <etunimi>"ilmoittaja-etunimi"</etunimi>

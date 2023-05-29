@@ -46,6 +46,10 @@
   <paikanKuvaus>Jossain kentällä.</paikanKuvaus>
   <lisatieto>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lisatieto>
   <yhteydenottopyynto>false</yhteydenottopyynto>
+  <luokittelu>
+  <aihe>1</aihe>
+  <tarkenne>101</tarkenne>
+  </luokittelu>
   <sijainti>
   <tienumero>79</tienumero>
   <x>443199</x>
@@ -210,6 +214,10 @@
     <paikanKuvaus>Hailuodossa</paikanKuvaus>
     <lisatieto>Valot ovat pimeänä.</lisatieto>
     <yhteydenottopyynto>false</yhteydenottopyynto>
+    <luokittelu>
+    <aihe>1</aihe>
+    <tarkenne>101</tarkenne>
+    </luokittelu>
     <sijainti>
     <tienumero>816</tienumero>
     <x>421076.487</x>
@@ -249,6 +257,10 @@
     <paikanKuvaus>Hailuodossa</paikanKuvaus>
     <lisatieto>Valot ovat pimeänä.</lisatieto>
     <yhteydenottopyynto>false</yhteydenottopyynto>
+    <luokittelu>
+    <aihe>1</aihe>
+    <tarkenne>101</tarkenne>
+    </luokittelu>
     <sijainti>
     <tienumero>"tienumero"</tienumero>
     <x>"x-koordinaatti"</x>
@@ -287,6 +299,10 @@
    <paikanKuvaus>Lauttarannassa</paikanKuvaus>
    <lisatieto>Päällystyksessä reikiä</lisatieto>
    <yhteydenottopyynto>false</yhteydenottopyynto>
+   <luokittelu>
+   <aihe>1</aihe>
+   <tarkenne>101</tarkenne>
+   </luokittelu>
    <sijainti>
    <tienumero>816</tienumero>
    <x>418613.894</x>
