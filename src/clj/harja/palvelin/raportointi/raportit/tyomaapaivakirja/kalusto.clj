@@ -11,15 +11,17 @@
     [:varillinen-teksti {:arvo lisakalusto}]
     [:varillinen-teksti {:arvo toimenpide}]))
 
-(defn kalusto-taulukko []
+(defn kalusto-taulukko [kalustot]
   (let [tiedot {:oikealle-tasattavat #{1 2}
                 :rivin-tiedot (rivi
-                                {:otsikko "Aikaväli" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "vaalen-tumma-tausta" :leveys 0.121 :tyyppi :varillinen-teksti}
-                                {:otsikko "Peruskalusto (KA/TR)" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.3 :tyyppi :varillinen-teksti}
-                                {:otsikko "Lisäkalusto" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.3 :tyyppi :varillinen-teksti}
-                                {:otsikko "Toimenpide" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 1 :tyyppi :varillinen-teksti})
-                :rivit [(kalusto-rivi "00:00" "6" "-" "Pistehiekoitus (01:23 - 02:15), Suolaus (00:22 - 01:12)")
-                        (kalusto-rivi "01:00" "6" "-" "Pistehiekoitus (01:23 - 02:15), Suolaus (00:22 - 01:12)")]}]
+                                {:otsikko "Aikaväli" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "vaalen-tumma-tausta" :leveys 0.15 :tyyppi :varillinen-teksti}
+                                {:otsikko "Peruskalusto (KA/TR)" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.25 :tyyppi :varillinen-teksti}
+                                {:otsikko "Lisäkalusto" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.25 :tyyppi :varillinen-teksti}
+                                {:otsikko "Toimenpide" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.7 :tyyppi :varillinen-teksti})
+                :rivit (mapv
+                         #(kalusto-rivi (str (harja.pvm/aika (:aloitus %)) " - " (harja.pvm/aika (:lopetus %)))
+                            (:tyokoneiden_lkm %) (or (:lisakaluston_lkm %) "-") "Miten saadaan tällainen mäppäys: Pistehiekoitus (01:23 - 02:15), Suolaus (00:22 - 01:12)")
+                         kalustot)}]
     (into ()
       [(yhteiset/taulukko tiedot)
        (yhteiset/osion-otsikko "Kalusto ja tielle tehdyt toimenpiteet")])))
