@@ -165,7 +165,7 @@
   <paikanKuvaus>Jossain kentällä.</paikanKuvaus>
   <lisatieto>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lisatieto>
   <yhteydenottopyynto>false</yhteydenottopyynto>
-  <luokittelu
+  <luokittelu>
   <aihe>1</aihe>
   <tarkenne>1</tarkenne>
   </luokittelu>
