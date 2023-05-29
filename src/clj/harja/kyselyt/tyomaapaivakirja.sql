@@ -49,3 +49,7 @@ VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :tyyppi::tyomaapaivakirja_toi
 --name: lisaa-tapahtuma<!
 INSERT INTO tyomaapaivakirja_tapahtuma (urakka_id, tyomaapaivakirja_id, versio, tyyppi, kuvaus)
 VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :tyyppi::tyomaapaivakirja_tapahtumatyyppi, :kuvaus);
+
+-- name: lisaa-toimeksianto<!
+INSERT INTO tyomaapaivakirja_toimeksianto (urakka_id, tyomaapaivakirja_id, versio, kuvaus, aika)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kuvaus, :aika);

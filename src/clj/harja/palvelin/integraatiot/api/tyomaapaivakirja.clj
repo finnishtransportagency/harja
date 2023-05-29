@@ -164,6 +164,16 @@
                                                   :urakka_id urakka-id
                                                   :tyyppi "muut_kirjaukset"}))
 
+(defn- tallenna-toimeksiannot [db data versio tyomaapaivakirja-id urakka-id]
+  (doseq [v (get-in data [:viranomaisen-avustaminen])]
+    (tyomaapaivakirja-kyselyt/lisaa-toimeksianto<! db (merge
+                                                        (:viranomaisen-avustus v)
+                                                        {:versio versio
+                                                         :tyomaapaivakirja_id tyomaapaivakirja-id
+                                                         :urakka_id urakka-id
+                                                         :kuvaus (:kuvaus v)
+                                                         :aika (:tunnit v)}))))
+
 (defn tallenna-tyomaapaivakirja [db urakka-id data kayttaja tyomaapaivakirja-id]
   (let [tyomaapaivakirja-id (konv/konvertoi->int tyomaapaivakirja-id)
         versio (get-in data [:tunniste :versio]) ; Jokaiselle payloadilla on oma versionsa
@@ -192,7 +202,7 @@
         _ (tallenna-onnettomuudet db data versio tyomaapaivakirja-id urakka-id)
         _ (tallenna-liikenteenohjaus-muutokset db data versio tyomaapaivakirja-id urakka-id)
         _ (tallenna-palautteet db data versio tyomaapaivakirja-id urakka-id)
-        _ (tallenna-tapahtuma db data versio tyomaapaivakirja-id urakka-id :viranomaisen-avustaminen :viranomaisen-avustus "viranomaisen_avustus")
+        _ (tallenna-toimeksiannot db data versio tyomaapaivakirja-id urakka-id)
         _ (tallenna-tapahtuma db data versio tyomaapaivakirja-id urakka-id :tilaajan-yhteydenotot :tilaajan-yhteydenotto "tilaajan-yhteydenotto")
         _ (tallenna-muut-kirjaukset db data versio tyomaapaivakirja-id urakka-id)]
     tyomaapaivakirja-id))
