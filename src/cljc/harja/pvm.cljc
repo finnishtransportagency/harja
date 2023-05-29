@@ -1291,3 +1291,75 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      [pvm]
      (dateksi (t/last-day-of-the-month (vuosi pvm) (kuukausi pvm)))))
 
+
+;; Suomen lomapäivät
+(defn- kiinteat-lomapaivat-vuodelle [vuosi]
+  [{:nimi "Uudenvuodenpäivä" :pvm (luo-pvm-dec-kk vuosi 1 1)}
+   {:nimi "Loppiainen" :pvm (luo-pvm-dec-kk vuosi 1 6)}
+   {:nimi "Vappu" :pvm (luo-pvm-dec-kk vuosi 5 1)}
+   {:nimi "Itsenäisyyspäivä" :pvm (luo-pvm-dec-kk vuosi 12 6)}
+   {:nimi "Jouluaatto" :pvm (luo-pvm-dec-kk vuosi 12 24)}
+   {:nimi "Joulupäivä" :pvm (luo-pvm-dec-kk vuosi 12 25)}
+   {:nimi "Tapaninpäivä" :pvm (luo-pvm-dec-kk vuosi 12 26)}])
+
+(defn- paasiaspaiva-vuodelle
+  "Laskee pääsiäissunnuntain (Pääsiäispäivän) annetulle vuodelle käyttäen Butcherin menetelmää.
+  https://fi.wikipedia.org/wiki/P%C3%A4%C3%A4si%C3%A4isen_laskeminen"
+  [vuosi]
+  (let [a (mod vuosi 19)
+        b (quot vuosi 100)
+        c (mod vuosi 100)
+        d (quot b 4)
+        e (mod b 4)
+        f (quot (+ b 8) 25)
+        g (quot (+ (- b f) 1) 3)
+        h (mod (+ (* 19 a) (- b d g) 15) 30)
+        i (quot c 4)
+        k (mod c 4)
+        l (mod (- (+ 32 (* 2 e) (* 2 i)) h k) 7)
+        m (quot (+ a (* 11 h) (* 22 l)) 451)
+        ;; kk
+        n (quot (+ h (- l (* 7 m)) 114) 31)
+        ;; paiva
+        p (mod (+ h (- l (* 7 m)) 114) 31)
+        paiva (+ p 1)]
+    (luo-pvm-dec-kk vuosi n paiva)))
+
+(defn- paasiaiseen-liittyvat-lomapaivat-vuodelle [vuosi]
+  (let [paasiaispaiva (paasiaspaiva-vuodelle vuosi)]
+    [{:nimi "Pitkäperjantai" :pvm (ajan-muokkaus paasiaispaiva false 2 :paiva)}
+     {:nimi "Pääsiäispäivä" :pvm paasiaispaiva}
+     {:nimi "2. Pääsiäispäivä" :pvm (ajan-muokkaus paasiaispaiva true 1 :paiva)}
+     {:nimi "Helatorstai" :pvm (ajan-muokkaus paasiaispaiva true 39 :paiva)}
+     {:nimi "Helluntaipäivä" :pvm (ajan-muokkaus paasiaispaiva true 49 :paiva)}]))
+
+(defn loyda-ensimmainen-viikonpaiva-alkaen [pvm viikonpaiva]
+  (let [pvm (joda-timeksi pvm)
+        ;; Day-of-week antaa väärän järjestysluvun, jos pvm ei konvertoida ensin suomen aikavyöhykkeeseen
+        aloitus-viikonpaiva (t/day-of-week (suomen-aikavyohykkeeseen pvm))]
+
+    (if (= aloitus-viikonpaiva viikonpaiva)
+      pvm
+      (let [siirtyma-paivia (mod (- viikonpaiva aloitus-viikonpaiva) 7)]
+        (ajan-muokkaus pvm true siirtyma-paivia :paiva)))))
+(defn- aikavaleista-poimittavat-lomapaivat-vuodelle
+  "Laskee aikavälien perusteella pääteltävät lomapäivät annetulle vuodelle (Juhannus ja pyhäinpäivä)"
+  [vuosi]
+  (let [juhannusaatto (loyda-ensimmainen-viikonpaiva-alkaen (luo-pvm-dec-kk vuosi 6 19) 5)]
+    [{:nimi "Juhannusaatto" :pvm juhannusaatto}
+     {:nimi "Juhannuspäivä" :pvm (ajan-muokkaus juhannusaatto true 1 :paiva)}
+     {:nimi "Pyhäinpäivä" :pvm (loyda-ensimmainen-viikonpaiva-alkaen (luo-pvm-dec-kk vuosi 10 31) 6)}]))
+
+(defn lomapaivat-vuodelle
+  "Palauttaa kaikki Suomen viralliset lomapäivät annetulle vuodelle ISO8601 päivämäärinä."
+  [vuosi]
+  (map
+    (fn [{:keys [nimi pvm]}]
+      {:nimi nimi :pvm (df/unparse
+                         (df/formatter-local "yyyy-MM-dd")
+                         (suomen-aikavyohykkeeseen (joda-timeksi pvm)))})
+    (concat
+      (kiinteat-lomapaivat-vuodelle vuosi)
+      (paasiaiseen-liittyvat-lomapaivat-vuodelle vuosi)
+      (aikavaleista-poimittavat-lomapaivat-vuodelle vuosi))))
+

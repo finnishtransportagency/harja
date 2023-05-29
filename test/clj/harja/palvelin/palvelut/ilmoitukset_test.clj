@@ -205,42 +205,16 @@
         "Olemattomalle tielle rajattu haku ei löydy ilmoituksia")))
 
 
-(defn urakan-kausi-pvm
+(defn urakan-kausi-iso-8601
   "Feikataan urakan kesäkausi dynaamisesti, jotta testejä voi ajaa vaikka t/now vaihtuu.
   (Myöhästymisen tarkastelu käyttää nykyistä aikaa (t/now) sisäisesti.)"
   [siirra-paivia]
   (pvm/pvm->iso-8601 (t/plus (t/now) (t/days siirra-paivia))))
 
-(deftest ilmoitus-myohassa-ilman-kuittauksia-kesakausi
-  ;; Kesäkausi on nykyhetki - 1 päivä <--> nykyhetki + 1 päivä
-  (let [urakka-kesakausi-alkupvm (urakan-kausi-pvm -1)
-        urakka-kesakausi-loppupvm (urakan-kausi-pvm 1)
-        myohastynyt-kysely {:ilmoitustyyppi :kysely
-                            :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
-                            :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
-                            :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7)))
-                            :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
-        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto
-                                      :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
-                                      :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
-                                      :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7)))
-                                      :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
-        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus
-                               :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
-                               :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
-                               :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7)))
-                               :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}]
-    (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
-    (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
-    (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
-
-
-;; Talvikauden testaamisen puolesta riittää testata se kerran tässä yhteydessä.
-;; Tarkastellaan muut myöhästymiset vain kesäkauden näkökulmasta.
 (deftest ilmoitus-myohassa-ilman-kuittauksia-talvikausi
-  ;; Kesäkausi on nykyhetki -2 päivää <--> nykyhetki -1 päivä, eli t/now on talvikaudella (osuu kesäkauden ulkopuolelle)
-  (let [urakka-kesakausi-alkupvm (urakan-kausi-pvm -2)
-        urakka-kesakausi-loppupvm (urakan-kausi-pvm -1)
+  ;; Kesäkausi on nykyhetki -2 päivä <--> nykyhetki -1 päivä, eli nyt ollaan talvikaudella
+  (let [urakka-kesakausi-alkupvm (urakan-kausi-iso-8601 -2)
+        urakka-kesakausi-loppupvm (urakan-kausi-iso-8601 -1)
         myohastynyt-kysely {:ilmoitustyyppi :kysely
                             :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
                             :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
@@ -259,11 +233,66 @@
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
+
+;; Kesäkauden testaamisen puolesta riittää testata se kerran tässä yhteydessä.
+;; Tarkastellaan muut myöhästymiset vain talvikauden näkökulmasta.
+(deftest ilmoitus-myohassa-ilman-kuittauksia-kesakausi
+  ;; Kesäkausi on nykyhetki -1 päivää <--> nykyhetki +1 päivä, eli nyt ollaan kesäkaudella
+  (let [urakka-kesakausi-alkupvm (urakan-kausi-iso-8601 -1)
+        urakka-kesakausi-loppupvm (urakan-kausi-iso-8601 1)
+        myohastynyt-kysely {:ilmoitustyyppi :kysely
+                            :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                            :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                            :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7)))
+                            :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
+        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto
+                                      :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                                      :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                                      :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7)))
+                                      :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}]
+    (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
+    (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))))
+
+;; Tiedotus-ilmoitus käyttää kesäkaudella monimutkaisempaa logiikkaa myöhästymisen päättelyyn.
+;; Testataan myöhästyminen tiedotuksille erikseen.
+(deftest tiedotus-ilmoitus-myohassa-kesakausi
+  ;; Kesäkausi on nykyhetki -1 päivää <--> nykyhetki +1 päivä, eli nyt ollaan kesäkaudella
+  (let [urakka-kesakausi-alkupvm (urakan-kausi-iso-8601 -1)
+        urakka-kesakausi-loppupvm (urakan-kausi-iso-8601 1)]
+    ;; Tiedotus-tyyppisten ilmoitusten talvikauden sääntö on monimutkaisempi, joten mockataan tähän t/now päivämäärä arkipäiväksi.
+    ;; (Seuraavan arkipäivän aamuna klo 9).
+
+    ;; Tässä 11.4.2023 on tiistai, normaali arkipäivä
+    (with-redefs [t/now #(pvm/iso-8601->pvm "2023-04-11")]
+      (let [myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus
+                                   :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                                   :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                                   ;; Viisi päivää taaksepäin on edellinen arkipäivä (välissä pitkäperjantai ja toinen pääsiäispäivä)
+                                   :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 5)))
+                                   :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 5))) :kuittaukset []}]
+        (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))))
+
+(deftest tiedotus-ilmoitus-ei-myohassa-myohassa-kesakausi
+  ;; Kesäkausi on nykyhetki -1 päivää <--> nykyhetki +1 päivä, eli nyt ollaan kesäkaudella
+  (let [urakka-kesakausi-alkupvm (urakan-kausi-iso-8601 -1)
+        urakka-kesakausi-loppupvm (urakan-kausi-iso-8601 1)]
+    ;; Tiedotus-tyyppisten ilmoitusten talvikauden sääntö on monimutkaisempi, joten mockataan tähän t/now päivämäärä arkipäiväksi.
+    ;; (Seuraavan arkipäivän aamuna klo 9).
+
+    ;; Tässä 11.4.2023 on tiistai, normaali arkipäivä
+    (with-redefs [t/now #(pvm/iso-8601->pvm "2023-04-11")]
+      (let [myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus
+                                   :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                                   :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                                   ;; Viisi päivää taaksepäin on edellinen arkipäivä (välissä pitkäperjantai ja toinen pääsiäispäivä)
+                                   :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 5)))
+                                   :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 5))) :kuittaukset []}]
+        (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))))
 
 (deftest ilmoitus-myohassa-kun-kuittaus-myohassa
-  ;; Kesäkausi on nykyhetki - 1 päivä <--> nykyhetki + 1 päivä
-  (let [urakka-kesakausi-alkupvm (urakan-kausi-pvm -1)
-        urakka-kesakausi-loppupvm (urakan-kausi-pvm 1)
+  ;; Kesäkausi on nykyhetki -2 päivä <--> nykyhetki -1 päivä, eli nyt ollaan talvikaudella
+  (let [urakka-kesakausi-alkupvm (urakan-kausi-iso-8601 -2)
+        urakka-kesakausi-loppupvm (urakan-kausi-iso-8601 -1)
         myohastynyt-kysely {:ilmoitustyyppi :kysely
                             :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
                             :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
@@ -287,9 +316,9 @@
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
 
 (deftest ilmoitus-myohassa-kun-kuittaus-vaaraa-tyyppia
-  ;; Kesäkausi on nykyhetki - 1 päivä <--> nykyhetki + 1 päivä
-  (let [urakka-kesakausi-alkupvm (urakan-kausi-pvm -1)
-        urakka-kesakausi-loppupvm (urakan-kausi-pvm 1)
+  ;; Kesäkausi on nykyhetki -2 päivä <--> nykyhetki -1 päivä, eli nyt ollaan talvikaudella
+  (let [urakka-kesakausi-alkupvm (urakan-kausi-iso-8601 -2)
+        urakka-kesakausi-loppupvm (urakan-kausi-iso-8601 -1)
         myohastynyt-kysely {:ilmoitustyyppi :kysely
                             :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
                             :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
@@ -313,9 +342,9 @@
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
 
 (deftest ilmoitus-ei-myohassa
-  ;; Kesäkausi on nykyhetki - 1 päivä <--> nykyhetki + 1 päivä
-  (let [urakka-kesakausi-alkupvm (urakan-kausi-pvm -1)
-        urakka-kesakausi-loppupvm (urakan-kausi-pvm 1)
+  ;; Kesäkausi on nykyhetki -2 päivä <--> nykyhetki -1 päivä, eli nyt ollaan talvikaudella
+  (let [urakka-kesakausi-alkupvm (urakan-kausi-iso-8601 -2)
+        urakka-kesakausi-loppupvm (urakan-kausi-iso-8601 -1)
         myohastynyt-kysely {:ilmoitustyyppi :kysely
                             :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
                             :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
@@ -339,9 +368,9 @@
     (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
 
 (deftest ilmoitus-ei-myohassa-valitetty-urakkaan-myohemmin
-  ;; Kesäkausi on nykyhetki - 1 päivä <--> nykyhetki + 1 päivä
-  (let [urakka-kesakausi-alkupvm (urakan-kausi-pvm -1)
-        urakka-kesakausi-loppupvm (urakan-kausi-pvm 1)
+  ;; Kesäkausi on nykyhetki -2 päivä <--> nykyhetki -1 päivä, eli nyt ollaan talvikaudella
+  (let [urakka-kesakausi-alkupvm (urakan-kausi-iso-8601 -2)
+        urakka-kesakausi-loppupvm (urakan-kausi-iso-8601 -1)
         myohastynyt-kysely {:ilmoitustyyppi :kysely
                             :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
                             :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm

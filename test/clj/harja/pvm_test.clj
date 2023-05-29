@@ -291,3 +291,57 @@
 
 (deftest rajapinta-str-aika->sql-timestamp-test-epaonnistuu
   (is (= (pvm/rajapinta-str-aika->sql-timestamp "2023-04-14T09:07:2") nil)))
+
+
+(deftest suomen-lomapaivat-vuodelle
+  ;; https://www.timeanddate.com/holidays/finland/2033 (tarkasta täältä)
+  (is (= (pvm/lomapaivat-vuodelle 2033)
+        '({:nimi "Uudenvuodenpäivä", :pvm "2033-01-01"}
+          {:nimi "Loppiainen", :pvm "2033-01-06"}
+          {:nimi "Vappu", :pvm "2033-05-01"}
+          {:nimi "Itsenäisyyspäivä", :pvm "2033-12-06"}
+          {:nimi "Jouluaatto", :pvm "2033-12-24"}
+          {:nimi "Joulupäivä", :pvm "2033-12-25"}
+          {:nimi "Tapaninpäivä", :pvm "2033-12-26"}
+          {:nimi "Pitkäperjantai", :pvm "2033-04-15"}
+          {:nimi "Pääsiäispäivä", :pvm "2033-04-17"}
+          {:nimi "2. Pääsiäispäivä", :pvm "2033-04-18"}
+          {:nimi "Helatorstai", :pvm "2033-05-26"}
+          {:nimi "Helluntaipäivä", :pvm "2033-06-05"}
+          {:nimi "Juhannusaatto", :pvm "2033-06-24"}
+          {:nimi "Juhannuspäivä", :pvm "2033-06-25"}
+          {:nimi "Pyhäinpäivä", :pvm "2033-11-05"})))
+
+  (is (= (pvm/lomapaivat-vuodelle 2023)
+        '({:nimi "Uudenvuodenpäivä", :pvm "2023-01-01"}
+          {:nimi "Loppiainen", :pvm "2023-01-06"}
+          {:nimi "Vappu", :pvm "2023-05-01"}
+          {:nimi "Itsenäisyyspäivä", :pvm "2023-12-06"}
+          {:nimi "Jouluaatto", :pvm "2023-12-24"}
+          {:nimi "Joulupäivä", :pvm "2023-12-25"}
+          {:nimi "Tapaninpäivä", :pvm "2023-12-26"}
+          {:nimi "Pitkäperjantai", :pvm "2023-04-07"}
+          {:nimi "Pääsiäispäivä", :pvm "2023-04-09"}
+          {:nimi "2. Pääsiäispäivä", :pvm "2023-04-10"}
+          {:nimi "Helatorstai", :pvm "2023-05-18"}
+          {:nimi "Helluntaipäivä", :pvm "2023-05-28"}
+          {:nimi "Juhannusaatto", :pvm "2023-06-23"}
+          {:nimi "Juhannuspäivä", :pvm "2023-06-24"}
+          {:nimi "Pyhäinpäivä", :pvm "2023-11-04"})))
+
+  (is (= (pvm/lomapaivat-vuodelle 2022)
+        '({:nimi "Uudenvuodenpäivä", :pvm "2022-01-01"}
+          {:nimi "Loppiainen", :pvm "2022-01-06"}
+          {:nimi "Vappu", :pvm "2022-05-01"}
+          {:nimi "Itsenäisyyspäivä", :pvm "2022-12-06"}
+          {:nimi "Jouluaatto", :pvm "2022-12-24"}
+          {:nimi "Joulupäivä", :pvm "2022-12-25"}
+          {:nimi "Tapaninpäivä", :pvm "2022-12-26"}
+          {:nimi "Pitkäperjantai", :pvm "2022-04-15"}
+          {:nimi "Pääsiäispäivä", :pvm "2022-04-17"}
+          {:nimi "2. Pääsiäispäivä", :pvm "2022-04-18"}
+          {:nimi "Helatorstai", :pvm "2022-05-26"}
+          {:nimi "Helluntaipäivä", :pvm "2022-06-05"}
+          {:nimi "Juhannusaatto", :pvm "2022-06-24"}
+          {:nimi "Juhannuspäivä", :pvm "2022-06-25"}
+          {:nimi "Pyhäinpäivä", :pvm "2022-11-05"}))))
