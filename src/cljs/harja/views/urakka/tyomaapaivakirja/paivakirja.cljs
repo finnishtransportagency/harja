@@ -1,4 +1,4 @@
-(ns harja.views.urakka.tyomaapaivakirja
+(ns harja.views.urakka.tyomaapaivakirja.paivakirja
   "Työmaapäiväkirja urakka välilehti (listaus)"
   (:require [tuck.core :refer [tuck]]
             [harja.tiedot.tyomaapaivakirja :as tiedot]
@@ -22,30 +22,32 @@
    :puuttuvat "Puuttuvat (123)"
    :kommentoidut "Kommentoidut (123)"})
 
-(def toimituksen-tila [{:class "ok" :selitys "Ok"}
-                       {:class "myohassa" :selitys "Myöhässä"}
-                       {:class "puuttuu" :selitys "Puuttuu"}])
+#_(def toimituksen-tila [{:class "ok" :selitys "Ok"}
+                         {:class "myohassa" :selitys "Myöhässä"}
+                         {:class "puuttuu" :selitys "Puuttuu"}])
 
-(def valittu-hakumuoto (reaction-writable :kaikki))
+(def toimituksen-tila {"ok" {:class "ok" :selitys "Ok"}
+                       "myohassa" {:class "myohassa" :selitys "Myöhässä"}
+                       "puuttuu" {:class "puuttuu" :selitys "Puuttuu"}})
+
+#_(def valittu-hakumuoto (reaction-writable :kaikki))
+(def valittu-hakumuoto (atom :kaikki))
 
 (defn tyomaapaivakirja-listaus [e! {:keys [nayta-rivit valinnat] :as tiedot}]
   (let [;; TODO
         ;; Lisää tähän oikea toiminnallisuus mikäli toimitus puuttuu (tekee "puuttuu-tausta" tekee oranssin solun taustan)
         ;; Tällä hetkellä :tila tulee tyomaapaivakirja.sql joka on randomisti generoitu
         solu-fn (fn [arvo _]
-                  (let [rivin-id (:id arvo)
-                        viimeksi-klikattu-id (-> @tiedot/tila :viimeksi-valittu :id)]
+                  (let [rivin-paivamaara (:paivamaara arvo)
+                        viimeksi-klikattu-rivi (-> @tiedot/tila :viimeksi-valittu :paivamaara)]
                     ;; Kun käyttäjä klikkaa riviä, vaihda tämän rivin väriä
                     ;; ja scrollaa tähän luokkaan kun poistutaan näkymästä takaisin listaukseen
-                    (if (= viimeksi-klikattu-id rivin-id)
+                    (if (= viimeksi-klikattu-rivi rivin-paivamaara)
                       "viimeksi-valittu-tausta"
-                      (when (= (:tila arvo) 2) "puuttuu-tausta"))))
+                      (when (= (:tila arvo) "puuttuu") "puuttuu-tausta"))))
 
         ;; Toimituksen tila
         toimituksen-tila-fn (fn [arvo _]
-                              ;; TODO 
-                              ;; Lisää tähän toimituksen tilan tiedot
-                              ;; Tällä hetkellä :tila tulee tyomaapaivakirja.sql joka on randomisti generoitu
                               (let [toimitus-tiedot (get toimituksen-tila (:tila arvo))]
                                 [:span.paivakirja-toimitus
                                  [:div {:class (str "pallura " (:class toimitus-tiedot))}]
@@ -67,14 +69,15 @@
                             :vaihtoehdot (into [] (keys haun-valinnat))
                             :vayla-tyyli? true
                             :nayta-rivina? true
-                            :vaihtoehto-nayta haun-valinnat}
+                            :vaihtoehto-nayta haun-valinnat
+                            :valitse-fn #(e! (tiedot/->PaivitaHakumuoto %))}
          valittu-hakumuoto]]]
 
-      [grid/grid {:tyhja "Ei Tietoja."
-                  :tunniste :id
+      [grid/grid {;:tyhja "Ei Tietoja."
+                  :tunniste :paivamaara
                   :voi-kumota? false
                   :piilota-toiminnot? true
-                  :jarjesta :id
+                  :jarjesta :paivamaara
                   :mahdollista-rivin-valinta? true
                   :rivin-luokka solu-fn
                   :rivi-klikattu #(e! (tiedot/->ValitseRivi %))}
@@ -84,27 +87,27 @@
                           [:div [ikonit/action-sort-descending]]])
          :tyyppi :komponentti
          :komponentti (fn [arvo _]
-                        (str (pvm/pvm (:alkupvm arvo))))
+                        (str (pvm/pvm (:paivamaara arvo))))
          :luokka "semibold text-nowrap"
          :leveys 0.3}
 
         {:otsikko "Saapunut"
          :tyyppi :komponentti
          :komponentti (fn [arvo _]
-                        (str (pvm/pvm-aika-klo (:loppupvm arvo))))
+                        (str (pvm/pvm-aika-klo (:luotu arvo))))
          :luokka "text-nowrap"
          :leveys 0.5}
 
         {:otsikko "Viim. muutos"
          :tyyppi :komponentti
          :komponentti (fn [arvo _]
-                        (str (pvm/pvm-aika-klo (:loppupvm arvo))))
+                        (str (pvm/pvm-aika-klo (:muokattu arvo))))
          :luokka "text-nowrap"
          :leveys 0.5}
 
         {:otsikko "Urakka"
          :tyyppi :string
-         :nimi :nimi
+         :nimi :urakka-nimi
          :leveys 1}
 
         {:otsikko "Toimituksen tila"
@@ -114,12 +117,12 @@
 
         {:otsikko "Kommentit"
          :tyyppi :komponentti
-         :komponentti (fn [_ _]
-                       ;; TODO
-                       ;; Lisää kommenttien määrä tähän
-                        [:span
-                         [:a.ei-tekstityylia.kommentti-valistys
-                          [ikonit/livicon-kommentti]] "1"])
+         :komponentti (fn [rivi _]
+                        (if (:kommenttien-maara rivi)
+                          [:span
+                           [:a.ei-tekstityylia.kommentti-valistys
+                            [ikonit/livicon-kommentti]] (:kommenttien-maara rivi)]
+                          [:span "-"]))
          :leveys 0.5}]
        nayta-rivit]]]))
 
@@ -182,28 +185,28 @@
                          (pvm/sama-pvm? (second vanha) (second uusi)))
                (e! (tiedot/->PaivitaAikavali {:aikavali uusi})))))
 
-         (add-watch valittu-hakumuoto
-           :valituu-hakumuoto
-           (fn [_ _ vanha uusi]
-             (when-not (= vanha uusi)
-               (e! (tiedot/->PaivitaHakumuoto uusi)))))
+         #_(add-watch valittu-hakumuoto
+             :valituu-hakumuoto
+             (fn [_ _ vanha uusi]
+               (when-not (= vanha uusi)
+                 (e! (tiedot/->PaivitaHakumuoto uusi)))))
 
          (e! (tiedot/->HaeTiedot @nav/valittu-urakka-id)))
-      
+
       #(do
-         (remove-watch tiedot/aikavali-atom :aikavali-haku)
-         (remove-watch valittu-hakumuoto :valituu-hakumuoto)
+         #_(remove-watch tiedot/aikavali-atom :aikavali-haku)
+         #_(remove-watch valittu-hakumuoto :valituu-hakumuoto)
          (e! (tiedot/->PoistaRiviValinta))))
 
     (fn [e! {:keys [valittu-rivi] :as tiedot}]
       [:div
        (if valittu-rivi
-        ;; Jos valittu rivi, näytä päiväkirjanäkymä (tehty raporttien puolelle)
+         ;; Jos valittu rivi, näytä päiväkirjanäkymä (tehty raporttien puolelle)
          [suorita-tyomaapaivakirja-raportti e!]
 
-        ;; Mikäli ei valittua riviä, päivitä aikavälivalinta ja näytä listaus
+         ;; Mikäli ei valittua riviä, päivitä aikavälivalinta ja näytä listaus
          (do
-           (e! (tiedot/->PaivitaAikavali (:aikavali @tiedot/tila)))
+           #_(e! (tiedot/->PaivitaAikavali (:aikavali @tiedot/tila)))
            [tyomaapaivakirja-listaus e! tiedot]))])))
 
 (defn tyomaapaivakirja []

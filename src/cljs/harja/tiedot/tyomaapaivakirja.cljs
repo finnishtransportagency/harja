@@ -16,14 +16,15 @@
                      :nayta-rivit []
                      :valittu-rivi nil
                      :viimeksi-valittu nil
-                     :valinnat {:aikavali (pvm/paivamaaran-hoitokausi (pvm/nyt))
+                     :valinnat {:aikavali (pvm/kuukauden-aikavali (pvm/nyt))
                                 :hakumuoto :kaikki}}))
 
 (def suodattimet {:kaikki nil
                   :myohastyneet 1
                   :puuttuvat 2})
 
-(def aikavali-atom (atom (:aikavali (:valinnat @tila))))
+;(def aikavali-atom (atom (:aikavali (:valinnat @tila))))
+(def aikavali-atom (atom (pvm/kuukauden-aikavali (pvm/nyt))))
 (defonce raportti-avain :tyomaapaivakirja-nakyma)
 
 (defonce raportin-parametrit
@@ -64,19 +65,33 @@
                               (= valittu-hakumuoto rivin-toimitustila))))) (:tiedot @tila))]
     rivit))
 
+
+(defn- hae-paivakirjat [app]
+  (let [_ (js/console.log "hae-paivakirjat :: app" (pr-str (dissoc app :tiedot :nayta-rivit)))
+        aikavali (get-in app [:valinnat :aikavali])
+        hakumuoto (get-in app [:valinnat :hakumuoto])]
+    (tuck-apurit/post! app :tyomaapaivakirja-hae
+      {:urakka-id (:id @nav/valittu-urakka)
+       :alkuaika (first aikavali)
+       :loppuaika (second aikavali)
+       :hakumuoto hakumuoto}
+      {:onnistui ->HaeTiedotOnnistui
+       :epaonnistui ->HaeTiedotEpaonnistui})))
 (extend-protocol tuck/Event
   HaeTiedot
-  (process-event [{urakka-id :urakka-id} app]
-    (tuck-apurit/post! app :tyomaapaivakirja-hae
-      {:urakka-id urakka-id}
-      {:onnistui ->HaeTiedotOnnistui
-       :epaonnistui ->HaeTiedotEpaonnistui}))
+  (process-event [_ app]
+    (do
+      (js/console.log "HaeTiedot :: valinnat" (pr-str (:valinnat app)))
+      (js/console.log "HaeTiedot :: app" (pr-str (dissoc app :tiedot :nayta-rivit)))
+      (hae-paivakirjat app)))
 
   HaeTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (-> app
-      (assoc :tiedot vastaus)
-      (assoc :nayta-rivit vastaus)))
+    (do
+      ;(js/console.log "HaeTiedotOnnistui :: vastaus" (pr-str vastaus))
+      (-> app
+        (assoc :tiedot vastaus)
+        (assoc :nayta-rivit vastaus))))
 
   HaeTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -86,17 +101,24 @@
 
   PaivitaAikavali
   (process-event [{u :uudet} app]
-    (let [uudet-valinnat (merge (:valinnat app) u)]
-      (-> app
-        (assoc :valinnat uudet-valinnat)
-        (assoc :nayta-rivit (suodata-rivit-aikavalilla uudet-valinnat)))))
+    (let [_ (js/console.log "PaivitaAikavali :: uudet:" (pr-str u))
+          uudet-valinnat (merge (:valinnat app) u)
+          app (-> app
+                (assoc :valinnat uudet-valinnat)
+                #_(assoc :nayta-rivit (suodata-rivit-aikavalilla uudet-valinnat)))]
+      (hae-paivakirjat app)
+      app))
 
   PaivitaHakumuoto
   (process-event [u app]
-    (let [uudet-valinnat (:uudet u)]
-      (-> app
-        (assoc-in [:valinnat :hakumuoto] uudet-valinnat)
-        (assoc :nayta-rivit (suodata-rivit-aikavalilla (-> @tila :valinnat))))))
+    (let [_ (js/console.log "PaivitaHakumuoto :: u" (pr-str u))
+          _ (js/console.log "PaivitaHakumuoto :: tila" (pr-str (dissoc @tila :nayta-rivit :tiedot)))
+          uudet-valinnat (:uudet u)
+          app (-> app
+                (assoc-in [:valinnat :hakumuoto] uudet-valinnat)
+                #_(assoc :nayta-rivit (suodata-rivit-aikavalilla (-> @tila :valinnat))))]
+      (hae-paivakirjat app)
+      app))
 
   ValitseRivi
   (process-event [{rivi :rivi} app]
