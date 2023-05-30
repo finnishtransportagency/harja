@@ -38,7 +38,8 @@
       [:span (str "Saapunut " (pvm/pvm-aika-klo (:luotu tyomaapaivakirja)))]
       (when (:muokattu tyomaapaivakirja)
         [:span (str "Päivitetty " (pvm/pvm-aika-klo (:muokattu tyomaapaivakirja)))])
-      [:a.klikattava "Näytä muutoshistoria"]
+      ;;TODO: Tehdään myöhemmin
+      #_ [:a.klikattava "Näytä muutoshistoria"]
 
       [:span.paivakirja-toimitus
        [:div {:class (str "pallura " (:tila tyomaapaivakirja))}]
