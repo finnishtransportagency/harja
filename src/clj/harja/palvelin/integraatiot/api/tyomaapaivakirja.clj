@@ -171,8 +171,8 @@
                                                         {:versio versio
                                                          :tyomaapaivakirja_id tyomaapaivakirja-id
                                                          :urakka_id urakka-id
-                                                         :kuvaus (:kuvaus v)
-                                                         :aika (:tunnit v)}))))
+                                                         :kuvaus (:kuvaus (:viranomaisen-avustus v))
+                                                         :aika (:tunnit (:viranomaisen-avustus v))}))))
 
 (defn tallenna-tyomaapaivakirja [db urakka-id data kayttaja tyomaapaivakirja-id]
   (let [tyomaapaivakirja-id (konv/konvertoi->int tyomaapaivakirja-id)

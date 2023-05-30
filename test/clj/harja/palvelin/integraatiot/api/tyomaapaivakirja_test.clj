@@ -41,8 +41,9 @@
                       (SELECT array_agg(row(s.havaintoaika, s.aseman_tunniste, s.aseman_tietojen_paivityshetki, s.ilman_lampotila, s.tien_lampotila, s.keskituuli, s.sateen_olomuoto, s.sadesumma)) FROM tyomaapaivakirja_saaasema s WHERE s.tyomaapaivakirja_id = %s AND s.versio = %s) as saat,
                       (SELECT array_agg(row(t.tyyppi, t.kuvaus)) FROM tyomaapaivakirja_tapahtuma t WHERE t.tyomaapaivakirja_id = %s AND t.versio = %s) as tapahtumat,
                       (SELECT array_agg(row(tt.tyyppi, tt.aloitus, tt.lopetus)) FROM tyomaapaivakirja_tieston_toimenpide tt WHERE tt.tyomaapaivakirja_id = %s AND tt.versio = %s) as tieston_toimenpiteet,
-                      (SELECT array_agg(row(t.aloitus, t.lopetus, t.nimi)) FROM tyomaapaivakirja_tyonjohtaja t WHERE t.tyomaapaivakirja_id = %s AND t.versio = %s) as tyonjohtajat
-                 FROM tyomaapaivakirja t WHERE t.id = %s" tid versio tid versio tid versio tid versio tid versio tid versio tid versio tid)))
+                      (SELECT array_agg(row(t.aloitus, t.lopetus, t.nimi)) FROM tyomaapaivakirja_tyonjohtaja t WHERE t.tyomaapaivakirja_id = %s AND t.versio = %s) as tyonjohtajat,
+                      (SELECT array_agg(row(t.kuvaus, t.aika)) FROM tyomaapaivakirja_toimeksianto t WHERE t.tyomaapaivakirja_id = %s AND t.versio = %s) as toimeksiannot
+                 FROM tyomaapaivakirja t WHERE t.id = %s" tid versio tid versio tid versio tid versio tid versio tid versio tid versio tid versio tid)))
         typa-db (-> typa-db
                   (update :kalustot
                     (fn [kalusto]
@@ -78,10 +79,16 @@
                     (fn [tyonjohtajat]
                       (mapv
                         #(konversio/pgobject->map % :aloitus :string :lopetus :string :nimi :string)
-                        (konversio/pgarray->vector tyonjohtajat)))))
+                        (konversio/pgarray->vector tyonjohtajat))))
+                  (update :toimeksiannot
+                    (fn [toimeksiannot]
+                      (mapv
+                        #(konversio/pgobject->map % :kuvaus :string :aika :double)
+                        (konversio/pgarray->vector toimeksiannot)))))
 
         ;; Tehtävien ja toimenpiteiden mäppääminen on tehty todella vaikeaksi yllä olevan tietokantahaun kautta, joten tehdään niille erillinen haku
-        sql-tehtavat (q-map (format "SELECT (SELECT string_agg(t.tehtavat::TEXT, ', ')) as tehtavat FROM tyomaapaivakirja_tieston_toimenpide t WHERE t.tyomaapaivakirja_id = %s" tid))
+        sql-tehtavat (q-map (format "SELECT (SELECT string_agg(t.tehtavat::TEXT, ', ')) as tehtavat FROM tyomaapaivakirja_tieston_toimenpide t
+                                      WHERE t.tyomaapaivakirja_id = %s AND t.versio = %s" tid versio))
         tehtavat (mapv
                    (fn [tehtava]
                      (let [tehtava (-> tehtava
@@ -94,7 +101,8 @@
                                                                (map #(konversio/konvertoi->int %) t)))]
                        tehtava))
                    sql-tehtavat)
-        sql-toimenpiteet (q-map (format "SELECT (SELECT string_agg(t.toimenpiteet::TEXT, ', ')) toimenpiteet FROM tyomaapaivakirja_tieston_toimenpide t WHERE t.tyomaapaivakirja_id = %s" tid))
+        sql-toimenpiteet (q-map (format "SELECT (SELECT string_agg(t.toimenpiteet::TEXT, ', ')) toimenpiteet FROM tyomaapaivakirja_tieston_toimenpide t
+                                         WHERE t.tyomaapaivakirja_id = %s AND t.versio = %s" tid versio))
         toimenpiteet (mapv
                        (fn [toimenpide]
                          (let [toimenpide (-> toimenpide
@@ -153,8 +161,12 @@
   (is (= (get-in typa-db [:saat 0 :sadesumma]) (get-in typa-data [:tyomaapaivakirja :saatiedot 0 :saatieto :sadesumma])))
 
   ;; Varmistetaan tapahtumat
-  ;'onnettomuus', 'liikenteenohjausmuutos','viranomaisen_avustus', 'palaute', 'tilaajan-yhteydenotto', 'muut_kirjaukset'
-  (is (= 6 (count (:tapahtumat typa-db))))
+  ;'onnettomuus', 'liikenteenohjausmuutos', 'palaute', 'tilaajan-yhteydenotto', 'muut_kirjaukset'
+  (is (= 5 (count (:tapahtumat typa-db))))
+
+  ;; Varmistetaan viranomaisen avustaminen
+  (is (= (get-in typa-db [:toimeksiannot 0 :kuvaus]) (get-in typa-data [:tyomaapaivakirja :viranomaisen-avustaminen 0 :viranomaisen-avustus :kuvaus])))
+  (is (= (get-in typa-db [:toimeksiannot 0 :aika]) (get-in typa-data [:tyomaapaivakirja :viranomaisen-avustaminen 0 :viranomaisen-avustus :tunnit])))
 
   ;; Varmistetaan tiestön toimenpiteet
   (is (= (get-in typa-db [:tieston_toimenpiteet 0 :tyyppi]) "yleinen"))
@@ -205,10 +217,11 @@
 
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja"] kayttaja-yit portti typa)
         vastaus-body (cheshire/decode (:body vastaus) true)
+
         ;; Hae typa tietokannasta
         versio 1
-        typa-db (hae-typa (:tyomaapaivakirja-id vastaus-body) versio)
         typa-data (cheshire/decode typa true)
+        typa-db (hae-typa (:tyomaapaivakirja-id vastaus-body) versio)
         ;; Poista typa
         _ (poista-viimeisin-typa)]
     (varmista-perustiedot vastaus vastaus-body typa-db typa-data urakka-id ulkoinenid paivamaara)
