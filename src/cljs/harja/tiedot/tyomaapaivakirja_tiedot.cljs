@@ -108,10 +108,13 @@
 
   ValitseRivi
   (process-event [{rivi :rivi} app]
+    (js/console.log "ValitseRivi :: rivi" (pr-str rivi))
     (if (not= "puuttuu" (:tila rivi))
-      (-> app
-        (assoc :valittu-rivi rivi)
-        (assoc :viimeksi-valittu rivi))
+      (do
+        (swap! tila assoc :valittu-rivi rivi)
+        (-> app
+            (assoc :valittu-rivi rivi)
+            (assoc :viimeksi-valittu rivi)))
       (do
         (viesti/nayta-toast! "Valitun päivän työmaapäiväkirjaa ei ole vielä lähetetty." :varoitus)
         app)))
