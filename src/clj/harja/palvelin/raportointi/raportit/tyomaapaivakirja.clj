@@ -9,11 +9,7 @@
     [harja.palvelin.raportointi.raportit.tyomaapaivakirja.keliolosuhteet :as keliolosuhteet]
     [harja.palvelin.raportointi.raportit.tyomaapaivakirja.kalusto :as kalusto]
     [harja.palvelin.raportointi.raportit.tyomaapaivakirja.muut-toimenpiteet :as muut-toimenpiteet]
-    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.vahingot :as vahingot]
-    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.liikenneohjaukset :as liikenneohjaukset]
     [harja.palvelin.raportointi.raportit.tyomaapaivakirja.maastotoimeksiannot :as maastotoimeksiannot]
-    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteydenotot :as yhteydenotot]
-    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.muut-huomiot :as muut-huomiot]
     [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
 
 (defn tapahtumataulukot [tapahtumat otsikko ei-tapahtumia-teksti]
