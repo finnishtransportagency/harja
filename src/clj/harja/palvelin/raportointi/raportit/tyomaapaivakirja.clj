@@ -87,6 +87,17 @@
                                 (mapv
                                   #(konversio/pgobject->map % :aloitus :date :lopetus :date :tyokoneiden_lkm :long :lisakaluston_lkm :long :tunniste :string)
                                   (konversio/pgarray->vector kalustot))))
+                            ;; Päivitetään kalustolle vielä mahdolliset tehtävät
+                            (update
+                              :kalustot
+                              (fn [kalustot]
+                                (mapv
+                                  (fn [kalusto]
+                                    (let [kaluston-tehtavat (filter
+                                                              #(= (:tunniste kalusto) (:tunniste %))
+                                                              tehtavat)]
+                                      (assoc kalusto :tehtavat (flatten (map :tehtavat kaluston-tehtavat)))))
+                                  kalustot)))
                             (update
                               :tapahtumat
                               (fn [tapahtumat]
@@ -103,9 +114,7 @@
          liikenteenohjaukset (filter #(= "liikenteenohjausmuutos" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
          yhteydenotot (filter #(= "tilaajan-yhteydenotto" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
          muut-kirjaukset (filter #(= "muut_kirjaukset" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
-         otsikko "Työmaapäiväkirja"
-         _ (println "kalustot: " (pr-str (:kalustot tyomaapaivakirja)))
-         _ (println "tehtavat: " (pr-str tehtavat))]
+         otsikko "Työmaapäiväkirja"]
      [:raportti {:nimi otsikko
                  :piilota-otsikko? true}
 
