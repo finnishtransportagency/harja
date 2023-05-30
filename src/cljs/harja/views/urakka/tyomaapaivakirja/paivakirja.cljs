@@ -15,14 +15,6 @@
             [harja.tiedot.navigaatio :as nav])
   (:require-macros [harja.atom :refer [reaction-writable]]))
 
-;; TODO 
-;; Lisää tähän oikeat arvot
-#_ (defonce haun-valinnat
-  {:kaikki "Kaikki (123)"
-   :myohastyneet "Myöhästyneet (123)"
-   :puuttuvat "Puuttuvat (123)"
-   :kommentoidut "Kommentoidut (123)"})
-
 (defn haun-valinnat [tiedot]
   (let [myohassa (filter
                    #(= "myohassa" (:tila %))
@@ -145,9 +137,9 @@
 (defn suorita-tyomaapaivakirja-raportti [e!]
   (if-let [tiedot @tiedot/raportin-tiedot]
     [:div.tyomaapaivakirja
-     ;; Päiväkirjanäkymä 
+     ;; Päiväkirjanäkymä
      [:div.paivakirja-nakyma
-      ;; Takaisin nappi 
+      ;; Takaisin nappi
       [:div.klikattava {:class "sulje" :on-click #(do
                                                     (e! (tiedot/->PoistaRiviValinta))
                                                     ;; Rullataan käyttäjä viimeksi klikatulle riville
@@ -157,8 +149,9 @@
       ;; Raportin html
       [muodosta-html (assoc-in tiedot [1 :tunniste] tiedot/raportti-avain)]]
 
-     ;; Sticky bar (Edellinen - Seuraava) Tallenna PDF 
-     [:div.ala-valinnat-fixed
+     ;; Sticky bar (Edellinen - Seuraava) Tallenna PDF
+     ;;TODO: Toteutetaan myöhemmin
+     #_ [:div.ala-valinnat-fixed
 
       [:div.napit.klikattava
        [:span.nuoli
@@ -201,12 +194,6 @@
                          (pvm/sama-pvm? (second vanha) (second uusi)))
                (e! (tiedot/->PaivitaAikavali {:aikavali uusi})))))
 
-         #_(add-watch valittu-hakumuoto
-             :valituu-hakumuoto
-             (fn [_ _ vanha uusi]
-               (when-not (= vanha uusi)
-                 (e! (tiedot/->PaivitaHakumuoto uusi)))))
-
          (e! (tiedot/->HaeTiedot @nav/valittu-urakka-id)))
 
       #(do
@@ -221,9 +208,7 @@
          [suorita-tyomaapaivakirja-raportti e!]
 
          ;; Mikäli ei valittua riviä, päivitä aikavälivalinta ja näytä listaus
-         (do
-           #_(e! (tiedot/->PaivitaAikavali (:aikavali @tiedot/tila)))
-           [tyomaapaivakirja-listaus e! app]))])))
+         [tyomaapaivakirja-listaus e! app])])))
 
 (defn tyomaapaivakirja []
   [tuck tiedot/tila tyomaapaivakirja*])

@@ -13,8 +13,8 @@ FROM urakka ORDER BY alkupvm DESC LIMIT 50;
 
 -- name: hae-paivakirjalistaus
 SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
-       --t.paivamaara::DATE,
-       d::DATE as paivamaara,
+       d::DATE as paivamaara, -- Otetaan generoinnin päivämäärä
+       -- Ihan hihasta vedetty tilan määritelmä.
        CASE
            WHEN t.luotu IS NULL THEN 'puuttuu'
            WHEN t.luotu BETWEEN d::DATE and d::DATE + interval '14 day' THEN 'ok'
@@ -35,6 +35,11 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
 -- name: hae-paivakirja
 SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
        t.paivamaara::DATE,
+       -- Hihasta vedetty tilan määritelmä
+       CASE
+           WHEN t.luotu BETWEEN t.paivamaara and t.paivamaara + interval '14 day' THEN 'ok'
+           WHEN t.luotu > t.paivamaara + interval '14 day' THEN 'myohassa'
+           END as tila,
        (SELECT array_agg(row(aloitus, lopetus, nimi))
         FROM tyomaapaivakirja_paivystaja
         WHERE versio = :versio AND tyomaapaivakirja_id = :tyomaapaivakirja_id) as paivystajat,

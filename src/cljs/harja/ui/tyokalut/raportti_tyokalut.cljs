@@ -4,6 +4,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.debug :refer [debug]]
             [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
             [harja.ui.nakymasiirrin :as siirrin]))
 
 (defmethod raportointi/muodosta-html :tyomaa-laskutusyhteenveto-yhteensa [[_ kyseessa-kk-vali? hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str]]
@@ -17,35 +18,40 @@
        [:span.laskutus-yhteensa laskutettu-str]
        [:span.laskutus-yhteensa laskutetaan-str]
        [:h1 (str (fmt/euro laskutettu))]
-       [:h1 [:span.vahvistamaton(str (fmt/euro laskutetaan))]]]
+       [:h1 [:span.vahvistamaton (str (fmt/euro laskutetaan))]]]
 
       [:div.sisalto-ei-kk-vali
        [:span.laskutus-yhteensa laskutettu-str]
        [:h1 (str (fmt/euro laskutettu))]])
     ]])
 
-(defmethod raportointi/muodosta-html :tyomaapaivakirja-header [[_ valittu-rivi]]
-  [:<>
-   [:div [debug valittu-rivi]]
+(defmethod raportointi/muodosta-html :tyomaapaivakirja-header [[_ tyomaapaivakirja]]
+  (when tyomaapaivakirja
+    [:<>
+     [:div [debug tyomaapaivakirja]]
 
-   [:h3.header-yhteiset "UUD MHU 2022–2027"]
-   [:h1.header-yhteiset "Työmaapäiväkirja 9.10.2022"]
+     [:h3.header-yhteiset (:urakka-nimi tyomaapaivakirja)]
+     [:h1.header-yhteiset (str "Työmaapäiväkirja " (pvm/pvm (:paivamaara tyomaapaivakirja)))]
 
-   [:div.nakyma-otsikko-tiedot
+     [:div.nakyma-otsikko-tiedot
 
-    [:span "Saapunut 11.10.2022 05:45"]
-    [:span "Päivitetty 11.10.2022 05:45"]
-    [:a.klikattava "Näytä muutoshistoria"]
+      [:span (str "Saapunut " (pvm/pvm-aika-klo (:luotu tyomaapaivakirja)))]
+      (when (:muokattu tyomaapaivakirja)
+        [:span (str "Päivitetty " (pvm/pvm-aika-klo (:muokattu tyomaapaivakirja)))])
+      [:a.klikattava "Näytä muutoshistoria"]
 
-    [:span.paivakirja-toimitus
-     [:div {:class (str "pallura " "myohassa")}]
-     [:span.toimituksen-selite "Myöhässä"]]
+      [:span.paivakirja-toimitus
+       [:div {:class (str "pallura " (:tila tyomaapaivakirja))}]
+       [:span.toimituksen-selite (if (= "myohassa" (:tila tyomaapaivakirja))
+                                   "Myöhässä"
+                                   "Ok")]]
 
-    ;; Kommentti- nappi scrollaa alas kommentteihin
-    [:a.klikattava {:on-click #(.setTimeout js/window (fn [] (siirrin/kohde-elementti-id "Kommentit")) 150)}
-     [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "2 kommenttia"]]]
+      ;; Kommentti- nappi scrollaa alas kommentteihin
+      ;; TODO: Toteutetaan myöhemmin
+      #_[:a.klikattava {:on-click #(.setTimeout js/window (fn [] (siirrin/kohde-elementti-id "Kommentit")) 150)}
+         [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "2 kommenttia"]]]
 
-   [:hr]])
+     [:hr]]))
 
 (defmethod raportointi/muodosta-html :gridit-vastakkain [[_
                                                           {:keys [otsikko-vasen optiot-vasen otsikot-vasen rivit-vasen]}
@@ -133,7 +139,7 @@
    ;; Itse kommentti
    [:div.kommentti
     [:h1.tieto-rivi "Tästähän puuttuu nelostien rekka-kolari"]
-    [:span.klikattava.kommentti-poista {:on-click (fn[]
+    [:span.klikattava.kommentti-poista {:on-click (fn []
                                                     (println "Klikattu poista kommentti"))} (ikonit/action-delete)]]
 
 
@@ -149,6 +155,6 @@
     [:a.klikattava.info-rivi "Näytä muutoshistoria"]]
 
    [:div.kommentti-lisaa
-    [:a.klikattava {:on-click (fn[]
+    [:a.klikattava {:on-click (fn []
                                 (println "Klikattu lisää kommentti"))}
      [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Lisää kommentti"]]]])
