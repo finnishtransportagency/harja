@@ -30,6 +30,14 @@
             "selite": "vettaTiella"
           }
         ],
+        "aihe": {
+          "id": 2,
+          "nimi": "Este tai vettä tiellä"
+        },
+        "tarkenne": {
+          "id": 201,
+          "nimi": "Vesi nousee tielle"
+        },
         "kuittaukset": [
           {
             "kuittaus": {

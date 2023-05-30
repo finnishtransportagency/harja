@@ -119,6 +119,36 @@
                   }
                 ]
               },
+              "aihe": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/aihe",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "id": "urn:harja/ilmoitukset/0/ilmoitus/aihe/id",
+                    "type": "integer"
+                  },
+                  "nimi": {
+                    "id": "urn:harja/ilmoitukset/0/ilmoitus/aihe/nimi",
+                    "type": "string"
+                  }
+                }
+              },
+              "tarkenne": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/tarkenne",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "id": "urn:harja/ilmoitukset/0/ilmoitus/tarkenne/id",
+                    "type": "integer"
+                  },
+                  "nimi": {
+                    "id": "urn:harja/ilmoitukset/0/ilmoitus/tarkenne/nimi",
+                    "type": "string"
+                  }
+                }
+              },
               "sijainti": {
                 "id": "urn:harja/ilmoitukset/0/sijainti",
                 "$ref": "file:resources/api/schemas/entities/sijainti-myos-vanhat-kaistat.schema.json",

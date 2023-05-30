@@ -84,10 +84,6 @@
         ajaa.
       </lisatieto>
       <yhteydenottopyynto>false</yhteydenottopyynto>
-     <luokittelu>
-     <aihe>3</aihe>
-     <tarkenne>302</tarkenne>
-     </luokittelu>
       "sijainti-xml"
       <ilmoittaja>
         <etunimi>"ilmoittaja-etunimi"</etunimi>
@@ -105,5 +101,9 @@
       <seliteet>
         <selite>soratienKuntoHuono</selite>
       </seliteet>
-      </ns0:ilmoitus>"))
+     <luokittelu>
+     <aihe>3</aihe>
+     <tarkenne>302</tarkenne>
+     </luokittelu>
+     </ns0:ilmoitus>"))
 

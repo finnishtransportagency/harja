@@ -148,8 +148,10 @@ SELECT
   otsikko,
   ilmoitustyyppi,
   selitteet,
-  aihe,
-  tarkenne,
+  i.aihe AS aihe_id,
+  pa.nimi AS aihe_nimi,
+  i.tarkenne AS tarkenne_id,
+  pt.nimi AS tarkenne_nimi,
   sijainti,
   tr_numero,
   tr_alkuosa,
@@ -166,7 +168,9 @@ SELECT
   lahettaja_puhelinnumero,
   lahettaja_sahkoposti,
   "aiheutti-toimenpiteita"
-FROM ilmoitus
+FROM ilmoitus i
+  LEFT JOIN palautejarjestelma_aihe pa ON i.aihe = pa.ulkoinen_id
+  LEFT JOIN palautejarjestelma_tarkenne pt ON i.tarkenne = pt.ulkoinen_id
 WHERE ilmoitusid IN (:ilmoitusidt);
 
 -- name: hae-ilmoitus
@@ -324,8 +328,10 @@ SELECT
   otsikko,
   ilmoitustyyppi,
   selitteet,
-  aihe,
-  tarkenne,
+  i.aihe AS aihe_id,
+  i.tarkenne AS tarkenne_id,
+  pa.nimi AS aihe_nimi,
+  pt.nimi AS tarkenne_nimi,
   sijainti,
   tr_numero,
   tr_alkuosa,
@@ -342,7 +348,9 @@ SELECT
   lahettaja_puhelinnumero,
   lahettaja_sahkoposti,
   "aiheutti-toimenpiteita"
-FROM ilmoitus
+FROM ilmoitus i
+    LEFT JOIN palautejarjestelma_aihe pa ON i.aihe = pa.ulkoinen_id
+    LEFT JOIN palautejarjestelma_tarkenne pt ON i.tarkenne = pt.ulkoinen_id
 WHERE urakka = :urakka AND
       (muokattu > :aika OR luotu > :aika);
 
@@ -385,8 +393,10 @@ SELECT
     i.lisatieto,
     i.otsikko,
     i.selitteet,
-    i.aihe,
-    i.tarkenne,
+    i.aihe AS aihe_id,
+    i.tarkenne AS tarkenne_id,
+    pa.nimi AS aihe_nimi,
+    pt.nimi AS tarkenne_nimi,
     i.sijainti,
     i.tr_numero as tienumero,
     i.ilmoittaja_etunimi,
@@ -405,7 +415,9 @@ SELECT
 FROM loydetyt_ilmoitukset li
          JOIN ilmoitus i ON i.id = li.id
          JOIN ilmoitustoimenpide it on it.ilmoitus = li.id
-GROUP BY i.id, li.urakkanro, i."valitetty-urakkaan"
+         LEFT JOIN palautejarjestelma_aihe pa on i.aihe = pa.ulkoinen_id
+         LEFT JOIN palautejarjestelma_tarkenne pt on i.tarkenne = pt.ulkoinen_id
+     GROUP BY i.id, li.urakkanro, i."valitetty-urakkaan"
 ORDER BY i."valitetty-urakkaan" ASC
 LIMIT 10000;
 

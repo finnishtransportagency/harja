@@ -48,7 +48,6 @@
    "Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")])
 
 (defn aiheen-sisaltavat-yleiset-tiedot [ilmoitus aiheet-ja-tarkenteet]
-  (println "jere testaa::" palautejarjestelma/hae-aihe aiheet-ja-tarkenteet (:aihe ilmoitus))
   [yleiset/tietoja {:piirra-viivat? true
                     :class "body-text"
                     :tietorivi-luokka "padding-8 css-grid css-grid-columns-12rem-9"}
