@@ -102,14 +102,18 @@
         {:otsikko "Saapunut"
          :tyyppi :komponentti
          :komponentti (fn [arvo _]
-                        (str (pvm/pvm-aika-klo (:luotu arvo))))
+                        (if (:luotu arvo)
+                          (str (pvm/pvm-aika-klo (:luotu arvo)))
+                          "-"))
          :luokka "text-nowrap"
          :leveys 0.5}
 
         {:otsikko "Viim. muutos"
          :tyyppi :komponentti
          :komponentti (fn [arvo _]
-                        (str (pvm/pvm-aika-klo (:muokattu arvo))))
+                        (if (:muokattu arvo)
+                          (str (pvm/pvm-aika-klo (:muokattu arvo)))
+                          "-"))
          :luokka "text-nowrap"
          :leveys 0.5}
 
@@ -196,10 +200,7 @@
 
          (e! (tiedot/->HaeTiedot @nav/valittu-urakka-id)))
 
-      #(do
-         #_(remove-watch tiedot/aikavali-atom :aikavali-haku)
-         #_(remove-watch valittu-hakumuoto :valituu-hakumuoto)
-         (e! (tiedot/->PoistaRiviValinta))))
+      #(e! (tiedot/->PoistaRiviValinta)))
 
     (fn [e! {:keys [valittu-rivi] :as app}]
       [:div

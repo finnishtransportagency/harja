@@ -108,7 +108,6 @@
 
   ValitseRivi
   (process-event [{rivi :rivi} app]
-    (js/console.log "ValitseRivi :: rivi" (pr-str rivi))
     (if (not= "puuttuu" (:tila rivi))
       (do
         (swap! tila assoc :valittu-rivi rivi)

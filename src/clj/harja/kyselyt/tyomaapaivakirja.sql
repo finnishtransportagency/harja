@@ -52,7 +52,7 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
        (SELECT array_agg(row(havaintoaika, paikka, kuvaus))
         FROM tyomaapaivakirja_poikkeussaa
         WHERE versio = :versio AND tyomaapaivakirja_id = :tyomaapaivakirja_id) as poikkeussaat,
-       (SELECT array_agg(row(aloitus, lopetus, tyokoneiden_lkm, lisakaluston_lkm, md5(concat(tyomaapaivakirja_id,aloitus,lopetus))))
+       (SELECT array_agg(row(aloitus, lopetus, tyokoneiden_lkm, lisakaluston_lkm, md5(concat(versio, tyomaapaivakirja_id,aloitus,lopetus))))
         FROM tyomaapaivakirja_kalusto
         WHERE versio = :versio AND tyomaapaivakirja_id = :tyomaapaivakirja_id) as kalustot,
        (SELECT array_agg(row(tyyppi::TEXT, kuvaus))
@@ -68,7 +68,7 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
  GROUP BY t.id, u.nimi;
 
 -- name: hae-paivakirjan-tehtavat
-SELECT ttt.tyyppi, ttt.aloitus, ttt.lopetus, array_agg(tehtava.nimi) as tehtavat, md5(concat(ttt.tyomaapaivakirja_id,ttt.aloitus,ttt.lopetus)) as tunniste
+SELECT ttt.tyyppi, ttt.aloitus, ttt.lopetus, array_agg(tehtava.nimi) as tehtavat, md5(concat(ttt.versio, ttt.tyomaapaivakirja_id, ttt.aloitus, ttt.lopetus)) as tunniste
   FROM tyomaapaivakirja_tieston_toimenpide ttt
        LEFT JOIN lateral unnest(ttt.tehtavat) t on true
        LEFT JOIN tehtava ON tehtava.id = t
