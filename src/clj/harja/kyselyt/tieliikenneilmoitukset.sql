@@ -417,7 +417,7 @@ FROM loydetyt_ilmoitukset li
          JOIN ilmoitustoimenpide it on it.ilmoitus = li.id
          LEFT JOIN palautejarjestelma_aihe pa on i.aihe = pa.ulkoinen_id
          LEFT JOIN palautejarjestelma_tarkenne pt on i.tarkenne = pt.ulkoinen_id
-     GROUP BY i.id, li.urakkanro, i."valitetty-urakkaan"
+     GROUP BY i.id, li.urakkanro, i."valitetty-urakkaan", pa.nimi, pt.nimi
 ORDER BY i."valitetty-urakkaan" ASC
 LIMIT 10000;
 
