@@ -84,7 +84,8 @@
    :tiedoitus {:kuittaustyyppi :vastaanotto
                :kuittausaika {:talvi (t/hours 1)
                               ;; TODO: Toteuta erikoistapaus "Seuraavan arkipäivän aamuna klo 9" VHAR-7367
-                              :kesa (t/hours 1)}}})
+                              :kesa (fn [ilmoitusaika]
+                                      )}}})
 
 (def kuittausvaatimukset-str
   ["URK lopetus 72h sisällä."

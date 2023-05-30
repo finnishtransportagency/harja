@@ -345,3 +345,64 @@
           {:nimi "Juhannusaatto", :pvm "2022-06-24"}
           {:nimi "Juhannuspäivä", :pvm "2022-06-25"}
           {:nimi "Pyhäinpäivä", :pvm "2022-11-05"}))))
+(deftest seuraava-arkipaiva
+  ;; Testataan seuraava arkipäivä viikolla (10.1. = arkipäivä (tiistai))
+  ;; --> Seuraava arkipäivä = 11.1. (keskiviikko)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 1 10))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 1 11))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan tavallinen viikonloppu (13.1. = arkipäivä (perjantai))
+  ;; --> Seuraava arkipäivä = 16.1. (maanantai)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 1 13))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 1 16))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan uusivuosi (31.12.2020 = arkipäivä (torstai), 1.1.2021. = Uudenvuodenpäivä (perjantai))
+  ;; --> Seuraava arkipäivä = 4.1.2021 (maanantai)
+  ;; Tässä on valittu testivuosi 2020 siten, että arkipyhiä sattuu sopivasti viikolle.
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2020 12 31))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2021 1 4))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan loppiainen (5.1. = arkipäivä (torstai), 6.1.2021. = Loppiainen (perjantai))
+  ;; --> Seuraava arkipäivä = 9.1. (maanantai)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 1 5))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 1 9))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan pääsiäinen (6.4. = arkipäivä, 7.4. = pitkäperjantai, 10.4. = 2. pääsiäispäivä)
+  ;; --> Seuraava arkipäivä = 11.4 (tiistai)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 4 6))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 4 11))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan vappu (28.4. = arkiperjantai, 1.5 = vappu)
+  ;; --> Seuraava arkipäivä = 2.5 (tiistai)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 4 28))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 5 2))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan helatorstai (17.5. = arkipäivä, 18.5. = helatorstai)
+  ;; --> Seuraava arkipäivä = 19.5 (perjantai)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 5 17))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 5 19))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan juhannus (22.6. = arkipäivä, 23.6. = juhannusaatto, 26.5. = juhannuspäivä)
+  ;; --> Seuraava arkipäivä = 26.6 (maanantai)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 6 22))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 6 26))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan itsenäisyyspäivä (5.12. = arkipäivä, 6.12. = itsenäisyyspäivä)
+  ;; --> Seuraava arkipäivä = 7.12. (torstai)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 12 5))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 12 7))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan joulunaika (22.12. = arkipäivä, 24.12. = jouluaatto, 25.12. = joulupäivä, 26.12. = Tapaninpäivä)
+  ;; --> Seuraava arkipäivä = 27.12. (torstai)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 12 22))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 12 27))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm))))

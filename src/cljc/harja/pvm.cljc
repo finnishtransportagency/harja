@@ -56,7 +56,7 @@
        (hash (tc/to-long o)))))
 
 #?(:clj
-   (defn- joda-time? [pvm]
+   (defn joda-time? [pvm]
      (or (instance? org.joda.time.DateTime pvm)
          (instance? org.joda.time.LocalDate pvm)
          (instance? org.joda.time.LocalDateTime pvm))))
@@ -1362,4 +1362,36 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
       (kiinteat-lomapaivat-vuodelle vuosi)
       (paasiaiseen-liittyvat-lomapaivat-vuodelle vuosi)
       (aikavaleista-poimittavat-lomapaivat-vuodelle vuosi))))
+
+
+#?(:clj
+   (defn seuraava-arkipaiva
+     "Palauttaa annettua päivämäärää seuraavan arkipäivän, eli päivän joka ei osu viikonloppuun tai viralliseen arkipyhään.
+     Pvm palautetaan samassa aikavyöhykkeessä kuin parametrina annettun pvm."
+     [pvm]
+     (let [pvm (if (joda-time? pvm) pvm (joda-timeksi pvm))
+           ;; Otetaan talteen pvm alkuperäinen aikavyöhyke, jotta lopputulos voidaan palauttaa alkuperäisessä aikavyöhykkeessä
+           alkuperainen-aikavyohyke (.getZone pvm)
+           pvm (suomen-aikavyohykkeeseen pvm)]
+       (loop [pvm pvm]
+         (let [viikonpaiva (t/day-of-week pvm)
+               paiva-johon-hypattiin
+               (cond
+                 ;; Jos annettu paiva on pe/la/su hyppää suoraan maanantaihin
+                 (#{5 6 7} viikonpaiva)
+                 (loyda-ensimmainen-viikonpaiva-alkaen pvm 1)
+
+                 ;; Ma - To, hypätään vain seuraavaan arkipäivään
+                 :else
+                 (t/plus pvm (t/days 1)))
+               lomapaivat (into #{} (map :pvm (lomapaivat-vuodelle (vuosi paiva-johon-hypattiin))))]
+
+           ;; Jos päivä johon hypättiin ei ole lomapäivä, lopetetetaan haku. Muutoin jatketaan.
+           ;; Verrataan päivämääriä vain yksinkertaisina stringeinä
+           (if-not (lomapaivat (df/unparse
+                                 (df/formatter-local "yyyy-MM-dd")
+                                 paiva-johon-hypattiin))
+             ;; Palautetaan lopputulos parametrina annetun päivämäärän aikavyöhykkeessä
+             (t/to-time-zone paiva-johon-hypattiin alkuperainen-aikavyohyke)
+             (recur paiva-johon-hypattiin)))))))
 
