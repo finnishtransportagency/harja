@@ -46,10 +46,6 @@
   <paikanKuvaus>Jossain kentällä.</paikanKuvaus>
   <lisatieto>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lisatieto>
   <yhteydenottopyynto>false</yhteydenottopyynto>
-  <luokittelu>
-  <aihe>1</aihe>
-  <tarkenne>101</tarkenne>
-  </luokittelu>
   <sijainti>
   <tienumero>79</tienumero>
   <x>443199</x>
@@ -150,7 +146,12 @@
   <selite>tapahtumaOhi</selite>
   <selite>kevyenLiikenteenVaylatOvatjaatymassa</selite>
   <selite>tietOvatjaisiaJamarkia</selite>
-  </seliteet>\n</harja:ilmoitus>")))
+  </seliteet>
+  <luokittelu>
+  <aihe>1</aihe>
+  <tarkenne>101</tarkenne>
+  </luokittelu>
+  </harja:ilmoitus>")))
 
 (defn testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija
   ([] (testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija ilmoitettu valitetty))
@@ -169,10 +170,6 @@
   <paikanKuvaus>Jossain kentällä.</paikanKuvaus>
   <lisatieto>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lisatieto>
   <yhteydenottopyynto>false</yhteydenottopyynto>
-  <luokittelu>
-  <aihe>1</aihe>
-  <tarkenne>1</tarkenne>
-  </luokittelu>
   <sijainti>
   <tienumero>79</tienumero>
   <x>443199</x>
@@ -195,6 +192,10 @@
   <selite>auraustarve</selite>
   <selite>aurausvallitNakemaesteena</selite>
   </seliteet>
+  <luokittelu>
+  <aihe>1</aihe>
+  <tarkenne>1</tarkenne>
+  </luokittelu>
   </harja:ilmoitus>")))
 
 (defn testi-valaistusilmoitus-sanoma
@@ -214,10 +215,6 @@
     <paikanKuvaus>Hailuodossa</paikanKuvaus>
     <lisatieto>Valot ovat pimeänä.</lisatieto>
     <yhteydenottopyynto>false</yhteydenottopyynto>
-    <luokittelu>
-    <aihe>1</aihe>
-    <tarkenne>101</tarkenne>
-    </luokittelu>
     <sijainti>
     <tienumero>816</tienumero>
     <x>421076.487</x>
@@ -239,6 +236,10 @@
     <seliteet>
     <selite>tievalaistusVioittunutOnnettomuudessa</selite>
     </seliteet>
+    <luokittelu>
+    <aihe>1</aihe>
+    <tarkenne>101</tarkenne>
+    </luokittelu>
     </harja:ilmoitus>
     ")))
 
@@ -257,10 +258,6 @@
     <paikanKuvaus>Hailuodossa</paikanKuvaus>
     <lisatieto>Valot ovat pimeänä.</lisatieto>
     <yhteydenottopyynto>false</yhteydenottopyynto>
-    <luokittelu>
-    <aihe>1</aihe>
-    <tarkenne>101</tarkenne>
-    </luokittelu>
     <sijainti>
     <tienumero>"tienumero"</tienumero>
     <x>"x-koordinaatti"</x>
@@ -282,6 +279,10 @@
     <seliteet>
     <selite>tievalaistusVioittunutOnnettomuudessa</selite>
     </seliteet>
+    <luokittelu>
+    <aihe>1</aihe>
+    <tarkenne>101</tarkenne>
+    </luokittelu>
     </harja:ilmoitus>
     "))
 
@@ -299,10 +300,6 @@
    <paikanKuvaus>Lauttarannassa</paikanKuvaus>
    <lisatieto>Päällystyksessä reikiä</lisatieto>
    <yhteydenottopyynto>false</yhteydenottopyynto>
-   <luokittelu>
-   <aihe>1</aihe>
-   <tarkenne>101</tarkenne>
-   </luokittelu>
    <sijainti>
    <tienumero>816</tienumero>
    <x>418613.894</x>
@@ -324,6 +321,10 @@
    <seliteet>
    <selite>paallystevaurio</selite>
    </seliteet>
+   <luokittelu>
+   <aihe>1</aihe>
+   <tarkenne>101</tarkenne>
+   </luokittelu>
    </harja:ilmoitus>")
 
 (defn luo-tloik-komponentti []

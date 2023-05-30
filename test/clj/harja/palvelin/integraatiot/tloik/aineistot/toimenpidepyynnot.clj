@@ -45,10 +45,6 @@
      <otsikko>Urakoitsijaviesti</otsikko>
      <paikanKuvaus>Tämä tarkentaa sijaintia todella hirmuisesti!</paikanKuvaus>
      <yhteydenottopyynto>true</yhteydenottopyynto>
-     <luokittelu>
-     <aihe>4</aihe>
-     <tarkenne>403</tarkenne>
-     </luokittelu>
      " sijainti "
      " ilmoittaja "
      <lahettaja>
@@ -60,7 +56,11 @@
     <seliteet>
       <selite>auraustarve</selite>
     </seliteet>
-  </harja:ilmoitus>
+     <luokittelu>
+     <aihe>4</aihe>
+     <tarkenne>403</tarkenne>
+     </luokittelu>
+     </harja:ilmoitus>
   "))
 
 (defn toimenpidepyynto-ilmoittaja-sanoma [{:keys [viesti-id ilmoitus-id sijainti-xml
