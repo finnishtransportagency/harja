@@ -24,11 +24,10 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
        t_kalusto.versio,
        t.luotu, t.luoja, t.muokattu, t.muokkaaja
   FROM generate_series(:alkuaika::DATE, :loppuaika::DATE, '1 day'::interval) d
-       LEFT JOIN tyomaapaivakirja t ON t.paivamaara = d::DATE
+       LEFT JOIN tyomaapaivakirja t ON t.paivamaara = d::DATE AND t.urakka_id = :urakka-id
        LEFT JOIN urakka u ON t.urakka_id = u.id
        LEFT JOIN tyomaapaivakirja_kommentti tk on t.id = tk.tyomaapaivakirja_id
        LEFT JOIN (SELECT versio, tyomaapaivakirja_id FROM tyomaapaivakirja_kalusto ORDER BY versio desc) t_kalusto on t.id = t_kalusto.tyomaapaivakirja_id
- WHERE t.urakka_id = :urakka-id
  GROUP BY t.id, u.nimi, d, t_kalusto.versio
  ORDER BY paivamaara ASC;
 
