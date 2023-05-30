@@ -317,7 +317,8 @@
 
 (def renderoi-rivia-kerralla 100)
 
-(defn- muokkauspaneeli [{:keys [nayta-otsikko? muokataan tallenna tiedot muuta-gridia-muokataan?
+(defn- muokkauspaneeli [{:keys [muokkauspaneeli-alhaalla?
+                                nayta-otsikko? muokataan tallenna tiedot muuta-gridia-muokataan?
                                 tallennus-ei-mahdollinen-tooltip muokattu? voi-lisata? ohjaus opts
                                 custom-toiminto paneelikomponentit
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa ennen-muokkausta
@@ -346,14 +347,22 @@
                                                           (fmt arvo)
                                                           arvo)]]
                                          arvo))
-                                     tiedot)
+                                 tiedot)
               raporttiparametrit (assoc raporttiparametrit
                                    :parametrit
                                    (merge raporttiparametrit
-                                          {:sarakkeet otsikot-ja-leveydet
-                                           :rivit rivit-raportille}))
-              excel-nappi (yleiset/tallenna-excel-nappi (k/excel-url :raportointi))
-              pdf-nappi (yleiset/tallenna-pdf-nappi (k/pdf-url :raportointi))
+                                     {:sarakkeet otsikot-ja-leveydet
+                                      :rivit rivit-raportille}))
+              
+              ;; Älä aseta olemassa olevia ID:itä napeille
+              excel-nappi (if muokkauspaneeli-alhaalla?
+                            (yleiset/tallenna-excel-nappi (k/excel-url :raportointi) "raporttixls-alhaalla")
+                            (yleiset/tallenna-excel-nappi (k/excel-url :raportointi)))
+
+              pdf-nappi (if muokkauspaneeli-alhaalla?
+                          (yleiset/tallenna-pdf-nappi (k/pdf-url :raportointi) "raporttipdf-alhaalla")
+                          (yleiset/tallenna-pdf-nappi (k/pdf-url :raportointi)))
+              
               valitut-raportin-vientimuodot (sorted-set
                                               (when (raporttivienti :excel)
                                                 excel-nappi)
@@ -1332,7 +1341,8 @@
                          +rivimaara-jonka-jalkeen-napit-alaskin+)
                       (not ei-footer-muokkauspaneelia?))
              [:span.gridin-napit-alhaalla
-              (muokkauspaneeli {:nayta-otsikko? false :muokataan muokataan :tallenna tallenna
+              (muokkauspaneeli {:muokkauspaneeli-alhaalla? true
+                                :nayta-otsikko? false :muokataan muokataan :tallenna tallenna
                                 :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
                                 :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
                                 :muokattu? muokattu? :voi-lisata? voi-lisata? :ohjaus ohjaus

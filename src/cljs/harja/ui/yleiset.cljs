@@ -884,12 +884,16 @@ jatkon."
     (ikonit/livicon-check)))
 
 (defn tallenna-excel-nappi
-  [url]
+  ([url]
   [[ikonit/livicon-download] "Tallenna Excel" "raporttixls" url])
+  ([url id]
+   [[ikonit/livicon-download] "Tallenna Excel" id url]))
 
 (defn tallenna-pdf-nappi
-  [url]
+  ([url]
   [[ikonit/livicon-download] "Tallenna PDF" "raporttipdf" url])
+  ([url id]
+   [[ikonit/livicon-download] "Tallenna PDF" id url]))
 
 (def ^{:doc "Mahdolliset raportin vientimuodot"}
 +raportin-vientimuodot+
