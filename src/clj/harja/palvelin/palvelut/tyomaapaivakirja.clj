@@ -11,8 +11,7 @@
         paivakirjat (tyomaapaivakirja-kyselyt/hae-paivakirjalistaus db {:urakka-id (:urakka-id tiedot)
                                                                         :alkuaika (konversio/sql-date (:alkuaika tiedot))
                                                                          :loppuaika (konversio/sql-date (:loppuaika tiedot))})]
-    paivakirjat
-    ))
+    paivakirjat))
 
 (defrecord Tyomaapaivakirja []
   component/Lifecycle
