@@ -238,20 +238,6 @@
 (defn lue-asetukset
   "Lue Harja palvelimen asetukset annetusta tiedostosta ja varmista, että ne ovat oikeat"
   [tiedosto]
-  (let [salatiedostot ["../.harja/anti-csrf-token"
-                       "../.harja/api-sahkoposti-salasana"
-                       "../.harja/google-static-maps-key"
-                       "../.harja/api-sahkoposti-salasana"
-                       "../.harja/digiroad-api-key"
-                       "../.harja/yha-api-key"
-                       "../.harja/velho-salasana"
-                       "../.harja/velho-varuste-salasana"
-                       "../.harja/labyrintti-salasana"
-                       "../.harja/palautejarjestelma-salasana"]]
-    (doseq [salatiedosto salatiedostot]
-      (if (.exists (io/file salatiedosto))
-        (spit salatiedosto (str/trim-newline (slurp salatiedosto)))
-        (spit salatiedosto ""))))
   (->> tiedosto
        slurp
        read-string
