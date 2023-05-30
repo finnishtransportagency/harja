@@ -1,4 +1,4 @@
-(ns harja.tiedot.tyomaapaivakirja
+(ns harja.tiedot.tyomaapaivakirja-tiedot
   "Työmaapäiväkirja kutsut"
   (:require [reagent.core :refer [atom] :as reagent]
             [tuck.core :as tuck]
@@ -20,10 +20,9 @@
                                 :hakumuoto :kaikki}}))
 
 (def suodattimet {:kaikki nil
-                  :myohastyneet 1
-                  :puuttuvat 2})
+                  :myohastyneet "myohassa"
+                  :puuttuvat "puuttuu"})
 
-;(def aikavali-atom (atom (:aikavali (:valinnat @tila))))
 (def aikavali-atom (atom (pvm/kuukauden-aikavali (pvm/nyt))))
 (defonce raportti-avain :tyomaapaivakirja-nakyma)
 
@@ -49,26 +48,24 @@
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
 
-(defn suodata-rivit-aikavalilla [valinnat]
-  ;; Annetaan parametrina tilan :valinnat josta luetaan hakumuoto & valittu aikaväli
+(defn suodata-rivit
+  "Annetaan parametrina tilan :valinnat josta luetaan hakumuoto"
+  [app]
   (let [rivit (filter (fn [rivi]
-                        (let [tyopaiva (:alkupvm rivi)
-                              aikavali (:aikavali valinnat)
-                              valittu-hakumuoto (get suodattimet (-> @tila :valinnat :hakumuoto))
-                              rivin-toimitustila (:tila rivi)]
-                          (and
-                            ;; Onko "TYÖPÄIVÄ"- sarake valitun aikavälin välissä
-                            (pvm/valissa? tyopaiva (first aikavali) (second aikavali))
-                            (or
-                              ;; Vastaako valittu hakumuoto rivin toimituksen tilaa 
-                              (= valittu-hakumuoto nil)
-                              (= valittu-hakumuoto rivin-toimitustila))))) (:tiedot @tila))]
+                        (let [valittu-hakumuoto (get suodattimet (get-in app [:valinnat :hakumuoto]))
+
+                              rivin-toimitustila (if (not= "kommentoitu" (get-in app [:valinnat :hakumuoto]))
+                                                   (:tila rivi)
+                                                   "kommentoitu")]
+                          (or
+                            ;; Vastaako valittu hakumuoto rivin toimituksen tilaa
+                            (= valittu-hakumuoto nil)
+                            (= valittu-hakumuoto rivin-toimitustila)))) (:tiedot app))]
     rivit))
 
 
 (defn- hae-paivakirjat [app]
-  (let [_ (js/console.log "hae-paivakirjat :: app" (pr-str (dissoc app :tiedot :nayta-rivit)))
-        aikavali (get-in app [:valinnat :aikavali])
+  (let [aikavali (get-in app [:valinnat :aikavali])
         hakumuoto (get-in app [:valinnat :hakumuoto])]
     (tuck-apurit/post! app :tyomaapaivakirja-hae
       {:urakka-id (:id @nav/valittu-urakka)
@@ -78,20 +75,16 @@
       {:onnistui ->HaeTiedotOnnistui
        :epaonnistui ->HaeTiedotEpaonnistui})))
 (extend-protocol tuck/Event
+
   HaeTiedot
   (process-event [_ app]
-    (do
-      (js/console.log "HaeTiedot :: valinnat" (pr-str (:valinnat app)))
-      (js/console.log "HaeTiedot :: app" (pr-str (dissoc app :tiedot :nayta-rivit)))
-      (hae-paivakirjat app)))
+    (hae-paivakirjat app))
 
   HaeTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (do
-      ;(js/console.log "HaeTiedotOnnistui :: vastaus" (pr-str vastaus))
-      (-> app
-        (assoc :tiedot vastaus)
-        (assoc :nayta-rivit vastaus))))
+    (-> app
+      (assoc :tiedot vastaus)
+      (assoc :nayta-rivit vastaus)))
 
   HaeTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -100,31 +93,28 @@
     app)
 
   PaivitaAikavali
-  (process-event [{u :uudet} app]
-    (let [_ (js/console.log "PaivitaAikavali :: uudet:" (pr-str u))
-          uudet-valinnat (merge (:valinnat app) u)
-          app (-> app
-                (assoc :valinnat uudet-valinnat)
-                #_(assoc :nayta-rivit (suodata-rivit-aikavalilla uudet-valinnat)))]
+  (process-event [{uudet :uudet} app]
+    (let [uudet-valinnat (merge (:valinnat app) uudet)
+          app (assoc app :valinnat uudet-valinnat)]
+      ;; Aikavälin päivittäminen käynnistää tietokannasta hakemisen aina
       (hae-paivakirjat app)
       app))
 
   PaivitaHakumuoto
-  (process-event [u app]
-    (let [_ (js/console.log "PaivitaHakumuoto :: u" (pr-str u))
-          _ (js/console.log "PaivitaHakumuoto :: tila" (pr-str (dissoc @tila :nayta-rivit :tiedot)))
-          uudet-valinnat (:uudet u)
-          app (-> app
-                (assoc-in [:valinnat :hakumuoto] uudet-valinnat)
-                #_(assoc :nayta-rivit (suodata-rivit-aikavalilla (-> @tila :valinnat))))]
-      (hae-paivakirjat app)
+  (process-event [{uudet :uudet} app]
+    (let [app (assoc-in app [:valinnat :hakumuoto] uudet)
+          app (assoc app :nayta-rivit (suodata-rivit app))]
       app))
 
   ValitseRivi
   (process-event [{rivi :rivi} app]
-    (-> app
-      (assoc :valittu-rivi rivi)
-      (assoc :viimeksi-valittu rivi)))
+    (if (not= "puuttuu" (:tila rivi))
+      (-> app
+        (assoc :valittu-rivi rivi)
+        (assoc :viimeksi-valittu rivi))
+      (do
+        (viesti/nayta-toast! "Valitun päivän työmaapäiväkirjaa ei ole vielä lähetetty." :varoitus)
+        app)))
 
   PoistaRiviValinta
   (process-event [_ app]

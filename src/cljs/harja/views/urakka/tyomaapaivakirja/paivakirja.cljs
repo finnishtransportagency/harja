@@ -1,7 +1,8 @@
 (ns harja.views.urakka.tyomaapaivakirja.paivakirja
   "Työmaapäiväkirja urakka välilehti (listaus)"
   (:require [tuck.core :refer [tuck]]
-            [harja.tiedot.tyomaapaivakirja :as tiedot]
+            [harja.tiedot.tyomaapaivakirja-tiedot :as tiedot]
+            [harja.ui.debug :refer [debug]]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.kentat :as kentat]
             [harja.ui.ikonit :as ikonit]
@@ -16,11 +17,24 @@
 
 ;; TODO 
 ;; Lisää tähän oikeat arvot
-(defonce haun-valinnat
+#_ (defonce haun-valinnat
   {:kaikki "Kaikki (123)"
    :myohastyneet "Myöhästyneet (123)"
    :puuttuvat "Puuttuvat (123)"
    :kommentoidut "Kommentoidut (123)"})
+
+(defn haun-valinnat [tiedot]
+  (let [myohassa (filter
+                   #(= "myohassa" (:tila %))
+                   (:tiedot tiedot))
+        puuttuu (filter
+                  #(= "puuttuu" (:tila %))
+                  (:tiedot tiedot))]
+    {:kaikki (str "Kaikki (" (count (:tiedot tiedot)) ")")
+     :myohastyneet (str "Myöhästyneet (" (count myohassa) ")")
+     :puuttuvat (str "Puuttuvat (" (count puuttuu) ")")
+     ;:kommentoidut "Kommentoidut (123)" Lisätään kommentoidut sitten, kun niitä voi kommentoida
+     }))
 
 #_(def toimituksen-tila [{:class "ok" :selitys "Ok"}
                          {:class "myohassa" :selitys "Myöhässä"}
@@ -33,8 +47,9 @@
 #_(def valittu-hakumuoto (reaction-writable :kaikki))
 (def valittu-hakumuoto (atom :kaikki))
 
-(defn tyomaapaivakirja-listaus [e! {:keys [nayta-rivit valinnat] :as tiedot}]
-  (let [;; TODO
+(defn tyomaapaivakirja-listaus [e! {:keys [nayta-rivit valinnat] :as app}]
+  (let [#_ (js/console.log "tyomaapaivakirja-listaus ::  app: " (pr-str app))
+        ;; TODO
         ;; Lisää tähän oikea toiminnallisuus mikäli toimitus puuttuu (tekee "puuttuu-tausta" tekee oranssin solun taustan)
         ;; Tällä hetkellä :tila tulee tyomaapaivakirja.sql joka on randomisti generoitu
         solu-fn (fn [arvo _]
@@ -55,6 +70,7 @@
 
     [:div.tyomaapaivakirja
      [:div.paivakirja-listaus
+      [debug app {:otsikko "TUCK STATE"}]
       [:h1.header-yhteiset "Työmaapäiväkirja"]
 
       [:div.row.filtterit
@@ -66,10 +82,10 @@
 
        [:div.tyomaa-haku-suodatin
         [kentat/tee-kentta {:tyyppi :radio-group
-                            :vaihtoehdot (into [] (keys haun-valinnat))
+                            :vaihtoehdot (into [] (keys (haun-valinnat app)))
                             :vayla-tyyli? true
                             :nayta-rivina? true
-                            :vaihtoehto-nayta haun-valinnat
+                            :vaihtoehto-nayta (haun-valinnat app)
                             :valitse-fn #(e! (tiedot/->PaivitaHakumuoto %))}
          valittu-hakumuoto]]]
 
@@ -173,7 +189,7 @@
 
     [yleiset/ajax-loader "Ladataan tietoja..."]))
 
-(defn tyomaapaivakirja* [e! _]
+(defn tyomaapaivakirja* [e! app]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (komp/sisaan-ulos
@@ -198,7 +214,7 @@
          #_(remove-watch valittu-hakumuoto :valituu-hakumuoto)
          (e! (tiedot/->PoistaRiviValinta))))
 
-    (fn [e! {:keys [valittu-rivi] :as tiedot}]
+    (fn [e! {:keys [valittu-rivi] :as app}]
       [:div
        (if valittu-rivi
          ;; Jos valittu rivi, näytä päiväkirjanäkymä (tehty raporttien puolelle)
@@ -207,7 +223,7 @@
          ;; Mikäli ei valittua riviä, päivitä aikavälivalinta ja näytä listaus
          (do
            #_(e! (tiedot/->PaivitaAikavali (:aikavali @tiedot/tila)))
-           [tyomaapaivakirja-listaus e! tiedot]))])))
+           [tyomaapaivakirja-listaus e! app]))])))
 
 (defn tyomaapaivakirja []
   [tuck tiedot/tila tyomaapaivakirja*])
