@@ -319,7 +319,8 @@
                 :tyyppi :tierekisteriosoite
                 :validoi [[:ei-tyhja-avain :sijainti "Sijaintia ei löytynyt, valitse reitti uudelleen"]
                           [:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
-                :sijainti nil})
+                :sijainti (r/wrap (:sijainti @turvallisuuspoikkeama)
+                            #(swap! turvallisuuspoikkeama assoc :sijainti %))})
              {:otsikko "Paikan kuvaus"
               :nimi :paikan-kuvaus
               :tyyppi :string
