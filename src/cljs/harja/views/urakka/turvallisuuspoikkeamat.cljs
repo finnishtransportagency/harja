@@ -316,7 +316,6 @@
                 :nimi :tr
                 :pakollinen? true
                 :tyyppi :tierekisteriosoite
-                :ala-nayta-virhetta-komponentissa? true
                 :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
                 :sijainti (r/wrap (:sijainti @turvallisuuspoikkeama)
                             #(swap! turvallisuuspoikkeama assoc :sijainti %))})
