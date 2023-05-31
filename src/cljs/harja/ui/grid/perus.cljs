@@ -369,8 +369,8 @@
                                               (when (raporttivienti :pdf)
                                                 pdf-nappi))
               aseta-parametrit! (fn [id]
-                                  ;; Meillä voi olla tallenna- nappeja ylhäällä sekä alhaalla eli yhteensä 4 kpl
-                                  ;; Tässä käy niin että tulee 2 paria nappia samoilla IDllä, täytyy antaa kaikille napeille raporttiparametrit
+                                  ;; Failsafe jos jostain syystä nappeja on samalla ID:llä niin annetaan kaikille napeille raporttiparametrit 
+                                  ;; (näin ei pitäisi enään käydä koska tämä on korjattu ylhäällä (excel-nappi / pdf-nappi))
                                   ;; Loopataan document.querySelectorAll('[id=elementin-id]');
                                   ;; -> asetetaan elementin parametrit arvo raporttiparametreihin 
                                   (let [kaikki-raporttielementit (.querySelectorAll js/document (str "[id=" id "]"))]
