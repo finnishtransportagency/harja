@@ -198,6 +198,10 @@
           (some? (avain rivi)))
     (or viesti "Syötä molemmat arvot")))
 
+(defmethod validoi-saanto :ei-tyhja-avain [_ _ data rivi _ & [avain viesti]]
+  (when (nil? (avain rivi))
+    (or viesti "Syötä arvo avaimelle " avain)))
+
 (defmethod validoi-saanto :ainakin-toinen-annettu [_ _ _ rivi _ & [[avain1 avain2] viesti]]
   (when-not (or (avain1 rivi)
                 (avain2 rivi))
