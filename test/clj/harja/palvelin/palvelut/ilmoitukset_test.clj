@@ -1,5 +1,6 @@
 (ns ^:hidas harja.palvelin.palvelut.ilmoitukset-test
-  (:require [clojure.test :refer :all]
+  (:require [clj-time.coerce :as tc]
+            [clojure.test :refer :all]
             [clojure.set :as set]
             [clojure.core.async :refer [go]]
 
@@ -256,38 +257,65 @@
 ;; Tiedotus-ilmoitus käyttää kesäkaudella monimutkaisempaa logiikkaa myöhästymisen päättelyyn.
 ;; Testataan myöhästyminen tiedotuksille erikseen.
 (deftest tiedotus-ilmoitus-myohassa-kesakausi
-  ;; Kesäkausi on nykyhetki -1 päivää <--> nykyhetki +1 päivä, eli nyt ollaan kesäkaudella
-  (let [urakka-kesakausi-alkupvm (urakan-kausi-iso-8601 -1)
-        urakka-kesakausi-loppupvm (urakan-kausi-iso-8601 1)]
-    ;; Tiedotus-tyyppisten ilmoitusten talvikauden sääntö on monimutkaisempi, joten mockataan tähän t/now päivämäärä arkipäiväksi.
-    ;; (Seuraavan arkipäivän aamuna klo 9).
+  ;; Tiedotus-tyyppisten ilmoitusten talvikauden sääntö on monimutkaisempi, joten mockataan tähän t/now päivämäärä arkipäiväksi.
+  ;; (Säännön mukaan ilmoitus pitäisi kuitata viimeistään seuraavan arkipäivän aamuna klo 9).
 
-    ;; Tässä 11.4.2023 on tiistai, normaali arkipäivä
-    (with-redefs [t/now #(pvm/iso-8601->pvm "2023-04-11")]
+  ;; Tässä 11.4.2023 on tiistai, normaali arkipäivä
+  (with-redefs [t/now #(->
+                         (pvm/iso-8601->pvm "2023-04-11")
+                         ;; Ilmoituksen kuittaus on minuutin myöhässä
+                         (pvm/aikana 9 1 0 0)
+                         (tc/to-date-time)
+                         (pvm/suomen-aikavyohykkeeseen))]
+    (let [myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus
+                                 :urakka-kesakausi-alkupvm "2023-04-01"
+                                 :urakka-kesakausi-loppupvm "2023-04-30"
+                                 ;; 6.4.2023 on arkipäivä, sen jälkeen arkipyhinä pitkäperjantai ja toinen pääsiäispäivä
+                                 ;; Seuraava arkipäivä on 11.4. (tiistai)
+                                 :ilmoitettu (c/to-sql-time (pvm/keskipaiva
+                                                              (pvm/iso-8601->pvm "2023-04-06")))
+                                 :valitetty-urakkaan (c/to-sql-time (pvm/keskipaiva
+                                                                      (pvm/iso-8601->pvm "2023-04-06"))) :kuittaukset []}]
+      (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus))))))
+
+(deftest tiedotus-ilmoitus-EI-myohassa-kesakausi
+  ;; Tiedotus-tyyppisten ilmoitusten talvikauden sääntö on monimutkaisempi, joten mockataan tähän t/now päivämäärä arkipäiväksi.
+  ;; (Säännön mukaan ilmoitus pitäisi kuitata viimeistään seuraavan arkipäivän aamuna klo 9).
+
+  ;; Tässä 11.4.2023 on tiistai, normaali arkipäivä
+  (testing "Ilmoituksen myöhästymistä tarkastellaan seuraavana arkipäivänä klo 9:00 (Ei myöhässä)"
+    (with-redefs [t/now #(->
+                           (pvm/iso-8601->pvm "2023-04-11")
+                           (pvm/aikana 9 0 0 0)
+                           (tc/to-date-time)
+                           (pvm/suomen-aikavyohykkeeseen))]
       (let [myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus
-                                   :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
-                                   :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
-                                   ;; Viisi päivää taaksepäin on edellinen arkipäivä (välissä pitkäperjantai ja toinen pääsiäispäivä)
-                                   :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 5)))
-                                   :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 5))) :kuittaukset []}]
-        (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))))
+                                   :urakka-kesakausi-alkupvm "2023-04-01"
+                                   :urakka-kesakausi-loppupvm "2023-04-30"
+                                   ;; 6.4.2023 on arkipäivä, sen jälkeen arkipyhinä pitkäperjantai ja toinen pääsiäispäivä
+                                   ;; Seuraava arkipäivä on 11.4. (tiistai)
+                                   :ilmoitettu (c/to-sql-time (pvm/keskipaiva
+                                                                (pvm/iso-8601->pvm "2023-04-06")))
+                                   :valitetty-urakkaan (c/to-sql-time (pvm/keskipaiva
+                                                                        (pvm/iso-8601->pvm "2023-04-06"))) :kuittaukset []}]
+        (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus))))))
 
-(deftest tiedotus-ilmoitus-ei-myohassa-myohassa-kesakausi
-  ;; Kesäkausi on nykyhetki -1 päivää <--> nykyhetki +1 päivä, eli nyt ollaan kesäkaudella
-  (let [urakka-kesakausi-alkupvm (urakan-kausi-iso-8601 -1)
-        urakka-kesakausi-loppupvm (urakan-kausi-iso-8601 1)]
-    ;; Tiedotus-tyyppisten ilmoitusten talvikauden sääntö on monimutkaisempi, joten mockataan tähän t/now päivämäärä arkipäiväksi.
-    ;; (Seuraavan arkipäivän aamuna klo 9).
-
-    ;; Tässä 11.4.2023 on tiistai, normaali arkipäivä
-    (with-redefs [t/now #(pvm/iso-8601->pvm "2023-04-11")]
+  (testing "Ilmoituksen myöhästymistä tarkastellaan seuraavana arkipäivänä klo 8:59 (Ei myöhässä)"
+    (with-redefs [t/now #(->
+                           (pvm/iso-8601->pvm "2023-04-11")
+                           (pvm/aikana 8 59 0 0)
+                           (tc/to-date-time)
+                           (pvm/suomen-aikavyohykkeeseen))]
       (let [myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus
-                                   :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
-                                   :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
-                                   ;; Viisi päivää taaksepäin on edellinen arkipäivä (välissä pitkäperjantai ja toinen pääsiäispäivä)
-                                   :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 5)))
-                                   :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 5))) :kuittaukset []}]
-        (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))))
+                                   :urakka-kesakausi-alkupvm "2023-04-01"
+                                   :urakka-kesakausi-loppupvm "2023-04-30"
+                                   ;; 6.4.2023 on arkipäivä, sen jälkeen arkipyhinä pitkäperjantai ja toinen pääsiäispäivä
+                                   ;; Seuraava arkipäivä on 11.4. (tiistai)
+                                   :ilmoitettu (c/to-sql-time (pvm/keskipaiva
+                                                                (pvm/iso-8601->pvm "2023-04-06")))
+                                   :valitetty-urakkaan (c/to-sql-time (pvm/keskipaiva
+                                                                        (pvm/iso-8601->pvm "2023-04-06"))) :kuittaukset []}]
+        (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))))
 
 (deftest ilmoitus-myohassa-kun-kuittaus-myohassa
   ;; Kesäkausi on nykyhetki -2 päivä <--> nykyhetki -1 päivä, eli nyt ollaan talvikaudella

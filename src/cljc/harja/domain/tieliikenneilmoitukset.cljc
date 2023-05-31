@@ -3,7 +3,9 @@
   (:require
     #?(:cljs [cljs-time.core :as t])
     #?(:clj [clj-time.core :as t])
-            [clojure.string :as string]))
+    #?(:clj [clj-time.coerce :as tc])
+    [clojure.string :as string]
+    [harja.pvm :as pvm]))
 
 (def +ilmoitustyypit+ #{:kysely :toimenpidepyynto :tiedoitus})
 
@@ -70,22 +72,27 @@
     :tiedoitus "TUR"))
 
 ;; Jos muutat näitä, päivitä myös kuittausvaatimukset-str!
-(def kuittausvaatimukset
-  {;; URK (kysely)
-   :kysely {:kuittaustyyppi :lopetus
-            :kuittausaika {:talvi (t/hours 72)
-                           :kesa (t/hours 72)}}
+#?(:clj
+   (def kuittausvaatimukset
+     {;; URK (kysely)
+      :kysely {:kuittaustyyppi :lopetus
+               :kuittausaika {:talvi (t/hours 72)
+                              :kesa (t/hours 72)}}
 
-   ;; TPP (toimenpidepyyntö)
-   :toimenpidepyynto {:kuittaustyyppi :vastaanotto
-                      :kuittausaika {:talvi (t/minutes 10)
-                                     :kesa (t/minutes 10)}}
-   ;; TUR (tiedoksi)
-   :tiedoitus {:kuittaustyyppi :vastaanotto
-               :kuittausaika {:talvi (t/hours 1)
-                              ;; TODO: Toteuta erikoistapaus "Seuraavan arkipäivän aamuna klo 9" VHAR-7367
-                              :kesa (fn [ilmoitusaika]
-                                      )}}})
+      ;; TPP (toimenpidepyyntö)
+      :toimenpidepyynto {:kuittaustyyppi :vastaanotto
+                         :kuittausaika {:talvi (t/minutes 10)
+                                        :kesa (t/minutes 10)}}
+      ;; TUR (tiedoksi)
+      :tiedoitus {:kuittaustyyppi :vastaanotto
+                  :kuittausaika {:talvi (t/hours 1)
+                                 ;; Sääntö: Viestien vasteaika on kesällä seuraavan arkipäivän aamuun klo 9 mennessä
+                                 :kesa (fn [ilmoitusaika]
+                                         (let [seuraava-arkipaiva (pvm/seuraava-arkipaiva ilmoitusaika)
+                                               arkipaiva-klo-9 (tc/to-date-time (pvm/aikana seuraava-arkipaiva 9 0 0 0))]
+                                           ;; Palauta maksimiaika kuittaamiselle minuutin tarkkuudella
+                                           (t/minutes
+                                             (pvm/aikaa-valissa ilmoitusaika arkipaiva-klo-9 t/in-minutes))))}}}))
 
 (def kuittausvaatimukset-str
   ["URK lopetus 72h sisällä."

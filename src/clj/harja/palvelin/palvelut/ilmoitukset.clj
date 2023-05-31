@@ -70,6 +70,11 @@
         ilmoitusaika (c/from-sql-time valitetty-urakkaan)
         vaadittu-kuittaustyyppi (get-in ilmoitukset-domain/kuittausvaatimukset [ilmoitustyyppi :kuittaustyyppi])
         vaadittu-kuittausaika (get-in ilmoitukset-domain/kuittausvaatimukset [ilmoitustyyppi :kuittausaika kausi])
+        ;; Vaadittu kuittausaika lasketaan kuittausvaatimusten säännöistä
+        ;; Sääntö voi olla joko funktio, joka palauttaa aikayksiköitä esim. (t/hour 1) tai suoraan pelkkä aikayksikkö.
+        vaadittu-kuittausaika (if (fn? vaadittu-kuittausaika)
+                                (vaadittu-kuittausaika ilmoitusaika)
+                                vaadittu-kuittausaika)
         vaadittu-aika-kulunut? (t/after? (t/now) (t/plus ilmoitusaika vaadittu-kuittausaika))
         vaaditut-kuittaukset (filter
                                (fn [kuittaus]

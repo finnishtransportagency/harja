@@ -1083,6 +1083,17 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   (when (and eka toka)
     (paivia-valissa eka toka)))
 
+
+(defn aikaa-valissa
+  "Palauttaa kokonaisluvun, joka kertoo montako aikayksikköä kahden päivämäärän välillä on kulunut.
+  Annettujen päivämäärien ei tarvitse olla kronologisessa järjestyksesä.
+  Oletuksena käytetään aikakonversio-fn t/in-hours funktiota."
+  ([pvm1 pvm2] (aikaa-valissa pvm1 pvm2 t/in-hours))
+  ([pvm1 pvm2 aikakonversio-fn]
+   (if (t/before? pvm1 pvm2)
+     (aikakonversio-fn (t/interval pvm1 pvm2))
+     (aikakonversio-fn (t/interval pvm2 pvm1)))))
+
 (defn iso-8601->pvm
   "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon joda-time päivämääräksi."
   [teksti]
