@@ -297,16 +297,13 @@
         vapaa-loppuaika (-> valinnat-nyt :valitetty-urakkaan-loppuaika)
         tuntia-sitten (pvm/tuntia-sitten tunteja-valittu)
         valittu-alkupvm (if tunteja-valittu tuntia-sitten vapaa-alkuaika)
-        valittu-loppupvm (if tunteja-valittu (pvm/nyt) vapaa-loppuaika)
-        ilmoituksilla-aihe-ja-tarkenne? (every? #(and
-                                                   (some? (:tarkenne %))
-                                                   (some? (:aihe %)))  haetut-ilmoitukset)]
+        valittu-loppupvm (if tunteja-valittu (pvm/nyt) vapaa-loppuaika) ]
 
 
     [:span.ilmoitukset
      [debug/debug ilmoitukset]
 
-     [ilmoitusten-hakuehdot e! valinnat-nyt aiheet-ja-tarkenteet ilmoituksilla-aihe-ja-tarkenne?]
+     [ilmoitusten-hakuehdot e! valinnat-nyt aiheet-ja-tarkenteet]
      [:div
       [:div.margin-top-16
        [kentat/tee-kentta {:tyyppi :checkbox

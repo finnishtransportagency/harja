@@ -305,7 +305,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   v/HaeAiheetJaTarkenteet
   (process-event [_ app]
     (-> app
-      (tuck-apurit/post! :hae-ilmoitusten-aiheet-ja-tarkenteet
+      (tuck-apurit/post! :hae-palauteluokitukset
         {}
         {:onnistui v/->HaeAiheetJaTarkenteetOnnistui
          :epaonnistui v/->HaeAiheetJaTarkenteetEpaonnistui

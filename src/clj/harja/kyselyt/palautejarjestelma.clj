@@ -14,15 +14,18 @@
       (dissoc tarkenne :kaytossa?))))
 
 (defn hae-aiheet-ja-tarkenteet [db]
-  (map
-    (fn [aihe]
-      (as-> aihe aihe
-        (set/rename-keys aihe palautejarjestelma/domain->api)
-        (update aihe :tarkenteet
-          #(map (fn [tarkenne] (set/rename-keys tarkenne palautejarjestelma/domain->api)) %))
-        (update aihe :tarkenteet
-          #(filter :kaytossa? %))))
-    (fetch db ::palautejarjestelma/aihe
-      (conj (columns ::palautejarjestelma/aihe)
-        [::palautejarjestelma/tarkenteet (columns ::palautejarjestelma/tarkenne)])
-      {::palautejarjestelma/kaytossa? true})))
+  (sort-by :jarjestys
+    (map
+      (fn [aihe]
+        (as-> aihe aihe
+          (set/rename-keys aihe palautejarjestelma/domain->api)
+          (update aihe :tarkenteet
+            #(map (fn [tarkenne] (set/rename-keys tarkenne palautejarjestelma/domain->api)) %))
+          (update aihe :tarkenteet
+            #(filter :kaytossa? %))
+          (update aihe :tarkenteet
+            #(sort-by :jarjestys %))))
+      (fetch db ::palautejarjestelma/aihe
+        (conj (columns ::palautejarjestelma/aihe)
+          [::palautejarjestelma/tarkenteet (columns ::palautejarjestelma/tarkenne)])
+        {::palautejarjestelma/kaytossa? true}))))

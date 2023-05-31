@@ -10,6 +10,16 @@
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]))
 
+;; TODO: Pohdi nimeämistä.
+;;       Palautejarjestelma -> palautevayla?
+;;       nimi -> selite tms?
+;;
+;; TODO: Korjaa cypress-testit
+;;       Tee testi, jossa ei ole aihetta tai tarkennetta, mutta on selitteitä.
+;;       Tee testi, jossa ei ole selitettä ja on aihe/tarkenne.
+
+;; TODO: Pitäisikö ilmoitustaulussa olla relaatio aihe/tarkenne-tauluun?
+
 (defprotocol PalautejarjestelmaHaku
   (hae-aiheet [this])
   (hae-tarkenteet [this])
@@ -71,7 +81,9 @@
         tarkenteet (hae-tarkenteet-palautejarjestelmasta db integraatioloki asetukset)]
     (jdbc/with-db-transaction [db db]
       (palautejarjestelma-q/lisaa-tai-paivita-aiheet db aiheet)
-      (palautejarjestelma-q/lisaa-tai-paivita-tarkenteet db tarkenteet))))
+      (palautejarjestelma-q/lisaa-tai-paivita-tarkenteet db tarkenteet))
+
+    (palautejarjestelma-q/hae-aiheet-ja-tarkenteet db)))
 
 (defn- aiheet-ja-tarkenteet-paivitystehtava [db integraatioloki {:keys [paivitysaika url kayttajatunnus salasana] :as asetukset}]
   (when (and paivitysaika url kayttajatunnus salasana)

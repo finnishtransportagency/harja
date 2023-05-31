@@ -72,6 +72,7 @@
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.info :as info]
     [harja.palvelin.palvelut.hallinta.rajoitusalue-pituudet :as rajoitusalue-pituudet]
+    [harja.palvelin.palvelut.hallinta.palauteluokitukset :as palauteluokitukset-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
@@ -106,6 +107,7 @@
     [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
     [harja.palvelin.palvelut.tyomaapaivakirja :as tyomaapaivakirja]
+    [harja.palvelin.palvelut.palauteluokitukset :as palauteluokitukset]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -784,7 +786,17 @@
       :palautejarjestelma
       (component/using
         (palautejarjestelma/->Palautejarjestelma (:palautejarjestelma asetukset))
-        [:db :integraatioloki]))))
+        [:db :integraatioloki])
+
+      :palauteluokitukset
+      (component/using
+        (palauteluokitukset/->Palauteluokitukset)
+        [:http-palvelin :db])
+
+      :palauteluokitukset-hallinta
+      (component/using
+        (palauteluokitukset-hallinta/->PalauteluokitustenHallinta)
+        [:http-palvelin :db :palautejarjestelma]))))
 
 (defonce harja-jarjestelma nil)
 

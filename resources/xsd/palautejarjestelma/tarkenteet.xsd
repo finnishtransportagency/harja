@@ -11,8 +11,8 @@
                             <xs:element name="active" type="xs:integer"/>
                             <xs:element name="name" type="xs:string"/>
                             <xs:element name="id" type="xs:integer"/>
-                            <xs:element name="subject_id" type="xs:integer"/>
                             <xs:element name="locale" type="xs:string"/>
+                            <xs:element name="subject_id" type="xs:integer"/>
                             <xs:element name="order" type="xs:integer"/>
                             <xs:element name="tloik" type="xs:integer"/>
                             <xs:element name="palautevayla" type="xs:integer"/>
