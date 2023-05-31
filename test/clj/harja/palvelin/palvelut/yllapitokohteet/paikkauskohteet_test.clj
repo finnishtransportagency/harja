@@ -13,7 +13,9 @@
             [harja.tyokalut.paikkaus-test :refer :all]
             [harja.pvm :as pvm]
             [dk.ative.docjure.spreadsheet :as xls]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.konversio :as konv]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -528,11 +530,35 @@
                         {:urakka-id urakka-id
                          :paikkauskohde-id (:id paikkauskohde)}
                         "test/resurssit/excel/urem_tuonti.xlsx")
-        paikkaukset-jalkeen (hae-paikkaukset urakka-id (:id paikkauskohde))]
+        paikkaukset-jalkeen (into []
+                                  (comp
+                                    (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
+                                  (hae-paikkaukset urakka-id (:id paikkauskohde)))
+        eka-rivi (first (filter #(= 50 (get-in % [:tierekisteriosoite :loppuetaisyys]))
+
+                                paikkaukset-jalkeen))
+        toka-rivi (first (filter #(= 100 (get-in % [:tierekisteriosoite :loppuetaisyys]))
+
+                                paikkaukset-jalkeen))
+        urem-kohteen-kokonaismassamaara (ffirst (q (str "SELECT urem_kok_massamaara FROM paikkauskohde WHERE id = " (:id paikkauskohde) ";")))]
+
     (is (= (:status lue-excelista) 200))
+    (is (= urem-kohteen-kokonaismassamaara 1.5M) "Kohteen kokonaismassamäärä")
+    (is (= (:tierekisteriosoite eka-rivi) {:alkuetaisyys 0
+                                           :alkuosa 1
+                                           :loppuetaisyys 50
+                                           :loppuosa 1
+                                           :numero 22}) "Tierekisteriosoite oikein")
+    (is (= (:tierekisteriosoite toka-rivi) {:alkuetaisyys 0
+                                           :alkuosa 3
+                                           :loppuetaisyys 100
+                                           :loppuosa 3
+                                           :numero 22}) "Tierekisteriosoite oikein")
     (is (= alkup-paikkausmaara 0) "Paikkauskohteella ei pitäisi olla paikkauksia ennen excel-tuontia")
-    (is (= (count paikkaukset-jalkeen) 1) "Excel-tuonnista pitäisi tulla yksi paikkaus")
+    (is (= (count paikkaukset-jalkeen) 2) "Excel-tuonnista pitäisi tulla kaksi paikkausta")
+
     (is (= (:massatyyppi (first paikkaukset-jalkeen)) "AB, Asfalttibetoni"))
+    (is (= (:massatyyppi (second paikkaukset-jalkeen)) "AB, Asfalttibetoni"))
     (is (= (:massamenekki (first paikkaukset-jalkeen)) 15.38M))))
 
 (deftest lisaa-urem-paikkaus-excelista-epaonnistuu

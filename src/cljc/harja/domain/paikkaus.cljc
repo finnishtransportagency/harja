@@ -28,6 +28,7 @@
     "tarkistettu" ::tarkistettu
     "tarkistaja-id" ::tarkistaja-id
     "ilmoitettu-virhe" ::ilmoitettu-virhe
+    "urem_kok_massamaara" ::urem-kok-massamaara
     ::paikkaukset (specql.rel/has-many ::id
                                        ::paikkaus
                                        ::paikkauskohde-id)

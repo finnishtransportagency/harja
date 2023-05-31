@@ -29,7 +29,8 @@
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [specql.core :as specql]
-            [harja.kyselyt.konversio :as konversio]))
+            [harja.kyselyt.konversio :as konversio]
+            [clojure.java.jdbc :as jdbc]))
 
 (defn validi-pvm-vali? [validointivirheet alku loppu]
   (if (and (not (nil? alku)) (not (nil? loppu)) (.after alku loppu))
@@ -645,6 +646,11 @@
     true
     (dissoc :pituus)))
 
+(defn- tee-massamaara [{pituus :pituus
+                       leveys ::paikkaus/leveys :as paikkaus}]
+  ;; TODO massamäärä riville otettava pinta-alojen suhteessa kohteen kokonaismassamäärästä
+  (assoc paikkaus ::paikkaus/massamaara 0))
+
 (defn- muuta-arvot [paikkaus avaimet fn]
   (reduce #(update % %2 fn) paikkaus avaimet))
 
@@ -664,6 +670,10 @@
                             ::paikkaus/leveys
                             ::paikkaus/pinta-ala])
 
+(defn validoi-urem-excel-kokonaismassamaara
+  [urem-kokonaismassamaara]
+  (not (s/valid? ::paikkaus/urem-kok-massamaara urem-kokonaismassamaara "Kohteen kokonaismassamäärä puuttuu tai on virheellinen")))
+
 (defn validoi-urem-excel-paikkaus [{alkuaika ::paikkaus/alkuaika
                                     loppuaika ::paikkaus/loppuaika
                                     {tie ::tr/tie
@@ -674,7 +684,6 @@
                                     massatyyppi ::paikkaus/massatyyppi
                                     raekoko ::paikkaus/raekoko
                                     kuulamylly ::paikkaus/kuulamylly
-                                    massamaara ::paikkaus/massamaara
                                     pinta-ala ::paikkaus/pinta-ala}]
   (cond-> []
     (not (s/valid? ::paikkaus/alkuaika alkuaika)) (conj "Alkuaika puuttuu tai on virheellinen")
@@ -687,7 +696,6 @@
     (not (s/valid? ::paikkaus/urapaikkaus-massatyyppi massatyyppi)) (conj "Massatyyppi puuttuu tai on virheellinen")
     (not (s/valid? ::paikkaus/raekoko raekoko)) (conj "Raekoko puuttuu tai on virheellinen")
     (not (s/valid? ::paikkaus/urapaikkaus-kuulamylly kuulamylly)) (conj "Kuulamylly puuttuu tai on virheellinen")
-    (not (s/valid? ::paikkaus/massamaara massamaara)) (conj "Massamäärä puuttuu tai on virheellinen")
     (not (s/valid? ::paikkaus/pinta-ala pinta-ala)) (conj "Pinta-alaa ei voitu laskea!")
     (and
       (s/valid? ::paikkaus/alkuaika alkuaika)
@@ -696,10 +704,12 @@
 
 (defn- kasittele-urem-excel [db urakka-id paikkauskohde-id {kayttaja-id :id} req]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
-        {paikkaukset :paikkaukset excel-luku-virhe :virhe} (p-excel/erottele-uremit workbook)
-
+        {paikkaukset :paikkaukset urem-kok-massamaara :urem-kok-massamaara
+         excel-luku-virhe :virhe} (p-excel/erottele-uremit workbook)
         paikkauskohde (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/id paikkauskohde-id}))
-
+        ;; päivitä kohteen kokonaismassamäärä
+        tulos (paikkaus-q/paivita-urem-kohteen-kokonaismassamaara! db {:paikkauskohde_id paikkauskohde-id
+                                                                       :urem_kok_massamaara urem-kok-massamaara})
         paikkauskohteen-tila-virhe
         (when (not= "tilattu" (::paikkaus/paikkauskohteen-tila paikkauskohde))
           (log/error (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " paikkauskohde-id))
@@ -715,6 +725,7 @@
                                  (tee-pituus db)
                                  tee-tr-osoite
                                  tee-pinta-ala
+                                 tee-massamaara
                                  tee-tienkohta
                                  tee-massamenekki
                                  (assoc
@@ -760,8 +771,8 @@
 
 (defn vastaanota-urem-excel [db req]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
-    (:kayttaja req)
-    (Integer/parseInt (get (:params req) "urakka-id")))
+                                  (:kayttaja req)
+                                  (Integer/parseInt (get (:params req) "urakka-id")))
   (let [urakka-id (Integer/parseInt (get (:params req) "urakka-id"))
         paikkauskohde-id (Integer/parseInt (get (:params req) "paikkauskohde-id"))
         kayttaja (:kayttaja req)]
@@ -770,7 +781,9 @@
           (some? urakka-id)
           (some? kayttaja)
           (some? paikkauskohde-id))
-      (kasittele-urem-excel db urakka-id paikkauskohde-id kayttaja req)
+      (jdbc/with-db-transaction
+        [db db]
+        (kasittele-urem-excel db urakka-id paikkauskohde-id kayttaja req))
       (throw+ {:type "Error"
                :virheet [{:koodi "ERROR" :viesti "Urakka, käyttäjä tai paikkauskohde puuttuu."}]}))))
 
