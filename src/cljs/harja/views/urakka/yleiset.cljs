@@ -382,7 +382,11 @@
       ;; päällystys --> kokonaisurakka
       "Sopimustyyppi: " (yllapitourakan-sopimustyyppi ur)
       "Indeksi: " (when-not (#{:paallystys :paikkaus} (:tyyppi ur))
-                    [urakan-indeksi ur])]]))
+                    [urakan-indeksi ur])
+      "Urakan kesäaika: " [:<>
+                           [:span (str (pvm/fmt-paiva-ja-kuukausi-lyhyt (:kesakausi-alkupvm ur))
+                                    "–" (pvm/fmt-paiva-ja-kuukausi-lyhyt (:kesakausi-loppupvm ur)))]
+                           [:span " (tieliikenneilmoituksien kesävasteaika)"]]]]))
 
 
 (defn yhteyshenkilot [ur]

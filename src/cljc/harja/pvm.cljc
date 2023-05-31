@@ -390,7 +390,7 @@
 (def kokovuosi-ja-kuukausi-fmt
   (luo-format "yyyy/MM"))
 
-(defn fmt-kuukausi-ja-vuosi-lyhyt [aika]
+(defn fmt-paiva-ja-kuukausi-lyhyt [aika]
   (formatoi (luo-format "d.M.") aika))
 
 (defn fmt-p-k-v-lyhyt [aika]
