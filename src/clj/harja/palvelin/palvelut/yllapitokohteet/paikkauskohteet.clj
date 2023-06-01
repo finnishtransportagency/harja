@@ -708,7 +708,8 @@
 
 (defn- kasittele-urem-excel [db urakka-id paikkauskohde-id {kayttaja-id :id} req]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
-        {paikkaukset :paikkaukset urem-kok-massamaara :urem-kok-massamaara
+        {paikkaukset :paikkaukset
+         urem-kok-massamaara :urem-kok-massamaara
          excel-luku-virhe :virhe} (p-excel/erottele-uremit workbook)
         paikkauskohde (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/id paikkauskohde-id}))
         paikkauskohteen-tila-virhe
@@ -737,10 +738,10 @@
                                    ::paikkaus/ulkoinen-id 0)))))
                       paikkaukset)
         kaikki-pinta-ala-yhteensa (reduce +
-                                          (mapv (fn [rivi]
-                                                  (or (get-in rivi [:paikkaus ::paikkaus/pinta-ala])
-                                                      0M))
-                                                paikkaukset))
+                                          (map (fn [rivi]
+                                                 (or (get-in rivi [:paikkaus ::paikkaus/pinta-ala])
+                                                     0M))
+                                               paikkaukset))
         paikkaukset-massatietoineen (map (fn [rivi]
                                     (update rivi :paikkaus
                                             (fn [paikkaus]
