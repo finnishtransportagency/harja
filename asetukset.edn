@@ -70,6 +70,12 @@
  ;        :uudelleenlahetysvali-minuuteissa 30}
 
 
+ :turi {:turvallisuuspoikkeamat-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/turi/poikkeamaTuonti"
+        :kayttajatunnus "Harja"
+        :salasana #=(slurp "../.harja/turi-salasana")
+        :paivittainen-lahetysaika [0 0 0]}
+
+
  :solita-sahkoposti {:vastausosoite "harja-ala-vastaa@vayla.fi"
                      ;; :palvelin "solita-service-1.solita.fi"
                      }
@@ -103,7 +109,7 @@
                         :tieosoiteverkon-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:tieosoiteverkko&outputFormat=SHAPE-ZIP"
                         :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/tieosoiteverkkoLine.shz"
 
-                        :laajennetun-tieosoiteverkon-tiedot "../.harja/harjalle_ajorata_kaista_puoli_20210825.csv"
+                        :laajennetun-tieosoiteverkon-tiedot "../.harja/harjalle_ajorata_kaista_puoli_20230519.csv"
 
                         :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/pohjavesialueetLine.shp"
                         :pohjavesialueen-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:pohjavesialueet&outputFormat=SHAPE-ZIP"

@@ -346,7 +346,8 @@
          :as yha-tiedot} (yha-tiedot ur)]
     [bs/panel {}
      "Yleiset tiedot"
-     [yleiset/tietoja {:class "body-text"
+     [yleiset/tietoja {:piirra-viivat? true
+                       :class "body-text"
                        :tietorivi-luokka "padding-8 css-grid css-grid-colums-12rem-9"}
       "Urakan nimi:" (:nimi ur)
       "Urakan tunnus:" (:sampoid ur)

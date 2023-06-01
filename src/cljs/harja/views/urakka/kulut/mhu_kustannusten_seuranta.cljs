@@ -8,6 +8,7 @@
             [tuck.core :as tuck]
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
             [harja.ui.debug :as debug]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+]]
@@ -470,7 +471,7 @@
                                       :data-cy "hoitokausi-valinta"
                                       :valitse-fn #(do (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
                                                        (e! (t-yhteiset/->NollaaValikatselmuksenPaatokset)))
-                                      :format-fn #(str kustannusten-seuranta-tiedot/fin-hk-alkupvm % "-" kustannusten-seuranta-tiedot/fin-hk-loppupvm (inc %))
+                                      :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet)
                                       :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          hoitokaudet]]
        [:div.filtteri.kuukausi
