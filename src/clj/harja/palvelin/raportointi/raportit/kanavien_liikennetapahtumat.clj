@@ -11,7 +11,7 @@
   (let [{:keys [alkupvm loppupvm valitut-urakat]} parametrit
         raportin-nimi "Liikennetapahtumat"
         ;; Urakoiden-nimet on nil kun 1 urakka valittuna, haetaan tällöin valitun urakan nimi toisesta muuttujasta
-        urakoiden-nimet (if (nil? urakoiden-nimet) (first valitut-urakat) urakoiden-nimet)
+        urakoiden-nimet (or urakoiden-nimet (first valitut-urakat))
         raportin-otsikko (raportin-otsikko urakoiden-nimet raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape
                 :nimi raportin-otsikko}
