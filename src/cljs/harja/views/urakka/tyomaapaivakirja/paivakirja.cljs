@@ -72,7 +72,7 @@
                                                 :ikoni-sisaan? true
                                                 :vayla-tyyli? true}]
 
-       [:div.tyomaa-haku-suodatin
+       [:div.puolita-leveys
         [kentat/tee-kentta {:tyyppi :radio-group
                             :vaihtoehdot (into [] (keys (haun-valinnat app)))
                             :vayla-tyyli? true

@@ -2,6 +2,7 @@
   "Työmaapäiväkirja -näkymän kalusto ja tien toimenpiteet"
   (:require
     [clojure.string :as str]
+    [harja.pvm :as pvm]
     [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]
     [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
 
@@ -20,7 +21,7 @@
                                 {:otsikko "Lisäkalusto" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.25 :tyyppi :varillinen-teksti}
                                 {:otsikko "Toimenpide" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.7 :tyyppi :varillinen-teksti})
                 :rivit (mapv
-                         #(kalusto-rivi (str (harja.pvm/aika (:aloitus %)) " - " (harja.pvm/aika (:lopetus %)))
+                         #(kalusto-rivi (str (pvm/aika (:aloitus %)) " - " (pvm/aika (:lopetus %)))
                             (:tyokoneiden_lkm %) (or (:lisakaluston_lkm %) "-") (str/join ", " (:tehtavat %))
                             #_"Miten saadaan tällainen mäppäys: Pistehiekoitus (01:23 - 02:15), Suolaus (00:22 - 01:12)")
                          kalustot)}]

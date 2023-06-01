@@ -59,7 +59,7 @@
                                                           {:keys [otsikko-oikea optiot-oikea otsikot-oikea rivit-oikea]}]]
   ;; Tekee 2 taulukkoa vierekkän
   [:div.flex-gridit
-   [:div {:style {:width "50%"}}
+   [:div.puolita-leveys
     [:h3.gridin-otsikko otsikko-vasen]
     (let [{otsikko :otsikko
            viimeinen-rivi-yhteenveto? :viimeinen-rivi-yhteenveto?
@@ -93,7 +93,7 @@
        otsikot-vasen rivit-vasen])]
    ;; Ei piirretä oikeaa elementtiä, jos sitä ei ole annettu.
    (if otsikko-oikea
-     [:div {:style {:width "50%"}}
+     [:div.puolita-leveys
       [:h3.gridin-otsikko otsikko-oikea]
       (let [{otsikko :otsikko
              viimeinen-rivi-yhteenveto? :viimeinen-rivi-yhteenveto?
@@ -125,7 +125,7 @@
          sivuttain-rullattava?
          ensimmainen-sarake-sticky?
          otsikot-oikea rivit-oikea])]
-     [:div {:style {:width "50%"}}])])
+     [:div.puolita-leveys])])
 
 (defmethod raportointi/muodosta-html :tyomaapaivakirjan-kommentit [[_]]
   ;; Työmaakokouksen laskutusyhteenvedon footer
