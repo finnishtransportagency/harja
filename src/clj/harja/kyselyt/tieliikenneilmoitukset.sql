@@ -65,8 +65,8 @@ WHERE ulompi_i.id IN
 
       -- Tarkasta vapaatekstihakuehto
       (:teksti_annettu IS FALSE OR (sisempi_i.otsikko LIKE :teksti OR sisempi_i.paikankuvaus LIKE :teksti OR sisempi_i.lisatieto LIKE :teksti) OR
-       (SELECT nimi from palautejarjestelma_tarkenne WHERE ulkoinen_id = sisempi_i.tarkenne) LIKE :teksti OR
-       (SELECT nimi from palautejarjestelma_aihe WHERE ulkoinen_id = sisempi_i.aihe) LIKE :teksti) AND
+       (SELECT nimi from palautevayla_tarkenne WHERE ulkoinen_id = sisempi_i.tarkenne) LIKE :teksti OR
+       (SELECT nimi from palautevayla_aihe WHERE ulkoinen_id = sisempi_i.aihe) LIKE :teksti) AND
 
       -- Tarkasta selitehakuehto
       (:selite_annettu IS FALSE OR (sisempi_i.selitteet @> ARRAY [:selite :: TEXT])) AND
@@ -169,8 +169,8 @@ SELECT
   lahettaja_sahkoposti,
   "aiheutti-toimenpiteita"
 FROM ilmoitus i
-  LEFT JOIN palautejarjestelma_aihe pa ON i.aihe = pa.ulkoinen_id
-  LEFT JOIN palautejarjestelma_tarkenne pt ON i.tarkenne = pt.ulkoinen_id
+  LEFT JOIN palautevayla_aihe pa ON i.aihe = pa.ulkoinen_id
+  LEFT JOIN palautevayla_tarkenne pt ON i.tarkenne = pt.ulkoinen_id
 WHERE ilmoitusid IN (:ilmoitusidt);
 
 -- name: hae-ilmoitus
@@ -349,8 +349,8 @@ SELECT
   lahettaja_sahkoposti,
   "aiheutti-toimenpiteita"
 FROM ilmoitus i
-    LEFT JOIN palautejarjestelma_aihe pa ON i.aihe = pa.ulkoinen_id
-    LEFT JOIN palautejarjestelma_tarkenne pt ON i.tarkenne = pt.ulkoinen_id
+    LEFT JOIN palautevayla_aihe pa ON i.aihe = pa.ulkoinen_id
+    LEFT JOIN palautevayla_tarkenne pt ON i.tarkenne = pt.ulkoinen_id
 WHERE urakka = :urakka AND
       (muokattu > :aika OR luotu > :aika);
 
@@ -415,8 +415,8 @@ SELECT
 FROM loydetyt_ilmoitukset li
          JOIN ilmoitus i ON i.id = li.id
          JOIN ilmoitustoimenpide it on it.ilmoitus = li.id
-         LEFT JOIN palautejarjestelma_aihe pa on i.aihe = pa.ulkoinen_id
-         LEFT JOIN palautejarjestelma_tarkenne pt on i.tarkenne = pt.ulkoinen_id
+         LEFT JOIN palautevayla_aihe pa on i.aihe = pa.ulkoinen_id
+         LEFT JOIN palautevayla_tarkenne pt on i.tarkenne = pt.ulkoinen_id
      GROUP BY i.id, li.urakkanro, i."valitetty-urakkaan", pa.nimi, pt.nimi
 ORDER BY i."valitetty-urakkaan" ASC
 LIMIT 10000;

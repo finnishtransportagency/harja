@@ -13,7 +13,7 @@
             [harja.views.ilmoituskuittaukset :as kuittaukset]
             [harja.ui.ikonit :as ikonit]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.palautejarjestelma-domain :as palautejarjestelma]
+            [harja.domain.palautevayla-domain :as palautevayla]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.tiedot.ilmoitukset.viestit :as v]
@@ -60,8 +60,8 @@
    "Yhteydenottopyyntö " (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")
    "Sijainti " (tr-domain/tierekisteriosoite-tekstina (:tr ilmoitus))
    "Paikan kuvaus " (:paikankuvaus ilmoitus)
-   "Aihe " (palautejarjestelma/hae-aihe aiheet-ja-tarkenteet (:aihe ilmoitus))
-   "Tarkenne " (palautejarjestelma/hae-tarkenne aiheet-ja-tarkenteet (:tarkenne ilmoitus))
+   "Aihe " (palautevayla/hae-aihe aiheet-ja-tarkenteet (:aihe ilmoitus))
+   "Tarkenne " (palautevayla/hae-tarkenne aiheet-ja-tarkenteet (:tarkenne ilmoitus))
    "Otsikko " (:otsikko ilmoitus)
    "Kuvaus " (when (:lisatieto ilmoitus) (:lisatieto ilmoitus))
    "Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")

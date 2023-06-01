@@ -1,23 +1,23 @@
-(ns harja.domain.palautejarjestelma-domain
+(ns harja.domain.palautevayla-domain
   (:require
     [clojure.spec.alpha]
     [specql.rel :as rel]
-    #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]]
+    #?@(:clj  [[harja.kyselyt.specql-db :refer [define-tables]]]
         :cljs [[specql.impl.registry]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
-  ["palautejarjestelma_aihe" ::aihe
+  ["palautevayla_aihe" ::aihe
    {"ulkoinen_id" ::aihe-id
     "nimi" ::nimi
     "jarjestys" ::jarjestys
     "kaytossa" ::kaytossa?
     ::tarkenteet (specql.rel/has-many
-                    ::aihe-id
-                    ::tarkenne
-                    ::aihe-id)}]
-  ["palautejarjestelma_tarkenne" ::tarkenne
+                   ::aihe-id
+                   ::tarkenne
+                   ::aihe-id)}]
+  ["palautevayla_tarkenne" ::tarkenne
    {"ulkoinen_id" ::tarkenne-id
     "nimi" ::nimi
     "jarjestys" ::jarjestys

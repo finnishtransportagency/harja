@@ -1,9 +1,9 @@
-(ns harja.palvelin.integraatiot.palautejarjestelma.palautejarjestelma-test
+(ns harja.palvelin.integraatiot.palautevayla.palautevayla-test
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
-            [harja.palvelin.integraatiot.palautejarjestelma.palautejarjestelma-komponentti :as pj]
-            [harja.domain.palautejarjestelma-domain :as domain]
+            [harja.palvelin.integraatiot.palautevayla.palautevayla-komponentti :as pj]
+            [harja.domain.palautevayla-domain :as domain]
             [com.stuartsierra.component :as component]
             [org.httpkit.fake :refer [with-fake-http]]))
 
@@ -11,16 +11,16 @@
 
 (def +testi-pj+
   {:paivitysaika nil
-   :url "https://feikki-palautejarjestelma-api.com"
+   :url "https://feikki-palautevayla-api.com"
    :kayttajatunnus "pj-testi-kayttajatunnus"
    :salasana "pj-testi-salasana"})
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :palautejarjestelma (component/using
-                          (pj/->Palautejarjestelma +testi-pj+)
-                          [:db :integraatioloki])
+    :palautevayla (component/using
+                    (pj/->Palautevayla +testi-pj+)
+                    [:db :integraatioloki])
     :ilmoitukset (component/using
                    (ilmoitukset/->Ilmoitukset)
                    [:db :integraatioloki :http-palvelin])))
@@ -107,27 +107,27 @@
 
 (deftest hae-aiheet-onnistuu
   (with-fake-http
-    ["https://feikki-palautejarjestelma-api.com/api/x_sgtk_open311/v1/publicws/subjects?locale=fi"
-     (slurp "resources/xsd/palautejarjestelma/esimerkit/aiheet.xml")]
-    (let [aiheet (pj/hae-aiheet (:palautejarjestelma jarjestelma))]
+    ["https://feikki-palautevayla-api.com/api/x_sgtk_open311/v1/publicws/subjects?locale=fi"
+     (slurp "resources/xsd/palautevayla/esimerkit/aiheet.xml")]
+    (let [aiheet (pj/hae-aiheet (:palautevayla jarjestelma))]
       (is (= (count aiheet) 3))
       (is (= odotetut-aiheet aiheet)))))
 
 (deftest hae-tarkenteet-onnistuu
   (with-fake-http
-    ["https://feikki-palautejarjestelma-api.com/api/x_sgtk_open311/v1/publicws/subsubjects?locale=fi"
-     (slurp "resources/xsd/palautejarjestelma/esimerkit/tarkenteet.xml")]
-    (let [tarkenteet (pj/hae-tarkenteet (:palautejarjestelma jarjestelma))]
+    ["https://feikki-palautevayla-api.com/api/x_sgtk_open311/v1/publicws/subsubjects?locale=fi"
+     (slurp "resources/xsd/palautevayla/esimerkit/tarkenteet.xml")]
+    (let [tarkenteet (pj/hae-tarkenteet (:palautevayla jarjestelma))]
       (is (= (count tarkenteet) 6))
       (is (= odotetut-tarkenteet tarkenteet)))))
 
 (deftest tallenna-aiheet-ja-tarkenteet-onnistuu
   (with-fake-http
-    ["https://feikki-palautejarjestelma-api.com/api/x_sgtk_open311/v1/publicws/subjects?locale=fi"
-     (slurp "resources/xsd/palautejarjestelma/esimerkit/aiheet.xml")
-     "https://feikki-palautejarjestelma-api.com/api/x_sgtk_open311/v1/publicws/subsubjects?locale=fi"
-     (slurp "resources/xsd/palautejarjestelma/esimerkit/tarkenteet.xml")]
-    (let [_aiheet (pj/paivita-aiheet-ja-tarkenteet (:palautejarjestelma jarjestelma))
+    ["https://feikki-palautevayla-api.com/api/x_sgtk_open311/v1/publicws/subjects?locale=fi"
+     (slurp "resources/xsd/palautevayla/esimerkit/aiheet.xml")
+     "https://feikki-palautevayla-api.com/api/x_sgtk_open311/v1/publicws/subsubjects?locale=fi"
+     (slurp "resources/xsd/palautevayla/esimerkit/tarkenteet.xml")]
+    (let [_aiheet (pj/paivita-aiheet-ja-tarkenteet (:palautevayla jarjestelma))
           aiheet-ja-tarkenteet-kannassa (ilmoitukset/hae-ilmoitusten-aiheet-ja-tarkenteet
                                           (:db jarjestelma) +kayttaja-jvh+)]
       (is (= odotetut-aiheet-ja-tarkenteet-kannasta aiheet-ja-tarkenteet-kannassa)))))

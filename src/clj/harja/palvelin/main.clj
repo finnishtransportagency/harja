@@ -33,7 +33,7 @@
     [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
     [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
-    [harja.palvelin.integraatiot.palautejarjestelma.palautejarjestelma-komponentti :as palautejarjestelma]
+    [harja.palvelin.integraatiot.palautevayla.palautevayla-komponentti :as palautevayla]
 
     [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
     [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
@@ -783,9 +783,9 @@
         (yleiset-ajastukset/->YleisetAjastuket)
         [:db])
 
-      :palautejarjestelma
+      :palautevayla
       (component/using
-        (palautejarjestelma/->Palautejarjestelma (:palautejarjestelma asetukset))
+        (palautevayla/->Palautevayla (:palautevayla asetukset))
         [:db :integraatioloki])
 
       :palauteluokitukset
@@ -796,7 +796,7 @@
       :palauteluokitukset-hallinta
       (component/using
         (palauteluokitukset-hallinta/->PalauteluokitustenHallinta)
-        [:http-palvelin :db :palautejarjestelma]))))
+        [:http-palvelin :db :palautevayla]))))
 
 (defonce harja-jarjestelma nil)
 

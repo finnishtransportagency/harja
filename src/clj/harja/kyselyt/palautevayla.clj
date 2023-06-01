@@ -1,16 +1,16 @@
-(ns harja.kyselyt.palautejarjestelma
+(ns harja.kyselyt.palautevayla
   (:require [specql.core :refer [fetch upsert! columns]]
-            [harja.domain.palautejarjestelma-domain :as palautejarjestelma]
+            [harja.domain.palautevayla-domain :as palautevayla]
             [clojure.set :as set]))
 
 (defn lisaa-tai-paivita-aiheet [db aiheet]
   (doseq [aihe aiheet]
-    (upsert! db ::palautejarjestelma/aihe
+    (upsert! db ::palautevayla/aihe
       (dissoc aihe :kaytossa?))))
 
 (defn lisaa-tai-paivita-tarkenteet [db tarkenteet]
   (doseq [tarkenne tarkenteet]
-    (upsert! db ::palautejarjestelma/tarkenne
+    (upsert! db ::palautevayla/tarkenne
       (dissoc tarkenne :kaytossa?))))
 
 (defn hae-aiheet-ja-tarkenteet [db]
@@ -18,14 +18,14 @@
     (map
       (fn [aihe]
         (as-> aihe aihe
-          (set/rename-keys aihe palautejarjestelma/domain->api)
+          (set/rename-keys aihe palautevayla/domain->api)
           (update aihe :tarkenteet
-            #(map (fn [tarkenne] (set/rename-keys tarkenne palautejarjestelma/domain->api)) %))
+            #(map (fn [tarkenne] (set/rename-keys tarkenne palautevayla/domain->api)) %))
           (update aihe :tarkenteet
             #(filter :kaytossa? %))
           (update aihe :tarkenteet
             #(sort-by :jarjestys %))))
-      (fetch db ::palautejarjestelma/aihe
-        (conj (columns ::palautejarjestelma/aihe)
-          [::palautejarjestelma/tarkenteet (columns ::palautejarjestelma/tarkenne)])
-        {::palautejarjestelma/kaytossa? true}))))
+      (fetch db ::palautevayla/aihe
+        (conj (columns ::palautevayla/aihe)
+          [::palautevayla/tarkenteet (columns ::palautevayla/tarkenne)])
+        {::palautevayla/kaytossa? true}))))

@@ -6,7 +6,7 @@
              [kuittausvaatimukset-str ilmoitustyypin-lyhenne-ja-nimi
               +ilmoitusten-selitteet+ kuittaustyypin-selite kuittaustyypin-lyhenne
               tilan-selite vaikutuksen-selite] :as domain]
-            [harja.domain.palautejarjestelma-domain :as palautejarjestelma]
+            [harja.domain.palautevayla-domain :as palautevayla]
             [harja.tuck-remoting.ilmoitukset-ohjain :as ilmoitukset-ws]
             [harja.ui.bootstrap :as bs]
             [harja.ui.debug :as debug]
@@ -167,7 +167,7 @@
        :valinnat (if
                    (seq aiheet-ja-tarkenteet) (into [nil] (map :aihe-id aiheet-ja-tarkenteet))
                    [])
-       :valinta-nayta #(or (palautejarjestelma/hae-aihe aiheet-ja-tarkenteet %) "Ei rajoitusta")}
+       :valinta-nayta #(or (palautevayla/hae-aihe aiheet-ja-tarkenteet %) "Ei rajoitusta")}
       {:nimi :tarkenne
        :palstoja 2
        :rivi-luokka "grid-column-end-span-2"
@@ -183,7 +183,7 @@
        :valinnat (if (seq tarkenteet)
                    (into [nil] (map :tarkenne-id tarkenteet))
                    [])
-       :valinta-nayta #(or (palautejarjestelma/hae-tarkenne aiheet-ja-tarkenteet %) "Ei valintaa")}
+       :valinta-nayta #(or (palautevayla/hae-tarkenne aiheet-ja-tarkenteet %) "Ei valintaa")}
       {:nimi :tr-numero
        :palstoja 2
        :rivi-luokka "grid-column-end-span-1"
@@ -269,7 +269,7 @@
    [:span (or tunniste "-")]])
 
 (defn- tarkenne-tai-selite-teksti [aiheet-ja-tarkenteet {:keys [tarkenne selitteet]}]
-  (or (palautejarjestelma/hae-tarkenne aiheet-ja-tarkenteet tarkenne)
+  (or (palautevayla/hae-tarkenne aiheet-ja-tarkenteet tarkenne)
     (when selitteet
       (str
         (if (= 1 (count selitteet))

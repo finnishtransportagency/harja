@@ -1,12 +1,12 @@
 (ns harja.palvelin.palvelut.palauteluokitukset
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.kyselyt.palautejarjestelma :as q]
+            [harja.kyselyt.palautevayla :as q]
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn- hae-palauteluokitukset [db kayttaja]
-    (oikeudet/vaadi-lukuoikeus oikeudet/ilmoitukset-ilmoitukset kayttaja)
-    (q/hae-aiheet-ja-tarkenteet db))
+  (oikeudet/vaadi-lukuoikeus oikeudet/ilmoitukset-ilmoitukset kayttaja)
+  (q/hae-aiheet-ja-tarkenteet db))
 
 (defrecord Palauteluokitukset []
   component/Lifecycle
