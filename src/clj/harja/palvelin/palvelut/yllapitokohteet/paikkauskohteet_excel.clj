@@ -4,6 +4,7 @@
             [slingshot.slingshot :refer [throw+]]
             [clojure.string :refer [trim]]
             [harja.domain.oikeudet :as oikeudet]
+            [taoensso.timbre :as log]
             [harja.palvelin.raportointi.excel :as excel]
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.urakat :as q-urakat]
@@ -196,24 +197,30 @@
                           workbook)))
 
 (defn- lue-urem-excelin-otsikot [sivu]
-  (first
-    (->> sivu
-         xls/row-seq
-         (drop 6)
-         (take 7) ;; millä rivillä otsikot ovat
-         (map xls/cell-seq)
-         (map #(take 16 %)) ;; 16 saraketta
-         (map (partial map xls/read-cell)))))
+  (try
+    (first
+     (->> sivu
+          xls/row-seq
+          (drop 6)
+          (take 7) ;; millä rivillä otsikot ovat
+          (map xls/cell-seq)
+          (map #(take 16 %)) ;; 16 saraketta
+          (map (partial map xls/read-cell))))
+    (catch Exception e
+      (log/error e "Vääränlainen Excel-pohja UREM-tuonnissa: "))))
 
 (defn- lue-urem-kokonaismassamaara [sivu]
-  (ffirst
-    (->> sivu
-         xls/row-seq
-         ;; hypätään riville, missä kokonaismassamäärä syötetään
-         (drop 3)
-         (map xls/cell-seq)
-         (map #(take 1 %)) ;; luetaan vain eka sarake
-         (map (partial map xls/read-cell)))))
+  (try
+    (ffirst
+     (->> sivu
+          xls/row-seq
+          ;; hypätään riville, missä kokonaismassamäärä syötetään
+          (drop 3)
+          (map xls/cell-seq)
+          (map #(take 1 %)) ;; luetaan vain eka sarake
+          (map (partial map xls/read-cell))))
+    (catch Exception e
+      (log/error e "Ei löytynyt kokonaismassamäärää Excel-pohjasta"))))
 
 (def urem-excel-pohjan-otsikot
   (-> "public/excel/harja_urapaikkaustoteumien_tuonti_pohja.xlsx"

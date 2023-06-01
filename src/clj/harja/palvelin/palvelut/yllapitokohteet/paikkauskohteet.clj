@@ -629,13 +629,25 @@
   (assoc paikkaus :pituus
     (:pituus (paikkaus-q/laske-paikkauskohteen-pituus db {:tie tie :aosa aosa :aet aet :losa losa :let let}))))
 
-(defn- tee-massamenekki [{pinta-ala ::paikkaus/pinta-ala
-                          massamaara ::paikkaus/massamaara :as paikkaus}]
-  (assoc paikkaus ::paikkaus/massamenekki
-    (when (and pinta-ala massamaara
-            (number? pinta-ala)
-            (number? massamaara))
-      (paikkaus/massamaara-ja-pinta-ala->massamenekki massamaara pinta-ala))))
+(defn- laske-massamaara
+  "Laskee massamäärän perustuen kohteen kokonaismassamäärään sekä rivin suhteellisen pinta-alan osuuteen kokonaispinta-alasta"
+  [paikkaus urem-kok-massamaara kaikki-pinta-ala-yhteensa]
+  (when (number? urem-kok-massamaara)
+    (bigdec
+      (with-precision 4
+        (*
+          ;; Lasketaan paikkausrivin pinta-alan suhteellinen osuus ja kerrotaan massamäärällä
+          (when (and (::paikkaus/pinta-ala paikkaus) kaikki-pinta-ala-yhteensa)
+            (with-precision 6 (/ (::paikkaus/pinta-ala paikkaus)
+                                 kaikki-pinta-ala-yhteensa)))
+          urem-kok-massamaara)))))
+
+(defn- laske-massamenekki [{pinta-ala ::paikkaus/pinta-ala
+                            massamaara ::paikkaus/massamaara :as paikkaus}]
+  (when (and pinta-ala massamaara
+             (number? pinta-ala)
+             (number? massamaara))
+    (paikkaus/massamaara-ja-pinta-ala->massamenekki massamaara pinta-ala)))
 
 (defn- tee-pinta-ala [{pituus :pituus
                        leveys ::paikkaus/leveys :as paikkaus}]
@@ -645,11 +657,6 @@
 
     true
     (dissoc :pituus)))
-
-(defn- tee-massamaara [{pituus :pituus
-                       leveys ::paikkaus/leveys :as paikkaus}]
-  ;; TODO massamäärä riville otettava pinta-alojen suhteessa kohteen kokonaismassamäärästä
-  (assoc paikkaus ::paikkaus/massamaara 0))
 
 (defn- muuta-arvot [paikkaus avaimet fn]
   (reduce #(update % %2 fn) paikkaus avaimet))
@@ -670,9 +677,6 @@
                             ::paikkaus/leveys
                             ::paikkaus/pinta-ala])
 
-(defn validoi-urem-excel-kokonaismassamaara
-  [urem-kokonaismassamaara]
-  (not (s/valid? ::paikkaus/urem-kok-massamaara urem-kokonaismassamaara "Kohteen kokonaismassamäärä puuttuu tai on virheellinen")))
 
 (defn validoi-urem-excel-paikkaus [{alkuaika ::paikkaus/alkuaika
                                     loppuaika ::paikkaus/loppuaika
@@ -725,9 +729,7 @@
                                  (tee-pituus db)
                                  tee-tr-osoite
                                  tee-pinta-ala
-                                 tee-massamaara
                                  tee-tienkohta
-                                 tee-massamenekki
                                  (assoc
                                    ::muokkaustiedot/luoja-id kayttaja-id
                                    ::muokkaustiedot/luotu (pvm/nyt)
@@ -737,22 +739,34 @@
                                    ::paikkaus/tyomenetelma (::paikkaus/tyomenetelma paikkauskohde)
                                    ::paikkaus/ulkoinen-id 0)))))
                       paikkaukset)
-
+        kaikki-pinta-ala-yhteensa (reduce +
+                                          (mapv (fn [rivi]
+                                                  (get-in rivi [:paikkaus ::paikkaus/pinta-ala]))
+                                                paikkaukset))
+        paikkaukset-massatietoineen (map (fn [rivi]
+                                    (update rivi :paikkaus
+                                            (fn [paikkaus]
+                                              (as-> paikkaus p
+                                                  (assoc p ::paikkaus/massamaara
+                                                           (laske-massamaara paikkaus urem-kok-massamaara kaikki-pinta-ala-yhteensa))
+                                                    (assoc p ::paikkaus/massamenekki (laske-massamenekki p))))))
+                                         paikkaukset)
         paikkausten-validointivirheet (into {} (map (fn [{rivi :rivi paikkaus :paikkaus}]
                                                       (let [validointivirheet (validoi-urem-excel-paikkaus paikkaus)]
                                                         (when-not (empty? validointivirheet)
                                                           [rivi validointivirheet])))
-                                                 paikkaukset))
-
+                                                    paikkaukset-massatietoineen))
         virheet (merge {}
+                  (when (and (not excel-luku-virhe)
+                             (not (number? urem-kok-massamaara)))
+                    {:urem-kokonaismassamaaravirhe "Kohteen kokonaismassamäärä puuttuu, täytä solu A4."})
                   (when (seq paikkausten-validointivirheet) {:paikkausten-validointivirheet paikkausten-validointivirheet})
                   (when paikkauskohteen-tila-virhe {:paikkauskohteen-tila-virhe paikkauskohteen-tila-virhe})
                   (when excel-luku-virhe {:excel-luku-virhe excel-luku-virhe}))
-
         tallennetut-paikkaukset (when (empty? virheet)
                                   (mapv
                                     #(paikkaus-q/tallenna-urem-paikkaus-excelista db (:paikkaus %))
-                                    paikkaukset))
+                                    paikkaukset-massatietoineen))
         body (cheshire/encode (cond
                                 tallennetut-paikkaukset
                                 {:message "OK"}
