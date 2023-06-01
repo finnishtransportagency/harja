@@ -4,7 +4,7 @@
             [harja.kyselyt.palautevayla :as q]
             [harja.domain.oikeudet :as oikeudet]))
 
-(defn- hae-palauteluokitukset [db kayttaja]
+(defn hae-palauteluokitukset [db kayttaja]
   (oikeudet/vaadi-lukuoikeus oikeudet/ilmoitukset-ilmoitukset kayttaja)
   (q/hae-aiheet-ja-tarkenteet db))
 

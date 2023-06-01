@@ -7,7 +7,7 @@
             <xs:sequence>
                 <xs:element name="subject" maxOccurs="unbounded">
                     <xs:complexType>
-                        <xs:sequence>
+                        <xs:all>
                             <xs:element type="xs:byte" name="active"/>
                             <xs:element type="xs:string" name="name"/>
                             <xs:element type="xs:byte" name="id"/>
@@ -16,7 +16,7 @@
                             <xs:element type="xs:byte" name="tloik"/>
                             <xs:element type="xs:byte" name="palautevayla"/>
                             <xs:element type="xs:byte" name="mobiilisovellus"/>
-                        </xs:sequence>
+                        </xs:all>
                     </xs:complexType>
                 </xs:element>
             </xs:sequence>

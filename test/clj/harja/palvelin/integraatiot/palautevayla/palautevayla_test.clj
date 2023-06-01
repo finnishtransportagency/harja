@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.palautevayla.palautevayla-test
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
-            [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
+            [harja.palvelin.palvelut.palauteluokitukset :as palauteluokitukset]
             [harja.palvelin.integraatiot.palautevayla.palautevayla-komponentti :as pj]
             [harja.domain.palautevayla-domain :as domain]
             [com.stuartsierra.component :as component]
@@ -20,10 +20,8 @@
     kayttaja
     :palautevayla (component/using
                     (pj/->Palautevayla +testi-pj+)
-                    [:db :integraatioloki])
-    :ilmoitukset (component/using
-                   (ilmoitukset/->Ilmoitukset)
-                   [:db :integraatioloki :http-palvelin])))
+
+                    [:db :integraatioloki])))
 
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture
@@ -128,6 +126,6 @@
      "https://feikki-palautevayla-api.com/api/x_sgtk_open311/v1/publicws/subsubjects?locale=fi"
      (slurp "resources/xsd/palautevayla/esimerkit/tarkenteet.xml")]
     (let [_aiheet (pj/paivita-aiheet-ja-tarkenteet (:palautevayla jarjestelma))
-          aiheet-ja-tarkenteet-kannassa (ilmoitukset/hae-ilmoitusten-aiheet-ja-tarkenteet
+          aiheet-ja-tarkenteet-kannassa (palauteluokitukset/hae-palauteluokitukset
                                           (:db jarjestelma) +kayttaja-jvh+)]
       (is (= odotetut-aiheet-ja-tarkenteet-kannasta aiheet-ja-tarkenteet-kannassa)))))
