@@ -1353,6 +1353,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
       pvm
       (let [siirtyma-paivia (mod (- viikonpaiva aloitus-viikonpaiva) 7)]
         (ajan-muokkaus pvm true siirtyma-paivia :paiva)))))
+
 (defn- aikavaleista-poimittavat-lomapaivat-vuodelle
   "Laskee aikavälien perusteella pääteltävät lomapäivät annetulle vuodelle (Juhannus ja pyhäinpäivä)"
   [vuosi]
@@ -1373,7 +1374,6 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
       (kiinteat-lomapaivat-vuodelle vuosi)
       (paasiaiseen-liittyvat-lomapaivat-vuodelle vuosi)
       (aikavaleista-poimittavat-lomapaivat-vuodelle vuosi))))
-
 
 #?(:clj
    (defn seuraava-arkipaiva

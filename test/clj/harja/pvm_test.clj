@@ -292,7 +292,6 @@
 (deftest rajapinta-str-aika->sql-timestamp-test-epaonnistuu
   (is (= (pvm/rajapinta-str-aika->sql-timestamp "2023-04-14T09:07:2") nil)))
 
-
 (deftest suomen-lomapaivat-vuodelle
   ;; https://www.timeanddate.com/holidays/finland/2033 (tarkasta täältä)
   (is (= (pvm/lomapaivat-vuodelle 2033)
@@ -345,6 +344,7 @@
           {:nimi "Juhannusaatto", :pvm "2022-06-24"}
           {:nimi "Juhannuspäivä", :pvm "2022-06-25"}
           {:nimi "Pyhäinpäivä", :pvm "2022-11-05"}))))
+
 (deftest seuraava-arkipaiva
   ;; Testataan seuraava arkipäivä viikolla (10.1. = arkipäivä (tiistai))
   ;; --> Seuraava arkipäivä = 11.1. (keskiviikko)
