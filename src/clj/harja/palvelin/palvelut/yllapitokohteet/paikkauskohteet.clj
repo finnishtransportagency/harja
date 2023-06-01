@@ -743,12 +743,12 @@
                                                      0M))
                                                paikkaukset))
         paikkaukset-massatietoineen (map (fn [rivi]
-                                    (update rivi :paikkaus
-                                            (fn [paikkaus]
-                                              (as-> paikkaus p
-                                                  (assoc p ::paikkaus/massamaara
-                                                           (laske-massamaara paikkaus urem-kok-massamaara kaikki-pinta-ala-yhteensa))
-                                                    (assoc p ::paikkaus/massamenekki (laske-massamenekki p))))))
+                                           (update rivi :paikkaus
+                                                   (fn [paikkaus]
+                                                     (as-> paikkaus p
+                                                           (assoc p ::paikkaus/massamaara
+                                                                    (laske-massamaara paikkaus urem-kok-massamaara kaikki-pinta-ala-yhteensa))
+                                                           (assoc p ::paikkaus/massamenekki (laske-massamenekki p))))))
                                          paikkaukset)
         paikkausten-validointivirheet (into {} (map (fn [{rivi :rivi paikkaus :paikkaus}]
                                                       (let [validointivirheet (validoi-urem-excel-paikkaus paikkaus)]
