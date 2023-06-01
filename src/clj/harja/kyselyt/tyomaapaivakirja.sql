@@ -25,7 +25,7 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
        t.luotu, t.luoja, t.muokattu, t.muokkaaja
   FROM generate_series(:alkuaika::DATE, :loppuaika::DATE, '1 day'::interval) d
        LEFT JOIN tyomaapaivakirja t ON t.paivamaara = d::DATE AND t.urakka_id = :urakka-id
-       LEFT JOIN urakka u ON t.urakka_id = u.id
+       JOIN urakka u ON u.id = :urakka-id
        LEFT JOIN tyomaapaivakirja_kommentti tk on t.id = tk.tyomaapaivakirja_id
        LEFT JOIN (SELECT versio, tyomaapaivakirja_id FROM tyomaapaivakirja_kalusto ORDER BY versio desc) t_kalusto on t.id = t_kalusto.tyomaapaivakirja_id
  GROUP BY t.id, u.nimi, d, t_kalusto.versio
@@ -52,7 +52,7 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
        (SELECT array_agg(row(havaintoaika, paikka, kuvaus))
         FROM tyomaapaivakirja_poikkeussaa
         WHERE versio = :versio AND tyomaapaivakirja_id = :tyomaapaivakirja_id) as poikkeussaat,
-       (SELECT array_agg(row(aloitus, lopetus, tyokoneiden_lkm, lisakaluston_lkm, md5(concat(versio, tyomaapaivakirja_id,aloitus,lopetus))))
+       (SELECT array_agg(row(aloitus, lopetus, tyokoneiden_lkm, lisakaluston_lkm))
         FROM tyomaapaivakirja_kalusto
         WHERE versio = :versio AND tyomaapaivakirja_id = :tyomaapaivakirja_id) as kalustot,
        (SELECT array_agg(row(tyyppi::TEXT, kuvaus))
@@ -68,14 +68,15 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
  GROUP BY t.id, u.nimi;
 
 -- name: hae-paivakirjan-tehtavat
-SELECT ttt.tyyppi, ttt.aloitus, ttt.lopetus, array_agg(tehtava.nimi) as tehtavat, md5(concat(ttt.versio, ttt.tyomaapaivakirja_id, ttt.aloitus, ttt.lopetus)) as tunniste
-  FROM tyomaapaivakirja_tieston_toimenpide ttt
-       LEFT JOIN lateral unnest(ttt.tehtavat) t on true
-       LEFT JOIN tehtava ON tehtava.id = t
- WHERE ttt.versio = :versio
-   AND ttt.tyomaapaivakirja_id = :tyomaapaivakirja_id
-   AND ttt.tyyppi = 'yleinen'::tyomaapaivakirja_toimenpide_tyyppi
- GROUP BY ttt.id;
+SELECT ttt.tyyppi, ttt.aloitus, ttt.lopetus, array_agg(tehtava.nimi) as tehtavat
+FROM tyomaapaivakirja_tieston_toimenpide ttt
+         LEFT JOIN lateral unnest(ttt.tehtavat) t on true
+         LEFT JOIN tehtava ON tehtava.id = t
+WHERE ttt.versio = :versio
+  AND ttt.tyomaapaivakirja_id = :tyomaapaivakirja_id
+  AND ttt.tyyppi = 'yleinen'::tyomaapaivakirja_toimenpide_tyyppi
+  AND ttt.aloitus BETWEEN :alkuaika AND :loppuaika
+GROUP BY ttt.id;
 
 -- name: hae-paivakirjan-toimenpiteet
 SELECT ttt.tyyppi, ttt.aloitus, ttt.lopetus, toimenpiteet as toimenpiteet
