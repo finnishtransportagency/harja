@@ -21,10 +21,14 @@
    {:id 35 :nimi "Oulun MHU 2019-2024 (Aseta sopimusid 42)"}
    ])
 
-(def alkutila {:paivakirja {:tierekisteriosoite nil
+(defn- luo-aika-paivamaarasta [paivamaara aika]
+  (str paivamaara aika))
+
+(def alkutila {:paivakirja {
                             :valittu-jarjestelma "Autoyksikkö Kolehmainen"
                             :valittu-urakka nil
                             :valittu-hallintayksikko nil
+                            :paivamaara (pvm/iso8601 (pvm/nyt))
                             :lahetysaika (pvm/jsondate (pvm/nyt))
                             :ulkoinen-id 123
                             :suorittaja-nimi "Urakoitsija Oy"
@@ -32,16 +36,12 @@
                             :tyonjohtaja "Teppo Työnjohtaja"
                             :tyokoneiden-lkm 7
                             :lisakaluston-lkm 3
-                            :saa-asematietojen-lkm 1}
+                            :saa-asematietojen-lkm 1
+                            :onnettomuus1 "Onnettomuus tiellä 22"
+                            :liikenneohjaus1 "Onnettomuuden takia jouduttiin vähän ohjailemaan liikennettä."}
                :lahetys-kaynnissa? false
                :mahdolliset-urakat +mahdolliset-urakat+})
 (def data (atom alkutila))
-
-(def +mahdolliset-materiaalit+
-  [{:id 1 :nimi "Talvisuolaliuos NaCl" :yksikko "t"}
-   {:id 6 :nimi "Kaliumformiaattiliuos" :yksikko "t"}
-   {:id 10 :nimi "Kesäsuola sorateiden kevätkunnostus" :yksikko "t"}
-   {:id 11 :nimi "Kesäsuola sorateiden pölynsidonta" :yksikko "t"}])
 
 (defn- generoi-saaasematiedot [montako lahetysaika-str]
   (let [aika (df/parse (df/formatter "yyyy-MM-dd'T'HH:mm:ss'Z'") lahetysaika-str)
@@ -66,16 +66,48 @@
     (vec (for [i (range 1 (inc montako))]
            (anna-toimenpide i)))))
 
-(defn koostettu-data [app]
-  {:otsikko {:lahettaja {:jarjestelma (get-in app [:paivakirja :valittu-jarjestelma]),
+(defn- generoi-kalusto
+  "Generoidaan viiteen ajankohtaan päivälle kalusto"
+  [app]
+  (let [_ (js/console.log "generoi-kalusto")
+        paivamaara (get-in app [:paivakirja :paivamaara]) ]
+    [{:kalusto {:aloitus (luo-aika-paivamaarasta paivamaara "T21:00:00Z")
+                :lopetus (luo-aika-paivamaarasta paivamaara "T22:59:59Z"),
+                :tyokoneiden-lkm (get-in app [:paivakirja :tyokoneiden-lkm]),
+                :lisakaluston-lkm (get-in app [:paivakirja :lisakaluston-lkm])}}
+     {:kalusto {:aloitus (luo-aika-paivamaarasta paivamaara "T23:00:00Z")
+                :lopetus (luo-aika-paivamaarasta paivamaara "T04:59:59Z"),
+                :tyokoneiden-lkm (get-in app [:paivakirja :tyokoneiden-lkm]),
+                :lisakaluston-lkm (get-in app [:paivakirja :lisakaluston-lkm])}}
+     {:kalusto {:aloitus (luo-aika-paivamaarasta paivamaara "T05:00:00Z")
+                :lopetus (luo-aika-paivamaarasta paivamaara "T10:59:59Z"),
+                :tyokoneiden-lkm (get-in app [:paivakirja :tyokoneiden-lkm]),
+                :lisakaluston-lkm (get-in app [:paivakirja :lisakaluston-lkm])}}
+     {:kalusto {:aloitus (luo-aika-paivamaarasta paivamaara "T11:00:00Z")
+                :lopetus (luo-aika-paivamaarasta paivamaara "T18:59:59Z"),
+                :tyokoneiden-lkm (get-in app [:paivakirja :tyokoneiden-lkm]),
+                :lisakaluston-lkm (get-in app [:paivakirja :lisakaluston-lkm])}}
+     {:kalusto {:aloitus (luo-aika-paivamaarasta paivamaara "T19:00:00Z")
+                :lopetus (luo-aika-paivamaarasta paivamaara "T20:59:59Z"),
+                :tyokoneiden-lkm (get-in app [:paivakirja :tyokoneiden-lkm]),
+                :lisakaluston-lkm (get-in app [:paivakirja :lisakaluston-lkm])}}]))
+
+(defn- generoi-tieston-toimenpiteet [montako paivamaara]
+  (let [anna-toimenpide (fn [indeksi]
+                          (let [tunti (* indeksi 1)]
+                            {:tieston-toimenpide {:aloitus (luo-aika-paivamaarasta paivamaara (str "T0" tunti ":00:00Z")),
+                                                  :lopetus (luo-aika-paivamaarasta paivamaara (str "T0" (inc tunti) ":00:00Z")),
+                                                  :tehtavat [{:tehtava {:id 1368}}]}}))]
+    (vec (for [i (range 1 (inc montako))]
+           (anna-toimenpide i)))))
+
+  (defn koostettu-data [app]
+    {:otsikko {:lahettaja {:jarjestelma (get-in app [:paivakirja :valittu-jarjestelma]),
                          :organisaatio {:nimi "YIT Rakennus Oy",
                                         :ytunnus "1565583-5"}},
              :viestintunniste {:id 8139298},
              :lahetysaika (get-in app [:paivakirja :lahetysaika])}
-   :tyomaapaivakirja {:kaluston-kaytto [{:kalusto {:aloitus (get-in app [:paivakirja :lahetysaika]),
-                                                   :lopetus (get-in app [:paivakirja :lahetysaika]),
-                                                   :tyokoneiden-lkm (get-in app [:paivakirja :tyokoneiden-lkm]),
-                                                   :lisakaluston-lkm (get-in app [:paivakirja :lisakaluston-lkm])}}],
+   :tyomaapaivakirja {:kaluston-kaytto (generoi-kalusto app),
                       :muut-kirjaukset {:kuvaus "Huomatus vielä että kiire tuli hommissa"},
                       :saatiedot (generoi-saaasematiedot
                                    (get-in app [:paivakirja :saa-asematietojen-lkm])
@@ -87,14 +119,12 @@
                                                          :lopetus (get-in app [:paivakirja :lahetysaika]),
                                                          :nimi (get-in app [:paivakirja :paivystaja])}}],
                       :tieston-muut-toimenpiteet (generoi-muut-toimenpiteet 3 (get-in app [:paivakirja :lahetysaika])),
-                      :tieston-toimenpiteet [{:tieston-toimenpide {:aloitus (get-in app [:paivakirja :lahetysaika]),
-                                                                   :lopetus (get-in app [:paivakirja :lahetysaika]),
-                                                                   :tehtavat [{:tehtava {:id 1368}}]}}],
-                      :onnettomuudet [{:onnettomuus {:kuvaus "Onnettomuus tiellä 4"}}],
-                      :liikenteenohjaus-muutokset [{:liikenteenohjaus-muutos {:kuvaus "Paljon muutoksia"}}],
+                      :tieston-toimenpiteet (generoi-tieston-toimenpiteet 3 (get-in app [:paivakirja :paivamaara])),
+                      :onnettomuudet [{:onnettomuus {:kuvaus (get-in app [:paivakirja :onnettomuus1])}}],
+                      :liikenteenohjaus-muutokset [{:liikenteenohjaus-muutos {:kuvaus (get-in app [:paivakirja :liikenneohjaus1])}}],
                       :tunniste {:id "123456",
                                  :versio 1,
-                                 :paivamaara (pvm/iso8601-timestamp-str->iso8601-str (get-in app [:paivakirja :lahetysaika]))},
+                                 :paivamaara (get-in app [:paivakirja :paivamaara]) #_ (pvm/iso8601-timestamp-str->iso8601-str (get-in app [:paivakirja :lahetysaika]))},
                       :poikkeukselliset-saahavainnot [{:poikkeuksellinen-saahavainto {:havaintoaika (get-in app [:paivakirja :lahetysaika]),
                                                                                       :paikka "Kauhava",
                                                                                       :kuvaus "Jäätävä sade"}}],
@@ -119,10 +149,6 @@
 (defrecord LisaaOikeudetUrakkaan [urakka-id])
 (defrecord LisaaOikeudetUrakkaanOnnistui [vastaus])
 (defrecord LisaaOikeudetUrakkaanEpaonnistui [vastaus])
-
-(defrecord HaeSeuraavaVapaaUlkoinenId [])
-(defrecord HaeSeuraavaVapaaUlkoinenIdOnnistui [vastaus])
-(defrecord HaeSeuraavaVapaaUlkoinenIdEpaonnistui [vastaus])
 
 (defn hae-hallintayksikon-urakat [hal]
   (let [_ (tuck-apurit/post! :hallintayksikon-urakat
@@ -167,11 +193,13 @@
   (process-event [{paivakirja :paivakirja} app]
     (let [tulos! (tuck/send-async! ->LahetysOnnistui)
           virhe! (tuck/send-async! ->LahetysEpaonnistui)
-          urakkaid (:id (get-in app [:paivakirja :valittu-urakka]))]
+          urakkaid (:id (get-in app [:paivakirja :valittu-urakka]))
+          data (koostettu-data app)]
+
       (if urakkaid
         (go
           (let [vastaus (<! (http/post (str "api/urakat/" urakkaid "/tyomaapaivakirja")
-                              {:body (.stringify js/JSON (clj->js (koostettu-data app)))
+                              {:body (.stringify js/JSON (clj->js data))
                                :content-type :json
                                :accect :json}))]
             (if (k/virhe? vastaus)
@@ -238,25 +266,4 @@
   LisaaOikeudetUrakkaanEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.log "LisaaOikeudetUrakkaanEpaonnistui :: vastaus" (pr-str vastaus))
-    app)
-
-  HaeSeuraavaVapaaUlkoinenId
-  (process-event [_ app]
-    (let [_ (tuck-apurit/post! :debug-hae-seuraava-vapaa-ulkoinen-id
-              {}
-              {:onnistui ->HaeSeuraavaVapaaUlkoinenIdOnnistui
-               :epaonnistui ->HaeSeuraavaVapaaUlkoinenIdEpaonnistui
-               :paasta-virhe-lapi? true})]
-      app))
-
-  HaeSeuraavaVapaaUlkoinenIdOnnistui
-  (process-event [{vastaus :vastaus} app]
-    (js/console.log "LisaaOikeudetUrakkaanOnnistui :: vastaus" (pr-str vastaus))
-    (viesti/nayta-toast! "HaeSeuraavaVapaaUlkoinenIdOnnistui" :onnistui)
-    (assoc-in app [:paivakirja :ulkoinen-id] vastaus))
-
-  HaeSeuraavaVapaaUlkoinenIdEpaonnistui
-  (process-event [{vastaus :vastaus} app]
-    (js/console.log "HaeSeuraavaVapaaUlkoinenIdEpaonnistui :: vastaus" (pr-str vastaus))
-    (viesti/nayta-toast! "HaeSeuraavaVapaaUlkoinenIdEpaonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
     app))

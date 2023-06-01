@@ -60,10 +60,10 @@
         :tyyppi :string
         :pituus-max 40
         :pakollinen? true}
-       {:nimi :ulkoinen-id
-        :otsikko "Ulkoinen id"
-        :tyyppi :numero
-        :pituus-max 40
+       {:nimi :paivamaara
+        :otsikko "Työpäivä"
+        :tyyppi :string
+        :pituus-max 10
         :pakollinen? true}
 
        {:nimi :tyokoneiden-lkm
@@ -84,6 +84,14 @@
         :pakollinen? true}
        {:nimi :tyonjohtaja
         :otsikko "Työnjohtaja"
+        :tyyppi :string
+        :pakollinen? true}
+       {:nimi :onnettomuus1
+        :otsikko "Onnettomuus1"
+        :tyyppi :string
+        :pakollinen? true}
+       {:nimi :liikenneohjaus1
+        :otsikko "Liikenneohjaus1"
         :tyyppi :string
         :pakollinen? true}]
       paivakirja]]))
