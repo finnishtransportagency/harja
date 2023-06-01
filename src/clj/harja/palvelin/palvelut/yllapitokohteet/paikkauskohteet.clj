@@ -632,21 +632,21 @@
 (defn- laske-massamaara
   "Laskee massamäärän perustuen kohteen kokonaismassamäärään sekä rivin suhteellisen pinta-alan osuuteen kokonaispinta-alasta"
   [paikkaus urem-kok-massamaara kaikki-pinta-ala-yhteensa]
-  (when (number? urem-kok-massamaara)
+  (when (and (number? (::paikkaus/pinta-ala paikkaus))
+             (number? kaikki-pinta-ala-yhteensa)
+             (number? urem-kok-massamaara))
     (bigdec
       (with-precision 4
+        ;; Rivikohtainen massamäärä saadaan laskemalla paikkausrivin pinta-alan
+        ;; suhteellinen osuus ja kerrotaan se kohteen kokonaismassamäärällä
         (*
-          ;; Lasketaan paikkausrivin pinta-alan suhteellinen osuus ja kerrotaan massamäärällä
-          (when (and (::paikkaus/pinta-ala paikkaus) kaikki-pinta-ala-yhteensa)
-            (with-precision 6 (/ (::paikkaus/pinta-ala paikkaus)
-                                 kaikki-pinta-ala-yhteensa)))
+          (with-precision 6 (/ (::paikkaus/pinta-ala paikkaus)
+                               kaikki-pinta-ala-yhteensa))
           urem-kok-massamaara)))))
 
 (defn- laske-massamenekki [{pinta-ala ::paikkaus/pinta-ala
                             massamaara ::paikkaus/massamaara :as paikkaus}]
-  (when (and pinta-ala massamaara
-             (number? pinta-ala)
-             (number? massamaara))
+  (when (and (number? pinta-ala) (number? massamaara))
     (paikkaus/massamaara-ja-pinta-ala->massamenekki massamaara pinta-ala)))
 
 (defn- tee-pinta-ala [{pituus :pituus
@@ -741,7 +741,8 @@
                       paikkaukset)
         kaikki-pinta-ala-yhteensa (reduce +
                                           (mapv (fn [rivi]
-                                                  (get-in rivi [:paikkaus ::paikkaus/pinta-ala]))
+                                                  (or (get-in rivi [:paikkaus ::paikkaus/pinta-ala])
+                                                      0M))
                                                 paikkaukset))
         paikkaukset-massatietoineen (map (fn [rivi]
                                     (update rivi :paikkaus
