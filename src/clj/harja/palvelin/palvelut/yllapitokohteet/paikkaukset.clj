@@ -39,7 +39,7 @@
 
                 tie (or (:harja.domain.tierekisteri/tie kohde)
                         (:harja.domain.tierekisteri/tie (first (::paikkaus/paikkaukset kohde))))
-                ;; VHAR-7783 Korjataan aikkauksen pituuden laskenta
+                ;; VHAR-7783 Korjataan paikkauksen pituuden laskenta
                 pienin-tien-osa (if (not-empty (::paikkaus/paikkaukset kohde))
                                   (apply min (map #(::tierekisteri/aosa %) (::paikkaus/paikkaukset kohde)))
                                   (:aosa kohde))

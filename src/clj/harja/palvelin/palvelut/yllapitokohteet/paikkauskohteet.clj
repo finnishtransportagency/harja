@@ -636,11 +636,11 @@
              (number? kaikki-pinta-ala-yhteensa)
              (number? urem-kok-massamaara))
     (bigdec
-      (with-precision 4
+      (with-precision 6
         ;; Rivikohtainen massamäärä saadaan laskemalla paikkausrivin pinta-alan
         ;; suhteellinen osuus ja kerrotaan se kohteen kokonaismassamäärällä
         (*
-          (with-precision 6 (/ (::paikkaus/pinta-ala paikkaus)
+          (with-precision 8 (/ (::paikkaus/pinta-ala paikkaus)
                                kaikki-pinta-ala-yhteensa))
           urem-kok-massamaara)))))
 
