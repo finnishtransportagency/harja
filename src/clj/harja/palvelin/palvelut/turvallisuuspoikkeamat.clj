@@ -229,17 +229,19 @@
 
 (defn turvallisuuspoikkeaman-data-validi?
   [{:keys [otsikko tapahtunut tyyppi vahinkoluokittelu vakavuusaste
-           tr tila kuvaus juurisyy1]}]
-  (and (not (empty? otsikko))
-       (instance? Date tapahtunut)
-       (not (empty? tyyppi))
-       (not (empty? vahinkoluokittelu))
-       (not (nil? vakavuusaste))
-       (tr/validi-osoite? tr)
-       (not (nil? tila))
-       (not (empty? kuvaus))
-       (or (not (contains? tyyppi :tyotapaturma))
-           (not (nil? juurisyy1)))))
+           tr tila kuvaus juurisyy1 sijainti]}]
+  (and 
+    (some? sijainti)
+    (not (empty? otsikko))
+    (instance? Date tapahtunut)
+    (not (empty? tyyppi))
+    (not (empty? vahinkoluokittelu))
+    (not (nil? vakavuusaste))
+    (tr/validi-osoite? tr)
+    (not (nil? tila))
+    (not (empty? kuvaus))
+    (or (not (contains? tyyppi :tyotapaturma))
+      (not (nil? juurisyy1)))))
 
 (defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
   (let [{:keys [id urakka]} tp]
