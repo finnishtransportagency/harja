@@ -711,9 +711,6 @@
         {paikkaukset :paikkaukset urem-kok-massamaara :urem-kok-massamaara
          excel-luku-virhe :virhe} (p-excel/erottele-uremit workbook)
         paikkauskohde (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/id paikkauskohde-id}))
-        ;; päivitä kohteen kokonaismassamäärä
-        tulos (paikkaus-q/paivita-urem-kohteen-kokonaismassamaara! db {:paikkauskohde_id paikkauskohde-id
-                                                                       :urem_kok_massamaara urem-kok-massamaara})
         paikkauskohteen-tila-virhe
         (when (not= "tilattu" (::paikkaus/paikkauskohteen-tila paikkauskohde))
           (log/error (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " paikkauskohde-id))

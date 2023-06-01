@@ -539,13 +539,9 @@
                                 paikkaukset-jalkeen))
         toka-rivi (first (filter #(= 100 (get-in % [:tierekisteriosoite :loppuetaisyys]))
 
-                                paikkaukset-jalkeen))
-        urem-kohteen-kokonaismassamaara (ffirst (q (str "SELECT urem_kok_massamaara FROM paikkauskohde WHERE id = " (:id paikkauskohde) ";")))]
+                                paikkaukset-jalkeen))]
 
     (is (= (:status lue-excelista) 200))
-
-    ;; varmista että kokonaismassamäärä saadaan talteen
-    (is (= urem-kohteen-kokonaismassamaara 1.5M) "Kohteen kokonaismassamäärä")
     ;; varmista että saadaan laskettua pinta-alat joka riville. Suhde 1:2
     (is (= (:pinta-ala eka-rivi) 50.0M) "UREM pinta-ala")
     (is (= (:pinta-ala toka-rivi) 100.0M) "UREM pinta-ala")

@@ -469,9 +469,3 @@ SELECT p.id, p.nimi, p.valmistumispvm, p.alkupvm
         (:id::INT is not null AND p.id != :id))
    AND p."ulkoinen-id" = :ulkoinen-id
    AND p."urakka-id" = :urakka-id;
-
-
---name: paivita-urem-kohteen-kokonaismassamaara!
-UPDATE paikkauskohde
-   SET urem_kok_massamaara = :urem_kok_massamaara
- WHERE id = :paikkauskohde_id;
