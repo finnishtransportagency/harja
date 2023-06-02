@@ -6,6 +6,9 @@ FROM clojure:temurin-11-lein-2.10.0-alpine as builder
 RUN mkdir -p /build
 WORKDIR /build
 
+# Asenna git gitlogin generointia varten
+# TODO: Tutkitaan tarvitaanko gitlogin generointia enää Harjan about-sivua varten
+RUN apk add --no-cache git
 
 # Cacheta riippuvuudet
 COPY project.clj /build/
@@ -17,7 +20,23 @@ RUN lein deps
 COPY . /build/
 
 # Tee uberjar tuotantoa varten
-RUN lein tuotanto
+# TODO: Gitlogia käytetään vain about-sivulla ja sen compile on hidasta. Tarvitaanko tätä ollenkaan enää?
+#RUN lein do gitlog, compile
+# Käännä backend
+RUN lein do compile
+
+# Käännä frontend (less, cljs)
+# TODO: Tarvitsee yhteyden PostgreSQL tietokantaan Specql interospektiota varten
+#       Tietokannassa on oltava viimeisimmät migraatiot ajettuna
+#RUN lein do less once, with-profile prod-cljs compile-prod
+
+# Käännä laadunseuranta
+# TODO: Tarvitsee yhteyden PostgreSQL tietokantaan Specql interospektiota varten
+#       Tietokannassa on oltava viimeisimmät migraatiot ajettuna
+#RUN lein do with-profile laadunseuranta-prod compile-laadunseuranta-prod
+
+# Luo uberjar ja dokumentaatio
+RUN lein do uberjar, codox
 
 
 # -- Run-time vaihe --
@@ -28,8 +47,8 @@ FROM eclipse-temurin:11-alpine
 LABEL description="Harja app"
 LABEL version="1.0"
 
-# Asenna apurit (curl, telnet, jq, nano, unzip ja vim)
-RUN apk add --no-cache curl telnet jq nano unzip vim
+# Asenna apurit (curl, jq, nano, unzip, vim ja busybox-extras)
+RUN apk add --no-cache curl jq nano unzip vim busybox-extras
 
 # Asenna AWS CLI v2
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
@@ -45,7 +64,7 @@ RUN mkdir -p /app && chown -R harja:harja /app
 USER harja
 
 # Kopioi uberjar build vaiheesta
-COPY --from=builder --chown=harja:harja /build/target/uberjar/harja-0.0.1-SNAPSHOT-standalone.jar /app/harja.jar
+COPY --from=builder --chown=harja:harja /build/target/harja-0.0.1-SNAPSHOT-standalone.jar /app/harja.jar
 
 # Aseta ENV muuttujat
 # ENV JAVA_JAVA_OPTIONS=
