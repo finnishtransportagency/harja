@@ -32,3 +32,13 @@ UPDATE tyomaapaivakirja_tapahtuma SET tyyppi = _tyyppi :: TEXT :: tyomaapaivakir
 
 ALTER TABLE tyomaapaivakirja_tapahtuma DROP COLUMN _tyyppi;
 DROP TYPE _tt;
+
+-- Lisätään vielä versio työmaapaiväkirja tauluun
+ALTER TABLE tyomaapaivakirja ADD COLUMN versio integer not null default 1;
+
+-- Päivitä työmaapäiväkirja taulun versiot kalusto taulun mukaan
+UPDATE tyomaapaivakirja
+   SET versio = (SELECT kalusto.versio FROM tyomaapaivakirja_kalusto kalusto
+                  WHERE kalusto.tyomaapaivakirja_id = id
+                  ORDER BY kalusto.versio DESC
+                  LIMIT 1);
