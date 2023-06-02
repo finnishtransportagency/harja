@@ -65,8 +65,7 @@
 
 (defn suorita [db _ {:keys [valittu-rivi] :as parametrit}]
   (if valittu-rivi
-    (let [_ (println "raportti :: suorita :: valittu-rivi: " (pr-str valittu-rivi))
-          tyomaapaivakirja (first (tyomaapaivakirja-kyselyt/hae-paivakirja db {:tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
+    (let [tyomaapaivakirja (first (tyomaapaivakirja-kyselyt/hae-paivakirja db {:tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
                                                                                :versio (:versio valittu-rivi)}))
           ;; Tehtävien tietokantamäppäys on liian monimutkainen, niin haetaan ne erikseen
           tehtavat (hae-tehtavat-aikajaksolle db (:urakka_id valittu-rivi) (:tyomaapaivakirja_id valittu-rivi)
@@ -125,7 +124,9 @@
                                (fn [kalustot]
                                  (map-indexed
                                    (fn [indeksi kalusto]
-                                     (let [kaluston-tehtavat (nth tehtavat indeksi)]
+                                     (let [;; Pieni indeksitarkistus, ettei käy käpy
+                                           kaluston-tehtavat (when (< indeksi (count tehtavat))
+                                                               (nth tehtavat indeksi))]
                                        (assoc kalusto :tehtavat (flatten (map :tehtavat kaluston-tehtavat)))))
                                    kalustot)))
                              (update
