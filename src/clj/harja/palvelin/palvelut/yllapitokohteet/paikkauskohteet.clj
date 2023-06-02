@@ -784,8 +784,8 @@
 
 (defn vastaanota-urem-excel [db req]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
-                                  (:kayttaja req)
-                                  (Integer/parseInt (get (:params req) "urakka-id")))
+    (:kayttaja req)
+    (Integer/parseInt (get (:params req) "urakka-id")))
   (let [urakka-id (Integer/parseInt (get (:params req) "urakka-id"))
         paikkauskohde-id (Integer/parseInt (get (:params req) "paikkauskohde-id"))
         kayttaja (:kayttaja req)]
