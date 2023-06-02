@@ -1,8 +1,9 @@
 (ns harja.palvelin.raportointi.raportit.tyomaapaivakirja.keliolosuhteet
   "Työmaapäiväkirja -näkymän poikkeukselliset keliolosuhteet"
   (:require
-   [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
-   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
+    [harja.pvm :as pvm]
+    [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
+    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
 
 (defn- keliolosuhteet-rivi [klo paikka havainto]
   (rivi
@@ -18,7 +19,7 @@
                                 {:otsikko "Havainto" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 1 :tyyppi :varillinen-teksti})
                 :rivit (mapv
                          #(keliolosuhteet-rivi
-                            (harja.pvm/aika (:havaintoaika %))
+                            (pvm/aika (:havaintoaika %))
                             (:paikka %)
                             (:kuvaus %))
                          poikkeussaat)}]

@@ -2,6 +2,7 @@
   "Työmaapäiväkirja -näkymän muut toimenpiteet taulukko"
   (:require
     [clojure.string :as str]
+    [harja.pvm :as pvm]
     [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
     [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
 
@@ -11,9 +12,8 @@
     [:varillinen-teksti {:arvo toimenpide}]))
 
 (defn muut-toimenpiteet-taulukko [toimenpiteet]
-  (let [rivit (mapv #(muut-toimenpiteet-rivi
-                       (str (harja.pvm/aika (:aloitus %)) " - " (harja.pvm/aika (:lopetus %)))
-                       (str/join (:toimenpiteet %)))
+  (let [rivit (mapv
+                #(muut-toimenpiteet-rivi (pvm/kellonaikavali (:aloitus %) (:lopetus %)) (str/join (:toimenpiteet %)))
                 toimenpiteet)
         tiedot {:rivin-tiedot (rivi
                                 {:otsikko "Aikaväli" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "vaalen-tumma-tausta" :leveys 0.116 :tyyppi :varillinen-teksti}

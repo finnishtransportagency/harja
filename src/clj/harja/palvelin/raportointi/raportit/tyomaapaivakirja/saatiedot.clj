@@ -1,6 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.tyomaapaivakirja.saatiedot
   "Työmaapäiväkirja -näkymän säätietojen gridit"
   (:require
+    [harja.pvm :as pvm]
     [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
     [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
 
@@ -36,7 +37,7 @@
         rivit-vasen (into []
                       (mapv
                         #(saatiedot-rivi
-                           (harja.pvm/aika (:havaintoaika %))
+                           (pvm/aika (:havaintoaika %))
                            (str (:ilman_lampotila %) " C°")
                            (str (:tien_lampotila %) " C°")
                            (sateen-olomuoto (:sateen_olomuoto %))
@@ -46,7 +47,7 @@
         rivit-oikea (into []
                       (mapv
                         #(saatiedot-rivi
-                           (harja.pvm/aika (:havaintoaika %))
+                           (pvm/aika (:havaintoaika %))
                            (str (:ilman_lampotila %) " C°")
                            (str (:tien_lampotila %) " C°")
                            (sateen-olomuoto (:sateen_olomuoto %))

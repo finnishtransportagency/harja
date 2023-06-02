@@ -502,6 +502,9 @@
   [pvm]
   (formatoi kokovuosi-ja-kuukausi-fmt pvm))
 
+(defn kellonaikavali [alkuhetki loppuhetki]
+  (str (aika alkuhetki) " - " (aika loppuhetki)))
+
 (defn ->pvm-aika
   "Jäsentää tekstistä d.M.yyyy H:mm tai d.M.yyyy H muodossa olevan päivämäärän ja ajan.
   Jos teksti ei ole oikeaa muotoa, palauta nil."

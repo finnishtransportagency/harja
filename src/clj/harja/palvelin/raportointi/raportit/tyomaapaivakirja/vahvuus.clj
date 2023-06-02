@@ -1,6 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.tyomaapaivakirja.vahvuus
   "Työmaapäiväkirja -näkymän urakan henkilöstö gridit"
   (:require
+    [harja.pvm :as pvm]
     [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
     [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
 
@@ -26,11 +27,11 @@
                             :tyyppi :varillinen-teksti})
         ;; Vasemman taulukon rivit (Päivystäjät)
         rivit-v (into []
-                  (mapv #(vahvuus-rivi (str (harja.pvm/aika (:aloitus %)) " - " (harja.pvm/aika (:lopetus %))) (:nimi %)) paivystajat))
+                  (mapv #(vahvuus-rivi (pvm/kellonaikavali (:aloitus %) (:lopetus %)) (:nimi %)) paivystajat))
 
         ;; Työnjohtajat
         rivit-o (into []
-                  (mapv #(vahvuus-rivi (str (harja.pvm/aika (:aloitus %)) " - " (harja.pvm/aika (:lopetus %))) (:nimi %)) tyonjohtajat))
+                  (mapv #(vahvuus-rivi (pvm/kellonaikavali (:aloitus %) (:lopetus %)) (:nimi %)) tyonjohtajat))
 
         taulukko-1 {:otsikko-vasen "Päivystäjät" :optiot-vasen taulukon-optiot :otsikot-vasen taulukon-otsikot :rivit-vasen rivit-v}
         taulukko-2 {:otsikko-oikea "Työnjohtajat" :optiot-oikea taulukon-optiot :otsikot-oikea taulukon-otsikot :rivit-oikea rivit-o}]
