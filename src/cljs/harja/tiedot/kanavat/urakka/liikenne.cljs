@@ -232,9 +232,9 @@
                       :sulutukset-alas sulutukset-alas
                       :sillan-avaukset sillan-avaukset
                       :tyhjennykset tyhjennykset
-                      :yhteensa (+ sulutukset-ylos 
-                                   sulutukset-alas 
-                                   sillan-avaukset 
+                      :yhteensa (+ sulutukset-ylos
+                                   sulutukset-alas
+                                   sillan-avaukset
                                    tyhjennykset)}
 
         palvelumuoto {:paikallispalvelu paikallispalvelut
@@ -248,23 +248,40 @@
                                  muut)}]
 
     (swap! lt/yhteenveto-atom assoc :toimenpiteet toimenpiteet)
-    (swap! lt/yhteenveto-atom assoc :palvelumuoto palvelumuoto))
+    (swap! lt/yhteenveto-atom assoc :palvelumuoto palvelumuoto)
 
-  (-> app
-      (assoc :liikennetapahtumien-haku-kaynnissa? false)
-      (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false)
-      (assoc :haetut-tapahtumat tulos)
-      (assoc :tapahtumarivit (mapcat #(tapahtumarivit app %) tulos))
-      (assoc :raporttiparametrit
-             (raporttitiedot/usean-urakan-raportin-parametrit
-               (keep #(when (:valittu? %)
-                        (:nimi %))
-                     (:kayttajan-urakat (:valinnat app)))
-               :kanavien-liikennetapahtumat
-               {:alkupvm (first (:aikavali (:valinnat app)))
-                :loppupvm (second (:aikavali (:valinnat app)))
-                :urakkatyyppi :vesivayla-kanavien-hoito
-                :yhteenveto @lt/yhteenveto-atom}))))
+    (let [valitut-urakat (keep #(when
+                                  (:valittu? %)
+                                  (:nimi %))
+                           (:kayttajan-urakat (:valinnat app)))
+
+          urakkaa-valittuna (count valitut-urakat)
+          raportin-avain :kanavien-liikennetapahtumat
+          raporttiparametrit {:valitut-urakat valitut-urakat
+                              :alkupvm (first (:aikavali (:valinnat app)))
+                              :loppupvm (second (:aikavali (:valinnat app)))
+                              :urakkatyyppi :vesivayla-kanavien-hoito
+                              :yhteenveto @lt/yhteenveto-atom}
+
+          raporttitiedot (if (= 1 urakkaa-valittuna)
+                           ;; 1 urakka valittuna, suoritetaan raportti yhden urakan kontekstissa
+                           ;; Tämä korjaa excel tallennuksen oikeudet urakoitsijoiden laadunvalvojille 
+                           (raporttitiedot/urakkaraportin-parametrit
+                             (:id @nav/valittu-urakka)
+                             raportin-avain
+                             raporttiparametrit)
+
+                           ;; Jos useita urakoita valittu, suoritetaan raportti monen urakan kontekstissa
+                           (raporttitiedot/usean-urakan-raportin-parametrit
+                             valitut-urakat
+                             raportin-avain
+                             raporttiparametrit))]
+      (-> app
+        (assoc :liikennetapahtumien-haku-kaynnissa? false)
+        (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false)
+        (assoc :haetut-tapahtumat tulos)
+        (assoc :tapahtumarivit (mapcat #(tapahtumarivit app %) tulos))
+        (assoc :raporttiparametrit raporttitiedot)))))
 
 (defn tallennusparametrit [t]
   (-> t

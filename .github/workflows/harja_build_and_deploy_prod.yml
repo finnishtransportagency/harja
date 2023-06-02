@@ -1,4 +1,4 @@
-name: 'Harja: Build and deploy to ECR'
+name: '!! [PROD] !! Harja: Build and deploy to ECR'
 
 concurrency:
   group: ${{ github.ref_name }}-${{ github.workflow }}
@@ -22,7 +22,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@master
         with:
           aws-region: 'eu-west-1'
-          role-to-assume: 'arn:aws:iam::823195919183:role/cicd-github-harja-infra-admin'
+          role-to-assume: 'arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_PROD }}:role/cicd-github-harja-infra-admin'
           role-duration-seconds: 3600
           role-skip-session-tagging: true
 
@@ -36,5 +36,5 @@ jobs:
           ECR_REPOSITORY: harja-ecr-repository
           IMAGE_TAG: latest
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --file .github/workflows/mockup-server/Dockerfile .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --file aws/fargate/Dockerfile .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
