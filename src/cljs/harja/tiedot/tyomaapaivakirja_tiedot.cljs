@@ -108,7 +108,7 @@
 
   ValitseRivi
   (process-event [{rivi :rivi} app]
-    (if (not= "puuttuu" (:tila rivi))
+    (if (or (= "ok" (:tila rivi)) (= "myohassa" (:tila rivi)))
       (do
         (swap! tila assoc :valittu-rivi rivi)
         (-> app

@@ -40,7 +40,7 @@
 (def valittu-hakumuoto (atom :kaikki))
 
 (defn tyomaapaivakirja-listaus [e! {:keys [nayta-rivit valinnat] :as app}]
-  (let [#_ (js/console.log "tyomaapaivakirja-listaus ::  app: " (pr-str app))
+  (let [#_(js/console.log "tyomaapaivakirja-listaus ::  app: " (pr-str app))
         ;; TODO
         ;; Lisää tähän oikea toiminnallisuus mikäli toimitus puuttuu (tekee "puuttuu-tausta" tekee oranssin solun taustan)
         ;; Tällä hetkellä :tila tulee tyomaapaivakirja.sql joka on randomisti generoitu
@@ -66,11 +66,14 @@
       [:h1.header-yhteiset "Työmaapäiväkirja"]
 
       [:div.row.filtterit
-       [valinnat/aikavali tiedot/aikavali-atom {:otsikko "Aikaväli"
-                                                :for-teksti "filtteri-aikavali"
-                                                :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta "}
-                                                :ikoni-sisaan? true
-                                                :vayla-tyyli? true}]
+       [valinnat/aikavali
+        tiedot/aikavali-atom
+        {:otsikko "Aikaväli"
+         :for-teksti "filtteri-aikavali"
+         :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta "}
+         :ikoni-sisaan? true
+         :vayla-tyyli? true
+         :aikavalin-rajoitus [6 :kuukausi]}]
 
        [:div.puolita-leveys
         [kentat/tee-kentta {:tyyppi :radio-group
@@ -83,6 +86,7 @@
 
       [grid/grid {;:tyhja "Ei Tietoja."
                   :tunniste :paivamaara
+                  :sivuta grid/vakiosivutus
                   :voi-kumota? false
                   :piilota-toiminnot? true
                   :jarjesta :paivamaara
@@ -155,34 +159,34 @@
 
      ;; Sticky bar (Edellinen - Seuraava) Tallenna PDF
      ;;TODO: Toteutetaan myöhemmin
-     #_ [:div.ala-valinnat-fixed
+     #_[:div.ala-valinnat-fixed
 
-      [:div.napit.klikattava
-       [:span.nuoli
-        [ikonit/harja-icon-navigation-previous-page]]
-       [:span "Edellinen"]]
+        [:div.napit.klikattava
+         [:span.nuoli
+          [ikonit/harja-icon-navigation-previous-page]]
+         [:span "Edellinen"]]
 
-      [:div.napit.klikattava
-       [:span "Seuraava"]
-       [:span.nuoli
-        [ikonit/harja-icon-navigation-next-page]]]
+        [:div.napit.klikattava
+         [:span "Seuraava"]
+         [:span.nuoli
+          [ikonit/harja-icon-navigation-next-page]]]
 
-      [:div.napit.ei-reunoja.klikattava
-       [:span.nuoli
-        [ikonit/livicon-download]]
-       [:span "Tallenna PDF"]]
+        [:div.napit.ei-reunoja.klikattava
+         [:span.nuoli
+          [ikonit/livicon-download]]
+         [:span "Tallenna PDF"]]
 
-      [:div.napit.ei-reunoja.klikattava
-       [:span.nuoli
-        [ikonit/harja-icon-action-send-email]]
-       [:span "Lähetä sähköpostilla"]]
+        [:div.napit.ei-reunoja.klikattava
+         [:span.nuoli
+          [ikonit/harja-icon-action-send-email]]
+         [:span "Lähetä sähköpostilla"]]
 
-      [:div.napit.ei-reunoja.klikattava {:on-click #(do
-                                                      (e! (tiedot/->PoistaRiviValinta))
-                                                      ;; Rullataan käyttäjä viimeksi klikatulle riville
-                                                      (.setTimeout js/window (fn [] (siirrin/kohde-elementti-luokka "viimeksi-valittu-tausta")) 150))}
-       [:span.nuoli [ikonit/harja-icon-navigation-close]]
-       [:span "Sulje"]]]]
+        [:div.napit.ei-reunoja.klikattava {:on-click #(do
+                                                        (e! (tiedot/->PoistaRiviValinta))
+                                                        ;; Rullataan käyttäjä viimeksi klikatulle riville
+                                                        (.setTimeout js/window (fn [] (siirrin/kohde-elementti-luokka "viimeksi-valittu-tausta")) 150))}
+         [:span.nuoli [ikonit/harja-icon-navigation-close]]
+         [:span "Sulje"]]]]
 
     [yleiset/ajax-loader "Ladataan tietoja..."]))
 

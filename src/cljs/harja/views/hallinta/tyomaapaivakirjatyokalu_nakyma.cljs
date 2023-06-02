@@ -119,6 +119,4 @@
     "Puutteelliset käyttöoikeudet"))
 
 (defn simuloi-tyomaapaivakirja []
-  (do
-    (println "jees")
-    [tuck tiedot/data simuloi-tyomaapaivakirja*]))
+  [tuck tiedot/data simuloi-tyomaapaivakirja*])

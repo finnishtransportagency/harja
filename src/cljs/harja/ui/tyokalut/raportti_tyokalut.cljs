@@ -129,7 +129,6 @@
      [:div.puolita-leveys])])
 
 (defmethod raportointi/muodosta-html :tyomaapaivakirjan-kommentit [[_]]
-  ;; Työmaakokouksen laskutusyhteenvedon footer
   [:div.row.filtterit.kommentit-valistys {:id "Kommentit"}
    [:h2 "Kommentit"]
 

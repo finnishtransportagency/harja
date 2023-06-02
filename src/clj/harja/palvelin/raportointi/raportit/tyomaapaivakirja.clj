@@ -24,7 +24,7 @@
     (into ()
       (conj
         ;; Lisätään tyhjä rivi jos on tarpeen
-        (if (not (empty? tapahtumat))
+        (if (some? tapahtumat)
           tapahtumarivit
           (conj
             [:jakaja true]
