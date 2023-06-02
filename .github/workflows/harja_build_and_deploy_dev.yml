@@ -1,0 +1,40 @@
+name: '[DEV] Harja: Build and deploy to ECR'
+
+concurrency:
+  group: ${{ github.ref_name }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Assume role with OIDC
+        uses: aws-actions/configure-aws-credentials@master
+        with:
+          aws-region: 'eu-west-1'
+          role-to-assume: 'arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_DEV }}:role/cicd-github-harja-infra-admin'
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+
+      - name: Authenticate with AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag and push image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: harja-ecr-repository
+          IMAGE_TAG: latest
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --file aws/fargate/Dockerfile .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
