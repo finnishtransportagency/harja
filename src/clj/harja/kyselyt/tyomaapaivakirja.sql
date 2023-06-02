@@ -41,29 +41,29 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi", t.vers
            END as tila,
        (SELECT array_agg(row(aloitus, lopetus, nimi))
         FROM tyomaapaivakirja_paivystaja
-        WHERE versio = :versio AND tyomaapaivakirja_id = :tyomaapaivakirja_id) as paivystajat,
+        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as paivystajat,
        (SELECT array_agg(row(aloitus, lopetus, nimi))
         FROM tyomaapaivakirja_tyonjohtaja
-        WHERE versio = :versio AND tyomaapaivakirja_id = :tyomaapaivakirja_id) as tyonjohtajat,
+        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as tyonjohtajat,
        (SELECT array_agg(row(havaintoaika, aseman_tunniste, aseman_tietojen_paivityshetki, ilman_lampotila, tien_lampotila, keskituuli, sateen_olomuoto, sadesumma))
         FROM tyomaapaivakirja_saaasema
-        WHERE versio = :versio AND tyomaapaivakirja_id = :tyomaapaivakirja_id)  as "saa-asemat",
+        WHERE versio = :versio AND tyomaapaivakirja_id = t.id)  as "saa-asemat",
        (SELECT array_agg(row(havaintoaika, paikka, kuvaus))
         FROM tyomaapaivakirja_poikkeussaa
-        WHERE versio = :versio AND tyomaapaivakirja_id = :tyomaapaivakirja_id) as poikkeussaat,
+        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as poikkeussaat,
        (SELECT array_agg(row(aloitus, lopetus, tyokoneiden_lkm, lisakaluston_lkm))
         FROM tyomaapaivakirja_kalusto
-        WHERE versio = :versio AND tyomaapaivakirja_id = :tyomaapaivakirja_id) as kalustot,
+        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as kalustot,
        (SELECT array_agg(row(tyyppi::TEXT, kuvaus))
         FROM tyomaapaivakirja_tapahtuma
-        WHERE versio = :versio AND tyomaapaivakirja_id = :tyomaapaivakirja_id) as tapahtumat,
+        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as tapahtumat,
        (SELECT array_agg(row(kuvaus, aika))
         FROM tyomaapaivakirja_toimeksianto
-        WHERE versio = :versio AND tyomaapaivakirja_id = :tyomaapaivakirja_id) as toimeksiannot,
+        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as toimeksiannot,
        t.luotu, t.luoja, t.muokattu, t.muokkaaja
   FROM tyomaapaivakirja t
        JOIN urakka u ON t.urakka_id = u.id
- WHERE t.id = :tyomaapaivakirja_id
+ WHERE t.id = t.id
    AND t.versio = :versio
  GROUP BY t.id, u.nimi;
 
