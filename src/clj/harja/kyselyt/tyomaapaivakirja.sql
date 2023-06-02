@@ -16,7 +16,7 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
        d::DATE as paivamaara, -- Otetaan generoinnin päivämäärä
        -- Ihan hihasta vedetty tilan määritelmä.
        CASE
-           WHEN t.luotu IS NULL THEN 'puuttuu'
+           WHEN t.luotu IS NULL  AND d::DATE < NOW() THEN 'puuttuu'
            WHEN t.luotu BETWEEN d::DATE and d::DATE + interval '14 day' THEN 'ok'
            WHEN t.luotu > d::DATE + interval '14 day' THEN 'myohassa'
        END as tila,
@@ -27,7 +27,7 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
        LEFT JOIN tyomaapaivakirja t ON t.paivamaara = d::DATE AND t.urakka_id = :urakka-id
        JOIN urakka u ON u.id = :urakka-id
        LEFT JOIN tyomaapaivakirja_kommentti tk on t.id = tk.tyomaapaivakirja_id
-       LEFT JOIN (SELECT versio, tyomaapaivakirja_id FROM tyomaapaivakirja_kalusto ORDER BY versio desc) t_kalusto on t.id = t_kalusto.tyomaapaivakirja_id
+       LEFT JOIN (SELECT versio, tyomaapaivakirja_id FROM tyomaapaivakirja_kalusto ORDER BY versio DESC limit 1) t_kalusto on t.id = t_kalusto.tyomaapaivakirja_id
  GROUP BY t.id, u.nimi, d, t_kalusto.versio
  ORDER BY paivamaara ASC;
 
