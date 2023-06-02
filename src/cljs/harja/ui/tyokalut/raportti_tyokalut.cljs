@@ -28,7 +28,7 @@
 (defmethod raportointi/muodosta-html :tyomaapaivakirja-header [[_ tyomaapaivakirja]]
   (when tyomaapaivakirja
     [:<>
-     [:div [debug tyomaapaivakirja]]
+     #_ [:div [debug tyomaapaivakirja]]
 
      [:h3.header-yhteiset (:urakka-nimi tyomaapaivakirja)]
      [:h1.header-yhteiset (str "Työmaapäiväkirja " (pvm/pvm (:paivamaara tyomaapaivakirja)))]
@@ -38,8 +38,9 @@
       [:span (str "Saapunut " (pvm/pvm-aika-klo (:luotu tyomaapaivakirja)))]
       (when (:muokattu tyomaapaivakirja)
         [:span (str "Päivitetty " (pvm/pvm-aika-klo (:muokattu tyomaapaivakirja)))])
+      [:span (str "Versio " (:versio tyomaapaivakirja))]
       ;;TODO: Tehdään myöhemmin
-      #_ [:a.klikattava "Näytä muutoshistoria"]
+       #_ [:a.klikattava "Näytä muutoshistoria"]
 
       [:span.paivakirja-toimitus
        [:div {:class (str "pallura " (:tila tyomaapaivakirja))}]
