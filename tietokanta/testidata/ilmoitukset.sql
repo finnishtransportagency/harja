@@ -1181,7 +1181,7 @@ DECLARE
   toimenpiteen_suunnat VIESTISUUNTA[];
   toimenpiteen_suunta VIESTISUUNTA;
   minuutit INTEGER;
-  nyt TIMESTAMP := (SELECT now());
+  nyt TIMESTAMP := (SELECT now() - interval '1 minute');
 BEGIN
   ilmoituksia_n = (SELECT array_length(ilmoitustyypit, 1));
   FOR counter IN 1..ilmoituksia_n
@@ -1231,7 +1231,7 @@ $$
                                             FROM ilmoitus
                                             ORDER BY ilmoitusid DESC
                                             LIMIT 1);
-        nyt                   TIMESTAMP := (SELECT now());
+        nyt                   TIMESTAMP := (SELECT now() - interval '2 minute');
         aiheet                INT[]     := '{90, 91}';
         tarkenteet            INT[]     := '{901, 902, 911, 912}';
     BEGIN
