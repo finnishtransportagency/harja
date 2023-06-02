@@ -231,6 +231,11 @@
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-viallinen-kutsu-virhevastaus virheet (get otsikot "origin")))
 
+(defn kasittele-duplikaatti-tyomaapaivakirja [resurssi otsikot virheet]
+  (log/warn (format "Resurssin: %s kutsu ei palauttanut hakutuloksia: %s " resurssi virheet))
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
+  (tee-viallinen-kutsu-virhevastaus virheet (get otsikot "origin")))
+
 (defn kasittele-viallinen-kutsu [resurssi parametrit otsikot kutsu virheet]
       (log/warn (format "Resurssin: %s kutsu on viallinen: %s. Parametrit: %s. Kutsu: %s." resurssi virheet parametrit (pr-str (str/join (take 10000 kutsu)))))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
@@ -332,6 +337,8 @@
       (kasittele-sisainen-autentikaatio-virhe resurssi headerit virheet))
     (catch [:type virheet/+kayttajalla-puutteelliset-oikeudet+] {:keys [virheet]}
       (kasittele-sisainen-autentikaatio-virhe resurssi headerit virheet))
+    (catch [:type virheet/+duplikaatti-tyomaapaivakirja+] {:keys [virheet]}
+      (kasittele-duplikaatti-tyomaapaivakirja resurssi headerit virheet))
     (catch #(get % :virheet) poikkeus
       (kasittele-sisainen-kasittelyvirhe resurssi headerit (:virheet poikkeus) ))
     ;; Odottamattomat poikkeustilanteet (virhetietoja ei julkaista):
@@ -488,7 +495,7 @@
 (defn kasittele-kevyesti-get-kutsu
   "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu data
    tulee GET pyyntönä parametrien kanssa. Lähetetty data on JSON/ tai XML -formaatissa, joka muunnetaan Clojure dataksi ja toisin päin.
-   Vain ulospäin lähtevä data validoidaan annetun scheman mukaisesti. Tämä siis poikkeaa hieman toisest kasittele-kutsu
+   Vain ulospäin lähtevä data validoidaan annetun scheman mukaisesti. Tämä siis poikkeaa hieman toisesta kasittele-kutsu
    funktiosta.
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
