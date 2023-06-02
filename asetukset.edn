@@ -237,5 +237,5 @@
 
  :palautevayla {:url "https://liikennevirastodev.service-now.com"
                 :kayttajatunnus "integration.harja"
-                :salasana #=(slurp "../.harja/palautevayla-salasana")
+                :salasana #=(eval (harja.tyokalut.env/env "HARJA_PALAUTEVAYLA_SALASANA" ""))
                 :paivitysaika [2 30 00]}}
