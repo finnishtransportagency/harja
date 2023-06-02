@@ -131,3 +131,13 @@ VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :tyyppi::tyomaapaivakirja_tap
 -- name: lisaa-toimeksianto<!
 INSERT INTO tyomaapaivakirja_toimeksianto (urakka_id, tyomaapaivakirja_id, versio, kuvaus, aika)
 VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kuvaus, :aika);
+
+-- name: hae-tyomaapaivakirjan-versiotiedot
+SELECT t_kalusto.versio, t.id as tyomaapaivakirja_id
+  FROM tyomaapaivakirja_kalusto t_kalusto
+       JOIN tyomaapaivakirja t
+            ON t_kalusto.tyomaapaivakirja_id = t.id
+           AND t.urakka_id = :urakka_id
+           AND t.paivamaara = :paivamaara
+ORDER BY t_kalusto.versio DESC
+ LIMIT 1;
