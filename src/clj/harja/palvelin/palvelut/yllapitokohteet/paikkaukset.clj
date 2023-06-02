@@ -32,19 +32,20 @@
   Samalla lasketaan paikkauksen pituus ja pita-ala."
   [db paikkauskohteet]
   (mapv (fn [kohde]
-          (let [;; Koska tiedetään, että yksi paikkauskohde on aina yhdellä tiellä, niin haetaan jokaista paikkauskohdetta
-                ;; kohti tien osien pituudet vain kerran ja käytetään tätä tietoa laskiessa paikkaus taulun riville (paikkaustoteuma)
-                ;; pituutta. Mutta koska maailma ei ole täydellinen, niin on olemassa paikkauskohteita, joilla ei ole tietä.
-                ;; Näille tie kaivetaan ensimmäisestä paikkaustoteumasta
-
+          (let [;; Asiakkaalta saatu lupa olettaa, että paikkaukset kohdistuvat yhdelle tielle joka on sama kuin paikkauskohteella
                 tie (or (:harja.domain.tierekisteri/tie kohde)
                         (:harja.domain.tierekisteri/tie (first (::paikkaus/paikkaukset kohde))))
                 ;; VHAR-7783 Korjataan paikkauksen pituuden laskenta
-                pienin-tien-osa (if (not-empty (::paikkaus/paikkaukset kohde))
-                                  (apply min (map #(::tierekisteri/aosa %) (::paikkaus/paikkaukset kohde)))
+                ;; huomioitava että alkuosa ja loppuosa voivat tulla myös toisin päin, eli haetaan absoluuttisesti
+                ;; pienin ja suurin tien osa
+                tien-osat (apply concat
+                                 (map #(vals (select-keys % [::tierekisteri/aosa ::tierekisteri/losa]))
+                                      (::paikkaus/paikkaukset kohde)))
+                pienin-tien-osa (if (not-empty tien-osat)
+                                  (apply min tien-osat)
                                   (:aosa kohde))
-                suurin-tien-osa (if (not-empty (::paikkaus/paikkaukset kohde))
-                                  (apply max (map #(::tierekisteri/losa %) (::paikkaus/paikkaukset kohde)))
+                suurin-tien-osa (if (not-empty tien-osat)
+                                  (apply max tien-osat)
                                   (:losa kohde))
                 osan-pituudet (tv/hae-osien-pituudet db {:tie tie
                                                          :aosa pienin-tien-osa
