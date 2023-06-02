@@ -4,6 +4,7 @@
             [slingshot.slingshot :refer [throw+]]
             [clojure.string :refer [trim]]
             [harja.domain.oikeudet :as oikeudet]
+            [taoensso.timbre :as log]
             [harja.palvelin.raportointi.excel :as excel]
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.urakat :as q-urakat]
@@ -196,31 +197,49 @@
                           workbook)))
 
 (defn- lue-urem-excelin-otsikot [sivu]
-  (->> sivu
-    xls/row-seq
-    (take 4)
-    (map xls/cell-seq)
-    (map #(take 17 %))
-    (map (partial map xls/read-cell))))
+  (try
+    (first
+     (->> sivu
+          xls/row-seq
+          (drop 6)
+          (take 7) ;; millä rivillä otsikot ovat
+          (map xls/cell-seq)
+          (map #(take 16 %)) ;; 16 saraketta
+          (map (partial map xls/read-cell))))
+    (catch Exception e
+      (log/error e "Vääränlainen Excel-pohja UREM-tuonnissa: "))))
+
+(defn- lue-urem-kokonaismassamaara [sivu]
+  (try
+    (ffirst
+     (->> sivu
+          xls/row-seq
+          ;; hypätään riville, missä kokonaismassamäärä syötetään
+          (drop 3)
+          (map xls/cell-seq)
+          (map #(take 1 %)) ;; luetaan vain eka sarake
+          (map (partial map xls/read-cell))))
+    (catch Exception e
+      (log/error e "Ei löytynyt kokonaismassamäärää Excel-pohjasta"))))
 
 (def urem-excel-pohjan-otsikot
   (-> "public/excel/harja_urapaikkaustoteumien_tuonti_pohja.xlsx"
-    xls/load-workbook-from-resource
-    xls/sheet-seq
-    first
-    lue-urem-excelin-otsikot))
+      xls/load-workbook-from-resource
+      xls/sheet-seq
+      first
+      lue-urem-excelin-otsikot))
 
 (defn erottele-uremit [workbook]
   (let [sivu (first (xls/sheet-seq workbook))
-
-        excel-tasmaa-pohjaan? (= (lue-urem-excelin-otsikot sivu) urem-excel-pohjan-otsikot)
-
-        paikkaukset (when excel-tasmaa-pohjaan?
+        excelin-otsikot-tasmaavat-pohjaan? (= (lue-urem-excelin-otsikot sivu)
+                                              urem-excel-pohjan-otsikot)
+        urem-kok-massamaara (lue-urem-kokonaismassamaara sivu)
+        paikkaukset (when excelin-otsikot-tasmaavat-pohjaan?
                       (->> sivu
                         xls/row-seq
                         ;; Toisin kuin paikkauskohteissa, oletetaan että käyttäjä käyttää meidän pohjaa.
                         ;; Pudotetaan otsikkorivit.
-                        (drop 4)
+                        (drop 7)
                         (map xls/cell-seq)
                         (mapv
                           (fn [rivi]
@@ -242,4 +261,5 @@
                         ;; Pohjassa on alustettu useampi sata riviä. Pudotetaan nekin pois.
                         (filter #(not (every? nil? (:paikkaus %))))))]
     {:paikkaukset paikkaukset
-     :virhe (when-not excel-tasmaa-pohjaan? "Excelin otsikot eivät täsmää pohjaan")}))
+     :urem-kok-massamaara urem-kok-massamaara
+     :virhe (when-not excelin-otsikot-tasmaavat-pohjaan? "Excelin otsikot eivät täsmää pohjaan")}))
