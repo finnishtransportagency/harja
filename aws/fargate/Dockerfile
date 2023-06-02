@@ -1,6 +1,6 @@
 # -- Build vaihe --
 # Käytetään build vaiheessa mahdollisimman kevyttä alpine linuxia ja openjdk 11
-FROM clojure:openjdk-11-lein-2.10.0-alpine as builder
+FROM clojure:temurin-11-lein-2.10.0-alpine as builder
 
 # Luo build hakemisto
 RUN mkdir -p /build
@@ -28,8 +28,14 @@ FROM eclipse-temurin:11-alpine
 LABEL description="Harja app"
 LABEL version="1.0"
 
-# Lisää apureita (curl ja jq)
-RUN apk add --no-cache curl jq
+# Asenna apurit (curl, telnet, jq, nano, unzip ja vim)
+RUN apk add --no-cache curl telnet jq nano unzip vim
+
+# Asenna AWS CLI v2
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+ unzip awscliv2.zip && \
+ ./aws/install && \
+ rm -rf awscliv2.zip aws
 
 # Luo Non-root ryhmä ja käyttäjä, jotta sovellus ei pyöri roottina
 RUN addgroup -S harja && adduser -S harja -G harja
