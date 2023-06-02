@@ -120,5 +120,7 @@
 
   PoistaRiviValinta
   (process-event [_ app]
+    ;; Raportin sulkeminen käynnistää listauksen hakemisen tietokannasta aina
+    (hae-paivakirjat app)
     (-> app
       (assoc :valittu-rivi nil))))

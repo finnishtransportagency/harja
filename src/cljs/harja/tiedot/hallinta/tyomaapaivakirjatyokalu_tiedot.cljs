@@ -42,6 +42,9 @@
                :lahetys-kaynnissa? false
                :mahdolliset-urakat +mahdolliset-urakat+})
 (def data (atom alkutila))
+(def versio (atom 1))
+(def tyomaapaivakirja-id (atom nil))
+(def versio-haettu (atom false))
 
 (defn- generoi-saaasematiedot [montako lahetysaika-str]
   (let [aika (df/parse (df/formatter "yyyy-MM-dd'T'HH:mm:ss'Z'") lahetysaika-str)
@@ -70,7 +73,7 @@
   "Generoidaan viiteen ajankohtaan päivälle kalusto"
   [app]
   (let [_ (js/console.log "generoi-kalusto")
-        paivamaara (get-in app [:paivakirja :paivamaara]) ]
+        paivamaara (get-in app [:paivakirja :paivamaara])]
     [{:kalusto {:aloitus (luo-aika-paivamaarasta paivamaara "T21:00:00Z")
                 :lopetus (luo-aika-paivamaarasta paivamaara "T22:59:59Z"),
                 :tyokoneiden-lkm (get-in app [:paivakirja :tyokoneiden-lkm]),
@@ -101,8 +104,8 @@
     (vec (for [i (range 1 (inc montako))]
            (anna-toimenpide i)))))
 
-  (defn koostettu-data [app]
-    {:otsikko {:lahettaja {:jarjestelma (get-in app [:paivakirja :valittu-jarjestelma]),
+(defn koostettu-data [app versio]
+  {:otsikko {:lahettaja {:jarjestelma (get-in app [:paivakirja :valittu-jarjestelma]),
                          :organisaatio {:nimi "YIT Rakennus Oy",
                                         :ytunnus "1565583-5"}},
              :viestintunniste {:id 8139298},
@@ -123,8 +126,8 @@
                       :onnettomuudet [{:onnettomuus {:kuvaus (get-in app [:paivakirja :onnettomuus1])}}],
                       :liikenteenohjaus-muutokset [{:liikenteenohjaus-muutos {:kuvaus (get-in app [:paivakirja :liikenneohjaus1])}}],
                       :tunniste {:id "123456",
-                                 :versio 1,
-                                 :paivamaara (get-in app [:paivakirja :paivamaara]) #_ (pvm/iso8601-timestamp-str->iso8601-str (get-in app [:paivakirja :lahetysaika]))},
+                                 :versio versio,
+                                 :paivamaara (get-in app [:paivakirja :paivamaara]) #_(pvm/iso8601-timestamp-str->iso8601-str (get-in app [:paivakirja :lahetysaika]))},
                       :poikkeukselliset-saahavainnot [{:poikkeuksellinen-saahavainto {:havaintoaika (get-in app [:paivakirja :lahetysaika]),
                                                                                       :paikka "Kauhava",
                                                                                       :kuvaus "Jäätävä sade"}}],
@@ -144,6 +147,9 @@
 (defrecord HaeHallintayksikonUrakatEpaonnistui [vastaus])
 (defrecord HaeKayttajanOikeuksiaOnnistui [vastaus])
 (defrecord HaeKayttajanOikeuksiaEpaonnistui [vastaus])
+(defrecord HaeVersiotiedot [])
+(defrecord HaeVersiotiedotOnnistui [vastaus])
+(defrecord HaeVersiotiedotEpaonnistui [vastaus])
 
 ;; Lisätään oikeudet urakkaan
 (defrecord LisaaOikeudetUrakkaan [urakka-id])
@@ -155,6 +161,16 @@
             (:id hal)
             {:onnistui ->HaeHallintayksikonUrakatOnnistui
              :epaonnistui ->HaeHallintayksikonUrakatEpaonnistui
+             :paasta-virhe-lapi? true})]))
+
+(defn tarkista-versio [urakka-id paivamaara]
+  (let [_ (js/console.log "tarkista-versio :: urakka-id: " (pr-str urakka-id) " paivamaara: " (pr-str paivamaara))
+        _ (tuck-apurit/post! :hae-tyomaapaivakirjan-versiotiedot
+            {:urakka_id urakka-id
+             :paivamaara paivamaara}
+
+            {:onnistui ->HaeVersiotiedotOnnistui
+             :epaonnistui ->HaeVersiotiedotEpaonnistui
              :paasta-virhe-lapi? true})]))
 
 (defn hae-kayttajan-kaytto-oikeudet []
@@ -193,31 +209,49 @@
   (process-event [{paivakirja :paivakirja} app]
     (let [tulos! (tuck/send-async! ->LahetysOnnistui)
           virhe! (tuck/send-async! ->LahetysEpaonnistui)
-          urakkaid (:id (get-in app [:paivakirja :valittu-urakka]))
-          data (koostettu-data app)]
+          urakkaid (:id (get-in app [:paivakirja :valittu-urakka]))]
 
-      (if urakkaid
-        (go
-          (let [vastaus (<! (http/post (str "api/urakat/" urakkaid "/tyomaapaivakirja")
-                              {:body (.stringify js/JSON (clj->js data))
-                               :content-type :json
-                               :accect :json}))]
-            (if (k/virhe? vastaus)
-              (virhe!)
-              (tulos!))))
-        (js/console.log "Urakkaa ei valittu! ei lähetetä (käyttöliittymä on vaikea, eli yritä uusiksi)"))
+      (tuck/action!
+        (fn [e!]
+          (e! (->HaeVersiotiedot))))
+
+      (.setTimeout js/window
+        #(if @versio-haettu
+           (let [data (koostettu-data app @versio)]
+            (if urakkaid
+              (go
+                (let [_ (js/console.log "Ja post seuraavaksi :: @tyomaapaivakirja-id " (pr-str @tyomaapaivakirja-id) "versio:" (pr-str @versio))
+                      params {:body (.stringify js/JSON (clj->js data))
+                              :content-type :json
+                              :accect :json}
+                      ;; Työmaapäiväkirjan päivitys käyttää http/put
+                      vastaus (if @tyomaapaivakirja-id
+                                (<! (http/put (str "api/urakat/" urakkaid "/tyomaapaivakirja/" @tyomaapaivakirja-id)
+                                      params))
+                                (<! (http/post (str "api/urakat/" urakkaid "/tyomaapaivakirja")
+                                      params)))
+                      ]
+                  (if (k/virhe? vastaus)
+                    (virhe!)
+                    (tulos!))))
+              (js/console.log "Urakkaa ei valittu! ei lähetetä (käyttöliittymä on vaikea, eli yritä uusiksi)")))
+           (js/console.log "Versiota ei ole vielä haettu! ei lähetetä mitään"))
+        500)
+
       (assoc app :lahetys-kaynnissa? true)))
 
   LahetysOnnistui
   (process-event [{vastaus :vastaus} app]
     (do
       (viesti/nayta-toast! "Päiväkirja lähetetty" :onnistui)
+      (reset! versio-haettu false)
       (assoc app :lahetys-kaynnissa? false)))
 
   LahetysEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
       (viesti/nayta-toast! "Päiväkirjan lähetys epäonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
+      (reset! versio-haettu false)
       (assoc app :lahetys-kaynnissa? false)))
 
   HaeHallintayksikonUrakatOnnistui
@@ -266,4 +300,30 @@
   LisaaOikeudetUrakkaanEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.log "LisaaOikeudetUrakkaanEpaonnistui :: vastaus" (pr-str vastaus))
+    app)
+
+  HaeVersiotiedot
+  (process-event [_ app]
+    (js/console.log "HaeVersiotiedot")
+    (tarkista-versio (get-in app [:paivakirja :valittu-urakka :id]) (get-in app [:paivakirja :paivamaara]))
+    app)
+
+  HaeVersiotiedotOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "HaeVersiotiedotOnnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "HaeVersiotiedotOnnistui" :onnistui)
+    (assoc-in app [:toteumatiedot :ulkoinen-id] vastaus)
+    ;; Palautteessa saadaan nykyinen versio, jos se on olemassa. Päivityksessä versionumeroa pitää kasvattaa.
+    (reset! versio (if (:versio vastaus)
+                     (inc (:versio vastaus))
+                     1))
+    (reset! versio-haettu true)
+    (reset! tyomaapaivakirja-id (:tyomaapaivakirja_id vastaus))
+    app)
+
+  HaeVersiotiedotEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "HaeVersiotiedotEpaonnistui :: vastaus" (pr-str vastaus))
+    (reset! versio-haettu true)
+    (viesti/nayta-toast! "HaeVersiotiedotEpaonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
     app))
