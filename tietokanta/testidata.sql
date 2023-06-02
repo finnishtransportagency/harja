@@ -102,6 +102,8 @@ SELECT paivita_pohjavesialueet();
 -- Päivitä päällystys & paikkausurakoiden geometriat kohdeluetteloiden perusteella
 SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 
+\i testidata/palauteluokitukset.sql
+
 -- Ilmoitukset ja kuittaukset
 \i testidata/ilmoitukset.sql
 

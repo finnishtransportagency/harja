@@ -1219,3 +1219,35 @@ BEGIN
 END $$;
 
 UPDATE ilmoitus SET "valitetty-urakkaan" = valitetty WHERE "valitetty-urakkaan" IS NULL;
+
+-- Ilmoituksia uudella tarkenteella
+DO
+$$
+    DECLARE
+        urakka_id             INT       := (SELECT id
+                                            FROM urakka
+                                            WHERE nimi = 'Oulun MHU 2019-2024');
+        viimeisin_ilmoitus_id INTEGER   := (SELECT ilmoitusid
+                                            FROM ilmoitus
+                                            ORDER BY ilmoitusid DESC
+                                            LIMIT 1);
+        nyt                   TIMESTAMP := (SELECT now());
+        aiheet                INT[]     := '{90, 91}';
+        tarkenteet            INT[]     := '{901, 902, 911, 912}';
+    BEGIN
+        FOR i IN 1..(SELECT array_length(tarkenteet, 1))
+            LOOP
+                viimeisin_ilmoitus_id = viimeisin_ilmoitus_id + 1;
+                INSERT INTO ilmoitus (urakka, ilmoitusid, ilmoitettu, valitetty, "valitetty-urakkaan", vastaanotettu,
+                                      "vastaanotettu-alunperin", yhteydenottopyynto, paikankuvaus, sijainti,
+                                      tr_numero, ilmoitustyyppi, urakkatyyppi,
+                                      ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyyppi,
+                                      lahettaja_etunimi, lahettaja_sukunimi, aihe, tarkenne, lisatieto)
+                VALUES (urakka_id, viimeisin_ilmoitus_id, nyt - interval '1 minute', nyt, nyt, nyt, nyt, false,
+                        'Toripolliisi',
+                        ST_MakePoint(427641.544, 7210836.163)::GEOMETRY,
+                        48410, 'tiedoitus', 'teiden-hoito', 'Iiro', 'Ilmoittaja', 'Tienkäyttäjä', 'Lasse', 'Lähettäjä',
+                        aiheet[(i + 1) / 2], tarkenteet[i], 'Toripolliisi on lenkillä!');
+            END LOOP;
+    END
+$$;
