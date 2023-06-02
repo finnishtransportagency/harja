@@ -127,7 +127,7 @@
                   :tarkenne-id 911}
                  {:aihe-id 91
                   :nimi "Toinen testailu"
-                  :jarjestys 999
+                  :jarjestys 9993
                   :kaytossa? true
                   :tarkenne-id 912}]}])
 
