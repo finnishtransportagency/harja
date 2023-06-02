@@ -40,11 +40,36 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build, tag and push image to ECR
+        id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: harja-ecr-repository
-          IMAGE_TAG: latest
+          IMAGE_TAG: ${{ github.sha }}
           DOCKERFILE_PATH: ${{ inputs.targetImage == 'mockup' && 'aws/fargate/mockup-image/Dockerfile' || 'aws/fargate/Dockerfile' }}
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --file $DOCKERFILE_PATH .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      # TODO: Määrittele github environmentit (dev, stg, prod) ja käytä env muuuttujia niiden kautta
+      - name: Download task definition
+        env:
+          ECS_TASK_DEFINITION_NAME_STG: ${{ vars.ECS_TASK_DEFINITION_NAME_STG }}
+        run: |
+          aws ecs describe-task-definition --task-definition $ECS_TASK_DEFINITION_NAME_STG --query taskDefinition> harja-task-definition.json
+
+      - name: Update ECS task definition (add image id)
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: harja-task-definition.json
+          container-name: ${{ vars.ECS_CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ vars.ECS_SERVICE_NAME_STG }}
+          cluster: ${{ vars.ECS_CLUSTER_NAME_STG }}
+          wait-for-service-stability: true

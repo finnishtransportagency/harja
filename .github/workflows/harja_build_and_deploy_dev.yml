@@ -51,6 +51,7 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+      # TODO: Määrittele github environmentit (dev, stg, prod) ja käytä env muuuttujia niiden kautta
       - name: Download task definition
         env:
           ECS_TASK_DEFINITION_NAME_DEV: ${{ vars.ECS_TASK_DEFINITION_NAME_DEV }}
