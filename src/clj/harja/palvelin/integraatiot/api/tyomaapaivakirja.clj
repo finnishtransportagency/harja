@@ -2,17 +2,19 @@
   "Työmaapäiväkirjan hallinta API:n kautta. Alkuun kirjaus ja päivitys mahdollisuudet"
   (:require [com.stuartsierra.component :as component]
             [clojure.spec.alpha :as s]
+            [taoensso.timbre :as log]
             [compojure.core :refer [POST PUT]]
+            [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.tyomaapaivakirja :as tyomaapaivakirja-kyselyt]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date aika-string->java-sql-date]]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [clojure.java.jdbc :as jdbc])
-  (:use [slingshot.slingshot :only [throw+]]))
+  (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (s/def ::urakka-id #(and (integer? %) (pos? %)))
 
@@ -28,6 +30,16 @@
 ;; TODO: Validoi sisään tuleva data
 (defn validoi-tyomaapaivakirja [data]
   )
+
+(defn- hae-tyomaapaivakirjan-versiotiedot [db kayttaja tiedot]
+  (validointi/tarkista-urakka-ja-kayttaja db (:urakka_id tiedot) kayttaja)
+  (let [hakuparametrit {:urakka_id (:urakka_id tiedot)
+                        :paivamaara (pvm-string->java-sql-date (:paivamaara tiedot))}
+        _ (println "hae-tyomaapaivakirjan-versiotiedot :: hakuparametrit" (pr-str hakuparametrit))
+        versiotiedot (first (tyomaapaivakirja-kyselyt/hae-tyomaapaivakirjan-versiotiedot db hakuparametrit))
+        versionro (if (or (nil? versiotiedot)) {:versio nil
+                                                :tyomaapaivakirja_id nil} versiotiedot)]
+    versionro))
 
 (defn- tallenna-kalusto [db data versio tyomaapaivakirja-id urakka-id]
   (doseq [k (get-in data [:kaluston-kaytto])
@@ -175,21 +187,34 @@
                                                          :aika (:tunnit (:viranomaisen-avustus v))}))))
 
 (defn tallenna-tyomaapaivakirja [db urakka-id data kayttaja tyomaapaivakirja-id]
-  (let [tyomaapaivakirja-id (konv/konvertoi->int tyomaapaivakirja-id)
+  (let [_ (println "tallenna-tyomaapaivakirja :: data" (pr-str data))
+        tyomaapaivakirja-id (konv/konvertoi->int tyomaapaivakirja-id)
         versio (get-in data [:tunniste :versio]) ; Jokaiselle payloadilla on oma versionsa
+        versiotiedot (hae-tyomaapaivakirjan-versiotiedot db kayttaja {:urakka_id urakka-id
+                                                                      :paivamaara (get-in data [:tunniste :paivamaara])})
         tyomaapaivakirja {:urakka_id urakka-id
                           :kayttaja (:id kayttaja)
                           :paivamaara (pvm-string->java-sql-date (get-in data [:tunniste :paivamaara]))
                           :ulkoinen-id (get-in data [:tunniste :id])
+                          :versio (get-in data [:tunniste :versio])
                           :id tyomaapaivakirja-id}
-
+        ;; Varmista, että annettu versio on suurempi, kuin kannassa oleva
+        _ (when tyomaapaivakirja-id
+            (if (not= (get-in data [:tunniste :versio])
+                  (inc (:versio versiotiedot)))
+              (throw+ {:type virheet/+vaara-versio-tyomaapaivakirja+ :virheet [{:koodi virheet/+vaara-versio-tyomaapaivakirja-virhe-koodi+
+                                                                               :viesti "Työmaapäiväkirjan versio ei täsmää"}]})))
         tyomaapaivakirja-id (if tyomaapaivakirja-id
                               ;; Päivitä vanhaa
                               (do
                                 (tyomaapaivakirja-kyselyt/paivita-tyomaapaivakirja<! db tyomaapaivakirja)
                                 (:id tyomaapaivakirja))
                               ;; ELSE: Lisää uusi
-                              (:id (tyomaapaivakirja-kyselyt/lisaa-tyomaapaivakirja<! db tyomaapaivakirja)))
+                              (try
+                                (:id (tyomaapaivakirja-kyselyt/lisaa-tyomaapaivakirja<! db tyomaapaivakirja))
+                                (catch Exception e
+                                  (throw+ {:type virheet/+duplikaatti-tyomaapaivakirja+ :virheet [{:koodi virheet/+duplikaatti-tyomaapaivakirja-virhe-koodi+
+                                                                                                   :viesti "Duplikaatti versio ja päivämäärä"}]}))))
 
         ;; Tallennetaan jokainen osio omalla versionumerolla.
         _ (tallenna-kalusto db data versio tyomaapaivakirja-id urakka-id)
@@ -215,13 +240,9 @@
         ;; Tallenna
         tyomaapaivakirja-id (jdbc/with-db-transaction [db db]
                               (tallenna-tyomaapaivakirja db urakka-id tyomaapaivakirja kayttaja tid))
-
-
-
-        ;; Muodosta vastaus
+        ;; Muodosta OK vastaus - Error vastaus pärähtää throwssa ja sen käsittelee kutsu-kasittelijä
         vastaus {:status "OK"
-                 :tyomaapaivakirja-id tyomaapaivakirja-id}
-        ]
+                 :tyomaapaivakirja-id tyomaapaivakirja-id}]
     vastaus))
 
 (defrecord Tyomaapaivakirja []
@@ -251,10 +272,15 @@
           (fn [parametrit data kayttaja db]
             (kirjaa-tyomaapaivakirja db parametrit data kayttaja))))
       true)
+    (julkaise-palvelu (:http-palvelin this)
+      :hae-tyomaapaivakirjan-versiotiedot
+      (fn [user tiedot]
+        (hae-tyomaapaivakirjan-versiotiedot (:db this) user tiedot)))
     this)
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
       :kirjaa-tyomaapaivakirja
-      :paivita-tyomaapaivakirja)
+      :paivita-tyomaapaivakirja
+      :hae-tyomaapaivakirjan-versiotiedot)
     this))
