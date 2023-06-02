@@ -16,7 +16,7 @@
 (defn kalusto-taulukko [kalustot]
   (let [tiedot {:oikealle-tasattavat #{1 2}
                 :rivin-tiedot (rivi
-                                {:otsikko "Aikaväli" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "vaalen-tumma-tausta" :leveys 0.15 :tyyppi :varillinen-teksti}
+                                {:otsikko "Aikaväli" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "vaalen-tumma-tausta" :leveys 0.14 :tyyppi :varillinen-teksti}
                                 {:otsikko "Peruskalusto (KA/TR)" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.25 :tyyppi :varillinen-teksti}
                                 {:otsikko "Lisäkalusto" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.25 :tyyppi :varillinen-teksti}
                                 {:otsikko "Toimenpide" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.7 :tyyppi :varillinen-teksti})
