@@ -21,7 +21,7 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
            WHEN t.luotu > d::DATE + interval '14 day' THEN 'myohassa'
        END as tila,
        count(tk.id) as "kommenttien-maara",
-       t_kalusto.versio,
+       t.versio,
        t.luotu, t.luoja, t.muokattu, t.muokkaaja
   FROM generate_series(:alkuaika::DATE, :loppuaika::DATE, '1 day'::interval) d
        LEFT JOIN tyomaapaivakirja t ON t.paivamaara = d::DATE AND t.urakka_id = :urakka-id
@@ -33,8 +33,7 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
 
 
 -- name: hae-paivakirja
-SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
-       t.paivamaara::DATE,
+SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi", t.versio, t.paivamaara::DATE,
        -- Hihasta vedetty tilan määritelmä
        CASE
            WHEN t.luotu BETWEEN t.paivamaara and t.paivamaara + interval '14 day' THEN 'ok'
@@ -65,6 +64,7 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
   FROM tyomaapaivakirja t
        JOIN urakka u ON t.urakka_id = u.id
  WHERE t.id = :tyomaapaivakirja_id
+   AND t.versio = :versio
  GROUP BY t.id, u.nimi;
 
 -- name: hae-paivakirjan-tehtavat
@@ -91,7 +91,8 @@ INSERT INTO tyomaapaivakirja (urakka_id, paivamaara, ulkoinen_id, luotu, luoja)
 values (:urakka_id, :paivamaara, :ulkoinen-id, now(), :kayttaja);
 
 -- name: paivita-tyomaapaivakirja<!
-UPDATE tyomaapaivakirja SET paivamaara = :paivamaara, ulkoinen_id = :ulkoinen-id, muokattu = now(), muokkaaja = :kayttaja
+UPDATE tyomaapaivakirja SET paivamaara = :paivamaara, ulkoinen_id = :ulkoinen-id, muokattu = now(),
+                            muokkaaja = :kayttaja, versio = :versio
  WHERE id = :id;
 
 -- name: lisaa-kalusto<!
