@@ -7,10 +7,14 @@
 (def +viallinen-kutsu+ ::viallinen-kutsu)
 (def +ei-hakutuloksia+ ::ei-hakutuloksia)
 (def +sisainen-kasittelyvirhe+ ::sisainen-kasittelyvirhe)
+(def +duplikaatti-tyomaapaivakirja+ ::duplikaatti-tyomaapaivakirja)
+(def +vaara-versio-tyomaapaivakirja+ ::vaara-versio-tyomaapaivakirja)
 
 ;; Virhekoodit
 (def +invalidi-json-koodi+ "invalidi-json")
 (def +sisainen-kasittelyvirhe-koodi+ "sisainen-kasittelyvirhe")
+(def +duplikaatti-tyomaapaivakirja-virhe-koodi+ "duplikaatti-tyomaapaivakirja")
+(def +vaara-versio-tyomaapaivakirja-virhe-koodi+ "vaara-versio")
 (def +ulkoinen-kasittelyvirhe-koodi+ "ulkoinen-kasittelyvirhe")
 (def +virheellinen-liite-koodi+ "virheellinen-liite")
 (def +tuntematon-urakka-koodi+ "tuntematon-urakka")
