@@ -1,5 +1,7 @@
 (ns harja.palvelin.palvelut.tyomaapaivakirja
   (:require [com.stuartsierra.component :as component]
+            [taoensso.timbre :as log]
+            [harja.pvm :as pvm]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.tyomaapaivakirja :as tyomaapaivakirja-kyselyt]
             [harja.kyselyt.konversio :as konversio]
@@ -7,10 +9,16 @@
 
 (defn hae-tyomaapaivakirjat [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/raportit-tyomaapaivakirja user (:urakka-id tiedot))
-  (let [_ (println "hae-tyomaapaivakirjat :: tiedot" (pr-str tiedot))
+  (let [_ (log/debug "hae-tyomaapaivakirjat :: tiedot" (pr-str tiedot))
+        ;; Päiväkirjalistaukseen generoidaan rivit, vaikka päiväkirjoja ei olisi
+        ;; Mutta tulevaisuuden päiville rivejä ei tarvitse generoida
+        ;; Joten rajoitetaan loppupäivä tähän päivään
+        loppuaika-sql (if (pvm/jalkeen? (:loppuaika tiedot) (pvm/nyt))
+                        (konversio/sql-date (pvm/nyt))
+                        (konversio/sql-date (:loppuaika tiedot)))
         paivakirjat (tyomaapaivakirja-kyselyt/hae-paivakirjalistaus db {:urakka-id (:urakka-id tiedot)
                                                                         :alkuaika (konversio/sql-date (:alkuaika tiedot))
-                                                                         :loppuaika (konversio/sql-date (:loppuaika tiedot))})]
+                                                                         :loppuaika loppuaika-sql})]
     paivakirjat))
 
 (defrecord Tyomaapaivakirja []
