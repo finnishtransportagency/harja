@@ -48,7 +48,6 @@
 
   PaivitaPalauteluokituksetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (println "paivitapalauteluokitukset onnistui")
     (assoc app :palauteluokitukset vastaus
       :palauteluokkapaivitys-kesken? false))
 
