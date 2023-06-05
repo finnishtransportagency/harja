@@ -10,10 +10,6 @@
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]))
 
-;; TODO: Korjaa cypress-testit
-;;       Tee testi, jossa ei ole aihetta tai tarkennetta, mutta on selitteitä.
-;;       Tee testi, jossa ei ole selitettä ja on aihe/tarkenne.
-
 (defprotocol PalautevaylaHaku
   (hae-aiheet [this])
   (hae-tarkenteet [this])
