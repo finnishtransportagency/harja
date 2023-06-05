@@ -60,7 +60,7 @@
                                                           {:keys [otsikko-oikea optiot-oikea otsikot-oikea rivit-oikea]}]]
   ;; Tekee 2 taulukkoa vierekkän
   [:div.flex-gridit
-   [:div.puolita-leveys
+   [:div.width-half
     [:h3.gridin-otsikko otsikko-vasen]
     (let [{otsikko :otsikko
            viimeinen-rivi-yhteenveto? :viimeinen-rivi-yhteenveto?
@@ -94,7 +94,7 @@
        otsikot-vasen rivit-vasen])]
    ;; Ei piirretä oikeaa elementtiä, jos sitä ei ole annettu.
    (if otsikko-oikea
-     [:div.puolita-leveys
+     [:div.width-half
       [:h3.gridin-otsikko otsikko-oikea]
       (let [{otsikko :otsikko
              viimeinen-rivi-yhteenveto? :viimeinen-rivi-yhteenveto?
@@ -126,7 +126,7 @@
          sivuttain-rullattava?
          ensimmainen-sarake-sticky?
          otsikot-oikea rivit-oikea])]
-     [:div.puolita-leveys])])
+     [:div.width-half])])
 
 (defmethod raportointi/muodosta-html :tyomaapaivakirjan-kommentit [[_]]
   [:div.row.filtterit.kommentit-valistys {:id "Kommentit"}

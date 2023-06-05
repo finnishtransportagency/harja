@@ -35,7 +35,7 @@
   (validointi/tarkista-urakka-ja-kayttaja db (:urakka_id tiedot) kayttaja)
   (let [hakuparametrit {:urakka_id (:urakka_id tiedot)
                         :paivamaara (pvm-string->java-sql-date (:paivamaara tiedot))}
-        _ (println "hae-tyomaapaivakirjan-versiotiedot :: hakuparametrit" (pr-str hakuparametrit))
+        _ (log/debug "hae-tyomaapaivakirjan-versiotiedot :: hakuparametrit" (pr-str hakuparametrit))
         versiotiedot (first (tyomaapaivakirja-kyselyt/hae-tyomaapaivakirjan-versiotiedot db hakuparametrit))
         versionro (if (or (nil? versiotiedot)) {:versio nil
                                                 :tyomaapaivakirja_id nil} versiotiedot)]
@@ -187,7 +187,7 @@
                                                          :aika (:tunnit (:viranomaisen-avustus v))}))))
 
 (defn tallenna-tyomaapaivakirja [db urakka-id data kayttaja tyomaapaivakirja-id]
-  (let [_ (println "tallenna-tyomaapaivakirja :: data" (pr-str data))
+  (let [_ (log/debug "tallenna-tyomaapaivakirja :: data" (pr-str data))
         tyomaapaivakirja-id (konv/konvertoi->int tyomaapaivakirja-id)
         versio (get-in data [:tunniste :versio]) ; Jokaiselle payloadilla on oma versionsa
         versiotiedot (hae-tyomaapaivakirjan-versiotiedot db kayttaja {:urakka_id urakka-id

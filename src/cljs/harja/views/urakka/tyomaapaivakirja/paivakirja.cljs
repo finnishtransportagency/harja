@@ -28,15 +28,10 @@
      ;:kommentoidut "Kommentoidut (123)" Lisätään kommentoidut sitten, kun niitä voi kommentoida
      }))
 
-#_(def toimituksen-tila [{:class "ok" :selitys "Ok"}
-                         {:class "myohassa" :selitys "Myöhässä"}
-                         {:class "puuttuu" :selitys "Puuttuu"}])
-
 (def toimituksen-tila {"ok" {:class "ok" :selitys "Ok"}
                        "myohassa" {:class "myohassa" :selitys "Myöhässä"}
                        "puuttuu" {:class "puuttuu" :selitys "Puuttuu"}})
 
-#_(def valittu-hakumuoto (reaction-writable :kaikki))
 (def valittu-hakumuoto (atom :kaikki))
 
 (defn tyomaapaivakirja-listaus [e! {:keys [nayta-rivit valinnat] :as app}]
@@ -75,7 +70,7 @@
          :vayla-tyyli? true
          :aikavalin-rajoitus [6 :kuukausi]}]
 
-       [:div.puolita-leveys
+       [:div.width-half
         [kentat/tee-kentta {:tyyppi :radio-group
                             :vaihtoehdot (into [] (keys (haun-valinnat app)))
                             :vayla-tyyli? true

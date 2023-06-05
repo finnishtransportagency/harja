@@ -72,8 +72,7 @@
 (defn- generoi-kalusto
   "Generoidaan viiteen ajankohtaan päivälle kalusto"
   [app]
-  (let [_ (js/console.log "generoi-kalusto")
-        paivamaara (get-in app [:paivakirja :paivamaara])]
+  (let [paivamaara (get-in app [:paivakirja :paivamaara])]
     [{:kalusto {:aloitus (luo-aika-paivamaarasta paivamaara "T21:00:00Z")
                 :lopetus (luo-aika-paivamaarasta paivamaara "T22:59:59Z"),
                 :tyokoneiden-lkm (get-in app [:paivakirja :tyokoneiden-lkm]),
