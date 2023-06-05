@@ -2,6 +2,7 @@
   (:require
     [clojure.spec.alpha]
     [specql.rel :as rel]
+    [harja.domain.muokkaustiedot :as muokkaustiedot]
     #?@(:clj  [[harja.kyselyt.specql-db :refer [define-tables]]]
         :cljs [[specql.impl.registry]]))
   #?(:cljs
@@ -13,6 +14,8 @@
     "nimi" ::nimi
     "jarjestys" ::jarjestys
     "kaytossa" ::kaytossa?
+    "muokattu" ::muokkaustiedot/muokattu
+    "luotu" ::muokkaustiedot/luotu
     ::tarkenteet (specql.rel/has-many
                    ::aihe-id
                    ::tarkenne
@@ -22,7 +25,9 @@
     "nimi" ::nimi
     "jarjestys" ::jarjestys
     "kaytossa" ::kaytossa?
-    "aihe_id" ::aihe-id}])
+    "aihe_id" ::aihe-id
+    "muokattu" ::muokkaustiedot/muokattu
+    "luotu" ::muokkaustiedot/luotu}])
 
 (def domain->api
   {::aihe :aihe

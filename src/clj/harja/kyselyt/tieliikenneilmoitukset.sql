@@ -352,7 +352,7 @@ FROM ilmoitus i
     LEFT JOIN palautevayla_aihe pa ON i.aihe = pa.ulkoinen_id
     LEFT JOIN palautevayla_tarkenne pt ON i.tarkenne = pt.ulkoinen_id
 WHERE urakka = :urakka AND
-      (muokattu > :aika OR luotu > :aika);
+      (i.muokattu > :aika OR i.luotu > :aika);
 
 -- name: hae-ilmoitukset-ytunnuksella
 WITH ilmoitus_urakat AS (SELECT u.id as id, u.urakkanro as urakkanro

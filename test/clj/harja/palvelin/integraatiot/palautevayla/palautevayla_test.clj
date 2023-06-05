@@ -4,6 +4,7 @@
             [harja.palvelin.palvelut.palauteluokitukset :as palauteluokitukset]
             [harja.palvelin.integraatiot.palautevayla.palautevayla-komponentti :as pj]
             [harja.domain.palautevayla-domain :as domain]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [com.stuartsierra.component :as component]
             [org.httpkit.fake :refer [with-fake-http]]))
 
@@ -152,6 +153,16 @@
      "https://localhost:9999/api/x_sgtk_open311/v1/publicws/subsubjects?locale=fi"
      (slurp "resources/xsd/palautevayla/esimerkit/tarkenteet.xml")]
     (let [_aiheet (pj/paivita-aiheet-ja-tarkenteet (:palautevayla jarjestelma))
-          aiheet-ja-tarkenteet-kannassa (palauteluokitukset/hae-palauteluokitukset
-                                          (:db jarjestelma) +kayttaja-jvh+)]
+          aiheet-ja-tarkenteet-kannassa (map #(-> %
+                                                (dissoc
+                                                  ::muokkaustiedot/muokattu
+                                                  ::muokkaustiedot/luotu)
+                                                (update :tarkenteet (fn [tarkenteet]
+                                                                      (map (fn [tarkenne]
+                                                                             (dissoc tarkenne
+                                                                               ::muokkaustiedot/muokattu
+                                                                               ::muokkaustiedot/luotu))
+                                                                        tarkenteet))))
+                                          (palauteluokitukset/hae-palauteluokitukset
+                                            (:db jarjestelma) +kayttaja-jvh+))]
       (is (= odotetut-aiheet-ja-tarkenteet-kannasta aiheet-ja-tarkenteet-kannassa)))))
