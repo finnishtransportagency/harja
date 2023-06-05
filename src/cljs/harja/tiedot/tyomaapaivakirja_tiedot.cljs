@@ -49,7 +49,7 @@
 (defrecord HaeTiedotEpaonnistui [vastaus])
 
 (defn suodata-rivit
-  "Annetaan parametrina tilan :valinnat josta luetaan hakumuoto"
+  "Suodatetaan tulokset käyttäjän valitsemien suodattimien perusteella"
   [app]
   (let [rivit (filter (fn [rivi]
                         (let [valittu-hakumuoto (get suodattimet (get-in app [:valinnat :hakumuoto]))
