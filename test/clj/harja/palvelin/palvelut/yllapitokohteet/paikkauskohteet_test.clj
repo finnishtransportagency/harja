@@ -13,7 +13,9 @@
             [harja.tyokalut.paikkaus-test :refer :all]
             [harja.pvm :as pvm]
             [dk.ative.docjure.spreadsheet :as xls]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.konversio :as konv]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -528,12 +530,40 @@
                         {:urakka-id urakka-id
                          :paikkauskohde-id (:id paikkauskohde)}
                         "test/resurssit/excel/urem_tuonti.xlsx")
-        paikkaukset-jalkeen (hae-paikkaukset urakka-id (:id paikkauskohde))]
+        paikkaukset-jalkeen (into []
+                                  (comp
+                                    (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
+                                  (hae-paikkaukset urakka-id (:id paikkauskohde)))
+        eka-rivi (first (filter #(= 50 (get-in % [:tierekisteriosoite :loppuetaisyys]))
+
+                                paikkaukset-jalkeen))
+        toka-rivi (first (filter #(= 100 (get-in % [:tierekisteriosoite :loppuetaisyys]))
+
+                                paikkaukset-jalkeen))]
+
     (is (= (:status lue-excelista) 200))
+    ;; varmista että saadaan laskettua pinta-alat joka riville. Suhde 1:2
+    (is (= (:pinta-ala eka-rivi) 50.0M) "UREM pinta-ala")
+    (is (= (:pinta-ala toka-rivi) 100.0M) "UREM pinta-ala")
+    ;; sen jälkeen massamäärä joka riville pinta-alojen suhteessa 1:2
+    (is (=marginaalissa? (:massamaara eka-rivi) 0.5M) "UREM massamaara")
+    (is (=marginaalissa? (:massamaara toka-rivi) 1.0M) "UREM massamaara")
+    (is (= (:massatyyppi eka-rivi) "AB, Asfalttibetoni"))
+    (is (= (:massatyyppi toka-rivi) "AB, Asfalttibetoni"))
+    (is (= (:massamenekki eka-rivi) 10M) "Massamenekki")
+    (is (= (:massamenekki toka-rivi) 10M) "Massamenekki")
+    (is (= (:tierekisteriosoite eka-rivi) {:alkuetaisyys 0
+                                           :alkuosa 1
+                                           :loppuetaisyys 50
+                                           :loppuosa 1
+                                           :numero 22}) "Tierekisteriosoite oikein")
+    (is (= (:tierekisteriosoite toka-rivi) {:alkuetaisyys 0
+                                           :alkuosa 3
+                                           :loppuetaisyys 100
+                                           :loppuosa 3
+                                           :numero 22}) "Tierekisteriosoite oikein")
     (is (= alkup-paikkausmaara 0) "Paikkauskohteella ei pitäisi olla paikkauksia ennen excel-tuontia")
-    (is (= (count paikkaukset-jalkeen) 1) "Excel-tuonnista pitäisi tulla yksi paikkaus")
-    (is (= (:massatyyppi (first paikkaukset-jalkeen)) "AB, Asfalttibetoni"))
-    (is (= (:massamenekki (first paikkaukset-jalkeen)) 15.38M))))
+    (is (= (count paikkaukset-jalkeen) 2) "Excel-tuonnista pitäisi tulla kaksi paikkausta")))
 
 (deftest lisaa-urem-paikkaus-excelista-epaonnistuu
   (let [urakka-id @kemin-alueurakan-2019-2023-id
@@ -550,20 +580,34 @@
                         {:urakka-id urakka-id
                          :paikkauskohde-id (:id paikkauskohde)}
                         "test/resurssit/excel/urem_tuonti_fail.xlsx")
-        virheet1 (get-in (cheshire/decode (:body lue-excelista)) ["virheet" "paikkausten-validointivirheet"])
-
-        lue-roskaa-excelista (kutsu-excel-vienti-palvelua (:http-palvelin jarjestelma)
-                               :lue-urapaikkaukset-excelista
-                               +kayttaja-jvh+
-                               {:urakka-id urakka-id
-                                :paikkauskohde-id (:id paikkauskohde)}
-                               "test/resurssit/excel/odottamaton-excel.xlsx")
-
-        virheet2 (get-in (cheshire/decode (:body lue-roskaa-excelista)) ["virheet" "excel-luku-virhe"])
+        virheet1 (get-in (cheshire/decode (:body lue-excelista)) ["virheet" "urem-kokonaismassamaaravirhe"])
         paikkaukset-jalkeen (hae-paikkaukset urakka-id (:id paikkauskohde))]
     (is (= (:status lue-excelista) 400))
     (is (= (count paikkaukset-ennen) 0) "Paikkauskohteella ei pitäisi olla paikkauksia ennen excel-tuontia")
-    (is (= (get virheet1 "5") ["Massamäärä puuttuu tai on virheellinen"]))
-    (is (= virheet2 "Excelin otsikot eivät täsmää pohjaan"))
+    (is (= virheet1 "Kohteen kokonaismassamäärä puuttuu, täytä solu A4.") "Kokonaismassamäärä puuttuu")
     (is (= (count paikkaukset-jalkeen) 0) "Excel-tuonnista ei pitäisi tulla paikkausta")))
 
+
+(deftest lisaa-urem-paikkaus-excelista-epaonnistuu-vaara-pohja
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        kohde (merge {:urakka-id urakka-id}
+                     (default-paikkauskohde (rand-int 999999)))
+        paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :tallenna-paikkauskohde-urakalle
+                                      +kayttaja-jvh+
+                                      (assoc kohde :paikkauskohteen-tila "tilattu"))
+        paikkaukset-ennen (hae-paikkaukset urakka-id (:id paikkauskohde))
+
+        lue-roskaa-excelista (kutsu-excel-vienti-palvelua (:http-palvelin jarjestelma)
+                                                          :lue-urapaikkaukset-excelista
+                                                          +kayttaja-jvh+
+                                                          {:urakka-id urakka-id
+                                                           :paikkauskohde-id (:id paikkauskohde)}
+                                                          "test/resurssit/excel/odottamaton-excel.xlsx")
+
+        virheet2 (get-in (cheshire/decode (:body lue-roskaa-excelista)) ["virheet" "excel-luku-virhe"])
+        paikkaukset-jalkeen (hae-paikkaukset urakka-id (:id paikkauskohde))]
+    (is (= virheet2 "Excelin otsikot eivät täsmää pohjaan"))
+    (is (= (count paikkaukset-ennen)
+           (count paikkaukset-jalkeen)
+           0) "Excel-tuonnista ei pitäisi tulla paikkausta")))

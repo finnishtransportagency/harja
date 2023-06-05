@@ -29,7 +29,8 @@
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [specql.core :as specql]
-            [harja.kyselyt.konversio :as konversio]))
+            [harja.kyselyt.konversio :as konversio]
+            [clojure.java.jdbc :as jdbc]))
 
 (defn validi-pvm-vali? [validointivirheet alku loppu]
   (if (and (not (nil? alku)) (not (nil? loppu)) (.after alku loppu))
@@ -628,13 +629,25 @@
   (assoc paikkaus :pituus
     (:pituus (paikkaus-q/laske-paikkauskohteen-pituus db {:tie tie :aosa aosa :aet aet :losa losa :let let}))))
 
-(defn- tee-massamenekki [{pinta-ala ::paikkaus/pinta-ala
-                          massamaara ::paikkaus/massamaara :as paikkaus}]
-  (assoc paikkaus ::paikkaus/massamenekki
-    (when (and pinta-ala massamaara
-            (number? pinta-ala)
-            (number? massamaara))
-      (paikkaus/massamaara-ja-pinta-ala->massamenekki massamaara pinta-ala))))
+(defn- laske-massamaara
+  "Laskee massamäärän perustuen kohteen kokonaismassamäärään sekä rivin suhteellisen pinta-alan osuuteen kokonaispinta-alasta"
+  [paikkaus urem-kok-massamaara kaikki-pinta-ala-yhteensa]
+  (when (and (number? (::paikkaus/pinta-ala paikkaus))
+             (number? kaikki-pinta-ala-yhteensa)
+             (number? urem-kok-massamaara))
+    (bigdec
+      (with-precision 6
+        ;; Rivikohtainen massamäärä saadaan laskemalla paikkausrivin pinta-alan
+        ;; suhteellinen osuus ja kerrotaan se kohteen kokonaismassamäärällä
+        (*
+          (with-precision 8 (/ (::paikkaus/pinta-ala paikkaus)
+                               kaikki-pinta-ala-yhteensa))
+          urem-kok-massamaara)))))
+
+(defn- laske-massamenekki [{pinta-ala ::paikkaus/pinta-ala
+                            massamaara ::paikkaus/massamaara :as paikkaus}]
+  (when (and (number? pinta-ala) (number? massamaara))
+    (paikkaus/massamaara-ja-pinta-ala->massamenekki massamaara pinta-ala)))
 
 (defn- tee-pinta-ala [{pituus :pituus
                        leveys ::paikkaus/leveys :as paikkaus}]
@@ -664,6 +677,7 @@
                             ::paikkaus/leveys
                             ::paikkaus/pinta-ala])
 
+
 (defn validoi-urem-excel-paikkaus [{alkuaika ::paikkaus/alkuaika
                                     loppuaika ::paikkaus/loppuaika
                                     {tie ::tr/tie
@@ -674,7 +688,6 @@
                                     massatyyppi ::paikkaus/massatyyppi
                                     raekoko ::paikkaus/raekoko
                                     kuulamylly ::paikkaus/kuulamylly
-                                    massamaara ::paikkaus/massamaara
                                     pinta-ala ::paikkaus/pinta-ala}]
   (cond-> []
     (not (s/valid? ::paikkaus/alkuaika alkuaika)) (conj "Alkuaika puuttuu tai on virheellinen")
@@ -687,7 +700,6 @@
     (not (s/valid? ::paikkaus/urapaikkaus-massatyyppi massatyyppi)) (conj "Massatyyppi puuttuu tai on virheellinen")
     (not (s/valid? ::paikkaus/raekoko raekoko)) (conj "Raekoko puuttuu tai on virheellinen")
     (not (s/valid? ::paikkaus/urapaikkaus-kuulamylly kuulamylly)) (conj "Kuulamylly puuttuu tai on virheellinen")
-    (not (s/valid? ::paikkaus/massamaara massamaara)) (conj "Massamäärä puuttuu tai on virheellinen")
     (not (s/valid? ::paikkaus/pinta-ala pinta-ala)) (conj "Pinta-alaa ei voitu laskea!")
     (and
       (s/valid? ::paikkaus/alkuaika alkuaika)
@@ -696,10 +708,10 @@
 
 (defn- kasittele-urem-excel [db urakka-id paikkauskohde-id {kayttaja-id :id} req]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
-        {paikkaukset :paikkaukset excel-luku-virhe :virhe} (p-excel/erottele-uremit workbook)
-
+        {paikkaukset :paikkaukset
+         urem-kok-massamaara :urem-kok-massamaara
+         excel-luku-virhe :virhe} (p-excel/erottele-uremit workbook)
         paikkauskohde (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/id paikkauskohde-id}))
-
         paikkauskohteen-tila-virhe
         (when (not= "tilattu" (::paikkaus/paikkauskohteen-tila paikkauskohde))
           (log/error (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " paikkauskohde-id))
@@ -716,7 +728,6 @@
                                  tee-tr-osoite
                                  tee-pinta-ala
                                  tee-tienkohta
-                                 tee-massamenekki
                                  (assoc
                                    ::muokkaustiedot/luoja-id kayttaja-id
                                    ::muokkaustiedot/luotu (pvm/nyt)
@@ -726,22 +737,35 @@
                                    ::paikkaus/tyomenetelma (::paikkaus/tyomenetelma paikkauskohde)
                                    ::paikkaus/ulkoinen-id 0)))))
                       paikkaukset)
-
+        kaikki-pinta-ala-yhteensa (reduce +
+                                          (map (fn [rivi]
+                                                 (or (get-in rivi [:paikkaus ::paikkaus/pinta-ala])
+                                                     0M))
+                                               paikkaukset))
+        paikkaukset-massatietoineen (map (fn [rivi]
+                                           (update rivi :paikkaus
+                                                   (fn [paikkaus]
+                                                     (as-> paikkaus p
+                                                           (assoc p ::paikkaus/massamaara
+                                                                    (laske-massamaara paikkaus urem-kok-massamaara kaikki-pinta-ala-yhteensa))
+                                                           (assoc p ::paikkaus/massamenekki (laske-massamenekki p))))))
+                                         paikkaukset)
         paikkausten-validointivirheet (into {} (map (fn [{rivi :rivi paikkaus :paikkaus}]
                                                       (let [validointivirheet (validoi-urem-excel-paikkaus paikkaus)]
                                                         (when-not (empty? validointivirheet)
                                                           [rivi validointivirheet])))
-                                                 paikkaukset))
-
+                                                    paikkaukset-massatietoineen))
         virheet (merge {}
+                  (when (and (not excel-luku-virhe)
+                             (not (number? urem-kok-massamaara)))
+                    {:urem-kokonaismassamaaravirhe "Kohteen kokonaismassamäärä puuttuu, täytä solu A4."})
                   (when (seq paikkausten-validointivirheet) {:paikkausten-validointivirheet paikkausten-validointivirheet})
                   (when paikkauskohteen-tila-virhe {:paikkauskohteen-tila-virhe paikkauskohteen-tila-virhe})
                   (when excel-luku-virhe {:excel-luku-virhe excel-luku-virhe}))
-
         tallennetut-paikkaukset (when (empty? virheet)
                                   (mapv
                                     #(paikkaus-q/tallenna-urem-paikkaus-excelista db (:paikkaus %))
-                                    paikkaukset))
+                                    paikkaukset-massatietoineen))
         body (cheshire/encode (cond
                                 tallennetut-paikkaukset
                                 {:message "OK"}
@@ -770,7 +794,9 @@
           (some? urakka-id)
           (some? kayttaja)
           (some? paikkauskohde-id))
-      (kasittele-urem-excel db urakka-id paikkauskohde-id kayttaja req)
+      (jdbc/with-db-transaction
+        [db db]
+        (kasittele-urem-excel db urakka-id paikkauskohde-id kayttaja req))
       (throw+ {:type "Error"
                :virheet [{:koodi "ERROR" :viesti "Urakka, käyttäjä tai paikkauskohde puuttuu."}]}))))
 
