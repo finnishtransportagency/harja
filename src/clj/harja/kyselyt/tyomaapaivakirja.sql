@@ -16,9 +16,9 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
        d::DATE as paivamaara, -- Otetaan generoinnin päivämäärä
        -- Ihan hihasta vedetty tilan määritelmä.
        CASE
-           WHEN t.luotu IS NULL  AND d::DATE < NOW() THEN 'puuttuu'
-           WHEN t.luotu BETWEEN d::DATE and d::DATE + interval '14 day' THEN 'ok'
-           WHEN t.luotu > d::DATE + interval '14 day' THEN 'myohassa'
+           WHEN t.luotu IS NULL  AND d::DATE < NOW()::DATE THEN 'puuttuu'
+           WHEN t.luotu BETWEEN d::DATE and d::DATE + interval '12 hour' THEN 'ok'
+           WHEN t.luotu > d::DATE + interval '12 hour' THEN 'myohassa'
        END as tila,
        count(tk.id) as "kommenttien-maara",
        t.versio,
@@ -36,8 +36,8 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
 SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi", t.versio, t.paivamaara::DATE,
        -- Hihasta vedetty tilan määritelmä
        CASE
-           WHEN t.luotu BETWEEN t.paivamaara and t.paivamaara + interval '14 day' THEN 'ok'
-           WHEN t.luotu > t.paivamaara + interval '14 day' THEN 'myohassa'
+           WHEN t.luotu BETWEEN t.paivamaara and t.paivamaara + interval '12 hour' THEN 'ok'
+           WHEN t.luotu > t.paivamaara + interval '12 hour' THEN 'myohassa'
            END as tila,
        (SELECT array_agg(row(aloitus, lopetus, nimi))
         FROM tyomaapaivakirja_paivystaja
@@ -109,8 +109,8 @@ VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :aloitus, :lopetus, :nimi);
 
 -- name: lisaa-saatiedot<!
 INSERT INTO tyomaapaivakirja_saaasema (urakka_id, tyomaapaivakirja_id, versio, havaintoaika, aseman_tunniste,
-                                  aseman_tietojen_paivityshetki, ilman_lampotila, tien_lampotila,
-                                  keskituuli, sateen_olomuoto, sadesumma)
+                                       aseman_tietojen_paivityshetki, ilman_lampotila, tien_lampotila,
+                                       keskituuli, sateen_olomuoto, sadesumma)
 VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :havaintoaika, :aseman-tunniste, :aseman-tietojen-paivityshetki,
         :ilman-lampotila, :tien-lampotila, :keskituuli, :sateen-olomuoto, :sadesumma);
 
