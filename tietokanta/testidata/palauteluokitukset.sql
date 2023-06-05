@@ -10,6 +10,3 @@ VALUES (901, 'Testaaminen', 90, 9990, true),
        (912, 'Toinen testailu', 91, 9993, true),
        (921, 'Poistettu käytössä', 92, 9994, true),
        (922, 'Poistettu poistettu', 92, 9995, true);
-
-
-
