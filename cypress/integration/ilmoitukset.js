@@ -1,3 +1,5 @@
+let timeoutAika = 10000;
+
 describe('Ilmoitus-näkymä (Tieliikenne)', function () {
     beforeEach(function () {
         cy.visit("http://localhost:3000/#ilmoitukset/tieliikenne?")
@@ -5,7 +7,7 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
 
     it("Ilmoitusten default näkymä", function() {
         cy.contains('.murupolku-urakkatyyppi', 'Kaikki')
-        cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', {timeout: 10000}).should( 'not.exist')
+        cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', {timeout: timeout}).should( 'not.exist')
         cy.get('[data-cy=ilmoitukset-grid]').gridOtsikot().then(($gridOtsikot) => {
             let $rivit = $gridOtsikot.grid.find('tbody tr');
             let $otsikot = $gridOtsikot.otsikot;
@@ -29,7 +31,7 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
         cy.contains("Vapaa aikaväli").click({force: true})
         cy.get('label[for=valitetty-urakkaan-alkuaika] + .pvm-aika-kentta input.pvm').type("1.1.2015")
         cy.contains("Piilota kartta").click() // klikataan mitä vaan muuta jotta pvm-kentän muutos liipaisee päivityksen
-        cy.wait('@ihaku', {timeout: 10000})
+        cy.wait('@ihaku', {timeout: timeout})
         cy.contains("Tie on liukas ja urainen")
     })
 
@@ -41,7 +43,7 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
         cy.get('label[for=hakuehto] + input').clear();
         cy.get('label[for=aihe] + div > button').click();
         cy.get('label[for=aihe] + div').contains("Testaus").click({force: true});
-        cy.wait('@ihaku', {timeout: 10000});
+        cy.wait('@ihaku', {timeout: timeout});
         cy.contains("2 Ilmoitusta");
         cy.get('[data-cy=ilmoitukset-grid]').contains("Testaaminen");
         cy.get('[data-cy=ilmoitukset-grid]').contains("Testailu");
@@ -59,18 +61,18 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
         cy.get('label[for=tarkenne] + div > ul').should('be.visible');
         cy.get('label[for=tarkenne] + div > ul').children().should('have.length', 5);
         cy.get('label[for=tarkenne] + div > ul').contains('Toinen testaaminen').click()
-        cy.wait('@ihaku', {timeout: 10000});
+        cy.wait('@ihaku', {timeout: timeout});
         cy.contains("1 Ilmoitusta");
         cy.get('[data-cy=ilmoitukset-grid]').contains("Toinen testaaminen");
     })
 
     it("Ilmoitusten http-pollaus", function () {
-        cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', { timeout: 10000 }).should('not.exist')
+        cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', { timeout: timeout }).should('not.exist')
         cy.contains('.ilmoitukset', 'Uusia ilmoituksia haetaan')
     })
 
     it("Ilmoitusten ws-yhteys aktivoituu", function () {
-        cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', { timeout: 10000 }).should('not.exist')
+        cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', { timeout: timeout }).should('not.exist')
         cy.contains('Aktivoi kokeellinen ilmoitusten reaaliaikahaku').click()
         cy.contains('.ilmoitukset', 'Uusien ilmoitusten reaaliaikahaku aktiivinen')
     })

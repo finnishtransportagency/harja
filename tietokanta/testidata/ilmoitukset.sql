@@ -1232,8 +1232,8 @@ $$
                                             ORDER BY ilmoitusid DESC
                                             LIMIT 1);
         nyt                   TIMESTAMP := (SELECT now() - interval '2 minute');
-        aiheet                INT[]     := '{90, 91}';
-        tarkenteet            INT[]     := '{901, 902, 911, 912}';
+        aiheet                INT[] := '{90,  90,  91,  91}';
+        tarkenteet            INT[] := '{901, 902, 911, 912}';
     BEGIN
         FOR i IN 1..(SELECT array_length(tarkenteet, 1))
             LOOP
@@ -1247,7 +1247,7 @@ $$
                         'Toripolliisi',
                         ST_MakePoint(427641.544, 7210836.163)::GEOMETRY,
                         48410, 'tiedoitus', 'teiden-hoito', 'Iiro', 'Ilmoittaja', 'Tienkäyttäjä', 'Lasse', 'Lähettäjä',
-                        aiheet[(i + 1) / 2], tarkenteet[i], 'Toripolliisi on lenkillä!');
+                        aiheet[i], tarkenteet[i], 'Toripolliisi on lenkillä!');
             END LOOP;
     END
 $$;

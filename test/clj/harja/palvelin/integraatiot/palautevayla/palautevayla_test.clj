@@ -11,7 +11,7 @@
 
 (def +testi-pj+
   {:paivitysaika nil
-   :url "https://feikki-palautevayla-api.com"
+   :url "https://localhost:9999"
    :kayttajatunnus "pj-testi-kayttajatunnus"
    :salasana "pj-testi-salasana"})
 
@@ -20,9 +20,7 @@
     kayttaja
     :palautevayla (component/using
                     (pj/->Palautevayla +testi-pj+)
-
                     [:db :integraatioloki])))
-
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture
                       jarjestelma-fixture))
@@ -133,7 +131,7 @@
 
 (deftest hae-aiheet-onnistuu
   (with-fake-http
-    ["https://feikki-palautevayla-api.com/api/x_sgtk_open311/v1/publicws/subjects?locale=fi"
+    ["https://localhost:9999/api/x_sgtk_open311/v1/publicws/subjects?locale=fi"
      (slurp "resources/xsd/palautevayla/esimerkit/aiheet.xml")]
     (let [aiheet (pj/hae-aiheet (:palautevayla jarjestelma))]
       (is (= (count aiheet) 3))
@@ -141,7 +139,7 @@
 
 (deftest hae-tarkenteet-onnistuu
   (with-fake-http
-    ["https://feikki-palautevayla-api.com/api/x_sgtk_open311/v1/publicws/subsubjects?locale=fi"
+    ["https://localhost:9999/api/x_sgtk_open311/v1/publicws/subsubjects?locale=fi"
      (slurp "resources/xsd/palautevayla/esimerkit/tarkenteet.xml")]
     (let [tarkenteet (pj/hae-tarkenteet (:palautevayla jarjestelma))]
       (is (= (count tarkenteet) 6))
@@ -149,9 +147,9 @@
 
 (deftest tallenna-aiheet-ja-tarkenteet-onnistuu
   (with-fake-http
-    ["https://feikki-palautevayla-api.com/api/x_sgtk_open311/v1/publicws/subjects?locale=fi"
+    ["https://localhost:9999/api/x_sgtk_open311/v1/publicws/subjects?locale=fi"
      (slurp "resources/xsd/palautevayla/esimerkit/aiheet.xml")
-     "https://feikki-palautevayla-api.com/api/x_sgtk_open311/v1/publicws/subsubjects?locale=fi"
+     "https://localhost:9999/api/x_sgtk_open311/v1/publicws/subsubjects?locale=fi"
      (slurp "resources/xsd/palautevayla/esimerkit/tarkenteet.xml")]
     (let [_aiheet (pj/paivita-aiheet-ja-tarkenteet (:palautevayla jarjestelma))
           aiheet-ja-tarkenteet-kannassa (palauteluokitukset/hae-palauteluokitukset

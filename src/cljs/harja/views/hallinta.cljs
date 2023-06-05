@@ -106,7 +106,6 @@
 
    "Palauteluokitukset"
    :palauteluokitukset
-   ;; TODO: Tee oikeus?
    (when (oikeudet/hallinta-palautevayla)
      ^{:key "palauteluokitukset"}
      [pl/palauteluokitukset])])
