@@ -36,6 +36,11 @@
 ;; Kuittauksen vastaus
 (defrecord KuittaaVastaus [vastaus])
 
+;; Aiheiden ja tarkenteiden haku
+(defrecord HaeAiheetJaTarkenteet [])
+(defrecord HaeAiheetJaTarkenteetOnnistui [vastaus])
+(defrecord HaeAiheetJaTarkenteetEpaonnistui [vastaus])
+
 ;;
 (defrecord AloitaPikakuittaus [ilmoitus kuittaustyyppi])
 (defrecord PaivitaPikakuittaus [pikakuittaus])

@@ -18,6 +18,7 @@
             [harja.views.hallinta.toteumatyokalu-nakyma :as toteumatyokalu-nakyma]
             [harja.views.hallinta.tyomaapaivakirjatyokalu-nakyma :as paivakirjatyokalu-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
+            [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -111,4 +112,10 @@
   :koulutusvideot
   (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-koulutusvideot)
     ^{:key "koulutusvideot"}
-    [koulutusvideot/nakyma])])
+    [koulutusvideot/nakyma])
+
+   "Palauteluokitukset"
+   :palauteluokitukset
+   (when (oikeudet/hallinta-palautevayla)
+     ^{:key "palauteluokitukset"}
+     [pl/palauteluokitukset])])

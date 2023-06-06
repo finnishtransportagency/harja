@@ -160,7 +160,10 @@
     :harja-status
     :rajoitusalue-pituudet
     :api-tyomaapaivakirja
-    :tyomaapaivakirja})
+    :tyomaapaivakirja
+    :palautevayla
+    :palauteluokitukset
+    :palauteluokitukset-hallinta})
 
 (def ei-statusta
   #{:metriikka
@@ -229,7 +232,10 @@
     :info
     :rajoitusalue-pituudet
     :api-tyomaapaivakirja
-    :tyomaapaivakirja})
+    :tyomaapaivakirja
+    :palautevayla
+    :palauteluokitukset
+    :palauteluokitukset-hallinta})
 
 (def hidas-ok-status #{:itmf})
 

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<subsubjects>
+    <subsubject>
+        <active>1</active>
+        <name>Tarkenne 1-1</name>
+        <id>101</id>
+        <subject_id>1</subject_id>
+        <locale>fi</locale>
+        <order>100</order>
+        <tloik>0</tloik>
+        <palautevayla>1</palautevayla>
+        <mobiilisovellus>0</mobiilisovellus>
+    </subsubject>
+    <subsubject>
+        <active>1</active>
+        <name>Tarkenne 1-2</name>
+        <id>102</id>
+        <subject_id>1</subject_id>
+        <locale>fi</locale>
+        <order>200</order>
+        <tloik>1</tloik>
+        <palautevayla>1</palautevayla>
+        <mobiilisovellus>0</mobiilisovellus>
+    </subsubject>
+    <subsubject>
+        <active>1</active>
+        <name>Tarkenne 2-1</name>
+        <id>201</id>
+        <subject_id>2</subject_id>
+        <locale>fi</locale>
+        <order>300</order>
+        <tloik>1</tloik>
+        <palautevayla>1</palautevayla>
+        <mobiilisovellus>0</mobiilisovellus>
+    </subsubject>
+    <subsubject>
+        <active>1</active>
+        <name>Tarkenne 2-2</name>
+        <id>202</id>
+        <subject_id>2</subject_id>
+        <locale>fi</locale>
+        <order>400</order>
+        <tloik>1</tloik>
+        <palautevayla>1</palautevayla>
+        <mobiilisovellus>0</mobiilisovellus>
+    </subsubject>
+    <subsubject>
+        <active>0</active>
+        <name>Tarkenne 2-3, ei käytössä</name>
+        <id>203</id>
+        <subject_id>2</subject_id>
+        <locale>fi</locale>
+        <order>500</order>
+        <tloik>1</tloik>
+        <palautevayla>1</palautevayla>
+        <mobiilisovellus>0</mobiilisovellus>
+    </subsubject>
+    <subsubject>
+        <active>1</active>
+        <name>Tarkenne 3-1</name>
+        <id>301</id>
+        <subject_id>3</subject_id>
+        <locale>fi</locale>
+        <order>600</order>
+        <tloik>1</tloik>
+        <palautevayla>1</palautevayla>
+        <mobiilisovellus>0</mobiilisovellus>
+    </subsubject>
+</subsubjects>
