@@ -1235,6 +1235,21 @@ $$
         aiheet                INT[] := '{90,  90,  91,  91}';
         tarkenteet            INT[] := '{901, 902, 911, 912}';
     BEGIN
+        -- Ilmoitus luokittelulla lisätiedossa.
+        INSERT INTO ilmoitus (urakka, ilmoitusid, ilmoitettu, valitetty, "valitetty-urakkaan", vastaanotettu,
+                              "vastaanotettu-alunperin", yhteydenottopyynto, paikankuvaus, sijainti,
+                              tr_numero, ilmoitustyyppi, urakkatyyppi,
+                              ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyyppi,
+                              lahettaja_etunimi, lahettaja_sukunimi, lisatieto, selitteet)
+        VALUES (urakka_id, viimeisin_ilmoitus_id + 1, nyt - interval '1 minute', nyt, nyt, nyt, nyt, false,
+                'Toripolliisi',
+                ST_MakePoint(427641.544, 7210836.163)::GEOMETRY,
+                48410, 'tiedoitus', 'teiden-hoito', 'Iiro', 'Ilmoittaja', 'Tienkäyttäjä', 'Lasse', 'Lähettäjä',
+                'Aihe: Toinen testaus Lisätieto: Toinen testailu Otsikko: Toripolliisi kadonnut! Kuvaus: Toripolliisi on lähtenyt nallikariin ottamaan aurinkoa!',
+                '{"tiellaOnEste"}');
+
+        viimeisin_ilmoitus_id = viimeisin_ilmoitus_id + 1;
+
         FOR i IN 1..(SELECT array_length(tarkenteet, 1))
             LOOP
                 viimeisin_ilmoitus_id = viimeisin_ilmoitus_id + 1;
