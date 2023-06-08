@@ -4,7 +4,15 @@ SELECT
   ulompi_i.id,
   ulompi_i.urakka,
   ulompi_i.tunniste,
-  u.nimi as urakkanimi,
+  u.nimi AS urakkanimi,
+  CASE
+      WHEN u.kesakausi_alkupvm IS NOT NULL THEN
+          CONCAT(TO_CHAR(NOW(), 'YYYY'), '-', TO_CHAR(u.kesakausi_alkupvm, 'MM-DD'))
+      END AS "urakka-kesakausi-alkupvm",
+  CASE
+      WHEN u.kesakausi_loppupvm IS NOT NULL THEN
+          CONCAT(TO_CHAR(NOW(), 'YYYY'), '-', TO_CHAR(u.kesakausi_loppupvm, 'MM-DD'))
+      END AS "urakka-kesakausi-loppupvm",
   ulompi_i.ilmoitusid,
   ulompi_i.ilmoitettu,
   ulompi_i.valitetty,

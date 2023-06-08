@@ -56,7 +56,7 @@
        (hash (tc/to-long o)))))
 
 #?(:clj
-   (defn- joda-time? [pvm]
+   (defn joda-time? [pvm]
      (or (instance? org.joda.time.DateTime pvm)
          (instance? org.joda.time.LocalDate pvm)
          (instance? org.joda.time.LocalDateTime pvm))))
@@ -390,7 +390,7 @@
 (def kokovuosi-ja-kuukausi-fmt
   (luo-format "yyyy/MM"))
 
-(defn fmt-kuukausi-ja-vuosi-lyhyt [aika]
+(defn fmt-paiva-ja-kuukausi-lyhyt [aika]
   (formatoi (luo-format "d.M.") aika))
 
 (defn fmt-p-k-v-lyhyt [aika]
@@ -1091,6 +1091,17 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   (when (and eka toka)
     (paivia-valissa eka toka)))
 
+
+(defn aikaa-valissa
+  "Palauttaa kokonaisluvun, joka kertoo montako aikayksikköä kahden päivämäärän välillä on kulunut.
+  Annettujen päivämäärien ei tarvitse olla kronologisessa järjestyksesä.
+  Oletuksena käytetään aikakonversio-fn t/in-hours funktiota."
+  ([pvm1 pvm2] (aikaa-valissa pvm1 pvm2 t/in-hours))
+  ([pvm1 pvm2 aikakonversio-fn]
+   (if (t/before? pvm1 pvm2)
+     (aikakonversio-fn (t/interval pvm1 pvm2))
+     (aikakonversio-fn (t/interval pvm2 pvm1)))))
+
 (defn iso-8601->pvm
   "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon joda-time päivämääräksi."
   [teksti]
@@ -1305,4 +1316,108 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn kuukauden-viimeinen-paiva
      [pvm]
      (dateksi (t/last-day-of-the-month (vuosi pvm) (kuukausi pvm)))))
+
+
+;; Suomen lomapäivät
+(defn- kiinteat-lomapaivat-vuodelle [vuosi]
+  [{:nimi "Uudenvuodenpäivä" :pvm (luo-pvm-dec-kk vuosi 1 1)}
+   {:nimi "Loppiainen" :pvm (luo-pvm-dec-kk vuosi 1 6)}
+   {:nimi "Vappu" :pvm (luo-pvm-dec-kk vuosi 5 1)}
+   {:nimi "Itsenäisyyspäivä" :pvm (luo-pvm-dec-kk vuosi 12 6)}
+   {:nimi "Jouluaatto" :pvm (luo-pvm-dec-kk vuosi 12 24)}
+   {:nimi "Joulupäivä" :pvm (luo-pvm-dec-kk vuosi 12 25)}
+   {:nimi "Tapaninpäivä" :pvm (luo-pvm-dec-kk vuosi 12 26)}])
+
+(defn- paasiaspaiva-vuodelle
+  "Laskee pääsiäissunnuntain (Pääsiäispäivän) annetulle vuodelle käyttäen Butcherin menetelmää.
+  https://fi.wikipedia.org/wiki/P%C3%A4%C3%A4si%C3%A4isen_laskeminen"
+  [vuosi]
+  (let [a (mod vuosi 19)
+        b (quot vuosi 100)
+        c (mod vuosi 100)
+        d (quot b 4)
+        e (mod b 4)
+        f (quot (+ b 8) 25)
+        g (quot (+ (- b f) 1) 3)
+        h (mod (+ (* 19 a) (- b d g) 15) 30)
+        i (quot c 4)
+        k (mod c 4)
+        l (mod (- (+ 32 (* 2 e) (* 2 i)) h k) 7)
+        m (quot (+ a (* 11 h) (* 22 l)) 451)
+        ;; kk
+        n (quot (+ h (- l (* 7 m)) 114) 31)
+        ;; paiva
+        p (mod (+ h (- l (* 7 m)) 114) 31)
+        paiva (+ p 1)]
+    (luo-pvm-dec-kk vuosi n paiva)))
+
+(defn- paasiaiseen-liittyvat-lomapaivat-vuodelle [vuosi]
+  (let [paasiaispaiva (paasiaspaiva-vuodelle vuosi)]
+    [{:nimi "Pitkäperjantai" :pvm (ajan-muokkaus paasiaispaiva false 2 :paiva)}
+     {:nimi "Pääsiäispäivä" :pvm paasiaispaiva}
+     {:nimi "2. Pääsiäispäivä" :pvm (ajan-muokkaus paasiaispaiva true 1 :paiva)}
+     {:nimi "Helatorstai" :pvm (ajan-muokkaus paasiaispaiva true 39 :paiva)}
+     {:nimi "Helluntaipäivä" :pvm (ajan-muokkaus paasiaispaiva true 49 :paiva)}]))
+
+(defn loyda-ensimmainen-viikonpaiva-alkaen [pvm viikonpaiva]
+  (let [pvm (joda-timeksi pvm)
+        ;; Day-of-week antaa väärän järjestysluvun, jos pvm ei konvertoida ensin suomen aikavyöhykkeeseen
+        aloitus-viikonpaiva (t/day-of-week (suomen-aikavyohykkeeseen pvm))]
+
+    (if (= aloitus-viikonpaiva viikonpaiva)
+      pvm
+      (let [siirtyma-paivia (mod (- viikonpaiva aloitus-viikonpaiva) 7)]
+        (ajan-muokkaus pvm true siirtyma-paivia :paiva)))))
+
+(defn- aikavaleista-poimittavat-lomapaivat-vuodelle
+  "Laskee aikavälien perusteella pääteltävät lomapäivät annetulle vuodelle (Juhannus ja pyhäinpäivä)"
+  [vuosi]
+  (let [juhannusaatto (loyda-ensimmainen-viikonpaiva-alkaen (luo-pvm-dec-kk vuosi 6 19) 5)]
+    [{:nimi "Juhannusaatto" :pvm juhannusaatto}
+     {:nimi "Juhannuspäivä" :pvm (ajan-muokkaus juhannusaatto true 1 :paiva)}
+     {:nimi "Pyhäinpäivä" :pvm (loyda-ensimmainen-viikonpaiva-alkaen (luo-pvm-dec-kk vuosi 10 31) 6)}]))
+
+(defn lomapaivat-vuodelle
+  "Palauttaa kaikki Suomen viralliset lomapäivät annetulle vuodelle ISO8601 päivämäärinä."
+  [vuosi]
+  (map
+    (fn [{:keys [nimi pvm]}]
+      {:nimi nimi :pvm (df/unparse
+                         (df/formatter-local "yyyy-MM-dd")
+                         (suomen-aikavyohykkeeseen (joda-timeksi pvm)))})
+    (concat
+      (kiinteat-lomapaivat-vuodelle vuosi)
+      (paasiaiseen-liittyvat-lomapaivat-vuodelle vuosi)
+      (aikavaleista-poimittavat-lomapaivat-vuodelle vuosi))))
+
+#?(:clj
+   (defn seuraava-arkipaiva
+     "Palauttaa annettua päivämäärää seuraavan arkipäivän, eli päivän joka ei osu viikonloppuun tai viralliseen arkipyhään.
+     Pvm palautetaan samassa aikavyöhykkeessä kuin parametrina annettun pvm."
+     [pvm]
+     (let [pvm (if (joda-time? pvm) pvm (joda-timeksi pvm))
+           ;; Otetaan talteen pvm alkuperäinen aikavyöhyke, jotta lopputulos voidaan palauttaa alkuperäisessä aikavyöhykkeessä
+           alkuperainen-aikavyohyke (.getZone pvm)
+           pvm (suomen-aikavyohykkeeseen pvm)]
+       (loop [pvm pvm]
+         (let [viikonpaiva (t/day-of-week pvm)
+               paiva-johon-hypattiin
+               (cond
+                 ;; Jos annettu paiva on pe/la/su hyppää suoraan maanantaihin
+                 (#{5 6 7} viikonpaiva)
+                 (loyda-ensimmainen-viikonpaiva-alkaen pvm 1)
+
+                 ;; Ma - To, hypätään vain seuraavaan arkipäivään
+                 :else
+                 (t/plus pvm (t/days 1)))
+               lomapaivat (into #{} (map :pvm (lomapaivat-vuodelle (vuosi paiva-johon-hypattiin))))]
+
+           ;; Jos päivä johon hypättiin ei ole lomapäivä, lopetetetaan haku. Muutoin jatketaan.
+           ;; Verrataan päivämääriä vain yksinkertaisina stringeinä
+           (if-not (lomapaivat (df/unparse
+                                 (df/formatter-local "yyyy-MM-dd")
+                                 paiva-johon-hypattiin))
+             ;; Palautetaan lopputulos parametrina annetun päivämäärän aikavyöhykkeessä
+             (t/to-time-zone paiva-johon-hypattiin alkuperainen-aikavyohyke)
+             (recur paiva-johon-hypattiin)))))))
 
