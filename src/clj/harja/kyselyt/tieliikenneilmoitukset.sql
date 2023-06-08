@@ -240,7 +240,12 @@ SELECT
   it.kasittelija_henkilo_tyopuhelin        AS kuittaus_kasittelija_tyopuhelin,
   it.kasittelija_henkilo_sahkoposti        AS kuittaus_kasittelija_sahkoposti,
   it.kasittelija_organisaatio_nimi         AS kuittaus_kasittelija_organisaatio,
-  it.kasittelija_organisaatio_ytunnus      AS kuittaus_kasittelija_ytunnus
+  it.kasittelija_organisaatio_ytunnus      AS kuittaus_kasittelija_ytunnus,
+
+  -- Liitä ilmoituksen kuvat kyselyyn, mikäli olemassa
+  ( SELECT ARRAY_AGG(ik.linkki) 
+    FROM ilmoitus_kuvat ik
+    WHERE ik.ilmoitus = i.id )             AS kuvat
 
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
@@ -432,6 +437,10 @@ WHERE ilmoitusid = :ilmoitusid;
 SELECT id, urakka, "valitetty-urakkaan", valitetty
 FROM ilmoitus
 WHERE ilmoitusid = :ilmoitusid;
+
+-- name: liita-kuvat-ilmoitukseen<!
+-- Liittää kuvat ilmoitukseen
+INSERT INTO ilmoitus_kuvat (ilmoitus, linkki) VALUES (:id, :linkki)
 
 -- name: luo-ilmoitus<!
 -- Luo uuden havainnon

@@ -28,6 +28,7 @@
     (map #(konv/string->keyword % [:kuittaus :kanava]))
     (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
     (map #(konv/array->vec % :selitteet))
+    (map #(konv/array->vec % :kuvat))
     (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
     (map #(assoc-in % [:kuittaus :kuittaustyyppi] (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
     (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))

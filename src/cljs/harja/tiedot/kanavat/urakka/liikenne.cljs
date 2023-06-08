@@ -487,31 +487,34 @@
     (and (not= (::toiminto/toimenpide osa) :ei-avausta)
          (= (::toiminto/palvelumuoto osa) :itse))))
 
-(defn suuntavalinta-str [edelliset suunta]
+(defn- ketjutus-kaytossa? [valittu-liikennetapahtuma haetut-sopimukset]
+  (let [sopimus-id (-> valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
+        ketjutus-kaytossa? (first (filter (fn[sopimus]
+                                            (= sopimus-id (::sop/id sopimus))) haetut-sopimukset))]
+    (boolean (::sop/ketjutus ketjutus-kaytossa?))))
+
+(defn suuntavalinta-str [{:keys [valittu-liikennetapahtuma haetut-sopimukset]} edelliset suunta]
   (let [suunta->str (fn [suunta] (@lt/suunnat-atom suunta))]
     (str (suunta->str suunta)
-         (when (suunta edelliset)
-           (str ", " (count (get-in edelliset [suunta :edelliset-alukset])) " lähestyvää alusta")))))
+      ;; Älä näytä (x lähestyvää alusta) jos ketjutus ei ole käytössä
+      (when (and
+              (suunta edelliset)
+              (ketjutus-kaytossa? valittu-liikennetapahtuma haetut-sopimukset))
+        (str ", " (count (get-in edelliset [suunta :edelliset-alukset])) " lähestyvää alusta")))))
 
 (defn nayta-edelliset-alukset? [{:keys [valittu-liikennetapahtuma
                                         edellisten-haku-kaynnissa?
                                         haetut-sopimukset
                                         edelliset]}]
-
-  (let [sopimus-id (-> valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
-        ketjutus-kaytossa? (first (filter (fn[sopimus]
-                                            (= sopimus-id (::sop/id sopimus))) haetut-sopimukset))
-        ketjutus-kaytossa? (boolean (::sop/ketjutus ketjutus-kaytossa?))]
-
-    ;; Onko ketjutus käytössä tällä sopimuksella/urakalla?
-    (if ketjutus-kaytossa?
-      (boolean
-        (and (::lt/kohde valittu-liikennetapahtuma)
-          (not edellisten-haku-kaynnissa?)
-          (or (:alas edelliset) (:ylos edelliset))
-          (some? (:valittu-suunta valittu-liikennetapahtuma))
-          (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))))
-      false)))
+  ;; Onko ketjutus käytössä tällä sopimuksella/urakalla?
+  (if (ketjutus-kaytossa? valittu-liikennetapahtuma haetut-sopimukset)
+    (boolean
+      (and (::lt/kohde valittu-liikennetapahtuma)
+        (not edellisten-haku-kaynnissa?)
+        (or (:alas edelliset) (:ylos edelliset))
+        (some? (:valittu-suunta valittu-liikennetapahtuma))
+        (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))))
+    false))
 
 (defn nayta-suunnan-ketjutukset? [{:keys [valittu-liikennetapahtuma]} suunta tiedot]
   (boolean
