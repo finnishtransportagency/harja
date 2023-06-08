@@ -101,7 +101,7 @@ jobs:
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
         run: |
           echo "Building image with tag $IMAGE_TAG"
-          docker build -network="host" -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --file $DOCKERFILE_PATH .
+          docker build --network="host" -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --file $DOCKERFILE_PATH .
           
           echo "Pushing image to ECR"
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
