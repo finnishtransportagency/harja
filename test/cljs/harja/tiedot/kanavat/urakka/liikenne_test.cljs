@@ -580,7 +580,8 @@
             :raporttiparametrit {:nimi :kanavien-liikennetapahtumat,
                                  :konteksti "monta-urakkaa",
                                  :urakoiden-nimet (),
-                                 :parametrit {:alkupvm nil 
+                                 :parametrit {:valitut-urakat ()
+                                              :alkupvm nil 
                                               :loppupvm nil
                                               :urakkatyyppi :vesivayla-kanavien-hoito
                                               :yhteenveto {:toimenpiteet {:sulutukset-ylos 1, :sulutukset-alas 1, :sillan-avaukset 1, :tyhjennykset 1, :yhteensa 4}, 
@@ -792,7 +793,8 @@
                               {::lt-alus/suunta :ylos
                                ::lt-alus/nimi "Ronsu"})]
             :raporttiparametrit {:nimi :kanavien-liikennetapahtumat, :konteksti "monta-urakkaa", :urakoiden-nimet (),
-                                 :parametrit {:alkupvm nil
+                                 :parametrit {:valitut-urakat ()
+                                              :alkupvm nil
                                               :loppupvm nil
                                               :urakkatyyppi :vesivayla-kanavien-hoito
                                               :yhteenveto {:toimenpiteet {:sulutukset-ylos 0, :sulutukset-alas 0, :sillan-avaukset 0, :tyhjennykset 0, :yhteensa 0}, 

@@ -396,18 +396,25 @@
    (let [vapaa-aikavali? (get-in valinnat-nyt [(or (:vakioaikavali kenttien-nimet) :vakioaikavali) :vapaa-aikavali])
          palstoita-vapaa-aikavali? (:palstoita-vapaa-aikavali? valinnat-nyt)
          alkuaika (:alkuaika valinnat-nyt)
+         aikavalivalitsin-flex? (:aikavalivalitsin-flex? vakio-aikavalikentta-skeema)
          vakio-aikavalikentta (merge {:nimi (or (:vakioaikavali kenttien-nimet) :vakioaikavali)
                                       :otsikko otsikko
                                       :fmt :nimi
                                       :tyyppi :valinta
                                       :valinnat aikavalit
                                       :valinta-nayta :nimi
-                                      :alasveto-luokka "aikavalinta"} vakio-aikavalikentta-skeema)
+                                      :alasveto-luokka "aikavalinta"
+                                      ::lomake/col-luokka (when aikavalivalitsin-flex?
+                                                            "lomakepalsta-flex-kokonainen")} vakio-aikavalikentta-skeema)
          alkuaikakentta {:nimi (or (:alkuaika kenttien-nimet) :alkuaika)
                          :otsikko "Alku"
+                         ::lomake/col-luokka (when aikavalivalitsin-flex?
+                                               "lomakepalsta-flex-puolikas")
                          :tyyppi (if vain-pvm :pvm :pvm-aika)
                          :validoi [[:ei-tyhja "Anna alkuaika"]]}
          loppuaikakentta {:nimi (or (:loppuaika kenttien-nimet) :loppuaika)
+                          ::lomake/col-luokka (when aikavalivalitsin-flex?
+                                                "lomakepalsta-flex-puolikas")
                           :otsikko "Loppu"
                           :tyyppi (if vain-pvm :pvm :pvm-aika)
                           :validoi [[:ei-tyhja "Anna loppuaika"]
@@ -417,7 +424,8 @@
        (if palstoita-vapaa-aikavali?
          (lomake/palstat
            {}
-           {:otsikko nil}
+           {:otsikko nil
+            :flex? aikavalivalitsin-flex?}
            [vakio-aikavalikentta
             alkuaikakentta
             loppuaikakentta])

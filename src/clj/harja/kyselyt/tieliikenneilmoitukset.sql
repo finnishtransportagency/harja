@@ -22,6 +22,8 @@ SELECT
   ulompi_i.lisatieto,
   ulompi_i.ilmoitustyyppi,
   ulompi_i.selitteet,
+  ulompi_i.aihe,
+  ulompi_i.tarkenne,
   ulompi_i.urakkatyyppi,
   ulompi_i.tila,
   ulompi_i.sijainti,
@@ -70,7 +72,9 @@ WHERE ulompi_i.id IN
       (:tyypit_annettu IS FALSE OR sisempi_i.ilmoitustyyppi :: TEXT IN (:tyypit)) AND
 
       -- Tarkasta vapaatekstihakuehto
-      (:teksti_annettu IS FALSE OR (sisempi_i.otsikko LIKE :teksti OR sisempi_i.paikankuvaus LIKE :teksti OR sisempi_i.lisatieto LIKE :teksti)) AND
+      (:teksti_annettu IS FALSE OR (sisempi_i.otsikko LIKE :teksti OR sisempi_i.paikankuvaus LIKE :teksti OR sisempi_i.lisatieto LIKE :teksti) OR
+       (SELECT nimi from palautevayla_tarkenne WHERE ulkoinen_id = sisempi_i.tarkenne) LIKE :teksti OR
+       (SELECT nimi from palautevayla_aihe WHERE ulkoinen_id = sisempi_i.aihe) LIKE :teksti) AND
 
       -- Tarkasta selitehakuehto
       (:selite_annettu IS FALSE OR (sisempi_i.selitteet @> ARRAY [:selite :: TEXT])) AND
@@ -88,7 +92,13 @@ WHERE ulompi_i.id IN
       -- Rajaa ilmoittajan puhelinnumerolla
       (:ilmoittaja-puhelin::TEXT IS NULL OR
        sisempi_i.ilmoittaja_matkapuhelin
-           LIKE :ilmoittaja-puhelin)
+           LIKE :ilmoittaja-puhelin) AND
+
+       -- Rajaa aiheella ja tarkenteella
+      (:aihe::INTEGER IS NULL OR
+       sisempi_i.aihe = :aihe) AND
+      (:tarkenne::INTEGER IS NULL OR
+       sisempi_i.tarkenne = :tarkenne)
        ORDER BY sisempi_i."valitetty-urakkaan" DESC
        LIMIT :max-maara::INTEGER)
 ORDER BY ulompi_i."valitetty-urakkaan" DESC, it.kuitattu DESC;
@@ -146,6 +156,10 @@ SELECT
   otsikko,
   ilmoitustyyppi,
   selitteet,
+  i.aihe AS aihe_id,
+  pa.nimi AS aihe_nimi,
+  i.tarkenne AS tarkenne_id,
+  pt.nimi AS tarkenne_nimi,
   sijainti,
   tr_numero,
   tr_alkuosa,
@@ -162,7 +176,9 @@ SELECT
   lahettaja_puhelinnumero,
   lahettaja_sahkoposti,
   "aiheutti-toimenpiteita"
-FROM ilmoitus
+FROM ilmoitus i
+  LEFT JOIN palautevayla_aihe pa ON i.aihe = pa.ulkoinen_id
+  LEFT JOIN palautevayla_tarkenne pt ON i.tarkenne = pt.ulkoinen_id
 WHERE ilmoitusid IN (:ilmoitusidt);
 
 -- name: hae-ilmoitus
@@ -182,6 +198,8 @@ SELECT
   i.lisatieto,
   i.ilmoitustyyppi,
   i.selitteet,
+  i.aihe,
+  i.tarkenne,
   i.urakkatyyppi,
   i.tila,
 
@@ -253,6 +271,8 @@ SELECT
   i.paikankuvaus,
   i.lisatieto,
   i.selitteet,
+  i.aihe,
+  i.tarkenne,
 
   i.sijainti,
   i.tr_numero,
@@ -316,6 +336,10 @@ SELECT
   otsikko,
   ilmoitustyyppi,
   selitteet,
+  i.aihe AS aihe_id,
+  i.tarkenne AS tarkenne_id,
+  pa.nimi AS aihe_nimi,
+  pt.nimi AS tarkenne_nimi,
   sijainti,
   tr_numero,
   tr_alkuosa,
@@ -332,9 +356,11 @@ SELECT
   lahettaja_puhelinnumero,
   lahettaja_sahkoposti,
   "aiheutti-toimenpiteita"
-FROM ilmoitus
+FROM ilmoitus i
+    LEFT JOIN palautevayla_aihe pa ON i.aihe = pa.ulkoinen_id
+    LEFT JOIN palautevayla_tarkenne pt ON i.tarkenne = pt.ulkoinen_id
 WHERE urakka = :urakka AND
-      (muokattu > :aika OR luotu > :aika);
+      (i.muokattu > :aika OR i.luotu > :aika);
 
 -- name: hae-ilmoitukset-ytunnuksella
 WITH ilmoitus_urakat AS (SELECT u.id as id, u.urakkanro as urakkanro
@@ -375,6 +401,10 @@ SELECT
     i.lisatieto,
     i.otsikko,
     i.selitteet,
+    i.aihe AS aihe_id,
+    i.tarkenne AS tarkenne_id,
+    pa.nimi AS aihe_nimi,
+    pt.nimi AS tarkenne_nimi,
     i.sijainti,
     i.tr_numero as tienumero,
     i.ilmoittaja_etunimi,
@@ -393,7 +423,9 @@ SELECT
 FROM loydetyt_ilmoitukset li
          JOIN ilmoitus i ON i.id = li.id
          JOIN ilmoitustoimenpide it on it.ilmoitus = li.id
-GROUP BY i.id, li.urakkanro, i."valitetty-urakkaan"
+         LEFT JOIN palautevayla_aihe pa on i.aihe = pa.ulkoinen_id
+         LEFT JOIN palautevayla_tarkenne pt on i.tarkenne = pt.ulkoinen_id
+     GROUP BY i.id, li.urakkanro, i."valitetty-urakkaan", pa.nimi, pt.nimi
 ORDER BY i."valitetty-urakkaan" ASC
 LIMIT 10000;
 
@@ -427,7 +459,9 @@ INSERT INTO ilmoitus
  viestiid,
  vastaanotettu,
  "vastaanotettu-alunperin",
- "valitetty-urakkaan")
+ "valitetty-urakkaan",
+ aihe,
+ tarkenne)
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -444,7 +478,9 @@ VALUES
    :viestiid,
    :vastaanotettu :: TIMESTAMPTZ,
    :vastaanotettu-alunperin :: TIMESTAMPTZ,
-   :valitetty-urakkaan :: TIMESTAMP);
+   :valitetty-urakkaan :: TIMESTAMP,
+   :aihe,
+   :tarkenne);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
@@ -463,7 +499,9 @@ SET urakka               = :urakka,
     selitteet = :selitteet :: TEXT [],
     tunniste = :tunniste,
     muokattu = NOW(),
-    viestiid = :viestiid
+    viestiid = :viestiid,
+    aihe = :aihe,
+    tarkenne = :tarkenne
 WHERE id = :id;
 
 -- name: paivita-ilmoituksen-urakka!

@@ -56,7 +56,11 @@
     <seliteet>
       <selite>auraustarve</selite>
     </seliteet>
-  </harja:ilmoitus>
+     <luokittelu>
+     <aihe>4</aihe>
+     <tarkenne>403</tarkenne>
+     </luokittelu>
+     </harja:ilmoitus>
   "))
 
 (defn toimenpidepyynto-ilmoittaja-sanoma [{:keys [viesti-id ilmoitus-id sijainti-xml
@@ -97,5 +101,9 @@
       <seliteet>
         <selite>soratienKuntoHuono</selite>
       </seliteet>
-      </ns0:ilmoitus>"))
+     <luokittelu>
+     <aihe>3</aihe>
+     <tarkenne>302</tarkenne>
+     </luokittelu>
+     </ns0:ilmoitus>"))
 

@@ -173,7 +173,7 @@
     (is (= (count (:laatupoikkeamat vastaus)) 51))
     (is (= (count (:paallystys vastaus)) 1))
     (is (= (count (:paikkaus vastaus)) 13))
-    (is (= (count (:ilmoitukset vastaus)) 48))
+    (is (= (count (:ilmoitukset vastaus)) 52))
     (is (= (count (:tietyomaat vastaus)) 1))
     (is (= (count (:tietyoilmoitukset vastaus)) 4))))
 
