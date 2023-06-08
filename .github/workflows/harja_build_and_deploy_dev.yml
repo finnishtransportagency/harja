@@ -14,25 +14,19 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    services:
-      harja-postgres:
-        image: solita/harjadb:postgis-3.1
-        ports:
-        - 5432:5432
-        options:  >-
-          --name harja-postgres
-# FIXME: Health check ei vaikuta toimivan
-#        options: ->
-#          --health-cmd pg_isready
-#          --health-start-period 30s
-#          --health-interval 10s
-#          --health-timeout 5s
-#          --health-retries 5
-#           --name harja-postgres
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Pull and start test database
+        run: |
+          cd .github
+          echo "Pulling harja test database image"
+          docker-compose pull harjadb
+          
+          echo "Starting harja test database and waiting for it to start"
+          docker-compose up -d harjadb --wait --wait-timeout 30
 
       - name: Run migrations and test data into harja-postgres service
         run: |
@@ -45,8 +39,8 @@ jobs:
           docker exec harja-postgres /bin/bash -c "~/hae-migraatiot-ja-testidata.sh"
           
           echo "Running migrations and test data into harja-postgres service"
-          docker exec --user postgres harja-postgres /bin/bash -c "~/aja-migraatiot.sh"
-          docker exec --user postgres  harja-postgres /bin/bash -c "~/aja-testidata.sh"
+          docker exec --user postgres harjadb /bin/bash -c "~/aja-migraatiot.sh"
+          docker exec --user postgres harjadb /bin/bash -c "~/aja-testidata.sh"
 
       - name: Cache Clojure Dependencies
         id: cache-clojure-deps

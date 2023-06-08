@@ -13,6 +13,9 @@
 # Käyttöjärjestelmänä on debian:bullseye (11)
 FROM postgis/postgis:12-3.1
 
+# Yhdistä image harjan repositoryyn
+LABEL org.opencontainers.image.source https://github.com/finnishtransportagency/harja
+
 # Aseta default ympäristömuuttujat
 ENV HARJA_TIETOKANTA_PORTTI=5432
 
@@ -80,7 +83,7 @@ RUN pg_ctl start; \
 
 # Käynnistä postgresql ja pidä container käynnissä
 # Jos ympäristömuuttujaa HARJA_TIETOKANTA_PORTTI ei ole asetettu, käytä oletusarvoa.
-CMD sed -i "s/port = 5432/port = ${HARJA_TIETOKANTA_PORTTI}/g" /var/lib/postgresql/data/postgresql.conf \
-    && sed -i 's/#port =/port =/g' /var/lib/postgresql/data/postgresql.conf \
+CMD sed -i "s/port = 5432/port = ${HARJA_TIETOKANTA_PORTTI}/g" ./data/postgresql.conf \
+    && sed -i 's/#port =/port =/g' ./data/postgresql.conf \
     && pg_ctl start && tail -f /dev/null
 
