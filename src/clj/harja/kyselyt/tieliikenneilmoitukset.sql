@@ -65,6 +65,7 @@ WHERE ulompi_i.id IN
 
       -- Tarkasta vapaatekstihakuehto
       (:teksti_annettu IS FALSE OR (sisempi_i.otsikko LIKE :teksti OR sisempi_i.paikankuvaus LIKE :teksti OR sisempi_i.lisatieto LIKE :teksti) OR
+       sisempi_i.selitteet::TEXT ILIKE REPLACE(TRANSLATE(:teksti, 'åäöÅÄÖ', 'aaoAAO'), ' ', '') OR
        (SELECT nimi from palautevayla_tarkenne WHERE ulkoinen_id = sisempi_i.tarkenne) LIKE :teksti OR
        (SELECT nimi from palautevayla_aihe WHERE ulkoinen_id = sisempi_i.aihe) LIKE :teksti) AND
 

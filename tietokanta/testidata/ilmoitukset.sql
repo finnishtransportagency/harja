@@ -1232,8 +1232,8 @@ $$
                                             ORDER BY ilmoitusid DESC
                                             LIMIT 1);
         nyt                   TIMESTAMP := (SELECT now() - interval '2 minute');
-        aiheet                INT[] := '{90,  90,  91,  91}';
-        tarkenteet            INT[] := '{901, 902, 911, 912}';
+        aiheet                INT[] := '{900,  900,  901,  901}';
+        tarkenteet            INT[] := '{9001, 9002, 9011, 9012}';
     BEGIN
         -- Ilmoitus luokittelulla lisätiedossa.
         INSERT INTO ilmoitus (urakka, ilmoitusid, ilmoitettu, valitetty, "valitetty-urakkaan", vastaanotettu,
