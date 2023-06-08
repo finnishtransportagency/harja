@@ -1,3 +1,6 @@
+# Security hardening for GitHub Actions
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
+
 name: '[DEV] Harja: Build and deploy to ECR'
 
 concurrency:
@@ -7,9 +10,17 @@ concurrency:
 on:
   workflow_dispatch:
 
+# README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
 permissions:
+  # OIDC token is needed for AWS CDK to assume the role
   id-token: write
+  # Contents is needed for the checkout action
   contents: read
+  # Packages read-access is needed for pulling the harja test database image
+  packages: read
+
+env:
+  DOCKER_REGISTRY: ghcr.io
 
 jobs:
   build-and-deploy:
@@ -19,25 +30,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Log in to the Container registry
+        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.2.0
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Pull and start test database
         run: |
           cd .github
-          echo "Pulling harja test database image"
-          docker-compose pull harjadb
+          echo "Pulling harja test database image (Docker Compose version: $(docker-compose version --short))"
+          docker compose pull harjadb
           
-          echo "Starting harja test database and waiting for it to start"
-          docker-compose up -d harjadb --wait --wait-timeout 30
+          echo "Starting harja test database and waiting for it to start (Docker Compose version: $(docker-compose version --short))"
+          docker compose up -d --wait --wait-timeout 60 harjadb
 
       - name: Run migrations and test data into harja-postgres service
         run: |
           docker ps -a
-          
-          echo "Waiting for harja-postgres service to start"
-          docker exec --user postgres harja-postgres /bin/bash -c "~/odota-kaynnistymista.sh"
-          
-          echo "Fetching migrations and test data into harja-postgres service"
-          docker exec harja-postgres /bin/bash -c "~/hae-migraatiot-ja-testidata.sh"
-          
+      
           echo "Running migrations and test data into harja-postgres service"
           docker exec --user postgres harjadb /bin/bash -c "~/aja-migraatiot.sh"
           docker exec --user postgres harjadb /bin/bash -c "~/aja-testidata.sh"
