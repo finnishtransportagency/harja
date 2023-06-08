@@ -74,9 +74,8 @@
                                                       valitetty otsikko paikankuvaus lisatieto
                                                       yhteydenottopyynto ilmoittaja lahettaja selitteet
                                                       sijainti vastaanottaja tunniste viesti-id
-                                                      vastaanotettu luokittelu] :as ilmoitus}]
-  (let [kuvat-test ["www-link-1-com" "www-link-2-com"]
-        id (:id (ilmoitukset/luo-ilmoitus<!
+                                                      vastaanotettu luokittelu kuvat] :as ilmoitus}]
+  (let [id (:id (ilmoitukset/luo-ilmoitus<!
                   db
                   {:urakka                  urakka-id
                    :ilmoitusid              ilmoitus-id
@@ -97,12 +96,12 @@
                    :aihe (:aihe luokittelu)
                    :tarkenne (:tarkenne luokittelu)}))
         
-        ;; Liitä kuvat ilmoitukseen
-        #_#_ _ (map (fn [linkki]
+        ;; Liitä kuvat ilmoitukseen, en tiedä toimiiko
+        _ (map (fn [linkki]
                  (ilmoitukset/liita-kuvat-ilmoitukseen<!
                    db
                    {:id id
-                    :linkki linkki}) kuvat-test))]
+                    :linkki linkki}) kuvat))]
     
     (paivita-ilmoittaja db id ilmoittaja)
     (paivita-lahettaja db id lahettaja)

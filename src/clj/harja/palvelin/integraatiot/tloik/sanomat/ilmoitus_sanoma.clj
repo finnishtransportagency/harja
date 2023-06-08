@@ -59,6 +59,9 @@
   {:aihe (Integer/parseInt (z/xml1-> luokittelu :aihe z/text))
    :tarkenne (Integer/parseInt (z/xml1-> luokittelu :tarkenne z/text))})
 
+(defn lue-kuvat [kuvaLinkit]
+  (z/xml1-> kuvaLinkit :url z/text))
+
 (defn lue-viesti [viesti]
   (let [data (xml/lue viesti)
         ilmoitus {:ilmoitettu (parsi-paivamaara (z/xml1-> data :ilmoitettu z/text))
@@ -83,6 +86,8 @@
                               (if (empty? sijainti) nil sijainti))
                   :vastaanottaja (when-let [vastaanottaja (into {} (z/xml-> data :vastaanottaja lue-vastaanottaja))]
                                    (if (empty? vastaanottaja) nil vastaanottaja))
+                  :kuvat (when-let [kuvaLinkit (into {} (z/xml-> data :kuvaLinkit lue-kuvat))]
+                                (if (empty? kuvaLinkit) nil kuvaLinkit))
                   :luokittelu (when-let [luokittelu (into {} (z/xml-> data :luokittelu lue-luokittelu))]
                                 (if (empty? luokittelu) nil luokittelu))}]
     ilmoitus))
