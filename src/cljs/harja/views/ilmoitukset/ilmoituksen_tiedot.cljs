@@ -28,6 +28,13 @@
         [ikonit/livicon-warning-sign] "Virka-apupyyntö"])
      (parsi-selitteet (filter #(not= % :virkaApupyynto) selitteet))]))
 
+(defn- kuvalinkit [ilmoitus]
+  (when-not (empty? (:kuvat ilmoitus))
+    (for [[n linkki] (map-indexed #(vector %1 %2) (:kuvat ilmoitus))]
+      [:div
+       [:br]
+       [:a {:href linkki} (str "Kuvalinkki " (inc n))]])))
+
 (defn selitteen-sisaltavat-yleiset-tiedot [ilmoitus]
   [yleiset/tietoja {:piirra-viivat? true
                     :class "body-text"
@@ -45,6 +52,7 @@
    "Lisatieto " (when (:lisatieto ilmoitus) (:lisatieto ilmoitus))
    "Selitteet " [selitelista ilmoitus]
    "Toimenpiteet aloitettu " (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))
+   "Kuvalinkit " (kuvalinkit ilmoitus)
    "Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")])
 
 (defn aiheen-sisaltavat-yleiset-tiedot [ilmoitus aiheet-ja-tarkenteet]
@@ -64,6 +72,7 @@
    "Tarkenne " (palautevayla/hae-tarkenne aiheet-ja-tarkenteet (:tarkenne ilmoitus))
    "Otsikko " (:otsikko ilmoitus)
    "Kuvaus " (when (:lisatieto ilmoitus) (:lisatieto ilmoitus))
+   "Kuvalinkit " (kuvalinkit ilmoitus)
    "Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")
    (when (:toimenpiteet-aloitettu ilmoitus) "Toimenpiteet aloitettu ")
    (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))])
