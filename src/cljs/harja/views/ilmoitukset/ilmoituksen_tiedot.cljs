@@ -133,21 +133,21 @@
         [bs/panel {}
          [:div
           [:span
-           [yleiset/tietoja {:piirra-viivat? true
-                             :class "body-text"
-                             :tietorivi-luokka "padding-8 css-grid css-grid-colums-12rem-9"}
-            "Kuvaliitteet" ""]]
+           (let [kuvaliite-teksti (when (empty? (:kuvat ilmoitus)) "Ei liitteitä")]
+             [yleiset/tietoja {:piirra-viivat? true
+                               :class "body-text"
+                               :tietorivi-luokka "padding-8 css-grid css-grid-colums-12rem-9"}
+              "Kuvaliitteet" ""
+              "" kuvaliite-teksti])]
 
-          (if-not (empty? (:kuvat ilmoitus))
+          (when-not (empty? (:kuvat ilmoitus))
             (map
               (fn [linkki]
                 [:div
                  [:br]
                  [:a
-                  {:href linkki :target "_blank"}
-                  [:img {:src linkki :style {:width "100%" :max-width "450px"}}]]]) (:kuvat ilmoitus))
-            ;; Kuvia ei löytynyt
-            [:span "Ei liitteitä"])]]]
+                  {:href linkki}
+                  [:img {:src linkki :style {:width "100%" :max-width "450px"}}]]]) (:kuvat ilmoitus)))]]]
 
        [:div.kuittaukset
         [:h3 "Kuittaukset"]
