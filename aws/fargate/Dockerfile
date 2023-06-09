@@ -11,10 +11,13 @@ LABEL version="1.0"
 RUN apk add --no-cache curl jq nano unzip vim busybox-extras
 
 # Asenna AWS CLI v2
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
- unzip awscliv2.zip && \
- ./aws/install && \
- rm -rf awscliv2.zip aws
+# FIXME: AWS CLI v2 ei toimi Alpine linuxissa suorilta ja sen asentaminen vaikuttaa hankalalta
+#        Jos tätä tarvitaan, niin pitää ehkä käyttää jotain muuta kuin Alpine linuxia pohjana tai
+#        asentaa AWS CLI v2 jotenkin muuten.
+#RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+# unzip awscliv2.zip && \
+# ./aws/install && \
+# rm -rf awscliv2.zip aws
 
 
 # Luo Non-root ryhmä ja käyttäjä, jotta sovellus ei pyöri roottina
