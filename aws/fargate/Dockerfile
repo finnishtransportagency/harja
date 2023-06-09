@@ -1,46 +1,3 @@
-# -- Build vaihe --
-# Käytetään build vaiheessa mahdollisimman kevyttä alpine linuxia ja openjdk 11
-FROM clojure:temurin-11-lein-2.10.0-alpine as builder
-
-# Luo build hakemisto
-RUN mkdir -p /build
-WORKDIR /build
-
-# Asenna git gitlogin generointia varten
-# TODO: Tutkitaan tarvitaanko gitlogin generointia enää Harjan about-sivua varten
-RUN apk add --no-cache git
-
-# Cacheta riippuvuudet
-COPY project.clj /build/
-RUN lein deps
-
-# Kopioi lähdekoodi ja resurssit (Ignorataan epärelevantit tiedostot .dockerignore:ssa)
-# Kopioimalla lähdekoodin eriin overlayhin kuin riippuvuudet, varmistetaan että muutokset lähdekoodissa eivät aiheuta
-# riippuvuuksien uudelleen lataamista
-COPY . /build/
-
-# Tee uberjar tuotantoa varten
-# TODO: Gitlogia käytetään vain about-sivulla ja sen compile on hidasta. Tarvitaanko tätä ollenkaan enää?
-#RUN lein do gitlog, compile
-# Käännä backend
-RUN lein do compile
-
-# Käännä frontend (less, cljs)
-#   Tarvitsee yhteyden PostgreSQL tietokantaan Specql interospektiota varten
-#   Tietokannassa on oltava viimeisimmät migraatiot ajettuna
-#   Docker buildillevoi antaa --network host parametrin, jolloin se voi käyttää hostin tietokantaa
-RUN lein do less once, with-profile prod-cljs compile-prod
-
-# Käännä laadunseuranta (TODO: Enabloi käännös myöhemmin)
-#   Tarvitsee yhteyden PostgreSQL tietokantaan Specql interospektiota varten
-#   Tietokannassa on oltava viimeisimmät migraatiot ajettuna
-#   Docker buildille voi antaa --network host parametrin, jolloin se voi käyttää hostin tietokantaa
-#RUN lein do with-profile laadunseuranta-prod compile-laadunseuranta-prod
-
-# Luo uberjar ja dokumentaatio
-RUN lein do uberjar, codox
-
-
 # -- Run-time vaihe --
 # Käytetään kevyttä Alpine linux Eclipse Temurin 11 (OpenJDK) imagea
 FROM eclipse-temurin:11-alpine
@@ -68,13 +25,16 @@ RUN mkdir -p /app && chown -R harja:harja /app
 USER harja
 WORKDIR /app
 
-# Kopioi uberjar build vaiheesta
-COPY --from=builder --chown=harja:harja /build/target/harja-0.0.1-SNAPSHOT-standalone.jar harja.jar
+# Kopioi uberjar pipelinesta
+# Tässä oleteetaan, että uberjar on jo buildattu ja se on hakemistossa "target"
+COPY ./target/harja-0.0.1-SNAPSHOT-standalone.jar harja.jar
+
+# Kopioi asetusten templaatti
+# Asetuksien parametrit ja salaisuudet asetetaan AWS Fargate palvelun kautta ympäristömuuttujina
 COPY ./aws/fargate/asetukset.edn asetukset.edn
 
 # Harja-app tarkastaa tällä hetkellä jotkin asetetut ENV muuttujat .harja_env tiedoston mukaisesti
 # harja.palvelin.asetukset/tarkista-ymparisto! -funktiolla
-# TODO: Tarvitaaanko tätä enää?
 COPY ./aws/fargate/.harja_env .harja_env
 
 # Aseta ENV muuttujat
