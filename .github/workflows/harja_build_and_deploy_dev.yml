@@ -12,7 +12,7 @@ on:
 
 # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
 permissions:
-  # OIDC token is needed for AWS CDK to assume the role
+  # OIDC token is needed for AWS actions assume the role
   id-token: write
   # Contents is needed for the checkout action
   contents: read
@@ -20,7 +20,7 @@ permissions:
   packages: read
 
 env:
-  DOCKER_REGISTRY: ghcr.io
+  GH_DOCKER_REGISTRY: ghcr.io
 
 jobs:
   build-and-deploy:
@@ -33,7 +33,7 @@ jobs:
       - name: Log in to the Container registry
         uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.2.0
         with:
-          registry: ${{ env.DOCKER_REGISTRY }}
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -79,6 +79,30 @@ jobs:
       - name: Download Clojure dependencies
         if: steps.cache-clojure-deps.outputs.cache-hit != 'true'
         run: lein deps
+
+      ## Tests ##
+      - name: Run unit tests
+        run: lein test
+
+      - name: Run integraatio testit
+        run: lein test :integraatio
+
+      - name: Run hitaat testit
+        run: lein test :hidas
+
+      - name: Build uberjar
+        run: |
+          echo "Building backend"
+          lein do compile
+          echo "Building frontend"
+          lein do less once, with-profile prod-cljs compile-prod
+          echo "Building documentation"
+          lein codox
+          echo "Building uberjar"
+          lein uberjar
+
+
+      ## Build and push image to ECR ##
 
       - name: Assume role with OIDC
         uses: aws-actions/configure-aws-credentials@master
