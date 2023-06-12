@@ -217,6 +217,16 @@
        :otsikko "Ilmoittajan puhelinnumero"
        :placeholder "Rajaa ilmoittajan puhelinnumerolla"
        :tyyppi :puhelin}
+      {:nimi :selite
+       :palstoja 2
+       :otsikko "Selite"
+       :placeholder "Hae ja valitse selite"
+       :tyyppi :haku
+       :hae-kun-yli-n-merkkia 0
+       :nayta second :fmt second
+       :lahde selitehaku
+       :rivi-luokka "grid-column-end-span-12"
+       ::lomake/col-luokka "width-half"}
       {:nimi :tilat
        :otsikko "Tila"
        :tyyppi :checkbox-group
