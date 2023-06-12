@@ -348,7 +348,7 @@
      "Yleiset tiedot"
      [yleiset/tietoja {:piirra-viivat? true
                        :class "body-text"
-                       :tietorivi-luokka "padding-8 css-grid css-grid-colums-12rem-9"}
+                       :tietorivi-luokka "padding-8 css-grid css-grid-columns-12rem-9"}
       "Urakan nimi:" (:nimi ur)
       "Urakan tunnus:" (:sampoid ur)
       "Urakkanumero:" (:urakkanro ur)
