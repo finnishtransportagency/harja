@@ -6,7 +6,7 @@
 {:kehitysmoodi false
  ;; TODO: Vaatii muutoksia, jos halutaan käyttää vanhaan tyyliin kovakoodattuja "sähke"-, eli OAM-headereita (AWS:ssä Cogniton headerit)
  :sahke-headerit {}
- :http-palvelin {:portti 80 :url "http://localhost:80/"
+ :http-palvelin {:portti 3000 :url "http://localhost:3000/"
                  :threads 64
                  :max-body-size 33554432
                  ;; TODO: Parametrisoi
