@@ -4,7 +4,7 @@
 name: '[DEV] Harja: Build and deploy to ECR'
 
 concurrency:
-  group: ${{ github.ref_name }}-${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: true
 
 on:
@@ -81,7 +81,7 @@ jobs:
           retention-days: 1
 
   deploy-to-ecs:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
     needs: test-and-build
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -89,66 +89,12 @@ jobs:
       id-token: write
       # Contents is needed for the checkout action
       contents: read
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Download uberjar artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: harja-uberjar
-          # Download to the same directory as the uberjar is built to
-          path: ./target
-
-      - name: Assume role with OIDC
-        uses: aws-actions/configure-aws-credentials@master
-        with:
-          aws-region: 'eu-west-1'
-          role-to-assume: 'arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_DEV }}:role/cicd-github-harja-infra-admin'
-          role-duration-seconds: 3600
-          role-skip-session-tagging: true
-
-      - name: Authenticate with AWS ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Build, tag and push image to ECR
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: harja-ecr-repository
-          IMAGE_TAG: ${{ github.sha }}
-          DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
-        run: |
-          echo "Building image with tag $IMAGE_TAG"
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --file $DOCKERFILE_PATH .
-          
-          echo "Pushing image to ECR"
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-      # TODO: Määrittele github environmentit (dev, stg, prod) ja käytä env muuuttujia niiden kautta
-      - name: Download task definition
-        env:
-          ECS_TASK_DEFINITION_NAME_DEV: ${{ vars.ECS_TASK_DEFINITION_NAME_DEV }}
-        run: |
-          aws ecs describe-task-definition --task-definition $ECS_TASK_DEFINITION_NAME_DEV --query taskDefinition> harja-task-definition.json
-
-      - name: Update ECS task definition (add image id)
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: harja-task-definition.json
-          container-name: ${{ vars.ECS_CONTAINER_NAME }}
-          image: ${{ steps.build-image.outputs.image }}
-
-      - name: Deploy ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ vars.ECS_SERVICE_NAME_DEV }}
-          cluster: ${{ vars.ECS_CLUSTER_NAME_DEV }}
-          wait-for-service-stability: false
-          #wait-for-service-stability: true
+    with:
+      ecr_repository_name: harja-ecr-repository
+      ecs_container_name: ${{ vars.ECS_CONTAINER_NAME }}
+      ecs_task_definition_name: ${{ vars.ECS_TASK_DEFINITION_NAME_DEV }}
+      ecs_service_name: ${{ vars.ECS_SERVICE_NAME_DEV }}
+      ecs_cluster_name: ${{ vars.ECS_CLUSTER_NAME_DEV }}
+    secrets:
+      aws_account_id: ${{ secrets.AWS_ACCOUNT_ID_DEV }}
 
