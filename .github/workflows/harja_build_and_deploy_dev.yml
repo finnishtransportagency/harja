@@ -42,48 +42,33 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       ## Build Harja uberjar ##
-      - name: Prepare java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '11'
-
-      - name: Cache Clojure Dependencies
-        id: cache-clojure-deps
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-leiningen-${{ hashFiles('**/project.clj') }}
-          restore-keys: ${{ runner.os }}-leiningen-
-
-      # TODO: Selvitä tietoturvanäkökulma setup-clojure actionionille
-      #      - name: Install clojure tools
-      #        uses: DeLaGuardo/setup-clojure@9.5
-      #        with:
-      #          clj-kondo: 2023.05.26
-      #          lein: 2.9.10
-
-      - name: Download Clojure dependencies
-        if: steps.cache-clojure-deps.outputs.cache-hit != 'true'
-        run: lein deps
+      - name: Setup clojure environment
+        uses: ./.github/actions/setup-clojure-env
 
       #- name: Run unit tests
       #  run: lein test2junit
 
-      - run: |
+      - name: Build back-end
+        run: |
           echo "Building backend"
           lein do compile
-      - run: |
+      - name: Build front-end
+        run: |
           echo "Building frontend"
           lein do less once, with-profile prod-cljs compile-prod
+
       # TODO: Disabloitu toistaiseksi buildin testailun nopeuttamiseksi. Tämäkin menee kyllä läpi OK.
-      #      - run: |
-      #          echo "Building laadunseuranta"
-      #          lein do with-profile laadunseuranta-prod compile-laadunseuranta-prod
-      - run: |
+      #            - name: Build laadunseuranta
+      #              run: |
+      #                echo "Building laadunseuranta"
+      #                lein do with-profile laadunseuranta-prod compile-laadunseuranta-prod
+      - name: Build documentation
+        run: |
           echo "Building documentation"
           lein codox
-      - run: |
+
+      - name: Build uberjar
+        run: |
           echo "Building uberjar"
           lein uberjar
 
