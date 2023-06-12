@@ -45,7 +45,7 @@ COPY ./aws/fargate/.harja_env .harja_env
 # ENV JAVA_JAVA_OPTIONS=
 
 # Aseta portti
-EXPOSE 3000
+EXPOSE 80
 
 # Aseta entrypoint
 ENTRYPOINT ["java", "-jar", "harja.jar"]

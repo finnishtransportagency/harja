@@ -133,9 +133,6 @@ jobs:
           # Download to the same directory as the uberjar is built to
           path: ./target
 
-      - name: (TEST, REMOVE) Test if docker containers are running in the background
-        run: docker ps -a
-
       - name: Assume role with OIDC
         uses: aws-actions/configure-aws-credentials@master
         with:
@@ -157,7 +154,7 @@ jobs:
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
         run: |
           echo "Building image with tag $IMAGE_TAG"
-          docker build --network="host" -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --file $DOCKERFILE_PATH .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --file $DOCKERFILE_PATH .
           
           echo "Pushing image to ECR"
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
