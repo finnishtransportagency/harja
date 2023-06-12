@@ -196,7 +196,11 @@
                               (hae-tieosan-ajoratojen-geometriat db params))
       :hae-tr-gps-koordinaateilla (fn [_ params]
                                     (oikeudet/ei-oikeustarkistusta!)
-                                    (hae-tr-osoite-gps-koordinaateilla db params)))
+                                    (hae-tr-osoite-gps-koordinaateilla db params))
+      :hae-tienumerot-kartalle (fn [_ params]
+                                 (oikeudet/ei-oikeustarkistusta!)
+                                 (tv/hae-tiet-alueella db params))
+      )
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http

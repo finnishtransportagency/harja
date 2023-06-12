@@ -17,7 +17,7 @@
 
 (declare aseta-kartta-debug-sijainti pakota-paivitys)
 
-(defonce tila (atom {:nayta-kartan-debug? false
+(defonce tila (atom {:nayta-kartan-debug? true
                      :nayta-kaikki-layerit? false
                      :nayta-kartan-ylaosassa? true
                      :nayta-infopaneelin-tiedot? true

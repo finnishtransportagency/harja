@@ -540,8 +540,8 @@
       (when (or (and (not= 1 (:infopaneelin-merkki vanha-maara))
                      (not= 1 (:infopaneelin-merkki uusi-maara))
                      (some tasot-joita-zoomataan-aina (keys uusi-maara)))
-                (not= (dissoc vanha-maara :infopaneelin-merkki)
-                      (dissoc uusi-maara :infopaneelin-merkki))
+                (not= (dissoc vanha-maara :infopaneelin-merkki :tienumerot)
+                      (dissoc uusi-maara :infopaneelin-merkki :tienumerot))
                 (not= (:organisaatio vanha) (:organisaatio uusi)))
         (tiedot/zoomaa-geometrioihin)))))
 

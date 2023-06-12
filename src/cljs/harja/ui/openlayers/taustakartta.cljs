@@ -5,6 +5,7 @@
             [ol.tilegrid.WMTS]
             [ol.layer.Tile]
             [ol.source.ImageWMS]
+            [ol.source.OSM]
             [ol.layer.Image]
             [ol.extent :as ol-extent]
             [harja.ui.openlayers.projektiot :as p]
