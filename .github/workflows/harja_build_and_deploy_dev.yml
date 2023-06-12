@@ -41,30 +41,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-#      - name: Log in to the Container registry
-#        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.2.0
-#        with:
-#          registry: ${{ env.GH_DOCKER_REGISTRY }}
-#          username: ${{ github.actor }}
-#          password: ${{ secrets.GITHUB_TOKEN }}
-#
-#      - name: Pull and start test database
-#        run: |
-#          cd .github
-#          echo "Pulling harja test database image (Docker Compose version: $(docker-compose version --short))"
-#          docker compose pull harjadb
-#
-#          echo "Starting harja test database and waiting for it to start (Docker Compose version: $(docker-compose version --short))"
-#          docker compose up -d --wait --wait-timeout 60 harjadb
-#
-#      - name: Run migrations and test data into harja-postgres service
-#        run: |
-#          docker ps -a
-#
-#          echo "Running migrations and test data into harja-postgres service"
-#          docker exec --user postgres harjadb /bin/bash -c "~/aja-migraatiot.sh"
-#          docker exec --user postgres harjadb /bin/bash -c "~/aja-testidata.sh"
-
       ## Build Harja uberjar ##
       - name: Prepare java
         uses: actions/setup-java@v3

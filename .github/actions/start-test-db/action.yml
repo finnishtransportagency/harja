@@ -1,5 +1,5 @@
 name: 'Start test database'
-desription: 'Käynnistää testitietokannan ja ajaa siihen migraatiot ja testidataa'
+desription: 'Käynnistää testitietokannan taustalle ja ajaa siihen migraatiot ja testidataa'
 
 inputs:
   registry:
@@ -7,8 +7,10 @@ inputs:
     required: true
     default: 'ghcr.io'
   username:
+    description: ''
     required: true
   password:
+    description: ''
     required: true
 
 runs:
