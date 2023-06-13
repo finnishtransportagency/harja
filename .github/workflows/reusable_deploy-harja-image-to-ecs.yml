@@ -78,6 +78,15 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+      # TODO: Tähän kohtaan todennäköisesti migraatioiden ajo RDS:ään
+      # Laitetaan esim. Fargate kontit alas ja ajetaan migratiot
+      # Tässä kohtaa uusi image on jo puskettu ECR:ään.
+      # Kun migraatiot ovat valmiit, voidaan viedä imagen deploymentti alempana loppuun ja käynnistää kontit uudelleen
+      #      - name: Run migrations to RDS
+      #        uses: ./.github/actions/run-migrations-to-rds
+      #        with:
+      #
+
       # TODO: Määrittele github environmentit (dev, stg, prod) ja käytä env muuuttujia niiden kautta
       - name: Download task definition
         env:

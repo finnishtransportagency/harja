@@ -15,7 +15,7 @@ on:
         type: environment
         required: true
 
-# No common permissions currently needed for all jobs, but if needed, they can be defined here:
+# Tässä voi määritellä yhteiset permissionit kaikille jobeille workflowissa tarvittaessa
 # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
 #permissions:
 
@@ -88,6 +88,10 @@ jobs:
   deploy-to-ecs:
     uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
     needs: test-and-build
+    # Deployment ajetaan dev ja stg ympäristöihin
+#    strategy:
+#      matrix:
+#        environment: [dev, stg]
     # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -96,7 +100,7 @@ jobs:
       # Contents read lupaa tarvitaan checkout actionissa
       contents: read
     with:
-      environment: ${{ github.event.inputs.environment }}
+      environment: ${{ github.event.inputs.environment }} # tai ${{ matrix.environment }}
     # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattiesesti envinronmentista reusable workfloweissa
     #       Tässä määritetään mitkä yksittäiset salaisuudet reusable workflow saa lukea GitHub environmentista.
     #       Vaihtoehtoisesti, voi käyttää secrets: inherit toimintoa, jolloin reusable workflow saa kaikki salaisuudet
