@@ -64,6 +64,8 @@
    "Tarkenne " (palautevayla/hae-tarkenne aiheet-ja-tarkenteet (:tarkenne ilmoitus))
    "Otsikko " (:otsikko ilmoitus)
    "Kuvaus " (when (:lisatieto ilmoitus) (:lisatieto ilmoitus))
+   (when (:selitteet ilmoitus) "Selitteet" )
+   (when (:selitteet ilmoitus) [selitelista ilmoitus])
    "Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")
    (when (:toimenpiteet-aloitettu ilmoitus) "Toimenpiteet aloitettu ")
    (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))])
