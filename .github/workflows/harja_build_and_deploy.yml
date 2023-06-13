@@ -1,0 +1,110 @@
+# Security hardening for GitHub Actions
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
+
+name: 'Harja: Build and deploy to ECS'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Valitse deploy-ympäristö'
+        type: environment
+        required: true
+
+# Tässä voi määritellä yhteiset permissionit kaikille jobeille workflowissa tarvittaessa
+# README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+#permissions:
+
+
+env:
+  GH_DOCKER_REGISTRY: ghcr.io
+
+
+# Huom. Jokainen job ajetaan omassa VM:ssä, joten ympäristö ei ole jaettu jobien välillä.
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    permissions:
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
+      packages: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Start test database
+        uses: ./.github/actions/start-test-db
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      ## Build Harja uberjar ##
+      - name: Setup clojure environment
+        uses: ./.github/actions/setup-clojure-env
+
+      #- name: Run unit tests
+      #  run: lein test2junit
+
+      - name: Build back-end
+        run: |
+          echo "Building backend"
+          lein do compile
+      - name: Build front-end
+        run: |
+          echo "Building frontend"
+          lein do less once, with-profile prod-cljs compile-prod
+
+      # TODO: Disabloitu toistaiseksi buildin testailun nopeuttamiseksi. Tämäkin menee kyllä läpi OK.
+      #            - name: Build laadunseuranta
+      #              run: |
+      #                echo "Building laadunseuranta"
+      #                lein do with-profile laadunseuranta-prod compile-laadunseuranta-prod
+      - name: Build documentation
+        run: |
+          echo "Building documentation"
+          lein codox
+
+      - name: Build uberjar
+        run: |
+          echo "Building uberjar"
+          lein uberjar
+
+      - name: Upload uberjar as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: harja-uberjar
+          path: ./target/harja-0.0.1-SNAPSHOT-standalone.jar
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy-to-ecs:
+    uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
+    needs: test-and-build
+    # Deployment ajetaan dev ja stg ympäristöihin
+#    strategy:
+#      matrix:
+#        environment: [dev, stg]
+    # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
+    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    permissions:
+      # OIDC tokenia tarvitaan AWS jobeissa roolin omaksumiseen
+      id-token: write
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+    with:
+      environment: ${{ github.event.inputs.environment }} # tai ${{ matrix.environment }}
+    # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattiesesti envinronmentista reusable workfloweissa
+    #       Tässä määritetään mitkä yksittäiset salaisuudet reusable workflow saa lukea GitHub environmentista.
+    #       Vaihtoehtoisesti, voi käyttää secrets: inherit toimintoa, jolloin reusable workflow saa kaikki salaisuudet
+    #       kuin kutsuva workflowikin.
+    secrets:
+      aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+

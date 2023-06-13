@@ -533,7 +533,7 @@
                                                    (assoc :uudet-liitteet @uudet-liitteet)
                                                    (assoc :urakka-id (:id @nav/valittu-urakka)))]
                    (tallenna-siltatarkastus! tallennettava-tarkastus tallennus-kaynnissa?)))
-            {:disabled (not voi-tallentaa?)}]
+            {:disabled (or (not voi-tallentaa?) @tallennus-kaynnissa?)}]
 
            ;; Tarkista montako kohdetta jolla tulos. Jos alle 24, näytä herja
            (let [vinkki (if (= 24 riveja-taytetty)

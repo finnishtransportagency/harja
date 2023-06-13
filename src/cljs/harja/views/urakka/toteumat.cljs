@@ -74,14 +74,14 @@
                  (or hj-urakka? (not mhu-urakka?)))
            [erilliskustannukset/erilliskustannusten-toteumat ur])
 
-         "Varusteet" :varusteet
+         "Varusteet" :varusteet-ulkoiset
+         (when (and (istunto/ominaisuus-kaytossa? :varusteet-ulkoiset)
+                 (oikeudet/urakat-toteumat-varusteet id)
+                 (#{:hoito :teiden-hoito} (:tyyppi ur)))
+           [velho-varusteet/velho-varusteet ur])
+         "Vanhat kirjaukset (Tierekisteri)" :varusteet
+
          (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
                     (oikeudet/urakat-toteumat-varusteet id)
                     (#{:hoito :teiden-hoito} (:tyyppi ur)))
-           [varusteet/varusteet])
-
-         "Varusteet2" :varusteet2
-         (when (and (istunto/ominaisuus-kaytossa? :varusteet-ulkoiset)
-                    (oikeudet/urakat-toteumat-varusteet id)
-                    (#{:hoito :teiden-hoito} (:tyyppi ur)))
-           [velho-varusteet/velho-varusteet ur])]))))
+           [varusteet/varusteet])]))))

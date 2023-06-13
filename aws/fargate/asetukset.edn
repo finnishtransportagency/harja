@@ -1,0 +1,259 @@
+;; TODO: Tämä on templaatti eri ympäristöstöjen asetustiedoille. Tarkista, että kaikki tarvittava on mukana.
+;;       Suuri osa tiedoista on tarkoitus tuoda parametreina sisään AWS Fargate -ympäristössä ennen kontin käynnistystä.
+;;       Salaisuudet (kuten tietokannan käyttäjätunnus ja salasana) tuodaan ympäristömuuttujina.
+
+
+{:kehitysmoodi false
+ ;; TODO: Vaatii muutoksia, jos halutaan käyttää vanhaan tyyliin kovakoodattuja "sähke"-, eli OAM-headereita (AWS:ssä Cogniton headerit)
+ :sahke-headerit {}
+ :http-palvelin {:portti 3000 :url "http://localhost:3000/"
+                 :threads 64
+                 :max-body-size 33554432
+                 ;; TODO: Parametrisoi
+                 :anti-csrf-token "{{anti_csrf_token}}"
+                 :salli-oletuskayttaja? false
+                 :dev-resources-path nil}
+ ;; TODO: Tuo salaisuudet ympäristömuuttujiin
+ :tietokanta {:palvelin #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_HOST"))
+              :tietokanta "harja"
+              :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI"))
+              :yhteyspoolin-koko 32
+              :kayttaja #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_KAYTTAJA"))
+              :salasana #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_SALASANA"))
+              :julkaise-tila? true}
+
+
+ ;; TODO: Replican käytön miettiminen: Miten tehdään AWS:n puolella. Tarvitaanko replican kaltaista tietokantainstanssia enää ollenkaan?
+ ;;       Replicaa käytetään Harjassa ainakin raporttien tietojen haussa ja tilannekuvan kyselyissä.
+ ; :tietokanta-replica {:palvelin "{{db_osoite_replica}}"
+ ;                         :tietokanta "harja"
+ ;                         :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI"))
+ ;                         :yhteyspoolin-koko 32
+ ;                         :kayttaja "{{db_kayttaja}}"
+ ;                         :salasana "{{db_salasana}}"
+ ;                         :julkaise-tila? true}
+
+ ;; TODO: Tarkista mitä tämä tekee
+ :tarkkailija {:loop-odotus 100}
+
+
+ ;; TODO: Minne ja miten lokitetaan
+ :log {:gelf {:taso :debug
+              :palvelin "localhost"}
+       :testidata? true
+       ;; TODO: Slack-integraatio
+       :ei-logiteta #{"http-palvelin"
+                      "ajastettu-geometriapaivitys"
+                      "komponentti-event"
+                      "sillat"}}
+
+
+ ;; ---- Integraatiot yms. ----
+
+ ;; TODO: Tarkista ajat per ympäristö. Otetaanko parametreina sisään?
+ :integraatiot {:paivittainen-lokin-puhdistusaika nil}
+ :paivystystarkistus {:paivittainen-aika [12 11 00]}
+ :reittitarkistus {:paivittainen-aika [00 30 00]}
+
+ ;; TODO: FIM
+ ; :fim {:url "{{fim_url}}"
+ ;          :kayttajatunnus "{{fim_kayttaja}}"
+ ;          :salasana "{{fim_salasana}}"}
+
+ ;; TODO: ITMF ja T-LOIK
+ :itmf
+ {:url #=(eval (str "tcp://"
+                   (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
+                   ":"
+                   (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61626)))
+  :kayttaja ""
+  :salasana ""
+  ;; TODO: Hae :tyyppi ympäristökohtaisesti parametrina
+  :tyyppi :activemq
+  :julkaise-tila? true}
+
+ ;; TODO: ITMF ja T-LOIK
+ ; :tloik {:ilmoitusviestijono "{{tloik_ilmoitusviestijono}}"
+ ;            :ilmoituskuittausjono "{{tloik_ilmoituskuittausjono}}"
+ ;            :toimenpideviestijono "{{tloik_toimenpideviestijono}}"
+ ;            :toimenpidekuittausjono "{{tloik_toimenpidekuittausjono}}"
+ ;            :ilmoitukset {:google-static-maps-key "{{google_static_maps_key}}"}
+ ;            :uudelleenlahetysvali-minuuteissa {{tloik_uudelleenlahetysvali_minuuteissa}}}
+
+ ;; TODO: SAMPO-integraatio
+ ; :sampo-api {:lahetys-url "{{api_sampo_lahetys_url}}"
+ ;                :paivittainen-lahetysaika {{api_sampo_paivittainen_lahetysaika}}
+ ;                :palvelin "{{api_sampo_palvelin}}"
+ ;                :kayttajatunnus "{{api_sahkoposti_kayttaja}}"
+ ;                :salasana "{{api_sahkoposti_salasana}}"}
+
+ ;; TODO: Sähköposti-API
+ ; :api-sahkoposti {:vastausosoite "{{api_sahkoposti_vastausosoite}}"
+ ;                     :suora? {{api_sahkoposti_suora_lahetys}}
+ ;                     :sahkoposti-lahetys-url "{{api_sahkoposti_lahetys_url}}"
+ ;                     :sahkoposti-ja-liite-lahetys-url "{{api_sahkoposti_ja_liite_lahetys_url}}"
+ ;                     :palvelin "{{api_sahkoposti_palvelin}}"
+ ;                     :kayttajatunnus "{{api_sahkoposti_kayttaja}}"
+ ;                     :salasana "{{api_sahkoposti_salasana}}"}
+
+ ;; TODO: Tierekisteri
+ :tierekisteri {:url ""
+                :uudelleenlahetys-aikavali-minuutteina nil}
+
+ ;; TODO: VKM
+ :vkm {:url "https://avoinapi.testivaylapilvi.fi/viitekehysmuunnin/"}
+
+ ;; TODO: Digiroad
+ ; :digiroad {:url "{{digiroad_url}}"
+ ;               :api-key "{{digiroad_api_key}}"}
+
+ :ilmatieteenlaitos {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
+
+ ;; TODO: Geometriapäivitykset
+ ;; Voit hallinnoida geometria-aineistojen päivitystä GEOMETRIAPAIVITYS-taulussa.
+ ;; Jos aineiston nimi muuttuu, voit tallentaa nimen ja sen voimassaolon GEOMETRIAAINEISTO-tauluun.
+ :geometriapaivitykset {:tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/tieosoiteverkkoLine.shp"
+                        :tieosoiteverkon-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:tieosoiteverkko&outputFormat=SHAPE-ZIP"
+                        :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/tieosoiteverkkoLine.shz"
+
+                        :laajennetun-tieosoiteverkon-tiedot "../.harja/harjalle_ajorata_kaista_puoli_20230519.csv"
+
+                        :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/pohjavesialueetLine.shp"
+                        :pohjavesialueen-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:pohjavesialueet&outputFormat=SHAPE-ZIP"
+                        :pohjavesialueen-tuontikohde "./shp/Pohjavesialueet/pohjavesialueetLine.shz"
+
+                        :talvihoidon-hoitoluokkien-shapefile "file://shp/Talvihoitoluokat/talvihoitoluokkaLine.shp"
+                        :talvihoidon-hoitoluokkien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:talvihoitoluokka&outputFormat=SHAPE-ZIP"
+                        :talvihoidon-hoitoluokkien-tuontikohde "./shp/Talvihoitoluokat/talvihoitoluokkaLine.shz"
+
+                        :soratien-hoitoluokkien-shapefile "file://shp/Soratieluokat/soratieluokkaLine.shp"
+                        :soratien-hoitoluokkien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:soratieluokka&outputFormat=SHAPE-ZIP"
+                        :soratien-hoitoluokkien-tuontikohde "./shp/Soratieluokat/soratieluokkaLine.shz"
+
+                        :siltojen-shapefile "file://shp/Sillat/siltaPoint.shp"
+                        :siltojen-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=taitorakenteet:silta&outputFormat=SHAPE-ZIP"
+                        :siltojen-tuontikohde "./shp/Sillat/siltaPoint.shz"
+
+                        :urakoiden-shapefile "file://shp/Hoitourakat/tie_hoitourakatPolygon.shp"
+                        :urakoiden-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=tiestotiedot:tie_hoitourakat&outputformat=shape-zip"
+                        :urakoiden-tuontikohde "./shp/Hoitourakat/tie_hoitourakatPolygon.shz"
+
+                        :ely-alueiden-shapefile "file://shp/ELYt/ULKOISET_Elyt_infra.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
+
+                        :valaistusurakoiden-shapefile "file://shp/Valaistusurakat/palvelusopimusLine.shp"
+                        :valaistusurakoiden-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=tiestotiedot:palvelusopimus&outputformat=shape-zip" ;; Valaistusurakoiden ja päällystyspalvelusopimusten lähdetiedosto on nykyään sama.
+                        :valaistusurakoiden-tuontikohde "./shp/Valaistusurakat/palvelusopimukset.shz"
+
+                        :paallystyspalvelusopimusten-shapefile "file://shp/Paallystyspalvelusopimukset/palvelusopimusLine.shp"
+                        :paallystyspalvelusopimusten-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=tiestotiedot:palvelusopimus&outputformat=shape-zip" ;; Valaistusurakoiden ja päällystyspalvelusopimusten lähdetiedosto on nykyään sama.
+                        :paallystyspalvelusopimusten-tuontikohde "./shp/Paallystyspalvelusopimukset/palvelusopimukset.shz"
+
+                        :tekniset-laitteet-urakat-shapefile "file://shp/Tekniset_laitteet_urakat/tekniset_laitteet_urakat.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
+
+                        :siltojenpalvelusopimusten-shapefile "file://shp/Siltapalvelusopimukset/siltapalvelusopimukset.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
+
+                        :turvalaitteiden-shapefile "file://shp/Vesivaylien_turvalaitteet/turvalaitteet.shp"
+                        :turvalaitteiden-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:turvalaitteet&outputFormat=SHAPE-ZIP"
+                        :turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/Turvalaitteet.shz"
+
+                        :kanavien-shapefile "file://shp/Vesivaylien_kanavat/sulkukanavat.shp"
+                        :kanavien-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:sulkukanavat&outputFormat=SHAPE-ZIP"
+                        :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/Sulkukanavat.shz"}
+ ;; TODO: Väylät
+ :vaylat {:geometria-url "https://extranet.vayla.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json"
+              :paivittainen-tarkistusaika [15 10 00]
+              :paivitysvali-paivissa 60}
+
+ ;; TODO: Kanavasillat
+ :kanavasillat {:geometria-url "https://modoc.demo.solita.fi/paakayttaja/rajapinta/tierekisteri/rakenteet/uusin?sivu=%1&tuloksia-per-sivu=1000"
+                :paivittainen-tarkistusaika []
+                :paivitysvali-paivissa nil}
+
+ ;; TODO: Labyrintti
+ ; :labyrintti {:url "{{labyrintti_url}}"
+ ;                 :kayttajatunnus "{{labyrintti_kayttaja}}"
+ ;                 :salasana "{{labyrintti_salasana}}"}
+
+ ;; TODO: TURI
+ ; :turi {:turvallisuuspoikkeamat-url "{{turvallisuuspoikkeamat_url}}"
+ ;           :kayttajatunnus "{{turi_kayttaja}}"
+ ;           :salasana "{{turi_salasana}}"
+ ;           :paivittainen-lahetysaika {{turi_lahetysaika}}}
+
+ ;; TODO: YHA
+ ; :yha {:url "{{yha_url}}"
+ ;          :api-key "{{yha_api_key}}"}
+
+ ;; TODO: Velho
+ ; :velho {:paallystetoteuma-url "{{velho_paallystetoteuma_url}}"
+ ;            :token-url "{{velho_token_url}}}"
+ ;            :kayttajatunnus "{{velho_kayttajatunnus}}"
+ ;            :salasana "{{velho_salasana}}"
+ ;            :varuste-api-juuri-url "{{velho_varuste_api_juuri_url}}"
+ ;            :varuste-kayttajatunnus "{{velho_varuste_kayttajatunnus}}"
+ ;            :varuste-salasana "{{velho_varuste_salasana}}"
+ ;            :varuste-urakka-oid-url "{{velho_varuste_urakka_oid_url}}"
+ ;            :varuste-urakka-kohteet-url "{{velho_varuste_urakka_kohteet_url}}"}
+
+ ;; TODO: Tiedostopesula (Miten? Tehdäänkö mieluummin AWS:n puolella?)
+ ; :tiedostopesula {:base-url "{{tiedostopesula_url}}"}
+
+ ;; TODO: Virustarkastus (Miten? Tehdäänkö mieluummin AWS:n puolella?)
+ ; :virustarkistus {:url "{{virustarkistus_url}}"}
+
+ ;; TODO: Liiteet (Miten? Minne tallennetaan ja miten haetaan?)
+ ; :liitteet {:fileyard-url "{{fileyard_url}}"}
+
+
+ ;; Seuraavat ominaisuudet on mahdollista kytkeä pois päältä:
+ ;; :laatupoikkeaman-selvityspyynnosta-lahtee-viesti  Kun laatupoikkeamasta pyydetään selvitystä urakoitsijalta,
+ ;;                                                   lähetetään laatupoikkeaman urakan vastuuhenkilöille
+ ;;                                                   tieto tästä SMS/email viestinä. Viesti sisältää linkin
+ ;;                                                   tuotantoharjaan.
+ ;; :replica-db
+ ;; :fileyard
+ ;; :tiedostopesula
+ ;; :api-sampo
+ ;; :sampo
+ ;; :tierekisteri
+ ;; :tierekisterin-varusteet
+ ;; :varuste-api
+ ;; :varusteet-ulkoiset
+ ;; :tietyoilmoitusten-lahetys
+ ;; :vesivayla
+ ;; :reittitarkistukset
+ ;; :itmf
+ ;; :itmf-uudelleen-kaynnistys
+ ;; :sonja-uudelleen-kaynnistys
+ ;; :sonja-sahkoposti
+ ;; :sonja
+ ;; :toteumatyokalu - (Kehittäjän testailuun liittyvä työkalu)
+
+ :pois-kytketyt-ominaisuudet #{
+                               :replica-db
+                               :fileyard
+                               :tiedostopesula
+                               :api-sampo
+                               :sampo
+                               :tierekisteri
+                               :tierekisterin-varusteet
+                               :varuste-api
+                               :varusteet-ulkoiset
+                               :tietyoilmoitusten-lahetys
+                               :vesivayla
+                               :reittitarkistukset
+                               :itmf
+                               :itmf-uudelleen-kaynnistys
+                               :sonja-uudelleen-kaynnistys
+                               :sonja-sahkoposti
+                               :sonja
+                               :toteumatyokalu
+                               }
+
+
+ :komponenttien-tila {:itmf {:paivitystiheys-ms 10000}
+                      :db {:paivitystiheys-ms 10000
+                           :kyselyn-timeout-ms 20000}
+                      :db-replica {:paivitystiheys-ms 10000
+                                   :replikoinnin-max-viive-ms 100000}}
+ }

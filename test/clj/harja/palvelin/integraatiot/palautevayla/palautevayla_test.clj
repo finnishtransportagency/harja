@@ -101,34 +101,34 @@
                   :aihe-id 2
                   :kaytossa? true
                   :jarjestys 400}]}
-   {:aihe-id 90
+   {:aihe-id 900
     :nimi "Testaus"
     :jarjestys 9990
     :kaytossa? true
-    :tarkenteet [{:aihe-id 90
+    :tarkenteet [{:aihe-id 900
                   :nimi "Testaaminen"
                   :jarjestys 9990
                   :kaytossa? true
-                  :tarkenne-id 901}
-                 {:aihe-id 90
+                  :tarkenne-id 9001}
+                 {:aihe-id 900
                   :nimi "Testailu"
                   :jarjestys 9991
                   :kaytossa? true
-                  :tarkenne-id 902}]}
-   {:aihe-id 91
+                  :tarkenne-id 9002}]}
+   {:aihe-id 901
     :nimi "Toinen testaus"
     :jarjestys 9991
     :kaytossa? true
-    :tarkenteet [{:aihe-id 91
+    :tarkenteet [{:aihe-id 901
                   :nimi "Toinen testaaminen"
                   :jarjestys 9992
                   :kaytossa? true
-                  :tarkenne-id 911}
-                 {:aihe-id 91
+                  :tarkenne-id 9011}
+                 {:aihe-id 901
                   :nimi "Toinen testailu"
                   :jarjestys 9993
                   :kaytossa? true
-                  :tarkenne-id 912}]}])
+                  :tarkenne-id 9012}]}])
 
 (deftest hae-aiheet-onnistuu
   (with-fake-http

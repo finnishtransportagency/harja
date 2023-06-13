@@ -1,0 +1,12 @@
+# Ignoraa kaikki tiedostot
+*
+
+# Lisää lähdekoodi ja muut tarvittavat tiedostot
+!project.clj
+!src/
+!laadunseuranta/
+!test/
+!resources/
+!dev-resources/
+!tietokanta/src/
+!figwheel_conf/
