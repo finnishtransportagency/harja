@@ -1,5 +1,5 @@
 (ns harja.views.urakka.toteumat.velho-varusteet
-  "Urakan 'TOTEUMAT' välilehden 'Varusteet2' osio
+  "Urakan 'TOTEUMAT' välilehden 'Varusteet' osio
 
   Näyttää Harjan kautta kirjatut varustetoimenpiteet sekä mahdollistaa haut ja muokkaukset suoraan Tierekisteriin rajapinnan
   kautta.
