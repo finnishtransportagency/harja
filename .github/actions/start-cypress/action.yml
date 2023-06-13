@@ -1,0 +1,39 @@
+# TODO: Toteuta cypress-kontti, jota ajetaan taustalla. Ota mallia .github/docker imageista.
+#       Käytä yhteistä docker-composessa määriteltyä harja_net verkkoa
+
+name: 'Start Cypress'
+description: 'Käynnistää Cyperss kontin taustalle'
+
+inputs:
+  registry:
+    description: 'Container registry, josta haetaan cypress kontin image'
+    required: true
+    default: 'ghcr.io'
+  username:
+    description: ''
+    required: true
+  password:
+    description: ''
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Log in to the Container registry
+      uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.2.0
+      with:
+        registry: ${{ inputs.registry }}
+        username: ${{ inputs.username }}
+        password: ${{ inputs.password }}
+
+    - name: Pull and start test database
+      run: |
+        cd .github
+        echo "Pulling harja test database image (Docker Compose version: $(docker-compose version --short))"
+        docker compose pull cypress
+
+        echo "Starting cypress and waiting for it to start (Docker Compose version: $(docker-compose version --short))"
+        docker compose up -d --wait --wait-timeout 60 cypress
+      shell: bash
+
+

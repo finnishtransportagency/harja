@@ -1,0 +1,43 @@
+name: 'Start test database'
+desription: 'Käynnistää testitietokannan taustalle ja ajaa siihen migraatiot ja testidataa'
+
+inputs:
+  registry:
+    description: 'Container registry, josta haetaan testitietokannan image'
+    required: true
+    default: 'ghcr.io'
+  username:
+    description: ''
+    required: true
+  password:
+    description: ''
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Log in to the Container registry
+      uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.2.0
+      with:
+        registry: ${{ inputs.registry }}
+        username: ${{ inputs.username }}
+        password: ${{ inputs.password }}
+
+    - name: Pull and start test database
+      run: |
+        cd .github
+        echo "Pulling harja test database image (Docker Compose version: $(docker-compose version --short))"
+        docker compose pull harjadb
+
+        echo "Starting harja test database and waiting for it to start (Docker Compose version: $(docker-compose version --short))"
+        docker compose up -d --wait --wait-timeout 60 harjadb
+      shell: bash
+
+    - name: Run migrations and test data into harja-postgres service
+      run: |
+        docker ps -a
+
+        echo "Running migrations and test data into harja-postgres service"
+        docker exec --user postgres harjadb /bin/bash -c "~/aja-migraatiot.sh"
+        docker exec --user postgres harjadb /bin/bash -c "~/aja-testidata.sh"
+      shell: bash
