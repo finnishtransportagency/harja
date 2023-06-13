@@ -101,13 +101,14 @@
 (defn hae-urakat-paivystystarkistukseen
   ;; TODO Poista urakkatyyppi-filtteri kun kaikki urakat tuotannossa (joku kaunis päivä)
   ([db pvm] (hae-urakat-paivystystarkistukseen db pvm nil))
-  ([db pvm urakkatyyppi]
+  ([db pvm urakkatyypit]
   (yhteyshenkilot-q/hae-urakat-paivystystarkistukseen db {:pvm (c/to-sql-time pvm)
-                                                          :tyyppi (when urakkatyyppi
-                                                                    (name urakkatyyppi))})))
+                                                          :tyypit (when urakkatyypit
+                                                                    (mapv name urakkatyypit))})))
 
 (defn- paivystyksien-tarkistustehtava [db fim email nykyhetki]
-  (let [voimassa-olevat-urakat (hae-urakat-paivystystarkistukseen db nykyhetki :hoito)
+  (let [voimassa-olevat-urakat (hae-urakat-paivystystarkistukseen db nykyhetki #{:paallystys :valaistus
+                                                                                 :hoito :teiden-hoito})
         paivystykset (hae-voimassa-olevien-urakoiden-paivystykset db nykyhetki)
         urakat-ilman-paivystysta (urakat-ilman-paivystysta paivystykset voimassa-olevat-urakat nykyhetki)]
     (ilmoita-paivystyksettomista-urakoista urakat-ilman-paivystysta fim email nykyhetki)))
