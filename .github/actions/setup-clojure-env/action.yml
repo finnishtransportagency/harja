@@ -1,0 +1,37 @@
+name: 'Setup Clojure environment'
+description: 'Asentaa Clojure-kehitysympäristön ja lataa riippuvuudet'
+
+  #inputs:
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: Prepare java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+
+    - name: Cache Clojure Dependencies
+      id: cache-clojure-deps
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-leiningen-${{ hashFiles('**/project.clj') }}
+        restore-keys: ${{ runner.os }}-leiningen-
+
+    # TODO: Selvitä tietoturvanäkökulma setup-clojure actionionille
+    #       Perus ubuntu-latest GHA imagen mukana tulee leiningen, mutta olisi hyvä hallita käytetty versio itse.
+    #    - name: Install clojure tools
+    #      uses: DeLaGuardo/setup-clojure@9.5
+    #      with:
+    #        clj-kondo: 2023.05.26
+    #        lein: 2.9.10
+
+    - name: Download Clojure dependencies
+      if: steps.cache-clojure-deps.outputs.cache-hit != 'true'
+      run: lein deps
+      shell: bash
+
+
