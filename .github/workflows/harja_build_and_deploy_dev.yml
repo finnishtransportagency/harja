@@ -9,6 +9,11 @@ concurrency:
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Valitse deploy-ympäristö'
+        type: environment
+        required: true
 
 # No common permissions currently needed for all jobs, but if needed, they can be defined here:
 # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
@@ -90,11 +95,5 @@ jobs:
       # Contents is needed for the checkout action
       contents: read
     with:
-      ecr_repository_name: harja-ecr-repository
-      ecs_container_name: ${{ vars.ECS_CONTAINER_NAME }}
-      ecs_task_definition_name: ${{ vars.ECS_TASK_DEFINITION_NAME_DEV }}
-      ecs_service_name: ${{ vars.ECS_SERVICE_NAME_DEV }}
-      ecs_cluster_name: ${{ vars.ECS_CLUSTER_NAME_DEV }}
-    secrets:
-      aws_account_id: ${{ secrets.AWS_ACCOUNT_ID_DEV }}
+      environment: ${{ github.event.inputs.environment }}
 
