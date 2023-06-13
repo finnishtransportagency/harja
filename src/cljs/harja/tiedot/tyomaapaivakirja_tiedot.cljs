@@ -10,6 +10,7 @@
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
+(defonce raportti-avain :tyomaapaivakirja-nakyma)
 (def nakymassa? (atom false))
 
 (defonce tila (atom {:tiedot []
@@ -24,15 +25,17 @@
                   :puuttuvat "puuttuu"})
 
 (def aikavali-atom (atom (pvm/kuukauden-aikavali (pvm/nyt))))
-(defonce raportti-avain :tyomaapaivakirja-nakyma)
 
 (defonce raportin-parametrit
-  (reaction (let [ur @nav/valittu-urakka]
-              (raportit/urakkaraportin-parametrit
-                (:id ur)
-                raportti-avain
-                {:urakkatyyppi (:tyyppi ur)
-                 :valittu-rivi (:valittu-rivi @tila)}))))
+  (reaction (let [ur @nav/valittu-urakka
+                  valittu-tila @tila
+                  valittu-rivi (:valittu-rivi valittu-tila)
+                  parametrit (raportit/urakkaraportin-parametrit
+                               (:id ur)
+                               raportti-avain
+                               {:urakkatyyppi (:tyyppi ur)
+                                :valittu-rivi valittu-rivi})]
+              parametrit)))
 
 (defonce raportin-tiedot
   (reaction<! [p @raportin-parametrit]
@@ -78,7 +81,8 @@
 
   HaeTiedot
   (process-event [_ app]
-    (hae-paivakirjat app))
+    (hae-paivakirjat app)
+    app)
 
   HaeTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
