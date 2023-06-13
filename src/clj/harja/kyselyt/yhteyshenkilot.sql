@@ -348,10 +348,9 @@ SELECT
   sampoid
 FROM urakka u
 WHERE u.alkupvm <= :pvm
-      AND u.loppupvm >= :pvm
-      -- PENDING Lisätään urakkatyyppejä sitä mukaan kun
-      -- päätyvät tuotantoon
-        AND (TRUE IN (SELECT unnest(ARRAY[:tyypit]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:tyypit]::urakkatyyppi[]));
+  AND u.loppupvm >= :pvm
+  AND u.urakkanro IS NOT NULL
+  AND (TRUE IN (SELECT unnest(ARRAY[:tyypit]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:tyypit]::urakkatyyppi[]));
 
 -- name: hae-urakan-vastuuhenkilot
 SELECT * FROM urakanvastuuhenkilo WHERE urakka = :urakka;
