@@ -197,7 +197,6 @@
  ;; :toteumatyokalu - sallittu vain gc ja local ympäristöissä, muualla estetty
  :pois-kytketyt-ominaisuudet #{:fileyard
                                ; :tietyoilmoitusten-lahetys
-                               :varusteet-ulkoiset
                                :itmf
                                :sonja-uudelleen-kaynnistys
                                :itmf-uudelleen-kaynnistys
