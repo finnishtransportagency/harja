@@ -341,7 +341,7 @@ FROM paivystys p
 WHERE u.loppupvm >= :pvm;
 
 -- name: hae-urakat-paivystystarkistukseen
--- Hakee urakat, jotka ovat voimassa annettuna päivänä
+-- Hakee urakat, jotka ovat voimassa annettuna päivänä ja joiden tyyppi passaa annettuun tyyppi-listaan.
 SELECT
   id,
   nimi,
@@ -351,7 +351,7 @@ WHERE u.alkupvm <= :pvm
       AND u.loppupvm >= :pvm
       -- PENDING Lisätään urakkatyyppejä sitä mukaan kun
       -- päätyvät tuotantoon
-      AND (:tyyppi::urakkatyyppi IS NULL OR tyyppi = :tyyppi::urakkatyyppi);
+        AND (TRUE IN (SELECT unnest(ARRAY[:tyypit]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:tyypit]::urakkatyyppi[]));
 
 -- name: hae-urakan-vastuuhenkilot
 SELECT * FROM urakanvastuuhenkilo WHERE urakka = :urakka;

@@ -154,6 +154,27 @@
     ;; Ei urakoita käynnissä tänä aikana, mitään ei palaudu
     (is (= (count urakat-ilman-paivystysta) (count urakat)))))
 
+(deftest hoidon-urakat-paivystys-loytyy
+  (let [pvm (t/local-date 2015 12 5)
+        testitietokanta (:db jarjestelma)
+        hoitourakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm #{:hoito :teiden-hoito})]
+    ;; Löytyy 4 urakkaa annettuna ajankohtana
+    (is (= (count hoitourakat) 4))))
+
+(deftest valaistus-urakat-paivystys-loytyy
+  (let [pvm (t/local-date 2015 12 5)
+        testitietokanta (:db jarjestelma)
+        valaistusurakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm #{:valaistus})]
+    ;; Löytyy 2 urakkaa annettuna ajankohtana
+    (is (= (count valaistusurakat) 2))))
+
+(deftest paallystys-urakat-paivystys-loytyy
+  (let [pvm (t/local-date 2015 12 5)
+        testitietokanta (:db jarjestelma)
+        paallystysurakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm #{:paallystys})]
+    ;; Löytyy 4 urakkaa annettuna ajankohtana
+    (is (= (count paallystysurakat) 4))))
+
 (deftest ilmoituksien-saajien-haku-toimii
   (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))]
     (with-fake-http
