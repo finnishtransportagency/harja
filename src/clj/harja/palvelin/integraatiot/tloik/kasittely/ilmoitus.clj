@@ -45,7 +45,7 @@
 (defn paivita-ilmoitus [db id urakka-id valitetty-urakkaan {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi
                                                 valitetty otsikko paikankuvaus lisatieto
                                                 yhteydenottopyynto ilmoittaja lahettaja selitteet
-                                                sijainti vastaanottaja tunniste viesti-id]}]
+                                                sijainti vastaanottaja luokittelu tunniste viesti-id]}]
   (ilmoitukset/paivita-ilmoitus!
     db
     {:urakka urakka-id
@@ -62,7 +62,9 @@
      :selitteet (konv/seq->array (map name selitteet))
      :tunniste tunniste
      :viestiid viesti-id
-     :id id})
+     :id id
+     :aihe (:aihe luokittelu)
+     :tarkenne (:tarkenne luokittelu)})
   (paivita-ilmoittaja db id ilmoittaja)
   (paivita-lahettaja db id lahettaja)
   (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)
@@ -72,7 +74,7 @@
                                                       valitetty otsikko paikankuvaus lisatieto
                                                       yhteydenottopyynto ilmoittaja lahettaja selitteet
                                                       sijainti vastaanottaja tunniste viesti-id
-                                                      vastaanotettu]}]
+                                                      vastaanotettu luokittelu] :as ilmoitus}]
   (let [id (:id (ilmoitukset/luo-ilmoitus<!
                   db
                   {:urakka                  urakka-id
@@ -90,7 +92,9 @@
                    :viestiid                viesti-id
                    :vastaanotettu           (pvm/nyt)
                    :vastaanotettu-alunperin (pvm/nyt)
-                   :valitetty-urakkaan      (pvm/nyt)}))]
+                   :valitetty-urakkaan      (pvm/nyt)
+                   :aihe (:aihe luokittelu)
+                   :tarkenne (:tarkenne luokittelu)}))]
     (paivita-ilmoittaja db id ilmoittaja)
     (paivita-lahettaja db id lahettaja)
     (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)

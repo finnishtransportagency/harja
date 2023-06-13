@@ -344,6 +344,20 @@ fieldset.lomake-osa {
     flex-direction: column;*/
 
   }
+
+  &-flex {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: @valistys-16;
+
+    &-kokonainen {
+      width: 100%;
+    }
+
+    &-puolikas {
+      width: ~"calc(50% - @{valistys-8})";
+    }
+  }
 }
 
 .lomakepalstat {

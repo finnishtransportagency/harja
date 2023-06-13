@@ -148,6 +148,14 @@ SELECT
           END as alue,
   u.alkupvm,
   u.loppupvm,
+  CASE
+      WHEN u.kesakausi_alkupvm IS NOT NULL THEN
+          CONCAT(TO_CHAR(NOW(), 'YYYY'), '-', TO_CHAR(u.kesakausi_alkupvm, 'MM-DD'))::DATE
+      END AS "kesakausi-alkupvm",
+  CASE
+      WHEN u.kesakausi_loppupvm IS NOT NULL THEN
+          CONCAT(TO_CHAR(NOW(), 'YYYY'), '-', TO_CHAR(u.kesakausi_loppupvm, 'MM-DD'))::DATE
+      END AS "kesakausi-loppupvm",
   u.tyyppi,
   u.sopimustyyppi,
   u.indeksi,

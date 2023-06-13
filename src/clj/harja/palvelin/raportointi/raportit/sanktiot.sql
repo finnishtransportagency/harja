@@ -11,14 +11,14 @@ SELECT
   st.koodi       AS sanktiotyyppi_koodi,
   tpi.id         AS toimenpideinstanssi_id,
   tpi.nimi       AS toimenpideinstanssi_nimi,
-  toimenpide.koodi AS toimenpide_koodi,
+  tpk2.koodi     AS toimenpide_koodi,
   u.id           AS "urakka-id",
   u.nimi         AS nimi,
   u.loppupvm     AS loppupvm,
   o.id           AS hallintayksikko_id,
   o.nimi         AS hallintayksikko_nimi,
   o.elynumero    AS hallintayksikko_elynumero,
-  toimenpide.nimi AS toimenpidekoodi_taso2,
+  tpk2.nimi      AS toimenpidekoodi_taso2,
   (SELECT korotus FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, u.id, s.sakkoryhma)) AS indeksikorotus
 FROM urakka u
      JOIN toimenpideinstanssi tpi ON tpi.urakka = u.id
@@ -39,8 +39,8 @@ FROM urakka u
                                     OR
                                      lp.yllapitokohde IS NOT NULL AND
                                      (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE)
-     LEFT JOIN tehtava tehtava on tpi.toimenpide = tehtava.id
-     LEFT JOIN toimenpide toimenpide on tehtava.emo = toimenpide.id
+     LEFT JOIN toimenpide tpk3 on tpk3.id = tpi.toimenpide
+     LEFT JOIN toimenpide tpk2 on tpk3.emo = tpk2.id
 WHERE u.alkupvm < :loppu::DATE AND u.loppupvm > :alku::DATE
     AND ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka) -- varmistaa ettei testiurakka tule mukaan alueraportteihin
     AND (:urakka::INTEGER IS NOT NULL OR (

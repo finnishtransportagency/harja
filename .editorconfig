@@ -33,7 +33,7 @@ ij_clojure_onespacelists = false
 ij_clojure_userecommendednsclauseorder = true
 ij_clojure_userecommendednscollections = true
 
-[package.json]
+[*.json]
 indent_size = 2
 
 [*.less]

@@ -151,7 +151,8 @@
 
 (defn excel-tuonti-virhe-modal
   [e! {:keys [urem-excel-virheet] :as app}]
-  (let [{validointivirheet "paikkausten-validointivirheet"
+  (let [{urem-kokonaismassamaaravirhe "urem-kokonaismassamaaravirhe"
+         validointivirheet "paikkausten-validointivirheet"
          paikkauskohteen-tila-virhe "paikkauskohteen-tila-virhe"
          excel-luku-virhe "excel-luku-virhe"} urem-excel-virheet]
     [modal/modal
@@ -163,7 +164,7 @@
      [:div
       (when validointivirheet
         [:<>
-         [:p "Tuotua exceliä ei voitu lukea. Varmista, että käytät HARJAsta ladattua pohjaa, jonka sarakkeita A-Q ei ole muokattu, ja paikkaukset alkavat riviltä 5."]
+         [:p "Tuotua exceliä ei voitu lukea. Varmista, että käytät HARJAsta ladattua pohjaa, jonka sarakkeita A-P ei ole muokattu, ja paikkaukset alkavat riviltä 8."]
          [:<>
           [:br]
           (for* [[rivi virheet] validointivirheet]
@@ -172,6 +173,10 @@
              [:ul
               (for* [virhe virheet]
                 [:li virhe])]])]])
+      (when urem-kokonaismassamaaravirhe
+        [:<>
+         [:br]
+         [:p urem-kokonaismassamaaravirhe]])
       (when paikkauskohteen-tila-virhe
         [:<>
          [:br]

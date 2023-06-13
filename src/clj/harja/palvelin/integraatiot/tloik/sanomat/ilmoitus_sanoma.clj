@@ -55,6 +55,10 @@
   {:nimi (z/xml1-> vastaanottaja :nimi z/text)
    :ytunnus (z/xml1-> vastaanottaja :ytunnus z/text)})
 
+(defn lue-luokittelu [luokittelu]
+  {:aihe (Integer/parseInt (z/xml1-> luokittelu :aihe z/text))
+   :tarkenne (Integer/parseInt (z/xml1-> luokittelu :tarkenne z/text))})
+
 (defn lue-viesti [viesti]
   (let [data (xml/lue viesti)
         ilmoitus {:ilmoitettu (parsi-paivamaara (z/xml1-> data :ilmoitettu z/text))
@@ -78,5 +82,7 @@
                   :sijainti (when-let [sijainti (into {} (z/xml-> data :sijainti lue-sijainti))]
                               (if (empty? sijainti) nil sijainti))
                   :vastaanottaja (when-let [vastaanottaja (into {} (z/xml-> data :vastaanottaja lue-vastaanottaja))]
-                                   (if (empty? vastaanottaja) nil vastaanottaja))}]
+                                   (if (empty? vastaanottaja) nil vastaanottaja))
+                  :luokittelu (when-let [luokittelu (into {} (z/xml-> data :luokittelu lue-luokittelu))]
+                                (if (empty? luokittelu) nil luokittelu))}]
     ilmoitus))

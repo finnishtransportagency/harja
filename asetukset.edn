@@ -197,7 +197,6 @@
  ;; :toteumatyokalu - sallittu vain gc ja local ympäristöissä, muualla estetty
  :pois-kytketyt-ominaisuudet #{:fileyard
                                ; :tietyoilmoitusten-lahetys
-                               :varusteet-ulkoiset
                                :itmf
                                :sonja-uudelleen-kaynnistys
                                :itmf-uudelleen-kaynnistys
@@ -234,4 +233,8 @@
                            :kyselyn-timeout-ms 20000}
                       :db-replica {:paivitystiheys-ms 10000
                                    :replikoinnin-max-viive-ms 100000}}
- }
+
+ :palautevayla {:url "https://liikennevirastodev.service-now.com"
+                :kayttajatunnus "integration.harja"
+                :salasana #=(eval (harja.tyokalut.env/env "HARJA_PALAUTEVAYLA_SALASANA" ""))
+                :paivitysaika [2 30 00]}}

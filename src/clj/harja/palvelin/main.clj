@@ -33,6 +33,7 @@
     [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
     [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
+    [harja.palvelin.integraatiot.palautevayla.palautevayla-komponentti :as palautevayla]
 
     [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
     [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
@@ -71,6 +72,7 @@
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.info :as info]
     [harja.palvelin.palvelut.hallinta.rajoitusalue-pituudet :as rajoitusalue-pituudet]
+    [harja.palvelin.palvelut.hallinta.palauteluokitukset :as palauteluokitukset-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
@@ -105,6 +107,7 @@
     [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
     [harja.palvelin.palvelut.tyomaapaivakirja :as tyomaapaivakirja]
+    [harja.palvelin.palvelut.palauteluokitukset :as palauteluokitukset]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -779,7 +782,21 @@
       (component/using
         (yleiset-ajastukset/->YleisetAjastuket)
         [:db])
-      )))
+
+      :palautevayla
+      (component/using
+        (palautevayla/->Palautevayla (:palautevayla asetukset))
+        [:db :integraatioloki])
+
+      :palauteluokitukset
+      (component/using
+        (palauteluokitukset/->Palauteluokitukset)
+        [:http-palvelin :db])
+
+      :palauteluokitukset-hallinta
+      (component/using
+        (palauteluokitukset-hallinta/->PalauteluokitustenHallinta)
+        [:http-palvelin :db :palautevayla]))))
 
 (defonce harja-jarjestelma nil)
 
