@@ -107,8 +107,7 @@
                                                                     (mapv name urakkatyypit))})))
 
 (defn- paivystyksien-tarkistustehtava [db fim email nykyhetki]
-  (let [voimassa-olevat-urakat (hae-urakat-paivystystarkistukseen db nykyhetki #{:paallystys :valaistus
-                                                                                 :hoito :teiden-hoito})
+  (let [voimassa-olevat-urakat (hae-urakat-paivystystarkistukseen db nykyhetki #{:valaistus :hoito :teiden-hoito})
         paivystykset (hae-voimassa-olevien-urakoiden-paivystykset db nykyhetki)
         urakat-ilman-paivystysta (urakat-ilman-paivystysta paivystykset voimassa-olevat-urakat nykyhetki)]
     (ilmoita-paivystyksettomista-urakoista urakat-ilman-paivystysta fim email nykyhetki)))
