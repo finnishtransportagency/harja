@@ -24,15 +24,15 @@ env:
   GH_DOCKER_REGISTRY: ghcr.io
 
 
-# Note: Each job runs in a fresh VM, so the environment is not shared between jobs.
+# Huom. Jokainen job ajetaan omassa VM:ssä, joten ympäristö ei ole jaettu jobien välillä.
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # Contents is needed for the checkout action
+      # Contents read lupaa tarvitaan checkout actionissa
       contents: read
-      # Packages read-access is needed for pulling the harja test database image
+      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
       packages: read
 
     steps:
@@ -88,12 +88,19 @@ jobs:
   deploy-to-ecs:
     uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
     needs: test-and-build
+    # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # OIDC token is needed for AWS actions assume the role
+      # OIDC tokenia tarvitaan AWS jobeissa roolin omaksumiseen
       id-token: write
-      # Contents is needed for the checkout action
+      # Contents read lupaa tarvitaan checkout actionissa
       contents: read
     with:
       environment: ${{ github.event.inputs.environment }}
+    # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattiesesti envinronmentista reusable workfloweissa
+    #       Tässä määritetään mitkä yksittäiset salaisuudet reusable workflow saa lukea GitHub environmentista.
+    #       Vaihtoehtoisesti, voi käyttää secrets: inherit toimintoa, jolloin reusable workflow saa kaikki salaisuudet
+    #       kuin kutsuva workflowikin.
+    secrets:
+      aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
 

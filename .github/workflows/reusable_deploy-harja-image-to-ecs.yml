@@ -7,17 +7,19 @@ on:
   workflow_call:
     inputs:
       environment:
-        description: 'Kohdeympäristö, johon deployataan'
+        description: 'Deploymentin kohdeympäristö'
         type: string
         required: true
+    secrets:
+      AWS_ACCOUNT_ID:
+        required: true
+
 
 # Note: Each job runs in a fresh VM, so the environment is not shared between jobs.
 jobs:
   deploy-image-to-ecs:
     runs-on: ubuntu-latest
-    # Note: Vars and secrets used in this job are defined in the referenced environment
-    environment:
-      name: ${{ inputs.environment }}
+    environment: ${{ inputs.environment }}
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -29,6 +31,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: List used environment variables
+        run: |
+          echo "Target environment: ${{ inputs.environment }}"
+          echo "Environment variables:"
+          echo "  ECR_REPOSITORY_NAME: ${{ vars.ECR_REPOSITORY_NAME }}"
+          echo "  ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}"
+          echo "  ECS_CONTAINER_NAME: ${{ vars.ECS_CONTAINER_NAME }}"
+          echo "  ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}"
+          echo "  ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}"
+
+        shell: bash
 
       - name: Download uberjar artifact
         uses: actions/download-artifact@v3
@@ -53,7 +67,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ vars.ecr_repository_name }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
           IMAGE_TAG: ${{ github.sha }}
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
         run: |
@@ -67,7 +81,7 @@ jobs:
       # TODO: Määrittele github environmentit (dev, stg, prod) ja käytä env muuuttujia niiden kautta
       - name: Download task definition
         env:
-          ECS_TASK_DEFINITION_NAME: ${{ vars.ecs_task_definition_name }}
+          ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
         run: |
           aws ecs describe-task-definition --task-definition $ECS_TASK_DEFINITION_NAME --query taskDefinition> harja-task-definition.json
 
@@ -76,15 +90,15 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: harja-task-definition.json
-          container-name: ${{ vars.ecs_container_name }}
+          container-name: ${{ vars.ECS_CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
 
       - name: Deploy ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ vars.ecs_service_name }}
-          cluster: ${{ vars.ecs_cluster_name }}
+          service: ${{ vars.ECS_SERVICE_NAME }}
+          cluster: ${{ vars.ECS_CLUSTER_NAME }}
           wait-for-service-stability: false
           #wait-for-service-stability: true
 
