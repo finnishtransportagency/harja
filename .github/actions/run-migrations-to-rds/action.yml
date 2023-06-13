@@ -1,0 +1,19 @@
+name: 'Run migrations to RDS'
+description: 'Ajaa migraatiot Aurora RDS kantaan kohdeympäristöön'
+
+#inputs:
+
+# TODO: Toteuta migraatioiden ajaminen RDS:ään
+#       Käytetään todennäköisesti AWS puolella Lambdaa, joka ajaa migraatiot kantaan
+#       Tämä sen takia, että ei tarvitse ottaa suoraan yhteyttä RDS:ään GitHub actionseissa,
+#       eikä actionseille tarvitse antaa niin paljon oikeuksia.
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run migrations to RDS using lambda
+      run:  |
+        echo "Run migrations to RDS using lambda"
+      shell: bash
+
+
