@@ -14,7 +14,7 @@
             [harja.pvm :as pvm]
             [dk.ative.docjure.spreadsheet :as xls]
             [clojure.java.io :as io]
-            [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.paikkaus :as paikkaus-q]
             [harja.kyselyt.konversio :as konv]))
 
 (defn jarjestelma-fixture [testit]
@@ -532,19 +532,34 @@
                         "test/resurssit/excel/urem_tuonti.xlsx")
         paikkaukset-jalkeen (into []
                                   (comp
-                                    (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
-                                  (hae-paikkaukset urakka-id (:id paikkauskohde)))
+                                    (map #(update % :tierekisteriosoite konv/lue-tr-osoite))
+                                    (map #(assoc % :tienkohdat (paikkaus-q/hae-paikkauksen-tienkohdat (:db jarjestelma)
+                                                                  {::paikkaus/paikkaus-id (:id %)})))
+                                    )
+                              (hae-paikkaukset urakka-id (:id paikkauskohde)))
         eka-rivi (first (filter #(= 50 (get-in % [:tierekisteriosoite :loppuetaisyys]))
 
-                                paikkaukset-jalkeen))
+                          paikkaukset-jalkeen))
         toka-rivi (first (filter #(= 100 (get-in % [:tierekisteriosoite :loppuetaisyys]))
 
-                                paikkaukset-jalkeen))]
+                           paikkaukset-jalkeen))]
 
     (is (= (:status lue-excelista) 200))
     ;; varmista että saadaan laskettua pinta-alat joka riville. Suhde 1:2
     (is (= (:pinta-ala eka-rivi) 50.0M) "UREM pinta-ala")
     (is (= (:pinta-ala toka-rivi) 100.0M) "UREM pinta-ala")
+    (is (= (:tienkohdat eka-rivi) (list #:harja.domain.paikkaus{:ajorata 1
+                                                                :ajourat [1]
+                                                                :ajouravalit [1]
+                                                                :keskisaumat [1]
+                                                                :reunat [1]
+                                                                :tienkohta-id (ffirst (q (str "SELECT id FROM paikkauksen_tienkohta where \"paikkaus-id\" = " (:id eka-rivi) ";")))})) "UREM tienkohdat")
+    (is (= (:tienkohdat toka-rivi) (list #:harja.domain.paikkaus{:ajorata 1
+                                                                 :ajourat [1]
+                                                                 :ajouravalit [2]
+                                                                 :keskisaumat [1]
+                                                                 :reunat [2]
+                                                                 :tienkohta-id (ffirst (q (str "SELECT id FROM paikkauksen_tienkohta where \"paikkaus-id\" = " (:id toka-rivi) ";")))}) "UREM tienkohdat"))
     ;; sen jälkeen massamäärä joka riville pinta-alojen suhteessa 1:2
     (is (=marginaalissa? (:massamaara eka-rivi) 0.5M) "UREM massamaara")
     (is (=marginaalissa? (:massamaara toka-rivi) 1.0M) "UREM massamaara")
