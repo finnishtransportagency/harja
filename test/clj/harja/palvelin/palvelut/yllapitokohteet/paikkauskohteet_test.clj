@@ -554,12 +554,14 @@
                                                                 :keskisaumat [1]
                                                                 :reunat [1]
                                                                 :tienkohta-id (ffirst (q (str "SELECT id FROM paikkauksen_tienkohta where \"paikkaus-id\" = " (:id eka-rivi) ";")))})) "UREM tienkohdat")
+
     (is (= (:tienkohdat toka-rivi) (list #:harja.domain.paikkaus{:ajorata 1
                                                                  :ajourat [1]
                                                                  :ajouravalit [2]
                                                                  :keskisaumat [1]
                                                                  :reunat [2]
-                                                                 :tienkohta-id (ffirst (q (str "SELECT id FROM paikkauksen_tienkohta where \"paikkaus-id\" = " (:id toka-rivi) ";")))}) "UREM tienkohdat"))
+                                                                 :tienkohta-id (ffirst (q (str "SELECT id FROM paikkauksen_tienkohta where \"paikkaus-id\" = " (:id toka-rivi) ";")))})) "UREM tienkohdat")
+
     ;; sen jälkeen massamäärä joka riville pinta-alojen suhteessa 1:2
     (is (=marginaalissa? (:massamaara eka-rivi) 0.5M) "UREM massamaara")
     (is (=marginaalissa? (:massamaara toka-rivi) 1.0M) "UREM massamaara")
