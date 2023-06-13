@@ -242,8 +242,8 @@ SELECT
   it.kasittelija_organisaatio_nimi         AS kuittaus_kasittelija_organisaatio,
   it.kasittelija_organisaatio_ytunnus      AS kuittaus_kasittelija_ytunnus,
 
-  -- Liitä ilmoituksen kuvat kyselyyn, mikäli olemassa
-  ( SELECT ARRAY_AGG(ik.linkki) 
+  -- Liitä ilmoituksen kuvat kyselyyn, mikäli olemassa, ketjuta linkki ja id
+  ( SELECT ARRAY_AGG('[' || ik.linkki  || ',' || ik.id || ']')
     FROM ilmoitus_kuvat ik
     WHERE ik.ilmoitus = i.id )             AS kuvat
 

@@ -1,6 +1,7 @@
 (ns harja.views.ilmoitukset.ilmoituksen-tiedot
   (:require [harja.ui.yleiset :as yleiset]
             [harja.pvm :as pvm]
+            [clojure.string :as str]
             [harja.ui.bootstrap :as bs]
             [clojure.string :refer [capitalize]]
             [harja.tiedot.ilmoitukset.tieliikenneilmoitukset :as tiedot]
@@ -18,7 +19,8 @@
             [harja.domain.tierekisteri :as tr-domain]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.loki :refer [log]]
-            [reagent.core :refer [atom] :as r]))
+            [reagent.core :refer [atom] :as r])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn selitelista [{:keys [selitteet] :as ilmoitus}]
   (let [virka-apu? (ilmoitukset/virka-apupyynto? ilmoitus)]
@@ -30,10 +32,16 @@
 
 (defn- kuvalinkit [ilmoitus]
   (when-not (empty? (:kuvat ilmoitus))
-    (for [[n linkki] (map-indexed #(vector %1 %2) (:kuvat ilmoitus))]
+    (for* [[n linkki] (map-indexed #(vector %1 %2) (:kuvat ilmoitus))]
       [:div
-       [:br]
-       [:a {:href linkki} (str "Kuvalinkki " (inc n))]])))
+       [:a {:href linkki} (str "Kuvalinkki " (inc n))]
+       [:br]])))
+
+(defn- parsi-kuva [kuva]
+  (mapv (fn [tiedot]
+          (let [parsittu (str/replace tiedot "[" "")
+                parsittu (str/replace parsittu "]" "")]
+            parsittu)) (str/split kuva ",")))
 
 (defn selitteen-sisaltavat-yleiset-tiedot [ilmoitus]
   [yleiset/tietoja {:piirra-viivat? true
@@ -142,12 +150,17 @@
 
           (when-not (empty? (:kuvat ilmoitus))
             (map
-              (fn [linkki]
-                [:div
-                 [:br]
-                 [:a
-                  {:href linkki}
-                  [:img {:src linkki :style {:width "100%" :max-width "450px"}}]]]) (:kuvat ilmoitus)))]]]
+              (fn [kuva]
+                (let [kuva (parsi-kuva kuva) ;; Parsi kuvan tiedot [linkki, id]
+                      validi? (= (count kuva) 2) ;; Tietojen pitäisi sisältää linkki ja id
+                      id (if validi? (second kuva) nil)
+                      linkki (if validi? (first kuva) nil)]
+                  ^{:key id}
+                  [:div
+                   [:br]
+                   [:a
+                    {:href linkki}
+                    [:img {:src linkki :style {:width "100%" :max-width "450px"}}]]])) (:kuvat ilmoitus)))]]]
 
        [:div.kuittaukset
         [:h3 "Kuittaukset"]
