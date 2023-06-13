@@ -41,15 +41,19 @@ COPY ./aws/fargate/asetukset.edn asetukset.edn
 COPY ./aws/fargate/.harja_env .harja_env
 
 # Aseta ENV muuttujat
+
+# Java agent
+ENV HARJA_JAVA_AGENT=""
+
 # TODO: Tarkista mitkä JAVA optionsit tarvitaan
 # Käytä -XshowSettings:all, jos haluat nähdä mitä asetuksia käytetään
 ENV HARJA_JVM_OPTS="-Xmx6g"
 # TODO: Tämä kirjasto ei ole opensourcea. Miten otetaan konttiin mukaan?
 #ENV LIBS="sonic-client.jar:sonic-xmessage.jar:sonic-crypto.jar"
-ENV LIBS=""
+ENV HARJA_LIBS=""
 
 # Aseta portti
 EXPOSE 3000
 
 # Aseta entrypoint,
-ENTRYPOINT java $HARJA_JVM_OPTS -cp $LIBS:harja.jar harja.palvelin.main
+ENTRYPOINT java $HARJA_JAVA_AGENT $HARJA_JVM_OPTS -cp $HARJA_LIBS:harja.jar harja.palvelin.main
