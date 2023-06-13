@@ -670,6 +670,7 @@
    ::tr/let
    ::paikkaus/ajourat
    ::paikkaus/ajouravalit
+   ::paikkaus/reunat
    ::paikkaus/keskisaumat
    ::paikkaus/raekoko])
 
