@@ -43,6 +43,7 @@ COPY ./aws/fargate/.harja_env .harja_env
 # Aseta ENV muuttujat
 
 # Java agent
+# TODO: Esimerkiksi JMX Prometheus Java agentti
 ENV HARJA_JAVA_AGENT=""
 
 # TODO: Tarkista mitkä JAVA optionsit tarvitaan
