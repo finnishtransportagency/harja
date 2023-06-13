@@ -6,49 +6,27 @@
 
   Harjaan tallennettu varustetoimenpide sisältää Tievelhosta haetun kopion toimenpiteestä ja sen kohteesta rajatuilla tiedoilla.
   Tarkemmat tiedot löytyvät Tievelhosta."
-  (:require [cljs.core.async :refer [<! >! chan timeout]]
-            [clojure.string :as str]
-            [harja.asiakas.kommunikaatio :as kommunikaatio]
-            [harja.atom :refer [paivita!] :refer-macros [reaction<!]]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.domain.tierekisteri.varusteet :refer [varusteominaisuus->skeema] :as tierekisteri-varusteet]
+  (:require [reagent.core :refer [atom]]
+            [tuck.core :as tuck]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.domain.varuste-ulkoiset :as varuste-ulkoiset]
-            [harja.geo :as geo]
-            [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
-            [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.kartta :as kartta-tiedot]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.tierekisteri.varusteet :as tv]
             [harja.tiedot.urakka.toteumat.velho-varusteet-tiedot :as v]
             [harja.tiedot.urakka.urakka :as urakka-tila]
             [harja.tiedot.urakka.varusteet-kartalla :as varusteet-kartalla]
+            [harja.transit :as transit]
             [harja.ui.debug :refer [debug]]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :as kentat :refer [tee-kentta]]
             [harja.ui.komponentti :as komp]
-            [harja.ui.liitteet :as liitteet]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
-            [harja.ui.protokollat :refer [Haku hae]]
             [harja.ui.sivupalkki :as sivupalkki]
             [harja.ui.valinnat :as valinnat]
-            [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader]]
             [harja.views.kartta :as kartta]
-            [harja.views.kartta.tasot :as kartta-tasot]
-            [harja.views.tierekisteri.varusteet :refer [varustehaku] :as view]
-            [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
-            [harja.views.urakka.valinnat :as urakka-valinnat]
-            [reagent.core :refer [atom] :as r]
-            [harja.asiakas.kommunikaatio :as k]
-            [tuck.core :as tuck]
-            [harja.transit :as transit])
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]
-                   [tuck.intercept :refer [intercept send-to]]))
+            [harja.views.kartta.tasot :as kartta-tasot]))
 
 (defn kuntoluokka-komponentti [kuntoluokka]
   [yleiset/tila-indikaattori kuntoluokka
@@ -72,15 +50,15 @@
                                                (contains? (get valinnat avain) nimi)
                                                (nil? (get valinnat avain)))}))
         varustetyypit-ja-suosikit (map-indexed (fn [idx itm] {:id idx :nimi itm})
-                                               (into ["Aidat" "Liikennemerkit" "Portaalit" "Rummut"]
-                                                     (sort (vals v/tietolaji->varustetyyppi-map))))
+                                    (into ["Aidat" "Liikennemerkit" "Portaalit" "Rummut"]
+                                      (sort (vals v/tietolaji->varustetyyppi-map))))
         varustetyypit (map (multimap-fn :varustetyypit) (into ["Kaikki"] varustetyypit-ja-suosikit))
         kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] v/kuntoluokat))
         toteumat (into [nil] (keys varuste-ulkoiset/toteuma->toimenpide-map))
         tr-kentan-valitse-fn (fn [avain]
                                (fn [event]
                                  (e! (v/->ValitseTR-osoite (-> event .-target .-value) avain))))
-        tie  (:tie valinnat)
+        tie (:tie valinnat)
         aosa (:aosa valinnat)
         aeta (:aeta valinnat)
         losa (:losa valinnat)
@@ -104,9 +82,9 @@
         :valitse-fn #(e! (v/->ValitseHoitovuodenKuukausi %))
         :format-fn #(if %
                       (str (pvm/kuukauden-nimi % true) " "
-                           (if (>= % 10)
-                             hoitokauden-alkuvuosi
-                             (inc hoitokauden-alkuvuosi)))
+                        (if (>= % 10)
+                          hoitokauden-alkuvuosi
+                          (inc hoitokauden-alkuvuosi)))
                       "Kaikki")
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        hoitovuoden-kuukaudet]
@@ -152,12 +130,12 @@
       [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä" #(do
                                                                 (e! (v/->TaydennaTR-osoite-suodatin tie aosa aeta losa leta))
                                                                 (e! (v/->HaeVarusteet))) {:luokka "nappi-korkeus-32"
-                                                                                :disabled false
-                                                                                :ikoni (ikonit/livicon-search)}]
+                                                                                          :disabled false
+                                                                                          :ikoni (ikonit/livicon-search)}]
       [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet (pvm/vuosi (get-in app [:urakka :alkupvm]))))
        {:luokka "nappi-korkeus-32"
         :disabled (and (every? nil? (vals (dissoc valinnat :hoitokauden-alkuvuosi)))
-                       (= (pvm/vuosi (get-in app [:urakka :alkupvm])) (:hoitokauden-alkuvuosi valinnat)))}]]]))
+                    (= (pvm/vuosi (get-in app [:urakka :alkupvm])) (:hoitokauden-alkuvuosi valinnat)))}]]]))
 
 (defn listaus [e! {:keys [varusteet haku-paalla] :as app}]
   (let [lkm (count varusteet)]
@@ -201,7 +179,7 @@
       {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
      varusteet]))
 
-(defn listaus-toteumat [{:keys [muokkaa-lomaketta data]} e! valittu-toteumat]
+(defn listaus-toteumat [_ valittu-toteumat]
   [grid/grid
    {:otsikko "Käyntihistoria"
     :tunniste :id
@@ -219,14 +197,14 @@
    valittu-toteumat])
 
 (defn varustelomake-nakyma
-  [e! varuste toteumat]
+  [e! _varuste _toteumat]
   (let [saa-sulkea? (atom false)]
     (komp/luo
       (komp/piirretty #(yleiset/fn-viiveella (fn []
                                                (reset! saa-sulkea? true))))
       (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
                                      (e! (v/->SuljeVarusteLomake)))
-                                  {:tarkista-komponentti? true})
+        {:tarkista-komponentti? true})
       (fn [e! varuste toteumat]
         [:div.varustelomake {:on-click #(.stopPropagation %)}
          [sivupalkki/oikea
@@ -258,7 +236,7 @@
             {:tyyppi :komponentti
              :nimi :ulkoinen-id
              ::lomake/col-luokka ""
-             :komponentti (fn [data]
+             :komponentti (fn [_]
                             [yleiset/tooltip
                              {}
                              [napit/yleinen-toissijainen "Katso tarkemmat varustetiedot"
@@ -270,11 +248,11 @@
                              "Linkki velhoon ei ole vielä saatavilla."])}
             {:nimi ::spacer :piilota-label? true :tyyppi :komponentti :palstoja 3
              ::lomake/col-luokka "margin-top-32"
-             :komponentti (fn [rivi] [:hr])}
+             :komponentti (fn [_] [:hr])}
             {:tyyppi :komponentti :palstoja 3
              ::lomake/col-luokka "margin-top-32"
              :piilota-label? true
-             :komponentti listaus-toteumat :komponentti-args [e! toteumat]}]
+             :komponentti listaus-toteumat :komponentti-args [toteumat]}]
            varuste]]]))))
 
 (defn- varusteet* [e! app]
@@ -294,7 +272,7 @@
          (kartta-tasot/taso-pois! :varusteet-ulkoiset)
          (reset! nav/kartan-edellinen-koko nil)
          (reset! varusteet-kartalla/varuste-klikattu-fn (constantly nil))))
-    (fn [e! {ur :urakka :as app}]
+    (fn [e! app]
       [:div
        (when (:valittu-varuste app)
          [varustelomake-nakyma e! (:valittu-varuste app) (:valittu-toteumat app)])

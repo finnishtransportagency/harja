@@ -1,7 +1,7 @@
 (ns harja.views.urakka.toteumat-test
-  (:require [cljs.test :as test :refer-macros [deftest is testing async]]
+  (:require [cljs.test :as test :refer-macros [deftest is]]
             [harja.views.urakka.toteumat :as toteumat]
-            [harja.testutils :refer [fake-palvelut-fixture fake-palvelukutsu jvh-fixture]]
+            [harja.testutils :refer [fake-palvelut-fixture jvh-fixture]]
             [harja.testutils.shared-testutils :as u])
   (:require-macros [harja.testutils.macros :refer [komponenttitesti]]))
 
