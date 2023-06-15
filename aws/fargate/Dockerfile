@@ -6,9 +6,9 @@ FROM eclipse-temurin:11-alpine
 LABEL description="Harja app"
 LABEL version="1.0"
 
-# Asenna apurit (curl, jq, nano, unzip, vim ja busybox-extras)
+# Asenna apurit
 # Huom! busybox-extras sisältää mm. telnetin
-RUN apk add --no-cache curl jq nano unzip vim busybox-extras
+RUN apk add --no-cache bash curl jq nano unzip vim busybox-extras
 
 # Asenna AWS CLI v2
 # FIXME: AWS CLI v2 ei toimi Alpine linuxissa suorilta ja sen asentaminen vaikuttaa hankalalta
@@ -41,11 +41,20 @@ COPY ./aws/fargate/asetukset.edn asetukset.edn
 COPY ./aws/fargate/.harja_env .harja_env
 
 # Aseta ENV muuttujat
+
+# Java agent
+# TODO: Esimerkiksi JMX Prometheus Java agentti
+ENV HARJA_JAVA_AGENT=""
+
 # TODO: Tarkista mitkä JAVA optionsit tarvitaan
-# ENV JAVA_JAVA_OPTIONS=
+# Käytä -XshowSettings:all, jos haluat nähdä mitä asetuksia käytetään
+ENV HARJA_JVM_OPTS="-Xmx6g"
+# TODO: Tämä kirjasto ei ole opensourcea. Miten otetaan konttiin mukaan?
+#ENV LIBS="sonic-client.jar:sonic-xmessage.jar:sonic-crypto.jar"
+ENV HARJA_LIBS=""
 
 # Aseta portti
 EXPOSE 3000
 
-# Aseta entrypoint
-ENTRYPOINT ["java", "-jar", "harja.jar"]
+# Aseta entrypoint,
+ENTRYPOINT java $HARJA_JAVA_AGENT $HARJA_JVM_OPTS -cp $HARJA_LIBS:harja.jar harja.palvelin.main
