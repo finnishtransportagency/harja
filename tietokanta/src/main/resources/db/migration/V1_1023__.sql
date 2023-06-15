@@ -1,25 +1,28 @@
 -- Tehtävälistaan on kertynyt vuosien myötä liikaa tehtäviä joista suuri osa on käyttämättömiä.
 -- Poistetaan tehtävät, jotka eivät ole käytössä (joille ei ole tehty yhtään suunnittelu- tai toteumakirjausta)
-DELETE FROM tehtava WHERE id IN
-                          -- haetaan tehtävät, jotka ovat toteumakirjauksissa mukana...
-                          (WITH tehtavakoodit as (select distinct toimenpidekoodi from toteuma_tehtava WHERE toimenpidekoodi is not null)
-                         select t.id from tehtava t
-                          -- ... ja jätetään jäljelle tehtävät, joille ei ole toteumakirjauksia
-                                    where id not in (select toimenpidekoodi from tehtavakoodit)
 
-                                      -- MHU-urakoiden kirjaukset
-                                      AND t.tehtavaryhma is null
-                                      AND t.id not in (select tehtava from kiinteahintainen_tyo WHERE tehtava is not null)
-                                      AND t.id not in (select tehtava from kulu_kohdistus WHERE tehtava is not null)
-                                      AND t.id not in (select tehtava from kustannusarvioitu_tyo WHERE tehtava is not null)
-                                      AND t.id not in (select tehtava from sopimus_tehtavamaara WHERE tehtava is not null)
-                                      AND t.id not in (select tehtava from toteutuneet_kustannukset WHERE tehtava is not null)
-                                      AND t.id not in (select tehtava from urakka_tehtavamaara WHERE tehtava is not null)
-
-                                      -- vanhojen alueurakoiden suunnittelutiedot
-                                      AND t.id not in (select tehtava from yksikkohintainen_tyo WHERE tehtava is not null)
-                                      AND t.id not in (select tehtava from muutoshintainen_tyo WHERE tehtava is not null)
-
-                                      -- vesiväylien ja kanavien kirjaukset
-                                      AND t.id not in (select toimenpidekoodi from kan_toimenpide WHERE toimenpidekoodi is not null)
-                                      AND t.id not in (select "toimenpidekoodi-id" from vv_tyo WHERE "toimenpidekoodi-id" is not null));
+-- Tämä migraatio on ajettu käsin tuotantoon. Sitä ei haluta ajaa localhost-ympäristöön. Tämä tiedosto on tehty,
+-- jotta asiasta jää jälki.
+-- DELETE FROM tehtava WHERE id IN
+--                           -- haetaan tehtävät, jotka ovat toteumakirjauksissa mukana...
+--                           (WITH tehtavakoodit as (select distinct toimenpidekoodi from toteuma_tehtava WHERE toimenpidekoodi is not null)
+--                          select t.id from tehtava t
+--                           -- ... ja jätetään jäljelle tehtävät, joille ei ole toteumakirjauksia
+--                                     where id not in (select toimenpidekoodi from tehtavakoodit)
+--
+--                                       -- MHU-urakoiden kirjaukset
+--                                       AND t.tehtavaryhma is null
+--                                       AND t.id not in (select tehtava from kiinteahintainen_tyo WHERE tehtava is not null)
+--                                       AND t.id not in (select tehtava from kulu_kohdistus WHERE tehtava is not null)
+--                                       AND t.id not in (select tehtava from kustannusarvioitu_tyo WHERE tehtava is not null)
+--                                       AND t.id not in (select tehtava from sopimus_tehtavamaara WHERE tehtava is not null)
+--                                       AND t.id not in (select tehtava from toteutuneet_kustannukset WHERE tehtava is not null)
+--                                       AND t.id not in (select tehtava from urakka_tehtavamaara WHERE tehtava is not null)
+--
+--                                       -- vanhojen alueurakoiden suunnittelutiedot
+--                                       AND t.id not in (select tehtava from yksikkohintainen_tyo WHERE tehtava is not null)
+--                                       AND t.id not in (select tehtava from muutoshintainen_tyo WHERE tehtava is not null)
+--
+--                                       -- vesiväylien ja kanavien kirjaukset
+--                                       AND t.id not in (select toimenpidekoodi from kan_toimenpide WHERE toimenpidekoodi is not null)
+--                                       AND t.id not in (select "toimenpidekoodi-id" from vv_tyo WHERE "toimenpidekoodi-id" is not null));
