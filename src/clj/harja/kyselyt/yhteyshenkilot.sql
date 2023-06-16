@@ -350,6 +350,8 @@ FROM urakka u
 WHERE u.alkupvm <= :pvm
   AND u.loppupvm >= :pvm
   AND u.urakkanro IS NOT NULL
+  -- Varmistetaan, että jos urakan nimessä on sana "talvihoitourakka" niin kesäkautena 1.5 - 30.9 ei vaadita päivystystä
+  AND (u.nimi not ilike '%talvihoitourakka%' OR (u.nimi ilike '%talvihoitourakka%' AND CURRENT_DATE NOT BETWEEN CONCAT(date_part('year', CURRENT_DATE), '-05-01')::DATE AND CONCAT(date_part('year', CURRENT_DATE), '-09-30')::DATE))
   AND (TRUE IN (SELECT unnest(ARRAY[:tyypit]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:tyypit]::urakkatyyppi[]));
 
 -- name: hae-urakan-vastuuhenkilot
