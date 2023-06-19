@@ -4,7 +4,15 @@ SELECT
   ulompi_i.id,
   ulompi_i.urakka,
   ulompi_i.tunniste,
-  u.nimi as urakkanimi,
+  u.nimi AS urakkanimi,
+  CASE
+      WHEN u.kesakausi_alkupvm IS NOT NULL THEN
+          CONCAT(TO_CHAR(NOW(), 'YYYY'), '-', TO_CHAR(u.kesakausi_alkupvm, 'MM-DD'))
+      END AS "urakka-kesakausi-alkupvm",
+  CASE
+      WHEN u.kesakausi_loppupvm IS NOT NULL THEN
+          CONCAT(TO_CHAR(NOW(), 'YYYY'), '-', TO_CHAR(u.kesakausi_loppupvm, 'MM-DD'))
+      END AS "urakka-kesakausi-loppupvm",
   ulompi_i.ilmoitusid,
   ulompi_i.ilmoitettu,
   ulompi_i.valitetty,
@@ -65,6 +73,10 @@ WHERE ulompi_i.id IN
 
       -- Tarkasta vapaatekstihakuehto
       (:teksti_annettu IS FALSE OR (sisempi_i.otsikko LIKE :teksti OR sisempi_i.paikankuvaus LIKE :teksti OR sisempi_i.lisatieto LIKE :teksti) OR
+       -- HOX: Mikäli kannan ja käyttäjän välillä on eri enkoodaus, niin tämä ei toimi.
+       -- Tarkista paikallisessa ympäristössä tarvittaessa SHOW CLIENT_ENCODING; ja SHOW SERVER_ENCODING;
+       -- Jos ne eivät täsmää, aseta server encoding esim. näin: `update pg_database set encoding = pg_char_to_encoding('UTF8');`
+       sisempi_i.selitteet::TEXT ILIKE REPLACE(TRANSLATE(:teksti, 'åäöÅÄÖ', 'aaoAAO'), ' ', '') OR
        (SELECT nimi from palautevayla_tarkenne WHERE ulkoinen_id = sisempi_i.tarkenne) LIKE :teksti OR
        (SELECT nimi from palautevayla_aihe WHERE ulkoinen_id = sisempi_i.aihe) LIKE :teksti) AND
 

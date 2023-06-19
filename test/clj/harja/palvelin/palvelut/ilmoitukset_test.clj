@@ -1,5 +1,6 @@
 (ns ^:hidas harja.palvelin.palvelut.ilmoitukset-test
-  (:require [clojure.test :refer :all]
+  (:require [clj-time.coerce :as tc]
+            [clojure.test :refer :all]
             [clojure.set :as set]
             [clojure.core.async :refer [go]]
 
@@ -205,22 +206,137 @@
         "Olemattomalle tielle rajattu haku ei löydy ilmoituksia")))
 
 
-(deftest ilmoitus-myohassa-ilman-kuittauksia
-  (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7))) :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
-        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7))) :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
-        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7))) :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}]
+(defn urakan-kausi-iso-8601
+  "Feikataan urakan kesäkausi dynaamisesti, jotta testejä voi ajaa vaikka t/now vaihtuu.
+  (Myöhästymisen tarkastelu käyttää nykyistä aikaa (t/now) sisäisesti.)"
+  [siirra-paivia]
+  (pvm/pvm->iso-8601 (t/plus (t/now) (t/days siirra-paivia))))
+
+(deftest ilmoitus-myohassa-ilman-kuittauksia-talvikausi
+  ;; Kesäkausi on nykyhetki -2 päivä <--> nykyhetki -1 päivä, eli nyt ollaan talvikaudella
+  (let [urakka-kesakausi-alkupvm (urakan-kausi-iso-8601 -2)
+        urakka-kesakausi-loppupvm (urakan-kausi-iso-8601 -1)
+        myohastynyt-kysely {:ilmoitustyyppi :kysely
+                            :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                            :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                            :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7)))
+                            :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
+        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto
+                                      :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                                      :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                                      :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7)))
+                                      :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
+        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus
+                               :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                               :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                               :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7)))
+                               :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}]
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
 
+;; Kesäkauden testaamisen puolesta riittää testata se kerran tässä yhteydessä.
+;; Tarkastellaan muut myöhästymiset vain talvikauden näkökulmasta.
+(deftest ilmoitus-myohassa-ilman-kuittauksia-kesakausi
+  ;; Kesäkausi on nykyhetki -1 päivää <--> nykyhetki +1 päivä, eli nyt ollaan kesäkaudella
+  (let [urakka-kesakausi-alkupvm (urakan-kausi-iso-8601 -1)
+        urakka-kesakausi-loppupvm (urakan-kausi-iso-8601 1)
+        myohastynyt-kysely {:ilmoitustyyppi :kysely
+                            :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                            :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                            :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7)))
+                            :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
+        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto
+                                      :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                                      :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                                      :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7)))
+                                      :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}]
+    (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
+    (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))))
+
+;; Tiedotus-ilmoitus käyttää kesäkaudella monimutkaisempaa logiikkaa myöhästymisen päättelyyn.
+;; Testataan myöhästyminen tiedotuksille erikseen.
+(deftest tiedotus-ilmoitus-myohassa-kesakausi
+  ;; Tiedotus-tyyppisten ilmoitusten talvikauden sääntö on monimutkaisempi, joten mockataan tähän t/now päivämäärä arkipäiväksi.
+  ;; (Säännön mukaan ilmoitus pitäisi kuitata viimeistään seuraavan arkipäivän aamuna klo 9).
+
+  ;; Tässä 11.4.2023 on tiistai, normaali arkipäivä
+  (with-redefs [t/now #(->
+                         (pvm/iso-8601->pvm "2023-04-11")
+                         ;; Ilmoituksen kuittaus on minuutin myöhässä
+                         (pvm/aikana 9 1 0 0)
+                         (tc/to-date-time)
+                         (pvm/suomen-aikavyohykkeeseen))]
+    (let [myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus
+                                 :urakka-kesakausi-alkupvm "2023-04-01"
+                                 :urakka-kesakausi-loppupvm "2023-04-30"
+                                 ;; 6.4.2023 on arkipäivä, sen jälkeen arkipyhinä pitkäperjantai ja toinen pääsiäispäivä
+                                 ;; Seuraava arkipäivä on 11.4. (tiistai)
+                                 :ilmoitettu (c/to-sql-time (pvm/keskipaiva
+                                                              (pvm/iso-8601->pvm "2023-04-06")))
+                                 :valitetty-urakkaan (c/to-sql-time (pvm/keskipaiva
+                                                                      (pvm/iso-8601->pvm "2023-04-06"))) :kuittaukset []}]
+      (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus))))))
+
+(deftest tiedotus-ilmoitus-EI-myohassa-kesakausi
+  ;; Tiedotus-tyyppisten ilmoitusten talvikauden sääntö on monimutkaisempi, joten mockataan tähän t/now päivämäärä arkipäiväksi.
+  ;; (Säännön mukaan ilmoitus pitäisi kuitata viimeistään seuraavan arkipäivän aamuna klo 9).
+
+  ;; Tässä 11.4.2023 on tiistai, normaali arkipäivä
+  (testing "Ilmoituksen myöhästymistä tarkastellaan seuraavana arkipäivänä klo 9:00 (Ei myöhässä)"
+    (with-redefs [t/now #(->
+                           (pvm/iso-8601->pvm "2023-04-11")
+                           (pvm/aikana 9 0 0 0)
+                           (tc/to-date-time)
+                           (pvm/suomen-aikavyohykkeeseen))]
+      (let [myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus
+                                   :urakka-kesakausi-alkupvm "2023-04-01"
+                                   :urakka-kesakausi-loppupvm "2023-04-30"
+                                   ;; 6.4.2023 on arkipäivä, sen jälkeen arkipyhinä pitkäperjantai ja toinen pääsiäispäivä
+                                   ;; Seuraava arkipäivä on 11.4. (tiistai)
+                                   :ilmoitettu (c/to-sql-time (pvm/keskipaiva
+                                                                (pvm/iso-8601->pvm "2023-04-06")))
+                                   :valitetty-urakkaan (c/to-sql-time (pvm/keskipaiva
+                                                                        (pvm/iso-8601->pvm "2023-04-06"))) :kuittaukset []}]
+        (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus))))))
+
+  (testing "Ilmoituksen myöhästymistä tarkastellaan seuraavana arkipäivänä klo 8:59 (Ei myöhässä)"
+    (with-redefs [t/now #(->
+                           (pvm/iso-8601->pvm "2023-04-11")
+                           (pvm/aikana 8 59 0 0)
+                           (tc/to-date-time)
+                           (pvm/suomen-aikavyohykkeeseen))]
+      (let [myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus
+                                   :urakka-kesakausi-alkupvm "2023-04-01"
+                                   :urakka-kesakausi-loppupvm "2023-04-30"
+                                   ;; 6.4.2023 on arkipäivä, sen jälkeen arkipyhinä pitkäperjantai ja toinen pääsiäispäivä
+                                   ;; Seuraava arkipäivä on 11.4. (tiistai)
+                                   :ilmoitettu (c/to-sql-time (pvm/keskipaiva
+                                                                (pvm/iso-8601->pvm "2023-04-06")))
+                                   :valitetty-urakkaan (c/to-sql-time (pvm/keskipaiva
+                                                                        (pvm/iso-8601->pvm "2023-04-06"))) :kuittaukset []}]
+        (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))))
+
 (deftest ilmoitus-myohassa-kun-kuittaus-myohassa
-  (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 73)))
+  ;; Kesäkausi on nykyhetki -2 päivä <--> nykyhetki -1 päivä, eli nyt ollaan talvikaudella
+  (let [urakka-kesakausi-alkupvm (urakan-kausi-iso-8601 -2)
+        urakka-kesakausi-loppupvm (urakan-kausi-iso-8601 -1)
+        myohastynyt-kysely {:ilmoitustyyppi :kysely
+                            :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                            :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                            :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 73)))
                             :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/hours 73)))
                             :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :lopetus}]}
-        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 11)))
+        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto
+                                      :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                                      :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                                      :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 11)))
                                       :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/minutes 11)))
                                       :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}
-        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 2)))
+        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus
+                               :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                               :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                               :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 2)))
                                :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/hours 2)))
                                :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}]
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
@@ -228,13 +344,25 @@
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
 
 (deftest ilmoitus-myohassa-kun-kuittaus-vaaraa-tyyppia
-  (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 75)))
+  ;; Kesäkausi on nykyhetki -2 päivä <--> nykyhetki -1 päivä, eli nyt ollaan talvikaudella
+  (let [urakka-kesakausi-alkupvm (urakan-kausi-iso-8601 -2)
+        urakka-kesakausi-loppupvm (urakan-kausi-iso-8601 -1)
+        myohastynyt-kysely {:ilmoitustyyppi :kysely
+                            :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                            :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                            :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 75)))
                             :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/hours 75)))
                             :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}
-        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 15)))
+        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto
+                                      :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                                      :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                                      :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 15)))
                                       :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/minutes 15)))
                                       :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :aloitus}]}
-        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 2)))
+        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus
+                               :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                               :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                               :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 2)))
                                :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/hours 2)))
                                :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :aloitus}]}]
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
@@ -242,36 +370,56 @@
     (is (true? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
 
 (deftest ilmoitus-ei-myohassa
-  (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 71)))
+  ;; Kesäkausi on nykyhetki -2 päivä <--> nykyhetki -1 päivä, eli nyt ollaan talvikaudella
+  (let [urakka-kesakausi-alkupvm (urakan-kausi-iso-8601 -2)
+        urakka-kesakausi-loppupvm (urakan-kausi-iso-8601 -1)
+        myohastynyt-kysely {:ilmoitustyyppi :kysely
+                            :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                            :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                            :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 71)))
                             :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/hours 71)))
                             :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :lopetus}]}
-        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 9)))
+        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto
+                                      :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                                      :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                                      :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 9)))
                                       :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/minutes 9)))
                                       :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}
-        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 40)))
+        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus
+                               :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                               :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                               :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 40)))
                                :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/minutes 40)))
                                :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}]
     (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
     (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
-
-
     (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
 
 (deftest ilmoitus-ei-myohassa-valitetty-urakkaan-myohemmin
-         (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 71)))
-                                   :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/hours 71)))
-                                   :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :lopetus}]}
-               myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 9)))
-                                             :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/minutes 9)))
-                                             :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}
-               myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 40)))
-                                      :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/minutes 40)))
-                                      :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}]
-              (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
-              (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
-
-
-              (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
+  ;; Kesäkausi on nykyhetki -2 päivä <--> nykyhetki -1 päivä, eli nyt ollaan talvikaudella
+  (let [urakka-kesakausi-alkupvm (urakan-kausi-iso-8601 -2)
+        urakka-kesakausi-loppupvm (urakan-kausi-iso-8601 -1)
+        myohastynyt-kysely {:ilmoitustyyppi :kysely
+                            :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                            :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                            :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/hours 71)))
+                            :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/hours 71)))
+                            :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :lopetus}]}
+        myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto
+                                      :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                                      :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                                      :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 9)))
+                                      :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/minutes 9)))
+                                      :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}
+        myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus
+                               :urakka-kesakausi-alkupvm urakka-kesakausi-alkupvm
+                               :urakka-kesakausi-loppupvm urakka-kesakausi-loppupvm
+                               :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/minutes 40)))
+                               :valitetty-urakkaan (c/to-sql-time (t/minus (t/now) (t/minutes 40)))
+                               :kuittaukset [{:kuitattu (c/to-sql-time (t/now)) :kuittaustyyppi :vastaanotto}]}]
+    (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-kysely)))
+    (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
+    (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
 
 (deftest aloituskuittausta-ei-annettu-alle-tunnissa
   (let [ilmoitus1 {:ilmoitettu (c/to-sql-time (t/now))
@@ -356,7 +504,7 @@
       (is (#{:toimenpidepyynto :tiedoitus :kysely}
             (:ilmoitustyyppi i)) "ilmoitustyyppi"))
     (is (= 501 (count ilmoitukset-palvelusta)) "Ilmoitusten lukumäärä") ;eka sivullinen eli 500+1 palautuu
-    (is (= ilmoitusten-maara-suoraan-kannasta 10052) "Ilmoitusten lukumäärä")))
+    (is (= ilmoitusten-maara-suoraan-kannasta 10053) "Ilmoitusten lukumäärä")))
 
 (deftest ^:perf hae-ilmoitukset-kesto
   (is (gatling-onnistuu-ajassa?

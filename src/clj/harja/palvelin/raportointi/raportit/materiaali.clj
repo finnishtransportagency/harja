@@ -115,6 +115,7 @@
     [:raportti {:nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true
+                 :sivuttain-rullattava? true
                  :sheet-nimi raportin-nimi}
       (into []
             (concat
