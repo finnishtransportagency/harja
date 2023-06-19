@@ -123,35 +123,35 @@ delete from sopimus_tehtavamaara where tehtava = (select id from tehtava where n
 -- Kun dataa haetaan urakat_tehtavamaara taulusta, materliaalikoodi ja materiaaliluokka mäppäykset on oltava.
 -- Joten luodaan ne tässä
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Talvisuola')
-WHERE nimi = 'Suolaus' AND taso = 4;
+WHERE nimi = 'Suolaus';
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Formiaatti')
-WHERE nimi = 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)' AND taso = 4;
+WHERE nimi = 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)';
 
 -- Materiaaleihin mäpättävät tehtavat
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Hiekoitushiekka'),
                            materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Hiekoitushiekka')
-WHERE nimi = 'Liukkaudentorjunta hiekoituksella' AND taso = 4;
+WHERE nimi = 'Liukkaudentorjunta hiekoituksella';
 
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Kesäsuola'),
                            materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Kesäsuola sorateiden kevätkunnostus')
-WHERE nimi = 'Sorateiden pölynsidonta (materiaali)' AND taso = 4;
+WHERE nimi = 'Sorateiden pölynsidonta (materiaali)';
 
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Murske'),
                            materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Kelirikkomurske')
-WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa' AND taso = 4;
+WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa';
 
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Hiekoitushiekka'),
                            materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Hiekoitushiekka')
-WHERE nimi = 'Ennalta arvaamattomien kuljetusten avustaminen' AND taso = 4;
+WHERE nimi = 'Ennalta arvaamattomien kuljetusten avustaminen';
 
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Murske'),
                            materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Reunantäyttömurske')
-WHERE nimi = 'Reunantäyttö' AND taso = 4;
+WHERE nimi = 'Reunantäyttö';
 
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Murske'),
                            materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Sorastusmurske')
-WHERE nimi = 'Sorastus' AND taso = 4;
+WHERE nimi = 'Sorastus';
 
 -- Korjataan sorastuksen yksikkö
 UPDATE tehtava SET yksikko = 'tonni', suunnitteluyksikko = 'tonni'
-WHERE nimi = 'Sorastus' AND taso = 4;
+WHERE nimi = 'Sorastus';
