@@ -450,7 +450,7 @@ FROM materiaalikoodi;
 -- name: hae-suolauksen-toimenpidekoodi
 SELECT id
   FROM tehtava
- WHERE nimi = 'Suolaus' AND taso = 4;
+ WHERE nimi = 'Suolaus';
 
 -- name: hae-suolatoteumat-tr-valille
 SELECT *
