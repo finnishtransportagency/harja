@@ -56,7 +56,7 @@
 (s/def ::alkuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
 (s/def ::loppuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
 
-(defn- tarkista-haun-parametrit [parametrit]
+(defn- tarkista-haun-parametrit [parametrit rajoita]
   (parametrivalidointi/tarkista-parametrit
     parametrit
     {:alkuaika "Alkuaika puuttuu"
@@ -71,16 +71,17 @@
        :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-02T00:00:00+03" (:loppuaika parametrit))}))
 
   ;; Rajoitetaan toteumien haku yhteen vuorokauteen, muuten meillä voi mennä tuotannosta levyt tukkoon
-  (let [alkuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) (:alkuaika parametrit))
-        loppuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) (:loppuaika parametrit))
-        aikavali-sekunteina (pvm/aikavali-sekuntteina alkuaika-pvm loppuaika-pvm)
-        syotetty-aikavali-tunteina-str (str (int (/ aikavali-sekunteina 60 60)))
-        paiva-sekunteina 90000] ;; Käytetään 25 tuntia
+  (when rajoita
+    (let [alkuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) (:alkuaika parametrit))
+          loppuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) (:loppuaika parametrit))
+          aikavali-sekunteina (pvm/aikavali-sekuntteina alkuaika-pvm loppuaika-pvm)
+          syotetty-aikavali-tunteina-str (str (int (/ aikavali-sekunteina 60 60)))
+          paiva-sekunteina 90000] ;; Käytetään 25 tuntia
     ;; Jos pyydetty aikaväli ylittää 25 tuntia, palautetaan virhe
-    (when (> aikavali-sekunteina paiva-sekunteina)
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Aikaväli ylittää sallitun rajan. Syötetty aikaväli: %s tuntia. Sallittu aikaväli max. 24 tuntia." syotetty-aikavali-tunteina-str)}))))
+      (when (> aikavali-sekunteina paiva-sekunteina)
+        (virheet/heita-viallinen-apikutsu-poikkeus
+          {:koodi virheet/+puutteelliset-parametrit+
+           :viesti (format "Aikaväli ylittää sallitun rajan. Syötetty aikaväli: %s tuntia. Sallittu aikaväli max. 24 tuntia." syotetty-aikavali-tunteina-str)})))))
 
 (def db-tehtavat->avaimet
   {:f1 :id
@@ -156,7 +157,7 @@
   "Haetaan toteumat annettujen alku- ja loppuajan puitteissa.
   koordinaattimuutos-parametrilla voidaan hakea lisäksi reittipisteet EPSG:4326-muodossa."
   [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
-  (tarkista-haun-parametrit parametrit)
+  (tarkista-haun-parametrit parametrit true)
   (let [;; Materiaalikoodeja ei ole montaa, mutta niitä on vaikea yhdistää tietokantalauseeseen tehokkaasti
         ;; joten hoidetaan se koodilla
         materiaalikoodit (materiaalit-kyselyt/hae-materiaalikoodit db)
@@ -521,7 +522,7 @@
 
 (defn hae-turvallisuuspoikkeamat [db {:keys [alkuaika loppuaika] :as parametrit} kayttaja]
   (log/debug "hae-turvallisuuspoikkeamat :: parametrit" (pr-str parametrit))
-  (tarkista-haun-parametrit parametrit)
+  (tarkista-haun-parametrit parametrit false)
   (let [
         turpot (turvallisuuspoikkeamat/hae-turvallisuuspoikkeamat-lahetettavaksi-analytiikalle db {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
                                                                                                    :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
