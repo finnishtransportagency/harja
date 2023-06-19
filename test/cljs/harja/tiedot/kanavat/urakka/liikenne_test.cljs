@@ -362,10 +362,10 @@
                                            ::toiminto/palvelumuoto :kauko}))))
 
 (deftest suuntavalinta-str
-  (is (= "Ylös, 1 lähestyvää alusta"
-         (tiedot/suuntavalinta-str {:ylos {:edelliset-alukset [{:foo :bar}]}} :ylos)))
+  (is (= "Ylös"
+         (tiedot/suuntavalinta-str [{:foo :bar}] {:ylos {:edelliset-alukset [{:foo :bar}]}} :ylos)))
   (is (= "Alas"
-         (tiedot/suuntavalinta-str {:ylos {:edelliset-alukset [{:foo :bar}]}} :alas))))
+         (tiedot/suuntavalinta-str [{:foo :bar}] {:ylos {:edelliset-alukset [{:foo :bar}]}} :alas))))
 
 (deftest nayta-edelliset
   (is (true? (tiedot/nayta-edelliset-alukset? {:haetut-sopimukset [{::sop/id 1
