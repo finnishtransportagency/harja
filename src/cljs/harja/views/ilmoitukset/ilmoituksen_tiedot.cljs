@@ -37,12 +37,6 @@
        [:a {:href linkki} (str "Kuvalinkki " (inc n))]
        [:br]])))
 
-(defn- parsi-kuva [kuva]
-  (mapv (fn [tiedot]
-          (let [parsittu (str/replace tiedot "[" "")
-                parsittu (str/replace parsittu "]" "")]
-            parsittu)) (str/split kuva ",")))
-
 (defn selitteen-sisaltavat-yleiset-tiedot [ilmoitus]
   [yleiset/tietoja {:piirra-viivat? true
                     :class "body-text"
@@ -149,18 +143,12 @@
               "" kuvaliite-teksti])]
 
           (when-not (empty? (:kuvat ilmoitus))
-            (map
-              (fn [kuva]
-                (let [kuva (parsi-kuva kuva) ;; Parsi kuvan tiedot [linkki, id]
-                      validi? (= (count kuva) 2) ;; Tietojen pitäisi sisältää linkki ja id
-                      id (if validi? (second kuva) nil)
-                      linkki (if validi? (first kuva) nil)]
-                  ^{:key id}
-                  [:div
-                   [:br]
-                   [:a
-                    {:href linkki}
-                    [:img {:src linkki :style {:width "100%" :max-width "450px"}}]]])) (:kuvat ilmoitus)))]]]
+            (for* [kuva (:kuvat ilmoitus)]
+              [:div
+               [:br]
+               [:a
+                {:href kuva}
+                [:img {:src kuva :style {:width "100%" :max-width "450px"}}]]]))]]]
 
        [:div.kuittaukset
         [:h3 "Kuittaukset"]

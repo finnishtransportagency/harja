@@ -1251,3 +1251,10 @@ $$
             END LOOP;
     END
 $$;
+
+UPDATE ilmoitus SET kuvat = 
+array[
+'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/3-Colored_Norwegian_Forest_Cat.jpg/220px-3-Colored_Norwegian_Forest_Cat.jpg',
+'https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Minniecat.png/220px-Minniecat.png',
+'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Six_weeks_old_cat_%28aka%29.jpg/390px-Six_weeks_old_cat_%28aka%29.jpg'
+]::text[] WHERE id = 35;

@@ -190,6 +190,8 @@ SELECT
   i.lisatieto,
   i.ilmoitustyyppi,
   i.selitteet,
+  i.kuvat,
+  i."emon-ilmoitusid",
   i.aihe,
   i.tarkenne,
   i.urakkatyyppi,
@@ -240,12 +242,7 @@ SELECT
   it.kasittelija_henkilo_tyopuhelin        AS kuittaus_kasittelija_tyopuhelin,
   it.kasittelija_henkilo_sahkoposti        AS kuittaus_kasittelija_sahkoposti,
   it.kasittelija_organisaatio_nimi         AS kuittaus_kasittelija_organisaatio,
-  it.kasittelija_organisaatio_ytunnus      AS kuittaus_kasittelija_ytunnus,
-
-  -- Liitä ilmoituksen kuvat kyselyyn, mikäli olemassa, ketjuta linkki ja id
-  ( SELECT ARRAY_AGG('[' || ik.linkki  || ',' || ik.id || ']')
-    FROM ilmoitus_kuvat ik
-    WHERE ik.ilmoitus = i.id )             AS kuvat
+  it.kasittelija_organisaatio_ytunnus      AS kuittaus_kasittelija_ytunnus
 
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
@@ -438,10 +435,6 @@ SELECT id, urakka, "valitetty-urakkaan", valitetty
 FROM ilmoitus
 WHERE ilmoitusid = :ilmoitusid;
 
--- name: liita-kuvat-ilmoitukseen<!
--- Liittää kuvat ilmoitukseen
-INSERT INTO ilmoitus_kuvat (ilmoitus, linkki) VALUES (:id, :linkki)
-
 -- name: luo-ilmoitus<!
 -- Luo uuden havainnon
 INSERT INTO ilmoitus
@@ -462,7 +455,9 @@ INSERT INTO ilmoitus
  "vastaanotettu-alunperin",
  "valitetty-urakkaan",
  aihe,
- tarkenne)
+ tarkenne,
+ kuvat,
+ "emon-ilmoitusid")
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -481,7 +476,10 @@ VALUES
    :vastaanotettu-alunperin :: TIMESTAMPTZ,
    :valitetty-urakkaan :: TIMESTAMP,
    :aihe,
-   :tarkenne);
+   :tarkenne,
+   :kuvat :: TEXT [],
+   :emon-ilmoitusid
+   );
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen

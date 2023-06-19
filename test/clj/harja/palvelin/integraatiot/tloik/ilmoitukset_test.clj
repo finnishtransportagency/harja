@@ -104,6 +104,21 @@
     (is (= 1 (:tarkenne ilmoitus))))
   (poista-ilmoitus 123456789))
 
+(deftest tarkista-ilmoituksen-kuvat
+  (ei-lisattavia-kuuntelijoita!)
+  (tuo-ilmoitus)
+  (let [ilmoitus (first (hae-oulun-testi-urakan-ilmoitus))
+        kuvien-maara (count (:kuvat ilmoitus))]
+
+    (is (some? (first (:kuvat ilmoitus))) "Kuvia löytyi")
+    (is (= kuvien-maara 3) "Kuvia löytyi 3")
+    (is (= (:yhteydenottopyynto ilmoitus) true))
+    (is (= (:ilmoittaja_tyyppi ilmoitus) "asukas"))
+    (is (instance? PGgeometry (:sijainti ilmoitus)))
+    (is (= (:ilmoittaja_matkapuhelin ilmoitus) "0441231234"))
+    (is (= (:ilmoitus-id ilmoitus) 1))
+    (is (= (:lisatieto ilmoitus) "Taas ollaan pulassa"))))
+
 (deftest tarkista-ilmoituksen-paivitys
   (ei-lisattavia-kuuntelijoita!)
   (tuo-ilmoitus)
