@@ -227,7 +227,7 @@ ORDER BY jarjestys;
 -- name: listaa-tehtavat
 -- Listataan tehtävät APIa varten toimenpidekoodin alatasot eli tehtävät
 SELECT t.id, t.nimi, t.voimassaolo_alkuvuosi, t.voimassaolo_loppuvuosi, t.jarjestys, t.jarjestys, t.emo,
-       t.yksikko, t.suunnitteluyksikko, t.tuotenumero,  t.hinnoittelu,
+       t.yksikko, t.suunnitteluyksikko,  t.hinnoittelu,
        t.suoritettavatehtava, t.tehtavaryhma, t.ensisijainen, t.yksiloiva_tunniste,
        t.kasin_lisattava_maara, t."raportoi-tehtava?", t.materiaaliluokka_id,
        t.materiaalikoodi_id, t.aluetieto, t.piilota, t.poistettu, t.luotu, t.muokattu

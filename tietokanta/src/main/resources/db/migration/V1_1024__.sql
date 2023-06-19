@@ -1,6 +1,7 @@
 ALTER TABLE tehtava
     DROP COLUMN koodi,
-    DROP COLUMN taso;
+    DROP COLUMN taso,
+    DROP COLUMN tuotenumero;
 
 -- Poistetaan tässä funktiossa aiemmin ollut riippuvuus tehtava.taso kolumniin
 CREATE OR REPLACE FUNCTION tarkista_t_tr_ti_yhteensopivuus(tehtava_ INTEGER, tehtavaryhma_ INTEGER, toimenpideinstanssi_ INTEGER)
