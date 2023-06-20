@@ -23,7 +23,6 @@
   ([ymparisto-muuttuja default-arvo key-fn]
    {:pre [(string? ymparisto-muuttuja)]}
    (let [ym (clj-str/trim (str (System/getenv ymparisto-muuttuja)))]
-     (if
-       (and (= "" ym)
-         (some? default-arvo)) default-arvo
+     (if (and (= "" ym) (some? default-arvo))
+       default-arvo
        (cheshire/decode ym key-fn)))))
