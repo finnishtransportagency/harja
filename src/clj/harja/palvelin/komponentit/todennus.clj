@@ -163,14 +163,14 @@ on nil."
                  ;; Sähköposti ja puhelin
                  "oam_user_mail" "oam_user_mobile"])))
 
-(defn prosessoi-headerit
-  "Palauttaa koka-headerit, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
-  Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi."
+(defn prosessoi-kayttaja-headerit
+  "Palauttaa headerit sellaisenaan, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
+  Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään
+  muiden headereiden joukkoon."
   [headerit]
-  (let [koka-headerit (koka-headerit headerit)]
-    (if (empty? koka-headerit)
-      (pura-cognito-headerit headerit)
-      koka-headerit)))
+  (if (empty? (koka-headerit headerit))
+    (merge headerit (pura-cognito-headerit headerit))
+    headerit))
 
 (defn- hae-organisaatio-elynumerolla [db ely]
   (some->> ely
@@ -262,7 +262,8 @@ headerit palautetaan normaalisti."
       koka-headerit))
 
 (defn koka->kayttajatiedot [db headerit oikeudet]
-  (let [oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
+  (let [headerit (prosessoi-kayttaja-headerit headerit)
+        oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
     (try
       (get (swap! kayttajatiedot-cache-atom
                   #(cache/through
@@ -289,7 +290,7 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 
   Todennus
   (todenna-pyynto [{db :db :as this} req]
-    (let [headerit (:headers req)
+    (let [headerit (prosessoi-kayttaja-headerit (:headers req))
           kayttaja-id (headerit "oam_remote_user")]
       (if (nil? kayttaja-id)
         (do
