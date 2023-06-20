@@ -79,6 +79,11 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+# TODO: Ennen migraatioiden ajoa voisi Fargate kontit ajaa alas migraatioiden ajon ajaksi
+#      - name: Shutdown Fargate containers
+#        run: |
+#          aws ecs foobar
+
       # TODO: Tähän kohtaan todennäköisesti migraatioiden ajo RDS:ään
       # Laitetaan esim. Fargate kontit alas ja ajetaan migratiot
       # Tässä kohtaa uusi image on jo puskettu ECR:ään.
@@ -86,7 +91,11 @@ jobs:
       #      - name: Run migrations to RDS
       #        uses: ./.github/actions/run-migrations-to-rds
       #        with:
+      #          commit-sha: {{ github.sha }}
       #
+      # Migraatioiden ajon jälkeen hoidetaan imagen deployment ECS:ään loppuun ja päivitetään task defition
+      # Varmista, että Fargate kontit käynnistyvät uudestaan task definitionin deploymentin jälkeen
+      # Task definition deployment itsessään saattaa käynnistää kontit vaikka ne olisivat alhaalla, mutta en ole varma.
 
       - name: Download task definition
         env:
