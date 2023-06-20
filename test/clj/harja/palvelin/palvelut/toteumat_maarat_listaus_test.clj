@@ -94,7 +94,6 @@
                                                         (str "SELECT count(*)
                                                               FROM urakka_tehtavamaara ut, tehtava tk
                                                               WHERE ut.tehtava = tk.id
-                                                              AND tk.taso = 4
                                                               AND tk.aluetieto = false
                                                               AND tk.ensisijainen = true
                                                               AND tk.tehtavaryhma is not null
@@ -104,7 +103,6 @@
                                                         (str "SELECT count(*)
                                                               FROM urakka_tehtavamaara ut, tehtava tk
                                                               WHERE ut.tehtava = tk.id
-                                                              AND tk.taso = 4
                                                               AND tk.ensisijainen = true
                                                               AND tk.aluetieto = false
                                                               AND tk.tehtavaryhma is not null
@@ -114,7 +112,6 @@
                                                         (str "SELECT count(*)
                                                               FROM urakka_tehtavamaara ut, tehtava tk
                                                               WHERE ut.tehtava = tk.id
-                                                              AND tk.taso = 4
                                                               AND tk.ensisijainen = true
                                                               AND tk.aluetieto = false
                                                               AND tk.tehtavaryhma is not null

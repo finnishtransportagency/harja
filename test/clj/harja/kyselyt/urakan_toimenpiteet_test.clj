@@ -31,8 +31,7 @@
                                    (str "SELECT count(*)
                                            FROM tehtava t4
                                                 LEFT JOIN toimenpide t3 ON t3.id=t4.emo
-                                           WHERE t4.taso = 4 AND
-                                                (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= 2005) AND
+                                           WHERE(t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= 2005) AND
                                                 (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= 2005) AND
                                                 t3.id in (SELECT toimenpide FROM toimenpideinstanssi WHERE urakka = "
                                                           @oulun-alueurakan-2005-2010-id ")")))
@@ -54,7 +53,7 @@
                                    (str "SELECT count(*)
                                            FROM tehtava t4
                                                 LEFT JOIN toimenpide t3 ON t3.id=t4.emo
-                                           WHERE t4.taso = 4 AND
+                                           WHERE
                                             (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= 2007) AND
                                             (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= 2007) AND
                                                 t3.id in (SELECT toimenpide FROM toimenpideinstanssi WHERE urakka = "
@@ -70,7 +69,7 @@
                                         (str "SELECT count(*)
                                            FROM tehtava t4
                                                 LEFT JOIN toimenpide t3 ON t3.id=t4.emo
-                                           WHERE t4.taso = 4 AND
+                                           WHERE
                                             (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= 2005) AND
                                             (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= 2005) AND
                                                 t3.id in (SELECT toimenpide FROM toimenpideinstanssi WHERE urakka = "
