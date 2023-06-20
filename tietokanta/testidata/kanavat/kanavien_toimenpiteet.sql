@@ -14,8 +14,8 @@ DECLARE
   muutosaskare_tpk_id INTEGER;
 BEGIN
 
-  INSERT INTO tehtava (nimi, taso, luotu, yksikko, suoritettavatehtava, hinnoittelu, emo)
-  VALUES ('Henkilöstö: muutosaskare', 4, now(), 'h', NULL,
+  INSERT INTO tehtava (nimi, luotu, yksikko, suoritettavatehtava, hinnoittelu, emo)
+  VALUES ('Henkilöstö: muutosaskare', now(), 'h', NULL,
           '{yksikkohintainen}', (SELECT id FROM toimenpide WHERE koodi='27105'));
   muutosaskare_tpk_id := (SELECT MAX(id) from tehtava);
 
