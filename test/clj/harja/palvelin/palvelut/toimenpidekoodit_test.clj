@@ -45,7 +45,7 @@
         from toimenpide
         WHERE piilota IS NOT TRUE GROUP BY taso
         UNION
-        select 4, count(*)
+        select 4 as taso, count(*)
         from tehtava
         WHERE piilota IS NOT TRUE GROUP BY taso ORDER BY taso;")
         koodit-tasoittain (group-by

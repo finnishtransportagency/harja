@@ -25,9 +25,10 @@ SELECT
  UNION
 SELECT
     t.id,
-    t.koodi,
+    null as koodi,
     t.nimi,
     t.emo,
+    4 as taso,
     t.poistettu,
     t.luoja        AS luoja_id,
     k.kayttajanimi AS luoja_kayttajanimi,
