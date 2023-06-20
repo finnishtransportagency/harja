@@ -3,7 +3,9 @@
   WWW-palvelussa tehdään KOKA ympäristön antamilla header tiedoilla. Tämä komponentti ei tee
   käyttöoikeustarkistuksia, vaan pelkästään hakee käyttäjälle sallitut käyttöoikeudet
   ja tarkistaa käyttäjän identiteetin."
-  (:require [clojure.core.cache :as cache]
+  (:require [cheshire.core :as cheshire]
+            [clojure.core.cache :as cache]
+            [clojure.set :as set]
             [clojure.string :as str]
             [com.stuartsierra.component :as component]
             [harja.domain
@@ -12,7 +14,8 @@
              [kayttajat :as q]]
             [slingshot.slingshot :refer [throw+ try+]]
             [taoensso.timbre :as log])
-  (:import (org.apache.commons.codec.net BCodec)))
+  (:import (org.apache.commons.codec.binary Base64)
+           (org.apache.commons.codec.net BCodec)))
 
 (def todennusvirhe {:virhe :todennusvirhe})
 
@@ -102,6 +105,49 @@ on nil."
     (.decode (BCodec.) teksti)
     teksti))
 
+(defn- pura-cognito-headerit
+  "Purkaa AWS Cognitolta palautuneet relevantit headerit ja hakee niistä OAM-tiedot.
+  Tiedot mapataan vanhan mallisiksi OAM_-headereiksi"
+  [headerit]
+
+  (let [headerit (select-keys headerit [;; Sisältää mm. Cogniton user poolin url:n ja app client id:n
+                                        "x-iam-accesstoken"
+
+                                        ;; Sisältää käyttäjään liittyviä tietoja, mm. roolit
+                                        "x-iam-data"
+
+                                        ;; Käyttäjän sub-kenttä Cognitossa
+                                        "x-iam-identity"])
+        jwt (some->
+              (get headerit "x-iam-data")
+              ;; Jaetaan kolmeen osaan: header, body, signature
+              (clojure.string/split #"\."))
+        jwt-body (second jwt)
+        dekoodatut-headerit (some->
+                              ^String jwt-body
+                              Base64/decodeBase64
+                              String.
+                              cheshire/decode)]
+
+    ;; Mapataan Cognito-headerit vanhan mallisiksi vastaaviksi OAM-headereiksi
+    ;; TODO: Siirrytään mahdollisesti myöhemmin käyttämään pelkkiä cognito-headereita
+    (reduce-kv
+      (fn [m k v]
+        (assoc m k (pura-header-arvo v)))
+      {}
+      (set/rename-keys dekoodatut-headerit
+        {"custom:rooli" "oam_groups"
+         "custom:uid" "oam_remote_user"
+         "custom:etunimi" "oam_user_first_name"
+         "custom:sukunimi" "oam_user_last_name"
+         ;; Huom. ei custom:-alkuliitettä
+         "email" "oam_user_mail"
+         "custom:puhelin" "oam_user_mobile"
+         ;; TODO: Tuleeko myös departmentnumber eli ELY-numero cognitosta, mikäli käyttäjälle on sellainen määritelty?
+         #_#_"????" "oam_departmentnumber"
+         "custom:organisaatio" "oam_organization"
+         "custom:ytunnus" "oam_user_companyid"}))))
+
 (defn- koka-headerit [headerit]
   (reduce-kv
    (fn [m k v]
@@ -116,6 +162,15 @@ on nil."
                  "oam_user_first_name" "oam_user_last_name"
                  ;; Sähköposti ja puhelin
                  "oam_user_mail" "oam_user_mobile"])))
+
+(defn prosessoi-headerit
+  "Palauttaa koka-headerit, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
+  Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi."
+  [headerit]
+  (let [koka-headerit (koka-headerit headerit)]
+    (if (empty? koka-headerit)
+      (pura-cognito-headerit headerit)
+      koka-headerit)))
 
 (defn- hae-organisaatio-elynumerolla [db ely]
   (some->> ely

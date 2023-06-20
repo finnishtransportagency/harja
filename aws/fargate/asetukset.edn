@@ -5,6 +5,7 @@
 
 {:kehitysmoodi false
  ;; TODO: Vaatii muutoksia, jos halutaan käyttää vanhaan tyyliin kovakoodattuja "sähke"-, eli OAM-headereita (AWS:ssä Cogniton headerit)
+ ;; Header-asetukset tulevat env-muuttujasta JSON-stringinä, joka parsitaan clojure-mapiksi
  :sahke-headerit #=(eval (harja.tyokalut.env/env "HARJA_OHITUSKAISTA_HEADERIT" nil true))
  :http-palvelin {:portti 3000 :url "http://localhost:3000/"
                  :threads 64
