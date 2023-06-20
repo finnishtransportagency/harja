@@ -72,9 +72,10 @@ jobs:
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
         run: |
           echo "Building image with tag $IMAGE_TAG"
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --file $DOCKERFILE_PATH .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest --file $DOCKERFILE_PATH .
           
-          echo "Pushing image to ECR"
+          echo "Pushing 'latest' and '${IMAGE_TAG}' tags to ECR"
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
@@ -87,7 +88,6 @@ jobs:
       #        with:
       #
 
-      # TODO: Määrittele github environmentit (dev, stg, prod) ja käytä env muuuttujia niiden kautta
       - name: Download task definition
         env:
           ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
