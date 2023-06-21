@@ -124,6 +124,23 @@
         (is (= (get-in req [:kayttaja :puhelin]) "1234567890"))
         (is (= (get-in req [:kayttaja :etunimi]) "Daniel"))
         (is (= (get-in req [:kayttaja :sukunimi]) "Destialainen"))
+        (is (= (get-in req [:kayttaja :organisaatioroolit]) {23 #{"Paakayttaja"}}))))
+
+    (testing "Käytetään OAM-headereita normaalisti, mikäli ne on määritelty"
+      (let [req (todenna {:headers {"oam_remote_user" "daniel"
+                                    "oam_user_first_name" "Daniel"
+                                    "oam_user_last_name" "Destialainen"
+                                    "oam_user_mail" "daniel@example.com"
+                                    "oam_user_mobile" "1234567890"
+                                    "oam_organization" "Destia Oy"
+                                    "oam_groups" "2234567-8_Paakayttaja"}})]
+
+        (is (= (get-in req [:kayttaja :organisaatio :id]) destia-id))
+        (is (= (get-in req [:kayttaja :sahkoposti]) "daniel@example.com"))
+        (is (= (get-in req [:kayttaja :kayttajanimi]) "daniel"))
+        (is (= (get-in req [:kayttaja :puhelin]) "1234567890"))
+        (is (= (get-in req [:kayttaja :etunimi]) "Daniel"))
+        (is (= (get-in req [:kayttaja :sukunimi]) "Destialainen"))
         (is (= (get-in req [:kayttaja :organisaatioroolit]) {23 #{"Paakayttaja"}}))))))
 
 (deftest ota-organisaatio-roolin-y-tunnuksesta
