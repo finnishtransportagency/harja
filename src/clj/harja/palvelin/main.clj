@@ -859,10 +859,6 @@
   (try
     (let [asetukset (lue-asetukset asetusfile)]
 
-      ;; TODO: Poista debug-lokitus
-      (when (seq (:sahke-headerit asetukset))
-        (log/info "### :sahke-headerit " (:sahke-headerit asetukset)))
-
       ;; Säikeet vain sammuvat, jos niissä nakataan jotain eikä sitä käsitellä siinä säikeessä. Tämä koodinpätkä
       ;; ottaa kaikki tällaiset throwablet kiinni ja logittaa sen.
       (Thread/setDefaultUncaughtExceptionHandler
