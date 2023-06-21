@@ -28,12 +28,17 @@
                    :y (second koordinaatit)})
         (rakenna-tierekisteriosoite tierekisteriosoite))))
 
-(defn rakenna-selitteet [ilmoitus]
-  (if (:selitteet ilmoitus)
-    (let [selitteet-kannassa (vec (.getArray (:selitteet ilmoitus)))
-          selitteet-vastauksessa (mapv (fn [selite] {:selite selite}) selitteet-kannassa)]
-      (update ilmoitus :selitteet (constantly selitteet-vastauksessa)))
+(defn rakenna-ilmoituksen-data [ilmoitus vectorin-avain elementin-avain]
+  (if (vectorin-avain ilmoitus)
+    (let [kannassa (vec (.getArray (vectorin-avain ilmoitus)))
+          vastauksessa (mapv (fn [selite] {elementin-avain selite}) kannassa)]
+      (update ilmoitus vectorin-avain (constantly vastauksessa)))
     ilmoitus))
+
+(defn rakenna-emon-ilmoitusid [ilmoitus]
+  (-> ilmoitus
+    (assoc-in [:emon-ilmoitusid :id] {:emon-ilmoitusid ilmoitus})
+    (dissoc :emon-ilmoitusid)))
 
 (defn rakenna-henkilo [ilmoitus henkiloavain]
   (let [henkilo (henkiloavain ilmoitus)]
@@ -68,7 +73,9 @@
 
 (defn rakenna-ilmoitus [ilmoitus]
   {:ilmoitus (-> ilmoitus
-               rakenna-selitteet
+               (rakenna-emon-ilmoitusid)
+               (rakenna-ilmoituksen-data :selitteet :selite)
+               (rakenna-ilmoituksen-data :kuvat :url)
                (rakenna-henkilo :ilmoittaja)
                (rakenna-henkilo :lahettaja)
                rakenna-sijanti
