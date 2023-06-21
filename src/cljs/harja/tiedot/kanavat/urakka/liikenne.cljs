@@ -489,7 +489,7 @@
 
 (defn- ketjutus-kaytossa? [valittu-liikennetapahtuma haetut-sopimukset]
   (let [sopimus-id (-> valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
-        ketjutus-kaytossa? (first (filter (fn[sopimus]
+        ketjutus-kaytossa? (first (filter (fn [sopimus]
                                             (= sopimus-id (::sop/id sopimus))) haetut-sopimukset))]
     (boolean (::sop/ketjutus ketjutus-kaytossa?))))
 
