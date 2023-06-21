@@ -14,7 +14,7 @@
 
 (defn erottele-paikkauskohteet [workbook]
   (let [sivu (first (xls/sheet-seq workbook)) ;; Käsitellään excelin ensimmäinen sivu tai tabi
-        ;; Esimerkki excelissä paikkauskohteet alkavat vasta viidenneltä riviltä.
+        ;; Esimerkki excelissä paikkauskohteet alkavat vasta kuudennelta riviltä.
         ;; Me emme voi olla tästä kuitenkaan ihan varmoja, niin luetaan varalta kaikki data excelistä ulos
         raaka-data (->> sivu
                         xls/row-seq
