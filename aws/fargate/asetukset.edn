@@ -25,13 +25,14 @@
 
  ;; TODO: Replican käytön miettiminen: Miten tehdään AWS:n puolella. Tarvitaanko replican kaltaista tietokantainstanssia enää ollenkaan?
  ;;       Replicaa käytetään Harjassa ainakin raporttien tietojen haussa ja tilannekuvan kyselyissä.
- ; :tietokanta-replica {:palvelin "{{db_osoite_replica}}"
- ;                         :tietokanta "harja"
- ;                         :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI"))
- ;                         :yhteyspoolin-koko 32
- ;                         :kayttaja "{{db_kayttaja}}"
- ;                         :salasana "{{db_salasana}}"
- ;                         :julkaise-tila? true}
+ ;; FIXME: Käytetään tässä "replicana" väliaikaisesti normaalia harja-tietokantaa
+ :tietokanta-replica {:palvelin #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_HOST"))
+                      :tietokanta "harja"
+                      :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI"))
+                      :yhteyspoolin-koko 32
+                      :kayttaja #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_KAYTTAJA"))
+                      :salasana #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_SALASANA"))
+                      :julkaise-tila? true}
 
  ;; TODO: Tarkista mitä tämä tekee
  :tarkkailija {:loop-odotus 100}
@@ -81,11 +82,12 @@
  ;            :uudelleenlahetysvali-minuuteissa {{tloik_uudelleenlahetysvali_minuuteissa}}}
 
  ;; TODO: SAMPO-integraatio
- ; :sampo-api {:lahetys-url "{{api_sampo_lahetys_url}}"
- ;                :paivittainen-lahetysaika {{api_sampo_paivittainen_lahetysaika}}
- ;                :palvelin "{{api_sampo_palvelin}}"
- ;                :kayttajatunnus "{{api_sahkoposti_kayttaja}}"
- ;                :salasana "{{api_sahkoposti_salasana}}"}
+ ;:sampo-api {:lahetys-url #=(eval (harja.tyokalut.env/env "HARJA_API_SAMPO_LAHETYS_URL"))
+ ;            ;; Parametreissa JSON-muodossa, esim. [16, 44, 0]
+ ;            :paivittainen-lahetysaika #=(eval (harja.tyokalut.env/env-json "HARJA_API_SAMPO_PAIVITTAINEN_LAHETYSAIKA"))
+ ;            :palvelin #=(eval (harja.tyokalut.env/env "HARJA_API_SAMPO_PALVELIN"))
+ ;            :kayttajatunnus #=(eval (harja.tyokalut.env/env "HARJA_API_SAHKOPOSTI_KAYTTAJA"))
+ ;            :salasana #=(eval (harja.tyokalut.env/env "HARJA_API_SAHKOPOSTI_SALASANA"))}
 
  ;; TODO: Sähköposti-API
  ; :api-sahkoposti {:vastausosoite "{{api_sahkoposti_vastausosoite}}"
@@ -110,6 +112,7 @@
  :ilmatieteenlaitos {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
 
  ;; TODO: Geometriapäivitykset
+ ;; TODO: Muuta kaikki osoitteet parametreiksi esimerkin vuoksi. Otetaan tämän esimerkin parametrit käyttöön infran puolella.
  ;; Voit hallinnoida geometria-aineistojen päivitystä GEOMETRIAPAIVITYS-taulussa.
  ;; Jos aineiston nimi muuttuu, voit tallentaa nimen ja sen voimassaolon GEOMETRIAAINEISTO-tauluun.
  :geometriapaivitykset {:tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/tieosoiteverkkoLine.shp"
@@ -161,8 +164,8 @@
                         :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/Sulkukanavat.shz"}
  ;; TODO: Väylät
  :vaylat {:geometria-url "https://extranet.vayla.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json"
-              :paivittainen-tarkistusaika [15 10 00]
-              :paivitysvali-paivissa 60}
+          :paivittainen-tarkistusaika [15 10 00]
+          :paivitysvali-paivissa 60}
 
  ;; TODO: Kanavasillat
  :kanavasillat {:geometria-url "https://modoc.demo.solita.fi/paakayttaja/rajapinta/tierekisteri/rakenteet/uusin?sivu=%1&tuloksia-per-sivu=1000"
@@ -230,7 +233,6 @@
  ;; :toteumatyokalu - (Kehittäjän testailuun liittyvä työkalu)
 
  :pois-kytketyt-ominaisuudet #{
-                               :replica-db
                                :fileyard
                                :tiedostopesula
                                :api-sampo
