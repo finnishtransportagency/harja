@@ -35,11 +35,6 @@
       (update ilmoitus vectorin-avain (constantly vastauksessa)))
     ilmoitus))
 
-(defn rakenna-emon-ilmoitusid [ilmoitus]
-  (-> ilmoitus
-    (assoc-in [:emon-ilmoitusid :id] {:emon-ilmoitusid ilmoitus})
-    (dissoc :emon-ilmoitusid)))
-
 (defn rakenna-henkilo [ilmoitus henkiloavain]
   (let [henkilo (henkiloavain ilmoitus)]
     (-> ilmoitus
@@ -73,7 +68,6 @@
 
 (defn rakenna-ilmoitus [ilmoitus]
   {:ilmoitus (-> ilmoitus
-               (rakenna-emon-ilmoitusid)
                (rakenna-ilmoituksen-data :selitteet :selite)
                (rakenna-ilmoituksen-data :kuvat :url)
                (rakenna-henkilo :ilmoittaja)
