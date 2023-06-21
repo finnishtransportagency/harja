@@ -87,7 +87,7 @@
                   :vastaanottaja (when-let [vastaanottaja (into {} (z/xml-> data :vastaanottaja lue-vastaanottaja))]
                                    (if (empty? vastaanottaja) nil vastaanottaja))
                   :kuvat (when-let [kuvaLinkit (into {} (z/xml-> data :kuvaLinkit lue-kuvat))]
-                                (if (empty? kuvaLinkit) nil kuvaLinkit))
+                           (seq kuvaLinkit))
                   :luokittelu (when-let [luokittelu (into {} (z/xml-> data :luokittelu lue-luokittelu))]
                                 (if (empty? luokittelu) nil luokittelu))}]
     ilmoitus))
