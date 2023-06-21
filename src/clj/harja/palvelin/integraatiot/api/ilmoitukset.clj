@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.api.ilmoitukset
   "Tieliikennelmoitusten haku ja ilmoitustoimenpiteiden kirjaus"
   (:require [com.stuartsierra.component :as component]
+            [harja.palvelin.komponentit.todennus :as todennus]
             [org.httpkit.server :refer [with-channel on-close send!]]
             [clojure.spec.alpha :as s]
             [clj-time.coerce :as c]
@@ -140,7 +141,9 @@
               odota-uusia? :odota-uusia?
               sulje-vastauksen-jalkeen? :sulje-vastauksen-jalkeen?} parametrit
              tapahtuma-id (lokita-kutsu integraatioloki :hae-ilmoitukset request nil)
-             kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))]
+             kayttaja (hae-kayttaja db (get
+                                         (todennus/prosessoi-kayttaja-headerit (:headers request))
+                                         "oam_remote_user"))]
          (log/debug (format "Käynnistetään ilmoitusten kuuntelu urakalle id: %s. Muutosaika: %s." urakka-id muuttunut-jalkeen))
          (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
          (with-channel request kanava

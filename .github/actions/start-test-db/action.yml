@@ -1,5 +1,5 @@
 name: 'Start test database'
-desription: 'Käynnistää testitietokannan taustalle ja ajaa siihen migraatiot ja testidataa'
+description: 'Käynnistää testitietokannan taustalle ja ajaa siihen migraatiot ja testidataa'
 
 inputs:
   registry:

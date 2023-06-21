@@ -858,6 +858,7 @@
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
     (let [asetukset (lue-asetukset asetusfile)]
+
       ;; Säikeet vain sammuvat, jos niissä nakataan jotain eikä sitä käsitellä siinä säikeessä. Tämä koodinpätkä
       ;; ottaa kaikki tällaiset throwablet kiinni ja logittaa sen.
       (Thread/setDefaultUncaughtExceptionHandler

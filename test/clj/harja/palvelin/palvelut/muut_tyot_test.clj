@@ -35,7 +35,7 @@
                                                      (str "SELECT count(*)
                                                              FROM muutoshintainen_tyo
                                                             WHERE urakka = " @oulun-alueurakan-2005-2010-id)))
-               ramppitehtavan-id (ffirst (q (str "SELECT id FROM tehtava WHERE taso=4 AND nimi='I rampit'")))
+               ramppitehtavan-id (ffirst (q (str "SELECT id FROM tehtava WHERE nimi='I rampit'")))
                ;; testidata.sta: {:loppupvm #inst "2010-09-29T21:00:00.000-00:00", :yksikko tiekm, :tehtava 1384,
                ;; :urakka 1, :yksikkohinta 4.5, :toimenpideinstanssi 1, :id 8,
                ;; :tehtavan_nimi I rampit, :sopimus 1, :alkupvm #inst "2005-09-30T21:00:00.000-00:00"

@@ -117,7 +117,7 @@ SELECT distinct tpk3.id       as "toimenpide-id",
                 tpi.id        as "toimenpideinstanssi"
 FROM tehtavaryhma tr
        LEFT JOIN tehtava tpk4
-                 ON tr.id = tpk4.tehtavaryhma and tpk4.taso = 4 AND tpk4.ensisijainen is true AND
+                 ON tr.id = tpk4.tehtavaryhma AND tpk4.ensisijainen is true AND
                     tpk4.poistettu is not true AND tpk4.piilota is not true
        JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
        JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id and tpi.urakka = :urakka
@@ -169,7 +169,7 @@ SELECT ut.urakka                   as "urakka",
        sp.tallennettu              as "sopimus-tallennettu"
 FROM tehtavaryhma tr3
        LEFT JOIN tehtava tpk4
-                 ON tr3.id = tpk4.tehtavaryhma AND tpk4.taso = 4 AND tpk4.ensisijainen is true AND
+                 ON tr3.id = tpk4.tehtavaryhma AND tpk4.ensisijainen is true AND
                     tpk4.poistettu is not true AND tpk4.piilota is not true AND (tpk4.yksiloiva_tunniste NOT IN
                                                                                  (
                                                                                   'd373c08b-32eb-4ac2-b817-04106b862fb1', --'Äkillinen hoitotyö (talvihoito)',

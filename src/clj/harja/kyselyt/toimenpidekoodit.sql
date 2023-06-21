@@ -25,10 +25,10 @@ SELECT
  UNION
 SELECT
     t.id,
-    t.koodi,
+    null as koodi,
     t.nimi,
     t.emo,
-    t.taso,
+    4 as taso,
     t.poistettu,
     t.luoja        AS luoja_id,
     k.kayttajanimi AS luoja_kayttajanimi,
@@ -75,19 +75,6 @@ WHERE id = :id;
 -- Antaa MAX(muokattu) päivämäärän toimenpidekoodeista
 SELECT MAX(muokattu) AS muokattu
 FROM tehtava;
-
---name: hae-neljannen-tason-toimenpidekoodit
-SELECT
-  id,
-  koodi,
-  nimi,
-  emo,
-  taso,
-  yksikko
-FROM tehtava
-WHERE poistettu IS NOT TRUE AND
-      piilota IS NOT TRUE AND
-      emo = :emo;
 
 -- name: onko-olemassa?
 -- single?: true
@@ -240,14 +227,14 @@ ORDER BY jarjestys;
 
 -- name: listaa-tehtavat
 -- Listataan tehtävät APIa varten toimenpidekoodin alatasot eli tehtävät
-SELECT t.id, t.nimi, t.voimassaolo_alkuvuosi, t.voimassaolo_loppuvuosi, t.jarjestys, t.koodi, t.jarjestys, t.emo,
-       t.taso, t.yksikko, t.suunnitteluyksikko, t.tuotenumero,  t.hinnoittelu,
+SELECT t.id, t.nimi, t.voimassaolo_alkuvuosi, t.voimassaolo_loppuvuosi, t.jarjestys, t.jarjestys, t.emo,
+       t.yksikko, t.suunnitteluyksikko,  t.hinnoittelu,
        t.suoritettavatehtava, t.tehtavaryhma, t.ensisijainen, t.yksiloiva_tunniste,
        t.kasin_lisattava_maara, t."raportoi-tehtava?", t.materiaaliluokka_id,
        t.materiaalikoodi_id, t.aluetieto, t.piilota, t.poistettu, t.luotu, t.muokattu
   FROM tehtava t
-       LEFT JOIN toimenpide emo ON t.emo = emo.id AND t.taso = 4
- WHERE (t.poistettu IS FALSE and t.taso in (1,2,3) OR (t.taso = 4 AND emo.poistettu IS FALSE) OR (t.taso = 4 AND emo.poistettu IS TRUE AND t.poistettu IS FALSE))
+       LEFT JOIN toimenpide emo ON t.emo = emo.id
+ WHERE (t.poistettu IS FALSE OR emo.poistettu IS FALSE OR (emo.poistettu IS TRUE AND t.poistettu IS FALSE))
  ORDER BY nimi ASC;
 
 -- name: listaa-tehtavaryhmat

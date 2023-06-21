@@ -72,11 +72,17 @@ jobs:
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
         run: |
           echo "Building image with tag $IMAGE_TAG"
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --file $DOCKERFILE_PATH .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest --file $DOCKERFILE_PATH .
           
-          echo "Pushing image to ECR"
+          echo "Pushing 'latest' and '${IMAGE_TAG}' tags to ECR"
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+# TODO: Ennen migraatioiden ajoa voisi Fargate kontit ajaa alas migraatioiden ajon ajaksi
+#      - name: Shutdown Fargate containers
+#        run: |
+#          aws ecs foobar
 
       # TODO: Tähän kohtaan todennäköisesti migraatioiden ajo RDS:ään
       # Laitetaan esim. Fargate kontit alas ja ajetaan migratiot
@@ -85,9 +91,12 @@ jobs:
       #      - name: Run migrations to RDS
       #        uses: ./.github/actions/run-migrations-to-rds
       #        with:
+      #          commit-sha: {{ github.sha }}
       #
+      # Migraatioiden ajon jälkeen hoidetaan imagen deployment ECS:ään loppuun ja päivitetään task defition
+      # Varmista, että Fargate kontit käynnistyvät uudestaan task definitionin deploymentin jälkeen
+      # Task definition deployment itsessään saattaa käynnistää kontit vaikka ne olisivat alhaalla, mutta en ole varma.
 
-      # TODO: Määrittele github environmentit (dev, stg, prod) ja käytä env muuuttujia niiden kautta
       - name: Download task definition
         env:
           ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}

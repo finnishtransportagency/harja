@@ -116,6 +116,7 @@
      [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true
                  :sivuttain-rullattava? true
+                 :ensimmainen-sarake-sticky? true
                  :sheet-nimi raportin-nimi}
       (into []
             (concat

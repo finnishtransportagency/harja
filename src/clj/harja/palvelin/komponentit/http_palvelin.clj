@@ -304,9 +304,10 @@
 
 (defn korvaa-ehka-oletuskayttajalla [kutsu]
   ;; Jos asetukset mahdollistaa ja kutsussa ei ole käyttäjätietoja, käytetään oletuskäyttöoikeuksia
-  (if (empty? (get (:headers kutsu) "oam_remote_user"))
-    (assoc kutsu :headers (conj (:headers kutsu) {"oam_remote_user" "oletus-kaytto-oikeudet"}))
-    kutsu))
+  (let [headers (todennus/prosessoi-kayttaja-headerit (:headers kutsu))]
+    (if (empty? (get headers "oam_remote_user"))
+      (assoc kutsu :headers (conj headers {"oam_remote_user" "oletus-kaytto-oikeudet"}))
+      kutsu)))
 
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
                          http-server kehitysmoodi
@@ -334,7 +335,9 @@
                                    (korvaa-ehka-oletuskayttajalla req)
                                    req)
                              ui-kasittelijat (mapv :fn @kasittelijat)
-                             oam-kayttajanimi (get (:headers req) "oam_remote_user")
+                             oam-kayttajanimi (get
+                                                (todennus/prosessoi-kayttaja-headerit (:headers req))
+                                                "oam_remote_user")
                              random-avain (get (:headers req) "x-csrf-token")
                              csrf-token (when random-avain (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key))
                              _ (when csrf-token (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi csrf-token (time/now)))
