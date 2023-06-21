@@ -1,16 +1,13 @@
 (ns harja.palvelin.palvelut.varuste-ulkoiset
   "Varustetoteumien backend"
-  (:require [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
+  (:require [taoensso.timbre :as log]
+            [com.stuartsierra.component :as component]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.geo :as geo]
-            [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-komponentti]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
-            [harja.palvelin.palvelut.varuste-ulkoiset-excel :as v-excel]
-            [harja.pvm :as pvm]))
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.palvelut.varuste-ulkoiset-excel :as v-excel]))
 
 (defn kelvollinen-tr-filter [tie aosa aeta losa leta]
   (or
@@ -19,7 +16,7 @@
     (and (every? some? [tie aosa aeta losa leta])
          (or
            (and (= aosa losa) (<= aeta leta))
-           (and (< aosa losa))))
+           (< aosa losa)))
     ; tie, alkuosa ja alkuetäisyys annettu ja ei ole annettu loppuosaa eikä loppuetäisyyttä
     (and (every? some? [tie aosa aeta]) (every? nil? [losa leta]))
     ; tie annettu ja ei muuta
@@ -37,7 +34,7 @@
   {:urakka-id urakka-id :toteumat (toteumat-q/hae-uusimmat-varustetoteuma-ulkoiset db tiedot)})
 
 (defn hae-varustetoteumat-ulkoiset
-  [db user {:keys [urakka-id ulkoinen-oid] :as tiedot}]
+  [db user {:keys [urakka-id ulkoinen-oid]}]
   (when (nil? ulkoinen-oid) (throw (IllegalArgumentException. "ulkoinen-oid on pakollinen")))
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (let [toteumat (toteumat-q/hae-urakan-varustetoteuma-ulkoiset db {:urakka urakka-id :ulkoinen_oid ulkoinen-oid})]
@@ -84,11 +81,11 @@
 
 
       (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-varustetoteumat
-                        (fn [user data]
+                        (fn [user _]
                           (tuo-uudet-varustetoteumat-velhosta velho user)))
 
       (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-hae-velhosta-mhu-urakka-oidt
-                        (fn [user data]
+                        (fn [user _]
                           (hae-mhu-urakka-oidt-velhosta velho user)))
     this))
   (stop [this]

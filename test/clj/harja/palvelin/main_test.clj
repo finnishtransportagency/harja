@@ -41,8 +41,7 @@
                                             :toimenpidejono tloik-tyokalut/+tloik-ilmoitustoimenpideviestijono+
                                             :toimenpidekuittausjono tloik-tyokalut/+tloik-ilmoitustoimenpidekuittausjono+
                                             :toimenpideviestijono tloik-tyokalut/+tloik-toimenpideviestijono+})
-                             (assoc-in [:turi :turvallisuuspoikkeamat-url] "")
-                             (assoc-in [:turi :urakan-tyotunnit-url] ""))]
+                             (assoc-in [:turi :turvallisuuspoikkeamat-url] ""))]
     asetukset-datana
     #_(str asetukset-datana)))
 
@@ -159,7 +158,12 @@
     :suolarajoitukset
     :api-sampo
     :harja-status
-    :rajoitusalue-pituudet})
+    :rajoitusalue-pituudet
+    :api-tyomaapaivakirja
+    :tyomaapaivakirja
+    :palautevayla
+    :palauteluokitukset
+    :palauteluokitukset-hallinta})
 
 (def ei-statusta
   #{:metriikka
@@ -226,7 +230,12 @@
     :api-sampo
     :harja-status
     :info
-    :rajoitusalue-pituudet})
+    :rajoitusalue-pituudet
+    :api-tyomaapaivakirja
+    :tyomaapaivakirja
+    :palautevayla
+    :palauteluokitukset
+    :palauteluokitukset-hallinta})
 
 (def hidas-ok-status #{:itmf})
 

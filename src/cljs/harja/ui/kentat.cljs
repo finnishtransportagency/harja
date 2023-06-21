@@ -446,10 +446,12 @@
 
 
 
-(defmethod tee-kentta :puhelin [{:keys [on-focus on-blur pituus lomake? placeholder disabled?] :as kentta} data]
+(defmethod tee-kentta :puhelin [{:keys [on-focus on-blur pituus lomake? placeholder disabled? vayla-tyyli? muokattu? virhe?] :as kentta} data]
   [:input {:class (cond-> nil
-                          lomake? (str "form-control ")
-                          disabled? (str "disabled"))
+                    (and lomake?
+                      (not vayla-tyyli?)) (str "form-control ")
+                    vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
+                    disabled? (str "disabled"))
            :type "tel"
            :value @data
            :max-length pituus
@@ -1340,12 +1342,12 @@
                   [:label.control-label
                    [:span
                     [:span.kentan-label otsikko]
-                    (when pakollinen? [:span.required-tahti " *"])]])
+                    (when pakollinen? [:span.required-tahti])]])
                 komponentti
                 (when alaotsikko?
                   [:span
                    [:span.kentan-label otsikko]
-                   (when pakollinen? [:span.required-tahti " *"])])])]
+                   (when pakollinen? [:span.required-tahti])])])]
     (fn [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
          piste? vaadi-vali?]
      [:div

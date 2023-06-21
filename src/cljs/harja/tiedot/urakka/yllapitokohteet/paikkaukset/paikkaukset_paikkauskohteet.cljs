@@ -51,12 +51,15 @@
         (assoc vertailtava-lomake :loppupvm (str (:loppupvm vertailtava-lomake)))
         (hash vertailtava-lomake)))
 
-(defn- fmt-aikataulu [alkupvm loppupvm tila]
+(defn- fmt-aikataulu
+  "Formatoi paikkauskohteen aikataulun."
+  [{:keys [alkupvm loppupvm valmistumispvm paikkauskohteen-tila]}]
   (str
-    (pvm/fmt-kuukausi-ja-vuosi-lyhyt alkupvm)
+    (pvm/fmt-paiva-ja-kuukausi-lyhyt alkupvm)
     " - "
-    (pvm/fmt-p-k-v-lyhyt loppupvm)
-    (when-not (= "valmis" tila)
+    ;; Loppupäiväksi valitaan valmistumispvm jos saatavilla, muuten näytetään arvio (loppupvm).
+    (pvm/fmt-p-k-v-lyhyt (or valmistumispvm loppupvm))
+    (when-not (= "valmis" paikkauskohteen-tila)
       " (arv.)")))
 
 (defn- fmt-valmistuminen
@@ -491,8 +494,7 @@
   (process-event [{vastaus :vastaus} app]
     (let [paikkauskohteet (map (fn [kohde]
                                  (-> kohde
-                                     (assoc :formatoitu-aikataulu
-                                            (fmt-aikataulu (:alkupvm kohde) (:loppupvm kohde) (:paikkauskohteen-tila kohde)))
+                                     (assoc :formatoitu-aikataulu (fmt-aikataulu kohde))
                                      (assoc :formatoitu-sijainti
                                             (tr-domain/tr-osoite-moderni-fmt (:tie kohde) (:aosa kohde) (:aet kohde) (:losa kohde) (:let kohde)))
                                      (assoc :loppupvm-arvio (fmt-valmistuminen (:loppupvm kohde)))

@@ -33,6 +33,14 @@
             "selite": "aurausvallitNakemaesteena"
           }
         ],
+        "aihe": {
+          "id": 1,
+          "nimi": "Tien talvihoito"
+        },
+        "tarkenne": {
+          "id": 101,
+          "nimi": "Tie on nyt auraamatta"
+        },
         "sijainti": {
           "koordinaatit": {
             "x": 641403,

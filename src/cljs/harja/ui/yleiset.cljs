@@ -164,11 +164,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   "Tarkoitettu esimerkiksi erillisen esxel tiedoston lataamiseen. Käyttää html5 speksin linkin download atriboottia.
   Jos atriboottia download ei täytetä, palautetaan urlissa annetun tiedoston nimi. Downloadiin voi siis tarvittaessa
   joskus lisätä tiedoston lopullinen nimi."
-  [otsikko url]
-  [:a {:class "napiton-nappi nappi-toissijainen"
-       :href url
-       :download ""}
-   [ikonit/ikoni-ja-teksti (ikonit/livicon-download) otsikko]])
+  ([otsikko url]
+   (tiedoston-lataus-linkki otsikko url nil))
+  ([otsikko url {:keys [luokat] :as _opts}]
+   [:a {:class (concat ["nappi-reunaton"] luokat)
+        :href url
+        :download ""}
+    [ikonit/ikoni-ja-teksti (ikonit/livicon-download) otsikko]]))
 
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
@@ -882,12 +884,16 @@ jatkon."
     (ikonit/livicon-check)))
 
 (defn tallenna-excel-nappi
-  [url]
+  ([url]
   [[ikonit/livicon-download] "Tallenna Excel" "raporttixls" url])
+  ([url id]
+   [[ikonit/livicon-download] "Tallenna Excel" id url]))
 
 (defn tallenna-pdf-nappi
-  [url]
+  ([url]
   [[ikonit/livicon-download] "Tallenna PDF" "raporttipdf" url])
+  ([url id]
+   [[ikonit/livicon-download] "Tallenna PDF" id url]))
 
 (def ^{:doc "Mahdolliset raportin vientimuodot"}
 +raportin-vientimuodot+

@@ -831,8 +831,8 @@ VALUES
    30,
    kayttaja_id_tero,
    (SELECT id
-    FROM toimenpidekoodi
-    WHERE nimi = 'Henkilöstö: Ammattimies' AND koodi ILIKE('VV%')));
+    FROM tehtava
+    WHERE nimi = 'Henkilöstö: Ammattimies'));
 INSERT INTO vv_tyo
 ("hinnoittelu-id", maara, luoja, "toimenpidekoodi-id")
 VALUES
@@ -840,8 +840,8 @@ VALUES
    15,
    kayttaja_id_tero,
    (SELECT id
-    FROM toimenpidekoodi
-    WHERE nimi = 'Henkilöstö: Työnjohto' AND koodi ILIKE('VV%')));
+    FROM tehtava
+    WHERE nimi = 'Henkilöstö: Työnjohto' AND poistettu is false));
 INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, summa, luoja, ryhma)
 VALUES

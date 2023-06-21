@@ -9,6 +9,7 @@
 
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
+            [harja.kyselyt.urakat :as urakat-kyselyt]
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.api.reittitoteuma :as reittitoteuma]
             [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri-haku]
@@ -29,6 +30,22 @@
   (let [tulos (q/hae-tyokonehavainto-reitti db {:tyokoneid (:tyokone-id params)})
         reitti (:sijainti (first tulos))]
     reitti))
+(defn hae-seuraava-vapaa-ulkoinen-id [db params]
+  (let [tulos (q/seuraava-vapaa-ulkoinen-id db)
+        _ (println "hae-seuraava-vapaa-ulkoinen-id :: tulos: " tulos)]
+    (:ulkoinen_id (first tulos))))
+
+(defn hae-urakan-tierekisteriosoitteita [db params]
+  (let [tulos (q/hae-urakan-tierekisteriosoitteita db {:urakka-id (:urakka-id params)})
+        _ (println "hae-urakan-tierekisteriosoitteita :: tulos: " tulos)]
+    tulos))
+
+(defn paivita-raportit [db params]
+  (let [_ (q/paivita-toteuma-tehtavat db)
+        _ (q/paivita-toteuma-materiaalit db)
+        _ (q/paivita-pohjavesialuekooste db)
+        _ (q/paivita-pohjavesialueiden-suolatoteumat db)
+        _ (q/paivita-materiaalin-kaytto-urakalle db params)]))
 
 (defn geometrisoi-reittoteuma [db json]
   (let [parsittu  (cheshire/decode json)
@@ -87,6 +104,29 @@
                          suolat)]
     suolat))
 
+(defn hae-urakan-geometriat
+  "Osaa hakea vain hoido/mhu urakoiden ja valaistusurakoiden geometriat tällä hetkellä."
+  [db tiedot]
+  (let [_ (println "hae-urakan-geometriat :: tiedot :" (pr-str tiedot))
+        urakka-id (Integer/parseInt (:urakka-id tiedot))
+        ;; hoito ja teiden-hoito tyyppisten urakoiden geometriat ovat alueurakka -taulussa
+        ;; valaistusurakoiden geometriatiedot ovat valaistusurakka -taulussa
+        urakan-tyyppi (:tyyppi (first (urakat-kyselyt/hae-urakan-tyyppi db {:urakka urakka-id})))
+        geometriat (cond
+                     (or (= "hoito" urakan-tyyppi) (= "teiden-hoito" urakan-tyyppi))
+                     (map
+                       #(-> %
+                          (assoc :alue (or (:alueurakka_alue %) (:urakka_alue %)))
+                          (dissoc :alueurakka_alue :urakka_alue))
+                       (urakat-kyselyt/hae-urakan-geometria db {:id urakka-id}))
+                     (= "valaistus" urakan-tyyppi)
+                     (urakat-kyselyt/hae-valaistusurakan-geometria db {:id urakka-id}))
+        geometriat (map (fn [s]
+                    (-> s
+                      (assoc :alue (geo/pg->clj (:alue s)))))
+               geometriat)]
+    geometriat))
+
 (defn vaadi-jvh! [palvelu-fn]
   (fn [user payload]
     (if-not (roolit/jvh? user)
@@ -112,10 +152,18 @@
       (vaadi-jvh! (partial #'geometrisoi-reittipisteet db))
       :debug-hae-tyokonehavainto-reittipisteet
       (vaadi-jvh! (partial #'hae-tyokonehavainto-reitti db))
+      :debug-hae-seuraava-vapaa-ulkoinen-id
+      (vaadi-jvh! (partial #'hae-seuraava-vapaa-ulkoinen-id db))
+      :debug-hae-urakan-tierekisteriosoitteita
+      (vaadi-jvh! (partial #'hae-urakan-tierekisteriosoitteita db))
+      :debug-paivita-raportit
+      (vaadi-jvh! (partial #'paivita-raportit db))
       :debug-hae-rajoitusalueet
       (vaadi-jvh! (partial #'urakan-rajoitusalueet db))
       :debug-hae-paivan-suolatoteumat
-      (vaadi-jvh! (partial #'hae-suolatoteumat db)))
+      (vaadi-jvh! (partial #'hae-suolatoteumat db))
+      :debug-hae-urakan-geometriat
+      (vaadi-jvh! (partial #'hae-urakan-geometriat db)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -126,6 +174,10 @@
       :debug-geometrisoi-tarkastus
       :debug-geometrisoi-reittipisteet
       :debug-hae-tyokonehavainto-reittipisteet
+      :debug-hae-seuraava-vapaa-ulkoinen-id
+      :debug-hae-urakan-tierekisteriosoitteita
+      :debug-paivita-raportit
       :debug-hae-rajoitusalueet
-      :debug-hae-paivan-suolatoteumat)
+      :debug-hae-paivan-suolatoteumat
+      :debug-hae-urakan-geometriat)
     this))

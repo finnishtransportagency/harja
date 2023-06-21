@@ -195,7 +195,7 @@
         kayttaja "yit_pk2"
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (ffirst (q "SELECT id FROM sopimus WHERE urakka = " urakka " AND paasopimus IS NULL"))
-        tehtava-id (ffirst (q "SELECT id FROM toimenpidekoodi WHERE nimi = 'Suolaus'"))
+        tehtava-id (ffirst (q "SELECT id FROM tehtava WHERE nimi = 'Suolaus'"))
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                          (-> "test/resurssit/api/reittitoteuma_talvisuola_pyoratiella.json"
                            slurp

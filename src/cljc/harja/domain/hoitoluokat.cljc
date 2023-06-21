@@ -2,12 +2,13 @@
   "Määrittelee talvihoitoluokat ja soratien hoitoluokat"
   (:require [harja.pvm :as pvm]))
 
-(def ei-talvihoitoluokkaa-nimi "Hoitoluokka puuttuu")
+(def ei-talvihoitoluokkaa-nimi "Ei kohdistu hoitoluokkiin")
 
-(def ^{:doc "Talvihoitoluokat voimaan 1.10.2019 alkaen urakoissa. Tierekisteriin nämä tulivat voimaan jo 14.6.2018 ja AVA:n geometria-aineistoon 2.7.2018. Nimi kertoo käyttöliittymässä käytetyn
-nimen. Numero on tierekisterin koodi luokalle. Jos hoitoluokkaa ei saada geometrioista
-selvitettyä, se asetetaan arvoon 100. Arvolla NULL PSQL upsert ei toimisi, koska UNIQUE
-constrait vertailussa NULL arvot eivät aiheuta koskaan konfliktia.
+(def ^{:doc "Talvihoitoluokat voimaan 1.10.2019 alkaen urakoissa.
+Tierekisteriin nämä tulivat voimaan jo 14.6.2018 ja AVA:n geometria-aineistoon 2.7.2018.
+Nimi kertoo käyttöliittymässä käytetyn nimen. Numero on tierekisterin koodi luokalle.
+Jos hoitoluokkaa ei saada geometrioista selvitettyä, se asetetaan arvoon 100.
+Arvolla NULL PSQL upsert ei toimisi, koska UNIQUE constrait vertailussa NULL arvot eivät aiheuta koskaan konfliktia.
 2023 lähtien talvihoitoluokat tulevat Harjaan Velhon tiedoista muodostetusta aineistosta, jossa hoitoluokka on numeron sijaan merkkijono.
 Talvihoito-avaimeen on tallennettu merkkijono sellaisena kuin se geometria-aineistoissa on.
 Geometria-aineiston tapauksia Hoito osin ja Talvihoito ei ole tuotu Harjaan."}
@@ -59,8 +60,10 @@ Numero on tierekisterin koodi luokalle."}
   [{:nimi "I" :kuvaus "I lk Vilkkaat soratiet" :numero 1 :soratieluo "I lk"}
    {:nimi "II" :kuvaus "II lk Perussoratiet" :numero 2 :soratieluo "II lk"}
    {:nimi "III" :kuvaus "III lk Vähäliikenteiset soratiet" :numero 3 :soratieluo "III lk"}
+   {:nimi "I - uusi" :kuvaus "I lk Vilkkaat soratiet" :numero 4 :soratieluo "I lk uusi"}
+   {:nimi "II - uusi" :kuvaus "II lk Perussoratiet" :numero 5 :soratieluo "II lk uusi"}
    {:nimi "Käsin kirjattu" :kuvaus "Käsin kirjattu" :numero 99}
-   {:nimi "Hoitoluokka puuttuu" :kuvaus "Hoitoluokka puuttuu" :numero 100 :soratieluo ""}])
+   {:nimi "Ei kohdistu hoitoluokkiin" :kuvaus "Ei kohdistu hoitoluokkiin" :numero 100 :soratieluo ""}])
 
 (def ^{:doc "Mäppäys soratieluokan numerosta sen nimeen."}
   soratieluokan-nimi

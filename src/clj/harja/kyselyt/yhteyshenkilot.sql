@@ -341,17 +341,21 @@ FROM paivystys p
 WHERE u.loppupvm >= :pvm;
 
 -- name: hae-urakat-paivystystarkistukseen
--- Hakee urakat, jotka ovat voimassa annettuna päivänä
+-- Hakee urakat, jotka ovat voimassa annettuna päivänä, joiden tyyppi passaa annettuun tyyppi-listaan ja kesällä ne urakat joiden
+-- nimessä ei lue talvihoitourakkaa. Tämä talvihoitourakka pitäisi määrittää jotenkin muuten, jos näitä urakoita tulee useampia
+-- kuin yksi. Tätä rakentaessa niitä oli vain yksi, joten poikkeuksellinen toteutustapa lienee ok.
 SELECT
   id,
   nimi,
   sampoid
 FROM urakka u
 WHERE u.alkupvm <= :pvm
-      AND u.loppupvm >= :pvm
-      -- PENDING Lisätään urakkatyyppejä sitä mukaan kun
-      -- päätyvät tuotantoon
-      AND (:tyyppi::urakkatyyppi IS NULL OR tyyppi = :tyyppi::urakkatyyppi);
+  AND u.loppupvm >= :pvm
+  AND u.urakkanro IS NOT NULL
+  -- Varmistetaan, että jos urakan nimessä on sana "talvihoitourakka" niin kesäkautena 1.5 - 30.9 ei vaadita päivystystä
+  AND (u.nimi not ilike '%talvihoitourakka%' OR (u.nimi ilike '%talvihoitourakka%' AND CURRENT_DATE NOT BETWEEN CONCAT(date_part('year', CURRENT_DATE), '-05-01')::DATE AND CONCAT(date_part('year', CURRENT_DATE), '-09-30')::DATE))
+  -- Ota vain annettujen tyyppien kanssa yhtenevät urakat
+  AND (TRUE IN (SELECT unnest(ARRAY[:tyypit]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:tyypit]::urakkatyyppi[]));
 
 -- name: hae-urakan-vastuuhenkilot
 SELECT * FROM urakanvastuuhenkilo WHERE urakka = :urakka;

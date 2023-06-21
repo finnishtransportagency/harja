@@ -139,7 +139,7 @@
      [:span
       ^{:key "kuitattu"}
       [yleiset/tietoja {:class "body-text"
-                        :tietorivi-luokka "padding-8 css-grid css-grid-colums-12rem-9"}
+                        :tietorivi-luokka "padding-8 css-grid css-grid-columns-12rem-9"}
        (if valitys? "Lähetetty: " "Kuitattu: ") (pvm/pvm-aika-sek (:kuitattu kuittaus))
        "Vakiofraasi: " (:vakiofraasi kuittaus)
 
@@ -150,7 +150,7 @@
       [:br]
       ^{:key "kuittaaja"}
       [yleiset/tietoja {:class "body-text"
-                        :tietorivi-luokka "padding-8 css-grid css-grid-colums-12rem-9"}
+                        :tietorivi-luokka "padding-8 css-grid css-grid-columns-12rem-9"}
        (if valitys? "Vastaanottaja: " "Kuittaaja: ") (apurit/nayta-henkilo (:kuittaaja kuittaus))
        "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kuittaaja kuittaus))
        "Sähköposti: " (get-in kuittaus [:kuittaaja :sahkoposti])]
@@ -158,7 +158,7 @@
       (when (:kasittelija kuittaus)
         ^{:key "kasittelija"}
         [yleiset/tietoja {:class "body-text"
-                          :tietorivi-luokka "padding-8 css-grid css-grid-colums-12rem-9"}
+                          :tietorivi-luokka "padding-8 css-grid css-grid-columns-12rem-9"}
          "Käsittelijä: " (apurit/nayta-henkilo (:kasittelija kuittaus))
          "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kasittelija kuittaus))
          "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])])]]))

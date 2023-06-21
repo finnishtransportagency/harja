@@ -25,6 +25,9 @@
 (defrecord TallennaGeometria-ainestot [geometria-aineistot paluukanava])
 (defrecord Geometria-aineistotTallennettu [geometria-aineistot paluukanava])
 (defrecord Geometria-ainestojenTallennusEpaonnistui [geometria-aineistot paluukanava])
+(defrecord HaeGeometriapaivitykset [])
+(defrecord HaeGeometriapaivityksetOnnistui [vastaus])
+(defrecord HaeGeometriapaivityksetEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -54,6 +57,31 @@
   Geometria-ainestojenHakuEpaonnistui
   (process-event [_ app]
     (viesti/nayta! [:span "Virhe geometria-aineistojen haussa!"] :danger)
+    (assoc app :haku-kaynnissa? false))
+
+  HaeGeometriapaivitykset
+  (process-event [_ app]
+    (let [onnistui! (tuck/send-async! ->HaeGeometriapaivityksetOnnistui)
+          virhe! (tuck/send-async! ->HaeGeometriapaivityksetEpaonnistui)]
+      (go
+        (try
+          (let [vastaus (async/<! (k/post! :hae-geometriapaivitykset {}))]
+            (if (k/virhe? vastaus)
+              (virhe! vastaus)
+              (onnistui! vastaus)))
+          (catch :default e
+            (virhe! nil)
+            (throw e)))))
+    (assoc app :haku-kaynnissa? true))
+
+  HaeGeometriapaivityksetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :geometriapaivitykset vastaus
+      :haku-kaynnissa? false))
+
+  HaeGeometriapaivityksetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! [:span "Virhe geometriapäivitysten haussa!"] :danger)
     (assoc app :haku-kaynnissa? false))
 
   TallennaGeometria-ainestot

@@ -233,7 +233,7 @@
           tehtavaryhma-id (ffirst (q (str "select id from tehtavaryhma where nimi = 'Hoidonjohtopalkkio (G)';")))
           urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
           sopimuksen-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
-          tehtava-id (ffirst (q (str "select id FROM toimenpidekoodi WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8';")))
+          tehtava-id (ffirst (q (str "select id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8';")))
           poikkeuslaskutukset (ffirst (q (str "SELECT coalesce(SUM(kk.summa),0)
                                                  FROM kulu k, kulu_kohdistus kk
                                                 WHERE k.urakka = "urakka-id"
@@ -241,7 +241,7 @@
                                                   AND kk.kulu IN (select id from kulu where tyyppi = 'laskutettava'
                                                   AND erapaiva >= '2020-03-01'::DATE AND erapaiva <= '2020-03-31'::DATE)
                                                   AND kk.toimenpideinstanssi = "hallinnolliset-toimenpiteet-tpi-id "
-                                                  AND tehtavaryhma NOT IN (SELECT id FROM tehtavaryhma WHERE emo = (SELECT id FROM tehtavaryhma WHERE nimi = 'Välitaso Hoitovuoden päättäminen'));")))
+                                                  AND tehtavaryhma NOT IN (SELECT id FROM tehtavaryhma WHERE nimi ILIKE 'Hoitovuoden päättäminen%');")))
           kustannusarvioidut-tyot (ffirst (q (str "SELECT COALESCE(SUM(kat.summa_indeksikorjattu), 0) AS summa
                                                      FROM kustannusarvioitu_tyo kat
                                                     WHERE kat.toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "

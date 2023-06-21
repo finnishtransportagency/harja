@@ -9,6 +9,7 @@
             [specql.rel :as rel]
             [taoensso.timbre :as log]
             [jeesql.core :refer [defqueries]]
+            [clojure.string :as str]
 
             [harja.id :refer [id-olemassa?]]
             [harja.pvm :as pvm]
@@ -19,8 +20,10 @@
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.geo :as geo]))
 
+(defqueries "harja/kyselyt/kanavat/kohteet.sql")
 
 (defn- hae-kohteiden-urakkatiedot* [user kohteet linkit]
   (let [kohde-ja-urakat (->> linkit
@@ -89,17 +92,46 @@
                                         {::m/poistettu? false})})
     (partial hae-kohteiden-urakkatiedot db user))))
 
-(defn hae-urakan-kohteet [db user urakka-id]
-  (->>
-    (sort-by :harja.domain.kanavat.kohde/jarjestys (specql/fetch db
-                  ::kohde/kohde
-                  (set/union
-                    kohde/perustiedot
-                    kohde/kohteen-kohdekokonaisuus
-                    kohde/kohteenosat)
-                  {::m/poistettu? false}))
-    (hae-kohteiden-urakkatiedot db user urakka-id)
-    (remove (comp empty? ::kohde/urakat))))
+(defn hae-urakan-kohteet 
+  "Kohdekokonaisuus sekä kohteenosat pitää järjestää etelästä pohjoiseen ryhmitettynä"
+  [db user urakka-id]
+
+  ;; Ryhmitellään kohdekokonaisuus id:n mukaan ja joka ryhmän kohteet jarjestys- sarakkeen mukaan
+  ;; Jarjestys- sarake tulee proseduurista paivita_kanavakohteiden_jarjestys() joka ajetaan aina kun kohteita päivitetään
+  (let [kohteet (->>
+                  (reverse
+                    (sort-by ::kohde/jarjestys (specql/fetch db ::kohde/kohde
+                                                                     (set/union
+                                                                       kohde/perustiedot
+                                                                       kohde/kohteen-kohdekokonaisuus
+                                                                       kohde/kohteenosat)
+                                                                     {::m/poistettu? false})))
+                  (group-by #(-> % ::kohde/kohdekokonaisuus ::kok/id)))
+        ;; Järjestetään vielä kaikki ryhmät, etelästä pohjoiseen
+        ;; Luetaan postgresin sijainti objektista Y arvo (etelä/pohjoinen), ja sortataan sen mukaan
+        kohteet (reverse (->> kohteet
+                           (sort-by (fn [kohde]
+                                      (let [kohteen-tiedot (-> kohde second first)
+                                            kohteen-sijainti (::kohde/sijainti kohteen-tiedot)
+                                            kohteen-sijainti (geo/pg->clj kohteen-sijainti)
+                                            kohteen-sijainti-y (if-not (nil? kohteen-sijainti)
+                                                                 (-> kohteen-sijainti :coordinates second)
+                                                                 nil)]
+
+                                        (if-not (nil? kohteen-sijainti-y)
+                                          kohteen-sijainti-y
+                                          (::kohde/id kohteen-tiedot)))))))
+        ;; Ryhmitys tekee ryhmän vectoreita mikä puretaan muotoon joka toimii liikenne/toimenpide välilehdellä
+        kohteet (->> kohteet
+                  (map second)
+                  (apply concat)
+                  (reverse))]
+    
+    ;; Filtteröidään / Liitetään urakkatiedot ja palautetaan vastaus
+    (->>
+      kohteet
+      (hae-kohteiden-urakkatiedot db user urakka-id)
+      (remove (comp empty? ::kohde/urakat)))))
 
 (defn hae-urakan-kohteet-mukaanlukien-poistetut [db user urakka-id]
   (->>
@@ -164,6 +196,10 @@
                         ::kok/kohdekokonaisuus
                         (merge {::m/luoja-id (:id user)}
                                (dissoc kokonaisuus ::kok/id)))))))
+
+(defn paivita-jarjestys! [db]
+  ;; Päivitetään kohteiden järjestys kun kohteita muokataan
+  (paivita-kohteiden-jarjestys db))
 
 (defn merkitse-kohde-poistetuksi! [db user kohde-id]
   (specql/update! db

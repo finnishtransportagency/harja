@@ -95,8 +95,13 @@
     (is (= (:lahettaja_sukunimi ilmoitus) "Päivystäjä"))
     (is (= (:lahettaja_sahkoposti ilmoitus) "pekka.paivystaja@livi.fi"))
     (is (= (:lisatieto ilmoitus) "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."))
+
+    ;; Selitteet ovat jäämässä pois käytöstä. Tässä testissä ne kuitenkin voivat olla olemassa aiheen ja tarkenteen kanssa.
+    ;; Tulevaisuudessa selite ja aihe+tarkenne ei voi olla samalla ilmoituksella.
     (is (= #{"auraustarve"
-             "aurausvallitNakemaesteena"} (:selitteet ilmoitus))))
+             "aurausvallitNakemaesteena"} (:selitteet ilmoitus)))
+    (is (= 1 (:aihe ilmoitus)))
+    (is (= 1 (:tarkenne ilmoitus))))
   (poista-ilmoitus 123456789))
 
 (deftest tarkista-ilmoituksen-paivitys

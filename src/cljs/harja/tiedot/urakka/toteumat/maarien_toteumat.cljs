@@ -43,7 +43,6 @@
 (defrecord TehtavatHakuOnnistui [vastaus parametrit])
 (defrecord TehtavatHakuEpaonnistui [vastaus])
 
-(defrecord HaeTehtavat [parametrit])
 (defrecord LahetaLomake [lomake])
 (defrecord LisaaToteuma [lomake])
 (defrecord PaivitaLomake [lomake polku indeksi])
@@ -116,14 +115,8 @@
                                   (re-find #"LIIKENNEYMPÄRISTÖN HOITO" otsikko) "Liikenneympäristön hoito|l.ymp.hoito"
                                   (re-find #"SORATEIDEN HOITO" otsikko) "Soratiet|sorateiden"
                                   :else ""))
-         parametrit {:polku :tehtavat
-                     :filtteri (case tyyppi
-                                 ;; TODO: saako tähän jonkin filtterin sitä varten, ettei pystyis kirjaamaan määrämitattavia äkillisille ja korjauksille
-                                 ;; :maaramitattava
-
-                                 :lisatyo
+         parametrit {:filtteri (if (= :lisatyo tyyppi)
                                  #(re-find (re-pattern (str "(" toimenpide-re-string ")")) (:tehtava %))
-
                                  (constantly true))}]
      (tuck-apurit/post! rajapinta
                         {:otsikko otsikko
@@ -198,24 +191,23 @@
                toteumat))
 
 (defn- uusi-pvm-lomakkeelle [app]
-  (let [vuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
+  ;; huom: tälle logiikalle ei ole kiveenhakattua säännöstöä olemassa. Koetetaan kuitenkin auttaa
+  ;; käyttäjää hyödyntämällä oletusta, että loppuvuonna (loka-joulukuu) syötetään usein edellisen hoitokauden määriä syyskuulle
+  ;; jos taas eletään tammi-syyskuuta, ei tehdä näitä oletuksia vaan käytetään tätä hetkeä
+  (let [nyt-tammi-syyskuu? (< (pvm/kuukausi (pvm/nyt)) 10)
+        vuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
                 ; Käytetään loppuvuonna valittua hoitokauden alkuvuotta
                 (if (< (:hoitokauden-alkuvuosi app) (pvm/vuosi (pvm/nyt)))
                   (inc (:hoitokauden-alkuvuosi app))        ;; Yritetään määritellä aina loppu hoitokausi
                   (:hoitokauden-alkuvuosi app))
                 ; Käytetään alkuvuonna valittua hoitokauden loppuvuotta
                 (+ 1 (:hoitokauden-alkuvuosi app)))
-        kuukausi (cond
-                   ; Valitun hoitokauden alkuvuosi täsmää tähän hetkeen
-                   (= (:hoitokauden-alkuvuosi app) (pvm/vuosi (pvm/nyt)))
-                   (- (pvm/kuukausi (pvm/nyt)) 1)
-                   ; Valitun hoitokauden alkuvuosi on aiemmin, kuin tämä hetki
-                   (< (:hoitokauden-alkuvuosi app) (pvm/vuosi (pvm/nyt)))
-                   8  ; Otetaan hoitokauden viimeinen kuukausi
-                   :else
-                   (- (pvm/kuukausi (pvm/nyt)) 1)
-                   )
-        paiva 1
+        kuukausi (if nyt-tammi-syyskuu?
+                   (- (pvm/kuukausi (pvm/nyt)) 1) ;; tammi-syyskuussa käytetään tätä hetkeä...
+                   8) ;; ... loppuvuonna tarjotaan kirjaamista syyskuulle
+        paiva (if nyt-tammi-syyskuu?
+                (pvm/paiva (pvm/nyt)) ;; tammi-syyskuussa käytetään tätä hetkeä...
+                1)
         uusi-pvm (pvm/luo-pvm vuosi kuukausi paiva)]
     uusi-pvm))
 
@@ -280,10 +272,6 @@
           (assoc-in app [:hakufiltteri polku] arvo)
           (assoc-in app [:toteutuneet-maarat-grouped] (ryhmittele-tehtavat (:toteutuneet-maarat app)
                                                                            (:hakufiltteri app)))))
-  HaeTehtavat
-  (process-event [{{:keys [toimenpide]} :parametrit} app]
-    (hae-tehtavat-tyypille app toimenpide)
-    app)
 
   LahetaLomake
   (process-event [{lomake :lomake} app]

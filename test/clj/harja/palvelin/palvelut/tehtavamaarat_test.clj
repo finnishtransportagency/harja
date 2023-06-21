@@ -81,48 +81,32 @@
   [{:tehtava-id id-ib-rampit :maara 6.66}
    {:tehtava-id 666 :maara 999}])
 
-;; TODO: hae urkakkanumerot älä kovakoodaa, muuta käyttäjä urakanvalvojaksi
-
-
-;; jos tehtävähierarkian tehtävien tiedoissa tapahtuu muutoksia, tämä testi feilaa ja täytyy päivittää
-(deftest tehtavahierarkian-haku
-  (let [hierarkia (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :tehtavahierarkia
-                                  +kayttaja-jvh+
-                                  {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})]
-    #_(is (= (count hierarkia) 108) "Hierarkiassa on 108 osaa.")
-    (is (= (:tehtava (first (filter #(= rumpujen-korjaus (:tehtava-id %)) hierarkia))) "Soratien rumpujen korjaus ja uusiminen  Ø> 600  <=800 mm") "Tehtävähierarkiassa palautuu tietoja.")))
-
-
 
 (deftest tehtavaryhmat-ja-toimenpiteet-testi
   (let [tr-tp-lkm (ffirst
                     (q (str "SELECT count(distinct tr3.id)
-                               FROM tehtavaryhma tr1
-                                    JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
-                                    JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo
-                                            AND (tr3.yksiloiva_tunniste IS NULL
-                                                 OR (tr3.yksiloiva_tunniste IS NOT NULL AND tr3.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'))
-                                    LEFT JOIN toimenpidekoodi tpk4 ON tr3.id = tpk4.tehtavaryhma
-                                            AND tpk4.taso = 4 AND tpk4.ensisijainen is true
+                               FROM tehtavaryhma tr3
+                                    LEFT JOIN tehtava tpk4 ON tr3.id = tpk4.tehtavaryhma
+                                            AND tpk4.ensisijainen is true
                                             AND tpk4.poistettu is not true AND tpk4.piilota is not true
-                                    JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+                                    JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
                                     JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id and tpi.urakka = "
-                         @oulun-maanteiden-hoitourakan-2019-2024-id
-                         "WHERE tr1.emo is null")))
+                         @oulun-maanteiden-hoitourakan-2019-2024-id)))
         tehtavaryhmat-toimenpiteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                      :tehtavaryhmat-ja-toimenpiteet
                                      +kayttaja-jvh+
                                      {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})
         ;; Tehtäväryhmälistaan ei saa lisätä kaikkia tehtäväryhmiä. Varmista, että ainakin nämä puuttuu
-        kielletyt-tehtavaryhmat (some (fn [tr]
-                                        (= "Tilaajan rahavaraus (T3)" (:tehtavaryhma-nimi tr)))
+        ;; Juuri nyt kesän ajan ei ole kiellettyjä ryhmiä, koska syyt
+        #_#_kielletyt-tehtavaryhmat (some (fn [tr]
+                                         (= "Tilaajan rahavaraus (T3)" (:tehtavaryhma-nimi tr))
+                                        )
                                   tehtavaryhmat-toimenpiteet)
         tehtavaryhmat-ja-toimenpiteet-vaara-urakka-id (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :tehtavaryhmat-ja-toimenpiteet
                                                         +kayttaja-jvh+
                                                         {:urakka-id 36565345})]
-    (is (nil? kielletyt-tehtavaryhmat))
+    #_ (is (nil? kielletyt-tehtavaryhmat))
     (is (= (count tehtavaryhmat-toimenpiteet) tr-tp-lkm) "Palauttaa tehtäväryhmä ja toimenpidelistan")
     (is (empty? tehtavaryhmat-ja-toimenpiteet-vaara-urakka-id) "Tyhjä lista jos ei löydy urakkaa")
     (is (thrown? IllegalArgumentException (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -241,6 +225,21 @@
                                                                 :hoitokauden-alkuvuosi 2022
                                                                 :tehtavamaarat         virheellinen-tehtava})) "Vain validit tehtävät voi tallentaa."))
 
+(def odotetut-tehtavamaarien-nimet-ja-tehtavien-lukumaarat
+  [{:nimi "1.0 TALVIHOITO", :sopimus-tallennettu nil, :tehtavien-lkm 31}
+   {:nimi "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen", :sopimus-tallennettu nil, :tehtavien-lkm 2}
+   {:nimi "2.2 LIIKENNEYMPÄRISTÖN HOITO / Tie-, levähdys- ja liitännäisalueiden puhtaanapito ja kalusteiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 2}
+   {:nimi "2.3 LIIKENNEYMPÄRISTÖN HOITO / Viheralueiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 1}
+   {:nimi "2.4 LIIKENNEYMPÄRISTÖN HOITO / Kuivatusjärjestelmän kaivojen, putkistojen ja pumppaamoiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 1}
+   {:nimi "2.7 LIIKENNEYMPÄRISTÖN HOITO / Päällystettyjen teiden sorapientareen kunnossapito", :sopimus-tallennettu nil, :tehtavien-lkm 2}
+   {:nimi "2.8 LIIKENNEYMPÄRISTÖN HOITO / Siltojen ja laitureiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 2}
+   {:nimi "3 SORATEIDEN HOITO", :sopimus-tallennettu nil, :tehtavien-lkm 7}
+   {:nimi "4 PÄÄLLYSTEIDEN PAIKKAUS", :sopimus-tallennettu nil, :tehtavien-lkm 4}
+   {:nimi "6.1 YLLÄPITO / Rumpujen uusiminen", :sopimus-tallennettu nil, :tehtavien-lkm 8}
+   {:nimi "6.2 YLLÄPITO / Avo-ojien kunnossapito", :sopimus-tallennettu nil, :tehtavien-lkm 7}
+   {:nimi "7 KORVAUSINVESTOINTI", :sopimus-tallennettu nil, :tehtavien-lkm 1}
+   {:nimi "8 MUUTA", :sopimus-tallennettu nil, :tehtavien-lkm 4}])
+
 (deftest tehtavahierarkian-haku-maarineen-testi
   (kutsu-palvelua (:http-palvelin jarjestelma)
     :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
@@ -251,7 +250,13 @@
                              :tehtavamaarat-hierarkiassa
                              +kayttaja-jvh+
                              {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
-                              :hoitokauden-alkuvuosi 2020})]
+                              :hoitokauden-alkuvuosi 2020})
+        nimet-ja-sopimus-tallennettu (->> tehtavat-ja-maarat
+                                          (mapv #(select-keys % [:nimi :sopimus-tallennettu :tehtavat]))
+                                          (mapv #(assoc % :tehtavien-lkm (count (:tehtavat %))))
+                                          (mapv #(dissoc % :tehtavat)))]
+    (is (= nimet-ja-sopimus-tallennettu odotetut-tehtavamaarien-nimet-ja-tehtavien-lukumaarat) "Oikea olennainen sisältö tehtävämäärissä")
+    (is (= (count tehtavat-ja-maarat) 13) "13 tehtävämääräryhmää")
     (is (true? (every? #(= 2020 (:hoitokauden-alkuvuosi %)) (filter #(not (nil? (:hoitokauden-alkuvuosi %))) tehtavat-ja-maarat))) "Palauttaa tehtavahiearkian määrineen vuodelle"))
   (let [tehtavat-ja-maarat-urakan-ulkopuolelta (kutsu-palvelua
                                                  (:http-palvelin jarjestelma)

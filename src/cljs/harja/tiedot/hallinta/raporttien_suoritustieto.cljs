@@ -41,10 +41,14 @@
 ;; järjestetty tuotantodatan yleisyyden mukaan
 (def +mahdolliset-raportit+
   [[nil "Kaikki"]
-   ["laskutusyhteenveto-tuotekohtainen" "Laskutusyhteenveto MHU"]
+   ["laskutusyhteenveto-tuotekohtainen" "Laskutusyhteenveto, tuotekohtainen"]
+   ["laskutusyhteenveto-tyomaa" "Laskutusyhteenveto, työmaakokous"]
+   ["laskutusyhteenveto-mhu" "Laskutusyhteenveto MHU"]
    ["laskutusyhteenveto" "Laskutusyhteenveto alueurakat"]
+   ["suolatoteumat-rajoitusalueilla" "Suolatoteumat rajoitusalueilla"]
    ["ymparistoraportti" "Ympäristöraportti"]
    ["ilmoitusraportti" "Ilmoitusraportti"]
+   ["ilmoitukset-raportti" "Ilmoitukset-raportti"]
    ["tyomaakokous" "Työmaakokousraportti"]
    ["muutos-ja-lisatyot" "Muutos- ja lisätyot"]
    ["indeksitarkistus" "Indeksitarkistus"]
@@ -75,6 +79,7 @@
    ["vesivaylien-laskutusyhteenveto" "Vesiväylien laskutusyhteenveto"]
    ["sanktioraportti-yllapito" "Sanktioraportti yllapito"]
    ["vastaanottotarkastusraportti" "Vastaanottotarkastusraportti"]
+   ["kanavien-muutos-ja-lisatyot" "Kanavien muutos-ja lisätyöt"]
    ["kanavien-laskutusyhteenveto" "Kanavien laskutusyhteenveto"]
    ["kanavien-liikennetapahtumat" "Kanavien liikennetapahtumat"]])
 

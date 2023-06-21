@@ -92,9 +92,8 @@
 
         oulun-mhu-urakan-maarien-toteuma-2019 (ffirst (q
                                                         (str "SELECT count(*)
-                                                              FROM urakka_tehtavamaara ut, toimenpidekoodi tk
+                                                              FROM urakka_tehtavamaara ut, tehtava tk
                                                               WHERE ut.tehtava = tk.id
-                                                              AND tk.taso = 4
                                                               AND tk.aluetieto = false
                                                               AND tk.ensisijainen = true
                                                               AND tk.tehtavaryhma is not null
@@ -102,9 +101,8 @@
                                                               AND urakka = " urakka-id)))
         oulun-mhu-urakan-maarien-toteuma-2020 (ffirst (q
                                                         (str "SELECT count(*)
-                                                              FROM urakka_tehtavamaara ut, toimenpidekoodi tk
+                                                              FROM urakka_tehtavamaara ut, tehtava tk
                                                               WHERE ut.tehtava = tk.id
-                                                              AND tk.taso = 4
                                                               AND tk.ensisijainen = true
                                                               AND tk.aluetieto = false
                                                               AND tk.tehtavaryhma is not null
@@ -112,9 +110,8 @@
                                                               AND urakka = " urakka-id)))
         oulun-mhu-urakan-maarien-toteuma-2021 (ffirst (q
                                                         (str "SELECT count(*)
-                                                              FROM urakka_tehtavamaara ut, toimenpidekoodi tk
+                                                              FROM urakka_tehtavamaara ut, tehtava tk
                                                               WHERE ut.tehtava = tk.id
-                                                              AND tk.taso = 4
                                                               AND tk.ensisijainen = true
                                                               AND tk.aluetieto = false
                                                               AND tk.tehtavaryhma is not null
@@ -144,7 +141,7 @@
         oulun-mhu-urakan-maarien-toteuma-21 (q (str "SELECT *
                                                        FROM
                                                             urakka_tehtavamaara ut,
-                                                            toimenpidekoodi tk,
+                                                            tehtava tk,
                                                             tehtavaryhma tr
                                                        WHERE tk.id = ut.tehtava
                                                          AND tr.id = tk.tehtavaryhma
@@ -152,7 +149,7 @@
                                                          AND tr.otsikko = '2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen'
                                                          AND ut.urakka = " urakka-id))
         oulun-mhu-urakan-maarien-toteuma-muuta (q (str "SELECT *
-                                                         FROM toimenpidekoodi tk,
+                                                         FROM tehtava tk,
                                                               tehtavaryhma tr,
                                                               urakka u
                                                          WHERE tk.tehtavaryhma = tr.id

@@ -34,7 +34,7 @@ ORDER BY u.alkupvm DESC, u.nimi;
 -- name: luo-vesivaylaurakan-toimenpideinstanssi<!
 INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm)
 VALUES (:urakka_id, :nimi, (SELECT id
-                            FROM toimenpidekoodi
+                            FROM toimenpide
                             WHERE nimi = :toimenpide_nimi), :alkupvm, :loppupvm);
 
 -- name: luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
@@ -148,6 +148,14 @@ SELECT
           END as alue,
   u.alkupvm,
   u.loppupvm,
+  CASE
+      WHEN u.kesakausi_alkupvm IS NOT NULL THEN
+          CONCAT(TO_CHAR(NOW(), 'YYYY'), '-', TO_CHAR(u.kesakausi_alkupvm, 'MM-DD'))::DATE
+      END AS "kesakausi-alkupvm",
+  CASE
+      WHEN u.kesakausi_loppupvm IS NOT NULL THEN
+          CONCAT(TO_CHAR(NOW(), 'YYYY'), '-', TO_CHAR(u.kesakausi_loppupvm, 'MM-DD'))::DATE
+      END AS "kesakausi-loppupvm",
   u.tyyppi,
   u.sopimustyyppi,
   u.indeksi,
@@ -702,7 +710,7 @@ WHERE hallintayksikko = :hal
 -- name: onko-urakalla-tehtavaa
 SELECT EXISTS(
     SELECT tpk.id
-    FROM toimenpidekoodi tpk
+    FROM tehtava tpk
       INNER JOIN toimenpideinstanssi tpi ON tpi.toimenpide = tpk.emo
     WHERE tpi.urakka = :urakkaid
           AND tpk.id = :tehtavaid);
@@ -931,6 +939,45 @@ ORDER BY CASE WHEN u.tyyppi = 'hoito' THEN 1
               WHEN u.tyyppi = 'vesivayla-kanavien-hoito' THEN 9
              END;
 
+-- name: hae-kaynnissa-oleva-tieurakka-urakkanumerolla
+-- single? : true
+-- Tämä on vastaava, kuin yllä oleva haku, mutta tämä ei palauta mahdollisesti kanavaurakoita, koska urakkanumeorissa
+-- on eri urakkatyyppien välillä ristiriitaisuutta.
+SELECT
+    u.id,
+    u.sampoid,
+    u.urakkanro,
+    u.nimi,
+    u.alkupvm,
+    u.loppupvm,
+    e.nimi        AS "elynimi",
+    e.elynumero,
+    o.nimi        AS "urakoitsija-nimi",
+    o.ytunnus     AS "urakoitsija-ytunnus",
+    o.katuosoite  AS "urakoitsija-katuosoite",
+    o.postinumero AS "urakoitsija-postinumero"
+FROM urakka u
+         JOIN organisaatio e ON e.id = u.hallintayksikko
+         JOIN organisaatio o ON o.id = u.urakoitsija
+WHERE u.urakkanro = :urakka
+  AND u.alkupvm <= current_date
+  AND u.loppupvm >= current_date
+  AND u.tyyppi in ('hoito',
+                 'teiden-hoito',
+                 'paallystys',
+                 'tiemerkinta',
+                 'valaistus',
+                 'tekniset-laitteet',
+                 'siltakorjaus')
+ORDER BY CASE WHEN u.tyyppi = 'hoito' THEN 1
+              WHEN u.tyyppi = 'teiden-hoito' THEN 2
+              WHEN u.tyyppi = 'paallystys' THEN 3
+              WHEN u.tyyppi = 'tiemerkinta' THEN 4
+              WHEN u.tyyppi = 'valaistus' THEN 5
+              WHEN u.tyyppi = 'tekniset-laitteet' THEN 6
+              WHEN u.tyyppi = 'siltakorjaus' THEN 7
+             END;
+
 -- name: onko-kaynnissa-urakkanro?
 -- single?: true
 SELECT exists(SELECT id
@@ -1096,3 +1143,9 @@ SELECT id, sampoid, nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke
        urakkanro as alueurakkanro, tyyppi, poistettu, velho_oid, luotu, muokattu
 FROM urakka
 ORDER BY alkupvm ASC;
+
+-- name: hae-valaistusurakan-geometria
+-- Simplifoidaan hieman geometriaa, koska niitä voi olla niin paljon.
+SELECT ST_Simplify(v.alue, 20, true) as alue
+  FROM valaistusurakka v
+       JOIN urakka u ON u.id = :id AND u.urakkanro = v.valaistusurakkanro;

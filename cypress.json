@@ -2,5 +2,10 @@
 	"baseUrl": "http://localhost:3000",
 	"watchForFileChanges": false,
     "experimentalStudio": false,
-    "videoUploadOnPasses": false
+    "videoUploadOnPasses": false,
+    "reporter": "junit",
+    "reporterOptions": {
+        "mochaFile": "/tmp/cypress-run/cypress/test-results/results-[hash].xml",
+        "toConsole": true
+    }
 }

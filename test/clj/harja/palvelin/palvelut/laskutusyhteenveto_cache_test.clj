@@ -192,7 +192,7 @@
   (testing "laskutusyhteenvedon-cache-tyhjenee-jos-muutoshinta-muuttuu"
     (let [urakka-id @oulun-alueurakan-2014-2019-id
           oulu-liik-ymp-hoito-tpi-id (hae-oulun-alueurakan-liikenneympariston-hoito-tpi-id)
-          vesakonraivaus-tpk-id (ffirst (q "SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus' AND taso = 4;"))
+          vesakonraivaus-tpk-id (ffirst (q "SELECT id FROM tehtava WHERE nimi = 'Vesakonraivaus';"))
           oulu-vesakonraivaus-muutoshinta-id (ffirst (q "SELECT id FROM muutoshintainen_tyo WHERE urakka = " urakka-id
                                                        " AND sopimus = " @oulun-alueurakan-2014-2019-paasopimuksen-id
                                                        " AND tehtava = " vesakonraivaus-tpk-id ";"))

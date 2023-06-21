@@ -33,6 +33,7 @@
     [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
     [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
+    [harja.palvelin.integraatiot.palautevayla.palautevayla-komponentti :as palautevayla]
 
     [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
     [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
@@ -71,6 +72,7 @@
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.info :as info]
     [harja.palvelin.palvelut.hallinta.rajoitusalue-pituudet :as rajoitusalue-pituudet]
+    [harja.palvelin.palvelut.hallinta.palauteluokitukset :as palauteluokitukset-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
@@ -104,6 +106,8 @@
     [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
     [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
+    [harja.palvelin.palvelut.tyomaapaivakirja :as tyomaapaivakirja]
+    [harja.palvelin.palvelut.palauteluokitukset :as palauteluokitukset]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -134,8 +138,10 @@
     [harja.palvelin.integraatiot.api.paikkaukset :as api-paikkaukset]
     [harja.palvelin.integraatiot.api.raportit :as api-raportit]
     [harja.palvelin.integraatiot.api.analytiikka :as analytiikka]
+    [harja.palvelin.integraatiot.api.tyomaapaivakirja :as api-tyomaapaivakirja]
     [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as api-sahkoposti]
     [harja.palvelin.integraatiot.vayla-rest.sampo-api :as api-sampo]
+
 
     [harja.palvelin.palvelut.tieluvat :as tieluvat]
 
@@ -516,6 +522,10 @@
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
                                 [:http-palvelin :db :turi])
 
+      :tyomaapaivakirja (component/using
+                          (tyomaapaivakirja/->Tyomaapaivakirja)
+                          [:http-palvelin :db])
+
       :valikatselmukset (component/using
                           (valikatselmukset/->Valikatselmukset)
                           [:http-palvelin :db])
@@ -550,7 +560,7 @@
       :geometriapaivitykset (component/using
                               (geometriapaivitykset/->Geometriapaivitykset
                                 (:geometriapaivitykset asetukset))
-                              [:db  :integraatioloki])
+                              [:db :integraatioloki])
 
       :api-yhteysvarmistus (component/using
                              (let [{:keys [ajovali-minuutteina
@@ -562,7 +572,7 @@
                                  url
                                  kayttajatunnus
                                  salasana))
-                             [:db  :integraatioloki])
+                             [:db :integraatioloki])
 
       :tilannekuva (component/using
                      (tilannekuva/->Tilannekuva)
@@ -588,7 +598,7 @@
 
       :urakan-tyotunnit (component/using
                           (urakan-tyotunnit/->UrakanTyotunnit)
-                          [:db  :http-palvelin :turi])
+                          [:db :http-palvelin])
 
       :hairioilmoitukset (component/using
                            (hairioilmoitukset/->Hairioilmoitukset)
@@ -602,12 +612,12 @@
       :reimari (component/using
                  (let [{:keys [url kayttajatunnus salasana]} (:reimari asetukset)]
                    (reimari/->Reimari url kayttajatunnus salasana))
-                 [:db  :integraatioloki])
+                 [:db :integraatioloki])
 
       :vkm (component/using
              (let [{url :url} (:vkm asetukset)]
                (vkm/->VKM url))
-             [:db  :integraatioloki])
+             [:db :integraatioloki])
 
       :api-jarjestelmatunnukset (component/using
                                   (api-jarjestelmatunnukset/->APIJarjestelmatunnukset)
@@ -632,17 +642,16 @@
       ;; Harja API
       :api-urakat (component/using
                     (api-urakat/->Urakat)
-                    [:http-palvelin :db  :integraatioloki])
+                    [:http-palvelin :db :integraatioloki])
       :api-laatupoikkeamat (component/using
                              (api-laatupoikkeamat/->Laatupoikkeamat)
-                             [:http-palvelin :db  :liitteiden-hallinta
-                              :integraatioloki])
+                             [:http-palvelin :db  :liitteiden-hallinta :integraatioloki])
       :api-paivystajatiedot (component/using
                               (api-paivystajatiedot/->Paivystajatiedot)
-                              [:http-palvelin :db  :integraatioloki])
+                              [:http-palvelin :db :integraatioloki])
       :api-pistetoteuma (component/using
                           (api-pistetoteuma/->Pistetoteuma)
-                          [:http-palvelin :db  :integraatioloki])
+                          [:http-palvelin :db :integraatioloki])
       :api-reittitoteuma (component/using
                            (api-reittitoteuma/->Reittitoteuma)
                            [:http-palvelin :db  :db-replica :integraatioloki])
@@ -651,10 +660,10 @@
                             [:http-palvelin :db  :tierekisteri :integraatioloki])
       :api-siltatarkastukset (component/using
                                (api-siltatarkastukset/->Siltatarkastukset)
-                               [:http-palvelin :db  :integraatioloki :liitteiden-hallinta])
+                               [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
       :api-tarkastukset (component/using
                           (api-tarkastukset/->Tarkastukset)
-                          [:http-palvelin :db  :integraatioloki :liitteiden-hallinta])
+                          [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
       :api-tyokoneenseuranta (component/using
                                (api-tyokoneenseuranta/->Tyokoneenseuranta)
                                [:http-palvelin :db])
@@ -670,45 +679,49 @@
                                    [:db])
       :api-varusteet (component/using
                        (api-varusteet/->Varusteet)
-                       [:http-palvelin :db  :integraatioloki :tierekisteri :vkm])
+                       [:http-palvelin :db :integraatioloki :tierekisteri :vkm])
       :api-ilmoitukset (component/using
                          (api-ilmoitukset/->Ilmoitukset)
-                         [:http-palvelin :db  :integraatioloki
+                         [:http-palvelin :db :integraatioloki
                           :tloik])
       :api-yllapitokohteet (component/using
                              (api-yllapitokohteet/->Yllapitokohteet)
                              [:http-palvelin :db :integraatioloki :liitteiden-hallinta :fim :api-sahkoposti :vkm])
       :api-ping (component/using
                   (api-ping/->Ping)
-                  [:http-palvelin :db  :integraatioloki])
+                  [:http-palvelin :db :integraatioloki])
 
       :api-yhteystiedot (component/using
                           (api-yhteystiedot/->Yhteystiedot)
-                          [:http-palvelin :db  :integraatioloki :fim])
+                          [:http-palvelin :db :integraatioloki :fim])
 
       :api-tiemerkintatoteuma (component/using
                                 (api-tiemerkintatoteuma/->Tiemerkintatoteuma)
-                                [:http-palvelin :db  :integraatioloki])
+                                [:http-palvelin :db :integraatioloki])
 
       :api-urakan-tyotunnit (component/using
                               (api-urakan-tyotunnit/->UrakanTyotunnit)
-                              [:http-palvelin :db  :integraatioloki :turi])
+                              [:http-palvelin :db :integraatioloki])
       :api-tieluvat (component/using
                       (api-tieluvat/->Tieluvat)
-                      [:http-palvelin :db  :integraatioloki :liitteiden-hallinta])
+                      [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
 
 
       :api-paikkaukset (component/using
                          (api-paikkaukset/->Paikkaukset)
-                         [:http-palvelin :db  :integraatioloki :yha-paikkauskomponentti])
+                         [:http-palvelin :db :integraatioloki :yha-paikkauskomponentti])
 
       :api-raportit (component/using
                       (api-raportit/->Raportit)
-                      [:http-palvelin :db  :integraatioloki])
+                      [:http-palvelin :db :integraatioloki])
 
       :api-analytiikka (component/using
                   (analytiikka/->Analytiikka (:kehitysmoodi asetukset))
-                  [:http-palvelin :db-replica  :integraatioloki])
+                  [:http-palvelin :db-replica :integraatioloki])
+
+      :api-tyomaapaivakirja (component/using
+                         (api-tyomaapaivakirja/->Tyomaapaivakirja)
+                         [:http-palvelin :db :integraatioloki])
 
       :tieluvat (component/using
                   (tieluvat/->Tieluvat)
@@ -769,7 +782,21 @@
       (component/using
         (yleiset-ajastukset/->YleisetAjastuket)
         [:db])
-      )))
+
+      :palautevayla
+      (component/using
+        (palautevayla/->Palautevayla (:palautevayla asetukset))
+        [:db :integraatioloki])
+
+      :palauteluokitukset
+      (component/using
+        (palauteluokitukset/->Palauteluokitukset)
+        [:http-palvelin :db])
+
+      :palauteluokitukset-hallinta
+      (component/using
+        (palauteluokitukset-hallinta/->PalauteluokitustenHallinta)
+        [:http-palvelin :db :palautevayla]))))
 
 (defonce harja-jarjestelma nil)
 
@@ -831,6 +858,7 @@
 (defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
   (try
     (let [asetukset (lue-asetukset asetusfile)]
+
       ;; Säikeet vain sammuvat, jos niissä nakataan jotain eikä sitä käsitellä siinä säikeessä. Tämä koodinpätkä
       ;; ottaa kaikki tällaiset throwablet kiinni ja logittaa sen.
       (Thread/setDefaultUncaughtExceptionHandler

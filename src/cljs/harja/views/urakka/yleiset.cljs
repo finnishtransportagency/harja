@@ -346,7 +346,9 @@
          :as yha-tiedot} (yha-tiedot ur)]
     [bs/panel {}
      "Yleiset tiedot"
-     [yleiset/tietoja {}
+     [yleiset/tietoja {:piirra-viivat? true
+                       :class "body-text"
+                       :tietorivi-luokka "padding-8 css-grid css-grid-columns-12rem-9"}
       "Urakan nimi:" (:nimi ur)
       "Urakan tunnus:" (:sampoid ur)
       "Urakkanumero:" (:urakkanro ur)
@@ -381,7 +383,11 @@
       ;; päällystys --> kokonaisurakka
       "Sopimustyyppi: " (yllapitourakan-sopimustyyppi ur)
       "Indeksi: " (when-not (#{:paallystys :paikkaus} (:tyyppi ur))
-                    [urakan-indeksi ur])]]))
+                    [urakan-indeksi ur])
+      "Urakan kesäaika: " [:<>
+                           [:span (str (pvm/fmt-paiva-ja-kuukausi-lyhyt (:kesakausi-alkupvm ur))
+                                    "–" (pvm/fmt-paiva-ja-kuukausi-lyhyt (:kesakausi-loppupvm ur)))]
+                           [:span " (tieliikenneilmoituksien kesävasteaika)"]]]]))
 
 
 (defn yhteyshenkilot [ur]

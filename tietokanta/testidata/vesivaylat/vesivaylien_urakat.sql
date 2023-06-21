@@ -151,9 +151,9 @@ INSERT INTO reimari_sopimuslinkki ("harja-sopimus-id", "reimari-sopimus-id") VAL
 INSERT INTO reimari_sopimuslinkki ("harja-sopimus-id", "reimari-sopimus-id") VALUES ((SELECT id FROM sopimus WHERE nimi = 'Rentoselän pääsopimus'), -26);
 
 -- TOIMENPIDEKOODIT
-INSERT INTO toimenpidekoodi (taso, emo, nimi)
+INSERT INTO toimenpide (taso, emo, nimi)
 VALUES (3, 132, 'Rannikon kauppamerenkulku');
-INSERT INTO toimenpidekoodi (taso, emo, nimi)
+INSERT INTO toimenpide (taso, emo, nimi)
 VALUES (3, 132, 'Rannikon muut');
 
 -- URAKKA-ALUEET

@@ -34,7 +34,7 @@
       padding: 0 15px;
     }
   }
-  label:not(.checkbox-label) {
+  label:not(.checkbox-label, .file-upload) {
     color: @black-light;
     font-family: 'Open Sans', serif;
     font-weight: 600;
@@ -343,6 +343,20 @@ fieldset.lomake-osa {
     /* Pakota elementit alekain
     flex-direction: column;*/
 
+  }
+
+  &-flex {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: @valistys-16;
+
+    &-kokonainen {
+      width: 100%;
+    }
+
+    &-puolikas {
+      width: ~"calc(50% - @{valistys-8})";
+    }
   }
 }
 

@@ -49,6 +49,13 @@
 (defn resetoi-tila []
   (reset! tila tila-arvot))
 
+(defn paivita-liikennenakyma []
+  ;; Kun kohteita/osia/urakkaliitoksia muokataan, resetoidaan liikennenäkymän tiedot
+  ;; Eli pakotetaan näkymän uudelleenlataus, jotta uudet teidot tulevat näkyviin ja vältymme erroreilta
+  (resetoi-tila)
+  (reset! nav/valittu-hallintayksikko-id nil)
+  (reset! nav/valittu-urakka-id nil))
+
 (defn uusi-tapahtuma
   ([]
    (uusi-tapahtuma istunto/kayttaja u/valittu-sopimusnumero nav/valittu-urakka (pvm/nyt)))
@@ -183,22 +190,33 @@
             (let [suuntia-olemassa? (pos? (hae-sulutuksen-suunta tapahtuma haluttu-toiminto haluttu-suunta))
                   toiminnot (filter (fn [toiminto]
                                       (or
-                                       (and
-                                        suuntia-olemassa?
-                                        (= haluttu-toiminto (::toiminto/toimenpide toiminto)))
+                                        (and
+                                          suuntia-olemassa?
+                                          (= haluttu-toiminto (::toiminto/toimenpide toiminto)))
 
-                                       (and
-                                        haluttu-toiminto
-                                        (= haluttu-toiminto (::toiminto/toimenpide toiminto))
-                                        (= haluttu-suunta nil))
+                                        (and
+                                          haluttu-toiminto
+                                          (= haluttu-toiminto (::toiminto/toimenpide toiminto))
+                                          (= haluttu-suunta nil))
 
-                                       (and
-                                        haluttu-palvelumuoto
-                                        (= haluttu-palvelumuoto (::toiminto/palvelumuoto toiminto))
-                                        (= haluttu-suunta nil)
-                                        (= haluttu-toiminto nil))))
-                                    (::lt/toiminnot tapahtuma))]
-              (+ acc (count toiminnot)))) 0 tapahtumat))
+                                         (and
+                                          haluttu-palvelumuoto
+                                          (= haluttu-palvelumuoto (::toiminto/palvelumuoto toiminto))
+                                          (= haluttu-suunta nil)
+                                          (= haluttu-toiminto nil))))
+                              (::lt/toiminnot tapahtuma))]
+
+              ;; Jos lasketaan itsepalveluita, palautetaan tapahtuman 'lkm' arvo (itsepalveluiden määrä)
+              (if (and
+                    (some? (first toiminnot))
+                    (= haluttu-palvelumuoto :itse))
+                (let [itsepalvelu-maara (-> (filter #(= (::toiminto/palvelumuoto %) :itse) toiminnot)
+                                          first
+                                          ::toiminto/lkm
+                                          int)]
+                  (+ acc itsepalvelu-maara))
+                (+ acc (count toiminnot)))
+              )) 0 tapahtumat))
 
 (defn tapahtumat-haettu [app tulos]
   (let [sulutukset-alas (laske-yhteenveto tulos :sulutus :alas nil)
@@ -214,9 +232,9 @@
                       :sulutukset-alas sulutukset-alas
                       :sillan-avaukset sillan-avaukset
                       :tyhjennykset tyhjennykset
-                      :yhteensa (+ sulutukset-ylos 
-                                   sulutukset-alas 
-                                   sillan-avaukset 
+                      :yhteensa (+ sulutukset-ylos
+                                   sulutukset-alas
+                                   sillan-avaukset
                                    tyhjennykset)}
 
         palvelumuoto {:paikallispalvelu paikallispalvelut
@@ -230,23 +248,40 @@
                                  muut)}]
 
     (swap! lt/yhteenveto-atom assoc :toimenpiteet toimenpiteet)
-    (swap! lt/yhteenveto-atom assoc :palvelumuoto palvelumuoto))
+    (swap! lt/yhteenveto-atom assoc :palvelumuoto palvelumuoto)
 
-  (-> app
-      (assoc :liikennetapahtumien-haku-kaynnissa? false)
-      (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false)
-      (assoc :haetut-tapahtumat tulos)
-      (assoc :tapahtumarivit (mapcat #(tapahtumarivit app %) tulos))
-      (assoc :raporttiparametrit
-             (raporttitiedot/usean-urakan-raportin-parametrit
-               (keep #(when (:valittu? %)
-                        (:nimi %))
-                     (:kayttajan-urakat (:valinnat app)))
-               :kanavien-liikennetapahtumat
-               {:alkupvm (first (:aikavali (:valinnat app)))
-                :loppupvm (second (:aikavali (:valinnat app)))
-                :urakkatyyppi :vesivayla-kanavien-hoito
-                :yhteenveto @lt/yhteenveto-atom}))))
+    (let [valitut-urakat (keep #(when
+                                  (:valittu? %)
+                                  (:nimi %))
+                           (:kayttajan-urakat (:valinnat app)))
+
+          urakkaa-valittuna (count valitut-urakat)
+          raportin-avain :kanavien-liikennetapahtumat
+          raporttiparametrit {:valitut-urakat valitut-urakat
+                              :alkupvm (first (:aikavali (:valinnat app)))
+                              :loppupvm (second (:aikavali (:valinnat app)))
+                              :urakkatyyppi :vesivayla-kanavien-hoito
+                              :yhteenveto @lt/yhteenveto-atom}
+
+          raporttitiedot (if (= 1 urakkaa-valittuna)
+                           ;; 1 urakka valittuna, suoritetaan raportti yhden urakan kontekstissa
+                           ;; Tämä korjaa excel tallennuksen oikeudet urakoitsijoiden laadunvalvojille 
+                           (raporttitiedot/urakkaraportin-parametrit
+                             (:id @nav/valittu-urakka)
+                             raportin-avain
+                             raporttiparametrit)
+
+                           ;; Jos useita urakoita valittu, suoritetaan raportti monen urakan kontekstissa
+                           (raporttitiedot/usean-urakan-raportin-parametrit
+                             valitut-urakat
+                             raportin-avain
+                             raporttiparametrit))]
+      (-> app
+        (assoc :liikennetapahtumien-haku-kaynnissa? false)
+        (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false)
+        (assoc :haetut-tapahtumat tulos)
+        (assoc :tapahtumarivit (mapcat #(tapahtumarivit app %) tulos))
+        (assoc :raporttiparametrit raporttitiedot)))))
 
 (defn tallennusparametrit [t]
   (-> t
@@ -460,13 +495,23 @@
 
 (defn nayta-edelliset-alukset? [{:keys [valittu-liikennetapahtuma
                                         edellisten-haku-kaynnissa?
+                                        haetut-sopimukset
                                         edelliset]}]
-  (boolean
-    (and (::lt/kohde valittu-liikennetapahtuma)
-         (not edellisten-haku-kaynnissa?)
-         (or (:alas edelliset) (:ylos edelliset))
-         (some? (:valittu-suunta valittu-liikennetapahtuma))
-         (not (id-olemassa? (::lt/id valittu-liikennetapahtuma))))))
+
+  (let [sopimus-id (-> valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
+        ketjutus-kaytossa? (first (filter (fn[sopimus]
+                                            (= sopimus-id (::sop/id sopimus))) haetut-sopimukset))
+        ketjutus-kaytossa? (boolean (::sop/ketjutus ketjutus-kaytossa?))]
+
+    ;; Onko ketjutus käytössä tällä sopimuksella/urakalla?
+    (if ketjutus-kaytossa?
+      (boolean
+        (and (::lt/kohde valittu-liikennetapahtuma)
+          (not edellisten-haku-kaynnissa?)
+          (or (:alas edelliset) (:ylos edelliset))
+          (some? (:valittu-suunta valittu-liikennetapahtuma))
+          (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))))
+      false)))
 
 (defn nayta-suunnan-ketjutukset? [{:keys [valittu-liikennetapahtuma]} suunta tiedot]
   (boolean

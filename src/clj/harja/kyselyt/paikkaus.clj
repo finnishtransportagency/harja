@@ -447,8 +447,13 @@
                    (luo-paikkaus db uusi-paikkaus))
         _ (tallenna-tienkohdat db (::paikkaus/id paikkaus) [tienkohdat])
         ]
-    paikkaus)
-  )
+    paikkaus))
+
+(defn tallenna-urem-paikkaus-excelista [db paikkaus]
+  (let [tienkohdat (::paikkaus/tienkohdat paikkaus)
+        paikkaus (luo-paikkaus db (dissoc paikkaus ::paikkaus/tienkohdat))]
+    (tallenna-tienkohdat db (::paikkaus/id paikkaus) [tienkohdat])
+    paikkaus))
 
 (defn tallenna-paikkaustoteuma
   "Tallentaa paikkauskustannuksiin liittyvän yksittäisen rivin tiedot."

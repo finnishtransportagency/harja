@@ -373,7 +373,7 @@
             :tyyppi :komponentti
             :komponentti (fn []
                            [harja.ui.yleiset/varoitus-vihje
-                            "Urapaikkauksen toteumat voi tuoda vain rajapintojen kautta" nil])
+                            "Urapaikkauksen toteumat voi tuoda Harjan rajapinnan tai Excel-tiedoston avulla" nil])
             ::lomake/col-luokka "col-xs-12"
             :rivi-luokka "lomakeryhman-rivi-tausta"}))
        ;; Kun POT raportoitava, niin näytä potin tila

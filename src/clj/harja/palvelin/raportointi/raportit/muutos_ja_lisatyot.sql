@@ -43,7 +43,7 @@ FROM toteuma_tehtava tt
   JOIN toteuma t ON (tt.toteuma = t.id AND
                      t.tyyppi::TEXT IN (:tyotyypit) AND
                      t.poistettu IS NOT TRUE)
-  JOIN toimenpidekoodi tpk4 ON tpk4.id = tt.toimenpidekoodi
+  JOIN tehtava tpk4 ON tpk4.id = tt.toimenpidekoodi
   JOIN toimenpideinstanssi tpi
     ON (tpi.toimenpide = tpk4.emo AND tpi.urakka = t.urakka)
   LEFT JOIN muutoshintainen_tyo mht
@@ -65,7 +65,7 @@ WHERE
                 FROM urakka
                 WHERE hallintayksikko = :hallintayksikko))
   AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                    FROM toimenpidekoodi tpk
+                                                    FROM tehtava tpk
                                                     WHERE tpk.emo = :tpi))
   AND t.alkanut BETWEEN :alku AND :loppu;
 
@@ -97,7 +97,7 @@ FROM toteuma_tehtava tt
   JOIN toteuma t ON (tt.toteuma = t.id AND
                      t.tyyppi::TEXT  IN (:tyotyypit) AND
                      t.poistettu IS NOT TRUE)
-  JOIN toimenpidekoodi tpk4 ON tpk4.id = tt.toimenpidekoodi
+  JOIN tehtava tpk4 ON tpk4.id = tt.toimenpidekoodi
   JOIN toimenpideinstanssi tpi
     ON (tpi.toimenpide = tpk4.emo AND tpi.urakka = t.urakka)
   LEFT JOIN muutoshintainen_tyo mht
@@ -123,7 +123,7 @@ WHERE
                 FROM urakka
                 WHERE hallintayksikko = :hallintayksikko))
   AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                    FROM toimenpidekoodi tpk
+                                                    FROM tehtava tpk
                                                     WHERE tpk.emo = :tpi))
   AND t.alkanut BETWEEN :alku AND :loppu
 GROUP BY hy.id, t.tyyppi;
@@ -153,7 +153,7 @@ FROM toteuma_tehtava tt
   JOIN toteuma t ON (tt.toteuma = t.id AND
                      t.tyyppi::TEXT  IN (:tyotyypit) AND
                      t.poistettu IS NOT TRUE)
-  JOIN toimenpidekoodi tpk4 ON tpk4.id = tt.toimenpidekoodi
+  JOIN tehtava tpk4 ON tpk4.id = tt.toimenpidekoodi
   JOIN toimenpideinstanssi tpi
     ON (tpi.toimenpide = tpk4.emo AND tpi.urakka = t.urakka)
   LEFT JOIN muutoshintainen_tyo mht
@@ -173,7 +173,7 @@ WHERE
     END))
   AND u.id IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
   AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                    FROM toimenpidekoodi tpk
+                                                    FROM tehtava tpk
                                                     WHERE tpk.emo = :tpi))
   AND t.alkanut BETWEEN :alku AND :loppu
 GROUP BY u.id, t.tyyppi;

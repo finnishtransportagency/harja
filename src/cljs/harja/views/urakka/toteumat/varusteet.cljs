@@ -45,7 +45,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept send-to]]))
 
-(def nayta-max-toteumaa 500)
+(def nayta-max-toteumaa 2000)
 
 (defn oikeus-varusteiden-muokkaamiseen? []
   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
@@ -64,12 +64,17 @@
 
 (defn toteumataulukko [e! toteumat varustetoteumien-haku-kaynnissa?]
   [:span
+   (when (> (count toteumat) nayta-max-toteumaa)
+     [:div.alert-warning
+      (str "Toteumia löytyi yli " nayta-max-toteumaa ". Tarkenna hakurajausta.")])
+
    [grid/grid
     {:otsikko "Varustetoteumat"
      :tyhja (if varustetoteumien-haku-kaynnissa?
               [ajax-loader "Haetaan toteumia..." {:sama-rivi? true}]
               [:span "Toteumia ei löytynyt"])
      :tunniste :id
+     :sivuta 100
      :rivi-klikattu #(e! (v/->ValitseToteuma %))}
     [{:tyyppi :vetolaatikon-tila :leveys 5}
      {:otsikko "Tehty" :tyyppi :pvm :fmt pvm/pvm-aika :nimi :luotu :leveys 10}
@@ -83,23 +88,21 @@
       :hae (fn [rivi]
              (tierekisteri-varusteet/varuste-toimenpide->string (:toimenpide rivi)))}
      {:otsikko "Tie" :nimi :tie :tyyppi :positiivinen-numero :leveys 10 :tasaa :oikea
-      :hae #(get-in % [:tierekisteriosoite :numero])}
+      :hae #(get-in % [:tierekisteriosoite :numero]) :kokonaisluku? true}
      {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
-      :hae #(get-in % [:tierekisteriosoite :alkuosa])}
+      :hae #(get-in % [:tierekisteriosoite :alkuosa]) :kokonaisluku? true}
      {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
-      :hae #(get-in % [:tierekisteriosoite :alkuetaisyys])}
+      :hae #(get-in % [:tierekisteriosoite :alkuetaisyys]) :kokonaisluku? true}
      {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
-      :hae #(get-in % [:tierekisteriosoite :loppuosa])}
+      :hae #(get-in % [:tierekisteriosoite :loppuosa]) :kokonaisluku? true}
      {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
-      :hae #(get-in % [:tierekisteriosoite :loppuetaisyys])}
-     {:otsikko "Yleinen kuntoluokitus" :nimi :kuntoluokka :tyyppi :positiivinen-numero :leveys 10}
+      :hae #(get-in % [:tierekisteriosoite :loppuetaisyys]) :kokonaisluku? true}
+     {:otsikko "Yleinen kuntoluokitus" :nimi :kuntoluokka :tyyppi :positiivinen-numero :leveys 10 :kokonaisluku? true
+      :tasaa :oikea}
      {:otsikko "Lähetys Tierekisteriin" :nimi :lahetyksen-tila :tyyppi :komponentti :leveys 9
       :komponentti #(nayta-varustetoteuman-lahetyksen-tila %)
       :fmt pvm/pvm-aika}]
-    (take nayta-max-toteumaa toteumat)]
-   (when (> (count toteumat) nayta-max-toteumaa)
-     [:div.alert-warning
-      (str "Toteumia löytyi yli " nayta-max-toteumaa ". Tarkenna hakurajausta.")])])
+    (take nayta-max-toteumaa toteumat)] ])
 
 (defn valinnat [e! valinnat]
   [:span
@@ -423,7 +426,7 @@
        [yleiset/info-laatikko :vahva-ilmoitus "Varusteiden syöttäminen Harjan kautta päättyy" "Varusteet syötetään jatkossa urakoitsijoiden omien järjestelmien kautta.
         Siirtymävaiheessa varustekirjaukset voidaan kirjata urakoitsijan järjestelmään tai Velhon excel-lomakkeella.
         Vanhat varustekirjaukset löytyvät Harjasta edelleen, mutta varusteiden yksityiskohtaisia tietoja ei voida tarkastella.
-        Velhon varustetiedot tulevat Harjaan näkyviin kesällä 2022." "100%"]
+        Velhon varustetiedot tulevat Harjaan näkyviin arviolta kesällä 2023." "100%"]
        (when virhe
          (yleiset/virheviesti-sailio virhe (fn [_] (e! (v/->VirheKasitelty)))))
        [kartta/kartan-paikka]

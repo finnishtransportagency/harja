@@ -275,3 +275,134 @@
     (is (= "01.10.2021-30.09.2022" (pvm/hoitokausi-str-alkuvuodesta alkuvuosi)) "Hoitokauden formatointi onnistuu")
     (is (= "01.10.2022-30.09.2023" (pvm/hoitokausi-str-alkuvuodesta (inc alkuvuosi))) "Hoitokauden formatointi onnistuu")
     (is (nil? (pvm/hoitokausi-str-alkuvuodesta nil)) "Nil ei aiheuta poikkeutta")))
+
+(deftest rajapinta-str-aika->sql-timestamp-test-toimii
+  (is (= (pvm/rajapinta-str-aika->sql-timestamp "2023-04-14T09:07:20.162457Z") #inst "2023-04-14T09:07:20.000-00:00"))
+  (is (= (pvm/rajapinta-str-aika->sql-timestamp "2023-04-14T09:07:20.12345Z") #inst "2023-04-14T09:07:20.000-00:00"))
+  (is (= (pvm/rajapinta-str-aika->sql-timestamp "2023-04-14T09:07:20.1234Z") #inst "2023-04-14T09:07:20.000-00:00"))
+  (is (= (pvm/rajapinta-str-aika->sql-timestamp "2023-04-14T09:07:20.123Z") #inst "2023-04-14T09:07:20.000-00:00"))
+  (is (= (pvm/rajapinta-str-aika->sql-timestamp "2023-04-14T09:07:20.12Z") #inst "2023-04-14T09:07:20.000-00:00"))
+  (is (= (pvm/rajapinta-str-aika->sql-timestamp "2023-04-14T09:07:20.1Z") #inst "2023-04-14T09:07:20.000-00:00")))
+
+(deftest rajapinta-str-aika->sql-timestamp-test-toimii2
+  (is (= (pvm/rajapinta-str-aika->sql-timestamp "2023-04-20T07:21:17+01") #inst "2023-04-20T06:21:17.000-00:00"))
+  (is (= (pvm/rajapinta-str-aika->sql-timestamp "2023-04-20T08:21:17+03") #inst "2023-04-20T05:21:17.000-00:00"))
+  (is (= (pvm/rajapinta-str-aika->sql-timestamp "2023-04-14T09:07:20.162457Z") #inst "2023-04-14T09:07:20.000-00:00")))
+
+(deftest rajapinta-str-aika->sql-timestamp-test-epaonnistuu
+  (is (= (pvm/rajapinta-str-aika->sql-timestamp "2023-04-14T09:07:2") nil)))
+
+(deftest suomen-lomapaivat-vuodelle
+  ;; https://www.timeanddate.com/holidays/finland/2033 (tarkasta täältä)
+  (is (= (pvm/lomapaivat-vuodelle 2033)
+        '({:nimi "Uudenvuodenpäivä", :pvm "2033-01-01"}
+          {:nimi "Loppiainen", :pvm "2033-01-06"}
+          {:nimi "Vappu", :pvm "2033-05-01"}
+          {:nimi "Itsenäisyyspäivä", :pvm "2033-12-06"}
+          {:nimi "Jouluaatto", :pvm "2033-12-24"}
+          {:nimi "Joulupäivä", :pvm "2033-12-25"}
+          {:nimi "Tapaninpäivä", :pvm "2033-12-26"}
+          {:nimi "Pitkäperjantai", :pvm "2033-04-15"}
+          {:nimi "Pääsiäispäivä", :pvm "2033-04-17"}
+          {:nimi "2. Pääsiäispäivä", :pvm "2033-04-18"}
+          {:nimi "Helatorstai", :pvm "2033-05-26"}
+          {:nimi "Helluntaipäivä", :pvm "2033-06-05"}
+          {:nimi "Juhannusaatto", :pvm "2033-06-24"}
+          {:nimi "Juhannuspäivä", :pvm "2033-06-25"}
+          {:nimi "Pyhäinpäivä", :pvm "2033-11-05"})))
+
+  (is (= (pvm/lomapaivat-vuodelle 2023)
+        '({:nimi "Uudenvuodenpäivä", :pvm "2023-01-01"}
+          {:nimi "Loppiainen", :pvm "2023-01-06"}
+          {:nimi "Vappu", :pvm "2023-05-01"}
+          {:nimi "Itsenäisyyspäivä", :pvm "2023-12-06"}
+          {:nimi "Jouluaatto", :pvm "2023-12-24"}
+          {:nimi "Joulupäivä", :pvm "2023-12-25"}
+          {:nimi "Tapaninpäivä", :pvm "2023-12-26"}
+          {:nimi "Pitkäperjantai", :pvm "2023-04-07"}
+          {:nimi "Pääsiäispäivä", :pvm "2023-04-09"}
+          {:nimi "2. Pääsiäispäivä", :pvm "2023-04-10"}
+          {:nimi "Helatorstai", :pvm "2023-05-18"}
+          {:nimi "Helluntaipäivä", :pvm "2023-05-28"}
+          {:nimi "Juhannusaatto", :pvm "2023-06-23"}
+          {:nimi "Juhannuspäivä", :pvm "2023-06-24"}
+          {:nimi "Pyhäinpäivä", :pvm "2023-11-04"})))
+
+  (is (= (pvm/lomapaivat-vuodelle 2022)
+        '({:nimi "Uudenvuodenpäivä", :pvm "2022-01-01"}
+          {:nimi "Loppiainen", :pvm "2022-01-06"}
+          {:nimi "Vappu", :pvm "2022-05-01"}
+          {:nimi "Itsenäisyyspäivä", :pvm "2022-12-06"}
+          {:nimi "Jouluaatto", :pvm "2022-12-24"}
+          {:nimi "Joulupäivä", :pvm "2022-12-25"}
+          {:nimi "Tapaninpäivä", :pvm "2022-12-26"}
+          {:nimi "Pitkäperjantai", :pvm "2022-04-15"}
+          {:nimi "Pääsiäispäivä", :pvm "2022-04-17"}
+          {:nimi "2. Pääsiäispäivä", :pvm "2022-04-18"}
+          {:nimi "Helatorstai", :pvm "2022-05-26"}
+          {:nimi "Helluntaipäivä", :pvm "2022-06-05"}
+          {:nimi "Juhannusaatto", :pvm "2022-06-24"}
+          {:nimi "Juhannuspäivä", :pvm "2022-06-25"}
+          {:nimi "Pyhäinpäivä", :pvm "2022-11-05"}))))
+
+(deftest seuraava-arkipaiva
+  ;; Testataan seuraava arkipäivä viikolla (10.1. = arkipäivä (tiistai))
+  ;; --> Seuraava arkipäivä = 11.1. (keskiviikko)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 1 10))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 1 11))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan tavallinen viikonloppu (13.1. = arkipäivä (perjantai))
+  ;; --> Seuraava arkipäivä = 16.1. (maanantai)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 1 13))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 1 16))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan uusivuosi (31.12.2020 = arkipäivä (torstai), 1.1.2021. = Uudenvuodenpäivä (perjantai))
+  ;; --> Seuraava arkipäivä = 4.1.2021 (maanantai)
+  ;; Tässä on valittu testivuosi 2020 siten, että arkipyhiä sattuu sopivasti viikolle.
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2020 12 31))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2021 1 4))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan loppiainen (5.1. = arkipäivä (torstai), 6.1.2021. = Loppiainen (perjantai))
+  ;; --> Seuraava arkipäivä = 9.1. (maanantai)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 1 5))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 1 9))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan pääsiäinen (6.4. = arkipäivä, 7.4. = pitkäperjantai, 10.4. = 2. pääsiäispäivä)
+  ;; --> Seuraava arkipäivä = 11.4 (tiistai)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 4 6))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 4 11))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan vappu (28.4. = arkiperjantai, 1.5 = vappu)
+  ;; --> Seuraava arkipäivä = 2.5 (tiistai)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 4 28))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 5 2))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan helatorstai (17.5. = arkipäivä, 18.5. = helatorstai)
+  ;; --> Seuraava arkipäivä = 19.5 (perjantai)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 5 17))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 5 19))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan juhannus (22.6. = arkipäivä, 23.6. = juhannusaatto, 26.5. = juhannuspäivä)
+  ;; --> Seuraava arkipäivä = 26.6 (maanantai)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 6 22))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 6 26))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan itsenäisyyspäivä (5.12. = arkipäivä, 6.12. = itsenäisyyspäivä)
+  ;; --> Seuraava arkipäivä = 7.12. (torstai)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 12 5))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 12 7))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm)))
+
+  ;; Testataan joulunaika (22.12. = arkipäivä, 24.12. = jouluaatto, 25.12. = joulupäivä, 26.12. = Tapaninpäivä)
+  ;; --> Seuraava arkipäivä = 27.12. (torstai)
+  (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 12 22))
+        seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 12 27))]
+    (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm))))
