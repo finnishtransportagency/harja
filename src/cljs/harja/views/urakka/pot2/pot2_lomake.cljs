@@ -233,7 +233,9 @@
         perustietojen-virheet (perustietojen-virheet (::lomake/puuttuvat-pakolliset-kentat perustiedot))]
     [:div.pot-lomakkeen-virheet
      (when
-       (or (seq kulutuskerroksen-tekstit) (seq alustan-tekstit))
+       (or (seq kulutuskerroksen-tekstit)
+         (seq alustan-tekstit)
+         (some? perustietojen-virheet))
        [yleiset/info-laatikko :varoitus
         "Lomakkeessa on virheitä. Lomaketta ei voi lähettää tarkistettavaksi ennen virheiden korjausta. "
         [:<>

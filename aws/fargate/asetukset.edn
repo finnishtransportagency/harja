@@ -4,12 +4,12 @@
 
 
 {:kehitysmoodi false
- ;; TODO: Vaatii muutoksia, jos halutaan käyttää vanhaan tyyliin kovakoodattuja "sähke"-, eli OAM-headereita (AWS:ssä Cogniton headerit)
- :sahke-headerit {}
+ ;; Header-asetukset tulevat env-muuttujasta JSON-stringinä, joka parsitaan clojure-mapiksi
+ :sahke-headerit #=(eval (harja.tyokalut.env/env-json "HARJA_OHITUSKAISTA_HEADERIT"))
  :http-palvelin {:portti 3000 :url "http://localhost:3000/"
                  :threads 64
                  :max-body-size 33554432
-                 ;; TODO: Parametrisoi
+                 ;; Salainen avain csrf-tokenin generoimiseen
                  :anti-csrf-token "{{anti_csrf_token}}"
                  :salli-oletuskayttaja? false
                  :dev-resources-path nil}

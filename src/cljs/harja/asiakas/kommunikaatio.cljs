@@ -40,7 +40,12 @@
     (gstr/contains host "googleusercontent")
     (gstr/contains host "harja-gc")
     (kehitysymparistossa-localhost?* host)
-    (#{"harja-test.solitaservices.fi"} host)))
+    (#{"harja-test.solitaservices.fi"} host)
+
+    ;; AWS ympäristöt
+    ;; TODO: Onko ok myös lisätä aws stg-ympäristö (harjatest).
+    ;;       Kehiteysymparistossa-yhteiset? ja kehitysymparistossa? käyttötarkoitukset ovat hiukan hämääviä
+    (#{"harjadev.testivaylapilvi.fi" "harjatest.testivaylapilvi.fi"} host)))
 
 (defn kehitysymparistossa?
   "Tarkistaa ollaanko kehitysympäristössä"
@@ -55,8 +60,15 @@
   (let [host (.-host js/location)]
     (kehitysymparistossa-localhost?* host)))
 
+(defn vaylapilvi-ymparistossa?
+  [host]
+  (#{"harjadev.testivaylapilvi.fi" "harjatest.testivaylapilvi.fi" "harja.vaylapilvi.fi"} host))
+
 (def +polku+ (let [host (.-host js/location)]
-               (if (kehitysymparistossa-yhteiset? host)
+               (if (or
+                     ;; Meillä on oma alidomain aws-ympäristössä, joten /harja/ polku on tarpeeton siellä.
+                     (vaylapilvi-ymparistossa? host)
+                     (kehitysymparistossa-yhteiset? host))
                  "/"
                  "/harja/")))
 (defn polku []
