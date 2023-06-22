@@ -898,11 +898,12 @@ WHERE urakka_id = :urakka
   AND ulkoinen_oid = :ulkoinen_oid
 ORDER BY v.alkupvm;
 
--- name: paivita-varustetoteumat-oidilla-ulkoiset
+-- name: paivita-varusteen-toteuma
 UPDATE varustetoteuma_ulkoiset
-SET velho_varustetoimenpiteet = velho_varustetoimenpiteet || ARRAY[:velho_varustetoimenpiteet]::text[]
+SET toteuma = :toteuma :: varustetoteuma_tyyppi
 WHERE ulkoinen_oid = :ulkoinen_oid 
-AND alkupvm = :alkupvm
+AND :alkupvm >= COALESCE(alkupvm, '1900-01-01') 
+AND :alkupvm < COALESCE(loppupvm, '9999-12-31')
 RETURNING *;
 
 -- name: luo-varustetoteuma-ulkoiset<!
