@@ -91,6 +91,9 @@
                     :virhekohteen_vastaus (str kohde)}]
      (q-toteumat/tallenna-varustetoteuma-ulkoiset-virhe<! db hakuvirhe))))
 
+(defn lokita-urakkahakuvirhe [viesti]
+  (log/error viesti))
+
 (defn- urakka-sijainnin-avulla
   [db sijainti alkusijainti version-voimassaolo alkaen]
   (let [s (or sijainti alkusijainti)
@@ -305,8 +308,8 @@
                                 true
                                 (catch Throwable t
                                   (tallenna-virhe-fn kohde (str t " url: " url))
-                                  false)
-                                )) tallennettavat-kohteet)]
+                                  false)))
+                            tallennettavat-kohteet)]
           (every? true? tulokset)))
       false)))
 
@@ -360,7 +363,7 @@
         token (token-fn)]
     (if token
       (try+
-        (let [haku-alkanut (pvm/nyt)
+        (let [haku-alkanut (java.util.Date.)
               otsikot {"Content-Type" "application/json"
                        "Authorization" (str "Bearer " token)}
               http-asetukset {:metodi :GET
@@ -368,10 +371,8 @@
                               :otsikot otsikot}
               {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
               {tila :tila oidit :oidit} (jasenna-varusteiden-oidit url body headers tallenna-virhe-fn)]
-          (when (and tila (not-empty oidit))
-            (let [oidit (take 10 oidit) ; TODO: Poista tämä dev-feedback nopeutus
-                  _ (prn "oidit" oidit)
-                  oidit-alijoukot (partition
+          (if (and tila (not-empty oidit))
+            (let [oidit-alijoukot (partition
                                     +kohde-haku-maksimi-koko+
                                     +kohde-haku-maksimi-koko+
                                     nil
@@ -383,7 +384,12 @@
                 (do
                   (tallenna-hakuaika-fn haku-alkanut)
                   true)
-                false))))
+                false))
+            (if tila 
+              (do
+               (tallenna-hakuaika-fn haku-alkanut) 
+                true)
+              false)))
         (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
           (let [virheilmoitus (str "Haku Velhosta epäonnistui. Virheet: " virheet)]
             (tallenna-virhe-fn nil virheilmoitus))
@@ -472,9 +478,9 @@
   [urakka-kohteet-ndjson]
   (map #(try
           (json/read-str % :key-fn keyword)
-          (catch Throwable t (log/error
+          (catch Throwable t (lokita-urakkahakuvirhe
                                (str "JSON jäsennys epäonnistui. JSON (alku 200 mki): '"
-                                 (subs % 0 (min 199 (count %))) "'"))
+                                 (subs % 0 (min 199 (count %))) "'" t))
             nil))
     (str/split-lines urakka-kohteet-ndjson)))
 
@@ -482,37 +488,45 @@
 (defn- hae-ja-palauta-valimaiset-varustetoimenpiteet-velhosta [token
                                                                varuste-toimenpiteet-oid-url
                                                                varuste-toimenpiteet-kohteet-url
-                                                               konteksti]
+                                                               konteksti
+                                                               varuste-api-juuri-url]
   (when token
     (let [_ (log/debug "Varusteiden oidien hakemiseen käytetty url: " varuste-toimenpiteet-oid-url)
           oid-joukko (hae-oidt-velhosta token varuste-toimenpiteet-oid-url konteksti)
           _ (log/debug "oid-joukko" (count oid-joukko))]
       (when (seq oid-joukko)
         (let [vastaus (hae-kohteet-velhosta token varuste-toimenpiteet-kohteet-url oid-joukko konteksti)
-              kohteet (jasenna-urakka-kohteet vastaus)]
+              kohteet (kohteet-historia-ndjson->kohteet vastaus)]
           kohteet)))))
-
-;; TODO: Tämä on vain testausta varten
-(defn kasittele-valimaiset-toimenpiteet [valimaiset-toimenpiteet]
-  (let [oidit (map #(-> %
-                      (assoc-in  [:ominaisuudet :toimenpiteen-kohde] "1.2.246.578.4.3.12.512.310173995")
-                      (assoc-in  [:version-voimassaolo :alku] "2019-11-30")) valimaiset-toimenpiteet)
-        _ (log/debug "TÄMÄ ON TESTI INJEKTIO : välimäiset-oidit" (count oidit))]
-    oidit))
 
 
 (defn paivita-varustetoteumat-valimaisille-kohteille [valimaiset-toimenpiteet db]
-  (let [paivitetyt-kohteet (map (fn [valimainen-toimepide]
-                                  (let [varuste-oid (get-in valimainen-toimepide [:ominaisuudet :toimenpiteen-kohde])
-                                        alkupvm (-> (get-in valimainen-toimepide [:version-voimassaolo :alku])
-                                                  varuste-vastaanottosanoma/velho-pvm->pvm
-                                                  varuste-vastaanottosanoma/aika->sql)
-                                        paivitetty-varuste (q-toteumat/paivita-varustetoteumat-oidilla-ulkoiset db {:ulkoinen_oid varuste-oid
-                                                                                                                    :toteuma "lisatty" ;TODO: Oikea päättely tähän
-                                                                                                                    :velho_varustetoimenpiteet "varustetoimenpide/vtp02" ;; TODO Oikea päättely & varmista että ei tule duplikaatti arvoja
-                                                                                                                    :alkupvm alkupvm})]
-                                    paivitetty-varuste)) valimaiset-toimenpiteet)
-        _ (log/debug "Päivitettiin välimäiset toimenpiteet onnistuneesti" (count paivitetyt-kohteet) "/ " (count valimaiset-toimenpiteet) "kohteelle." paivitetyt-kohteet)]
+  (let [paivitetyt-kohteet (when (seq valimaiset-toimenpiteet)
+                             (keep (fn [valimainen-toimepide]
+                                    (when valimainen-toimepide
+                                      (let [varuste-oid (get-in valimainen-toimepide [:ominaisuudet :toimenpiteen-kohde])
+                                            alkupvm (-> (get-in valimainen-toimepide [:version-voimassaolo :alku])
+                                                      varuste-vastaanottosanoma/velho-pvm->pvm
+                                                      varuste-vastaanottosanoma/aika->sql)
+                                            toimenpide (get-in valimainen-toimepide [:ominaisuudet :toimenpide]) 
+                                            konversio (koodistot/konversio db "v/vtp" toimenpide)
+                                            _ (prn "valimainen-toimepide" valimainen-toimepide)
+                                            _ (log/debug "Päivitetään välimäistä toimenpidettä: oid:" varuste-oid "alkupvm:" alkupvm "toteuma:" konversio) 
+                                            paivitetyt-varusteet (try (q-toteumat/paivita-varustetoteumat-oidilla-ulkoiset
+                                                                      db
+                                                                      {:ulkoinen_oid varuste-oid
+                                                                       :toteuma konversio
+                                                                       :alkupvm alkupvm})
+                                                                 (catch Throwable t
+                                                                   (lokita-ja-tallenna-hakuvirhe
+                                                                     db valimainen-toimepide
+                                                                     (str "Välimäiseen varusteeseen yritetty toteuman päivistys epäonnistui. oid: " varuste-oid " alkupvm: " alkupvm " toimenpide: " toimenpide " konversio: " konversio " poikkeus:" t))
+                                                                   (throw t)))]
+                                        (when (seq paivitetyt-varusteet)
+                                          paivitetyt-varusteet)))) valimaiset-toimenpiteet))
+        _ (log/info "Päivitettiin välimäiset toimenpiteet onnistuneesti" (count paivitetyt-kohteet) "/ " (count valimaiset-toimenpiteet) "kohteelle")
+        ei-paivitetyt-toimenpiteet (set/difference (set valimaiset-toimenpiteet) (set paivitetyt-kohteet))
+        _ (log/info "Näille välimäisille toimenpiteille ei löytynyt päivitettävää varustetta:" ei-paivitetyt-toimenpiteet)]
     paivitetyt-kohteet))
 
 (defn tuo-uudet-varustetoteumat-velhosta
@@ -523,9 +537,7 @@
            varuste-kayttajatunnus
            varuste-salasana
            varuste-toimenpiteet-oid-url
-           varuste-toimenpiteet-kohteet-url] 
-    :or {varuste-toimenpiteet-oid-url "https://apiv2stgvelho.testivaylapilvi.fi/toimenpiderekisteri/api/v1/tunnisteet/toimenpiteet/valimaiset-varustetoimenpiteet"
-         varuste-toimenpiteet-kohteet-url "https://apiv2stgvelho.testivaylapilvi.fi/toimenpiderekisteri/api/v1/kohteet"} :as asetukset}]
+           varuste-toimenpiteet-kohteet-url] :as asetukset}]
   (try+
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "velho" "varustetoteumien-haku" nil
@@ -533,59 +545,55 @@
         (let [token-fn (fn [] (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana konteksti))
               token (token-fn)]
           (if token
-            (let [valimaiset-toimenpiteet (hae-ja-palauta-valimaiset-varustetoimenpiteet-velhosta token varuste-toimenpiteet-oid-url varuste-toimenpiteet-kohteet-url konteksti)
-                  _ (log/debug "Haettuja välimäisiä toimenpiteitä: " (count valimaiset-toimenpiteet))
-                  fake-toimenpiteet (kasittele-valimaiset-toimenpiteet valimaiset-toimenpiteet)
-                  _ (paivita-varustetoteumat-valimaisille-kohteille fake-toimenpiteet db)
-                  tulos (map
-                          (fn [tietolahde]
-                            (let [tietolahteen-kohdeluokka (:kohdeluokka tietolahde)
-                                  viimeksi-haettu (hae-viimeisin-hakuaika-lahteelle db tietolahteen-kohdeluokka)
-                                  _ (log/debug "Viimeksi haettu: " viimeksi-haettu "Kohdeluokka: " tietolahteen-kohdeluokka)
-                                  tallenna-hakuaika-fn (partial tallenna-viimeisin-hakuaika-kohdeluokalle db tietolahteen-kohdeluokka)
-                                  tallenna-virhe-fn (partial lokita-ja-tallenna-hakuvirhe db)
-                                  virhe-oidit-fn (partial virhe-oidit db)
-                                  tallenna-toteuma-fn (fn [{:keys [oid muokattu] :as kohde}]
-                                                        (try
-                                                          (let [{varustetoteuma :tulos
-                                                                 virheviesti :virheviesti
-                                                                 ohitusviesti :ohitusviesti} (jasenna-ja-tarkasta-varustetoteuma
-                                                                                             db (assoc kohde :kohdeluokka tietolahteen-kohdeluokka))]
-                                                            (cond varustetoteuma
-                                                                  (do
-                                                                    (log/debug "Tallennetaan kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid
-                                                                               " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku))
-                                                                    (lisaa-tai-paivita-kantaan db varustetoteuma kohde)
-                                                                    true)
+            (let [tulos (doall (map
+                                 (fn [tietolahde]
+                                   (let [tietolahteen-kohdeluokka (:kohdeluokka tietolahde)
+                                         viimeksi-haettu (hae-viimeisin-hakuaika-lahteelle db tietolahteen-kohdeluokka)
+                                         _ (log/debug "Viimeksi haettu: " viimeksi-haettu "Kohdeluokka: " tietolahteen-kohdeluokka)
+                                         tallenna-hakuaika-fn (partial tallenna-viimeisin-hakuaika-kohdeluokalle db tietolahteen-kohdeluokka)
+                                         tallenna-virhe-fn (partial lokita-ja-tallenna-hakuvirhe db)
+                                         virhe-oidit-fn (partial virhe-oidit db)
+                                         tallenna-toteuma-fn (fn [{:keys [oid muokattu] :as kohde}]
+                                                               (try
+                                                                 (let [{varustetoteuma :tulos
+                                                                        virheviesti :virheviesti
+                                                                        ohitusviesti :ohitusviesti} (jasenna-ja-tarkasta-varustetoteuma
+                                                                                                      db (assoc kohde :kohdeluokka tietolahteen-kohdeluokka))]
+                                                                   (cond varustetoteuma
+                                                                     (do
+                                                                       (log/debug "Tallennetaan kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid
+                                                                         " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku))
+                                                                       (lisaa-tai-paivita-kantaan db varustetoteuma kohde)
+                                                                       true)
 
-                                                                  virheviesti
-                                                                  (do
-                                                                    (lokita-ja-tallenna-hakuvirhe
-                                                                      db kohde
-                                                                      (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei onnistu muuttaa Harjan muotoon. ulkoinen_oid: "
+                                                                     virheviesti
+                                                                     (do
+                                                                       (lokita-ja-tallenna-hakuvirhe
+                                                                         db kohde
+                                                                         (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei onnistu muuttaa Harjan muotoon. ulkoinen_oid: "
                                                                            (format "%s muokattu: %s validointivirhe: %s"
-                                                                                   oid muokattu virheviesti)))
-                                                                    false)
+                                                                             oid muokattu virheviesti)))
+                                                                       false)
 
-                                                                  :else
-                                                                  (log/debug "Ohitettiin varustetoteuma. kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku) " viesti: " ohitusviesti)))
-                                                          (catch Throwable t
-                                                            (log/error "Poikkeus käsiteltäessä varustetoteumaa. Kohdeluokka: "tietolahteen-kohdeluokka
-                                                                       "oid: " oid " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku)
-                                                                       " Throwable:" t)
-                                                            (throw t))))]
-                              (hae-ja-tallenna
-                                tietolahde viimeksi-haettu konteksti varuste-api-juuri-url token-fn tallenna-toteuma-fn tallenna-hakuaika-fn
-                                tallenna-virhe-fn virhe-oidit-fn)))
-                          +tietolajien-lahteet+)]
-              (every? true? tulos))
+                                                                     :else
+                                                                     (log/debug "Ohitettiin varustetoteuma. kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku) " viesti: " ohitusviesti)))
+                                                                 (catch Throwable t
+                                                                   (log/error "Poikkeus käsiteltäessä varustetoteumaa. Kohdeluokka: "tietolahteen-kohdeluokka
+                                                                     "oid: " oid " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku)
+                                                                     " Throwable:" t)
+                                                                   (throw t))))]
+                                     (hae-ja-tallenna
+                                       tietolahde viimeksi-haettu konteksti varuste-api-juuri-url token-fn tallenna-toteuma-fn tallenna-hakuaika-fn
+                                       tallenna-virhe-fn virhe-oidit-fn))) +tietolajien-lahteet+)) 
+                  valimaiset-toimenpiteet (hae-ja-palauta-valimaiset-varustetoimenpiteet-velhosta token varuste-toimenpiteet-oid-url varuste-toimenpiteet-kohteet-url konteksti varuste-api-juuri-url) 
+                  _ (log/debug "Haettuja välimäisiä toimenpiteitä: " (count valimaiset-toimenpiteet))
+                  _ (log/debug "Päivitetään välimäiset toimenpiteet kohteille lopuksi") 
+                  _ (paivita-varustetoteumat-valimaisille-kohteille valimaiset-toimenpiteet db)] 
+                (every? true? tulos))
             false))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (log/error "Integraatioajo tuo-uudet-varustetoteumat-velhosta epäonnistui. Virheet: " virheet)
       false)))
-
-(defn lokita-urakkahakuvirhe [viesti]
-  (log/error viesti))
 
 (defn- paivita-velho-oid-urakalle-fn
   [db]
@@ -641,7 +649,7 @@
 
 (defn- tarkasta-urakka-kohteet-joukko
   [urakka-kohteet oid-joukko]
-  (let [urakka-oid-joukko (set (map :oid urakka-kohteet))
+  (let [urakka-oid-joukko (set (keep :oid urakka-kohteet))
         liikaa (set/difference urakka-oid-joukko oid-joukko)
         puuttuu (set/difference oid-joukko urakka-oid-joukko)]
     (when-not (= (count urakka-oid-joukko) (count urakka-kohteet))
