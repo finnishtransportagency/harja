@@ -262,9 +262,6 @@
  :komponenttien-tila {:itmf {:paivitystiheys-ms 10000}
                       :db {:paivitystiheys-ms 10000
                            :kyselyn-timeout-ms 20000}
-                      ;; FIXME: DB replican viivetarkastusväli nostettu korkeaksi, koska Aurora ei tue
-                      ;;        nykyistä tapaa: "pg_last_xact_replay_timestamp()" ja lokeihin tulee
-                      ;;        sen myötä vain turhaa virhespämmiä.
-                      :db-replica {:paivitystiheys-ms #=(eval (* 10 60 1000))
+                      :db-replica {:paivitystiheys-ms 10000
                                    :replikoinnin-max-viive-ms 100000}}
  }

@@ -35,7 +35,14 @@
          false)))
 
 (defn- replica-ok? [db-replica replikoinnin-max-viive-ms]
-  (let [replikoinnin-viive (try (status-q/hae-replikoinnin-viive db-replica)
+  (let [db-on-aurora? (try
+                        (status-q/db-on-aurora db-replica)
+                        (catch Exception e
+                          (log/debug "Tietokannan tyyppiä ei voitu tunnistaa")
+                          false))
+        replikoinnin-viive (try (if db-on-aurora?
+                                  (status-q/hae-replikoinnin-viive-aurora db-replica)
+                                  (status-q/hae-replikoinnin-viive db-replica))
                                 (catch Throwable t
                                   (log/error "Replican tilan tarkastaminen epäonnistui: " (.getMessage t) "\nStackTrace: " (.printStackTrace t))
                                   :virhe))]
