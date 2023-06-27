@@ -50,7 +50,7 @@ ENV HARJA_JAVA_AGENT=""
 # Käytä -XshowSettings:all, jos haluat nähdä mitä asetuksia käytetään
 ENV HARJA_JVM_OPTS="-Xmx6g"
 # TODO: Tämä kirjasto ei ole opensourcea. Miten otetaan konttiin mukaan?
-#ENV LIBS="sonic-client.jar:sonic-xmessage.jar:sonic-crypto.jar"
+#ENV HARJA_LIBS="sonic-client.jar:sonic-xmessage.jar:sonic-crypto.jar"
 ENV HARJA_LIBS=""
 
 # Aseta portti
