@@ -31,22 +31,44 @@
     (swap! yhteyskatkokset conj {:aika (pvm/nyt)
                                  :palvelu palvelu})))
 
+(defn kehitysymparistossa-localhost?* [host]
+  (#{"localhost" "localhost:3000" "localhost:8000"} host))
+
 (defn kehitysymparistossa-yhteiset?
   [host]
   (or (gstr/startsWith host "10.")
     (gstr/contains host "googleusercontent")
     (gstr/contains host "harja-gc")
-    (#{"localhost" "localhost:3000" "localhost:8000" 
-       "harja-test.solitaservices.fi"} host)))
+    (kehitysymparistossa-localhost?* host)
+    (#{"harja-test.solitaservices.fi"} host)
 
-(defn kehitysymparistossa? []
+    ;; AWS ympäristöt
+    ;; TODO: Onko ok myös lisätä aws stg-ympäristö (harjatest).
+    ;;       Kehiteysymparistossa-yhteiset? ja kehitysymparistossa? käyttötarkoitukset ovat hiukan hämääviä
+    (#{"harjadev.testivaylapilvi.fi" "harjatest.testivaylapilvi.fi"} host)))
+
+(defn kehitysymparistossa?
   "Tarkistaa ollaanko kehitysympäristössä"
+  []
   (let [host (.-host js/location)]
     (or (kehitysymparistossa-yhteiset? host)
         (#{"harja-c7-dev.lxd:8000" "testiextranet.vayla.fi"} host))))
 
+(defn kehitysymparistossa-localhost?
+  "Tarkistaa ollaanko localhost-kehitysympäristössä"
+  []
+  (let [host (.-host js/location)]
+    (kehitysymparistossa-localhost?* host)))
+
+(defn vaylapilvi-ymparistossa?
+  [host]
+  (#{"harjadev.testivaylapilvi.fi" "harjatest.testivaylapilvi.fi" "harja.vaylapilvi.fi"} host))
+
 (def +polku+ (let [host (.-host js/location)]
-               (if (kehitysymparistossa-yhteiset? host)
+               (if (or
+                     ;; Meillä on oma alidomain aws-ympäristössä, joten /harja/ polku on tarpeeton siellä.
+                     (vaylapilvi-ymparistossa? host)
+                     (kehitysymparistossa-yhteiset? host))
                  "/"
                  "/harja/")))
 (defn polku []

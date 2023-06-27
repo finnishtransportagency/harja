@@ -111,7 +111,7 @@
                 ;; Alueurakoitsijat ja tiemerkkarit näkevät listassa muiden urakoiden tietoja
                 ;; Niimpä varmistetaan, että käyttäjällä on kustannusoikeudet paikkauskohteisiin
                 (when nayta-hinnat?
-                  {:otsikko "Suun. hinta"
+                  {:otsikko "Suunn. hinta"
                    :leveys 1.7
                    :nimi :suunniteltu-hinta
                    :fmt fmt/euro-opt
@@ -270,13 +270,12 @@
                                                       :loppupvm (pvm/->pvm (str "31.12." (:valittu-vuosi app)))
                                                       :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]
                [:button {:type "submit"
-                         :class #{"nappi-toissijainen napiton-nappi"}}
+                         :class #{"nappi-reunaton"}}
                 [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]])
 
            [liitteet/lataa-tiedosto
             {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
             {:nappi-teksti "Tuo kohteet excelistä"
-             :nappi-luokka "napiton-nappi"
              :url "lue-paikkauskohteet-excelista"
              :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
              :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]

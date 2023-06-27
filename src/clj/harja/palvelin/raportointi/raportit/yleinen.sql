@@ -35,4 +35,4 @@ SELECT id,nimi FROM urakka WHERE id IN (:urakka)
 SELECT id,nimi FROM organisaatio WHERE id IN (:organisaatio)
 
 -- name: hae-toimenpidekoodien-nimet
-SELECT id,nimi FROM toimenpidekoodi WHERE id IN (:toimenpidekoodi)
+SELECT id,nimi FROM tehtava WHERE id IN (:toimenpidekoodi)

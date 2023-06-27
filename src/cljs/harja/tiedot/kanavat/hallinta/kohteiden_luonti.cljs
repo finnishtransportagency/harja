@@ -1,6 +1,7 @@
 (ns harja.tiedot.kanavat.hallinta.kohteiden-luonti
   (:require [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
+            [harja.tiedot.kanavat.urakka.liikenne :as liikenne]
             [cljs.core.async :as async :refer [<!]]
             [clojure.set :as set]
             [harja.pvm :as pvm]
@@ -300,10 +301,11 @@
 
   PaivitaKohteidenUrakkaliitokset
   (process-event [_ app]
+    (liikenne/paivita-liikennenakyma)
     (tt/post! :liita-kohteet-urakkaan
-              {:liitokset (:uudet-urakkaliitokset app)}
-              {:onnistui ->LiitoksetPaivitetty
-               :epaonnistui ->LiitoksetEiPaivitetty})
+      {:liitokset (:uudet-urakkaliitokset app)}
+      {:onnistui ->LiitoksetPaivitetty
+       :epaonnistui ->LiitoksetEiPaivitetty})
     (assoc app :liittaminen-kaynnissa? true))
 
   LiitoksetPaivitetty
@@ -336,14 +338,15 @@
 
   TallennaKohdekokonaisuudet
   (process-event [{kokonaisuudet :kokonaisuudet} app]
+    (liikenne/paivita-liikennenakyma)
     (if-not (:kohdekokonaisuuksien-tallennus-kaynnissa? app)
       (-> app
-          (tt/post! :tallenna-kohdekokonaisuudet
-                    (kohdekokonaisuudet-tallennusparametrit kokonaisuudet)
-                    {:onnistui ->KohdekokonaisuudetTallennettu
-                     :epaonnistui ->KohdekokonaisuudetEiTallennettu})
+        (tt/post! :tallenna-kohdekokonaisuudet
+          (kohdekokonaisuudet-tallennusparametrit kokonaisuudet)
+          {:onnistui ->KohdekokonaisuudetTallennettu
+           :epaonnistui ->KohdekokonaisuudetEiTallennettu})
 
-          (assoc :kohdekokonaisuuksien-tallennus-kaynnissa? true))
+        (assoc :kohdekokonaisuuksien-tallennus-kaynnissa? true))
 
       app))
 
@@ -375,14 +378,15 @@
 
   TallennaKohde
   (process-event [{kohde :kohde} app]
+    (liikenne/paivita-liikennenakyma)
     (if-not (:kohteen-tallennus-kaynnissa? app)
       (-> app
-          (tt/post! :tallenna-kohde
-                    (tallennusparametrit-kohde kohde)
-                    {:onnistui ->KohdeTallennettu
-                     :epaonnistui ->KohdeEiTallennettu})
+        (tt/post! :tallenna-kohde
+          (tallennusparametrit-kohde kohde)
+          {:onnistui ->KohdeTallennettu
+           :epaonnistui ->KohdeEiTallennettu})
 
-          (assoc :kohteen-tallennus-kaynnissa? true))
+        (assoc :kohteen-tallennus-kaynnissa? true))
 
       app))
 

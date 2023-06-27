@@ -172,8 +172,8 @@ BEGIN
              tpi.id    AS tpi,
              tpk3.id   AS tpk3_id
            FROM toimenpideinstanssi tpi
-             JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-             JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id
+             JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+             JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id
            WHERE tpi.urakka = ur
   LOOP
     RAISE NOTICE '***** Laskutusyhteenvedon laskenta alkaa toimenpiteelle: % *****', t.nimi;
@@ -247,8 +247,8 @@ BEGIN
 		       ON (tt.toteuma = tot.id AND
 		           tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND
 		           tot.poistettu IS NOT TRUE)
-                  JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
-                  JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+                  JOIN tehtava tpk4 ON tt.toimenpidekoodi = tpk4.id
+                  JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
                   JOIN yksikkohintainen_tyo yht
 		       ON (tt.toimenpidekoodi = yht.tehtava AND
 		           yht.alkupvm <= tot.alkanut::DATE AND yht.loppupvm >= tot.alkanut::DATE AND
@@ -403,8 +403,8 @@ BEGIN
 		           tot.tyyppi IN ('muutostyo', 'lisatyo',
 			                  'vahinkojen-korjaukset','akillinen-hoitotyo') AND
 			   tot.poistettu IS NOT TRUE)
-                  JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
-                  JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+                  JOIN tehtava tpk4 ON tt.toimenpidekoodi = tpk4.id
+                  JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
                   LEFT JOIN muutoshintainen_tyo mht
 		       ON (tt.toimenpidekoodi = mht.tehtava AND
 		           mht.urakka = tot.urakka AND
@@ -529,10 +529,10 @@ BEGIN
     SELECT * INTO lampotilat FROM lampotilat
     WHERE urakka = ur AND alkupvm = hk_alkupvm AND loppupvm = hk_loppupvm;
 
-    IF (lampotilat IS NULL OR lampotilat.keskilampotila IS NULL OR lampotilat.pitka_keskilampotila IS NULL)
+    IF (lampotilat IS NULL OR lampotilat.keskilampotila IS NULL OR lampotilat.keskilampotila_1981_2010 IS NULL)
     THEN
       RAISE NOTICE 'Urakalle % ei ole lämpötiloja hoitokaudelle % - %', ur, hk_alkupvm, hk_loppupvm;
-      RAISE NOTICE 'Keskilämpötila hoitokaudella %, pitkän ajan keskilämpötila %', lampotilat.keskilampotila, lampotilat.pitka_keskilampotila;
+      RAISE NOTICE 'Keskilämpötila hoitokaudella %, pitkän ajan keskilämpötila %', lampotilat.keskilampotila, lampotilat.keskilampotila_1981_2010;
       lampotila_puuttuu = TRUE;
     ELSE
       lampotila_puuttuu = FALSE;

@@ -6,7 +6,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.urakka :as u]
             [harja.ui.notifikaatiot :as notifikaatiot]
-            [harja.loki :refer [log tarkkaile!]]
+            [harja.loki :refer [log error]]
             [alandipert.storage-atom :refer [local-storage]]
             [cljs.core.async :refer [<!]]
             [clojure.set :as set]
@@ -17,7 +17,8 @@
             [tuck.core :as t]
             [harja.ui.viesti :as viesti]
             [clojure.string :as str]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.tyokalut.tuck :as tuck-apurit])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -55,6 +56,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   [:myohassa :aiheutti-toimenpiteita])
 
 (def aanimerkki-uusista-ilmoituksista? (local-storage (atom true) :aanimerkki-ilmoituksista))
+(def ws-kuuntelija-ominaisuus? (local-storage (atom false) :ws-kuuntelija-ominaisuus))
 
 (defonce ilmoitukset
   (atom {:ilmoitusnakymassa?            false
@@ -157,9 +159,15 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
        (when haku
          (.clearTimeout js/window haku))
        (-> app
-           (assoc :ilmoitushaku-id (.setTimeout js/window
-                                                (t/send-async! v/->HaeIlmoitukset)
-                                                timeout))
+         ;; Käynnistä automaattinen ilmoitusten HTTP-pollaus (taustahaku) jos WS-ilmoitusten kuuntelu ei ole aktiivinen
+         ;; Vanhanmallinen HTTP-pollaus toimii varakeinona ilmoitustietojen hakemiseen, mikäli WS-yhteys/kuuntelu ei jostakin syystä toimi.
+         ;; Sallitaan kuitenkin aina muun tyyppiset käyttäjän toimesta käynnistetyt ilmoitusten haut (eli, ei taustahaut)
+           (assoc :ilmoitushaku-id (when (or
+                                           (not taustahaku?)
+                                           (not (get-in app [:ws-ilmoitusten-kuuntelu :aktiivinen?])))
+                                     (.setTimeout js/window
+                                           (t/send-async! v/->HaeIlmoitukset)
+                                           timeout)))
            (assoc :taustahaku? taustahaku?)
            (assoc :ensimmainen-haku-tehty? true))))))
 
@@ -293,6 +301,30 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
         (assoc app
           :kuittaa-monta nil
           :pikakuittaus nil))))
+
+  v/HaeAiheetJaTarkenteet
+  (process-event [_ app]
+    (-> app
+      (tuck-apurit/post! :hae-palauteluokitukset
+        {}
+        {:onnistui v/->HaeAiheetJaTarkenteetOnnistui
+         :epaonnistui v/->HaeAiheetJaTarkenteetEpaonnistui
+         :paasta-virhe-lapi? true})
+      (assoc :aiheiden-haku-kaynnissa? true)))
+
+  v/HaeAiheetJaTarkenteetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app
+      :aiheiden-haku-kaynnissa? false
+      :aiheet-ja-tarkenteet vastaus))
+
+  v/HaeAiheetJaTarkenteetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (error "Aiheiden ja tarkenteiden haku epäonnistui:" vastaus)
+    (viesti/nayta-toast! (str "Aiheiden ja tarkenteiden haku epäonnistui."
+                           " Päivitä sivu ja ole yhteydessä sivun yläkulmasta löytyvän palautelomakkeen kautta,"
+                           " mikäli ongelma jatkuu") :varoitus)
+    (assoc app :aiheiden-haku-kaynnissa? false))
 
   v/PeruMonenKuittaus
   (process-event [_ app]

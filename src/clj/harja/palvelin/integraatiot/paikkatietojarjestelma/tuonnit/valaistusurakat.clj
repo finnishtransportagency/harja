@@ -9,9 +9,7 @@
 (defn tuo-urakka [db geometria valaistusurakkanro]
   (if (and valaistusurakkanro (not (empty? (str/trim valaistusurakkanro))))
     (if geometria
-      (let [valaistusurakkanro (when (and valaistusurakkanro (not (empty? (str/trim valaistusurakkanro))))
-                                 (str (int (Double/parseDouble valaistusurakkanro))))
-            geometria (.toString geometria)]
+      (let [geometria (.toString geometria)]
         (u/luo-valaistusurakka<! db geometria valaistusurakkanro))
       (log/warn (format "Urakkalle (valaistusurakkanro: %s ei voida tuoda geometriaa, sillä se on tyhjä"
                         valaistusurakkanro)))

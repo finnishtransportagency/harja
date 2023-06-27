@@ -82,8 +82,8 @@ $$
         -- SUOLASAKOT
         -- Suolasakot :: Vaatii suolasakon, toteutuma_materiaalin, toteutuman sekä lämpötilat, toimiakseen.
         -- Lisätään hatusta vedetyt lämpötilat 10/2019 ja 09/2020 kuukausille
-        INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila,
-                                pitka_keskilampotila_vanha)
+        INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, keskilampotila_1981_2010,
+                                keskilampotila_1971_2000)
             VALUES (urakka_id,
                 '2019-10-01', '2020-09-30', -3.5, -5.6, -5.6);
 
@@ -174,7 +174,7 @@ $$
         sopimus_id := (SELECT id FROM sopimus WHERE urakka = urakka_id AND paasopimus IS NULL); --MHU Oulu sopimus
         tpi := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP');
         kayttaja_id := (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio');
-        toimenpidekoodi_hoidonjohtopalkkio := (SELECT id FROM toimenpidekoodi WHERE nimi = 'Hoidonjohtopalkkio');
+        toimenpidekoodi_hoidonjohtopalkkio := (SELECT id FROM tehtava WHERE nimi = 'Hoidonjohtopalkkio');
         tehtavaryhma_erillishankinnat := (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');
         tehtavaryhma_hjpalkkiot := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoidonjohtopalkkio (G)');
         tehtavaryhma_johto_hallintokorvaus := (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)');

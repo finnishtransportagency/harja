@@ -144,6 +144,11 @@
 
 (deftest tallenna-turvallisuuspoikkeama-test
   (let [urakka-id @oulun-alueurakan-2005-2010-id
+        _ (u "INSERT INTO liite (tyyppi, nimi, liite_oid, lahde) VALUES ('image/jpeg', 'IMG_0339.jpg', '123', 'harja-ui')")
+        liitteen-id (ffirst (q "SELECT id FROM liite WHERE nimi = 'IMG_0339.jpg';"))
+        liite {:kuvaus nil, :fileyard-hash nil, :urakka 567, :nimi "IMG_0339.jpg",
+               :id liitteen-id
+               :lahde "harja-ui", :tyyppi "image/jpeg", :koko 2093367}
         tp {:urakka urakka-id
             :tapahtunut (pvm/luo-pvm (+ 1900 105) 6 1)
             :tyontekijanammatti :kuorma-autonkuljettaja
@@ -161,7 +166,8 @@
             :vahinkoluokittelu #{:ymparistovahinko}
             :vaaralliset-aineet #{:vaarallisten-aineiden-kuljetus :vaarallisten-aineiden-vuoto}
             :sijainti {:type :point :coordinates [0 0]}
-            :tr {:numero 1 :alkuetaisyys 2 :loppuetaisyys 3 :alkuosa 4 :loppuosa 5}}
+            :tr {:numero 1 :alkuetaisyys 2 :loppuetaisyys 3 :alkuosa 4 :loppuosa 5}
+            :uusi-liite liite}
         korjaavat-toimenpiteet [{:kuvaus "Ei ressata liikaa"
                                 :otsikko "Ressi pois!"
                                 :tila :avoin
@@ -184,6 +190,8 @@
            :hoitokausi hoitokausi}))
 
     (is (= (hae-tp-maara) (+ 1 vanha-maara)))
+    ;; varmistetaan että liite assosioitiin turvallisuuspoikkeamaan oikein
+    (is (= 1 (ffirst (q (str "SELECT count(*) FROM turvallisuuspoikkeama_liite where liite = " liitteen-id)))))
 
     ;; Tarkistetaan, että data tallentui oikein
     (let [uusin-tp (hae-uusin-turvallisuuspoikkeama)

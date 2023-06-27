@@ -6,6 +6,7 @@
     [harja.domain.pot2 :as pot2-domain]
     [harja.domain.tierekisteri :as tr]
     [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+    [harja.domain.paikkaus :as paikaus]
     [harja.loki :refer [log]]
     [harja.ui.debug :refer [debug]]
     [harja.ui.grid :as grid]
@@ -17,7 +18,8 @@
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
     [harja.ui.yleiset :as yleiset]
     [harja.validointi :as v]
-    [harja.fmt :as fmt])
+    [harja.fmt :as fmt]
+    [harja.domain.paikkaus :as paikkaus])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -165,11 +167,9 @@
       {:otsikko "Massa\u00ADmenekki (kg/m\u00B2)" :nimi :massamenekki :tyyppi :positiivinen-numero :tasaa :oikea
        :fmt #(fmt/desimaaliluku-opt % 1) :muokattava? (constantly false)
        :hae (fn [rivi]
-              (let [massamaara (:kokonaismassamaara rivi)
-                    pinta-ala (:pinta_ala rivi)]
-                (when (and massamaara (> pinta-ala 0))
-                  (/ (* 1000 massamaara) ;; * 1000, koska kok.massamäärä on tonneja, halutaan kg/m2
-                     pinta-ala))))
+              (paikkaus/massamaara-ja-pinta-ala->massamenekki
+                (:kokonaismassamaara rivi)
+                (:pinta_ala rivi)))
        :tayta-alas? pot2-tiedot/tayta-alas?-fn :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)}
       {:otsikko "" :nimi :kulutuspaallyste-toiminnot :tyyppi :reagent-komponentti :leveys (:toiminnot pot2-yhteiset/gridin-leveydet)
        :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros voi-muokata? ohjauskahva]

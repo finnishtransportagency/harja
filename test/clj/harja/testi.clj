@@ -30,7 +30,8 @@
     [clj-gatling.core :as gatling]
     [clojure.java.jdbc :as jdbc]
     [harja.tyokalut.env :as env]
-    [slingshot.slingshot :refer [throw+ try+]])
+    [slingshot.slingshot :refer [throw+ try+]]
+    [clojure.java.io :as io])
   (:import (org.postgresql.util PSQLException)
            (java.util Locale)
            (java.lang Boolean Exception)
@@ -424,7 +425,10 @@
   (kutsu-excel-palvelua
     ;; Palauttaa halutun excelin testiin ennen kuin siitä generoidaan
     ;; oikea excel-tiedosto, eli raporttielementteinä.
-    [this nimi kayttaja payload]))
+    [this nimi kayttaja payload])
+
+  (kutsu-excel-vienti-palvelua
+    [this nimi kayttaja params tiedostonimi]))
 
 (defn- palvelua-ei-loydy [nimi]
   (is false (str "Palvelua " nimi " ei löydy!"))
@@ -511,7 +515,23 @@
           ((get @palvelut :excel)
            {:kayttaja kayttaja
             :body payload
-            :params {"_" nimi}}))))))
+            :params {"_" nimi}})))
+
+      (kutsu-excel-vienti-palvelua [_ nimi kayttaja params tiedostonimi]
+        (if-let [palvelu (get @palvelut nimi)]
+          (let [tiedosto (io/file tiedostonimi)
+                ;; Muunnetaan mapin avaimet ja arvot stringiksi, kuten käy tällaisissa kutsuissa.
+                params (into {} (map (fn [[k v]]
+                                       [(name k) (str v)]) params))
+                payload {:kayttaja kayttaja
+                         :params (merge params
+                                   {"file" {:filename tiedostonimi
+                                            :tempfile (io/file tiedosto)}})}
+                vastaus (palvelu payload)]
+            (if (http/async-response? vastaus)
+              (async/<!! (:channel vastaus))
+              vastaus))
+          (palvelua-ei-loydy nimi))))))
 
 (defn materiaali-haun-pg-Array->map
   [haku]
@@ -621,10 +641,10 @@
 
 (defn hae-vaylanhoito-ei-yksiloity-tpk-id []
   (ffirst (q (str "SELECT id
-                     FROM toimenpidekoodi t4
-                    WHERE t4.nimi = 'Ei yksilöity' and t4.taso = 4 AND t4.emo = (select id from toimenpidekoodi t3 WHERE t3.nimi = 'Laaja toimenpide' and t3.taso = 3
-                          AND t3.emo = (select id from toimenpidekoodi t2 WHERE t2.nimi = 'Vesiliikenteen käyttöpalvelut' and t2.taso = 2
-                          AND t2.emo = (SELECT id FROM toimenpidekoodi t1 WHERE t1.nimi = 'Käyttö, meri' AND t1.taso = 1)));"))))
+                     FROM tehtava t4
+                    WHERE t4.nimi = 'Ei yksilöity' AND t4.emo = (select id from toimenpide t3 WHERE t3.nimi = 'Laaja toimenpide' and t3.taso = 3
+                          AND t3.emo = (select id from toimenpide t2 WHERE t2.nimi = 'Vesiliikenteen käyttöpalvelut' and t2.taso = 2
+                          AND t2.emo = (SELECT id FROM toimenpide t1 WHERE t1.nimi = 'Käyttö, meri' AND t1.taso = 1)));"))))
 
 
 (defn hae-kohde-soskua []
@@ -838,14 +858,14 @@
 
 (defn hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi [toimenpidekoodi]
   (ffirst (q (str "SELECT id from toimenpideinstanssi where urakka = (select id FROM urakka WHERE  nimi = 'Oulun MHU 2019-2024') AND
-                   toimenpide = (select id from toimenpidekoodi where koodi = '" toimenpidekoodi "');"))))
+                   toimenpide = (select id from toimenpide where koodi = '" toimenpidekoodi "');"))))
 
 (defn hae-toimenpideinstanssi-id [urakka-id toimenpidekoodi]
   (ffirst (q (str "SELECT id from toimenpideinstanssi where urakka = " urakka-id " AND
-                   toimenpide = (select id from toimenpidekoodi where koodi = '" toimenpidekoodi "');"))))
+                   toimenpide = (select id from toimenpide where koodi = '" toimenpidekoodi "');"))))
 
 (defn hae-toimenpidekoodin-id [nimi koodi]
-  (ffirst (q (str "SELECT id from toimenpidekoodi where nimi = '" nimi "' AND emo = (select id from toimenpidekoodi WHERE koodi = '" koodi "');"))))
+  (ffirst (q (str "SELECT id from tehtava where nimi = '" nimi "' AND emo = (select id from toimenpide WHERE koodi = '" koodi "');"))))
 
 (defn hae-tehtavaryhman-id [nimi]
   (ffirst (q (str "SELECT id from tehtavaryhma where nimi = '" nimi "';"))))
@@ -899,7 +919,7 @@
                    WHERE  nimi = 'Siirtyneiden poijujen siirto';"))))
 
 (defn hae-oulun-alueurakan-lampotila-hk-2014-2015 []
-  (ffirst (q (str "SELECT id, urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila
+  (ffirst (q (str "SELECT id, urakka, alkupvm, loppupvm, keskilampotila, keskilampotila_1981_2010
                    FROM   lampotilat
                    WHERE  urakka = " @oulun-alueurakan-2014-2019-id "
                    AND alkupvm = '2014-10-01' AND loppupvm = '2015-09-30'"))))
@@ -944,9 +964,9 @@
 
 (defn hae-liikenneympariston-hoidon-toimenpidekoodin-id []
   (ffirst (q (str "SELECT id
-  FROM toimenpidekoodi
+  FROM toimenpide
   WHERE nimi = 'Liikenneympäristön hoito laaja TPI' AND taso = 3\nAND
-  emo = (select id FROM toimenpidekoodi WHERE taso = 2 AND nimi = 'Liikenneympäristön hoito');"))))
+  emo = (select id from toimenpide where taso = 2 AND nimi = 'Liikenneympäristön hoito');"))))
 
 (defn hae-muhoksen-paallystysurakan-tpi-id []
   (ffirst (q (str "SELECT id
@@ -1730,3 +1750,34 @@
   "Anna määrä parametriin, että montako minuuttia siirretään tulevaisuuteen."
   [maara]
   (.format (SimpleDateFormat. "yyyy-MM-dd HH:mm:ss.SSS") (Date. (+ (.getTime (Date.)) (* maara 60000)))))
+
+(defn- seuraava-rivi
+  [edellinen nykyinen loput-seq]
+  (reduce
+    (fn [rivi [diagonal ylapuolinen muut]]
+      (let [paivitettava-arvo (if (= muut nykyinen)
+                                diagonal
+                                (inc (min diagonal ylapuolinen (peek rivi))))]
+        (conj rivi paivitettava-arvo)))
+    [(inc (first edellinen))]
+    (map vector edellinen (next edellinen) loput-seq)))
+(defn lahes-sama?
+  "Laske Levenshtein Distance -arvon kahden tekstin välille ja kertoo, onko se sallitun thresholdin puitteissa.
+  Nyt thresholdina on 0.4 mikä tarkoittaa, että 40% sanasta/tekstistä täytyy täsmätä. Tällä verrataan yksittäisiä sanoja
+  tai pitkiä lauseita ja pituus näyttelee isoa roolia, joten thresholdi on nyt suuri. Koska yksittäisten sanojen
+  pituus on lyhyt.
+
+  Voit jatkokehittää tätä ottamaan vastaan thresholdin parametrina tai suhteessa vertailtavan sanan pituuteen."
+  [s1 s2]
+  (let [;; Hyväksyy osimoilleen samat
+        threshold 0.4
+        matka (cond
+                (and (empty? s1) (empty? s2)) 0
+                (empty? s1) (count s2)
+                (empty? s2) (count s1)
+                :else (peek
+                        (reduce (fn [edellinen nykyinen] (seuraava-rivi edellinen nykyinen s2))
+                          (map #(identity %2) (cons nil s2) (range))
+                          s1)))
+        ero (/ matka (float (count s1)))]
+    (< ero threshold)))

@@ -275,9 +275,8 @@ select * from leikkaavat_pohjavesialueet(:tie::int, :aosa::int, :aet::int, :losa
 SELECT ut.maara as talvisuolan_kayttoraja
   FROM urakka_tehtavamaara ut
  WHERE ut.tehtava = (SELECT id
-                       FROM toimenpidekoodi
-                      WHERE taso = 4
-                        AND suunnitteluyksikko = 'kuivatonnia'
+                       from tehtava
+                      WHERE suunnitteluyksikko = 'kuivatonnia'
                         AND suoritettavatehtava = 'suolaus')
   AND ut."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi
   AND ut.urakka = :urakka-id
@@ -494,3 +493,15 @@ SELECT u.id as "urakka-id", u.nimi as urakka_nimi, ra.id, (ra.tierekisteriosoite
 FROM rajoitusalue ra
      JOIN urakka u on ra.urakka_id = u.id
 order by urakka_id;
+
+-- name: hae-urakan-rajoitusaluegeometriat
+SELECT r.id, r.tierekisteriosoite, r.sijainti
+  FROM rajoitusalue r
+ WHERE r.urakka_id = :urakka-id::INT;
+
+-- name: hae-suolatoteumageometriat
+SELECT sr.sijainti, t.alkanut
+  FROM toteuma t
+       JOIN suolatoteuma_reittipiste sr on sr.toteuma = t.id
+ WHERE t.urakka = :urakka-id::INT
+  AND t.alkanut BETWEEN :alkupaiva::DATE AND :loppupaiva::DATE + INTERVAL '1 days'

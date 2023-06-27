@@ -146,7 +146,12 @@
   <selite>tapahtumaOhi</selite>
   <selite>kevyenLiikenteenVaylatOvatjaatymassa</selite>
   <selite>tietOvatjaisiaJamarkia</selite>
-  </seliteet>\n</harja:ilmoitus>")))
+  </seliteet>
+  <luokittelu>
+  <aihe>1</aihe>
+  <tarkenne>101</tarkenne>
+  </luokittelu>
+  </harja:ilmoitus>")))
 
 (defn testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija
   ([] (testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija ilmoitettu valitetty))
@@ -187,6 +192,10 @@
   <selite>auraustarve</selite>
   <selite>aurausvallitNakemaesteena</selite>
   </seliteet>
+  <luokittelu>
+  <aihe>1</aihe>
+  <tarkenne>1</tarkenne>
+  </luokittelu>
   </harja:ilmoitus>")))
 
 (defn testi-valaistusilmoitus-sanoma
@@ -227,6 +236,10 @@
     <seliteet>
     <selite>tievalaistusVioittunutOnnettomuudessa</selite>
     </seliteet>
+    <luokittelu>
+    <aihe>1</aihe>
+    <tarkenne>101</tarkenne>
+    </luokittelu>
     </harja:ilmoitus>
     ")))
 
@@ -266,6 +279,10 @@
     <seliteet>
     <selite>tievalaistusVioittunutOnnettomuudessa</selite>
     </seliteet>
+    <luokittelu>
+    <aihe>1</aihe>
+    <tarkenne>101</tarkenne>
+    </luokittelu>
     </harja:ilmoitus>
     "))
 
@@ -304,6 +321,10 @@
    <seliteet>
    <selite>paallystevaurio</selite>
    </seliteet>
+   <luokittelu>
+   <aihe>1</aihe>
+   <tarkenne>101</tarkenne>
+   </luokittelu>
    </harja:ilmoitus>")
 
 (defn luo-tloik-komponentti []

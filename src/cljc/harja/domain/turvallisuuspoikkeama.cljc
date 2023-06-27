@@ -153,3 +153,13 @@
    :ohjeiden_vastainen_toiminta_tai_riskinotto 5
    :tyomaan_ulkopuolinen_tekija_tai_olosuhde 6
    :muu 7})
+
+(def juurisyy->teksti
+  {:puutteelliset_henkilonsuojaimet "Puutteelliset henkilönsuojaimet"
+   :puutteelliset_tyovalineet_tai_koneet "Puutteelliset työvälineet tai koneet"
+   :puutteellinen_jarjestys_tai_siisteys "Puutteellinen järjestys tai siisteys"
+   :puutteellinen_patevyys_tai_kelpoisuus "Puutteellinen pätevyys tai kelpoisuus"
+   :puutteellinen_tai_puuttuva_ohjeistus_tai_perehdytys "Puutteellinen tai puuttuva ohjeistus tai perehdytys"
+   :ohjeiden_vastainen_toiminta_tai_riskinotto "Ohjeiden vastainen toiminta tai riskinotto"
+   :tyomaan_ulkopuolinen_tekija_tai_olosuhde "Työmaan ulkopuolinen tekijä tai olosuhde"
+   :muu "Muu"})

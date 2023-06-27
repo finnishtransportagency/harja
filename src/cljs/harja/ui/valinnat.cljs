@@ -54,7 +54,7 @@
                               (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur)) "Urakkavuosi"
                               :default "Sopimuskausi")]
    [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
-                         :format-fn #(if % (fmt/pvm-vali-opt %) "Valitse")
+                         :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % @hoitokaudet) "Valitse")
                          :valitse-fn valitse-fn}
     @hoitokaudet]])
 
@@ -67,7 +67,7 @@
    [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                  :vayla-tyyli? true
                                  :valitse-fn tuck-event
-                                 :format-fn #(if % (fmt/pvm-vali-opt %) "Valitse")}
+                                 :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet) "Valitse")}
     hoitokaudet]])
 
 (defn hoitokausi
@@ -391,35 +391,50 @@
 (defn aikavalivalitsin
   ([otsikko aikavalit valinnat-nyt] (aikavalivalitsin otsikko aikavalit valinnat-nyt nil))
   ([otsikko aikavalit valinnat-nyt kenttien-nimet] (aikavalivalitsin otsikko aikavalit valinnat-nyt kenttien-nimet false))
-  ([otsikko aikavalit valinnat-nyt kenttien-nimet vain-pvm]
+  ([otsikko aikavalit valinnat-nyt kenttien-nimet vain-pvm] (aikavalivalitsin otsikko aikavalit valinnat-nyt kenttien-nimet vain-pvm {}))
+  ([otsikko aikavalit valinnat-nyt kenttien-nimet vain-pvm vakio-aikavalikentta-skeema]
    (let [vapaa-aikavali? (get-in valinnat-nyt [(or (:vakioaikavali kenttien-nimet) :vakioaikavali) :vapaa-aikavali])
+         palstoita-vapaa-aikavali? (:palstoita-vapaa-aikavali? valinnat-nyt)
          alkuaika (:alkuaika valinnat-nyt)
-         vakio-aikavalikentta {:nimi (or (:vakioaikavali kenttien-nimet) :vakioaikavali)
-                               :otsikko otsikko
-                               :fmt :nimi
-                               :tyyppi :valinta
-                               :valinnat aikavalit
-                               :valinta-nayta :nimi
-                               :alasveto-luokka "aikavalinta"}
+         aikavalivalitsin-flex? (:aikavalivalitsin-flex? vakio-aikavalikentta-skeema)
+         vakio-aikavalikentta (merge {:nimi (or (:vakioaikavali kenttien-nimet) :vakioaikavali)
+                                      :otsikko otsikko
+                                      :fmt :nimi
+                                      :tyyppi :valinta
+                                      :valinnat aikavalit
+                                      :valinta-nayta :nimi
+                                      :alasveto-luokka "aikavalinta"
+                                      ::lomake/col-luokka (when aikavalivalitsin-flex?
+                                                            "lomakepalsta-flex-kokonainen")} vakio-aikavalikentta-skeema)
          alkuaikakentta {:nimi (or (:alkuaika kenttien-nimet) :alkuaika)
                          :otsikko "Alku"
+                         ::lomake/col-luokka (when aikavalivalitsin-flex?
+                                               "lomakepalsta-flex-puolikas")
                          :tyyppi (if vain-pvm :pvm :pvm-aika)
                          :validoi [[:ei-tyhja "Anna alkuaika"]]}
          loppuaikakentta {:nimi (or (:loppuaika kenttien-nimet) :loppuaika)
+                          ::lomake/col-luokka (when aikavalivalitsin-flex?
+                                                "lomakepalsta-flex-puolikas")
                           :otsikko "Loppu"
                           :tyyppi (if vain-pvm :pvm :pvm-aika)
                           :validoi [[:ei-tyhja "Anna loppuaika"]
                                     [:pvm-toisen-pvmn-jalkeen alkuaika "Loppuajan on oltava alkuajan jälkeen"]]}]
 
      (if vapaa-aikavali?
-       (lomake/ryhma
-         {:rivi? true}
-         vakio-aikavalikentta
-         alkuaikakentta
-         loppuaikakentta)
-       (lomake/ryhma
-         {:rivi? true}
-         vakio-aikavalikentta)))))
+       (if palstoita-vapaa-aikavali?
+         (lomake/palstat
+           {}
+           {:otsikko nil
+            :flex? aikavalivalitsin-flex?}
+           [vakio-aikavalikentta
+            alkuaikakentta
+            loppuaikakentta])
+         (lomake/ryhma
+           {:rivi? true}
+           vakio-aikavalikentta
+           alkuaikakentta
+           loppuaikakentta))
+       vakio-aikavalikentta))))
 
 (defn vaylatyyppi
   [valittu-vaylatyyppi-atom vaylatyypit format-fn]
@@ -658,32 +673,13 @@
                          :valitse-fn valitse-fn}
     tyypit]])
 
-(defn hv-valinta-fn
-  [fn! hv]
-  (fn [_]
-    (fn! hv)))
-
-(defn hoitovuosi-rivivalitsin
-  ;; FIXME: Ei hover tyyliä määritelty!
-  [hoitovuodet valittu valitse-fn]
-  [:div.rivivalitsin
-   {:data-cy "hoitovuosi-rivivalitsin"}
-   [:label "Hoitovuosi"]
-   [:div
-    (for [hv hoitovuodet]
-      (if (= valittu hv)
-        ^{:key (str "hv-rivivalitsin-valitse-" hv)}
-        [napit/harmaa
-         (str hv)
-         (hv-valinta-fn valitse-fn hv)
-         {:teksti-nappi? true
-          :luokka "nappi-rivivalitsin"
-          :valittu? (= valittu hv)}]
-        ^{:key (str "hv-rivivalitsin-valitse-" hv)}
-        [:span.borderhack                                   ; borderhackilla saadaan tehttyä semmonen reuna, joka ei ole koko elementin korkuinen :+1:
-         [napit/harmaa
-          (str hv)
-          (hv-valinta-fn valitse-fn hv)
-          {:teksti-nappi? true
-           :luokka "nappi-rivivalitsin"
-           :valittu? (= valittu hv)}]]))]])
+(defn hoitovuosi-jarjestysluvulla
+  [hoitovuosien-jarjestysluvut valittu valitse-fn urakan-hoitokaudet optiot]
+  [:div {:data-cy "hoitokausi-jarjestysluvulla"
+         :class (or (:wrapper-luokka optiot) "col-xs-6.col-md-3")}
+   [:label.alasvedon-otsikko-vayla "Hoitovuosi"]
+   [yleiset/livi-pudotusvalikko {:valinta valittu
+                                 :vayla-tyyli? true
+                                 :valitse-fn valitse-fn
+                                 :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % urakan-hoitokaudet) "Valitse")}
+    hoitovuosien-jarjestysluvut]])

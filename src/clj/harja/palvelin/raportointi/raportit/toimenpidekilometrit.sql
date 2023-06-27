@@ -11,7 +11,7 @@ FROM toteuma t
   JOIN urakka u ON t.urakka = u.id
   JOIN toteuma_tehtava tt ON t.id = tt.toteuma
                              AND tt.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+  JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
   JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
   LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON TRUE
   LEFT JOIN LATERAL unnest(rp.tehtavat) AS rt ON TRUE

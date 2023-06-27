@@ -16,7 +16,8 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as paikkauskohteet-kartalle]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.domain.paikkaus :as paikkaus])
+            [harja.domain.paikkaus :as paikkaus]
+            [harja.domain.tierekisteri :as tr-domain])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def lomakkeen-pituuskentat (atom {:pituus nil :tie nil :aosa nil :aet nil :losa nil :let nil}))
@@ -50,12 +51,15 @@
         (assoc vertailtava-lomake :loppupvm (str (:loppupvm vertailtava-lomake)))
         (hash vertailtava-lomake)))
 
-(defn- fmt-aikataulu [alkupvm loppupvm tila]
+(defn- fmt-aikataulu
+  "Formatoi paikkauskohteen aikataulun."
+  [{:keys [alkupvm loppupvm valmistumispvm paikkauskohteen-tila]}]
   (str
-    (pvm/fmt-kuukausi-ja-vuosi-lyhyt alkupvm)
+    (pvm/fmt-paiva-ja-kuukausi-lyhyt alkupvm)
     " - "
-    (pvm/fmt-p-k-v-lyhyt loppupvm)
-    (when-not (= "valmis" tila)
+    ;; Loppupäiväksi valitaan valmistumispvm jos saatavilla, muuten näytetään arvio (loppupvm).
+    (pvm/fmt-p-k-v-lyhyt (or valmistumispvm loppupvm))
+    (when-not (= "valmis" paikkauskohteen-tila)
       " (arv.)")))
 
 (defn- fmt-valmistuminen
@@ -63,8 +67,6 @@
   [loppupvm]
   (str (pvm/pvm-opt loppupvm) " (arv.) "))
 
-(defn fmt-sijainti [tie alkuosa loppuosa alkuet loppuet]
-  (str tie " - " alkuosa "/" alkuet " - " loppuosa "/" loppuet))
 
 (defrecord PaivitaTiemerkintaModal [tiemerkintalomake])
 (defrecord SuljeTiemerkintaModal [])
@@ -492,10 +494,9 @@
   (process-event [{vastaus :vastaus} app]
     (let [paikkauskohteet (map (fn [kohde]
                                  (-> kohde
-                                     (assoc :formatoitu-aikataulu
-                                            (fmt-aikataulu (:alkupvm kohde) (:loppupvm kohde) (:paikkauskohteen-tila kohde)))
+                                     (assoc :formatoitu-aikataulu (fmt-aikataulu kohde))
                                      (assoc :formatoitu-sijainti
-                                            (fmt-sijainti (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde)))
+                                            (tr-domain/tr-osoite-moderni-fmt (:tie kohde) (:aosa kohde) (:aet kohde) (:losa kohde) (:let kohde)))
                                      (assoc :loppupvm-arvio (fmt-valmistuminen (:loppupvm kohde)))
                                      (assoc :paivays (or (:muokattu kohde) (:luotu kohde)))
                                      (assoc :toteumatyyppi (cond
@@ -806,3 +807,18 @@
                :justify-content "center"}}
              ok-nappi
              peruuta-nappi]])))
+
+(defn urapaikkauksen-sijainti-fmt
+  "Formatoi urapaikkausten sijainnit. Input voi olla joko numeerinen arvo esim. 1, tai sitten vectorissa arvot [1 2].
+  Tehdään yksi formatointifunktio, joka osaa näyttää näissä kaikissa tilanteissa luvut lukutilassa oikein.
+  Ja lisäksi näytetään viiva - mikäli arvoa ei ole annettu ollenkaan."
+  [v]
+  (cond
+    (vector? v)
+    (clojure.string/join ", " v)
+
+    (or (nil? v) (and (seq? v) (empty? v)))
+    "-"
+
+    :else
+    v))

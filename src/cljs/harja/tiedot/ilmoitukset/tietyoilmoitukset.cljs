@@ -254,7 +254,6 @@
                                                 false)))
               (::t/id ilmoitus)))))
 
-
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
   (when haku
     (.clearTimeout js/window haku))

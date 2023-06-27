@@ -123,21 +123,21 @@
         kokonaishintaisten-toimenpiteiden-tehtavat (into #{}
                                                          (apply concat
                                                                 (q "SELECT tk4.id
-                                                                    FROM toimenpidekoodi tk4
-                                                                     JOIN toimenpidekoodi tk3 ON tk4.emo=tk3.id
+                                                                    FROM tehtava tk4
+                                                                     JOIN toimenpide tk3 ON tk4.emo=tk3.id
                                                                     WHERE tk3.koodi='27105' AND
                                                                           'kokonaishintainen'::hinnoittelutyyppi=ANY(tk4.hinnoittelu);")))
         muutoshintaisten-toimenpiteiden-tehtavat (into #{}
                                                        (apply concat
                                                               (q "SELECT tk4.id
-                                                                  FROM toimenpidekoodi tk4
-                                                                   JOIN toimenpidekoodi tk3 ON tk4.emo=tk3.id
+                                                                  FROM tehtava tk4
+                                                                   JOIN toimenpide tk3 ON tk4.emo=tk3.id
                                                                   WHERE tk3.koodi='27105' AND
                                                                         'muutoshintainen'::hinnoittelutyyppi=ANY(tk4.hinnoittelu);")))
         ei-yksiloity-tehtava (into #{}
                                    (first (q "SELECT tk4.id
-                                              FROM toimenpidekoodi tk4
-                                               JOIN toimenpidekoodi tk3 ON tk4.emo=tk3.id
+                                              FROM tehtava tk4
+                                               JOIN toimenpide tk3 ON tk4.emo=tk3.id
                                               WHERE tk4.nimi='Ei yksilöity' AND
                                                     tk3.koodi='27105';")))
         tyypin-toimenpiteet #(into #{} (keep (fn [toimenpide]
@@ -221,13 +221,13 @@
         kohde-id (ffirst (q "select \"kohde-id\" from kan_kohde_urakka limit 1;"))
         huoltokohde (ffirst (q "select id from kan_huoltokohde limit 1;"))
         kolmostason-toimenpide-id (ffirst (q "select tpk3.id
-                                               from toimenpidekoodi tpk1
-                                                join toimenpidekoodi tpk2 on tpk1.id = tpk2.emo
-                                                  join toimenpidekoodi tpk3 on tpk2.id = tpk3.emo
+                                               from toimenpide tpk1
+                                                join toimenpide tpk2 on tpk1.id = tpk2.emo
+                                                  join toimenpide tpk3 on tpk2.id = tpk3.emo
                                                   where tpk1.nimi ILIKE '%Hoito, meri%' and
                                                         tpk2.nimi ILIKE '%Väylänhoito%' and
                                                               tpk3.nimi ilike '%Laaja toimenpide%';"))
-        tehtava-id (ffirst (q (format "select id from toimenpidekoodi where emo = %s" kolmostason-toimenpide-id)))
+        tehtava-id (ffirst (q (format "select id from tehtava where emo = %s" kolmostason-toimenpide-id)))
         toimenpideinstanssi (ffirst (q "select id from toimenpideinstanssi where nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP';"))
         toimenpide-template {::kanavan-toimenpide/suorittaja "suorittaja"
                              ::kanavan-toimenpide/muu-toimenpide "muu"

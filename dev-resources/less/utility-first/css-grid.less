@@ -1,3 +1,6 @@
+@import "../yleiset";
+@import "../bootstrap/variables";
+
 /* -------- Utility CSS - Luokat jotka tekevät vain yhden asian ala Tailwind ----- */
 /*-------------------------------------------*\ 
 Periaatteet:
@@ -11,18 +14,66 @@ Periaatteet:
         display: grid;
     }
 
-    .css-grid-colums-1-9 {
+
+    .css-grid-columns-1-9 {
         grid-template-columns: 1fr 9fr;
     }
 
-    .css-grid-colums-1-2 {
+    .css-grid-columns-1-2 {
         grid-template-columns: 1fr 2fr;
     }
 
+    .css-grid-columns-4x1 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    @media (max-width: @screen-sm-min) {
+        .sm-css-grid-columns-4x1 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        // Jos halutaan elementit omille riveilleen pienellä näytöllä
+        .sm-css-block {
+          display: block;
+        }
+    }
+
+   .css-grid-columns-12x1 {
+     grid-template-columns: repeat(12, 1fr);
+   }
+
+
     /* ----- Fixed values---- */
 
-    .css-grid-colums-12rem-9 {
+    .css-grid-columns-12rem-9 {
         grid-template-columns: 12rem 9fr;
     }
 
+    /* ----- Column gap ---- */
+    .css-grid-columns-gap-16 {
+      column-gap: @valistys-16;
+    }
+
+    .css-grid-columns-gap-32 {
+     column-gap: 2rem;
+    }
+
+    /* ----- Items : Start & end ---- */
+    .grid-column-start-1 {
+        grid-column-start: 1;
+    }
+
+    .grid-column-end-5 {
+        grid-column-start: 5;
+    }
+
+  .tee-grid-column-end-span(@n, @i: 1) when (@i =< @n) {
+    .grid-column-end-span-@{i} {
+      grid-column-end: span @i;
+    }
+
+    .tee-grid-column-end-span(@n, @i+1);
+  }
+
+  .tee-grid-column-end-span(12); // Tehdään grid-column-end: span 1-12.
 }

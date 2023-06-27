@@ -44,7 +44,7 @@
                                       (toteumat/->Toteumat)
                                       [:http-palvelin :db :db-replica :karttakuvat :tierekisteri])
                           :tehtavamaarat (component/using
-                                           (tehtavamaarat/->Tehtavamaarat)
+                                           (tehtavamaarat/->Tehtavamaarat false)
                                            [:http-palvelin :db]))))))
 
   (testit)
@@ -729,6 +729,7 @@
 
 (deftest kokonaishintaisen-toteuman-siirtymatiedot
   (let [toteuma-id (ffirst (q "SELECT id FROM toteuma WHERE urakka = 2 AND lisatieto = 'Tämä on käsin tekaistu juttu'"))
+        tehtava-id (ffirst (q "SELECT id FROM tehtava WHERE nimi = 'Auraus ja sohjonpoisto';"))
         hae #(kutsu-palvelua (:http-palvelin jarjestelma)
                              :siirry-toteuma
                              %
@@ -740,7 +741,7 @@
                   :aikavali           {:alku  #inst "2007-09-30T21:00:00.000-00:00"
                                        :loppu #inst "2008-09-29T21:00:00.000-00:00"}
                   :tehtavat
-                                      [{:toimenpidekoodi 1350, :toimenpideinstanssi "10100"}]}
+                                      [{:toimenpidekoodi tehtava-id, :toimenpideinstanssi "23104"}]}
         ei-ok-tulos nil]
 
     (is (some? toteuma-id))

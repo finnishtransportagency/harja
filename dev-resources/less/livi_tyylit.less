@@ -103,12 +103,14 @@ table.table-striped {
     width: @leveys;
 
     .disabled {
+        align-items: center;
         background-color: @harmaa10;
         color: @harmaa6;
     }
 
+
     .nappi-alasveto {
-        padding: @valistys-8;
+        padding: @valistys-6;
         display: flex;
         align-items: center;
         border-radius: @valistys-4;
@@ -171,13 +173,28 @@ table.table-striped {
     &:focus {
         background-color: @gray245;
     }
-    > span, div.boolean {
-        align-items: center;
+    > span {
+        align-items: stretch;
         display: flex;
         flex: 1;
         padding-left: @valistys-8;
         padding-right: @valistys-8;
     }
+
+  // Hack, että saadaan monimutkainen checkbox-elementin sisältö asettumaan keskelle list-itemissä
+  // TODO: List itemien sisällölle pudotusvalikossa pitäisi tehdä kokonaisvaltainen remontti,
+  //       eikä niiden tyylejä pitäisi joutua muokkaamaan ulkoa päin tällä tavalla.
+    & div.boolean {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      padding-left: @valistys-8;
+      padding-right: @valistys-8;
+    }
+
+  // TODO: Sama tässä kuin yllä. Yleiskäyttöisen linkki-komponentin tyyliä ei tarvitsi joutua muokkaamaan tässä.
+  //       Tämä on fragiili muutoksille linkki-komponentissa. Kokonaisvaltainen remontti komponenttien käytölle ja
+  //       tyylittelylle tarvitaan.
     & > span > a {
         display: flex;
         align-items: center;

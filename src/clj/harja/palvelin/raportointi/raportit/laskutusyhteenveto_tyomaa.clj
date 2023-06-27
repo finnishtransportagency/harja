@@ -40,7 +40,7 @@
                               (= "Hoidonjohto" otsikko)
                               [(rivi-taulukolle data kyseessa-kk-vali? "Johto- ja hallintokorvaukset" :johtojahallinto_hoitokausi_yht :johtojahallinto_val_aika_yht false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Erillishankinnat" :erillishankinnat_hoitokausi_yht :erillishankinnat_val_aika_yht false)
-                               (rivi-taulukolle data kyseessa-kk-vali? "Hoidojohtopalkkio" :hjpalkkio_hoitokausi_yht :hjpalkkio_val_aika_yht false)
+                               (rivi-taulukolle data kyseessa-kk-vali? "Hoidonjohtopalkkio" :hjpalkkio_hoitokausi_yht :hjpalkkio_val_aika_yht false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :hoidonjohto_hoitokausi_yht :hoidonjohto_val_aika_yht true)]
 
                               (= "Äkilliset hoitotyöt ja vahinkojen korjaukset" otsikko)
@@ -62,13 +62,13 @@
                                (rivi-taulukolle data kyseessa-kk-vali? "Sanktiot" :sanktiot_hoitokausi_yht :sanktiot_val_aika_yht false)
                                
                                ;; Näytetään päätökset vain jos ne on olemassa 
-                               (when (raha-arvo-olemassa? (data :paatos_kattoh_ylitys_hoitokausi_yht))
+                               (when (raha-arvo-olemassa? (:paatos_kattoh_ylitys_hoitokausi_yht data))
                                  (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päätös / Urakoitsija maksaa kattohinnan ylityksestä" :paatos_kattoh_ylitys_hoitokausi_yht :paatos_kattoh_ylitys_val_aika_yht false))
 
-                               (when (raha-arvo-olemassa? (data :paatos_tavoiteh_ylitys_hoitokausi_yht))
+                               (when (raha-arvo-olemassa? (:paatos_tavoiteh_ylitys_hoitokausi_yht data))
                                  (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päätös / Urakoitsija maksaa tavoitehinnan ylityksestä" :paatos_tavoiteh_ylitys_hoitokausi_yht :paatos_tavoiteh_ylitys_hoitokausi_yht false))
                                
-                               (when (raha-arvo-olemassa? (data :paatos_tavoitepalkkio_hoitokausi_yht))
+                               (when (raha-arvo-olemassa? (:paatos_tavoitepalkkio_hoitokausi_yht data))
                                  (rivi-taulukolle data kyseessa-kk-vali? "Tavoitepalkkio" :paatos_tavoitepalkkio_hoitokausi_yht :paatos_tavoitepalkkio_hoitokausi_yht false))])))]
 
     [:taulukko {:oikealle-tasattavat-kentat #{1 2}
@@ -109,13 +109,13 @@
                                         "vahvistamaton")
 
                                ;; Nätetään arvot vain jos on olemassa
-                               (when (raha-arvo-olemassa? (data :hoitokauden_tavoitehinta))
+                               (when (raha-arvo-olemassa? (:hoitokauden_tavoitehinta data))
                                  (kt-rivi data false "Tavoitehinta (indeksikorjattu)" :hoitokauden_tavoitehinta :hoitokauden_tavoitehinta true nil nil))
 
-                               (when (raha-arvo-olemassa? (data :hk_tavhintsiirto_ed_vuodelta))
+                               (when (raha-arvo-olemassa? (:hk_tavhintsiirto_ed_vuodelta data))
                                  (kt-rivi data false "Siirto edelliseltä vuodelta" :hk_tavhintsiirto_ed_vuodelta :hk_tavhintsiirto_ed_vuodelta true "red" nil))
 
-                               (when (raha-arvo-olemassa? (data :budjettia_jaljella))
+                               (when (raha-arvo-olemassa? (:budjettia_jaljella data))
                                  (kt-rivi data false "Budjettia jäljellä" :budjettia_jaljella :budjettia_jaljella true nil nil))
                                
                                (kt-rivi data false "" :nil :nil false nil nil)

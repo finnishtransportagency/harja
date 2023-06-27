@@ -43,8 +43,11 @@
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.lomake :as lomake]
             [harja.ui.sivupalkki :as sivupalkki]
-            [harja.ui.valinnat :as valinnat])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.ui.valinnat :as valinnat]
+            [harja.domain.tierekisteri :as tr-domain]
+            [harja.asiakas.kommunikaatio :as komm]
+            [harja.ui.liitteet :as liitteet])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
 (defn- pinta-alojen-summa [paikkaukset tehty-koneellisesti?]
@@ -145,6 +148,44 @@
         varmista-kayttajalta/modal-sahkopostikopio]
        lomakedata]
       [yleiset/vihje "Huom! Lähetetyn sähköpostiviestin sisältö tallennetaan Harjaan ja se saatetaan näyttää Harjassa paikkauskohteen tietojen yhteydessä."]]]))
+
+(defn excel-tuonti-virhe-modal
+  [e! {:keys [urem-excel-virheet] :as app}]
+  (let [{urem-kokonaismassamaaravirhe "urem-kokonaismassamaaravirhe"
+         validointivirheet "paikkausten-validointivirheet"
+         paikkauskohteen-tila-virhe "paikkauskohteen-tila-virhe"
+         excel-luku-virhe "excel-luku-virhe"} urem-excel-virheet]
+    [modal/modal
+     {:otsikko "Virheitä urapaikkausten tuonnissa excelillä"
+      :nakyvissa? urem-excel-virheet
+      :sulje-fn #(e! (tiedot/->SuljeUremLatausVirhe))
+      :footer [:div
+               [napit/sulje #(e! (tiedot/->SuljeUremLatausVirhe))]]}
+     [:div
+      (when validointivirheet
+        [:<>
+         [:p "Tuotua exceliä ei voitu lukea. Varmista, että käytät HARJAsta ladattua pohjaa, jonka sarakkeita A-P ei ole muokattu, ja paikkaukset alkavat riviltä 8."]
+         [:<>
+          [:br]
+          (for* [[rivi virheet] validointivirheet]
+            [:<>
+             [:p "Rivi " rivi ":"]
+             [:ul
+              (for* [virhe virheet]
+                [:li virhe])]])]])
+      (when urem-kokonaismassamaaravirhe
+        [:<>
+         [:br]
+         [:p urem-kokonaismassamaaravirhe]])
+      (when paikkauskohteen-tila-virhe
+        [:<>
+         [:br]
+         [:p paikkauskohteen-tila-virhe]])
+      (when excel-luku-virhe
+        [:<>
+         [:br]
+         [:p "Tuotu excel ei näytä oikeanlaiselta. Varmista, että käytät HARJAsta ladattua pohjaa, jonka sarakkeita A-Q tai otsikkorivejä ei ole muokattu."]])]]))
+
 
 (def ohje-teksti-tilaajalle
   "Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Valitse Ilmoita virhe lähettääksesi virhetiedot sähköpostitse urakoitsijalle.")
@@ -251,88 +292,74 @@
   [tyomenetelma tyomenetelmat yksikko]
   (let [desimaalien-maara 2
         urapaikkaus? (urem? tyomenetelma tyomenetelmat)
-        levittimella-tehty? (paikkaus/levittimella-tehty? {:tyomenetelma tyomenetelma} tyomenetelmat)]
-    (into []
-          (keep identity)
-          (concat
-            [{:tyyppi :vetolaatikon-tila :leveys 1}]
-            [{:otsikko "Alku\u00ADaika"
-              :leveys 8
-              :nimi ::paikkaus/alkuaika
-              :fmt (if urapaikkaus?
-                     pvm/pvm-aika-klo-suluissa
-                     pvm/pvm-opt)}
-             {:otsikko "Loppu\u00ADaika"
-              :leveys 8
-              :nimi ::paikkaus/loppuaika
-              :fmt (if urapaikkaus?
-                     pvm/pvm-aika-klo-suluissa
-                     pvm/pvm-opt)}]
-            (if (or urapaikkaus? levittimella-tehty?)
-
-              [{:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi ::tierekisteri/tie
-                :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea :kokonaisluku? true}
-               {:otsikko "Aosa" :nimi ::tierekisteri/aosa :leveys 4 :tyyppi :positiivinen-numero
-                :tasaa :oikea :kokonaisluku? true}
-               {:otsikko "Aet" :nimi ::tierekisteri/aet :leveys 4 :tyyppi :positiivinen-numero
-                :tasaa :oikea :kokonaisluku? true}
-               {:otsikko "Losa" :nimi ::tierekisteri/losa :leveys 4 :tyyppi :positiivinen-numero
-                :tasaa :oikea :kokonaisluku? true}
-               {:otsikko "Let" :nimi ::tierekisteri/let :leveys 4 :tyyppi :positiivinen-numero
-                :tasaa :oikea :kokonaisluku? true}
-               {:otsikko "Ajo\u00ADrata" :nimi ::paikkaus/ajorata :kokonaisluku? true
-                :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea}
-               {:otsikko "Kais\u00ADta" :nimi ::paikkaus/kaista  :kokonaisluku? true
-                :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea}
-               {:otsikko "Pit. (m)" :nimi :suirun-pituus :leveys 4 :tyyppi :positiivinen-numero
-                :tasaa :oikea :kokonaisluku? true}]
-
-              [{:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi ::tierekisteri/tie
-                :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea :kokonaisluku? true}
-               {:otsikko "Ajo\u00ADrata" :nimi ::paikkaus/ajorata
-                :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea}
-               {:otsikko "Aosa" :nimi ::tierekisteri/aosa :leveys 4 :tyyppi :positiivinen-numero
-                :tasaa :oikea :kokonaisluku? true}
-               {:otsikko "Aet" :nimi ::tierekisteri/aet :leveys 4 :tyyppi :positiivinen-numero
-                :tasaa :oikea :kokonaisluku? true}
-               {:otsikko "Losa" :nimi ::tierekisteri/losa :leveys 4 :tyyppi :positiivinen-numero
-                :tasaa :oikea :kokonaisluku? true}
-               {:otsikko "Let" :nimi ::tierekisteri/let :leveys 4 :tyyppi :positiivinen-numero
-                :tasaa :oikea :kokonaisluku? true}])
-            (when (or levittimella-tehty? urapaikkaus?)
-              [{:otsikko "Leveys\u00AD (m)"
-                :leveys 5
-                :nimi ::paikkaus/leveys}])
-            [{:otsikko "Työ\u00ADmene\u00ADtelmä"
-              :leveys 10
-              :nimi ::paikkaus/tyomenetelma
-              :fmt #(paikkaus/tyomenetelma-id->nimi % tyomenetelmat)}]
-            ;; Näytetään yksikkö muille paitsi uremille ja levittimellä tehdyille
-            (when-not (or levittimella-tehty? urapaikkaus?)
-              [{:otsikko yksikko
-                :leveys 5
-                :nimi (yksikko-avain yksikko)}])
-            (when (or levittimella-tehty? urapaikkaus?)
-               [{:otsikko "Massa\u00ADtyyp\u00ADpi"
-                 :leveys 10
-                 :nimi ::paikkaus/massatyyppi}
-                {:otsikko "m\u00B2"
-                 :leveys 5
-                 :fmt #(fmt/desimaaliluku-opt % desimaalien-maara)
-                 :nimi :suirun-pinta-ala}
-                {:otsikko "kg/m²"
-                 :leveys 5
-                 :nimi ::paikkaus/massamaara}
-                {:otsikko "t"
-                 :leveys 5
-                 :nimi ::paikkaus/massamenekki}
-                {:otsikko "Raekoko"
-                 :leveys 5
-                 :nimi ::paikkaus/raekoko}
-                {:otsikko "Kuula\u00ADmylly"
-                 :leveys 5
-                 :nimi ::paikkaus/kuulamylly}])
-             ))))
+        levittimella-tehty? (paikkaus/levittimella-tehty? {:tyomenetelma tyomenetelma} tyomenetelmat)
+        excelista-tuotu?-fn #(= "excel" (::paikkaus/lahde %))]
+    (concat
+      [{:otsikko "Pvm." :leveys 6 :nimi ::paikkaus/pvm
+        :hae #(select-keys % [::paikkaus/alkuaika ::paikkaus/loppuaika])
+        :fmt #(fmt/pvm-vali [(::paikkaus/alkuaika %)
+                             (::paikkaus/loppuaika %)]
+                            false)}
+       {:otsikko "Tie\u00ADosoi\u00ADte" :nimi ::tierekisteri/tieosoite
+        :hae #(select-keys % [::tierekisteri/tie
+                              ::tierekisteri/aosa
+                              ::tierekisteri/aet
+                              ::tierekisteri/losa
+                              ::tierekisteri/let])
+        :tyyppi :string :leveys 7
+        :fmt (fn [r]
+               (tr-domain/tr-osoite-moderni-fmt (::tierekisteri/tie r)
+                                                (::tierekisteri/aosa r)
+                                                (::tierekisteri/aet r)
+                                                (::tierekisteri/losa r)
+                                                (::tierekisteri/let r)))}
+       {:otsikko "Ajor." :nimi ::paikkaus/ajorata :kokonaisluku? true
+        :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea}]
+      (when levittimella-tehty?
+        [{:otsikko "Kais\u00ADta" :nimi ::paikkaus/kaista :kokonaisluku? true
+          :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea}])
+      (when (or urapaikkaus? levittimella-tehty?)
+        [{:otsikko "Pit. (m)" :nimi :suirun-pituus :leveys 3 :tyyppi :positiivinen-numero
+          :tasaa :oikea :kokonaisluku? true}
+         {:otsikko "Leveys\u00AD (m)"
+          :leveys 3 :tasaa :oikea
+          :nimi ::paikkaus/leveys}])
+      ;; Näytetään yksikkö muille paitsi uremille ja levittimellä tehdyille
+      (when-not (or levittimella-tehty? urapaikkaus?)
+        [{:otsikko yksikko
+          :leveys 5
+          :nimi (yksikko-avain yksikko)}])
+      (when urapaikkaus?
+        [{:otsikko "Ajo\u00ADurat" :nimi ::paikkaus/ajourat
+          :leveys 3 :fmt t-paikkauskohteet/urapaikkauksen-sijainti-fmt :tasaa :oikea}
+         {:otsikko "Reu\u00ADnat" :nimi ::paikkaus/reunat
+          :leveys 3 :fmt t-paikkauskohteet/urapaikkauksen-sijainti-fmt :tasaa :oikea}
+         {:otsikko "Urien välit" :nimi ::paikkaus/ajouravalit
+          :leveys 3 :fmt t-paikkauskohteet/urapaikkauksen-sijainti-fmt :tasaa :oikea}
+         {:otsikko "Keski\u00ADsauma" :nimi ::paikkaus/keskisaumat
+          :leveys 3 :fmt t-paikkauskohteet/urapaikkauksen-sijainti-fmt :tasaa :oikea}])
+      (when (or levittimella-tehty? urapaikkaus?)
+        [{:otsikko "Massa\u00ADtyyp\u00ADpi"
+          :leveys 7
+          :nimi ::paikkaus/massatyyppi}
+         {:otsikko "Raek." :leveys 3 :tasaa :oikea
+          :nimi ::paikkaus/raekoko}
+         {:otsikko "Kuula\u00ADmylly"
+          :leveys 4
+          :nimi ::paikkaus/kuulamylly}
+         {:otsikko "m\u00B2"
+          :leveys 5 :tasaa :oikea
+          :fmt #(fmt/desimaaliluku-opt % desimaalien-maara)
+          :hae #(if (excelista-tuotu?-fn %)
+                  (::paikkaus/pinta-ala %)
+                  (:suirun-pinta-ala %))
+          :nimi :suirun-pinta-ala}
+         {:otsikko "kg/m²"
+          :leveys 5 :tasaa :oikea
+          :nimi ::paikkaus/massamenekki}
+         {:otsikko "t" :fmt #(fmt/desimaaliluku-opt % 3)
+          :leveys 5 :tasaa :oikea
+          :nimi ::paikkaus/massamaara}]))))
 
 (defn- gridien-gridi
   [{:keys [ladataan-tietoja? otsikkokomponentti e! tyomenetelmat] :as app} paikkauskohteet gridien-tilat]
@@ -409,9 +436,10 @@
                        @istunto/kayttaja)
             arvo-kpl (kpl-summa paikkaukset)
             arvo-pinta-ala (pinta-alojen-summa paikkaukset (or urapaikkaus? levittimella-tehty?))
-            arvo-massamenekki (massamenekin-keskiarvo paikkaukset)
             arvo-juoksumetri (juoksumetri-summa paikkaukset)
-            arvo-massamaara (massamaaran-summa paikkaukset)]
+            arvo-massamaara (massamaaran-summa paikkaukset)
+            arvo-massamenekki (massamenekin-keskiarvo paikkaukset)
+            tilattu? (= "tilattu" paikkauskohteen-tila)]
         (if ladataan-tietoja?
           [:div.flex-row.venyta.otsikkokomponentti
            [:div.basis512.growfill
@@ -449,35 +477,54 @@
             ;; Muut kuin urem ja levittimellä tehdyt
             (when (and (not urapaikkaus?) (not levittimella-tehty?))
               [:div.basis512.growfill.body-text.riviksi.shrink4.rajaus
-               (when (= "m2" yksikko) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m2")])
-               (when (= "jm" yksikko) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-juoksumetri) " jm")])
-               (when (= "t" yksikko) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " t")])
-               (when (= "kpl" yksikko) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-kpl) " kpl")])])
+               (when (= "m2" yksikko) [:span
+                                       [:strong "Pinta-ala"]
+                                       [:div (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m²")]])
+               (when (= "jm" yksikko) [:span
+                                       [:strong "Jm"]
+                                       [:div (str (fmt/desimaaliluku-opt arvo-juoksumetri) " jm")]])
+               (when (= "t" yksikko) [:span
+                                      [:strong "Ton\u00ADnia"]
+                                      [:div (str (fmt/desimaaliluku-opt arvo-massamaara 2) " t")]])
+               (when (= "kpl" yksikko) [:span
+                                        [:strong "Kpl"]
+                                        [:div (str (fmt/desimaaliluku-opt arvo-kpl) " kpl")]])])
             (when (or urapaikkaus? levittimella-tehty?)
               [:div.basis512.growfill.body-text.riviksi.shrink4.rajaus
-               (when (not= 0 arvo-pinta-ala) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m2")])
-               (when (not= 0 arvo-massamenekki) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamenekki) " t")])
-               (when (not= 0 arvo-massamaara) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " kg/m2")])])
-            [:div.basis192.nogrow.body-text.shrink2.rajaus
-             [yleiset/linkki "Lisää toteuma"
-              #(luo-uusi-toteuma-kohteelle
-                 e!
-                 {::paikkaus/tyomenetelma tyomenetelma
-                  ::paikkaus/paikkauskohde paikkauskohde})
-              {:stop-propagation true
-               :disabloitu? (or urapaikkaus?
-                                (not= "tilattu" paikkauskohteen-tila))
-               :ikoni (ikonit/livicon-plus)
-               :block? true}]
+               (when (not= 0 arvo-pinta-ala) [:span
+                                              [:strong "Pinta-ala"]
+                                              [:div (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m²")]])
+               (when (not= 0 arvo-massamenekki) [:span
+                                                 [:strong "Massa\u00ADmenekki (ka.)"]
+                                                 [:div (str (fmt/desimaaliluku-opt arvo-massamenekki) " kg/m²")]])
+               (when (not= 0 arvo-massamaara) [:span
+                                               [:strong "Ton\u00ADnia"]
+                                               [:div (str (fmt/desimaaliluku-opt arvo-massamaara 2) " t")]])])
+            [:div.basis192.nogrow.body-text.shrink2.rajaus.items-start
+             (if urapaikkaus?
+               [liitteet/lataa-tiedosto
+                {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+                 :paikkauskohde-id (::paikkaus/id paikkauskohde)}
+                {:nappi-teksti "Tuo Excelillä"
+                 :disabled? (not tilattu?)
+                 :url "lue-urapaikkaukset-excelista"
+                 :lataus-epaonnistui #(e! (tiedot/->UremPaikkausLatausEpaonnistui %))
+                 :tiedosto-ladattu #(e! (tiedot/->UremPaikkausLatausOnnistui %))}]
+               [napit/yleinen-toissijainen "Lisää toteuma"
+                #(luo-uusi-toteuma-kohteelle
+                   e!
+                   {::paikkaus/tyomenetelma tyomenetelma
+                    ::paikkaus/paikkauskohde paikkauskohde})
+                {:disabled (not tilattu?)
+                 :ikoni (ikonit/livicon-plus)
+                 :luokka "nappi-reunaton"}])
              ;; Näytetään virheen ilmoitus vain tilaajalle
              (when tilaaja?
-               [yleiset/linkki "Ilmoita virhe"
+               [napit/yleinen-reunaton
+                "Ilmoita virhe"
                 #(e! (tiedot/->AvaaVirheModal paikkauskohde))
-                {:style {}
-                 :block? true
-                 :ikoni (ikonit/harja-icon-action-send-email)
-                 :disabloitu? urakoitsija-kayttajana?
-                 :stop-propagation true}])
+                {:ikoni (ikonit/harja-icon-action-send-email)
+                 :disabled urakoitsija-kayttajana?}])
              (when ilmoitettu-virhe
                [:span.pieni-teksti
                 [:div "Ilmoitettu virhe:"]
@@ -489,27 +536,27 @@
                  [:div.body-text.harmaa [ikonit/livicon-check] "Tarkistettu"]
                  ;; Annetaan vain tilaajan merkitä kohde tarkistetuksi
                  (when tilaaja?
-                   [yleiset/linkki "Merkitse tarkistetuksi"
+                   [napit/yleinen-reunaton "Merkitse tarkistetuksi"
                     #(e! (tiedot/->PaikkauskohdeTarkistettu
                            {::paikkaus/paikkauskohde paikkauskohde}))
-                    {:disabloitu? (or
-                                    urakoitsija-kayttajana?
-                                    tarkistettu?)
-                     :ikoni (ikonit/livicon-check)
-                     :style {:margin-top "0px"}
-                     :block? true
-                     :stop-propagation true}]))
-               [:div.small-text.harmaa (cond
-                                         (= yha-lahetyksen-tila "lahetetty") "Lähetetty YHAan"
+                    {:disabled (or
+                                 urakoitsija-kayttajana?
+                                 tarkistettu?)
+                     :ikoni (ikonit/livicon-check)}]))
+               [:div.small-text.harmaa
+                ;; Täsmätään vihjetekstin sisennys napin tekstiin
+                (when (and (not tarkistettu) tilaaja?) {:style {:margin-left "34px"}})
+                (cond
+                  (= yha-lahetyksen-tila "lahetetty") "Lähetetty YHAan"
 
-                                         (true? tarkistettu?) "Tarkistettu"
+                  (true? tarkistettu?) "Tarkistettu"
 
-                                         (and
-                                           (false? tarkistettu?)
-                                           (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? (paikkaus/tyomenetelma-id->lyhenne tyomenetelma tyomenetelmat))) "Lähetys YHAan"
+                  (and
+                    (false? tarkistettu?)
+                    (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? (paikkaus/tyomenetelma-id->lyhenne tyomenetelma tyomenetelmat))) "Lähetys YHAan"
 
-                                         :else
-                                         "Ko. toimenpidettä ei lähetetä YHA:an")]])]])))))
+                  :else
+                  "Ko. toimenpidettä ei lähetetä YHA:an")]])]])))))
 
 
 (defn paikkaukset [e! {:keys [paikkaukset-grid
@@ -542,6 +589,12 @@
       {:leveys "600px" :jarjestys 1}
       [v-toteumalomake/toteumalomake e! app]])])
 
+(defn- lataa-urem-excel []
+  [yleiset/tiedoston-lataus-linkki
+   "Lataa urapaikkaustoteumien tuonti-Excel"
+   (str (when-not (komm/kehitysymparistossa-yhteiset? (.-host js/location)) "/harja") "/excel/harja_urapaikkaustoteumien_tuonti_pohja.xlsx")
+   {:luokat ["pull-right" "margin-top-16"]}])
+
 (defn view [e! app]
   [:div
    [:div.row.filtterit {:style {:padding "16px"}}
@@ -554,8 +607,11 @@
    [debug/debug app]
    (when (:modalin-paikkauskohde app)
      [ilmoita-virheesta-modal e! app])
+   [excel-tuonti-virhe-modal e! app]
    [:div.row
     [kartta/kartan-paikka]]
+   [:div.row
+    [lataa-urem-excel]]
    [:div.row
     [paikkaukset e! app]]])
 

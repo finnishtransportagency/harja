@@ -2,7 +2,6 @@
 -- Hakee kaikki urakan 3. ja 4. tason toimenpiteet 
 SELECT        u.id, tpi.nimi,
        t4.id                     AS t4_id,
-       t4.koodi                  AS t4_koodi,
        t4.nimi                   AS t4_nimi,
        t4.yksikko                AS t4_yksikko,
        t4.hinnoittelu            AS t4_hinnoittelu,
@@ -18,14 +17,13 @@ SELECT        u.id, tpi.nimi,
        t1.id                     AS t1_id,
        t1.koodi                  AS t1_koodi,
        t1.nimi                   AS t1_nimi
-FROM toimenpidekoodi t4
-         LEFT JOIN toimenpidekoodi t3 ON t3.id = t4.emo
-         LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
-         LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
+FROM tehtava t4
+         LEFT JOIN toimenpide t3 ON t3.id = t4.emo
+         LEFT JOIN toimenpide t2 ON t2.id = t3.emo
+         LEFT JOIN toimenpide t1 ON t1.id = t2.emo
          LEFT JOIN toimenpideinstanssi tpi ON t3.id = tpi.toimenpide AND tpi.urakka = :urakka
          JOIN urakka u on tpi.urakka = u.id
-WHERE t4.taso = 4
-  AND (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+WHERE (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
 
 
@@ -44,17 +42,17 @@ SELECT
   t1.nimi        AS t1_nimi,
   t1.koodi       AS t1_koodi
 FROM toimenpideinstanssi tpi
-  LEFT JOIN toimenpidekoodi t3 ON tpi.toimenpide = t3.id
-  LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
-  LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
+  LEFT JOIN toimenpide t3 ON tpi.toimenpide = t3.id
+  LEFT JOIN toimenpide t2 ON t2.id = t3.emo
+  LEFT JOIN toimenpide t1 ON t1.id = t2.emo
 WHERE urakka = :urakka;
 
 -- name: hae-mh-urakoiden-toimenpiteet
 -- Hakee kaikki 2.tason toimenpiteet mh-urakoille
 SELECT DISTINCT on (t2.nimi) t2.nimi, t2.koodi
 FROM toimenpideinstanssi tpi
-         LEFT JOIN toimenpidekoodi t3 ON tpi.toimenpide = t3.id
-         LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
+         LEFT JOIN toimenpide t3 ON tpi.toimenpide = t3.id
+         LEFT JOIN toimenpide t2 ON t2.id = t3.emo
          LEFT JOIN urakka u ON tpi.urakka = u.id
 WHERE urakka IN (:urakat) AND u.tyyppi='teiden-hoito';
 
@@ -62,7 +60,6 @@ WHERE urakka IN (:urakat) AND u.tyyppi='teiden-hoito';
 -- name: hae-urakan-muutoshintaiset-tehtavat
 -- Hakee kaikki urakan 4. tason muutoshintaiset toimenpiteet
 SELECT t4.id                     AS t4_id,
-       t4.koodi                  AS t4_koodi,
        t4.nimi                   AS t4_nimi,
        t4.yksikko                AS t4_yksikko,
        t4.jarjestys              AS t4_jarjestys,
@@ -77,14 +74,13 @@ SELECT t4.id                     AS t4_id,
        t1.id                     AS t1_id,
        t1.koodi                  AS t1_koodi,
        t1.nimi                   AS t1_nimi
-FROM toimenpidekoodi t4
-         LEFT JOIN toimenpidekoodi t3 ON t3.id = t4.emo
-         LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
-         LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
+FROM tehtava t4
+         LEFT JOIN toimenpide t3 ON t3.id = t4.emo
+         LEFT JOIN toimenpide t2 ON t2.id = t3.emo
+         LEFT JOIN toimenpide t1 ON t1.id = t2.emo
          LEFT JOIN toimenpideinstanssi tpi ON t3.id = tpi.toimenpide AND tpi.urakka = :urakka
          JOIN urakka u on tpi.urakka = u.id
-WHERE t4.taso = 4
-  AND t4.hinnoittelu @> ARRAY ['muutoshintainen'::hinnoittelutyyppi]
+WHERE t4.hinnoittelu @> ARRAY ['muutoshintainen'::hinnoittelutyyppi]
   AND (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
 
@@ -95,7 +91,6 @@ SELECT
     tpi.id               AS tpi_id,
     tpi.nimi             AS tpi_nimi,
     t4.id                AS t4_id,
-    t4.koodi             AS t4_koodi,
     t4.nimi              AS t4_nimi,
     t4.yksikko           AS t4_yksikko,
     t4.hinnoittelu       AS t4_hinnoittelu,
@@ -111,13 +106,13 @@ SELECT
     t1.id                AS t1_id,
     t1.koodi             AS t1_koodi,
     t1.nimi              AS t1_nimi
-FROM toimenpidekoodi t4
-         LEFT JOIN toimenpidekoodi t3 ON t3.id = t4.emo
-         LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
-         LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
+FROM tehtava t4
+         LEFT JOIN toimenpide t3 ON t3.id = t4.emo
+         LEFT JOIN toimenpide t2 ON t2.id = t3.emo
+         LEFT JOIN toimenpide t1 ON t1.id = t2.emo
          LEFT JOIN toimenpideinstanssi tpi ON t3.id = tpi.toimenpide
          JOIN urakka u on tpi.urakka = u.id
-WHERE t4.taso = 4 AND t4.hinnoittelu @> ARRAY ['kokonaishintainen'::hinnoittelutyyppi]
+WHERE t4.hinnoittelu @> ARRAY ['kokonaishintainen'::hinnoittelutyyppi]
   AND t4.poistettu = FALSE
   AND (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
@@ -128,7 +123,6 @@ WHERE t4.taso = 4 AND t4.hinnoittelu @> ARRAY ['kokonaishintainen'::hinnoittelut
 SELECT tpi.id                    AS tpi_id,
        tpi.nimi                  AS tpi_nimi,
        t4.id                     AS t4_id,
-       t4.koodi                  AS t4_koodi,
        t4.nimi                   AS t4_nimi,
        t4.yksikko                AS t4_yksikko,
        t4.hinnoittelu            AS t4_hinnoittelu,
@@ -144,14 +138,13 @@ SELECT tpi.id                    AS tpi_id,
        t1.id                     AS t1_id,
        t1.koodi                  AS t1_koodi,
        t1.nimi                   AS t1_nimi
-FROM toimenpidekoodi t4
-         LEFT JOIN toimenpidekoodi t3 ON t3.id = t4.emo
-         LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
-         LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
+FROM tehtava t4
+         LEFT JOIN toimenpide t3 ON t3.id = t4.emo
+         LEFT JOIN toimenpide t2 ON t2.id = t3.emo
+         LEFT JOIN toimenpide t1 ON t1.id = t2.emo
          LEFT JOIN toimenpideinstanssi tpi ON t3.id = tpi.toimenpide AND tpi.urakka = :urakka
          JOIN urakka u on tpi.urakka = u.id
-WHERE t4.taso = 4
-  AND t4.hinnoittelu @> ARRAY ['yksikkohintainen'::hinnoittelutyyppi]
+WHERE t4.hinnoittelu @> ARRAY ['yksikkohintainen'::hinnoittelutyyppi]
   AND t4.id NOT IN (SELECT DISTINCT tehtava
                     FROM muutoshintainen_tyo
                     WHERE urakka = :urakka
@@ -166,7 +159,6 @@ WHERE t4.taso = 4
 -- ja joille ei ole annettu urakassa hintaa yksikköhintaisena työnä
 SELECT
   t4.id                AS t4_id,
-  t4.koodi             AS t4_koodi,
   t4.nimi              AS t4_nimi,
   t4.yksikko           AS t4_yksikko,
   t4.hinnoittelu       AS t4_hinnoittelu,
@@ -182,14 +174,13 @@ SELECT
   t1.id                AS t1_id,
   t1.koodi             AS t1_koodi,
   t1.nimi              AS t1_nimi
-FROM toimenpidekoodi t4
-         LEFT JOIN toimenpidekoodi t3 ON t3.id = t4.emo
-         LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
-         LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
+FROM tehtava t4
+         LEFT JOIN toimenpide t3 ON t3.id = t4.emo
+         LEFT JOIN toimenpide t2 ON t2.id = t3.emo
+         LEFT JOIN toimenpide t1 ON t1.id = t2.emo
          LEFT JOIN toimenpideinstanssi tpi ON t3.id = tpi.toimenpide AND tpi.urakka = :urakka
          JOIN urakka u on tpi.urakka = u.id
-WHERE t4.taso = 4
-  AND t4.hinnoittelu @> ARRAY ['muutoshintainen'::hinnoittelutyyppi]
+WHERE t4.hinnoittelu @> ARRAY ['muutoshintainen'::hinnoittelutyyppi]
   AND t4.id NOT IN (SELECT DISTINCT tehtava
                     FROM yksikkohintainen_tyo
                     WHERE urakka = :urakka
@@ -201,6 +192,6 @@ ORDER BY t4.jarjestys;
 
 --name: hae-tuote-kolmostason-toimenpidekoodilla
 SELECT tpk2.id, tpk2.nimi
-FROM toimenpidekoodi tpk3
-  JOIN toimenpidekoodi tpk2 ON tpk2.id = tpk3.emo
+FROM toimenpide tpk3
+  JOIN toimenpide tpk2 ON tpk2.id = tpk3.emo
 WHERE tpk3.id = :id;

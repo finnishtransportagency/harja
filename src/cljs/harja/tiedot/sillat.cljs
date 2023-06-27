@@ -37,11 +37,15 @@
   ;; Värittää sillan vihreäksi mikäli se on tarkastettu tämän hoitokauden aikana
 
   (-> silta
-      (assoc-in [:alue :fill] true)
-      (assoc-in [:alue :color] (cond
-                                 (on-tarkastettu-hoitokautena? silta) (:tarkistettu silta-varit)
-                                 (ei-urakan-vastuulla? silta) (:poistettu silta-varit)
-                                 :else (:ei-tarkistettu silta-varit)))))
+    (assoc-in [:alue :fill] true)
+    (assoc-in [:alue :color] (cond
+                               (on-tarkastettu-hoitokautena? silta) (:tarkistettu silta-varit)
+                               (ei-urakan-vastuulla? silta) (:poistettu silta-varit)
+                               :else (:ei-tarkistettu silta-varit)))
+    (assoc-in [:alue :zindex] (cond
+                                (ei-urakan-vastuulla? silta) 4
+                                (on-tarkastettu-hoitokautena? silta) 5
+                                :else 6))))
 
 (defn- hae-urakan-siltalistaus [urakka listaus]
   (k/post! :hae-urakan-sillat

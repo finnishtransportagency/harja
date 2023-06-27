@@ -314,10 +314,11 @@
                 :karttavalinta-tehty-fn #(swap! turvallisuuspoikkeama assoc :sijainti %)}
                {:otsikko "Tierekisteriosoite"
                 :nimi :tr
+                :ala-nayta-virhetta-komponentissa? false
                 :pakollinen? true
                 :tyyppi :tierekisteriosoite
-                :ala-nayta-virhetta-komponentissa? true
-                :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
+                :validoi [[:ei-tyhja-avain :sijainti "Sijaintia ei löytynyt, valitse reitti uudelleen"]
+                          [:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
                 :sijainti (r/wrap (:sijainti @turvallisuuspoikkeama)
                             #(swap! turvallisuuspoikkeama assoc :sijainti %))})
              {:otsikko "Paikan kuvaus"

@@ -202,8 +202,8 @@
   7. Varusteversion versioitu.tekninen-tapatuma tulee olla tyhjä
 
   Tulokset:
-  2. 4. 6. ja 7. -> :ohita
-  1. 3. ja 5. -> :varoita
+  2b. 4. 6. ja 7. -> :ohita
+  1. 3. 5. ja 2a -> :varoita
   muuten :tallenna.
 
   Varoitus jättää tämän lähteen viimeisen ajokerran päiväyksen päivittämättä, eli integraatio epäonnistuu osittain.
@@ -214,7 +214,10 @@
         varuste-olemassaolo {:alkupvm alkupvm :loppupvm alkupvm}
         puuttuvat-pakolliset (puuttuvat-pakolliset-avaimet varustetoteuma)]
     (cond
-      ; 2
+      ; 2a
+      (and (nil? urakka_id) (not= "migraatio" (:muokkaaja varustetoteuma)) )
+      {:toiminto :varoita :viesti (format "Muutoksen lähteen %s urakkaa ei löydy Harjasta ja muokkaaja on joku muu kuin 'migraatio'. Pyydä Velhoa lisäämään urakka-id varusteelle" muutoksen-lahde-oid)}
+      ; 2b
       (nil? urakka_id)
       {:toiminto :ohita :viesti (format "Muutoksen lähteen %s urakkaa ei löydy Harjasta. Ohita varustetoteuma." muutoksen-lahde-oid)}
       ; 4

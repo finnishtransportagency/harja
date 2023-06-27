@@ -185,11 +185,12 @@
             maksuerarivit-ilman-otsikkoja (filter (fn [rivi]
                                                     (not (contains? rivi :teksti)))
                                                   maksuerarivit)]
-        [:div
+        [:div.margin-top-32
+         [:h1 "Maksuerät"]
          [grid/grid
-          {:otsikko "Maksuerät"
-           :tyhja (if (nil? maksuerarivit) [ajax-loader "Maksueriä haetaan..."] "Ei maksueriä")
+          {:tyhja (if (nil? maksuerarivit) [ajax-loader "Maksueriä haetaan..."] "Ei maksueriä")
            :tallenna nil
+           :piilota-muokkaus? true
            :tunniste :numero}
           [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "9%" :pituus 16
             :hae (fn [rivi] (:numero rivi)) :tasaa :oikea}

@@ -41,8 +41,7 @@
                                             :toimenpidejono tloik-tyokalut/+tloik-ilmoitustoimenpideviestijono+
                                             :toimenpidekuittausjono tloik-tyokalut/+tloik-ilmoitustoimenpidekuittausjono+
                                             :toimenpideviestijono tloik-tyokalut/+tloik-toimenpideviestijono+})
-                             (assoc-in [:turi :turvallisuuspoikkeamat-url] "")
-                             (assoc-in [:turi :urakan-tyotunnit-url] ""))]
+                             (assoc-in [:turi :turvallisuuspoikkeamat-url] ""))]
     asetukset-datana
     #_(str asetukset-datana)))
 
@@ -106,7 +105,7 @@
     :muut-tyot :kulut :toteumat :yllapitototeumat :paallystys :maaramuutokset
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
-    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
+    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset :tuck-remoting :ilmoitukset-ws-palvelu
     :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :digiroad :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :api-jarjestelmatunnukset :geometria-aineistot
@@ -159,7 +158,12 @@
     :suolarajoitukset
     :api-sampo
     :harja-status
-    :rajoitusalue-pituudet})
+    :rajoitusalue-pituudet
+    :api-tyomaapaivakirja
+    :tyomaapaivakirja
+    :palautevayla
+    :palauteluokitukset
+    :palauteluokitukset-hallinta})
 
 (def ei-statusta
   #{:metriikka
@@ -173,7 +177,7 @@
     :muut-tyot :kulut :toteumat :yllapitototeumat :paallystys :maaramuutokset
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
-    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
+    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset :tuck-remoting :ilmoitukset-ws-palvelu
     :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :digiroad :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :api-jarjestelmatunnukset :geometria-aineistot
@@ -226,7 +230,12 @@
     :api-sampo
     :harja-status
     :info
-    :rajoitusalue-pituudet})
+    :rajoitusalue-pituudet
+    :api-tyomaapaivakirja
+    :tyomaapaivakirja
+    :palautevayla
+    :palauteluokitukset
+    :palauteluokitukset-hallinta})
 
 (def hidas-ok-status #{:itmf})
 

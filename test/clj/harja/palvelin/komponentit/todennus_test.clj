@@ -1,10 +1,13 @@
 (ns harja.palvelin.komponentit.todennus-test
-  (:require [harja.palvelin.komponentit.todennus :as todennus]
+  (:require [cheshire.core :as cheshire]
+            [clojure.string :as str]
+            [harja.palvelin.komponentit.todennus :as todennus]
             [harja.domain.oikeudet :as oikeudet]
             [harja.testi :refer :all]
             [clojure.test :as t :refer [deftest is use-fixtures testing]]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]))
+            [harja.palvelin.komponentit.tietokanta :as tietokanta])
+  (:import (org.apache.commons.codec.binary Base64)))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root
@@ -81,6 +84,64 @@
                          :urakkaroolit       {14303 #{"ELY_Urakanvalvoja"}
                                               13343 #{"ELY_Urakanvalvoja"}}}]
     (is (= vastaus odotetut-roolit))))
+
+(defn testi-cognito-headerit []
+  (let [x-iam-data [{"typ" "JWT"
+                     "kid" "7d2ed764-76dd-44c3-b4cf-8cde89fe6e5f"
+                     "alg" "ES256"
+                     "iss" "https://cognito-idp.eu-west-1.amazonaws.com/foobar"
+                     "client" "3ctc20d3i4ghv34ks0semt4e16"
+                     "signer" "arn:aws:elasticloadbalancing:eu-west-1:083539282917:loadbalancer/app/foobar/8dad8bb767eb8568"
+                     "exp" 1687175356}
+                    {"custom:rooli" "2234567-8_Paakayttaja"
+                     "custom:sukunimi" "Destialainen"
+                     "custom:ytunnus" "2163026-3"
+                     "email" "daniel@example.com"
+                     "exp" 1687175356
+                     "custom:uid" "daniel"
+                     "custom:puhelin" "1234567890"
+                     "custom:organisaatio" "Destia Oy"
+                     "custom:etunimi" "Daniel"}
+                    ;; Tämä on vain signature. Ei relevantti näiden testien kannalta tällä hetkellä.
+                    "TDZJ0uQA-H2GEfw38cVc-OS8gAsRVlW_EyPojJOtLKbqMalXUcq59BFB-ZJY1UXmxhdNDX04IEAQs70qa5p2Gw=="]
+        jwt (map #(->
+                    %
+                    cheshire/encode
+                    (.getBytes "UTF-8")
+                    Base64/encodeBase64
+                    (String. "UTF-8")) [(first x-iam-data) (second x-iam-data)])
+        jwt (str (str/join "." jwt) "." (nth x-iam-data 2))]
+    {"x-iam-data" jwt}))
+(deftest cognito-headereiden-purku
+  (let [todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)
+        destia-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'")))]
+    (testing "Cognito headeri: x-iam-data on purettu oikein ja tarvittava OAM-data on saatu"
+      (let [req (todenna {:headers (testi-cognito-headerit)})]
+
+        (is (= (get-in req [:kayttaja :organisaatio :id]) destia-id))
+        (is (= (get-in req [:kayttaja :sahkoposti]) "daniel@example.com"))
+        (is (= (get-in req [:kayttaja :kayttajanimi]) "daniel"))
+        (is (= (get-in req [:kayttaja :puhelin]) "1234567890"))
+        (is (= (get-in req [:kayttaja :etunimi]) "Daniel"))
+        (is (= (get-in req [:kayttaja :sukunimi]) "Destialainen"))
+        (is (= (get-in req [:kayttaja :organisaatioroolit]) {23 #{"Paakayttaja"}}))))
+
+    (testing "Käytetään OAM-headereita normaalisti, mikäli ne on määritelty"
+      (let [req (todenna {:headers {"oam_remote_user" "daniel"
+                                    "oam_user_first_name" "Daniel"
+                                    "oam_user_last_name" "Destialainen"
+                                    "oam_user_mail" "daniel@example.com"
+                                    "oam_user_mobile" "1234567890"
+                                    "oam_organization" "Destia Oy"
+                                    "oam_groups" "2234567-8_Paakayttaja"}})]
+
+        (is (= (get-in req [:kayttaja :organisaatio :id]) destia-id))
+        (is (= (get-in req [:kayttaja :sahkoposti]) "daniel@example.com"))
+        (is (= (get-in req [:kayttaja :kayttajanimi]) "daniel"))
+        (is (= (get-in req [:kayttaja :puhelin]) "1234567890"))
+        (is (= (get-in req [:kayttaja :etunimi]) "Daniel"))
+        (is (= (get-in req [:kayttaja :sukunimi]) "Destialainen"))
+        (is (= (get-in req [:kayttaja :organisaatioroolit]) {23 #{"Paakayttaja"}}))))))
 
 (deftest ota-organisaatio-roolin-y-tunnuksesta
   (let [todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)

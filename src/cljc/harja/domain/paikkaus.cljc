@@ -98,6 +98,7 @@
     ::kuulamylly
     ::sijainti
     ::massamaara
+    ::pinta-ala
     ::lahde})
 
 (def tienkohta-perustiedot
@@ -155,6 +156,31 @@
 (s/def ::paikkausurakan-kustannukset-vastaus (s/keys :req-un [::kustannukset]
                                                      :opt-un [::paikkauskohteet ::tyomenetelmat]))
 
+(def massatyypit #{"AB, Asfalttibetoni"
+                   "SMA, Kivimastiksiasfaltti"
+                   "PAB-B, Pehmeät asfalttibetonit"
+                   "PAB-V, Pehmeät asfalttibetonit"
+                   "PAB-O, Pehmeät asfalttibetonit"
+                   "VA, valuasfaltti"
+                   "SIP, Sirotepintaus"
+                   "SOP, Soratien pintaus"})
+
+(def kuulamyllyt #{"AN5"
+                   "AN7"
+                   "AN10"
+                   "AN14"
+                   "AN19"
+                   "AN30"
+                   "AN22"})
+
+(s/def ::alkuaika ::pvm)
+(s/def ::loppuaika ::pvm)
+(s/def ::urapaikkaus-massatyyppi massatyypit)
+(s/def ::raekoko number?)
+(s/def ::urapaikkaus-kuulamylly kuulamyllyt)
+(s/def ::massamaara number?)
+(s/def ::pinta-ala number?)
+
 ;; VHAR-1384, huom. nämä lyhenteitä
 (def paikkaustyomenetelmat-jotka-kiinnostaa-yhaa
   #{"UREM" "KTVA" "REPA" "SIPA" "SIPU"})
@@ -195,6 +221,24 @@
     (or (= "AB-paikkaus levittäjällä" tyomenetelma)
        (= "PAB-paikkaus levittäjällä" tyomenetelma)
        (= "SMA-paikkaus levittäjällä" tyomenetelma))))
+
+(defn massamaara-ja-pinta-ala->massamenekki [massamaara pinta-ala]
+  (when (and massamaara pinta-ala (pos? pinta-ala))
+    #?(:clj
+       ;; with-precision haluaa tarkkuuden, ei skaalaa.
+       ;; Koska ei voida tietää ennen desimaalia olevien määrää,
+       ;; joudutaan laskemaan tarkkuus hieman hankalasti. Lisätään kokonaislukujen määrään kaksi, jotta saadaan
+       ;; luku kahden desimaalin tarkkuudella.
+       (let [tarkkuus (+ 2 (count (str (int (/ (* 1000 (float massamaara))
+                                              (float pinta-ala))))))]
+         (with-precision
+           tarkkuus
+           (/ (* 1000 massamaara)
+             pinta-ala)))
+       :cljs
+       ;; cljs-puolella hoidetaan pyöristys fmt-funktioilla
+       (/ (* 1000 massamaara)
+         pinta-ala))))
 
 (def paikkaus->speqcl-avaimet
   {:id :harja.domain.paikkaus/id

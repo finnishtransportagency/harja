@@ -1,0 +1,158 @@
+{
+    "otsikko": {
+        "lahettaja": {
+            "jarjestelma": "Urakoitsijan järjestelmä",
+            "organisaatio": {
+                "nimi": "__URAKOITSIJA__",
+                "ytunnus": "__YTUNNUS__"
+            }
+        },
+        "viestintunniste": {
+            "id": __VIESTITUNNISTE__
+        },
+        "lahetysaika": "__LÄHETYSAIKA__"
+    },
+    "tyomaapaivakirja": {
+        "tunniste": {
+            "id": "__ULKOINENID__",
+            "versio": __VERSIO__,
+            "paivamaara": "__PAIVAMAARA__"
+        },
+        "saatiedot": [
+            {
+                "saatieto": {
+                    "havaintoaika": "2016-01-30T12:00:00+02:00",
+                    "aseman-tunniste": "__UUSI_SAA-ASEMA-TUNNISTE__",
+                    "aseman-tietojen-paivityshetki": "2016-01-30T12:00:00+02:00",
+                    "ilman-lampotila": 20.0,
+                    "tien-lampotila": 5.0,
+                    "keskituuli": 16,
+                    "sateen-olomuoto": 23.0,
+                    "sadesumma": 5
+                }
+            },
+            {
+                "saatieto": {
+                    "havaintoaika": "2016-01-30T14:00:00+02:00",
+                    "aseman-tunniste": "101500",
+                    "aseman-tietojen-paivityshetki": "2016-01-30T14:00:00+02:00",
+                    "ilman-lampotila": 19.0,
+                    "tien-lampotila": 5.0,
+                    "keskituuli": 17,
+                    "sateen-olomuoto": 23.0,
+                    "sadesumma": 3
+                }
+            }
+        ],
+        "poikkeukselliset-saahavainnot": [
+            {
+                "poikkeuksellinen-saahavainto": {
+                    "havaintoaika": "2016-01-30T12:00:00+02:00",
+                    "paikka": "Kauhava",
+                    "kuvaus": "Jäätävä sade"
+                }
+            }
+        ],
+        "kaluston-kaytto": [
+            {
+                "kalusto": {
+                    "aloitus": "2016-01-30T12:00:00+02:00",
+                    "lopetus": "2017-01-30T12:00:00+02:00",
+                    "tyokoneiden-lkm": 2,
+                    "lisakaluston-lkm": 4
+                }
+            }
+        ],
+        "paivystajan-tiedot": [
+            {
+                "paivystaja": {
+                    "aloitus": "2016-01-30T12:00:00+02:00",
+                    "lopetus": "2017-01-30T12:00:00+02:00",
+                    "nimi": "Erkki Esimerkki"
+                }
+            }
+        ],
+        "tyonjohtajan-tiedot": [
+            {
+                "tyonjohtaja": {
+                    "aloitus": "2016-01-30T12:00:00+02:00",
+                    "lopetus": "2017-01-30T12:00:00+02:00",
+                    "nimi": "Essi Esimerkki"
+                }
+            }
+        ],
+        "tieston-toimenpiteet": [
+            {
+                "tieston-toimenpide": {
+                    "aloitus": "2016-01-30T12:00:00+02:00",
+                    "lopetus": "2017-01-30T12:00:00+02:00",
+                    "tehtavat": [
+                        {
+                            "tehtava": {
+                                "id": 20
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "tieston-muut-toimenpiteet": [
+            {
+                "tieston-muu-toimenpide": {
+                    "aloitus": "2016-01-30T12:00:00+02:00",
+                    "lopetus": "2017-01-30T12:00:00+02:00",
+                    "tehtavat": [
+                        {
+                            "tehtava": {
+                                "kuvaus": "Esimerkki kuvaus"
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "liikenteenohjaus-muutokset": [
+            {
+                "liikenteenohjaus-muutos": {
+                    "kuvaus": "Paljon muutoksia"
+                }
+            }
+        ],
+        "onnettomuudet": [
+            {
+                "onnettomuus": {
+                    "kuvaus": "Onnettomuus tiellä 4"
+                }
+            }
+        ],
+        "viranomaisen-avustaminen": [
+            {
+                "viranomaisen-avustus": {
+                    "kuvaus": "Katselmointi pidetty hyvässä ymmärryksessä",
+                    "tunnit": 4.75
+                }
+            }
+        ],
+        "palautteet": [
+            {
+                "palaute": {
+                    "kuvaus": "Esimerkki palaute"
+                }
+            }
+        ],
+        "muut-kirjaukset": {
+            "kuvaus": "Huomatus vielä että kiire tuli hommissa"
+        },
+        "tilaajan-yhteydenotot": [
+            {
+                "tilaajan-yhteydenotto": {
+                    "kuvaus": "Tilaajan huomautukset työmaapäiväkirjaan"
+                }
+            }
+        ],
+        "urakoitsijan-merkinnat": {
+            "kuvaus": "Urakoitsijan merkinnät jälkikäteen",
+            "nimi": "Ulla Urakoitsija"
+        }
+    }
+}

@@ -1,27 +1,23 @@
 (ns harja.palvelin.integraatiot.velho.varusteet
   (:import (org.postgresql.util PSQLException))
-  (:require [hiccup.core :refer [html]]
-            [taoensso.timbre :as log]
-            [harja.kyselyt.konversio :as konversio]
-            [harja.kyselyt.koodistot :as koodistot]
-            [harja.kyselyt.toteumat :as q-toteumat]
-            [harja.kyselyt.urakat :as q-urakat]
-            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
-            [harja.palvelin.integraatiot.velho.yhteiset :refer [hae-velho-token]]
-            [harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma :as varuste-vastaanottosanoma]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer
-             [aika-string->java-sql-timestamp]]
-            [harja.pvm :as pvm]
-            [harja.tyokalut.yleiset :as yleiset]
-            [clojure.data.json :as json]
-            [clojure.set :as set]
-            [clojure.string :as str]
-            [org.httpkit.client :as http]
-            [clojure.core.memoize :as memo])
-  (:use [slingshot.slingshot :only [throw+ try+]]))
+  (:require
+    [clojure.core.memoize :as memo]
+    [clojure.data.json :as json]
+    [clojure.set :as set]
+    [clojure.string :as str]
+    [org.httpkit.client :as http]
+    [slingshot.slingshot :refer [try+]]
+    [taoensso.timbre :as log]
+    [harja.kyselyt.koodistot :as koodistot]
+    [harja.kyselyt.toteumat :as q-toteumat]
+    [harja.kyselyt.urakat :as q-urakat]
+    [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-timestamp]]
+    [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+    [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
+    [harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma :as varuste-vastaanottosanoma]
+    [harja.palvelin.integraatiot.velho.yhteiset :refer [hae-velho-token]]
+    [harja.pvm :as pvm]))
 
-(def +virhe-varustetoteuma-haussa+ ::velho-virhe-varustetoteuma-haussa)
 (def +kohde-haku-maksimi-koko+ 1000)
 (def +virhe-oidit-memoize-ttl+ (* 10 60 1000))
 (def +oid-hakujen-epokki+ "2000-01-01 00:00:00.0")
@@ -106,8 +102,6 @@
     (assert (some? alkupvm) "`alkupvm` on pakollinen")
     urakka-id))
 
-(def +urakka-memoize-ttl+ (* 10 60 1000))
-
 (defn hae-id->urakka-pvm-map
   "Hakee urakan päivämäärätietoja sellaisille urakoille, joille on olemassa velho_oid (ovat siis velhosta löytyviä MHU urakoita).
   Palauttaa:
@@ -162,7 +156,7 @@
   [db muutoksen-lahde-oid]
   (get (memo-velho-oid->urakka-map db) muutoksen-lahde-oid))
 
-(defn urakka-id-kohteelle [db {:keys [muutoksen-lahde-oid] :as kohde}]
+(defn urakka-id-kohteelle [db {:keys [muutoksen-lahde-oid]}]
   (hae-urakka-velho-oidlla db muutoksen-lahde-oid))
 
 (defn alku-500 [s]
@@ -326,7 +320,7 @@
               http-asetukset {:metodi :POST
                               :url url
                               :otsikot otsikot}
-              {sisalto :body otsikot :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset pyynto)
+              {sisalto :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset pyynto)
               onnistunut? (tallenna-kohteet sisalto oidit url tallenna-fn tallenna-virhe-fn virhe-oidit-fn)]
           onnistunut?)
         (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
@@ -389,7 +383,7 @@
         (tallenna-virhe-fn nil virheviesti)
         false))))
 
-(defn sijainti-kohteelle [db {:keys [sijainti alkusijainti loppusijainti] :as kohde}]
+(defn sijainti-kohteelle [db {:keys [sijainti alkusijainti loppusijainti]}]
   (let [a (or sijainti alkusijainti)
         b loppusijainti
         piste? (some? sijainti)]
@@ -446,7 +440,7 @@
    {:keys [token-url
            varuste-api-juuri-url
            varuste-kayttajatunnus
-           varuste-salasana] :as asetukset}]
+           varuste-salasana]}]
   (try+
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "velho" "varustetoteumien-haku" nil
@@ -558,7 +552,7 @@
   [urakka-kohteet-ndjson]
   (map #(try
           (json/read-str % :key-fn keyword)
-          (catch Throwable t (lokita-urakkahakuvirhe
+          (catch Throwable _ (lokita-urakkahakuvirhe
                                (str "JSON jäsennys epäonnistui. JSON (alku 200 mki): '"
                                     (subs % 0 (min 199 (count %))) "'"))
                              nil))
@@ -594,7 +588,7 @@
            varuste-kayttajatunnus
            varuste-salasana
            varuste-urakka-oid-url
-           varuste-urakka-kohteet-url] :as asetukset}]
+           varuste-urakka-kohteet-url]}]
   (log/debug (format "Haetaan MHU urakoita Velhosta."))
   (try+
     (integraatiotapahtuma/suorita-integraatio

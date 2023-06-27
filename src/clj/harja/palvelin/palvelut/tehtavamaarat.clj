@@ -7,7 +7,8 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.tyokalut.big :as big]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.domain.roolit :as roolit]))
 
 (defn hae-validit-tehtavat
   "Palauttaa tehtava-id:t niille tehtäville, joille teiden hoidon urakoissa (MHU) voi kirjata."
@@ -22,12 +23,6 @@
   (into []
     (q/hae-suunnitellut-hoitokauden-tehtavamaarat-urakassa db {:urakka urakka-id
                                                                :hoitokausi hoitokauden-alkuvuosi})))
-
-(defn hae-tehtavahierarkia
-  "Palauttaa tehtävähierarkian kokonaisuudessaan ilman urakkaan liittyviä tietoja."
-  [db user {:keys [urakka-id]}]
-  (into []
-        (q/hae-tehtavahierarkia db {:urakka urakka-id})))
 
 (defn tehtavaryhmat-ja-toimenpiteet
   [db user {:keys [urakka-id]}]
@@ -133,14 +128,6 @@
                  (reduce (ryhmittele-tehtavat-valitasojen-perusteella (:idt valitasot))
                    (:tasot valitasot) 
                    tehtavat))))))
-
-(defn hae-tehtavat
-  "Urakan tehtävähierarkia ilman määriä"
-  [db user {:keys [urakka-id]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
-  (let [kannasta (into [] (q/hae-tehtavahierarkia db {:urakka urakka-id}))
-        hierarkia (muodosta-hierarkia kannasta)]
-    hierarkia))
 
 (defn hae-tehtavahierarkia-koko-urakan-ajalle
   "Haetaan kaikkien hoitokausien tehtävämäärät"
@@ -270,8 +257,7 @@
 (defn tallenna-sopimuksen-tehtavamaara [db user {:keys [urakka-id tehtava-id maara hoitovuosi] :as tiedot}]
   (log/debug "tallenna-sopimuksen-tehtavamaara :: tiedot" tiedot)
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
-        validit-tehtavat (hae-validit-tehtavat db)
-        hoitokauden-alkuvuosi hoitovuosi]                   ; FIXME kun aikaa
+        validit-tehtavat (hae-validit-tehtavat db)]
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
     (when (empty?
             (filter #(= tehtava-id
@@ -281,9 +267,7 @@
 
     (if-not (= urakkatyyppi :teiden-hoito)
       (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei ole sopimuksella tehtävä- ja määräluettelon tietoja."))))
-    (let [maara (if (big/big? maara)
-                  maara
-                  (-> maara big/->big big/unwrap))
+    (let [maara (bigdec maara)
           urakkatiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
           alkuvuosi (-> urakkatiedot :alkupvm pvm/vuosi)
           loppuvuosi (-> urakkatiedot :loppupvm pvm/vuosi)
@@ -292,6 +276,28 @@
                                            (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitokauden-alkuvuosi))
                                      (range alkuvuosi loppuvuosi))]
       sopimuksen-tehtavamaarat)))
+
+(defn tallenna-sopimuksen-tehtavamaara-kaikille-tehtaville-test
+  "Testausta helpottava palvelu, jota ei voi eikä saa käyttää tuotannossa. Tallentaa kaikille tehtäville suunnitellun määrän."
+  [db user {:keys [urakka-id] :as tiedot} kehitysmoodi?]
+  (log/debug "tallenna-sopimuksen-tehtavamaara-test :: tiedot" tiedot " kehitysmoodi? " kehitysmoodi?)
+  (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
+        validit-tehtavat (hae-validit-tehtavat db)]
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
+    (if-not (= urakkatyyppi :teiden-hoito)
+      (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei ole sopimuksella tehtävä- ja määräluettelon tietoja."))))
+    (let [maara 100M
+          urakkatiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+          alkuvuosi (-> urakkatiedot :alkupvm pvm/vuosi)
+          loppuvuosi (-> urakkatiedot :loppupvm pvm/vuosi)
+          sopimuksen-tehtavamaarat (mapv (fn [hoitokauden-alkuvuosi]
+                                           (doseq [t validit-tehtavat]
+                                             (when (and
+                                                     (roolit/roolissa? user roolit/jarjestelmavastaava) kehitysmoodi?)
+                                               (q/tallenna-sopimuksen-tehtavamaara db user urakka-id (:tehtava-id t) maara hoitokauden-alkuvuosi))))
+                                         (range alkuvuosi loppuvuosi))]
+      (hae-tehtavahierarkia-maarineen db user {:urakka-id urakka-id
+                                               :hoitokauden-alkuvuosi alkuvuosi}))))
 
 (defn poista-namespace 
   [[avain arvo]]
@@ -361,7 +367,7 @@
       {:tallennettu nil}
       tulos)))
 
-(defrecord Tehtavamaarat []
+(defrecord Tehtavamaarat [kehitysmoodi?]
   component/Lifecycle
   (start [{:keys [db http-palvelin] :as this}]
     (doto http-palvelin
@@ -373,14 +379,6 @@
         :hae-sopimuksen-tila
         (fn [user tiedot]
           (hae-sopimuksen-tila db user tiedot)))
-      (julkaise-palvelu
-        :tehtavat
-        (fn [user tiedot]
-          (hae-tehtavat db user tiedot)))
-      (julkaise-palvelu
-        :tehtavahierarkia
-        (fn [user tiedot]
-          (hae-tehtavahierarkia db user tiedot)))
       (julkaise-palvelu
         :tehtavamaarat-hierarkiassa
         (fn [user tiedot]
@@ -400,17 +398,20 @@
       (julkaise-palvelu
         :tallenna-sopimuksen-tehtavamaara
         (fn [user tiedot]
-          (tallenna-sopimuksen-tehtavamaara db user tiedot))))
+          (tallenna-sopimuksen-tehtavamaara db user tiedot)))
+      (julkaise-palvelu
+        :tallenna-sopimuksen-tehtavamaara-kaikille-tehtaville-test
+        (fn [user tiedot]
+          (tallenna-sopimuksen-tehtavamaara-kaikille-tehtaville-test db user tiedot kehitysmoodi?))))
     this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :tallenna-sopimuksen-tila)
     (poista-palvelu (:http-palvelin this) :hae-sopimuksen-tila)
-    (poista-palvelu (:http-palvelin this) :tehtavat)
-    (poista-palvelu (:http-palvelin this) :tehtavahierarkia)
     (poista-palvelu (:http-palvelin this) :tehtavamaarat-hierarkiassa)
     (poista-palvelu (:http-palvelin this) :tehtavamaarat)
     (poista-palvelu (:http-palvelin this) :tallenna-tehtavamaarat)
     (poista-palvelu (:http-palvelin this) :tehtavaryhmat-ja-toimenpiteet)
-    (poista-palvelu (:http-palvelin this) :tallenna-suunnitellut-tehtavamaarat)
+    (poista-palvelu (:http-palvelin this) :tallenna-sopimuksen-tehtavamaara)
+    (poista-palvelu (:http-palvelin this) :tallenna-sopimuksen-tehtavamaara-kaikille-tehtaville-test)
     this))

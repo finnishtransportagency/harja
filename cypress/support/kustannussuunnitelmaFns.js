@@ -10,7 +10,7 @@ import transit from "transit-js";
 
 export function testaaTilayhteenveto(hoitovuosi, osionNimi, onkoVahvistettu) {
     // Valitse aluksi haluttu hoitovuosi, jotta kohdistetaan testaus tietylle hoitovuodelle yhteenvedossa.
-    cy.get('[data-cy="hoitovuosi-rivivalitsin"]')
+    cy.get('[data-cy="hoitokausi-jarjestysluvulla"]')
         .contains('button', hoitovuosi)
         .click();
 
@@ -406,11 +406,7 @@ export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
     cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
 }
 
-/**
- * @param hoitokausi Valittava hoitokausi
- */
-export function valitseHoitokausi(hoitokausi) {
-    cy.get('[data-cy="hoitovuosi-rivivalitsin"]')
-        .contains('button', hoitokausi)
-        .click();
+export function valitseHoitokausi(nykyinenHoitokausi, uusiHoitokausi) {
+    cy.get('[data-cy="hoitokausi-jarjestysluvulla"]').contains(nykyinenHoitokausi).click();
+    cy.get('[data-cy="hoitokausi-jarjestysluvulla"]').contains('span', uusiHoitokausi).click();
 }

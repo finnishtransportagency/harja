@@ -20,8 +20,9 @@ function alustaKittilanUrakka() {
 }
 
 function taytaArvoja() {
-    // Valitaan 3. hoitovuosi ja täytetään sille arvoja.
-    ks.valitseHoitokausi(3);
+    let hoitokausiNyt = "4. hoitovuosi (2022—2023)";
+    let valittavaHoitokausi = "3. hoitovuosi (2021—2022)";
+    ks.valitseHoitokausi(hoitokausiNyt, valittavaHoitokausi);
     cy.get('#suunnitellut-hankinnat-taulukko')
         .taulukonOsaPolussa([1, 0, 0, 0])
         .click();
@@ -83,8 +84,10 @@ describe('Testaa Kittilän MHU kustannussuunnitelmanäkymää', () => {
     })
 
     it('Vaihda vuosi ja täytä kattohinta', () => {
-        // Valitaan 4. hoitovuosi.
-        ks.valitseHoitokausi(4);
+
+        let hoitokausiNyt = "3. hoitovuosi (2021—2022)";
+        let valittavaHoitokausi = "4. hoitovuosi (2022—2023)";
+        ks.valitseHoitokausi(hoitokausiNyt, valittavaHoitokausi);
 
         cy.get(kattohintaElem(3)).should('not.have', 'input');
         ks.taytaKattohinta(4, "12300");
@@ -99,7 +102,9 @@ describe('Testaa Kittilän MHU kustannussuunnitelmanäkymää', () => {
         cy.reload();
         cy.get('.ajax-loader', {timeout: 40000}).should('not.exist');
         // Valitaan 3. hoitovuosi.
-        valitseHoitokausi(3);
+        let hoitokausiNyt = "4. hoitovuosi (2022—2023)";
+        let valittavaHoitokausi = "3. hoitovuosi (2021—2022)";
+        ks.valitseHoitokausi(hoitokausiNyt, valittavaHoitokausi);
 
         tarkistaKattohinta(1, "0,00", true)
         tarkistaKattohinta(2, "0,00", true)

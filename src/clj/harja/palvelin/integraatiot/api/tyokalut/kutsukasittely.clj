@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.api.tyokalut.kutsukasittely
   "API:n kutsujen käsittely funktiot"
   (:require [cheshire.core :as cheshire]
+            [harja.palvelin.komponentit.todennus :as todennus]
             [taoensso.timbre :as log]
             [clojure.walk :as walk]
             [clojure.core.async :refer [<! go thread]]
@@ -231,6 +232,11 @@
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-viallinen-kutsu-virhevastaus virheet (get otsikot "origin")))
 
+(defn kasittele-duplikaatti-tyomaapaivakirja [resurssi otsikot virheet]
+  (log/warn (format "Resurssin: %s kutsu ei palauttanut hakutuloksia: %s " resurssi virheet))
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
+  (tee-viallinen-kutsu-virhevastaus virheet (get otsikot "origin")))
+
 (defn kasittele-viallinen-kutsu [resurssi parametrit otsikot kutsu virheet]
       (log/warn (format "Resurssin: %s kutsu on viallinen: %s. Parametrit: %s. Kutsu: %s." resurssi virheet parametrit (pr-str (str/join (take 10000 kutsu)))))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
@@ -332,6 +338,8 @@
       (kasittele-sisainen-autentikaatio-virhe resurssi headerit virheet))
     (catch [:type virheet/+kayttajalla-puutteelliset-oikeudet+] {:keys [virheet]}
       (kasittele-sisainen-autentikaatio-virhe resurssi headerit virheet))
+    (catch [:type virheet/+duplikaatti-tyomaapaivakirja+] {:keys [virheet]}
+      (kasittele-duplikaatti-tyomaapaivakirja resurssi headerit virheet))
     (catch #(get % :virheet) poikkeus
       (kasittele-sisainen-kasittelyvirhe resurssi headerit (:virheet poikkeus) ))
     ;; Odottamattomat poikkeustilanteet (virhetietoja ei julkaista):
@@ -396,7 +404,9 @@
                    headerit
                    body
                    #(let
-                        [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+                        [kayttaja (hae-kayttaja db (get
+                                                     (todennus/prosessoi-kayttaja-headerit (:headers request))
+                                                     "oam_remote_user"))
                          origin-header (get (:headers request) "origin")
                          kutsun-data (lue-kutsu xml? kutsun-skeema request body)
                          vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
@@ -436,7 +446,9 @@
                     headerit
                     body
                     #(let
-                       [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+                       [kayttaja (hae-kayttaja db (get
+                                                    (todennus/prosessoi-kayttaja-headerit (:headers request))
+                                                    "oam_remote_user"))
                         origin-header (get (:headers request) "origin")
                         kutsun-data (lue-kutsu xml? kutsun-skeema request body)
                         vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)
@@ -465,7 +477,9 @@
     {:status 415
      :headers {"Content-Type" "text/plain"}
      :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
-    (let [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+    (let [kayttaja (hae-kayttaja db (get
+                                      (todennus/prosessoi-kayttaja-headerit (:headers request))
+                                      "oam_remote_user"))
           xml? (= (kutsun-formaatti request) "xml")
           tapahtuma-id (when integraatioloki
                          (lokita-kutsu integraatioloki resurssi request nil))
@@ -478,7 +492,10 @@
                     nil
                     #(let
                        [_ (vaadi-jarjestelmaoikeudet db
-                            (hae-kayttaja db (get (:headers request) "oam_remote_user")) vaadi-analytiikka-oikeus?)
+                            (hae-kayttaja db (get
+                                               (todennus/prosessoi-kayttaja-headerit (:headers request))
+                                               "oam_remote_user"))
+                            vaadi-analytiikka-oikeus?)
                         vastauksen-data (kasittele-kutsu-fn parametrit kayttaja db)]
                        (tee-vastaus 200 vastauksen-skeema vastauksen-data (get (:headers request) "origin") xml?)))]
       (when integraatioloki
@@ -488,7 +505,7 @@
 (defn kasittele-kevyesti-get-kutsu
   "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu data
    tulee GET pyyntönä parametrien kanssa. Lähetetty data on JSON/ tai XML -formaatissa, joka muunnetaan Clojure dataksi ja toisin päin.
-   Vain ulospäin lähtevä data validoidaan annetun scheman mukaisesti. Tämä siis poikkeaa hieman toisest kasittele-kutsu
+   Vain ulospäin lähtevä data validoidaan annetun scheman mukaisesti. Tämä siis poikkeaa hieman toisesta kasittele-kutsu
    funktiosta.
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
@@ -501,7 +518,9 @@
      :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
     (let [kutsun-kesto-alkaa (System/currentTimeMillis)
           request-origin (get (:headers request) "origin")
-          kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+          kayttaja (hae-kayttaja db (get
+                                      (todennus/prosessoi-kayttaja-headerit (:headers request))
+                                      "oam_remote_user"))
           tapahtuma-id (when integraatioloki
                          (lokita-kutsu integraatioloki resurssi request nil))
           parametrit (:params request)
@@ -567,7 +586,10 @@
                     (:headers request)
                     body
                     #(let
-                       [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+                       [kayttaja (hae-kayttaja db
+                                   (get
+                                     (todennus/prosessoi-kayttaja-headerit (:headers request))
+                                     "oam_remote_user"))
                         origin-header (get (:headers request) "origin")
                         kutsun-data (lue-kutsu xml? kutsun-skeema request body)
                         vastauksen-data (kasittele-kutsu-fn db kutsun-data tapahtuma-id)

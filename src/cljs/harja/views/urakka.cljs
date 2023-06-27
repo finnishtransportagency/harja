@@ -7,6 +7,7 @@
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
             [harja.views.urakka.toteutus :as toteutus]
+            [harja.views.urakka.tyomaapaivakirja.paivakirja :as paivakirja]
             [harja.views.urakka.laskutus :as laskutus]
             [harja.views.vesivaylat.urakka.laskutus :as laskutus-vesivaylat]
             [harja.views.urakka.yllapitokohteet.paallystyksen-kohdeluettelo :as paallystyksen-kohdeluettelo]
@@ -28,7 +29,9 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
-            [harja.domain.urakka :as urakka])
+            [harja.domain.urakka :as urakka]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.domain.roolit :as roolit])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -47,6 +50,13 @@
     :toimenpiteet (and (oikeudet/urakat-vesivaylatoimenpiteet id)
                        (urakka/vesivaylaurakkatyyppi? tyyppi)
                        (istunto/ominaisuus-kaytossa? :vesivayla))
+    ;; TODO 
+    :tyomaapaivakirja (and 
+                         (k/kehitysymparistossa?)
+                         (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava)
+                         (oikeudet/urakat-paikkaukset id)
+                         (#{:hoito :teiden-hoito} tyyppi))
+
     :vv-materiaalit (and
                       (oikeudet/urakat-vesivayla-materiaalit id)
                       (urakka/vesivaylaurakkatyyppi? tyyppi))
@@ -152,6 +162,13 @@
        (when (valilehti-mahdollinen? :toimenpiteet ur)
          ^{:key "toimenpiteet"}
          [toimenpiteet/toimenpiteet ur])
+
+       ;; Työmaapäiväkirja sallitaan tällähetkellä vain kehitysympäristössä 
+       "Työmaapäiväkirja"
+       :tyomaapaivakirja
+       (when (valilehti-mahdollinen? :tyomaapaivakirja ur)
+         ^{:key "tyomaapaivakirja"}
+         [paivakirja/tyomaapaivakirja])
 
        "Liikenne"
        :liikenne

@@ -8,12 +8,6 @@
             <kohdetyotyyppi>paallystys</kohdetyotyyppi>
             <nimi>testikohde</nimi>
             <tunnus>A</tunnus>
-            <!--Optional:-->
-            <yllapitoluokka>1</yllapitoluokka>
-            <!--Optional:-->
-            <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
-            <!--Optional:-->
-            <nykyinen-paallyste>1</nykyinen-paallyste>
             <tierekisteriosoitevali>
                 <karttapaivamaara>2017-12-12</karttapaivamaara>
                 <tienumero>20</tienumero>
@@ -40,12 +34,19 @@
                     <paallystystoimenpide>
                         <uusi-paallyste>11</uusi-paallyste>
                         <raekoko>12</raekoko>
+                        <massamenekki>100</massamenekki>
                         <kokonaismassamaara>124</kokonaismassamaara>
                         <rc-prosentti>14</rc-prosentti>
                         <!--Optional:-->
                         <kuulamylly>4</kuulamylly>
                         <paallystetyomenetelma>22</paallystetyomenetelma>
                     </paallystystoimenpide>
+                    <!--Optional:-->
+                    <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
+                    <!--Optional:-->
+                    <yllapitoluokka>1</yllapitoluokka>
+                    <!--Optional:-->
+                    <nykyinen-paallyste>1</nykyinen-paallyste>
                 </alikohde>
                 <alikohde>
                     <yha-id>4</yha-id>
@@ -63,12 +64,19 @@
                     <paallystystoimenpide>
                         <uusi-paallyste>11</uusi-paallyste>
                         <raekoko>12</raekoko>
+                        <massamenekki>100</massamenekki>
                         <kokonaismassamaara>124</kokonaismassamaara>
                         <rc-prosentti>14</rc-prosentti>
                         <!--Optional:-->
                         <kuulamylly>4</kuulamylly>
                         <paallystetyomenetelma>22</paallystetyomenetelma>
                     </paallystystoimenpide>
+                    <!--Optional:-->
+                    <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
+                    <!--Optional:-->
+                    <yllapitoluokka>1</yllapitoluokka>
+                    <!--Optional:-->
+                    <nykyinen-paallyste>1</nykyinen-paallyste>
                 </alikohde>
             </alikohteet>
         </kohde>

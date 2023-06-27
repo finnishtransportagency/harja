@@ -122,7 +122,7 @@
     (let [urakan-tpi (ffirst (q "SELECT id
                                   FROM toimenpideinstanssi
                                   WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')
-                                  AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi = 'PAAL_YKSHINT')"))]
+                                  AND toimenpide = (SELECT id FROM toimenpide WHERE koodi = 'PAAL_YKSHINT')"))]
       (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
 
 (deftest tarkista-tiemerkintaurakan-toimenpideinstanssin-luonti
@@ -141,7 +141,7 @@
     (let [urakan-tpi (ffirst (q "SELECT id
                                   FROM toimenpideinstanssi
                                   WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')
-                                  AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi = 'TIEM_YKSHINT')"))]
+                                  AND toimenpide = (SELECT id FROM toimenpide WHERE koodi = 'TIEM_YKSHINT')"))]
       (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
 
 (deftest tarkista-valaistusurakan-toimenpideinstanssin-luonti
@@ -159,7 +159,7 @@
     (let [urakan-tpi (ffirst (q "SELECT id
                                   FROM toimenpideinstanssi
                                   WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')
-                                  AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi = 'VALA_YKSHINT')"))]
+                                  AND toimenpide = (SELECT id FROM toimenpide WHERE koodi = 'VALA_YKSHINT')"))]
       (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
 
 (deftest sampo-harja-kutsu-epaonnistuu-test

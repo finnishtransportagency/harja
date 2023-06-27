@@ -23,7 +23,8 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as v-toteumalomake]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake :as v-pmrlomake]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.domain.tierekisteri :as tr-domain])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- viesti-tiemerkintaan-modal [e! lomake tiemerkintaurakat tyomenetelmat]
@@ -372,7 +373,7 @@
             :tyyppi :komponentti
             :komponentti (fn []
                            [harja.ui.yleiset/varoitus-vihje
-                            "Urapaikkauksen toteumat voi tuoda vain rajapintojen kautta" nil])
+                            "Urapaikkauksen toteumat voi tuoda Harjan rajapinnan tai Excel-tiedoston avulla" nil])
             ::lomake/col-luokka "col-xs-12"
             :rivi-luokka "lomakeryhman-rivi-tausta"}))
        ;; Kun POT raportoitava, niin näytä potin tila
@@ -694,8 +695,9 @@
    [:div.col-xs-12
     [lukutila-rivi "Työmenetelmä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma lomake) tyomenetelmat)]
     ;; Sijainti
-    [lukutila-rivi "Sijainti" (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
-                                                              (:aet lomake) (:let lomake))]
+    [lukutila-rivi "Sijainti" (tr-domain/tr-osoite-moderni-fmt (:tie lomake)
+                                                               (:aosa lomake) (:aet lomake)
+                                                               (:losa lomake) (:let lomake))]
     ;; Pituus
     [lukutila-rivi "Kohteen pituus" (str (:pituus lomake) " m")]
     ;; Aikataulu
@@ -719,8 +721,9 @@
      [:div.lomake-arvo.margin-right-64 (paikkaus/tyomenetelma-id->nimi (:tyomenetelma lomake) tyomenetelmat)]
      [napit/muokkaa "Muokkaa" #(e! (harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake/->AvaaPMRLomake (assoc lomake :tyyppi :paikkauskohteen-muokkaus))) {:luokka "napiton-nappi" :paksu? true}]]
     [:div.lomake-arvo.margin-top-4 (or (:lisatiedot lomake) "")]
-    [:div.lomake-arvo.margin-top-4 (t-paikkauskohteet/fmt-sijainti (:tie lomake) (:aosa lomake) (:losa lomake)
-                                                                   (:aet lomake) (:let lomake))]
+    [:div.lomake-arvo.margin-top-4 (tr-domain/tr-osoite-moderni-fmt (:tie lomake)
+                                                                    (:aosa lomake) (:aet lomake)
+                                                                    (:losa lomake) (:let lomake))]
 
     [:hr]
 
