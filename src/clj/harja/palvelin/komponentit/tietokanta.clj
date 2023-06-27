@@ -38,7 +38,6 @@
   (let [db-on-aurora? (try
                         (status-q/db-on-aurora db-replica)
                         (catch Exception e
-                          (log/debug "Tietokannan tyyppiä ei voitu tunnistaa")
                           false))
         replikoinnin-viive (try (if db-on-aurora?
                                   (status-q/hae-replikoinnin-viive-aurora db-replica)
