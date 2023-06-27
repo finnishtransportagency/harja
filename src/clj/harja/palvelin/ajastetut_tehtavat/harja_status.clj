@@ -26,7 +26,13 @@
                                                        :lisatiedot nil})]))
 
 (defn tarkista-replica [db kehitysmoodi?]
-  (let [viive (status-kyselyt/hae-replikoinnin-viive db)
+  (let [db-on-aurora? (try
+                        (status-kyselyt/db-on-aurora db)
+                        (catch Exception e
+                          false))
+        viive (if db-on-aurora?
+                (status-kyselyt/hae-replikoinnin-viive-aurora db)
+                (status-kyselyt/hae-replikoinnin-viive db))
         status (cond
                  (not (ominaisuus-kaytossa? :replica-db)) "ei-kaytossa"
                  (and (ominaisuus-kaytossa? :replica-db) (not (nil? viive)) (not kehitysmoodi?) (> 5 viive)) "ok"
