@@ -32,8 +32,8 @@
 (def +velho-urakka-oid-url+ (str +velho-api-juuri+ "/hallintorekisteri/api/v1/tunnisteet/urakka/maanteiden-hoitourakka"))
 (def +velho-urakka-kohde-url+ (str +velho-api-juuri+ "hallintorekisteri/api/v1/kohteet"))
 
-(def +velho-toimenpiteet-oid-url+ (str +velho-api-juuri+ "/toimenpiderekisteri/api/v1/tunnisteet/toimenpiteet/valimaiset-varustetoimenpiteet"))
-(def +velho-toimenpiteet-kohde-url+ (str +velho-api-juuri+ "/toimenpiderekisteri/api/v1/historia/kohteet"))
+(def +velho-toimenpiteet-oid-url+ (re-pattern (str +velho-api-juuri+ "/toimenpiderekisteri/api/v1/tunnisteet/[^/]+/[^/]+")))
+(def +velho-toimenpiteet-kohde-url+ (re-pattern (str +velho-api-juuri+ "/toimenpiderekisteri/api/v1/historia/kohteet")))
 
 (def +ylimaarainen-54321-kohde+ "[{\"kohdeluokka\":\"varusteet/kaiteet\",{\"sijainti\":{\"tie\":22,\"osa\":5,\"etaisyys\":4139},
 \"oid\":\"5.4.3.2.1\"},{\"kohdeluokka\":\"varusteet/kaiteet\",{\"sijainti\":{\"tie\":22,\"enkoodattu\":1682900006324,\"osa\":5,\"etaisyys\":4139},
@@ -234,8 +234,8 @@
        {:url +velho-toimenpiteet-kohde-url+ :method :post} (fake-kohteet-yleinen toimenpide-oidit-yleinen toimenpide-kohteet-yleinen)]
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
         (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))
-        (is (= 1 (count (kaikki-virheet))))
-        (when (= 1 (count (kaikki-virheet)))
+        (is (= 2 (count (kaikki-virheet))))
+        (when (= 2 (count (kaikki-virheet)))
           (is (str/includes? (:virhekuvaus (first (kaikki-virheet))) "Ulkoinen käsittelyvirhe")))))))
 
 (deftest varuste-velho-kohteet-palauttaa-rikkinaisen-vastauksen-test
@@ -692,7 +692,7 @@
                                                   FROM varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle"))]
           (is (every? (fn [x] (= odotettu-viimeisin-aika (:viimeksi_haettu x))) viimeksi-haetut)
               "Kaikilla kohdeluokilla piti olla odotettu viimeisin hakuaika.")
-          (let [odotetut-kohdelajit (set (map :kohdeluokka varusteet/+tietolajien-lahteet+))
+          (let [odotetut-kohdelajit (set (map :kohdeluokka (conj varusteet/+tietolajien-lahteet+ varusteet/+valimaiset-varustetoimenpiteet+)))
                 viimeksi-haettu-kohdelajit (set (map :kohdeluokka viimeksi-haetut))]
             (is (= viimeksi-haettu-kohdelajit odotetut-kohdelajit)
                 "Kaikkien kohdeluokkien pitää olla varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle taulussa.")))))
@@ -740,7 +740,7 @@
                                      q-map
                                      (map :enumlabel)
                                      set)
-        koodin-kohdeluokat (->> varusteet/+tietolajien-lahteet+
+        koodin-kohdeluokat (->> (conj varusteet/+tietolajien-lahteet+ varusteet/+valimaiset-varustetoimenpiteet+)
                                 (map :kohdeluokka)
                                 set)]
     (is (= koodin-kohdeluokat tietokannan-kohdeluokat) "Tietokannassa pitää olla samat kohdeluokat kuin koodissa.")))
