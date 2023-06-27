@@ -13,7 +13,7 @@
     },
     "alueurakkanumero": {
       "id": "urn:harja/ilmoitukset/0/ilmoitus/alueurakkanumero",
-      "type": "integer",
+      "type": ["string", "integer"],
       "required": false
     },
     "sopimusId": {
