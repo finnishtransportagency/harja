@@ -5,6 +5,16 @@
 -- tämä luku ei tarkoita mitään.
 SELECT EXTRACT(EPOCH FROM (now() - pg_last_xact_replay_timestamp()))::INT;
 
+-- name: db-on-aurora
+-- single?: true
+-- Palauttaa true tai false, mikäli
+SELECT aurora_version() IS NOT NULL;
+
+-- name: hae-replikoinnin-viive-aurora
+-- single?: true
+-- Palauttaa replikoinnin viiveen sekunteina.
+SELECT FLOOR((SELECT replica_lag_in_msec FROM aurora_replica_status()) / 1000)::INT;
+
 
 -- name: tarkista-kantayhteys
 -- single?: true

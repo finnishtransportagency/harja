@@ -41,7 +41,13 @@
 
 (deftest toimenpidekoodien-haku-toimii
   (let [[[_ taso1-lkm] [_ taso2-lkm] [_ taso3-lkm] [_ taso4-lkm]]
-        (q "select taso, count(*) from toimenpide WHERE piilota IS NOT TRUE GROUP BY taso UNION select taso, count(*) from tehtava WHERE piilota IS NOT TRUE GROUP BY taso ORDER BY taso;")
+        (q "select taso, count(*)
+        from toimenpide
+        WHERE piilota IS NOT TRUE GROUP BY taso
+        UNION
+        select 4 as taso, count(*)
+        from tehtava
+        WHERE piilota IS NOT TRUE GROUP BY taso ORDER BY taso;")
         koodit-tasoittain (group-by
                             :taso
                             (kutsu-palvelua (:http-palvelin jarjestelma)

@@ -504,7 +504,7 @@
       (is (#{:toimenpidepyynto :tiedoitus :kysely}
             (:ilmoitustyyppi i)) "ilmoitustyyppi"))
     (is (= 501 (count ilmoitukset-palvelusta)) "Ilmoitusten lukumäärä") ;eka sivullinen eli 500+1 palautuu
-    (is (= ilmoitusten-maara-suoraan-kannasta 10052) "Ilmoitusten lukumäärä")))
+    (is (= ilmoitusten-maara-suoraan-kannasta 10053) "Ilmoitusten lukumäärä")))
 
 (deftest ^:perf hae-ilmoitukset-kesto
   (is (gatling-onnistuu-ajassa?

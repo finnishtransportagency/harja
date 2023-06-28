@@ -203,10 +203,10 @@
                                                (:id user))]
       (q/liita-kommentti<! db tp-id (:id kommentti)))))
 
-(defn tallenna-turvallisuuspoikkeaman-liite [db turvallisuuspoikkeama]
+(defn tallenna-turvallisuuspoikkeaman-liite [db turvallisuuspoikkeama tp-id]
   (when-let [uusi-liite (:uusi-liite turvallisuuspoikkeama)]
     (log/info "UUSI LIITE: " uusi-liite)
-    (q/liita-liite<! db (:id turvallisuuspoikkeama) (:id uusi-liite))))
+    (q/liita-liite<! db tp-id (:id uusi-liite))))
 
 (defn tallenna-turvallisuuspoikkeama-kantaan [db user tp korjaavattoimenpiteet uusi-kommentti urakka]
   (jdbc/with-db-transaction [db db]
@@ -215,7 +215,7 @@
       (when tyotunnit
         (urakan-tyotunnit-q/paivita-urakan-kuluvan-vuosikolmanneksen-tyotunnit db urakka tyotunnit))
       (tallenna-turvallisuuspoikkeaman-kommentti db user uusi-kommentti (:urakka tp) tp-id)
-      (tallenna-turvallisuuspoikkeaman-liite db tp)
+      (tallenna-turvallisuuspoikkeaman-liite db tp tp-id)
       (luo-tai-paivita-korjaavat-toimenpiteet db user korjaavattoimenpiteet tp-id urakka)
       tp-id)))
 

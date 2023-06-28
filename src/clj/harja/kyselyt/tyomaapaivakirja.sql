@@ -63,7 +63,7 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi", t.vers
        t.luotu, t.luoja, t.muokattu, t.muokkaaja
   FROM tyomaapaivakirja t
        JOIN urakka u ON t.urakka_id = u.id
- WHERE t.id = t.id
+ WHERE t.id = :tyomaapaivakirja_id
    AND t.versio = :versio
  GROUP BY t.id, u.nimi;
 

@@ -1,0 +1,30 @@
+name: 'Run migrations to RDS'
+description: 'Ajaa migraatiot Aurora RDS kantaan kohdeympäristöön'
+
+inputs:
+  commit-sha:
+    description: ''
+    required: true
+
+# TODO: Toteuta migraatioiden ajaminen RDS:ään
+#       Käytetään todennäköisesti AWS puolella Lambdaa, joka ajaa migraatiot kantaan
+#       Tämä sen takia, että ei tarvitse ottaa suoraan yhteyttä RDS:ään GitHub actionseissa,
+#       eikä actionseille tarvitse antaa niin paljon oikeuksia.
+
+runs:
+  using: "composite"
+  # Esimerkkispeksi lambdalle:
+  #   1. Lambda ottaa vastaan parametrina commit-sha:n, josta Harjan image on deployattu
+  #   2. Lambda pullaa Harjan julkireposta commit-sha:lla vastaavat koodit (jotta ajetaan imagen versiota vastaavat migraatiot)
+  #   3. Migraatiot ajetaan flywaylla tavalliseen tapaan Aurora RDS kantaan
+  #   3.1 mvn -Dharja.tietokanta.port="${HARJA_TIETOKANTA_PORTTI}" -Dharja.tietokanta.host="${HARJA_TIETOKANTA_HOST}" flyway:migrate
+  #   4. Jos on tarpeita tuoda migraatioiden ajamiseen liittyviä asetuksia, ne tuodaan tilikohtaisesti AWS Secrets Managerilla
+  #        GitHub actionsin kautta ei tarvitse antaa lambdalle salaisuuksia.
+  steps:
+    - name: Run migrations to RDS using lambda
+      run:  |
+        echo "Run migrations to RDS using lambda"
+        aws aja-lambda-jotenkin <ajettavan-lambda-arn> $commit_sha
+      shell: bash
+
+

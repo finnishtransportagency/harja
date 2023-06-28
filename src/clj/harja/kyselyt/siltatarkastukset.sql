@@ -293,10 +293,11 @@ SET silta         = :silta,
     urakka        = :urakka,
     tarkastusaika = :tarkastusaika,
     tarkastaja    = :tarkastaja,
-    luoja         = :luoja,
-    poistettu     = :poistettu
+    poistettu     = :poistettu,
+    muokkaaja     = :muokkaaja,
+    muokattu      = NOW()
 WHERE ulkoinen_id = :id
-  AND luoja = :luoja
+  AND luoja = :muokkaaja
   AND poistettu = FALSE;
 
 -- name: hae-siltatarkastusten-kohteet
