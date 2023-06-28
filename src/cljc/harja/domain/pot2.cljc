@@ -73,7 +73,7 @@
      {:name :a :jos :b}
 
   Kenttä :a tulee olemaan vain jos kenttä :b ei ole nil."
-  [alusta tiedot]
+  [alusta]
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
                                                [:kasittelysyvyys :lisatty-paksuus :murske]
                                                2            ;; AB
@@ -139,17 +139,16 @@
                                                                                         (assoc avain-tai-metadata :pakollinen? true)
                                                                                         avain-tai-metadata)))
                                             kentta-metadata (get alusta-toimenpide-kaikki-lisaavaimet (:nimi toimenpide-spesifinen-kentta-metadata))
-
                                             ;; Lasketaan tien pinta ala
                                             kentta-metadata (if (= (get kentta-metadata :nimi) :pinta-ala)
-                                                              (let [tie {:tr-alkuosa (-> tiedot :alustalomake :tr-alkuosa)
-                                                                         :tr-alkuetaisyys (-> tiedot :alustalomake :tr-alkuetaisyys)
-                                                                         :tr-loppuosa (-> tiedot :alustalomake :tr-loppuosa)
-                                                                         :tr-loppuetaisyys (-> tiedot :alustalomake :tr-loppuetaisyys)}
+                                                              (let [tie {:tr-alkuosa (:tr-alkuosa alusta)
+                                                                         :tr-alkuetaisyys (:tr-alkuetaisyys alusta)
+                                                                         :tr-loppuosa (:tr-loppuosa alusta)
+                                                                         :tr-loppuetaisyys (:tr-loppuetaisyys alusta)}
                                                                     pituus (tr/laske-tien-pituus {} tie)
-                                                                    leveys (-> tiedot :alustalomake :leveys)]
+                                                                    leveys (:leveys alusta)]
                                                                 (merge kentta-metadata {:arvo (* pituus leveys)}))
-                                                              (merge kentta-metadata {:arvo 0}))]
+                                                              kentta-metadata)]
                                         (merge kentta-metadata toimenpide-spesifinen-kentta-metadata)))]
     (->> avaimet
          (map luo-metadata-ja-oletusarvot)
@@ -172,7 +171,7 @@
 (defn alusta-sallitut-ja-pakolliset-lisaavaimet
   "Palauta vain sallittut avaimet"
   [alusta]
-  (let [relevantti-metadata (alusta-toimenpidespesifit-metadata alusta nil)
+  (let [relevantti-metadata (alusta-toimenpidespesifit-metadata alusta)
         sallitut (->> relevantti-metadata
                       (map #(:nimi %))
                       set)

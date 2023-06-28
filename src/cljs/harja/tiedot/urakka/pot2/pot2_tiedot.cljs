@@ -68,22 +68,22 @@
                                        (not= nimi :massa)
                                        (not= nimi :murske)
                                        (not= nimi :verkon-tyyppi)))
-               muotoile-kentta (fn [{:keys [otsikko yksikko nimi valinnat-koodisto valinta-arvo valinta-nayta] :as metadata}]
+               muotoile-kentta (fn [{:keys [otsikko yksikko nimi valinnat-koodisto valinta-arvo valinta-nayta arvo] :as metadata}]
                                  (let [kentan-arvo (nimi rivi)
                                        teksti (if valinnat-koodisto
                                                 (let [koodisto (valinnat-koodisto koodistot)
                                                       koodisto-rivi (some #(when (= (valinta-arvo %) kentan-arvo) %) koodisto)
                                                       koodisto-teksti (valinta-nayta koodisto-rivi)]
                                                   koodisto-teksti)
-                                                (str kentan-arvo
+                                                (str (or kentan-arvo arvo)
                                                      (when (some? yksikko)
                                                        (str " " yksikko))))
                                        otsikko? (not (contains? #{:verkon-sijainti :verkon-tarkoitus
                                                                   :sideaine :sideainepitoisuus :sideaine2
-                                                                  :massamaara :pinta-ala :kokonaismassamaara} nimi))]
+                                                                  :massamaara :kokonaismassamaara} nimi))]
 
                                    (str (when otsikko? (str otsikko ": ")) teksti)))]
-           (str/join "; " (->> (pot2-domain/alusta-toimenpidespesifit-metadata rivi nil)
+           (str/join "; " (->> (pot2-domain/alusta-toimenpidespesifit-metadata rivi)
                                (filter kuuluu-kentalle?)
                                (map muotoile-kentta))))))]))
 
