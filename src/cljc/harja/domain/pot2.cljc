@@ -8,6 +8,7 @@
             [harja.validointi :as v]
             [clojure.set :as set]
             [clojure.spec.alpha :as s]
+            [harja.domain.tierekisteri :as tr]
             [clojure.string :as str]
             #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]]))
   #?(:cljs
@@ -36,8 +37,7 @@
             :tyyppi :positiivinen-numero :desimaalien-maara 2
             :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 20 2))}
    :pinta-ala {:nimi :pinta-ala :otsikko "Pinta-ala" :yksikko "m²"
-               :tyyppi :positiivinen-numero :desimaalien-maara 1
-               :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
+               :tyyppi :pinta-ala :arvo 0}
    :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmäärä" :yksikko "t"
                         :tyyppi :positiivinen-numero :desimaalien-maara 1
                         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
@@ -73,7 +73,7 @@
      {:name :a :jos :b}
 
   Kenttä :a tulee olemaan vain jos kenttä :b ei ole nil."
-  [alusta]
+  [alusta tiedot]
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
                                                [:kasittelysyvyys :lisatty-paksuus :murske]
                                                2            ;; AB
@@ -126,7 +126,8 @@
                                                []
                                                42           ;; LJYR
                                                [:kasittelysyvyys
-                                                :leveys :pinta-ala]
+                                                :leveys 
+                                                {:nimi :pinta-ala :pakollinen? false}]
                                                43           ;; RJYR
                                                []}
         avaimet (get alusta-toimenpidespesifit-lisaavaimet (:toimenpide alusta))
@@ -137,7 +138,18 @@
                                                                                       (if (nil? pakollinen?)
                                                                                         (assoc avain-tai-metadata :pakollinen? true)
                                                                                         avain-tai-metadata)))
-                                            kentta-metadata (get alusta-toimenpide-kaikki-lisaavaimet (:nimi toimenpide-spesifinen-kentta-metadata))]
+                                            kentta-metadata (get alusta-toimenpide-kaikki-lisaavaimet (:nimi toimenpide-spesifinen-kentta-metadata))
+
+                                            ;; Lasketaan tien pinta ala
+                                            kentta-metadata (if (= (get kentta-metadata :nimi) :pinta-ala)
+                                                              (let [tie {:tr-alkuosa (-> tiedot :alustalomake :tr-alkuosa)
+                                                                         :tr-alkuetaisyys (-> tiedot :alustalomake :tr-alkuetaisyys)
+                                                                         :tr-loppuosa (-> tiedot :alustalomake :tr-loppuosa)
+                                                                         :tr-loppuetaisyys (-> tiedot :alustalomake :tr-loppuetaisyys)}
+                                                                    pituus (tr/laske-tien-pituus {} tie)
+                                                                    leveys (-> tiedot :alustalomake :leveys)]
+                                                                (merge kentta-metadata {:arvo (* pituus leveys)}))
+                                                              (merge kentta-metadata {:arvo 0}))]
                                         (merge kentta-metadata toimenpide-spesifinen-kentta-metadata)))]
     (->> avaimet
          (map luo-metadata-ja-oletusarvot)
@@ -160,7 +172,7 @@
 (defn alusta-sallitut-ja-pakolliset-lisaavaimet
   "Palauta vain sallittut avaimet"
   [alusta]
-  (let [relevantti-metadata (alusta-toimenpidespesifit-metadata alusta)
+  (let [relevantti-metadata (alusta-toimenpidespesifit-metadata alusta nil)
         sallitut (->> relevantti-metadata
                       (map #(:nimi %))
                       set)

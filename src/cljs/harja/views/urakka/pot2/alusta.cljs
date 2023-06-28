@@ -71,7 +71,9 @@
                                                                                                   :fmt :komponentti}]
                                                           "-"))
                                        :valinnat massat}}
-        toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpidespesifit-metadata alustalomake)
+        toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpidespesifit-metadata alustalomake alusta)
+
+
         lisakentta-generaattori (fn [{:keys [nimi pakollinen? valinnat-koodisto jos] :as kentta-metadata}]
                                   (let [kentta (get mukautetut-lisakentat nimi)
                                         valinnat (or (:valinnat kentta)

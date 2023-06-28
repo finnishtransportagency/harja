@@ -83,7 +83,7 @@
                                                                   :massamaara :pinta-ala :kokonaismassamaara} nimi))]
 
                                    (str (when otsikko? (str otsikko ": ")) teksti)))]
-           (str/join "; " (->> (pot2-domain/alusta-toimenpidespesifit-metadata rivi)
+           (str/join "; " (->> (pot2-domain/alusta-toimenpidespesifit-metadata rivi nil)
                                (filter kuuluu-kentalle?)
                                (map muotoile-kentta))))))]))
 
