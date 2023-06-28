@@ -162,6 +162,8 @@ SELECT
   otsikko,
   ilmoitustyyppi,
   selitteet,
+  kuvat,
+  "emon-ilmoitusid",
   i.aihe AS aihe_id,
   pa.nimi AS aihe_nimi,
   i.tarkenne AS tarkenne_id,
