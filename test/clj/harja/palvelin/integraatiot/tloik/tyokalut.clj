@@ -192,6 +192,10 @@
   <selite>auraustarve</selite>
   <selite>aurausvallitNakemaesteena</selite>
   </seliteet>
+  <kuvat>
+  <url>https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Minniecat.png/220px-Minniecat.png</url>
+  <url>https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Six_weeks_old_cat_%28aka%29.jpg/390px-Six_weeks_old_cat_%28aka%29.jpg</url>
+  </kuvat>
   <luokittelu>
   <aihe>1</aihe>
   <tarkenne>1</tarkenne>
@@ -391,8 +395,9 @@
 (defn hae-testi-ilmoitukset []
   (let [vastaus (mapv
                   #(-> %
-                       (konv/array->set :selitteet)
-                       (set/rename-keys {:ilmoitusid :ilmoitus-id}))
+                     (konv/array->set :selitteet)
+                     (konv/array->set :kuvat)
+                     (set/rename-keys {:ilmoitusid :ilmoitus-id}))
                   (q-map "select * from ilmoitus where ilmoitusid = 123456789;"))]
     vastaus))
 

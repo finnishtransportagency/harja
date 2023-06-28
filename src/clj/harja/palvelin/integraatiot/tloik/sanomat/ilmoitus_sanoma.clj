@@ -45,6 +45,10 @@
   (z/xml-> selitteet (fn [selite]
                        (z/xml-> (z/xml1-> selite) :selite z/text))))
 
+(defn lue-kuvat [kuvat]
+  (z/xml-> kuvat (fn [kuva]
+                       (z/xml-> (z/xml1-> kuva) :url z/text))))
+
 (defn lue-sijainti [sijainti]
   (let [tienumero (z/xml1-> sijainti :tienumero z/text)]
     {:tienumero (when tienumero (Integer/parseInt tienumero))
@@ -58,9 +62,6 @@
 (defn lue-luokittelu [luokittelu]
   {:aihe (Integer/parseInt (z/xml1-> luokittelu :aihe z/text))
    :tarkenne (Integer/parseInt (z/xml1-> luokittelu :tarkenne z/text))})
-
-(defn lue-kuvat [kuvaLinkit]
-  (z/xml1-> kuvaLinkit :url z/text))
 
 (defn lue-viesti [viesti]
   (let [data (xml/lue viesti)
@@ -82,12 +83,11 @@
                   :lahettaja (when-let [lahettaja (into {} (z/xml-> data :lahettaja lue-lahettaja))]
                                (if (empty? lahettaja) nil lahettaja))
                   :selitteet (into [] (z/xml-> data :seliteet lue-selitteet))
+                  :kuvat (into [] (z/xml-> data :kuvat lue-kuvat))
                   :sijainti (when-let [sijainti (into {} (z/xml-> data :sijainti lue-sijainti))]
                               (if (empty? sijainti) nil sijainti))
                   :vastaanottaja (when-let [vastaanottaja (into {} (z/xml-> data :vastaanottaja lue-vastaanottaja))]
                                    (if (empty? vastaanottaja) nil vastaanottaja))
-                  :kuvat (when-let [kuvaLinkit (into {} (z/xml-> data :kuvaLinkit lue-kuvat))]
-                           (seq kuvaLinkit))
                   :luokittelu (when-let [luokittelu (into {} (z/xml-> data :luokittelu lue-luokittelu))]
                                 (if (empty? luokittelu) nil luokittelu))}]
     ilmoitus))
