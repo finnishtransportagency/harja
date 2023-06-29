@@ -115,6 +115,7 @@
     (is (= kuvien-maara 2) "Kuvia löytyi 2")
     (is (= (:yhteydenottopyynto ilmoitus) false))
     (is (= (:ilmoittaja_tyyppi ilmoitus) "tienkayttaja"))
+    (is (= (:emon-ilmoitusid ilmoitus) 987240))
     (is (instance? PGgeometry (:sijainti ilmoitus)))
     (is (= (:ilmoittaja_matkapuhelin ilmoitus) "08023394852"))
     (is (= (:ilmoitus-id ilmoitus) 123456789))

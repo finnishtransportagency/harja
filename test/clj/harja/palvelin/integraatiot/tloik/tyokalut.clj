@@ -161,6 +161,7 @@
      <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
      <lahetysaika>" valitetty "</lahetysaika>
      <ilmoitusId>123456789</ilmoitusId>
+     <emonIlmoitusId>987240</emonIlmoitusId>
      <tunniste>UV-1509-1a</tunniste>
      <versionumero>1</versionumero>
      <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
