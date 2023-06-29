@@ -11,6 +11,12 @@
 
 (def tiemax-atom (atom 9999))
 
+;; Tämä on vain gc:llä testausta varten
+;; TODO: Poista
+(defn ^:export aseta-tiemax [uusi]
+  (reset! tiemax-atom uusi)
+  )
+
 (def tienumerot
   (reaction<!
     [{:keys [xmin ymin xmax ymax] :as kartalla-nakyva-alue} @nav/kartalla-nakyva-alue]
