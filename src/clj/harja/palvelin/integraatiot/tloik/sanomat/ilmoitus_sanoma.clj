@@ -66,7 +66,8 @@
                                (parsi-paivamaara (z/xml1-> data :lahetysaika z/text))
                                (parsi-paivamaara (z/xml1-> data :ilmoitettu z/text)))
                   :ilmoitus-id (Integer/parseInt (z/xml1-> data :ilmoitusId z/text))
-                  :emon-ilmoitusid (Integer/parseInt (z/xml1-> data :emonIlmoitusId z/text))
+                  :emon-ilmoitusid (when-let [emonilmoitusid (z/xml1-> data :emonIlmoitusId z/text)]
+                                     (Integer/parseInt emonilmoitusid))
                   :tunniste (z/xml1-> data :tunniste z/text)
                   :ilmoitustyyppi (z/xml1-> data :ilmoitustyyppi z/text)
                   :urakkatyyppi (z/xml1-> data :urakkatyyppi z/text)
