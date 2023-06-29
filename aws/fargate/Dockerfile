@@ -1,31 +1,43 @@
 # -- Run-time vaihe --
-# Käytetään kevyttä Alpine linux Eclipse Temurin 11 (OpenJDK) imagea
-FROM eclipse-temurin:11-alpine
+# Käytetään Eclipse Temurin 11 (OpenJDK) imagea
+FROM eclipse-temurin:11
 
 # Lisää labeleita AWS ECR:ää varten
 LABEL description="Harja app"
 LABEL version="1.0"
 
 # Asenna apurit
-# Huom! busybox-extras sisältää mm. telnetin
-RUN apk add --no-cache bash curl jq nano unzip vim busybox-extras
+
+RUN apt-get update && apt-get install -y \
+    bash \
+    curl \
+    jq \
+    nano \
+    unzip \
+    vim \
+    telnet \
+    && rm -rf /var/lib/apt/lists/*
+
 
 # Asenna AWS CLI v2
-# FIXME: AWS CLI v2 ei toimi Alpine linuxissa suorilta ja sen asentaminen vaikuttaa hankalalta
-#        Jos tätä tarvitaan, niin pitää ehkä käyttää jotain muuta kuin Alpine linuxia pohjana tai
-#        asentaa AWS CLI v2 jotenkin muuten.
-#RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
-# unzip awscliv2.zip && \
-# ./aws/install && \
-# rm -rf awscliv2.zip aws
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+ unzip awscliv2.zip && \
+ ./aws/install && \
+ rm -rf awscliv2.zip aws
 
 
 # Luo Non-root ryhmä ja käyttäjä, jotta sovellus ei pyöri roottina
-RUN addgroup -S harja && adduser -S harja -G harja
+ARG USERNAME=harja
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+RUN groupadd --gid $USER_GID $USERNAME && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
 
 # Luo hakemisto sovellukselle ja aseta oikeudet
 RUN mkdir -p /app && chown -R harja:harja /app
-USER harja
+
+# Aseta default user ja workdir
+USER $USERNAME
 WORKDIR /app
 
 COPY ./aws/fargate/entrypoint.sh entrypoint.sh

@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -x
-
 # TODO: Lataa kontin tarvitsemat tiedostot S3 bucketista aws cli s3 työkalulla
 
 # Luodaan java-optioille array, johon otetaan mukaan lisäoptioita mikäli ne on määritelty
