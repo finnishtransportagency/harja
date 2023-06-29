@@ -8,7 +8,8 @@
 (def data
          (reaction {:harja.tiedot.navigaatio    {:valittu-urakka @nav/valittu-urakka
                                                  :valittu-ilmoitus-id @nav/valittu-ilmoitus-id
-                                                 :kartalla-nakyva-alue @nav/kartalla-nakyva-alue}
+                                                 :kartalla-nakyva-alue @nav/kartalla-nakyva-alue
+                                                 :kartan-koko @nav/kartan-nakyvan-alueen-koko}
                     :harja.tiedot.urakka.tienumerot-kartallla {:tienumerot @tienumerot-kartalla/tienumerot
                                                                :tienumerot-kartalla @tienumerot-kartalla/tienumerot-kartalla}
                     :harja.tiedot.urakka.urakka {:yleiset                          @urakka/yleiset

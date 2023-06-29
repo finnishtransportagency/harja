@@ -1,10 +1,6 @@
 (ns harja.tiedot.urakka.tienumerot-kartalla
   (:require [reagent.core :refer [atom] :as r]
-            [cljs.core.async :refer [<!]]
             [harja.atom :refer-macros [reaction<!]]
-            [harja.loki :refer [log tarkkaile!]]
-            [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature kartalla-esitettavaan-muotoon]]
-            [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros
@@ -13,6 +9,7 @@
 (defonce karttataso-tienumerot (atom nil))
 (defonce karttataso-nakyvissa? (atom true))
 
+(def tiemax-atom (atom 9999))
 
 (def tienumerot
   (reaction<!
@@ -20,21 +17,15 @@
     {:odota 1000}
     (when (and xmin ymin xmax ymax)
       (k/post! :hae-tienumerot-kartalle
-        kartalla-nakyva-alue))))
+        (merge kartalla-nakyva-alue
+          {:tiemax @tiemax-atom})))))
 
 (def tienumerot-kartalla
   (reaction
     (when @tienumerot
       (mapv (fn [tienumero]
-              (println tienumero)
               {:alue
                {:type :teksti
                 :coordinates (:coordinates (:geom tienumero))
-                :text (:tie tienumero)
-                }
-               #_(maarittele-feature (:geom tienumero)
-                       false
-                       (merge asioiden-ulkoasu/tr-ikoni
-                         {:text "asdf"})
-                       asioiden-ulkoasu/tr-viiva)})
+                :text (:tie tienumero)}})
         @tienumerot))))

@@ -165,11 +165,11 @@ WHERE "tr-numero" = :tr-numero AND
 
 -- name: hae-tiet-alueella
 SELECT tie,
-         st_closestpoint(st_union(array_agg(geom)), st_centroid(st_union(array_agg(geom)))) AS geom,
-    st_asgeojson(st_union(array_agg(geom)))
-FROM
-tr_osan_ajorata toa WHERE
-ST_Intersects(toa.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
+       st_closestpoint(st_union(array_agg(geom)), st_centroid(st_union(array_agg(geom)))) AS geom,
+       st_asgeojson(st_union(array_agg(geom)))
+FROM tr_osan_ajorata toa
+WHERE (:tiemax IS NULL OR tie < :tiemax::INT)
+  AND ST_Intersects(toa.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
 GROUP BY tie
-ORDER BY tie ASC
+ORDER BY tie
 LIMIT 100;

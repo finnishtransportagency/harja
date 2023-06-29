@@ -162,6 +162,10 @@
   {:pre (s/valid? ::yllapitokohde/tr-paalupiste params)}
   (tv/hae-trpisteiden-valinen-tieto-yhdistaa db params))
 
+(defn hae-tienumerot-kartalle [db params]
+  (tv/hae-tiet-alueella db params)
+  )
+
 (defrecord TierekisteriHaku []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -199,8 +203,7 @@
                                     (hae-tr-osoite-gps-koordinaateilla db params))
       :hae-tienumerot-kartalle (fn [_ params]
                                  (oikeudet/ei-oikeustarkistusta!)
-                                 (tv/hae-tiet-alueella db params))
-      )
+                                 (hae-tienumerot-kartalle db params)))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
