@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -x
 
 # Ladataan Harjan tarvitsemat staattiset tiedostot ja ylimääräiset kirjastot
 
