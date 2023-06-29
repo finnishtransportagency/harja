@@ -66,16 +66,10 @@
         (assoc :kuittaukset kuittaukset))
       ilmoitus)))
 
-(defn muokkaa-alueurakkanro [ilmoitus]
-  (if (:alueurakkanumero ilmoitus)
-    (assoc ilmoitus :alueurakkanumero (Integer/parseInt (:alueurakkanumero ilmoitus)))
-    ilmoitus))
-
 (defn rakenna-ilmoitus [ilmoitus]
   {:ilmoitus (-> ilmoitus
                rakenna-selitteet
                (rakenna-henkilo :ilmoittaja)
                (rakenna-henkilo :lahettaja)
                rakenna-sijanti
-               rakenna-kuittaukset
-               muokkaa-alueurakkanro)})
+               rakenna-kuittaukset)})

@@ -263,48 +263,48 @@ BEGIN
     -- Talvihoidon toimenpideinstanssin id
     select tpi.id
     from toimenpideinstanssi tpi
-             join toimenpidekoodi tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '23104' AND tpk.taso = 3
+             JOIN toimenpide tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '23104' AND tpk.taso = 3
     WHERE tpi.urakka = ur
     into talvihoito_tpi_id;
 
     -- Liikenneymp. hoidon toimenpideinstanssin id
     select tpi.id
     from toimenpideinstanssi tpi
-             join toimenpidekoodi tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '23116' AND tpk.taso = 3
+             JOIN toimenpide tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '23116' AND tpk.taso = 3
     WHERE tpi.urakka = ur
     into lyh_tpi_id;
 
     -- Sorateiden hoidon toimenpideinstanssin id
     select tpi.id
     from toimenpideinstanssi tpi
-             join toimenpidekoodi tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '23124' AND tpk.taso = 3
+             JOIN toimenpide tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '23124' AND tpk.taso = 3
     WHERE tpi.urakka = ur
     into sora_tpi_id;
 
     -- Päällystepaikkaukset toimenpideinstanssin id
     select tpi.id
     from toimenpideinstanssi tpi
-             join toimenpidekoodi tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '20107' AND tpk.taso = 3
+             JOIN toimenpide tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '20107' AND tpk.taso = 3
     WHERE tpi.urakka = ur
     into paallyste_tpi_id;
 
     -- MHU ylläpidon toimenpideinstanssin id
     select tpi.id
     from toimenpideinstanssi tpi
-             join toimenpidekoodi tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '20191' AND tpk.taso = 3
+             JOIN toimenpide tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '20191' AND tpk.taso = 3
     WHERE tpi.urakka = ur
     into yllapito_tpi_id;
 
     -- Korvausinvestointien toimenpideinstanssin id
     select tpi.id
     from toimenpideinstanssi tpi
-             join toimenpidekoodi tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '14301' AND tpk.taso = 3
+             JOIN toimenpide tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '14301' AND tpk.taso = 3
     WHERE tpi.urakka = ur
     into korvausinv_tpi_id;
 
     select tpi.id
     from toimenpideinstanssi tpi
-             join toimenpidekoodi tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '23151' AND tpk.taso = 3
+             JOIN toimenpide tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '23151' AND tpk.taso = 3
     WHERE tpi.urakka = ur
     into hoidonjohto_tpi_id;
 
@@ -874,8 +874,8 @@ BEGIN
                            AND (u.tyyppi = 'hoito' OR
                                 (u.tyyppi = 'teiden-hoito' AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
                                                                                          FROM toimenpideinstanssi tpi
-                                                                                                  JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                                                                                                  JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                                                                                                  JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+                                                                                                  JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
                                                                                               maksuera m
                                                                                          WHERE tpi.urakka = ur
                                                                                            AND m.toimenpideinstanssi = tpi.id

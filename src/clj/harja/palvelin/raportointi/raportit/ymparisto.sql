@@ -3,8 +3,8 @@
 -- lisäksi tälle riville otetaan mukaan frontin kautta raportoidut käytöt, jolle ei ole hoitoluokkatietoa.
 
 WITH paikkaustehtavat AS (SELECT tpk4.*
-                            FROM toimenpidekoodi tpk4
-                                     JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+                            FROM tehtava tpk4
+                                     JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
                                  -- "Päällysteiden paikkaus"-tehtävät
                            WHERE tpk3.koodi = '20107'
                              AND tpk4.poistettu IS NOT TRUE
@@ -52,7 +52,7 @@ SELECT
     SUM(rtmaarat.tehtavamaara) AS maara
   FROM raportti_toteuma_maarat rtmaarat
            JOIN urakka u ON (u.id = rtmaarat.urakka_id AND u.urakkanro IS NOT NULL)
-           JOIN toimenpidekoodi tk ON tk.id = rtmaarat.toimenpidekoodi
+           JOIN tehtava tk ON tk.id = rtmaarat.toimenpidekoodi
  WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
    AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
    AND u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
@@ -141,7 +141,7 @@ SELECT
     SUM(ut.maara) as maara
 FROM urakka_tehtavamaara ut
          JOIN urakka u ON ut.urakka = u.id AND u.urakkanro IS NOT NULL
-         JOIN toimenpidekoodi tk ON ut.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
+         JOIN tehtava tk ON ut.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
          JOIN materiaaliluokka ml ON tk.materiaaliluokka_id = ml.id
          LEFT JOIN materiaalikoodi mk ON tk.materiaalikoodi_id = mk.id
 WHERE ut.poistettu IS NOT TRUE
@@ -175,7 +175,7 @@ SELECT u.id AS urakka_id,
        SUM(ut.maara) AS maara
   FROM urakka_tehtavamaara ut
     JOIN urakka u ON ut.urakka = u.id AND u.urakkanro IS NOT NULL
-    JOIN toimenpidekoodi tk ON ut.tehtava = tk.id
+    JOIN tehtava tk ON ut.tehtava = tk.id
  WHERE ut.poistettu IS NOT TRUE
    -- Rajoitetaan koskemaan pelkästään teiden-hoito (MHU) tyyppisiin urakohin
    AND u.tyyppi = 'teiden-hoito'

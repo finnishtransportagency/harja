@@ -191,13 +191,16 @@
                               :kayttajatunnus s/Str
                               :salasana s/Str}
 
-
    (s/optional-key :yllapitokohteet) {:paivittainen-sahkopostin-lahetysaika [s/Num]}
    :komponenttien-tila {:itmf {:paivitystiheys-ms s/Int}
                         :db {:paivitystiheys-ms s/Int
                              :kyselyn-timeout-ms s/Int}
                         :db-replica {:paivitystiheys-ms s/Int
-                                     :replikoinnin-max-viive-ms s/Int}}})
+                                     :replikoinnin-max-viive-ms s/Int}}
+   (s/optional-key :palautevayla) {:url s/Str
+                                   :kayttajatunnus s/Str
+                                   :salasana s/Str
+                                   :paivitysaika [s/Num]}})
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"

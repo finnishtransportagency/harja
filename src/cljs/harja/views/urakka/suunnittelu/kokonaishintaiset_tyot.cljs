@@ -474,7 +474,8 @@
                   :leveys 12
                   :muokattava? (constantly false)})
 
-               {:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys 25}
+               {:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero
+                :kokonaisluku? true :leveys 25}
                {:otsikko "Kuukausi" :nimi "kk" :hae #(if (= -1 (:kuukausi %))
                                                        "urakan alkaessa"
                                                        (pvm/kuukauden-nimi (:kuukausi %)))

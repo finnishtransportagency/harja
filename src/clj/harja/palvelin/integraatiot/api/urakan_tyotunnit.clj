@@ -11,8 +11,7 @@
             [harja.kyselyt.urakan-tyotunnit :as q]
             [harja.domain.urakan-tyotunnit :as d]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
-            [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.integraatiot.turi.turi-komponentti :as turi])
+            [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn kolmannes-tallennetavaksi [urakka-id {:keys [vuosi kolmannes tunnit]}]
@@ -21,16 +20,7 @@
    ::d/vuosikolmannes kolmannes
    ::d/tyotunnit tunnit})
 
-(defn laheta-turiin [turi urakka-id tyotunnit]
-  (future
-    (doseq [{:keys [vuosi kolmannes]} tyotunnit]
-      (try
-        (turi/laheta-urakan-vuosikolmanneksen-tyotunnit turi urakka-id vuosi kolmannes)
-        (catch Exception e
-          (log/error e (format "Urakan (id: %s) työtuntien (vuosi: %s, kolmannes: %s) lähettäminen epäonnistui"
-                               urakka-id vuosi kolmannes)))))))
-
-(defn kirjaa-urakan-tyotunnit [turi db kayttaja {urakka-id :id} {tyotunnit :tyotunnit}]
+(defn kirjaa-urakan-tyotunnit [db kayttaja {urakka-id :id} {tyotunnit :tyotunnit}]
   (let [urakka-id (Integer/parseInt urakka-id)]
     (log/info (format "Kirjataan urakalle (id: %s) työtunnit käyttäjän (%s) toimesta. Työtunnit: %s."
                       urakka-id
@@ -41,24 +31,22 @@
       (doseq [{vuosikolmannes :vuosikolmannes} tyotunnit]
         (q/tallenna-urakan-tyotunnit db (kolmannes-tallennetavaksi urakka-id vuosikolmannes))))
 
-    (laheta-turiin turi urakka-id (map :vuosikolmannes tyotunnit))
-
     (tee-kirjausvastauksen-body {:ilmoitukset "Työtunnit kirjattu onnistuneesti"})))
 
-(defn palvelut [turi]
+(defn palvelut []
   [{:palvelu :kirjaa-urakan-tyotunnit
     :polku "/api/urakat/:id/tyotunnit"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/urakan-tyotuntien-kirjaus-request
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
-                    (kirjaa-urakan-tyotunnit turi db kayttaja parametrit data))}])
+                    (kirjaa-urakan-tyotunnit db kayttaja parametrit data))}])
 
 (defrecord UrakanTyotunnit []
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :integraatioloki turi :turi :as this}]
-    (palvelut/julkaise http db integraatioloki (palvelut turi))
+  (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
+    (palvelut/julkaise http db integraatioloki (palvelut))
     this)
-  (stop [{http :http-palvelin turi :turi :as this}]
-    (palvelut/poista http (palvelut turi))
+  (stop [{http :http-palvelin :as this}]
+    (palvelut/poista http (palvelut))
     this))

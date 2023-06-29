@@ -16,8 +16,9 @@
             [harja.views.hallinta.raporttien-suoritustieto :as raporttien-suoritustieto]
             [harja.views.hallinta.jarjestelma-asetukset :as jarjestelma-asetukset]
             [harja.views.hallinta.toteumatyokalu-nakyma :as toteumatyokalu-nakyma]
-            [harja.views.hallinta.rajoitusaluepituus :as rajoitusaluepituus]
+            [harja.views.hallinta.tyomaapaivakirjatyokalu-nakyma :as paivakirjatyokalu-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
+            [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -98,14 +99,23 @@
      ^{:key "toteumatyokalu"}
      [toteumatyokalu-nakyma/simuloi-toteuma])
 
+   "Työmaapäiväkirjatyökalu"
+   :tyomaapaivakirjatyokalu
+   (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+           (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+     ^{:key "tyomaapaivakirjatyokalu"}
+     (do
+       (js/console.log "Rendataan tabile työmaapäiväkirjatyökalulle")
+       [paivakirjatyokalu-nakyma/simuloi-tyomaapaivakirja]))
+
   "Koulutusvideot"
   :koulutusvideot
   (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-koulutusvideot)
     ^{:key "koulutusvideot"}
     [koulutusvideot/nakyma])
 
-   "Tarkista rajoitusalueiden pituudet"
-   :rajoitusaluepituus
-   (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-koulutusvideot)
-     ^{:key ":rajoitusaluepituus"}
-     [rajoitusaluepituus/rajoitusaluepituus-nakyma])])
+   "Palauteluokitukset"
+   :palauteluokitukset
+   (when (oikeudet/hallinta-palautevayla)
+     ^{:key "palauteluokitukset"}
+     [pl/palauteluokitukset])])

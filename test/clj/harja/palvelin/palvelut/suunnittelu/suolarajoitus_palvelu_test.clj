@@ -747,8 +747,7 @@
 
 (defn- aseta-urakalle-talvisuolaraja [talvisuolaraja urakka-id hk-alkuvuosi]
   (let [;; Hae suolauksen tehtävän id
-        toimenpidekoodi (t/q-map (str "select id from toimenpidekoodi where taso = 4
-        AND suunnitteluyksikko = 'kuivatonnia' AND suoritettavatehtava = 'suolaus'"))
+        toimenpidekoodi (t/q-map (str "select id from tehtava where suunnitteluyksikko = 'kuivatonnia' AND suoritettavatehtava = 'suolaus'"))
         suolaus-tehtava-id (:id (first toimenpidekoodi))
 
         ;; Lisää tehtävälle suunniteltu määrä

@@ -317,7 +317,8 @@
 
 (def renderoi-rivia-kerralla 100)
 
-(defn- muokkauspaneeli [{:keys [nayta-otsikko? muokataan tallenna tiedot muuta-gridia-muokataan?
+(defn- muokkauspaneeli [{:keys [muokkauspaneeli-alhaalla?
+                                nayta-otsikko? muokataan tallenna tiedot muuta-gridia-muokataan?
                                 tallennus-ei-mahdollinen-tooltip muokattu? voi-lisata? ohjaus opts
                                 custom-toiminto paneelikomponentit
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa ennen-muokkausta
@@ -346,28 +347,41 @@
                                                           (fmt arvo)
                                                           arvo)]]
                                          arvo))
-                                     tiedot)
+                                 tiedot)
               raporttiparametrit (assoc raporttiparametrit
                                    :parametrit
                                    (merge raporttiparametrit
-                                          {:sarakkeet otsikot-ja-leveydet
-                                           :rivit rivit-raportille}))
-              excel-nappi (yleiset/tallenna-excel-nappi (k/excel-url :raportointi))
-              pdf-nappi (yleiset/tallenna-pdf-nappi (k/pdf-url :raportointi))
+                                     {:sarakkeet otsikot-ja-leveydet
+                                      :rivit rivit-raportille}))
+              
+              ;; Älä aseta olemassa olevia ID:itä napeille
+              excel-nappi (if muokkauspaneeli-alhaalla?
+                            (yleiset/tallenna-excel-nappi (k/excel-url :raportointi) "raporttixls-alhaalla")
+                            (yleiset/tallenna-excel-nappi (k/excel-url :raportointi)))
+
+              pdf-nappi (if muokkauspaneeli-alhaalla?
+                          (yleiset/tallenna-pdf-nappi (k/pdf-url :raportointi) "raporttipdf-alhaalla")
+                          (yleiset/tallenna-pdf-nappi (k/pdf-url :raportointi)))
+              
               valitut-raportin-vientimuodot (sorted-set
                                               (when (raporttivienti :excel)
                                                 excel-nappi)
                                               (when (raporttivienti :pdf)
                                                 pdf-nappi))
               aseta-parametrit! (fn [id]
-                                  (let [input (-> js/document
-                                                  (.getElementById id)
-                                                  (aget "parametrit"))
-                                        parametrit raporttiparametrit]
-                                    (set! (.-value input)
-                                          (tr/clj->transit parametrit))
-                                    true))
-              
+                                  ;; Failsafe jos jostain syystä nappeja on samalla ID:llä niin annetaan kaikille napeille raporttiparametrit 
+                                  ;; (näin ei pitäisi enään käydä koska tämä on korjattu ylhäällä (excel-nappi / pdf-nappi))
+                                  ;; Loopataan document.querySelectorAll('[id=elementin-id]');
+                                  ;; -> asetetaan elementin parametrit arvo raporttiparametreihin 
+                                  (let [kaikki-raporttielementit (.querySelectorAll js/document (str "[id=" id "]"))]
+                                    (doall (map (fn [elementti]
+                                                  (let [input (aget elementti "parametrit")
+                                                        parametrit raporttiparametrit]
+                                                    (set! (.-value input)
+                                                      (tr/clj->transit parametrit))
+                                                    true))
+                                             (array-seq kaikki-raporttielementit)))))
+
               raportin-napin-tyyli (if raporttivienti-lapinakyva? :button.nappi-toissijainen :button.nappi-ensisijainen)]
           
           (if (not (empty? raporttivienti))
@@ -464,7 +478,7 @@
                        (nollaa-muokkaustiedot!)
                        (when peruuta (peruuta))
                        nil)}
-         [ui-ikonit/ikoni-ja-teksti (ui-ikonit/livicon-ban) "Peruuta"]])])
+         [ui-ikonit/ikoni-ja-teksti (ui-ikonit/harja-icon-status-denied) "Peruuta"]])])
    (when nayta-otsikko? [:h6.panel-title otsikko])
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])])
 
@@ -498,6 +512,57 @@
                 (and (not piilota-toiminnot?)
                      tallenna))
         [:th.toiminnot {:width "40px"} " "])]]))
+
+(defn- aseta-leijuvan-otsikkorivin-sarakkeet! [leijuva-otsikkorivi oikea-taulu leveys-atomi scroll
+                                               ensimmainen-sarake-sticky?]
+  (reset! leveys-atomi (dom/elementin-leveys oikea-taulu))
+  (let [leijuvat-sarakkeet (array-seq (.getElementsByTagName leijuva-otsikkorivi "th"))
+        oikeat-sarakkeet (array-seq (.getElementsByTagName oikea-taulu "th"))]
+    (when ensimmainen-sarake-sticky?
+      (set! (.-transform (.-style (first leijuvat-sarakkeet))) (str "translateX(" scroll "px)"))
+      (set! (.-transform (.-style (second leijuvat-sarakkeet))) (str "translateX(" scroll "px)")))
+
+    (loop [leijuvat-sarakkeet leijuvat-sarakkeet
+           oikeat-sarakkeet oikeat-sarakkeet]
+      (when-not (empty? leijuvat-sarakkeet)
+        (set! (.-width (first leijuvat-sarakkeet)) (.-offsetWidth (first oikeat-sarakkeet)))
+        (recur (rest leijuvat-sarakkeet) (rest oikeat-sarakkeet))))))
+
+(defn- leijuva-otsikkorivi [taulukon-ref-atom rootin-ref-atom ensimmainen-sarake-sticky? & _]
+  (let [taulukon-leveys (atom 0)
+        taulukon-scroll (atom 0)
+        aseta-taulukon-scroll! (fn [_ tapahtuma] (reset! taulukon-scroll (some-> tapahtuma
+                                                                           .-target
+                                                                           .-scrollLeft)))
+        aseta-leijuvan-otsikkorivin-sarakkeet! (fn [this & _]
+                                                 (when @taulukon-ref-atom
+                                                   (aseta-leijuvan-otsikkorivin-sarakkeet!
+                                                     (r/dom-node this)
+                                                     @taulukon-ref-atom
+                                                     taulukon-leveys
+                                                     @taulukon-scroll
+                                                     ensimmainen-sarake-sticky?)))]
+    (komp/luo
+      (komp/piirretty (fn [this]
+                        (when @rootin-ref-atom
+                          (reset! taulukon-scroll (.-scrollLeft @rootin-ref-atom))
+                          (aseta-leijuvan-otsikkorivin-sarakkeet! this))))
+      (komp/dom-kuuntelija @rootin-ref-atom
+        EventType/SCROLL aseta-taulukon-scroll!)
+      {:component-did-update aseta-leijuvan-otsikkorivin-sarakkeet!}
+
+      (fnc [_ _ _ opts skeema nayta-toimintosarake? piilota-toiminnot? tallenna esta-tiivis-grid?
+            avattavat-rivit-auki]
+        @avattavat-rivit-auki
+        [:table.grid
+         {:style {:width @taulukon-leveys
+                  :position :fixed
+                  :top 0
+                  :z-index 100
+                  :transform (str "translateX(-" @taulukon-scroll "px)")}}
+         [otsikkorivi {:opts opts :skeema skeema
+                       :nayta-toimintosarake? nayta-toimintosarake? :piilota-toiminnot? piilota-toiminnot?
+                       :tallenna tallenna :esta-tiivis-grid? esta-tiivis-grid?}]]))))
 
 (defn- toggle-valiotsikko [valiotsikko-id piilotetut-valiotsikot]
   (if (@piilotetut-valiotsikot valiotsikko-id)
@@ -826,6 +891,8 @@
            taulukko-validointi taulukko-varoitus taulukko-huomautus piilota-border?] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
   (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
+        taulukon-ref (atom nil)
+        taulukon-rootin-ref (atom nil)
         muokatut (atom nil) ;; muokattu datajoukko
         jarjestys (atom nil) ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
@@ -1074,7 +1141,6 @@
         kasittele-otsikkorivin-kiinnitys (fn [this]
                                            (if (and
                                                  (empty? @vetolaatikot-auki) ;; Jottei naulattu otsikkorivi peitä sisältöä
-                                                 (empty? @avattavat-rivit-auki) ;; Jottei naulattu otsikkorivi peitä sisältöä
                                                  (> (dom/elementin-korkeus (r/dom-node this)) @dom/korkeus)
                                                  (< (dom/elementin-etaisyys-viewportin-ylareunaan (r/dom-node this)) -20)
                                                  (pos? (dom/elementin-etaisyys-viewportin-ylareunaan-alareunasta (r/dom-node this))))
@@ -1186,21 +1252,26 @@
                               skeema
                               tiedot))
            [:div.panel-body
-            {:class (str (when reunaviiva? "livi-grid-reunaviiva"))}
+            {:class (str (when reunaviiva? "livi-grid-reunaviiva"))
+             :ref #(when % (reset! taulukon-rootin-ref %))}
             (when @kiinnita-otsikkorivi?
               ^{:key "kiinnitettyotsikko"}
-              [:table.grid
-               {:style {:position "fixed"
-                        :top 0
-                        :width @kiinnitetyn-otsikkorivin-leveys
-                        :z-index 200}}
-               [otsikkorivi {:opts opts :skeema skeema
-                             :nayta-toimintosarake? nayta-toimintosarake? :piilota-toiminnot? piilota-toiminnot?
-                             :tallenna tallenna}]])
+              (if sivuttain-rullattava?
+                [leijuva-otsikkorivi taulukon-ref taulukon-rootin-ref ensimmainen-sarake-sticky? opts skeema nayta-toimintosarake?
+                 piilota-toiminnot? tallenna esta-tiivis-grid? avattavat-rivit-auki]
+                [:table.grid
+                 {:style {:position "fixed"
+                          :top 0
+                          :width @kiinnitetyn-otsikkorivin-leveys
+                          :z-index 200}}
+                 [otsikkorivi {:opts opts :skeema skeema
+                               :nayta-toimintosarake? nayta-toimintosarake? :piilota-toiminnot? piilota-toiminnot?
+                               :tallenna tallenna}]]))
             (if (nil? tiedot)
               (ajax-loader)
               ^{:key "taulukkodata"}
               [:table.grid
+               {:ref #(when % (reset! taulukon-ref %))}
                [otsikkorivi {:opts opts :skeema skeema
                              :nayta-toimintosarake? nayta-toimintosarake? :piilota-toiminnot? piilota-toiminnot?
                              :tallenna tallenna :esta-tiivis-grid? esta-tiivis-grid?}]
@@ -1270,7 +1341,8 @@
                          +rivimaara-jonka-jalkeen-napit-alaskin+)
                       (not ei-footer-muokkauspaneelia?))
              [:span.gridin-napit-alhaalla
-              (muokkauspaneeli {:nayta-otsikko? false :muokataan muokataan :tallenna tallenna
+              (muokkauspaneeli {:muokkauspaneeli-alhaalla? true
+                                :nayta-otsikko? false :muokataan muokataan :tallenna tallenna
                                 :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
                                 :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
                                 :muokattu? muokattu? :voi-lisata? voi-lisata? :ohjaus ohjaus

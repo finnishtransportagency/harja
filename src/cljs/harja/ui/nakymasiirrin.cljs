@@ -13,11 +13,11 @@
       (+ t asiakkaan-ylaosa matka-ylaosasta (elementin-ylaosa (.-offsetParent e) t)))
     t))
 
-(defn kohde-elementti-id [kohde-id]
-  (let [e (.getElementById js/document kohde-id)
-        hyppyjen-maara (/ nopeus liikkumis-intervalli)
+(defn- siirry [e keskita]
+  (let [hyppyjen-maara (/ nopeus liikkumis-intervalli)
         dokumentin-ylaosa (siirry-ylos)
-        vali (/ (- (elementin-ylaosa e 0) dokumentin-ylaosa) hyppyjen-maara)]
+        vali (/ (- (elementin-ylaosa e 0) dokumentin-ylaosa) hyppyjen-maara)
+        vali (if keskita (- vali 10) vali)]
     (doseq [i (range 1 (inc hyppyjen-maara))]
       (let [hypyn-kohta (* vali i)
             siirry (+ hypyn-kohta dokumentin-ylaosa)
@@ -25,3 +25,10 @@
         (.setTimeout js/window (fn []
                                  (.scrollTo js/window 0 siirry))
                      timeout)))))
+
+(defn kohde-elementti-id [kohde-id]
+  (siirry (.getElementById js/document kohde-id) false))
+
+(defn kohde-elementti-luokka [kohde-luokka]
+  (let [selectable-rows (.getElementsByClassName js/document kohde-luokka)]
+    (doall (map #(siirry % true) (array-seq selectable-rows)))))

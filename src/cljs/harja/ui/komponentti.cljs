@@ -112,14 +112,14 @@
                                    [[aihe kasittelija] & kuuntelijat] kuuntelijat]
                               (if-not aihe
                                 (r/set-state this {::dom-kuuntelijat kahvat})
-                                (let [kuuntelija-fn (fn [tapahtuma] (kasittelija this tapahtuma))]
-                                  (events/listen dom-node aihe kuuntelija-fn)
-                                  (recur (conj kahvat [aihe kuuntelija-fn]) kuuntelijat)))))
+                                (let [kuuntelija-fn (fn [tapahtuma] (kasittelija this tapahtuma))
+                                      kuuntelija-avain (events/listen dom-node aihe kuuntelija-fn)]
+                                  (recur (conj kahvat kuuntelija-avain) kuuntelijat)))))
 
      :component-will-unmount (fn [this _]
                                (let [kuuntelijat (-> this r/state ::dom-kuuntelijat)]
-                                 (doseq [[aihe kuuntelija-fn] kuuntelijat]
-                                   (events/unlisten dom-node aihe kuuntelija-fn))
+                                 (doseq [kuuntelija-avain kuuntelijat]
+                                   (events/unlistenByKey kuuntelija-avain))
                                  (r/set-state this {::dom-kuuntelijat nil})))}))
 
 (defn sisaan-ulos

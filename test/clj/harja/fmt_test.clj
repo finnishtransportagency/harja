@@ -2,7 +2,8 @@
   (:require
     [clojure.test :refer :all]
     [harja.fmt :as fmt]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [harja.pvm :as pvm]))
 
 (deftest kuvaile-aikavali-toimii
   (is (thrown? AssertionError (fmt/kuvaile-paivien-maara nil)))
@@ -90,3 +91,52 @@
   (is (= (fmt/desimaaliluku 777777777.1234567 nil 7 false) "777777777,1234567") "kokonaislukuosa 9 numeroa, desimaaliosa 7 numeroa")
   (is (= (fmt/desimaaliluku 123.123456789012 nil nil false) "123,123456789") "max-desimaalit oletusarvo on 10")
   (is (= (fmt/desimaaliluku 777777777.1234567 nil 7 true) "777 777 777,1234567") "ryhmittely toimii"))
+
+(deftest hoitokauden-formatointi
+  (let [hoitokaudet [[(pvm/->pvm "1.10.2020") (pvm/->pvm "30.9.2021")]
+                     [(pvm/->pvm "1.10.2021") (pvm/->pvm "30.9.2022")]
+                     [(pvm/->pvm "1.10.2022") (pvm/->pvm "30.9.2023")]
+                     [(pvm/->pvm "1.10.2023") (pvm/->pvm "30.9.2024")]]
+        valittu-hk [(pvm/->pvm "1.10.2021") (pvm/->pvm "30.9.2022")]]
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitokaudet)
+           "2. hoitovuosi (2021—2022)"))))
+
+(deftest hoitokauden-formatointi-huono-input
+  (let [hoitokaudet [[(pvm/->pvm "1.10.2020") (pvm/->pvm "30.9.2021")]
+                     [(pvm/->pvm "1.10.2021") (pvm/->pvm "30.9.2022")]
+                     [(pvm/->pvm "1.10.2022") (pvm/->pvm "30.9.2023")]
+                     [(pvm/->pvm "1.10.2023") (pvm/->pvm "30.9.2024")]]
+        ;; tähän input joka ei ole hoitokausi -> silti näytettävä hoitokausi oikein vaikka järjestysnumeroa ei saada
+        valittu-hk [(pvm/->pvm "5.10.2021") (pvm/->pvm "4.9.2022")]]
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitokaudet)
+           "hoitovuosi (2021—2022)"))))
+
+(deftest hoitovuoden-vuosimuodon-formatointi
+  (let [hoitovuodet [2020 2021 2022 2023 2024]
+        valittu-hk 2021]
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitovuodet)
+          "2. hoitovuosi (2021—2022)"))))
+
+(deftest hoitovuoden-vuosimuodon-formatointi-huono-input
+  (let [hoitovuodet [2020 2021 2022 2023 2024]
+        ;; Valittu hoitokausi ei ole annettujen hoitokausien sisällä
+        valittu-hk 2019]
+    ;; Saadaan hoitovuosi, mutta ei järjestysnumeroa
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitovuodet)
+          "hoitovuosi (2019—2020)"))))
+
+(deftest hoitovuoden-formatointi-jarjestysluvulla
+  (let [hoitovuodet [[(pvm/->pvm "1.10.2020") (pvm/->pvm "30.9.2021")]
+                     [(pvm/->pvm "1.10.2021") (pvm/->pvm "30.9.2022")]
+                     [(pvm/->pvm "1.10.2022") (pvm/->pvm "30.9.2023")]
+                     [(pvm/->pvm "1.10.2023") (pvm/->pvm "30.9.2024")]]]
+    (is (thrown? AssertionError  (fmt/hoitokauden-jarjestysluku-ja-vuodet 0 hoitovuodet)))
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet 1 hoitovuodet)
+           "1. hoitovuosi (2020—2021)"))
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet 2 hoitovuodet)
+           "2. hoitovuosi (2021—2022)"))
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet 3 hoitovuodet)
+           "3. hoitovuosi (2022—2023)"))
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet 4 hoitovuodet)
+           "4. hoitovuosi (2023—2024)"))
+    (is (thrown? AssertionError (fmt/hoitokauden-jarjestysluku-ja-vuodet 0 hoitovuodet)))))

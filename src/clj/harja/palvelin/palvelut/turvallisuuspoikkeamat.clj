@@ -203,10 +203,10 @@
                                                (:id user))]
       (q/liita-kommentti<! db tp-id (:id kommentti)))))
 
-(defn tallenna-turvallisuuspoikkeaman-liite [db turvallisuuspoikkeama]
+(defn tallenna-turvallisuuspoikkeaman-liite [db turvallisuuspoikkeama tp-id]
   (when-let [uusi-liite (:uusi-liite turvallisuuspoikkeama)]
     (log/info "UUSI LIITE: " uusi-liite)
-    (q/liita-liite<! db (:id turvallisuuspoikkeama) (:id uusi-liite))))
+    (q/liita-liite<! db tp-id (:id uusi-liite))))
 
 (defn tallenna-turvallisuuspoikkeama-kantaan [db user tp korjaavattoimenpiteet uusi-kommentti urakka]
   (jdbc/with-db-transaction [db db]
@@ -215,7 +215,7 @@
       (when tyotunnit
         (urakan-tyotunnit-q/paivita-urakan-kuluvan-vuosikolmanneksen-tyotunnit db urakka tyotunnit))
       (tallenna-turvallisuuspoikkeaman-kommentti db user uusi-kommentti (:urakka tp) tp-id)
-      (tallenna-turvallisuuspoikkeaman-liite db tp)
+      (tallenna-turvallisuuspoikkeaman-liite db tp tp-id)
       (luo-tai-paivita-korjaavat-toimenpiteet db user korjaavattoimenpiteet tp-id urakka)
       tp-id)))
 
@@ -229,20 +229,22 @@
 
 (defn turvallisuuspoikkeaman-data-validi?
   [{:keys [otsikko tapahtunut tyyppi vahinkoluokittelu vakavuusaste
-           tr tila kuvaus juurisyy1]}]
-  (and (not (empty? otsikko))
-       (instance? Date tapahtunut)
-       (not (empty? tyyppi))
-       (not (empty? vahinkoluokittelu))
-       (not (nil? vakavuusaste))
-       (tr/validi-osoite? tr)
-       (not (nil? tila))
-       (not (empty? kuvaus))
-       (or (not (contains? tyyppi :tyotapaturma))
-           (not (nil? juurisyy1)))))
+           tr tila kuvaus juurisyy1 sijainti]}]
+  (and 
+    (some? sijainti)
+    (not (empty? otsikko))
+    (instance? Date tapahtunut)
+    (not (empty? tyyppi))
+    (not (empty? vahinkoluokittelu))
+    (not (nil? vakavuusaste))
+    (tr/validi-osoite? tr)
+    (not (nil? tila))
+    (not (empty? kuvaus))
+    (or (not (contains? tyyppi :tyotapaturma))
+      (not (nil? juurisyy1)))))
 
 (defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
-  (let [{:keys [id urakka urakan-tyotunnit]} tp]
+  (let [{:keys [id urakka]} tp]
     (log/debug "Tallennetaan turvallisuuspoikkeama " id " urakkaan " urakka)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user urakka)
     ;; Tarkista kaiken varalta, että annettu turpo-id kuuluu annettuun urakkaan
@@ -251,14 +253,7 @@
     (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti urakka)]
       (when turi
         ;; Turi-lähetystä ei pidä sitoa transaktioon, muuten voi jäädä jumiin.
-        (turi/laheta-turvallisuuspoikkeama turi id)
-        (when (and (asetukset/ominaisuus-kaytossa? :urakan-tyotunnit) urakan-tyotunnit)
-          (let [kolmannes (urakan-tyotunnit-d/kuluva-vuosikolmannes)]
-            (turi/laheta-urakan-vuosikolmanneksen-tyotunnit
-              turi
-              urakka
-              (::urakan-tyotunnit-d/vuosi kolmannes)
-              (::urakan-tyotunnit-d/vuosikolmannes kolmannes))))))
+        (turi/laheta-turvallisuuspoikkeama turi id)))
 
     (hae-urakan-turvallisuuspoikkeamat db
                                        user

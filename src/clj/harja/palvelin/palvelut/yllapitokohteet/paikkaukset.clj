@@ -25,24 +25,31 @@
            (java.sql Date)
            (java.util TimeZone)))
 
-(defn- kasittele-koko-ja-sijainti
+(defn kasittele-koko-ja-sijainti
   "Paikkauskohteiden sisään haetaan siis json objektina paikkaukset. Ja koska kyseessä on json objekti, niin kaikki
   data on string tyyppistä. Joten sijainnin geometriasta tulee db->clojure muunnoksessa vain PersistentVector eikä
   geometria MultiLineString. Niinpä tehdään se tässä käsityönä ja hartaudella.
   Samalla lasketaan paikkauksen pituus ja pita-ala."
   [db paikkauskohteet]
   (mapv (fn [kohde]
-          (let [;; Koska tiedetään, että yksi paikkauskohde on aina yhdellä tiellä, niin haetaan jokaista paikkauskohdetta
-                ;; kohti tien osien pituudet vain kerran ja käytetään tätä tietoa laskiessa paikkaus taulun riville (paikkaustoteuma)
-                ;; pituutta. Mutta koska maailma ei ole täydellinen, niin on olemassa paikkauskohteita, joilla ei ole tietä.
-                ;; Näille tie kaivetaan ensimmäisestä paikkaustoteumasta
-
-                tie (if (:harja.domain.tierekisteri/tie kohde)
-                      (:harja.domain.tierekisteri/tie kohde)
-                      (:harja.domain.tierekisteri/tie (first (::paikkaus/paikkaukset kohde))))
+          (let [;; Asiakkaalta saatu lupa olettaa, että paikkaukset kohdistuvat yhdelle tielle joka on sama kuin paikkauskohteella
+                tie (or (:harja.domain.tierekisteri/tie kohde)
+                        (:harja.domain.tierekisteri/tie (first (::paikkaus/paikkaukset kohde))))
+                ;; VHAR-7783 Korjataan paikkauksen pituuden laskenta
+                ;; huomioitava että alkuosa ja loppuosa voivat tulla myös toisin päin, eli haetaan absoluuttisesti
+                ;; pienin ja suurin tien osa
+                tien-osat (apply concat
+                                 (map #(vals (select-keys % [::tierekisteri/aosa ::tierekisteri/losa]))
+                                      (::paikkaus/paikkaukset kohde)))
+                pienin-tien-osa (if (not-empty tien-osat)
+                                  (apply min tien-osat)
+                                  (:aosa kohde))
+                suurin-tien-osa (if (not-empty tien-osat)
+                                  (apply max tien-osat)
+                                  (:losa kohde))
                 osan-pituudet (tv/hae-osien-pituudet db {:tie tie
-                                                         :aosa (or (:aosa kohde) (::paikkaus/aosa (first (::paikkaus/paikkaukset kohde))))
-                                                         :losa (or (:losa kohde) (::paikkaus/losa (first (::paikkaus/paikkaukset kohde))))})]
+                                                         :aosa pienin-tien-osa
+                                                         :losa suurin-tien-osa})]
             (if-not (empty? (::paikkaus/paikkaukset kohde))
               (let [paikkaukset (::paikkaus/paikkaukset kohde)
                     kohde (-> kohde
@@ -50,9 +57,9 @@
                                      (mapv
                                        (fn [p]
                                          (let [pituus (:pituus (tv/laske-tien-osien-pituudet osan-pituudet {:aosa (:harja.domain.tierekisteri/aosa p)
-                                                                                                           :aet (:harja.domain.tierekisteri/aet p)
-                                                                                                           :losa (:harja.domain.tierekisteri/losa p)
-                                                                                                           :let (:harja.domain.tierekisteri/let p)}))
+                                                                                                            :aet (:harja.domain.tierekisteri/aet p)
+                                                                                                            :losa (:harja.domain.tierekisteri/losa p)
+                                                                                                            :let (:harja.domain.tierekisteri/let p)}))
                                                p (update p ::paikkaus/sijainti (fn [sijainti]
                                                                                  (let [sijainti (when-not (nil? sijainti)
                                                                                                   (json/read-str sijainti :key-fn keyword))

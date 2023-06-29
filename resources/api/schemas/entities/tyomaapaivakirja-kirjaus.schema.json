@@ -18,8 +18,15 @@
                 "versio": {
                     "id": "urn:harja/tunniste/versio",
                     "required": true,
-                    "description": "Päiväkirjan sivun versionumero urakoitsijan järjestelmästä, alkaa numerosta 1...n",
+                    "description": "Päiväkirjan versionumero urakoitsijan järjestelmästä, alkaa numerosta 1...n. Nostetaan yhdellä ylöspäin jokaisella päivityskerralla.",
                     "type": "integer"
+                },
+                "paivamaara": {
+                    "id": "urn:harja/tunniste/paivamaara",
+                    "required": true,
+                    "description": "Työmaapäiväkirjan päivä, jolta päiväkirja on tehty.",
+                    "type": "string",
+                    "format": "date"
                 }
             }
         },
@@ -344,59 +351,91 @@
         },
         "liikenteenohjaus-muutokset": {
             "id": "urn:harja/liikenteenohjaus-muutokset",
-            "type": "object",
+            "type": "array",
             "required": false,
             "description": "Tilapäiset liikenteenohjaus muutokset (nopeusrajoitus,painorajoitus, kiertotie jne.) Kirjataan päiväkirjaan (yksittäiset erikseen, talviajan nopeus rajoitukset massana, isommat liikenteen ohjaukset liikenteenohjaussuunnitelman mukaan)",
-            "properties": {
-                "kuvaus": {
-                    "id": "urn:harja/liikenteenohjaus-muutokset/kuvaus",
-                    "required": true,
-                    "type": "string"
+            "items": {
+                "id": "urn:harja/liikenteenohjaus-muutokset/0",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "liikenteenohjaus-muutos": {
+                        "kuvaus": {
+                            "id": "urn:harja/liikenteenohjaus-muutokset/0/kuvaus",
+                            "required": true,
+                            "type": "string"
+                        }
+                    }
                 }
             }
         },
         "onnettomuudet": {
             "id": "urn:harja/onnettomuudet",
-            "type": "object",
+            "type": "array",
             "required": false,
             "description": "Tietoon tulleet onnettomuudet, jotka todennäköisesti edellyttävät jälkikäteen tehtävän urakoitsijan selvityksen laatimista (olosuhteet ja toimenpiteet).",
-            "properties": {
-                "kuvaus": {
-                    "id": "urn:harja/onnettomuudet/kuvaus",
-                    "required": true,
-                    "type": "string"
+            "items": {
+                "id": "urn:harja/onnettomuudet/0",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "onnettomuus": {
+                        "kuvaus": {
+                            "id": "urn:harja/onnettomuudet/0/kuvaus",
+                            "required": true,
+                            "type": "string"
+                        }
+                    }
                 }
             }
         },
         "viranomaisen-avustaminen": {
             "id": "urn:harja/viranomaisen-avustaminen",
-            "type": "object",
+            "type": "array",
             "required": false,
             "description": "Esim. siirtoajoneuvot, vahingonkorvaus. Tähän kommentoidaan onko katselmuksia pidetty.",
-            "properties": {
-                "kuvaus": {
-                    "id": "urn:harja/viranomaisen-avustaminen/kuvaus",
-                    "required": true,
-                    "type": "string"
-                },
-                "tunnit": {
-                    "id": "urn:harja/viranomaisen-avustaminen/tunnit",
-                    "required": false,
-                    "description": "Käytetty aika tunteina kahden desimaalin tarkkuudella",
-                    "type": "number"
+            "items": {
+                "id": "urn:harja/viranomaisen-avustaminen/0",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "viranomaisen-avustus": {
+                        "kuvaus": {
+                            "id": "urn:harja/viranomaisen-avustaminen/0/kuvaus",
+                            "required": true,
+                            "type": "string"
+                        },
+                        "tunnit": {
+                            "id": "urn:harja/viranomaisen-avustaminen/0/tunnit",
+                            "required": false,
+                            "description": "Käytetty aika tunteina kahden desimaalin tarkkuudella",
+                            "type": "number"
+                        }
+                    }
                 }
             }
         },
         "palautteet": {
             "id": "urn:harja/palautteet",
-            "type": "object",
+            "type": "array",
             "required": false,
             "description": "Asiakkaiden, median yhteydenotot ja palautteet, jotka koskevat tilaajaa (jatkotoimia aiheuttavat). Tässä ei kirjata kaikkia, vaan oleelliset palautteet.",
-            "properties": {
-                "kuvaus": {
-                    "id": "urn:harja/viranomaisenavustaminen/kuvaus",
-                    "required": true,
-                    "type": "string"
+            "items": {
+                "id": "urn:harja/palautteet/0",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "palaute": {
+                        "id": "urn:harja/palautteet/0",
+                        "type": "object",
+                        "properties": {
+                            "kuvaus": {
+                                "id": "urn:harja/palautteet/0/kuvaus",
+                                "required": true,
+                                "type": "string"
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -415,19 +454,21 @@
         },
         "tilaajan-yhteydenotot": {
             "id": "urn:harja/tilaajan-yhteydenotot",
-            "type": "object",
+            "type": "array",
             "required": false,
             "description": "Tilaajan huomautukset työmaapäiväkirjaan.",
-            "properties": {
-                "kuvaus": {
-                    "id": "urn:harja/tilaajan-yhteydenotot/kuvaus",
-                    "required": true,
-                    "type": "string"
-                },
-                "nimi": {
-                    "id": "urn:harja/tilaajan-yhteydenotot/nimi",
-                    "required": true,
-                    "type": "string"
+            "items": {
+                "id": "urn:harja/tilaajan-yhteydenotot/0",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "tilaajan-yhteydenotto": {
+                        "kuvaus": {
+                            "id": "urn:harja/tilaajan-yhteydenotot/kuvaus",
+                            "required": true,
+                            "type": "string"
+                        }
+                    }
                 }
             }
         }

@@ -12,6 +12,7 @@
   [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
   [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen]
   [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tyomaa]
+  [harja.palvelin.raportointi.raportit.tyomaapaivakirja]
   [harja.palvelin.raportointi.raportit.ilmoitukset]
   [harja.palvelin.raportointi.raportit.tehtavamaarat]
   [harja.palvelin.raportointi.raportit.vemtr]
@@ -57,9 +58,9 @@
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :kuvaus       "Ilmoitukset"
     :suorita      #'harja.palvelin.raportointi.raportit.ilmoitukset/suorita}
-   
+
    {:nimi         :sanktioraportti-yllapito
-    
+
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus       "Sakko- ja bonusraportti"
@@ -88,7 +89,7 @@
     :kuvaus-tarkenne "Laskutusyhteenveto (tuotekohtainen)"
     :suorita      #'harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen/suorita
     :urakkatyyppi #{:teiden-hoito}}
-   
+
    {:nimi         :laskutusyhteenveto-tyomaa
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"hallintayksikko" "urakka"}
@@ -96,6 +97,11 @@
     :kuvaus-tarkenne "Laskutusyhteenveto (työmaakokous)"
     :suorita      #'harja.palvelin.raportointi.raportit.laskutusyhteenveto-tyomaa/suorita
     :urakkatyyppi #{:teiden-hoito}}
+   
+   {:nimi         :tyomaapaivakirja-nakyma
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :kuvaus       "Työmaapäiväkirja"
+    :suorita      #'harja.palvelin.raportointi.raportit.tyomaapaivakirja/suorita}
 
    {:nimi :tehtavamaarat
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]

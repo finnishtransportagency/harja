@@ -34,7 +34,7 @@ ORDER BY u.alkupvm DESC, u.nimi;
 -- name: luo-vesivaylaurakan-toimenpideinstanssi<!
 INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm)
 VALUES (:urakka_id, :nimi, (SELECT id
-                            FROM toimenpidekoodi
+                            FROM toimenpide
                             WHERE nimi = :toimenpide_nimi), :alkupvm, :loppupvm);
 
 -- name: luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
@@ -148,6 +148,14 @@ SELECT
           END as alue,
   u.alkupvm,
   u.loppupvm,
+  CASE
+      WHEN u.kesakausi_alkupvm IS NOT NULL THEN
+          CONCAT(TO_CHAR(NOW(), 'YYYY'), '-', TO_CHAR(u.kesakausi_alkupvm, 'MM-DD'))::DATE
+      END AS "kesakausi-alkupvm",
+  CASE
+      WHEN u.kesakausi_loppupvm IS NOT NULL THEN
+          CONCAT(TO_CHAR(NOW(), 'YYYY'), '-', TO_CHAR(u.kesakausi_loppupvm, 'MM-DD'))::DATE
+      END AS "kesakausi-loppupvm",
   u.tyyppi,
   u.sopimustyyppi,
   u.indeksi,
@@ -702,7 +710,7 @@ WHERE hallintayksikko = :hal
 -- name: onko-urakalla-tehtavaa
 SELECT EXISTS(
     SELECT tpk.id
-    FROM toimenpidekoodi tpk
+    FROM tehtava tpk
       INNER JOIN toimenpideinstanssi tpi ON tpi.toimenpide = tpk.emo
     WHERE tpi.urakka = :urakkaid
           AND tpk.id = :tehtavaid);

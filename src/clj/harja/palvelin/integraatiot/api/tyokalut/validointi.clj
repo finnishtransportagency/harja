@@ -53,9 +53,12 @@
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Koordinaattien järjestys väärä"}]}))))
 
+;; FIXME: Näissä tarkistuksissa on päällekkäisyyksiä. Refaktorointi voisi olla paikallaan.
+;; Vrt. esim. tarkista-oikeudet-urakan-paivystajatietoihin
 (defn tarkista-kayttajan-oikeudet-urakkaan [db urakka-id kayttaja]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (when (and (not (kayttajat-q/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
+  (when (and (not (roolit/roolissa? kayttaja roolit/liikennepaivystaja))
+             (not (kayttajat-q/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
              (not (kayttajat-q/onko-kayttajalla-lisaoikeus-urakkaan? db urakka-id (:id kayttaja))))
     (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+

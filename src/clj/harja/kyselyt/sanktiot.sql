@@ -209,8 +209,8 @@ SELECT ek.id,
    -- vapaammin mille tahansa toimenpideinstanssille
    AND (u.tyyppi = 'hoito' OR (u.tyyppi = 'teiden-hoito' AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
                                    FROM toimenpideinstanssi tpi
-                                            JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                                            JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                                            JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+                                            JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
                                         maksuera m
                                   WHERE tpi.urakka = :urakka
                                     AND m.toimenpideinstanssi = tpi.id

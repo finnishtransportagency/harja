@@ -205,6 +205,23 @@
         (into (sorted-map) virheet)))
     []))
 
+(defn- puuttuva-tieto->str [avain]
+  (case avain
+    :aloituspvm "Työ aloitettu"
+    :valmispvm-kohde "Kohde valmistunut"
+    :tr-osoite "Tierekisteriosoite"
+
+    ;; jos ei jostain syystä tunnisteta tai tulevaisuudessa tulee uusia kenttiä:
+    (name avain)))
+
+(defn- perustietojen-virheet
+  [puuttuvat-pakolliset-perustiedot]
+  (when-not (empty? puuttuvat-pakolliset-perustiedot)
+    (str "Seuraavat pakolliset perustiedot puuttuvat: "
+         (str/join ", "
+                   (mapv #(puuttuva-tieto->str %)
+                         puuttuvat-pakolliset-perustiedot)))))
+
 (defn- lomakkeen-virheet
   [lahetyksen-tila perustiedot]
   (let [kulutuskerroksen-virheet (virheet-tai-varoitukset->elementit @pot2-tiedot/kohdeosat-virheet-atom :virhe)
@@ -212,13 +229,22 @@
         alustan-virheet (virheet-tai-varoitukset->elementit @pot2-tiedot/alustarivit-virheet-atom :virhe)
         alustan-varoitukset (virheet-tai-varoitukset->elementit @pot2-tiedot/alustarivit-varoitukset-atom :varoitus)
         kulutuskerroksen-tekstit (concat [] kulutuskerroksen-virheet kulutuskerroksen-varoitukset)
-        alustan-tekstit (concat [] alustan-virheet alustan-varoitukset)]
+        alustan-tekstit (concat [] alustan-virheet alustan-varoitukset)
+        perustietojen-virheet (perustietojen-virheet (::lomake/puuttuvat-pakolliset-kentat perustiedot))]
     [:div.pot-lomakkeen-virheet
      (when
-       (or (seq kulutuskerroksen-tekstit) (seq alustan-tekstit))
+       (or (seq kulutuskerroksen-tekstit)
+         (seq alustan-tekstit)
+         (some? perustietojen-virheet))
        [yleiset/info-laatikko :varoitus
         "Lomakkeessa on virheitä. Lomaketta ei voi lähettää tarkistettavaksi ennen virheiden korjausta. "
         [:<>
+         (when (some? perustietojen-virheet)
+           [:span
+            [:br]
+            [:div [:b "Perustietojen virheet ja varoitukset"]]
+            [:p perustietojen-virheet]])
+
          (when (seq kulutuskerroksen-tekstit)
            [:<>
             [:br]

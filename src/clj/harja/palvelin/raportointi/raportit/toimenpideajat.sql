@@ -12,7 +12,7 @@ SELECT
        LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
        LEFT JOIN LATERAL (select normalisoi_talvihoitoluokka(rp.talvihoitoluokka::INTEGER, t.alkanut) AS hoitoluokka) hl ON TRUE
        JOIN toteuma_tehtava tt ON t.id = tt.toteuma
-       JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+       JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
  WHERE (t.alkanut BETWEEN :alkupvm AND :loppupvm)
    AND t.poistettu IS NOT TRUE
    AND ((select normalisoi_talvihoitoluokka(rp.talvihoitoluokka, t.alkanut)) IN (:hoitoluokat) OR rp.talvihoitoluokka IS NULL)
@@ -36,7 +36,7 @@ FROM toteuma t
   JOIN urakka u ON t.urakka = u.id
   JOIN organisaatio o ON u.hallintayksikko = o.id
   JOIN toteuma_tehtava tt ON t.id = tt.toteuma
-  JOIN toimenpidekoodi toimkood ON tt.toimenpidekoodi = toimkood.id
+  JOIN tehtava toimkood ON tt.toimenpidekoodi = toimkood.id
 WHERE ((select normalisoi_talvihoitoluokka(rp.talvihoitoluokka, t.alkanut)) IN (:hoitoluokat) OR rp.talvihoitoluokka IS NULL)
       AND (t.alkanut BETWEEN :alku AND :loppu)
       AND t.poistettu IS NOT TRUE

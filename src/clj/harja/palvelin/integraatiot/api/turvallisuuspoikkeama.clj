@@ -2,12 +2,12 @@
   "Turvallisuuspoikkeaman kirjaaminen urakalle"
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
+            [clojure.spec.alpha :as s]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer
-             [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus
-              tee-kirjausvastauksen-body]]
+             [tee-kirjausvastauksen-body kasittele-kutsu kasittele-get-kutsu]]
+            [harja.pvm :as pvm]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-turvallisuuspoikkeamalle]]
@@ -295,4 +295,5 @@
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-turvallisuuspoikkeama)
+    (poista-palvelut http :hae-turvallisuuspoikkeamat)
     this))

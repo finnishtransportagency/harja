@@ -341,12 +341,18 @@
     (is (= {:toiminto :varoita :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
            (kutsu (-> {} alku-ja-loppupvm
                       oid-muokattu-urakka-tietolaji-sijainti))))
-    ; 2 -> ohita
-    (is (= {:toiminto :ohita :viesti "Muutoksen lähteen 4.3.2.1 urakkaa ei löydy Harjasta. Ohita varustetoteuma."}
-           (kutsu (-> {} perus-setti
-                      sijainti-ei-MHU-testidatassa
-                      muutoksen-lahde-tuntematon-oid
-                      (assoc :urakka_id nil)))))
+    ; 2b -> ohita
+    (is (= {:toiminto :ohita :viesti "Muutoksen lähteen null urakkaa ei löydy Harjasta. Ohita varustetoteuma."}
+          (kutsu (-> {} perus-setti
+                   sijainti-ei-MHU-testidatassa
+                   (assoc :muokkaaja "migraatio")
+                   (assoc :urakka_id nil)))))
+    ; 2a -> varoita
+    (is (= {:toiminto :varoita :viesti (format "Muutoksen lähteen %s urakkaa ei löydy Harjasta ja muokkaaja on joku muu kuin 'migraatio'. Pyydä Velhoa lisäämään urakka-id varusteelle" nil)}
+          (kutsu (-> {} perus-setti
+                   sijainti-ei-MHU-testidatassa
+                   (assoc :muokkaaja nil)
+                   (assoc :urakka_id nil)))))
     ; 4 -> ohita
     (is (= {:toiminto :ohita :viesti "Tietolaji ei vastaa Harjan valittuja tietojajeja. Ohita varustetoteuma."}
            (kutsu (-> {} perus-setti

@@ -55,7 +55,7 @@
   "Formatoi paikkauskohteen aikataulun."
   [{:keys [alkupvm loppupvm valmistumispvm paikkauskohteen-tila]}]
   (str
-    (pvm/fmt-kuukausi-ja-vuosi-lyhyt alkupvm)
+    (pvm/fmt-paiva-ja-kuukausi-lyhyt alkupvm)
     " - "
     ;; Loppupäiväksi valitaan valmistumispvm jos saatavilla, muuten näytetään arvio (loppupvm).
     (pvm/fmt-p-k-v-lyhyt (or valmistumispvm loppupvm))
