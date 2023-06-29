@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -x
+
+# set -x
 
 # Ladataan Harjan tarvitsemat staattiset tiedostot ja ylimääräiset kirjastot
 
@@ -8,7 +9,7 @@ echo "Ladataan sonic-client.jar..."
 aws s3api get-object --bucket "$HARJA_CONFIG_S3_BUCKET" --key "${HARJA_CONFIG_S3_SONIC_HAKEMISTO}/sonic-client.jar" sonic-client.jar
 echo "DONE"
 
-echo "Ladataan /sonic-xmessage.jar..."
+echo "Ladataan sonic-xmessage.jar..."
 aws s3api get-object --bucket "$HARJA_CONFIG_S3_BUCKET" --key "${HARJA_CONFIG_S3_SONIC_HAKEMISTO}/sonic-xmessage.jar" sonic-xmessage.jar
 echo "DONE"
 
@@ -37,6 +38,7 @@ fi
 
 cmd_opts+=("-cp" "$HARJA_LIBS":harja.jar harja.palvelin.main)
 
-echo "Käynnistetään harja.jar"
 ## Aja java-komento
+echo "Käynnistetään java-sovellus..."
+
 java "${cmd_opts[@]}"
