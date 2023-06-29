@@ -28,6 +28,8 @@ RUN mkdir -p /app && chown -R harja:harja /app
 USER harja
 WORKDIR /app
 
+COPY ./aws/fargate/entrypoint.sh entrypoint.sh
+
 # Kopioi uberjar pipelinesta
 # Tässä oleteetaan, että uberjar on jo buildattu ja se on hakemistossa "target"
 COPY ./target/harja-0.0.1-SNAPSHOT-standalone.jar harja.jar
@@ -40,21 +42,19 @@ COPY ./aws/fargate/asetukset.edn asetukset.edn
 # harja.palvelin.asetukset/tarkista-ymparisto! -funktiolla
 COPY ./aws/fargate/.harja_env .harja_env
 
-# Aseta ENV muuttujat
 
-# Java agent
-# TODO: Esimerkiksi JMX Prometheus Java agentti
+# Aseta ENV muuttujat (default-arvot)
+# ENV-muuttujien varsinaiset arvot tuodaan ulkopuolelta containeriin.
+
 ENV HARJA_JAVA_AGENT=""
 
-# TODO: Tarkista mitkä JAVA optionsit tarvitaan
-# Käytä -XshowSettings:all, jos haluat nähdä mitä asetuksia käytetään
+# Käytä lisäksi -XshowSettings:all, jos haluat nähdä mitä asetuksia käytetään
 ENV HARJA_JVM_OPTS="-Xmx6g"
-# TODO: Tämä kirjasto ei ole opensourcea. Miten otetaan konttiin mukaan?
-#ENV HARJA_LIBS="sonic-client.jar:sonic-xmessage.jar:sonic-crypto.jar"
-ENV HARJA_LIBS=""
+
+#ENV HARJA_LIBS=""
 
 # Aseta portti
 EXPOSE 3000
 
 # Aseta entrypoint,
-ENTRYPOINT java $HARJA_JAVA_AGENT $HARJA_JVM_OPTS -cp $HARJA_LIBS:harja.jar harja.palvelin.main
+ENTRYPOINT ["./entrypoint.sh"]
