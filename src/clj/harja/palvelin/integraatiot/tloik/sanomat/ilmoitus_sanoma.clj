@@ -70,8 +70,6 @@
                                (parsi-paivamaara (z/xml1-> data :lahetysaika z/text))
                                (parsi-paivamaara (z/xml1-> data :ilmoitettu z/text)))
                   :ilmoitus-id (Integer/parseInt (z/xml1-> data :ilmoitusId z/text))
-                  :emon-ilmoitusid (when-let [emonilmoitusid (z/xml1-> data :emonIlmoitusId z/text)]
-                                     (Integer/parseInt emonilmoitusid))
                   :tunniste (z/xml1-> data :tunniste z/text)
                   :ilmoitustyyppi (z/xml1-> data :ilmoitustyyppi z/text)
                   :urakkatyyppi (z/xml1-> data :urakkatyyppi z/text)
@@ -85,7 +83,6 @@
                   :lahettaja (when-let [lahettaja (into {} (z/xml-> data :lahettaja lue-lahettaja))]
                                (if (empty? lahettaja) nil lahettaja))
                   :selitteet (into [] (z/xml-> data :seliteet lue-selitteet))
-                  :kuvat (into [] (z/xml-> data :kuvat lue-kuvat))
                   :sijainti (when-let [sijainti (into {} (z/xml-> data :sijainti lue-sijainti))]
                               (if (empty? sijainti) nil sijainti))
                   :vastaanottaja (when-let [vastaanottaja (into {} (z/xml-> data :vastaanottaja lue-vastaanottaja))]
