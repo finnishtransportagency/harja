@@ -6,6 +6,7 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
+            [harja.palvelin.integraatiot.velho.yhteiset :as velho-yhteiset]
             [harja.palvelin.integraatiot.velho.yhteiset-test :as yhteiset-test]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
@@ -62,6 +63,13 @@
   (fn [_ _ _]
     {:status 200 :body (json/write-str odotettu-oidit-vastaus) :headers {:content-type "application/json"}}))
 
+(defn fake-tunnisteet-yleinen-oidien-lisayksella [odotettu-oidit-vastaus 
+                                                  odotettu-ei-tyhja-oid-vastaus 
+                                                  saatu-ei-tyhja-oid-vastaus] 
+    (swap! odotettu-ei-tyhja-oid-vastaus + 2) ;; Toimenpiteistä palautuu kaksi oidia
+    (swap! saatu-ei-tyhja-oid-vastaus inc)
+    (fake-tunnisteet-yleinen odotettu-oidit-vastaus))
+
 (defn fake-kohteet-yleinen [odotettu-oidit-vastaus odotettu-kohteet-vastaus]
   (fn [_ {:keys [body headers _]} _]
     (is (= (set odotettu-oidit-vastaus)
@@ -86,9 +94,9 @@
         tallentava-fn (fn [alkuperainen-fn db kohde viesti]
                         (swap! loki #(str % "\n" viesti))
                         (alkuperainen-fn db kohde viesti))
-        vanha-funktio varusteet/lokita-ja-tallenna-hakuvirhe]
+        vanha-funktio velho-yhteiset/lokita-ja-tallenna-hakuvirhe]
     (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]
-                  varusteet/lokita-ja-tallenna-hakuvirhe (partial tallentava-fn vanha-funktio)]
+                  velho-yhteiset/lokita-ja-tallenna-hakuvirhe (partial tallentava-fn vanha-funktio)]
       (testattava-funktio))
     @loki))
 
@@ -302,7 +310,7 @@
   ; ASETA
   (let [testitunniste "osajoukkoja-test"
         osajoukkojen-koko 2
-        odotettu-syotetiedostoparien-maara 1                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
+        odotettu-syotetiedostoparien-maara 3                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
         odotettu-kohteet-vastaus (atom {})
         odotettu-oidit-vastaus (atom {})
         odotettu-ei-tyhja-oid-vastaus (atom 0)
@@ -353,7 +361,10 @@
       [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-kohteet
-       {:url +velho-toimenpiteet-oid-url+ :method :get} (fake-tunnisteet-yleinen toimenpide-oidit-yleinen)
+       {:url +velho-toimenpiteet-oid-url+ :method :get} (fake-tunnisteet-yleinen-oidien-lisayksella 
+                                                          toimenpide-oidit-yleinen 
+                                                          odotettu-ei-tyhja-oid-vastaus 
+                                                          saatu-ei-tyhja-oid-vastaus) 
        {:url +velho-toimenpiteet-kohde-url+ :method :post} (fake-kohteet-yleinen toimenpide-oidit-yleinen toimenpide-kohteet-yleinen)]
       (let [raportoi-oid-haku-fn varusteet/lokita-oid-haku]
         (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]
@@ -372,11 +383,12 @@
       (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
           (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen")))))
 
+
 (deftest varuste-tuonti-onnistuneet-test
   (u "DELETE FROM varustetoteuma_ulkoiset")
   ; ASETA
   (let [testitunniste "onnistuneet-test"
-        odotettu-syotetiedostoparien-maara 2                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
+        odotettu-syotetiedostoparien-maara 4                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
         odotettu-kohteet-vastaus (atom {})
         odotettu-oidit-vastaus (atom {})
         odotettu-ei-tyhja-oid-vastaus (atom 0)
@@ -412,7 +424,10 @@
       [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-kohteet
-       {:url +velho-toimenpiteet-oid-url+ :method :get} (fake-tunnisteet-yleinen toimenpide-oidit-yleinen)
+       {:url +velho-toimenpiteet-oid-url+ :method :get} (fake-tunnisteet-yleinen-oidien-lisayksella
+                                                          toimenpide-oidit-yleinen
+                                                          odotettu-ei-tyhja-oid-vastaus
+                                                          saatu-ei-tyhja-oid-vastaus)
        {:url +velho-toimenpiteet-kohde-url+ :method :post} (fake-kohteet-yleinen toimenpide-oidit-yleinen toimenpide-kohteet-yleinen)]
       (let [raportoi-oid-haku-fn varusteet/lokita-oid-haku]
         (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+ varusteet/+tl506+]
@@ -513,7 +528,7 @@
   (u "DELETE FROM varustetoteuma_ulkoiset")
   ; ASETA
   (let [testitunniste "uusin-voittaa-test"
-        odotettu-syotetiedostoparien-maara 1                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
+        odotettu-syotetiedostoparien-maara 3                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
         odotettu-kohteet-vastaus (atom {})
         odotettu-oidit-vastaus (atom {})
         odotettu-ei-tyhja-oid-vastaus (atom 0)
@@ -549,7 +564,10 @@
       [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-kohteet
-       {:url +velho-toimenpiteet-oid-url+ :method :get} (fake-tunnisteet-yleinen toimenpide-oidit-yleinen)
+       {:url +velho-toimenpiteet-oid-url+ :method :get} (fake-tunnisteet-yleinen-oidien-lisayksella
+                                                          toimenpide-oidit-yleinen
+                                                          odotettu-ei-tyhja-oid-vastaus
+                                                          saatu-ei-tyhja-oid-vastaus)
        {:url +velho-toimenpiteet-kohde-url+ :method :post} (fake-kohteet-yleinen toimenpide-oidit-yleinen toimenpide-kohteet-yleinen)]
       (let [raportoi-oid-haku-fn varusteet/lokita-oid-haku]
         (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]
@@ -573,7 +591,7 @@
 (deftest varustetoteuma-skipataan-jos-ei-ole-urakkaa
   (u "DELETE FROM varustetoteuma_ulkoiset")
   (let [testitunniste "skipataan-jos-ei-urakkaa"
-        odotettu-syotetiedostoparien-maara 1                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
+        odotettu-syotetiedostoparien-maara 3                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
         odotettu-kohteet-vastaus (atom {})
         odotettu-oidit-vastaus (atom {})
         odotettu-ei-tyhja-oid-vastaus (atom 0)
@@ -609,7 +627,10 @@
       [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-kohteet
-       {:url +velho-toimenpiteet-oid-url+ :method :get} (fake-tunnisteet-yleinen toimenpide-oidit-yleinen)
+       {:url +velho-toimenpiteet-oid-url+ :method :get} (fake-tunnisteet-yleinen-oidien-lisayksella 
+                                                          toimenpide-oidit-yleinen 
+                                                          odotettu-ei-tyhja-oid-vastaus 
+                                                          saatu-ei-tyhja-oid-vastaus) 
        {:url +velho-toimenpiteet-kohde-url+ :method :post} (fake-kohteet-yleinen toimenpide-oidit-yleinen toimenpide-kohteet-yleinen)]
       (let [raportoi-oid-haku-fn varusteet/lokita-oid-haku]
         (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]
