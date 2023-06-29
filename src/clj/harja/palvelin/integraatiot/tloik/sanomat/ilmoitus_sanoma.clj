@@ -41,13 +41,9 @@
      :sukunimi (z/xml1-> lahettaja :sukunimi z/text)
      :tyopuhelin (z/xml1-> lahettaja :tyopuhelin z/text)}))
 
-(defn lue-selitteet [selitteet]
-  (z/xml-> selitteet (fn [selite]
-                       (z/xml-> (z/xml1-> selite) :selite z/text))))
-
-(defn lue-kuvat [kuvat]
-  (z/xml-> kuvat (fn [kuva]
-                   (z/xml-> (z/xml1-> kuva) :url z/text))))
+(defn- lue-data [elementit avain]
+  (z/xml-> elementit (fn [e]
+                       (z/xml-> (z/xml1-> e) avain z/text))))
 
 (defn lue-sijainti [sijainti]
   (let [tienumero (z/xml1-> sijainti :tienumero z/text)]
@@ -70,6 +66,8 @@
                                (parsi-paivamaara (z/xml1-> data :lahetysaika z/text))
                                (parsi-paivamaara (z/xml1-> data :ilmoitettu z/text)))
                   :ilmoitus-id (Integer/parseInt (z/xml1-> data :ilmoitusId z/text))
+                  :emon-ilmoitusid (when-let [emonilmoitusid (z/xml1-> data :emonIlmoitusId z/text)]
+                                     (Integer/parseInt emonilmoitusid))
                   :tunniste (z/xml1-> data :tunniste z/text)
                   :ilmoitustyyppi (z/xml1-> data :ilmoitustyyppi z/text)
                   :urakkatyyppi (z/xml1-> data :urakkatyyppi z/text)
@@ -82,7 +80,8 @@
                                 (if (empty? ilmoittaja) nil ilmoittaja))
                   :lahettaja (when-let [lahettaja (into {} (z/xml-> data :lahettaja lue-lahettaja))]
                                (if (empty? lahettaja) nil lahettaja))
-                  :selitteet (into [] (z/xml-> data :seliteet lue-selitteet))
+                  :selitteet (into [] (z/xml-> data :seliteet #(lue-data % :selite)))
+                  :kuvat (into [] (z/xml-> data :kuvat #(lue-data % :url)))
                   :sijainti (when-let [sijainti (into {} (z/xml-> data :sijainti lue-sijainti))]
                               (if (empty? sijainti) nil sijainti))
                   :vastaanottaja (when-let [vastaanottaja (into {} (z/xml-> data :vastaanottaja lue-vastaanottaja))]

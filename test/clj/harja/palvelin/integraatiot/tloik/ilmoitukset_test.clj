@@ -104,23 +104,23 @@
     (is (= 1 (:tarkenne ilmoitus))))
   (poista-ilmoitus 123456789))
 
-"""(deftest tarkista-ilmoituksen-kuvat
+(deftest tarkista-ilmoituksen-kuvat
   (ei-lisattavia-kuuntelijoita!)
   (tuo-ilmoitus)
   (let [ilmoitukset (hae-testi-ilmoitukset)
         ilmoitus (first ilmoitukset)
         kuvien-maara (count (:kuvat ilmoitus))]
 
-    (is (some? (first (:kuvat ilmoitus))) Kuvia löytyi)
-    (is (= kuvien-maara 2) Kuvia löytyi 2)
+    (is (some? (first (:kuvat ilmoitus))) "Kuvia löytyi")
+    (is (= kuvien-maara 2) "Kuvia löytyi 2")
     (is (= (:yhteydenottopyynto ilmoitus) false))
-    (is (= (:ilmoittaja_tyyppi ilmoitus) tienkayttaja))
+    (is (= (:ilmoittaja_tyyppi ilmoitus) "tienkayttaja"))
     (is (= (:emon-ilmoitusid ilmoitus) 987240))
     (is (instance? PGgeometry (:sijainti ilmoitus)))
-    (is (= (:ilmoittaja_matkapuhelin ilmoitus) 08023394852))
+    (is (= (:ilmoittaja_matkapuhelin ilmoitus) "08023394852"))
     (is (= (:ilmoitus-id ilmoitus) 123456789))
-    (is (= (:lisatieto ilmoitus) Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.)))
-  (poista-ilmoitus 123456789))"""
+    (is (= (:lisatieto ilmoitus) "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.")))
+  (poista-ilmoitus 123456789))
 
 (deftest tarkista-ilmoituksen-paivitys
   (ei-lisattavia-kuuntelijoita!)
