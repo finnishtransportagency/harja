@@ -4,6 +4,7 @@
             [clojure.test :refer :all]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma :as vos]
+            [harja.palvelin.integraatiot.velho.yhteiset :as velho-yhteiset]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.kyselyt.koodistot :as koodistot]
@@ -158,7 +159,7 @@
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
         urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
         sijainti-fn (fn [& _] "dummy")
-        konversio-fn (partial koodistot/konversio db)
+        konversio-fn (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)
         {tulos :tulos} (vos/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn urakka-pvmt-idlla-fn syote)]
     (is (= odotettu tulos))))
 
@@ -171,7 +172,7 @@
           urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
           urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
           sijainti-fn (partial varusteet/sijainti-kohteelle db)
-          konversio-fn (partial koodistot/konversio db)]
+          konversio-fn (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)]
       (is (= odotettu (vos/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn urakka-pvmt-idlla-fn puuttuu-oid))))))
 
 (deftest velho->harja-sijaintipalvelun-vastaus-ei-sisalla-historiaa-test
@@ -196,7 +197,7 @@
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
         urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
         sijainti-fn (partial varusteet/sijainti-kohteelle db)
-        konversio-fn (partial koodistot/konversio db)
+        konversio-fn (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)
         konvertoitu-kohde (vos/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn urakka-pvmt-idlla-fn kohde)]
     (is (= odotettu (update-in konvertoitu-kohde [:tulos] dissoc :sijainti :muokattu)))))
 
@@ -204,28 +205,28 @@
   (let [kohde nil
         tietolajit (disj vos/+kaikki-tietolajit+ :tl506)
         db (:db jarjestelma)
-        konversio-fn (partial koodistot/konversio db)]
+        konversio-fn (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)]
     (doseq [tl tietolajit]
       (vos/varusteen-lisatieto konversio-fn (name tl) kohde))))
 
 (deftest liikennemerkin-puuttuva-asetus-ja-lakinumero-palauttaa-virhetiedon-lisatietona-test
   (let [kohde (slurp->json "test/resurssit/velho/varusteet/puuttuvat-asetus-ja-lakinumerot.json")
         db (:db jarjestelma)
-        konversio-fn (partial koodistot/konversio db)]
+        konversio-fn (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)]
     (is (= "VIRHE: Liikennemerkin asetusnumero ja lakinumero tyhjiä Tievelhossa"
            (vos/varusteen-lisatieto konversio-fn "tl506" kohde)))))
 
 (deftest liikennemerkin-tupla-asetus-ja-lakinumero-palauttaa-virhetiedon-lisatietona-test
   (let [kohde (slurp->json "test/resurssit/velho/varusteet/seka-asetus-etta-lakinumero.json")
         db (:db jarjestelma)
-        konversio-fn (partial koodistot/konversio db)]
+        konversio-fn (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)]
     (is (= "VIRHE: Liikennemerkillä sekä asetusnumero että lakinumero Tievelhossa"
            (vos/varusteen-lisatieto konversio-fn "tl506" kohde)))))
 
 (deftest liikennemerkin-lisatietoja-poimitaan-mukaan-test
   (let [kohde (slurp->json "test/resurssit/velho/varusteet/liikennemerkin-lisatietoja.json")
         db (:db jarjestelma)
-        konversio-fn (partial koodistot/konversio db)]
+        konversio-fn (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)]
     (is (= "Tienviitta: Lisätietokilven teksti"
            (vos/varusteen-lisatieto konversio-fn "tl506" kohde)))))
 
@@ -233,14 +234,14 @@
   ; Yleinen-kuntoluokka ei ole pakollinen, mutta jos on, niin sen pitää konvertoitua.
   (let [kohde (slurp->json "test/resurssit/velho/varusteet/kuntoluokka-konvertoituu-oikein.json")
         odotettu-kuntoluokka "Hyvä"
-        konversio-fn (partial koodistot/konversio (:db jarjestelma))]
+        konversio-fn (partial koodistot/konversio (:db jarjestelma) velho-yhteiset/lokita-ja-tallenna-hakuvirhe)]
     (is (= odotettu-kuntoluokka (vos/varusteen-kuntoluokka konversio-fn kohde)))))
 
 (deftest varusteen-toimenpiteet-konvertoituu-oikein-test
   ; Toimenpiteet joukko konvertoituu niin, että pidämme vain tutut toimenpiteet.
   (let [kohde (slurp->json "test/resurssit/velho/varusteet/toimenpiteet-konvertoituu-oikein.json")
         odotetut-toimenpiteet "tarkastus"
-        konversio-fn (partial koodistot/konversio (:db jarjestelma))]
+        konversio-fn (partial koodistot/konversio (:db jarjestelma) velho-yhteiset/lokita-ja-tallenna-hakuvirhe)]
     (is (= odotetut-toimenpiteet (vos/varusteen-toteuma konversio-fn kohde)))))
 
 (deftest toteumatyyppi-konvertoituu-oikein-test
@@ -262,7 +263,7 @@
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
         urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
         sijainti-fn (partial varusteet/sijainti-kohteelle db)
-        konversio-fn (partial koodistot/konversio db)]
+        konversio-fn (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)]
     (doseq [kohde-toteuma kohteet-ja-toteumatyypit]
       (let [{konvertoitu-kohde :tulos virheviesti :virheviesti}
             (vos/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn urakka-pvmt-idlla-fn (:kohde kohde-toteuma))]
@@ -431,7 +432,7 @@
   (let [db (:db jarjestelma)
         urakkaid-kohteelle-fn (partial varusteet/urakka-id-kohteelle db)
         sijainti-kohteelle-fn (partial varusteet/sijainti-kohteelle db)
-        konversio-fn (partial koodistot/konversio db)
+        konversio-fn (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)
 
         kohde (assoc mallikohde :keskilinjageometria {:coordinates [403308.68055337796 6806912.275501393 0.0] :type "Point"})
         odotettu-sijainti {:type :point :coordinates [403308.68055337796 6806912.275501393]}
@@ -445,7 +446,7 @@
   (let [db (:db jarjestelma)
         urakkaid-kohteelle-fn (partial varusteet/urakka-id-kohteelle db)
         sijainti-kohteelle-fn (partial varusteet/sijainti-kohteelle db)
-        konversio-fn (partial koodistot/konversio db)
+        konversio-fn (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)
 
         kohde (assoc mallikohde :keskilinjageometria {:coordinates [[478448.212 7038721.375 108.769] [478447.856 7038733.435 108.244]]
                                                       :type "LineString"})
@@ -460,7 +461,7 @@
   (let [db (:db jarjestelma)
         urakkaid-kohteelle-fn (partial varusteet/urakka-id-kohteelle db)
         sijainti-kohteelle-fn (partial varusteet/sijainti-kohteelle db)
-        konversio-fn (partial koodistot/konversio db)
+        konversio-fn (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)
 
         kohde (assoc mallikohde
                 :keskilinjageometria {:coordinates
@@ -482,7 +483,7 @@
   (let [db (:db jarjestelma)
         urakkaid-kohteelle-fn (partial varusteet/urakka-id-kohteelle db)
         sijainti-kohteelle-fn (partial varusteet/sijainti-kohteelle db)
-        konversio-fn (partial koodistot/konversio db)
+        konversio-fn (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)
 
         kohde (assoc mallikohde :keskilinjageometria {:coordinates [[246875.68965580963 6722086.79823778 0.0]
                                                                     [246865.4987514359 6722097.828952567 0.0]], :type "MultiPoint"})
