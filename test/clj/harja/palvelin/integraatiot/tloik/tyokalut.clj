@@ -37,7 +37,6 @@
   <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
   <lahetysaika>" valitetty "</lahetysaika>
   <ilmoitusId>123456789</ilmoitusId>
-  <emonIlmoitusId>987241</emonIlmoitusId>
   <tunniste>UV-1509-1a</tunniste>
   <versionumero>1</versionumero>
   <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
@@ -162,7 +161,6 @@
      <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
      <lahetysaika>" valitetty "</lahetysaika>
      <ilmoitusId>123456789</ilmoitusId>
-     <emonIlmoitusId>987240</emonIlmoitusId>
      <tunniste>UV-1509-1a</tunniste>
      <versionumero>1</versionumero>
      <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
@@ -170,10 +168,6 @@
   <urakkatyyppi>hoito</urakkatyyppi>
   <otsikko>Korkeat vallit</otsikko>
   <paikanKuvaus>Jossain kentällä.</paikanKuvaus>
-  <kuvat>
-  <url>https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Minniecat.png/220px-Minniecat.png</url>
-  <url>https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Six_weeks_old_cat_%28aka%29.jpg/390px-Six_weeks_old_cat_%28aka%29.jpg</url>
-  </kuvat>
   <lisatieto>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lisatieto>
   <yhteydenottopyynto>false</yhteydenottopyynto>
   <sijainti>
@@ -212,7 +206,6 @@
       <viestiId>14324234</viestiId>
       <lahetysaika>" valitetty "</lahetysaika>
       <ilmoitusId>987654321</ilmoitusId>
-      <emonIlmoitusId>987242</emonIlmoitusId>
       <tunniste>UV-1509-1a</tunniste>
       <versionumero>1</versionumero>
       <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
