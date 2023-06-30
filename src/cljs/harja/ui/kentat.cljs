@@ -184,10 +184,6 @@
            :id (or elementin-id nil)
            :max-length pituus-max}])
 
-(defmethod tee-kentta :pinta-ala [{:keys [arvo]}]
-  [:div.kentta-yksikko
-   [:span arvo]])
-
 (defmethod tee-kentta :linkki [opts data]
   [tee-kentta (assoc opts :tyyppi :string) data])
 

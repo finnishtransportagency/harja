@@ -36,8 +36,16 @@
    :leveys {:nimi :leveys :otsikko "Leveys" :yksikko "m"
             :tyyppi :positiivinen-numero :desimaalien-maara 2
             :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 20 2))}
-   :pinta-ala {:nimi :pinta-ala :otsikko "Pinta-ala" :yksikko "m²"
-               :tyyppi :pinta-ala :arvo 0}
+   :pinta-ala {:nimi :pinta_ala :tyyppi :positiivinen-numero :otsikko "Pinta-ala" :yksikko "m²" 
+               :muokattava? (constantly false)
+               :fmt #(fmt/desimaaliluku-opt % 1)
+               :hae (fn [rivi]
+                      (when-let [tie {:tr-alkuosa (:tr-alkuosa rivi)
+                                      :tr-alkuetaisyys (:tr-alkuetaisyys rivi)
+                                      :tr-loppuosa (:tr-loppuosa rivi)
+                                      :tr-loppuetaisyys (:tr-loppuetaisyys rivi)}]
+                        (when (:leveys rivi)
+                          (* (:leveys rivi) (tr/laske-tien-pituus {} tie)))))}
    :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmäärä" :yksikko "t"
                         :tyyppi :positiivinen-numero :desimaalien-maara 1
                         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
@@ -138,17 +146,7 @@
                                                                                       (if (nil? pakollinen?)
                                                                                         (assoc avain-tai-metadata :pakollinen? true)
                                                                                         avain-tai-metadata)))
-                                            kentta-metadata (get alusta-toimenpide-kaikki-lisaavaimet (:nimi toimenpide-spesifinen-kentta-metadata))
-                                            ;; Lasketaan tien pinta ala
-                                            kentta-metadata (if (= (get kentta-metadata :nimi) :pinta-ala)
-                                                              (let [tie {:tr-alkuosa (:tr-alkuosa alusta)
-                                                                         :tr-alkuetaisyys (:tr-alkuetaisyys alusta)
-                                                                         :tr-loppuosa (:tr-loppuosa alusta)
-                                                                         :tr-loppuetaisyys (:tr-loppuetaisyys alusta)}
-                                                                    pituus (tr/laske-tien-pituus {} tie)
-                                                                    leveys (:leveys alusta)]
-                                                                (merge kentta-metadata {:arvo (* pituus leveys)}))
-                                                              kentta-metadata)]
+                                            kentta-metadata (get alusta-toimenpide-kaikki-lisaavaimet (:nimi toimenpide-spesifinen-kentta-metadata))]
                                         (merge kentta-metadata toimenpide-spesifinen-kentta-metadata)))]
     (->> avaimet
          (map luo-metadata-ja-oletusarvot)

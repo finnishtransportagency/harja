@@ -68,14 +68,14 @@
                                        (not= nimi :massa)
                                        (not= nimi :murske)
                                        (not= nimi :verkon-tyyppi)))
-               muotoile-kentta (fn [{:keys [otsikko yksikko nimi valinnat-koodisto valinta-arvo valinta-nayta arvo] :as metadata}]
+               muotoile-kentta (fn [{:keys [otsikko yksikko nimi valinnat-koodisto valinta-arvo valinta-nayta] :as metadata}]
                                  (let [kentan-arvo (nimi rivi)
                                        teksti (if valinnat-koodisto
                                                 (let [koodisto (valinnat-koodisto koodistot)
                                                       koodisto-rivi (some #(when (= (valinta-arvo %) kentan-arvo) %) koodisto)
                                                       koodisto-teksti (valinta-nayta koodisto-rivi)]
                                                   koodisto-teksti)
-                                                (str (or kentan-arvo arvo)
+                                                (str kentan-arvo
                                                      (when (some? yksikko)
                                                        (str " " yksikko))))
                                        otsikko? (not (contains? #{:verkon-sijainti :verkon-tarkoitus
