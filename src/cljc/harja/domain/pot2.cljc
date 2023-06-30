@@ -36,8 +36,15 @@
    :leveys {:nimi :leveys :otsikko "Leveys" :yksikko "m"
             :tyyppi :positiivinen-numero :desimaalien-maara 2
             :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 20 2))}
-   :pinta-ala {:nimi :pinta_ala :tyyppi :positiivinen-numero :otsikko "Pinta-ala" :yksikko "m²" 
-               :muokattava? (constantly false)
+   :pinta-ala {:nimi :pinta_ala :tyyppi :positiivinen-numero :otsikko "Pinta-ala" :yksikko "m²"
+               :muokattava? (fn [rivi]
+                              ;; 2 = AB 
+                              ;; 21 = ABK 
+                              ;; 22 = ABS
+                              (or
+                                (= (:toimenpide rivi) 2)
+                                (= (:toimenpide rivi) 21)
+                                (= (:toimenpide rivi) 22)))
                :fmt #(fmt/desimaaliluku-opt % 1)
                :hae (fn [rivi]
                       (when-let [tie {:tr-alkuosa (:tr-alkuosa rivi)
