@@ -264,7 +264,7 @@
                         ::toiminto/kohteenosa-id 1
                         ::toiminto/kohde-id 1
                         ::toiminto/lkm 1
-                        ::toiminto/toimenpide :ei-avausta
+                        ::toiminto/toimenpide :avaus
                         ::toiminto/palvelumuoto :kauko}]}
            (tiedot/kohteenosatiedot-toimintoihin
              {::lt/id 1}
