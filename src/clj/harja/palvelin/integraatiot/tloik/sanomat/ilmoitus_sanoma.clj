@@ -61,31 +61,33 @@
 
 (defn lue-viesti [viesti]
   (let [data (xml/lue viesti)
-        ilmoitus {:ilmoitettu (parsi-paivamaara (z/xml1-> data :ilmoitettu z/text))
-                  :valitetty (if (z/xml1-> data :lahetysaika z/text)
-                               (parsi-paivamaara (z/xml1-> data :lahetysaika z/text))
-                               (parsi-paivamaara (z/xml1-> data :ilmoitettu z/text)))
-                  :ilmoitus-id (Integer/parseInt (z/xml1-> data :ilmoitusId z/text))
-                  :emon-ilmoitusid (when-let [emonilmoitusid (z/xml1-> data :emonIlmoitusId z/text)]
-                                     (Integer/parseInt emonilmoitusid))
-                  :tunniste (z/xml1-> data :tunniste z/text)
-                  :ilmoitustyyppi (z/xml1-> data :ilmoitustyyppi z/text)
-                  :urakkatyyppi (z/xml1-> data :urakkatyyppi z/text)
-                  :otsikko (z/xml1-> data :otsikko z/text)
-                  :paikankuvaus (z/xml1-> data :paikanKuvaus z/text)
-                  :lisatieto (z/xml1-> data :lisatieto z/text)
-                  :viesti-id (z/xml1-> data :viestiId z/text)
-                  :yhteydenottopyynto (boolean (Boolean/valueOf (z/xml1-> data :yhteydenottopyynto z/text)))
-                  :ilmoittaja (when-let [ilmoittaja (into {} (z/xml-> data :ilmoittaja lue-ilmoittaja))]
-                                (if (empty? ilmoittaja) nil ilmoittaja))
-                  :lahettaja (when-let [lahettaja (into {} (z/xml-> data :lahettaja lue-lahettaja))]
-                               (if (empty? lahettaja) nil lahettaja))
-                  :selitteet (into [] (z/xml-> data :seliteet #(lue-data % :selite)))
-                  :kuvat (into [] (z/xml-> data :kuvat #(lue-data % :url)))
-                  :sijainti (when-let [sijainti (into {} (z/xml-> data :sijainti lue-sijainti))]
-                              (if (empty? sijainti) nil sijainti))
-                  :vastaanottaja (when-let [vastaanottaja (into {} (z/xml-> data :vastaanottaja lue-vastaanottaja))]
-                                   (if (empty? vastaanottaja) nil vastaanottaja))
-                  :luokittelu (when-let [luokittelu (into {} (z/xml-> data :luokittelu lue-luokittelu))]
-                                (if (empty? luokittelu) nil luokittelu))}]
+        ilmoitus (merge
+                   {:ilmoitettu (parsi-paivamaara (z/xml1-> data :ilmoitettu z/text))
+                    :valitetty (if (z/xml1-> data :lahetysaika z/text)
+                                 (parsi-paivamaara (z/xml1-> data :lahetysaika z/text))
+                                 (parsi-paivamaara (z/xml1-> data :ilmoitettu z/text)))
+                    :ilmoitus-id (Integer/parseInt (z/xml1-> data :ilmoitusId z/text))
+                    :tunniste (z/xml1-> data :tunniste z/text)
+                    :ilmoitustyyppi (z/xml1-> data :ilmoitustyyppi z/text)
+                    :urakkatyyppi (z/xml1-> data :urakkatyyppi z/text)
+                    :otsikko (z/xml1-> data :otsikko z/text)
+                    :paikankuvaus (z/xml1-> data :paikanKuvaus z/text)
+                    :lisatieto (z/xml1-> data :lisatieto z/text)
+                    :viesti-id (z/xml1-> data :viestiId z/text)
+                    :yhteydenottopyynto (boolean (Boolean/valueOf (z/xml1-> data :yhteydenottopyynto z/text)))
+                    :ilmoittaja (when-let [ilmoittaja (into {} (z/xml-> data :ilmoittaja lue-ilmoittaja))]
+                                  (if (empty? ilmoittaja) nil ilmoittaja))
+                    :lahettaja (when-let [lahettaja (into {} (z/xml-> data :lahettaja lue-lahettaja))]
+                                 (if (empty? lahettaja) nil lahettaja))
+                    :selitteet (into [] (z/xml-> data :seliteet #(lue-data % :selite)))
+                    :kuvat (into [] (z/xml-> data :kuvat #(lue-data % :url)))
+                    :sijainti (when-let [sijainti (into {} (z/xml-> data :sijainti lue-sijainti))]
+                                (if (empty? sijainti) nil sijainti))
+                    :vastaanottaja (when-let [vastaanottaja (into {} (z/xml-> data :vastaanottaja lue-vastaanottaja))]
+                                     (if (empty? vastaanottaja) nil vastaanottaja))
+                    :luokittelu (when-let [luokittelu (into {} (z/xml-> data :luokittelu lue-luokittelu))]
+                                  (if (empty? luokittelu) nil luokittelu))}
+
+                   (when (z/xml1-> data :emonIlmoitusId z/text)
+                     {:emon-ilmoitusid (Integer/parseInt (z/xml1-> data :emonIlmoitusId z/text))}))]
     ilmoitus))
