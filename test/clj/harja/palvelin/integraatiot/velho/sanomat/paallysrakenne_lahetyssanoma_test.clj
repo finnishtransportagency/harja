@@ -3,6 +3,7 @@
             [harja.testi :refer :all]
             [clojure.data.json :as json]
             [harja.kyselyt.koodistot :refer [konversio]]
+            [harja.palvelin.integraatiot.velho.yhteiset :as velho-yhteiset] 
             [harja.palvelin.integraatiot.velho.sanomat.paallysrakenne-lahetyssanoma :as lahetyssanoma]
             [harja.palvelin.integraatiot.yha.kohteen-lahetyssanoma-test :as testi-tiedot]))
 
@@ -45,7 +46,7 @@
    :rakeisuus nil, :sideaine nil, :toimenpide 21, :pot-id 6, :verkon-sijainti nil, :pot2a_id 3})
 
 (deftest muodosta-oikea-paallystekerros
-  (let [koodisto-muunnin (partial konversio (:db jarjestelma))
+  (let [koodisto-muunnin (partial konversio (:db jarjestelma) velho-yhteiset/lokita-hakuvirhe)
         sidottu-paallysrakenne-tulos (lahetyssanoma/paallystekerros->velho-muoto paallystekerros-esimerkki
                                                                                  urakka-esimerkki
                                                                                  koodisto-muunnin)
@@ -86,7 +87,7 @@
     (is (= odotettu-rakenne sidottu-paallysrakenne-tulos))))
 
 (deftest muodosta-oikea-alusta-verkko
-  (let [koodisto-muunnin (partial konversio (:db jarjestelma))
+  (let [koodisto-muunnin (partial konversio (:db jarjestelma) velho-yhteiset/lokita-hakuvirhe)
         paallysterakenteen-lujitteet (lahetyssanoma/alusta->velho-muoto alusta-verkko-esimerkki
                                                                         urakka-esimerkki
                                                                         koodisto-muunnin)
@@ -122,7 +123,7 @@
     (is (= odotettu-rakenne paallysterakenteen-lujitteet))))
 
 (deftest muodosta-oikea-alusta
-  (let [koodisto-muunnin (partial konversio (:db jarjestelma))
+  (let [koodisto-muunnin (partial konversio (:db jarjestelma) velho-yhteiset/lokita-hakuvirhe)
         paallysterakenteen-lujitteet (lahetyssanoma/alusta->velho-muoto alusta-esimerkki
                                                                         urakka-esimerkki
                                                                         koodisto-muunnin)
@@ -156,7 +157,7 @@
     (is (= odotettu-uusi-rakenne paallysterakenteen-lujitteet))))
 
 (deftest muodosta-oikea-alusta-abk
-  (let [koodisto-muunnin (partial konversio (:db jarjestelma))
+  (let [koodisto-muunnin (partial konversio (:db jarjestelma) velho-yhteiset/lokita-hakuvirhe)
         paallysterakenteen-lujitteet (lahetyssanoma/alusta->velho-muoto alusta-abk-esimerkki
                                                                         urakka-esimerkki
                                                                         koodisto-muunnin)

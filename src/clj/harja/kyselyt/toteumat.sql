@@ -896,6 +896,14 @@ WHERE urakka_id = :urakka
   AND ulkoinen_oid = :ulkoinen_oid
 ORDER BY v.alkupvm;
 
+-- name: paivita-varusteen-toteuma
+UPDATE varustetoteuma_ulkoiset
+SET toteuma = :toteuma :: varustetoteuma_tyyppi
+WHERE ulkoinen_oid = :ulkoinen_oid 
+AND :alkupvm >= COALESCE(alkupvm, '1900-01-01') 
+AND :alkupvm < COALESCE(loppupvm, '9999-12-31')
+RETURNING *;
+
 -- name: luo-varustetoteuma-ulkoiset<!
 -- Luo uuden Velhosta tuodun varustetoteuman
 INSERT INTO varustetoteuma_ulkoiset (ulkoinen_oid,
