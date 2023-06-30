@@ -1,32 +1,46 @@
 # -- Run-time vaihe --
-# Käytetään kevyttä Alpine linux Eclipse Temurin 11 (OpenJDK) imagea
-FROM eclipse-temurin:11-alpine
+# Käytetään Eclipse Temurin 11 (OpenJDK) imagea
+FROM eclipse-temurin:11
 
 # Lisää labeleita AWS ECR:ää varten
 LABEL description="Harja app"
 LABEL version="1.0"
 
 # Asenna apurit
-# Huom! busybox-extras sisältää mm. telnetin
-RUN apk add --no-cache bash curl jq nano unzip vim busybox-extras
+
+RUN apt-get update && apt-get install -y \
+    bash \
+    curl \
+    jq \
+    nano \
+    unzip \
+    vim \
+    telnet \
+    && rm -rf /var/lib/apt/lists/*
+
 
 # Asenna AWS CLI v2
-# FIXME: AWS CLI v2 ei toimi Alpine linuxissa suorilta ja sen asentaminen vaikuttaa hankalalta
-#        Jos tätä tarvitaan, niin pitää ehkä käyttää jotain muuta kuin Alpine linuxia pohjana tai
-#        asentaa AWS CLI v2 jotenkin muuten.
-#RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
-# unzip awscliv2.zip && \
-# ./aws/install && \
-# rm -rf awscliv2.zip aws
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+ unzip awscliv2.zip && \
+ ./aws/install && \
+ rm -rf awscliv2.zip aws
 
 
 # Luo Non-root ryhmä ja käyttäjä, jotta sovellus ei pyöri roottina
-RUN addgroup -S harja && adduser -S harja -G harja
+ARG USERNAME=harja
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+RUN groupadd --gid $USER_GID $USERNAME && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
 
 # Luo hakemisto sovellukselle ja aseta oikeudet
 RUN mkdir -p /app && chown -R harja:harja /app
-USER harja
+
+# Aseta default user ja workdir
+USER $USERNAME
 WORKDIR /app
+
+COPY ./aws/fargate/entrypoint.sh entrypoint.sh
 
 # Kopioi uberjar pipelinesta
 # Tässä oleteetaan, että uberjar on jo buildattu ja se on hakemistossa "target"
@@ -40,21 +54,19 @@ COPY ./aws/fargate/asetukset.edn asetukset.edn
 # harja.palvelin.asetukset/tarkista-ymparisto! -funktiolla
 COPY ./aws/fargate/.harja_env .harja_env
 
-# Aseta ENV muuttujat
 
-# Java agent
-# TODO: Esimerkiksi JMX Prometheus Java agentti
+# Aseta ENV muuttujat (default-arvot)
+# ENV-muuttujien varsinaiset arvot tuodaan ulkopuolelta containeriin.
+
 ENV HARJA_JAVA_AGENT=""
 
-# TODO: Tarkista mitkä JAVA optionsit tarvitaan
-# Käytä -XshowSettings:all, jos haluat nähdä mitä asetuksia käytetään
+# Käytä lisäksi -XshowSettings:all, jos haluat nähdä mitä asetuksia käytetään
 ENV HARJA_JVM_OPTS="-Xmx6g"
-# TODO: Tämä kirjasto ei ole opensourcea. Miten otetaan konttiin mukaan?
-#ENV HARJA_LIBS="sonic-client.jar:sonic-xmessage.jar:sonic-crypto.jar"
-ENV HARJA_LIBS=""
+
+#ENV HARJA_LIBS=""
 
 # Aseta portti
 EXPOSE 3000
 
 # Aseta entrypoint,
-ENTRYPOINT java $HARJA_JAVA_AGENT $HARJA_JVM_OPTS -cp $HARJA_LIBS:harja.jar harja.palvelin.main
+ENTRYPOINT ["./entrypoint.sh"]
