@@ -37,22 +37,18 @@
             :tyyppi :positiivinen-numero :desimaalien-maara 2
             :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 20 2))}
    :pinta-ala {:nimi :pinta_ala :tyyppi :positiivinen-numero :otsikko "Pinta-ala" :yksikko "m²"
-               :muokattava? (fn [rivi]
-                              ;; 2 = AB 
-                              ;; 21 = ABK 
-                              ;; 22 = ABS
-                              (or
-                                (= (:toimenpide rivi) 2)
-                                (= (:toimenpide rivi) 21)
-                                (= (:toimenpide rivi) 22)))
-               :fmt #(fmt/desimaaliluku-opt % 1)
-               :hae (fn [rivi]
-                      (when-let [tie {:tr-alkuosa (:tr-alkuosa rivi)
-                                      :tr-alkuetaisyys (:tr-alkuetaisyys rivi)
-                                      :tr-loppuosa (:tr-loppuosa rivi)
-                                      :tr-loppuetaisyys (:tr-loppuetaisyys rivi)}]
-                        (when (:leveys rivi)
-                          (* (:leveys rivi) (tr/laske-tien-pituus {} tie)))))}
+                        :pakollinen? (constantly false)
+                        :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))
+                        :muokattava? (fn [rivi]
+                                       ;; 2 = AB 
+                                       ;; 21 = ABK 
+                                       ;; 22 = ABS
+                                       (or
+                                         (= (:toimenpide rivi) 2)
+                                         (= (:toimenpide rivi) 21)
+                                         (= (:toimenpide rivi) 22)))
+                        :fmt #(fmt/desimaaliluku-opt % 1)
+                        }
    :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmäärä" :yksikko "t"
                         :tyyppi :positiivinen-numero :desimaalien-maara 1
                         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
@@ -140,9 +136,14 @@
                                                41           ;; TJYR
                                                []
                                                42           ;; LJYR
-                                               [:kasittelysyvyys
-                                                :leveys 
-                                                {:nimi :pinta-ala :pakollinen? false}]
+                                               [:kasittelysyvyys :leveys 
+                                                {:nimi :pinta-ala :hae (fn [rivi]
+                                                                         (when-let [tie {:tr-alkuosa (:tr-alkuosa rivi)
+                                                                                         :tr-alkuetaisyys (:tr-alkuetaisyys rivi)
+                                                                                         :tr-loppuosa (:tr-loppuosa rivi)
+                                                                                         :tr-loppuetaisyys (:tr-loppuetaisyys rivi)}]
+                                                                           (when (:leveys rivi)
+                                                                             (* (:leveys rivi) (tr/laske-tien-pituus {} tie)))))}]
                                                43           ;; RJYR
                                                []}
         avaimet (get alusta-toimenpidespesifit-lisaavaimet (:toimenpide alusta))
