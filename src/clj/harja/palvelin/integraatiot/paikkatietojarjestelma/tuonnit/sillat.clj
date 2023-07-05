@@ -33,7 +33,6 @@
     (or (str/includes? kunnossapitaja "yksityinen")
       (str/includes? kunnossapitaja "kaupunki")
       (str/includes? kunnossapitaja "kunta")
-      (str/includes? kunnossapitaja "tieyhtiö")
       (str/includes? kunnossapitaja "ruotsi")
       (str/includes? kunnossapitaja "hkl")
       (str/includes? kunnossapitaja "sairaanhoitopiiri"))))

@@ -1,0 +1,1 @@
+ALTER TYPE kohdeluokka_tyyppi ADD VALUE 'toimenpiteet/valimaiset-varustetoimenpiteet';

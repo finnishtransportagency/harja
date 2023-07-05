@@ -45,7 +45,7 @@
 (defonce murupolku-nakyvissa? (reaction (and (not @raportit/raportit-nakymassa?)
                                              (not= @valittu-sivu :tilannekuva)
                                              (not= @valittu-sivu :info)
-                                             (not= @valittu-sivu :tieluvat)
+                                             (not= @valittu-sivu :tienpidon-luvat)
                                              (not= @valittu-sivu :about)
                                              (not= @valittu-sivu :hallinta))))
 
