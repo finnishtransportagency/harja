@@ -163,8 +163,7 @@
   (tv/hae-trpisteiden-valinen-tieto-yhdistaa db params))
 
 (defn hae-tienumerot-kartalle [db params]
-  (tv/hae-tiet-alueella db params)
-  )
+  (tv/hae-tiet-alueella db params))
 
 (defrecord TierekisteriHaku []
   component/Lifecycle

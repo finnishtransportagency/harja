@@ -1,5 +1,5 @@
 (ns harja.tiedot.urakka.tienumerot-kartalla
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [reagent.core :refer [atom]]
             [harja.atom :refer-macros [reaction<!]]
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.kommunikaatio :as k])
@@ -8,13 +8,6 @@
 
 (defonce karttataso-tienumerot (atom nil))
 (defonce karttataso-nakyvissa? (atom true))
-
-(def tiemax-atom (atom 9999))
-
-;; Tämä on vain gc:llä testausta varten
-;; TODO: Poista
-(defn ^:export aseta-tiemax [uusi]
-  (reset! tiemax-atom uusi))
 
 (def tienumerot
   (reaction<!
@@ -26,9 +19,10 @@
                      100000 39
                      50000 99
                      9999)]
-        (k/post! :hae-tienumerot-kartalle
-          (merge kartalla-nakyva-alue
-            {:tiemax tiemax}))))))
+        (when (and @karttataso-nakyvissa? (not= 0 tiemax))
+          (k/post! :hae-tienumerot-kartalle
+            (merge kartalla-nakyva-alue
+              {:tiemax tiemax})))))))
 
 (def tienumerot-kartalla
   (reaction
