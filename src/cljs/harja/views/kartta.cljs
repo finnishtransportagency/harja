@@ -791,7 +791,7 @@
          :geometry-layers [{:id :tienumerot
                             :nakyvissa-atom tienumerot-kartalla/karttataso-nakyvissa?
                             :icon (ikonit/numero-taulu-24 16 16)}]
-         :layers [(when (harja.asiakas.kommunikaatio/kehitysymparistossa-localhost?)
+         :layers [(when (k/kehitysymparistossa-localhost?)
                     ;; Käytetään kapsi.fi:n avointa WMS-karttaa paikallisessa kehitysympäristössä MML:n karttojen sijaan.
                     {:type :wms
                      :id :kapsi
