@@ -691,7 +691,8 @@
                   (tarkasta-urakka-kohteet-joukko urakka-kohteet oid-joukko)
                   (poista-velho-oidt db)
                   (tallenna-urakka-velho-oidt db urakka-kohteet)))))
-          (empty? @virheet))))
+          (when-not (empty? @virheet)
+            (virheet/heita-poikkeus virheet/+ulkoinen-kasittelyvirhe-koodi+ @virheet) ))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (lokita-urakkahakuvirhe (str "MHU urakoiden haku Velhosta epäonnistui. Virheet: " virheet))
       false)
