@@ -791,25 +791,25 @@
          :geometry-layers [{:id :tienumerot
                             :nakyvissa-atom tienumerot-kartalla/karttataso-nakyvissa?
                             :icon (ikonit/numero-taulu-24 16 16)}]
-         :layers [(when (k/kehitysymparistossa-localhost?)
-                    ;; Käytetään kapsi.fi:n avointa WMS-karttaa paikallisessa kehitysympäristössä MML:n karttojen sijaan.
-                    {:type :wms
-                     :id :kapsi
-                     :url "https://tiles.kartat.kapsi.fi/taustakartta"
-                     :layer "taustakartta"
-                     :default true})
-                  {:type :mml
-                   :url (str (k/wmts-polku-mml) "maasto/wmts")
-                   :layer "taustakartta"
-                   :default true}
-                  {:type :wms
-                   :id :enc-merikartta
-                   :nimi "ENC merikartta"
-                   :icon (ikonit/ankkuri-24 16 16)
-                   :url "https://julkinen.vayla.fi/s57/wms?request=GetCapabilities&service=WMS"
-                   :layer "cells"
-                   :style "style-id-202"
-                   :default false}]}]))))
+         :layers (keep identity [(when (k/kehitysymparistossa-localhost?)
+                                   ;; Käytetään kapsi.fi:n avointa WMS-karttaa paikallisessa kehitysympäristössä MML:n karttojen sijaan.
+                                   {:type :wms
+                                    :id :kapsi
+                                    :url "https://tiles.kartat.kapsi.fi/taustakartta"
+                                    :layer "taustakartta"
+                                    :default true})
+                                 {:type :mml
+                                  :url (str (k/wmts-polku-mml) "maasto/wmts")
+                                  :layer "taustakartta"
+                                  :default true}
+                                 {:type :wms
+                                  :id :enc-merikartta
+                                  :nimi "ENC merikartta"
+                                  :icon (ikonit/ankkuri-24 16 16)
+                                  :url "https://julkinen.vayla.fi/s57/wms?request=GetCapabilities&service=WMS"
+                                  :layer "cells"
+                                  :style "style-id-202"
+                                  :default false}])}]))))
 
 (defn kartan-edistyminen [kuvataso geometriataso]
   (let [ladattu (+ (:ladattu kuvataso) (:ladattu geometriataso))
