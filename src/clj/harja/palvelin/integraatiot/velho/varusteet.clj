@@ -279,9 +279,6 @@
         ylimaaraiset-oidit (set/difference saadut-oidit haetut-oidit) 
         tallennettavat-oidit (set/difference saadut-oidit ylimaaraiset-oidit (virhe-oidit-fn))
         tallennettavat-kohteet (filter #(contains? tallennettavat-oidit (:oid %)) saadut-kohteet)]
-    ; TODO VHAR-6139 palauta kohteiden haun ja tallentamisen lopputulokset lokita koostetusti kutsussa
-    #_(log/info "Varustehaku Velhosta palautti " (count saadut-kohteet) " historia-kohdetta. Yksikäsitteisiä oideja: "
-                (count saadut-oidit) " kpl. Tallennetaan " (count tallennettavat-oidit) " kpl. (Ylimääräisiä oideja " (count ylimaaraiset-oidit) " kpl.) Url: " url)
     (if jasennys-onnistui?
       (do
         (when (and jasennys-onnistui? (seq puuttuvat-oidit))
@@ -296,6 +293,10 @@
                                   (tallenna-virhe-fn kohde (str t " url: " url))
                                   false)))
                             tallennettavat-kohteet)]
+          {:onnistuneet (count (filter true? tulokset))
+           :epaonnistuneet (count (filter false? tulokset))
+           :ylimaaraiset (count ylimaaraiset-oidit)
+           :saadut (count saadut-kohteet)}
           (every? true? tulokset)))
       false)))
 
@@ -400,8 +401,11 @@
                   sisalto (map #(hae-kohdetiedot kohteet-url konteksti token-fn
                                    % tallenna-virhe-fn)
                              oidit-alijoukot)
-                  tulokset (map #(tallenna-kohteet % url tallenna-fn tallenna-virhe-fn virhe-oidit-fn) sisalto)]
-              (if (every? true? tulokset)
+                  tulokset (map #(tallenna-kohteet % url tallenna-fn tallenna-virhe-fn virhe-oidit-fn) sisalto)
+                  {:keys [onnistuneet epaonnistuneet ylimaaraiset saadut]} (apply merge-with + tulokset)]
+              (log/info "Varustehaku Velhosta palautti " (count saadut) " kohdetta. "
+                "Tallennettiin " (count onnistuneet) " kpl. (Ylimääräisiä oideja " ylimaaraiset " kpl.)")
+              (if (= 0 epaonnistuneet)
                 (do
                   (tallenna-hakuaika-fn haku-alkanut)
                   true)
@@ -575,9 +579,10 @@
                   valimaiset-toimenpiteet (hae-ja-palauta-tietolajin-lahde +valimaiset-varustetoimenpiteet+ db konteksti varuste-api-juuri-url token-fn) 
                   _ (log/debug "Haettuja välimäisiä toimenpiteitä: " (when (seq valimaiset-toimenpiteet) (count valimaiset-toimenpiteet)))
                   _ (log/debug "Päivitetään välimäiset toimenpiteet kohteille lopuksi") 
-                  _ (paivita-varustetoteumat-valimaisille-kohteille valimaiset-toimenpiteet db)] 
-                (every? true? tulos))
-            false))))
+                  _ (paivita-varustetoteumat-valimaisille-kohteille valimaiset-toimenpiteet db)]
+              (when-not (every? true? tulos)
+                (virheet/heita-poikkeus virheet/+ulkoinen-kasittelyvirhe-koodi+ "Tietolajien lähteiden haussa virheitä")))
+            (virheet/heita-poikkeus virheet/+ulkoinen-kasittelyvirhe-koodi+ "Velho-tokenin haku epäonnistui")))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (log/error "Integraatioajo tuo-uudet-varustetoteumat-velhosta epäonnistui. Virheet: " virheet)
       false)))
