@@ -48,6 +48,7 @@
             [harja.ui.dom :as dom]
             [harja.views.kartta.tasot :as tasot]
             [harja.views.kartta.infopaneeli :as infopaneeli]
+            [harja.tiedot.urakka.tienumerot-kartalla :as tienumerot-kartalla]
             [reagent.core :refer [atom] :as reagent]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.openlayers.taso :as taso]
@@ -244,11 +245,11 @@
          (run! (do @dom/ikkunan-koko
                    (openlayers/invalidate-size!))))
 
-(defn piilota-tai-nayta-kartta-nappula 
+(defn piilota-tai-nayta-kartta-nappula
   [optiot]
   (let [otsikko (if (= :S @nav/kartan-koko) "Näytä kartta" "Piilota kartta")
         koko (if (= :S @nav/kartan-koko) :L :S)
-        {:keys [luokka] :as optiot} optiot]  
+        {:keys [luokka] :as optiot} optiot]
     [yleiset/linkki otsikko #(nav/vaihda-kartan-koko! koko) (merge optiot {:luokka (conj luokka "kartta-nappeli")} {:ikoni (ikonit/kartta-24 12 12)})]))
 
 (defn kartan-koko-kontrollit
@@ -540,8 +541,8 @@
       (when (or (and (not= 1 (:infopaneelin-merkki vanha-maara))
                      (not= 1 (:infopaneelin-merkki uusi-maara))
                      (some tasot-joita-zoomataan-aina (keys uusi-maara)))
-                (not= (dissoc vanha-maara :infopaneelin-merkki)
-                      (dissoc uusi-maara :infopaneelin-merkki))
+                (not= (dissoc vanha-maara :infopaneelin-merkki :tienumerot)
+                      (dissoc uusi-maara :infopaneelin-merkki :tienumerot))
                 (not= (:organisaatio vanha) (:organisaatio uusi)))
         (tiedot/zoomaa-geometrioihin)))))
 
@@ -721,91 +722,94 @@
                   @nav/kartan-koko)]
 
        [openlayers
-        {:id                 "kartta"
-         :width              "100%"
+        {:id "kartta"
+         :width "100%"
          ;; set width/height as CSS units, must set height as pixels!
-         :height             (fmt/pikseleina @kartan-korkeus)
-         :style              (when (= koko :S)
-                               ;; display none estää kartan korkeuden
-                               ;; animoinnin suljettaessa
-                               {:display "none"})
-         :class              (when (or
-                                    (= :hidden koko)
-                                    (= :S koko))
-                               "piilossa")
+         :height (fmt/pikseleina @kartan-korkeus)
+         :style (when (= koko :S)
+                  ;; display none estää kartan korkeuden
+                  ;; animoinnin suljettaessa
+                  {:display "none"})
+         :class (when (or
+                        (= :hidden koko)
+                        (= :S koko))
+                  "piilossa")
 
          ;; :extent-key muuttuessa zoomataan aina uudelleen, vaikka itse alue ei olisi muuttunut
 
-         :extent-key         (str (if (or (= :hidden koko) (= :S koko)) "piilossa" "auki") "_" (name @nav/valittu-sivu))
-         :extent             @nav/kartan-extent
+         :extent-key (str (if (or (= :hidden koko) (= :S koko)) "piilossa" "auki") "_" (name @nav/valittu-sivu))
+         :extent @nav/kartan-extent
 
-         :selection          nav/valittu-hallintayksikko
-         :on-zoom            paivita-extent
-         :on-drag            (fn [item event]
-                               (paivita-extent item event)
-                               (t/julkaise! {:aihe :karttaa-vedetty}))
-         :on-postrender      (fn [_]
-                               ;; Geometriatason pakottaminen valmiiksi postrenderissä
-                               ;; tuntuu toimivan hyvin, mutta kuvatason pakottaminen ei.
-                               ;; Postrender triggeröityy monta kertaa, kun kuvatasoja piirretään.
-                               (edistymispalkki/geometriataso-pakota-valmistuminen!))
-         :on-mount           (fn [initialextent]
-                               (paivita-extent nil initialextent))
-         :on-click           (fn [event]
-                               ;; Click tarkoittaa tyhjän pisteen klikkaamista,
-                               ;; eli esim valitun urakan "ulkopuolelle" klikkaamista.
-                               (cond
-                                 ;; Näissä näkymissä ei näytetä paneelia
-                                 (#{:ilmoitukset :raportit} @nav/valittu-sivu)
-                                 nil
+         :selection nav/valittu-hallintayksikko
+         :on-zoom paivita-extent
+         :on-drag (fn [item event]
+                    (paivita-extent item event)
+                    (t/julkaise! {:aihe :karttaa-vedetty}))
+         :on-postrender (fn [_]
+                          ;; Geometriatason pakottaminen valmiiksi postrenderissä
+                          ;; tuntuu toimivan hyvin, mutta kuvatason pakottaminen ei.
+                          ;; Postrender triggeröityy monta kertaa, kun kuvatasoja piirretään.
+                          (edistymispalkki/geometriataso-pakota-valmistuminen!))
+         :on-mount (fn [initialextent]
+                     (paivita-extent nil initialextent))
+         :on-click (fn [event]
+                     ;; Click tarkoittaa tyhjän pisteen klikkaamista,
+                     ;; eli esim valitun urakan "ulkopuolelle" klikkaamista.
+                     (cond
+                       ;; Näissä näkymissä ei näytetä paneelia
+                       (#{:ilmoitukset :raportit} @nav/valittu-sivu)
+                       nil
 
-                                 ;; Etusivulla urakkaa valittaessa ei haluta avata infopaneelia
-                                 (and (#{:urakat} @nav/valittu-sivu)
-                                      (not @nav/valittu-urakka))
-                                 nil
+                       ;; Etusivulla urakkaa valittaessa ei haluta avata infopaneelia
+                       (and (#{:urakat} @nav/valittu-sivu)
+                         (not @nav/valittu-urakka))
+                       nil
 
-                                 :default
-                                 (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
-                                                                          event
-                                                                          asiat-pisteessa))
-                               (.stopPropagation event)
-                               (.preventDefault event))
-         :on-select          kasittele-select!
+                       :default
+                       (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
+                         event
+                         asiat-pisteessa))
+                     (.stopPropagation event)
+                     (.preventDefault event))
+         :on-select kasittele-select!
 
-         :on-dblclick        nil
+         :on-dblclick nil
 
          :on-dblclick-select kasittele-dblclick-select!
 
-         :tooltip-fn         (fn [geom]
-                                        ; Palauttaa funktion joka palauttaa tooltipin sisällön, tai nil jos hoverattu asia
-                                        ; on valittu hallintayksikkö tai urakka.
-                               (if (or (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? geom)
-                                       (and (empty? (:nimi geom)) (empty? (:siltanimi geom))))
-                                 nil
-                                 (fn []
-                                   (and geom
-                                        [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))))
+         :tooltip-fn (fn [geom]
+                       ; Palauttaa funktion joka palauttaa tooltipin sisällön, tai nil jos hoverattu asia
+                       ; on valittu hallintayksikkö tai urakka.
+                       (if (or (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? geom)
+                             (and (empty? (:nimi geom)) (empty? (:siltanimi geom))))
+                         nil
+                         (fn []
+                           (and geom
+                             [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))))
 
-         :geometries         @tasot/geometriat-kartalle
-         :layers             [{:type  :mml
-                               :url   (str (k/wmts-polku-mml) "maasto/wmts")
-                               :layer "taustakartta"
-                               :default true}
-                              {:type  :livi
-                               :id :tienumerot
-                               :nimi "tienumerot"
-                               :icon (ikonit/numero-taulu-24 16 16)
-                               :url   (str (k/wmts-polku-livi) "wmts")
-                               :layer "liikennevirasto:PTP_HatkaPlus_Tienumerot"
-                               :default true}
-                              {:type :wms
-                               :id :enc-merikartta
-                               :nimi "ENC merikartta"
-                               :icon  (ikonit/ankkuri-24 16 16)
-                               :url "https://julkinen.vayla.fi/s57/wms?request=GetCapabilities&service=WMS"
-                               :layer "cells"
-                               :style "style-id-202"
-                               :default false}]}]))))
+         :geometries @tasot/geometriat-kartalle
+         :geometry-layers [{:id :tienumerot
+                            :nakyvissa-atom tienumerot-kartalla/karttataso-nakyvissa?
+                            :icon (ikonit/numero-taulu-24 16 16)}]
+         :layers [(when (k/kehitysymparistossa-localhost?)
+                    ;; Käytetään kapsi.fi:n avointa WMS-karttaa paikallisessa kehitysympäristössä MML:n karttojen sijaan.
+                    {:type :wms
+                     :id :kapsi
+                     :url "https://tiles.kartat.kapsi.fi/taustakartta"
+                     :layer "taustakartta"
+                     :default true})
+                  {:type :mml
+                   :url (str (k/wmts-polku-mml) "maasto/wmts")
+                   :layer "taustakartta"
+                   :default true}
+                  {:type :wms
+                   :id :enc-merikartta
+                   :nimi "ENC merikartta"
+                   :icon (ikonit/ankkuri-24 16 16)
+                   :url "https://julkinen.vayla.fi/s57/wms?request=GetCapabilities&service=WMS"
+                   :layer "cells"
+                   :style "style-id-202"
+                   :default false}]}]))))
 
 (defn kartan-edistyminen [kuvataso geometriataso]
   (let [ladattu (+ (:ladattu kuvataso) (:ladattu geometriataso))
