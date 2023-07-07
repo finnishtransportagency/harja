@@ -162,3 +162,16 @@ FROM tr_tiedot
 WHERE "tr-numero" = :tr-numero AND
       "tr-osa" >= :tr-alkuosa AND
       "tr-osa" <= :tr-loppuosa;
+
+-- name: hae-tiet-alueella
+SELECT tie,
+       -- Yhdistetään tienpätkät, ja etsitään niiden keskipiste.
+       -- st_centroid etsii geometrin keskipisteen, joka ei välttämättä ole viivalla.
+       -- st_closestpoint-funktiolla etsitään viivalta piste, joka on lähimpänä geometrista keskipistettä.
+       st_closestpoint(st_union(array_agg(geom)), st_centroid(st_union(array_agg(geom)))) AS geom
+FROM tr_osan_ajorata toa
+WHERE (:tiemax IS NULL OR tie < :tiemax::INT)
+  AND ST_Intersects(toa.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
+GROUP BY tie
+ORDER BY tie
+LIMIT 100;
