@@ -25,7 +25,6 @@
                      7 valtatie-max
                      9 kantatie-max
                      yhdystie-max)]
-        (println "kartan koko: " (ol/nykyinen-zoom-taso) ", tiemax: " tiemax)
         (when (and @karttataso-nakyvissa? (not= 0 tiemax))
           (k/post! :hae-tienumerot-kartalle
             (merge kartalla-nakyva-alue
