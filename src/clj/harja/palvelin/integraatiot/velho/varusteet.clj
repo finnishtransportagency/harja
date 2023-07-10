@@ -82,22 +82,6 @@
 (defn lokita-urakkahakuvirhe [viesti]
   (log/error viesti))
 
-(defn- urakka-sijainnin-avulla
-  [db sijainti alkusijainti version-voimassaolo alkaen]
-  (let [s (or sijainti alkusijainti)
-        alkupvm (or (:alku version-voimassaolo)
-                    alkaen)                                 ; Sijaintipalvelu ei palauta versioita
-        tr-osoite {:tie (:tie s)
-                   :aosa (:osa s)
-                   :aet (:etaisyys s)
-                   :paivamaara alkupvm}
-        urakka-id (-> (q-urakat/hae-hoito-urakka-tr-pisteelle db tr-osoite)
-                      first
-                      :id)]
-    (assert (some? s) "`sijainti` tai `alkusijainti` on pakollinen")
-    (assert (some? alkupvm) "`alkupvm` on pakollinen")
-    urakka-id))
-
 (defn hae-id->urakka-pvm-map
   "Hakee urakan päivämäärätietoja sellaisille urakoille, joille on olemassa velho_oid (ovat siis velhosta löytyviä MHU urakoita).
   Palauttaa:
@@ -105,7 +89,7 @@
   [db]
   (->> (q-urakat/hae-kaikki-urakat-pvm db)                  ; [{:id 36 :alkupvm <sql-date> :loppupvm <sql-date>} {...} ... ]
        (map
-         (fn [{:keys [id alkupvm loppupvm] :as urakka}]
+         (fn [{:keys [id alkupvm loppupvm]}]
            [id {:alkupvm alkupvm :loppupvm loppupvm}]))     ; ([36 {:alkupvm <sql-date> :loppupvm <sql-date>}] [38 {...}])
        (into {})))                                          ; {36 {:alkupvm <sql-date> :loppupvm <sql-date>} 38 {...}}
 
@@ -118,7 +102,7 @@
   ; {"1.2.3" 36 "1.2.4" 38}
   (->> (q-urakat/hae-kaikki-urakka-velho-oid db)
        (map
-         (fn [{:keys [velho_oid id] :as urakka}]
+         (fn [{:keys [velho_oid id]}]
            [velho_oid id]))
        (into {})))
 
@@ -300,7 +284,7 @@
           (every? true? tulokset)))
       false)))
 
-(defn muodosta-kohteet-url [varuste-api-juuri-url {:keys [palvelu api-versio] :as lahde}]
+(defn muodosta-kohteet-url [varuste-api-juuri-url {:keys [palvelu api-versio]}]
   (let [historia-osa (if (= "sijaintipalvelu" palvelu)
                        ""
                        "/historia")]
@@ -316,7 +300,7 @@
               http-asetukset {:metodi :POST
                               :url kohteet-url
                               :otsikot otsikot}
-              {sisalto :body otsikot :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset pyynto)]
+              {sisalto :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset pyynto)]
           {:sisalto sisalto
            :oidit oidit})
         (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
@@ -356,7 +340,7 @@
         token (token-fn)]
     (if token
       (try+
-        (let [haku-alkanut (java.util.Date.)
+        (let [haku-alkanut (pvm/nyt)
               {tila :tila oidit :oidit} (hae-oidt-velhosta token url konteksti tallenna-virhe-fn)]
           (when (and tila (not-empty oidit))
             (let [oidit-alijoukot (partition
@@ -390,7 +374,7 @@
         token (token-fn)]
     (if token
       (try+
-        (let [haku-alkanut (java.util.Date.)
+        (let [haku-alkanut (pvm/nyt)
               {tila :tila oidit :oidit} (hae-oidt-velhosta token url konteksti tallenna-virhe-fn)]
           (if (and tila (not-empty oidit))
             (let [oidit-alijoukot (partition
