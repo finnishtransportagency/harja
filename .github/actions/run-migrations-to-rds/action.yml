@@ -20,7 +20,7 @@ runs:
         
         RESULT=$(cat result.json)
         
-        if [[ "$RESULT" = "success" ]; then
+        if [[ "$RESULT" = "success" ]]; then
           echo "Migration succesful"
         else
           echo "Migration failed!"
