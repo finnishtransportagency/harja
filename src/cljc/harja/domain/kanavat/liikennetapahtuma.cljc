@@ -72,6 +72,7 @@
   ^{:private true}
   {:sulutus "Sulutus"
    :tyhjennys "Tyhjennys"
+   :veden-korkeus "Vedenkorkeus"
    :avaus "Sillan avaus"
    :ei-avausta "Ei avausta"})
 
@@ -82,7 +83,8 @@
 (def sulku-toimenpiteet*
   ^{:private true}
   {:sulutus "Sulutus"
-   :tyhjennys "Tyhjennys"})
+   :tyhjennys "Tyhjennys"
+   :veden-korkeus "Vedenkorkeus"})
 
 (def silta-toimenpiteet*
   ^{:private true}
