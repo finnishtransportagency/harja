@@ -213,6 +213,7 @@
 (defn tallenna-viimeisin-hakuaika-kohdeluokalle [db kohdeluokka viimeisin-hakuaika]
   (let [parametrit {:kohdeluokka kohdeluokka
                     :viimeisin_hakuaika viimeisin-hakuaika}]
+    (println "Tallennetaan hakuaika " kohdeluokka viimeisin-hakuaika)
     (q-toteumat/varustetoteuma-ulkoiset-paivita-viimeisin-hakuaika-kohdeluokalle! db parametrit)))
 
 (defn tallenna-kohteet
@@ -280,9 +281,11 @@
           {:onnistuneet (count (filter true? tulokset))
            :epaonnistuneet (count (filter false? tulokset))
            :ylimaaraiset (count ylimaaraiset-oidit)
-           :saadut (count saadut-kohteet)}
-          (every? true? tulokset)))
-      false)))
+           :saadut (count saadut-kohteet)}))
+      {:onnistuneet 0
+       :epaonnistuneet 0
+       :ylimaaraiset 0
+       :saadut 0})))
 
 (defn muodosta-kohteet-url [varuste-api-juuri-url {:keys [palvelu api-versio]}]
   (let [historia-osa (if (= "sijaintipalvelu" palvelu)
@@ -387,16 +390,16 @@
                              oidit-alijoukot)
                   tulokset (map #(tallenna-kohteet % url tallenna-fn tallenna-virhe-fn virhe-oidit-fn) sisalto)
                   {:keys [onnistuneet epaonnistuneet ylimaaraiset saadut]} (apply merge-with + tulokset)]
-              (log/info "Varustehaku Velhosta palautti " (count saadut) " kohdetta. "
-                "Tallennettiin " (count onnistuneet) " kpl. (Ylimääräisiä oideja " ylimaaraiset " kpl.)")
+              (log/info "Varustehaku Velhosta palautti " saadut " kohdetta. "
+                "Tallennettiin " onnistuneet " kpl. (Ylimääräisiä oideja " ylimaaraiset " kpl.)")
               (if (= 0 epaonnistuneet)
                 (do
                   (tallenna-hakuaika-fn haku-alkanut)
                   true)
                 false))
-            (if tila 
+            (if tila
               (do
-               (tallenna-hakuaika-fn haku-alkanut) 
+                (tallenna-hakuaika-fn haku-alkanut)
                 true)
               false)))
         (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
