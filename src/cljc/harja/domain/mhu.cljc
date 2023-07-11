@@ -94,7 +94,7 @@
   {:akilliset-hoitotyot "Äkillinen hoitotyö"
    :kolmansien-osapuolten-aiheuttamat-vahingot "Vahinkojen korjaukset"
    :tunneleiden-hoidot "Tunneleiden hoito"
-   :rahavaraus-lupaukseen-1 "Tilaajan rahavaraus lupaukseen 1"
+   :rahavaraus-lupaukseen-1 "Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään"
    :muut-rahavaraukset "Muut tavoitehintaan vaikuttavat rahavaraukset"})
 
 (def tallennettava-asia->toteumatyyppi
