@@ -18,7 +18,7 @@ runs:
         AVAILABLE_SERVICE=$(aws ecs list-services --cluster HarjaFargateCluster --region eu-west-1 | jq -r '.serviceArns[0]')
         
         echo "Shutting down running tasks..."
-        aws ecs update-service --cluster HarjaFargateCluster --service $AVAILABLE_SERVICE --desired-count 0 --region eu-west-1
+        aws ecs update-service --cluster HarjaFargateCluster --service $AVAILABLE_SERVICE --desired-count 0 --region eu-west-1 1> /dev/null
 
         while true; do
           runningTasks=$(aws ecs list-tasks --cluster HarjaFargateCluster --service-name $AVAILABLE_SERVICE --region eu-west-1 | jq '.taskArns')
