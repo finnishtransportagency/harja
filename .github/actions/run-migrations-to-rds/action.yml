@@ -12,20 +12,25 @@ runs:
     - name: Run migrations to RDS using lambda
       env:
         SHA: ${{ inputs.commit-sha }}
+        TIMEOUT: "900"
 
       run:  |
-        echo "Run migrations to RDS using lambda"
-        aws lambda invoke --function-name "HarjaMigrationRunner" --invocation-type "RequestResponse" --cli-read-timeout 0 \
-        --cli-binary-format raw-in-base64-out --payload '{"payload":{"sha":"${SHA}"}}' result.json
+        echo "Run migrations to RDS using lambda (Timeout ${TIMEOUT} sec)"
+        
+        readonly payload="{\"payload\":{\"sha\":\"${SHA}\"}}"
+        
+        aws lambda invoke --function-name "HarjaMigrationRunner" --invocation-type "RequestResponse" \
+        --cli-read-timeout "${TIMEOUT}" \
+        --cli-binary-format raw-in-base64-out --payload "$payload" result.json
         
         RESULT=$(cat result.json)
         
         if [[ "$RESULT" = "success" ]]; then
-          echo "Migration succesful"
+        echo "Migration succesful"
         else
           echo "Migration failed!"
           echo "Result: $RESULT"
-          
+        
           exit 1
         fi
 
