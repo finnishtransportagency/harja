@@ -74,7 +74,7 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
         cy.get('[data-cy=ilmoitukset-grid]').contains("Toinen testaaminen");
     })
 
-    it.only('Aihe saadaan parsittua ilmoituksen lisätiedoista', function () {
+    it('Aihe saadaan parsittua ilmoituksen lisätiedoista', function () {
         cy.server();
         cy.route({
                 url: "*/hae-ilmoitukset",
