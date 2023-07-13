@@ -470,7 +470,7 @@
 (defn nappi-hover-vihjeella
   "Anna tyyppi :lisaa, :pilko tai :poista"
   [{:keys [tyyppi disabled? toiminto toiminto-args hover-txt data-attributes]}]
-  (assert (#{:lisaa :pilko :poista} tyyppi) "Tyypin oltava :lisaa, :pilko tai :poista")
+  (assert (#{:lisaa :pilko :poista :kopioi} tyyppi) "Tyypin oltava :lisaa, :pilko, :poista tai :kopioi")
   [yleiset/wrap-if true
    [yleiset/tooltip {} :% hover-txt]
    [yleinen-ensisijainen ""
@@ -483,7 +483,10 @@
               (ikonit/road-split)
 
               :poista
-              (ikonit/action-delete))
+              (ikonit/action-delete)
+
+              :kopioi
+              (ikonit/action-copy))
      :disabled? disabled?
      :luokka "napiton-nappi btn-xs"
      :toiminto-args toiminto-args

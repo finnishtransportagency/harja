@@ -35,7 +35,8 @@
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord AsetaTallennusKaynnissa [])
 (defrecord TallennaPot2Tiedot [valmis-kasiteltavaksi?])
-(defrecord KopioiToimenpiteetTaulukossa [rivi toimenpiteet-taulukko-atom])
+(defrecord KopioiToimenpiteetTaulukossaKaistoille [rivi toimenpiteet-taulukko-atom])
+(defrecord KopioiToimenpiteetTaulukossaAjoradoille [rivi toimenpiteet-taulukko-atom])
 (defrecord AvaaAlustalomake [lomake])
 (defrecord PaivitaAlustalomake [alustalomake])
 (defrecord TallennaAlustalomake [alustalomake jatka?])
@@ -266,7 +267,7 @@
                           :epaonnistui paallystys/->TallennaPaallystysilmoitusEpaonnistui
                           :paasta-virhe-lapi? true})))
 
-  KopioiToimenpiteetTaulukossa
+  KopioiToimenpiteetTaulukossaKaistoille
   (process-event [{rivi :rivi toimenpiteet-taulukko-atom :toimenpiteet-taulukko-atom} app]
     (let [kaistat (yllapitokohteet-domain/kaikki-kaistat rivi
                                                          (get-in app [:paallystysilmoitus-lomakedata
@@ -291,6 +292,42 @@
                                                                           :murskeet (:murskeet app)
                                                                           :materiaalikoodistot (:materiaalikoodistot app)}
                                                                        rivi))))]
+      (when toimenpiteet-taulukko-atom
+        (reset! toimenpiteet-taulukko-atom rivit-ja-kopiot)
+        (merkitse-muokattu app)))
+    app)
+
+  KopioiToimenpiteetTaulukossaAjoradoille
+  (process-event [{rivi :rivi toimenpiteet-taulukko-atom :toimenpiteet-taulukko-atom} app]
+    (let [rivi-ja-sen-kopiot [rivi
+                              (-> rivi
+                                (update :tr-ajorata #(case %
+                                                       1 2
+                                                       2 1
+                                                       %))
+                                (update :tr-kaista #(case %
+                                                      11 21
+                                                      12 22
+                                                      21 11
+                                                      22 12)))]
+          kaikki-rivit (vals @toimenpiteet-taulukko-atom)
+          rivit-idt-korjattuna (yllapitokohteet-domain/sailyta-idt-jos-sama-tr-osoite rivi-ja-sen-kopiot kaikki-rivit)
+          avain-ja-rivi (fn [rivi]
+                          {(select-keys rivi [:tr-numero :tr-ajorata :tr-kaista
+                                              :tr-alkuosa :tr-alkuetaisyys
+                                              :tr-loppuosa :tr-loppuetaisyys
+                                              :toimenpide])
+                           rivi})
+          haettavat-rivit (map avain-ja-rivi (concat kaikki-rivit rivit-idt-korjattuna))
+          rivit-ja-kopiot (->> haettavat-rivit
+                            (into {})
+                            vals
+                            (jarjesta-rivit-fn-mukaan
+                              (fn [rivi]
+                                (jarjesta-valitulla-sort-funktiolla @valittu-alustan-sort {:massat (:massat app)
+                                                                                           :murskeet (:murskeet app)
+                                                                                           :materiaalikoodistot (:materiaalikoodistot app)}
+                                  rivi))))]
       (when toimenpiteet-taulukko-atom
         (reset! toimenpiteet-taulukko-atom rivit-ja-kopiot)
         (merkitse-muokattu app)))

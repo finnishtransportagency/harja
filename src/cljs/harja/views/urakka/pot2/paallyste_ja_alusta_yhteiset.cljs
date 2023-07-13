@@ -37,6 +37,7 @@
 ;; ----
 
 (def hint-kopioi-kaistoille "Kopioi rivin sisältö kaikille rinnakkaisille kaistoille. Jos kaistaa ei vielä ole, se lisätään taulukkoon.")
+(def hint-kopioi-toiselle-ajr "Kopioi toisen ajoradan vastaavalle kaistalle")
 (def hint-nayta-virheet "Lähetys epäonnistunut, näytä lisää")
 
 ;; Tärkeää käytettävyyden kannalta, että kulutuskerroksen ja alustan sarakkeet ovat kohdikkain
@@ -131,12 +132,19 @@
              [napit/yleinen-ensisijainen ""
               #(do
                  (tarjoa-toiminnon-undo @rivit-atom tyyppi index)
-                 (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossa rivi rivit-atom))
+                 (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossaKaistoille rivi rivit-atom))
                  (when ohjauskahva (grid/validoi-grid ohjauskahva)))
               {:ikoni (ikonit/copy-lane-svg)
                :disabled? nappi-disabled?
                :luokka "napiton-nappi btn-xs"
                :toiminto-args [rivi rivit-atom]}]]
+            [napit/nappi-hover-vihjeella {:tyyppi :kopioi
+                                          :disabled? nappi-disabled?
+                                          :hover-txt hint-kopioi-toiselle-ajr
+                                          :toiminto #(do
+                                                       (tarjoa-toiminnon-undo @rivit-atom tyyppi index)
+                                                       (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossaAjoradoille rivi rivit-atom))
+                                                       (when ohjauskahva (grid/validoi-grid ohjauskahva)))}]
             [napit/nappi-hover-vihjeella {:tyyppi :pilko
                                           :disabled? nappi-disabled?
                                           :hover-txt yllapitokohteet/hint-pilko-osoitevali
