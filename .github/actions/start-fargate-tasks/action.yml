@@ -1,0 +1,26 @@
+name: 'Start Harja Fargate tasks'
+description: 'Käynnnistää uudelleen Harja servicen käynnissä olevat Fargate taskit (OIDC autentikaatio vaadittu)'
+
+#inputs:
+#  your-input:
+
+runs:
+  using: "composite"
+  steps:
+    - name: Start Fargate tasks
+      env:
+        SHA: ${{ inputs.commit-sha }}
+        DESIRED_COUNT: "1"
+
+      run: |
+        echo "Getting available service..."
+        AVAILABLE_SERVICE=$(aws ecs list-services --cluster HarjaFargateCluster --region eu-west-1 | jq -r '.serviceArns[0]')
+        
+        echo "Starting tasks..."
+        aws ecs update-service --cluster HarjaFargateCluster --service $AVAILABLE_SERVICE \
+        --desired-count "${DESIRED_COUNT}" --region eu-west-1
+        
+        echo "Done."
+      shell: bash
+
+
