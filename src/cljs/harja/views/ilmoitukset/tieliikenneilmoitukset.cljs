@@ -314,6 +314,10 @@
           (update :lisatieto #(str/replace % (str "Lisätieto: " (:nimi tarkenne-ilmoituksessa) " ") "")) )))
     ilmoitus))
 
+(defn urakan-nimi [lyhyt-nimi, nimi]
+  (or lyhyt-nimi (comp fmt/lyhennetty-urakan-nimi nimi))
+  )
+
 (defn ilmoitusten-paanakyma
   [e! {ws-ilmoitusten-kuuntelu :ws-ilmoitusten-kuuntelu
        valinnat-nyt :valinnat
@@ -415,8 +419,10 @@
                               (boolean (valitut-ilmoitukset rivi))]]))
            :leveys "40px"})
         (when-not @nav/valittu-urakka
-          {:otsikko "Urakka" :otsikkorivi-luokka "urakka" :leveys "" :nimi :urakkanimi
-           :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)})
+          {:otsikko "Urakka" :otsikkorivi-luokka "urakka" :leveys ""
+           :hae #(or (:lyhytnimi %) (fmt/lyhennetty-urakan-nimi (:urakkanimi %)))
+           :solun-tooltip (fn [rivi]
+                            {:teksti (:urakkanimi rivi)})})
         {:otsikko "Saapunut" :nimi :valitetty-urakkaan
          :hae (comp pvm/pvm-aika :valitetty-urakkaan)
          :otsikkorivi-luokka "saapunut" :leveys ""
