@@ -1,5 +1,11 @@
-# TODO: Toteuta cypress-kontti, jota ajetaan taustalla. Ota mallia .github/docker imageista.
-#       Käytä yhteistä docker-composessa määriteltyä harja_net verkkoa
+# TODO: Toteuta cypress-image, jota ajetaan taustalla. Ota mallia .github/docker imageista.
+#
+#       Tallenna cypress image .github/docker polkuun ja lähetä image Harjan repon Container Registryyn
+#
+#       Cypressillä on myös hyviä omia pohja-imageita, joita voi käyttää: https://github.com/cypress-io/cypress-docker-images
+#
+#       Muista käyttää yhteistä docker-composessa määriteltyä harja_net verkkoa
+#          Katso: .github/docker-compose.yml
 
 name: 'Start Cypress'
 description: 'Käynnistää Cyperss kontin taustalle'
@@ -26,10 +32,10 @@ runs:
         username: ${{ inputs.username }}
         password: ${{ inputs.password }}
 
-    - name: Pull and start test database
+    - name: Pull and start cypress image
       run: |
         cd .github
-        echo "Pulling harja test database image (Docker Compose version: $(docker-compose version --short))"
+        echo "Pulling harja cypress image (Docker Compose version: $(docker-compose version --short))"
         docker compose pull cypress
 
         echo "Starting cypress and waiting for it to start (Docker Compose version: $(docker-compose version --short))"
