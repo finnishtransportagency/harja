@@ -6,6 +6,12 @@ inputs:
     description: ''
     required: true
 
+# FIXME: aws lambda invoke harvakseltaan epäonnistuu siten, että se ei saa responsea ja ennenpitkää timeouttaa.
+#        Vaikka kuitenkin, migraatio-lambda menee läpi onnistuneesti AWS:n puolella ja lähettää response payloadin.
+#
+#        AWS CLI v2 ohjeistus ohjaa säätämään esim. käyttöjärjestelmän "TCP keep alive" -asetuksia, mutta miten se onnistuu
+#        Github actionseissa, en vielä tiedä.
+#        https://github.com/aws/aws-cli/issues/5783
 runs:
   using: "composite"
   steps:
