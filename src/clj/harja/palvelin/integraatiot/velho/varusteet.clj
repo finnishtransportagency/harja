@@ -213,7 +213,6 @@
 (defn tallenna-viimeisin-hakuaika-kohdeluokalle [db kohdeluokka viimeisin-hakuaika]
   (let [parametrit {:kohdeluokka kohdeluokka
                     :viimeisin_hakuaika viimeisin-hakuaika}]
-    (println "Tallennetaan hakuaika " kohdeluokka viimeisin-hakuaika)
     (q-toteumat/varustetoteuma-ulkoiset-paivita-viimeisin-hakuaika-kohdeluokalle! db parametrit)))
 
 (defn tallenna-kohteet
