@@ -20,7 +20,7 @@ runs:
         
         echo "Starting tasks..."
         aws ecs update-service --cluster "${CLUSTER_NAME}" --service $AVAILABLE_SERVICE \
-        --desired-count "${DESIRED_COUNT}" --region eu-west-1
+        --desired-count "${DESIRED_COUNT}" --region eu-west-1  1> /dev/null
         
         echo "Done."
       shell: bash
