@@ -14,6 +14,7 @@ runs:
         CLUSTER_NAME: ${{ inputs.cluster }}
         WAIT_TIME_SEC: "30"
 
+      # Komennon 'update-service' stdout ohjataan /dev/nulliin, koska se voi tulostaa sensitiivisiä tietoja
       run: |
         echo "Getting available service..."
         

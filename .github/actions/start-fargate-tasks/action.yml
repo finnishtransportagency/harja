@@ -14,6 +14,7 @@ runs:
         CLUSTER_NAME: ${{ inputs.cluster }}
         DESIRED_COUNT: "1"
 
+      # Komennon 'update-service' stdout ohjataan /dev/nulliin, koska se voi tulostaa sensitiivisiä tietoja
       run: |
         echo "Getting available service..."
         AVAILABLE_SERVICE=$(aws ecs list-services --cluster "${CLUSTER_NAME}" --region eu-west-1 | jq -r '.serviceArns[0]')
