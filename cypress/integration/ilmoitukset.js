@@ -1,4 +1,4 @@
-let timeout = 10000; // lokaalisti voi joutua kasvatamaan tätä
+let timeout = 10000;
 
 describe('Ilmoitus-näkymä (Tieliikenne)', function () {
     beforeEach(function () {
@@ -26,6 +26,17 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
 
             cy.wrap(valitseTeksti(0, 'Urakka', true)).should('equal', 'Aktiivinen Oulu Testi');
             cy.wrap(valitseTeksti(1, 'Urakka', true)).should('equal', 'Aktiivinen Oulu Päällystys Testi');
+
+            let tableIndex = function () {
+                for (let i = 0; i < $rivit.length; i++) {
+                    if ($rivit.eq(i).find('td').text().trim() === 'Oulun MHU 2019-2024') {
+                        return i
+                    }
+                }
+                return -1
+            }
+            cy.wrap(valitseTeksti(tableIndex(), 'Urakka', false)).should('equal', 'Oulun MHU 2019-2024');
+            cy.wrap(valitseTeksti(tableIndex(), 'Urakka', true)).should('be.empty');
         })
     })
 
