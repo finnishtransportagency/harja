@@ -299,17 +299,19 @@
 
   KopioiToimenpiteetTaulukossaAjoradoille
   (process-event [{rivi :rivi toimenpiteet-taulukko-atom :toimenpiteet-taulukko-atom} app]
-    (let [rivi-ja-sen-kopiot [rivi
-                              (-> rivi
-                                (update :tr-ajorata #(case %
-                                                       1 2
-                                                       2 1
-                                                       %))
-                                (update :tr-kaista #(case %
-                                                      11 21
-                                                      12 22
-                                                      21 11
-                                                      22 12)))]
+    (let [rivi-ja-sen-kopiot (cond-> [rivi]
+                               (#{1 2} (:tr-ajorata rivi))
+                               (conj (-> rivi
+                                       (update :tr-ajorata #(case %
+                                                              1 2
+                                                              2 1
+                                                              %))
+                                       (update :tr-kaista #(case %
+                                                             11 21
+                                                             12 22
+                                                             21 11
+                                                             22 12
+                                                             %)))))
           kaikki-rivit (vals @toimenpiteet-taulukko-atom)
           rivit-idt-korjattuna (yllapitokohteet-domain/sailyta-idt-jos-sama-tr-osoite rivi-ja-sen-kopiot kaikki-rivit)
           avain-ja-rivi (fn [rivi]

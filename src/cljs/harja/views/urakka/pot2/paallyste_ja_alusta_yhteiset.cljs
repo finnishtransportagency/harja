@@ -139,7 +139,8 @@
                :luokka "napiton-nappi btn-xs"
                :toiminto-args [rivi rivit-atom]}]]
             [napit/nappi-hover-vihjeella {:tyyppi :kopioi
-                                          :disabled? nappi-disabled?
+                                          :disabled? (or nappi-disabled?
+                                                       (not (#{1 2} (:tr-ajorata rivi))))
                                           :hover-txt hint-kopioi-toiselle-ajr
                                           :toiminto #(do
                                                        (tarjoa-toiminnon-undo @rivit-atom tyyppi index)

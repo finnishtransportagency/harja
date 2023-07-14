@@ -487,7 +487,7 @@
 
               :kopioi
               (ikonit/action-copy))
-     :disabled? disabled?
+     :disabled disabled?
      :luokka "napiton-nappi btn-xs"
      :toiminto-args toiminto-args
      :data-attributes data-attributes}]])
