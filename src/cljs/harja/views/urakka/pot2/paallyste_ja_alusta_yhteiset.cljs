@@ -157,6 +157,12 @@
                                           :hover-txt yllapitokohteet/hint-poista-rivi
                                           :toiminto poista-osa-fn
                                           :toiminto-args [index ohjauskahva]}]
+
+            [napit/nappi-hover-vihjeella {:tyyppi :valikko
+                                          :disabled? false
+                                          :hover-txt "Lisää toimintoja"
+                                          :wrapper-luokka "aina-viimeinen"
+                                          :toiminto (constantly nil)}]
             (when (= "epaonnistunut" (:velho-rivi-lahetyksen-tila rivi))
               (lahetys-virheet-nappi rivi :lyhyt))])]))))
 
