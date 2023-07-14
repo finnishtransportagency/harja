@@ -36,7 +36,7 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
                 return -1
             }
             cy.wrap(valitseTeksti(tableIndex(), 'Urakka', false)).should('equal', 'Oulun MHU 2019-2024');
-            cy.wrap(valitseTeksti(tableIndex(), 'Urakka', true)).should('be.empty');
+            cy.wrap($rivit.eq(tableIndex()).find('td').eq($otsikot.get('Urakka')).find('.tooltip')).should('not.exist')
         })
     })
 
