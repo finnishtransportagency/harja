@@ -9,7 +9,7 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
     it("Ilmoitusten default näkymä", function() {
         cy.contains('.murupolku-urakkatyyppi', 'Kaikki')
         cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', {timeout: timeout}).should( 'not.exist')
-        cy.get('[data-cy=ilmoitukset-grid]', {timeout: timeout}).contains('Ei löytyneitä tietoja').should('not.exist')
+        cy.get('[data-cy=ilmoitukset-grid]').contains('Ei löytyneitä tietoja', {timeout: timeout}).should('not.exist')
         cy.get('[data-cy=ilmoitukset-grid]').gridOtsikot().then(($gridOtsikot) => {
             let $rivit = $gridOtsikot.grid.find('tbody tr');
             let $otsikot = $gridOtsikot.otsikot;
@@ -82,7 +82,7 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
         cy.get('[data-cy=ilmoitukset-grid]').contains("Toinen testaaminen");
     })
 
-    it.only('Aihe saadaan parsittua ilmoituksen lisätiedoista', function () {
+    it('Aihe saadaan parsittua ilmoituksen lisätiedoista', function () {
         cy.server();
         cy.route({
                 url: "*/hae-ilmoitukset",
