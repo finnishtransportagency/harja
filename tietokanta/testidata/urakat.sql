@@ -1389,3 +1389,5 @@ VALUES ('PR00001111', (SELECT id
 INSERT INTO alueurakka (alueurakkanro, alue, elynumero, nimi, "ely-nimi", luotu, luoja, muokattu, muokkaaja)
 SELECT u.urakkanro, u.alue, (SELECT elynumero FROM organisaatio WHERE id=u.hallintayksikko), u.nimi, (SELECT nimi FROM organisaatio WHERE id=u.hallintayksikko), NOW(), 1, NULL, NULL
 FROM urakka u WHERE u.tyyppi = 'teiden-hoito' AND u.urakkanro IS NOT NULL ON CONFLICT DO NOTHING;
+
+UPDATE urakka SET lyhyt_nimi = 'Oulun lyhyt nimi' WHERE nimi = 'Aktiivinen Oulu Testi';

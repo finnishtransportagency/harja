@@ -13,11 +13,30 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
         cy.get('[data-cy=ilmoitukset-grid]').gridOtsikot().then(($gridOtsikot) => {
             let $rivit = $gridOtsikot.grid.find('tbody tr');
             let $otsikot = $gridOtsikot.otsikot;
-            let valitseTeksti = function (rivi, otsikko) {
-                return $rivit.eq(rivi).find('td').eq($otsikot.get(otsikko)).text().trim()
+            let valitseTeksti = function (rivi, otsikko, tooltip) {
+                let td = $rivit.eq(rivi).find('td').eq($otsikot.get(otsikko))
+                if (tooltip) {
+                    return td.find('.tooltip').text().trim()
+                }
+                return td.find('span').text().trim()
             };
-            cy.wrap(valitseTeksti(0, 'Urakka')).should('equal', 'Aktiivinen Oulu Testi');
-            cy.wrap(valitseTeksti(1, 'Urakka')).should('equal', 'Aktiivinen Oulu pääl. Testi');
+
+            cy.wrap(valitseTeksti(0, 'Urakka', false)).should('equal', 'Oulun lyhyt nimi');
+            cy.wrap(valitseTeksti(1, 'Urakka', false)).should('equal', 'Aktiivinen Oulu pääl. Testi');
+
+            cy.wrap(valitseTeksti(0, 'Urakka', true)).should('equal', 'Aktiivinen Oulu Testi');
+            cy.wrap(valitseTeksti(1, 'Urakka', true)).should('equal', 'Aktiivinen Oulu Päällystys Testi');
+
+            let tableIndex = function () {
+                for (let i = 0; i < $rivit.length; i++) {
+                    if ($rivit.eq(i).find('td').text().trim() === 'Oulun MHU 2019-2024') {
+                        return i
+                    }
+                }
+                return -1
+            }
+            cy.wrap(valitseTeksti(tableIndex(), 'Urakka', false)).should('equal', 'Oulun MHU 2019-2024');
+            cy.wrap($rivit.eq(tableIndex()).find('td').eq($otsikot.get('Urakka')).find('.tooltip')).should('not.exist')
         })
     })
 

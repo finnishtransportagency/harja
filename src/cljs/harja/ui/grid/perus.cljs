@@ -262,7 +262,7 @@
                                    (luokka rivi)
                                    luokka))}
                    ;; Solun sisältö
-                   [yleiset/tooltip {:tooltip-disabloitu? (when-not solun-tooltip true)}
+                   [yleiset/tooltip {:tooltip-disabloitu? (when-not (and solun-tooltip (solun-tooltip rivi)) true)}
                     [:div (when (and (:oikealle? rivi) ((:oikealle? rivi) nimi)) {:style {:float "right"}})
                     ;; Sijoitetaan infolaatikko suhteessa viimeiseen soluun.
                     ;; Semanttisesti sen kuuluisi olla suhteessa riviin (koska laatikko kuvaa rivin lisätietoa).
