@@ -415,8 +415,11 @@
                               (boolean (valitut-ilmoitukset rivi))]]))
            :leveys "40px"})
         (when-not @nav/valittu-urakka
-          {:otsikko "Urakka" :otsikkorivi-luokka "urakka" :leveys "" :nimi :urakkanimi
-           :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)})
+          {:otsikko "Urakka" :otsikkorivi-luokka "urakka" :leveys ""
+           :hae #(or (:lyhytnimi %) (fmt/lyhennetty-urakan-nimi (:urakkanimi %)))
+           :solun-tooltip (fn [rivi]
+                            (when-not (= (:urakkanimi rivi) (or (:lyhytnimi rivi) (fmt/lyhennetty-urakan-nimi (:urakkanimi rivi))))
+                              {:teksti (:urakkanimi rivi)}))})
         {:otsikko "Saapunut" :nimi :valitetty-urakkaan
          :hae (comp pvm/pvm-aika :valitetty-urakkaan)
          :otsikkorivi-luokka "saapunut" :leveys ""
