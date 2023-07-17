@@ -468,29 +468,12 @@
 
 ;; POT-lomakkeen ja päällystyskohdeluettelon käyttämiä nappeja
 (defn nappi-hover-vihjeella
-  "Anna tyyppi :lisaa, :pilko tai :poista"
-  [{:keys [tyyppi disabled? toiminto toiminto-args hover-txt data-attributes wrapper-luokka]}]
-  (assert (#{:lisaa :pilko :poista :kopioi :valikko} tyyppi)
-    "Tyypin oltava :lisaa, :pilko, :poista, :kopioi tai :valikko")
+  [{:keys [ikoni disabled? toiminto toiminto-args hover-txt data-attributes wrapper-luokka]}]
   [yleiset/wrap-if true
    [yleiset/tooltip {:wrapper-luokka wrapper-luokka} :% hover-txt]
    [yleinen-ensisijainen ""
     toiminto
-    {:ikoni (case tyyppi
-              :lisaa
-              (ikonit/action-add)
-
-              :pilko
-              (ikonit/road-split)
-
-              :poista
-              (ikonit/action-delete)
-
-              :kopioi
-              (ikonit/action-copy)
-
-              :valikko
-              (ikonit/navigation-more))
+    {:ikoni ikoni
      :disabled disabled?
      :luokka "napiton-nappi btn-xs"
      :toiminto-args toiminto-args
