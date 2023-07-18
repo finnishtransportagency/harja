@@ -31,7 +31,7 @@
 (defn rakenna-ilmoituksen-data [ilmoitus vectorin-avain elementin-avain]
   (if (vectorin-avain ilmoitus)
     (let [kannassa (vec (.getArray (vectorin-avain ilmoitus)))
-          vastauksessa (mapv (fn [selite] {elementin-avain selite}) kannassa)]
+          vastauksessa (mapv (fn [arvo] {elementin-avain arvo}) kannassa)]
       (update ilmoitus vectorin-avain (constantly vastauksessa)))
     ilmoitus))
 

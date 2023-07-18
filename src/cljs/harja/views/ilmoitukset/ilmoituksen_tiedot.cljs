@@ -1,9 +1,8 @@
 (ns harja.views.ilmoitukset.ilmoituksen-tiedot
   (:require [harja.ui.yleiset :as yleiset]
             [harja.pvm :as pvm]
-            [clojure.string :as str]
             [harja.ui.bootstrap :as bs]
-            [clojure.string :refer [capitalize]]
+            [clojure.string :refer [capitalize] :as str]
             [harja.tiedot.ilmoitukset.tieliikenneilmoitukset :as tiedot]
             [harja.domain.tieliikenneilmoitukset
              :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
