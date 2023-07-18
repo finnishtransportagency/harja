@@ -5,6 +5,7 @@ SELECT
   ulompi_i.urakka,
   ulompi_i.tunniste,
   u.nimi AS urakkanimi,
+  u.lyhyt_nimi AS lyhytnimi,
   CASE
       WHEN u.kesakausi_alkupvm IS NOT NULL THEN
           CONCAT(TO_CHAR(NOW(), 'YYYY'), '-', TO_CHAR(u.kesakausi_alkupvm, 'MM-DD'))

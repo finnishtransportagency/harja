@@ -15,6 +15,7 @@
             [ol.style.Stroke]
             [ol.style.Icon]
             [ol.style.Circle]
+            [ol.style.Text]
 
             [harja.loki :refer [log]]
 
@@ -167,6 +168,20 @@ pienemmällä zindexillä." :const true}
                                     :scale (or scale 1)})))
                       :zIndex (or zindex oletus-zindex)}))))
 
+(defmethod luo-geometria :teksti
+  [{c :coordinates}]
+  (ol.geom.Point. (clj->js c)))
+
+(defmethod luo-feature :teksti [{:keys [text color zindex offsetX offsetY scale] :as teksti}]
+  (doto (ol.Feature. #js {:geometry (luo-geometria teksti)})
+    (.setStyle (ol.style.Style.
+                 #js {:text (ol.style.Text. (clj->js {:text (str text)
+                                                      :offsetX (or offsetY 0)
+                                                      :offsetY (or offsetX 0)
+                                                      :scale (or scale 2)
+                                                      :stroke (ol.style.Stroke. (clj->js {:color "white" :width 2}))
+                                                      :fill (ol.style.Fill. (clj->js {:color (or color "black")}))}))
+                      :zIndex (or zindex oletus-zindex)}))))
 
 (defmethod luo-geometria :polygon [{c :coordinates}]
   (ol.geom.Polygon. (clj->js [c])))

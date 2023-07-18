@@ -332,7 +332,8 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn- ol3-did-mount
   "Initialize OpenLayers map for a newly mounted map component."
   [this]
-  (let [{layers :layers :as mapspec} (:mapspec (reagent/state this))
+  (let [{layers :layers
+         geometry-layers :geometry-layers :as mapspec} (:mapspec (reagent/state this))
         interaktiot (let [oletukset (ol-interaction/defaults
                                      #js {:mouseWheelZoom true
                                           :dragPan        false})]
@@ -347,7 +348,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                              :interactions interaktiot})
         ol3 (ol/Map. map-optiot)
 
-        _ (.addControl ol3 (tasovalinta/tasovalinta ol3 layers))
+        _ (.addControl ol3 (tasovalinta/tasovalinta ol3 layers geometry-layers))
 
         _ (reset!
             openlayers-kartan-leveys

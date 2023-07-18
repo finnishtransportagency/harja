@@ -80,7 +80,7 @@
                                                        (str " " yksikko))))
                                        otsikko? (not (contains? #{:verkon-sijainti :verkon-tarkoitus
                                                                   :sideaine :sideainepitoisuus :sideaine2
-                                                                  :massamaara :pinta-ala :kokonaismassamaara} nimi))]
+                                                                  :massamaara :kokonaismassamaara} nimi))]
 
                                    (str (when otsikko? (str otsikko ": ")) teksti)))]
            (str/join "; " (->> (pot2-domain/alusta-toimenpidespesifit-metadata rivi)

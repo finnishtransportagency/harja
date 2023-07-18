@@ -256,10 +256,10 @@
           lisatietoja (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :lisatietoja])
           merkki (cond
                    (and asetusnumero (nil? lakinumero))
-                   (str (konversio-fn "v/vtlm" asetusnumero))
+                   (str (konversio-fn "v/vtlm" asetusnumero kohde))
 
                    (and (nil? asetusnumero) lakinumero)
-                   (konversio-fn "v/vtlmln" lakinumero)
+                   (konversio-fn "v/vtlmln" lakinumero kohde)
 
                    (and (nil? asetusnumero) (nil? lakinumero))
                    "VIRHE: Liikennemerkin asetusnumero ja lakinumero tyhjiä Tievelhossa"
@@ -273,7 +273,7 @@
 (defn varusteen-kuntoluokka [konversio-fn kohde]
   (let [kuntoluokka (get-in kohde [:ominaisuudet :kunto-ja-vauriotiedot :yleinen-kuntoluokka])]
     (if kuntoluokka
-      (konversio-fn "v/vtykl" kuntoluokka)
+      (konversio-fn "v/vtykl" kuntoluokka kohde)
       "Puuttuu")))
 
 (defn varusteen-toteuma [konversio-fn {:keys [version-voimassaolo alkaen paattyen uusin-versio ominaisuudet tekninen-tapahtuma] :as kohde}]
@@ -281,7 +281,7 @@
         version-loppu (:loppu version-voimassaolo)
         toimenpiteet (:toimenpiteet ominaisuudet)
         toimenpidelista (->> toimenpiteet
-                             (map #(konversio-fn "v/vtp" %))
+                             (map #(konversio-fn "v/vtp" % kohde))
                              (keep not-empty))]
     (cond (< 1 (count toimenpidelista))
           (do
