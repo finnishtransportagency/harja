@@ -408,6 +408,7 @@
   (let [vastaus (first (mapv
                          #(-> %
                             (konv/array->set :selitteet)
+                            (konv/array->set :kuvat)
                             (set/rename-keys {:ilmoitusid :ilmoitus-id}))
                          (q-map (str "select * from ilmoitus where ilmoitusid = " ilmoitus-id ";"))))]
     vastaus))
