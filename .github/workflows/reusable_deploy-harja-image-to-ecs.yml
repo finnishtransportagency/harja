@@ -82,6 +82,8 @@ jobs:
       # Sammutetaan Harjan Fargate taskit migraatioiden ajoa varten, jotta ne eivät häiritse migraation onnistumista
       - name: Shutdown Harja Fargate tasks
         uses: ./.github/actions/shutdown-fargate-tasks
+        with:
+          cluster: ${{ vars.ECS_CLUSTER_NAME }}
         # FIXME: Ajetaan migraatiot tällä hetkellä vain dev-ympäristölle,
         #        kunnes stg/prod ympäristöjen tietokantojen data on saatu ojennukseen
         if: ${{ inputs.environment }} == 'dev'
@@ -123,4 +125,6 @@ jobs:
       # Pakotetaan lopuksi Harjan Fargate taskit käynnistymään, mikäli ne on aiemmin laitettu alas.
       - name: Start Harja Fargate tasks
         uses: ./.github/actions/start-fargate-tasks
+        with:
+          cluster: ${{ vars.ECS_CLUSTER_NAME }}
 

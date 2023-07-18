@@ -1,0 +1,1 @@
+ALTER TABLE urakka ADD COLUMN lyhyt_nimi VARCHAR;

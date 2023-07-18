@@ -1,8 +1,9 @@
 name: 'Start Harja Fargate tasks'
 description: 'Käynnnistää uudelleen Harja servicen käynnissä olevat Fargate taskit (OIDC autentikaatio vaadittu)'
 
-#inputs:
-#  your-input:
+inputs:
+  cluster:
+    description: "Harja app Fargate cluster name"
 
 runs:
   using: "composite"
@@ -10,15 +11,17 @@ runs:
     - name: Start Fargate tasks
       env:
         SHA: ${{ inputs.commit-sha }}
+        CLUSTER_NAME: ${{ inputs.cluster }}
         DESIRED_COUNT: "1"
 
+      # Komennon 'update-service' stdout ohjataan /dev/nulliin, koska se voi tulostaa sensitiivisiä tietoja
       run: |
         echo "Getting available service..."
-        AVAILABLE_SERVICE=$(aws ecs list-services --cluster HarjaFargateCluster --region eu-west-1 | jq -r '.serviceArns[0]')
+        AVAILABLE_SERVICE=$(aws ecs list-services --cluster "${CLUSTER_NAME}" --region eu-west-1 | jq -r '.serviceArns[0]')
         
         echo "Starting tasks..."
-        aws ecs update-service --cluster HarjaFargateCluster --service $AVAILABLE_SERVICE \
-        --desired-count "${DESIRED_COUNT}" --region eu-west-1
+        aws ecs update-service --cluster "${CLUSTER_NAME}" --service $AVAILABLE_SERVICE \
+        --desired-count "${DESIRED_COUNT}" --region eu-west-1  1> /dev/null
         
         echo "Done."
       shell: bash
