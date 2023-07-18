@@ -123,7 +123,8 @@
                       }
                     }
                   }
-                ]
+                ],
+                "minItems": 0
               },
               "selitteet": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/seliteet",
