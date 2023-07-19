@@ -158,7 +158,7 @@
     (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
     (swap! lt-alus/aluslajit* dissoc :EI))
   
-  ;; Jos toimenpide on tyhjennys tai palvelumuoto itsepalvelu, lisätään "ei määritelty" suunta alukselle
+  ;; Jos toimenpide on tyhjennys/vedenkorkeus tai palvelumuoto itsepalvelu, lisätään "ei määritelty" suunta alukselle
   (if (or (= (:arvo @palvelu-atom) :itse)
           (or (= (:arvo @toimenpide-atom) :tyhjennys) (= (:arvo @toimenpide-atom) :veden-korkeus)))
     (swap! suunnat-atom assoc :ei-suuntaa "Ei määritelty")
