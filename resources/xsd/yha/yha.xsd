@@ -209,7 +209,7 @@
             <xs:element name="tunnus" minOccurs="0" maxOccurs="1">
                 <xs:simpleType>
                     <xs:restriction base="xs:string">
-                        <xs:maxLength value="1"/>
+                        <xs:maxLength value="2"/>
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
@@ -241,7 +241,7 @@
             <xs:element name="tunnus" minOccurs="0" maxOccurs="1">
                 <xs:simpleType>
                     <xs:restriction base="xs:string">
-                        <xs:maxLength value="1"/>
+                        <xs:maxLength value="2"/>
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
@@ -690,6 +690,21 @@
             <xs:enumeration value="42">
                 <xs:annotation>
                     <xs:documentation>sorastus</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="43">
+                <xs:annotation>
+                    <xs:documentation>soratien kevyt korjaus</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="44">
+                <xs:annotation>
+                    <xs:documentation>soratien kelirikon poistava korjaus</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="45">
+                <xs:annotation>
+                    <xs:documentation>soratien raskas rakenteen parantaminen</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="51">
