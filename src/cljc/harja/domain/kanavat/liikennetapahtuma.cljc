@@ -160,7 +160,7 @@
   
   ;; Jos toimenpide on tyhjennys tai palvelumuoto itsepalvelu, lisätään "ei määritelty" suunta alukselle
   (if (or (= (:arvo @palvelu-atom) :itse)
-          (= (:arvo @toimenpide-atom) :tyhjennys))
+          (or (= (:arvo @toimenpide-atom) :tyhjennys) (= (:arvo @toimenpide-atom) :veden-korkeus)))
     (swap! suunnat-atom assoc :ei-suuntaa "Ei määritelty")
     (swap! suunnat-atom dissoc :ei-suuntaa)))
 
