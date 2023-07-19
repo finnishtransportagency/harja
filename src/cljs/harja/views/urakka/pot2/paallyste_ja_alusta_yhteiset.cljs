@@ -91,7 +91,7 @@
        :luokka "napiton-nappi"
        :toiminto-args [rivi]}]]))
 
-(defn rivin-toiminnot [e! ohjauskahva nappi-disabled? rivi rivit-atom tyyppi index]
+(defn rivin-toiminnot [e! ohjauskahva nappi-disabled? rivi rivit-atom sort-atom tyyppi index]
   (let [kohdeosat-muokkaa! (fn [uudet-kohdeosat-fn index]
                              (let [vanhat-kohdeosat @rivit-atom
                                    uudet-kohdeosat (uudet-kohdeosat-fn vanhat-kohdeosat)]
@@ -122,7 +122,7 @@
       :teksti hint-kopioi-kaistoille-lyhyt
       :toiminto #(do
                    (tarjoa-toiminnon-undo @rivit-atom tyyppi index)
-                   (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossaKaistoille rivi rivit-atom))
+                   (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossaKaistoille rivi rivit-atom sort-atom))
                    (when ohjauskahva (grid/validoi-grid ohjauskahva)))
       :toiminto-args [rivi rivit-atom]}
      {:ikoni (ikonit/action-copy)
@@ -132,7 +132,7 @@
       :hover-txt hint-kopioi-toiselle-ajr
       :toiminto #(do
                    (tarjoa-toiminnon-undo @rivit-atom tyyppi index)
-                   (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossaAjoradoille rivi rivit-atom))
+                   (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossaAjoradoille rivi rivit-atom sort-atom))
                    (when ohjauskahva (grid/validoi-grid ohjauskahva)))}
      {:ikoni (ikonit/road-split)
       :tyyppi :pilko
@@ -177,7 +177,10 @@
   (let [lisatoiminnot-auki? (atom false)]
     (fn [rivi {:keys [index] :as osa} e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata? ohjauskahva]
       (let [nappi-disabled? (or (not voi-muokata?)
-                                (not kirjoitusoikeus?))]
+                                (not kirjoitusoikeus?))
+            sort-atom (case tyyppi
+                        :alusta pot2-tiedot/valittu-alustan-sort
+                        :paallystekerros pot2-tiedot/valittu-paallystekerros-sort)]
         [:span.tasaa-oikealle.pot2-rivin-toiminnot
          ;; vain sille riville tarjotaan undo, missä on toimintoa painettu
          (if (and (= tyyppi (:tyyppi @undo-tiedot))
@@ -190,9 +193,9 @@
                 (when ohjauskahva (grid/validoi-grid ohjauskahva)))]]
            [:<>
             (for*
-              [rivin-toiminto (rivin-toiminnot e! ohjauskahva nappi-disabled? rivi rivit-atom tyyppi index)]
+              [rivin-toiminto (rivin-toiminnot e! ohjauskahva nappi-disabled? rivi rivit-atom sort-atom tyyppi index)]
               [napit/nappi-hover-vihjeella rivin-toiminto])
-            [rivin-lisatoiminnot-dropdown (rivin-toiminnot e! ohjauskahva nappi-disabled? rivi rivit-atom tyyppi index)
+            [rivin-lisatoiminnot-dropdown (rivin-toiminnot e! ohjauskahva nappi-disabled? rivi rivit-atom sort-atom tyyppi index)
              lisatoiminnot-auki?]
             (when (= "epaonnistunut" (:velho-rivi-lahetyksen-tila rivi))
               (lahetys-virheet-nappi rivi :lyhyt))])]))))

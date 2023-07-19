@@ -271,6 +271,18 @@
         :valinnat pot/+kaistat+ :valinta-arvo :koodi
         :valinta-nayta (fn [rivi]
                          (if rivi (:nimi rivi) "- Valitse kaista -"))
+        :sarake-sort {:fn (fn [rivi]
+                            (reset! pot2-tiedot/valittu-alustan-sort :kaista)
+                            (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit
+                              alustarivit-atom
+                              (fn [rivi]
+                                (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-alustan-sort {:massat massat
+                                                                                                                   :murskeet murskeet
+                                                                                                                   :materiaalikoodistot materiaalikoodistot}
+                                  rivi)))
+                            (when ohjauskahva
+                              (grid/validoi-grid ohjauskahva)))
+                      :luokka (when (= @pot2-tiedot/valittu-alustan-sort :kaista) "valittu-sort")}
         :tasaa :oikea :kokonaisluku? true}
        {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
@@ -309,6 +321,6 @@
         :komponentti (fn [rivi]
                        [pot2-tiedot/toimenpiteen-tiedot {:koodistot materiaalikoodistot} rivi])}
        {:otsikko "" :nimi :alusta-toiminnot :tyyppi :reagent-komponentti :leveys (:toiminnot pot2-yhteiset/gridin-leveydet)
-        :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom :alusta voi-muokata? ohjauskahva]
+        :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? alustarivit-atom  :alusta voi-muokata? ohjauskahva]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
       alustarivit-atom]]))
