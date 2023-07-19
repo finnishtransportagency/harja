@@ -30,6 +30,14 @@
             "selite": "vettaTiella"
           }
         ],
+        "kuvat": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Six_weeks_old_cat_%28aka%29.jpg/390px-Six_weeks_old_cat_%28aka%29.jpg"
+          }
+        ],
+        "emon-ilmoitusid": {
+          "id": 90
+        },
         "aihe": {
           "id": 2,
           "nimi": "Este tai vettä tiellä"

@@ -74,7 +74,7 @@
                                                       valitetty otsikko paikankuvaus lisatieto
                                                       yhteydenottopyynto ilmoittaja lahettaja selitteet
                                                       sijainti vastaanottaja tunniste viesti-id
-                                                      vastaanotettu luokittelu] :as ilmoitus}]
+                                                      vastaanotettu luokittelu kuvat emon-ilmoitusid] :as ilmoitus}]
   (let [id (:id (ilmoitukset/luo-ilmoitus<!
                   db
                   {:urakka                  urakka-id
@@ -93,8 +93,11 @@
                    :vastaanotettu           (pvm/nyt)
                    :vastaanotettu-alunperin (pvm/nyt)
                    :valitetty-urakkaan      (pvm/nyt)
-                   :aihe (:aihe luokittelu)
-                   :tarkenne (:tarkenne luokittelu)}))]
+                   :aihe                    (:aihe luokittelu)
+                   :tarkenne                (:tarkenne luokittelu)
+                   :kuvat                   (konv/seq->array (map name kuvat))
+                   :emon-ilmoitusid         emon-ilmoitusid}))]
+
     (paivita-ilmoittaja db id ilmoittaja)
     (paivita-lahettaja db id lahettaja)
     (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)

@@ -23,6 +23,8 @@ SELECT
   ulompi_i.lisatieto,
   ulompi_i.ilmoitustyyppi,
   ulompi_i.selitteet,
+  ulompi_i.kuvat,
+  ulompi_i."emon-ilmoitusid",
   ulompi_i.aihe,
   ulompi_i.tarkenne,
   ulompi_i.urakkatyyppi,
@@ -161,6 +163,8 @@ SELECT
   otsikko,
   ilmoitustyyppi,
   selitteet,
+  CASE WHEN array_length(kuvat, 1) > 0 THEN kuvat ELSE ARRAY['']::TEXT[] END AS kuvat,
+  "emon-ilmoitusid",
   i.aihe AS aihe_id,
   pa.nimi AS aihe_nimi,
   i.tarkenne AS tarkenne_id,
@@ -203,6 +207,8 @@ SELECT
   i.lisatieto,
   i.ilmoitustyyppi,
   i.selitteet,
+  i.kuvat,
+  i."emon-ilmoitusid",
   i.aihe,
   i.tarkenne,
   i.urakkatyyppi,
@@ -341,6 +347,8 @@ SELECT
   otsikko,
   ilmoitustyyppi,
   selitteet,
+  i.kuvat,
+  i."emon-ilmoitusid",
   i.aihe AS aihe_id,
   i.tarkenne AS tarkenne_id,
   pa.nimi AS aihe_nimi,
@@ -406,6 +414,8 @@ SELECT
     i.lisatieto,
     i.otsikko,
     i.selitteet,
+    i.kuvat,
+    i."emon-ilmoitusid",
     i.aihe AS aihe_id,
     i.tarkenne AS tarkenne_id,
     pa.nimi AS aihe_nimi,
@@ -466,7 +476,9 @@ INSERT INTO ilmoitus
  "vastaanotettu-alunperin",
  "valitetty-urakkaan",
  aihe,
- tarkenne)
+ tarkenne,
+ kuvat,
+ "emon-ilmoitusid")
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -485,7 +497,10 @@ VALUES
    :vastaanotettu-alunperin :: TIMESTAMPTZ,
    :valitetty-urakkaan :: TIMESTAMP,
    :aihe,
-   :tarkenne);
+   :tarkenne,
+   :kuvat :: TEXT [],
+   :emon-ilmoitusid
+   );
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
