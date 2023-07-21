@@ -135,9 +135,9 @@
                       :pakollinen? true :tyyppi :positiivinen-numero :kokonaisluku? true})]
         lisakentat (alustalomakkeen-lisakentat tiedot)]
     (vec
-      (concat toimenpide-kentta
-              (when toimenpide tr-kentat)
-              (when toimenpide lisakentat)))))
+      (concat tr-kentat
+        toimenpide-kentta
+        (when toimenpide lisakentat)))))
 
 (defn alustalomake-nakyma
   [e! {:keys [alustalomake alusta-toimenpiteet massat murskeet
