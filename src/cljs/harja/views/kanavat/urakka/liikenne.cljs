@@ -363,7 +363,7 @@
                    :nimi :valittu-suunta
                    :tyyppi :radio-group
                    :vaihtoehdot suunta-vaihtoehdot
-                   :vaihtoehto-nayta (partial tiedot/suuntavalinta-str edelliset)
+                   :vaihtoehto-nayta (partial tiedot/suuntavalinta-str app edelliset)
                    :aseta (fn [rivi arvo]
                             (:valittu-liikennetapahtuma (e! (tiedot/->AsetaSuunnat arvo))))}]))))]
         (when (tiedot/nayta-edelliset-alukset? app)
