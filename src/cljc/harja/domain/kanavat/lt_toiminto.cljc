@@ -49,4 +49,4 @@
 
 (def metatiedot m/muokkauskentat)
 
-(s/def ::toimenpiteet (s/coll-of #{:sulutus :tyhjennys :avaus :ei-avausta}))
+(s/def ::toimenpiteet (s/coll-of #{:sulutus :tyhjennys :veden-korkeus :avaus :ei-avausta}))

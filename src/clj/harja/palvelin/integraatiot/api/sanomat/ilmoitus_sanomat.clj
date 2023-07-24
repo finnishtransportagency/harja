@@ -66,10 +66,20 @@
         (assoc :kuittaukset kuittaukset))
       ilmoitus)))
 
+(defn- poista-tyhja-lista
+  "Tyhjät arrayt eivät mene validaatiosta läpi.
+  Poistetaan avain kokonaan, jos sen arvo on tyhjä lista."
+  [ilmoitus avain]
+  (println "Poistetaan tyhjä lista")
+  (if (empty? (avain ilmoitus))
+    (dissoc ilmoitus avain)
+    ilmoitus))
+
 (defn rakenna-ilmoitus [ilmoitus]
   {:ilmoitus (-> ilmoitus
                (rakenna-ilmoituksen-data :selitteet :selite)
                (rakenna-ilmoituksen-data :kuvat :url)
+               (poista-tyhja-lista :kuvat)
                (rakenna-henkilo :ilmoittaja)
                (rakenna-henkilo :lahettaja)
                rakenna-sijanti
