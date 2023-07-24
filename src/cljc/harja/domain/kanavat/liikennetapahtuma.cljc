@@ -72,6 +72,7 @@
   ^{:private true}
   {:sulutus "Sulutus"
    :tyhjennys "Tyhjennys"
+   :veden-korkeus "Vedenkorkeus"
    :avaus "Sillan avaus"
    :ei-avausta "Ei avausta"})
 
@@ -82,7 +83,8 @@
 (def sulku-toimenpiteet*
   ^{:private true}
   {:sulutus "Sulutus"
-   :tyhjennys "Tyhjennys"})
+   :tyhjennys "Tyhjennys"
+   :veden-korkeus "Vedenkorkeus"})
 
 (def silta-toimenpiteet*
   ^{:private true}
@@ -156,9 +158,9 @@
     (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
     (swap! lt-alus/aluslajit* dissoc :EI))
   
-  ;; Jos toimenpide on tyhjennys tai palvelumuoto itsepalvelu, lisätään "ei määritelty" suunta alukselle
+  ;; Jos toimenpide on tyhjennys/vedenkorkeus tai palvelumuoto itsepalvelu, lisätään "ei määritelty" suunta alukselle
   (if (or (= (:arvo @palvelu-atom) :itse)
-          (= (:arvo @toimenpide-atom) :tyhjennys))
+          (or (= (:arvo @toimenpide-atom) :tyhjennys) (= (:arvo @toimenpide-atom) :veden-korkeus)))
     (swap! suunnat-atom assoc :ei-suuntaa "Ei määritelty")
     (swap! suunnat-atom dissoc :ei-suuntaa)))
 
