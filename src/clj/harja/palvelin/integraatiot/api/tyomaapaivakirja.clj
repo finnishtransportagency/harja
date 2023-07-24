@@ -27,6 +27,37 @@
       {:koodi virheet/+puutteelliset-parametrit+
        :viesti (format "Urakka-id muodossa: %s. Anna muodossa: 1" (:id parametrit))})))
 
+(defn validoi-saa [saatiedot]
+  (doseq [s saatiedot
+          :let [saa (:saatieto s)]]
+    (when (or (< (:ilman-lampotila saa) -80) (> (:ilman-lampotila saa) 80))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Ilman lämpötila täytyy olla väliltä -80 - 80. Oli nyt %s." (:ilman-lampotila saa))}))
+
+    (when (and (not (nil? (:tien-lampotila saa)))
+            (or (< (:tien-lampotila saa) -80) (> (:tien-lampotila saa) 80)))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Tien lämpötila täytyy olla väliltä -80 - 80. Oli nyt %s." (:tien-lampotila saa))}))
+
+    (when (and (not (nil? (:keskituuli saa)))
+            (or (< (:keskituuli saa) 0) (> (:keskituuli saa) 150)))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Keskituuli täytyy olla väliltä 0 - 150. Oli nyt %s." (:keskituuli saa))}))
+
+    (when (and (not (nil? (:sateen-olomuoto saa)))
+            (or (< (:sateen-olomuoto saa) 0) (> (:sateen-olomuoto saa) 150)))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Sateen olomuoto täytyy olla väliltä 0 - 150. Oli nyt %s." (:sateen-olomuoto saa))}))
+
+    (when (and (not (nil? (:sadesumma saa)))
+            (or (< (:sadesumma saa) 0) (> (:sadesumma saa) 10000)))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Sadesumma täytyy olla väliltä 0 - 10000. Oli nyt %s." (:sadesumma saa))}))))
 ;; TODO: Validoi sisään tuleva data
 (defn validoi-tyomaapaivakirja [data]
   )
