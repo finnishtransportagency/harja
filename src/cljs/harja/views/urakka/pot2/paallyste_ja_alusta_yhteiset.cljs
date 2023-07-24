@@ -117,7 +117,6 @@
                         (when ohjauskahva (grid/validoi-grid ohjauskahva)))]
     (keep identity
       [{:ikoni (ikonit/copy-lane-svg)
-        :tyyppi :kopioi-kaista
         :disabled? nappi-disabled?
         :hover-txt hint-kopioi-kaistoille
         :teksti hint-kopioi-kaistoille-lyhyt
@@ -127,7 +126,6 @@
                      (when ohjauskahva (grid/validoi-grid ohjauskahva)))
         :toiminto-args [rivi rivit-atom]}
        {:ikoni (ikonit/action-copy)
-        :tyyppi :kopioi
         :disabled? (or nappi-disabled?
                      (not (#{1 2} (:tr-ajorata rivi))))
         :hover-txt hint-kopioi-toiselle-ajr
@@ -136,7 +134,6 @@
                      (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossaAjoradoille rivi rivit-atom sort-atom))
                      (when ohjauskahva (grid/validoi-grid ohjauskahva)))}
        {:ikoni (ikonit/road-split)
-        :tyyppi :pilko
         :disabled? nappi-disabled?
         :hover-txt yllapitokohteet/hint-pilko-osoitevali
         :toiminto pilko-osa-fn
@@ -152,7 +149,6 @@
                                                 :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])))
                        (when ohjauskahva (grid/validoi-grid ohjauskahva)))})
        {:ikoni (ikonit/action-delete)
-        :tyyppi :poista
         :disabled? nappi-disabled?
         :hover-txt yllapitokohteet/hint-poista-rivi
         :toiminto poista-osa-fn
