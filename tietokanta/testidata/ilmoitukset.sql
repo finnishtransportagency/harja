@@ -1103,7 +1103,7 @@ INSERT INTO ilmoitus
 (urakka, ilmoitusid, ilmoitettu, valitetty, vastaanotettu, "vastaanotettu-alunperin", yhteydenottopyynto, otsikko, paikankuvaus, lisatieto, sijainti,
  tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
  ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
- lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
+ lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti, kuvat)
 VALUES ((SELECT id
          FROM urakka
          WHERE nimi = 'Aktiivinen Oulu Testi'), 1, NOW(), NOW(), NOW(), NOW(), TRUE,
@@ -1114,7 +1114,12 @@ VALUES ((SELECT id
                                                                                                        FROM urakka
                                                                                                        WHERE nimi = 'Aktiivinen Oulu Testi'),
                                                                                                       'Seppo', 'Savela', '0441231234', '0441231234', 'seppo.savela@example.com', 'asukas' ,
-        'Mari', 'Marttala', '085674567', 'mmarttala@isoveli.com');
+        'Mari', 'Marttala', '085674567', 'mmarttala@isoveli.com',
+        array[
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/3-Colored_Norwegian_Forest_Cat.jpg/220px-3-Colored_Norwegian_Forest_Cat.jpg',
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Minniecat.png/220px-Minniecat.png',
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Six_weeks_old_cat_%28aka%29.jpg/390px-Six_weeks_old_cat_%28aka%29.jpg'
+        ]::text[]);
 
 INSERT INTO ilmoitus
 (urakka, ilmoitusid, ilmoitettu, valitetty, vastaanotettu, "vastaanotettu-alunperin", yhteydenottopyynto, otsikko, paikankuvaus, lisatieto, sijainti,

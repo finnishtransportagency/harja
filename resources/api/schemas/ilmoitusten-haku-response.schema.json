@@ -100,6 +100,31 @@
                 "$ref": "file:resources/api/schemas/entities/henkilo-opt.schema.json",
                 "required": true
               },
+              "emon-ilmoitusid": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/emon-ilmoitusid",
+                "type": "integer",
+                "required": false
+              },
+              "kuvat": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/kuvat",
+                "type": "array",
+                "maxItems": 5,
+                "additionalProperties": false,
+                "required": false,
+                "items": [
+                  {
+                    "id": "http://jsonschema.net/kuvat/0",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "url": {
+                        "id": "http://jsonschema.net/kuvat/0/kuva",
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              },
               "selitteet": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/seliteet",
                 "type": "array",
