@@ -23,38 +23,6 @@
 
 (defonce taulukon-virheet (atom nil))
 
-#_(defn lyhytnimet
-  "Urakoiden lyhytnimien hallinnan komponentti"
-  []
-  (fn []
-    ;(let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/hallinta-lyhytnimet)]
-    (let [
-          urakkatyyppi @yhteiset/valittu-urakkatyyppi
-          urakkatyypit (keep #(if (not= :vesivayla (:arvo %))
-                                %
-                                {:nimi "Vesiväylät" :arvo :vesivayla-hoito})
-                         (conj nav/+urakkatyypit+
-                           {:nimi "Kanavat", :arvo :vesivayla-kanavien-hoito}))
-          vain-puuttuvat? (atom false)
-          ]
-
-      [:div.lyhytnimet
-       [:h3 "Urakkanimet"]
-       [:div.row
-        [valinnat/urakkatyyppi
-         yhteiset/valittu-urakkatyyppi
-         urakkatyypit
-         ]
-        [kentat/tee-kentta {:tyyppi :checkbox
-                            :teksti "Näytä vain urakat joilta lyhyt nimi puuttuu"}
-         vain-puuttuvat?]
-        ]
-       [grid]
-       ]
-
-      ))
-  )
-
 (defn- urakoiden-lyhytnimet* [e! _app]
   (komp/luo
     (komp/sisaan
@@ -72,7 +40,7 @@
           :tunniste :id
           :tallenna-vain-muokatut true
           :tallenna (fn [urakat]
-                      (e! (tiedot/->PaivitaUrakoidenLyhytnimet {:urakat urakat})))}
+                      (e! (tiedot/->PaivitaUrakoidenLyhytnimet {:urakat urakat :urakkatyyppi @yhteiset/valittu-urakkatyyppi})))}
 
           [ {:nimi :nimi
            :leveys "auto"
@@ -117,6 +85,7 @@
      [valinnat/urakkatyyppi
       yhteiset/valittu-urakkatyyppi
       urakkatyypit
+      #(reset! yhteiset/valittu-urakkatyyppi %)
       ]
      [kentat/tee-kentta {:tyyppi :checkbox
                          :teksti "Näytä vain urakat joilta lyhyt nimi puuttuu"

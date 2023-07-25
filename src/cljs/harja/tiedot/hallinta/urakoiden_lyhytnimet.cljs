@@ -39,8 +39,9 @@
     (assoc app :hae-urakoiden-lyhytnimet-kesken? false))
 
   PaivitaUrakoidenLyhytnimet
-  (process-event [{urakat :urakat} app]
+  (process-event [{urakat :urakat urakkatyyppi :urakkatyyppi} app]
     (println "Päivitä parametrit: " urakat)
+    (println "Urakkatyyppi: " urakkatyyppi)
     (tuck-apurit/post! :tallenna-urakan-lyhytnimi urakat
       {:onnistui ->PaivitaUrakoidenLyhytnimetOnnistui
        :epaonnistui ->PaivitaUrakoidenLyhytnimetEpaonnistui})

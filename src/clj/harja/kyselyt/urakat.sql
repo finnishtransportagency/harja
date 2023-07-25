@@ -111,8 +111,8 @@ SELECT
     u.id,
     u.nimi,
     u.lyhyt_nimi
-FROM urakka u;
--- WHERE (:urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi);
+FROM urakka u
+WHERE (:urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi);
 
 -- name: tallenna-urakan-lyhytnimi!
 -- Vaihtaa urakan lyhytnimen
