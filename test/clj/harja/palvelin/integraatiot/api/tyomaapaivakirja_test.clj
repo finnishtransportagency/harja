@@ -370,3 +370,22 @@
       "Poikkeus heitetään, kun lisäkaluston lukumäärä on väärä.")
     (is (nil? (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :lisakaluston-lkm] 1)))
       "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")))
+
+(deftest validoi-typa-arvot-paivystaja
+  (let [paivystajatiedot [{:paivystaja {:aloitus "2016-01-30T12:00:00+02:00",
+                                        :lopetus "2016-01-30T14:00:00+02:00"
+                                        :nimi "Pekka Päivystäjä"}}]]
+
+    ;; Tarkista, että lopetus on aloituksen jälkeen
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-paivystajat (assoc-in paivystajatiedot [0 :paivystaja :lopetus] "2015-01-30T14:00:00+02:00")))
+      "Poikkeus heitetään, kun lopetus on ennen aloitusta")
+    (is (nil? (api-tyomaapaivakirja/validoi-paivystajat (assoc-in paivystajatiedot [0 :paivystaja :lopetus] "2025-01-30T14:00:00+02:00")))
+      "Poikkeusta ei heitetä.")
+
+    ;; Validoi nimen pituus
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-paivystajat (assoc-in paivystajatiedot [0 :paivystaja :nimi] nil)))
+      "Poikkeus heitetään, kun työkoneiden lukumäärä on väärä.")
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-paivystajat (assoc-in paivystajatiedot [0 :paivystaja :nimi] "Pek")))
+      "Poikkeus heitetään, kun työkoneiden lukumäärä on väärä.")
+    (is (nil? (api-tyomaapaivakirja/validoi-paivystajat (assoc-in paivystajatiedot [0 :paivystaja :nimi] "Päivi Päivystäjä")))
+      "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")))

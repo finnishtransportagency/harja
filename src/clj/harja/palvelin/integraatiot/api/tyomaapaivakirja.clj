@@ -81,11 +81,28 @@
         {:koodi virheet/+puutteelliset-parametrit+
          :viesti (format "Lisäkaluston lukumäärä täytyy olla väliltä 0 - 2000. Oli nyt %s." (:lisakaluston-lkm kalusto))}))))
 
+(defn validoi-paivystajat [paivystajat]
+  (doseq [p paivystajat
+          :let [paivystaja (:paivystaja p)
+                aloitus (tyokalut-json/pvm-string->joda-date (:aloitus paivystaja))
+                lopetus (tyokalut-json/pvm-string->joda-date (:lopetus paivystaja))]]
+
+    (when (pvm/ennen? lopetus aloitus)
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Päivystäjän lopetusaika täytyy olla aloitusajan jälkeen.")}))
+
+    (when (> 4 (count (:nimi paivystaja)))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Päivystäjän nimi liian lyhyt. Oli nyt %s." (:nimi paivystaja))}))))
+
 ;; TODO: Validoi sisään tuleva data
 (defn validoi-tyomaapaivakirja [data]
   (println "validoi-tyomaapäivkäirja :: data" (pr-str data))
   (validoi-saa (get-in data [:saatiedot]))
   (validoi-kalusto (get-in data [:kaluston-kaytto]))
+  (validoi-paivystajat (get-in data [:paivystajan-tiedot]))
 
   )
 
