@@ -115,6 +115,24 @@
           {:koodi virheet/+puutteelliset-parametrit+
            :viesti (format "Toimenpiteeseen liitettyä tehtävää ei löydy. Tarkista tehtävä id: %s." (get-in tehtava [:tehtava :id]))})))))
 
+(defn validoi-tieston-muut-toimenpiteet [toimenpiteet]
+  (doseq [t toimenpiteet
+          :let [toimenpide (:tieston-muu-toimenpide t)
+                aloitus (tyokalut-json/pvm-string->joda-date (:aloitus toimenpide))
+                lopetus (tyokalut-json/pvm-string->joda-date (:lopetus toimenpide))]]
+
+    (when (pvm/ennen? lopetus aloitus)
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Tiestön muun toimenpiteen lopetusaika täytyy olla aloitusajan jälkeen.")}))
+
+    ;; Varmista, että annetut tehtävät on kuvattu tarvittavan pitkällä tekstillä
+    (doseq [tehtava (:tehtavat toimenpide)]
+      (when (> 4 (count (get-in tehtava [:tehtava :kuvaus])))
+        (virheet/heita-viallinen-apikutsu-poikkeus
+          {:koodi virheet/+puutteelliset-parametrit+
+           :viesti (format "Tiestön muun toimenpiteen kuvaus on liian lyhyt. Tarkenna kuvasta. Oli nyt: %s." (get-in tehtava [:tehtava :kuvaus]))})))))
+
 ;; TODO: Validoi sisään tuleva data
 (defn validoi-tyomaapaivakirja [db data]
   (println "validoi-tyomaapäivkäirja :: data" (pr-str data))
@@ -123,6 +141,7 @@
   (validoi-paivystajat-ja-tyonjohtajat (get-in data [:paivystajan-tiedot]) :paivystaja "Päivystäjän")
   (validoi-paivystajat-ja-tyonjohtajat (get-in data [:tyonjohtajan-tiedot]) :tyonjohtaja "Työnjohtajan")
   (validoi-tieston-toimenpiteet db (get-in data [:tieston-toimenpiteet]))
+  (validoi-tieston-muut-toimenpiteet (get-in data [:tieston-muut-toimenpiteet]))
   )
 
 (defn- hae-tyomaapaivakirjan-versiotiedot [db kayttaja tiedot]
