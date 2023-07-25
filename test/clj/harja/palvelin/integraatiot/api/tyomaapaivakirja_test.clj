@@ -372,34 +372,43 @@
       "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")))
 
 (deftest validoi-typa-arvot-paivystajat-ja-tyonjohtajat
-  (let [tiedot [{:paivystaja {:aloitus "2016-01-30T12:00:00+02:00",
-                              :lopetus "2016-01-30T14:00:00+02:00"
-                              :nimi "Pekka Päivystäjä"}}]]
+  (let [paivystaja [{:paivystaja {:aloitus "2016-01-30T12:00:00+02:00",
+                                  :lopetus "2016-01-30T14:00:00+02:00"
+                                  :nimi "Pekka Päivystäjä"}}]
+        tyonjohtaja [{:tyonjohtaja {:aloitus "2016-01-30T12:00:00+02:00",
+                                    :lopetus "2016-01-30T14:00:00+02:00"
+                                    :nimi "Pekka Päivystäjä"}}]]
 
     ;; Tarkista, että lopetus on aloituksen jälkeen
-    (is (thrown? Exception (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tiedot [0 :paivystaja :lopetus] "2015-01-30T14:00:00+02:00") :paivystaja "Päivystäjän"))
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in paivystaja [0 :paivystaja :lopetus] "2015-01-30T14:00:00+02:00") :paivystaja "Päivystäjän"))
       "Poikkeus heitetään, kun lopetus on ennen aloitusta")
-    (is (nil? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tiedot [0 :paivystaja :lopetus] "2025-01-30T14:00:00+02:00") :paivystaja "Päivystäjän"))
+    (is (nil? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in paivystaja [0 :paivystaja :lopetus] "2025-01-30T14:00:00+02:00") :paivystaja "Päivystäjän"))
+      "Poikkeusta ei heitetä.")
+    ;; Lopetus ei ole pakollinen
+    (is (nil? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in paivystaja [0 :paivystaja :lopetus] nil) :paivystaja "Päivystäjän"))
       "Poikkeusta ei heitetä.")
 
     ;; Validoi nimen pituus
-    (is (thrown? Exception (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tiedot [0 :paivystaja :nimi] nil) :paivystaja "Päivystäjän"))
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in paivystaja [0 :paivystaja :nimi] nil) :paivystaja "Päivystäjän"))
       "Poikkeus heitetään, kun työkoneiden lukumäärä on väärä.")
-    (is (thrown? Exception (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tiedot [0 :paivystaja :nimi] "Pek") :paivystaja "Päivystäjän"))
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in paivystaja [0 :paivystaja :nimi] "Pek") :paivystaja "Päivystäjän"))
       "Poikkeus heitetään, kun työkoneiden lukumäärä on väärä.")
-    (is (nil? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tiedot [0 :paivystaja :nimi] "Päivi Päivystäjä") :paivystaja "Päivystäjän"))
+    (is (nil? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in paivystaja [0 :paivystaja :nimi] "Päivi Päivystäjä") :paivystaja "Päivystäjän"))
       "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
 
     ;; Tarkista, että lopetus on aloituksen jälkeen
-    (is (thrown? Exception (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tiedot [0 :tyonjohtaja :lopetus] "2015-01-30T14:00:00+02:00") :tyonjohtaja "Työnjohtajan"))
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tyonjohtaja [0 :tyonjohtaja :lopetus] "2015-01-30T14:00:00+02:00") :tyonjohtaja "Työnjohtajan"))
       "Poikkeus heitetään, kun lopetus on ennen aloitusta")
-    (is (nil? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tiedot [0 :tyonjohtaja :lopetus] "2025-01-30T14:00:00+02:00") :tyonjohtaja "Päivystäjän"))
+    (is (nil? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tyonjohtaja [0 :tyonjohtaja :lopetus] "2025-01-30T14:00:00+02:00") :tyonjohtaja "Työnjohtajan"))
+      "Poikkeusta ei heitetä.")
+    ;; Lopetus ei ole pakollinen
+    (is (nil? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tyonjohtaja [0 :tyonjohtaja :lopetus] nil) :tyonjohtaja "Työnjohtajan"))
       "Poikkeusta ei heitetä.")
 
     ;; Validoi nimen pituus
-    (is (thrown? Exception (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tiedot [0 :tyonjohtaja :nimi] nil) :tyonjohtaja "Työnjohtajan"))
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tyonjohtaja [0 :tyonjohtaja :nimi] nil) :tyonjohtaja "Työnjohtajan"))
       "Poikkeus heitetään, kun työkoneiden lukumäärä on väärä.")
-    (is (thrown? Exception (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tiedot [0 :tyonjohtaja :nimi] "Pek") :tyonjohtaja "Työnjohtajan"))
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tyonjohtaja [0 :tyonjohtaja :nimi] "Pek") :tyonjohtaja "Työnjohtajan"))
       "Poikkeus heitetään, kun työkoneiden lukumäärä on väärä.")
-    (is (nil? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tiedot [0 :tyonjohtaja :nimi] "Tuula Työnjohtaja") :tyonjohtaja "Työnjohtajan"))
+    (is (nil? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tyonjohtaja [0 :tyonjohtaja :nimi] "Tuula Työnjohtaja") :tyonjohtaja "Työnjohtajan"))
       "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")))
