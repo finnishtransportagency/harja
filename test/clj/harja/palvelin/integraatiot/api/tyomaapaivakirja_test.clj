@@ -474,3 +474,52 @@
       "Poikkeus heitetään, kun kuvaus on liian lyhyt.")
     (is (nil? (api-tyomaapaivakirja/validoi-viranomaisen-avustamiset (assoc-in avustukset [0 :viranomaisen-avustus :kuvaus] "Avustettiin vähä viranomaisia.")))
       "Poikkeusta ei heitetä, koska kuvaus on olemassa.")))
+
+(deftest validoi-typa-kuvaukset
+  (let [data {:liikenteenohjaus-muutokset [{:liikenteenohjaus-muutos {:kuvaus "Kuvaus"}}]
+              :onnettomuudet [{:onnettomuus {:kuvaus "Kuvaus"}}]
+              :palautteet [{:palaute {:kuvaus "Kuvaus"}}]
+              :tilaajan-yhteydenotot [{:tilaajan-yhteydenotto {:kuvaus "Kuvaus"}}]
+              :muut-kirjaukset {:kuvaus "Kuvaus"}}]
+    (is (nil? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit data))
+      "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
+
+    ;; liikenteenohjaus-muutokset
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:liikenteenohjaus-muutokset 0 :liikenteenohjaus-muutos :kuvaus] "nil")))
+      "Poikkeus heitetään, kun kuvaus on liian lyhyt.")
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:liikenteenohjaus-muutokset 0 :liikenteenohjaus-muutos :kuvaus] nil)))
+      "Poikkeus heitetään, kun kuvaus puuttuu.")
+    (is (nil? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:liikenteenohjaus-muutokset 0 :liikenteenohjaus-muutos :kuvaus] "Kuvaus on kunnossa.")))
+      "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
+
+    ;; onnettomuudet
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:onnettomuudet 0 :onnettomuus :kuvaus] "nil")))
+      "Poikkeus heitetään, kun kuvaus on liian lyhyt.")
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:onnettomuudet 0 :onnettomuus :kuvaus] nil)))
+      "Poikkeus heitetään, kun kuvaus puuttuu.")
+    (is (nil? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:onnettomuudet 0 :onnettomuus :kuvaus] "Kuvaus on kunnossa.")))
+      "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
+
+    ;; tilaajan-yhteydenotot
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:tilaajan-yhteydenotot 0 :tilaajan-yhteydenotto :kuvaus] "nil")))
+      "Poikkeus heitetään, kun kuvaus on liian lyhyt.")
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:tilaajan-yhteydenotot 0 :tilaajan-yhteydenotto :kuvaus] nil)))
+      "Poikkeus heitetään, kun kuvaus puuttuu.")
+    (is (nil? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:tilaajan-yhteydenotot 0 :tilaajan-yhteydenotto :kuvaus] "Kuvaus on kunnossa.")))
+      "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
+
+    ;; palautteet
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:palautteet 0 :palaute :kuvaus] "nil")))
+      "Poikkeus heitetään, kun kuvaus on liian lyhyt.")
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:palautteet 0 :palaute :kuvaus] nil)))
+      "Poikkeus heitetään, kun kuvaus puuttuu.")
+    (is (nil? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:palautteet 0 :palaute :kuvaus] "Kuvaus on kunnossa.")))
+      "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
+
+    ;; muut-kirjaukset
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:muut-kirjaukset :kuvaus] "nil")))
+      "Poikkeus heitetään, kun kuvaus on liian lyhyt.")
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:muut-kirjaukset :kuvaus] nil)))
+      "Poikkeus heitetään, kun kuvaus puuttuu.")
+    (is (nil? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:muut-kirjaukset :kuvaus] "Kuvaus on kunnossa.")))
+      "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")))

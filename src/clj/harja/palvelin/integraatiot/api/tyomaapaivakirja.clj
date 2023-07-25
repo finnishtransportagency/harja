@@ -149,6 +149,54 @@
         {:koodi virheet/+puutteelliset-parametrit+
          :viesti (format "Viranomaisen avustamisen kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus avustus))}))))
 
+(defn validoi-muut-kuvaustekstit [data]
+
+  ;; liikenteenohjaus-muutokset
+  (doseq [a (:liikenteenohjaus-muutokset data)
+          :let [ohjaus (:liikenteenohjaus-muutos a)]]
+
+    ;; Kuvaus pitää olla järkevän mittainen
+    (when (> 4 (count (:kuvaus ohjaus)))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Liikenteenohjausmuustosten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus ohjaus))})))
+
+  ;; onnettomuudet
+  (doseq [a (:onnettomuudet data)
+          :let [onnettomuus (:onnettomuus a)]]
+
+    ;; Kuvaus pitää olla järkevän mittainen
+    (when (> 4 (count (:kuvaus onnettomuus)))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Onnettomuuden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus onnettomuus))})))
+
+  ;; palautteet
+  (doseq [a (:palautteet data)
+          :let [palaute (:palaute a)]]
+
+    ;; Kuvaus pitää olla järkevän mittainen
+    (when (> 4 (count (:kuvaus palaute)))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Palautteiden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus palaute))})))
+
+  ;; tilaajan-yhteydenotot
+  (doseq [a (:tilaajan-yhteydenotot data)
+          :let [yhteydenotto (:tilaajan-yhteydenotto a)]]
+
+    ;; Kuvaus pitää olla järkevän mittainen
+    (when (> 4 (count (:kuvaus yhteydenotto)))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Yhteydenoton kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus yhteydenotto))})))
+
+  ;; muut-kirjaukset
+  ;; Kuvaus pitää olla järkevän mittainen
+  (when (> 4 (count (:kuvaus (:muut-kirjaukset data))))
+    (virheet/heita-viallinen-apikutsu-poikkeus
+      {:koodi virheet/+puutteelliset-parametrit+
+       :viesti (format "Muiden kirjausten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus (:muut-kirjaukset data)))})))
 ;; TODO: Validoi sisään tuleva data
 (defn validoi-tyomaapaivakirja [db data]
   (println "validoi-tyomaapäivkäirja :: data" (pr-str data))
