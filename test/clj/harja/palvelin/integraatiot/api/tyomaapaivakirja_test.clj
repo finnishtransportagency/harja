@@ -412,3 +412,23 @@
       "Poikkeus heitetään, kun työkoneiden lukumäärä on väärä.")
     (is (nil? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tyonjohtaja [0 :tyonjohtaja :nimi] "Tuula Työnjohtaja") :tyonjohtaja "Työnjohtajan"))
       "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")))
+
+(deftest validoi-typa-arvot-toimenpiteet
+  (let [toimenpiteet [{:tieston-toimenpide {:aloitus "2016-01-30T12:00:00+02:00",
+                                            :lopetus "2016-01-30T14:00:00+02:00"
+                                            :tehtavat [{:tehtava {:id 1359}}]}}]]
+
+    ;; Tarkista, että lopetus on aloituksen jälkeen
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-tieston-toimenpiteet (:db jarjestelma) (assoc-in toimenpiteet [0 :tieston-toimenpide :lopetus] "2015-01-30T14:00:00+02:00")))
+      "Poikkeus heitetään, kun lopetus on ennen aloitusta")
+    (is (nil? (api-tyomaapaivakirja/validoi-tieston-toimenpiteet (:db jarjestelma) (assoc-in toimenpiteet [0 :tieston-toimenpide :lopetus] "2025-01-30T14:00:00+02:00")))
+      "Poikkeusta ei heitetä.")
+    ;; Lopetus ei ole pakollinen
+    (is (nil? (api-tyomaapaivakirja/validoi-tieston-toimenpiteet (:db jarjestelma) (assoc-in toimenpiteet [0 :tieston-toimenpide :lopetus] nil)))
+      "Poikkeusta ei heitetä.")
+
+    ;; Tehtävä täytyy löytyä tietokannasta
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-tieston-toimenpiteet (:db jarjestelma) (assoc-in toimenpiteet [0 :tieston-toimenpide :tehtavat 0 :tehtava :id] 24342340234)))
+      "Poikkeus heitetään, kun tehtävää ei löydy tietokannasta.")
+    (is (nil? (api-tyomaapaivakirja/validoi-tieston-toimenpiteet (:db jarjestelma) (assoc-in toimenpiteet [0 :tieston-toimenpide :tehtavat 0 :tehtava :id] 1359)))
+      "Poikkeusta ei heitetä, koska tehtävä on validi.")))

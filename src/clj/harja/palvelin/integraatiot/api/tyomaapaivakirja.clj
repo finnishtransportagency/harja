@@ -97,14 +97,32 @@
         {:koodi virheet/+puutteelliset-parametrit+
          :viesti (format "%s nimi liian lyhyt. Oli nyt %s." kuvaava-nimi (:nimi tieto))}))))
 
+(defn validoi-tieston-toimenpiteet [db toimenpiteet]
+  (doseq [t toimenpiteet
+          :let [toimenpide (:tieston-toimenpide t)
+                aloitus (tyokalut-json/pvm-string->joda-date (:aloitus toimenpide))
+                lopetus (tyokalut-json/pvm-string->joda-date (:lopetus toimenpide))]]
+
+    (when (pvm/ennen? lopetus aloitus)
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Toimenpiteen lopetusaika täytyy olla aloitusajan jälkeen.")}))
+
+    ;; Varmista, että annetut tehtävät on tietokannassa
+    (doseq [tehtava (:tehtavat toimenpide)]
+      (when (false? (tyomaapaivakirja-kyselyt/onko-tehtava-olemassa? db {:id (get-in tehtava [:tehtava :id])}))
+        (virheet/heita-viallinen-apikutsu-poikkeus
+          {:koodi virheet/+puutteelliset-parametrit+
+           :viesti (format "Toimenpiteeseen liitettyä tehtävää ei löydy. Tarkista tehtävä id: %s." (get-in tehtava [:tehtava :id]))})))))
+
 ;; TODO: Validoi sisään tuleva data
-(defn validoi-tyomaapaivakirja [data]
+(defn validoi-tyomaapaivakirja [db data]
   (println "validoi-tyomaapäivkäirja :: data" (pr-str data))
   (validoi-saa (get-in data [:saatiedot]))
   (validoi-kalusto (get-in data [:kaluston-kaytto]))
   (validoi-paivystajat-ja-tyonjohtajat (get-in data [:paivystajan-tiedot]) :paivystaja "Päivystäjän")
   (validoi-paivystajat-ja-tyonjohtajat (get-in data [:tyonjohtajan-tiedot]) :tyonjohtaja "Työnjohtajan")
-
+  (validoi-tieston-toimenpiteet db (get-in data [:tieston-toimenpiteet]))
   )
 
 (defn- hae-tyomaapaivakirjan-versiotiedot [db kayttaja tiedot]
@@ -309,7 +327,7 @@
     tyomaapaivakirja-id))
 
 (defn kirjaa-tyomaapaivakirja [db {:keys [id tid] :as parametrit} data kayttaja]
-  (validoi-tyomaapaivakirja data)
+  (validoi-tyomaapaivakirja db data)
   (tarkista-parametrit parametrit)
   (let [urakka-id (konv/konvertoi->int id)
         tyomaapaivakirja (:tyomaapaivakirja data)
