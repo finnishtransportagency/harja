@@ -197,17 +197,17 @@
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
        :viesti (format "Muiden kirjausten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus (:muut-kirjaukset data)))})))
+
 ;; TODO: Validoi sisään tuleva data
 (defn validoi-tyomaapaivakirja [db data]
-  (println "validoi-tyomaapäivkäirja :: data" (pr-str data))
-  (validoi-saa (get-in data [:saatiedot]))
-  (validoi-kalusto (get-in data [:kaluston-kaytto]))
-  (validoi-paivystajat-ja-tyonjohtajat (get-in data [:paivystajan-tiedot]) :paivystaja "Päivystäjän")
-  (validoi-paivystajat-ja-tyonjohtajat (get-in data [:tyonjohtajan-tiedot]) :tyonjohtaja "Työnjohtajan")
-  (validoi-tieston-toimenpiteet db (get-in data [:tieston-toimenpiteet]))
-  (validoi-tieston-muut-toimenpiteet (get-in data [:tieston-muut-toimenpiteet]))
-  (validoi-viranomaisen-avustamiset (get-in data [:viranomaisen-avustaminen]))
-  )
+  (validoi-saa (get-in data [:tyomaapaivakirja :saatiedot]))
+  (validoi-kalusto (get-in data [:tyomaapaivakirja :kaluston-kaytto]))
+  (validoi-paivystajat-ja-tyonjohtajat (get-in data [:tyomaapaivakirja :paivystajan-tiedot]) :paivystaja "Päivystäjän")
+  (validoi-paivystajat-ja-tyonjohtajat (get-in data [:tyomaapaivakirja :tyonjohtajan-tiedot]) :tyonjohtaja "Työnjohtajan")
+  (validoi-tieston-toimenpiteet db (get-in data [:tyomaapaivakirja :tieston-toimenpiteet]))
+  (validoi-tieston-muut-toimenpiteet (get-in data [:tyomaapaivakirja :tieston-muut-toimenpiteet]))
+  (validoi-viranomaisen-avustamiset (get-in data [:tyomaapaivakirja :viranomaisen-avustaminen]))
+  (validoi-muut-kuvaustekstit (:tyomaapaivakirja data)))
 
 (defn- hae-tyomaapaivakirjan-versiotiedot [db kayttaja tiedot]
   (validointi/tarkista-urakka-ja-kayttaja db (:urakka_id tiedot) kayttaja)
