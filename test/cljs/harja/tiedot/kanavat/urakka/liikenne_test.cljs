@@ -570,7 +570,8 @@
                    ::lt/toiminnot [{::toiminto/palvelumuoto :muu
                                     ::toiminto/toimenpide :tyhjennys}]}]
     
-    (is (= {:liikennetapahtumien-haku-kaynnissa? false
+    (is (= {:valittu-liikennetapahtuma nil
+            :liikennetapahtumien-haku-kaynnissa? false
             :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false
             :haetut-tapahtumat [sulutus-alas sulutus-ylos sillan-avaus tyhjennys]
             :tapahtumarivit [(merge sulutus-alas {::lt-alus/suunta :alas})
