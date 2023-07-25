@@ -294,9 +294,9 @@
         vastaus-body (cheshire/decode (:body vastaus) true)]
     (is (= "puutteelliset-parametrit") (get-in vastaus-body [:virheet 0 :virhe :koodi]))))
 
-(deftest validoi-typa-arvot
+(deftest validoi-typa-arvot-saa
   (let [saatiedot [{:saatieto {:havaintoaika "2016-01-30T12:00:00+02:00",
-                               :aseman-tunniste  "101500",
+                               :aseman-tunniste "101500",
                                :aseman-tietojen-paivityshetki "2016-01-30T12:00:00+02:00",
                                :ilman-lampotila 10,
                                :tien-lampotila 10,
@@ -307,35 +307,36 @@
       "Poikkeus heitetään, kun ilman lämpötila on väärä tai uupuu")
     (is (thrown? Exception (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :ilman-lampotila] -81.1)))
       "Poikkeus heitetään, kun ilman lämpötila on väärä tai uupuu")
-    (is (nil?  (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :ilman-lampotila] 79.1)))
+    (is (nil? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :ilman-lampotila] 79.1)))
       "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
 
     (is (thrown? Exception (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :tien-lampotila] 81.1)))
       "Poikkeus heitetään, kun tien lämpötila on väärä.")
     (is (thrown? Exception (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :tien-lampotila] -81.1)))
       "Poikkeus heitetään, kun tien lämpötila on väärä.")
-    (is (nil?  (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :tien-lampotila] 79.1)))
+    (is (nil? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :tien-lampotila] 79.1)))
       "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
 
     (is (thrown? Exception (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :keskituuli] 151)))
       "Poikkeus heitetään, kun keskituuli on väärä.")
     (is (thrown? Exception (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :keskituuli] -1)))
       "Poikkeus heitetään, kun keskituuli on väärä.")
-    (is (nil?  (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :keskituuli] 1)))
+    (is (nil? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :keskituuli] 1)))
       "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
 
     (is (thrown? Exception (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sateen-olomuoto] -1)))
       "Poikkeus heitetään, kun sateen olomuoto on väärä.")
     (is (thrown? Exception (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sateen-olomuoto] 151)))
       "Poikkeus heitetään, kun sateen olomuoto on väärä.")
-    (is (nil?  (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sateen-olomuoto] 1)))
+    (is (nil? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sateen-olomuoto] 1)))
       "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
 
     (is (thrown? Exception (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sadesumma] -1)))
       "Poikkeus heitetään, kun sadesumma on väärä.")
     (is (thrown? Exception (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sadesumma] 10001)))
       "Poikkeus heitetään, kun sadesumma on väärä.")
-    (is (nil?  (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sadesumma] 1)))
+    (is (nil? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sadesumma] 1)))
       "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
-    (is (nil?  (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sadesumma] nil)))
+    (is (nil? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sadesumma] nil)))
       "Poikkeusta ei heitetä, koska arvo ei ole pakollinen")))
+
