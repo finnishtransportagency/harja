@@ -340,3 +340,33 @@
     (is (nil? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sadesumma] nil)))
       "Poikkeusta ei heitetä, koska arvo ei ole pakollinen")))
 
+(deftest validoi-typa-arvot-kalusto
+  (let [kalustotiedot [{:kalusto {:aloitus "2016-01-30T12:00:00+02:00",
+                                  :lopetus "2016-01-30T14:00:00+02:00"
+                                  :tyokoneiden-lkm 2
+                                  :lisakaluston-lkm 4}}]]
+
+    ;; Tarkista, että lopetus on aloituksen jälkeen
+    ;; Tarkista kaluston määrät
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :lopetus] "2015-01-30T14:00:00+02:00")))
+      "Poikkeus heitetään, kun lopetus on ennen aloitusta")
+    (is (nil? (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :lopetus] "2025-01-30T14:00:00+02:00")))
+      "Poikkeusta ei heitetä.")
+
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :tyokoneiden-lkm] -1)))
+      "Poikkeus heitetään, kun työkoneiden lukumäärä on väärä.")
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :tyokoneiden-lkm] 10001)))
+      "Poikkeus heitetään, kun työkoneiden lukumäärä on väärä.")
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :tyokoneiden-lkm] nil)))
+      "Poikkeus heitetään, kun työkoneiden lukumäärä on väärä.")
+    (is (nil? (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :tyokoneiden-lkm] 1)))
+      "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
+
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :lisakaluston-lkm] -1)))
+      "Poikkeus heitetään, kun lisäkaluston lukumäärä on väärä.")
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :lisakaluston-lkm] 10001)))
+      "Poikkeus heitetään, kun lisäkaluston lukumäärä on väärä.")
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :lisakaluston-lkm] nil)))
+      "Poikkeus heitetään, kun lisäkaluston lukumäärä on väärä.")
+    (is (nil? (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :lisakaluston-lkm] 1)))
+      "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")))

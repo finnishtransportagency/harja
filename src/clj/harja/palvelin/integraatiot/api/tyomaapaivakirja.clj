@@ -4,10 +4,11 @@
             [clojure.spec.alpha :as s]
             [taoensso.timbre :as log]
             [compojure.core :refer [POST PUT]]
+            [harja.pvm :as pvm]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.tyomaapaivakirja :as tyomaapaivakirja-kyselyt]
             [harja.kyselyt.konversio :as konv]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date aika-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as tyokalut-json]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
@@ -58,8 +59,34 @@
       (virheet/heita-viallinen-apikutsu-poikkeus
         {:koodi virheet/+puutteelliset-parametrit+
          :viesti (format "Sadesumma täytyy olla väliltä 0 - 10000. Oli nyt %s." (:sadesumma saa))}))))
+
+(defn validoi-kalusto [kalustot]
+  (doseq [k kalustot
+          :let [kalusto (:kalusto k)
+                aloitus (tyokalut-json/pvm-string->joda-date (:aloitus kalusto))
+                lopetus (tyokalut-json/pvm-string->joda-date (:lopetus kalusto))]]
+
+    (when (pvm/ennen? lopetus aloitus)
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Kaluston lopetusaika täytyy olla aloitusajan jälkeen.")}))
+
+    (when (or (< (:tyokoneiden-lkm kalusto) 0) (> (:tyokoneiden-lkm kalusto) 2000))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Työkoneiden lukumäärä täytyy olla väliltä 0 - 2000. Oli nyt %s." (:tyokoneiden-lkm kalusto))}))
+
+    (when (or (< (:lisakaluston-lkm kalusto) 0) (> (:lisakaluston-lkm kalusto) 2000))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Lisäkaluston lukumäärä täytyy olla väliltä 0 - 2000. Oli nyt %s." (:lisakaluston-lkm kalusto))}))))
+
 ;; TODO: Validoi sisään tuleva data
 (defn validoi-tyomaapaivakirja [data]
+  (println "validoi-tyomaapäivkäirja :: data" (pr-str data))
+  (validoi-saa (get-in data [:saatiedot]))
+  (validoi-kalusto (get-in data [:kaluston-kaytto]))
+
   )
 
 (defn- hae-tyomaapaivakirjan-versiotiedot [db kayttaja tiedot]
