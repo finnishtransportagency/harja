@@ -81,28 +81,29 @@
         {:koodi virheet/+puutteelliset-parametrit+
          :viesti (format "Lisäkaluston lukumäärä täytyy olla väliltä 0 - 2000. Oli nyt %s." (:lisakaluston-lkm kalusto))}))))
 
-(defn validoi-paivystajat [paivystajat]
-  (doseq [p paivystajat
-          :let [paivystaja (:paivystaja p)
-                aloitus (tyokalut-json/pvm-string->joda-date (:aloitus paivystaja))
-                lopetus (tyokalut-json/pvm-string->joda-date (:lopetus paivystaja))]]
+(defn validoi-paivystajat-ja-tyonjohtajat [tiedot omistaja-avain kuvaava-nimi]
+  (doseq [t tiedot
+          :let [tieto (omistaja-avain t)
+                aloitus (tyokalut-json/pvm-string->joda-date (:aloitus tieto))
+                lopetus (tyokalut-json/pvm-string->joda-date (:lopetus tieto))]]
 
     (when (pvm/ennen? lopetus aloitus)
       (virheet/heita-viallinen-apikutsu-poikkeus
         {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Päivystäjän lopetusaika täytyy olla aloitusajan jälkeen.")}))
+         :viesti (format "%s lopetusaika täytyy olla aloitusajan jälkeen." kuvaava-nimi)}))
 
-    (when (> 4 (count (:nimi paivystaja)))
+    (when (> 4 (count (:nimi tieto)))
       (virheet/heita-viallinen-apikutsu-poikkeus
         {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Päivystäjän nimi liian lyhyt. Oli nyt %s." (:nimi paivystaja))}))))
+         :viesti (format "%s nimi liian lyhyt. Oli nyt %s." kuvaava-nimi (:nimi tieto))}))))
 
 ;; TODO: Validoi sisään tuleva data
 (defn validoi-tyomaapaivakirja [data]
   (println "validoi-tyomaapäivkäirja :: data" (pr-str data))
   (validoi-saa (get-in data [:saatiedot]))
   (validoi-kalusto (get-in data [:kaluston-kaytto]))
-  (validoi-paivystajat (get-in data [:paivystajan-tiedot]))
+  (validoi-paivystajat-ja-tyonjohtajat (get-in data [:paivystajan-tiedot]) :paivystaja "Päivystäjän")
+  (validoi-paivystajat-ja-tyonjohtajat (get-in data [:tyonjohtajan-tiedot]) :tyonjohtaja "Työnjohtajan")
 
   )
 
