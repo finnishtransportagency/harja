@@ -447,8 +447,30 @@
     (is (nil? (api-tyomaapaivakirja/validoi-tieston-muut-toimenpiteet (assoc-in muut-toimenpiteet [0 :tieston-muu-toimenpide :lopetus] nil)))
       "Poikkeusta ei heitetä.")
 
-    ;; Tehtävä täytyy löytyä tietokannasta
+    ;; Kuvaus
     (is (thrown? Exception (api-tyomaapaivakirja/validoi-tieston-muut-toimenpiteet (assoc-in muut-toimenpiteet [0 :tieston-muu-toimenpide :tehtavat 0 :tehtava :kuvaus] "s")))
       "Poikkeus heitetään, kun tehtävää ei löydy tietokannasta.")
     (is (nil? (api-tyomaapaivakirja/validoi-tieston-muut-toimenpiteet (assoc-in muut-toimenpiteet [0 :tieston-muu-toimenpide :tehtavat 0 :tehtava :id] "Tarkka kuvaus tehtävästä.")))
       "Poikkeusta ei heitetä, koska tehtävä on validi.")))
+
+(deftest validoi-typa-arvot-viranomaisen-avustaminen
+  (let [avustukset [{:viranomaisen-avustus {:tunnit 4.54
+                                            :kuvaus "Järkevä kuvaus"}}]]
+
+    ;; Tarkista tunnit
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-viranomaisen-avustamiset (assoc-in avustukset [0 :viranomaisen-avustus :tunnit] nil)))
+      "Poikkeus heitetään, kun tunteja ei ole annettu.")
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-viranomaisen-avustamiset (assoc-in avustukset [0 :viranomaisen-avustus :tunnit] -1)))
+      "Poikkeus heitetään, kun tunneiksi on annettu väärä arvo.")
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-viranomaisen-avustamiset (assoc-in avustukset [0 :viranomaisen-avustus :tunnit] 9999)))
+      "Poikkeus heitetään, kun tunneiksi on annettu väärä arvo.")
+    (is (nil? (api-tyomaapaivakirja/validoi-viranomaisen-avustamiset (assoc-in avustukset [0 :viranomaisen-avustus :tunnit] 5.92)))
+      "Poikkeusta ei heitetä, koska tunnit on validit.")
+
+    ;; Kuvaus
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-viranomaisen-avustamiset (assoc-in avustukset [0 :viranomaisen-avustus :kuvaus] nil)))
+      "Poikkeus heitetään, kun kuvausta ei ole annettu.")
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-viranomaisen-avustamiset (assoc-in avustukset [0 :viranomaisen-avustus :kuvaus] "nil")))
+      "Poikkeus heitetään, kun kuvaus on liian lyhyt.")
+    (is (nil? (api-tyomaapaivakirja/validoi-viranomaisen-avustamiset (assoc-in avustukset [0 :viranomaisen-avustus :kuvaus] "Avustettiin vähä viranomaisia.")))
+      "Poikkeusta ei heitetä, koska kuvaus on olemassa.")))

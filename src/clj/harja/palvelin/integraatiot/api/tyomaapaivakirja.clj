@@ -133,6 +133,22 @@
           {:koodi virheet/+puutteelliset-parametrit+
            :viesti (format "Tiestön muun toimenpiteen kuvaus on liian lyhyt. Tarkenna kuvasta. Oli nyt: %s." (get-in tehtava [:tehtava :kuvaus]))})))))
 
+(defn validoi-viranomaisen-avustamiset [avustukset]
+  (doseq [a avustukset
+          :let [avustus (:viranomaisen-avustus a)]]
+
+    ;; Varmista, että annetut tunnit on järkevissä raameissa
+    (when (or (< (:tunnit avustus) 0) (> (:tunnit avustus) 1000))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Viranomaisen avustamiseen käytetyt tunnit pitää olla väliltä 0 - 1000. Oli nyt: %s." (:tunnit avustus))}))
+
+    ;; Avustamisen kuvaus pitää olla järkevän mittainen
+    (when (> 4 (count (:kuvaus avustus)))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Viranomaisen avustamisen kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus avustus))}))))
+
 ;; TODO: Validoi sisään tuleva data
 (defn validoi-tyomaapaivakirja [db data]
   (println "validoi-tyomaapäivkäirja :: data" (pr-str data))
@@ -142,6 +158,7 @@
   (validoi-paivystajat-ja-tyonjohtajat (get-in data [:tyonjohtajan-tiedot]) :tyonjohtaja "Työnjohtajan")
   (validoi-tieston-toimenpiteet db (get-in data [:tieston-toimenpiteet]))
   (validoi-tieston-muut-toimenpiteet (get-in data [:tieston-muut-toimenpiteet]))
+  (validoi-viranomaisen-avustamiset (get-in data [:viranomaisen-avustaminen]))
   )
 
 (defn- hae-tyomaapaivakirjan-versiotiedot [db kayttaja tiedot]
