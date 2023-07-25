@@ -106,6 +106,20 @@ WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date)
       AND (u.loppupvm IS NULL OR u.loppupvm >= current_date)
       AND (:urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi);
 
+-- name: hae-urakoiden-nimet
+SELECT
+    u.id,
+    u.nimi,
+    u.lyhyt_nimi
+FROM urakka u;
+-- WHERE (:urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi);
+
+-- name: tallenna-urakan-lyhytnimi!
+-- Vaihtaa urakan lyhytnimen
+UPDATE urakka
+SET lyhyt_nimi = :lyhytnimi
+WHERE id = :urakka;
+
 -- name: hae-kaynnissa-olevat-hoitourakat
 SELECT
     u.id,

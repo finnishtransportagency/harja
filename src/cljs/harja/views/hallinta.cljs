@@ -8,6 +8,7 @@
             [harja.views.hallinta.indeksit :as i]
             [harja.views.hallinta.yhteydenpito :as yhteydenpito]
             [harja.views.hallinta.lampotilat :as lampotilat]
+            [harja.views.hallinta.urakoiden-lyhytnimet :as lyhytnimet]
             [harja.views.hallinta.integraatiotilanne :as integraatiotilanne]
             [harja.views.hallinta.hairiot :as hairiot]
             [harja.views.hallinta.valtakunnalliset-valitavoitteet :as valitavoitteet]
@@ -48,6 +49,12 @@
    (when (oikeudet/hallinta-lampotilat)
      ^{:key "lämpötilat"}
      [lampotilat/lampotilat])
+
+   "Urakkanimet"
+   :lyhytnimet
+   (when true
+     ^{:key "lyhytnimet"}
+     [lyhytnimet/urakoiden-lyhytnimet ])
 
    "Integraatiotilanne"
    :integraatiotilanne
