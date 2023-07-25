@@ -92,7 +92,7 @@
 (defn- hae-tyomaapaivakirjan-versiotiedot [db kayttaja tiedot]
   (validointi/tarkista-urakka-ja-kayttaja db (:urakka_id tiedot) kayttaja)
   (let [hakuparametrit {:urakka_id (:urakka_id tiedot)
-                        :paivamaara (pvm-string->java-sql-date (:paivamaara tiedot))}
+                        :paivamaara (tyokalut-json/pvm-string->java-sql-date (:paivamaara tiedot))}
         _ (log/debug "hae-tyomaapaivakirjan-versiotiedot :: hakuparametrit" (pr-str hakuparametrit))
         versiotiedot (first (tyomaapaivakirja-kyselyt/hae-tyomaapaivakirjan-versiotiedot db hakuparametrit))
         versionro (if (or (nil? versiotiedot)) {:versio nil
@@ -103,8 +103,8 @@
   (doseq [k (get-in data [:kaluston-kaytto])
           :let [kalusto (:kalusto k)
                 kalusto (-> kalusto
-                          (assoc :aloitus (aika-string->java-sql-date (:aloitus kalusto)))
-                          (assoc :lopetus (aika-string->java-sql-date (:lopetus kalusto)))
+                          (assoc :aloitus (tyokalut-json/aika-string->java-sql-date (:aloitus kalusto)))
+                          (assoc :lopetus (tyokalut-json/aika-string->java-sql-date (:lopetus kalusto)))
                           (merge {:versio versio
                                   :tyomaapaivakirja_id tyomaapaivakirja-id
                                   :urakka_id urakka-id}))]]
@@ -114,8 +114,8 @@
   (doseq [p (get-in data [:paivystajan-tiedot])
           :let [paivystaja (:paivystaja p)
                 paivystaja (-> paivystaja
-                             (assoc :aloitus (aika-string->java-sql-date (:aloitus paivystaja)))
-                             (assoc :lopetus (aika-string->java-sql-date (:lopetus paivystaja))))]]
+                             (assoc :aloitus (tyokalut-json/aika-string->java-sql-date (:aloitus paivystaja)))
+                             (assoc :lopetus (tyokalut-json/aika-string->java-sql-date (:lopetus paivystaja))))]]
     (tyomaapaivakirja-kyselyt/lisaa-paivystaja<! db (merge
                                                       paivystaja
                                                       {:versio versio
@@ -126,8 +126,8 @@
   (doseq [j (get-in data [:tyonjohtajan-tiedot])
           :let [johtaja (:tyonjohtaja j)
                 johtaja (-> johtaja
-                          (assoc :aloitus (aika-string->java-sql-date (:aloitus johtaja)))
-                          (assoc :lopetus (aika-string->java-sql-date (:lopetus johtaja))))]]
+                          (assoc :aloitus (tyokalut-json/aika-string->java-sql-date (:aloitus johtaja)))
+                          (assoc :lopetus (tyokalut-json/aika-string->java-sql-date (:lopetus johtaja))))]]
     (tyomaapaivakirja-kyselyt/lisaa-tyonjohtaja<! db (merge
                                                        johtaja
                                                        {:versio versio
@@ -138,8 +138,8 @@
   (doseq [s (get-in data [:saatiedot])
           :let [saa (:saatieto s)
                 saa (-> saa
-                      (assoc :havaintoaika (aika-string->java-sql-date (:havaintoaika saa)))
-                      (assoc :aseman-tietojen-paivityshetki (aika-string->java-sql-date (:aseman-tietojen-paivityshetki saa))))]]
+                      (assoc :havaintoaika (tyokalut-json/aika-string->java-sql-date (:havaintoaika saa)))
+                      (assoc :aseman-tietojen-paivityshetki (tyokalut-json/aika-string->java-sql-date (:aseman-tietojen-paivityshetki saa))))]]
     (tyomaapaivakirja-kyselyt/lisaa-saatiedot<! db (merge
                                                      saa
                                                      {:versio versio
@@ -150,7 +150,7 @@
   (doseq [p (get-in data [:poikkeukselliset-saahavainnot])
           :let [poikkeus (:poikkeuksellinen-saahavainto p)
                 poikkeus (-> poikkeus
-                           (assoc :havaintoaika (aika-string->java-sql-date (:havaintoaika poikkeus))))]]
+                           (assoc :havaintoaika (tyokalut-json/aika-string->java-sql-date (:havaintoaika poikkeus))))]]
     (tyomaapaivakirja-kyselyt/lisaa-poikkeussaa<! db (merge
                                                        poikkeus
                                                        {:versio versio
@@ -161,8 +161,8 @@
   (doseq [t (get-in data [:tieston-toimenpiteet])
           :let [toimenpide (:tieston-toimenpide t)
                 toimenpide (-> toimenpide
-                             (assoc :aloitus (aika-string->java-sql-date (:aloitus toimenpide)))
-                             (assoc :lopetus (aika-string->java-sql-date (:lopetus toimenpide)))
+                             (assoc :aloitus (tyokalut-json/aika-string->java-sql-date (:aloitus toimenpide)))
+                             (assoc :lopetus (tyokalut-json/aika-string->java-sql-date (:lopetus toimenpide)))
                              (assoc :tyyppi "yleinen")
                              (assoc :toimenpiteet nil) ;; Ei voida lisätä toimenpiteitä.
                              (assoc :tehtavat (->
@@ -178,8 +178,8 @@
   (doseq [t (get-in data [:tieston-muut-toimenpiteet])
           :let [toimenpide (:tieston-muu-toimenpide t)
                 toimenpide (-> toimenpide
-                             (assoc :aloitus (aika-string->java-sql-date (:aloitus toimenpide)))
-                             (assoc :lopetus (aika-string->java-sql-date (:lopetus toimenpide)))
+                             (assoc :aloitus (tyokalut-json/aika-string->java-sql-date (:aloitus toimenpide)))
+                             (assoc :lopetus (tyokalut-json/aika-string->java-sql-date (:lopetus toimenpide)))
                              (assoc :tyyppi "muu")
                              (assoc :tehtavat nil) ;; Ei voida lisätä tehtäviä
                              (assoc :toimenpiteet (->
@@ -252,7 +252,7 @@
                                                                       :paivamaara (get-in data [:tunniste :paivamaara])})
         tyomaapaivakirja {:urakka_id urakka-id
                           :kayttaja (:id kayttaja)
-                          :paivamaara (pvm-string->java-sql-date (get-in data [:tunniste :paivamaara]))
+                          :paivamaara (tyokalut-json/pvm-string->java-sql-date (get-in data [:tunniste :paivamaara]))
                           :ulkoinen-id (get-in data [:tunniste :id])
                           :versio (get-in data [:tunniste :versio])
                           :id tyomaapaivakirja-id}
