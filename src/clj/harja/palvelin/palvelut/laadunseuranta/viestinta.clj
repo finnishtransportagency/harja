@@ -65,8 +65,8 @@
 (defn- laheta-sposti-laatupoikkeamasta-selvitys-pyydetty*
   [{:keys [db fim email urakka-id laatupoikkeama selvityksen-pyytaja]}]
   (log/debug (format "Lähetetään sähköposti: laatupoikkeamasta %s pyydetty selvitys" (:id laatupoikkeama)))
-
   (let [urakka-nimi (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+        urakka-nimi (html-tyokalut/sanitoi urakka-nimi)
         hallintayksikko-id (:id (first (urakat-q/hae-urakan-ely db urakka-id)))
         urakka-sampoid (urakat-q/hae-urakan-sampo-id db urakka-id)]
     (viestinta/laheta-sposti-fim-kayttajarooleille
