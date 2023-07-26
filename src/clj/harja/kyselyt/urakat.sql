@@ -112,7 +112,8 @@ SELECT
     u.nimi,
     u.lyhyt_nimi
 FROM urakka u
-WHERE (:urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi);
+WHERE (:urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi)
+ORDER BY u.nimi ASC;
 
 -- name: tallenna-urakan-lyhytnimi!
 -- Vaihtaa urakan lyhytnimen
