@@ -308,7 +308,7 @@
                 {:otsikko (osa/fmt-kohteenosa osa)
                  :rivi? true}
                 {:otsikko "Toimenpide"
-                 :nimi (str "Toimenpide - " (::kohde/nimi (::lt/kohde valittu-liikennetapahtuma)))
+                 :nimi (str "toimenpide-" (::kohde/id (::lt/kohde valittu-liikennetapahtuma)))
                  :pakollinen? true
                  :tyyppi :radio-group
                  :vaihtoehdot (lt/toimenpide-vaihtoehdot osa)
@@ -320,7 +320,7 @@
                           (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/toimenpide arvo)))}
                 (when (tiedot/nayta-palvelumuoto? osa)
                   {:otsikko "Palvelumuoto"
-                   :nimi (str i "-palvelumuoto")
+                   :nimi (str "palvelumuoto-" (::kohde/id (::lt/kohde valittu-liikennetapahtuma)))
                    :pakollinen? true
                    :tyyppi :valinta
                    :valinnat lt/palvelumuoto-vaihtoehdot
@@ -332,7 +332,7 @@
                             (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/palvelumuoto arvo)))})
                 (when (tiedot/nayta-itsepalvelut? osa)
                   {:otsikko "Itsepalveluiden lukumäärä"
-                   :nimi (str i "-lkm")
+                   :nimi (str "lkm-" (::kohde/id (::lt/kohde valittu-liikennetapahtuma)))
                    :pakollinen? true
                    :tyyppi :positiivinen-numero
                    :hae (constantly (::toiminto/lkm osa))
