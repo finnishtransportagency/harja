@@ -5,7 +5,7 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]))
 
-(defonce tila (atom {:valittu-urakkatyyppi nil}))
+(defonce tila (atom {:valittu-urakkatyyppi {:nimi "Hoito", :arvo :hoito}}))
 
 (defrecord HaeUrakoidenLyhytnimet [valinnat])
 (defrecord HaeUrakoidenLyhytnimetOnnistui [vastaus])
@@ -15,18 +15,21 @@
 (defrecord PaivitaUrakoidenLyhytnimetEpaonnistui [vastaus])
 (defrecord PaivitaValittuUrakkaTyyppi [valittu-urakkatyyppi])
 
+(defn- hae-urakkatyypit [parametrit]
+  (tuck-apurit/post! :hae-urakoiden-nimet parametrit
+    {:onnistui ->HaeUrakoidenLyhytnimetOnnistui
+     :epaonnistui ->HaeUrakoidenLyhytnimetEpaonnistui}))
+
 (extend-protocol tuck/Event
 
   HaeUrakoidenLyhytnimet
   (process-event [{valinnat :valinnat} app]
-    (let [parametrit {:urakkatyyppi (:urakkatyyppi valinnat)}]
-      (println "PARAMETRIT: " parametrit)
-      (println "APP: " app)
-    (-> app
-      (assoc :hae-urakoiden-lyhytnimet-kesken? true)
-      (tuck-apurit/post! :hae-urakoiden-nimet parametrit
-        {:onnistui ->HaeUrakoidenLyhytnimetOnnistui
-         :epaonnistui ->HaeUrakoidenLyhytnimetEpaonnistui}))))
+    (let [parametrit {:urakkatyyppi (:urakkatyyppi valinnat)}
+          _ (hae-urakkatyypit parametrit)
+          _ (println "PARAMETRIT: " parametrit)
+          _ (println "APP: " app)
+          ]                                                 ;->PaivitaUrakoidenLyhytnimetEpaonnistui
+      (assoc app :hae-urakoiden-lyhytnimet-kesken? true)))
 
   HaeUrakoidenLyhytnimetOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -65,5 +68,6 @@
 
   PaivitaValittuUrakkaTyyppi
   (process-event [{valittu-urakkatyyppi :valittu-urakkatyyppi} app]
-    (println "Valittu urakkatyyppi: " valittu-urakkatyyppi)
-    app))
+    (let [_ (hae-urakkatyypit {:urakkatyyppi valittu-urakkatyyppi
+                               :arvo (:arvo valittu-urakkatyyppi)})]
+      (assoc app :valittu-urakkatyyppi valittu-urakkatyyppi))))
