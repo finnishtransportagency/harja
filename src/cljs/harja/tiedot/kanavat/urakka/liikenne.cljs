@@ -691,9 +691,7 @@
   TallennaLiikennetapahtuma
   (process-event [{t :tapahtuma} {:keys [tallennus-kaynnissa?] :as app}]
     (if-not tallennus-kaynnissa?
-      (let [params (->
-                     (tallennusparametrit t)
-                     (assoc :hakuparametrit (hakuparametrit app)))]
+      (let [params (assoc (tallennusparametrit t) :hakuparametrit (hakuparametrit app))]
         (-> app
           (tt/post!
             :tallenna-liikennetapahtuma
