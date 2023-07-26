@@ -5,7 +5,7 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]))
 
-(defonce tila (atom {}))
+(defonce tila (atom {:valittu-urakkatyyppi nil}))
 
 (defrecord HaeUrakoidenLyhytnimet [valinnat])
 (defrecord HaeUrakoidenLyhytnimetOnnistui [vastaus])
@@ -13,6 +13,7 @@
 (defrecord PaivitaUrakoidenLyhytnimet [urakat])
 (defrecord PaivitaUrakoidenLyhytnimetOnnistui [vastaus])
 (defrecord PaivitaUrakoidenLyhytnimetEpaonnistui [vastaus])
+(defrecord PaivitaValittuUrakkaTyyppi [valittu-urakkatyyppi])
 
 (extend-protocol tuck/Event
 
@@ -20,6 +21,7 @@
   (process-event [{valinnat :valinnat} app]
     (let [parametrit {:urakkatyyppi (:urakkatyyppi valinnat)}]
       (println "PARAMETRIT: " parametrit)
+      (println "APP: " app)
     (-> app
       (assoc :hae-urakoiden-lyhytnimet-kesken? true)
       (tuck-apurit/post! :hae-urakoiden-nimet parametrit
@@ -59,4 +61,9 @@
   (process-event [{vastaus :vastaus} app]
     (log/error "Urakoiden lyhytnimien päivitys epäonnistui. Virhe: " vastaus)
     (viesti/nayta-toast! "Urakoiden lyhytnimien päivitys epäonnistui." :varoitus)
-    (assoc app :paivita-urakoiden-lyhytnimet-kesken? false)))
+    (assoc app :paivita-urakoiden-lyhytnimet-kesken? false))
+
+  PaivitaValittuUrakkaTyyppi
+  (process-event [{valittu-urakkatyyppi :valittu-urakkatyyppi} app]
+    (println "Valittu urakkatyyppi: " valittu-urakkatyyppi)
+    app))

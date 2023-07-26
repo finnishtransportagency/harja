@@ -21,9 +21,9 @@
              [harja.pvm :as pvm]
              [harja.domain.oikeudet :as oikeudet]))
 
-(defonce taulukon-virheet (atom nil))
+;(defonce taulukon-virheet (atom nil))
 
-(defn- urakoiden-lyhytnimet* [e! _app]
+(defn- urakoiden-lyhytnimet* [e! app]
   (komp/luo
     (komp/sisaan
       #(e! (tiedot/->HaeUrakoidenLyhytnimet {:urakkatyyppi @yhteiset/valittu-urakkatyyppi})))
@@ -62,7 +62,7 @@
     "paattyneet"
     "Päättyneet"))
 
-(defn urakoiden-lyhytnimet []
+(defn urakoiden-lyhytnimet [e! app]
   (let [
         urakkatyyppi @yhteiset/valittu-urakkatyyppi
         urakkatyypit (keep #(if (not= :vesivayla (:arvo %))
@@ -82,10 +82,21 @@
                                     :format-fn #(if % (urakan-tilan-nimi %) "Kaikki urakat")
                                     :valitse-fn #(reset! urakan-tila %)}
        [nil "meneillaan-tai-tuleva" "paattyneet"]]]
-     [valinnat/urakkatyyppi
+      [:div.label-ja-alasveto
+       [:span.alasvedon-otsikko "Urakktyypit"]
+       [yleiset/livi-pudotusvalikko {:valinta (:valittu-urakkatyyppi app)
+                                     ;:format-fn #(if % (urakan-tilan-nimi %) "Kaikki urakat")
+                                     :valitse-fn #_(do
+                                                    (js/console.log "Valittu arvo: " (pr-str %))
+                                                    #_(reset! yhteiset/valittu-urakkatyyppi %)
+                                                    (e! (tiedot/->PaivitaUrakoidenLyhytnimetEpaonnistui %)))
+                                     #(e! (tiedot/->PaivitaUrakoidenLyhytnimetEpaonnistui %))}
+        urakkatyypit]]
+     #_[valinnat/urakkatyyppi
       yhteiset/valittu-urakkatyyppi
       urakkatyypit
-      #(reset! yhteiset/valittu-urakkatyyppi %)
+      #(e! (tiedot/->PaivitaValittuUrakkaTyyppi %))
+      #_(reset! yhteiset/valittu-urakkatyyppi %)
       ]
      [kentat/tee-kentta {:tyyppi :checkbox
                          :teksti "Näytä vain urakat joilta lyhyt nimi puuttuu"
@@ -95,5 +106,4 @@
      (println "Urakan tila " @urakan-tila)
      (println "Urakkatyyppi " urakkatyyppi)
      (println "Urakkatyypit " urakkatyypit)
-     ;(println str "vain puuttuvat: " (deref vain-puuttuvat?))
   [tuck tiedot/tila urakoiden-lyhytnimet*]]))
