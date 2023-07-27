@@ -66,8 +66,9 @@
                          (e! (paallystys/->HaeKaistat
                                (select-keys rivi tr/paaluvali-avaimet)
                                tr-ajorata))))]
+  [:div
     [grid/muokkaus-grid
-     {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
+     {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true :hyppy-alert? true
       :voi-muokata? voi-muokata? :voi-lisata? false
       :voi-kumota? false
       :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
@@ -111,7 +112,7 @@
       {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
       {:otsikko "Aet" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi) :korosta-hyppy (fn [] kohdeosat-atom)} 
+       :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi) :korosta-hyppy (fn [] kohdeosat-atom)}
       {:otsikko "Losa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuosa :validoi (:tr-loppuosa validointi)}
       {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
@@ -120,9 +121,9 @@
        :muokattava? (constantly false)
        :hae (fn [rivi]
               (tr/laske-tien-pituus (into {}
-                                          (map (juxt key (comp :pituus val)))
-                                          (get tr-osien-pituudet (:tr-numero rivi)))
-                                    rivi))}
+                                      (map (juxt key (comp :pituus val)))
+                                      (get tr-osien-pituudet (:tr-numero rivi)))
+                rivi))}
       {:otsikko "Pääl\u00ADlyste" :nimi :materiaali :leveys (:materiaali pot2-yhteiset/gridin-leveydet) :tayta-alas? pot2-tiedot/tayta-alas?-fn
        :tyyppi :valinta
        :valinnat-fn (fn [rivi]
@@ -131,7 +132,7 @@
                             massat (or massat [])]
                         (if massa-valinnainen?
                           (cons {::pot2-domain/massa-id nil :tyhja "ei päällystettä"}
-                                massat)
+                            massat)
                           massat)))
        :valinta-arvo ::pot2-domain/massa-id
        :linkki-fn (fn [arvo]
@@ -158,9 +159,9 @@
        :fmt #(fmt/desimaaliluku-opt % 1)
        :hae (fn [rivi]
               (when-let [pituus (tr/laske-tien-pituus (into {}
-                                                            (map (juxt key (comp :pituus val)))
-                                                            (get tr-osien-pituudet (:tr-numero rivi)))
-                                                      rivi)]
+                                                        (map (juxt key (comp :pituus val)))
+                                                        (get tr-osien-pituudet (:tr-numero rivi)))
+                                  rivi)]
                 (when (:leveys rivi)
                   (* (:leveys rivi) pituus))))
        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)}
@@ -174,4 +175,6 @@
       {:otsikko "" :nimi :kulutuspaallyste-toiminnot :tyyppi :reagent-komponentti :leveys (:toiminnot pot2-yhteiset/gridin-leveydet)
        :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros voi-muokata? ohjauskahva]
        :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
-     kohdeosat-atom]))
+     kohdeosat-atom]
+     
+     [:div.kulutus-pituus-yhteensa "Pituus yhteensä: 12 345 m"]]))

@@ -20,9 +20,13 @@
 
 (defn- muokkauspaneeli [{:keys [otsikko voi-muokata? voi-kumota? muokatut virheet varoitukset huomautukset
                                 skeema peru! voi-lisata? ohjaus uusi-id opts paneelikomponentit historia
-                                virhe-viesti custom-toiminto]}]
+                                virhe-viesti custom-toiminto hyppy-alert?]}]
   [:div.panel-heading
    (when otsikko [:h2.panel-title otsikko])
+   (when hyppy-alert?
+     [:div.kulutus-hyppy-info
+      [:div.kulutus-hyppy-ikoni (ikonit/alert-svg)]
+      [:div.kulutus-hyppy-teksti "Kulutuskerros ei ole yhtenäinen (1 hyppy)"]])
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])
    (when (not= false voi-muokata?)
      [:span.pull-right.muokkaustoiminnot
@@ -34,17 +38,17 @@
         [:button.nappi-toissijainen
          {:disabled (empty? @historia)
           :on-click #(do (.stopPropagation %)
-                         (.preventDefault %)
-                         (peru! muokatut virheet varoitukset huomautukset skeema))}
+                       (.preventDefault %)
+                       (peru! muokatut virheet varoitukset huomautukset skeema))}
          (ikonit/peru) " Kumoa"])
       (when (not= false voi-lisata?)
         [:button.grid-lisaa
          {:class (or (:uusi-rivi-nappi-luokka opts) "nappi-toissijainen")
           :on-click #(do (.preventDefault %)
-                         (lisaa-rivi! ohjaus
-                                      (if uusi-id
-                                        {:id uusi-id}
-                                        {})))}
+                       (lisaa-rivi! ohjaus
+                         (if uusi-id
+                           {:id uusi-id}
+                           {})))}
          (ikonit/livicon-plus) " " (or (:lisaa-rivi opts) "Lisää rivi")])
       (when paneelikomponentit
         (map-indexed (fn [i komponentti]
@@ -737,7 +741,7 @@
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto
                     sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus vetolaatikko-optiot disabloi-autocomplete?
-                    piilota-table-header? piilota-rivi korostusrajaus?] :as opts} skeema muokatut]
+                    piilota-table-header? piilota-rivi korostusrajaus? hyppy-alert?] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                skeema (skeema/laske-sarakkeiden-leveys
                         (filterv some? skeema))
@@ -763,7 +767,7 @@
                                 :varoituket varoitukset :huomautukset huomautukset
                                 :skeema skeema :voi-lisata? voi-lisata? :ohjaus ohjaus :uusi-id uusi-id
                                 :opts opts :paneelikomponentit paneelikomponentit :peru! peru!
-                                :virhe-viesti virhe-viesti :custom-toiminto custom-toiminto}])
+                                :virhe-viesti virhe-viesti :custom-toiminto custom-toiminto :hyppy-alert? hyppy-alert?}])
             [:div.panel-body
              [:table.grid (merge {} (when korostusrajaus? {:class "grid-korostettu"}))
               (when-not (true? piilota-table-header?)
