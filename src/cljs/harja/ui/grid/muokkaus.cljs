@@ -24,9 +24,13 @@
   [:div.panel-heading
    (when otsikko [:h2.panel-title otsikko])
    (when hyppy-alert?
-     [:div.kulutus-hyppy-info
-      [:div.kulutus-hyppy-ikoni (ikonit/alert-svg)]
+     [:div.kulutus-hyppy-info.vahvistamaton
+      [:div.kulutus-hyppy-ikoni-alert (ikonit/alert-svg)]
       [:div.kulutus-hyppy-teksti "Kulutuskerros ei ole yhtenäinen (1 hyppy)"]])
+   (when hyppy-alert?
+     [:div.kulutus-hyppy-info
+      [:div.kulutus-hyppy-ikoni-ok (ikonit/harja-icon-status-completed)]
+      [:div.kulutus-hyppy-teksti "Kulutuskerros on yhtenäinen (ei hyppyjä)"]])
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])
    (when (not= false voi-muokata?)
      [:span.pull-right.muokkaustoiminnot
