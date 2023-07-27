@@ -153,8 +153,8 @@
   <selite>tietOvatjaisiaJamarkia</selite>
   </seliteet>
   <luokittelu>
-  <aihe>1</aihe>
-  <tarkenne>101</tarkenne>
+  <aihe>900</aihe>
+  <tarkenne>9001</tarkenne>
   </luokittelu>
   </harja:ilmoitus>")))
 
@@ -203,8 +203,8 @@
   <selite>aurausvallitNakemaesteena</selite>
   </seliteet>
   <luokittelu>
-  <aihe>1</aihe>
-  <tarkenne>1</tarkenne>
+  <aihe>900</aihe>
+  <tarkenne>9001</tarkenne>
   </luokittelu>
   </harja:ilmoitus>")))
 
