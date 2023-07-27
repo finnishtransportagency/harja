@@ -79,6 +79,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
                              (str "mailto:" vastausosoite "?subject=" subject "&body=" body)))
 
 (defn- viesti [vastausosoite otsikko ilmoitus]
+(defn- viesti [db vastausosoite otsikko ilmoitus]
   (html
     [:div
      [:table
@@ -105,9 +106,9 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
        [:div {:style "padding-top: 10px;"}
         (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))])]))
 
-(defn otsikko-ja-viesti [vastausosoite ilmoitus]
+(defn otsikko-ja-viesti [db vastausosoite ilmoitus]
   (let [otsikko (otsikko ilmoitus)
-        viesti (viesti vastausosoite otsikko ilmoitus)]
+        viesti (viesti db vastausosoite otsikko ilmoitus)]
     [otsikko viesti]))
 
 (defn viestin-kuittaustyyppi [sisalto]
