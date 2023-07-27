@@ -141,7 +141,8 @@
                                                   :loppuetaisyys (:tr-loppuetaisyys eka-kohde)}
                                 nakokulma-urakka-nimi (case nakokulma
                                                         :paallystys (:paallystysurakka-nimi eka-kohde)
-                                                        :tiemerkinta (:tiemerkintaurakka-nimi eka-kohde))]
+                                                        :tiemerkinta (:tiemerkintaurakka-nimi eka-kohde))
+                                nakokulma-urakka-nimi (html-tyokalut/sanitoi nakokulma-urakka-nimi)]
                             (if (> (count kohteet) 1)
                               (format "Urakan '%s' kohteita merkitty tiemerkityksi"
                                       nakokulma-urakka-nimi)

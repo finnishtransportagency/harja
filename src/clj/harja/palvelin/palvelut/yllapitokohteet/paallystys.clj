@@ -609,11 +609,11 @@
           hallintayksikko-id (:id (first (urakat-q/hae-urakan-ely db urakka-id)))
           viesti (sanitoi
                    (format "Urakan %s kohteen %s päällystysilmoitus %s"
-                           urakka-nimi
-                           (:nimi paallystyskohde)
-                           (if sposti-urakan-valvojalle?
-                             "valmis käsiteltäväksi"
-                             (str "on " (if (= "hylatty" uusi-paatos) "hylätty" "hyväksytty")))))
+                     (sanitoi urakka-nimi)
+                     (sanitoi (:nimi paallystyskohde))
+                     (if sposti-urakan-valvojalle?
+                       "valmis käsiteltäväksi"
+                       (str "on " (if (= "hylatty" uusi-paatos) "hylätty" "hyväksytty")))))
           url (str "https://extranet.vayla.fi/harja#urakat/kohdeluettelo-paallystys/paallystysilmoitukset?"
                    "&hy=" hallintayksikko-id
                    "&u=" urakka-id)
