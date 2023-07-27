@@ -69,8 +69,42 @@
     [:td {:class luokat}
      arvo]))
 
+(defn- tunnista-kulutus-hypyt
+  [y data id]
+  (when (> (count data) (dec y))
+    (let [rivi (get-in data [y])
+          rivi-id (:kohdeosa-id rivi)
+          rivi-aet (:tr-alkuetaisyys rivi)
+          rivi-let (:tr-loppuetaisyys rivi)
+          edellinen-rivi (get-in data [(dec y)])
+          edellinen-rivi-let (:tr-loppuetaisyys edellinen-rivi)
+          seuraava-rivi (get-in data [(inc y)])
+          seuraava-rivi-aet (:tr-alkuetaisyys seuraava-rivi)
+          
+          kulukerros-hyppy (cond
+                             ;; Seuraava ja tämä rivi olemassa
+                             ;; sekä seuraavan rivin alkuetäisyys on isompi kun tämän rivin loppuetäisyys = hyppy
+                             ;; (korosta LET)
+                             (and
+                               (= rivi-id id) rivi-aet seuraava-rivi-aet
+                               (> seuraava-rivi-aet rivi-let))
+                             1
+                             ;; Tämä rivi ja edellinen rivi olemassa
+                             ;; sekä tämän rivin alkuetäisyys isompi kuin edellisen loppuetäisyys = hyppy 
+                             ;; (korosta AET)
+                             (and
+                               (= rivi-id id) rivi-aet edellinen-rivi-let
+                               (> rivi-aet edellinen-rivi-let))
+                             2
+                             ;; Ei hyppyjä
+                             :else false)]
+      (if kulukerros-hyppy
+        kulukerros-hyppy
+        (recur
+          (inc y) data id)))))
+
 (defn- muokkauselementin-tila
-  [{:keys [aseta nimi valinta-arvo hae elementin-id]}
+  [{:keys [aseta nimi valinta-arvo hae elementin-id korosta-hyppy]}
    {:keys [muokkaa! muokatut-atom virheet varoitukset huomautukset skeema id i rivi gridin-tietoja
            sisalto-kun-rivi-disabloitu]}
    rivi-disabloitu? kentan-virheet kentan-varoitukset kentan-huomautukset
@@ -79,16 +113,23 @@
   (let [grid-tilan-muokkaus-fn (atom (fn [uusi]
                                        (if aseta
                                          (muokkaa! muokatut-atom virheet varoitukset huomautukset skeema
-                                                   id (fn [rivi]
-                                                        (aseta rivi uusi)))
+                                           id (fn [rivi]
+                                                (aseta rivi uusi)))
                                          (muokkaa! muokatut-atom virheet varoitukset huomautukset skeema
-                                                   id assoc nimi uusi))))
+                                           id assoc nimi uusi))))
         data-muokkaus-fn (atom (fn [uusi]
                                  (let [uusi (if valinta-arvo
                                               (valinta-arvo uusi)
                                               uusi)]
                                    (@grid-tilan-muokkaus-fn uusi))))
         arvo-atom (atom ((or hae #(get % nimi)) rivi))
+        gridin-data (if (some? korosta-hyppy) (korosta-hyppy arvo-atom) false)
+        korosta-hyppy? (if gridin-data (tunnista-kulutus-hypyt 0 @gridin-data (:kohdeosa-id  rivi)) false)
+        korosta-hyppy? (if (and
+                             korosta-hyppy?
+                             (or
+                               (and (= nimi :tr-loppuetaisyys) (= korosta-hyppy? 1))
+                               (and (= nimi :tr-alkuetaisyys) (= korosta-hyppy? 2)))) true false)
         fokus? (atom false)
         fokus-elementille #(reset! fokus? true)
         fokus-pois-elementilta #(let [uusi-fokusoitu-komponentti (.-relatedTarget %)
@@ -174,6 +215,7 @@
                                     tasaus-luokka
                                     (grid-yleiset/tiivis-tyyli skeema)
                                     (cond
+                                      korosta-hyppy? " korostettu-muokkaus-grid-hyppy"
                                       (not (empty? kentan-virheet)) " sisaltaa-virheen"
                                       (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
                                       (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))
@@ -224,10 +266,11 @@
                                         @data-muokkaus-fn]
                                        ^{:key kentan-key}
                                        [tee-kentta (assoc sarake :on-focus fokus-elementille
-                                                                 :on-blur fokus-pois-elementilta
-                                                                 :disabloi-autocomplete? disabloi-autocomplete?
-                                                                 :disabled? (not voi-muokata?)
-                                                                 :elementin-id elementin-id)
+                                                     :on-blur fokus-pois-elementilta
+                                                     :korosta-hyppy? korosta-hyppy?
+                                                     :disabloi-autocomplete? disabloi-autocomplete?
+                                                     :disabled? (not voi-muokata?)
+                                                     :elementin-id elementin-id)
                                         arvo-atom])]
                 :else [nayta-arvo (assoc sarake :index i :muokataan? false)
                        (vain-luku-atomina arvo)])]

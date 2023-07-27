@@ -289,7 +289,7 @@
       (komp/nimi "Numerokenttä")
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
       (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? vaadi-negatiivinen? toiminta-f on-blur on-focus
-                   disabled? vayla-tyyli? virhe? yksikko validoi-kentta-fn salli-whitespace? disabloi-autocomplete? muokattu?] :as kentta} data]
+                   disabled? vayla-tyyli? virhe? yksikko validoi-kentta-fn salli-whitespace? disabloi-autocomplete? muokattu? korosta-hyppy?] :as kentta} data]
         (let [nykyinen-data @data
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data) salli-whitespace?)
@@ -317,12 +317,14 @@
           [:span.numero
            [:input {:id id
                     :class (cond-> nil
-                                   (and lomake?
-                                        (not vayla-tyyli?)) (str "form-control ")
-                                   vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
-                                   disabled? (str "disabled")
-                                   input-luokka (str " " input-luokka)
-                                   veda-oikealle? (str " veda-oikealle"))
+                             (and lomake?
+                               (not vayla-tyyli?)) (str "form-control ")
+                             vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
+                             disabled? (str "disabled")
+                             input-luokka (str " " input-luokka)
+                             veda-oikealle? (str " veda-oikealle")
+                             ;; Piilota inputin tausta sekä borderit jotta parent elementin (td) korostus näkyy
+                             korosta-hyppy? (str " lapinakyva-tausta-muokkaus-input"))
                     :style (when (and veda-oikealle? yksikko)
                              {:padding-right (str "calc(19px + " (count yksikko) "ch")})
                     :type "text"
@@ -332,9 +334,10 @@
                     :size (or koko nil)
                     :on-key-down (or on-key-down nil)
                     :on-focus #(when on-focus (on-focus))
-                    :on-blur #(do (when on-blur
-                                    (on-blur %))
-                                  (reset! teksti nil))
+                    :on-blur #(do
+                                (when on-blur
+                                  (on-blur %))
+                                (reset! teksti nil))
                     :value nykyinen-teksti
                     :on-change #(let [v (normalisoi-numero (-> % .-target .-value) salli-whitespace?)
                                       v (cond
@@ -347,14 +350,14 @@
                                           :default v)]
                                   (when (and
                                           (or (nil? validoi-kentta-fn)
-                                              (validoi-kentta-fn v))
+                                            (validoi-kentta-fn v))
                                           (or (= v "")
-                                              (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                              (re-matches (if kokonaisluku?
-                                                            kokonaisluku-re-pattern
-                                                            desimaaliluku-re-pattern)
+                                            (when-not vaadi-ei-negatiivinen? (= v "-"))
+                                            (re-matches (if kokonaisluku?
+                                                          kokonaisluku-re-pattern
+                                                          desimaaliluku-re-pattern)
                                                 ;; Matchataan whitespacesta huolimatta
-                                                (str/replace v #"\s" ""))))
+                                              (str/replace v #"\s" ""))))
                                     (reset! teksti v)
 
                                     ;; Numeron parsimista varten pitää poistaa whitespace,
