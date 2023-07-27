@@ -20,7 +20,7 @@
 
 (defn- muokkauspaneeli [{:keys [otsikko voi-muokata? voi-kumota? muokatut virheet varoitukset huomautukset
                                 skeema peru! voi-lisata? ohjaus uusi-id opts paneelikomponentit historia
-                                virhe-viesti custom-toiminto hyppyjen-maara]}]
+                                virhe-viesti custom-toiminto nayta-hypyt? hyppyjen-maara]}]
   [:div.panel-heading
    (when otsikko [:h2.panel-title otsikko])
    (if hyppyjen-maara
@@ -31,9 +31,10 @@
                                                                       (str "(" hyppyjen-maara " hyppyä)")
                                                                       :else
                                                                       (str "(" hyppyjen-maara " hyppy)"))]]
-     [:div.kulutus-hyppy-info
-      [:div.kulutus-hyppy-ikoni-ok (ikonit/harja-icon-status-completed)]
-      [:div.kulutus-hyppy-teksti "Kulutuskerros on yhtenäinen (ei hyppyjä)"]])
+     (when nayta-hypyt?
+       [:div.kulutus-hyppy-info
+        [:div.kulutus-hyppy-ikoni-ok (ikonit/harja-icon-status-completed)]
+        [:div.kulutus-hyppy-teksti "Kulutuskerros on yhtenäinen (ei hyppyjä)"]]))
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])
    (when (not= false voi-muokata?)
      [:span.pull-right.muokkaustoiminnot
@@ -748,7 +749,7 @@
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto
                     sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus vetolaatikko-optiot disabloi-autocomplete?
-                    piilota-table-header? piilota-rivi korostusrajaus? hyppyjen-maara] :as opts} skeema muokatut]
+                    piilota-table-header? piilota-rivi korostusrajaus? nayta-hypyt? hyppyjen-maara] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                skeema (skeema/laske-sarakkeiden-leveys
                         (filterv some? skeema))
@@ -774,7 +775,8 @@
                                 :varoituket varoitukset :huomautukset huomautukset
                                 :skeema skeema :voi-lisata? voi-lisata? :ohjaus ohjaus :uusi-id uusi-id
                                 :opts opts :paneelikomponentit paneelikomponentit :peru! peru!
-                                :virhe-viesti virhe-viesti :custom-toiminto custom-toiminto :hyppyjen-maara hyppyjen-maara}])
+                                :virhe-viesti virhe-viesti :custom-toiminto custom-toiminto 
+                                :nayta-hypyt? nayta-hypyt? :hyppyjen-maara hyppyjen-maara}])
             [:div.panel-body
              [:table.grid (merge {} (when korostusrajaus? {:class "grid-korostettu"}))
               (when-not (true? piilota-table-header?)
