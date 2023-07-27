@@ -16,8 +16,7 @@
             [harja.tyokalut.html :refer [sanitoi] :as html-tyokalut]
             [harja.geo :as geo]
             [harja.fmt :as fmt]
-            [harja.domain.tierekisteri :as tierekisteri])
-  (:import (org.postgis PGgeometry)))
+            [harja.domain.tierekisteri :as tierekisteri]))
 
 (def ^{:doc "Ilmoituksen otsikon regex pattern, josta urakka ja ilmoitusid tunnistetaan" :const true}
 otsikko-pattern #".*\#\[(\d+)/(\d+)\].*")
@@ -110,8 +109,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
      ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]]))
 
 (defn- aiheen-sisaltavat-yleiset-tiedot [db ilmoitus]
-  (let [aiheet-ja-tarkenteet (palautevayla-kyselyt/hae-aiheet-ja-tarkenteet db)
-        _ (println "aiheet-ja-tarkenteet: " (pr-str aiheet-ja-tarkenteet))]
+  (let [aiheet-ja-tarkenteet (palautevayla-kyselyt/hae-aiheet-ja-tarkenteet db)]
     [:div
      (html-tyokalut/tietoja
        [["Urakka" (:urakkanimi ilmoitus)]
@@ -133,6 +131,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
         ["Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
         [(when (:toimenpiteet-aloitettu ilmoitus) "Toimenpiteet aloitettu ")
          (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))]])]))
+
 (defn- viesti [db vastausosoite otsikko ilmoitus]
   (html
     [:div
