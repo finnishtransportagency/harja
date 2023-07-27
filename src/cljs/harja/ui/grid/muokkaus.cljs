@@ -23,7 +23,7 @@
                                 virhe-viesti custom-toiminto nayta-hypyt? hyppyjen-maara]}]
   [:div.panel-heading
    (when otsikko [:h2.panel-title otsikko])
-   (if hyppyjen-maara
+   (if (> hyppyjen-maara 0)
      [:div.kulutus-hyppy-info.vahvistamaton
       [:div.kulutus-hyppy-ikoni-alert (ikonit/alert-svg)]
       [:div.kulutus-hyppy-teksti "Kulutuskerros ei ole yhtenäinen " (cond
@@ -94,6 +94,13 @@
           seuraava-rivi-aet (:tr-alkuetaisyys seuraava-rivi)
           
           kulukerros-hyppy (cond
+                             ;; Korosta molemmat aet/let (hyppy tällä ja edellisellä rivillä)
+                             (and
+                               (= rivi-id id) rivi-aet seuraava-rivi-aet
+                               (> seuraava-rivi-aet rivi-let)
+                               rivi-aet edellinen-rivi-let
+                               (> rivi-aet edellinen-rivi-let))
+                             3
                              ;; Seuraava ja tämä rivi olemassa
                              ;; sekä seuraavan rivin alkuetäisyys on isompi kun tämän rivin loppuetäisyys = hyppy
                              ;; (korosta LET)
@@ -138,9 +145,13 @@
         gridin-data (if (some? korosta-hyppy) (korosta-hyppy arvo-atom) false)
         korosta-hyppy? (if gridin-data (tunnista-kulutus-hypyt 0 @gridin-data (:kohdeosa-id  rivi)) false)
         korosta-hyppy? (if (and
-                             korosta-hyppy?
+                             korosta-hyppy? korosta-hyppy
                              (or
+                               ;; Korosta molemmat
+                               (= korosta-hyppy? 3)
+                               ;; Korosta vain alkuet
                                (and (= nimi :tr-loppuetaisyys) (= korosta-hyppy? 1))
+                               ;; Korosta vain loppuet
                                (and (= nimi :tr-alkuetaisyys) (= korosta-hyppy? 2)))) true false)
         fokus? (atom false)
         fokus-elementille #(reset! fokus? true)
@@ -288,9 +299,11 @@
                        (vain-luku-atomina arvo)])]
              (cond
                (= tyyppi :komponentti)
-               [:td.ei-muokattava {:class (y/luokat "ei-muokattava"
-                                                    tasaus-luokka
-                                                    (grid-yleiset/tiivis-tyyli skeema))}
+               [:td {:class (y/luokat
+                              "ei-muokattava"
+                              tasaus-luokka
+                              (grid-yleiset/tiivis-tyyli skeema)
+                              (when korosta-hyppy? " korostettu-muokkaus-grid-hyppy"))}
                 (apply komponentti rivi {:index i :muokataan? false} komponentti-args)]
 
                ;; POT2 myötä tullut uusi komponentti "linkki ja alasvetovalinta" halusi pitää linkin
@@ -299,18 +312,22 @@
                  (= tyyppi :valinta)
                  (:linkki-fn sarake)
                  (:linkki-icon sarake))
-               [:td.ei-muokattava
+               [:td {:class (y/luokat
+                              "ei-muokattava"
+                              (when korosta-hyppy? " korostettu-muokkaus-grid-hyppy"))}
                 [tee-kentta (assoc sarake :on-focus fokus-elementille
-                                          :on-blur fokus-pois-elementilta
-                                          :disabled? (not voi-muokata?)
-                                          :disabloi-autocomplete? disabloi-autocomplete?
-                                          :elementin-id elementin-id)
+                              :on-blur fokus-pois-elementilta
+                              :disabled? (not voi-muokata?)
+                              :disabloi-autocomplete? disabloi-autocomplete?
+                              :elementin-id elementin-id)
                  arvo-atom]]
 
                :else 
-               [ei-muokattava-elementti (y/luokat "ei-muokattava"
+               [ei-muokattava-elementti (y/luokat 
+                                          "ei-muokattava"
                                           tasaus-luokka
-                                          (grid-yleiset/tiivis-tyyli skeema))
+                                          (grid-yleiset/tiivis-tyyli skeema)
+                                          (when korosta-hyppy? " korostettu-muokkaus-grid-hyppy"))
                 fmt
                 tyyppi
                 (cond
