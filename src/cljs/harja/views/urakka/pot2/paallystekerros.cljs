@@ -85,7 +85,7 @@
                                tr-ajorata))))]
     [:div
      [grid/muokkaus-grid
-      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true :hyppy-alert? true
+      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true :hyppyjen-maara hyppyjen-maara
        :voi-muokata? voi-muokata? :voi-lisata? false
        :voi-kumota? false
        :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
