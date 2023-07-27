@@ -79,6 +79,19 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
                              (str "mailto:" vastausosoite "?subject=" subject "&body=" body)))
 
 (defn- viesti [vastausosoite otsikko ilmoitus]
+(defn- parsi-kuvalinkit-sahkopostiin [kuvat]
+  (when-not (empty? kuvat)
+     [:table
+      [:tr
+       [:th "Kuvalinkit:"] [:th]]
+      (doall (map-indexed
+                      (fn [indeksi linkki]
+                        [:tr
+                         [:td]
+                         [:td
+                          {:key (str (hash linkki) "-" indeksi)}
+                          [:a {:href linkki} (str "Kuvalinkki " (inc indeksi))]]])
+                      kuvat))]))
 (defn- viesti [db vastausosoite otsikko ilmoitus]
   (html
     [:div
@@ -96,6 +109,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
          ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
          ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
          ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]])]
+     [:div (parsi-kuvalinkit-sahkopostiin (:kuvat ilmoitus))]
      [:blockquote (sanitoi (:lisatieto ilmoitus))]
      (when-let [sijainti (:sijainti ilmoitus)]
        (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
