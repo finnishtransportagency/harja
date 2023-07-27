@@ -55,11 +55,28 @@
                                                      paallekkyydet}
                                                     (not alikohde?))))
 
+(defn- laske-kulutuskerroksen-hypyt [data i hypyt]
+  (if (> (count data) (dec i))
+    (let [rivi (get-in data [i])
+          rivi-aet (:tr-alkuetaisyys rivi)
+          rivi-let (:tr-loppuetaisyys rivi)
+          seuraava-rivi (get-in data [(inc i)])
+          seuraava-rivi-aet (:tr-alkuetaisyys seuraava-rivi)
+          hyppy-olemassa? (if (and rivi-aet seuraava-rivi-aet
+                                (> seuraava-rivi-aet rivi-let))
+                            true
+                            false)]
+      (if hyppy-olemassa?
+        (recur data (inc i) (inc hypyt))
+        (recur data (inc i) hypyt)))
+    hypyt))
+
 (defn paallystekerros
   "Alikohteiden päällystekerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet ohjauskahvat] :as app}
    {:keys [massat materiaalikoodistot validointi virheet-atom varoitukset-atom]} kohdeosat-atom]
-  (let [voi-muokata? (not= :lukittu (:tila perustiedot))
+  (let [hyppyjen-maara (laske-kulutuskerroksen-hypyt @kohdeosat-atom 0 0)
+        voi-muokata? (not= :lukittu (:tila perustiedot))
         ohjauskahva (:paallystekerros ohjauskahvat)
         on-rivi-blur (fn [rivi]
                        (let [{:keys [tr-ajorata]} rivi]
