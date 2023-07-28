@@ -12,7 +12,7 @@
     (do
       (log/info "Lähetetään ilmoitus (id: " id ") sähköpostilla osoitteeseen: " vastaanottaja)
       (let [lahettaja (sahkoposti/vastausosoite email)
-            [otsikko viesti] (tloik-sahkoposti/otsikko-ja-viesti lahettaja ilmoitus)]
+            [otsikko viesti] (tloik-sahkoposti/otsikko-ja-viesti db lahettaja ilmoitus)]
         (try
          (sahkoposti/laheta-viesti! email lahettaja vastaanottaja otsikko viesti {"X-Correlation-ID" id})
          (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide

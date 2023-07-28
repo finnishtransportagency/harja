@@ -163,7 +163,7 @@ SELECT
   otsikko,
   ilmoitustyyppi,
   selitteet,
-  CASE WHEN array_length(kuvat, 1) > 0 THEN kuvat ELSE ARRAY['']::TEXT[] END AS kuvat,
+  kuvat,
   "emon-ilmoitusid",
   i.aihe AS aihe_id,
   pa.nimi AS aihe_nimi,

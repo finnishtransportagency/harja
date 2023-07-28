@@ -8,7 +8,9 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset]
+            [harja.kyselyt.palautevayla :as palautevayla-kyselyt]
             [harja.domain.tieliikenneilmoitukset :as ilm]
+            [harja.domain.palautevayla-domain :as palautevayla]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [harja.tyokalut.html :refer [sanitoi] :as html-tyokalut]
@@ -78,23 +80,67 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
   (html-tyokalut/nappilinkki napin-teksti
                              (str "mailto:" vastausosoite "?subject=" subject "&body=" body)))
 
-(defn- viesti [vastausosoite otsikko ilmoitus]
+(defn- parsi-kuvalinkit-sahkopostiin [kuvat]
+  (when-not (empty? kuvat)
+     [:table
+      [:tr
+       [:th "Kuvalinkit:"] [:th]]
+      (doall (map-indexed
+                      (fn [indeksi linkki]
+                        [:tr
+                         [:td]
+                         [:td
+                          {:key (str (hash linkki) "-" indeksi)}
+                          [:a {:href linkki} (str "Kuvalinkki " (inc indeksi))]]])
+                      kuvat))]))
+
+(defn- selitteen-sisaltavat-yleiset-tiedot [ilmoitus]
+  (html-tyokalut/tietoja
+    [["Urakka" (:urakkanimi ilmoitus)]
+     ["Tunniste" (:tunniste ilmoitus)]
+     ["Ilmoitettu" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
+     ["Lähetetty HARJAan" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
+     ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
+     ["Otsikko" (:otsikko ilmoitus)]
+     ["Tierekisteriosoite" (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus) {:teksti-tie? false})]
+     ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
+     ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
+     ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
+     ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]]))
+
+(defn- aiheen-sisaltavat-yleiset-tiedot [db ilmoitus]
+  (let [aiheet-ja-tarkenteet (palautevayla-kyselyt/hae-aiheet-ja-tarkenteet db)]
+    [:div
+     (html-tyokalut/tietoja
+       [["Urakka" (:urakkanimi ilmoitus)]
+        ["Id" (:ilmoitusid ilmoitus)]
+        ["Tunniste" (:tunniste ilmoitus)]
+        ["Ilmoitettu" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
+        ["Lähetetty HARJAan" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
+        ["Yhteydenottopyyntö " (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")]
+        ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
+        ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
+        ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]
+        ["Aihe " (palautevayla/hae-aihe aiheet-ja-tarkenteet (get-in ilmoitus [:luokittelu :aihe]))]
+        ["Tarkenne " (palautevayla/hae-tarkenne aiheet-ja-tarkenteet (get-in ilmoitus [:luokittelu :tarkenne]))]
+        [(when (:selitteet ilmoitus) "Selitteet")
+         (when (:selitteet ilmoitus) (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus))))]
+        ["Otsikko " (:otsikko ilmoitus)]
+        ["Tierekisteriosoite" (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus) {:teksti-tie? false})]
+        ["Kuvaus " (when (:lisatieto ilmoitus) (:lisatieto ilmoitus))]
+        ["Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
+        [(when (:toimenpiteet-aloitettu ilmoitus) "Toimenpiteet aloitettu ")
+         (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))]])]))
+
+(defn- viesti [db vastausosoite otsikko ilmoitus]
   (html
     [:div
      [:table
-      (html-tyokalut/tietoja
-        [["Urakka" (:urakkanimi ilmoitus)]
-         ["Tunniste" (:tunniste ilmoitus)]
-         ["Ilmoitettu" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
-         ["Lähetetty HARJAan" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
-         ;;TODO: ["Tiedotettu urakkaan" (:valitetty-urakkaan ilmoitus)]
-         ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
-         ["Otsikko" (:otsikko ilmoitus)]
-         ["Tierekisteriosoite" (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus) {:teksti-tie? false})]
-         ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
-         ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
-         ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
-         ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]])]
+      (if-not (get-in ilmoitus [:luokittelu :aihe])
+        (selitteen-sisaltavat-yleiset-tiedot ilmoitus)
+        (aiheen-sisaltavat-yleiset-tiedot db ilmoitus))]
+
+     [:div (parsi-kuvalinkit-sahkopostiin (:kuvat ilmoitus))]
      [:blockquote (sanitoi (:lisatieto ilmoitus))]
      (when-let [sijainti (:sijainti ilmoitus)]
        (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
@@ -105,9 +151,9 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
        [:div {:style "padding-top: 10px;"}
         (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))])]))
 
-(defn otsikko-ja-viesti [vastausosoite ilmoitus]
+(defn otsikko-ja-viesti [db vastausosoite ilmoitus]
   (let [otsikko (otsikko ilmoitus)
-        viesti (viesti vastausosoite otsikko ilmoitus)]
+        viesti (viesti db vastausosoite otsikko ilmoitus)]
     [otsikko viesti]))
 
 (defn viestin-kuittaustyyppi [sisalto]
