@@ -114,7 +114,7 @@
                                (> seuraava-rivi-aet rivi-let)
                                (> rivi-aet edellinen-rivi-let))
                              3
-                             ;; Seuraava ja tämä rivi olemassa sekä molemmilla sama kaista&ajorata
+                             ;; Seuraava ja tämä rivi olemassa sekä molemmilla sama tie&ajorata
                              ;; Seuraavan rivin alkuetäisyys on isompi kun tämän rivin loppuetäisyys = hyppy
                              ;; (korosta LET)
                              (and
@@ -124,7 +124,7 @@
                                (= rivi-ajorata seuraava-rivi-ajorata)
                                (> seuraava-rivi-aet rivi-let))
                              1
-                             ;; Tämä rivi ja edellinen rivi olemassa sekä molemmilla sama kaista&ajorata
+                             ;; Tämä rivi ja edellinen rivi olemassa sekä molemmilla sama tie&ajorata
                              ;; Tämän rivin alkuetäisyys isompi kuin edellisen loppuetäisyys = hyppy 
                              ;; (korosta AET)
                              (and
