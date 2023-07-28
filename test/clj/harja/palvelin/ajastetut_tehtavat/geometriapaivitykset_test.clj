@@ -112,7 +112,7 @@
           testitietokanta
           "file:///Users/maaritla/Downloads/Turvalaite-testi/Turvalaitteet.shp")))))
 
-(def aja-valaistusurakoiden-paivitys
+(defn aja-valaistusurakoiden-paivitys
   "REPL-testiajofunktio - Tämän saa toimimaan, kunhan valaistusurakoiden tiedot
   on ensin haettu 'valaistusurakoiden_osoite' muuttujaan tallennetusta urlista esim selaimella.
   Pura saapuva zip ja kutsu sitten tätä."
