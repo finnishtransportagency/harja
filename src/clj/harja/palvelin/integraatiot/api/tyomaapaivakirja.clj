@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.api.tyomaapaivakirja
   "Työmaapäiväkirjan hallinta API:n kautta. Alkuun kirjaus ja päivitys mahdollisuudet"
-  (:require [com.stuartsierra.component :as component]
+  (:require [clojure.string :as str]
+            [com.stuartsierra.component :as component]
             [clojure.spec.alpha :as s]
             [taoensso.timbre :as log]
             [compojure.core :refer [POST PUT]]
@@ -17,6 +18,7 @@
             [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
+(def virheet (atom []))
 (s/def ::urakka-id #(and (integer? %) (pos? %)))
 
 (defn- tarkista-parametrit [parametrit]
@@ -28,186 +30,177 @@
       {:koodi virheet/+puutteelliset-parametrit+
        :viesti (format "Urakka-id muodossa: %s. Anna muodossa: 1" (:id parametrit))})))
 
-(defn validoi-saa [saatiedot]
-  (doseq [s saatiedot
-          :let [saa (:saatieto s)]]
-    (when (or (< (:ilman-lampotila saa) -80) (> (:ilman-lampotila saa) 80))
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Ilman lämpötila täytyy olla väliltä -80 - 80. Oli nyt %s." (:ilman-lampotila saa))}))
+(defn validoi-saa [saatiedot virheet]
+  (reduce
+    (fn [virheet s]
+      (let [saa (:saatieto s)
+            virheet (if (or (< (:ilman-lampotila saa) -80) (> (:ilman-lampotila saa) 80))
+                      (conj virheet (format "Ilman lämpötila täytyy olla väliltä -80 - 80. Oli nyt %s." (:ilman-lampotila saa)))
+                      virheet)
+            virheet (if (and (not (nil? (:tien-lampotila saa)))
+                          (or (< (:tien-lampotila saa) -80) (> (:tien-lampotila saa) 80)))
+                      (conj virheet (format "Tien lämpötila täytyy olla väliltä -80 - 80. Oli nyt %s." (:tien-lampotila saa)))
+                      virheet)
+            virheet (if (and (not (nil? (:keskituuli saa)))
+                          (or (< (:keskituuli saa) 0) (> (:keskituuli saa) 150)))
+                      (conj virheet (format "Keskituuli täytyy olla väliltä 0 - 150. Oli nyt %s." (:keskituuli saa)))
+                      virheet)
+            virheet (if (and (not (nil? (:sateen-olomuoto saa)))
+                          (or (< (:sateen-olomuoto saa) 0) (> (:sateen-olomuoto saa) 150)))
+                      (conj virheet (format "Sateen olomuoto täytyy olla väliltä 0 - 150. Oli nyt %s." (:sateen-olomuoto saa)))
+                      virheet)
+            virheet (if (and (not (nil? (:sadesumma saa)))
+                          (or (< (:sadesumma saa) 0) (> (:sadesumma saa) 10000)))
+                      (conj virheet (format "Sadesumma täytyy olla väliltä 0 - 10000. Oli nyt %s." (:sadesumma saa)))
+                      virheet)]
+        virheet))
+    virheet saatiedot))
 
-    (when (and (not (nil? (:tien-lampotila saa)))
-            (or (< (:tien-lampotila saa) -80) (> (:tien-lampotila saa) 80)))
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Tien lämpötila täytyy olla väliltä -80 - 80. Oli nyt %s." (:tien-lampotila saa))}))
+(defn validoi-kalusto [kalustot virheet]
+  (reduce (fn [virheet k]
+            (let [kalusto (:kalusto k)
+                  aloitus (tyokalut-json/pvm-string->joda-date (:aloitus kalusto))
+                  lopetus (tyokalut-json/pvm-string->joda-date (:lopetus kalusto))
+                  virheet (if (pvm/ennen? lopetus aloitus)
+                            (conj virheet (str "Kaluston lopetusaika täytyy olla aloitusajan jälkeen."))
+                            virheet)
+                  virheet (if (or (nil? (:tyokoneiden-lkm kalusto)) (< (:tyokoneiden-lkm kalusto) 0) (> (:tyokoneiden-lkm kalusto) 2000))
+                            (conj virheet (format "Työkoneiden lukumäärä täytyy olla väliltä 0 - 2000. Oli nyt %s." (:tyokoneiden-lkm kalusto)))
+                            virheet)
+                  virheet (if (or (nil? (:lisakaluston-lkm kalusto)) (< (:lisakaluston-lkm kalusto) 0) (> (:lisakaluston-lkm kalusto) 2000))
+                            (conj virheet (format "Lisäkaluston lukumäärä täytyy olla väliltä 0 - 2000. Oli nyt %s." (:lisakaluston-lkm kalusto)))
+                            virheet)]
+              virheet))
+    virheet kalustot))
 
-    (when (and (not (nil? (:keskituuli saa)))
-            (or (< (:keskituuli saa) 0) (> (:keskituuli saa) 150)))
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Keskituuli täytyy olla väliltä 0 - 150. Oli nyt %s." (:keskituuli saa))}))
+(defn validoi-paivystajat-ja-tyonjohtajat [tiedot omistaja-avain kuvaava-nimi virheet]
+  (reduce (fn [t t]
+            (let [tieto (omistaja-avain t)
+                  aloitus (tyokalut-json/pvm-string->joda-date (:aloitus tieto))
+                  lopetus (tyokalut-json/pvm-string->joda-date (:lopetus tieto))
+                  virheet (if (pvm/ennen? lopetus aloitus)
+                            (conj virheet (format "%s lopetusaika täytyy olla aloitusajan jälkeen." kuvaava-nimi))
+                            virheet)
+                  virheet (if (> 4 (count (:nimi tieto)))
+                            (conj virheet (format "%s nimi liian lyhyt. Oli nyt %s." kuvaava-nimi (:nimi tieto)))
+                            virheet)]
+              virheet))
+    virheet tiedot))
 
-    (when (and (not (nil? (:sateen-olomuoto saa)))
-            (or (< (:sateen-olomuoto saa) 0) (> (:sateen-olomuoto saa) 150)))
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Sateen olomuoto täytyy olla väliltä 0 - 150. Oli nyt %s." (:sateen-olomuoto saa))}))
+(defn validoi-tieston-toimenpiteet [db toimenpiteet virheet]
+  (reduce (fn [virheet t]
+            (let [toimenpide (:tieston-toimenpide t)
+                  aloitus (tyokalut-json/pvm-string->joda-date (:aloitus toimenpide))
+                  lopetus (tyokalut-json/pvm-string->joda-date (:lopetus toimenpide))
+                  virheet (if (pvm/ennen? lopetus aloitus)
+                            (conj virheet (format "Toimenpiteen lopetusaika täytyy olla aloitusajan jälkeen."))
+                            virheet)
+                  ;; Varmista, että annetut tehtävät on tietokannassa
+                  virheet (reduce (fn [virheet tehtava]
+                                    (if (false? (tyomaapaivakirja-kyselyt/onko-tehtava-olemassa? db {:id (get-in tehtava [:tehtava :id])}))
+                                      (conj virheet (format "Toimenpiteeseen liitettyä tehtävää ei löydy. Tarkista tehtävä id: %s." (get-in tehtava [:tehtava :id])))
+                                      virheet))
+                            virheet (:tehtavat toimenpide))]
+              virheet))
+    virheet toimenpiteet))
 
-    (when (and (not (nil? (:sadesumma saa)))
-            (or (< (:sadesumma saa) 0) (> (:sadesumma saa) 10000)))
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Sadesumma täytyy olla väliltä 0 - 10000. Oli nyt %s." (:sadesumma saa))}))))
+(defn validoi-tieston-muut-toimenpiteet [toimenpiteet virheet]
+  (reduce (fn [virheet t]
+            (let [toimenpide (:tieston-muu-toimenpide t)
+                  aloitus (tyokalut-json/pvm-string->joda-date (:aloitus toimenpide))
+                  lopetus (tyokalut-json/pvm-string->joda-date (:lopetus toimenpide))
+                  virheet (if (pvm/ennen? lopetus aloitus)
+                            (conj virheet (format "Tiestön muun toimenpiteen lopetusaika täytyy olla aloitusajan jälkeen."))
+                            virheet)
+                  ;; Varmista, että annetut tehtävät on kuvattu tarvittavan pitkällä tekstillä
+                  virheet (reduce (fn [virheet tehtava]
+                                    (if (> 4 (count (get-in tehtava [:tehtava :kuvaus])))
+                                      (conj virheet (format "Tiestön muun toimenpiteen kuvaus on liian lyhyt. Tarkenna kuvasta. Oli nyt: %s." (get-in tehtava [:tehtava :kuvaus])))
+                                      virheet))
+                            virheet (:tehtavat toimenpide))]
+              virheet))
+    virheet toimenpiteet))
 
-(defn validoi-kalusto [kalustot]
-  (doseq [k kalustot
-          :let [kalusto (:kalusto k)
-                aloitus (tyokalut-json/pvm-string->joda-date (:aloitus kalusto))
-                lopetus (tyokalut-json/pvm-string->joda-date (:lopetus kalusto))]]
+(defn validoi-viranomaisen-avustamiset [avustukset virheet]
+  (reduce (fn [virheet a]
+            (let [avustus (:viranomaisen-avustus a)
+                  ;; Varmista, että annetut tunnit on järkevissä raameissa
+                  virheet (if (and (not (nil? (:tunnit avustus)))
+                                (or (< (:tunnit avustus) 0) (> (:tunnit avustus) 1000)))
+                            (conj virheet (format "Viranomaisen avustamiseen käytetyt tunnit pitää olla väliltä 0 - 1000. Oli nyt: %s." (:tunnit avustus)))
+                            virheet)
+                  ;; Avustamisen kuvaus pitää olla järkevän mittainen
+                  virheet (if (or (nil? (:kuvaus avustus))
+                                (> 4 (count (:kuvaus avustus))))
+                            (conj virheet (format "Viranomaisen avustamisen kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus avustus)))
+                            virheet)]
+              virheet))
+    virheet avustukset))
 
-    (when (pvm/ennen? lopetus aloitus)
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Kaluston lopetusaika täytyy olla aloitusajan jälkeen.")}))
+(defn validoi-muut-kuvaustekstit [data virheet]
+  (let [;; liikenteenohjaus-muutokset
+        virheet (reduce (fn [virheet a]
+                          (let [ohjaus (:liikenteenohjaus-muutos a)
+                                ;; Kuvaus pitää olla järkevän mittainen
+                                virheet (if (> 4 (count (:kuvaus ohjaus)))
+                                          (conj virheet (format "Liikenteenohjausmuustosten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus ohjaus)))
+                                          virheet)]
+                            virheet))
+                  virheet (:liikenteenohjaus-muutokset data))
 
-    (when (or (< (:tyokoneiden-lkm kalusto) 0) (> (:tyokoneiden-lkm kalusto) 2000))
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Työkoneiden lukumäärä täytyy olla väliltä 0 - 2000. Oli nyt %s." (:tyokoneiden-lkm kalusto))}))
+        ;; onnettomuudet
+        virheet (reduce (fn [virheet a]
+                          (let [onnettomuus (:onnettomuus a)
+                                ;; Kuvaus pitää olla järkevän mittainen
+                                virheet (if (> 4 (count (:kuvaus onnettomuus)))
+                                          (conj virheet (format "Onnettomuuden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus onnettomuus)))
+                                          virheet)]
+                            virheet))
+                  virheet (:onnettomuudet data))
+        ;; palautteet
+        virheet (reduce (fn [virheet a]
+                          (let [palaute (:palaute a)
+                                ;; Kuvaus pitää olla järkevän mittainen
+                                virheet (if (> 4 (count (:kuvaus palaute)))
+                                          (conj virheet (format "Palautteiden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus palaute)))
+                                          virheet)]
+                            virheet))
+                  virheet (:palautteet data))
 
-    (when (or (< (:lisakaluston-lkm kalusto) 0) (> (:lisakaluston-lkm kalusto) 2000))
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Lisäkaluston lukumäärä täytyy olla väliltä 0 - 2000. Oli nyt %s." (:lisakaluston-lkm kalusto))}))))
+        ;; tilaajan-yhteydenotot
+        virheet (reduce (fn [virheet a]
+                          (let [yhteydenotto (:tilaajan-yhteydenotto a)
+                                ;; Kuvaus pitää olla järkevän mittainen
+                                virheet (if (> 4 (count (:kuvaus yhteydenotto)))
+                                          (conj virheet (format "Yhteydenoton kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus yhteydenotto)))
+                                          virheet)]
+                            virheet))
+                  virheet (:tilaajan-yhteydenotot data))
 
-(defn validoi-paivystajat-ja-tyonjohtajat [tiedot omistaja-avain kuvaava-nimi]
-  (doseq [t tiedot
-          :let [tieto (omistaja-avain t)
-                aloitus (tyokalut-json/pvm-string->joda-date (:aloitus tieto))
-                lopetus (tyokalut-json/pvm-string->joda-date (:lopetus tieto))]]
+        ;; muut-kirjaukset
+        ;; Kuvaus pitää olla järkevän mittainen
+        virheet (if (> 4 (count (:kuvaus (:muut-kirjaukset data))))
+                  (conj virheet (format "Muiden kirjausten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus (:muut-kirjaukset data))))
+                  virheet)]
+    virheet))
 
-    (when (pvm/ennen? lopetus aloitus)
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "%s lopetusaika täytyy olla aloitusajan jälkeen." kuvaava-nimi)}))
 
-    (when (> 4 (count (:nimi tieto)))
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "%s nimi liian lyhyt. Oli nyt %s." kuvaava-nimi (:nimi tieto))}))))
-
-(defn validoi-tieston-toimenpiteet [db toimenpiteet]
-  (doseq [t toimenpiteet
-          :let [toimenpide (:tieston-toimenpide t)
-                aloitus (tyokalut-json/pvm-string->joda-date (:aloitus toimenpide))
-                lopetus (tyokalut-json/pvm-string->joda-date (:lopetus toimenpide))]]
-
-    (when (pvm/ennen? lopetus aloitus)
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Toimenpiteen lopetusaika täytyy olla aloitusajan jälkeen.")}))
-
-    ;; Varmista, että annetut tehtävät on tietokannassa
-    (doseq [tehtava (:tehtavat toimenpide)]
-      (when (false? (tyomaapaivakirja-kyselyt/onko-tehtava-olemassa? db {:id (get-in tehtava [:tehtava :id])}))
-        (virheet/heita-viallinen-apikutsu-poikkeus
-          {:koodi virheet/+puutteelliset-parametrit+
-           :viesti (format "Toimenpiteeseen liitettyä tehtävää ei löydy. Tarkista tehtävä id: %s." (get-in tehtava [:tehtava :id]))})))))
-
-(defn validoi-tieston-muut-toimenpiteet [toimenpiteet]
-  (doseq [t toimenpiteet
-          :let [toimenpide (:tieston-muu-toimenpide t)
-                aloitus (tyokalut-json/pvm-string->joda-date (:aloitus toimenpide))
-                lopetus (tyokalut-json/pvm-string->joda-date (:lopetus toimenpide))]]
-
-    (when (pvm/ennen? lopetus aloitus)
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Tiestön muun toimenpiteen lopetusaika täytyy olla aloitusajan jälkeen.")}))
-
-    ;; Varmista, että annetut tehtävät on kuvattu tarvittavan pitkällä tekstillä
-    (doseq [tehtava (:tehtavat toimenpide)]
-      (when (> 4 (count (get-in tehtava [:tehtava :kuvaus])))
-        (virheet/heita-viallinen-apikutsu-poikkeus
-          {:koodi virheet/+puutteelliset-parametrit+
-           :viesti (format "Tiestön muun toimenpiteen kuvaus on liian lyhyt. Tarkenna kuvasta. Oli nyt: %s." (get-in tehtava [:tehtava :kuvaus]))})))))
-
-(defn validoi-viranomaisen-avustamiset [avustukset]
-  (doseq [a avustukset
-          :let [avustus (:viranomaisen-avustus a)]]
-
-    ;; Varmista, että annetut tunnit on järkevissä raameissa
-    (when (or (< (:tunnit avustus) 0) (> (:tunnit avustus) 1000))
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Viranomaisen avustamiseen käytetyt tunnit pitää olla väliltä 0 - 1000. Oli nyt: %s." (:tunnit avustus))}))
-
-    ;; Avustamisen kuvaus pitää olla järkevän mittainen
-    (when (> 4 (count (:kuvaus avustus)))
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Viranomaisen avustamisen kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus avustus))}))))
-
-(defn validoi-muut-kuvaustekstit [data]
-
-  ;; liikenteenohjaus-muutokset
-  (doseq [a (:liikenteenohjaus-muutokset data)
-          :let [ohjaus (:liikenteenohjaus-muutos a)]]
-
-    ;; Kuvaus pitää olla järkevän mittainen
-    (when (> 4 (count (:kuvaus ohjaus)))
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Liikenteenohjausmuustosten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus ohjaus))})))
-
-  ;; onnettomuudet
-  (doseq [a (:onnettomuudet data)
-          :let [onnettomuus (:onnettomuus a)]]
-
-    ;; Kuvaus pitää olla järkevän mittainen
-    (when (> 4 (count (:kuvaus onnettomuus)))
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Onnettomuuden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus onnettomuus))})))
-
-  ;; palautteet
-  (doseq [a (:palautteet data)
-          :let [palaute (:palaute a)]]
-
-    ;; Kuvaus pitää olla järkevän mittainen
-    (when (> 4 (count (:kuvaus palaute)))
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Palautteiden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus palaute))})))
-
-  ;; tilaajan-yhteydenotot
-  (doseq [a (:tilaajan-yhteydenotot data)
-          :let [yhteydenotto (:tilaajan-yhteydenotto a)]]
-
-    ;; Kuvaus pitää olla järkevän mittainen
-    (when (> 4 (count (:kuvaus yhteydenotto)))
-      (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Yhteydenoton kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus yhteydenotto))})))
-
-  ;; muut-kirjaukset
-  ;; Kuvaus pitää olla järkevän mittainen
-  (when (> 4 (count (:kuvaus (:muut-kirjaukset data))))
-    (virheet/heita-viallinen-apikutsu-poikkeus
-      {:koodi virheet/+puutteelliset-parametrit+
-       :viesti (format "Muiden kirjausten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus (:muut-kirjaukset data)))})))
-
-;; TODO: Validoi sisään tuleva data
 (defn validoi-tyomaapaivakirja [db data]
-  (validoi-saa (get-in data [:tyomaapaivakirja :saatiedot]))
-  (validoi-kalusto (get-in data [:tyomaapaivakirja :kaluston-kaytto]))
-  (validoi-paivystajat-ja-tyonjohtajat (get-in data [:tyomaapaivakirja :paivystajan-tiedot]) :paivystaja "Päivystäjän")
-  (validoi-paivystajat-ja-tyonjohtajat (get-in data [:tyomaapaivakirja :tyonjohtajan-tiedot]) :tyonjohtaja "Työnjohtajan")
-  (validoi-tieston-toimenpiteet db (get-in data [:tyomaapaivakirja :tieston-toimenpiteet]))
-  (validoi-tieston-muut-toimenpiteet (get-in data [:tyomaapaivakirja :tieston-muut-toimenpiteet]))
-  (validoi-viranomaisen-avustamiset (get-in data [:tyomaapaivakirja :viranomaisen-avustaminen]))
-  (validoi-muut-kuvaustekstit (:tyomaapaivakirja data)))
+  (let [virheet (->> []
+                  (validoi-saa (get-in data [:tyomaapaivakirja :saatiedot]))
+                  (validoi-kalusto (get-in data [:tyomaapaivakirja :kaluston-kaytto]))
+                  (validoi-paivystajat-ja-tyonjohtajat (get-in data [:tyomaapaivakirja :paivystajan-tiedot]) :paivystaja "Päivystäjän")
+                  (validoi-paivystajat-ja-tyonjohtajat (get-in data [:tyomaapaivakirja :tyonjohtajan-tiedot]) :tyonjohtaja "Työnjohtajan")
+                  (validoi-tieston-toimenpiteet db (get-in data [:tyomaapaivakirja :tieston-toimenpiteet]))
+                  (validoi-tieston-muut-toimenpiteet (get-in data [:tyomaapaivakirja :tieston-muut-toimenpiteet]))
+                  (validoi-viranomaisen-avustamiset (get-in data [:tyomaapaivakirja :viranomaisen-avustaminen]))
+                  (validoi-muut-kuvaustekstit (:tyomaapaivakirja data)))]
+
+    (when-not (empty? virheet)
+      (throw+
+        {:type virheet/+invalidi-json+
+         :virheet [{:koodi virheet/+invalidi-json+
+                    :viesti (str/join \space virheet)}]}))))
 
 (defn- hae-tyomaapaivakirjan-versiotiedot [db kayttaja tiedot]
   (validointi/tarkista-urakka-ja-kayttaja db (:urakka_id tiedot) kayttaja)
@@ -381,7 +374,7 @@
             (if (not= (get-in data [:tunniste :versio])
                   (inc (:versio versiotiedot)))
               (throw+ {:type virheet/+vaara-versio-tyomaapaivakirja+ :virheet [{:koodi virheet/+vaara-versio-tyomaapaivakirja-virhe-koodi+
-                                                                               :viesti "Työmaapäiväkirjan versio ei täsmää"}]})))
+                                                                                :viesti "Työmaapäiväkirjan versio ei täsmää"}]})))
         tyomaapaivakirja-id (if tyomaapaivakirja-id
                               ;; Päivitä vanhaa
                               (do
