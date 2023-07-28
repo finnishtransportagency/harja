@@ -52,7 +52,7 @@
 
    "Urakkanimet"
    :lyhytnimet
-   (when true
+   (when (oikeudet/hallinta-indeksit) ; ei uutta roolia roolit exceliin
      ^{:key "lyhytnimet"}
      [lyhytnimet/urakoiden-lyhytnimet ])
 

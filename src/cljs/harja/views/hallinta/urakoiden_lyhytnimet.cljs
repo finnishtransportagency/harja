@@ -69,12 +69,12 @@
 
              [{:nimi :nimi
                :leveys "auto"
-               :otsikko "Virallinen nimi"
+               :otsikko "Virallinen nimi (Sampo-nimi)"
                :tyyppi :string
                :muokattava? (constantly false)}
               {:nimi :lyhyt_nimi
                :leveys "auto"
-               :otsikko "Lyhyt nimi"
+               :otsikko "Lyhyt nimi (käytetään esim ilmoitukset-näkymän taulukossa)"
                :tyyppi :string}]
 
              (:UrakoidenLyhytnimet app)]]]]]))))

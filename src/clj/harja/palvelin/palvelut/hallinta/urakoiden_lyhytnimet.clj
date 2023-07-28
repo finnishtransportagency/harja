@@ -11,9 +11,9 @@
 
 (defn- muodosta-hakuehdot [params]
   (merge (parsi-urakkatyyppi params) {:vain_puuttuvat (:vain-puuttuvat params) :urakantila (:urakan-tila params)}))
-(defn hae-urakoiden-nimet [db user params]
+(defn hae-urakoiden-nimet [db kayttaja params]
   (let [hakuehdot (muodosta-hakuehdot params)]
-    (oikeudet/ei-oikeustarkistusta!)
+    (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-indeksit kayttaja)
     (log/debug "Haetaan urakoiden nimiä parametreilla: " params)
     (log/debug "hakuehdot: " hakuehdot)
     (into []
@@ -25,15 +25,15 @@
     (assert urakkaid "Urakka id puuttuu, ei voi tallentaa lyhytnimeä!")
     (assert lyhyt-nimi "Lyhyt nimi puuttuu, ei voi tallentaa!")
     (log/debug "Tallennetaan urakan lyhytnimi: " urakkaid ", nimi " (:nimi urakka) ", lyhytnimi " lyhyt-nimi)
-    (oikeudet/ei-oikeustarkistusta!)
     (q/tallenna-urakan-lyhytnimi! db {:urakka urakkaid
                                       :lyhytnimi lyhyt-nimi})))
-(defn tallenna-urakoiden-lyhytnimet [db user tiedot]
+(defn tallenna-urakoiden-lyhytnimet [db kayttaja tiedot]
   (let [urakat (:urakat tiedot)
         haku-parametrit (:haku-parametrit tiedot)]
-    (oikeudet/ei-oikeustarkistusta!)
+    ; vaaditaan samoja oikeuksia kuin indeksien hallinnassa, ei tarpeen tehdä omaa roolia lyhytnimien hallintaan
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-indeksit kayttaja)
     (doseq [urakka urakat] (tallenna-urakka-nimi db urakka))
-    (hae-urakoiden-nimet db nil haku-parametrit)))
+    (hae-urakoiden-nimet db kayttaja haku-parametrit)))
 
 (defrecord UrakkaLyhytnimienHallinta []
   component/Lifecycle
