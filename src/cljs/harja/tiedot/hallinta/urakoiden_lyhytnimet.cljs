@@ -5,7 +5,9 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]))
 
-(defonce tila (atom {:valittu-urakkatyyppi {:nimi "Hoito", :arvo :hoito}}))
+(defonce tila (atom {:valittu-urakkatyyppi {:nimi "Kaikki" :arvo :kaikki}
+                     :vain-puuttuvat false
+                     :urakan-tila nil}))
 
 (defrecord HaeUrakoidenLyhytnimet [valinnat])
 (defrecord HaeUrakoidenLyhytnimetOnnistui [vastaus])
@@ -14,21 +16,23 @@
 (defrecord PaivitaUrakoidenLyhytnimetOnnistui [vastaus])
 (defrecord PaivitaUrakoidenLyhytnimetEpaonnistui [vastaus])
 (defrecord PaivitaValittuUrakkaTyyppi [valittu-urakkatyyppi])
+(defrecord PaivitaVainPuuttuvat [vain-puuttuvat])
+(defrecord PaivitaUrakanTila [urakan-tila])
 
-(defn- hae-urakkatyypit [parametrit]
+(defn- hae-urakoiden-nimet [parametrit]
   (tuck-apurit/post! :hae-urakoiden-nimet parametrit
     {:onnistui ->HaeUrakoidenLyhytnimetOnnistui
      :epaonnistui ->HaeUrakoidenLyhytnimetEpaonnistui}))
+
+(defn- hakuparametrit [_app]
+   {:urakkatyyppi (:valittu-urakkatyyppi _app) :vain-puuttuvat (:vain-puuttuvat _app) :urakan-tila (:urakan-tila _app)})
 
 (extend-protocol tuck/Event
 
   HaeUrakoidenLyhytnimet
   (process-event [{valinnat :valinnat} app]
-    (let [parametrit {:urakkatyyppi (:urakkatyyppi valinnat)}
-          _ (hae-urakkatyypit parametrit)
-          _ (println "PARAMETRIT: " parametrit)
-          _ (println "APP: " app)
-          ]                                                 ;->PaivitaUrakoidenLyhytnimetEpaonnistui
+    (do
+      (hae-urakoiden-nimet (hakuparametrit app))
       (assoc app :hae-urakoiden-lyhytnimet-kesken? true)))
 
   HaeUrakoidenLyhytnimetOnnistui
@@ -44,19 +48,17 @@
     (assoc app :hae-urakoiden-lyhytnimet-kesken? false))
 
   PaivitaUrakoidenLyhytnimet
-  (process-event [{urakat :urakat urakkatyyppi :urakkatyyppi} app]
-    (println "Päivitä parametrit: " urakat)
-    (println "Urakkatyyppi: " urakkatyyppi)
-    (tuck-apurit/post! :tallenna-urakan-lyhytnimi urakat
-      {:onnistui ->PaivitaUrakoidenLyhytnimetOnnistui
-       :epaonnistui ->PaivitaUrakoidenLyhytnimetEpaonnistui})
-    (-> app
-      (assoc :paivita-urakoiden-lyhytnimet-kesken? true)
-      ))
+  (process-event [{urakat :urakat} app]
+    (do
+      (tuck-apurit/post! :tallenna-urakoiden-lyhytnimet (assoc urakat :haku-parametrit (hakuparametrit app))
+        {:onnistui ->PaivitaUrakoidenLyhytnimetOnnistui
+         :epaonnistui ->PaivitaUrakoidenLyhytnimetEpaonnistui})
+      (-> app
+        (assoc :paivita-urakoiden-lyhytnimet-kesken? true)
+        )))
 
   PaivitaUrakoidenLyhytnimetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (println "Tallennus onnistui!!!")
     (assoc app :UrakoidenLyhytnimet vastaus
       :paivita-urakoiden-lyhytnimet-kesken? false))
 
@@ -68,6 +70,18 @@
 
   PaivitaValittuUrakkaTyyppi
   (process-event [{valittu-urakkatyyppi :valittu-urakkatyyppi} app]
-    (let [_ (hae-urakkatyypit {:urakkatyyppi valittu-urakkatyyppi
-                               :arvo (:arvo valittu-urakkatyyppi)})]
-      (assoc app :valittu-urakkatyyppi valittu-urakkatyyppi))))
+    (let [app (assoc app :valittu-urakkatyyppi valittu-urakkatyyppi)]
+      (hae-urakoiden-nimet (hakuparametrit app))
+      app))
+
+  PaivitaVainPuuttuvat
+  (process-event [{vain-puuttuvat :vain-puuttuvat} app]
+    (let [app (assoc app :vain-puuttuvat vain-puuttuvat)]
+      (hae-urakoiden-nimet (hakuparametrit app))
+      app))
+
+  PaivitaUrakanTila
+  (process-event [{urakan-tila :urakan-tila} app]
+    (let [app (assoc app :urakan-tila urakan-tila)]
+      (hae-urakoiden-nimet (hakuparametrit app))
+      app)))

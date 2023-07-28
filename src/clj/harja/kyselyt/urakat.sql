@@ -112,7 +112,18 @@ SELECT
     u.nimi,
     u.lyhyt_nimi
 FROM urakka u
-WHERE (:urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi)
+WHERE (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi)
+  AND (CASE
+           WHEN :vain_puuttuvat :: BOOLEAN = true
+               THEN u.lyhyt_nimi IS NULL
+           ELSE true END)
+  AND (CASE
+           WHEN :urakantila :: TEXT IS NULL THEN true
+           WHEN :urakantila = 'meneillaan-tai-tuleva'
+               THEN u.loppupvm >= current_date
+           WHEN :urakantila = 'paattyneet'
+               THEN u.loppupvm < current_date
+           ELSE true END)
 ORDER BY u.nimi ASC;
 
 -- name: tallenna-urakan-lyhytnimi!
