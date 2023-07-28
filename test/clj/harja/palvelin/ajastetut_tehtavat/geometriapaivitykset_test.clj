@@ -4,6 +4,7 @@
             [clj-time.periodic :refer [periodic-seq]]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.ava :as alk]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko :as tieverkon-tuonti]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.valaistusurakat :as valaistusurakoiden-tuonti]
             [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
             [harja.kyselyt.geometriapaivitykset :as gp-kyselyt]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -110,6 +111,17 @@
         (tieverkon-tuonti/vie-tieverkko-kantaan
           testitietokanta
           "file:///Users/maaritla/Downloads/Turvalaite-testi/Turvalaitteet.shp")))))
+
+(def aja-valaistusurakoiden-paivitys
+  "REPL-testiajofunktio - Tämän saa toimimaan, kunhan valaistusurakoiden tiedot
+  on ensin haettu 'valaistusurakoiden_osoite' muuttujaan tallennetusta urlista esim selaimella.
+  Pura saapuva zip ja kutsu sitten tätä."
+  []
+  (valaistusurakoiden-tuonti/vie-urakat-kantaan
+    (:db jarjestelma)
+    ;(:db harja.palvelin.main/harja-jarjestelma) Jos ajat tätä funktiota REPListä, niin anna kahva tietokantaan näin ja kommentoi pois tuo ylempi
+    ;; Anna <kayttajatunnus> kohtaan ja muuallekin oikea polku tiedostoon
+    "file:///Users/<kayttajatunnus>/Downloads/palvelusopimus/palvelusopimusLine.shp"))
 
 
 (deftest testaa-pitaako-paivittaa
