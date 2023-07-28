@@ -58,11 +58,19 @@
 (defn- laske-kulutuskerroksen-hypyt [data i hypyt]
   (if (> (count data) (dec i))
     (let [rivi (get-in data [i])
+          rivi-tie (:tr-numero rivi)
+          rivi-ajorata (:tr-ajorata rivi)
           rivi-aet (:tr-alkuetaisyys rivi)
           rivi-let (:tr-loppuetaisyys rivi)
+
           seuraava-rivi (get-in data [(inc i)])
+          seuraavarivi-tie (:tr-numero seuraava-rivi)
+          seuraava-rivi-ajorata (:tr-ajorata seuraava-rivi)
           seuraava-rivi-aet (:tr-alkuetaisyys seuraava-rivi)
+          
           hyppy-olemassa? (if (and rivi-aet seuraava-rivi-aet
+                                (= rivi-tie seuraavarivi-tie)
+                                (= rivi-ajorata seuraava-rivi-ajorata)
                                 (> seuraava-rivi-aet rivi-let))
                             true
                             false)]

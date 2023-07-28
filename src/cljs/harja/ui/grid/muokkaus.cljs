@@ -86,33 +86,52 @@
   (when (> (count data) (dec y))
     (let [rivi (get-in data [y])
           rivi-id (:kohdeosa-id rivi)
+          rivi-tie (:rivi-tie rivi)
+          rivi-ajorata (:tr-ajorata rivi)
           rivi-aet (:tr-alkuetaisyys rivi)
           rivi-let (:tr-loppuetaisyys rivi)
+
           edellinen-rivi (get-in data [(dec y)])
+          edellinen-rivi-tie (:rivi-tie edellinen-rivi)
+          edellinen-rivi-ajorata (:tr-ajorata edellinen-rivi)
           edellinen-rivi-let (:tr-loppuetaisyys edellinen-rivi)
+
           seuraava-rivi (get-in data [(inc y)])
+          seuraava-rivi-tie (:rivi-tie seuraava-rivi)
+          seuraava-rivi-ajorata (:tr-ajorata seuraava-rivi)
           seuraava-rivi-aet (:tr-alkuetaisyys seuraava-rivi)
           
           kulukerros-hyppy (cond
                              ;; Korosta molemmat aet/let (hyppy tällä ja edellisellä rivillä)
                              (and
-                               (= rivi-id id) rivi-aet seuraava-rivi-aet
-                               (> seuraava-rivi-aet rivi-let)
+                               (= rivi-id id) 
+                               rivi-aet seuraava-rivi-aet
                                rivi-aet edellinen-rivi-let
+                               (= rivi-tie seuraava-rivi-tie)
+                               (= rivi-ajorata seuraava-rivi-ajorata)
+                               (= rivi-tie edellinen-rivi-tie)
+                               (= rivi-ajorata edellinen-rivi-ajorata)
+                               (> seuraava-rivi-aet rivi-let)
                                (> rivi-aet edellinen-rivi-let))
                              3
-                             ;; Seuraava ja tämä rivi olemassa
-                             ;; sekä seuraavan rivin alkuetäisyys on isompi kun tämän rivin loppuetäisyys = hyppy
+                             ;; Seuraava ja tämä rivi olemassa sekä molemmilla sama kaista&ajorata
+                             ;; Seuraavan rivin alkuetäisyys on isompi kun tämän rivin loppuetäisyys = hyppy
                              ;; (korosta LET)
                              (and
-                               (= rivi-id id) rivi-aet seuraava-rivi-aet
+                               (= rivi-id id) 
+                               rivi-aet seuraava-rivi-aet
+                               (= rivi-tie seuraava-rivi-tie)
+                               (= rivi-ajorata seuraava-rivi-ajorata)
                                (> seuraava-rivi-aet rivi-let))
                              1
-                             ;; Tämä rivi ja edellinen rivi olemassa
-                             ;; sekä tämän rivin alkuetäisyys isompi kuin edellisen loppuetäisyys = hyppy 
+                             ;; Tämä rivi ja edellinen rivi olemassa sekä molemmilla sama kaista&ajorata
+                             ;; Tämän rivin alkuetäisyys isompi kuin edellisen loppuetäisyys = hyppy 
                              ;; (korosta AET)
                              (and
-                               (= rivi-id id) rivi-aet edellinen-rivi-let
+                               (= rivi-id id) 
+                               rivi-aet edellinen-rivi-let
+                               (= rivi-tie seuraava-rivi-tie)
+                               (= rivi-ajorata edellinen-rivi-ajorata)
                                (> rivi-aet edellinen-rivi-let))
                              2
                              ;; Ei hyppyjä
