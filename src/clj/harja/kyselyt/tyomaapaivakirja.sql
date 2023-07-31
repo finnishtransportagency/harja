@@ -141,3 +141,11 @@ SELECT t_kalusto.versio, t.id as tyomaapaivakirja_id
            AND t.paivamaara = :paivamaara
 ORDER BY t_kalusto.versio DESC
  LIMIT 1;
+
+-- name: onko-tehtava-olemassa?
+-- single?: true
+SELECT exists(
+    SELECT t.id
+    FROM tehtava t
+    WHERE t.id = :id
+      AND t.poistettu IS NOT TRUE);
