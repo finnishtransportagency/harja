@@ -399,7 +399,7 @@ INSERT INTO laatupoikkeama_liite (laatupoikkeama, liite) VALUES (:laatupoikkeama
 SELECT exists(
     SELECT laatupoikkeama.id
     FROM laatupoikkeama
-    WHERE ulkoinen_id = :ulkoinen_id AND luoja = :luoja);
+    WHERE ulkoinen_id = :ulkoinen_id AND urakka = :urakka_id);
 
 -- name: paivita-laatupoikkeama-ulkoisella-idlla<!
 -- Päivittää laatupoikkeaman annetuille perustiedoille.
