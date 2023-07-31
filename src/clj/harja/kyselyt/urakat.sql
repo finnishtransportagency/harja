@@ -119,8 +119,8 @@ WHERE (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urak
            ELSE true END)
   AND (CASE
            WHEN :urakantila :: TEXT IS NULL THEN true
-           WHEN :urakantila = 'meneillaan-tai-tuleva'
-               THEN u.loppupvm >= current_date
+           WHEN :urakantila = 'meneillaan'
+               THEN u.loppupvm IS NULL OR u.loppupvm >= current_date
            WHEN :urakantila = 'paattyneet'
                THEN u.loppupvm < current_date
            ELSE true END)

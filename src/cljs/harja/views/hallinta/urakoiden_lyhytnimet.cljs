@@ -14,8 +14,8 @@
 (defn- urakan-tilan-nimi
   [tila-str]
   (case tila-str
-    "meneillaan-tai-tuleva"
-    "Meneillään olevat tai tulevat"
+    "meneillaan"
+    "Käynnissä olevat urakat"
     "paattyneet"
     "Päättyneet"))
 
@@ -30,27 +30,30 @@
                            (conj nav/+urakkatyypit-ja-kaikki+
                              {:nimi "Kanavat", :arvo :vesivayla-kanavien-hoito}))
             ]
-        [:div
-         [:div.lyhytnimet
-          [:h3 "Urakkanimet"]
+        [:div.urakkanimet-uloin
+         [:div.urakkanimet-otsake-ja-hakuehdot
+          [:div.urakkanimet-otsikko "Urakkanimet"]
           [:div.flex-row
            [:div.label-ja-alasveto
             [:span.alasvedon-otsikko "Urakan tila"]
             [yleiset/livi-pudotusvalikko {:valinta (:urakan-tila app)
                                           :format-fn #(if % (urakan-tilan-nimi %) "Kaikki urakat")
                                           :valitse-fn #(e! (tiedot/->PaivitaUrakanTila %))}
-             [nil "meneillaan-tai-tuleva" "paattyneet"]]]
+             [nil "meneillaan" "paattyneet"]]]
            [:div.label-ja-alasveto
             [:span.alasvedon-otsikko "Urakkatyypit"]
             [yleiset/livi-pudotusvalikko {:valinta (:valittu-urakkatyyppi app)
                                           :format-fn :nimi
                                           :valitse-fn #(e! (tiedot/->PaivitaValittuUrakkaTyyppi %))}
              urakkatyypit]]
+           [:div.urakkanimet-checkbox
            [kentat/raksiboksi {:teksti "Näytä vain urakat joilta lyhyt nimi puuttuu"
                                :toiminto (fn [arvo]
                                            (e! (tiedot/->PaivitaVainPuuttuvat (-> arvo .-target .-checked))))}
             (:vain-puuttuvat app)]
+            ]
            ]
+          ]
 
           [:div
            [harja.ui.debug/debug {:app app}]
@@ -77,6 +80,6 @@
                :otsikko "Lyhyt nimi (käytetään esim ilmoitukset-näkymän taulukossa)"
                :tyyppi :string}]
 
-             (:UrakoidenLyhytnimet app)]]]]]))))
+             (:UrakoidenLyhytnimet app)]]]]))))
 (defn urakoiden-lyhytnimet [e! app]
   [tuck tiedot/tila urakoiden-lyhytnimet*])

@@ -6,8 +6,8 @@
             [harja.kyselyt.urakat :as q]))
 
 (defn- parsi-urakkatyyppi [params]
-  (let [arvo (:arvo (:urakkatyyppi params))]
-    (if (= arvo :kaikki) (assoc {} :urakkatyyppi nil) (assoc {} :urakkatyyppi (name arvo)))))
+  (let [urakkatyyppi (:urakkatyyppi params)]
+    (if (= urakkatyyppi :kaikki) (assoc {} :urakkatyyppi nil) (assoc {} :urakkatyyppi (name urakkatyyppi)))))
 
 (defn- muodosta-hakuehdot [params]
   (merge (parsi-urakkatyyppi params) {:vain_puuttuvat (:vain-puuttuvat params) :urakantila (:urakan-tila params)}))

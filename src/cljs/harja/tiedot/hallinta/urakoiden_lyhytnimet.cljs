@@ -24,8 +24,11 @@
     {:onnistui ->HaeUrakoidenLyhytnimetOnnistui
      :epaonnistui ->HaeUrakoidenLyhytnimetEpaonnistui}))
 
-(defn- hakuparametrit [_app]
-   {:urakkatyyppi (:valittu-urakkatyyppi _app) :vain-puuttuvat (:vain-puuttuvat _app) :urakan-tila (:urakan-tila _app)})
+(defn- parsi-urakkatyyppi [app]
+  (:arvo (:valittu-urakkatyyppi app)))
+
+(defn- hakuparametrit [app]
+   {:urakkatyyppi (parsi-urakkatyyppi app) :vain-puuttuvat (:vain-puuttuvat app) :urakan-tila (:urakan-tila app)})
 
 (extend-protocol tuck/Event
 
