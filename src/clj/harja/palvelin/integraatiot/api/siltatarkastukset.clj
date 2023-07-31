@@ -83,7 +83,7 @@
           :id ulkoinen-id})))
 
 (defn luo-tai-paivita-siltatarkastus [ulkoinen-id urakka-id tarkastus silta kayttaja db]
-  (let [siltatarkastus-kannassa (first (silta-q/hae-siltatarkastus-ulkoisella-idlla-ja-luojalla db ulkoinen-id (:id kayttaja)))]
+  (let [siltatarkastus-kannassa (first (silta-q/hae-siltatarkastus-ulkoisella-idlla-ja-urakalla db ulkoinen-id urakka-id))]
     (if siltatarkastus-kannassa
       (paivita-siltatarkastus ulkoinen-id urakka-id tarkastus silta kayttaja db)
       (luo-siltatarkastus ulkoinen-id urakka-id tarkastus silta kayttaja db))))
