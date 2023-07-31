@@ -418,7 +418,7 @@ SET
   muokattu         = current_timestamp,
   "sisaltaa-poikkeamaraportin?" = :sisaltaa_poikkeamaraportin
 WHERE ulkoinen_id = :ulkoinen_id AND
-      luoja = :luoja;
+      urakka = :urakka-id;
 
 -- name: hae-urakan-laatupoikkeamat-liitteineen-raportille
 -- Hakee urakan laatupoikkeamat aikavälin perusteella raportille
