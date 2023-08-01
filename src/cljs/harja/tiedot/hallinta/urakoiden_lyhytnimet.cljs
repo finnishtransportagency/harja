@@ -7,7 +7,7 @@
 
 (defonce tila (atom {:valittu-urakkatyyppi {:nimi "Kaikki" :arvo :kaikki}
                      :vain-puuttuvat false
-                     :urakan-tila nil}))
+                     :urakan-tila :kaikki}))
 
 (defrecord HaeUrakoidenLyhytnimet [valinnat])
 (defrecord HaeUrakoidenLyhytnimetOnnistui [vastaus])
@@ -28,7 +28,9 @@
   (:arvo (:valittu-urakkatyyppi app)))
 
 (defn- hakuparametrit [app]
-   {:urakkatyyppi (parsi-urakkatyyppi app) :vain-puuttuvat (:vain-puuttuvat app) :urakan-tila (:urakan-tila app)})
+   {:urakkatyyppi (parsi-urakkatyyppi app)
+    :vain-puuttuvat (:vain-puuttuvat app)
+    :urakan-tila (:urakan-tila app)})
 
 (extend-protocol tuck/Event
 
@@ -41,7 +43,7 @@
   HaeUrakoidenLyhytnimetOnnistui
   (process-event [{vastaus :vastaus} app]
     (assoc app
-      :UrakoidenLyhytnimet vastaus
+      :urakoiden-lyhytnimet vastaus
       :hae-urakoiden-lyhytnimet-kesken? false))
 
   HaeUrakoidenLyhytnimetEpaonnistui
@@ -57,12 +59,11 @@
         {:onnistui ->PaivitaUrakoidenLyhytnimetOnnistui
          :epaonnistui ->PaivitaUrakoidenLyhytnimetEpaonnistui})
       (-> app
-        (assoc :paivita-urakoiden-lyhytnimet-kesken? true)
-        )))
+        (assoc :paivita-urakoiden-lyhytnimet-kesken? true))))
 
   PaivitaUrakoidenLyhytnimetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc app :UrakoidenLyhytnimet vastaus
+    (assoc app :urakoiden-lyhytnimet vastaus
       :paivita-urakoiden-lyhytnimet-kesken? false))
 
   PaivitaUrakoidenLyhytnimetEpaonnistui

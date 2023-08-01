@@ -114,11 +114,11 @@ SELECT
 FROM urakka u
 WHERE (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi)
   AND (CASE
-           WHEN :vain_puuttuvat :: BOOLEAN = true
+           WHEN :vain-puuttuvat :: BOOLEAN = true
                THEN u.lyhyt_nimi IS NULL
            ELSE true END)
   AND (CASE
-           WHEN :urakantila :: TEXT IS NULL THEN true
+           WHEN :urakantila :: TEXT = 'kaikki' THEN true
            WHEN :urakantila = 'meneillaan'
                THEN u.loppupvm IS NULL OR u.loppupvm >= current_date
            WHEN :urakantila = 'paattyneet'

@@ -14,9 +14,11 @@
 (defn- urakan-tilan-nimi
   [tila-str]
   (case tila-str
-    "meneillaan"
+    :kaikki
+    "Kaikki urakat"
+    :meneillaan
     "Käynnissä olevat urakat"
-    "paattyneet"
+    :paattyneet
     "Päättyneet"))
 
 (defn- urakoiden-lyhytnimet* [e! app]
@@ -32,14 +34,14 @@
             ]
         [:div.urakkanimet-uloin
          [:div.urakkanimet-otsake-ja-hakuehdot
-          [:div.urakkanimet-otsikko "Urakkanimet"]
+          [:h1 "Urakkanimet"]
           [:div.flex-row
            [:div.label-ja-alasveto
             [:span.alasvedon-otsikko "Urakan tila"]
             [yleiset/livi-pudotusvalikko {:valinta (:urakan-tila app)
-                                          :format-fn #(if % (urakan-tilan-nimi %) "Kaikki urakat")
+                                          :format-fn #(urakan-tilan-nimi %)
                                           :valitse-fn #(e! (tiedot/->PaivitaUrakanTila %))}
-             [nil "meneillaan" "paattyneet"]]]
+             [:kaikki :meneillaan :paattyneet]]]
            [:div.label-ja-alasveto
             [:span.alasvedon-otsikko "Urakkatyypit"]
             [yleiset/livi-pudotusvalikko {:valinta (:valittu-urakkatyyppi app)
@@ -80,6 +82,6 @@
                :otsikko "Lyhyt nimi (käytetään esim ilmoitukset-näkymän taulukossa)"
                :tyyppi :string}]
 
-             (:UrakoidenLyhytnimet app)]]]]))))
+             (:urakoiden-lyhytnimet app)]]]]))))
 (defn urakoiden-lyhytnimet [e! app]
   [tuck tiedot/tila urakoiden-lyhytnimet*])
