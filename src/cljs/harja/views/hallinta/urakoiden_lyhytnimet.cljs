@@ -1,6 +1,7 @@
 (ns harja.views.hallinta.urakoiden-lyhytnimet
   "Urakoiden lyhytnimien näkymä. Täällä jvh pitää yllä urakoiden lyhytnimiä."
   (:require
+    [harja.tyokalut.tuck :as tuck-apurit]
     [tuck.core :refer [tuck]]
 
     [harja.ui.grid :as grid]
@@ -66,7 +67,7 @@
              :jarjesta :nimi
              :tallenna-vain-muokatut true
              :tallenna (fn [urakat]
-                         (e! (tiedot/->PaivitaUrakoidenLyhytnimet {:urakat urakat})))}
+                         (tuck-apurit/e-kanavalla! e! tiedot/->PaivitaUrakoidenLyhytnimet {:urakat urakat}))}
 
             [{:nimi :nimi
               :leveys "auto"
