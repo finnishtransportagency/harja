@@ -430,8 +430,20 @@
 ;; - kopioi fontit
 ;;   cp fonts/* ~/source/harja/dev-resources/less/fonts
 ;;   cp fonts/* ~/source/harja/resources/public/fonts
+
 ;; - kopioi tyylit (ilman color-määrityksiä) harja-icons.less -tiedostoon
 ;;   grep -v 'color: #' style.css
+;;   huomioi less tiedoston alkuun: @harja-icons-polku: '../fonts';
+;;   korvaa font-face@{} -url alkuun  font/  ->  @{harja-icons-polku}/
+
+;; - korjaa harjan checkboxit, etsi koodipesästä: .vayla-checkbox {
+;;   vaihda content koodi: 
+;;   &:before { 
+;;      content: "\e9ec";
+;;   }
+;;   siihen mikä harja-icons.less tiedostossa on merkitty status-completed koodiksi
+
+;; - kaikki harja-icons.ttf:Zone.Identifier tiedostot voi poistaa jos sellaisia ilmestyy (Git Source control changes)
 ;; - päivitä funktiot tähän tiedostoon
 ;;   - alempana on koodia, jolla voi generoida funktiot replissä
 
