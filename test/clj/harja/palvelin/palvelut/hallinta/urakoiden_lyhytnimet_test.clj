@@ -27,9 +27,9 @@
   {:urakkatyyppi :kaikki :vain-puuttuvat false :urakan-tila :kaikki})
 
 (defn- tallenna-parametrit [urakkaid]
-  {:urakat [{:id urakkaid,
-             :nimi "Aktiivinen Oulu Testi",
-             :lyhyt_nimi "test123"}]
+  {:tiedot {:urakat [{:id urakkaid,
+                      :nimi "Aktiivinen Oulu Testi",
+                      :lyhyt_nimi "test123"}]}
    :haku-parametrit (hakuparametrit-kaikki)})
 
 (deftest paivita-lyhytnimet
@@ -37,11 +37,11 @@
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                 :hae-urakoiden-nimet +kayttaja-jvh+
                 (hakuparametrit-kaikki))
-        vaihdettu-nimi (kutsu-palvelua (:http-palvelin jarjestelma)
+        tallennksen-palauttamat (kutsu-palvelua (:http-palvelin jarjestelma)
                          :tallenna-urakoiden-lyhytnimet +kayttaja-jvh+
                          (tallenna-parametrit urakkaid))]
     (is (= (:lyhyt_nimi (first (filter (comp #{urakkaid} :id) tulos))) "Oulun lyhyt nimi"))
-    (is (= (:lyhyt_nimi (first (filter (comp #{urakkaid} :id) vaihdettu-nimi))) "test123"))))
+    (is (= (:lyhyt_nimi (first (filter (comp #{urakkaid} :id) tallennksen-palauttamat))) "test123"))))
 
 (deftest hae-urakat-joilta-lyhytnimi-puuttuu
   (let [hakutulos (kutsu-palvelua (:http-palvelin jarjestelma)
