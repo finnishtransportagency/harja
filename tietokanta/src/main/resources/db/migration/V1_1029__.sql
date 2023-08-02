@@ -1,8 +1,9 @@
 -- Poista indeksit liittyen ulkoinen-id, luoja ja lisää ulkoinen-id, urakka-id
+ALTER TABLE laatupoikkeama
+    DROP CONSTRAINT uniikki_ulkoinen_laatupoikkeama;
+
 CREATE UNIQUE INDEX laatupoikkeama_ulkoinen_id_urakka_uindex
     on laatupoikkeama (ulkoinen_id, urakka, poistettu);
-
-DROP INDEX uniikki_ulkoinen_laatupoikkeama;
 
 CREATE UNIQUE INDEX siltatarkastus_ulkoinen_id_urakka_uindex
     ON siltatarkastus (ulkoinen_id, urakka, poistettu);
