@@ -219,6 +219,13 @@
   (let [;; Aikavälit ja otsikkotekstit
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
+        ;; Kun koko hoitokausi on valittu ja loppupvm on myöhemmin kuin kuluva päivä, käytetään kuluvaa päivää
+        ;; Muuten laskutusyhteenveto alkaa "ennustamaan" kustannuksia tulevaisuudesta.
+        parametrit (assoc parametrit :haun-loppupvm (if (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
+                                                      (if (pvm/ennen? (pvm/nyt) loppupvm)
+                                                        (pvm/nyt)
+                                                        loppupvm)
+                                                      loppupvm))
         kyseessa-vuosi-vali? (pvm/kyseessa-vuosi-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Laskutettu hoito\u00ADkaudella ennen " (pvm/kuukausi-ja-vuosi alkupvm))
         laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm))
