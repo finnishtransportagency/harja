@@ -47,7 +47,7 @@
   (let [hakutulos (kutsu-palvelua (:http-palvelin jarjestelma)
                     :hae-urakoiden-nimet +kayttaja-jvh+
                     (assoc (hakuparametrit-kaikki) :vain-puuttuvat true))]
-    (is (every? (fn [m] (nil? (:lyhyt_nimi m))) hakutulos))))
+    (is (every? #(nil? (:lyhyt_nimi %)) hakutulos))))
 
 (deftest hae-urakat-urakkatyypilla-ja-lyhytnimi-puuttuu
   (let [hakuehdot-hoito (assoc (hakuparametrit-kaikki) :urakkatyyppi :hoito)
@@ -60,8 +60,8 @@
                           (assoc hakuehdot-hoito :vain-puuttuvat true))
         hoito-vain-puuttuvat-idt (into #{} (map :id hakutulos-hoito-vain-puuttuvat))]
 
-    (is (some (fn [m] (= (:lyhyt_nimi m) "Oulun lyhyt nimi")) hakutulos-hoito))
-    (is (every? (fn [m] (nil? (:lyhyt_nimi m))) hakutulos-hoito-vain-puuttuvat))
+    (is (some #(= (:lyhyt_nimi %) "Oulun lyhyt nimi") hakutulos-hoito))
+    (is (every? #(nil? (:lyhyt_nimi %)) hakutulos-hoito-vain-puuttuvat))
     (is (every? #(contains? hoitoidt %) hoito-vain-puuttuvat-idt))))
 
 (deftest hae-urakat-urakkatyypilla-ja-tila-ehdolla

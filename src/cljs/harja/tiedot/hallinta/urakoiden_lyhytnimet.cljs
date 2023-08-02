@@ -55,11 +55,10 @@
   PaivitaUrakoidenLyhytnimet
   (process-event [{urakat :urakat} app]
     (do
-      (tuck-apurit/post! :tallenna-urakoiden-lyhytnimet (assoc urakat :haku-parametrit (hakuparametrit app))
+      (tuck-apurit/post! :tallenna-urakoiden-lyhytnimet {:tiedot urakat :haku-parametrit (hakuparametrit app)}
         {:onnistui ->PaivitaUrakoidenLyhytnimetOnnistui
          :epaonnistui ->PaivitaUrakoidenLyhytnimetEpaonnistui})
-      (-> app
-        (assoc :paivita-urakoiden-lyhytnimet-kesken? true))))
+      (assoc app :paivita-urakoiden-lyhytnimet-kesken? true)))
 
   PaivitaUrakoidenLyhytnimetOnnistui
   (process-event [{vastaus :vastaus} app]

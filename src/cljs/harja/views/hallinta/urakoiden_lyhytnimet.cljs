@@ -3,6 +3,7 @@
   (:require
     [harja.tyokalut.tuck :as tuck-apurit]
     [tuck.core :refer [tuck]]
+    [harja.ui.debug :as debug]
 
     [harja.ui.grid :as grid]
     [harja.ui.yleiset :as yleiset]
@@ -38,13 +39,13 @@
           [:div.flex-row
            [:div.label-ja-alasveto
             [:span.alasvedon-otsikko "Urakan tila"]
-            [yleiset/livi-pudotusvalikko {:valinta (:urakan-tila app)
+            [yleiset/livi-pudotusvalikko {:valinta urakan-tila
                                           :format-fn #(urakan-tilan-nimi %)
                                           :valitse-fn #(e! (tiedot/->PaivitaUrakanTila %))}
              [:kaikki :meneillaan :paattyneet]]]
            [:div.label-ja-alasveto
             [:span.alasvedon-otsikko "Urakkatyypit"]
-            [yleiset/livi-pudotusvalikko {:valinta (:valittu-urakkatyyppi app)
+            [yleiset/livi-pudotusvalikko {:valinta valittu-urakkatyyppi
                                           :format-fn :nimi
                                           :valitse-fn #(e! (tiedot/->PaivitaValittuUrakkaTyyppi %))}
              urakkatyypit]]
@@ -52,11 +53,10 @@
             [kentat/raksiboksi {:teksti "Näytä vain urakat joilta lyhyt nimi puuttuu"
                                 :toiminto (fn [arvo]
                                             (e! (tiedot/->PaivitaVainPuuttuvat (-> arvo .-target .-checked))))}
-             (:vain-puuttuvat app)]]]]
+             vain-puuttuvat]]]]
 
          [:div
-          [harja.ui.debug/debug {:app app}]
-          [:div
+          [debug/debug app]
            [grid/grid
             {:otsikko "Urakoiden lyhyet nimet"
              :voi-muokata? true
@@ -80,7 +80,7 @@
               :tyyppi :string
               :luokka "nakyma-valkoinen-solu"}]
 
-            (:urakoiden-lyhytnimet app)]]]]))))
+            (:urakoiden-lyhytnimet app)]]]))))
 
 (defn urakoiden-lyhytnimet []
   [tuck tiedot/tila urakoiden-lyhytnimet*])

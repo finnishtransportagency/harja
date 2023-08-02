@@ -34,25 +34,25 @@
     (q/tallenna-urakan-lyhytnimi! db {:urakka urakkaid
                                       :lyhytnimi lyhyt-nimi})))
 (defn tallenna-urakoiden-lyhytnimet [db kayttaja tiedot]
-  (let [urakat (:urakat tiedot)
+  (let [urakat (:urakat (:tiedot tiedot))
         haku-parametrit (:haku-parametrit tiedot)]
     ; vaaditaan samoja oikeuksia kuin indeksien hallinnassa, ei tarpeen tehdä omaa roolia lyhytnimien hallintaan
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-indeksit kayttaja)
     (doseq [urakka urakat] (tallenna-urakka-nimi db urakka))
     (hae-urakoiden-nimet db kayttaja haku-parametrit)))
 
-(defrecord UrakkaLyhytnimienHallinta []
-  component/Lifecycle
-  (start [{:keys [http-palvelin db] :as this}]
-    (julkaise-palvelu http-palvelin :hae-urakoiden-nimet
-      (fn [kayttaja tiedot]
-        (hae-urakoiden-nimet db kayttaja tiedot)))
-    (julkaise-palvelu http-palvelin :tallenna-urakoiden-lyhytnimet
-      (fn [kayttaja tiedot]
-        (tallenna-urakoiden-lyhytnimet db kayttaja tiedot)))
-    this)
-  (stop [{:keys [http-palvelin] :as this}]
-    (poista-palvelut http-palvelin
-      :hae-urakoiden-nimet
-      :tallenna-urakoiden-lyhytnimet)
-    this))
+  (defrecord UrakkaLyhytnimienHallinta []
+    component/Lifecycle
+    (start [{:keys [http-palvelin db] :as this}]
+      (julkaise-palvelu http-palvelin :hae-urakoiden-nimet
+        (fn [kayttaja tiedot]
+          (hae-urakoiden-nimet db kayttaja tiedot)))
+      (julkaise-palvelu http-palvelin :tallenna-urakoiden-lyhytnimet
+        (fn [kayttaja tiedot]
+          (tallenna-urakoiden-lyhytnimet db kayttaja tiedot)))
+      this)
+    (stop [{:keys [http-palvelin] :as this}]
+      (poista-palvelut http-palvelin
+        :hae-urakoiden-nimet
+        :tallenna-urakoiden-lyhytnimet)
+      this))
