@@ -26,7 +26,7 @@
   (komp/luo
     (komp/sisaan
       #(e! (tiedot/->HaeUrakoidenLyhytnimet {:urakkatyyppi @yhteiset/valittu-urakkatyyppi})))
-    (fn [e! app]
+    (fn [e! {:keys [urakan-tila valittu-urakkatyyppi vain-puuttuvat] :as app}]
       (let [urakkatyypit (keep #(if (not= :vesivayla (:arvo %))
                                   %
                                   {:nimi "Vesiväylät" :arvo :vesivayla-hoito})
