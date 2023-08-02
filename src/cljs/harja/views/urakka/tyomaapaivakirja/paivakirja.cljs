@@ -149,8 +149,7 @@
       [muodosta-html (assoc-in tiedot [1 :tunniste] tiedot/raportti-avain)]]
 
      ;; Sticky bar (Edellinen - Seuraava) Tallenna PDF
-     ;;TODO: Toteutetaan myöhemmin
-     #_[:div.ala-valinnat-fixed
+     [:div.ala-valinnat-fixed
 
         [:div.napit.klikattava
          [:span.nuoli
@@ -166,11 +165,6 @@
          [:span.nuoli
           [ikonit/livicon-download]]
          [:span "Tallenna PDF"]]
-
-        [:div.napit.ei-reunoja.klikattava
-         [:span.nuoli
-          [ikonit/harja-icon-action-send-email]]
-         [:span "Lähetä sähköpostilla"]]
 
         [:div.napit.ei-reunoja.klikattava {:on-click #(do
                                                         (e! (tiedot/->PoistaRiviValinta))

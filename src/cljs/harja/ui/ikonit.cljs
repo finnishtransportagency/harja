@@ -443,6 +443,11 @@
 ;;   }
 ;;   siihen mikä harja-icons.less tiedostossa on merkitty status-completed koodiksi
 
+;;  - mikäli muutoksien pushaus ei mene läpi, disconnectaa VPN/vaihda networkkia & lisää buffer kokoa:
+;;    git config http.postBuffer 500000000
+;;    git config http.lowSpeedTime 600
+;;    ja kokeile uudestaan
+
 ;; - kaikki harja-icons.ttf:Zone.Identifier tiedostot voi poistaa jos sellaisia ilmestyy (Git Source control changes)
 ;; - päivitä funktiot tähän tiedostoon
 ;;   - alempana on koodia, jolla voi generoida funktiot replissä
