@@ -20,7 +20,7 @@
 (defn hae-urakoiden-nimet [db kayttaja params]
   (let [hakuehdot (muodosta-hakuehdot params)]
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-indeksit kayttaja)
-    (log/debug "Haetaan urakoideﬂnﬂ nimiä parametreilla: " params)
+    (log/debug "Haetaan urakoiden nimiä parametreilla: " params)
     (log/debug "hakuehdot: " hakuehdot)
     (into []
       (q/hae-urakoiden-nimet db hakuehdot))))

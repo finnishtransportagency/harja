@@ -39,8 +39,7 @@
                 (hakuparametrit-kaikki))
         vaihdettu-nimi (kutsu-palvelua (:http-palvelin jarjestelma)
                          :tallenna-urakoiden-lyhytnimet +kayttaja-jvh+
-                         (tallenna-parametrit urakkaid))
-        ]
+                         (tallenna-parametrit urakkaid))]
     (is (= (:lyhyt_nimi (first (filter (comp #{urakkaid} :id) tulos))) "Oulun lyhyt nimi"))
     (is (= (:lyhyt_nimi (first (filter (comp #{urakkaid} :id) vaihdettu-nimi))) "test123"))))
 
@@ -48,7 +47,6 @@
   (let [hakutulos (kutsu-palvelua (:http-palvelin jarjestelma)
                     :hae-urakoiden-nimet +kayttaja-jvh+
                     (assoc (hakuparametrit-kaikki) :vain-puuttuvat true))]
-    ;(is (every? #(nil? (:lyhyt_nimi %)) hakutulos))
     (is (every? (fn [m] (nil? (:lyhyt_nimi m))) hakutulos))))
 
 (deftest hae-urakat-urakkatyypilla-ja-lyhytnimi-puuttuu
@@ -56,10 +54,26 @@
         hakutulos-hoito (kutsu-palvelua (:http-palvelin jarjestelma)
                     :hae-urakoiden-nimet +kayttaja-jvh+
                     hakuehdot-hoito)
+        hoitoidt (into #{} (map :id hakutulos-hoito))
         hakutulos-hoito-vain-puuttuvat (kutsu-palvelua (:http-palvelin jarjestelma)
                           :hae-urakoiden-nimet +kayttaja-jvh+
-                          (assoc hakuehdot-hoito :vain-puuttuvat true))]
+                          (assoc hakuehdot-hoito :vain-puuttuvat true))
+        hoito-vain-puuttuvat-idt (into #{} (map :id hakutulos-hoito-vain-puuttuvat))]
 
     (is (some (fn [m] (= (:lyhyt_nimi m) "Oulun lyhyt nimi")) hakutulos-hoito))
     (is (every? (fn [m] (nil? (:lyhyt_nimi m))) hakutulos-hoito-vain-puuttuvat))
-    ))
+    (is (every? #(contains? hoitoidt %) hoito-vain-puuttuvat-idt))))
+
+(deftest hae-urakat-urakkatyypilla-ja-tila-ehdolla
+  (let [hakuehdot-hoito (assoc (hakuparametrit-kaikki) :urakkatyyppi :hoito)
+        hakutulos-hoito (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :hae-urakoiden-nimet +kayttaja-jvh+
+                          hakuehdot-hoito)
+        hoitoidt (into #{} (map :id hakutulos-hoito))
+        hakutulos-hoito-paattyneet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :hae-urakoiden-nimet +kayttaja-jvh+
+                                         (assoc hakuehdot-hoito :urakan-tila :paattyneet))
+        hoito-paattyneet-idt (into #{} (map :id hakutulos-hoito-paattyneet))]
+
+    (is (not-empty hakutulos-hoito-paattyneet))
+    (is (every? #(contains? hoitoidt %) hoito-paattyneet-idt))))

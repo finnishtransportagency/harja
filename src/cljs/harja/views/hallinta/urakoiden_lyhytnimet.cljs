@@ -4,7 +4,7 @@
     [tuck.core :refer [tuck]]
 
     [harja.ui.grid :as grid]
-    [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
+    [harja.ui.yleiset :as yleiset]
     [harja.tiedot.hallinta.yhteiset :as yhteiset]
     [harja.tiedot.hallinta.urakoiden-lyhytnimet :as tiedot]
     [harja.tiedot.navigaatio :as nav]
@@ -21,17 +21,16 @@
     :paattyneet
     "Päättyneet"))
 
-(defn- urakoiden-lyhytnimet* [e! app]
+(defn- urakoiden-lyhytnimet* [e!]
   (komp/luo
     (komp/sisaan
       #(e! (tiedot/->HaeUrakoidenLyhytnimet {:urakkatyyppi @yhteiset/valittu-urakkatyyppi})))
-    (fn [e! {:keys [urakoiden-nimet hae-urakoiden-lyhytnimet-kesken? hae-urakoiden-lyhytnimet-kesken?] :as app}]
+    (fn [e! app]
       (let [urakkatyypit (keep #(if (not= :vesivayla (:arvo %))
                                   %
                                   {:nimi "Vesiväylät" :arvo :vesivayla-hoito})
                            (conj nav/+urakkatyypit-ja-kaikki+
-                             {:nimi "Kanavat", :arvo :vesivayla-kanavien-hoito}))
-            ]
+                             {:nimi "Kanavat", :arvo :vesivayla-kanavien-hoito}))]
         [:div.urakkanimet-uloin
          [:div.urakkanimet-otsake-ja-hakuehdot
           [:h1 "Urakkanimet"]
@@ -49,39 +48,38 @@
                                           :valitse-fn #(e! (tiedot/->PaivitaValittuUrakkaTyyppi %))}
              urakkatyypit]]
            [:div.urakkanimet-checkbox
-           [kentat/raksiboksi {:teksti "Näytä vain urakat joilta lyhyt nimi puuttuu"
-                               :toiminto (fn [arvo]
-                                           (e! (tiedot/->PaivitaVainPuuttuvat (-> arvo .-target .-checked))))}
-            (:vain-puuttuvat app)]
-            ]
-           ]
-          ]
+            [kentat/raksiboksi {:teksti "Näytä vain urakat joilta lyhyt nimi puuttuu"
+                                :toiminto (fn [arvo]
+                                            (e! (tiedot/->PaivitaVainPuuttuvat (-> arvo .-target .-checked))))}
+             (:vain-puuttuvat app)]]]]
 
+         [:div
+          [harja.ui.debug/debug {:app app}]
           [:div
-           [harja.ui.debug/debug {:app app}]
-           [:div
-            [grid/grid
-             {:otsikko "Urakoiden lyhyet nimet"
-              :voi-muokata? true
-              :voi-lisata? false
-              :voi-poistaa? (constantly false)
-              :piilota-toiminnot? false
-              :tunniste :id
-              :jarjesta :nimi
-              :tallenna-vain-muokatut true
-              :tallenna (fn [urakat]
-                          (e! (tiedot/->PaivitaUrakoidenLyhytnimet {:urakat urakat})))}
+           [grid/grid
+            {:otsikko "Urakoiden lyhyet nimet"
+             :voi-muokata? true
+             :voi-lisata? false
+             :voi-poistaa? (constantly false)
+             :piilota-toiminnot? false
+             :tunniste :id
+             :jarjesta :nimi
+             :tallenna-vain-muokatut true
+             :tallenna (fn [urakat]
+                         (e! (tiedot/->PaivitaUrakoidenLyhytnimet {:urakat urakat})))}
 
-             [{:nimi :nimi
-               :leveys "auto"
-               :otsikko "Virallinen nimi (Sampo-nimi)"
-               :tyyppi :string
-               :muokattava? (constantly false)}
-              {:nimi :lyhyt_nimi
-               :leveys "auto"
-               :otsikko "Lyhyt nimi (käytetään esim ilmoitukset-näkymän taulukossa)"
-               :tyyppi :string}]
+            [{:nimi :nimi
+              :leveys "auto"
+              :otsikko "Virallinen nimi (Sampo-nimi)"
+              :tyyppi :string
+              :muokattava? (constantly false)}
+             {:nimi :lyhyt_nimi
+              :leveys "auto"
+              :otsikko "Lyhyt nimi (käytetään esim ilmoitukset-näkymän taulukossa)"
+              :tyyppi :string
+              :luokka "nakyma-valkoinen-solu"}]
 
-             (:urakoiden-lyhytnimet app)]]]]))))
-(defn urakoiden-lyhytnimet [e! app]
+            (:urakoiden-lyhytnimet app)]]]]))))
+
+(defn urakoiden-lyhytnimet []
   [tuck tiedot/tila urakoiden-lyhytnimet*])

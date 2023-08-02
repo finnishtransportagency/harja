@@ -35,7 +35,7 @@
 (extend-protocol tuck/Event
 
   HaeUrakoidenLyhytnimet
-  (process-event [{valinnat :valinnat} app]
+  (process-event [_ app]
     (do
       (hae-urakoiden-nimet (hakuparametrit app))
       (assoc app :hae-urakoiden-lyhytnimet-kesken? true)))
