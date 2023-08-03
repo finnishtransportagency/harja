@@ -6,11 +6,13 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.pvm :as pvm]
             [harja.tiedot.raportit :as raportit]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.nakymasiirrin :as siirrin])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
 (defonce raportti-avain :tyomaapaivakirja-nakyma)
+
 (def nakymassa? (atom false))
 
 (defonce tila (atom {:tiedot []
@@ -40,16 +42,32 @@
 (defonce raportin-tiedot
   (reaction<! [p @raportin-parametrit]
     {:nil-kun-haku-kaynnissa? true}
-    (when (and p @nakymassa?)
+    (when 
+      (and p @nakymassa?)
       (raportit/suorita-raportti p))))
 
 (defrecord HaeTiedot [urakka-id])
 (defrecord ValitseRivi [rivi])
 (defrecord PoistaRiviValinta [])
+(defrecord SeuraavaRivi [])
 (defrecord PaivitaAikavali [uudet])
 (defrecord PaivitaHakumuoto [uudet])
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
+
+(defn- etsi-seuraava-rivi
+  [y data id]
+  (when (> (count data) (dec y))
+    (let [rivi (get-in data [y])
+          rivi-id (:tyomaapaivakirja_id rivi)]
+      (if (= rivi-id id)
+        (get-in data [(inc y)])
+        (recur (inc y) data id)))))
+
+(defn scrollaa-viimeksi-valitulle-riville [e!]
+  ;; Poistetaan rivivalinta ja rullataan käyttäjä viimeksi klikatulle riville
+  (e! (->PoistaRiviValinta))
+  (.setTimeout js/window (fn [] (siirrin/kohde-elementti-luokka "viimeksi-valittu-tausta")) 150))
 
 (defn suodata-rivit
   "Suodatetaan tulokset käyttäjän valitsemien suodattimien perusteella"
@@ -66,7 +84,6 @@
                             (= valittu-hakumuoto rivin-toimitustila)))) (:tiedot app))]
     rivit))
 
-
 (defn- hae-paivakirjat [app]
   (let [aikavali (get-in app [:valinnat :aikavali])
         hakumuoto (get-in app [:valinnat :hakumuoto])]
@@ -77,8 +94,8 @@
        :hakumuoto hakumuoto}
       {:onnistui ->HaeTiedotOnnistui
        :epaonnistui ->HaeTiedotEpaonnistui})))
-(extend-protocol tuck/Event
 
+(extend-protocol tuck/Event
   HaeTiedot
   (process-event [_ app]
     (hae-paivakirjat app)
@@ -116,8 +133,8 @@
       (do
         (swap! tila assoc :valittu-rivi rivi)
         (-> app
-            (assoc :valittu-rivi rivi)
-            (assoc :viimeksi-valittu rivi)))
+          (assoc :valittu-rivi rivi)
+          (assoc :viimeksi-valittu rivi)))
       (do
         (viesti/nayta-toast! "Valitun päivän työmaapäiväkirjaa ei ole vielä lähetetty." :varoitus)
         app)))
@@ -127,4 +144,19 @@
     ;; Raportin sulkeminen käynnistää listauksen hakemisen tietokannasta aina
     (hae-paivakirjat app)
     (-> app
-      (assoc :valittu-rivi nil))))
+      (assoc :valittu-rivi nil)))
+
+  SeuraavaRivi
+  (process-event [_ {:keys [nayta-rivit valittu-rivi] :as app}]
+    ;; Etsitään seuraava päiväkirja listauksesta  
+    (let [seuraava-rivi (etsi-seuraava-rivi 0 (vec nayta-rivit) (:tyomaapaivakirja_id valittu-rivi))
+          seuraava-rivi (if (nil? (:tyomaapaivakirja_id seuraava-rivi)) nil seuraava-rivi)]
+      ;; Jos seuraava rivi olemassa, lataa se ja maalaa listauksessa valituksi
+      (if seuraava-rivi
+        (assoc app
+          :valittu-rivi seuraava-rivi
+          :viimeksi-valittu seuraava-rivi)
+        ;; Seuraavaa riviä ei olemassa
+        (do 
+          (scrollaa-viimeksi-valitulle-riville app)
+          (assoc app :valittu-rivi seuraava-rivi))))))

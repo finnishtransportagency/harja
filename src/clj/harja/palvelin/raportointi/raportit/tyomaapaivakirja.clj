@@ -63,7 +63,7 @@
                                                                          :loppuaika (c/to-sql-time (pvm/pvm-plus-tuntia paivamaara 24))})]
     [tehtavat1 tehtavat2 tehtavat3 tehtavat4 tehtavat5]))
 
-(defn suorita [db _ {:keys [valittu-rivi] :as parametrit}]
+(defn suorita [db _ {:keys [valittu-rivi]}]
   (if valittu-rivi
     (let [tyomaapaivakirja (first (tyomaapaivakirja-kyselyt/hae-paivakirja db {:tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
                                                                                :versio (:versio valittu-rivi)}))

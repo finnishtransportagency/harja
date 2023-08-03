@@ -10,10 +10,8 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.raportti :refer [muodosta-html]]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.nakymasiirrin :as siirrin]
             [harja.pvm :as pvm]
-            [harja.tiedot.navigaatio :as nav])
-  (:require-macros [harja.atom :refer [reaction-writable]]))
+            [harja.tiedot.navigaatio :as nav]))
 
 (defn haun-valinnat [tiedot]
   (let [myohassa (filter
@@ -139,10 +137,7 @@
      ;; Päiväkirjanäkymä
      [:div.paivakirja-nakyma
       ;; Takaisin nappi
-      [:div.klikattava {:class "sulje" :on-click #(do
-                                                    (e! (tiedot/->PoistaRiviValinta))
-                                                    ;; Rullataan käyttäjä viimeksi klikatulle riville
-                                                    (.setTimeout js/window (fn [] (siirrin/kohde-elementti-luokka "viimeksi-valittu-tausta")) 150))}
+      [:div.klikattava {:class "sulje" :on-click #(tiedot/scrollaa-viimeksi-valitulle-riville e!)}
        [ikonit/harja-icon-navigation-close]]
 
       ;; Raportin html
@@ -156,7 +151,7 @@
           [ikonit/harja-icon-navigation-previous-page]]
          [:span "Edellinen"]]
 
-        [:div.napit.klikattava
+        [:div.napit.klikattava {:on-click #(e! (tiedot/->SeuraavaRivi))}
          [:span "Seuraava"]
          [:span.nuoli
           [ikonit/harja-icon-navigation-next-page]]]
@@ -166,10 +161,7 @@
           [ikonit/livicon-download]]
          [:span "Tallenna PDF"]]
 
-        [:div.napit.ei-reunoja.klikattava {:on-click #(do
-                                                        (e! (tiedot/->PoistaRiviValinta))
-                                                        ;; Rullataan käyttäjä viimeksi klikatulle riville
-                                                        (.setTimeout js/window (fn [] (siirrin/kohde-elementti-luokka "viimeksi-valittu-tausta")) 150))}
+        [:div.napit.ei-reunoja.klikattava {:on-click #(tiedot/scrollaa-viimeksi-valitulle-riville e!)}
          [:span.nuoli [ikonit/harja-icon-navigation-close]]
          [:span "Sulje"]]]]
 
