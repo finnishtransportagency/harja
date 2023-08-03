@@ -189,12 +189,12 @@
        :juurisyy3-selite juurisyy3-selite})
     (turvallisuuspoikkeamat/hae-turvallisuuspoikkeaman-id-ulkoisella-idlla
       db {:ulkoinen_id (:id tunniste)
-          :luoja (:id kirjaaja)})))
+          :urakka-id urakka-id})))
 
 (defn luo-tai-paivita-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti]} data]
     (log/debug "Onko turvallisuuspoikkeama jo olmessa?")
-    (if (turvallisuuspoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
+    (if (turvallisuuspoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) urakka-id)
       (paivita-turvallisuuspoikkeama db urakka-id kirjaaja data)
       (luo-turvallisuuspoikkeama db urakka-id kirjaaja data))))
 
