@@ -99,14 +99,18 @@
   [:fo:inline
    [:fo:inline (str arvo (when selite (str " (" selite ")")))]])
 
-(defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt lihavoi?]}]]
+(defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt lihavoi? font-size himmenna?]}]]
   (let [tyyli {:color (or itsepaisesti-maaritelty-oma-vari
                           (raportti-domain/virhetyylit tyyli)
                           "black")}
+        tyyli (if font-size (assoc tyyli :font-size font-size) tyyli)
+        tyyli (if himmenna? (assoc tyyli :color "#858585") tyyli)
         tyyli (if lihavoi?
                 (merge tyyli {:font-weight "bold"})
                 tyyli)]
-    [:fo:inline
+    ;; Muutettu inline -> block
+    ;; Korjaa bugin päiväkirjaraportissa, ei vaikuta mitenkän ulkonäköön
+    [:fo:block
      [:fo:inline tyyli
       (if fmt (fmt arvo) arvo)]]))
 
@@ -444,10 +448,14 @@
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
 
-(defmethod muodosta-pdf :jakaja [[_ _]]
-  [:fo:block {:border "solid 0.1mm gray"
-              :margin-top "30px"
-              :margin-bottom "30px"}])
+(defmethod muodosta-pdf :jakaja [[_ margin]]
+  (let [tyyli {:border "solid 0.1mm gray"}
+        ;; Jos haluaan ""poistaa margin"" jakajasta, laitetaan vaan 8px
+        margin-px (if-not (= margin :poista-margin) "30px" "8px")
+        tyyli (assoc tyyli
+                :margin-top margin-px
+                :margin-bottom margin-px)]
+    [:fo:block tyyli]))
 
 (defmethod muodosta-pdf :otsikko [[_ teksti]]
   [:fo:block {:padding-top "5mm" :font-size otsikon-fonttikoko} teksti])

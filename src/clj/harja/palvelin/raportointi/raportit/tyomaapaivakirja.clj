@@ -18,18 +18,19 @@
   (let [tapahtumarivit (reduce (fn [rivit onnettomuus]
                                  (conj
                                    rivit
-                                   [:jakaja true]
+                                   [:jakaja :poista-margin]
                                    (yhteiset/body-teksti (:kuvaus onnettomuus))))
                          [] tapahtumat)]
+    
     (into ()
       (conj
-        ;; Lisätään tyhjä rivi jos on tarpeen
-        (if (some? tapahtumat)
-          tapahtumarivit
-          (conj
-            [:jakaja true]
-            (yhteiset/placeholder-ei-tietoja ei-tapahtumia-teksti)))
-        [:jakaja true]
+        ;; Jos kuvaus on tyhjä, näytetään <ei tietoja>
+        (if (empty? (:kuvaus (first tapahtumat)))
+          (into []
+            [[:jakaja :poista-margin]
+             (yhteiset/placeholder-ei-tietoja ei-tapahtumia-teksti)])
+          tapahtumarivit)
+        [:jakaja :poista-margin]
         (yhteiset/osion-otsikko otsikko)))))
 
 ;;FIXME: Tähän alkoi menemään niin paljon aikaa, että tehdessä päädyttiin tekemään yksinkertainen mäppäys
@@ -162,15 +163,15 @@
        ;; Muut toimenpiteet
        (muut-toimenpiteet/muut-toimenpiteet-taulukko toimenpiteet)
        ;; Vahingot ja onnettomuudet
-       ;(tapahtumataulukot onnettomuudet "Vahingot ja onnettomuudet" "Ei vahinkoja tai onnettomuuksia")
+       (tapahtumataulukot onnettomuudet "Vahingot ja onnettomuudet" "Ei vahinkoja tai onnettomuuksia")
        ;; Tilapäiset liikenteenohjaukset
-       ;(tapahtumataulukot liikenteenohjaukset "Tilapäiset liikenteenohjaukset" "Ei liikenteenohjauksia")
+       (tapahtumataulukot liikenteenohjaukset "Tilapäiset liikenteenohjaukset" "Ei liikenteenohjauksia")
        ;; Viranomaispäätöksiin liittyvät maastotoimeksiannot
        (maastotoimeksiannot/maastotoimeksiannot-taulukko (:toimeksiannot tyomaapaivakirja))
        ;; Yhteydenotot ja palautteet, jotka edellyttävät toimenpiteitä
-       ;(tapahtumataulukot yhteydenotot "Yhteydenotot ja palautteet, jotka edellyttävät toimenpiteitä" "Ei yhteydenottoja")
+       (tapahtumataulukot yhteydenotot "Yhteydenotot ja palautteet, jotka edellyttävät toimenpiteitä" "Ei yhteydenottoja")
        ;; Muut huomiot
-       ;(tapahtumataulukot muut-kirjaukset "Muut huomiot" "Ei muita huomioita")
+       (tapahtumataulukot muut-kirjaukset "Muut huomiot" "Ei muita huomioita")
 
        ;; Kommentit (nämäkin pitäisi saada PDF raporttiin)
        ;; Toteutetaan myöhemmin
