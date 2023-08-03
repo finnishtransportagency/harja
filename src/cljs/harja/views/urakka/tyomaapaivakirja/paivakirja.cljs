@@ -163,7 +163,7 @@
        [:form {:target "_blank" :method "POST"
                :action (k/pdf-url :raportointi)}
         [:input {:type "hidden" :name "parametrit"
-                 :value (t/clj->transit tiedot)}]
+                 :value (t/clj->transit @tiedot/raportin-parametrit)}]
 
         [:button {:type "submit"}
          [:span.nuoli

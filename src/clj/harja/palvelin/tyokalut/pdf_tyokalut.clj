@@ -52,3 +52,42 @@
        [:fo:table-cell [:fo:block saraketyyli-ala "Itsepalvelu: " (liikenneyhteenveto-arvo-str yhteenveto :palvelumuoto :itsepalvelu)]]
        [:fo:table-cell [:fo:block saraketyyli-ala "Muu: " (liikenneyhteenveto-arvo-str yhteenveto :palvelumuoto :muu)]]
        [:fo:table-cell [:fo:block sivusarakkeet-ala "Yhteensä: " (liikenneyhteenveto-arvo-str yhteenveto :palvelumuoto :yhteensa)]]]])])
+
+(defmethod pdf-raportointi/muodosta-pdf :gridit-vastakkain [[_
+                                                             {:keys [otsikko-vasen optiot-vasen otsikot-vasen rivit-vasen]}
+                                                             {:keys [otsikko-oikea optiot-oikea otsikot-oikea rivit-oikea]}]]
+  ;; Tekee 2 PDF taulukkoa vierekkän mikäli molempien taulukkojen data olemassa
+  (if otsikko-oikea
+    [:fo:table {:font-size "9pt" :margin-bottom "12px"}
+     [:fo:table-column {:column-width "52%"}]
+     [:fo:table-column {:column-width "48%"}]
+
+     [:fo:table-body
+      [:fo:table-row
+       [:fo:table-cell
+        ;; Tehdään pieni väli keskelle, jonka takia 52% & 48%
+        ;; Näyttää hieman siistimmältä, ehkä
+        [:fo:block {:margin-right "5px"}
+         (pdf-raportointi/taulukko
+           otsikko-vasen
+           false
+           otsikot-vasen
+           rivit-vasen
+           optiot-vasen)]]
+
+       [:fo:table-cell
+        [:fo:block
+         (pdf-raportointi/taulukko
+           otsikko-oikea
+           false
+           otsikot-oikea
+           rivit-oikea
+           optiot-oikea)]]]]]
+
+    ;; Pelkästään vasemman taulukon data olemassa, eli tehdään vain 1 taulukko
+    (pdf-raportointi/taulukko
+      otsikko-vasen
+      false
+      otsikot-vasen
+      rivit-vasen
+      optiot-vasen)))

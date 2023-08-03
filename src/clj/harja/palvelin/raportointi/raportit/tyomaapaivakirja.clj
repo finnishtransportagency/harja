@@ -149,7 +149,7 @@
       [:raportti {:nimi otsikko
                   :piilota-otsikko? true}
 
-       [:tyomaapaivakirja-header tyomaapaivakirja]
+       ; [:tyomaapaivakirja-header tyomaapaivakirja]
 
        ;; Päivystäjät, Työnjohtajat
        (vahvuus/vahvuus-taulukot (:paivystajat tyomaapaivakirja) (:tyonjohtajat tyomaapaivakirja))
@@ -162,15 +162,15 @@
        ;; Muut toimenpiteet
        (muut-toimenpiteet/muut-toimenpiteet-taulukko toimenpiteet)
        ;; Vahingot ja onnettomuudet
-       (tapahtumataulukot onnettomuudet "Vahingot ja onnettomuudet" "Ei vahinkoja tai onnettomuuksia")
+       ;(tapahtumataulukot onnettomuudet "Vahingot ja onnettomuudet" "Ei vahinkoja tai onnettomuuksia")
        ;; Tilapäiset liikenteenohjaukset
-       (tapahtumataulukot liikenteenohjaukset "Tilapäiset liikenteenohjaukset" "Ei liikenteenohjauksia")
+       ;(tapahtumataulukot liikenteenohjaukset "Tilapäiset liikenteenohjaukset" "Ei liikenteenohjauksia")
        ;; Viranomaispäätöksiin liittyvät maastotoimeksiannot
        (maastotoimeksiannot/maastotoimeksiannot-taulukko (:toimeksiannot tyomaapaivakirja))
        ;; Yhteydenotot ja palautteet, jotka edellyttävät toimenpiteitä
-       (tapahtumataulukot yhteydenotot "Yhteydenotot ja palautteet, jotka edellyttävät toimenpiteitä" "Ei yhteydenottoja")
+       ;(tapahtumataulukot yhteydenotot "Yhteydenotot ja palautteet, jotka edellyttävät toimenpiteitä" "Ei yhteydenottoja")
        ;; Muut huomiot
-       (tapahtumataulukot muut-kirjaukset "Muut huomiot" "Ei muita huomioita")
+       ;(tapahtumataulukot muut-kirjaukset "Muut huomiot" "Ei muita huomioita")
 
        ;; Kommentit (nämäkin pitäisi saada PDF raporttiin)
        ;; Toteutetaan myöhemmin

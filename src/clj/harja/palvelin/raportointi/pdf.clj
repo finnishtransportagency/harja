@@ -425,7 +425,7 @@
              (str elem ":")
              (str (fmt/euro hoitokauden-arvo)))))))))
 
-(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko hoitokausi-arvotaulukko?] :as optiot} sarakkeet data]]
+(defn taulukko [otsikko hoitokausi-arvotaulukko? sarakkeet data optiot]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
     (if hoitokausi-arvotaulukko?
       (hoitokausi-kuukausi-arvotaulukko sarakkeet data)
@@ -437,6 +437,9 @@
         (taulukko-header optiot sarakkeet)
         (taulukko-body sarakkeet data optiot)]
        [:fo:block {:space-after "1em"}]])))
+
+(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko hoitokausi-arvotaulukko?] :as optiot} sarakkeet data]]
+  (taulukko otsikko hoitokausi-arvotaulukko? sarakkeet data optiot))
 
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
