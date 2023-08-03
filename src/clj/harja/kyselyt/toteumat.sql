@@ -331,7 +331,7 @@ SET alkanut           = :alkanut,
   tyokonetyyppi       = :tyokonetyyppi,
   tyokonetunniste     = :tyokonetunniste,
   tyokoneen_lisatieto = :tyokoneen-lisatieto
-WHERE ulkoinen_id = :id AND urakka = :urakka AND luoja = :luoja;
+WHERE ulkoinen_id = :id AND urakka = :urakka;
 
 -- name: luo-toteuma<!
 -- Luo uuden toteuman.
@@ -359,12 +359,12 @@ SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
 -- name: poista-toteumat-ulkoisilla-idlla-ja-luojalla!
 UPDATE toteuma
 SET muokattu = NOW(), muokkaaja = :kayttaja-id, poistettu = TRUE
-WHERE ulkoinen_id IN (:ulkoiset-idt) AND luoja = :kayttaja-id AND urakka = :urakka-id AND poistettu IS NOT TRUE;
+WHERE ulkoinen_id IN (:ulkoiset-idt) AND urakka = :urakka-id AND poistettu IS NOT TRUE;
 
 -- name: hae-poistettavien-toteumien-alkanut-ulkoisella-idlla
 SELECT alkanut
   FROM toteuma t
- WHERE ulkoinen_id IN (:ulkoiset-idt) AND luoja = :kayttaja-id AND urakka = :urakka-id AND poistettu IS NOT TRUE;
+ WHERE ulkoinen_id IN (:ulkoiset-idt) AND urakka = :urakka-id AND poistettu IS NOT TRUE;
 
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
@@ -392,7 +392,7 @@ WHERE id IN (:id) AND poistettu IS NOT TRUE;
 SELECT EXISTS(
     SELECT ulkoinen_id
     FROM toteuma
-    WHERE ulkoinen_id = :ulkoinen_id AND luoja = :luoja AND urakka = :urakka_id);
+    WHERE ulkoinen_id = :ulkoinen_id AND urakka = :urakka_id);
 
 -- name: listaa-urakan-hoitokauden-erilliskustannukset
 -- Listaa urakan erilliskustannukset

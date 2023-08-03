@@ -25,7 +25,7 @@
              tiemerkintatoteumat]
        (let [ulkoinen-id (:id tunniste)
              luoja-id (:id kayttaja)
-             id (yllapitototeuma-q/hae-tiemerkintatoteuman-id-ulkoisella-idlla db luoja-id ulkoinen-id)
+             id (yllapitototeuma-q/hae-tiemerkintatoteuman-id-ulkoisella-idlla db urakka-id ulkoinen-id)
              yllapitokohde (when yllapitokohde-id (first (yllapitokohteet-q/hae-yllapitokohde db {:id yllapitokohde-id})))
              hinta-kohteelle (when yllapitokohde-id (d/maarittele-hinnan-kohde yllapitokohde))
              paivamaara (json/aika-string->java-sql-date paivamaara)
