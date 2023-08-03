@@ -155,8 +155,8 @@ DO $$
                      HAVING count(ulkoinen_id) > 1)
             loop
                 update toteuma set poistettu = true, muokattu = NOW() where id = rivi.id;
-                update toteuma_materiaali set poistettu = true, muokattu = NOW() where id = rivi.id;
-                update toteuma_tehtava set poistettu = true, muokattu = NOW() where id = rivi.id;
+                update toteuma_materiaali set poistettu = true, muokattu = NOW() where toteuma = rivi.id;
+                update toteuma_tehtava set poistettu = true, muokattu = NOW() where toteuma = rivi.id;
 
             end loop;
     end
