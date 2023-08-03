@@ -29,7 +29,7 @@ DO $$
                      GROUP BY urakka, ulkoinen_id, poistettu, tyyppi
                      HAVING count(ulkoinen_id) > 1)
             loop
-                update tarkastus set poistettu = true where id = rivi.id;
+                update tarkastus set poistettu = true, muokattu = NOW() where id = rivi.id;
             end loop;
     end
 $$ language plpgsql;
@@ -60,10 +60,10 @@ create unique index tarkastus_2017_q2_ulkoinen_id_urakka_poistettu_uindex
 create unique index tarkastus_2017_q3_ulkoinen_id_urakka_poistettu_uindex
     on tarkastus_2017_q3 (ulkoinen_id, urakka, poistettu, tyyppi);
 create unique index tarkastus_2017_q4_ulkoinen_id_urakka_poistettu_uindex
-    on tarkastus_2017_q4 (ulkoinen_id, urakka, poistettu, tyyppi);
+    on tarkastus_2017_q4 (ulkoinen_id, urakka, poistettu, tyyppi) WHERE luotu > '2018-01-01';
 
 create unique index tarkastus_2018_q1_ulkoinen_id_urakka_poistettu_uindex
-    on tarkastus_2018_q1 (ulkoinen_id, urakka, poistettu, tyyppi);
+    on tarkastus_2018_q1 (ulkoinen_id, urakka, poistettu, tyyppi) WHERE luotu > '2018-03-01';
 create unique index tarkastus_2018_q2_ulkoinen_id_urakka_poistettu_uindex
     on tarkastus_2018_q2 (ulkoinen_id, urakka, poistettu, tyyppi);
 create unique index tarkastus_2018_q3_ulkoinen_id_urakka_poistettu_uindex
@@ -90,16 +90,16 @@ create unique index tarkastus_2020_q4_ulkoinen_id_urakka_poistettu_uindex
     on tarkastus_2020_q4 (ulkoinen_id, urakka, poistettu, tyyppi);
 
 create unique index tarkastus_2021_q1_ulkoinen_id_urakka_poistettu_uindex
-    on tarkastus_2021_q1 (ulkoinen_id, urakka, poistettu, tyyppi);
+    on tarkastus_2021_q1 (ulkoinen_id, urakka, poistettu, tyyppi) WHERE luotu > '2021-06-01';
 create unique index tarkastus_2021_q2_ulkoinen_id_urakka_poistettu_uindex
-    on tarkastus_2021_q2 (ulkoinen_id, urakka, poistettu, tyyppi);
+    on tarkastus_2021_q2 (ulkoinen_id, urakka, poistettu, tyyppi) WHERE luotu > '2021-06-01';
 create unique index tarkastus_2021_q3_ulkoinen_id_urakka_poistettu_uindex
     on tarkastus_2021_q3 (ulkoinen_id, urakka, poistettu, tyyppi);
 create unique index tarkastus_2021_q4_ulkoinen_id_urakka_poistettu_uindex
     on tarkastus_2021_q4 (ulkoinen_id, urakka, poistettu, tyyppi);
 
 create unique index tarkastus_2022_q1_ulkoinen_id_urakka_poistettu_uindex
-    on tarkastus_2022_q1 (ulkoinen_id, urakka, poistettu, tyyppi);
+    on tarkastus_2022_q1 (ulkoinen_id, urakka, poistettu, tyyppi) WHERE luotu > '2022-03-01';
 create unique index tarkastus_2022_q2_ulkoinen_id_urakka_poistettu_uindex
     on tarkastus_2022_q2 (ulkoinen_id, urakka, poistettu, tyyppi);
 create unique index tarkastus_2022_q3_ulkoinen_id_urakka_poistettu_uindex
@@ -154,16 +154,16 @@ DO $$
                      GROUP BY urakka, ulkoinen_id, poistettu
                      HAVING count(ulkoinen_id) > 1)
             loop
-                update toteuma set poistettu = true where id = rivi.id;
-                update toteuma_materiaali set poistettu = true where id = rivi.id;
-                update toteuma_tehtava set poistettu = true where id = rivi.id;
+                update toteuma set poistettu = true, muokattu = NOW() where id = rivi.id;
+                update toteuma_materiaali set poistettu = true, muokattu = NOW() where id = rivi.id;
+                update toteuma_tehtava set poistettu = true, muokattu = NOW() where id = rivi.id;
 
             end loop;
     end
 $$ language plpgsql;
 
 CREATE UNIQUE INDEX toteuma_010101_191001_ulkoinen_id_urakka_poistettu_uindex
-    ON toteuma_010101_191001 (ulkoinen_id, urakka, poistettu);
+    ON toteuma_010101_191001 (ulkoinen_id, urakka, poistettu) where luotu > '2071-01-01';
 
 CREATE UNIQUE INDEX toteuma_191001_200701_ulkoinen_id_urakka_poistettu_uindex
     ON toteuma_191001_200701 (ulkoinen_id, urakka, poistettu);
