@@ -163,7 +163,7 @@ DO $$
 $$ language plpgsql;
 
 CREATE UNIQUE INDEX toteuma_010101_191001_ulkoinen_id_urakka_poistettu_uindex
-    ON toteuma_010101_191001 (ulkoinen_id, urakka, poistettu) where luotu > '2071-01-01';
+    ON toteuma_010101_191001 (ulkoinen_id, urakka, poistettu) where luotu > '2017-01-01';
 
 CREATE UNIQUE INDEX toteuma_191001_200701_ulkoinen_id_urakka_poistettu_uindex
     ON toteuma_191001_200701 (ulkoinen_id, urakka, poistettu);
