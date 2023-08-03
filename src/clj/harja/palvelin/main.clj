@@ -73,6 +73,7 @@
     [harja.palvelin.palvelut.info :as info]
     [harja.palvelin.palvelut.hallinta.rajoitusalue-pituudet :as rajoitusalue-pituudet]
     [harja.palvelin.palvelut.hallinta.palauteluokitukset :as palauteluokitukset-hallinta]
+    [harja.palvelin.palvelut.hallinta.urakoiden-lyhytnimet :as urakoidenlyhytnimet-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
@@ -796,7 +797,12 @@
       :palauteluokitukset-hallinta
       (component/using
         (palauteluokitukset-hallinta/->PalauteluokitustenHallinta)
-        [:http-palvelin :db :palautevayla]))))
+        [:http-palvelin :db :palautevayla])
+
+      :lyhytnimien-hallinta
+      (component/using
+        (urakoidenlyhytnimet-hallinta/->UrakkaLyhytnimienHallinta)
+        [:http-palvelin :db]))))
 
 (defonce harja-jarjestelma nil)
 
