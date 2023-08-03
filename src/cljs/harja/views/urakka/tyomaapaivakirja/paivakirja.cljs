@@ -11,7 +11,9 @@
             [harja.ui.raportti :refer [muodosta-html]]
             [harja.ui.yleiset :as yleiset]
             [harja.pvm :as pvm]
-            [harja.tiedot.navigaatio :as nav]))
+            [harja.tiedot.navigaatio :as nav]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.transit :as t]))
 
 (defn haun-valinnat [tiedot]
   (let [myohassa (filter
@@ -146,24 +148,31 @@
      ;; Sticky bar (Edellinen - Seuraava) Tallenna PDF
      [:div.ala-valinnat-fixed
 
-        [:div.napit.klikattava {:on-click #(e! (tiedot/->SelaaPaivakirjoja :edellinen))}
-         [:span.nuoli
-          [ikonit/harja-icon-navigation-previous-page]]
-         [:span "Edellinen"]]
+      [:div.napit.klikattava {:on-click #(e! (tiedot/->SelaaPaivakirjoja :edellinen))}
+       [:span.nuoli
+        [ikonit/harja-icon-navigation-previous-page]]
+       [:span "Edellinen"]]
 
-        [:div.napit.klikattava {:on-click #(e! (tiedot/->SelaaPaivakirjoja :seuraava))}
-         [:span "Seuraava"]
-         [:span.nuoli
-          [ikonit/harja-icon-navigation-next-page]]]
+      [:div.napit.klikattava {:on-click #(e! (tiedot/->SelaaPaivakirjoja :seuraava))}
+       [:span "Seuraava"]
+       [:span.nuoli
+        [ikonit/harja-icon-navigation-next-page]]]
 
-        [:div.napit.ei-reunoja.klikattava
+      [:div.napit.ei-reunoja.klikattava
+       ^{:key "raporttipdf"}
+       [:form {:target "_blank" :method "POST"
+               :action (k/pdf-url :raportointi)}
+        [:input {:type "hidden" :name "parametrit"
+                 :value (t/clj->transit tiedot)}]
+
+        [:button {:type "submit"}
          [:span.nuoli
           [ikonit/livicon-download]]
-         [:span "Tallenna PDF"]]
+         [:span "Tallenna PDF"]]]]
 
-        [:div.napit.ei-reunoja.klikattava {:on-click #(tiedot/scrollaa-viimeksi-valitulle-riville e!)}
-         [:span.nuoli [ikonit/harja-icon-navigation-close]]
-         [:span "Sulje"]]]]
+      [:div.napit.ei-reunoja.klikattava {:on-click #(tiedot/scrollaa-viimeksi-valitulle-riville e!)}
+       [:span.nuoli [ikonit/harja-icon-navigation-close]]
+       [:span "Sulje"]]]]
 
     [yleiset/ajax-loader "Ladataan tietoja..."]))
 

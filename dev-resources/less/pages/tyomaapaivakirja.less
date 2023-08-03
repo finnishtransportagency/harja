@@ -199,15 +199,18 @@
       border-width: 2px;
       color: @white-default;
 
-    * > {
-      row-gap: 20px;
-    }
+      // [Tallenna PDF] Poista submit napin default tyylit
+      button {
+        all: unset;
+        display: flex;
+        gap: 10px;
+      }
 
-    .nuoli {
-      transform: scale(1.0);
-      color: @white-default;
-      margin-top: 2px;
-    }
+      .nuoli {
+        transform: scale(1.0);
+        color: @white-default;
+        margin-top: 2px;
+      }
     }
 
     .ei-reunoja {
