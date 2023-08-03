@@ -146,12 +146,12 @@
      ;; Sticky bar (Edellinen - Seuraava) Tallenna PDF
      [:div.ala-valinnat-fixed
 
-        [:div.napit.klikattava
+        [:div.napit.klikattava {:on-click #(e! (tiedot/->SelaaPaivakirjoja :edellinen))}
          [:span.nuoli
           [ikonit/harja-icon-navigation-previous-page]]
          [:span "Edellinen"]]
 
-        [:div.napit.klikattava {:on-click #(e! (tiedot/->SeuraavaRivi))}
+        [:div.napit.klikattava {:on-click #(e! (tiedot/->SelaaPaivakirjoja :seuraava))}
          [:span "Seuraava"]
          [:span.nuoli
           [ikonit/harja-icon-navigation-next-page]]]

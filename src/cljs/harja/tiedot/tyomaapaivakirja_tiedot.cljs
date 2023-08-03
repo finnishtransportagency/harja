@@ -49,20 +49,21 @@
 (defrecord HaeTiedot [urakka-id])
 (defrecord ValitseRivi [rivi])
 (defrecord PoistaRiviValinta [])
-(defrecord SeuraavaRivi [])
+(defrecord SelaaPaivakirjoja [suunta])
 (defrecord PaivitaAikavali [uudet])
 (defrecord PaivitaHakumuoto [uudet])
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
 
-(defn- etsi-seuraava-rivi
-  [y data id]
+(defn- selaa-paivakirjoja
+  [y data id suunta]
   (when (> (count data) (dec y))
     (let [rivi (get-in data [y])
-          rivi-id (:tyomaapaivakirja_id rivi)]
+          rivi-id (:tyomaapaivakirja_id rivi)
+          indeksi (if (= suunta :seuraava) (inc y) (dec y))]
       (if (= rivi-id id)
-        (get-in data [(inc y)])
-        (recur (inc y) data id)))))
+        (get-in data [indeksi])
+        (recur (inc y) data id suunta)))))
 
 (defn scrollaa-viimeksi-valitulle-riville [e!]
   ;; Poistetaan rivivalinta ja rullataan käyttäjä viimeksi klikatulle riville
@@ -146,17 +147,17 @@
     (-> app
       (assoc :valittu-rivi nil)))
 
-  SeuraavaRivi
-  (process-event [_ {:keys [nayta-rivit valittu-rivi] :as app}]
-    ;; Etsitään seuraava päiväkirja listauksesta  
-    (let [seuraava-rivi (etsi-seuraava-rivi 0 (vec nayta-rivit) (:tyomaapaivakirja_id valittu-rivi))
-          seuraava-rivi (if (nil? (:tyomaapaivakirja_id seuraava-rivi)) nil seuraava-rivi)]
-      ;; Jos seuraava rivi olemassa, lataa se ja maalaa listauksessa valituksi
-      (if seuraava-rivi
+  SelaaPaivakirjoja 
+  (process-event [{suunta :suunta} {:keys [nayta-rivit valittu-rivi] :as app}]
+    ;; Etsitään seuraava/edellinen päiväkirja listauksesta 
+    (let [etsitty-rivi (selaa-paivakirjoja 0 (vec nayta-rivit) (:tyomaapaivakirja_id valittu-rivi) suunta)
+          etsitty-rivi (if (nil? (:tyomaapaivakirja_id etsitty-rivi)) nil etsitty-rivi)]
+      ;; Jos rivi olemassa, lataa se ja maalaa listauksessa valituksi
+      (if etsitty-rivi
         (assoc app
-          :valittu-rivi seuraava-rivi
-          :viimeksi-valittu seuraava-rivi)
-        ;; Seuraavaa riviä ei olemassa
+          :valittu-rivi etsitty-rivi
+          :viimeksi-valittu etsitty-rivi)
+        ;; Päiväkirjat rullattu loppuun, seuraavaa ei ole
         (do 
           (scrollaa-viimeksi-valitulle-riville app)
-          (assoc app :valittu-rivi seuraava-rivi))))))
+          (assoc app :valittu-rivi etsitty-rivi))))))
