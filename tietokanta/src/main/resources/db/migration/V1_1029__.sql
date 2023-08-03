@@ -17,8 +17,7 @@ CREATE UNIQUE INDEX paivystys_ulkoinen_id_urakka_uindex
 CREATE UNIQUE INDEX tiemerkinnan_yksikkohintainen_toteuma_ulkoinen_id_urakka_uindex
     ON tiemerkinnan_yksikkohintainen_toteuma (ulkoinen_id, urakka);
 
--- Jotta tarkastuksille voidaan lisätä uniikkiusindeksit, siivotaan sieltä ensin duplikaatit pois
-
+-- Jotta tarkastuksille voidaan lisätä uniikkiusindeksit, siivotaan sieltä ensin duplikaatit pois, niitä on 28 kpl
 DO $$
     DECLARE
         rivi record;
@@ -26,6 +25,7 @@ DO $$
 
         FOR rivi in (SELECT MIN(id) as id, urakka, ulkoinen_id, poistettu, tyyppi, count(ulkoinen_id)
                      FROM tarkastus
+                     WHERE luotu > '2022-05-01'
                      GROUP BY urakka, ulkoinen_id, poistettu, tyyppi
                      HAVING count(ulkoinen_id) > 1)
             loop
@@ -143,13 +143,14 @@ create unique index tarkastus_2026_q3_ulkoinen_id_urakka_poistettu_uindex
 create unique index tarkastus_2026_q4_ulkoinen_id_urakka_poistettu_uindex
     on tarkastus_2026_q4 (ulkoinen_id, urakka, poistettu, tyyppi);
 
--- Siivotaan duplikaatit toteumat pois, ennenkuin ajetaan unique indexit toteumille
+-- Siivotaan duplikaatit toteumat pois, ennenkuin ajetaan unique indexit toteumille, niitä on 28811
 DO $$
     DECLARE
         rivi record;
     BEGIN
         FOR rivi in (SELECT MIN(id) as id, urakka, ulkoinen_id, poistettu
                      FROM toteuma
+                     WHERE luotu > '2022-05-01'
                      GROUP BY urakka, ulkoinen_id, poistettu
                      HAVING count(ulkoinen_id) > 1)
             loop
