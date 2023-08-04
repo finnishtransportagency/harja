@@ -84,21 +84,36 @@
   [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet ohjauskahvat] :as app}
    {:keys [massat materiaalikoodistot validointi virheet-atom varoitukset-atom]} kohdeosat-atom]
   (let [hyppyjen-maara (laske-kulutuskerroksen-hypyt @kohdeosat-atom 0 0)
+        alert-ok-teksti "Kulutuskerros on yhtenäinen (ei hyppyjä)"
+        alert-teksti (str "Kulutuskerros ei ole yhtenäinen " (cond
+                                                               (> hyppyjen-maara 1)
+                                                               (str "(" hyppyjen-maara " hyppyä)")
+                                                               :else
+                                                               (str "(" hyppyjen-maara " hyppy)")))
+        custom-yla-panel (if (> hyppyjen-maara 0)
+                           [:div.kulutus-hyppy-info.vahvistamaton
+                            [:div.kulutus-hyppy-ikoni-alert (ikonit/alert-svg)]
+                            [:div alert-teksti]]
+
+                           [:div.kulutus-hyppy-info
+                            [:div.kulutus-hyppy-ikoni-ok (ikonit/harja-icon-status-completed)]
+                            [:div alert-ok-teksti]])
         voi-muokata? (not= :lukittu (:tila perustiedot))
-        ohjauskahva (:paallystekerros ohjauskahvat)
-        on-rivi-blur (fn [rivi]
-                       (let [{:keys [tr-ajorata]} rivi]
-                         (e! (paallystys/->HaeKaistat
-                               (select-keys rivi tr/paaluvali-avaimet)
-                               tr-ajorata))))]
+        ohjauskahva (:paallystekerros ohjauskahvat)]
     [:div
      [grid/muokkaus-grid
-      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true :nayta-hypyt? true :hyppyjen-maara hyppyjen-maara
+      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true 
+       :custom-yla-panel custom-yla-panel
        :voi-muokata? voi-muokata? :voi-lisata? false
        :voi-kumota? false
        :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
       ;; TODO: Digiroad-kaistojen haku disabloitu, kunnes Digiroad-rajapinnan käyttö ja kaista-aineiston hyödyntäminen
       ;;       on suunniteltu kuntoon validointia ajatellen
+      ;;on-rivi-blur (fn [rivi]
+      ;;                 (let [{:keys [tr-ajorata]} rivi]
+      ;;                   (e! (paallystys/->HaeKaistat
+      ;;                         (select-keys rivi tr/paaluvali-avaimet)
+      ;;                         tr-ajorata)))
        #_#_:on-rivi-blur on-rivi-blur
        :custom-toiminto {:teksti "Lisää toimenpide"
                          :toiminto #(e! (pot2-tiedot/->LisaaPaallysterivi kohdeosat-atom))
