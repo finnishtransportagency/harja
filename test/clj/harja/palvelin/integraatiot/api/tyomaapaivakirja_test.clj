@@ -5,9 +5,13 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [pvm-string->java-sql-date sql-timestamp-str->utc-timestr]]
             [harja.testi :refer :all]
+            [clojure.test :refer :all]
+            [slingshot.test :refer :all]
+            [slingshot.slingshot :refer [throw+ try+]]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.palvelin.integraatiot.api.tyomaapaivakirja :as api-tyomaapaivakirja]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as tyokalut-virheet]
             [clojure.string :as str]))
 
 (def kayttaja-yit "yit-rakennus")
@@ -293,3 +297,282 @@
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja"] kayttaja-yit portti typa)
         vastaus-body (cheshire/decode (:body vastaus) true)]
     (is (= "puutteelliset-parametrit") (get-in vastaus-body [:virheet 0 :virhe :koodi]))))
+
+(deftest validoi-typa-arvot-saa
+  (let [saatiedot [{:saatieto {:havaintoaika "2016-01-30T12:00:00+02:00",
+                               :aseman-tunniste "101500",
+                               :aseman-tietojen-paivityshetki "2016-01-30T12:00:00+02:00",
+                               :ilman-lampotila 10,
+                               :tien-lampotila 10,
+                               :keskituuli 16,
+                               :sateen-olomuoto 23.0,
+                               :sadesumma 5}}]]
+
+    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :ilman-lampotila] 81.1) [])
+          ["Ilman lämpötila täytyy olla väliltä -80 - 80. Oli nyt 81.1."]))
+    (is (thrown? Exception (api-tyomaapaivakirja/validoi-tyomaapaivakirja (:db jarjestelma) (assoc-in saatiedot [0 :saatieto :ilman-lampotila] 81.1)))
+      "Poikkeus heitetään, kun ilman lämpötila on väärä tai uupuu")
+    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :ilman-lampotila] -81.1) [])
+          ["Ilman lämpötila täytyy olla väliltä -80 - 80. Oli nyt -81.1."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :ilman-lampotila] 79.1) []))
+      "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
+
+    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :tien-lampotila] 81.1) [])
+          ["Tien lämpötila täytyy olla väliltä -80 - 80. Oli nyt 81.1."]))
+    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :tien-lampotila] -81.1) [])
+          ["Tien lämpötila täytyy olla väliltä -80 - 80. Oli nyt -81.1."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :tien-lampotila] 79.1) []))
+      "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
+
+    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :keskituuli] 151) [])
+          ["Keskituuli täytyy olla väliltä 0 - 150. Oli nyt 151."]))
+    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :keskituuli] -1) [])
+          ["Keskituuli täytyy olla väliltä 0 - 150. Oli nyt -1."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :keskituuli] 1) []))
+      "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
+
+    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sateen-olomuoto] -1) [])
+          ["Sateen olomuoto täytyy olla väliltä 0 - 150. Oli nyt -1."]))
+    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sateen-olomuoto] 151) [])
+          ["Sateen olomuoto täytyy olla väliltä 0 - 150. Oli nyt 151."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sateen-olomuoto] 1) []))
+      "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
+
+    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sadesumma] -1) [])
+          ["Sadesumma täytyy olla väliltä 0 - 10000. Oli nyt -1."]))
+    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sadesumma] 10001) [])
+          ["Sadesumma täytyy olla väliltä 0 - 10000. Oli nyt 10001."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sadesumma] 1) []))
+      "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
+    (is (empty? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sadesumma] nil) []))
+      "Poikkeusta ei heitetä, koska arvo ei ole pakollinen")))
+
+(deftest validoi-typa-arvot-kalusto
+  (let [kalustotiedot [{:kalusto {:aloitus "2016-01-30T12:00:00+02:00",
+                                  :lopetus "2016-01-30T14:00:00+02:00"
+                                  :tyokoneiden-lkm 2
+                                  :lisakaluston-lkm 4}}]]
+
+    ;; Tarkista, että lopetus on aloituksen jälkeen
+    ;; Tarkista kaluston määrät
+    (is (= (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :lopetus] "2015-01-30T14:00:00+02:00") [])
+          ["Kaluston lopetusaika täytyy olla aloitusajan jälkeen."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :lopetus] "2025-01-30T14:00:00+02:00") []))
+      "Poikkeusta ei heitetä.")
+
+    (is (= (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :tyokoneiden-lkm] -1) [])
+          ["Työkoneiden lukumäärä täytyy olla väliltä 0 - 2000. Oli nyt -1."]))
+    (is (= (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :tyokoneiden-lkm] 10001) [])
+          ["Työkoneiden lukumäärä täytyy olla väliltä 0 - 2000. Oli nyt 10001."]))
+    (is (= (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :tyokoneiden-lkm] nil) [])
+          ["Työkoneiden lukumäärä täytyy olla väliltä 0 - 2000. Oli nyt null."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :tyokoneiden-lkm] 1) []))
+      "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
+
+    (is (= (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :lisakaluston-lkm] -1) [])
+          ["Lisäkaluston lukumäärä täytyy olla väliltä 0 - 2000. Oli nyt -1."]))
+    (is (= (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :lisakaluston-lkm] 10001) [])
+          ["Lisäkaluston lukumäärä täytyy olla väliltä 0 - 2000. Oli nyt 10001."]))
+    (is (= (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :lisakaluston-lkm] nil) [])
+          ["Lisäkaluston lukumäärä täytyy olla väliltä 0 - 2000. Oli nyt null."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-kalusto (assoc-in kalustotiedot [0 :kalusto :lisakaluston-lkm] 1) []))
+      "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")))
+
+(deftest validoi-typa-arvot-paivystajat-ja-tyonjohtajat
+  (let [paivystaja [{:paivystaja {:aloitus "2016-01-30T12:00:00+02:00",
+                                  :lopetus "2016-01-30T14:00:00+02:00"
+                                  :nimi "Pekka Päivystäjä"}}]
+        tyonjohtaja [{:tyonjohtaja {:aloitus "2016-01-30T12:00:00+02:00",
+                                    :lopetus "2016-01-30T14:00:00+02:00"
+                                    :nimi "Pekka Päivystäjä"}}]]
+
+    ;; Tarkista, että lopetus on aloituksen jälkeen
+    (is (= (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in paivystaja [0 :paivystaja :lopetus] "2015-01-30T14:00:00+02:00") :paivystaja "Päivystäjän" [])
+          ["Päivystäjän lopetusaika täytyy olla aloitusajan jälkeen."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in paivystaja [0 :paivystaja :lopetus] "2025-01-30T14:00:00+02:00") :paivystaja "Päivystäjän" []))
+      "Poikkeusta ei heitetä.")
+    ;; Lopetus ei ole pakollinen
+    (is (empty? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in paivystaja [0 :paivystaja :lopetus] nil) :paivystaja "Päivystäjän" []))
+      "Poikkeusta ei heitetä.")
+
+    ;; Validoi nimen pituus
+    (is (= (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in paivystaja [0 :paivystaja :nimi] nil) :paivystaja "Päivystäjän" [])
+          ["Päivystäjän nimi liian lyhyt. Oli nyt null."]))
+    (is (= (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in paivystaja [0 :paivystaja :nimi] "Pek") :paivystaja "Päivystäjän" [])
+          ["Päivystäjän nimi liian lyhyt. Oli nyt Pek."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in paivystaja [0 :paivystaja :nimi] "Päivi Päivystäjä") :paivystaja "Päivystäjän" []))
+      "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
+
+    ;; Tarkista, että lopetus on aloituksen jälkeen
+    (is (= (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tyonjohtaja [0 :tyonjohtaja :lopetus] "2015-01-30T14:00:00+02:00") :tyonjohtaja "Työnjohtajan" [])
+          ["Työnjohtajan lopetusaika täytyy olla aloitusajan jälkeen."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tyonjohtaja [0 :tyonjohtaja :lopetus] "2025-01-30T14:00:00+02:00") :tyonjohtaja "Työnjohtajan" []))
+      "Poikkeusta ei heitetä.")
+    ;; Lopetus ei ole pakollinen
+    (is (empty? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tyonjohtaja [0 :tyonjohtaja :lopetus] nil) :tyonjohtaja "Työnjohtajan" []))
+      "Poikkeusta ei heitetä.")
+
+    ;; Validoi nimen pituus
+    (is (= (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tyonjohtaja [0 :tyonjohtaja :nimi] nil) :tyonjohtaja "Työnjohtajan" [])
+          ["Työnjohtajan nimi liian lyhyt. Oli nyt null."]))
+    (is (= (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tyonjohtaja [0 :tyonjohtaja :nimi] "Pek") :tyonjohtaja "Työnjohtajan" [])
+          ["Työnjohtajan nimi liian lyhyt. Oli nyt Pek."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-paivystajat-ja-tyonjohtajat (assoc-in tyonjohtaja [0 :tyonjohtaja :nimi] "Tuula Työnjohtaja") :tyonjohtaja "Työnjohtajan" []))
+      "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")))
+
+(deftest validoi-typa-arvot-tieston-toimenpiteet
+  (let [toimenpiteet [{:tieston-toimenpide {:aloitus "2016-01-30T12:00:00+02:00",
+                                            :lopetus "2016-01-30T14:00:00+02:00"
+                                            :tehtavat [{:tehtava {:id 1359}}]}}]]
+
+    ;; Tarkista, että lopetus on aloituksen jälkeen
+    (is (= (api-tyomaapaivakirja/validoi-tieston-toimenpiteet (:db jarjestelma) (assoc-in toimenpiteet [0 :tieston-toimenpide :lopetus] "2015-01-30T14:00:00+02:00") [])
+          ["Toimenpiteen lopetusaika täytyy olla aloitusajan jälkeen."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-tieston-toimenpiteet (:db jarjestelma) (assoc-in toimenpiteet [0 :tieston-toimenpide :lopetus] "2025-01-30T14:00:00+02:00") []))
+      "Poikkeusta ei heitetä.")
+    ;; Lopetus ei ole pakollinen
+    (is (empty? (api-tyomaapaivakirja/validoi-tieston-toimenpiteet (:db jarjestelma) (assoc-in toimenpiteet [0 :tieston-toimenpide :lopetus] nil) []))
+      "Poikkeusta ei heitetä.")
+
+    ;; Tehtävä täytyy löytyä tietokannasta
+    (is (= (api-tyomaapaivakirja/validoi-tieston-toimenpiteet (:db jarjestelma) (assoc-in toimenpiteet [0 :tieston-toimenpide :tehtavat 0 :tehtava :id] 24342340234) [])
+          ["Toimenpiteeseen liitettyä tehtävää ei löydy. Tarkista tehtävä id: 24342340234."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-tieston-toimenpiteet (:db jarjestelma) (assoc-in toimenpiteet [0 :tieston-toimenpide :tehtavat 0 :tehtava :id] 1359) []))
+      "Poikkeusta ei heitetä, koska tehtävä on validi.")))
+
+(deftest validoi-typa-arvot-muut-tieston-toimenpiteet
+  (let [muut-toimenpiteet [{:tieston-muu-toimenpide {:aloitus "2016-01-30T12:00:00+02:00",
+                                                     :lopetus "2016-01-30T14:00:00+02:00"
+                                                     :tehtavat [{:tehtava {:kuvaus "Esimerkki kuvaus"}}]}}]]
+
+    ;; Tarkista, että lopetus on aloituksen jälkeen
+    (is (= (api-tyomaapaivakirja/validoi-tieston-muut-toimenpiteet (assoc-in muut-toimenpiteet [0 :tieston-muu-toimenpide :lopetus] "2015-01-30T14:00:00+02:00") [])
+          ["Tiestön muun toimenpiteen lopetusaika täytyy olla aloitusajan jälkeen."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-tieston-muut-toimenpiteet (assoc-in muut-toimenpiteet [0 :tieston-muu-toimenpide :lopetus] "2025-01-30T14:00:00+02:00") []))
+      "Poikkeusta ei heitetä.")
+    ;; Lopetus ei ole pakollinen
+    (is (empty? (api-tyomaapaivakirja/validoi-tieston-muut-toimenpiteet (assoc-in muut-toimenpiteet [0 :tieston-muu-toimenpide :lopetus] nil) []))
+      "Poikkeusta ei heitetä.")
+
+    ;; Kuvaus
+    (is (= (api-tyomaapaivakirja/validoi-tieston-muut-toimenpiteet (assoc-in muut-toimenpiteet [0 :tieston-muu-toimenpide :tehtavat 0 :tehtava :kuvaus] "s") [])
+          ["Tiestön muun toimenpiteen kuvaus on liian lyhyt. Tarkenna kuvasta. Oli nyt: s."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-tieston-muut-toimenpiteet (assoc-in muut-toimenpiteet [0 :tieston-muu-toimenpide :tehtavat 0 :tehtava :id] "Tarkka kuvaus tehtävästä.") []))
+      "Poikkeusta ei heitetä, koska tehtävä on validi.")))
+
+(deftest validoi-typa-arvot-viranomaisen-avustaminen
+  (let [avustukset [{:viranomaisen-avustus {:tunnit 4.54
+                                            :kuvaus "Järkevä kuvaus"}}]]
+
+    ;; Tarkista tunnit
+    (is (= (api-tyomaapaivakirja/validoi-viranomaisen-avustamiset (assoc-in avustukset [0 :viranomaisen-avustus :tunnit] nil) [])
+          []))
+    (is (= (api-tyomaapaivakirja/validoi-viranomaisen-avustamiset (assoc-in avustukset [0 :viranomaisen-avustus :tunnit] -1) [])
+          ["Viranomaisen avustamiseen käytetyt tunnit pitää olla väliltä 0 - 1000. Oli nyt: -1."]))
+    (is (= (api-tyomaapaivakirja/validoi-viranomaisen-avustamiset (assoc-in avustukset [0 :viranomaisen-avustus :tunnit] 9999) [])
+          ["Viranomaisen avustamiseen käytetyt tunnit pitää olla väliltä 0 - 1000. Oli nyt: 9999."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-viranomaisen-avustamiset (assoc-in avustukset [0 :viranomaisen-avustus :tunnit] 5.92) []))
+      "Poikkeusta ei heitetä, koska tunnit on validit.")
+
+    ;; Kuvaus
+    (is (= (api-tyomaapaivakirja/validoi-viranomaisen-avustamiset (assoc-in avustukset [0 :viranomaisen-avustus :kuvaus] nil) [])
+          ["Viranomaisen avustamisen kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+    (is (= (api-tyomaapaivakirja/validoi-viranomaisen-avustamiset (assoc-in avustukset [0 :viranomaisen-avustus :kuvaus] "nil") [])
+          ["Viranomaisen avustamisen kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-viranomaisen-avustamiset (assoc-in avustukset [0 :viranomaisen-avustus :kuvaus] "Avustettiin varovasti viranomaisia.") []))
+      "Poikkeusta ei heitetä, koska kuvaus on olemassa.")))
+
+(deftest validoi-typa-kuvaukset
+  (let [data {:liikenteenohjaus-muutokset [{:liikenteenohjaus-muutos {:kuvaus "Kuvaus"}}]
+              :onnettomuudet [{:onnettomuus {:kuvaus "Kuvaus"}}]
+              :palautteet [{:palaute {:kuvaus "Kuvaus"}}]
+              :tilaajan-yhteydenotot [{:tilaajan-yhteydenotto {:kuvaus "Kuvaus"}}]
+              :muut-kirjaukset {:kuvaus "Kuvaus"}}]
+    (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit data []))
+      "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
+
+    ;; liikenteenohjaus-muutokset
+    (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:liikenteenohjaus-muutokset 0 :liikenteenohjaus-muutos :kuvaus] "nil") [])
+          ["Liikenteenohjausmuustosten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+    (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:liikenteenohjaus-muutokset 0 :liikenteenohjaus-muutos :kuvaus] nil) [])
+          ["Liikenteenohjausmuustosten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:liikenteenohjaus-muutokset 0 :liikenteenohjaus-muutos :kuvaus] "Kuvaus on kunnossa.") []))
+      "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
+
+    ;; onnettomuudet
+    (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:onnettomuudet 0 :onnettomuus :kuvaus] "nil") [])
+          ["Onnettomuuden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+    (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:onnettomuudet 0 :onnettomuus :kuvaus] nil) [])
+          ["Onnettomuuden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:onnettomuudet 0 :onnettomuus :kuvaus] "Kuvaus on kunnossa.") []))
+      "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
+
+    ;; tilaajan-yhteydenotot
+    (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:tilaajan-yhteydenotot 0 :tilaajan-yhteydenotto :kuvaus] "nil") [])
+          ["Yhteydenoton kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+    (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:tilaajan-yhteydenotot 0 :tilaajan-yhteydenotto :kuvaus] nil) [])
+          ["Yhteydenoton kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:tilaajan-yhteydenotot 0 :tilaajan-yhteydenotto :kuvaus] "Kuvaus on kunnossa.") []))
+      "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
+
+    ;; palautteet
+    (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:palautteet 0 :palaute :kuvaus] "nil") [])
+          ["Palautteiden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+    (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:palautteet 0 :palaute :kuvaus] nil) [])
+          ["Palautteiden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:palautteet 0 :palaute :kuvaus] "Kuvaus on kunnossa.") []))
+      "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
+
+    ;; muut-kirjaukset
+    (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:muut-kirjaukset :kuvaus] "nil") [])
+          ["Muiden kirjausten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+    (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:muut-kirjaukset :kuvaus] nil) [])
+          ["Muiden kirjausten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:muut-kirjaukset :kuvaus] "Kuvaus on kunnossa.") []))
+      "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")))
+
+(deftest validoi-typa-arvot-laajemmin
+  (let [muut-toimenpiteet [{:tieston-muu-toimenpide {:aloitus "2016-01-30T12:00:00+02:00",
+                                                     :lopetus "2016-01-30T14:00:00+02:00"
+                                                     :tehtavat [{:tehtava {:kuvaus "Esimerkki kuvaus"}}]}}
+                           ;; Jälkimmäisessä virheitä
+                           {:tieston-muu-toimenpide {:aloitus "2016-01-30T12:00:00+02:00",
+                                                     :lopetus "2015-01-30T14:00:00+02:00"
+                                                     :tehtavat [{:tehtava {:kuvaus "e"}}]}}]
+        kuvaukset {:liikenteenohjaus-muutokset [{:liikenteenohjaus-muutos {:kuvaus "Kuvaus"}}
+                                           {:liikenteenohjaus-muutos {:kuvaus "k"}}]
+              :onnettomuudet [{:onnettomuus {:kuvaus "Kuvaus"}}]
+              :palautteet [{:palaute {:kuvaus "Kuvaus"}}]
+              :tilaajan-yhteydenotot [{:tilaajan-yhteydenotto {:kuvaus "Kuvaus"}}]
+              :muut-kirjaukset {:kuvaus "Kuvaus"}}
+        saatiedot [{:saatieto {:havaintoaika "2016-01-30T12:00:00+02:00",
+                               :aseman-tunniste "101500",
+                               :aseman-tietojen-paivityshetki "2016-01-30T12:00:00+02:00",
+                               :ilman-lampotila 10,
+                               :tien-lampotila 10,
+                               :keskituuli 16,
+                               :sateen-olomuoto 23.0,
+                               :sadesumma 5}}
+                   ;; Jälkimmäisessä virheitä
+                   {:saatieto {:havaintoaika "2016-01-30T12:00:00+02:00",
+                               :aseman-tunniste "101500",
+                               :aseman-tietojen-paivityshetki "2016-01-30T12:00:00+02:00",
+                               :ilman-lampotila -100,
+                               :tien-lampotila 100,
+                               :keskituuli 160,
+                               :sateen-olomuoto 231.0,
+                               :sadesumma 599999}}]
+        typa (merge
+               {:saatiedot saatiedot
+                :tieston-muut-toimenpiteet muut-toimenpiteet}
+               kuvaukset)
+        typa {:tyomaapaivakirja typa}
+        _ (println "typa: " (pr-str typa))
+        vastaus (try+
+                  (api-tyomaapaivakirja/validoi-tyomaapaivakirja (:db jarjestelma) typa)
+          (catch [:type tyokalut-virheet/+invalidi-json+] {:keys [virheet]}
+
+            virheet))]
+
+    (is (= (:viesti (first vastaus))
+          "Ilman lämpötila täytyy olla väliltä -80 - 80. Oli nyt -100. Tien lämpötila täytyy olla väliltä -80 - 80. Oli nyt 100. Keskituuli täytyy olla väliltä 0 - 150. Oli nyt 160. Sateen olomuoto täytyy olla väliltä 0 - 150. Oli nyt 231.0. Sadesumma täytyy olla väliltä 0 - 10000. Oli nyt 599999. Tiestön muun toimenpiteen lopetusaika täytyy olla aloitusajan jälkeen. Tiestön muun toimenpiteen kuvaus on liian lyhyt. Tarkenna kuvasta. Oli nyt: e. Liikenteenohjausmuustosten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: k."))))

@@ -72,19 +72,18 @@
          "harja-api")))
 
 (defn paivita-siltatarkastus [ulkoinen-id urakka-id tarkastus silta kayttaja db]
-  (log/debug "Päivitetään vanha siltarkastus")
-  (:id (silta-q/paivita-siltatarkastus-ulkoisella-idlla<!
-         db
-         (:id silta)
-         urakka-id
-         (aika-string->java-sql-date (:tarkastusaika tarkastus))
-         (str (get-in tarkastus [:tarkastaja :etunimi]) " " (get-in tarkastus [:tarkastaja :sukunimi]))
-         (:id kayttaja)
-         false
-         ulkoinen-id)))
+  (log/debug "Päivitetään siltarkastus, jonka ulkoinen-id on " ulkoinen-id)
+  (:id (silta-q/paivita-siltatarkastus-ulkoisella-idlla<! db
+         {:silta (:id silta)
+          :urakka urakka-id
+          :tarkastusaika (aika-string->java-sql-date (:tarkastusaika tarkastus))
+          :tarkastaja (str (get-in tarkastus [:tarkastaja :etunimi]) " " (get-in tarkastus [:tarkastaja :sukunimi]))
+          :poistettu false
+          :muokkaaja (:id kayttaja)
+          :id ulkoinen-id})))
 
 (defn luo-tai-paivita-siltatarkastus [ulkoinen-id urakka-id tarkastus silta kayttaja db]
-  (let [siltatarkastus-kannassa (first (silta-q/hae-siltatarkastus-ulkoisella-idlla-ja-luojalla db ulkoinen-id (:id kayttaja)))]
+  (let [siltatarkastus-kannassa (first (silta-q/hae-siltatarkastus-ulkoisella-idlla-ja-urakalla db ulkoinen-id urakka-id))]
     (if siltatarkastus-kannassa
       (paivita-siltatarkastus ulkoinen-id urakka-id tarkastus silta kayttaja db)
       (luo-siltatarkastus ulkoinen-id urakka-id tarkastus silta kayttaja db))))

@@ -2296,7 +2296,9 @@
                                                              (+ summa (* (:tunnit kuukauden-arvot) (:tuntipalkka kuukauden-arvot)))
                                                              summa))
                                                    0
-                                                   (nth toimenkuvan-data-hoitokausittain (dec hoitokauden-numero)))
+                                                   ;; Tarkista että vectorin elementtejä olemassa enemmän kuin indeksi mitä yritetään saada
+                                                   (when (> (count toimenkuvan-data-hoitokausittain) (dec hoitokauden-numero))
+                                                     (nth toimenkuvan-data-hoitokausittain (dec hoitokauden-numero))))
                                      maksuerat (reduce (fn [maksueran-hoitokaudet kuluva-hoitokausi]
                                                          (let [kuukausi-arvot (reduce (fn [hoitokauden-kuukausiarvot kuluva-kuukausi]
                                                                                         (let [kasiteltavan-hoitokauden-arvot (nth toimenkuvan-data-hoitokausittain (dec kuluva-hoitokausi))

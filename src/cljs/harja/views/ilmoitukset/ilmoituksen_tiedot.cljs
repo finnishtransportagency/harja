@@ -2,7 +2,7 @@
   (:require [harja.ui.yleiset :as yleiset]
             [harja.pvm :as pvm]
             [harja.ui.bootstrap :as bs]
-            [clojure.string :refer [capitalize]]
+            [clojure.string :refer [capitalize] :as str]
             [harja.tiedot.ilmoitukset.tieliikenneilmoitukset :as tiedot]
             [harja.domain.tieliikenneilmoitukset
              :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
@@ -18,7 +18,8 @@
             [harja.domain.tierekisteri :as tr-domain]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.loki :refer [log]]
-            [reagent.core :refer [atom] :as r]))
+            [reagent.core :refer [atom] :as r])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn selitelista [{:keys [selitteet] :as ilmoitus}]
   (let [virka-apu? (ilmoitukset/virka-apupyynto? ilmoitus)]
@@ -27,6 +28,13 @@
        [:div.selite-virkaapu
         [ikonit/livicon-warning-sign] "Virka-apupyyntö"])
      (parsi-selitteet (filter #(not= % :virkaApupyynto) selitteet))]))
+
+(defn- kuvalinkit [ilmoitus]
+  (when-not (empty? (:kuvat ilmoitus))
+    (for* [[n linkki] (map-indexed #(vector %1 %2) (:kuvat ilmoitus))]
+      [:div
+       [:a {:href linkki} (str "Kuvalinkki " (inc n))]
+       [:br]])))
 
 (defn selitteen-sisaltavat-yleiset-tiedot [ilmoitus]
   [yleiset/tietoja {:piirra-viivat? true
@@ -45,6 +53,7 @@
    "Lisatieto " (when (:lisatieto ilmoitus) (:lisatieto ilmoitus))
    "Selitteet " [selitelista ilmoitus]
    "Toimenpiteet aloitettu " (when (:toimenpiteet-aloitettu ilmoitus) (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))
+   "Kuvalinkit " (kuvalinkit ilmoitus)
    "Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")])
 
 (defn aiheen-sisaltavat-yleiset-tiedot [ilmoitus aiheet-ja-tarkenteet]
@@ -64,6 +73,7 @@
    "Tarkenne " (palautevayla/hae-tarkenne aiheet-ja-tarkenteet (:tarkenne ilmoitus))
    "Otsikko " (:otsikko ilmoitus)
    "Kuvaus " (when (:lisatieto ilmoitus) (:lisatieto ilmoitus))
+   "Kuvalinkit " (kuvalinkit ilmoitus)
    (when (:selitteet ilmoitus) "Selitteet" )
    (when (:selitteet ilmoitus) [selitelista ilmoitus])
    "Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")
@@ -74,46 +84,73 @@
   (let [nayta-valitykset? (atom false)]
     (fn [e! ilmoitus aiheet-ja-tarkenteet]
       [:div
-       [bs/panel {}
-        (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
-        [:span
-         (if-not (:aihe ilmoitus)
-           [selitteen-sisaltavat-yleiset-tiedot ilmoitus]
-           [aiheen-sisaltavat-yleiset-tiedot ilmoitus aiheet-ja-tarkenteet])
-         [:br]
-         [yleiset/tietoja {:piirra-viivat? true
-                           :class "body-text"
-                           :tietorivi-luokka "padding-8 css-grid css-grid-columns-12rem-9"}
-          "Ilmoittaja " (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
-                              tyyppi (capitalize (name (get-in ilmoitus [:ilmoittaja :tyyppi])))]
-                          (if (and henkilo tyyppi)
-                            (str henkilo ", " tyyppi)
-                            (str (or henkilo tyyppi))))
-          "Puhelinnumero " (parsi-puhelinnumero (:ilmoittaja ilmoitus))
-          "Sähköposti " (get-in ilmoitus [:ilmoittaja :sahkoposti])]
+       ;; Ilmoitustietojen otsikko
+       [:div.panel-heading
+        [:h2.musta (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))]]
 
-         [:br]
-         [yleiset/tietoja {:piirra-viivat? true
-                           :class "body-text"
-                           :tietorivi-luokka "padding-8 css-grid css-grid-columns-12rem-9"}
-          "Lähettäjä " (nayta-henkilo (:lahettaja ilmoitus))
-          "Puhelinnumero " (parsi-puhelinnumero (:lahettaja ilmoitus))
-          "Sähköposti " (get-in ilmoitus [:lahettaja :sahkoposti])]
-         
-         [:br]
-         (when (and
-                 (:ilmoitusid ilmoitus)
-                 (oikeudet/voi-kirjoittaa?
-                   oikeudet/ilmoitukset-ilmoitukset
-                   (:id @nav/valittu-urakka)))
-           ;; todo: tämä kirjaus ei ole sallittu, jos lopetuskuittaus on jo tehty
-           (if (:toimenpiteet-aloitettu ilmoitus)
-             [:button.nappi-kielteinen
-              {:on-click #(e! (v/->PeruutaToimenpiteidenAloitus (:id ilmoitus)))}
-              "Peruuta toimenpiteiden aloitus"]
-             [:button.nappi-ensisijainen
-              {:on-click #(e! (v/->TallennaToimenpiteidenAloitus (:id ilmoitus)))}
-              "Toimenpiteet aloitettu"]))]]
+       [:div.ilmoitustiedot-flex
+        [:span.ilmoituksen-tiedot
+         ;; Ei anneta panelille tässä otsikkoa parametrina jotta flexit tulee samalle tasolle 
+         ;; Alemmalla panelilla ei ole otsikkoa
+         [bs/panel {}
+          [:span
+           (if-not (:aihe ilmoitus)
+             [selitteen-sisaltavat-yleiset-tiedot ilmoitus]
+             [aiheen-sisaltavat-yleiset-tiedot ilmoitus aiheet-ja-tarkenteet])
+           [:br]
+           [yleiset/tietoja {:piirra-viivat? true
+                             :class "body-text"
+                             :tietorivi-luokka "padding-8 css-grid css-grid-columns-12rem-9"}
+            "Ilmoittaja " (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
+                                tyyppi (capitalize (name (get-in ilmoitus [:ilmoittaja :tyyppi])))]
+                            (if (and henkilo tyyppi)
+                              (str henkilo ", " tyyppi)
+                              (str (or henkilo tyyppi))))
+            "Puhelinnumero " (parsi-puhelinnumero (:ilmoittaja ilmoitus))
+            "Sähköposti " (get-in ilmoitus [:ilmoittaja :sahkoposti])]
+
+           [:br]
+           [yleiset/tietoja {:piirra-viivat? true
+                             :class "body-text"
+                             :tietorivi-luokka "padding-8 css-grid css-grid-columns-12rem-9"}
+            "Lähettäjä " (nayta-henkilo (:lahettaja ilmoitus))
+            "Puhelinnumero " (parsi-puhelinnumero (:lahettaja ilmoitus))
+            "Sähköposti " (get-in ilmoitus [:lahettaja :sahkoposti])]
+
+           [:br]
+           (when (and
+                   (:ilmoitusid ilmoitus)
+                   (oikeudet/voi-kirjoittaa?
+                     oikeudet/ilmoitukset-ilmoitukset
+                     (:id @nav/valittu-urakka)))
+             ;; todo: tämä kirjaus ei ole sallittu, jos lopetuskuittaus on jo tehty
+             (if (:toimenpiteet-aloitettu ilmoitus)
+               [:button.nappi-kielteinen
+                {:on-click #(e! (v/->PeruutaToimenpiteidenAloitus (:id ilmoitus)))}
+                "Peruuta toimenpiteiden aloitus"]
+               [:button.nappi-ensisijainen
+                {:on-click #(e! (v/->TallennaToimenpiteidenAloitus (:id ilmoitus)))}
+                "Toimenpiteet aloitettu"]))]]]
+
+        ;; Ilmoitukseen liitetyt kuvat panel
+        [bs/panel {}
+         [:div
+          [:span
+           (let [kuvaliite-teksti (when (empty? (:kuvat ilmoitus)) "Ei liitteitä")]
+             [yleiset/tietoja {:piirra-viivat? true
+                               :class "body-text"
+                               :tietorivi-luokka "padding-8 css-grid css-grid-colums-12rem-9"}
+              "Kuvaliitteet" ""
+              "" kuvaliite-teksti])]
+
+          (when-not (empty? (:kuvat ilmoitus))
+            (for* [kuva (:kuvat ilmoitus)]
+              [:div
+               [:br]
+               [:a
+                {:href kuva}
+                [:img {:src kuva :style {:width "100%" :max-width "450px"}}]]]))]]]
+
        [:div.kuittaukset
         [:h3 "Kuittaukset"]
         [:div
@@ -122,8 +159,7 @@
          (when e!
            (if-let [uusi-kuittaus (:uusi-kuittaus ilmoitus)]
              [kuittaukset/uusi-kuittaus e! uusi-kuittaus]
-             (when (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
-                                             (:id @nav/valittu-urakka))
+             (when (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset (:id @nav/valittu-urakka))
 
                (if (:ilmoitusid ilmoitus)
                  [:button.nappi-ensisijainen
@@ -139,6 +175,7 @@
 
          (when-not (empty? (:kuittaukset ilmoitus))
            [:div
-            (for [kuittaus (cond->> (sort-by :kuitattu pvm/jalkeen? (:kuittaukset ilmoitus))
-                                    (not @nayta-valitykset?) (remove ilmoitukset/valitysviesti?))]
+            (for [kuittaus (cond->>
+                             (sort-by :kuitattu pvm/jalkeen? (:kuittaukset ilmoitus))
+                             (not @nayta-valitykset?) (remove ilmoitukset/valitysviesti?))]
               (kuittaukset/kuittauksen-tiedot kuittaus))])]]])))

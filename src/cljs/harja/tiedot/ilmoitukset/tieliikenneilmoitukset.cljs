@@ -396,17 +396,24 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
         :kuittaa-monta nil
         :pikakuittaus nil))))
 
+;; Lippu, josta päätellään näytetäänkö ilmoitukset kartalla
 (defonce karttataso-ilmoitukset (atom false))
 
 (defonce ilmoitukset-kartalla
   (reaction
     (let [{:keys [ilmoitukset valittu-ilmoitus]} @ilmoitukset]
       (when @karttataso-ilmoitukset
-        (kartalla-esitettavaan-muotoon
-          (map
-            #(assoc % :tyyppi-kartalla (get % :ilmoitustyyppi))
-            ilmoitukset)
-          #(= (:id %) (:id valittu-ilmoitus)))))))
+        ;; Zoomataan yhteen yksittäiseen ilmoitukseen, kun yksittäinen ilmoitus on valittuna
+        (if (:id valittu-ilmoitus)
+          (kartalla-esitettavaan-muotoon
+            [(assoc valittu-ilmoitus :tyyppi-kartalla (get valittu-ilmoitus :ilmoitustyyppi))]
+            (constantly true))
+
+          (kartalla-esitettavaan-muotoon
+            (map
+              #(assoc % :tyyppi-kartalla (get % :ilmoitustyyppi))
+              ilmoitukset)
+            #(= (:id %) (:id valittu-ilmoitus))))))))
 
 
 (defn avaa-ilmoitus! [ilmoitus]

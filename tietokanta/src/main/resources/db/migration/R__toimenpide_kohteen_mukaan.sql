@@ -10,7 +10,7 @@ BEGIN
        AND
        (osan_tyyppi IN ('silta', 'rautatiesilta')))
       OR
-      (NEW.toimenpide IN ('sulutus', 'tyhjennys')
+      (NEW.toimenpide IN ('sulutus', 'tyhjennys', 'veden-korkeus')
        AND
        (osan_tyyppi IN ('sulku'))))
   THEN

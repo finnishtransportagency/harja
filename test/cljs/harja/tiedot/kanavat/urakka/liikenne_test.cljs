@@ -264,7 +264,7 @@
                         ::toiminto/kohteenosa-id 1
                         ::toiminto/kohde-id 1
                         ::toiminto/lkm 1
-                        ::toiminto/toimenpide :ei-avausta
+                        ::toiminto/toimenpide :avaus
                         ::toiminto/palvelumuoto :kauko}]}
            (tiedot/kohteenosatiedot-toimintoihin
              {::lt/id 1}
@@ -362,10 +362,10 @@
                                            ::toiminto/palvelumuoto :kauko}))))
 
 (deftest suuntavalinta-str
-  (is (= "Ylös, 1 lähestyvää alusta"
-         (tiedot/suuntavalinta-str {:ylos {:edelliset-alukset [{:foo :bar}]}} :ylos)))
+  (is (= "Ylös"
+         (tiedot/suuntavalinta-str [{:foo :bar}] {:ylos {:edelliset-alukset [{:foo :bar}]}} :ylos)))
   (is (= "Alas"
-         (tiedot/suuntavalinta-str {:ylos {:edelliset-alukset [{:foo :bar}]}} :alas))))
+         (tiedot/suuntavalinta-str [{:foo :bar}] {:ylos {:edelliset-alukset [{:foo :bar}]}} :alas))))
 
 (deftest nayta-edelliset
   (is (true? (tiedot/nayta-edelliset-alukset? {:haetut-sopimukset [{::sop/id 1
@@ -570,7 +570,8 @@
                    ::lt/toiminnot [{::toiminto/palvelumuoto :muu
                                     ::toiminto/toimenpide :tyhjennys}]}]
     
-    (is (= {:liikennetapahtumien-haku-kaynnissa? false
+    (is (= {:valittu-liikennetapahtuma nil
+            :liikennetapahtumien-haku-kaynnissa? false
             :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false
             :haetut-tapahtumat [sulutus-alas sulutus-ylos sillan-avaus tyhjennys]
             :tapahtumarivit [(merge sulutus-alas {::lt-alus/suunta :alas})

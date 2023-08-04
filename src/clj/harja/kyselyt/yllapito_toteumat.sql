@@ -129,14 +129,13 @@ WHERE yllapitokohde = :yllapitokohde;
 -- single?: true
 SELECT id
 FROM tiemerkinnan_yksikkohintainen_toteuma
-WHERE luoja = :luoja AND ulkoinen_id = :ulkoinen_id;
+WHERE urakka = :urakka-id AND ulkoinen_id = :ulkoinen_id;
 
 -- name: poista-tiemerkintatoteumat-ulkoisilla-idlla!
 UPDATE tiemerkinnan_yksikkohintainen_toteuma
 SET poistettu = TRUE
 WHERE poistettu IS NOT TRUE AND
       ulkoinen_id = ANY (:ulkoiset_idt :: INT []) AND
-      luoja = :luoja_id AND
       (:urakka_id :: INT IS NULL OR urakka = :urakka_id) AND
       (:yllapitokohde_id :: INT IS NULL OR yllapitokohde = :yllapitokohde_id);
 
