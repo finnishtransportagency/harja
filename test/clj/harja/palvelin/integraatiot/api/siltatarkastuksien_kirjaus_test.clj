@@ -11,6 +11,7 @@
   (:import (java.util Date)))
 
 (def kayttaja "destia")
+(def kayttaja-jvh "jvh")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -125,7 +126,7 @@
     ;; Nyt Simo huomaa typottaneensa oman nimensä täysin ja korjaa tilanteen
     (let [tarkastaja-etunimi "Simo"
           tarkastaja-sukunimi "Sillantarkastaja"
-          vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
+          vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja-jvh portti
                                                   (-> "test/resurssit/api/siltatarkastus.json"
                                                       slurp
                                                       (.replace "__ID__" (str ulkoinen-id))
@@ -152,7 +153,7 @@
                                                     (.replace "__SILTATUNNUS__" (str siltatunnus))
                                                     (.replace "__TARKASTUSAIKA__" tarkastusaika)))
         siltatarkastus-kannassa-ennen-poistoa (first (q (str "SELECT id, ulkoinen_id, tarkastaja, tarkastusaika FROM siltatarkastus WHERE poistettu IS NOT TRUE AND ulkoinen_id = '" ulkoinen-id "';")))
-        vastaus-poisto (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
+        vastaus-poisto (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja-jvh portti
                                                   (-> "test/resurssit/api/siltatarkastus-poisto.json"
                                                       slurp
                                                       (.replace "__ID__" (str ulkoinen-id))
@@ -177,7 +178,7 @@
                            (.replace "__SUKUNIMI__" "Sillantarkastaja")
                            (.replace "__SILTATUNNUS__" (str siltatunnus))
                            (.replace "__TARKASTUSAIKA__" tarkastusaika)))
-        vastaus-lisays2 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
+        vastaus-lisays2 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja-jvh portti
                           (-> "test/resurssit/api/siltatarkastus-liitteella.json"
                             slurp
                             (.replace "__ID__" (str ulkoinen-id))

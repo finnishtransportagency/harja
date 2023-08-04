@@ -1,144 +1,199 @@
--- Lupaus -taulussa on ollut vuosina 21-23 virhe järjestyksessään 7:ssä lupauksessa. Laadunseuranta oli virheellisesti yli 6 kertaa. Tässä korjataan kuuten tai enemmän
-UPDATE lupaus
-SET sisalto = 'Teemme urakassa muuttuvissa keliolosuhteissa laadunseurantaa myös pistokokeina ≥ 6 kertaa
- talvessa (esim. toimenpideajassa pysyminen, työn jälki, työmenetelmä, reagointikyky ja
- liukkaudentorjuntamateriaalien annosmäärät), joista kolme tehdään klo 20–06 välillä ja/tai
- viikonloppuisin. Laadimme jokaisesta pistokokeesta erillisen raportin ja luovutamme sen tilaajalle
- viimeistään seuraavassa työmaakokouksessa.'
-WHERE jarjestys = 7 AND "urakan-alkuvuosi" IN (2021, 2022);
+-- Poista indeksit liittyen ulkoinen-id, luoja ja lisää ulkoinen-id, urakka-id
+ALTER TABLE laatupoikkeama
+    DROP CONSTRAINT uniikki_ulkoinen_laatupoikkeama;
 
--- Lupausten pohjadata hoitokaudelle 2023-2024
-INSERT INTO lupausryhma(otsikko, jarjestys, "urakan-alkuvuosi", luotu)
-VALUES
-    ('Kannustavat alihankintasopimukset', 1, 2023, NOW()),
-    ('Toiminnan suunnitelmallisuus', 2, 2023, NOW()),
-    ('Laadunvarmistus ja reagointikyky', 3, 2023, NOW()),
-    ('Turvallisuus ja osaamisen kehittäminen', 4, 2023, NOW()),
-    ('Viestintä ja tienkäyttäjäasiakkaan palvelu', 5, 2023, NOW());
+CREATE UNIQUE INDEX laatupoikkeama_ulkoinen_id_urakka_uindex
+    on laatupoikkeama (ulkoinen_id, urakka, poistettu);
 
-INSERT INTO lupaus (jarjestys, "lupausryhma-id", "urakka-id", lupaustyyppi, "pisteet", "kirjaus-kkt", "paatos-kk", "joustovara-kkta", kuvaus, sisalto, "urakan-alkuvuosi") VALUES
--- A. Kannustavat alihankintasopimukset
-(1, (SELECT id FROM lupausryhma WHERE otsikko = 'Kannustavat alihankintasopimukset' and "urakan-alkuvuosi" = 2023), null, 'yksittainen', 8, '{10}', 6, 0,
- 'Talvihoidon kannustinjärjestelmä',
- 'Kehitämme yhdessä tilaajan kanssa talvihoidon alihankkijoiden kannustinjärjestelmän, joka on
-käytössä vähintään kahdessa alihankintasopimuksessamme. Lupaus täyttyy myös
-kannustinjärjestelmän kehittämisen ja käyttöönoton jälkeisinä hoitovuosina, mikäli sama
-järjestelmä on edelleen käytössä. Tilaaja on varannut vuosittain 5 000 € ja me vähintään 15 000
-€ tämän lupauksen kannustinjärjestelmään. Tilaajan ja meidän rahavarauksemme yhdistetään
-ja tätä summaa käytetään samassa suhteessa maksettaessa mahdollisia yksittäisiä kannusteita.',
- 2023),
-(2, (SELECT id FROM lupausryhma WHERE otsikko = 'Kannustavat alihankintasopimukset' and "urakan-alkuvuosi" = 2023), null, 'yksittainen', 8, '{10}', 9, 0,
- 'Kesähoidon kannustinjärjestelmä',
- 'Kehitämme yhdessä tilaajan kanssa kesähoidon alihankkijoiden kannustinjärjestelmän, joka on
-käytössä vähintään kahdessa alihankintasopimuksessamme. Lupaus täyttyy myös
-kannustinjärjestelmän kehittämisen ja käyttöönoton jälkeisinä hoitovuosina, mikäli sama
-järjestelmä on edelleen käytössä. Tilaaja on varannut vuosittain 5 000 € ja me vähintään 15 000
-€ tämän lupauksen kannustinjärjestelmään. Tilaajan ja meidän rahavarauksemme yhdistetään
-ja tätä summaa käytetään samassa suhteessa maksettaessa mahdollisia yksittäisiä kannusteita.',
- 2023),
-(3, (SELECT id FROM lupausryhma WHERE otsikko = 'Kannustavat alihankintasopimukset' and "urakan-alkuvuosi" = 2023), null, 'kysely', 14, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', 9, 0,
- 'Kyselytutkimus alihankkijoille',
- 'Kyselytutkimus alihankkijoille (6 sisäistä pistevaihtoehtoa). Tarjoaja antaa lupauksen
-tarjoamansa hoitourakan kyselytutkimuksen keskiarvosta.',
- 2023),
+CREATE UNIQUE INDEX siltatarkastus_ulkoinen_id_urakka_uindex
+    ON siltatarkastus (ulkoinen_id, urakka, poistettu);
 
--- B. Toiminnan suunnitelmallisuus
-(4, (SELECT id FROM lupausryhma WHERE otsikko = 'Toiminnan suunnitelmallisuus' and "urakan-alkuvuosi" = 2023), null, 'yksittainen', 10, null, 0, 1,
- 'Kuukausittainen töiden suunnittelu',
- 'Suunnittelemme yhdessä tilaajan ja alihankkijoiden kanssa urakan töitä vähintään kerran
-kuukaudessa. Töitä voidaan suunnitella esimerkiksi palaverein tai sähköisin menettelyin.
-Suunnittelussa ja töiden sisältöjen (laatuvaatimukset, töiden yhteensovittaminen yms.)
-läpikäynnissä tulee olla mukana ne alihankkijatahot, jotka tulevat tekemään töitä urakassa
-seuraavan kuukauden aikana.',
- 2023),
--- C. Laadunvarmistus ja reagointikyky
-(5, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky' and "urakan-alkuvuosi" = 2023), null, 'monivalinta', 10, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', 9, 0,
- 'Kunnossapitoilmoitukset',
- 'Toimenpiteitä aiheuttaneiden ilmoitusten (urakoitsijaviestien) %-osuus talvihoitoon ja sorateiden
-kunnossapitoon liittyvistä ilmoituksista. (6 sisäistä pistevaihtoehtoa).',
- 2023),
-(6, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky' and "urakan-alkuvuosi" = 2023), null, 'yksittainen', 5, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', 9, 0,
- 'Luovutuksen menettely',
- 'Meillä (pääurakoitsijalla) on käytössä itselle luovutuksen menettely määräaikaan sidotuista töistä
-/ työkokonaisuuksista, varusteiden ja laitteiden lisäämisestä ja uusimisesta, sorateiden ja siltojen
-hoidosta sekä ojituksesta. Alihankkijamme tekevät itselle luovutuksen vastaavista omista
-töistään / työkokonaisuuksista, jotka tarkastamme ennen tilaajalle luovuttamista.',
- 2023),
-(7, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky' and "urakan-alkuvuosi" = 2023), null, 'yksittainen', 5, '{10, 11, 12, 1, 2, 3, 4, 5}', 6, 0,
- 'Talvihoidon pistokokeet',
- 'Teemme urakassa muuttuvissa keliolosuhteissa laadunseurantaa myös pistokokeina ≥= 6 kertaa
- talvessa (esim. toimenpideajassa pysyminen, työn jälki, työmenetelmä, reagointikyky ja
- liukkaudentorjuntamateriaalien annosmäärät), joista kolme tehdään klo 20–06 välillä ja/tai
- viikonloppuisin. Laadimme jokaisesta pistokokeesta erillisen raportin ja luovutamme sen tilaajalle
- viimeistään seuraavassa työmaakokouksessa.',
- 2023),
--- D. Turvallisuus ja osaamisen kehittäminen
-(8, (SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen' and "urakan-alkuvuosi" = 2023), null, 'yksittainen', 5, null, 0, 0,
- 'Työturvallisuuden raportointi',
- 'Seuraamme urakassa systemaattisesti työturvallisuutta vaarantavia läheltä piti -tilanteita ja
-teemme korjaavia toimenpiteitä ko. tilanteiden vähentämiseksi. Raportoimme em. tilanteet sekä
-niihin liittyvät suunnitellut ja/tai tehdyt toimenpiteet tilaajalle työmaakokouksien yhteydessä.',
- 2023),
-(9, (SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen' and "urakan-alkuvuosi" = 2023), null, 'yksittainen', 5,
- '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', 9, 0,
- 'Turvallisuuden teemakokoukset',
- 'Pidämme vähintään 80 %:lle alihankkijoiden operatiivisesta henkilöstöstä vuosittain
-työlajikohtaiset tai synergisesti yli työlajien nivoutuvat turvallisuuden teemakokoukset.
-Kokouksien ohjelmat ja osallistujalistat todetaan viimeistään kokousta seuraavassa
-työmaakokouksessa',
- 2023),
-(10, (SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen' and "urakan-alkuvuosi" = 2023), null, 'yksittainen', 5,
- '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', 9, 0,
- 'Koulutukset',
- 'Järjestämme urakassa koulutuksia, joiden aiheita voivat olla esim. menetelmätieto,
-laatutietoisuus, raportointi, seurantalaitteiden käyttö ja työturvallisuus. Järjestämäämme
-koulutukseen (1 htp / hoitovuosi) osallistuu vähintään 1 alihankkijan henkilö kultakin
-sopimussuhteessa olevalta alihankkijalta. Osallistumisvelvollisuus on kirjattu
-alihankintasopimuksiimme.',
- 2023),
--- E. Viestintä ja tienkäyttäjäasiakkaan palvelu
-(11, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu' and "urakan-alkuvuosi" = 2023), null, 'yksittainen', 2, null, 0, 0,
- 'Tilanne- ja ennakkotiedotus',
- 'Toteutamme tilanne- ja ennakkotiedotusta vähintään 4 kertaa kuukaudessa.',
- 2023),
-(12, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu' and "urakan-alkuvuosi" = 2023), null, 'yksittainen', 12, null, 9, 0,
- 'Viestintä sidosryhmien kanssa',
- 'Tunnistamme urakka-alueen tärkeimmät sidosryhmät (esim. Vapo, metsäyhtiöt, linja-autoyhtiöt,
-koululaiskuljetukset, yms.). Sovimme hoitovuosittain heidän kanssaan käytävästä
-vuoropuhelusta ja viestinnästä. Vuoropuhelun perusteella kehitämme toimintaamme siten, että
-sidosryhmien tarpeet sopimuksen puitteissa tulevat huomioiduiksi mahdollisimman hyvin.
-Olemme yhteydessä paikallismedioihin ja sovimme hoitovuosittain heidän kanssaan käytävästä
-vuoropuhelusta ja viestinnästä.',
- 2023),
-(13, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu' and "urakan-alkuvuosi" = 2023), null, 'yksittainen', 8, null, 0, 0,
- 'Palautteet ja kehittäminen',
- 'Toimitamme tienkäyttäjäpalautteet ja urakoitsijaviestit henkilöstön ja alihankkijoiden
-tietoisuuteen viikoittain. Näiden palautteiden ja omien sekä alihankkijoidemme havaintojen
-perusteella kehitämme ja teemme tienkäyttäjiä palvelevia toimenpiteitä esim. reititykseen,
-työmenetelmiin ja alihankinnan ohjaukseen. Keskustelemme kehittämistoimista tilaajan kanssa
-sekä huomioimme ne viestinnässä.',
- 2023),
-(14, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu' and "urakan-alkuvuosi" = 2023), null, 'yksittainen', 3, null, 9, 0,
- 'Tyytyväisyystutkimustulokset',
- 'Teemme Talven tienkäyttäjätyytyväisyystutkimustuloksista (ml. vapaat vastaukset) analyysin
-kerran vuodessa. Saatamme tutkimuksen ja analyysin tulokset henkilöstön ja alihankkijoiden
-tietoisuuteen. Huomioimme havaitut kehitystarpeet toiminnassa ja viestinnässä. Esitämme
-analyysit, havainnot ja kehitystoimet tilaajalle 2 kk:n kuluessa tulosten saamisesta.',
- 2023);
+CREATE UNIQUE INDEX turvallisuuspoikkeama_ulkoinen_id_urakka_uindex
+    ON turvallisuuspoikkeama (ulkoinen_id, urakka);
 
--- kyselytutkimus alihankkijoille lupaukset 3 osalta toimitetaan luultavasti muualla kuin Harjassa.
--- Harjassa valitaan vain monivalintana saatu tulos
-SELECT * FROM luo_lupauksen_vaihtoehto(3, 2023, '<= 4,1 ', 0);
-SELECT * FROM luo_lupauksen_vaihtoehto(3, 2023, '> 4,1', 2);
-SELECT * FROM luo_lupauksen_vaihtoehto(3, 2023, '> 4,4', 4);
-SELECT * FROM luo_lupauksen_vaihtoehto(3, 2023, '> 4,7', 6);
-SELECT * FROM luo_lupauksen_vaihtoehto(3, 2023, '> 5,0', 10);
-SELECT * FROM luo_lupauksen_vaihtoehto(3, 2023, '> 5.3', 14);
+CREATE UNIQUE INDEX paivystys_ulkoinen_id_urakka_uindex
+    ON paivystys (ulkoinen_id, urakka);
 
-SELECT * FROM luo_lupauksen_vaihtoehto(5, 2023, '> 25 % / hoitovuosi', 0);
-SELECT * FROM luo_lupauksen_vaihtoehto(5, 2023, '10-25 % / hoitovuosi', 2);
-SELECT * FROM luo_lupauksen_vaihtoehto(5, 2023, '15-20 % / hoitovuosi', 4);
-SELECT * FROM luo_lupauksen_vaihtoehto(5, 2023, '10-15 % / hoitovuosi', 6);
-SELECT * FROM luo_lupauksen_vaihtoehto(5, 2023, '5-10 % / hoitovuosi', 8);
-SELECT * FROM luo_lupauksen_vaihtoehto(5, 2023, '0-5 % / hoitovuosi', 10);
+CREATE UNIQUE INDEX tiemerkinnan_yksikkohintainen_toteuma_ulkoinen_id_urakka_uindex
+    ON tiemerkinnan_yksikkohintainen_toteuma (ulkoinen_id, urakka);
 
+-- Jotta tarkastuksille voidaan lisätä uniikkiusindeksit, siivotaan sieltä ensin duplikaatit pois, niitä on 28 kpl
+DO $$
+    DECLARE
+        rivi record;
+    BEGIN
+
+        FOR rivi in (SELECT MIN(id) as id, urakka, ulkoinen_id, poistettu, tyyppi, count(ulkoinen_id)
+                     FROM tarkastus
+                     WHERE luotu > '2022-05-01'
+                     GROUP BY urakka, ulkoinen_id, poistettu, tyyppi
+                     HAVING count(ulkoinen_id) > 1)
+            loop
+                update tarkastus set poistettu = true, muokattu = NOW() where id = rivi.id;
+            end loop;
+    end
+$$ language plpgsql;
+
+-- unique index
+create unique index tarkastus_2015_q1_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2015_q1 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2015_q2_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2015_q2 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2015_q3_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2015_q3 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2015_q4_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2015_q4 (ulkoinen_id, urakka, poistettu, tyyppi);
+
+create unique index tarkastus_2016_q1_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2016_q1 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2016_q2_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2016_q2 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2016_q3_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2016_q3 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2016_q4_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2016_q4 (ulkoinen_id, urakka, poistettu, tyyppi);
+
+create unique index tarkastus_2017_q1_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2017_q1 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2017_q2_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2017_q2 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2017_q3_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2017_q3 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2017_q4_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2017_q4 (ulkoinen_id, urakka, poistettu, tyyppi) WHERE luotu > '2018-01-01';
+
+create unique index tarkastus_2018_q1_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2018_q1 (ulkoinen_id, urakka, poistettu, tyyppi) WHERE luotu > '2018-03-01';
+create unique index tarkastus_2018_q2_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2018_q2 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2018_q3_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2018_q3 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2018_q4_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2018_q4 (ulkoinen_id, urakka, poistettu, tyyppi);
+
+create unique index tarkastus_2019_q1_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2019_q1 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2019_q2_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2019_q2 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2019_q3_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2019_q3 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2019_q4_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2019_q4 (ulkoinen_id, urakka, poistettu, tyyppi);
+
+create unique index tarkastus_2020_q1_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2020_q1 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2020_q2_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2020_q2 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2020_q3_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2020_q3 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2020_q4_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2020_q4 (ulkoinen_id, urakka, poistettu, tyyppi);
+
+create unique index tarkastus_2021_q1_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2021_q1 (ulkoinen_id, urakka, poistettu, tyyppi) WHERE luotu > '2021-06-01';
+create unique index tarkastus_2021_q2_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2021_q2 (ulkoinen_id, urakka, poistettu, tyyppi) WHERE luotu > '2021-06-01';
+create unique index tarkastus_2021_q3_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2021_q3 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2021_q4_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2021_q4 (ulkoinen_id, urakka, poistettu, tyyppi);
+
+create unique index tarkastus_2022_q1_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2022_q1 (ulkoinen_id, urakka, poistettu, tyyppi) WHERE luotu > '2022-03-01';
+create unique index tarkastus_2022_q2_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2022_q2 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2022_q3_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2022_q3 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2022_q4_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2022_q4 (ulkoinen_id, urakka, poistettu, tyyppi);
+
+create unique index tarkastus_2023_q1_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2023_q1 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2023_q2_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2023_q2 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2023_q3_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2023_q3 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2023_q4_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2023_q4 (ulkoinen_id, urakka, poistettu, tyyppi);
+
+create unique index tarkastus_2024_q1_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2024_q1 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2024_q2_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2024_q2 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2024_q3_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2024_q3 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2024_q4_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2024_q4 (ulkoinen_id, urakka, poistettu, tyyppi);
+
+create unique index tarkastus_2025_q1_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2025_q1 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2025_q2_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2025_q2 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2025_q3_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2025_q3 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2025_q4_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2025_q4 (ulkoinen_id, urakka, poistettu, tyyppi);
+
+create unique index tarkastus_2026_q1_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2026_q1 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2026_q2_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2026_q2 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2026_q3_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2026_q3 (ulkoinen_id, urakka, poistettu, tyyppi);
+create unique index tarkastus_2026_q4_ulkoinen_id_urakka_poistettu_uindex
+    on tarkastus_2026_q4 (ulkoinen_id, urakka, poistettu, tyyppi);
+
+-- Siivotaan duplikaatit toteumat pois, ennenkuin ajetaan unique indexit toteumille, niitä on 28811
+DO $$
+    DECLARE
+        rivi record;
+    BEGIN
+        FOR rivi in (SELECT MIN(id) as id, urakka, ulkoinen_id, poistettu
+                     FROM toteuma
+                     WHERE luotu > '2022-05-01'
+                     GROUP BY urakka, ulkoinen_id, poistettu
+                     HAVING count(ulkoinen_id) > 1)
+            loop
+                update toteuma set poistettu = true, muokattu = NOW() where id = rivi.id;
+                update toteuma_materiaali set poistettu = true, muokattu = NOW() where toteuma = rivi.id;
+                update toteuma_tehtava set poistettu = true, muokattu = NOW() where toteuma = rivi.id;
+
+            end loop;
+    end
+$$ language plpgsql;
+
+CREATE UNIQUE INDEX toteuma_010101_191001_ulkoinen_id_urakka_poistettu_uindex
+    ON toteuma_010101_191001 (ulkoinen_id, urakka, poistettu) where luotu > '2017-01-01';
+
+CREATE UNIQUE INDEX toteuma_191001_200701_ulkoinen_id_urakka_poistettu_uindex
+    ON toteuma_191001_200701 (ulkoinen_id, urakka, poistettu);
+
+CREATE UNIQUE INDEX toteuma_200701_210101_ulkoinen_id_urakka_poistettu_uindex
+    ON toteuma_200701_210101 (ulkoinen_id, urakka, poistettu);
+
+CREATE UNIQUE INDEX toteuma_210101_210701_ulkoinen_id_urakka_poistettu_uindex
+    ON toteuma_210101_210701 (ulkoinen_id, urakka, poistettu);
+
+CREATE UNIQUE INDEX toteuma_210701_220101_ulkoinen_id_urakka_poistettu_uindex
+    ON toteuma_210701_220101 (ulkoinen_id, urakka, poistettu);
+
+CREATE UNIQUE INDEX toteuma_220101_220701_ulkoinen_id_urakka_poistettu_uindex
+    ON toteuma_220101_220701 (ulkoinen_id, urakka, poistettu);
+
+CREATE UNIQUE INDEX toteuma_220701_230101_ulkoinen_id_urakka_poistettu_uindex
+    ON toteuma_220701_230101 (ulkoinen_id, urakka, poistettu);
+
+CREATE UNIQUE INDEX toteuma_230101_230701_ulkoinen_id_urakka_poistettu_uindex
+    ON toteuma_230101_230701 (ulkoinen_id, urakka, poistettu);
+
+CREATE UNIQUE INDEX toteuma_230701_240101_ulkoinen_id_urakka_poistettu_uindex
+    ON toteuma_230701_240101 (ulkoinen_id, urakka, poistettu);
+
+CREATE UNIQUE INDEX toteuma_240101_240701_ulkoinen_id_urakka_poistettu_uindex
+    ON toteuma_240101_240701 (ulkoinen_id, urakka, poistettu);
+
+CREATE UNIQUE INDEX toteuma_240701_250101_ulkoinen_id_urakka_poistettu_uindex
+    ON toteuma_240701_250101 (ulkoinen_id, urakka, poistettu);
+
+CREATE UNIQUE INDEX toteuma_250101_991231_ulkoinen_id_urakka_poistettu_uindex
+    ON toteuma_250101_991231 (ulkoinen_id, urakka, poistettu);
