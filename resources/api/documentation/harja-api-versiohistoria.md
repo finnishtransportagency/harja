@@ -2,6 +2,8 @@
 <b>Julkaistu: 27.06.2023</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.61 Julkaistu 04.08.2023
+    - Korjattu dokumentaatio materiaaliraportin hakurajapinnasta vastaamaan toteutusta.
 - Versionumero 1.0.60 Julkaistu 27.06.2023
     - Päivitty viimeisin versio työmaapaivakirja rajapinnoista. Toteutus testattavissa mutta voi muuttua palautteen perusteella.
 - Versionumero 1.0.59 Julkaistu 01.05.2023
