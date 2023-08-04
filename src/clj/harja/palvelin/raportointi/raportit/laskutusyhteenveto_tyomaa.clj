@@ -188,10 +188,10 @@
 
         ;; Kun koko hoitokausi on valittu ja loppupvm on myöhemmin kuin kuluva päivä, käytetään kuluvaa päivää
         ;; Muuten laskutusyhteenveto alkaa "ennustamaan" kustannuksia tulevaisuudesta.
-        parametrit (assoc parametrit :haun-loppupvm (if (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
-                                                      (if (pvm/ennen? (pvm/nyt) loppupvm)
-                                                        (pvm/nyt)
-                                                        loppupvm)
+        parametrit (assoc parametrit :haun-loppupvm (if (and
+                                                          (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
+                                                          (pvm/ennen? (pvm/nyt) loppupvm))
+                                                      (pvm/nyt)
                                                       loppupvm))
 
         ;; Jos käytetään valittua aikaväliä, näytetään vain "Määrä" -otsikko
@@ -241,10 +241,8 @@
     [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")
                 :otsikon-koko :iso}
      [:otsikko-heading-small (str alueen-nimi)]
-     (if (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
-       (if (pvm/ennen? (pvm/nyt) loppupvm)
-         [:otsikko-heading (str "Tavoitehintaan vaikuttavat toteutuneet kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
-         [:otsikko-heading "Tavoitehintaan vaikuttavat toteutuneet kustannukset"])
+     (if (and (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm) (pvm/ennen? (pvm/nyt) loppupvm))
+       [:otsikko-heading (str "Tavoitehintaan vaikuttavat toteutuneet kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
        [:otsikko-heading "Tavoitehintaan vaikuttavat toteutuneet kustannukset"])
 
      (concat (for [x otsikot]
@@ -271,10 +269,8 @@
                                      :laskutetaan-teksti laskutetaan-teksti
                                      :kyseessa-kk-vali? kyseessa-kk-vali?})
 
-     (if (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
-       (if (pvm/ennen? (pvm/nyt) loppupvm)
-         [:otsikko-heading (str "Muut toteutuneet kustannukset (ei lasketa tavoitehintaan) aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
-         [:otsikko-heading "Muut toteutuneet kustannukset (ei lasketa tavoitehintaan)"])
+     (if (and (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm) (pvm/ennen? (pvm/nyt) loppupvm))
+       [:otsikko-heading (str "Muut toteutuneet kustannukset (ei lasketa tavoitehintaan) aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
        [:otsikko-heading "Muut toteutuneet kustannukset (ei lasketa tavoitehintaan)"])
      
      (let [otsikot ["Lisätyöt" "Muut"]]

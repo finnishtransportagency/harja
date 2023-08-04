@@ -187,10 +187,10 @@
 
         ;; Kun koko hoitokausi on valittu ja loppupvm on myöhemmin kuin kuluva päivä, käytetään kuluvaa päivää
         ;; Muuten laskutusyhteenveto alkaa "ennustamaan" kustannuksia tulevaisuudesta.
-        parametrit (assoc parametrit :haun-loppupvm (if (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
-                                                      (if (pvm/ennen? (pvm/nyt) loppupvm)
-                                                        (pvm/nyt)
-                                                        loppupvm)
+        parametrit (assoc parametrit :haun-loppupvm (if (and
+                                                          (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
+                                                          (pvm/ennen? (pvm/nyt) loppupvm))
+                                                      (pvm/nyt)
                                                       loppupvm))
         ;; Konteksti ja urakkatiedot
         konteksti (cond urakka-id :urakka
