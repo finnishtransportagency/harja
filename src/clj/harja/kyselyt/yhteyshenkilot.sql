@@ -22,9 +22,8 @@ WHERE yu.urakka = :urakka;
 -- name: poista-urakan-paivystykset!
 -- Poistaa annetun urakan päivystykset ulkoisella id:lla
 DELETE FROM paivystys
-WHERE urakka = :urakka AND
-      luoja = :kayttaja_id AND
-      ulkoinen_id IN (:ulkoiset_idt);
+WHERE urakka = :urakka
+  AND ulkoinen_id IN (:ulkoiset_idt);
 
 -- name: hae-urakan-paivystajat
 -- Hakee urakan päivystykset

@@ -17,6 +17,7 @@
            (java.util Date)))
 
 (def kayttaja "yit-rakennus")
+(def kayttaja-jvh "jvh")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -164,7 +165,7 @@
       ;; Myös päivitys toimii
       (let [vanhat-korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)
             _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
-                kayttaja portti
+                kayttaja-jvh portti
                 (-> "test/resurssit/api/turvallisuuspoikkeama.json"
                   slurp
                   (.replace "__PAIKKA__" "Liukas tie metsän reunalla.")

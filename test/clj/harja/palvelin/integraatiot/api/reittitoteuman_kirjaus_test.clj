@@ -11,6 +11,7 @@
 
 (def kayttaja "destia")
 (def kayttaja-yit "yit-rakennus")
+(def kayttaja-jvh "jvh")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -61,7 +62,7 @@
 
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
-      (let [vastaus-paivitys (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+      (let [vastaus-paivitys (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-jvh portti
                                                       (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                                                           slurp
                                                           (.replace "__SOPIMUS_ID__" (str sopimus-id))
@@ -112,7 +113,7 @@
 
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
-      (let [vastaus-paivitys (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+      (let [vastaus-paivitys (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-jvh portti
                                (-> "test/resurssit/api/reittitoteuma_yksittainen_talvisuola.json"
                                  slurp
                                  (.replace "__SOPIMUS_ID__" (str sopimus-id))
@@ -310,11 +311,11 @@
     (u "DELETE FROM kayttajan_lisaoikeudet_urakkaan;")
     (is (= 200 (:status vastaus-lisays)))))
 
-(defn laheta-yksittainen-reittitoteuma [urakka-id uusi-aika]
+(defn laheta-yksittainen-reittitoteuma [urakka-id annettu-kayttaja uusi-aika]
   (let [ulkoinen-id (str (tyokalut/hae-vapaa-toteuma-ulkoinen-id))
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
         vastaus (tyokalut/post-kutsu
-                 ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja portti
+                 ["/api/urakat/" urakka-id "/toteumat/reitti"] annettu-kayttaja portti
                   (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                     slurp
                     (.replace "2016-01-30" uusi-aika)
@@ -347,7 +348,7 @@
       (is (empty? materiaalin-kaytto-ennen)))
 
     (testing "Uuden materiaalitoteuman lähetys lisää päivälle rivin"
-      (let [ulkoinen-id  (laheta-yksittainen-reittitoteuma urakka-id "2009-01-30")]
+      (let [ulkoinen-id  (laheta-yksittainen-reittitoteuma urakka-id kayttaja "2009-01-30")]
         (let [rivit1 (hae-materiaalit)
               maara1 (:maara (first rivit1))]
           (is (= 1 (count rivit1)))
@@ -355,7 +356,7 @@
 
           (testing "Uusi toteuma samalle päivälle, kasvattaa lukua"
             ;; Lähetetään uusi toteuma, määrän pitää tuplautua ja rivimäärä olla sama
-            (laheta-yksittainen-reittitoteuma urakka-id "2009-01-30")
+            (laheta-yksittainen-reittitoteuma urakka-id kayttaja-jvh "2009-01-30")
             (let [rivit2 (hae-materiaalit)
                   maara2 (:maara (first rivit2))]
               (is (= 1 (count rivit2)) "rivien määrä pysyy samana")
