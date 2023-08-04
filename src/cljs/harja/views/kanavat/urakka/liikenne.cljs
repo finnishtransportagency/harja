@@ -27,7 +27,6 @@
 
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.urakka :as ur]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.sopimus :as sop]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
@@ -522,25 +521,24 @@
    [:div {:class "urakkavalinnat"}
     [:div {:class "liikenneyhteenveto"}
 
-     [:div {:class "yhteenveto-rivi"}
+     [:div {:class "toimenpiteet-rivi"}
 
       [:span {:class "caption musta"} "Toimenpiteet"]
       [:span {:class "body-text semibold"} "Sulutukset ylös: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :toimenpiteet :sulutukset-ylos)]]
       [:span {:class "body-text semibold"} "Sulutukset alas: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :toimenpiteet :sulutukset-alas)]]
       [:span {:class "body-text semibold"} "Sillan avaukset: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :toimenpiteet :sillan-avaukset)]]
-      [:span {:class "body-text semibold"} "Tyhjennykset: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :toimenpiteet :tyhjennykset)]]
-      [:span {:class "body-text semibold"} "Yhteensä: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :toimenpiteet :yhteensa)]]]
+      [:span {:class "body-text semibold"} "Tyhjennykset: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :toimenpiteet :tyhjennykset)]]]
 
      [:hr {:style
            {:width "98%" :height "0px" :border ".5px solid #D6D6D6"}}]
      
      [:div {:class "yhteenveto-rivi"}
-      [:span {:class "caption musta"} "Palvelumuoto"]
+      [:span {:class "caption musta"} "Palvelumuoto, sulutukset"]
       [:span {:class "body-text strong"} "Paikallispalvelu: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :palvelumuoto :paikallispalvelu)]]
       [:span {:class "body-text strong"} "Kaukopalvelu: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :palvelumuoto :kaukopalvelu)]]
       [:span {:class "body-text strong"} "Itsepalvelu: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :palvelumuoto :itsepalvelu)]]
       [:span {:class "body-text strong"} "Muu: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :palvelumuoto :muu)]]
-      [:span {:class "body-text strong"} "Yhteensä: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :palvelumuoto :yhteensa)]]]]]])
+      [:span {:class "body-text strong"} "Sulutukset yhteensä: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :palvelumuoto :yhteensa)]]]]]])
 
 (defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?
                                             liikennetapahtumien-haku-tulee-olemaan-kaynnissa?
