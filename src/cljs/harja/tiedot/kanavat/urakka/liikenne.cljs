@@ -172,17 +172,14 @@
 (defn hae-sulutuksen-suunta-lkm [tapahtuma haluttu-suunta]
   ;; Palauttaa integerin montako kertaa haluttu suunta esiintyy tapahtumalla
   ;; Sulutuksen aluksilla on aina 1 suunta, tällä haetaan siis sulutuksen suunta
-  (count (filter
-   (fn [alus]
-     (let [toimenpide
-           #{(::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))
-                       (::toiminto/toimenpide (second (::lt/toiminnot tapahtuma)))
-                       (::toiminto/toimenpide (last (::lt/toiminnot tapahtuma)))
-                       }]
-       (and
-        (contains? toimenpide :sulutus)
-        (= (::lt-alus/suunta alus) haluttu-suunta))))
-   (::lt/alukset tapahtuma))))
+  (let [toimenpiteet
+        #{(::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))
+          (::toiminto/toimenpide (second (::lt/toiminnot tapahtuma)))
+          (::toiminto/toimenpide (last (::lt/toiminnot tapahtuma))) ; ei hyvä mutta toimii
+          }]
+    (if (contains? toimenpiteet :sulutus)
+      (count (filter #(= (::lt-alus/suunta %) haluttu-suunta) (::lt/alukset tapahtuma)))
+      0)))
 
 (defn laske-yhteenveto [tapahtumat haluttu-toiminto haluttu-suunta haluttu-palvelumuoto]
   ;; Laskee liikennetapahtumien yhteenvetotietoja
@@ -190,8 +187,7 @@
   ;; Tapahtumilla voi olla useita kohteenosia, eli useita toimenpiteitä/palvelumuotoja, jotka otettu myös huomioon
   ;; Palautetaan integer (Long) montako toimenpidettä/palvelumuotoa löytyi
   (reduce (fn [acc tapahtuma]
-            (let [suuntia-olemassa? (pos? (hae-sulutuksen-suunta-lkm tapahtuma haluttu-suunta))
-                  toiminnot (filter (fn [toiminto]
+            (let [toiminnot (filter (fn [toiminto]
                                       (or
                                         (and
                                           (= haluttu-toiminto (::toiminto/toimenpide toiminto))
@@ -201,7 +197,7 @@
                                           (= haluttu-toiminto :avaus))
                                         (and
                                           haluttu-suunta
-                                          suuntia-olemassa?
+                                          (pos? (hae-sulutuksen-suunta-lkm tapahtuma haluttu-suunta))
                                           (= haluttu-palvelumuoto nil)
                                           (= haluttu-toiminto (::toiminto/toimenpide toiminto)))
                                         (and
