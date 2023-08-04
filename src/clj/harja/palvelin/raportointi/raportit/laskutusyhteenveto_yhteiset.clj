@@ -130,12 +130,12 @@
 
 (def varoitus-vain-jvh-voi-muokata-tietoja "Vain järjestelmän vastuuhenkilö voi syöttää indeksiarvoja ja lämpötiloja Harjaan.")
 
-(defn formatoi-urakan-pvm [kysely-fn db hk-alkupvm hk-loppupvm alkupvm loppupvm urakka-id]
+(defn tee-laskutusyhteevetohaku [kysely-fn db hk-alkupvm hk-loppupvm alkupvm haun-loppupvm urakka-id]
   (kysely-fn db
              (konv/sql-date hk-alkupvm)
              (konv/sql-date hk-loppupvm)
              (konv/sql-date alkupvm)
-             (konv/sql-date loppupvm)
+             (konv/sql-date haun-loppupvm)
              urakka-id))
 
 (defn hae-alku-ja-loppupvm [alkupvm loppupvm]
@@ -147,13 +147,18 @@
     [alkupvm loppupvm]))
 
 (defn hae-laskutusyhteenvedon-tiedot
-  [db user {:keys [urakka-id alkupvm loppupvm urakkatyyppi] :as tiedot} & [koko-vuosi? vuoden-kk? valittu-aikavali?]]
+  [db user {:keys [urakka-id alkupvm loppupvm haun-loppupvm urakkatyyppi] :as tiedot} & [koko-vuosi? vuoden-kk? valittu-aikavali?]]
   (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
 
   ;; Jos valittuna tietty vuosi, vuoden kuukausi, tai oma aikaväli, käytetään annettua alku/loppupvm
   (let [[hk-alkupvm hk-loppupvm] (if (or koko-vuosi? vuoden-kk? valittu-aikavali?) 
                                    [alkupvm loppupvm] 
                                    (hae-alku-ja-loppupvm alkupvm loppupvm))
+        ;; Haun-loppupvm käytetään vain, jos on koko hoitovuosi asetus valittuna. Se ei ole pakollinen parametri.
+        ;; Mikäli sitä ei ole asetettu, muodostetaan se loppupvm:stä
+        haun-loppupvm (if (nil? haun-loppupvm)
+                        loppupvm
+                        haun-loppupvm)
         kysely-fn (if (= "teiden-hoito" urakkatyyppi)
                     laskutus-q/hae-laskutusyhteenvedon-tiedot-teiden-hoito
                     laskutus-q/hae-laskutusyhteenvedon-tiedot)
@@ -162,12 +167,18 @@
                       toimenpidekoodit/tuotteen-jarjestys)
         tulos (vec
                 (sort-by (juxt (comp jarjesta-fn :tuotekoodi) :nimi)
-                         (into [] (formatoi-urakan-pvm kysely-fn db hk-alkupvm hk-loppupvm alkupvm loppupvm urakka-id))))]
+                         (into [] (tee-laskutusyhteevetohaku kysely-fn db hk-alkupvm hk-loppupvm alkupvm haun-loppupvm urakka-id))))]
     tulos))
 
 (defn hae-tyomaa-laskutusyhteenvedon-tiedot
-  [db _ {:keys [urakka-id alkupvm loppupvm]}]
+  [db _ {:keys [urakka-id alkupvm loppupvm haun-loppupvm]}]
   (let [[hk-alkupvm hk-loppupvm] (hae-alku-ja-loppupvm alkupvm loppupvm)
+
+        ;; Haun-loppupvm käytetään vain, jos on koko hoitovuosi asetus valittuna. Se ei ole pakollinen parametri.
+        ;; Mikäli sitä ei ole asetettu, muodostetaan se loppupvm:stä
+        haun-loppupvm (if (nil? haun-loppupvm)
+                        loppupvm
+                        haun-loppupvm)
         kysely-fn laskutus-q/hae-tyomaakokous-laskutusyhteenveto
-        tulos (vec (into [] (formatoi-urakan-pvm kysely-fn db hk-alkupvm hk-loppupvm alkupvm loppupvm urakka-id)))]
+        tulos (vec (into [] (tee-laskutusyhteevetohaku kysely-fn db hk-alkupvm hk-loppupvm alkupvm haun-loppupvm urakka-id)))]
     tulos))
