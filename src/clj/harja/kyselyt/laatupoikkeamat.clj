@@ -10,8 +10,8 @@
 (defqueries "harja/kyselyt/laatupoikkeamat.sql"
   {:positional? true})
 
-(defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id luoja]
-  (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id luoja))))
+(defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id urakka-id]
+  (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id urakka-id))))
 
 (defn luo-tai-paivita-laatupoikkeama
   "Luo uuden laatupoikkeaman tai päivittää olemassaolevan laatupoikkeaman perustiedot. Palauttaa laatupoikkeaman id:n."

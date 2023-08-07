@@ -400,11 +400,11 @@ SELECT id
 FROM tarkastus
 WHERE ulkoinen_id = :id
       AND tyyppi = :tyyppi :: tarkastustyyppi
-      AND luoja = :luoja;
+      AND urakka = :urakka-id;
 
 -- name: luo-liite<!
 -- Luo tarkastukselle liite
-INSERT INTO tarkastus_liite (tarkastus, liite) VALUES (:tarkastus, :liite)
+INSERT INTO tarkastus_liite (tarkastus, liite) VALUES (:tarkastus, :liite);
 
 -- name: hae-urakan-tiestotarkastukset-liitteineen-raportille
 -- Hakee urakan tiestötarkastukset aikavälin perusteella raportille

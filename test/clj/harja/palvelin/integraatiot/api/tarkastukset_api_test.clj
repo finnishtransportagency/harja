@@ -17,6 +17,7 @@
   (:import (java.util Date)))
 
 (def kayttaja "destia")
+(def kayttaja-jvh "jvh")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -60,7 +61,7 @@
 
     (let [poista-vastaus (api-tyokalut/delete-kutsu
                            ["/api/urakat/" urakka "/tarkastus/soratietarkastus"]
-                           kayttaja portti
+                           kayttaja-jvh portti
                            (json-sapluunasta "test/resurssit/api/soratietarkastus-poisto.json" pvm id))]
       (is (-> poista-vastaus :status (= 200))))))
 
@@ -99,7 +100,7 @@
 
     (let [poista-vastaus (api-tyokalut/delete-kutsu
                            ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
-                           kayttaja portti
+                           kayttaja-jvh portti
                            (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-poisto.json" pvm id))
           olemattoman-poista-vastaus (api-tyokalut/delete-kutsu
                                        ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
@@ -166,7 +167,7 @@
                                          "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))
           vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
                     (json-sapluunasta "test/resurssit/api/talvihoitotarkastus.json" pvm id))
-          vastaus2 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
+          vastaus2 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja-jvh portti
                      (json-sapluunasta "test/resurssit/api/talvihoitotarkastus.json" pvm id))
           liitteiden-maara-jalkeen (first (first (q "select count(id) FROM liite")))]
 

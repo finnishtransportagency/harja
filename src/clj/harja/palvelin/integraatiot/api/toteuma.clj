@@ -65,8 +65,7 @@
   (jdbc/with-db-transaction [db db]
     (let [kayttaja-id (:id kirjaaja)
           toteumien-alkupvmt (set (map #(pvm/pvm (:alkanut %))
-                                       (q-toteumat/hae-poistettavien-toteumien-alkanut-ulkoisella-idlla db {:kayttaja-id kayttaja-id
-                                                                                                            :urakka-id urakka-id
+                                       (q-toteumat/hae-poistettavien-toteumien-alkanut-ulkoisella-idlla db {:urakka-id urakka-id
                                                                                                             :ulkoiset-idt ulkoiset-idt})))
           poistettujen-maara (q-toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt urakka-id)
 
@@ -125,7 +124,7 @@
 (defn paivita-tai-luo-uusi-toteuma
   ([db urakka-id kirjaaja toteuma] (paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma nil))
   ([db urakka-id kirjaaja toteuma tyokone]
-   (if (q-toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja) urakka-id)
+   (if (q-toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) urakka-id)
      (paivita-toteuma db urakka-id kirjaaja toteuma tyokone)
      (luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone))))
 
