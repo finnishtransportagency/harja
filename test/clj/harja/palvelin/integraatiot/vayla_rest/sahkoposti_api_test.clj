@@ -53,6 +53,11 @@
                                                                        :ilmoitusviestijono tloik-testi-tyokalut/+tloik-ilmoitusviestijono+
                                                                        :ilmoituskuittausjono tloik-testi-tyokalut/+tloik-ilmoituskuittausjono+}})
                               [:http-palvelin :db :integraatioloki :itmf])
+    :ulkoinen-sahkoposti (component/using
+                         (sahkoposti/luo-vain-lahetys
+                           (:palvelin integraatio/ulkoinen-sahkoposti-asetukset)
+                           (:vastausosoite integraatio/ulkoinen-sahkoposti-asetukset))
+                         [:integraatioloki :db])
     :labyrintti (component/using
                   (labyrintti/->Labyrintti "foo" "testi" "testi" (atom #{}))
                   [:db :http-palvelin :integraatioloki])
@@ -89,6 +94,21 @@
         "Yllättävästä häiriöstä erikseen ilmoitus puhelimitse"
         " urakoitsijan linjalle 0200 21200"]])
     {:tiedostonimi (str "Tietyöilmoitus-jokutie.pdf")}))
+
+;; Tällä voidaan testata nopeasti esim GMAILin kautta sähköpostin lähettämistä.
+;; Anna gmail tunnus ja lähetysosoite, sekä vastaanottaja. Voit joutua 2FA:n käytöstä johtuen luomaan
+;; Google Accountille erillisen salasanan, jolla voidaan lähettää sähköposteja.
+#_ (deftest laheta-ulkoinen-sahkoposti
+  (let [(sahkoposti/laheta-ulkoisella-jarjestelmalla-viesti!
+          (:ulkoinen-sahkoposti jarjestelma)
+          <gmail - tunnus>
+          <gmail - lahetysosoite, sama kuin tunnus>
+          "otsikko"
+          "sisalto - Gmailista gmailiin"
+          nil                                               ;; Headers - näitä ei käytetä vielä
+          <vastaanottaja>
+          <gmail / google account ulkoinen järjestelmä salasana
+          587)]))
 
 (deftest laheta-tietyoilmoitus-sahkoposti-liitteen-kanssa
   (let [_ (pdf-vienti/rekisteroi-pdf-kasittelija! (:pdf-vienti jarjestelma) :tietyoilmoitus luo-testi-pdf)
