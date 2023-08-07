@@ -15,6 +15,9 @@
   (laheta-viesti!
    [this lahettaja vastaanottaja otsikko sisalto headers]
    "Lähettää viestin vastaanottajalle annetulla otsikolla ja sisällöllä")
+  (laheta-ulkoisella-jarjestelmalla-viesti!
+    [this lahettaja vastaanottaja otsikko sisalto headers username password port]
+    "Lähettää viestin vastaanottajalle annetulla otsikolla ja sisällöllä käyttäen ulkoista järjestelmää, joka vaatii kirjautumistiedot.")
   (vastausosoite
    [this]
    "Palauttaa oletus vastausosoitteen, jota voi käyttää lähettäjänä ja johon lähetetyt viestit
