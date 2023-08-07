@@ -172,11 +172,7 @@
 (defn hae-sulutuksen-suunta-lkm [tapahtuma haluttu-suunta]
   ;; Palauttaa integerin montako kertaa haluttu suunta esiintyy tapahtumalla
   ;; Sulutuksen aluksilla on aina 1 suunta, tällä haetaan siis sulutuksen suunta
-  (let [toimenpiteet
-        #{(::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))
-          (::toiminto/toimenpide (second (::lt/toiminnot tapahtuma)))
-          (::toiminto/toimenpide (last (::lt/toiminnot tapahtuma))) ; ei hyvä mutta toimii
-          }]
+  (let [toimenpiteet (set (map #(::toiminto/toimenpide %) (::lt/toiminnot tapahtuma)))]
     (if (contains? toimenpiteet :sulutus)
       (count (filter #(= (::lt-alus/suunta %) haluttu-suunta) (::lt/alukset tapahtuma)))
       0)))
