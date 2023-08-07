@@ -16,18 +16,18 @@
 
 
 
-(def alkutila {:email {:lahettaja "markus.vahakangas@solita.fi"
-                       :vastaanottaja "markus.vahakangas@gmail.com"
+(def alkutila {:email {:lahettaja "harja@testaa.fi"
+                       :vastaanottaja "harja@vastaanottaa.com"
                        :palvelin "smtp.gmail.com"
-                       :tunnus "markus.vahakangas@gmail.com"
-                       :salasana "dfemhnaflstwflth"
+                       :tunnus "harja@testaa.com"
+                       :salasana "salakala"
                        :portti 587
                        :tls true
                        :otsikko "annaotsikko"
                        :viesti "annaviesti"
                        :lahetys-kaynnissa? false}
-               :emailapi {:lahettaja "markus.vahakangas@solita.fi"
-                          :vastaanottaja "markus.vahakangas@gmail.com"
+               :emailapi {:lahettaja "harja@testaa.fi"
+                          :vastaanottaja "harja@vastaanottaa.com"
                           :otsikko "annaotsikko"
                           :viesti "annaviesti"
                           :lahetys-kaynnissa? false}})
