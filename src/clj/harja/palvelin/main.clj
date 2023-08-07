@@ -608,7 +608,9 @@
       :debug (component/using
                (debug/->Debug)
                {:db :db-replica
-                :http-palvelin :http-palvelin})
+                :http-palvelin :http-palvelin
+                :solita-sahkoposti :solita-sahkoposti
+                :api-sahkoposti :api-sahkoposti})
 
       :reimari (component/using
                  (let [{:keys [url kayttajatunnus salasana]} (:reimari asetukset)]
