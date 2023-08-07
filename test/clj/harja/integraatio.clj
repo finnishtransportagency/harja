@@ -24,7 +24,7 @@
                                :palvelin "http://localhost:8084"
                                :vastausosoite "harja-ala-vastaa@vayla.fi"})
 
-(def solita-sahkoposti-asetukset {:suora? true
+(def ulkoinen-sahkoposti-asetukset {:suora? true
                                   :palvelin "smtp.gmail.com"
                                   :vastausosoite "example@example.com"})
 

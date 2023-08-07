@@ -37,7 +37,7 @@
   gmailin tarvitsemat asetukset ja tunnukset. Toinen vaihtoehto on lähettää viestit Digian tarjoamaa api-rajapintaa hyödyntäen.
   Jälkimmäinen tapa simuloi paremmin sitä, mitä Harja tekee, kun se lähettää sähköposteja. Ensimmäinen on lähinnä
   lokaaliin ympäristöön testitarkoituksissa."]
-     [:p "Viestin lähetykseen voit käyttää vaikka Gmailia. Vaihdat asetukset.edn tiedostoon :solita-sahkoposti :palvelin arvon 'stmp.gmail.com'."]
+     [:p "Viestin lähetykseen voit käyttää vaikka Gmailia. Vaihdat asetukset.edn tiedostoon :ulkoinen-sahkoposti :palvelin arvon 'stmp.gmail.com'."]
      [:p "Jos Gmailissa on käytössä 2FA, niin luo sähköpostin lähettämistä varten erillinen sovelluskohtainen salasana Google Tilillä: 'https://myaccount.google.com/security?hl=fi'."]
      [:p "Tunnus ja lähettäjä on Gmailissa sinun oma sähköpostiosoite. Porttina 587 ja tsl = true. Lähettävä palvelin on stmp.gmail.com."]
      [:h2 "Lähetä 'postal' kirjastolla"]

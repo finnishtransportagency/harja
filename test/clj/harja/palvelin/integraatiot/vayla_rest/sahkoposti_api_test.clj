@@ -53,10 +53,10 @@
                                                                        :ilmoitusviestijono tloik-testi-tyokalut/+tloik-ilmoitusviestijono+
                                                                        :ilmoituskuittausjono tloik-testi-tyokalut/+tloik-ilmoituskuittausjono+}})
                               [:http-palvelin :db :integraatioloki :itmf])
-    :solita-sahkoposti (component/using
+    :ulkoinen-sahkoposti (component/using
                          (sahkoposti/luo-vain-lahetys
-                           (:palvelin integraatio/solita-sahkoposti-asetukset)
-                           (:vastausosoite integraatio/solita-sahkoposti-asetukset))
+                           (:palvelin integraatio/ulkoinen-sahkoposti-asetukset)
+                           (:vastausosoite integraatio/ulkoinen-sahkoposti-asetukset))
                          [:integraatioloki :db])
     :labyrintti (component/using
                   (labyrintti/->Labyrintti "foo" "testi" "testi" (atom #{}))
@@ -98,9 +98,9 @@
 ;; Tällä voidaan testata nopeasti esim GMAILin kautta sähköpostin lähettämistä.
 ;; Anna gmail tunnus ja lähetysosoite, sekä vastaanottaja. Voit joutua 2FA:n käytöstä johtuen luomaan
 ;; Google Accountille erillisen salasanan, jolla voidaan lähettää sähköposteja.
-#_ (deftest laheta-solita-sahkoposti
+#_ (deftest laheta-ulkoinen-sahkoposti
   (let [(sahkoposti/laheta-ulkoisella-jarjestelmalla-viesti!
-          (:solita-sahkoposti jarjestelma)
+          (:ulkoinen-sahkoposti jarjestelma)
           <gmail - tunnus>
           <gmail - lahetysosoite, sama kuin tunnus>
           "otsikko"

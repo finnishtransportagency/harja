@@ -130,9 +130,9 @@
 
 (defn- laheta-email
   "Lähetetään sähköpostia itse konfiguroidun järjestelmän kautta. Esim Gmailin."
-  [solita-sahkoposti email]
+  [ulkoinen-sahkoposti email]
   (let [vastaus (sahkoposti/laheta-ulkoisella-jarjestelmalla-viesti!
-          solita-sahkoposti (:lahettaja email) (:vastaanottaja email)
+          ulkoinen-sahkoposti (:lahettaja email) (:vastaanottaja email)
           (:otsikko email) (:viesti email) nil
           (:tunnus email) (:salasana email) (:portti email))]
     ;; Palautetaan onnistunut setti, jos onnistuu, ja jos ei onnistu, niin palautetaan koko setti
@@ -163,7 +163,7 @@
 (defrecord Debug []
   component/Lifecycle
   (start [{db :db
-           solita-sahkoposti :solita-sahkoposti
+           ulkoinen-sahkoposti :ulkoinen-sahkoposti
            api-sahkoposti :api-sahkoposti
            http :http-palvelin :as this}]
     (http/julkaise-palvelut
@@ -191,7 +191,7 @@
       :debug-hae-urakan-geometriat
       (vaadi-jvh! (partial #'hae-urakan-geometriat db))
       :debug-laheta-email
-      (vaadi-jvh! (partial #'laheta-email solita-sahkoposti))
+      (vaadi-jvh! (partial #'laheta-email ulkoinen-sahkoposti))
       :debug-laheta-emailapi
       (vaadi-jvh! (partial #'laheta-emailapi api-sahkoposti)))
     this)
