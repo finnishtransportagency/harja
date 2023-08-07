@@ -10,6 +10,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.raportti :refer [muodosta-html]]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.napit :as napit]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.kommunikaatio :as k]
@@ -133,6 +134,99 @@
          :leveys 0.5}]
        nayta-rivit]]]))
 
+(defn- paivakirjan-kommentit [e!]
+  (let [toggle-kentat (fn [nayta piilota]
+                        ;; Tämä tehtiin alunperin raporttien puolelle jonka takia käytetään DOM manipulaatiota eikä tuckin tila atomia
+                        ;; Toggleaa kun toinen element näytetään niin toinen piiloitetaan
+                        ;; Parametrina elementtien ID:t, resetoi aina kommenttikentän (text-area)
+                        (let [nayta-element (.-classList (.getElementById js/document nayta))
+                              kommentti-element (.getElementById js/document "kommentti-teksti")
+                              piilota-element (.-classList (.getElementById js/document piilota))]
+                          (set! (.-value kommentti-element) "")
+                          (.add piilota-element "piilota-kentta")
+                          (.remove nayta-element "piilota-kentta")))]
+
+    [:div#Kommentit.row.filtterit.kommentit-valistys
+     [:h2 "Kommentit"]
+     [:span.ei-kommentteja "Ei kommentteja"]
+
+     ;; Kommentin päiväys ja nimi
+     #_[:div.alarivi-tiedot
+        [:span "10.10.2022 15:45"]
+        [:span "Timo Tilaaja"]]
+
+     ;; Kommentti
+     #_[:div.kommentti
+        [:h1.tieto-rivi "Tästähän puuttuu nelostien rekka-kolari"]
+        [:span.klikattava.kommentti-poista {:on-click (fn []
+                                                        (println "Klikattu poista kommentti"))} (ikonit/action-delete)]]
+
+     ;; Muutoshistoria tiedot
+     #_[:div.alarivi-tiedot
+        [:span "11.10.2022 07:45"]
+        [:span "Tauno Työnjohtaja"]
+        [:span.muutos-info "Jälkikäteismerkintä urakoitsijajärjestelmästä"]]
+
+     ;; Muutoshistoria
+     #_[:div.kommentti.muutos
+        [:h1.tieto-rivi "Työmaapäiväkirja päivitetty 11.10.2022 08:10: lisätty rekka-kolari."]
+        [:a.klikattava.info-rivi "Näytä muutoshistoria"]]
+
+     [:div#kommentti-lisaa
+      [:a.klikattava {:on-click #(toggle-kentat "kommentti-area" "kommentti-lisaa")}
+
+       [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Lisää kommentti"]]]
+
+     [:span#kommentti-area.kentta-text.piilota-kentta
+      [:span "Lisää kommentti"]
+      [:textarea#kommentti-teksti]
+      [:span "Myös työmaapäiväkirjaan kirjoitetut kommentit tallentuvat PDF:ään ja ne arkistoidaan muun työpäiväkirjan mukana."]
+
+      [:div
+       [:span
+        [napit/tallenna "Tallenna"
+         (fn[]
+           (let [kommentti-element (.getElementById js/document "kommentti-teksti")
+                 tt (-> kommentti-element .-value)]
+             (toggle-kentat "kommentti-lisaa" "kommentti-area")
+             (println "Klikattu tallenna kommentti: " tt)))
+         {:vayla-tyyli? true}]]
+
+       [:span
+        [napit/tallenna "Peruuta"
+         #(toggle-kentat "kommentti-lisaa" "kommentti-area")
+         {:luokka "nappi-toissijainen" :vayla-tyyli? true}]]]]]))
+
+(defn- paivakirjan-sticky [e!]
+  ;; Sticky bar
+  [:div.ala-valinnat-fixed
+
+   [:div.napit.klikattava {:on-click #(e! (tiedot/->SelaaPaivakirjoja :edellinen))}
+    [:span.nuoli
+     [ikonit/harja-icon-navigation-previous-page]]
+    [:span "Edellinen"]]
+
+   [:div.napit.klikattava {:on-click #(e! (tiedot/->SelaaPaivakirjoja :seuraava))}
+    [:span "Seuraava"]
+    [:span.nuoli
+     [ikonit/harja-icon-navigation-next-page]]]
+
+   [:div.napit.ei-reunoja.klikattava
+    ^{:key "raporttipdf"}
+    [:form {:target "_blank" :method "POST"
+            :action (k/pdf-url :raportointi)}
+     [:input {:type "hidden" :name "parametrit"
+              :value (t/clj->transit @tiedot/raportin-parametrit)}]
+
+     [:button {:type "submit"}
+      [:span.nuoli
+       [ikonit/livicon-download]]
+      [:span "Tallenna PDF"]]]]
+
+   [:div.napit.ei-reunoja.klikattava {:on-click #(tiedot/scrollaa-viimeksi-valitulle-riville e!)}
+    [:span.nuoli [ikonit/harja-icon-navigation-close]]
+    [:span "Sulje"]]])
+
 (defn suorita-tyomaapaivakirja-raportti [e!]
   (if-let [tiedot @tiedot/raportin-tiedot]
     [:div.tyomaapaivakirja
@@ -143,36 +237,13 @@
        [ikonit/harja-icon-navigation-close]]
 
       ;; Raportin html
-      [muodosta-html (assoc-in tiedot [1 :tunniste] tiedot/raportti-avain)]]
+      [muodosta-html (assoc-in tiedot [1 :tunniste] tiedot/raportti-avain)]
+
+      ;; Kommentit
+      (paivakirjan-kommentit e!)]
 
      ;; Sticky bar (Edellinen - Seuraava) Tallenna PDF
-     [:div.ala-valinnat-fixed
-
-      [:div.napit.klikattava {:on-click #(e! (tiedot/->SelaaPaivakirjoja :edellinen))}
-       [:span.nuoli
-        [ikonit/harja-icon-navigation-previous-page]]
-       [:span "Edellinen"]]
-
-      [:div.napit.klikattava {:on-click #(e! (tiedot/->SelaaPaivakirjoja :seuraava))}
-       [:span "Seuraava"]
-       [:span.nuoli
-        [ikonit/harja-icon-navigation-next-page]]]
-
-      [:div.napit.ei-reunoja.klikattava
-       ^{:key "raporttipdf"}
-       [:form {:target "_blank" :method "POST"
-               :action (k/pdf-url :raportointi)}
-        [:input {:type "hidden" :name "parametrit"
-                 :value (t/clj->transit @tiedot/raportin-parametrit)}]
-
-        [:button {:type "submit"}
-         [:span.nuoli
-          [ikonit/livicon-download]]
-         [:span "Tallenna PDF"]]]]
-
-      [:div.napit.ei-reunoja.klikattava {:on-click #(tiedot/scrollaa-viimeksi-valitulle-riville e!)}
-       [:span.nuoli [ikonit/harja-icon-navigation-close]]
-       [:span "Sulje"]]]]
+     (paivakirjan-sticky e!)]
 
     [yleiset/ajax-loader "Ladataan tietoja..."]))
 

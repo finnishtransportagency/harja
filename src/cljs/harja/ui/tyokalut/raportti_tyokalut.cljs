@@ -2,7 +2,6 @@
   ;; Tänne voi laittaa mm yksittäisten raporttien funktioita
   (:require [harja.ui.raportti :as raportointi]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.napit :as napit]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.ui.nakymasiirrin :as siirrin]))
@@ -127,63 +126,7 @@
          otsikot-oikea rivit-oikea])]
      [:div.width-half])])
 
-(defmethod raportointi/muodosta-html :tyomaapaivakirjan-kommentit [[_]]
-  (let [toggle-kentat (fn [nayta piilota]
-                        ;; Toggleaa kun toinen element näytetään niin toinen piiloitetaan
-                        ;; Parametrina elementtien ID:t, resetoi aina kommenttikentän (text-area)
-                        (let [nayta-element (.-classList (.getElementById js/document nayta))
-                              kommentti-element (.getElementById js/document "kommentti-teksti")
-                              piilota-element (.-classList (.getElementById js/document piilota))]
-                          (set! (.-value kommentti-element) "")
-                          (.add piilota-element "piilota-kentta")
-                          (.remove nayta-element "piilota-kentta")))]
-
-    [:div#Kommentit.row.filtterit.kommentit-valistys
-     [:h2 "Kommentit"]
-
-     ;; Kommentin päiväys ja nimi
-     [:div.alarivi-tiedot
-      [:span "10.10.2022 15:45"]
-      [:span "Timo Tilaaja"]]
-
-     ;; Kommentti
-     [:div.kommentti
-      [:h1.tieto-rivi "Tästähän puuttuu nelostien rekka-kolari"]
-      [:span.klikattava.kommentti-poista {:on-click (fn []
-                                                      (println "Klikattu poista kommentti"))} (ikonit/action-delete)]]
-
-     ;; Muutoshistoria tiedot
-     #_[:div.alarivi-tiedot
-        [:span "11.10.2022 07:45"]
-        [:span "Tauno Työnjohtaja"]
-        [:span.muutos-info "Jälkikäteismerkintä urakoitsijajärjestelmästä"]]
-
-     ;; Muutoshistoria
-     #_[:div.kommentti.muutos
-        [:h1.tieto-rivi "Työmaapäiväkirja päivitetty 11.10.2022 08:10: lisätty rekka-kolari."]
-        [:a.klikattava.info-rivi "Näytä muutoshistoria"]]
-
-     [:div#kommentti-lisaa
-      [:a.klikattava {:on-click #(toggle-kentat "kommentti-area" "kommentti-lisaa")}
-
-       [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Lisää kommentti"]]]
-
-     [:span#kommentti-area.kentta-text
-      [:span "Lisää kommentti"]
-      [:textarea#kommentti-teksti]
-      [:span "Myös työmaapäiväkirjaan kirjoitetut kommentit tallentuvat PDF:ään ja ne arkistoidaan muun työpäiväkirjan mukana."]
-
-      [:div
-       [:span
-        [napit/tallenna "Tallenna"
-         (fn[]
-           (let [kommentti-element (.getElementById js/document "kommentti-teksti")
-                 tt (-> kommentti-element .-value)]
-             (toggle-kentat "kommentti-lisaa" "kommentti-area")
-             (println "Klikattu tallenna kommentti: " tt)))
-         {:vayla-tyyli? true}]]
-
-       [:span
-        [napit/tallenna "Peruuta"
-         #(toggle-kentat "kommentti-lisaa" "kommentti-area")
-         {:luokka "nappi-toissijainen" :vayla-tyyli? true}]]]]]))
+(defmethod raportointi/muodosta-html :tyomaapaivakirjan-kommentit [[_ _]]
+  ;; Kommenteiden html käsitellään paivakirja.cljs koska niiden kanssa tehdään palvelinkutsuja
+  ;; Kommenteille tehdään oma PDF metodi erikseen pdf_tyokalut.clj jossa generoidaan kommentit PDFään
+  nil)
