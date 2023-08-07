@@ -147,10 +147,11 @@
           yhteydenotot (filter #(= "tilaajan-yhteydenotto" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
           muut-kirjaukset (filter #(= "muut_kirjaukset" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
           otsikko "Työmaapäiväkirja"]
+      
       [:raportti {:nimi otsikko
                   :piilota-otsikko? true}
 
-       ; [:tyomaapaivakirja-header tyomaapaivakirja]
+       [:tyomaapaivakirja-header tyomaapaivakirja]
 
        ;; Päivystäjät, Työnjohtajat
        (vahvuus/vahvuus-taulukot (:paivystajat tyomaapaivakirja) (:tyonjohtajat tyomaapaivakirja))
@@ -173,7 +174,6 @@
        ;; Muut huomiot
        (tapahtumataulukot muut-kirjaukset "Muut huomiot" "Ei muita huomioita")
 
-       ;; Kommentit (nämäkin pitäisi saada PDF raporttiin)
-       ;; Toteutetaan myöhemmin
-       #_[:tyomaapaivakirjan-kommentit _]])
+       ;; Kommentit
+       [:tyomaapaivakirjan-kommentit _]])
     (log/debug "Raportin tiedot eivät ole latautuneet. Odotellaan hetki")))

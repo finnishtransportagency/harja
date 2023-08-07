@@ -1,13 +1,12 @@
 (ns harja.palvelin.tyokalut.pdf-tyokalut
   ;; Tänne voi laittaa mm yksittäisten raporttien funktioita
-
   (:require [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
             [harja.palvelin.raportointi.pdf :as pdf-raportointi]))
 
 (defmethod pdf-raportointi/muodosta-pdf :tyomaa-laskutusyhteenveto-yhteensa [[_ kyseessa-kk-vali? hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str]]
   ;; Muodostaa työmaakokouksen laskutusyhteenvedolle "Laskutus yhteensä" -yhteenvedon 
   ;; Näihin tulee Hoitokauden & Valitun kuukauden otsikot joiden alle arvot annettujen parametrien perusteella
-
   [:fo:block {:margin-top "10px"}
    (pdf-raportointi/arvotaulukko-valittu-aika
     kyseessa-kk-vali?
@@ -91,3 +90,38 @@
       otsikot-vasen
       rivit-vasen
       optiot-vasen)))
+
+(defmethod pdf-raportointi/muodosta-pdf :tyomaapaivakirja-header [[_ tyomaapaivakirja]]
+  ;; Urakka nimi & työmaapäiväkirja title on vakiona jo PDF raportissa, joten nämä voi skippaa
+  ;; Näytetään vaan saapunut / päivitetty / versio / kommentit / tila
+  [:fo:table {:font-size pdf-raportointi/otsikon-fonttikoko}
+   [:fo:table-column {:column-width "25%"}]
+   [:fo:table-column {:column-width "25%"}]
+   [:fo:table-column {:column-width "14%"}]
+   [:fo:table-column {:column-width "2%"}]
+   [:fo:table-column {:column-width "14%"}]
+
+   (let [tyyli-default {:margin-bottom "20px" :margin-top "5px" :color "#000000" :font-size "8pt"} ;; #858585 harmaa sävy
+         tila-tyyli tyyli-default
+         saapunut-tyyli (merge tyyli-default {:font-size "7pt"})
+         versio-tyyli (merge tyyli-default {:margin-left "5mm"})
+         paivitetty-tyyli (merge tyyli-default {:margin-left "5mm" :font-size "7pt"})
+         pallura-tyyli (merge tyyli-default {:margin-top "2.5px" :font-size "12pt" :font-weight "bold"})
+         pallura-tyyli (merge pallura-tyyli (if (= "myohassa" (:tila tyomaapaivakirja))
+                                              {:color "#FFC300"}
+                                              {:color "#27B427"}))]
+     [:fo:table-body
+      [:fo:table-row
+       [:fo:table-cell [:fo:block saapunut-tyyli (str "Saapunut:" (pvm/pvm-aika-klo (:luotu tyomaapaivakirja)))]]
+
+       [:fo:table-cell [:fo:block paivitetty-tyyli (str "Päivitetty " (pvm/pvm-aika-klo (:muokattu tyomaapaivakirja)))]]
+       [:fo:table-cell [:fo:block versio-tyyli (str "Versio " (:versio tyomaapaivakirja))]]
+       [:fo:table-cell [:fo:block pallura-tyyli "• "]]
+       [:fo:table-cell [:fo:block tila-tyyli (if (= "myohassa" (:tila tyomaapaivakirja))
+                                               "Myöhässä"
+                                               "Ok")]]]])])
+
+(defmethod pdf-raportointi/muodosta-pdf :tyomaapaivakirjan-kommentit [[_ kommentit]]
+  ;; TODO ...
+  ;;
+  [:fo:block "Kommentit"])

@@ -132,6 +132,10 @@ VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :tyyppi::tyomaapaivakirja_tap
 INSERT INTO tyomaapaivakirja_toimeksianto (urakka_id, tyomaapaivakirja_id, versio, kuvaus, aika)
 VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kuvaus, :aika);
 
+-- name: lisaa-kommentti<!
+INSERT INTO tyomaapaivakirja_kommentti (urakka_id, tyomaapaivakirja_id, versio, kommentti, tunnit, luotu, luoja)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kommentti, :tunnit, :luotu, :luoja);
+
 -- name: hae-tyomaapaivakirjan-versiotiedot
 SELECT t_kalusto.versio, t.id as tyomaapaivakirja_id
   FROM tyomaapaivakirja_kalusto t_kalusto

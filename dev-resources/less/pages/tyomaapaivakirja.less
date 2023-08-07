@@ -164,11 +164,34 @@
     background: @white-darker;
   }
 
-  .kommentti-lisaa {
+  #kommentti-lisaa {
     font-size: 14px;
     font-weight: bold;
     padding: @valistys-24 0px @valistys-24;
     margin-top: @valistys-24;
+  }
+
+  #kommentti-area {
+    top: 20px;
+    position: relative;
+
+    textarea {
+      height: 100px;
+      border-radius: 5px;
+      resize: none;
+    }
+
+    div {
+      padding-top: 25px;
+      display: flex;
+      flex-flow:wrap row;
+      justify-content:space-between;
+    }
+  }
+
+  .piilota-kentta {
+    display: none;
+    position: relative;
   }
 
   .ala-valinnat-fixed {

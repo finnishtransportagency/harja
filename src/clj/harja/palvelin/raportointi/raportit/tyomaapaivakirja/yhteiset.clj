@@ -4,7 +4,7 @@
 (defn body-teksti [teksti]
   [:varillinen-teksti
    {:arvo teksti
-    :font-size "9pt"
+    :font-size "8pt"
     :kustomi-tyyli "body-text"}])
 
 (defn osion-otsikko [otsikko]
@@ -14,7 +14,7 @@
   [:varillinen-teksti
    {:arvo teksti
     :himmenna? true
-    :font-size "9pt"
+    :font-size "8pt"
     :kustomi-tyyli "ei-tietoja"}])
 
 (defn taulukko [{:keys [gridin-otsikko rivin-tiedot rivit oikealle-tasattavat]}]
