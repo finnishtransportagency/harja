@@ -54,6 +54,12 @@
 (defrecord PaivitaHakumuoto [uudet])
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
+(defrecord TallennaKommentti [kommentti])
+(defrecord TallennaKommenttiOnnistui [vastaus])
+(defrecord TallennaKommenttiEpaonnistui [vastaus])
+(defrecord HaeKommentit [])
+(defrecord HaeKommentitOnnistui [vastaus])
+(defrecord HaeKommentitEpaonnistui [vastaus])
 
 (defn- selaa-paivakirjoja
   [y data id suunta]
@@ -147,7 +153,7 @@
     (-> app
       (assoc :valittu-rivi nil)))
 
-  SelaaPaivakirjoja 
+  SelaaPaivakirjoja
   (process-event [{suunta :suunta} {:keys [nayta-rivit valittu-rivi] :as app}]
     ;; Etsitään seuraava/edellinen päiväkirja listauksesta 
     (let [etsitty-rivi (selaa-paivakirjoja 0 (vec nayta-rivit) (:tyomaapaivakirja_id valittu-rivi) suunta)
@@ -158,6 +164,48 @@
           :valittu-rivi etsitty-rivi
           :viimeksi-valittu etsitty-rivi)
         ;; Päiväkirjat rullattu loppuun, seuraavaa ei ole
-        (do 
+        (do
           (scrollaa-viimeksi-valitulle-riville app)
-          (assoc app :valittu-rivi etsitty-rivi))))))
+          (assoc app :valittu-rivi etsitty-rivi)))))
+
+  TallennaKommentti
+  (process-event [{kommentti :kommentti} {:keys [valittu-rivi] :as app}]
+    (tuck-apurit/post! app :tyomaapaivakirja-tallenna-kommentti
+      {:urakka-id (:id @nav/valittu-urakka)
+       :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
+       :versio (:versio valittu-rivi)
+       :kommentti kommentti}
+      {:onnistui ->TallennaKommenttiOnnistui
+       :epaonnistui ->TallennaKommenttiEpaonnistui})
+    app)
+
+  TallennaKommenttiOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (println "Kommentointi vastaus OK " vastaus " \n \n ")
+    app)
+
+  TallennaKommenttiEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "TallennaKommenttiEpaonnistui :: vastaus: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "TallennaKommenttiEpaonnistui \n Vastaus: " (pr-str vastaus)) :varoitus)
+    app)
+
+  HaeKommentit
+  (process-event [_ {:keys [valittu-rivi] :as app}]
+    (tuck-apurit/post! app :tyomaapaivakirja-hae-kommentit
+      {:urakka-id (:id @nav/valittu-urakka)
+       :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
+       :versio (:versio valittu-rivi)}
+      {:onnistui ->HaeKommentitOnnistui
+       :epaonnistui ->HaeKommentitEpaonnistui})
+    app)
+
+  HaeKommentitOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc-in app [:valittu-rivi :kommentit] vastaus))
+
+  HaeKommentitEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "HaeKommentitEpaonnistui :: vastaus: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "HaeKommentitEpaonnistui \n Vastaus: " (pr-str vastaus)) :varoitus)
+    app))

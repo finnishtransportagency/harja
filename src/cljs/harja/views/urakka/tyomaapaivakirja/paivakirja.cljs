@@ -144,11 +144,31 @@
                               piilota-element (.-classList (.getElementById js/document piilota))]
                           (set! (.-value kommentti-element) "")
                           (.add piilota-element "piilota-kentta")
-                          (.remove nayta-element "piilota-kentta")))]
+                          (.remove nayta-element "piilota-kentta")))
+        kommentit (e! (tiedot/->HaeKommentit))
+        kommentit (-> kommentit :valittu-rivi :kommentit)
+        ;; _ (println "Kommentit : " (-> kommentit :valittu-rivi :kommentit))
+        _ (dorun (for [x kommentit]
+                   (println "Kommentti: " x)
+                   ))]
 
     [:div#Kommentit.row.filtterit.kommentit-valistys
      [:h2 "Kommentit"]
-     [:span.ei-kommentteja "Ei kommentteja"]
+
+     (for [{:keys [id luotu kommentti kayttajanimi] :as x} kommentit]
+       ^{:key id}
+       [:span
+        [:div.alarivi-tiedot
+         [:span (str luotu)]
+         [:span kayttajanimi]]
+        
+        [:div.kommentti
+         [:h1.tieto-rivi kommentti]
+         [:span.klikattava.kommentti-poista {:on-click (fn []
+                                                         (println "Klikattu poista kommentti"))} (ikonit/action-delete)]]
+        ]
+       
+       )
 
      ;; Kommentin päiväys ja nimi
      #_[:div.alarivi-tiedot
@@ -185,11 +205,12 @@
       [:div
        [:span
         [napit/tallenna "Tallenna"
-         (fn[]
+         (fn []
            (let [kommentti-element (.getElementById js/document "kommentti-teksti")
-                 tt (-> kommentti-element .-value)]
+                 kirjoitettu-teksti (-> kommentti-element .-value)]
              (toggle-kentat "kommentti-lisaa" "kommentti-area")
-             (println "Klikattu tallenna kommentti: " tt)))
+             (e! (tiedot/->TallennaKommentti kirjoitettu-teksti))))
+         
          {:vayla-tyyli? true}]]
 
        [:span

@@ -86,6 +86,14 @@ WHERE ttt.versio = :versio
   AND ttt.tyyppi = 'muu'::tyomaapaivakirja_toimenpide_tyyppi
 GROUP BY ttt.id;
 
+-- name: hae-paivakirjan-kommentit
+SELECT tk.id, tk.luotu, tk.kommentti, k.kayttajanimi
+FROM tyomaapaivakirja_kommentti tk 
+         LEFT JOIN kayttaja k ON k.id = tk.luoja
+WHERE tk.versio = :versio
+  AND tk.tyomaapaivakirja_id = :tyomaapaivakirja_id 
+GROUP BY tk.id, k.kayttajanimi;
+
 -- name: lisaa-tyomaapaivakirja<!
 INSERT INTO tyomaapaivakirja (urakka_id, paivamaara, ulkoinen_id, luotu, luoja)
 values (:urakka_id, :paivamaara, :ulkoinen-id, now(), :kayttaja);
@@ -134,7 +142,7 @@ VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kuvaus, :aika);
 
 -- name: lisaa-kommentti<!
 INSERT INTO tyomaapaivakirja_kommentti (urakka_id, tyomaapaivakirja_id, versio, kommentti, tunnit, luotu, luoja)
-VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kommentti, :tunnit, :luotu, :luoja);
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kommentti, :tunnit, now(), :luoja);
 
 -- name: hae-tyomaapaivakirjan-versiotiedot
 SELECT t_kalusto.versio, t.id as tyomaapaivakirja_id
