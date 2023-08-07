@@ -419,7 +419,7 @@
                             (assoc ::toiminto/lkm 1)
                             (assoc ::toiminto/palvelumuoto (::osa/oletuspalvelumuoto osa))
                             (assoc ::toiminto/toimenpide (if (osa/silta? osa)
-                                                           :avaus
+                                                           :ei-avausta
                                                            :sulutus)))
                         (first (vanhat (::osa/id osa)))))
                     (::kohde/kohteenosat kohde)))))))
