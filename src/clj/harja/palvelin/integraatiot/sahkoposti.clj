@@ -73,6 +73,23 @@
         :subject (sanitoi-otsikko otsikko)
         :body [{:type "text/html; charset=UTF-8"
                 :content sisalto}]})))
+  (laheta-ulkoisella-jarjestelmalla-viesti! [_ lahettaja vastaanottaja otsikko sisalto headers username password port]
+    (let [_ (log/debug "VainLahetys :: postal :: Lähetetään ulkoisen smtp palvelimen kautta")
+          smtp-asetukset {:host palvelin
+                          :user username
+                          :pass password
+                          :port port
+                          :tls true}
+          viesti-asetukset {:from lahettaja
+                            :to vastaanottaja
+                            :subject (sanitoi-otsikko otsikko)
+                            :body [{:type "text/html; charset=UTF-8"
+                                    :content sisalto}]}
+          _ (log/debug "VainLahetys :: postal :: smtp-asetukset:" smtp-asetukset)
+          _ (log/debug "VainLahetys :: postal :: viesti-asetukset:" viesti-asetukset)
+          vastaus (postal/send-message smtp-asetukset viesti-asetukset)
+          _ (println "VainLahetys :: posta ::  vastaus:" vastaus)]
+      vastaus))
   (vastausosoite [_] vastausosoite)
   (laheta-viesti-ja-liite! [_ lahettaja vastaanottajat otsikko sisalto headers tiedosto-nimi]
     (laheta-postal-viesti-ja-liite {:palvelin palvelin
