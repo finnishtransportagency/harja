@@ -62,7 +62,7 @@
                                           :kaukopalvelu "Kaukopalvelu: "
                                           :itsepalvelu "Itsepalvelu: "
                                           :muu "Muu: "
-                                          :yhteensa "Yhteensä: "}}
+                                          :yhteensa "Sulutukset yhteensä: "}}
 
           raportin-tiedot-tyyli (excel/create-cell-style! workbook {:font {:color :black
                                                                            :size 12

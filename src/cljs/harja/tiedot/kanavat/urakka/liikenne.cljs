@@ -169,12 +169,17 @@
 (defn koko-tapahtuma [rivi {:keys [haetut-tapahtumat]}]
   (some #(when (= (::lt/id rivi) (::lt/id %)) %) haetut-tapahtumat))
 
-(defn onko-sulutuksella-haluttu-suunta [tapahtuma haluttu-suunta]
-  ;; Palauttaa true jos haluttu suunta esiintyy tapahtumalla ja tapahtuma on sulutus, muuten palautetaan nil
+(defn onko-sulutuksella-haluttu-suunta? [tapahtuma haluttu-suunta]
+  ;; Palauttaa true jos haluttu suunta esiintyy tapahtumalla ja tapahtuma on sulutus, muuten palautetaan false
   ;; Sulutuksen aluksilla on aina sama suunta.
   (let [toimenpiteet (set (map #(::toiminto/toimenpide %) (::lt/toiminnot tapahtuma)))]
     (if (contains? toimenpiteet :sulutus)
-      (some #(= (::lt-alus/suunta %) haluttu-suunta) (::lt/alukset tapahtuma)))))
+      (boolean
+        (some
+          #(= (::lt-alus/suunta %) haluttu-suunta)
+          (::lt/alukset tapahtuma)))
+      ; Else -> Toimenpiteissä ei ollut sulutusta
+      false)))
 
 (defn laske-yhteenveto [tapahtumat haluttu-toiminto haluttu-suunta haluttu-palvelumuoto]
   ;; Laskee liikennetapahtumien yhteenvetotietoja
@@ -192,13 +197,13 @@
                                           (= haluttu-toiminto :avaus))
                                         (and
                                           haluttu-suunta
-                                          (= (onko-sulutuksella-haluttu-suunta tapahtuma haluttu-suunta) true)
-                                          (= haluttu-palvelumuoto nil)
+                                          (onko-sulutuksella-haluttu-suunta? tapahtuma haluttu-suunta)
+                                          (nil? haluttu-palvelumuoto)
                                           (= haluttu-toiminto (::toiminto/toimenpide toiminto)))
                                         (and
                                           (= haluttu-toiminto (::toiminto/toimenpide toiminto))
                                           (= haluttu-palvelumuoto (::toiminto/palvelumuoto toiminto))
-                                          (= haluttu-suunta nil))))
+                                          (nil? haluttu-suunta))))
                               (::lt/toiminnot tapahtuma))]
 
               ;; Jos lasketaan itsepalveluita, palautetaan tapahtuman 'lkm' arvo (itsepalveluiden määrä)
@@ -426,8 +431,8 @@
 (defn kasittele-suunta-alukselle [tapahtuma alukset]
   (map (fn [a]
          (let [valittu-suunta (#{:ylos :alas :ei-suuntaa} (:valittu-suunta tapahtuma))
-               sulutus-ylos? (= (onko-sulutuksella-haluttu-suunta tapahtuma :ylos) true)
-               sulutus-alas? (= (onko-sulutuksella-haluttu-suunta tapahtuma :alas) true)
+               sulutus-ylos? (onko-sulutuksella-haluttu-suunta? tapahtuma :ylos)
+               sulutus-alas? (onko-sulutuksella-haluttu-suunta? tapahtuma :alas)
 
                ;; Jos valittu-suunta on ei-suuntaa mutta sitä ei toimenpide tai palvelumuoto salli, vaihda suunta
                vaihdettu-suunta (if (and (not (:ei-suuntaa @lt/suunnat-atom))

@@ -875,10 +875,10 @@
                                                                        {::toiminto/toimenpide :sulutus}]
                                                        ::lt/alukset [ronsu-alus]}
         ]
-    (is (true? (tiedot/onko-sulutuksella-haluttu-suunta tapahtuma-yksi-sulutus-ylos :ylos)))
-    (is (= (tiedot/onko-sulutuksella-haluttu-suunta tapahtuma-yksi-sulutus-alas :ylos) nil))
-    (is (= (tiedot/onko-sulutuksella-haluttu-suunta tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys :ylos) nil))
-    (is (true? (tiedot/onko-sulutuksella-haluttu-suunta tapahtuma-sillan-avaus-vedenkorkeus-sulutus :ylos)))))
+    (is (true? (tiedot/onko-sulutuksella-haluttu-suunta? tapahtuma-yksi-sulutus-ylos :ylos)))
+    (is (false? (tiedot/onko-sulutuksella-haluttu-suunta? tapahtuma-yksi-sulutus-alas :ylos)))
+    (is (false? (tiedot/onko-sulutuksella-haluttu-suunta? tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys :ylos)))
+    (is (true? (tiedot/onko-sulutuksella-haluttu-suunta? tapahtuma-sillan-avaus-vedenkorkeus-sulutus :ylos)))))
 
 (deftest laske-yhteenveto-sillan-avaukset
   (let [ronsu-alus {::lt-alus/suunta :ylos
