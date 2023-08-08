@@ -95,6 +95,8 @@
       email]
      [:h2 "Lähetä Digian API:lla sähköpostia."]
      [:p "Tämä simuloi paremmin sitä, mitä Harja tekee, kun sähköpostia lähetetään."]
+     [:p "Jos haluat lähettää esim tienpäällystyksen valmistumisesta viestin, niin joudut tekemään muutoksia
+     backendiin."]
      [lomake/lomake
       {:ei-borderia? true
        :tarkkaile-ulkopuolisia-muutoksia? true
