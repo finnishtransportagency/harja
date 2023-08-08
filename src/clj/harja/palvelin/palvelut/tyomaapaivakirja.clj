@@ -23,8 +23,7 @@
 
 (defn- hae-kommentit [db tiedot]
   (tyomaapaivakirja-kyselyt/hae-paivakirjan-kommentit db {:urakka_id (:urakka-id tiedot)
-                                                          :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)
-                                                          :versio (:versio tiedot)}))
+                                                          :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)}))
 
 (defn- hae-tyomaapaivakirjan-kommentit [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/raportit-tyomaapaivakirja user (:urakka-id tiedot))

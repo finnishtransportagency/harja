@@ -142,6 +142,9 @@
                                  (mapv
                                    #(konversio/pgobject->map % :kuvaus :string :aika :double)
                                    (konversio/pgarray->vector toimeksiannot)))))
+          kommentit (tyomaapaivakirja-kyselyt/hae-paivakirjan-kommentit db {:urakka_id (:urakka_id valittu-rivi)
+                                                                            :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
+                                                                            :versio (:versio valittu-rivi)})
           onnettomuudet (filter #(= "onnettomuus" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
           liikenteenohjaukset (filter #(= "liikenteenohjausmuutos" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
           yhteydenotot (filter #(= "tilaajan-yhteydenotto" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
@@ -175,5 +178,5 @@
        (tapahtumataulukot muut-kirjaukset "Muut huomiot" "Ei muita huomioita")
 
        ;; Kommentit
-       [:tyomaapaivakirjan-kommentit _]])
+       [:tyomaapaivakirjan-kommentit kommentit]])
     (log/debug "Raportin tiedot eivät ole latautuneet. Odotellaan hetki")))

@@ -2,7 +2,8 @@
   ;; Tänne voi laittaa mm yksittäisten raporttien funktioita
   (:require [harja.fmt :as fmt]
             [harja.pvm :as pvm]
-            [harja.palvelin.raportointi.pdf :as pdf-raportointi]))
+            [harja.palvelin.raportointi.pdf :as pdf-raportointi]
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]))
 
 (defmethod pdf-raportointi/muodosta-pdf :tyomaa-laskutusyhteenveto-yhteensa [[_ kyseessa-kk-vali? hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str]]
   ;; Muodostaa työmaakokouksen laskutusyhteenvedolle "Laskutus yhteensä" -yhteenvedon 
@@ -122,6 +123,5 @@
                                                "Ok")]]]])])
 
 (defmethod pdf-raportointi/muodosta-pdf :tyomaapaivakirjan-kommentit [[_ kommentit]]
-  ;; TODO ...
-  ;;
+  (println "\n \n Kommentit : " kommentit " \n \n")
   [:fo:block "Kommentit"])

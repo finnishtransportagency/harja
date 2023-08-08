@@ -199,8 +199,7 @@
   (process-event [_ {:keys [valittu-rivi] :as app}]
     (tuck-apurit/post! app :tyomaapaivakirja-hae-kommentit
       {:urakka-id (:id @nav/valittu-urakka)
-       :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
-       :versio (:versio valittu-rivi)}
+       :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)}
       {:onnistui ->HaeKommentitOnnistui
        :epaonnistui ->HaeKommentitEpaonnistui})
     app)

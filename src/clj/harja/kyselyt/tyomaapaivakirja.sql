@@ -93,8 +93,7 @@ GROUP BY ttt.id;
 SELECT tk.id, tk.luotu, tk.kommentti, k.kayttajanimi
 FROM tyomaapaivakirja_kommentti tk 
          LEFT JOIN kayttaja k ON k.id = tk.luoja
-WHERE tk.versio = :versio
-  AND tk.tyomaapaivakirja_id = :tyomaapaivakirja_id 
+WHERE tk.tyomaapaivakirja_id = :tyomaapaivakirja_id 
   AND tk.poistettu = false 
 GROUP BY tk.id, k.kayttajanimi;
 

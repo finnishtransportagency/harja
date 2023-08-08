@@ -154,7 +154,7 @@
        ^{:key id}
        [:span
         [:div.alarivi-tiedot
-         [:span (str luotu)]
+         [:span (str (pvm/pvm-aika luotu))]
          [:span kayttajanimi]]
 
         [:div.kommentti
@@ -273,7 +273,6 @@
                          (pvm/sama-pvm? (second vanha) (second uusi)))
                (e! (tiedot/->PaivitaAikavali {:aikavali uusi})))))
          
-         ;;(e! (tiedot/->HaeKommentit))
          (e! (tiedot/->HaeTiedot)))
 
       #(e! (tiedot/->PoistaRiviValinta)))
