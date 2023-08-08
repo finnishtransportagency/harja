@@ -26,8 +26,9 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
   FROM generate_series(:alkuaika::DATE, :loppuaika::DATE, '1 day'::interval) d
        LEFT JOIN tyomaapaivakirja t ON t.paivamaara = d::DATE AND t.urakka_id = :urakka-id
        JOIN urakka u ON u.id = :urakka-id
-       LEFT JOIN tyomaapaivakirja_kommentti tk on t.id = tk.tyomaapaivakirja_id
-       LEFT JOIN (SELECT versio, tyomaapaivakirja_id FROM tyomaapaivakirja_kalusto ORDER BY versio DESC limit 1) t_kalusto on t.id = t_kalusto.tyomaapaivakirja_id
+       LEFT JOIN tyomaapaivakirja_kommentti tk ON t.id = tk.tyomaapaivakirja_id AND tk.poistettu = false 
+       LEFT JOIN (SELECT versio, tyomaapaivakirja_id FROM tyomaapaivakirja_kalusto ORDER BY versio DESC limit 1) t_kalusto 
+       ON t.id = t_kalusto.tyomaapaivakirja_id
  GROUP BY t.id, u.nimi, d, t_kalusto.versio
  ORDER BY paivamaara ASC;
 
@@ -60,9 +61,11 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi", t.vers
        (SELECT array_agg(row(kuvaus, aika))
         FROM tyomaapaivakirja_toimeksianto
         WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as toimeksiannot,
-       t.luotu, t.luoja, t.muokattu, t.muokkaaja
+       t.luotu, t.luoja, t.muokattu, t.muokkaaja,
+       count(tk.id) as "kommenttien-maara"
   FROM tyomaapaivakirja t
        JOIN urakka u ON t.urakka_id = u.id
+       LEFT JOIN tyomaapaivakirja_kommentti tk ON t.id = tk.tyomaapaivakirja_id AND tk.poistettu = false 
  WHERE t.id = :tyomaapaivakirja_id
    AND t.versio = :versio
  GROUP BY t.id, u.nimi;
@@ -92,6 +95,7 @@ FROM tyomaapaivakirja_kommentti tk
          LEFT JOIN kayttaja k ON k.id = tk.luoja
 WHERE tk.versio = :versio
   AND tk.tyomaapaivakirja_id = :tyomaapaivakirja_id 
+  AND tk.poistettu = false 
 GROUP BY tk.id, k.kayttajanimi;
 
 -- name: lisaa-tyomaapaivakirja<!
@@ -102,6 +106,11 @@ values (:urakka_id, :paivamaara, :ulkoinen-id, now(), :kayttaja);
 UPDATE tyomaapaivakirja SET paivamaara = :paivamaara, ulkoinen_id = :ulkoinen-id, muokattu = now(),
                             muokkaaja = :kayttaja, versio = :versio
  WHERE id = :id;
+
+-- name: poista-tyomaapaivakirjan-kommentti<!
+UPDATE tyomaapaivakirja_kommentti 
+SET poistettu = true, muokattu = now(), muokkaaja = :muokkaaja 
+WHERE id = :id AND tyomaapaivakirja_id = :tyomaapaivakirja_id;
 
 -- name: lisaa-kalusto<!
 INSERT INTO tyomaapaivakirja_kalusto (urakka_id, tyomaapaivakirja_id, versio, aloitus, lopetus, tyokoneiden_lkm, lisakaluston_lkm)
@@ -141,8 +150,8 @@ INSERT INTO tyomaapaivakirja_toimeksianto (urakka_id, tyomaapaivakirja_id, versi
 VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kuvaus, :aika);
 
 -- name: lisaa-kommentti<!
-INSERT INTO tyomaapaivakirja_kommentti (urakka_id, tyomaapaivakirja_id, versio, kommentti, tunnit, luotu, luoja)
-VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kommentti, :tunnit, now(), :luoja);
+INSERT INTO tyomaapaivakirja_kommentti (urakka_id, tyomaapaivakirja_id, versio, kommentti, luotu, luoja)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kommentti, now(), :luoja);
 
 -- name: hae-tyomaapaivakirjan-versiotiedot
 SELECT t_kalusto.versio, t.id as tyomaapaivakirja_id

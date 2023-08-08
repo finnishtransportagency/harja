@@ -134,7 +134,7 @@
          :leveys 0.5}]
        nayta-rivit]]]))
 
-(defn- paivakirjan-kommentit [e!]
+(defn- paivakirjan-kommentit [e! valittu-rivi]
   (let [toggle-kentat (fn [nayta piilota]
                         ;; Tämä tehtiin alunperin raporttien puolelle jonka takia käytetään DOM manipulaatiota eikä tuckin tila atomia
                         ;; Toggleaa kun toinen element näytetään niin toinen piiloitetaan
@@ -145,30 +145,24 @@
                           (set! (.-value kommentti-element) "")
                           (.add piilota-element "piilota-kentta")
                           (.remove nayta-element "piilota-kentta")))
-        kommentit (e! (tiedot/->HaeKommentit))
-        kommentit (-> kommentit :valittu-rivi :kommentit)
-        ;; _ (println "Kommentit : " (-> kommentit :valittu-rivi :kommentit))
-        _ (dorun (for [x kommentit]
-                   (println "Kommentti: " x)
-                   ))]
+        
+        kommentit (:kommentit valittu-rivi)]
 
     [:div#Kommentit.row.filtterit.kommentit-valistys
      [:h2 "Kommentit"]
-
-     (for [{:keys [id luotu kommentti kayttajanimi] :as x} kommentit]
+     (for [{:keys [id luotu kommentti kayttajanimi]} kommentit]
        ^{:key id}
        [:span
         [:div.alarivi-tiedot
          [:span (str luotu)]
          [:span kayttajanimi]]
-        
+
         [:div.kommentti
          [:h1.tieto-rivi kommentti]
-         [:span.klikattava.kommentti-poista {:on-click (fn []
-                                                         (println "Klikattu poista kommentti"))} (ikonit/action-delete)]]
-        ]
-       
-       )
+         [:span.klikattava.kommentti-poista
+          {:on-click #(e! (tiedot/->PoistaKommentti
+                            {:id id :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)}))}
+          (ikonit/action-delete)]]])
 
      ;; Kommentin päiväys ja nimi
      #_[:div.alarivi-tiedot
@@ -210,7 +204,6 @@
                  kirjoitettu-teksti (-> kommentti-element .-value)]
              (toggle-kentat "kommentti-lisaa" "kommentti-area")
              (e! (tiedot/->TallennaKommentti kirjoitettu-teksti))))
-         
          {:vayla-tyyli? true}]]
 
        [:span
@@ -248,7 +241,7 @@
     [:span.nuoli [ikonit/harja-icon-navigation-close]]
     [:span "Sulje"]]])
 
-(defn suorita-tyomaapaivakirja-raportti [e!]
+(defn suorita-tyomaapaivakirja-raportti [e! valittu-rivi]
   (if-let [tiedot @tiedot/raportin-tiedot]
     [:div.tyomaapaivakirja
      ;; Päiväkirjanäkymä
@@ -261,7 +254,7 @@
       [muodosta-html (assoc-in tiedot [1 :tunniste] tiedot/raportti-avain)]
 
       ;; Kommentit
-      (paivakirjan-kommentit e!)]
+      (paivakirjan-kommentit e! valittu-rivi)]
 
      ;; Sticky bar (Edellinen - Seuraava) Tallenna PDF
      (paivakirjan-sticky e!)]
@@ -279,8 +272,9 @@
              (when-not (and (pvm/sama-pvm? (first vanha) (first uusi))
                          (pvm/sama-pvm? (second vanha) (second uusi)))
                (e! (tiedot/->PaivitaAikavali {:aikavali uusi})))))
-
-         (e! (tiedot/->HaeTiedot @nav/valittu-urakka-id)))
+         
+         ;;(e! (tiedot/->HaeKommentit))
+         (e! (tiedot/->HaeTiedot)))
 
       #(e! (tiedot/->PoistaRiviValinta)))
 
@@ -288,7 +282,9 @@
       [:div
        (if valittu-rivi
          ;; Jos valittu rivi, näytä päiväkirjanäkymä (tehty raporttien puolelle)
-         [suorita-tyomaapaivakirja-raportti e!]
+         (do 
+           (e! (tiedot/->HaeKommentit))
+           [suorita-tyomaapaivakirja-raportti e! valittu-rivi])
 
          ;; Mikäli ei valittua riviä, päivitä aikavälivalinta ja näytä listaus
          [tyomaapaivakirja-listaus e! app])])))

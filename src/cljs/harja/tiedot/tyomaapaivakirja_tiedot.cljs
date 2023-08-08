@@ -46,7 +46,7 @@
       (and p @nakymassa?)
       (raportit/suorita-raportti p))))
 
-(defrecord HaeTiedot [urakka-id])
+(defrecord HaeTiedot [])
 (defrecord ValitseRivi [rivi])
 (defrecord PoistaRiviValinta [])
 (defrecord SelaaPaivakirjoja [suunta])
@@ -60,6 +60,9 @@
 (defrecord HaeKommentit [])
 (defrecord HaeKommentitOnnistui [vastaus])
 (defrecord HaeKommentitEpaonnistui [vastaus])
+(defrecord PoistaKommentti [tiedot])
+(defrecord PoistaKommenttiOnnistui [vastaus])
+(defrecord PoistaKommenttiEpaonnistui [vastaus])
 
 (defn- selaa-paivakirjoja
   [y data id suunta]
@@ -71,10 +74,13 @@
         (get-in data [indeksi])
         (recur (inc y) data id suunta)))))
 
+(defn scrollaa-elementtiin [e]
+  (.setTimeout js/window (fn [] (siirrin/kohde-elementti-id e)) 150))
+
 (defn scrollaa-viimeksi-valitulle-riville [e!]
   ;; Poistetaan rivivalinta ja rullataan käyttäjä viimeksi klikatulle riville
   (e! (->PoistaRiviValinta))
-  (.setTimeout js/window (fn [] (siirrin/kohde-elementti-luokka "viimeksi-valittu-tausta")) 150))
+  (scrollaa-elementtiin "viimeksi-valittu-tausta"))
 
 (defn suodata-rivit
   "Suodatetaan tulokset käyttäjän valitsemien suodattimien perusteella"
@@ -181,8 +187,7 @@
 
   TallennaKommenttiOnnistui
   (process-event [{vastaus :vastaus} app]
-    (println "Kommentointi vastaus OK " vastaus " \n \n ")
-    app)
+    (assoc app :kommentit vastaus))
 
   TallennaKommenttiEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -208,4 +213,24 @@
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "HaeKommentitEpaonnistui :: vastaus: " (pr-str vastaus))
     (viesti/nayta-toast! (str "HaeKommentitEpaonnistui \n Vastaus: " (pr-str vastaus)) :varoitus)
+    app)
+
+  PoistaKommentti
+  (process-event [{tiedot :tiedot} app]
+    (tuck-apurit/post! app :tyomaapaivakirja-poista-kommentti
+      {:urakka-id (:id @nav/valittu-urakka)
+       :id (:id tiedot)
+       :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)}
+      {:onnistui ->PoistaKommenttiOnnistui
+       :epaonnistui ->PoistaKommenttiEpaonnistui})
+    app)
+
+  PoistaKommenttiOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc-in app [:valittu-rivi :kommentit] vastaus))
+
+  PoistaKommenttiEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "PoistaKommenttiEpaonnistui :: vastaus: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "PoistaKommenttiEpaonnistui \n Vastaus: " (pr-str vastaus)) :varoitus)
     app))

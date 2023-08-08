@@ -65,7 +65,7 @@
     [tehtavat1 tehtavat2 tehtavat3 tehtavat4 tehtavat5]))
 
 (defn suorita [db _ {:keys [valittu-rivi]}]
-  (if valittu-rivi
+  (if (and valittu-rivi (:tila valittu-rivi))
     (let [tyomaapaivakirja (first (tyomaapaivakirja-kyselyt/hae-paivakirja db {:tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
                                                                                :versio (:versio valittu-rivi)}))
           ;; Tehtävien tietokantamäppäys on liian monimutkainen, niin haetaan ne erikseen

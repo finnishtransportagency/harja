@@ -31,14 +31,24 @@
   (hae-kommentit db tiedot))
 
 (defn- tallenna-kommentti [db user tiedot]
+  ;; TODO.. oikeudet
   (oikeudet/vaadi-lukuoikeus oikeudet/raportit-tyomaapaivakirja user (:urakka-id tiedot))
   (let [_ (log/debug "tallenna-kommentti :: tiedot" (pr-str tiedot))
         _ (tyomaapaivakirja-kyselyt/lisaa-kommentti<! db {:urakka_id (:urakka-id tiedot)
                                                           :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)
                                                           :versio (:versio tiedot)
                                                           :kommentti (:kommentti tiedot)
-                                                          :tunnit 0
                                                           :luoja (:id user)})]
+    (hae-kommentit db tiedot)))
+
+(defn- poista-tyomaapaivakirjan-kommentti [db user tiedot]
+  ;; TODO oikeudet
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/raportit-tyomaapaivakirja user (:urakka-id tiedot))
+
+  (let [_ (log/debug "poista-tyomaapaivakirjan-kommentti :: tiedot" (pr-str tiedot))
+        _ (tyomaapaivakirja-kyselyt/poista-tyomaapaivakirjan-kommentti<! db {:id (:id tiedot)
+                                                                             :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)
+                                                                             :muokkaaja (:id user)})]
     (hae-kommentit db tiedot)))
 
 (defrecord Tyomaapaivakirja []
@@ -59,11 +69,17 @@
       :tyomaapaivakirja-hae-kommentit
       (fn [user tiedot]
         (hae-tyomaapaivakirjan-kommentit db user tiedot)))
+    
+    (julkaise-palvelu http-palvelin
+      :tyomaapaivakirja-poista-kommentti
+      (fn [user tiedot]
+        (poista-tyomaapaivakirjan-kommentti db user tiedot)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin 
       :tyomaapaivakirja-hae 
       :tyomaapaivakirja-tallenna-kommentti
-      :tyomaapaivakirja-hae-kommentit)
+      :tyomaapaivakirja-hae-kommentit
+      :tyomaapaivakirja-poista-kommentti)
     this))
