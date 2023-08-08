@@ -15,9 +15,9 @@
 (defqueries "harja/kyselyt/toteumat.sql"
   {:positional? true})
 
-(defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id luoja urakka-id]
-  (log/debug "Tarkistetaan onko olemassa toteuma ulkoisella id:llä " ulkoinen-id " ja luojalla " luoja " sekä urakka id:llä: " urakka-id)
-  (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id luoja urakka-id))))
+(defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id urakka-id]
+  (log/debug "Tarkistetaan onko olemassa toteuma ulkoisella id:llä " ulkoinen-id " ja urakka id:llä: " urakka-id)
+  (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id urakka-id))))
 
 ;; Talvihoitoluokat niille kevyen liikenteen väylille, joita ei suolata, eli K1, K2 ja K (Ei talvihoitoa)
 (def kelvien-talvihoitoluokat [9 10 11])

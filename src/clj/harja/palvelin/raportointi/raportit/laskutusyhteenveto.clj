@@ -219,6 +219,13 @@
   (let [;; Aikavälit ja otsikkotekstit
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
+        ;; Kun koko hoitokausi on valittu ja loppupvm on myöhemmin kuin kuluva päivä, käytetään kuluvaa päivää
+        ;; Muuten laskutusyhteenveto alkaa "ennustamaan" kustannuksia tulevaisuudesta.
+        parametrit (assoc parametrit :haun-loppupvm (if (and
+                                                          (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
+                                                          (pvm/ennen? (pvm/nyt) loppupvm))
+                                                      (pvm/nyt)
+                                                      loppupvm))
         kyseessa-vuosi-vali? (pvm/kyseessa-vuosi-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Laskutettu hoito\u00ADkaudella ennen " (pvm/kuukausi-ja-vuosi alkupvm))
         laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm))
@@ -231,8 +238,8 @@
 
         ;; Konteksti ja urakkatiedot
         konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
-                        :default :urakka)
+                    hallintayksikko-id :hallintayksikko
+                    :default :urakka)
         {alueen-nimi :nimi} (first (if (= konteksti :hallintayksikko)
                                      (hallintayksikko-q/hae-organisaatio db hallintayksikko-id)
                                      (urakat-q/hae-urakka db urakka-id)))
@@ -241,17 +248,17 @@
                      :hallintayksikkoid hallintayksikko-id :urakkaid urakka-id
                      :urakkatyyppi (name (:urakkatyyppi parametrit))})
         urakoiden-parametrit (mapv #(assoc parametrit :urakka-id (:id %)
-                                                      :urakka-nimi (:nimi %)
-                                                      :indeksi (:indeksi %)
-                                                      :urakkatyyppi (:tyyppi %)) urakat)
+                                      :urakka-nimi (:nimi %)
+                                      :indeksi (:indeksi %)
+                                      :urakkatyyppi (:tyyppi %)) urakat)
         ;; Datan nostaminen tietokannasta urakoittain, hyödyntää cachea
         laskutusyhteenvedot (mapv (fn [urakan-parametrit]
                                     (mapv #(assoc % :urakka-id (:urakka-id urakan-parametrit)
-                                                    :urakka-nimi (:urakka-nimi urakan-parametrit)
-                                                    :indeksi (:indeksi urakan-parametrit)
-                                                    :urakkatyyppi (:urakkatyyppi urakan-parametrit))
-                                          (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
-                                  urakoiden-parametrit)
+                                             :urakka-nimi (:urakka-nimi urakan-parametrit)
+                                             :indeksi (:indeksi urakan-parametrit)
+                                             :urakkatyyppi (:urakkatyyppi urakan-parametrit))
+                                      (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
+                              urakoiden-parametrit)
 
         urakoiden-lahtotiedot (lyv-yhteiset/urakoiden-lahtotiedot laskutusyhteenvedot)
 

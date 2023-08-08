@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.api.laatupoikkeaman-kirjaus-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
+            [clojure.data :refer [diff]]
             [harja.palvelin.komponentit.liitteet :as liitteet]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
@@ -9,6 +10,7 @@
             [cheshire.core :as cheshire]))
 
 (def kayttaja "yit-rakennus")
+(def kayttaja-jvh "jvh")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -25,13 +27,16 @@
         liitteiden-maara-ennen (first (first (q "select count(id) FROM liite")))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/laatupoikkeama"] kayttaja portti
                                          (-> "test/resurssit/api/laatupoikkeama.json" slurp))
-        vastaus2 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/laatupoikkeama"] kayttaja portti
+        vastaus2 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/laatupoikkeama"] kayttaja-jvh portti
                   (-> "test/resurssit/api/laatupoikkeama.json" slurp))
         liitteiden-maara-jalkeen (first (first (q "select count(id) FROM liite")))]
     (is (contains? (cheshire/decode (:body vastaus) true) :ilmoitukset))
 
     (is (= 200 (:status vastaus)))
     (is (= 200 (:status vastaus2)))
+    ;; Varmistetaan vielä, että mitään ei muuttunut. Laatupoikkeama päivittyi samalla id:llä kuin alkuperäinen
+    ;; Vaikka käyttäjä onkin eri
+    (is (= [nil nil "{\"ilmoitukset\":\"Laatupoikkeama kirjattu onnistuneesti\"}"] (diff (:body vastaus) (:body vastaus2))))
 
     ;; Vain yksi liite tallennetaan kantaan, vaikka samat tiedot tallennetaan kahdesti
     (is (+ 1 liitteiden-maara-ennen) liitteiden-maara-jalkeen)
