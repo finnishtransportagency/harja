@@ -20,6 +20,7 @@
             [harja.views.hallinta.tyomaapaivakirjatyokalu-nakyma :as paivakirjatyokalu-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
             [harja.views.hallinta.palauteluokitukset :as pl]
+            [harja.views.hallinta.sahkopostitestaus-nakyma :as email-nakyma]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -125,4 +126,10 @@
    :palauteluokitukset
    (when (oikeudet/hallinta-palautevayla)
      ^{:key "palauteluokitukset"}
-     [pl/palauteluokitukset])])
+     [pl/palauteluokitukset])
+
+   "Sähköpostitestaus"
+   :sahkopostitestaus
+   (when true
+     ^{:key "sahkopostitestaus"}
+     [email-nakyma/email-testaus])])
