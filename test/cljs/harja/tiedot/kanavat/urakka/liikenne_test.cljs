@@ -857,11 +857,15 @@
              {:ketjutuksen-poistot #{1}
               :edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
                                            {::lt-alus/id 2}]}}}))))
-(deftest hae-sulutuksen-suunta-lkm
+(deftest onko-sulutuksella-haluttu-suunta
   (let [ronsu-alus {::lt-alus/suunta :ylos
                     ::lt-alus/nimi "Ronsu"}
-        tapahtuma-yksi-sulutus {::lt/toiminnot [{::toiminto/toimenpide :sulutus}]
+        ransu-alus {::lt-alus/suunta :alas
+                    ::lt-alus/nimi "Ransu"}
+        tapahtuma-yksi-sulutus-ylos {::lt/toiminnot [{::toiminto/toimenpide :sulutus}]
          ::lt/alukset [ronsu-alus]}
+        tapahtuma-yksi-sulutus-alas {::lt/toiminnot [{::toiminto/toimenpide :sulutus}]
+                                     ::lt/alukset [ransu-alus]}
         tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys {::lt/toiminnot [{::toiminto/toimenpide :avaus}
                                                                        {::toiminto/toimenpide :korkeus}
                                                                        {::toiminto/toimenpide :tyhjennys}]
@@ -871,9 +875,10 @@
                                                                        {::toiminto/toimenpide :sulutus}]
                                                        ::lt/alukset [ronsu-alus]}
         ]
-    (is (= (tiedot/hae-sulutuksen-suunta-lkm tapahtuma-yksi-sulutus :ylos) 1))
-    (is (= (tiedot/hae-sulutuksen-suunta-lkm tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys :ylos) 0))
-    (is (= (tiedot/hae-sulutuksen-suunta-lkm tapahtuma-sillan-avaus-vedenkorkeus-sulutus :ylos) 1))))
+    (is (true? (tiedot/onko-sulutuksella-haluttu-suunta tapahtuma-yksi-sulutus-ylos :ylos)))
+    (is (= (tiedot/onko-sulutuksella-haluttu-suunta tapahtuma-yksi-sulutus-alas :ylos) nil))
+    (is (= (tiedot/onko-sulutuksella-haluttu-suunta tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys :ylos) nil))
+    (is (true? (tiedot/onko-sulutuksella-haluttu-suunta tapahtuma-sillan-avaus-vedenkorkeus-sulutus :ylos)))))
 
 (deftest laske-yhteenveto-sillan-avaukset
   (let [ronsu-alus {::lt-alus/suunta :ylos

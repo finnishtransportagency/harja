@@ -541,7 +541,7 @@
      [:hr {:style
            {:width "98%" :height "0px" :border ".5px solid #D6D6D6"}}]
      
-     [:div {:class "yhteenveto-rivi"}
+     [:div {:class "palvelumuodot-rivi"}
       [:span {:class "caption musta"} "Palvelumuoto, sulutukset"]
       [:span {:class "body-text strong"} "Paikallispalvelu: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :palvelumuoto :paikallispalvelu)]]
       [:span {:class "body-text strong"} "Kaukopalvelu: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :palvelumuoto :kaukopalvelu)]]

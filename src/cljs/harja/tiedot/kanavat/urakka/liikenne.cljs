@@ -169,13 +169,12 @@
 (defn koko-tapahtuma [rivi {:keys [haetut-tapahtumat]}]
   (some #(when (= (::lt/id rivi) (::lt/id %)) %) haetut-tapahtumat))
 
-(defn hae-sulutuksen-suunta-lkm [tapahtuma haluttu-suunta]
-  ;; Palauttaa integerin montako kertaa haluttu suunta esiintyy tapahtumalla
-  ;; Sulutuksen aluksilla on aina 1 suunta, tällä haetaan siis sulutuksen suunta
+(defn onko-sulutuksella-haluttu-suunta [tapahtuma haluttu-suunta]
+  ;; Palauttaa true jos haluttu suunta esiintyy tapahtumalla ja tapahtuma on sulutus, muuten palautetaan nil
+  ;; Sulutuksen aluksilla on aina sama suunta.
   (let [toimenpiteet (set (map #(::toiminto/toimenpide %) (::lt/toiminnot tapahtuma)))]
     (if (contains? toimenpiteet :sulutus)
-      (count (filter #(= (::lt-alus/suunta %) haluttu-suunta) (::lt/alukset tapahtuma)))
-      0)))
+      (some #(= (::lt-alus/suunta %) haluttu-suunta) (::lt/alukset tapahtuma)))))
 
 (defn laske-yhteenveto [tapahtumat haluttu-toiminto haluttu-suunta haluttu-palvelumuoto]
   ;; Laskee liikennetapahtumien yhteenvetotietoja
@@ -193,7 +192,7 @@
                                           (= haluttu-toiminto :avaus))
                                         (and
                                           haluttu-suunta
-                                          (pos? (hae-sulutuksen-suunta-lkm tapahtuma haluttu-suunta))
+                                          (= (onko-sulutuksella-haluttu-suunta tapahtuma haluttu-suunta) true)
                                           (= haluttu-palvelumuoto nil)
                                           (= haluttu-toiminto (::toiminto/toimenpide toiminto)))
                                         (and
@@ -427,8 +426,8 @@
 (defn kasittele-suunta-alukselle [tapahtuma alukset]
   (map (fn [a]
          (let [valittu-suunta (#{:ylos :alas :ei-suuntaa} (:valittu-suunta tapahtuma))
-               sulutus-ylos? (> (hae-sulutuksen-suunta-lkm tapahtuma :ylos) 0)
-               sulutus-alas? (> (hae-sulutuksen-suunta-lkm tapahtuma :alas) 0)
+               sulutus-ylos? (= (onko-sulutuksella-haluttu-suunta tapahtuma :ylos) true)
+               sulutus-alas? (= (onko-sulutuksella-haluttu-suunta tapahtuma :alas) true)
 
                ;; Jos valittu-suunta on ei-suuntaa mutta sitä ei toimenpide tai palvelumuoto salli, vaihda suunta
                vaihdettu-suunta (if (and (not (:ei-suuntaa @lt/suunnat-atom))
