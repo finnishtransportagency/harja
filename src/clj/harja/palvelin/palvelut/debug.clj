@@ -143,12 +143,17 @@
 (defn- laheta-emailapi
   "Lähetetään sähköpostia API-rajapinnan kautta. Toimii vain stg- ja tuotantoympäristöissä IP whitelistauksen vuoksi."
   [api-sahkoposti email]
-  (let [_ (println "****** emailapi: " email)
-        vastaus (sahkoposti/laheta-viesti!
+  (let [vastaus (sahkoposti/laheta-viesti!
                   api-sahkoposti (:lahettaja email) (:vastaanottaja email)
                   (:otsikko email) (:viesti email) nil)
-        _ (println "emailapin lähetyksen vastaus: " (pr-str vastaus))]
+        _ (log/info "emailapin lähetyksen vastaus: " (pr-str vastaus))]
     ;; Palautetaan onnistunut setti, jos onnistuu, ja jos ei onnistu, niin palautetaan koko setti
+    (if (= "Message processed" vastaus)
+      "Message processed"
+      {:status 400
+       :error "Virhe"
+       :body {:virhe "Virhe"
+              :viesti vastaus}})
     vastaus))
 
 (defn vaadi-jvh! [palvelu-fn]

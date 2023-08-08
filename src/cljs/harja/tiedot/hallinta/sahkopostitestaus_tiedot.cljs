@@ -23,13 +23,13 @@
                        :salasana "salakala"
                        :portti 587
                        :tls true
-                       :otsikko "annaotsikko"
-                       :viesti "annaviesti"
+                       :otsikko "<anna otsikko>"
+                       :viesti "<anna viesti>"
                        :lahetys-kaynnissa? false}
-               :emailapi {:lahettaja "harja@testaa.fi"
-                          :vastaanottaja "harja@vastaanottaa.com"
-                          :otsikko "annaotsikko"
-                          :viesti "annaviesti"
+               :emailapi {:lahettaja "harja@vayla.fi"
+                          :vastaanottaja "<vastaanottajansahkoposti>"
+                          :otsikko "<anna otsikko>"
+                          :viesti "<anna viesti>"
                           :lahetys-kaynnissa? false}})
 (def tila (atom alkutila))
 (def nakymassa? (atom false))
