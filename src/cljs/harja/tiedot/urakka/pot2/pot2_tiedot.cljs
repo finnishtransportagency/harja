@@ -35,7 +35,8 @@
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord AsetaTallennusKaynnissa [])
 (defrecord TallennaPot2Tiedot [valmis-kasiteltavaksi?])
-(defrecord KopioiToimenpiteetTaulukossa [rivi toimenpiteet-taulukko-atom])
+(defrecord KopioiToimenpiteetTaulukossaKaistoille [rivi toimenpiteet-taulukko-atom sort-atom])
+(defrecord KopioiToimenpiteetTaulukossaAjoradoille [rivi toimenpiteet-taulukko-atom sort-atom])
 (defrecord AvaaAlustalomake [lomake])
 (defrecord PaivitaAlustalomake [alustalomake])
 (defrecord TallennaAlustalomake [alustalomake jatka?])
@@ -154,6 +155,7 @@
     +nil-materiaalin-sort-str+))
 
 (def valittu-alustan-sort (atom :tieosoite))
+(def valittu-paallystekerros-sort (atom :tieosoite))
 
 (defn jarjesta-valitulla-sort-funktiolla
   "Riippuen siitä mikä sort avain on valittu, palautetaan oikea funktio"
@@ -170,6 +172,9 @@
 
     :materiaali
     (materiaalin-sort-fn rivi massat murskeet materiaalikoodistot)
+
+    :kaista
+    (yllapitokohteet-domain/yllapitokohteen-jarjestys rivi true)
 
     :else
     (yllapitokohteet-domain/yllapitokohteen-jarjestys rivi)))
@@ -266,8 +271,8 @@
                           :epaonnistui paallystys/->TallennaPaallystysilmoitusEpaonnistui
                           :paasta-virhe-lapi? true})))
 
-  KopioiToimenpiteetTaulukossa
-  (process-event [{rivi :rivi toimenpiteet-taulukko-atom :toimenpiteet-taulukko-atom} app]
+  KopioiToimenpiteetTaulukossaKaistoille
+  (process-event [{:keys [rivi toimenpiteet-taulukko-atom sort-atom]} app]
     (let [kaistat (yllapitokohteet-domain/kaikki-kaistat rivi
                                                          (get-in app [:paallystysilmoitus-lomakedata
                                                                       :tr-osien-tiedot
@@ -287,10 +292,48 @@
                                vals
                                (jarjesta-rivit-fn-mukaan
                                  (fn [rivi]
-                                   (jarjesta-valitulla-sort-funktiolla @valittu-alustan-sort {:massat (:massat app)
-                                                                          :murskeet (:murskeet app)
-                                                                          :materiaalikoodistot (:materiaalikoodistot app)}
-                                                                       rivi))))]
+                                   (jarjesta-valitulla-sort-funktiolla @sort-atom {:massat (:massat app)
+                                                                                   :murskeet (:murskeet app)
+                                                                                   :materiaalikoodistot (:materiaalikoodistot app)}
+                                     rivi))))]
+      (when toimenpiteet-taulukko-atom
+        (reset! toimenpiteet-taulukko-atom rivit-ja-kopiot)
+        (merkitse-muokattu app)))
+    app)
+
+  KopioiToimenpiteetTaulukossaAjoradoille
+  (process-event [{:keys [rivi toimenpiteet-taulukko-atom sort-atom]} app]
+    (let [rivi-ja-sen-kopiot (cond-> [rivi]
+                               (#{1 2} (:tr-ajorata rivi))
+                               (conj (-> rivi
+                                       (update :tr-ajorata #(case %
+                                                              1 2
+                                                              2 1
+                                                              %))
+                                       (update :tr-kaista #(case %
+                                                             11 21
+                                                             12 22
+                                                             21 11
+                                                             22 12
+                                                             %)))))
+          kaikki-rivit (vals @toimenpiteet-taulukko-atom)
+          rivit-idt-korjattuna (yllapitokohteet-domain/sailyta-idt-jos-sama-tr-osoite rivi-ja-sen-kopiot kaikki-rivit)
+          avain-ja-rivi (fn [rivi]
+                          {(select-keys rivi [:tr-numero :tr-ajorata :tr-kaista
+                                              :tr-alkuosa :tr-alkuetaisyys
+                                              :tr-loppuosa :tr-loppuetaisyys
+                                              :toimenpide])
+                           rivi})
+          haettavat-rivit (map avain-ja-rivi (concat kaikki-rivit rivit-idt-korjattuna))
+          rivit-ja-kopiot (->> haettavat-rivit
+                            (into {})
+                            vals
+                            (jarjesta-rivit-fn-mukaan
+                              (fn [rivi]
+                                (jarjesta-valitulla-sort-funktiolla @sort-atom {:massat (:massat app)
+                                                                                :murskeet (:murskeet app)
+                                                                                :materiaalikoodistot (:materiaalikoodistot app)}
+                                  rivi))))]
       (when toimenpiteet-taulukko-atom
         (reset! toimenpiteet-taulukko-atom rivit-ja-kopiot)
         (merkitse-muokattu app)))

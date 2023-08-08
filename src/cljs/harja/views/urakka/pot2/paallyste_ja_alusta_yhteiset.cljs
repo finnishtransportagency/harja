@@ -10,7 +10,9 @@
             [harja.ui.yleiset :as yleiset]
             [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
             [harja.ui.viesti :as viesti]
-            [harja.ui.grid :as grid]))
+            [harja.ui.grid :as grid]
+            [harja.ui.komponentti :as komp])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn validoi-kaistavalinta
   [rivi taulukko]
@@ -37,7 +39,10 @@
 ;; ----
 
 (def hint-kopioi-kaistoille "Kopioi rivin sisältö kaikille rinnakkaisille kaistoille. Jos kaistaa ei vielä ole, se lisätään taulukkoon.")
+(def hint-kopioi-kaistoille-lyhyt "Kopioi rinnakkaisille kaistoille")
+(def hint-kopioi-toiselle-ajr "Kopioi toisen ajoradan vastaavalle kaistalle")
 (def hint-nayta-virheet "Lähetys epäonnistunut, näytä lisää")
+(def hint-luo-alustarivi "Luo uusi alusta-rivi samoilla tieosoitetiedoilla")
 
 ;; Tärkeää käytettävyyden kannalta, että kulutuskerroksen ja alustan sarakkeet ovat kohdikkain
 ;; siksi huomioitava tämä jos sarakkeita lisätään tai poistetaan jompaan kumpaan
@@ -87,9 +92,7 @@
        :luokka "napiton-nappi"
        :toiminto-args [rivi]}]]))
 
-(defn rivin-toiminnot-sarake
-  [rivi osa e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata? ohjauskahva]
-  (assert (#{:alusta :paallystekerros} tyyppi) "Tyypin on oltava päällystekerros tai alusta")
+(defn rivin-toiminnot [e! ohjauskahva nappi-disabled? rivi rivit-atom sort-atom tyyppi index]
   (let [kohdeosat-muokkaa! (fn [uudet-kohdeosat-fn index]
                              (let [vanhat-kohdeosat @rivit-atom
                                    uudet-kohdeosat (uudet-kohdeosat-fn vanhat-kohdeosat)]
@@ -102,19 +105,90 @@
                                              (if (= tyyppi :paallystekerros)
                                                (yllapitokohteet/pilko-paallystekohdeosa vanhat-kohdeosat (inc index) {})
                                                (yllapitokohteet/lisaa-uusi-pot2-alustarivi vanhat-kohdeosat (inc index) {})))
-                                           index))
+                         index))
         poista-osa-fn (fn [index ohjauskahva]
                         (kohdeosat-muokkaa! (fn [vanhat-kohdeosat]
                                               (yllapitokohteet/poista-kohdeosa vanhat-kohdeosat (inc index)))
-                                            ;; Jos poistetaan ylin rivi (index 0), lisätään yksi, jotta undo tarjotaan riville 1
-                                            (if (= index (- (count (keys @rivit-atom)) 1))
-                                              ;; Jos poistetaan alin rivi, vähennetään indeksiä jotta undo ilmestyy edeltävälle riville (muuten ei näkyisi ollenkaan)
-                                              (dec index)
-                                              index))
+                          ;; Jos poistetaan ylin rivi (index 0), lisätään yksi, jotta undo tarjotaan riville 1
+                          (if (= index (- (count (keys @rivit-atom)) 1))
+                            ;; Jos poistetaan alin rivi, vähennetään indeksiä jotta undo ilmestyy edeltävälle riville (muuten ei näkyisi ollenkaan)
+                            (dec index)
+                            index))
                         (when ohjauskahva (grid/validoi-grid ohjauskahva)))]
+    (keep identity
+      [{:ikoni (ikonit/copy-lane-svg)
+        :disabled? nappi-disabled?
+        :hover-txt hint-kopioi-kaistoille
+        :teksti hint-kopioi-kaistoille-lyhyt
+        :toiminto #(do
+                     (tarjoa-toiminnon-undo @rivit-atom tyyppi index)
+                     (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossaKaistoille rivi rivit-atom sort-atom))
+                     (when ohjauskahva (grid/validoi-grid ohjauskahva)))
+        :toiminto-args [rivi rivit-atom]}
+       {:ikoni (ikonit/action-copy)
+        :disabled? (or nappi-disabled?
+                     (not (#{1 2} (:tr-ajorata rivi))))
+        :hover-txt hint-kopioi-toiselle-ajr
+        :toiminto #(do
+                     (tarjoa-toiminnon-undo @rivit-atom tyyppi index)
+                     (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossaAjoradoille rivi rivit-atom sort-atom))
+                     (when ohjauskahva (grid/validoi-grid ohjauskahva)))}
+       {:ikoni (ikonit/road-split)
+        :disabled? nappi-disabled?
+        :hover-txt yllapitokohteet/hint-pilko-osoitevali
+        :toiminto pilko-osa-fn
+        :toiminto-args [index tyyppi]}
+       (when (= tyyppi :paallystekerros)
+         {:ikoni (ikonit/harja-icon-action-add)
+          :disabled nappi-disabled?
+          :hover-txt hint-luo-alustarivi
+          :toiminto #(do
+                       (tarjoa-toiminnon-undo @rivit-atom tyyppi index)
+                       (e! (pot2-tiedot/->AvaaAlustalomake
+                             (select-keys rivi [:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa
+                                                :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])))
+                       (when ohjauskahva (grid/validoi-grid ohjauskahva)))})
+       {:ikoni (ikonit/action-delete)
+        :disabled? nappi-disabled?
+        :hover-txt yllapitokohteet/hint-poista-rivi
+        :toiminto poista-osa-fn
+        :toiminto-args [index ohjauskahva]}])))
+
+(defn rivin-lisatoiminnot-dropdown [_rivin-toiminnot lisatoiminnot-auki?]
+  (komp/luo
+    (komp/klikattu-ulkopuolelle #(reset! lisatoiminnot-auki? false))
+    (fn [rivin-toiminnot lisatoiminnot-auki?]
+      [:div.aina-viimeinen
+       [napit/nappi-hover-vihjeella
+        {:ikoni (ikonit/navigation-more)
+         :disabled? false
+         :hover-txt "Lisää toimintoja"
+         :luokka "napiton-nappi btn-xs"
+         :wrapper-luokka "aina-viimeinen"
+         :toiminto #(swap! lisatoiminnot-auki? not)}]
+       [:ul.lisatoiminnot
+        {:class (when @lisatoiminnot-auki? "auki")}
+        (for*
+          [{:keys [toiminto toiminto-args ikoni teksti hover-txt]} rivin-toiminnot]
+          [:li
+           [napit/yleinen-ensisijainen
+            (or teksti hover-txt)
+            toiminto
+            {:toiminto-args toiminto-args
+             :ikoni ikoni
+             :luokka "napiton-nappi btn-xs"}]])]])))
+
+(defn rivin-toiminnot-sarake
+  [rivi osa e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata? ohjauskahva]
+  (assert (#{:alusta :paallystekerros} tyyppi) "Tyypin on oltava päällystekerros tai alusta")
+  (let [lisatoiminnot-auki? (atom false)]
     (fn [rivi {:keys [index] :as osa} e! app kirjoitusoikeus? rivit-atom tyyppi voi-muokata? ohjauskahva]
       (let [nappi-disabled? (or (not voi-muokata?)
-                                (not kirjoitusoikeus?))]
+                                (not kirjoitusoikeus?))
+            sort-atom (case tyyppi
+                        :alusta pot2-tiedot/valittu-alustan-sort
+                        :paallystekerros pot2-tiedot/valittu-paallystekerros-sort)
+            rivin-toiminnot (rivin-toiminnot e! ohjauskahva nappi-disabled? rivi rivit-atom sort-atom tyyppi index)]
         [:span.tasaa-oikealle.pot2-rivin-toiminnot
          ;; vain sille riville tarjotaan undo, missä on toimintoa painettu
          (if (and (= tyyppi (:tyyppi @undo-tiedot))
@@ -126,28 +200,10 @@
                 (poista-undo-tiedot)
                 (when ohjauskahva (grid/validoi-grid ohjauskahva)))]]
            [:<>
-            [yleiset/wrap-if true
-             [yleiset/tooltip {} :% hint-kopioi-kaistoille]
-             [napit/yleinen-ensisijainen ""
-              #(do
-                 (tarjoa-toiminnon-undo @rivit-atom tyyppi index)
-                 (e! (pot2-tiedot/->KopioiToimenpiteetTaulukossa rivi rivit-atom))
-                 (when ohjauskahva (grid/validoi-grid ohjauskahva)))
-              {:ikoni (ikonit/copy-lane-svg)
-               :disabled? nappi-disabled?
-               :luokka "napiton-nappi btn-xs"
-               :toiminto-args [rivi rivit-atom]}]]
-            [napit/nappi-hover-vihjeella {:tyyppi :pilko
-                                          :disabled? nappi-disabled?
-                                          :hover-txt yllapitokohteet/hint-pilko-osoitevali
-                                          :toiminto pilko-osa-fn
-                                          :toiminto-args [index tyyppi]}]
-
-            [napit/nappi-hover-vihjeella {:tyyppi :poista
-                                          :disabled? nappi-disabled?
-                                          :hover-txt yllapitokohteet/hint-poista-rivi
-                                          :toiminto poista-osa-fn
-                                          :toiminto-args [index ohjauskahva]}]
+            (for*
+              [rivin-toiminto rivin-toiminnot]
+              [napit/nappi-hover-vihjeella rivin-toiminto])
+            [rivin-lisatoiminnot-dropdown rivin-toiminnot lisatoiminnot-auki?]
             (when (= "epaonnistunut" (:velho-rivi-lahetyksen-tila rivi))
               (lahetys-virheet-nappi rivi :lyhyt))])]))))
 
