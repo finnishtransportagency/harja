@@ -49,10 +49,11 @@
       ;; Kommentti- nappi scrollaa alas kommentteihin
       [:a.klikattava {:on-click #(.setTimeout js/window (fn [] (siirrin/kohde-elementti-id "Kommentit")) 150)}
        [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) (cond
-                                                            (> (:kommenttien-maara tyomaapaivakirja) 1)
-                                                            (str (:kommenttien-maara tyomaapaivakirja) " kommenttia")
+                                                            (or
+                                                              (= (:kommenttien-maara tyomaapaivakirja) 1))
+                                                            (str (:kommenttien-maara tyomaapaivakirja) " kommentti")
                                                             :else
-                                                            (str (:kommenttien-maara tyomaapaivakirja) " kommentti"))]]]
+                                                            (str (:kommenttien-maara tyomaapaivakirja) " kommenttia"))]]]
      [:hr]]))
 
 (defmethod raportointi/muodosta-html :gridit-vastakkain [[_

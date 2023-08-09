@@ -160,8 +160,10 @@
         [:div.kommentti
          [:h1.tieto-rivi kommentti]
          [:span.klikattava.kommentti-poista
-          {:on-click #(e! (tiedot/->PoistaKommentti
-                            {:id id :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)}))}
+          {:on-click #(do
+                       (e! (tiedot/->PoistaKommentti
+                            {:id id :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)}))
+                        (tiedot/scrollaa-kommentteihin))}
           (ikonit/action-delete)]]])
 
      ;; Kommentin päiväys ja nimi
@@ -187,7 +189,9 @@
         [:a.klikattava.info-rivi "Näytä muutoshistoria"]]
 
      [:div#kommentti-lisaa
-      [:a.klikattava {:on-click #(toggle-kentat "kommentti-area" "kommentti-lisaa")}
+      [:a.klikattava {:on-click #(do 
+                                   (toggle-kentat "kommentti-area" "kommentti-lisaa")
+                                   (tiedot/scrollaa-kommentteihin))}
 
        [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Lisää kommentti"]]]
 
@@ -203,7 +207,8 @@
            (let [kommentti-element (.getElementById js/document "kommentti-teksti")
                  kirjoitettu-teksti (-> kommentti-element .-value)]
              (toggle-kentat "kommentti-lisaa" "kommentti-area")
-             (e! (tiedot/->TallennaKommentti kirjoitettu-teksti))))
+             (e! (tiedot/->TallennaKommentti kirjoitettu-teksti))
+             (tiedot/scrollaa-kommentteihin)))
          {:vayla-tyyli? true}]]
 
        [:span

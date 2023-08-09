@@ -65,22 +65,69 @@
 (defrecord PoistaKommenttiEpaonnistui [vastaus])
 
 (defn- selaa-paivakirjoja
+  "Työmaapäiväkirjan sticky bar Edellinen/Seuraava toiminto
+   Jos päiväkirjoja puuttuu välistä, palauttaa vectorin hypätyistä riveistä, viimeisenä elementtinä riville jolle hypättiin"
   [y data id suunta]
-  (when (> (count data) (dec y))
-    (let [rivi (get-in data [y])
-          rivi-id (:tyomaapaivakirja_id rivi)
-          indeksi (if (= suunta :seuraava) (inc y) (dec y))]
+  (let [aja? (if (= suunta :seuraava)
+               (> (count data) (dec y))
+               (> y -1))
+        rivi (get-in data [y])
+        rivi-id (:tyomaapaivakirja_id rivi)
+        indeksi (if (= suunta :seuraava) (inc y) (dec y))
+        seuraava-rivi (get-in data [indeksi])
+        seuraava-rivi-id (:tyomaapaivakirja_id seuraava-rivi)
+        ;; Mikäli haluttu suunta palauttaa nil, tehdään nestattu loop ja katsotaan onko seuraavaa riviä ollenkaan olemassa
+        ;; Jos on, palautetaan data riveistä mitkä hypättiin
+        aja-loput-rivit (fn [y data suunta data-seuraavat]
+                          ;; Loopataan päiväkirjalistaus loppuun
+                          (let [i (if (= suunta :seuraava) (inc y) (dec y))
+                                ;; Ajetaanko seuraava loop
+                                aja? (if (= suunta :seuraava)
+                                       (> (count data) i)
+                                       (> i -1))
+                                rivin-data (get-in data [i])
+                                rivi-id (:tyomaapaivakirja_id rivin-data)
+                                data-seuraavat (conj data-seuraavat rivin-data)]
+                            (when aja?
+                              (if (nil? rivi-id)
+                                ;; Seuraavaa työmaapäiväkirjaa ei ole, jatka kunnes käyty kaikki
+                                (recur i data suunta data-seuraavat)
+                                ;; Seuraava löytyi, palauta kaikki tulokset, myös puuttuvat
+                                data-seuraavat))))]
+    ;; Ajetaanko seuraava loop
+    (when aja?
       (if (= rivi-id id)
-        (get-in data [indeksi])
+        ;; Seuraavaa päiväkirjaa ei ole olemassa
+        (if (nil? seuraava-rivi-id)
+          ;; Ajetaan loput rivit ja katsotaan hypättiinkö rivejä
+          ;; Palautetaan vector hypätyistä riveistä
+          [(aja-loput-rivit y data suunta []) seuraava-rivi]
+          seuraava-rivi)
         (recur (inc y) data id suunta)))))
 
-(defn scrollaa-elementtiin [e]
-  (.setTimeout js/window (fn [] (siirrin/kohde-elementti-id e)) 150))
+(defn- ilmoita-hypatyt-rivit [hypatyt-rivit suunta]
+  ;; Ilmoitetaan käyttäjälle että rivejä hypättiin
+  (when (not-empty hypatyt-rivit)
+    (let [pvm-alku (if (= suunta :seuraava)
+                     (pvm/pvm (:paivamaara (first hypatyt-rivit)))
+                     (pvm/pvm (:paivamaara (last hypatyt-rivit))))
+          pvm-loppu (if (= suunta :seuraava)
+                      (pvm/pvm (:paivamaara (last hypatyt-rivit)))
+                      (pvm/pvm (:paivamaara (first hypatyt-rivit))))
+          aikavali (if (= pvm-alku pvm-loppu)
+                     pvm-alku
+                     (str pvm-alku " - " pvm-loppu))]
+      (viesti/nayta-toast! (str "Hypättiin puuttuvat päiväkirjat aikaväliltä: " aikavali) :neutraali-ikoni 10000))))
+
+(defn scrollaa-kommentteihin []
+  ;; Kutsutaan kun käyttäjä poistaa/lisää kommentin
+  ;; Tehty nopeaksi (10ms)
+  (.setTimeout js/window (fn [] (siirrin/kohde-elementti-id "Kommentit")) 10))
 
 (defn scrollaa-viimeksi-valitulle-riville [e!]
   ;; Poistetaan rivivalinta ja rullataan käyttäjä viimeksi klikatulle riville
   (e! (->PoistaRiviValinta))
-  (scrollaa-elementtiin "viimeksi-valittu-tausta"))
+  (.setTimeout js/window (fn [] (siirrin/kohde-elementti-luokka "viimeksi-valittu-tausta")) 150))
 
 (defn suodata-rivit
   "Suodatetaan tulokset käyttäjän valitsemien suodattimien perusteella"
@@ -163,6 +210,15 @@
   (process-event [{suunta :suunta} {:keys [nayta-rivit valittu-rivi] :as app}]
     ;; Etsitään seuraava/edellinen päiväkirja listauksesta 
     (let [etsitty-rivi (selaa-paivakirjoja 0 (vec nayta-rivit) (:tyomaapaivakirja_id valittu-rivi) suunta)
+          hypatyt-rivit (when (vector? etsitty-rivi) (first etsitty-rivi))
+          hyppaa-riville (last hypatyt-rivit)
+          hypatyt-rivit (drop-last hypatyt-rivit)
+          ;; Näytä viesti jos rivejä hypättiin, palauttaa mille riville hypättiin
+          etsitty-rivi (if (map? hyppaa-riville)
+                         (do
+                           (ilmoita-hypatyt-rivit hypatyt-rivit suunta)
+                           hyppaa-riville)
+                         etsitty-rivi)
           etsitty-rivi (if (nil? (:tyomaapaivakirja_id etsitty-rivi)) nil etsitty-rivi)]
       ;; Jos rivi olemassa, lataa se ja maalaa listauksessa valituksi
       (if etsitty-rivi
