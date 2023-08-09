@@ -8,7 +8,7 @@
     padding-top: 0px;
 }
 
-.yhteenveto-rivi {
+.palvelumuodot-rivi {
     display: grid;
     align-items: start;
     text-align: left;
@@ -18,11 +18,24 @@
 }
 
 // Sarakkeista tulee hieman luettavampia pienemmällä resoluttiolla
-.yhteenveto-rivi>* {
+.palvelumuodot-rivi>* {
     width: 70%;
 }
 
 // Yhteensä-sarake
-.yhteenveto-rivi>*:last-child {
+.palvelumuodot-rivi>*:last-child {
     text-align: right;
+}
+
+.toimenpiteet-rivi {
+  display: grid;
+  align-items: start;
+  text-align: left;
+  grid-template-columns: repeat(6, 1fr);
+  padding: @valistys-16;
+  gap: @valistys-8;
+}
+
+.toimenpiteet-rivi>* {
+  width: 70%;
 }
