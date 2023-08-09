@@ -176,7 +176,7 @@
   component/Lifecycle
   (start [{http :http-palvelin
            db :db
-           sahkoposti :solita-sahkoposti
+           sahkoposti :ulkoinen-sahkoposti
            :as this}]
     (julkaise-palvelu http
                       :kayttajatiedot

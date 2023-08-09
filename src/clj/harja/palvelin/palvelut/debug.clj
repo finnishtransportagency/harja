@@ -15,6 +15,7 @@
             [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri-haku]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
+            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [harja.geo :as geo]))
 
 (defn hae-toteuman-reitti-ja-pisteet [db toteuma-id]
@@ -127,6 +128,34 @@
                geometriat)]
     geometriat))
 
+(defn- laheta-email
+  "Lähetetään sähköpostia itse konfiguroidun järjestelmän kautta. Esim Gmailin."
+  [ulkoinen-sahkoposti email]
+  (let [vastaus (sahkoposti/laheta-ulkoisella-jarjestelmalla-viesti!
+          ulkoinen-sahkoposti (:lahettaja email) (:vastaanottaja email)
+          (:otsikko email) (:viesti email) nil
+          (:tunnus email) (:salasana email) (:portti email))]
+    ;; Palautetaan onnistunut setti, jos onnistuu, ja jos ei onnistu, niin palautetaan koko setti
+    (if (= :SUCCESS (:error vastaus))
+      "Viesti lähetetty"
+      vastaus)))
+
+(defn- laheta-emailapi
+  "Lähetetään sähköpostia API-rajapinnan kautta. Toimii vain stg- ja tuotantoympäristöissä IP whitelistauksen vuoksi."
+  [api-sahkoposti email]
+  (let [vastaus (sahkoposti/laheta-viesti!
+                  api-sahkoposti (:lahettaja email) (:vastaanottaja email)
+                  (:otsikko email) (:viesti email) nil)
+        _ (log/info "emailapin lähetyksen vastaus: " (pr-str vastaus))]
+    ;; Palautetaan onnistunut setti, jos onnistuu, ja jos ei onnistu, niin palautetaan koko setti
+    (if (= "Message processed" vastaus)
+      "Message processed"
+      {:status 400
+       :error "Virhe"
+       :body {:virhe "Virhe"
+              :viesti vastaus}})
+    vastaus))
+
 (defn vaadi-jvh! [palvelu-fn]
   (fn [user payload]
     (if-not (roolit/jvh? user)
@@ -139,6 +168,8 @@
 (defrecord Debug []
   component/Lifecycle
   (start [{db :db
+           ulkoinen-sahkoposti :ulkoinen-sahkoposti
+           api-sahkoposti :api-sahkoposti
            http :http-palvelin :as this}]
     (http/julkaise-palvelut
       http
@@ -163,7 +194,11 @@
       :debug-hae-paivan-suolatoteumat
       (vaadi-jvh! (partial #'hae-suolatoteumat db))
       :debug-hae-urakan-geometriat
-      (vaadi-jvh! (partial #'hae-urakan-geometriat db)))
+      (vaadi-jvh! (partial #'hae-urakan-geometriat db))
+      :debug-laheta-email
+      (vaadi-jvh! (partial #'laheta-email ulkoinen-sahkoposti))
+      :debug-laheta-emailapi
+      (vaadi-jvh! (partial #'laheta-emailapi api-sahkoposti)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -179,5 +214,7 @@
       :debug-paivita-raportit
       :debug-hae-rajoitusalueet
       :debug-hae-paivan-suolatoteumat
-      :debug-hae-urakan-geometriat)
+      :debug-hae-urakan-geometriat
+      :debug-laheta-email
+      :debug-laheta-emailapi)
     this))
