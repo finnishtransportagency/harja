@@ -102,6 +102,7 @@
   (case taso
     :hallintayksikko 0
     :urakka 1
+    :tienumerot 1
     :pohjavesialueet 2
     :sillat 3
     :tienakyma-muut 3
@@ -332,7 +333,7 @@
        :paikkaukset-paallystysilmoitukset (taso :paikkaukset-paallystysilmoitukset)
        :maarien-toteumat (taso :maarien-toteumat)
        :tieluvat (taso :tieluvat)
-       :tienumerot (taso :tienumerot)
+       :tienumerot (taso :tienumerot :tienumerot)
        ;; Yksittäisen näkymän omat mahdolliset geometriat
        :nakyman-geometriat
        (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
