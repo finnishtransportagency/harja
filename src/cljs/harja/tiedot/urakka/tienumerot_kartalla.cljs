@@ -7,13 +7,13 @@
   (:require-macros
     [reagent.ratom :refer [reaction]]))
 
-(defonce karttataso-tienumerot (atom nil))
 (defonce karttataso-nakyvissa? (atom true))
 
 (def valtatie-max 39) ;; Tiet 1-39 ovat valtateitä
 (def kantatie-max 99) ;; Tiet 40-99 ovat kantateitä
 (def seututie-max 999) ;; Tiet 100-999 ovat seututeitä
 (def yhdystie-max 9999) ;; Ja loput ovat yhdysteitä.
+(def yhdystie-5nro-max 99999) ;; Näytetään 5-numeroiset vielä erikseen.
 
 (def tienumerot
   (reaction<!
@@ -24,7 +24,8 @@
                      5 0 ;; Ei näytetä ollenkaan teitä
                      7 valtatie-max
                      9 kantatie-max
-                     yhdystie-max)]
+                     13 yhdystie-max
+                     yhdystie-5nro-max)]
         (when (and @karttataso-nakyvissa? (not= 0 tiemax))
           (k/post! :hae-tienumerot-kartalle
             (merge kartalla-nakyva-alue
@@ -43,5 +44,5 @@
                          valtatie-max 2
                          kantatie-max 1.7
                          seututie-max 1.5
-                         yhdystie-max 1.2)}})
+                         yhdystie-5nro-max 1.2)}})
         @tienumerot))))
