@@ -191,7 +191,7 @@
      [:div#kommentti-lisaa
       [:a.klikattava {:on-click #(do 
                                    (toggle-kentat "kommentti-area" "kommentti-lisaa")
-                                   (tiedot/scrollaa-kommentteihin))}
+                                   (tiedot/siirry-elementin-id "kommentti-area" 150))}
 
        [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Lisää kommentti"]]]
 

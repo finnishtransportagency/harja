@@ -123,5 +123,23 @@
                                                "Ok")]]]])])
 
 (defmethod pdf-raportointi/muodosta-pdf :tyomaapaivakirjan-kommentit [[_ kommentit]]
-  (println "\n \n Kommentit : " kommentit " \n \n")
-  [:fo:block "Kommentit"])
+  [:fo:block {:margin-top "30px"} "Kommentit"
+   (let [taulukon-otsikot (rivi
+                            {:otsikko "Aika" :leveys 0.2 :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "vaalen-tumma-tausta" :tyyppi :varillinen-teksti}
+                            {:otsikko "Nimi" :leveys 0.2 :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :tyyppi :varillinen-teksti}
+                            {:otsikko "Kommentti" :leveys 0.75 :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :tyyppi :varillinen-teksti})
+         taulukon-optiot {:tyhja "Ei Tietoja."
+                          :piilota-border? false
+                          :viimeinen-rivi-yhteenveto? false}
+         kommentit-rivit (for [x kommentit]
+                           (into [] [[:varillinen-teksti {:arvo (str (pvm/pvm-aika (:luotu x)))}]
+                                     [:varillinen-teksti {:arvo (:kayttajanimi x)}]
+                                     [:varillinen-teksti {:arvo (:kommentti x)}]]))
+         kommentit-rivit (vec kommentit-rivit)]
+
+     (pdf-raportointi/taulukko
+       ""
+       false
+       taulukon-otsikot
+       kommentit-rivit
+       taulukon-optiot))])
