@@ -450,5 +450,5 @@
         vaara-vuodet-vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" "l" 200)] kayttaja-analytiikka portti)]
     (is (not (nil? uri-virhe)))
     (is (str/includes? uri-virhe "java.net.URISyntaxException"))
-    (is (str/includes? virheellinen-kayttaja-vastaus "tuntematon-kayttaja"))
+    (is (str/includes? virheellinen-kayttaja-vastaus "kayttajalla-puutteelliset-oikeudet"))
     (is (str/includes? vaara-vuodet-vastaus "puutteelliset-parametrit"))))

@@ -43,5 +43,6 @@ INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisa
 ('tilaaja','ELY','tilaaja','tilaaja@example.org', '434532345',
  (SELECT id  FROM organisaatio  WHERE lyhenne = 'LAP'));
 -- Analytiikan apien testaamiseksi tarvittava käyttäjä
-INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, "analytiikka-oikeus") VALUES
-          ('etunimi','sukunimi', 'analytiikka-testeri', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'), true);
+INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, api_oikeus) VALUES
+          ('etunimi', 'sukunimi', 'analytiikka-testeri', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'),
+           'analytiikka');
