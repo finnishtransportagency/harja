@@ -62,7 +62,8 @@
         kayttajadb (q-map (format "SELECT * from kayttaja where kayttajanimi = '%s'" "analytiikka-testeri"))
         _ (println "***************** kayttajadb: " kayttajadb)
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/urakat")] kayttaja-analytiikka portti)
-        encoodattu-body (cheshire/decode (:body vastaus) true)]
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        (println "***************** encoodattu-body: " encoodattu-body)]
     (is (= 200 (:status vastaus)))
     (is (= (count urakat-kannasta) (count (:urakat encoodattu-body))))))
 
@@ -358,6 +359,7 @@
         ;; Haetaan apista tulokset
         vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s" urakka-id)] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)
+        _ (println "************ encoodattu-body" encoodattu-body)
         ekan-vuoden-suunnitelmat (sort-by :maara (:suunnitellut-tehtavat (first encoodattu-body)))]
 
     (is (= 200 (:status vastaus)))
