@@ -58,6 +58,9 @@
 
 (deftest hae-urakat-onnistuu-test
   (let [urakat-kannasta (q-map (str "SELECT id FROM urakka"))
+        ;; Varmista käyttäjän oikeudet kannasta
+        kayttajadb (q-map (format "SELECT * from kayttaja where kayttajanimi = '%s'" "analytiikka-testeri"))
+        _ (println "***************** kayttajadb: " kayttajadb)
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/urakat")] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
@@ -276,7 +279,8 @@
         loppuvuosi 2040
         ;; Hae suunnitellut materiaalit
         vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-materiaalit/%s/%s" alkuvuosi loppuvuosi)] kayttaja-analytiikka portti)
-        encoodattu-body (cheshire/decode (:body vastaus) true)]
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        _ (println "encoodattu-body:" (pr-str encoodattu-body))]
 
     (is (= 200 (:status vastaus)))
     (is (not (nil? encoodattu-body)))
