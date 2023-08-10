@@ -143,3 +143,151 @@
        taulukon-otsikot
        kommentit-rivit
        taulukon-optiot))])
+
+(defn- olomuoto? [olom arvo]
+  (boolean (= olom arvo)))
+
+(defn generoi-saa-ikoni-pdf [olom]
+  ;; Koska meillä ei ole ikoneita PDFään, palautetaan vaan lyhyt string joka kuvaa sää olomuotoa
+  ;; Olomuodoksi annetaan NWS / WMO koodi pöydästä SYNOP koodi
+  ;; https://issues.solita.fi/browse/VHAR-7868
+  (cond
+    ;; Selkeää
+    (olomuoto? olom 0)
+    "Selkeä"
+
+    (or
+      ;; Sumu
+      (olomuoto? olom 10)
+      ;; Sumua tai savua tai pölyä ilmassa, näkyvyys alle 1 km
+      (olomuoto? olom 5)
+      ;; Sumua tai savua tai pölyä ilmassa, näkyvyys yhtä suuri tai suurempi kuin 1 km
+      (olomuoto? olom 4))
+    "Sumu/Savu/Pöly"
+
+    ;; Koodilukuja 20-25 käytetään, jos sadetta tai sumua on havaittu edellisen tunnin aikana, mutta ei havainnointihetkellä
+    ;; _____________________________________________________________________________________________________________________
+
+    (or
+      ;; Sumu
+      (olomuoto? olom 20)
+      ;; Sumu
+      (olomuoto? olom 30)
+      ;; Sumua tai jääsumua, paikoin
+      (olomuoto? olom 31)
+      ;; Sumu tai jääsumu on ohentunut viimeisen tunnin aikana
+      (olomuoto? olom 32)
+      ;; Sumua tai jääsumua, ei merkittävää muutosta viimeisen tunnin aikana
+      (olomuoto? olom 33)
+
+      ;; Sumua tai jääsumua, on alkanut tai tihentynyt viimeisen tunnin aikana
+      (olomuoto? olom 34))
+    "Sumu"
+
+    ;; Vesi tihkua
+    (or
+      (olomuoto? olom 21)
+      (olomuoto? olom 40)
+      ;; Tihkusadetta (ei jäätyvää) tai lunta
+      (olomuoto? olom 22)
+      ;; Tihkusadetta 
+      (olomuoto? olom 23))
+    "Tihkusade"
+
+    ;; Lumisade
+    (olomuoto? olom 24)
+    "Lumisade"
+
+    (or
+      ;; Sadetta, lievää tai kohtalaista
+      (olomuoto? olom 41)
+      ;; Sadetta, rankkaa
+      (olomuoto? olom 42)
+      ;; Tihkusade
+      (olomuoto? olom 50)
+      ;; Tihkusadetta, ei jäätävää, vähäistä
+      (olomuoto? olom 51)
+      ;; Tihkusadetta, ei jäätävää, kohtalaista
+      (olomuoto? olom 52)
+      ;; Tihkusadetta, ei jäätävää, raskas
+      (olomuoto? olom 53)
+
+      ;; Sadetta 
+      (olomuoto? olom 60)
+      ;; Sadetta, vähäistä
+      (olomuoto? olom 61)
+      ;; Sadetta, rankkaa
+      (olomuoto? olom 63)
+
+      ;; Sadekuuroja tai ajoittaisia sateita
+      (olomuoto? olom 80)
+      ;; Sadekuuroja, vähäistä
+      (olomuoto? olom 81)
+      ;; Sadekuuroja, kohtalaista
+      (olomuoto? olom 82)
+      ;; Sadekuuroja, raskas
+      (olomuoto? olom 83))
+    "Sade"
+
+    (or
+      ;; Tihkusadetta, jäätävää, vähäistä
+      (olomuoto? olom 54)
+      ;; Tihkusadetta, jäätävää, kohtalaista
+      (olomuoto? olom 55)
+      ;; Tihkusadetta, jäätävää, raskas
+      (olomuoto? olom 56)
+
+      ;; Sadetta, jäätävää, vähäistä
+      (olomuoto? olom 64)
+      ;; Sadetta, jäätävää, kohtalaista
+      (olomuoto? olom 65)
+      ;; Sadetta, jäätävää, raskas
+      (olomuoto? olom 66)
+
+      ;; Jäätävää sadetta tai jäätävää tihkusadetta
+      (olomuoto? olom 25)
+
+      ;; Sadetta (tai tihkusadetta) ja lunta, kevyttä
+      (olomuoto? olom 67)
+      ; Sadetta (tai tihkusadetta) ja lunta, kohtalaista tai raskasta
+      (olomuoto? olom 68))
+    "Jäätävä sade"
+
+    ;; Lumisade
+    (or
+      ;; Lumisade
+      (olomuoto? olom 70)
+      ;; Lumisade, vähäinen
+      (olomuoto? olom 71)
+      ;; Lumisade, kohtalainen
+      (olomuoto? olom 72)
+      ;; Lumisade, raskas
+      (olomuoto? olom 73)
+
+      ;; Lumisade, vähäinen
+      (olomuoto? olom 85)
+      ;; Lumisade, kohtalainen
+      (olomuoto? olom 86)
+      ;; Lumisade, raskas
+      (olomuoto? olom 87))
+    "Lumisade"
+
+    (or
+      ;; Rakeita, vähäinen
+      (olomuoto? olom 74)
+      ;; Rakeita, kohtalainen
+      (olomuoto? olom 75)
+      ;; Rakeita, raskas
+      (olomuoto? olom 76))
+    "Rakeita"
+
+    ;; Erittäin rajuja sadekuuroja (> 32mm/h)
+    (olomuoto? olom 84)
+    "Raju sade (!)"
+
+    ;; Fallback
+    :else "Ei tietoja"))
+
+(defmethod pdf-raportointi/muodosta-pdf :saa-ikoni [[_ {:keys [olomuoto _ _]}]]
+  ;; Generoidaan sään olomuoto tekstinä pdfään
+  (generoi-saa-ikoni-pdf olomuoto))

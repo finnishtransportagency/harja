@@ -22,12 +22,15 @@
                    (:tiedot tiedot))
         puuttuu (filter
                   #(= "puuttuu" (:tila %))
-                  (:tiedot tiedot))]
+                  (:tiedot tiedot))
+        kommentoitu (filter
+                      #(> (:kommenttien-maara %) 0)
+                      (:tiedot tiedot))]
+    
     {:kaikki (str "Kaikki (" (count (:tiedot tiedot)) ")")
      :myohastyneet (str "Myöhästyneet (" (count myohassa) ")")
      :puuttuvat (str "Puuttuvat (" (count puuttuu) ")")
-     ;:kommentoidut "Kommentoidut (123)" Lisätään kommentoidut sitten, kun niitä voi kommentoida
-     }))
+     :kommentoidut (str "Kommentoidut (" (count kommentoitu) ")")}))
 
 (def toimituksen-tila {"ok" {:class "ok" :selitys "Ok"}
                        "myohassa" {:class "myohassa" :selitys "Myöhässä"}

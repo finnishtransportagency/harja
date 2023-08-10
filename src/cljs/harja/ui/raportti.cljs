@@ -101,10 +101,9 @@
     [ikonit/harja-icon-status-info]
     info]])
 
-(defmethod muodosta-html :ikoni [[_ {:keys [arvo info]}]]
-  ;; TODO
-  ;; [ikonit/harja-icon-fair-day]
-  nil)
+(defmethod muodosta-html :saa-ikoni [[_ {:keys [olomuoto havaintoaika maara]}]]
+  ;; Generoidaan sää ikoni olomuotoon ja havaintoaikaan nähden
+  [ikonit/generoi-saa-ikoni (int olomuoto) (int maara) havaintoaika])
 
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään

@@ -273,4 +273,47 @@
     float: right;
     transform: scale(2.0);
   }
+
+  // Työmaapäiväkirjan sää ikonit
+  .saa-ikonit {
+    transform: scale(2.0);
+    max-height: @valistys-24;
+    position: relative;
+    top: 9px;
+  }
+  // Svg kuvat voivat olla joissain iconeissa hieman off-center 
+  // tätä ei voi mitenkään css koodilla korjata kaikkiin kerralla, 
+  // joten tässä ikoni kohtaiset muutokset 
+  .clear-day, .cloudy-1-day {
+    padding-left: @valistys-6;
+  }
+  .dust, .fog, .hail, .haze, .hurricane, .rainy-1, .rainy-2, .rainy-3, 
+  .snowy-1, .snowy-2, .snowy-3, .rain-and-sleet-mix, .rain-and-snow-mix, 
+  .scattered-thunderstorms, .wind, .severe-thunderstorm, .snow-and-sleet-mix, 
+  .thunderstorms, .tornado, .tropical-storm, .rainy-4 {
+    top: 0px;
+  }
+  .fog-day, .fog-night, .haze-day, .haze-night,
+  .rainy-1-day, .rainy-1-night, .snowy-1-day, .snowy-1-night, 
+  .snowy-2-day, .snowy-2-night, .snowy-3-day, .snowy-3-night {
+    top: 5px;
+  }
+  .isolated-thunderstorms-day, .isolated-thunderstorms-night, 
+  .isolated-thunderstorms, .rainy-2-day, .rainy-2-night, .rainy-3-day, 
+  .rainy-3-night, .scattered-thunderstorms-day, .scattered-thunderstorms-night {
+    top: 2px;
+  }
+  .frost-day, .frost-night, .frost {
+    transform: scale(1.3);
+    top: 0px;
+    padding-left: @valistys-4;
+  } 
+  .hail, .hurricane, .rain-and-sleet-mix, .rain-and-snow-mix, 
+  .rainy-1-day, .rainy-1-night, .rainy-2-day, .rainy-2-night, .rainy-3-day, 
+  .rainy-3-night, .isolated-thunderstorms-day, .isolated-thunderstorms-night, 
+  .isolated-thunderstorms, .scattered-thunderstorms-day, .scattered-thunderstorms-night, 
+  .severe-thunderstorm, .snow-and-sleet-mix, .snowy-1-day, .snowy-1-night, .snowy-2-day, 
+  .snowy-2-night, .snowy-3-day, .snowy-3-night, .thunderstorms, .tornado, .tropical-storm, .rainy-4  {
+    transform: scale(1.7);
+  }
 }

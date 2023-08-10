@@ -134,17 +134,24 @@
 
 (defn suodata-rivit
   "Suodatetaan tulokset käyttäjän valitsemien suodattimien perusteella"
-  [app]
-  (let [rivit (filter (fn [rivi]
-                        (let [valittu-hakumuoto (get suodattimet (get-in app [:valinnat :hakumuoto]))
-
-                              rivin-toimitustila (if (not= "kommentoitu" (get-in app [:valinnat :hakumuoto]))
-                                                   (:tila rivi)
-                                                   "kommentoitu")]
-                          (or
-                            ;; Vastaako valittu hakumuoto rivin toimituksen tilaa
-                            (= valittu-hakumuoto nil)
-                            (= valittu-hakumuoto rivin-toimitustila)))) (:tiedot app))]
+  [{:keys [tiedot]} hakumuoto]
+  (let [rivit (filter
+                (fn [{:keys [tila kommenttien-maara]}]
+                  (let [rivin-toimitustila tila]
+                    (or
+                      ;; Tila valittuna (Myöhästyneet / puuttuvat) 
+                      ;; -> Vastaako valittu hakumuoto rivin toimituksen tilaa
+                      (and
+                        hakumuoto
+                        (or
+                          (and (= hakumuoto :puuttuvat) (= rivin-toimitustila "puuttuu"))
+                          (and (= hakumuoto :myohastyneet) (= rivin-toimitustila "myohassa"))))
+                      ;; Kommentoidut valittu -> onko rivi kommentoitu
+                      (and
+                        (= hakumuoto :kommentoidut)
+                        (> kommenttien-maara 0))
+                      ;; Kaikki valittu -> pass 
+                      (= hakumuoto :kaikki)))) tiedot)]
     rivit))
 
 (defn- hae-paivakirjat [app]
@@ -187,7 +194,7 @@
   PaivitaHakumuoto
   (process-event [{uudet :uudet} app]
     (let [app (assoc-in app [:valinnat :hakumuoto] uudet)
-          app (assoc app :nayta-rivit (suodata-rivit app))]
+          app (assoc app :nayta-rivit (suodata-rivit app uudet))]
       app))
 
   ValitseRivi
