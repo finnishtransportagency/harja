@@ -154,19 +154,19 @@
     ;; Käyttäjien kommentit
     [:div#Kommentit.row.filtterit.kommentit-valistys
      [:h2 "Kommentit"]
-     (for [{:keys [id luotu kommentti kayttajanimi]} kommentit]
+     (for [{:keys [id luotu kommentti etunimi sukunimi luoja]} kommentit]
        ^{:key id}
        [:span
         [:div.alarivi-tiedot
          [:span (str (pvm/pvm-aika luotu))]
-         [:span kayttajanimi]]
+         [:span (str etunimi " " sukunimi)]]
         
         [:div.kommentti
          [:h1.tieto-rivi kommentti]
          [:span.klikattava.kommentti-poista
           {:on-click #(do
                        (e! (tiedot/->PoistaKommentti
-                            {:id id :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)}))
+                            {:id id :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi) :luoja luoja}))
                         (tiedot/scrollaa-kommentteihin))}
           
           (ikonit/action-delete)]]])

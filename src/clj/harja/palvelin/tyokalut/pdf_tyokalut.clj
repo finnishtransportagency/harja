@@ -113,9 +113,11 @@
                                               {:color "#27B427"}))]
      [:fo:table-body
       [:fo:table-row
-       [:fo:table-cell [:fo:block saapunut-tyyli (str "Saapunut:" (pvm/pvm-aika-klo (:luotu tyomaapaivakirja)))]]
+       [:fo:table-cell [:fo:block saapunut-tyyli (str "Saapunut: " (pvm/pvm-aika-klo (:luotu tyomaapaivakirja)))]]
 
-       [:fo:table-cell [:fo:block paivitetty-tyyli (str "Päivitetty " (pvm/pvm-aika-klo (:muokattu tyomaapaivakirja)))]]
+       [:fo:table-cell [:fo:block paivitetty-tyyli (str "Päivitetty " (or 
+                                                                        "-"
+                                                                        (pvm/pvm-aika-klo (:muokattu tyomaapaivakirja))))]]
        [:fo:table-cell [:fo:block versio-tyyli (str "Versio " (:versio tyomaapaivakirja))]]
        [:fo:table-cell [:fo:block pallura-tyyli "• "]]
        [:fo:table-cell [:fo:block tila-tyyli (if (= "myohassa" (:tila tyomaapaivakirja))
@@ -131,10 +133,10 @@
          taulukon-optiot {:tyhja "Ei Tietoja."
                           :piilota-border? false
                           :viimeinen-rivi-yhteenveto? false}
-         kommentit-rivit (for [x kommentit]
-                           (into [] [[:varillinen-teksti {:arvo (str (pvm/pvm-aika (:luotu x)))}]
-                                     [:varillinen-teksti {:arvo (:kayttajanimi x)}]
-                                     [:varillinen-teksti {:arvo (:kommentti x)}]]))
+         kommentit-rivit (for [{:keys [etunimi sukunimi luotu kommentti]} kommentit]
+                           (into [] [[:varillinen-teksti {:arvo (str (pvm/pvm-aika luotu))}]
+                                     [:varillinen-teksti {:arvo (str etunimi " " sukunimi)}]
+                                     [:varillinen-teksti {:arvo kommentti}]]))
          kommentit-rivit (vec kommentit-rivit)]
 
      (pdf-raportointi/taulukko

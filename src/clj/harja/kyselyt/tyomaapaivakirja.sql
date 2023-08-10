@@ -90,12 +90,12 @@ WHERE ttt.versio = :versio
 GROUP BY ttt.id;
 
 -- name: hae-paivakirjan-kommentit
-SELECT tk.id, tk.luotu, tk.kommentti, k.kayttajanimi
+SELECT tk.id, tk.luotu, tk.kommentti, k.etunimi, k.sukunimi, tk.luoja 
 FROM tyomaapaivakirja_kommentti tk 
          LEFT JOIN kayttaja k ON k.id = tk.luoja
 WHERE tk.tyomaapaivakirja_id = :tyomaapaivakirja_id 
   AND tk.poistettu = false 
-GROUP BY tk.id, k.kayttajanimi;
+GROUP BY tk.id, k.etunimi, k.sukunimi, k.luoja;
 
 -- name: lisaa-tyomaapaivakirja<!
 INSERT INTO tyomaapaivakirja (urakka_id, paivamaara, ulkoinen_id, luotu, luoja)
@@ -109,7 +109,9 @@ UPDATE tyomaapaivakirja SET paivamaara = :paivamaara, ulkoinen_id = :ulkoinen-id
 -- name: poista-tyomaapaivakirjan-kommentti<!
 UPDATE tyomaapaivakirja_kommentti 
 SET poistettu = true, muokattu = now(), muokkaaja = :muokkaaja 
-WHERE id = :id AND tyomaapaivakirja_id = :tyomaapaivakirja_id;
+WHERE id = :id 
+AND tyomaapaivakirja_id = :tyomaapaivakirja_id 
+AND luoja = :kayttaja;
 
 -- name: lisaa-kalusto<!
 INSERT INTO tyomaapaivakirja_kalusto (urakka_id, tyomaapaivakirja_id, versio, aloitus, lopetus, tyokoneiden_lkm, lisakaluston_lkm)

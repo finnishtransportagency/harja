@@ -7,6 +7,7 @@
             [harja.pvm :as pvm]
             [harja.tiedot.raportit :as raportit]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.istunto :as istunto]
             [harja.ui.nakymasiirrin :as siirrin])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -290,8 +291,12 @@
 
   PoistaKommentti
   (process-event [{tiedot :tiedot} app]
+    ;; Sallitaan vaan omien kommenttien poisto
+    (when (not= (:id @istunto/kayttaja) (:luoja tiedot))
+      (viesti/nayta-toast! (str "Et voi poistaa muiden käyttäjien kommentteja.") :neutraali 3000))
     (tuck-apurit/post! app :tyomaapaivakirja-poista-kommentti
-      {:urakka-id (:id @nav/valittu-urakka)
+      {:kayttaja (:id @istunto/kayttaja)
+       :urakka-id (:id @nav/valittu-urakka)
        :id (:id tiedot)
        :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)}
       {:onnistui ->PoistaKommenttiOnnistui

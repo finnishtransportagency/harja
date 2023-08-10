@@ -46,6 +46,7 @@
 
   (let [_ (log/debug "poista-tyomaapaivakirjan-kommentti :: tiedot" (pr-str tiedot))
         _ (tyomaapaivakirja-kyselyt/poista-tyomaapaivakirjan-kommentti<! db {:id (:id tiedot)
+                                                                             :kayttaja (:kayttaja tiedot)
                                                                              :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)
                                                                              :muokkaaja (:id user)})]
     (hae-kommentit db tiedot)))
