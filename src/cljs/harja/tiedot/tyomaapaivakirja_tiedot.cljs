@@ -85,10 +85,11 @@
                                        (> (count data) i)
                                        (> i -1))
                                 rivin-data (get-in data [i])
+                                rivi-tila (:tila rivin-data)
                                 rivi-id (:tyomaapaivakirja_id rivin-data)
                                 data-seuraavat (conj data-seuraavat rivin-data)]
                             (when aja?
-                              (if (nil? rivi-id)
+                              (if (or (nil? rivi-tila) (nil? rivi-id))
                                 ;; Seuraavaa työmaapäiväkirjaa ei ole, jatka kunnes käyty kaikki
                                 (recur i data suunta data-seuraavat)
                                 ;; Seuraava löytyi, palauta kaikki tulokset, myös puuttuvat
@@ -116,7 +117,7 @@
           aikavali (if (= pvm-alku pvm-loppu)
                      pvm-alku
                      (str pvm-alku " - " pvm-loppu))]
-      (viesti/nayta-toast! (str "Hypättiin puuttuvat päiväkirjat aikaväliltä: " aikavali) :neutraali-ikoni 10000))))
+      (viesti/nayta! (str "Ohitettiin puuttuvat päiväkirjat aikaväliltä: " aikavali) :info 10000))))
 
 (defn siirry-elementin-id [id aika]
   (siirrin/kohde-elementti-id id)
@@ -234,7 +235,9 @@
                          ;; Else -> Rivejä ei hypätty
                          etsitty-rivi)
           ;; Jos seuraava päiväkirjaa ei ole, ollaan rullattu loppuun
-          etsitty-rivi (if (nil? (:tyomaapaivakirja_id etsitty-rivi)) nil etsitty-rivi)]
+          etsitty-rivi (if (or 
+                             (nil? (:tila etsitty-rivi))
+                             (nil? (:tyomaapaivakirja_id etsitty-rivi))) nil etsitty-rivi)]
       ;; Jos rivi olemassa, lataa se ja maalaa listauksessa valituksi
       (if etsitty-rivi
         (assoc app

@@ -2,6 +2,7 @@
   "Flash-viestin näyttäminen UI:n päällä, jolla voidaan kertoa käyttäjälle statustietoa operaatioista."
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.dom :as dom]
+            [harja.ui.ikonit :as ikonit]
             [cljs.core.async :refer [<! timeout]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -62,9 +63,9 @@
   []
   (let [{:keys [viesti luokka nakyvissa? kesto]} @toast-viesti-sisalto
         ikoni (case luokka
-                :onnistunut (harja.ui.ikonit/livicon-check)
-                :varoitus (harja.ui.ikonit/livicon-warning-sign)
-                :neutraali-ikoni (harja.ui.ikonit/nelio-info)
+                :onnistunut (ikonit/livicon-check)
+                :varoitus (ikonit/livicon-warning-sign)
+                :neutraali-ikoni (ikonit/nelio-info)
                 nil)]
     (if nakyvissa?
       (do (when (not= kesto viestin-nayttoaika-aareton) (go (<! (timeout kesto))
@@ -76,7 +77,7 @@
             (when ikoni [:span ikoni])
             [:span {:style {:padding-left "10px"}} (str " " viesti)]
 
-            (when (= :varoitus luokka) [harja.ui.ikonit/sulje])]])
+            (when (= :varoitus luokka) [ikonit/sulje])]])
       ^{:key "ei-viestia"}
       [:div.ei-viestia-nyt])))
 
