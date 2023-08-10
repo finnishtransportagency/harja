@@ -222,6 +222,7 @@
         ;; Hae suunnitellut materiaalit
         vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-materiaalit/%s" urakka-id)] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)
+        _ (println "hae-suunnitellut-materiaalimaarat-MH-urakalle-onnistuu-test :: encoodattu-body" (pr-str encoodattu-body))
         ensimmainen-hoitovuosi (:suunnitellut-materiaalit (first encoodattu-body))
         ;; Järjestetään materiaalit id:n mukaan
         ensimmainen-hoitovuosi (sort-by :materiaali_id ensimmainen-hoitovuosi)]
