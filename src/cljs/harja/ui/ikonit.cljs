@@ -430,7 +430,6 @@
 ;; - kopioi fontit
 ;;   cp fonts/* ~/source/harja/dev-resources/less/fonts
 ;;   cp fonts/* ~/source/harja/resources/public/fonts
-
 ;; - kopioi tyylit (ilman color-määrityksiä) harja-icons.less -tiedostoon
 ;;   grep -v 'color: #' style.css
 ;;   huomioi less tiedoston alkuun: @harja-icons-polku: '../fonts';
