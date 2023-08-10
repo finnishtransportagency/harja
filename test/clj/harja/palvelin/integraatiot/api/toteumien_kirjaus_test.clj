@@ -13,6 +13,7 @@
   (:import (java.util Date)))
 
 (def kayttaja "destia")
+(def kayttaja-jvh "jvh")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -52,7 +53,7 @@
       (is (= (count toteuma-tehtava-idt) 1))
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
-      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
+      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja-jvh portti
                                                       (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
                                                           slurp
                                                           (.replace "__SOPIMUS_ID__" (str sopimus-id))
@@ -68,7 +69,7 @@
         (u (str "DELETE FROM toteuman_reittipisteet WHERE toteuma = " toteuma-id))
         (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
         (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id))))
-    (let [vastaus-poisto (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
+    (let [vastaus-poisto (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja-jvh portti
                                                   (-> "test/resurssit/api/toteuman-poisto.json"
                                                       slurp
                                                       (.replace "__SOPIMUS_ID__" (str sopimus-id))
@@ -94,7 +95,7 @@
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
-      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-jvh portti
                                                       (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                                                           slurp
                                                           (.replace "__SOPIMUS_ID__" (str sopimus-id))

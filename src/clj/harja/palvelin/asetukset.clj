@@ -63,7 +63,7 @@
                                      :kayttajatunnus s/Str
                                      :salasana s/Str}
 
-   (s/optional-key :solita-sahkoposti) {:vastausosoite s/Str
+   (s/optional-key :ulkoinen-sahkoposti) {:vastausosoite s/Str
                                         (s/optional-key :palvelin/Str) s/Str}
    (s/optional-key :sampo-api) {:lahetys-url s/Str
                                 :paivittainen-lahetysaika [s/Num]

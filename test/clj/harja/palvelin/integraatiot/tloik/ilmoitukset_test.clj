@@ -100,8 +100,8 @@
     ;; Tulevaisuudessa selite ja aihe+tarkenne ei voi olla samalla ilmoituksella.
     (is (= #{"auraustarve"
              "aurausvallitNakemaesteena"} (:selitteet ilmoitus)))
-    (is (= 1 (:aihe ilmoitus)))
-    (is (= 1 (:tarkenne ilmoitus))))
+    (is (= 900 (:aihe ilmoitus)))
+    (is (= 9001 (:tarkenne ilmoitus))))
   (poista-ilmoitus 123456789))
 
 (deftest tarkista-ilmoituksen-kuvat

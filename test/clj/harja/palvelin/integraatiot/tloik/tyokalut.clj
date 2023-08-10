@@ -45,6 +45,10 @@
   <urakkatyyppi>hoito</urakkatyyppi>
   <otsikko>Korkeat vallit</otsikko>
   <paikanKuvaus>Jossain kentällä.</paikanKuvaus>
+  <kuvat>
+    <url>https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Minniecat.png/220px-Minniecat.png</url>
+    <url>https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Six_weeks_old_cat_%28aka%29.jpg/390px-Six_weeks_old_cat_%28aka%29.jpg</url>
+  </kuvat>
   <lisatieto>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lisatieto>
   <yhteydenottopyynto>false</yhteydenottopyynto>
   <sijainti>
@@ -149,8 +153,8 @@
   <selite>tietOvatjaisiaJamarkia</selite>
   </seliteet>
   <luokittelu>
-  <aihe>1</aihe>
-  <tarkenne>101</tarkenne>
+  <aihe>900</aihe>
+  <tarkenne>9001</tarkenne>
   </luokittelu>
   </harja:ilmoitus>")))
 
@@ -199,8 +203,8 @@
   <selite>aurausvallitNakemaesteena</selite>
   </seliteet>
   <luokittelu>
-  <aihe>1</aihe>
-  <tarkenne>1</tarkenne>
+  <aihe>900</aihe>
+  <tarkenne>9001</tarkenne>
   </luokittelu>
   </harja:ilmoitus>")))
 

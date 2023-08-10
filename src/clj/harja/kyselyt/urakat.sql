@@ -106,6 +106,32 @@ WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date)
       AND (u.loppupvm IS NULL OR u.loppupvm >= current_date)
       AND (:urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi);
 
+-- name: hae-urakoiden-nimet
+SELECT
+    u.id,
+    u.nimi,
+    u.lyhyt_nimi
+FROM urakka u
+WHERE (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi)
+  AND (CASE
+           WHEN :vain-puuttuvat :: BOOLEAN = true
+               THEN u.lyhyt_nimi IS NULL
+           ELSE true END)
+  AND (CASE
+           WHEN :urakantila :: TEXT = 'kaikki' THEN true
+           WHEN :urakantila = 'meneillaan'
+               THEN u.loppupvm IS NULL OR u.loppupvm >= current_date
+           WHEN :urakantila = 'paattyneet'
+               THEN u.loppupvm < current_date
+           ELSE true END)
+ORDER BY u.nimi ASC;
+
+-- name: tallenna-urakan-lyhytnimi!
+-- Vaihtaa urakan lyhytnimen
+UPDATE urakka
+SET lyhyt_nimi = :lyhytnimi
+WHERE id = :urakka;
+
 -- name: hae-kaynnissa-olevat-hoitourakat
 SELECT
     u.id,

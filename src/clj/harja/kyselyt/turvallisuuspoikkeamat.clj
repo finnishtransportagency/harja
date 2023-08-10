@@ -32,5 +32,5 @@
         (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))
         (map #(konv/string->keyword % :juurisyy1 :juurisyy2 :juurisyy3))))
 
-(defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id luoja]
-  (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id luoja))))
+(defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id urakka-id]
+  (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id urakka-id))))

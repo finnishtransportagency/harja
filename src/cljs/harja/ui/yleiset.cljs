@@ -859,8 +859,7 @@ jatkon."
   [{:keys [suunta leveys wrapper-luokka wrapperin-koko tooltip-disabloitu?] :as opts} komponentti sisalto]
   (if-not tooltip-disabloitu? (r/with-let [tooltip-visible?-atom (atom false)]
                                 [:div.inline-block
-                                 {:style {:position "relative"}
-                                  :class wrapper-luokka
+                                 {:class wrapper-luokka
                                   :on-mouse-enter #(reset! tooltip-visible?-atom true)
                                   :on-mouse-leave #(reset! tooltip-visible?-atom false)}
                                  komponentti
