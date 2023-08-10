@@ -82,22 +82,6 @@
 (defn lokita-urakkahakuvirhe [viesti]
   (log/error viesti))
 
-(defn- urakka-sijainnin-avulla
-  [db sijainti alkusijainti version-voimassaolo alkaen]
-  (let [s (or sijainti alkusijainti)
-        alkupvm (or (:alku version-voimassaolo)
-                    alkaen)                                 ; Sijaintipalvelu ei palauta versioita
-        tr-osoite {:tie (:tie s)
-                   :aosa (:osa s)
-                   :aet (:etaisyys s)
-                   :paivamaara alkupvm}
-        urakka-id (-> (q-urakat/hae-hoito-urakka-tr-pisteelle db tr-osoite)
-                      first
-                      :id)]
-    (assert (some? s) "`sijainti` tai `alkusijainti` on pakollinen")
-    (assert (some? alkupvm) "`alkupvm` on pakollinen")
-    urakka-id))
-
 (defn hae-id->urakka-pvm-map
   "Hakee urakan päivämäärätietoja sellaisille urakoille, joille on olemassa velho_oid (ovat siis velhosta löytyviä MHU urakoita).
   Palauttaa:
@@ -105,7 +89,7 @@
   [db]
   (->> (q-urakat/hae-kaikki-urakat-pvm db)                  ; [{:id 36 :alkupvm <sql-date> :loppupvm <sql-date>} {...} ... ]
        (map
-         (fn [{:keys [id alkupvm loppupvm] :as urakka}]
+         (fn [{:keys [id alkupvm loppupvm]}]
            [id {:alkupvm alkupvm :loppupvm loppupvm}]))     ; ([36 {:alkupvm <sql-date> :loppupvm <sql-date>}] [38 {...}])
        (into {})))                                          ; {36 {:alkupvm <sql-date> :loppupvm <sql-date>} 38 {...}}
 
@@ -118,7 +102,7 @@
   ; {"1.2.3" 36 "1.2.4" 38}
   (->> (q-urakat/hae-kaikki-urakka-velho-oid db)
        (map
-         (fn [{:keys [velho_oid id] :as urakka}]
+         (fn [{:keys [velho_oid id]}]
            [velho_oid id]))
        (into {})))
 
@@ -279,9 +263,6 @@
         ylimaaraiset-oidit (set/difference saadut-oidit haetut-oidit) 
         tallennettavat-oidit (set/difference saadut-oidit ylimaaraiset-oidit (virhe-oidit-fn))
         tallennettavat-kohteet (filter #(contains? tallennettavat-oidit (:oid %)) saadut-kohteet)]
-    ; TODO VHAR-6139 palauta kohteiden haun ja tallentamisen lopputulokset lokita koostetusti kutsussa
-    #_(log/info "Varustehaku Velhosta palautti " (count saadut-kohteet) " historia-kohdetta. Yksikäsitteisiä oideja: "
-                (count saadut-oidit) " kpl. Tallennetaan " (count tallennettavat-oidit) " kpl. (Ylimääräisiä oideja " (count ylimaaraiset-oidit) " kpl.) Url: " url)
     (if jasennys-onnistui?
       (do
         (when (and jasennys-onnistui? (seq puuttuvat-oidit))
@@ -296,10 +277,16 @@
                                   (tallenna-virhe-fn kohde (str t " url: " url))
                                   false)))
                             tallennettavat-kohteet)]
-          (every? true? tulokset)))
-      false)))
+          {:onnistuneet (count (filter true? tulokset))
+           :epaonnistuneet (count (filter false? tulokset))
+           :ylimaaraiset (count ylimaaraiset-oidit)
+           :saadut (count saadut-kohteet)}))
+      {:onnistuneet 0
+       :epaonnistuneet 0
+       :ylimaaraiset 0
+       :saadut 0})))
 
-(defn muodosta-kohteet-url [varuste-api-juuri-url {:keys [palvelu api-versio] :as lahde}]
+(defn muodosta-kohteet-url [varuste-api-juuri-url {:keys [palvelu api-versio]}]
   (let [historia-osa (if (= "sijaintipalvelu" palvelu)
                        ""
                        "/historia")]
@@ -315,7 +302,7 @@
               http-asetukset {:metodi :POST
                               :url kohteet-url
                               :otsikot otsikot}
-              {sisalto :body otsikot :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset pyynto)]
+              {sisalto :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset pyynto)]
           {:sisalto sisalto
            :oidit oidit})
         (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
@@ -355,7 +342,7 @@
         token (token-fn)]
     (if token
       (try+
-        (let [haku-alkanut (java.util.Date.)
+        (let [haku-alkanut (pvm/nyt)
               {tila :tila oidit :oidit} (hae-oidt-velhosta token url konteksti tallenna-virhe-fn)]
           (when (and tila (not-empty oidit))
             (let [oidit-alijoukot (partition
@@ -389,7 +376,7 @@
         token (token-fn)]
     (if token
       (try+
-        (let [haku-alkanut (java.util.Date.)
+        (let [haku-alkanut (pvm/nyt)
               {tila :tila oidit :oidit} (hae-oidt-velhosta token url konteksti tallenna-virhe-fn)]
           (if (and tila (not-empty oidit))
             (let [oidit-alijoukot (partition
@@ -400,15 +387,18 @@
                   sisalto (map #(hae-kohdetiedot kohteet-url konteksti token-fn
                                    % tallenna-virhe-fn)
                              oidit-alijoukot)
-                  tulokset (map #(tallenna-kohteet % url tallenna-fn tallenna-virhe-fn virhe-oidit-fn) sisalto)]
-              (if (every? true? tulokset)
+                  tulokset (map #(tallenna-kohteet % url tallenna-fn tallenna-virhe-fn virhe-oidit-fn) sisalto)
+                  {:keys [onnistuneet epaonnistuneet ylimaaraiset saadut]} (apply merge-with + tulokset)]
+              (log/info "Varustehaku Velhosta palautti " saadut " kohdetta. "
+                "Tallennettiin " onnistuneet " kpl. (Ylimääräisiä oideja " ylimaaraiset " kpl.)")
+              (if (= 0 epaonnistuneet)
                 (do
                   (tallenna-hakuaika-fn haku-alkanut)
                   true)
                 false))
-            (if tila 
+            (if tila
               (do
-               (tallenna-hakuaika-fn haku-alkanut) 
+                (tallenna-hakuaika-fn haku-alkanut)
                 true)
               false)))
         (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
@@ -575,9 +565,10 @@
                   valimaiset-toimenpiteet (hae-ja-palauta-tietolajin-lahde +valimaiset-varustetoimenpiteet+ db konteksti varuste-api-juuri-url token-fn) 
                   _ (log/debug "Haettuja välimäisiä toimenpiteitä: " (when (seq valimaiset-toimenpiteet) (count valimaiset-toimenpiteet)))
                   _ (log/debug "Päivitetään välimäiset toimenpiteet kohteille lopuksi") 
-                  _ (paivita-varustetoteumat-valimaisille-kohteille valimaiset-toimenpiteet db)] 
-                (every? true? tulos))
-            false))))
+                  _ (paivita-varustetoteumat-valimaisille-kohteille valimaiset-toimenpiteet db)]
+              (when-not (every? true? tulos)
+                (virheet/heita-poikkeus virheet/+ulkoinen-kasittelyvirhe-koodi+ "Tietolajien lähteiden haussa virheitä")))
+            (virheet/heita-poikkeus virheet/+ulkoinen-kasittelyvirhe-koodi+ "Velho-tokenin haku epäonnistui")))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (log/error "Integraatioajo tuo-uudet-varustetoteumat-velhosta epäonnistui. Virheet: " virheet)
       false)))
@@ -691,7 +682,8 @@
                   (tarkasta-urakka-kohteet-joukko urakka-kohteet oid-joukko)
                   (poista-velho-oidt db)
                   (tallenna-urakka-velho-oidt db urakka-kohteet)))))
-          (empty? @virheet))))
+          (when-not (empty? @virheet)
+            (virheet/heita-poikkeus virheet/+ulkoinen-kasittelyvirhe-koodi+ @virheet) ))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (lokita-urakkahakuvirhe (str "MHU urakoiden haku Velhosta epäonnistui. Virheet: " virheet))
       false)
