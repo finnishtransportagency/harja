@@ -148,6 +148,7 @@
         
         kommentit (:kommentit valittu-rivi)]
 
+    ;; Käyttäjien kommentit
     [:div#Kommentit.row.filtterit.kommentit-valistys
      [:h2 "Kommentit"]
      (for [{:keys [id luotu kommentti kayttajanimi]} kommentit]
@@ -156,7 +157,7 @@
         [:div.alarivi-tiedot
          [:span (str (pvm/pvm-aika luotu))]
          [:span kayttajanimi]]
-
+        
         [:div.kommentti
          [:h1.tieto-rivi kommentti]
          [:span.klikattava.kommentti-poista
@@ -164,19 +165,10 @@
                        (e! (tiedot/->PoistaKommentti
                             {:id id :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)}))
                         (tiedot/scrollaa-kommentteihin))}
+          
           (ikonit/action-delete)]]])
 
-     ;; Kommentin päiväys ja nimi
-     #_[:div.alarivi-tiedot
-        [:span "10.10.2022 15:45"]
-        [:span "Timo Tilaaja"]]
-
-     ;; Kommentti
-     #_[:div.kommentti
-        [:h1.tieto-rivi "Tästähän puuttuu nelostien rekka-kolari"]
-        [:span.klikattava.kommentti-poista {:on-click (fn []
-                                                        (println "Klikattu poista kommentti"))} (ikonit/action-delete)]]
-
+     ;; TODO Tällä tehdään muutoshistoria kommentti
      ;; Muutoshistoria tiedot
      #_[:div.alarivi-tiedot
         [:span "11.10.2022 07:45"]

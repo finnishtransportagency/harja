@@ -38,7 +38,7 @@
       [:span (str "Versio " (:versio tyomaapaivakirja))]
 
       ;;TODO: 
-      [:a.klikattava "Näytä muutoshistoria"]
+      #_ [:a.klikattava "Näytä muutoshistoria"]
 
       [:span.paivakirja-toimitus
        [:div {:class (str "pallura " (:tila tyomaapaivakirja))}]

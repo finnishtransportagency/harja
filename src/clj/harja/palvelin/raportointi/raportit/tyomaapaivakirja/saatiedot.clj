@@ -10,7 +10,7 @@
     [:varillinen-teksti {:arvo aikavali}]
     [:varillinen-teksti {:arvo ilma}]
     [:varillinen-teksti {:arvo tie}]
-    [:varillinen-teksti {:arvo s-olom}]
+    [:ikoni {:arvo s-olom}]
     [:varillinen-teksti {:arvo k-tuuli}]
     [:varillinen-teksti {:arvo s-sum}]))
 
@@ -18,9 +18,7 @@
   "Sateen olomuoto saadaan numeroarvosta, josta päätellään sateen olomuoto"
   [numero]
   ;;TODO: tee päättely tänne ja palauta oikea ikoni
-  "<icon>"
-  )
-
+  {:s-olom numero})
 (defn saatiedot-taulukkojen-parametrit [vasen-aseman-tiedot oikea-aseman-tiedot]
   (let [vasen-rivit (second vasen-aseman-tiedot)
         oikea-rivit (second oikea-aseman-tiedot)

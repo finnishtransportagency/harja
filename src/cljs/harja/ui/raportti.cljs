@@ -101,6 +101,11 @@
     [ikonit/harja-icon-status-info]
     info]])
 
+(defmethod muodosta-html :ikoni [[_ {:keys [arvo info]}]]
+  ;; TODO
+  ;; [ikonit/harja-icon-fair-day]
+  nil)
+
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
   ;; ennaltamääriteltyjä tyylejä, mutta jos on erikoistapaus missä halutaan käyttää itsemääriteltyä väriä,
@@ -325,8 +330,7 @@
                 :height        h
                 :format-amount (or fmt str)
                 :hide-value?   piilota-arvo?
-                :legend legend
-                }
+                :legend legend}
       pylvaat]]))
 
 (defmethod muodosta-html :piirakka [[_ {:keys [otsikko]} data]]
