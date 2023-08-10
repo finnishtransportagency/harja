@@ -307,7 +307,8 @@
   "Käyttäjä on oltava validoitu ennen tämän funktion kutsumista. Tässä varmennetaan,
   että käyttäjällä on oikeaan apiin lisätty oikeus tietokannassa."
   [db kayttaja vaadittu-api-oikeus]
-  (let [on-oikeus (if vaadittu-api-oikeus
+  (let [_ (println "vaadi-api-oikeudet :: tulee tänne: kayttaja:" (pr-str kayttaja))
+        on-oikeus (if vaadittu-api-oikeus
                     ;; vaadittu-api-oikeus voi olla nil esim testitapauksissa, joten riittää, että on järjestelmä käyttäjä
                     (kayttajat/onko-jarjestelma-ja-api-oikeus? db {:kayttajanimi (:kayttajanimi kayttaja)
                                                                    :api-oikeus vaadittu-api-oikeus})
