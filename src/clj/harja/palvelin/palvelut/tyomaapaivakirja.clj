@@ -30,26 +30,22 @@
   (hae-kommentit db tiedot))
 
 (defn- tallenna-kommentti [db user tiedot]
-  ;; TODO.. oikeudet
-  (oikeudet/vaadi-lukuoikeus oikeudet/raportit-tyomaapaivakirja user (:urakka-id tiedot))
-  (let [_ (log/debug "tallenna-kommentti :: tiedot" (pr-str tiedot))
-        _ (tyomaapaivakirja-kyselyt/lisaa-kommentti<! db {:urakka_id (:urakka-id tiedot)
-                                                          :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)
-                                                          :versio (:versio tiedot)
-                                                          :kommentti (:kommentti tiedot)
-                                                          :luoja (:id user)})]
-    (hae-kommentit db tiedot)))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/raportit-kommentit user (:urakka-id tiedot))
+  (tyomaapaivakirja-kyselyt/lisaa-kommentti<! db {:urakka_id (:urakka-id tiedot)
+                                                  :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)
+                                                  :versio (:versio tiedot)
+                                                  :kommentti (:kommentti tiedot)
+                                                  :luoja (:id user)})
+  (hae-kommentit db tiedot))
 
 (defn- poista-tyomaapaivakirjan-kommentti [db user tiedot]
-  ;; TODO oikeudet
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/raportit-tyomaapaivakirja user (:urakka-id tiedot))
-
-  (let [_ (log/debug "poista-tyomaapaivakirjan-kommentti :: tiedot" (pr-str tiedot))
-        _ (tyomaapaivakirja-kyselyt/poista-tyomaapaivakirjan-kommentti<! db {:id (:id tiedot)
-                                                                             :kayttaja (:kayttaja tiedot)
-                                                                             :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)
-                                                                             :muokkaaja (:id user)})]
-    (hae-kommentit db tiedot)))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/raportit-kommentit user (:urakka-id tiedot))
+  ;; Poistaa ainoastaan kommentin jos kommentti on poistajan itse tekemä
+  (tyomaapaivakirja-kyselyt/poista-tyomaapaivakirjan-kommentti<! db {:id (:id tiedot)
+                                                                     :kayttaja (:kayttaja tiedot)
+                                                                     :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)
+                                                                     :muokkaaja (:id user)})
+  (hae-kommentit db tiedot))
 
 (defrecord Tyomaapaivakirja []
   component/Lifecycle
