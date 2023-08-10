@@ -63,7 +63,7 @@
         _ (println "***************** kayttajadb: " kayttajadb)
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/urakat")] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)
-        (println "***************** encoodattu-body: " encoodattu-body)]
+        _ (println "***************** encoodattu-body: " encoodattu-body)]
     (is (= 200 (:status vastaus)))
     (is (= (count urakat-kannasta) (count (:urakat encoodattu-body))))))
 
