@@ -711,7 +711,7 @@
        {:url +velho-toimenpiteet-oid-url+ :method :get} (fake-tunnisteet-yleinen toimenpide-oidit-yleinen)
        {:url +velho-toimenpiteet-kohde-url+ :method :post} (fake-kohteet-yleinen toimenpide-oidit-yleinen toimenpide-kohteet-yleinen)]
       ; with-redefs korvataan kello, josta viimeisin hakuaika poimitaan
-      (with-redefs [pvm/nyt (fn [] odotettu-viimeisin-aika)]
+      (with-redefs [pvm/nyt (constantly odotettu-viimeisin-aika)]
         (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))
         (let [viimeksi-haetut (q-map (str "SELECT kohdeluokka, viimeisin_hakuaika
                                                   FROM varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle"))]
