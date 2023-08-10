@@ -307,13 +307,11 @@
   "Käyttäjä on oltava validoitu ennen tämän funktion kutsumista. Tässä varmennetaan,
   että käyttäjällä on oikeaan apiin lisätty oikeus tietokannassa."
   [db kayttaja vaadittu-api-oikeus]
-  (let [_ (println "vaadi-api-oikeudet :: tulee tänne: kayttaja:" (pr-str kayttaja))
-        on-oikeus (if vaadittu-api-oikeus
+  (let [on-oikeus (if vaadittu-api-oikeus
                     ;; vaadittu-api-oikeus voi olla nil esim testitapauksissa, joten riittää, että on järjestelmä käyttäjä
                     (kayttajat/onko-jarjestelma-ja-api-oikeus? db {:kayttajanimi (:kayttajanimi kayttaja)
                                                                    :api-oikeus vaadittu-api-oikeus})
-                    (kayttajat/onko-jarjestelma? db {:kayttajanimi (:kayttajanimi kayttaja)}))
-        _ (println "vaadi-api-oikeudet :: on-oikeus:" (pr-str on-oikeus))]
+                    (kayttajat/onko-jarjestelma? db {:kayttajanimi (:kayttajanimi kayttaja)}))]
     (if (nil? on-oikeus)
       (do
         (log/error "Käyttäjällä ei ole järjestelmäoikeuksia: " (:kayttajanimi kayttaja))
@@ -527,7 +525,6 @@
           kayttaja (hae-kayttaja db (get
                                       (todennus/prosessoi-kayttaja-headerit (:headers request))
                                       "oam_remote_user"))
-          _ (println "kasittele-kevyesti-get-kutsu :: kayttaja:" (pr-str kayttaja))
           tapahtuma-id (when integraatioloki
                          (lokita-kutsu integraatioloki resurssi request nil))
           parametrit (:params request)

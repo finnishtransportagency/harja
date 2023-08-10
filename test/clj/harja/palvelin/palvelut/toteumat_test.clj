@@ -243,8 +243,7 @@
 
     (is (not (contains? summat-ennen-lisaysta 1368)))
 
-    (let [_ (println "tyo ::::::::::::::::." (pr-str tyo))
-          lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
+    (let [lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
                                   +kayttaja-jvh+ tyo)
           summat-lisayksen-jalkeen (hae-summat)]
@@ -337,8 +336,7 @@
 
     (is (not (contains? summat-ennen-lisaysta 1368)))
 
-    (let [_ (println "tyo ::::::::::::::::." (pr-str tyo))
-          lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
+    (let [lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
                     :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
                     +kayttaja-jvh+ tyo)
           summat-lisayksen-jalkeen (hae-summat)]

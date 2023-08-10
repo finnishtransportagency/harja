@@ -60,10 +60,8 @@
   (let [urakat-kannasta (q-map (str "SELECT id FROM urakka"))
         ;; Varmista käyttäjän oikeudet kannasta
         kayttajadb (q-map (format "SELECT * from kayttaja where kayttajanimi = '%s'" "analytiikka-testeri"))
-        _ (println "***************** kayttajadb: " kayttajadb)
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/urakat")] kayttaja-analytiikka portti)
-        encoodattu-body (cheshire/decode (:body vastaus) true)
-        _ (println "***************** encoodattu-body: " encoodattu-body)]
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (count urakat-kannasta) (count (:urakat encoodattu-body))))))
 
@@ -222,7 +220,6 @@
         ;; Hae suunnitellut materiaalit
         vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-materiaalit/%s" urakka-id)] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)
-        _ (println "hae-suunnitellut-materiaalimaarat-MH-urakalle-onnistuu-test :: encoodattu-body" (pr-str encoodattu-body))
         ensimmainen-hoitovuosi (:suunnitellut-materiaalit (first encoodattu-body))
         ;; Järjestetään materiaalit id:n mukaan
         ensimmainen-hoitovuosi (sort-by :materiaali_id ensimmainen-hoitovuosi)]
@@ -281,8 +278,7 @@
         loppuvuosi 2040
         ;; Hae suunnitellut materiaalit
         vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-materiaalit/%s/%s" alkuvuosi loppuvuosi)] kayttaja-analytiikka portti)
-        encoodattu-body (cheshire/decode (:body vastaus) true)
-        _ (println "encoodattu-body:" (pr-str encoodattu-body))]
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
 
     (is (= 200 (:status vastaus)))
     (is (not (nil? encoodattu-body)))
@@ -360,7 +356,6 @@
         ;; Haetaan apista tulokset
         vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s" urakka-id)] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)
-        _ (println "************ encoodattu-body" encoodattu-body)
         ekan-vuoden-suunnitelmat (sort-by :maara (:suunnitellut-tehtavat (first encoodattu-body)))]
 
     (is (= 200 (:status vastaus)))
