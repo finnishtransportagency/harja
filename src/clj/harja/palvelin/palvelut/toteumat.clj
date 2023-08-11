@@ -1016,12 +1016,6 @@
                                 (toteumat-q/tallenna-liite-toteumalle<! db toteuma-id (:id uusi-liite)))
                               id)))
 
-(defn tallenna-varustetoteuma [tierekisteri db user hakuehdot {:keys [urakka-id] :as varustetoteuma}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
-  (log/debug "Tallennetaan varustetoteuma")
-  (let [varustetoteuma-id (luo-tai-paivita-varustetoteuma tierekisteri db user varustetoteuma)]
-    (async/thread (tierekisteri/laheta-varustetoteuma tierekisteri varustetoteuma-id)))
-  (hae-urakan-varustetoteumat tierekisteri db user hakuehdot))
 
 (defn hae-toteuman-reitti-ja-tr-osoite [db user {:keys [id urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
@@ -1224,9 +1218,6 @@
       :urakan-varustetoteumat
       (fn [user tiedot]
         (hae-urakan-varustetoteumat tierekisteri db-replica user tiedot))
-      :tallenna-varustetoteuma
-      (fn [user {:keys [hakuehdot toteuma]}]
-        (tallenna-varustetoteuma tierekisteri db user hakuehdot toteuma))
       :hae-toteuman-reitti-ja-tr-osoite
       (fn [user tiedot]
         (hae-toteuman-reitti-ja-tr-osoite db-replica user tiedot))
@@ -1268,7 +1259,6 @@
       :urakan-varustetoteumat
       :hae-toteuman-reitti-ja-tr-osoite
       :siirry-toteuma
-      :tallenna-varustetoteuma
       :hae-toteumien-reitit
       :hae-toteuman-liitteet)
     this))

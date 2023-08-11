@@ -1,7 +1,6 @@
 (ns harja.domain.tierekisteri.varusteet-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer [deftest is]]
             [harja.testi :refer :all]
-            [slingshot.slingshot :refer [throw+]]
             [slingshot.test]
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [clj-time.core :as t]))

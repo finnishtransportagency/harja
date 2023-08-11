@@ -9,13 +9,6 @@ API on jaettu kuuteen pääosioon:
       <li>Urakan Tieliikennekeskuksen tekemien ilmoitusten haku</li>
     </ul>
   </li>
-  <li>varusteet:
-    <ul>
-      <li>Varustetietojen tietolajikuvausten haku Tierekisteristä</li>
-      <li>Varustetietojen haku Tierekisteristä</li>
-      <li>Varustetietojen lisäys, poisto ja päivitys Tierekisteriin.</li>
-    </ul>
-  </li>
   <li>seuranta:
       <ul>
         <li>Reaaliaikaisten seurantatietojen, kuten esim. aura-auton liikkeiden kirjaus</li>

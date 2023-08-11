@@ -44,9 +44,6 @@
 ;; Varustetoteumat ovat muuttuneet alinäkymässä
 (defrecord VarustetoteumatMuuttuneet [varustetoteumat])
 
-;; Ala muokkaamaan valittua varustetta
-(defrecord MuokkaaVarustetta [varuste])
-
 (defrecord LisaaLiitetiedosto [liite])
 (defrecord PoistaUusiLiitetiedosto [liite])
 (defrecord PaivitaLiitteet [liitteet])

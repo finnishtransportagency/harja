@@ -123,7 +123,6 @@
     [harja.palvelin.integraatiot.api.paivystajatiedot :as api-paivystajatiedot]
     [harja.palvelin.integraatiot.api.pistetoteuma :as api-pistetoteuma]
     [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
-    [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]
     [harja.palvelin.integraatiot.api.siltatarkastukset :as api-siltatarkastukset]
     [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
     [harja.palvelin.integraatiot.api.tyokoneenseuranta :as api-tyokoneenseuranta]
@@ -658,9 +657,6 @@
       :api-reittitoteuma (component/using
                            (api-reittitoteuma/->Reittitoteuma)
                            [:http-palvelin :db  :db-replica :integraatioloki])
-      :api-varustetoteuma (component/using
-                            (api-varustetoteuma/->Varustetoteuma)
-                            [:http-palvelin :db  :tierekisteri :integraatioloki])
       :api-siltatarkastukset (component/using
                                (api-siltatarkastukset/->Siltatarkastukset)
                                [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
@@ -682,14 +678,14 @@
                                    [:db])
       :api-varusteet (component/using
                        (api-varusteet/->Varusteet)
-                       [:http-palvelin :db :integraatioloki :tierekisteri :vkm])
+                       [:http-palvelin :db :integraatioloki :tierekisteri])
       :api-ilmoitukset (component/using
                          (api-ilmoitukset/->Ilmoitukset)
                          [:http-palvelin :db :integraatioloki
                           :tloik])
       :api-yllapitokohteet (component/using
                              (api-yllapitokohteet/->Yllapitokohteet)
-                             [:http-palvelin :db :integraatioloki :liitteiden-hallinta :fim :api-sahkoposti :vkm])
+                             [:http-palvelin :db :integraatioloki :liitteiden-hallinta :fim :api-sahkoposti])
       :api-ping (component/using
                   (api-ping/->Ping)
                   [:http-palvelin :db :integraatioloki])

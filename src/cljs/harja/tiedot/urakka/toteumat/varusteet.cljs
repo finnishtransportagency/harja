@@ -117,53 +117,6 @@
 (defn- hae-tietolajin-kuvaus [tietolaji]
   (k/post! :hae-tietolajin-kuvaus tietolaji))
 
-(defn tallenna-varustetoteuma [{:keys [urakka-id
-                                       sopimus-id
-                                       aikavali
-                                       tienumero] :as hakuehdot}
-                               {:keys [id
-                                       arvot
-                                       sijainti
-                                       puoli
-                                       ajorata
-                                       lisatieto
-                                       tietolaji
-                                       toiminto
-                                       toimenpide
-                                       tunniste
-                                       tierekisteriosoite
-                                       alkupvm
-                                       loppupvm
-                                       uusi-liite] :as toteuma}]
-  (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
-        toteuma {:id id
-                 :arvot arvot
-                 :sijainti sijainti
-                 :ajorata ajorata
-                 :tierekisteriosoite tierekisteriosoite
-                 :lisatieto lisatieto
-                 :tietolaji tietolaji
-                 :toiminto (or toiminto toimenpide)
-                 :urakka-id @nav/valittu-urakka-id
-                 :kuntoluokitus (when (and (:kuntoluokitus arvot)
-                                           (not (str/blank? (:kuntoluokitus arvot))))
-                                  (js/parseInt (:kuntoluokitus arvot)))
-                 :alkupvm alkupvm
-                 :loppupvm loppupvm
-                 :uusi-liite uusi-liite
-                 :tunniste tunniste}
-
-        toteuma (if (varusteet-domain/tien-puolellinen-tietolaji? tietolaji)
-                  (assoc toteuma :puoli puoli)
-                  toteuma)
-
-        hakuehdot {:urakka-id urakka-id
-                   :sopimus-id sopimus-id
-                   :alkupvm (first aikavali)
-                   :loppupvm (second aikavali)
-                   :tienumero tienumero}]
-    (k/post! :tallenna-varustetoteuma {:hakuehdot hakuehdot :toteuma toteuma})))
-
 (defn varusteen-osoite [varuste]
   (when varuste
     (let [osoite (get-in varuste [:tietue :sijainti :tie])]
