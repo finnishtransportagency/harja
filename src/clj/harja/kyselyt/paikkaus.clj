@@ -38,9 +38,10 @@
 (defn hae-paikkaukset-materiaalit [db hakuehdot]
   (fetch db
          ::paikkaus/paikkaus
-         (conj paikkaus/paikkauksen-perustiedot
-               [::paikkaus/materiaalit paikkaus/materiaalit-perustiedot])
-         hakuehdot))
+    (-> paikkaus/paikkauksen-perustiedot
+      (disj ::paikkaus/pinta-ala ::paikkaus/massamaara)
+      (conj [::paikkaus/materiaalit paikkaus/materiaalit-perustiedot]))
+    hakuehdot))
 
 (defn hae-paikkaukset-paikkauskohde [db hakuehdot]
   (fetch db
