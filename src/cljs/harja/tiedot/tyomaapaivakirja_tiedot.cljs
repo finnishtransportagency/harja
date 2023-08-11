@@ -15,6 +15,7 @@
 (defonce raportti-avain :tyomaapaivakirja-nakyma)
 
 (def nakymassa? (atom false))
+(def valittu-hakumuoto (atom :kaikki))
 
 (defonce tila (atom {:tiedot []
                      :nayta-rivit []
@@ -175,9 +176,11 @@
 
   HaeTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (-> app
-      (assoc :tiedot vastaus)
-      (assoc :nayta-rivit vastaus)))
+    (let [app (assoc app :tiedot vastaus)]
+      ;; Suodatetaan vielä rivit vastaukseen
+      (-> app
+        (assoc :nayta-rivit (suodata-rivit app @valittu-hakumuoto))
+        (assoc-in [:valinnat :hakumuoto] @valittu-hakumuoto))))
 
   HaeTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]

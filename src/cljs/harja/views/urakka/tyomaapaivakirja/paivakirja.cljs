@@ -36,9 +36,7 @@
                        "myohassa" {:class "myohassa" :selitys "Myöhässä"}
                        "puuttuu" {:class "puuttuu" :selitys "Puuttuu"}})
 
-(def valittu-hakumuoto (atom :kaikki))
-
-(defn tyomaapaivakirja-listaus [e! {:keys [nayta-rivit valinnat] :as app}]
+(defn tyomaapaivakirja-listaus [e! {:keys [nayta-rivit] :as app}]
   (let [solu-fn (fn [arvo _]
                   (let [rivin-paivamaara (:paivamaara arvo)
                         viimeksi-klikattu-rivi (-> @tiedot/tila :viimeksi-valittu :paivamaara)]
@@ -77,7 +75,7 @@
                             :nayta-rivina? true
                             :vaihtoehto-nayta (haun-valinnat app)
                             :valitse-fn #(e! (tiedot/->PaivitaHakumuoto %))}
-         valittu-hakumuoto]]]
+         tiedot/valittu-hakumuoto]]]
 
       [grid/grid {:tyhja "Työmaapäiväkirjoja ei ole valitulle aikavälille."
                   :tunniste :paivamaara
