@@ -37,7 +37,7 @@
                               (name tyyppi))
                      {tarkastus-id :id}
                      (first
-                       (q-tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id tyyppi (:id kayttaja)))
+                       (q-tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id tyyppi urakka-id))
                      uusi? (nil? tarkastus-id)
                      aika (json/aika-string->java-sql-date (:aika tarkastus))
                      tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti tarkastus) (:loppusijainti tarkastus))

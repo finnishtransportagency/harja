@@ -243,7 +243,7 @@ FROM siltatarkastus st
 WHERE st.id = :id
   AND poistettu = FALSE;
 
--- name: hae-siltatarkastus-ulkoisella-idlla-ja-luojalla
+-- name: hae-siltatarkastus-ulkoisella-idlla-ja-urakalla
 -- Hakee yhden siltatarkastuksen ulkoisella id:llä ja luojalla
 SELECT id,
        silta,
@@ -257,7 +257,7 @@ SELECT id,
        poistettu
 FROM siltatarkastus
 WHERE ulkoinen_id = :id
-  AND luoja = :luoja
+  AND urakka = :urakka-id
   AND poistettu = FALSE;
 
 -- name: hae-silta-tunnuksella
@@ -297,7 +297,7 @@ SET silta         = :silta,
     muokkaaja     = :muokkaaja,
     muokattu      = NOW()
 WHERE ulkoinen_id = :id
-  AND luoja = :muokkaaja
+  AND urakka = :urakka
   AND poistettu = FALSE;
 
 -- name: hae-siltatarkastusten-kohteet
@@ -346,7 +346,6 @@ SET poistettu = TRUE,
     muokattu  = NOW(),
     muokkaaja = :kayttaja_id
 WHERE ulkoinen_id::integer IN (:ulkoiset_idt)
-  AND luoja = :kayttaja_id
   AND urakka = :urakka_id;
 
 -- name: poista-siltatarkastuskohteet!

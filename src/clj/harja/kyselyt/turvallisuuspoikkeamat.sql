@@ -421,7 +421,7 @@ WHERE t.luotu BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP;
 SELECT exists(
     SELECT tp.id
     FROM turvallisuuspoikkeama tp
-    WHERE tp.ulkoinen_id = :ulkoinen_id AND luoja = :luoja);
+    WHERE tp.ulkoinen_id = :ulkoinen_id AND urakka = :urakka_id);
 
 -- name: liita-kommentti<!
 INSERT INTO turvallisuuspoikkeama_kommentti (turvallisuuspoikkeama, kommentti)
@@ -535,7 +535,7 @@ WHERE id = :id
 SELECT id
 FROM turvallisuuspoikkeama
 WHERE ulkoinen_id = :ulkoinen_id AND
-      luoja = :luoja;
+      urakka = :urakka-id;
 
 --name: paivita-turvallisuuspoikkeama-ulkoisella-idlla!
 UPDATE turvallisuuspoikkeama
@@ -575,8 +575,8 @@ SET urakka                            = :urakka,
   turvallisuuskoordinaattori_etunimi  = :turvallisuuskoordinaattori_etunimi,
   turvallisuuskoordinaattori_sukunimi = :turvallisuuskoordinaattori_sukunimi,
   laatija                             = :laatija
-WHERE ulkoinen_id = :ulkoinen_id AND
-      luoja = :luoja;
+WHERE ulkoinen_id = :ulkoinen_id
+  AND urakka = :urakka;
 
 --name: aseta-ulkoinen-id<!
 UPDATE turvallisuuspoikkeama

@@ -24,6 +24,10 @@
                                :palvelin "http://localhost:8084"
                                :vastausosoite "harja-ala-vastaa@vayla.fi"})
 
+(def ulkoinen-sahkoposti-asetukset {:suora? true
+                                  :palvelin "smtp.gmail.com"
+                                  :vastausosoite "example@example.com"})
+
 (def api-sampo-asetukset {:lahetys-url "/sampo/harja"
                           :paivittainen-lahetysaika [16 44 0]
                           :palvelin "http://localhost:8084"

@@ -504,7 +504,6 @@ VALUES
           teksti "Oulun alueurakka 2014-2019 (1238), Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
           otsikko-oulu "Talvisuolat"
           taulukko-oulu (apurit/taulukko-otsikolla vastaus-oulu otsikko-oulu)
-          _ (println "taulukko-oulu: " taulukko-oulu)
           oulu-talvisuola-luokka-kaikki-hoitoluokat-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 0))
           oulu-talvisuola-luokka-IsE-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 1))
           oulu-talvisuola-luokka-Is-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 2))

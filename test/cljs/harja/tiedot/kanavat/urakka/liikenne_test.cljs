@@ -264,7 +264,7 @@
                         ::toiminto/kohteenosa-id 1
                         ::toiminto/kohde-id 1
                         ::toiminto/lkm 1
-                        ::toiminto/toimenpide :avaus
+                        ::toiminto/toimenpide :ei-avausta
                         ::toiminto/palvelumuoto :kauko}]}
            (tiedot/kohteenosatiedot-toimintoihin
              {::lt/id 1}
@@ -585,8 +585,8 @@
                                               :alkupvm nil 
                                               :loppupvm nil
                                               :urakkatyyppi :vesivayla-kanavien-hoito
-                                              :yhteenveto {:toimenpiteet {:sulutukset-ylos 1, :sulutukset-alas 1, :sillan-avaukset 1, :tyhjennykset 1, :yhteensa 4}, 
-                                                           :palvelumuoto {:paikallispalvelu 1, :kaukopalvelu 1, :itsepalvelu 1, :muu 1, :yhteensa 4}}}}}
+                                              :yhteenveto {:toimenpiteet {:sulutukset-ylos 1, :sulutukset-alas 1, :sillan-avaukset 1, :tyhjennykset 1},
+                                                           :palvelumuoto {:paikallispalvelu 0, :kaukopalvelu 1, :itsepalvelu 1, :muu 0, :yhteensa 2}}}}}
            
            (e! (tiedot/->LiikennetapahtumatHaettu [sulutus-alas sulutus-ylos sillan-avaus tyhjennys]))))))
 
@@ -798,7 +798,7 @@
                                               :alkupvm nil
                                               :loppupvm nil
                                               :urakkatyyppi :vesivayla-kanavien-hoito
-                                              :yhteenveto {:toimenpiteet {:sulutukset-ylos 0, :sulutukset-alas 0, :sillan-avaukset 0, :tyhjennykset 0, :yhteensa 0}, 
+                                              :yhteenveto {:toimenpiteet {:sulutukset-ylos 0, :sulutukset-alas 0, :sillan-avaukset 0, :tyhjennykset 0},
                                                            :palvelumuoto {:paikallispalvelu 0, :kaukopalvelu 0, :itsepalvelu 0, :muu 0, :yhteensa 0}}}}}
            (e! (tiedot/->TapahtumaTallennettu [tapahtuma1 tapahtuma2])))))
 
@@ -857,3 +857,203 @@
              {:ketjutuksen-poistot #{1}
               :edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
                                            {::lt-alus/id 2}]}}}))))
+(deftest onko-sulutuksella-haluttu-suunta
+  (let [ronsu-alus {::lt-alus/suunta :ylos
+                    ::lt-alus/nimi "Ronsu"}
+        ransu-alus {::lt-alus/suunta :alas
+                    ::lt-alus/nimi "Ransu"}
+        tapahtuma-yksi-sulutus-ylos {::lt/toiminnot [{::toiminto/toimenpide :sulutus}]
+         ::lt/alukset [ronsu-alus]}
+        tapahtuma-yksi-sulutus-alas {::lt/toiminnot [{::toiminto/toimenpide :sulutus}]
+                                     ::lt/alukset [ransu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys {::lt/toiminnot [{::toiminto/toimenpide :avaus}
+                                                                       {::toiminto/toimenpide :korkeus}
+                                                                       {::toiminto/toimenpide :tyhjennys}]
+                                ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-sulutus {::lt/toiminnot [{::toiminto/toimenpide :avaus}
+                                                                       {::toiminto/toimenpide :veden-korkeus}
+                                                                       {::toiminto/toimenpide :sulutus}]
+                                                       ::lt/alukset [ronsu-alus]}
+        ]
+    (is (true? (tiedot/onko-sulutuksella-haluttu-suunta? tapahtuma-yksi-sulutus-ylos :ylos)))
+    (is (false? (tiedot/onko-sulutuksella-haluttu-suunta? tapahtuma-yksi-sulutus-alas :ylos)))
+    (is (false? (tiedot/onko-sulutuksella-haluttu-suunta? tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys :ylos)))
+    (is (true? (tiedot/onko-sulutuksella-haluttu-suunta? tapahtuma-sillan-avaus-vedenkorkeus-sulutus :ylos)))))
+
+(deftest laske-yhteenveto-sillan-avaukset
+  (let [ronsu-alus {::lt-alus/suunta :ylos
+                    ::lt-alus/nimi "Ronsu"}
+        tapahtuma-yksi-sulutus {::lt/toiminnot [{::toiminto/toimenpide :sulutus}]
+                                ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys {::lt/toiminnot [{::toiminto/toimenpide :avaus}
+                                                                       {::toiminto/toimenpide :veden-korkeus}
+                                                                       {::toiminto/toimenpide :tyhjennys}]
+                                                       ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-sulutus {::lt/toiminnot [{::toiminto/toimenpide :avaus}
+                                                                     {::toiminto/toimenpide :veden-korkeus}
+                                                                     {::toiminto/toimenpide :sulutus}]
+                                                     ::lt/alukset [ronsu-alus]}
+        tapahtumat [tapahtuma-yksi-sulutus tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys tapahtuma-sillan-avaus-vedenkorkeus-sulutus]
+        ]
+    (is (= (tiedot/laske-yhteenveto tapahtumat :avaus nil nil) 2))))
+
+(deftest laske-yhteenveto-tyhjennykset
+  (let [ronsu-alus {::lt-alus/suunta :ylos
+                    ::lt-alus/nimi "Ronsu"}
+        tapahtuma-yksi-sulutus {::lt/toiminnot [{::toiminto/toimenpide :sulutus}]
+                                ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys {::lt/toiminnot [{::toiminto/toimenpide :avaus}
+                                                                       {::toiminto/toimenpide :veden-korkeus}
+                                                                       {::toiminto/toimenpide :tyhjennys}]
+                                                       ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-sulutus {::lt/toiminnot [{::toiminto/toimenpide :avaus}
+                                                                     {::toiminto/toimenpide :veden-korkeus}
+                                                                     {::toiminto/toimenpide :sulutus}]
+                                                     ::lt/alukset [ronsu-alus]}
+        tapahtumat [tapahtuma-yksi-sulutus tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys tapahtuma-sillan-avaus-vedenkorkeus-sulutus]
+        ]
+    (is (= (tiedot/laske-yhteenveto tapahtumat :tyhjennys nil nil) 1))))
+
+(deftest laske-yhteenveto-suunnat-ylos
+  (let [ronsu-alus {::lt-alus/suunta :ylos
+                    ::lt-alus/nimi "Ronsu"}
+        tapahtuma-yksi-sulutus {::lt/toiminnot [{::toiminto/toimenpide :sulutus}]
+                                ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys {::lt/toiminnot [{::toiminto/toimenpide :avaus}
+                                                                       {::toiminto/toimenpide :veden-korkeus}
+                                                                       {::toiminto/toimenpide :tyhjennys}]
+                                                       ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-sulutus {::lt/toiminnot [{::toiminto/toimenpide :avaus}
+                                                                     {::toiminto/toimenpide :veden-korkeus}
+                                                                     {::toiminto/toimenpide :sulutus}]
+                                                     ::lt/alukset [ronsu-alus]}
+        tapahtumat [tapahtuma-yksi-sulutus tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys tapahtuma-sillan-avaus-vedenkorkeus-sulutus]
+        ]
+    (is (= (tiedot/laske-yhteenveto tapahtumat :sulutus :ylos nil) 2))))
+
+(deftest laske-yhteenveto-suunnat-alas
+  (let [ronsu-alus {::lt-alus/suunta :ylos
+                    ::lt-alus/nimi "Ronsu"}
+        ransu-alus {::lt-alus/suunta :alas
+                    ::lt-alus/nimi "Ransu"}
+        tapahtuma-yksi-sulutus {::lt/toiminnot [{::toiminto/toimenpide :sulutus}]
+                                ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys {::lt/toiminnot [{::toiminto/toimenpide :avaus}
+                                                                       {::toiminto/toimenpide :veden-korkeus}
+                                                                       {::toiminto/toimenpide :tyhjennys}]
+                                                       ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-sulutus {::lt/toiminnot [{::toiminto/toimenpide :avaus}
+                                                                     {::toiminto/toimenpide :veden-korkeus}
+                                                                     {::toiminto/toimenpide :sulutus}]
+                                                     ::lt/alukset [ransu-alus]}
+        tapahtumat [tapahtuma-yksi-sulutus tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys tapahtuma-sillan-avaus-vedenkorkeus-sulutus]
+        ]
+    (is (= (tiedot/laske-yhteenveto tapahtumat :sulutus :alas nil) 1))))
+
+(deftest laske-yhteenveto-kaukopalvelut
+  (let [ronsu-alus {::lt-alus/suunta :ylos
+                    ::lt-alus/nimi "Ronsu"}
+        tapahtuma-yksi-sulutus {::lt/toiminnot [{::toiminto/palvelumuoto :kauko
+                                                 ::toiminto/toimenpide :sulutus}]
+                                ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys {::lt/toiminnot [{::toiminto/toimenpide :avaus}
+                                                                       {::toiminto/toimenpide :veden-korkeus}
+                                                                       {::toiminto/toimenpide :tyhjennys}]
+                                                       ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-sulutus {::lt/toiminnot [{::toiminto/toimenpide :avaus}
+                                                                     {::toiminto/toimenpide :veden-korkeus}
+                                                                     {::toiminto/toimenpide :sulutus}]
+                                                     ::lt/alukset [ronsu-alus]}
+        tapahtumat [tapahtuma-yksi-sulutus tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys tapahtuma-sillan-avaus-vedenkorkeus-sulutus]
+        ]
+    (is (= (tiedot/laske-yhteenveto tapahtumat :sulutus nil :kauko) 1))))
+
+(deftest laske-yhteenveto-paikallispalvelut
+  (let [ronsu-alus {::lt-alus/suunta :ylos
+                    ::lt-alus/nimi "Ronsu"}
+        tapahtuma-yksi-sulutus {::lt/toiminnot [{::toiminto/palvelumuoto :kauko
+                                                 ::toiminto/toimenpide :sulutus}]
+                                ::lt/alukset [ronsu-alus]}
+        tapahtuma-sulutus-paikallispalvelu {::lt/toiminnot [{::toiminto/palvelumuoto :paikallis
+                                                 ::toiminto/toimenpide :sulutus}]
+                                ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys {::lt/toiminnot [{::toiminto/toimenpide :avaus
+                                                                        ::toiminto/palvelumuoto :paikallis}
+                                                                       {::toiminto/toimenpide :veden-korkeus
+                                                                        ::toiminto/palvelumuoto :paikallis}
+                                                                       {::toiminto/toimenpide :tyhjennys
+                                                                        ::toiminto/palvelumuoto :paikallis}]
+                                                       ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-sulutus {::lt/toiminnot [{::toiminto/toimenpide :avaus}
+                                                                     {::toiminto/toimenpide :veden-korkeus}
+                                                                     {::toiminto/toimenpide :sulutus
+                                                                      ::toiminto/palvelumuoto :paikallis}]
+                                                     ::lt/alukset [ronsu-alus]}
+        tapahtumat [tapahtuma-yksi-sulutus
+                    tapahtuma-sulutus-paikallispalvelu
+                    tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys
+                    tapahtuma-sillan-avaus-vedenkorkeus-sulutus]
+        ]
+    (is (= (tiedot/laske-yhteenveto tapahtumat :sulutus nil :paikallis) 2))))
+
+(deftest laske-yhteenveto-itsepalvelut
+  (let [ronsu-alus {::lt-alus/suunta :ylos
+                    ::lt-alus/nimi "Ronsu"}
+        tapahtuma-yksi-sulutus {::lt/toiminnot [{::toiminto/palvelumuoto :itse
+                                                 ::toiminto/lkm 1
+                                                 ::toiminto/toimenpide :sulutus}]
+                                ::lt/alukset [ronsu-alus]}
+        tapahtuma-sulutus-paikallispalvelu {::lt/toiminnot [{::toiminto/palvelumuoto :paikallis
+                                                             ::toiminto/toimenpide :sulutus}]
+                                            ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys {::lt/toiminnot [{::toiminto/toimenpide :avaus
+                                                                        ::toiminto/palvelumuoto :itse
+                                                                        ::toiminto/lkm 100}
+                                                                       {::toiminto/toimenpide :veden-korkeus
+                                                                        ::toiminto/palvelumuoto :paikallis}
+                                                                       {::toiminto/toimenpide :tyhjennys
+                                                                        ::toiminto/palvelumuoto :paikallis}]
+                                                       ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-sulutus {::lt/toiminnot [{::toiminto/toimenpide :avaus}
+                                                                     {::toiminto/toimenpide :veden-korkeus}
+                                                                     {::toiminto/toimenpide :sulutus
+                                                                      ::toiminto/palvelumuoto :itse
+                                                                      ::toiminto/lkm 2}]
+                                                     ::lt/alukset [ronsu-alus]}
+        tapahtumat [tapahtuma-yksi-sulutus
+                    tapahtuma-sulutus-paikallispalvelu
+                    tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys
+                    tapahtuma-sillan-avaus-vedenkorkeus-sulutus]
+        ]
+    (is (= (tiedot/laske-yhteenveto tapahtumat :sulutus nil :itse) 3))))
+
+(deftest laske-yhteenveto-palvelutmuoto-muu
+  (let [ronsu-alus {::lt-alus/suunta :ylos
+                    ::lt-alus/nimi "Ronsu"}
+        tapahtuma-yksi-sulutus {::lt/toiminnot [{::toiminto/palvelumuoto :muu
+                                                 ::toiminto/lkm 1
+                                                 ::toiminto/toimenpide :sulutus}]
+                                ::lt/alukset [ronsu-alus]}
+        tapahtuma-sulutus-paikallispalvelu {::lt/toiminnot [{::toiminto/palvelumuoto :paikallis
+                                                             ::toiminto/toimenpide :sulutus}]
+                                            ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys {::lt/toiminnot [{::toiminto/toimenpide :avaus
+                                                                        ::toiminto/palvelumuoto :muu
+                                                                        ::toiminto/lkm 100}
+                                                                       {::toiminto/toimenpide :veden-korkeus
+                                                                        ::toiminto/palvelumuoto :paikallis}
+                                                                       {::toiminto/toimenpide :tyhjennys
+                                                                        ::toiminto/palvelumuoto :paikallis}]
+                                                       ::lt/alukset [ronsu-alus]}
+        tapahtuma-sillan-avaus-vedenkorkeus-sulutus {::lt/toiminnot [{::toiminto/toimenpide :avaus}
+                                                                     {::toiminto/toimenpide :veden-korkeus}
+                                                                     {::toiminto/toimenpide :sulutus
+                                                                      ::toiminto/palvelumuoto :muu
+                                                                      ::toiminto/lkm 2}]
+                                                     ::lt/alukset [ronsu-alus]}
+        tapahtumat [tapahtuma-yksi-sulutus
+                    tapahtuma-sulutus-paikallispalvelu
+                    tapahtuma-sillan-avaus-vedenkorkeus-tyhjennys
+                    tapahtuma-sillan-avaus-vedenkorkeus-sulutus]
+        ]
+    (is (= (tiedot/laske-yhteenveto tapahtumat :sulutus nil :muu) 2))))

@@ -95,7 +95,7 @@ töistään / työkokonaisuuksista, jotka tarkastamme ennen tilaajalle luovuttam
  2019),
 (7, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 5, '{10, 11, 12, 1, 2, 3, 4, 5}', 6, 0,
  'Talvihoidon pistokokeet',
- 'Teemme urakassa muuttuvissa keliolosuhteissa laadunseurantaa myös pistokokeina > 6 kertaa
+ 'Teemme urakassa muuttuvissa keliolosuhteissa laadunseurantaa myös pistokokeina ≥ 6 kertaa
  talvessa (esim. toimenpideajassa pysyminen, työn jälki, työmenetelmä, reagointikyky ja
  liukkaudentorjuntamateriaalien annosmäärät), joista kolme tehdään klo 20–06 välillä ja/tai
  viikonloppuisin. Laadimme jokaisesta pistokokeesta erillisen raportin ja luovutamme sen tilaajalle
