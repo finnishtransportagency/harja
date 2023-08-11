@@ -1380,18 +1380,19 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
         {:nimi "Juhannuspäivä" :pvm (ajan-muokkaus juhannusaatto true 1 :paiva)}
         {:nimi "Pyhäinpäivä" :pvm (loyda-ensimmainen-viikonpaiva-alkaen (luo-pvm-dec-kk vuosi 10 31) 6)}])))
 
-(defn lomapaivat-vuodelle
-  "Palauttaa kaikki Suomen viralliset lomapäivät annetulle vuodelle ISO8601 päivämäärinä."
-  [vuosi]
-  (map
-    (fn [{:keys [nimi pvm]}]
-      {:nimi nimi :pvm (df/unparse
-                         (df/formatter-local "yyyy-MM-dd")
-                         (suomen-aikavyohykkeeseen (joda-timeksi pvm)))})
-    (concat
-      (kiinteat-lomapaivat-vuodelle vuosi)
-      (paasiaiseen-liittyvat-lomapaivat-vuodelle vuosi)
-      (aikavaleista-poimittavat-lomapaivat-vuodelle vuosi))))
+#?(:clj
+   (defn lomapaivat-vuodelle
+     "Palauttaa kaikki Suomen viralliset lomapäivät annetulle vuodelle ISO8601 päivämäärinä."
+     [vuosi]
+     (map
+       (fn [{:keys [nimi pvm]}]
+         {:nimi nimi :pvm (df/unparse
+                            (df/formatter-local "yyyy-MM-dd")
+                            (suomen-aikavyohykkeeseen (joda-timeksi pvm)))})
+       (concat
+         (kiinteat-lomapaivat-vuodelle vuosi)
+         (paasiaiseen-liittyvat-lomapaivat-vuodelle vuosi)
+         (aikavaleista-poimittavat-lomapaivat-vuodelle vuosi)))))
 
 #?(:clj
    (defn seuraava-arkipaiva
