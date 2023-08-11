@@ -1425,3 +1425,10 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
              (t/to-time-zone paiva-johon-hypattiin alkuperainen-aikavyohyke)
              (recur paiva-johon-hypattiin)))))))
 
+
+(defn hoitokauden-vuodet-lyhynnetty
+  "Palauttaa hoitokauden [[1.10.2022] [30.9.2023]] muodossa 2022-23"
+  [hoitokausi]
+  (when (= 2 (count hoitokausi))
+    (str (vuosi (first hoitokausi)) "-"
+      (subs (str (vuosi (second hoitokausi))) 2 4))))
