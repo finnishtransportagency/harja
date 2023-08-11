@@ -59,6 +59,8 @@
 
 (deftest kirjaa-uusi-mainoslupa
   (let [db (luo-testitietokanta)
+        ;; Lisää väliaikaisesti kayttaja :lle tielupa -oikeudet tietokantaan
+        _ (u (format "update kayttaja set api_oikeus = 'tielupa' WHERE kayttajanimi = '%s'" kayttaja))
         tunniste 3453455
         tielupa-json (.replace (slurp "test/resurssit/api/tieluvan-kirjaus-mainoslupa.json") "<TUNNISTE>" (str tunniste))
         odotettu {::tielupa/tienpitoviranomainen-sahkopostiosoite "teijo.tienpitaja@example.com"
@@ -112,6 +114,8 @@
 
 (deftest kirjaa-uusi-suojaalue-lupa
   (let [db (luo-testitietokanta)
+        ;; Lisää väliaikaisesti kayttaja :lle tielupa -oikeudet tietokantaan
+        _ (u (format "update kayttaja set api_oikeus = 'tielupa' WHERE kayttajanimi = '%s'" kayttaja))
         tunniste 373773
         tielupa-json (.replace (slurp "test/resurssit/api/tieluvan-kirjaus-suojaalue.json") "<TUNNISTE>" (str tunniste))
         odotettu #:harja.domain.tielupa{:urakoitsija-yhteyshenkilo
@@ -177,6 +181,8 @@
 
 (deftest kirjaa-uusi-liittymalupalupa
   (let [db (luo-testitietokanta)
+        ;; Lisää väliaikaisesti kayttaja :lle tielupa -oikeudet tietokantaan
+        _ (u (format "update kayttaja set api_oikeus = 'tielupa' WHERE kayttajanimi = '%s'" kayttaja))
         tunniste 43858
         tielupa-json (.replace (slurp "test/resurssit/api/tieluvan-kirjaus-liittymalupa.json") "<TUNNISTE>" (str tunniste))
         odotettu #:harja.domain.tielupa{:urakoitsija-yhteyshenkilo
