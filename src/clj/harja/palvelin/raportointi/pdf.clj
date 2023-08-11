@@ -32,6 +32,8 @@
 (def raportin-tehostevari "#f0f0f0")
 (def korostettu-vari "#004D99")
 (def hennosti-korostettu-vari "#E0EDF9")
+(def varoitus-vari "#f8d7d1")
+(def huomio-vari "#FFF0BF")
 (def harmaa-korostettu-vari "#FAFAFA")
 
 (defmulti muodosta-pdf
@@ -182,7 +184,7 @@
 (defn- korostetaanko-hennosti
   "Yleisesti PDF:n solun formatointi asetetaan rivitasolla. Tällä funktiolla voidaan määrittää
   solutasoisia hentoja korostuksia, eli vaalean sinistä taustaa.
-  Käytetään soluelementille annettua hento-korostus-arvoa ensisijaisesti. Toissijaisesti käytetään riville annetta.
+  Käytetään soluelementille annettua hento-korostus-arvoa ensisijaisesti. Toissijaisesti käytetään riville annettua.
 
   'korosta-hennosti?' ensimmäinen parametri tulee rivitasolta.
   'arvo-datassa' on koko soluelementin sisältö ja jos sille on määritelty hento korostus, niin asettaan taustaväri."
@@ -200,6 +202,48 @@
      :color "black"}
     :else {}))
 
+(defn- korosta-varoitus
+  "Yleisesti PDF:n solun formatointi asetetaan rivitasolla. Tällä funktiolla voidaan määrittää
+  solutasoisia virheen korostuksia, eli vaalean punaista taustaa.
+  Käytetään soluelementille annettua varoitus?-arvoa ensisijaisesti. Toissijaisesti käytetään riville annettua.
+
+  'varoitus?' ensimmäinen parametri tulee rivitasolta.
+  'arvo-datassa' on koko soluelementin sisältö ja jos sille on määritelty varoituksen korostus, niin asettaan taustaväri."
+  [varoitus? arvo-datassa]
+  (cond
+    (and
+      (raportti-domain/raporttielementti? arvo-datassa)
+      (false? (:varoitus? (second arvo-datassa))))
+    {}
+    varoitus? varoitus?
+    (and
+      (raportti-domain/raporttielementti? arvo-datassa)
+      (:varoitus? (second arvo-datassa)))
+    {:background-color varoitus-vari
+     :color "black"}
+    :else {}))
+
+(defn- korosta-huomio
+  "Yleisesti PDF:n solun formatointi asetetaan rivitasolla. Tällä funktiolla voidaan määrittää
+  solutasoisia huomion korostuksia, eli vaalean keltaista taustaa.
+  Käytetään soluelementille annettua huomio?-arvoa ensisijaisesti. Toissijaisesti käytetään riville annettua.
+
+  'huomio?' ensimmäinen parametri tulee rivitasolta.
+  'arvo-datassa' on koko soluelementin sisältö ja jos sille on määritelty huomion korostus, niin asettaan taustaväri."
+  [huomio? arvo-datassa]
+  (cond
+    (and
+      (raportti-domain/raporttielementti? arvo-datassa)
+      (false? (:huomio? (second arvo-datassa))))
+    {}
+    huomio? huomio?
+    (and
+      (raportti-domain/raporttielementti? arvo-datassa)
+      (:huomio? (second arvo-datassa)))
+    {:background-color huomio-vari
+     :color "black"}
+    :else {}))
+
 (defn- taulukko-rivit [sarakkeet data viimeinen-rivi
                        {:keys [viimeinen-rivi-yhteenveto? korosta-rivit
                                oikealle-tasattavat-kentat] :as optiot}]
@@ -214,7 +258,9 @@
                 korosta-rivi? (:korosta? optiot)
                 valkoinen? (:valkoinen? optiot)
                 korosta-harmaa? (:korosta-harmaa? optiot)
-                korosta-hennosti? (:korosta-hennosti? optiot)]]
+                korosta-hennosti? (:korosta-hennosti? optiot)
+                varoitus? (:varoitus? optiot)
+                huomio? (:huomio? optiot)]]
       (if-let [otsikko (:otsikko optiot)]
         (taulukko-valiotsikko otsikko sarakkeet)
         (let [yhteenveto? (when (and viimeinen-rivi-yhteenveto?
@@ -234,6 +280,12 @@
               korosta-hennosti? (when korosta-hennosti?
                                   {:background-color hennosti-korostettu-vari
                                    :color "black"})
+              varoitus? (when varoitus?
+                          {:background-color varoitus-vari
+                           :color "black"})
+              huomio? (when huomio?
+                          {:background-color huomio-vari
+                           :color "black"})
               lihavoi? (when lihavoi-rivi?
                          {:font-weight "bold"})]
           [:fo:table-row
@@ -269,6 +321,8 @@
                                valkoinen?
                                korosta-harmaa?
                                (korostetaanko-hennosti korosta-hennosti? arvo-datassa)
+                               (korosta-varoitus varoitus? arvo-datassa)
+                               (korosta-huomio huomio? arvo-datassa)
                                lihavoi?)
               (when korosta?
                 [:fo:block {:space-after "0.2em"}])
