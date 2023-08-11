@@ -1,6 +1,5 @@
 (ns harja.domain.tierekisteri.tietolajit
   (:require [clojure.string :as str]
-            [taoensso.timbre :as log]
             [harja.tyokalut.merkkijono :as merkkijono]
             [clojure.string :as str]
             [clojure.set :as set]
