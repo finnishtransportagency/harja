@@ -12,7 +12,8 @@
             [clj-time.coerce :as c]
             [clj-time.core :as time]
             [harja.pvm :as pvm]
-            [harja.palvelin.raportointi.excel :as excel]))
+            [harja.palvelin.raportointi.excel :as excel]
+            [harja.palvelin.palvelut.budjettisuunnittelu :as bs]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -277,3 +278,24 @@
   (is (= "AC" (excel/parsi-sarakekirjain "AC12")) "AC12 parsitaan AC")
   (is (= "ACHHHH" (excel/parsi-sarakekirjain "ACHHHH12")) "ACHHHH12 parsitaan ACHHHH")
   (is (= "G" (excel/parsi-sarakekirjain "G665")) "G665 parsitaan G"))
+
+(deftest indeksikertoimet-oulun-mhu
+  (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        db (luo-testitietokanta)
+        indeksikertoimet (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id urakka-id})]
+
+    (is (= (yleinen/urakan-hoitokauden-indeksikerroin {:indeksikertoimet indeksikertoimet
+                                                       :hoitokausi (pvm/paivamaaran-hoitokausi (pvm/->pvm (str "02.10." 2019)))})
+          [:teksti "Hoitokauden 2019-20 indeksikerroin: 1,081"]))
+    (is (= (yleinen/urakan-hoitokauden-indeksikerroin {:indeksikertoimet indeksikertoimet
+                                                       :hoitokausi (pvm/paivamaaran-hoitokausi (pvm/->pvm (str "02.10." 2020)))})
+          [:teksti "Hoitokauden 2020-21 indeksikerroin: 1,171"]))
+    (is (= (yleinen/urakan-hoitokauden-indeksikerroin {:indeksikertoimet indeksikertoimet
+                                                       :hoitokausi (pvm/paivamaaran-hoitokausi (pvm/->pvm (str "02.10." 2021)))})
+          [:teksti "Hoitokauden 2021-22 indeksikerroin: 1,261"]))
+    (is (= (yleinen/urakan-hoitokauden-indeksikerroin {:indeksikertoimet indeksikertoimet
+                                                       :hoitokausi (pvm/paivamaaran-hoitokausi (pvm/->pvm (str "02.10." 2022)))})
+          [:teksti "Hoitokauden 2022-23 indeksikerroin: 1,352"]))
+    (is (= (yleinen/urakan-hoitokauden-indeksikerroin {:indeksikertoimet indeksikertoimet
+                                                       :hoitokausi (pvm/paivamaaran-hoitokausi (pvm/->pvm (str "02.10." 2023)))})
+          [:teksti "Hoitokauden 2023-24 indeksikerroin: ei saatavilla"]))))
