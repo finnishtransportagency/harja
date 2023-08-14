@@ -53,8 +53,13 @@
                          (pos? (Integer/parseInt %))
                          (pos? %))))
 (s/def ::urakka-id #(and (string? %) (not (nil? (konversio/konvertoi->int %))) (pos? (konversio/konvertoi->int %))))
-(s/def ::alkuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
-(s/def ::loppuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
+(s/def ::alkuaika #(and (string? %) (>= (count %) 20) (or
+                                                        (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))
+                                                        (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muotoZ) %))
+                                                        )))
+(s/def ::loppuaika #(and (string? %) (>= (count %) 20) (or
+                                                         (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))
+                                                         (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muotoZ) %)))))
 
 (defn- tarkista-haun-parametrit [parametrit rajoita]
   (parametrivalidointi/tarkista-parametrit
