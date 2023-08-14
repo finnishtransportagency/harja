@@ -41,9 +41,6 @@
 (def +tielupien-haku-vastaus+ "api/schemas/tielupien-haku-response.schema.json")
 (def tielupien-haku-vastaus (tee-validaattori "api/schemas/tielupien-haku-response.schema.json"))
 
-(def +tietolajien-haku+ "api/schemas/tietolajien-haku-response.schema.json")
-(def tietolajien-haku (tee-validaattori "api/schemas/tietolajien-haku-response.schema.json"))
-
 (def +siltatarkastuksen-kirjaus+ "api/schemas/siltatarkastuksen-kirjaus-request.schema.json")
 (def siltatarkastuksen-kirjaus (tee-validaattori "api/schemas/siltatarkastuksen-kirjaus-request.schema.json"))
 (def +siltatarkastuksen-poisto+ "api/schemas/tarkastuksen-poisto-request.schema.json")

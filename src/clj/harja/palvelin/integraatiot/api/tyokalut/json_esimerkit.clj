@@ -28,8 +28,6 @@
 (def +tielupien-haku+ "api/examples/tielupien-haku-request.json")
 (def +tielupien-haku-vastaus+ "api/examples/tielupien-haku-response.json")
 
-(def +tietolajien-haku+ "api/examples/tietolajien-haku-response.json")
-
 (def +tiestotarkastuksen-kirjaus+ "api/examples/tiestotarkastuksen-kirjaus-request.json")
 (def +tiestotarkastuksen-poisto+ "api/examples/tiestotarkastuksen-poisto-request.json")
 (def +soratietarkastuksen-kirjaus+ "api/examples/soratietarkastuksen-kirjaus-request.json")

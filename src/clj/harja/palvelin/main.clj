@@ -25,7 +25,6 @@
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
-    [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
     [harja.palvelin.integraatiot.digiroad.digiroad-komponentti :as digiroad-integraatio]
     [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
@@ -127,7 +126,6 @@
     [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
     [harja.palvelin.integraatiot.api.tyokoneenseuranta :as api-tyokoneenseuranta]
     [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
-    [harja.palvelin.integraatiot.api.varusteet :as api-varusteet]
     [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
     [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
     [harja.palvelin.integraatiot.api.ping :as api-ping]
@@ -294,13 +292,6 @@
                 :api-sahkoposti :api-sahkoposti
                 :labyrintti :labyrintti})
 
-      ;; Tierekisteri
-      :tierekisteri (let [asetukset (:tierekisteri asetukset)]
-                      (component/using
-                        (tierekisteri/->Tierekisteri (:url asetukset)
-                                                     (:uudelleenlahetys-aikavali-minuutteina asetukset))
-                        [:db :integraatioloki]))
-
       ;; Didiroad integraatio
       :digiroad-integraatio (component/using
                               (digiroad-integraatio/->Digiroad (:digiroad asetukset))
@@ -395,7 +386,7 @@
                 [:http-palvelin :db :pdf-vienti :excel-vienti])
       :toteumat (component/using
                   (toteumat/->Toteumat)
-                  [:http-palvelin :db :db-replica :karttakuvat :tierekisteri])
+                  [:http-palvelin :db :db-replica :karttakuvat])
       :kustannusten-seuranta (component/using
                                (kustannusten-seuranta/->KustannustenSeuranta)
                                [:http-palvelin :db :db-replica :excel-vienti])
@@ -676,9 +667,6 @@
       :api-suolasakkojen-lahetys (component/using
                                    (suolasakkojen-lahetys/->SuolasakkojenLahetys)
                                    [:db])
-      :api-varusteet (component/using
-                       (api-varusteet/->Varusteet)
-                       [:http-palvelin :db :integraatioloki :tierekisteri])
       :api-ilmoitukset (component/using
                          (api-ilmoitukset/->Ilmoitukset)
                          [:http-palvelin :db :integraatioloki

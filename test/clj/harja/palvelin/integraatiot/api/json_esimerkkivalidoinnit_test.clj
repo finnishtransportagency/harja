@@ -29,8 +29,6 @@
   (is (nil? (validoi json-skeemat/tielupien-haku json-esimerkit/+tielupien-haku+)))
   (is (nil? (validoi json-skeemat/tielupien-haku-vastaus json-esimerkit/+tielupien-haku-vastaus+)))
 
-  (is (nil? (validoi json-skeemat/tietolajien-haku json-esimerkit/+tietolajien-haku+)))
-
   (is (nil? (validoi json-skeemat/siltatarkastuksen-kirjaus json-esimerkit/+siltatarkastuksen-kirjaus+)))
   (is (nil? (validoi json-skeemat/siltatarkastuksen-poisto json-esimerkit/+siltatarkastuksen-poisto+)))
   (is (nil? (validoi json-skeemat/tiestotarkastuksen-kirjaus json-esimerkit/+tiestotarkastuksen-kirjaus+)))

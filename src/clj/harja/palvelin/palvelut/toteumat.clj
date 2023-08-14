@@ -6,17 +6,14 @@
             [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
-            [harja.domain.skeema :refer [Toteuma validoi]]
             [clojure.java.jdbc :as jdbc]
-            [slingshot.slingshot :refer [throw+ try+]]
+            [slingshot.slingshot :refer [throw+]]
 
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.kyselyt.materiaalit :as materiaalit-q]
             [harja.kyselyt.muutoshintaiset-tyot :as mht-q]
             [harja.kyselyt.sopimukset :as sopimukset-q]
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-kyselyt]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.geometriapaivitykset :as geometriat-q]
             [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-q]
 
@@ -26,20 +23,12 @@
             [harja.domain.toteuma :as toteuma]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
-            [harja.transit :as transit]
             [clojure.core.async :as async]
             [harja.id :as id]
             [harja.pvm :as pvm]
-            [harja.domain.tierekisteri.tietolajit :as tietolajit]
-            [harja.tyokalut.functor :as functor]
-            [harja.kyselyt.livitunnisteet :as livitunnisteet]
-            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.domain.roolit :as roolit]
             [harja.palvelin.palvelut.interpolointi :as interpolointi]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [specql.core :refer [fetch update! insert! upsert! delete!]]
-            [specql.core :as specql]
-            [harja.fmt :as fmt]))
+            [specql.core :refer [fetch update! upsert!]]))
 
 (defn geometriaksi [reitti]
   (when reitti (geo/geometry (geo/clj->pg reitti))))
@@ -854,34 +843,20 @@
                                                                                       sopimus)))))
 
 (defn varustetoteuma-xf
-  "Palauttaa transducerin tietokannasta haettavien varustetoteumien muuntamiseen.
-  Tierekisteri tarvitaan parametrina muuntamaan varusteiden arvot. "
-  ([] (varustetoteuma-xf nil))
-  ([tierekisteri]
-   (comp
-     (map #(assoc % :tyyppi-kartalla :varustetoteuma))
-     (map #(konv/string->keyword % :toimenpide))
-     (map #(konv/string->keyword % :toteumatyyppi))
-     (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+  "Palauttaa transducerin tietokannasta haettavien varustetoteumien muuntamiseen."
+  []
+  (comp
+    (map #(assoc % :tyyppi-kartalla :varustetoteuma))
+    (map #(konv/string->keyword % :toimenpide))
+    (map #(konv/string->keyword % :toteumatyyppi))
+    (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
 
-     (if (nil? tierekisteri)
-       (map identity)
-       (map #(try+
-               (assoc % :arvot (tietolajit/validoi-ja-muunna-merkkijono-arvoiksi
-                                 tierekisteri
-                                 (:arvot %)
-                                 (:tietolaji %)))
-               (catch [:type virheet/+virhe-tietolajin-arvojen-kasittelyssa+] {:keys [virheet]}
-                 (assoc % :arvot {:virhe virheet}))
-               (catch [:type virheet/+virhe-tietolajin-arvojen-versiossa+] {:keys [virheet]}
-                 (assoc % :arvot {:virhe virheet})))))
-     (map konv/alaviiva->rakenne))))
+    (map konv/alaviiva->rakenne)))
 
-(defn hae-urakan-varustetoteumat [tierekisteri db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero tietolajit] :as hakuehdot}]
+(defn hae-urakan-varustetoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero tietolajit] :as hakuehdot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Haetaan varustetoteumat: " urakka-id sopimus-id alkupvm loppupvm tienumero)
   (let [toteumat (into []
-                       (varustetoteuma-xf tierekisteri)
                        (toteumat-q/hae-urakan-varustetoteumat
                          db
                          {:urakka             urakka-id
@@ -920,102 +895,6 @@
                :toteuma         toteuma-id
                :pvm             nil
                :toimenpidekoodi nil}))))
-
-(defn luo-tai-paivita-varustetoteuma [tierekisteri db user
-                                      {:keys [id urakka-id arvot sijainti puoli
-                                              ajorata tierekisteriosoite lisatieto
-                                              tietolaji toiminto
-                                              alkupvm loppupvm kuntoluokitus uusi-liite
-                                              tunniste]
-                                       :as   toteuma}]
-  (jdbc/with-db-transaction [db db]
-                            (let [nyt (pvm/nyt)
-                                  sijainti
-                                  (cond
-                                    (not (nil? sijainti)) (geo/geometry (geo/clj->pg sijainti))
-                                    (not (nil? tierekisteriosoite)) (geo/geometry (geo/clj->pg (tr-q/hae-tr-viiva db tierekisteriosoite)))
-                                    :else nil)
-                                  toiminto (name toiminto)
-                                  tunniste (if (and (= toiminto "lisatty") (not tunniste))
-                                             (livitunnisteet/hae-seuraava-livitunniste db)
-                                             tunniste)
-                                  arvot (functor/fmap str (assoc arvot :tunniste tunniste))
-                                  arvot (tietolajit/validoi-ja-muunna-arvot-merkkijonoksi tierekisteri arvot tietolaji)
-
-                                  elynro (:elynumero (first (urakat-q/hae-urakan-ely db urakka-id)))
-                                  sopimus-id (:id (first (sopimukset-q/hae-urakan-paasopimus db urakka-id)))
-                                  karttapvm (or (geometriat-q/hae-karttapvm db) nyt)
-                                  toteuma-id (when id (:toteuma (first (toteumat-q/hae-varustetoteuma db {:id id}))))
-                                  toteuma-id (if (and id toteuma-id)
-                                               (do
-                                                 (toteumat-q/paivita-toteuma<! db
-                                                                               {:alkanut       nyt
-                                                                                :paattynyt     nyt
-                                                                                :tyyppi        "kokonaishintainen"
-                                                                                :kayttaja      (:id user)
-                                                                                :suorittaja    (str (:etunimi user) " " (:sukunimi user))
-                                                                                :ytunnus       (get-in user [:organisaatio :ytunnus])
-                                                                                :lisatieto     lisatieto
-                                                                                :numero        nil
-                                                                                :alkuosa       nil
-                                                                                :alkuetaisyys  nil
-                                                                                :loppuosa      nil
-                                                                                :loppuetaisyys nil
-                                                                                :id            toteuma-id
-                                                                                :urakka        urakka-id})
-                                                 toteuma-id)
-                                               (toteumat-q/luo-uusi-toteuma db
-                                                                            {:urakka              urakka-id
-                                                                             :sopimus             sopimus-id
-                                                                             :alkanut             nyt
-                                                                             :paattynyt           nyt
-                                                                             :tyyppi              "kokonaishintainen"
-                                                                             :kayttaja            (:id user)
-                                                                             :suorittaja          (str (:etunimi user) " " (:sukunimi user))
-                                                                             :ytunnus             (get-in user [:organisaatio :ytunnus])
-                                                                             :lisatieto           lisatieto
-                                                                             :ulkoinen_id         nil
-                                                                             :reitti              sijainti
-                                                                             :numero              nil
-                                                                             :alkuosa             nil
-                                                                             :alkuetaisyys        nil
-                                                                             :loppuosa            nil
-                                                                             :loppuetaisyys       nil
-                                                                             :lahde               "harja-ui"
-                                                                             :tyokonetyyppi       nil
-                                                                             :tyokonetunniste     nil
-                                                                             :tyokoneen-lisatieto nil}))
-                                  varustetoteuma {:id                      id
-                                                  :tunniste                tunniste
-                                                  :toteuma                 toteuma-id
-                                                  :toimenpide              toiminto
-                                                  :tietolaji               tietolaji
-                                                  :arvot                   arvot
-                                                  :karttapvm               karttapvm
-                                                  :alkupvm                 alkupvm
-                                                  :loppupvm                loppupvm
-                                                  :piiri                   elynro
-                                                  :kuntoluokka             kuntoluokitus
-                                                  :tierekisteriurakkakoodi (:tierekisteriurakkakoodi arvot)
-                                                  :kayttaja                (:id user)
-                                                  :tr_numero               (:numero tierekisteriosoite)
-                                                  :tr_alkuosa              (:alkuosa tierekisteriosoite)
-                                                  :tr_alkuetaisyys         (:alkuetaisyys tierekisteriosoite)
-                                                  :tr_loppuosa             (:loppuosa tierekisteriosoite)
-                                                  :tr_loppuetaisyys        (:loppuetaisyys tierekisteriosoite)
-                                                  :tr_puoli                puoli
-                                                  :tr_ajorata              ajorata
-                                                  :sijainti                sijainti}
-                                  id (if id
-                                       (do
-                                         ;; TODO Kuuluu urakkaan?
-                                         (toteumat-q/paivita-varustetoteuma! db varustetoteuma)
-                                         id)
-                                       (:id (toteumat-q/luo-varustetoteuma<! db varustetoteuma)))]
-                              (when uusi-liite
-                                (toteumat-q/tallenna-liite-toteumalle<! db toteuma-id (:id uusi-liite)))
-                              id)))
-
 
 (defn hae-toteuman-reitti-ja-tr-osoite [db user {:keys [id urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
@@ -1130,7 +1009,6 @@
            db           :db
            db-replica   :db-replica
            karttakuvat  :karttakuvat
-           tierekisteri :tierekisteri
            :as          this}]
     (assert (some? db-replica))
     (when karttakuvat
@@ -1217,7 +1095,7 @@
           (hae-kokonaishintaisen-toteuman-tiedot db-replica user urakka-id pvm toimenpidekoodi)))
       :urakan-varustetoteumat
       (fn [user tiedot]
-        (hae-urakan-varustetoteumat tierekisteri db-replica user tiedot))
+        (hae-urakan-varustetoteumat db-replica user tiedot))
       :hae-toteuman-reitti-ja-tr-osoite
       (fn [user tiedot]
         (hae-toteuman-reitti-ja-tr-osoite db-replica user tiedot))
@@ -1259,6 +1137,7 @@
       :urakan-varustetoteumat
       :hae-toteuman-reitti-ja-tr-osoite
       :siirry-toteuma
+      :tallenna-varustetoteuma
       :hae-toteumien-reitit
       :hae-toteuman-liitteet)
     this))

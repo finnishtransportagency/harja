@@ -8,13 +8,6 @@
 (defn validoi [xsd-polku skeematiedosto esimerkkipolku]
   (xml/validi-xml? xsd-polku skeematiedosto (slurp (io/resource esimerkkipolku))))
 
-(deftest validoi-tierekisteri-xmlsanomat
-  (let [xsd-polku "xsd/tierekisteri/skeemat/"]
-    (is (true? (validoi xsd-polku "haeTietolaji.xsd" xml-esimerkit/+hae-tietolaji-request+)))
-    (is (true? (validoi xsd-polku "vastaus.xsd" xml-esimerkit/+ok-vastaus-response+)))
-    (is (true? (validoi xsd-polku "vastaus.xsd" xml-esimerkit/+virhe-vastaus-tietolajia-ei-loydy-response+)))
-    (is (true? (validoi xsd-polku "vastaus.xsd" xml-esimerkit/+virhe-vastaus-tietuetta-ei-loydy-response+)))))
-
 (deftest validoi-tloik-xmlsanomat
          (let [xsd-polku "xsd/tloik/"]
               (is (true? (validoi xsd-polku "harja-tloik.xsd" xml-esimerkit/+ilmoitus+)))

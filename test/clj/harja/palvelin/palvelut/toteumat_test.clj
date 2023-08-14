@@ -573,21 +573,6 @@
       (is (= sopimuksen-kaytetty-mat-jalkeen-odotettu sopimuksen-mat-kaytto-jalkeen ) "sopimuksen materiaalin käyttö cache jalkeen muutoksen")
       (is (= hoitoluokittaiset-jalkeen-odotettu hoitoluokittaiset-jalkeen ) "hoitoluokittaisten cache jalkeen muutoksen"))))
 
-(deftest varustetoteumat-haettu-oikein
-  (let [alkupvm (pvm/luo-pvm 2005 9 1)
-        loppupvm (pvm/luo-pvm 2017 10 30)
-        hae-tietolaji-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))
-        varustetoteumat (with-fake-http [(str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-xml]
-                                        (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                        :urakan-varustetoteumat +kayttaja-jvh+
-                                                        {:urakka-id  @oulun-alueurakan-2005-2010-id
-                                                         :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
-                                                         :alkupvm    alkupvm
-                                                         :loppupvm   loppupvm
-                                                         :tietolajit (into #{} (keys varusteet-domain/tietolaji->selitys))}))]
-    (is (>= (count varustetoteumat) 3))
-    (is (contains? (first varustetoteumat) :sijainti))))
-
 (deftest kokonaishintaisen-toteuman-siirtymatiedot
   (let [toteuma-id (ffirst (q "SELECT id FROM toteuma WHERE urakka = 2 AND lisatieto = 'Tämä on käsin tekaistu juttu'"))
         tehtava-id (ffirst (q "SELECT id FROM tehtava WHERE nimi = 'Auraus ja sohjonpoisto';"))

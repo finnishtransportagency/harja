@@ -1,9 +1,5 @@
 (ns harja.palvelin.integraatiot.api.tyokalut.xml-esimerkit)
 
-(def +hae-tietolaji-request+ "xsd/tierekisteri/esimerkit/hae-tietolaji-request.xml")
-(def +ok-vastaus-response+ "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml")
-(def +virhe-vastaus-tietolajia-ei-loydy-response+ "xsd/tierekisteri/esimerkit/virhe-vastaus-tietolajia-ei-loydy-response.xml")
-(def +virhe-vastaus-tietuetta-ei-loydy-response+ "xsd/tierekisteri/esimerkit/virhe-vastaus-tietuetta-ei-loydy-response.xml")
 (def +ilmoitus+ "xsd/tloik/esimerkit/ilmoitus.xml")
 (def +ilmoitustoimenpide+ "xsd/tloik/esimerkit/ilmoitustoimenpide.xml")
 (def +harja-kuittaus+ "xsd/tloik/esimerkit/harja-kuittaus.xml")

@@ -124,13 +124,7 @@
 
 (defn kasittele-alkutila [e! {:keys [uudet-varustetoteumat muokattava-varuste naytettava-varuste]}]
   (when uudet-varustetoteumat
-    (e! (v/->VarustetoteumatMuuttuneet uudet-varustetoteumat)))
-
-  (when muokattava-varuste
-    (e! (v/->UusiVarusteToteuma :paivitetty muokattava-varuste)))
-
-  (when naytettava-varuste
-    (e! (v/->UusiVarusteToteuma :nayta naytettava-varuste))))
+    (e! (v/->VarustetoteumatMuuttuneet uudet-varustetoteumat))))
 
 (defn- varusteet* [e! _]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))

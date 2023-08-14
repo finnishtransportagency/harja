@@ -57,77 +57,11 @@
    "Viherkuviot" "tl524"
    "Tekninen piste" "tl523"})
 
-(def puolet
-  {0 "Määrittämätön"
-   1 "Oikea"
-   2 "Vasen"
-   3 "Ajoratojen välissä (ajosuuntia erottavalla keskialueella)"
-   7 "Tien päässä"
-   8 "Keskellä (ajoradalla tai sen yläpuolella)"
-   9 "Tien päällä"})
-
-(defn puoli->selitys
-  [puoli]
-  (get puolet puoli))
-
-(defn tien-puolellinen-tietolaji? [tietolaji]
-  ;; Kaikki tietolajit ovat nyt puolellisia.
-  true)
-
-(defn tarkastaminen-sallittu? [tietolaji]
-  (nil? (#{"tl524" "tl523"} tietolaji)))
-
-(defn muokkaaminen-sallittu? [tietolaji]
-  (nil? (#{"tl523"} tietolaji)))
-
-(defn muokattavat-tietolajit []
-  (filter #(muokkaaminen-sallittu? (first %)) tietolaji->selitys))
-
 (def oletus-ajoradat
   [0])
 
 (def kaikki-ajoradat
   [0 1 2])
-
-(defn kiinnostaa-listauksessa?
-  [ominaisuus]
-  (let [tunniste (:kenttatunniste (:ominaisuus ominaisuus))]
-    (and (not (#{"x" "y" "z" "urakka"} tunniste))
-         (not (re-matches #".*tunn" tunniste)))))
-
-(defn varusteen-liikennemerkki-skeema
-  [tietolaji]
-  (let [ominaisuudet (get-in tietolaji [:tietolaji :ominaisuudet])
-        liikennemerkki (:ominaisuus (first (filter #(= (get-in % [:ominaisuus :kenttatunniste]) "asetusnr") ominaisuudet)))
-        asetusnr->teksti (fn [numero]
-                           (:selite (first (filter #(= (str (:koodi %)) numero) (:koodisto liikennemerkki)))))]
-    {:otsikko "Liikennemerkki"
-     :tyyppi :string
-     :hae (fn [rivi]
-            (let [numero (get-in rivi [:varuste :tietue :tietolaji :arvot "asetusnr"])]
-              (str numero " - " (asetusnr->teksti numero))))
-     :leveys 2}))
-
-(def varusteen-perustiedot-skeema
-  [{:otsikko "Tietolaji"
-    :tyyppi :tunniste
-    :hae #(let [tietolaji (get-in % [:varuste :tietue :tietolaji :tunniste])]
-            (str (tietolaji->selitys tietolaji) " (" tietolaji ")"))
-    :leveys 1}
-   {:otsikko "Tunniste"
-    :tyyppi :tunniste
-    :hae (comp :tunniste :varuste)
-    :leveys 1}
-   {:otsikko "Tieosoite"
-    :tyyppi :tierekisteriosoite
-    :hae (comp :tie :sijainti :tietue :varuste)
-    :fmt tr/tierekisteriosoite-tekstina
-    :leveys 1}
-   {:otsikko "Puoli"
-    :tyyppi :string
-    :hae #(let [puoli (get-in % [:varuste :tietue :sijainti :tie :puoli])]
-            (str puoli " - " (puoli->selitys puoli)))
-    :leveys 1}])
 
 (defn parsi-luku [s]
   #?(:cljs (js/parseInt s)
@@ -152,24 +86,12 @@
    :muokattava? #(and (not (= "tunniste" (:kenttatunniste ominaisuus))) muokattava?)
    :pituus-max (:pituus ominaisuus)})
 
-(defn tietolajin-koodi-voimassa? [koodi]
-  (if-let [{alkupvm :alkupvm loppupvm :loppupvm} (:voimassaolo koodi)]
-    (cond
-      (and alkupvm loppupvm) (t/within? (t/interval alkupvm loppupvm) (t/now))
-      alkupvm (t/after? (t/now) alkupvm)
-      loppupvm (t/before? (t/now) loppupvm)
-      :else true)
-    true))
-
 (defmethod varusteominaisuus->skeema :koodisto
   [{ominaisuus :ominaisuus} muokattava?]
   (let [koodisto (map #(assoc % :selite (str/capitalize (:selite %))
                                 :koodi (str (:koodi %)))
                       (:koodisto ominaisuus))
         ;; vanhat arvot saa näyttää vanhoille varusteille, mutta niitä ei saa käyttää muokatessa
-        koodisto (if muokattava?
-                   (filter tietolajin-koodi-voimassa? koodisto)
-                   koodisto)
         hae-selite (fn [arvo]
                      (some #(when (= (:koodi %) arvo)
                               (str (:koodi %) " " (:selite %)))

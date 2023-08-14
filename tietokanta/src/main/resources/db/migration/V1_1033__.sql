@@ -8,12 +8,6 @@ WHERE (jarjestelma = 'api'
                  'hae-tietueet',
                  'lisaa-tietue',
                  'paivita-tietue',
-                 'poista-tietue'))
-   OR (jarjestelma = 'tierekisteri'
-    AND nimi IN (
-                 'hae-tietue',
-                 'hae-tietueet',
-                 'hae-urakan-tietueet',
-                 'lisaa-tietue',
-                 'paivita-tietue',
-                 'poista-tietue'));
+                 'poista-tietue',
+                 'hae-tietolaji'))
+   OR (jarjestelma = 'tierekisteri');
