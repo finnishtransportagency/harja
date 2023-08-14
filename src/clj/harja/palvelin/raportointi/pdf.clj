@@ -35,8 +35,8 @@
 (def harmaa-korostettu-vari "#FAFAFA")
 (def harmaa-himmennys-vari "#858585")
 (def valiotsikko-tumma-vari "#e1e1e1")
-(def yhteenveto-tuma-vari "#fafafa")
-(def varoitus-punaine-vari "#dd0000")
+(def yhteenveto-tumma-vari "#fafafa")
+(def varoitus-punainen-vari "#dd0000")
 
 (defmulti muodosta-pdf
           "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
@@ -227,7 +227,7 @@
         (taulukko-valiotsikko otsikko sarakkeet)
         (let [yhteenveto? (when (and viimeinen-rivi-yhteenveto?
                                      (= viimeinen-rivi rivi))
-                            {:background-color yhteenveto-tuma-vari
+                            {:background-color yhteenveto-tumma-vari
                              :border (str "solid 0.3mm " raportin-tehostevari)
                              :font-weight "bold"})
               korosta? (when (or korosta-rivi? (some #(= i-rivi %) korosta-rivit))
@@ -486,7 +486,7 @@
               :font-weight "bold"} teksti])
 
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
-  (muodosta-pdf [:teksti teksti {:vari varoitus-punaine-vari}]))
+  (muodosta-pdf [:teksti teksti {:vari varoitus-punainen-vari}]))
 
 (defmethod muodosta-pdf :infolaatikko [[_ teksti {:keys [tyyppi toissijainen-viesti leveys rivita?]}]]
   ;; TODO: Infolaatikon renderöintiä ei toistaiseksi tueta. Toteutetaan, jos tarve ilmenee.
