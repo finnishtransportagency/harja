@@ -14,11 +14,7 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
        LEFT JOIN tyomaapaivakirja t ON t.paivamaara = d::DATE AND t.urakka_id = :urakka-id
        JOIN urakka u ON u.id = :urakka-id
        LEFT JOIN tyomaapaivakirja_kommentti tk ON t.id = tk.tyomaapaivakirja_id AND tk.poistettu = false 
-       LEFT JOIN (SELECT versio, tyomaapaivakirja_id FROM tyomaapaivakirja_kalusto ORDER BY versio DESC limit 1) t_kalusto 
-       ON t.id = t_kalusto.tyomaapaivakirja_id
- GROUP BY t.id, u.nimi, d, t_kalusto.versio
- ORDER BY paivamaara ASC;
-
+ GROUP BY t.id, u.nimi, d ORDER BY paivamaara ASC;
 
 -- name: hae-paivakirja
 SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi", t.versio, t.paivamaara::DATE,
