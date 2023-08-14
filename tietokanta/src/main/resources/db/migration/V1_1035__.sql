@@ -79,6 +79,6 @@ INSERT INTO tehtava (nimi, emo, yksikko, suunnitteluyksikko, tehtavaryhma, jarje
 VALUES ('Ojitus', (select id from toimenpide where koodi = '23124'), 'jkm', 'jkm',
         (select id from tehtavaryhma where nimi = 'Avo-ojitus, soratiet (Z)'), 551, '{kokonaishintainen}', TRUE, NULL,
         'ojitus', TRUE, TRUE, current_timestamp, (select id from kayttaja where kayttajanimi = 'LX377737'));
-UPDATE tehtava SET api_tunnus = id WHERE nimi = 'Päällystettyjen teiden pölynsidonta (jkm)';
+UPDATE tehtava SET api_tunnus = id WHERE nimi = 'Ojitus';
 
 
