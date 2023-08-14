@@ -8,7 +8,8 @@
             [taoensso.timbre :as log]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.palvelin.palvelut.budjettisuunnittelu :as bs]))
 
 (def summa-fmt fmt/euro-opt)
 
@@ -185,7 +186,7 @@
         valittu-aikavali? (= aikarajaus :valittu-aikakvali)
         ;; Ei käytetä kk-väliä jos oma aikaväli valittuna
         kyseessa-kk-vali? (if valittu-aikavali? false kyseessa-kk-vali?)
-
+        kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
         ;; Kun koko hoitokausi on valittu ja loppupvm on myöhemmin kuin kuluva päivä, käytetään kuluvaa päivää
         ;; Muuten laskutusyhteenveto alkaa "ennustamaan" kustannuksia tulevaisuudesta.
         parametrit (assoc parametrit :haun-loppupvm (if (and
@@ -195,7 +196,7 @@
                                                       loppupvm))
 
         ;; Jos käytetään valittua aikaväliä, näytetään vain "Määrä" -otsikko
-        laskutettu-teksti (if (= aikarajaus :valittu-aikakvali) "Määrä" laskutettu-teksti)
+        laskutettu-teksti (if (= aikarajaus :valittu-aikavali) "Määrä" laskutettu-teksti)
 
         ;; Konteksti ja urakkatiedot
         konteksti (cond urakka-id :urakka
@@ -212,7 +213,6 @@
                     :hallintayksikkoid hallintayksikko-id
                     :urakkaid urakka-id
                     :urakkatyyppi (name (:urakkatyyppi parametrit))})
-
         urakoiden-parametrit (mapv #(assoc parametrit :urakka-id (:id %)
                                            :urakka-nimi (:nimi %)
                                            :indeksi (:indeksi %)
@@ -226,7 +226,8 @@
                                                   :urakkatyyppi (:urakkatyyppi urakan-parametrit))
                                           (lyv-yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
                                   urakoiden-parametrit)
-
+        perusluku (when urakka-id (:perusluku (ffirst laskutusyhteenvedot)))
+        indeksikertoimet (when urakka-id (bs/hae-urakan-indeksikertoimet db user {:urakka-id urakka-id}))
         [hk-alkupvm hk-loppupvm] (if (or (pvm/kyseessa-kk-vali? alkupvm loppupvm)
                                          (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm))
                                    ;; jos kyseessä vapaa aikaväli, lasketaan vain yksi sarake joten
@@ -241,6 +242,11 @@
     [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")
                 :otsikon-koko :iso}
      [:otsikko-heading-small (str alueen-nimi)]
+     (when perusluku
+       (yleinen/urakan-indlask-perusluku {:perusluku perusluku}))
+     (when (or kyseessa-hoitokausi-vali? kyseessa-kk-vali?)
+       (yleinen/urakan-hoitokauden-indeksikerroin {:indeksikertoimet indeksikertoimet
+                                                   :hoitokausi (pvm/paivamaaran-hoitokausi alkupvm)}))
      (if (and (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm) (pvm/ennen? (pvm/nyt) loppupvm))
        [:otsikko-heading (str "Tavoitehintaan vaikuttavat toteutuneet kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
        [:otsikko-heading "Tavoitehintaan vaikuttavat toteutuneet kustannukset"])
