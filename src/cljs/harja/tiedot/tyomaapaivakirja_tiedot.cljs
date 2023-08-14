@@ -73,10 +73,10 @@
   (let [aja? (if (= suunta :seuraava)
                (> (count data) (dec y))
                (> y -1))
-        rivi (get-in data [y])
+        rivi (nth data y nil)
         rivi-id (:tyomaapaivakirja_id rivi)
         indeksi (if (= suunta :seuraava) (inc y) (dec y))
-        seuraava-rivi (get-in data [indeksi])
+        seuraava-rivi (nth data indeksi nil)
         seuraava-rivi-id (:tyomaapaivakirja_id seuraava-rivi)
         aja-loput-rivit (fn [y data suunta data-seuraavat]
                           ;; Loopataan päiväkirjalistaus loppuun, katsotaan onko seuraavaa riviä ollenkaan olemassa
@@ -86,7 +86,7 @@
                                 aja? (if (= suunta :seuraava)
                                        (> (count data) i)
                                        (> i -1))
-                                rivin-data (get-in data [i])
+                                rivin-data (nth data i nil)
                                 rivi-tila (:tila rivin-data)
                                 rivi-id (:tyomaapaivakirja_id rivin-data)
                                 data-seuraavat (conj data-seuraavat rivin-data)]
