@@ -97,17 +97,17 @@
     (is (false? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db oikean-urakan-id 2345)) "Väärällä ulkoisella tunnisteella (int) ei paikkaustoteumaa.")
     (is (false? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db oikean-urakan-id "foo")) "Väärällä ulkoisella tunnisteella (string) ei löydy paikkaustoteumaa.")))
 
-(defn hae-testipaikkaus [db]
-  (first (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id testipaikkauksen-ulkoinen-id})))
+(defn hae-testipaikkaus [db id]
+  (first (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id id})))
 
-(defn hae-testipaikkauksen-materiaalit [db]
-  (first (paikkaus-q/hae-paikkaukset-materiaalit db {::paikkaus/ulkoinen-id testipaikkauksen-ulkoinen-id})))
+(defn hae-testipaikkauksen-materiaalit [db id]
+  (first (paikkaus-q/hae-paikkaukset-materiaalit db {::paikkaus/ulkoinen-id id})))
 
-(defn hae-testipaikkauksen-tienkohta [db]
-  (first (paikkaus-q/hae-paikkaukset-tienkohta db {::paikkaus/ulkoinen-id testipaikkauksen-ulkoinen-id})))
+(defn hae-testipaikkauksen-tienkohta [db id]
+  (first (paikkaus-q/hae-paikkaukset-tienkohta db {::paikkaus/ulkoinen-id id})))
 
-(defn hae-testipaikkaustoteuma [db]
-  (first (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/ulkoinen-id testipaikkaustoteuman-ulkoinen-id})))
+(defn hae-testipaikkaustoteuma [db id]
+  (first (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/ulkoinen-id id})))
 
 (defn hae-paikkausten-maara []
   (ffirst (q "select count (id) from paikkaus;")))
@@ -133,9 +133,9 @@
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara))
         "Kohteiden määrä on noussut yhdellä")
 
-    (let [toteuma (hae-testipaikkaus db)
-          materiaalit (::paikkaus/materiaalit (hae-testipaikkauksen-materiaalit db))
-          tienkohdat (::paikkaus/tienkohdat (hae-testipaikkauksen-tienkohta db))]
+    (let [toteuma (hae-testipaikkaus db testipaikkauksen-ulkoinen-id)
+          materiaalit (::paikkaus/materiaalit (hae-testipaikkauksen-materiaalit db testipaikkauksen-ulkoinen-id))
+          tienkohdat (::paikkaus/tienkohdat (hae-testipaikkauksen-tienkohta db testipaikkauksen-ulkoinen-id))]
       (is (= [{::paikkaus/esiintyma "Testikivi"
                ::paikkaus/kuulamylly-arvo "1"
                ::paikkaus/muotoarvo "Muotoarvo"
@@ -170,15 +170,15 @@
     (paikkaus-q/tallenna-paikkaus db oikean-urakan-id destian-kayttaja-id (assoc testipaikkaus ::paikkaus/massatyyppi "SMA, Kivimastiksiasfaltti"))
     (is (= paikkausten-maara-luonnin-jalkeen (hae-paikkausten-maara)) "Uutta paikkausta ei luotu")
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uutta kohdetta ei luotu")
-    (is (= "SMA, Kivimastiksiasfaltti" (::paikkaus/massatyyppi (hae-testipaikkaus db))) "Massatyyppi on päivitetty oikein")
+    (is (= "SMA, Kivimastiksiasfaltti" (::paikkaus/massatyyppi (hae-testipaikkaus db testipaikkauksen-ulkoinen-id))) "Massatyyppi on päivitetty oikein")
 
     ;; harjan id:lla paivittaminen
     (paikkaus-q/tallenna-paikkaus db oikean-urakan-id destian-kayttaja-id (assoc testipaikkaus
-                                                           ::paikkaus/id (::paikkaus/id (hae-testipaikkaus db))
+                                                           ::paikkaus/id (::paikkaus/id (hae-testipaikkaus db testipaikkauksen-ulkoinen-id))
                                                            ::paikkaus/massatyyppi "PAB-B, Pehmeät asfalttibetonit"))
     (is (= paikkausten-maara-luonnin-jalkeen (hae-paikkausten-maara)) "Uutta paikkausta ei luotu")
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uutta kohdetta ei luotu")
-    (is (= "PAB-B, Pehmeät asfalttibetonit" (::paikkaus/massatyyppi (hae-testipaikkaus db))) "Massatyyppi on päivitetty oikein")))
+    (is (= "PAB-B, Pehmeät asfalttibetonit" (::paikkaus/massatyyppi (hae-testipaikkaus db testipaikkauksen-ulkoinen-id))) "Massatyyppi on päivitetty oikein")))
 
 (deftest kohteiden-paivittaminen
   (let [db (:db jarjestelma)
@@ -211,7 +211,7 @@
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara))
         "Kohteiden määrä on noussut yhdellä")
 
-    (let [toteuma (hae-testipaikkaustoteuma db)]
+    (let [toteuma (hae-testipaikkaustoteuma db testipaikkauksen-ulkoinen-id)]
       (is (= (dissoc toteuma
                      ::paikkaus/kirjattu
                      ::paikkaus/id
@@ -229,3 +229,48 @@
     (paikkaus-q/paivita-paikkaustoteumat-poistetuksi db destian-kayttaja-id oikean-urakan-id [testipaikkaustoteuman-ulkoinen-id])
     (is (= 0 (first(first(q (str "select count (id) from paikkaustoteuma where poistettu is not true and \"ulkoinen-id\" = " testipaikkaustoteuman-ulkoinen-id " ;" ))))) "Paikkaustoteuma ei ole voimassa poiston jälkeen.")
     (is (= 1 (first(first(q (str "select count (id) from paikkaustoteuma where poistettu is true and \"ulkoinen-id\" = " testipaikkaustoteuman-ulkoinen-id " ;" ))))) "Paikkaustoteuma on merkitty poistetuksi.")))
+
+(deftest luo-uusi-paikkaus-ja-paikkauskohde-massamaaralla
+  (let [db (:db jarjestelma)
+        paikkausten-maara-luonnin-jalkeen (+ (hae-paikkausten-maara) 1)
+        kohteiden-maara-luonnin-jalkeen (+ (hae-kohteiden-maara) 1)
+        testipaikkauksen-ulkoinen-id (inc testipaikkauksen-ulkoinen-id)
+        testikohteen-ulkoinen-id (inc testikohteen-ulkoinen-id)
+        testipaikkaus (-> testipaikkaus
+                        (dissoc ::paikkaus/massamenekki)
+                        (assoc ::paikkaus/massamaara 260)
+                        (assoc ::paikkaus/ulkoinen-id testipaikkauksen-ulkoinen-id)
+                        (assoc-in [::paikkaus/paikkauskohde ::paikkaus/ulkoinen-id] testikohteen-ulkoinen-id))]
+
+    (paikkaus-q/tallenna-paikkaus db oikean-urakan-id destian-kayttaja-id testipaikkaus)
+    (is (= (true? (paikkaus-q/onko-paikkaus-olemassa-ulkoisella-idlla? db oikean-urakan-id testipaikkauksen-ulkoinen-id)))
+      "Toteuma löytyy ulkoisella id:lla")
+    (is (= paikkausten-maara-luonnin-jalkeen (hae-paikkausten-maara))
+      "Toteumien määrä on noussut yhdellä")
+    (is (= (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id testikohteen-ulkoinen-id)))
+      "Kohde löytyy ulkoisella id:lla")
+    (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara))
+      "Kohteiden määrä on noussut yhdellä")
+
+
+    (let [toteuma (hae-testipaikkaus db testipaikkauksen-ulkoinen-id)
+          materiaalit (::paikkaus/materiaalit (hae-testipaikkauksen-materiaalit db testipaikkauksen-ulkoinen-id))
+          tienkohdat (::paikkaus/tienkohdat (hae-testipaikkauksen-tienkohta db testipaikkauksen-ulkoinen-id))]
+
+      (is (= [{::paikkaus/esiintyma "Testikivi"
+               ::paikkaus/kuulamylly-arvo "1"
+               ::paikkaus/muotoarvo "Muotoarvo"
+               ::paikkaus/lisa-aineet "Lisäaineet"
+               ::paikkaus/pitoisuus 3.2M
+               ::paikkaus/sideainetyyppi "70/100"}]
+            [(dissoc (first materiaalit)
+               ::paikkaus/materiaali-id)])
+        "Oletetut materiaalit löytyvät")
+      (is (= [{::paikkaus/ajourat [1 2]
+               ::paikkaus/ajorata 1
+               ::paikkaus/ajouravalit [1]
+               ::paikkaus/reunat [0]}]
+            [(dissoc (first tienkohdat)
+               ::paikkaus/tienkohta-id)])
+        "Oletetut tienkohdat löytyvät"))))
+
