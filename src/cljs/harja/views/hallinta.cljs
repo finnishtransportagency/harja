@@ -8,6 +8,7 @@
             [harja.views.hallinta.indeksit :as i]
             [harja.views.hallinta.yhteydenpito :as yhteydenpito]
             [harja.views.hallinta.lampotilat :as lampotilat]
+            [harja.views.hallinta.urakoiden-lyhytnimet :as lyhytnimet]
             [harja.views.hallinta.integraatiotilanne :as integraatiotilanne]
             [harja.views.hallinta.hairiot :as hairiot]
             [harja.views.hallinta.valtakunnalliset-valitavoitteet :as valitavoitteet]
@@ -19,6 +20,7 @@
             [harja.views.hallinta.tyomaapaivakirjatyokalu-nakyma :as paivakirjatyokalu-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
             [harja.views.hallinta.palauteluokitukset :as pl]
+            [harja.views.hallinta.sahkopostitestaus-nakyma :as email-nakyma]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -48,6 +50,12 @@
    (when (oikeudet/hallinta-lampotilat)
      ^{:key "lämpötilat"}
      [lampotilat/lampotilat])
+
+   "Urakkanimet"
+   :lyhytnimet
+   (when (oikeudet/hallinta-indeksit) ; ei uutta roolia roolit exceliin
+     ^{:key "lyhytnimet"}
+     [lyhytnimet/urakoiden-lyhytnimet ])
 
    "Integraatiotilanne"
    :integraatiotilanne
@@ -118,4 +126,10 @@
    :palauteluokitukset
    (when (oikeudet/hallinta-palautevayla)
      ^{:key "palauteluokitukset"}
-     [pl/palauteluokitukset])])
+     [pl/palauteluokitukset])
+
+   "Sähköpostitestaus"
+   :sahkopostitestaus
+   (when true
+     ^{:key "sahkopostitestaus"}
+     [email-nakyma/email-testaus])])

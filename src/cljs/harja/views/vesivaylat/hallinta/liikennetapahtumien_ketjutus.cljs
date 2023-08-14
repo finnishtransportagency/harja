@@ -24,7 +24,7 @@
    [{:otsikko "Sopimus" :nimi ::sopimus/nimi :tyyppi :string}
     {:otsikko "Alku" :nimi ::sopimus/alkupvm :tyyppi :pvm :fmt pvm/pvm-opt}
     {:otsikko "Loppu" :nimi ::sopimus/loppupvm :tyyppi :pvm :fmt pvm/pvm-opt}
-    {:otsikko "Urakka" :nimi :urakan-nimi :hae #(get-in % [::sopimus/urakka ::urakka/nimi])}
+    {:otsikko "Urakka" :nimi :urakan-nimi :hae ::sopimus/urakka_nimi}
 
     {:otsikko "Ketjutus käytössä?"
      :tyyppi :komponentti

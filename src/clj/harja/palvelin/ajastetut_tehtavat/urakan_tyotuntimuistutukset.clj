@@ -28,8 +28,8 @@
                       hallintayksikko
                       id)
           otsikko (format "Urakan '%s' työtunnit välille %s kirjaamatta"
-                          nimi
-                          kuukausivali)
+                    (sanitoi nimi)
+                    kuukausivali)
           sisalto (format "Urakan <a href=%s>%s</a> työtunnit vuoden <b>%s</b> välille <b>%s</b> on kirjaamatta.
                            Työtunnit täytyy kirjata <b>%s</b> mennessä."
                           url

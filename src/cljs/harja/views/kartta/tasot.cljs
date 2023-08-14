@@ -42,7 +42,8 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paallystysilmoitukset :as paikkaukset-paallystysilmoitukset]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as paikkaukset-paikkauskohteet-kartalle]
             [harja.tiedot.tieluvat.tieluvat-kartalla :as tieluvat]
-            [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla])
+            [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla]
+            [harja.tiedot.urakka.tienumerot-kartalla :as tienumerot-kartalla])
   
   (:require-macros [reagent.ratom :refer [reaction run!] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
@@ -101,6 +102,7 @@
   (case taso
     :hallintayksikko 0
     :urakka 1
+    :tienumerot 1
     :pohjavesialueet 2
     :sillat 3
     :tienakyma-muut 3
@@ -257,7 +259,8 @@
    :paikkaukset-paikkauskohteet paikkaukset-paikkauskohteet-kartalle/paikkauskohteet-kartalla
    :paikkaukset-paallystysilmoitukset paikkaukset-paallystysilmoitukset/paallystysilmoitukset-kartalla
    :tieluvat tieluvat/tieluvat-kartalla
-   :maarien-toteumat maarien-toteumat-kartalla/toteumat-kartalla})
+   :maarien-toteumat maarien-toteumat-kartalla/toteumat-kartalla
+   :tienumerot tienumerot-kartalla/tienumerot-kartalla})
 
 (defn nayta-geometria!
   ([avain geometria] (nayta-geometria! avain geometria :nakyman-geometriat))
@@ -330,6 +333,7 @@
        :paikkaukset-paallystysilmoitukset (taso :paikkaukset-paallystysilmoitukset)
        :maarien-toteumat (taso :maarien-toteumat)
        :tieluvat (taso :tieluvat)
+       :tienumerot (taso :tienumerot :tienumerot)
        ;; Yksittäisen näkymän omat mahdolliset geometriat
        :nakyman-geometriat
        (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
@@ -377,7 +381,8 @@
    :maarien-toteumat maarien-toteumat-kartalla/karttataso-nakyvissa?
    :tieluvat tieluvat/karttataso-tieluvat
    :nakyman-geometriat (atom true)
-   :infopaneelin-merkki (atom true)})
+   :infopaneelin-merkki (atom true)
+   :tienumerot tienumerot-kartalla/karttataso-nakyvissa?})
 
 (defn- nykyiset-karttatasot* [atomit nimet-set]
   (->> atomit

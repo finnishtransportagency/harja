@@ -1,0 +1,41 @@
+name: 'Shutdown Harja Fargate tasks'
+description: 'Sammuttaa Harja servicen käynnissä olevat Fargate taskit (OIDC autentikaatio vaadittu)'
+
+inputs:
+  cluster:
+    description: "Harja app Fargate cluster name"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Shutdown Fargate tasks
+      env:
+        SHA: ${{ inputs.commit-sha }}
+        CLUSTER_NAME: ${{ inputs.cluster }}
+        WAIT_TIME_SEC: "30"
+
+      # Komennon 'update-service' stdout ohjataan /dev/nulliin, koska se voi tulostaa sensitiivisiä tietoja
+      run: |
+        echo "Getting available service..."
+        
+        AVAILABLE_SERVICE=$(aws ecs list-services --cluster "${CLUSTER_NAME}" --region eu-west-1 | jq -r '.serviceArns[0]')
+        
+        echo "Shutting down running tasks..."
+        aws ecs update-service --cluster "${CLUSTER_NAME}" --service $AVAILABLE_SERVICE --desired-count 0 --region eu-west-1 1> /dev/null
+
+        while true; do
+          runningTasks=$(aws ecs list-tasks --cluster "${CLUSTER_NAME}" --service-name $AVAILABLE_SERVICE --region eu-west-1 | jq '.taskArns')
+        
+          if [ $(echo "$runningTasks" | jq length) -eq 0 ]; then
+            echo "No Fargate tasks found."
+            break
+          else
+            echo "Running Fargate tasks found. Waiting..."
+            sleep "${WAIT_TIME_SEC}"
+          fi
+        done
+        
+        echo "Done."
+      shell: bash
+
+

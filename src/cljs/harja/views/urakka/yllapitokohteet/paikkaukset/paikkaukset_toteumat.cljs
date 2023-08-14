@@ -9,8 +9,6 @@
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
 
-            [harja.tyokalut.tuck :as tuck-apurit]
-
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.domain.roolit :as roolit]
@@ -610,8 +608,10 @@
    [excel-tuonti-virhe-modal e! app]
    [:div.row
     [kartta/kartan-paikka]]
-   [:div.row
-    [lataa-urem-excel]]
+   ;; Näytetään Urapaikkaustoteumien tuonti-Excel vain ylläpito/päällystys tyyppisille urakoille.
+   (when (= :paallystys (:arvo @nav/urakkatyyppi))
+     [:div.row
+      [lataa-urem-excel]])
    [:div.row
     [paikkaukset e! app]]])
 

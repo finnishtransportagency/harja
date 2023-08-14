@@ -98,7 +98,7 @@
     :todennus :http-palvelin
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :solita-sahkoposti :api-sahkoposti :fim :tloik :tierekisteri :labyrintti
+    :integraatioloki :ulkoinen-sahkoposti :api-sahkoposti :fim :tloik :tierekisteri :labyrintti
     :turi :digiroad-integraatio :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
@@ -163,14 +163,15 @@
     :tyomaapaivakirja
     :palautevayla
     :palauteluokitukset
-    :palauteluokitukset-hallinta})
+    :palauteluokitukset-hallinta
+    :lyhytnimien-hallinta})
 
 (def ei-statusta
   #{:metriikka
     :todennus
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :solita-sahkoposti :api-sahkoposti :fim :tierekisteri :labyrintti
+    :integraatioloki :ulkoinen-sahkoposti :api-sahkoposti :fim :tierekisteri :labyrintti
     :turi :digiroad-integraatio :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
@@ -235,7 +236,8 @@
     :tyomaapaivakirja
     :palautevayla
     :palauteluokitukset
-    :palauteluokitukset-hallinta})
+    :palauteluokitukset-hallinta
+    :lyhytnimien-hallinta})
 
 (def hidas-ok-status #{:itmf})
 

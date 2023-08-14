@@ -700,7 +700,11 @@
                                                          (let [[kohdistukset] (resetoi-kohdistukset kohdistukset)]
                                                            [(-> kohdistukset
                                                               (dissoc :tehtavaryhma)
-                                                              (assoc :lisatyo? (.. % -target -checked)))])))
+                                                              (assoc :lisatyo? (.. % -target -checked))
+                                                              ;; Lisätään :lisatiedon-lisatyo, jos sitä ei ole, mutta ei muokata sitä jos se on.
+                                                              ;; Tämän puute aiheutti tietyssä tilanteessa sen, että kun useampi-kulu oli valittu,
+                                                              ;; lisätyön lisätietokenttä aiheutti kaatumisen.
+                                                              (update :lisatyon-lisatieto identity))])))
                             jalkiprosessointi-fn (if (.. % -target -checked)
                                                    (fn [lomake]
                                                      (vary-meta

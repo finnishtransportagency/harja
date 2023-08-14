@@ -169,17 +169,17 @@
 (defn koko-tapahtuma [rivi {:keys [haetut-tapahtumat]}]
   (some #(when (= (::lt/id rivi) (::lt/id %)) %) haetut-tapahtumat))
 
-(defn hae-sulutuksen-suunta [tapahtuma haluttu-toiminto haluttu-suunta]
-  ;; Palauttaa integerin montako suuntaa tapahtumalla 
-  ;; Sulutuksen aluksilla on aina 1 suunta, tällä haetaan siis sulutuksen suunta
-  (count (filter
-   (fn [alus]
-     (let [toiminnot #{(::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))
-                       (::toiminto/toimenpide (second (::lt/toiminnot tapahtuma)))}]
-       (and
-        (contains? toiminnot haluttu-toiminto)
-        (= (::lt-alus/suunta alus) haluttu-suunta))))
-   (::lt/alukset tapahtuma))))
+(defn onko-sulutuksella-haluttu-suunta? [tapahtuma haluttu-suunta]
+  ;; Palauttaa true jos haluttu suunta esiintyy tapahtumalla ja tapahtuma on sulutus, muuten palautetaan false
+  ;; Sulutuksen aluksilla on aina sama suunta.
+  (let [toimenpiteet (set (map #(::toiminto/toimenpide %) (::lt/toiminnot tapahtuma)))]
+    (if (contains? toimenpiteet :sulutus)
+      (boolean
+        (some
+          #(= (::lt-alus/suunta %) haluttu-suunta)
+          (::lt/alukset tapahtuma)))
+      ; Else -> Toimenpiteissä ei ollut sulutusta
+      false)))
 
 (defn laske-yhteenveto [tapahtumat haluttu-toiminto haluttu-suunta haluttu-palvelumuoto]
   ;; Laskee liikennetapahtumien yhteenvetotietoja
@@ -187,23 +187,23 @@
   ;; Tapahtumilla voi olla useita kohteenosia, eli useita toimenpiteitä/palvelumuotoja, jotka otettu myös huomioon
   ;; Palautetaan integer (Long) montako toimenpidettä/palvelumuotoa löytyi
   (reduce (fn [acc tapahtuma]
-            (let [suuntia-olemassa? (pos? (hae-sulutuksen-suunta tapahtuma haluttu-toiminto haluttu-suunta))
-                  toiminnot (filter (fn [toiminto]
+            (let [toiminnot (filter (fn [toiminto]
                                       (or
                                         (and
-                                          suuntia-olemassa?
-                                          (= haluttu-toiminto (::toiminto/toimenpide toiminto)))
-
-                                        (and
-                                          haluttu-toiminto
                                           (= haluttu-toiminto (::toiminto/toimenpide toiminto))
-                                          (= haluttu-suunta nil))
-
-                                         (and
-                                          haluttu-palvelumuoto
+                                          (= haluttu-toiminto :tyhjennys))
+                                        (and
+                                          (= haluttu-toiminto (::toiminto/toimenpide toiminto))
+                                          (= haluttu-toiminto :avaus))
+                                        (and
+                                          haluttu-suunta
+                                          (onko-sulutuksella-haluttu-suunta? tapahtuma haluttu-suunta)
+                                          (nil? haluttu-palvelumuoto)
+                                          (= haluttu-toiminto (::toiminto/toimenpide toiminto)))
+                                        (and
+                                          (= haluttu-toiminto (::toiminto/toimenpide toiminto))
                                           (= haluttu-palvelumuoto (::toiminto/palvelumuoto toiminto))
-                                          (= haluttu-suunta nil)
-                                          (= haluttu-toiminto nil))))
+                                          (nil? haluttu-suunta))))
                               (::lt/toiminnot tapahtuma))]
 
               ;; Jos lasketaan itsepalveluita, palautetaan tapahtuman 'lkm' arvo (itsepalveluiden määrä)
@@ -223,19 +223,15 @@
         sulutukset-ylos (laske-yhteenveto tulos :sulutus :ylos nil)
         sillan-avaukset (laske-yhteenveto tulos :avaus nil nil)
         tyhjennykset (laske-yhteenveto tulos :tyhjennys nil nil)
-        paikallispalvelut (laske-yhteenveto tulos nil nil :paikallis)
-        kaukopalvelut (laske-yhteenveto tulos nil nil :kauko)
-        itsepalvelut (laske-yhteenveto tulos nil nil :itse)
-        muut (laske-yhteenveto tulos nil nil :muu)
+        paikallispalvelut (laske-yhteenveto tulos :sulutus nil :paikallis)
+        kaukopalvelut (laske-yhteenveto tulos :sulutus nil :kauko)
+        itsepalvelut (laske-yhteenveto tulos :sulutus nil :itse)
+        muut (laske-yhteenveto tulos :sulutus nil :muu)
 
         toimenpiteet {:sulutukset-ylos sulutukset-ylos
                       :sulutukset-alas sulutukset-alas
                       :sillan-avaukset sillan-avaukset
-                      :tyhjennykset tyhjennykset
-                      :yhteensa (+ sulutukset-ylos
-                                   sulutukset-alas
-                                   sillan-avaukset
-                                   tyhjennykset)}
+                      :tyhjennykset tyhjennykset}
 
         palvelumuoto {:paikallispalvelu paikallispalvelut
                       :kaukopalvelu kaukopalvelut
@@ -419,7 +415,7 @@
                             (assoc ::toiminto/lkm 1)
                             (assoc ::toiminto/palvelumuoto (::osa/oletuspalvelumuoto osa))
                             (assoc ::toiminto/toimenpide (if (osa/silta? osa)
-                                                           :avaus
+                                                           :ei-avausta
                                                            :sulutus)))
                         (first (vanhat (::osa/id osa)))))
                     (::kohde/kohteenosat kohde)))))))
@@ -435,8 +431,8 @@
 (defn kasittele-suunta-alukselle [tapahtuma alukset]
   (map (fn [a]
          (let [valittu-suunta (#{:ylos :alas :ei-suuntaa} (:valittu-suunta tapahtuma))
-               sulutus-ylos? (> (hae-sulutuksen-suunta tapahtuma :sulutus :ylos) 0)
-               sulutus-alas? (> (hae-sulutuksen-suunta tapahtuma :sulutus :alas) 0)
+               sulutus-ylos? (onko-sulutuksella-haluttu-suunta? tapahtuma :ylos)
+               sulutus-alas? (onko-sulutuksella-haluttu-suunta? tapahtuma :alas)
 
                ;; Jos valittu-suunta on ei-suuntaa mutta sitä ei toimenpide tai palvelumuoto salli, vaihda suunta
                vaihdettu-suunta (if (and (not (:ei-suuntaa @lt/suunnat-atom))
@@ -487,31 +483,34 @@
     (and (not= (::toiminto/toimenpide osa) :ei-avausta)
          (= (::toiminto/palvelumuoto osa) :itse))))
 
-(defn suuntavalinta-str [edelliset suunta]
+(defn- ketjutus-kaytossa? [valittu-liikennetapahtuma haetut-sopimukset]
+  (let [sopimus-id (-> valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
+        ketjutus-kaytossa? (first (filter (fn [sopimus]
+                                            (= sopimus-id (::sop/id sopimus))) haetut-sopimukset))]
+    (boolean (::sop/ketjutus ketjutus-kaytossa?))))
+
+(defn suuntavalinta-str [{:keys [valittu-liikennetapahtuma haetut-sopimukset]} edelliset suunta]
   (let [suunta->str (fn [suunta] (@lt/suunnat-atom suunta))]
     (str (suunta->str suunta)
-         (when (suunta edelliset)
-           (str ", " (count (get-in edelliset [suunta :edelliset-alukset])) " lähestyvää alusta")))))
+      ;; Älä näytä (x lähestyvää alusta) jos ketjutus ei ole käytössä
+      (when (and
+              (suunta edelliset)
+              (ketjutus-kaytossa? valittu-liikennetapahtuma haetut-sopimukset))
+        (str ", " (count (get-in edelliset [suunta :edelliset-alukset])) " lähestyvää alusta")))))
 
 (defn nayta-edelliset-alukset? [{:keys [valittu-liikennetapahtuma
                                         edellisten-haku-kaynnissa?
                                         haetut-sopimukset
                                         edelliset]}]
-
-  (let [sopimus-id (-> valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
-        ketjutus-kaytossa? (first (filter (fn[sopimus]
-                                            (= sopimus-id (::sop/id sopimus))) haetut-sopimukset))
-        ketjutus-kaytossa? (boolean (::sop/ketjutus ketjutus-kaytossa?))]
-
-    ;; Onko ketjutus käytössä tällä sopimuksella/urakalla?
-    (if ketjutus-kaytossa?
-      (boolean
-        (and (::lt/kohde valittu-liikennetapahtuma)
-          (not edellisten-haku-kaynnissa?)
-          (or (:alas edelliset) (:ylos edelliset))
-          (some? (:valittu-suunta valittu-liikennetapahtuma))
-          (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))))
-      false)))
+  ;; Onko ketjutus käytössä tällä sopimuksella/urakalla?
+  (if (ketjutus-kaytossa? valittu-liikennetapahtuma haetut-sopimukset)
+    (boolean
+      (and (::lt/kohde valittu-liikennetapahtuma)
+        (not edellisten-haku-kaynnissa?)
+        (or (:alas edelliset) (:ylos edelliset))
+        (some? (:valittu-suunta valittu-liikennetapahtuma))
+        (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))))
+    false))
 
 (defn nayta-suunnan-ketjutukset? [{:keys [valittu-liikennetapahtuma]} suunta tiedot]
   (boolean
@@ -567,16 +566,16 @@
     (if-not (:liikennetapahtumien-haku-kaynnissa? app)
       (let [params (hakuparametrit app)]
         (-> app
-            (tt/post! :hae-liikennetapahtumat
-                      params
-                      ;; Checkbox-group ja aluksen nimen kirjoitus generoisi
-                      ;; liikaa requesteja ilman viivettä.
-                      {:viive 1000
-                       :tunniste :hae-liikennetapahtumat-liikenne-nakymaan
-                       :lahetetty ->HaeLiikennetapahtumatKutsuLahetetty
-                       :onnistui ->LiikennetapahtumatHaettu
-                       :epaonnistui ->LiikennetapahtumatEiHaettu})
-            (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? true)))
+          (tt/post! :hae-liikennetapahtumat
+            params
+            ;; Checkbox-group ja aluksen nimen kirjoitus generoisi
+            ;; liikaa requesteja ilman viivettä.
+            {:viive 1000
+             :tunniste :hae-liikennetapahtumat-liikenne-nakymaan
+             :lahetetty ->HaeLiikennetapahtumatKutsuLahetetty
+             :onnistui ->LiikennetapahtumatHaettu
+             :epaonnistui ->LiikennetapahtumatEiHaettu})
+          (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? true)))
       app))
 
   HaeLiikennetapahtumatKutsuLahetetty
@@ -585,13 +584,18 @@
 
   LiikennetapahtumatHaettu
   (process-event [{tulos :tulos} app]
-    (tapahtumat-haettu app tulos))
+    (-> app
+      ;; Kun liikennetapahtumat on haettu, resetoi valittu tapahtuma
+      ;; jotta vanhat tiedot eivät näy urakkaa vaihdettaessa 
+      (assoc :valittu-liikennetapahtuma nil)
+      (tapahtumat-haettu tulos)))
 
   LiikennetapahtumatEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Liikennetapahtumien haku epäonnistui! " :danger)
-    (assoc app :liikennetapahtumien-haku-kaynnissa? false
-           :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false))
+    (assoc app
+      :liikennetapahtumien-haku-kaynnissa? false
+      :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false))
 
   ValitseTapahtuma
   (process-event [{t :tapahtuma} app]
@@ -599,10 +603,11 @@
     (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
     (swap! lt/suunnat-atom assoc :ei-suuntaa "Ei määritelty")
     (-> app
-        (assoc :valittu-liikennetapahtuma (when-let [tapahtuma (if (::lt/id t) (koko-tapahtuma t app) t)]
-                                            (kohteenosatiedot-toimintoihin tapahtuma (::lt/kohde tapahtuma))))
-        (assoc :siirretyt-alukset #{})
-        (assoc :ketjutuksen-poistot #{})))
+      (assoc :valittu-liikennetapahtuma
+        (when-let [tapahtuma (if (::lt/id t) (koko-tapahtuma t app) t)]
+          (kohteenosatiedot-toimintoihin tapahtuma (::lt/kohde tapahtuma))))
+      (assoc :siirretyt-alukset #{})
+      (assoc :ketjutuksen-poistot #{})))
 
   HaeEdellisetTiedot
   (process-event [{t :tapahtuma} app]
@@ -610,32 +615,31 @@
                   ::lt/kohde-id (get-in t [::lt/kohde ::kohde/id])
                   ::lt/sopimus-id (get-in t [::lt/sopimus ::sop/id])}]
       (tt/post! :hae-edelliset-tapahtumat
-                params
-                {:onnistui ->EdellisetTiedotHaettu
-                 :epaonnistui ->EdellisetTiedotEiHaettu})
+        params
+        {:onnistui ->EdellisetTiedotHaettu
+         :epaonnistui ->EdellisetTiedotEiHaettu})
       (assoc app :edellisten-haku-kaynnissa? true)))
 
   EdellisetTiedotHaettu
   (process-event [{t :tulos} app]
     (-> app
-        (assoc-in [:edelliset :tama] (:edellinen t))
-        (assoc-in [:valittu-liikennetapahtuma ::lt/vesipinta-alaraja] (get-in t [:edellinen ::lt/vesipinta-alaraja]))
-        (assoc-in [:valittu-liikennetapahtuma ::lt/vesipinta-ylaraja] (get-in t [:edellinen ::lt/vesipinta-ylaraja]))
-        (assoc-in [:edelliset :ylos] (:ylos t))
-        (assoc-in [:edelliset :alas] (:alas t))
-        (assoc-in [:edelliset :ei-suuntaa] (:ei-suuntaa t))
-        (assoc :edellisten-haku-kaynnissa? false)))
+      (assoc-in [:edelliset :tama] (:edellinen t))
+      (assoc-in [:valittu-liikennetapahtuma ::lt/vesipinta-alaraja] (get-in t [:edellinen ::lt/vesipinta-alaraja]))
+      (assoc-in [:valittu-liikennetapahtuma ::lt/vesipinta-ylaraja] (get-in t [:edellinen ::lt/vesipinta-ylaraja]))
+      (assoc-in [:edelliset :ylos] (:ylos t))
+      (assoc-in [:edelliset :alas] (:alas t))
+      (assoc-in [:edelliset :ei-suuntaa] (:ei-suuntaa t))
+      (assoc :edellisten-haku-kaynnissa? false)))
 
   EdellisetTiedotEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Virhe edellisten tapahtumien haussa!" :danger)
     (-> app
-        (assoc :edellisten-haku-kaynnissa? false)))
+      (assoc :edellisten-haku-kaynnissa? false)))
 
   PaivitaValinnat
   (process-event [{u :uudet} app]
-    (let [uudet-valinnat (merge (:valinnat app)
-                                (select-keys u valintojen-avaimet))
+    (let [uudet-valinnat (merge (:valinnat app) (select-keys u valintojen-avaimet))
           haku (tuck/send-async! ->HaeLiikennetapahtumat)]
       (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
@@ -646,49 +650,51 @@
 
   MuokkaaAluksia
   (process-event [{alukset :alukset v :virheita?} {tapahtuma :valittu-liikennetapahtuma :as app}]
-      (if tapahtuma
-        (-> app
-            (assoc-in [:valittu-liikennetapahtuma ::lt/alukset] (kasittele-suunta-alukselle tapahtuma alukset))
-            (assoc-in [:valittu-liikennetapahtuma :grid-virheita?] v))
-        app))
+    (if tapahtuma
+      (-> app
+        (assoc-in [:valittu-liikennetapahtuma ::lt/alukset] (kasittele-suunta-alukselle tapahtuma alukset))
+        (assoc-in [:valittu-liikennetapahtuma :grid-virheita?] v))
+      app))
 
   VaihdaSuuntaa
   (process-event [{alus :alus suunta :suunta} app]
     (let [uusi-suunta (if (:ei-suuntaa @lt/suunnat-atom)
-                        (cond (= :ylos suunta) :alas
-                              (= :alas suunta) :ei-suuntaa
-                              (= :ei-suuntaa suunta) :ylos
-                              :else :ylos)
-                        (cond (= :ylos suunta) :alas
-                              (= :alas suunta) :ylos
-                              :else :ylos))
+                        (cond
+                          (= :ylos suunta) :alas
+                          (= :alas suunta) :ei-suuntaa
+                          (= :ei-suuntaa suunta) :ylos
+                          :else :ylos)
+                        (cond
+                          (= :ylos suunta) :alas
+                          (= :alas suunta) :ylos
+                          :else :ylos))
 
           uusi (assoc alus ::lt-alus/suunta uusi-suunta)]
       (update app :valittu-liikennetapahtuma
-              (fn [t]
-                (update t ::lt/alukset
-                        (fn [alukset]
-                          (map #(if (sama-alusrivi? uusi %) uusi %) alukset)))))))
+        (fn [t]
+          (update t ::lt/alukset
+            (fn [alukset]
+              (map #(if (sama-alusrivi? uusi %) uusi %) alukset)))))))
 
   AsetaSuunnat
   (process-event [{suunta :suunta} app]
     (-> app
-        (assoc-in [:valittu-liikennetapahtuma :valittu-suunta] suunta)
-        (update-in [:valittu-liikennetapahtuma ::lt/alukset]
-                   (fn [alukset]
-                     (map #(assoc % ::lt-alus/suunta suunta) alukset)))))
+      (assoc-in [:valittu-liikennetapahtuma :valittu-suunta] suunta)
+      (update-in [:valittu-liikennetapahtuma ::lt/alukset]
+        (fn [alukset]
+          (map #(assoc % ::lt-alus/suunta suunta) alukset)))))
 
   TallennaLiikennetapahtuma
   (process-event [{t :tapahtuma} {:keys [tallennus-kaynnissa?] :as app}]
     (if-not tallennus-kaynnissa?
-      (let [params (-> (tallennusparametrit t)
-                       (assoc :hakuparametrit (hakuparametrit app)))]
+      (let [params (assoc (tallennusparametrit t) :hakuparametrit (hakuparametrit app))]
         (-> app
-            (tt/post! :tallenna-liikennetapahtuma
-                      params
-                      {:onnistui ->TapahtumaTallennettu
-                       :epaonnistui ->TapahtumaEiTallennettu})
-            (assoc :tallennus-kaynnissa? true)))
+          (tt/post!
+            :tallenna-liikennetapahtuma
+            params
+            {:onnistui ->TapahtumaTallennettu
+             :epaonnistui ->TapahtumaEiTallennettu})
+          (assoc :tallennus-kaynnissa? true)))
       app))
 
   TapahtumaTallennettu
@@ -698,9 +704,9 @@
     (swap! lt/suunnat-atom assoc :ei-suuntaa "Ei määritelty")
     (when (modal/nakyvissa?) (modal/piilota!))
     (-> app
-        (assoc :tallennus-kaynnissa? false)
-        (assoc :valittu-liikennetapahtuma nil)
-        (tapahtumat-haettu t)))
+      (assoc :tallennus-kaynnissa? false)
+      (assoc :valittu-liikennetapahtuma nil)
+      (tapahtumat-haettu t)))
 
   TapahtumaEiTallennettu
   (process-event [_ app]
@@ -711,47 +717,47 @@
   (process-event [{alukset :alukset} app]
     (let [idt (map ::lt-alus/id alukset)]
       (-> app
-          (update :siirretyt-alukset (fn [s] (if (nil? s) (set idt) (into s idt))))
-          (update-in [:valittu-liikennetapahtuma ::lt/alukset] concat alukset))))
+        (update :siirretyt-alukset (fn [s] (if (nil? s) (set idt) (into s idt))))
+        (update-in [:valittu-liikennetapahtuma ::lt/alukset] concat alukset))))
 
   SiirraTapahtumaan
   (process-event [{alus :alus} app]
     (-> app
-        (update :siirretyt-alukset (fn [s] (if (nil? s) #{(::lt-alus/id alus)} (conj s (::lt-alus/id alus)))))
-        (update-in [:valittu-liikennetapahtuma ::lt/alukset] conj alus)))
+      (update :siirretyt-alukset (fn [s] (if (nil? s) #{(::lt-alus/id alus)} (conj s (::lt-alus/id alus)))))
+      (update-in [:valittu-liikennetapahtuma ::lt/alukset] conj alus)))
 
   SiirraTapahtumasta
   (process-event [{alus :alus} app]
     (-> app
-        (update :siirretyt-alukset (fn [s] (disj s (::lt-alus/id alus))))
-        (update-in [:valittu-liikennetapahtuma ::lt/alukset]
-                   (fn [alukset]
-                     (let [;; Peak human evolution
-                           ;; Eli kun poistetaan rivi annetaan sille poistettu true, niin tämä merkataan poistetuksi myös kannasta kun tallennetaan
-                           ;; Jos uusi rivi poistetaan, kantaan ei tehdä muutoksia 
-                           uudet-alukset (into [] (merge (disj (into #{} alukset) alus) (-> alus
-                                                                                            ;; Poistetun lisäksi virheiden ehkäisyn takia laji pois ja suunta ylös
-                                                                                            (assoc :poistettu true)
-                                                                                            (dissoc ::lt-alus/laji)
-                                                                                            (assoc ::lt-alus/suunta :ylos))))]
-                       ;; Palautetaan alukset sortattuna niin eivät mene sekaisin rivejä poistaessa 
-                       (sort-by :id uudet-alukset))))))
+      (update :siirretyt-alukset (fn [s] (disj s (::lt-alus/id alus))))
+      (update-in [:valittu-liikennetapahtuma ::lt/alukset]
+        (fn [alukset]
+          (let [;; Peak human evolution
+                ;; Eli kun poistetaan rivi annetaan sille poistettu true, niin tämä merkataan poistetuksi myös kannasta kun tallennetaan
+                ;; Jos uusi rivi poistetaan, kantaan ei tehdä muutoksia 
+                uudet-alukset (into [] (merge (disj (into #{} alukset) alus) (-> alus
+                                                                               ;; Poistetun lisäksi virheiden ehkäisyn takia laji pois ja suunta ylös
+                                                                               (assoc :poistettu true)
+                                                                               (dissoc ::lt-alus/laji)
+                                                                               (assoc ::lt-alus/suunta :ylos))))]
+            ;; Palautetaan alukset sortattuna niin eivät mene sekaisin rivejä poistaessa 
+            (sort-by :id uudet-alukset))))))
 
   PoistaKetjutus
   (process-event [{a :alus} {:keys [ketjutuksen-poistot] :as app}]
     (let [id (::lt-alus/id a)]
       (if-not (ketjutuksen-poistot id)
         (-> app
-            (tt/post! :poista-ketjutus
-                      {::lt-alus/id id
-                       ::lt/urakka-id (:id @nav/valittu-urakka)}
-                      {:onnistui ->KetjutusPoistettu
-                       :onnistui-parametrit [id]
-                       :epaonnistui ->KetjutusEiPoistettu
-                       :epaonnistui-parametrit [id]})
-            (update :ketjutuksen-poistot (fn [s] (if (nil? s)
-                                                   #{id}
-                                                   (conj s id)))))
+          (tt/post! :poista-ketjutus
+            {::lt-alus/id id
+             ::lt/urakka-id (:id @nav/valittu-urakka)}
+            {:onnistui ->KetjutusPoistettu
+             :onnistui-parametrit [id]
+             :epaonnistui ->KetjutusEiPoistettu
+             :epaonnistui-parametrit [id]})
+          (update :ketjutuksen-poistot (fn [s] (if (nil? s)
+                                                 #{id}
+                                                 (conj s id)))))
 
         app)))
 
@@ -759,38 +765,39 @@
   (process-event [{_ :tulos id :id} app]
     (when (modal/nakyvissa?) (modal/piilota!))
     (-> app
-        (poista-ketjutus id)
-        (update :ketjutuksen-poistot (fn [s] (if (nil? s)
-                                               #{}
-                                               (disj s id))))))
+      (poista-ketjutus id)
+      (update :ketjutuksen-poistot (fn [s] (if (nil? s)
+                                             #{}
+                                             (disj s id))))))
 
   KetjutusEiPoistettu
   (process-event [{_ :virhe id :id} app]
     (viesti/nayta! "Virhe ketjutuksen poistossa!" :danger)
     (-> app
-        (update :ketjutuksen-poistot (fn [s] (if (nil? s)
-                                               #{}
-                                               (disj s id))))))
+      (update :ketjutuksen-poistot (fn [s] (if (nil? s)
+                                             #{}
+                                             (disj s id))))))
   AsetaAloitusTiedot
   (process-event [{:keys [aikavali]} app]
-    (let [kanava-hallintayksikko (some #(when (= (:nimi %) "Kanavat ja avattavat sillat")
-                                          (:id %))
-                                       @hallintayksikot/vaylamuodon-hallintayksikot)]
+    (let [kanava-hallintayksikko (some
+                                   #(when (= (:nimi %) "Kanavat ja avattavat sillat") (:id %))
+                                   @hallintayksikot/vaylamuodon-hallintayksikot)]
       (-> app
-          (tt/post! :kayttajan-urakat [kanava-hallintayksikko] {:onnistui ->KayttajanUrakatHaettu})
-          (assoc-in [:valinnat :aikavali] aikavali))))
+        (tt/post! :kayttajan-urakat [kanava-hallintayksikko] {:onnistui ->KayttajanUrakatHaettu})
+        (assoc-in [:valinnat :aikavali] aikavali))))
 
   KayttajanUrakatHaettu
   (process-event [{urakat :urakat} app]
     (let [urakat (when-not (empty? urakat)
-                   (->> urakat
-                        first
-                        :urakat
-                        (map #(if (= (:id %) @nav/valittu-urakka-id)
-                                (-> %
-                                    (assoc :valittu? true)
-                                    (dissoc % :urakkanro))
-                                (dissoc % :urakkanro)))))
+                   (->>
+                     urakat
+                     first
+                     :urakat
+                     (map #(if (= (:id %) @nav/valittu-urakka-id)
+                             (-> %
+                               (assoc :valittu? true)
+                               (dissoc % :urakkanro))
+                             (dissoc % :urakkanro)))))
           app (assoc-in app [:valinnat :kayttajan-urakat] urakat)]
       (tuck/process-event (->PaivitaValinnat (:valinnat app)) app)
       app))
@@ -799,6 +806,6 @@
     (let [uudet-urakkavalinnat (map #(if (= (:id %) id)
                                        (assoc % :valittu? valittu?)
                                        %)
-                                    (get-in app [:valinnat :kayttajan-urakat]))]
+                                 (get-in app [:valinnat :kayttajan-urakat]))]
       (tuck/process-event (->PaivitaValinnat {:kayttajan-urakat uudet-urakkavalinnat}) app)
       (assoc-in app [:valinnat :kayttajan-urakat] uudet-urakkavalinnat))))

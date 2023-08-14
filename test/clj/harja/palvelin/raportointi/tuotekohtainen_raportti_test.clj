@@ -51,11 +51,14 @@
                                  :urakka-id  (hae-urakan-id-nimella "Oulun MHU 2019-2024")
                                  :parametrit {:urakkatyyppi :teiden-hoito
                                               :alkupvm      (c/to-date (t/local-date 2019 10 1))
-                                              :loppupvm     (c/to-date (t/local-date 2020 9 30))}})
+                                              :loppupvm     (c/to-date (t/local-date 2020 9 30))
+                                              :aikarajaus   :hoitokausi}})
 
         raportin-nimi (-> vastaus second :nimi)
-        raportit (nth vastaus 3)
-        laskutusyhteenveto (take 15 raportit)
+        perusluku-teksti (nth vastaus 3)
+        indeksikerroin-teksti (nth vastaus 4)
+        raportit (nth vastaus 5)
+        laskutusyhteenveto (take 16 raportit)
         talvihoito-yhteensa (-> (first laskutusyhteenveto) (nth 3) (nth 5) second second :arvo)
         liikenneymp-akilliset-hoitotyot (-> (second laskutusyhteenveto) (nth 3) (nth 3) second second :arvo)
         liikenneymp-vahinkojen-korjaukset (-> (second laskutusyhteenveto) (nth 3) (nth 4) second second :arvo)
@@ -67,6 +70,8 @@
         mhu-bonukset (-> (nth laskutusyhteenveto 6) (nth 3) (nth 3) second second :arvo)]
 
     (is (= raportin-nimi "Laskutusyhteenveto (01.10.2019 - 30.09.2020)"))
+    (is (= perusluku-teksti [:teksti "Indeksilaskennan perusluku: 110,8"]) "perusluku")
+    (is (= indeksikerroin-teksti [:teksti "Hoitokauden 2019-20 indeksikerroin: 1,081"]) "indeksikerroin")
     (is (= talvihoito-yhteensa 5411.791430M))
     (is (= liikenneymp-akilliset-hoitotyot 4444.44M))
     (is (= liikenneymp-vahinkojen-korjaukset 0.0M))

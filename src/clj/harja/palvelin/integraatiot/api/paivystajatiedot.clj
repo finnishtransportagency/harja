@@ -167,7 +167,7 @@
     (validointi/tarkista-urakka db urakka-id)
     (validointi/tarkista-oikeudet-urakan-paivystajatietoihin db urakka-id kayttaja)
     (log/debug "Poistettavat ulkoiset idt: " (pr-str paivystysidt) " urakka " (:id parametrit))
-    (yhteyshenkilot-q/poista-urakan-paivystykset! db urakka-id (:id kayttaja) paivystysidt)
+    (yhteyshenkilot-q/poista-urakan-paivystykset! db urakka-id paivystysidt)
     (paivystajatiedot-sanoma/tee-onnistunut-poisto-vastaus)))
 
 (defn- hae-paivystajatiedot-sijainnilla [db parametrit kayttaja]

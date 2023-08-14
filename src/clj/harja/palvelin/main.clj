@@ -73,6 +73,7 @@
     [harja.palvelin.palvelut.info :as info]
     [harja.palvelin.palvelut.hallinta.rajoitusalue-pituudet :as rajoitusalue-pituudet]
     [harja.palvelin.palvelut.hallinta.palauteluokitukset :as palauteluokitukset-hallinta]
+    [harja.palvelin.palvelut.hallinta.urakoiden-lyhytnimet :as urakoidenlyhytnimet-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
@@ -267,9 +268,9 @@
                         (api-sahkoposti/->ApiSahkoposti asetukset)
                         [:http-palvelin :db :integraatioloki :itmf])
 
-      :solita-sahkoposti
+      :ulkoinen-sahkoposti
       (component/using
-        (let [{:keys [vastausosoite palvelin]} (:solita-sahkoposti asetukset)]
+        (let [{:keys [vastausosoite palvelin]} (:ulkoinen-sahkoposti asetukset)]
           (sahkoposti/luo-vain-lahetys palvelin vastausosoite))
         [:integraatioloki :db])
 
@@ -350,7 +351,7 @@
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
                         (kayttajatiedot/->Kayttajatiedot)
-                        [:http-palvelin :db :solita-sahkoposti])
+                        [:http-palvelin :db :ulkoinen-sahkoposti])
       :urakoitsijat (component/using
                       (urakoitsijat/->Urakoitsijat)
                       [:http-palvelin :db])
@@ -607,7 +608,9 @@
       :debug (component/using
                (debug/->Debug)
                {:db :db-replica
-                :http-palvelin :http-palvelin})
+                :http-palvelin :http-palvelin
+                :ulkoinen-sahkoposti :ulkoinen-sahkoposti
+                :api-sahkoposti :api-sahkoposti})
 
       :reimari (component/using
                  (let [{:keys [url kayttajatunnus salasana]} (:reimari asetukset)]
@@ -796,7 +799,12 @@
       :palauteluokitukset-hallinta
       (component/using
         (palauteluokitukset-hallinta/->PalauteluokitustenHallinta)
-        [:http-palvelin :db :palautevayla]))))
+        [:http-palvelin :db :palautevayla])
+
+      :lyhytnimien-hallinta
+      (component/using
+        (urakoidenlyhytnimet-hallinta/->UrakkaLyhytnimienHallinta)
+        [:http-palvelin :db]))))
 
 (defonce harja-jarjestelma nil)
 

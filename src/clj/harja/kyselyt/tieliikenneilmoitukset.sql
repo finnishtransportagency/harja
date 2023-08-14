@@ -5,6 +5,7 @@ SELECT
   ulompi_i.urakka,
   ulompi_i.tunniste,
   u.nimi AS urakkanimi,
+  u.lyhyt_nimi AS lyhytnimi,
   CASE
       WHEN u.kesakausi_alkupvm IS NOT NULL THEN
           CONCAT(TO_CHAR(NOW(), 'YYYY'), '-', TO_CHAR(u.kesakausi_alkupvm, 'MM-DD'))
@@ -22,6 +23,8 @@ SELECT
   ulompi_i.lisatieto,
   ulompi_i.ilmoitustyyppi,
   ulompi_i.selitteet,
+  ulompi_i.kuvat,
+  ulompi_i."emon-ilmoitusid",
   ulompi_i.aihe,
   ulompi_i.tarkenne,
   ulompi_i.urakkatyyppi,
@@ -160,6 +163,8 @@ SELECT
   otsikko,
   ilmoitustyyppi,
   selitteet,
+  kuvat,
+  "emon-ilmoitusid",
   i.aihe AS aihe_id,
   pa.nimi AS aihe_nimi,
   i.tarkenne AS tarkenne_id,
@@ -202,6 +207,8 @@ SELECT
   i.lisatieto,
   i.ilmoitustyyppi,
   i.selitteet,
+  i.kuvat,
+  i."emon-ilmoitusid",
   i.aihe,
   i.tarkenne,
   i.urakkatyyppi,
@@ -340,6 +347,8 @@ SELECT
   otsikko,
   ilmoitustyyppi,
   selitteet,
+  i.kuvat,
+  i."emon-ilmoitusid",
   i.aihe AS aihe_id,
   i.tarkenne AS tarkenne_id,
   pa.nimi AS aihe_nimi,
@@ -405,6 +414,8 @@ SELECT
     i.lisatieto,
     i.otsikko,
     i.selitteet,
+    i.kuvat,
+    i."emon-ilmoitusid",
     i.aihe AS aihe_id,
     i.tarkenne AS tarkenne_id,
     pa.nimi AS aihe_nimi,
@@ -465,7 +476,9 @@ INSERT INTO ilmoitus
  "vastaanotettu-alunperin",
  "valitetty-urakkaan",
  aihe,
- tarkenne)
+ tarkenne,
+ kuvat,
+ "emon-ilmoitusid")
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -484,7 +497,10 @@ VALUES
    :vastaanotettu-alunperin :: TIMESTAMPTZ,
    :valitetty-urakkaan :: TIMESTAMP,
    :aihe,
-   :tarkenne);
+   :tarkenne,
+   :kuvat :: TEXT [],
+   :emon-ilmoitusid
+   );
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
