@@ -40,7 +40,7 @@
       {:arvo (:erotus-toteuma rivi)
        :jos-tyhja "-"
        :desimaalien-maara 2
-       :ryhmitelty? false}
+       :ryhmitelty? true}
       (if (> (:erotus-toteuma rivi) 0)
         {:varoitus? true}
         {:korosta-hennosti? true}))]])
@@ -61,7 +61,7 @@
              {:arvo (:erotus-toteuma-yhteensa rivi)
               :jos-tyhja "-"
               :desimaalien-maara 2
-              :ryhmitelty? false}
+              :ryhmitelty? true}
              (if (> (:erotus-toteuma-yhteensa rivi) 0)
                {:varoitus? true}
                {:korosta-hennosti? true}))]]})
@@ -76,19 +76,22 @@
   >= 4.0 c korkeampi - 30% korotusta
   "
   [erotus]
-  (cond
-    (< erotus 2.0) 0
-    (< erotus 3.0) 10
-    (< erotus 4.0) 20
-    (>= erotus 4.0) 30
-    ;; Kaikissa virhetilanteissa palauta nolla
-    :else 0))
+  (when erotus
+    (cond
+      (< erotus 2.0) 0
+      (< erotus 3.0) 10
+      (< erotus 4.0) 20
+      (>= erotus 4.0) 30
+      ;; Kaikissa virhetilanteissa palauta nolla
+      :else 0)))
 
 (defn kohtuullistettu-kayttoraja
   "Käyttöraja on suolaa tonneina.
   Vaikutus on arvo 0 - 30, joka kertoo prosenteista. 10 = 10%."
   [kayttoraja vaikutus]
-  (* (float kayttoraja) (+ (/ vaikutus 100) 1)))
+  ;; Varmista, että molemmat arvot ovat annettu
+  (when (and kayttoraja vaikutus (<= vaikutus 30) (>= vaikutus 0))
+    (* (float kayttoraja) (+ (/ vaikutus 100) 1))))
 
 (defn paattele-raportin-viimeinen-hoitovuosi
   "Aina ei voida näyttää koko hoitokautta tai kaikkia esim viittä vuotta, koska urakka on kesken.
@@ -108,6 +111,10 @@
         (pvm/vuosi (pvm/nyt))
         ;; Jos on vuoden alku, niin otetaan nykypäivästä yksi vuosi pois
         (dec (pvm/vuosi (pvm/nyt)))))))
+
+(defn jasenna-raportin-otsikko [urakan-tiedot hoitovuodet]
+  (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu " (pvm/pvm (:alkupvm urakan-tiedot)) " - " (str "30.09." (inc (last hoitovuodet)))))
+
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                     hallintayksikko-id :hallintayksikko
@@ -176,13 +183,13 @@
                :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                :koko-maa "KOKO MAA")
         raportin-nimi nimi
-        otsikko (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu " (pvm/pvm (:alkupvm urakan-tiedot)) " - " (str "30.09." (inc (last hoitovuodet))))
+        otsikko (jasenna-raportin-otsikko urakan-tiedot hoitovuodet)
 
         otsikkorivit [{:otsikko "Hoitovuosi" :leveys 1 :fmt :kokonaisluku :tasaa :vasen}
                       {:otsikko "Keskilämpötilojen keskiarvo tarkastelujaksolla (°C)" :leveys 1 :fmt :numero :tasaa :oikea}
                       {:otsikko "Keskilämpötilojen keskiarvo pitkällä aikavälillä (°C)" :leveys 1 :fmt :numero :tasaa :oikea}
                       {:otsikko "Erotus (°C)" :leveys 1 :fmt :numero :tasaa :oikea}
-                      {:otsikko "Lämpötilan vaikutus käyttörajaan" :leveys 1 :fmt :numero :tasaa :oikea}
+                      {:otsikko "Lämpötilan vaikutus käyttörajaan" :leveys 1 :fmt :teksti :tasaa :oikea}
                       {:otsikko "Käyttöraja (kuivatonnia)" :leveys 1 :fmt :numero :tasaa :oikea}
                       {:otsikko "Kohtuullistettu käyttöraja (kuivatonnia)" :leveys 1 :fmt :numero :tasaa :oikea}
                       {:otsikko "Toteuma (kuivatonnia)" :leveys 1 :fmt :numero :tasaa :oikea}
