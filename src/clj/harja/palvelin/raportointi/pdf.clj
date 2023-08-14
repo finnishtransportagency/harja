@@ -33,6 +33,10 @@
 (def korostettu-vari "#004D99")
 (def hennosti-korostettu-vari "#E0EDF9")
 (def harmaa-korostettu-vari "#FAFAFA")
+(def harmaa-himmennys-vari "#858585")
+(def valiotsikko-tumma-vari "#e1e1e1")
+(def yhteenveto-tuma-vari "#fafafa")
+(def varoitus-punaine-vari "#dd0000")
 
 (defmulti muodosta-pdf
           "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
@@ -104,7 +108,7 @@
                           (raportti-domain/virhetyylit tyyli)
                           "black")}
         tyyli (if font-size (assoc tyyli :font-size font-size) tyyli)
-        tyyli (if himmenna? (assoc tyyli :color "#858585") tyyli)
+        tyyli (if himmenna? (assoc tyyli :color harmaa-himmennys-vari) tyyli)
         tyyli (if lihavoi?
                 (merge tyyli {:font-weight "bold"})
                 tyyli)]
@@ -165,7 +169,7 @@
   [:fo:table-row
    [:fo:table-cell {:padding "1mm"
                     :font-weight "normal"
-                    :background-color "#e1e1e1"
+                    :background-color valiotsikko-tumma-vari
                     :number-columns-spanned (count sarakkeet)}
     [:fo:block {:space-after "0.5em"}]
     [:fo:block (cdata otsikko)]]])
@@ -223,7 +227,7 @@
         (taulukko-valiotsikko otsikko sarakkeet)
         (let [yhteenveto? (when (and viimeinen-rivi-yhteenveto?
                                      (= viimeinen-rivi rivi))
-                            {:background-color "#fafafa"
+                            {:background-color yhteenveto-tuma-vari
                              :border (str "solid 0.3mm " raportin-tehostevari)
                              :font-weight "bold"})
               korosta? (when (or korosta-rivi? (some #(= i-rivi %) korosta-rivit))
@@ -482,7 +486,7 @@
               :font-weight "bold"} teksti])
 
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
-  (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))
+  (muodosta-pdf [:teksti teksti {:vari varoitus-punaine-vari}]))
 
 (defmethod muodosta-pdf :infolaatikko [[_ teksti {:keys [tyyppi toissijainen-viesti leveys rivita?]}]]
   ;; TODO: Infolaatikon renderöintiä ei toistaiseksi tueta. Toteutetaan, jos tarve ilmenee.
