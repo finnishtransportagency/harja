@@ -36,8 +36,9 @@
                        "myohassa" {:class "myohassa" :selitys "Myöhässä"}
                        "puuttuu" {:class "puuttuu" :selitys "Puuttuu"}})
 
-(defn tyomaapaivakirja-listaus [e! {:keys [nayta-rivit] :as app}]
-  (let [solu-fn (fn [arvo _]
+(defn tyomaapaivakirja-listaus [e! {:keys [nayta-rivit valinnat] :as app}]
+  (let [hakumuoto (atom (:hakumuoto valinnat))
+        solu-fn (fn [arvo _]
                   (let [rivin-paivamaara (:paivamaara arvo)
                         viimeksi-klikattu-rivi (-> @tiedot/tila :viimeksi-valittu :paivamaara)]
                     ;; Kun käyttäjä klikkaa riviä, vaihda tämän rivin väriä
@@ -75,7 +76,7 @@
                             :nayta-rivina? true
                             :vaihtoehto-nayta (haun-valinnat app)
                             :valitse-fn #(e! (tiedot/->PaivitaHakumuoto %))}
-         tiedot/valittu-hakumuoto]]]
+         hakumuoto]]]
 
       [grid/grid {:tyhja "Työmaapäiväkirjoja ei ole valitulle aikavälille."
                   :tunniste :paivamaara
