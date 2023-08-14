@@ -250,7 +250,6 @@
   v/ValitseToteuma
   (process-event [{toteuma :toteuma} app]
     (peru-taustahaku app)
-    (println "jere testaa 1::" toteuma)
     (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (assoc toteuma :muokattava? (varustetoteuma-muokattava? toteuma))))]
       (kartalle (tulos!))))
 
