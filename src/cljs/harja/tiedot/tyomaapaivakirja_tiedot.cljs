@@ -138,24 +138,23 @@
 (defn suodata-rivit
   "Suodatetaan tulokset käyttäjän valitsemien suodattimien perusteella"
   [{:keys [tiedot]} hakumuoto]
-  (let [rivit (filter
-                (fn [{:keys [tila kommenttien-maara]}]
-                  (let [rivin-toimitustila tila]
-                    (or
-                      ;; Tila valittuna (Myöhästyneet / puuttuvat) 
-                      ;; -> Vastaako valittu hakumuoto rivin toimituksen tilaa
-                      (and
-                        hakumuoto
-                        (or
-                          (and (= hakumuoto :puuttuvat) (= rivin-toimitustila "puuttuu"))
-                          (and (= hakumuoto :myohastyneet) (= rivin-toimitustila "myohassa"))))
-                      ;; Kommentoidut valittu -> onko rivi kommentoitu
-                      (and
-                        (= hakumuoto :kommentoidut)
-                        (> kommenttien-maara 0))
-                      ;; Kaikki valittu -> pass 
-                      (= hakumuoto :kaikki)))) tiedot)]
-    rivit))
+  (filter
+    (fn [{:keys [tila kommenttien-maara]}]
+      (let [rivin-toimitustila tila]
+        (or
+          ;; Tila valittuna (Myöhästyneet / puuttuvat) 
+          ;; -> Vastaako valittu hakumuoto rivin toimituksen tilaa
+          (and
+            hakumuoto
+            (or
+              (and (= hakumuoto :puuttuvat) (= rivin-toimitustila "puuttuu"))
+              (and (= hakumuoto :myohastyneet) (= rivin-toimitustila "myohassa"))))
+          ;; Kommentoidut valittu -> onko rivi kommentoitu
+          (and
+            (= hakumuoto :kommentoidut)
+            (> kommenttien-maara 0))
+          ;; Kaikki valittu -> pass 
+          (= hakumuoto :kaikki)))) tiedot))
 
 (defn- hae-paivakirjat [app]
   (let [aikavali (get-in app [:valinnat :aikavali])
