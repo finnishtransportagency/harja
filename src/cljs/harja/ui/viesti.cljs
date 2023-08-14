@@ -78,8 +78,8 @@
               (when (:tehty @toast-viesti-sisalto)
                 ;; Korjataan viestin resetointi vanhalla ajalla
                 ;; Eli jos tehdään uusi viesti, noudatetaan uusimman viestin kestoa aina
-                (let [nyt-timestamp (-> (.getTime (pvm/nyt)) (+ 1))
-                      tehty-timestamp (-> (.getTime (:tehty @toast-viesti-sisalto)))
+                (let [nyt-timestamp (+ (.getTime (pvm/nyt)) 1)
+                      tehty-timestamp (.getTime (:tehty @toast-viesti-sisalto))
                       tehty-plus-kesto (+ tehty-timestamp kesto)]
                   ;; Jos kesto on käytetty loppuun nykyaikaan nähden, poista viesti 
                   (when (> nyt-timestamp tehty-plus-kesto)
