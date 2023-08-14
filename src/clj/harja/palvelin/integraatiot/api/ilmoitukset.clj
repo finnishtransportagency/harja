@@ -260,14 +260,14 @@
         (kasittele-kevyesti-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
           (fn [parametrit kayttaja db]
             (hae-ilmoitukset-ytunnuksella db parametrit kayttaja))
-          false)))
+          nil)))
     (julkaise-reitti
       http :hae-ilmoitukset-ytunnuksella
       (GET "/api/ilmoitukset/:ytunnus/:alkuaika" request
         (kasittele-kevyesti-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
           (fn [parametrit kayttaja db]
             (hae-ilmoitukset-ytunnuksella db parametrit kayttaja))
-          false)))
+          nil)))
 
 
     ;; Tässä rajapinnassa on virheellisesti kauttaviiva. Rajapinta duplikoitu ilman kauttaviivaa,
