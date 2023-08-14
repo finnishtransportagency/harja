@@ -211,7 +211,7 @@
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara))
         "Kohteiden määrä on noussut yhdellä")
 
-    (let [toteuma (hae-testipaikkaustoteuma db testipaikkauksen-ulkoinen-id)]
+    (let [toteuma (hae-testipaikkaustoteuma db testipaikkaustoteuman-ulkoinen-id)]
       (is (= (dissoc toteuma
                      ::paikkaus/kirjattu
                      ::paikkaus/id
