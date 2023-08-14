@@ -198,8 +198,7 @@
        [:span
         [napit/tallenna "Tallenna"
          (fn []
-           (let [kommentti-element (.getElementById js/document "kommentti-teksti")
-                 kirjoitettu-teksti (-> kommentti-element .-value)]
+           (let [kirjoitettu-teksti (-> (.getElementById js/document "kommentti-teksti") .-value)]
              (toggle-kentat "kommentti-lisaa" "kommentti-area")
              (e! (tiedot/->TallennaKommentti kirjoitettu-teksti))
              (tiedot/scrollaa-kommentteihin)))
