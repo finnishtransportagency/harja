@@ -97,7 +97,9 @@ UPDATE tyomaapaivakirja SET paivamaara = :paivamaara, ulkoinen_id = :ulkoinen-id
 
 -- name: poista-tyomaapaivakirjan-kommentti<!
 UPDATE tyomaapaivakirja_kommentti 
-SET poistettu = true, muokattu = now(), muokkaaja = :muokkaaja 
+  SET poistettu = true, 
+      muokattu = now(), 
+      muokkaaja = :muokkaaja 
 WHERE id = :id 
 AND tyomaapaivakirja_id = :tyomaapaivakirja_id 
 AND luoja = :kayttaja;

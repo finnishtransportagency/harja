@@ -117,7 +117,7 @@
           aikavali (if (= pvm-alku pvm-loppu)
                      pvm-alku
                      (str pvm-alku " - " pvm-loppu))]
-      (viesti/nayta! (str "Ohitettiin puuttuvat päiväkirjat aikaväliltä: " aikavali) :info 10000))))
+      (viesti/nayta-toast! (str "Ohitettiin puuttuvat päiväkirjat aikaväliltä: " aikavali) :neutraali-ikoni-keskella 10000))))
 
 (defn siirry-elementin-id [id aika]
   (siirrin/kohde-elementti-id id)

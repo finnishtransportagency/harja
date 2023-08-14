@@ -27,8 +27,7 @@
   (when tyomaapaivakirja
     [:<>
      [:h3.header-yhteiset (:urakka-nimi tyomaapaivakirja)]
-     ;; Id lisätty väliaikaisesti visualisointia varten
-     [:h1.header-yhteiset (str "Työmaapäiväkirja " (pvm/pvm (:paivamaara tyomaapaivakirja)) " id: " (:tyomaapaivakirja_id tyomaapaivakirja))]
+     [:h1.header-yhteiset (str "Työmaapäiväkirja " (pvm/pvm (:paivamaara tyomaapaivakirja)))]
 
      [:div.nakyma-otsikko-tiedot
 
