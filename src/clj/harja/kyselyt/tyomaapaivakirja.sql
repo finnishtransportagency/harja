@@ -73,9 +73,15 @@ WHERE ttt.versio = :versio
 GROUP BY ttt.id;
 
 -- name: hae-paivakirjan-kommentit
-SELECT tk.id, tk.luotu, tk.kommentti, k.etunimi, k.sukunimi, tk.luoja 
-FROM tyomaapaivakirja_kommentti tk 
-         LEFT JOIN kayttaja k ON k.id = tk.luoja
+SELECT 
+  tk.id, 
+  tk.luotu, 
+  tk.kommentti, 
+  k.etunimi, 
+  k.sukunimi, 
+  tk.luoja 
+  FROM tyomaapaivakirja_kommentti tk 
+  LEFT JOIN kayttaja k ON k.id = tk.luoja
 WHERE tk.tyomaapaivakirja_id = :tyomaapaivakirja_id 
   AND tk.poistettu = false 
 GROUP BY tk.id, k.etunimi, k.sukunimi, k.luoja;
