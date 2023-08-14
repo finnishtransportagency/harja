@@ -21,15 +21,61 @@
                                                                          :loppuaika loppuaika-sql})]
     paivakirjat))
 
+(defn- hae-kommentit [db tiedot]
+  (tyomaapaivakirja-kyselyt/hae-paivakirjan-kommentit db {:urakka_id (:urakka-id tiedot)
+                                                          :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)}))
+
+(defn- hae-tyomaapaivakirjan-kommentit [db user tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/raportit-tyomaapaivakirja user (:urakka-id tiedot))
+  (hae-kommentit db tiedot))
+
+(defn- tallenna-kommentti [db user tiedot]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/raportit-kommentit user (:urakka-id tiedot))
+  (tyomaapaivakirja-kyselyt/lisaa-kommentti<! db {:urakka_id (:urakka-id tiedot)
+                                                  :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)
+                                                  :versio (:versio tiedot)
+                                                  :kommentti (:kommentti tiedot)
+                                                  :luoja (:id user)})
+  (hae-kommentit db tiedot))
+
+(defn- poista-tyomaapaivakirjan-kommentti [db user tiedot]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/raportit-kommentit user (:urakka-id tiedot))
+  ;; Poistaa ainoastaan kommentin jos kommentti on poistajan itse tekemä
+  (tyomaapaivakirja-kyselyt/poista-tyomaapaivakirjan-kommentti<! db {:id (:id tiedot)
+                                                                     :kayttaja (:kayttaja tiedot)
+                                                                     :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)
+                                                                     :muokkaaja (:id user)})
+  (hae-kommentit db tiedot))
+
 (defrecord Tyomaapaivakirja []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
+    
     (julkaise-palvelu http-palvelin
       :tyomaapaivakirja-hae
       (fn [user tiedot]
         (hae-tyomaapaivakirjat db user tiedot)))
+    
+    (julkaise-palvelu http-palvelin
+      :tyomaapaivakirja-tallenna-kommentti
+      (fn [user tiedot]
+        (tallenna-kommentti db user tiedot)))
+    
+    (julkaise-palvelu http-palvelin
+      :tyomaapaivakirja-hae-kommentit
+      (fn [user tiedot]
+        (hae-tyomaapaivakirjan-kommentit db user tiedot)))
+    
+    (julkaise-palvelu http-palvelin
+      :tyomaapaivakirja-poista-kommentti
+      (fn [user tiedot]
+        (poista-tyomaapaivakirjan-kommentti db user tiedot)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
-    (poista-palvelut http-palvelin :tyomaapaivakirja-hae)
+    (poista-palvelut http-palvelin 
+      :tyomaapaivakirja-hae 
+      :tyomaapaivakirja-tallenna-kommentti
+      :tyomaapaivakirja-hae-kommentit
+      :tyomaapaivakirja-poista-kommentti)
     this))
