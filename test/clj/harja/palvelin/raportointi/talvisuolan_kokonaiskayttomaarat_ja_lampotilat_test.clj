@@ -6,6 +6,8 @@
             [harja.palvelin.komponentit
              [tietokanta :as tietokanta]
              [pdf-vienti :as pdf-vienti]]
+            [clj-time
+             [core :as t]]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.raportointi.testiapurit :as apurit]
             [harja.palvelin.palvelut.raportit :as raportit]
