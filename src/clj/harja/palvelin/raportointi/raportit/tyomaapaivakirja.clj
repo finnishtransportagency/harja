@@ -18,18 +18,19 @@
   (let [tapahtumarivit (reduce (fn [rivit onnettomuus]
                                  (conj
                                    rivit
-                                   [:jakaja true]
+                                   [:jakaja :poista-margin]
                                    (yhteiset/body-teksti (:kuvaus onnettomuus))))
                          [] tapahtumat)]
+    
     (into ()
       (conj
-        ;; Lisätään tyhjä rivi jos on tarpeen
-        (if (some? tapahtumat)
-          tapahtumarivit
-          (conj
-            [:jakaja true]
-            (yhteiset/placeholder-ei-tietoja ei-tapahtumia-teksti)))
-        [:jakaja true]
+        ;; Jos kuvaus on tyhjä, näytetään <ei tietoja>
+        (if (empty? (:kuvaus (first tapahtumat)))
+          (into []
+            [[:jakaja :poista-margin]
+             (yhteiset/placeholder-ei-tietoja ei-tapahtumia-teksti)])
+          tapahtumarivit)
+        [:jakaja :poista-margin]
         (yhteiset/osion-otsikko otsikko)))))
 
 ;;FIXME: Tähän alkoi menemään niin paljon aikaa, että tehdessä päädyttiin tekemään yksinkertainen mäppäys
@@ -63,8 +64,8 @@
                                                                          :loppuaika (c/to-sql-time (pvm/pvm-plus-tuntia paivamaara 24))})]
     [tehtavat1 tehtavat2 tehtavat3 tehtavat4 tehtavat5]))
 
-(defn suorita [db _ {:keys [valittu-rivi] :as parametrit}]
-  (if valittu-rivi
+(defn suorita [db _ {:keys [valittu-rivi]}]
+  (if (and valittu-rivi (:tila valittu-rivi))
     (let [tyomaapaivakirja (first (tyomaapaivakirja-kyselyt/hae-paivakirja db {:tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
                                                                                :versio (:versio valittu-rivi)}))
           ;; Tehtävien tietokantamäppäys on liian monimutkainen, niin haetaan ne erikseen
@@ -141,11 +142,15 @@
                                  (mapv
                                    #(konversio/pgobject->map % :kuvaus :string :aika :double)
                                    (konversio/pgarray->vector toimeksiannot)))))
+          kommentit (tyomaapaivakirja-kyselyt/hae-paivakirjan-kommentit db {:urakka_id (:urakka_id valittu-rivi)
+                                                                            :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
+                                                                            :versio (:versio valittu-rivi)})
           onnettomuudet (filter #(= "onnettomuus" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
           liikenteenohjaukset (filter #(= "liikenteenohjausmuutos" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
           yhteydenotot (filter #(= "tilaajan-yhteydenotto" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
           muut-kirjaukset (filter #(= "muut_kirjaukset" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
           otsikko "Työmaapäiväkirja"]
+      
       [:raportti {:nimi otsikko
                   :piilota-otsikko? true}
 
@@ -172,7 +177,6 @@
        ;; Muut huomiot
        (tapahtumataulukot muut-kirjaukset "Muut huomiot" "Ei muita huomioita")
 
-       ;; Kommentit (nämäkin pitäisi saada PDF raporttiin)
-       ;; Toteutetaan myöhemmin
-       #_[:tyomaapaivakirjan-kommentit _]])
+       ;; Kommentit
+       [:tyomaapaivakirjan-kommentit kommentit]])
     (log/debug "Raportin tiedot eivät ole latautuneet. Odotellaan hetki")))
