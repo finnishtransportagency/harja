@@ -140,4 +140,17 @@
                [[:arvo {:arvo "2020-2021"}] [:arvo {:arvo "Lämpötilatieto puuttuu", :huomio? true}] [:arvo {:arvo "Lämpötilatieto puuttuu", :huomio? true}] 0 "0 %" [:arvo {:arvo "Käyttöraja puuttuu", :huomio? true}] [:arvo {:arvo "-"}] [:arvo {:arvo "-"}] [:arvo {:arvo 0, :jos-tyhja "-", :desimaalien-maara 2, :ryhmitelty? true, :korosta-hennosti? true}]]
                [[:arvo {:arvo "2021-2022"}] [:arvo {:arvo "Lämpötilatieto puuttuu", :huomio? true}] [:arvo {:arvo "Lämpötilatieto puuttuu", :huomio? true}] 0 "0 %" [:arvo {:arvo "Käyttöraja puuttuu", :huomio? true}] [:arvo {:arvo "-"}] [:arvo {:arvo "-"}] [:arvo {:arvo 0, :jos-tyhja "-", :desimaalien-maara 2, :ryhmitelty? true, :korosta-hennosti? true}]]
                {:lihavoi? true, :korosta-hennosti? true,
-                :rivi [[:arvo {:arvo "Yhteensä"}] nil nil nil nil 0 0 1300M [:arvo {:arvo 1300M, :jos-tyhja "-", :desimaalien-maara 2, :ryhmitelty? true, :varoitus? true}]]}]]])))))
+                :rivi [[:arvo {:arvo "Yhteensä"}] nil nil nil nil
+                       [:arvo
+                        {:arvo      nil
+                         :jos-tyhja "-"}]
+                       [:arvo
+                        {:arvo      nil
+                         :jos-tyhja "-"}]
+                       1300M
+                       [:arvo
+                        {:arvo              0
+                         :desimaalien-maara 2
+                         :jos-tyhja         "-"
+                         :korosta-hennosti? true
+                         :ryhmitelty?       true}]]}]]])))))
