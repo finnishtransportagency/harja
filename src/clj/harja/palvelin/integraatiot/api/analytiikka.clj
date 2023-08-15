@@ -55,8 +55,7 @@
 (s/def ::urakka-id #(and (string? %) (not (nil? (konversio/konvertoi->int %))) (pos? (konversio/konvertoi->int %))))
 (s/def ::alkuaika #(and (string? %) (>= (count %) 20) (or
                                                         (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))
-                                                        (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muotoZ) %))
-                                                        )))
+                                                        (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muotoZ) %)))))
 (s/def ::loppuaika #(and (string? %) (>= (count %) 20) (or
                                                          (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))
                                                          (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muotoZ) %)))))
