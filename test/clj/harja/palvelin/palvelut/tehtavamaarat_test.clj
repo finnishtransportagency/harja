@@ -83,22 +83,15 @@
 
 
 (deftest tehtavaryhmat-ja-toimenpiteet-testi
-  ;; Testissä palvelun käyttämä SQL-kysely toimii odotettuna arvona
-  ;; Jos SQL:ää muutetaan, useimmiten on syytä muuttaa sitä tästä altakin
-  (let [tr-tp-lkm (count
-                    (q (str "SELECT distinct tpk3.id  as  \"toimenpide-id\",
-                                    tpk3.nimi as  toimenpide,
-                                    tr.nimi as  \"tehtavaryhma-nimi\",
-                                    tr.id as  \"tehtavaryhma-id\",
-                                    tr.jarjestys as  jarjestys,
-                                    tpi.id as  toimenpideinstanssi
-                             FROM tehtavaryhma tr
-                                    LEFT JOIN tehtava tpk4 ON tr.id = tpk4.tehtavaryhma AND tpk4.ensisijainen is true AND
-                                                                         tpk4.poistettu is not true AND tpk4.piilota is not true
+  (let [tr-tp-lkm (ffirst
+                    (q (str "SELECT count(distinct tr3.id)
+                               FROM tehtavaryhma tr3
+                                    LEFT JOIN tehtava tpk4 ON tr3.id = tpk4.tehtavaryhma
+                                            AND tpk4.ensisijainen is true
+                                            AND tpk4.poistettu is not true AND tpk4.piilota is not true
                                     JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
-                                    JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id
-                                    and tpi.urakka = " @oulun-maanteiden-hoitourakan-2019-2024-id
-                         " WHERE tr.nimi not like '%Lisätyöt%';")))
+                                    JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id and tpi.urakka = "
+                         @oulun-maanteiden-hoitourakan-2019-2024-id)))
         tehtavaryhmat-toimenpiteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                      :tehtavaryhmat-ja-toimenpiteet
                                      +kayttaja-jvh+
