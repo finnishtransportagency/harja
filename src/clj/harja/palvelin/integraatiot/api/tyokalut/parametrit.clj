@@ -6,6 +6,7 @@
            (java.util Date)))
 
 (def pvm-aika-muoto "yyyy-MM-dd'T'HH:mm:ssX")
+(def pvm-aika-muotoZ "yyyy-MM-dd'T'HH:mm:ssZ")
 (def esimerkki-aika (.format (SimpleDateFormat. pvm-aika-muoto) (Date.)))
 
 (defn pvm-aika-opt
