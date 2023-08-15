@@ -76,7 +76,7 @@ WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa';
 -- Ojitus
 INSERT INTO tehtava (nimi, emo, yksikko, suunnitteluyksikko, tehtavaryhma, jarjestys, hinnoittelu, api_seuranta,
                      api_tunnus, suoritettavatehtava, ensisijainen, aluetieto, luotu, luoja)
-VALUES ('Ojitus', (select id from toimenpide where koodi = '23124'), 'jkm', 'jkm',
+VALUES ('Ojitus', (select id from toimenpide where koodi = '20191'), 'jkm', 'jkm',
         (select id from tehtavaryhma where nimi = 'Avo-ojitus, soratiet (Z)'), 551, '{kokonaishintainen}', TRUE, NULL,
         'ojitus', TRUE, TRUE, current_timestamp, (select id from kayttaja where kayttajanimi = 'LX377737'));
 UPDATE tehtava SET api_tunnus = id WHERE nimi = 'Ojitus';
