@@ -66,13 +66,18 @@
 (defmethod muodosta-pdf :vain-arvo [arvo] arvo)
 
 (defmethod muodosta-pdf :arvo [[_ {:keys [arvo desimaalien-maara fmt ryhmitelty? jos-tyhja] :as elementti}]]
-  [:fo:inline
-   [:fo:inline (if-not (nil? arvo)
-                 (cond
-                   desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
-                   fmt (fmt arvo)
-                   :else arvo)
-                 jos-tyhja)]])
+  (let [;; Negaativisille numeroille laitetaan negaatio, muuten ei tehdä mitään
+        etuliite (if (and (number? arvo) (neg? arvo)) "-\u00A0" "")
+        ;; Ja, koska etuliite lisätään käsin, pitää negaatio poistaa
+        arvo (if (and (number? arvo) (neg? arvo)) (* -1 arvo)  arvo)]
+    [:fo:inline
+     [:fo:inline (if-not (nil? arvo)
+                   (str etuliite
+                     (cond
+                       desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
+                       fmt (fmt arvo)
+                       :else arvo))
+                   jos-tyhja)]]))
 
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
