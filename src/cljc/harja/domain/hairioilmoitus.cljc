@@ -30,6 +30,63 @@
      (sort-by ::pvm)
      first))
 
+(defn tulevat-hairiot [hairiot]
+  (->> hairiot
+    (filter #(and
+               (::voimassa? %)
+               (::alkuaika %)
+               (pvm/ennen? (pvm/nyt) (::alkuaika %)))
+      )
+    (sort-by ::alkuaika)))
+
+(defn vanhat-hairiot [hairiot]
+  (->> hairiot
+    (filter #(or
+               (not (::voimassa? %))
+               (pvm/jalkeen? (pvm/nyt) (::loppuaika %))
+               )
+      )
+    (sort-by ::loppupvm)))
+
+(defn- aikavalit-leikkaavat-sivuaminen-sallittu? [vanhaalku vanhaloppu uusialku uusiloppu]
+  (boolean (or
+             (and
+               (not (nil? uusialku))
+               (not (nil? uusiloppu))
+               (not (nil? vanhaalku))
+               (not (nil? vanhaloppu))
+               (pvm/jalkeen? uusiloppu vanhaalku)
+               (pvm/ennen? uusialku vanhaloppu))
+             (and
+               (nil? uusialku)
+               (not (nil? uusiloppu))
+               (not (nil? vanhaalku))
+               (not (nil? vanhaloppu))
+               (pvm/jalkeen? uusiloppu vanhaalku))
+             (and
+               (nil? uusiloppu)
+               (not (nil? uusialku))
+               (not (nil? vanhaalku))
+               (not (nil? vanhaloppu))
+               (pvm/ennen? uusialku vanhaloppu))
+             (and
+               (nil? vanhaalku)
+               (not (nil? uusialku))
+               (not (nil? uusiloppu))
+               (not (nil? vanhaloppu))
+               (pvm/jalkeen? vanhaloppu uusialku))
+             (and
+               (nil? vanhaloppu)
+               (not (nil? uusialku))
+               (not (nil? uusiloppu))
+               (not (nil? vanhaalku))
+               (pvm/ennen? vanhaalku uusiloppu))
+             )))
+(defn onko-paallekkainen [uusialku uusiloppu vanhat]
+  (some #(aikavalit-leikkaavat-sivuaminen-sallittu? (::alkuaika %) (::loppuaika %) uusialku uusiloppu) vanhat)
+  ;(some #(pvm/aikavalit-leikkaavat? (::alkuaika %) (::loppuaika %) uusialku uusiloppu) vanhat)
+  )
+
 (defn voimassaoleva-hairio
   ([hairiot]
    (voimassaoleva-hairio hairiot (pvm/nyt)))
@@ -50,3 +107,4 @@
                   :else true)))
      (sort-by ::pvm)
      first)))
+

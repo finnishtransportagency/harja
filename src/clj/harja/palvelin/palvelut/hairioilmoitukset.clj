@@ -9,6 +9,7 @@
             [harja.domain.muokkaustiedot :as muok]
             [harja.domain.hairioilmoitus :as hairio]
             [specql.core :as specql]
+            [specql.op :as op]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [harja.pvm :as pvm]))
@@ -20,7 +21,7 @@
                                                hairio/sarakkeet
                                                {}))))
 
-(defn- hae-tuorein-voimassaoleva-hairioilmoitus [db user]
+(defn- hae-voimassaoleva-hairioilmoitus [db user]
   (oikeudet/ei-oikeustarkistusta!) ;; Kuka vaan saa hakea tuoreimman häiriön
   {:hairioilmoitus (-> (hae-kaikki-hairioilmoitukset db user false)
                      (hairio/voimassaoleva-hairio))})
@@ -32,17 +33,40 @@
                   {::hairio/voimassa? true})
   (hae-kaikki-hairioilmoitukset db user false))
 
+(defn- aseta-hairioilmoitus-pois [db user {::hairio/keys [id]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
+  (specql/update! db ::hairio/hairioilmoitus
+    {::hairio/voimassa? false}
+    {::hairio/id id})
+  (log/debug "Asetettiin häiriöilmoitus pois päältä: " id)
+  (hae-kaikki-hairioilmoitukset db user false))
+
+(defn- aseta-vanhat-hairioilmoitukset-pois [db]
+  (specql/update! db ::hairio/hairioilmoitus
+    {::hairio/voimassa? false}
+    {::hairio/voimassa? true
+     ::hairio/loppuaika (op/< (c/to-sql-time (t/now)))
+     }))
 (defn- aseta-hairioilmoitus [db user {::hairio/keys [viesti tyyppi alkuaika loppuaika]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
-  (aseta-kaikki-hairioilmoitukset-pois db user)
-  (specql/insert! db ::hairio/hairioilmoitus
-    {::hairio/viesti viesti
-     ::hairio/pvm (c/to-sql-date (t/now))
-     ::hairio/voimassa? true
-     ::hairio/tyyppi (or tyyppi :hairio)
-     ::hairio/alkuaika alkuaika
-     ::hairio/loppuaika loppuaika})
-  (hae-kaikki-hairioilmoitukset db user false))
+  (aseta-vanhat-hairioilmoitukset-pois db) ; TODO: onko hyvä paikka tehdä tämä?
+  (if-not (hairio/onko-paallekkainen alkuaika loppuaika (specql/fetch db ::hairio/hairioilmoitus
+                                                             hairio/sarakkeet
+                                                             {::hairio/voimassa? true}))
+    (do
+      (specql/insert! db ::hairio/hairioilmoitus
+        {::hairio/viesti viesti
+         ::hairio/pvm (c/to-sql-date (t/now))
+         ::hairio/voimassa? true
+         ::hairio/tyyppi (or tyyppi :hairio)
+         ::hairio/alkuaika alkuaika
+         ::hairio/loppuaika loppuaika})
+      (log/debug "Asetettiin häiriöilmoitus")
+      (hae-kaikki-hairioilmoitukset db user false))
+    (do
+      (log/debug "Häiriöilmoituksen luonti epäonnistui")
+      [{:virhe (str "Alkuaika " alkuaika " ja loppuaika " loppuaika " leikkaavat olemassaolevaa häiriöilmoitusta")}])
+    ))
 
 (defrecord Hairioilmoitukset []
   component/Lifecycle
@@ -56,9 +80,9 @@
 
     (julkaise-palvelu
       http
-      :hae-tuorein-voimassaoleva-hairioilmoitus
+      :hae-voimassaoleva-hairioilmoitus
       (fn [user _]
-        (hae-tuorein-voimassaoleva-hairioilmoitus db user)))
+        (hae-voimassaoleva-hairioilmoitus db user)))
 
     (julkaise-palvelu
       http
@@ -71,13 +95,20 @@
       :aseta-kaikki-hairioilmoitukset-pois
       (fn [user _]
         (aseta-kaikki-hairioilmoitukset-pois db user)))
-    this)
+
+  (julkaise-palvelu
+    http
+    :aseta-hairioilmoitus-pois
+    (fn [user tiedot]
+      (aseta-hairioilmoitus-pois db user tiedot)))
+  this)
 
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
       :hae-hairioilmoitukset
-      :hae-tuorein-voimassaoleva-hairioilmoitus
+      :hae-voimassaoleva-hairioilmoitus
       :aseta-hairioilmoitus
-      :aseta-kaikki-hairioilmoitukset-pois)
+      :aseta-kaikki-hairioilmoitukset-pois
+      :aseta-hairioilmoitus-pois)
     this))

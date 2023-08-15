@@ -15,7 +15,7 @@
 (def nayta-hairioilmoitus? (atom true))
 
 (defn hae-tuorein-hairioilmoitus! []
-  (go (let [vastaus (<! (k/post! :hae-tuorein-voimassaoleva-hairioilmoitus {}))]
+  (go (let [vastaus (<! (k/post! :hae-voimassaoleva-hairioilmoitus {}))]
         (when-not (k/virhe? vastaus)
           (reset! tuore-hairioilmoitus vastaus)))))
 

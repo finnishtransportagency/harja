@@ -33,17 +33,23 @@
                                                         ::hairio/loppuaika loppuaika}))]
         (reset! tallennus-kaynnissa? false)
         (reset! asetetaan-hairioilmoitus? false)
-        (if (k/virhe? vastaus)
-          (viesti/nayta! "Häiriöilmoituksen asettaminen epäonnistui!" :warn)
+        (if (or
+              (k/virhe? vastaus)
+              (:virhe (first vastaus)))
+          (do
+            (viesti/nayta-toast!
+              (str "Häiriöilmoituksen asettaminen epäonnistui!" "\n" (:virhe (first vastaus)))
+              :varoitus
+              (* 60 1000)))
           (do (reset! hairiot vastaus)
               (reset! tuore-hairioilmoitus {:tyyppi :hairio :teksti nil})
               (hairio-ui/hae-tuorein-hairioilmoitus!))))))
 
-(defn poista-hairioilmoitus []
+(defn poista-hairioilmoitus [{:keys [id]}]
   (reset! tallennus-kaynnissa? true)
-  (go (let [vastaus (<! (k/post! :aseta-kaikki-hairioilmoitukset-pois {}))]
+  (go (let [vastaus (<! (k/post! :aseta-hairioilmoitus-pois {::hairio/id id}))]
         (reset! tallennus-kaynnissa? false)
         (if (k/virhe? vastaus)
           (viesti/nayta! "Häiriöilmoituksen poistaminen epäonnistui!" :warn)
           (do (reset! hairiot vastaus)
-              (hairio-ui/hae-tuorein-hairioilmoitus!))))))
+            (hairio-ui/hae-tuorein-hairioilmoitus!))))))
