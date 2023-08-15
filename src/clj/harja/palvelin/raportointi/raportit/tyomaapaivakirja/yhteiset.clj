@@ -3,16 +3,19 @@
 
 (defn body-teksti [teksti]
   [:varillinen-teksti
-   {:kustomi-tyyli "body-text"
-    :arvo teksti}])
+   {:arvo teksti
+    :font-size "8pt"
+    :kustomi-tyyli "body-text"}])
 
 (defn osion-otsikko [otsikko]
   [:otsikko-heading otsikko {:padding-top "50px"}])
 
 (defn placeholder-ei-tietoja [teksti]
   [:varillinen-teksti
-   {:kustomi-tyyli "ei-tietoja"
-    :arvo teksti}])
+   {:arvo teksti
+    :himmenna? true
+    :font-size "8pt"
+    :kustomi-tyyli "ei-tietoja"}])
 
 (defn taulukko [{:keys [gridin-otsikko rivin-tiedot rivit oikealle-tasattavat]}]
   [:taulukko {:otsikko gridin-otsikko

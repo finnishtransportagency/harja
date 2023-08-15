@@ -273,6 +273,12 @@ tr.uusitehtavakoodi td {
   }
 }
 
+.toast-keskella {
+  top: 25%;
+  left: 35%;
+  width: 30%;
+}
+
 .toast-viesti {
   padding-left: 12px;
   padding-right: 12px;
@@ -297,6 +303,19 @@ tr.uusitehtavakoodi td {
     background: @lemon-light;
     border-radius: 4px;
     border: 1px solid @lemon-default;
+
+    span.livicon-check {
+      color: @harmaa2;
+      font-size: 24px;
+    }
+  }
+
+  &.neutraali-keskella {
+    background: @lemon-light;
+    border-radius: 4px;
+    border: 1px solid @lemon-default;
+    align-items: center;
+    justify-content: center;
 
     span.livicon-check {
       color: @harmaa2;
