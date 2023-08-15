@@ -10,10 +10,11 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.raportti :refer [muodosta-html]]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.nakymasiirrin :as siirrin]
+            [harja.ui.napit :as napit]
             [harja.pvm :as pvm]
-            [harja.tiedot.navigaatio :as nav])
-  (:require-macros [harja.atom :refer [reaction-writable]]))
+            [harja.tiedot.navigaatio :as nav]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.transit :as t]))
 
 (defn haun-valinnat [tiedot]
   (let [myohassa (filter
@@ -21,21 +22,23 @@
                    (:tiedot tiedot))
         puuttuu (filter
                   #(= "puuttuu" (:tila %))
-                  (:tiedot tiedot))]
+                  (:tiedot tiedot))
+        kommentoitu (filter
+                      #(> (:kommenttien-maara %) 0)
+                      (:tiedot tiedot))]
+    
     {:kaikki (str "Kaikki (" (count (:tiedot tiedot)) ")")
      :myohastyneet (str "Myöhästyneet (" (count myohassa) ")")
      :puuttuvat (str "Puuttuvat (" (count puuttuu) ")")
-     ;:kommentoidut "Kommentoidut (123)" Lisätään kommentoidut sitten, kun niitä voi kommentoida
-     }))
+     :kommentoidut (str "Kommentoidut (" (count kommentoitu) ")")}))
 
 (def toimituksen-tila {"ok" {:class "ok" :selitys "Ok"}
                        "myohassa" {:class "myohassa" :selitys "Myöhässä"}
                        "puuttuu" {:class "puuttuu" :selitys "Puuttuu"}})
 
-(def valittu-hakumuoto (atom :kaikki))
-
 (defn tyomaapaivakirja-listaus [e! {:keys [nayta-rivit valinnat] :as app}]
-  (let [solu-fn (fn [arvo _]
+  (let [hakumuoto (atom (:hakumuoto valinnat))
+        solu-fn (fn [arvo _]
                   (let [rivin-paivamaara (:paivamaara arvo)
                         viimeksi-klikattu-rivi (-> @tiedot/tila :viimeksi-valittu :paivamaara)]
                     ;; Kun käyttäjä klikkaa riviä, vaihda tämän rivin väriä
@@ -73,7 +76,7 @@
                             :nayta-rivina? true
                             :vaihtoehto-nayta (haun-valinnat app)
                             :valitse-fn #(e! (tiedot/->PaivitaHakumuoto %))}
-         valittu-hakumuoto]]]
+         hakumuoto]]]
 
       [grid/grid {:tyhja "Työmaapäiväkirjoja ei ole valitulle aikavälille."
                   :tunniste :paivamaara
@@ -133,51 +136,126 @@
          :leveys 0.5}]
        nayta-rivit]]]))
 
-(defn suorita-tyomaapaivakirja-raportti [e!]
+(defn- paivakirjan-kommentit [e! valittu-rivi]
+  (let [toggle-kentat (fn [nayta piilota]
+                        ;; Tämä tehtiin alunperin raporttien puolelle jonka takia käytetään DOM manipulaatiota eikä tuckin tila atomia
+                        ;; Toggleaa kun toinen element näytetään niin toinen piiloitetaan
+                        ;; Parametrina elementtien ID:t, resetoi aina kommenttikentän (text-area)
+                        (let [nayta-element (.-classList (.getElementById js/document nayta))
+                              kommentti-element (.getElementById js/document "kommentti-teksti")
+                              piilota-element (.-classList (.getElementById js/document piilota))]
+                          (set! (.-value kommentti-element) "")
+                          (.add piilota-element "piilota-kentta")
+                          (.remove nayta-element "piilota-kentta")))
+        
+        kommentit (:kommentit valittu-rivi)]
+
+    ;; Käyttäjien kommentit
+    [:div#Kommentit.row.filtterit.kommentit-valistys
+     [:h2 "Kommentit"]
+     (for [{:keys [id luotu kommentti etunimi sukunimi luoja]} kommentit]
+       ^{:key id}
+       [:span
+        [:div.alarivi-tiedot
+         [:span (str (pvm/pvm-aika luotu))]
+         [:span (str etunimi " " sukunimi)]]
+        
+        [:div.kommentti
+         [:h1.tieto-rivi kommentti]
+         [:span.klikattava.kommentti-poista
+          {:on-click #(do
+                       (e! (tiedot/->PoistaKommentti
+                            {:id id :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi) :luoja luoja}))
+                        (tiedot/scrollaa-kommentteihin))}
+          
+          (ikonit/action-delete)]]])
+
+     ;; TODO Tällä tehdään muutoshistoria kommentti
+     ;; Muutoshistoria tiedot
+     #_[:div.alarivi-tiedot
+        [:span "11.10.2022 07:45"]
+        [:span "Tauno Työnjohtaja"]
+        [:span.muutos-info "Jälkikäteismerkintä urakoitsijajärjestelmästä"]]
+
+     ;; Muutoshistoria
+     #_[:div.kommentti.muutos
+        [:h1.tieto-rivi "Työmaapäiväkirja päivitetty 11.10.2022 08:10: lisätty rekka-kolari."]
+        [:a.klikattava.info-rivi "Näytä muutoshistoria"]]
+
+     [:div#kommentti-lisaa
+      [:a.klikattava {:on-click #(do 
+                                   (toggle-kentat "kommentti-area" "kommentti-lisaa")
+                                   (tiedot/siirry-elementin-id "kommentti-area" 150))}
+
+       [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Lisää kommentti"]]]
+
+     [:span#kommentti-area.kentta-text.piilota-kentta
+      [:span "Lisää kommentti"]
+      [:textarea#kommentti-teksti]
+      [:span "Myös työmaapäiväkirjaan kirjoitetut kommentit tallentuvat PDF:ään ja ne arkistoidaan muun työpäiväkirjan mukana."]
+
+      [:div
+       [:span
+        [napit/tallenna "Tallenna"
+         (fn []
+           (let [kirjoitettu-teksti (-> (.getElementById js/document "kommentti-teksti") .-value)]
+             (toggle-kentat "kommentti-lisaa" "kommentti-area")
+             (e! (tiedot/->TallennaKommentti kirjoitettu-teksti))
+             (tiedot/scrollaa-kommentteihin)))
+         {:vayla-tyyli? true}]]
+
+       [:span
+        [napit/tallenna "Peruuta"
+         #(toggle-kentat "kommentti-lisaa" "kommentti-area")
+         {:luokka "nappi-toissijainen" :vayla-tyyli? true}]]]]]))
+
+(defn- paivakirjan-sticky [e!]
+  ;; Sticky bar
+  [:div.ala-valinnat-fixed
+
+   [:div.napit.klikattava {:on-click #(e! (tiedot/->SelaaPaivakirjoja :edellinen))}
+    [:span.nuoli
+     [ikonit/harja-icon-navigation-previous-page]]
+    [:span "Edellinen"]]
+
+   [:div.napit.klikattava {:on-click #(e! (tiedot/->SelaaPaivakirjoja :seuraava))}
+    [:span "Seuraava"]
+    [:span.nuoli
+     [ikonit/harja-icon-navigation-next-page]]]
+
+   [:div.napit.ei-reunoja.klikattava
+    ^{:key "raporttipdf"}
+    [:form {:target "_blank" :method "POST"
+            :action (k/pdf-url :raportointi)}
+     [:input {:type "hidden" :name "parametrit"
+              :value (t/clj->transit @tiedot/raportin-parametrit)}]
+
+     [:button {:type "submit"}
+      [:span.nuoli
+       [ikonit/livicon-download]]
+      [:span "Tallenna PDF"]]]]
+
+   [:div.napit.ei-reunoja.klikattava {:on-click #(tiedot/scrollaa-viimeksi-valitulle-riville e!)}
+    [:span.nuoli [ikonit/harja-icon-navigation-close]]
+    [:span "Sulje"]]])
+
+(defn suorita-tyomaapaivakirja-raportti [e! valittu-rivi]
   (if-let [tiedot @tiedot/raportin-tiedot]
     [:div.tyomaapaivakirja
      ;; Päiväkirjanäkymä
      [:div.paivakirja-nakyma
       ;; Takaisin nappi
-      [:div.klikattava {:class "sulje" :on-click #(do
-                                                    (e! (tiedot/->PoistaRiviValinta))
-                                                    ;; Rullataan käyttäjä viimeksi klikatulle riville
-                                                    (.setTimeout js/window (fn [] (siirrin/kohde-elementti-luokka "viimeksi-valittu-tausta")) 150))}
+      [:div.klikattava {:class "sulje" :on-click #(tiedot/scrollaa-viimeksi-valitulle-riville e!)}
        [ikonit/harja-icon-navigation-close]]
 
       ;; Raportin html
-      [muodosta-html (assoc-in tiedot [1 :tunniste] tiedot/raportti-avain)]]
+      [muodosta-html (assoc-in tiedot [1 :tunniste] tiedot/raportti-avain)]
+
+      ;; Kommentit
+      (paivakirjan-kommentit e! valittu-rivi)]
 
      ;; Sticky bar (Edellinen - Seuraava) Tallenna PDF
-     ;;TODO: Toteutetaan myöhemmin
-     #_[:div.ala-valinnat-fixed
-
-        [:div.napit.klikattava
-         [:span.nuoli
-          [ikonit/harja-icon-navigation-previous-page]]
-         [:span "Edellinen"]]
-
-        [:div.napit.klikattava
-         [:span "Seuraava"]
-         [:span.nuoli
-          [ikonit/harja-icon-navigation-next-page]]]
-
-        [:div.napit.ei-reunoja.klikattava
-         [:span.nuoli
-          [ikonit/livicon-download]]
-         [:span "Tallenna PDF"]]
-
-        [:div.napit.ei-reunoja.klikattava
-         [:span.nuoli
-          [ikonit/harja-icon-action-send-email]]
-         [:span "Lähetä sähköpostilla"]]
-
-        [:div.napit.ei-reunoja.klikattava {:on-click #(do
-                                                        (e! (tiedot/->PoistaRiviValinta))
-                                                        ;; Rullataan käyttäjä viimeksi klikatulle riville
-                                                        (.setTimeout js/window (fn [] (siirrin/kohde-elementti-luokka "viimeksi-valittu-tausta")) 150))}
-         [:span.nuoli [ikonit/harja-icon-navigation-close]]
-         [:span "Sulje"]]]]
+     (paivakirjan-sticky e!)]
 
     [yleiset/ajax-loader "Ladataan tietoja..."]))
 
@@ -192,8 +270,8 @@
              (when-not (and (pvm/sama-pvm? (first vanha) (first uusi))
                          (pvm/sama-pvm? (second vanha) (second uusi)))
                (e! (tiedot/->PaivitaAikavali {:aikavali uusi})))))
-
-         (e! (tiedot/->HaeTiedot @nav/valittu-urakka-id)))
+         
+         (e! (tiedot/->HaeTiedot)))
 
       #(e! (tiedot/->PoistaRiviValinta)))
 
@@ -201,7 +279,9 @@
       [:div
        (if valittu-rivi
          ;; Jos valittu rivi, näytä päiväkirjanäkymä (tehty raporttien puolelle)
-         [suorita-tyomaapaivakirja-raportti e!]
+         (do 
+           (e! (tiedot/->HaeKommentit))
+           [suorita-tyomaapaivakirja-raportti e! valittu-rivi])
 
          ;; Mikäli ei valittua riviä, päivitä aikavälivalinta ja näytä listaus
          [tyomaapaivakirja-listaus e! app])])))

@@ -35,6 +35,10 @@
 (def varoitus-vari "#f8d7d1")
 (def huomio-vari "#FFF0BF")
 (def harmaa-korostettu-vari "#FAFAFA")
+(def harmaa-himmennys-vari "#858585")
+(def valiotsikko-tumma-vari "#e1e1e1")
+(def yhteenveto-tumma-vari "#fafafa")
+(def varoitus-punainen-vari "#dd0000")
 
 (defmulti muodosta-pdf
           "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
@@ -101,14 +105,18 @@
   [:fo:inline
    [:fo:inline (str arvo (when selite (str " (" selite ")")))]])
 
-(defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt lihavoi?]}]]
+(defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt lihavoi? font-size himmenna?]}]]
   (let [tyyli {:color (or itsepaisesti-maaritelty-oma-vari
                           (raportti-domain/virhetyylit tyyli)
                           "black")}
+        tyyli (if font-size (assoc tyyli :font-size font-size) tyyli)
+        tyyli (if himmenna? (assoc tyyli :color harmaa-himmennys-vari) tyyli)
         tyyli (if lihavoi?
                 (merge tyyli {:font-weight "bold"})
                 tyyli)]
-    [:fo:inline
+    ;; Muutettu inline -> block
+    ;; Korjaa bugin päiväkirjaraportissa, ei vaikuta mitenkän ulkonäköön
+    [:fo:block
      [:fo:inline tyyli
       (if fmt (fmt arvo) arvo)]]))
 
@@ -163,7 +171,7 @@
   [:fo:table-row
    [:fo:table-cell {:padding "1mm"
                     :font-weight "normal"
-                    :background-color "#e1e1e1"
+                    :background-color valiotsikko-tumma-vari
                     :number-columns-spanned (count sarakkeet)}
     [:fo:block {:space-after "0.5em"}]
     [:fo:block (cdata otsikko)]]])
@@ -265,7 +273,7 @@
         (taulukko-valiotsikko otsikko sarakkeet)
         (let [yhteenveto? (when (and viimeinen-rivi-yhteenveto?
                                      (= viimeinen-rivi rivi))
-                            {:background-color "#fafafa"
+                            {:background-color yhteenveto-tumma-vari
                              :border (str "solid 0.3mm " raportin-tehostevari)
                              :font-weight "bold"})
               korosta? (when (or korosta-rivi? (some #(= i-rivi %) korosta-rivit))
@@ -479,7 +487,7 @@
              (str elem ":")
              (str (fmt/euro hoitokauden-arvo)))))))))
 
-(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko hoitokausi-arvotaulukko?] :as optiot} sarakkeet data]]
+(defn taulukko [otsikko hoitokausi-arvotaulukko? sarakkeet data optiot]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
     (if hoitokausi-arvotaulukko?
       (hoitokausi-kuukausi-arvotaulukko sarakkeet data)
@@ -492,13 +500,20 @@
         (taulukko-body sarakkeet data optiot)]
        [:fo:block {:space-after "1em"}]])))
 
+(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko hoitokausi-arvotaulukko?] :as optiot} sarakkeet data]]
+  (taulukko otsikko hoitokausi-arvotaulukko? sarakkeet data optiot))
+
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
 
-(defmethod muodosta-pdf :jakaja [[_ _]]
-  [:fo:block {:border "solid 0.1mm gray"
-              :margin-top "30px"
-              :margin-bottom "30px"}])
+(defmethod muodosta-pdf :jakaja [[_ margin]]
+  (let [tyyli {:border "solid 0.1mm gray"}
+        ;; Jos haluaan ""poistaa margin"" jakajasta, laitetaan vaan 8px
+        margin-px (if-not (= margin :poista-margin) "30px" "8px")
+        tyyli (assoc tyyli
+                :margin-top margin-px
+                :margin-bottom margin-px)]
+    [:fo:block tyyli]))
 
 (defmethod muodosta-pdf :otsikko [[_ teksti]]
   [:fo:block {:padding-top "5mm" :font-size otsikon-fonttikoko} teksti])
@@ -525,7 +540,7 @@
               :font-weight "bold"} teksti])
 
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
-  (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))
+  (muodosta-pdf [:teksti teksti {:vari varoitus-punainen-vari}]))
 
 (defmethod muodosta-pdf :infolaatikko [[_ teksti {:keys [tyyppi toissijainen-viesti leveys rivita?]}]]
   ;; TODO: Infolaatikon renderöintiä ei toistaiseksi tueta. Toteutetaan, jos tarve ilmenee.
