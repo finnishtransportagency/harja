@@ -4,6 +4,7 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
+            [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
@@ -180,6 +181,7 @@
         valittu-aikavali? (= aikarajaus :valittu-aikakvali)
         ;; Ei käytetä kk-väliä jos oma aikaväli valittuna
         kyseessa-kk-vali? (if valittu-aikavali? false kyseessa-kk-vali?)
+        kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
         ;; Jos näytetään tietyn vuoden dataa, tai omaa aikaväliä, sarakkeen otsikko on vain "Määrä"
         laskutettu-teksti (if (or koko-vuosi? valittu-aikavali?) "Määrä" laskutettu-teksti)
         ;; Hoitokausi valittuna?
@@ -222,7 +224,8 @@
                                              :urakkatyyppi (:urakkatyyppi urakan-parametrit))
                                       (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot db user urakan-parametrit koko-vuosi? vuoden-kk? valittu-aikavali?)))
                               urakoiden-parametrit)
-
+        perusluku (when urakka-id (:perusluku (ffirst laskutusyhteenvedot)))
+        indeksikertoimet (when urakka-id (bs/hae-urakan-indeksikertoimet db user {:urakka-id urakka-id}))
         tiedot-tuotteittain (fmap #(group-by :nimi %) laskutusyhteenvedot)
         kaikki-tuotteittain (apply merge-with concat tiedot-tuotteittain)
         kaikki-tuotteittain-summattuna (when kaikki-tuotteittain
@@ -249,7 +252,11 @@
     [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")
                 :otsikon-koko :iso}
      [:otsikko-heading-small (str alueen-nimi)]
-
+     (when perusluku
+       (yleinen/urakan-indlask-perusluku {:perusluku perusluku}))
+     (when (or kyseessa-hoitokausi-vali? kyseessa-kk-vali?)
+       (yleinen/urakan-hoitokauden-indeksikerroin {:indeksikertoimet indeksikertoimet
+                                                   :hoitokausi (pvm/paivamaaran-hoitokausi alkupvm)}))
      ;; Data on vectorina järjestyksessä, käytetään 'otsikot' indeksiä oikean datan näyttämiseen  
      (concat (for [x otsikot]
                (do

@@ -2,15 +2,16 @@
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [clojure.string :as string]
+            [clj-time.coerce :refer [to-date-time]]
+            [ring.util.codec :refer [form-decode]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
             [harja.palvelin.integraatiot.velho.yhteiset :as velho-yhteiset]
             [harja.palvelin.integraatiot.velho.yhteiset-test :as yhteiset-test]
+            [harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma :refer [velho-aika->aika]]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
-            [harja.tyokalut.yleiset :as yleiset]
             [org.httpkit.fake :refer [with-fake-http]]
             [clojure.test :refer :all])
   (:import (org.postgis PGgeometry)))
@@ -285,12 +286,12 @@
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
         (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))))
 
-(defn testi-tiedosto-oideille [{:keys [palvelu api-versio kohdeluokka] :as lahde} testitunniste]
-  (let [kohdeluokka-tiedostonimessa (string/replace kohdeluokka "/" "_")]
+(defn testi-tiedosto-oideille [{:keys [palvelu api-versio kohdeluokka]} testitunniste]
+  (let [kohdeluokka-tiedostonimessa (str/replace kohdeluokka "/" "_")]
     (str "test/resurssit/velho/varusteet/" testitunniste "/" palvelu "_api_" api-versio "_tunnisteet_" kohdeluokka-tiedostonimessa ".jsonl")))
 
-(defn testi-tiedosto-kohteille [{:keys [palvelu api-versio kohdeluokka] :as lahde} testitunniste]
-  (let [kohdeluokka-tiedostonimessa (string/replace kohdeluokka "/" "_")]
+(defn testi-tiedosto-kohteille [{:keys [palvelu api-versio kohdeluokka]} testitunniste]
+  (let [kohdeluokka-tiedostonimessa (str/replace kohdeluokka "/" "_")]
     (str "test/resurssit/velho/varusteet/" testitunniste "/" palvelu "_api_" api-versio "_historia_kohteet_" kohdeluokka-tiedostonimessa ".jsonl")))
 
 (defn olemassa-testi-tiedostot? [lahde testitunniste]
@@ -299,7 +300,7 @@
     (and (.exists (io/file oid-tiedostonimi)) (.exists (io/file kohde-tiedostonimi)))))
 
 (defn lahde-oid-urlista [url]
-  (let [url-osat (string/split url #"[/\\?]")
+  (let [url-osat (str/split url #"[/\\?]")
         palvelu (nth url-osat 3)
         api-versio (nth url-osat 5)
         kohdeluokka (str (nth url-osat 7) "/" (nth url-osat 8))]
@@ -342,14 +343,14 @@
         fake-kohteet (fn [_ {:keys [body headers _]} _]
                        (let [oidit-pyynnosta (json/read-str body)
                              oidit-lahtojoukko (json/read-str @odotettu-oidit-vastaus)
-                             vastauksen-kohteiden-rivit (string/split-lines @odotettu-kohteet-vastaus)
+                             vastauksen-kohteiden-rivit (str/split-lines @odotettu-kohteet-vastaus)
                              vastauksen-oid-joukko (as-> oidit-lahtojoukko x
                                                          (partition osajoukkojen-koko osajoukkojen-koko nil x)
                                                          (nth x @kohteiden-kutsukerta))
                              vastauksen-kohteet (as-> vastauksen-kohteiden-rivit x
                                                       (partition osajoukkojen-koko osajoukkojen-koko nil x)
                                                       (nth x @kohteiden-kutsukerta)
-                                                      (string/join "\n" x))]
+                                                      (str/join "\n" x))]
                          (is (= vastauksen-oid-joukko oidit-pyynnosta)
                              "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
                          (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
@@ -688,18 +689,21 @@
   "1. Tarkistetaan, että oikea päivämäärä tallentuu kantaan.
    2. Tarkistetaan, että tunnisteita haetaan tallennetulla päivämäärällä (jälkeen parametri get:ssa)."
   ; ASETA
-  (let [odotettu-viimeisin-aika (pvm/iso-8601->aika "2021-11-23T00:00:00Z")
+  (let [odotettu-viimeisin-aika (pvm/->pvm-aika "23.11.2021 00:00:00")
         fake-tunnisteet (fn [_ _ _]
                           {:status 200 :body "[]"})
         fake-tunnisteet-2 (fn [_ {:keys [_ _ url]} _]
                             (let [jalkeen (->> url
                                             (re-find #"alkumuokkausaika=(.*)")
                                             second
-                                            pvm/iso-8601->aika)]
-                              (is (= odotettu-viimeisin-aika jalkeen)))
+                                            form-decode
+                                            velho-aika->aika)]
+                              (is (= (to-date-time odotettu-viimeisin-aika) jalkeen)))
                             {:status 200 :body "[]"})
         ei-sallittu (fake-ei-saa-kutsua-fn "Oid-lista oli tyhjä. Tätä ei saa kutsua.")]
     ; SUORITA
+    ;; Nollataan tokenien hakuaika, koska aiemmissa testeissä käytetään nykyaikaa ja testissä menneisyyttä.
+    (reset! velho-yhteiset/velho-tokenit nil)
     (with-fake-http
       [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
@@ -707,11 +711,11 @@
        {:url +velho-toimenpiteet-oid-url+ :method :get} (fake-tunnisteet-yleinen toimenpide-oidit-yleinen)
        {:url +velho-toimenpiteet-kohde-url+ :method :post} (fake-kohteet-yleinen toimenpide-oidit-yleinen toimenpide-kohteet-yleinen)]
       ; with-redefs korvataan kello, josta viimeisin hakuaika poimitaan
-      (with-redefs [harja.pvm/nyt (fn [] (identity odotettu-viimeisin-aika))]
+      (with-redefs [pvm/nyt (constantly odotettu-viimeisin-aika)]
         (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))
         (let [viimeksi-haetut (q-map (str "SELECT kohdeluokka, viimeisin_hakuaika
                                                   FROM varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle"))]
-          (is (every? (fn [x] (= odotettu-viimeisin-aika (:viimeksi_haettu x))) viimeksi-haetut)
+          (is (every? #(= odotettu-viimeisin-aika (:viimeisin_hakuaika %)) viimeksi-haetut)
               "Kaikilla kohdeluokilla piti olla odotettu viimeisin hakuaika.")
           (let [odotetut-kohdelajit (set (map :kohdeluokka (conj varusteet/+tietolajien-lahteet+ varusteet/+valimaiset-varustetoimenpiteet+)))
                 viimeksi-haettu-kohdelajit (set (map :kohdeluokka viimeksi-haetut))]
