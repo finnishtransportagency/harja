@@ -53,8 +53,12 @@
           nil
           nil
           nil
-          (:kayttoraja-yhteensa rivi)
-          (:kohtuull-kayttoraja-yhteensa rivi)
+          (if (= 0 (:kayttoraja-yhteensa rivi))
+            [:arvo {:arvo nil :jos-tyhja "-"}]
+            (:kayttoraja-yhteensa rivi))
+          (if (= 0 (:kohtuull-kayttoraja-yhteensa rivi))
+            [:arvo {:arvo nil :jos-tyhja "-"}]
+            (:kohtuull-kayttoraja-yhteensa rivi))
           (:toteuma-yhteensa rivi)
           [:arvo
            (merge
@@ -212,7 +216,9 @@
                        :kohtuull-kayttoraja-yhteensa kohtuullistettu-kayttoraja-yhteensa
                        :toteuma-yhteensa toteuma-yhteensa
                        :erotus-toteuma-yhteensa (if (and
-                                                      (not (nil? kohtuullistettu-kayttoraja-yhteensa))
+                                                      (and
+                                                        (not (nil? kohtuullistettu-kayttoraja-yhteensa))
+                                                        (not (= 0 kohtuullistettu-kayttoraja-yhteensa)))
                                                       (not (nil? toteuma-yhteensa)))
                                                   (- toteuma-yhteensa kohtuullistettu-kayttoraja-yhteensa)
                                                   0)}
