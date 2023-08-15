@@ -97,6 +97,19 @@
   (when (and kayttoraja vaikutus (<= vaikutus 30) (>= vaikutus 0))
     (* (float kayttoraja) (+ (/ vaikutus 100) 1))))
 
+
+
+(defn paattele-kaytettava-keskilampotilajakso
+  "Päätellään pitkän aikajakson keskilämpötila urakan alkuvuodesta"
+  [urakan_alkuvuosi lampotila-vuodelle]
+  (when (and urakan_alkuvuosi (number? urakan_alkuvuosi))
+    (let [lampotila-avain (cond
+                            (<= urakan_alkuvuosi 2014) :keskilampotila-1971-2000
+                            (<= urakan_alkuvuosi 2022) :keskilampotila-1981-2010
+                            :else :keskilampotila-1991-2020)
+          keskilampo-pitka (lampotila-avain lampotila-vuodelle)]
+      keskilampo-pitka)))
+
 (defn paattele-raportin-viimeinen-hoitovuosi
   "Aina ei voida näyttää koko hoitokautta tai kaikkia esim viittä vuotta, koska urakka on kesken.
   Päätellään tässä, että mikä on viimeinen valmistunut hoitokausi."
@@ -125,6 +138,7 @@
                     :default :koko-maa)
         ;; Haetaan tiedot hoitokausittain - ja siihen tarvitaan urakan kesto
         urakan-tiedot (first (urakat-kyselyt/hae-yksittainen-urakka db {:urakka_id urakka-id}))
+        urakan_alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         viimeinen-mahdollinen-vuosi (paattele-raportin-viimeinen-hoitovuosi (:loppupvm urakan-tiedot))
         hoitovuodet (range
                       (pvm/vuosi (:alkupvm urakan-tiedot))
@@ -139,13 +153,8 @@
                                                         (when (= vuosi (pvm/vuosi (:alkupvm rivi)))
                                                           rivi))
                                                   urakan-lampotilat)
-                             ;; Hox!!
-                             ;; Pitkien 30 vuotisten keskiarvolämpötilojen jaksona käytetään arvoa
-                             ; :keskilampotila-1981-2010 vaikka urakan mahdollisesti pitäisi käyttää jo
-                             ; uudempaa :keskilampotila-1991-2020 jaksoa. Näitä uudempia jaksoja ei kuitenkaan ole vielä tietokannassa
-                             ; tätä tehtäessä, eikä ole mitään takeita, että ne saataisiin piakkoin. Tästä syystä, raportti käyttää tätä
-                             ; vanhaa jaksoa!
-                             keskilampo-pitka (:keskilampotila-1981-2010 lampotila-vuodelle)
+                             ;; Päätellään pitkän aikajakson keskilämpötila urakan alkuvuodesta
+                             keskilampo-pitka (paattele-kaytettava-keskilampotilajakso urakan_alkuvuosi lampotila-vuodelle)
                              keskilampo (:keskilampotila lampotila-vuodelle)
                              ;; Lämpötilojen erotus celciuksena
                              erotus-c (if (and (not (nil? keskilampo)) (not (nil? keskilampo-pitka)))

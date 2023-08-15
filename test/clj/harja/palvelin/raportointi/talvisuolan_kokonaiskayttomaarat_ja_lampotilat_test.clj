@@ -90,6 +90,22 @@
     (is (= "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu 01.10.2022 - 30.09.2022"
           (talvisuola-rap/jasenna-raportin-otsikko urakan-tiedot hoitovuodet)))))
 
+(deftest paattele-kaytettava-keskilampotilajakso-test
+  (let [lampotila-vuodelle {:keskilampotila-1971-2000 1     ;; ennen vuotta 2014
+                            :keskilampotila-1981-2010 2     ;; ennen vuotta 2022
+                            :keskilampotila-1991-2020 3}    ;; muut
+                            ]
+    ;; Jos ei ole tiedossa, niin palautetaan nil
+    (is (= nil (talvisuola-rap/paattele-kaytettava-keskilampotilajakso nil lampotila-vuodelle)))
+    (is (= 1 (talvisuola-rap/paattele-kaytettava-keskilampotilajakso 2012 lampotila-vuodelle)))
+    (is (= 1 (talvisuola-rap/paattele-kaytettava-keskilampotilajakso 2014 lampotila-vuodelle)))
+    (is (= 2 (talvisuola-rap/paattele-kaytettava-keskilampotilajakso 2015 lampotila-vuodelle)))
+    (is (= 2 (talvisuola-rap/paattele-kaytettava-keskilampotilajakso 2016 lampotila-vuodelle)))
+    (is (= 2 (talvisuola-rap/paattele-kaytettava-keskilampotilajakso 2022 lampotila-vuodelle)))
+    (is (= 3 (talvisuola-rap/paattele-kaytettava-keskilampotilajakso 2023 lampotila-vuodelle)))
+    (is (= 3 (talvisuola-rap/paattele-kaytettava-keskilampotilajakso 2027 lampotila-vuodelle)))
+    (is (= nil (talvisuola-rap/paattele-kaytettava-keskilampotilajakso "jarkko" lampotila-vuodelle)))))
+
 (deftest raportin-suoritus-talvisuolan-kokonaismaaralle-toimii
   (let [urakan-nimi "Oulun MHU 2019-2024"
         urakka-id (hae-urakan-id-nimella urakan-nimi)
