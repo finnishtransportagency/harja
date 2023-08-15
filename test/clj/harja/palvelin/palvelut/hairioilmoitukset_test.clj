@@ -117,8 +117,7 @@
                             (:http-palvelin jarjestelma)
                             :hae-hairioilmoitukset
                             +kayttaja-jvh+
-                            {})
-          ]
+                            {})]
       (is (is (::hairio/voimassa? (first vastaus))))
       (is (= (::hairio/voimassa? (first poiston-jalkeen)) false))))
 

@@ -45,8 +45,7 @@
   (specql/update! db ::hairio/hairioilmoitus
     {::hairio/voimassa? false}
     {::hairio/voimassa? true
-     ::hairio/loppuaika (op/< (c/to-sql-time (t/now)))
-     }))
+     ::hairio/loppuaika (op/< (c/to-sql-time (t/now)))}))
 (defn- aseta-hairioilmoitus [db user {::hairio/keys [viesti tyyppi alkuaika loppuaika]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
   (aseta-vanhat-hairioilmoitukset-pois db) ; TODO: onko hyvä paikka tehdä tämä?
@@ -65,8 +64,7 @@
       (hae-kaikki-hairioilmoitukset db user false))
     (do
       (log/debug "Häiriöilmoituksen luonti epäonnistui")
-      [{:virhe (str "Alkuaika " alkuaika " ja loppuaika " loppuaika " leikkaavat olemassaolevaa häiriöilmoitusta")}])
-    ))
+      [{:virhe (str "Alkuaika " alkuaika " ja loppuaika " loppuaika " leikkaavat olemassaolevaa häiriöilmoitusta")}])))
 
 (defrecord Hairioilmoitukset []
   component/Lifecycle

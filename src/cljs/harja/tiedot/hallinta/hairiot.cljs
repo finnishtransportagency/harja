@@ -36,14 +36,13 @@
         (if (or
               (k/virhe? vastaus)
               (:virhe (first vastaus)))
-          (do
-            (viesti/nayta-toast!
-              (str "Häiriöilmoituksen asettaminen epäonnistui!" "\n" (:virhe (first vastaus)))
-              :varoitus
-              (* 60 1000)))
+          (viesti/nayta-toast!
+            (str "Häiriöilmoituksen asettaminen epäonnistui!" "\n" (:virhe (first vastaus)))
+            :varoitus
+            (* 60 1000))
           (do (reset! hairiot vastaus)
-              (reset! tuore-hairioilmoitus {:tyyppi :hairio :teksti nil})
-              (hairio-ui/hae-tuorein-hairioilmoitus!))))))
+            (reset! tuore-hairioilmoitus {:tyyppi :hairio :teksti nil})
+            (hairio-ui/hae-tuorein-hairioilmoitus!))))))
 
 (defn poista-hairioilmoitus [{:keys [id]}]
   (reset! tallennus-kaynnissa? true)

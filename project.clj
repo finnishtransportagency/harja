@@ -177,7 +177,7 @@
   ;; Näitä cljsbuild tarvitsee testaamista varten doo:n kanssa.
   :cljsbuild {:builds [{:id "test"
                         :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"
-                                       "test/cljs" "test/doo" "test/shared-cljs" "test/cljc/data" "test/cljc/tyokalut"]
+                                       "test/cljs" "test/doo" "test/shared-cljs" "test/cljc"]
                         :compiler {:output-to "target/cljs/test/test.js"
                                    :output-dir "target/cljs/test"
                                    :optimizations :none

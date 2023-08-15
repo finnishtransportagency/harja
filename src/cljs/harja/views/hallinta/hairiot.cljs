@@ -96,9 +96,7 @@
            {:disabled @tiedot/tallennus-kaynnissa?}])])])
 
 (defn- tulevat-hairioilmoitukset [hairiot]
-  (let [
-        tulevat (hairio/tulevat-hairiot hairiot)
-        ]
+  (let [tulevat (hairio/tulevat-hairiot hairiot)]
     [:div
      [:h3 "Tulevat häiriöilmoitukset"]
      (if (empty? tulevat)
@@ -106,10 +104,9 @@
        [:ul
         (for* [hairio tulevat]
           [:div
-             [:li (listaa-hairioilmoitus hairio)]
-          [:div.flex-row [napit/poista "Poista häiriöilmoitus" #(tiedot/poista-hairioilmoitus {:id (::hairio/id hairio)})
-                      {:disabled @tiedot/tallennus-kaynnissa?}
-              ]]])])]))
+           [:li (listaa-hairioilmoitus hairio)]
+           [:div.flex-row [napit/poista "Poista häiriöilmoitus" #(tiedot/poista-hairioilmoitus {:id (::hairio/id hairio)})
+                           {:disabled @tiedot/tallennus-kaynnissa?}]]])])]))
 
 (defn hairiot []
   (komp/luo
@@ -121,8 +118,7 @@
       (let [hairiotilmoitukset @tiedot/hairiot
             voimassaoleva-hairio (hairio/voimassaoleva-hairio hairiotilmoitukset)
             tulevat-hairiot (hairio/tulevat-hairiot hairiotilmoitukset)
-            vanhat-hairiot (hairio/vanhat-hairiot hairiotilmoitukset)
-            ]
+            vanhat-hairiot (hairio/vanhat-hairiot hairiotilmoitukset)]
         (if (nil? hairiotilmoitukset)
           [ajax-loader "Haetaan..."]
 
@@ -130,11 +126,9 @@
            [harja.ui.debug/debug {:a hairiotilmoitukset
                                   :voimassaoleva voimassaoleva-hairio
                                   :tulevat tulevat-hairiot
-                                  :vanhat vanhat-hairiot
-                                  }]
+                                  :vanhat vanhat-hairiot}]
            [voimassaoleva-hairioilmoitus voimassaoleva-hairio]
            [tulevat-hairioilmoitukset tulevat-hairiot]
            [vanhat-hairioilmoitukset vanhat-hairiot]
            [napit/yleinen-ensisijainen "Aseta häiriöilmoitus"
-            #(reset! tiedot/asetetaan-hairioilmoitus? true)]
-           ])))))
+            #(reset! tiedot/asetetaan-hairioilmoitus? true)]])))))
