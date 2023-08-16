@@ -194,68 +194,48 @@
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
 
-(defn- korostetaanko-hennosti
+(defn- korosta-kolumni-arvosta
   "Yleisesti PDF:n solun formatointi asetetaan rivitasolla. Tällä funktiolla voidaan määrittää
-  solutasoisia hentoja korostuksia, eli vaalean sinistä taustaa.
-  Käytetään soluelementille annettua hento-korostus-arvoa ensisijaisesti. Toissijaisesti käytetään riville annettua.
+  solutasoisia korostuksia, eli eri värisiä taustoja.
+  Käytetään soluelementille eli arvolle annettua korostusa, joita on kolme:
+  ':korosta-hennosti?'
+  ':varoitus?'
+  ':huomio?'
 
-  'korosta-hennosti?' ensimmäinen parametri tulee rivitasolta.
-  'arvo-datassa' on koko soluelementin sisältö ja jos sille on määritelty hento korostus, niin asettaan taustaväri."
-  [korosta-hennosti? arvo-datassa]
-  (cond
-    (and
-      (raportti-domain/raporttielementti? arvo-datassa)
-      (false? (:korosta-hennosti? (second arvo-datassa))))
-    {}
-    korosta-hennosti? korosta-hennosti?
-    (and
-      (raportti-domain/raporttielementti? arvo-datassa)
-      (:korosta-hennosti? (second arvo-datassa)))
-    {:background-color hennosti-korostettu-vari
-     :color "black"}
-    :else {}))
-
-(defn- korosta-varoitus
-  "Yleisesti PDF:n solun formatointi asetetaan rivitasolla. Tällä funktiolla voidaan määrittää
-  solutasoisia virheen korostuksia, eli vaalean punaista taustaa.
-  Käytetään soluelementille annettua varoitus?-arvoa ensisijaisesti. Toissijaisesti käytetään riville annettua.
-
-  'varoitus?' ensimmäinen parametri tulee rivitasolta.
-  'arvo-datassa' on koko soluelementin sisältö ja jos sille on määritelty varoituksen korostus, niin asettaan taustaväri."
-  [varoitus? arvo-datassa]
-  (cond
-    (and
-      (raportti-domain/raporttielementti? arvo-datassa)
-      (false? (:varoitus? (second arvo-datassa))))
-    {}
-    varoitus? varoitus?
-    (and
-      (raportti-domain/raporttielementti? arvo-datassa)
-      (:varoitus? (second arvo-datassa)))
-    {:background-color varoitus-vari
-     :color "black"}
-    :else {}))
-
-(defn- korosta-huomio
-  "Yleisesti PDF:n solun formatointi asetetaan rivitasolla. Tällä funktiolla voidaan määrittää
-  solutasoisia huomion korostuksia, eli vaalean keltaista taustaa.
-  Käytetään soluelementille annettua huomio?-arvoa ensisijaisesti. Toissijaisesti käytetään riville annettua.
-
-  'huomio?' ensimmäinen parametri tulee rivitasolta.
-  'arvo-datassa' on koko soluelementin sisältö ja jos sille on määritelty huomion korostus, niin asettaan taustaväri."
-  [huomio? arvo-datassa]
-  (cond
-    (and
-      (raportti-domain/raporttielementti? arvo-datassa)
-      (false? (:huomio? (second arvo-datassa))))
-    {}
-    huomio? huomio?
-    (and
-      (raportti-domain/raporttielementti? arvo-datassa)
-      (:huomio? (second arvo-datassa)))
-    {:background-color huomio-vari
-     :color "black"}
-    :else {}))
+  'arvo-datassa' on koko soluelementin sisältö ja jos sille on määritelty korostus, niin asettaan taustaväri korostuksen mukaan."
+  [arvo-datassa]
+  (let [korostusavain (if (and arvo-datassa (vector? arvo-datassa))
+                        (cond
+                          (:korosta-hennosti? (second arvo-datassa)) :korosta-hennosti?
+                          (:varoitus? (second arvo-datassa)) :varoitus?
+                          (:huomio? (second arvo-datassa)) :huomio?
+                          :default :ei-korostusta)
+                        :ei-korostusta)
+        korostus-arvo-datassa (when (and
+                                      arvo-datassa
+                                      (vector? arvo-datassa)
+                                      (korostusavain (second arvo-datassa)))
+                                (korostusavain (second arvo-datassa)))
+        taustavari (case korostusavain
+                     :korosta-hennosti? hennosti-korostettu-vari
+                     :varoitus? varoitus-vari
+                     :huomio? huomio-vari
+                     nil)
+        korostus (cond
+                   ;; korostusta ei ole asetettu data -elementtiin
+                   (and
+                     (raportti-domain/raporttielementti? arvo-datassa)
+                     (false? korostus-arvo-datassa))
+                   {}
+                   (= korostusavain :ei-korostusta) {}
+                   ;; Korostus asetettu data elementtiin
+                   (and
+                     (raportti-domain/raporttielementti? arvo-datassa)
+                     korostus-arvo-datassa)
+                   {:background-color taustavari
+                    :color "black"}
+                   :else {})]
+    korostus))
 
 (defn- taulukko-rivit [sarakkeet data viimeinen-rivi
                        {:keys [viimeinen-rivi-yhteenveto? korosta-rivit
@@ -333,9 +313,11 @@
                                korosta?
                                valkoinen?
                                korosta-harmaa?
-                               (korostetaanko-hennosti korosta-hennosti? arvo-datassa)
-                               (korosta-varoitus varoitus? arvo-datassa)
-                               (korosta-huomio huomio? arvo-datassa)
+                               ;; Rivin korostustiedot ajaa koluminikohtaisten korostusten yli.
+                               ;; Tarkistetaan siis, onko jo korostukset olemassa, jos ei ole, niin haetaan arvo datasta eli kolumilta
+                               (if (or korosta-hennosti? varoitus? huomio?)
+                                 (first (filter #(not (nil? %)) (into #{} [korosta-hennosti? varoitus? huomio?])))
+                                 (korosta-kolumni-arvosta arvo-datassa))
                                lihavoi?)
               (when korosta?
                 [:fo:block {:space-after "0.2em"}])
