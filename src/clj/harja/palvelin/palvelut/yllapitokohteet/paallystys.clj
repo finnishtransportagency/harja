@@ -242,22 +242,152 @@
     :leveys :pinta_ala :massamenekki :jarjestysnro :pot2p_id
     :velho-lahetyksen-aika :velho-lahetyksen-vastaus :velho-rivi-lahetyksen-tila})
 
+(defn- laske-kulutuskerroksen-hypyt
+  "Laskee ja palauttaa kulutuskerroksessa hyppyjen määrän integerinä"
+  [data i hypyt]
+  (if (> (count data) (dec i))
+    (let [rivi (get-in data [i])
+          rivi-tie (:tr-numero rivi)
+          rivi-ajorata (:tr-ajorata rivi)
+          rivi-aet (:tr-alkuetaisyys rivi)
+          rivi-let (:tr-loppuetaisyys rivi)
+
+          seuraava-rivi (get-in data [(inc i)])
+          seuraavarivi-tie (:tr-numero seuraava-rivi)
+          seuraava-rivi-ajorata (:tr-ajorata seuraava-rivi)
+          seuraava-rivi-aet (:tr-alkuetaisyys seuraava-rivi)
+
+          hyppy-olemassa? (if (and rivi-aet seuraava-rivi-aet
+                                (= rivi-tie seuraavarivi-tie)
+                                (= rivi-ajorata seuraava-rivi-ajorata)
+                                (> seuraava-rivi-aet rivi-let))
+                            true
+                            false)]
+      (if hyppy-olemassa?
+        (recur data (inc i) (inc hypyt))
+        (recur data (inc i) hypyt)))
+    hypyt))
+
+(defn- tunnista-paallystys-hypyt
+  "Tunnistaa päällystyksessä tapahtuvat hypyt
+   Palauttaa vectorin kohdeosista joihin lisätty hyppyjen tiedot avaimiin
+   Avaimet käsitellään frontissa paallystekerros.cljs missä ne passataan muokkaus.cljs korostusta varten
+   Laitetaan aluksi rajaksi 50 metriä, eli kaikki alle 50 metrin hypyt näytetään fronttiin
+   Hyppy tulee tunnistaa kun mennään samalla ajoradalla, tiellä sekä samalla kaistalla. 
+   Jos kaista tai tie vaihtuu, silloin tämä ei ole hyppy.
+   Terminologiaa:
+   Ajorata = Rata jossa on yksi tai usea tie (ajoradalla voi olla esim. moottoritie jossa 2 tietä)
+   Tie = Tie jossa 2 kaistaa
+   Kaista = Tien kaista 
+   Aet = Alkuetäisyys metreinä
+   Let = Loppuetäisyys metreinä"
+  ;; TODO 
+  ;; Korosta frontissa avainten perusteella taulukon kenttä
+  ;; Mahdollisesti jos hypyn näytön yhteydessä käyttäjä muokkaa riviä, katsotaan jos saadaan korostus pois? 
+  [y data palautus]
+  (when (> (count data) (dec y))
+    (let [rivi (nth data y nil)
+          rivi-tie (:rivi-tie rivi)
+          rivi-ajorata (:tr-ajorata rivi)
+          rivi-kaista (:tr-kaista rivi)
+          rivi-aet (:tr-alkuetaisyys rivi)
+          rivi-let (:tr-loppuetaisyys rivi)
+
+          ;; Kuinka iso hyppy halutaan näyttää? 
+          ;; (inc 50) = Näytetään hypyt jotka ovat 50 metriä tai alle 
+          hypyn-metriraja (inc 50)
+
+          edellinen-rivi (nth data (dec y) nil)
+          edellinen-rivi-tie (:rivi-tie edellinen-rivi)
+          edellinen-rivi-ajorata (:tr-ajorata edellinen-rivi)
+          edellinen-rivi-kaista (:tr-kaista edellinen-rivi)
+          edellinen-rivi-let (:tr-loppuetaisyys edellinen-rivi)
+
+          seuraava-rivi (nth data (inc y) nil)
+          seuraava-rivi-tie (:rivi-tie seuraava-rivi)
+          seuraava-rivi-ajorata (:tr-ajorata seuraava-rivi)
+          seuraava-rivi-kaista (:tr-kaista seuraava-rivi)
+          seuraava-rivi-aet (:tr-alkuetaisyys seuraava-rivi)
+
+          rivi (cond
+                 ;; Seuraava ja tämä rivi olemassa sekä molemmilla sama tie&ajorata&kaista
+                 ;; Seuraavan rivin alkuetäisyys on isompi kun tämän rivin loppuetäisyys = hyppy
+                 ;; (korosta LET)
+                 (and
+                   rivi-aet seuraava-rivi-aet
+                   (= rivi-tie seuraava-rivi-tie)
+                   (= rivi-ajorata seuraava-rivi-ajorata)
+                   (= rivi-kaista seuraava-rivi-kaista)
+                   (> seuraava-rivi-aet rivi-let)
+                   ;; Onko hyppy X metriä tai alle?
+                   (< (- seuraava-rivi-aet rivi-let) hypyn-metriraja))
+                 (merge rivi {:tr-korosta-let? true})
+
+                 ;; Tämä rivi ja edellinen rivi olemassa sekä molemmilla sama tie&ajorata&kaista
+                 ;; Tämän rivin alkuetäisyys isompi kuin edellisen loppuetäisyys = hyppy 
+                 ;; (korosta AET)
+                 (and
+                   rivi-aet edellinen-rivi-let
+                   (= rivi-tie seuraava-rivi-tie)
+                   (= rivi-ajorata edellinen-rivi-ajorata)
+                   (= rivi-kaista edellinen-rivi-kaista)
+                   (> rivi-aet edellinen-rivi-let)
+                   ;; Onko hyppy X metriä tai alle?
+                   (< (- rivi-aet edellinen-rivi-let) hypyn-metriraja))
+                 (merge rivi {:tr-korosta-aet? true})
+
+                 ;; Korosta molemmat aet/let (hyppy tällä ja edellisellä rivillä)
+                 (and
+                   rivi-aet seuraava-rivi-aet
+                   rivi-aet edellinen-rivi-let
+                   (= rivi-tie seuraava-rivi-tie)
+                   (= rivi-ajorata seuraava-rivi-ajorata)
+                   (= rivi-kaista seuraava-rivi-kaista)
+                   (= rivi-tie edellinen-rivi-tie)
+                   (= rivi-ajorata edellinen-rivi-ajorata)
+                   (= rivi-kaista edellinen-rivi-kaista)
+                   (> seuraava-rivi-aet rivi-let)
+                   (> rivi-aet edellinen-rivi-let)
+                   ;; Onko hypyt X metriä tai alle?
+                   (< (- seuraava-rivi-aet rivi-let) hypyn-metriraja)
+                   (< (- rivi-aet edellinen-rivi-let) hypyn-metriraja))
+                 (merge rivi {:tr-korosta-molemmat? true})
+
+                 ;; Ei hyppyjä
+                 :else rivi)
+          ;; Älä palauta nil arvoa, tämä lisää muuten tyhjän rivin kulutuskerrostaulukkoon
+          palautus (if rivi (conj palautus rivi) palautus)]
+      ;; Jos riviä ei enää olemassa, palauta tiedot, muuten jatka looppia
+      (if (nil? rivi)
+        palautus
+        (recur
+          (inc y) data palautus)))))
+
 (defn- pot2-paallystekerros
   "Kasaa POT2-ilmoituksen tarvitsemaan muotoon päällystekerroksen rivit
   Käyttää PO1:n kohdeosat-avaimen tietoja pohjana, ja yhdistää ne pot2_paallystekerros taulussa
   oleviin tietoihin."
   [db paallystysilmoitus]
-  (mapv (fn [kohdeosa]
-          (let [paallystekerros (first
-                                  (q/hae-kohdeosan-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)
-                                                                               :kohdeosa_id (:id kohdeosa)}))
-                rivi (select-keys (merge kohdeosa paallystekerros
-                                         ;; kohdeosan id on aina läsnä YLLAPITOKOHDEOSA-taulussa, mutta pot2_paallystekerros-taulun
-                                         ;; riviä ei välttämättä ole tässä kohti vielä olemassa (jos INSERT)
-                                         {:kohdeosa-id (:id kohdeosa)}) pot2-paallystekerroksen-avaimet)]
-            rivi))
-        (:kohdeosat paallystysilmoitus)))
-
+  (let [kohdeosat (mapv
+                    (fn [kohdeosa]
+                      (let [paallystekerros (first
+                                              (q/hae-kohdeosan-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)
+                                                                                           :kohdeosa_id (:id kohdeosa)}))
+                            rivi (select-keys (merge kohdeosa paallystekerros
+                                                ;; kohdeosan id on aina läsnä YLLAPITOKOHDEOSA-taulussa, mutta pot2_paallystekerros-taulun
+                                                ;; riviä ei välttämättä ole tässä kohti vielä olemassa (jos INSERT)
+                                                {:kohdeosa-id (:id kohdeosa)}) pot2-paallystekerroksen-avaimet)]
+                        rivi))
+                    (:kohdeosat paallystysilmoitus))
+        
+        kohdeosat (vec (sort-by yllapitokohteet-domain/yllapitokohteen-jarjestys kohdeosat))
+        ;; Laske hypyt
+        hyppyjen-maara (laske-kulutuskerroksen-hypyt kohdeosat 0 0)
+        ;; Lisää hyppyjen määrä ensimmäisen rivin dataan, tämä tarvitaan noutaa vaan kerran 
+        kohdeosat (assoc-in kohdeosat [0 :hyppyjen-maara] hyppyjen-maara)
+        ;; Lisää avaimet riveille joissa hyppy 
+        kohdeosat (tunnista-paallystys-hypyt 0 kohdeosat [])]
+    kohdeosat))
 
 (defn pot2-alusta
   "Kasaa POT2-ilmoituksen tarvitsemaan muotoon alustakerroksen rivit"
