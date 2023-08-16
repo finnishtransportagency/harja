@@ -1,7 +1,5 @@
 (ns harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara
   (:require [clojure.string :as str]
-            [taoensso.timbre :as log]
-            [jeesql.core :refer [defqueries]]
             [harja.pvm :as pvm]
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
@@ -132,7 +130,7 @@
 (defn jasenna-raportin-otsikko [urakan-tiedot hoitovuodet]
   (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu " (pvm/pvm (:alkupvm urakan-tiedot)) " - " (str "30.09." (inc (last hoitovuodet)))))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id] :as parametrit}]
+(defn suorita [db _ {:keys [urakka-id hallintayksikko-id] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                     hallintayksikko-id :hallintayksikko
                     :default :koko-maa)
@@ -242,7 +240,7 @@
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
      [:taulukko {:otsikko otsikko
-                 :tyhja (if (empty? data) "Ei raportoitavia tietoja.")
+                 :tyhja (when (empty? data) "Ei raportoitavia tietoja.")
                  :sheet-nimi "Talvihoitosuolat"}
       otsikkorivit
       datarivit]]))
