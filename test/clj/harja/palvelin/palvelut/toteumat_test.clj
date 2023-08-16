@@ -1,6 +1,5 @@
 (ns harja.palvelin.palvelut.toteumat-test
   (:require [clojure.test :refer :all]
-            [clojure.java.io :as io]
             [com.stuartsierra.component :as component]
             [harja
              [pvm :as pvm]
@@ -10,15 +9,10 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
-            [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.palvelut.toteumat :as toteumat]
             [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
-            [harja.domain.tierekisteri.varusteet :as varusteet-domain]))
-
-(def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -35,12 +29,9 @@
                           :integraatioloki (component/using
                                              (integraatioloki/->Integraatioloki nil)
                                              [:db])
-                          :tierekisteri (component/using
-                                          (tierekisteri/->Tierekisteri +testi-tierekisteri-url+ nil)
-                                          [:db :integraatioloki])
                           :toteumat (component/using
                                       (toteumat/->Toteumat)
-                                      [:http-palvelin :db :db-replica :karttakuvat :tierekisteri])
+                                      [:http-palvelin :db :db-replica :karttakuvat])
                           :tehtavamaarat (component/using
                                            (tehtavamaarat/->Tehtavamaarat false)
                                            [:http-palvelin :db]))))))
