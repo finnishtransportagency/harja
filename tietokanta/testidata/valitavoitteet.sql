@@ -95,7 +95,14 @@ VALUES (null,
        1,
        1,
        'toistuva'::valitavoite_tyyppi,
-       true);
+       true),
+       (null,
+        'Pidä urakoitsijan kanssa kunnon syyskekkerit',
+        'teiden-hoito',
+        30,
+        9,
+        'toistuva'::valitavoite_tyyppi,
+        false);
 
 ---------------------------------------------
 -- Muhoksen päällystysurakka
@@ -138,3 +145,9 @@ VALUES ((SELECT id
    NULL,
    NULL,
    false);
+
+INSERT INTO valitavoite (urakka, nimi, takaraja, viikkosakko, sakko, valmis_pvm, valmis_kommentti, valmis_merkitsija, valmis_merkitty, luotu, muokattu, luoja, muokkaaja, poistettu, tyyppi, takaraja_toistopaiva, takaraja_toistokuukausi, valtakunnallinen_valitavoite, urakkatyyppi, aloituspvm, yllapitokohde)
+VALUES
+       ((SELECT id FROM urakka where nimi = 'Raahen MHU 2023-2028'), 'Pidä urakoitsijan kanssa kunnon syyskekkerit', '2023-09-30', null, null, null, null, null, null, '2023-08-15 12:53:34.965786', null, 3, null, false, null, null, null, (select id from valitavoite where nimi = 'Pidä urakoitsijan kanssa kunnon syyskekkerit' AND valtakunnallinen_valitavoite IS NULL), null, null, null),
+       ((SELECT id FROM urakka where nimi = 'Raahen MHU 2023-2028'), 'Pidä urakoitsijan kanssa kunnon syyskekkerit', '2024-09-30', null, null, null, null, null, null, '2023-08-15 12:53:34.965786', null, 3, null, false, null, null, null, (select id from valitavoite where nimi = 'Pidä urakoitsijan kanssa kunnon syyskekkerit' AND valtakunnallinen_valitavoite IS NULL), null, null, null),
+       ((SELECT id FROM urakka where nimi = 'Raahen MHU 2023-2028'), 'Pidä urakoitsijan kanssa kunnon syyskekkerit', '2025-09-30', null, null, null, null, null, null, '2023-08-15 12:53:34.965786', null, 3, null, false, null, null, null, (select id from valitavoite where nimi = 'Pidä urakoitsijan kanssa kunnon syyskekkerit' AND valtakunnallinen_valitavoite IS NULL), null, null, null);

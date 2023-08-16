@@ -25,10 +25,12 @@ SELECT
   merkitsija.etunimi as "valmis-merkitsija-etunimi",
   merkitsija.sukunimi as "valmis-merkitsija-sukunimi"
   FROM valitavoite v
-  LEFT JOIN valitavoite vv ON v.valtakunnallinen_valitavoite = vv.id
-  LEFT JOIN kayttaja merkitsija ON v.valmis_merkitsija = merkitsija.id
-WHERE v.poistettu = FALSE
-      AND v.urakka = :urakka
+           LEFT JOIN valitavoite vv ON v.valtakunnallinen_valitavoite = vv.id
+           LEFT JOIN kayttaja merkitsija ON v.valmis_merkitsija = merkitsija.id
+           LEFT JOIN urakka u ON v.urakka = u.id
+WHERE v.poistettu = FALSE AND v.urakka = :urakka
+  -- huomioidaan vain urakan ajalle osuvat takarajat
+  AND v.takaraja  BETWEEN u.alkupvm AND u.loppupvm
 ORDER BY v.takaraja ASC;
 
 -- name: hae-valtakunnalliset-valitavoitteet

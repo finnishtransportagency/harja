@@ -31,10 +31,7 @@
 (deftest urakan-valitavoitteiden-haku-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-valitavoitteet +kayttaja-jvh+ (hae-oulun-alueurakan-2014-2019-id))]
-
-    ;(log/debug vastaus)
-    (is (>= (count vastaus) 4)))
-
+    (is (= (count vastaus) 2)))
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-valitavoitteet +kayttaja-jvh+ (hae-urakan-id-nimella "Muhoksen päällystysurakka"))]
 
@@ -299,3 +296,28 @@
 
         (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
         (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))))
+
+(defn- raahen-odotetetut-valitavoitteet [urakka-id valtakunnallisen-vtn-id]
+  [{:valmis-merkitsija nil, :valmispvm nil, :valtakunnallinen-id valtakunnallisen-vtn-id, :urakka-id urakka-id, :luotu #inst "2023-08-15T09:53:34.965786000-00:00", :valtakunnallinen-takarajan-toistokuukausi 9, :sakko nil, :valmis-merkitsija-etunimi nil, :takaraja #inst "2024-09-29T21:00:00.000-00:00", :luoja 3, :valmis-kommentti nil, :valtakunnallinen-takaraja nil, :nimi "Pidä urakoitsijan kanssa kunnon syyskekkerit", :aloituspvm nil, :muokkaaja nil, :id 30, :valmis-merkitsija-sukunimi nil, :yllapitokohde-id nil, :valtakunnallinen-nimi "Pidä urakoitsijan kanssa kunnon syyskekkerit", :valmis-merkitty nil, :muokattu nil, :valtakunnallinen-takarajan-toistopaiva 30, :viikkosakko nil}
+
+   {:valmis-merkitsija nil, :valmispvm nil, :valtakunnallinen-id valtakunnallisen-vtn-id, :urakka-id urakka-id, :luotu #inst "2023-08-15T09:53:34.965786000-00:00", :valtakunnallinen-takarajan-toistokuukausi 9, :sakko nil, :valmis-merkitsija-etunimi nil, :takaraja #inst "2025-09-29T21:00:00.000-00:00", :luoja 3, :valmis-kommentti nil, :valtakunnallinen-takaraja nil, :nimi "Pidä urakoitsijan kanssa kunnon syyskekkerit", :aloituspvm nil, :muokkaaja nil, :id 31, :valmis-merkitsija-sukunimi nil, :yllapitokohde-id nil, :valtakunnallinen-nimi "Pidä urakoitsijan kanssa kunnon syyskekkerit", :valmis-merkitty nil, :muokattu nil, :valtakunnallinen-takarajan-toistopaiva 30, :viikkosakko nil}])
+
+(deftest toistuvat-valitavoitteet-eivat-saa-nakya-ennen-urakan-alkua
+  (let [raahen-mhu-urakan-id (hae-urakan-id-nimella "Raahen MHU 2023-2028")
+        raahen-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                raahen-mhu-urakan-id)
+        valtakunnallisen-vtn-id (ffirst (q "(select id from valitavoite where nimi = 'Pidä urakoitsijan kanssa kunnon syyskekkerit' AND valtakunnallinen_valitavoite IS NULL);"))]
+    (is (= (count raahen-valitavoitteet) 2) "Kaksi välitavoitetta joissa takaraja urakan sisällä")
+    (is (= (map #(select-keys % [:valtakunnallinen-id
+                                 :urakka-id
+                                 :nimi
+                                 :takaraja
+                                 :valtakunnallinen-takarajan-toistopaiva
+                                 :valtakunnallinen-takarajan-toistokuukausi]) (raahen-odotetetut-valitavoitteet raahen-mhu-urakan-id valtakunnallisen-vtn-id))
+          (map #(select-keys % [:valtakunnallinen-id
+                                :urakka-id
+                                :nimi
+                                :takaraja
+                                :valtakunnallinen-takarajan-toistopaiva
+                                :valtakunnallinen-takarajan-toistokuukausi]) raahen-valitavoitteet)))))
