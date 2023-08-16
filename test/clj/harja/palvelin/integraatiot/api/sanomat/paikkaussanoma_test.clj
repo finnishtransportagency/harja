@@ -37,6 +37,7 @@
                   :harja.domain.paikkaus/leveys 10M
                   :harja.domain.paikkaus/loppuaika #inst "2018-01-30T18:00:00.000-00:00"
                   :harja.domain.paikkaus/massamenekki 12
+                  :harja.domain.paikkaus/massamaara nil
                   :harja.domain.paikkaus/massatyyppi "AB, Asfalttibetoni"
                   :harja.domain.paikkaus/materiaalit [{:harja.domain.paikkaus/esiintyma "testi"
                                                        :harja.domain.paikkaus/kuulamylly-arvo "testi"
@@ -62,6 +63,15 @@
                                                              :harja.domain.tierekisteri/tie 20}
                   :harja.domain.paikkaus/tyomenetelma "massapintaus"
                   :harja.domain.paikkaus/ulkoinen-id 123
-                  :harja.domain.paikkaus/urakka-id 666}]
+                  :harja.domain.paikkaus/urakka-id 666}
 
-    (is (= odotettu (paikkaustoteumasanoma/api->domain 666 paikkaustoteuma)))))
+        paikkaustoteuma-massamenekilla (-> paikkaustoteuma
+                                         (dissoc :massamenekki)
+                                         (assoc :massamaara 180000))
+
+        odotettu-massamenekilla (-> odotettu
+                                (assoc :harja.domain.paikkaus/massamenekki nil)
+                                (assoc :harja.domain.paikkaus/massamaara 180000))]
+
+    (is (= odotettu (paikkaustoteumasanoma/api->domain 666 paikkaustoteuma)))
+    (is (= odotettu-massamenekilla (paikkaustoteumasanoma/api->domain 666 paikkaustoteuma-massamenekilla)))))

@@ -69,7 +69,8 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     muut_kustannukset_hoitokausi_yht      NUMERIC,
     muut_kustannukset_val_aika_yht        NUMERIC,
     yhteensa_kaikki_hoitokausi_yht        NUMERIC,
-    yhteensa_kaikki_val_aika_yht          NUMERIC
+    yhteensa_kaikki_val_aika_yht          NUMERIC,
+    perusluku                             NUMERIC
 
 
 );
@@ -1094,7 +1095,9 @@ BEGIN
         -- Muut kustannukset yhteensä
               muut_kustannukset_hoitokausi_yht, muut_kustannukset_val_aika_yht,
         -- Kaikki yhteensä
-              yhteensa_kaikki_hoitokausi_yht, yhteensa_kaikki_val_aika_yht);
+              yhteensa_kaikki_hoitokausi_yht, yhteensa_kaikki_val_aika_yht,
+        -- Indeksilaskennan perusluku
+              perusluku);
     return next tulos;
 END;
 $$;

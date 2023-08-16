@@ -77,6 +77,7 @@
 (def +tieluvan-kirjaus-request-vesihuoltolupa+ "api/examples/tieluvan-kirjaus-request-vesihuoltolupa.json")
 
 (def +paikkausten-kirjaus-request+ "api/examples/paikkausten-kirjaus-request.json")
+(def +paikkausten-kirjaus-massamaara-request+ "api/examples/paikkausten-kirjaus-request.json")
 (def +paikkauskustannusten-kirjaus-request+ "api/examples/paikkauskustannusten-kirjaus-request.json")
 
 (def +analytiikka-reittitoteumat-response+ "api/examples/analytiikka-reittitoteumat-response.json")

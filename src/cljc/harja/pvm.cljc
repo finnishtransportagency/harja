@@ -1351,44 +1351,48 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
         paiva (+ p 1)]
     (luo-pvm-dec-kk vuosi n paiva)))
 
-(defn- paasiaiseen-liittyvat-lomapaivat-vuodelle [vuosi]
-  (let [paasiaispaiva (paasiaspaiva-vuodelle vuosi)]
-    [{:nimi "Pitkäperjantai" :pvm (ajan-muokkaus paasiaispaiva false 2 :paiva)}
-     {:nimi "Pääsiäispäivä" :pvm paasiaispaiva}
-     {:nimi "2. Pääsiäispäivä" :pvm (ajan-muokkaus paasiaispaiva true 1 :paiva)}
-     {:nimi "Helatorstai" :pvm (ajan-muokkaus paasiaispaiva true 39 :paiva)}
-     {:nimi "Helluntaipäivä" :pvm (ajan-muokkaus paasiaispaiva true 49 :paiva)}]))
+#?(:clj
+   (defn- paasiaiseen-liittyvat-lomapaivat-vuodelle [vuosi]
+     (let [paasiaispaiva (paasiaspaiva-vuodelle vuosi)]
+       [{:nimi "Pitkäperjantai" :pvm (ajan-muokkaus paasiaispaiva false 2 :paiva)}
+        {:nimi "Pääsiäispäivä" :pvm paasiaispaiva}
+        {:nimi "2. Pääsiäispäivä" :pvm (ajan-muokkaus paasiaispaiva true 1 :paiva)}
+        {:nimi "Helatorstai" :pvm (ajan-muokkaus paasiaispaiva true 39 :paiva)}
+        {:nimi "Helluntaipäivä" :pvm (ajan-muokkaus paasiaispaiva true 49 :paiva)}])))
 
-(defn loyda-ensimmainen-viikonpaiva-alkaen [pvm viikonpaiva]
-  (let [pvm (joda-timeksi pvm)
-        ;; Day-of-week antaa väärän järjestysluvun, jos pvm ei konvertoida ensin suomen aikavyöhykkeeseen
-        aloitus-viikonpaiva (t/day-of-week (suomen-aikavyohykkeeseen pvm))]
+#?(:clj
+   (defn loyda-ensimmainen-viikonpaiva-alkaen [pvm viikonpaiva]
+     (let [pvm (joda-timeksi pvm)
+           ;; Day-of-week antaa väärän järjestysluvun, jos pvm ei konvertoida ensin suomen aikavyöhykkeeseen
+           aloitus-viikonpaiva (t/day-of-week (suomen-aikavyohykkeeseen pvm))]
 
-    (if (= aloitus-viikonpaiva viikonpaiva)
-      pvm
-      (let [siirtyma-paivia (mod (- viikonpaiva aloitus-viikonpaiva) 7)]
-        (ajan-muokkaus pvm true siirtyma-paivia :paiva)))))
+       (if (= aloitus-viikonpaiva viikonpaiva)
+         pvm
+         (let [siirtyma-paivia (mod (- viikonpaiva aloitus-viikonpaiva) 7)]
+           (ajan-muokkaus pvm true siirtyma-paivia :paiva))))))
 
-(defn- aikavaleista-poimittavat-lomapaivat-vuodelle
-  "Laskee aikavälien perusteella pääteltävät lomapäivät annetulle vuodelle (Juhannus ja pyhäinpäivä)"
-  [vuosi]
-  (let [juhannusaatto (loyda-ensimmainen-viikonpaiva-alkaen (luo-pvm-dec-kk vuosi 6 19) 5)]
-    [{:nimi "Juhannusaatto" :pvm juhannusaatto}
-     {:nimi "Juhannuspäivä" :pvm (ajan-muokkaus juhannusaatto true 1 :paiva)}
-     {:nimi "Pyhäinpäivä" :pvm (loyda-ensimmainen-viikonpaiva-alkaen (luo-pvm-dec-kk vuosi 10 31) 6)}]))
+#?(:clj
+   (defn- aikavaleista-poimittavat-lomapaivat-vuodelle
+     "Laskee aikavälien perusteella pääteltävät lomapäivät annetulle vuodelle (Juhannus ja pyhäinpäivä)"
+     [vuosi]
+     (let [juhannusaatto (loyda-ensimmainen-viikonpaiva-alkaen (luo-pvm-dec-kk vuosi 6 19) 5)]
+       [{:nimi "Juhannusaatto" :pvm juhannusaatto}
+        {:nimi "Juhannuspäivä" :pvm (ajan-muokkaus juhannusaatto true 1 :paiva)}
+        {:nimi "Pyhäinpäivä" :pvm (loyda-ensimmainen-viikonpaiva-alkaen (luo-pvm-dec-kk vuosi 10 31) 6)}])))
 
-(defn lomapaivat-vuodelle
-  "Palauttaa kaikki Suomen viralliset lomapäivät annetulle vuodelle ISO8601 päivämäärinä."
-  [vuosi]
-  (map
-    (fn [{:keys [nimi pvm]}]
-      {:nimi nimi :pvm (df/unparse
-                         (df/formatter-local "yyyy-MM-dd")
-                         (suomen-aikavyohykkeeseen (joda-timeksi pvm)))})
-    (concat
-      (kiinteat-lomapaivat-vuodelle vuosi)
-      (paasiaiseen-liittyvat-lomapaivat-vuodelle vuosi)
-      (aikavaleista-poimittavat-lomapaivat-vuodelle vuosi))))
+#?(:clj
+   (defn lomapaivat-vuodelle
+     "Palauttaa kaikki Suomen viralliset lomapäivät annetulle vuodelle ISO8601 päivämäärinä."
+     [vuosi]
+     (map
+       (fn [{:keys [nimi pvm]}]
+         {:nimi nimi :pvm (df/unparse
+                            (df/formatter-local "yyyy-MM-dd")
+                            (suomen-aikavyohykkeeseen (joda-timeksi pvm)))})
+       (concat
+         (kiinteat-lomapaivat-vuodelle vuosi)
+         (paasiaiseen-liittyvat-lomapaivat-vuodelle vuosi)
+         (aikavaleista-poimittavat-lomapaivat-vuodelle vuosi)))))
 
 #?(:clj
    (defn seuraava-arkipaiva
@@ -1421,3 +1425,10 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
              (t/to-time-zone paiva-johon-hypattiin alkuperainen-aikavyohyke)
              (recur paiva-johon-hypattiin)))))))
 
+
+(defn hoitokauden-vuodet-lyhynnetty
+  "Palauttaa hoitokauden [[1.10.2022] [30.9.2023]] muodossa 2022-23"
+  [hoitokausi]
+  (when (= 2 (count hoitokausi))
+    (str (vuosi (first hoitokausi)) "-"
+      (subs (str (vuosi (second hoitokausi))) 2 4))))

@@ -80,6 +80,7 @@
   (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request-vesihuoltolupa+)))
 
   (is (nil? (validoi json-skeemat/paikkausten-kirjaus-request json-esimerkit/+paikkausten-kirjaus-request+)))
+  (is (nil? (validoi json-skeemat/paikkausten-kirjaus-request json-esimerkit/+paikkausten-kirjaus-massamaara-request+)))
   (is (nil? (validoi json-skeemat/paikkauskustannusten-kirjaus-request json-esimerkit/+paikkauskustannusten-kirjaus-request+)))
 
   (is (nil? (validoi json-skeemat/analytiikkaportaali-toteuma-vastaus json-esimerkit/+analytiikka-reittitoteumat-response+)))
