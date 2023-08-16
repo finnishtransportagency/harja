@@ -112,7 +112,7 @@
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
     :api-reittitoteuma :api-siltatarkastukset :api-tarkastukset
     :api-tyokoneenseuranta :api-tyokoneenseuranta-puhdistus :api-turvallisuuspoikkeama
-    :api-suolasakkojen-lahetys :api-varusteet :api-ilmoitukset :api-yllapitokohteet :api-ping
+    :api-suolasakkojen-lahetys :api-ilmoitukset :api-yllapitokohteet :api-ping
     :api-yhteystiedot :api-tiemerkintatoteuma :api-raportit :laskutusyhteenvetojen-muodostus :status
     :kanavasiltojen-geometriahaku
     :mobiili-laadunseuranta
@@ -171,7 +171,7 @@
     :todennus
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :ulkoinen-sahkoposti :api-sahkoposti :fim :tierekisteri :labyrintti
+    :integraatioloki :ulkoinen-sahkoposti :api-sahkoposti :fim :labyrintti
     :turi :digiroad-integraatio :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
