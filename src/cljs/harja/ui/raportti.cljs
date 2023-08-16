@@ -175,6 +175,8 @@
                                    ;; Jos rivi on tässä nimiavaruudessa määritetty komponentti, rivin optioissa voi
                                    ;; olla avain :varoitus?, jolloin piirretään solu punaisella taustalla ja tekstillä.
                                 (str
+                                  (when (:huomio? (and (vector? arvo) (second arvo)))
+                                    " solu-huomio ")
                                   (when (:varoitus? (and (vector? arvo) (second arvo)))
                                     " solu-varoitus ")
                                   (when (:korosta-hennosti? (and (vector? arvo) (second arvo)))
