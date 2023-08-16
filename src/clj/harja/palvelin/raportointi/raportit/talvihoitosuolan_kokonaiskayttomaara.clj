@@ -191,10 +191,14 @@
         ;; Konteksti on tätä kirjoittaessa rajoitettu urakkaan, mutta jos myöhemmin huomataan, että
         ;; ely tai koko maan taso halutaan, niin riittää, että raportin asetuksista määritellään kontekstiin puuttuvat tiedot
         ;; Raportin nimeen se ei tule vaikuttamaan, koska se on jo toteuteuttu tässä.
-        nimi (case konteksti
-               :urakka (:nimi (first (urakat-kyselyt/hae-urakka db urakka-id)))
-               :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
-               :koko-maa "KOKO MAA")
+        nimi (if (nil? (:kasittelija parametrit))
+               ;; HTML raportille raportin nimi muodostetaan kontekstista
+               (case konteksti
+                 :urakka (:nimi urakan-tiedot)
+                 :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                 :koko-maa "KOKO MAA")
+               ;; PDF ja Excel raportteihin laitetaan raportille eri nimi, joka tulee tiedoston nimeksi
+               (str "Talvisuolan lämpötilaraportti - " (:nimi urakan-tiedot)))
         raportin-nimi nimi
         otsikko (jasenna-raportin-otsikko urakan-tiedot hoitovuodet)
 
