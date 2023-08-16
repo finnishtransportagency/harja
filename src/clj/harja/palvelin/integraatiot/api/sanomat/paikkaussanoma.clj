@@ -34,6 +34,7 @@
                                      massatyyppi
                                      kuulamylly
                                      massamenekki
+                                     massamaara
                                      raekoko
                                      leveys
                                      tyomenetelma
@@ -45,6 +46,7 @@
    ::paikkaus/tyomenetelma tyomenetelma
    ::paikkaus/massatyyppi massatyyppi
    ::paikkaus/kuulamylly kuulamylly
+   ::paikkaus/massamaara massamaara
    ::paikkaus/massamenekki massamenekki
    ::paikkaus/raekoko raekoko
    ::paikkaus/leveys (json-tyokalut/nil-turvallinen-bigdec leveys)
