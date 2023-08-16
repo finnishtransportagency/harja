@@ -28,15 +28,6 @@
 (def +tielupien-haku+ "api/examples/tielupien-haku-request.json")
 (def +tielupien-haku-vastaus+ "api/examples/tielupien-haku-response.json")
 
-(def +tietolajien-haku+ "api/examples/tietolajien-haku-response.json")
-
-(def +varusteen-haku-vastaus+ "api/examples/varusteen-haku-response.json")
-(def +varusteiden-haku-vastaus+ "api/examples/varusteiden-haku-response.json")
-(def +varusteen-lisays+ "api/examples/varusteen-lisays-request.json")
-(def +varusteen-paivitys+ "api/examples/varusteen-paivitys-request.json")
-(def +varusteen-poisto+ "api/examples/varusteen-poisto-request.json")
-(def +varustetoteuman-kirjaus+ "api/examples/varustetoteuman-kirjaus-request.json")
-
 (def +tiestotarkastuksen-kirjaus+ "api/examples/tiestotarkastuksen-kirjaus-request.json")
 (def +tiestotarkastuksen-poisto+ "api/examples/tiestotarkastuksen-poisto-request.json")
 (def +soratietarkastuksen-kirjaus+ "api/examples/soratietarkastuksen-kirjaus-request.json")

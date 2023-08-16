@@ -1,23 +1,13 @@
 (ns harja.palvelin.palvelut.toteumat-maarat-listaus-test
   (:require [clojure.test :refer :all]
-            [clojure.java.io :as io]
             [com.stuartsierra.component :as component]
             [harja
-             [pvm :as pvm]
              [testi :refer :all]]
-            [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toteumat :refer :all]
-            [harja.tyokalut.functor :refer [fmap]]
-            [taoensso.timbre :as log]
-            [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.palvelut.toteumat :as toteumat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]))
-
-(def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
-(def +oikea-testi-tierekisteri-url+ "https://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri")
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -34,12 +24,9 @@
                           :integraatioloki (component/using
                                              (integraatioloki/->Integraatioloki nil)
                                              [:db])
-                          :tierekisteri (component/using
-                                          (tierekisteri/->Tierekisteri +testi-tierekisteri-url+ nil)
-                                          [:db :integraatioloki])
                           :toteumat (component/using
                                       (toteumat/->Toteumat)
-                                      [:http-palvelin :db :db-replica :karttakuvat :tierekisteri]))))))
+                                      [:http-palvelin :db :db-replica :karttakuvat]))))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
