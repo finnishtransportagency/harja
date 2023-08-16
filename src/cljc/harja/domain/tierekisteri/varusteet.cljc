@@ -57,207 +57,11 @@
    "Viherkuviot" "tl524"
    "Tekninen piste" "tl523"})
 
-(def puolet
-  {0 "Määrittämätön"
-   1 "Oikea"
-   2 "Vasen"
-   3 "Ajoratojen välissä (ajosuuntia erottavalla keskialueella)"
-   7 "Tien päässä"
-   8 "Keskellä (ajoradalla tai sen yläpuolella)"
-   9 "Tien päällä"})
-
-(defn puoli->selitys
-  [puoli]
-  (get puolet puoli))
-
-(defn tien-puolet [tietolaji]
-  (case tietolaji
-    "tl523" [1 2 3]
-    "tl501" [1 2 3 8]
-    "tl517" [1 2]
-    "tl506" [1 2 3 8]
-    "tl507" [1 2 7]
-    "tl508" [1 2 7]
-    "tl509" [1 2 9]
-    "tl522" [1 2 3 8]
-    "tl513" [1 2 3]
-    "tl520" [1 2 3 9]
-    "tl505" [1 2 7 9]
-    "tl504" [1 2 7 9]
-    "tl518" [1 2 3 8]
-    "tl514" [1 2 3]
-    "tl515" [1 2 3]
-    "tl503" [1 2 7 9]
-    "tl512" [1 2 3 7 8 9]
-    "tl516" [1 2 3 8]
-    "tl524" [1 2 3 4 7 8 9]
-    []))
-
-(defn pistemainen-tietolaji? [tietolaji]
-  (contains? #{"tl113",
-               "tl191",
-               "tl192",
-               "tl197",
-               "tl202",
-               "tl211",
-               "tl230",
-               "tl232",
-               "tl251",
-               "tl261",
-               "tl262",
-               "tl263",
-               "tl264",
-               "tl270",
-               "tl310",
-               "tl503",
-               "tl504",
-               "tl505",
-               "tl506",
-               "tl507",
-               "tl508",
-               "tl509",
-               "tl511",
-               "tl512",
-               "tl516",
-               "tl517",
-               "tl520",
-               "tl523",
-               "tl524",
-               "tl703"} tietolaji))
-
-(defn valikohtainen-tietolaji [tietolaji]
-  (contains? #{"tl109",
-               "tl111",
-               "tl112",
-               "tl128",
-               "tl130",
-               "tl131",
-               "tl132",
-               "tl133",
-               "tl134",
-               "tl135",
-               "tl136",
-               "tl137",
-               "tl138",
-               "tl139",
-               "tl141",
-               "tl144",
-               "tl145",
-               "tl146",
-               "tl149",
-               "tl150",
-               "tl151",
-               "tl152",
-               "tl153",
-               "tl157",
-               "tl158",
-               "tl159",
-               "tl161",
-               "tl162",
-               "tl164",
-               "tl166",
-               "tl167",
-               "tl168",
-               "tl169",
-               "tl170",
-               "tl171",
-               "tl173",
-               "tl174",
-               "tl180",
-               "tl181",
-               "tl194",
-               "tl201",
-               "tl210",
-               "tl231",
-               "tl233",
-               "tl250",
-               "tl271",
-               "tl303",
-               "tl305",
-               "tl309",
-               "tl312",
-               "tl314",
-               "tl317",
-               "tl322",
-               "tl326",
-               "tl327",
-               "tl328",
-               "tl330",
-               "tl331",
-               "tl332",
-               "tl340",
-               "tl341",
-               "tl501",
-               "tl510",
-               "tl513",
-               "tl514",
-               "tl515",
-               "tl518",
-               "tl522",
-               "tl704",
-               "tl705",
-               "tl714",
-               "tl750",
-               "tl751"} tietolaji))
-
-(defn tien-puolellinen-tietolaji? [tietolaji]
-  ;; Kaikki tietolajit ovat nyt puolellisia.
-  true)
-
-(defn tarkastaminen-sallittu? [tietolaji]
-  (nil? (#{"tl524" "tl523"} tietolaji)))
-
-(defn muokkaaminen-sallittu? [tietolaji]
-  (nil? (#{"tl523"} tietolaji)))
-
-(defn muokattavat-tietolajit []
-  (filter #(muokkaaminen-sallittu? (first %)) tietolaji->selitys))
-
 (def oletus-ajoradat
   [0])
 
 (def kaikki-ajoradat
   [0 1 2])
-
-(defn kiinnostaa-listauksessa?
-  [ominaisuus]
-  (let [tunniste (:kenttatunniste (:ominaisuus ominaisuus))]
-    (and (not (#{"x" "y" "z" "urakka"} tunniste))
-         (not (re-matches #".*tunn" tunniste)))))
-
-(defn varusteen-liikennemerkki-skeema
-  [tietolaji]
-  (let [ominaisuudet (get-in tietolaji [:tietolaji :ominaisuudet])
-        liikennemerkki (:ominaisuus (first (filter #(= (get-in % [:ominaisuus :kenttatunniste]) "asetusnr") ominaisuudet)))
-        asetusnr->teksti (fn [numero]
-                           (:selite (first (filter #(= (str (:koodi %)) numero) (:koodisto liikennemerkki)))))]
-    {:otsikko "Liikennemerkki"
-     :tyyppi :string
-     :hae (fn [rivi]
-            (let [numero (get-in rivi [:varuste :tietue :tietolaji :arvot "asetusnr"])]
-              (str numero " - " (asetusnr->teksti numero))))
-     :leveys 2}))
-
-(def varusteen-perustiedot-skeema
-  [{:otsikko "Tietolaji"
-    :tyyppi :tunniste
-    :hae #(let [tietolaji (get-in % [:varuste :tietue :tietolaji :tunniste])]
-            (str (tietolaji->selitys tietolaji) " (" tietolaji ")"))
-    :leveys 1}
-   {:otsikko "Tunniste"
-    :tyyppi :tunniste
-    :hae (comp :tunniste :varuste)
-    :leveys 1}
-   {:otsikko "Tieosoite"
-    :tyyppi :tierekisteriosoite
-    :hae (comp :tie :sijainti :tietue :varuste)
-    :fmt tr/tierekisteriosoite-tekstina
-    :leveys 1}
-   {:otsikko "Puoli"
-    :tyyppi :string
-    :hae #(let [puoli (get-in % [:varuste :tietue :sijainti :tie :puoli])]
-            (str puoli " - " (puoli->selitys puoli)))
-    :leveys 1}])
 
 (defn parsi-luku [s]
   #?(:cljs (js/parseInt s)
@@ -282,24 +86,12 @@
    :muokattava? #(and (not (= "tunniste" (:kenttatunniste ominaisuus))) muokattava?)
    :pituus-max (:pituus ominaisuus)})
 
-(defn tietolajin-koodi-voimassa? [koodi]
-  (if-let [{alkupvm :alkupvm loppupvm :loppupvm} (:voimassaolo koodi)]
-    (cond
-      (and alkupvm loppupvm) (t/within? (t/interval alkupvm loppupvm) (t/now))
-      alkupvm (t/after? (t/now) alkupvm)
-      loppupvm (t/before? (t/now) loppupvm)
-      :else true)
-    true))
-
 (defmethod varusteominaisuus->skeema :koodisto
   [{ominaisuus :ominaisuus} muokattava?]
   (let [koodisto (map #(assoc % :selite (str/capitalize (:selite %))
                                 :koodi (str (:koodi %)))
                       (:koodisto ominaisuus))
         ;; vanhat arvot saa näyttää vanhoille varusteille, mutta niitä ei saa käyttää muokatessa
-        koodisto (if muokattava?
-                   (filter tietolajin-koodi-voimassa? koodisto)
-                   koodisto)
         hae-selite (fn [arvo]
                      (some #(when (= (:koodi %) arvo)
                               (str (:koodi %) " " (:selite %)))

@@ -6,7 +6,6 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
-            [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]
             [taoensso.timbre :as log]
             [specql.core :refer [fetch columns]]
             [harja.domain.reittipiste :as rp])
@@ -23,10 +22,7 @@
                       [:http-palvelin :db :integraatioloki])
    :api-reittitoteuma (component/using
                        (api-reittitoteuma/->Reittitoteuma)
-                       [:http-palvelin :db :db-replica :integraatioloki])
-   :api-varusteoteuma (component/using
-                       (api-varustetoteuma/->Varustetoteuma)
-                       [:http-palvelin :db :integraatioloki])))
+                       [:http-palvelin :db :db-replica :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 

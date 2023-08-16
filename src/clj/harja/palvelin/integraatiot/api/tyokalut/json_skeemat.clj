@@ -41,22 +41,6 @@
 (def +tielupien-haku-vastaus+ "api/schemas/tielupien-haku-response.schema.json")
 (def tielupien-haku-vastaus (tee-validaattori "api/schemas/tielupien-haku-response.schema.json"))
 
-(def +tietolajien-haku+ "api/schemas/tietolajien-haku-response.schema.json")
-(def tietolajien-haku (tee-validaattori "api/schemas/tietolajien-haku-response.schema.json"))
-
-(def +varusteiden-haku-vastaus+ "api/schemas/varusteiden-haku-response.schema.json")
-(def varusteiden-haku-vastaus (tee-validaattori "api/schemas/varusteiden-haku-response.schema.json"))
-(def +varusteen-lisays+ "api/schemas/varusteen-lisays-request.schema.json")
-(def varusteen-lisays (tee-validaattori "api/schemas/varusteen-lisays-request.schema.json"))
-(def +varusteen-paivitys+ "api/schemas/varusteen-paivitys-request.schema.json")
-(def varusteen-paivitys (tee-validaattori "api/schemas/varusteen-paivitys-request.schema.json"))
-(def +varusteen-poisto+ "api/schemas/varusteen-poisto-request.schema.json")
-(def varusteen-poisto (tee-validaattori "api/schemas/varusteen-poisto-request.schema.json"))
-(def +varustetoteuman-kirjaus+ "api/schemas/varustetoteuman-kirjaus-request.schema.json")
-(def varustetoteuman-kirjaus (tee-validaattori "api/schemas/varustetoteuman-kirjaus-request.schema.json"))
-(def +varustetoteuman-poisto+ "api/schemas/toteuman-poisto-request.schema.json")
-(def varustetoteuman-poisto (tee-validaattori "api/schemas/toteuman-poisto-request.schema.json"))
-
 (def +siltatarkastuksen-kirjaus+ "api/schemas/siltatarkastuksen-kirjaus-request.schema.json")
 (def siltatarkastuksen-kirjaus (tee-validaattori "api/schemas/siltatarkastuksen-kirjaus-request.schema.json"))
 (def +siltatarkastuksen-poisto+ "api/schemas/tarkastuksen-poisto-request.schema.json")
