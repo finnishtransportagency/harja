@@ -61,9 +61,6 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
   (aseta-vanhat-hairioilmoitukset-pois db) ; TODO: onko hyvä paikka tehdä tämä?
   (if (nil? validointi-virhe)
-    ;(hairio/onko-paallekkainen alkuaika loppuaika (specql/fetch db ::hairio/hairioilmoitus
-    ;                                                         hairio/sarakkeet
-    ;                                                         {::hairio/voimassa? true}))
     (do
       (specql/insert! db ::hairio/hairioilmoitus
         {::hairio/viesti viesti
