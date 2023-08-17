@@ -1,0 +1,43 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 124
+    },
+    "lahetysaika": "__PVM__"
+  },
+  "tarkastukset": [
+    {
+      "tarkastus": {
+        "tunniste": {
+          "id": 1240
+        },
+        "tarkastusajo": {
+          "id": 12401
+        },
+        "aika": "2023-07-29T15:01:00+02:00",
+        "alkusijainti": {
+          "x": 378749.9,
+          "y": 6728024.4
+        },
+        "loppusijainti": {
+          "x": 378195.7,
+          "y": 6728647.5
+        },
+        "tarkastaja": {
+          "id": 123,
+          "etunimi": "Taina",
+          "sukunimi": "Tarkastaja"
+        },
+        "havainnot": "Railo tiessä",
+        "liitteet": []
+      }
+    }
+  ]
+}

@@ -111,6 +111,39 @@
       (is (-> olemattoman-poista-vastaus :status (= 200)))
       (is (empty? poista-tark)))))
 
+(deftest tallenna-ja-poista-tieturvallisuustarkastus
+  (let [pvm (Date.)
+        tarkista-kannasta #(first (q (str "SELECT t.tyyppi, t.pisteet "
+                                       "  FROM tarkastus t "
+                                       " WHERE t.ulkoinen_id = 1240"
+                                       "   AND t.poistettu IS NOT TRUE"
+                                       "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))
+        tallenna-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/tieturvallisuustarkastus"] kayttaja portti
+                           (json-sapluunasta "test/resurssit/api/tieturvallisuustarkastus.json" pvm nil))]
+
+    (is (= 200 (:status tallenna-vastaus)))
+
+    (let [tark (tarkista-kannasta)
+          odotetut-pisteet (->
+                             {:type :multipoint,
+                              :coordinates [{:type :point :coordinates [378749.9 6728024.4]}
+                                            {:type :point, :coordinates [378195.7 6728647.5]}]}
+                             geo/clj->pg
+                             geo/geometry)])
+
+    (let [poista-vastaus (api-tyokalut/delete-kutsu
+                           ["/api/urakat/" urakka "/tarkastus/tieturvallisuustarkastus"]
+                           kayttaja-jvh portti
+                           (json-sapluunasta "test/resurssit/api/tieturvallisuustarkastus-poisto.json" pvm nil))
+          olemattoman-poista-vastaus (api-tyokalut/delete-kutsu
+                                       ["/api/urakat/" urakka "/tarkastus/tieturvallisuustarkastus"]
+                                       kayttaja portti
+                                       (json-sapluunasta "test/resurssit/api/tieturvallisuustarkastus-poisto.json" pvm 88888888))
+          poista-tark (tarkista-kannasta)]
+      (is (-> poista-vastaus :status (= 200)) "Tieturvallisuustarkastuksen poistaminen API:n kautta")
+      (is (-> olemattoman-poista-vastaus :status (= 200)))
+      (is (empty? poista-tark)))))
+
 (deftest tarkasta-tarkastajan-lahettaminen
   (let [tarkastus-idt [6660001 6660002 6660003]
         tarkastustemplate {:tarkastus {:tunniste {:id nil}
