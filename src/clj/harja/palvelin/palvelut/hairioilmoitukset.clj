@@ -46,12 +46,24 @@
     {::hairio/voimassa? false}
     {::hairio/voimassa? true
      ::hairio/loppuaika (op/< (c/to-sql-time (t/now)))}))
+
+(defn- validoi-ajat [db alkuaika loppuaika]
+  (if (= loppuaika alkuaika)
+    [{:virhe (str "Alkuaika " alkuaika " ja loppuaika " loppuaika " eivät voi olla samat")}]
+    (if (pvm/ennen? loppuaika alkuaika)
+    [{:virhe (str "Alkuajan " alkuaika " pitäisi olla ennen loppuaikaa " loppuaika)}]
+    (if (hairio/onko-paallekkainen alkuaika loppuaika (specql/fetch db ::hairio/hairioilmoitus
+                                                           hairio/sarakkeet
+                                                           {::hairio/voimassa? true}))
+      [{:virhe (str "Alkuaika " alkuaika " ja loppuaika " loppuaika " leikkaavat olemassaolevaa häiriöilmoitusta")}]))))
 (defn- aseta-hairioilmoitus [db user {::hairio/keys [viesti tyyppi alkuaika loppuaika]}]
+  (let [validointi-virhe (validoi-ajat db alkuaika loppuaika)]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
   (aseta-vanhat-hairioilmoitukset-pois db) ; TODO: onko hyvä paikka tehdä tämä?
-  (if-not (hairio/onko-paallekkainen alkuaika loppuaika (specql/fetch db ::hairio/hairioilmoitus
-                                                             hairio/sarakkeet
-                                                             {::hairio/voimassa? true}))
+  (if (nil? validointi-virhe)
+    ;(hairio/onko-paallekkainen alkuaika loppuaika (specql/fetch db ::hairio/hairioilmoitus
+    ;                                                         hairio/sarakkeet
+    ;                                                         {::hairio/voimassa? true}))
     (do
       (specql/insert! db ::hairio/hairioilmoitus
         {::hairio/viesti viesti
@@ -64,7 +76,7 @@
       (hae-kaikki-hairioilmoitukset db user false))
     (do
       (log/debug "Häiriöilmoituksen luonti epäonnistui")
-      [{:virhe (str "Alkuaika " alkuaika " ja loppuaika " loppuaika " leikkaavat olemassaolevaa häiriöilmoitusta")}])))
+      validointi-virhe))))
 
 (defrecord Hairioilmoitukset []
   component/Lifecycle

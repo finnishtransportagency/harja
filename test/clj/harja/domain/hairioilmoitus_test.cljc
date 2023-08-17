@@ -2,7 +2,8 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.pvm :as pvm]
-            [harja.domain.hairioilmoitus :as hairio]))
+            [harja.domain.hairioilmoitus :as hairio]
+            [clj-time.core :as t]))
 
 (defn- hairio [id voimassa? alkuaika loppuaika]
   {::hairio/id id
@@ -78,39 +79,120 @@
         uusi (hairio 4 true (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 55)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 60)))]
     (is (not (hairio/onko-paallekkainen (::hairio/alkuaika uusi) (::hairio/loppuaika uusi) vanhat)))))
 
-(deftest aikavalit-eivat-leikkaa-sivuavat
-  (let [vanhat [(hairio 1 true (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 5)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 50)))]
-        uusi (hairio 2 true (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 50)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 60)))]
-    (is (not (hairio/onko-paallekkainen (::hairio/alkuaika uusi) (::hairio/loppuaika uusi) vanhat)))))
+(deftest aikavalit-leikkaavat-sivuaminen-sallittu
+  (is (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+        (t/date-time 2023 8 15 8 0)
+        (t/date-time 2023 8 15 8 30)
+        (t/date-time 2023 8 15 8 29)
+        (t/date-time 2023 8 15 9 0)))
 
-(deftest aikavali-leikkaus-uuden-alku-avoin-ei-leikkaa
-  (let [vanhat [(hairio 1 true (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 5)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 50)))]]
-    (is (not (hairio/onko-paallekkainen nil (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 4)) vanhat)))))
+  (is (false? (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+                (t/date-time 2023 8 15 8 0)
+                (t/date-time 2023 8 15 8 30)
+                (t/date-time 2023 8 15 8 31)
+                (t/date-time 2023 8 15 9 0))))
 
-(deftest aikavali-leikkaus-uuden-alku-avoin-leikkaa
-  (let [vanhat [(hairio 1 true (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 5)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 50)))]]
-    (is (hairio/onko-paallekkainen nil (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 6)) vanhat))))
+  (is (false? (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+                (t/date-time 2023 8 15 8 0)
+                (t/date-time 2023 8 15 8 30)
+                (t/date-time 2023 8 15 8 30)
+                (t/date-time 2023 8 15 9 0)))
+    "Aikavälien sivuaminen sallittu")
 
-(deftest aikavali-leikkaus-uuden-loppu-avoin-ei-leikkaa
-  (let [vanhat [(hairio 1 true (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 5)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 7)))]]
-    (is (not (hairio/onko-paallekkainen (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 8)) nil vanhat)))))
+  (is (false? (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+                nil
+                (t/date-time 2023 8 15 8 30)
+                (t/date-time 2023 8 15 8 30)
+                (t/date-time 2023 8 15 9 0)))
+    "Ekan aikavälin alku avoin, ok, sivuaa")
 
-(deftest aikavali-leikkaus-uuden-loppu-avoin-leikkaa
-  (let [vanhat [(hairio 1 true (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 5)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 7)))]]
-    (is (hairio/onko-paallekkainen (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 6)) nil vanhat))))
+  (is (true? (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+               nil
+               (t/date-time 2023 8 15 8 31)
+               (t/date-time 2023 8 15 8 30)
+               (t/date-time 2023 8 15 9 0)))
+    "Ekan aikavälin alku avoin, leikkaa")
 
-(deftest aikavali-leikkaus-vanhan-alku-avoin-leikkaa
-  (let [vanhat [(hairio 1 true nil (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 1)))]]
-    (is (not (hairio/onko-paallekkainen (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 2)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 4)) vanhat)))))
+  (is (true? (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+                (t/date-time 2023 8 15 8 0)
+                nil
+                (t/date-time 2023 8 15 8 30)
+                (t/date-time 2023 8 15 9 0)))
+    "Ekan aikavälin loppu avoin, leikkaa")
 
-(deftest aikavali-leikkaus-vanhan-alku-avoin-ei-leikkaa
-  (let [vanhat [(hairio 1 true nil (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 3)))]]
-    (is (hairio/onko-paallekkainen (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 2)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 4)) vanhat))))
+  (is (false? (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+               (t/date-time 2023 8 15 9 0)
+               nil
+               (t/date-time 2023 8 15 8 30)
+               (t/date-time 2023 8 15 9 0)))
+    "Ekan aikavälin loppu avoin, ok")
 
-(deftest aikavali-leikkaus-vanhan-loppu-avoin-ei-leikkaa
-  (let [vanhat [(hairio 1 true (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 5)) nil)]]
-    (is (not (hairio/onko-paallekkainen (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 2)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 4)) vanhat)))))
+  (is (false? (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+                (t/date-time 2023 8 15 8 0)
+                (t/date-time 2023 8 15 8 30)
+                nil
+                (t/date-time 2023 8 15 8 0)))
+    "Toisen aikavälin alku avoin, ei leikkaa")
 
-(deftest aikavali-leikkaus-vanhan-loppu-avoin-leikkaa
-  (let [vanhat [(hairio 1 true (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 3)) nil)]]
-    (is (hairio/onko-paallekkainen (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 2)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 4)) vanhat))))
+  (is (true? (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+                (t/date-time 2023 8 15 8 0)
+                (t/date-time 2023 8 15 8 30)
+                nil
+                (t/date-time 2023 8 15 8 1)))
+    "Toisen aikavälin alku avoin, ei leikkaa")
+
+  (is (false? (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+                (t/date-time 2023 8 15 8 0)
+                (t/date-time 2023 8 15 8 30)
+                (t/date-time 2023 8 15 8 31)
+                nil))
+    "Toisen aikavälin loppu avoin, ei leikkaa")
+
+  (is (true? (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+                (t/date-time 2023 8 15 8 0)
+                (t/date-time 2023 8 15 8 30)
+                (t/date-time 2023 8 15 8 29)
+                nil))
+    "Toisen aikavälin loppu avoin, leikkaa")
+
+  (is (true? (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+               nil
+               (t/date-time 2023 8 15 8 0)
+               nil
+               (t/date-time 2023 8 15 8 29)))
+    "Ekan aikavälin alku avoin, tokan alku avoin")
+
+  (is (true? (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+               (t/date-time 2023 8 15 8 0)
+               nil
+               (t/date-time 2023 8 15 8 29)
+               nil))
+    "Ekan aikavälin loppu avoin, tokan loppu avoin")
+
+  (is (false? (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+               nil
+               (t/date-time 2023 8 15 8 30)
+               (t/date-time 2023 8 15 8 30)
+                nil))
+    "Ekan aikavälin alku avoin, tokan loppu avoin, ei leikkaa")
+
+  (is (true? (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+                nil
+                (t/date-time 2023 8 15 8 30)
+                (t/date-time 2023 8 15 8 29)
+                nil))
+    "Ekan aikavälin alku avoin, tokan loppu avoin, leikkaa")
+
+  (is (false? (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+                (t/date-time 2023 8 15 8 30)
+                nil
+                nil
+                (t/date-time 2023 8 15 8 30)))
+    "Ekan aikavälin loppu avoin, tokan alku avoin, ei leikkaa")
+
+  (is (true? (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?
+                (t/date-time 2023 8 15 8 31)
+                nil
+                nil
+                (t/date-time 2023 8 15 8 30)))
+    "Ekan aikavälin loppu avoin, tokan alku avoin, ei leikkaa"))

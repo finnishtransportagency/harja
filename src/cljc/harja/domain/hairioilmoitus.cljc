@@ -45,40 +45,53 @@
                (pvm/jalkeen? (pvm/nyt) (::loppuaika %))))
     (sort-by ::loppupvm)))
 
-(defn- aikavalit-leikkaavat-sivuaminen-sallittu? [vanhaalku vanhaloppu uusialku uusiloppu]
+(defn aikavalit-leikkaavat-sivuaminen-sallittu? [ensimmainen-alku ensimmainen-loppu toinen-alku toinen-loppu]
   (boolean (or
              (and
-               (not (nil? uusialku))
-               (not (nil? uusiloppu))
-               (not (nil? vanhaalku))
-               (not (nil? vanhaloppu))
-               (pvm/jalkeen? uusiloppu vanhaalku)
-               (pvm/ennen? uusialku vanhaloppu))
+               (not (nil? toinen-alku))
+               (not (nil? toinen-loppu))
+               (not (nil? ensimmainen-alku))
+               (not (nil? ensimmainen-loppu))
+               (pvm/jalkeen? toinen-loppu ensimmainen-alku)
+               (pvm/ennen? toinen-alku ensimmainen-loppu))
              (and
-               (nil? uusialku)
-               (not (nil? uusiloppu))
-               (not (nil? vanhaalku))
-               (not (nil? vanhaloppu))
-               (pvm/jalkeen? uusiloppu vanhaalku))
+               (nil? toinen-alku)
+               (not (nil? toinen-loppu))
+               (not (nil? ensimmainen-alku))
+               (not (nil? ensimmainen-loppu))
+               (pvm/jalkeen? toinen-loppu ensimmainen-alku))
              (and
-               (nil? uusiloppu)
-               (not (nil? uusialku))
-               (not (nil? vanhaalku))
-               (not (nil? vanhaloppu))
-               (pvm/ennen? uusialku vanhaloppu))
+               (nil? toinen-loppu)
+               (not (nil? toinen-alku))
+               (not (nil? ensimmainen-alku))
+               (not (nil? ensimmainen-loppu))
+               (pvm/ennen? toinen-alku ensimmainen-loppu))
              (and
-               (nil? vanhaalku)
-               (not (nil? uusialku))
-               (not (nil? uusiloppu))
-               (not (nil? vanhaloppu))
-               (pvm/jalkeen? vanhaloppu uusialku))
+               (nil? ensimmainen-alku)
+               (not (nil? toinen-alku))
+               (not (nil? toinen-loppu))
+               (not (nil? ensimmainen-loppu))
+               (pvm/jalkeen? ensimmainen-loppu toinen-alku))
              (and
-               (nil? vanhaloppu)
-               (not (nil? uusialku))
-               (not (nil? uusiloppu))
-               (not (nil? vanhaalku))
-               (pvm/ennen? vanhaalku uusiloppu))
-             )))
+               (nil? ensimmainen-loppu)
+               (not (nil? toinen-alku))
+               (not (nil? toinen-loppu))
+               (not (nil? ensimmainen-alku))
+               (pvm/ennen? ensimmainen-alku toinen-loppu))
+             (and
+               (nil? ensimmainen-alku)
+               (nil? toinen-alku))
+             (and
+               (nil? ensimmainen-loppu)
+               (nil? toinen-loppu))
+             (and
+               (nil? ensimmainen-alku)
+               (nil? toinen-loppu)
+               (pvm/jalkeen? ensimmainen-loppu toinen-alku))
+             (and
+               (nil? ensimmainen-loppu)
+               (nil? toinen-alku)
+               (pvm/jalkeen? ensimmainen-alku toinen-loppu)))))
 (defn onko-paallekkainen [uusialku uusiloppu vanhat]
   (some #(aikavalit-leikkaavat-sivuaminen-sallittu? (::alkuaika %) (::loppuaika %) uusialku uusiloppu) vanhat))
 
