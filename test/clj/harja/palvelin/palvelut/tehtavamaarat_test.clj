@@ -226,17 +226,17 @@
                                                                 :tehtavamaarat         virheellinen-tehtava})) "Vain validit tehtävät voi tallentaa."))
 
 (def odotetut-tehtavamaarien-nimet-ja-tehtavien-lukumaarat
-  [{:nimi "1.0 TALVIHOITO", :sopimus-tallennettu nil, :tehtavien-lkm 31}
+  [{:nimi "1.0 TALVIHOITO", :sopimus-tallennettu nil, :tehtavien-lkm 32}
    {:nimi "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen", :sopimus-tallennettu nil, :tehtavien-lkm 2}
-   {:nimi "2.2 LIIKENNEYMPÄRISTÖN HOITO / Tie-, levähdys- ja liitännäisalueiden puhtaanapito ja kalusteiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 2}
+   {:nimi "2.2 LIIKENNEYMPÄRISTÖN HOITO / Tie-, levähdys- ja liitännäisalueiden puhtaanapito ja kalusteiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 3}
    {:nimi "2.3 LIIKENNEYMPÄRISTÖN HOITO / Viheralueiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 1}
    {:nimi "2.4 LIIKENNEYMPÄRISTÖN HOITO / Kuivatusjärjestelmän kaivojen, putkistojen ja pumppaamoiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 1}
-   {:nimi "2.7 LIIKENNEYMPÄRISTÖN HOITO / Päällystettyjen teiden sorapientareen kunnossapito", :sopimus-tallennettu nil, :tehtavien-lkm 2}
+   {:nimi "2.7 LIIKENNEYMPÄRISTÖN HOITO / Päällystettyjen teiden sorapientareen kunnossapito", :sopimus-tallennettu nil, :tehtavien-lkm 3}
    {:nimi "2.8 LIIKENNEYMPÄRISTÖN HOITO / Siltojen ja laitureiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 2}
    {:nimi "3 SORATEIDEN HOITO", :sopimus-tallennettu nil, :tehtavien-lkm 7}
    {:nimi "4 PÄÄLLYSTEIDEN PAIKKAUS", :sopimus-tallennettu nil, :tehtavien-lkm 4}
    {:nimi "6.1 YLLÄPITO / Rumpujen uusiminen", :sopimus-tallennettu nil, :tehtavien-lkm 8}
-   {:nimi "6.2 YLLÄPITO / Avo-ojien kunnossapito", :sopimus-tallennettu nil, :tehtavien-lkm 7}
+   {:nimi "6.2 YLLÄPITO / Avo-ojien kunnossapito", :sopimus-tallennettu nil, :tehtavien-lkm 8}
    {:nimi "7 KORVAUSINVESTOINTI", :sopimus-tallennettu nil, :tehtavien-lkm 1}
    {:nimi "8 MUUTA", :sopimus-tallennettu nil, :tehtavien-lkm 4}])
 

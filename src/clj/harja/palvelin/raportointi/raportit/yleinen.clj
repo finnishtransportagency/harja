@@ -210,7 +210,7 @@
                rivit)))))
 
 (defn urakan-indlask-perusluku [{:keys [perusluku]}]
-  [:teksti (str "Urakan indeksilaskennan perusluku: " (fmt/desimaaliluku perusluku 1))])
+  [:teksti (str "Indeksilaskennan perusluku: " (fmt/desimaaliluku-opt perusluku 1))])
 
 (defn kkn-indeksiarvo [{:keys [kyseessa-kk-vali? alkupvm kkn-indeksiarvo]}]
   [:teksti (when kyseessa-kk-vali?
@@ -220,6 +220,21 @@
                   (if kkn-indeksiarvo
                     (str ": " (fmt/desimaaliluku (:arvo kkn-indeksiarvo) 1))
                     " puuttuu.")))])
+
+(defn urakan-hoitokauden-indeksikerroin
+  "Palauttaa MHU-urakan indeksilaskentaa varten indeksikertoimen halutun hoitokauden osalta, formatoi raporttimuotoon."
+  [{:keys [indeksikertoimet hoitokausi]}]
+  (when (and (not-empty indeksikertoimet)
+          (= 2 (count hoitokausi)))
+    (let [kerroin (first (filter
+                           #(= (:vuosi %) (pvm/vuosi (first hoitokausi)))
+                           indeksikertoimet))]
+      [:teksti
+       (str "Hoitokauden " (pvm/hoitokauden-vuodet-lyhynnetty hoitokausi)
+         " indeksikerroin: "
+         (if kerroin
+           (fmt/desimaaliluku-opt (:indeksikerroin kerroin) 3)
+           "ei saatavilla"))])))
 
 (defn osat [raportti]
   ;; Pudotetaan pois :raportti keyword ja string tai map optiot.

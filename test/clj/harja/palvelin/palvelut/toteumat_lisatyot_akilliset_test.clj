@@ -4,17 +4,13 @@
             [harja
              [pvm :as pvm]
              [testi :refer :all]]
-            [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toteumat :refer :all]
-            [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
-            [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.palvelut.toteumat :as toteumat]
             [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]))
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]))
 
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
 
@@ -33,12 +29,9 @@
                           :integraatioloki (component/using
                                              (integraatioloki/->Integraatioloki nil)
                                              [:db])
-                          :tierekisteri (component/using
-                                          (tierekisteri/->Tierekisteri +testi-tierekisteri-url+ nil)
-                                          [:db :integraatioloki])
                           :toteumat (component/using
                                       (toteumat/->Toteumat)
-                                      [:http-palvelin :db :db-replica :karttakuvat :tierekisteri])
+                                      [:http-palvelin :db :db-replica :karttakuvat])
                           :tehtavamaarat (component/using
                                            (tehtavamaarat/->Tehtavamaarat false)
                                            [:http-palvelin :db]))))))

@@ -9,8 +9,6 @@
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
 
-            [harja.tyokalut.tuck :as tuck-apurit]
-
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.domain.roolit :as roolit]
@@ -68,11 +66,10 @@
        (map ::paikkaus/kpl)
        (reduce +)))
 
-(defn- massamenekin-keskiarvo [paikkaukset]
-  (let [menekit (map ::paikkaus/massamenekki paikkaukset)]
-    (if (not= 0 (count menekit))
-      (/ (reduce + menekit) (count menekit))
-      0)))
+(defn- kokonaismassamenekki [pinta-ala massamaara]
+  (when (and (pos? pinta-ala) (pos? massamaara))
+    (/ (* 1000 massamaara)
+      pinta-ala)))
 
 (defn- massamaaran-summa [paikkaukset]
   (->> paikkaukset
@@ -438,7 +435,7 @@
             arvo-pinta-ala (pinta-alojen-summa paikkaukset (or urapaikkaus? levittimella-tehty?))
             arvo-juoksumetri (juoksumetri-summa paikkaukset)
             arvo-massamaara (massamaaran-summa paikkaukset)
-            arvo-massamenekki (massamenekin-keskiarvo paikkaukset)
+            arvo-massamenekki (kokonaismassamenekki arvo-pinta-ala arvo-massamaara)
             tilattu? (= "tilattu" paikkauskohteen-tila)]
         (if ladataan-tietoja?
           [:div.flex-row.venyta.otsikkokomponentti
@@ -495,7 +492,7 @@
                                               [:strong "Pinta-ala"]
                                               [:div (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m²")]])
                (when (not= 0 arvo-massamenekki) [:span
-                                                 [:strong "Massa\u00ADmenekki (ka.)"]
+                                                 [:strong "Massa\u00ADmenekki"]
                                                  [:div (str (fmt/desimaaliluku-opt arvo-massamenekki) " kg/m²")]])
                (when (not= 0 arvo-massamaara) [:span
                                                [:strong "Ton\u00ADnia"]
@@ -610,8 +607,10 @@
    [excel-tuonti-virhe-modal e! app]
    [:div.row
     [kartta/kartan-paikka]]
-   [:div.row
-    [lataa-urem-excel]]
+   ;; Näytetään Urapaikkaustoteumien tuonti-Excel vain ylläpito/päällystys tyyppisille urakoille.
+   (when (= :paallystys (:arvo @nav/urakkatyyppi))
+     [:div.row
+      [lataa-urem-excel]])
    [:div.row
     [paikkaukset e! app]]])
 

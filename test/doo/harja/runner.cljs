@@ -17,7 +17,6 @@
             [harja.ui.edistymispalkki-test]
             [harja.fmt-test]
             [harja.tiedot.urakka.siirtymat-test]
-            [harja.tiedot.tierekisteri.varusteet-test]
             [harja.ui.kartta.infopaneelin-sisalto-test]
             [harja.tiedot.tilannekuva.tienakyma-test]
             [harja.tiedot.urakka.aikataulu-test]
@@ -68,7 +67,6 @@
            'harja.ui.edistymispalkki-test
            'harja.fmt-test
            'harja.tiedot.urakka.siirtymat-test
-           'harja.tiedot.tierekisteri.varusteet-test
            'harja.ui.kartta.infopaneelin-sisalto-test
            'harja.tiedot.tilannekuva.tienakyma-test
            'harja.tiedot.urakka.aikataulu-test

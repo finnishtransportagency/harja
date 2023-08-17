@@ -53,8 +53,12 @@
                          (pos? (Integer/parseInt %))
                          (pos? %))))
 (s/def ::urakka-id #(and (string? %) (not (nil? (konversio/konvertoi->int %))) (pos? (konversio/konvertoi->int %))))
-(s/def ::alkuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
-(s/def ::loppuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
+(s/def ::alkuaika #(and (string? %) (>= (count %) 20) (or
+                                                        (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))
+                                                        (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muotoZ) %)))))
+(s/def ::loppuaika #(and (string? %) (>= (count %) 20) (or
+                                                         (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))
+                                                         (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muotoZ) %)))))
 
 (defn- tarkista-haun-parametrit [parametrit rajoita]
   (parametrivalidointi/tarkista-parametrit
@@ -564,8 +568,8 @@
           :analytiikka-hae-toteumat request
           (fn [parametrit kayttaja db]
             (palauta-toteumat db parametrit kayttaja))
-          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
-          (not kehitysmoodi?))))
+          ;; Vaaditaan analytiikka-oikeudet
+          "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-toteumat
@@ -589,8 +593,8 @@
           :analytiikka-hae-suunnitellut-materiaalimaarat request
           (fn [parametrit kayttaja db]
             (palauta-suunnitellut-materiaalimaarat db parametrit kayttaja))
-          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
-          (not kehitysmoodi?))))
+          ;; Vaaditaan analytiikka-oikeudet
+          "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-suunnitellut-materiaalit-urakka
@@ -599,8 +603,8 @@
           :analytiikka-hae-suunnitellut-materiaalimaarat request
           (fn [parametrit kayttaja db]
             (palauta-urakan-suunnitellut-materiaalimaarat db parametrit kayttaja))
-          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
-          (not kehitysmoodi?))))
+          ;; Vaaditaan analytiikka-oikeudet
+          "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-suunnitellut-tehtavamaarat-hoitovuosi
@@ -609,8 +613,8 @@
           :analytiikka-hae-suunnitellut-tehtavamaarat request
           (fn [parametrit kayttaja db]
             (palauta-suunnitellut-tehtavamaarat db parametrit kayttaja))
-          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
-          (not kehitysmoodi?))))
+          ;; Vaaditaan analytiikka-oikeudet
+          "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-suunnitellut-tehtavamaarat-urakka
@@ -619,8 +623,8 @@
           :analytiikka-hae-suunnitellut-tehtavamaarat request
           (fn [parametrit kayttaja db]
             (palauta-urakan-suunnitellut-tehtavamaarat db parametrit kayttaja))
-          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
-          (not kehitysmoodi?))))
+          ;; Vaaditaan analytiikka-oikeudet
+          "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-materiaalit
@@ -629,8 +633,8 @@
           :analytiikka-hae-materiaalikoodit request
           (fn [parametrit kayttaja db]
             (palauta-materiaalit db parametrit kayttaja))
-          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
-          (not kehitysmoodi?))))
+          ;; Vaaditaan analytiikka-oikeudet
+          "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-tehtavat
@@ -639,8 +643,8 @@
           :analytiikka-hae-tehtavat request
           (fn [parametrit kayttaja db]
             (palauta-tehtavat db parametrit kayttaja))
-          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
-          (not kehitysmoodi?))))
+          ;; Vaaditaan analytiikka-oikeudet
+          "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-urakat
@@ -649,8 +653,8 @@
           :analytiikka-hae-urakat request
           (fn [parametrit kayttaja db]
             (palauta-urakat db parametrit kayttaja))
-          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
-          (not kehitysmoodi?))))
+          ;; Vaaditaan analytiikka-oikeudet
+          "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-organisaatiot
@@ -659,8 +663,8 @@
           :analytiikka-hae-organisaatiot request
           (fn [parametrit kayttaja db]
             (palauta-organisaatiot db parametrit kayttaja))
-          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
-          (not kehitysmoodi?))))
+          ;; Vaaditaan analytiikka-oikeudet
+          "analytiikka")))
     (julkaise-reitti
       http :analytiikka-turvallisuuspoikkeamat
       (GET "/api/analytiikka/turvallisuuspoikkeamat/:alkuaika/:loppuaika" request
@@ -668,8 +672,8 @@
           json-skeemat/+turvallisuuspoikkeamien-vastaus+
           (fn [parametrit kayttaja db]
             (hae-turvallisuuspoikkeamat db parametrit kayttaja))
-          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
-          (not kehitysmoodi?))))
+          ;; Vaaditaan analytiikka-oikeudet
+          "analytiikka")))
     this)
 
   (stop [{http :http-palvelin :as this}]

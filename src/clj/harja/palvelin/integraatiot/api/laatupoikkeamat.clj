@@ -22,7 +22,7 @@
 
 (defn tallenna-laatupoikkeama [db urakka-id kirjaaja data tr-osoite geometria]
   (let [{:keys [tunniste kuvaus kohde aika sisaltaa-poikkeamaraportin]} data]
-    (if (laatupoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
+    (if (laatupoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) urakka-id)
       (:id (laatupoikkeamat/paivita-laatupoikkeama-ulkoisella-idlla<!
              db
              (aika-string->java-sql-date aika)
@@ -37,7 +37,7 @@
              (:id kirjaaja)
              sisaltaa-poikkeamaraportin
              (:id tunniste)
-             (:id kirjaaja)))
+             urakka-id))
       (:id (laatupoikkeamat/luo-laatupoikkeama<!
              db
              "harja-api"

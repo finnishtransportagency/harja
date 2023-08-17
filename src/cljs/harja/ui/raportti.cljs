@@ -101,6 +101,10 @@
     [ikonit/harja-icon-status-info]
     info]])
 
+(defmethod muodosta-html :saa-ikoni [[_ {:keys [olomuoto havaintoaika maara]}]]
+  ;; Generoidaan sää ikoni olomuotoon ja havaintoaikaan nähden
+  [ikonit/generoi-saa-ikoni (int olomuoto) (int maara) havaintoaika])
+
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
   ;; ennaltamääriteltyjä tyylejä, mutta jos on erikoistapaus missä halutaan käyttää itsemääriteltyä väriä,
@@ -171,6 +175,8 @@
                                    ;; Jos rivi on tässä nimiavaruudessa määritetty komponentti, rivin optioissa voi
                                    ;; olla avain :varoitus?, jolloin piirretään solu punaisella taustalla ja tekstillä.
                                 (str
+                                  (when (:huomio? (and (vector? arvo) (second arvo)))
+                                    " solu-huomio ")
                                   (when (:varoitus? (and (vector? arvo) (second arvo)))
                                     " solu-varoitus ")
                                   (when (:korosta-hennosti? (and (vector? arvo) (second arvo)))
@@ -325,8 +331,7 @@
                 :height        h
                 :format-amount (or fmt str)
                 :hide-value?   piilota-arvo?
-                :legend legend
-                }
+                :legend legend}
       pylvaat]]))
 
 (defmethod muodosta-html :piirakka [[_ {:keys [otsikko]} data]]

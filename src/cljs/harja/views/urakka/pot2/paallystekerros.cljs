@@ -58,7 +58,7 @@
 (defn paallystekerros
   "Alikohteiden päällystekerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet ohjauskahvat] :as app}
-   {:keys [massat materiaalikoodistot validointi virheet-atom varoitukset-atom]} kohdeosat-atom]
+   {:keys [massat murskeet materiaalikoodistot validointi virheet-atom varoitukset-atom]} kohdeosat-atom]
   (let [hyppyjen-maara (get-in @kohdeosat-atom [1 :hyppyjen-maara])
         alert-ok-teksti "Kulutuskerros on yhtenäinen (ei hyppyjä)"
         alert-teksti (str "Kulutuskerros ei ole yhtenäinen " (cond
@@ -109,9 +109,35 @@
       [{:otsikko "Toimen\u00ADpide" :nimi :toimenpide :tayta-alas? pot2-tiedot/tayta-alas?-fn
         :tyyppi :valinta :valinnat (or (:paallystekerros-toimenpiteet materiaalikoodistot) []) :valinta-arvo ::pot2-domain/koodi
         :valinta-nayta ::pot2-domain/lyhenne :validoi [[:ei-tyhja "Anna arvo"]]
-        :leveys (:toimenpide pot2-yhteiset/gridin-leveydet)}
+        :leveys (:toimenpide pot2-yhteiset/gridin-leveydet)
+       :sarake-sort {:fn (fn [rivi]
+                           (reset! pot2-tiedot/valittu-paallystekerros-sort :toimenpide)
+                           (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit
+                             kohdeosat-atom
+                             (fn [rivi]
+                               (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-paallystekerros-sort
+                                 {:massat massat
+                                  :murskeet murskeet
+                                  :materiaalikoodistot materiaalikoodistot}
+                                 rivi)))
+                           (when ohjauskahva
+                             (grid/validoi-grid ohjauskahva)))
+                     :luokka (when (= @pot2-tiedot/valittu-paallystekerros-sort :toimenpide) "valittu-sort")}}
        {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-numero :validoi (:tr-numero validointi)}
+        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-numero :validoi (:tr-numero validointi)
+       :sarake-sort {:fn (fn [rivi]
+                           (reset! pot2-tiedot/valittu-paallystekerros-sort :tieosoite)
+                           (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit
+                             kohdeosat-atom
+                             (fn [rivi]
+                               (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-paallystekerros-sort
+                                 {:massat massat
+                                  :murskeet murskeet
+                                  :materiaalikoodistot materiaalikoodistot}
+                                 rivi)))
+                           (when ohjauskahva
+                             (grid/validoi-grid ohjauskahva)))
+                     :luokka (when (= @pot2-tiedot/valittu-paallystekerros-sort :tieosoite) "valittu-sort")}}
        {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
         :alasveto-luokka "kavenna-jos-kapea"
         :valinnat pot/+ajoradat-numerona+ :valinta-arvo :koodi
@@ -124,7 +150,20 @@
                          (if rivi
                            (:nimi rivi)
                            "- Valitse kaista -"))
-        :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}
+        :sarake-sort {:fn (fn [rivi]
+                           (reset! pot2-tiedot/valittu-paallystekerros-sort :kaista)
+                           (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit
+                             kohdeosat-atom
+                             (fn [rivi]
+                               (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-paallystekerros-sort
+                                 {:massat massat
+                                  :murskeet murskeet
+                                  :materiaalikoodistot materiaalikoodistot}
+                                 rivi)))
+                           (when ohjauskahva
+                             (grid/validoi-grid ohjauskahva)))
+                     :luokka (when (= @pot2-tiedot/valittu-paallystekerros-sort :kaista) "valittu-sort")}
+       :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}
        {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
        {:otsikko "Aet" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true

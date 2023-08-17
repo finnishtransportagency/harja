@@ -91,7 +91,7 @@
     (is (= 403 (:status vastaus)))
     (is (str/includes? (:body vastaus) "virheet"))
     (is (str/includes? (:body vastaus) "koodi"))
-    (is (str/includes? (:body vastaus) "tuntematon-kayttaja"))))
+    (is (str/includes? (:body vastaus) "kayttajalla-puutteelliset-oikeudet"))))
 
 (deftest hae-toteumat-test-vaara-paivamaaraformaatti
   (let [alkuaika "2005-01-01T00:00:00"
@@ -190,7 +190,7 @@
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
                   kayttaja-yit portti)]
     (is (= 403 (:status vastaus)))
-    (is (str/includes? (:body vastaus) "tuntematon-kayttaja"))))
+    (is (str/includes? (:body vastaus) "kayttajalla-puutteelliset-oikeudet"))))
 
 (deftest hae-turvallisuuspoikkeamat-analytiikalle-onnistuu
   (let [;; Luo väliaikainen turvallisuuspoikkeama
