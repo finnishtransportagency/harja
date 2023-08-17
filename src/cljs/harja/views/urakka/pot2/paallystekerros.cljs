@@ -55,35 +55,11 @@
                                                      paallekkyydet}
                                                     (not alikohde?))))
 
-(defn- laske-kulutuskerroksen-hypyt [data i hypyt]
-  (if (> (count data) (dec i))
-    (let [rivi (get-in data [i])
-          rivi-tie (:tr-numero rivi)
-          rivi-ajorata (:tr-ajorata rivi)
-          rivi-aet (:tr-alkuetaisyys rivi)
-          rivi-let (:tr-loppuetaisyys rivi)
-
-          seuraava-rivi (get-in data [(inc i)])
-          seuraavarivi-tie (:tr-numero seuraava-rivi)
-          seuraava-rivi-ajorata (:tr-ajorata seuraava-rivi)
-          seuraava-rivi-aet (:tr-alkuetaisyys seuraava-rivi)
-          
-          hyppy-olemassa? (if (and rivi-aet seuraava-rivi-aet
-                                (= rivi-tie seuraavarivi-tie)
-                                (= rivi-ajorata seuraava-rivi-ajorata)
-                                (> seuraava-rivi-aet rivi-let))
-                            true
-                            false)]
-      (if hyppy-olemassa?
-        (recur data (inc i) (inc hypyt))
-        (recur data (inc i) hypyt)))
-    hypyt))
-
 (defn paallystekerros
   "Alikohteiden päällystekerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet ohjauskahvat] :as app}
    {:keys [massat materiaalikoodistot validointi virheet-atom varoitukset-atom]} kohdeosat-atom]
-  (let [hyppyjen-maara (laske-kulutuskerroksen-hypyt @kohdeosat-atom 0 0)
+  (let [hyppyjen-maara (get-in @kohdeosat-atom [1 :hyppyjen-maara])
         alert-ok-teksti "Kulutuskerros on yhtenäinen (ei hyppyjä)"
         alert-teksti (str "Kulutuskerros ei ole yhtenäinen " (cond
                                                                (> hyppyjen-maara 1)
@@ -152,11 +128,11 @@
        {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
        {:otsikko "Aet" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi) :korosta-hyppy (fn [] kohdeosat-atom)}
+        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi) :korosta-sarake #(:tr-korosta-aet? %)}
        {:otsikko "Losa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuosa :validoi (:tr-loppuosa validointi)}
        {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi) :korosta-hyppy (fn [] kohdeosat-atom)}
+        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi) :korosta-sarake #(:tr-korosta-let? %)}
        {:otsikko "Pituus" :nimi :pituus :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :tyyppi :positiivinen-numero :tasaa :oikea
         :muokattava? (constantly false)
         :hae (fn [rivi]

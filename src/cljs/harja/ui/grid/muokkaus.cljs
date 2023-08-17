@@ -70,68 +70,8 @@
     [:td {:class luokat}
      arvo]))
 
-(defn- tunnista-kulutus-hypyt
-  [y data id]
-  (when (> (count data) (dec y))
-    (let [rivi (get-in data [y])
-          rivi-id (:kohdeosa-id rivi)
-          rivi-tie (:rivi-tie rivi)
-          rivi-ajorata (:tr-ajorata rivi)
-          rivi-aet (:tr-alkuetaisyys rivi)
-          rivi-let (:tr-loppuetaisyys rivi)
-
-          edellinen-rivi (get-in data [(dec y)])
-          edellinen-rivi-tie (:rivi-tie edellinen-rivi)
-          edellinen-rivi-ajorata (:tr-ajorata edellinen-rivi)
-          edellinen-rivi-let (:tr-loppuetaisyys edellinen-rivi)
-
-          seuraava-rivi (get-in data [(inc y)])
-          seuraava-rivi-tie (:rivi-tie seuraava-rivi)
-          seuraava-rivi-ajorata (:tr-ajorata seuraava-rivi)
-          seuraava-rivi-aet (:tr-alkuetaisyys seuraava-rivi)
-          
-          kulukerros-hyppy (cond
-                             ;; Korosta molemmat aet/let (hyppy tällä ja edellisellä rivillä)
-                             (and
-                               (= rivi-id id) 
-                               rivi-aet seuraava-rivi-aet
-                               rivi-aet edellinen-rivi-let
-                               (= rivi-tie seuraava-rivi-tie)
-                               (= rivi-ajorata seuraava-rivi-ajorata)
-                               (= rivi-tie edellinen-rivi-tie)
-                               (= rivi-ajorata edellinen-rivi-ajorata)
-                               (> seuraava-rivi-aet rivi-let)
-                               (> rivi-aet edellinen-rivi-let))
-                             3
-                             ;; Seuraava ja tämä rivi olemassa sekä molemmilla sama tie&ajorata
-                             ;; Seuraavan rivin alkuetäisyys on isompi kun tämän rivin loppuetäisyys = hyppy
-                             ;; (korosta LET)
-                             (and
-                               (= rivi-id id) 
-                               rivi-aet seuraava-rivi-aet
-                               (= rivi-tie seuraava-rivi-tie)
-                               (= rivi-ajorata seuraava-rivi-ajorata)
-                               (> seuraava-rivi-aet rivi-let))
-                             1
-                             ;; Tämä rivi ja edellinen rivi olemassa sekä molemmilla sama tie&ajorata
-                             ;; Tämän rivin alkuetäisyys isompi kuin edellisen loppuetäisyys = hyppy 
-                             ;; (korosta AET)
-                             (and
-                               (= rivi-id id) 
-                               rivi-aet edellinen-rivi-let
-                               (= rivi-tie seuraava-rivi-tie)
-                               (= rivi-ajorata edellinen-rivi-ajorata)
-                               (> rivi-aet edellinen-rivi-let))
-                             2
-                             ;; Ei hyppyjä
-                             :else false)]
-      (if kulukerros-hyppy
-        kulukerros-hyppy
-        (recur
-          (inc y) data id)))))
-
 (defn- muokkauselementin-tila
-  [{:keys [aseta nimi valinta-arvo hae elementin-id korosta-hyppy]}
+  [{:keys [aseta nimi valinta-arvo hae elementin-id korosta-sarake]}
    {:keys [muokkaa! muokatut-atom virheet varoitukset huomautukset skeema id i rivi gridin-tietoja
            sisalto-kun-rivi-disabloitu]}
    rivi-disabloitu? kentan-virheet kentan-varoitukset kentan-huomautukset
@@ -150,17 +90,7 @@
                                               uusi)]
                                    (@grid-tilan-muokkaus-fn uusi))))
         arvo-atom (atom ((or hae #(get % nimi)) rivi))
-        gridin-data (if (some? korosta-hyppy) (korosta-hyppy arvo-atom) false)
-        korosta-hyppy? (if gridin-data (tunnista-kulutus-hypyt 0 @gridin-data (:kohdeosa-id  rivi)) false)
-        korosta-hyppy? (if (and
-                             korosta-hyppy? korosta-hyppy
-                             (or
-                               ;; Korosta molemmat
-                               (= korosta-hyppy? 3)
-                               ;; Korosta vain alkuet
-                               (and (= nimi :tr-loppuetaisyys) (= korosta-hyppy? 1))
-                               ;; Korosta vain loppuet
-                               (and (= nimi :tr-alkuetaisyys) (= korosta-hyppy? 2)))) true false)
+        korosta-sarake? (if (some? korosta-sarake) (korosta-sarake rivi) false)
         fokus? (atom false)
         fokus-elementille #(reset! fokus? true)
         fokus-pois-elementilta #(let [uusi-fokusoitu-komponentti (.-relatedTarget %)
@@ -246,7 +176,7 @@
                                     tasaus-luokka
                                     (grid-yleiset/tiivis-tyyli skeema)
                                     (cond
-                                      korosta-hyppy? " korostettu-muokkaus-grid-hyppy"
+                                      korosta-sarake? " korostettu-sarake"
                                       (not (empty? kentan-virheet)) " sisaltaa-virheen"
                                       (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
                                       (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))
@@ -298,7 +228,7 @@
                                        ^{:key kentan-key}
                                        [tee-kentta (assoc sarake :on-focus fokus-elementille
                                                      :on-blur fokus-pois-elementilta
-                                                     :korosta-hyppy? korosta-hyppy?
+                                                     :korosta-sarake? korosta-sarake?
                                                      :disabloi-autocomplete? disabloi-autocomplete?
                                                      :disabled? (not voi-muokata?)
                                                      :elementin-id elementin-id)
@@ -311,7 +241,7 @@
                               "ei-muokattava"
                               tasaus-luokka
                               (grid-yleiset/tiivis-tyyli skeema)
-                              (when korosta-hyppy? " korostettu-muokkaus-grid-hyppy"))}
+                              (when korosta-sarake? " korostettu-sarake"))}
                 (apply komponentti rivi {:index i :muokataan? false} komponentti-args)]
 
                ;; POT2 myötä tullut uusi komponentti "linkki ja alasvetovalinta" halusi pitää linkin
@@ -322,7 +252,7 @@
                  (:linkki-icon sarake))
                [:td {:class (y/luokat
                               "ei-muokattava"
-                              (when korosta-hyppy? " korostettu-muokkaus-grid-hyppy"))}
+                              (when korosta-sarake? " korostettu-sarake"))}
                 [tee-kentta (assoc sarake :on-focus fokus-elementille
                               :on-blur fokus-pois-elementilta
                               :disabled? (not voi-muokata?)
@@ -335,7 +265,7 @@
                                           "ei-muokattava"
                                           tasaus-luokka
                                           (grid-yleiset/tiivis-tyyli skeema)
-                                          (when korosta-hyppy? " korostettu-muokkaus-grid-hyppy"))
+                                          (when korosta-sarake? " korostettu-sarake"))
                 fmt
                 tyyppi
                 (cond
