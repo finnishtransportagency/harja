@@ -569,9 +569,12 @@
 
 
 (defn hae-urakan-id-nimella [nimi]
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = '" nimi "';"))))
+  (let [urakka-id (ffirst (q (str "SELECT id
+                                     FROM urakka
+                                    WHERE nimi = '" nimi "';")))]
+    (if urakka-id
+      urakka-id
+      (throw (Exception. (format "Annetulla nimellä: '%s'  ei löydy urakkaa!!" nimi))))))
 
 (defn kutsu-http-palvelua
   "Lyhyt muoto testijärjestelmän HTTP palveluiden kutsumiseen."

@@ -1,7 +1,8 @@
 (ns harja.ui.ikonit
   "Kaikki bootstrap ja muut ikonit."
   (:refer-clojure :exclude [remove repeat print list filter sort])
-  (:require-macros [harja.ui.svg-sprite :refer [maarittele-svg-spritet]]))
+  (:require-macros [harja.ui.svg-sprite :refer [maarittele-svg-spritet]]) 
+  (:require [clojure.string :as str]))
 
 ;; Bootstrap ikonit
 (defn euro []
@@ -401,6 +402,8 @@
   [:img {:src "images/harja-icons/action/delete.svg" :alt "delete"}])
 (defn action-sort-descending []
   [:img {:src "images/harja-icons/action/sort-descending.svg" :alt "descending sort"}])
+(defn navigation-more []
+  [:img {:src "images/harja-icons/navigation/more.svg" :alt "more"}])
 
 (defn close-svg []
   [:img {:src "images/harja-icons/navigation/close.svg" :alt "close"}])
@@ -414,6 +417,288 @@
 
 (defn status-completed-svg []
   [:img.status-completed {:src "images/harja-icons/status/completed.svg" :alt "status-completed"}])
+
+;; Sää ikonit 
+(defn weather-clear-day [] [:img.saa-ikonit.clear-day {:src "images/harja-icons/weather/clear-day.svg"}])
+(defn weather-clear-night [] [:img.saa-ikonit.clear-night {:src "images/harja-icons/weather/clear-night.svg"}])
+(defn weather-cloudy-1-day [] [:img.saa-ikonit.cloudy-1-day {:src "images/harja-icons/weather/cloudy-1-day.svg"}])
+(defn weather-cloudy-1-night [] [:img.saa-ikonit.cloudy-1-night {:src "images/harja-icons/weather/cloudy-1-night.svg"}])
+(defn weather-cloudy-2-day [] [:img.saa-ikonit.cloudy-2-day {:src "images/harja-icons/weather/cloudy-2-day.svg"}])
+(defn weather-cloudy-2-night [] [:img.saa-ikonit.cloudy-2-night {:src "images/harja-icons/weather/cloudy-2-night.svg"}])
+(defn weather-cloudy-3-day [] [:img.saa-ikonit.cloudy-3-day {:src "images/harja-icons/weather/cloudy-3-day.svg"}])
+(defn weather-cloudy-3-night [] [:img.saa-ikonit.cloudy-3-night {:src "images/harja-icons/weather/cloudy-3-night.svg"}])
+(defn weather-cloudy [] [:img.saa-ikonit.cloudy {:src "images/harja-icons/weather/cloudy.svg"}])
+(defn weather-dust [] [:img.saa-ikonit.dust {:src "images/harja-icons/weather/dust.svg"}])
+(defn weather-fog-day [] [:img.saa-ikonit.fog-day {:src "images/harja-icons/weather/fog-day.svg"}])
+(defn weather-fog-night [] [:img.saa-ikonit.fog-night {:src "images/harja-icons/weather/fog-night.svg"}])
+(defn weather-fog [] [:img.saa-ikonit.fog {:src "images/harja-icons/weather/fog.svg"}])
+(defn weather-frost-day [] [:img.saa-ikonit.frost-day {:src "images/harja-icons/weather/frost-day.svg"}])
+(defn weather-frost-night [] [:img.saa-ikonit.frost-night {:src "images/harja-icons/weather/frost-night.svg"}])
+(defn weather-frost [] [:img.saa-ikonit.frost {:src "images/harja-icons/weather/frost.svg"}])
+(defn weather-hail [] [:img.saa-ikonit.hail {:src "images/harja-icons/weather/hail.svg"}])
+(defn weather-haze-day [] [:img.saa-ikonit.haze-day {:src "images/harja-icons/weather/haze-day.svg"}])
+(defn weather-haze-night [] [:img.saa-ikonit.haze-night {:src "images/harja-icons/weather/haze-night.svg"}])
+(defn weather-haze [] [:img.saa-ikonit.haze {:src "images/harja-icons/weather/haze.svg"}])
+(defn weather-hurricane [] [:img.saa-ikonit.hurricane {:src "images/harja-icons/weather/hurricane.svg"}])
+(defn weather-isolated-thunderstorms-day [] [:img.saa-ikonit.isolated-thunderstorms-day {:src "images/harja-icons/weather/isolated-thunderstorms-day.svg"}])
+(defn weather-isolated-thunderstorms-night [] [:img.saa-ikonit.isolated-thunderstorms-night {:src "images/harja-icons/weather/isolated-thunderstorms-night.svg"}])
+(defn weather-isolated-thunderstorms [] [:img.saa-ikonit.isolated-thunderstorms {:src "images/harja-icons/weather/isolated-thunderstorms.svg"}])
+(defn weather-rain-and-sleet-mix [] [:img.saa-ikonit.rain-and-sleet-mix {:src "images/harja-icons/weather/rain-and-sleet-mix.svg"}])
+(defn weather-rain-and-snow-mix [] [:img.saa-ikonit.rain-and-snow-mix {:src "images/harja-icons/weather/rain-and-snow-mix.svg"}])
+(defn weather-rainy-1-day [] [:img.saa-ikonit.rainy-1-day {:src "images/harja-icons/weather/rainy-1-day.svg"}])
+(defn weather-rainy-1-night [] [:img.saa-ikonit.rainy-1-night {:src "images/harja-icons/weather/rainy-1-night.svg"}])
+(defn weather-rainy-1 [] [:img.saa-ikonit.rainy-1 {:src "images/harja-icons/weather/rainy-1.svg"}])
+(defn weather-rainy-2-day [] [:img.saa-ikonit.rainy-2-day {:src "images/harja-icons/weather/rainy-2-day.svg"}])
+(defn weather-rainy-2-night [] [:img.saa-ikonit.rainy-2-night {:src "images/harja-icons/weather/rainy-2-night.svg"}])
+(defn weather-rainy-2 [] [:img.saa-ikonit.rainy-2 {:src "images/harja-icons/weather/rainy-2.svg"}])
+(defn weather-rainy-3-day [] [:img.saa-ikonit.rainy-3-day {:src "images/harja-icons/weather/rainy-3-day.svg"}])
+(defn weather-rainy-3-night [] [:img.saa-ikonit.rainy-3-night {:src "images/harja-icons/weather/rainy-3-night.svg"}])
+(defn weather-rainy-3 [] [:img.saa-ikonit.rainy-3 {:src "images/harja-icons/weather/rainy-3.svg"}])
+(defn weather-rainy-4 [] [:img.saa-ikonit.rainy-4 {:src "images/harja-icons/weather/rainy-4.svg"}])
+(defn weather-scattered-thunderstorms-day [] [:img.saa-ikonit.scattered-thunderstorms-day {:src "images/harja-icons/weather/scattered-thunderstorms-day.svg"}])
+(defn weather-scattered-thunderstorms-night [] [:img.saa-ikonit.scattered-thunderstorms-night {:src "images/harja-icons/weather/scattered-thunderstorms-night.svg"}])
+(defn weather-scattered-thunderstorms [] [:img.saa-ikonit.scattered-thunderstorms {:src "images/harja-icons/weather/scattered-thunderstorms.svg"}])
+(defn weather-severe-thunderstorm [] [:img.saa-ikonit.severe-thunderstorm {:src "images/harja-icons/weather/severe-thunderstorm.svg"}])
+(defn weather-snow-and-sleet-mix [] [:img.saa-ikonit.snow-and-sleet-mix {:src "images/harja-icons/weather/snow-and-sleet-mix.svg"}])
+(defn weather-snowy-1-day [] [:img.saa-ikonit.snowy-1-day {:src "images/harja-icons/weather/snowy-1-day.svg"}])
+(defn weather-snowy-1-night [] [:img.saa-ikonit.snowy-1-night {:src "images/harja-icons/weather/snowy-1-night.svg"}])
+(defn weather-snowy-1 [] [:img.saa-ikonit.snowy-1 {:src "images/harja-icons/weather/snowy-1.svg"}])
+(defn weather-snowy-2-day [] [:img.saa-ikonit.snowy-2-day {:src "images/harja-icons/weather/snowy-2-day.svg"}])
+(defn weather-snowy-2-night [] [:img.saa-ikonit.snowy-2-night {:src "images/harja-icons/weather/snowy-2-night.svg"}])
+(defn weather-snowy-2 [] [:img.saa-ikonit.snowy-2 {:src "images/harja-icons/weather/snowy-2.svg"}])
+(defn weather-snowy-3-day [] [:img.saa-ikonit.snowy-3-day {:src "images/harja-icons/weather/snowy-3-day.svg"}])
+(defn weather-snowy-3-night [] [:img.saa-ikonit.snowy-3-night {:src "images/harja-icons/weather/snowy-3-night.svg"}])
+(defn weather-snowy-3 [] [:img.saa-ikonit.snowy-3 {:src "images/harja-icons/weather/snowy-3.svg"}])
+(defn weather-thunderstorms [] [:img.saa-ikonit.thunderstorms {:src "images/harja-icons/weather/thunderstorms.svg"}])
+(defn weather-tornado [] [:img.saa-ikonit.tornado {:src "images/harja-icons/weather/tornado.svg"}])
+(defn weather-tropical-storm [] [:img.saa-ikonit.tropical-storm {:src "images/harja-icons/weather/tropical-storm.svg"}])
+(defn weather-wind [] [:img.saa-ikonit.wind {:src "images/harja-icons/weather/wind.svg"}])
+
+(defn- olomuoto? [olom arvo]
+  (boolean (= olom arvo)))
+
+(defn- hae-ikoni-kellonajalle [aika paiva ilta]
+  ;; Voidaan antaa päivä ja ilta ikoni, ajan perusteella 
+  ;; funktio päättelee simplifioidusti kumpaa pitäisi käyttää
+  (let [aika-pvm (-> (str/split aika " klo ") first)
+        aika-kk (-> (str/split aika-pvm ".") second int)
+        aika-klo (-> (str/split aika " klo ") second)
+        aika-tuntina (-> (str/split aika-klo ":") first int)]
+    (cond
+      ;; Kesäaika
+      (and (> aika-kk 4) (< aika-kk 9))
+      (if (< aika-tuntina 4)
+        ilta
+        paiva)
+      ;; Talviaika
+      (or (> aika-kk 8) (< aika-kk 5))
+      (if (or (> aika-tuntina 18) (< aika-tuntina 8))
+        ilta
+        paiva))))
+
+(defn generoi-saa-ikoni [olom maara aika]
+  ;; Sääikoni "moottori" simplifioituna, käytetään työmaapäiväkirjassa
+  ;; Olomuodoksi annetaan NWS / WMO koodi pöydästä SYNOP koodi
+  ;; https://issues.solita.fi/browse/VHAR-7868
+  (cond
+    ;; Selkeää
+    (olomuoto? olom 0)
+    (hae-ikoni-kellonajalle aika [weather-clear-day] [weather-clear-night])
+
+    ;; Sumua tai savua tai pölyä ilmassa, näkyvyys yhtä suuri tai suurempi kuin 1 km
+    (olomuoto? olom 4)
+    (hae-ikoni-kellonajalle aika [weather-haze] [weather-haze])
+
+    ;; Sumua tai savua tai pölyä ilmassa, näkyvyys alle 1 km
+    (olomuoto? olom 5)
+    (hae-ikoni-kellonajalle aika [weather-dust] [weather-dust])
+
+    ;; Sumu
+    (olomuoto? olom 10)
+    (hae-ikoni-kellonajalle aika [weather-fog] [weather-fog])
+
+    ;; Koodilukuja 20-25 käytetään, jos sadetta tai sumua on havaittu edellisen tunnin aikana, mutta ei havainnointihetkellä
+    ;; _____________________________________________________________________________________________________________________
+    ;; Sumu
+    (olomuoto? olom 20)
+    (hae-ikoni-kellonajalle aika [weather-fog] [weather-fog])
+
+    ;; Vesi tihkua
+    (olomuoto? olom 21)
+    (cond
+      (> maara 15)
+      (hae-ikoni-kellonajalle aika [weather-rainy-3] [weather-rainy-3])
+      (> maara 6)
+      (hae-ikoni-kellonajalle aika [weather-rainy-2] [weather-rainy-2])
+      :else
+      (hae-ikoni-kellonajalle aika [weather-rainy-1] [weather-rainy-1]))
+
+    ;; Tihkusadetta (ei jäätyvää) tai lunta
+    (olomuoto? olom 22)
+    (hae-ikoni-kellonajalle aika [weather-rain-and-snow-mix] [weather-rain-and-snow-mix])
+
+    ;; Tihkusadetta 
+    (olomuoto? olom 23)
+    (cond
+      (> maara 15)
+      (hae-ikoni-kellonajalle aika [weather-rainy-3] [weather-rainy-3])
+      (> maara 6)
+      (hae-ikoni-kellonajalle aika [weather-rainy-2] [weather-rainy-2])
+      :else
+      (hae-ikoni-kellonajalle aika [weather-rainy-1] [weather-rainy-1]))
+
+    ;; Lumisade
+    (olomuoto? olom 24)
+    (cond
+      (> maara 15)
+      (hae-ikoni-kellonajalle aika [weather-snowy-3] [weather-snowy-3])
+      (> maara 6)
+      (hae-ikoni-kellonajalle aika [weather-snowy-2] [weather-snowy-2])
+      :else
+      (hae-ikoni-kellonajalle aika [weather-snowy-1] [weather-snowy-1]))
+
+    ;; Jäätävää sadetta tai jäätävää tihkusadetta
+    (olomuoto? olom 25)
+    (hae-ikoni-kellonajalle aika [weather-snow-and-sleet-mix] [weather-snow-and-sleet-mix])
+
+    ;; Seuraavia koodilukuja käytetään, jos havainnointihetkellä havaitaan sadetta tai sumua
+    ;; _____________________________________________________________________________________
+    ;; Sumu
+    (olomuoto? olom 30)
+    (hae-ikoni-kellonajalle aika [weather-fog] [weather-fog])
+
+    ;; Sumua tai jääsumua, paikoin
+    (olomuoto? olom 31)
+    (hae-ikoni-kellonajalle aika [weather-frost] [weather-frost])
+
+    ;; Sumu tai jääsumu on ohentunut viimeisen tunnin aikana
+    (olomuoto? olom 32)
+    (hae-ikoni-kellonajalle aika [weather-fog] [weather-fog])
+
+    ;; Sumua tai jääsumua, ei merkittävää muutosta viimeisen tunnin aikana
+    (olomuoto? olom 33)
+    (hae-ikoni-kellonajalle aika [weather-frost] [weather-frost])
+
+    ;; Sumua tai jääsumua, on alkanut tai tihentynyt viimeisen tunnin aikana
+    (olomuoto? olom 34)
+    (hae-ikoni-kellonajalle aika [weather-frost] [weather-frost])
+
+    ;; Tihkusadetta 
+    (olomuoto? olom 40)
+    (cond
+      (> maara 15)
+      (hae-ikoni-kellonajalle aika [weather-rainy-3] [weather-rainy-3])
+      (> maara 6)
+      (hae-ikoni-kellonajalle aika [weather-rainy-2] [weather-rainy-2])
+      :else
+      (hae-ikoni-kellonajalle aika [weather-rainy-1] [weather-rainy-1]))
+
+    ;; Sadetta, lievää tai kohtalaista
+    (olomuoto? olom 41)
+    (cond
+      (> maara 15)
+      (hae-ikoni-kellonajalle aika [weather-rainy-3] [weather-rainy-3])
+      (> maara 6)
+      (hae-ikoni-kellonajalle aika [weather-rainy-2] [weather-rainy-2])
+      :else
+      (hae-ikoni-kellonajalle aika [weather-rainy-1] [weather-rainy-1]))
+
+    (or
+      ;; Sadetta, rankkaa
+      (olomuoto? olom 42)
+      ;; Tihkusade
+      (olomuoto? olom 50)
+      ;; Tihkusadetta, ei jäätävää, vähäistä
+      (olomuoto? olom 51)
+      ;; Tihkusadetta, ei jäätävää, kohtalaista
+      (olomuoto? olom 52)
+      ;; Tihkusadetta, ei jäätävää, raskas
+      (olomuoto? olom 53)
+
+      ;; Sadetta 
+      (olomuoto? olom 60)
+      ;; Sadetta, vähäistä
+      (olomuoto? olom 61)
+      ;; Sadetta, rankkaa
+      (olomuoto? olom 63)
+
+      ;; Sadekuuroja tai ajoittaisia sateita
+      (olomuoto? olom 80)
+      ;; Sadekuuroja, vähäistä
+      (olomuoto? olom 81)
+      ;; Sadekuuroja, kohtalaista
+      (olomuoto? olom 82)
+      ;; Sadekuuroja, raskas
+      (olomuoto? olom 83))
+    (cond
+      (> maara 15)
+      (hae-ikoni-kellonajalle aika [weather-rainy-3] [weather-rainy-3])
+      (> maara 6)
+      (hae-ikoni-kellonajalle aika [weather-rainy-2] [weather-rainy-2])
+      :else
+      (hae-ikoni-kellonajalle aika [weather-rainy-1] [weather-rainy-1]))
+
+    (or
+      ;; Tihkusadetta, jäätävää, vähäistä
+      (olomuoto? olom 54)
+      ;; Tihkusadetta, jäätävää, kohtalaista
+      (olomuoto? olom 55)
+      ;; Tihkusadetta, jäätävää, raskas
+      (olomuoto? olom 56)
+
+      ;; Sadetta, jäätävää, vähäistä
+      (olomuoto? olom 64)
+      ;; Sadetta, jäätävää, kohtalaista
+      (olomuoto? olom 65)
+      ;; Sadetta, jäätävää, raskas
+      (olomuoto? olom 66)
+
+      ;; Sadetta (tai tihkusadetta) ja lunta, kevyttä
+      (olomuoto? olom 67)
+      ; Sadetta (tai tihkusadetta) ja lunta, kohtalaista tai raskasta
+      (olomuoto? olom 68))
+    (hae-ikoni-kellonajalle aika [weather-rain-and-snow-mix] [weather-rain-and-snow-mix])
+
+    ;; Lumisade
+    (or
+      ;; Lumisade
+      (olomuoto? olom 70)
+      ;; Lumisade, vähäinen
+      (olomuoto? olom 71)
+      ;; Lumisade, kohtalainen
+      (olomuoto? olom 72)
+      ;; Lumisade, raskas
+      (olomuoto? olom 73)
+
+      ;; Lumisade, vähäinen
+      (olomuoto? olom 85)
+      ;; Lumisade, kohtalainen
+      (olomuoto? olom 86)
+      ;; Lumisade, raskas
+      (olomuoto? olom 87))
+    (cond
+      (> maara 15)
+      (hae-ikoni-kellonajalle aika [weather-snowy-3] [weather-snowy-3])
+      (> maara 6)
+      (hae-ikoni-kellonajalle aika [weather-snowy-2] [weather-snowy-2])
+      :else
+      (hae-ikoni-kellonajalle aika [weather-snowy-1] [weather-snowy-1]))
+
+    (or
+      ;; Rakeita, vähäinen
+      (olomuoto? olom 74)
+      ;; Rakeita, kohtalainen
+      (olomuoto? olom 75)
+      ;; Rakeita, raskas
+      (olomuoto? olom 76))
+    (hae-ikoni-kellonajalle aika [weather-hail] [weather-hail])
+
+    ;; Erittäin rajuja sadekuuroja (> 32mm/h)
+    (olomuoto? olom 84)
+    (hae-ikoni-kellonajalle aika [weather-rainy-4] [weather-rainy-4])
+
+    ;; Fallback
+    :else [weather-cloudy-1-day]))
 
 ;; harja-icons -ikonifontti
 ;; Käytetty icomoon.io-työkalua:
@@ -432,6 +717,22 @@
 ;;   cp fonts/* ~/source/harja/resources/public/fonts
 ;; - kopioi tyylit (ilman color-määrityksiä) harja-icons.less -tiedostoon
 ;;   grep -v 'color: #' style.css
+;;   huomioi less tiedoston alkuun: @harja-icons-polku: '../fonts';
+;;   korvaa font-face@{} -url alkuun  font/  ->  @{harja-icons-polku}/
+
+;; - korjaa harjan checkboxit, etsi koodipesästä: .vayla-checkbox {
+;;   vaihda content koodi: 
+;;   &:before { 
+;;      content: "\e9ec";
+;;   }
+;;   siihen mikä harja-icons.less tiedostossa on merkitty status-completed koodiksi
+
+;;  - mikäli muutoksien pushaus ei mene läpi, disconnectaa VPN/vaihda networkkia & lisää buffer kokoa:
+;;    git config http.postBuffer 500000000
+;;    git config http.lowSpeedTime 600
+;;    ja kokeile uudestaan
+
+;; - kaikki harja-icons.ttf:Zone.Identifier tiedostot voi poistaa jos sellaisia ilmestyy (Git Source control changes)
 ;; - päivitä funktiot tähän tiedostoon
 ;;   - alempana on koodia, jolla voi generoida funktiot replissä
 

@@ -5,21 +5,14 @@
     [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
     [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
 
-(defn- saatiedot-rivi [aikavali ilma tie s-olom k-tuuli s-sum]
+(defn- saatiedot-rivi [aika aika-tarkka ilma tie s-olom k-tuuli s-sum-str maara]
   (rivi
-    [:varillinen-teksti {:arvo aikavali}]
+    [:varillinen-teksti {:arvo aika}]
     [:varillinen-teksti {:arvo ilma}]
     [:varillinen-teksti {:arvo tie}]
-    [:varillinen-teksti {:arvo s-olom}]
-    [:varillinen-teksti {:arvo k-tuuli}]
-    [:varillinen-teksti {:arvo s-sum}]))
-
-(defn- sateen-olomuoto
-  "Sateen olomuoto saadaan numeroarvosta, josta päätellään sateen olomuoto"
-  [numero]
-  ;;TODO: tee päättely tänne ja palauta oikea ikoni
-  "<icon>"
-  )
+    [:saa-ikoni {:olomuoto s-olom :havaintoaika aika-tarkka :maara maara}]
+    [:varillinen-teksti {:arvo s-sum-str}]
+    [:varillinen-teksti {:arvo k-tuuli}]))
 
 (defn saatiedot-taulukkojen-parametrit [vasen-aseman-tiedot oikea-aseman-tiedot]
   (let [vasen-rivit (second vasen-aseman-tiedot)
@@ -32,27 +25,31 @@
                            {:otsikko "Ilma" :leveys 0.75 :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :tyyppi :varillinen-teksti}
                            {:otsikko "Tie" :leveys 0.75 :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :tyyppi :varillinen-teksti}
                            {:otsikko "S-olom" :leveys 0.75 :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :tyyppi :varillinen-teksti}
-                           {:otsikko "K-tuuli" :leveys 0.75 :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :tyyppi :varillinen-teksti}
-                           {:otsikko "S-Sum" :leveys 0.75 :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :tyyppi :varillinen-teksti})
+                           {:otsikko "S-Sum" :leveys 0.75 :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :tyyppi :varillinen-teksti}
+                           {:otsikko "K-tuuli" :leveys 0.75 :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :tyyppi :varillinen-teksti})
         rivit-vasen (into []
                       (mapv
                         #(saatiedot-rivi
                            (pvm/aika (:havaintoaika %))
+                           (pvm/pvm-aika-klo (:havaintoaika %))
                            (str (:ilman_lampotila %) " C°")
                            (str (:tien_lampotila %) " C°")
-                           (sateen-olomuoto (:sateen_olomuoto %))
+                           (int (:sateen_olomuoto %))
                            (str (:keskituuli %) " m/s")
-                           (str (:sadesumma %) " mm"))
+                           (str (:sadesumma %) " mm")
+                           (int (:sadesumma %)))
                         vasen-rivit))
         rivit-oikea (into []
                       (mapv
                         #(saatiedot-rivi
                            (pvm/aika (:havaintoaika %))
+                           (pvm/pvm-aika-klo (:havaintoaika %))
                            (str (:ilman_lampotila %) " C°")
                            (str (:tien_lampotila %) " C°")
-                           (sateen-olomuoto (:sateen_olomuoto %))
+                           (int (:sateen_olomuoto %))
                            (str (:keskituuli %) " m/s")
-                           (str (:sadesumma %) " mm"))
+                           (str (:sadesumma %) " mm")
+                           (int (:sadesumma %)))
                         oikea-rivit))
         taulukko-vasen {:otsikko-vasen (:aseman_tunniste (first (second vasen-aseman-tiedot)))
                         :optiot-vasen taulukon-optiot

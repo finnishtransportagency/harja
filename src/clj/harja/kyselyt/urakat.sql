@@ -112,7 +112,10 @@ SELECT
     u.nimi,
     u.lyhyt_nimi
 FROM urakka u
-WHERE (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi)
+WHERE (:urakkatyyppi :: urakkatyyppi IS NULL OR CASE
+                                                    WHEN :urakkatyyppi = 'hoito'
+                                                        THEN u.tyyppi IN ('hoito', 'teiden-hoito')
+                                                    ELSE u.tyyppi = :urakkatyyppi :: urakkatyyppi END)
   AND (CASE
            WHEN :vain-puuttuvat :: BOOLEAN = true
                THEN u.lyhyt_nimi IS NULL

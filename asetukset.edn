@@ -76,7 +76,7 @@
         :paivittainen-lahetysaika [0 0 0]}
 
 
- :solita-sahkoposti {:vastausosoite "harja-ala-vastaa@vayla.fi"
+ :ulkoinen-sahkoposti {:vastausosoite "harja-ala-vastaa@vayla.fi"
                      ;; :palvelin "solita-service-1.solita.fi"
                      }
 

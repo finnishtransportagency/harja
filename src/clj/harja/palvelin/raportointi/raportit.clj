@@ -48,6 +48,7 @@
   [harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat]
   [harja.palvelin.raportointi.raportit.pohjavesialueiden-suolat]
   [harja.palvelin.raportointi.raportit.rajoitusalueiden-suolat]
+  [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara]
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
 
@@ -395,6 +396,13 @@
     :konteksti    #{"urakka"}
     :kuvaus       "Suolatoteumat - Urakkasopimuksen rajoitusalueet"
     :suorita      #'harja.palvelin.raportointi.raportit.rajoitusalueiden-suolat/suorita
+    :urakkatyyppi #{:hoito :teiden-hoito}}
+
+   {:nimi :talvisuolanlämpötilaraportti
+    :konteksti #{"urakka"},
+    :kuvaus-tarkenne "Talvisuolan lämpötilatarkastelu"
+    :kuvaus "Talvisuolanlämpötilaraportti"
+    :suorita #'harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara/suorita
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi         :kulut-tehtavaryhmittain

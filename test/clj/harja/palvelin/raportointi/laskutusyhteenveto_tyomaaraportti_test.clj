@@ -149,7 +149,7 @@
         vastaus (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))]
     (is (not (nil? vastaus)) "Saatiin raportti")
-    (is (= (count (first vastaus)) 61) "Raportilla on 59 riviä")))
+    (is (= (count (first vastaus)) 62) "Raportilla on oikea määrä rivejä")))
 
 ;; Oulun MHU:n toimenpideinstanssit ja toimenpidekoodi taulun koodit
 ;Oulu MHU Talvihoito TP,23104

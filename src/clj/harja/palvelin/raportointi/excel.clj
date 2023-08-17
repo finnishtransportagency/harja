@@ -102,8 +102,14 @@
 
 ;; Excelissä tekee täsmälleen saman kuin ylempi :vain-arvo, mutta pdf:ssä ja html raportissa ui on eri näköinen ja me joudutaan
 ;; käyttämään samoja elementtejä, niin se täällä excel puolella vaikuttaa toistolta, mutta ei ole kokonaisuudessaan sitä.
-(defmethod muodosta-solu :arvo [[_ {:keys [arvo]}] solun-tyyli]
-  [arvo solun-tyyli])
+(defmethod muodosta-solu :arvo [[_ {:keys [arvo lihavoi? korosta?
+                                           korosta-hennosti? ala-korosta? korosta-harmaa?
+                                           varoitus? huomio?]}] solun-tyyli]
+  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?)
+        solun-tyyli (if-not (empty? solun-tyyli)
+                      solun-tyyli
+                      oletustyyli)]
+    [arvo solun-tyyli]))
 
 (defmethod muodosta-solu :boolean [[_ {:keys [arvo]}] solun-tyyli]
   [(if arvo "Kyllä" "Ei") solun-tyyli])
@@ -122,14 +128,14 @@
 
 (defmethod muodosta-solu :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara lihavoi? korosta?
                                                           korosta-hennosti? ala-korosta? korosta-harmaa?
-                                                          varoitus?]}] solun-tyyli]
+                                                          varoitus? huomio?]}] solun-tyyli]
   (let [etuliite (cond
                    (neg? arvo) "- "
                    (zero? arvo) ""
                    :else "+ ")
         arvo (Math/abs (float arvo))
         prosentti (Math/abs (float prosentti))
-        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa?)
+        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?)
         solun-tyyli (if-not (empty? solun-tyyli)
                       solun-tyyli
                       oletustyyli)
@@ -150,8 +156,8 @@
 ;; [:arvo-ja-yksikko-korostettu {:arvo yht :korosta-hennosti? true :yksikko "%" :desimaalien-maara 2}]
 (defmethod muodosta-solu :arvo-ja-yksikko-korostettu [[_ {:keys [arvo yksikko desimaalien-maara lihavoi? korosta?
                                                                  korosta-hennosti? korosta-harmaa? ala-korosta?
-                                                                 varoitus?]}] solun-tyyli]
-  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa?)
+                                                                 varoitus? huomio?]}] solun-tyyli]
+  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?)
         solun-tyyli (if-not (empty? solun-tyyli)
                       solun-tyyli
                       oletustyyli)
@@ -160,11 +166,16 @@
                       solun-tyyli)
         ;; Rivin pääasiallista tyyliä on mahdollista muokata myös varoituksen muodossa, kunhan attribuutti varoitus? on annettu
         ;; Ylikirjoitetaan tässä mahdollisen varoituksen vaikutukset myös yhteenvetoriveille
-        solun-tyyli (if varoitus?
+        solun-tyyli (cond
+                      varoitus?
                       (merge solun-tyyli
                         {:background :red
                          :font       {:color :white}})
-                      solun-tyyli)]
+                      huomio?
+                      (merge solun-tyyli
+                        {:background :orange
+                         :font       {:color :black}})
+                      :default solun-tyyli)]
     [arvo solun-tyyli
      (when desimaalien-maara
        (if (= yksikko "%")
@@ -523,6 +534,8 @@
                                          (= rivi viimeinen-rivi)))
                        korosta? (:korosta? optiot)
                        korosta-hennosti? (:korosta-hennosti? optiot)
+                       varoitus? (:varoitus? optiot)
+                       huomio? (:huomio? optiot)
                        korosta-harmaa? (:korosta-harmaa? optiot)
                        arvo-datassa (nth data sarake-nro)
                        ;; ui.yleiset/totuus-ikonin tuki toistaiseksi tämä
@@ -534,7 +547,7 @@
                                   (:fmt (second arvo-datassa)))
                        formatoi-solu? (raportti-domain/formatoi-solu? arvo-datassa)
 
-                       oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa?)
+                       oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?)
                        [naytettava-arvo solun-tyyli formaatti]
                        (if (and (raportti-domain/raporttielementti? arvo-datassa)
                              (not (raportti-domain/excel-kaava? arvo-datassa)))

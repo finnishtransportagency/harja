@@ -187,6 +187,9 @@
       (if (nil? virhe)
         (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti headers false)
         (throw+ virhe))))
+  (laheta-ulkoisella-jarjestelmalla-viesti! [this lahettaja vastaanottaja otsikko sisalto headers username password port]
+    ;; Ei tee tarkoituksellisesti mitään, mutta toteuttaa Protokollan
+    (log/debug "ApiSahkoposti palvelu ei tue laheta-ulkoisella-jarjestelmalla-viesti! toiminnallisuutta."))
   (vastausosoite [this]
     (get-in asetukset [:api-sahkoposti :vastausosoite]))
   (laheta-viesti-ja-liite! [this lahettaja vastaanottajat otsikko sisalto headers tiedosto-nimi]

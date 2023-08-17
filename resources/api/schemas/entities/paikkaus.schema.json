@@ -87,7 +87,15 @@
     },
     "massamenekki": {
       "id": "urn:harja/paikkaukset/0/paikkaus/massamenekki",
-      "type": "integer"
+      "type": "integer",
+      "required": false,
+      "description": "Poistumassa käytöstä, massamäärä korvaa tämän. Käytössä siihen asti, että rajapinnan käyttäjät ottavat massamäärän käyttöön."
+    },
+    "massamaara": {
+      "id": "urn:harja/paikkaukset/0/paikkaus/massamaara",
+      "type": "integer",
+      "required": false,
+      "description": "Massamäärä kilogrammoina. Vapaaehtoinen kunnes massamenekki poistetaan käytöstä."
     },
     "raekoko": {
       "id": "urn:harja/paikkaukset/0/paikkaus/raekoko",
