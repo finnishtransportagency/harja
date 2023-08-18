@@ -90,7 +90,21 @@
                                               uusi)]
                                    (@grid-tilan-muokkaus-fn uusi))))
         arvo-atom (atom ((or hae #(get % nimi)) rivi))
-        korosta-sarake? (if (some? korosta-sarake) (korosta-sarake rivi) false)
+        korosta-sarake-nimi (atom "")
+        korosta-sarake? (if (some? korosta-sarake)
+                          ;; Jos halutaan korostaa tietty sarake, laitetaan atomiksi kyseinen sarake ja palautetaan avain jota etsitään rivin tiedoista
+                          ;; korosta-sarake on siis funktio joka palauttaa avaimen minkä arvoa etsitään rivistä 
+                          (do
+                            (reset! korosta-sarake-nimi nimi)
+                            (korosta-sarake))
+                          false)
+        ;; Kutsutaan funktiota ja katsotaan onko rivissä palautettu avain true, jos on korosta sarake
+        korostetaanko-fn (fn [nimi rivi atom]
+                           (when korosta-sarake?
+                             (when (and
+                                     (korosta-sarake? rivi)
+                                     (= nimi @atom))
+                               true)))
         fokus? (atom false)
         fokus-elementille #(reset! fokus? true)
         fokus-pois-elementilta #(let [uusi-fokusoitu-komponentti (.-relatedTarget %)
@@ -172,14 +186,16 @@
                elementin-id (str rivi-index elementin-id)]
            (if (and (or (nil? muokattava?) (muokattava? rivi i))
                     voi-muokata?)
-             [:td {:class (y/luokat "muokattava"
-                                    tasaus-luokka
-                                    (grid-yleiset/tiivis-tyyli skeema)
-                                    (cond
-                                      korosta-sarake? " korostettu-sarake"
-                                      (not (empty? kentan-virheet)) " sisaltaa-virheen"
-                                      (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
-                                      (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))
+             [:td {:class (y/luokat
+                            "muokattava"
+                            tasaus-luokka
+                            (grid-yleiset/tiivis-tyyli skeema)
+                            (cond
+                              (not (empty? kentan-virheet)) " sisaltaa-virheen"
+                              (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
+                              (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen")
+                            (when (korostetaanko-fn nimi rivi korosta-sarake-nimi)
+                              " korostettu-sarake"))
                    :on-click #(.stopPropagation %)}
               (when (case nayta-virheet?
                       :fokus @fokus?
@@ -228,7 +244,7 @@
                                        ^{:key kentan-key}
                                        [tee-kentta (assoc sarake :on-focus fokus-elementille
                                                      :on-blur fokus-pois-elementilta
-                                                     :korosta-sarake? korosta-sarake?
+                                                     :korosta-sarake? (korostetaanko-fn nimi rivi korosta-sarake-nimi)
                                                      :disabloi-autocomplete? disabloi-autocomplete?
                                                      :disabled? (not voi-muokata?)
                                                      :elementin-id elementin-id)
@@ -241,7 +257,8 @@
                               "ei-muokattava"
                               tasaus-luokka
                               (grid-yleiset/tiivis-tyyli skeema)
-                              (when korosta-sarake? " korostettu-sarake"))}
+                              (when (korostetaanko-fn nimi rivi korosta-sarake-nimi)
+                                " korostettu-sarake"))}
                 (apply komponentti rivi {:index i :muokataan? false} komponentti-args)]
 
                ;; POT2 myötä tullut uusi komponentti "linkki ja alasvetovalinta" halusi pitää linkin
@@ -252,7 +269,8 @@
                  (:linkki-icon sarake))
                [:td {:class (y/luokat
                               "ei-muokattava"
-                              (when korosta-sarake? " korostettu-sarake"))}
+                              (when (korostetaanko-fn nimi rivi korosta-sarake-nimi)
+                                " korostettu-sarake"))}
                 [tee-kentta (assoc sarake :on-focus fokus-elementille
                               :on-blur fokus-pois-elementilta
                               :disabled? (not voi-muokata?)
@@ -261,11 +279,12 @@
                  arvo-atom]]
 
                :else 
-               [ei-muokattava-elementti (y/luokat 
+               [ei-muokattava-elementti (y/luokat
                                           "ei-muokattava"
                                           tasaus-luokka
                                           (grid-yleiset/tiivis-tyyli skeema)
-                                          (when korosta-sarake? " korostettu-sarake"))
+                                          (when (korostetaanko-fn nimi rivi korosta-sarake-nimi)
+                                            " korostettu-sarake"))
                 fmt
                 tyyppi
                 (cond

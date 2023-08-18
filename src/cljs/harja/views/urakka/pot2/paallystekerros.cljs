@@ -150,28 +150,28 @@
                          (if rivi
                            (:nimi rivi)
                            "- Valitse kaista -"))
-        :sarake-sort {:fn (fn [rivi]
-                           (reset! pot2-tiedot/valittu-paallystekerros-sort :kaista)
-                           (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit
-                             kohdeosat-atom
-                             (fn [rivi]
-                               (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-paallystekerros-sort
-                                 {:massat massat
-                                  :murskeet murskeet
-                                  :materiaalikoodistot materiaalikoodistot}
-                                 rivi)))
-                           (when ohjauskahva
-                             (grid/validoi-grid ohjauskahva)))
+        :sarake-sort {:fn (fn []
+                            (reset! pot2-tiedot/valittu-paallystekerros-sort :kaista)
+                            (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit
+                              kohdeosat-atom
+                              (fn [rivi]
+                                (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-paallystekerros-sort
+                                  {:massat massat
+                                   :murskeet murskeet
+                                   :materiaalikoodistot materiaalikoodistot}
+                                  rivi)))
+                            (when ohjauskahva
+                              (grid/validoi-grid ohjauskahva)))
                      :luokka (when (= @pot2-tiedot/valittu-paallystekerros-sort :kaista) "valittu-sort")}
        :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}
-       {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
+       {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true 
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
        {:otsikko "Aet" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi) :korosta-sarake #(:tr-korosta-aet? %)}
+        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi) :korosta-sarake (fn [] :tr-korosta-aet?)}
        {:otsikko "Losa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuosa :validoi (:tr-loppuosa validointi)}
        {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi) :korosta-sarake #(:tr-korosta-let? %)}
+        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi) :korosta-sarake (fn [] :tr-korosta-let?)}
        {:otsikko "Pituus" :nimi :pituus :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :tyyppi :positiivinen-numero :tasaa :oikea
         :muokattava? (constantly false)
         :hae (fn [rivi]
@@ -237,5 +237,7 @@
                                                                          (map (juxt key (comp :pituus val)))
                                                                          (get tr-osien-pituudet (:tr-numero (second data))))
                                                    (second data))]
-                                 (+ acc pituus))) 0 @kohdeosat-atom)]
+                                 (+ acc pituus)))
+                       0
+                       @kohdeosat-atom)]
        [:div.kulutus-pituus-yhteensa (str "Pituus yhteensä: " kokpituus " m")])]))

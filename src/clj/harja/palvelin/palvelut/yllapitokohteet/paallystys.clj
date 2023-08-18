@@ -284,7 +284,7 @@
   ;; TODO 
   ;; Korosta frontissa avainten perusteella taulukon kenttä
   ;; Mahdollisesti jos hypyn näytön yhteydessä käyttäjä muokkaa riviä, katsotaan jos saadaan korostus pois? 
-  [y data palautus]
+  [y data palautus maara]
   (when (> (count data) (dec y))
     (let [rivi (nth data y nil)
           rivi-tie (:rivi-tie rivi)
@@ -355,13 +355,15 @@
 
                  ;; Ei hyppyjä
                  :else rivi)
+          ;; Lisätään hyppyjen määrä tieto jokaiseen riviin
+          rivi (when rivi (merge rivi {:hyppyjen-maara maara}))
           ;; Älä palauta nil arvoa, tämä lisää muuten tyhjän rivin kulutuskerrostaulukkoon
           palautus (if rivi (conj palautus rivi) palautus)]
       ;; Jos riviä ei enää olemassa, palauta tiedot, muuten jatka looppia
       (if (nil? rivi)
         palautus
         (recur
-          (inc y) data palautus)))))
+          (inc y) data palautus maara)))))
 
 (defn- pot2-paallystekerros
   "Kasaa POT2-ilmoituksen tarvitsemaan muotoon päällystekerroksen rivit
@@ -383,10 +385,8 @@
         kohdeosat (vec (sort-by yllapitokohteet-domain/yllapitokohteen-jarjestys kohdeosat))
         ;; Laske hypyt
         hyppyjen-maara (laske-kulutuskerroksen-hypyt kohdeosat 0 0)
-        ;; Lisää hyppyjen määrä ensimmäisen rivin dataan, tämä tarvitaan noutaa vaan kerran 
-        kohdeosat (assoc-in kohdeosat [0 :hyppyjen-maara] hyppyjen-maara)
         ;; Lisää avaimet riveille joissa hyppy 
-        kohdeosat (tunnista-paallystys-hypyt 0 kohdeosat [])]
+        kohdeosat (tunnista-paallystys-hypyt 0 kohdeosat [] hyppyjen-maara)]
     kohdeosat))
 
 (defn pot2-alusta
