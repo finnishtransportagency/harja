@@ -190,6 +190,41 @@
     (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
     (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))
 
+(def valtakunnallinen-valitavoite-hoitokauden-lopussa
+  [{:id -99 :nimi "Pyyhi pölyt ja sammuta valot hoitokauden lopussa", :takaraja nil, :tyyppi :toistuva, :urakkatyyppi :hoito, :takaraja-toistopaiva 30, :takaraja-toistokuukausi 9}])
+
+
+(deftest valtakunnallinen-valitavoite-hoitokauden-viimeiselle-paivalle
+  (let [raahen-mhu-urakan-id (hae-urakan-id-nimella "Raahen MHU 2023-2028")
+        vastaus (kutsu-palvelua
+                  (:http-palvelin jarjestelma)
+                  :tallenna-valtakunnalliset-valitavoitteet
+                  +kayttaja-jvh+
+                  {:valitavoitteet valtakunnallinen-valitavoite-hoitokauden-lopussa})
+        ei-luoda-urakan-ulkopuolelle (first (q (str "SELECT takaraja, nimi from valitavoite where nimi = 'Pyyhi pölyt ja sammuta valot hoitokauden lopussa' AND takaraja = '2023-09-30' AND urakka = " raahen-mhu-urakan-id ";")))
+        raahen-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                raahen-mhu-urakan-id)
+        tallennetut (filter #(and
+                               (= raahen-mhu-urakan-id (:urakka-id %))
+                               (= (:nimi %) "Pyyhi pölyt ja sammuta valot hoitokauden lopussa")) raahen-valitavoitteet)]
+    (is (empty? ei-luoda-urakan-ulkopuolelle) "Ei saa edes luoda urakan ulkopuolelle")
+    (is (= 5 (count tallennetut)) "Viidelle hoitokaudelle replikoitu")
+    (is (nil? (some #(= (:takaraja %)
+                        (pvm/->pvm "30.9.2023")) raahen-valitavoitteet)) "2023 tiedot oikein")
+    (is (some? (some #(= (:takaraja %)
+                        (pvm/->pvm "30.9.2024")) raahen-valitavoitteet)) "2024 tiedot oikein")
+    (is (some? (some #(= (:takaraja %)
+                        (pvm/->pvm "30.9.2025")) raahen-valitavoitteet)) "2025 tiedot oikein")
+    (is (some? (some #(= (:takaraja %)
+                        (pvm/->pvm "30.9.2026")) raahen-valitavoitteet)) "2026 tiedot oikein")
+    (is (some? (some #(= (:takaraja %)
+                        (pvm/->pvm "30.9.2027")) raahen-valitavoitteet)) "2027 tiedot oikein")
+    (is (some? (some #(= (:takaraja %)
+                        (pvm/->pvm "30.9.2028")) raahen-valitavoitteet)) "2028 tiedot oikein"))
+
+
+  (u "DELETE from valitavoite where nimi = 'Pyyhi pölyt ja sammuta valot hoitokauden lopussa'"))
 
 (deftest valtakunnallisten-valitavoitteiden-kasittely-toimii
   (let [rovaniemen-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
