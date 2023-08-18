@@ -421,13 +421,15 @@
             (fmt/lyhennetty-urakan-nimi (:urakkanimi %))) 
            :solun-tooltip (fn [rivi]
                             (when-not (= (:urakkanimi rivi) (or (:lyhytnimi rivi) (fmt/lyhennetty-urakan-nimi (:urakkanimi rivi))))
-                              {:teksti (:urakkanimi rivi)}))})
+                              {:teksti (:urakkanimi rivi)
+                               :suunta :oikea}))})
         {:otsikko "Saapunut" :nimi :valitetty-urakkaan
          :hae (comp pvm/pvm-aika :valitetty-urakkaan)
          :otsikkorivi-luokka "saapunut" :leveys ""
          :solun-tooltip (fn [rivi]
                           {:tooltip-tyyppi :komponentti
-                           :tooltip-komponentti (tunniste-tooltip (:tunniste rivi))})}
+                           :tooltip-komponentti (tunniste-tooltip (:tunniste rivi))
+                           :suunta :alas})}
         {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
          :tyyppi :komponentti
          :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))
@@ -441,7 +443,8 @@
          :leveys ""
          :luokka "lisatieto-rivi"
          :solun-tooltip (fn [rivi]
-                          {:teksti (:lisatieto rivi)})}
+                          {:teksti (:lisatieto rivi)
+                           :suunta :alas})}
 
         {:otsikko "Tie" :nimi :tierekisteri
          :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %) {:teksti-tie? false})
