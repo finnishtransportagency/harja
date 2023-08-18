@@ -44,7 +44,7 @@
     (if (empty? vastaus) id (recur))))
 
 (deftest tallenna-soratietarkastus
-  (let [pvm (Date.)
+  (let [pvm (pvm/nyt)
         id (hae-vapaa-tarkastus-ulkoinen-id)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
                                          (json-sapluunasta "test/resurssit/api/soratietarkastus.json" pvm id))]
@@ -73,7 +73,7 @@
     (is (= "invalidi-json" (some-> vastaus :body json/read-str (get "virheet") first (get "virhe") (get "koodi"))))))
 
 (deftest tallenna-ja-poista-talvihoitotarkastus
-  (let [pvm (Date.)
+  (let [pvm (pvm/nyt)
         id (hae-vapaa-tarkastus-ulkoinen-id)
         tarkista-kannasta #(first (q (str "SELECT t.tyyppi, t.havainnot, thm.lumimaara, l.nimi, t.pisteet "
                                           "  FROM tarkastus t "
@@ -108,6 +108,40 @@
                                        (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-poisto.json" pvm 88888888))
           poista-tark (tarkista-kannasta)]
       (is (-> poista-vastaus :status (= 200)))
+      (is (-> olemattoman-poista-vastaus :status (= 200)))
+      (is (empty? poista-tark)))))
+
+(deftest tallenna-ja-poista-tieturvallisuustarkastus
+  (let [pvm (pvm/nyt)
+        tallenna-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/tieturvallisuustarkastus"] kayttaja portti
+                           (json-sapluunasta "test/resurssit/api/tieturvallisuustarkastus.json" pvm nil))
+        tallennetun-tarkastuksen-ulkoinen-id 1240
+        tarkista-kannasta #(first (q (str "SELECT t.tyyppi, t.pisteet "
+                                       "  FROM tarkastus t "
+                                       " WHERE t.ulkoinen_id = " tallennetun-tarkastuksen-ulkoinen-id
+                                       "   AND t.poistettu IS NOT TRUE"
+                                       "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))]
+
+    (is (= 200 (:status tallenna-vastaus)))
+
+    (let [tark (tarkista-kannasta)
+          odotetut-pisteet (->
+                             {:type :multipoint,
+                              :coordinates [{:type :point :coordinates [378749.9 6728024.4]}
+                                            {:type :point, :coordinates [378195.7 6728647.5]}]}
+                             geo/clj->pg
+                             geo/geometry)])
+
+    (let [poista-vastaus (api-tyokalut/delete-kutsu
+                           ["/api/urakat/" urakka "/tarkastus/tieturvallisuustarkastus"]
+                           kayttaja-jvh portti
+                           (json-sapluunasta "test/resurssit/api/tieturvallisuustarkastus-poisto.json" pvm nil))
+          olemattoman-poista-vastaus (api-tyokalut/delete-kutsu
+                                       ["/api/urakat/" urakka "/tarkastus/tieturvallisuustarkastus"]
+                                       kayttaja portti
+                                       (json-sapluunasta "test/resurssit/api/tieturvallisuustarkastus-poisto.json" pvm 88888888))
+          poista-tark (tarkista-kannasta)]
+      (is (-> poista-vastaus :status (= 200)) "Tieturvallisuustarkastuksen poistaminen API:n kautta")
       (is (-> olemattoman-poista-vastaus :status (= 200)))
       (is (empty? poista-tark)))))
 
@@ -154,7 +188,7 @@
 ;; Tarkastuksen tiedot vain päivitetään
 (deftest tallenna-talvihoitotarkastus-kahdesti
   (testing "Tallenna talvihoitotarkastus kahdesti"
-    (let [pvm (Date.)
+    (let [pvm (pvm/nyt)
           id (hae-vapaa-tarkastus-ulkoinen-id)
           liitteiden-maara-ennen (first (first (q "select count(id) FROM liite")))
           tarkista-kannasta #(first (q (str "SELECT t.tyyppi, t.havainnot, thm.lumimaara, l.nimi "
@@ -190,7 +224,7 @@
 ;; Erilaisen liitteen voi kuitenkin lisätä. Varmistetaan tässä, että se toimii
 (deftest tallenna-talvihoitotarkastus-uudella-liitteellä
   (testing "Tallenna talvihoitotarkastus uudella liitteellä"
-    (let [pvm (Date.)
+    (let [pvm (pvm/nyt)
           id (hae-vapaa-tarkastus-ulkoinen-id)
           liitteiden-maara-ennen (first (first (q "select count(id) FROM liite")))
           tarkista-kannasta #(q (str "SELECT t.tyyppi, t.havainnot, thm.lumimaara, l.nimi "
@@ -231,7 +265,7 @@
         hoitokauden-loppu (second hoitokausi)
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         _ @oulun-maanteiden-hoitourakan-2019-2024-id
-        pvm (Date.)
+        pvm (pvm/nyt)
         ulkoinen-id (hae-vapaa-tarkastus-ulkoinen-id)
         tarkista-kannasta #(first (q (str "SELECT t.tyyppi, t.havainnot, thm.lumimaara, l.nimi "
                                        "  FROM tarkastus t "

@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.62</b>
-<b>Julkaistu: 14.08.2023</b>
+<b>Nykyinen versio: 1.0.63</b>
+<b>Julkaistu: 22.08.2023</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.63 Julkaistu 22.08.2023
+- Lisätty tieturvallisuustarkastus rajapinta.
 - Versionumero 1.0.62 Julkaistu 14.08.2023
     - Lisätty massamäärä paikkaus-rajapintaan.
 - Versionumero 1.0.61 Julkaistu 04.08.2023
