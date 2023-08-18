@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.61</b>
-<b>Julkaistu: 04.08.2023</b>
+<b>Nykyinen versio: 1.0.62</b>
+<b>Julkaistu: 14.08.2023</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.62 Julkaistu 14.08.2023
+    - Lisätty massamäärä paikkaus-rajapintaan.
 - Versionumero 1.0.61 Julkaistu 04.08.2023
     - Korjattu dokumentaatio materiaaliraportin hakurajapinnasta vastaamaan toteutusta.
 - Versionumero 1.0.60 Julkaistu 27.06.2023

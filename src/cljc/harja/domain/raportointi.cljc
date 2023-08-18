@@ -29,14 +29,14 @@
                  {:background :dark_red
                   :font {:color :white}})
    :varoitus (merge rajat-excel
-                    {:background :orange
+                    {:background :rose
                      :font {:color :black}})
    :info (merge rajat-excel
                 {:background :light_turquoise
                  :font {:color :black}})
    :disabled {:font {:color :grey_80_percent}}})
 
-(defn solun-oletustyyli-excel [lihavoi? korosta? korosta-hennosti? korosta-harmaa?]
+(defn solun-oletustyyli-excel [lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?]
   (let [deep-merge (partial merge-with merge)]
     (cond-> {}
             lihavoi?
@@ -48,6 +48,14 @@
 
             korosta-hennosti?
             (deep-merge {:background :pale_blue
+                         :font       {:color :black}})
+
+            varoitus?
+            (deep-merge {:background :rose
+                         :font       {:color :black}})
+
+            huomio?
+            (deep-merge {:background :yellow
                          :font       {:color :black}})
 
             korosta-harmaa?

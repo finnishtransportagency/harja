@@ -4,12 +4,8 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.urakan-tyotunnit :as urakan-tyotunnit]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [clojure.java.io :as io]
-            [cheshire.core :as cheshire]
             [org.httpkit.fake :refer [with-fake-http]]
-            [clojure.data.json :as json]
-            [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]))
 
 (def kayttaja "yit-rakennus")
@@ -21,9 +17,9 @@
     :turi (component/using
             (turi/->Turi {:urakan-tyotunnit-url +testi-turi-url+})
             [:db :integraatioloki :liitteiden-hallinta])
-    :api-varusteet (component/using
-                     (urakan-tyotunnit/->UrakanTyotunnit)
-                     [:http-palvelin :db :integraatioloki :turi])))
+    :api-urakan-tyotunnit (component/using
+                            (urakan-tyotunnit/->UrakanTyotunnit)
+                            [:http-palvelin :db :integraatioloki :turi])))
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture
                                       jarjestelma-fixture))
