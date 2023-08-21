@@ -14,7 +14,6 @@
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
             [harja.tiedot.urakka.urakka :as urakka-tila]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset]
             [harja.tiedot.urakka.toteumat.varusteet :as varusteet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 

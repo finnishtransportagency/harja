@@ -114,82 +114,6 @@
             (map #(assoc % :tyyppi-kartalla :varuste) tierekisterin-varusteet))
     #(valittu-varustetoteuma-kartalla % valittu-varustetoteuma)))
 
-(defn- hae-tietolajin-kuvaus [tietolaji]
-  (k/post! :hae-tietolajin-kuvaus tietolaji))
-
-(defn tallenna-varustetoteuma [{:keys [urakka-id
-                                       sopimus-id
-                                       aikavali
-                                       tienumero] :as hakuehdot}
-                               {:keys [id
-                                       arvot
-                                       sijainti
-                                       puoli
-                                       ajorata
-                                       lisatieto
-                                       tietolaji
-                                       toiminto
-                                       toimenpide
-                                       tunniste
-                                       tierekisteriosoite
-                                       alkupvm
-                                       loppupvm
-                                       uusi-liite] :as toteuma}]
-  (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
-        toteuma {:id id
-                 :arvot arvot
-                 :sijainti sijainti
-                 :ajorata ajorata
-                 :tierekisteriosoite tierekisteriosoite
-                 :lisatieto lisatieto
-                 :tietolaji tietolaji
-                 :toiminto (or toiminto toimenpide)
-                 :urakka-id @nav/valittu-urakka-id
-                 :kuntoluokitus (when (and (:kuntoluokitus arvot)
-                                           (not (str/blank? (:kuntoluokitus arvot))))
-                                  (js/parseInt (:kuntoluokitus arvot)))
-                 :alkupvm alkupvm
-                 :loppupvm loppupvm
-                 :uusi-liite uusi-liite
-                 :tunniste tunniste}
-
-        toteuma (if (varusteet-domain/tien-puolellinen-tietolaji? tietolaji)
-                  (assoc toteuma :puoli puoli)
-                  toteuma)
-
-        hakuehdot {:urakka-id urakka-id
-                   :sopimus-id sopimus-id
-                   :alkupvm (first aikavali)
-                   :loppupvm (second aikavali)
-                   :tienumero tienumero}]
-    (k/post! :tallenna-varustetoteuma {:hakuehdot hakuehdot :toteuma toteuma})))
-
-(defn varusteen-osoite [varuste]
-  (when varuste
-    (let [osoite (get-in varuste [:tietue :sijainti :tie])]
-      {:numero (:numero osoite)
-       :alkuosa (:aosa osoite)
-       :alkuetaisyys (:aet osoite)
-       :loppuosa (:losa osoite)
-       :loppuetaisyys (:let osoite)})))
-
-(defn uusi-varustetoteuma
-  "Luo uuden tyhjän varustetoteuman lomaketta varten."
-  ([toiminto] (uusi-varustetoteuma toiminto nil))
-  ([toiminto {tietue :tietue :as varuste}]
-   (let [tietolaji (or (get-in tietue [:tietolaji :tunniste]) (ffirst (varusteet-domain/muokattavat-tietolajit)))]
-     {:toiminto toiminto
-      :tietolaji tietolaji
-      :alkupvm (or (:alkupvm tietue) (pvm/nyt))
-      :muokattava? (not (= :nayta toiminto))
-      :ajoradat []
-      :ajorata (or (get-in tietue [:sijainti :tie :ajr]) (first varusteet-domain/oletus-ajoradat))
-      :puoli (or (get-in tietue [:sijainti :tie :puoli]) (first (varusteet-domain/tien-puolet tietolaji)))
-      :arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
-      :tierekisteriosoite (varusteen-osoite varuste)
-      :sijainti (:sijainti varuste)
-      :tunniste (:tunniste varuste)})))
-
 (defn- palauta-tilan-arvo [virheelliset-ainoastaan?]
   (if virheelliset-ainoastaan? "virhe" nil))
 
@@ -333,11 +257,6 @@
   (process-event [_ app]
     (kartalle (assoc app :varustetoteuma nil)))
 
-  v/UusiVarusteToteuma
-  (process-event [{:keys [toiminto varuste]} _]
-    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (uusi-varustetoteuma toiminto varuste)))]
-      (kartalle (dissoc (tulos!) :muokattava-varuste :naytettava-varuste))))
-
   v/AsetaToteumanTiedot
   (process-event [{tiedot :tiedot} {nykyinen-toteuma :varustetoteuma :as app}]
     (let [nykyinen-tietolaji (:tietolaji tiedot)
@@ -371,15 +290,6 @@
       (hae-liitteet urakka-id toteuma-id
                     (t/send-async! v/->LiitteetHaettu)
                     (t/send-async! (partial v/->VirheTapahtui "Liitteiden haku epäonnistui")))
-      ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
-      (when (and tietolaji-muuttui? (:tietolaji tiedot))
-        (let [virhe! (t/send-async! (partial v/->VirheTapahtui "Tietolajin hakemisessa tapahtui virhe"))
-              valmis! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
-          (go
-            (let [vastaus (<! (hae-tietolajin-kuvaus (:tietolaji tiedot)))]
-              (if (k/virhe? vastaus)
-                (virhe!)
-                (valmis! vastaus))))))
       (kartalle
         (assoc app :varustetoteuma uusi-toteuma :muokattava-varuste nil :naytettava-varuste nil))))
 

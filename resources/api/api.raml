@@ -1,7 +1,7 @@
 #%RAML 0.8
 # https://github.com/raml-org/raml-spec/blob/master/versions/raml-08/raml-08.md
 title: Harja API
-version: 1.0.61
+version: 1.0.63
 baseUri: https://testiapi.vayla.fi/harja/api (testi) & https://api.vayla.fi/harja/api (tuotanto)
 protocols: [HTTPS]
 mediaType: application/json
@@ -25,7 +25,6 @@ schemas:
  - paivystajatietojen-kirjaus-request: !include schemas/paivystajatietojen-kirjaus-request.schema.json
  - paivystajatietojen-haku-response: !include schemas/paivystajatietojen-haku-response.schema.json
  - paivystyksen-poisto-request: !include schemas/paivystyksen-poisto-request.schema.json
- - tietolajien-haku-response: !include schemas/tietolajien-haku-response.schema.json
  - virhe-response: !include schemas/virhe-response.schema.json
  - tieluvan-kirjaus-request: !include schemas/tieluvan-kirjaus-request.schema.json
  - tielupien-haku-request: !include schemas/tielupien-haku-request.schema.json
@@ -358,6 +357,53 @@ documentation:
           body:
             application/json:
               example: !include examples/tiestotarkastuksen-poisto-request.json
+              schema: tarkastuksen-poisto-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: kirjaus-response
+      /tieturvallisuustarkastus:
+        post:
+          is: [secured]
+          description: Uuden tieturvallisuustarkastuksen kirjaaminen.
+          body:
+            application/json:
+              example: !include examples/tieturvallisuustarkastuksen-kirjaus-request.json
+              schema: tieturvallisuustarkastuksen-kirjaus-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: kirjaus-response
+        delete:
+          is: [secured]
+          description: Tieturvallisuustarkastuksen poisto.
+          body:
+            application/json:
+              example: !include examples/tieturvallisuustarkastuksen-poisto-request.json
               schema: tarkastuksen-poisto-request
           responses:
            200:
@@ -990,7 +1036,7 @@ documentation:
                     example: !include examples/virhe-response.json
                     schema: kirjaus-response
     /paikkaus:
-      description: Paikkauskohteiden ja niihin liittyvien paikkausten kirjaus ja päivitys.
+      description: Paikkauskohteiden ja niihin liittyvien paikkausten kirjaus ja päivitys. Massamenekki on poistumassa käytöstä, sen sijaan tulisi käyttää massamäärää kilogrammoina.
       post:
         is: [secured]
         description: Uuden paikkauksen kirjaaminen tai vanhan päivittäminen.

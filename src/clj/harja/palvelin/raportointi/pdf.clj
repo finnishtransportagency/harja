@@ -32,6 +32,8 @@
 (def raportin-tehostevari "#f0f0f0")
 (def korostettu-vari "#004D99")
 (def hennosti-korostettu-vari "#E0EDF9")
+(def varoitus-vari "#f8d7d1")
+(def huomio-vari "#FFF0BF")
 (def harmaa-korostettu-vari "#FAFAFA")
 (def harmaa-himmennys-vari "#858585")
 (def valiotsikko-tumma-vari "#e1e1e1")
@@ -64,13 +66,18 @@
 (defmethod muodosta-pdf :vain-arvo [arvo] arvo)
 
 (defmethod muodosta-pdf :arvo [[_ {:keys [arvo desimaalien-maara fmt ryhmitelty? jos-tyhja] :as elementti}]]
-  [:fo:inline
-   [:fo:inline (if-not (nil? arvo)
-                 (cond
-                   desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
-                   fmt (fmt arvo)
-                   :else arvo)
-                 jos-tyhja)]])
+  (let [;; Negaativisille numeroille laitetaan negaatio, muuten ei tehdä mitään
+        etuliite (if (and (number? arvo) (neg? arvo)) "-\u00A0" "")
+        ;; Ja, koska etuliite lisätään käsin, pitää negaatio poistaa
+        arvo (if (and (number? arvo) (neg? arvo)) (* -1 arvo)  arvo)]
+    [:fo:inline
+     [:fo:inline (if-not (nil? arvo)
+                   (str etuliite
+                     (cond
+                       desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
+                       fmt (fmt arvo)
+                       :else arvo))
+                   jos-tyhja)]]))
 
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
@@ -187,26 +194,48 @@
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
 
-(defn- korostetaanko-hennosti
+(defn- korosta-kolumni-arvosta
   "Yleisesti PDF:n solun formatointi asetetaan rivitasolla. Tällä funktiolla voidaan määrittää
-  solutasoisia hentoja korostuksia, eli vaalean sinistä taustaa.
-  Käytetään soluelementille annettua hento-korostus-arvoa ensisijaisesti. Toissijaisesti käytetään riville annetta.
+  solutasoisia korostuksia, eli eri värisiä taustoja.
+  Käytetään soluelementille eli arvolle annettua korostusa, joita on kolme:
+  ':korosta-hennosti?'
+  ':varoitus?'
+  ':huomio?'
 
-  'korosta-hennosti?' ensimmäinen parametri tulee rivitasolta.
-  'arvo-datassa' on koko soluelementin sisältö ja jos sille on määritelty hento korostus, niin asettaan taustaväri."
-  [korosta-hennosti? arvo-datassa]
-  (cond
-    (and
-      (raportti-domain/raporttielementti? arvo-datassa)
-      (false? (:korosta-hennosti? (second arvo-datassa))))
-    {}
-    korosta-hennosti? korosta-hennosti?
-    (and
-      (raportti-domain/raporttielementti? arvo-datassa)
-      (:korosta-hennosti? (second arvo-datassa)))
-    {:background-color hennosti-korostettu-vari
-     :color "black"}
-    :else {}))
+  'arvo-datassa' on koko soluelementin sisältö ja jos sille on määritelty korostus, niin asettaan taustaväri korostuksen mukaan."
+  [arvo-datassa]
+  (let [korostusavain (if (and arvo-datassa (vector? arvo-datassa))
+                        (cond
+                          (:korosta-hennosti? (second arvo-datassa)) :korosta-hennosti?
+                          (:varoitus? (second arvo-datassa)) :varoitus?
+                          (:huomio? (second arvo-datassa)) :huomio?
+                          :default :ei-korostusta)
+                        :ei-korostusta)
+        korostus-arvo-datassa (when (and
+                                      arvo-datassa
+                                      (vector? arvo-datassa)
+                                      (korostusavain (second arvo-datassa)))
+                                (korostusavain (second arvo-datassa)))
+        taustavari (case korostusavain
+                     :korosta-hennosti? hennosti-korostettu-vari
+                     :varoitus? varoitus-vari
+                     :huomio? huomio-vari
+                     nil)
+        korostus (cond
+                   ;; korostusta ei ole asetettu data -elementtiin
+                   (and
+                     (raportti-domain/raporttielementti? arvo-datassa)
+                     (false? korostus-arvo-datassa))
+                   {}
+                   (= korostusavain :ei-korostusta) {}
+                   ;; Korostus asetettu data elementtiin
+                   (and
+                     (raportti-domain/raporttielementti? arvo-datassa)
+                     korostus-arvo-datassa)
+                   {:background-color taustavari
+                    :color "black"}
+                   :else {})]
+    korostus))
 
 (defn- taulukko-rivit [sarakkeet data viimeinen-rivi
                        {:keys [viimeinen-rivi-yhteenveto? korosta-rivit
@@ -222,7 +251,9 @@
                 korosta-rivi? (:korosta? optiot)
                 valkoinen? (:valkoinen? optiot)
                 korosta-harmaa? (:korosta-harmaa? optiot)
-                korosta-hennosti? (:korosta-hennosti? optiot)]]
+                korosta-hennosti? (:korosta-hennosti? optiot)
+                varoitus? (:varoitus? optiot)
+                huomio? (:huomio? optiot)]]
       (if-let [otsikko (:otsikko optiot)]
         (taulukko-valiotsikko otsikko sarakkeet)
         (let [yhteenveto? (when (and viimeinen-rivi-yhteenveto?
@@ -242,6 +273,12 @@
               korosta-hennosti? (when korosta-hennosti?
                                   {:background-color hennosti-korostettu-vari
                                    :color "black"})
+              varoitus? (when varoitus?
+                          {:background-color varoitus-vari
+                           :color "black"})
+              huomio? (when huomio?
+                          {:background-color huomio-vari
+                           :color "black"})
               lihavoi? (when lihavoi-rivi?
                          {:font-weight "bold"})]
           [:fo:table-row
@@ -276,7 +313,11 @@
                                korosta?
                                valkoinen?
                                korosta-harmaa?
-                               (korostetaanko-hennosti korosta-hennosti? arvo-datassa)
+                               ;; Rivin korostustiedot ajaa koluminikohtaisten korostusten yli.
+                               ;; Tarkistetaan siis, onko jo korostukset olemassa, jos ei ole, niin haetaan arvo datasta eli kolumilta
+                               (if (or korosta-hennosti? varoitus? huomio?)
+                                 (first (filter #(not (nil? %)) (into #{} [korosta-hennosti? varoitus? huomio?])))
+                                 (korosta-kolumni-arvosta arvo-datassa))
                                lihavoi?)
               (when korosta?
                 [:fo:block {:space-after "0.2em"}])
