@@ -422,7 +422,7 @@ UNION ALL
 -- kustannusarvoidut_työt
 SELECT 0                        AS budjetoitu_summa,
        0                        AS budjetoitu_summa_indeksikorjattu,
-       SUM((SELECT CASE WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN (korotettuna * -1) ELSE korotettuna END korotettuna
+       SUM((SELECT korotettuna
               FROM erilliskustannuksen_indeksilaskenta(ek.pvm, ek.indeksin_nimi,
                  ek.rahasumma,ek.urakka , ek.tyyppi,
 CASE WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE ELSE FALSE END))) AS toteutunut_summa,
