@@ -732,9 +732,10 @@
   Tiedon mukana tulee yhteenlaskettu summa materiaalin käytöstä.
   * Jos tähän funktioon tehdään muutoksia, pitäisi muutokset tehdä myös
   materiaalit/tallenna-toteuma-materiaaleja! funktioon (todnäk)"
-  [db user t toteumamateriaalit hoitokausi sopimus]
+  [db user t toteumamateriaalit hoitokausi sopimus sijainti]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-materiaalit user (:urakka t))
   (log/debug "Tallenna toteuma: " (pr-str t) " ja toteumamateriaalit " (pr-str toteumamateriaalit))
+  (log/debug "Tallenna toteuma, sijainti: " (pr-str sijainti) )
   (jdbc/with-db-transaction [c db]
                             (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c (:id t) (:urakka t))
                             (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c (:id t))

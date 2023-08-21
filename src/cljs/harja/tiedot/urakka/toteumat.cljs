@@ -64,11 +64,12 @@
 (defn tallenna-erilliskustannus [ek]
   (k/post! :tallenna-erilliskustannus ek))
 
-(defn tallenna-toteuma-ja-toteumamateriaalit! [toteuma toteumamateriaalit hoitokausi sopimus-id]
+(defn tallenna-toteuma-ja-toteumamateriaalit! [toteuma toteumamateriaalit hoitokausi sopimus-id sijainti]
   (k/post! :tallenna-toteuma-ja-toteumamateriaalit {:toteuma toteuma
                                                     :toteumamateriaalit toteumamateriaalit
                                                     :hoitokausi hoitokausi
-                                                    :sopimus sopimus-id}))
+                                                    :sopimus sopimus-id
+                                                    :sijainti sijainti}))
 
 
 (defn hae-urakan-toteutuneet-muut-tyot [urakka-id sopimus-id [alkupvm loppupvm]]

@@ -28,6 +28,11 @@
   ^{:doc "Valittu aikaväli materiaalien tarkastelulle"}
   valittu-aikavali (atom nil))
 
+(defonce
+  ^{:doc "Valittu sijainti"}
+  valittu-sijainti (atom nil))
+
+
 (defonce urakan-materiaalin-kaytot
   (reaction<! [nakymassa? @materiaali-tiedot/materiaalinakymassa?
                sopimusnumero (first @u/valittu-sopimusnumero)
@@ -41,7 +46,7 @@
                  (:id ur) alku loppu sopimusnumero))))
 
 (defn tallenna-toteuma-ja-toteumamateriaalit!
-  [tm m]
+  [tm m sijainti]
   (let [toteumamateriaalit (into []
                                  (comp
                                    (map #(assoc % :materiaalikoodi (:id (:materiaali %))))
@@ -59,10 +64,12 @@
                  :tyyppi "materiaali"
                  :suorittajan-nimi (:suorittaja m)
                  :suorittajan-ytunnus (:ytunnus m)
-                 :lisatieto (:lisatieto m)}
+                 :lisatieto (:lisatieto m)
+                 ; tänne
+                 }
         hoitokausi @u/valittu-hoitokausi
         sopimus-id (first @u/valittu-sopimusnumero)]
-    (toteumat/tallenna-toteuma-ja-toteumamateriaalit! toteuma toteumamateriaalit hoitokausi sopimus-id)))
+    (toteumat/tallenna-toteuma-ja-toteumamateriaalit! toteuma toteumamateriaalit hoitokausi sopimus-id sijainti)))
 
 (def materiaalikoodit (reaction (into []
                                       (comp
@@ -191,7 +198,8 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                            "Tallenna toteuma"
                            #(tallenna-toteuma-ja-toteumamateriaalit!
                               (:toteumamateriaalit @lomakkeen-tiedot)
-                              @lomakkeen-tiedot)
+                              @lomakkeen-tiedot
+                              @sijainti)
                            {:luokka "nappi-ensisijainen"
                             :ikoni (ikonit/tallenna)
                             :kun-onnistuu
@@ -225,9 +233,21 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
             :tyyppi :pvm :validoi [[:ei-tyhja "Anna lopetuspäivämäärä"]
                                    [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]
             :muokattava? (constantly (not jarjestelman-luoma?))}
-           (when jarjestelman-luoma?
+                      (when jarjestelman-luoma?
              {:otsikko "Lähde" :nimi :luoja :tyyppi :string
               :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")")) :muokattava? (constantly false)})
+           {
+            :nimi :tierekisteriosoite
+            :otsikko "Sijainti"
+            :tyyppi :tierekisteriosoite
+            ;:tyyli :rivitetty
+            :vayla-tyyli? true
+            ;:alaotsikot? true
+            :sijainti (atom nil)
+            ;:vaadi-vali? true
+            }
+           ;{:numero tie :alkuosa aosa :alkuetaisyys aet :loppuosa losa :loppuetaisyys let}
+
            {:otsikko "Materiaalit" :nimi :materiaalit :palstoja 2
             :komponentti (fn [_]
                            [materiaalit-ja-maarat
@@ -324,6 +344,8 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                                         oikeudet/urakat-toteumat-materiaalit)]
        [napit/uusi "Lisää toteuma" #(aseta-lomakkeen-tiedot {} (:id ur))
         {:disabled (not oikeus?)}]))
+
+   ; tänne
 
    [grid/grid
     {:otsikko "Materiaalien käyttö"

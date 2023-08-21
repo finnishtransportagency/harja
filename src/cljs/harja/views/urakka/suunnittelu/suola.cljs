@@ -97,7 +97,8 @@
           :teksti (if muokkaustila?
                     "Tee muutokset myös tuleville hoitovuosille"
                     "Kopioi rajoitukset tuleville hoitovuosille")})]
-      [(lomake/ryhma
+      [
+       (lomake/ryhma
          {:otsikko "Sijainti"
           :rivi? true
           :ryhman-luokka "lomakeryhman-otsikko-tausta"}
