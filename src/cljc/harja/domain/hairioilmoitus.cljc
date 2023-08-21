@@ -92,8 +92,9 @@
                (nil? ensimmainen-loppu)
                (nil? toinen-alku)
                (pvm/jalkeen? ensimmainen-alku toinen-loppu)))))
-(defn onko-paallekkainen [uusialku uusiloppu vanhat]
-  (some #(aikavalit-leikkaavat-sivuaminen-sallittu? (::alkuaika %) (::loppuaika %) uusialku uusiloppu) vanhat))
+
+(defn onko-paallekkainen? [uusialku uusiloppu vanhat]
+  (boolean (some #(aikavalit-leikkaavat-sivuaminen-sallittu? (::alkuaika %) (::loppuaika %) uusialku uusiloppu) vanhat)))
 
 (defn voimassaoleva-hairio
   ([hairiot]

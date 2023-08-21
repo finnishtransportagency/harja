@@ -70,14 +70,14 @@
                 (hairio 2 true (pvm/dateksi (pvm/paivaa-sitten 1)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 5)))
                 (hairio 3 true (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 5)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 50)))]
         uusi (hairio 4 true (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 1)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 40)))]
-    (is (hairio/onko-paallekkainen (::hairio/alkuaika uusi) (::hairio/loppuaika uusi) vanhat))))
+    (is (hairio/onko-paallekkainen? (::hairio/alkuaika uusi) (::hairio/loppuaika uusi) vanhat))))
 
 (deftest aikavalit-eivat-leikkaa
   (let [vanhat [(hairio 1 true (pvm/dateksi (pvm/paivaa-sitten 2)) (pvm/dateksi (pvm/paivaa-sitten 1)))
                 (hairio 2 true (pvm/dateksi (pvm/paivaa-sitten 1)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 5)))
                 (hairio 3 true (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 5)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 50)))]
         uusi (hairio 4 true (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 55)) (pvm/dateksi (pvm/pvm-plus-tuntia (pvm/nyt) 60)))]
-    (is (not (hairio/onko-paallekkainen (::hairio/alkuaika uusi) (::hairio/loppuaika uusi) vanhat)))))
+    (is (not (hairio/onko-paallekkainen? (::hairio/alkuaika uusi) (::hairio/loppuaika uusi) vanhat)))))
 
 (deftest aikavalit-leikkaavat-sivuaminen-sallittu
   (is (hairio/aikavalit-leikkaavat-sivuaminen-sallittu?

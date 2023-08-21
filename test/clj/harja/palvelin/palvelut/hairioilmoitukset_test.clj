@@ -161,7 +161,7 @@
                      ::hairio/alkuaika (pvm/dateksi (t/from-now (t/days 1)))
                      ::hairio/loppuaika (pvm/dateksi (t/from-now (t/days 3)))})]
       (is (:virhe (first vastaus)))
-      (is (s/includes? (:virhe (first vastaus)) "leikkaavat olemassaolevaa häiriöilmoitusta")))))
+      (is (= (:virhe (first vastaus)) "Aikaväli leikkaa olemassaolevaa häiriöilmoitusta.")))))
 
 (deftest hairion-pois-paalta-laittaminen-ei-toimi-ilman-oikeuksia
   (try+

@@ -48,18 +48,24 @@
      ::hairio/loppuaika (op/< (c/to-sql-time (t/now)))}))
 
 (defn- validoi-ajat [db alkuaika loppuaika]
-  (if (= loppuaika alkuaika)
-    [{:virhe (str "Alkuaika " alkuaika " ja loppuaika " loppuaika " eivät voi olla samat")}]
-    (if (pvm/ennen? loppuaika alkuaika)
-    [{:virhe (str "Alkuajan " alkuaika " pitäisi olla ennen loppuaikaa " loppuaika)}]
-    (if (hairio/onko-paallekkainen alkuaika loppuaika (specql/fetch db ::hairio/hairioilmoitus
-                                                           hairio/sarakkeet
-                                                           {::hairio/voimassa? true}))
-      [{:virhe (str "Alkuaika " alkuaika " ja loppuaika " loppuaika " leikkaavat olemassaolevaa häiriöilmoitusta")}]))))
+  (cond
+    (= loppuaika alkuaika)
+    [{:virhe (str "Alkuaika ja loppuaika eivät voi olla samat.")}]
+
+    (pvm/ennen? loppuaika alkuaika)
+    [{:virhe (str "Alkuajan pitäisi olla ennen loppuaikaa.")}]
+
+    (hairio/onko-paallekkainen? alkuaika loppuaika (specql/fetch db ::hairio/hairioilmoitus
+                                                    hairio/sarakkeet
+                                                    {::hairio/voimassa? true}))
+    [{:virhe (str "Aikaväli leikkaa olemassaolevaa häiriöilmoitusta.")}]
+    ;; Ei virheitä
+    :else nil))
+
 (defn- aseta-hairioilmoitus [db user {::hairio/keys [viesti tyyppi alkuaika loppuaika]}]
   (let [validointi-virhe (validoi-ajat db alkuaika loppuaika)]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
-  (aseta-vanhat-hairioilmoitukset-pois db) ; TODO: onko hyvä paikka tehdä tämä?
+  (aseta-vanhat-hairioilmoitukset-pois db)
   (if (nil? validointi-virhe)
     (do
       (specql/insert! db ::hairio/hairioilmoitus

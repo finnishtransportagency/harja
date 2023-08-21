@@ -1,16 +1,11 @@
 (ns harja.tiedot.hallinta.hairiot
-  (:require [reagent.core :refer [atom] :as r]
-            [harja.tiedot.hallinta.yhteydenpito :as tiedot]
-            [cljs.core.async :refer [<! >! timeout chan]]
-            [harja.ui.yleiset :refer [ajax-loader]]
-            [harja.ui.komponentti :as komp]
+  (:require [reagent.core :refer [atom]]
+            [cljs.core.async :refer [<!]]
             [harja.domain.hairioilmoitus :as hairio]
-            [harja.loki :refer [log]]
             [harja.tiedot.hairioilmoitukset :as hairio-ui]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti])
-  (:require-macros [cljs.core.async.macros :refer [go go-loop]]
-                   [reagent.ratom :refer [reaction]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
 (def hairiot (atom nil))
