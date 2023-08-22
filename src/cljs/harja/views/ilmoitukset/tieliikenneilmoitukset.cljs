@@ -288,32 +288,6 @@
           "Selitteet:\n")
         (domain/parsi-selitteet selitteet)))))
 
-(defn- parsi-palauteluokitus
-  "Ilmoitusten luokittelun käyttöönoton välivaiheessa ilmoitusten lisätieto-kentässä on lähetetty aihe ja tarkenne
-  tekstimuotoisena. Yritetään parsia tällaiset ja näytetään niistä aihe ja tarkenne ikään kuin ne olisi tulleet
-  uuden mallisena."
-  [{:keys [aihe tarkenne lisatieto] :as ilmoitus} palauteluokitukset]
-  (if (and (nil? aihe) (nil? tarkenne) lisatieto)
-    (let [aiheet-ilmoituksessa (filter
-                                 #(str/includes? lisatieto (str "Aihe: " (:nimi %)))
-                                 palauteluokitukset)
-          tarkenteet-ilmoituksessa (filter
-                                     #(str/includes? lisatieto (str "Lisätieto: " (:nimi %)))
-                                     (flatten (map :tarkenteet palauteluokitukset)))
-          aihe-ilmoituksessa (first aiheet-ilmoituksessa)
-          tarkenne-ilmoituksessa (first tarkenteet-ilmoituksessa)]
-      (cond-> ilmoitus
-        (= 1 (count aiheet-ilmoituksessa))
-        (->
-          (assoc :aihe (:aihe-id aihe-ilmoituksessa))
-          (update :lisatieto #(str/replace % (str "Aihe: " (:nimi aihe-ilmoituksessa) " ") "")))
-
-        (and (= 1 (count aiheet-ilmoituksessa)) (= 1 (count tarkenteet-ilmoituksessa)))
-        (->
-          (assoc :tarkenne (:tarkenne-id (first tarkenteet-ilmoituksessa)))
-          (update :lisatieto #(str/replace % (str "Lisätieto: " (:nimi tarkenne-ilmoituksessa) " ") "")) )))
-    ilmoitus))
-
 (defn ilmoitusten-paanakyma
   [e! {ws-ilmoitusten-kuuntelu :ws-ilmoitusten-kuuntelu
        valinnat-nyt :valinnat
@@ -334,8 +308,7 @@
         vapaa-loppuaika (-> valinnat-nyt :valitetty-urakkaan-loppuaika)
         tuntia-sitten (pvm/tuntia-sitten tunteja-valittu)
         valittu-alkupvm (if tunteja-valittu tuntia-sitten vapaa-alkuaika)
-        valittu-loppupvm (if tunteja-valittu (pvm/nyt) vapaa-loppuaika)
-        haetut-ilmoitukset (map #(parsi-palauteluokitus % aiheet-ja-tarkenteet) haetut-ilmoitukset)]
+        valittu-loppupvm (if tunteja-valittu (pvm/nyt) vapaa-loppuaika)]
 
 
     [:span.ilmoitukset
@@ -525,7 +498,7 @@
       [:span
        [kartta/kartan-paikka]
        (if (and @nav/valittu-ilmoitus-id valittu-ilmoitus)
-         [ilmoituksen-tiedot e! (parsi-palauteluokitus valittu-ilmoitus aiheet-ja-tarkenteet) aiheet-ja-tarkenteet]
+         [ilmoituksen-tiedot e! valittu-ilmoitus aiheet-ja-tarkenteet]
          [ilmoitusten-paanakyma e! ilmoitukset])])))
 
 (defn ilmoitukset []
