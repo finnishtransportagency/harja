@@ -69,7 +69,7 @@
       [:varillinen-teksti {:arvo (or (avain_yht tp-rivi) (summa-fmt 0.00M)) :fmt :raha :lihavoi? lihavoi?}])))
 
 (defn- taulukko [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
-                         kyseessa-kk-vali? sheet-nimi]}]
+                         kyseessa-kk-vali? sheet-nimi alkupvm]}]
   (let [rivit (into []
                 (remove nil?
                   (cond
@@ -95,13 +95,20 @@
 
                      (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
 
-                    (= "MHU Ylläpito" otsikko)
+                    ;; "01.10.2022" jälkeen alihankintabonukset merkitään omalla rivillään
+                    (and (= "MHU Ylläpito" otsikko) (pvm/sama-tai-jalkeen? alkupvm (pvm/->pvm "01.10.2022")))
                     [(rivi-taulukolle data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
-                     (rivi-taulukolle data kyseessa-kk-vali? "Rahavaraukset" :rahavaraukset_laskutettu :rahavaraukset_laskutetaan false)
+                     (rivi-taulukolle data kyseessa-kk-vali? "Tilaajan rahavaraus (alihankintasopimusten maksuehtobonukset)" :rahavaraukset_laskutettu :rahavaraukset_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
 
+                    ;; Ennen "01.10.2022" alihankintabonukset ovat vain bonuksia ja löytyvät bonuksista
+                    (and (= "MHU Ylläpito" otsikko) (pvm/ennen? alkupvm (pvm/->pvm "01.10.2022")))
+                    [(rivi-taulukolle data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
+                     (rivi-taulukolle data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
+                     (rivi-taulukolle data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
+                     (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
 
                     :else
                     [(rivi-taulukolle data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
@@ -279,7 +286,8 @@
                               :sheet-nimi (when (= (.indexOf otsikot x) 0) sheet-nimi)
                               :laskutettu-teksti laskutettu-teksti
                               :laskutetaan-teksti laskutetaan-teksti
-                              :kyseessa-kk-vali? kyseessa-kk-vali?})))))
+                              :kyseessa-kk-vali? kyseessa-kk-vali?
+                              :alkupvm alkupvm})))))
 
      (toteutuneet-taulukko {:data (first koostettu-yhteenveto)
                             :otsikko "Toteutuneet"
