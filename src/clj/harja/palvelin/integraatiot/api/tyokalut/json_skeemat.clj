@@ -57,6 +57,10 @@
 (def talvihoitotarkastuksen-kirjaus (tee-validaattori "api/schemas/talvihoitotarkastuksen-kirjaus-request.schema.json"))
 (def +talvihoitotarkastuksen-poisto+ "api/schemas/tarkastuksen-poisto-request.schema.json")
 (def talvihoitotarkastuksen-poisto (tee-validaattori "api/schemas/tarkastuksen-poisto-request.schema.json"))
+(def +tieturvallisuustarkastuksen-kirjaus+ "api/schemas/tiestotarkastuksen-kirjaus-request.schema.json")
+(def tieturvallisuustarkastuksen-kirjaus (tee-validaattori "api/schemas/tiestotarkastuksen-kirjaus-request.schema.json"))
+(def +tieturvallisuustarkastuksen-poisto+ "api/schemas/tarkastuksen-poisto-request.schema.json")
+(def tieturvallisuustarkastuksen-poisto (tee-validaattori "api/schemas/tarkastuksen-poisto-request.schema.json"))
 
 (def +paivystajatietojen-kirjaus+ "api/schemas/paivystajatietojen-kirjaus-request.schema.json")
 (def paivystajatietojen-kirjaus (tee-validaattori "api/schemas/paivystajatietojen-kirjaus-request.schema.json"))

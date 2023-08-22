@@ -63,6 +63,16 @@
     :pyynto-skeema json-skeemat/talvihoitotarkastuksen-poisto
     :tyyppi :talvihoito
     :metodi :delete}
+   {:palvelu :lisaa-tieturvallisuustarkastus
+    :polku "/api/urakat/:id/tarkastus/tieturvallisuustarkastus"
+    :pyynto-skeema json-skeemat/tieturvallisuustarkastuksen-kirjaus
+    :tyyppi :talvihoito
+    :metodi :post}
+   {:palvelu :poista-tieturvallisuustarkastus
+    :polku "/api/urakat/:id/tarkastus/tieturvallisuustarkastus"
+    :pyynto-skeema json-skeemat/tieturvallisuustarkastuksen-poisto
+    :tyyppi :tieturvallisuus
+    :metodi :delete}
    {:palvelu :lisaa-soratietarkastus
     :polku "/api/urakat/:id/tarkastus/soratietarkastus"
     :pyynto-skeema json-skeemat/soratietarkastuksen-kirjaus

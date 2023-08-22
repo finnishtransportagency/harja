@@ -10,7 +10,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [clj-time.coerce :as tc]))
 
 (defn hae-valtakunnalliset-valitavoitteet [db user]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-valitavoitteet user)
@@ -127,13 +128,12 @@
                                                       (t/year (c/from-date (:alkupvm urakka))))
                                                  (inc (t/year (c/from-date (:loppupvm urakka)))))]
         (doseq [vuosi urakan-jaljella-olevat-vuodet]
-          (let [tarkka-takaraja (t/local-date vuosi takaraja-toistokuukausi takaraja-toistopaiva)]
-            (when (and (t/after? tarkka-takaraja pvm/kayttoonottto)
-                       (pvm/valissa? tarkka-takaraja
-                                     (c/from-date (:alkupvm urakka))
-                                     (c/from-date (:loppupvm urakka))))
+          (let [tarkka-takaraja (tc/to-date (t/date-time vuosi takaraja-toistokuukausi takaraja-toistopaiva))]
+            (when (pvm/valissa? tarkka-takaraja
+                    (konv/java-date (:alkupvm urakka))
+                    (konv/java-date (:loppupvm urakka)))
               (log/debug "Lisätään toistuva välitavoite " nimi " urakkaan " (:nimi urakka) " takarajalla "
-                         vuosi "-" takaraja-toistokuukausi "-" takaraja-toistopaiva)
+                vuosi "-" takaraja-toistokuukausi "-" takaraja-toistopaiva)
               (q/lisaa-urakan-valitavoite<! db {:urakka (:id urakka)
                                                 :aloituspvm nil
                                                 :takaraja (konv/sql-date (c/to-date tarkka-takaraja))

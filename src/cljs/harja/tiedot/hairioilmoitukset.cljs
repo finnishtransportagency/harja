@@ -1,12 +1,8 @@
 (ns harja.tiedot.hairioilmoitukset
-  (:require [harja.loki :refer [log tarkkaile!]]
-
-            [reagent.core :refer [atom]]
-            [cljs.core.async :refer [<!]]
-            [cljs.core.async :refer [<! >! timeout chan]]
+  (:require [reagent.core :refer [atom]]
+            [cljs.core.async :refer [<! timeout]]
             [harja.asiakas.kommunikaatio :as k])
-  (:require-macros [cljs.core.async.macros :refer [go go-loop]]
-                   [reagent.ratom :refer [reaction]]))
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (def tarkkailuvali-ms (* 1000 60))
 (def hairion-piilotusaika-ms (* 1000 60 60))
@@ -15,7 +11,7 @@
 (def nayta-hairioilmoitus? (atom true))
 
 (defn hae-tuorein-hairioilmoitus! []
-  (go (let [vastaus (<! (k/post! :hae-tuorein-voimassaoleva-hairioilmoitus {}))]
+  (go (let [vastaus (<! (k/post! :hae-voimassaoleva-hairioilmoitus {}))]
         (when-not (k/virhe? vastaus)
           (reset! tuore-hairioilmoitus vastaus)))))
 
