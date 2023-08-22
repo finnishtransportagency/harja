@@ -272,18 +272,14 @@
   "Tunnistaa päällystyksessä tapahtuvat hypyt
    Palauttaa vectorin kohdeosista joihin lisätty hyppyjen tiedot avaimiin
    Avaimet käsitellään frontissa paallystekerros.cljs missä ne passataan muokkaus.cljs korostusta varten
-   Laitetaan aluksi rajaksi 50 metriä, eli kaikki alle 50 metrin hypyt näytetään fronttiin
+   Laitetaan aluksi 50 metriä rajaksi, eli kaikki alle 50 metrin hypyt näytetään fronttiin
    Hyppy tulee tunnistaa kun mennään samalla ajoradalla, tiellä sekä samalla kaistalla. 
    Jos kaista tai tie vaihtuu, silloin tämä ei ole hyppy.
-   Terminologiaa:
    Ajorata = Rata jossa on yksi tai usea tie (ajoradalla voi olla esim. moottoritie jossa 2 tietä)
    Tie = Tie jossa 2 kaistaa
    Kaista = Tien kaista 
    Aet = Alkuetäisyys metreinä
    Let = Loppuetäisyys metreinä"
-  ;; TODO 
-  ;; Korosta frontissa avainten perusteella taulukon kenttä
-  ;; Mahdollisesti jos hypyn näytön yhteydessä käyttäjä muokkaa riviä, katsotaan jos saadaan korostus pois? 
   [y data palautus maara]
   (when (> (count data) (dec y))
     (let [rivi (nth data y nil)

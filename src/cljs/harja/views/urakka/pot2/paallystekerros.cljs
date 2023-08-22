@@ -1,28 +1,24 @@
 (ns harja.views.urakka.pot2.paallystekerros
   "POT2-lomakkeen päällystekerros"
   (:require
-    [reagent.core :refer [atom] :as r]
-    [harja.domain.paallystysilmoitus :as pot]
-    [harja.domain.pot2 :as pot2-domain]
-    [harja.domain.tierekisteri :as tr]
-    [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-    [harja.domain.paikkaus :as paikaus]
-    [harja.loki :refer [log]]
-    [harja.ui.debug :refer [debug]]
-    [harja.ui.grid :as grid]
-    [harja.ui.ikonit :as ikonit]
-    [harja.ui.yleiset :refer [ajax-loader]]
-    [harja.tiedot.urakka.paallystys :as paallystys]
-    [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
-    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
-    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
-    [harja.ui.yleiset :as yleiset]
-    [harja.validointi :as v]
-    [harja.fmt :as fmt]
-    [harja.domain.paikkaus :as paikkaus])
-  (:require-macros [reagent.ratom :refer [reaction]]
-                   [cljs.core.async.macros :refer [go]]
-                   [harja.atom :refer [reaction<!]]))
+   [reagent.core :refer [atom] :as r]
+   [harja.domain.paallystysilmoitus :as pot]
+   [harja.domain.pot2 :as pot2-domain]
+   [harja.domain.tierekisteri :as tr]
+   [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+   [harja.ui.grid.protokollat :as grid-protokollat]
+   [harja.domain.paikkaus :as paikaus]
+   [harja.ui.grid :as grid]
+   [harja.ui.ikonit :as ikonit]
+   [harja.ui.yleiset :refer [ajax-loader]]
+   [harja.tiedot.urakka.paallystys :as paallystys]
+   [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
+   [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
+   [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
+   [harja.ui.yleiset :as yleiset]
+   [harja.validointi :as v]
+   [harja.fmt :as fmt]
+   [harja.domain.paikkaus :as paikkaus]))
 
 
 (defn validoi-paallystekerros
@@ -60,29 +56,75 @@
   [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet ohjauskahvat] :as app}
    {:keys [massat murskeet materiaalikoodistot validointi virheet-atom varoitukset-atom]} kohdeosat-atom]
   (let [hyppyjen-maara (get-in @kohdeosat-atom [1 :hyppyjen-maara])
+        alkup-jarjestys (atom @kohdeosat-atom)
+        lomaketta-muokattu? (boolean (:kulutuskerros-muokattu? (e! (pot2-tiedot/->KulutuskerrosMuokattu nil))))
         alert-ok-teksti "Kulutuskerros on yhtenäinen (ei hyppyjä)"
         alert-teksti (str "Kulutuskerros ei ole yhtenäinen " (cond
                                                                (> hyppyjen-maara 1)
                                                                (str "(" hyppyjen-maara " hyppyä)")
                                                                :else
                                                                (str "(" hyppyjen-maara " hyppy)")))
-        custom-yla-panel (if (> hyppyjen-maara 0)
-                           [:div.kulutus-hyppy-info.vahvistamaton
-                            [:div.kulutus-hyppy-ikoni-alert (ikonit/alert-svg)]
-                            [:div alert-teksti]]
+        custom-yla-panel (if-not lomaketta-muokattu?
+                           (if (> hyppyjen-maara 0)
+                             [:div.kulutus-hyppy-info.vahvistamaton
+                              [:div.kulutus-hyppy-ikoni-alert (ikonit/alert-svg)]
+                              [:div alert-teksti]]
 
-                           [:div.kulutus-hyppy-info
-                            [:div.kulutus-hyppy-ikoni-ok (ikonit/harja-icon-status-completed)]
-                            [:div alert-ok-teksti]])
+                             [:div.kulutus-hyppy-info
+                              [:div.kulutus-hyppy-ikoni-ok (ikonit/harja-icon-status-completed)]
+                              [:div alert-ok-teksti]])
+                           nil)
         voi-muokata? (not= :lukittu (:tila perustiedot))
         ohjauskahva (:paallystekerros ohjauskahvat)]
     [:div
      [grid/muokkaus-grid
-      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true 
-       :custom-yla-panel custom-yla-panel
+      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
        :voi-muokata? voi-muokata? :voi-lisata? false
        :voi-kumota? false
-       :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
+       :custom-yla-panel custom-yla-panel
+       :muutos (fn [g]
+                 ;; Koska tätä kutsutaan myös sorttauksen yhteydessä, täytyy tarkistaa erillisellä funktiolla onko rivjeä muokattu
+                 (let [uusi-jarjestys (grid-protokollat/hae-muokkaustila g)
+                       riveja-muokattu? (fn [i data]
+                                          ;; Onko käyttäjä muokannut lomaketta, käy läpi vanhan järjestyksen rivit, vertaa niitä uusiin riveihin
+                                          ;; Kutsutaan kun sortataan rivejä, ei kutsuta enää sen jälkeen jos käyttäjä muokannut lomaketta
+                                          (let [rivi (-> data (nth i nil) (nth 1 nil))
+                                                fn-data? (fn [rivi data i]
+                                                          (and
+                                                            (some? rivi)
+                                                            (> (count data) (dec i))))
+                                                fn-etsi-vanha (fn [i data etsi fn-data?]
+                                                                (let [rivi (-> data (nth i nil) (nth 1 nil))]
+                                                                  (if (and rivi etsi
+                                                                        (= (:kohdeosa-id rivi) (:kohdeosa-id etsi)))
+                                                                    rivi
+                                                                    (if (fn-data? rivi data i)
+                                                                      (recur (inc i) data etsi fn-data?)
+                                                                      nil))))
+                                                vanha-rivi (fn-etsi-vanha 0 (vec uusi-jarjestys) rivi fn-data?)
+                                                fn-vertaa-arvo (fn [vanha uusi avain]
+                                                                 (and vanha uusi
+                                                                   (= (avain vanha) (avain uusi))))]
+                                            (when (fn-data? rivi data i)
+                                              ;; Verrataan relevantteja tietoja mitä käyttäjä voi muokata 
+                                              (if (and
+                                                    (fn-vertaa-arvo vanha-rivi rivi :toimenpide)
+                                                    (fn-vertaa-arvo vanha-rivi rivi :tr-kaista)
+                                                    (fn-vertaa-arvo vanha-rivi rivi :tr-ajorata)
+                                                    (fn-vertaa-arvo vanha-rivi rivi :tr-loppuosa)
+                                                    (fn-vertaa-arvo vanha-rivi rivi :tr-alkuosa)
+                                                    (fn-vertaa-arvo vanha-rivi rivi :tr-loppuetaisyys)
+                                                    (fn-vertaa-arvo vanha-rivi rivi :materiaali)
+                                                    (fn-vertaa-arvo vanha-rivi rivi :tr-alkuetaisyys)
+                                                    (fn-vertaa-arvo vanha-rivi rivi :tr-numero))
+                                                (recur (inc i) data)
+                                                true))))]
+                   (when-not lomaketta-muokattu?
+                     (when (riveja-muokattu? 0 (vec @alkup-jarjestys))
+                       (e! (pot2-tiedot/->KulutuskerrosMuokattu true)))))
+
+                 (reset! alkup-jarjestys @kohdeosat-atom)
+                 (e! (pot2-tiedot/->Pot2Muokattu)))
       ;; TODO: Digiroad-kaistojen haku disabloitu, kunnes Digiroad-rajapinnan käyttö ja kaista-aineiston hyödyntäminen
       ;;       on suunniteltu kuntoon validointia ajatellen
       ;;on-rivi-blur (fn [rivi]
@@ -99,8 +141,8 @@
        :virheet virheet-atom
        :varoitukset varoitukset-atom
        :piilota-toiminnot? true
-      ;; Varoitetaan validointivirheistä, mutta ei estetä tallentamista.
-      ;; Backendin puolella suoritetaan validointi, kun lomake merkitetään tarkastettavaksi ja tallennetaan.
+       ;; Varoitetaan validointivirheistä, mutta ei estetä tallentamista.
+       ;; Backendin puolella suoritetaan validointi, kun lomake merkitetään tarkastettavaksi ja tallennetaan.
        :rivi-varoitus (:rivi validointi)
        :taulukko-varoitus (:taulukko validointi)
        :tyhja (if (nil? @kohdeosat-atom)
@@ -110,34 +152,34 @@
         :tyyppi :valinta :valinnat (or (:paallystekerros-toimenpiteet materiaalikoodistot) []) :valinta-arvo ::pot2-domain/koodi
         :valinta-nayta ::pot2-domain/lyhenne :validoi [[:ei-tyhja "Anna arvo"]]
         :leveys (:toimenpide pot2-yhteiset/gridin-leveydet)
-       :sarake-sort {:fn (fn [rivi]
-                           (reset! pot2-tiedot/valittu-paallystekerros-sort :toimenpide)
-                           (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit
-                             kohdeosat-atom
-                             (fn [rivi]
-                               (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-paallystekerros-sort
-                                 {:massat massat
-                                  :murskeet murskeet
-                                  :materiaalikoodistot materiaalikoodistot}
-                                 rivi)))
-                           (when ohjauskahva
-                             (grid/validoi-grid ohjauskahva)))
-                     :luokka (when (= @pot2-tiedot/valittu-paallystekerros-sort :toimenpide) "valittu-sort")}}
+        :sarake-sort {:fn (fn []
+                            (reset! pot2-tiedot/valittu-paallystekerros-sort :toimenpide)
+                            (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit
+                              kohdeosat-atom
+                              (fn [rivi]
+                                (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-paallystekerros-sort
+                                  {:massat massat
+                                   :murskeet murskeet
+                                   :materiaalikoodistot materiaalikoodistot}
+                                  rivi)))
+                            (when ohjauskahva
+                              (grid/validoi-grid ohjauskahva)))
+                      :luokka (when (= @pot2-tiedot/valittu-paallystekerros-sort :toimenpide) "valittu-sort")}}
        {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-numero :validoi (:tr-numero validointi)
-       :sarake-sort {:fn (fn [rivi]
-                           (reset! pot2-tiedot/valittu-paallystekerros-sort :tieosoite)
-                           (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit
-                             kohdeosat-atom
-                             (fn [rivi]
-                               (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-paallystekerros-sort
-                                 {:massat massat
-                                  :murskeet murskeet
-                                  :materiaalikoodistot materiaalikoodistot}
-                                 rivi)))
-                           (when ohjauskahva
-                             (grid/validoi-grid ohjauskahva)))
-                     :luokka (when (= @pot2-tiedot/valittu-paallystekerros-sort :tieosoite) "valittu-sort")}}
+        :sarake-sort {:fn (fn []
+                            (reset! pot2-tiedot/valittu-paallystekerros-sort :tieosoite)
+                            (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit
+                              kohdeosat-atom
+                              (fn [rivi]
+                                (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-paallystekerros-sort
+                                  {:massat massat
+                                   :murskeet murskeet
+                                   :materiaalikoodistot materiaalikoodistot}
+                                  rivi)))
+                            (when ohjauskahva
+                              (grid/validoi-grid ohjauskahva)))
+                      :luokka (when (= @pot2-tiedot/valittu-paallystekerros-sort :tieosoite) "valittu-sort")}}
        {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
         :alasveto-luokka "kavenna-jos-kapea"
         :valinnat pot/+ajoradat-numerona+ :valinta-arvo :koodi
@@ -162,16 +204,23 @@
                                   rivi)))
                             (when ohjauskahva
                               (grid/validoi-grid ohjauskahva)))
-                     :luokka (when (= @pot2-tiedot/valittu-paallystekerros-sort :kaista) "valittu-sort")}
-       :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}
-       {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true 
+                      :luokka (when (= @pot2-tiedot/valittu-paallystekerros-sort :kaista) "valittu-sort")}
+        :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}
+       {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
        {:otsikko "Aet" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi) :korosta-sarake (fn [] :tr-korosta-aet?)}
+        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi)
+        :korosta-sarake (fn []
+                          (if (boolean (:kulutuskerros-muokattu? (e! (pot2-tiedot/->KulutuskerrosMuokattu nil))))
+                            false :tr-korosta-aet?))}
        {:otsikko "Losa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuosa :validoi (:tr-loppuosa validointi)}
        {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
-        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi) :korosta-sarake (fn [] :tr-korosta-let?)}
+        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi)
+        :korosta-sarake (fn []
+                          (if (boolean (:kulutuskerros-muokattu? (e! (pot2-tiedot/->KulutuskerrosMuokattu nil))))
+                            false
+                            :tr-korosta-let?))}
        {:otsikko "Pituus" :nimi :pituus :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :tyyppi :positiivinen-numero :tasaa :oikea
         :muokattava? (constantly false)
         :hae (fn [rivi]

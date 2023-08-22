@@ -102,6 +102,7 @@
         korostetaanko-fn (fn [nimi rivi atom]
                            (when korosta-sarake?
                              (when (and
+                                     (korosta-sarake)
                                      (korosta-sarake? rivi)
                                      (= nimi @atom))
                                true)))
