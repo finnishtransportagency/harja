@@ -251,19 +251,23 @@
           rivi-ajorata (:tr-ajorata rivi)
           rivi-aet (:tr-alkuetaisyys rivi)
           rivi-let (:tr-loppuetaisyys rivi)
+          rivi-kaista (:tr-kaista rivi)
 
           ;; Kuinka iso hyppy halutaan näyttää? 
           ;; (inc 50) = Näytetään hypyt jotka ovat 50 metriä tai alle 
           hypyn-metriraja (inc yllapitokohteet-domain/+kulutus-hyppy-metriraja+)
 
           seuraava-rivi (get-in data [(inc i)])
-          seuraavarivi-tie (:tr-numero seuraava-rivi)
+          seuraava-rivi-tie (:tr-numero seuraava-rivi)
           seuraava-rivi-ajorata (:tr-ajorata seuraava-rivi)
           seuraava-rivi-aet (:tr-alkuetaisyys seuraava-rivi)
+          seuraava-rivi-kaista (:tr-kaista seuraava-rivi)
 
-          hyppy-olemassa? (if (and rivi-aet seuraava-rivi-aet
-                                (= rivi-tie seuraavarivi-tie)
+          hyppy-olemassa? (if (and
+                                rivi-aet seuraava-rivi-aet
+                                (= rivi-tie seuraava-rivi-tie)
                                 (= rivi-ajorata seuraava-rivi-ajorata)
+                                (= rivi-kaista seuraava-rivi-kaista)
                                 (> seuraava-rivi-aet rivi-let)
                                 ;; Onko hyppy X metriä tai alle?
                                 (< (- seuraava-rivi-aet rivi-let) hypyn-metriraja))
@@ -289,7 +293,7 @@
   [y data palautus maara]
   (when (> (count data) (dec y))
     (let [rivi (nth data y nil)
-          rivi-tie (:rivi-tie rivi)
+          rivi-tie (:tr-numero rivi)
           rivi-ajorata (:tr-ajorata rivi)
           rivi-kaista (:tr-kaista rivi)
           rivi-aet (:tr-alkuetaisyys rivi)
@@ -300,13 +304,13 @@
           hypyn-metriraja (inc yllapitokohteet-domain/+kulutus-hyppy-metriraja+)
 
           edellinen-rivi (nth data (dec y) nil)
-          edellinen-rivi-tie (:rivi-tie edellinen-rivi)
+          edellinen-rivi-tie (:tr-numero edellinen-rivi)
           edellinen-rivi-ajorata (:tr-ajorata edellinen-rivi)
           edellinen-rivi-kaista (:tr-kaista edellinen-rivi)
           edellinen-rivi-let (:tr-loppuetaisyys edellinen-rivi)
 
           seuraava-rivi (nth data (inc y) nil)
-          seuraava-rivi-tie (:rivi-tie seuraava-rivi)
+          seuraava-rivi-tie (:tr-numero seuraava-rivi)
           seuraava-rivi-ajorata (:tr-ajorata seuraava-rivi)
           seuraava-rivi-kaista (:tr-kaista seuraava-rivi)
           seuraava-rivi-aet (:tr-alkuetaisyys seuraava-rivi)
@@ -347,7 +351,7 @@
                  ;; (korosta AET)
                  (and
                    rivi-aet edellinen-rivi-let
-                   (= rivi-tie seuraava-rivi-tie)
+                   (= rivi-tie edellinen-rivi-tie)
                    (= rivi-ajorata edellinen-rivi-ajorata)
                    (= rivi-kaista edellinen-rivi-kaista)
                    (> rivi-aet edellinen-rivi-let)
