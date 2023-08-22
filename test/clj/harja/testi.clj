@@ -841,6 +841,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Iin MHU 2021-2026'"))))
 
+(defn hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id []
+  (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Iin MHU 2021-2026')"))))
+
 (defn hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id []
   (ffirst (q (str "SELECT id
                    FROM   lupaus_sitoutuminen
@@ -1764,6 +1769,21 @@
         (conj rivi paivitettava-arvo)))
     [(inc (first edellinen))]
     (map vector edellinen (next edellinen) loput-seq)))
+
+(defn poista-kulut-aikavalilta [urakka-id hk_alkupvm hk_loppupvm]
+  (let [kulut (flatten (q (format "SELECT id FROM kulu k WHERE k.urakka = %s and k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE;" urakka-id hk_alkupvm hk_loppupvm)))
+        _ (u (format "DELETE FROM kulu_kohdistus WHERE kulu IN (%s)" (str/join "," kulut)))
+        _ (u (format "DELETE FROM kulu_liite WHERE kulu IN (%s)" (str/join "," kulut)))
+        _ (u (format "delete from kulu k where k.urakka = %s and k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE; " urakka-id hk_alkupvm hk_loppupvm))]))
+
+(defn poista-bonukset-ja-sanktiot-aikavalilta [urakka-id hk_alkupvm hk_loppupvm]
+  (let [toimenpideinstanssit (flatten (q (format "SELECT tpi.id as is
+                                                    FROM toimenpideinstanssi tpi
+                                                   WHERE tpi.urakka = %s;" urakka-id)))
+        _ (u (format "DELETE FROM erilliskustannus WHERE urakka = %s AND pvm BETWEEN '%s'::DATE AND '%s'::DATE;" urakka-id hk_alkupvm hk_loppupvm))
+        ;; Sanktioihin ei ole tallennettu urakkaa, niin se pitää niputtaa toimenpideinstanssien kautta
+        _ (u (format "DELETE FROM sanktio WHERE toimenpideinstanssi IN (%s) AND perintapvm BETWEEN '%s'::DATE AND '%s'::DATE;" (str/join "," toimenpideinstanssit) hk_alkupvm hk_loppupvm))]))
+
 (defn lahes-sama?
   "Laske Levenshtein Distance -arvon kahden tekstin välille ja kertoo, onko se sallitun thresholdin puitteissa.
   Nyt thresholdina on 0.4 mikä tarkoittaa, että 40% sanasta/tekstistä täytyy täsmätä. Tällä verrataan yksittäisiä sanoja
