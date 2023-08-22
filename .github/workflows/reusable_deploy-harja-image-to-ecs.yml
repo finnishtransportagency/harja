@@ -59,9 +59,14 @@ jobs:
           role-duration-seconds: 3600
           role-skip-session-tagging: true
 
+      # https://github.com/aws-actions/amazon-ecr-login
+      # mask-password: 'true' käyttö on suositeltavaa, jotta docker-salasanaa ei tulosteta mikäli debug-lokitus on enabloitu.
+      # Huomioi kuitenkin, että docker salasanan jakaminen jobien välillä ei onnistu mikäli se maskataan.
       - name: Authenticate with AWS ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+        with:
+          mask-password: 'true'
 
       - name: Build, tag and push image to ECR
         id: build-image
