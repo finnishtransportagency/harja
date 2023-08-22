@@ -10,35 +10,37 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [clojure.set :as set])
-  (:import (java.util Date)))
+  (:import (harja.domain.roolit EiOikeutta))
+  (:use [slingshot.slingshot :only [try+ throw+]])
+  (:use [clojure.string :as s]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
-                        :http-palvelin (testi-http-palvelin)
-                        :hairioilmoitukset (component/using
-                                             (hairioilmoitukset/->Hairioilmoitukset)
-                                             [:http-palvelin :db])))))
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db (tietokanta/luo-tietokanta testitietokanta)
+          :http-palvelin (testi-http-palvelin)
+          :hairioilmoitukset (component/using
+                               (hairioilmoitukset/->Hairioilmoitukset)
+                               [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
 (deftest kaikki-saavat-hakea-tuoreimman-hairioilmoituksen
   (let [vastaus (kutsu-palvelua
                   (:http-palvelin jarjestelma)
-                  :hae-tuorein-voimassaoleva-hairioilmoitus
+                  :hae-voimassaoleva-hairioilmoitus
                   +kayttaja-tero+
                   {})]
-  (is (map? vastaus))
-  (is (= (first (keys vastaus)) :hairioilmoitus))))
+    (is (map? vastaus))
+    (is (= (first (keys vastaus)) :hairioilmoitus))))
 
 (deftest ajastetut-hairioilmoitukset-toimii
   (testing "Päättyvä häiriöilmoitus näkyy"
@@ -49,11 +51,12 @@
                                           ::hairio/loppuaika (pvm/dateksi (t/from-now (t/days 1)))})
           vastaus (kutsu-palvelua
                     (:http-palvelin jarjestelma)
-                    :hae-tuorein-voimassaoleva-hairioilmoitus
+                    :hae-voimassaoleva-hairioilmoitus
                     +kayttaja-tero+
                     {})]
-      (is (= (get-in vastaus [:hairioilmoitus ::hairio/viesti]) "test 1"))))
+      (is (= (get-in vastaus [:hairioilmoitus ::hairio/viesti]) "test 1")))))
 
+(deftest paattynyt-hairio-ilmoitus-ei-nay
   (testing "Päättynyt häiriöilmoitus ei näy"
     (let [_tee-paattynyt-hairioilmoitus (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :aseta-hairioilmoitus
@@ -62,11 +65,12 @@
                                            ::hairio/loppuaika (pvm/dateksi (t/from-now (t/days -1)))})
           vastaus (kutsu-palvelua
                     (:http-palvelin jarjestelma)
-                    :hae-tuorein-voimassaoleva-hairioilmoitus
+                    :hae-voimassaoleva-hairioilmoitus
                     +kayttaja-tero+
                     {})]
-      (is (= (get-in vastaus [:hairioilmoitus]) nil))))
+      (is (= (get-in vastaus [:hairioilmoitus]) nil)))))
 
+(deftest tuleva-hairio-ei-nay
   (testing "Tuleva häiriöilmoitus ei näy"
     (let [_tee-alkava-hairioilmoitus (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :aseta-hairioilmoitus
@@ -75,11 +79,12 @@
                                         ::hairio/alkuaika (pvm/dateksi (t/from-now (t/days 1)))})
           vastaus (kutsu-palvelua
                     (:http-palvelin jarjestelma)
-                    :hae-tuorein-voimassaoleva-hairioilmoitus
+                    :hae-voimassaoleva-hairioilmoitus
                     +kayttaja-tero+
                     {})]
-      (is (= (get-in vastaus [:hairioilmoitus]) nil))))
+      (is (= (get-in vastaus [:hairioilmoitus]) nil)))))
 
+(deftest ajastettuna-alkanut-hairio-nakyy
   (testing "Ajastettuna alkava häiriöilmoitus näkyy"
     (let [_tee-alkanut-hairioilmoitus (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :aseta-hairioilmoitus
@@ -88,7 +93,92 @@
                                          ::hairio/alkuaika (pvm/dateksi (t/from-now (t/days -1)))})
           vastaus (kutsu-palvelua
                     (:http-palvelin jarjestelma)
-                    :hae-tuorein-voimassaoleva-hairioilmoitus
+                    :hae-voimassaoleva-hairioilmoitus
                     +kayttaja-tero+
                     {})]
       (is (= (get-in vastaus [:hairioilmoitus ::hairio/viesti]) "test 4")))))
+
+(deftest hairion-pois-paalta-laittaminen
+  (let [_tee-alkanut-hairioilmoitus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :aseta-hairioilmoitus
+                                      +kayttaja-jvh+
+                                      {::hairio/viesti "test 1"
+                                       ::hairio/alkuaika (pvm/dateksi (t/from-now (t/days -1)))})
+        vastaus (kutsu-palvelua
+                  (:http-palvelin jarjestelma)
+                  :hae-hairioilmoitukset
+                  +kayttaja-jvh+
+                  {})
+        _laita_pois_paalta (kutsu-palvelua
+                             (:http-palvelin jarjestelma)
+                             :aseta-hairioilmoitus-pois
+                             +kayttaja-jvh+
+                             {::hairio/id (::hairio/id (first vastaus))})
+        poiston-jalkeen (kutsu-palvelua
+                          (:http-palvelin jarjestelma)
+                          :hae-hairioilmoitukset
+                          +kayttaja-jvh+
+                          {})]
+    (is (is (::hairio/voimassa? (first vastaus))))
+    (is (= (::hairio/voimassa? (first poiston-jalkeen)) false))))
+
+(deftest hairion-loppuaika-ennen-alkuaikaa
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :aseta-hairioilmoitus
+                  +kayttaja-jvh+
+                  {::hairio/viesti "test 1"
+                   ::hairio/alkuaika (pvm/dateksi (t/from-now (t/days 1)))
+                   ::hairio/loppuaika (pvm/nyt)})]
+
+    (is (:virhe (first vastaus)))
+    (is (s/includes? (:virhe (first vastaus)) "pitäisi olla ennen loppuaikaa"))))
+
+(deftest hairion-loppuaika-sama-kuin-alkuaika
+  (let [aika (pvm/nyt)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :aseta-hairioilmoitus
+                  +kayttaja-jvh+
+                  {::hairio/viesti "test 1"
+                   ::hairio/alkuaika aika
+                   ::hairio/loppuaika aika})]
+
+    (is (:virhe (first vastaus)))
+    (is (s/includes? (:virhe (first vastaus)) "eivät voi olla samat"))))
+
+(deftest hairion-aikavali-leikkaa-aiempaa
+  (testing "Talletettavan häiriöilmoituksen aikaväli leikkaa aiemmin talletetun äiriöilmoituksen aikaväliä"
+    (let [_hairioilmoitus (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :aseta-hairioilmoitus
+                            +kayttaja-jvh+
+                            {::hairio/viesti "test 1"
+                             ::hairio/alkuaika (pvm/nyt)
+                             ::hairio/loppuaika (pvm/dateksi (t/from-now (t/days 2)))})
+          vastaus (kutsu-palvelua
+                    (:http-palvelin jarjestelma)
+                    :aseta-hairioilmoitus
+                    +kayttaja-jvh+
+                    {::hairio/viesti "test 2"
+                     ::hairio/alkuaika (pvm/dateksi (t/from-now (t/days 1)))
+                     ::hairio/loppuaika (pvm/dateksi (t/from-now (t/days 3)))})]
+      (is (:virhe (first vastaus)))
+      (is (= (:virhe (first vastaus)) "Aikaväli leikkaa olemassaolevaa häiriöilmoitusta.")))))
+
+(deftest hairion-pois-paalta-laittaminen-ei-toimi-ilman-oikeuksia
+  (try+
+    (let [_tee-alkanut-hairioilmoitus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :aseta-hairioilmoitus
+                                        +kayttaja-jvh+
+                                        {::hairio/viesti "test 1"
+                                         ::hairio/alkuaika (pvm/dateksi (t/from-now (t/days -1)))})
+          ilmoitukset (kutsu-palvelua
+                        (:http-palvelin jarjestelma)
+                        :hae-hairioilmoitukset
+                        +kayttaja-jvh+
+                        {})
+          _ (kutsu-palvelua (:http-palvelin jarjestelma)
+              :aseta-hairioilmoitus-pois
+              +kayttaja-tero+
+              {::hairio/id (::hairio/id (first ilmoitukset))})])
+    (is false "Nyt on joku paha oikeusongelma")
+    (catch EiOikeutta e
+      (is e))))
