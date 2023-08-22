@@ -496,11 +496,13 @@ CREATE TYPE LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI AS
     sakot_laskutetaan                                           NUMERIC,
     rahavaraukset_laskutettu                                    NUMERIC,
     rahavaraukset_laskutetaan                                   NUMERIC,
-    -- Äkilliset hoitotyöt ja Vahinkojen korjaukset
+    -- Äkilliset hoitotyöt ja Vahinkojen korjaukset ja maksuehtobonukset
     akilliset_laskutettu                                        NUMERIC,
     akilliset_laskutetaan                                       NUMERIC,
     vahingot_laskutettu                                         NUMERIC,
     vahingot_laskutetaan                                        NUMERIC,
+    alihank_bon_laskutettu                                      NUMERIC,
+    alihank_bon_laskutetaan                                     NUMERIC,
     -- MHU ja HJU Hoidon johto
     johto_ja_hallinto_laskutettu                                NUMERIC,
     johto_ja_hallinto_laskutetaan                               NUMERIC,
@@ -1052,12 +1054,19 @@ BEGIN
                 RAISE NOTICE 'Asiakastyytyväisyysbonus laskutettu :: laskutetaan: % :: %', asiakas_tyyt_bon_laskutettu, asiakas_tyyt_bon_laskutetaan;
                 RAISE NOTICE 'Tavoitepalkkio laskutettu :: laskutetaan: % :: %', tavoitepalkk_bon_laskutettu, tavoitepalkk_bon_laskutetaan;
 
-                bonukset_laskutettu := bonukset_laskutettu + alihank_bon_laskutettu + lupaus_bon_laskutettu +
+                -- Alihankintabonuksia ei oteta bonuksiin huomioon 2022-10-01 jälkeen, sen vuoksi
+                -- joudutaan iffittelemään bonusten yhteenlasku erikseen
+                bonukset_laskutettu := bonukset_laskutettu + lupaus_bon_laskutettu +
                                        asiakas_tyyt_bon_laskutettu + tavoitepalkk_bon_laskutettu + muu_bonus_laskutettu
-                                           + tavoitehinnan_ulk_rahav_laskutettu;
-                bonukset_laskutetaan := bonukset_laskutetaan + alihank_bon_laskutetaan + lupaus_bon_laskutetaan +
+                    + tavoitehinnan_ulk_rahav_laskutettu;
+                bonukset_laskutetaan := bonukset_laskutetaan + lupaus_bon_laskutetaan +
                                         asiakas_tyyt_bon_laskutetaan + tavoitepalkk_bon_laskutetaan + muu_bonus_laskutetaan
-                                            + tavoitehinnan_ulk_rahav_laskutetaan;
+                    + tavoitehinnan_ulk_rahav_laskutetaan;
+                IF(hk_alkupvm < '2022-10-01'::DATE) THEN
+                    bonukset_laskutettu := bonukset_laskutettu + alihank_bon_laskutettu;
+                    bonukset_laskutetaan := bonukset_laskutetaan + alihank_bon_laskutetaan;
+                end if;
+
                 RAISE NOTICE 'Bonuksia laskutettu :: laskutetaan: % :: %', bonukset_laskutettu, bonukset_laskutetaan;
 
                 -- HOIDON JOHTO, tpk 23150.
@@ -1145,6 +1154,7 @@ LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
             RAISE NOTICE 'Erillishankinnat laskutetaan: %', hj_erillishankinnat_laskutetaan;
             RAISE NOTICE 'HJ-Palkkio laskutetaan: %', hj_palkkio_laskutetaan;
             RAISE NOTICE 'Bonukset laskutetaan: %', bonukset_laskutetaan;
+            RAISE NOTICE 'Rahavaraukset laskutetaan: %', rahavaraukset_laskutetaan;
             RAISE NOTICE 'Hoitovuoden päättäminen (tavoitepalkkio) laskutetaan: %', hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan;
             RAISE NOTICE 'Hoitovuoden päättäminen (tavoitehinnan ylitys) laskutetaan: %', hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan;
             RAISE NOTICE 'Hoitovuoden päättäminen (kattohinnan ylitys) laskutetaan: %', hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan;
@@ -1168,6 +1178,7 @@ LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
                      rahavaraukset_laskutettu, rahavaraukset_laskutetaan,
                      akilliset_laskutettu, akilliset_laskutetaan,
                      vahingot_laskutettu, vahingot_laskutetaan,
+                     alihank_bon_laskutettu, alihank_bon_laskutetaan,
                      johto_ja_hallinto_laskutettu, johto_ja_hallinto_laskutetaan,
                      bonukset_laskutettu, bonukset_laskutetaan,
                      hj_palkkio_laskutettu, hj_palkkio_laskutetaan,
