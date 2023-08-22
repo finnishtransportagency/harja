@@ -123,12 +123,20 @@
        ::lomake/col-luokka "col-xs-12"
        :komponentti (fn [{:keys [_ data]}]
                       (let [;; MHU urakoiden toimenpideinstanssi on määrätty. Alueurakoilla ei
-                            ;; Lisäksi alihankintabonus laitetaan MHU Ylläpidon alle, muut Hoidon johtoon
+                            ;; Lisäksi alihankintabonus laitetaan MHU Ylläpidon alle, kun se tehdään 1.10.2022 jälkeen, muut Hoidon johtoon
                             toimenpideinstanssit (cond
-                                                   (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) (= :alihankintabonus (:laji data)))
+                                                   ;; :alihankintabonus ja 1.10.2022 jälkeen
+                                                   (and
+                                                     (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                                                     (= :alihankintabonus (:laji data))
+                                                     (pvm/sama-tai-jalkeen? (:perintapvm data) (pvm/->pvm "01.10.2022")))
                                                    (filter #(= "20190" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit)
 
-                                                   (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) (not= :alihankintabonus (:laji data)))
+                                                   ;; Muu kuin :alihankintabonus tai on :alihankintabonus, mutta ennen 1.10.2022
+                                                   (or
+                                                     (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) (not= :alihankintabonus (:laji data)))
+                                                     (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) (= :alihankintabonus (:laji data))
+                                                       (pvm/ennen? (:perintapvm data) (pvm/->pvm "01.10.2022"))))
                                                    (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit)
 
                                                    ;; Muille urakakkatyypeille näytetään kaikki toimenpideinstanssit
