@@ -283,8 +283,7 @@
         {:keys [tr-numero tr-alkuosa tr-loppuosa]} (get-in paallystysilmoitus-lomakedata [:perustiedot :tr-osoite])]
     (komp/luo
       (komp/lippu pot2-tiedot/pot2-nakymassa?)
-      (komp/sisaan (fn [this]
-                     (e! (pot2-tiedot/->KulutuskerrosMuokattu false))
+      (komp/sisaan (fn []
                      (e! (paallystys/->HaeTrOsienPituudet tr-numero nil nil))
                      (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))
                      (e! (mk-tiedot/->HaePot2MassatJaMurskeet))

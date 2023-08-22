@@ -222,6 +222,7 @@
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
     (let [lomakedata (pot2-haun-vastaus->lomakedata vastaus (:id urakka))]
       (-> app
+        (assoc :kulutuskerros-muokattu? false)
         (assoc :paallystysilmoitus-lomakedata lomakedata))))
 
   HaePot2TiedotEpaonnistui

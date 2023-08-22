@@ -977,18 +977,18 @@
                                         urakka-id sopimus-id paallystyskohde-id paallystysilmoitus) 1 nil)]
 
     ;; Hyppy seuraavalla rivillä, korostetaan let
-    (is (true? (get-in paallystys-hyppy-olemassa [:paallystekerros 0 :tr-korosta-let?])) "Korostetaan loppuetäisyys")
-    (is (nil? (get-in paallystys-hyppy-olemassa [:paallystekerros 0 :tr-korosta-aet?])) "Ei korosteta alkuetäisyytt'")
+    (is (true? (get-in paallystys-hyppy-olemassa [:paallystekerros 0 :let-hyppy?])) "Korostetaan loppuetäisyys")
+    (is (nil? (get-in paallystys-hyppy-olemassa [:paallystekerros 0 :aet-hyppy?])) "Ei korosteta alkuetäisyytt'")
     (is (= (get-in paallystys-hyppy-olemassa [:paallystekerros 0 :hyppyjen-maara]) 1) "Hyppyjen määrä löytyy")
 
     ;; Seuraavalla korostetaan aet
-    (is (nil? (get-in paallystys-hyppy-olemassa [:paallystekerros 1 :tr-korosta-let?])) "Ei korosteta loppuetäisyyttä")
-    (is (true? (get-in paallystys-hyppy-olemassa [:paallystekerros 1 :tr-korosta-aet?])) "Korostetaan alkuetäisyys")
+    (is (nil? (get-in paallystys-hyppy-olemassa [:paallystekerros 1 :let-hyppy?])) "Ei korosteta loppuetäisyyttä")
+    (is (true? (get-in paallystys-hyppy-olemassa [:paallystekerros 1 :aet-hyppy?])) "Korostetaan alkuetäisyys")
     (is (= (get-in paallystys-hyppy-olemassa [:paallystekerros 1 :hyppyjen-maara]) 1) "Hyppyjen määrä löytyy")
 
     ;; Hyppy ylittää metrirajan, joten korostuksia ei tehdä 
-    (is (nil? (get-in paallystys-hyppy-ylittyy [:paallystekerros 0 :tr-korosta-let?])) "Loppuetäisyyttä ei korosteta")
-    (is (nil? (get-in paallystys-hyppy-ylittyy [:paallystekerros 0 :tr-korosta-aet?])) "Alkuetäisyyttä ei korosteta")
+    (is (nil? (get-in paallystys-hyppy-ylittyy [:paallystekerros 0 :let-hyppy?])) "Loppuetäisyyttä ei korosteta")
+    (is (nil? (get-in paallystys-hyppy-ylittyy [:paallystekerros 0 :aet-hyppy?])) "Alkuetäisyyttä ei korosteta")
     (is (= (get-in paallystys-hyppy-ylittyy [:paallystekerros 0 :hyppyjen-maara]) 0) "Hyppyjä ei ole")))
 
 (deftest tallenna-pot2-paallystysilmoitus-kohteen-alku-ja-loppupvm-muuttuvat

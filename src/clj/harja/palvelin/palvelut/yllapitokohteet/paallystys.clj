@@ -331,7 +331,7 @@
                    ;; Onko hypyt X metriä tai alle?
                    (< (- seuraava-rivi-aet rivi-let) hypyn-metriraja)
                    (< (- rivi-aet edellinen-rivi-let) hypyn-metriraja))
-                 (merge rivi {:tr-korosta-aet? true :tr-korosta-let? true})
+                 (merge rivi {:aet-hyppy? true :let-hyppy? true})
 
                  ;; Seuraava ja tämä rivi olemassa sekä molemmilla sama tie&ajorata&kaista
                  ;; Seuraavan rivin alkuetäisyys on isompi kun tämän rivin loppuetäisyys = hyppy
@@ -344,7 +344,7 @@
                    (> seuraava-rivi-aet rivi-let)
                    ;; Onko hyppy X metriä tai alle?
                    (< (- seuraava-rivi-aet rivi-let) hypyn-metriraja))
-                 (merge rivi {:tr-korosta-let? true})
+                 (merge rivi {:let-hyppy? true})
 
                  ;; Tämä rivi ja edellinen rivi olemassa sekä molemmilla sama tie&ajorata&kaista
                  ;; Tämän rivin alkuetäisyys isompi kuin edellisen loppuetäisyys = hyppy 
@@ -357,7 +357,7 @@
                    (> rivi-aet edellinen-rivi-let)
                    ;; Onko hyppy X metriä tai alle?
                    (< (- rivi-aet edellinen-rivi-let) hypyn-metriraja))
-                 (merge rivi {:tr-korosta-aet? true})
+                 (merge rivi {:aet-hyppy? true})
 
                  ;; Ei hyppyjä
                  :else rivi)

@@ -58,21 +58,22 @@
   (let [hyppyjen-maara (get-in @kohdeosat-atom [1 :hyppyjen-maara])
         alkup-jarjestys (atom @kohdeosat-atom)
         lomaketta-muokattu? (boolean (:kulutuskerros-muokattu? (e! (pot2-tiedot/->KulutuskerrosMuokattu nil))))
-        alert-ok-teksti "Kulutuskerros on yhtenäinen (ei hyppyjä)"
-        alert-teksti (str "Kulutuskerros ei ole yhtenäinen " (cond
-                                                               (> hyppyjen-maara 1)
-                                                               (str "(" hyppyjen-maara " hyppyä)")
-                                                               :else
-                                                               (str "(" hyppyjen-maara " hyppy)")))
+        hyppy-teksti (str (cond
+                            (> hyppyjen-maara 1)
+                            (str "Kulutuskerros ei ole yhtenäinen (" hyppyjen-maara " hyppyä)")
+                            (= hyppyjen-maara 0)
+                            "Kulutuskerros on yhtenäinen (ei hyppyjä)"
+                            :else
+                            (str "Kulutuskerros ei ole yhtenäinen (" hyppyjen-maara " hyppy)")))
         custom-yla-panel (if-not lomaketta-muokattu?
                            (if (> hyppyjen-maara 0)
                              [:div.kulutus-hyppy-info.vahvistamaton
                               [:div.kulutus-hyppy-ikoni-alert (ikonit/alert-svg)]
-                              [:div alert-teksti]]
+                              [:div hyppy-teksti]]
 
                              [:div.kulutus-hyppy-info
                               [:div.kulutus-hyppy-ikoni-ok (ikonit/harja-icon-status-completed)]
-                              [:div alert-ok-teksti]])
+                              [:div hyppy-teksti]])
                            nil)
         voi-muokata? (not= :lukittu (:tila perustiedot))
         ohjauskahva (:paallystekerros ohjauskahvat)]
@@ -212,7 +213,8 @@
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi)
         :korosta-sarake (fn []
                           (if (boolean (:kulutuskerros-muokattu? (e! (pot2-tiedot/->KulutuskerrosMuokattu nil))))
-                            false :tr-korosta-aet?))}
+                            false 
+                            :aet-hyppy?))}
        {:otsikko "Losa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuosa :validoi (:tr-loppuosa validointi)}
        {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
@@ -220,7 +222,7 @@
         :korosta-sarake (fn []
                           (if (boolean (:kulutuskerros-muokattu? (e! (pot2-tiedot/->KulutuskerrosMuokattu nil))))
                             false
-                            :tr-korosta-let?))}
+                            :let-hyppy?))}
        {:otsikko "Pituus" :nimi :pituus :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :tyyppi :positiivinen-numero :tasaa :oikea
         :muokattava? (constantly false)
         :hae (fn [rivi]
