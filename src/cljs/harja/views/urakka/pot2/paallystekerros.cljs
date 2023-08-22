@@ -211,18 +211,12 @@
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
        {:otsikko "Aet" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi)
-        :korosta-sarake (fn []
-                          (if (boolean (:kulutuskerros-muokattu? (e! (pot2-tiedot/->KulutuskerrosMuokattu nil))))
-                            false 
-                            :aet-hyppy?))}
+        :td-luokka-fn #(when (:aet-hyppy? %) "korostettu-sarake")}
        {:otsikko "Losa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuosa :validoi (:tr-loppuosa validointi)}
        {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi)
-        :korosta-sarake (fn []
-                          (if (boolean (:kulutuskerros-muokattu? (e! (pot2-tiedot/->KulutuskerrosMuokattu nil))))
-                            false
-                            :let-hyppy?))}
+        :td-luokka-fn #(when (:let-hyppy? %) "korostettu-sarake")}
        {:otsikko "Pituus" :nimi :pituus :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :tyyppi :positiivinen-numero :tasaa :oikea
         :muokattava? (constantly false)
         :hae (fn [rivi]

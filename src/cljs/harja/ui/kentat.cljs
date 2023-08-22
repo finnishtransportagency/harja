@@ -289,7 +289,7 @@
       (komp/nimi "Numerokenttä")
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
       (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? vaadi-negatiivinen? toiminta-f on-blur on-focus
-                   disabled? vayla-tyyli? virhe? yksikko validoi-kentta-fn salli-whitespace? disabloi-autocomplete? muokattu? korosta-sarake?] :as kentta} data]
+                   disabled? vayla-tyyli? virhe? yksikko validoi-kentta-fn salli-whitespace? disabloi-autocomplete? muokattu?] :as kentta} data]
         (let [nykyinen-data @data
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data) salli-whitespace?)
@@ -322,9 +322,7 @@
                              vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
                              disabled? (str "disabled")
                              input-luokka (str " " input-luokka)
-                             veda-oikealle? (str " veda-oikealle")
-                             ;; Piilota inputin tausta sekä borderit jotta parent elementin (td) korostus näkyy
-                             korosta-sarake? (str " lapinakyva-input-tausta"))
+                             veda-oikealle? (str " veda-oikealle"))
                     :style (when (and veda-oikealle? yksikko)
                              {:padding-right (str "calc(19px + " (count yksikko) "ch")})
                     :type "text"

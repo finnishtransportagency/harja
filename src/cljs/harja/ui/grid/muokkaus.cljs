@@ -71,7 +71,7 @@
      arvo]))
 
 (defn- muokkauselementin-tila
-  [{:keys [aseta nimi valinta-arvo hae elementin-id korosta-sarake]}
+  [{:keys [aseta nimi valinta-arvo hae elementin-id td-luokka-fn]}
    {:keys [muokkaa! muokatut-atom virheet varoitukset huomautukset skeema id i rivi gridin-tietoja
            sisalto-kun-rivi-disabloitu]}
    rivi-disabloitu? kentan-virheet kentan-varoitukset kentan-huomautukset
@@ -90,22 +90,6 @@
                                               uusi)]
                                    (@grid-tilan-muokkaus-fn uusi))))
         arvo-atom (atom ((or hae #(get % nimi)) rivi))
-        korosta-sarake-nimi (atom "")
-        korosta-sarake? (if (some? korosta-sarake)
-                          ;; Jos halutaan korostaa tietty sarake, laitetaan atomiksi kyseinen sarake ja palautetaan avain jota etsitään rivin tiedoista
-                          ;; korosta-sarake on siis funktio joka palauttaa avaimen minkä arvoa etsitään rivistä 
-                          (do
-                            (reset! korosta-sarake-nimi nimi)
-                            (korosta-sarake))
-                          false)
-        ;; Kutsutaan funktiota ja katsotaan onko rivissä palautettu avain true, jos on korosta sarake
-        korostetaanko-fn (fn [nimi rivi atom]
-                           (when korosta-sarake?
-                             (when (and
-                                     (korosta-sarake)
-                                     (korosta-sarake? rivi)
-                                     (= nimi @atom))
-                               true)))
         fokus? (atom false)
         fokus-elementille #(reset! fokus? true)
         fokus-pois-elementilta #(let [uusi-fokusoitu-komponentti (.-relatedTarget %)
@@ -136,8 +120,8 @@
       {:display-name "Muokkauselementin-tila"
        :UNSAFE_component-will-mount (fn [this]
                                       (add-watch arvo-atom seuranta-avain
-                                                 (fn [_ _ _ uusi-arvo]
-                                                   (@grid-tilan-muokkaus-fn uusi-arvo))))
+                                        (fn [_ _ _ uusi-arvo]
+                                          (@grid-tilan-muokkaus-fn uusi-arvo))))
        :component-did-mount (fn [this]
                               (reset! this-node (r/dom-node this))
                               (.addEventListener js/window EventType/RESIZE virhelaatikon-max-koon-asetus)
@@ -173,7 +157,7 @@
        :reagent-render
        (fn [{:keys [nimi aseta fmt muokattava? tyyppi tasaa elementin-id
                     komponentti hae kentta-arity-3? komponentti-args sarake-disabloitu-arvo-fn
-                    valinta-arvo valinta-nayta valinnat] :as sarake}
+                    valinta-arvo valinta-nayta valinnat td-luokka-fn] :as sarake}
             {:keys [ohjaus id rivi rivi-index gridin-tietoja
                     nayta-virheet? i voi-muokata? disable-input?
                     muokatut-atom muokkaa! virheet skeema sisalto-kun-rivi-disabloitu
@@ -186,17 +170,16 @@
                tayta-alas (:tayta-alas? sarake)
                elementin-id (str rivi-index elementin-id)]
            (if (and (or (nil? muokattava?) (muokattava? rivi i))
-                    voi-muokata?)
+                 voi-muokata?)
              [:td {:class (y/luokat
                             "muokattava"
+                            (when td-luokka-fn (td-luokka-fn rivi))
                             tasaus-luokka
                             (grid-yleiset/tiivis-tyyli skeema)
                             (cond
                               (not (empty? kentan-virheet)) " sisaltaa-virheen"
                               (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
-                              (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen")
-                            (when (korostetaanko-fn nimi rivi korosta-sarake-nimi)
-                              " korostettu-sarake"))
+                              (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))
                    :on-click #(.stopPropagation %)}
               (when (case nayta-virheet?
                       :fokus @fokus?
@@ -224,32 +207,31 @@
                 (= tyyppi :reagent-komponentti) (vec (concat [komponentti rivi {:index i :muokataan? true}]
                                                              komponentti-args))
                 (or voi-muokata?
-                    disable-input?) [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
+                  disable-input?) [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
 
-                                     (when (and tayta-alas voi-muokata?)
-                                       ^{:key tayta-alas-key}
-                                       [grid-yleiset/tayta-alas-nappi {:fokus? @fokus? :fokus-atom fokus?
-                                                                       :arvo arvo :tayta-alas tayta-alas
-                                                                       :rivi-index rivi-index
-                                                                       :tulevat-elementit tulevat-elementit
-                                                                       :sarake sarake :ohjaus ohjaus :rivi rivi}])
-                                     (if kentta-arity-3?
-                                       ^{:key kentan-key}
-                                       [tee-kentta (assoc sarake :on-focus fokus-elementille
-                                                                 :on-blur fokus-pois-elementilta
-                                                                 :disabloi-autocomplete? disabloi-autocomplete?
-                                                                 :disabled? (not voi-muokata?)
-                                                                 :elementin-id elementin-id)
-                                        arvo
-                                        @data-muokkaus-fn]
-                                       ^{:key kentan-key}
-                                       [tee-kentta (assoc sarake :on-focus fokus-elementille
-                                                     :on-blur fokus-pois-elementilta
-                                                     :korosta-sarake? (korostetaanko-fn nimi rivi korosta-sarake-nimi)
-                                                     :disabloi-autocomplete? disabloi-autocomplete?
-                                                     :disabled? (not voi-muokata?)
-                                                     :elementin-id elementin-id)
-                                        arvo-atom])]
+                                   (when (and tayta-alas voi-muokata?)
+                                     ^{:key tayta-alas-key}
+                                     [grid-yleiset/tayta-alas-nappi {:fokus? @fokus? :fokus-atom fokus?
+                                                                     :arvo arvo :tayta-alas tayta-alas
+                                                                     :rivi-index rivi-index
+                                                                     :tulevat-elementit tulevat-elementit
+                                                                     :sarake sarake :ohjaus ohjaus :rivi rivi}])
+                                   (if kentta-arity-3?
+                                     ^{:key kentan-key}
+                                     [tee-kentta (assoc sarake :on-focus fokus-elementille
+                                                   :on-blur fokus-pois-elementilta
+                                                   :disabloi-autocomplete? disabloi-autocomplete?
+                                                   :disabled? (not voi-muokata?)
+                                                   :elementin-id elementin-id)
+                                      arvo
+                                      @data-muokkaus-fn]
+                                     ^{:key kentan-key}
+                                     [tee-kentta (assoc sarake :on-focus fokus-elementille
+                                                   :on-blur fokus-pois-elementilta
+                                                   :disabloi-autocomplete? disabloi-autocomplete?
+                                                   :disabled? (not voi-muokata?)
+                                                   :elementin-id elementin-id)
+                                      arvo-atom])]
                 :else [nayta-arvo (assoc sarake :index i :muokataan? false)
                        (vain-luku-atomina arvo)])]
              (cond
@@ -257,9 +239,7 @@
                [:td {:class (y/luokat
                               "ei-muokattava"
                               tasaus-luokka
-                              (grid-yleiset/tiivis-tyyli skeema)
-                              (when (korostetaanko-fn nimi rivi korosta-sarake-nimi)
-                                " korostettu-sarake"))}
+                              (grid-yleiset/tiivis-tyyli skeema))}
                 (apply komponentti rivi {:index i :muokataan? false} komponentti-args)]
 
                ;; POT2 myötä tullut uusi komponentti "linkki ja alasvetovalinta" halusi pitää linkin
@@ -269,9 +249,7 @@
                  (:linkki-fn sarake)
                  (:linkki-icon sarake))
                [:td {:class (y/luokat
-                              "ei-muokattava"
-                              (when (korostetaanko-fn nimi rivi korosta-sarake-nimi)
-                                " korostettu-sarake"))}
+                              "ei-muokattava")}
                 [tee-kentta (assoc sarake :on-focus fokus-elementille
                               :on-blur fokus-pois-elementilta
                               :disabled? (not voi-muokata?)
@@ -279,22 +257,20 @@
                               :elementin-id elementin-id)
                  arvo-atom]]
 
-               :else 
+               :else
                [ei-muokattava-elementti (y/luokat
                                           "ei-muokattava"
                                           tasaus-luokka
-                                          (grid-yleiset/tiivis-tyyli skeema)
-                                          (when (korostetaanko-fn nimi rivi korosta-sarake-nimi)
-                                            " korostettu-sarake"))
+                                          (grid-yleiset/tiivis-tyyli skeema))
                 fmt
                 tyyppi
                 (cond
                   (and (= tyyppi :valinta) valinta-arvo valinta-nayta)
                   (sisalto-kun-rivi-disabloitu-oletus-fn sarake i)
-                  
+
                   (some? sarake-disabloitu-arvo-fn)
                   (sarake-disabloitu-arvo-fn sarake i)
-                  
+
                   :else
                   arvo)]))))})))
 
