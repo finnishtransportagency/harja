@@ -12,15 +12,16 @@ INSERT INTO erilliskustannus (tyyppi,sopimus,urakka,toimenpideinstanssi,pvm,raha
 INSERT INTO erilliskustannus (tyyppi,sopimus,urakka,toimenpideinstanssi,pvm,rahasumma,indeksin_nimi,lisatieto,luotu,luoja) VALUES ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Pudasjärvi Talvihoito TP'), '2012-01-19', 10000, 'MAKU 2005', 'Muun erilliskustannuksen lisätieto', NOW(), (SELECT ID FROM kayttaja WHERE kayttajanimi = 'jvh'));
 
 -- Alihankintabonus siirretään rahoitusvaraukseksi 2022 vuodesta eteenpäin
+-- Alihankintabonuksen toimenpideinstanssi muutetaan samalla MHU Ylläpidoksi
 INSERT INTO erilliskustannus (tyyppi,sopimus,urakka,toimenpideinstanssi,pvm,rahasumma,indeksin_nimi,lisatieto,luotu,luoja) VALUES
 ('alihankintabonus', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024') AND paasopimus IS null),
  (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024'),
- (SELECT id FROM toimenpideinstanssi WHERE nimi='Oulu MHU Hallinnolliset toimenpiteet TP'),
+ (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU MHU Ylläpito TP'),
  '2021-01-15', 1000, null, 'Alihankkijat on hoitaneet hommat hienosti.', NOW(), (SELECT ID FROM kayttaja WHERE kayttajanimi = 'jvh'));
 INSERT INTO erilliskustannus (tyyppi,sopimus,urakka,toimenpideinstanssi,pvm,rahasumma,indeksin_nimi,lisatieto,luotu,luoja) VALUES
 ('alihankintabonus', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024') AND paasopimus IS null),
  (SELECT id FROM urakka WHERE nimi='Oulun MHU 2019-2024'),
- (SELECT id FROM toimenpideinstanssi WHERE nimi='Oulu MHU Hallinnolliset toimenpiteet TP'),
+ (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU MHU Ylläpito TP'),
  '2023-01-19', 1000, null, 'Alihankkijat on hoitaneet hommat hienosti.', NOW(), (SELECT ID FROM kayttaja WHERE kayttajanimi = 'jvh'));
 
 

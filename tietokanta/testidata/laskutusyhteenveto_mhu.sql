@@ -161,8 +161,9 @@ $$
         urakan_alkuvuosi                   INTEGER;
         sopimus_id                         INTEGER;
         tpi                                INTEGER;
+        tpi_yllapito                       INTEGER;
         kayttaja_id                        INTEGER;
-        toimenpidekoodi_hoidonjohtopalkkio          INTEGER;
+        toimenpidekoodi_hoidonjohtopalkkio INTEGER;
         tehtavaryhma_erillishankinnat      INTEGER;
         tehtavaryhma_hjpalkkiot            INTEGER;
         tehtavaryhma_johto_hallintokorvaus INTEGER;
@@ -173,6 +174,7 @@ $$
         urakan_alkuvuosi := 2019;
         sopimus_id := (SELECT id FROM sopimus WHERE urakka = urakka_id AND paasopimus IS NULL); --MHU Oulu sopimus
         tpi := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP');
+        tpi_yllapito := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU MHU Ylläpito TP');
         kayttaja_id := (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio');
         toimenpidekoodi_hoidonjohtopalkkio := (SELECT id FROM tehtava WHERE nimi = 'Hoidonjohtopalkkio');
         tehtavaryhma_erillishankinnat := (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');
@@ -190,7 +192,7 @@ $$
         -- Erilliskustannukset - Alihankintabonus - lupausbonus - muubonus - asiakastyytyväisyysbonus
         INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
                                       lisatieto, luotu, luoja)
-            VALUES ('alihankintabonus', sopimus_id, urakka_id, tpi, '2019-10-15', 1000, NULL,
+            VALUES ('alihankintabonus', sopimus_id, urakka_id, tpi_yllapito, '2019-10-15', 1000, NULL,
                     'Alihankittu hyvin!', '2019-10-13', kayttaja_id);
 
         INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
@@ -259,6 +261,13 @@ $$
             VALUES (2020, 3, 50, testidata_indeksikorjaa(50, urakan_alkuvuosi, 3, urakka_id),
                     now(), 'laskutettava-tyo'::TOTEUMATYYPPI, NULL, tehtavaryhma_erillishankinnat, tpi,
                     sopimus_id, kayttaja_id, 'erillishankinnat');
+
+        -- Alihankintabonus tulkitaan 2022 hoitokaudesta eteenpäin rahavaraukseksi.
+        -- Luodaan siis erillinen rivi, jotta se voidaan testata rauhassa tarkasti
+        INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
+                                      lisatieto, luotu, luoja)
+        VALUES ('alihankintabonus', sopimus_id, urakka_id, tpi_yllapito, '2022-10-15', 777, NULL,
+                'Alihankittu hyvin!', '2022-10-13', kayttaja_id);
 
         -- HJ-palkkio - 10/2019
        -- INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
