@@ -3,7 +3,8 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.urakat :as q]))
+            [harja.kyselyt.urakat :as q]
+            [clojure.string :as str]))
 
 (defn- parsi-urakkatyyppi [params]
   (let [urakkatyyppi (:urakkatyyppi params)]
@@ -27,9 +28,8 @@
 
 (defn- tallenna-urakka-nimi [db urakka]
   (let [urakkaid (:id urakka)
-        lyhyt-nimi (:lyhyt_nimi urakka)]
+        lyhyt-nimi (if (str/blank? (:lyhyt_nimi urakka)) nil (:lyhyt_nimi urakka))]
     (when-not urakkaid (throw (Exception. "Urakka id puuttuu, ei voi tallentaa lyhytnimeä!")))
-    (when-not lyhyt-nimi (throw (Exception. "Lyhyt nimi puuttuu, ei voi tallentaa!")))
     (log/debug "Tallennetaan urakan lyhytnimi: " urakkaid ", nimi " (:nimi urakka) ", lyhytnimi " lyhyt-nimi)
     (q/tallenna-urakan-lyhytnimi! db {:urakka urakkaid
                                       :lyhytnimi lyhyt-nimi})))

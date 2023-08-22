@@ -479,7 +479,7 @@
   (when (and (tk/valittu? varustetoteumat tk/varustetoteumat)
              (not (empty? urakat)))
     (into []
-          (toteumat/varustetoteuma-xf nil)
+          (toteumat/varustetoteuma-xf)
           (q/hae-varustetoteumat db {:urakat urakat
                                      :alku alku
                                      :loppu loppu}))))

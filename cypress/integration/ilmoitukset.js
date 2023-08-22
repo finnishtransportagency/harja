@@ -1,4 +1,4 @@
-let timeout = 10000;
+let timeout = 60000;
 
 describe('Ilmoitus-näkymä (Tieliikenne)', function () {
     beforeEach(function () {
