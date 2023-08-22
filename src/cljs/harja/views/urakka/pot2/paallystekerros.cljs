@@ -90,9 +90,9 @@
                                           ;; Kutsutaan kun sortataan rivejä, ei kutsuta enää sen jälkeen jos käyttäjä muokannut lomaketta
                                           (let [rivi (-> data (nth i nil) (nth 1 nil))
                                                 fn-data? (fn [rivi data i]
-                                                          (and
-                                                            (some? rivi)
-                                                            (> (count data) (dec i))))
+                                                           (and
+                                                             (some? rivi)
+                                                             (> (count data) (dec i))))
                                                 fn-etsi-vanha (fn [i data etsi fn-data?]
                                                                 (let [rivi (-> data (nth i nil) (nth 1 nil))]
                                                                   (if (and rivi etsi
@@ -281,12 +281,14 @@
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
       kohdeosat-atom]
 
-     (let [kokpituus (reduce (fn [acc data]
-                               (when-let [pituus (tr/laske-tien-pituus (into {}
-                                                                         (map (juxt key (comp :pituus val)))
-                                                                         (get tr-osien-pituudet (:tr-numero (second data))))
-                                                   (second data))]
-                                 (+ acc pituus)))
+     (let [kokpituus (reduce
+                       (fn [acc data]
+                         (when-let
+                           [pituus (tr/laske-tien-pituus (into {}
+                                                           (map (juxt key (comp :pituus val)))
+                                                           (get tr-osien-pituudet (:tr-numero (second data))))
+                                     (second data))]
+                           (+ acc pituus)))
                        0
                        @kohdeosat-atom)]
        [:div.kulutus-pituus-yhteensa (str "Pituus yhteensä: " kokpituus " m")])]))

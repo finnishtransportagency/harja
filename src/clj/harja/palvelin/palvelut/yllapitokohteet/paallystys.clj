@@ -252,6 +252,10 @@
           rivi-aet (:tr-alkuetaisyys rivi)
           rivi-let (:tr-loppuetaisyys rivi)
 
+          ;; Kuinka iso hyppy halutaan näyttää? 
+          ;; (inc 50) = Näytetään hypyt jotka ovat 50 metriä tai alle 
+          hypyn-metriraja (inc yllapitokohteet-domain/+kulutus-hyppy-metriraja+)
+
           seuraava-rivi (get-in data [(inc i)])
           seuraavarivi-tie (:tr-numero seuraava-rivi)
           seuraava-rivi-ajorata (:tr-ajorata seuraava-rivi)
@@ -260,7 +264,9 @@
           hyppy-olemassa? (if (and rivi-aet seuraava-rivi-aet
                                 (= rivi-tie seuraavarivi-tie)
                                 (= rivi-ajorata seuraava-rivi-ajorata)
-                                (> seuraava-rivi-aet rivi-let))
+                                (> seuraava-rivi-aet rivi-let)
+                                ;; Onko hyppy X metriä tai alle?
+                                (< (- seuraava-rivi-aet rivi-let) hypyn-metriraja))
                             true
                             false)]
       (if hyppy-olemassa?
@@ -291,7 +297,7 @@
 
           ;; Kuinka iso hyppy halutaan näyttää? 
           ;; (inc 50) = Näytetään hypyt jotka ovat 50 metriä tai alle 
-          hypyn-metriraja (inc 50)
+          hypyn-metriraja (inc yllapitokohteet-domain/+kulutus-hyppy-metriraja+)
 
           edellinen-rivi (nth data (dec y) nil)
           edellinen-rivi-tie (:rivi-tie edellinen-rivi)

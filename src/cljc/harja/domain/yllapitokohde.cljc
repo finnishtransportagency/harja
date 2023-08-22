@@ -16,6 +16,8 @@
           [tieverkko :as q-tieverkko]
           [yllapitokohteet :as q-yllapitokohteet]]])))
 
+(def +kulutus-hyppy-metriraja+ 50)
+
 (s/def ::id ::spec-apurit/postgres-serial)
 (s/def ::kohdenumero (s/nilable string?))
 (s/def ::nimi string?)
