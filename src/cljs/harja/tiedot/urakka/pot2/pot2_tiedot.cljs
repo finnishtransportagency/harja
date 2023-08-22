@@ -196,7 +196,8 @@
      :kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset urakka-id)
      :paallystekerros kulutuskerros
      :alusta alusta
-     :lisatiedot (:lisatiedot vastaus)}))
+     :lisatiedot (:lisatiedot vastaus)
+     :kulutuskerros-muokattu? false}))
 
 (extend-protocol tuck/Event
 
@@ -222,7 +223,6 @@
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
     (let [lomakedata (pot2-haun-vastaus->lomakedata vastaus (:id urakka))]
       (-> app
-        (assoc :kulutuskerros-muokattu? false)
         (assoc :paallystysilmoitus-lomakedata lomakedata))))
 
   HaePot2TiedotEpaonnistui
@@ -421,7 +421,7 @@
   (process-event [{muokattu? :muokattu?} app]
     (if (nil? muokattu?)
       app
-      (assoc app :kulutuskerros-muokattu? muokattu?)))
+      (assoc-in app [:paallystysilmoitus-lomakedata :kulutuskerros-muokattu?] muokattu?)))
 
   LisaaPaallysterivi
   (process-event [{atomi :atomi} app]

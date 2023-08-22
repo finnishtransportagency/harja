@@ -53,11 +53,11 @@
 
 (defn paallystekerros
   "Alikohteiden päällystekerroksen rivien muokkaus"
-  [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet ohjauskahvat] :as app}
+  [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet ohjauskahvat kulutuskerros-muokattu?] :as app}
    {:keys [massat murskeet materiaalikoodistot validointi virheet-atom varoitukset-atom]} kohdeosat-atom]
   (let [hyppyjen-maara (get-in @kohdeosat-atom [1 :hyppyjen-maara])
         alkup-jarjestys (atom @kohdeosat-atom)
-        lomaketta-muokattu? (boolean (:kulutuskerros-muokattu? (e! (pot2-tiedot/->KulutuskerrosMuokattu nil))))
+        lomaketta-muokattu? kulutuskerros-muokattu?
         hyppy-teksti (str (cond
                             (> hyppyjen-maara 1)
                             (str "Kulutuskerros ei ole yhtenäinen (" hyppyjen-maara " hyppyä)")
