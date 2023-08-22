@@ -93,9 +93,7 @@
          :fmt #(if %
                  (pvm/pvm-opt %)
                  "Ei takarajaa")
-         :validoi [[:pvm-kentan-jalkeen :aloituspvm
-                    "Takaraja ei voi olla ennen aloituspäivää."]]
-         :varoita [[:urakan-aikana]]
+         :validoi [[:urakan-aikana]]
          :tyyppi :pvm}
         {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
          :nimi :valmiustila :hae identity :fmt vt-domain/valmiustilan-kuvaus}
@@ -142,7 +140,7 @@
       {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
                                                                     (pvm/pvm-opt %)
                                                                     "Ei takarajaa")
-       :varoita [[:urakan-aikana]]
+       :validoi [[:urakan-aikana]]
        :tyyppi :pvm}
       {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :valmiustila :hae identity :fmt vt-domain/valmiustilan-kuvaus}
