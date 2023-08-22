@@ -312,6 +312,23 @@
           seuraava-rivi-aet (:tr-alkuetaisyys seuraava-rivi)
 
           rivi (cond
+                 ;; Korosta molemmat aet/let (hyppy tällä ja edellisellä rivillä)
+                 (and
+                   rivi-aet seuraava-rivi-aet
+                   rivi-aet edellinen-rivi-let
+                   (= rivi-tie seuraava-rivi-tie)
+                   (= rivi-ajorata seuraava-rivi-ajorata)
+                   (= rivi-kaista seuraava-rivi-kaista)
+                   (= rivi-tie edellinen-rivi-tie)
+                   (= rivi-ajorata edellinen-rivi-ajorata)
+                   (= rivi-kaista edellinen-rivi-kaista)
+                   (> seuraava-rivi-aet rivi-let)
+                   (> rivi-aet edellinen-rivi-let)
+                   ;; Onko hypyt X metriä tai alle?
+                   (< (- seuraava-rivi-aet rivi-let) hypyn-metriraja)
+                   (< (- rivi-aet edellinen-rivi-let) hypyn-metriraja))
+                 (merge rivi {:tr-korosta-aet? true :tr-korosta-let? true})
+
                  ;; Seuraava ja tämä rivi olemassa sekä molemmilla sama tie&ajorata&kaista
                  ;; Seuraavan rivin alkuetäisyys on isompi kun tämän rivin loppuetäisyys = hyppy
                  ;; (korosta LET)
@@ -337,23 +354,6 @@
                    ;; Onko hyppy X metriä tai alle?
                    (< (- rivi-aet edellinen-rivi-let) hypyn-metriraja))
                  (merge rivi {:tr-korosta-aet? true})
-
-                 ;; Korosta molemmat aet/let (hyppy tällä ja edellisellä rivillä)
-                 (and
-                   rivi-aet seuraava-rivi-aet
-                   rivi-aet edellinen-rivi-let
-                   (= rivi-tie seuraava-rivi-tie)
-                   (= rivi-ajorata seuraava-rivi-ajorata)
-                   (= rivi-kaista seuraava-rivi-kaista)
-                   (= rivi-tie edellinen-rivi-tie)
-                   (= rivi-ajorata edellinen-rivi-ajorata)
-                   (= rivi-kaista edellinen-rivi-kaista)
-                   (> seuraava-rivi-aet rivi-let)
-                   (> rivi-aet edellinen-rivi-let)
-                   ;; Onko hypyt X metriä tai alle?
-                   (< (- seuraava-rivi-aet rivi-let) hypyn-metriraja)
-                   (< (- rivi-aet edellinen-rivi-let) hypyn-metriraja))
-                 (merge rivi {:tr-korosta-molemmat? true})
 
                  ;; Ei hyppyjä
                  :else rivi)
