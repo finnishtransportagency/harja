@@ -57,7 +57,6 @@
    {:keys [massat murskeet materiaalikoodistot validointi virheet-atom varoitukset-atom]} kohdeosat-atom]
   (let [hyppyjen-maara (get-in @kohdeosat-atom [1 :hyppyjen-maara])
         alkup-jarjestys (atom @kohdeosat-atom)
-        lomaketta-muokattu? kulutuskerros-muokattu?
         hyppy-teksti (str (cond
                             (> hyppyjen-maara 1)
                             (str "Kulutuskerros ei ole yhtenäinen (" hyppyjen-maara " hyppyä)")
@@ -65,7 +64,7 @@
                             "Kulutuskerros on yhtenäinen (ei hyppyjä)"
                             :else
                             (str "Kulutuskerros ei ole yhtenäinen (" hyppyjen-maara " hyppy)")))
-        custom-yla-panel (if-not lomaketta-muokattu?
+        custom-yla-panel (if-not kulutuskerros-muokattu?
                            (if (> hyppyjen-maara 0)
                              [:div.kulutus-hyppy-info.vahvistamaton
                               [:div.kulutus-hyppy-ikoni-alert (ikonit/alert-svg)]
@@ -120,7 +119,7 @@
                                                     (fn-vertaa-arvo vanha-rivi rivi :tr-numero))
                                                 (recur (inc i) data)
                                                 true))))]
-                   (when-not lomaketta-muokattu?
+                   (when-not kulutuskerros-muokattu?
                      (when (riveja-muokattu? 0 (vec @alkup-jarjestys))
                        (e! (pot2-tiedot/->KulutuskerrosMuokattu true)))))
 
@@ -211,12 +210,12 @@
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
        {:otsikko "Aet" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi)
-        :solun-luokka-fn #(when (:aet-hyppy? %) "korostettu-sarake")}
+        :solun-luokka-fn #(when (and (not kulutuskerros-muokattu?) (:aet-hyppy? %)) "korostettu-sarake")}
        {:otsikko "Losa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuosa :validoi (:tr-loppuosa validointi)}
        {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi)
-        :solun-luokka-fn #(when (:let-hyppy? %) "korostettu-sarake")}
+        :solun-luokka-fn #(when (and (not kulutuskerros-muokattu?) (:let-hyppy? %)) "korostettu-sarake")}
        {:otsikko "Pituus" :nimi :pituus :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :tyyppi :positiivinen-numero :tasaa :oikea
         :muokattava? (constantly false)
         :hae (fn [rivi]
