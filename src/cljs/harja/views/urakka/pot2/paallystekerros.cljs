@@ -75,7 +75,17 @@
                               [:div hyppy-teksti]])
                            nil)
         voi-muokata? (not= :lukittu (:tila perustiedot))
-        ohjauskahva (:paallystekerros ohjauskahvat)]
+        ohjauskahva (:paallystekerros ohjauskahvat)
+        kokpituus (reduce
+                    (fn [acc data]
+                      (when-let
+                        [pituus (tr/laske-tien-pituus (into {}
+                                                        (map (juxt key (comp :pituus val)))
+                                                        (get tr-osien-pituudet (:tr-numero (second data))))
+                                  (second data))]
+                        (+ acc pituus)))
+                    0
+                    @kohdeosat-atom)]
     [:div
      [grid/muokkaus-grid
       {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
@@ -275,15 +285,4 @@
         :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros voi-muokata? ohjauskahva]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
       kohdeosat-atom]
-
-     (let [kokpituus (reduce
-                       (fn [acc data]
-                         (when-let
-                           [pituus (tr/laske-tien-pituus (into {}
-                                                           (map (juxt key (comp :pituus val)))
-                                                           (get tr-osien-pituudet (:tr-numero (second data))))
-                                     (second data))]
-                           (+ acc pituus)))
-                       0
-                       @kohdeosat-atom)]
-       [:div.kulutus-pituus-yhteensa (str "Pituus yhteensä: " kokpituus " m")])]))
+     [:div.kulutus-pituus-yhteensa (str "Pituus yhteensä: " kokpituus " m")]]))
