@@ -33,7 +33,8 @@
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as integraatiopiste-http]
             [harja.tyokalut.xml :as xml]
-            [harja.domain.paallystysilmoitus :as pot-domain])
+            [harja.domain.paallystysilmoitus :as pot-domain]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain])
   (:import (java.util UUID))
   (:use org.httpkit.fake))
 
@@ -911,14 +912,84 @@
         urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystysilmoitus (-> pot2-testidata
-                               (assoc :paallystyskohde-id paallystyskohde-id)
-                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] true)
-                               (update-in [:paallystekerros 0] dissoc :materiaali)
-                               (assoc-in [:paallystekerros 0 :toimenpide] kar-toimenpide))
-        [paallystysilmoitus-kannassa-ennen paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
-                                                                                  urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)]
-    (is (nil? (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 1 :materiaali])))
-    (is (= kar-toimenpide (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 1 :toimenpide])))))
+                             (assoc :paallystyskohde-id paallystyskohde-id)
+                             (assoc-in [:perustiedot :valmis-kasiteltavaksi] true)
+                             (update-in [:paallystekerros 0] dissoc :materiaali)
+                             (assoc-in [:paallystekerros 0 :toimenpide] kar-toimenpide))
+        paallystysilmoitus-kannassa-jalkeen (nth (tallenna-pot2-testi-paallystysilmoitus
+                                                   urakka-id sopimus-id paallystyskohde-id paallystysilmoitus) 1 nil)]
+    (is (nil? (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 0 :materiaali])))
+    (is (= kar-toimenpide (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 0 :toimenpide])))))
+
+(deftest tallenna-pot2-paallystysilmoitus-testaa-paallystys-hypyt
+  (let [toimenpide pot2-domain/+masuunikuonan-sideainetyyppi-koodi+
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        aet 1067
+        paallystysilmoitus (-> pot2-testidata
+                             (assoc :paallystyskohde-id paallystyskohde-id)
+                             (assoc-in [:paallystekerros 0 :toimenpide] toimenpide)
+
+                             ;; Tehdään manuaalisesti hyppy
+                             (assoc-in [:paallystekerros 0 :tr-alkuosa] 1)
+                             (assoc-in [:paallystekerros 0 :tr-loppuosa] 1)
+                             (assoc-in [:paallystekerros 0 :tr-loppuetaisyys] aet)
+                             (assoc-in [:paallystekerros 0 :tr-alkuetaisyys] 1066)
+                             (assoc-in [:paallystekerros 0 :tr-numero] 20)
+                             (assoc-in [:paallystekerros 0 :tr-kaista] 12)
+                             (assoc-in [:paallystekerros 0 :tr-ajorata] 1)
+                             (assoc-in [:paallystekerros 0 :tr-ajorata] 1)
+
+                             (assoc-in [:paallystekerros 1 :tr-alkuosa] 1)
+                             (assoc-in [:paallystekerros 1 :tr-loppuosa] 1)
+                             (assoc-in [:paallystekerros 1 :tr-loppuetaisyys] 3827)
+                             (assoc-in [:paallystekerros 1 :tr-alkuetaisyys] (+ aet yllapitokohteet-domain/+kulutus-hyppy-metriraja+))
+                             (assoc-in [:paallystekerros 1 :tr-numero] 20)
+                             (assoc-in [:paallystekerros 1 :tr-kaista] 12)
+                             (assoc-in [:paallystekerros 1 :tr-ajorata] 1))
+
+        paallystys-hyppy-olemassa (nth (tallenna-pot2-testi-paallystysilmoitus
+                                         urakka-id sopimus-id paallystyskohde-id paallystysilmoitus) 1 nil)
+
+        paallystysilmoitus (-> pot2-testidata
+                             (assoc :paallystyskohde-id paallystyskohde-id)
+                             (assoc-in [:paallystekerros 0 :toimenpide] toimenpide)
+
+                             (assoc-in [:paallystekerros 0 :tr-alkuosa] 1)
+                             (assoc-in [:paallystekerros 0 :tr-loppuosa] 1)
+                             (assoc-in [:paallystekerros 0 :tr-loppuetaisyys] aet)
+                             (assoc-in [:paallystekerros 0 :tr-alkuetaisyys] 1066)
+                             (assoc-in [:paallystekerros 0 :tr-numero] 20)
+                             (assoc-in [:paallystekerros 0 :tr-kaista] 12)
+                             (assoc-in [:paallystekerros 0 :tr-ajorata] 1)
+                             (assoc-in [:paallystekerros 0 :tr-ajorata] 1)
+
+                             (assoc-in [:paallystekerros 1 :tr-alkuosa] 1)
+                             (assoc-in [:paallystekerros 1 :tr-loppuosa] 1)
+                             (assoc-in [:paallystekerros 1 :tr-loppuetaisyys] 3827)
+                             (assoc-in [:paallystekerros 1 :tr-alkuetaisyys] (+ aet yllapitokohteet-domain/+kulutus-hyppy-metriraja+ 1))
+                             (assoc-in [:paallystekerros 1 :tr-numero] 20)
+                             (assoc-in [:paallystekerros 1 :tr-kaista] 12)
+                             (assoc-in [:paallystekerros 1 :tr-ajorata] 1))
+
+        paallystys-hyppy-ylittyy (nth (tallenna-pot2-testi-paallystysilmoitus
+                                        urakka-id sopimus-id paallystyskohde-id paallystysilmoitus) 1 nil)]
+
+    ;; Hyppy seuraavalla rivillä, korostetaan let
+    (is (true? (get-in paallystys-hyppy-olemassa [:paallystekerros 0 :let-hyppy?])) "Korostetaan loppuetäisyys")
+    (is (nil? (get-in paallystys-hyppy-olemassa [:paallystekerros 0 :aet-hyppy?])) "Ei korosteta alkuetäisyytt'")
+    (is (= (get-in paallystys-hyppy-olemassa [:paallystekerros 0 :hyppyjen-maara]) 1) "Hyppyjen määrä löytyy")
+
+    ;; Seuraavalla korostetaan aet
+    (is (nil? (get-in paallystys-hyppy-olemassa [:paallystekerros 1 :let-hyppy?])) "Ei korosteta loppuetäisyyttä")
+    (is (true? (get-in paallystys-hyppy-olemassa [:paallystekerros 1 :aet-hyppy?])) "Korostetaan alkuetäisyys")
+    (is (= (get-in paallystys-hyppy-olemassa [:paallystekerros 1 :hyppyjen-maara]) 1) "Hyppyjen määrä löytyy")
+
+    ;; Hyppy ylittää metrirajan, joten korostuksia ei tehdä 
+    (is (nil? (get-in paallystys-hyppy-ylittyy [:paallystekerros 0 :let-hyppy?])) "Loppuetäisyyttä ei korosteta")
+    (is (nil? (get-in paallystys-hyppy-ylittyy [:paallystekerros 0 :aet-hyppy?])) "Alkuetäisyyttä ei korosteta")
+    (is (= (get-in paallystys-hyppy-ylittyy [:paallystekerros 0 :hyppyjen-maara]) 0) "Hyppyjä ei ole")))
 
 (deftest tallenna-pot2-paallystysilmoitus-kohteen-alku-ja-loppupvm-muuttuvat
   (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
