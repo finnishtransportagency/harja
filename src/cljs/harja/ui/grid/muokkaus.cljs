@@ -71,7 +71,7 @@
      arvo]))
 
 (defn- muokkauselementin-tila
-  [{:keys [aseta nimi valinta-arvo hae elementin-id td-luokka-fn]}
+  [{:keys [aseta nimi valinta-arvo hae elementin-id solun-luokka-fn]}
    {:keys [muokkaa! muokatut-atom virheet varoitukset huomautukset skeema id i rivi gridin-tietoja
            sisalto-kun-rivi-disabloitu]}
    rivi-disabloitu? kentan-virheet kentan-varoitukset kentan-huomautukset
@@ -157,7 +157,7 @@
        :reagent-render
        (fn [{:keys [nimi aseta fmt muokattava? tyyppi tasaa elementin-id
                     komponentti hae kentta-arity-3? komponentti-args sarake-disabloitu-arvo-fn
-                    valinta-arvo valinta-nayta valinnat td-luokka-fn] :as sarake}
+                    valinta-arvo valinta-nayta valinnat solun-luokka-fn] :as sarake}
             {:keys [ohjaus id rivi rivi-index gridin-tietoja
                     nayta-virheet? i voi-muokata? disable-input?
                     muokatut-atom muokkaa! virheet skeema sisalto-kun-rivi-disabloitu
@@ -173,7 +173,7 @@
                  voi-muokata?)
              [:td {:class (y/luokat
                             "muokattava"
-                            (when td-luokka-fn (td-luokka-fn rivi))
+                            (when solun-luokka-fn (solun-luokka-fn rivi))
                             tasaus-luokka
                             (grid-yleiset/tiivis-tyyli skeema)
                             (cond
