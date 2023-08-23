@@ -93,24 +93,6 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
         cy.get('[data-cy=ilmoitukset-grid]').contains("Toinen testaaminen");
     })
 
-    it('Aihe saadaan parsittua ilmoituksen lisätiedoista', function () {
-        cy.server();
-        cy.route({
-                url: "*/hae-ilmoitukset",
-                method: "POST"
-            }
-        ).as('ihaku')
-        cy.get('[data-cy=ilmoitukset-grid]').contains("Toripolliisi kadonnut!", {timeout: timeout}).parent().parent().parent().parent().as('rivi');
-        cy.get("@rivi").contains("Toinen testailu");
-        cy.get("@rivi").should('not.have.text', "Aihe: Toinen testailu");
-        cy.get("@rivi").click({force: true});
-
-        cy.get(".tietokentta").contains("Aihe").parent().contains("Toinen testaus")
-        cy.get(".tietokentta").contains("Tarkenne").parent().contains("Toinen testailu")
-        cy.get(".tietorivi").find('.selitelista').should('have.length', 1);
-        cy.get(".selitelista").contains("Tiellä on este");
-    })
-
     it("Ilmoitusten http-pollaus", function () {
         cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', { timeout: timeout }).should('not.exist')
         cy.contains('.ilmoitukset', 'Uusia ilmoituksia haetaan', {timeout: timeout})

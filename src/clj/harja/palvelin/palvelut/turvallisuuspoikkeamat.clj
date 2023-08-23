@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.turvallisuuspoikkeamat
-  (:require [com.stuartsierra.component :as component]
+  (:require [clojure.spec.alpha :as s]
+            [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
@@ -229,15 +230,14 @@
 
 (defn turvallisuuspoikkeaman-data-validi?
   [{:keys [otsikko tapahtunut tyyppi vahinkoluokittelu vakavuusaste
-           tr tila kuvaus juurisyy1 sijainti]}]
-  (and 
-    (some? sijainti)
+           tila kuvaus juurisyy1 sijainti]}]
+  (and
+    (and (map? sijainti) (contains? sijainti :type) (s/valid? (geo/geometria-spec sijainti) sijainti))
     (not (empty? otsikko))
     (instance? Date tapahtunut)
     (not (empty? tyyppi))
     (not (empty? vahinkoluokittelu))
     (not (nil? vakavuusaste))
-    (tr/validi-osoite? tr)
     (not (nil? tila))
     (not (empty? kuvaus))
     (or (not (contains? tyyppi :tyotapaturma))
