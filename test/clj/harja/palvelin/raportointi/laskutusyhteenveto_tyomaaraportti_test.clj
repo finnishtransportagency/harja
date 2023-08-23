@@ -367,18 +367,18 @@
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
         tpi-hallinnolliset-toimenpiteet (hae-toimenpideinstanssi-id urakka-id "23151") ;; Hallinnolliset toimenpiteet
-        tpi-yllapito (hae-toimenpideinstanssi-id urakka-id "20191") ;; MHU Ylläpito
         pvm (pvm/->pvm "15.10.2019")
         bonus_summa 1000M
         alihankintabonus_summa 7777M
         sanktio_summa 1500M
+
         ;; Poistetaan kaikki bonukset ja sanktiot urakalta
         _ (poista-bonukset-ja-sanktiot-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
 
-        ;; Luodaan alihankintabonus
+        ;; Luodaan alihankintabonus - ennen 1.10.2022 kuuluu hallinnollisiin toimenpiteisiin
         _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, rahasumma, urakka, tyyppi)
                       VALUES (%s, %s, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
-               sopimus-id tpi-yllapito pvm alihankintabonus_summa urakka-id "alihankintabonus"))
+               sopimus-id tpi-hallinnolliset-toimenpiteet pvm alihankintabonus_summa urakka-id "alihankintabonus"))
         ;; Luodaan asiakastyytyvaisyysbonus
         _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, rahasumma, urakka, tyyppi)
                       VALUES (%s, %s, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
@@ -391,11 +391,10 @@
 
         raportti (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                       hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
-        purettu (pura-tyomaaraportti-mapiksi (first raportti))
-        _ (println "purettu: " (pr-str (into (sorted-map) purettu)))]
+        purettu (pura-tyomaaraportti-mapiksi (first raportti))]
 
-    (is (= (* 2 bonus_summa) (:bonukset_hoitokausi_yht purettu)))
-    (is (= (* 2 bonus_summa) (:bonukset_val_aika_yht purettu)))
+    (is (= (+ alihankintabonus_summa bonus_summa) (:bonukset_hoitokausi_yht purettu)))
+    (is (= (+ alihankintabonus_summa bonus_summa) (:bonukset_val_aika_yht purettu)))
     (is (= (* -1 sanktio_summa) (:sanktiot_hoitokausi_yht purettu)))
     (is (= (* -1 sanktio_summa) (:sanktiot_val_aika_yht purettu)))))
 

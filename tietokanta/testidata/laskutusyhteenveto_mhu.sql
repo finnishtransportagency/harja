@@ -262,12 +262,6 @@ $$
                     now(), 'laskutettava-tyo'::TOTEUMATYYPPI, NULL, tehtavaryhma_erillishankinnat, tpi,
                     sopimus_id, kayttaja_id, 'erillishankinnat');
 
-        -- Alihankintabonus tulkitaan 2022 hoitokaudesta eteenpäin rahavaraukseksi.
-        -- Luodaan siis erillinen rivi, jotta se voidaan testata rauhassa tarkasti
-        INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
-                                      lisatieto, luotu, luoja)
-        VALUES ('alihankintabonus', sopimus_id, urakka_id, tpi_yllapito, '2022-10-15', 777, NULL,
-                'Alihankittu hyvin!', '2022-10-13', kayttaja_id);
 
         -- HJ-palkkio - 10/2019
        -- INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,

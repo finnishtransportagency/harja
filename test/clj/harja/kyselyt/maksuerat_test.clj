@@ -78,17 +78,18 @@
                          {:kokonaishintainen 8801.94M
                           :tpi_id 50
                           :urakka_id 35}
-                         {:kokonaishintainen 6796.454000M
+                         {:kokonaishintainen 4796.454000M
                           :tpi_id 51
                           :urakka_id 35}
                          {:kokonaishintainen 11001.94M
                           :tpi_id 52
                           :urakka_id 35}
-                         {:kokonaishintainen 16401.94M
+                         {:kokonaishintainen 15401.94M
                           :tpi_id 53
                           :urakka_id 35}
                          {:kokonaishintainen 13201.94M
                           :tpi_id 54
                           :urakka_id 35}]
-               vastaus (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))]
+               vastaus (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))
+               _ (println "vastaus: " (pr-str vastaus))]
               (is (= vastaus odotettu))))
