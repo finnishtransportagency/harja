@@ -732,16 +732,18 @@
   Tiedon mukana tulee yhteenlaskettu summa materiaalin käytöstä.
   * Jos tähän funktioon tehdään muutoksia, pitäisi muutokset tehdä myös
   materiaalit/tallenna-toteuma-materiaaleja! funktioon (todnäk)"
-  [db user t toteumamateriaalit hoitokausi sopimus sijainti]
+  [db user t toteumamateriaalit hoitokausi sopimus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-materiaalit user (:urakka t))
   (log/debug "Tallenna toteuma: " (pr-str t) " ja toteumamateriaalit " (pr-str toteumamateriaalit))
-  (log/debug "Tallenna toteuma, sijainti: " (pr-str sijainti) )
   (jdbc/with-db-transaction [c db]
                             (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c (:id t) (:urakka t))
                             (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c (:id t))
                             ;; Jos toteumalla on positiivinen id, toteuma on olemassa
                             (let [urakka-id (:urakka t)
                                   toteuma-id (:id t)
+                                  tr-osoite (:tierekisteriosoite t)
+                                  reitti-viiva (tr-q/hae-tr-viiva c tr-osoite)
+                                  _ (log/debug "REITTI:" (pr-str reitti-viiva))
                                   toteuman-alkuperainen-pvm (toteumat-q/hae-toteuman-alkanut-pvm-idlla c {:id toteuma-id})
                                   toteuma (if (id/id-olemassa? toteuma-id)
                                             ;; Jos poistettu=true, halutaan toteuma poistaa.
@@ -760,13 +762,14 @@
                                                                                  :suorittaja    (:suorittajan-nimi t)
                                                                                  :ytunnus       (:suorittajan-ytunnus t)
                                                                                  :lisatieto     (:lisatieto t)
-                                                                                 :numero        nil
-                                                                                 :alkuosa       nil
-                                                                                 :alkuetaisyys  nil
-                                                                                 :loppuosa      nil
-                                                                                 :loppuetaisyys nil
+                                                                                 :numero        (:numero tr-osoite)
+                                                                                 :alkuosa       (:alkuosa tr-osoite)
+                                                                                 :alkuetaisyys  (:alkuetaisyys tr-osoite)
+                                                                                 :loppuosa      (:loppuosa tr-osoite)
+                                                                                 :loppuetaisyys (:loppuetaisyys tr-osoite)
                                                                                  :id            (:id t)
                                                                                  :urakka        urakka-id})
+                                                (paivita-toteuman-reitti c (:id t) reitti-viiva)
                                                 t))
                                             ;; Jos id:tä ei ole tai se on negatiivinen, halutaan luoda uusi toteuma
                                             ;; Tässä tapauksessa palautetaan kyselyn luoma toteuma
@@ -783,12 +786,12 @@
                                                                                               :ytunnus             (:suorittajan-ytunnus t)
                                                                                               :lisatieto           (:lisatieto t)
                                                                                               :ulkoinen_id         nil
-                                                                                              :reitti              nil
-                                                                                              :numero              nil
-                                                                                              :alkuosa             nil
-                                                                                              :alkuetaisyys        nil
-                                                                                              :loppuosa            nil
-                                                                                              :loppuetaisyys       nil
+                                                                                              :reitti              (geometriaksi reitti-viiva)
+                                                                                              :numero              (:numero tr-osoite)
+                                                                                              :alkuosa             (:alkuosa tr-osoite)
+                                                                                              :alkuetaisyys        (:alkuetaisyys tr-osoite)
+                                                                                              :loppuosa            (:loppuosa tr-osoite)
+                                                                                              :loppuetaisyys       (:loppuetaisyys tr-osoite)
                                                                                               :lahde               "harja-ui"
                                                                                               :tyokonetyyppi       nil
                                                                                               :tyokonetunniste     nil

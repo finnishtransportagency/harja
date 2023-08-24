@@ -65,7 +65,7 @@
         tulos (assoc
                 (first (map :toteuma mankeloitava))
                 :toteumamateriaalit (into [] (map :toteumamateriaali mankeloitava)))]
-    (log/debug "Hae toteuman materiaalitiedot:")
+    (log/debug "Haettiin toteuman materiaalitiedot: " tulos)
     tulos))
 
 

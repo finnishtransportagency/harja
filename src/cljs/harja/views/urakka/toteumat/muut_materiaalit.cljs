@@ -1,5 +1,7 @@
 (ns harja.views.urakka.toteumat.muut-materiaalit
-  (:require [harja.views.urakka.valinnat :as valinnat]
+  (:require [harja.ui.debug :as debug]
+            [harja.views.kartta.tasot :as kartta-tasot]
+            [harja.views.urakka.valinnat :as valinnat]
             [reagent.core :refer [atom wrap]]
             [harja.loki :refer [log]]
             [harja.fmt :as fmt]
@@ -28,11 +30,6 @@
   ^{:doc "Valittu aikaväli materiaalien tarkastelulle"}
   valittu-aikavali (atom nil))
 
-(defonce
-  ^{:doc "Valittu sijainti"}
-  valittu-sijainti (atom nil))
-
-
 (defonce urakan-materiaalin-kaytot
   (reaction<! [nakymassa? @materiaali-tiedot/materiaalinakymassa?
                sopimusnumero (first @u/valittu-sopimusnumero)
@@ -46,7 +43,7 @@
                  (:id ur) alku loppu sopimusnumero))))
 
 (defn tallenna-toteuma-ja-toteumamateriaalit!
-  [tm m sijainti]
+  [tm m]
   (let [toteumamateriaalit (into []
                                  (comp
                                    (map #(assoc % :materiaalikoodi (:id (:materiaali %))))
@@ -65,11 +62,10 @@
                  :suorittajan-nimi (:suorittaja m)
                  :suorittajan-ytunnus (:ytunnus m)
                  :lisatieto (:lisatieto m)
-                 ; tänne
-                 }
+                 :tierekisteriosoite (:tierekisteriosoite m)}
         hoitokausi @u/valittu-hoitokausi
         sopimus-id (first @u/valittu-sopimusnumero)]
-    (toteumat/tallenna-toteuma-ja-toteumamateriaalit! toteuma toteumamateriaalit hoitokausi sopimus-id sijainti)))
+    (toteumat/tallenna-toteuma-ja-toteumamateriaalit! toteuma toteumamateriaalit hoitokausi sopimus-id)))
 
 (def materiaalikoodit (reaction (into []
                                       (comp
@@ -184,7 +180,11 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
             jarjestelman-luoma? (true? (:jarjestelmanlisaama @lomakkeen-tiedot))
             voi-tallentaa? (and (lomake/validi? @lomakkeen-tiedot)
                                 (> (count @materiaalitoteumat-mapissa) 0)
-                                (zero? (count @materiaalien-virheet)))]
+                                (zero? (count @materiaalien-virheet)))
+            sijainti (:tierekisteriosoite @lomakkeen-tiedot)
+            _ (println "LOMAKKEEN TIEDOT " @lomakkeen-tiedot)
+            _ (println "SIJAINTI (MUUT MATERIAALIT) " sijainti)
+            ]
         [:div.toteuman-tiedot
          [napit/takaisin "Takaisin materiaaliluetteloon" #(reset! lomakkeen-tiedot nil)]
          [lomake {:otsikko (if (:id @lomakkeen-tiedot)
@@ -192,14 +192,13 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                              "Luo uusi toteuma")
                   :luokka :horizontal
                   :voi-muokata? (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))
-                                     (not jarjestelman-luoma?))
+                                  (not jarjestelman-luoma?))
                   :muokkaa! muokkaa!
                   :footer [napit/palvelinkutsu-nappi
                            "Tallenna toteuma"
                            #(tallenna-toteuma-ja-toteumamateriaalit!
                               (:toteumamateriaalit @lomakkeen-tiedot)
-                              @lomakkeen-tiedot
-                              @sijainti)
+                              @lomakkeen-tiedot)
                            {:luokka "nappi-ensisijainen"
                             :ikoni (ikonit/tallenna)
                             :kun-onnistuu
@@ -236,15 +235,26 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                       (when jarjestelman-luoma?
              {:otsikko "Lähde" :nimi :luoja :tyyppi :string
               :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")")) :muokattava? (constantly false)})
+           ;{:otsikko "Sijainti"}
+           ;{:teksti                "Sijainti"
+           ; :tyyppi                :valiotsikko
+           ; :ui-lomake/col-luokka "col-xs-12"
+           ; }
            {
-            :nimi :tierekisteriosoite
+            :label-ja-kentta-samalle-riville? false
             :otsikko "Sijainti"
+            ;:uusi-rivi? true
+            :nimi :tierekisteriosoite
             :tyyppi :tierekisteriosoite
             ;:tyyli :rivitetty
             :vayla-tyyli? true
-            ;:alaotsikot? true
+            :alaotsikot? false
+            ;:tr-otsikot? true
+            ;:sijainti (wrap sijainti (constantly true))
             :sijainti (atom nil)
             ;:vaadi-vali? true
+            ;:lataa-piirrettaessa-koordinaatit? true
+            ;:voi-valita-kartalta? true
             }
            ;{:numero tie :alkuosa aosa :alkuetaisyys aet :loppuosa losa :loppuetaisyys let}
 
@@ -388,6 +398,11 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
 (defn muut-materiaalit-nakyma [ur]
   (komp/luo
     (komp/lippu materiaali-tiedot/materiaalinakymassa?)
+    (komp/sisaan-ulos #(do
+                         (println "KOMP SISÄÄN ULOS")
+                         )
+      #(do
+         (kartta-tasot/poista-geometria! :tr-valittu-osoite)))
     (fn [ur]
       [:span
        [kartta/kartan-paikka]
