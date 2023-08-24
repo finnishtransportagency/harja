@@ -128,7 +128,7 @@ jobs:
         uses: ./.github/actions/setup-clojure-env
 
       # TODO: Aja halutut testit
-      #- name: Run backend tests
+      name: Run backend tests
       run: lein test
 
       #
