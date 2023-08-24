@@ -128,8 +128,8 @@ jobs:
         uses: ./.github/actions/setup-clojure-env
 
       # TODO: Aja halutut testit
-      name: Run backend tests
-      run: lein test
+      - name: Run backend tests
+        run: lein test
 
       #
   e2e-tests:
