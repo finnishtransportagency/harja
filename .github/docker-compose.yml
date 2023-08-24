@@ -18,7 +18,7 @@ services:
     environment:
       HARJA_TIETOKANTA_PORTTI: 5432
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - ../tietokanta:/var/lib/postgresql/harja/tietokanta
     healthcheck:
