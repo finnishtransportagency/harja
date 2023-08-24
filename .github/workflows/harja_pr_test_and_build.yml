@@ -135,6 +135,9 @@ jobs:
   e2e-tests:
     name: "e2e-testit"
     runs-on: ubuntu-latest
+    env:
+      # Asetetaan Suomen aikavyöhyke testejä varten
+      TZ: "EET"
     needs: build
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
