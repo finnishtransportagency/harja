@@ -271,13 +271,15 @@
 (defn maarien-toteumat* [e! app]
   (komp/luo
     (komp/lippu toteumat/maarien-toteumat-nakymassa?)
-    (komp/sisaan-ulos #(do
-        (e! (maarien-toteumat/->HaeKaikkiTehtavat))
-        (e! (maarien-toteumat/->HaeToimenpiteet))
-        ;; Haetaan kaikki, joten ei määritellä tehtäväryhmää
-        (e! (maarien-toteumat/->HaeToimenpiteenTehtavaYhteenveto {:id 0})))
+    (komp/sisaan-ulos
       #(do
-         (kartta-tasot/poista-geometria! :tr-valittu-osoite)))
+      (kartta-tasot/taso-paalle! :maarien-toteumat)
+         (e! (maarien-toteumat/->HaeKaikkiTehtavat))
+         (e! (maarien-toteumat/->HaeToimenpiteet))
+         ;; Haetaan kaikki, joten ei määritellä tehtäväryhmää
+         (e! (maarien-toteumat/->HaeToimenpiteenTehtavaYhteenveto {:id 0})))
+      #(do
+         (kartta-tasot/taso-pois! :maarien-toteumat)))
     (fn [e! app]
       (let [syottomoodi (get-in app [:syottomoodi])]
         [:div {:id "vayla"}
