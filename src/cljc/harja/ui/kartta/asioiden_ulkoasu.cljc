@@ -338,7 +338,6 @@
     :dash [3 9]
     :width 5}])
 
-
 (defn materiaalitoteuman-viiva []
   [{:color puhtaat/tummanharmaa
     :width 10}

@@ -383,7 +383,7 @@
    :paikkaukset-paikkauskohteet paikkaukset-paikkauskohteet-kartalle/karttataso-nakyvissa?
    :paikkaukset-paallystysilmoitukset paikkaukset-paallystysilmoitukset/karttataso-nakyvissa?
    :maarien-toteumat maarien-toteumat-kartalla/karttataso-nakyvissa?
-   :materiaalitoteumat materiaalitoteumat-kartalla/karttataso-nakyvissa?
+   :materiaalitoteumat materiaalitoteumat-kartalla/karttataso-muut-materiaalitoteumat
    :tieluvat tieluvat/karttataso-tieluvat
    :nakyman-geometriat (atom true)
    :infopaneelin-merkki (atom true)

@@ -1,15 +1,8 @@
 (ns harja.tiedot.urakka.toteumat
   "Tämä nimiavaruus hallinnoi urakan toteumien tietoja."
   (:require [harja.asiakas.kommunikaatio :as k]
-            [harja.asiakas.tapahtumat :as t]
-            [cljs.core.async :refer [<! >! chan]]
             [reagent.core :refer [atom]]
-            [harja.loki :refer [log tarkkaile!]]
-            [harja.pvm :as pvm]
-            [harja.ui.protokollat :refer [Haku hae]])
-  (:require-macros [harja.atom :refer [reaction<!]]
-                   [reagent.ratom :refer [reaction]]
-                   [cljs.core.async.macros :refer [go]]))
+            [harja.loki :refer [log tarkkaile!]]))
 
 ; FIXME Tämä nimiavaruus hallinoi useaa Toteumat-välilehden alivälilehtiä. Pitäisi refactoroida niin, että
 ; jokaisella näkymällä olisi oma tiedot-namespace kaverina.
@@ -63,13 +56,6 @@
 
 (defn tallenna-erilliskustannus [ek]
   (k/post! :tallenna-erilliskustannus ek))
-
-(defn tallenna-toteuma-ja-toteumamateriaalit! [toteuma toteumamateriaalit hoitokausi sopimus-id]
-  (k/post! :tallenna-toteuma-ja-toteumamateriaalit {:toteuma toteuma
-                                                    :toteumamateriaalit toteumamateriaalit
-                                                    :hoitokausi hoitokausi
-                                                    :sopimus sopimus-id}))
-
 
 (defn hae-urakan-toteutuneet-muut-tyot [urakka-id sopimus-id [alkupvm loppupvm]]
   (log "tiedot: hae urakan muut työt" urakka-id sopimus-id alkupvm loppupvm)

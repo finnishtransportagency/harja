@@ -6,14 +6,8 @@
 
 (defonce karttataso-muut-materiaalitoteumat (atom false))
 
-(defonce karttataso-nakyvissa? (atom true))
-
 (defonce muut-materiaalitoteumat-kartalla (reaction
-                                            (when (and @karttataso-muut-materiaalitoteumat
-                                                    (not-empty @toteumat/valitun-materiaalitoteuman-tiedot))
+                                            (when @karttataso-muut-materiaalitoteumat
                                               (let [toteuma @toteumat/valitun-materiaalitoteuman-tiedot]
                                                 (kartalla-esitettavaan-muotoon
                                                   [(assoc toteuma :tyyppi-kartalla :materiaalitoteuma)])))))
-
-
-
