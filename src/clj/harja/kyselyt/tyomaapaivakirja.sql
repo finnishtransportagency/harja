@@ -1,12 +1,6 @@
 -- name: hae-paivakirjalistaus
 SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
        d::DATE as paivamaara, -- Otetaan generoinnin päivämäärä
-       -- Ihan hihasta vedetty tilan määritelmä.
-       CASE
-           WHEN t.luotu IS NULL  AND d::DATE < NOW()::DATE THEN 'puuttuu'
-           WHEN t.luotu BETWEEN d::DATE and d::DATE + interval '12 hour' THEN 'ok'
-           WHEN t.luotu > d::DATE + interval '12 hour' THEN 'myohassa'
-       END as tila,
        count(tk.id) as "kommenttien-maara",
        t.versio,
        t.luotu, t.luoja, t.muokattu, t.muokkaaja
@@ -18,11 +12,6 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
 
 -- name: hae-paivakirja
 SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi", t.versio, t.paivamaara::DATE,
-       -- Hihasta vedetty tilan määritelmä
-       CASE
-           WHEN t.luotu BETWEEN t.paivamaara and t.paivamaara + interval '12 hour' THEN 'ok'
-           WHEN t.luotu > t.paivamaara + interval '12 hour' THEN 'myohassa'
-           END as tila,
        (SELECT array_agg(row(aloitus, lopetus, nimi))
         FROM tyomaapaivakirja_paivystaja
         WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as paivystajat,

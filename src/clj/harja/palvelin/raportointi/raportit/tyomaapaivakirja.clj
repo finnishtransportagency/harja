@@ -1,18 +1,19 @@
 (ns harja.palvelin.raportointi.raportit.tyomaapaivakirja
   "Työmaapäiväkirja -näkymän raportti"
   (:require
-    [taoensso.timbre :as log]
-    [harja.pvm :as pvm]
-    [clj-time.coerce :as c]
-    [harja.kyselyt.tyomaapaivakirja :as tyomaapaivakirja-kyselyt]
-    [harja.kyselyt.konversio :as konversio]
-    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.saatiedot :as saatiedot]
-    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.vahvuus :as vahvuus]
-    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.keliolosuhteet :as keliolosuhteet]
-    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.kalusto :as kalusto]
-    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.muut-toimenpiteet :as muut-toimenpiteet]
-    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.maastotoimeksiannot :as maastotoimeksiannot]
-    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
+   [taoensso.timbre :as log]
+   [harja.pvm :as pvm]
+   [clj-time.coerce :as c]
+   [harja.kyselyt.tyomaapaivakirja :as tyomaapaivakirja-kyselyt]
+   [harja.palvelin.palvelut.tyomaapaivakirja :as tyomaapaivakirja-palvelut]
+   [harja.kyselyt.konversio :as konversio]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.saatiedot :as saatiedot]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.vahvuus :as vahvuus]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.keliolosuhteet :as keliolosuhteet]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.kalusto :as kalusto]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.muut-toimenpiteet :as muut-toimenpiteet]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.maastotoimeksiannot :as maastotoimeksiannot]
+   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
 
 (defn tapahtumataulukot [tapahtumat otsikko ei-tapahtumia-teksti]
   (let [tapahtumarivit (reduce (fn [rivit onnettomuus]
@@ -68,6 +69,7 @@
   (if (and valittu-rivi (:tila valittu-rivi))
     (let [tyomaapaivakirja (first (tyomaapaivakirja-kyselyt/hae-paivakirja db {:tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
                                                                                :versio (:versio valittu-rivi)}))
+          tyomaapaivakirja (tyomaapaivakirja-palvelut/kasittele-tyomaapaivakirjan-tila tyomaapaivakirja)
           ;; Tehtävien tietokantamäppäys on liian monimutkainen, niin haetaan ne erikseen
           tehtavat (hae-tehtavat-aikajaksolle db (:urakka_id valittu-rivi) (:tyomaapaivakirja_id valittu-rivi)
                      (:versio valittu-rivi) (:paivamaara tyomaapaivakirja))
