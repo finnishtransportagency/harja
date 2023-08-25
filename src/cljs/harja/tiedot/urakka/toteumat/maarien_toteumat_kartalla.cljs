@@ -1,8 +1,6 @@
 (ns harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla
   "UI controlleri määrien toteutumille"
   (:require [reagent.core :refer [atom] :as r]
-            [cljs.core.async :refer [<!]]
-            [harja.loki :refer [log tarkkaile!]]
             [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature kartalla-esitettavaan-muotoon]]
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu])
 
@@ -14,12 +12,16 @@
                         :toteumien-haku-kaynnissa? false
                         :nakymassa? false
                         :kayttajan-urakat [nil]}))
+
 (defonce karttataso-toteumat (atom false))
-(defonce karttataso-nakyvissa? (atom true))
+
+(defonce karttataso-nakyvissa? (atom false))
 
 (defonce toteumat-kartalla
          (reaction
-           (when @karttataso-toteumat
+           (when @karttataso-nakyvissa?
+             ;; fixme: otetaan käyttöön kutsu kartalla-esitettavaan-muotoon eikä
+             ;; suoraan määrittele-feature
              [{:alue (maarittele-feature @karttataso-toteumat
                                          false
                                          asioiden-ulkoasu/tr-ikoni
