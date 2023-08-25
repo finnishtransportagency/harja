@@ -20,7 +20,7 @@
 (defonce toteumat-kartalla
          (reaction
            (when @karttataso-nakyvissa?
-             ;; fixme: otetaan käyttöön kutsu kartalle-esitettavaan-muotoon eikä
+             ;; fixme: otetaan käyttöön kutsu kartalla-esitettavaan-muotoon eikä
              ;; suoraan määrittele-feature
              [{:alue (maarittele-feature @karttataso-toteumat
                                          false
