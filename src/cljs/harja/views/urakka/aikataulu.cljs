@@ -193,15 +193,11 @@
 (defn- paallystys-aloitettu-validointi
   "Validoinnit päällystys aloitettu -kentälle"
   [optiot]
-  (as-> [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
-          "Päällystys ei voi alkaa ennen kohteen aloitusta."]] validointi
-
-        ;; Päällystysnäkymässä validoidaan, että alku on annettu
-        (if (= (:nakyma optiot) :paallystys)
-          (conj validointi
-                [:toinen-arvo-annettu-ensin :aikataulu-kohde-alku
-                 "Päällystystä ei voi merkitä alkaneeksi ennen kohteen aloitusta."])
-          validointi)))
+  (when (= (:nakyma optiot) :paallystys)
+    [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
+      "Päällystys ei voi alkaa ennen kohteen aloitusta."]
+     [:toinen-arvo-annettu-ensin :aikataulu-kohde-alku
+      "Päällystystä ei voi merkitä alkaneeksi ennen kohteen aloitusta."]]))
 
 (defn- oikeudet
   "Tarkistaa aikataulunäkymän tarvitsemat oikeudet"
@@ -223,9 +219,7 @@
     {:saa-muokata? saa-muokata?
      :saa-asettaa-valmis-takarajan? saa-asettaa-valmis-takarajan?
      :saa-merkita-valmiiksi? saa-merkita-valmiiksi?
-     :voi-tallentaa? (or saa-muokata?
-                         saa-merkita-valmiiksi?
-                         saa-asettaa-valmis-takarajan?)}))
+     :voi-tallentaa? true}))
 
 
 (defn- otsikoi-aikataulurivit
@@ -544,6 +538,7 @@
       :ennen-muokkausta (fn []
                           ;; Hankalaa kumota visuaalisia muutoksia, jos gridiä muokataan.
                           (kumousboksi/ala-ehdota-kumoamista!))
+      
       :tallenna (if voi-tallentaa?
                   #(tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi %
                                               (fn [vastaus]
