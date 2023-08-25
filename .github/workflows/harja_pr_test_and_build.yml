@@ -105,6 +105,8 @@ jobs:
   basic-tests:
     name: "Perustestit"
     runs-on: ubuntu-latest
+    env:
+      TZ: "EET"
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
       # Contents read lupaa tarvitaan checkout actionissa
