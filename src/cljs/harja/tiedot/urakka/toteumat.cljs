@@ -106,3 +106,5 @@
     :vahinkojen-korjaukset "Vahinkojen korjaukset"
     nil "Kaikki"
     +valitse-tyyppi+))
+
+(def valitun-materiaalitoteuman-tiedot (atom nil))
