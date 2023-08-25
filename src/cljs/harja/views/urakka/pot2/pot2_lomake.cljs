@@ -283,7 +283,7 @@
         {:keys [tr-numero tr-alkuosa tr-loppuosa]} (get-in paallystysilmoitus-lomakedata [:perustiedot :tr-osoite])]
     (komp/luo
       (komp/lippu pot2-tiedot/pot2-nakymassa?)
-      (komp/sisaan (fn [this]
+      (komp/sisaan (fn []
                      (e! (paallystys/->HaeTrOsienPituudet tr-numero nil nil))
                      (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))
                      (e! (mk-tiedot/->HaePot2MassatJaMurskeet))
@@ -309,7 +309,7 @@
               massalomake-app (select-keys app #{:pot2-massa-lomake :materiaalikoodistot})
               murskelomake-app (select-keys app #{:pot2-murske-lomake :materiaalikoodistot})
               alusta-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :alusta :alustalomake :tr-osien-pituudet :ohjauskahvat})
-              paallystekerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :paallystekerros :tr-osien-pituudet :ohjauskahvat})
+              paallystekerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :paallystekerros :tr-osien-pituudet :ohjauskahvat :kulutuskerros-muokattu?})
               tallenna-app (select-keys (get-in app [:paallystysilmoitus-lomakedata :perustiedot])
                                         #{:tekninen-osa :tila :versio})
               {:keys [tila]} perustiedot

@@ -189,6 +189,11 @@
                          {:yllapitokohde-id yllapitokohde-id})))))
 
 ;; Yhteiset UI-asiat
+(def kvl-skeema
+  {:otsikko "KVL" :nimi :keskimaarainen-vuorokausiliikenne
+   :tyyppi :positiivinen-numero :kokonaisluku? true
+   :tasaa :oikea :muokattava? (constantly false)})
+
 (def pk-lk-skeema
   {:otsikko "PK-lk" :alasveto-luokka "kavenna-jos-kapea"
    :nimi :yllapitoluokka :tyyppi :valinta
