@@ -238,8 +238,6 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
             :alaotsikot? false
             :sijainti (atom nil)
             }
-           ;{:numero tie :alkuosa aosa :alkuetaisyys aet :loppuosa losa :loppuetaisyys let}
-
            {:otsikko "Materiaalit" :nimi :materiaalit :palstoja 2
             :komponentti (fn [_]
                            [materiaalit-ja-maarat
@@ -336,9 +334,6 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                                         oikeudet/urakat-toteumat-materiaalit)]
        [napit/uusi "Lisää toteuma" #(aseta-lomakkeen-tiedot {} (:id ur))
         {:disabled (not oikeus?)}]))
-
-   ; tänne
-
    [grid/grid
     {:otsikko "Materiaalien käyttö"
      :tyhja (if (nil? @urakan-materiaalin-kaytot) [ajax-loader "Materiaaleja haetaan"] "Ei löytyneitä tietoja.")

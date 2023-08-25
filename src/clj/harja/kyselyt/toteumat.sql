@@ -315,7 +315,6 @@ SET alkanut           = :alkanut,
   tr_loppuetaisyys    = :loppuetaisyys,
   poistettu           = FALSE
 WHERE id = :id AND urakka = :urakka;
--- tänne
 
 -- name: paivita-toteuma-ulkoisella-idlla<!
 UPDATE toteuma
