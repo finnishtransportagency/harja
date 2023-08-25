@@ -43,6 +43,7 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as paikkaukset-paikkauskohteet-kartalle]
             [harja.tiedot.tieluvat.tieluvat-kartalla :as tieluvat]
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla]
+            [harja.tiedot.urakka.toteumat.materiaalitoteumat-kartalla :as materiaalitoteumat-kartalla]
             [harja.tiedot.urakka.tienumerot-kartalla :as tienumerot-kartalla])
   
   (:require-macros [reagent.ratom :refer [reaction run!] :as ratom]
@@ -85,7 +86,8 @@
     :paikkaukset-paikkauskohteet
     :paikkaukset-paallystysilmoitukset
     :tieluvat
-    :maarien-toteumat})
+    :maarien-toteumat
+    :materiaalitoteumat})
 
 (def
   ^{:doc
@@ -260,6 +262,7 @@
    :paikkaukset-paallystysilmoitukset paikkaukset-paallystysilmoitukset/paallystysilmoitukset-kartalla
    :tieluvat tieluvat/tieluvat-kartalla
    :maarien-toteumat maarien-toteumat-kartalla/toteumat-kartalla
+   :materiaalitoteumat materiaalitoteumat-kartalla/muut-materiaalitoteumat-kartalla
    :tienumerot tienumerot-kartalla/tienumerot-kartalla})
 
 (defn nayta-geometria!
@@ -332,6 +335,7 @@
        :paikkaukset-paikkauskohteet (taso :paikkaukset-paikkauskohteet :paikkaukset-paikkauskohteet 0.7)
        :paikkaukset-paallystysilmoitukset (taso :paikkaukset-paallystysilmoitukset)
        :maarien-toteumat (taso :maarien-toteumat)
+       :materiaalitoteumat (taso :materiaalitoteumat)
        :tieluvat (taso :tieluvat)
        :tienumerot (taso :tienumerot :tienumerot)
        ;; Yksittäisen näkymän omat mahdolliset geometriat
@@ -379,6 +383,7 @@
    :paikkaukset-paikkauskohteet paikkaukset-paikkauskohteet-kartalle/karttataso-nakyvissa?
    :paikkaukset-paallystysilmoitukset paikkaukset-paallystysilmoitukset/karttataso-nakyvissa?
    :maarien-toteumat maarien-toteumat-kartalla/karttataso-nakyvissa?
+   :materiaalitoteumat materiaalitoteumat-kartalla/karttataso-nakyvissa?
    :tieluvat tieluvat/karttataso-tieluvat
    :nakyman-geometriat (atom true)
    :infopaneelin-merkki (atom true)

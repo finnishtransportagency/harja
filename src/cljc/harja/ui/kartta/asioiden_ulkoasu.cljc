@@ -338,6 +338,19 @@
     :dash [3 9]
     :width 5}])
 
+
+(defn materiaalitoteuman-viiva []
+  [{:color puhtaat/tummanharmaa
+    :width 10}
+   {:color puhtaat/harmaa
+    :width 8}
+   {:color puhtaat/tummanharmaa
+    :dash [3 9]
+    :width 6}
+   {:color puhtaat/sininen
+    :dash [3 9]
+    :width 5}])
+
 (defn tarkastuksen-ikoni [{:keys [ok? tekija] :as tarkastus} reitti?]
   (cond
     reitti? nil

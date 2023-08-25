@@ -298,6 +298,7 @@ SELECT
   t.tr_alkuetaisyys     AS toteuma_tierekisteriosoite_alkuetaisyys,
   t.tr_loppuosa         AS toteuma_tierekisteriosoite_loppuosa,
   t.tr_loppuetaisyys    AS toteuma_tierekisteriosoite_loppuetaisyys,
+  t.reitti              AS toteuma_reitti,
   m.id                  AS toteumamateriaali_materiaali_id,
   t.id                  AS toteuma_id,
   tm.id                 AS toteumamateriaali_tmid,

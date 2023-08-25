@@ -59,9 +59,11 @@
   [db user urakka-id toteuma-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (let [mankeloitava (into []
-                           (comp (map konv/alaviiva->rakenne)
-                                 (map #(assoc-in % [:toteumamateriaali :maara] (double (:maara (:toteumamateriaali %))))))
-                           (q/hae-toteuman-materiaalitiedot db toteuma-id urakka-id))
+                       (comp
+                         (geo/muunna-pg-tulokset :toteuma_reitti)
+                         (map konv/alaviiva->rakenne)
+                         (map #(assoc-in % [:toteumamateriaali :maara] (double (:maara (:toteumamateriaali %))))))
+                       (q/hae-toteuman-materiaalitiedot db toteuma-id urakka-id))
         tulos (assoc
                 (first (map :toteuma mankeloitava))
                 :toteumamateriaalit (into [] (map :toteumamateriaali mankeloitava)))]
