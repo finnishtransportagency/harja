@@ -20,9 +20,10 @@
 
 (defn- muokkauspaneeli [{:keys [otsikko voi-muokata? voi-kumota? muokatut virheet varoitukset huomautukset
                                 skeema peru! voi-lisata? ohjaus uusi-id opts paneelikomponentit historia
-                                virhe-viesti custom-toiminto]}]
+                                virhe-viesti custom-toiminto custom-yla-panel]}]
   [:div.panel-heading
    (when otsikko [:h2.panel-title otsikko])
+   (when custom-yla-panel custom-yla-panel)
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])
    (when (not= false voi-muokata?)
      [:span.pull-right.muokkaustoiminnot
@@ -34,17 +35,17 @@
         [:button.nappi-toissijainen
          {:disabled (empty? @historia)
           :on-click #(do (.stopPropagation %)
-                         (.preventDefault %)
-                         (peru! muokatut virheet varoitukset huomautukset skeema))}
+                       (.preventDefault %)
+                       (peru! muokatut virheet varoitukset huomautukset skeema))}
          (ikonit/peru) " Kumoa"])
       (when (not= false voi-lisata?)
         [:button.grid-lisaa
          {:class (or (:uusi-rivi-nappi-luokka opts) "nappi-toissijainen")
           :on-click #(do (.preventDefault %)
-                         (lisaa-rivi! ohjaus
-                                      (if uusi-id
-                                        {:id uusi-id}
-                                        {})))}
+                       (lisaa-rivi! ohjaus
+                         (if uusi-id
+                           {:id uusi-id}
+                           {})))}
          (ikonit/livicon-plus) " " (or (:lisaa-rivi opts) "Lisää rivi")])
       (when paneelikomponentit
         (map-indexed (fn [i komponentti]
@@ -70,7 +71,7 @@
      arvo]))
 
 (defn- muokkauselementin-tila
-  [{:keys [aseta nimi valinta-arvo hae elementin-id]}
+  [{:keys [aseta nimi valinta-arvo hae elementin-id solun-luokka-fn]}
    {:keys [muokkaa! muokatut-atom virheet varoitukset huomautukset skeema id i rivi gridin-tietoja
            sisalto-kun-rivi-disabloitu]}
    rivi-disabloitu? kentan-virheet kentan-varoitukset kentan-huomautukset
@@ -79,10 +80,10 @@
   (let [grid-tilan-muokkaus-fn (atom (fn [uusi]
                                        (if aseta
                                          (muokkaa! muokatut-atom virheet varoitukset huomautukset skeema
-                                                   id (fn [rivi]
-                                                        (aseta rivi uusi)))
+                                           id (fn [rivi]
+                                                (aseta rivi uusi)))
                                          (muokkaa! muokatut-atom virheet varoitukset huomautukset skeema
-                                                   id assoc nimi uusi))))
+                                           id assoc nimi uusi))))
         data-muokkaus-fn (atom (fn [uusi]
                                  (let [uusi (if valinta-arvo
                                               (valinta-arvo uusi)
@@ -119,8 +120,8 @@
       {:display-name "Muokkauselementin-tila"
        :UNSAFE_component-will-mount (fn [this]
                                       (add-watch arvo-atom seuranta-avain
-                                                 (fn [_ _ _ uusi-arvo]
-                                                   (@grid-tilan-muokkaus-fn uusi-arvo))))
+                                        (fn [_ _ _ uusi-arvo]
+                                          (@grid-tilan-muokkaus-fn uusi-arvo))))
        :component-did-mount (fn [this]
                               (reset! this-node (r/dom-node this))
                               (.addEventListener js/window EventType/RESIZE virhelaatikon-max-koon-asetus)
@@ -156,7 +157,7 @@
        :reagent-render
        (fn [{:keys [nimi aseta fmt muokattava? tyyppi tasaa elementin-id
                     komponentti hae kentta-arity-3? komponentti-args sarake-disabloitu-arvo-fn
-                    valinta-arvo valinta-nayta valinnat] :as sarake}
+                    valinta-arvo valinta-nayta valinnat solun-luokka-fn] :as sarake}
             {:keys [ohjaus id rivi rivi-index gridin-tietoja
                     nayta-virheet? i voi-muokata? disable-input?
                     muokatut-atom muokkaa! virheet skeema sisalto-kun-rivi-disabloitu
@@ -169,14 +170,16 @@
                tayta-alas (:tayta-alas? sarake)
                elementin-id (str rivi-index elementin-id)]
            (if (and (or (nil? muokattava?) (muokattava? rivi i))
-                    voi-muokata?)
-             [:td {:class (y/luokat "muokattava"
-                                    tasaus-luokka
-                                    (grid-yleiset/tiivis-tyyli skeema)
-                                    (cond
-                                      (not (empty? kentan-virheet)) " sisaltaa-virheen"
-                                      (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
-                                      (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))
+                 voi-muokata?)
+             [:td {:class (y/luokat
+                            "muokattava"
+                            (when solun-luokka-fn (solun-luokka-fn rivi))
+                            tasaus-luokka
+                            (grid-yleiset/tiivis-tyyli skeema)
+                            (cond
+                              (not (empty? kentan-virheet)) " sisaltaa-virheen"
+                              (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
+                              (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))
                    :on-click #(.stopPropagation %)}
               (when (case nayta-virheet?
                       :fokus @fokus?
@@ -204,38 +207,39 @@
                 (= tyyppi :reagent-komponentti) (vec (concat [komponentti rivi {:index i :muokataan? true}]
                                                              komponentti-args))
                 (or voi-muokata?
-                    disable-input?) [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
+                  disable-input?) [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
 
-                                     (when (and tayta-alas voi-muokata?)
-                                       ^{:key tayta-alas-key}
-                                       [grid-yleiset/tayta-alas-nappi {:fokus? @fokus? :fokus-atom fokus?
-                                                                       :arvo arvo :tayta-alas tayta-alas
-                                                                       :rivi-index rivi-index
-                                                                       :tulevat-elementit tulevat-elementit
-                                                                       :sarake sarake :ohjaus ohjaus :rivi rivi}])
-                                     (if kentta-arity-3?
-                                       ^{:key kentan-key}
-                                       [tee-kentta (assoc sarake :on-focus fokus-elementille
-                                                                 :on-blur fokus-pois-elementilta
-                                                                 :disabloi-autocomplete? disabloi-autocomplete?
-                                                                 :disabled? (not voi-muokata?)
-                                                                 :elementin-id elementin-id)
-                                        arvo
-                                        @data-muokkaus-fn]
-                                       ^{:key kentan-key}
-                                       [tee-kentta (assoc sarake :on-focus fokus-elementille
-                                                                 :on-blur fokus-pois-elementilta
-                                                                 :disabloi-autocomplete? disabloi-autocomplete?
-                                                                 :disabled? (not voi-muokata?)
-                                                                 :elementin-id elementin-id)
-                                        arvo-atom])]
+                                   (when (and tayta-alas voi-muokata?)
+                                     ^{:key tayta-alas-key}
+                                     [grid-yleiset/tayta-alas-nappi {:fokus? @fokus? :fokus-atom fokus?
+                                                                     :arvo arvo :tayta-alas tayta-alas
+                                                                     :rivi-index rivi-index
+                                                                     :tulevat-elementit tulevat-elementit
+                                                                     :sarake sarake :ohjaus ohjaus :rivi rivi}])
+                                   (if kentta-arity-3?
+                                     ^{:key kentan-key}
+                                     [tee-kentta (assoc sarake :on-focus fokus-elementille
+                                                   :on-blur fokus-pois-elementilta
+                                                   :disabloi-autocomplete? disabloi-autocomplete?
+                                                   :disabled? (not voi-muokata?)
+                                                   :elementin-id elementin-id)
+                                      arvo
+                                      @data-muokkaus-fn]
+                                     ^{:key kentan-key}
+                                     [tee-kentta (assoc sarake :on-focus fokus-elementille
+                                                   :on-blur fokus-pois-elementilta
+                                                   :disabloi-autocomplete? disabloi-autocomplete?
+                                                   :disabled? (not voi-muokata?)
+                                                   :elementin-id elementin-id)
+                                      arvo-atom])]
                 :else [nayta-arvo (assoc sarake :index i :muokataan? false)
                        (vain-luku-atomina arvo)])]
              (cond
                (= tyyppi :komponentti)
-               [:td.ei-muokattava {:class (y/luokat "ei-muokattava"
-                                                    tasaus-luokka
-                                                    (grid-yleiset/tiivis-tyyli skeema))}
+               [:td {:class (y/luokat
+                              "ei-muokattava"
+                              tasaus-luokka
+                              (grid-yleiset/tiivis-tyyli skeema))}
                 (apply komponentti rivi {:index i :muokataan? false} komponentti-args)]
 
                ;; POT2 myötä tullut uusi komponentti "linkki ja alasvetovalinta" halusi pitää linkin
@@ -244,16 +248,18 @@
                  (= tyyppi :valinta)
                  (:linkki-fn sarake)
                  (:linkki-icon sarake))
-               [:td.ei-muokattava
+               [:td {:class (y/luokat
+                              "ei-muokattava")}
                 [tee-kentta (assoc sarake :on-focus fokus-elementille
-                                          :on-blur fokus-pois-elementilta
-                                          :disabled? (not voi-muokata?)
-                                          :disabloi-autocomplete? disabloi-autocomplete?
-                                          :elementin-id elementin-id)
+                              :on-blur fokus-pois-elementilta
+                              :disabled? (not voi-muokata?)
+                              :disabloi-autocomplete? disabloi-autocomplete?
+                              :elementin-id elementin-id)
                  arvo-atom]]
 
-               :else 
-               [ei-muokattava-elementti (y/luokat "ei-muokattava"
+               :else
+               [ei-muokattava-elementti (y/luokat
+                                          "ei-muokattava"
                                           tasaus-luokka
                                           (grid-yleiset/tiivis-tyyli skeema))
                 fmt
@@ -261,10 +267,10 @@
                 (cond
                   (and (= tyyppi :valinta) valinta-arvo valinta-nayta)
                   (sisalto-kun-rivi-disabloitu-oletus-fn sarake i)
-                  
+
                   (some? sarake-disabloitu-arvo-fn)
                   (sarake-disabloitu-arvo-fn sarake i)
-                  
+
                   :else
                   arvo)]))))})))
 
@@ -694,7 +700,7 @@
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto
                     sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus vetolaatikko-optiot disabloi-autocomplete?
-                    piilota-table-header? piilota-rivi korostusrajaus?] :as opts} skeema muokatut]
+                    piilota-table-header? piilota-rivi korostusrajaus? custom-yla-panel] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                skeema (skeema/laske-sarakkeiden-leveys
                         (filterv some? skeema))
@@ -720,7 +726,8 @@
                                 :varoituket varoitukset :huomautukset huomautukset
                                 :skeema skeema :voi-lisata? voi-lisata? :ohjaus ohjaus :uusi-id uusi-id
                                 :opts opts :paneelikomponentit paneelikomponentit :peru! peru!
-                                :virhe-viesti virhe-viesti :custom-toiminto custom-toiminto}])
+                                :virhe-viesti virhe-viesti :custom-toiminto custom-toiminto 
+                                :custom-yla-panel custom-yla-panel}])
             [:div.panel-body
              [:table.grid (merge {} (when korostusrajaus? {:class "grid-korostettu"}))
               (when-not (true? piilota-table-header?)
