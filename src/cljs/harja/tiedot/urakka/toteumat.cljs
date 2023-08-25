@@ -64,13 +64,6 @@
 (defn tallenna-erilliskustannus [ek]
   (k/post! :tallenna-erilliskustannus ek))
 
-(defn tallenna-toteuma-ja-toteumamateriaalit! [toteuma toteumamateriaalit hoitokausi sopimus-id]
-  (k/post! :tallenna-toteuma-ja-toteumamateriaalit {:toteuma toteuma
-                                                    :toteumamateriaalit toteumamateriaalit
-                                                    :hoitokausi hoitokausi
-                                                    :sopimus sopimus-id}))
-
-
 (defn hae-urakan-toteutuneet-muut-tyot [urakka-id sopimus-id [alkupvm loppupvm]]
   (log "tiedot: hae urakan muut työt" urakka-id sopimus-id alkupvm loppupvm)
   (k/post! :urakan-toteutuneet-muut-tyot
@@ -106,5 +99,3 @@
     :vahinkojen-korjaukset "Vahinkojen korjaukset"
     nil "Kaikki"
     +valitse-tyyppi+))
-
-(def valitun-materiaalitoteuman-tiedot (atom nil))
