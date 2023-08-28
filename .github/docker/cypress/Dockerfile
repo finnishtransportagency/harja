@@ -1,12 +1,16 @@
 # Ohjeet imagen buildaamiseen ja manuaaliseen ajamiseen työkoneella:
 # 1. Build: Aja ./build-image.sh
-# 2. Testaa toimintaa lokaalisti:
+# 2. Varmista, että harjan kehitystietokanta ja harja backend pyörii (ja HARJA_SALLI_OLETUSKAYTTAJA=true on harjalle asetettu)
+# 3. Testaa kontin toimintaa lokaalisti (Imitoidaan sitä, mitä GH actions tekee):
 #    docker run -it --network host \
-#     -v /absoluuttinen/polku/harja-repoon/harja/cypress:/cypress ghcr.io/finnishtransportagency/harja_cypress:latest \
-#    bash -c "echo '{}' > cypress.json && cypress run --browser chrome -c baseUrl='http://localhost:3000'"
-# 2.1. Kopioi cypress.json config  kontin sisälle
-# 2.2. aja /root/node_modules/cypress/bin/cypress run --browser chrome
-# 3. Testien pitäisi mennä läpi
+#     -v /absoluuttinen/polku/harja-repoon/harja/cypress:/harja/cypress ghcr.io/finnishtransportagency/harja_cypress:latest /bin/bash
+#
+#    Aja kontissa:
+#    $ cd /harja
+#    $ npm install transit-js
+#    Ajetaan esim. suppea testisetti, joka käyttää transit-js riippuvuutta
+#    $ cypress run --config '{"baseUrl":"http://localhost:3000"}' --config-file false --browser chrome --spec "cypress/integration/mhu*"
+# 4. Testien pitäisi mennä läpi
 
 # Lue ohjeet Dockerfilejen käyttöön Github Actions container jobeissa:
 # https://docs.github.com/en/actions/creating-actions/dockerfile-support-for-github-actions
@@ -22,7 +26,6 @@ LABEL org.opencontainers.image.source https://github.com/finnishtransportagency/
 
 # NPM pakettien versiot Docker build argumentteina
 ARG NPM_CYPRESS_VERSION
-ARG NPM_TRANSITJS_VERSION
 
 # "Docker actions must be run by the default Docker user (root)."
 USER root
@@ -103,11 +106,7 @@ ENV CI=1 \
   # See https://on.cypress.io/caching
   CYPRESS_CACHE_FOLDER=/root/.cache/Cypress \
   # Salli viittaus globaalisti asennettuihin NPM paketteihin
-  NODE_PATH=/usr/local/lib/node_modules \
-  # Lisää cypress binääri suoraan PATHiin (cypressiä sen tarvitsemien depsien kanssa (transit-js) ei voi asentaa globaalisti)
-  # Kierretään ongelma viittaamalla suoraan cypressiin PATH:ssa, jolloin komento on saatavilla kuten globaalisti asennettu
-  # cypress.
-  PATH=$PATH:/root/node_modules/cypress/bin/
+  NODE_PATH=/usr/local/lib/node_modules
 
 ### Cypressin ym. asentaminen ###
 # Katso esimerkkiä esim.: https://github.com/cypress-io/cypress-docker-images/blob/master/included/12.3.0/Dockerfile
@@ -115,20 +114,19 @@ ENV CI=1 \
 # Annetaan jokaiselle käyttäjälle lukuoikeus /root home hakemistoon, jonne cypress cachettaa.
 RUN ls -la /root && chmod 755 /root
 
-# Asenna build argumentteina annetut versiot cypress ja transitjs paketeista /root/ hakemistoon
-# NPM paketit täytyy asentaa root-hakemistoon, koska / hakemistoon NPM ei halua asentaa ja WORKDIR asetusta ei saa
-# build vaiheessa määritellä GH Actions docker imageille (lue: https://docs.github.com/en/actions/creating-actions/dockerfile-support-for-github-actions#workdir)
-RUN cd root/ \
-    && npm install "cypress@${NPM_CYPRESS_VERSION}" \
-    && npm install "transit-js@${NPM_TRANSITJS_VERSION}" \
+# Asenna build argumenttina annettu versio cypress globaalisti, jotta se on helposti saatavilla
+RUN npm install -g "cypress@${NPM_CYPRESS_VERSION}" \
     && cypress verify \
-    # Tarkista, että cypress cache ja asennus on /root hakemistossa
+    # Tarkista, että cypress cache ja asennus on /root hakemistossa ja että npm exec komento toimii oletetusti prefixillä
     && cypress cache path \
     && cypress cache list \
     && cypress info \
     && cypress version \
     # Tulosta polku mistä Node lataa tarvittavat moduulit
     && node -p 'module.paths'
+
+# Huom, koska transit-js dependency on cypress-testien itsessään tarvitsema dependency, täytyy transit-js asentaa
+# erikseen WORKDIRin sisällä GH actions checkoutin jälkeen, jotta node löytää transit-js:n testien ajon aikana.
 
 # Työkalujen versiot
 RUN echo  " Node version:    $(node -v) \n" \

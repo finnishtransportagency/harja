@@ -26,11 +26,14 @@ echo "Buildataan ja tagataan image..."
 
 # Asennetaan samat versiot cypressin tarvitsemista NPM-paketeista, kuin on käytössä paikallisessa kehityksessäkin
 readonly NPM_CYPRESS_VERSION=$(node -pe 'require("../../../package").dependencies.cypress')
-readonly NPM_TRANSITJS_VERSION=$(node -pe 'require("../../../package").dependencies["transit-js"]')
+
+if [[ -z "$NPM_CYPRESS_VERSION" ]]; then
+    echo "Cypressin NPM-paketin versiota ei löytynyt. Lopetetaan build..."
+    exit 1
+fi
 
 docker build -t ghcr.io/finnishtransportagency/harja_cypress:latest \
 --build-arg="NPM_CYPRESS_VERSION=${NPM_CYPRESS_VERSION}" \
---build-arg="NPM_TRANSITJS_VERSION=${NPM_TRANSITJS_VERSION}" \
 "${cmd_opts[@]}" .
 
 echo "Build valmis."
