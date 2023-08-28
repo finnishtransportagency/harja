@@ -11,6 +11,8 @@
 
 (defonce materiaalinakymassa? (atom false))
 
+(def valitun-materiaalitoteuman-tiedot (atom nil))
+
 (defn hae-materiaalikoodit
   "Palauttaa atomin, jossa on järjestelmän materiaalikodit.
   Jos materiaaleja ei ole vielä haettu, laukaisee niiden haun palvelimelta."
@@ -37,6 +39,12 @@
 
 (defn hae-toteuman-materiaalitiedot [urakka-id toteuma-id]
   (k/post! :hae-toteuman-materiaalitiedot {:urakka-id urakka-id :toteuma-id toteuma-id}))
+
+(defn tallenna-toteuma-ja-toteumamateriaalit! [toteuma toteumamateriaalit hoitokausi sopimus-id]
+  (k/post! :tallenna-toteuma-ja-toteumamateriaalit {:toteuma toteuma
+                                                    :toteumamateriaalit toteumamateriaalit
+                                                    :hoitokausi hoitokausi
+                                                    :sopimus sopimus-id}))
 
 (defn tallenna-toteuma-materiaaleja [urakka-id toteumamateriaalit hoitokausi sopimus-id]
   (k/post! :tallenna-toteuma-materiaaleja! {:urakka-id urakka-id
