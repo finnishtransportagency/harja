@@ -367,6 +367,7 @@
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
         tpi-hallinnolliset-toimenpiteet (hae-toimenpideinstanssi-id urakka-id "23151") ;; Hallinnolliset toimenpiteet
+        ;; Päivämäärä (käsittelypäivä) ja laskutuskuukausi, voi olla samat näissä testeissä, vaikka oikeasti ne voi vaihdella
         pvm (pvm/->pvm "15.10.2019")
         bonus_summa 1000M
         alihankintabonus_summa 7777M
@@ -376,13 +377,13 @@
         _ (poista-bonukset-ja-sanktiot-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
 
         ;; Luodaan alihankintabonus - ennen 1.10.2022 kuuluu hallinnollisiin toimenpiteisiin
-        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, rahasumma, urakka, tyyppi)
-                      VALUES (%s, %s, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
-               sopimus-id tpi-hallinnolliset-toimenpiteet pvm alihankintabonus_summa urakka-id "alihankintabonus"))
+        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
+                      VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
+               sopimus-id tpi-hallinnolliset-toimenpiteet pvm pvm alihankintabonus_summa urakka-id "alihankintabonus"))
         ;; Luodaan asiakastyytyvaisyysbonus
-        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, rahasumma, urakka, tyyppi)
-                      VALUES (%s, %s, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
-               sopimus-id tpi-hallinnolliset-toimenpiteet pvm bonus_summa urakka-id "asiakastyytyvaisyysbonus"))
+        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
+                      VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
+               sopimus-id tpi-hallinnolliset-toimenpiteet pvm pvm bonus_summa urakka-id "asiakastyytyvaisyysbonus"))
 
         ;; Luodaan sanktio
         _ (u (format "INSERT INTO sanktio (maara, perintapvm, toimenpideinstanssi, tyyppi, suorasanktio, sakkoryhma)
@@ -413,13 +414,13 @@
         _ (poista-bonukset-ja-sanktiot-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
 
         ;; Luodaan alihankintabonus
-        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, rahasumma, urakka, tyyppi)
-                      VALUES (%s, %s, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
-               sopimus-id tpi pvm bonus_summa urakka-id "alihankintabonus"))
+        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
+                      VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
+               sopimus-id tpi pvm pvm bonus_summa urakka-id "alihankintabonus"))
         ;; Luodaan asiakastyytyvaisyysbonus
-        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, rahasumma, urakka, tyyppi)
-                      VALUES (%s, %s, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
-               sopimus-id tpi pvm bonus_summa urakka-id "asiakastyytyvaisyysbonus"))
+        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
+                      VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
+               sopimus-id tpi pvm pvm bonus_summa urakka-id "asiakastyytyvaisyysbonus"))
 
         raportti (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                       hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
