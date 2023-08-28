@@ -374,6 +374,15 @@
                :vari (viivojen-varit-leveimmasta-kapeimpaan viiva)}
       :alue (maarittele-feature suolatoteuma false nil viiva))))
 
+(defmethod asia-kartalle :materiaalitoteuma [materiaalitoteuma valittu?]
+  (let [viiva (ulkoasu/materiaalitoteuman-viiva)]
+    (assoc materiaalitoteuma
+      :type :materiaalitoteuma
+      :nimi "Materiaalitoteuma"
+      :selite {:teksti "Materiaalitoteuma"
+               :vari (viivojen-varit-leveimmasta-kapeimpaan viiva)}
+      :alue (maarittele-feature materiaalitoteuma false nil viiva))))
+
 (defn- yllapitokohde [tyyppi yllapitokohde valittu? teksti]
   (let [tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila yllapitokohde))
         tila-teksti (str/lower-case (yllapitokohteet-domain/kuvaile-kohteen-tila-kartalla tila-kartalla))
