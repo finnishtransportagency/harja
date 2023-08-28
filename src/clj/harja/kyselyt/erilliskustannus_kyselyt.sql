@@ -1,5 +1,5 @@
 -- name: hae-erilliskustannus
-SELECT id, sopimus, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
+SELECT id, sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, indeksin_nimi,
        CASE
            WHEN tyyppi::TEXT IN ('lupausbonus', 'asiakastyytyvaisyysbonus')
                THEN (SELECT korotus

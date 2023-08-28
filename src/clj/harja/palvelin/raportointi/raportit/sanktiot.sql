@@ -109,6 +109,7 @@ ORDER BY yllapitoluokka;
 -- tässä haussa ei tarvitse hakea ylläpidon bonuksia sanktiot taulusta.
 SELECT ek.id,
        ek.pvm                                              AS pvm,
+       ek.laskutuskuukausi                                 AS laskutuskuukausi,
        ek.rahasumma                                        AS summa,
        ek.tyyppi::TEXT                                     AS laji,
        u.id                                                AS "urakka-id",
@@ -150,6 +151,6 @@ FROM erilliskustannus ek
                                         AND m.toimenpideinstanssi = tpi.id
                                         AND tpk2.koodi = '23150'
                                       LIMIT 1)))
-WHERE ek.pvm BETWEEN :alku AND :loppu
+WHERE ek.laskutuskuukausi BETWEEN :alku AND :loppu
   AND ek.poistettu IS NOT TRUE
   AND ek.tyyppi != 'muu'::erilliskustannustyyppi;

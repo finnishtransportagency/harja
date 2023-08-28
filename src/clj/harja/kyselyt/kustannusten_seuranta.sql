@@ -423,7 +423,7 @@ UNION ALL
 SELECT 0                        AS budjetoitu_summa,
        0                        AS budjetoitu_summa_indeksikorjattu,
        SUM((SELECT korotettuna
-              FROM erilliskustannuksen_indeksilaskenta(ek.pvm, ek.indeksin_nimi,
+              FROM erilliskustannuksen_indeksilaskenta(ek.laskutuskuukausi, ek.indeksin_nimi,
                  ek.rahasumma,ek.urakka , ek.tyyppi,
 CASE WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE ELSE FALSE END))) AS toteutunut_summa,
        CASE
@@ -455,7 +455,7 @@ FROM erilliskustannus ek
 WHERE s.urakka = :urakka
   AND ek.sopimus = s.id
   AND ek.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
-  AND ek.pvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+  AND ek.laskutuskuukausi BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND ek.poistettu IS NOT TRUE
 GROUP BY ek.tyyppi, ek.indeksin_nimi
 UNION ALL

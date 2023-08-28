@@ -216,7 +216,7 @@ SELECT ek.id,
                                     AND m.toimenpideinstanssi = tpi.id
                                     AND tpk2.koodi = '23150'
                                   LIMIT 1)))
-   AND ek.pvm BETWEEN :alku AND :loppu
+   AND ek.laskutuskuukausi BETWEEN :alku AND :loppu
    AND ek.poistettu IS NOT TRUE
    AND ek.tyyppi != 'muu'::erilliskustannustyyppi
 
