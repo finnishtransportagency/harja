@@ -29,6 +29,8 @@ jobs:
   # Build job
   build:
     name: "Prod build"
+    # FIXME: Disabloitu väliaikaisesti
+    if: false
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -81,10 +83,39 @@ jobs:
           echo "Building uberjar"
           lein uberjar
 
-      - name: Upload uberjar as artifact
+#      - name: Name build artifact using the branch name
+#        id: artifact-name
+#        env:
+#          REF: ${{ github.ref }}
+#        run: echo "::set-output name=value::${REF////-}-uberjar"
+#
+#      - name: Delete old branch build artifacts (only latest is needed)
+#        uses: actions/github-script@v4
+#        id: artifact
+#        with:
+#          script: |
+#            const { owner, repo } = context.issue
+#
+#            const res = await github.actions.listArtifactsForRepo({
+#              owner,
+#              repo,
+#            })
+#
+#            res.data.artifacts
+#              .filter(({ name }) => name === '${{ steps.artifact-name.outputs.value }}')
+#              .forEach(({ id }) => {
+#                github.actions.deleteArtifact({
+#                  owner,
+#                  repo,
+#                  artifact_id: id,
+#                })
+#              })
+
+      - name: Upload a new build artifact
         uses: actions/upload-artifact@v3
         with:
           name: harja-uberjar
+          #name: ${{ steps.artifact-name.outputs.value }}
           path: ./target/harja-0.0.1-SNAPSHOT-standalone.jar
           if-no-files-found: error
           retention-days: 1
@@ -102,43 +133,47 @@ jobs:
   # Halutessaan testien depsujen asentelusta voi tehdä erillisen composite-actionin ja tallentaa sen .github/actions kansioon
   # Katso esimerkiksi mitä "Setup Clojure environment" action tekee: Se asentaa java-11 ja clojure-työkalut.
   #
-  basic-tests:
-    name: "Perustestit"
-    runs-on: ubuntu-latest
-    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
-    permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-      packages: read
+#  basic-tests:
+#    name: "Perustestit"
+#    runs-on: ubuntu-latest
+#    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+#    permissions:
+#      # Contents read lupaa tarvitaan checkout actionissa
+#      contents: read
+#      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
+#      packages: read
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#
+#      # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
+#      - name: Start test database
+#        uses: ./.github/actions/start-test-db
+#        with:
+#          registry: ${{ env.GH_DOCKER_REGISTRY }}
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Setup clojure environment
+#        uses: ./.github/actions/setup-clojure-env
+#
+#      # TODO: Aja halutut testit
+#      #- name: Run unit tests jne.
+#      #  run: lein test2junit
+#
+#      #
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
-      - name: Start test database
-        uses: ./.github/actions/start-test-db
-        with:
-          registry: ${{ env.GH_DOCKER_REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Setup clojure environment
-        uses: ./.github/actions/setup-clojure-env
-
-      # TODO: Aja halutut testit
-      #- name: Run unit tests jne.
-      #  run: lein test2junit
-
-      #
   e2e-tests:
-    name: "e2e-testit"
+    name: "e2e-testit (Cypress)"
+    #needs: build
     runs-on: ubuntu-latest
     env:
       # Asetetaan Suomen aikavyöhyke testejä varten
       TZ: "EET"
-    needs: build
+      HARJA_SALLI_OLETUSKAYTTAJA: "true"
+      HARJA_DEV_YMPARISTO: "false"
+
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
       # Contents read lupaa tarvitaan checkout actionissa
@@ -149,6 +184,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Check ENV
+        run: |
+          echo "Salli harjan oletuskäyttäjä? ${HARJA_SALLI_OLETUSKAYTTAJA}"
+          echo "Harja dev ympäristö? ${HARJA_DEV_YMPARISTO}"
+          echo "Aikavyöhyke: ${TZ}"
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -165,24 +206,26 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
 
-      - name: Download uberjar artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: harja-uberjar
-          # Downloads to the same directory as the uberjar is built to
-          path: ./target
+#      - name: Get the build artifact name
+#        id: artifact-name
+#        env:
+#          REF: ${{ github.ref }}
+#        run: echo "::set-output name=value::${REF////-}-uberjar"
 
-      # Pohja cypress-kontin käynnistämiselle
-      # TODO: Toteuta. Ktso composite-actionin pohja
-#      - name: Start cypress
-#        uses: ./.github/actions/start-cypress
+#      - name: Download uberjar artifact
+#        uses: actions/download-artifact@v3
 #        with:
-#          registry: ${{ env.GH_DOCKER_REGISTRY }}
-#          username: ${{ github.actor }}
-#          password: ${{ secrets.GITHUB_TOKEN }}
+#          name: harja-uberjar
+#          #name: ${{ steps.artifact-name.outputs.value }}
+#          # Downloads to the same directory as the uberjar is built to
+#          path: ./target
 
       # TODO: Käynnistä aiemmin artifactina ladattu Harja-jar
 
-      # TODO: Aja cypress testit käynnistettyä cypress-konttia varten.
-      #      Harja jar käyttää tietokantanaan jobin alussa käynnistetty testdb:tä
-
+      - name: Run cypress
+        uses: ./.github/actions/start-cypress
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_WORKSPACE: ${{ env.GITHUB_WORKSPACE }}
