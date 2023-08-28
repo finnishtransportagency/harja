@@ -633,20 +633,32 @@
     urakoitsija-maksaa? :urakoitsija-maksaa? :as tila}]
   (let [kohdistukset-lkm (count kohdistukset)
         resetoi-kohdistukset (fn [kohdistukset]
-                               [tila/kulut-kohdistus-default])]
+                               [tila/kulut-kohdistus-default])
+        kulutyyppi (cond
+                     vuoden-paatos-valittu? :vuoden-paatos
+                     (> (count kohdistukset) 1) :eri-tehtavat
+                     (and
+                       (not vuoden-paatos-valittu?)
+                       (= (count kohdistukset) 1)
+                       (:lisatyo? (first kohdistukset))) :lisatyo
+                     :else :normaali-kulu)]
     [:div.row {:style {:max-width "960px"}}
      [:div.palstat
       [:div.palsta
        [:h3 {:style {:width "100%"}}
-        "Mihin työhön kulu liittyy?"]
+        "Mihin työhön kulu liittyy?"]]]
+      [:div.palstat
+       ;; T3 tehtäväryhmää ei näytetä aina - vuoden päätökselle ja lisätöille ei näytetä
+       (when (or (= kulutyyppi :normaali-kulu) (= kulutyyppi :eri-tehtavat))
+         [yleiset/info-laatikko :vahva-ilmoitus
+          "Tilaajan rahavaraus (T3) -tehtäväryhmälle ei kirjata enää kuluja tällä lomakkeella. T3-kulut muodustuvat Harjaan automaattisesti samalla, kun hoidon projektipäällikkö kirjaa alihankintasopimusten maksuehtobonuksen."
+          nil nil])]
+     [:div.palstat
+      [:div.palsta
        [vayla-radio {:id "kulu-normaali"
                      :teksti "Normaali suunniteltu tai määrämitattava hankintakulu"
                      :ryhma "kulu-group"
-                     :oletus-valittu? (cond
-                                        vuoden-paatos-valittu? false
-                                        (> (count kohdistukset) 1) false
-                                        (= "lisatyo" (:maksueratyyppi (first kohdistukset))) false
-                                        :else true)
+                     :oletus-valittu? (if (= kulutyyppi :normaali-kulu) true false)
                      :disabloitu? (or (not= 0 haetaan) kulu-lukittu?)
                      :muutos-fn (r/partial #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
                                                                              resetoi-kohdistukset)
@@ -663,9 +675,7 @@
         [:input#kulu-useampi.vayla-radio
          {:type :radio
           :name "kulu-group"
-          :default-checked (if (and (not vuoden-paatos-valittu?) (> (count kohdistukset) 1))
-                             true
-                             false)
+          :default-checked (if (= kulutyyppi :eri-tehtavat) true false)
           :disabled (or (not= 0 haetaan) kulu-lukittu?)
           :on-change #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
                                                        lisaa-kohdistus
@@ -689,11 +699,7 @@
         [:input#kulu-lisatyo.vayla-radio
          {:type :radio
           :name "kulu-group"
-          :default-checked (cond
-                             vuoden-paatos-valittu? false
-                             (> (count kohdistukset) 1) false
-                             (not (= "lisatyo" (:maksueratyyppi (first kohdistukset)))) false
-                             :else true)
+          :default-checked (if (= kulutyyppi :lisatyo) true false)
           :disabled (or (not= 0 haetaan) kulu-lukittu?)
           :on-change #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
                                                        (fn [kohdistukset]
@@ -719,7 +725,7 @@
         [:input#kulu-hoitovuoden-paatos.vayla-radio
          {:type :radio
           :name "kulu-group"
-          :default-checked vuoden-paatos-valittu?
+          :default-checked (if (= kulutyyppi :vuoden-paatos) true false)
           :disabled (or (not= 0 haetaan) kulu-lukittu?)
           :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
                                                        (fn [_]
