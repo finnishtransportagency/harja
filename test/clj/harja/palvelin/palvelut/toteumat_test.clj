@@ -435,13 +435,11 @@
     (let [tmidt (flatten (q "SELECT id FROM toteuma_materiaali WHERE maara=192837"))
           tid (ffirst (q "SELECT id from toteuma WHERE suorittajan_nimi='UNIT TEST'"))
           uusi-lisatieto "NYT PITÄIS OLLA MUUTTUNUT."
-          tierekisteriosoite {
-                              :numero 20
+          tierekisteriosoite {:numero 20
                               :alkuosa 1
                               :alkuetaisyys 1000
                               :loppuosa 2
-                              :loppuetaisyys 2000
-                              }
+                              :loppuetaisyys 2000}
           sopimuksen-kaytetty-materiaali-jalkeen (q (str "SELECT alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus))]
       ;; tarkistetaan että kaikki cachesta palautetut tulokset löytyvät expected-setistä
       (is (= true (every? #(some?
