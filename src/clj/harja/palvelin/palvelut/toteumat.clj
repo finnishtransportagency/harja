@@ -742,7 +742,7 @@
                             (let [urakka-id (:urakka t)
                                   toteuma-id (:id t)
                                   tr-osoite (:tierekisteriosoite t)
-                                  reitti-viiva (tr-q/hae-tr-viiva c tr-osoite)
+                                  reitti-viiva (when tr-osoite (tr-q/hae-tr-viiva c tr-osoite))
                                   _ (log/debug "REITTI:" (pr-str reitti-viiva))
                                   toteuman-alkuperainen-pvm (toteumat-q/hae-toteuman-alkanut-pvm-idlla c {:id toteuma-id})
                                   toteuma (if (id/id-olemassa? toteuma-id)
