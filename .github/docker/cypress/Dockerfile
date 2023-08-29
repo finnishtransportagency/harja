@@ -134,3 +134,8 @@ RUN echo  " Node version:    $(node -v) \n" \
     "Debian version:  $(cat /etc/debian_version) \n" \
     "Chrome version:  $(google-chrome --version) \n" \
     "User:          $(whoami) \n"
+
+
+COPY entrypoint.sh /usr/local/bin
+
+ENTRYPOINT ["entrypoint.sh"]
