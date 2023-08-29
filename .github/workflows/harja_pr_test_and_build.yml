@@ -164,7 +164,7 @@ jobs:
 
   e2e-tests:
     name: "e2e-testit (Cypress)"
-    #needs: build
+    needs: build
     runs-on: ubuntu-latest
     env:
       # Asetetaan Suomen aikavyöhyke testejä varten
