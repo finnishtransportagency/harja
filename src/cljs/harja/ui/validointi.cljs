@@ -375,7 +375,8 @@
 (defn validoi-ja-anna-virheet
   ([gridin-tiedot skeema rivivalidointi taulukkovalidointi tyyppi] (validoi-ja-anna-virheet gridin-tiedot skeema rivivalidointi taulukkovalidointi tyyppi nil))
   ([gridin-tiedot skeema rivivalidointi taulukkovalidointi tyyppi poistettu-avain]
-   (let [virheet (into {}
+   (let [skeema (remove nil? skeema)
+         virheet (into {}
                        (keep (fn [[index rivi]]
                                (let [kenttien-virheet (validoi-rivin-kentat gridin-tiedot rivi skeema tyyppi)
                                      rivin-virheet (when rivivalidointi

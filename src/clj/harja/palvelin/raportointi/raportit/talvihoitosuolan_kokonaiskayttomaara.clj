@@ -128,7 +128,9 @@
         (dec (pvm/vuosi (pvm/nyt)))))))
 
 (defn jasenna-raportin-otsikko [urakan-tiedot hoitovuodet]
-  (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu " (pvm/pvm (:alkupvm urakan-tiedot)) " - " (str "30.09." (inc (last hoitovuodet)))))
+  (if hoitovuodet
+    (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu " (pvm/pvm (:alkupvm urakan-tiedot)) " - " (str "30.09." (inc (last hoitovuodet))))
+    (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu - Ei valmistuneita hoitovuosia")))
 
 (defn suorita [db _ {:keys [urakka-id hallintayksikko-id] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
@@ -138,53 +140,58 @@
         urakan-tiedot (first (urakat-kyselyt/hae-yksittainen-urakka db {:urakka_id urakka-id}))
         urakan_alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         viimeinen-mahdollinen-vuosi (paattele-raportin-viimeinen-hoitovuosi (:loppupvm urakan-tiedot))
-        hoitovuodet (range
-                      (pvm/vuosi (:alkupvm urakan-tiedot))
-                      ;; Näytetään vain päättyneiltä hoitokausilta
-                      viimeinen-mahdollinen-vuosi)
+        ;; Jos urakka on vasta alkanut ja valmistuneita hoitokausia ei ole, niin ei haeta tietoja
+        hoitovuodet (if (not= viimeinen-mahdollinen-vuosi (pvm/vuosi (:alkupvm urakan-tiedot)))
+                      (range
+                        (pvm/vuosi (:alkupvm urakan-tiedot))
+                        ;; Näytetään vain päättyneiltä hoitokausilta
+                        viimeinen-mahdollinen-vuosi)
+                      nil)
+
         ;; Haetaan hoitovuodelle keskilämpötilojen keskiarvo tarkastelujaksolla
         urakan-lampotilat (lampotilat-kyselyt/hae-urakan-lampotilat db {:urakka urakka-id})
 
         ;; Koostetaan data map tyyppiseen rakenteeseen
-        data (reduce (fn [d vuosi]
-                       (let [lampotila-vuodelle (some (fn [rivi]
-                                                        (when (= vuosi (pvm/vuosi (:alkupvm rivi)))
-                                                          rivi))
-                                                  urakan-lampotilat)
-                             ;; Päätellään pitkän aikajakson keskilämpötila urakan alkuvuodesta
-                             keskilampo-pitka (paattele-kaytettava-keskilampotilajakso urakan_alkuvuosi lampotila-vuodelle)
-                             keskilampo (:keskilampotila lampotila-vuodelle)
-                             ;; Lämpötilojen erotus celciuksena
-                             erotus-c (if (and (not (nil? keskilampo)) (not (nil? keskilampo-pitka)))
-                                        (- keskilampo keskilampo-pitka)
-                                        0)
-                             lampotilan-vaikutus (lampotilan-vaikutus-suolan-kulutukseen erotus-c)
+        data (when hoitovuodet
+               (reduce (fn [d vuosi]
+                         (let [lampotila-vuodelle (some (fn [rivi]
+                                                          (when (= vuosi (pvm/vuosi (:alkupvm rivi)))
+                                                            rivi))
+                                                    urakan-lampotilat)
+                               ;; Päätellään pitkän aikajakson keskilämpötila urakan alkuvuodesta
+                               keskilampo-pitka (paattele-kaytettava-keskilampotilajakso urakan_alkuvuosi lampotila-vuodelle)
+                               keskilampo (:keskilampotila lampotila-vuodelle)
+                               ;; Lämpötilojen erotus celciuksena
+                               erotus-c (if (and (not (nil? keskilampo)) (not (nil? keskilampo-pitka)))
+                                          (- keskilampo keskilampo-pitka)
+                                          0)
+                               lampotilan-vaikutus (lampotilan-vaikutus-suolan-kulutukseen erotus-c)
 
-                             ;; HAetaan suolarajoitukset
-                             suolarajoitukset (first (suolarajoitus-kyselyt/hae-talvisuolan-kokonaiskayttoraja db
-                                                       {:urakka-id urakka-id
-                                                        :hoitokauden-alkuvuosi vuosi}))
-                             suolan-kokonaismaara (first (materiaalit-kyselyt/hae-talvisuolan-hoitovuoden-kokonaismaara db
-                                                           {:urakka-id urakka-id
-                                                            :alkupvm (pvm/hoitokauden-alkupvm vuosi)
-                                                            :loppupvm (pvm/hoitokauden-loppupvm (inc vuosi))}))
-                             toteuma (:kokonaismaara suolan-kokonaismaara)
-                             kohtuullistettu-kayttoraja (kohtuullistettu-kayttoraja (:talvisuolan_kayttoraja suolarajoitukset) lampotilan-vaikutus)
-                             erotus-toteuma (if (and
-                                                  (not (nil? kohtuullistettu-kayttoraja))
-                                                  (not (nil? toteuma)))
-                                              (- toteuma kohtuullistettu-kayttoraja)
-                                              0)]
-                         (conj d {:hoitovuosi (str vuosi "-" (inc vuosi))
-                                  :keskilampotila-jaksolla keskilampo
-                                  :keskilampotila-pitkalla-aikavalilla keskilampo-pitka
-                                  :erotus-celcius erotus-c
-                                  :lampotilan-vaikutus (str (when (> lampotilan-vaikutus 0) "+") lampotilan-vaikutus " %")
-                                  :kayttoraja (:talvisuolan_kayttoraja suolarajoitukset)
-                                  :kohtuull-kayttoraja kohtuullistettu-kayttoraja
-                                  :toteuma toteuma
-                                  :erotus-toteuma erotus-toteuma})))
-               [] hoitovuodet)
+                               ;; HAetaan suolarajoitukset
+                               suolarajoitukset (first (suolarajoitus-kyselyt/hae-talvisuolan-kokonaiskayttoraja db
+                                                         {:urakka-id urakka-id
+                                                          :hoitokauden-alkuvuosi vuosi}))
+                               suolan-kokonaismaara (first (materiaalit-kyselyt/hae-talvisuolan-hoitovuoden-kokonaismaara db
+                                                             {:urakka-id urakka-id
+                                                              :alkupvm (pvm/hoitokauden-alkupvm vuosi)
+                                                              :loppupvm (pvm/hoitokauden-loppupvm (inc vuosi))}))
+                               toteuma (:kokonaismaara suolan-kokonaismaara)
+                               kohtuullistettu-kayttoraja (kohtuullistettu-kayttoraja (:talvisuolan_kayttoraja suolarajoitukset) lampotilan-vaikutus)
+                               erotus-toteuma (if (and
+                                                    (not (nil? kohtuullistettu-kayttoraja))
+                                                    (not (nil? toteuma)))
+                                                (- toteuma kohtuullistettu-kayttoraja)
+                                                0)]
+                           (conj d {:hoitovuosi (str vuosi "-" (inc vuosi))
+                                    :keskilampotila-jaksolla keskilampo
+                                    :keskilampotila-pitkalla-aikavalilla keskilampo-pitka
+                                    :erotus-celcius erotus-c
+                                    :lampotilan-vaikutus (str (when (> lampotilan-vaikutus 0) "+") lampotilan-vaikutus " %")
+                                    :kayttoraja (:talvisuolan_kayttoraja suolarajoitukset)
+                                    :kohtuull-kayttoraja kohtuullistettu-kayttoraja
+                                    :toteuma toteuma
+                                    :erotus-toteuma erotus-toteuma})))
+                 [] hoitovuodet))
 
         ;; Konteksti on tätä kirjoittaessa rajoitettu urakkaan, mutta jos myöhemmin huomataan, että
         ;; ely tai koko maan taso halutaan, niin riittää, että raportin asetuksista määritellään kontekstiin puuttuvat tiedot

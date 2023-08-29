@@ -143,7 +143,9 @@
                                                                                          :tr-loppuosa (:tr-loppuosa rivi)
                                                                                          :tr-loppuetaisyys (:tr-loppuetaisyys rivi)}]
                                                                            (when (:leveys rivi)
-                                                                             (* (:leveys rivi) (tr/laske-tien-pituus {} tie)))))}]
+                                                                             (fmt/desimaaliluku-opt
+                                                                               (* (:leveys rivi) (tr/laske-tien-pituus {} tie))
+                                                                               1))))}]
                                                43           ;; RJYR
                                                []}
         avaimet (get alusta-toimenpidespesifit-lisaavaimet (:toimenpide alusta))

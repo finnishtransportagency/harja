@@ -46,7 +46,6 @@
             [harja.domain.toimenpidekoodi :as tpk]
             [harja.domain.kayttaja :as kayttaja]
             [harja.fmt :as fmt]
-            [harja.pvm :as pvm]
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kohde :as kohde]
@@ -245,10 +244,6 @@
               {:otsikko "Nykyinen päällyste" :tyyppi :string
                :hae (hakufunktio #{[:yllapitokohde :nykyinen-paallyste]}
                                  #(paallystys-ja-paikkaus/hae-paallyste-koodilla (get-in % [:yllapitokohde :nykyinen-paallyste])))}
-              {:otsikko "KVL" :tyyppi :string
-               :hae (hakufunktio
-                      #{[:yllapitokohde :keskimaarainen-vuorokausiliikenne]}
-                      #(fmt/desimaaliluku-opt (get-in % [:yllapitokohde :keskimaarainen-vuorokausiliikenne]) 0))}
               {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
               {:otsikko "Tila" :tyyppi :string
                :hae (hakufunktio

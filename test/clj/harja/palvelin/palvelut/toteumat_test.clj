@@ -11,6 +11,7 @@
             [harja.tyokalut.functor :refer [fmap]]
             [harja.palvelin.palvelut.toteumat :as toteumat]
             [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
+            [harja.palvelin.palvelut.materiaalit :refer :all]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]))
 
@@ -32,6 +33,9 @@
                           :toteumat (component/using
                                       (toteumat/->Toteumat)
                                       [:http-palvelin :db :db-replica :karttakuvat])
+                          :hae-toteuman-materiaalitiedot (component/using
+                                                           (->Materiaalit)
+                                                           [:http-palvelin :db])
                           :tehtavamaarat (component/using
                                            (tehtavamaarat/->Tehtavamaarat false)
                                            [:http-palvelin :db]))))))
@@ -40,7 +44,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -431,6 +435,11 @@
     (let [tmidt (flatten (q "SELECT id FROM toteuma_materiaali WHERE maara=192837"))
           tid (ffirst (q "SELECT id from toteuma WHERE suorittajan_nimi='UNIT TEST'"))
           uusi-lisatieto "NYT PITÄIS OLLA MUUTTUNUT."
+          tierekisteriosoite {:numero 20
+                              :alkuosa 1
+                              :alkuetaisyys 1000
+                              :loppuosa 2
+                              :loppuetaisyys 2000}
           sopimuksen-kaytetty-materiaali-jalkeen (q (str "SELECT alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus))]
       ;; tarkistetaan että kaikki cachesta palautetut tulokset löytyvät expected-setistä
       (is (= true (every? #(some?
@@ -452,7 +461,8 @@
                    (assoc :maara 8712))])
 
       (reset! toteuma (-> (assoc @toteuma :id tid)
-                          (assoc :lisatieto uusi-lisatieto)))
+                          (assoc :lisatieto uusi-lisatieto)
+                          (assoc :tierekisteriosoite tierekisteriosoite)))
 
       (is (not (nil? (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-ja-toteumamateriaalit +kayttaja-jvh+
                                      {:toteuma            @toteuma
@@ -466,6 +476,19 @@
 
       (is (= uusi-lisatieto (ffirst (q "SELECT lisatieto FROM toteuma WHERE id=" tid))))
       (is (= 8712 (int (ffirst (q "SELECT maara FROM toteuma_materiaali WHERE id=" (second tmidt))))))
+
+      (let [toteuman-materiaalit (kutsu-palvelua (:http-palvelin jarjestelma) :hae-toteuman-materiaalitiedot +kayttaja-jvh+
+                                   {:urakka-id urakka
+                                    :toteuma-id tid}
+                                   )
+            haettu-osoite (:tierekisteriosoite toteuman-materiaalit)]
+        (is (not (nil? (:tierekisteriosoite toteuman-materiaalit))))
+        (is (not (nil? (:sijainti toteuman-materiaalit))))
+        (is (= 20 (:numero haettu-osoite)))
+        (is (= 1 (:alkuosa haettu-osoite)))
+        (is (= 1000 (:alkuetaisyys haettu-osoite)))
+        (is (= 2 (:loppuosa haettu-osoite)))
+        (is (= 2000 (:loppuetaisyys haettu-osoite))))
 
       (u "DELETE FROM toteuma_materiaali WHERE id in (" (clojure.string/join "," tmidt) ")")
       (u "DELETE FROM toteuma WHERE id=" tid))))
@@ -524,7 +547,7 @@
       (is (= hoitoluokittaiset-jalkeen-odotettu hoitoluokittaiset-jalkeen ) "hoitoluokittaisten cache jalkeen muutoksen"))))
 
 
-(deftest uusi-materliaali-cachet-pysyy-jiirissa
+(deftest uusi-materiaali-cachet-pysyy-jiirissa
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
         sopimuksen-kaytetty-mat-ennen-odotettu (set [])
