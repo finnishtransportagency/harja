@@ -129,9 +129,11 @@ jobs:
       - name: Setup clojure environment
         uses: ./.github/actions/setup-clojure-env
 
-      # TODO: Aja halutut testit
       - name: Run backend tests
         run: lein test
+
+      - name: Run integration tests
+        run: lein test :integraatio
 
       #
   e2e-tests:
