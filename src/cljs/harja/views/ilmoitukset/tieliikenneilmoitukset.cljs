@@ -401,8 +401,7 @@
          :otsikkorivi-luokka "saapunut" :leveys ""
          :solun-tooltip (fn [rivi]
                           {:tooltip-tyyppi :komponentti
-                           :tooltip-komponentti (tunniste-tooltip (:tunniste rivi))
-                           :suunta :alas})}
+                           :tooltip-komponentti (tunniste-tooltip (:tunniste rivi))})}
         {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
          :tyyppi :komponentti
          :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))
@@ -416,8 +415,7 @@
          :leveys ""
          :luokka "lisatieto-rivi"
          :solun-tooltip (fn [rivi]
-                          {:teksti (:lisatieto rivi)
-                           :suunta :alas})}
+                          {:teksti (:lisatieto rivi)})}
 
         {:otsikko "Tie" :nimi :tierekisteri
          :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %) {:teksti-tie? false})

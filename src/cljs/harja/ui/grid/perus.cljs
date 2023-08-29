@@ -225,11 +225,12 @@
                     haettu-arvo (if hae
                                   (hae rivi)
                                   (get rivi nimi))
-                    tooltippi {:tooltip-disabloitu? (when-not (and solun-tooltip (solun-tooltip rivi)) true)
-                                        :suunta :oikea
-                                        }
-                    tooltip-params (if (and solun-tooltip (:suunta (solun-tooltip rivi))) (assoc tooltippi :suunta (:suunta (solun-tooltip rivi))) tooltippi)
-                    ]
+                    solun-tooltip? (and solun-tooltip (solun-tooltip rivi))
+                    tooltip-params {:tooltip-disabloitu? (when-not solun-tooltip? true)}
+                    tooltip-suunta-fn (fn [rivi] (:suunta (solun-tooltip rivi)))
+                    tooltip-params (if (and solun-tooltip? (tooltip-suunta-fn rivi))
+                                     (assoc tooltip-params :suunta (tooltip-suunta-fn rivi))
+                                     tooltip-params)]
                 (cond
                   (and (= :avattava-rivi tyyppi) (not isanta-rivin-id))
                   ^{:key (str "avattava-rivi-tila" id)}
