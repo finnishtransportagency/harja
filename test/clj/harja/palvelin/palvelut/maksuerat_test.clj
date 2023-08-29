@@ -56,15 +56,16 @@
         _ (poista-bonukset-ja-sanktiot-aikavalilta urakka-id (pvm/->pvm "01.10.2021") (pvm/->pvm "30.09.2026"))
 
         ;; Luodaan alihankintabonus vuodelle 2021 - kaikki bonukset menevät hoidon johto toimenpideinstanssille
-        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, rahasumma, urakka, tyyppi)
-                      VALUES (%s, %s, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
-               sopimus-id tpi-hoidonjohto pvm-2021 bonus_summa urakka-id "alihankintabonus"))
+        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
+                      VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
+               sopimus-id tpi-hoidonjohto pvm-2021 pvm-2021 bonus_summa urakka-id "alihankintabonus"))
         ;; Luodaan asiakastyytyvaisyysbonus vuodelle 2021
-        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, rahasumma, urakka, tyyppi)
-                      VALUES (%s, %s, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
-               sopimus-id tpi-hoidonjohto pvm-2021 bonus_summa urakka-id "asiakastyytyvaisyysbonus"))
+        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
+                      VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
+               sopimus-id tpi-hoidonjohto pvm-2021 pvm-2021 bonus_summa urakka-id "asiakastyytyvaisyysbonus"))
         maksuerat (kutsu-palvelua (:http-palvelin jarjestelma)
                     :hae-urakan-maksuerat +kayttaja-jvh+ urakka-id)
+        _ (println "maksuerat: " (pr-str maksuerat))
 
         ;; Kokonaishintaiset
         kokonaishintaiset-hoidonjohto (first (filter (fn [rivi]
@@ -91,13 +92,13 @@
         ;; Poistetaan kaikki bonukset ja sanktiot urakalta
         _ (poista-bonukset-ja-sanktiot-aikavalilta urakka-id (pvm/->pvm "01.10.2021") (pvm/->pvm "30.09.2026"))
         ;; Luodaan alihankintabonus vuodelle 2022
-        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, rahasumma, urakka, tyyppi)
-                      VALUES (%s, %s, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
-               sopimus-id tpi-yllapito pvm-2022 bonus_summa urakka-id "alihankintabonus"))
+        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
+                      VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
+               sopimus-id tpi-yllapito pvm-2022 pvm-2022 bonus_summa urakka-id "alihankintabonus"))
         ;; Luodaan asiakastyytyvaisyysbonus vuodelle 2022
-        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, rahasumma, urakka, tyyppi)
-                      VALUES (%s, %s, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
-               sopimus-id tpi-hoidonjohto pvm-2022 bonus_summa urakka-id "asiakastyytyvaisyysbonus"))
+        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
+                      VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
+               sopimus-id tpi-hoidonjohto pvm-2022 pvm-2022 bonus_summa urakka-id "asiakastyytyvaisyysbonus"))
 
         maksuerat (kutsu-palvelua (:http-palvelin jarjestelma)
                     :hae-urakan-maksuerat +kayttaja-jvh+ urakka-id)

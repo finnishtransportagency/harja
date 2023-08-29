@@ -138,17 +138,17 @@
           (tyyppi = 'muu-bonus')
           AND toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
           AND poistettu IS NOT TRUE
-          AND pvm >= '2019-10-01'::DATE AND pvm <= '2020-03-31'::DATE AND sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))
+          AND laskutuskuukausi >= '2019-10-01'::DATE AND laskutuskuukausi <= '2020-03-31'::DATE AND sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))
           lupaus-ja-asiakastyytyvaisyys-bonus (ffirst (q (str "SELECT SUM(rahasumma) FROM erilliskustannus WHERE
           (tyyppi = 'lupausbonus' OR tyyppi = 'asiakastyytyvaisyysbonus' )
           AND toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
           AND poistettu IS NOT TRUE
-          AND pvm >= '2019-10-01'::DATE AND pvm <= '2020-03-31'::DATE AND sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))
+          AND laskutuskuukausi >= '2019-10-01'::DATE AND laskutuskuukausi <= '2020-03-31'::DATE AND sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))
           alihankinta-ja-tavoitepalkkio (ffirst (q (str "SELECT SUM(rahasumma) FROM erilliskustannus WHERE
           ( tyyppi = 'alihankintabonus' OR tyyppi = 'tavoitepalkkio' )
           AND toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id  "
           AND poistettu IS NOT TRUE
-          AND pvm >= '2019-10-01'::DATE AND pvm <= '2020-03-31'::DATE AND sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))
+          AND laskutuskuukausi >= '2019-10-01'::DATE AND laskutuskuukausi <= '2020-03-31'::DATE AND sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))
           lupaus-ja-asiakastyytyvaisyys-bonus-indeksilla (first (laskutusyhteenveto-kyselyt/hoitokautta-edeltavan-syyskuun-indeksikorotus
                                                    (:db jarjestelma)
                                                    {:hoitokauden-alkuvuosi 2019

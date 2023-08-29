@@ -367,7 +367,7 @@ UNION ALL
                                            WHERE tpi.urakka = "urakka"
                                              AND m.toimenpideinstanssi = tpi.id
                                              AND tpk2.koodi = '23150')
-            AND ek.pvm BETWEEN '"alkupvm"'::DATE AND '"loppupvm"'::DATE
+            AND ek.laskutuskuukausi BETWEEN '"alkupvm"'::DATE AND '"loppupvm"'::DATE
             AND ek.poistettu IS NOT TRUE
           GROUP BY ek.tyyppi, ek.indeksin_nimi"))
 
