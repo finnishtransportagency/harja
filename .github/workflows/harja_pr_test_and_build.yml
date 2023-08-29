@@ -29,8 +29,6 @@ jobs:
   # Build job
   build:
     name: "Prod build"
-    # FIXME: Disabloitu väliaikaisesti
-    if: false
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -222,9 +220,20 @@ jobs:
 
       - name: Start Harja jar
         run: |
-          java -cp :harja.jar harja.palvelin.main
-
-      # TODO: Käynnistä aiemmin artifactina ladattu Harja-jar
+          java -cp :harja.jar harja.palvelin.main > harja.out 2>&1 &
+          javapid=$!
+          
+          for i in $(seq 4); do
+            curl localhost:3000 > /dev/null 2>&1 && break
+            if kill -0 $javapid; then
+              echo "Harja ei ole vielä käynnissä, odotetaan 10 sec..."
+              sleep 10
+            else
+              echo "Harja ei käynnisty. Lopetetaan..."
+              cat harja.out
+              exit 1
+            fi
+          done
 
       - name: Run cypress
         uses: ./.github/actions/start-cypress
