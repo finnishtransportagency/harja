@@ -215,12 +215,11 @@ jobs:
         with:
           name: harja-uberjar
           #name: ${{ steps.artifact-name.outputs.value }}
-          # Downloads to the same directory as the uberjar is built to
-          path: ./target
+          path: ./
 
       - name: Start Harja jar
         run: |
-          java -cp :harja.jar harja.palvelin.main > harja.out 2>&1 &
+          java -cp :harja-0.0.1-SNAPSHOT-standalone.jar harja.palvelin.main > harja.out 2>&1 &
           javapid=$!
           
           for i in $(seq 4); do
