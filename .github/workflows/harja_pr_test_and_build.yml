@@ -36,6 +36,8 @@ jobs:
       contents: read
       # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
       packages: read
+      # Actions write oikeudella voidaan esim. listata ja poistaa artifacteja
+      actions: write
 
     steps:
       - name: Checkout code
@@ -93,19 +95,17 @@ jobs:
         id: artifact
         with:
           script: |
-            const { owner, repo } = context.issue
-
             const res = await github.rest.actions.listArtifactsForRepo({
-              owner,
-              repo,
+              context.repo.owner,
+              context.repo.repo,
             })
 
             res.data.artifacts
               .filter(({ name }) => name === '${{ steps.artifact-name.outputs.value }}')
               .forEach(({ id }) => {
                 github.rest.actions.deleteArtifact({
-                  owner,
-                  repo,
+                  context.repo.owner,
+                  context.repo.repo,
                   artifact_id: id,
                 })
               })
