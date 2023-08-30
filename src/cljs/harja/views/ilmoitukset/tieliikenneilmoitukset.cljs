@@ -394,7 +394,8 @@
             (fmt/lyhennetty-urakan-nimi (:urakkanimi %))) 
            :solun-tooltip (fn [rivi]
                             (when-not (= (:urakkanimi rivi) (or (:lyhytnimi rivi) (fmt/lyhennetty-urakan-nimi (:urakkanimi rivi))))
-                              {:teksti (:urakkanimi rivi)}))})
+                              {:teksti (:urakkanimi rivi)
+                               :suunta :oikea}))})
         {:otsikko "Saapunut" :nimi :valitetty-urakkaan
          :hae (comp pvm/pvm-aika :valitetty-urakkaan)
          :otsikkorivi-luokka "saapunut" :leveys ""
