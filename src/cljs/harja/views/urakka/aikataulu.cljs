@@ -571,7 +571,7 @@
        :fmt #(tr-domain/tierekisteriosoite-tekstina % {:teksti-tie? false})
        :muokattava? (constantly false)}
       {:otsikko "Pit. (m)" :nimi :pituus :leveys 3
-       :tyyppi :positiivinen-numero
+       :tyyppi :positiivinen-numero :kokonaisluku? true
        :tasaa :oikea
        :muokattava? (constantly false)}
       (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
