@@ -1,3 +1,6 @@
+# Tämä image tarjoaa vain cypressin ja siihen suoraan liittyvät dependencyt ja työkalut.
+# Jos testeissä käytetään erikseen ylimääräisiä dependencyjä, ne kannattaa asentaa GH actions jobissa ennen cypressin ajoa.
+
 # Ohjeet imagen buildaamiseen ja manuaaliseen ajamiseen työkoneella:
 # 1. Build: Aja ./build-image.sh
 # 2. Varmista, että harjan kehitystietokanta ja harja backend pyörii (ja HARJA_SALLI_OLETUSKAYTTAJA=true on harjalle asetettu)
@@ -127,6 +130,7 @@ RUN npm install -g "cypress@${NPM_CYPRESS_VERSION}" \
 
 # Huom, koska transit-js dependency on cypress-testien itsessään tarvitsema dependency, täytyy transit-js asentaa
 # erikseen WORKDIRin sisällä GH actions checkoutin jälkeen, jotta node löytää transit-js:n testien ajon aikana.
+# Tämä image tarjoaa vain cypressin ja siihen suoraan liittyvät dependencyt ja työkalut.
 
 # Työkalujen versiot
 RUN echo  " Node version:    $(node -v) \n" \
