@@ -19,7 +19,10 @@ runs:
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-leiningen-${{ hashFiles('**/project.clj') }}
-        restore-keys: ${{ runner.os }}-leiningen-
+        # https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#matching-a-cache-key
+        # "restore-keys allows you to specify a list of alternate restore keys to use when there is a cache miss on key. "
+        # Kommentoitu pois, jotta PR brancheissä ei haeta aina cachesta potentiaalisesti vääriä clojure depsuja
+        #restore-keys: ${{ runner.os }}-leiningen-
 
     # TODO: Selvitä tietoturvanäkökulma setup-clojure actionionille
     #       Perus ubuntu-latest GHA imagen mukana tulee leiningen, mutta olisi hyvä hallita käytetty versio itse.
