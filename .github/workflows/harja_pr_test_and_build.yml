@@ -89,13 +89,13 @@ jobs:
         run: echo "value=${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
       - name: Delete old branch build artifacts (only latest is needed)
-        uses: actions/github-script@v4
+        uses: actions/github-script@v6
         id: artifact
         with:
           script: |
             const { owner, repo } = context.issue
 
-            const res = await github.actions.listArtifactsForRepo({
+            const res = await github.rest.actions.listArtifactsForRepo({
               owner,
               repo,
             })
@@ -103,7 +103,7 @@ jobs:
             res.data.artifacts
               .filter(({ name }) => name === '${{ steps.artifact-name.outputs.value }}')
               .forEach(({ id }) => {
-                github.actions.deleteArtifact({
+                github.rest.actions.deleteArtifact({
                   owner,
                   repo,
                   artifact_id: id,
