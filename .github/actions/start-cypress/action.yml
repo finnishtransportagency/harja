@@ -48,6 +48,8 @@ runs:
         docker pull "$IMAGE_NAME"
       shell: bash
 
+    # Konttiin mountataan /harja workdirectoryyn GITHUB_WORKSPACE, joka sisältää jobin checkoutissa haetun sisällön
+    # sekä myöhemmin jobissa ennen mounttia workspaceen lisätyn sisällön, kuten esimerkiksi asennetut NPM-paketit.
     - name: Aja cypress-testit
       env:
         IMAGE_NAME: ${{ inputs.registry }}
