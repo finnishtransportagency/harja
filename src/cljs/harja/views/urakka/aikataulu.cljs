@@ -193,15 +193,11 @@
 (defn- paallystys-aloitettu-validointi
   "Validoinnit päällystys aloitettu -kentälle"
   [optiot]
-  (as-> [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
-          "Päällystys ei voi alkaa ennen kohteen aloitusta."]] validointi
-
-        ;; Päällystysnäkymässä validoidaan, että alku on annettu
-        (if (= (:nakyma optiot) :paallystys)
-          (conj validointi
-                [:toinen-arvo-annettu-ensin :aikataulu-kohde-alku
-                 "Päällystystä ei voi merkitä alkaneeksi ennen kohteen aloitusta."])
-          validointi)))
+  (when (= (:nakyma optiot) :paallystys)
+    [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
+      "Päällystys ei voi alkaa ennen kohteen aloitusta."]
+     [:toinen-arvo-annettu-ensin :aikataulu-kohde-alku
+      "Päällystystä ei voi merkitä alkaneeksi ennen kohteen aloitusta."]]))
 
 (defn- oikeudet
   "Tarkistaa aikataulunäkymän tarvitsemat oikeudet"
@@ -575,7 +571,7 @@
        :fmt #(tr-domain/tierekisteriosoite-tekstina % {:teksti-tie? false})
        :muokattava? (constantly false)}
       {:otsikko "Pit. (m)" :nimi :pituus :leveys 3
-       :tyyppi :positiivinen-numero
+       :tyyppi :positiivinen-numero :kokonaisluku? true
        :tasaa :oikea
        :muokattava? (constantly false)}
       (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
