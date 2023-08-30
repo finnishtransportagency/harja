@@ -134,10 +134,7 @@
                          (yleiset/tietoja {:class "modal-ilmoita-virheesta-tiedot"}
                                           "Kohde" nimi
                                           "Työmenetelmä" tyomenetelma-nimi
-                                          "Rivejä" rivien-lkm)
-                         ;"Pinta-ala yht. " (str pinta-ala "m\u00B2")
-                         ;"Massamenekki " (str massamenekki "kg/m\u00B2")
-                         ])}
+                                          "Rivejä" rivien-lkm)])}
         varmista-kayttajalta/modal-muut-vastaanottajat
         (merge varmista-kayttajalta/modal-saateviesti {:otsikko "Lisätietoa virheestä"
                                                        :pakollinen? true
@@ -351,7 +348,8 @@
                   (::paikkaus/pinta-ala %)
                   (:suirun-pinta-ala %))
           :nimi :suirun-pinta-ala}
-         {:otsikko "kg/m²"
+         {:otsikko "kg/m²" :tyyppi :positiivinen-numero
+          :fmt #(fmt/desimaaliluku-opt % 2)
           :leveys 5 :tasaa :oikea
           :nimi ::paikkaus/massamenekki}
          {:otsikko "t" :fmt #(fmt/desimaaliluku-opt % 3)
