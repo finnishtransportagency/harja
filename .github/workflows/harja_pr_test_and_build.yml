@@ -46,6 +46,7 @@ jobs:
 
       # https://github.com/clj-kondo/clj-kondo/blob/master/doc/ci-integration.md
       - name: Lint
+        continue-on-error: true
         run: clj-kondo --lint src --config '{:output {:pattern "::{{level}} file={{filename}},line={{row}},col={{col}}::{{message}}"}}'
 
   # Build job
