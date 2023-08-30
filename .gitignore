@@ -59,7 +59,6 @@ resources/public/laadunseuranta/css/
 .deploy3_known_hosts
 testi.pdf
 checkouts/
-package-lock.json
 src/cljs-dev/harja/repl.cljs
 .rebel_readline_history
 *.log

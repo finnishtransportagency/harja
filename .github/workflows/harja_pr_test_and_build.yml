@@ -81,10 +81,39 @@ jobs:
           echo "Building uberjar"
           lein uberjar
 
-      - name: Upload uberjar as artifact
+      - name: Name build artifact using the branch name
+        id: artifact-name
+        env:
+          REF: ${{ github.ref }}
+          # Branchin nimen "/"-merkit muunnetaan "-"-merkeiksi, ja muodostetaan branchiin pohjautuva nimi
+        run: echo "value=${REF////-}-uberjar" >> $GITHUB_OUTPUT
+
+      - name: Delete old branch build artifacts (only latest is needed)
+        uses: actions/github-script@v4
+        id: artifact
+        with:
+          script: |
+            const { owner, repo } = context.issue
+
+            const res = await github.actions.listArtifactsForRepo({
+              owner,
+              repo,
+            })
+
+            res.data.artifacts
+              .filter(({ name }) => name === '${{ steps.artifact-name.outputs.value }}')
+              .forEach(({ id }) => {
+                github.actions.deleteArtifact({
+                  owner,
+                  repo,
+                  artifact_id: id,
+                })
+              })
+
+      - name: Upload a new build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: harja-uberjar
+          name: ${{ steps.artifact-name.outputs.value }}
           path: ./target/harja-0.0.1-SNAPSHOT-standalone.jar
           if-no-files-found: error
           retention-days: 1
@@ -132,10 +161,15 @@ jobs:
       #  run: lein test2junit
 
       #
+
   e2e-tests:
-    name: "e2e-testit"
-    runs-on: ubuntu-latest
+    name: "e2e-testit (Cypress)"
     needs: build
+    runs-on: ubuntu-latest
+    env:
+      # Asetetaan Suomen aikavyöhyke testejä varten
+      TZ: "EET"
+
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
       # Contents read lupaa tarvitaan checkout actionissa
@@ -162,24 +196,83 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
 
+      - name: Get the build artifact name
+        id: artifact-name
+        env:
+          REF: ${{ github.ref }}
+          # Branchin nimen "/"-merkit muunnetaan "-"-merkeiksi, ja muodostetaan branchiin pohjautuva nimi
+        run: echo "value=${REF////-}-uberjar" >> $GITHUB_OUTPUT
+
       - name: Download uberjar artifact
         uses: actions/download-artifact@v3
         with:
-          name: harja-uberjar
-          # Downloads to the same directory as the uberjar is built to
-          path: ./target
+          name: ${{ steps.artifact-name.outputs.value }}
+          path: ./
 
-      # Pohja cypress-kontin käynnistämiselle
-      # TODO: Toteuta. Ktso composite-actionin pohja
-#      - name: Start cypress
-#        uses: ./.github/actions/start-cypress
-#        with:
-#          registry: ${{ env.GH_DOCKER_REGISTRY }}
-#          username: ${{ github.actor }}
-#          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Start Harja jar
+        env:
+          HARJA_TIETOKANTA_HOST: localhost
+          HARJA_TIETOKANTA_PORTTI: 5432
+          HARJA_SALLI_OLETUSKAYTTAJA: "true"
+          HARJA_DEV_YMPARISTO: "false"
+        run: |
+          echo "Salli harjan oletuskäyttäjä? ${HARJA_SALLI_OLETUSKAYTTAJA}"
+          echo "Harja dev ympäristö? ${HARJA_DEV_YMPARISTO}"
+          echo "Aikavyöhyke: ${TZ}"
+          echo "HARJA_TIETOKANTA_HOST: ${HARJA_TIETOKANTA_HOST}"
+          echo "HARJA_TIETOKANTA_PORTTI: ${HARJA_TIETOKANTA_PORTTI}"
 
-      # TODO: Käynnistä aiemmin artifactina ladattu Harja-jar
+          echo "Luodaan Harjalle 'salaisuudet' .harja-kansioon"
+          mkdir -p ../.harja
+          echo aaaa > ../.harja/anti-csrf-token
+          touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,yha-api-key,labyrintti-salasana,velho-salasana,velho-varuste-salasana,api-sahkoposti-salasana,digiroad-api-key}
+          touch ../.harja/harjalle_ajorata_kaista_puoli_20210825.csv
+          
+          echo "Käynnistetään Harja..."
+          java -cp :harja-0.0.1-SNAPSHOT-standalone.jar harja.palvelin.main > harja.out 2>&1 &
+          javapid=$!
+          
+          for i in $(seq 4); do
+            curl localhost:3000 > /dev/null 2>&1 && break
+            if kill -0 $javapid; then
+              echo "Harja ei ole vielä käynnissä, odotetaan 10 sec..."
+              sleep 10
+            else
+              echo "Harja ei käynnisty. Lopetetaan..."
+              cat harja.out
+              exit 1
+            fi
+          done
 
-      # TODO: Aja cypress testit käynnistettyä cypress-konttia varten.
-      #      Harja jar käyttää tietokantanaan jobin alussa käynnistetty testdb:tä
+          echo "Harja käynnistyi. Alla ote Harja-sovelluksen lokista:"
+          echo +++++++++++++++++++
+          tail -50 harja.out
+          echo +++++++++++++++++++
+          echo
 
+      - uses: actions/cache@v3
+        id: npm-cache
+        with:
+          path: |
+            ~/.cache/Cypress
+            node_modules
+          key: cypress-pr-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      # Asennetaan projektin package.jsonissa määritelty transit-js versio
+      # Package-lock tiedostosta ei voi asennaa yksittäisiä paketteja "npm ci" komennolla, joten
+      # asennetaan kompromissina npm installilla spesifi versio, mikäli package-lock.json muuttuu.
+      - name: Install Cypress test dependencies (transit-js)
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: |
+          NPM_TRANSITJS_VERSION=$(node -pe 'require("./package").dependencies["transit-js"]')
+          npm install "transit-js@${NPM_TRANSITJS_VERSION}"
+
+      # Ajaa cypress testit erillisessä kontissa
+      # Konttiin mountataan GITHUB_WORKSPACE, joka sisältää myös aiemmin asennetut node-moduulit, joita testit tarvitsevat
+      - name: Run cypress
+        uses: ./.github/actions/start-cypress
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_WORKSPACE: ${{ env.GITHUB_WORKSPACE }}
