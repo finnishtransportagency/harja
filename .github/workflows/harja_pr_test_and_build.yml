@@ -225,7 +225,7 @@ jobs:
           echo "Aikavyöhyke: ${TZ}"
           echo "HARJA_TIETOKANTA_HOST: ${HARJA_TIETOKANTA_HOST}"
           echo "HARJA_TIETOKANTA_PORTTI: ${HARJA_TIETOKANTA_PORTTI}"
-          
+
           echo "Luodaan Harjalle 'salaisuudet' .harja-kansioon"
           mkdir -p ../.harja
           echo aaaa > ../.harja/anti-csrf-token
@@ -247,7 +247,7 @@ jobs:
               exit 1
             fi
           done
-          
+
           echo "Harja käynnistyi. Alla ote Harja-sovelluksen lokista:"
           echo +++++++++++++++++++
           tail -50 harja.out
