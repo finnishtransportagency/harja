@@ -245,9 +245,8 @@
                         (if aikataulu? tr-leveys-aikataulu tr-leveys)
                         tr-sarakkeet-asetukset
                         vain-nama-validoinnit?))
-                    [(when-not aikataulu?
-                       (assoc paallystys-tiedot/kvl-skeema
-                         :leveys kvl-leveys))
+                    [(assoc paallystys-tiedot/kvl-skeema
+                       :leveys kvl-leveys)
                      (assoc paallystys-tiedot/pk-lk-skeema
                        :fokus-klikin-jalkeen? true
                        :tasaa (when aikataulu? :oikea)
