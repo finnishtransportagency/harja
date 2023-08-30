@@ -90,22 +90,22 @@ jobs:
           # Branchin nimen "/"-merkit muunnetaan "-"-merkeiksi, ja muodostetaan branchiin pohjautuva nimi
         run: echo "value=${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
-      - name: Delete old branch build artifacts (only latest is needed)
+      - name: Delete old branch build artifacts (only the latest is needed)
         uses: actions/github-script@v6
         id: artifact
         with:
           script: |
             const res = await github.rest.actions.listArtifactsForRepo({
-              context.repo.owner,
-              context.repo.repo,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
             })
 
             res.data.artifacts
               .filter(({ name }) => name === '${{ steps.artifact-name.outputs.value }}')
               .forEach(({ id }) => {
                 github.rest.actions.deleteArtifact({
-                  context.repo.owner,
-                  context.repo.repo,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
                   artifact_id: id,
                 })
               })
@@ -251,18 +251,16 @@ jobs:
           echo
 
       - uses: actions/cache@v3
-        id: npm-cache
+        id: cache-npm
         with:
-          path: |
-            ~/.cache/Cypress
-            node_modules
-          key: cypress-pr-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          path: node_modules
+          key: ${{ runner.os }}-cypress-pr-${{ hashFiles('package-lock.json') }}
 
       # Asennetaan projektin package.jsonissa määritelty transit-js versio
       # Package-lock tiedostosta ei voi asennaa yksittäisiä paketteja "npm ci" komennolla, joten
       # asennetaan kompromissina npm installilla spesifi versio, mikäli package-lock.json muuttuu.
       - name: Install Cypress test dependencies (transit-js)
-        if: steps.npm-cache.outputs.cache-hit != 'true'
+        if: steps.cache-npm.outputs.cache-hit != 'true'
         run: |
           NPM_TRANSITJS_VERSION=$(node -pe 'require("./package").dependencies["transit-js"]')
           npm install "transit-js@${NPM_TRANSITJS_VERSION}"
