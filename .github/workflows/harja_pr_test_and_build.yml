@@ -132,8 +132,13 @@ jobs:
       - name: Run backend tests
         run: lein test
 
-      - name: Run integration tests
-        run: lein test :integraatio
+      - name: run slow tests
+        run: lein test :hidas
+
+      # integraatiotestit vaativat ActiveMQ-brokerin ympäristöön, tulossa eri haarassa
+      # - name: Run integration tests
+      #   run: lein test :integraatio
+
 
       #
   e2e-tests:
