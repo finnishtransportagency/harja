@@ -26,6 +26,28 @@ env:
   GH_DOCKER_REGISTRY: ghcr.io
 
 jobs:
+  # Linter job
+  lint-clj:
+    name: "Lint Clojure"
+    runs-on: ubuntu-latest
+    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    permissions:
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup clojure environment
+        uses: ./.github/actions/setup-clojure-env
+        with:
+          install-tools: true
+
+      # https://github.com/clj-kondo/clj-kondo/blob/master/doc/ci-integration.md
+      - name: Lint
+        run: clj-kondo --lint src --config '{:output {:pattern "::{{level}} file={{filename}},line={{row}},col={{col}}::{{message}}"}}'
+
   # Build job
   build:
     name: "Prod build"

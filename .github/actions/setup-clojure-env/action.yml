@@ -1,8 +1,9 @@
 name: 'Setup Clojure environment'
 description: 'Asentaa Clojure-kehitysympäristön ja lataa riippuvuudet'
 
-  #inputs:
-
+inputs:
+  install-tools:
+    description: 'Asennetaanko clj-työkalut?'
 
 runs:
   using: "composite"
@@ -24,13 +25,13 @@ runs:
         # Kommentoitu pois, jotta PR brancheissä ei haeta aina cachesta potentiaalisesti vääriä clojure depsuja
         #restore-keys: ${{ runner.os }}-leiningen-
 
-    # TODO: Selvitä tietoturvanäkökulma setup-clojure actionionille
-    #       Perus ubuntu-latest GHA imagen mukana tulee leiningen, mutta olisi hyvä hallita käytetty versio itse.
-    #    - name: Install clojure tools
-    #      uses: DeLaGuardo/setup-clojure@9.5
-    #      with:
-    #        clj-kondo: 2023.05.26
-    #        lein: 2.9.10
+    # https://github.com/DeLaGuardo/setup-clojure
+    - name: Install clojure tools
+      uses: DeLaGuardo/setup-clojure@1c76ab0e154379260d7a6ea16b413679abe46785 # versio 11
+      if: ${{ inputs.install-tools }} == 'true'
+      with:
+        clj-kondo: 2023.07.13
+        #lein: 2.9.8
 
     - name: Download Clojure dependencies
       if: steps.cache-clojure-deps.outputs.cache-hit != 'true'
