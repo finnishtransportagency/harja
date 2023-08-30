@@ -130,36 +130,36 @@ jobs:
   # Halutessaan testien depsujen asentelusta voi tehdä erillisen composite-actionin ja tallentaa sen .github/actions kansioon
   # Katso esimerkiksi mitä "Setup Clojure environment" action tekee: Se asentaa java-11 ja clojure-työkalut.
   #
-#  basic-tests:
-#    name: "Perustestit"
-#    runs-on: ubuntu-latest
-#    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
-#    permissions:
-#      # Contents read lupaa tarvitaan checkout actionissa
-#      contents: read
-#      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-#      packages: read
-#
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v3
-#
-#      # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
-#      - name: Start test database
-#        uses: ./.github/actions/start-test-db
-#        with:
-#          registry: ${{ env.GH_DOCKER_REGISTRY }}
-#          username: ${{ github.actor }}
-#          password: ${{ secrets.GITHUB_TOKEN }}
-#
-#      - name: Setup clojure environment
-#        uses: ./.github/actions/setup-clojure-env
-#
-#      # TODO: Aja halutut testit
-#      #- name: Run unit tests jne.
-#      #  run: lein test2junit
-#
-#      #
+  basic-tests:
+    name: "Perustestit"
+    runs-on: ubuntu-latest
+    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    permissions:
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
+      packages: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
+      - name: Start test database
+        uses: ./.github/actions/start-test-db
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup clojure environment
+        uses: ./.github/actions/setup-clojure-env
+
+      # TODO: Aja halutut testit
+      #- name: Run unit tests jne.
+      #  run: lein test2junit
+
+      #
 
   e2e-tests:
     name: "e2e-testit (Cypress)"
