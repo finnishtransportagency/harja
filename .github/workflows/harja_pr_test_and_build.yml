@@ -11,8 +11,8 @@ on:
   # Manuaalisen käynnistyksen asetukset
   workflow_dispatch:
   # Jobi ajetaan automaattisesti jokaiselle PR:lle, jonka base branch on develop
-#  pull_request:
-#    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
 
 # Tässä voi määritellä yhteiset permissionit kaikille jobeille workflowissa tarvittaessa
 # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
