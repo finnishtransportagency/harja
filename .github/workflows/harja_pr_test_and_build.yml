@@ -85,6 +85,7 @@ jobs:
         id: artifact-name
         env:
           REF: ${{ github.ref }}
+          # Branchin nimen "/"-merkit muunnetaan "-"-merkeiksi, ja muodostetaan branchiin pohjautuva nimi
         run: echo "value=${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
       - name: Delete old branch build artifacts (only latest is needed)
@@ -199,6 +200,7 @@ jobs:
         id: artifact-name
         env:
           REF: ${{ github.ref }}
+          # Branchin nimen "/"-merkit muunnetaan "-"-merkeiksi, ja muodostetaan branchiin pohjautuva nimi
         run: echo "value=${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
       - name: Download uberjar artifact
