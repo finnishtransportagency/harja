@@ -180,12 +180,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Check ENV
-        run: |
-          echo "Salli harjan oletuskäyttäjä? ${HARJA_SALLI_OLETUSKAYTTAJA}"
-          echo "Harja dev ympäristö? ${HARJA_DEV_YMPARISTO}"
-          echo "Aikavyöhyke: ${TZ}"
-
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
         uses: ./.github/actions/start-test-db
