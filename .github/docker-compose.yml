@@ -28,23 +28,22 @@ services:
       start_period: 20s
       timeout: 10s
 
-# TODO: Disabloitu. Toteutetaan myöhemmin
-#  activemq-itmf:
-#    image: ghcr.io/finnishtransportagency/harja_activemq:latest
-#    container_name: activemq
-#    networks:
-#      - harja_net
-#    environment:
-#      TZ: "EET"
-#      TCP_PORT: 61616
-#      UI_PORT: 8161
-#    ports:
-#        - "127.0.0.1:61616:61616" # broker (admin:adminactivemq)(amq:amq)
-#        - "127.0.0.1:8161:8161"   # web    localhost:8171/admin/queues.jsp (admin:admin)
-#    healthcheck:
-# https://stackoverflow.com/questions/52500782/how-to-check-if-activemq-is-working-properly
-#      test: [ "CMD", "TODO" "how" "to" "healtcheck" "activemq?" ]
-#      interval: 10s
-#      retries: 5
-#      start_period: 20s
-#      timeout: 10s
+  activemq-itmf:
+    image: ghcr.io/finnishtransportagency/harja_activemq:latest
+    container_name: activemq-itmf
+    networks:
+      - harja_net
+    environment:
+      TZ: "EET"
+      TCP_PORT: 61616
+      UI_PORT: 8161
+    ports:
+        - "127.0.0.1:61616:61616" # broker (admin:adminactivemq)(amq:amq)
+        - "127.0.0.1:8161:8161"   # web    localhost:8161/admin/queues.jsp (admin:admin)
+    healthcheck:
+     # https://stackoverflow.com/questions/52500782/how-to-check-if-activemq-is-working-properly
+      test: /opt/activemq/bin/activemq query --objname type=Broker,brokerName=*,service=Health | grep Good
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
