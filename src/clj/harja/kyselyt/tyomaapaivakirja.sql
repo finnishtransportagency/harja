@@ -12,35 +12,66 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
 
 -- name: hae-paivakirja
 SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi", t.versio, t.paivamaara::DATE,
-       (SELECT array_agg(row(aloitus, lopetus, nimi))
-        FROM tyomaapaivakirja_paivystaja
-        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as paivystajat,
-       (SELECT array_agg(row(aloitus, lopetus, nimi))
-        FROM tyomaapaivakirja_tyonjohtaja
-        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as tyonjohtajat,
-       (SELECT array_agg(row(havaintoaika, aseman_tunniste, aseman_tietojen_paivityshetki, ilman_lampotila, tien_lampotila, keskituuli, sateen_olomuoto, sadesumma))
-        FROM tyomaapaivakirja_saaasema
-        WHERE versio = :versio AND tyomaapaivakirja_id = t.id)  as "saa-asemat",
-       (SELECT array_agg(row(havaintoaika, paikka, kuvaus))
-        FROM tyomaapaivakirja_poikkeussaa
-        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as poikkeussaat,
-       (SELECT array_agg(row(aloitus, lopetus, tyokoneiden_lkm, lisakaluston_lkm))
-        FROM tyomaapaivakirja_kalusto
-        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as kalustot,
-       (SELECT array_agg(row(tyyppi::TEXT, kuvaus))
-        FROM tyomaapaivakirja_tapahtuma
-        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as tapahtumat,
-       (SELECT array_agg(row(kuvaus, aika))
-        FROM tyomaapaivakirja_toimeksianto
-        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as toimeksiannot,
-       t.luotu, t.luoja, t.muokattu, t.muokkaaja,
-       count(tk.id) as "kommenttien-maara"
-  FROM tyomaapaivakirja t
-       JOIN urakka u ON t.urakka_id = u.id
-       LEFT JOIN tyomaapaivakirja_kommentti tk ON t.id = tk.tyomaapaivakirja_id AND tk.poistettu = false 
- WHERE t.id = :tyomaapaivakirja_id
-   AND t.versio = :versio
- GROUP BY t.id, u.nimi;
+      (SELECT array_agg(row(aloitus, lopetus, nimi))
+       FROM tyomaapaivakirja_paivystaja
+       WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as paivystajat,
+      (SELECT array_agg(row(aloitus, lopetus, nimi))
+       FROM tyomaapaivakirja_tyonjohtaja
+       WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as tyonjohtajat,
+      (SELECT array_agg(row(havaintoaika, aseman_tunniste, aseman_tietojen_paivityshetki, ilman_lampotila, tien_lampotila, keskituuli, sateen_olomuoto, sadesumma))
+       FROM tyomaapaivakirja_saaasema
+       WHERE versio = :versio AND tyomaapaivakirja_id = t.id)  as "saa-asemat",
+      (SELECT array_agg(row(havaintoaika, paikka, kuvaus))
+       FROM tyomaapaivakirja_poikkeussaa
+       WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as poikkeussaat,
+      (SELECT array_agg(row(aloitus, lopetus, tyokoneiden_lkm, lisakaluston_lkm))
+       FROM tyomaapaivakirja_kalusto
+       WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as kalustot,
+      (SELECT array_agg(row(tyyppi::TEXT, kuvaus))
+       FROM tyomaapaivakirja_tapahtuma
+       WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as tapahtumat,
+      (SELECT array_agg(row(kuvaus, aika))
+       FROM tyomaapaivakirja_toimeksianto
+       WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as toimeksiannot,
+      t.luotu, t.luoja, t.muokattu, t.muokkaaja,
+      count(tk.id) as "kommenttien-maara"
+ FROM tyomaapaivakirja t
+      JOIN urakka u ON t.urakka_id = u.id
+      LEFT JOIN tyomaapaivakirja_kommentti tk ON t.id = tk.tyomaapaivakirja_id AND tk.poistettu = false 
+WHERE t.id = :tyomaapaivakirja_id
+  AND t.versio = :versio
+GROUP BY t.id, u.nimi;
+
+-- name: hae-paivakirjan-muutoshistoria
+SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi", t.versio, t.paivamaara::DATE,
+      (SELECT array_agg(row(aloitus, lopetus, nimi, lisatty))
+       FROM tyomaapaivakirja_paivystaja
+       WHERE tyomaapaivakirja_id = t.id) as paivystajat,
+      (SELECT array_agg(row(aloitus, lopetus, nimi, lisatty))
+       FROM tyomaapaivakirja_tyonjohtaja
+       WHERE tyomaapaivakirja_id = t.id) as tyonjohtajat,
+      (SELECT array_agg(row(havaintoaika, aseman_tunniste, aseman_tietojen_paivityshetki, ilman_lampotila, tien_lampotila, keskituuli, sateen_olomuoto, sadesumma, lisatty))
+       FROM tyomaapaivakirja_saaasema
+       WHERE tyomaapaivakirja_id = t.id)  as "saa-asemat",
+      (SELECT array_agg(row(havaintoaika, paikka, kuvaus, lisatty))
+       FROM tyomaapaivakirja_poikkeussaa
+       WHERE tyomaapaivakirja_id = t.id) as poikkeussaat,
+      (SELECT array_agg(row(aloitus, lopetus, tyokoneiden_lkm, lisakaluston_lkm, lisatty))
+       FROM tyomaapaivakirja_kalusto
+       WHERE tyomaapaivakirja_id = t.id) as kalustot,
+      (SELECT array_agg(row(tyyppi::TEXT, kuvaus, lisatty))
+       FROM tyomaapaivakirja_tapahtuma
+       WHERE tyomaapaivakirja_id = t.id) as tapahtumat,
+      (SELECT array_agg(row(kuvaus, aika, lisatty))
+       FROM tyomaapaivakirja_toimeksianto
+       WHERE tyomaapaivakirja_id = t.id) as toimeksiannot,
+      t.luotu, t.luoja, t.muokattu, t.muokkaaja,
+      count(tk.id) as "kommenttien-maara"
+FROM tyomaapaivakirja t
+      JOIN urakka u ON t.urakka_id = u.id
+     LEFT JOIN tyomaapaivakirja_kommentti tk ON t.id = tk.tyomaapaivakirja_id AND tk.poistettu = false 
+WHERE t.id = :tyomaapaivakirja_id
+GROUP BY t.id, u.nimi;
 
 -- name: hae-paivakirjan-tehtavat
 SELECT ttt.tyyppi, ttt.aloitus, ttt.lopetus, array_agg(tehtava.nimi) as tehtavat
@@ -49,6 +80,16 @@ FROM tyomaapaivakirja_tieston_toimenpide ttt
          LEFT JOIN tehtava ON tehtava.id = t
 WHERE ttt.versio = :versio
   AND ttt.tyomaapaivakirja_id = :tyomaapaivakirja_id
+  AND ttt.tyyppi = 'yleinen'::tyomaapaivakirja_toimenpide_tyyppi
+  AND ttt.aloitus BETWEEN :alkuaika AND :loppuaika
+GROUP BY ttt.id;
+
+-- name: hae-paivakirjan-muutoshistoria-tehtavat
+SELECT ttt.tyyppi, ttt.aloitus, ttt.lopetus, array_agg(tehtava.nimi), lisatty as tehtavat
+FROM tyomaapaivakirja_tieston_toimenpide ttt
+         LEFT JOIN lateral unnest(ttt.tehtavat) t on true
+         LEFT JOIN tehtava ON tehtava.id = t
+WHERE ttt.tyomaapaivakirja_id = :tyomaapaivakirja_id
   AND ttt.tyyppi = 'yleinen'::tyomaapaivakirja_toimenpide_tyyppi
   AND ttt.aloitus BETWEEN :alkuaika AND :loppuaika
 GROUP BY ttt.id;
@@ -94,41 +135,41 @@ AND tyomaapaivakirja_id = :tyomaapaivakirja_id
 AND luoja = :kayttaja;
 
 -- name: lisaa-kalusto<!
-INSERT INTO tyomaapaivakirja_kalusto (urakka_id, tyomaapaivakirja_id, versio, aloitus, lopetus, tyokoneiden_lkm, lisakaluston_lkm)
-VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :aloitus, :lopetus, :tyokoneiden-lkm, :lisakaluston-lkm);
+INSERT INTO tyomaapaivakirja_kalusto (urakka_id, tyomaapaivakirja_id, versio, aloitus, lopetus, tyokoneiden_lkm, lisakaluston_lkm, lisatty)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :aloitus, :lopetus, :tyokoneiden-lkm, :lisakaluston-lkm, now());
 
 -- name: lisaa-paivystaja<!
-INSERT INTO tyomaapaivakirja_paivystaja (urakka_id, tyomaapaivakirja_id, versio, aloitus, lopetus, nimi)
-VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :aloitus, :lopetus, :nimi);
+INSERT INTO tyomaapaivakirja_paivystaja (urakka_id, tyomaapaivakirja_id, versio, aloitus, lopetus, nimi, lisatty)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :aloitus, :lopetus, :nimi, now());
 
 -- name: lisaa-tyonjohtaja<!
-INSERT INTO tyomaapaivakirja_tyonjohtaja (urakka_id, tyomaapaivakirja_id, versio, aloitus, lopetus, nimi)
-VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :aloitus, :lopetus, :nimi);
+INSERT INTO tyomaapaivakirja_tyonjohtaja (urakka_id, tyomaapaivakirja_id, versio, aloitus, lopetus, nimi, lisatty)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :aloitus, :lopetus, :nimi, now());
 
 -- name: lisaa-saatiedot<!
 INSERT INTO tyomaapaivakirja_saaasema (urakka_id, tyomaapaivakirja_id, versio, havaintoaika, aseman_tunniste,
                                        aseman_tietojen_paivityshetki, ilman_lampotila, tien_lampotila,
-                                       keskituuli, sateen_olomuoto, sadesumma)
+                                       keskituuli, sateen_olomuoto, sadesumma, lisatty)
 VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :havaintoaika, :aseman-tunniste, :aseman-tietojen-paivityshetki,
-        :ilman-lampotila, :tien-lampotila, :keskituuli, :sateen-olomuoto, :sadesumma);
+        :ilman-lampotila, :tien-lampotila, :keskituuli, :sateen-olomuoto, :sadesumma, now());
 
 -- name: lisaa-poikkeussaa<!
-INSERT INTO tyomaapaivakirja_poikkeussaa (urakka_id, tyomaapaivakirja_id, versio, havaintoaika, paikka, kuvaus)
-VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :havaintoaika, :paikka, :kuvaus);
+INSERT INTO tyomaapaivakirja_poikkeussaa (urakka_id, tyomaapaivakirja_id, versio, havaintoaika, paikka, kuvaus, lisatty)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :havaintoaika, :paikka, :kuvaus, now());
 
 --name: lisaa-tie-toimenpide<!
 INSERT INTO tyomaapaivakirja_tieston_toimenpide (urakka_id, tyomaapaivakirja_id, versio, tyyppi, aloitus, lopetus, tehtavat,
-                                                 toimenpiteet)
+                                                 toimenpiteet, lisatty)
 VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :tyyppi::tyomaapaivakirja_toimenpide_tyyppi, :aloitus, :lopetus,
-        :tehtavat::integer[], :toimenpiteet::text[]);
+        :tehtavat::integer[], :toimenpiteet::text[], now());
 
 --name: lisaa-tapahtuma<!
-INSERT INTO tyomaapaivakirja_tapahtuma (urakka_id, tyomaapaivakirja_id, versio, tyyppi, kuvaus)
-VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :tyyppi::tyomaapaivakirja_tapahtumatyyppi, :kuvaus);
+INSERT INTO tyomaapaivakirja_tapahtuma (urakka_id, tyomaapaivakirja_id, versio, tyyppi, kuvaus, lisatty)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :tyyppi::tyomaapaivakirja_tapahtumatyyppi, :kuvaus, now());
 
 -- name: lisaa-toimeksianto<!
-INSERT INTO tyomaapaivakirja_toimeksianto (urakka_id, tyomaapaivakirja_id, versio, kuvaus, aika)
-VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kuvaus, :aika);
+INSERT INTO tyomaapaivakirja_toimeksianto (urakka_id, tyomaapaivakirja_id, versio, kuvaus, aika, lisatty)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kuvaus, :aika, now());
 
 -- name: lisaa-kommentti<!
 INSERT INTO tyomaapaivakirja_kommentti (urakka_id, tyomaapaivakirja_id, versio, kommentti, luotu, luoja)

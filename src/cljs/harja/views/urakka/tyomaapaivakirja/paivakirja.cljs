@@ -136,7 +136,9 @@
          :leveys 0.5}]
        nayta-rivit]]]))
 
-(defn nayta-modal []
+(defn nayta-muutoshistoria [{:keys [muutoshistoria] :as app}]
+
+  (println "Muutoshistoria: " muutoshistoria " \n \n")
   (modal/nayta!
     {:modal-luokka "harja-modal-keskitetty"
      :luokka "modal-dialog-keskitetty"}
@@ -144,34 +146,39 @@
     [:div.muutoshistoria-modal
      [:div.muutoshistoria-otsikko "Versiohistoria"]
 
-     [:div.muutoshistoria]]))
+     [:div.muutoshistoria
 
-(defn paivakirjan-header [e! tyomaapaivakirja]
-  (when tyomaapaivakirja
+      [:span (ikonit/harja-icon-navigation-down)]
+      [:span "11.10.2022 08:10 Lisätty rekka-kolari"]]]))
+
+(defn paivakirjan-header [e! {:keys [valittu-rivi] :as app}]
+  (when valittu-rivi
     [:<>
-     [:h3.header-yhteiset (:urakka-nimi tyomaapaivakirja)]
-     [:h1.header-yhteiset (str "Työmaapäiväkirja " (pvm/pvm (:paivamaara tyomaapaivakirja)))]
+     [:h3.header-yhteiset (:urakka-nimi valittu-rivi)]
+     [:h1.header-yhteiset (str "Työmaapäiväkirja " (pvm/pvm (:paivamaara valittu-rivi)))]
 
      [:div.nakyma-otsikko-tiedot
 
-      [:span (str "Saapunut " (pvm/pvm-aika-klo (:luotu tyomaapaivakirja)))]
-      (when (:muokattu tyomaapaivakirja)
-        [:span (str "Päivitetty " (pvm/pvm-aika-klo (:muokattu tyomaapaivakirja)))])
-      [:span (str "Versio " (:versio tyomaapaivakirja))]
+      [:span (str "Saapunut " (pvm/pvm-aika-klo (:luotu valittu-rivi)))]
+      (when (:muokattu valittu-rivi)
+        [:span (str "Päivitetty " (pvm/pvm-aika-klo (:muokattu valittu-rivi)))])
+      [:span (str "Versio " (:versio valittu-rivi))]
 
-      [:a.klikattava {:on-click #(nayta-modal)} "Näytä muutoshistoria"]
+      [:a.klikattava {:on-click #(do 
+                                   (e! (tiedot/->HaeMuutoshistoria))
+                                   (nayta-muutoshistoria app))} "Näytä muutoshistoria"]
 
       [:span.paivakirja-toimitus
-       [:div {:class (str "pallura " (:tila tyomaapaivakirja))}]
-       [:span.toimituksen-selite (if (= "myohassa" (:tila tyomaapaivakirja))
+       [:div {:class (str "pallura " (:tila valittu-rivi))}]
+       [:span.toimituksen-selite (if (= "myohassa" (:tila valittu-rivi))
                                    "Myöhässä"
                                    "Ok")]]
 
       ;; Kommentti- nappi scrollaa alas kommentteihin
       [:a.klikattava {:on-click #(tiedot/siirry-elementin-id "Kommentit" 150)}
-       [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) (if (= (:kommenttien-maara tyomaapaivakirja) 1)
-                                                            (str (:kommenttien-maara tyomaapaivakirja) " kommentti")
-                                                            (str (:kommenttien-maara tyomaapaivakirja) " kommenttia"))]]]
+       [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) (if (= (:kommenttien-maara valittu-rivi) 1)
+                                                            (str (:kommenttien-maara valittu-rivi) " kommentti")
+                                                            (str (:kommenttien-maara valittu-rivi) " kommenttia"))]]]
      [:hr]]))
 
 (defn- paivakirjan-kommentit [e! valittu-rivi]
@@ -277,7 +284,7 @@
     [:span.nuoli [ikonit/harja-icon-navigation-close]]
     [:span "Sulje"]]])
 
-(defn suorita-tyomaapaivakirja-raportti [e! valittu-rivi]
+(defn suorita-tyomaapaivakirja-raportti [e! {:keys [valittu-rivi] :as app}]
   (if-let [tiedot @tiedot/raportin-tiedot]
     [:div.tyomaapaivakirja
      ;; Päiväkirjanäkymä
@@ -287,7 +294,7 @@
        [ikonit/harja-icon-navigation-close]]
       
       ;; Header 
-      (paivakirjan-header e! valittu-rivi)
+      (paivakirjan-header e! app)
 
       ;; Raportin html
       [muodosta-html (assoc-in tiedot [1 :tunniste] tiedot/raportti-avain)]
@@ -322,7 +329,7 @@
          ;; Jos valittu rivi, näytä päiväkirjanäkymä (tehty raporttien puolelle)
          (do 
            (e! (tiedot/->HaeKommentit))
-           [suorita-tyomaapaivakirja-raportti e! valittu-rivi])
+           [suorita-tyomaapaivakirja-raportti e! app])
 
          ;; Mikäli ei valittua riviä, päivitä aikavälivalinta ja näytä listaus
          [tyomaapaivakirja-listaus e! app])])))

@@ -47,6 +47,9 @@
       (raportit/suorita-raportti p))))
 
 (defrecord HaeTiedot [])
+(defrecord HaeMuutoshistoria [])
+(defrecord HaeMuutoshistoriaOnnistui [vastaus])
+(defrecord HaeMuutoshistoriaEpaonnistui [vastaus])
 (defrecord ValitseRivi [rivi])
 (defrecord PoistaRiviValinta [])
 (defrecord SelaaPaivakirjoja [suunta])
@@ -234,7 +237,7 @@
                          ;; Else -> Rivejä ei hypätty
                          etsitty-rivi)
           ;; Jos seuraava päiväkirjaa ei ole, ollaan rullattu loppuun
-          etsitty-rivi (if (or 
+          etsitty-rivi (if (or
                              (nil? (:tila etsitty-rivi))
                              (nil? (:tyomaapaivakirja_id etsitty-rivi))) nil etsitty-rivi)]
       ;; Jos rivi olemassa, lataa se ja maalaa listauksessa valituksi
@@ -285,6 +288,25 @@
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "HaeKommentitEpaonnistui :: vastaus: " (pr-str vastaus))
     (viesti/nayta-toast! (str "HaeKommentitEpaonnistui \n Vastaus: " (pr-str vastaus)) :varoitus)
+    app)
+
+  HaeMuutoshistoria
+  (process-event [_ {:keys [valittu-rivi] :as app}]
+    (tuck-apurit/post! app :tyomaapaivakirja-hae-muutoshistoria
+      {:tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)}
+      {:onnistui ->HaeMuutoshistoriaOnnistui
+       :epaonnistui ->HaeMuutoshistoriaEpaonnistui})
+    app)
+
+  HaeMuutoshistoriaOnnistui
+  (process-event [{vastaus :vastaus} app]
+    ;; (println "Vastaus : " vastaus)
+    (assoc app :muutoshistoria vastaus))
+
+  HaeMuutoshistoriaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "HaeMuutoshistoriaEpaonnistui :: vastaus: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "HaeMuutoshistoriaEpaonnistui \n Vastaus: " (pr-str vastaus)) :varoitus)
     app)
 
   PoistaKommentti
