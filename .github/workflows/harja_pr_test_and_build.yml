@@ -164,12 +164,42 @@ jobs:
       - name: run slow tests
         run: lein test :hidas
 
-      # integraatiotestit vaativat ActiveMQ-brokerin ympäristöön, tulossa eri haarassa
-      # - name: Run integration tests
-      #   run: lein test :integraatio
+  # integraatiotestit vaativat ActiveMQ-brokerin, siksi oma jobi
+  integration-tests:
+    name: "integraatiotestit"
+    runs-on: ubuntu-latest
+    env:
+      TZ: "EET"
 
+    permissions:
+      contents: read
+      packages: read
 
-      #
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
+      - name: Start test database
+        uses: ./.github/actions/start-test-db
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Käynnistetään ActiveMQ JMS-testejä varten
+      - name: Start ActiveMQ
+        uses: ./.github/actions/start-activemq
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup clojure environment
+        uses: ./.github/actions/setup-clojure-env
+
+      - name: Run integration tests
+        run: lein test :integraatio
 
   e2e-tests:
     name: "e2e-testit (Cypress)"
