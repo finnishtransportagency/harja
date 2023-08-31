@@ -181,11 +181,16 @@ jobs:
       - name: Setup clojure environment
         uses: ./.github/actions/setup-clojure-env
 
+# TÄHÄN ASENNA PHANHTOM!?
+
       - name: Run backend tests
         run: lein test
 
       - name: run slow tests
         run: lein test :hidas
+
+      - name: run front end tests
+        run: lein with-profile +test doo phantom test once
 
   # integraatiotestit vaativat ActiveMQ-brokerin, siksi oma jobi
   integration-tests:

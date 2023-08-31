@@ -35,10 +35,10 @@ services:
       - harja_net
     environment:
       TZ: "EET"
-      TCP_PORT: 61616
+      TCP_PORT: 61626
       UI_PORT: 8161
     ports:
-        - "127.0.0.1:61616:61616" # broker (admin:adminactivemq)(amq:amq)
+        - "127.0.0.1:61626:61626" # broker (admin:adminactivemq)(amq:amq)
         - "127.0.0.1:8161:8161"   # web    localhost:8161/admin/queues.jsp (admin:admin)
     healthcheck:
      # https://stackoverflow.com/questions/52500782/how-to-check-if-activemq-is-working-properly
