@@ -12,7 +12,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
             [harja.pvm :as pvm]
-            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.modal :as modal]
             [harja.asiakas.kommunikaatio :as k]
             [harja.transit :as t]))
 
@@ -136,6 +136,44 @@
          :leveys 0.5}]
        nayta-rivit]]]))
 
+(defn nayta-modal []
+  (modal/nayta!
+    {:modal-luokka "harja-modal-keskitetty"
+     :luokka "modal-dialog-keskitetty"}
+
+    [:div.muutoshistoria-modal
+     [:div.muutoshistoria-otsikko "Versiohistoria"]
+
+     [:div.muutoshistoria]]))
+
+(defn paivakirjan-header [e! tyomaapaivakirja]
+  (when tyomaapaivakirja
+    [:<>
+     [:h3.header-yhteiset (:urakka-nimi tyomaapaivakirja)]
+     [:h1.header-yhteiset (str "Työmaapäiväkirja " (pvm/pvm (:paivamaara tyomaapaivakirja)))]
+
+     [:div.nakyma-otsikko-tiedot
+
+      [:span (str "Saapunut " (pvm/pvm-aika-klo (:luotu tyomaapaivakirja)))]
+      (when (:muokattu tyomaapaivakirja)
+        [:span (str "Päivitetty " (pvm/pvm-aika-klo (:muokattu tyomaapaivakirja)))])
+      [:span (str "Versio " (:versio tyomaapaivakirja))]
+
+      [:a.klikattava {:on-click #(nayta-modal)} "Näytä muutoshistoria"]
+
+      [:span.paivakirja-toimitus
+       [:div {:class (str "pallura " (:tila tyomaapaivakirja))}]
+       [:span.toimituksen-selite (if (= "myohassa" (:tila tyomaapaivakirja))
+                                   "Myöhässä"
+                                   "Ok")]]
+
+      ;; Kommentti- nappi scrollaa alas kommentteihin
+      [:a.klikattava {:on-click #(tiedot/siirry-elementin-id "Kommentit" 150)}
+       [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) (if (= (:kommenttien-maara tyomaapaivakirja) 1)
+                                                            (str (:kommenttien-maara tyomaapaivakirja) " kommentti")
+                                                            (str (:kommenttien-maara tyomaapaivakirja) " kommenttia"))]]]
+     [:hr]]))
+
 (defn- paivakirjan-kommentit [e! valittu-rivi]
   (let [toggle-kentat (fn [nayta piilota]
                         ;; Tämä tehtiin alunperin raporttien puolelle jonka takia käytetään DOM manipulaatiota eikä tuckin tila atomia
@@ -247,6 +285,9 @@
       ;; Takaisin nappi
       [:div.klikattava {:class "sulje" :on-click #(tiedot/scrollaa-viimeksi-valitulle-riville e!)}
        [ikonit/harja-icon-navigation-close]]
+      
+      ;; Header 
+      (paivakirjan-header e! valittu-rivi)
 
       ;; Raportin html
       [muodosta-html (assoc-in tiedot [1 :tunniste] tiedot/raportti-avain)]
