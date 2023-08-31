@@ -31,7 +31,7 @@ RUN wget "https://downloads.apache.org/maven/maven-3/${MAVEN_VERSIO}/binaries/ap
     rm "apache-maven-${MAVEN_VERSIO}-bin.tar.gz";
 
 # Lisää maven bin kansio PATH:iin
-ENV PATH="/apache-maven-3.9.4/bin/:${PATH}"
+ENV PATH="/apache-maven-${MAVEN_VERSIO}/bin/:${PATH}"
 
 
 ## Postgresql konfiguraatio ##
