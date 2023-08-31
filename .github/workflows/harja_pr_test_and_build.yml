@@ -11,8 +11,8 @@ on:
   # Manuaalisen käynnistyksen asetukset
   workflow_dispatch:
   # Jobi ajetaan automaattisesti jokaiselle PR:lle, jonka base branch on develop
-#  pull_request:
-#    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
 
 # Tässä voi määritellä yhteiset permissionit kaikille jobeille workflowissa tarvittaessa
 # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
@@ -26,6 +26,29 @@ env:
   GH_DOCKER_REGISTRY: ghcr.io
 
 jobs:
+  # Linter job
+  lint-clj:
+    name: "Lint Clojure"
+    runs-on: ubuntu-latest
+    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    permissions:
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup clojure environment
+        uses: ./.github/actions/setup-clojure-env
+        with:
+          install-tools: true
+
+      # https://github.com/clj-kondo/clj-kondo/blob/master/doc/ci-integration.md
+      - name: Lint
+        continue-on-error: true
+        run: clj-kondo --lint src --config '{:output {:pattern "::{{level}} file={{filename}},line={{row}},col={{col}}::{{message}}"}}'
+
   # Build job
   build:
     name: "Prod build"
@@ -36,6 +59,8 @@ jobs:
       contents: read
       # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
       packages: read
+      # Actions write oikeudella voidaan esim. listata ja poistaa artifacteja
+      actions: write
 
     steps:
       - name: Checkout code
@@ -88,24 +113,22 @@ jobs:
           # Branchin nimen "/"-merkit muunnetaan "-"-merkeiksi, ja muodostetaan branchiin pohjautuva nimi
         run: echo "value=${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
-      - name: Delete old branch build artifacts (only latest is needed)
-        uses: actions/github-script@v4
+      - name: Delete old branch build artifacts (only the latest is needed)
+        uses: actions/github-script@v6
         id: artifact
         with:
           script: |
-            const { owner, repo } = context.issue
-
-            const res = await github.actions.listArtifactsForRepo({
-              owner,
-              repo,
+            const res = await github.rest.actions.listArtifactsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
             })
 
             res.data.artifacts
               .filter(({ name }) => name === '${{ steps.artifact-name.outputs.value }}')
               .forEach(({ id }) => {
-                github.actions.deleteArtifact({
-                  owner,
-                  repo,
+                github.rest.actions.deleteArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
                   artifact_id: id,
                 })
               })
@@ -290,18 +313,16 @@ jobs:
           echo
 
       - uses: actions/cache@v3
-        id: npm-cache
+        id: cache-npm
         with:
-          path: |
-            ~/.cache/Cypress
-            node_modules
-          key: cypress-pr-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          path: node_modules
+          key: ${{ runner.os }}-cypress-pr-${{ hashFiles('package-lock.json') }}
 
       # Asennetaan projektin package.jsonissa määritelty transit-js versio
       # Package-lock tiedostosta ei voi asennaa yksittäisiä paketteja "npm ci" komennolla, joten
       # asennetaan kompromissina npm installilla spesifi versio, mikäli package-lock.json muuttuu.
       - name: Install Cypress test dependencies (transit-js)
-        if: steps.npm-cache.outputs.cache-hit != 'true'
+        if: steps.cache-npm.outputs.cache-hit != 'true'
         run: |
           NPM_TRANSITJS_VERSION=$(node -pe 'require("./package").dependencies["transit-js"]')
           npm install "transit-js@${NPM_TRANSITJS_VERSION}"
