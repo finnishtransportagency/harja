@@ -24,7 +24,7 @@
                     :virhekohteen_oid oid
                     :virhekohteen_alkupvm alkupvm
                     :virhekohteen_vastaus (str kohde)}]
-     (log/error (str virhekuvaus "Oid:" oid "Oid:" oid "Alkupvm:" alkupvm))
+     (log/warn (str virhekuvaus "Oid:" oid "Oid:" oid "Alkupvm:" alkupvm))
      (q-toteumat/tallenna-varustetoteuma-ulkoiset-virhe<! db hakuvirhe))))
 
 (defn lokita-hakuvirhe [_ _ virhekuvaus] (log/error virhekuvaus))
