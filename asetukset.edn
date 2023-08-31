@@ -110,7 +110,7 @@
  ;;       Jos testejä varten halutaan käyttää aineistoja, ne kannattaa tuoda tiedostoina tai tietokannan testidatana.
  ;;       Paljon kuormitusta aiheuttavien integraatioiden käyttöä tulisi välttää, mikäli ne eivät ole relevantteja testien kannalta.
  :geometriapaivitykset
- #=(eval (if (= "true" (harja.tyokalut.env/env "HARJA_HAE_GEOMETRIAT" "true"))
+ #=(eval (if (harja.tyokalut.env/env "HARJA_HAE_GEOMETRIAT" true)
            {:tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/tieosoiteverkkoLine.shp"
             :tieosoiteverkon-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:tieosoiteverkko&outputFormat=SHAPE-ZIP"
             :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/tieosoiteverkkoLine.shz"
