@@ -298,4 +298,7 @@
           [:teksti "Hoitokauden 2022-23 indeksikerroin: 1,352"]))
     (is (= (yleinen/urakan-hoitokauden-indeksikerroin {:indeksikertoimet indeksikertoimet
                                                        :hoitokausi (pvm/paivamaaran-hoitokausi (pvm/->pvm (str "02.10." 2023)))})
-          [:teksti "Hoitokauden 2023-24 indeksikerroin: ei saatavilla"]))))
+          [:teksti "Hoitokauden 2023-24 indeksikerroin: 1,442"]))
+    (is (= (yleinen/urakan-hoitokauden-indeksikerroin {:indeksikertoimet indeksikertoimet
+                                                       :hoitokausi (pvm/paivamaaran-hoitokausi (pvm/->pvm (str "02.10." 2024)))})
+          [:teksti "Hoitokauden 2024-25 indeksikerroin: ei saatavilla"]))))
