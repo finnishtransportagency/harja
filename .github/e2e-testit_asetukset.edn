@@ -1,0 +1,19 @@
+;; Tämän tiedoston sisältö ylikirjoittaa harjan suoritushakemistosta lataaman asetukset.edn tiedoston asetuksia
+;; Käytä meta-dataa määrittelemään miten asetukset mergetään asetukset.edn asetuksiin:
+;;  ^:prepend, ^:displace, ^:replace (https://github.com/weavejester/meta-merge/tree/master#usage)
+
+{:http-palvelin ^:prepend {:threads 32
+                           :max-body-size 33554432}
+ :tietokanta ^:prepend {:yhteyspoolin-koko 32}
+ :geometriapaivitykset ^:replace {}
+ :api-sahkoposti ^:replace {}
+ :sampo-api ^:replace {}
+ :palautevayla ^:replace {}
+ :kanavasillat ^:replace {}
+ :pois-kytketyt-ominaisuudet ^:prepend #{:varuste-api
+                                         :varusteet-ulkoiset
+                                         :tierekisterin-varusteet}
+ :virustarkistus ^:replace {}
+ :labyrintti ^:replace {}
+ :yha ^:replace {}
+ :velho ^:replace {}}

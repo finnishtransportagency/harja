@@ -389,7 +389,7 @@
                        kayttaja
                        data))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (let [poistettujen-maara (tarkastukset-q/poista-tarkastus! db kayttaja-id urakka-id ulkoiset-idt)
+    (let [poistettujen-maara (tarkastukset-q/poista-yllapitokohteiden-tarkastuksia! db kayttaja-id urakka-id   ulkoiset-idt)
           poistettujen-liitteiden-maara (tarkastukset-q/poista-poistetut-liitteet! db {:urakka-id urakka-id})]
       (let [ilmoitukset (if (pos? poistettujen-maara)
                           (format "Tarkastukset poistettu onnistuneesti. Poistettiin: %s tarkastusta." poistettujen-maara)
