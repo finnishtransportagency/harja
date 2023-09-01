@@ -9,7 +9,7 @@ indent_style = space
 insert_final_newline = true
 max_line_length = 120
 
-[{*.bb,*.clj,*.cljs,*.cljc}]
+[{*.bb,*.clj,*.cljs,*.cljc,*.edn}]
 indent_size = 2
 tab_width = 2
 ## -- Intellij IDEA specific options for clojure (cursive) --
