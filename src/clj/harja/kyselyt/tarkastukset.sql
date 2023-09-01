@@ -338,8 +338,22 @@ WHERE urakka = :urakka AND id = :id;
 
 -- name: poista-tarkastus!
 UPDATE tarkastus
-SET muokattu = NOW(), muokkaaja = :kayttajanimi, poistettu = TRUE
-WHERE urakka = :urakka-id AND ulkoinen_id IN (:ulkoiset-idt) AND poistettu IS NOT TRUE;
+SET muokattu  = NOW(),
+    muokkaaja = :kayttajanimi,
+    poistettu = TRUE
+WHERE urakka = :urakka-id
+  AND tyyppi = :tyyppi :: tarkastustyyppi
+  AND ulkoinen_id IN (:ulkoiset-idt)
+  AND poistettu IS NOT TRUE;
+
+-- name: poista-yllapitokohteiden-tarkastuksia!
+UPDATE tarkastus
+SET muokattu  = NOW(),
+    muokkaaja = :kayttajanimi,
+    poistettu = TRUE
+WHERE urakka = :urakka-id
+  AND ulkoinen_id IN (:ulkoiset-idt)
+  AND poistettu IS NOT TRUE;
 
 -- name: poista-poistetut-liitteet!
 DELETE from tarkastus_liite tl
