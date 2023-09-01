@@ -66,7 +66,7 @@
    {:palvelu :lisaa-tieturvallisuustarkastus
     :polku "/api/urakat/:id/tarkastus/tieturvallisuustarkastus"
     :pyynto-skeema json-skeemat/tieturvallisuustarkastuksen-kirjaus
-    :tyyppi :talvihoito
+    :tyyppi :tieturvallisuus
     :metodi :post}
    {:palvelu :poista-tieturvallisuustarkastus
     :polku "/api/urakat/:id/tarkastus/tieturvallisuustarkastus"
