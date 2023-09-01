@@ -334,15 +334,15 @@ SET aika               = :aika,
   nayta_urakoitsijalle = :nayta_urakoitsijalle,
   pisteet              = :pisteet,
   poistettu            = FALSE
-WHERE urakka = :urakka AND id = :id and tyyppi = :tyyppi :: tarkastustyyppi;
+WHERE urakka = :urakka AND id = :id;
 
 -- name: poista-tarkastus!
 UPDATE tarkastus
 SET muokattu  = NOW(),
     muokkaaja = :kayttajanimi,
     poistettu = TRUE
-WHERE urakka = :urakka - id
-  AND tyyppi = :tyyppi
+WHERE urakka = :urakka-id
+  AND tyyppi = :tyyppi :: tarkastustyyppi
   AND ulkoinen_id IN (:ulkoiset-idt)
   AND poistettu IS NOT TRUE;
 
