@@ -239,7 +239,7 @@ jobs:
           HARJA_SALLI_OLETUSKAYTTAJA: "true"
           HARJA_DEV_YMPARISTO: "false"
           # Estä geometrioiden lataaminen integraatioiden kautta, koska ne kuormittavat Harjaa testien aikana.
-          # Jos jokin E2E-testit erityistesti tarvitsee tietyn aineiston dataa, se kannattaa tuoda testejä varten
+          # Jos jokin E2E-testit erityisesti tarvitsee tietyn aineiston dataa, se kannattaa tuoda testejä varten
           # mukaan jollakin toisella tavalla.
           HARJA_HAE_GEOMETRIAT: "false"
         run: |
