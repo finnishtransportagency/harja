@@ -211,10 +211,6 @@
                                :replica-db
                                :sampo}
 
- :reimari {:url "https://www.example.com/HarjaWebService"
-           :kayttajatunnus "reimaritunnus"
-           :salasana "reimarisalasana"}
-
  :vaylat {:geometria-url "https://extranet.vayla.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json"
           :paivittainen-tarkistusaika [12 22 00]
           :paivitysvali-paivissa 60}
