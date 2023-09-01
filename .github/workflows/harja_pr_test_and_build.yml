@@ -298,3 +298,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_WORKSPACE: ${{ env.GITHUB_WORKSPACE }}
+
+      # Mikäli testit epäonnistuvat, tallenna cypress screenshotit ja videot artifakteina
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+          retention-days: 7
+
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-videos
+          path: cypress/videos
+          retention-days: 2
