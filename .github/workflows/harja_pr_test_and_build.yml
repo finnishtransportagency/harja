@@ -189,7 +189,7 @@ jobs:
           cd /tmp
           wget -O ~/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2
           if [ "$(sha512sum /home/runner/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 )" != "039b62ecf2fa4196357e129727871a53b046948e17b21900c78a1af4d0b523e41b9d4137e7454b0a638333d7fc27e65d14f4af8c665e982a504c12f828525419  /home/runner/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2" ]; then exit 1; fi;
-          tar -xf phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 -C /tmp/
+          tar -xf /home/runner/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 -C /tmp/
           mv -f /tmp/phantomjs-2.1.1-linux-x86_64/bin/phantomjs /usr/local/bin/phantomjs
           rm /home/runner/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2
           cd /home/runner/work/harja/harja/
