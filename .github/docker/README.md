@@ -1,4 +1,4 @@
-# GitHub Actionsin tarvitsemat Docker-imaget
+# Harjan Workflowien käyttämät Docker-imaget
 
 GitHub Actions workflowit käyttävät seuraavia Docker-kontteja:
 1. Testitietokanta (harjadb): [docker/tietokanta/Dockerfile](./tietokanta/Dockerfile)
@@ -28,7 +28,7 @@ Konttien käyttöön kannattaa tutustua etsimällä relevantit composite actioni
 niitä on käytetty workfloweissa.
 
 
-# Github Container Registry
+# GitHub Container Registry
 
 ## Kehittäjän kirjautuminen Container Registryyn
 
