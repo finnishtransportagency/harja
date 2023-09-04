@@ -289,6 +289,7 @@ jobs:
           HARJA_TIETOKANTA_PORTTI: 5432
           HARJA_SALLI_OLETUSKAYTTAJA: "true"
           HARJA_DEV_YMPARISTO: "false"
+          HARJA_ASETUKSET_OVERRIDE_TIEDOSTO: ".github/e2e-testit_asetukset.edn"
         run: |
           echo "Salli harjan oletuskäyttäjä? ${HARJA_SALLI_OLETUSKAYTTAJA}"
           echo "Harja dev ympäristö? ${HARJA_DEV_YMPARISTO}"
@@ -348,3 +349,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_WORKSPACE: ${{ env.GITHUB_WORKSPACE }}
+
+      # Mikäli testit epäonnistuvat, tallenna cypress screenshotit ja videot artifakteina
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+          retention-days: 7
+
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-videos
+          path: cypress/videos
+          retention-days: 2
