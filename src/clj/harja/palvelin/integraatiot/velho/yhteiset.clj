@@ -5,9 +5,30 @@
   (:require [clojure.data.json :as json]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
+            [harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma :as varuste-vastaanottosanoma]
             [taoensso.timbre :as log]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.kyselyt.toteumat :as q-toteumat])
   (:use [slingshot.slingshot :only [throw+ try+]]))
+
+
+(defn lokita-ja-tallenna-hakuvirhe
+  ([db {:keys [oid version-voimassaolo] :as kohde} virhekuvaus]
+   (let [alkupvm (when version-voimassaolo
+                   (-> version-voimassaolo
+                     :alku
+                     varuste-vastaanottosanoma/velho-pvm->pvm
+                     varuste-vastaanottosanoma/aika->sql))
+         hakuvirhe {:aikaleima (pvm/nyt)
+                    :virhekuvaus virhekuvaus
+                    :virhekohteen_oid oid
+                    :virhekohteen_alkupvm alkupvm
+                    :virhekohteen_vastaus (str kohde)}]
+     (log/warn (str virhekuvaus "Oid:" oid "Oid:" oid "Alkupvm:" alkupvm))
+     (q-toteumat/tallenna-varustetoteuma-ulkoiset-virhe<! db hakuvirhe))))
+
+(defn lokita-hakuvirhe [_ _ virhekuvaus] (log/error virhekuvaus))
+
 
 (defn pyyda-velho-token [token-url kayttajatunnus salasana konteksti virhe-fn]
   (try+

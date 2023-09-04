@@ -58,6 +58,8 @@
 
 (deftest hae-urakat-onnistuu-test
   (let [urakat-kannasta (q-map (str "SELECT id FROM urakka"))
+        ;; Varmista käyttäjän oikeudet kannasta
+        kayttajadb (q-map (format "SELECT * from kayttaja where kayttajanimi = '%s'" "analytiikka-testeri"))
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/urakat")] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
@@ -450,5 +452,5 @@
         vaara-vuodet-vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" "l" 200)] kayttaja-analytiikka portti)]
     (is (not (nil? uri-virhe)))
     (is (str/includes? uri-virhe "java.net.URISyntaxException"))
-    (is (str/includes? virheellinen-kayttaja-vastaus "tuntematon-kayttaja"))
+    (is (str/includes? virheellinen-kayttaja-vastaus "kayttajalla-puutteelliset-oikeudet"))
     (is (str/includes? vaara-vuodet-vastaus "puutteelliset-parametrit"))))

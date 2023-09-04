@@ -68,7 +68,9 @@ Harja repon hakemistorakenne:
 
     `sh devdb_up.sh`
 
-4. Asenna tarvittavat työkalut `npm install`
+4. Asenna tarvittavat työkalut `npm ci` 
+   * Huom: ```npm ci``` -komento asentaa package-lock.json tiedostoon jäädytetyt paketit.
+   * Mikäli päivität paketin package.jsoniin, aja ```npm install```, ja committoi päivitetty package-lock.json.
 5. Hae harja-testidata repositoriosta (Internal [*1](#*1)) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
 6. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:
 

@@ -35,7 +35,8 @@
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord AsetaTallennusKaynnissa [])
 (defrecord TallennaPot2Tiedot [valmis-kasiteltavaksi?])
-(defrecord KopioiToimenpiteetTaulukossa [rivi toimenpiteet-taulukko-atom])
+(defrecord KopioiToimenpiteetTaulukossaKaistoille [rivi toimenpiteet-taulukko-atom sort-atom])
+(defrecord KopioiToimenpiteetTaulukossaAjoradoille [rivi toimenpiteet-taulukko-atom sort-atom])
 (defrecord AvaaAlustalomake [lomake])
 (defrecord PaivitaAlustalomake [alustalomake])
 (defrecord TallennaAlustalomake [alustalomake jatka?])
@@ -44,6 +45,7 @@
 (defrecord SuljeMateriaalilomake [])
 (defrecord Pot2Muokattu [])
 (defrecord LisaaPaallysterivi [atomi])
+(defrecord KulutuskerrosMuokattu [muokattu?])
 
 (defn- lisaa-uusi-paallystekerrosrivi!
   [rivit-atom perustiedot]
@@ -80,7 +82,7 @@
                                                        (str " " yksikko))))
                                        otsikko? (not (contains? #{:verkon-sijainti :verkon-tarkoitus
                                                                   :sideaine :sideainepitoisuus :sideaine2
-                                                                  :massamaara :pinta-ala :kokonaismassamaara} nimi))]
+                                                                  :massamaara :kokonaismassamaara} nimi))]
 
                                    (str (when otsikko? (str otsikko ": ")) teksti)))]
            (str/join "; " (->> (pot2-domain/alusta-toimenpidespesifit-metadata rivi)
@@ -154,6 +156,7 @@
     +nil-materiaalin-sort-str+))
 
 (def valittu-alustan-sort (atom :tieosoite))
+(def valittu-paallystekerros-sort (atom :tieosoite))
 
 (defn jarjesta-valitulla-sort-funktiolla
   "Riippuen siitä mikä sort avain on valittu, palautetaan oikea funktio"
@@ -170,6 +173,9 @@
 
     :materiaali
     (materiaalin-sort-fn rivi massat murskeet materiaalikoodistot)
+
+    :kaista
+    (yllapitokohteet-domain/yllapitokohteen-jarjestys rivi true)
 
     :else
     (yllapitokohteet-domain/yllapitokohteen-jarjestys rivi)))
@@ -190,7 +196,8 @@
      :kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset urakka-id)
      :paallystekerros kulutuskerros
      :alusta alusta
-     :lisatiedot (:lisatiedot vastaus)}))
+     :lisatiedot (:lisatiedot vastaus)
+     :kulutuskerros-muokattu? false}))
 
 (extend-protocol tuck/Event
 
@@ -207,16 +214,16 @@
                       :paallystyskohde-id paallystyskohde-id
                       :paikkauskohde? (if paikkauskohde-id true false)}]
       (tuck-apurit/post! app
-                         :urakan-paallystysilmoitus-paallystyskohteella
-                         parametrit
-                         {:onnistui ->HaePot2TiedotOnnistui
-                          :epaonnistui ->HaePot2TiedotEpaonnistui})))
+        :urakan-paallystysilmoitus-paallystyskohteella
+        parametrit
+        {:onnistui ->HaePot2TiedotOnnistui
+         :epaonnistui ->HaePot2TiedotEpaonnistui})))
 
   HaePot2TiedotOnnistui
   (process-event [{vastaus :vastaus} {urakka :urakka :as app}]
     (let [lomakedata (pot2-haun-vastaus->lomakedata vastaus (:id urakka))]
       (-> app
-          (assoc :paallystysilmoitus-lomakedata lomakedata))))
+        (assoc :paallystysilmoitus-lomakedata lomakedata))))
 
   HaePot2TiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -228,24 +235,25 @@
     (assoc-in app [:paallystysilmoitus-lomakedata :tallennus-kaynnissa?] true))
 
   TallennaPot2Tiedot
-  (process-event [{:keys [valmis-kasiteltavaksi?]} {{urakka-id :id :as urakka} :urakka
-                     {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
-                     paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
+  (process-event [{:keys [valmis-kasiteltavaksi?]} 
+                  {{urakka-id :id :as urakka} :urakka
+                   {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
+                   paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
     (let [lahetettava-data (-> paallystysilmoitus-lomakedata
-                               (select-keys #{:perustiedot :ilmoitustiedot :paallystyskohde-id})
-                               (update :perustiedot lomakkeen-muokkaus/ilman-lomaketietoja)
-                               (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
-                               (update-in [:perustiedot :tekninen-osa] lomakkeen-muokkaus/ilman-lomaketietoja)
-                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] valmis-kasiteltavaksi?)
-                               (assoc :lisatiedot @lisatiedot-atom
-                                      :versio 2)
-                               (update :ilmoitustiedot dissoc :virheet)
-                               (assoc :paallystekerros (gridin-muokkaus/filteroi-uudet-poistetut
-                                                                (into (sorted-map)
-                                                                      @kohdeosat-atom)))
-                               (assoc :alusta (gridin-muokkaus/filteroi-uudet-poistetut
-                                                (into (sorted-map)
-                                                      @alustarivit-atom))))
+                             (select-keys #{:perustiedot :ilmoitustiedot :paallystyskohde-id})
+                             (update :perustiedot lomakkeen-muokkaus/ilman-lomaketietoja)
+                             (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
+                             (update-in [:perustiedot :tekninen-osa] lomakkeen-muokkaus/ilman-lomaketietoja)
+                             (assoc-in [:perustiedot :valmis-kasiteltavaksi] valmis-kasiteltavaksi?)
+                             (assoc :lisatiedot @lisatiedot-atom
+                               :versio 2)
+                             (update :ilmoitustiedot dissoc :virheet)
+                             (assoc :paallystekerros (gridin-muokkaus/filteroi-uudet-poistetut
+                                                       (into (sorted-map)
+                                                         @kohdeosat-atom)))
+                             (assoc :alusta (gridin-muokkaus/filteroi-uudet-poistetut
+                                              (into (sorted-map)
+                                                @alustarivit-atom))))
           ;; Mikäli lomakkeella pyritään täydentämään paikkauskohteen pot ilmoitusta, niin siirrä data oman avaimen alle
           lahetettava-data (if-not (:paikkauskohteet? app)
                              lahetettava-data
@@ -258,20 +266,20 @@
                                 :takuuaika (get-in paallystysilmoitus-lomakedata [:perustiedot :takuuaika])}))]
       (log "TallennaPot2Tiedot lahetettava-data: " (pr-str lahetettava-data))
       (tuck-apurit/post! app :tallenna-paallystysilmoitus
-                         {:urakka-id urakka-id
-                          :sopimus-id (first valittu-sopimusnumero)
-                          :vuosi valittu-urakan-vuosi
-                          :paallystysilmoitus lahetettava-data}
-                         {:onnistui paallystys/->TallennaPaallystysilmoitusOnnistui
-                          :epaonnistui paallystys/->TallennaPaallystysilmoitusEpaonnistui
-                          :paasta-virhe-lapi? true})))
+        {:urakka-id urakka-id
+         :sopimus-id (first valittu-sopimusnumero)
+         :vuosi valittu-urakan-vuosi
+         :paallystysilmoitus lahetettava-data}
+        {:onnistui paallystys/->TallennaPaallystysilmoitusOnnistui
+         :epaonnistui paallystys/->TallennaPaallystysilmoitusEpaonnistui
+         :paasta-virhe-lapi? true})))
 
-  KopioiToimenpiteetTaulukossa
-  (process-event [{rivi :rivi toimenpiteet-taulukko-atom :toimenpiteet-taulukko-atom} app]
+  KopioiToimenpiteetTaulukossaKaistoille
+  (process-event [{:keys [rivi toimenpiteet-taulukko-atom sort-atom]} app]
     (let [kaistat (yllapitokohteet-domain/kaikki-kaistat rivi
-                                                         (get-in app [:paallystysilmoitus-lomakedata
-                                                                      :tr-osien-tiedot
-                                                                      (:tr-numero rivi)]))
+                    (get-in app [:paallystysilmoitus-lomakedata
+                                 :tr-osien-tiedot
+                                 (:tr-numero rivi)]))
           rivi-ja-sen-kopiot (map #(assoc rivi :tr-kaista %) kaistat)
           kaikki-rivit (vals @toimenpiteet-taulukko-atom)
           rivit-idt-korjattuna (yllapitokohteet-domain/sailyta-idt-jos-sama-tr-osoite rivi-ja-sen-kopiot kaikki-rivit)
@@ -283,14 +291,52 @@
                            rivi})
           haettavat-rivit (map avain-ja-rivi (concat kaikki-rivit rivit-idt-korjattuna))
           rivit-ja-kopiot (->> haettavat-rivit
-                               (into {})
-                               vals
-                               (jarjesta-rivit-fn-mukaan
-                                 (fn [rivi]
-                                   (jarjesta-valitulla-sort-funktiolla @valittu-alustan-sort {:massat (:massat app)
-                                                                          :murskeet (:murskeet app)
-                                                                          :materiaalikoodistot (:materiaalikoodistot app)}
-                                                                       rivi))))]
+                            (into {})
+                            vals
+                            (jarjesta-rivit-fn-mukaan
+                              (fn [rivi]
+                                (jarjesta-valitulla-sort-funktiolla @sort-atom {:massat (:massat app)
+                                                                                :murskeet (:murskeet app)
+                                                                                :materiaalikoodistot (:materiaalikoodistot app)}
+                                  rivi))))]
+      (when toimenpiteet-taulukko-atom
+        (reset! toimenpiteet-taulukko-atom rivit-ja-kopiot)
+        (merkitse-muokattu app)))
+    app)
+
+  KopioiToimenpiteetTaulukossaAjoradoille
+  (process-event [{:keys [rivi toimenpiteet-taulukko-atom sort-atom]} app]
+    (let [rivi-ja-sen-kopiot (cond-> [rivi]
+                               (#{1 2} (:tr-ajorata rivi))
+                               (conj (-> rivi
+                                       (update :tr-ajorata #(case %
+                                                              1 2
+                                                              2 1
+                                                              %))
+                                       (update :tr-kaista #(case %
+                                                             11 21
+                                                             12 22
+                                                             21 11
+                                                             22 12
+                                                             %)))))
+          kaikki-rivit (vals @toimenpiteet-taulukko-atom)
+          rivit-idt-korjattuna (yllapitokohteet-domain/sailyta-idt-jos-sama-tr-osoite rivi-ja-sen-kopiot kaikki-rivit)
+          avain-ja-rivi (fn [rivi]
+                          {(select-keys rivi [:tr-numero :tr-ajorata :tr-kaista
+                                              :tr-alkuosa :tr-alkuetaisyys
+                                              :tr-loppuosa :tr-loppuetaisyys
+                                              :toimenpide])
+                           rivi})
+          haettavat-rivit (map avain-ja-rivi (concat kaikki-rivit rivit-idt-korjattuna))
+          rivit-ja-kopiot (->> haettavat-rivit
+                            (into {})
+                            vals
+                            (jarjesta-rivit-fn-mukaan
+                              (fn [rivi]
+                                (jarjesta-valitulla-sort-funktiolla @sort-atom {:massat (:massat app)
+                                                                                :murskeet (:murskeet app)
+                                                                                :materiaalikoodistot (:materiaalikoodistot app)}
+                                  rivi))))]
       (when toimenpiteet-taulukko-atom
         (reset! toimenpiteet-taulukko-atom rivit-ja-kopiot)
         (merkitse-muokattu app)))
@@ -306,7 +352,7 @@
   PaivitaAlustalomake
   (process-event [{alustalomake :alustalomake} app]
     (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake]
-              alustalomake))
+      alustalomake))
 
   TallennaAlustalomake
   (process-event [{alustalomake :alustalomake
@@ -314,10 +360,10 @@
     (let [idt (keys @alustarivit-atom)
           pienin-id (apply min idt)
           uusi-id (or (:muokkaus-grid-id alustalomake)
-                      (if (or (nil? pienin-id)
-                              (pos? pienin-id))
-                        -1
-                        (dec pienin-id)))
+                    (if (or (nil? pienin-id)
+                          (pos? pienin-id))
+                      -1
+                      (dec pienin-id)))
           alusta-params (lomakkeen-muokkaus/ilman-lomaketietoja alustalomake)
           ylimaaraiset-avaimet (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet alusta-params)
           alusta-params-ilman-ylimaaraisia (apply
@@ -328,15 +374,15 @@
                     (jarjesta-valitulla-sort-funktiolla @valittu-alustan-sort {:massat (:massat app)
                                                                                :murskeet (:murskeet app)
                                                                                :materiaalikoodistot (:materiaalikoodistot app)}
-                                                        rivi))
+                      rivi))
                   (vals (conj @alustarivit-atom uusi-rivi)))]
       (reset! alustarivit-atom rivit)
       (-> app
-          (assoc-in [:paallystysilmoitus-lomakedata :alustalomake]
-                 (when jatka? (-> alusta-params
-                                  (assoc :tr-ajorata nil :tr-kaista nil
-                                         :tr-alkuosa nil :tr-alkuetaisyys nil :tr-loppuosa nil :tr-loppuetaisyys nil))))
-          (assoc-in [:paallystysilmoitus-lomakedata :muokattu?] true))))
+        (assoc-in [:paallystysilmoitus-lomakedata :alustalomake]
+          (when jatka? (-> alusta-params
+                         (assoc :tr-ajorata nil :tr-kaista nil
+                           :tr-alkuosa nil :tr-alkuetaisyys nil :tr-loppuosa nil :tr-loppuetaisyys nil))))
+        (assoc-in [:paallystysilmoitus-lomakedata :muokattu?] true))))
 
   SuljeAlustalomake
   (process-event [_ app]
@@ -350,26 +396,32 @@
                        materiaali)
           materiaali (if (::pot2-domain/massa-id materiaali)
                        (mk-tiedot/massa-kayttoliittyman-muotoon materiaali
-                                                                (::pot2-domain/massa-id materiaali)
-                                                                false)
+                         (::pot2-domain/massa-id materiaali)
+                         false)
                        materiaali)
           polku (if (:harja.domain.pot2/murske-id materiaali) :pot2-murske-lomake :pot2-massa-lomake)
           nil-polku (if (:harja.domain.pot2/murske-id materiaali) :pot2-massa-lomake :pot2-murske-lomake)]
       (-> app
-          (assoc polku (merge materiaali
-                              {:sivulle? sivulle?
-                               :voi-muokata? false})
-                 nil-polku nil))))
+        (assoc polku (merge materiaali
+                       {:sivulle? sivulle?
+                        :voi-muokata? false})
+          nil-polku nil))))
 
   SuljeMateriaalilomake
   (process-event [_ app]
     (-> app
-        (assoc :pot2-massa-lomake nil
-               :pot2-murske-lomake nil)))
+      (assoc :pot2-massa-lomake nil
+        :pot2-murske-lomake nil)))
 
   Pot2Muokattu
   (process-event [_ app]
     (merkitse-muokattu app))
+
+  KulutuskerrosMuokattu
+  (process-event [{muokattu? :muokattu?} app]
+    (if (nil? muokattu?)
+      app
+      (assoc-in app [:paallystysilmoitus-lomakedata :kulutuskerros-muokattu?] muokattu?)))
 
   LisaaPaallysterivi
   (process-event [{atomi :atomi} app]

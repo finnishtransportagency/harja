@@ -1,7 +1,9 @@
 (ns harja.palvelin.asetukset
   "Yleinen Harja-palvelimen konfigurointi. Esimerkkinä käytetty Antti Virtasen clj-weba."
-  (:require [schema.core :as s]
+  (:require [harja.tyokalut.env :as env]
+            [schema.core :as s]
             [clojure.string :as str]
+            [meta-merge.core :refer [meta-merge]]
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
             [harja.palvelin.lokitus.slack :as slack]
@@ -63,7 +65,7 @@
                                      :kayttajatunnus s/Str
                                      :salasana s/Str}
 
-   (s/optional-key :solita-sahkoposti) {:vastausosoite s/Str
+   (s/optional-key :ulkoinen-sahkoposti) {:vastausosoite s/Str
                                         (s/optional-key :palvelin/Str) s/Str}
    (s/optional-key :sampo-api) {:lahetys-url s/Str
                                 :paivittainen-lahetysaika [s/Num]
@@ -241,10 +243,18 @@
 (defn lue-asetukset
   "Lue Harja palvelimen asetukset annetusta tiedostosta ja varmista, että ne ovat oikeat"
   [tiedosto]
-  (->> tiedosto
-       slurp
-       read-string
-       (yhdista-asetukset oletusasetukset)))
+  (let [override-tiedosto (env/env "HARJA_ASETUKSET_OVERRIDE_TIEDOSTO")
+        override-asetukset (some->> override-tiedosto slurp read-string)]
+
+    (->> tiedosto
+      slurp
+      read-string
+      (yhdista-asetukset oletusasetukset)
+      ;; Ylikirjoita tai mergetä asetuksia
+      ;; Katso dokumentaatio:
+      ;;   https://github.com/weavejester/meta-merge/blob/master/test/meta_merge/core_test.cljc
+      ;;   https://github.com/weavejester/meta-merge/tree/master#usage
+      (meta-merge (or override-asetukset {})))))
 
 (defonce pois-kytketyt-ominaisuudet (atom #{}))
 

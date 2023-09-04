@@ -16,6 +16,8 @@
           [tieverkko :as q-tieverkko]
           [yllapitokohteet :as q-yllapitokohteet]]])))
 
+(def +kulutus-hyppy-metriraja+ 50)
+
 (s/def ::id ::spec-apurit/postgres-serial)
 (s/def ::kohdenumero (s/nilable string?))
 (s/def ::nimi string?)
@@ -84,13 +86,23 @@ yllapitoluokkanimi->numero
        kirjain])))
 
 (defn yllapitokohteen-jarjestys
-  [kohde]
-  ((juxt #(kohdenumero-str->kohdenumero-vec (:kohdenumero %))
-         :tie :tr-numero :tienumero
-         :ajr :tr-ajorata :ajorata
-         :kaista :tr-kaista
-         :aosa :tr-alkuosa
-         :aet :tr-alkuetaisyys) kohde))
+  ([kohde]
+   (yllapitokohteen-jarjestys kohde false))
+  ([kohde niputa-kaistat?]
+   (if niputa-kaistat?
+     ((juxt #(kohdenumero-str->kohdenumero-vec (:kohdenumero %))
+        :tie :tr-numero :tienumero
+        :aosa :tr-alkuosa :aet
+        :tr-alkuetaisyys :ajr
+        :tr-ajorata :ajorata
+        :kaista :tr-kaista) kohde)
+
+     ((juxt #(kohdenumero-str->kohdenumero-vec (:kohdenumero %))
+        :tie :tr-numero :tienumero
+        :ajr :tr-ajorata :ajorata
+        :kaista :tr-kaista
+        :aosa :tr-alkuosa
+        :aet :tr-alkuetaisyys) kohde))))
 
 (defn- jarjesta-yllapitokohteet*
   [kohteet]
@@ -546,16 +558,19 @@ yllapitoluokkanimi->numero
   [rivi-ja-kopiot rivit-atomista]
   (let [rivit (map (fn [rivi]
                      (let [vastaava-rivi (some #(when (and (tr-domain/sama-tr-osoite? rivi %)
-                                                           (= (:toimenpide rivi) (:toimenpide %)))
+                                                        (= (:toimenpide rivi) (:toimenpide %)))
                                                   %)
-                                               rivit-atomista)]
+                                           rivit-atomista)]
                        ;; funktio on siksi geneerinen, että se toimii sekä päällyste- että alustariveille
                        ;; on turvallista assocata päällysteriveille alustaid:ksi nil ja vice versa.
-                       (assoc rivi :kohdeosa-id (:kohdeosa-id vastaava-rivi)
-                                   :pot2a_id (:pot2a_id vastaava-rivi)
-                                   :pot2p_id (:pot2p_id vastaava-rivi)
-                                   :nimi (:nimi vastaava-rivi))))
-                   rivi-ja-kopiot)]
+                       (-> rivi
+                         (dissoc :let-hyppy?)
+                         (dissoc :aet-hyppy?)
+                         (assoc :kohdeosa-id (:kohdeosa-id vastaava-rivi)
+                           :pot2a_id (:pot2a_id vastaava-rivi)
+                           :pot2p_id (:pot2p_id vastaava-rivi)
+                           :nimi (:nimi vastaava-rivi)))))
+                rivi-ja-kopiot)]
     rivit))
 
 (defn validoi-kohde

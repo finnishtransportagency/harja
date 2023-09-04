@@ -20,9 +20,6 @@
 (defrecord ValitseVarusteToteumanTyyppi [tyyppi])
 (defrecord ValitseVarusteNaytetaanVirheelliset [virheelliset-ainoastaan?])
 
-;; Ala luomaan uutta varustetoteumaa käyttöliittymästä
-(defrecord UusiVarusteToteuma [toiminto varuste])
-
 ;; Aseta uudet varustetoteuman tiedot lomakkeelta muokattaessa
 (defrecord AsetaToteumanTiedot [tiedot])
 
@@ -43,9 +40,6 @@
 
 ;; Varustetoteumat ovat muuttuneet alinäkymässä
 (defrecord VarustetoteumatMuuttuneet [varustetoteumat])
-
-;; Ala muokkaamaan valittua varustetta
-(defrecord MuokkaaVarustetta [varuste])
 
 (defrecord LisaaLiitetiedosto [liite])
 (defrecord PoistaUusiLiitetiedosto [liite])

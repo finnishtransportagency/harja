@@ -1,6 +1,5 @@
 (ns harja.palvelin.palvelut.toteumat-test
   (:require [clojure.test :refer :all]
-            [clojure.java.io :as io]
             [com.stuartsierra.component :as component]
             [harja
              [pvm :as pvm]
@@ -10,17 +9,11 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
-            [taoensso.timbre :as log]
-            [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.palvelut.toteumat :as toteumat]
             [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
+            [harja.palvelin.palvelut.materiaalit :refer :all]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
-            [harja.domain.tierekisteri.varusteet :as varusteet-domain]))
-
-(def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
-(def +oikea-testi-tierekisteri-url+ "https://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri")
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -37,12 +30,12 @@
                           :integraatioloki (component/using
                                              (integraatioloki/->Integraatioloki nil)
                                              [:db])
-                          :tierekisteri (component/using
-                                          (tierekisteri/->Tierekisteri +testi-tierekisteri-url+ nil)
-                                          [:db :integraatioloki])
                           :toteumat (component/using
                                       (toteumat/->Toteumat)
-                                      [:http-palvelin :db :db-replica :karttakuvat :tierekisteri])
+                                      [:http-palvelin :db :db-replica :karttakuvat])
+                          :hae-toteuman-materiaalitiedot (component/using
+                                                           (->Materiaalit)
+                                                           [:http-palvelin :db])
                           :tehtavamaarat (component/using
                                            (tehtavamaarat/->Tehtavamaarat false)
                                            [:http-palvelin :db]))))))
@@ -51,7 +44,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -243,8 +236,7 @@
 
     (is (not (contains? summat-ennen-lisaysta 1368)))
 
-    (let [_ (println "tyo ::::::::::::::::." (pr-str tyo))
-          lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
+    (let [lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
                                   +kayttaja-jvh+ tyo)
           summat-lisayksen-jalkeen (hae-summat)]
@@ -337,8 +329,7 @@
 
     (is (not (contains? summat-ennen-lisaysta 1368)))
 
-    (let [_ (println "tyo ::::::::::::::::." (pr-str tyo))
-          lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
+    (let [lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
                     :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
                     +kayttaja-jvh+ tyo)
           summat-lisayksen-jalkeen (hae-summat)]
@@ -444,6 +435,11 @@
     (let [tmidt (flatten (q "SELECT id FROM toteuma_materiaali WHERE maara=192837"))
           tid (ffirst (q "SELECT id from toteuma WHERE suorittajan_nimi='UNIT TEST'"))
           uusi-lisatieto "NYT PITÄIS OLLA MUUTTUNUT."
+          tierekisteriosoite {:numero 20
+                              :alkuosa 1
+                              :alkuetaisyys 1000
+                              :loppuosa 2
+                              :loppuetaisyys 2000}
           sopimuksen-kaytetty-materiaali-jalkeen (q (str "SELECT alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus))]
       ;; tarkistetaan että kaikki cachesta palautetut tulokset löytyvät expected-setistä
       (is (= true (every? #(some?
@@ -465,7 +461,8 @@
                    (assoc :maara 8712))])
 
       (reset! toteuma (-> (assoc @toteuma :id tid)
-                          (assoc :lisatieto uusi-lisatieto)))
+                          (assoc :lisatieto uusi-lisatieto)
+                          (assoc :tierekisteriosoite tierekisteriosoite)))
 
       (is (not (nil? (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-ja-toteumamateriaalit +kayttaja-jvh+
                                      {:toteuma            @toteuma
@@ -479,6 +476,19 @@
 
       (is (= uusi-lisatieto (ffirst (q "SELECT lisatieto FROM toteuma WHERE id=" tid))))
       (is (= 8712 (int (ffirst (q "SELECT maara FROM toteuma_materiaali WHERE id=" (second tmidt))))))
+
+      (let [toteuman-materiaalit (kutsu-palvelua (:http-palvelin jarjestelma) :hae-toteuman-materiaalitiedot +kayttaja-jvh+
+                                   {:urakka-id urakka
+                                    :toteuma-id tid}
+                                   )
+            haettu-osoite (:tierekisteriosoite toteuman-materiaalit)]
+        (is (not (nil? (:tierekisteriosoite toteuman-materiaalit))))
+        (is (not (nil? (:sijainti toteuman-materiaalit))))
+        (is (= 20 (:numero haettu-osoite)))
+        (is (= 1 (:alkuosa haettu-osoite)))
+        (is (= 1000 (:alkuetaisyys haettu-osoite)))
+        (is (= 2 (:loppuosa haettu-osoite)))
+        (is (= 2000 (:loppuetaisyys haettu-osoite))))
 
       (u "DELETE FROM toteuma_materiaali WHERE id in (" (clojure.string/join "," tmidt) ")")
       (u "DELETE FROM toteuma WHERE id=" tid))))
@@ -537,7 +547,7 @@
       (is (= hoitoluokittaiset-jalkeen-odotettu hoitoluokittaiset-jalkeen ) "hoitoluokittaisten cache jalkeen muutoksen"))))
 
 
-(deftest uusi-materliaali-cachet-pysyy-jiirissa
+(deftest uusi-materiaali-cachet-pysyy-jiirissa
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
         sopimuksen-kaytetty-mat-ennen-odotettu (set [])
@@ -576,156 +586,6 @@
       ;; lisäyksen jälkeen cachet päivittyvät oikein, vanhalla pvm:llä ollut määrä poistuu, ja uusi määrä uudelle päivällä
       (is (= sopimuksen-kaytetty-mat-jalkeen-odotettu sopimuksen-mat-kaytto-jalkeen ) "sopimuksen materiaalin käyttö cache jalkeen muutoksen")
       (is (= hoitoluokittaiset-jalkeen-odotettu hoitoluokittaiset-jalkeen ) "hoitoluokittaisten cache jalkeen muutoksen"))))
-
-(deftest varustetoteumat-haettu-oikein
-  (let [alkupvm (pvm/luo-pvm 2005 9 1)
-        loppupvm (pvm/luo-pvm 2017 10 30)
-        hae-tietolaji-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))
-        varustetoteumat (with-fake-http [(str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-xml]
-                                        (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                        :urakan-varustetoteumat +kayttaja-jvh+
-                                                        {:urakka-id  @oulun-alueurakan-2005-2010-id
-                                                         :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
-                                                         :alkupvm    alkupvm
-                                                         :loppupvm   loppupvm
-                                                         :tietolajit (into #{} (keys varusteet-domain/tietolaji->selitys))}))]
-    (is (>= (count varustetoteumat) 3))
-    (is (contains? (first varustetoteumat) :sijainti))))
-
-;; circleci:stä ei saane yhteyttä +oikea-testi-tierekisteri-url+
-;; Otetaan pois siksi aikaa, että on saatu muutokset tierekisteriin liittyen tuotantoon asti
-;; - myöskään jenkinsistä ei saada yhteyttä joten disabloitu kunnes saadaan korjattua
-(when false                                                 ;; (not (circleci?))
-  (deftest varusteiden-testit
-    ;; Tässä haetaan liikennemerkin tiedot tierekisterin testipuolelta. Tierekisterikomponentti kakuttaa tuloksen, niin
-    ;; tallennuksen aikana ei tarvitse enään tehdä uutta kutsua (jos tehtäisiin, niin se epäonnistuisi, koska annetun tierekisterikomponentin url
-    ;; on tekaistu)
-    (tierekisteri/hae-tietolaji (assoc (:tierekisteri jarjestelma) :tierekisteri-api-url +oikea-testi-tierekisteri-url+) "tl506" nil)
-    (let [toteuma {:ajorata            0
-                   :kuntoluokitus      nil
-                   :sijainti
-                                       {:type :point :coordinates [428024.7622351866 7210432.45750019]}
-                   :tierekisteriosoite {:numero 22 :alkuosa 1 :alkuetaisyys 3}
-                   :urakka-id          4
-                   :loppupvm           nil
-                   :arvot              {:x 428025 :y 7210432 :asetusnr "11"}
-                   :puoli              1
-                   :tietolaji          "tl506"
-                   :id                 nil
-                   :uusi-liite         nil
-                   :toiminto           :lisatty
-                   :alkupvm            (pvm/luo-pvm 2018 6 11)
-                   :tunniste           nil
-                   :lisatieto          nil}
-          hakuehdot {:urakka-id  4
-                     :sopimus-id 2
-                     :alkupvm    (pvm/luo-pvm 2017 9 30)
-                     :loppupvm   (pvm/luo-pvm 3018 9 29)
-                     :tienumero  nil}
-          toteumien-maara (atom (count (q "SELECT id FROM toteuma;")))
-          ;; Tämä kopio tarvitaan, jotta sitä voidaan käyttää with-redefs funktiossa. Tarkoitus on vain muuttaa vastaus-saatu
-          ;; atomin arvo todeksi, kun tallennusoperaatio on suoritettu, sillä se suoritetaan omassa säikeessään.
-          laheta-varustetoteuma-tierekisteriin-copy tierekisteri/laheta-varustetoteuma-tierekisteriin
-          haku-fn (fn [haku-parametrit vastaus-atom]
-                    (with-redefs [tierekisteri/laheta-varustetoteuma-tierekisteriin (fn [this varustetoteuma-id]
-                                                                                      (when (= (:tierekisteri-api-url this) +testi-tierekisteri-url+)
-                                                                                        (laheta-varustetoteuma-tierekisteriin-copy this varustetoteuma-id))
-                                                                                      (reset! vastaus-atom true))]
-                      (kutsu-palvelua (:http-palvelin jarjestelma)
-                                      :tallenna-varustetoteuma +kayttaja-jvh+
-                                      haku-parametrit)))]
-      (testing "Varusteen tallentaminen"
-        (let [lisaa-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
-              vastaus-saatu (atom false)]
-          (with-fake-http
-            [(str +testi-tierekisteri-url+ "/lisaatietue") lisaa-tietue-xml]
-            (let [vastaus (haku-fn {:hakuehdot hakuehdot :toteuma toteuma} vastaus-saatu)
-                  _ (odota-ehdon-tayttymista #(true? @vastaus-saatu) "Tierekisteristä saatiin vastaus" 10000)
-                  tallennettu-varuste (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila FROM varustetoteuma WHERE tunniste='HARJ0000000000000002' ORDER BY luotu DESC;")]
-              (swap! toteumien-maara inc)
-              (is (= (count (q "SELECT id FROM toteuma;")) @toteumien-maara))
-              (is (true? @vastaus-saatu) "Saatiin vastaus")
-              (is (= (mapv rest tallennettu-varuste) [["HARJ0000000000000002" "tl506" "lisatty" "lahetetty"]]))
-              (is (nil? (:tila vastaus)))                   ;; Vastauksen tila pitäisi olla uusissa nil, sillä sitä ei olla vileä keretty lähettää tierekisteriin
-              (is (= (:tunniste (first vastaus)) "HARJ0000000000000002"))
-              (doseq [[kentta arvo] (:arvot (first vastaus))]
-                (when (contains? (:arvot toteuma) kentta)
-                  (is (= arvo (str (kentta (:arvot toteuma)))))))))))
-
-      (testing "Varusteen päivittäminen"
-        (let [paivita-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
-              vastaus-saatu (atom false)]
-          (with-fake-http
-            [(str +testi-tierekisteri-url+ "/paivitatietue") paivita-tietue-xml]
-            (let [toteuma (-> toteuma
-                              (update :arvot (fn [arvot] (assoc arvot :lmteksti "foo")))
-                              (assoc :toiminto :paivitetty
-                                     :tunniste "HARJ0000000000000002"))
-                  vastaus (haku-fn {:hakuehdot hakuehdot :toteuma toteuma} vastaus-saatu)
-                  _ (odota-ehdon-tayttymista #(true? @vastaus-saatu) "Tierekisteristä saatiin vastaus" 10000)
-                  varusteet (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila FROM varustetoteuma WHERE tunniste='HARJ0000000000000002' ORDER BY luotu ASC;")]
-              (swap! toteumien-maara inc)
-              (is (= (count (q "SELECT id FROM toteuma;")) @toteumien-maara))
-              (is (true? @vastaus-saatu) "Saatiin vastaus")
-              (is (= (mapv rest varusteet) [["HARJ0000000000000002" "tl506" "lisatty" "lahetetty"]
-                                            ["HARJ0000000000000002" "tl506" "paivitetty" "lahetetty"]]))
-              (is (= (:tunniste (first vastaus)) "HARJ0000000000000002"))
-              (doseq [[kentta arvo] (:arvot (first vastaus))]
-                (when (contains? (:arvot toteuma) kentta)
-                  (is (= arvo (str (kentta (:arvot toteuma)))))))))))
-
-      (testing "Varusteen poistaminen"
-        (let [poista-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
-              vastaus-saatu (atom false)]
-          (with-fake-http
-            [(str +testi-tierekisteri-url+ "/poistatietue") poista-tietue-xml]
-            (let [toteuma (-> toteuma
-                              (update :arvot (fn [arvot] (assoc arvot :lmteksti "foo")))
-                              (assoc :toiminto :poistettu
-                                     :tunniste "HARJ0000000000000002"))
-                  vastaus (haku-fn {:hakuehdot hakuehdot :toteuma toteuma} vastaus-saatu)
-                  _ (odota-ehdon-tayttymista #(true? @vastaus-saatu) "Tierekisteristä saatiin vastaus" 10000)
-                  varusteet (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila FROM varustetoteuma WHERE tunniste='HARJ0000000000000002' ORDER BY luotu ASC;")]
-              (swap! toteumien-maara inc)
-              (is (= (count (q "SELECT id FROM toteuma;")) @toteumien-maara))
-              (is (true? @vastaus-saatu) "Saatiin vastaus")
-              (is (= (mapv rest varusteet) [["HARJ0000000000000002" "tl506" "lisatty" "lahetetty"]
-                                            ["HARJ0000000000000002" "tl506" "paivitetty" "lahetetty"]
-                                            ["HARJ0000000000000002" "tl506" "poistettu" "lahetetty"]]))
-              (is (= (:tunniste (first vastaus)) "HARJ0000000000000002"))))))
-
-      (testing "Varusteen epäonnistunut tallentaminen"
-        (let [lisaa-tietue-virhe-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/virhe-tietueen-lisays-epaonnistui-response.xml"))
-              vastaus-saatu (atom false)]
-          (with-fake-http
-            [(str +testi-tierekisteri-url+ "/lisaatietue") lisaa-tietue-virhe-xml]
-            (let [vastaus (haku-fn {:hakuehdot hakuehdot :toteuma toteuma} vastaus-saatu)
-                  _ (odota-ehdon-tayttymista #(true? @vastaus-saatu) "Tierekisteristä saatiin vastaus" 10000)
-                  tallennettu-varuste (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila, lahetysvirhe FROM varustetoteuma WHERE tunniste='HARJ0000000000000003' ORDER BY luotu DESC;")]
-              (swap! toteumien-maara inc)
-              (is (= (count (q "SELECT id FROM toteuma;")) @toteumien-maara))
-              (is (true? @vastaus-saatu) "Saatiin vastaus")
-              (is (= (mapv rest tallennettu-varuste) [["HARJ0000000000000003" "tl506" "lisatty" "virhe" "Virheet: Tietueen tiedot ovat puutteelliset"]]))
-              (is (nil? (:tila vastaus)))
-              (is (= (:tunniste (first vastaus)) "HARJ0000000000000003"))
-              (doseq [[kentta arvo] (:arvot (first vastaus))]
-                (when (contains? (:arvot toteuma) kentta)
-                  (is (= arvo (str (kentta (:arvot toteuma)))))))))))
-      (testing "Varusteen epäonnistuneen tallentamisen tallentaminen"
-        (let [lisaa-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
-              vastaus-saatu (atom false)]
-          (with-fake-http
-            [(str +testi-tierekisteri-url+ "/lisaatietue") lisaa-tietue-xml]
-            (let [toteuma (-> toteuma
-                              (assoc :tunniste "HARJ0000000000000003"
-                                     :id (ffirst (q "SELECT id FROM varustetoteuma WHERE tunniste='HARJ0000000000000003'"))))
-                  vastaus (haku-fn {:hakuehdot hakuehdot :toteuma toteuma} vastaus-saatu)
-                  _ (odota-ehdon-tayttymista #(true? @vastaus-saatu) "Tierekisteristä saatiin vastaus" 10000)
-                  tallennettu-varuste (q "SELECT luotu, tunniste, tietolaji, toimenpide, tila, lahetysvirhe FROM varustetoteuma WHERE tunniste='HARJ0000000000000003' ORDER BY luotu DESC;")]
-              (is (= (count (q "SELECT id FROM toteuma;")) @toteumien-maara))
-              (is (true? @vastaus-saatu) "Saatiin vastaus")
-              (is (= (mapv rest tallennettu-varuste) [["HARJ0000000000000003" "tl506" "lisatty" "lahetetty" nil]]))
-              (is (= (:tunniste (first vastaus)) "HARJ0000000000000003")))))))))
 
 (deftest kokonaishintaisen-toteuman-siirtymatiedot
   (let [toteuma-id (ffirst (q "SELECT id FROM toteuma WHERE urakka = 2 AND lisatieto = 'Tämä on käsin tekaistu juttu'"))

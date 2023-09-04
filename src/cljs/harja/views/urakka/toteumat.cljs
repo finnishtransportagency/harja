@@ -15,7 +15,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.domain.roolit :as roolit]))
 
 
 (defn toteumat
@@ -76,11 +77,12 @@
 
          "Varusteet" :varusteet-ulkoiset
          (when (and (istunto/ominaisuus-kaytossa? :varusteet-ulkoiset)
+                 (roolit/jvh? @istunto/kayttaja)
                  (oikeudet/urakat-toteumat-varusteet id)
                  (#{:hoito :teiden-hoito} (:tyyppi ur)))
            [velho-varusteet/velho-varusteet ur])
-         "Vanhat kirjaukset (Tierekisteri)" :varusteet
 
+         "Vanhat varustekirjaukset (Tierekisteri)" :varusteet
          (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
                     (oikeudet/urakat-toteumat-varusteet id)
                     (#{:hoito :teiden-hoito} (:tyyppi ur)))

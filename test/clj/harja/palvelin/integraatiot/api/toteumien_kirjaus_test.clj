@@ -6,13 +6,13 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
-            [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]
             [taoensso.timbre :as log]
             [specql.core :refer [fetch columns]]
             [harja.domain.reittipiste :as rp])
   (:import (java.util Date)))
 
 (def kayttaja "destia")
+(def kayttaja-jvh "jvh")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -22,10 +22,7 @@
                       [:http-palvelin :db :integraatioloki])
    :api-reittitoteuma (component/using
                        (api-reittitoteuma/->Reittitoteuma)
-                       [:http-palvelin :db :db-replica :integraatioloki])
-   :api-varusteoteuma (component/using
-                       (api-varustetoteuma/->Varustetoteuma)
-                       [:http-palvelin :db :integraatioloki])))
+                       [:http-palvelin :db :db-replica :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -52,7 +49,7 @@
       (is (= (count toteuma-tehtava-idt) 1))
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
-      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
+      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja-jvh portti
                                                       (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
                                                           slurp
                                                           (.replace "__SOPIMUS_ID__" (str sopimus-id))
@@ -68,7 +65,7 @@
         (u (str "DELETE FROM toteuman_reittipisteet WHERE toteuma = " toteuma-id))
         (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
         (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id))))
-    (let [vastaus-poisto (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
+    (let [vastaus-poisto (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja-jvh portti
                                                   (-> "test/resurssit/api/toteuman-poisto.json"
                                                       slurp
                                                       (.replace "__SOPIMUS_ID__" (str sopimus-id))
@@ -94,7 +91,7 @@
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
-      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-jvh portti
                                                       (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                                                           slurp
                                                           (.replace "__SOPIMUS_ID__" (str sopimus-id))

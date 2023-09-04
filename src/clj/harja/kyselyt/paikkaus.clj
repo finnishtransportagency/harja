@@ -38,9 +38,10 @@
 (defn hae-paikkaukset-materiaalit [db hakuehdot]
   (fetch db
          ::paikkaus/paikkaus
-         (conj paikkaus/paikkauksen-perustiedot
-               [::paikkaus/materiaalit paikkaus/materiaalit-perustiedot])
-         hakuehdot))
+    (-> paikkaus/paikkauksen-perustiedot
+      (disj ::paikkaus/pinta-ala ::paikkaus/massamaara)
+      (conj [::paikkaus/materiaalit paikkaus/materiaalit-perustiedot]))
+    hakuehdot))
 
 (defn hae-paikkaukset-paikkauskohde [db hakuehdot]
   (fetch db
@@ -323,31 +324,49 @@
   "APIa varten tehty paikkauksen tallennus. Olettaa saavansa ulkoisen id:n"
   [db urakka-id kayttaja-id paikkaus]
   (let [_ (log/debug "tallenna-paikkaus :: paikkaus:" (pr-str paikkaus))
-        id (::paikkaus/id paikkaus)
-        ulkoinen-id (::paikkaus/ulkoinen-id paikkaus)
         paikkauskohde-id (::paikkaus/id
                            (tallenna-paikkauskohde db urakka-id kayttaja-id
                              (::paikkaus/paikkauskohde paikkaus)
                              (::paikkaus/alkuaika paikkaus)))
-        materiaalit (::paikkaus/materiaalit paikkaus)
-        tienkohdat (::paikkaus/tienkohdat paikkaus)
-        tr-osoite (::paikkaus/tierekisteriosoite paikkaus)
-        ;; Muutetaan työmenetelmä tarvittaessa ID:ksi
-        tyomenetelma (::paikkaus/tyomenetelma paikkaus)
+        {id ::paikkaus/id
+         ulkoinen-id ::paikkaus/ulkoinen-id
+         materiaalit ::paikkaus/materiaalit
+         tr-osoite ::paikkaus/tierekisteriosoite
+         tyomenetelma ::paikkaus/tyomenetelma
+         tienkohdat ::paikkaus/tienkohdat
+         leveys ::paikkaus/leveys
+         massamenekki ::paikkaus/massamenekki
+         massamaara ::paikkaus/massamaara } paikkaus
         paikkaus (cond-> paikkaus
-                         (not (nil? (::paikkaus/massamenekki paikkaus))) (update ::paikkaus/massamenekki bigdec))
+                         (not (nil? massamenekki)) (update ::paikkaus/massamenekki bigdec))
         tr-osoite-tr-muodossa (tr-domain/tr-alkuiseksi tr-osoite)
         osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db [tr-osoite-tr-muodossa])
         pituus (tr-domain/laske-tien-pituus (osien-pituudet-tielle 20) tr-osoite-tr-muodossa)
-        pinta-ala (when (and (::paikkaus/leveys paikkaus) pituus)
-                    (* (::paikkaus/leveys paikkaus) pituus))
+        pinta-ala (when (and leveys pituus)
+                    (* leveys pituus))
         ;; lisätään paikkauksiin pinta-ala ja massamäärä, jos ne luvut saatavilla mistä pystytään johtamaan
-        paikkaus (assoc paikkaus
-                   ::paikkaus/pinta-ala pinta-ala
+        paikkaus (cond-> paikkaus
+                   true (assoc
+                          ::paikkaus/pinta-ala pinta-ala)
+
+                   ;; Vanha tapa kirjata paikkaus massamenekillä. Voidaan poistaa myöhemmin, kun massamäärällä kirjaus
+                   ;; on saatu otettua käyttöön, pitäisi tapahtua 24.8.2023.
+                   (and pinta-ala (some? massamenekki) (nil? massamaara))
                    ;; massamenekki on kg/m2, kokonaismassamäärä puolestaan aina tonneja -->
                    ;; kokonaismassamäärä tonneina = massamenekki tonneina / m2 * pinta-ala m2
-                   ::paikkaus/massamaara (when (and (::paikkaus/massamenekki paikkaus) pinta-ala)
-                                           (* (/ (::paikkaus/massamenekki paikkaus) 1000) pinta-ala)))
+                   (assoc
+                     ::paikkaus/massamaara (* (/ massamenekki 1000) pinta-ala))
+
+                   ;; 24.8.2023 jälkeen rajapinnasta pitäisi saada massamäärä kilogrammoina massamenekin sijaan.
+                   (and (some? massamaara) (nil? massamenekki))
+                   (assoc
+                     ;; Rajapinnasta saadaan massamäärä kilogrammoina. -->
+                     ;; massamenekki kg/m^2 = massamäärä / pinta-ala.
+                     ;; Massamenekin pitäisi olla kymmenissä, joten with-precision 5 pitäisi olla riittävä.
+                     ::paikkaus/massamenekki (bigdec (with-precision 5 (/ massamaara pinta-ala)))
+                     ;; Muutetaan massamäärä vielä tonneiksi ennen kantaan tallennusta.
+                     ;; Massaa on maksimissaan kymmenissä tonneissa. Varalta kuitenkin with-precision 10.
+                     ::paikkaus/massamaara (bigdec (with-precision 10 (/ massamaara 1000)))))
         tyomenetelma (if (string? tyomenetelma)
                        (hae-tyomenetelman-id db tyomenetelma)
                        tyomenetelma)

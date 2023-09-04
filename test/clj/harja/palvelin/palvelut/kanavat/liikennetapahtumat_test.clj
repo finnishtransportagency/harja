@@ -206,6 +206,46 @@
 
       (is (= (count vastaus) (inc (count vanhat))))))
 
+  (testing "Vedenkorkeuden tallentaminen"
+    (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
+          sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+          kohde-id (hae-kohde-kansola)
+          [kohteenosa-id tyyppi] (hae-kohteenosat-kansola)
+          _ (is (= tyyppi "sulku") "Kansolan kohteenosan tyyppiä on vaihdettu, päivitä testi tai testidata.")
+          hakuparametrit {:urakka-idt #{urakka-id} ::toiminto/toimenpiteet #{:veden-korkeus}}
+          vanhat (kutsu-palvelua (:http-palvelin jarjestelma)
+                   :hae-liikennetapahtumat
+                   +kayttaja-jvh+
+                   hakuparametrit)
+          _ (is (empty vanhat) "Kansolan liikennetapahtumissa olikin jo vedenkorkeus, päivitä testi tai testidata")
+          params {::lt/urakka-id urakka-id
+                  ::lt/sopimus-id sopimus-id
+                  ::lt/kohde-id kohde-id
+                  ::lt/aika (pvm/nyt)
+                  ::lt/id -1
+                  ::lt/toiminnot [{::toiminto/kohteenosa-id kohteenosa-id
+                                   ::toiminto/kohde-id kohde-id
+                                   ::toiminto/toimenpide :veden-korkeus
+                                   ::toiminto/palvelumuoto :kauko
+                                   ::toiminto/lkm 1}]
+                  ::lt/vesipinta-alaraja 600
+                  ::lt/vesipinta-ylaraja 1001.9
+                  ::lt/lisatieto "Vedenkorkeuden lisätieto"
+                  ::lt/kuittaaja-id (:id +kayttaja-jvh+)
+                  :hakuparametrit hakuparametrit}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-liikennetapahtuma
+                    +kayttaja-jvh+
+                    params)]
+
+      (is (s/valid? ::lt/tallenna-liikennetapahtuma-kysely params))
+      (is (s/valid? ::lt/tallenna-liikennetapahtuma-vastaus vastaus))
+
+      (is (= (count vastaus) (inc (count vanhat))))
+      (is (some #(= (::lt/lisatieto %) "Vedenkorkeuden lisätieto") vastaus))
+      (is (some #(= (::lt/vesipinta-alaraja %) 600M) vastaus))
+      (is (some #(= (::lt/vesipinta-ylaraja %) 1001.9M) vastaus))))
+
   (testing "Ketjutus luotiin"
     (let [tapahtuma-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma WHERE lisatieto = 'Sitten mennään';")))]
       (is (= 1 (count (q (str "SELECT * FROM kan_liikennetapahtuma_ketjutus WHERE \"tapahtumasta-id\"=" tapahtuma-id)))))))

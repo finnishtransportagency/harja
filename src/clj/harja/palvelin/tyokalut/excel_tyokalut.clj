@@ -1,6 +1,6 @@
 (ns harja.palvelin.tyokalut.excel-tyokalut
   ;; Tänne voi laittaa mm yksittäisten raporttien funktioita
-  
+
   (:require [taoensso.timbre :as log]
             [harja.fmt :as fmt]
             [dk.ative.docjure.spreadsheet :as excel]
@@ -36,7 +36,7 @@
       (tee-solu solu-laskutettu (str (fmt/euro laskutettu)) tyyli-normaali)
       (when kyseessa-kk-vali?
         (tee-solu solu-laskutetaan (str (fmt/euro laskutetaan)) tyyli-normaali))
-      
+
       (dotimes [i 2]
         (.autoSizeColumn sheet i)))))
 
@@ -52,18 +52,17 @@
 
           ;; Rivit sekä ensimmäiset sarakkeet
           sarakkeen-ensimmainen-solu {:toimenpiteet "Toimenpiteet"
-                                      :palvelumuoto "Palvelumuoto"}
+                                      :palvelumuoto "Palvelumuoto, sulutukset"}
           ;; Yhteenvetosarakkeet
           sarakkeen_nimet {:toimenpiteet {:sulutukset-ylos "Sulutukset ylös: "
                                           :sulutukset-alas "Sulutukset alas: "
                                           :sillan-avaukset "Sillan avaukset: "
-                                          :tyhjennykset "Tyhjennykset: "
-                                          :yhteensa "Yhteensä: "}
+                                          :tyhjennykset "Tyhjennykset: "}
                            :palvelumuoto {:paikallispalvelu "Paikallispalvelu: "
                                           :kaukopalvelu "Kaukopalvelu: "
                                           :itsepalvelu "Itsepalvelu: "
                                           :muu "Muu: "
-                                          :yhteensa "Yhteensä: "}}
+                                          :yhteensa "Sulutukset yhteensä: "}}
 
           raportin-tiedot-tyyli (excel/create-cell-style! workbook {:font {:color :black
                                                                            :size 12
@@ -87,6 +86,8 @@
             ;; Tehdään uusi rivi ja ensimmäinen sarake
             (excel/set-cell! ensimmainen-sarake (str (x sarakkeen-ensimmainen-solu)))
             (excel/set-cell-style! ensimmainen-sarake tyyli-normaali)
+            ; palvelumuoto rivin otsakesolu saatava näkymään kokonaan
+            (.autoSizeColumn sheet 0)
 
             ;; Loput sarakkeet
             (doseq [y (get sarakkeiden-arvot x)]
@@ -95,8 +96,7 @@
                     arvo (liikenneyhteenveto-arvo-str sarakkeiden-arvot x (first y))
                     ;; Sarake indeksi (mille sarakkeelle data laitetaan)
                     ;; Avaimet on indeksijärjestyksessä
-                    indeksi (inc (.indexOf (keys (x sarakkeen_nimet)) (first y)))
-                    solu-nro (dec indeksi)
+                    solu-nro (inc (.indexOf (keys (x sarakkeen_nimet)) (first y)))
                     solu (.createCell rivi solu-nro)]
 
                 (excel/set-cell! solu (str nimi arvo))

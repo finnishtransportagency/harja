@@ -14,6 +14,8 @@
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.256"]
                  [com.cognitect/transit-clj "0.8.313"]
+                 ;; Pätevä yksinkertainen työkalu esimerkiksi config-tiedostojen mergeämiseen
+                 [meta-merge "1.0.0"]
 
                  [cljsjs/exif "2.1.1-1"]
 
@@ -44,7 +46,7 @@
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
-                 [org.postgresql/postgresql "42.4.1"]
+                 [org.postgresql/postgresql "42.6.0"]
                  [net.postgis/postgis-jdbc "2.5.0"]
                  [org.locationtech.jts/jts-core "1.16.1"]
                  [com.mchange/c3p0 "0.9.5.4"]

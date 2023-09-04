@@ -1,0 +1,67 @@
+-- Muutetaan uniikit indeksit käyttäämän luoja-sarakkeen sijaan urakka-saraketta
+-- Partitioiduissa tauluissa muutos on jo tehty migraatiossa V1_1029.
+CREATE UNIQUE INDEX tarkastus_ulkoinen_id_urakka_poistettu_tyyppi_uindex ON tarkastus (ulkoinen_id, urakka, poistettu, tyyppi);
+CREATE UNIQUE INDEX tarkastus_ennen_2015_ulkoinen_id_urakka_poistettu_tyyppi_uindex ON tarkastus_ennen_2015 (ulkoinen_id, urakka, poistettu, tyyppi);
+
+-- Poistetaan luoja uniikista indeksistä, koska urakka on tekemässä uniikkia indeksiä
+DROP INDEX tarkastus_ennen_2015_ulkoinen_id_luoja_tyyppi_idx;
+
+DROP INDEX tarkastus_2015_q1_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2015_q2_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2015_q3_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2015_q4_ulkoinen_id_luoja_tyyppi_idx;
+
+DROP INDEX tarkastus_2016_q1_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2016_q2_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2016_q3_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2016_q4_ulkoinen_id_luoja_tyyppi_idx;
+
+DROP INDEX tarkastus_2017_q1_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2017_q2_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2017_q3_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2017_q4_ulkoinen_id_luoja_tyyppi_idx;
+
+DROP INDEX tarkastus_2018_q1_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2018_q2_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2018_q3_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2018_q4_ulkoinen_id_luoja_tyyppi_idx;
+
+DROP INDEX tarkastus_2019_q1_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2019_q2_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2019_q3_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2019_q4_ulkoinen_id_luoja_tyyppi_idx;
+
+DROP INDEX tarkastus_2020_q1_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2020_q2_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2020_q3_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2020_q4_ulkoinen_id_luoja_tyyppi_idx;
+
+DROP INDEX tarkastus_2021_q1_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2021_q2_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2021_q3_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2021_q4_ulkoinen_id_luoja_tyyppi_idx;
+
+DROP INDEX tarkastus_2022_q1_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2022_q2_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2022_q3_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2022_q4_ulkoinen_id_luoja_tyyppi_idx;
+
+DROP INDEX tarkastus_2023_q1_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2023_q2_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2023_q3_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2023_q4_ulkoinen_id_luoja_tyyppi_idx;
+
+DROP INDEX tarkastus_2024_q1_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2024_q2_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2024_q3_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2024_q4_ulkoinen_id_luoja_tyyppi_idx;
+
+DROP INDEX tarkastus_2025_q1_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2025_q2_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2025_q3_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2025_q4_ulkoinen_id_luoja_tyyppi_idx;
+
+DROP INDEX tarkastus_2026_q1_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2026_q2_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2026_q3_ulkoinen_id_luoja_tyyppi_idx;
+DROP INDEX tarkastus_2026_q4_ulkoinen_id_luoja_tyyppi_idx;

@@ -224,7 +224,13 @@
               (let [kentan-skeema (get skeema i)
                     haettu-arvo (if hae
                                   (hae rivi)
-                                  (get rivi nimi))]
+                                  (get rivi nimi))
+                    solun-tooltip? (and solun-tooltip (solun-tooltip rivi))
+                    tooltip-params {:tooltip-disabloitu? (when-not solun-tooltip? true)}
+                    tooltip-suunta-fn (fn [rivi] (:suunta (solun-tooltip rivi)))
+                    tooltip-params (if (and solun-tooltip? (tooltip-suunta-fn rivi))
+                                     (assoc tooltip-params :suunta (tooltip-suunta-fn rivi))
+                                     tooltip-params)]
                 (cond
                   (and (= :avattava-rivi tyyppi) (not isanta-rivin-id))
                   ^{:key (str "avattava-rivi-tila" id)}
@@ -262,7 +268,7 @@
                                    (luokka rivi)
                                    luokka))}
                    ;; Solun sisältö
-                   [yleiset/tooltip {:tooltip-disabloitu? (when-not solun-tooltip true)}
+                   [yleiset/tooltip tooltip-params
                     [:div (when (and (:oikealle? rivi) ((:oikealle? rivi) nimi)) {:style {:float "right"}})
                     ;; Sijoitetaan infolaatikko suhteessa viimeiseen soluun.
                     ;; Semanttisesti sen kuuluisi olla suhteessa riviin (koska laatikko kuvaa rivin lisätietoa).

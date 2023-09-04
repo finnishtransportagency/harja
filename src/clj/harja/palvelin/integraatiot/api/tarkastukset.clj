@@ -31,11 +31,11 @@
         kayttajanimi (:kayttajanimi kayttaja)]
     #_ (log/debug (format "Poistetaan tarkastus ulk.id %s tyyppiä: %s käyttäjän: %s toimesta. Data: %s"
                        ulkoiset-idt
-                       tyyppi
+                       (name tyyppi)
                        kayttajanimi
                        data))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (let [poistettujen-maara (q-tarkastukset/poista-tarkastus! db kayttaja-id urakka-id ulkoiset-idt)
+    (let [poistettujen-maara (q-tarkastukset/poista-tarkastus! db kayttaja-id urakka-id (name tyyppi) ulkoiset-idt)
           poistettujen-liitteiden-maara (q-tarkastukset/poista-poistetut-liitteet! db {:urakka-id urakka-id})]
       (let [ilmoitukset (if (pos? poistettujen-maara)
                           (format "Tarkastukset poistettu onnistuneesti. Poistettiin: %s tarkastusta." poistettujen-maara)
@@ -62,6 +62,16 @@
     :polku "/api/urakat/:id/tarkastus/talvihoitotarkastus"
     :pyynto-skeema json-skeemat/talvihoitotarkastuksen-poisto
     :tyyppi :talvihoito
+    :metodi :delete}
+   {:palvelu :lisaa-tieturvallisuustarkastus
+    :polku "/api/urakat/:id/tarkastus/tieturvallisuustarkastus"
+    :pyynto-skeema json-skeemat/tieturvallisuustarkastuksen-kirjaus
+    :tyyppi :tieturvallisuus
+    :metodi :post}
+   {:palvelu :poista-tieturvallisuustarkastus
+    :polku "/api/urakat/:id/tarkastus/tieturvallisuustarkastus"
+    :pyynto-skeema json-skeemat/tieturvallisuustarkastuksen-poisto
+    :tyyppi :tieturvallisuus
     :metodi :delete}
    {:palvelu :lisaa-soratietarkastus
     :polku "/api/urakat/:id/tarkastus/soratietarkastus"

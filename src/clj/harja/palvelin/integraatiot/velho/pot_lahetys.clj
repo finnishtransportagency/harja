@@ -8,7 +8,7 @@
             [harja.kyselyt.yha :as q-yha-tiedot]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.velho.sanomat.paallysrakenne-lahetyssanoma :as kohteen-lahetyssanoma]
-            [harja.palvelin.integraatiot.velho.yhteiset :refer [hae-velho-token]]
+            [harja.palvelin.integraatiot.velho.yhteiset :as velho-yhteiset]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.pvm :as pvm]
@@ -90,12 +90,12 @@
           (fn [konteksti]
             (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
               (let [token-virhe-fn (partial paivita-yllapitokohde! "tekninen-virhe")
-                    token (hae-velho-token token-url kayttajatunnus salasana konteksti token-virhe-fn)]
+                    token (velho-yhteiset/hae-velho-token token-url kayttajatunnus salasana konteksti token-virhe-fn)]
                 (when token
                   (let [urakka (assoc urakka :harjaid urakka-id
                                              :sampoid (yha/yhaan-lahetettava-sampoid urakka))
                         kohde (hae-kohteen-tiedot db kohde-id)
-                        kutsudata (kohteen-lahetyssanoma/muodosta urakka kohde (partial koodistot/konversio db))
+                        kutsudata (kohteen-lahetyssanoma/muodosta urakka kohde (partial koodistot/konversio db velho-yhteiset/lokita-hakuvirhe))
                         ainakin-yksi-rivi-onnistui? (atom false)
                         kohteen-lahetys-onnistunut? (atom true)
                         laheta-rivi-velhoon (fn [kuorma paivita-fn]

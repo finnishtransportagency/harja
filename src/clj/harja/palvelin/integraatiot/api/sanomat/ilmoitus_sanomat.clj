@@ -28,11 +28,11 @@
                    :y (second koordinaatit)})
         (rakenna-tierekisteriosoite tierekisteriosoite))))
 
-(defn rakenna-selitteet [ilmoitus]
-  (if (:selitteet ilmoitus)
-    (let [selitteet-kannassa (vec (.getArray (:selitteet ilmoitus)))
-          selitteet-vastauksessa (mapv (fn [selite] {:selite selite}) selitteet-kannassa)]
-      (update ilmoitus :selitteet (constantly selitteet-vastauksessa)))
+(defn rakenna-ilmoituksen-data [ilmoitus vectorin-avain elementin-avain]
+  (if (vectorin-avain ilmoitus)
+    (let [kannassa (vec (.getArray (vectorin-avain ilmoitus)))
+          vastauksessa (mapv (fn [arvo] {elementin-avain arvo}) kannassa)]
+      (update ilmoitus vectorin-avain (constantly vastauksessa)))
     ilmoitus))
 
 (defn rakenna-henkilo [ilmoitus henkiloavain]
@@ -66,9 +66,20 @@
         (assoc :kuittaukset kuittaukset))
       ilmoitus)))
 
+(defn- poista-tyhja-lista
+  "Tyhjät arrayt eivät mene validaatiosta läpi.
+  Poistetaan avain kokonaan, jos sen arvo on tyhjä lista."
+  [ilmoitus avain]
+  (println "Poistetaan tyhjä lista")
+  (if (empty? (avain ilmoitus))
+    (dissoc ilmoitus avain)
+    ilmoitus))
+
 (defn rakenna-ilmoitus [ilmoitus]
   {:ilmoitus (-> ilmoitus
-               rakenna-selitteet
+               (rakenna-ilmoituksen-data :selitteet :selite)
+               (rakenna-ilmoituksen-data :kuvat :url)
+               (poista-tyhja-lista :kuvat)
                (rakenna-henkilo :ilmoittaja)
                (rakenna-henkilo :lahettaja)
                rakenna-sijanti

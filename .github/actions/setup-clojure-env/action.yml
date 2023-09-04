@@ -1,8 +1,9 @@
 name: 'Setup Clojure environment'
 description: 'Asentaa Clojure-kehitysympäristön ja lataa riippuvuudet'
 
-  #inputs:
-
+inputs:
+  install-tools:
+    description: 'Asennetaanko clj-työkalut?'
 
 runs:
   using: "composite"
@@ -19,15 +20,34 @@ runs:
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-leiningen-${{ hashFiles('**/project.clj') }}
-        restore-keys: ${{ runner.os }}-leiningen-
+        # https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#matching-a-cache-key
+        # "restore-keys allows you to specify a list of alternate restore keys to use when there is a cache miss on key. "
+        # Kommentoitu pois, jotta PR brancheissä ei haeta aina cachesta potentiaalisesti vääriä clojure depsuja
+        #restore-keys: ${{ runner.os }}-leiningen-
 
-    # TODO: Selvitä tietoturvanäkökulma setup-clojure actionionille
-    #       Perus ubuntu-latest GHA imagen mukana tulee leiningen, mutta olisi hyvä hallita käytetty versio itse.
-    #    - name: Install clojure tools
-    #      uses: DeLaGuardo/setup-clojure@9.5
-    #      with:
-    #        clj-kondo: 2023.05.26
-    #        lein: 2.9.10
+    # FIXME: delaguardo/setup-clojure@1c76ab0e154379260d7a6ea16b413679abe46785 is not allowed to be used in finnishtransportagency/harja.
+    #        Actions in this workflow must be: within a repository that belongs to your Enterprise account, created by GitHub,
+    #        verified in the GitHub Marketplace, or matching the following: haya14busa/action-bumpr@e184f8e5aa9d5045eb9f8194fc0977e723100d41.
+    # https://github.com/DeLaGuardo/setup-clojure
+#    - name: Install clojure tools
+#      uses: DeLaGuardo/setup-clojure@1c76ab0e154379260d7a6ea16b413679abe46785 # versio 11
+#      if: ${{ inputs.install-tools }} == 'true'
+#      with:
+#        clj-kondo: 2023.07.13
+#        #lein: 2.9.8
+
+    - name: Install clj-kondo
+      if: ${{ inputs.install-tools }} == 'true'
+      env:
+        VERSION: 2023.07.13
+      run: |
+        cd /tmp
+        curl -o clj-kondo.zip -sL "https://github.com/clj-kondo/clj-kondo/releases/download/v${VERSION}/clj-kondo-${VERSION}-linux-amd64.zip"
+        unzip -qqo clj-kondo.zip
+        rm clj-kondo.zip
+        mv -f "/tmp/clj-kondo" "/usr/local/bin/clj-kondo"
+
+      shell: bash
 
     - name: Download Clojure dependencies
       if: steps.cache-clojure-deps.outputs.cache-hit != 'true'

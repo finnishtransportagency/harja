@@ -293,6 +293,12 @@ SELECT
   tm.maara              AS toteumamateriaali_maara,
   t.alkanut             AS toteuma_alkanut,
   t.paattynyt           AS toteuma_paattynyt,
+  t.tr_numero           AS toteuma_tierekisteriosoite_numero,
+  t.tr_alkuosa          AS toteuma_tierekisteriosoite_alkuosa,
+  t.tr_alkuetaisyys     AS toteuma_tierekisteriosoite_alkuetaisyys,
+  t.tr_loppuosa         AS toteuma_tierekisteriosoite_loppuosa,
+  t.tr_loppuetaisyys    AS toteuma_tierekisteriosoite_loppuetaisyys,
+  t.reitti              AS toteuma_sijainti,
   m.id                  AS toteumamateriaali_materiaali_id,
   t.id                  AS toteuma_id,
   tm.id                 AS toteumamateriaali_tmid,
@@ -488,3 +494,12 @@ SELECT m.id                               AS materiaali_id,
 -- name: hae-talvisuolan-materiaaliluokka
 SELECT nimi as materiaaliluokka, yksikko as materiaaliluokka_yksikko, materiaalityyppi as materiaaliluokka_tyyppi
   FROM materiaaliluokka where nimi = 'Talvisuola';
+
+-- name: hae-talvisuolan-hoitovuoden-kokonaismaara
+SELECT SUM(kokonaismaara) as kokonaismaara
+  FROM raportti_toteutuneet_materiaalit rtm
+       JOIN materiaalikoodi mk ON rtm."materiaali-id" = mk.id
+ WHERE (mk.materiaalityyppi = 'talvisuola'::materiaalityyppi
+    OR mk.materiaalityyppi = 'erityisalue'::materiaalityyppi)
+   AND rtm."urakka-id" = :urakka-id
+   AND rtm.paiva BETWEEN :alkupvm AND :loppupvm;

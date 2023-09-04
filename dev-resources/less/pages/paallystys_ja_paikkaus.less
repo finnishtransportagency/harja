@@ -1,3 +1,5 @@
+@import "../yleiset.less";
+
 .ilmoitus-hylatty {
     color: @vaara;
 }
@@ -128,26 +130,92 @@
 .yllapitokohteet .toiminnot,
 .paallystysilmoituslomake .toiminnot,
 .aikataulu-toiminnot {
-    > div {
-        padding-top: 2px;
-        button.napiton-nappi {
-            &:hover {
-                transform: scale(1.2);
-            }
-            background-color: inherit;
-            padding: 1px;
-            margin-right: 4px;
-            img {
-                width: @valistys-16;
-                height: @valistys-16;
-                padding: 1px;
-                &:hover {
-                    color: @white-default;
-                }
-            }
-        }
+  display: grid;
+  overflow: hidden;
+  padding: 0;
+  grid-template-columns: repeat(auto-fit, minmax(26px, 1fr));
+  grid-template-rows: 1fr;
+  grid-auto-columns: 0;
+  grid-auto-rows: 0;
+
+  > div {
+    &.aina-viimeinen {
+      grid-row: 1;
+      grid-column: -2;
     }
+
+    padding-top: 2px;
+
+    button.napiton-nappi {
+      &:hover {
+        transform: scale(1.2);
+      }
+
+      background-color: inherit;
+      padding: 1px;
+      margin-right: 4px;
+
+      img {
+        width: @valistys-16;
+        height: @valistys-16;
+        padding: 1px;
+
+        &:hover {
+          color: @white-default;
+        }
+      }
+    }
+  }
+
+  ul.lisatoiminnot {
+    &.auki {
+      display: flex;
+    }
+    // Vetolaatikon tyylit
+    list-style: none;
+    width: max-content;
+    display: none;
+    position: absolute;
+    background-color: @white;
+    flex-direction: column;
+    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.20), 0 2px 1px 0 rgba(0, 0, 0, 0.20);
+    align-items: flex-start;
+
+    // Täsmätään laatikko alkamaan napin oikeasta reunasta vasemmalle.
+    transform: translateX(calc(~'-100% + ' 22px));
+    padding: 0;
+    z-index: 10;
+
+    button.napiton-nappi {
+      &:hover {
+        transform: none;
+      }
+      // Fontin tyylit figmasta
+      color: @black-default;
+      font-weight: normal;
+      line-height: 1.25;
+      font-size: 0.875rem;
+
+      // Täytetään koko vetolaatikko vasemmasta reunasta
+      width: 100%;
+      text-align: start;
+    }
+
+    > li {
+      &:hover {
+        background-color: @white-dark;
+      }
+
+      &:not(:last-child) {
+        border-bottom: 1px solid @white-darker;
+      }
+      display: flex;
+      width: 100%;
+      padding: @valistys-8;
+    }
+  }
 }
+
 .takuupvm-valinta {
     .dropdown.livi-alasveto {
         width: 146px;
@@ -360,3 +428,28 @@ div.yllapitokohteet {
   }
 }
 
+.kulutus-pituus-yhteensa {
+  color: @black-light;
+  position: relative;
+  top: -20px;
+  font-size: 14px;
+}
+
+.kulutus-hyppy-info {
+  font-size: 14px;
+  width: 369px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: @valistys-6;
+  margin-top: @valistys-16;
+  padding-left: @valistys-12;
+}
+
+.kulutus-hyppy-ikoni-alert {
+  transform: scale(0.6);
+}
+
+.kulutus-hyppy-ikoni-ok {
+  transform: scale(0.8);
+}

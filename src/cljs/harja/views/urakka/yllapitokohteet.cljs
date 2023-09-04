@@ -245,7 +245,9 @@
                         (if aikataulu? tr-leveys-aikataulu tr-leveys)
                         tr-sarakkeet-asetukset
                         vain-nama-validoinnit?))
-                    [(assoc paallystys-tiedot/pk-lk-skeema
+                    [(assoc paallystys-tiedot/kvl-skeema
+                       :leveys kvl-leveys)
+                     (assoc paallystys-tiedot/pk-lk-skeema
                        :fokus-klikin-jalkeen? true
                        :tasaa (when aikataulu? :oikea)
                        :leveys (if aikataulu?
@@ -956,13 +958,13 @@
   ;; Joten ei muuta kuin speksi käteen ja tarkkana, jos muutat näitä
   [{:teksti "" :sarakkeita (case listaus
                              :yha-kohteet
-                             (if piilota-arvonmuutos-ja-sanktiot? 15 17)
-
-                             :muut-kohteet
                              (if piilota-arvonmuutos-ja-sanktiot? 14 16)
 
+                             :muut-kohteet
+                             (if piilota-arvonmuutos-ja-sanktiot? 13 15)
+
                              :yhteensa
-                             (if piilota-arvonmuutos-ja-sanktiot? 16 18))
+                             (if piilota-arvonmuutos-ja-sanktiot? 15 17))
     :luokka "paallystys-tausta"}
    {:teksti "Hintamuutokset" :sarakkeita 3 :luokka "paallystys-tausta-tumma"}
    {:teksti "" :sarakkeita 2 :luokka "paallystys-tausta"}])
@@ -1100,10 +1102,7 @@
                        {:nimi :tr-loppuosa :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
                        {:nimi :tr-loppuetaisyys :muokattava? paallystysilmoitusta-ei-ole-lukittu?}]
                       true)
-                    [{:otsikko "KVL"
-                      :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :numero :leveys kvl-leveys
-                      :muokattava? (constantly (not yha-sidottu?))}
-                     (when paallystys?
+                    [(when paallystys?
                        {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
                         :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :tasaa :oikea})
                      (when paallystys?
@@ -1203,7 +1202,6 @@
       {:otsikko "" :nimi :tr-alkuetaisyys :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :tr-loppuosa :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :tr-loppuetaisyys :tyyppi :string :leveys tr-leveys}
-      {:otsikko "" :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :string :leveys kvl-leveys}
       {:otsikko "" :nimi :yllapitoluokka :tyyppi :string :leveys pk-luokka-leveys}
       {:otsikko "Toteu\u00ADtunut hinta (muut kohteet)" :nimi :toteutunut-hinta
        :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys :tasaa :oikea}

@@ -76,7 +76,7 @@
         :paivittainen-lahetysaika [0 0 0]}
 
 
- :solita-sahkoposti {:vastausosoite "harja-ala-vastaa@vayla.fi"
+ :ulkoinen-sahkoposti {:vastausosoite "harja-ala-vastaa@vayla.fi"
                      ;; :palvelin "solita-service-1.solita.fi"
                      }
 
@@ -104,7 +104,6 @@
 
  ;; Voit hallinnoida geometria-aineistojen päivitystä GEOMETRIAPAIVITYS-taulussa.
  ;; Jos aineiston nimi muuttuu, voit tallentaa nimen ja sen voimassaolon GEOMETRIAAINEISTO-tauluun.
- ;; Huom. Kutsut julkinen.vayla.fi-palveluun epäonnistuvat, jos käyttäjätunnus ja salasana on asetettu. Kutsut ava.vaylapilvi.fi-osoitteeseen epäonnistuvat, jos käyttäjätiedot puuttuvat.
  :geometriapaivitykset {:tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/tieosoiteverkkoLine.shp"
                         :tieosoiteverkon-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:tieosoiteverkko&outputFormat=SHAPE-ZIP"
                         :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/tieosoiteverkkoLine.shz"
@@ -149,9 +148,9 @@
                         :turvalaitteiden-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:turvalaitteet&outputFormat=SHAPE-ZIP"
                         :turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/Turvalaitteet.shz"
 
-                        :kanavien-shapefile "file://shp/Vesivaylien_kanavat/sulkukanavat.shp"
-                        :kanavien-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:sulkukanavat&outputFormat=SHAPE-ZIP"
-                        :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/Sulkukanavat.shz"}
+                        :kanavien-shapefile "file://shp/Vesivaylien_kanavat/sulkukanavatPolygon.shp"
+                        :kanavien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=vesivaylatiedot:sulkukanavat&outputFormat=SHAPE-ZIP"
+                        :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/SulkukanavatPolygon.shz"}
 
  :yha {:url "https://api.testivaylapilvi.fi/yha/rest/"
        :api-key #=(slurp "../.harja/yha-api-key")} ;; Testipalvelimen avain projektin jakamassa LastPass-kansiossa.

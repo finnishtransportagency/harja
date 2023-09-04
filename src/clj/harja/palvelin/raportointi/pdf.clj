@@ -32,7 +32,13 @@
 (def raportin-tehostevari "#f0f0f0")
 (def korostettu-vari "#004D99")
 (def hennosti-korostettu-vari "#E0EDF9")
+(def varoitus-vari "#f8d7d1")
+(def huomio-vari "#FFF0BF")
 (def harmaa-korostettu-vari "#FAFAFA")
+(def harmaa-himmennys-vari "#858585")
+(def valiotsikko-tumma-vari "#e1e1e1")
+(def yhteenveto-tumma-vari "#fafafa")
+(def varoitus-punainen-vari "#dd0000")
 
 (defmulti muodosta-pdf
           "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
@@ -60,13 +66,18 @@
 (defmethod muodosta-pdf :vain-arvo [arvo] arvo)
 
 (defmethod muodosta-pdf :arvo [[_ {:keys [arvo desimaalien-maara fmt ryhmitelty? jos-tyhja] :as elementti}]]
-  [:fo:inline
-   [:fo:inline (if-not (nil? arvo)
-                 (cond
-                   desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
-                   fmt (fmt arvo)
-                   :else arvo)
-                 jos-tyhja)]])
+  (let [;; Negaativisille numeroille laitetaan negaatio, muuten ei tehdä mitään
+        etuliite (if (and (number? arvo) (neg? arvo)) "-\u00A0" "")
+        ;; Ja, koska etuliite lisätään käsin, pitää negaatio poistaa
+        arvo (if (and (number? arvo) (neg? arvo)) (* -1 arvo)  arvo)]
+    [:fo:inline
+     [:fo:inline (if-not (nil? arvo)
+                   (str etuliite
+                     (cond
+                       desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
+                       fmt (fmt arvo)
+                       :else arvo))
+                   jos-tyhja)]]))
 
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
@@ -99,14 +110,18 @@
   [:fo:inline
    [:fo:inline (str arvo (when selite (str " (" selite ")")))]])
 
-(defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt lihavoi?]}]]
+(defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt lihavoi? font-size himmenna?]}]]
   (let [tyyli {:color (or itsepaisesti-maaritelty-oma-vari
                           (raportti-domain/virhetyylit tyyli)
                           "black")}
+        tyyli (if font-size (assoc tyyli :font-size font-size) tyyli)
+        tyyli (if himmenna? (assoc tyyli :color harmaa-himmennys-vari) tyyli)
         tyyli (if lihavoi?
                 (merge tyyli {:font-weight "bold"})
                 tyyli)]
-    [:fo:inline
+    ;; Muutettu inline -> block
+    ;; Korjaa bugin päiväkirjaraportissa, ei vaikuta mitenkän ulkonäköön
+    [:fo:block
      [:fo:inline tyyli
       (if fmt (fmt arvo) arvo)]]))
 
@@ -161,7 +176,7 @@
   [:fo:table-row
    [:fo:table-cell {:padding "1mm"
                     :font-weight "normal"
-                    :background-color "#e1e1e1"
+                    :background-color valiotsikko-tumma-vari
                     :number-columns-spanned (count sarakkeet)}
     [:fo:block {:space-after "0.5em"}]
     [:fo:block (cdata otsikko)]]])
@@ -179,26 +194,48 @@
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
 
-(defn- korostetaanko-hennosti
+(defn- korosta-kolumni-arvosta
   "Yleisesti PDF:n solun formatointi asetetaan rivitasolla. Tällä funktiolla voidaan määrittää
-  solutasoisia hentoja korostuksia, eli vaalean sinistä taustaa.
-  Käytetään soluelementille annettua hento-korostus-arvoa ensisijaisesti. Toissijaisesti käytetään riville annetta.
+  solutasoisia korostuksia, eli eri värisiä taustoja.
+  Käytetään soluelementille eli arvolle annettua korostusa, joita on kolme:
+  ':korosta-hennosti?'
+  ':varoitus?'
+  ':huomio?'
 
-  'korosta-hennosti?' ensimmäinen parametri tulee rivitasolta.
-  'arvo-datassa' on koko soluelementin sisältö ja jos sille on määritelty hento korostus, niin asettaan taustaväri."
-  [korosta-hennosti? arvo-datassa]
-  (cond
-    (and
-      (raportti-domain/raporttielementti? arvo-datassa)
-      (false? (:korosta-hennosti? (second arvo-datassa))))
-    {}
-    korosta-hennosti? korosta-hennosti?
-    (and
-      (raportti-domain/raporttielementti? arvo-datassa)
-      (:korosta-hennosti? (second arvo-datassa)))
-    {:background-color hennosti-korostettu-vari
-     :color "black"}
-    :else {}))
+  'arvo-datassa' on koko soluelementin sisältö ja jos sille on määritelty korostus, niin asettaan taustaväri korostuksen mukaan."
+  [arvo-datassa]
+  (let [korostusavain (if (and arvo-datassa (vector? arvo-datassa))
+                        (cond
+                          (:korosta-hennosti? (second arvo-datassa)) :korosta-hennosti?
+                          (:varoitus? (second arvo-datassa)) :varoitus?
+                          (:huomio? (second arvo-datassa)) :huomio?
+                          :default :ei-korostusta)
+                        :ei-korostusta)
+        korostus-arvo-datassa (when (and
+                                      arvo-datassa
+                                      (vector? arvo-datassa)
+                                      (korostusavain (second arvo-datassa)))
+                                (korostusavain (second arvo-datassa)))
+        taustavari (case korostusavain
+                     :korosta-hennosti? hennosti-korostettu-vari
+                     :varoitus? varoitus-vari
+                     :huomio? huomio-vari
+                     nil)
+        korostus (cond
+                   ;; korostusta ei ole asetettu data -elementtiin
+                   (and
+                     (raportti-domain/raporttielementti? arvo-datassa)
+                     (false? korostus-arvo-datassa))
+                   {}
+                   (= korostusavain :ei-korostusta) {}
+                   ;; Korostus asetettu data elementtiin
+                   (and
+                     (raportti-domain/raporttielementti? arvo-datassa)
+                     korostus-arvo-datassa)
+                   {:background-color taustavari
+                    :color "black"}
+                   :else {})]
+    korostus))
 
 (defn- taulukko-rivit [sarakkeet data viimeinen-rivi
                        {:keys [viimeinen-rivi-yhteenveto? korosta-rivit
@@ -214,12 +251,14 @@
                 korosta-rivi? (:korosta? optiot)
                 valkoinen? (:valkoinen? optiot)
                 korosta-harmaa? (:korosta-harmaa? optiot)
-                korosta-hennosti? (:korosta-hennosti? optiot)]]
+                korosta-hennosti? (:korosta-hennosti? optiot)
+                varoitus? (:varoitus? optiot)
+                huomio? (:huomio? optiot)]]
       (if-let [otsikko (:otsikko optiot)]
         (taulukko-valiotsikko otsikko sarakkeet)
         (let [yhteenveto? (when (and viimeinen-rivi-yhteenveto?
                                      (= viimeinen-rivi rivi))
-                            {:background-color "#fafafa"
+                            {:background-color yhteenveto-tumma-vari
                              :border (str "solid 0.3mm " raportin-tehostevari)
                              :font-weight "bold"})
               korosta? (when (or korosta-rivi? (some #(= i-rivi %) korosta-rivit))
@@ -234,6 +273,12 @@
               korosta-hennosti? (when korosta-hennosti?
                                   {:background-color hennosti-korostettu-vari
                                    :color "black"})
+              varoitus? (when varoitus?
+                          {:background-color varoitus-vari
+                           :color "black"})
+              huomio? (when huomio?
+                          {:background-color huomio-vari
+                           :color "black"})
               lihavoi? (when lihavoi-rivi?
                          {:font-weight "bold"})]
           [:fo:table-row
@@ -268,7 +313,11 @@
                                korosta?
                                valkoinen?
                                korosta-harmaa?
-                               (korostetaanko-hennosti korosta-hennosti? arvo-datassa)
+                               ;; Rivin korostustiedot ajaa koluminikohtaisten korostusten yli.
+                               ;; Tarkistetaan siis, onko jo korostukset olemassa, jos ei ole, niin haetaan arvo datasta eli kolumilta
+                               (if (or korosta-hennosti? varoitus? huomio?)
+                                 (first (filter #(not (nil? %)) (into #{} [korosta-hennosti? varoitus? huomio?])))
+                                 (korosta-kolumni-arvosta arvo-datassa))
                                lihavoi?)
               (when korosta?
                 [:fo:block {:space-after "0.2em"}])
@@ -425,7 +474,7 @@
              (str elem ":")
              (str (fmt/euro hoitokauden-arvo)))))))))
 
-(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko hoitokausi-arvotaulukko?] :as optiot} sarakkeet data]]
+(defn taulukko [otsikko hoitokausi-arvotaulukko? sarakkeet data optiot]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
     (if hoitokausi-arvotaulukko?
       (hoitokausi-kuukausi-arvotaulukko sarakkeet data)
@@ -438,13 +487,20 @@
         (taulukko-body sarakkeet data optiot)]
        [:fo:block {:space-after "1em"}]])))
 
+(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko hoitokausi-arvotaulukko?] :as optiot} sarakkeet data]]
+  (taulukko otsikko hoitokausi-arvotaulukko? sarakkeet data optiot))
+
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
 
-(defmethod muodosta-pdf :jakaja [[_ _]]
-  [:fo:block {:border "solid 0.1mm gray"
-              :margin-top "30px"
-              :margin-bottom "30px"}])
+(defmethod muodosta-pdf :jakaja [[_ margin]]
+  (let [tyyli {:border "solid 0.1mm gray"}
+        ;; Jos haluaan ""poistaa margin"" jakajasta, laitetaan vaan 8px
+        margin-px (if-not (= margin :poista-margin) "30px" "8px")
+        tyyli (assoc tyyli
+                :margin-top margin-px
+                :margin-bottom margin-px)]
+    [:fo:block tyyli]))
 
 (defmethod muodosta-pdf :otsikko [[_ teksti]]
   [:fo:block {:padding-top "5mm" :font-size otsikon-fonttikoko} teksti])
@@ -471,7 +527,7 @@
               :font-weight "bold"} teksti])
 
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
-  (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))
+  (muodosta-pdf [:teksti teksti {:vari varoitus-punainen-vari}]))
 
 (defmethod muodosta-pdf :infolaatikko [[_ teksti {:keys [tyyppi toissijainen-viesti leveys rivita?]}]]
   ;; TODO: Infolaatikon renderöintiä ei toistaiseksi tueta. Toteutetaan, jos tarve ilmenee.

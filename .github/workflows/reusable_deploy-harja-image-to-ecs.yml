@@ -59,9 +59,14 @@ jobs:
           role-duration-seconds: 3600
           role-skip-session-tagging: true
 
+      # https://github.com/aws-actions/amazon-ecr-login
+      # mask-password: 'true' käyttö on suositeltavaa, jotta docker-salasanaa ei tulosteta mikäli debug-lokitus on enabloitu.
+      # Huomioi kuitenkin, että docker salasanan jakaminen jobien välillä ei onnistu mikäli se maskataan.
       - name: Authenticate with AWS ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+        with:
+          mask-password: 'true'
 
       - name: Build, tag and push image to ECR
         id: build-image
@@ -79,24 +84,26 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-# TODO: Ennen migraatioiden ajoa voisi Fargate kontit ajaa alas migraatioiden ajon ajaksi
-#      - name: Shutdown Fargate containers
-#        run: |
-#          aws ecs foobar
+      # Sammutetaan Harjan Fargate taskit migraatioiden ajoa varten, jotta ne eivät häiritse migraation onnistumista
+      - name: Shutdown Harja Fargate tasks
+        uses: ./.github/actions/shutdown-fargate-tasks
+        with:
+          cluster: ${{ vars.ECS_CLUSTER_NAME }}
+        # FIXME: Ajetaan migraatiot tällä hetkellä vain dev-ympäristölle,
+        #        kunnes stg/prod ympäristöjen tietokantojen data on saatu ojennukseen
+        if: ${{ inputs.environment }} == 'dev'
 
-      # TODO: Tähän kohtaan todennäköisesti migraatioiden ajo RDS:ään
-      # Laitetaan esim. Fargate kontit alas ja ajetaan migratiot
-      # Tässä kohtaa uusi image on jo puskettu ECR:ään.
-      # Kun migraatiot ovat valmiit, voidaan viedä imagen deploymentti alempana loppuun ja käynnistää kontit uudelleen
-      #      - name: Run migrations to RDS
-      #        uses: ./.github/actions/run-migrations-to-rds
-      #        with:
-      #          commit-sha: {{ github.sha }}
-      #
-      # Migraatioiden ajon jälkeen hoidetaan imagen deployment ECS:ään loppuun ja päivitetään task defition
-      # Varmista, että Fargate kontit käynnistyvät uudestaan task definitionin deploymentin jälkeen
-      # Task definition deployment itsessään saattaa käynnistää kontit vaikka ne olisivat alhaalla, mutta en ole varma.
+      - name: Run migrations to RDS
+        uses: ./.github/actions/run-migrations-to-rds
+        # FIXME: Ajetaan migraatiot tällä hetkellä vain dev-ympäristölle,
+        #        kunnes stg/prod ympäristöjen tietokantojen data on saatu ojennukseen
+        if: ${{ inputs.environment }} == 'dev'
+        with:
+          # Migraatiot ajetaan samalle commit SHA:lle, kuin mistä fargate image on buildattu
+          commit-sha: ${{ github.sha }}
 
+      # Migraatioiden ajon jälkeen hoidetaan imagen ECS task deployment loppuun alla.
+      # Uusi image on jo julkaistu ECR:ään odottamaan aiemmassa vaiheessa.
       - name: Download task definition
         env:
           ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
@@ -119,4 +126,10 @@ jobs:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           wait-for-service-stability: false
           #wait-for-service-stability: true
+
+      # Pakotetaan lopuksi Harjan Fargate taskit käynnistymään, mikäli ne on aiemmin laitettu alas.
+      - name: Start Harja Fargate tasks
+        uses: ./.github/actions/start-fargate-tasks
+        with:
+          cluster: ${{ vars.ECS_CLUSTER_NAME }}
 
