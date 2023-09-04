@@ -21,7 +21,7 @@ valitettavasti hyödyt:
 
 Näiden haittapuolien ja ylläpidon vaikeuden takia, kaikki tarvittavat Docker kontit ajetaan suoraan Docker run komennoilla.  
 Jokaisen Docker-kontin käynnistämiseen on luotu uudelleenkäytettävät composite action määritykset: [.github/actions/](../actions/).  
-Joillekin konteille on luotu myös konfiguraatiot ja verkkoasetukset [docker-compose.yml](../docker-compose.yml) -tiedostoon,
+Joillekin konteille on luotu myös konfiguraatiot ja verkkoasetukset [docker-compose.yml](./docker-compose.yml) -tiedostoon,
 jotta konttien hallinta olisi mahdollisimman yksinkertaista ja asetuksia voisi helpommin ylläpitää.
 
 Konttien käyttöön kannattaa tutustua etsimällä relevantit composite actionit ```.github/actions``` hakemistosta ja tutkia miten
@@ -66,7 +66,7 @@ Alla olevat seikat on syytä huomioida, jos on tarvetta toteuttaa uusi image.
 5. Docker containerin ajoon kannattaa tehdä uudelleenkäytettävä composite action: [.github/actions](../actions)
     * Ota mallia olemassaolevista composite actioneista
 6. Jos konttien täytyy viestiä keskenään tai on tarvetta monimutkaisemmille verkkoasetuksille tms,  
-   kannattaa harkita asetuksien säätämistä uudelle kontille [.github/docker-compose.yml](../docker-compose.yml) tiedostoon.
+   kannattaa harkita asetuksien säätämistä uudelle kontille [.github/docker-compose.yml](./docker-compose.yml) tiedostoon.
 
 ## Imageiden päivitys
 

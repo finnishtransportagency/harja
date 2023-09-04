@@ -238,7 +238,7 @@ jobs:
           HARJA_TIETOKANTA_PORTTI: 5432
           HARJA_SALLI_OLETUSKAYTTAJA: "true"
           HARJA_DEV_YMPARISTO: "false"
-          HARJA_ASETUKSET_OVERRIDE_TIEDOSTO: ".github/e2e-testit_asetukset.edn"
+          HARJA_ASETUKSET_OVERRIDE_TIEDOSTO: ".github/workflows/config/e2e-testit_asetukset.edn"
         run: |
           echo "Salli harjan oletuskäyttäjä? ${HARJA_SALLI_OLETUSKAYTTAJA}"
           echo "Harja dev ympäristö? ${HARJA_DEV_YMPARISTO}"
