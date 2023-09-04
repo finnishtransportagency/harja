@@ -1,13 +1,13 @@
 # GitHub Actionsin tarvitsemat Docker-imaget
 
 GitHub Actions workflowit käyttävät seuraavia Docker-kontteja:
-1. Testitietokanta (harjadb): [.github/docker/tietokanta](.github/docker/tietokanta/)
+1. Testitietokanta (harjadb): [docker/tietokanta/Dockerfile](./tietokanta/Dockerfile)
     * Tarvitaan Harjan buildaamisessa (Specql-kirjasto tarvitsee kantayhteyden) ja testien ajamisessa
     * Tämä on modernimpi versio kehittäjien käytössä olevasta Dockerhubiin julkaistusta harjadb-imagesta.
-        *  **TODO**: Otetaan tämä käyttöön myös paikallisessa kehityksessä. Katso [tietokanta/devdeb_up_uusi.sh](tietokanta/devdeb_up_uusi.sh)
-2. ActiveMQ: [.github/docker/activemq](.github/docker/activemq/)
+        *  **TODO**: Otetaan tämä käyttöön myös paikallisessa kehityksessä. Katso [tietokanta/devdeb_up_uusi.sh](../../tietokanta/devdb_up_uusi.sh)
+2. ActiveMQ: [.github/docker/activemq/](./activemq/Dockerfile)
     * Tarvitaan Integraatiotestien ajamisessa
-3. Cypress: [.github/docker/cypress](.github/docker/cypress/)
+3. Cypress: [.github/docker/cypress/Dockerfile](./cypress/Dockerfile)
     * Tarvitaan E2E-testien ajamisesssa
 
 GitHub Actionsissa on konsepti nimeltä ["Service containers"](https://docs.github.com/en/actions/using-containerized-services/about-service-containers),
@@ -21,8 +21,8 @@ valitettavasti hyödyt:
    käyttämään useita Docker-kontteja.
 
 Näiden haittapuolien ja ylläpidon vaikeuden takia, kaikki tarvittavat Docker kontit ajetaan suoraan Docker run komennoilla.  
-Jokaisen Docker-kontin käynnistämiseen on luotu uudelleenkäytettävät composite action määritykset: [.github/actions/](.github/actions/).  
-Joillekin konteille on luotu myös konfiguraatiot ja verkkoasetukset [docker-compose.yml](.github/docker-compose.yml) -tiedostoon,
+Jokaisen Docker-kontin käynnistämiseen on luotu uudelleenkäytettävät composite action määritykset: [.github/actions/](../actions/).  
+Joillekin konteille on luotu myös konfiguraatiot ja verkkoasetukset [docker-compose.yml](../docker-compose.yml) -tiedostoon,
 jotta konttien hallinta olisi mahdollisimman yksinkertaista ja asetuksia voisi helpommin ylläpitää.
 
 Konttien käyttöön kannattaa tutustua etsimällä relevantit composite actionit ```.github/actions``` hakemistosta ja tutkia miten
@@ -64,10 +64,10 @@ Alla olevat seikat on syytä huomioida, jos on tarvetta toteuttaa uusi image.
 3. Julkaistaan image pushaamalla se normaalisti githubin container registryyn
 4. Julkaistut imaget löytyvät täältä: https://github.com/orgs/finnishtransportagency/packages?repo_name=harja
     * Huomioi, että imaget ovat aina oletuksena privaatteja. Toistaiseksi ei ole tarvetta julkaista julkisia imageja.
-5. Docker containerin ajoon kannattaa tehdä uudelleenkäytettävä composite action: [.github/actions](.github/actions)
+5. Docker containerin ajoon kannattaa tehdä uudelleenkäytettävä composite action: [.github/actions](../actions)
     * Ota mallia olemassaolevista composite actioneista
 6. Jos konttien täytyy viestiä keskenään tai on tarvetta monimutkaisemmille verkkoasetuksille tms,  
-   kannattaa harkita asetuksien säätämistä uudelle kontille [.github/docker-compose.yml](.github/docker-compose.yml) tiedostoon.
+   kannattaa harkita asetuksien säätämistä uudelle kontille [.github/docker-compose.yml](../docker-compose.yml) tiedostoon.
 
 ## Imageiden päivitys
 
