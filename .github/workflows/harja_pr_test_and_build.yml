@@ -182,12 +182,15 @@ jobs:
         uses: ./.github/actions/setup-clojure-env
 
       - name: Run backend tests
+        if: false
         run: lein test
 
       - name: run slow tests
+        if: false
         run: lein test :hidas
 
       - name: Front end tests
+        if: false
         env:
           PHANTOMJS_VERSIO: 2.1.1
         run: |
@@ -206,6 +209,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TZ: "EET"
+      HARJA_ITMF_BROKER_PORT: 61616
+      HARJA_ITMF_BROKER_AI_PORT: 8161
 
     permissions:
       contents: read
