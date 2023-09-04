@@ -202,7 +202,6 @@ jobs:
 
   # integraatiotestit vaativat ActiveMQ-brokerin, siksi oma jobi
   integration-tests:
-    if: false
     name: "integraatiotestit"
     runs-on: ubuntu-latest
     env:
