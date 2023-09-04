@@ -189,8 +189,9 @@ jobs:
           tar -jxf /home/runner/phantomjs-2.1.1-linux-x86_64.tar.bz2
           echo "/home/runner/phantomjs-2.1.1-linux-x86_64/bin" >> $GITHUB_PATH
           echo "tarkista phantomjs 1"
-          ls -la /home/runner/phantomjs-2.1.1-linux-x86_64
+          ls -la /home/runner/
           echo "tarkista phantomjs 2"
+          which phantomjs
           /home/runner/phantomjs-2.1.1-linux-x86_64/bin
           rm /home/runner/phantomjs-2.1.1-linux-x86_64.tar.bz2
           cd /home/runner/work/harja/harja/
