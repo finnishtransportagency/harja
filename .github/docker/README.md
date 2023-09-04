@@ -5,7 +5,7 @@ GitHub Actions workflowit käyttävät seuraavia Docker-kontteja:
     * Tarvitaan Harjan buildaamisessa (Specql-kirjasto tarvitsee kantayhteyden) ja testien ajamisessa
     * Tämä on modernimpi versio kehittäjien käytössä olevasta Dockerhubiin julkaistusta harjadb-imagesta.
         *  **TODO**: Otetaan tämä käyttöön myös paikallisessa kehityksessä. Katso [tietokanta/devdeb_up_uusi.sh](../../tietokanta/devdb_up_uusi.sh)
-2. ActiveMQ: [.github/docker/activemq/](./activemq/Dockerfile)
+2. ActiveMQ: [.github/docker/activemq/Dockerfile](./activemq/Dockerfile)
     * Tarvitaan Integraatiotestien ajamisessa
 3. Cypress: [.github/docker/cypress/Dockerfile](./cypress/Dockerfile)
     * Tarvitaan E2E-testien ajamisesssa
