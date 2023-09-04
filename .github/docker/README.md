@@ -17,8 +17,7 @@ valitettavasti hyödyt:
 1. Service containeriin ei voi mountata hakemistoa Actions checkoutin jälkeen, vaan se käynnistyy ennen kuin checkout tapahtuu.
 2. Service containerien asetuksia ei voi helposti uudelleenkäyttää kuten composite actioneita, vaan ne joutuu joka kerta
    kopioimaan jobeihin missä niitä haluaa käyttää. Tämä hankaloittaa jobien ylläpitoa.
-3. Service containerien kanssa joutuu helposti epämieluisaan Docker-in-docker tilanteeseen, mikäli jobissa joutuu
-   käyttämään useita Docker-kontteja.
+3. Kaikkia containereita ei voi tai ei kannata ajaa serviceinä.
 
 Näiden haittapuolien ja ylläpidon vaikeuden takia, kaikki tarvittavat Docker kontit ajetaan suoraan Docker run komennoilla.  
 Jokaisen Docker-kontin käynnistämiseen on luotu uudelleenkäytettävät composite action määritykset: [.github/actions/](../actions/).  
