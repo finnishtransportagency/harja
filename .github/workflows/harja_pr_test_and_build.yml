@@ -191,6 +191,7 @@ jobs:
           tar -xvjf /home/runner/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2
           echo "/home/runner/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64/bin" >> $GITHUB_PATH
           echo "tarkista phantomjs 1"
+          locate phantomjs
           ls -la /home/runner/
           echo "tarkista phantomjs runners"
           ls -la /home/runner/runners/
