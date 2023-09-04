@@ -147,8 +147,35 @@ jobs:
   #       Halutut status checkit valikoidaan Harjan Github-repon asetuksista.
   #       Jokainen jobi ajetaan omassa VM:ssä, joten perusasiat ja tarvittaessa testitietokannan käynnistys action
   #       pitää ottaa mukaan jobiin.
+  back-tests:
+    name: "Backend-testit"
+    runs-on: ubuntu-latest
+    env:
+      TZ: "EET"
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
+      - name: Start test database
+        uses: ./.github/actions/start-test-db
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup clojure environment
+        uses: ./.github/actions/setup-clojure-env
+
+      - name: Run backend tests
+        run: lein test
+
   basic-tests:
-    name: "Perustestit"
+    name: "Frontti- ja hitaat testit"
     runs-on: ubuntu-latest
     env:
       TZ: "EET"
@@ -173,9 +200,6 @@ jobs:
 
       - name: Setup clojure environment
         uses: ./.github/actions/setup-clojure-env
-
-      - name: Run backend tests
-        run: lein test
 
       - name: run slow tests
         run: lein test :hidas
