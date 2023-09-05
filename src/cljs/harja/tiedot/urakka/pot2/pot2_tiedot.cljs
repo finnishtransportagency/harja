@@ -455,7 +455,7 @@
 
   LaskeTieosoitteenPituusOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [pinta-ala (fmt/desimaaliluku-opt
+    (let [pinta-ala (* (get-in app [:paallystysilmoitus-lomakedata :alustalomake :leveys]) (:pituus vastaus)) #_ (fmt/desimaaliluku-opt
                       (* (get-in app [:paallystysilmoitus-lomakedata :alustalomake :leveys]) (:pituus vastaus))
                       1)]
       (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake :pinta-ala] pinta-ala)))
