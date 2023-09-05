@@ -137,15 +137,7 @@
                                                []
                                                42           ;; LJYR
                                                [:kasittelysyvyys :leveys 
-                                                {:nimi :pinta-ala :hae (fn [rivi]
-                                                                         (when-let [tie {:tr-alkuosa (:tr-alkuosa rivi)
-                                                                                         :tr-alkuetaisyys (:tr-alkuetaisyys rivi)
-                                                                                         :tr-loppuosa (:tr-loppuosa rivi)
-                                                                                         :tr-loppuetaisyys (:tr-loppuetaisyys rivi)}]
-                                                                           (when (:leveys rivi)
-                                                                             (fmt/desimaaliluku-opt
-                                                                               (* (:leveys rivi) (tr/laske-tien-pituus {} tie))
-                                                                               1))))}]
+                                                {:nimi :pinta-ala}]
                                                43           ;; RJYR
                                                []}
         avaimet (get alusta-toimenpidespesifit-lisaavaimet (:toimenpide alusta))

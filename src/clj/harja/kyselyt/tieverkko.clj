@@ -238,5 +238,25 @@
                           k))]
                   tulos))
         ;; Annetaan reducelle mäppi, jossa :pituus avaimeen lasketaan annetun tien kohdan pituus.
-        {:pituus 0 :aosa (:aosa kohde) :aet (:aet kohde) :losa (:losa kohde) :let (:let kohde)}
+        {:pituus 0 :aosa (:aosa kohde) :aet (:aet kohde) :losa (:losa kohde) :let (:let kohde) :tie (:tie kohde)}
         osan-pituudet))))
+
+(defn laske-tierekisteriosoitteen-pituus [db tierekisteriosoite]
+  (let [;; Jos osan hae-osien-pituudet kyselyn tulos muuttuu, tämän funktion toiminta loppuu
+        ;; Alla oleva reduce olettaa, että sille annetaan osien pituudet desc järjestyksessä ja muodossa
+        ;; ({:osa 1 :pituus 3000} {:osa 2 :pituus 3000})
+        ;; Joten jos tieosoite annetaan nurinpäin, niin muokataan se sopivaan muotoon
+        varatierekisteriosoite tierekisteriosoite
+        tierekisteriosoite (if (and (not (nil? (:aosa tierekisteriosoite))) (not (nil? (:losa tierekisteriosoite)))
+                                 (> (:aosa tierekisteriosoite) (:losa tierekisteriosoite)))
+                             (-> tierekisteriosoite
+                               (assoc :aosa (:losa varatierekisteriosoite))
+                               (assoc :aet (:let varatierekisteriosoite))
+                               (assoc :losa (:aosa varatierekisteriosoite))
+                               (assoc :let (:aet varatierekisteriosoite)))
+                             tierekisteriosoite)
+        osien-pituudet (hae-osien-pituudet db {:tie (:tie tierekisteriosoite)
+                                               :aosa (:aosa tierekisteriosoite)
+                                               :losa (:losa tierekisteriosoite)})
+        pituus (laske-tien-osien-pituudet osien-pituudet tierekisteriosoite)]
+    pituus))
