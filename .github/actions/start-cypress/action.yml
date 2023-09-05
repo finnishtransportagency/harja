@@ -8,7 +8,7 @@
 #          Katso: .github/docker-compose.yml
 
 name: 'Start Cypress'
-description: 'Käynnistää Cyperss kontin taustalle'
+description: 'Käynnistää Cypress kontin ja ajaa komennon sen sisällä kerran'
 
 inputs:
   registry:
@@ -21,6 +21,14 @@ inputs:
   password:
     description: ''
     required: true
+  image:
+    description: 'Cypress kontin imagen nimi'
+    required: false
+    default: ghcr.io/finnishtransportagency/harja_cypress:latest
+  GITHUB_WORKSPACE:
+    description: 'Github jobin workspace path. Tämä mountataan cypress kontin sisälle.'
+    required: true
+
 
 runs:
   using: "composite"
@@ -32,14 +40,28 @@ runs:
         username: ${{ inputs.username }}
         password: ${{ inputs.password }}
 
-    - name: Pull and start cypress image
+    - name: Pull image
+      env:
+        IMAGE_NAME: ${{ inputs.image }}
       run: |
-        cd .github
-        echo "Pulling harja cypress image (Docker Compose version: $(docker-compose version --short))"
-        docker compose pull cypress
-
-        echo "Starting cypress and waiting for it to start (Docker Compose version: $(docker-compose version --short))"
-        docker compose up -d --wait --wait-timeout 60 cypress
+        echo "Pulling harja cypress image"
+        docker pull "$IMAGE_NAME"
       shell: bash
 
+    # Konttiin mountataan /harja workdirectoryyn GITHUB_WORKSPACE, joka sisältää jobin checkoutissa haetun sisällön
+    # sekä myöhemmin jobissa ennen mounttia workspaceen lisätyn sisällön, kuten esimerkiksi asennetut NPM-paketit.
+    - name: Aja cypress-testit
+      env:
+        IMAGE_NAME: ${{ inputs.registry }}
+        GITHUB_WORKSPACE: ${{ inputs.GITHUB_WORKSPACE }}
+      run: |
+        echo "Ajetaan cypress komento kontissa"
+        
+        docker run \
+          --network host \
+          -v $GITHUB_WORKSPACE:/harja \
+          -w /harja \
+          ghcr.io/finnishtransportagency/harja_cypress:latest \
+          cypress run --browser chrome
+      shell: bash
 

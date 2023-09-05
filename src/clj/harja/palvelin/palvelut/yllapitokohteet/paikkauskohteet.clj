@@ -187,7 +187,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id tiedot))
   (let [;; Haetaan tiemerkintäurakan sampo-id sähköpostin lähetystä varten
         urakka-sampo-id (urakat-q/hae-urakan-sampo-id db (:tiemerkinta-urakka tiedot))
-        pituus (paikkaus-q/laske-paikkauskohteen-pituus db {:tie (:tie tiedot)
+        pituus (q-tr/laske-tierekisteriosoitteen-pituus db {:tie (:tie tiedot)
                                                             :aosa (:aosa tiedot)
                                                             :aet (:aet tiedot)
                                                             :losa (:losa tiedot)
@@ -627,7 +627,7 @@
 
 (defn- tee-pituus [{::tr/keys [tie aosa aet losa let] :as paikkaus} db]
   (assoc paikkaus :pituus
-    (:pituus (paikkaus-q/laske-paikkauskohteen-pituus db {:tie tie :aosa aosa :aet aet :losa losa :let let}))))
+    (:pituus (q-tr/laske-tierekisteriosoitteen-pituus db {:tie tie :aosa aosa :aet aet :losa losa :let let}))))
 
 (defn- laske-massamaara
   "Laskee massamäärän perustuen kohteen kokonaismassamäärään sekä rivin suhteellisen pinta-alan osuuteen kokonaispinta-alasta"
@@ -841,7 +841,7 @@
                           (tallenna-paikkauskohde! db fim email user kohde kehitysmoodi?)))
       (julkaise-palvelu http :laske-paikkauskohteen-pituus
                         (fn [user kohde]
-                          (paikkaus-q/laske-paikkauskohteen-pituus db kohde)))
+                          (q-tr/laske-tierekisteriosoitteen-pituus db kohde)))
       (julkaise-palvelu http :poista-paikkauskohde
                         (fn [user kohde]
                           (poista-paikkauskohde! db user kohde)))

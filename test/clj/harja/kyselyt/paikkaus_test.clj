@@ -39,11 +39,11 @@
    ::paikkaus/leveys 1.3M
    ::paikkaus/urakka-id oikean-urakan-id
    :harja.domain.muokkaustiedot/luoja-id destian-kayttaja-id
-   ::paikkaus/tierekisteriosoite {:harja.domain.tierekisteri/aet 1
-                                  :harja.domain.tierekisteri/let 100
-                                  :harja.domain.tierekisteri/tie 20
-                                  :harja.domain.tierekisteri/aosa 1
-                                  :harja.domain.tierekisteri/losa 1}
+   ::paikkaus/tierekisteriosoite {:harja.domain.tierekisteri/aet 3290
+                                  :harja.domain.tierekisteri/let 10
+                                  :harja.domain.tierekisteri/tie 12
+                                  :harja.domain.tierekisteri/aosa 101
+                                  :harja.domain.tierekisteri/losa 102}
    ::paikkaus/massatyyppi "AB, Asfalttibetoni"
    ::paikkaus/kuulamylly "2"
    ::paikkaus/paikkauskohde {::paikkaus/ulkoinen-id testikohteen-ulkoinen-id

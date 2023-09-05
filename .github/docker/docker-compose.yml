@@ -1,0 +1,50 @@
+# Tätä docker-compose-fileä käytetään githubin actionseissa esimerkiksi testitietokannan helpompaan käynnistämiseen
+# Samalla varmistetaan, että tarvittavat ympäristömuuttujat on asetettu ja oikeat volumet on mountattu.
+# Tämä tiedosto on tarkoitettu käytettäväksi vain Github Actionseissa
+
+version: "3.8"
+
+networks:
+  harja_net:
+    driver: bridge
+
+services:
+  harjadb:
+    # Hae image GitHubin container registrystä
+    image: ghcr.io/finnishtransportagency/harja_harjadb:latest
+    container_name: harjadb
+    networks:
+      - harja_net
+    environment:
+      HARJA_TIETOKANTA_PORTTI: 5432
+    ports:
+      - "127.0.0.1:5432:5432"
+    # Huom: Mountissa viitataan Harja-repon juuressa olevaan tietokanta-hakemistoon, jossa migraatiotiedostot ovat.
+    volumes:
+      - ../../tietokanta:/var/lib/postgresql/harja/tietokanta
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "harja", "-d", "harja"]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+
+  activemq-itmf:
+    image: ghcr.io/finnishtransportagency/harja_activemq:latest
+    container_name: activemq-itmf
+    networks:
+      - harja_net
+    environment:
+      TZ: "EET"
+      TCP_PORT: 61616
+      UI_PORT: 8161
+    ports:
+        - "127.0.0.1:61616:61616" # broker (admin:adminactivemq)(amq:amq)
+        - "127.0.0.1:8161:8161"   # web    localhost:8161/admin/queues.jsp (admin:admin)
+    healthcheck:
+     # https://stackoverflow.com/questions/52500782/how-to-check-if-activemq-is-working-properly
+      test: /opt/activemq/bin/activemq query --objname type=Broker,brokerName=*,service=Health | grep Good
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s

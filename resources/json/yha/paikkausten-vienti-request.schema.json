@@ -198,7 +198,7 @@
           "type": "number"
         },
         "massamenekki": {
-          "type": "integer"
+          "type": "number"
         },
         "raekoko": {
           "type": "integer",

@@ -14,6 +14,8 @@
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.256"]
                  [com.cognitect/transit-clj "0.8.313"]
+                 ;; Pätevä yksinkertainen työkalu esimerkiksi config-tiedostojen mergeämiseen
+                 [meta-merge "1.0.0"]
 
                  [cljsjs/exif "2.1.1-1"]
 
