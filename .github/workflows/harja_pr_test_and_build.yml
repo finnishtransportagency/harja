@@ -207,14 +207,17 @@ jobs:
       - name: Front end tests
         env:
           PHANTOMJS_VERSIO: 2.1.1
+        with:
+          GITHUB_WORKSPACE: ${{ env.GITHUB_WORKSPACE }}
         run: |
           cd /tmp
+          echo "GITHUB_WORKSPACE {$GITHUB_WORKSPACE}"
           wget -O ~/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2
-          if [ "$(sha512sum /home/runner/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 )" != "039b62ecf2fa4196357e129727871a53b046948e17b21900c78a1af4d0b523e41b9d4137e7454b0a638333d7fc27e65d14f4af8c665e982a504c12f828525419  /home/runner/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2" ]; then exit 1; fi;
-          tar -xf /home/runner/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 -C /tmp/
+          if [ "$(sha512sum /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 )" != "039b62ecf2fa4196357e129727871a53b046948e17b21900c78a1af4d0b523e41b9d4137e7454b0a638333d7fc27e65d14f4af8c665e982a504c12f828525419  /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2" ]; then exit 1; fi;
+          tar -xf /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 -C /tmp/
           mv -f /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64/bin/phantomjs /usr/local/bin/phantomjs
-          rm /home/runner/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2
-          cd /home/runner/work/harja/harja/
+          rm /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2
+          cd ~/work/harja/harja/
           lein with-profile +test doo phantom test once
 
   # integraatiotestit vaativat ActiveMQ-brokerin, siksi oma jobi
