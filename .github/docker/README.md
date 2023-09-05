@@ -32,7 +32,16 @@ niitä on käytetty workfloweissa.
 
 ## Kehittäjän kirjautuminen Container Registryyn
 
-TBD
+GitHub Packages (eli käytännössä Container Registry) tukee kirjautumista ainoastaan classic personal access tokenilla.  
+Lue alla olevat ohjeet tarkoin. Kehittäjä tarvitsee read/write/delete oikeudet Packages scopeen.  
+Lue tarkasti varsinkin ohje, jossa neuvotaan pienentämään tokenin access scopea, jotta tokenilla ei ole liian laajat oikeudet.
+>Note: By default, when you select the write:packages scope for your personal access token (classic) in the user interface, the repo scope will also be selected. 
+>The repo scope offers unnecessary and broad access, which we recommend you avoid using for GitHub Actions workflows in particular. 
+>For more information, see "Security hardening for GitHub Actions." 
+>As a workaround, you can select just the write:packages scope for your personal access token (classic) in the user interface with this url: https://github.com/settings/tokens/new?scopes=write:packages.
+
+**Ohjeet:**  
+https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-with-a-personal-access-token-classic
 
 
 # Docker imageiden julkaisu/päivitys
