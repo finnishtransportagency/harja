@@ -25,7 +25,6 @@ runs:
   steps:
     - name: Setup clojure environment
       uses: ./.github/actions/setup-clojure-env
-      shell: bash
 
     - name: Build back-end
       if: ${{ inputs.build-back-end == 'true' }}
