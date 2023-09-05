@@ -76,7 +76,7 @@ jobs:
 
        # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
       - name: Build Harja Uberjar
-        uses: ./github/actions/build-harja-app
+        uses: ./.github/actions/build-harja-app
         with:
           build-laadunseuranta: 'false'
 
