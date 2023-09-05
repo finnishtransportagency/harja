@@ -215,11 +215,11 @@ jobs:
           tar -xf /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 -C /tmp/
           mv -f /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64/bin/phantomjs /usr/local/bin/phantomjs
           rm /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2
+          cd -
       - name: Front end tests
         env:
           GITHUB_WORKSPACE: ${{ env.GITHUB_WORKSPACE }}
         run: |
-          cd $GITHUB_WORKSPACE
           lein with-profile +test doo phantom test once
 
   # integraatiotestit vaativat ActiveMQ-brokerin, siksi oma jobi
