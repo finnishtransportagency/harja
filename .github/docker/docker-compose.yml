@@ -19,8 +19,9 @@ services:
       HARJA_TIETOKANTA_PORTTI: 5432
     ports:
       - "127.0.0.1:5432:5432"
+    # Huom: Mountissa viitataan Harja-repon juuressa olevaan tietokanta-hakemistoon, jossa migraatiotiedostot ovat.
     volumes:
-      - ../tietokanta:/var/lib/postgresql/harja/tietokanta
+      - ../../tietokanta:/var/lib/postgresql/harja/tietokanta
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "harja", "-d", "harja"]
       interval: 10s
