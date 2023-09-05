@@ -22,6 +22,7 @@
              [sopimukset :as sopimukset-q]
              [konversio :as konversio]
              [yllapitokohteet :as yllapitokohteet-q]
+             [paikkaus :as paikkaus-q]
              [tieverkko :as tieverkko-q]]
             [harja.domain
              [paallystysilmoitus :as pot-domain]
@@ -1086,6 +1087,9 @@
       (julkaise-palvelu http :tuo-paallystyskustannukset-excelista
                         (wrap-multipart-params (fn [req] (lue-paallystysten-kustannusexcel db req)))
                         {:ring-kasittelija? true})
+      (julkaise-palvelu http :laske-tieosoitteen-pituus
+        (fn [user kohde]
+          (tieverkko-q/laske-tierekisteriosoitteen-pituus db kohde)))
       (when excel
         (excel-vienti/rekisteroi-excel-kasittelija! excel :paallystyskohteet-excel
                                                     (partial #'p-excel/vie-paallystyskohteet-exceliin db)))
@@ -1102,6 +1106,7 @@
       :hae-paallystyksen-maksuerat
       :tallenna-paallystyksen-maksuerat
       :aseta-paallystysilmoituksen-tila
+      :laske-tieosoitteen-pituus
       :tuo-paallystyskustannukset-excelista)
     (when (:excel-vienti this)
       (excel-vienti/poista-excel-kasittelija! (:excel-vienti this) :paallystyskohteet-excel))
