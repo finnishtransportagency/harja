@@ -137,7 +137,7 @@
                                                []
                                                42           ;; LJYR
                                                [:kasittelysyvyys :leveys 
-                                                {:nimi :pinta-ala}]
+                                                {:nimi :pinta-ala :fmt #(fmt/desimaaliluku-opt % 1)}]
                                                43           ;; RJYR
                                                []}
         avaimet (get alusta-toimenpidespesifit-lisaavaimet (:toimenpide alusta))
