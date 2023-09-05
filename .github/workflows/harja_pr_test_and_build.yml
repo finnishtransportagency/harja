@@ -205,24 +205,28 @@ jobs:
       - name: run slow tests
         run: lein test :hidas
 
-      - name: Front end tests
+      - name: Install PhantomJS
         env:
           PHANTOMJS_VERSIO: 2.1.1
-          GITHUB_WORKSPACE: ${{ env.GITHUB_WORKSPACE }}
         run: |
           cd /tmp
-          echo "GITHUB_WORKSPACE {$GITHUB_WORKSPACE}"
           wget -O /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2
           if [ "$(sha512sum /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 )" != "039b62ecf2fa4196357e129727871a53b046948e17b21900c78a1af4d0b523e41b9d4137e7454b0a638333d7fc27e65d14f4af8c665e982a504c12f828525419  /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2" ]; then exit 1; fi;
           tar -xf /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 -C /tmp/
           mv -f /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64/bin/phantomjs /usr/local/bin/phantomjs
           rm /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2
+      - name: Front end tests
+        env:
+          GITHUB_WORKSPACE: ${{ env.GITHUB_WORKSPACE }}
+        run: |
+          cd $GITHUB_WORKSPACE
           lein with-profile +test doo phantom test once
 
   # integraatiotestit vaativat ActiveMQ-brokerin, siksi oma jobi
   integration-tests:
     name: "integraatiotestit"
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       TZ: "EET"
       HARJA_ITMF_BROKER_PORT: 61616
