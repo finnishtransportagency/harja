@@ -149,7 +149,6 @@ jobs:
   #       pitää ottaa mukaan jobiin.
   back-tests:
     name: "Backend-testit"
-    if: false
     runs-on: ubuntu-latest
     env:
       TZ: "EET"
