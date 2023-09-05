@@ -3,6 +3,7 @@
     [reagent.core :refer [atom] :as r]
     [tuck.core :refer [process-event] :as tuck]
     [clojure.string :as str]
+    [harja.fmt :as fmt]
     [harja.domain.pot2 :as pot2-domain]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.loki :refer [log tarkkaile!]]
@@ -46,6 +47,9 @@
 (defrecord Pot2Muokattu [])
 (defrecord LisaaPaallysterivi [atomi])
 (defrecord KulutuskerrosMuokattu [muokattu?])
+(defrecord LaskeTieosoitteenPituus [tie])
+(defrecord LaskeTieosoitteenPituusOnnistui [vastaus])
+(defrecord LaskeTieosoitteenPituusVirhe [vastaus])
 
 (defn- lisaa-uusi-paallystekerrosrivi!
   [rivit-atom perustiedot]
@@ -351,8 +355,20 @@
 
   PaivitaAlustalomake
   (process-event [{alustalomake :alustalomake} app]
-    (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake]
-      alustalomake))
+    ;; LJYR toimenpiteelle pitää laskea tie osoitteen pituus.
+    ;; alustatoimenpiteet on mallinnettu niin, että niiden mallintamiskoodi on käytössä monessa paikassa
+    ;; Ja pituuden laskentaa ei voi tehdä muualla, kuin tässä
+    (do
+      (when (= 42 (:toimenpide alustalomake))
+         ;; Päivitettään LJYR toimenpiteelle pinta-ala tierekisteriosoitteen pituuden perusteella
+        (tuck/action!
+          (fn [e!]
+            (e! (->LaskeTieosoitteenPituus {:tie (:tr-numero alustalomake)
+                                            :aosa (:tr-alkuosa alustalomake)
+                                            :aet (:tr-alkuetaisyys alustalomake)
+                                            :losa (:tr-loppuosa alustalomake)
+                                            :let (:tr-loppuetaisyys alustalomake)})))))
+      (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] alustalomake)))
 
   TallennaAlustalomake
   (process-event [{alustalomake :alustalomake
@@ -426,4 +442,25 @@
   LisaaPaallysterivi
   (process-event [{atomi :atomi} app]
     (lisaa-uusi-paallystekerrosrivi! atomi (get-in app [:paallystysilmoitus-lomakedata :perustiedot]))
+    app)
+
+  LaskeTieosoitteenPituus
+  (process-event [{tie :tie} app]
+    (do (tuck-apurit/post! :laske-tieosoitteen-pituus
+          tie
+          {:onnistui ->LaskeTieosoitteenPituusOnnistui
+           :epaonnistui ->LaskeTieosoitteenPituusVirhe
+           :paasta-virhe-lapi? true})
+      app))
+
+  LaskeTieosoitteenPituusOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (let [pinta-ala (fmt/desimaaliluku-opt
+                      (* (get-in app [:paallystysilmoitus-lomakedata :alustalomake :leveys]) (:pituus vastaus))
+                      1)]
+      (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake :pinta-ala] pinta-ala)))
+
+  LaskeTieosoitteenPituusVirhe
+  (process-event [{vastaus :vastaus} app]
+    (js/console.error "Virhe  laskettaessa tieosoitteen pituutta:" (pr-str vastaus))
     app))
