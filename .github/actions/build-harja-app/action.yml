@@ -1,0 +1,63 @@
+# HUOM: Tämä Action vaatii, että jobissa on Harjan testitietokanta ajossa ennen kuin tämän actionin ajaa.
+
+name: 'Build Harja'
+description: 'Buildaa Harjan osat ja paketoi ne Uberjarriin. Huom: Jobissa täytyy testitietokannan olla ajossa!'
+
+inputs:
+  build-back-end:
+    description: 'Build back-end'
+    default: 'true'
+  build-front-end:
+    description: 'Build front-end'
+    default: 'true'
+  build-laadunseuranta:
+    description: 'Build laadunseuranta'
+    default: 'true'
+  build-documentation:
+    description: 'Build documentation'
+    default: 'true'
+  build-uberjar:
+    description: 'Build uberjar'
+    default: 'true'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup clojure environment
+      uses: ./.github/actions/setup-clojure-env
+      shell: bash
+
+    - name: Build back-end
+      if: ${{ inputs.build-back-end == 'true' }}
+      run: |
+        echo "Building backend"
+        lein do compile
+      shell: bash
+
+    - name: Build front-end
+      if: ${{ inputs.build-front-end == 'true' }}
+      run: |
+        echo "Building frontend"
+        lein do less once, with-profile prod-cljs compile-prod
+      shell: bash
+
+    - name: Build laadunseuranta
+      if: ${{ inputs.build-laadunseuranta == 'true' }}
+      run: |
+        echo "Building laadunseuranta"
+        lein do with-profile laadunseuranta-prod compile-laadunseuranta-prod
+      shell: bash
+
+    - name: Build documentation
+      if: ${{ inputs.build-documentation == 'true' }}
+      run: |
+        echo "Building documentation"
+        lein codox
+      shell: bash
+
+    - name: Build uberjar
+      if: ${{ inputs.build-uberjar == 'true' }}
+      run: |
+        echo "Building uberjar"
+        lein uberjar
+      shell: bash
