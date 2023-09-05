@@ -37,7 +37,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup clojure environment
         uses: ./.github/actions/setup-clojure-env
@@ -64,7 +64,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen ja Harjan buildaamiseen
       - name: Start test database
@@ -188,7 +188,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -277,7 +277,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -313,7 +313,7 @@ jobs:
           HARJA_TIETOKANTA_PORTTI: 5432
           HARJA_SALLI_OLETUSKAYTTAJA: "true"
           HARJA_DEV_YMPARISTO: "false"
-          HARJA_ASETUKSET_OVERRIDE_TIEDOSTO: ".github/e2e-testit_asetukset.edn"
+          HARJA_ASETUKSET_OVERRIDE_TIEDOSTO: ".github/workflows/config/e2e-testit_asetukset.edn"
         run: |
           echo "Salli harjan oletuskäyttäjä? ${HARJA_SALLI_OLETUSKAYTTAJA}"
           echo "Harja dev ympäristö? ${HARJA_DEV_YMPARISTO}"
