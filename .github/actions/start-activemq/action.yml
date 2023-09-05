@@ -25,7 +25,7 @@ runs:
 
     - name: Pull and start test activemq
       run: |
-        cd .github
+        cd .github/docker
         echo "Pulling harja activemq image (Docker Compose version: $(docker-compose version --short))"
         docker compose pull activemq-itmf
 
