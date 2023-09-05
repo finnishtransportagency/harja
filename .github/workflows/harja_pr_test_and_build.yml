@@ -325,7 +325,7 @@ jobs:
           mkdir -p ../.harja
           echo aaaa > ../.harja/anti-csrf-token
           touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,yha-api-key,labyrintti-salasana,velho-salasana,velho-varuste-salasana,api-sahkoposti-salasana,digiroad-api-key}
-          touch ../.harja/harjalle_ajorata_kaista_puoli_20210825.csv
+          touch ../.harja/harjalle_ajorata_kaista_puoli_20230519.csv
           
           echo "Käynnistetään Harja..."
           java -cp :harja-0.0.1-SNAPSHOT-standalone.jar harja.palvelin.main > harja.out 2>&1 &
