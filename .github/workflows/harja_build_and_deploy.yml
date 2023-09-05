@@ -46,36 +46,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      ## Build Harja uberjar ##
-      - name: Setup clojure environment
-        uses: ./.github/actions/setup-clojure-env
-
-      #- name: Run unit tests
-      #  run: lein test2junit
-
-      - name: Build back-end
-        run: |
-          echo "Building backend"
-          lein do compile
-      - name: Build front-end
-        run: |
-          echo "Building frontend"
-          lein do less once, with-profile prod-cljs compile-prod
-
-      # TODO: Disabloitu toistaiseksi buildin testailun nopeuttamiseksi. Tämäkin menee kyllä läpi OK.
-      #            - name: Build laadunseuranta
-      #              run: |
-      #                echo "Building laadunseuranta"
-      #                lein do with-profile laadunseuranta-prod compile-laadunseuranta-prod
-      - name: Build documentation
-        run: |
-          echo "Building documentation"
-          lein codox
-
-      - name: Build uberjar
-        run: |
-          echo "Building uberjar"
-          lein uberjar
+      # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
+      - name: Build Harja Uberjar
+        uses: ./.github/actions/build-harja-app
+        with:
+          build-laadunseuranta: 'false'
 
       - name: Upload uberjar as artifact
         uses: actions/upload-artifact@v3
