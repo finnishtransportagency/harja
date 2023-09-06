@@ -125,7 +125,7 @@
 
         reitti (-> reitti
                  (update-in [:reittipiste] dissoc :sijainti)
-                 (assoc-in [:reittipiste :koodinaatit] koordinaatit-3067))
+                 (assoc-in [:reittipiste :koordinaatit] koordinaatit-3067))
         reitti (if lisaa-epsg-4326-koordinaatit?
                  (assoc-in reitti [:reittipiste :koordinaatit-4326] koordinaatit-4326)
                  reitti)]
@@ -156,6 +156,16 @@
                       materiaalit)
         reitti (assoc reitti :materiaalit materiaalit)]
     reitti))
+
+(defn- poista-reittipistetaso
+  "Tiivistetään json formaattia poistamalla reittipiste sen jälkeen, kun sen alle on saatu koottua kaikki tiedot."
+  [reitti]
+  (-> reitti
+    (assoc :aika (get-in reitti [:reittipiste :aika]))
+    (assoc :tehtavat (get-in reitti [:reittipiste :tehtavat]))
+    (assoc :koordinaatit (get-in reitti [:reittipiste :koordinaatit]))
+    (assoc :materiaalit (get-in reitti [:reittipiste :materiaalit]))
+    (dissoc :reittipiste)))
 
 (defn palauta-toteumat
   "Haetaan toteumat annettujen alku- ja loppuajan puitteissa.
@@ -210,11 +220,13 @@
                                          (when (not (nil? (:f1 r))) ;; Varmista että Left joinilla haettuja rivejä on
                                            (clojure.set/rename-keys r db-reitti->avaimet))
                                          ;; Muokkaa reittipisteen nimet oikein
+                                         ;; Tietokanta palauttaa reittipisteen, joka poistetaan datan formatoinnin jälkeen
                                          r (-> r
                                              (konversio/alaviiva->rakenne)
                                              (rakenna-reittipiste-sijainti koordinaattimuutos)
                                              (rakenna-reittipiste-tehtavat)
-                                             (rakenna-reittipiste-materiaalit materiaalikoodit))]
+                                             (rakenna-reittipiste-materiaalit materiaalikoodit)
+                                             (poista-reittipistetaso))]
                                      r))
                                  rivit))))))
         toteumat (when (< koko 100000)
