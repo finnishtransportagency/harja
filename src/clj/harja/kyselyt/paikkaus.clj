@@ -341,7 +341,8 @@
                          (not (nil? massamenekki)) (update ::paikkaus/massamenekki bigdec))
         tr-osoite-tr-muodossa (tr-domain/tr-alkuiseksi tr-osoite)
         osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db [tr-osoite-tr-muodossa])
-        pituus (tr-domain/laske-tien-pituus (osien-pituudet-tielle 20) tr-osoite-tr-muodossa)
+        pituus (tr-domain/laske-tien-pituus (osien-pituudet-tielle (::tierekisteri/tie tr-osoite)) tr-osoite-tr-muodossa)
+
         pinta-ala (when (and leveys pituus)
                     (* leveys pituus))
         ;; lisätään paikkauksiin pinta-ala ja massamäärä, jos ne luvut saatavilla mistä pystytään johtamaan
@@ -528,24 +529,6 @@
 (defn- hae-urakkatyyppi [db urakka-id]
   (keyword (:tyyppi (first (q-yllapitokohteet/hae-urakan-tyyppi db {:urakka urakka-id})))))
 
-(defn laske-paikkauskohteen-pituus [db kohde]
-  (let [;; Jos osan hae-osien-pituudet kyselyn tulos muuttuu, tämän funktion toiminta loppuu
-        ;; Alla oleva reduce olettaa, että sille annetaan osien pituudet desc järjestyksessä ja muodossa
-        ;; ({:osa 1 :pituus 3000} {:osa 2 :pituus 3000})
-        ;; Joten jos tieosoite annetaan nurinpäin, niin muokataan se sopivaan muotoon
-        varakohde kohde
-        kohde (if (and (not (nil? (:aosa kohde))) (not (nil? (:losa kohde)))
-                    (> (:aosa kohde) (:losa kohde)))
-                (-> kohde
-                  (assoc :aosa (:losa varakohde))
-                  (assoc :losa (:aosa varakohde)))
-                kohde)
-        osan-pituudet (harja.kyselyt.tieverkko/hae-osien-pituudet db {:tie (:tie kohde)
-                                                                      :aosa (:aosa kohde)
-                                                                      :losa (:losa kohde)})
-        pituus (q-tr/laske-tien-osien-pituudet osan-pituudet kohde)]
-    pituus))
-
 (defn- kasittele-paikkauskohteiden-sijainti
   "Poistetaan käyttämättömät avaimet ja lasketaan pituus"
   [db paikkauskohteet]
@@ -557,7 +540,7 @@
                                     :points [(:coordinates (first (:coordinates sijainti)))]}]}
                           sijainti)]
            (-> p
-               (assoc :pituus (:pituus (laske-paikkauskohteen-pituus db p)))
+               (assoc :pituus (:pituus (q-tr/laske-tierekisteriosoitteen-pituus db p)))
                (assoc :sijainti sijainti)
                (dissoc :geometria))))
        paikkauskohteet))

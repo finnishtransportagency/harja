@@ -2,10 +2,16 @@
 ;; Käytä meta-dataa määrittelemään miten asetukset mergetään asetukset.edn asetuksiin:
 ;;  ^:prepend, ^:displace, ^:replace (https://github.com/weavejester/meta-merge/tree/master#usage)
 
+;; Annetaan E2E-testien Harja-sovellukselle enemmän threadejä ja suurempi yhteyspoolin koko
 {:http-palvelin ^:prepend {:threads 32
                            :max-body-size 33554432}
  :tietokanta ^:prepend {:yhteyspoolin-koko 32}
+ ;; Erityisesti geometriapäivitykset kuormittavat Harjaa turhaan testien aikana.
+ ;; Otetaan ne pois käytöstä poistamalla geometriapäivitysten urlit asetuksista.
  :geometriapaivitykset ^:replace {}
+
+ ;; Poistetaan lisäksi käytöstä muitakin integraatioita, joilla ei ole E2R-testien kannalta merkitystä
+ ;; ja potentiaalisesti vähennetään Harjan kuormitusta testien aikana rajoitetuilla resursseilla.
  :api-sahkoposti ^:replace {}
  :sampo-api ^:replace {}
  :palautevayla ^:replace {}
