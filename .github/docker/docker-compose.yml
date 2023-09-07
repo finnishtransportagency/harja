@@ -19,6 +19,7 @@ services:
     # TODO: AWS:ssä on ajossa Postgres 13. Harja on saatava toimimaan vähintään tällä versiolla.
     image: ghcr.io/finnishtransportagency/harja_harjadb:13-3.1
     # TODO: Postgres 13, mutta uudemmalla PostGIS 3.4 versiolla (aiempi versio 3.1)
+    # https://docs.aws.amazon.com/AmazonRDS/latest/AuroraPostgreSQLReleaseNotes/AuroraPostgreSQL.Extensions.html#AuroraPostgreSQL.Extensions.13
     #image: ghcr.io/finnishtransportagency/harja_harjadb:13-3.4
 
     container_name: harjadb
