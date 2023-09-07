@@ -44,7 +44,7 @@
                                           (conj {:kivi-ja-sideaineet (mapv kasittele-materiaali (:materiaalit p))})
                                           (dissoc :materiaalit))})
         kohteet {:paikkauskohteet [{:paikkauskohde (-> kohde
-                                                       (dissoc :ulkoinen-id :yhalahetyksen-tila :virhe)
+                                                       (dissoc :ulkoinen-id :yhalahetyksen-tila :yhalahetyksen-aika :virhe)
                                                        (rename-keys {:id :harja-id})
                                                        (conj {:paikkaukset (mapv kasittele-paikkaus paikkaukset)}))}]}
         sanomasisalto (merge urakka kohteet)]
