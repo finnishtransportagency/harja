@@ -214,7 +214,6 @@
   [db paikkauskohde]
   (let [id (::paikkaus/id paikkauskohde)
         ehdot {::paikkaus/id id}]
-    (assert (id-olemassa? id) "Paikkauskohteen päivitys vaatii id:n")
     (when (id-olemassa? id)
       (update! db ::paikkaus/paikkauskohde paikkauskohde ehdot))
     (first (hae-paikkaukset db ehdot))))
