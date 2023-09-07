@@ -292,6 +292,7 @@
 
   HaeMuutoshistoria
   (process-event [_ {:keys [valittu-rivi] :as app}]
+    (println "\n haetaan historia id: "  (:tyomaapaivakirja_id valittu-rivi) " \n \n")
     (tuck-apurit/post! app :tyomaapaivakirja-hae-muutoshistoria
       {:tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)}
       {:onnistui ->HaeMuutoshistoriaOnnistui
