@@ -290,9 +290,11 @@
   IlmoituksetHaettu
   (process-event [vastaus app]
     (let [ilmoitukset (:tietyoilmoitukset (:tulokset vastaus))
-          pollattavat-ilmoitukset (when (and (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
-                                             (not (:pollaus-kaynnissa? app)))
-                                    (aloita-ilmoitusten-pollaaminen ilmoitukset (:pollattavat-ilmoitukset app)))]
+          pollattavat-ilmoitukset nil
+          ; Ei enää pollata, koska ominaisuus poistettu käytöstä. Tämä räsäyttää Harjan.
+          #_(when (and (istunto/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+                  (not (:pollaus-kaynnissa? app)))
+            (aloita-ilmoitusten-pollaaminen ilmoitukset (:pollattavat-ilmoitukset app)))]
 
       (-> app
           (assoc :tietyoilmoitukset ilmoitukset)
