@@ -72,6 +72,7 @@
     ::ulkoinen-id
     ::nimi
     ::yhalahetyksen-tila
+    ::yhalahetyksen-aika
     ::paikkauskohteen-tila
     ::alkupvm
     ::loppupvm
@@ -368,6 +369,7 @@
    :muokattu ::muokkaustiedot/muokattu
    :urakka-id :harja.domain.paikkaus/urakka-id
    :yhalahetyksen-tila :harja.domain.paikkaus/yhalahetyksen-tila
+   :yhalahetyksen-aika :harja.domain.paikkaus/yhalahetyksen-aika
    :virhe :harja.domain.paikkaus/virhe
    :tarkistettu :harja.domain.paikkaus/tarkistettu
    :tarkistaja-id :harja.domain.paikkaus/tarkistaja-id
