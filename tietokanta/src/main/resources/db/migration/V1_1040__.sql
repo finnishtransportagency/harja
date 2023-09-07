@@ -8,7 +8,6 @@ ALTER TABLE tyomaapaivakirja_tieston_toimenpide ADD COLUMN IF NOT EXISTS muokatt
 ALTER TABLE tyomaapaivakirja_tyonjohtaja ADD COLUMN IF NOT EXISTS muokattu timestamp;
 ALTER TABLE tyomaapaivakirja_toimeksianto ADD COLUMN IF NOT EXISTS muokattu timestamp;
 
-
 DROP FUNCTION IF EXISTS tyomaapaivakirja_etsi_taulun_versiomuutokset(TEXT, TEXT[], TEXT[], INTEGER, INTEGER, INTEGER, INTEGER, TEXT);
 
 CREATE OR REPLACE FUNCTION tyomaapaivakirja_etsi_taulun_versiomuutokset(
@@ -29,7 +28,6 @@ DECLARE
   ehdot TEXT;
   on_ehto TEXT;
 BEGIN
-	
   -- Heitä exception koska tarvitaan jotain mitä verrataan
   IF t_ei_verratut = t_sarakkeet THEN
     RAISE EXCEPTION 'Ei verratut sarakkeet eivät voi olla samoja kun verratut sarakkeet';

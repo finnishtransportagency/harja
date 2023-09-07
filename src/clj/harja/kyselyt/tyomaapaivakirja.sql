@@ -43,15 +43,15 @@ WHERE t.id = :tyomaapaivakirja_id
 GROUP BY t.id, u.nimi;
 
 -- name: hae-paivakirjan-muutoshistoria
-SELECT * FROM find_changes_between_versions(
-    'tyomaapaivakirja_kalusto', -- taulu mistä haetaan
-    ARRAY['urakka_id', 'tyokoneiden_lkm', 'lisakaluston_lkm'], -- sarakkeet mitä verrataan
-    ARRAY['muokattu', 'aloitus', 'urakka_id'], -- sarakkeet mitkä palautetaan mutta ei verrata 
-    3, -- p_tyomaapaivakirja_id
-    35, -- urakka_id
-    26, -- työmaapäiväkirjan vanha versio
-    27,  -- työmaapäiväkirjanuusi versio 
-    'urakka_id' -- OPTIONAL, tämä sarake täytyy olla sama verratessa, voi olla NULL 
+SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
+  'tyomaapaivakirja_poikkeussaa', -- taulu mistä haetaan
+  ARRAY['paikka', 'kuvaus', 'urakka_id'], -- sarakkeet mitä verrataan
+  ARRAY['muokattu'],-- sarakkeet mitkä palautetaan mutta ei verrata 
+  3, -- tyomaapaivakirja_id
+  35, -- urakka_id
+  26, -- vanha versio
+  27, -- uusi versio 
+  null -- OPTIONAL, tämä sarake täytyy olla sama verratessa, voi olla NULL 
 );
 
 -- name: hae-paivakirjan-tehtavat

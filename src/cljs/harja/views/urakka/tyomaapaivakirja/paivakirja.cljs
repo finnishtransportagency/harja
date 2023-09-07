@@ -137,8 +137,7 @@
        nayta-rivit]]]))
 
 (defn nayta-muutoshistoria [{:keys [muutoshistoria] :as app}]
-
-  (println "Muutoshistoria: " muutoshistoria " \n \n Ajetaan.. \n ")
+  (println "\n Muutoshistoria: " muutoshistoria " \n \n Ajetaan.. \n ")
   ;; Tehdään funktio joka käsittelee muutoshistoriatiedot
   ;; Palautetaan jokin arvo jossa mäpätty esim: [ {:aika aika, :kenttä kentta, :vanha-arvo vanha-arvo, :uusi-arvo uusi-arvo} ]
   (modal/nayta!
@@ -167,7 +166,7 @@
       [:span (str "Versio " (:versio valittu-rivi))]
 
       [:a.klikattava {:on-click #(do 
-                                   ;; (nayta-muutoshistoria app)
+                                   (nayta-muutoshistoria app)
                                    (e! (tiedot/->HaeMuutoshistoria)))} "Näytä muutoshistoria"]
 
       [:span.paivakirja-toimitus
