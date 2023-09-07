@@ -14,42 +14,52 @@ if [[ -z "$IMAGE_NAME" ]]; then
     exit 1
 fi
 
-
 help() {
-  echo "Käyttö: $0 [OPTIONS]"
-  echo "  -t, --tag TAG   Valinnainen pushattava tag. Tämän lisäksi 'latest' tag pushataan aina."
-  echo "  -h, --help      Näytä tämä ohjeteksti."
-  exit 1
+    echo "Käyttö: $0 [OPTIONS]"
+    echo "  -t, --tag TAG    Valinnainen pushattava tag. "
+    echo "  --update-latest  Päivitetään myös latest."
+    echo "  -h, --help       Näytä tämä ohjeteksti."
+    exit 1
 }
 
-# Valinnainen ylimääräinen tag. "Latest" tag pusketaan aina.
+# Valinnainen ylimääräinen tag.
 TAG=""
+
+# Pusketaanko latest
+PUSH_LATEST="false"
 
 # Parsi komentorivioptiot
 while [[ "$#" -gt 0 ]]; do
-  case "$1" in
-    -t|--tag)
-      TAG="$2"
-      shift 2
-      ;;
-    -h|--help)
-      help
-      ;;
+    case "$1" in
+    -t | --tag)
+        TAG="$2"
+        shift 2
+        ;;
+    --update-latest)
+        PUSH_LATEST="true"
+        shift 1
+        ;;
+    -h | --help)
+        help
+        ;;
     *)
-      echo "Tuntematon optio: $1"
-      help
-      ;;
-  esac
+        echo "Tuntematon optio: $1"
+        help
+        ;;
+    esac
 done
 
 
-echo "Pushataan ${IMAGE_NAME}:latest..."
-
-docker push "${IMAGE_REPO}/${IMAGE_NAME}:latest"
+if [[ "$PUSH_LATEST" = "true" ]]; then
+    echo "Pushataan ${IMAGE_NAME}:latest..."
+    docker push "${IMAGE_REPO}/${IMAGE_NAME}:latest"
+else
+    echo "Ohitetaan ${IMAGE_NAME}:latest päivitys.."
+fi
 
 if [[ -n "$TAG" ]]; then
-  echo "Pushataan ${IMAGE_NAME}:${TAG}..."
-  docker push "${IMAGE_REPO}/${IMAGE_NAME}:${TAG}"
+    echo "Pushataan ${IMAGE_NAME}:${TAG}..."
+    docker push "${IMAGE_REPO}/${IMAGE_NAME}:${TAG}"
 fi
 
 echo "Push valmis."
