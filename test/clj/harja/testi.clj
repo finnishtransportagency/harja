@@ -300,6 +300,11 @@
 
 (defonce ^:private testikannan-luonti-lukko (Object.))
 
+(defn postgresql-versio-num []
+  (let [postgresql-versio (ffirst (q "SELECT version()"))]
+    (some->
+      (second (re-find #"PostgreSQL (\d+.\d+)" postgresql-versio))
+      (Float/parseFloat))))
 
 (def testikanta-yritysten-lkm 15)
 (defn pudota-ja-luo-testitietokanta-templatesta
@@ -312,7 +317,14 @@
       (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) testikanta-yritysten-lkm true)
       (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) testikanta-yritysten-lkm true)
       (yrita-querya (fn [n]
-                      (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
+                      (let [postgresql-versio (or (postgresql-versio-num) 0)
+                            versio-13-tai-isompi? (>= postgresql-versio 13)]
+
+                        ;; Huom: "with (force)" toimii PostgreSQl 13 alkaen.
+                        ;; FIXME: Poista versio-check, kun PostgreSQL 13 on otettu kaikkialla käyttöön.
+                        (if versio-13-tai-isompi?
+                          (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest with (force)")
+                          (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")))
                       (async/<!! (async/timeout (* n 1000)))
                       (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
                     testikanta-yritysten-lkm
@@ -382,7 +394,14 @@
                                                                    (with-open [c (jdbc/get-connection db)
                                                                                ps (.createStatement c)]
                                                                      (.executeUpdate ps (str "CREATE DATABASE " testikanta-data-placeholder " OWNER " testikanta-data-placeholder " TEMPLATE " db-name))
-                                                                     (.executeUpdate ps (str "DROP DATABASE IF EXISTS " db-name))))
+                                                                     (let [postgresql-versio (or (postgresql-versio-num) 0)
+                                                                           versio-13-tai-isompi? (>= postgresql-versio 13)]
+
+                                                                       ;; Huom: "with (force)" toimii PostgreSQl 13 alkaen.
+                                                                       ;; FIXME: Poista versio-check, kun PostgreSQL 13 on otettu kaikkialla käyttöön.
+                                                                       (if versio-13-tai-isompi?
+                                                                         (.executeUpdate ps (str "DROP DATABASE IF EXISTS " db-name " with (force)"))
+                                                                         (.executeUpdate ps (str "DROP DATABASE IF EXISTS " db-name))))))
                                           (async/>! kanava :katkos-kaynnissa)
                                           ;; Odotetaan, että saadaan laittaa kanta takaisin pystyyn
                                           (async/<! kanava)
@@ -400,7 +419,14 @@
                                    (with-open [c (jdbc/get-connection db)
                                                ps (.createStatement c)]
                                      #_(yrita-querya (fn [] (tapa-backend-kannasta ps testikanta-data-placeholder)) 5 false)
-                                     (yrita-querya (fn [] (.executeUpdate ps (str "DROP DATABASE IF EXISTS " testikanta-data-placeholder))) 5)
+                                     (let [postgresql-versio (or (postgresql-versio-num) 0)
+                                           versio-13-tai-isompi? (>= postgresql-versio 13)]
+
+                                       ;; Huom: "with (force)" toimii PostgreSQl 13 alkaen.
+                                       ;; FIXME: Poista versio-check, kun PostgreSQL 13 on otettu kaikkialla käyttöön.
+                                       (if versio-13-tai-isompi?
+                                         (yrita-querya (fn [] (.executeUpdate ps (str "DROP DATABASE IF EXISTS " testikanta-data-placeholder " with (force)"))) 5)
+                                         (yrita-querya (fn [] (.executeUpdate ps (str "DROP DATABASE IF EXISTS " testikanta-data-placeholder))) 5)))
                                      (yrita-querya (fn [] (.executeUpdate ps (str "DROP USER IF EXISTS " testikanta-data-placeholder))) 5)))
           (println "---> TMP KANTA TAPETTU")
           (async/put! kanava :kanta-uudetaan-kaynnissa)
