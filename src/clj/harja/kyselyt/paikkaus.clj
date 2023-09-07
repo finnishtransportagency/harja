@@ -213,9 +213,9 @@
   "Päivittää paikkauskohteen tilan harjan sisäisen id:n perusteella (lähetetty, virhe)."
   [db paikkauskohde]
   (let [id (::paikkaus/id paikkauskohde)
-        ehdot (if (id-olemassa? id)
-                {::paikkaus/id id})]
-    (update! db ::paikkaus/paikkauskohde paikkauskohde ehdot)
+        ehdot {::paikkaus/id id}]
+    (when (id-olemassa? id)
+      (update! db ::paikkaus/paikkauskohde paikkauskohde ehdot))
     (first (hae-paikkaukset db ehdot))))
 
 (defn- paivita-paikkaus
