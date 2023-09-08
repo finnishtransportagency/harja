@@ -22,7 +22,7 @@ if unzip -q -v "$jarfile" > /dev/null 2>&1; then
     chmod a+rwxt $jardir
     trap "rm -vf $jardir/{harja.jar,aja-cypress-kontissa.bash,asetukset.edn,cypress.tar}; rmdir $jardir" EXIT
     cp -v $jarfile $jardir/harja.jar
-    tar -C $DIR/.. -cf $jardir/cypress.tar cypress.json cypress
+    tar -C $DIR/.. -cf $jardir/cypress.tar cypress.config.js cypress
     cp -v $DIR/aja-cypress-kontissa.bash $asetukset  $jardir/
     docker run --link harjadb:postgres -v "$jardir:/jar" --rm solita/harja-cypress /jar/aja-cypress-kontissa.bash
     chmod go-rwxt $jardir
