@@ -266,18 +266,6 @@
     transform: scale(2.0);
   }
 
-  .muutoshistoria-modal {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    .muutoshistoria-otsikko {
-      margin-top: 3rem;
-      font-size: 16px;
-      font-weight: bold;
-    }
-  }
-
   // Työmaapäiväkirjan sää ikonit
   .saa-ikonit {
     transform: scale(2.0);
@@ -319,5 +307,26 @@
   .severe-thunderstorm, .snow-and-sleet-mix, .snowy-1-day, .snowy-1-night, .snowy-2-day, 
   .snowy-2-night, .snowy-3-day, .snowy-3-night, .thunderstorms, .tornado, .tropical-storm, .rainy-4  {
     transform: scale(1.7);
+  }
+}
+
+.muutoshistoria-modal {
+  display: flex;
+  flex-direction: column;
+
+  .muutoshistoria-otsikko {
+    margin-bottom: 1rem;
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  .muutos-pvm {
+    font-weight: bold;
+    margin-left: @valistys-6;
+    
+  }
+  .muutoshistoria-grid {
+    margin-top: @valistys-6;
+    
   }
 }

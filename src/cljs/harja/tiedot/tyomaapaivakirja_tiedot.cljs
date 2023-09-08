@@ -296,8 +296,7 @@
     (tuck-apurit/post! app :tyomaapaivakirja-hae-muutoshistoria
       {:tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
        :urakka-id (:id @nav/valittu-urakka)
-       :versio (:versio valittu-rivi)
-       :vanha (dec (:versio valittu-rivi))}
+       :versio (:versio valittu-rivi)}
       {:onnistui ->HaeMuutoshistoriaOnnistui
        :epaonnistui ->HaeMuutoshistoriaEpaonnistui})
     app)

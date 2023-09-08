@@ -145,45 +145,57 @@
   ;; :vanhat : Vanhan version arvot 
   ;; :uudet : Nykyisen version arvot 
 
+
+
   (modal/nayta!
     {:modal-luokka "harja-modal-keskitetty"
-     :luokka "modal-dialog-keskitetty"}
+     ;;:luokka "modal-dialog-keskitetty"
+     :luokka "muutoshistoria-content"
+     :body-tyyli {:width "100%"}}
 
     [:div.muutoshistoria-modal
      [:div.muutoshistoria-otsikko "Versiohistoria"]
 
      [:div.muutoshistoria
+      
+      (for [rivi muutoshistoria]
+      (let [kentan-nimi (cond)
+            _ (println "X: " rivi)
+            _ (println "\n")
 
-      [:span.klikattava {:on-click #(do
-                                      (println "Klikattiin"))} (ikonit/harja-icon-navigation-down)]
-      [:span "11.10.2022 08:10 Lisätty rekka-kolari"]
+            solu-fn #(str "nakyma-valkoinen-solu")]
 
-      [grid/grid {:tyhja "Työmaapäiväkirjoja ei ole valitulle aikavälille."
-                  :tunniste :id
-                  :sivuta grid/vakiosivutus
-                  :voi-kumota? false
-                  :piilota-toiminnot? true
-                  :jarjesta :paivamaara
-                  :mahdollista-rivin-valinta? true
-                  ;;:rivin-luokka solu-fn
-                  ;;:rivi-klikattu fn
-                  }
+        [:span.klikattava {:on-click #(do
+                                        (println "Klikattiin"))} (ikonit/harja-icon-navigation-down)]
+        [:span.muutos-pvm "11.10.2022 08:10 Lisätty rekka-kolari"]
 
-       [{:tyyppi :komponentti
-         :komponentti (fn [arvo _]
-                        (str "tester "))
-         :luokka "semibold text-nowrap"
-         :leveys 0.3}
+        [:div.muutoshistoria-grid
+         #_ [grid/grid {:tyhja "Työmaapäiväkirjoja ei ole valitulle aikavälille."
+                     :tunniste :id
+                     :sivuta grid/vakiosivutus
+                     :voi-kumota? false
+                     :piilota-toiminnot? true
+                     :jarjesta :paivamaara
+                     :mahdollista-rivin-valinta? true
+                     :piilota-muokkaus? true}
 
-        {:otsikko "Urakka"
-         :tyyppi :string
-         :nimi :info
-         :leveys 1}
-        {:otsikko "Urakka"
-         :tyyppi :string
-         :nimi :info
-         :leveys 1}]
-       muutoshistoria]]]))
+          [{:otsikko "Kentän nimi"
+            :tyyppi :string
+            :nimi :info
+            :solun-luokka solu-fn
+            :leveys 1}
+
+           {:otsikko "Vanha arvo"
+            :tyyppi :string
+            :nimi :info
+            :solun-luokka solu-fn
+            :leveys 1}
+           {:otsikko "Uusi arvo"
+            :tyyppi :string
+            :solun-luokka solu-fn
+            :nimi :info
+            :leveys 1}]
+          (into [] rivi)]]))]]))
 
 (defn paivakirjan-header [e! {:keys [valittu-rivi] :as app}]
   (when valittu-rivi
