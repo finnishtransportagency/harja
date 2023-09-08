@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 
-# Exit on any error or an unset variable (use optionally -x to print each command)
+# Exit, mikäli tulee virheitä tai löytyy määrittelemätön muuttuja
 set -Eeu
 
-echo "Pushataan image."
-docker push ghcr.io/finnishtransportagency/harja_cypress:latest
-echo "Build valmis."
+# shellcheck disable=SC2034
+IMAGE_REPO="ghcr.io/finnishtransportagency"
+# shellcheck disable=SC2034
+IMAGE_NAME="harja_cypress"
+
+source ../scripts/push-image.sh
