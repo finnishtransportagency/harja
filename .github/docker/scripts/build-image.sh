@@ -15,11 +15,12 @@ if [[ -z "$IMAGE_NAME" ]]; then
 fi
 
 help() {
-    echo "Käyttö: $0 [OPTIONS]"
+    echo "Käyttö: $0 [OPTIONS] [-- Vapaaehtoiset 'docker build' lisäoptiot]"
     echo "  -t, --tag TAG                   Valinnainen ylimääräinen tag. 'Latest' buildataan aina."
     echo "  -c, --clean-build [true|false]  Buildaa ilman cachea (default: true)."
     echo "  -p, --progress [auto|plain]     Määrittele build progress lokituksen muoto (default: plain)."
     echo "  -h, --help                      Näytä tämä ohjeteksti."
+    echo "  --                              Lisäoptiot 'docker build'-komennolle '--' jälkeen."
     exit 1
 }
 
