@@ -14,7 +14,8 @@
             [harja.pvm :as pvm]
             [harja.ui.modal :as modal]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.transit :as t]))
+            [harja.transit :as t])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn haun-valinnat [tiedot]
   (let [myohassa (filter
@@ -137,78 +138,91 @@
          :leveys 0.5}]
        nayta-rivit]]]))
 
-(defn nayta-muutoshistoria [e! {:keys [muutoshistoria nayta-rivit historiatiedot-auki historiarivi-auki] :as app}]
-  ;; (println "\n nayta: " (type nayta-rivit) " muutoshistoria " (type (:info (first muutoshistoria))) (type (:urakka-nimi (first nayta-rivit))))
-  ;; Tuck statesta löytyy muutoshistoria jossa mäpätty: ( {:info , :toiminto <>, :vanhat <>, :uudet <>} )
-  ;; :info : Mistä taulusta on tehty mitäkin, esim "<Lisätty> <säätietoja>" (toiminto, info)
-  ;; :toiminto : 'muutettu' | 'poistettu' | 'lisatty' 
-  ;; :vanhat : Vanhan version arvot 
-  ;; :uudet : Nykyisen version arvot 
-  (modal/nayta!
-    {:modal-luokka "harja-modal-keskitetty"
-     :luokka "muutoshistoria-content"
-     :body-tyyli {:width "100%"}
-     :sulje-fn #(e! (tiedot/->MuutoshistoriaAuki))}
+(defn nayta-muutoshistoria
+  "Tuck statesta löytyy muutoshistoria jossa mäpätty: ( {vers1 {:info , :toiminto <>, :vanhat <>, :uudet <>}} ... )
+  :info : Mistä taulusta on tehty mitäkin, esim '<Lisätty> <säätietoja>' (toiminto, info)
+  :toiminto : 'muutettu' | 'poistettu' | 'lisatty' 
+  :vanhat : Vanhan version arvot 
+  :uudet : Nykyisen version arvot"
+  [e! {:keys [muutoshistoria historiarivi-auki]}]
 
-    [:div.muutoshistoria-modal
-     [:div.muutoshistoria-otsikko "Versiohistoria"]
+  ;; Tehty kustom modali koska Harjan nayta-modal herjasi React atom virheitä ilman kummempia tietoja enkä saanut korjattua
+  [:div.muutoshistoria-modal {:on-click(fn [e]
+                                         ;; Jos klikattiin elementin ulkopuolelle, suljetaan modali
+                                         (when (= (-> e .-target .-classList str) "muutoshistoria-modal")
+                                           (e! (tiedot/->MuutoshistoriaAuki))))}
+   [:div.muutoshistoria-dialog
+    [:div.muutoshistoria-otsikko "Versiohistoria"]
 
-     [:div.muutoshistoria
+    [:div.muutoshistoria
       ;; Loopataan muutokset ja tehdään rivit, reverse jotta uusimmat muutokset ylimpänä
-      (for [[indeksi versiomuutokset] (map-indexed vector (reverse muutoshistoria))]
+     (for* [[indeksi versiomuutokset] (map-indexed vector (reverse muutoshistoria))]
 
-        (let [kentan-nimi (cond)
-              kentta-auki? (get-in historiarivi-auki [indeksi])
+       (let [kentta-auki? (get-in historiarivi-auki [indeksi])
 
-              _ (println "{" indeksi "} [" kentta-auki? "] X: " versiomuutokset)
-              _ (println "\n")
+             _ (println "{" indeksi "} [" kentta-auki? "] X: " versiomuutokset)
+             _ (println "\n")
+             solu-fn #(str "nakyma-valkoinen-solu muutoshistoria-kentan-nimi")
 
-              solu-fn #(str "nakyma-valkoinen-solu")]
+             fn-hae-arvo (fn [kentta uusi?]
 
-          ^{:key indeksi}
-          [:div.muutoshistoria-grid
+                           (let [avain (if uusi? :uudet :vanhat)]
+                             (if (nil? (avain kentta))
+                               "(tyhjä)"
+                               (cond
+                                 (= (:info kentta) "kalustoja")
+                                 (str
+                                   "Työkoneiden määrä: " (get-in kentta [avain :tyokoneiden_lkm]) ", "
+                                   "Lisäkaluston määrä: " (get-in kentta [avain :lisakaluston_lkm]))
 
-           [:span.klikattava {:on-click #(do
-                                           (println "auki? " kentta-auki?)
-                                           (e! (tiedot/->ValitseHistoriarivi indeksi)))} (ikonit/harja-icon-navigation-down)]
+                                 (= (:info kentta) "sääasematietoja")
+                                 (str
+                                   "Tunniste: " (get-in kentta [avain :aseman_tunniste]) ", "
+                                   "Tien lämpötila: " (get-in kentta [avain :tien_lampotila]) ", "
+                                   "Ilman lämpötila: " (get-in kentta [avain :ilman_lampotila]) ", "
+                                   "Tuuli: " (get-in kentta [avain :keskituuli]) " m/s, "
+                                   "S-Sum: " (get-in kentta [avain :sadesumma]) " mm")
 
-           [:span.muutos-pvm "11.10.2022 08:10 Lisätty rekka-kolari"]
+                                 :else "Ei tietoja"))))]
 
-           [:div {:style {:display (if kentta-auki? "block" "none")}}
-            [grid/grid {:tyhja "Työmaapäiväkirjoja ei ole valitulle aikavälille."
-                        :tunniste :id
-                        :sivuta grid/vakiosivutus
-                        :voi-kumota? false
-                        :piilota-toiminnot? true
-                        :jarjesta :paivamaara
-                        :mahdollista-rivin-valinta? true
-                        :piilota-muokkaus? true}
+         [:div.muutoshistoria-grid
+          [:span.klikattava {:on-click #(e! (tiedot/->ValitseHistoriarivi indeksi))} (ikonit/harja-icon-navigation-down)]
+          [:span.muutos-pvm "11.10.2022 08:10 Lisätty rekka-kolari"]
 
-             [{:otsikko "Kentän nimi"
-               :tyyppi :string
-               :nimi :info
-               :solun-luokka solu-fn
-               :leveys 1}
+          [:div {:style {:display (if kentta-auki? "block" "none")}}
+           [grid/grid {:tyhja "Työmaapäiväkirjoja ei ole valitulle aikavälille."
+                       :tunniste :id
+                       :sivuta grid/vakiosivutus
+                       :voi-kumota? false
+                       :piilota-toiminnot? true
+                       :jarjesta :paivamaara
+                       :mahdollista-rivin-valinta? false
+                       :piilota-muokkaus? true}
 
-              {:otsikko "Vanha arvo"
-               :tyyppi :string
-               :nimi :info
-               :solun-luokka solu-fn
-               :leveys 1}
-              {:otsikko "Uusi arvo"
-               :tyyppi :string
-               :solun-luokka solu-fn
-               :nimi :info
-               :leveys 1}]
-             (into [] versiomuutokset)]]]))]]))
+            [{:otsikko "Kentän nimi"
+              :tyyppi :string
+              :nimi :info
+              :solun-luokka solu-fn
+              :leveys 1}
+             {:otsikko "Vanha arvo"
+              :tyyppi :komponentti
+              :komponentti (fn [arvo _] (fn-hae-arvo arvo false))
+              :solun-luokka solu-fn
+              :leveys 1}
+             {:otsikko "Uusi arvo"
+              :tyyppi :komponentti
+              :komponentti (fn [arvo _] (fn-hae-arvo arvo true))
+              :solun-luokka solu-fn
+              :leveys 1}]
+            versiomuutokset]]]))]]])
 
 (defn paivakirjan-header [e! {:keys [valittu-rivi historiatiedot-auki] :as app}]
   (when valittu-rivi
     [:<>
-     
+
      (when historiatiedot-auki
        (nayta-muutoshistoria e! app))
-     
+
      [:h3.header-yhteiset (:urakka-nimi valittu-rivi)]
      [:h1.header-yhteiset (str "Työmaapäiväkirja " (pvm/pvm (:paivamaara valittu-rivi)))]
 

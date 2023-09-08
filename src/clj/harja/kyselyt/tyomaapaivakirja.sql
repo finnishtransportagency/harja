@@ -89,7 +89,7 @@ SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
 -- name: hae-saaasema-muutokset
 SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
   'tyomaapaivakirja_saaasema', -- taulu mistä haetaan
-  ARRAY['versio', 'aseman_tunniste', 'ilman_lampotila', 'tien_lampotila', 'keskituuli', 'sateen_olomuoto', 'sadesumma', 'havaintoaika', 'muokattu'], -- sarakkeet mitä verrataan
+  ARRAY['versio', 'aseman_tunniste', 'ilman_lampotila', 'tien_lampotila', 'keskituuli', 'sateen_olomuoto', 'sadesumma', 'muokattu'], -- sarakkeet mitä verrataan
   ARRAY['muokattu', 'versio'],                    -- sarakkeet mitkä palautetaan mutta ei verrata 
   :tyomaapaivakirja_id::INTEGER,        -- tyomaapaivakirja_id
   :urakka_id::INTEGER,                  -- urakka_id

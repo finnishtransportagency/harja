@@ -313,19 +313,44 @@
 .muutoshistoria-modal {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1050;
+  -webkit-overflow-scrolling: touch;
+  outline: 0;
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #19191964;
 
-  .muutoshistoria-otsikko {
-    margin-bottom: 1rem;
-    font-size: 16px;
-    font-weight: bold;
-  }
+  .muutoshistoria-dialog {
+    position: relative;
+    width: 90%;
+    max-width: 800px;
+    height: 90%;
+    overflow-y: auto;
+    background-color: @harjan-taustavari;
+    padding: @valistys-32 @valistys-48;
 
-  .muutos-pvm {
-    font-weight: bold;
-    margin-left: @valistys-6;
-    
-  }
-  .muutoshistoria-grid {
-    margin-top: @valistys-6;
+    .muutoshistoria-otsikko {
+      margin-bottom: 1rem;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .muutos-pvm {
+      font-weight: bold;
+      margin-left: @valistys-6;
+    }
+    .muutoshistoria-grid {
+      margin-top: @valistys-6;
+    }
+    .muutoshistoria-kentan-nimi {
+      font-weight: bold;
+    }
   }
 }
