@@ -137,69 +137,78 @@
          :leveys 0.5}]
        nayta-rivit]]]))
 
-(defn nayta-muutoshistoria [{:keys [muutoshistoria nayta-rivit] :as app}]
+(defn nayta-muutoshistoria [e! {:keys [muutoshistoria nayta-rivit historiatiedot-auki historiarivi-auki] :as app}]
   ;; (println "\n nayta: " (type nayta-rivit) " muutoshistoria " (type (:info (first muutoshistoria))) (type (:urakka-nimi (first nayta-rivit))))
   ;; Tuck statesta löytyy muutoshistoria jossa mäpätty: ( {:info , :toiminto <>, :vanhat <>, :uudet <>} )
   ;; :info : Mistä taulusta on tehty mitäkin, esim "<Lisätty> <säätietoja>" (toiminto, info)
   ;; :toiminto : 'muutettu' | 'poistettu' | 'lisatty' 
   ;; :vanhat : Vanhan version arvot 
   ;; :uudet : Nykyisen version arvot 
-
-
-
   (modal/nayta!
     {:modal-luokka "harja-modal-keskitetty"
-     ;;:luokka "modal-dialog-keskitetty"
      :luokka "muutoshistoria-content"
-     :body-tyyli {:width "100%"}}
+     :body-tyyli {:width "100%"}
+     :sulje-fn #(e! (tiedot/->MuutoshistoriaAuki))}
 
     [:div.muutoshistoria-modal
      [:div.muutoshistoria-otsikko "Versiohistoria"]
 
      [:div.muutoshistoria
-      
-      (for [rivi muutoshistoria]
-      (let [kentan-nimi (cond)
-            _ (println "X: " rivi)
-            _ (println "\n")
+      ;; Loopataan muutokset ja tehdään rivit, reverse jotta uusimmat muutokset ylimpänä
+      (for [[indeksi versiomuutokset] (map-indexed vector (reverse muutoshistoria))]
 
-            solu-fn #(str "nakyma-valkoinen-solu")]
+        (let [kentan-nimi (cond)
+              kentta-auki? (get-in historiarivi-auki [indeksi])
 
-        [:span.klikattava {:on-click #(do
-                                        (println "Klikattiin"))} (ikonit/harja-icon-navigation-down)]
-        [:span.muutos-pvm "11.10.2022 08:10 Lisätty rekka-kolari"]
+              _ (println "{" indeksi "} [" kentta-auki? "] X: " versiomuutokset)
+              _ (println "\n")
 
-        [:div.muutoshistoria-grid
-         #_ [grid/grid {:tyhja "Työmaapäiväkirjoja ei ole valitulle aikavälille."
-                     :tunniste :id
-                     :sivuta grid/vakiosivutus
-                     :voi-kumota? false
-                     :piilota-toiminnot? true
-                     :jarjesta :paivamaara
-                     :mahdollista-rivin-valinta? true
-                     :piilota-muokkaus? true}
+              solu-fn #(str "nakyma-valkoinen-solu")]
 
-          [{:otsikko "Kentän nimi"
-            :tyyppi :string
-            :nimi :info
-            :solun-luokka solu-fn
-            :leveys 1}
+          ^{:key indeksi}
+          [:div.muutoshistoria-grid
 
-           {:otsikko "Vanha arvo"
-            :tyyppi :string
-            :nimi :info
-            :solun-luokka solu-fn
-            :leveys 1}
-           {:otsikko "Uusi arvo"
-            :tyyppi :string
-            :solun-luokka solu-fn
-            :nimi :info
-            :leveys 1}]
-          (into [] rivi)]]))]]))
+           [:span.klikattava {:on-click #(do
+                                           (println "auki? " kentta-auki?)
+                                           (e! (tiedot/->ValitseHistoriarivi indeksi)))} (ikonit/harja-icon-navigation-down)]
 
-(defn paivakirjan-header [e! {:keys [valittu-rivi] :as app}]
+           [:span.muutos-pvm "11.10.2022 08:10 Lisätty rekka-kolari"]
+
+           [:div {:style {:display (if kentta-auki? "block" "none")}}
+            [grid/grid {:tyhja "Työmaapäiväkirjoja ei ole valitulle aikavälille."
+                        :tunniste :id
+                        :sivuta grid/vakiosivutus
+                        :voi-kumota? false
+                        :piilota-toiminnot? true
+                        :jarjesta :paivamaara
+                        :mahdollista-rivin-valinta? true
+                        :piilota-muokkaus? true}
+
+             [{:otsikko "Kentän nimi"
+               :tyyppi :string
+               :nimi :info
+               :solun-luokka solu-fn
+               :leveys 1}
+
+              {:otsikko "Vanha arvo"
+               :tyyppi :string
+               :nimi :info
+               :solun-luokka solu-fn
+               :leveys 1}
+              {:otsikko "Uusi arvo"
+               :tyyppi :string
+               :solun-luokka solu-fn
+               :nimi :info
+               :leveys 1}]
+             (into [] versiomuutokset)]]]))]]))
+
+(defn paivakirjan-header [e! {:keys [valittu-rivi historiatiedot-auki] :as app}]
   (when valittu-rivi
     [:<>
+     
+     (when historiatiedot-auki
+       (nayta-muutoshistoria e! app))
+     
      [:h3.header-yhteiset (:urakka-nimi valittu-rivi)]
      [:h1.header-yhteiset (str "Työmaapäiväkirja " (pvm/pvm (:paivamaara valittu-rivi)))]
 
@@ -210,9 +219,9 @@
         [:span (str "Päivitetty " (pvm/pvm-aika-klo (:muokattu valittu-rivi)))])
       [:span (str "Versio " (:versio valittu-rivi))]
 
-      [:a.klikattava {:on-click #(do 
-                                   (nayta-muutoshistoria app)
-                                   (e! (tiedot/->HaeMuutoshistoria)))} "Näytä muutoshistoria"]
+      [:a.klikattava {:on-click #(do
+                                   (e! (tiedot/->HaeMuutoshistoria))
+                                   (e! (tiedot/->MuutoshistoriaAuki)))} "Näytä muutoshistoria"]
 
       [:span.paivakirja-toimitus
        [:div {:class (str "pallura " (:tila valittu-rivi))}]

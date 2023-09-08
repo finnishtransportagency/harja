@@ -51,6 +51,8 @@
 (defrecord HaeMuutoshistoriaOnnistui [vastaus])
 (defrecord HaeMuutoshistoriaEpaonnistui [vastaus])
 (defrecord ValitseRivi [rivi])
+(defrecord MuutoshistoriaAuki [])
+(defrecord ValitseHistoriarivi [indeksi])
 (defrecord PoistaRiviValinta [])
 (defrecord SelaaPaivakirjoja [suunta])
 (defrecord PaivitaAikavali [uudet])
@@ -211,6 +213,16 @@
       (do
         (viesti/nayta-toast! "Valitun päivän työmaapäiväkirjaa ei ole vielä lähetetty." :varoitus)
         app)))
+
+  ValitseHistoriarivi
+  (process-event [{indeksi :indeksi} app]
+    (-> app
+      (assoc-in [:historiarivi-auki indeksi] (not (get-in app [:historiarivi-auki indeksi])))))
+  
+  MuutoshistoriaAuki
+  (process-event [_ app]
+    (-> app
+      (assoc :historiatiedot-auki (not (get app :historiatiedot-auki)) )))
 
   PoistaRiviValinta
   (process-event [_ app]
