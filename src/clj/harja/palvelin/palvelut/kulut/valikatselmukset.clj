@@ -12,14 +12,10 @@
     [harja.kyselyt.valikatselmus :as valikatselmus-q]
     [harja.kyselyt.urakat :as urakat-q]
     [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
-    [harja.kyselyt.konversio :as konv]
-    [harja.kyselyt.toteumat :as toteumat-q]
-    [harja.kyselyt.sanktiot :as sanktiot-q]
-    [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-q]
-    [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
-    [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
     [harja.palvelin.palvelut.toteumat :as toteumat-palvelu]
+    [harja.palvelin.palvelut.kulut :as kulut-palvelu]
+    [harja.palvelin.palvelut.kulut.paatos-apurit :as paatos-apurit]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
     [harja.pvm :as pvm]
     [harja.domain.roolit :as roolit]
@@ -115,77 +111,6 @@
 
       ;; Tarkista siirto
       (tarkista-ei-siirtoa-tavoitehinnan-ylityksessa tiedot))))
-
-(defn tarkista-lupausbonus
-  "Varmista, että annettu bonus täsmää lupauksista saatavaan bonukseen"
-  [db kayttaja tiedot]
-  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id (::urakka/id tiedot)}))
-        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
-        hakuparametrit {:urakka-id (::urakka/id tiedot)
-                        :urakan-alkuvuosi urakan-alkuvuosi
-                        :nykyhetki (pvm/nyt)
-                        :valittu-hoitokausi [(pvm/luo-pvm (::valikatselmus/hoitokauden-alkuvuosi tiedot) 9 1)
-                                             (pvm/luo-pvm (inc (::valikatselmus/hoitokauden-alkuvuosi tiedot)) 8 30)]}
-        vanha-mhu? (lupaus-domain/urakka-19-20? urakan-tiedot)
-        lupaustiedot (if vanha-mhu?
-                       (lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle db kayttaja hakuparametrit)
-                       (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))
-        tilaajan-maksu (bigdec (::valikatselmus/tilaajan-maksu tiedot))
-        laskettu-bonus (bigdec (or (get-in lupaustiedot [:yhteenveto :bonus-tai-sanktio :bonus]) 0M))]
-    (cond (and
-            ;; Varmistetaan, että tyyppi täsmää
-            (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupausbonus)
-            ;; Tarkistetaan, että bonus on annettu, jotta voidaan tarkistaa luvut
-            (get-in lupaustiedot [:yhteenveto :bonus-tai-sanktio :bonus])
-            ;; Varmistetaan, että lupauksissa laskettu bonus täsmää päätöksen bonukseen
-            (= laskettu-bonus tilaajan-maksu))
-          true
-          (and
-            ;; Varmistetaan, että tyyppi täsmää
-            (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupausbonus)
-            ;; Tarkistetaan, että tavoite on täytetty, eli nolla case, jotta voidaan tarkistaa luvut
-            (get-in lupaustiedot [:yhteenveto :bonus-tai-sanktio :tavoite-taytetty])
-            ;; Varmistetaan, että lupauksissa laskettu sanktio täsmää päätöksen sanktioon
-            (= (bigdec 0) tilaajan-maksu))
-          true
-          :else
-          (do
-            (log/warn "Lupausbonuksen tilaajan maksun summa ei täsmää lupauksissa lasketun bonuksen kanssa.
-            Laskettu bonus: " laskettu-bonus " tilaajan maksu: " tilaajan-maksu)
-            (heita-virhe "Lupausbonuksen tilaajan maksun summa ei täsmää lupauksissa lasketun bonuksen kanssa.")))))
-
-(defn tarkista-lupaussanktio
-  "Varmista, että tuleva sanktio täsmää lupauksista saatavaan sanktioon"
-  [db kayttaja tiedot]
-  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id (::urakka/id tiedot)}))
-        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
-        hakuparametrit {:urakka-id (::urakka/id tiedot)
-                        :urakan-alkuvuosi urakan-alkuvuosi
-                        :nykyhetki (pvm/nyt)
-                        :valittu-hoitokausi [(pvm/luo-pvm (::valikatselmus/hoitokauden-alkuvuosi tiedot) 9 1)
-                                             (pvm/luo-pvm (inc (::valikatselmus/hoitokauden-alkuvuosi tiedot)) 8 30)]}
-        ;; Lupauksia käsitellään täysin eri tavalla riippuen urakan alkuvuodesta
-        lupaukset (if (lupaus-domain/vuosi-19-20? urakan-alkuvuosi)
-                    (lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle db kayttaja hakuparametrit)
-                    (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))]
-    (cond (and
-            ;; Varmistetaan, että tyyppi täsmää
-            (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaussanktio)
-            ;; Tarkistetaan, että sanktio on annettu, jotta voidaan tarkistaa luvut
-            (get-in lupaukset [:yhteenveto :bonus-tai-sanktio :sanktio])
-            ;; Varmistetaan, että lupauksissa laskettu sanktio täsmää päätöksen sanktioon
-            (= (bigdec (get-in lupaukset [:yhteenveto :bonus-tai-sanktio :sanktio])) (bigdec (::valikatselmus/urakoitsijan-maksu tiedot))))
-          true
-          (and
-            ;; Varmistetaan, että tyyppi täsmää
-            (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaussanktio)
-            ;; Tarkistetaan, että tavoite on täytetty, eli nolla case, jotta voidaan tarkistaa luvut
-            (get-in lupaukset [:yhteenveto :bonus-tai-sanktio :tavoite-taytetty])
-            ;; Varmistetaan, että lupauksissa laskettu sanktio täsmää päätöksen sanktioon
-            (= (bigdec 0) (bigdec (::valikatselmus/urakoitsijan-maksu tiedot))))
-          true
-          :else
-          (heita-virhe "Lupaussanktion urakoitsijan maksun summa ei täsmää lupauksissa lasketun sanktion kanssa."))))
 
 (defn- poista-urakan-paatokset [db urakka-id hoitokauden-alkuvuosi kayttaja]
   (let [paatokset (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)]
@@ -369,76 +294,6 @@
     kayttaja
     (::urakka/id tiedot))
   (valikatselmus-q/hae-urakan-paatokset db tiedot))
-
-(defn- lupauksen-indeksi
-  "Lupausbonukselle ja -sanktiolle lisätään indeksi urakan tiedoista, mikäli ne on MH-urakoita ja alkavat vuonna -19 tai -20"
-  [urakan-tiedot]
-  (if (and
-        (= "teiden-hoito" (:tyyppi urakan-tiedot))
-        (or
-          (= (-> urakan-tiedot :alkupvm pvm/vuosi) 2020)
-          (= (-> urakan-tiedot :alkupvm pvm/vuosi) 2019)))
-    (:indeksi urakan-tiedot)
-    nil))
-
-(defn- tallenna-lupaussanktio [db paatoksen-tiedot kayttaja]
-  (when (= ::valikatselmus/lupaussanktio (::valikatselmus/tyyppi paatoksen-tiedot))
-   (let [urakka-id (::urakka/id paatoksen-tiedot)
-         urakka (first (q-urakat/hae-urakka db urakka-id))
-         toimenpideinstanssi-id (valikatselmus-q/hae-urakan-bonuksen-toimenpideinstanssi-id db urakka-id)
-         perustelu (str "Urakoitsija sai " (::valikatselmus/lupaus-toteutuneet-pisteet paatoksen-tiedot)
-                     " pistettä ja lupasi " (::valikatselmus/lupaus-luvatut-pisteet paatoksen-tiedot) " pistettä.")
-         kohdistuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (::valikatselmus/hoitokauden-alkuvuosi paatoksen-tiedot)) 9 15))
-
-         ; "Riippuen urakan alkuvuodesta, indeksejä ei välttämättä käytetä sakoissa/sanktioissa. MHU urakoissa joiden alkuvuosi 2021 tai eteenpäin niitä ei sidota indeksiin"
-         indeksi (lupauksen-indeksi urakka)
-         laatupoikkeama {:tekijanimi (:nimi kayttaja)
-                         :paatos {:paatos "sanktio", :kasittelyaika (pvm/nyt), :perustelu perustelu, :kasittelytapa :valikatselmus}
-                         :kohde nil
-                         :aika kohdistuspvm
-                         :urakka urakka-id
-                         :yllapitokohde nil}
-         lupaussanktiotyyppi (first (sanktiot-q/hae-sanktiotyypin-tiedot-koodilla db {:koodit 0}))
-         sanktio {:kasittelyaika (pvm/nyt)
-                  :suorasanktio true,
-                  :laji :lupaussanktio,
-                  :summa (::valikatselmus/urakoitsijan-maksu paatoksen-tiedot),
-                  :toimenpideinstanssi toimenpideinstanssi-id,
-                  :perintapvm kohdistuspvm
-                  ;; Lupaussanktion tyyppiä ei tarvitse valita
-                  :tyyppi lupaussanktiotyyppi
-                  :indeksi indeksi}
-
-         ;; Tallennus palauttaa sanktio-id:n
-         uusin-sanktio-id (laadunseuranta-palvelu/tallenna-suorasanktio db kayttaja sanktio laatupoikkeama urakka-id [nil nil])]
-     uusin-sanktio-id)))
-
-(defn- tallenna-lupausbonus
-  "Lupauspäätöstä tallennettaessa voidaan tallentaa myös lupausbonus"
-  [db paatoksen-tiedot kayttaja]
-  (when (= ::valikatselmus/lupausbonus (::valikatselmus/tyyppi paatoksen-tiedot))
-    (let [urakka-id (::urakka/id paatoksen-tiedot)
-          urakan-tiedot (first (urakat-q/hae-urakka db urakka-id))
-          indeksin-nimi (lupauksen-indeksi urakan-tiedot)
-          toimenpideinstanssi-id (valikatselmus-q/hae-urakan-bonuksen-toimenpideinstanssi-id db urakka-id)
-          sopimus-id (:id (first (urakat-q/hae-urakan-sopimukset db urakka-id)))
-          ;; Asetetaan päivämäärä hoitokauden viimeiselle kuukaudelle
-          laskutuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (::valikatselmus/hoitokauden-alkuvuosi paatoksen-tiedot)) 9 15))
-          lisatiedot (str "Urakoitsija sai " (::valikatselmus/lupaus-toteutuneet-pisteet paatoksen-tiedot)
-                       " pistettä ja lupasi " (::valikatselmus/lupaus-luvatut-pisteet paatoksen-tiedot) " pistettä.")
-          ek {:tyyppi "lupausbonus"
-              :urakka urakka-id
-              :sopimus sopimus-id
-              :toimenpideinstanssi toimenpideinstanssi-id
-              :pvm laskutuspvm
-              :rahasumma (::valikatselmus/tilaajan-maksu paatoksen-tiedot)
-              :indeksin_nimi indeksin-nimi
-              :lisatieto lisatiedot
-              :laskutuskuukausi laskutuspvm
-              :kasittelytapa "valikatselmus"
-              :luoja (:id kayttaja)}
-          bonus (toteumat-q/luo-erilliskustannus<! db ek)]
-      (:id bonus))))
 
 (defn tee-paatos-urakalle [db kayttaja tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
