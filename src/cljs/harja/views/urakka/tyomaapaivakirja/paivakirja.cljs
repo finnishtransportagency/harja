@@ -37,6 +37,7 @@
                        "puuttuu" {:class "puuttuu" :selitys "Puuttuu"}})
 
 (defn tyomaapaivakirja-listaus [e! {:keys [nayta-rivit valinnat] :as app}]
+  (println "nayta rivit " (type nayta-rivit))
   (let [hakumuoto (atom (:hakumuoto valinnat))
         solu-fn (fn [arvo _]
                   (let [rivin-paivamaara (:paivamaara arvo)
@@ -136,10 +137,14 @@
          :leveys 0.5}]
        nayta-rivit]]]))
 
-(defn nayta-muutoshistoria [{:keys [muutoshistoria] :as app}]
-  (println "\n Muutoshistoria: " muutoshistoria " \n \n Ajetaan.. \n ")
-  ;; Tehdään funktio joka käsittelee muutoshistoriatiedot
-  ;; Palautetaan jokin arvo jossa mäpätty esim: [ {:aika aika, :kenttä kentta, :vanha-arvo vanha-arvo, :uusi-arvo uusi-arvo} ]
+(defn nayta-muutoshistoria [{:keys [muutoshistoria nayta-rivit] :as app}]
+  ;; (println "\n nayta: " (type nayta-rivit) " muutoshistoria " (type (:info (first muutoshistoria))) (type (:urakka-nimi (first nayta-rivit))))
+  ;; Tuck statesta löytyy muutoshistoria jossa mäpätty: ( {:info , :toiminto <>, :vanhat <>, :uudet <>} )
+  ;; :info : Mistä taulusta on tehty mitäkin, esim "<Lisätty> <säätietoja>" (toiminto, info)
+  ;; :toiminto : 'muutettu' | 'poistettu' | 'lisatty' 
+  ;; :vanhat : Vanhan version arvot 
+  ;; :uudet : Nykyisen version arvot 
+
   (modal/nayta!
     {:modal-luokka "harja-modal-keskitetty"
      :luokka "modal-dialog-keskitetty"}
@@ -149,8 +154,36 @@
 
      [:div.muutoshistoria
 
-      [:span (ikonit/harja-icon-navigation-down)]
-      [:span "11.10.2022 08:10 Lisätty rekka-kolari"]]]))
+      [:span.klikattava {:on-click #(do
+                                      (println "Klikattiin"))} (ikonit/harja-icon-navigation-down)]
+      [:span "11.10.2022 08:10 Lisätty rekka-kolari"]
+
+      [grid/grid {:tyhja "Työmaapäiväkirjoja ei ole valitulle aikavälille."
+                  :tunniste :id
+                  :sivuta grid/vakiosivutus
+                  :voi-kumota? false
+                  :piilota-toiminnot? true
+                  :jarjesta :paivamaara
+                  :mahdollista-rivin-valinta? true
+                  ;;:rivin-luokka solu-fn
+                  ;;:rivi-klikattu fn
+                  }
+
+       [{:tyyppi :komponentti
+         :komponentti (fn [arvo _]
+                        (str "tester "))
+         :luokka "semibold text-nowrap"
+         :leveys 0.3}
+
+        {:otsikko "Urakka"
+         :tyyppi :string
+         :nimi :info
+         :leveys 1}
+        {:otsikko "Urakka"
+         :tyyppi :string
+         :nimi :info
+         :leveys 1}]
+       muutoshistoria]]]))
 
 (defn paivakirjan-header [e! {:keys [valittu-rivi] :as app}]
   (when valittu-rivi

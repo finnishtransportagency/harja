@@ -188,25 +188,43 @@
             #(konversio/pgobject->map % :kuvaus :string :aika :double)
             (konversio/pgarray->vector toimeksiannot)))))))
 
-(defn- hae-tyomaapaivakirjan-muutoshistoria [db user tiedot]
-  (oikeudet/vaadi-lukuoikeus oikeudet/raportit-tyomaapaivakirja user (:urakka-id tiedot))
-  (let [muutoshistoria (tyomaapaivakirja-kyselyt/hae-paivakirjan-muutoshistoria db)
-        ; muutoshistoria (koverttaa-paivakirjan-data db muutoshistoria nil)
-        _ (println "-------------------------------------------------- \n ")
-        _ (println "Muutoshistoria: " muutoshistoria " ")
-        muutoshistoria (-> muutoshistoria first (into {}))
+(defn- hae-tyomaapaivakirjan-muutoshistoria [db user {:keys [versio vanha urakka-id tyomaapaivakirja_id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/raportit-tyomaapaivakirja user urakka-id)
+  (let [parametrit {:urakka_id urakka-id
+                    :versio versio
+                    :vanha vanha
+                    :tyomaapaivakirja_id tyomaapaivakirja_id}
+        ;; Muunnetaan muutoshistorian datat jotta voidaan käsitellä
+        ;; Luultavasti helpompi tapa olemassa 
+        fn-jsonb-konversio (fn [k]
+                             (map #(apply hash-map %)
+                               (mapv (fn [rivi]
+                                       (mapcat
+                                         (fn [r]
+                                           (if (= (type (get-in r [1])) org.postgresql.util.PGobject)
+                                             (update r 1 #(konversio/jsonb->clojuremap %))
+                                             r))
+                                         rivi))
+                                 k)))
+        
+        poikkeussaa (tyomaapaivakirja-kyselyt/hae-poikkeussaa-muutokset db parametrit)
+        kalusto (tyomaapaivakirja-kyselyt/hae-kalusto-muutokset db parametrit)
+        paivystajat (tyomaapaivakirja-kyselyt/hae-paivystaja-muutokset db parametrit)
+        saaasemat (tyomaapaivakirja-kyselyt/hae-saaasema-muutokset db parametrit)
+        tapahtumat (tyomaapaivakirja-kyselyt/hae-tapahtuma-muutokset db parametrit)
+        tiesto (tyomaapaivakirja-kyselyt/hae-tieston-muutokset db parametrit)
+        toimeksiannot (tyomaapaivakirja-kyselyt/hae-toimeksianto-muutokset db parametrit)
+        tyonjohtajat (tyomaapaivakirja-kyselyt/hae-tyonjohtaja-muutokset db parametrit)
 
-        test (-> muutoshistoria
-               (update
-                 :vanhat
-                 (fn [j]
-                   (konversio/jsonb->clojuremap j)))
-               (update
-                 :uudet
-                 (fn [j]
-                   (konversio/jsonb->clojuremap j))))
-        _ (println "\n\ntest: " test)]
-    test))
+        ;; Lyödään tiedot yhteen jotta ovat nätisti mäpättynä 
+        muutoshistoria (apply concat
+                         (map #(fn-jsonb-konversio %)
+                           [poikkeussaa kalusto paivystajat saaasemat
+                            tapahtumat tiesto toimeksiannot tyonjohtajat]))
+        ;; Generoidaan vielä valmiiksi :id arvot mäppeihin tunnisteeksi gridiin
+        muutoshistoria (concat (mapv (fn [[index m]]
+                                       (assoc m :id (inc index))) (map-indexed vector muutoshistoria)))]
+    muutoshistoria))
 
 (defrecord Tyomaapaivakirja []
   component/Lifecycle

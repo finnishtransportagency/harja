@@ -42,17 +42,109 @@ WHERE t.id = :tyomaapaivakirja_id
   AND t.versio = :versio
 GROUP BY t.id, u.nimi;
 
--- name: hae-paivakirjan-muutoshistoria
+-- name: hae-kalusto-muutokset
 SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
-  'tyomaapaivakirja_poikkeussaa', -- taulu mistä haetaan
-  ARRAY['paikka', 'kuvaus', 'urakka_id'], -- sarakkeet mitä verrataan
-  ARRAY['muokattu'],-- sarakkeet mitkä palautetaan mutta ei verrata 
-  3, -- tyomaapaivakirja_id
-  35, -- urakka_id
-  26, -- vanha versio
-  27, -- uusi versio 
-  null -- OPTIONAL, tämä sarake täytyy olla sama verratessa, voi olla NULL 
-);
+  'tyomaapaivakirja_kalusto',                 -- taulu mistä haetaan
+  ARRAY['tyokoneiden_lkm', 'lisakaluston_lkm', 'muokattu', 'urakka_id'], -- sarakkeet mitä verrataan
+  ARRAY['muokattu'],                          -- sarakkeet mitkä palautetaan mutta ei verrata 
+  :tyomaapaivakirja_id::INTEGER,              -- tyomaapaivakirja_id
+  :urakka_id::INTEGER,                        -- urakka_id
+  :vanha::INTEGER,                            -- vanha versio
+  :versio::INTEGER,                           -- uusi (nykyinen) versio 
+  'urakka_id',                                -- OPTIONAL, tämä sarake täytyy olla sama verratessa, voi olla NULL 
+  'kalustoja'                                 -- Näytetään UIssa "Lisätty/Postettu/Muutettu x"
+) WHERE toiminto IN ('muutettu', 'poistettu', 'lisatty');
+
+-- name: hae-poikkeussaa-muutokset
+SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
+  'tyomaapaivakirja_poikkeussaa',             -- taulu mistä haetaan
+  ARRAY['paikka', 'kuvaus'],                  -- sarakkeet mitä verrataan
+  ARRAY['muokattu'],                          -- sarakkeet mitkä palautetaan mutta ei verrata 
+  :tyomaapaivakirja_id::INTEGER,              -- tyomaapaivakirja_id
+  :urakka_id::INTEGER,                        -- urakka_id
+  :vanha::INTEGER,                            -- vanha versio
+  :versio::INTEGER,                           -- uusi (nykyinen) versio 
+  NULL,                                       -- OPTIONAL, tämä sarake täytyy olla sama verratessa, voi olla NULL 
+  'säätietoja'                                -- Näytetään UIssa "Lisätty/Postettu/Muutettu x"
+) WHERE toiminto IN ('muutettu', 'poistettu', 'lisatty');
+
+-- name: hae-paivystaja-muutokset
+SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
+  'tyomaapaivakirja_paivystaja',              -- taulu mistä haetaan
+  ARRAY['nimi', 'muokattu'],                  -- sarakkeet mitä verrataan
+  ARRAY['muokattu'],                          -- sarakkeet mitkä palautetaan mutta ei verrata 
+  :tyomaapaivakirja_id::INTEGER,              -- tyomaapaivakirja_id
+  :urakka_id::INTEGER,                        -- urakka_id
+  :vanha::INTEGER,                            -- vanha versio
+  :versio::INTEGER,                           -- uusi (nykyinen) versio 
+  NULL,                                       -- OPTIONAL, tämä sarake täytyy olla sama verratessa, voi olla NULL 
+  'päivystäjiä'                               -- Näytetään UIssa "Lisätty/Postettu/Muutettu x"
+) WHERE toiminto IN ('muutettu', 'poistettu', 'lisatty');
+
+-- name: hae-tyonjohtaja-muutokset
+SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
+  'tyomaapaivakirja_tyonjohtaja',             -- taulu mistä haetaan
+  ARRAY['nimi', 'muokattu'],                  -- sarakkeet mitä verrataan
+  ARRAY['muokattu'],                          -- sarakkeet mitkä palautetaan mutta ei verrata 
+  :tyomaapaivakirja_id::INTEGER,              -- tyomaapaivakirja_id
+  :urakka_id::INTEGER,                        -- urakka_id
+  :vanha::INTEGER,                            -- vanha versio
+  :versio::INTEGER,                           -- uusi (nykyinen) versio 
+  NULL,                                       -- OPTIONAL, tämä sarake täytyy olla sama verratessa, voi olla NULL 
+  'työnjohtajia'                              -- Näytetään UIssa "Lisätty/Postettu/Muutettu x"
+) WHERE toiminto IN ('muutettu', 'poistettu', 'lisatty');
+
+-- name: hae-saaasema-muutokset
+SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
+  'tyomaapaivakirja_saaasema', -- taulu mistä haetaan
+  ARRAY['aseman_tunniste', 'ilman_lampotila', 'tien_lampotila', 'keskituuli', 'sateen_olomuoto', 'sadesumma', 'havaintoaika', 'muokattu'], -- sarakkeet mitä verrataan
+  ARRAY['muokattu'],                    -- sarakkeet mitkä palautetaan mutta ei verrata 
+  :tyomaapaivakirja_id::INTEGER,        -- tyomaapaivakirja_id
+  :urakka_id::INTEGER,                  -- urakka_id
+  :vanha::INTEGER,                      -- vanha versio
+  :versio::INTEGER,                     -- uusi (nykyinen) versio 
+  NULL,                                 -- OPTIONAL, tämä sarake täytyy olla sama verratessa, voi olla NULL 
+  'sääasematietoja'                     -- Näytetään UIssa "Lisätty/Postettu/Muutettu x"
+) WHERE toiminto IN ('muutettu', 'poistettu', 'lisatty');
+
+-- name: hae-tapahtuma-muutokset
+SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
+  'tyomaapaivakirja_tapahtuma',              -- taulu mistä haetaan
+  ARRAY['kuvaus', 'tyyppi', 'muokattu'],     -- sarakkeet mitä verrataan
+  ARRAY['muokattu'],                         -- sarakkeet mitkä palautetaan mutta ei verrata 
+  :tyomaapaivakirja_id::INTEGER,             -- tyomaapaivakirja_id
+  :urakka_id::INTEGER,                       -- urakka_id
+  :vanha::INTEGER,                           -- vanha versio
+  :versio::INTEGER,                          -- uusi (nykyinen) versio 
+  null,                                      -- OPTIONAL, tämä sarake täytyy olla sama verratessa, voi olla NULL 
+  'tapahtumia'                               -- Näytetään UIssa "Lisätty/Postettu/Muutettu x"
+) WHERE toiminto IN ('muutettu', 'poistettu', 'lisatty');
+
+-- name: hae-tieston-muutokset
+SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
+  'tyomaapaivakirja_tieston_toimenpide',      -- taulu mistä haetaan
+  ARRAY['tyyppi', 'tehtavat', 'toimenpiteet', 'muokattu'],  -- sarakkeet mitä verrataan
+  ARRAY['muokattu'],                          -- sarakkeet mitkä palautetaan mutta ei verrata 
+  :tyomaapaivakirja_id::INTEGER,              -- tyomaapaivakirja_id
+  :urakka_id::INTEGER,                        -- urakka_id
+  :vanha::INTEGER,                            -- vanha versio
+  :versio::INTEGER,                           -- uusi (nykyinen) versio 
+  NULL,                                       -- OPTIONAL, tämä sarake täytyy olla sama verratessa, voi olla NULL 
+  'tiestön toimenpiteä'                       -- Näytetään UIssa "Lisätty/Postettu/Muutettu x"
+) where toiminto in ('muutettu', 'poistettu', 'lisatty');
+
+-- name: hae-toimeksianto-muutokset
+SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
+  'tyomaapaivakirja_toimeksianto',            -- taulu mistä haetaan
+  ARRAY['kuvaus', 'aika', 'muokattu', 'urakka_id'], -- sarakkeet mitä verrataan
+  ARRAY['muokattu'],                          -- sarakkeet mitkä palautetaan mutta ei verrata 
+  :tyomaapaivakirja_id::INTEGER,              -- tyomaapaivakirja_id
+  :urakka_id::INTEGER,                        -- urakka_id
+  :vanha::INTEGER,                            -- vanha versio
+  :versio::INTEGER,                           -- uusi (nykyinen) versio 
+  NULL,                                       -- OPTIONAL, tämä sarake täytyy olla sama verratessa, voi olla NULL 
+  'toimeksiantoja'                            -- Näytetään UIssa "Lisätty/Postettu/Muutettu x"
+) WHERE toiminto IN ('muutettu', 'poistettu', 'lisatty');
 
 -- name: hae-paivakirjan-tehtavat
 SELECT ttt.tyyppi, ttt.aloitus, ttt.lopetus, array_agg(tehtava.nimi) as tehtavat

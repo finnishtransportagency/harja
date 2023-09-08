@@ -8,7 +8,7 @@ ALTER TABLE tyomaapaivakirja_tieston_toimenpide ADD COLUMN IF NOT EXISTS muokatt
 ALTER TABLE tyomaapaivakirja_tyonjohtaja ADD COLUMN IF NOT EXISTS muokattu timestamp;
 ALTER TABLE tyomaapaivakirja_toimeksianto ADD COLUMN IF NOT EXISTS muokattu timestamp;
 
-DROP FUNCTION IF EXISTS tyomaapaivakirja_etsi_taulun_versiomuutokset(TEXT, TEXT[], TEXT[], INTEGER, INTEGER, INTEGER, INTEGER, TEXT);
+DROP FUNCTION IF EXISTS tyomaapaivakirja_etsi_taulun_versiomuutokset(TEXT, TEXT[], TEXT[], INTEGER, INTEGER, INTEGER, INTEGER, TEXT, TEXT);
 
 CREATE OR REPLACE FUNCTION tyomaapaivakirja_etsi_taulun_versiomuutokset(
   t_taulu TEXT, -- taulu mistä haetaan
@@ -18,9 +18,11 @@ CREATE OR REPLACE FUNCTION tyomaapaivakirja_etsi_taulun_versiomuutokset(
   t_urakka_id INT, -- urakka_id 
   t_vanha_versio INT, -- työmaapäiväkirjan vanha versio 
   t_uusi_versio INT, -- työmaapäiväkirjan usi versio 
-  t_vastaa_sarakkeeseen TEXT -- OPTIONAL, tämä sarake täytyy olla sama verratessa, voi olla NULL 
+  t_vastaa_sarakkeeseen TEXT, -- OPTIONAL, tämä sarake täytyy olla sama verratessa, voi olla NULL 
+  t_tieto TEXT -- Näytetään UIssa "sääasematietoja" = "Lisätty/Postettu/Muutettu sääasematietoja"
 ) RETURNS TABLE (
-  ACTION TEXT, -- 'lisatty', 'poistettu', 'muutettu'
+  info TEXT,
+  toiminto TEXT, -- 'lisatty', 'poistettu', 'muutettu'
   vanhat JSONB,
   uudet JSONB
 ) AS $$
@@ -44,14 +46,15 @@ BEGIN
   -- Jos halutaan sarakkeet vastaamaan johonkin, tehdään se tässä
   IF t_vastaa_sarakkeeseen IS NULL THEN
     on_ehto := (SELECT string_agg(format('vanha.%I = uusi.%I', col, col), ' AND ') FROM unnest(t_sarakkeet) col WHERE col NOT IN (SELECT unnest(t_ei_verratut)));
-  else 
+  ELSE 
     on_ehto := format('vanha.%I = uusi.%I', t_vastaa_sarakkeeseen, t_vastaa_sarakkeeseen);
-  end IF;
+  END IF;
    
   -- Valitaan parametrien mukaisista taulusta parametrien mukaiset sarakkeet missä havaittu muutoksia
   -- Katsotaan mikä on muuttunut, poistunut ja mitä lisätty 
   RETURN QUERY EXECUTE format('
   SELECT
+	  ''%9$s'' AS info,
     CASE
         WHEN %1$s THEN ''lisatty''
         WHEN %2$s THEN ''poistettu''
@@ -83,11 +86,12 @@ BEGIN
   ',
   (SELECT string_agg(format('vanha.%I IS NULL', col), ' AND ') FROM unnest(t_sarakkeet) col WHERE col NOT IN (SELECT unnest(t_ei_verratut))), -- lisatty
   (SELECT string_agg(format('uusi.%I IS NULL', col), ' AND ') FROM unnest(t_sarakkeet) col WHERE col NOT IN (SELECT unnest(t_ei_verratut))), -- poistettu 
-  (SELECT string_agg(format('vanha.%I = uusi.%I', col, col), ' AND ') FROM unnest(t_sarakkeet) col WHERE col NOT IN (SELECT unnest(t_ei_verratut))), -- ei muutettu && on condition
+  (SELECT string_agg(format('(vanha.%I = uusi.%I OR vanha.%I IS NULL AND uusi.%I IS NULL)', col, col, col, col), ' AND ') FROM unnest(t_sarakkeet) col WHERE col NOT IN (SELECT unnest(t_ei_verratut))), -- sama
   (SELECT string_agg(format('''%I'', vanha.%I', col, col), ', ') FROM unnest(t_sarakkeet) col), -- jsonb_build
   (SELECT string_agg(format('''%I'', uusi.%I', col, col), ', ') FROM unnest(t_sarakkeet) col), -- jsonb_build 
   (SELECT string_agg(format('%s', col), ', ') FROM unnest(t_sarakkeet) col), -- SELECT distinct
   t_taulu,
-  on_ehto) USING t_uusi_versio, t_vanha_versio, t_id;
+  on_ehto, 
+  t_tieto) USING t_uusi_versio, t_vanha_versio, t_id;
 END;
 $$ LANGUAGE plpgsql;
