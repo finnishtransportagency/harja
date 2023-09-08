@@ -68,7 +68,9 @@ Harja repon hakemistorakenne:
 
     `sh devdb_up.sh`
 
-4. Asenna tarvittavat työkalut `npm install`
+4. Asenna tarvittavat työkalut `npm ci` 
+   * Huom: ```npm ci``` -komento asentaa package-lock.json tiedostoon jäädytetyt paketit.
+   * Mikäli päivität paketin package.jsoniin, aja ```npm install```, ja committoi päivitetty package-lock.json.
 5. Hae harja-testidata repositoriosta (Internal [*1](#*1)) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
 6. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:
 
@@ -93,7 +95,35 @@ Muista myös käynnistää REPL uudestaan, kun muutat asetukset.edn tiedostoa
 
 
 
-#### Docker compose
+
+# Docker
+## GitHub Container Registry
+
+### Kehittäjän kirjautuminen Container Registryyn
+Harjassa käytetään Harjan GitHub repositorioon julkaistuja Docker imageita.
+Imaget on varastoitu GitHub Packagesiin, johon pääsee käsiksi riittävillä oikeuksilla.
+
+GitHub Packages (eli käytännössä Container Registry) tukee kirjautumista ainoastaan classic personal access tokenilla.  
+Lue alla olevat ohjeet tarkoin. Kehittäjä tarvitsee read/write/delete oikeudet Packages scopeen.  
+Lue tarkasti varsinkin ohje, jossa neuvotaan pienentämään tokenin access scopea, jotta tokenilla ei ole liian laajat oikeudet.
+>Note: By default, when you select the write:packages scope for your personal access token (classic) in the user interface, the repo scope will also be selected.
+>The repo scope offers unnecessary and broad access, which we recommend you avoid using for GitHub Actions workflows in particular.
+>For more information, see "Security hardening for GitHub Actions."
+>As a workaround, you can select just the write:packages scope for your personal access token (classic) in the user interface with this url: https://github.com/settings/tokens/new?scopes=write:packages.
+
+**Ohjeet:**  
+https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-with-a-personal-access-token-classic
+
+## GitHub Actions & Docker
+Lue: [.github/docker/README.md](.github/docker/README.md)
+
+# GitHub Actions ja muut GitHub integraatiot
+Lue: [.github/README.md](.github/README.md)
+
+
+
+
+# Docker compose
 
 1. Asenna docker ja docker compose
 2. Jos olet linuxilla, niin lisää itsesi `docker` ryhmään, jos näin ei jo ole. Lisää tietoja

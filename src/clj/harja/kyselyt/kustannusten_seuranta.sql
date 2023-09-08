@@ -221,13 +221,23 @@ UNION ALL
 -- Toteutuneet kustannukset haetaan kulu_kohdistus taulusta. Nämäkin on ryhmitelty vastaavasti kuten
 -- budjetoidut kustannukset eli Hankintakustannukset, Johto- ja hallintokorvaus, Hoidonjohdonpalkkio sekä Erillishankinnat
 -- Ensimmäisenä haetaan pelkästään Hankintakustannukset
+-- Maagiset yksilöivät tunnisteet:
+-- '4e3cf237-fdf5-4f58-b2ec-319787127b3e' viittaa tehtäväryhmään: Muut, MHU ylläpito (F)
+-- '0e78b556-74ee-437f-ac67-7a03381c64f6' 'Tilaajan rahavaraus (T3)'
+-- 'ce9264f7-0860-4be0-a447-ac79822c3ca6' 'Muut, liikenneympäristön hoito (F)'
 SELECT 0                          AS budjetoitu_summa,
        0                          AS budjetoitu_summa_indeksikorjattu,
        coalesce(SUM(lk.summa), 0) AS toteutunut_summa,
        lk.maksueratyyppi::TEXT    AS maksutyyppi,
        CASE
-           WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi != 'Tilaajan rahavaraus (T3)' THEN 'hankinta'
-           WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi = 'Tilaajan rahavaraus (T3)'
+           WHEN (lk.maksueratyyppi::TEXT = 'kokonaishintainen'
+               AND tr.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'
+               AND tr.yksiloiva_tunniste != '4e3cf237-fdf5-4f58-b2ec-319787127b3e'
+               AND tr.yksiloiva_tunniste != 'ce9264f7-0860-4be0-a447-ac79822c3ca6') THEN 'hankinta'
+           WHEN (lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND
+                (tr.yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6' OR
+                 tr.yksiloiva_tunniste = '4e3cf237-fdf5-4f58-b2ec-319787127b3e' OR
+                 tr.yksiloiva_tunniste = 'ce9264f7-0860-4be0-a447-ac79822c3ca6'))
                THEN 'rahavaraus'
            WHEN lk.maksueratyyppi::TEXT = 'yksikkohintainen' THEN 'hankinta'
            WHEN lk.maksueratyyppi::TEXT = 'akillinen-hoitotyo' THEN 'rahavaraus'
@@ -251,9 +261,10 @@ SELECT 0                          AS budjetoitu_summa,
        CASE
            WHEN lk.maksueratyyppi::TEXT = 'akillinen-hoitotyo' THEN 'rahavaraukset'
            WHEN lk.maksueratyyppi::TEXT = 'muu' THEN 'rahavaraukset' -- muu = vahinkojen-korjaukset
-           WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi = 'Tilaajan rahavaraus (T3)'
-               THEN 'rahavaraukset'
-           WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND tr.nimi = 'Muut, liikenneympäristön hoito (F)'
+           WHEN (lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND
+                (tr.yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6' OR
+                 tr.yksiloiva_tunniste = 'ce9264f7-0860-4be0-a447-ac79822c3ca6' OR
+                 tr.yksiloiva_tunniste = '4e3cf237-fdf5-4f58-b2ec-319787127b3e'))
                THEN 'rahavaraukset'
            ELSE 'hankintakustannukset'
            END                    AS paaryhma,
@@ -275,7 +286,7 @@ WHERE l.urakka = :urakka
   AND (tk.koodi = '23104' OR tk.koodi = '23116'
     OR tk.koodi = '23124' OR tk.koodi = '20107' OR tk.koodi = '20191' OR
        tk.koodi = '14301')
-GROUP BY tr.nimi, tk.nimi, lk.maksueratyyppi, tk.koodi, tk_tehtava.jarjestys
+GROUP BY tr.nimi, tk.nimi, lk.maksueratyyppi, tk.koodi, tk_tehtava.jarjestys, tr.yksiloiva_tunniste
 UNION ALL
 -- Toteutuneet erillishankinnat, hoidonjohdonpalkkio, johto- ja hallintakorvaukset
 -- ja vuoden päättämiseen liittyvät kulut lasku_kohdistus taulusta.

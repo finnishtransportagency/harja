@@ -9,9 +9,10 @@
 #  $ sudo docker exec --user postgres harjadb /bin/bash -c "~/aja-migraatiot.sh"
 #  $ sudo docker exec --user postgres harjadb /bin/bash -c "~/aja-testidata.sh"
 
-# Käytetään pohjana postgresql 12 ja postgis 3.1
+# Käytetään pohjana postgresql 13 ja postgis 3.1
 # Käyttöjärjestelmänä on debian:bullseye (11)
-FROM postgis/postgis:12-3.1
+# https://registry.hub.docker.com/r/postgis/postgis/
+FROM postgis/postgis:13-3.1
 
 # Yhdistä image harjan repositoryyn
 LABEL org.opencontainers.image.source https://github.com/finnishtransportagency/harja
@@ -22,14 +23,16 @@ ENV HARJA_TIETOKANTA_PORTTI=5432
 # Asenna riippuvuudet
 RUN apt-get update && apt-get install -y openjdk-11-jdk wget
 
-# Asenna maven 3.6.3
-RUN wget https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz; \
-    if [ "$(sha512sum /apache-maven-3.6.3-bin.tar.gz )" != "c35a1803a6e70a126e80b2b3ae33eed961f83ed74d18fcd16909b2d44d7dada3203f1ffe726c17ef8dcca2dcaa9fca676987befeadc9b9f759967a8cb77181c0  /apache-maven-3.6.3-bin.tar.gz" ]; then exit 1; fi; \
-    tar xzvf apache-maven-3.6.3-bin.tar.gz; \
-    rm apache-maven-3.6.3-bin.tar.gz;
+ENV MAVEN_VERSIO=3.9.4
+
+# Asenna maven
+RUN wget "https://downloads.apache.org/maven/maven-3/${MAVEN_VERSIO}/binaries/apache-maven-${MAVEN_VERSIO}-bin.tar.gz"; \
+    if [ "$(sha512sum /apache-maven-${MAVEN_VERSIO}-bin.tar.gz )" != "deaa39e16b2cf20f8cd7d232a1306344f04020e1f0fb28d35492606f647a60fe729cc40d3cba33e093a17aed41bd161fe1240556d0f1b80e773abd408686217e  /apache-maven-${MAVEN_VERSIO}-bin.tar.gz" ]; then exit 1; fi; \
+    tar xzvf "apache-maven-${MAVEN_VERSIO}-bin.tar.gz"; \
+    rm "apache-maven-${MAVEN_VERSIO}-bin.tar.gz";
 
 # Lisää maven bin kansio PATH:iin
-ENV PATH="/apache-maven-3.6.3/bin/:${PATH}"
+ENV PATH="/apache-maven-${MAVEN_VERSIO}/bin/:${PATH}"
 
 
 ## Postgresql konfiguraatio ##

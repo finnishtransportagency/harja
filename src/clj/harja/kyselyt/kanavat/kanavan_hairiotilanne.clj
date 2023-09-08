@@ -1,14 +1,11 @@
 (ns harja.kyselyt.kanavat.kanavan-hairiotilanne
   (:require [specql.core :refer [fetch insert! update!]]
-            [jeesql.core :refer [defqueries]]
             [specql.op :as op]
             [harja.pvm :as pvm]
             [harja.id :as id]
-            [taoensso.timbre :as log]
 
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
-            [harja.domain.vesivaylat.materiaali :as materiaali]
             [clojure.set :as set]
             [harja.geo :as geo]))
 

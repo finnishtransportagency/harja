@@ -125,7 +125,7 @@
 
         reitti (-> reitti
                  (update-in [:reittipiste] dissoc :sijainti)
-                 (assoc-in [:reittipiste :koodinaatit] koordinaatit-3067))
+                 (assoc-in [:reittipiste :koordinaatit] koordinaatit-3067))
         reitti (if lisaa-epsg-4326-koordinaatit?
                  (assoc-in reitti [:reittipiste :koordinaatit-4326] koordinaatit-4326)
                  reitti)]
@@ -156,6 +156,16 @@
                       materiaalit)
         reitti (assoc reitti :materiaalit materiaalit)]
     reitti))
+
+(defn- poista-reittipistetaso
+  "Tiivistetään json formaattia poistamalla reittipiste sen jälkeen, kun sen alle on saatu koottua kaikki tiedot."
+  [reitti]
+  (-> reitti
+    (assoc :aika (get-in reitti [:reittipiste :aika]))
+    (assoc :tehtavat (get-in reitti [:reittipiste :tehtavat]))
+    (assoc :koordinaatit (get-in reitti [:reittipiste :koordinaatit]))
+    (assoc :materiaalit (get-in reitti [:reittipiste :materiaalit]))
+    (dissoc :reittipiste)))
 
 (defn palauta-toteumat
   "Haetaan toteumat annettujen alku- ja loppuajan puitteissa.
@@ -210,11 +220,13 @@
                                          (when (not (nil? (:f1 r))) ;; Varmista että Left joinilla haettuja rivejä on
                                            (clojure.set/rename-keys r db-reitti->avaimet))
                                          ;; Muokkaa reittipisteen nimet oikein
+                                         ;; Tietokanta palauttaa reittipisteen, joka poistetaan datan formatoinnin jälkeen
                                          r (-> r
                                              (konversio/alaviiva->rakenne)
                                              (rakenna-reittipiste-sijainti koordinaattimuutos)
                                              (rakenna-reittipiste-tehtavat)
-                                             (rakenna-reittipiste-materiaalit materiaalikoodit))]
+                                             (rakenna-reittipiste-materiaalit materiaalikoodit)
+                                             (poista-reittipistetaso))]
                                      r))
                                  rivit))))))
         toteumat (when (< koko 100000)
@@ -540,24 +552,6 @@
                          :kommentti :kommentit}))]
     {:turvallisuuspoikkeamat json-turpot}))
 
-;; Valmistele streamausta
-(defonce lataus-kaynnissa? (atom false))
-
-;; Valmistellaan streamausta
-(defn stream-file [db request]
-  (reset! lataus-kaynnissa? true)
-  (println "Saving data to disk..." (format "data-%s.json" (subs (:alkuaika (:params request)) 0 10)))
-  (let [alkums (clj-time.coerce/to-long (pvm/nyt))
-        file (io/file (format "data-%s.json" (subs (:alkuaika (:params request)) 0 10)))]
-    (with-open [writer (io/writer file)]
-      ;; TODO: Ota käyttöön wrappaa-toteumat
-      (doseq [batch (partition-all 10 (palauta-toteumat db (:params request) nil))]
-        (doseq [entry batch]
-          (println "Kirjoitetaan batch tiedostoon :: koko " (count batch))
-          (cheshire/encode-stream (spec-apurit/poista-nil-avaimet entry false) writer))))
-    (println "done! Kesot ms: " (- (clj-time.coerce/to-long (pvm/nyt)) alkums ))
-    (reset! lataus-kaynnissa? false)))
-
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
   (start [{http :http-palvelin db :db-replica integraatioloki :integraatioloki :as this}]
@@ -570,21 +564,6 @@
             (palauta-toteumat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
           "analytiikka")))
-
-    (julkaise-reitti
-      http :analytiikka-toteumat
-      (GET "/api/analytiikka/toteumat-stream/:alkuaika/:loppuaika" request
-        (do
-          (when-not @lataus-kaynnissa?
-            (println "request: " (pr-str request))
-            (future (stream-file db request)))
-          (if @lataus-kaynnissa?
-            {:status 409
-             :headers {"Content-Type" "text/plain"}
-             :body "Latauspyyntö menossa. Yritä myöhemmin uudestaan"}
-            {:status 200
-             :headers {"Content-Type" "text/plain"}
-             :body "200 OK"}))))
 
     (julkaise-reitti
       http :analytiikka-suunnitellut-materiaalit-hoitovuosi

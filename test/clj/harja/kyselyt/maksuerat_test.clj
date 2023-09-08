@@ -22,6 +22,8 @@
                    :tpi_id (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Testitoimenpideinstanssi' and urakka = '" urakka-id "';"))}]]
     (is (= odotettu (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))))))
 
+;; HUOM: Tämä testi failasi alunperin PostgreSQL versiolla 13, mutta ei versioilla 11 tai 12
+;;       Testin tuloksia kannattaa seurata. Korjaus tehtiin järjestemällä palautettu vastausvektori tpi_id mukaisesti.
 (deftest hae-urakan-maksueran-summat-yksikkohintaiset-summat--teiden-hoidon-urakalle
   (let [db (:db jarjestelma)
         urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
@@ -55,8 +57,12 @@
                    :tpi_id 6
                    :urakka_id 4
                    :yksikkohintainen 0.0M}]]
-    (is (= odotettu (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))))))
+    (is (= odotettu (vec
+                      (sort-by :tpi_id
+                        (maksuerat-q/hae-urakan-maksueran-summat db urakka-id)))))))
 
+;; HUOM: Tämä testi failasi alunperin PostgreSQL versiolla 13, mutta ei versioilla 11 tai 12
+;;       Testin tuloksia kannattaa seurata. Korjaus tehtiin järjestemällä palautettu vastausvektori tpi_id mukaisesti.
 (deftest hae-urakan-maksueran-summat-mhu-urakalle
          (let [db (:db jarjestelma)
                urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
@@ -90,6 +96,7 @@
                          {:kokonaishintainen 13201.94M
                           :tpi_id 54
                           :urakka_id 35}]
-               vastaus (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))
-               _ (println "vastaus: " (pr-str vastaus))]
+               vastaus (vec
+                         (sort-by :tpi_id
+                           (maksuerat-q/hae-urakan-maksueran-summat db urakka-id)))]
               (is (= vastaus odotettu))))
