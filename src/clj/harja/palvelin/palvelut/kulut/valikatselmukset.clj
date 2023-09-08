@@ -131,17 +131,17 @@
   (do
     (tarkista-ei-siirtoa-viimeisena-vuotena tiedot urakka)))
 
-(defn tarkista-maksun-maara-alituksessa [db tiedot urakka tavoitehinta hoitokauden-alkuvuosi]
+(defn tarkista-maksun-maara-alituksessa [tiedot urakka tavoitehinta hoitokauden-alkuvuosi]
   (let [maksu (- (::valikatselmus/urakoitsijan-maksu tiedot))
         viimeinen-hoitokausi? (= (pvm/vuosi (:loppupvm urakka)) (inc hoitokauden-alkuvuosi))
         maksimi-tavoitepalkkio (* valikatselmus/+maksimi-tavoitepalkkio-prosentti+ tavoitehinta)]
     (when (and (not viimeinen-hoitokausi?) (> maksu maksimi-tavoitepalkkio))
       (heita-virhe "Urakoitsijalle maksettava summa ei saa ylittää 3% tavoitehinnasta"))))
 
-(defn tarkista-tavoitehinnan-alitus [db tiedot urakka tavoitehinta hoitokauden-alkuvuosi]
+(defn tarkista-tavoitehinnan-alitus [tiedot urakka tavoitehinta hoitokauden-alkuvuosi]
   (do
     (tarkista-maksun-miinusmerkki-alituksessa tiedot)
-    (tarkista-maksun-maara-alituksessa db tiedot urakka tavoitehinta hoitokauden-alkuvuosi)))
+    (tarkista-maksun-maara-alituksessa tiedot urakka tavoitehinta hoitokauden-alkuvuosi)))
 
 (defn alkuvuosi->hoitokausi [urakka hoitokauden-alkuvuosi]
   (let [urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakka))]
@@ -311,18 +311,17 @@
               (tarkista-valikatselmusten-urakkatyyppi urakka :paatos)
               #_(tarkista-aikavali urakka :paatos kayttaja valittu-hoitokausi))
           paatoksen-tyyppi (::valikatselmus/tyyppi tiedot)
-          _ (println "tee-paatos-urakalle :: paatoksen-tyyppi: " (pr-str paatoksen-tyyppi))
           tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
                                                                       :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
           kattohinta (valikatselmus-q/hae-oikaistu-kattohinta db {:urakka-id urakka-id
                                                                   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-          erilliskustannus_id (paatos-apurit/tallenna-lupausbonus1 db tiedot kayttaja)
+          erilliskustannus_id (paatos-apurit/tallenna-lupausbonus db tiedot kayttaja)
           sanktio_id (paatos-apurit/tallenna-lupaussanktio db tiedot kayttaja)
           kulu_id (paatos-apurit/tallenna-kulu db tiedot kayttaja paatoksen-tyyppi)]
       (case paatoksen-tyyppi
         ::valikatselmus/tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys tiedot tavoitehinta kattohinta)
         ::valikatselmus/kattohinnan-ylitys (tarkista-kattohinnan-ylitys tiedot urakka)
-        ::valikatselmus/tavoitehinnan-alitus (tarkista-tavoitehinnan-alitus db tiedot urakka tavoitehinta hoitokauden-alkuvuosi)
+        ::valikatselmus/tavoitehinnan-alitus (tarkista-tavoitehinnan-alitus tiedot urakka tavoitehinta hoitokauden-alkuvuosi)
         ::valikatselmus/lupausbonus (paatos-apurit/tarkista-lupausbonus db kayttaja tiedot)
         ::valikatselmus/lupaussanktio (paatos-apurit/tarkista-lupaussanktio db kayttaja tiedot))
       (valikatselmus-q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi erilliskustannus_id sanktio_id kulu_id)))))

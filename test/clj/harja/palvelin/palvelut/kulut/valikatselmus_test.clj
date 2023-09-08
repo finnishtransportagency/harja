@@ -7,6 +7,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
             [harja.kyselyt.sanktiot :as sanktiot-q]
+            [harja.kyselyt.valikatselmus :as valikatselmus-q]
             [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
             [harja.pvm :as pvm]
@@ -647,6 +648,30 @@
                                         ::valikatselmus/tilaajan-maksu -2100}))
                      (catch Exception e e))]
     (is (= "Urakoitsijalle maksettava summa ei saa ylittää 3% tavoitehinnasta" (-> vastaus ex-data :virheet :viesti)))))
+
+(deftest tavoitehinnan-alitus-kulun-lisays-toimii-3%tilla
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        hoitokauden-alkuvuosi 2021
+        tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta (:db jarjestelma) {:urakka-id urakka-id
+                                                                                   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        tilaajan-maksu -2100M
+        urakoitsijan-maksu (* -1 (* 0.029 tavoitehinta))
+        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
+                       (kutsu-palvelua (:http-palvelin jarjestelma)
+                         :tallenna-urakan-paatos
+                         (kayttaja urakka-id)
+                         {::urakka/id urakka-id
+                          ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                          ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-alitus
+                          ::valikatselmus/urakoitsijan-maksu urakoitsijan-maksu
+                          ::valikatselmus/tilaajan-maksu tilaajan-maksu}))
+                  (catch Exception e e))
+
+        ;; Päätökseltä kaivetaan kulun id
+        kulu-id (::valikatselmus/kulu-id vastaus)
+        kulu (hae-kulu urakka-id kulu-id)]
+    (is (=marginaalissa? urakoitsijan-maksu (:kokonaissumma kulu)))
+    (is (=marginaalissa? urakoitsijan-maksu (::valikatselmus/urakoitsijan-maksu vastaus)))))
 
 (deftest lupausbonus-paatos-test-toimii
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id

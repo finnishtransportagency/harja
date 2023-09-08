@@ -66,7 +66,7 @@
           uusin-sanktio-id (laadunseuranta-palvelu/tallenna-suorasanktio db kayttaja sanktio laatupoikkeama urakka-id [nil nil])]
       uusin-sanktio-id)))
 
-(defn tallenna-lupausbonus1
+(defn tallenna-lupausbonus
   "Lupauspäätöstä tallennettaessa voidaan tallentaa myös lupausbonus"
   [db paatoksen-tiedot kayttaja]
   (when (= ::valikatselmus/lupausbonus (::valikatselmus/tyyppi paatoksen-tiedot))
