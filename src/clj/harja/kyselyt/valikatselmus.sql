@@ -61,6 +61,6 @@ limit 1;
 -- name: hae-paatos
 SELECT id, "hoitokauden-alkuvuosi", "urakka-id", "hinnan-erotus", "urakoitsijan-maksu", "tilaajan-maksu",
        siirto, tyyppi, "lupaus-luvatut-pisteet", "lupaus-toteutuneet-pisteet", "lupaus-tavoitehinta",
-       muokattu, "muokkaaja-id", "luoja-id", luotu, poistettu, erilliskustannus_id, sanktio_id
+       muokattu, "muokkaaja-id", "luoja-id", luotu, poistettu, erilliskustannus_id, sanktio_id, kulu_id
 FROM urakka_paatos
 WHERE id = :id;
