@@ -33,6 +33,7 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
+;; Helpperit
 (defn filtteroi-oikaisut-selitteella [oikaisut selite]
   (filter #(= selite (::valikatselmus/selite %))
           oikaisut))
@@ -40,6 +41,18 @@
 (defn kayttaja [urakka-id]
   (assoc +kayttaja-tero+
     :urakkaroolit {urakka-id #{"ELY_Urakanvalvoja"}}))
+
+(defn hae-kulu [urakka-id kulu-id]
+  (first (q-map (format "SELECT id, tyyppi, kokonaissumma, erapaiva, lisatieto, poistettu
+                           FROM kulu
+                           WHERE urakka = %s
+                             AND id = %s " urakka-id kulu-id))))
+
+(defn hae-poistettu-kulu [urakka-id kulu-id]
+  (first (q-map (format "SELECT id, tyyppi, kokonaissumma, erapaiva, lisatieto, poistettu
+                           FROM kulu
+                          WHERE urakka = %s
+                            AND id = %s " urakka-id kulu-id))))
 
 ;; Tavoitehinnan oikaisut
 (deftest tavoitehinnan-oikaisu-onnistuu
@@ -387,6 +400,28 @@
     (is (= 7000M (::valikatselmus/tilaajan-maksu vastaus)))
     (is (= hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi vastaus)))))
 
+(deftest tee-paatos-tavoitehinnan-ylityksesta-varmista-kulun-synty
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        tilaajan-maksu 7000M
+        urakoitsijan-maksu 3000M
+        hoitokauden-alkuvuosi 2021
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-urakan-paatos
+                    (kayttaja urakka-id)
+                    {::urakka/id urakka-id
+                     ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
+                     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                     ::valikatselmus/tilaajan-maksu tilaajan-maksu
+                     ::valikatselmus/urakoitsijan-maksu urakoitsijan-maksu}))
+        ;; Haetaan kulun suuruus kulu_id:n avulla
+        kulu-tietokannasta (hae-kulu urakka-id (::valikatselmus/kulu-id vastaus))]
+    (is (= tilaajan-maksu (::valikatselmus/tilaajan-maksu vastaus)))
+    (is (= urakoitsijan-maksu (::valikatselmus/urakoitsijan-maksu vastaus)))
+    (is (not (nil? (::valikatselmus/kulu-id vastaus))))
+    (is (= urakoitsijan-maksu (* -1 (:kokonaissumma kulu-tietokannasta))))
+    (is (= hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi vastaus)))))
+
 (deftest muokkaa-tavoitehinnan-ylityksen-paatosta
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
@@ -454,6 +489,39 @@
                                    ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
                                    ::valikatselmus/urakoitsijan-maksu 20000}))]
     (is (= 20000M (::valikatselmus/urakoitsijan-maksu vastaus)))))
+
+(deftest tee-paatos-kattohinnan-ylityksesta-varmista-urakoitsijan-maksu-kuluna-ja-poisto
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        hoitokauden-alkuvuosi 2021
+        odotettu-urakoitsijan-maksu 20000M
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-urakan-paatos
+                    (kayttaja urakka-id)
+                    {::urakka/id urakka-id
+                     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                     ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
+                     ::valikatselmus/urakoitsijan-maksu 20000}))
+        paatos-id (::valikatselmus/paatoksen-id vastaus)
+        ;; Jos päätösid:tä ei saada, niin haetaan se jotenkin välikatselmuksen perusteella.
+        ;; Päätökseltä kaivetaan kulun id
+        kulu-id (::valikatselmus/kulu-id vastaus)
+        ;; Haetaan kulut ja varmistetaan, että tavoitepalkkio on kirjattu oikein
+        kulu-ensin (hae-kulu urakka-id kulu-id)
+
+        ;; Poistetaan päätös ja varmistetaan, että kulu merkataan poistetuksi
+        poisto-vastaus (try
+                         (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :poista-paatos
+                           (kayttaja urakka-id)
+                           {::valikatselmus/paatoksen-id paatos-id})
+                         (catch Exception e e))
+        kulu-poistettu (hae-poistettu-kulu urakka-id kulu-id)]
+    (is (= odotettu-urakoitsijan-maksu (::valikatselmus/urakoitsijan-maksu vastaus)))
+    ;; Tavoitehinnan ylityksessä urakoitsija joutuu maksumieheksi ja siksi summa muuttuu kuluissa negatiiviseksi
+    (is (= (* -1 odotettu-urakoitsijan-maksu) (:kokonaissumma kulu-ensin)))
+    (is (false? (:poistettu kulu-ensin)))
+    (is (true? (:poistettu kulu-poistettu)))))
 
 (deftest kattohinnan-ylitys-siirto
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -525,6 +593,43 @@
                                    ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-alitus
                                    ::valikatselmus/urakoitsijan-maksu -3000}))]
     (is (= -3000M (::valikatselmus/urakoitsijan-maksu vastaus)))))
+
+(deftest tee-paatos-tavoitehinnan-alituksesta-varmista-tavoitepalkkio-kuluna-ja-poisto
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        hoitokauden-alkuvuosi 2021
+        odotettu-urakoitsijan-maksu -3000M
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
+                              q/hae-oikaistu-tavoitehinta (constantly 100000)
+                              q/hae-oikaistu-kattohinta (constantly 110000)]
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-urakan-paatos
+                    (kayttaja urakka-id)
+                    {::urakka/id urakka-id
+                     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                     ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-alitus
+                     ::valikatselmus/urakoitsijan-maksu -3000}))
+        paatos-id (::valikatselmus/paatoksen-id vastaus)
+        ;; Jos päätösid:tä ei saada, niin haetaan se jotenkin välikatselmuksen perusteella.
+        ;; Päätökseltä kaivetaan kulun id
+        kulu-id (::valikatselmus/kulu-id vastaus)
+        ;; Haetaan kulut ja varmistetaan, että tavoitepalkkio on kirjattu oikein
+        kulu-ensin (hae-kulu urakka-id kulu-id)
+
+        ;; Poistetaan päätös ja varmistetaan, että kulu merkataan poistetuksi
+        poisto-vastaus (try
+                         (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :poista-paatos
+                           (kayttaja urakka-id)
+                           {::valikatselmus/paatoksen-id paatos-id})
+                         (catch Exception e e))
+        kulu-poistettu (hae-poistettu-kulu urakka-id kulu-id)]
+    (is (= odotettu-urakoitsijan-maksu (::valikatselmus/urakoitsijan-maksu vastaus)))
+    (is (= odotettu-urakoitsijan-maksu (:kokonaissumma kulu-ensin)))
+    (is (false? (:poistettu kulu-ensin)))
+    ;; Kulu pitää kirjata sen hoitokauden viimeiselle kuukaudelle, jolle päätös tehdään. Eli jos
+    ;; Päätös tehdään 2021 alkaneelle hoitovuodelle pitää kulun eräpäivä (eli kirjauspäivä, hassu nimi kolumnilla) olla 15.9.2022
+    (is (= (pvm/->pvm (str "15.09." (inc hoitokauden-alkuvuosi))) (:erapaiva kulu-ensin)))
+    (is (true? (:poistettu kulu-poistettu)))))
 
 (deftest tavoitehinnan-alitus-maksu-yli-kolme-prosenttia
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
