@@ -24,6 +24,7 @@
     "lupaus-tavoitehinta" ::lupaus-tavoitehinta
     "erilliskustannus_id" ::erilliskustannus-id
     "sanktio_id" ::sanktio-id
+    "kulu_id" ::kulu-id
     "luoja-id" ::muokkaustiedot/luoja-id
     "luotu" ::muokkaustiedot/luotu
     "muokattu" ::muokkaustiedot/muokattu
