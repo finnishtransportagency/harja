@@ -84,7 +84,7 @@ Yleisesti, jokaiselle Dockerfilelle on määritelty "build-image.sh" ja "push-im
 imaget voi helposti päivittää.
 
 ### Apuscriptit
-Jokaisen Dockerfile kansion sisäll on ```build-image.sh``` ja ```push-image.sh``` apuscriptit.
+Jokaisen Dockerfile kansion sisällä on ```build-image.sh``` ja ```push-image.sh``` apuscriptit.
 
 1. **Build image**
 
