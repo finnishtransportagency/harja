@@ -589,7 +589,7 @@
                                                      ;; viimeisestä kohdistuksesta.
                                                       (= (:tehtavaryhma (last kohdistukset))
                                                         (:id (avain->tehtavaryhma tehtavaryhmat avain))))
-                                  :disabled (not= 0 haetaan)
+                                  :disabled true
                                   :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
                                                                                (fn [_]
                                                                                  (aseta-kohdistus avain)))
@@ -720,13 +720,13 @@
          {:type :radio
           :name "kulu-group"
           :default-checked vuoden-paatos-valittu?
-          :disabled (or (not= 0 haetaan) kulu-lukittu?)
+          :disabled true
           :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
                                                        (fn [_]
                                                          (let [tavoitepalkkio-tr (avain->tehtavaryhma tehtavaryhmat :tavoitepalkkio)]
                                                            [(-> tila/kulut-kohdistus-default
                                                               (assoc :tehtavaryhma (:id tavoitepalkkio-tr)
-                                                                     :toimenpideinstanssi (:toimenpideinstanssi tavoitepalkkio-tr)))])))
+                                                                :toimenpideinstanssi (:toimenpideinstanssi tavoitepalkkio-tr)))])))
                             jalkiprosessointi-fn (when (.. % -target -checked)
                                                    (fn [lomake]
                                                      (vary-meta
@@ -772,7 +772,7 @@
 
 (defn kulun-tiedot
   [{:keys [paivitys-fn e! haetaan]}
-   {:keys [koontilaskun-kuukausi laskun-numero erapaiva erapaiva-tilapainen tarkistukset testidata] :as lomake}
+   {:keys [koontilaskun-kuukausi laskun-numero erapaiva erapaiva-tilapainen tarkistukset] :as lomake}
    vuosittaiset-valikatselmukset
    kulu-lukittu?]
   (let [{:keys [validius]} (meta lomake)
@@ -854,8 +854,6 @@
                  :erapaiva
                  pvm/pvm)
                ". Yhdellä laskun numerolla voi olla yksi päivämäärä, joten kulu kirjataan samalle päivämäärälle. Jos haluat kirjata laskun eri päivämäärälle, vaihda laskun numero.")])]))
-
-
 
 (defn- kulujen-syottolomake
   [e! _]
