@@ -100,6 +100,16 @@ Jokaisen Dockerfile kansion sisällä on ```build-image.sh``` ja ```push-image.s
     ./build-image.sh --help
     ```
 
+     **Lisäoptiot docker buildille**  
+     Build-image.sh tukee lisäoptioiden syöttöä ```docker build``` komennolle.
+     Katso esimerkkiä ```.github/docker/cypress/build-image.sh``` tiedostosta.
+
+     Lisäoptioita voi syöttää antamalla argumetiksi "--".  
+     Kaikki "--" jälkeen tulevat optiot annetaan sellaisenaan 'docker build' komennolle build-image.sh scriptin sisällä.
+    ```bash
+    ./build-image.sh --tag 10.2.0 -- --build-arg="NPM_CYPRESS_VERSION=${NPM_CYPRESS_VERSION}"
+    ```
+
 2. **Push image**
 
     Käytetään komentoa:
@@ -138,4 +148,5 @@ Jokaisen Dockerfile kansion sisällä on ```build-image.sh``` ja ```push-image.s
    * Harkitse minkä tagin luot/päivität (<postgresql-versio>-<postgis-versio>)
 4. Kirjaudu sisään Github Container Registryyn classic tokenilla (Lue: "Kehittäjän kirjautuminen Container Registryyn" yllä)
 5. Aja scripti: ```./push-image.sh --tag xx-y.y```
-   * Aja myös --update-latest, jos on tarve.
+   * Voit päivittää samanaikaisesti myös "latest" tagin, jos on tarve:
+      * ```./push-image.sh --tag xx-y.y --update-latest```
