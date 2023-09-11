@@ -625,7 +625,9 @@
                          (catch Exception e e))
         kulu-poistettu (hae-poistettu-kulu urakka-id kulu-id)]
     (is (= odotettu-urakoitsijan-maksu (::valikatselmus/urakoitsijan-maksu vastaus)))
-    (is (= odotettu-urakoitsijan-maksu (:kokonaissumma kulu-ensin)))
+    ;; Tavoitehinnan alituksesta tuleva kulu on positiivinen ja se kuuluu tilaajan maksaa. Sen vuoksi emme odota
+    ;; Tässä enää negatiivista urakoitsijan maksua, vaan positiivista tilaajan maksua
+    (is (= (* -1 odotettu-urakoitsijan-maksu) (:kokonaissumma kulu-ensin)))
     (is (false? (:poistettu kulu-ensin)))
     ;; Kulu pitää kirjata sen hoitokauden viimeiselle kuukaudelle, jolle päätös tehdään. Eli jos
     ;; Päätös tehdään 2021 alkaneelle hoitovuodelle pitää kulun eräpäivä (eli kirjauspäivä, hassu nimi kolumnilla) olla 15.9.2022
@@ -655,7 +657,7 @@
         tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta (:db jarjestelma) {:urakka-id urakka-id
                                                                                    :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         tilaajan-maksu -2100M
-        urakoitsijan-maksu (* -1 (* 0.029 tavoitehinta))
+        urakoitsijan-maksu (* 0.029 tavoitehinta)
         vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                          :tallenna-urakan-paatos
