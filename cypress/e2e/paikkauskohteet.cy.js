@@ -41,7 +41,7 @@ let avaaPaikkauskohteetSuoraan = function () {
 
     cy.route('POST', '_/paikkauskohteet-urakalle').as('2021-kohteet')
     cy.get('[data-cy="hae-paikkauskohteita"]').click();
-    cy.wait('@2021-kohteet', {timeout: clickTimeout})
+    cy.wait('@2021-kohteet', {timeout: 15000})
 }
 
 let avaaToteumat = () => {
@@ -275,7 +275,7 @@ describe('Päällystysilmoitukset toimii', function () {
         cy.get('label[for=suunniteltu-maara] + span > input').type("1111")
         cy.get('label[for=yksikko] + div').valinnatValitse({valinta: 'jm'})
         cy.get('label[for=suunniteltu-hinta] + span > input').type("200000")
-        cy.get('button').contains('.nappi-ensisijainen', 'Tallenna', {timeout: clickTimeout}).click({force: true})
+        cy.get('button').contains('.nappi-ensisijainen', 'Tallenna', {timeout: clickTimeout}).click()
 
         // Varmista, että tallennus onnistui
         cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
