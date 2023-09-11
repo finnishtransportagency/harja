@@ -495,7 +495,7 @@
                                                           urakoitsijan-alukset)))}
            [{:otsikko "MMSI"
              :nimi ::alus/mmsi
-             :tyyppi :positiivinen-numero
+             :tyyppi :positiivinen-numero :kokonaisluku? true
              :leveys 7
              ;; MMSI:n muokkaus ei ole tuettua, jos alus on jo tallennettu, sillä se
              ;; triggeröisi uuden aluksen tallennuksen.
