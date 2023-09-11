@@ -357,14 +357,14 @@
     }
 
     .muutoshistoria-otsikko {
-      margin-left: @valistys-24;
+      margin-left: @valistys-4;
       margin-bottom: 1rem;
-      font-size: 16px;
-      font-weight: bold;
+      font-size: 20px;
+      font-weight: 600;
     }
 
     .muutoshistoria-ei-tietoja {
-      margin-left: @valistys-24;
+      margin-left: @valistys-4;
       font-size: 14px;
     }
 
@@ -380,7 +380,11 @@
       display: flex;
       margin: auto;
       justify-content: center;
-      padding-top: 3rem;
+      padding-top: 4rem;
+
+      .sulje-valitys {
+        padding: 8px 12px 8px 8px;
+      }
     }
 
     .alhaalla {
@@ -391,7 +395,8 @@
     .muutos-tiedot {
       display: flex;
       gap: @valistys-8;
-      font-weight: bold;
+      font-weight: 600;
+      font-size: 16px;
       margin-left: @valistys-6;
       align-items: center;
       justify-content: center;
@@ -400,10 +405,11 @@
       .klikattava {
         transform: scale(1.5);
         width: 15px;
+        margin-right: @valistys-6
       }
 
       :nth-child(2) {
-        width: 125px;
+        width: 160px;
       }
 
       :last-child {

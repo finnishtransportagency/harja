@@ -289,7 +289,7 @@
               :leveys 1}]
             versiomuutokset]]]))]
     [:span.muutoshistoria-sulje
-     [:span.nappi-ensisijainen.klikattava.alhaalla {:on-click #(e! (tiedot/->MuutoshistoriaAuki nil))}
+     [:span.nappi-ensisijainen.klikattava.alhaalla.sulje-valitys {:on-click #(e! (tiedot/->MuutoshistoriaAuki nil))}
       [ikonit/ikoni-ja-teksti (ikonit/harja-icon-navigation-close) "Sulje"]]]]])
 
 (defn paivakirjan-header [e! {:keys [valittu-rivi historiatiedot-auki] :as app}]
