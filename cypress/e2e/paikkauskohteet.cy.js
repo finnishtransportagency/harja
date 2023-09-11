@@ -40,9 +40,8 @@ let avaaPaikkauskohteetSuoraan = function () {
     cy.get('label[for=filtteri-vuosi] + div').valinnatValitse({valinta: '2021'})
 
     cy.route('POST', '_/paikkauskohteet-urakalle').as('2021-kohteet')
-    cy.contains('.nappi-ensisijainen', 'Hae kohteita', ).click({force: true})
+    cy.get('[data-cy="hae-paikkauskohteita"]').click();
     cy.wait('@2021-kohteet', {timeout: clickTimeout})
-
 }
 
 let avaaToteumat = () => {
@@ -255,7 +254,7 @@ describe('Päällystysilmoitukset toimii', function () {
         avaaPaikkauskohteetSuoraan()
 
         // Avataan paikkauskohdelomake uuden luomista varten
-        cy.get('button').contains('.nappi-ensisijainen', 'Lisää kohde', {timeout: clickTimeout}).click({force: true})
+        cy.get('[data-cy="lisaa-paikkauskohde"]').click();
         // Varmistetaan, että sivupaneeli aukesi
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // annetaan nimi
