@@ -150,16 +150,6 @@ WHERE ttt.versio = :versio
   AND ttt.aloitus BETWEEN :alkuaika AND :loppuaika
 GROUP BY ttt.id;
 
--- name: hae-paivakirjan-muutoshistoria-tehtavat
-SELECT ttt.tyyppi, ttt.aloitus, ttt.lopetus, array_agg(tehtava.nimi) as tehtavat, ttt.muokattu
-FROM tyomaapaivakirja_tieston_toimenpide ttt
-         LEFT JOIN lateral unnest(ttt.tehtavat) t on true
-         LEFT JOIN tehtava ON tehtava.id = t
-WHERE ttt.tyomaapaivakirja_id = :tyomaapaivakirja_id
-  AND ttt.tyyppi = 'yleinen'::tyomaapaivakirja_toimenpide_tyyppi
-  AND ttt.aloitus BETWEEN :alkuaika AND :loppuaika
-GROUP BY ttt.id;
-
 -- name: hae-paivakirjan-toimenpiteet
 SELECT ttt.tyyppi, ttt.aloitus, ttt.lopetus, toimenpiteet as toimenpiteet
 FROM tyomaapaivakirja_tieston_toimenpide ttt
