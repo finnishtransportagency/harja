@@ -703,19 +703,41 @@
   (t/day (d pvm)))
 
 (defn tunti
-  "Palauttaa annetun DateTime kuukauden"
+  "Palauttaa annetun DateTime tunnin."
   [pvm]
   (t/hour (d pvm)))
 
 (defn minuutti
-  "Palauttaa annetun DateTime kuukauden"
+  "Palauttaa annetun DateTime minuutin."
   [pvm]
   (t/minute (d pvm)))
 
 (defn sekuntti
-  "Palauttaa annetun DateTime kuukauden"
+  "Palauttaa annetun DateTime sekunnin."
   [pvm]
   (t/second (d pvm)))
+
+#?(:clj
+   (defn palvelimen-aika->suomen-aikaan
+     "Meillä on Harjassa bugi että tietokannasta haettu päivämäärä tulee transitin kautta palvelimelle UTC+0 muodossa jolloin tietokannan 15:00pm = 12:00pm.
+      Tämä funktio palauttaa tuon 12:00 ajan oikeana aikana jos tarvitaan tehdä palvelimella tuntiherkkiä funktioita
+
+      Input          #inst 2023-09-07T09:01:50.000-00:00
+      Palautetaan -> #inst 2023-09-07T12:01:50.000-00:00
+      
+      Input          #inst 2023-09-07T21:00:00-00:00
+      Palautetaan -> #inst 2023-09-08T00:00:00-00:00"
+     [pvm]
+     (let [paivana (->pvm-date-timeksi (str
+                                         (paiva pvm) "."
+                                         (kuukausi pvm) "."
+                                         (vuosi pvm)))
+           utc-3 (dateksi
+                   (aikana paivana
+                     (tunti pvm)
+                     (minuutti pvm)
+                     (sekuntti pvm) 0))]
+       utc-3)))
 
 (defn paivamaaran-hoitokausi
   "Palauttaa hoitokauden [alku loppu], johon annettu pvm kuuluu"

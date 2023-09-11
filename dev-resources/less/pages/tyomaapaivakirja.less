@@ -328,29 +328,88 @@
   align-items: center;
   background-color: #19191964;
 
-  .muutoshistoria-dialog {
+  #muutoshistoria-dialog {
     position: relative;
     width: 90%;
-    max-width: 800px;
-    height: 90%;
+    border-radius: @valistys-6;
+    max-width: 1100px;
+    min-height: 250px;
+    max-height: 600px;
     overflow-y: auto;
     background-color: @harjan-taustavari;
     padding: @valistys-32 @valistys-48;
 
+    .ei-nakyva {
+      max-height: 0;
+      opacity: 0;  
+      z-index: -1;
+      visibility: hidden;
+      transition: opacity 0.05s ease-out, max-height 0.08s ease-out;
+    }
+  
+    .nakyva {
+      max-width: 950px;
+      margin: auto;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.37s ease-out, max-height 0.37s ease-out;
+      max-height: 80%;
+    }
+
     .muutoshistoria-otsikko {
+      margin-left: @valistys-24;
       margin-bottom: 1rem;
       font-size: 16px;
       font-weight: bold;
     }
-    .muutos-pvm {
-      font-weight: bold;
-      margin-left: @valistys-6;
+
+    .muutoshistoria-ei-tietoja {
+      margin-left: @valistys-24;
+      font-size: 14px;
     }
+
     .muutoshistoria-grid {
       margin-top: @valistys-6;
     }
+
     .muutoshistoria-kentan-nimi {
       font-weight: bold;
+    }
+
+    .muutoshistoria-sulje {
+      display: flex;
+      margin: auto;
+      justify-content: center;
+      padding-top: 3rem;
+    }
+
+    .alhaalla {
+      position: relative;
+      bottom: 10px;
+    }
+
+    .muutos-tiedot {
+      display: flex;
+      gap: @valistys-8;
+      font-weight: bold;
+      margin-left: @valistys-6;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: @valistys-16;
+
+      .klikattava {
+        transform: scale(1.5);
+        width: 15px;
+      }
+
+      :nth-child(2) {
+        width: 125px;
+      }
+
+      :last-child {
+        gap: @valistys-16;
+        width: 80%;
+      }
     }
   }
 }

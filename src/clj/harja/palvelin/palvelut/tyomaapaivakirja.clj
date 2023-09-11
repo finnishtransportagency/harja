@@ -21,11 +21,8 @@
    luotu: Koska päiväkirja on lähetetty kyseiselle päivälle"
   [{:keys [luotu paivamaara] :as paivakirja}]
   (if (and luotu paivamaara)
-    (let [;; Korjaa palvelimen ja tietokannan aika-eron (3 tuntia, 10800s)
-          ;; Tietokannan 24:00 == Palvelimen 21:00
-          luotu (pvm/dateksi (pvm/ajan-muokkaus luotu true 10800))
-          paivamaara (pvm/dateksi (pvm/ajan-muokkaus paivamaara true 10800))
-
+    (let [paivamaara (pvm/palvelimen-aika->suomen-aikaan paivamaara)
+          luotu (pvm/palvelimen-aika->suomen-aikaan luotu)
           seuraava-arkipaiva (pvm/seuraava-arkipaiva paivamaara)
           seur-akipaiva-klo-12 (pvm/dateksi (pvm/aikana seuraava-arkipaiva 12 0 0 0))
           aikaa-valissa (try
@@ -38,7 +35,7 @@
                               false
                               ;; Jos sattuu jokin muu virhe, heitetään se 
                               (throw (Exception. (.getMessage e))))))]
-      (if aikaa-valissa
+      (if (and aikaa-valissa (> aikaa-valissa 0))
         ;; Aikaa jäi jäljelle, eli päiväkirja lähetetty OK
         (assoc paivakirja :tila "ok")
         ;; Aikaa ei jäänyt jäljelle, päiväkirja on myöhässä
@@ -203,50 +200,50 @@
 
 (defn- hae-tyomaapaivakirjan-muutoshistoria [db user {:keys [versio urakka-id tyomaapaivakirja_id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/raportit-tyomaapaivakirja user urakka-id)
-  (let [parametrit {:urakka_id urakka-id
-                    :tyomaapaivakirja_id tyomaapaivakirja_id}
-        fn-jsonb-konversio (fn [k]
-                             (map #(apply hash-map %)
-                               (mapv (fn [rivi]
-                                       (mapcat
-                                         (fn [r]
-                                           (if (= (type (get-in r [1])) org.postgresql.util.PGobject)
-                                             (update r 1 #(konversio/jsonb->clojuremap %))
-                                             r))
-                                         rivi))
-                                 k)))
-        fn-generoi-idt-riveille (fn [data]
-                                  (let [idt (map-indexed (fn [idx item] (assoc item :id (inc idx))) data)]
-                                    idt))
+  (when tyomaapaivakirja_id
+    (let [parametrit {:urakka_id urakka-id
+                      :tyomaapaivakirja_id tyomaapaivakirja_id}
+          fn-jsonb-konversio (fn [k]
+                               (map #(apply hash-map %)
+                                 (mapv (fn [rivi]
+                                         (mapcat
+                                           (fn [r]
+                                             (if (= (type (get-in r [1])) org.postgresql.util.PGobject)
+                                               (update r 1 #(konversio/jsonb->clojuremap %))
+                                               r))
+                                           rivi))
+                                   k)))
+          fn-generoi-idt-riveille (fn [data]
+                                    (let [idt (map-indexed (fn [idx item] (assoc item :id (inc idx))) data)]
+                                      idt))
 
-        poikkeussaa (tyomaapaivakirja-kyselyt/hae-poikkeussaa-muutokset db parametrit)
-        kalusto (tyomaapaivakirja-kyselyt/hae-kalusto-muutokset db parametrit)
-        paivystajat (tyomaapaivakirja-kyselyt/hae-paivystaja-muutokset db parametrit)
-        saaasemat (tyomaapaivakirja-kyselyt/hae-saaasema-muutokset db parametrit)
-        tapahtumat (tyomaapaivakirja-kyselyt/hae-tapahtuma-muutokset db parametrit)
-        tiesto (tyomaapaivakirja-kyselyt/hae-tieston-muutokset db parametrit)
-        toimeksiannot (tyomaapaivakirja-kyselyt/hae-toimeksianto-muutokset db parametrit)
-        tyonjohtajat (tyomaapaivakirja-kyselyt/hae-tyonjohtaja-muutokset db parametrit)
+          poikkeussaa (tyomaapaivakirja-kyselyt/hae-poikkeussaa-muutokset db parametrit)
+          kalusto (tyomaapaivakirja-kyselyt/hae-kalusto-muutokset db parametrit)
+          paivystajat (tyomaapaivakirja-kyselyt/hae-paivystaja-muutokset db parametrit)
+          saaasemat (tyomaapaivakirja-kyselyt/hae-saaasema-muutokset db parametrit)
+          tapahtumat (tyomaapaivakirja-kyselyt/hae-tapahtuma-muutokset db parametrit)
+          tiesto (tyomaapaivakirja-kyselyt/hae-tieston-muutokset db parametrit)
+          toimeksiannot (tyomaapaivakirja-kyselyt/hae-toimeksianto-muutokset db parametrit)
+          tyonjohtajat (tyomaapaivakirja-kyselyt/hae-tyonjohtaja-muutokset db parametrit)
 
-        ;; Lyödään tiedot yhteen jotta ovat nätisti mäpättynä 
-        muutoshistoria (apply concat
-                         (map #(fn-jsonb-konversio %)
-                           [poikkeussaa kalusto paivystajat saaasemat
-                            tapahtumat tiesto toimeksiannot tyonjohtajat]))
-        ;; Ryhmitellään versiomuutokset sequensseihin (1 2) (2 3) (3 4) jotka näytetään gridissä
-        ryhmitetyt-versiomuutokset (for [x (range 1 versio)]
-                                     (map (fn [rivi]
-                                            (let [nykyinen-vers (get-in rivi [:uudet :versio])
-                                                  vanha-vers (get-in rivi [:vanhat :versio])
-                                                  ret (when (or (= vanha-vers x) (= nykyinen-vers (inc x)))
-                                                        rivi)]
-                                              ret)) muutoshistoria))
-        ryhmitetyt-versiomuutokset (suodata-versioiden-ryhmitys ryhmitetyt-versiomuutokset)
-        ;; Generoidaan vielä uniikki idt gridin riveille
-        ryhmitetyt-versiomuutokset (map fn-generoi-idt-riveille ryhmitetyt-versiomuutokset)
-
-        _ (println "\n\n test: " ryhmitetyt-versiomuutokset)]
-    ryhmitetyt-versiomuutokset))
+          ;; Lyödään tiedot yhteen jotta ovat jo jokseenkin nätisti mäpättynä 
+          muutoshistoria (apply concat
+                           (map #(fn-jsonb-konversio %)
+                             [poikkeussaa kalusto paivystajat saaasemat
+                              tapahtumat tiesto toimeksiannot tyonjohtajat]))
+          ;; Ryhmitellään versiomuutokset sequensseihin (1 2) (2 3) (3 4) jotka näytetään gridissä
+          ryhmitetyt-versiomuutokset (for [x (range 1 versio)]
+                                       (map (fn [rivi]
+                                              (let [nykyinen-vers (get-in rivi [:uudet :versio])
+                                                    vanha-vers (get-in rivi [:vanhat :versio])
+                                                    ret (when (or (= vanha-vers x) (= nykyinen-vers (inc x)))
+                                                          rivi)]
+                                                ret)) muutoshistoria))
+          ;; Suodatetaan tyhjät sequenssit sun muut pois datasta 
+          ryhmitetyt-versiomuutokset (suodata-versioiden-ryhmitys ryhmitetyt-versiomuutokset)
+          ;; Generoidaan vielä uniikki idt gridin riveille
+          ryhmitetyt-versiomuutokset (map fn-generoi-idt-riveille ryhmitetyt-versiomuutokset)]
+      ryhmitetyt-versiomuutokset)))
 
 (defrecord Tyomaapaivakirja []
   component/Lifecycle

@@ -1,4 +1,4 @@
--- Jotta työmaapäiväkirjaan saadaan näkyville muutoshistoriatiedot, tarvimme lisätty sarakkeen
+-- Jotta työmaapäiväkirjaan saadaan näkyville muutoshistoriatiedot, tarvimme muokattu sarakkeen
 ALTER TABLE tyomaapaivakirja_kalusto ADD COLUMN IF NOT EXISTS muokattu timestamp;
 ALTER TABLE tyomaapaivakirja_paivystaja ADD COLUMN IF NOT EXISTS muokattu timestamp;
 ALTER TABLE tyomaapaivakirja_poikkeussaa ADD COLUMN IF NOT EXISTS muokattu timestamp;
@@ -8,19 +8,20 @@ ALTER TABLE tyomaapaivakirja_tieston_toimenpide ADD COLUMN IF NOT EXISTS muokatt
 ALTER TABLE tyomaapaivakirja_tyonjohtaja ADD COLUMN IF NOT EXISTS muokattu timestamp;
 ALTER TABLE tyomaapaivakirja_toimeksianto ADD COLUMN IF NOT EXISTS muokattu timestamp;
 
-DROP FUNCTION IF EXISTS tyomaapaivakirja_etsi_taulun_versiomuutokset(TEXT, TEXT[], TEXT[], INTEGER, INTEGER, TEXT, TEXT);
+DROP FUNCTION IF EXISTS tyomaapaivakirja_etsi_taulun_versiomuutokset(TEXT, TEXT[], TEXT[], INTEGER, INTEGER, TEXT, TEXT, TEXT[]);
 
 CREATE OR REPLACE FUNCTION tyomaapaivakirja_etsi_taulun_versiomuutokset(
-  t_taulu TEXT, -- taulu mistä haetaan
-  t_sarakkeet TEXT[], -- sarakkeet mitä verrataan
-  t_ei_verratut TEXT[], -- sarakkeet mitkä palautetaan mutta ei verrata 
-  t_id INT, -- tyomaapaivakirja_id 
-  t_urakka_id INT, -- urakka_id 
+  t_taulu TEXT,               -- taulu mistä haetaan
+  t_sarakkeet TEXT[],         -- sarakkeet mitä verrataan ja palautetaan
+  t_ei_verratut TEXT[],       -- sarakkeet mitkä palautetaan mutta ei verrata 
+  t_id INT,                   -- tyomaapaivakirja_id 
+  t_urakka_id INT,            -- urakka_id 
   t_vastaa_sarakkeeseen text, -- OPTIONAL, tämä sarake täytyy olla sama verratessa, voi olla NULL 
-  t_tieto TEXT -- Näytetään UIssa "sääasema" = "Lisätty/Postettu/Muutettu sääasematietoja"
+  t_tieto TEXT,               -- Näytetään UIssa esim. "Lisätty/Postettu/Muutettu X"
+  t_poista_joinista TEXT[]    -- sarakkeet mitä ei verrata join konditiossa
 ) RETURNS TABLE (
   info text,
-  toiminto TEXT, -- 'lisatty', 'poistettu', 'muutettu'
+  toiminto TEXT,              -- 'lisatty', 'poistettu', 'muutettu'
   vanhat JSONB,
   uudet JSONB
 ) AS $$
@@ -28,6 +29,8 @@ DECLARE
   ehdot TEXT;
   on_ehto TEXT;
   nykyinen_versio INT;
+  loop_alku INT;
+  loop_loppu INT;
 BEGIN
   -- Heitä exception koska tarvitaan jotain mitä verrataan
   IF t_ei_verratut = t_sarakkeet THEN
@@ -37,8 +40,17 @@ BEGIN
   -- Haetaan nykyinen versio
   EXECUTE 'SELECT COALESCE(max(versio), 0) FROM ' || t_taulu || ' WHERE tyomaapaivakirja_id = ' || t_id || ';' INTO nykyinen_versio;
   
-  -- Loopataan kaikkien versioiden muutokset
-  FOR i IN 1..nykyinen_versio-1 LOOP
+  -- Loop condition, näytetään korkeintaan viimeisen 30 version muutokset
+  IF nykyinen_versio >= 30 THEN
+    loop_alku := nykyinen_versio - 29;
+    loop_loppu := nykyinen_versio;
+  ELSE
+    loop_alku := 1;
+    loop_loppu := nykyinen_versio;
+  END IF;
+  
+  -- Loopataan kaikkien versioiden muutokset (korkeintaan viimeiset 30 versiota)
+  FOR i IN loop_alku..loop_loppu LOOP
     -- Generoi konditiot sarakkeille
     ehdot := array_to_string(
         ARRAY(
@@ -49,7 +61,12 @@ BEGIN
    
     -- Jos halutaan sarakkeet vastaamaan johonkin, tehdään se tässä
     IF t_vastaa_sarakkeeseen IS NULL THEN
-      on_ehto := (SELECT string_agg(format('vanha.%I = uusi.%I', col, col), ' AND ') FROM unnest(t_sarakkeet) col WHERE col NOT IN (SELECT unnest(t_ei_verratut)));
+      on_ehto := (
+        SELECT string_agg(format('vanha.%I = uusi.%I', col, col), ' AND ') 
+          FROM unnest(t_sarakkeet) col 
+        WHERE col NOT IN (SELECT unnest(t_ei_verratut)) 
+        AND col NOT IN (SELECT unnest(t_poista_joinista))
+      );
     ELSE 
       on_ehto := format('vanha.%I = uusi.%I', t_vastaa_sarakkeeseen, t_vastaa_sarakkeeseen);
     END IF;
