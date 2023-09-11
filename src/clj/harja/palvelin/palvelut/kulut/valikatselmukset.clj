@@ -116,15 +116,24 @@
   (let [paatokset (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)]
     (doseq [paatos paatokset]
       (cond
+        ;; Poista lupaussanktio myös
         (and
           (= (::valikatselmus/tyyppi paatos) "lupaussanktio")
           (not (nil? (::valikatselmus/sanktio-id paatos))))
         (laadunseuranta-palvelu/poista-suorasanktio db kayttaja {:id (::valikatselmus/sanktio-id paatos) :urakka-id urakka-id})
+        ;; Poista lupausbonus myöskin
         (and
           (= (::valikatselmus/tyyppi paatos) "lupausbonus")
           (not (nil? (::valikatselmus/erilliskustannus-id paatos))))
         (toteumat-palvelu/poista-erilliskustannus db kayttaja
-          {:id (::valikatselmus/erilliskustannus-id paatos) :urakka-id urakka-id})))
+          {:id (::valikatselmus/erilliskustannus-id paatos) :urakka-id urakka-id})
+        ;; Poista päätöksen kulut
+        (and
+          (or (= (::valikatselmus/tyyppi paatos) "tavoitehinnan-ylitys")
+            (= (::valikatselmus/tyyppi paatos) "kattohinnan-ylitys")
+            (= (::valikatselmus/tyyppi paatos) "tavoitehinnan-alitus"))
+          (not (nil? (::valikatselmus/kulu-id paatos))))
+        (kulut-palvelu/poista-kulu-tietokannasta db kayttaja {:urakka-id urakka-id :id (::valikatselmus/kulu-id paatos)})))
     (valikatselmus-q/poista-paatokset db urakka-id hoitokauden-alkuvuosi (:id kayttaja))))
 
 (defn tarkista-kattohinnan-ylitys [tiedot urakka]
