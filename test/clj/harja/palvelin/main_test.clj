@@ -126,7 +126,6 @@
     :vv-kiintiot
     :vv-hinnoittelut
     :vv-materiaalit
-    :reimari
     :vkm
     :vv-turvalaitteet
     :hairioilmoitukset
@@ -199,7 +198,6 @@
     :vv-kiintiot
     :vv-hinnoittelut
     :vv-materiaalit
-    :reimari
     :vkm
     :vv-turvalaitteet
     :hairioilmoitukset

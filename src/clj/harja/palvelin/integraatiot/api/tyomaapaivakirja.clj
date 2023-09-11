@@ -360,18 +360,20 @@
 (defn tallenna-tyomaapaivakirja [db urakka-id data kayttaja tyomaapaivakirja-id]
   (let [_ (log/debug "tallenna-tyomaapaivakirja :: data" (pr-str data))
         tyomaapaivakirja-id (konv/konvertoi->int tyomaapaivakirja-id)
-        versio (get-in data [:tunniste :versio]) ; Jokaiselle payloadilla on oma versionsa
         versiotiedot (hae-tyomaapaivakirjan-versiotiedot db kayttaja {:urakka_id urakka-id
                                                                       :paivamaara (get-in data [:tunniste :paivamaara])})
+        versio (or
+                 (get-in data [:tunniste :versio])
+                 (inc (or (:versio versiotiedot) 0)))
         tyomaapaivakirja {:urakka_id urakka-id
                           :kayttaja (:id kayttaja)
                           :paivamaara (tyokalut-json/pvm-string->java-sql-date (get-in data [:tunniste :paivamaara]))
                           :ulkoinen-id (get-in data [:tunniste :id])
-                          :versio (get-in data [:tunniste :versio])
+                          :versio versio
                           :id tyomaapaivakirja-id}
         ;; Varmista, että annettu versio on suurempi, kuin kannassa oleva
         _ (when tyomaapaivakirja-id
-            (if (not= (get-in data [:tunniste :versio])
+            (if (not= versio
                   (inc (:versio versiotiedot)))
               (throw+ {:type virheet/+vaara-versio-tyomaapaivakirja+ :virheet [{:koodi virheet/+vaara-versio-tyomaapaivakirja-virhe-koodi+
                                                                                 :viesti "Työmaapäiväkirjan versio ei täsmää"}]})))
