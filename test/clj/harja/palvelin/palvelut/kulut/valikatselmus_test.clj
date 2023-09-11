@@ -675,6 +675,67 @@
     (is (=marginaalissa? urakoitsijan-maksu (:kokonaissumma kulu)))
     (is (=marginaalissa? urakoitsijan-maksu (::valikatselmus/urakoitsijan-maksu vastaus)))))
 
+(deftest tavoitehinnan-oikaisu-onnistuu-paatoksen-jalkeen-kulun-kanssa
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        hoitokauden-alkuvuosi 2021
+
+        ;; Haetaan päätökset ja varmistetaan että niitä ei ole
+        paatokset-vastaus1 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-urakan-paatokset
+                                  (kayttaja urakka-id)
+                                  {::urakka/id urakka-id})
+
+        tilaajan-maksu -2100M
+        urakoitsijan-maksu -345M
+        paatos-vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
+                              (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-urakan-paatos
+                                (kayttaja urakka-id)
+                                {::urakka/id urakka-id
+                                 ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                 ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-alitus
+                                 ::valikatselmus/urakoitsijan-maksu urakoitsijan-maksu
+                                 ::valikatselmus/tilaajan-maksu tilaajan-maksu}))
+                         (catch Exception e e))
+
+        ;; Haetaan päätökset ja varmistetaan että niitä on yksi
+        paatokset-vastaus2 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-urakan-paatokset
+                                  (kayttaja urakka-id)
+                                  {::urakka/id urakka-id})
+
+        ;; Päätökseltä kaivetaan kulun id
+        kulu-id (::valikatselmus/kulu-id paatos-vastaus)
+        kulu-ensin (hae-kulu urakka-id kulu-id)
+
+        oikaisu-vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
+                          (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :tallenna-tavoitehinnan-oikaisu
+                            (kayttaja urakka-id)
+                            {::urakka/id urakka-id
+                             ::valikatselmus/otsikko " Oikaisu "
+                             ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                             ::valikatselmus/summa 9001
+                             ::valikatselmus/selite " Maailmanloppu tuli, kesti vähän oletettua kauemmin. "}))
+
+        ;; Oikaisun jälkeen päätöksiä ei saa enää olla
+        ;; Haetaan päätökset ja varmistetaan että niitä ei enää ole
+        paatokset-vastaus3 (kutsu-palvelua (:http-palvelin jarjestelma)
+                             :hae-urakan-paatokset
+                             (kayttaja urakka-id)
+                             {::urakka/id urakka-id})
+        ;; Oikaisun jälkeen kulu pitää poistaa, kuten päätöskin
+        kulu-jalkeen (hae-kulu urakka-id kulu-id)]
+
+    (is (true? (empty? paatokset-vastaus1)))
+    (is (false? (empty? paatokset-vastaus2)))
+    (is (true? (empty? paatokset-vastaus3)))
+    (is (= false (:poistettu kulu-ensin)))
+    (is (= true (:poistettu kulu-jalkeen)))
+    (is (=marginaalissa? urakoitsijan-maksu (:kokonaissumma kulu-ensin)))
+    (is (=marginaalissa? urakoitsijan-maksu (::valikatselmus/urakoitsijan-maksu paatos-vastaus)))
+    (is (= (::valikatselmus/summa oikaisu-vastaus) 9001M))))
+
 (deftest lupausbonus-paatos-test-toimii
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         bonuksen-maara 1500M
