@@ -186,19 +186,20 @@
                                  :polku [:kohdistukset indeksi :toimenpideinstanssi] 
                                  :arvon-formatteri-fn :toimenpideinstanssi})
         optiot (merge ryhmat
-                      {:virhe?        (not (validi-ei-tarkistettu-tai-ei-koskettu? valittu-meta))
-                       :disabled      disabled
-                       :vayla-tyyli?  true
-                       :elementin-id  (str indeksi)
-                       :valinta       valittu-asia
-                       :skrollattava? true
-                       :class (when disabled "tehtavaryhma-valinta-disabled")
-                       :valitse-fn    (if lisatyo?
-                                        valitse-toimenpide-fn
-                                        valitse-tehtavaryhma-fn)
-                       :format-fn     (if lisatyo?
-                                        #(get % :toimenpide)
-                                        #(get % :tehtavaryhma))})]
+                 {:virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? valittu-meta))
+                  :disabled disabled
+                  :vayla-tyyli? true
+                  :elementin-id (str indeksi)
+                  :data-cy "kulu-tehtavaryhma-dropdown"
+                  :valinta valittu-asia
+                  :skrollattava? true
+                  :class (when disabled "tehtavaryhma-valinta-disabled")
+                  :valitse-fn (if lisatyo?
+                                valitse-toimenpide-fn
+                                valitse-tehtavaryhma-fn)
+                  :format-fn (if lisatyo?
+                               #(get % :toimenpide)
+                               #(get % :tehtavaryhma))})]
     [:<>
      [yleiset/livi-pudotusvalikko optiot
       valinnat]
