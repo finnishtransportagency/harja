@@ -149,14 +149,55 @@
                               0
                               paikkauskohteet)
         rivi-valittu #(= (:id (:lomake app)) (:id %))
-        aluekohtaisissa? (:hae-aluekohtaiset-paikkauskohteet? app)]
+        aluekohtaisissa? (:hae-aluekohtaiset-paikkauskohteet? app)
+        loytyi-kohteita? (> (count (:paikkauskohteet app)) 0)]
     ;; Riippuen vähän roolista, taulukossa on enemmän dataa tai vähemmän dataa.
     ;; Niinpä kavennetaan sitä hieman, jos siihen tulee vähemmän dataa, luettavuuden parantamiseksi
     [:div.col-xs-12.col-md-12.col-lg-12 #_{:style {:display "flex"
                                                    :justify-content "flex-start"}}
      [grid/grid
       (merge {:tunniste :id
-              :tyhja "Ei tietoja"
+              :otsikko [:div
+                        (when-not aluekohtaisissa?
+                          [:div.flex-row.tasaa-alas
+                           [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")]
+                           (when (and
+                                   (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta) ;; Tiemerkintäurakoitsijalle ei näytetä nappeja
+                                   (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
+                             [:div
+                              (when loytyi-kohteita?
+                                {:style {:text-align "end"}})
+                              (when loytyi-kohteita?
+                                [:span.inline-block
+                                 [:form {:style {:margin-left "auto"}
+                                         :target "_blank" :method "POST"
+                                         :action (komm/excel-url :paikkauskohteet-urakalle-excel)}
+                                  [:input {:type "hidden" :name "parametrit"
+                                           :value (transit/clj->transit {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+                                                                         :tila (:valittu-tila app)
+                                                                         :elyt (:valitut-elyt app)
+                                                                         :alkupvm (pvm/->pvm (str "1.1." (:valittu-vuosi app)))
+                                                                         :loppupvm (pvm/->pvm (str "31.12." (:valittu-vuosi app)))
+                                                                         :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]
+                                  [:button {:type "submit"
+                                            :class #{"nappi-reunaton"}}
+                                   [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]])
+
+                              [liitteet/lataa-tiedosto
+                               {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
+                               {:nappi-teksti "Tuo kohteet excelistä"
+                                :url "lue-paikkauskohteet-excelista"
+                                :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
+                                :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
+                              [yleiset/tiedoston-lataus-linkki
+                               "Lataa Excel-pohja"
+                               (str (when-not (komm/kehitysymparistossa?) "/harja") "/excel/harja_paikkauskohteet_pohja.xlsx")]
+                              [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))
+                               {:paksu? true
+                                :data-attributes {:data-cy "lisaa-paikkauskohde"}}]])])]
+              :tyhja (if (empty? paikkauskohteet)
+                       "Ei paikkauskohteita valituilla rajauksilla."
+                       [yleiset/ajax-loader "Haku käynnissä, odota hetki"])
               :rivin-luokka #(str "paikkauskohderivi" (when (rivi-valittu %) " valittu"))
               :rivi-klikattu (fn [kohde]
                                (let [tilattu? (= "tilattu" (:paikkauskohteen-tila kohde))
@@ -180,12 +221,12 @@
                                    ;; Avaa lomake, jos käyttäjä on tilaaja tai urakoitsija
                                    ;; Käyttäjällä ei ole välttämättä muokkaus oikeuksia, mutta ne tarkistetaan erikseen myöhemmin
                                    (when (and (not aluekohtaisissa?)
-                                              (or tilaaja?
-                                                  ;; Päällystysurakoitsijat pääsee näkemään tarkempaa dataa
-                                                  ;; Mikäli heillä on oikeudet kustannuksiin
-                                                  (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
-                                                       urakoitsija?
-                                                       oikeudet-kustannuksiin?)))
+                                           (or tilaaja?
+                                             ;; Päällystysurakoitsijat pääsee näkemään tarkempaa dataa
+                                             ;; Mikäli heillä on oikeudet kustannuksiin
+                                             (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
+                                               urakoitsija?
+                                               oikeudet-kustannuksiin?)))
 
                                      (cond
                                        ;; Tilattu kohde avataan urakoitsijalle valmiiksi raportoinnin muokkaustilassa
@@ -231,63 +272,7 @@
                                     (when nayta-hinnat?
                                       {:teksti [:div.tasaa-oikealle {:style {:margin-right "-12px"}} (fmt/euro-opt yht-tot-hinta)]})])}))
       skeema
-      (if haku-kaynnissa? 
-        [] 
-        paikkauskohteet)]
-     (when haku-kaynnissa? 
-       [:div.row.col-xs-12 {:style {:text-align "center"}} 
-        [yleiset/ajax-loader "Haku käynnissä, odota hetki"]])]))
-
-(defn kohteet [e! app]
-  (let [loytyi-kohteita? (> (count (:paikkauskohteet app)) 0)
-        piilota-napit? (:hae-aluekohtaiset-paikkauskohteet? app)
-        haku-kaynnissa? (true? (:haku-kaynnissa? app))]
-    [:div.kohdelistaus
-     (when (and (not haku-kaynnissa?) 
-                (not loytyi-kohteita?))
-       [:div.row.col-xs-12 [:h2 "Ei paikkauskohteita valituilla rajauksilla."]])
-     (when-not piilota-napit?
-       [:div.flex-row.tasaa-alas
-        (when loytyi-kohteita?
-          [:div.col-mimic
-           [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")]])
-        (when (and
-                (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta) ;; Tiemerkintäurakoitsijalle ei näytetä nappeja
-                (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
-          [:div.col-mimic
-           (when loytyi-kohteita?
-             {:style {:text-align "end"}})
-           (when loytyi-kohteita?
-             [:span.inline-block
-              [:form {:style {:margin-left "auto"}
-                      :target "_blank" :method "POST"
-                      :action (komm/excel-url :paikkauskohteet-urakalle-excel)}
-               [:input {:type "hidden" :name "parametrit"
-                        :value (transit/clj->transit {:urakka-id (-> @tila/tila :yleiset :urakka :id)
-                                                      :tila (:valittu-tila app)
-                                                      :elyt (:valitut-elyt app)
-                                                      :alkupvm (pvm/->pvm (str "1.1." (:valittu-vuosi app)))
-                                                      :loppupvm (pvm/->pvm (str "31.12." (:valittu-vuosi app)))
-                                                      :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]
-               [:button {:type "submit"
-                         :class #{"nappi-reunaton"}}
-                [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]])
-
-           [liitteet/lataa-tiedosto
-            {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
-            {:nappi-teksti "Tuo kohteet excelistä"
-             :url "lue-paikkauskohteet-excelista"
-             :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
-             :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
-           [yleiset/tiedoston-lataus-linkki
-            "Lataa Excel-pohja"
-            (str (when-not (komm/kehitysymparistossa?) "/harja") "/excel/harja_paikkauskohteet_pohja.xlsx")]
-           [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde})) {:paksu? true}]])])
-     (if loytyi-kohteita?
-       [:div.row [paikkauskohteet-taulukko e! app]]
-       (when haku-kaynnissa?
-       [:div.row.col-xs-12 {:style {:text-align "center"}}
-        [yleiset/ajax-loader "Haku käynnissä, odota hetki"]]))]))
+     paikkauskohteet]]))
 
 (defn- filtterit [e! app]
   (let [haku-fn (fn [] (e! (t-paikkauskohteet/->HaePaikkauskohteet)))]
@@ -356,7 +341,8 @@
            [" Työmenetelmä valittu" " Työmenetelmää valittu"]
            {:vayla-tyyli? true}]]
          [:span {:style {:align-self "flex-end"}}  
-          [napit/yleinen-ensisijainen "Hae kohteita" haku-fn {:luokka "nappi-korkeus-36"}]]
+          [napit/yleinen-ensisijainen "Hae kohteita" haku-fn {:luokka "nappi-korkeus-36"
+                                                              :data-attributes {:data-cy "hae-paikkauskohteita"}}]]
          #_ [kartta/piilota-tai-nayta-kartta-nappula {:luokka #{"oikealle"}}]]))))
 
 (defn- paikkauskohteet-sivu [e! app]
@@ -366,7 +352,7 @@
    #_ [debug/debug app]
    (when (:lomake app)
      [paikkauskohdelomake/paikkauslomake e! app])
-   [kohteet e! app]])
+   [paikkauskohteet-taulukko e! app]])
 
 (defn wrap-paikkauskohteet [e! app]
   (komp/luo
