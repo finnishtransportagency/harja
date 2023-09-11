@@ -261,7 +261,6 @@
                         (.replace "__VIESTITUNNISTE__" (str (rand-int 9999999)))
                         (.replace "__LÄHETYSAIKA__" "2016-01-30T12:00:00+02:00")
                         (.replace "__PAIVAMAARA__" paivamaara)
-                        (.replace "__VERSIO__" (str uusi-versio))
                         (.replace "__ULKOINENID__" ulkoinenid)
                         ;; Muokatut tiedot
                         (.replace "__UUSI_SAA-ASEMA-TUNNISTE__" uusi-saa-asema))
