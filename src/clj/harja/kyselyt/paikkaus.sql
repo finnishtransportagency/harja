@@ -397,6 +397,7 @@ select pk.id                                       AS id,
        pk.tarkistettu                              as tarkistettu,
        pk.lisatiedot                               AS lisatiedot,
        pk."yhalahetyksen-tila"                     as "yhalahetyksen-tila",
+       pk."yhalahetyksen-aika"                     as "yhalahetyksen-aika",
        (SELECT string_agg(pk.virhe::TEXT, ', '))   as virhe, -- YHA-lähetyksen mahdollinen virhe
        pk."ilmoitettu-virhe"                       as "ilmoitettu-virhe", -- urakoitsijalle sähköpostiste
        (pk.tierekisteriosoite_laajennettu).tie     AS tie,

@@ -45,44 +45,52 @@
 (defn sisaltaa-perustiedot [vastaus]
   (is (str/includes? vastaus "tyokone"))
   (is (str/includes? vastaus "materiaalit"))
-  (is (str/includes? vastaus "reittipiste"))
+  (is (str/includes? vastaus "reitti"))
+  (is (str/includes? vastaus "poistettu"))
+  (is (str/includes? vastaus "toteuma"))
+    (is (str/includes? vastaus "muutostiedot"))
+    (is (str/includes? vastaus "tehtavat"))
   (is (str/includes? vastaus "yksikko"))
-  (is (str/includes? vastaus "tehtava"))
-  (is (str/includes? vastaus "muutostiedot")))
+  (is (str/includes? vastaus "tehtava")))
 
 (deftest hae-toteumat-test-aikaraja-ylittyy
   ;; Rajapinta rajoitettu hakemaan max 24h aikavälin
   ;; Testataan että rajoitus toimii 
   (let [alkuaika "2004-10-19T00:00:00+03"
         loppuaika "2004-10-20T00:00:00+03"
-        vastaus-ok (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))
-
+        vastaus-ok (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti)
         ;; Asetetaan ajaksi yli 24 tuntia
         alkuaika "2004-10-19T00:00:00+03"
         loppuaika "2004-10-21T00:00:00+03"
-        vastaus-epaonnistuu (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))]
-    
+        vastaus-epaonnistuu (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti)]
     ;; Ensimmäinen kutsi pitäisi mennä läpi
-    (is (= 200 (:status @vastaus-ok)))
-    (sisaltaa-perustiedot (:body @vastaus-ok))
+    (is (= 200 (:status vastaus-ok)))
+    (sisaltaa-perustiedot (:body vastaus-ok))
     ;; Toisen pitäisi epäonnistua ja antaa virhekoodin
-    (is (= 400 (:status @vastaus-epaonnistuu)))
-    (is (str/includes? (-> @vastaus-epaonnistuu :body) "Aikaväli ylittää sallitun rajan"))))
+    (is (= 400 (:status vastaus-epaonnistuu)))
+    (is (str/includes? (-> vastaus-epaonnistuu :body) "Aikaväli ylittää sallitun rajan"))))
 
 (deftest hae-toteumat-test-yksinkertainen-onnistuu
   (let [; Aseta tiukka hakuväli, josta löytyy vain vähän toteumia
         alkuaika "2004-10-19T00:00:00+03"
         loppuaika "2004-10-20T00:00:00+03"
-        vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))]
-    (is (= 200 (:status @vastaus)))
-    (sisaltaa-perustiedot (:body @vastaus))))
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti)]
+    (is (= 200 (:status vastaus)))
+    (sisaltaa-perustiedot (:body vastaus))))
 
 (deftest hae-toteumat-test-reitillinen-onnistuu
   (let [alkuaika "2015-01-19T00:00:00+03"
         loppuaika "2015-01-19T21:00:00+03"
-        vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))]
-    (is (= 200 (:status @vastaus)))
-    (sisaltaa-perustiedot (:body @vastaus))))
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti)]
+    (is (= 200 (:status vastaus)))
+    (sisaltaa-perustiedot (:body vastaus))))
+
+(deftest hae-toteumat-test-reitillinen-onnistuu-2
+  (let [alkuaika-paiva-sitten (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* 1 86400 1000))))
+        loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika-paiva-sitten "/" loppuaika)] kayttaja-analytiikka portti)]
+    (is (= 200 (:status vastaus)))
+    (sisaltaa-perustiedot (:body vastaus))))
 
 (deftest hae-toteumat-test-ei-kayttoikeutta
   (let [kuukausi-sitten (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* 30 86400 1000))))
@@ -96,10 +104,9 @@
 (deftest hae-toteumat-test-vaara-paivamaaraformaatti
   (let [alkuaika "2005-01-01T00:00:00"
         loppuaika "2005-12-31T21:00:00+03"
-        vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))]
-    (is (= 400 (:status @vastaus)))
-    (is (str/includes? (:body @vastaus) "Alkuaika väärässä muodossa"))))
-
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti)]
+    (is (= 400 (:status vastaus)))
+    (is (str/includes? (:body vastaus) "Alkuaika väärässä muodossa"))))
 
 (deftest hae-toteumat-test-poistettu-onnistuu
   (let [;; Merkitään toteuma poistetuksi
@@ -110,14 +117,14 @@
         paivan-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/nyt)))
         paivan-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/nyt)))
         
-        poistetut (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paivan-alussa "/" paivan-lopussa)] kayttaja-analytiikka portti))
+        poistetut (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paivan-alussa "/" paivan-lopussa)] kayttaja-analytiikka portti)
         _ (u (str "UPDATE toteuma SET poistettu = false, muokattu = null WHERE id = 9;"))
         _ (Thread/sleep 3500)
-        poistetut-body (-> (:body @poistetut)
+        poistetut-body (-> (:body poistetut)
                          (json/read-str)
                          (clojure.walk/keywordize-keys))]
-    (is (= 200 (:status @poistetut)))
-    (sisaltaa-perustiedot (:body @poistetut))
+    (is (= 200 (:status poistetut)))
+    (sisaltaa-perustiedot (:body poistetut))
     (is (= true (:poistettu (first (:reittitoteumat poistetut-body)))))))
 
 (deftest materiaalin-maara-muuttuu
@@ -143,8 +150,8 @@
         _ (u (format "UPDATE toteuma_materiaali set muokattu = NOW(), maara=%s where toteuma=9" uusi-maara))
         _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
 
-        muokattu-vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" nyt-paivan-alussa "/" nyt-paivan-lopussa)] kayttaja-analytiikka portti))
-        muokattu-vastaus-body (-> (:body @muokattu-vastaus)
+        muokattu-vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" nyt-paivan-alussa "/" nyt-paivan-lopussa)] kayttaja-analytiikka portti)
+        muokattu-vastaus-body (-> (:body muokattu-vastaus)
                                 (json/read-str)
                                 (clojure.walk/keywordize-keys))
 
@@ -157,8 +164,8 @@
         _ (u (str "UPDATE toteuma_materiaali set muokattu = NOW(), maara=25 where toteuma=9"))
         _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
 
-        vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" nyt-paivan-alussa "/" nyt-paivan-lopussa)] kayttaja-analytiikka portti))
-        vastaus-body (-> (:body @vastaus)
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" nyt-paivan-alussa "/" nyt-paivan-lopussa)] kayttaja-analytiikka portti)
+        vastaus-body (-> (:body vastaus)
                        (json/read-str)
                        (clojure.walk/keywordize-keys))
 

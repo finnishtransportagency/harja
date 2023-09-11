@@ -10,8 +10,18 @@ networks:
 
 services:
   harjadb:
-    # Hae image GitHubin container registrystä
-    image: ghcr.io/finnishtransportagency/harja_harjadb:latest
+    # Hae latest image GitHubin container registrystä
+    #image: ghcr.io/finnishtransportagency/harja_harjadb:latest
+
+    # Alla kokeiluja varten Harjan Container registrystä löytyvät spesifit versiot testikannasta
+    # Tämä on nykyisellään normaalisti toimiva versio
+    #image: ghcr.io/finnishtransportagency/harja_harjadb:12-3.1
+    # TODO: AWS:ssä on ajossa Postgres 13. Harja on saatava toimimaan vähintään tällä versiolla.
+    image: ghcr.io/finnishtransportagency/harja_harjadb:13-3.1
+    # TODO: Postgres 13, mutta uudemmalla PostGIS 3.4 versiolla (aiempi versio 3.1)
+    # https://docs.aws.amazon.com/AmazonRDS/latest/AuroraPostgreSQLReleaseNotes/AuroraPostgreSQL.Extensions.html#AuroraPostgreSQL.Extensions.13
+    #image: ghcr.io/finnishtransportagency/harja_harjadb:13-3.4
+
     container_name: harjadb
     networks:
       - harja_net
@@ -19,8 +29,9 @@ services:
       HARJA_TIETOKANTA_PORTTI: 5432
     ports:
       - "127.0.0.1:5432:5432"
+    # Huom: Mountissa viitataan Harja-repon juuressa olevaan tietokanta-hakemistoon, jossa migraatiotiedostot ovat.
     volumes:
-      - ../tietokanta:/var/lib/postgresql/harja/tietokanta
+      - ../../tietokanta:/var/lib/postgresql/harja/tietokanta
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "harja", "-d", "harja"]
       interval: 10s

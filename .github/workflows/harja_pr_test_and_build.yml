@@ -37,7 +37,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup clojure environment
         uses: ./.github/actions/setup-clojure-env
@@ -64,7 +64,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen ja Harjan buildaamiseen
       - name: Start test database
@@ -74,37 +74,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup clojure environment
-        uses: ./.github/actions/setup-clojure-env
-
-      #- name: Run unit tests
-      #  run: lein test2junit
-
-      # Buildataan Harjan osat erillisinä palasina
-      - name: Build back-end
-        run: |
-          echo "Building backend"
-          lein do compile
-      - name: Build front-end
-        run: |
-          echo "Building frontend"
-          lein do less once, with-profile prod-cljs compile-prod
-
-      # TODO: Disabloitu toistaiseksi buildin testailun nopeuttamiseksi.
-      #- name: Build laadunseuranta
-      #  run: |
-      #    echo "Building laadunseuranta"
-      #    lein do with-profile laadunseuranta-prod compile-laadunseuranta-prod
-      #- name: Build documentation
-      #  run: |
-      #    echo "Building documentation"
-      #    lein codox
-
-      # Buildataan lopuksi uberjar
-      - name: Build uberjar
-        run: |
-          echo "Building uberjar"
-          lein uberjar
+       # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
+      - name: Build Harja Uberjar
+        uses: ./.github/actions/build-harja-app
+        with:
+          build-laadunseuranta: 'false'
 
       - name: Name build artifact using the branch name
         id: artifact-name
@@ -147,21 +121,13 @@ jobs:
   #       Halutut status checkit valikoidaan Harjan Github-repon asetuksista.
   #       Jokainen jobi ajetaan omassa VM:ssä, joten perusasiat ja tarvittaessa testitietokannan käynnistys action
   #       pitää ottaa mukaan jobiin.
-  #
-  # Tässä ei tarvitse käyttää mitään CircleCI:ssä käytettyjä docker imageita. Tavoitellaan yksinkertaisuutta ja suoraviivaisuutta.
-  #
-  # Tarvittavat depsut, esim. phantom voi asentaa suoraan tässä jobissa.
-  # Halutessaan testien depsujen asentelusta voi tehdä erillisen composite-actionin ja tallentaa sen .github/actions kansioon
-  # Katso esimerkiksi mitä "Setup Clojure environment" action tekee: Se asentaa java-11 ja clojure-työkalut.
-  #
-  basic-tests:
-    name: "Perustestit"
+  back-tests:
+    name: "Backend-testit"
     runs-on: ubuntu-latest
-    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    env:
+      TZ: "EET"
     permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
       contents: read
-      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
       packages: read
 
     steps:
@@ -179,11 +145,94 @@ jobs:
       - name: Setup clojure environment
         uses: ./.github/actions/setup-clojure-env
 
-      # TODO: Aja halutut testit
-      #- name: Run unit tests jne.
-      #  run: lein test2junit
+      - name: Run backend tests
+        run: lein test
 
-      #
+  basic-tests:
+    name: "Frontti- ja hitaat testit"
+    runs-on: ubuntu-latest
+    env:
+      TZ: "EET"
+    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    permissions:
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
+      packages: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
+      - name: Start test database
+        uses: ./.github/actions/start-test-db
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup clojure environment
+        uses: ./.github/actions/setup-clojure-env
+
+      - name: run slow tests
+        run: lein test :hidas
+
+      - name: Install PhantomJS
+        env:
+          PHANTOMJS_VERSIO: 2.1.1
+        run: |
+          cd /tmp
+          wget -O /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2
+          if [ "$(sha512sum /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 )" != "039b62ecf2fa4196357e129727871a53b046948e17b21900c78a1af4d0b523e41b9d4137e7454b0a638333d7fc27e65d14f4af8c665e982a504c12f828525419  /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2" ]; then exit 1; fi;
+          tar -xf /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 -C /tmp/
+          mv -f /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64/bin/phantomjs /usr/local/bin/phantomjs
+          rm /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2
+          cd -
+
+      - name: Front end tests
+        run: |
+          lein with-profile +test doo phantom test once
+
+  # integraatiotestit vaativat ActiveMQ-brokerin, siksi oma jobi
+  integration-tests:
+    name: "integraatiotestit"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TZ: "EET"
+      HARJA_ITMF_BROKER_PORT: 61616
+      HARJA_ITMF_BROKER_AI_PORT: 8161
+
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
+      - name: Start test database
+        uses: ./.github/actions/start-test-db
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Käynnistetään ActiveMQ JMS-testejä varten
+      - name: Start ActiveMQ
+        uses: ./.github/actions/start-activemq
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup clojure environment
+        uses: ./.github/actions/setup-clojure-env
+
+      - name: Run integration tests
+        run: lein test :integraatio
 
   e2e-tests:
     name: "e2e-testit (Cypress)"
@@ -202,7 +251,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -238,7 +287,7 @@ jobs:
           HARJA_TIETOKANTA_PORTTI: 5432
           HARJA_SALLI_OLETUSKAYTTAJA: "true"
           HARJA_DEV_YMPARISTO: "false"
-          HARJA_ASETUKSET_OVERRIDE_TIEDOSTO: ".github/e2e-testit_asetukset.edn"
+          HARJA_ASETUKSET_OVERRIDE_TIEDOSTO: ".github/workflows/config/e2e-testit_asetukset.edn"
         run: |
           echo "Salli harjan oletuskäyttäjä? ${HARJA_SALLI_OLETUSKAYTTAJA}"
           echo "Harja dev ympäristö? ${HARJA_DEV_YMPARISTO}"
@@ -250,7 +299,7 @@ jobs:
           mkdir -p ../.harja
           echo aaaa > ../.harja/anti-csrf-token
           touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,yha-api-key,labyrintti-salasana,velho-salasana,velho-varuste-salasana,api-sahkoposti-salasana,digiroad-api-key}
-          touch ../.harja/harjalle_ajorata_kaista_puoli_20210825.csv
+          touch ../.harja/harjalle_ajorata_kaista_puoli_20230519.csv
           
           echo "Käynnistetään Harja..."
           java -cp :harja-0.0.1-SNAPSHOT-standalone.jar harja.palvelin.main > harja.out 2>&1 &

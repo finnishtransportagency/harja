@@ -33,6 +33,7 @@
   ([db kohde-id tila virheet]
     (q-paikkaus/paivita-paikkauskohteen-tila db {:harja.domain.paikkaus/id kohde-id
                                                  :harja.domain.paikkaus/yhalahetyksen-tila (name tila)
+                                                 :harja.domain.paikkaus/yhalahetyksen-aika (pvm/nyt)
                                                  :harja.domain.paikkaus/virhe (when virheet
                                                                                 (mapv #(:virheviesti %) virheet))})))
 
