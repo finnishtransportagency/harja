@@ -122,7 +122,7 @@
         (laadunseuranta-palvelu/poista-suorasanktio db kayttaja {:id (::valikatselmus/sanktio-id paatos) :urakka-id urakka-id})
         (and
           (= (::valikatselmus/tyyppi paatos) "lupausbonus")
-          (not (nil? (:erilliskustannus_id paatos))))
+          (not (nil? (::valikatselmus/erilliskustannus-id paatos))))
         (toteumat-palvelu/poista-erilliskustannus db kayttaja
           {:id (::valikatselmus/erilliskustannus-id paatos) :urakka-id urakka-id})))
     (valikatselmus-q/poista-paatokset db urakka-id hoitokauden-alkuvuosi (:id kayttaja))))
