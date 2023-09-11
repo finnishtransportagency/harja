@@ -172,7 +172,7 @@
                                   y x))
                         (first versiomuutokset)
                         versiomuutokset)
-             muokattu (-> muokattu :uudet :muokattu)
+             muokattu (or (-> muokattu :uudet :muokattu) (-> muokattu :vanhat :muokattu))
              muokattu (when muokattu
                         ;; En saanut muunnettua päivämääräksi oikein tätä #object[String] muuttujaa ilman että harja kaatuu, apua? 
                         (str (first (str/split muokattu "T")) " " (first (str/split (second (str/split muokattu "T")) "."))))
@@ -368,7 +368,7 @@
                                   y x))
                         (first versiomuutokset)
                         versiomuutokset)
-             muokattu (-> muokattu :uudet :muokattu)
+             muokattu (or (-> muokattu :uudet :muokattu) (-> muokattu :vanhat :muokattu))
              muokattu (when muokattu
                         (str (first (str/split muokattu "T")) " " (first (str/split (second (str/split muokattu "T")) "."))))
              toiminto (cond
