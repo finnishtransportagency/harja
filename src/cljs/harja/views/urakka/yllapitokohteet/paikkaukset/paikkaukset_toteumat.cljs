@@ -134,10 +134,7 @@
                          (yleiset/tietoja {:class "modal-ilmoita-virheesta-tiedot"}
                                           "Kohde" nimi
                                           "Työmenetelmä" tyomenetelma-nimi
-                                          "Rivejä" rivien-lkm)
-                         ;"Pinta-ala yht. " (str pinta-ala "m\u00B2")
-                         ;"Massamenekki " (str massamenekki "kg/m\u00B2")
-                         ])}
+                                          "Rivejä" rivien-lkm)])}
         varmista-kayttajalta/modal-muut-vastaanottajat
         (merge varmista-kayttajalta/modal-saateviesti {:otsikko "Lisätietoa virheestä"
                                                        :pakollinen? true
@@ -351,7 +348,8 @@
                   (::paikkaus/pinta-ala %)
                   (:suirun-pinta-ala %))
           :nimi :suirun-pinta-ala}
-         {:otsikko "kg/m²"
+         {:otsikko "kg/m²" :tyyppi :positiivinen-numero
+          :fmt #(fmt/desimaaliluku-opt % 2)
           :leveys 5 :tasaa :oikea
           :nimi ::paikkaus/massamenekki}
          {:otsikko "t" :fmt #(fmt/desimaaliluku-opt % 3)
@@ -422,6 +420,7 @@
           tyomenetelma ::paikkaus/tyomenetelma
           ilmoitettu-virhe ::paikkaus/ilmoitettu-virhe
           yha-lahetyksen-tila ::paikkaus/yhalahetyksen-tila
+          yha-lahetyksen-aika ::paikkaus/yhalahetyksen-aika
           paikkauskohteen-tila ::paikkaus/paikkauskohteen-tila
           yksikko ::paikkaus/yksikko :as paikkauskohde}]
       (let [urapaikkaus? (urem? tyomenetelma tyomenetelmat)
@@ -544,7 +543,7 @@
                 ;; Täsmätään vihjetekstin sisennys napin tekstiin
                 (when (and (not tarkistettu) tilaaja?) {:style {:margin-left "34px"}})
                 (cond
-                  (= yha-lahetyksen-tila "lahetetty") "Lähetetty YHAan"
+                  (some? yha-lahetyksen-tila) (lahetyksen-tilan-teksti yha-lahetyksen-tila)
 
                   (true? tarkistettu?) "Tarkistettu"
 
@@ -553,7 +552,8 @@
                     (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? (paikkaus/tyomenetelma-id->lyhenne tyomenetelma tyomenetelmat))) "Lähetys YHAan"
 
                   :else
-                  "Ko. toimenpidettä ei lähetetä YHA:an")]])]])))))
+                  "Ko. toimenpidettä ei lähetetä YHA:an")]
+               [:div.small-text.harmaa (pvm/pvm-aika-opt yha-lahetyksen-aika)]])]])))))
 
 
 (defn paikkaukset [e! {:keys [paikkaukset-grid

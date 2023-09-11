@@ -1,6 +1,9 @@
 {
   "dependencies": {
-    "cypress": "^9.1.1",
+    "cypress": "10.2.0",
     "transit-js": "^0.8.867"
+  },
+  "engines" : {
+    "node" : "^18.0.0"
   }
 }

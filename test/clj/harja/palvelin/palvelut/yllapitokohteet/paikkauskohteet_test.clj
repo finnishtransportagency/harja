@@ -355,6 +355,11 @@
         laskettu4 (tieverkko-kyselyt/laske-tien-osien-pituudet keksityt-osat keksitty-kohde4)
         keksitty-kohde41 {:tie 1 :aosa 4 :aet 100 :losa 1 :let 0}
         laskettu41 (tieverkko-kyselyt/laske-tien-osien-pituudet keksityt-osat keksitty-kohde41)
+
+        keksitty-kohde5 {:tie 1 :aosa 2 :aet 0 :losa 1 :let 0}
+        laskettu5 (tieverkko-kyselyt/laske-tien-osien-pituudet keksityt-osat keksitty-kohde5)
+        keksitty-kohde51 {:tie 1 :aosa 2 :aet 50 :losa 1 :let 60}
+        laskettu51 (tieverkko-kyselyt/laske-tien-osien-pituudet keksityt-osat keksitty-kohde51)
         ]
     ;; Perus case, otetaan osasta 1 loput ja osan 2 alku
     (is (= 110 (:pituus laskettu1)))
@@ -368,9 +373,12 @@
     (is (= 60 (:pituus laskettu3)))
 
     ;; Erikoistapaus, jossa tierekisterin osat merkataan eri järjestyksessä. Eli loppuosa on pienempi, kuin alkuosa
-    ;; Nyt tuloksena pitäisi olla nil
     (is (= 110 (:pituus laskettu4)))
-    (is (= 400 (:pituus laskettu41)))))
+    (is (= 400 (:pituus laskettu41)))
+
+    ;; Erikoistapaus, jossa tierekisterin osat merkataan eri järjestyksessä. Eli loppuosa on pienempi, kuin alkuosa
+    (is (= 100 (:pituus laskettu5)))
+    (is (= 90 (:pituus laskettu51)))))
 
 ;; Testataan käsin lisätyn paikkauksen toimintaa
 (defn testipaikkaus [paikkauskohde-id urakka-id kayttaja-id]

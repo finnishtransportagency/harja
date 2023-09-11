@@ -13,7 +13,6 @@
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
             [specql.op :as op]
-            [taoensso.timbre :as log]
             [clojure.set :as set]))
 
 (defn hae-toimenpiteen-hinnat [db toimenpide-id]

@@ -300,6 +300,11 @@
 
 (defonce ^:private testikannan-luonti-lukko (Object.))
 
+(defn postgresql-versio-num []
+  (let [postgresql-versio (ffirst (q "SELECT version()"))]
+    (some->
+      (second (re-find #"PostgreSQL (\d+.\d+)" postgresql-versio))
+      (Float/parseFloat))))
 
 (def testikanta-yritysten-lkm 15)
 (defn pudota-ja-luo-testitietokanta-templatesta
@@ -312,7 +317,14 @@
       (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) testikanta-yritysten-lkm true)
       (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) testikanta-yritysten-lkm true)
       (yrita-querya (fn [n]
-                      (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
+                      (let [postgresql-versio (or (postgresql-versio-num) 0)
+                            versio-13-tai-isompi? (>= postgresql-versio 13)]
+
+                        ;; Huom: "with (force)" toimii PostgreSQl 13 alkaen.
+                        ;; FIXME: Poista versio-check, kun PostgreSQL 13 on otettu kaikkialla käyttöön.
+                        (if versio-13-tai-isompi?
+                          (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest with (force)")
+                          (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")))
                       (async/<!! (async/timeout (* n 1000)))
                       (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
                     testikanta-yritysten-lkm

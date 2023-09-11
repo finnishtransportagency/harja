@@ -3,6 +3,7 @@
             [harja.kyselyt.paikkaus :as q-paikkaus]
             [harja.domain.paikkaus :as paikkaus]
             [harja.tyokalut.json-validointi :as json]
+            [harja.tyokalut.yleiset :as yleiset]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
             [cheshire.core :as cheshire]
@@ -32,15 +33,18 @@
                                                       (dissoc :materiaali-id)
                                                       (rename-keys {:kuulamylly-arvo :km-arvo})
                                                       )})
-        kasittele-paikkaus (fn [p] {:paikkaus (-> p
-                                                  (dissoc :sijainti :urakka-id :paikkauskohde-id :ulkoinen-id :lahde)
-                                                  (rename-keys {:tierekisteriosoite :sijainti})
-                                                  (assoc :alkuaika (pvm/aika-yha-format (:alkuaika p)))
-                                                  (assoc :loppuaika (pvm/aika-yha-format (:loppuaika p)))
-                                                  (conj {:kivi-ja-sideaineet (mapv kasittele-materiaali (:materiaalit p))})
-                                                  (dissoc :materiaalit))})
+        kasittele-paikkaus (fn [p]
+                             {:paikkaus (-> p
+                                          (dissoc :sijainti :urakka-id :paikkauskohde-id :ulkoinen-id :lahde)
+                                          (rename-keys {:tierekisteriosoite :sijainti})
+                                          (assoc :alkuaika (pvm/aika-yha-format (:alkuaika p)))
+                                          (assoc :loppuaika (pvm/aika-yha-format (:loppuaika p)))
+                                          (assoc :massamenekki (when (number? (:massamenekki p))
+                                                                 (yleiset/round2 2 (:massamenekki p))))
+                                          (conj {:kivi-ja-sideaineet (mapv kasittele-materiaali (:materiaalit p))})
+                                          (dissoc :materiaalit))})
         kohteet {:paikkauskohteet [{:paikkauskohde (-> kohde
-                                                       (dissoc :ulkoinen-id :yhalahetyksen-tila :virhe)
+                                                       (dissoc :ulkoinen-id :yhalahetyksen-tila :yhalahetyksen-aika :virhe)
                                                        (rename-keys {:id :harja-id})
                                                        (conj {:paikkaukset (mapv kasittele-paikkaus paikkaukset)}))}]}
         sanomasisalto (merge urakka kohteet)]

@@ -1,6 +1,6 @@
 (ns harja.palvelin.palvelut.tyomaapaivakirja-kommentit-test
   (:require [clojure.test :refer :all]
-            [harja [testi :refer :all]]
+            [harja.testi :refer :all]
             [harja.pvm :as pvm]
             [cheshire.core :as cheshire]
             [com.stuartsierra.component :as component]
