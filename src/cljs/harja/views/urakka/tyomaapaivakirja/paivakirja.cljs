@@ -173,9 +173,7 @@
                         (first versiomuutokset)
                         versiomuutokset)
              muokattu (or (-> muokattu :uudet :muokattu) (-> muokattu :vanhat :muokattu))
-             muokattu (when muokattu
-                        ;; En saanut muunnettua päivämääräksi oikein tätä #object[String] muuttujaa ilman että harja kaatuu, apua? 
-                        (str (first (str/split muokattu "T")) " " (first (str/split (second (str/split muokattu "T")) "."))))
+             muokattu (pvm/js-date->pvm muokattu)
              toiminto (cond
                         (and lisattiin? poistettiin?)
                         (str "Muutettu " infot)
@@ -256,10 +254,10 @@
 
                                  :else "Ei tietoja"))))]
          [:div.muutoshistoria-grid
-          [:span.muutos-tiedot
-           [:span.klikattava {:on-click #(e! (tiedot/->ValitseHistoriarivi indeksi))} (if kentta-auki?
-                                                                                        (ikonit/harja-icon-navigation-up)
-                                                                                        (ikonit/harja-icon-navigation-down))]
+          [:span.muutos-tiedot.klikattava {:on-click #(e! (tiedot/->ValitseHistoriarivi indeksi))}
+           [:span  (if kentta-auki?
+                     [:img.muutos-dialog-icon {:alt "Expander" :src "images/expander-down.svg"}]
+                     [:img.navigation-ympyrassa.muutos-dialog-icon.klikattava {:alt "Expander" :src "images/expander.svg"}])]
            [:span.muutos-pvm muokattu]
            [:span.muutos-toiminto toiminto]]
 
@@ -333,70 +331,94 @@
                           (set! (.-value kommentti-element) "")
                           (.add piilota-element "piilota-kentta")
                           (.remove nayta-element "piilota-kentta")))
-        
-        kommentit (:kommentit valittu-rivi)]
 
-    ;; Käyttäjien kommentit
+        kommentit (:kommentit valittu-rivi)
+        ;; Muunna luotu pvm js ajaksi
+        formatoi-kommenttien-pvm (map (fn [asd]
+                                        (assoc asd :luotu (js/Date. (:luotu asd))))
+                                   kommentit)
+
+        kommentit (map list formatoi-kommenttien-pvm)
+        ;; Tee sama muutoshistorialle
+        muutoshistoria-kommentit (map (fn [muutos]
+                                        (map (fn [x]
+                                               (let [pvm (or (-> x :uudet :muokattu) (-> x :vanhat :muokattu))
+                                                     pvm (js/Date. pvm)]
+                                                 (assoc x :luotu pvm)))
+                                          muutos))
+                                   muutoshistoria)
+        ;; Sortataan kaikki kommentit pvm mukaan
+        sortatut-kommentit-pvm-mukaan (sort-by (fn [x] (-> x first :luotu .getTime))
+                                        (concat kommentit muutoshistoria-kommentit))]
+
+    ;; Käyttäjien sekä muutoshistoria kommentit pvm mukaan
     [:div#Kommentit.row.filtterit.kommentit-valistys
      [:h2 "Kommentit"]
-     (for [{:keys [id luotu kommentti etunimi sukunimi luoja]} kommentit]
-       ^{:key id}
-       [:span
-        [:div.alarivi-tiedot
-         [:span (str (pvm/pvm-aika luotu))]
-         [:span (str etunimi " " sukunimi)]]
+     (for* [versiomuutokset sortatut-kommentit-pvm-mukaan]
+       (if (some #(or  (contains? % :uudet) (contains? % :vanhat)) versiomuutokset)
+         ;; Rivi on muutoshistoria kommentti
+         (let [muutos-indeksi (first (keep-indexed (fn [idx subseq]
+                                                     (when (= subseq (map #(dissoc % :luotu) versiomuutokset)) idx))
+                                       (reverse muutoshistoria)))
+               lisattiin? (some #(= (:toiminto %) "lisatty") versiomuutokset)
+               poistettiin? (some #(= (:toiminto %) "poistettu") versiomuutokset)
+               muutettiin? (some #(= (:toiminto %) "muutettu") versiomuutokset)
+               infot (str/join ", " (distinct (map :info versiomuutokset)))
+               muokattu (reduce (fn [x y]
+                                  (if (>
+                                       (get-in y [:uudet :versio])
+                                       (get-in x [:uudet :versio]))
+                                    y x))
+                          (first versiomuutokset)
+                          versiomuutokset)
+               muokattu (or (-> muokattu :uudet :muokattu) (-> muokattu :vanhat :muokattu))
+               muokattu (pvm/js-date->pvm muokattu)
+               toiminto (cond
+                          (and lisattiin? poistettiin?)
+                          (str "Muutettu " infot)
+                          (and (not poistettiin?) (not lisattiin?) muutettiin?)
+                          (str "Muutettu " infot)
+                          (and poistettiin? (not lisattiin?) (not muutettiin?))
+                          (str "Poistettu " infot)
+                          (and lisattiin? (not poistettiin?) (not muutettiin?))
+                          (str "Lisätty " infot)
+                          :else (str "Muutettu " infot))]
+           [:span
+            [:div.alarivi-tiedot
+             [:span muokattu]
+             [:span.muutos-info "Jälkikäteismerkintä urakoitsijajärjestelmästä"]]
+            [:div.kommentti.muutos
+             [:h1.tieto-rivi (str "Työmaapäiväkirja päivitetty: " toiminto)]
+             [:a.klikattava.info-rivi
+              {:on-click #(do
+                            ;; Käyttäjä klikkasi kommentin "Näytä muutoshistoria" nappia
+                            ;; -> Avataan klikattu muutoshistoria gridi modalissa ja scrollataan käyttäjä sinne
+                            (e! (tiedot/->MuutoshistoriaAuki muutos-indeksi))
+                            (js/setTimeout (fn []
+                                             ;; Käytetään muutoshistorian modalin(child element) siirrintä
+                                             (siirrin/siirry-lapsi-elementissa (str "muutoshistoria-" muutos-indeksi) true "muutoshistoria-dialog"))
+                              200))}
+              "Näytä muutoshistoria"]]])
+         ;; Rivi on käyttäjän kommentti
+         (let [{id :id
+                luotu :luotu
+                kommentti :kommentti
+                etunimi :etunimi
+                sukunimi :sukunimi
+                luoja :luoja} (first versiomuutokset)]
+           [:span
+            [:div.alarivi-tiedot
+             [:span (str (pvm/js-date->pvm luotu))]
+             [:span (str etunimi " " sukunimi)]]
 
-        [:div.kommentti
-         [:h1.tieto-rivi kommentti]
-         [:span.klikattava.kommentti-poista
-          {:on-click #(do
-                        (e! (tiedot/->PoistaKommentti
-                              {:id id :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi) :luoja luoja}))
-                        (tiedot/scrollaa-kommentteihin))}
-
-          (ikonit/action-delete)]]])
-
-     (for* [[indeksi versiomuutokset] (map-indexed vector (reverse muutoshistoria))]
-       (let [lisattiin? (some #(= (:toiminto %) "lisatty") versiomuutokset)
-             poistettiin? (some #(= (:toiminto %) "poistettu") versiomuutokset)
-             muutettiin? (some #(= (:toiminto %) "muutettu") versiomuutokset)
-             infot (str/join ", " (distinct (map :info versiomuutokset)))
-             muokattu (reduce (fn [x y]
-                                (if (>
-                                     (get-in y [:uudet :versio])
-                                     (get-in x [:uudet :versio]))
-                                  y x))
-                        (first versiomuutokset)
-                        versiomuutokset)
-             muokattu (or (-> muokattu :uudet :muokattu) (-> muokattu :vanhat :muokattu))
-             muokattu (when muokattu
-                        (str (first (str/split muokattu "T")) " " (first (str/split (second (str/split muokattu "T")) "."))))
-             toiminto (cond
-                        (and lisattiin? poistettiin?)
-                        (str "Muutettu " infot)
-                        (and (not poistettiin?) (not lisattiin?) muutettiin?)
-                        (str "Muutettu " infot)
-                        (and poistettiin? (not lisattiin?) (not muutettiin?))
-                        (str "Poistettu " infot)
-                        (and lisattiin? (not poistettiin?) (not muutettiin?))
-                        (str "Lisätty " infot)
-                        :else (str "Muutettu " infot))]
-         [:span
-          [:div.alarivi-tiedot
-           [:span muokattu]
-           [:span.muutos-info "Jälkikäteismerkintä urakoitsijajärjestelmästä"]]
-          [:div.kommentti.muutos
-           [:h1.tieto-rivi (str "Työmaapäiväkirja päivitetty: " toiminto)]
-           [:a.klikattava.info-rivi
-            {:on-click #(do
-                          ;; Käyttäjä klikkasi kommentin "Näytä muutoshistoria" nappia
-                          ;; -> Avataan klikattu muutoshistoria gridi modalissa ja scrollataan käyttäjä sinne
-                          (e! (tiedot/->MuutoshistoriaAuki indeksi))
-                          (js/setTimeout (fn [] 
-                                           ;; Käytetään muutoshistorian modalin(child element) siirrintä
-                                           (siirrin/siirry-lapsi-elementissa (str "muutoshistoria-" indeksi) true "muutoshistoria-dialog")) 
-                            200))}
-            "Näytä muutoshistoria"]]]))
+            [:div.kommentti
+             [:h1.tieto-rivi kommentti]
+             [:span.klikattava.kommentti-poista
+              {:on-click #(do
+                            (e! (tiedot/->PoistaKommentti
+                                  {:id id :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi) :luoja luoja}))
+                            (tiedot/scrollaa-kommentteihin))}
+              (ikonit/action-delete)]]])))
 
      [:div#kommentti-lisaa
       [:a.klikattava {:on-click #(do
