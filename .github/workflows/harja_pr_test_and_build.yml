@@ -10,9 +10,14 @@ concurrency:
 on:
   # Manuaalisen käynnistyksen asetukset
   workflow_dispatch:
-  # Jobi ajetaan automaattisesti jokaiselle PR:lle, jonka base branch on develop
+  # Workflow ajetaan automaattisesti jokaiselle PR:lle, jonka base branch on develop
   pull_request:
     branches: [ develop ]
+
+  # Workflow ajetaan aina kun develop-branchiin tulee muutos (esim. PR mergetetään)
+  push:
+    branches:
+      - develop
 
 # Tässä voi määritellä yhteiset permissionit kaikille jobeille workflowissa tarvittaessa
 # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
@@ -75,10 +80,19 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
        # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
-      - name: Build Harja Uberjar
+
+      # Huom: Build ajetaan ilman laadunseurantaa ja dokumentaatiota kaikille muille brancheille
+      #       Develop-branchille ajetaan aina täysi build.
+      - name: Build Harja Uberjar (Kevyt)
+        if: ${{ github.ref != 'refs/heads/develop' }}
         uses: ./.github/actions/build-harja-app
         with:
           build-laadunseuranta: 'false'
+          build-documentation: 'false'
+
+      - name: Build Harja Uberjar (Täysi build)
+        if: ${{ github.ref == 'refs/heads/develop' }}
+        uses: ./.github/actions/build-harja-app
 
       - name: Name build artifact using the branch name
         id: artifact-name
