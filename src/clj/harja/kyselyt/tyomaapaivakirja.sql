@@ -98,7 +98,7 @@ SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
   ARRAY['muokattu', 'versio'],          -- sarakkeet mitä ei verrata
   :tyomaapaivakirja_id::INTEGER,        -- tyomaapaivakirja_id
   :urakka_id::INTEGER,                  -- urakka_id
-  NULL,                                 -- NULL tai sarake joka täytyy täsmätä verratessa
+  'aseman_tunniste',                    -- NULL tai sarake joka täytyy täsmätä verratessa
   'sääasematietoja',                    -- näytetään UIssa esim 'Lisätty x', 'Poistettu x'
   NULL                                  -- sarakkeet mitä ei verrata join konditiossa
 ) WHERE toiminto IN ('muutettu', 'poistettu', 'lisatty');
