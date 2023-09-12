@@ -15,7 +15,6 @@
     "tyomaapaivakirja": {
         "tunniste": {
             "id": "__ULKOINENID__",
-            "versio": 1,
             "paivamaara": "__PAIVAMAARA__"
         },
         "saatiedot": [
