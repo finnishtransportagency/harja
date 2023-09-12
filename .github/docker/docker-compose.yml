@@ -13,12 +13,10 @@ services:
     # Hae latest image GitHubin container registrystä
     image: ghcr.io/finnishtransportagency/harja_harjadb:latest
 
-    # Alla kokeiluja varten Harjan Container registrystä löytyvät spesifit versiot testikannasta
-    #image: ghcr.io/finnishtransportagency/harja_harjadb:12-3.1
+    # Alla vanhempia versioita
+    # https://github.com/finnishtransportagency/harja/pkgs/container/harja_harjadb/versions
     #image: ghcr.io/finnishtransportagency/harja_harjadb:13-3.1
-    # TODO: Postgres 13, mutta uudemmalla PostGIS 3.4 versiolla (aiempi versio 3.1)
-    # https://docs.aws.amazon.com/AmazonRDS/latest/AuroraPostgreSQLReleaseNotes/AuroraPostgreSQL.Extensions.html#AuroraPostgreSQL.Extensions.13
-    #image: ghcr.io/finnishtransportagency/harja_harjadb:13-3.4
+    #image: ghcr.io/finnishtransportagency/harja_harjadb:12-3.1
 
     container_name: harjadb
     networks:

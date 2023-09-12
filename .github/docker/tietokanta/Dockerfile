@@ -12,20 +12,47 @@
 # Käytetään pohjana postgresql 13 ja postgis 3.1
 # Käyttöjärjestelmänä on debian:bullseye (11)
 # https://registry.hub.docker.com/r/postgis/postgis/
-FROM postgis/postgis:13-3.1
+
+FROM postgres:13.12-bullseye
 
 # Yhdistä image harjan repositoryyn
-LABEL org.opencontainers.image.source https://github.com/finnishtransportagency/harja
+LABEL org.opencontainers.image.source https://github.com/finnishtransportagency/harja \
+      org.opencontainers.image.description="PostGIS 3.4.0+dfsg-1.pgdg110+1 extension with PostgreSQL 13.12 bullseye"
 
-# Aseta default ympäristömuuttujat
-ENV HARJA_TIETOKANTA_PORTTI=5432
+# --- Asenna riippuvuudet --- #
 
-# Asenna riippuvuudet
-RUN apt-get update && apt-get install -y openjdk-11-jdk wget
+# Asenna PostGIS
+## https://tracker.debian.org/pkg/postgis
+ENV POSTGIS_MAJOR=3
+ENV POSTGIS_VERSION=3.4.0+dfsg-1.pgdg110+1
 
+# Huom: JOS versiota 3.1 tarvitaan, huomioi seuraava asia:
+# En saanut vanhempaa PostGIS 3.1.1-versiota toimimaan oikein.
+# Virheilmoitus tulee siinä kohtaa, kun PostGIS laajennuksen ottaa käyttöön "CREATE EXTENSION postgis" kyselyllä:
+# -> Failed with. ERROR: could not find function "gserialized_gist_sortsupport_2d" in file "/usr/lib/postgresql/13/lib/postgis-3.
+#ENV POSTGIS_VERSION=3.1.1+dfsg-1+deb11u1
+
+
+RUN apt-get update \
+      && apt-cache showpkg postgresql-$PG_MAJOR-postgis-$POSTGIS_MAJOR \
+      && apt-get install -y --no-install-recommends \
+           # ca-certificates: for accessing remote raster files;
+           #   fix: https://github.com/postgis/docker-postgis/issues/307
+           ca-certificates \
+           \
+           postgresql-$PG_MAJOR-postgis-$POSTGIS_MAJOR=$POSTGIS_VERSION \
+           postgresql-$PG_MAJOR-postgis-$POSTGIS_MAJOR-scripts \
+      # Tulosta asennetun paketin tiedot
+      && apt-cache policy postgresql-$PG_MAJOR-postgis-$POSTGIS_MAJOR
+
+## Asenna muut riippuvuudet
+RUN apt-get update && apt-get install -y openjdk-11-jdk wget \
+    && rm -rf /var/lib/apt/lists/*
+
+
+## Asenna maven
 ENV MAVEN_VERSIO=3.9.4
 
-# Asenna maven
 RUN wget "https://downloads.apache.org/maven/maven-3/${MAVEN_VERSIO}/binaries/apache-maven-${MAVEN_VERSIO}-bin.tar.gz"; \
     if [ "$(sha512sum /apache-maven-${MAVEN_VERSIO}-bin.tar.gz )" != "deaa39e16b2cf20f8cd7d232a1306344f04020e1f0fb28d35492606f647a60fe729cc40d3cba33e093a17aed41bd161fe1240556d0f1b80e773abd408686217e  /apache-maven-${MAVEN_VERSIO}-bin.tar.gz" ]; then exit 1; fi; \
     tar xzvf "apache-maven-${MAVEN_VERSIO}-bin.tar.gz"; \
@@ -35,7 +62,12 @@ RUN wget "https://downloads.apache.org/maven/maven-3/${MAVEN_VERSIO}/binaries/ap
 ENV PATH="/apache-maven-${MAVEN_VERSIO}/bin/:${PATH}"
 
 
+# --- Konfiguraatio --- #
+
 ## Postgresql konfiguraatio ##
+
+# Aseta Harjaan liittyvät default ympäristömuuttujat
+ENV HARJA_TIETOKANTA_PORTTI=5432
 
 # Siirretään apuscriptit postgresl käyttäjän kotihakemistoon
 WORKDIR /var/lib/postgresql/
