@@ -51,13 +51,6 @@ BEGIN
   
   -- Loopataan kaikkien versioiden muutokset (korkeintaan viimeiset 30 versiota)
   FOR i IN loop_alku..loop_loppu LOOP
-    -- Generoi konditiot sarakkeille
-    ehdot := array_to_string(
-        ARRAY(
-            SELECT format('uusi.%I <> vanha.%I', col, col)
-            FROM unnest(t_sarakkeet) col
-        ), ' OR '
-    );
    
     -- Jos halutaan sarakkeet vastaamaan johonkin, tehdään se tässä
     IF t_vastaa_sarakkeeseen IS NULL THEN

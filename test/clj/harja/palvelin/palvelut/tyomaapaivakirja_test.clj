@@ -107,11 +107,16 @@
         ;; _________________
         v1-toiminto (-> muutoshistoria first first :toiminto)
         vanha-versio (-> muutoshistoria first first :vanhat :versio)
+        vanha-s-sum (-> muutoshistoria first first :vanhat :sadesumma)
+        uusi-s-sum (-> muutoshistoria first first :uudet :sadesumma)
 
-        ;; Vanhan version pitäisi olla 1 ja toiminto poistettu, sillä sääaseman tunniste vaihdettiin, eli tuli uusi tilalle
-        _ (is (= v1-toiminto "poistettu") "Poistettiin sääasema")
+        ;; Vanhan version pitäisi olla 1 ja toiminto muokattu, päivitys jsonissa näköjään muokataan sadesummaa
+        _ (is (= v1-toiminto "muutettu") "Muutettiin sadesummaa")
+        _ (is (= vanha-s-sum 5) "Vanha sadesummaa 5")
+        _ (is (= uusi-s-sum 3) "Uusi sadesumma 3")
         _ (is (= vanha-versio (dec versio)) (str "Vanha versio " (dec versio)))
-
+        
+        ;; Toinen asema lisättiin
         v2-toiminto (-> muutoshistoria first second :toiminto)
         nyk-versio (-> muutoshistoria first second :uudet :versio)
         nyk-aseman-tunniste (-> muutoshistoria first second :uudet :aseman_tunniste)
