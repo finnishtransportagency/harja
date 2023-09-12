@@ -477,6 +477,14 @@
      [teksti]
      (formatoi iso8601-format (df/parse (df/formatter "yyyy-MM-dd'T'HH:mm:ss'Z'") teksti))))
 
+#?(:cljs
+   (defn js-date->pvm
+     "Palauttaa annetun js daten muodossa dd.MM.yyyy hh:mm"
+     [pvm]
+     (let [pvm (goog.date.DateTime. (js/Date. pvm))]
+       (-> (goog.i18n.DateTimeFormat. "dd.MM.yyyy HH:mm")
+         (.format pvm)))))
+
 (defn iso8601
   "Palauttaa tekstimuodossa päivämäärän, joka sopii esim tietokantahakuihin. Päivämäärä
   palautetaan siis esimerkiksi muodossa 2030-01-15"

@@ -402,10 +402,23 @@
       justify-content: center;
       margin-bottom: @valistys-16;
 
+      &:hover {
+        background-color: @blue-lighter;
+      }
+
+      .muutos-dialog-icon {
+        transform: scale(1.4);
+        margin-right: 4px;
+      }
+
       .klikattava {
-        transform: scale(1.5);
+        transform: scale(1.4);
         width: 15px;
-        margin-right: @valistys-6
+        color: @sininen5;
+        margin-right: 4px;
+        margin-bottom: 2px;
+        position: relative;
+        right: @valistys-4;
       }
 
       :nth-child(2) {
