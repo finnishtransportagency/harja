@@ -650,7 +650,7 @@
       [:div.palstat
        ;; T3 tehtäväryhmää ei näytetä aina - vuoden päätökselle ja lisätöille ei näytetä
        ;; Infolaatikko on käytössä vuoden 2024 loppuun. Sen jälkeen koko koodi voidaan poistaa.
-       (when (and (pvm/ennen? (pvm/nyt) (pvm/->pvm "01.08.2023"))
+       (when (and (pvm/ennen? (pvm/nyt) (pvm/->pvm "01.01.2025"))
                (or (= kulutyyppi :normaali-kulu) (= kulutyyppi :eri-tehtavat)))
          [yleiset/info-laatikko :vahva-ilmoitus
           "Tilaajan rahavaraus (T3) -tehtäväryhmälle ei kirjata enää kuluja tällä lomakkeella. T3-kulut muodustuvat Harjaan automaattisesti samalla, kun hoidon projektipäällikkö kirjaa alihankintasopimusten maksuehtobonuksen."
