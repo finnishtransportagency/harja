@@ -740,12 +740,12 @@
                                          (paiva pvm) "."
                                          (kuukausi pvm) "."
                                          (vuosi pvm)))
-           utc-3 (dateksi
-                   (aikana paivana
-                     (tunti pvm)
-                     (minuutti pvm)
-                     (sekuntti pvm) 0))]
-       utc-3)))
+           paivamaara (dateksi
+                        (aikana paivana
+                          (tunti pvm)
+                          (minuutti pvm)
+                          (sekuntti pvm) 0))]
+       paivamaara)))
 
 (defn paivamaaran-hoitokausi
   "Palauttaa hoitokauden [alku loppu], johon annettu pvm kuuluu"
