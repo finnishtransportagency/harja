@@ -11,7 +11,9 @@ networks:
 services:
   harjadb:
     # Hae latest image GitHubin container registrystä
-    image: ghcr.io/finnishtransportagency/harja_harjadb:latest
+    #image: ghcr.io/finnishtransportagency/harja_harjadb:latest
+    # Kokeilu:
+    image: ghcr.io/finnishtransportagency/harja_harjadb:13.12-3.4
 
     # Alla vanhempia versioita
     # https://github.com/finnishtransportagency/harja/pkgs/container/harja_harjadb/versions
