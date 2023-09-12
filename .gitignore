@@ -71,3 +71,4 @@ lsp/
 .java-version
 .calva/
 test.calva-repl
+cypress/
