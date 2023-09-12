@@ -47,7 +47,12 @@
       (raportit/suorita-raportti p))))
 
 (defrecord HaeTiedot [])
+(defrecord HaeMuutoshistoria [])
+(defrecord HaeMuutoshistoriaOnnistui [vastaus])
+(defrecord HaeMuutoshistoriaEpaonnistui [vastaus])
 (defrecord ValitseRivi [rivi])
+(defrecord MuutoshistoriaAuki [indeksi])
+(defrecord ValitseHistoriarivi [indeksi])
 (defrecord PoistaRiviValinta [])
 (defrecord SelaaPaivakirjoja [suunta])
 (defrecord PaivitaAikavali [uudet])
@@ -119,14 +124,10 @@
                      (str pvm-alku " - " pvm-loppu))]
       (viesti/nayta-toast! (str "Ohitettiin puuttuvat päiväkirjat aikaväliltä: " aikavali) :neutraali-ikoni-keskella 10000))))
 
-(defn siirry-elementin-id [id aika]
-  (siirrin/kohde-elementti-id id)
-  (.setTimeout js/window (fn [] (siirrin/kohde-elementti-id id)) aika))
-
 (defn scrollaa-kommentteihin []
   ;; Kutsutaan kun käyttäjä poistaa/lisää kommentin
   ;; Tehty nopeaksi (10ms)
-  (siirry-elementin-id "Kommentit" 10))
+  (siirrin/siirry-elementin-id "Kommentit" 10))
 
 (defn scrollaa-viimeksi-valitulle-riville [e!]
   ;; Poistetaan rivivalinta ja rullataan käyttäjä viimeksi klikatulle riville
@@ -203,11 +204,25 @@
       (do
         (swap! tila assoc :valittu-rivi rivi)
         (-> app
+          (assoc :historiarivi-auki nil)
+          (assoc :historiatiedot-auki false)
           (assoc :valittu-rivi rivi)
           (assoc :viimeksi-valittu rivi)))
       (do
         (viesti/nayta-toast! "Valitun päivän työmaapäiväkirjaa ei ole vielä lähetetty." :varoitus)
         app)))
+
+  ValitseHistoriarivi
+  (process-event [{indeksi :indeksi} app]
+    (-> app
+      (assoc-in [:historiarivi-auki indeksi] (not (get-in app [:historiarivi-auki indeksi])))))
+
+  MuutoshistoriaAuki
+  (process-event [{indeksi :indeksi} app]
+    (-> app
+      (assoc :historiarivi-auki nil)
+      (assoc-in [:historiarivi-auki indeksi] (not (get-in app [:historiarivi-auki indeksi])))
+      (assoc :historiatiedot-auki (not (get app :historiatiedot-auki)))))
 
   PoistaRiviValinta
   (process-event [_ app]
@@ -234,7 +249,7 @@
                          ;; Else -> Rivejä ei hypätty
                          etsitty-rivi)
           ;; Jos seuraava päiväkirjaa ei ole, ollaan rullattu loppuun
-          etsitty-rivi (if (or 
+          etsitty-rivi (if (or
                              (nil? (:tila etsitty-rivi))
                              (nil? (:tyomaapaivakirja_id etsitty-rivi))) nil etsitty-rivi)]
       ;; Jos rivi olemassa, lataa se ja maalaa listauksessa valituksi
@@ -260,7 +275,9 @@
 
   TallennaKommenttiOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc app :kommentit vastaus))
+    (-> app
+      (assoc :kommentit vastaus)
+      (assoc-in [:valittu-rivi :kommenttien-maara] (inc (get-in app [:valittu-rivi :kommenttien-maara])))))
 
   TallennaKommenttiEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -287,6 +304,26 @@
     (viesti/nayta-toast! (str "HaeKommentitEpaonnistui \n Vastaus: " (pr-str vastaus)) :varoitus)
     app)
 
+  HaeMuutoshistoria
+  (process-event [_ {:keys [valittu-rivi] :as app}]
+    (tuck-apurit/post! app :tyomaapaivakirja-hae-muutoshistoria
+      {:tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
+       :urakka-id (:id @nav/valittu-urakka)
+       :versio (:versio valittu-rivi)}
+      {:onnistui ->HaeMuutoshistoriaOnnistui
+       :epaonnistui ->HaeMuutoshistoriaEpaonnistui})
+    app)
+
+  HaeMuutoshistoriaOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :muutoshistoria vastaus))
+
+  HaeMuutoshistoriaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "HaeMuutoshistoriaEpaonnistui :: vastaus: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "HaeMuutoshistoriaEpaonnistui \n Vastaus: " (pr-str vastaus)) :varoitus)
+    app)
+
   PoistaKommentti
   (process-event [{tiedot :tiedot} app]
     ;; Sallitaan vaan omien kommenttien poisto
@@ -303,7 +340,9 @@
 
   PoistaKommenttiOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc-in app [:valittu-rivi :kommentit] vastaus))
+    (-> app
+      (assoc-in [:valittu-rivi :kommenttien-maara] (dec (get-in app [:valittu-rivi :kommenttien-maara])))
+      (assoc-in [:valittu-rivi :kommentit] vastaus)))
 
   PoistaKommenttiEpaonnistui
   (process-event [{vastaus :vastaus} app]
