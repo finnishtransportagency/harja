@@ -1,0 +1,106 @@
+# Security hardening for GitHub Actions
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
+
+name: 'Build test docker images for GH Actions and development'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      dockerfile:
+        description: 'Valitse Dockerfile'
+        type: choice
+        required: true
+        options:
+          - tietokanta
+          - cypress
+          - activemq
+      update-latest:
+        description: "Päivitetäänkö 'latest'-versio?"
+        type: boolean
+        default: false
+        required: true
+      tag:
+        description: "Julkaistaanko versio esim. '13-3.1'"
+        type: string
+        required: false
+
+
+# Tässä voi määritellä yhteiset permissionit kaikille jobeille workflowissa tarvittaessa
+# README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+#permissions:
+
+
+env:
+  GH_DOCKER_REGISTRY: ghcr.io
+
+jobs:
+  build-and-push-dockerfile:
+    runs-on: ubuntu-latest
+    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    permissions:
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+      # Packages write lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden päivitykseen
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+        # Ota QEMU ja Buildx käyttöön multi-arch buildeja varten
+        # https://github.com/docker/setup-qemu-action
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push tietokanta
+        if: ${{ inputs.dockerfile == 'tietokanta' }}
+        env:
+          TAG: ${{ inputs.tag }}
+          UPDATE_LATEST: ${{ inputs.update-latest }}
+          BUILD_PLATFORM: linux/arm64,linux/amd64
+        run: |
+          echo "Build tietokanta"
+          cd .github/docker/tietokanta
+          
+          build_opts=()
+          push_opts=()
+          
+          if [[ -n "$TAG" ]]; then
+            build_opts+=("--tag" "$TAG")
+            push_opts+=("--tag" "$TAG")
+          fi
+          
+          if [[ "$UPDATE_LATEST" == 'true' ]]; then
+            push_opts+=(--update-latest)
+          fi
+          
+          ./build-image.sh "${build_opts[@]}" -- --platform "${BUILD_PLATFORM}"
+
+      - name: Build and push Cypress
+        if: ${{ inputs.dockerfile == 'cypress' }}
+        run: |
+          echo "Build Cypress"
+          cd .github/docker/cypress
+          
+          ./build-image.sh
+
+      - name: Build and push ActiveMQ
+        if: ${{ inputs.dockerfile == 'activemq' }}
+        run: |
+          echo "Build ActiveMQ"
+          cd .github/docker/activemq
+          
+          ./build-image
