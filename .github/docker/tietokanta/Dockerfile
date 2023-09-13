@@ -1,5 +1,5 @@
 # Ohjeet imagen buildaamiseen ja ajaamiseen:
-# 1. Build: docker build -t harjadb .
+# 1. Build: Lue .github/docker/README.md
 # 2. Run:
 #   Tässä oletetaan, että olet Harjan projektihakemistossa ja haluat mountata harjan tietokanta-hakemiston containeriin.
 #   Tietokanta-hakemisto sisältää pom.xml tiedoston ja migraatiotiedostot, joita tarvitaan tietokannan alustamiseen.
@@ -8,19 +8,29 @@
 # 3. Aja migraatiot ja testidata kantaan:
 #  $ sudo docker exec --user postgres harjadb /bin/bash -c "~/aja-migraatiot.sh"
 #  $ sudo docker exec --user postgres harjadb /bin/bash -c "~/aja-testidata.sh"
+#
+# Muuta materiaalia: https://github.com/postgis/docker-postgis
 
-FROM postgres:13.11-bullseye as builder
+# https://hub.docker.com/_/postgres/tags
+ARG POSTGRES_IMAGE_VERSION=13.11-bullseye
+# https://docs.aws.amazon.com/AmazonRDS/latest/AuroraPostgreSQLReleaseNotes/AuroraPostgreSQL.Extensions.html#AuroraPostgreSQL.Extensions.13
+ARG POSTGIS_VERSION=3.3.2
 
-# Yhdistä image harjan repositoryyn
-LABEL org.opencontainers.image.source https://github.com/finnishtransportagency/harja \
-      org.opencontainers.image.description="PostGIS 3.3.2 extension with PostgreSQL 13.11 bullseye"
+
+# -----------------------------#
+# ---- Rakenna pohja-image ---- #
+# --------------------- -------#
+
+FROM postgres:${POSTGRES_IMAGE_VERSION} as base
+# https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
+ARG POSTGIS_VERSION
 
 # --- Asenna riippuvuudet --- #
 
 # Asenna työkaluja
 RUN apt-get update && apt-get install -y wget
 
-ENV POSTGIS_VERSION=3.3.2
+
 RUN wget "http://download.osgeo.org/postgis/source/postgis-${POSTGIS_VERSION}.tar.gz" \
     && tar -xvzf "postgis-${POSTGIS_VERSION}.tar.gz" \
     && rm "postgis-${POSTGIS_VERSION}.tar.gz"
@@ -86,9 +96,15 @@ RUN apt-get -y --purge autoremove  \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# --- Konfiguraatio --- #
 
-## Postgresql konfiguraatio ##
+#---------------------------------#
+# --- Harjadb-imagen rakennus --- #
+#---------------------------------#
+FROM base
+
+# Yhdistä image harjan repositoryyn
+LABEL org.opencontainers.image.source=https://github.com/finnishtransportagency/harja
+LABEL org.opencontainers.image.description="PostGIS 3.3.2 extension with PostgreSQL 13.11 bullseye"
 
 # Aseta Harjaan liittyvät default ympäristömuuttujat
 ENV HARJA_TIETOKANTA_PORTTI=5432
@@ -101,6 +117,9 @@ ADD docker_aja-testidata.sh ./aja-testidata.sh
 
 RUN chmod +x aja-migraatiot.sh
 RUN chmod +x aja-testidata.sh
+
+
+## Postgresql konfiguraatio ##
 
 USER postgres
 
@@ -126,6 +145,8 @@ RUN pg_ctl start; \
     do \
       sleep 1; \
     done; \
+    \
+    # Configuroi harja-database
     psql -c "CREATE USER harjatest WITH CREATEDB;" -U postgres && \
     psql -c "ALTER USER harjatest WITH SUPERUSER;" -U postgres && \
     psql -c "CREATE USER harja;" -U postgres && \
@@ -134,12 +155,17 @@ RUN pg_ctl start; \
     psql -c "CREATE DATABASE temp OWNER harjatest;" -U postgres && \
     psql -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO harjatest;" -U postgres && \
     psql -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO harja;" -U postgres  && \
+    \
+    # Asenna lisäosat harja-databaseen
     psql -c "CREATE EXTENSION postgis" -U postgres harja && \
     psql -c "CREATE EXTENSION postgis_topology" -U postgres harja && \
     psql -c "CREATE EXTENSION pg_trgm" -U postgres harja && \
     psql -c "CREATE EXTENSION pg_stat_statements" -U postgres harja && \
+    \
+    # Tulosta PostgreSQL:n ja PostGIS:in versiot
     psql -c "SELECT version()" -U postgres harja && \
     psql -c "SELECT postgis_full_version()" -U postgres harja && \
+    \
     pg_ctl stop;
 
 # Käynnistä postgresql ja pidä container käynnissä
