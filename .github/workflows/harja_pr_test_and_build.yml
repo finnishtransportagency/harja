@@ -366,11 +366,13 @@ jobs:
 
       # TODO: Kokeillaan testiksi erästä käyttöön hyväksyttyä test-report actionia.
       #       Tehdään lopullinen meille parhaiten sopiva raportointityökalun valinta myöhemmin
+      # https://github.com/mikepenz/action-junit-report
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
-        if: success() || failure()
+        if: always()
         with:
-          report_paths: '/tmp/cypress-run/cypress/test-results/results-*.xml'
+          report_paths: 'cypress/test-results/*.xml'
+          check_name: 'Cypress Test Report'
 
       # Mikäli testit epäonnistuvat, tallenna cypress screenshotit ja videot artifakteina
       - uses: actions/upload-artifact@v3
