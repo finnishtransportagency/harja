@@ -83,12 +83,55 @@ Imageiden Dockerfilet löytyvät polusta: ```.github/docker```.
 Yleisesti, jokaiselle Dockerfilelle on määritelty "build-image.sh" ja "push-image.sh" scriptit, jotka ajamalla
 imaget voi helposti päivittää.
 
+### Apuscriptit
+Jokaisen Dockerfile kansion sisällä on ```build-image.sh``` ja ```push-image.sh``` apuscriptit.
+
+1. **Build image**
+
+    Esim.
+    ```bash
+    ./build-image.sh --tag 13-3.1
+    ```
+    
+    Tämä tekee uudet "latest" ja "13-3.1" tagatut imaget.
+    
+    Katso muut optiot komennolle ajamalla:
+    ```bash
+    ./build-image.sh --help
+    ```
+
+     **Lisäoptiot docker buildille**  
+     Build-image.sh tukee lisäoptioiden syöttöä ```docker build``` komennolle.
+     Katso esimerkkiä ```.github/docker/cypress/build-image.sh``` tiedostosta.
+
+     Lisäoptioita voi syöttää antamalla argumetiksi "--".  
+     Kaikki "--" jälkeen tulevat optiot annetaan sellaisenaan 'docker build' komennolle build-image.sh scriptin sisällä.
+    ```bash
+    ./build-image.sh --tag 10.2.0 -- --build-arg="NPM_CYPRESS_VERSION=${NPM_CYPRESS_VERSION}"
+    ```
+
+2. **Push image**
+
+    Käytetään komentoa:
+    
+    ```bash
+    ./push-image.sh --tag 13-3.1
+    ```
+    
+    Defaulttina ei päivitetä "latest"-tagia Container Registryyn.
+    Jos haluat myös päivittää latest tagin, lisää optio ```--update-latest```
+    
+    Katso muut optiot ajamalla:
+    ```bash
+    ./push-image.sh --help
+    ```
+
 ### Cypress-imagen päivitys
 1. Navigoi polkuun: ```.github/docker/cypress/```
 2. Tutustu scriptiin: build-image.sh
 3. Aja scripti: ```./build-image.sh```
 4. Kirjaudu sisään Github Container Registryyn classic tokenilla (Lue: "Kehittäjän kirjautuminen Container Registryyn" yllä)
-5. Aja scripti: ```./push-image.sh```
+5. Aja scripti: ```./push-image.sh --update-latest```
 
 
 ### ActiveMQ-imagen päivitys
@@ -96,11 +139,14 @@ imaget voi helposti päivittää.
 2. Tutustu scriptiin: build-image.sh
 3. Aja scripti: ```./build-image.sh```
 4. Kirjaudu sisään Github Container Registryyn classic tokenilla (Lue: "Kehittäjän kirjautuminen Container Registryyn" yllä)
-5. Aja scripti: ```./push-image.sh```
+5. Aja scripti: ```./push-image.sh --update-latest```
 
 ### Tietokanta-imagen päivitys
 1. Navigoi polkuun: ```.github/docker/tietokanta/```
 2. Tutustu scriptiin: build-image.sh
-3. Aja scripti: ```./build-image.sh```
+3. Aja scripti: ```./build-image.sh --tag xx-y.y``` 
+   * Harkitse minkä tagin luot/päivität (<postgresql-versio>-<postgis-versio>)
 4. Kirjaudu sisään Github Container Registryyn classic tokenilla (Lue: "Kehittäjän kirjautuminen Container Registryyn" yllä)
-5. Aja scripti: ```./push-image.sh``` 
+5. Aja scripti: ```./push-image.sh --tag xx-y.y```
+   * Voit päivittää samanaikaisesti myös "latest" tagin, jos on tarve:
+      * ```./push-image.sh --tag xx-y.y --update-latest```

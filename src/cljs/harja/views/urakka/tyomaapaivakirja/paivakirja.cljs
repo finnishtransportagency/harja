@@ -12,9 +12,11 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
             [harja.pvm :as pvm]
-            [harja.tiedot.navigaatio :as nav]
+            [clojure.string :as str]
+            [harja.ui.nakymasiirrin :as siirrin]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.transit :as t]))
+            [harja.transit :as t])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn haun-valinnat [tiedot]
   (let [myohassa (filter
@@ -136,7 +138,189 @@
          :leveys 0.5}]
        nayta-rivit]]]))
 
-(defn- paivakirjan-kommentit [e! valittu-rivi]
+(defn nayta-muutoshistoria
+  "App statesta löytyy muutoshistoria jossa mäpätty: ( ({vers1 {:info , :toiminto <>, :vanhat <>, :uudet <>}}) ... )
+  :info : Mistä taulusta on tehty mitäkin, esim '<toiminto=Lisätty> <info=säätietoja>'
+  :toiminto : 'muutettu' | 'poistettu' | 'lisatty' 
+  :vanhat : Vanhan version arvot 
+  :uudet : Nykyisen version arvot"
+  [e! {:keys [muutoshistoria historiarivi-auki]}]
+  ;; Tehty custom modali koska Harjan nayta-modal herjasi React atom virheitä ilman kummempia tietoja enkä saanut korjattua
+  ;; Ei sopinut luultavasti tuck staten kanssa yhteen
+  [:div.muutoshistoria-modal {:on-click(fn [e]
+                                         ;; Jos klikattiin elementin ulkopuolelle, suljetaan modali
+                                         (when (= (-> e .-target .-classList str) "muutoshistoria-modal")
+                                           (e! (tiedot/->MuutoshistoriaAuki nil))))}
+   [:div#muutoshistoria-dialog
+    [:span.klikattava.sulje {:on-click #(e! (tiedot/->MuutoshistoriaAuki nil))}
+     [ikonit/harja-icon-navigation-close]]
+    [:div.muutoshistoria
+     [:div.muutoshistoria-otsikko "Versiohistoria"]
+     (when (= (count muutoshistoria) 0)
+       [:div.muutoshistoria-ei-tietoja "Ei historiatietoja."])
+     ;; Loopataan muutokset ja tehdään gridit, reverse jotta uusimmat muutokset ylimpänä
+     (for* [[indeksi versiomuutokset] (map-indexed vector (reverse muutoshistoria))]
+       (let [kentta-auki? (get-in historiarivi-auki [indeksi])
+             lisattiin? (some #(= (:toiminto %) "lisatty") versiomuutokset)
+             poistettiin? (some #(= (:toiminto %) "poistettu") versiomuutokset)
+             muutettiin? (some #(= (:toiminto %) "muutettu") versiomuutokset)
+             infot (str/join ", " (distinct (map :info versiomuutokset)))
+             muokattu (reduce (fn [x y]
+                                (if (>
+                                     (get-in y [:uudet :versio])
+                                     (get-in x [:uudet :versio]))
+                                  y x))
+                        (first versiomuutokset)
+                        versiomuutokset)
+             muokattu (or (-> muokattu :uudet :muokattu) (-> muokattu :vanhat :muokattu))
+             muokattu (pvm/js-date->pvm muokattu)
+             toiminto (cond
+                        (and lisattiin? poistettiin?)
+                        (str "Muutettu " infot)
+                        (and (not poistettiin?) (not lisattiin?) muutettiin?)
+                        (str "Muutettu " infot)
+                        (and poistettiin? (not lisattiin?) (not muutettiin?))
+                        (str "Poistettu " infot)
+                        (and lisattiin? (not poistettiin?) (not muutettiin?))
+                        (str "Lisätty " infot)
+                        :else (str "Muutettu " infot))
+             fn-kentan-toiminto (fn [kentta]
+                                  (cond
+                                    (= (:toiminto kentta) "muutettu") "(muutettu)"
+                                    (= (:toiminto kentta) "poistettu") "(poistettu)"
+                                    (= (:toiminto kentta) "lisatty") "(lisätty)"))
+             fn-hae-kentan-nimi (fn [kentta]
+                                  ;; Kentän nimet löytyy :info avaimesta mutta näytetään ne hieman erissä muodossa gridissä
+                                  (cond
+                                    (= (:info kentta) "sääasematietoja") (str "Sääasemien tiedot " (fn-kentan-toiminto kentta))
+                                    (= (:info kentta) "kalustoja") (str "Kalusto ja tielle tehdyt toimenpiteet " (fn-kentan-toiminto kentta))
+                                    (= (:info kentta) "tiestön toimenpiteä") (str "Toimenpiteet " (fn-kentan-toiminto kentta))
+                                    (= (:info kentta) "tapahtumia") (str "Tapahtumat " (fn-kentan-toiminto kentta))
+                                    (= (:info kentta) "työnjohtajia") (str "Työnjohtajat " (fn-kentan-toiminto kentta))
+                                    (= (:info kentta) "päivystäjiä") (str "Päivystäjät " (fn-kentan-toiminto kentta))
+                                    (= (:info kentta) "säätietoja") (str "Poikkeussää " (fn-kentan-toiminto kentta))
+                                    (= (:info kentta) "toimeksiantoja") (str "Toimeksiannot " (fn-kentan-toiminto kentta))
+                                    :else "Ei tietoja"))
+             fn-arvo-tai-tyhja (fn [kentta avain arvo]
+                                 (or (get-in kentta [avain arvo]) "(tyhjä)"))
+             fn-rivita-pilkun-jalkeen  (fn [teksti]
+                                         (let [osat (str/split teksti #", ½n")]
+                                           (for* [osa osat] [:div osa])))
+             fn-hae-arvo (fn [kentta uusi?]
+                           ;; Tehdään kenttiin arvot ja selitykset 
+                           (let [avain (if uusi? :uudet :vanhat)]
+                             (if (nil? (avain kentta))
+                               "(tyhjä)"
+                               (cond
+                                 (= (:info kentta) "kalustoja")
+                                 (str
+                                   "Työkoneiden määrä: " (fn-arvo-tai-tyhja kentta avain :tyokoneiden_lkm) ", ½n"
+                                   "Lisäkaluston määrä: " (fn-arvo-tai-tyhja kentta avain :lisakaluston_lkm))
+
+                                 (= (:info kentta) "sääasematietoja")
+                                 (str
+                                   "Tunniste: " (fn-arvo-tai-tyhja kentta avain :aseman_tunniste) ", ½n"
+                                   "Tien lämpötila: " (fn-arvo-tai-tyhja kentta avain :tien_lampotila) ", ½n"
+                                   "Ilman lämpötila: " (fn-arvo-tai-tyhja kentta avain :ilman_lampotila) ", ½n"
+                                   "Tuuli: " (fn-arvo-tai-tyhja kentta avain :keskituuli) " m/s, ½n"
+                                   "S-Sum: " (fn-arvo-tai-tyhja kentta avain :sadesumma) " mm")
+
+                                 (= (:info kentta) "tiestön toimenpiteä")
+                                 (str
+                                   "Tyyppi: " (fn-arvo-tai-tyhja kentta avain :tyyppi) ", ½n"
+                                   "Tehtävät: " (fn-arvo-tai-tyhja kentta avain :tehtavat) ", ½n"
+                                   "Toimenpiteet: " (fn-arvo-tai-tyhja kentta avain :toimenpiteet))
+
+                                 (or
+                                   (= (:info kentta) "työnjohtajia")
+                                   (= (:info kentta) "päivystäjiä"))
+                                 (str
+                                   "Nimi: " (fn-arvo-tai-tyhja kentta avain :nimi))
+
+                                 (= (:info kentta) "tapahtumia")
+                                 (str
+                                   "Kuvaus: " (fn-arvo-tai-tyhja kentta avain :kuvaus) ", ½n"
+                                   "Tyyppi: " (fn-arvo-tai-tyhja kentta avain :tyyppi))
+
+                                 (= (:info kentta) "säätietoja")
+                                 (str
+                                   "Kuvaus: " (fn-arvo-tai-tyhja kentta avain :kuvaus) ", ½n"
+                                   "Paikka: " (fn-arvo-tai-tyhja kentta avain :paikka))
+
+                                 (= (:info kentta) "toimeksiantoja")
+                                 (str
+                                   "Kuvaus: " (fn-arvo-tai-tyhja kentta avain :kuvaus) ", ½n"
+                                   "Aika: " (fn-arvo-tai-tyhja kentta avain :aika))
+
+                                 :else "Ei tietoja"))))]
+         [:div.muutoshistoria-grid
+          [:span.muutos-tiedot.klikattava {:on-click #(e! (tiedot/->ValitseHistoriarivi indeksi))}
+           [:span  (if kentta-auki?
+                     [:img.muutos-dialog-icon {:alt "Expander" :src "images/expander-down.svg"}]
+                     [:img.navigation-ympyrassa.muutos-dialog-icon.klikattava {:alt "Expander" :src "images/expander.svg"}])]
+           [:span.muutos-pvm muokattu]
+           [:span.muutos-toiminto toiminto]]
+
+          [:div {:class (if kentta-auki? "nakyva" "ei-nakyva") :id (str "muutoshistoria-" indeksi)}
+           [grid/grid {:tunniste :id
+                       :sivuta grid/vakiosivutus
+                       :voi-kumota? false
+                       :piilota-toiminnot? true
+                       :jarjesta :paivamaara
+                       :mahdollista-rivin-valinta? false
+                       :piilota-muokkaus? true}
+
+            [{:otsikko "Kentän nimi"
+              :tyyppi :komponentti
+              :komponentti (fn [arvo _] (fn-hae-kentan-nimi arvo))
+              :solun-luokka #(str "nakyma-valkoinen-solu muutoshistoria-kentan-nimi")
+              :leveys 0.75}
+             {:otsikko "Vanha arvo"
+              :tyyppi :komponentti
+              :komponentti (fn [arvo _] (fn-rivita-pilkun-jalkeen (fn-hae-arvo arvo false)))
+              :solun-luokka #(str "nakyma-valkoinen-solu")
+              :leveys 1}
+             {:otsikko "Uusi arvo"
+              :tyyppi :komponentti
+              :komponentti (fn [arvo _] (fn-rivita-pilkun-jalkeen (fn-hae-arvo arvo true)))
+              :solun-luokka #(str "nakyma-valkoinen-solu")
+              :leveys 1}]
+            versiomuutokset]]]))]
+    [:span.muutoshistoria-sulje
+     [:span.nappi-ensisijainen.klikattava.alhaalla.sulje-valitys {:on-click #(e! (tiedot/->MuutoshistoriaAuki nil))}
+      [ikonit/ikoni-ja-teksti (ikonit/harja-icon-navigation-close) "Sulje"]]]]])
+
+(defn paivakirjan-header [e! {:keys [valittu-rivi historiatiedot-auki] :as app}]
+  (when valittu-rivi
+    [:<>
+     (when historiatiedot-auki
+       (nayta-muutoshistoria e! app))
+
+     [:h3.header-yhteiset (:urakka-nimi valittu-rivi)]
+     [:h1.header-yhteiset (str "Työmaapäiväkirja " (pvm/pvm (:paivamaara valittu-rivi)))]
+
+     [:div.nakyma-otsikko-tiedot
+      [:span (str "Saapunut " (pvm/pvm-aika-klo (:luotu valittu-rivi)))]
+      (when (:muokattu valittu-rivi)
+        [:span (str "Päivitetty " (pvm/pvm-aika-klo (:muokattu valittu-rivi)))])
+      [:span (str "Versio " (:versio valittu-rivi))]
+
+      [:a.klikattava {:on-click #(e! (tiedot/->MuutoshistoriaAuki nil))} "Näytä muutoshistoria"]
+
+      [:span.paivakirja-toimitus
+       [:div {:class (str "pallura " (:tila valittu-rivi))}]
+       [:span.toimituksen-selite (if (= "myohassa" (:tila valittu-rivi))
+                                   "Myöhässä"
+                                   "Ok")]]
+
+      ;; Kommentti- nappi scrollaa alas kommentteihin
+      [:a.klikattava {:on-click #(siirrin/siirry-elementin-id "Kommentit" 150)}
+       [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) (if (= (:kommenttien-maara valittu-rivi) 1)
+                                                            (str (:kommenttien-maara valittu-rivi) " kommentti")
+                                                            (str (:kommenttien-maara valittu-rivi) " kommenttia"))]]]
+     [:hr]]))
+
+(defn- paivakirjan-kommentit [e! {:keys [valittu-rivi muutoshistoria]}]
   (let [toggle-kentat (fn [nayta piilota]
                         ;; Tämä tehtiin alunperin raporttien puolelle jonka takia käytetään DOM manipulaatiota eikä tuckin tila atomia
                         ;; Toggleaa kun toinen element näytetään niin toinen piiloitetaan
@@ -147,45 +331,99 @@
                           (set! (.-value kommentti-element) "")
                           (.add piilota-element "piilota-kentta")
                           (.remove nayta-element "piilota-kentta")))
-        
-        kommentit (:kommentit valittu-rivi)]
 
-    ;; Käyttäjien kommentit
+        kommentit (:kommentit valittu-rivi)
+        ;; Muunna luotu pvm js ajaksi
+        formatoi-kommenttien-pvm (map (fn [asd]
+                                        (assoc asd :luotu (js/Date. (:luotu asd))))
+                                   kommentit)
+
+        kommentit (map list formatoi-kommenttien-pvm)
+        ;; Tee sama muutoshistorialle
+        muutoshistoria-kommentit (map (fn [muutos]
+                                        (map (fn [x]
+                                               (let [pvm (or (-> x :uudet :muokattu) (-> x :vanhat :muokattu))
+                                                     pvm (js/Date. pvm)]
+                                                 (assoc x :luotu pvm)))
+                                          muutos))
+                                   muutoshistoria)
+        ;; Sortataan kaikki kommentit pvm mukaan
+        sortatut-kommentit-pvm-mukaan (sort-by (fn [x] (-> x first :luotu .getTime))
+                                        (concat kommentit muutoshistoria-kommentit))]
+
+    ;; Käyttäjien sekä muutoshistoria kommentit pvm mukaan
     [:div#Kommentit.row.filtterit.kommentit-valistys
      [:h2 "Kommentit"]
-     (for [{:keys [id luotu kommentti etunimi sukunimi luoja]} kommentit]
-       ^{:key id}
-       [:span
-        [:div.alarivi-tiedot
-         [:span (str (pvm/pvm-aika luotu))]
-         [:span (str etunimi " " sukunimi)]]
-        
-        [:div.kommentti
-         [:h1.tieto-rivi kommentti]
-         [:span.klikattava.kommentti-poista
-          {:on-click #(do
-                       (e! (tiedot/->PoistaKommentti
-                            {:id id :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi) :luoja luoja}))
-                        (tiedot/scrollaa-kommentteihin))}
-          
-          (ikonit/action-delete)]]])
+     (for* [versiomuutokset sortatut-kommentit-pvm-mukaan]
+       (if (some #(or  (contains? % :uudet) (contains? % :vanhat)) versiomuutokset)
+         ;; Rivi on muutoshistoria kommentti
+         (let [muutos-indeksi (first (keep-indexed (fn [idx subseq]
+                                                     (when (= subseq (map #(dissoc % :luotu) versiomuutokset)) idx))
+                                       (reverse muutoshistoria)))
+               lisattiin? (some #(= (:toiminto %) "lisatty") versiomuutokset)
+               poistettiin? (some #(= (:toiminto %) "poistettu") versiomuutokset)
+               muutettiin? (some #(= (:toiminto %) "muutettu") versiomuutokset)
+               infot (str/join ", " (distinct (map :info versiomuutokset)))
+               muokattu (reduce (fn [x y]
+                                  (if (>
+                                       (get-in y [:uudet :versio])
+                                       (get-in x [:uudet :versio]))
+                                    y x))
+                          (first versiomuutokset)
+                          versiomuutokset)
+               muokattu (or (-> muokattu :uudet :muokattu) (-> muokattu :vanhat :muokattu))
+               muokattu (pvm/js-date->pvm muokattu)
+               toiminto (cond
+                          (and lisattiin? poistettiin?)
+                          (str "Muutettu " infot)
+                          (and (not poistettiin?) (not lisattiin?) muutettiin?)
+                          (str "Muutettu " infot)
+                          (and poistettiin? (not lisattiin?) (not muutettiin?))
+                          (str "Poistettu " infot)
+                          (and lisattiin? (not poistettiin?) (not muutettiin?))
+                          (str "Lisätty " infot)
+                          :else (str "Muutettu " infot))]
+           [:span
+            [:div.alarivi-tiedot
+             [:span muokattu]
+             [:span.muutos-info "Jälkikäteismerkintä urakoitsijajärjestelmästä"]]
+            [:div.kommentti.muutos
+             [:h1.tieto-rivi (str "Työmaapäiväkirja päivitetty: " toiminto)]
+             [:a.klikattava.info-rivi
+              {:on-click #(do
+                            ;; Käyttäjä klikkasi kommentin "Näytä muutoshistoria" nappia
+                            ;; -> Avataan klikattu muutoshistoria gridi modalissa ja scrollataan käyttäjä sinne
+                            (e! (tiedot/->MuutoshistoriaAuki muutos-indeksi))
+                            (js/setTimeout (fn []
+                                             ;; Käytetään muutoshistorian modalin(child element) siirrintä
+                                             (siirrin/siirry-lapsi-elementissa (str "muutoshistoria-" muutos-indeksi) true "muutoshistoria-dialog"))
+                              200))}
+              "Näytä muutoshistoria"]]])
+         ;; Rivi on käyttäjän kommentti
+         (let [{id :id
+                luotu :luotu
+                kommentti :kommentti
+                etunimi :etunimi
+                sukunimi :sukunimi
+                luoja :luoja} (first versiomuutokset)]
+           [:span
+            [:div.alarivi-tiedot
+             [:span (str (pvm/js-date->pvm luotu))]
+             [:span (str etunimi " " sukunimi)]]
 
-     ;; TODO Tällä tehdään muutoshistoria kommentti
-     ;; Muutoshistoria tiedot
-     #_[:div.alarivi-tiedot
-        [:span "11.10.2022 07:45"]
-        [:span "Tauno Työnjohtaja"]
-        [:span.muutos-info "Jälkikäteismerkintä urakoitsijajärjestelmästä"]]
-
-     ;; Muutoshistoria
-     #_[:div.kommentti.muutos
-        [:h1.tieto-rivi "Työmaapäiväkirja päivitetty 11.10.2022 08:10: lisätty rekka-kolari."]
-        [:a.klikattava.info-rivi "Näytä muutoshistoria"]]
+            [:div.kommentti
+             [:h1.tieto-rivi kommentti]
+             [:span.klikattava.kommentti-poista
+              {:on-click #(do
+                            (e! (tiedot/->PoistaKommentti
+                                  {:id id :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi) :luoja luoja}))
+                            (tiedot/scrollaa-kommentteihin))}
+              (ikonit/action-delete)]]])))
 
      [:div#kommentti-lisaa
-      [:a.klikattava {:on-click #(do 
+      [:a.klikattava {:on-click #(do
                                    (toggle-kentat "kommentti-area" "kommentti-lisaa")
-                                   (tiedot/siirry-elementin-id "kommentti-area" 150))}
+                                   (siirrin/siirry-elementin-id "kommentti-area" 150))}
 
        [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Lisää kommentti"]]]
 
@@ -239,7 +477,7 @@
     [:span.nuoli [ikonit/harja-icon-navigation-close]]
     [:span "Sulje"]]])
 
-(defn suorita-tyomaapaivakirja-raportti [e! valittu-rivi]
+(defn suorita-tyomaapaivakirja-raportti [e! {:keys [valittu-rivi] :as app}]
   (if-let [tiedot @tiedot/raportin-tiedot]
     [:div.tyomaapaivakirja
      ;; Päiväkirjanäkymä
@@ -247,12 +485,15 @@
       ;; Takaisin nappi
       [:div.klikattava {:class "sulje" :on-click #(tiedot/scrollaa-viimeksi-valitulle-riville e!)}
        [ikonit/harja-icon-navigation-close]]
+      
+      ;; Header 
+      (paivakirjan-header e! app)
 
       ;; Raportin html
       [muodosta-html (assoc-in tiedot [1 :tunniste] tiedot/raportti-avain)]
 
       ;; Kommentit
-      (paivakirjan-kommentit e! valittu-rivi)]
+      (paivakirjan-kommentit e! app)]
 
      ;; Sticky bar (Edellinen - Seuraava) Tallenna PDF
      (paivakirjan-sticky e!)]
@@ -270,9 +511,7 @@
              (when-not (and (pvm/sama-pvm? (first vanha) (first uusi))
                          (pvm/sama-pvm? (second vanha) (second uusi)))
                (e! (tiedot/->PaivitaAikavali {:aikavali uusi})))))
-         
          (e! (tiedot/->HaeTiedot)))
-
       #(e! (tiedot/->PoistaRiviValinta)))
 
     (fn [e! {:keys [valittu-rivi] :as app}]
@@ -280,8 +519,9 @@
        (if valittu-rivi
          ;; Jos valittu rivi, näytä päiväkirjanäkymä (tehty raporttien puolelle)
          (do 
+           (e! (tiedot/->HaeMuutoshistoria))
            (e! (tiedot/->HaeKommentit))
-           [suorita-tyomaapaivakirja-raportti e! valittu-rivi])
+           [suorita-tyomaapaivakirja-raportti e! app])
 
          ;; Mikäli ei valittua riviä, päivitä aikavälivalinta ja näytä listaus
          [tyomaapaivakirja-listaus e! app])])))

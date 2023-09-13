@@ -35,7 +35,6 @@
     [harja.palvelin.integraatiot.palautevayla.palautevayla-komponentti :as palautevayla]
 
     [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
-    [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
 
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
@@ -601,11 +600,6 @@
                 :http-palvelin :http-palvelin
                 :ulkoinen-sahkoposti :ulkoinen-sahkoposti
                 :api-sahkoposti :api-sahkoposti})
-
-      :reimari (component/using
-                 (let [{:keys [url kayttajatunnus salasana]} (:reimari asetukset)]
-                   (reimari/->Reimari url kayttajatunnus salasana))
-                 [:db :integraatioloki])
 
       :vkm (component/using
              (let [{url :url} (:vkm asetukset)]
