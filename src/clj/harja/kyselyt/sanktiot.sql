@@ -168,7 +168,7 @@ WHERE
 
 -- name: hae-urakan-bonukset
 -- row-fn: muunna-urakan-bonus
--- Palauttaa kaikki urakalle kirjatut bonukset perintäpäivämäärällä ja toimenpideinstanssilla rajattuna
+-- Palauttaa kaikki urakalle kirjatut bonukset laskutuskuukaudella ja toimenpideinstanssilla rajattuna
 -- Käytetään siis mm. Laadunseuranta/sanktiot välilehdellä
 -- Filtteröi muu tyyppiset erilliskustannukset pois, koska niitä ei voi tämän renderöivässä näkymässä muokata eikä lisätä
 

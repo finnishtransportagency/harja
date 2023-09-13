@@ -122,9 +122,6 @@ FROM tehtavaryhma tr
        JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
        JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id and tpi.urakka = :urakka
  WHERE tr.nimi not like ('%Lisätyöt%')
-   -- Jätetään tehtäväryhmä: Tilaajan rahavaraus (T3) pois, koska se lisätään bonuksista
-   AND (tr.yksiloiva_tunniste IS NULL
-     OR (tr.yksiloiva_tunniste IS NOT NULL AND tr.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'))
  order by tr.jarjestys;
 
 -- name: hae-sopimuksen-tehtavamaarat-urakalle
