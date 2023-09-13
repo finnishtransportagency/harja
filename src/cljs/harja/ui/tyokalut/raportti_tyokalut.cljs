@@ -1,10 +1,7 @@
 (ns harja.ui.tyokalut.raportti-tyokalut
   ;; Tänne voi laittaa mm yksittäisten raporttien funktioita
   (:require [harja.ui.raportti :as raportointi]
-            [harja.ui.ikonit :as ikonit]
-            [harja.fmt :as fmt]
-            [harja.pvm :as pvm]
-            [harja.ui.nakymasiirrin :as siirrin]))
+            [harja.fmt :as fmt]))
 
 (defmethod raportointi/muodosta-html :tyomaa-laskutusyhteenveto-yhteensa [[_ kyseessa-kk-vali? hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str]]
   ;; Työmaakokouksen laskutusyhteenvedon footer
@@ -22,38 +19,6 @@
       [:div.sisalto-ei-kk-vali
        [:span.laskutus-yhteensa laskutettu-str]
        [:h1 (str (fmt/euro laskutettu))]])]])
-
-(defmethod raportointi/muodosta-html :tyomaapaivakirja-header [[_ tyomaapaivakirja]]
-  (when tyomaapaivakirja
-    [:<>
-     [:h3.header-yhteiset (:urakka-nimi tyomaapaivakirja)]
-     [:h1.header-yhteiset (str "Työmaapäiväkirja " (pvm/pvm (:paivamaara tyomaapaivakirja)))]
-
-     [:div.nakyma-otsikko-tiedot
-
-      [:span (str "Saapunut " (pvm/pvm-aika-klo (:luotu tyomaapaivakirja)))]
-      (when (:muokattu tyomaapaivakirja)
-        [:span (str "Päivitetty " (pvm/pvm-aika-klo (:muokattu tyomaapaivakirja)))])
-      [:span (str "Versio " (:versio tyomaapaivakirja))]
-
-      ;;TODO: 
-      #_ [:a.klikattava "Näytä muutoshistoria"]
-
-      [:span.paivakirja-toimitus
-       [:div {:class (str "pallura " (:tila tyomaapaivakirja))}]
-       [:span.toimituksen-selite (if (= "myohassa" (:tila tyomaapaivakirja))
-                                   "Myöhässä"
-                                   "Ok")]]
-
-      ;; Kommentti- nappi scrollaa alas kommentteihin
-      [:a.klikattava {:on-click #(.setTimeout js/window (fn [] (siirrin/kohde-elementti-id "Kommentit")) 150)}
-       [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) (cond
-                                                            (or
-                                                              (= (:kommenttien-maara tyomaapaivakirja) 1))
-                                                            (str (:kommenttien-maara tyomaapaivakirja) " kommentti")
-                                                            :else
-                                                            (str (:kommenttien-maara tyomaapaivakirja) " kommenttia"))]]]
-     [:hr]]))
 
 (defmethod raportointi/muodosta-html :gridit-vastakkain [[_
                                                           {:keys [otsikko-vasen optiot-vasen otsikot-vasen rivit-vasen]}
@@ -131,4 +96,8 @@
 (defmethod raportointi/muodosta-html :tyomaapaivakirjan-kommentit [[_ _]]
   ;; Kommenteiden html käsitellään paivakirja.cljs koska niiden kanssa tehdään palvelinkutsuja
   ;; Kommenteille tehdään oma PDF metodi erikseen pdf_tyokalut.clj jossa generoidaan kommentit PDFään
+  nil)
+
+(defmethod raportointi/muodosta-html :tyomaapaivakirja-header [[_ _]]
+  ;; Header HTML käsitellään myös paivakirja.cljs
   nil)
