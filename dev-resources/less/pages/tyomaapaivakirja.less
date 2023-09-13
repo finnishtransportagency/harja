@@ -309,3 +309,126 @@
     transform: scale(1.7);
   }
 }
+
+.muutoshistoria-modal {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1050;
+  -webkit-overflow-scrolling: touch;
+  outline: 0;
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+  background-color: @modal-content-border-color;
+
+  #muutoshistoria-dialog {
+    position: relative;
+    width: 90%;
+    border-radius: @valistys-6;
+    max-width: 1100px;
+    min-height: 250px;
+    max-height: 600px;
+    overflow-y: auto;
+    background-color: @harjan-taustavari;
+    padding: @valistys-32 @valistys-48;
+
+    .ei-nakyva {
+      max-height: 0;
+      opacity: 0;  
+      z-index: -1;
+      visibility: hidden;
+      transition: opacity 0.05s ease-out, max-height 0.08s ease-out;
+    }
+  
+    .nakyva {
+      max-width: 950px;
+      margin: auto;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.37s ease-out, max-height 0.37s ease-out;
+      max-height: 80%;
+    }
+
+    .muutoshistoria-otsikko {
+      margin-left: @valistys-4;
+      margin-bottom: 1rem;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .muutoshistoria-ei-tietoja {
+      margin-left: @valistys-4;
+      font-size: 14px;
+    }
+
+    .muutoshistoria-grid {
+      margin-top: @valistys-6;
+    }
+
+    .muutoshistoria-kentan-nimi {
+      font-weight: bold;
+    }
+
+    .muutoshistoria-sulje {
+      display: flex;
+      margin: auto;
+      justify-content: center;
+      padding-top: 4rem;
+
+      .sulje-valitys {
+        padding: 8px 12px 8px 8px;
+      }
+    }
+
+    .alhaalla {
+      position: relative;
+      bottom: 10px;
+    }
+
+    .muutos-tiedot {
+      display: flex;
+      gap: @valistys-8;
+      font-weight: 600;
+      font-size: 16px;
+      margin-left: @valistys-6;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: @valistys-16;
+
+      &:hover {
+        background-color: @blue-lighter;
+      }
+
+      .muutos-dialog-icon {
+        transform: scale(1.4);
+        margin-right: 4px;
+      }
+
+      .klikattava {
+        transform: scale(1.4);
+        width: 15px;
+        color: @sininen5;
+        margin-right: 4px;
+        margin-bottom: 2px;
+        position: relative;
+        right: @valistys-4;
+      }
+
+      :nth-child(2) {
+        width: 160px;
+      }
+
+      :last-child {
+        gap: @valistys-16;
+        width: 80%;
+      }
+    }
+  }
+}

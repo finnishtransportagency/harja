@@ -477,6 +477,14 @@
      [teksti]
      (formatoi iso8601-format (df/parse (df/formatter "yyyy-MM-dd'T'HH:mm:ss'Z'") teksti))))
 
+#?(:cljs
+   (defn js-date->pvm
+     "Palauttaa annetun js daten muodossa dd.MM.yyyy hh:mm"
+     [pvm]
+     (let [pvm (goog.date.DateTime. (js/Date. pvm))]
+       (-> (goog.i18n.DateTimeFormat. "dd.MM.yyyy HH:mm")
+         (.format pvm)))))
+
 (defn iso8601
   "Palauttaa tekstimuodossa päivämäärän, joka sopii esim tietokantahakuihin. Päivämäärä
   palautetaan siis esimerkiksi muodossa 2030-01-15"
@@ -703,19 +711,41 @@
   (t/day (d pvm)))
 
 (defn tunti
-  "Palauttaa annetun DateTime kuukauden"
+  "Palauttaa annetun DateTime tunnin."
   [pvm]
   (t/hour (d pvm)))
 
 (defn minuutti
-  "Palauttaa annetun DateTime kuukauden"
+  "Palauttaa annetun DateTime minuutin."
   [pvm]
   (t/minute (d pvm)))
 
 (defn sekuntti
-  "Palauttaa annetun DateTime kuukauden"
+  "Palauttaa annetun DateTime sekunnin."
   [pvm]
   (t/second (d pvm)))
+
+#?(:clj
+   (defn palvelimen-aika->suomen-aikaan
+     "Meillä on Harjassa bugi että tietokannasta haettu päivämäärä tulee transitin kautta palvelimelle UTC+0 muodossa jolloin tietokannan 15:00pm = 12:00pm.
+      Tämä funktio palauttaa tuon 12:00 ajan oikeana aikana jos tarvitaan tehdä palvelimella tuntiherkkiä funktioita
+
+      Input          #inst 2023-09-07T09:01:50.000-00:00
+      Palautetaan -> #inst 2023-09-07T12:01:50.000-00:00
+      
+      Input          #inst 2023-09-07T21:00:00-00:00
+      Palautetaan -> #inst 2023-09-08T00:00:00-00:00"
+     [pvm]
+     (let [paivana (->pvm-date-timeksi (str
+                                         (paiva pvm) "."
+                                         (kuukausi pvm) "."
+                                         (vuosi pvm)))
+           paivamaara (dateksi
+                        (aikana paivana
+                          (tunti pvm)
+                          (minuutti pvm)
+                          (sekuntti pvm) 0))]
+       paivamaara)))
 
 (defn paivamaaran-hoitokausi
   "Palauttaa hoitokauden [alku loppu], johon annettu pvm kuuluu"

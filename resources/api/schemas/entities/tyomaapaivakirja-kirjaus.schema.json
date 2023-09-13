@@ -17,8 +17,8 @@
                 },
                 "versio": {
                     "id": "urn:harja/tunniste/versio",
-                    "required": true,
-                    "description": "Päiväkirjan versionumero urakoitsijan järjestelmästä, alkaa numerosta 1...n. Nostetaan yhdellä ylöspäin jokaisella päivityskerralla.",
+                    "required": false,
+                    "description": "Päiväkirjan versionumero urakoitsijan järjestelmästä, alkaa numerosta 1...n. Nostetaan yhdellä ylöspäin jokaisella päivityskerralla. Tätä ei tarvitse antaa, sillä HARJA nostaa versionumeron automaattisesti, mikäli sitä ei ole annettu.",
                     "type": "integer"
                 },
                 "paivamaara": {
