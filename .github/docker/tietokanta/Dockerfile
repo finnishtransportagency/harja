@@ -9,50 +9,70 @@
 #  $ sudo docker exec --user postgres harjadb /bin/bash -c "~/aja-migraatiot.sh"
 #  $ sudo docker exec --user postgres harjadb /bin/bash -c "~/aja-testidata.sh"
 
-# Käytetään pohjana postgresql 13 ja postgis 3.1
-# Käyttöjärjestelmänä on debian:bullseye (11)
-# https://registry.hub.docker.com/r/postgis/postgis/
-
-FROM postgres:13.12-bullseye
+FROM postgres:13.11-bullseye as builder
 
 # Yhdistä image harjan repositoryyn
 LABEL org.opencontainers.image.source https://github.com/finnishtransportagency/harja \
-      org.opencontainers.image.description="PostGIS 3.4.0+dfsg-1.pgdg110+1 extension with PostgreSQL 13.12 bullseye"
+      org.opencontainers.image.description="PostGIS 3.3.2 extension with PostgreSQL 13.11 bullseye"
 
 # --- Asenna riippuvuudet --- #
 
-# Asenna PostGIS
-## https://tracker.debian.org/pkg/postgis
-ENV POSTGIS_MAJOR=3
-ENV POSTGIS_VERSION=3.4.0+dfsg-1.pgdg110+1
+# Asenna työkaluja
+RUN apt-get update && apt-get install -y wget
 
-# Huom: JOS versiota 3.1 tarvitaan, huomioi seuraava asia:
-# En saanut vanhempaa PostGIS 3.1.1-versiota toimimaan oikein.
-# Virheilmoitus tulee siinä kohtaa, kun PostGIS laajennuksen ottaa käyttöön "CREATE EXTENSION postgis" kyselyllä:
-# -> Failed with. ERROR: could not find function "gserialized_gist_sortsupport_2d" in file "/usr/lib/postgresql/13/lib/postgis-3.
-#ENV POSTGIS_VERSION=3.1.1+dfsg-1+deb11u1
+ENV POSTGIS_VERSION=3.3.2
+RUN wget "http://download.osgeo.org/postgis/source/postgis-${POSTGIS_VERSION}.tar.gz" \
+    && tar -xvzf "postgis-${POSTGIS_VERSION}.tar.gz" \
+    && rm "postgis-${POSTGIS_VERSION}.tar.gz"
 
 
-RUN apt-get update \
-      && apt-cache showpkg postgresql-$PG_MAJOR-postgis-$POSTGIS_MAJOR \
-      && apt-get install -y --no-install-recommends \
-           # ca-certificates: for accessing remote raster files;
-           #   fix: https://github.com/postgis/docker-postgis/issues/307
-           ca-certificates \
-           \
-           postgresql-$PG_MAJOR-postgis-$POSTGIS_MAJOR=$POSTGIS_VERSION \
-           postgresql-$PG_MAJOR-postgis-$POSTGIS_MAJOR-scripts \
-      # Tulosta asennetun paketin tiedot
-      && apt-cache policy postgresql-$PG_MAJOR-postgis-$POSTGIS_MAJOR
+# Asenna GDAL, GEOS ja Proj
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgdal-dev libgeos-dev libproj-dev
 
-## Asenna muut riippuvuudet
-RUN apt-get update && apt-get install -y openjdk-11-jdk wget \
-    && rm -rf /var/lib/apt/lists/*
+# Asenna PostGISin buildaamiseen vaadittavat riippuvuudet
+RUN set -ex \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+      postgresql-server-dev-$PG_MAJOR \
+      autoconf \
+      automake \
+      autotools-dev \
+      bison \
+      build-essential \
+      ca-certificates \
+      cmake \
+      g++ \
+      git \
+      libboost-all-dev \
+      libcgal-dev \
+      libcurl4-gnutls-dev \
+      libgmp-dev \
+      libjson-c-dev \
+      libmpfr-dev \
+      libpcre3-dev \
+      libprotobuf-c-dev \
+      libsqlite3-dev \
+      libtiff-dev \
+      libtool \
+      libxml2-dev \
+      make \
+      pkg-config \
+      protobuf-c-compiler \
+      xsltproc
+
+# Buildaa PostGIS
+RUN  cd postgis-${POSTGIS_VERSION} \
+        && ./configure \
+        && make clean \
+        # Anna Makelle saatavilla olevat prosessointiyksiköt
+        && make -j$(nproc) \
+        && make install
 
 
 ## Asenna maven
 ENV MAVEN_VERSIO=3.9.4
-
+RUN apt-get update && apt-get install -y openjdk-17-jdk
 RUN wget "https://downloads.apache.org/maven/maven-3/${MAVEN_VERSIO}/binaries/apache-maven-${MAVEN_VERSIO}-bin.tar.gz"; \
     if [ "$(sha512sum /apache-maven-${MAVEN_VERSIO}-bin.tar.gz )" != "deaa39e16b2cf20f8cd7d232a1306344f04020e1f0fb28d35492606f647a60fe729cc40d3cba33e093a17aed41bd161fe1240556d0f1b80e773abd408686217e  /apache-maven-${MAVEN_VERSIO}-bin.tar.gz" ]; then exit 1; fi; \
     tar xzvf "apache-maven-${MAVEN_VERSIO}-bin.tar.gz"; \
@@ -61,6 +81,10 @@ RUN wget "https://downloads.apache.org/maven/maven-3/${MAVEN_VERSIO}/binaries/ap
 # Lisää maven bin kansio PATH:iin
 ENV PATH="/apache-maven-${MAVEN_VERSIO}/bin/:${PATH}"
 
+# Siivous
+RUN apt-get -y --purge autoremove  \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # --- Konfiguraatio --- #
 
@@ -113,7 +137,9 @@ RUN pg_ctl start; \
     psql -c "CREATE EXTENSION postgis" -U postgres harja && \
     psql -c "CREATE EXTENSION postgis_topology" -U postgres harja && \
     psql -c "CREATE EXTENSION pg_trgm" -U postgres harja && \
-    psql -c "CREATE EXTENSION pg_stat_statements" -U postgres harja \
+    psql -c "CREATE EXTENSION pg_stat_statements" -U postgres harja && \
+    psql -c "SELECT version()" -U postgres harja && \
+    psql -c "SELECT postgis_full_version()" -U postgres harja && \
     pg_ctl stop;
 
 # Käynnistä postgresql ja pidä container käynnissä
