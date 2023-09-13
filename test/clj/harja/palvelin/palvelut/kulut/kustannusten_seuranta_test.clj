@@ -634,7 +634,7 @@ UNION ALL
                                                    (+ summa b)
                                                    summa))
                                               0M (map #(first %) bonukset-toteutuneet-sql))]
-    (is (= bonus-toteutuneet bonukset-sql-toteutunut-summa))))
+    (is (= (bigdec bonus-toteutuneet) bonukset-sql-toteutunut-summa))))
 
 
 (deftest alihankintabonus-rahavarauksiin-test
