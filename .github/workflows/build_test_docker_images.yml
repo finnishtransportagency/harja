@@ -1,7 +1,7 @@
 # Security hardening for GitHub Actions
 # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
 
-name: 'Build test docker images for GH Actions and development'
+name: 'DEV-TOOLS: Build test docker images for GH Actions and development'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}

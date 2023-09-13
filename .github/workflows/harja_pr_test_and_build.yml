@@ -262,6 +262,8 @@ jobs:
       contents: read
       # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
       packages: read
+      # Tarvitaan test-reportin julkaisuun PR:ssä
+      checks: write
 
     steps:
       - name: Checkout code
