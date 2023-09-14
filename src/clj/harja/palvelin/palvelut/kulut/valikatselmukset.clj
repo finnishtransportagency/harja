@@ -137,8 +137,7 @@
     (valikatselmus-q/poista-paatokset db urakka-id hoitokauden-alkuvuosi (:id kayttaja))))
 
 (defn tarkista-kattohinnan-ylitys [tiedot urakka]
-  (do
-    (tarkista-ei-siirtoa-viimeisena-vuotena tiedot urakka)))
+  (tarkista-ei-siirtoa-viimeisena-vuotena tiedot urakka))
 
 (defn tarkista-maksun-maara-alituksessa [tiedot urakka tavoitehinta hoitokauden-alkuvuosi]
   (let [maksu (- (::valikatselmus/urakoitsijan-maksu tiedot))
