@@ -132,9 +132,7 @@
                        :else nil)
           ;; Asetetaan päivämäärä hoitokauden viimeiselle kuukaudelle
           laskutuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (::valikatselmus/hoitokauden-alkuvuosi paatoksen-tiedot)) 9 15))
-          kokonaissumma (if (= ::valikatselmus/tavoitehinnan-alitus paatoksen-tyyppi)
-                          (* -1 (::valikatselmus/urakoitsijan-maksu paatoksen-tiedot))
-                          (::valikatselmus/urakoitsijan-maksu paatoksen-tiedot))
+          kokonaissumma (::valikatselmus/urakoitsijan-maksu paatoksen-tiedot)
           ;; Kulu
           kulu {:tyyppi "laskutettava"
                 :numero nil
