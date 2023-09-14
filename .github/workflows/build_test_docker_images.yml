@@ -1,7 +1,7 @@
 # Security hardening for GitHub Actions
 # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
 
-name: 'DEV-TOOLS: Build test docker images for GH Actions and development'
+name: 'Tools: Build test docker images for GH Actions and development'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
@@ -24,7 +24,7 @@ on:
         default: false
         required: true
       tag:
-        description: "Julkaistaanko versio esim. '13-3.1'"
+        description: "Julkaistava tag (esim. 13.11-3.3.2)"
         type: string
         required: false
 
@@ -51,6 +51,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Parse inputs
+        id: parsed-inputs
+        env:
+          TAG: ${{ inputs.tag }}
+          UPDATE_LATEST: ${{ inputs.update-latest }}
+        run: |
+          echo "Processing inputs"
+          
+          tags=()
+          
+          if [[ -n "$TAG" ]]; then
+            tags+=("<image>:$TAG")
+          fi
+          
+          if [[ "$UPDATE_LATEST" == 'true' ]]; then
+            tags+=("<image>:$TAG")
+          fi
+          
+          echo "tags=${tags[*]}" | tr ' ' ',' >> $GITHUB_OUTPUT
+          
+
         # Ota QEMU ja Buildx käyttöön multi-arch buildeja varten
         # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
@@ -65,30 +86,26 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push tietokanta
+      # Build & Push harja_harjadb-image
+      - id: tietokanta-tags
         if: ${{ inputs.dockerfile == 'tietokanta' }}
         env:
-          TAG: ${{ inputs.tag }}
-          UPDATE_LATEST: ${{ inputs.update-latest }}
-          BUILD_PLATFORM: linux/arm64,linux/amd64
-        run: |
-          echo "Build tietokanta"
-          cd .github/docker/tietokanta
-          
-          build_opts=()
-          push_opts=()
-          
-          if [[ -n "$TAG" ]]; then
-            build_opts+=("--tag" "$TAG")
-            push_opts+=("--tag" "$TAG")
-          fi
-          
-          if [[ "$UPDATE_LATEST" == 'true' ]]; then
-            push_opts+=(--update-latest)
-          fi
-          
-          ./build-image.sh "${build_opts[@]}" -- --platform "${BUILD_PLATFORM}"
+          TAGS: ${{ steps.parsed-inputs.outputs.tags }}
+        run: echo "tags=${TAGS//<image>/finnishtransportagency\/harja_harjadb}" >> $GITHUB_OUTPUT
+      - name: Build and push tietokanta
+        uses: docker/build-push-action@v5
+        if: ${{ inputs.dockerfile == 'tietokanta' }}
+        env:
+          TAGS: ${{ steps.tietokanta-tags.outputs.tags }}
+          BUILD_PLATFORMS: linux/arm64,linux/amd64
+        with:
+          context: .github/docker/tietokanta
+          push: false
+          tags: ${{ env.TAGS }}
+          platforms: ${{ env.BUILD_PLATFORMS }}
 
+
+      # Build & Push harja_cypress-image
       - name: Build and push Cypress
         if: ${{ inputs.dockerfile == 'cypress' }}
         run: |
@@ -97,6 +114,7 @@ jobs:
           
           ./build-image.sh
 
+      # Build & Push harja_activemq-image
       - name: Build and push ActiveMQ
         if: ${{ inputs.dockerfile == 'activemq' }}
         run: |
