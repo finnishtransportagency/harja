@@ -17,9 +17,9 @@ ARG POSTGRES_IMAGE_VERSION=13.11-bullseye
 ARG POSTGIS_VERSION=3.3.2
 
 
-# -----------------------------#
-# ---- Rakenna pohja-image ---- #
-# --------------------- -------#
+#-------------------------------#
+#----- Rakenna pohja-image -----#
+#-------------------------------#
 
 FROM postgres:${POSTGRES_IMAGE_VERSION} as base
 # https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
@@ -31,7 +31,7 @@ ARG POSTGIS_VERSION
 RUN apt-get update && apt-get install -y wget
 
 
-RUN wget "http://download.osgeo.org/postgis/source/postgis-${POSTGIS_VERSION}.tar.gz" \
+RUN wget "https://download.osgeo.org/postgis/source/postgis-${POSTGIS_VERSION}.tar.gz" \
     && tar -xvzf "postgis-${POSTGIS_VERSION}.tar.gz" \
     && rm "postgis-${POSTGIS_VERSION}.tar.gz"
 
@@ -98,7 +98,7 @@ RUN apt-get -y --purge autoremove  \
 
 
 #---------------------------------#
-# --- Harjadb-imagen rakennus --- #
+#---- Harjadb-imagen rakennus ----#
 #---------------------------------#
 FROM base
 
