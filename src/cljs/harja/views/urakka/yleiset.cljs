@@ -306,7 +306,7 @@
        ;; Jos mahdollisia käyttäjiä ei löydy, näytä viesti
        (when ei-kayttajia?
          [:div.ei-kayttjia-loydy
-          [ikonit/ikoni-ja-teksti [ikonit/livicon-info-sign] ei-kayttajia-info]])])))
+          [yleiset/keltainen-vihjelaatikko [:div ei-kayttajia-info] :info]])])))
 
 (defn- vastuuhenkilo-tooltip [vastuuhenkilo]
   [:span
