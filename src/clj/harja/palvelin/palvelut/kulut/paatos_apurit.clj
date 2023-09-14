@@ -104,7 +104,11 @@
           (or
             (= ::valikatselmus/tavoitehinnan-ylitys paatoksen-tyyppi)
             (= ::valikatselmus/tavoitehinnan-alitus paatoksen-tyyppi)
-            (= ::valikatselmus/kattohinnan-ylitys paatoksen-tyyppi)))
+            ;; Jos on kattohinnan ylitys, niin summan täytyy olla pienempi kuin nolla
+            ;; Koska on mahdollista, että kattohinnan ylityksen summa on siirretty seuraavalle vuodelle ja urakoitsija ei maksa nyt mitään
+            (and
+              (= ::valikatselmus/kattohinnan-ylitys paatoksen-tyyppi)
+              (> (::valikatselmus/urakoitsijan-maksu paatoksen-tiedot) 0))))
     (let [urakka-id (::urakka/id paatoksen-tiedot)
           urakka (first (q-urakat/hae-urakka db urakka-id))
           tehtavaryhman-avain (cond
