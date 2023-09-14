@@ -305,7 +305,7 @@
 
        ;; Jos mahdollisia käyttäjiä ei löydy, näytä viesti
        (when ei-kayttajia?
-         [:div.ei-kayttjia-loydy
+         [:div.kayttajia-ei-loydy
           [yleiset/keltainen-vihjelaatikko [:div ei-kayttajia-info] :info]])])))
 
 (defn- vastuuhenkilo-tooltip [vastuuhenkilo]
