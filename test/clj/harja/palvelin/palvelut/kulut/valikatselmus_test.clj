@@ -540,7 +540,7 @@
 (deftest kattohinnan-ylitys-siirto-viimeisena-vuotena
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2025
-        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm hoitokauden-alkuvuosi)]
+        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :tallenna-urakan-paatos
                                        (kayttaja urakka-id)
@@ -549,7 +549,24 @@
                                         ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
                                         ::valikatselmus/siirto 20000}))
                      (catch Exception e e))]
-    (= "Kattohinnan ylitystä ei voi siirtää ensi vuodelle urakan viimeisena vuotena" (-> vastaus ex-data :virheet :viesti))))
+    (is (= "Kattohinnan ylitystä ei voi siirtää ensi vuodelle urakan viimeisenä vuotena" (-> vastaus ex-data :virheet :viesti)))))
+
+(deftest kattohinnan-ylitys-siirto-koko-summa-ei-kulua
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        hoitokauden-alkuvuosi 2021
+        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm hoitokauden-alkuvuosi)]
+                       (kutsu-palvelua (:http-palvelin jarjestelma)
+                         :tallenna-urakan-paatos
+                         (kayttaja urakka-id)
+                         {::urakka/id urakka-id
+                          ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                          ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
+                          ::valikatselmus/urakoitsijan-maksu 0
+                          ::valikatselmus/siirto 20000}))
+                  (catch Exception e e))]
+    ;; Varmista, että kulua ei luoda
+    (is (nil? (::valikatselmus/kulu-id vastaus)))))
+
 
 (deftest kattohinnan-ylityksen-maksu-onnistuu-viimeisena-vuotena
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -625,9 +642,7 @@
                          (catch Exception e e))
         kulu-poistettu (hae-poistettu-kulu urakka-id kulu-id)]
     (is (= odotettu-urakoitsijan-maksu (::valikatselmus/urakoitsijan-maksu vastaus)))
-    ;; Tavoitehinnan alituksesta tuleva kulu on positiivinen ja se kuuluu tilaajan maksaa. Sen vuoksi emme odota
-    ;; Tässä enää negatiivista urakoitsijan maksua, vaan positiivista tilaajan maksua
-    (is (= (* -1 odotettu-urakoitsijan-maksu) (:kokonaissumma kulu-ensin)))
+    (is (= odotettu-urakoitsijan-maksu (:kokonaissumma kulu-ensin)))
     (is (false? (:poistettu kulu-ensin)))
     ;; Kulu pitää kirjata sen hoitokauden viimeiselle kuukaudelle, jolle päätös tehdään. Eli jos
     ;; Päätös tehdään 2021 alkaneelle hoitovuodelle pitää kulun eräpäivä (eli kirjauspäivä, hassu nimi kolumnilla) olla 15.9.2022
@@ -656,8 +671,8 @@
         hoitokauden-alkuvuosi 2021
         tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta (:db jarjestelma) {:urakka-id urakka-id
                                                                                    :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-        tilaajan-maksu -2100M
-        urakoitsijan-maksu (* 0.029 tavoitehinta)
+        ensi-vuoden-siirto 2100M
+        urakoitsijan-maksu (* -1 (* 0.029 tavoitehinta))
         vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
                          :tallenna-urakan-paatos
@@ -666,12 +681,12 @@
                           ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                           ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-alitus
                           ::valikatselmus/urakoitsijan-maksu urakoitsijan-maksu
-                          ::valikatselmus/tilaajan-maksu tilaajan-maksu}))
+                          ::valikatselmus/siirto ensi-vuoden-siirto}))
                   (catch Exception e e))
-
         ;; Päätökseltä kaivetaan kulun id
         kulu-id (::valikatselmus/kulu-id vastaus)
         kulu (hae-kulu urakka-id kulu-id)]
+    (is (< (:kokonaissumma kulu) 0))
     (is (=marginaalissa? urakoitsijan-maksu (:kokonaissumma kulu)))
     (is (=marginaalissa? urakoitsijan-maksu (::valikatselmus/urakoitsijan-maksu vastaus)))))
 
@@ -685,7 +700,7 @@
                                   (kayttaja urakka-id)
                                   {::urakka/id urakka-id})
 
-        tilaajan-maksu -2100M
+        siirto-ensi-vuodelle -2100M
         urakoitsijan-maksu -345M
         paatos-vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
                               (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -695,7 +710,7 @@
                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                  ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-alitus
                                  ::valikatselmus/urakoitsijan-maksu urakoitsijan-maksu
-                                 ::valikatselmus/tilaajan-maksu tilaajan-maksu}))
+                                 ::valikatselmus/siirto siirto-ensi-vuodelle}))
                          (catch Exception e e))
 
         ;; Haetaan päätökset ja varmistetaan että niitä on yksi
