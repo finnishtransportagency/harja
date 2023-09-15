@@ -55,7 +55,7 @@ jobs:
       # Tuottaa tagit, joilla julkaistava image merkitään
       # Imagen liittyvissä stepeissä "<image>"-string korvataan imageen viittaavalla stringillä: user/app
       # esim. finnishtransportagency/harja_cypress
-      # Esimerkki output: <image>:latest,<image>:13.11-3.3.2
+      # Esimerkki output: ghcr.io/<image>:latest,ghcr.io/<image>:13.11-3.3.2
       - name: Parse inputs
         id: parsed-inputs
         env:
@@ -67,11 +67,11 @@ jobs:
           tags=()
           
           if [[ -n "$TAG" ]]; then
-            tags+=("<image>:$TAG")
+            tags+=("${GH_DOCKER_REGISTRY}/<image>:$TAG")
           fi
           
           if [[ "$UPDATE_LATEST" == 'true' ]]; then
-            tags+=("<image>:latest")
+            tags+=("${GH_DOCKER_REGISTRY}/<image>:latest")
           fi
           
           echo "tags=${tags[*]}" | tr ' ' ',' >> $GITHUB_OUTPUT
