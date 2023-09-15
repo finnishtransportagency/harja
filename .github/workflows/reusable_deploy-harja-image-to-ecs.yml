@@ -1,7 +1,7 @@
 # Security hardening for GitHub Actions
 # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
 
-name: 'Deploy Harja image to ECS'
+name: '[Reusable] Deploy Harja image to ECS'
 
 on:
   workflow_call:
