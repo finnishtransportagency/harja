@@ -141,7 +141,7 @@
    [:div
     [valinnat/urakkavalinnat {:urakka valittu-urakka}
        ^{:key "urakkavalinnat"}
-       [urakka-valinnat/urakan-hoitokausi-ja-kuukausi valittu-urakka {:kuukausi-otsikko "Laskutuskuukausi"}]]]
+     [urakka-valinnat/urakan-hoitokausi valittu-urakka]]]
 
    [:div {:style {"flex-grow" 2}}
     [lajisuodatin-valinnat lajisuodattimet]]
