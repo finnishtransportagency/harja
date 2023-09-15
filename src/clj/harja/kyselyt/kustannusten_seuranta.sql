@@ -465,7 +465,6 @@ FROM erilliskustannus ek
      sopimus s
 WHERE s.urakka = :urakka
   AND ek.sopimus = s.id
-  AND ek.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
   AND ek.laskutuskuukausi BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND ek.poistettu IS NOT TRUE
 GROUP BY ek.tyyppi, ek.indeksin_nimi
