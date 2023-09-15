@@ -86,7 +86,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build & Push harja_harjadb-image
+      # -- Build & Push harja_harjadb-image --
       - id: tietokanta-tags
         if: ${{ inputs.dockerfile == 'tietokanta' }}
         env:
@@ -100,12 +100,23 @@ jobs:
           BUILD_PLATFORMS: linux/arm64,linux/amd64
         with:
           context: .github/docker/tietokanta
-          push: false
-          tags: ${{ env.TAGS }}
           platforms: ${{ env.BUILD_PLATFORMS }}
+          tags: ${{ env.TAGS }}
+          labels: |
+            "commit=${{ github.sha }}"
+            org.opencontainers.image.title=harjadb
+            org.opencontainers.image.source=https://github.com/finnishtransportagency/harja
+          # Cacheta, jotta tulevaisuuden buildit ovat nopeampia. ARM-buildissa kestää yli 30 minuuttia.
+          # https://docs.docker.com/build/ci/github-actions/cache/#registry-cache
+          cache-from: type=registry,ref=finnishtransportagency/harja_harjadb:buildcache
+          cache-to: type=registry,ref=finnishtransportagency/harja_harjadb:buildcache,mode=max
+          # On myös mahdollista käyttää (experimental) GH Actions cachea: https://docs.docker.com/build/cache/backends/gha/
+          #cache-from: type=gha
+          #cache-to: type=gha,mode=max
+          push: false
 
 
-      # Build & Push harja_cypress-image
+      # -- Build & Push harja_cypress-image --
       - name: Build and push Cypress
         if: ${{ inputs.dockerfile == 'cypress' }}
         run: |
@@ -114,7 +125,7 @@ jobs:
           
           ./build-image.sh
 
-      # Build & Push harja_activemq-image
+      # -- Build & Push harja_activemq-image --
       - name: Build and push ActiveMQ
         if: ${{ inputs.dockerfile == 'activemq' }}
         run: |
