@@ -143,9 +143,9 @@
        ^{:key "urakkavalinnat"}
      [urakka-valinnat/urakan-hoitokausi valittu-urakka]]]
 
-   [:div {:style {"flex-grow" 2}}
+   [:div {:style {:flex-grow 2}}
     [lajisuodatin-valinnat lajisuodattimet]]
-   [:div {:style {"flex-grow" 1}}
+   [:div {:style {:flex-grow 1}}
     (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                     (:id valittu-urakka))]
       (yleiset/wrap-if
@@ -154,7 +154,7 @@
          (oikeudet/oikeuden-puute-kuvaus :kirjoitus
            oikeudet/urakat-laadunseuranta-sanktiot)]
         ^{:key "Lisää uusi"}
-        [:div.lisaa-nappi
+        [:div.lisaa-nappi {:style {:float "right"}}
          [napit/uusi "Lisää uusi"
           #(do
              (reset! sivupaneeli-auki?-atom true)
