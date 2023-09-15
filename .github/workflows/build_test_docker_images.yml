@@ -4,7 +4,8 @@
 name: 'Tools: Build test docker images for GH Actions and development'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref_name }}
+  # Sallitaan vain yksi ajo kerrallaan, koska lopputulos pushataan container registryyn
+  group: ${{ github.workflow }}
   cancel-in-progress: true
 
 on:
