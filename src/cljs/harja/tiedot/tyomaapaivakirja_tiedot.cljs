@@ -231,7 +231,10 @@
     ;; Raportin sulkeminen käynnistää listauksen hakemisen tietokannasta aina
     (hae-paivakirjat app)
     (-> app
-      (assoc :valittu-rivi nil)))
+      (assoc
+        :valittu-rivi nil
+        :historia-haettu-typa-id nil
+        :kommentit-haettu-typa-id nil)))
 
   SelaaPaivakirjoja
   (process-event [{suunta :suunta} {:keys [nayta-rivit valittu-rivi] :as app}]
@@ -280,7 +283,7 @@
     (-> app
       (assoc :kommentit vastaus)
       (assoc :siirry-kommentteihin true)
-      (assoc :viimeksi-haettu-kommentit nil)
+      (assoc :kommentit-haettu-typa-id nil)
       (assoc-in [:valittu-rivi :kommenttien-maara] (inc (get-in app [:valittu-rivi :kommenttien-maara])))))
 
   TallennaKommenttiEpaonnistui
@@ -290,17 +293,16 @@
     app)
 
   HaeKommentit
-  (process-event [_ {:keys [valittu-rivi viimeksi-haettu-kommentit] :as app}]
+  (process-event [_ {:keys [valittu-rivi kommentit-haettu-typa-id] :as app}]
     ;; Älä kutsu uudelleen samalla päiväkirjalla jos tiedot haettu jo
-    ;; En usko että voi käyttää Nakymassa? lippua
-    (if-not (= viimeksi-haettu-kommentit (:tyomaapaivakirja_id valittu-rivi))
+    (if-not (= kommentit-haettu-typa-id (:tyomaapaivakirja_id valittu-rivi))
       (do
         (tuck-apurit/post! app :tyomaapaivakirja-hae-kommentit
           {:urakka-id (:id @nav/valittu-urakka)
            :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)}
           {:onnistui ->HaeKommentitOnnistui
            :epaonnistui ->HaeKommentitEpaonnistui})
-        (assoc app :viimeksi-haettu-kommentit (:tyomaapaivakirja_id valittu-rivi)))
+        (assoc app :kommentit-haettu-typa-id (:tyomaapaivakirja_id valittu-rivi)))
       app))
 
   HaeKommentitOnnistui
@@ -327,10 +329,9 @@
     (assoc app :siirry-kommentteihin-latauksesta true))
 
   HaeMuutoshistoria
-  (process-event [_ {:keys [valittu-rivi viimeksi-haettu-historia] :as app}]
+  (process-event [_ {:keys [valittu-rivi historia-haettu-typa-id] :as app}]
     ;; Älä kutsu uudelleen samalla päiväkirjalla jos tiedot haettu jo
-    ;; En usko että voi käyttää Nakymassa? lippua
-    (if-not (= viimeksi-haettu-historia (:tyomaapaivakirja_id valittu-rivi))
+    (if-not (= historia-haettu-typa-id (:tyomaapaivakirja_id valittu-rivi))
       (do
         (tuck-apurit/post! app :tyomaapaivakirja-hae-muutoshistoria
           {:tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
@@ -338,7 +339,7 @@
            :versio (:versio valittu-rivi)}
           {:onnistui ->HaeMuutoshistoriaOnnistui
            :epaonnistui ->HaeMuutoshistoriaEpaonnistui})
-        (assoc app :viimeksi-haettu-historia (:tyomaapaivakirja_id valittu-rivi)))
+        (assoc app :historia-haettu-typa-id (:tyomaapaivakirja_id valittu-rivi)))
       app))
 
   HaeMuutoshistoriaOnnistui
