@@ -22,13 +22,14 @@
      :tyyppi
      :string
      :validoi [[:ei-tyhja "Anna otsikko"]]
-     :nimi :otsikko :leveys 1}
+     :nimi :otsikko
+     :leveys 1}
     {:otsikko "Linkki"
      :tyyppi
      :string
      :validoi [[:ei-tyhja "Anna linkki"]]
-     :nimi :linkki :leveys 1.5}
-
+     :nimi :linkki
+     :leveys 1.5}
     {:otsikko "Pvm"
      ::lomake/col-luokka "col-xs-3"
      :pakollinen? true
@@ -42,16 +43,15 @@
 
 (defn videot* [e! _]
   (komp/luo
-   (komp/sisaan
-    #(do
-       (e! (tiedot/->HaeKoulutusvideot))))
-   
-   (fn [e! {:keys [videot]}]
-     [:div
-      [:h3 {:class "header-yhteiset"} "Info-näkymän videomateriaalit"]
-      [:p "Tästä voit muokata infosivun linkkejä."]
-      [:p "Kun lisäät rivejä syötä linkki muodossa https://www.youtube.com/watch?v=cTTxPCdU9zs"]
-      [videolistaus e! videot]])))
+    (komp/sisaan
+      #(do
+         (e! (tiedot/->HaeKoulutusvideot))))
+
+    (fn [e! {:keys [videot]}]
+      [:div
+       [:h3 {:class "header-yhteiset"} "Info-näkymän videomateriaalit"]
+       [:p "Tästä voit muokata infosivun linkkejä."]
+       [videolistaus e! videot]])))
 
 (defn nakyma []
   [tuck tiedot/tila videot*]) 
