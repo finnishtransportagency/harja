@@ -1,12 +1,6 @@
 -- name: hae-paivakirjalistaus
 SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
        d::DATE as paivamaara, -- Otetaan generoinnin päivämäärä
-       -- Ihan hihasta vedetty tilan määritelmä.
-       CASE
-           WHEN t.luotu IS NULL  AND d::DATE < NOW()::DATE THEN 'puuttuu'
-           WHEN t.luotu BETWEEN d::DATE and d::DATE + interval '12 hour' THEN 'ok'
-           WHEN t.luotu > d::DATE + interval '12 hour' THEN 'myohassa'
-       END as tila,
        count(tk.id) as "kommenttien-maara",
        t.versio,
        t.luotu, t.luoja, t.muokattu, t.muokkaaja
@@ -18,40 +12,132 @@ SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi",
 
 -- name: hae-paivakirja
 SELECT t.id as tyomaapaivakirja_id, t.urakka_id, u.nimi as "urakka-nimi", t.versio, t.paivamaara::DATE,
-       -- Hihasta vedetty tilan määritelmä
-       CASE
-           WHEN t.luotu BETWEEN t.paivamaara and t.paivamaara + interval '12 hour' THEN 'ok'
-           WHEN t.luotu > t.paivamaara + interval '12 hour' THEN 'myohassa'
-           END as tila,
-       (SELECT array_agg(row(aloitus, lopetus, nimi))
-        FROM tyomaapaivakirja_paivystaja
-        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as paivystajat,
-       (SELECT array_agg(row(aloitus, lopetus, nimi))
-        FROM tyomaapaivakirja_tyonjohtaja
-        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as tyonjohtajat,
-       (SELECT array_agg(row(havaintoaika, aseman_tunniste, aseman_tietojen_paivityshetki, ilman_lampotila, tien_lampotila, keskituuli, sateen_olomuoto, sadesumma))
-        FROM tyomaapaivakirja_saaasema
-        WHERE versio = :versio AND tyomaapaivakirja_id = t.id)  as "saa-asemat",
-       (SELECT array_agg(row(havaintoaika, paikka, kuvaus))
-        FROM tyomaapaivakirja_poikkeussaa
-        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as poikkeussaat,
-       (SELECT array_agg(row(aloitus, lopetus, tyokoneiden_lkm, lisakaluston_lkm))
-        FROM tyomaapaivakirja_kalusto
-        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as kalustot,
-       (SELECT array_agg(row(tyyppi::TEXT, kuvaus))
-        FROM tyomaapaivakirja_tapahtuma
-        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as tapahtumat,
-       (SELECT array_agg(row(kuvaus, aika))
-        FROM tyomaapaivakirja_toimeksianto
-        WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as toimeksiannot,
-       t.luotu, t.luoja, t.muokattu, t.muokkaaja,
-       count(tk.id) as "kommenttien-maara"
-  FROM tyomaapaivakirja t
-       JOIN urakka u ON t.urakka_id = u.id
-       LEFT JOIN tyomaapaivakirja_kommentti tk ON t.id = tk.tyomaapaivakirja_id AND tk.poistettu = false 
- WHERE t.id = :tyomaapaivakirja_id
-   AND t.versio = :versio
- GROUP BY t.id, u.nimi;
+      (SELECT array_agg(row(aloitus, lopetus, nimi))
+       FROM tyomaapaivakirja_paivystaja
+       WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as paivystajat,
+      (SELECT array_agg(row(aloitus, lopetus, nimi))
+       FROM tyomaapaivakirja_tyonjohtaja
+       WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as tyonjohtajat,
+      (SELECT array_agg(row(havaintoaika, aseman_tunniste, aseman_tietojen_paivityshetki, ilman_lampotila, tien_lampotila, keskituuli, sateen_olomuoto, sadesumma))
+       FROM tyomaapaivakirja_saaasema
+       WHERE versio = :versio AND tyomaapaivakirja_id = t.id)  as "saa-asemat",
+      (SELECT array_agg(row(havaintoaika, paikka, kuvaus))
+       FROM tyomaapaivakirja_poikkeussaa
+       WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as poikkeussaat,
+      (SELECT array_agg(row(aloitus, lopetus, tyokoneiden_lkm, lisakaluston_lkm))
+       FROM tyomaapaivakirja_kalusto
+       WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as kalustot,
+      (SELECT array_agg(row(tyyppi::TEXT, kuvaus))
+       FROM tyomaapaivakirja_tapahtuma
+       WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as tapahtumat,
+      (SELECT array_agg(row(kuvaus, aika))
+       FROM tyomaapaivakirja_toimeksianto
+       WHERE versio = :versio AND tyomaapaivakirja_id = t.id) as toimeksiannot,
+      t.luotu, t.luoja, t.muokattu, t.muokkaaja,
+      count(tk.id) as "kommenttien-maara"
+ FROM tyomaapaivakirja t
+      JOIN urakka u ON t.urakka_id = u.id
+      LEFT JOIN tyomaapaivakirja_kommentti tk ON t.id = tk.tyomaapaivakirja_id AND tk.poistettu = false 
+WHERE t.id = :tyomaapaivakirja_id
+  AND t.versio = :versio
+GROUP BY t.id, u.nimi;
+
+-- name: hae-kalusto-muutokset
+SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
+  'tyomaapaivakirja_kalusto',          -- taulu mistä haetaan
+  ARRAY['versio', 'tyokoneiden_lkm', 'lisakaluston_lkm', 'muokattu', 'urakka_id'], -- sarakkeet mitä verrataan ja palautetaan
+  ARRAY['muokattu', 'versio'],         -- sarakkeet mitä ei verrata
+  :tyomaapaivakirja_id::INTEGER,       -- tyomaapaivakirja_id
+  :urakka_id::INTEGER,                 -- urakka_id
+  'urakka_id',                         -- NULL tai sarake joka täytyy täsmätä verratessa
+  'kalustoja',                         -- näytetään UIssa esim 'Lisätty x', 'Poistettu x'
+  NULL                                 -- sarakkeet mitä ei verrata join konditiossa
+  -- löytyy näiden lisäksi myös 'sama', mitä ei tässä tarvita
+) WHERE toiminto IN ('muutettu', 'poistettu', 'lisatty');
+
+-- name: hae-poikkeussaa-muutokset
+SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
+  'tyomaapaivakirja_poikkeussaa',      -- taulu mistä haetaan
+  ARRAY['versio', 'paikka', 'kuvaus', 'muokattu'], -- sarakkeet mitä verrataan ja palautetaan
+  ARRAY['muokattu', 'versio'],         -- sarakkeet mitä ei verrata
+  :tyomaapaivakirja_id::INTEGER,       -- tyomaapaivakirja_id
+  :urakka_id::INTEGER,                 -- urakka_id
+  NULL,                                -- NULL tai sarake joka täytyy täsmätä verratessa
+  'säätietoja',                        -- näytetään UIssa esim 'Lisätty x', 'Poistettu x'
+  NULL                                 -- sarakkeet mitä ei verrata join konditiossa
+) WHERE toiminto IN ('muutettu', 'poistettu', 'lisatty');
+
+-- name: hae-paivystaja-muutokset
+SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
+  'tyomaapaivakirja_paivystaja',        -- taulu mistä haetaan
+  ARRAY['versio', 'nimi', 'muokattu'],  -- sarakkeet mitä verrataan ja palautetaan
+  ARRAY['muokattu', 'versio'],          -- sarakkeet mitä ei verrata
+  :tyomaapaivakirja_id::INTEGER,        -- tyomaapaivakirja_id
+  :urakka_id::INTEGER,                  -- urakka_id
+  NULL,                                 -- NULL tai sarake joka täytyy täsmätä verratessa
+  'päivystäjiä',                        -- näytetään UIssa esim 'Lisätty x', 'Poistettu x'
+  NULL                                  -- sarakkeet mitä ei verrata join konditiossa
+) WHERE toiminto IN ('muutettu', 'poistettu', 'lisatty');
+
+-- name: hae-tyonjohtaja-muutokset
+SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
+  'tyomaapaivakirja_tyonjohtaja',       -- taulu mistä haetaan
+  ARRAY['versio', 'nimi', 'muokattu'],  -- sarakkeet mitä verrataan ja palautetaan
+  ARRAY['muokattu', 'versio'],          -- sarakkeet mitä ei verrata
+  :tyomaapaivakirja_id::INTEGER,        -- tyomaapaivakirja_id
+  :urakka_id::INTEGER,                  -- urakka_id
+  NULL,                                 -- NULL tai sarake joka täytyy täsmätä verratessa
+  'työnjohtajia',                       -- näytetään UIssa esim 'Lisätty x', 'Poistettu x'
+  NULL                                  -- sarakkeet mitä ei verrata join konditiossa
+) WHERE toiminto IN ('muutettu', 'poistettu', 'lisatty');
+
+-- name: hae-saaasema-muutokset
+SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
+  'tyomaapaivakirja_saaasema',          -- taulu mistä haetaan
+  ARRAY['versio', 'aseman_tunniste', 'ilman_lampotila', 'tien_lampotila', 'keskituuli', 'sateen_olomuoto', 'sadesumma', 'muokattu'], -- sarakkeet mitä verrataan ja palautetaan
+  ARRAY['muokattu', 'versio'],          -- sarakkeet mitä ei verrata
+  :tyomaapaivakirja_id::INTEGER,        -- tyomaapaivakirja_id
+  :urakka_id::INTEGER,                  -- urakka_id
+  'aseman_tunniste',                    -- NULL tai sarake joka täytyy täsmätä verratessa
+  'sääasematietoja',                    -- näytetään UIssa esim 'Lisätty x', 'Poistettu x'
+  NULL                                  -- sarakkeet mitä ei verrata join konditiossa
+) WHERE toiminto IN ('muutettu', 'poistettu', 'lisatty');
+
+-- name: hae-tapahtuma-muutokset
+SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
+  'tyomaapaivakirja_tapahtuma',         -- taulu mistä haetaan
+  ARRAY['versio', 'kuvaus', 'tyyppi', 'muokattu'], -- sarakkeet mitä verrataan ja palautetaan
+  ARRAY['muokattu', 'versio'],          -- sarakkeet mitä ei verrata
+  :tyomaapaivakirja_id::INTEGER,        -- tyomaapaivakirja_id
+  :urakka_id::INTEGER,                  -- urakka_id
+  NULL,                                 -- NULL tai sarake joka täytyy täsmätä verratessa
+  'tapahtumia',                         -- näytetään UIssa esim 'Lisätty x', 'Poistettu x'
+  NULL                                  -- sarakkeet mitä ei verrata join konditiossa
+) WHERE toiminto IN ('muutettu', 'poistettu', 'lisatty');
+
+-- name: hae-tieston-muutokset
+SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
+  'tyomaapaivakirja_tieston_toimenpide', -- taulu mistä haetaan
+  ARRAY['versio', 'tyyppi', 'tehtavat', 'toimenpiteet', 'muokattu', 'urakka_id'], -- sarakkeet mitä verrataan ja palautetaan
+  ARRAY['muokattu', 'versio'],           -- sarakkeet mitä ei verrata
+  :tyomaapaivakirja_id::INTEGER,         -- tyomaapaivakirja_id
+  :urakka_id::INTEGER,                   -- urakka_id
+  NULL,                                  -- NULL tai sarake joka täytyy täsmätä verratessa
+  'tiestön toimenpiteä',                 -- näytetään UIssa esim 'Lisätty x', 'Poistettu x'
+  ARRAY['toimenpiteet', 'tehtavat']      -- sarakkeet mitä ei verrata join konditiossa
+) WHERE toiminto IN ('muutettu', 'poistettu', 'lisatty');
+
+-- name: hae-toimeksianto-muutokset
+SELECT * FROM tyomaapaivakirja_etsi_taulun_versiomuutokset(
+  'tyomaapaivakirja_toimeksianto',        -- taulu mistä haetaan
+  ARRAY['versio', 'kuvaus', 'aika', 'muokattu', 'urakka_id'], -- sarakkeet mitä verrataan ja palautetaan
+  ARRAY['muokattu', 'versio'],            -- sarakkeet mitä ei verrata
+  :tyomaapaivakirja_id::INTEGER,          -- tyomaapaivakirja_id
+  :urakka_id::INTEGER,                    -- urakka_id
+  NULL,                                   -- NULL tai sarake joka täytyy täsmätä verratessa
+  'toimeksiantoja',                       -- näytetään UIssa esim 'Lisätty x', 'Poistettu x'
+  NULL                                    -- sarakkeet mitä ei verrata join konditiossa
+) WHERE toiminto IN ('muutettu', 'poistettu', 'lisatty');
 
 -- name: hae-paivakirjan-tehtavat
 SELECT ttt.tyyppi, ttt.aloitus, ttt.lopetus, array_agg(tehtava.nimi) as tehtavat
@@ -105,41 +191,41 @@ AND tyomaapaivakirja_id = :tyomaapaivakirja_id
 AND luoja = :kayttaja;
 
 -- name: lisaa-kalusto<!
-INSERT INTO tyomaapaivakirja_kalusto (urakka_id, tyomaapaivakirja_id, versio, aloitus, lopetus, tyokoneiden_lkm, lisakaluston_lkm)
-VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :aloitus, :lopetus, :tyokoneiden-lkm, :lisakaluston-lkm);
+INSERT INTO tyomaapaivakirja_kalusto (urakka_id, tyomaapaivakirja_id, versio, aloitus, lopetus, tyokoneiden_lkm, lisakaluston_lkm, muokattu)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :aloitus, :lopetus, :tyokoneiden-lkm, :lisakaluston-lkm, now());
 
 -- name: lisaa-paivystaja<!
-INSERT INTO tyomaapaivakirja_paivystaja (urakka_id, tyomaapaivakirja_id, versio, aloitus, lopetus, nimi)
-VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :aloitus, :lopetus, :nimi);
+INSERT INTO tyomaapaivakirja_paivystaja (urakka_id, tyomaapaivakirja_id, versio, aloitus, lopetus, nimi, muokattu)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :aloitus, :lopetus, :nimi, now());
 
 -- name: lisaa-tyonjohtaja<!
-INSERT INTO tyomaapaivakirja_tyonjohtaja (urakka_id, tyomaapaivakirja_id, versio, aloitus, lopetus, nimi)
-VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :aloitus, :lopetus, :nimi);
+INSERT INTO tyomaapaivakirja_tyonjohtaja (urakka_id, tyomaapaivakirja_id, versio, aloitus, lopetus, nimi, muokattu)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :aloitus, :lopetus, :nimi, now());
 
 -- name: lisaa-saatiedot<!
 INSERT INTO tyomaapaivakirja_saaasema (urakka_id, tyomaapaivakirja_id, versio, havaintoaika, aseman_tunniste,
                                        aseman_tietojen_paivityshetki, ilman_lampotila, tien_lampotila,
-                                       keskituuli, sateen_olomuoto, sadesumma)
+                                       keskituuli, sateen_olomuoto, sadesumma, muokattu)
 VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :havaintoaika, :aseman-tunniste, :aseman-tietojen-paivityshetki,
-        :ilman-lampotila, :tien-lampotila, :keskituuli, :sateen-olomuoto, :sadesumma);
+        :ilman-lampotila, :tien-lampotila, :keskituuli, :sateen-olomuoto, :sadesumma, now());
 
 -- name: lisaa-poikkeussaa<!
-INSERT INTO tyomaapaivakirja_poikkeussaa (urakka_id, tyomaapaivakirja_id, versio, havaintoaika, paikka, kuvaus)
-VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :havaintoaika, :paikka, :kuvaus);
+INSERT INTO tyomaapaivakirja_poikkeussaa (urakka_id, tyomaapaivakirja_id, versio, havaintoaika, paikka, kuvaus, muokattu)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :havaintoaika, :paikka, :kuvaus, now());
 
 --name: lisaa-tie-toimenpide<!
 INSERT INTO tyomaapaivakirja_tieston_toimenpide (urakka_id, tyomaapaivakirja_id, versio, tyyppi, aloitus, lopetus, tehtavat,
-                                                 toimenpiteet)
+                                                 toimenpiteet, muokattu)
 VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :tyyppi::tyomaapaivakirja_toimenpide_tyyppi, :aloitus, :lopetus,
-        :tehtavat::integer[], :toimenpiteet::text[]);
+        :tehtavat::integer[], :toimenpiteet::text[], now());
 
 --name: lisaa-tapahtuma<!
-INSERT INTO tyomaapaivakirja_tapahtuma (urakka_id, tyomaapaivakirja_id, versio, tyyppi, kuvaus)
-VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :tyyppi::tyomaapaivakirja_tapahtumatyyppi, :kuvaus);
+INSERT INTO tyomaapaivakirja_tapahtuma (urakka_id, tyomaapaivakirja_id, versio, tyyppi, kuvaus, muokattu)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :tyyppi::tyomaapaivakirja_tapahtumatyyppi, :kuvaus, now());
 
 -- name: lisaa-toimeksianto<!
-INSERT INTO tyomaapaivakirja_toimeksianto (urakka_id, tyomaapaivakirja_id, versio, kuvaus, aika)
-VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kuvaus, :aika);
+INSERT INTO tyomaapaivakirja_toimeksianto (urakka_id, tyomaapaivakirja_id, versio, kuvaus, aika, muokattu)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kuvaus, :aika, now());
 
 -- name: lisaa-kommentti<!
 INSERT INTO tyomaapaivakirja_kommentti (urakka_id, tyomaapaivakirja_id, versio, kommentti, luotu, luoja)

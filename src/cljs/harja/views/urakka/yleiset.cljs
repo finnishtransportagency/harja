@@ -259,11 +259,15 @@
 
 (defn- aseta-vastuuhenkilo [paivita-vastuuhenkilot!
                             urakka-id kayttaja kayttajat vastuuhenkilot rooli
-                            ensisijainen varalla]
+                            ensisijainen varalla kayttaja-tyyppi]
   (r/with-let [henkilot (atom {:ensisijainen :ei-muutosta
                                :varalla :ei-muutosta})]
     ;; FIXME: valitse oletushenkilöksi nykyinen käyttäjänimen perusteella
-    (let [mahdolliset-henkilot (filter #(some (partial = rooli) (:roolinimet %)) kayttajat)]
+    (let [mahdolliset-henkilot (filter #(some (partial = rooli) (:roolinimet %)) kayttajat)
+          ei-kayttajia? (empty? mahdolliset-henkilot)
+          ei-kayttajia-info (if (= kayttaja-tyyppi "vastuuhenkilö")
+                              "Ei urakan vastuuhenkilöitä saatavilla. Vastuuhenkilöt tulee ensin asettaa urakalle Käyttövaltuushallinnassa."
+                              "Ei urakanvalvojia saatavilla. Urakanvalvojat tulee ensin asettaa urakalle Käyttövaltuushallinnassa.")]
 
       [:div.vastuuhenkilo-muokkaus
        [lomake/lomake {:muokkaa! #(reset! henkilot %)
@@ -298,7 +302,12 @@
                             (fmt/kayttaja varalla)
                             (fmt/kayttaja %))
           :valinnat mahdolliset-henkilot}]
-        @henkilot]])))
+        @henkilot]
+
+       ;; Jos mahdollisia käyttäjiä ei löydy, näytä viesti
+       (when ei-kayttajia?
+         [:div.kayttajia-ei-loydy.fontti-14
+          [yleiset/keltainen-vihjelaatikko [:div ei-kayttajia-info] :info]])])))
 
 (defn- vastuuhenkilo-tooltip [vastuuhenkilo]
   [:span
@@ -309,12 +318,15 @@
                             urakka-id kayttaja kayttajat vastuuhenkilot rooli]
   (let [roolin-henkilot (filter #(= rooli (:rooli %)) vastuuhenkilot)
         ensisijainen (first (filter :ensisijainen roolin-henkilot))
+        kayttaja-tyyppi (case rooli
+                          ("ELY_Urakanvalvoja" "Tilaajan_Urakanvalvoja") "urakanvalvoja"
+                          "vastuuhenkilo" "vastuuhenkilö")
         varalla (first (filter (comp not :ensisijainen) roolin-henkilot))
         voi-muokata? (and (not (k/virhe? kayttajat))
-                          (not (empty? kayttajat))
-                          (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset urakka-id)
-                          (or (not= rooli "ELY_Urakanvalvoja")
-                              (= :tilaaja (roolit/osapuoli kayttaja))))]
+                       (not (empty? kayttajat))
+                       (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset urakka-id)
+                       (or (not= rooli "ELY_Urakanvalvoja")
+                         (= :tilaaja (roolit/osapuoli kayttaja))))]
     [:div.vastuuhenkilo.inline-block
      [:span
       (if ensisijainen
@@ -329,15 +341,12 @@
          [vastuuhenkilo-tooltip varalla]])
       (when voi-muokata?
         [:span.klikattava {:on-click #(modal/nayta!
-                                        {:otsikko (str "Urakan ensisijainen "
-                                                       (case rooli
-                                                         ("ELY_Urakanvalvoja" "Tilaajan_Urakanvalvoja") "urakanvalvoja"
-                                                         "vastuuhenkilo" "vastuuhenkilö"))}
+                                        {:otsikko (str "Urakan ensisijainen " kayttaja-tyyppi)}
                                         [aseta-vastuuhenkilo
                                          paivita-vastuuhenkilot!
                                          urakka-id kayttaja kayttajat
                                          vastuuhenkilot rooli
-                                         ensisijainen varalla])}
+                                         ensisijainen varalla kayttaja-tyyppi])}
          " "
          (ikonit/livicon-wrench)
          " "])]]))
