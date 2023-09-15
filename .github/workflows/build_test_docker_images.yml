@@ -27,7 +27,7 @@ on:
       tag:
         description: "Julkaistava tag (esim. 13.11-3.3.2)"
         type: string
-        required: false
+        required: true
 
 
 # Tässä voi määritellä yhteiset permissionit kaikille jobeille workflowissa tarvittaessa
@@ -113,6 +113,8 @@ jobs:
             "commit=${{ github.sha }}"
             org.opencontainers.image.title=harja_harjadb
             org.opencontainers.image.source=https://github.com/finnishtransportagency/harja
+            org.opencontainers.image.description="PostgreSQL with PostGIS extension, see version in tag"
+
           # Cacheta, jotta tulevaisuuden buildit ovat nopeampia. ARM-buildissa kestää yli 30 minuuttia.
           # https://docs.docker.com/build/ci/github-actions/cache/#registry-cache
           cache-from: type=registry,ref=${{ env.GH_DOCKER_REGISTRY }}/finnishtransportagency/harja_harjadb:buildcache
@@ -120,7 +122,17 @@ jobs:
           # On myös mahdollista käyttää (experimental) GH Actions cachea: https://docs.docker.com/build/cache/backends/gha/
           #cache-from: type=gha
           #cache-to: type=gha,mode=max
+          # Disabloi provenance attestations: https://github.com/docker/build-push-action/issues/820
+          provenance: false
           push: true
+          # Adding a description to multi-arch images
+          # https://github.com/github/docs/blob/main/content/packages/working-with-a-github-packages-registry/working-with-the-container-registry.md#adding-a-description-to-multi-arch-images
+          outputs: >-
+            type=image,
+            name=${{ env.GH_DOCKER_REGISTRY }}/finnishtransportagency/harja_harjadb,
+            annotation-index.org.opencontainers.image.description=PostgreSQL with PostGIS extension,
+            annotation-index.org.opencontainers.image.revision=${{ github.sha }},
+            annotation-index.org.opencontainers.image.source=https://github.com/finnishtransportagency/harja
 
 
       # -- Build & Push harja_cypress-image --
@@ -160,7 +172,16 @@ jobs:
           # On myös mahdollista käyttää (experimental) GH Actions cachea: https://docs.docker.com/build/cache/backends/gha/
           #cache-from: type=gha
           #cache-to: type=gha,mode=max
+          # Disabloi provenance attestations: https://github.com/docker/build-push-action/issues/820
+          provenance: false
           push: true
+          # Adding a description to multi-arch images
+          # https://github.com/github/docs/blob/main/content/packages/working-with-a-github-packages-registry/working-with-the-container-registry.md#adding-a-description-to-multi-arch-images
+          outputs: >-
+            type=image,
+            name=${{ env.GH_DOCKER_REGISTRY }}/finnishtransportagency/harja_cypress,
+            annotation-index.org.opencontainers.image.revision=${{ github.sha }},
+            annotation-index.org.opencontainers.image.source=https://github.com/finnishtransportagency/harja
 
 
       # -- Build & Push harja_activemq-image --
@@ -192,4 +213,13 @@ jobs:
           # On myös mahdollista käyttää (experimental) GH Actions cachea: https://docs.docker.com/build/cache/backends/gha/
           #cache-from: type=gha
           #cache-to: type=gha,mode=max
+          # Disabloi provenance attestations: https://github.com/docker/build-push-action/issues/820
+          provenance: false
           push: false
+          # Adding a description to multi-arch images
+          # https://github.com/github/docs/blob/main/content/packages/working-with-a-github-packages-registry/working-with-the-container-registry.md#adding-a-description-to-multi-arch-images
+          outputs: >-
+            type=image,
+            name=${{ env.GH_DOCKER_REGISTRY }}/finnishtransportagency/harja_activemq,
+            annotation-index.org.opencontainers.image.revision=${{ github.sha }},
+            annotation-index.org.opencontainers.image.source=https://github.com/finnishtransportagency/harja
