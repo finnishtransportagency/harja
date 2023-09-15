@@ -14,20 +14,19 @@
 (defrecord PaivitaKoulutusvideotEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
-
   TallennaVideo
   (process-event [{videot :videot} app]
     (tuck-apurit/post! app :paivita-koulutusvideot
-                       {:tiedot videot}
-                       {:onnistui ->PaivitaKoulutusvideotOnnistui
-                        :epaonnistui ->PaivitaKoulutusvideotEpaonnistui}))
+      {:tiedot videot}
+      {:onnistui ->PaivitaKoulutusvideotOnnistui
+       :epaonnistui ->PaivitaKoulutusvideotEpaonnistui}))
 
   HaeKoulutusvideot
   (process-event [_ app]
     (tuck-apurit/post! app :hae-koulutusvideot
-                       {}
-                       {:onnistui ->HaeKoulutusvideotOnnistui
-                        :epaonnistui ->HaeKoulutusvideotEpaonnistui}))
+      {}
+      {:onnistui ->HaeKoulutusvideotOnnistui
+       :epaonnistui ->HaeKoulutusvideotEpaonnistui}))
 
   HaeKoulutusvideotOnnistui
   (process-event [{vastaus :vastaus} app]
