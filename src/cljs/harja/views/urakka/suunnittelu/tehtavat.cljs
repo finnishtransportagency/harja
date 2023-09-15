@@ -157,13 +157,16 @@
              [:label (str "Vuosi " vuosi "-" (inc vuosi))]
              [kentat/tee-kentta {:tyyppi :numero
                                  :elementin-id (str "vetolaatikko-input-" (vali->viiva nimi) "-" vuosi)
-                                 :disabled? (not @joka-vuosi-erikseen?)                            
-                                 :on-blur #(tallenna! e! 
+                                 :disabled? (not @joka-vuosi-erikseen?)
+                                 :on-blur #(tallenna! e!
                                              (:sopimukset-syotetty? app)
                                              :maarat
-                                             (assoc rivi 
+                                             (assoc rivi
                                                :joka-vuosi-erikseen? @joka-vuosi-erikseen?
-                                               :sopimuksen-tehtavamaara (.. % -target -value) 
+                                               :sopimus-maara (let [maara (.. % -target -value)]
+                                                                (if-not (empty? maara)
+                                                                  (js/parseInt maara)
+                                                                  0))
                                                :hoitokausi vuosi))}
               (r/cursor t/taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat vuosi])]]))
         [:div.vetolaatikko-kentat [:span (str yksikko)]]]])))
