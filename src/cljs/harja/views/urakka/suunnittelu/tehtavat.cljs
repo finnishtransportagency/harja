@@ -164,7 +164,7 @@
                                              (assoc rivi
                                                :joka-vuosi-erikseen? @joka-vuosi-erikseen?
                                                :sopimus-maara (let [maara (.. % -target -value)]
-                                                                (if-not (empty? maara)
+                                                                (if-not (str/blank? maara)
                                                                   (js/parseInt maara)
                                                                   0))
                                                :hoitokausi vuosi))}
