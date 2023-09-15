@@ -85,6 +85,28 @@
          ;; Valitse ainoa, jos tyyppejä on vain yksi.
          ;; Esimerkiksi ylläpitourakoiden tapauksessa on saatavilla vain "yllapidon_bonus"
          :valitse-ainoa? true
+         ;; Aseta toimenpideinstanssi, jos se voidaan tietää ennalta
+         :aseta (fn [rivi arvo]
+                  ;; Aseta toimenpideinstanssi, mikäli sitä ei ole asetettu ennakkoon oikein
+                  (let [asetettava-tpi (cond (and
+                                               (not (nil? arvo))
+                                               (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                                               (= :alihankintabonus arvo)
+                                               (pvm/sama-tai-jalkeen? (:perintapvm rivi) (pvm/->pvm "01.10.2022")))
+                                         ;; Maksuehto/alihankintabonukselle otetaan aina defaulttina MHU Ylläpito toimenpideinstanssiksi
+                                         (first (filter #(= "20190" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit))
+                                         (or
+                                           (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) (not= :alihankintabonus arvo))
+                                           (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) (= :alihankintabonus arvo)
+                                             (pvm/ennen? (:perintapvm rivi) (pvm/->pvm "01.10.2022"))))
+                                         (first (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit))
+
+                                         :else
+                                         ;; Muuten otetaan vain listan ensimmäinen
+                                         (:tpi_id (first @tiedot-urakka/urakan-toimenpideinstanssit)))]
+                    (-> rivi
+                      (assoc :toimenpideinstanssi (:tpi_id asetettava-tpi))
+                      (assoc :laji arvo))))
          :valinnat (sanktio-domain/luo-kustannustyypit (:tyyppi @nav/valittu-urakka) (:id @istunto/kayttaja) tpi)
          :valinta-nayta #(or (sanktio-domain/bonuslaji->teksti %) "- Valitse tyyppi -")
          ::lomake/col-luokka "col-xs-12"
