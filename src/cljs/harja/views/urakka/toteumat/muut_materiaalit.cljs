@@ -196,6 +196,8 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                   :voi-muokata? (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))
                                   (not jarjestelman-luoma?))
                   :muokkaa! muokkaa!
+                  :validoi-alussa? true
+                  :kutsu-muokkaa-renderissa? true
                   :footer [napit/palvelinkutsu-nappi
                            "Tallenna toteuma"
                            #(tallenna-toteuma-ja-toteumamateriaalit!
@@ -210,8 +212,6 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                             :disabled (or (not voi-tallentaa?)
                                         jarjestelman-luoma?
                                         (and (sijainti-pakollinen? @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
-                                          ; alla kommentissa kun en ole varma kumpi tapa oikein vai onko kumpikaan :-)
-                                          ;(not (tr-osoite-taytetty? (:tierekisteriosoite @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)))
                                           (not (:tierekisteriosoite @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)))
                                         (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))))}]}
 
@@ -241,8 +241,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                       (when jarjestelman-luoma?
              {:otsikko "Lähde" :nimi :luoja :tyyppi :string
               :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")")) :muokattava? (constantly false)})
-           {
-            :label-ja-kentta-samalle-riville? false
+           {:label-ja-kentta-samalle-riville? false
             :otsikko "Sijainti"
             :nimi :tierekisteriosoite
             :tyyppi :tierekisteriosoite
@@ -250,11 +249,12 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
             :alaotsikot? false
             :sijainti (atom nil)
             :pakollinen? (sijainti-pakollinen? @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
-            :validoi [(fn [osoite {sijainti :sijainti}]
-                        (when (and (sijainti-pakollinen? @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
+            :tarkkaile-ulkopuolisia-muutoksia? true
+            :validoi [(fn [osoite]
+                         (when (and (sijainti-pakollinen? @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
                                 (not (tr-osoite-taytetty? osoite)))
-                          (str "Sijaintitieto on pakollinen materiaaleille " (str/join " tai " pakolliset-materiaalit))))]
-            }
+                          (str "Sijaintitieto on pakollinen materiaaleille " (str/join " tai " pakolliset-materiaalit))))
+                      [:kokonainen-tr-osoite]]}
            {:otsikko "Materiaalit" :nimi :materiaalit :palstoja 2
             :komponentti (fn [_]
                            [materiaalit-ja-maarat
