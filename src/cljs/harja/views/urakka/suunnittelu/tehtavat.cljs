@@ -133,6 +133,11 @@
 
 (defn vali->viiva [nimi] (str/replace (str/lower-case nimi) " " "-"))
 
+(defn- parsi-maara-tai-nolla [arvo]
+  (if-not (str/blank? arvo)
+    (js/parseInt arvo)
+    0))
+
 (defn vetolaatikko-komponentti-
   [_ _ {:keys [vanhempi id yksikko nimi] :as _rivi}]
   (let [joka-vuosi-erikseen? (r/cursor t/taulukko-tila [:maarat vanhempi id :joka-vuosi-erikseen?])]
@@ -164,9 +169,7 @@
                                              (assoc rivi
                                                :joka-vuosi-erikseen? @joka-vuosi-erikseen?
                                                :sopimus-maara (let [maara (.. % -target -value)]
-                                                                (if-not (str/blank? maara)
-                                                                  (js/parseInt maara)
-                                                                  0))
+                                                                (parsi-maara-tai-nolla maara))
                                                :hoitokausi vuosi))}
               (r/cursor t/taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat vuosi])]]))
         [:div.vetolaatikko-kentat [:span (str yksikko)]]]])))
@@ -239,6 +242,8 @@
                "70%")}
             ;; ennen urakkaa -moodi         
             {:otsikko "Tarjouksen määrä" :nimi :sopimus-maara :tyyppi :numero :leveys "180px"
+             :hae #(let [maara (:sopimus-maara %)]
+                     (parsi-maara-tai-nolla maara))
              :muokattava? (constantly (if sopimukset-syotetty? false true)) :tasaa :oikea :veda-oikealle? true}
             ;; urakan ajan suunnittelu -moodi         
             (when sopimukset-syotetty? 
@@ -280,6 +285,8 @@
             ;; ennen urakkaa -moodi
             (when (not sopimukset-syotetty?)
               {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimus-maara :tyyppi :numero :leveys "180px"
+               :hae #(let [maara (:sopimus-maara %)]
+                       (parsi-maara-tai-nolla maara))
                :muokattava? (comp kun-yksikko kun-kaikki-samat) :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo
                :veda-oikealle? true :tasaa :oikea})
             ;; urakan ajan suunnittelu -moodi
