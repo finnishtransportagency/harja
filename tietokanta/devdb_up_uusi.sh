@@ -7,14 +7,12 @@ set -e
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IMAGE=ghcr.io/finnishtransportagency/harja_harjadb:latest
-# Alla kokeiluja varten Harjan Container registrystä löytyvät spesifit versiot testikannasta
-# Tämä on nykyisellään normaalisti toimiva versio
-#IMAGE=ghcr.io/finnishtransportagency/harja_harjadb:12-3.1
-# TODO: AWS:ssä on ajossa Postgres 13. Harja on saatava toimimaan vähintään sillä versiolla.
+
+# Alla saatavilla olevia versioita
+# https://github.com/finnishtransportagency/harja/pkgs/container/harja_harjadb/versions
+#IMAGE=ghcr.io/finnishtransportagency/harja_harjadb:13.11-3.3.2
 #IMAGE=ghcr.io/finnishtransportagency/harja_harjadb:13-3.1
-# TODO: Postgres 13, mutta uudemmalla PostGIS 3.4 versiolla (aiempi versio 3.1)
-# https://docs.aws.amazon.com/AmazonRDS/latest/AuroraPostgreSQLReleaseNotes/AuroraPostgreSQL.Extensions.html#AuroraPostgreSQL.Extensions.13
-#IMAGE=ghcr.io/finnishtransportagency/harja_harjadb:13-3.4
+#IMAGE=ghcr.io/finnishtransportagency/harja_harjadb:12-3.1
 
 
 devdb_image_lkm=$(docker image list -q --filter=reference=${IMAGE} 2>/dev/null | wc -l)

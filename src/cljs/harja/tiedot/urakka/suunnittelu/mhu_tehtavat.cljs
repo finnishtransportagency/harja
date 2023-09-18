@@ -291,9 +291,9 @@
   [vuosi sopimuksen-tehtavamaara])
 
 (defn paivita-vuosien-maarat 
-  [taulukko-tila {:keys [id vanhempi sopimuksen-tehtavamaara joka-vuosi-erikseen? hoitokausi]}]
-  (if joka-vuosi-erikseen?                  
-    (assoc-in taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat hoitokausi] sopimuksen-tehtavamaara)
+  [taulukko-tila {:keys [id vanhempi sopimus-maara joka-vuosi-erikseen? hoitokausi]}]
+  (if joka-vuosi-erikseen?
+    (assoc-in taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat hoitokausi] sopimus-maara)
     (let [urakan-vuodet 
           (range 
             (-> @tiedot/yleiset
@@ -306,7 +306,7 @@
               pvm/vuosi))]
       (assoc-in taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat]
         (into {} 
-          (map (r/partial tayta-vuodet sopimuksen-tehtavamaara)) 
+          (map (r/partial tayta-vuodet sopimus-maara))
           urakan-vuodet)))))
 
 (defn kopioi-tarvittaessa-sopimusmaarat-maariin
@@ -494,12 +494,15 @@
   SopimuksenTehtavaTallennusOnnistui
   (process-event 
     [{:keys [vastaus]} app]
-    (dissoc app :tallennettava))
+    (let [onnistunut-tehtava-id (:harja.domain.toimenpidekoodi/id (first vastaus))
+          virheet (dissoc @taulukko-virheet onnistunut-tehtava-id)]
+      (reset! taulukko-virheet virheet)
+      (dissoc app :tallennettava)))
 
   SopimuksenTehtavaTallennusEpaonnistui
   (process-event 
     [{:keys [vastaus]} {:keys [tallennettava] :as app}]
-    (viesti/nayta-toast! "Tallennus epäonnistui" :danger)
+    (viesti/nayta-toast! "Tallennus epäonnistui" :varoitus)
     (let [{:keys [id]} tallennettava
           virheet (assoc-in {} [id :sopimus-maara] ["Tallennus epäonnistui"])]
       (reset! taulukko-virheet virheet))      

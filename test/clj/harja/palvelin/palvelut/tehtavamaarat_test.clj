@@ -300,6 +300,7 @@
                   +kayttaja-jvh+
                   {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                    :tehtava-id id-yksityisten-rumpujen
+                   :samat-maarat-vuosittain? true
                    :hoitovuosi 2021
                    :maara 1234M})
         vastaus-2021 (nth vastaus 2) ;; Tallennus palauttaa kaikkien vuosien tehtävät, joten otetaan niistä vuodelle 2021 osuva
@@ -325,9 +326,10 @@
                    +kayttaja-jvh+
                    {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                     :tehtava-id id-suolaus
+                    :samat-maarat-vuosittain? false
                     :hoitovuosi 2022
                     :maara 9001M})
-        muokattu-2022 (nth muokattu 3) ;; Tallennus palauttaa kaikkien vuosien tehtävät, joten otetaan niistä vuodelle 2022 osuva
+        muokattu-2022 (first muokattu) ;; Tallennus palauttaa kaikkien vuosien tehtävät, joten otetaan niistä vuodelle 2022 osuva
         odotettu {::urakka/id 35
                   ::toimenpidekoodi/id id-suolaus
                   ::tm-domain/maara 9001M
