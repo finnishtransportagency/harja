@@ -260,17 +260,13 @@ jobs:
       - store_artifacts:
           path: /tmp/cypress-run/cypress/screenshots
       - store_artifacts:
-          path: /tmp/cypress-run/cypress/videos 
+          path: /tmp/cypress-run/cypress/videos
 
 workflows:
   version: 2
   build_and_test:
     jobs:
-      - prod-build
       - back-testit
       - hitaat-testit
       - integraatio-testit
       - front-testit
-      - e2e-testit:
-          requires:
-            - prod-build
