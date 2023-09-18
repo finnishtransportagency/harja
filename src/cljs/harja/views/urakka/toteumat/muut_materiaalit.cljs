@@ -42,6 +42,8 @@
                 (materiaali-tiedot/hae-urakassa-kaytetyt-materiaalit
                  (:id ur) alku loppu sopimusnumero))))
 
+(def tr-osoite-taytetty? (every-pred :numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys))
+
 (defn tallenna-toteuma-ja-toteumamateriaalit!
   [tm m]
   (let [toteumamateriaalit (into []
@@ -62,7 +64,7 @@
                  :suorittajan-nimi (:suorittaja m)
                  :suorittajan-ytunnus (:ytunnus m)
                  :lisatieto (:lisatieto m)
-                 :tierekisteriosoite (:tierekisteriosoite m)}
+                 :tierekisteriosoite (if (tr-osoite-taytetty? (:tierekisteriosoite m)) (:tierekisteriosoite m) nil)}
         hoitokausi @u/valittu-hoitokausi
         sopimus-id (first @u/valittu-sopimusnumero)]
     (materiaali-tiedot/tallenna-toteuma-ja-toteumamateriaalit! toteuma toteumamateriaalit hoitokausi sopimus-id)))
@@ -159,8 +161,6 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
 (defn- sijainti-pakollinen? [valitun-materiaalitoteuman-tiedot]
   (boolean (some #(contains? pakolliset-materiaalit %)
     (map #(:nimi %) (map #(:materiaali %) (:toteumamateriaalit valitun-materiaalitoteuman-tiedot))))))
-
-(def tr-osoite-taytetty? (every-pred :numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys))
 
 (defn materiaalit-tiedot
   "Valitun toteuman tietojen näkymä"
