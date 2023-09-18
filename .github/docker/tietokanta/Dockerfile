@@ -35,15 +35,12 @@ RUN wget "https://download.osgeo.org/postgis/source/postgis-${POSTGIS_VERSION}.t
     && tar -xvzf "postgis-${POSTGIS_VERSION}.tar.gz" \
     && rm "postgis-${POSTGIS_VERSION}.tar.gz"
 
-
-# Asenna GDAL, GEOS ja Proj
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgdal-dev libgeos-dev libproj-dev
-
-# Asenna PostGISin buildaamiseen vaadittavat riippuvuudet
-RUN set -ex \
+# Asenna PostGISin buildaamiseen vaadittavat riippuvuudet (https://docs.docker.com/build/cache/#use-the-dedicated-run-cache)
+RUN --mount=type=cache,target=/var/cache/apt \
+    set -ex \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
+      libgdal-dev libgeos-dev libproj-dev \
       postgresql-server-dev-$PG_MAJOR \
       autoconf \
       automake \
@@ -82,11 +79,11 @@ RUN  cd postgis-${POSTGIS_VERSION} \
 
 ## Asenna maven
 ENV MAVEN_VERSIO=3.9.4
-RUN apt-get update && apt-get install -y openjdk-17-jdk
-RUN wget "https://downloads.apache.org/maven/maven-3/${MAVEN_VERSIO}/binaries/apache-maven-${MAVEN_VERSIO}-bin.tar.gz"; \
-    if [ "$(sha512sum /apache-maven-${MAVEN_VERSIO}-bin.tar.gz )" != "deaa39e16b2cf20f8cd7d232a1306344f04020e1f0fb28d35492606f647a60fe729cc40d3cba33e093a17aed41bd161fe1240556d0f1b80e773abd408686217e  /apache-maven-${MAVEN_VERSIO}-bin.tar.gz" ]; then exit 1; fi; \
-    tar xzvf "apache-maven-${MAVEN_VERSIO}-bin.tar.gz"; \
-    rm "apache-maven-${MAVEN_VERSIO}-bin.tar.gz";
+RUN apt-get update && apt-get install -y openjdk-17-jdk \
+    && wget "https://downloads.apache.org/maven/maven-3/${MAVEN_VERSIO}/binaries/apache-maven-${MAVEN_VERSIO}-bin.tar.gz"; \
+        if [ "$(sha512sum /apache-maven-${MAVEN_VERSIO}-bin.tar.gz )" != "deaa39e16b2cf20f8cd7d232a1306344f04020e1f0fb28d35492606f647a60fe729cc40d3cba33e093a17aed41bd161fe1240556d0f1b80e773abd408686217e  /apache-maven-${MAVEN_VERSIO}-bin.tar.gz" ]; then exit 1; fi; \
+        tar xzvf "apache-maven-${MAVEN_VERSIO}-bin.tar.gz"; \
+        rm "apache-maven-${MAVEN_VERSIO}-bin.tar.gz";
 
 # Lisää maven bin kansio PATH:iin
 ENV PATH="/apache-maven-${MAVEN_VERSIO}/bin/:${PATH}"
