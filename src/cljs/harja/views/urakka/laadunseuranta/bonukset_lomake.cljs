@@ -103,7 +103,7 @@
 
                                          :else
                                          ;; Muuten otetaan vain listan ensimmäinen
-                                         (:tpi_id (first @tiedot-urakka/urakan-toimenpideinstanssit)))]
+                                         (first @tiedot-urakka/urakan-toimenpideinstanssit))]
                     (-> rivi
                       (assoc :toimenpideinstanssi (:tpi_id asetettava-tpi))
                       (assoc :laji arvo))))
@@ -143,7 +143,7 @@
        :pakollinen? true
        :tyyppi :komponentti
        ::lomake/col-luokka "col-xs-12"
-       :komponentti (fn [{:keys [_ data]}]
+       :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
                       (let [;; MHU urakoiden toimenpideinstanssi on määrätty. Alueurakoilla ei
                             ;; Lisäksi alihankintabonus laitetaan MHU Ylläpidon alle, kun se tehdään 1.10.2022 jälkeen, muut Hoidon johtoon
                             toimenpideinstanssit (cond
@@ -172,7 +172,9 @@
                            :format-fn :tpi_nimi
                            :valinta (first toimenpideinstanssit)
                            ;; Koska MHU urakoilla on määrätty toimenpideinstanssi, niin ei anneta käyttäjän vaihtaa, mutta alueurakoille se sallitaan
-                           :disabled (if (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) true false)}
+                           :disabled (if (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) true false)
+                           :valitse-fn #(muokkaa-lomaketta
+                                          (assoc data :toimenpideinstanssi (:tpi_id %)))}
                           toimenpideinstanssit]
                          ;; Näytetään alihankintabonuksille, että se oikeasti näytetään tehtäväryhmässä Tilaajan rahavaraus (T3)
                          (when (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) (= :alihankintabonus (:laji data)))
