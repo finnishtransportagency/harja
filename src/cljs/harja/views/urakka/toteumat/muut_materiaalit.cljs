@@ -197,6 +197,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                                   (not jarjestelman-luoma?))
                   :muokkaa! muokkaa!
                   :validoi-alussa? true
+                  :kutsu-muokkaa-renderissa? true
                   :footer [napit/palvelinkutsu-nappi
                            "Tallenna toteuma"
                            #(tallenna-toteuma-ja-toteumamateriaalit!
@@ -248,7 +249,6 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
             :alaotsikot? false
             :sijainti (atom nil)
             :pakollinen? (sijainti-pakollinen? @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
-            :tarkkaile-ulkopuolisia-muutoksia? true
             :validoi [(fn [osoite]
                          (when (and (sijainti-pakollinen? @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
                                 (not (tr-osoite-taytetty? osoite)))
