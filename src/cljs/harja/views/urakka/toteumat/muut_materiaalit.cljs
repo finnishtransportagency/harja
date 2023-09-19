@@ -197,7 +197,6 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                                   (not jarjestelman-luoma?))
                   :muokkaa! muokkaa!
                   :validoi-alussa? true
-                  :kutsu-muokkaa-renderissa? true
                   :footer [napit/palvelinkutsu-nappi
                            "Tallenna toteuma"
                            #(tallenna-toteuma-ja-toteumamateriaalit!
