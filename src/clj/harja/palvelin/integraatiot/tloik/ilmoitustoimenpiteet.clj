@@ -90,7 +90,7 @@
   T-LOIKilta poikkeuksellisen kauan. Mikäli tämä virhe nousee, on oltava yhteydessä T-LOIKiin ja varmistettava, johtuuko
   viive kuormasta vai siitä, että viestit eivät tule jonoon.
   Taustana tässä on tilanne, jossa HARJA luulee lähettäneensä viestin jonoon onnistuneesti, mutta ei kuitenkaan ole niin tehnyt.
-  Tämän kaltainen tapaus tapahtunut ainakin 9.5.2023, jolloin virhe huomattiin vasta kun asiasta saatiin palautetta,
+  Tämän kaltainen tapaus tapahtunut ainakin 5.9.2023, jolloin virhe huomattiin vasta kun asiasta saatiin palautetta,
   eikä lokeilta ollut huomattavissa mitään poikkeavaa"
   [db]
   (lukko/yrita-ajaa-lukon-kanssa db "kuittausten-monitorointi"
