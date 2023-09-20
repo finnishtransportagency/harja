@@ -1,5 +1,6 @@
 (ns harja.views.urakka.toteumat.muut-materiaalit
-  (:require [harja.views.kartta.tasot :as kartta-tasot]
+  (:require [clojure.string :as str]
+            [harja.views.kartta.tasot :as kartta-tasot]
             [harja.views.urakka.valinnat :as valinnat]
             [reagent.core :refer [atom wrap]]
             [harja.loki :refer [log]]
@@ -41,6 +42,8 @@
                 (materiaali-tiedot/hae-urakassa-kaytetyt-materiaalit
                  (:id ur) alku loppu sopimusnumero))))
 
+(def tr-osoite-taytetty? (every-pred :numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys))
+
 (defn tallenna-toteuma-ja-toteumamateriaalit!
   [tm m]
   (let [toteumamateriaalit (into []
@@ -61,7 +64,7 @@
                  :suorittajan-nimi (:suorittaja m)
                  :suorittajan-ytunnus (:ytunnus m)
                  :lisatieto (:lisatieto m)
-                 :tierekisteriosoite (:tierekisteriosoite m)}
+                 :tierekisteriosoite (if (tr-osoite-taytetty? (:tierekisteriosoite m)) (:tierekisteriosoite m) nil)}
         hoitokausi @u/valittu-hoitokausi
         sopimus-id (first @u/valittu-sopimusnumero)]
     (materiaali-tiedot/tallenna-toteuma-ja-toteumamateriaalit! toteuma toteumamateriaalit hoitokausi sopimus-id)))
@@ -154,6 +157,11 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
              :alkanut (pvm/nyt)
              :paattynyt (pvm/nyt)})))
 
+(def pakolliset-materiaalit #{"Sorastusmurske" "Kelirikkomurske"})
+(defn- sijainti-pakollinen? [valitun-materiaalitoteuman-tiedot]
+  (boolean (some #(contains? pakolliset-materiaalit %)
+    (map #(:nimi %) (map #(:materiaali %) (:toteumamateriaalit valitun-materiaalitoteuman-tiedot))))))
+
 (defn materiaalit-tiedot
   "Valitun toteuman tietojen näkymä"
   [ur]
@@ -177,7 +185,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                                        #(swap! materiaali-tiedot/valitun-materiaalitoteuman-tiedot assoc ::materiaalivirheet %))
             jarjestelman-luoma? (true? (:jarjestelmanlisaama @materiaali-tiedot/valitun-materiaalitoteuman-tiedot))
             voi-tallentaa? (and (lomake/validi? @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
-                                (> (count @materiaalitoteumat-mapissa) 0)
+                             (> (count @materiaalitoteumat-mapissa) 0)
                              (zero? (count @materiaalien-virheet)))]
         [:div.toteuman-tiedot
          [napit/takaisin "Takaisin materiaaliluetteloon" #(reset! materiaali-tiedot/valitun-materiaalitoteuman-tiedot nil)]
@@ -188,6 +196,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                   :voi-muokata? (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))
                                   (not jarjestelman-luoma?))
                   :muokkaa! muokkaa!
+                  :validoi-alussa? true
                   :footer [napit/palvelinkutsu-nappi
                            "Tallenna toteuma"
                            #(tallenna-toteuma-ja-toteumamateriaalit!
@@ -200,8 +209,10 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                                (reset! urakan-materiaalin-kaytot %)
                                (reset! materiaali-tiedot/valitun-materiaalitoteuman-tiedot nil))
                             :disabled (or (not voi-tallentaa?)
-                                          jarjestelman-luoma?
-                                          (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))))}]}
+                                        jarjestelman-luoma?
+                                        (and (sijainti-pakollinen? @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
+                                          (not (:tierekisteriosoite @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)))
+                                        (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))))}]}
 
           [(when jarjestelman-luoma?
              {:otsikko "Lähde" :nimi :luoja :tyyppi :string
@@ -229,15 +240,19 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                       (when jarjestelman-luoma?
              {:otsikko "Lähde" :nimi :luoja :tyyppi :string
               :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")")) :muokattava? (constantly false)})
-           {
-            :label-ja-kentta-samalle-riville? false
+           {:label-ja-kentta-samalle-riville? false
             :otsikko "Sijainti"
             :nimi :tierekisteriosoite
             :tyyppi :tierekisteriosoite
             :vayla-tyyli? true
             :alaotsikot? false
             :sijainti (atom nil)
-            }
+            :pakollinen? (sijainti-pakollinen? @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
+            :validoi [(fn [osoite]
+                         (when (and (sijainti-pakollinen? @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
+                                (not (tr-osoite-taytetty? osoite)))
+                          (str "Sijaintitieto on pakollinen materiaaleille " (str/join " tai " pakolliset-materiaalit))))
+                      [:kokonainen-tr-osoite]]}
            {:otsikko "Materiaalit" :nimi :materiaalit :palstoja 2
             :komponentti (fn [_]
                            [materiaalit-ja-maarat
