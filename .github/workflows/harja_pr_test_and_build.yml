@@ -282,7 +282,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '11'
+          java-version-file: './github/.java-version'
 
       - name: Get the build artifact name
         id: artifact-name
