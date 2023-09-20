@@ -14,7 +14,7 @@ runs:
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
-        java-version-file: './github/.java-version'
+        java-version-file: './.github/.java-version'
 
     - name: Cache Clojure Dependencies
       id: cache-clojure-deps
