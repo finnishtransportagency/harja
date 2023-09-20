@@ -21,7 +21,7 @@
 (defonce asetukset {:itmf integraatio/itmf-asetukset})
 (def jms-timeout 2000)
 (def itmf-kuittaus-timeout 20000)
-(def ws-vastaus-timeout 10000)
+(def ws-vastaus-timeout 5000)
 
 (def ilmoitukset-kayttaja "yit-rakennus")
 (def jvh-kayttajan-oam-headerit {"oam_remote_user" "jvh"
@@ -117,7 +117,7 @@
       (tr-tyokalut/siivoa-ws-vastaus! :asiakas-1)
 
       ;; Lähetetään uusi testi-ilmoitus ITMF-jonoon
-      (let [kuittausviestit-tloikkiin (atom nil)]
+      (let [kuittausviestit-tloikkiin (atom [])]
         (lisaa-kuuntelijoita! {"itmf" {tloik-tyokalut/+tloik-ilmoituskuittausjono+ #(swap! kuittausviestit-tloikkiin conj (.getText %))}})
 
         (async/<!! (async/timeout jms-timeout))

@@ -6,7 +6,7 @@ module.exports = defineConfig({
   videoUploadOnPasses: false,
   reporter: 'junit',
   reporterOptions: {
-    mochaFile: '/tmp/cypress-run/cypress/test-results/results-[hash].xml',
+    mochaFile: 'cypress/test-results/results-[hash].xml',
     toConsole: true,
   },
   e2e: {
