@@ -85,8 +85,14 @@
           :kasittelija_organisaatio_nimi    nil
           :kasittelija_organisaatio_ytunnus nil})))
 
-(defn varoita-vastaamattomista-kuittauksista [db]
-  (log/debug "haetaan myöhästyneet ilmoitustoimenpiteet")
+(defn varoita-vastaamattomista-kuittauksista
+  "Nostetaan varoitus tai virhe lokille, jos löydetään ilmoitustoimenpide-taulusta viestejä, jotka odottaa vastausta
+  T-LOIKilta poikkeuksellisen kauan. Mikäli tämä virhe nousee, on oltava yhteydessä T-LOIKiin ja varmistettava, johtuuko
+  viive kuormasta vai siitä, että viestit eivät tule jonoon.
+  Taustana tässä on tilanne, jossa HARJA luulee lähettäneensä viestin jonoon onnistuneesti, mutta ei kuitenkaan ole niin tehnyt.
+  Tämän kaltainen tapaus tapahtunut ainakin 9.5.2023, jolloin virhe huomattiin vasta kun asiasta saatiin palautetta,
+  eikä lokeilta ollut huomattavissa mitään poikkeavaa"
+  [db]
   (lukko/yrita-ajaa-lukon-kanssa db "kuittausten-monitorointi"
     (fn []
       (log/debug "Haetaan myöhästyneet ilmoitustoimenpiteet")
@@ -100,13 +106,13 @@
             kymmenen-min-myohastyneet (first (filter #(true? (:halytys-annettava %)) myohastyneet-ilmoitukset))]
 
         (when (and minuutin-myohastyneet (pos? (:maara minuutin-myohastyneet)))
-          (log/warn (format "Ilmoitusten kuittauksissa viivettä! Lähetetty %s ilmoitusta T-LOIK:ille ilman vastausta minuutissa"
+          (log/warn (format "Ilmoitusten kuittauksissa viivettä! Lähetetty %s kuittausviestiä T-LOIK:ille ilman vastausta minuutissa"
                       (:maara minuutin-myohastyneet)))
           (ilmoitukset/merkitse-ilmoitustoimenpide-varoitus-annetuksi! db {:idt (:idt minuutin-myohastyneet)
                                                                           :varoitus "varoitus"}))
 
         (when (and kymmenen-min-myohastyneet (pos? (:maara kymmenen-min-myohastyneet)))
-          (log/error (format "Ilmoitusten kuittauksissa viivettä! Lähetetty %s ilmoitusta T-LOIK:ille ilman vastausta kymmenessä minuutissa. Korrelaatio-id:t: (%s)"
+          (log/error (format "Ilmoitusten kuittauksissa viivettä! Lähetetty %s kuittausviestiä T-LOIK:ille ilman vastausta kymmenessä minuutissa. Korrelaatio-id:t: (%s)"
                        (:maara kymmenen-min-myohastyneet)
                        (str/join ", " (:korrelaatioidt kymmenen-min-myohastyneet))))
           (ilmoitukset/merkitse-ilmoitustoimenpide-varoitus-annetuksi! db {:idt (:idt kymmenen-min-myohastyneet)
