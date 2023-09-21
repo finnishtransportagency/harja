@@ -124,11 +124,11 @@
           toimenpideinstanssi-id (:id (first (kulut-q/hae-urakan-hoidon-johdon-toimenpideinstanssi db {:urakka urakka-id})))
           lisatiedot (cond
                        (= ::valikatselmus/tavoitehinnan-ylitys paatoksen-tyyppi)
-                       "Välikatselmuksessa luotu kulu. Tavoitehinta ylitettiin. Urakoitsijalle kulu."
+                       "Välikatselmuksessa luotu kulu. Tavoitehinnan ylitys. Urakoitsija maksaa."
                        (= ::valikatselmus/tavoitehinnan-alitus paatoksen-tyyppi)
-                       "Välikatselmuksessa luotu kulu. Tavoitehinta alitettiin. Tilaajalle kulu."
+                       "Välikatselmuksessa luotu kulu. Tavoitehinta alitettiin. Urakoitsijalle maksetaan tavoitepalkkiota."
                        (= ::valikatselmus/kattohinnan-ylitys paatoksen-tyyppi)
-                       "Välikatselmuksessa luotu kulu. Tavoitehinta ja kattohinta ylitettiin. Urakoitsijalle kulu."
+                       "Välikatselmuksessa luotu kulu. Kattohinnan ylitys. Urakoitsija maksaa hyvitystä."
                        :else nil)
           ;; Asetetaan päivämäärä hoitokauden viimeiselle kuukaudelle
           laskutuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (::valikatselmus/hoitokauden-alkuvuosi paatoksen-tiedot)) 9 15))
