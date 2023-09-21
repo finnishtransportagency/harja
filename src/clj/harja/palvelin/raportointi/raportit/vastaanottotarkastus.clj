@@ -76,6 +76,16 @@
     [:taulukko {:otsikko nimi
                 :tyhja (when (empty? kohteet) "Ei kohteita.")
                 :sheet-nimi nimi
+                :rivi-ennen [{:sarakkeita (if (= taulukkotyyppi :yha)
+                                            14
+                                            13)}
+                             {:sarakkeita 1}
+                             {:teksti "Hintamuutokset"
+                              :sarakkeita 3
+                              :luokka "paallystys-tausta-tumma"
+                              :tummenna-teksti? true
+                              :tasaa :keskita}
+                             {:sarakkeita 1}]
                 :lisaa-excel-valiotsikot true}
      (into []
        (concat
@@ -101,9 +111,9 @@
          (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
            [{:otsikko "Arvon muu\u00ADtok\u00ADset" :leveys 5 :fmt :raha}
             {:otsikko "Sakko\u00AD/bonus" :leveys 5 :fmt :raha}])
-         [{:otsikko "Bitu\u00ADmi-indek\u00ADsi" :leveys 5 :fmt :raha}
-          {:otsikko "Neste\u00ADkaasu ja kevyt poltto\u00ADöljy" :leveys 5 :fmt :raha}
-          {:otsikko "MAKU-pääl\u00ADlys\u00ADteet" :leveys 5 :fmt :raha}
+         [{:otsikko "Bitu\u00ADmi-indek\u00ADsi" :leveys 5 :fmt :raha :otsikkorivi-luokka "paallystys-tausta-tumma"}
+          {:otsikko "Neste\u00ADkaasu ja kevyt poltto\u00ADöljy" :leveys 10 :fmt :raha :otsikkorivi-luokka "paallystys-tausta-tumma"}
+          {:otsikko "MAKU-pääl\u00ADlys\u00ADteet" :leveys 5 :fmt :raha :otsikkorivi-luokka "paallystys-tausta-tumma"}
           {:otsikko "Kokonais\u00ADhinta" :leveys 5 :fmt :raha}]))
 
      (if (some? urakka-id)
