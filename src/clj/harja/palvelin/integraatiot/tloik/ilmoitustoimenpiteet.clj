@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet
   (:require [taoensso.timbre :as log]
+            [clojure.string :as str]
             [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset]
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitustoimenpide-sanoma :as toimenpide-sanoma]
@@ -11,9 +12,11 @@
 (defn laheta [jms-lahettaja db id]
   (let [viesti-id (str (UUID/randomUUID))
         data (konversio/alaviiva->rakenne (first (ilmoitukset/hae-ilmoitustoimenpide db id)))
-        muodosta-xml #(toimenpide-sanoma/muodosta data viesti-id)]
+        muodosta-xml #(toimenpide-sanoma/muodosta data viesti-id)
+        jms-viesti-id (jms-lahettaja muodosta-xml viesti-id)]
     (try
-      (jms-lahettaja muodosta-xml viesti-id)
+      (when (nil? jms-viesti-id)
+        (log/warn (format "Ilmoitustoimenpiteen (id: %s) lähetys T-LOIK:n onnistui. mutta JMS viesti-id on nil!" id)))
       (ilmoitukset/merkitse-ilmoitustoimenpide-odottamaan-vastausta! db viesti-id id)
       (log/debug (format "Ilmoitustoimenpiteen (id: %s) lähetys T-LOIK:n onnistui." id))
       (catch Exception e
@@ -81,3 +84,31 @@
           :kasittelija_henkilo_sahkoposti   nil
           :kasittelija_organisaatio_nimi    nil
           :kasittelija_organisaatio_ytunnus nil})))
+
+(defn varoita-vastaamattomista-kuittauksista [db]
+  (log/debug "haetaan myöhästyneet ilmoitustoimenpiteet")
+  (lukko/yrita-ajaa-lukon-kanssa db "kuittausten-monitorointi"
+    (fn []
+      (log/debug "Haetaan myöhästyneet ilmoitustoimenpiteet")
+      (let [myohastyneet-ilmoitukset (->> (ilmoitukset/hae-myohastyneet-ilmoitustoimenpiteet db)
+                                       (map #(konversio/array->vec % :idt))
+                                       (map #(konversio/array->vec % :korrelaatioidt)))
+            minuutin-myohastyneet (first (filter #(and
+                                                    (false? (:halytys-annettava %))
+                                                    (nil? (:varoitus-annettu %)))
+                                           myohastyneet-ilmoitukset))
+            kymmenen-min-myohastyneet (first (filter #(true? (:halytys-annettava %)) myohastyneet-ilmoitukset))]
+
+        (when (and minuutin-myohastyneet (pos? (:maara minuutin-myohastyneet)))
+          (log/warn (format "Ilmoitusten kuittauksissa viivettä! Lähetetty %s ilmoitusta T-LOIK:ille ilman vastausta minuutissa"
+                      (:maara minuutin-myohastyneet)))
+          (ilmoitukset/merkitse-ilmoitustoimenpide-varoitus-annetuksi! db {:idt (:idt minuutin-myohastyneet)
+                                                                          :varoitus "varoitus"}))
+
+        (when (and kymmenen-min-myohastyneet (pos? (:maara kymmenen-min-myohastyneet)))
+          (log/error (format "Ilmoitusten kuittauksissa viivettä! Lähetetty %s ilmoitusta T-LOIK:ille ilman vastausta kymmenessä minuutissa. Korrelaatio-id:t: (%s)"
+                       (:maara kymmenen-min-myohastyneet)
+                       (str/join ", " (:korrelaatioidt kymmenen-min-myohastyneet))))
+          (ilmoitukset/merkitse-ilmoitustoimenpide-varoitus-annetuksi! db {:idt (:idt kymmenen-min-myohastyneet)
+                                                                          :varoitus "halytys"}))))
+    55))
