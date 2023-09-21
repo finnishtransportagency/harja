@@ -237,51 +237,17 @@
 (def valitason-toimenpiteet
   (filter vain-taso-3))
 
-(defn sopimus-maara-syotetty
-  [virheet-kaikki r]
-  (let [{:keys [yksikko sopimuksen-tehtavamaarat sopimus-maara sopimuksen-aluetieto-maara aluetieto?]} (second r)
-        id (first r)
-        virheviesti ["Syötä 0 tai luku"]
-        syotetty? (cond-> false
-                    (or (nil? yksikko)
-                      (= "" yksikko)
-                      (= "-" yksikko)) ((constantly true))
+(defn- sopimusmaarat-taulukosta [taulukko tyyppi]
+  (map :sopimus-maara
+    (flatten (map vals (vals (tyyppi taulukko))))))
 
-                    (and
-                      aluetieto?
-                      (or
-                        (some #(when (some? %) %) (vals sopimuksen-aluetieto-maara))
-                        sopimus-maara)) ((constantly true))
+(defn aluetietoja-puuttuu? []
+  (let [keratyt-aluemaarat (sopimusmaarat-taulukosta @taulukko-tila :alueet)]
+    (some nil? keratyt-aluemaarat)))
 
-                    (and
-                      (not aluetieto?)
-                      (or
-                        (some #(when (some? %) %) (vals sopimuksen-tehtavamaarat))
-                        sopimus-maara)) ((constantly true)))]
-    (cond
-      ;; Määrä riveille virhe
-      (and
-        (not syotetty?)
-        (not aluetieto?))
-      (assoc-in virheet-kaikki [id :sopimus-maara] virheviesti)
-
-      ;; Alue riveille virhe
-      (and
-        (not syotetty?)
-        aluetieto?)
-      (assoc-in virheet-kaikki [id :sopimus-maara] virheviesti)
-
-      :else
-      virheet-kaikki)))
-
-(defn toimenpiteet-sopimuksen-tehtavamaarat-syotetty
-  [virheet-kaikki [_ taulukkorakenne]]
-  (reduce sopimus-maara-syotetty virheet-kaikki taulukkorakenne))
-
-(defn tarkista-sovitut-maarat
-  [taulukko]
-  (let [alueet-ja-maarat (merge-with merge (:alueet taulukko) (:maarat taulukko))]
-    (reduce toimenpiteet-sopimuksen-tehtavamaarat-syotetty {} alueet-ja-maarat)))
+(defn maaratietoja-puuttuu? []
+  (let [keratyt-tehtavamaarat (sopimusmaarat-taulukosta @taulukko-tila :maarat)]
+    (some nil? keratyt-tehtavamaarat)))
 
 (defn syotetty-maara-tuleville-vuosille 
   [tehtava hoitokausi]
@@ -423,22 +389,14 @@
   TallennaSopimus
   (process-event
     [{:keys [tallennettu]} app]
-    (let [app (dissoc app :virhe-kaikkia-syottaessa?)
-          virheet (tarkista-sovitut-maarat @taulukko-tila)
-          kaikki-arvot-syotetty? (empty? (keys virheet))]
-      (if (or kaikki-arvot-syotetty? 
-            (false? tallennettu)) 
-        (do
-          (reset! taulukko-virheet {})
-          (tuck-apurit/post! :tallenna-sopimuksen-tila
-            {:urakka-id (-> @tiedot/yleiset :urakka :id)
-             :tallennettu tallennettu}
-            {:onnistui ->SopimuksenTallennusOnnistui
-             :epaonnistui ->SopimuksenTallennusEpaonnistui})
-          (update-in app [:valinnat :noudetaan] inc))
-        (when (not (empty? (keys virheet))) 
-          (reset! taulukko-virheet virheet)
-          (assoc app :virhe-sopimuksia-syottaessa? true)))))
+    (do
+      (reset! taulukko-virheet {})
+      (tuck-apurit/post! :tallenna-sopimuksen-tila
+        {:urakka-id (-> @tiedot/yleiset :urakka :id)
+         :tallennettu tallennettu}
+        {:onnistui ->SopimuksenTallennusOnnistui
+         :epaonnistui ->SopimuksenTallennusEpaonnistui})
+      (update-in app [:valinnat :noudetaan] inc)))
 
   TestiTallennaKaikkiinTehtaviinArvo
   (process-event

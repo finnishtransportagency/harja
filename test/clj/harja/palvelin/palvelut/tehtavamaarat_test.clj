@@ -403,3 +403,30 @@
     (is (= 500M (hae-tehtavan-maara-fn id-III 2019)))
     (is (= 10000M (hae-tehtavan-maara-fn id-katupolyn-sidonta 2020)))
     (is (= 1000M (hae-tehtavan-maara-fn id-K2 2019)))))
+
+(deftest poista-sopimuksen-tehtavamaara-testi
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        tehtava-id (ffirst (q "SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)';"))
+        maara-ennen (ffirst (q "SELECT count(*) FROM sopimus_tehtavamaara WHERE urakka = " urakka-id))
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-sopimuksen-tehtavamaara
+            +kayttaja-jvh+
+            {:urakka-id urakka-id
+             :tehtava-id tehtava-id
+             :samat-maarat-vuosittain? false
+             :hoitovuosi 2021
+             :maara nil})
+        maara-jalkeen (ffirst (q "SELECT count(*) FROM sopimus_tehtavamaara WHERE urakka = " urakka-id))]
+    (is (= maara-ennen (inc maara-jalkeen)) "Poistaminen poistaa vain yhden rivin")))
+
+(deftest tehtavamaaran-poistaminen-ilman-urakkaidta-ei-mahdollinen
+  (let [tehtava-id (ffirst (q "SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)';"))]
+    (is (thrown? IllegalArgumentException
+          (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-sopimuksen-tehtavamaara
+            +kayttaja-jvh+
+            {:urakka-id nil
+             :tehtava-id tehtava-id
+             :samat-maarat-vuosittain? false
+             :hoitovuosi 2021
+             :maara nil})))))
