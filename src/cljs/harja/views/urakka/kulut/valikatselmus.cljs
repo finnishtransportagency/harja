@@ -603,11 +603,11 @@
 (defn valikatselmus [e! app]
   (komp/luo
     (komp/sisaan #(do
+                    (e! (valikatselmus-tiedot/->AlustaPaatosLomakkeet (:urakan-paatokset app) (:hoitokauden-alkuvuosi app)))
                     (e! (lupaus-tiedot/->HaeUrakanLupaustiedot (:urakka @tila/yleiset)))
                     (e! (valikatselmus-tiedot/->NollaaPaatoksetJosUrakkaVaihtui))
-                    (if (nil? (:urakan-paatokset app))
-                      (e! (valikatselmus-tiedot/->HaeUrakanPaatokset (-> @tila/yleiset :urakka :id)))
-                      (e! (valikatselmus-tiedot/->AlustaPaatosLomakkeet (:urakan-paatokset app) (:hoitokauden-alkuvuosi app))))))
+                    (when (nil? (:urakan-paatokset app))
+                      (e! (valikatselmus-tiedot/->HaeUrakanPaatokset (-> @tila/yleiset :urakka :id))))))
     (fn [e! app]
       [:div.valikatselmus-container
        [debug/debug app]
