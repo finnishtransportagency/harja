@@ -75,7 +75,8 @@
 
     [:taulukko {:otsikko nimi
                 :tyhja (when (empty? kohteet) "Ei kohteita.")
-                :sheet-nimi nimi}
+                :sheet-nimi nimi
+                :lisaa-excel-valiotsikot true}
      (into []
        (concat
          [{:otsikko "Urakka" :leveys 10}
@@ -195,7 +196,8 @@
                                          (:maara kustannus))])))]
     [:taulukko {:otsikko nimi
                 :tyhja (when (empty? muut-kustannukset) "Ei muita kustannuksia.")
-                :sheet-nimi nimi}
+                :sheet-nimi nimi
+                :lisaa-excel-valiotsikot true}
      [{:otsikko "Pvm" :leveys 10 :fmt :pvm}
       {:otsikko "Selitys" :leveys 10}
       {:otsikko "Summa" :leveys 10 :fmt :raha}]
