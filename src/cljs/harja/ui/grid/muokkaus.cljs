@@ -53,17 +53,22 @@
                        [komponentti])
           paneelikomponentit))])])
 
+(defmulti ei-muokattava-tyypillinen-fmt identity)
+
+(defmethod ei-muokattava-tyypillinen-fmt :numero
+  [_]
+  (fn [arvo] (when (number? arvo)
+               (fmt/desimaaliluku-opt arvo 2)) ))
+
+(defmethod ei-muokattava-tyypillinen-fmt :default
+  [_] nil)
 
 (defn ei-muokattava-elementti
-  [skeema tasaus-luokka fmt tyyppi arvo]
-  (let [luokat (y/luokat
-                 "ei-muokattava"
-                 tasaus-luokka
-                 (grid-yleiset/tiivis-tyyli skeema))]
+  [luokat fmt tyyppi arvo]
+  (let [fmt (or fmt (ei-muokattava-tyypillinen-fmt tyyppi) str)
+        arvo (fmt arvo)]
     [:td {:class luokat}
-     (if fmt
-       (fmt arvo)
-       [nayta-arvo skeema (vain-luku-atomina arvo)])]))
+     arvo]))
 
 (defn- muokkauselementin-tila
   [{:keys [aseta nimi valinta-arvo hae elementin-id solun-luokka-fn]}
@@ -253,7 +258,10 @@
                  arvo-atom]]
 
                :else
-               [ei-muokattava-elementti skeema tasaus-luokka
+               [ei-muokattava-elementti (y/luokat
+                                          "ei-muokattava"
+                                          tasaus-luokka
+                                          (grid-yleiset/tiivis-tyyli skeema))
                 fmt
                 tyyppi
                 (cond
