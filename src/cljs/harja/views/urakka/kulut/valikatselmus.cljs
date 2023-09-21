@@ -210,7 +210,7 @@
                  ::valikatselmus/tavoitehinnan-ylitys
                  urakan-paatokset)
         _ (js/console.log "tavoitehinnan-ylitys-lomake :: filtteröity paatos: " (pr-str paatos))
-        paatos-tehty? (some? paatos)
+        paatos-tehty? (map? paatos)
         paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
                                  ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
                                  ::valikatselmus/urakoitsijan-maksu urakoitsijan-osuus
