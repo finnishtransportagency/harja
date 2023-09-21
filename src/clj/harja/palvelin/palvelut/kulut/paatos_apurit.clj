@@ -137,11 +137,9 @@
           kulu {:tyyppi "laskutettava"
                 :numero nil
                 :koontilaskun-kuukausi (kulut-domain/pvm->koontilaskun-kuukausi laskutuspvm (:alkupvm urakka))
-                ;; Summa on negatiivinen, mikäli urakoitsija joutuu maksumieheksi
-                :kokonaissumma (if (or (= ::valikatselmus/tavoitehinnan-ylitys paatoksen-tyyppi)
-                                     (= ::valikatselmus/kattohinnan-ylitys paatoksen-tyyppi))
-                                 (* -1 kokonaissumma)
-                                 kokonaissumma)
+                ;; Summa tulee päätöksistä aina ristiriitaisena kululle. Kun urakoitsija on maksumiehenä, niin summan tätyy olla negatiivinen
+                ;; Ja tavoitehinnan alituksessa, kun summan täytyy olla positiivinen (bonusta urakoitsijalle ja uusi laskut tilaajalle) niin summan täytyy olla positiivinen
+                :kokonaissumma (* -1 kokonaissumma)
                 :erapaiva laskutuspvm
                 :urakka urakka-id
                 :kayttaja (:id kayttaja)

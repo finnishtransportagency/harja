@@ -642,7 +642,8 @@
                          (catch Exception e e))
         kulu-poistettu (hae-poistettu-kulu urakka-id kulu-id)]
     (is (= odotettu-urakoitsijan-maksu (::valikatselmus/urakoitsijan-maksu vastaus)))
-    (is (= odotettu-urakoitsijan-maksu (:kokonaissumma kulu-ensin)))
+    ;; Tavoitehinnan alituspäätöksestä syntyy tilaajalle kulu, eli se on eri tyyppisellä aloitusmerkillä kuin urakoitsijan maksu. Se menee siis positiivisena kuluna tilaajalle
+    (is (= odotettu-urakoitsijan-maksu (* -1 (:kokonaissumma kulu-ensin))))
     (is (false? (:poistettu kulu-ensin)))
     ;; Kulu pitää kirjata sen hoitokauden viimeiselle kuukaudelle, jolle päätös tehdään. Eli jos
     ;; Päätös tehdään 2021 alkaneelle hoitovuodelle pitää kulun eräpäivä (eli kirjauspäivä, hassu nimi kolumnilla) olla 15.9.2022
@@ -686,8 +687,10 @@
         ;; Päätökseltä kaivetaan kulun id
         kulu-id (::valikatselmus/kulu-id vastaus)
         kulu (hae-kulu urakka-id kulu-id)]
-    (is (< (:kokonaissumma kulu) 0))
-    (is (=marginaalissa? urakoitsijan-maksu (:kokonaissumma kulu)))
+    ;; Kulussa, summa on suurempi kuin nolla
+    (is (> (:kokonaissumma kulu) 0))
+    ;; Kulussa tehdään tilaajalle uusi kulu eli urakoitsija on saamapuolella
+    (is (=marginaalissa? urakoitsijan-maksu (* -1 (:kokonaissumma kulu))))
     (is (=marginaalissa? urakoitsijan-maksu (::valikatselmus/urakoitsijan-maksu vastaus)))))
 
 (deftest tavoitehinnan-oikaisu-onnistuu-paatoksen-jalkeen-kulun-kanssa
@@ -747,7 +750,8 @@
     (is (true? (empty? paatokset-vastaus3)))
     (is (= false (:poistettu kulu-ensin)))
     (is (= true (:poistettu kulu-jalkeen)))
-    (is (=marginaalissa? urakoitsijan-maksu (:kokonaissumma kulu-ensin)))
+    ;; Kulusta tullessa, summa on negatiivinen - jos on tehty tavoitehinnan alituspäätös
+    (is (=marginaalissa? urakoitsijan-maksu (* -1 (:kokonaissumma kulu-ensin))))
     (is (=marginaalissa? urakoitsijan-maksu (::valikatselmus/urakoitsijan-maksu paatos-vastaus)))
     (is (= (::valikatselmus/summa oikaisu-vastaus) 9001M))))
 
