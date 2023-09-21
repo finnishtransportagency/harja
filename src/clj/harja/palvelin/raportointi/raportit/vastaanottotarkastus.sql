@@ -1,5 +1,15 @@
 -- name: hae-yllapitokohteet
 SELECT
+  u.nimi  AS urakka,
+  u.id    AS urakka_id,
+  (SELECT * FROM laske_tie_osien_pituus(
+    ypk.tr_numero, 
+    ypk.tr_ajorata, 
+    ypk.tr_kaista, 
+    ypk.tr_alkuosa, 
+    ypk.tr_alkuetaisyys, 
+    ypk.tr_loppuosa,
+    ypk.tr_loppuetaisyys)) AS "pituus",
   ypk.id,
   ypk.yhaid,
   ypk.kohdenumero,
@@ -17,21 +27,33 @@ SELECT
   ypk.keskimaarainen_vuorokausiliikenne AS "kvl",
   ypk.yllapitoluokka                    AS "yplk",
   sum(-s.maara)                         AS "sakot-ja-bonukset",
-  ypkk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
-  ypkk.maaramuutokset                    AS "maaramuutokset",
-  ypkk.arvonvahennykset                  AS "arvonvahennykset",
-  ypkk.toteutunut_hinta                  AS "toteutunut-hinta",
-  ypkk.bitumi_indeksi                    AS "bitumi-indeksi",
+  ypkk.sopimuksen_mukaiset_tyot         AS "sopimuksen-mukaiset-tyot",
+  ypkk.maaramuutokset                   AS "maaramuutokset",
+  ypkk.arvonvahennykset                 AS "arvonvahennykset",
+  ypkk.toteutunut_hinta                 AS "toteutunut-hinta",
+  ypkk.bitumi_indeksi                   AS "bitumi-indeksi",
   ypkk.kaasuindeksi,
-  ypkk.maku_paallysteet                  AS "maku-paallysteet"
+  ypkk.maku_paallysteet                 AS "maku-paallysteet",
+  o.id                                  AS hallintayksikko_id,
+  o.nimi                                AS hallintayksikko_nimi
 FROM yllapitokohde ypk
-  LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka AND lp.poistettu IS NOT TRUE)
-  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
+  LEFT JOIN laatupoikkeama lp 
+	  	 ON (lp.yllapitokohde = ypk.id 
+	  	 AND lp.urakka = ypk.urakka AND lp.poistettu IS NOT TRUE)
+  LEFT JOIN sanktio s 
+	  	 ON s.laatupoikkeama = lp.id 
+	  	 AND s.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
-WHERE ypk.urakka = :urakka
-      AND ypk.vuodet @> ARRAY [:vuosi] :: INT []
+  LEFT JOIN urakka u ON ypk.urakka = u.id
+  LEFT JOIN organisaatio o ON u.hallintayksikko = o.id
+WHERE ypk.vuodet @> ARRAY [:vuosi] :: INT []
       AND ypk.poistettu IS NOT TRUE
-GROUP BY ypk.id, ypkk.sopimuksen_mukaiset_tyot, ypkk.maaramuutokset, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi,  ypkk.toteutunut_hinta, ypkk.maku_paallysteet;
+      AND ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR ypk.urakka = :urakka) 
+      AND ((:hallintayksikko::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR (u.id IN (SELECT id
+                                                                                        FROM urakka
+                                                                                        WHERE hallintayksikko =
+                                                                                              :hallintayksikko) AND u.urakkanro IS NOT NULL))
+GROUP BY ypk.id, ypkk.sopimuksen_mukaiset_tyot, ypkk.maaramuutokset, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi,  ypkk.toteutunut_hinta, ypkk.maku_paallysteet, o.id, o.nimi, u.id, u.nimi;
 
 -- name: hae-muut-kustannukset
 SELECT

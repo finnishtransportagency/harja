@@ -12,6 +12,102 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/vastaanottotarkastus.sql")
 
+(defn yllapitokohteet-taulukko-hallintayksikko [yllapitokohteet taulukkotyyppi vuosi]
+  (let [nimi (case taulukkotyyppi
+               :yha "YHA-kohteet"
+               :paikkaus "Muut kohteet")
+        test-group (group-by #(:hallintayksikko_id %) yllapitokohteet)]
+    
+    [:taulukko {:otsikko nimi
+                :tyhja (when (empty? yllapitokohteet) "Ei kohteita.")
+                :sheet-nimi nimi}
+     (into []
+       (concat
+         [{:otsikko "Urakkasd" :leveys 10}
+          {:otsikko "Kohde\u00ADnumero" :leveys 5}
+          {:otsikko "Tunnus" :leveys 5}
+          {:otsikko "Nimi" :leveys 10}
+          {:otsikko "Yö\u00ADtyö" :leveys 3 :fmt :boolean}
+          {:otsikko "Tie\u00ADnumero" :leveys 3 :tasaa :oikea}
+          {:otsikko "Aosa" :leveys 3 :tasaa :oikea}
+          {:otsikko "Aet" :leveys 3 :tasaa :oikea}
+          {:otsikko "Losa" :leveys 3 :tasaa :oikea}
+          {:otsikko "Let" :leveys 3 :tasaa :oikea}
+          {:otsikko "Pit. (m)" :leveys 3 :tasaa :oikea}
+          {:otsikko "KVL" :leveys 3 :tasaa :oikea}
+          {:otsikko "YP-lk" :leveys 3}]
+
+         (when (= taulukkotyyppi :yha)
+           [{:otsikko "Tarjous\u00ADhinta" :leveys 5 :fmt :raha}
+            {:otsikko "Määrä\u00ADmuu\u00ADtokset" :leveys 5 :fmt :raha}])
+         (when (= taulukkotyyppi :paikkaus)
+           [{:otsikko "Toteutunut hinta" :leveys 10 :fmt :raha}])
+         (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
+           [{:otsikko "Arvon muu\u00ADtok\u00ADset" :leveys 5 :fmt :raha}
+            {:otsikko "Sakko\u00AD/bonus" :leveys 5 :fmt :raha}])
+         [{:otsikko "Bitu\u00ADmi-indek\u00ADsi" :leveys 5 :fmt :raha}
+          {:otsikko "Neste\u00ADkaasu ja kevyt poltto\u00ADöljy" :leveys 5 :fmt :raha}
+          {:otsikko "MAKU-pääl\u00ADlys\u00ADteet" :leveys 5 :fmt :raha}
+          {:otsikko "Kokonais\u00ADhinta" :leveys 5 :fmt :raha}]))
+
+     (mapcat (fn [y]
+               (concat [{:otsikko (str
+                                    (format "%02d" (-> y second  first :hallintayksikko_id)) " "
+                                    (-> y second  first :hallintayksikko_nimi)) :leveys 10}]
+                 (map
+                   (fn [yllapitokohde]
+                     (case taulukkotyyppi
+
+                       :yha
+                       (concat
+                         [(:urakka yllapitokohde)
+                          (:kohdenumero yllapitokohde)
+                          (:tunnus yllapitokohde)
+                          (:nimi yllapitokohde)
+                          [:boolean {:arvo (:yotyo yllapitokohde)}]
+                          (:tr-numero yllapitokohde)
+                          (:tr-alkuosa yllapitokohde)
+                          (:tr-alkuetaisyys yllapitokohde)
+                          (:tr-loppuosa yllapitokohde)
+                          (:tr-loppuetaisyys yllapitokohde)
+                          (:pituus yllapitokohde)
+                          (:kvl yllapitokohde)
+                          (:yplk yllapitokohde)
+                          (:sopimuksen-mukaiset-tyot yllapitokohde)
+                          (:maaramuutokset yllapitokohde)]
+                         (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
+                           [(:arvonvahennykset yllapitokohde)
+                            (:sakot-ja-bonukset yllapitokohde)])
+                         [(:bitumi-indeksi yllapitokohde)
+                          (:kaasuindeksi yllapitokohde)
+                          (:maku-paallysteet yllapitokohde)
+                          (:kokonaishinta yllapitokohde)])
+
+                       :paikkaus
+                       (concat
+                         [(:kohdenumero yllapitokohde)
+                          (:tunnus yllapitokohde)
+                          (:nimi yllapitokohde)
+                          [:boolean {:arvo (:yotyo yllapitokohde)}]
+                          (:tr-numero yllapitokohde)
+                          (:tr-alkuosa yllapitokohde)
+                          (:tr-alkuetaisyys yllapitokohde)
+                          (:tr-loppuosa yllapitokohde)
+                          (:tr-loppuetaisyys yllapitokohde)
+                          (:pituus yllapitokohde)
+                          (:kvl yllapitokohde)
+                          (:yplk yllapitokohde)
+                          (:toteutunut-hinta yllapitokohde)]
+                         (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
+                           [(:arvonvahennykset yllapitokohde)
+                            (:sakot-ja-bonukset yllapitokohde)])
+                         [(:bitumi-indeksi yllapitokohde)
+                          (:kaasuindeksi yllapitokohde)
+                          (:maku-paallysteet yllapitokohde)
+                          (:kokonaishinta yllapitokohde)])))
+                   (second y))))
+       test-group)]))
+
 (defn yllapitokohteet-taulukko [yllapitokohteet taulukkotyyppi vuosi]
   (let [nimi (case taulukkotyyppi
                :yha "YHA-kohteet"
@@ -169,41 +265,50 @@
                     (:maara kustannus))])))
        (apply conj muut-kustannukset urakan-sanktiot))]))
 
-(defn suorita [db user {:keys [urakka-id vuosi] :as tiedot}]
+(defn suorita [db user {:keys [urakka-id vuosi hallintayksikko-id] :as tiedot}]
   (let [raportin-nimi "Vastaanottotarkastus"
+
+        _ (println "\n hallintayksikkö: " hallintayksikko-id)
         otsikko (str (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                     ", " raportin-nimi " " vuosi)
+                  ", " raportin-nimi " " vuosi)
+
         yllapitokohteet+kustannukset (cond->> (into []
-                                                (map #(konv/string->keyword % [:yllapitokohdetyotyyppi]))
                                                 (hae-yllapitokohteet db {:urakka urakka-id
-                                                                         :vuosi vuosi}))
-                                              (yllapitokohteet-domain/eritellyt-maaramuutokset-kaytossa? vuosi)
-                                              (ypk-yleiset/liita-yllapitokohteisiin-maaramuutokset db)
+                                                                         :vuosi vuosi
+                                                                         :hallintayksikko hallintayksikko-id}))
+                                       true
+                                       (map #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi)))
+                                       true
+                                       (yllapitokohteet-domain/jarjesta-yllapitokohteet))
 
-                                              true
-                                              (map #(ypk-yleiset/lisaa-yllapitokohteelle-pituus db %))
-
-                                              true
-                                              (map #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi)))
-
-                                              true
-                                              (yllapitokohteet-domain/jarjesta-yllapitokohteet))
+        _ (println "cond " (pvm/nyt))
+        ;_ (println "\n\n call: " yllapitokohteet+kustannukset)
+        ;_ (println "haettu")
         muut-kustannukset (hae-muut-kustannukset db {:urakka urakka-id
                                                      :vuosi vuosi})
         urakan-sanktiot (->>
                           (map konv/alaviiva->rakenne
-                               (hae-yllapitourakan-sanktiot db {:urakka urakka-id
-                                                            :vuosi vuosi}))
-                             (map #(assoc % :maara (- (:maara %)))))]
-    [:raportti {:orientaatio :landscape
-                :nimi otsikko}
-     (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet+kustannukset) :yha vuosi)
-     (when (some :maaramuutokset-ennustettu? yllapitokohteet+kustannukset) [:teksti "Taulukko sisältää ennustettuja määrämuutoksia."])
-     (yllapitokohteet-taulukko (filter (comp not :yhaid) yllapitokohteet+kustannukset) :paikkaus vuosi)
-     (muut-kustannukset-taulukko muut-kustannukset urakan-sanktiot)
-     (yhteensa-taulukko yllapitokohteet+kustannukset muut-kustannukset urakan-sanktiot vuosi)
+                            (hae-yllapitourakan-sanktiot db {:urakka urakka-id
+                                                             :vuosi vuosi}))
+                          (map #(assoc % :maara (- (:maara %)))))]
+    ;; Jos tietty urakka valittuna, suoritetaan normaali vastaanottotarkastus 
+    (if urakka-id
+      [:raportti {:orientaatio :landscape
+                  :nimi otsikko}
 
-     (mapcat (fn [[aja-parametri otsikko raportti-fn]]
-               (concat [[:otsikko otsikko]]
-                       (yleinen/osat (raportti-fn db user tiedot))))
-             [[:yllapidon-aikataulu "Aikataulu" yllapidon-aikataulu/suorita]])]))
+
+       (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet+kustannukset) :yha vuosi)
+       (when (some :maaramuutokset-ennustettu? yllapitokohteet+kustannukset) [:teksti "Taulukko sisältää ennustettuja määrämuutoksia."])
+       (yllapitokohteet-taulukko (filter (comp not :yhaid) yllapitokohteet+kustannukset) :paikkaus vuosi)
+       (muut-kustannukset-taulukko muut-kustannukset urakan-sanktiot)
+       (yhteensa-taulukko yllapitokohteet+kustannukset muut-kustannukset urakan-sanktiot vuosi)
+
+       (mapcat (fn [[_ otsikko raportti-fn]]
+                 (concat [[:otsikko otsikko]]
+                   (yleinen/osat (raportti-fn db user tiedot))))
+         [[:yllapidon-aikataulu "Aikataulu" yllapidon-aikataulu/suorita]])]
+      
+      ;; Muulloin, suoritetaan isomman kontekstin päällystysyhteenveto
+      [:raportti {:orientaatio :landscape
+                  :nimi otsikko}
+       (yllapitokohteet-taulukko-hallintayksikko (filter :yhaid yllapitokohteet+kustannukset) :yha vuosi)])))
