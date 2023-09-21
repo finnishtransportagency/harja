@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.suunnittelu.mhu-tehtavat
   (:require [tuck.core :refer [process-event] :as tuck]
             [harja.tiedot.urakka.urakka :as tiedot]
+            [harja.tiedot.urakka :as urakka]
             [harja.ui.viesti :as viesti]
             [reagent.core :as r]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -238,16 +239,30 @@
   (filter vain-taso-3))
 
 (defn- sopimusmaarat-taulukosta [taulukko tyyppi]
-  (map :sopimus-maara
-    (flatten (map vals (vals (tyyppi taulukko))))))
+  (map #(select-keys % [:sopimus-maara :sopimuksen-tehtavamaarat])
+          (flatten (map vals (vals (tyyppi taulukko))))))
 
 (defn aluetietoja-puuttuu? []
-  (let [keratyt-aluemaarat (sopimusmaarat-taulukosta @taulukko-tila :alueet)]
-    (some nil? keratyt-aluemaarat)))
+  (let [keratyt-aluemaarat (sopimusmaarat-taulukosta @taulukko-tila :alueet)
+        puutteita-aluetiedoissa? (boolean (some nil? (map :sopimus-maara keratyt-aluemaarat)))]
+    puutteita-aluetiedoissa?))
 
-(defn maaratietoja-puuttuu? []
-  (let [keratyt-tehtavamaarat (sopimusmaarat-taulukosta @taulukko-tila :maarat)]
-    (some nil? keratyt-tehtavamaarat)))
+(defn maaratietoja-puuttuu?
+  []
+  (let [keratyt-tehtavamaarat (sopimusmaarat-taulukosta @taulukko-tila :maarat)
+        ;; kerätään ne rivit ensin, joissa kaikille vuosille saman arvon asettava kenttä on nil
+        puutteita-sopimusmaarissa? (keep #(when (nil? (:sopimus-maara %))
+                                            (identity %)) keratyt-tehtavamaarat)
+        ;; näistä kelvollisia ovat ne, joilla on kaikille hoitokausille vuosikohtainen arvo
+        ;; sitä on kuitenkin tarkasteltava vielä erikseen
+        on-riveja-joilta-maaratieto-puuttuu? (keep #(or
+                                                      (nil? (:sopimuksen-tehtavamaarat %))
+                                                      (when
+                                                        (map? (:sopimuksen-tehtavamaarat %))
+                                                        ;; vaaditaan että vuosikohtaisissa on jokaiselle MHU:n vuodelle arvo
+                                                        (when (< (count (vals (:sopimuksen-tehtavamaarat %))) (count @urakka/valitun-urakan-hoitokaudet))
+                                                          (identity %)))) puutteita-sopimusmaarissa?)]
+    (boolean (seq on-riveja-joilta-maaratieto-puuttuu?))))
 
 (defn syotetty-maara-tuleville-vuosille 
   [tehtava hoitokausi]
