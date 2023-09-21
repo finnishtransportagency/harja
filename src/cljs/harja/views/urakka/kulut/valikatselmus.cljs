@@ -203,10 +203,13 @@
                           (- toteuma oikaistu-tavoitehinta))
         urakoitsijan-osuus (* valikatselmus/+urakoitsijan-osuus-ylityksesta+ ylityksen-maara)
         tilaajan-osuus (- ylityksen-maara urakoitsijan-osuus)
+        _ (js/console.log "tavoitehinnan-ylitys-lomake :: hoitokauden-alkuvuosi: " (pr-str hoitokauden-alkuvuosi))
+        _ (js/console.log "tavoitehinnan-ylitys-lomake :: paatokset: " (pr-str urakan-paatokset))
         paatos (valikatselmus-tiedot/filtteroi-paatos
                  hoitokauden-alkuvuosi
                  ::valikatselmus/tavoitehinnan-ylitys
                  urakan-paatokset)
+        _ (js/console.log "tavoitehinnan-ylitys-lomake :: filtteröity paatos: " (pr-str paatos))
         paatos-tehty? (some? paatos)
         paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
                                  ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys

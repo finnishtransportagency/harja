@@ -63,7 +63,8 @@
 
 (defn filtteroi-paatos [hoitokauden-alkuvuosi tyyppi paatokset]
   (first (filter #(and
-                    (= (name tyyppi) (::valikatselmus/tyyppi %))
+                    (or (= (name tyyppi) (::valikatselmus/tyyppi %))
+                      (= (name (keyword tyyppi)) (::valikatselmus/tyyppi %)))
                     (= hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi %)))
            paatokset)))
 
