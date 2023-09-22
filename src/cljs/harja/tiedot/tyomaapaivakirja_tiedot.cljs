@@ -51,6 +51,8 @@
 (defrecord HaeMuutoshistoriaOnnistui [vastaus])
 (defrecord HaeMuutoshistoriaEpaonnistui [vastaus])
 (defrecord ValitseRivi [rivi])
+(defrecord SiirryKommentteihin [])
+(defrecord SiirryKommentteihinLatauksesta [])
 (defrecord MuutoshistoriaAuki [indeksi])
 (defrecord ValitseHistoriarivi [indeksi])
 (defrecord PoistaRiviValinta [])
@@ -127,7 +129,7 @@
 (defn scrollaa-kommentteihin []
   ;; Kutsutaan kun käyttäjä poistaa/lisää kommentin
   ;; Tehty nopeaksi (10ms)
-  (siirrin/siirry-elementin-id "Kommentit" 10))
+  (siirrin/siirry-elementin-id "Lisaa-kommentti" 450))
 
 (defn scrollaa-viimeksi-valitulle-riville [e!]
   ;; Poistetaan rivivalinta ja rullataan käyttäjä viimeksi klikatulle riville
@@ -229,7 +231,10 @@
     ;; Raportin sulkeminen käynnistää listauksen hakemisen tietokannasta aina
     (hae-paivakirjat app)
     (-> app
-      (assoc :valittu-rivi nil)))
+      (assoc
+        :valittu-rivi nil
+        :historia-haettu-typa-id nil
+        :kommentit-haettu-typa-id nil)))
 
   SelaaPaivakirjoja
   (process-event [{suunta :suunta} {:keys [nayta-rivit valittu-rivi] :as app}]
@@ -277,6 +282,8 @@
   (process-event [{vastaus :vastaus} app]
     (-> app
       (assoc :kommentit vastaus)
+      (assoc :siirry-kommentteihin true)
+      (assoc :kommentit-haettu-typa-id nil)
       (assoc-in [:valittu-rivi :kommenttien-maara] (inc (get-in app [:valittu-rivi :kommenttien-maara])))))
 
   TallennaKommenttiEpaonnistui
@@ -286,13 +293,17 @@
     app)
 
   HaeKommentit
-  (process-event [_ {:keys [valittu-rivi] :as app}]
-    (tuck-apurit/post! app :tyomaapaivakirja-hae-kommentit
-      {:urakka-id (:id @nav/valittu-urakka)
-       :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)}
-      {:onnistui ->HaeKommentitOnnistui
-       :epaonnistui ->HaeKommentitEpaonnistui})
-    app)
+  (process-event [_ {:keys [valittu-rivi kommentit-haettu-typa-id] :as app}]
+    ;; Älä kutsu uudelleen samalla päiväkirjalla jos tiedot haettu jo
+    (if-not (= kommentit-haettu-typa-id (:tyomaapaivakirja_id valittu-rivi))
+      (do
+        (tuck-apurit/post! app :tyomaapaivakirja-hae-kommentit
+          {:urakka-id (:id @nav/valittu-urakka)
+           :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)}
+          {:onnistui ->HaeKommentitOnnistui
+           :epaonnistui ->HaeKommentitEpaonnistui})
+        (assoc app :kommentit-haettu-typa-id (:tyomaapaivakirja_id valittu-rivi)))
+      app))
 
   HaeKommentitOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -304,15 +315,32 @@
     (viesti/nayta-toast! (str "HaeKommentitEpaonnistui \n Vastaus: " (pr-str vastaus)) :varoitus)
     app)
 
+  SiirryKommentteihin
+  (process-event [_ {:keys [siirry-kommentteihin] :as app}]
+    ;; Siirrä käyttäjä takaisin kommentteihin lomakkeen latauksen jälkeen
+    (when siirry-kommentteihin (scrollaa-kommentteihin))
+    (-> app
+      (assoc
+        :siirry-kommentteihin false
+        :siirry-kommentteihin-latauksesta false)))
+
+  SiirryKommentteihinLatauksesta
+  (process-event [_ app]
+    (assoc app :siirry-kommentteihin-latauksesta true))
+
   HaeMuutoshistoria
-  (process-event [_ {:keys [valittu-rivi] :as app}]
-    (tuck-apurit/post! app :tyomaapaivakirja-hae-muutoshistoria
-      {:tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
-       :urakka-id (:id @nav/valittu-urakka)
-       :versio (:versio valittu-rivi)}
-      {:onnistui ->HaeMuutoshistoriaOnnistui
-       :epaonnistui ->HaeMuutoshistoriaEpaonnistui})
-    app)
+  (process-event [_ {:keys [valittu-rivi historia-haettu-typa-id] :as app}]
+    ;; Älä kutsu uudelleen samalla päiväkirjalla jos tiedot haettu jo
+    (if-not (= historia-haettu-typa-id (:tyomaapaivakirja_id valittu-rivi))
+      (do
+        (tuck-apurit/post! app :tyomaapaivakirja-hae-muutoshistoria
+          {:tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
+           :urakka-id (:id @nav/valittu-urakka)
+           :versio (:versio valittu-rivi)}
+          {:onnistui ->HaeMuutoshistoriaOnnistui
+           :epaonnistui ->HaeMuutoshistoriaEpaonnistui})
+        (assoc app :historia-haettu-typa-id (:tyomaapaivakirja_id valittu-rivi)))
+      app))
 
   HaeMuutoshistoriaOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -341,6 +369,7 @@
   PoistaKommenttiOnnistui
   (process-event [{vastaus :vastaus} app]
     (-> app
+      (assoc :siirry-kommentteihin true)
       (assoc-in [:valittu-rivi :kommenttien-maara] (dec (get-in app [:valittu-rivi :kommenttien-maara])))
       (assoc-in [:valittu-rivi :kommentit] vastaus)))
 
