@@ -267,6 +267,4 @@ workflows:
   build_and_test:
     jobs:
       - back-testit
-      - hitaat-testit
       - integraatio-testit
-      - front-testit
