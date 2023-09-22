@@ -211,9 +211,9 @@
          :validoi [[:ei-tyhja "Valitse päivämäärä"]]
          :aseta (fn [rivi arvo]
                   (cond-> rivi
-                    ;; Jos laskutuskuukautta  ei ole vielä valittu, niin asetetaan
+                    ;; Jos laskutuskuukautta  ei ole vielä valittu ja bonusta ei ole tallennettu (id nil), niin asetetaan
                     ;; esivalintana perintapvm valittu kasittelyn pvm
-                    (nil? (:laskutuskuukausi-komp-tiedot rivi))
+                    (and (nil? (:laskutuskuukausi-komp-tiedot rivi)) (nil? (:id rivi)))
                     (assoc :perintapvm arvo)
 
                     ;; Tallennetaan aina valittu käsittelyaika :kasittelyaika avaimen alle
