@@ -205,6 +205,13 @@
          [:br]
          (str "Päätöksen selitys: " perustelu)]))))
 
+(defn fmt-laskutuskuukausi
+  "Muokataan päivämäärästä -> Syyskuu 2023 (3. hoitovuosi) tyyppinen string"
+  [laskutuskuukausi urakan-alkupaiva]
+  (let [kuukausi-vuosi (pvm/koko-kuukausi-ja-vuosi laskutuskuukausi true)
+        hoitovuoden-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupaiva laskutuskuukausi)]
+    (str kuukausi-vuosi " (" hoitovuoden-nro ". hoitokausi)")))
+
 (defn sanktiot-ja-bonukset-listaus
   [sivupaneeli-auki?-atom valittu-urakka]
   (let [;; TODO: Onko tämä käytännössä sama asia kuin alempi "yllapitokohdeurakka?". Ylläpitourakakka?:ssa on mukana lisäksi :valaistus-urakkatyypi
@@ -218,6 +225,7 @@
                    reverse)
         hoitokauden-alku (first @tiedot-urakka/valittu-hoitokausi)
         hoitokauden-loppu (second @tiedot-urakka/valittu-hoitokausi)
+        urakan-alkupaiva (:alkupvm @nav/valittu-urakka)
         urakka-id (when valittu-urakka (:id valittu-urakka))
         urakka-nimi (when valittu-urakka (:nimi valittu-urakka))]
 
@@ -266,12 +274,12 @@
        :rivi-jalkeen-fn #(let [yhteensa-summat (reduce + 0 (map :summa %))
                                yhteensa-indeksit (reduce + 0 (map :indeksikorjaus %))]
                            [{:teksti "Yht." :luokka "lihavoitu"}
-                            {:teksti (str (count %) " kpl") :sarakkeita 4 :luokka "lihavoitu"}
+                            {:teksti (str (count %) " kpl") :sarakkeita 5 :luokka "lihavoitu"}
                             {:teksti (str (fmt/euro-opt false yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}
                             {:teksti (str (fmt/euro-opt false yhteensa-indeksit))
                              :tasaa :oikea :luokka "lihavoitu"}])}
       [{:otsikko "Käsitelty" :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.3}
-       {:otsikko "Laskutuskuukausi" :nimi :perintapvm :fmt pvm/pvm-opt :leveys 1.5}
+       {:otsikko "Laskutuskuukausi" :nimi :perintapvm :fmt #(fmt-laskutuskuukausi % urakan-alkupaiva) :leveys 1.5}
        {:otsikko "Laji" :nimi :laji :hae :laji :leveys 2.5 :fmt sanktio-domain/sanktiolaji->teksti}
        (when yllapitokohdeurakka?
          {:otsikko "Kohde" :nimi :kohde :leveys 2
