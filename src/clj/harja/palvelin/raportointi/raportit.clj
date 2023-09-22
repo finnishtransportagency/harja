@@ -352,6 +352,7 @@
     :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
     :suorita      #'harja.palvelin.raportointi.raportit.vastaanottotarkastus/suorita
     :kuvaus       "Vastaanottotarkastusraportti"
+    :kuvaus-suuri-konteksti "Päällystysurakoiden yhteenveto"
     :urakkatyyppi #{:paallystys}}
 
    {:nimi         :vesivaylien-laskutusyhteenveto

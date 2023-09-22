@@ -777,9 +777,16 @@
                           [livi-pudotusvalikko {:valinta @valittu-raporttityyppi
                                                 ;;\u2014 on väliviivan unikoodi
                                                 :format-fn #(if % (str
-                                                                    (or
-                                                                      (:kuvaus-tarkenne %)
-                                                                      (:kuvaus %))
+                                                                    ;; Jos urakkaa ei ole valittuna ja suuri konteksti avain olemassa
+                                                                    (if (and
+                                                                          (not (boolean v-ur))
+                                                                          (:kuvaus-suuri-konteksti %))
+                                                                      ;; Näytetään suuren kontekstin kuvaus
+                                                                      (:kuvaus-suuri-konteksti %)
+                                                                      ;; Muuten näytetään tarkenne / kuvaus 
+                                                                      (or
+                                                                        (:kuvaus-tarkenne %)
+                                                                        (:kuvaus %)))
                                                                     (if (:testiversio? %)
                                                                       " - TESTIVERSIO"
                                                                       "")) "Valitse")
