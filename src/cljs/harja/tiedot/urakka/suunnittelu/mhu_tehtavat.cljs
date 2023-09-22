@@ -250,8 +250,8 @@
 (defn maaratietoja-puuttuu?
   []
   (let [keratyt-tehtavamaarat (sopimusmaarat-taulukosta @taulukko-tila :maarat)
-        ;; kerätään ne rivit ensin, joissa kaikille vuosille saman arvon asettava kenttä on nil
-        puutteita-sopimusmaarissa? (keep #(when (nil? (:sopimus-maara %))
+        ;; kerätään ne rivit ensin, joissa kaikille vuosille saman arvon asettava kenttä (sopimus-maara) on nil
+        sopimusmaarat-puuttuvat (keep #(when (nil? (:sopimus-maara %))
                                             (identity %)) keratyt-tehtavamaarat)
         ;; näistä kelvollisia ovat ne, joilla on kaikille hoitokausille vuosikohtainen arvo
         ;; sitä on kuitenkin tarkasteltava vielä erikseen
@@ -261,7 +261,7 @@
                                                         (map? (:sopimuksen-tehtavamaarat %))
                                                         ;; vaaditaan että vuosikohtaisissa on jokaiselle MHU:n vuodelle arvo
                                                         (when (< (count (vals (:sopimuksen-tehtavamaarat %))) (count @urakka/valitun-urakan-hoitokaudet))
-                                                          (identity %)))) puutteita-sopimusmaarissa?)]
+                                                          (identity %)))) sopimusmaarat-puuttuvat)]
     (boolean (seq on-riveja-joilta-maaratieto-puuttuu?))))
 
 (defn syotetty-maara-tuleville-vuosille 
