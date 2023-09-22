@@ -162,6 +162,13 @@ jobs:
       - name: Run backend tests
         run: lein test
 
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
+        if: always()
+        with:
+        report_paths: 'test-results/*.xml'
+        check_name: 'Backend Test Report'
+
   basic-tests:
     name: "Frontti- ja hitaat testit"
     runs-on: ubuntu-latest
