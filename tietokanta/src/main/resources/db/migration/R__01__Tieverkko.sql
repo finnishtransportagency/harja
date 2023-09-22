@@ -208,32 +208,78 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP FUNCTION IF EXISTS laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GEOMETRY);
 CREATE OR REPLACE FUNCTION laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GEOMETRY, tie INTEGER, osa INTEGER)
     RETURNS tr_osan_kohta AS $$
 DECLARE
-    lahin_piste              GEOMETRY;
-    aet                      INTEGER;
-    tieosan_pituus           INTEGER;
-    tieosan_alku             GEOMETRY;
-    tieosan_loppu            GEOMETRY;
-    alun_etaisyys_pisteesta  NUMERIC;
-    lopun_etaisyys_pisteesta NUMERIC;
+    lahin_piste                GEOMETRY;
+    aet                        INTEGER;
+    tieosan_kokonaispituus     INTEGER;
+    etaisyys_pisteeseen        NUMERIC;
+    tieosan_alku               GEOMETRY;
+    tieosan_loppu              GEOMETRY;
+    alun_etaisyys_pisteesta    NUMERIC;
+    lopun_etaisyys_pisteesta   NUMERIC;
+    osan_geometrian_viiva      RECORD;
+    lahin_viiva                INTEGER;
+    viivan_etaisyys_pisteeseen NUMERIC;
+    lyhin_etaisyys_pisteeseen  NUMERIC;
+    laskuri                    INTEGER;
 BEGIN
 
-    SELECT ST_ClosestPoint(osan_geometria, piste)
-    INTO lahin_piste;
+    laskuri := 0;
+    lahin_viiva := 0;
+    viivan_etaisyys_pisteeseen := 0;
+    lyhin_etaisyys_pisteeseen := -1;
+    etaisyys_pisteeseen := 0;
 
-    SELECT ST_Length(ST_GeometryN(ST_Split(ST_Snap(osan_geometria, lahin_piste, 0.1), lahin_piste), 1))
-    INTO aet;
+    RAISE NOTICE 'TYYPPI: % ', St_GeometryType(osan_geometria);
 
-    tieosan_pituus := St_Length(osan_geometria);
+    IF St_GeometryType(osan_geometria) = 'ST_MultiLineString' THEN
+        -- Joskus osan geometria on multilinestring eli tienosa voi koostua useista erillisistä viivoista.
+        -- Tämä on otettava huomioon, kun päätellään pisteen suhdetta tienosaan kokonaisuutena.
+        -- Etsitään geoemtriasta se viiva, jota lähinnä kohdistettava piste on ja
+        -- pistettä lähinnä oleva kohta tässä viivassa.
+        FOR osan_geometrian_viiva IN (SELECT (St_Dump(osan_geometria)).path[1] as int,
+                                             (ST_Dump(osan_geometria)).geom    as geom)
+            LOOP
+                viivan_etaisyys_pisteeseen := (SELECT ST_Distance84(osan_geometrian_viiva.geom, piste));
+                IF lyhin_etaisyys_pisteeseen = -1 OR lyhin_etaisyys_pisteeseen > viivan_etaisyys_pisteeseen THEN
+                    lyhin_etaisyys_pisteeseen = viivan_etaisyys_pisteeseen;
+                    lahin_viiva := osan_geometrian_viiva.int;
+                    lahin_piste := (SELECT ST_ClosestPoint(osan_geometrian_viiva.geom, piste));
+                END IF;
+            END LOOP;
+    ELSE -- ST_LineString
+    -- Kun geometria on linestring, on vain yksi viiva
+        lahin_viiva = 1;
+        lahin_piste := (SELECT ST_ClosestPoint(osan_geometria, piste));
+    END IF;
+
+    RAISE NOTICE 'Lähin viiva: %', lahin_viiva;
+
+    -- Lasketaan edellä selvitettyjen tietojen perusteella pisteen etäisyys tien alkupäästä.
+    -- Huomioidaan laskennassa myös tienosan kaikki pistettä lähinnä olevaa viivaa edeltävät viivat.
+    WHILE laskuri < lahin_viiva
+        LOOP
+            laskuri := laskuri + 1;
+            IF laskuri = lahin_viiva THEN
+                etaisyys_pisteeseen := etaisyys_pisteeseen + (SELECT ST_Length(ST_GeometryN(ST_Split(
+                                                                                                    ST_Snap(ST_GeometryN(osan_geometria, laskuri), lahin_piste, 0.1),
+                                                                                                    lahin_piste), 1)));
+            ELSE
+                etaisyys_pisteeseen := etaisyys_pisteeseen + St_Length(ST_GeometryN(osan_geometria, laskuri));
+            END IF;
+            RAISE NOTICE 'Laskuri: %', laskuri;
+            RAISE NOTICE 'Etaisyys pisteeseen: %', etaisyys_pisteeseen;
+        END LOOP;
 
     -- Jos tarkasteltava piste on aivan tienosan päässä, etäisyydeksi palautuu koko osan pituus
     -- riippumatta siitä onko piste tienosan alku- vai loppupäässä. Alkupässä aet pitäisi olla 0, eikä sama kuin osan pituus.
     -- Tarkistetaan siksi pisteen suhde myös tienosan alkuun ja loppuun, jos edellä saatiin aet-arvoksi tienosan pituus.
-    IF aet = tieosan_pituus THEN
+    tieosan_kokonaispituus := St_Length(osan_geometria);
+    aet := etaisyys_pisteeseen;
 
+    IF aet = tieosan_kokonaispituus THEN
         tieosan_alku := tierekisteriosoitteelle_piste(tie, osa, 0);
         tieosan_loppu := tierekisteriosoitteelle_piste(tie, osa, aet);
         alun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_alku);
