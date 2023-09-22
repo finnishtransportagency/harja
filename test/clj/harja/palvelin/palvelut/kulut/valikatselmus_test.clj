@@ -1094,3 +1094,26 @@
                          (catch Exception e e))]
     (is (not= poisto-vastaus1 paatos-id1))
     (is (= "Päätöksen id puuttuu!" (-> poisto-vastaus2 ex-data :virheet :viesti)))))
+
+(deftest tarkista-maksun-maara-alituksessa-testi
+  (testing "Aiheutetaan virhe"
+    (let [tavoitehinta 100000
+          urakoitsijan-maksu (* -1 (* 0.031 tavoitehinta))   ;; Muutetaan negatiiviseksi
+          tiedot {::valikatselmus/urakoitsijan-maksu urakoitsijan-maksu}
+          urakka {:loppupvm (pvm/->pvm "30.09.2023")}
+          ;; Varmistetaan, että ei lasketa viimeisen vuoden summia, koska viimeisenä vuonna laskelmat on erilaiset
+          hoitokauden-alkuvuosi 2024
+          vastaus (try
+                    (valikatselmukset/tarkista-maksun-maara-alituksessa tiedot urakka tavoitehinta hoitokauden-alkuvuosi)
+                    (catch Exception e e))]
+      (is (= "Urakoitsijalle maksettava summa ei saa ylittää 3% tavoitehinnasta" (-> vastaus ex-data :virheet :viesti)))))
+  (testing "Oikea määrä virhe"
+    (let [tavoitehinta 100000
+          urakoitsijan-maksu (* -1 (* 0.03 tavoitehinta))   ;; Muutetaan negatiiviseksi
+          tiedot {::valikatselmus/urakoitsijan-maksu urakoitsijan-maksu}
+          urakka {:loppupvm (pvm/->pvm "30.09.2023")}
+          ;; Varmistetaan, että ei lasketa viimeisen vuoden summia, koska viimeisenä vuonna laskelmat on erilaiset
+          hoitokauden-alkuvuosi 2024
+          vastaus (valikatselmukset/tarkista-maksun-maara-alituksessa tiedot urakka tavoitehinta hoitokauden-alkuvuosi)]
+      ;; Saadaan nil vastaus, kun urakoitsijan maksu on hyväksytty 3% tavoitehinnasta tai pienempi
+      (is (= (nil? vastaus))))))
