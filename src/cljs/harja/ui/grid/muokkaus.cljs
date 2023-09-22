@@ -60,6 +60,8 @@
   (fn [arvo] (when (number? arvo)
                (fmt/desimaaliluku-opt arvo 2)) ))
 
+;; FIXME: on pyrittävä eroon tästä multimetodista, ja käytettävä ui.kentat/nayta-arvo toteutusta
+;; vaikuttaa jonkin verran Cypress-testeihin, mikä huomiotava muutoksessa
 (defmethod ei-muokattava-tyypillinen-fmt :default
   [_] nil)
 
