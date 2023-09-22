@@ -203,13 +203,10 @@
                           (- toteuma oikaistu-tavoitehinta))
         urakoitsijan-osuus (* valikatselmus/+urakoitsijan-osuus-ylityksesta+ ylityksen-maara)
         tilaajan-osuus (- ylityksen-maara urakoitsijan-osuus)
-        _ (js/console.log "tavoitehinnan-ylitys-lomake :: hoitokauden-alkuvuosi: " (pr-str hoitokauden-alkuvuosi))
-        _ (js/console.log "tavoitehinnan-ylitys-lomake :: paatokset: " (pr-str urakan-paatokset))
         paatos (valikatselmus-tiedot/filtteroi-paatos
                  hoitokauden-alkuvuosi
                  ::valikatselmus/tavoitehinnan-ylitys
                  urakan-paatokset)
-        _ (js/console.log "tavoitehinnan-ylitys-lomake :: filtteröity paatos: " (pr-str paatos))
         paatos-tehty? (map? paatos)
         paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
                                  ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
@@ -244,9 +241,7 @@
          #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id paatos) ::valikatselmus/tavoitehinnan-alitus))
          {:disabled (not voi-muokata?)
           :luokka "nappi-toissijainen napiton-nappi"
-          :ikoni [ikonit/harja-icon-action-undo]}])]]
-    )
-  )
+          :ikoni [ikonit/harja-icon-action-undo]}])]]))
 
 (defn tavoitehinnan-alitus-lomake [e! {:keys [hoitokauden-alkuvuosi urakan-paatokset]} toteuma
                                    oikaistu-tavoitehinta tavoitehinta voi-muokata?]
@@ -603,11 +598,11 @@
 (defn valikatselmus [e! app]
   (komp/luo
     (komp/sisaan #(do
-                    (e! (valikatselmus-tiedot/->AlustaPaatosLomakkeet (:urakan-paatokset app) (:hoitokauden-alkuvuosi app)))
                     (e! (lupaus-tiedot/->HaeUrakanLupaustiedot (:urakka @tila/yleiset)))
                     (e! (valikatselmus-tiedot/->NollaaPaatoksetJosUrakkaVaihtui))
-                    (when (nil? (:urakan-paatokset app))
-                      (e! (valikatselmus-tiedot/->HaeUrakanPaatokset (-> @tila/yleiset :urakka :id))))))
+                    (if (nil? (:urakan-paatokset app))
+                      (e! (valikatselmus-tiedot/->HaeUrakanPaatokset (-> @tila/yleiset :urakka :id)))
+                      (e! (valikatselmus-tiedot/->AlustaPaatosLomakkeet (:urakan-paatokset app) (:hoitokauden-alkuvuosi app))))))
     (fn [e! app]
       [:div.valikatselmus-container
        [debug/debug app]
