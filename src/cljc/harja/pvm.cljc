@@ -1287,9 +1287,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   Anna dt joda timena tai java.sql.Date"
   ([dt lisaa? maara] (ajan-muokkaus dt lisaa? maara :sekuntti))
   ([dt lisaa? maara aikamaare]
-   (let [dt #?(:clj (if (= java.sql.Date (type dt))
-                      (joda-timeksi dt)
-                      dt)
+   (let [dt #?(:clj (joda-timeksi dt)
                :cljs dt)
          muokkaus (if lisaa?
                     t/plus
