@@ -669,7 +669,7 @@
        (when (and (pvm/ennen? (pvm/nyt) (pvm/->pvm "01.01.2025"))
                (or (= kulutyyppi :normaali-kulu) (= kulutyyppi :eri-tehtavat)))
          [yleiset/info-laatikko :vahva-ilmoitus
-          "Tilaajan rahavaraus (T3) -tehtäväryhmälle ei kirjata enää kuluja tällä lomakkeella. T3-kulut muodustuvat Harjaan automaattisesti samalla, kun hoidon projektipäällikkö kirjaa alihankintasopimusten maksuehtobonuksen."
+          "Tilaajan rahavaraus (T3) -tehtäväryhmälle ei kirjata enää kuluja tällä lomakkeella. T3-kulut muodostuvat Harjaan automaattisesti samalla, kun hoidon projektipäällikkö kirjaa alihankintasopimusten maksuehtobonuksen."
           nil nil])]
      [:div.palstat
       [:div.palsta
