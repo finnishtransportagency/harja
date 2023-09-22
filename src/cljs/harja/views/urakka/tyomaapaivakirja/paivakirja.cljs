@@ -58,8 +58,7 @@
 
     [:div.tyomaapaivakirja
      [:div.paivakirja-listaus
-      [debug app {:otsikko "TUCK STATE"}]
-      [:h1.header-yhteiset "Työmaapäiväkirja"]
+      [:h1.header-yhteiset "Työmaapäiväkirja"] 
 
       [:div.row.filtterit
        [valinnat/aikavali
@@ -314,7 +313,7 @@
                                    "Ok")]]
 
       ;; Kommentti- nappi scrollaa alas kommentteihin
-      [:a.klikattava {:on-click #(siirrin/siirry-elementin-id "Kommentit" 150)}
+      [:a.klikattava {:on-click #(tiedot/scrollaa-kommentteihin)}
        [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) (if (= (:kommenttien-maara valittu-rivi) 1)
                                                             (str (:kommenttien-maara valittu-rivi) " kommentti")
                                                             (str (:kommenttien-maara valittu-rivi) " kommenttia"))]]]
@@ -414,21 +413,19 @@
             [:div.kommentti
              [:h1.tieto-rivi kommentti]
              [:span.klikattava.kommentti-poista
-              {:on-click #(do
-                            (e! (tiedot/->PoistaKommentti
-                                  {:id id :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi) :luoja luoja}))
-                            (tiedot/scrollaa-kommentteihin))}
+              {:on-click #(e! (tiedot/->PoistaKommentti
+                                {:id id :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi) :luoja luoja}))}
               (ikonit/action-delete)]]])))
 
      [:div#kommentti-lisaa
-      [:a.klikattava {:on-click #(do
-                                   (toggle-kentat "kommentti-area" "kommentti-lisaa")
-                                   (siirrin/siirry-elementin-id "kommentti-area" 150))}
+      [:a#Lisaa-kommentti.klikattava {:on-click #(do
+                                                   (toggle-kentat "kommentti-area" "kommentti-lisaa")
+                                                   (siirrin/siirry-elementin-id "kommentti-area" 150))}
 
        [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Lisää kommentti"]]]
 
      [:span#kommentti-area.kentta-text.piilota-kentta
-      [:span "Lisää kommentti"]
+      [:span#Lisaa-kommentti "Lisää kommentti"]
       [:textarea#kommentti-teksti]
       [:span "Myös työmaapäiväkirjaan kirjoitetut kommentit tallentuvat PDF:ään ja ne arkistoidaan muun työpäiväkirjan mukana."]
 
@@ -438,8 +435,7 @@
          (fn []
            (let [kirjoitettu-teksti (-> (.getElementById js/document "kommentti-teksti") .-value)]
              (toggle-kentat "kommentti-lisaa" "kommentti-area")
-             (e! (tiedot/->TallennaKommentti kirjoitettu-teksti))
-             (tiedot/scrollaa-kommentteihin)))
+             (e! (tiedot/->TallennaKommentti kirjoitettu-teksti))))
          {:vayla-tyyli? true}]]
 
        [:span
@@ -477,7 +473,7 @@
     [:span.nuoli [ikonit/harja-icon-navigation-close]]
     [:span "Sulje"]]])
 
-(defn suorita-tyomaapaivakirja-raportti [e! {:keys [valittu-rivi] :as app}]
+(defn suorita-tyomaapaivakirja-raportti [e! {:keys [siirry-kommentteihin siirry-kommentteihin-latauksesta] :as app}]
   (if-let [tiedot @tiedot/raportin-tiedot]
     [:div.tyomaapaivakirja
      ;; Päiväkirjanäkymä
@@ -485,7 +481,7 @@
       ;; Takaisin nappi
       [:div.klikattava {:class "sulje" :on-click #(tiedot/scrollaa-viimeksi-valitulle-riville e!)}
        [ikonit/harja-icon-navigation-close]]
-      
+
       ;; Header 
       (paivakirjan-header e! app)
 
@@ -496,9 +492,17 @@
       (paivakirjan-kommentit e! app)]
 
      ;; Sticky bar (Edellinen - Seuraava) Tallenna PDF
-     (paivakirjan-sticky e!)]
+     (paivakirjan-sticky e!)
+     
+     ;; Siirrä käyttäjä kommentteihin, jos poistettiin/lisättiin uusi kommentti
+     (when siirry-kommentteihin-latauksesta
+       (e! (tiedot/->SiirryKommentteihin)))]
 
-    [yleiset/ajax-loader "Ladataan tietoja..."]))
+    (do
+      ;; Jotta toimii hitaammalla latausajalla (singleton/tuotanto), piti tehdä tällainen virveli
+      (when siirry-kommentteihin
+        (e! (tiedot/->SiirryKommentteihinLatauksesta)))
+      [yleiset/ajax-loader "Ladataan tietoja..."])))
 
 (defn tyomaapaivakirja* [e! app]
   (komp/luo

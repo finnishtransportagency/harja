@@ -12,6 +12,7 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [harja.palvelin.integraatiot.jms :as jms-util]
+            [harja.palvelin.tyokalut.lukot :as lukot]
             [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
@@ -79,6 +80,17 @@
           (ilmoitustoimenpiteet/laheta-lahettamattomat-ilmoitustoimenpiteet toimenpide-jms-lahettaja (:db this) aikavali))))
     (constantly nil)))
 
+(defn tee-kuittausten-monitorointi-tehtava
+  "Monitoroidaan kuittausten kulkemista T-LOIKille. Jos HARJAsta lähtevälle kuittaukselle ei tule vastausta,
+  heitetään varoitus tai virhe, riippuen myöhästymisen määrästä."
+  [{:keys [db]}]
+  (let [kuittausten-monitorointi-aikavali 1]
+    (log/debug "Käynnistetään kuittausten monitorointi")
+    (ajastettu-tehtava/ajasta-minuutin-valein
+      kuittausten-monitorointi-aikavali 30
+      (fn [_]
+        (ilmoitustoimenpiteet/varoita-vastaamattomista-kuittauksista db)))))
+
 (defrecord Tloik [asetukset kehitysmoodi? ]
   component/Lifecycle
   (start [{:keys [labyrintti api-sahkoposti] :as this}]
@@ -104,11 +116,12 @@
         :paivittainen-lahetys-tehtava (tee-ajastettu-uudelleenlahetys-tehtava
                                         this
                                         toimenpide-jms-lahettaja
-                                        uudelleenlahetysvali-minuuteissa))))
+                                        uudelleenlahetysvali-minuuteissa)
+        :kuittausten-monitorointi-tehtava (tee-kuittausten-monitorointi-tehtava this))))
   (stop [this]
     (let [kuuntelijat [:itmf-ilmoitusviestikuuntelija
                        :itmf-toimenpidekuittauskuuntelija]
-          ajastetut [:paivittainen-lahetys-tehtava]
+          ajastetut [:paivittainen-lahetys-tehtava :kuittausten-monitorointi-tehtava]
           lahettajat (select-keys asetukset [:ilmoituskuittausjono :toimenpideviestijono])]
       (doseq [kuuntelija kuuntelijat
               :let [poista-kuuntelija-fn (get this kuuntelija)]]

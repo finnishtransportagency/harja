@@ -736,6 +736,24 @@ WHERE
   (tila IS NULL OR tila = 'virhe') AND
   kuittaustyyppi != 'valitys';
 
+-- name: hae-myohastyneet-ilmoitustoimenpiteet
+SELECT count(*) AS maara,
+       array_agg(id) idt,
+       (now() - kuitattu > interval '10 minutes') AS "halytys-annettava",
+       myohastymisvaroitus,
+       array_agg(DISTINCT ilmoitusid::TEXT) AS korrelaatioidt
+FROM ilmoitustoimenpide
+WHERE tila = 'odottaa_vastausta'
+  AND (kanava = 'harja' OR kanava='ulkoinen_jarjestelma')
+  AND kuitattu < (now() - interval '1 minute')
+  AND (myohastymisvaroitus != 'halytys' OR myohastymisvaroitus IS NULL)
+  AND NOT (myohastymisvaroitus IS NOT NULL AND myohastymisvaroitus = 'varoitus' AND (now() - kuitattu < interval '10 minutes'))
+GROUP BY (now() - kuitattu > interval '10 minutes'), myohastymisvaroitus;
+
+--name: merkitse-ilmoitustoimenpide-varoitus-annetuksi!
+UPDATE ilmoitustoimenpide SET myohastymisvaroitus = :varoitus::kuittausvaroitus
+WHERE id IN (:idt);
+
 -- name: hae-ilmoituksen-tieosoite
 SELECT
   tr_numero as "tr-numero",

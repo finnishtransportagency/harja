@@ -157,13 +157,16 @@
              [:label (str "Vuosi " vuosi "-" (inc vuosi))]
              [kentat/tee-kentta {:tyyppi :numero
                                  :elementin-id (str "vetolaatikko-input-" (vali->viiva nimi) "-" vuosi)
-                                 :disabled? (not @joka-vuosi-erikseen?)                            
-                                 :on-blur #(tallenna! e! 
+                                 :disabled? (not @joka-vuosi-erikseen?)
+                                 :on-blur #(tallenna! e!
                                              (:sopimukset-syotetty? app)
                                              :maarat
-                                             (assoc rivi 
+                                             (assoc rivi
                                                :joka-vuosi-erikseen? @joka-vuosi-erikseen?
-                                               :sopimuksen-tehtavamaara (.. % -target -value) 
+                                               :sopimus-maara (let [maara (.. % -target -value)]
+                                                                (if-not (str/blank? maara)
+                                                                  (js/parseInt maara)
+                                                                  0))
                                                :hoitokausi vuosi))}
               (r/cursor t/taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat vuosi])]]))
         [:div.vetolaatikko-kentat [:span (str yksikko)]]]])))
@@ -221,8 +224,7 @@
            {:id (keyword (str "tehtavat-alueet-" (vali->viiva nimi)))
             :tyhja "Ladataan tietoja"
             :voi-poistaa? (constantly false)
-            :jarjesta :jarjestys 
-            :ulkoinen-validointi? true
+            :jarjesta :jarjestys
             :voi-muokata? true
             :voi-lisata? false
             :disabloi-autocomplete? true
@@ -236,6 +238,7 @@
                "70%")}
             ;; ennen urakkaa -moodi         
             {:otsikko "Tarjouksen määrä" :nimi :sopimus-maara :tyyppi :numero :leveys "180px"
+             :validoi [[:ei-tyhja "Anna määrä"]]
              :muokattava? (constantly (if sopimukset-syotetty? false true)) :tasaa :oikea :veda-oikealle? true}
             ;; urakan ajan suunnittelu -moodi         
             (when sopimukset-syotetty? 
@@ -251,8 +254,7 @@
              {:id (keyword (str "tehtavat-maarat-" (vali->viiva nimi)))
               :tyhja "Ladataan tietoja"
               :voi-poistaa? (constantly false)
-              :jarjesta :jarjestys 
-              :ulkoinen-validointi? true
+              :jarjesta :jarjestys
               :voi-muokata? true
               :voi-lisata? false
               :disabloi-autocomplete? true
@@ -277,11 +279,12 @@
             ;; ennen urakkaa -moodi
             (when (not sopimukset-syotetty?)
               {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimus-maara :tyyppi :numero :leveys "180px"
+               :validoi [[:ei-tyhja]]
                :muokattava? (comp kun-yksikko kun-kaikki-samat) :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo
                :veda-oikealle? true :tasaa :oikea})
             ;; urakan ajan suunnittelu -moodi
             (when sopimukset-syotetty? 
-              {:otsikko "Koko urakka-ajan määrä tarjouksessa" :nimi :sopimuksen-tehtavamaarat-yhteensa 
+              {:otsikko "Koko urakka-ajan määrä tarjouksessa" :nimi :sopimuksen-tehtavamaarat-yhteensa
                :tyyppi :numero :muokattava? (constantly false) :leveys "160px" :tasaa :oikea :veda-oikealle? true})
             (when sopimukset-syotetty? 
               {:otsikko "Koko urakka-ajan määrää jäljellä" :nimi :sovittuja-jaljella :tyyppi :string 
@@ -306,13 +309,18 @@
        [yleiset/keltainen-vihjelaatikko "Näytettäviä tietoja/määriä ei valittu, tarkista valinnat"])]))
 
 (defn sopimuksen-tallennus-boksi
-  [e! virhe-sopimuksia-syottaessa?]
-  [:div.table-default-even.col-xs-12
-   [:div.flex-row
-    [:h3 "Syötä tarjouksen määrät"]
-    [napit/yleinen-ensisijainen "Tallenna" (comp (vieritys/vierita ::top) #(e! (t/->TallennaSopimus true)))]]
-   (when virhe-sopimuksia-syottaessa?
-     [yleiset/info-laatikko :varoitus "Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä '0'" "" "100%" {:luokka "ala-margin-16"}])])
+  [e!]
+  (let [aluetietoja-puuttuu? (t/aluetietoja-puuttuu?)
+        maaratietoja-puuttuu? (t/maaratietoja-puuttuu?)]
+    [:div.table-default-even.col-xs-12
+     [:div.flex-row
+      [:h3 "Syötä tarjouksen määrät"]
+      [napit/yleinen-ensisijainen "Tallenna" (comp (vieritys/vierita ::top) #(e! (t/->TallennaSopimus true)))
+       {:disabled (or aluetietoja-puuttuu? maaratietoja-puuttuu?)}]]
+     (when (or aluetietoja-puuttuu? maaratietoja-puuttuu?)
+       [yleiset/info-laatikko :neutraali
+        "Jotta voit tallentaa, syötä kaikkiin tehtäviin ensin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä '0'"
+        "" "100%" {:luokka "ala-margin-16"}])]))
 
 (defn kaikille-tehtaville-arvon-tallennus
   [e!]
@@ -335,7 +343,7 @@
                       (e! (t/->HaeSopimuksenTila))
                       (e! (t/->HaeTehtavat
                             {:hoitokausi :kaikki}))))
-    (fn [e! {:keys [sopimukset-syotetty? virhe-sopimuksia-syottaessa?] :as app}]
+    (fn [e! {:keys [sopimukset-syotetty?] :as app}]
       [:div#vayla
        [vieritys/majakka ::top]
        [:div.flex-row
@@ -357,7 +365,7 @@
            [:div "Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä ‘0’. Tarjouksien määriä käytetään apuna urakan määrien suunnitteluun ja seurantaan."]]
           :info])
        (when (not sopimukset-syotetty?)
-         [sopimuksen-tallennus-boksi e! virhe-sopimuksia-syottaessa?])
+         [sopimuksen-tallennus-boksi e!])
        ;; Vain pääkäyttäjille testiympäristössä mahdollisuus luoda nopeasti arvot kaikille tehtäville
        (when (and (k/kehitysymparistossa?)
                   (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava))
@@ -366,7 +374,7 @@
          [valitaso-filtteri e! app])
        [tehtava-maarat-taulukko-kontti e! app]
        (when (not sopimukset-syotetty?)
-         [sopimuksen-tallennus-boksi e! virhe-sopimuksia-syottaessa?])])))
+         [sopimuksen-tallennus-boksi e!])])))
 
 (defn tehtavat []
   (tuck/tuck tila/suunnittelu-tehtavat tehtavat*))

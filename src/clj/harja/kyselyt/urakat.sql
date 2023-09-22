@@ -929,7 +929,7 @@ SELECT
   u.id,
   ST_Distance84(au.alue, st_makepoint(:x, :y)) AS etaisyys
 FROM urakka u
-         JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
+         JOIN alueurakka au ON au.alueurakkanro = u.urakkanro AND u.tyyppi IN ('hoito', 'teiden-hoito')
 WHERE u.alkupvm + interval '12 hour' <= current_timestamp
   AND u.loppupvm + interval '36 hour' >= current_timestamp
   AND ST_Distance84(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys

@@ -254,7 +254,7 @@
     (hae-tehtavahierarkia-maarineen db user {:urakka-id urakka-id
                                              :hoitokauden-alkuvuosi nykyinen-hoitokausi})))
 
-(defn tallenna-sopimuksen-tehtavamaara [db user {:keys [urakka-id tehtava-id maara hoitovuosi] :as tiedot}]
+(defn tallenna-sopimuksen-tehtavamaara [db user {:keys [urakka-id tehtava-id maara hoitovuosi samat-maarat-vuosittain?] :as tiedot}]
   (log/debug "tallenna-sopimuksen-tehtavamaara :: tiedot" tiedot)
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
         validit-tehtavat (hae-validit-tehtavat db)]
@@ -267,14 +267,20 @@
 
     (if-not (= urakkatyyppi :teiden-hoito)
       (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei ole sopimuksella tehtävä- ja määräluettelon tietoja."))))
-    (let [maara (bigdec maara)
+    (let [maara (when maara (bigdec maara))
           urakkatiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
           alkuvuosi (-> urakkatiedot :alkupvm pvm/vuosi)
           loppuvuosi (-> urakkatiedot :loppupvm pvm/vuosi)
-          ;; Tallenna aina jokaiselle vuodelle arvot
           sopimuksen-tehtavamaarat (mapv (fn [hoitokauden-alkuvuosi]
-                                           (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitokauden-alkuvuosi))
-                                     (range alkuvuosi loppuvuosi))]
+                                           (if maara
+                                             (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitokauden-alkuvuosi)
+                                             (when (and (int? urakka-id) (int? tehtava-id) (int? hoitokauden-alkuvuosi))
+                                               (q/poista-sopimuksen-tehtavamaara! db {:urakka-id urakka-id
+                                                                                      :tehtava-id tehtava-id
+                                                                                      :vuosi hoitokauden-alkuvuosi}))))
+                                     (if-not samat-maarat-vuosittain?
+                                       [hoitovuosi]
+                                       (range alkuvuosi loppuvuosi)))]
       sopimuksen-tehtavamaarat)))
 
 (defn tallenna-sopimuksen-tehtavamaara-kaikille-tehtaville-test

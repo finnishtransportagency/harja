@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.suunnittelu.mhu-tehtavat
   (:require [tuck.core :refer [process-event] :as tuck]
             [harja.tiedot.urakka.urakka :as tiedot]
+            [harja.tiedot.urakka :as urakka]
             [harja.ui.viesti :as viesti]
             [reagent.core :as r]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -237,51 +238,31 @@
 (def valitason-toimenpiteet
   (filter vain-taso-3))
 
-(defn sopimus-maara-syotetty
-  [virheet-kaikki r]
-  (let [{:keys [yksikko sopimuksen-tehtavamaarat sopimus-maara sopimuksen-aluetieto-maara aluetieto?]} (second r)
-        id (first r)
-        virheviesti ["Syötä 0 tai luku"]
-        syotetty? (cond-> false
-                    (or (nil? yksikko)
-                      (= "" yksikko)
-                      (= "-" yksikko)) ((constantly true))
+(defn- sopimusmaarat-taulukosta [taulukko tyyppi]
+  (map #(select-keys % [:sopimus-maara :sopimuksen-tehtavamaarat])
+          (flatten (map vals (vals (tyyppi taulukko))))))
 
-                    (and
-                      aluetieto?
-                      (or
-                        (some #(when (some? %) %) (vals sopimuksen-aluetieto-maara))
-                        sopimus-maara)) ((constantly true))
+(defn aluetietoja-puuttuu? []
+  (let [keratyt-aluemaarat (sopimusmaarat-taulukosta @taulukko-tila :alueet)
+        puutteita-aluetiedoissa? (boolean (some nil? (map :sopimus-maara keratyt-aluemaarat)))]
+    puutteita-aluetiedoissa?))
 
-                    (and
-                      (not aluetieto?)
-                      (or
-                        (some #(when (some? %) %) (vals sopimuksen-tehtavamaarat))
-                        sopimus-maara)) ((constantly true)))]
-    (cond
-      ;; Määrä riveille virhe
-      (and
-        (not syotetty?)
-        (not aluetieto?))
-      (assoc-in virheet-kaikki [id :sopimus-maara] virheviesti)
-
-      ;; Alue riveille virhe
-      (and
-        (not syotetty?)
-        aluetieto?)
-      (assoc-in virheet-kaikki [id :sopimus-maara] virheviesti)
-
-      :else
-      virheet-kaikki)))
-
-(defn toimenpiteet-sopimuksen-tehtavamaarat-syotetty
-  [virheet-kaikki [_ taulukkorakenne]]
-  (reduce sopimus-maara-syotetty virheet-kaikki taulukkorakenne))
-
-(defn tarkista-sovitut-maarat
-  [taulukko]
-  (let [alueet-ja-maarat (merge-with merge (:alueet taulukko) (:maarat taulukko))]
-    (reduce toimenpiteet-sopimuksen-tehtavamaarat-syotetty {} alueet-ja-maarat)))
+(defn maaratietoja-puuttuu?
+  []
+  (let [keratyt-tehtavamaarat (sopimusmaarat-taulukosta @taulukko-tila :maarat)
+        ;; kerätään ne rivit ensin, joissa kaikille vuosille saman arvon asettava kenttä (sopimus-maara) on nil
+        sopimusmaarat-puuttuvat (keep #(when (nil? (:sopimus-maara %))
+                                            (identity %)) keratyt-tehtavamaarat)
+        ;; näistä kelvollisia ovat ne, joilla on kaikille hoitokausille vuosikohtainen arvo
+        ;; sitä on kuitenkin tarkasteltava vielä erikseen
+        on-riveja-joilta-maaratieto-puuttuu? (keep #(or
+                                                      (nil? (:sopimuksen-tehtavamaarat %))
+                                                      (when
+                                                        (map? (:sopimuksen-tehtavamaarat %))
+                                                        ;; vaaditaan että vuosikohtaisissa on jokaiselle MHU:n vuodelle arvo
+                                                        (when (< (count (vals (:sopimuksen-tehtavamaarat %))) (count @urakka/valitun-urakan-hoitokaudet))
+                                                          (identity %)))) sopimusmaarat-puuttuvat)]
+    (boolean (seq on-riveja-joilta-maaratieto-puuttuu?))))
 
 (defn syotetty-maara-tuleville-vuosille 
   [tehtava hoitokausi]
@@ -291,9 +272,9 @@
   [vuosi sopimuksen-tehtavamaara])
 
 (defn paivita-vuosien-maarat 
-  [taulukko-tila {:keys [id vanhempi sopimuksen-tehtavamaara joka-vuosi-erikseen? hoitokausi]}]
-  (if joka-vuosi-erikseen?                  
-    (assoc-in taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat hoitokausi] sopimuksen-tehtavamaara)
+  [taulukko-tila {:keys [id vanhempi sopimus-maara joka-vuosi-erikseen? hoitokausi]}]
+  (if joka-vuosi-erikseen?
+    (assoc-in taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat hoitokausi] sopimus-maara)
     (let [urakan-vuodet 
           (range 
             (-> @tiedot/yleiset
@@ -306,7 +287,7 @@
               pvm/vuosi))]
       (assoc-in taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat]
         (into {} 
-          (map (r/partial tayta-vuodet sopimuksen-tehtavamaara)) 
+          (map (r/partial tayta-vuodet sopimus-maara))
           urakan-vuodet)))))
 
 (defn kopioi-tarvittaessa-sopimusmaarat-maariin
@@ -423,22 +404,14 @@
   TallennaSopimus
   (process-event
     [{:keys [tallennettu]} app]
-    (let [app (dissoc app :virhe-kaikkia-syottaessa?)
-          virheet (tarkista-sovitut-maarat @taulukko-tila)
-          kaikki-arvot-syotetty? (empty? (keys virheet))]
-      (if (or kaikki-arvot-syotetty? 
-            (false? tallennettu)) 
-        (do
-          (reset! taulukko-virheet {})
-          (tuck-apurit/post! :tallenna-sopimuksen-tila
-            {:urakka-id (-> @tiedot/yleiset :urakka :id)
-             :tallennettu tallennettu}
-            {:onnistui ->SopimuksenTallennusOnnistui
-             :epaonnistui ->SopimuksenTallennusEpaonnistui})
-          (update-in app [:valinnat :noudetaan] inc))
-        (when (not (empty? (keys virheet))) 
-          (reset! taulukko-virheet virheet)
-          (assoc app :virhe-sopimuksia-syottaessa? true)))))
+    (do
+      (reset! taulukko-virheet {})
+      (tuck-apurit/post! :tallenna-sopimuksen-tila
+        {:urakka-id (-> @tiedot/yleiset :urakka :id)
+         :tallennettu tallennettu}
+        {:onnistui ->SopimuksenTallennusOnnistui
+         :epaonnistui ->SopimuksenTallennusEpaonnistui})
+      (update-in app [:valinnat :noudetaan] inc)))
 
   TestiTallennaKaikkiinTehtaviinArvo
   (process-event
@@ -494,12 +467,15 @@
   SopimuksenTehtavaTallennusOnnistui
   (process-event 
     [{:keys [vastaus]} app]
-    (dissoc app :tallennettava))
+    (let [onnistunut-tehtava-id (:harja.domain.toimenpidekoodi/id (first vastaus))
+          virheet (dissoc @taulukko-virheet onnistunut-tehtava-id)]
+      (reset! taulukko-virheet virheet)
+      (dissoc app :tallennettava)))
 
   SopimuksenTehtavaTallennusEpaonnistui
   (process-event 
     [{:keys [vastaus]} {:keys [tallennettava] :as app}]
-    (viesti/nayta-toast! "Tallennus epäonnistui" :danger)
+    (viesti/nayta-toast! "Tallennus epäonnistui" :varoitus)
     (let [{:keys [id]} tallennettava
           virheet (assoc-in {} [id :sopimus-maara] ["Tallennus epäonnistui"])]
       (reset! taulukko-virheet virheet))      
