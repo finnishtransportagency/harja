@@ -775,7 +775,6 @@
                           [:span (ei-raportteja-saatavilla-viesti (str/lower-case (:nimi v-ur-tyyppi)) v-ur)]
                           :default
                           [livi-pudotusvalikko {:valinta @valittu-raporttityyppi
-                                                ;;\u2014 on väliviivan unikoodi
                                                 :format-fn #(if % (str
                                                                     ;; Jos urakkaa ei ole valittuna ja suuri konteksti avain olemassa
                                                                     (if (and
