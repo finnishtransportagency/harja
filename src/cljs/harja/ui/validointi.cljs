@@ -103,6 +103,13 @@
           (or (= 0 (::tr/tie osoite)) (not (get-in rivi reittipolku))))
       (or viesti "Tarkasta tr-osoite"))))
 
+(defmethod validoi-saanto :kokonainen-tr-osoite [_ _ data _ _ & [viesti]]
+  (let [osoite (tr/normalisoi data)]
+    (when
+      (and (or (::tr/tie osoite) (::tr/aosa osoite) (::tr/aet osoite) (::tr/losa osoite) (::tr/let osoite))
+        (or (nil? (::tr/tie osoite)) (nil? (::tr/aosa osoite)) (nil? (::tr/aet osoite)) (nil? (::tr/losa osoite)) (nil? (::tr/let osoite))))
+      (or viesti "Tarkasta tr-osoite"))))
+
 (defmethod validoi-saanto :uusi-arvo-ei-setissa [_ _ data rivi _ & [setti-atom viesti]]
   "Tarkistaa, onko rivi uusi ja arvo annetussa setissä."
   (log "Tarkistetaan onko annettu arvo " (pr-str data) " setissä " (pr-str @setti-atom))
