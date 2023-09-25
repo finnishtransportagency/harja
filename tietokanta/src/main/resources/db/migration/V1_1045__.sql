@@ -1,5 +1,5 @@
 -- Laskee ja palauttaa annetun tieosoitteen kokonaispituuden 
-CREATE OR REPLACE FUNCTION laske_tr_osoitteen_pituus(_tnumero INTEGER, _rata INTEGER, _kaista INTEGER, _aosa INTEGER, _aet INTEGER, _losa INTEGER, _let INTEGER)
+CREATE OR REPLACE FUNCTION laske_tr_osoitteen_pituus(_tnumero INTEGER, _aosa INTEGER, _aet INTEGER, _losa INTEGER, _let INTEGER)
     RETURNS INTEGER AS
 $$
 DECLARE
@@ -12,13 +12,10 @@ DECLARE
 BEGIN
     -- Jos alku sekä loppuosat ovat samat, convertataan etäisyydet myös oikeinpäin, alkuetäisyys aina pienempi
     -- Jos osat eivät ole samoja, ei voida tietää kummin päin etäisyydet tulisi olla, joten silloin annetaan niiden olla
-    IF _aosa = _losa THEN 
+    IF alkuosa = loppuosa THEN 
       alkuet := LEAST(_aet, _let);
       loppet := GREATEST(_aet, _let);
-    END IF; 
-
-    -- Ja miinustetaan vaan let-aet jotta saadaan pituus 
-    IF alkuosa = loppuosa THEN
+      -- Ja miinustetaan vaan let-aet jotta saadaan pituus 
       kokonaispituus := loppet - alkuet;
     ELSE
       -- Jos osia välissä, lasketaan osat yhteen, miinustetaan aet ensimmäisestä osasta, viimeisessä osassa lisätään vaan let
@@ -28,7 +25,7 @@ BEGIN
           CASE 
             WHEN osa = alkuosa THEN pituus - alkuet
             WHEN osa > alkuosa AND osa < loppuosa THEN pituus
-            WHEN osa = loppuosa THEN loppet
+            WHEN tie = _tnumero AND osa = loppuosa THEN loppet
             ELSE 0
           END
       )
@@ -41,7 +38,8 @@ BEGIN
               (osa BETWEEN alkuosa AND loppuosa)
             );
     END IF;
-
+    -- Palautetaan 0 mikäli tietä ei löytynyt
+    IF kokonaispituus IS NULL THEN kokonaispituus := 0; END IF;
     RETURN kokonaispituus;
 END;
 $$ LANGUAGE plpgsql;

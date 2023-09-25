@@ -304,7 +304,7 @@
                            HorizontalAlignment/LEFT)))
 
 (defn- luo-rivi-ennen-tyyli
-  [workbook lista-tyyli? taustavari & [tummenna-teksti?]]
+  [workbook lista-tyyli? taustavari tummenna-teksti?]
   (excel/create-cell-style! workbook (if lista-tyyli?
                                        {:border-bottom :thin
                                         :border-top :thin
