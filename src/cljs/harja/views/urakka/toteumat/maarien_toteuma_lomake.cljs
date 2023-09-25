@@ -258,9 +258,9 @@
                             :paivita!   (fn [polku indeksi arvo]
                                           (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku indeksi)))})]
     [:div#vayla
-     #_[debug/debug app]
-     #_[debug/debug lomake]
-     #_[debug/debug validius]
+     [debug/debug app]
+     [debug/debug lomake]
+     [debug/debug validius]
      [:div.flex-row {:style {:padding-left  "15px"
                              :padding-right "15px"}}
       [napit/takaisin "Takaisin" #(tyhjenna-lomake! nil) {:vayla-tyyli? true :teksti-nappi? true}]]

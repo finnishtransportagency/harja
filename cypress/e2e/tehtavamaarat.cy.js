@@ -21,9 +21,8 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
   })
 
   it('Ei voi tallentaa keskeneräisenä', () => {
-    cy.intercept('POST', '_/tallenna-sopimuksen-tila').as('tila')
-    cy.contains('Tallenna').click()
-    cy.contains('Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä').should('be.visible')
+      cy.contains('Tallenna').should('be.disabled')
+      cy.contains('Jotta voit tallentaa, syötä kaikkiin tehtäviin ensin määrät.').should('be.visible')
   })
 
   it('Voi suunnitella eri määrät eri vuosille', () => {

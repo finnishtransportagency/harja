@@ -14,9 +14,9 @@
     str))
 
 (defn luo-tai-paivita-urakka [db urakka]
-  (let [urakkanumero (str (:gridcode urakka))
+  (let [urakkanumero (str (or (:gridcode urakka) (:urakkakood urakka)))
         geometria (.toString (:the_geom urakka))
-        piirinumero (string-intiksi (:piirinro urakka))
+        piirinumero (string-intiksi (or (:piirinro urakka) (:elynro urakka)))
         elynimi (or (:elyn_nimi urakka) "")
         nimi (or (:urakka_nim urakka) "") ]
     (if (first (u/hae-alueurakka-numerolla db urakkanumero))
