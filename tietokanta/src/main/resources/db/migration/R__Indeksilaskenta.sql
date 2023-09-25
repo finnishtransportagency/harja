@@ -14,7 +14,7 @@ BEGIN
   SELECT alkupvm FROM urakka WHERE id = urakka_id INTO urakan_alkupvm;
   SELECT tyyppi FROM urakka WHERE id = urakka_id INTO urakkatyyppi;
   IF indeksinimi IS NULL THEN
-    RAISE NOTICE 'Indeksit eivät ole käytössä urakassa %', urakka_id;
+    --RAISE NOTICE 'Indeksit eivät ole käytössä urakassa %', urakka_id;
     RETURN NULL;
   ELSE
     SELECT INTO kilpailutusvuosi (SELECT EXTRACT(YEAR FROM urakan_alkupvm));
@@ -72,13 +72,13 @@ BEGIN
                       (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 10)
               END
           );
-    RAISE NOTICE 'Laskettiin urakan id:llä % indeksilaskennan perusluvuksi:  %, käytetty indeksi: %, urakkatyyppi: %', urakka_id, tulosrivi.perusluku, indeksinimi, urakkatyyppi;
+    --RAISE NOTICE 'Laskettiin urakan id:llä % indeksilaskennan perusluvuksi:  %, käytetty indeksi: %, urakkatyyppi: %', urakka_id, tulosrivi.perusluku, indeksinimi, urakkatyyppi;
     -- Jos kaikkia kolmea indeksilukua ei ole, palautetaan NULL
     IF (tulosrivi.indeksilukujen_lkm = 3)
     THEN
       RETURN round(tulosrivi.perusluku, 1);
     ELSE
-      RAISE NOTICE 'Peruslukua ei voitu laskea koska indeksilukuja indeksillä % tarkastelujakson aikana %-% löytyi vain : %', indeksinimi, kilpailutusta_edeltava_vuosi, kilpailutusvuosi, tulosrivi.indeksilukujen_lkm;
+      --RAISE NOTICE 'Peruslukua ei voitu laskea koska indeksilukuja indeksillä % tarkastelujakson aikana %-% löytyi vain : %', indeksinimi, kilpailutusta_edeltava_vuosi, kilpailutusvuosi, tulosrivi.indeksilukujen_lkm;
       RETURN NULL;
     END IF;
   END IF;
