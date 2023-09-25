@@ -2,7 +2,7 @@
 SELECT
   u.nimi  AS urakka,
   u.id    AS urakka_id,
-  (SELECT * FROM laske_tie_osien_pituus(
+  (SELECT * FROM laske_tr_osoitteen_pituus(
     ypk.tr_numero, 
     ypk.tr_ajorata, 
     ypk.tr_kaista, 

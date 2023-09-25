@@ -1,5 +1,5 @@
--- Tie osien pituuden laskentafunktio jotta kokomaan raportin latauksessa ei kestä ikuisuutta päällystysurakoiden yhteenvedossa (vastaanottotarkastus)
-CREATE OR REPLACE FUNCTION laske_tie_osien_pituus(_tnumero INTEGER, _rata INTEGER, _kaista INTEGER, _aosa INTEGER, _aet INTEGER, _losa INTEGER, _let INTEGER)
+-- Laskee ja palauttaa annetun tieosoitteen kokonaispituuden 
+CREATE OR REPLACE FUNCTION laske_tr_osoitteen_pituus(_tnumero INTEGER, _rata INTEGER, _kaista INTEGER, _aosa INTEGER, _aet INTEGER, _losa INTEGER, _let INTEGER)
     RETURNS INTEGER AS
 $$
 DECLARE
