@@ -4,8 +4,6 @@ SELECT
   u.id    AS urakka_id,
   (SELECT * FROM laske_tr_osoitteen_pituus(
     ypk.tr_numero, 
-    ypk.tr_ajorata, 
-    ypk.tr_kaista, 
     ypk.tr_alkuosa, 
     ypk.tr_alkuetaisyys, 
     ypk.tr_loppuosa,
