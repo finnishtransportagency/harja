@@ -374,29 +374,23 @@
           [tee-otsikollinen-kentta {:otsikko "Aikaväli alkaa"
                                     :luokka "label-ja-kentta-kesa-aika"
                                     :tyylit {:width "90px"
-                                             :min-width "90px"
-                                             }
-                                    :kentta-params {
-                                                    :placeholder "pp.kk"
+                                             :min-width "90px"}
+                                    :kentta-params {:placeholder "pp.kk"
                                                     :tyyppi :string
                                                     :vayla-tyyli? true
                                                     :pituus-max 6
-                                                    :pituus-min 4
-                                                    }
+                                                    :pituus-min 4}
                                     :arvo-atom aikavali-alku
                                     } aikavali-alku]
          [tee-otsikollinen-kentta {:otsikko "Aikaväli loppuu"
                                    :luokka "label-ja-kentta-kesa-aika"
                                    :tyylit {:width "90px"
-                                            :min-width "90px"
-                                            }
-                                   :kentta-params {
-                                                   :placeholder "pp.kk"
+                                            :min-width "90px"}
+                                   :kentta-params {:placeholder "pp.kk"
                                                    :tyyppi :string
                                                    :vayla-tyyli? true
                                                    :pituus-max 6
-                                                   :pituus-min 4
-                                                   }
+                                                   :pituus-min 4}
                                    :arvo-atom aikavali-loppu
                                    } aikavali-loppu]
          [napit/palvelinkutsu-nappi "Tallenna"

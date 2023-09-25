@@ -29,4 +29,5 @@
   (k/post! :poista-indeksi-kaytosta {:urakka-id (:id ur)}))
 
 (defn paivita-kesa-aika! [ur kesa-ajan-alku kesa-ajan-loppu]
-  (k/post! :paivita-kesa-aika {:urakka-id (:id ur) :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}}))
+  (k/post! :paivita-kesa-aika {:urakka-id (:id ur)
+                               :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}}))

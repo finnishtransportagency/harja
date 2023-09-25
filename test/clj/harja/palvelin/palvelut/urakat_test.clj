@@ -242,8 +242,7 @@
       (is (= java.time.Month/MAY (.getMonth alku-localdate)))
       (is (= (.getYear (java.time.LocalDate/now)) (.getYear loppu-localdate)))
       (is (= 30 (.getDayOfMonth loppu-localdate)))
-      (is (= java.time.Month/SEPTEMBER (.getMonth loppu-localdate)))
-      )))
+      (is (= java.time.Month/SEPTEMBER (.getMonth loppu-localdate))))))
 
 (deftest urakan-kesa-ajan-tallennus-loppu-ennen-alkua
   (let [kesa-ajan-alku "01.05"
@@ -276,3 +275,14 @@
                                                   :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}})])
       (catch EiOikeutta e
         (is e))))
+
+(deftest urakan-kesa-ajan-tallennus-ei-tilaajan-kayttaja
+  (try+
+    (let [kesa-ajan-alku "01.05"
+          kesa-ajan-loppu "30.09"
+          vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
+              :paivita-kesa-aika +kayttaja-vastuuhlo-muhos+ {:urakka-id @oulun-alueurakan-2005-2010-id
+                                                             :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}})
+                    (catch SecurityException e e))]
+      (is (= SecurityException (type vastaus)))
+      (is (= (.getMessage vastaus) "Vain tilaaja voi asettaa urakan kesäajan")))))
