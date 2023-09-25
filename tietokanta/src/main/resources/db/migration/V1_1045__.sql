@@ -1,46 +1,47 @@
--- Tie osien pituuden laskentafunktio jotta kokomaan raportin 
--- latauksessa ei kestä ikuisuutta päällystysurakoiden yhteenvedossa (vastaanottotarkastus)
-
-DROP FUNCTION IF EXISTS laske_tie_osien_pituus(INTEGER, INTEGER, INTEGER, INTEGER, INTEGER, INTEGER, INTEGER);
-
+-- Tie osien pituuden laskentafunktio jotta kokomaan raportin latauksessa ei kestä ikuisuutta päällystysurakoiden yhteenvedossa (vastaanottotarkastus)
 CREATE OR REPLACE FUNCTION laske_tie_osien_pituus(_tnumero INTEGER, _rata INTEGER, _kaista INTEGER, _aosa INTEGER, _aet INTEGER, _losa INTEGER, _let INTEGER)
     RETURNS INTEGER AS
 $$
 DECLARE
-    _kokonaispituus INT := 0;
+    kokonaispituus INT := 0;
+    alkuet INT := _aet;
+    loppet INT := _let;
+    -- Sallitaan syöttää osat molemmin päin ja convertataan ne oikein päin, alkuosa aina loppusaa pienempi
+    alkuosa INT := LEAST(_aosa, _losa);
+    loppuosa INT := GREATEST(_aosa, _losa);
 BEGIN
-    IF _aosa = _losa THEN
-        -- Ei sallita invalid arvoja 
-        IF _aet > _let THEN
-          RAISE EXCEPTION 'Alkuetäisyys ei voi olla loppuetäisyyttä isompi, silloin kun aosa ja losa ovat samat.';
-        END IF;
+    -- Jos alku sekä loppuosat ovat samat, convertataan etäisyydet myös oikeinpäin, alkuetäisyys aina pienempi
+    -- Jos osat eivät ole samoja, ei voida tietää kummin päin etäisyydet tulisi olla, joten silloin annetaan niiden olla
+    IF _aosa = _losa THEN 
+      alkuet := LEAST(_aet, _let);
+      loppet := GREATEST(_aet, _let);
+    END IF; 
 
-        -- Jos alku ja loppuosat ovat samoja, miinustetaan vaan let - aet jotta saadaa pituus 
-        _kokonaispituus := _let - _aet;
+    -- Ja miinustetaan vaan let-aet jotta saadaan pituus 
+    IF alkuosa = loppuosa THEN
+      kokonaispituus := loppet - alkuet;
     ELSE
-      -- Ei myöskään sallita että aosa on isopi kun losa sillä tässä ei ole järkeä, kai
-    	IF _aosa > _losa THEN
-		    RAISE EXCEPTION 'Alkuosa ei voi olla loppuosaa isompi pituuden laskennassa.';
-		  END IF;
-
-      -- Jos osia välissä, lasketaan osat yhteen, miinustetaan aet ensimmäisestä osasta, viimeiseen osaan lisätään vaan _let
+      -- Jos osia välissä, lasketaan osat yhteen, miinustetaan aet ensimmäisestä osasta, viimeisessä osassa lisätään vaan let
+      -- Esim, jos meillä on yhteensä 4 osaa: kokonaispituus = [(osan1pituus - aet) + osan2pituus + osan3pituus + let] 
       SELECT 
         SUM(
           CASE 
-            WHEN osa = _aosa THEN pituus - _aet
-            WHEN osa > _aosa AND osa < _losa THEN pituus
-            WHEN osa = _losa THEN _let
+            WHEN osa = alkuosa THEN pituus - alkuet
+            WHEN osa > alkuosa AND osa < loppuosa THEN pituus
+            WHEN osa = loppuosa THEN loppet
             ELSE 0
           END
       )
-      INTO _kokonaispituus
+      INTO kokonaispituus
       FROM tr_osien_pituudet
       WHERE tie = _tnumero AND
-            ((_aosa::INTEGER IS NULL AND _losa::INTEGER IS NULL)
+            ( -- Palautetaan aina 0 jos osia ei anneta, jos yksi osa vain annetaan, oletetaan että molemmat osat samoja
+              (_aosa::INTEGER IS NULL AND _losa::INTEGER IS NULL) 
               OR
-            (osa BETWEEN _aosa AND _losa));
+              (osa BETWEEN alkuosa AND loppuosa)
+            );
     END IF;
 
-    RETURN _kokonaispituus;
+    RETURN kokonaispituus;
 END;
 $$ LANGUAGE plpgsql;
