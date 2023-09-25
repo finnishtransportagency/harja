@@ -1282,14 +1282,13 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
       (t/in-days (t/interval paiva1 paiva2))
       (- (t/in-days (t/interval paiva2 paiva1))))))
 
-#?(:clj
 (defn ajan-muokkaus
   "Tällä voi lisätä tai vähentää jonku tietyn ajan annetusta päivästä.
   Anna dt joda timena tai java.sql.Date"
   ([dt lisaa? maara] (ajan-muokkaus dt lisaa? maara :sekuntti))
   ([dt lisaa? maara aikamaare]
-   (let [dt (joda-timeksi dt)
-
+   (let [dt #?(:clj (joda-timeksi dt)
+               :cljs dt)
          muokkaus (if lisaa?
                     t/plus
                     t/minus)
@@ -1301,7 +1300,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                      :viikko (t/weeks maara)
                      :kuukausi (t/months maara)
                      :vuosi (t/years maara))]
-     (muokkaus dt aikamaara)))))
+     (muokkaus dt aikamaara))))
 
 (defn myohaisin
   "Palauttaa myöhäisimmän ajan annetuista ajoista"

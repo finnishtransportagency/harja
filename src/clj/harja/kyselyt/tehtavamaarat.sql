@@ -143,6 +143,13 @@ from sopimus_tehtavamaara st
 where st.urakka = :urakka-id
   and st.tehtava = :tehtava-id;
 
+-- name: poista-sopimuksen-tehtavamaara!
+DELETE
+  FROM sopimus_tehtavamaara st
+ WHERE st.urakka = :urakka-id
+   AND st.tehtava = :tehtava-id
+   AND st.hoitovuosi = :vuosi;
+
 -- name: hae-tehtavahierarkia-maarineen
 -- Palauttaa tehtävähierarkian käyttöliittymän Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten.
 -- Äkillistä hoitotyötä ja Kolmansien osapuolten aiheuttaminen vahinkojen korjausta ei suunnitella tehtävälistalla.
