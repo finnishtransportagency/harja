@@ -14,7 +14,10 @@
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
             [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]))
+            [clojure.spec.gen.alpha :as gen])
+  (:use [slingshot.slingshot :only [try+ throw+]])
+  (:import (clojure.lang ExceptionInfo))
+  (:import (harja.domain.roolit EiOikeutta)))
 
 
 (defn jarjestelma-fixture [testit]
@@ -219,3 +222,57 @@
     (assert sopimus-id "Sopimus pitää olla")
 
     (is (not (s/valid? ::u/tallenna-urakka-kysely urakka)) "Lähtevä kysely ei ole validi")))
+
+(deftest urakan-kesa-ajan-tallennus
+  (let [kesa-ajan-alku "01.05"
+        kesa-ajan-loppu "30.09"
+        urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
+        vastaus
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+          :paivita-kesa-aika urakanvalvoja {:urakka-id @oulun-alueurakan-2005-2010-id
+                                            :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}})]
+    (is (not (nil? vastaus)))
+    (is (not (nil? (:kesakausi-alkupvm (first vastaus)))))
+    (is (not (nil? (:kesakausi-loppupvm (first vastaus)))))
+
+    (let [alku-localdate (.toLocalDate (:kesakausi-alkupvm (first vastaus)))
+          loppu-localdate (.toLocalDate (:kesakausi-loppupvm (first vastaus)))]
+      (is (= (.getYear (java.time.LocalDate/now)) (.getYear alku-localdate)))
+      (is (= 1 (.getDayOfMonth alku-localdate)))
+      (is (= java.time.Month/MAY (.getMonth alku-localdate)))
+      (is (= (.getYear (java.time.LocalDate/now)) (.getYear loppu-localdate)))
+      (is (= 30 (.getDayOfMonth loppu-localdate)))
+      (is (= java.time.Month/SEPTEMBER (.getMonth loppu-localdate)))
+      )))
+
+(deftest urakan-kesa-ajan-tallennus-loppu-ennen-alkua
+  (let [kesa-ajan-alku "01.05"
+        kesa-ajan-loppu "30.04"
+        urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
+        vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :paivita-kesa-aika urakanvalvoja {:urakka-id @oulun-alueurakan-2005-2010-id
+                                                            :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}})
+        (catch Exception e e))]
+    (is (= ExceptionInfo (type vastaus)))
+    (is (.startsWith (-> vastaus ex-data :virheet :viesti) "Kesäajan alku oltava ennen loppuaikaa, tai ajat muuten virheellisiä."))))
+
+(deftest urakan-kesa-ajan-tallennus-karkauspaiva
+  (let [kesa-ajan-alku "29.02"
+        kesa-ajan-loppu "30.09"
+        urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
+        vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
+                       :paivita-kesa-aika urakanvalvoja {:urakka-id @oulun-alueurakan-2005-2010-id
+                                                         :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}})
+                  (catch Exception e e))]
+    (is (= ExceptionInfo (type vastaus)))
+    (is (-> vastaus ex-data :virheet :viesti) "Karkauspäivä ei ole sallittu alkamis- tai loppupäivä.")))
+
+(deftest urakan-kesa-ajan-tallennus-ei-oikeutta
+  (try+
+    (let [kesa-ajan-alku "01.05"
+          kesa-ajan-loppu "30.09"
+          _ (kutsu-palvelua (:http-palvelin jarjestelma)
+              :paivita-kesa-aika +kayttaja-tero+ {:urakka-id @oulun-alueurakan-2005-2010-id
+                                                  :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}})])
+      (catch EiOikeutta e
+        (is e))))

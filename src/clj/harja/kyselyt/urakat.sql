@@ -894,6 +894,25 @@ UPDATE urakka
 SET takuu_loppupvm = :loppupvm
 WHERE id = :urakka;
 
+-- name: aseta-urakan-kesa-aika!
+UPDATE urakka
+SET kesakausi_alkupvm  = :alkupvm,
+    kesakausi_loppupvm = :loppupvm
+WHERE id = :urakka;
+
+-- name: hae-urakan-kesa-aika
+SELECT
+    CASE
+        WHEN kesakausi_alkupvm IS NOT NULL THEN
+            CONCAT(TO_CHAR(NOW(), 'YYYY'), '-', TO_CHAR(kesakausi_alkupvm, 'MM-DD'))::DATE
+        END AS "kesakausi-alkupvm",
+    CASE
+        WHEN kesakausi_loppupvm IS NOT NULL THEN
+            CONCAT(TO_CHAR(NOW(), 'YYYY'), '-', TO_CHAR(kesakausi_loppupvm, 'MM-DD'))::DATE
+        END AS "kesakausi-loppupvm"
+FROM urakka
+WHERE id = :urakka;
+
 -- name: aseta-urakan-indeksi!
 UPDATE urakka
 SET indeksi = :indeksi

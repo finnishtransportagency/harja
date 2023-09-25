@@ -18,6 +18,7 @@
             [harja.geo :refer [muunna-pg-tulokset]]
             [clojure.string :as str]
             [harja.pvm :as pvm]
+            [slingshot.slingshot :refer [throw+]]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [clj-time.coerce :as c]))
@@ -252,15 +253,46 @@
   (q/aseta-takuun-loppupvm! db {:urakka   urakka-id
                                 :loppupvm (:loppupvm takuu)}))
 
+(defn- parsi-pvm [pvm-str]
+  (let [pv (pvm/parsi pvm/fi-pvm-parse (if (str/ends-with? pvm-str ".") (str pvm-str "2000") (str pvm-str ".2000")))]
+    (when (and (= (pvm/kuukausi pv) 2)
+            (= (pvm/paiva pv) 29))
+      (throw+ {:type "Error"
+               :virheet {:koodi "ERROR"
+                         :viesti "Karkauspäivä ei ole sallittu alkamis- tai loppupäivä."
+                                   }}))
+    pv))
+
+(defn aseta-urakan-kesa-aika [db user {:keys [urakka-id tiedot]}]
+  (let [
+        _ (log/debug "Aseta urakan kesäaika, id " urakka-id ", alku: " (:alkupvm tiedot) ", loppu " (:loppupvm tiedot))
+        alkupvm (parsi-pvm (:alkupvm tiedot))
+        loppupvm (parsi-pvm (:loppupvm tiedot))]
+
+  (when-not (roolit/tilaajan-kayttaja? user)
+    (throw (SecurityException. "Vain tilaaja voi asettaa urakan kesäajan")))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
+
+  (if (pvm/ennen? alkupvm loppupvm)
+    (do
+      (q/aseta-urakan-kesa-aika! db {:urakka urakka-id
+                                       :alkupvm alkupvm
+                                       :loppupvm loppupvm})
+      (q/hae-urakan-kesa-aika db urakka-id))
+    (throw+ {:type "Error"
+             :virheet {:koodi "ERROR"
+                       :viesti (format "Kesäajan alku oltava ennen loppuaikaa, tai ajat muuten virheellisiä. Tarkista alkuaika %s ja loppuaika %s."
+                                 alkupvm loppupvm)}}))))
+
 (defn poista-indeksi-kaytosta [db user {:keys [urakka-id]}]
   (when-not (roolit/tilaajan-kayttaja? user)
     (throw (SecurityException. "Vain tilaaja voi poistaa indeksin käytöstä")))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (jdbc/with-db-transaction [db db]
-                            (q/aseta-urakan-indeksi! db {:urakka urakka-id :indeksi nil})
-                            (laskutusyhteenveto-q/poista-urakan-kaikki-muistetut-laskutusyhteenvedot! db
-                                                                                                      {:urakka urakka-id})
-                            :ok))
+    (q/aseta-urakan-indeksi! db {:urakka urakka-id :indeksi nil})
+    (laskutusyhteenveto-q/poista-urakan-kaikki-muistetut-laskutusyhteenvedot! db
+      {:urakka urakka-id})
+    :ok))
 
 (defn- tallenna-vv-urakkanro! [db user urakka-id urakka-alue]
   (q/tallenna-vv-urakkanro<! db
@@ -445,78 +477,84 @@
 
 (defrecord Urakat []
   component/Lifecycle
-  (start [{http  :http-palvelin
-           db    :db
-           :as   this}]
+  (start [{http :http-palvelin
+           db :db
+           :as this}]
     (julkaise-palvelu http
-                      :hallintayksikon-urakat
-                      (fn [user hallintayksikko]
-                        (hallintayksikon-urakat db user hallintayksikko)))
+      :hallintayksikon-urakat
+      (fn [user hallintayksikko]
+        (hallintayksikon-urakat db user hallintayksikko)))
 
     (julkaise-palvelu http
-                      :hae-urakka
-                      (fn [user urakka-id]
-                        (hae-yksittainen-urakka db user urakka-id)))
+      :hae-urakka
+      (fn [user urakka-id]
+        (hae-yksittainen-urakka db user urakka-id)))
 
     (julkaise-palvelu http
-                      :hae-urakoita
-                      (fn [user teksti]
-                        (hae-urakoita db user teksti)))
+      :hae-urakoita
+      (fn [user teksti]
+        (hae-urakoita db user teksti)))
 
     (julkaise-palvelu http
-                      :hae-organisaation-urakat
-                      (fn [user organisaatio-id]
-                        (hae-organisaation-urakat db user organisaatio-id)))
+      :hae-organisaation-urakat
+      (fn [user organisaatio-id]
+        (hae-organisaation-urakat db user organisaatio-id)))
 
     (julkaise-palvelu http
-                      :hae-urakan-organisaatio
-                      (fn [user urakka-id]
-                        (hae-urakan-organisaatio db user urakka-id)))
+      :hae-urakan-organisaatio
+      (fn [user urakka-id]
+        (hae-urakan-organisaatio db user urakka-id)))
 
     (julkaise-palvelu http
-                      :tallenna-urakan-sopimustyyppi
-                      (fn [user tiedot]
-                        (tallenna-urakan-sopimustyyppi db user tiedot)))
+      :tallenna-urakan-sopimustyyppi
+      (fn [user tiedot]
+        (tallenna-urakan-sopimustyyppi db user tiedot)))
 
     (julkaise-palvelu http
-                      :tallenna-urakan-tyyppi
-                      (fn [user tiedot]
-                        (tallenna-urakan-tyyppi db user tiedot)))
+      :tallenna-urakan-tyyppi
+      (fn [user tiedot]
+        (tallenna-urakan-tyyppi db user tiedot)))
 
     (julkaise-palvelu http
-                      :aseta-takuun-loppupvm
-                      (fn [user tiedot]
-                        (aseta-takuun-loppupvm db user tiedot)))
+      :aseta-takuun-loppupvm
+      (fn [user tiedot]
+        (aseta-takuun-loppupvm db user tiedot)))
 
     (julkaise-palvelu http
-                      :poista-indeksi-kaytosta
-                      (fn [user tiedot]
-                        (poista-indeksi-kaytosta db user tiedot)))
+      :poista-indeksi-kaytosta
+      (fn [user tiedot]
+        (poista-indeksi-kaytosta db user tiedot)))
 
     (julkaise-palvelu http
-                      :tallenna-vesivaylaurakka
-                      (fn [user tiedot]
-                        (tallenna-vesivaylaurakka db user tiedot))
-                      {:kysely-spec  ::u/tallenna-urakka-kysely
-                       :vastaus-spec ::u/tallenna-urakka-vastaus})
+      :paivita-kesa-aika
+      (fn [user tiedot]
+        (aseta-urakan-kesa-aika db user tiedot)))
+
     (julkaise-palvelu http
-                      :hae-harjassa-luodut-urakat
-                      (fn [user _]
-                        (hae-harjassa-luodut-urakat db user))
-                      {:vastaus-spec ::u/hae-harjassa-luodut-urakat-vastaus})
+      :tallenna-vesivaylaurakka
+      (fn [user tiedot]
+        (tallenna-vesivaylaurakka db user tiedot))
+      {:kysely-spec ::u/tallenna-urakka-kysely
+       :vastaus-spec ::u/tallenna-urakka-vastaus})
+    (julkaise-palvelu http
+      :hae-harjassa-luodut-urakat
+      (fn [user _]
+        (hae-harjassa-luodut-urakat db user))
+      {:vastaus-spec ::u/hae-harjassa-luodut-urakat-vastaus})
 
     this)
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
-                     :hallintayksikon-urakat
-                     :hae-urakka
-                     :hae-urakoita
-                     :hae-organisaation-urakat
-                     :tallenna-urakan-sopimustyyppi
-                     :tallenna-urakan-tyyppi
-                     :aseta-takuun-loppupvm
-                     :tallenna-vesivaylaurakka
-                     :hae-harjassa-luodut-urakat)
+      :hallintayksikon-urakat
+      :hae-urakka
+      :hae-urakoita
+      :hae-organisaation-urakat
+      :tallenna-urakan-sopimustyyppi
+      :tallenna-urakan-tyyppi
+      :aseta-takuun-loppupvm
+      :paivita-kesa-aika
+      :tallenna-vesivaylaurakka
+      :hae-harjassa-luodut-urakat)
 
     this))
