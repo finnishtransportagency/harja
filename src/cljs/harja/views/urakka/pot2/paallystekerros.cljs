@@ -62,6 +62,8 @@
                             (str "Kulutuskerros ei ole yhtenäinen (" hyppyjen-maara " hyppyä)")
                             (= hyppyjen-maara 0)
                             "Kulutuskerros on yhtenäinen (ei hyppyjä)"
+                            (nil? hyppyjen-maara)
+                            ""
                             :else
                             (str "Kulutuskerros ei ole yhtenäinen (" hyppyjen-maara " hyppy)")))
         custom-yla-panel (if-not kulutuskerros-muokattu?
