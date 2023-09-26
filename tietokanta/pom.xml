@@ -24,10 +24,9 @@
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version>8.2.0</version>
+                <version>8.5.13</version>
                 <configuration>
                     <baselineOnMigrate>true</baselineOnMigrate>
-                    <allowMixedMigrations>false</allowMixedMigrations>
                     <baselineVersion>0</baselineVersion>
                     <url>${databaseUrl}</url>
                     <user>${databaseUser}</user>
