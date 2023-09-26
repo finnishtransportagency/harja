@@ -30,4 +30,5 @@
 
 (defn paivita-kesa-aika! [ur kesa-ajan-alku kesa-ajan-loppu]
   (k/post! :paivita-kesa-aika {:urakka-id (:id ur)
-                               :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}}))
+                               :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}}
+    nil true))

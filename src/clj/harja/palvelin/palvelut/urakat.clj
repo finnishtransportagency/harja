@@ -255,17 +255,17 @@
 
 (defn- pvm->kesa-aika-pvm [pvm-str]
   (let [vuosi-kantaan "2000"
-        pv (pvm/parsi pvm/fi-pvm-parse (if (str/ends-with? pvm-str ".") (str pvm-str vuosi-kantaan) (str pvm-str "." vuosi-kantaan)))]
+        pv (try (pvm/parsi pvm/fi-pvm-parse
+                  (if (str/ends-with? pvm-str ".") (str pvm-str vuosi-kantaan) (str pvm-str "." vuosi-kantaan)))
+             (catch Exception e
+               (throw (IllegalArgumentException. (str (format "Päivämäärä %s ei ole oikean muotoinen päivämäärä." pvm-str))))))]
     (when (and (= (pvm/kuukausi pv) 2)
             (= (pvm/paiva pv) 29))
-      (throw+ {:type "Error"
-               :virheet {:koodi "ERROR"
-                         :viesti "Karkauspäivä ei ole sallittu alkamis- tai loppupäivä."}}))
+      (throw (IllegalArgumentException. "Karkauspäivä ei ole sallittu alkamis- tai loppupäivä.")))
     pv))
 
 (defn aseta-urakan-kesa-aika [db user {:keys [urakka-id tiedot]}]
-  (let [
-        _ (log/debug "Aseta urakan kesäaika, id " urakka-id ", alku: " (:alkupvm tiedot) ", loppu " (:loppupvm tiedot))
+  (let [_ (log/debug "Aseta urakan kesäaika, id " urakka-id ", alku: " (:alkupvm tiedot) ", loppu " (:loppupvm tiedot))
         alkupvm (pvm->kesa-aika-pvm (:alkupvm tiedot))
         loppupvm (pvm->kesa-aika-pvm (:loppupvm tiedot))]
 
@@ -279,10 +279,7 @@
                                      :alkupvm alkupvm
                                      :loppupvm loppupvm})
       (q/hae-urakan-kesa-aika db urakka-id))
-    (throw+ {:type "Error"
-             :virheet {:koodi "ERROR"
-                       :viesti (format "Kesäajan alku oltava ennen loppuaikaa, tai ajat muuten virheellisiä. Tarkista alkuaika %s ja loppuaika %s."
-                                 alkupvm loppupvm)}}))))
+    (throw (IllegalArgumentException. "Kesäajan alku oltava ennen loppuaikaa.")))))
 
 (defn poista-indeksi-kaytosta [db user {:keys [urakka-id]}]
   (when-not (roolit/tilaajan-kayttaja? user)

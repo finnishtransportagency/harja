@@ -410,11 +410,9 @@
                              (reset! aikavali-loppu nil)))
            :virheviesti "Kesäajan tallennus epäonnistui."
            :nayta-virheviesti? true
-           ;:kun-virhe (fn [vastaus]
-           ;             (do
-           ;               (viesti/nayta! (str "Virhe: " vastaus) :varoitus)
-           ;               ;(reset! auki? false)
-           ;               ))
+           :kun-virhe (fn [vastaus]
+                          (viesti/nayta-toast! (:virhe (:response vastaus))
+                            :varoitus viesti/viestin-nayttoaika-keskipitka))
            }]
          [napit/yleinen-toissijainen "Peruuta" #(do
                                                   (reset! auki? false)

@@ -252,8 +252,8 @@
                           :paivita-kesa-aika urakanvalvoja {:urakka-id @oulun-alueurakan-2005-2010-id
                                                             :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}})
         (catch Exception e e))]
-    (is (= ExceptionInfo (type vastaus)))
-    (is (.startsWith (-> vastaus ex-data :virheet :viesti) "Kesäajan alku oltava ennen loppuaikaa, tai ajat muuten virheellisiä."))))
+    (is (= IllegalArgumentException (type vastaus)))
+    (is (= (.getMessage vastaus) "Kesäajan alku oltava ennen loppuaikaa."))))
 
 (deftest urakan-kesa-ajan-tallennus-karkauspaiva
   (let [kesa-ajan-alku "29.02"
@@ -263,8 +263,19 @@
                        :paivita-kesa-aika urakanvalvoja {:urakka-id @oulun-alueurakan-2005-2010-id
                                                          :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}})
                   (catch Exception e e))]
-    (is (= ExceptionInfo (type vastaus)))
-    (is (-> vastaus ex-data :virheet :viesti) "Karkauspäivä ei ole sallittu alkamis- tai loppupäivä.")))
+    (is (= IllegalArgumentException (type vastaus)))
+    (is (= (.getMessage vastaus) "Karkauspäivä ei ole sallittu alkamis- tai loppupäivä."))))
+
+(deftest urakan-kesa-ajan-tallennus-virheellinen-formaatti
+  (let [kesa-ajan-alku "diipadaa"
+        kesa-ajan-loppu "30.09"
+        urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
+        vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
+                       :paivita-kesa-aika urakanvalvoja {:urakka-id @oulun-alueurakan-2005-2010-id
+                                                         :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}})
+                  (catch Exception e e))]
+    (is (= IllegalArgumentException (type vastaus)))
+    (is (= (.getMessage vastaus) (format "Päivämäärä %s ei ole oikean muotoinen päivämäärä." "diipadaa")))))
 
 (deftest urakan-kesa-ajan-tallennus-ei-oikeutta
   (try+
