@@ -134,6 +134,11 @@
                (second kohde))))
          kohteet))]))
 
+(defn- korostettu-yhteensa-rivi [arvo]
+  [:arvo-ja-yksikko-korostettu {:arvo arvo
+                                :fmt :raha
+                                :korosta-hennosti? true}])
+
 (defn yhteensa-taulukko [yllapitokohteet muut-kustannukset urakan-sanktiot vuosi]
   (let [kohdistamattomat-sanktiot-yhteensa (reduce + 0 (keep :maara urakan-sanktiot))
         muut-kustannukset-yhteensa (reduce + 0 (keep :hinta muut-kustannukset))]
@@ -165,27 +170,28 @@
         {:otsikko "MAKU-pääl\u00ADlys\u00ADteet" :leveys 5 :fmt :raha}
         {:otsikko "Kokonais\u00ADhinta" :leveys 5 :fmt :raha}])
      [(concat
-        [nil
-         nil
-         nil
-         nil
-         nil
-         nil
-         nil
-         (reduce + 0 (keep :toteutunut-hinta yllapitokohteet))
-         kohdistamattomat-sanktiot-yhteensa
-         muut-kustannukset-yhteensa]
+        [(korostettu-yhteensa-rivi nil)
+         (korostettu-yhteensa-rivi nil)
+         (korostettu-yhteensa-rivi nil)
+         (korostettu-yhteensa-rivi nil)
+         (korostettu-yhteensa-rivi nil)
+         (korostettu-yhteensa-rivi nil)
+         (korostettu-yhteensa-rivi nil)
+         (korostettu-yhteensa-rivi (reduce + 0 (keep :toteutunut-hinta yllapitokohteet)))
+         (korostettu-yhteensa-rivi kohdistamattomat-sanktiot-yhteensa)
+         (korostettu-yhteensa-rivi muut-kustannukset-yhteensa)]
         (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
-          [(reduce + 0 (keep :arvonvahennykset yllapitokohteet))
-           (reduce + 0 (keep :sakot-ja-bonukset yllapitokohteet))])
-        [(reduce + 0 (keep :sopimuksen-mukaiset-tyot yllapitokohteet))
-         (reduce + 0 (keep :maaramuutokset yllapitokohteet))
-         (reduce + 0 (keep :bitumi-indeksi yllapitokohteet))
-         (reduce + 0 (keep :kaasuindeksi yllapitokohteet))
-         (reduce + 0 (keep :maku-paallysteet yllapitokohteet))
-         (+ (reduce + 0 (keep :kokonaishinta yllapitokohteet))
+          [(korostettu-yhteensa-rivi (reduce + 0 (keep :arvonvahennykset yllapitokohteet)))
+           (korostettu-yhteensa-rivi (reduce + 0 (keep :sakot-ja-bonukset yllapitokohteet)))])
+        [(korostettu-yhteensa-rivi (reduce + 0 (keep :sopimuksen-mukaiset-tyot yllapitokohteet)))
+         (korostettu-yhteensa-rivi (reduce + 0 (keep :maaramuutokset yllapitokohteet)))
+         (korostettu-yhteensa-rivi (reduce + 0 (keep :bitumi-indeksi yllapitokohteet)))
+         (korostettu-yhteensa-rivi (reduce + 0 (keep :kaasuindeksi yllapitokohteet)))
+         (korostettu-yhteensa-rivi (reduce + 0 (keep :maku-paallysteet yllapitokohteet)))
+         (korostettu-yhteensa-rivi 
+           (+ (reduce + 0 (keep :kokonaishinta yllapitokohteet))
            kohdistamattomat-sanktiot-yhteensa
-           muut-kustannukset-yhteensa)])]]))
+           muut-kustannukset-yhteensa))])]]))
 
 (defn muut-kustannukset-taulukko [muut-kustannukset urakan-sanktiot urakka-id]
   (let [nimi "Muut kustannukset"
