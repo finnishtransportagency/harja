@@ -13,12 +13,12 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/vastaanottotarkastus.sql")
 
-(defn yllapitokohteet-taulukko [yllapitokohteet taulukkotyyppi vuosi urakka-id]
+(defn yllapitokohteet-taulukko [yllapitokohteet taulukkotyyppi vuosi urakka-tai-hallintayksikko?]
   (let [nimi (case taulukkotyyppi
                :yha "YHA-kohteet"
                :paikkaus "Muut kohteet")
         ;; Ryhmitä kohteet jos isompi konteksti valittuna 
-        kohteet (if (some? urakka-id)
+        kohteet (if urakka-tai-hallintayksikko?
                   yllapitokohteet
                   (group-by #(:hallintayksikko_id %) yllapitokohteet))
 
@@ -116,11 +116,9 @@
           {:otsikko "MAKU-pääl\u00ADlys\u00ADteet" :leveys 5 :fmt :raha :otsikkorivi-luokka "paallystys-tausta-tumma"}
           {:otsikko "Kokonais\u00ADhinta" :leveys 5 :fmt :raha}]))
 
-     (if (some? urakka-id)
-       ;; Jos urakka valittuna, ei tehdä hallintayksikköryhmittelyä
-       (map
-         fn-formatoi-kohdetiedot
-         yllapitokohteet)
+     (if urakka-tai-hallintayksikko?
+       ;; Jos urakka tai yksikkö valittuna, ei tehdä hallintayksikköryhmittelyä
+       (map fn-formatoi-kohdetiedot yllapitokohteet)
        ;; Isompi konteksti valittuna 
        (mapcat
          (fn [kohde]
@@ -129,9 +127,7 @@
                                 (format "%02d"
                                   (-> kohde second  first :hallintayksikko_id)) " "
                                 (-> kohde second  first :hallintayksikko_nimi)) :leveys 10}]
-             (map
-               fn-formatoi-kohdetiedot
-               (second kohde))))
+             (map fn-formatoi-kohdetiedot (second kohde))))
          kohteet))]))
 
 (defn- korostettu-yhteensa-rivi [arvo]
@@ -193,10 +189,10 @@
            kohdistamattomat-sanktiot-yhteensa
            muut-kustannukset-yhteensa))])]]))
 
-(defn muut-kustannukset-taulukko [muut-kustannukset urakan-sanktiot urakka-id]
+(defn muut-kustannukset-taulukko [muut-kustannukset urakan-sanktiot urakka-tai-hallintayksikko?]
   (let [nimi "Muut kustannukset"
         ;; Ryhmitä sanktiot isommassa kontekstissa
-        sanktiot (if (some? urakka-id)
+        sanktiot (if urakka-tai-hallintayksikko?
                    urakan-sanktiot
                    (group-by #(get-in % [:hallintayksikko :id]) urakan-sanktiot))
 
@@ -218,11 +214,10 @@
       {:otsikko "Selitys" :leveys 10}
       {:otsikko "Summa" :leveys 10 :fmt :raha}]
 
-     (if (some? urakka-id)
-       (map
-         fn-formatoi-kustannus
-         (apply conj muut-kustannukset urakan-sanktiot))
-
+     (if urakka-tai-hallintayksikko?
+       ;; Älä tee hallintayksikön ryhmitystä ellei kokomaa valittuna
+       (map fn-formatoi-kustannus (apply conj muut-kustannukset urakan-sanktiot))
+       ;; Tee yksiköiden ryhmitys
        (mapcat (fn [kustannus]
                  (concat [;; Muodosta hallintayksikön otsikko  
                           {:otsikko (str
@@ -235,7 +230,11 @@
          sanktiot))]))
 
 (defn suorita [db user {:keys [urakka-id vuosi hallintayksikko-id] :as tiedot}]
-  (let [raportin-nimi (if urakka-id
+  (let [urakka-tai-hallintayksikko? (or
+                                      (some? urakka-id)
+                                      (and (some? hallintayksikko-id) (not urakka-id)))
+        
+        raportin-nimi (if urakka-id
                         "Vastaanottotarkastus"
                         "Päällystysurakoiden yhteenveto")
         konteksti (cond
@@ -274,11 +273,11 @@
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
      ;; Yha kohteet
-     (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet+kustannukset) :yha vuosi urakka-id)
+     (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet+kustannukset) :yha vuosi urakka-tai-hallintayksikko?)
      ;; Muut kohteet 
-     (yllapitokohteet-taulukko (filter (comp not :yhaid) yllapitokohteet+kustannukset) :paikkaus vuosi urakka-id)
+     (yllapitokohteet-taulukko (filter (comp not :yhaid) yllapitokohteet+kustannukset) :paikkaus vuosi urakka-tai-hallintayksikko?)
      ;; Muut kustannukset
-     (muut-kustannukset-taulukko muut-kustannukset urakan-sanktiot urakka-id)
+     (muut-kustannukset-taulukko muut-kustannukset urakan-sanktiot urakka-tai-hallintayksikko?)
      ;; Näytetään aikataulu vain urakan kontekstissa 
      (when urakka-id
        (mapcat (fn [[_ otsikko raportti-fn]]
