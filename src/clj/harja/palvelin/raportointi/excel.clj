@@ -248,7 +248,7 @@
   (.setLocked tyyli (not voi-muokata?))
   
   ;; Lisätty tyyliformaatti euroille
-  (let [raha-formaatti (luo-data-formaatti workbook "€#,##0.00_);[Red](€#,##0.00)")]
+  (let [raha-formaatti (luo-data-formaatti workbook "€#,##0.00;[Red]-€#,##0.00")]
     (case fmt
     ;; .setDataFormat hakee indeksillä tyylejä.
     ;; Tyylejä voi määritellä itse (https://poi.apache.org/apidocs/org/apache/poi/xssf/usermodel/XSSFDataFormat.html)
