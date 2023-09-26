@@ -248,7 +248,7 @@
   (.setLocked tyyli (not voi-muokata?))
   
   ;; Lisätty tyyliformaatti euroille
-  (let [raha-formaatti (luo-data-formaatti workbook "€#,##0.00_);[Red](€#,##0.00)")]
+  (let [raha-formaatti (luo-data-formaatti workbook "€#,##0.00;[Red]-€#,##0.00")]
     (case fmt
     ;; .setDataFormat hakee indeksillä tyylejä.
     ;; Tyylejä voi määritellä itse (https://poi.apache.org/apidocs/org/apache/poi/xssf/usermodel/XSSFDataFormat.html)
@@ -304,14 +304,16 @@
                            HorizontalAlignment/LEFT)))
 
 (defn- luo-rivi-ennen-tyyli
-  [workbook lista-tyyli? taustavari]
+  [workbook lista-tyyli? taustavari tummenna-teksti?]
   (excel/create-cell-style! workbook (if lista-tyyli?
                                        {:border-bottom :thin
                                         :border-top :thin
                                         :border-left :thin
                                         :border-right :thin
                                         :font (font-otsikko 18)}
-                                       {:background (or taustavari :grey_25_percent)
+                                       {:background (or taustavari (if tummenna-teksti? 
+                                                                     :pale_blue 
+                                                                     :grey_25_percent))
                                         :font {:color :black}})))
 
 (defn luo-rivi-jalkeen-tyyli [workbook]
@@ -320,11 +322,11 @@
 (defn- luo-rivi-ennen-tai-jalkeen
   "Luo rivin joko ennen tai jälkeen varsinaisen taulukon."
   [rivi-maaritys riviolio rivi-nro sheet workbook lista-tyyli? rivi-ennen?]
-  (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita taustavari]}]
+  (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita taustavari tummenna-teksti?]}]
             (let [sarakeryhman-tyyli (cond
 
                                        rivi-ennen?
-                                       (luo-rivi-ennen-tyyli workbook lista-tyyli? taustavari)
+                                       (luo-rivi-ennen-tyyli workbook lista-tyyli? taustavari tummenna-teksti?)
 
                                        (not rivi-ennen?)
                                        (luo-rivi-jalkeen-tyyli workbook))
