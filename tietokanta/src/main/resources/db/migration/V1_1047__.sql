@@ -25,11 +25,12 @@ BEGIN
             SELECT 1 FROM tr_osien_pituudet
             WHERE tie = _tnumero
             AND osa = alkuosa
-            AND pituus >= loppet 
+            AND pituus >= loppet -- Loppu sekä alkuetäisyys pitää aina olla osan pituuden sisällä
             AND pituus >= alkuet
       )) THEN 
-        -- Osoite on validi, palautetaan kokonaispituus
-        kokonaispituus := loppet - alkuet;
+        -- Osoite on validi, palautetaan kokonaispituus 
+        -- SELECT ABS = laskee pituuden oli etäisyydet kumminpäin tahansa 
+        kokonaispituus := (SELECT ABS(loppet - alkuet));
       ELSE RETURN 0; 
       END IF;
     ELSE

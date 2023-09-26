@@ -395,4 +395,9 @@
         _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 0) "Tie numeroa ei ole olemassa")
 
         pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, NULL, 142, 1, 895);"))
-        _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 0) "Tieosaa ei löydy")]))
+        _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 0) "Tieosaa ei löydy")
+
+        ;; Funktio sallii vielä samalle osalle etäisyyksien antamisen "väärinpäin", ja pituuden laskenta pitäisi onnistua
+        ;; aet 900 let 895 -> pituus = 5
+        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 1, 900, 1, 895);"))
+        _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 5) "Tien pituuden laskenta toimii etäisyydet väärinpäin, sama osa")]))
