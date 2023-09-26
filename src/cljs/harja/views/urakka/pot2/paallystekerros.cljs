@@ -72,9 +72,10 @@
                               [:div.kulutus-hyppy-ikoni-alert (ikonit/alert-svg)]
                               [:div hyppy-teksti]]
 
-                             [:div.kulutus-hyppy-info
-                              [:div.kulutus-hyppy-ikoni-ok (ikonit/harja-icon-status-completed)]
-                              [:div hyppy-teksti]])
+                             (when (some? hyppyjen-maara)
+                               [:div.kulutus-hyppy-info
+                                [:div.kulutus-hyppy-ikoni-ok (ikonit/harja-icon-status-completed)]
+                                [:div hyppy-teksti]]))
                            nil)
         voi-muokata? (not= :lukittu (:tila perustiedot))
         ohjauskahva (:paallystekerros ohjauskahvat)
