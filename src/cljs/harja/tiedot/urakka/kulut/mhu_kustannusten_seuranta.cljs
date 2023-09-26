@@ -11,6 +11,7 @@
             [harja.pvm :as pvm]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla])
   (:require-macros [reagent.ratom :refer [reaction]]
@@ -116,7 +117,11 @@
     ;;                      1 {data}}}
     (assoc app :tavoitehinnan-oikaisut
                ;; Merkitään samalla koskemattomiksi, jotta voidaan välttää turhien päivitysten tekeminen
-               (fmap #(zipmap (range) (map (fn [o] (assoc o :koskematon true)) %)) vastaus)))
+               (fmap #(zipmap (range) (map (fn [o] (-> o
+                                                      (assoc :koskematon true)
+                                                      (assoc :lisays-tai-vahennys (if (neg? (::valikatselmus/summa o))
+                                                                                    :vahennys
+                                                                                    :lisays)))) %)) vastaus)))
 
   HaeTavoitehintojenOikaisutEpaonnistui
   (process-event [{vastaus :vastaus} app]
