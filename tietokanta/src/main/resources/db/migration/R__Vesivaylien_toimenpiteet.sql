@@ -59,7 +59,7 @@ BEGIN
     IF (id_urakka_alue IS NULL) THEN
       RAISE NOTICE 'Toimenpiteen % urakka-aluetta ei voitu päätellä, joten urakkaa ei voi selvittää.', NEW."reimari-id"::text;
     ELSE
-      RAISE NOTICE 'Toimenpiteen % urakka-alue on %.', NEW."reimari-id"::text, CAST(id_urakka_alue AS text);
+      --RAISE NOTICE 'Toimenpiteen % urakka-alue on %.', NEW."reimari-id"::text, CAST(id_urakka_alue AS text);
       id_temp := (SELECT u.id
                   FROM urakka u,
                        sopimus s,
@@ -70,7 +70,7 @@ BEGIN
                     AND s.urakka = u.id
                   LIMIT 1);
       IF id_temp IS NULL THEN
-        RAISE NOTICE 'trigger: linkataan urakka-id turvalaiteryhmällä koska sopimus/diaarinro linkkaus ei onnistunut';
+        --RAISE NOTICE 'trigger: linkataan urakka-id turvalaiteryhmällä koska sopimus/diaarinro linkkaus ei onnistunut';
         id_temp := (SELECT id
                     FROM urakka u
                     WHERE u.urakkanro IS NOT NULL
@@ -82,7 +82,7 @@ BEGIN
   END IF;
   NEW."urakka-id" = id_temp;
   -- urakka-id:ksi tulee NULL jos ei löydy, joka on ok
-  RAISE NOTICE 'trigger: urakka-id arvoksi %', NEW."urakka-id";
+  --RAISE NOTICE 'trigger: urakka-id arvoksi %', NEW."urakka-id";
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -96,7 +96,7 @@ BEGIN
      BEGIN
          NEW."vaylanro" = (NEW."reimari-vayla").nro::integer;
      EXCEPTION WHEN OTHERS THEN
-         RAISE NOTICE 'valyanro arvoa % ei voitu muuntaa kokonaisluvuksi', (NEW."reimari-vayla").nro;
+         --RAISE NOTICE 'valyanro arvoa % ei voitu muuntaa kokonaisluvuksi', (NEW."reimari-vayla").nro;
          NULL;
      END;
   END IF;
@@ -115,7 +115,7 @@ BEGIN
                                  WHEN NEW."reimari-lisatyo" IS TRUE THEN 'yksikkohintainen'
                                  ELSE 'kokonaishintainen'
                             END;
-     RAISE NOTICE 'reimari_toimenpide hintatyyppi trigger: hintatyypiksi %', NEW."hintatyyppi";
+     --RAISE NOTICE 'reimari_toimenpide hintatyyppi trigger: hintatyypiksi %', NEW."hintatyyppi";
   END IF;
   RETURN NEW;
 END;
