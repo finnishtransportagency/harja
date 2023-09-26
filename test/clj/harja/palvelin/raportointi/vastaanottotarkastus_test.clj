@@ -379,13 +379,20 @@
                                 VALUES (%s, %s, %s);" tie osa pituus))
 
         pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 1, 895, 3, 143);"))
-        _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 3248) "Tien pituuden laskenta toimii tieosat oikeinpäin")
+        _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 3248) "Tien pituuden laskenta toimii tieosat oikeinpäin, monta osaa")
 
+        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 1, 895, 1, 900);"))
+        _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 5) "Tien pituuden laskenta toimii tieosat oikeinpäin, yksi osa")
+
+        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 1, 895, 1, 1501);"))
+        _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 0) "Loppuetäisyys menee yli osan pituuden, jolloin palautetaan 0")
+
+        ;; Kun tieosat käännetään, käännetään myös etäisyydet, jolloin aet 144 ja let 895 eikä toisin päin, tulos on 4751
         pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 3, 895, 1, 144);"))
-        _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 3249) "Tien pituuden laskenta toimii tieosat väärinpäin")
+        _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 4751) "Tien pituuden laskenta toimii tieosat väärinpäin")
 
-        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 1, 895, 1, 143);"))
-        _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 752) "Tien pituuden laskenta toimii samalle osalle etäisyydet väärinpäin")
+        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(862424, 1, 142, 1, 895);"))
+        _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 0) "Tie numeroa ei ole olemassa")
 
-        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 1, 142, 1, 895);"))
-        _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 753) "Tien pituuden laskenta toimii samalle osalle etäisyydet oikeinpäin")]))
+        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, NULL, 142, 1, 895);"))
+        _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 0) "Tieosaa ei löydy")]))

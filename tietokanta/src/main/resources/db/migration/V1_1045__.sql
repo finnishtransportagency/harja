@@ -6,17 +6,32 @@ DECLARE
     kokonaispituus INT := 0;
     alkuet INT := _aet;
     loppet INT := _let;
-    -- Sallitaan syöttää osat molemmin päin ja convertataan ne oikein päin, alkuosa aina loppusaa pienempi
-    alkuosa INT := LEAST(_aosa, _losa);
-    loppuosa INT := GREATEST(_aosa, _losa);
+    alkuosa INT := _aosa;
+    loppuosa INT := _losa;
 BEGIN
-    -- Jos alku sekä loppuosat ovat samat, convertataan etäisyydet myös oikeinpäin, alkuetäisyys aina pienempi
-    -- Jos osat eivät ole samoja, ei voida tietää kummin päin etäisyydet tulisi olla, joten silloin annetaan niiden olla
+    -- Tarkistetaan että annettu osoite on nousevassa järjestyksessä (alku ennen loppua), käännetään jos ei ole
+    IF alkuosa > loppuosa THEN 
+      alkuosa := _losa;
+      loppuosa := _aosa;
+      alkuet := _let;
+      loppet := _aet;
+    END IF;
+
+    -- Jos alku sekä loppuosat ovat samat, miinustetaan vaan let-aet jotta saadaan pituus 
     IF alkuosa = loppuosa THEN 
-      alkuet := LEAST(_aet, _let);
-      loppet := GREATEST(_aet, _let);
-      -- Ja miinustetaan vaan let-aet jotta saadaan pituus 
-      kokonaispituus := loppet - alkuet;
+      -- Katsotaan vielä että tie ja etäisyydet ovat valideja ennenkuin palautetaan kokonaispituus
+      IF (SELECT EXISTS 
+          ( -- Onko rivejä olemassa tällä tienumerolla ja pituuksilla
+            SELECT 1 FROM tr_osien_pituudet
+            WHERE tie = _tnumero
+            AND osa = alkuosa
+            AND pituus >= loppet 
+            AND pituus >= alkuet
+      )) THEN 
+        -- Osoite on validi, palautetaan kokonaispituus
+        kokonaispituus := loppet - alkuet;
+      ELSE RETURN 0; 
+      END IF;
     ELSE
       -- Jos osia välissä, lasketaan osat yhteen, miinustetaan aet ensimmäisestä osasta, viimeisessä osassa lisätään vaan let
       -- Esim, jos meillä on yhteensä 4 osaa: kokonaispituus = [(osan1pituus - aet) + osan2pituus + osan3pituus + let] 
@@ -31,12 +46,13 @@ BEGIN
       )
       INTO kokonaispituus
       FROM tr_osien_pituudet
-      WHERE tie = _tnumero AND
-            ( -- Palautetaan aina 0 jos osia ei anneta, jos yksi osa vain annetaan, oletetaan että molemmat osat samoja
-              (_aosa::INTEGER IS NULL AND _losa::INTEGER IS NULL) 
-              OR
-              (osa BETWEEN alkuosa AND loppuosa)
-            );
+      WHERE tie = _tnumero 
+      AND 
+      ( -- Palautetaan aina 0 jos tieosaa ei anneta
+        (_aosa::INTEGER IS NULL AND _losa::INTEGER IS NULL) 
+        OR
+        (osa BETWEEN alkuosa AND loppuosa)
+      );
     END IF;
     -- Palautetaan 0 mikäli tietä ei löytynyt
     IF kokonaispituus IS NULL THEN kokonaispituus := 0; END IF;
