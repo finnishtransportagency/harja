@@ -750,7 +750,7 @@ BEGIN
     alku := make_date(rivi.vuosi-1, 10, 1);
     loppu := make_date(rivi.vuosi, 9, 30);
   END IF;
-  RAISE NOTICE 'Poistetaan muistetut laskutusyhteenvedot % - %', alku, loppu;
+  --RAISE NOTICE 'Poistetaan muistetut laskutusyhteenvedot % - %', alku, loppu;
   DELETE FROM laskutusyhteenveto_cache
   WHERE alkupvm >= alku
         AND loppupvm <= loppu;
