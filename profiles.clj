@@ -8,8 +8,7 @@
                       [com.bhauman/rebel-readline-cljs "0.1.4"]]
        :source-paths ["src/clj-dev" "src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
        :resource-paths ["dev-resources/js" "dev-resources/tmp" "resources/public/css" "resources"]
-       :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
-                 [test2junit "1.4.4"]
+       :plugins [[test2junit "1.4.4"]
                  [lein-eftest "0.5.0"]]
        ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
        ;; :resource-paths ["opt/sonic/7.6.2/*"]
