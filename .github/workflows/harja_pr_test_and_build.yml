@@ -164,7 +164,7 @@ jobs:
       - name: Run backend tests
         run: lein test2junit
 
-      - name: Publish Backend Tests Report
+      - name: Publish Test Report
         uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
         if: always()
         with:
@@ -203,7 +203,7 @@ jobs:
       - name: run slow tests
         run: lein test2junit :hidas
 
-      - name: Publish Slow Tests Report
+      - name: Publish Test Report
         uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
         if: always()
         with:
@@ -268,7 +268,7 @@ jobs:
       - name: Run integration tests
         run: lein test2junit :integraatio
 
-      - name: Publish Backend, Slow and Integration Tests Report
+      - name: Publish Test Report
         uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
         if: always()
         with:
