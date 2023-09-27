@@ -254,10 +254,6 @@
           rivi-let (:tr-loppuetaisyys rivi)
           rivi-kaista (:tr-kaista rivi)
 
-          ;; Kuinka iso hyppy halutaan näyttää? 
-          ;; (inc 50) = Näytetään hypyt jotka ovat 50 metriä tai alle 
-          hypyn-metriraja (inc yllapitokohteet-domain/+kulutus-hyppy-metriraja+)
-
           seuraava-rivi (get-in data [(inc i)])
           seuraava-rivi-tie (:tr-numero seuraava-rivi)
           seuraava-rivi-ajorata (:tr-ajorata seuraava-rivi)
@@ -269,9 +265,7 @@
                                 (= rivi-tie seuraava-rivi-tie)
                                 (= rivi-ajorata seuraava-rivi-ajorata)
                                 (= rivi-kaista seuraava-rivi-kaista)
-                                (> seuraava-rivi-aet rivi-let)
-                                ;; Onko hyppy X metriä tai alle?
-                                (< (- seuraava-rivi-aet rivi-let) hypyn-metriraja))
+                                (> seuraava-rivi-aet rivi-let))
                             true
                             false)]
       (if hyppy-olemassa?
@@ -300,10 +294,6 @@
           rivi-aet (:tr-alkuetaisyys rivi)
           rivi-let (:tr-loppuetaisyys rivi)
 
-          ;; Kuinka iso hyppy halutaan näyttää? 
-          ;; (inc 50) = Näytetään hypyt jotka ovat 50 metriä tai alle 
-          hypyn-metriraja (inc yllapitokohteet-domain/+kulutus-hyppy-metriraja+)
-
           edellinen-rivi (nth data (dec y) nil)
           edellinen-rivi-tie (:tr-numero edellinen-rivi)
           edellinen-rivi-ajorata (:tr-ajorata edellinen-rivi)
@@ -328,10 +318,7 @@
                    (= rivi-ajorata edellinen-rivi-ajorata)
                    (= rivi-kaista edellinen-rivi-kaista)
                    (> seuraava-rivi-aet rivi-let)
-                   (> rivi-aet edellinen-rivi-let)
-                   ;; Onko hypyt X metriä tai alle?
-                   (< (- seuraava-rivi-aet rivi-let) hypyn-metriraja)
-                   (< (- rivi-aet edellinen-rivi-let) hypyn-metriraja))
+                   (> rivi-aet edellinen-rivi-let))
                  (merge rivi {:aet-hyppy? true :let-hyppy? true})
 
                  ;; Seuraava ja tämä rivi olemassa sekä molemmilla sama tie&ajorata&kaista
@@ -342,9 +329,7 @@
                    (= rivi-tie seuraava-rivi-tie)
                    (= rivi-ajorata seuraava-rivi-ajorata)
                    (= rivi-kaista seuraava-rivi-kaista)
-                   (> seuraava-rivi-aet rivi-let)
-                   ;; Onko hyppy X metriä tai alle?
-                   (< (- seuraava-rivi-aet rivi-let) hypyn-metriraja))
+                   (> seuraava-rivi-aet rivi-let))
                  (merge rivi {:let-hyppy? true})
 
                  ;; Tämä rivi ja edellinen rivi olemassa sekä molemmilla sama tie&ajorata&kaista
@@ -355,9 +340,7 @@
                    (= rivi-tie edellinen-rivi-tie)
                    (= rivi-ajorata edellinen-rivi-ajorata)
                    (= rivi-kaista edellinen-rivi-kaista)
-                   (> rivi-aet edellinen-rivi-let)
-                   ;; Onko hyppy X metriä tai alle?
-                   (< (- rivi-aet edellinen-rivi-let) hypyn-metriraja))
+                   (> rivi-aet edellinen-rivi-let))
                  (merge rivi {:aet-hyppy? true})
 
                  ;; Ei hyppyjä
