@@ -168,15 +168,15 @@ jobs:
         uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
         if: always()
         with:
-          report_paths: 'test-results/*.xml'
+          report_paths: 'test2junit/*.xml'
           check_name: 'Backend Test Report'
 
       - name: checkaa missä tulokset
         run: |
           echo "mitä on juuressa"
           ls -la
-          echo "mitä on test-results kansiossa"
-          ls -la test-results
+          echo "mitä on test2junit kansiossa"
+          ls -la test2junit
 
 
   basic-tests:
