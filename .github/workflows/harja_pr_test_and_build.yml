@@ -164,20 +164,6 @@ jobs:
       - name: Run backend tests
         run: lein test2junit
 
-      - name: Publish Backend Test Report
-        uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
-        if: always()
-        with:
-          report_paths: 'test2junit/xml/*.xml'
-          check_name: 'Backend Test Report'
-
-      - name: checkaa missä tulokset
-        run: |
-          echo "mitä on juuressa"
-          ls -la
-          echo "mitä on test2junit kansiossa"
-          ls -la test2junit
-
 
   basic-tests:
     name: "Frontti- ja hitaat testit"
@@ -208,13 +194,6 @@ jobs:
 
       - name: run slow tests
         run: lein test2junit :hidas
-
-      - name: Publish Slow Tests Report
-        uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
-        if: always()
-        with:
-          report_paths: 'test2junit/xml/*.xml'
-          check_name: 'Slow Tests Report'
 
       - name: Install PhantomJS
         env:
@@ -272,12 +251,12 @@ jobs:
       - name: Run integration tests
         run: lein test2junit :integraatio
 
-      - name: Publish Integration Tests Report
+      - name: Publish Backend, Slow and Integration Tests Report
         uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
         if: always()
         with:
           report_paths: 'test2junit/xml/*.xml'
-          check_name: 'Integration Tests Report'
+          check_name: 'Backend, Integration and Slow Tests Report'
 
   e2e-tests:
     name: "e2e-testit (Cypress)"
