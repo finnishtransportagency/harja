@@ -189,8 +189,7 @@
   :tallenna-oikaisu-fn    Funktio, jolla tallennetaan oikaisu, esimerkiksi tuck-funktio joka tekee kutsun bäkkäriin.
   :tallenna-oikaisut-fn   Funktio, jolla päivitetään oikaisut, esimerkiksi tuck-funktio joka tekee kutsun bäkkäriin.
                           Kutsutaan jokaisesta muutoksesta."
-  [hoitokauden-oikaisut-atom {:keys [voi-muokata? poista-oikaisu-fn tallenna-oikaisu-fn
-                                                                 paivita-oikaisu-fn hoitokauden-alkuvuosi]}]
+  [hoitokauden-oikaisut-atom {:keys [voi-muokata? poista-oikaisu-fn tallenna-oikaisu-fn]}]
   (let [virheet (atom {})
         uusi-id (if (empty? (keys @hoitokauden-oikaisut-atom))
                   0
@@ -209,25 +208,29 @@
                                :luokka "nappi-toissijainen"}}
       ;; Roskakorinappula rivin päässä
       :toimintonappi-fn (when voi-muokata?
-                              (fn [rivi _muokkaa! id]
-                                [napit/poista ""
-                                 #(do
-                                    (poista-oikaisu-fn rivi id)
-                                    #_ (reset! tallennettu-tila hoitokauden-oikaisut))
-                                 {:luokka "napiton-nappi"}]))
+                          (fn [rivi _muokkaa! id]
+                            [napit/poista ""
+                             #(do
+                                (poista-oikaisu-fn rivi id))
+                             {:luokka "napiton-nappi"}]))
       :voi-lisata? false ;; Piilotetaan default lisää rivi -nappi. Se on korvattu custom-toiminnolla
       :validoi-uusi-rivi? false
       :on-rivi-blur (fn [oikaisu i]
                       (when-not (or (seq (get @virheet i))
                                   (:koskematon (get @hoitokauden-oikaisut-atom i)))
-                        (tallenna-oikaisu-fn oikaisu i)))
+                        (let [oikaisu (cond-> oikaisu
+                                        true (update ::valikatselmus/summa Math/abs)
+
+                                        (= :vahennys (:lisays-tai-vahennys oikaisu))
+                                        (update ::valikatselmus/summa -))]
+                          (tallenna-oikaisu-fn oikaisu i))))
       :uusi-id uusi-id
       :virheet virheet
       :nayta-virheikoni? false}
      [{:otsikko "Luokka"
        :nimi ::valikatselmus/otsikko
        :tyyppi :valinta
-       :valinnat valikatselmus/luokat ;; TODO: Älä näytä "Alleviivatun fontin vaikutus tavoitehintaan" muissa kuin 19-20 alkaneissa.
+       :valinnat (valikatselmus/luokat @nav/valittu-urakka)
        :validoi [[:ei-tyhja "Valitse arvo"]]
        :leveys 2}
       {:otsikko "Selite"
@@ -237,29 +240,16 @@
        :leveys 3}
       {:otsikko "Lisäys / Vähennys"
        :nimi :lisays-tai-vahennys
-       :hae #(if (neg? (::valikatselmus/summa %)) :vahennys :lisays)
-       :aseta (fn [rivi arvo]
-                ;; Käännetään summa, jos valittu arvo ei täsmää arvon merkkisyyteen.
-                (let [maksu (js/parseFloat (::valikatselmus/summa rivi))
-                      rivi (assoc rivi :lisays-tai-vahennys arvo)]
-                  (if (or (and (neg? maksu) (= :lisays arvo)) (and (pos? maksu) (= :vahennys arvo)))
-                    (update rivi ::valikatselmus/summa -)
-                    rivi)))
        :tyyppi :valinta
        :valinnat [:lisays :vahennys]
        :valinta-arvo identity
-       :valinta-nayta {:lisays "Lisäys" ;; TODO: Korjaa lukumoodissa
+       :valinta-nayta {:lisays "Lisäys"
                        :vahennys "Vähennys"}
        :leveys 2}
       {:otsikko "Summa"
        :nimi ::valikatselmus/summa
        :tyyppi :numero
        :tasaa :oikea
-       :aseta (fn [rivi arvo]
-                (let [vahennys? (= :vahennys (:lisays-tai-vahennys rivi))]
-                  (if (and vahennys? (pos? arvo))
-                    (assoc rivi ::valikatselmus/summa (- arvo))
-                    (assoc rivi ::valikatselmus/summa arvo))))
        :fmt #(str (Math/abs %))
        :validoi [[:ei-tyhja "Täytä arvo"]]
        :leveys 2}]
