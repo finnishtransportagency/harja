@@ -133,7 +133,10 @@
                                      ::valikatselmus/otsikko
                                      ::valikatselmus/selite
                                      :lisays-tai-vahennys
-                                     ::valikatselmus/summa]))]
+                                     ::valikatselmus/summa]))
+          uusi (assoc uusi :lisays-tai-vahennys (if (neg? (::valikatselmus/summa uusi))
+                                                  :vahennys
+                                                  :lisays))]
       (viesti/nayta-toast! "Oikaisu tallennettu")
       ;; Päivitetään sekä välikatselmuksen, että kustannusseurannan tiedot
       (hae-lupaustiedot app)
