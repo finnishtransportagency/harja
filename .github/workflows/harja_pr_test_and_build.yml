@@ -168,15 +168,15 @@ jobs:
         uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
         if: always()
         with:
-          report_paths: 'test-results/*.xml'
+          report_paths: 'test2junit/xml/*.xml'
           check_name: 'Backend Test Report'
 
       - name: checkaa missä tulokset
         run: |
           echo "mitä on juuressa"
           ls -la
-          echo "mitä on test-results kansiossa"
-          ls -la test-results
+          echo "mitä on test2junit kansiossa"
+          ls -la test2junit
 
 
   basic-tests:
@@ -207,7 +207,14 @@ jobs:
         uses: ./.github/actions/setup-clojure-env
 
       - name: run slow tests
-        run: lein test :hidas
+        run: lein test2junit :hidas
+
+      - name: Publish Slow Tests Report
+        uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
+        if: always()
+        with:
+          report_paths: 'test2junit/xml/*.xml'
+          check_name: 'Slow Tests Report'
 
       - name: Install PhantomJS
         env:
@@ -263,7 +270,14 @@ jobs:
         uses: ./.github/actions/setup-clojure-env
 
       - name: Run integration tests
-        run: lein test :integraatio
+        run: lein test2junit :integraatio
+
+      - name: Publish Integration Tests Report
+        uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
+        if: always()
+        with:
+          report_paths: 'test2junit/xml/*.xml'
+          check_name: 'Integration Tests Report'
 
   e2e-tests:
     name: "e2e-testit (Cypress)"
