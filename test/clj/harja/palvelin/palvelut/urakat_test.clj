@@ -224,8 +224,8 @@
     (is (not (s/valid? ::u/tallenna-urakka-kysely urakka)) "Lähtevä kysely ei ole validi")))
 
 (deftest urakan-kesa-ajan-tallennus
-  (let [kesa-ajan-alku "01.05"
-        kesa-ajan-loppu "30.09"
+  (let [kesa-ajan-alku (pvm/luo-pvm 2000 4 1)
+        kesa-ajan-loppu (pvm/luo-pvm 2000 8 30)
         urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
         vastaus
         (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -245,8 +245,8 @@
       (is (= java.time.Month/SEPTEMBER (.getMonth loppu-localdate))))))
 
 (deftest urakan-kesa-ajan-tallennus-loppu-ennen-alkua
-  (let [kesa-ajan-alku "01.05"
-        kesa-ajan-loppu "30.04"
+  (let [kesa-ajan-alku (pvm/luo-pvm 2000 4 1)
+        kesa-ajan-loppu (pvm/luo-pvm 2000 3 30)
         urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
         vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
                           :paivita-kesa-aika urakanvalvoja {:urakka-id @oulun-alueurakan-2005-2010-id
@@ -256,8 +256,8 @@
     (is (= (.getMessage vastaus) "Kesäajan alku oltava ennen loppuaikaa."))))
 
 (deftest urakan-kesa-ajan-tallennus-karkauspaiva
-  (let [kesa-ajan-alku "29.02"
-        kesa-ajan-loppu "30.09"
+  (let [kesa-ajan-alku (pvm/luo-pvm 2000 1 29)
+        kesa-ajan-loppu (pvm/luo-pvm 2000 3 30)
         urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
         vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
                        :paivita-kesa-aika urakanvalvoja {:urakka-id @oulun-alueurakan-2005-2010-id
@@ -266,21 +266,10 @@
     (is (= IllegalArgumentException (type vastaus)))
     (is (= (.getMessage vastaus) "Karkauspäivä ei ole sallittu alkamis- tai loppupäivä."))))
 
-(deftest urakan-kesa-ajan-tallennus-virheellinen-formaatti
-  (let [kesa-ajan-alku "diipadaa"
-        kesa-ajan-loppu "30.09"
-        urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
-        vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
-                       :paivita-kesa-aika urakanvalvoja {:urakka-id @oulun-alueurakan-2005-2010-id
-                                                         :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}})
-                  (catch Exception e e))]
-    (is (= IllegalArgumentException (type vastaus)))
-    (is (= (.getMessage vastaus) (format "Päivämäärä %s ei ole oikean muotoinen päivämäärä." "diipadaa")))))
-
 (deftest urakan-kesa-ajan-tallennus-ei-oikeutta
   (try+
-    (let [kesa-ajan-alku "01.05"
-          kesa-ajan-loppu "30.09"
+    (let [kesa-ajan-alku (pvm/luo-pvm 2000 4 1)
+          kesa-ajan-loppu (pvm/luo-pvm 2000 3 30)
           _ (kutsu-palvelua (:http-palvelin jarjestelma)
               :paivita-kesa-aika +kayttaja-tero+ {:urakka-id @oulun-alueurakan-2005-2010-id
                                                   :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}})])
@@ -289,8 +278,8 @@
 
 (deftest urakan-kesa-ajan-tallennus-ei-tilaajan-kayttaja
   (try+
-    (let [kesa-ajan-alku "01.05"
-          kesa-ajan-loppu "30.09"
+    (let [kesa-ajan-alku (pvm/luo-pvm 2000 4 1)
+          kesa-ajan-loppu (pvm/luo-pvm 2000 3 30)
           vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
               :paivita-kesa-aika +kayttaja-vastuuhlo-muhos+ {:urakka-id @oulun-alueurakan-2005-2010-id
                                                              :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}})

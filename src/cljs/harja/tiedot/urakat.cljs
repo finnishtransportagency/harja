@@ -1,7 +1,9 @@
 (ns harja.tiedot.urakat
   "Harjan urakkalistausten tietojen hallinta"
-  (:require [harja.asiakas.kommunikaatio :as k]
+  (:require [clojure.string :as str]
+            [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [chan <! >! close!]]
+            [harja.pvm :as pvm]
             [harja.ui.protokollat :refer [Haku hae]]
             )
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -28,7 +30,11 @@
 (defn poista-indeksi-kaytosta! [ur]
   (k/post! :poista-indeksi-kaytosta {:urakka-id (:id ur)}))
 
+(defn- pvm-str->pvm [pv]
+  (pvm/parsi pvm/fi-pvm-parse (if (str/ends-with? pv ".") (str pv "2000") (str pv ".2000"))))
 (defn paivita-kesa-aika! [ur kesa-ajan-alku kesa-ajan-loppu]
-  (k/post! :paivita-kesa-aika {:urakka-id (:id ur)
-                               :tiedot {:alkupvm kesa-ajan-alku :loppupvm kesa-ajan-loppu}}
-    nil true))
+  (let [alku (pvm-str->pvm kesa-ajan-alku)
+        loppu (pvm-str->pvm kesa-ajan-loppu)]
+    (k/post! :paivita-kesa-aika {:urakka-id (:id ur) :tiedot {:alkupvm alku :loppupvm loppu}}
+      nil true)))
+

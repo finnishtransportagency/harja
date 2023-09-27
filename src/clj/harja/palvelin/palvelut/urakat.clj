@@ -21,7 +21,10 @@
             [slingshot.slingshot :refer [throw+]]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c])
+  ;(:import (java.time LocalDate)
+  ;         (java.time.format DateTimeFormatter))
+  )
 
 (def ^{:const true} oletus-toleranssi 50)
 
@@ -253,22 +256,15 @@
   (q/aseta-takuun-loppupvm! db {:urakka   urakka-id
                                 :loppupvm (:loppupvm takuu)}))
 
-(defn- pvm->kesa-aika-pvm [pvm-str]
-  (let [vuosi-kantaan "2000"
-        pv (try (pvm/parsi pvm/fi-pvm-parse
-                  (if (str/ends-with? pvm-str ".") (str pvm-str vuosi-kantaan) (str pvm-str "." vuosi-kantaan)))
-             (catch Exception e
-               (throw (IllegalArgumentException. (str (format "Päivämäärä %s ei ole oikean muotoinen päivämäärä." pvm-str))))))]
-    (when (and (= (pvm/kuukausi pv) 2)
-            (= (pvm/paiva pv) 29))
-      (throw (IllegalArgumentException. "Karkauspäivä ei ole sallittu alkamis- tai loppupäivä.")))
-    pv))
-
+(defn- validoi-pvm [pv]
+  (when (and (= (pvm/kuukausi pv) 2)
+          (= (pvm/paiva pv) 29))
+    (throw (IllegalArgumentException. "Karkauspäivä ei ole sallittu alkamis- tai loppupäivä.")))
+  pv)
 (defn aseta-urakan-kesa-aika [db user {:keys [urakka-id tiedot]}]
   (let [_ (log/debug "Aseta urakan kesäaika, id " urakka-id ", alku: " (:alkupvm tiedot) ", loppu " (:loppupvm tiedot))
-        alkupvm (pvm->kesa-aika-pvm (:alkupvm tiedot))
-        loppupvm (pvm->kesa-aika-pvm (:loppupvm tiedot))]
-
+        alkupvm (validoi-pvm (:alkupvm tiedot))
+        loppupvm (validoi-pvm (:loppupvm tiedot))]
   (when-not (roolit/tilaajan-kayttaja? user)
     (throw (SecurityException. "Vain tilaaja voi asettaa urakan kesäajan")))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
