@@ -171,6 +171,16 @@ jobs:
           report_paths: 'test-results/*.xml'
           check_name: 'Backend Test Report'
 
+      - name: checkaa missä tulokset
+        run: |
+          echo "mitä on juuressa"
+          ls -la
+          echo "mitä on test2junit"
+          ls -la test2junit
+          echo "mitä on test-results"
+          ls -la test-results
+
+
   basic-tests:
     name: "Frontti- ja hitaat testit"
     runs-on: ubuntu-latest
