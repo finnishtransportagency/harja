@@ -111,9 +111,10 @@
                           :harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
                          oikaisu)]
       ;; Lähetetään oikaisun tallennus serverille vain, jos kaikki tiedot on syötetty
-      (when (and (:harja.domain.kulut.valikatselmus/otsikko oikaisu)
-              (:harja.domain.kulut.valikatselmus/summa oikaisu)
-              (:harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi oikaisu)
+      (when (and (::valikatselmus/otsikko oikaisu)
+              (::valikatselmus/selite oikaisu)
+              (::valikatselmus/summa oikaisu)
+              (::valikatselmus/hoitokauden-alkuvuosi oikaisu)
               (::urakka/id oikaisu))
         (tuck-apurit/post! :tallenna-tavoitehinnan-oikaisu
           oikaisu
@@ -133,7 +134,10 @@
                                      ::valikatselmus/otsikko
                                      ::valikatselmus/selite
                                      :lisays-tai-vahennys
-                                     ::valikatselmus/summa]))]
+                                     ::valikatselmus/summa]))
+          uusi (assoc uusi :lisays-tai-vahennys (if (neg? (::valikatselmus/summa uusi))
+                                                  :vahennys
+                                                  :lisays))]
       (viesti/nayta-toast! "Oikaisu tallennettu")
       ;; Päivitetään sekä välikatselmuksen, että kustannusseurannan tiedot
       (hae-lupaustiedot app)
