@@ -156,7 +156,8 @@
   :managed-dependencies [[org.apache.poi/poi "4.1.0"]
                          [org.apache.poi/poi-scratchpad "4.1.0"]
                          [org.apache.poi/poi-ooxml "4.1.0"]]
-  :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
+  :profiles {:dev {:test2junit-output-dir "test-results"
+                   :test2junit-run-ant ~(not jenkinsissa?)}}
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
@@ -224,7 +225,6 @@
   :aot :all
   :main harja.palvelin.main
   :auto-clean false ;; for uberjar
-  :test2junit-output-dir "test-results"
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"fig" ["trampoline" "with-profile" "+dev-ymparisto" "with-env-vars" "run" "-m" "figwheel.main"]
