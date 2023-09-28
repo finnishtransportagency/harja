@@ -55,6 +55,7 @@
    "liik. opast. ja ohjausl. hoito seka reunapaalujen kun.pito"
    "Liikennemerkkien, opasteiden ja liikenteenohjauslaitteiden hoito sekä reunapaalujen kunnossapito"]
   [palteen-poisto "palteen poisto" "Palteen poisto"]
+  [palteen-poisto-kaiteen-alta "palteen poisto kaiteen alta" "Palteen poisto kaiteen alta"]
   [paallystetyn-tien-sorapientareen-taytto
    "paallystetyn tien sorapientareen taytto"
    "Päällystetyn tien sorapientareen täyttö"]
@@ -141,6 +142,7 @@
           siltojen-puhdistus
           liikennemerkkien-opasteiden-ja-liikenteenohjauslaitteiden-hoito-seka-reunapaalujen-kunnossapito
           palteen-poisto
+          palteen-poisto-kaiteen-alta
           paallystetyn-tien-sorapientareen-taytto
           ojitus
           reunapaalujen-uusiminen
