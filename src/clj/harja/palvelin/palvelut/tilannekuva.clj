@@ -397,8 +397,6 @@
       nil
       koodit)))
 
-(q/hae-toimenpidekoodit (:db harja.palvelin.main/harja-jarjestelma) #{"roskien keruu"})
-
 (defn- hae-toteumien-reitit
   [db ch user {:keys [toleranssi alue alku loppu] :as tiedot} urakat]
   (when-not (empty? urakat)

@@ -46,7 +46,7 @@ hakutiheys-historiakuva 1200000)
 (def valittu-urakka-tilannekuvaan-tullessa (atom nil))
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
-(def #_once suodattimet
+(defonce suodattimet
   (atom
     {:yllapito {tk/paallystys false
                 tk/paikkaus false
