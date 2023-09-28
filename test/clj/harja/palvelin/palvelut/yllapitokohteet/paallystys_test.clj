@@ -944,7 +944,7 @@
                              (assoc-in [:paallystekerros 1 :tr-alkuosa] 1)
                              (assoc-in [:paallystekerros 1 :tr-loppuosa] 1)
                              (assoc-in [:paallystekerros 1 :tr-loppuetaisyys] 3827)
-                             (assoc-in [:paallystekerros 1 :tr-alkuetaisyys] (+ aet yllapitokohteet-domain/+kulutus-hyppy-metriraja+))
+                             (assoc-in [:paallystekerros 1 :tr-alkuetaisyys] (+ aet 100))
                              (assoc-in [:paallystekerros 1 :tr-numero] 20)
                              (assoc-in [:paallystekerros 1 :tr-kaista] 12)
                              (assoc-in [:paallystekerros 1 :tr-ajorata] 1))
@@ -968,13 +968,13 @@
                              (assoc-in [:paallystekerros 1 :tr-alkuosa] 1)
                              (assoc-in [:paallystekerros 1 :tr-loppuosa] 1)
                              (assoc-in [:paallystekerros 1 :tr-loppuetaisyys] 3827)
-                             (assoc-in [:paallystekerros 1 :tr-alkuetaisyys] (+ aet yllapitokohteet-domain/+kulutus-hyppy-metriraja+ 1))
+                             (assoc-in [:paallystekerros 1 :tr-alkuetaisyys] aet)
                              (assoc-in [:paallystekerros 1 :tr-numero] 20)
                              (assoc-in [:paallystekerros 1 :tr-kaista] 12)
                              (assoc-in [:paallystekerros 1 :tr-ajorata] 1))
 
-        paallystys-hyppy-ylittyy (nth (tallenna-pot2-testi-paallystysilmoitus
-                                        urakka-id sopimus-id paallystyskohde-id paallystysilmoitus) 1 nil)]
+        paallystys-ei-hyppyja (nth (tallenna-pot2-testi-paallystysilmoitus
+                                     urakka-id sopimus-id paallystyskohde-id paallystysilmoitus) 1 nil)]
 
     ;; Hyppy seuraavalla rivillä, korostetaan let
     (is (true? (get-in paallystys-hyppy-olemassa [:paallystekerros 0 :let-hyppy?])) "Korostetaan loppuetäisyys")
@@ -986,10 +986,10 @@
     (is (true? (get-in paallystys-hyppy-olemassa [:paallystekerros 1 :aet-hyppy?])) "Korostetaan alkuetäisyys")
     (is (= (get-in paallystys-hyppy-olemassa [:paallystekerros 1 :hyppyjen-maara]) 1) "Hyppyjen määrä löytyy")
 
-    ;; Hyppy ylittää metrirajan, joten korostuksia ei tehdä 
-    (is (nil? (get-in paallystys-hyppy-ylittyy [:paallystekerros 0 :let-hyppy?])) "Loppuetäisyyttä ei korosteta")
-    (is (nil? (get-in paallystys-hyppy-ylittyy [:paallystekerros 0 :aet-hyppy?])) "Alkuetäisyyttä ei korosteta")
-    (is (= (get-in paallystys-hyppy-ylittyy [:paallystekerros 0 :hyppyjen-maara]) 0) "Hyppyjä ei ole")))
+    ;; Hyppyjä ei ole
+    (is (nil? (get-in paallystys-ei-hyppyja [:paallystekerros 0 :let-hyppy?])) "Loppuetäisyyttä ei korosteta")
+    (is (nil? (get-in paallystys-ei-hyppyja [:paallystekerros 0 :aet-hyppy?])) "Alkuetäisyyttä ei korosteta")
+    (is (= (get-in paallystys-ei-hyppyja [:paallystekerros 0 :hyppyjen-maara]) 0) "Hyppyjä ei ole")))
 
 (deftest tallenna-pot2-paallystysilmoitus-kohteen-alku-ja-loppupvm-muuttuvat
   (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
