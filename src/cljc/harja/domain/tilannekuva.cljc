@@ -46,6 +46,7 @@
 
   [auraus-ja-sohjonpoisto "auraus ja sohjonpoisto" "Auraus ja sohjonpoisto"]
   [suolaus "suolaus" "Suolaus"]
+  [sohjo-ojien-teko "sohjo-ojien-teko" "Sohjo-ojien teko"]
   [pistehiekoitus "pistehiekoitus" "Pistehiekoitus"]
   [linjahiekoitus "linjahiekoitus" "Linjahiekoitus"]
   [pinnan-tasaus "pinnan tasaus" "Pinnan tasaus"]
@@ -120,6 +121,7 @@
            lumivallien-madaltaminen
            liikenteen-varmistaminen-kelirikkokohteessa
            sulamisveden-haittojen-torjunta
+           sohjo-ojien-teko
            aurausviitoitus-ja-kinostimet
            lumensiirto
            paannejaan-poisto
