@@ -46,7 +46,7 @@ hakutiheys-historiakuva 1200000)
 (def valittu-urakka-tilannekuvaan-tullessa (atom nil))
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
-(defonce suodattimet
+(def suodattimet
   (atom
     {:yllapito {tk/paallystys false
                 tk/paikkaus false
@@ -102,6 +102,8 @@ hakutiheys-historiakuva 1200000)
             tk/palteen-poisto false
             tk/paallystetyn-tien-sorapientareen-taytto false
             tk/ojitus false
+            tk/reunapaalujen-uusiminen false
+            tk/roskien-keruu false
             tk/sorapientareen-taytto false
             tk/sorateiden-muokkaushoylays false
             tk/sorateiden-polynsidonta false

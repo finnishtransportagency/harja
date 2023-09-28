@@ -68,6 +68,8 @@
   [koneellinen-niitto "koneellinen niitto" "Koneellinen niitto"]
   [koneellinen-vesakonraivaus "koneellinen vesakonraivaus"
    "Koneellinen vesakonraivaus"]
+  [reunapaalujen-uusiminen "reunapaalujen uusiminen" "Reunapaalujen uusiminen"]
+  [roskien-keruu "roskien keruu" "Roskien keruu"]
   [sorateiden-muokkaushoylays "sorateiden muokkaushoylays"
    "Sorateiden muokkaushöyläys"]
   [sorateiden-polynsidonta "sorateiden polynsidonta" "Sorateiden pölynsidonta"]
@@ -139,6 +141,8 @@
           palteen-poisto
           paallystetyn-tien-sorapientareen-taytto
           ojitus
+          reunapaalujen-uusiminen
+          roskien-keruu
           muu]})
 
 (def yllapidon-reaaliaikaseurattavat

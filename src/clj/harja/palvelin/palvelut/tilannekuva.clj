@@ -393,9 +393,13 @@
                         haettavat
                         (q/hae-toimenpidekoodit db)
                         (map :id))]
+    (println "jere testaa::" (haettavat (union talvi kesa)))
+    (println "jere testaa::" koodit)
     (if (empty? koodit)
       nil
       koodit)))
+
+(q/hae-toimenpidekoodit (:db harja.palvelin.main/harja-jarjestelma) #{"roskien keruu"})
 
 (defn- hae-toteumien-reitit
   [db ch user {:keys [toleranssi alue alku loppu] :as tiedot} urakat]
@@ -635,6 +639,7 @@
    (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
    (let [haettavat-urakat (rajaa-urakat-hakuoikeudella db user tiedot)]
      (let [tiedot (assoc tiedot :toleranssi (geo/karkeistustoleranssi (:alue tiedot)))]
+       (println "jere testaa::" tiedot)
        (into {}
              (map (juxt identity (partial yrita-hakea-osio db user tiedot haettavat-urakat)))
              osiot)))))
