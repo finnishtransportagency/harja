@@ -59,6 +59,7 @@
   [paallystetyn-tien-sorapientareen-taytto
    "paallystetyn tien sorapientareen taytto"
    "Päällystetyn tien sorapientareen täyttö"]
+  [paallystetyn-tien-polynsidonta "paallystetyn tien polynsidonta" "Päällystetyn tien pölynsidonta"]
   [ojitus "ojitus" "Ojitus"]
   [sorapientareen-taytto "sorapientareen taytto" "Sorapientareen täyttö"]
   [lumivallien-madaltaminen "lumivallien madaltaminen" "Lumivallien madaltaminen"]
@@ -144,6 +145,7 @@
           palteen-poisto
           palteen-poisto-kaiteen-alta
           paallystetyn-tien-sorapientareen-taytto
+          paallystetyn-tien-polynsidonta
           ojitus
           reunapaalujen-uusiminen
           roskien-keruu

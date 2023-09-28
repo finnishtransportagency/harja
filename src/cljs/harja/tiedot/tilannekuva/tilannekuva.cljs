@@ -103,6 +103,7 @@ hakutiheys-historiakuva 1200000)
             tk/palteen-poisto false
             tk/palteen-poisto-kaiteen-alta false
             tk/paallystetyn-tien-sorapientareen-taytto false
+            tk/paallystetyn-tien-polynsidonta false
             tk/ojitus false
             tk/reunapaalujen-uusiminen false
             tk/roskien-keruu false
