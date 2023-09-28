@@ -46,7 +46,7 @@ hakutiheys-historiakuva 1200000)
 (def valittu-urakka-tilannekuvaan-tullessa (atom nil))
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
-(def suodattimet
+(def #_once suodattimet
   (atom
     {:yllapito {tk/paallystys false
                 tk/paikkaus false
@@ -88,6 +88,7 @@ hakutiheys-historiakuva 1200000)
              tk/aurausviitoitus-ja-kinostimet false
              tk/lumensiirto false
              tk/paannejaan-poisto false
+             tk/liikenteen-varmistaminen-kelirikkokohteessa false
              tk/muu false
              ;; Pinnan tasaus on mielestämme kesätoimenpide, mutta Anne
              ;; mailissaan pyysi, että pinnan tasaus tulee myös

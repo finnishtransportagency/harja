@@ -61,6 +61,7 @@
   [ojitus "ojitus" "Ojitus"]
   [sorapientareen-taytto "sorapientareen taytto" "Sorapientareen täyttö"]
   [lumivallien-madaltaminen "lumivallien madaltaminen" "Lumivallien madaltaminen"]
+  [liikenteen-varmistaminen-kelirikkokohteessa "liikenteen varmistaminen kelirikkokohteessa" "Liikenteen varmistaminen kelirikkokohteessa"]
   [sulamisveden-haittojen-torjunta "sulamisveden haittojen torjunta" "Sulamisveden haittojen torjunta"]
   [tiestotarkastus "tiestotarkastus" "Tiestötarkastus"]
   [kelintarkastus "kelintarkastus" "Kelintarkastus"]
@@ -115,6 +116,7 @@
            linjahiekoitus
            pinnan-tasaus
            lumivallien-madaltaminen
+           liikenteen-varmistaminen-kelirikkokohteessa
            sulamisveden-haittojen-torjunta
            aurausviitoitus-ja-kinostimet
            lumensiirto
