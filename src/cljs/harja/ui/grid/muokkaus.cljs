@@ -262,6 +262,7 @@
                :else
                [ei-muokattava-elementti (y/luokat
                                           "ei-muokattava"
+                                          (when solun-luokka-fn (solun-luokka-fn rivi))
                                           tasaus-luokka
                                           (grid-yleiset/tiivis-tyyli skeema))
                 fmt
