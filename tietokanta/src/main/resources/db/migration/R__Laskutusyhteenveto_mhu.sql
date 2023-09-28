@@ -45,7 +45,7 @@ DECLARE
                                 AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                                 AND lk.tehtavaryhma = tehtavaryhma_id
         LOOP
-            RAISE NOTICE 'Hoitovuoden päättäminen (tehtäväryhmä %), laskutettu :: summa: %', tehtavaryhma_id, hj_laskutettu_rivi.summa;
+            --RAISE NOTICE 'Hoitovuoden päättäminen (tehtäväryhmä %), laskutettu :: summa: %', tehtavaryhma_id, hj_laskutettu_rivi.summa;
             hj_laskutettu := hj_laskutettu + COALESCE(hj_laskutettu_rivi.summa, 0.0);
         END LOOP;
 
@@ -59,7 +59,7 @@ DECLARE
                                  AND l.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm
                                  AND lk.tehtavaryhma = tehtavaryhma_id
         LOOP
-            RAISE NOTICE 'Hoitovuoden päättäminen (tehtäväryhmä %) laskutetaan :: summa: %', tehtavaryhma_id, hj_laskutetaan_rivi.summa;
+            --RAISE NOTICE 'Hoitovuoden päättäminen (tehtäväryhmä %) laskutetaan :: summa: %', tehtavaryhma_id, hj_laskutetaan_rivi.summa;
             hj_laskutetaan := hj_laskutetaan + COALESCE(hj_laskutetaan_rivi.summa, 0.0);
         END LOOP;
     RETURN NEXT ARRAY [hj_laskutettu, hj_laskutetaan];
