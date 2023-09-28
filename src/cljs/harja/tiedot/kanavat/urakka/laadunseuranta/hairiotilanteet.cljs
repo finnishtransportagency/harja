@@ -37,6 +37,7 @@
 (defrecord MateriaalitHaettu [materiaalit])
 (defrecord MateriaalienHakuEpaonnistui [])
 ;; Muokkaukset
+(defrecord ValitseAjanTallennus [valittu?])
 (defrecord LisaaHairiotilanne [])
 (defrecord TyhjennaValittuHairiotilanne [])
 (defrecord AsetaHairiotilanteenTiedot [hairiotilanne])
@@ -59,11 +60,12 @@
 
 (defn esitaytetty-hairiotilanne []
   (let [kayttaja @istunto/kayttaja]
-    {::hairiotilanne/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
+    {::hairiotilanne/tallennuksen-aika? true
+     ::hairiotilanne/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
      ::hairiotilanne/kuittaaja {::kayttaja/id (:id kayttaja)
                                 ::kayttaja/etunimi (:etunimi kayttaja)
                                 ::kayttaja/sukunimi (:sukunimi kayttaja)}
-     ::hairiotilanne/havaintoaika (pvm/nyt)}))
+     ::hairiotilanne/havaintoaika (atom (pvm/nyt))}))
 
 (defn voi-tallentaa? [hairiotilanne]
   (and
@@ -74,6 +76,10 @@
 
 (defn tallennettava-hairiotilanne [hairiotilanne]
   (let [hairiotilanne (-> hairiotilanne
+                        ;; ;; Jos halutaan käyttää tallennushetken aikaa -> pvm/nyt
+                        (assoc ::hairiotilanne/havaintoaika (if (::hairiotilanne/tallennuksen-aika? hairiotilanne)
+                                           (pvm/nyt)
+                                           @(::hairiotilanne/havaintoaika hairiotilanne))) ;; Muulloin käytetään aikakentän aika-atomia
                           (select-keys [::hairiotilanne/id
                                         ::hairiotilanne/sopimus-id
                                         ::hairiotilanne/paikallinen-kaytto?
@@ -201,6 +207,10 @@
     (viesti/nayta! "Häiriötilanteiden haku epäonnistui!" :danger)
     (assoc app :hairiotilanteiden-haku-kaynnissa? false
                :hairiotilanteet []))
+  
+  ValitseAjanTallennus
+  (process-event [{valittu? :valittu?} app]
+    (assoc-in app [:valittu-hairiotilanne ::hairiotilanne/tallennuksen-aika?] (not valittu?)))
 
   LisaaHairiotilanne
   (process-event [_ app]
