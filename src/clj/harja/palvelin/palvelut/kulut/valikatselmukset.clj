@@ -162,14 +162,10 @@
   (let [urakka-id (::urakka/id tiedot)
         urakka (first (q-urakat/hae-urakka db urakka-id))
         hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi tiedot)
-        ;; Rakennetaan valittu hoitokausi
-        valittu-hoitokausi [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
-                            (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
         _ (do (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
                 kayttaja
                 urakka-id)
-              (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
-              #_ (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))
+              (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu))
         tiedot (select-keys tiedot (columns ::valikatselmus/tavoitehinnan-oikaisu))
         oikaisu-specql (merge tiedot {::urakka/id urakka-id
                                       ::muokkaustiedot/luoja-id (:id kayttaja)

@@ -21,7 +21,7 @@
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]))
 
 (defn- heita-virhe [viesti] (throw+ {:type "Error"
-                                    :virheet {:koodi "ERROR" :viesti viesti}}))
+                                     :virheet {:koodi "ERROR" :viesti viesti}}))
 
 (defn lupauksen-indeksi
   "Lupausbonukselle ja -sanktiolle lisätään indeksi urakan tiedoista, mikäli ne on MH-urakoita ja alkavat vuonna -19 tai -20"
