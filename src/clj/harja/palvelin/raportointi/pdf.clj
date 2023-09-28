@@ -341,13 +341,14 @@
     [:fo:table-header
      (when-let [rivi-ennen (:rivi-ennen optiot)]
        [:fo:table-row
-        (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
+        (for [{:keys [teksti sarakkeita tasaa tummenna-teksti?]} rivi-ennen]
           [:fo:table-cell {:border reunan-tyyli
                            :background-color raportin-tehostevari
                            :color "black"
                            :number-columns-spanned (or sarakkeita 1)
                            :text-align (tasaus tasaa)}
-           [:fo:block teksti]])])
+           [:fo:block 
+            (when tummenna-teksti? {:background-color valiotsikko-tumma-vari}) teksti]])])
 
      [:fo:table-row
       (map-indexed

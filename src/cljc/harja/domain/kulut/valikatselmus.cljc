@@ -2,6 +2,7 @@
   (:require
     [harja.domain.urakka :as urakka]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
+    [harja.pvm :as pvm]
     [clojure.spec.alpha]
     [harja.kyselyt.specql :as harja-specql]
     #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]]
@@ -54,13 +55,13 @@
     "hoitokauden-alkuvuosi" ::hoitokauden-alkuvuosi
     "poistettu" ::muokkaustiedot/poistettu?}])
 
-(def paatosten-tyypit
-  #{::tavoitehinnan-ylitys ::tavoitehinnan-alitus ::kattohinnan-ylitys ::lupausbonus ::lupaussanktio})
-
-(def luokat
-  #{"Tiestömuutokset" "Tehtävämuutokset" "Työmäärämuutokset" "Hoitoluokkamuutokset"
-    "Liikennejärjestelyt" "Bonukset ja sanktiot" "Alleviivatun fontin vaikutus tavoitehintaan"
-    "Materiaalit" "Muut"})
+(defn luokat [urakka]
+  (if (#{2019 2020} (pvm/vuosi (:alkupvm urakka)))
+    #{"Tiestömuutokset" "Tehtävämuutokset" "Työmäärämuutokset" "Hoitoluokkamuutokset"
+      "Liikennejärjestelyt" "Bonukset ja sanktiot" "Alleviivatun fontin vaikutus tavoitehintaan"
+      "Materiaalit" "Muut"}
+    #{"Tiestömuutokset" "Tehtävämuutokset" "Työmäärämuutokset" "Hoitoluokkamuutokset"
+      "Liikennejärjestelyt" "Bonukset ja sanktiot" "Materiaalit" "Muut"}))
 
 (def +tavoitepalkkio-kerroin+ 0.3)
 (def +urakoitsijan-osuus-ylityksesta+ 0.3)

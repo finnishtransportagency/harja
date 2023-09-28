@@ -1,3 +1,9 @@
--- Lisätään urakka_paatos tauluun linkitys kulu tauluun, jotta päätökset ja kulut saadaan poistettua/muokattua jos on tarvetta
-ALTER TABLE urakka_paatos
-    ADD COLUMN kulu_id INTEGER DEFAULT null;
+UPDATE tehtava
+SET yksikko            = 'tiem',
+    suunnitteluyksikko = 'tiem',
+    kasin_lisattava_maara = true,
+    "raportoi-tehtava?" = true,
+    hinnoittelu = '{kokonaishintainen}',
+    muokkaaja          = (select id from kayttaja where kayttajanimi = 'Integraatio'),
+    muokattu           = current_timestamp
+WHERE nimi = 'Sorateitä kaventava ojitus';
