@@ -62,6 +62,8 @@
                             (str "Kulutuskerros ei ole yhtenäinen (" hyppyjen-maara " hyppyä)")
                             (= hyppyjen-maara 0)
                             "Kulutuskerros on yhtenäinen (ei hyppyjä)"
+                            (nil? hyppyjen-maara)
+                            ""
                             :else
                             (str "Kulutuskerros ei ole yhtenäinen (" hyppyjen-maara " hyppy)")))
         custom-yla-panel (if-not kulutuskerros-muokattu?
@@ -70,9 +72,10 @@
                               [:div.kulutus-hyppy-ikoni-alert (ikonit/alert-svg)]
                               [:div hyppy-teksti]]
 
-                             [:div.kulutus-hyppy-info
-                              [:div.kulutus-hyppy-ikoni-ok (ikonit/harja-icon-status-completed)]
-                              [:div hyppy-teksti]])
+                             (when (some? hyppyjen-maara)
+                               [:div.kulutus-hyppy-info
+                                [:div.kulutus-hyppy-ikoni-ok (ikonit/harja-icon-status-completed)]
+                                [:div hyppy-teksti]]))
                            nil)
         voi-muokata? (not= :lukittu (:tila perustiedot))
         ohjauskahva (:paallystekerros ohjauskahvat)
