@@ -50,7 +50,7 @@
                                 (= "Rahavaraukset" otsikko))
                               [(rivi-taulukolle data kyseessa-kk-vali? "Äkilliset hoitotyöt" :akilliset_hoitokausi_yht :akilliset_val_aika_yht false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Vahinkojen korjaukset" :vahingot_hoitokausi_yht :vahingot_val_aika_yht false)
-                               (rivi-taulukolle data kyseessa-kk-vali? "Tilaajan rahavaraus (alihankintasopimusten maksuehtobonukset)" :alihankintabonus_hoitokausi_yht :alihankintabonus_val_aika_yht false)]
+                               (rivi-taulukolle data kyseessa-kk-vali? "Tilaajan rahavaraus (alihankintasopimusten maksuehtobonukset)" :alihank_bon_hoitokausi_yht :alihank_bon_val_aika_yht false)]
 
                               ;; Ennen 2022-10-01 alihankintabonukset ovat ihan tavallisia bonuksia ja löytyvät bonukset osiosta
                               (and (pvm/ennen? hk-alkupvm (pvm/->pvm "01.10.2022"))

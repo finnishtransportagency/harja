@@ -192,7 +192,7 @@ $$
         -- Erilliskustannukset - Alihankintabonus - lupausbonus - muubonus - asiakastyytyväisyysbonus
         INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, indeksin_nimi,
                                       lisatieto, luotu, luoja)
-            VALUES ('alihankintabonus', sopimus_id, urakka_id, tpi_yllapito, '2019-10-15', '2019-10-15', 1000, NULL,
+            VALUES ('alihankintabonus', sopimus_id, urakka_id, tpi, '2019-10-15', '2019-10-15', 1000, NULL,
                     'Alihankittu hyvin!', '2019-10-13', kayttaja_id);
 
         INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, indeksin_nimi,
