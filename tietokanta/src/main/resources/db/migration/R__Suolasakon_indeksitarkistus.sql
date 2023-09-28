@@ -29,7 +29,7 @@ BEGIN
   -- urakan alkuvuotta tarvitaan, jotta osataan laskea indeksitarkistus (tai olla laskematta)
   select extract(year from (select alkupvm from urakka where id = ur)) into urakan_alkuv;
   
-  raise notice 'alkuv %', urakan_alkuv;
+  --raise notice 'alkuv %', urakan_alkuv;
 
   -- Indeksi ei käytössä palauta summa ja korotettuna samana
   IF indeksinimi IS NULL THEN
@@ -38,7 +38,7 @@ BEGIN
 
   IF perusluku IS NULL
   THEN
-    RAISE NOTICE 'Suolasakon indeksitarkistusta ei voitu laskea koska urakan id=% peruslukua ei voitu laskea.', ur;
+    --RAISE NOTICE 'Suolasakon indeksitarkistusta ei voitu laskea koska urakan id=% peruslukua ei voitu laskea.', ur;
     RETURN (summa, NULL :: NUMERIC, NULL :: NUMERIC);
   END IF;
 

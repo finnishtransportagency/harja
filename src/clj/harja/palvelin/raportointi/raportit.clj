@@ -61,7 +61,6 @@
     :suorita      #'harja.palvelin.raportointi.raportit.ilmoitukset/suorita}
 
    {:nimi         :sanktioraportti-yllapito
-
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus       "Sakko- ja bonusraportti"
@@ -350,9 +349,10 @@
 
    {:nimi         :vastaanottotarkastusraportti
     :parametrit   [{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}]
-    :konteksti    #{"urakka"}
+    :konteksti    #{"hallintayksikko" "koko maa" "urakka"}
     :suorita      #'harja.palvelin.raportointi.raportit.vastaanottotarkastus/suorita
     :kuvaus       "Vastaanottotarkastusraportti"
+    :kuvaus-suuri-konteksti "Päällystysurakoiden yhteenveto"
     :urakkatyyppi #{:paallystys}}
 
    {:nimi         :vesivaylien-laskutusyhteenveto

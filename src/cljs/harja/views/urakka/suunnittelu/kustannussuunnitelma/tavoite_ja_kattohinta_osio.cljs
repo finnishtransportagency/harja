@@ -71,7 +71,6 @@
             :data-cy "manuaalinen-kattohinta-grid"
             :piilota-toiminnot? true
             :muokkauspaneeli? false
-            :ulkoinen-validointi? false
             :virheet t/kattohinta-virheet
             :virheet-dataan? true
             :muutos #(e! (t/->PaivitaKattohintaGrid))

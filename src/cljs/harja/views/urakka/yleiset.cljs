@@ -111,10 +111,10 @@
      :voi-poistaa? (constantly false)
      :tunniste :vuosi
      :piilota-toiminnot? true}
-    [{:otsikko "Vuosi" :nimi :vuosi :tyyppi :positiivinen-numero :muokattava? (constantly false)}
-     {:otsikko "Tammikuu - Huhtikuu" :nimi :ensimmainen-vuosikolmannes :tyyppi :positiivinen-numero}
-     {:otsikko "Toukokuu - Elokuu" :nimi :toinen-vuosikolmannes :tyyppi :positiivinen-numero}
-     {:otsikko "Syyskuu - Joulukuu" :nimi :kolmas-vuosikolmannes :tyyppi :positiivinen-numero}]
+    [{:otsikko "Vuosi" :nimi :vuosi :tyyppi :positiivinen-numero :muokattava? (constantly false) :kokonaisluku? true}
+     {:otsikko "Tammikuu - Huhtikuu" :nimi :ensimmainen-vuosikolmannes :tyyppi :positiivinen-numero :kokonaisluku? true}
+     {:otsikko "Toukokuu - Elokuu" :nimi :toinen-vuosikolmannes :tyyppi :positiivinen-numero :kokonaisluku? true}
+     {:otsikko "Syyskuu - Joulukuu" :nimi :kolmas-vuosikolmannes :tyyppi :positiivinen-numero :kokonaisluku? true}]
     tyotunnit]])
 
 (defn urakan-tyotunnit [{:keys [id alkupvm loppupvm]}]

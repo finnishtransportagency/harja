@@ -143,6 +143,8 @@ jobs:
     permissions:
       contents: read
       packages: read
+      # Tarvitaan test-reportin julkaisuun PR:ssä
+      checks: write
 
     steps:
       - name: Checkout code
@@ -160,7 +162,14 @@ jobs:
         uses: ./.github/actions/setup-clojure-env
 
       - name: Run backend tests
-        run: lein test
+        run: lein test2junit
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
+        if: always()
+        with:
+          report_paths: 'test2junit/xml/*.xml'
+          check_name: 'Test Report: Backend'
 
   basic-tests:
     name: "Frontti- ja hitaat testit"
@@ -173,6 +182,8 @@ jobs:
       contents: read
       # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
       packages: read
+      # Tarvitaan test-reportin julkaisuun PR:ssä
+      checks: write
 
     steps:
       - name: Checkout code
@@ -190,7 +201,14 @@ jobs:
         uses: ./.github/actions/setup-clojure-env
 
       - name: run slow tests
-        run: lein test :hidas
+        run: lein test2junit :hidas
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
+        if: always()
+        with:
+          report_paths: 'test2junit/xml/*.xml'
+          check_name: 'Test Report: Slow'
 
       - name: Install PhantomJS
         env:
@@ -221,6 +239,8 @@ jobs:
     permissions:
       contents: read
       packages: read
+      # Tarvitaan test-reportin julkaisuun PR:ssä
+      checks: write
 
     steps:
       - name: Checkout code
@@ -246,7 +266,14 @@ jobs:
         uses: ./.github/actions/setup-clojure-env
 
       - name: Run integration tests
-        run: lein test :integraatio
+        run: lein test2junit :integraatio
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
+        if: always()
+        with:
+          report_paths: 'test2junit/xml/*.xml'
+          check_name: 'Test Report: Integration'
 
   e2e-tests:
     name: "e2e-testit (Cypress)"
@@ -372,7 +399,7 @@ jobs:
         if: always()
         with:
           report_paths: 'cypress/test-results/*.xml'
-          check_name: 'Cypress Test Report'
+          check_name: 'Test Report: Cypress'
 
       # Mikäli testit epäonnistuvat, tallenna cypress screenshotit ja videot artifakteina
       - uses: actions/upload-artifact@v3

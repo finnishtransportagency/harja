@@ -105,7 +105,7 @@
                              [:span.integraatioloki-varoitus (ikonit/circle-arrow-left) " Ulos"])}
             {:otsikko "Osoite" :nimi :osoite :leveys 30}
             {:otsikko "Parametrit" :nimi :parametrit :leveys 20 :tyyppi :komponentti
-             :komponentti #(fmt/leikkaa-merkkijono 50 (kartta-merkkijonoksi (:parametrit %)))}
+             :komponentti #(fmt/leikkaa-merkkijono 75 (kartta-merkkijonoksi (:parametrit %)))}
             {:otsikko "Otsikko" :nimi :otsikko :leveys 30 :tyyppi :komponentti
              :komponentti #(nayta-otsikko (:otsikko %))}
             {:otsikko "Siirtotyyppi" :nimi :siirtotyyppi :leveys 20}

@@ -267,12 +267,17 @@
 
     (if-not (= urakkatyyppi :teiden-hoito)
       (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei ole sopimuksella tehtävä- ja määräluettelon tietoja."))))
-    (let [maara (bigdec maara)
+    (let [maara (when maara (bigdec maara))
           urakkatiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
           alkuvuosi (-> urakkatiedot :alkupvm pvm/vuosi)
           loppuvuosi (-> urakkatiedot :loppupvm pvm/vuosi)
           sopimuksen-tehtavamaarat (mapv (fn [hoitokauden-alkuvuosi]
-                                           (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitokauden-alkuvuosi))
+                                           (if maara
+                                             (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitokauden-alkuvuosi)
+                                             (when (and (int? urakka-id) (int? tehtava-id) (int? hoitokauden-alkuvuosi))
+                                               (q/poista-sopimuksen-tehtavamaara! db {:urakka-id urakka-id
+                                                                                      :tehtava-id tehtava-id
+                                                                                      :vuosi hoitokauden-alkuvuosi}))))
                                      (if-not samat-maarat-vuosittain?
                                        [hoitovuosi]
                                        (range alkuvuosi loppuvuosi)))]
