@@ -1,7 +1,7 @@
 import hudson.scm.ChangeLogSet
 import hudson.plugins.git.GitChangeSet
 
-def hoidaMahdollisenErrorinKorjaantuminen(stageNimi, viesti = 'Pipeline korjaantui') {
+def hoidaMahdollisenErrorinKorjaantuminen(stageNimi, viesti = 'Github Pipeline korjaantui') {
     // Jos edellinen buildi epäonnistui ja tämä buildi korjasi sen, niin lähetetään viesti Slackiin
     if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == stageNimi) {
         slackSend([color  : 'good',
@@ -9,7 +9,7 @@ def hoidaMahdollisenErrorinKorjaantuminen(stageNimi, viesti = 'Pipeline korjaant
     }
 }
 
-def hoidaErrori(eViesti, stageNimi, viesti = 'Pipelinessä tapahtui poikkeus') {
+def hoidaErrori(eViesti, stageNimi, viesti = 'Github Pipelinessä tapahtui poikkeus') {
     env.FAILED_STAGE = stageNimi
     def virheKoodi
     try {
@@ -113,18 +113,18 @@ def etsiKaytettavaJar(valitetaankoTestiBranchista, valitetaankoEpaonnistuneestaA
 def ajaTestikannanLuonti (stagenNimi) {
     try {
         sh([script: "sh Jenkins/skriptit/testitietokanta.sh"])
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu Jenkinsin testikannan luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Github Pipeline ei enää epäonnistu Jenkinsin testikannan luomiseen")
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline epäonnistui Jenkinsin testikannan luomiseen")
+        hoidaErrori(e.getMessage(), stagenNimi, "Github Pipeline epäonnistui Jenkinsin testikannan luomiseen")
     }
 }
 
 def ajaTestikannanLuontiTestStg (stagenNimi) {
     try {
         sh([script: "sh Jenkins/skriptit/testitietokanta_test_stg.sh"])
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu Jenkinsin testikannan luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Github Pipeline ei enää epäonnistu Jenkinsin testikannan luomiseen")
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline epäonnistui Jenkinsin testikannan luomiseen")
+        hoidaErrori(e.getMessage(), stagenNimi, "Github Pipeline epäonnistui Jenkinsin testikannan luomiseen")
     }
 }
 
@@ -136,7 +136,7 @@ def ajaJarJaTestit (stagenNimi) {
         sh([script: "lein tuotanto"])
         // Säilötään se jarri
         archiveArtifacts([artifacts: 'target/harja-*-standalone.jar, doc/*'])
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu testien ajamiseen/JAR:in luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Github Pipeline ei enää epäonnistu testien ajamiseen/JAR:in luomiseen")
     } catch (e) {
         String muutokset = changeSets2String()
         mail([from   : params.LAHETTAJA_SPOSTI,
@@ -144,9 +144,9 @@ def ajaJarJaTestit (stagenNimi) {
               to     : params.VASTAANOTTAJAT_SPOSTI,
               cc     : '',
               bcc    : '',
-              subject: "Pipelinen ajaminen epäonnistui ${env.BUILD_NUMBER}",
+              subject: "Github Pipelinen ajaminen epäonnistui ${env.BUILD_NUMBER}",
               body   : "Build: ${env.BUILD_URL}\n" + "Job name: ${env.JOB_BASE_NAME}" + muutokset])
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline epäonnistui testien ajamiseen/JAR:in luomiseen")
+        hoidaErrori(e.getMessage(), stagenNimi, "Github Pipeline epäonnistui testien ajamiseen/JAR:in luomiseen")
     } finally {
         // Testitulokset
         junit([testResults: 'test2junit/xml/*.xml'])
@@ -173,9 +173,9 @@ def ajaTestiserverinKanta(stagenNimi) {
                         " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu testiserverin kannan luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Github Pipeline ei enää epäonnistu testiserverin kannan luomiseen")
     } catch (e) {
-        hoidaErrori(stagenNimi, "Pipeline epäonnistui testiserverin kannan luomiseen: " + e.getMessage())
+        hoidaErrori(stagenNimi, "Github Pipeline epäonnistui testiserverin kannan luomiseen: " + e.getMessage())
     }
 }
 
@@ -189,9 +189,9 @@ def ajaTestiserverinApp(stagenNimi, buildNumber) {
                             jenkins_build_number: buildNumber,
                             jenkins_job_name: env.JOB_BASE_NAME
                         ]])
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu testiserverin appiksen luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Github Pipeline ei enää epäonnistu testiserverin appiksen luomiseen")
     } catch (e) {
-        hoidaErrori(stagenNimi, "Pipeline epäonnistui testiserverin appiksen luomiseen")
+        hoidaErrori(stagenNimi, "Github Pipeline epäonnistui testiserverin appiksen luomiseen")
     }
 }
 
@@ -204,11 +204,11 @@ def ajaE2ETestit(stagenNimi) {
                 }
             }
         }
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu E2E testeihin")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Github Pipeline ei enää epäonnistu E2E testeihin")
         env.E2E_ONNISTUI = true
     } catch (e) {
         env.E2E_ONNISTUI = false
-        hoidaErrori(stagenNimi, "Pipeline epäonnistui E2E testeihin")
+        hoidaErrori(stagenNimi, "Github Pipeline epäonnistui E2E testeihin")
     } finally {
         junit([testResults: 'test2junit/xml/*.xml'])
     }
@@ -233,9 +233,9 @@ def ajaStagingserverinKanta(stagenNimi) {
                         " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu stagingserverin kannan luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Github Pipeline ei enää epäonnistu stagingserverin kannan luomiseen")
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline epäonnistui stagingserverin kannan luomiseen: " + e.getMessage())
+        hoidaErrori(e.getMessage(), stagenNimi, "Github Pipeline epäonnistui stagingserverin kannan luomiseen: " + e.getMessage())
     }
 }
 
@@ -249,9 +249,9 @@ def ajaStagingserverinApp(stagenNimi, buildNumber) {
                                  jenkins_build_number: buildNumber,
                                  jenkins_job_name: env.JOB_BASE_NAME
                          ]])
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu stagingserverin appiksen luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Github Pipeline ei enää epäonnistu stagingserverin appiksen luomiseen")
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline epäonnistui stagingserverin appiksen luomiseen")
+        hoidaErrori(e.getMessage(), stagenNimi, "Github Pipeline epäonnistui stagingserverin appiksen luomiseen")
     }
 }
 
@@ -274,16 +274,16 @@ def ajaTuotantoserverinKanta(stagenNimi) {
                         " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu tuotantoserverin kannan luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Github Pipeline ei enää epäonnistu tuotantoserverin kannan luomiseen")
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline epäonnistui tuotantoserverin kannan luomiseen: " + e.getMessage())
+        hoidaErrori(e.getMessage(), stagenNimi, "Github Pipeline epäonnistui tuotantoserverin kannan luomiseen: " + e.getMessage())
     }
 }
 
 def ajaTuotantoerverinApp(stagenNimi, buildNumber) {
     try {
         slackSend([color  : 'good',
-                   message: 'Aloitetaan tuotanto deployment'])
+                   message: 'Aloitetaan tuotanto deployment (gh)'])
         ansiblePlaybook([installation: 'ansible 2.7',
                          inventory   : 'environments/production/inventory',
                          playbook    : 'playbooks/production.yml',
@@ -292,11 +292,11 @@ def ajaTuotantoerverinApp(stagenNimi, buildNumber) {
                                  jenkins_build_number: buildNumber,
                                  jenkins_job_name: env.JOB_BASE_NAME
                          ]])
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu tuotantoserverin appiksen luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Github Pipeline ei enää epäonnistu tuotantoserverin appiksen luomiseen")
         slackSend([color  : 'good',
-                   message: 'Tuotanto deployment onnistui'])
+                   message: 'Tuotanto deployment onnistui (gh)'])
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline epäonnistui tuotantoserverin appiksen luomiseen")
+        hoidaErrori(e.getMessage(), stagenNimi, "Github Pipeline epäonnistui tuotantoserverin appiksen luomiseen")
     }
 }
 
@@ -310,7 +310,7 @@ def checkoutHarja(haara) {
                      branches                         : [[name: haara]],
                      doGenerateSubmoduleConfigurations: false,
                      extensions                       : [[$class: 'CheckoutOption', timeout: 15],
-                                                         [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: true, timeout: 15]],
+                                                         [$class: 'CloneOption', depth: 1, noTags: false, reference: '', shallow: true, timeout: 15]],
                      submoduleCfg                     : [],
                      userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
 }
@@ -322,7 +322,7 @@ def checkoutCI() {
                      doGenerateSubmoduleConfigurations: false,
                      extensions                       : [],
                      submoduleCfg                     : [],
-                     userRemoteConfigs                : [[url: params.HARJA_CI_URL]]]])
+                     userRemoteConfigs                : [[credentialsId: 'harja-jenkins-ssh-id-rsa', url: params.HARJA_CI_URL]]]])
 }
 
 def checkoutE2E() {
@@ -332,6 +332,6 @@ def checkoutE2E() {
                      doGenerateSubmoduleConfigurations: false,
                      extensions                       : [],
                      submoduleCfg                     : [],
-                     userRemoteConfigs                : [[url: params.HARJA_E2E_URL]]]])
+                     userRemoteConfigs                : [[credentialsId: 'solita-internal-harja-e2e_id_rsa.pub', url: params.HARJA_E2E_URL]]]])
 }
 return this
