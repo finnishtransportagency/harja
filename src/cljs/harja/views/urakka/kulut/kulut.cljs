@@ -751,28 +751,29 @@
                         (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn
                           :vuoden-paatos-valittu? (constantly false)))}]
         [:label {:for "kulu-lisatyo"} "Lisätyö"]]
-       [:div.flex-row
-        [:input#kulu-hoitovuoden-paatos.vayla-radio
-         {:type :radio
-          :name "kulu-group"
-          :default-checked vuoden-paatos-valittu?
-          :disabled (or (not= 0 haetaan) kulu-lukittu?)
-          :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
-                                                       (fn [_]
-                                                         (let [tavoitepalkkio-tr (avain->tehtavaryhma tehtavaryhmat :tavoitepalkkio)]
-                                                           [(-> tila/kulut-kohdistus-default
-                                                              (assoc :tehtavaryhma (:id tavoitepalkkio-tr)
-                                                                     :toimenpideinstanssi (:toimenpideinstanssi tavoitepalkkio-tr)))])))
-                            jalkiprosessointi-fn (when (.. % -target -checked)
-                                                   (fn [lomake]
-                                                     (vary-meta
-                                                       lomake
-                                                       maaramitallisen-validoinnit
-                                                       {:lomake lomake
-                                                        :indeksi 0})))]
-                        (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn
-                          :vuoden-paatos-valittu? (constantly true)))}]
-        [:label {:for "kulu-hoitovuoden-paatos"} "Hoitovuoden päätös"]]]]
+       (when vuoden-paatos-valittu?
+         [:div.flex-row
+          [:input#kulu-hoitovuoden-paatos.vayla-radio
+           {:type :radio
+            :name "kulu-group"
+            :default-checked vuoden-paatos-valittu?
+            :disabled true
+            :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
+                                                         (fn [_]
+                                                           (let [tavoitepalkkio-tr (avain->tehtavaryhma tehtavaryhmat :tavoitepalkkio)]
+                                                             [(-> tila/kulut-kohdistus-default
+                                                                (assoc :tehtavaryhma (:id tavoitepalkkio-tr)
+                                                                  :toimenpideinstanssi (:toimenpideinstanssi tavoitepalkkio-tr)))])))
+                              jalkiprosessointi-fn (when (.. % -target -checked)
+                                                     (fn [lomake]
+                                                       (vary-meta
+                                                         lomake
+                                                         maaramitallisen-validoinnit
+                                                         {:lomake lomake
+                                                          :indeksi 0})))]
+                          (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn
+                            :vuoden-paatos-valittu? (constantly true)))}]
+          [:label {:for "kulu-hoitovuoden-paatos"} "Hoitovuoden päätös"]])]]
      (when vuoden-paatos-valittu?
        [vuoden-paatos-checkboxit opts tila])
      (into [:div.row] (map-indexed
