@@ -461,6 +461,7 @@
       (try
         (data-xml/indent-str parsittu-xml)
         (catch Exception e
-          (log/error "Error: " e)
+          ;; Otetaan logitus pois, koska sitä ei tarvita
+          ;(log/error "Error: " e)
           ;; Jos prettyprint hajoaa mihin tahansa, niin palauta muokkaamaton xml
           xml)))))
