@@ -113,6 +113,7 @@
                                                                                                                                 (fn [harja-jarjestelma]
                                                                                                                                   ;(log/debug "harjajarjestelman-restart")
                                                                                                                                   (try (let [uudelleen-kaynnistetty-jarjestelma (jarjestelma/system-restart harja-jarjestelma payload)]
+                                                                                                                                         (log/info "jere-debug:: t.p.k.uudelleen-kaynnistaja-test:116")
                                                                                                                                          (jms/aloita-jms (:itmf uudelleen-kaynnistetty-jarjestelma))
                                                                                                                                          (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma (* 1000 10))
                                                                                                                                            (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo)

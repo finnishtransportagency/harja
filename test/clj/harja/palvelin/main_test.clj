@@ -15,7 +15,8 @@
             [clojure.string :as str]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [harja.palvelin.integraatiot.jms :as jms])
+            [harja.palvelin.integraatiot.jms :as jms]
+            [taoensso.timbre :as log])
   (:import (java.io File)
            (clojure.lang ExceptionInfo)))
 
@@ -271,6 +272,7 @@
            (catch Throwable t
              (is false (str "Komponentin käynnistäminen epäonnistui!\n"
                             "Viesti: " (.getMessage t)))))
+      (log/info "jere-debug:: h.p.main-test:275")
       (jms/aloita-jms (:itmf @jarjestelma))
       (doseq [komponentti (sort (dep/topo-comparator (component/dependency-graph @jarjestelma komponentit)) komponentit)]
         (cond

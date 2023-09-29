@@ -113,6 +113,7 @@
                              ;; Ennen kuin aloitetaan yhteys, varmistetaan, että testikomponentin thread on päässyt loppuun
                              (let [testijonot (<! (-> jarjestelma :testikomponentti :testijonot))]
                                (swap! (-> jarjestelma :testikomponentti :tila) merge testijonot))
+                            (log/info "jere-debug:: h.p.k.jms-test:116")
                              (<! (jms/aloita-jms (:itmf jarjestelma))))]
     (testit))
   (alter-var-root #'jarjestelma component/stop)
@@ -210,6 +211,7 @@
                                                   (log/error "Virhe 'toinen-jarjestelma' käynnistyksessä:" e))))
                                             (timeout 10000)])
             itmf-yhteys (when toinen-jarjestelma
+                          (log/info "jere-debug:: h.p.k.jms-test:214")
                            (jms/aloita-jms (:itmf toinen-jarjestelma)))]
         (is (not (nil? toinen-jarjestelma)) "Järjestelmä ei lähde käyntiin, jos ITMF ei käynnisty")
         (is (nil? (first (alts!! [itmf-yhteys (timeout 1000)]))) "ITMF yhteyden aloittaminen blokkaa vaikka yhteys ei ole käytössä")

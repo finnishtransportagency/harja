@@ -1502,6 +1502,7 @@
   (when *aloitettavat-jmst*
     (let [jms-kaynnistaminen! (fn []
                                 (when (contains? *aloitettavat-jmst* "itmf")
+                                  (log/info "jere-debug:: h.testi:1505")
                                   (<!! (jms/aloita-jms (:itmf jarjestelma))))
                                 (when *jms-kaynnistetty-fn*
                                   (*jms-kaynnistetty-fn*)))]
@@ -1567,6 +1568,7 @@
      ;; aloita-sonja palauttaa kanavan.
      (binding [*lisattavat-kuuntelijat* (chan)]
        (let [kuuntelijoiden-lopettajat# (atom [])]
+         (log/info "jere-debug:: h.testi:1571")
          (jms-kasittely kuuntelijoiden-lopettajat#)
          (testit#)
          (when (not (empty? @kuuntelijoiden-lopettajat#))
