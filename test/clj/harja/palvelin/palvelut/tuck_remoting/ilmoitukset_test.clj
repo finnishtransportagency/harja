@@ -11,6 +11,7 @@
     [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
     [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
     [harja.palvelin.komponentit.itmf :as itmf]
+    [taoensso.timbre :as log]
     [tuck.remoting :as tr]
     [harja.palvelin.komponentit.tuck-remoting :as tr-komponentti]
     [harja.palvelin.palvelut.tuck-remoting.ilmoitukset :as sut]
@@ -121,13 +122,18 @@
         (lisaa-kuuntelijoita! {"itmf" {tloik-tyokalut/+tloik-ilmoituskuittausjono+ #(swap! kuittausviestit-tloikkiin conj (.getText %))}})
 
         (async/<!! (async/timeout jms-timeout))
-        (jms/laheta (:itmf jarjestelma) tloik-tyokalut/+tloik-ilmoitusviestijono+ (tloik-tyokalut/testi-ilmoitus-sanoma))
+        (let [jms-viesti-id
+              (jms/laheta (:itmf jarjestelma) tloik-tyokalut/+tloik-ilmoitusviestijono+ (tloik-tyokalut/testi-ilmoitus-sanoma))]
+          (log/info "Lähetettiin viesti, id " (pr-str jms-viesti-id)))
+
 
         ;; Odotellaan, että ilmoitus saadaan käsiteltyä ja kuitattua
         (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit-tloikkiin)) "Kuittaus on vastaanotettu." itmf-kuittaus-timeout)
 
         ;; Odotetaan vastausta ws-ilmoitusten omalta ilmoitus-kuuntelijalta
-        (odota-ehdon-tayttymista #(seq (tr-tyokalut/ws-vastaus :asiakas-1)) "Tuck-remotingilta saatiin vastaus" ws-vastaus-timeout)
+        (odota-ehdon-tayttymista #(do
+                                    (log/info "ws-client-yhteys-vastaukset-atom" @tr-tyokalut/ws-client-yhteys-vastaukset-atom)
+                                    (seq (tr-tyokalut/ws-vastaus :asiakas-1))) "Tuck-remotingilta saatiin vastaus" ws-vastaus-timeout)
 
         ;; Testataan tuliko ws-ilmoituksista Ilmoitus-eventin mukana oikea vastaanotetun ilmoituksen ilmoitus-id
         (is (= "harja.tuck-remoting.ilmoitukset-eventit.Ilmoitus"
