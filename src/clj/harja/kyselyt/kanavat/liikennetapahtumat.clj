@@ -45,7 +45,7 @@
                  #(when (urakka-idt (::ur/id %)) %)
                  urakat))))
 
-(defn- suodata-liikennetapahtuma-toimenpidetyypilla [tiedot tapahtumat]
+(defn- suodata-liikennetapahtuma-toimenpidetyypillä [tiedot tapahtumat]
   (filter #(let [toimenpidetyypit (::toiminto/toimenpiteet tiedot)]
              (if (empty? toimenpidetyypit)
                true
@@ -67,7 +67,7 @@
 (defn- hae-liikennetapahtumat* [tiedot tapahtumat urakkatiedot-fn urakka-idt]
   (->>
     tapahtumat
-    (suodata-liikennetapahtuma-toimenpidetyypilla tiedot)
+    (suodata-liikennetapahtuma-toimenpidetyypillä tiedot)
     (suodata-liikennetapahtuma-aluksen-nimella tiedot)
     (liita-kohteen-urakkatiedot urakkatiedot-fn)
     (map (partial urakat-idlla urakka-idt))
