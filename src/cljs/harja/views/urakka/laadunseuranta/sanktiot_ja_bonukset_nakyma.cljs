@@ -141,11 +141,11 @@
    [:div
     [valinnat/urakkavalinnat {:urakka valittu-urakka}
        ^{:key "urakkavalinnat"}
-       [urakka-valinnat/urakan-hoitokausi-ja-kuukausi valittu-urakka {:kuukausi-otsikko "Käsittelykuukausi"}]]]
+     [urakka-valinnat/urakan-hoitokausi valittu-urakka]]]
 
-   [:div {:style {"flex-grow" 2}}
+   [:div {:style {:flex-grow 2}}
     [lajisuodatin-valinnat lajisuodattimet]]
-   [:div {:style {"flex-grow" 1}}
+   [:div {:style {:flex-grow 1}}
     (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                     (:id valittu-urakka))]
       (yleiset/wrap-if
@@ -154,7 +154,7 @@
          (oikeudet/oikeuden-puute-kuvaus :kirjoitus
            oikeudet/urakat-laadunseuranta-sanktiot)]
         ^{:key "Lisää uusi"}
-        [:div.lisaa-nappi
+        [:div.lisaa-nappi {:style {:float "right"}}
          [napit/uusi "Lisää uusi"
           #(do
              (reset! sivupaneeli-auki?-atom true)
@@ -205,6 +205,13 @@
          [:br]
          (str "Päätöksen selitys: " perustelu)]))))
 
+(defn fmt-laskutuskuukausi
+  "Muokataan päivämäärästä -> Syyskuu 2023 (3. hoitovuosi) tyyppinen string"
+  [laskutuskuukausi urakan-alkupaiva]
+  (let [kuukausi-vuosi (pvm/koko-kuukausi-ja-vuosi laskutuskuukausi true)
+        hoitovuoden-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupaiva laskutuskuukausi)]
+    (str kuukausi-vuosi " (" hoitovuoden-nro ". hoitokausi)")))
+
 (defn sanktiot-ja-bonukset-listaus
   [sivupaneeli-auki?-atom valittu-urakka]
   (let [;; TODO: Onko tämä käytännössä sama asia kuin alempi "yllapitokohdeurakka?". Ylläpitourakakka?:ssa on mukana lisäksi :valaistus-urakkatyypi
@@ -218,6 +225,7 @@
                    reverse)
         hoitokauden-alku (first @tiedot-urakka/valittu-hoitokausi)
         hoitokauden-loppu (second @tiedot-urakka/valittu-hoitokausi)
+        urakan-alkupaiva (:alkupvm @nav/valittu-urakka)
         urakka-id (when valittu-urakka (:id valittu-urakka))
         urakka-nimi (when valittu-urakka (:nimi valittu-urakka))]
 
@@ -266,12 +274,13 @@
        :rivi-jalkeen-fn #(let [yhteensa-summat (reduce + 0 (map :summa %))
                                yhteensa-indeksit (reduce + 0 (map :indeksikorjaus %))]
                            [{:teksti "Yht." :luokka "lihavoitu"}
-                            {:teksti (str (count %) " kpl") :sarakkeita 4 :luokka "lihavoitu"}
+                            {:teksti (str (count %) " kpl") :sarakkeita 5 :luokka "lihavoitu"}
                             {:teksti (str (fmt/euro-opt false yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}
                             {:teksti (str (fmt/euro-opt false yhteensa-indeksit))
                              :tasaa :oikea :luokka "lihavoitu"}])}
-      [{:otsikko "Käsitelty" :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.5}
-       {:otsikko "Laji" :nimi :laji :hae :laji :leveys 3 :fmt sanktio-domain/sanktiolaji->teksti}
+      [{:otsikko "Käsitelty" :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.3}
+       {:otsikko "Laskutuskuukausi" :nimi :perintapvm :fmt #(fmt-laskutuskuukausi % urakan-alkupaiva) :leveys 1.5}
+       {:otsikko "Laji" :nimi :laji :hae :laji :leveys 2.5 :fmt sanktio-domain/sanktiolaji->teksti}
        (when yllapitokohdeurakka?
          {:otsikko "Kohde" :nimi :kohde :leveys 2
           :hae (fn [rivi]
@@ -283,19 +292,19 @@
          {:otsikko "Kuvaus" :nimi :vakiofraasi
           :hae #(sanktio-domain/yllapidon-sanktiofraasin-nimi (:vakiofraasi %)) :leveys 3}
          {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi)
-          :leveys 3 :fmt #(cond
+          :leveys 2.5 :fmt #(cond
                             (and % (= "Ei tarvita sanktiotyyppiä" %)) "–"
                             (and % (not= "Ei tarvita sanktiotyyppiä" %)) %
                             :else "–")})
        (when (not yllapitourakka?)
          {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
           :tyyppi :komponentti :komponentti sanktion-tai-bonuksen-kuvaus :leveys 3})
-       {:otsikko "Perustelu" :nimi :perustelu :leveys 3.5
+       {:otsikko "Perustelu" :nimi :perustelu :leveys 3
         :tyyppi :komponentti :komponentti sanktion-tai-bonuksen-perustelu}
-       {:otsikko "Määrä (€)" :nimi :summa :leveys 1.5 :tyyppi :numero :tasaa :oikea
+       {:otsikko "Määrä (€)" :nimi :summa :leveys 1.2 :tyyppi :numero :tasaa :oikea
         :hae #(or (fmt/euro-opt false (:summa %))
                 "Muistutus")}
-       {:otsikko "Indeksi (€)" :nimi :indeksikorjaus :fmt #(fmt/euro-opt false %) :tasaa :oikea :tyyppi :numero :leveys 1.5}]
+       {:otsikko "Indeksi (€)" :nimi :indeksikorjaus :fmt #(fmt/euro-opt false %) :tasaa :oikea :tyyppi :numero :leveys 1.2}]
       sanktiot]
      (when yllapitourakka?
        (yleiset/vihje "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."))]))
