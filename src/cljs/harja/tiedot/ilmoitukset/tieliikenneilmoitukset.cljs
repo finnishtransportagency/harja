@@ -58,6 +58,20 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 (def aanimerkki-uusista-ilmoituksista? (local-storage (atom true) :aanimerkki-ilmoituksista))
 (def ws-kuuntelija-ominaisuus? (local-storage (atom false) :ws-kuuntelija-ominaisuus))
 
+(def oletus-valinnat {:tyypit                               +ilmoitustyypit+
+                      :tilat                                (into #{} tila-filtterit)
+                      :hakuehto                             ""
+                      :selite                               [nil ""]
+                      :vain-myohassa?                       false
+                      :aloituskuittauksen-ajankohta         :kaikki
+                      :ilmoittaja-nimi                      ""
+                      :ilmoittaja-puhelin                   ""
+                      :valitetty-urakkaan-vakioaikavali             (second aikavalit)
+                      :toimenpiteet-aloitettu-vakioaikavali (first toimenpiteiden-aikavalit)
+                      :valitetty-urakkaan-alkuaika                  (pvm/tuntia-sitten 12)
+                      :valitetty-urakkaan-loppuaika                 (pvm/nyt)})
+(def oletus-valinnat? (atom true))
+
 (defonce ilmoitukset
   (atom {:ilmoitusnakymassa?            false
          :edellinen-valittu-ilmoitus-id nil
@@ -67,18 +81,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
          :ilmoitushaku-id               nil ;; ilmoitushaun timeout
          :taustahaku?                   false ;; true jos haku tehdään taustapollauksena (ei käyttäjän syötteestä)
          :ilmoitukset                   nil ;; haetut ilmoitukset
-         :valinnat                      {:tyypit                               +ilmoitustyypit+
-                                         :tilat                                (into #{} tila-filtterit)
-                                         :hakuehto                             ""
-                                         :selite                               [nil ""]
-                                         :vain-myohassa?                       false
-                                         :aloituskuittauksen-ajankohta         :kaikki
-                                         :ilmoittaja-nimi                      ""
-                                         :ilmoittaja-puhelin                   ""
-                                         :valitetty-urakkaan-vakioaikavali             (second aikavalit)
-                                         :toimenpiteet-aloitettu-vakioaikavali (first toimenpiteiden-aikavalit)
-                                         :valitetty-urakkaan-alkuaika                  (pvm/tuntia-sitten 12)
-                                         :valitetty-urakkaan-loppuaika                 (pvm/nyt)}
+         :valinnat                      oletus-valinnat
          :kuittaa-monta                 nil}))
 
 (defn- jarjesta-ilmoitukset [tulos]
@@ -177,6 +180,18 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   (process-event [{valinnat :valinnat} app]
     (hae
       (assoc app :valinnat valinnat)))
+
+  v/PalautaOletusHakuEhdot
+  (process-event [_ app]
+    (let [app (update-in app [:valinnat] merge oletus-valinnat {:vaikutukset #{}
+                                                                 :tunniste ""
+                                                                 })
+          app (update-in app [:valinnat] dissoc :tr-numero :tarkenne :aihe :hakuehto)
+          app (update-in app [:valinnat] assoc :toimenpiteet-aloitettu-vakioaikavali (first toimenpiteiden-aikavalit))
+          app (update-in app [:valinnat] assoc :valitetty-urakkaan-vakioaikavali (second aikavalit))
+          app (update-in app [:valinnat] assoc :selite [nil ""])
+          _ (println "PALAUTETUT: " (:valinnat app))]
+    (hae app)))
 
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat :as e} app]

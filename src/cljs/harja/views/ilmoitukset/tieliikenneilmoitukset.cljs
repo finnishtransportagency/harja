@@ -125,7 +125,17 @@
                      (flatten (map :tarkenteet aiheet-ja-tarkenteet)))]
     [lomake/lomake
      {:luokka "css-grid sm-css-block css-grid-columns-12x1 css-grid-columns-gap-16 padding-horizontal-16"
-      :muokkaa! #(e! (v/->AsetaValinnat %))}
+      :muokkaa! #(e! (v/->AsetaValinnat %))
+      :tarkkaile-ulkopuolisia-muutoksia? true
+      ;:footer-luokka "tyhjenna-hakuehdot"
+      :footer-fn (fn [data]
+                   [napit/tallenna "Tyhjennä hakuehdot"
+                    #(do
+                       ;(merge valinnat-nyt tiedot/oletus-valinnat {:selite [nil ""]})
+                       (e! (v/->PalautaOletusHakuEhdot %)))
+                    {:disabled @tiedot/oletus-valinnat?
+                     :luokka "button-secondary-default"
+                     }])}
      [(valinnat/aikavalivalitsin "Tiedotettu urakkaan aikavälillä"
         tiedot/aikavalit
         (merge valinnat-nyt {:palstoita-vapaa-aikavali? true})
@@ -442,6 +452,23 @@
 
              haetut-ilmoitukset)]]]))
 
+(defn- oletus-hakuehdot? [haku-ehdot]
+  (if (and (= (:tyypit haku-ehdot) (:tyypit tiedot/oletus-valinnat))
+        (= (:tilat haku-ehdot) (:tilat tiedot/oletus-valinnat))
+        (str/blank? (:ilmoittaja-nimi haku-ehdot))
+        (str/blank? (:hakuehto  haku-ehdot))
+        (str/blank? (:ilmoittaja-puhelin haku-ehdot))
+        (empty? (:vaikutukset haku-ehdot))
+        (or (nil? (:selite haku-ehdot)) (nil? (first (:selite haku-ehdot))))
+        (str/blank? (:tunniste haku-ehdot))
+        (str/blank? (:tr-numero haku-ehdot))
+        (str/blank? (:tarkenne haku-ehdot))
+        (str/blank? (:aihe haku-ehdot))
+        (= (:toimenpiteet-aloitettu-vakioaikavali haku-ehdot) (:toimenpiteet-aloitettu-vakioaikavali tiedot/oletus-valinnat))
+        (= (:valitetty-urakkaan-vakioaikavali haku-ehdot) (:valitetty-urakkaan-vakioaikavali tiedot/oletus-valinnat))
+        (= (:aloituskuittauksen-ajankohta haku-ehdot) (:aloituskuittauksen-ajankohta tiedot/oletus-valinnat)))
+    true
+    false))
 (defn- ilmoitukset* [e! {valinnat :valinnat :as ilmoitukset-tila}]
   ;; Kun näkymään tullaan, yhdistetään navigaatiosta tulevat valinnat
   (e! (v/->YhdistaValinnat @tiedot/valinnat))
@@ -466,6 +493,14 @@
         (if (true? uusi-tila)
           (e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu valinnat))
           (e! (ilmoitukset-ws/->KatkaiseYhteys)))))
+    (komp/watcher tiedot/ilmoitukset (fn [_ _ uudet]
+                                       (let [uudet-hakuehdot
+                                             (select-keys (:valinnat uudet)
+                                               (conj (keys tiedot/oletus-valinnat) :vaikutukset :tunniste :tr-numero :tarkenne :aihe))
+                                             ]
+                                         (if (oletus-hakuehdot? uudet-hakuehdot)
+                                           (reset! tiedot/oletus-valinnat? true)
+                                           (reset! tiedot/oletus-valinnat? false)))))
     (komp/sisaan-ulos #(do
                          (e! (v/->HaeAiheetJaTarkenteet))
                          (notifikaatiot/pyyda-notifikaatiolupa)
