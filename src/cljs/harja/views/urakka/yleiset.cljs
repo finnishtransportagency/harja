@@ -395,25 +395,22 @@
                                    } aikavali-loppu]
          [napit/palvelinkutsu-nappi "Tallenna"
           #(urakat/paivita-kesa-aika! ur @aikavali-alku @aikavali-loppu)
-          {
-           :kun-onnistuu (fn [vastaus]
+          {:kun-onnistuu (fn [vastaus]
                            (do
                              (viesti/nayta! "Urakan kesäaika tallennettu" :success)
                              (nav/paivita-urakan-tiedot! (:id ur)
                                (fn [u]
                                  (-> u
                                    (assoc :kesakausi-alkupvm (:kesakausi-alkupvm (first vastaus)))
-                                   (assoc :kesakausi-loppupvm (:kesakausi-loppupvm (first vastaus)))
-                                   )))
+                                   (assoc :kesakausi-loppupvm (:kesakausi-loppupvm (first vastaus))))))
                              (reset! auki? false)
                              (reset! aikavali-alku nil)
                              (reset! aikavali-loppu nil)))
            :virheviesti "Kesäajan tallennus epäonnistui."
            :nayta-virheviesti? true
            :kun-virhe (fn [vastaus]
-                          (viesti/nayta-toast! (:virhe (:response vastaus))
-                            :varoitus viesti/viestin-nayttoaika-keskipitka))
-           }]
+                        (viesti/nayta-toast! (:virhe (:response vastaus))
+                          :varoitus viesti/viestin-nayttoaika-keskipitka))}]
          [napit/yleinen-toissijainen "Peruuta" #(do
                                                   (reset! auki? false)
                                                   (reset! aikavali-alku nil)

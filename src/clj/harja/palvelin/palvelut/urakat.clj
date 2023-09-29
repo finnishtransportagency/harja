@@ -22,8 +22,6 @@
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [clj-time.coerce :as c])
-  ;(:import (java.time LocalDate)
-  ;         (java.time.format DateTimeFormatter))
   (:import (org.joda.time.format DateTimeFormat)))
 
 (def ^{:const true} oletus-toleranssi 50)
