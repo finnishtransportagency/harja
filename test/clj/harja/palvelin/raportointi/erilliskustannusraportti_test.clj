@@ -174,7 +174,7 @@
                         81.000M]
                        ["15.10.2019"
                         "666-TES"
-                        "Oulu MHU MHU Ylläpito TP"
+                        "Oulu MHU Hallinnolliset toimenpiteet TP"
                         "Alihankinta­bonus"
                         1000M
                         0]

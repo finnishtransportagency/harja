@@ -83,4 +83,4 @@
     (is (= paallyste-yhteensa 11001.94M))
     (is (= mhu-yllapito-yhteensa 15401.94M))
     (is (= mhu-korvaus-yhteensa 13201.94M))
-    (is (= mhu-bonukset 4634.500M))))
+    (is (= mhu-bonukset 5634.500M))))
