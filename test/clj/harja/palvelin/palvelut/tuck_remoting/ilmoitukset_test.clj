@@ -21,7 +21,7 @@
 (defonce asetukset {:itmf integraatio/itmf-asetukset})
 (def jms-timeout 2000)
 (def itmf-kuittaus-timeout 20000)
-(def ws-vastaus-timeout 5000)
+(def ws-vastaus-timeout 20000)
 
 (def ilmoitukset-kayttaja "yit-rakennus")
 (def jvh-kayttajan-oam-headerit {"oam_remote_user" "jvh"
