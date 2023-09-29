@@ -84,29 +84,22 @@
 
 (deftest tehtavaryhmat-ja-toimenpiteet-testi
   (let [tr-tp-lkm (ffirst
-                    (q (str "SELECT count(distinct tr3.id)
-                               FROM tehtavaryhma tr3
-                                    LEFT JOIN tehtava tpk4 ON tr3.id = tpk4.tehtavaryhma
+                    (q (format "SELECT count(distinct tr3.id)
+                                  FROM tehtavaryhma tr3
+                                       LEFT JOIN tehtava tpk4 ON tr3.id = tpk4.tehtavaryhma
                                             AND tpk4.ensisijainen is true
                                             AND tpk4.poistettu is not true AND tpk4.piilota is not true
-                                    JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
-                                    JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id and tpi.urakka = "
+                                       JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
+                                       JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id and tpi.urakka = %s"
                          @oulun-maanteiden-hoitourakan-2019-2024-id)))
         tehtavaryhmat-toimenpiteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                      :tehtavaryhmat-ja-toimenpiteet
                                      +kayttaja-jvh+
                                      {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})
-        ;; Tehtäväryhmälistaan ei saa lisätä kaikkia tehtäväryhmiä. Varmista, että ainakin nämä puuttuu
-        ;; Juuri nyt kesän ajan ei ole kiellettyjä ryhmiä, koska syyt
-        #_#_kielletyt-tehtavaryhmat (some (fn [tr]
-                                         (= "Tilaajan rahavaraus (T3)" (:tehtavaryhma-nimi tr))
-                                        )
-                                  tehtavaryhmat-toimenpiteet)
         tehtavaryhmat-ja-toimenpiteet-vaara-urakka-id (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :tehtavaryhmat-ja-toimenpiteet
                                                         +kayttaja-jvh+
                                                         {:urakka-id 36565345})]
-    #_ (is (nil? kielletyt-tehtavaryhmat))
     (is (= (count tehtavaryhmat-toimenpiteet) tr-tp-lkm) "Palauttaa tehtäväryhmä ja toimenpidelistan")
     (is (empty? tehtavaryhmat-ja-toimenpiteet-vaara-urakka-id) "Tyhjä lista jos ei löydy urakkaa")
     (is (thrown? IllegalArgumentException (kutsu-palvelua (:http-palvelin jarjestelma)

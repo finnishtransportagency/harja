@@ -63,7 +63,8 @@
 
 (defn filtteroi-paatos [hoitokauden-alkuvuosi tyyppi paatokset]
   (first (filter #(and
-                    (= (name tyyppi) (::valikatselmus/tyyppi %))
+                    (or (= (name tyyppi) (::valikatselmus/tyyppi %))
+                      (= (name (keyword tyyppi)) (::valikatselmus/tyyppi %)))
                     (= hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi %)))
            paatokset)))
 
@@ -111,9 +112,10 @@
                           :harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
                          oikaisu)]
       ;; Lähetetään oikaisun tallennus serverille vain, jos kaikki tiedot on syötetty
-      (when (and (:harja.domain.kulut.valikatselmus/otsikko oikaisu)
-              (:harja.domain.kulut.valikatselmus/summa oikaisu)
-              (:harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi oikaisu)
+      (when (and (::valikatselmus/otsikko oikaisu)
+              (::valikatselmus/selite oikaisu)
+              (::valikatselmus/summa oikaisu)
+              (::valikatselmus/hoitokauden-alkuvuosi oikaisu)
               (::urakka/id oikaisu))
         (tuck-apurit/post! :tallenna-tavoitehinnan-oikaisu
           oikaisu
