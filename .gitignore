@@ -21,7 +21,7 @@ tietokanta.tgz
 /resources/gitlog.edn
 .lein-failures
 figwheel_server.log
-§node_modules
+node_modules
 .idea/
 harja.iml
 *~
