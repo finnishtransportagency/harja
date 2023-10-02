@@ -137,7 +137,6 @@ jobs:
   #       pitää ottaa mukaan jobiin.
   back-tests:
     name: "Backend-testit"
-    if: false
     runs-on: ubuntu-latest
     env:
       TZ: "EET"
@@ -230,7 +229,6 @@ jobs:
   # integraatiotestit vaativat ActiveMQ-brokerin, siksi oma jobi
   integration-tests:
     name: "integraatiotestit"
-    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -279,7 +277,6 @@ jobs:
 
   e2e-tests:
     name: "e2e-testit (Cypress)"
-    if: false
     needs: build
     runs-on: ubuntu-latest
     env:
