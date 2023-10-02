@@ -225,9 +225,6 @@
   :main harja.palvelin.main
   :auto-clean false ;; for uberjar
 
-  :test-refresh {:notify-command ["terminal-notifier" "-title" "Harja tests" "-message"]}
-  
-
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"fig" ["trampoline" "with-profile" "+dev-ymparisto" "with-env-vars" "run" "-m" "figwheel.main"]
             "build-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "run" "-m" "figwheel.main" "-b" "figwheel_conf/dev" "-r"]

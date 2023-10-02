@@ -494,11 +494,15 @@ CREATE TYPE LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI AS
     hankinnat_laskutetaan                                       NUMERIC,
     sakot_laskutettu                                            NUMERIC,
     sakot_laskutetaan                                           NUMERIC,
-    -- Äkilliset hoitotyöt ja Vahinkojen korjaukset
+    rahavaraukset_laskutettu                                    NUMERIC,
+    rahavaraukset_laskutetaan                                   NUMERIC,
+    -- Äkilliset hoitotyöt ja Vahinkojen korjaukset ja maksuehtobonukset
     akilliset_laskutettu                                        NUMERIC,
     akilliset_laskutetaan                                       NUMERIC,
     vahingot_laskutettu                                         NUMERIC,
     vahingot_laskutetaan                                        NUMERIC,
+    alihank_bon_laskutettu                                      NUMERIC,
+    alihank_bon_laskutetaan                                     NUMERIC,
     -- MHU ja HJU Hoidon johto
     johto_ja_hallinto_laskutettu                                NUMERIC,
     johto_ja_hallinto_laskutetaan                               NUMERIC,
@@ -555,9 +559,12 @@ DECLARE
     -- Hoidon johto
     h_rivi                                RECORD;
     hj_palkkio_rivi                       RECORD;
-    -- Hoidon johto :: Bonukset
+    -- Rahavaraukset - nämä on eriskummallisella nimellä, koska alihankintabonukset näytetään raportilla rahavarauksina
     alihank_bon_laskutettu                NUMERIC;
     alihank_bon_laskutetaan               NUMERIC;
+    rahavaraukset_laskutettu              NUMERIC;
+    rahavaraukset_laskutetaan             NUMERIC;
+    -- Bonukset
     lupaus_bon_laskutettu                 NUMERIC;
     lupaus_bon_laskutetaan                NUMERIC;
     lupaus_bon_rivi                       RECORD;
@@ -803,8 +810,6 @@ BEGIN
                                      AND s.perintapvm <= aikavali_loppupvm
                                      AND s.poistettu IS NOT TRUE
                 LOOP
-
-                    -- TODO: Mikä tämä iffi on? Tuossa ylempänä jo rajataan hakua, tätä ei tartteta mihinkään
                     IF sanktiorivi.perintapvm <= aikavali_loppupvm THEN
                         -- Hoitokauden alusta
                         RAISE NOTICE 'sanktiorivi :: Määrä: %', sanktiorivi.maara;
@@ -816,7 +821,6 @@ BEGIN
                             sakot_laskutettu := sakot_laskutettu + COALESCE(sanktiorivi.indeksikorotettuna, 0.0);
                         END IF;
 
-
                         IF sanktiorivi.perintapvm >= aikavali_alkupvm AND
                            sanktiorivi.perintapvm <= aikavali_loppupvm THEN
                             -- Laskutetaan nyt
@@ -825,16 +829,14 @@ BEGIN
                             ELSE
                                 sakot_laskutetaan := sakot_laskutetaan + COALESCE(sanktiorivi.indeksikorotettuna, 0.0);
                             END IF;
-
                         END IF;
                     END IF;
-
                 END LOOP;
-
-
 
             -- ERILLISKUSTANNUKSET  hoitokaudella
             -- bonukset lasketaan erikseen tyypin perusteella
+            rahavaraukset_laskutettu := 0.0;
+            rahavaraukset_laskutetaan := 0.0;
             alihank_bon_laskutettu := 0.0;
             alihank_bon_laskutetaan := 0.0;
             lupaus_bon_laskutettu := 0.0;
@@ -863,33 +865,67 @@ BEGIN
             hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu := 0.0;
             hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan := 0.0;
 
+
+            IF (hk_alkupvm >= '2022-10-01'::DATE AND t.tuotekoodi = '20190') THEN -- MHU Ylläpito
+                -- Alihankintabokset on määritelty toimenpideinstassille: MHU ja HJU hoidon johto
+                -- Mutta ne halutaan kuitenkin näyttää MHU Ylläpidon alla rahavarauksina vuoden 2022 jälkeen
+                -- Tästä syystä ei verrata toimenpideinstanssia ollenkaan, vaan pelkästään bonuksen tyyppiä.
+                FOR erilliskustannus_rivi IN SELECT ek.laskutuskuukausi, ek.rahasumma, ek.indeksin_nimi, ek.tyyppi, ek.urakka
+                                             FROM erilliskustannus ek
+                                             WHERE ek.sopimus = sopimus_id
+                                               AND ek.tyyppi = 'alihankintabonus'
+                                               AND ek.laskutuskuukausi >= hk_alkupvm
+                                               AND ek.laskutuskuukausi <= aikavali_loppupvm
+                                               AND ek.laskutuskuukausi <= aikavali_loppupvm
+                                               AND ek.poistettu IS NOT TRUE
+                    LOOP
+                        RAISE NOTICE ' ********************************************* ERILLISKUSTANNUS - MHU Ylläpidolle - Tyyppi = % ', erilliskustannus_rivi.tyyppi;
+
+                        -- Alihankintabonukselle ei tule indeksikorotusta
+                        -- Bonus :: alihankintabonus
+                        IF erilliskustannus_rivi.laskutuskuukausi <= aikavali_loppupvm THEN
+                            -- Hoitokauden alusta
+                            alihank_bon_laskutettu := alihank_bon_laskutettu + COALESCE(erilliskustannus_rivi.rahasumma, 0.0);
+
+                            IF erilliskustannus_rivi.laskutuskuukausi >= aikavali_alkupvm AND erilliskustannus_rivi.laskutuskuukausi <= aikavali_loppupvm THEN
+                                -- Laskutetaan nyt
+                                alihank_bon_laskutetaan := alihank_bon_laskutetaan + COALESCE(erilliskustannus_rivi.rahasumma, 0.0);
+                            END IF;
+                        END IF;
+                    END LOOP;
+                RAISE NOTICE 'Alihankintabonus - Rahavaraukset - laskutettu :: laskutetaan: % :: %', alihank_bon_laskutettu, alihank_bon_laskutetaan;
+                rahavaraukset_laskutettu := alihank_bon_laskutettu;
+                rahavaraukset_laskutetaan := alihank_bon_laskutetaan;
+            END IF;
+
             -- Hoidonjohdolla (toimenpidekoodi 23150) omat erilliset mahdolliset kulunsa.
             -- Erilliskustannus-tauluun tallennetaan erilaiset bonukset.
             -- Hoitokauden päättämiseen liittyviä kuluja ei tallenneta erilliskustannus tauluun, ne kirjataan kuluina ja tallennetaan kulu ja kulu_kohdistus-tauluun
             IF (t.tuotekoodi = '23150') THEN
-                FOR erilliskustannus_rivi IN SELECT ek.pvm, ek.rahasumma, ek.indeksin_nimi, ek.tyyppi, ek.urakka
+                FOR erilliskustannus_rivi IN SELECT ek.laskutuskuukausi, ek.rahasumma, ek.indeksin_nimi, ek.tyyppi, ek.urakka
                                                  FROM erilliskustannus ek
                                                  WHERE ek.sopimus = sopimus_id
                                                    AND ek.toimenpideinstanssi = t.tpi
-                                                   AND ek.pvm >= hk_alkupvm
-                                                   AND ek.pvm <= aikavali_loppupvm
+                                                   AND ek.laskutuskuukausi >= hk_alkupvm
+                                                   AND ek.laskutuskuukausi <= aikavali_loppupvm
                                                    AND ek.poistettu IS NOT TRUE
                     LOOP
 
-                        RAISE NOTICE ' ********************************************* ERILLISKUSTANNUS Tyyppi = % ', erilliskustannus_rivi.tyyppi;
+                        RAISE NOTICE ' ********************************************* ERILLISKUSTANNUS - MHU Hoidonjohdolle Tyyppi = % ', erilliskustannus_rivi.tyyppi;
 
                         -- Alihankintabonukselle ei tule indeksikorotusta, joten tämä saa jäädä näin.
                         -- Kun on aikaa, niin tämän voisi laittaa käyttämään erilliskustannuksen_indeksilaskentaa, vaikka korotusta ei tulisikaan
                         -- Mutta se olisi yhdenmukaisempaa
-                        IF erilliskustannus_rivi.tyyppi = 'alihankintabonus' THEN
+                        -- Alihankintabonus lasketaan bonuksiin vain, jos katsellaan 2021 alkavia hoitokausia ja sitä aikaisempi ajankohtia
+                        IF (hk_alkupvm < '2022-10-01'::DATE AND erilliskustannus_rivi.tyyppi = 'alihankintabonus') THEN
                             -- Bonus :: alihankintabonus
-                            IF erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
+                            IF erilliskustannus_rivi.laskutuskuukausi <= aikavali_loppupvm THEN
                                 -- Hoitokauden alusta
                                 alihank_bon_laskutettu :=
                                             alihank_bon_laskutettu + COALESCE(erilliskustannus_rivi.rahasumma, 0.0);
 
-                                IF erilliskustannus_rivi.pvm >= aikavali_alkupvm AND
-                                   erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
+                                IF erilliskustannus_rivi.laskutuskuukausi >= aikavali_alkupvm AND
+                                   erilliskustannus_rivi.laskutuskuukausi <= aikavali_loppupvm THEN
                                     -- Laskutetaan nyt
                                     alihank_bon_laskutetaan := alihank_bon_laskutetaan +
                                                                COALESCE(erilliskustannus_rivi.rahasumma, 0.0);
@@ -899,7 +935,7 @@ BEGIN
                         ELSEIF erilliskustannus_rivi.tyyppi = 'lupausbonus' THEN
                             -- Bonus :: lupausbonus
                             SELECT *
-                            FROM erilliskustannuksen_indeksilaskenta(erilliskustannus_rivi.pvm,
+                            FROM erilliskustannuksen_indeksilaskenta(erilliskustannus_rivi.laskutuskuukausi,
                                                                      erilliskustannus_rivi.indeksin_nimi,
                                                                      erilliskustannus_rivi.rahasumma,
                                                                      erilliskustannus_rivi.urakka,
@@ -907,13 +943,13 @@ BEGIN
                                                                      pyorista_kerroin)
                             INTO lupaus_bon_rivi;
 
-                            IF erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
+                            IF erilliskustannus_rivi.laskutuskuukausi <= aikavali_loppupvm THEN
                                 -- Hoitokauden alusta
                                 lupaus_bon_laskutettu :=
                                         lupaus_bon_laskutettu + COALESCE(lupaus_bon_rivi.korotettuna, 0.0);
 
-                                IF erilliskustannus_rivi.pvm >= aikavali_alkupvm AND
-                                   erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
+                                IF erilliskustannus_rivi.laskutuskuukausi >= aikavali_alkupvm AND
+                                   erilliskustannus_rivi.laskutuskuukausi <= aikavali_loppupvm THEN
                                     -- Laskutetaan nyt
                                     lupaus_bon_laskutetaan :=
                                             lupaus_bon_laskutetaan + COALESCE(lupaus_bon_rivi.korotettuna, 0.0);
@@ -923,7 +959,7 @@ BEGIN
                             -- Asiakastyytyväisyysbonus
                         ELSEIF erilliskustannus_rivi.tyyppi = 'asiakastyytyvaisyysbonus' THEN
                             SELECT *
-                                FROM erilliskustannuksen_indeksilaskenta(erilliskustannus_rivi.pvm,
+                                FROM erilliskustannuksen_indeksilaskenta(erilliskustannus_rivi.laskutuskuukausi,
                                                                          erilliskustannus_rivi.indeksin_nimi,
                                                                          erilliskustannus_rivi.rahasumma,
                                                                          erilliskustannus_rivi.urakka,
@@ -931,13 +967,13 @@ BEGIN
                                                                          pyorista_kerroin)
                                 INTO asiakas_tyyt_bon_rivi;
 
-                            IF erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
+                            IF erilliskustannus_rivi.laskutuskuukausi <= aikavali_loppupvm THEN
                                 -- Hoitokauden alusta
                                 asiakas_tyyt_bon_laskutettu := asiakas_tyyt_bon_laskutettu +
                                                                COALESCE(asiakas_tyyt_bon_rivi.korotettuna, 0.0);
 
-                                IF erilliskustannus_rivi.pvm >= aikavali_alkupvm AND
-                                   erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
+                                IF erilliskustannus_rivi.laskutuskuukausi >= aikavali_alkupvm AND
+                                   erilliskustannus_rivi.laskutuskuukausi <= aikavali_loppupvm THEN
                                     -- Laskutetaan nyt
                                     asiakas_tyyt_bon_laskutetaan := asiakas_tyyt_bon_laskutetaan +
                                                                     COALESCE(asiakas_tyyt_bon_rivi.korotettuna, 0.0);
@@ -947,7 +983,7 @@ BEGIN
                             -- Muu bonus
                         ELSEIF erilliskustannus_rivi.tyyppi = 'muu-bonus' THEN
                             SELECT *
-                              FROM erilliskustannuksen_indeksilaskenta(erilliskustannus_rivi.pvm,
+                              FROM erilliskustannuksen_indeksilaskenta(erilliskustannus_rivi.laskutuskuukausi,
                                                                        erilliskustannus_rivi.indeksin_nimi,
                                                                        erilliskustannus_rivi.rahasumma,
                                                                        erilliskustannus_rivi.urakka,
@@ -955,13 +991,13 @@ BEGIN
                                                                        pyorista_kerroin)
                               INTO muu_bonus_rivi;
 
-                            IF erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
+                            IF erilliskustannus_rivi.laskutuskuukausi <= aikavali_loppupvm THEN
                                 -- Hoitokauden alusta
                                 muu_bonus_laskutettu := muu_bonus_laskutettu +
                                                                COALESCE(muu_bonus_rivi.korotettuna, 0.0);
 
-                                IF erilliskustannus_rivi.pvm >= aikavali_alkupvm AND
-                                   erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
+                                IF erilliskustannus_rivi.laskutuskuukausi >= aikavali_alkupvm AND
+                                   erilliskustannus_rivi.laskutuskuukausi <= aikavali_loppupvm THEN
                                     -- Laskutetaan nyt
                                     muu_bonus_laskutetaan := muu_bonus_laskutetaan +
                                                                     COALESCE(muu_bonus_rivi.korotettuna, 0.0);
@@ -1019,12 +1055,19 @@ BEGIN
                 RAISE NOTICE 'Asiakastyytyväisyysbonus laskutettu :: laskutetaan: % :: %', asiakas_tyyt_bon_laskutettu, asiakas_tyyt_bon_laskutetaan;
                 RAISE NOTICE 'Tavoitepalkkio laskutettu :: laskutetaan: % :: %', tavoitepalkk_bon_laskutettu, tavoitepalkk_bon_laskutetaan;
 
-                bonukset_laskutettu := bonukset_laskutettu + alihank_bon_laskutettu + lupaus_bon_laskutettu +
+                -- Alihankintabonuksia ei oteta bonuksiin huomioon 2022-10-01 jälkeen, sen vuoksi
+                -- joudutaan iffittelemään bonusten yhteenlasku erikseen
+                bonukset_laskutettu := bonukset_laskutettu + lupaus_bon_laskutettu +
                                        asiakas_tyyt_bon_laskutettu + tavoitepalkk_bon_laskutettu + muu_bonus_laskutettu
-                                           + tavoitehinnan_ulk_rahav_laskutettu;
-                bonukset_laskutetaan := bonukset_laskutetaan + alihank_bon_laskutetaan + lupaus_bon_laskutetaan +
+                    + tavoitehinnan_ulk_rahav_laskutettu;
+                bonukset_laskutetaan := bonukset_laskutetaan + lupaus_bon_laskutetaan +
                                         asiakas_tyyt_bon_laskutetaan + tavoitepalkk_bon_laskutetaan + muu_bonus_laskutetaan
-                                            + tavoitehinnan_ulk_rahav_laskutetaan;
+                    + tavoitehinnan_ulk_rahav_laskutetaan;
+                IF(hk_alkupvm < '2022-10-01'::DATE) THEN
+                    bonukset_laskutettu := bonukset_laskutettu + alihank_bon_laskutettu;
+                    bonukset_laskutetaan := bonukset_laskutetaan + alihank_bon_laskutetaan;
+                end if;
+
                 RAISE NOTICE 'Bonuksia laskutettu :: laskutetaan: % :: %', bonukset_laskutettu, bonukset_laskutetaan;
 
                 -- HOIDON JOHTO, tpk 23150.
@@ -1068,12 +1111,12 @@ BEGIN
             -- Kustannusten kokonaissummat
             kaikki_laskutettu := 0.0;
             kaikki_laskutetaan := 0.0;
-            kaikki_laskutettu := sakot_laskutettu + bonukset_laskutettu +
+            kaikki_laskutettu := sakot_laskutettu + bonukset_laskutettu + rahavaraukset_laskutettu +
                                  hankinnat_laskutettu + lisatyot_laskutettu + johto_ja_hallinto_laskutettu + akilliset_laskutettu + vahingot_laskutettu +
                                  hj_palkkio_laskutettu + hj_erillishankinnat_laskutettu + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu +
                                  hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu;
 
-            kaikki_laskutetaan := sakot_laskutetaan + bonukset_laskutetaan +
+            kaikki_laskutetaan := sakot_laskutetaan + bonukset_laskutetaan + rahavaraukset_laskutetaan +
                                   hankinnat_laskutetaan + lisatyot_laskutetaan + johto_ja_hallinto_laskutetaan + akilliset_laskutetaan + vahingot_laskutetaan +
                                   hj_palkkio_laskutetaan + hj_erillishankinnat_laskutetaan + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan +
                                   hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan;
@@ -1081,11 +1124,11 @@ BEGIN
             -- Tavoitehintaan sisältyy: Hankinnat, Johto- ja Hallintokorvaukset, (hoidonjohto tässä), Erillishankinnat, HJ-Palkkio.
             -- Tavoitehintaan ei sisälly: Lisätyöt, Sanktiot, Suolasanktiot, Bonukset, Hoitovuoden päättämiseen liittyvät kulut.
             tavoitehintaiset_laskutettu :=
-                        hankinnat_laskutettu + johto_ja_hallinto_laskutettu + hj_erillishankinnat_laskutettu +
+                        hankinnat_laskutettu + rahavaraukset_laskutettu + johto_ja_hallinto_laskutettu + hj_erillishankinnat_laskutettu +
                         hj_palkkio_laskutettu;
 
             tavoitehintaiset_laskutetaan :=
-                        hankinnat_laskutetaan + johto_ja_hallinto_laskutetaan + hj_erillishankinnat_laskutetaan +
+                        hankinnat_laskutetaan + rahavaraukset_laskutetaan + johto_ja_hallinto_laskutetaan + hj_erillishankinnat_laskutetaan +
                         hj_palkkio_laskutetaan;
 
             RAISE NOTICE '
@@ -1112,6 +1155,7 @@ LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
             RAISE NOTICE 'Erillishankinnat laskutetaan: %', hj_erillishankinnat_laskutetaan;
             RAISE NOTICE 'HJ-Palkkio laskutetaan: %', hj_palkkio_laskutetaan;
             RAISE NOTICE 'Bonukset laskutetaan: %', bonukset_laskutetaan;
+            RAISE NOTICE 'Rahavaraukset laskutetaan: %', rahavaraukset_laskutetaan;
             RAISE NOTICE 'Hoitovuoden päättäminen (tavoitepalkkio) laskutetaan: %', hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan;
             RAISE NOTICE 'Hoitovuoden päättäminen (tavoitehinnan ylitys) laskutetaan: %', hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan;
             RAISE NOTICE 'Hoitovuoden päättäminen (kattohinnan ylitys) laskutetaan: %', hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan;
@@ -1132,8 +1176,10 @@ LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
                      lisatyot_laskutettu, lisatyot_laskutetaan,
                      hankinnat_laskutettu, hankinnat_laskutetaan,
                      sakot_laskutettu, sakot_laskutetaan,
+                     rahavaraukset_laskutettu, rahavaraukset_laskutetaan,
                      akilliset_laskutettu, akilliset_laskutetaan,
                      vahingot_laskutettu, vahingot_laskutetaan,
+                     alihank_bon_laskutettu, alihank_bon_laskutetaan,
                      johto_ja_hallinto_laskutettu, johto_ja_hallinto_laskutetaan,
                      bonukset_laskutettu, bonukset_laskutetaan,
                      hj_palkkio_laskutettu, hj_palkkio_laskutetaan,
