@@ -167,14 +167,16 @@
                  ;; ["sonatype-snapshots" "https://oss.sonatype.org/content/repositories/snapshots/"]
                  ]
 
-  :plugins [[lein-cljsbuild "1.1.7"]
+  :plugins [[lein-cljsbuild "1.1.8"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.15"]
             [lein-codox "0.10.6"]
             [jonase/eastwood "0.3.5"]
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
-            [lein-doo "0.1.10"]]
+            [lein-doo "0.1.11"]]
+
+
 
   ;; Näitä cljsbuild tarvitsee testaamista varten doo:n kanssa.
   :cljsbuild {:builds [{:id "test"
@@ -281,8 +283,5 @@
              "Implementation-Version" "1.1"
              "Implementation-Vendor" "Sun Microsystems, Inc."
              "Extension-Name" "com.sun.media.imageio"}
-
-
-  ;;:doo {:paths {:phantom "phantomjs --local-storage-path=/tmp --local-storage-quota=1024 --offline-storage-path=/tmp --offline-storage-quota=1024"}}
   )
 

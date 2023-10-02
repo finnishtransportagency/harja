@@ -1,9 +1,16 @@
 {
   "dependencies": {
     "cypress": "10.2.0",
+    "node": "^18.0.0",
     "transit-js": "^0.8.867"
   },
-  "engines" : {
-    "node" : "^18.0.0"
+  "engines": {
+    "node": "^18.0.0"
+  },
+  "devDependencies": {
+    "karma": "^6.4.2",
+    "karma-cljs-test": "^0.1.0",
+    "karma-junit-reporter": "^2.0.1",
+    "karma-phantomjs-launcher": "^1.0.4"
   }
 }
