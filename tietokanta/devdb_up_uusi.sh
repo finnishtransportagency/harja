@@ -6,7 +6,7 @@
 set -e
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-IMAGE=ghcr.io/finnishtransportagency/harja_harjadb:latest
+IMAGE=ghcr.io/finnishtransportagency/harja_harjadb:15.3-3.3.2
 
 # Alla saatavilla olevia versioita
 # https://github.com/finnishtransportagency/harja/pkgs/container/harja_harjadb/versions
