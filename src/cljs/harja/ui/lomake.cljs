@@ -344,7 +344,7 @@ ja kaikki pakolliset kentät on täytetty"
           (when (not= @arvo
                       data-arvo)
             (do
-              (loki/log "data on muuttunut ulkopuolisesta lähteestä" @arvo "->" data-arvo)
+              (loki/log "data on muuttunut ulkopuolisesta lähteestä" (pr-str @arvo) "->" (pr-str data-arvo))
               (reset! init-arvo data-arvo)
               (reset! arvo data-arvo)))))
       (let [kentta (cond

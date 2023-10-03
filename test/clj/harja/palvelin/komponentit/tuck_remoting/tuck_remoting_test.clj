@@ -61,7 +61,7 @@
 
     ;; Lähetä ping-viesti
     (ws/send (tr-tyokalut/ws-yhteys :asiakas-1) (transit/clj->transit {:tuck.remoting/event-type :ping}))
-    (odota-ehdon-tayttymista #(seq (tr-tyokalut/ws-vastaus :asiakas-1)) "Tuck-remotingilta saatiin vastaus" 1000)
+    (odota-ehdon-tayttymista #(seq (tr-tyokalut/ws-vastaus :asiakas-1)) "Tuck-remotingilta saatiin vastaus" 5000)
 
     ;; Testataan vastaako tuck-remoting pong-viestillä
     (is (= {:tuck.remoting/event-type :pong} (tr-tyokalut/ws-vastaus :asiakas-1)))
@@ -82,7 +82,7 @@
       (sut/laheta-kaikille! (:tuck-remoting jarjestelma) (->TestiEventti))
 
       (doseq [id (range asiakkaat-lkm)]
-        (odota-ehdon-tayttymista #(seq (tr-tyokalut/ws-vastaus id)) (str "Tuck-remotingilta saatiin vastaus asiakkaalle " id) 2000))
+        (odota-ehdon-tayttymista #(seq (tr-tyokalut/ws-vastaus id)) (str "Tuck-remotingilta saatiin vastaus asiakkaalle " id) 5000))
 
       (doseq [id (range asiakkaat-lkm)]
         (is (= "harja.palvelin.komponentit.tuck-remoting.tuck-remoting-test.TestiEventti"

@@ -5,6 +5,7 @@ import {
     kattohintaElem,
     kattohintaInput, muokkaaRivinArvoa, tarkistaIndeksikorjattuKH, tarkistaKattohinta, valitseHoitokausi
 } from "../support/kustannussuunnitelmaFns.js";
+import {kuluvaHoitokausiAlkuvuosi} from "../support/apurit.js"
 
 /**
  * Vuosina 2019 ja 2020 aloitettujen MH-Urakoiden kattohinnan suunnittelu
@@ -20,7 +21,10 @@ function alustaKittilanUrakka() {
 }
 
 function taytaArvoja() {
-    let hoitokausiNyt = "4. hoitovuosi (2022—2023)";
+    let kuluvaHKVuosi = kuluvaHoitokausiAlkuvuosi();
+    let kuluvaHoitokausiNro = kuluvaHKVuosi - 2019 + 1;
+
+    let hoitokausiNyt = kuluvaHoitokausiNro + ". hoitovuosi (" + kuluvaHKVuosi + "—" + (kuluvaHKVuosi + 1) + ")";
     let valittavaHoitokausi = "3. hoitovuosi (2021—2022)";
     ks.valitseHoitokausi(hoitokausiNyt, valittavaHoitokausi);
     cy.get('#suunnitellut-hankinnat-taulukko')
@@ -84,7 +88,6 @@ describe('Testaa Kittilän MHU kustannussuunnitelmanäkymää', () => {
     })
 
     it('Vaihda vuosi ja täytä kattohinta', () => {
-
         let hoitokausiNyt = "3. hoitovuosi (2021—2022)";
         let valittavaHoitokausi = "4. hoitovuosi (2022—2023)";
         ks.valitseHoitokausi(hoitokausiNyt, valittavaHoitokausi);
@@ -101,8 +104,12 @@ describe('Testaa Kittilän MHU kustannussuunnitelmanäkymää', () => {
     it('Päivitä sivu ja tarkista arvot', () => {
         cy.reload();
         cy.get('.ajax-loader', {timeout: 40000}).should('not.exist');
+
+
+        let kuluvaHKVuosi = kuluvaHoitokausiAlkuvuosi();
+        let kuluvaHoitokausiNro = kuluvaHKVuosi - 2019 + 1;
+        let hoitokausiNyt = kuluvaHoitokausiNro + ". hoitovuosi (" + kuluvaHKVuosi + "—" + (kuluvaHKVuosi + 1) + ")";
         // Valitaan 3. hoitovuosi.
-        let hoitokausiNyt = "4. hoitovuosi (2022—2023)";
         let valittavaHoitokausi = "3. hoitovuosi (2021—2022)";
         ks.valitseHoitokausi(hoitokausiNyt, valittavaHoitokausi);
 
