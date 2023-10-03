@@ -733,13 +733,16 @@
                               alkupvm (when alkupvm
                                         (-> alkupvm
                                           (pvm/iso-8601->pvm)
-                                          (varuste-vastaanottosanoma/aika->sql)))]
+                                          (varuste-vastaanottosanoma/aika->sql)))
+                              tyyppi (get-in varuste [:rakenteelliset-ominaisuudet :tyyppi])
+                              tietolaji nil
+                              ]
                           {:alkupvm alkupvm
                            :kuntoluokka (varuste-vastaanottosanoma/varusteen-kuntoluokka
                                           (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)
                                           varuste)
                            ;; TODO: Lisää lisätieto kuten ennenkin
-                           :lisatieto nil
+                           :lisatieto (varuste-vastaanottosanoma/varusteen-lisatieto (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe) tietolaji varuste)
                            :loppupvm (cond-> (get-in varuste [:version-voimassaolo :loppu])
                                        (get-in varuste [:version-voimassaolo :loppu])
                                        pvm/iso-8601->pvm
@@ -749,7 +752,7 @@
                            :muokkaaja (get-in varuste [:muokkaaja :kayttajanimi])
                            :sijainti (or (varuste-vastaanottosanoma/velhogeo->harjageo (:keskilinjageometria varuste))
                                        (sijainti-kohteelle db varuste))
-                           :tietolaji nil ;; TODO: toteuta jos tarvitaan
+                           :tietolaji tietolaji
                            :toteuma (varuste-vastaanottosanoma/varusteen-toteuma
                                       (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)
                                       varuste)
@@ -758,16 +761,16 @@
                            :tr-alkuetaisyys alkuet
                            :tr-loppuosa loppuosa
                            :tr-loppuetaisyys loppuetaisyys
-                           :ulkoinen-oid (:oid varuste)
-                           })
+                           :ulkoinen-oid (:oid varuste) }))
+                  varusteet)]
 
-                        ) varusteet)]
-            (println "jere testaa::" (count varusteet))
             {:urakka-id urakka-id :toteumat varusteet}
 
             ))))))
 
 (comment
+  (mapv :kohdeluokka +tietolajien-lahteet+)
+
   (def foo (hae-urakan-varustetoteumat (:integraatioloki harja.palvelin.main/harja-jarjestelma)
              (:db harja.palvelin.main/harja-jarjestelma)
              (:asetukset (:velho-integraatio harja.palvelin.main/harja-jarjestelma))

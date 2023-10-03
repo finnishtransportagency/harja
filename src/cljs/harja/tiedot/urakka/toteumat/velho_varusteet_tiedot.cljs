@@ -76,7 +76,7 @@
 (defrecord ValitseVarustetyyppi [varustetyyppi valittu?])
 (defrecord ValitseKuntoluokka [kuntoluokka valittu?])
 (defrecord ValitseToteuma [toteuma])
-(defrecord HaeVarusteet [])
+(defrecord HaeVarusteet [lahde])
 (defrecord HaeVarusteetOnnistui [vastaus])
 (defrecord HaeVarusteetEpaonnistui [vastaus])
 (defrecord HaeToteumat [])
@@ -135,16 +135,24 @@
       (assoc-in app [:valinnat :toteuma] toteuma)))
 
   HaeVarusteet
-  (process-event [_ {:keys [haku-paalla] :as app}]
+  (process-event [{lahde :lahde} {:keys [haku-paalla] :as app}]
     (if haku-paalla
       app
       (do
         (reset! varusteet-kartalla/karttataso-varusteet [])
-        (println "asdf")
         (-> app
           (assoc :haku-paalla true :varusteet [])
-          (tuck-apurit/post! :hae-urakan-varustetoteumat
-            {:urakka-id @harja.tiedot.navigaatio/valittu-urakka-id}
+          (tuck-apurit/post! (case lahde
+                               :velho
+                               :hae-urakan-varustetoteumat
+                               :harja
+                               :hae-urakan-varustetoteuma-ulkoiset)
+            (case lahde
+              :velho
+              {:urakka-id @harja.tiedot.navigaatio/valittu-urakka-id}
+
+              :harja
+              (hakuparametrit app))
             {:onnistui ->HaeVarusteetOnnistui
              :epaonnistui ->HaeVarusteetEpaonnistui})))))
 

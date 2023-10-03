@@ -127,9 +127,15 @@
         :vayla-tyyli? true
         :fmt itse-tai-kaikki}]]
      [:div.row
+      ;; TODO: poista
+      [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä VANHA" #(do
+                                                                (e! (v/->TaydennaTR-osoite-suodatin tie aosa aeta losa leta))
+                                                                (e! (v/->HaeVarusteet :harja))) {:luokka "nappi-korkeus-32"
+                                                                                          :disabled false
+                                                                                          :ikoni (ikonit/livicon-search)}]
       [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä" #(do
                                                                 (e! (v/->TaydennaTR-osoite-suodatin tie aosa aeta losa leta))
-                                                                (e! (v/->HaeVarusteet))) {:luokka "nappi-korkeus-32"
+                                                                (e! (v/->HaeVarusteet :velho))) {:luokka "nappi-korkeus-32"
                                                                                           :disabled false
                                                                                           :ikoni (ikonit/livicon-search)}]
       [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet (pvm/vuosi (get-in app [:urakka :alkupvm]))))
