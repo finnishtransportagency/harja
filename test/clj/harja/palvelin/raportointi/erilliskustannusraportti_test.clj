@@ -83,7 +83,7 @@
                         "As.tyyt.­bonus"
                         1000M
                         0M]
-                       ["01.08.2015"
+                       ["15.08.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "Muu"
@@ -285,7 +285,7 @@
                 1000M
                 0M]
                ["Oulun alueurakka 2014-2019"
-                "01.08.2015"
+                "15.08.2015"
                 "2H16339/01"
                 "Oulu Talvihoito TP 2014-2019"
                 "Muu"
@@ -371,7 +371,7 @@
                 1000M
                 0M]
                ["Espoon alueurakka 2014-2019"
-                "01.08.2015"
+                "15.08.2015"
                 "7eS6339/05"
                 "Espoo Talvihoito TP 2014-2019"
                 "Muu"
@@ -497,7 +497,7 @@
                 1000M
                 0M]
                ["Oulun alueurakka 2014-2019"
-                "01.08.2015"
+                "15.08.2015"
                 "2H16339/01"
                 "Oulu Talvihoito TP 2014-2019"
                 "Muu"

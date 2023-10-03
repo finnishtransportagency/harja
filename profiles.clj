@@ -59,8 +59,7 @@
                        [cljsjs/react-with-addons "15.6.1-0"]
                        [cljsjs/react-dom "15.4.2-2" :exclusions [cljsjs/react]]
                        [cljs-react-test "0.1.4-SNAPSHOT"]]
-        :source-paths ["test/cljs" "test/doo" "test/shared-cljs"]
-        :notify-command ["./run-karma.sh"]}
+        :source-paths ["test/cljs" "test/doo" "test/shared-cljs"]}
  :prod-cljs {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]}
 
  :laadunseuranta-dev {:source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]}

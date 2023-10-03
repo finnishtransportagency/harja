@@ -3,7 +3,8 @@ properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
         daysToKeepStr: '21',
         numToKeepStr: '14')),
             disableConcurrentBuilds(),
-            disableResume()])
+            disableResume(),
+            pipelineTriggers([cron('0 7 * * 1-5'), pollSCM('H/5 * * * *')])])
 
 node {
     withEnv(["HARJA_DEV_YMPARISTO=${params.HARJA_DEV_YMPARISTO}",
@@ -14,6 +15,7 @@ node {
              "HARJA_AJA_GATLING_RAPORTTI=${params.HARJA_AJA_GATLING_RAPORTTI}",
              "HARJA_NOLOG=${params.HARJA_NOLOG}",
              "HARJA_DEV_RESOURCES_PATH=${params.HARJA_DEV_RESOURCES_PATH}"]) {
+
         // Tämä Checkout on sama kuin omatFunktiot.checkoutHarja muuten paitsi otetaan vain Jenkins kansion sisältö.
         // Tämä pitää tehdä ennen, kuin groovy filejä voi ladata workspacesta
         checkout([poll: true,

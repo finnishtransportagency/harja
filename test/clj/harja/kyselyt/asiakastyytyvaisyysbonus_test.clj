@@ -42,7 +42,7 @@
 (deftest laske-hoitokauden-asiakastyytyvaisyysbonus
   (let [ur @tampereen-alueurakan-2017-2022-id
         sop (hae-annetun-urakan-paasopimuksen-id ur)
-        maksupvm (ffirst (q (str "select pvm from erilliskustannus
+        maksupvm (ffirst (q (str "select laskutuskuukausi from erilliskustannus
         WHERE tyyppi = 'asiakastyytyvaisyysbonus' AND rahasumma = 10000 AND sopimus = " sop)))
         ind_nimi (ffirst (q (str "select indeksin_nimi from erilliskustannus
         WHERE tyyppi = 'asiakastyytyvaisyysbonus' AND rahasumma = 10000 AND sopimus = " sop)))
@@ -50,10 +50,11 @@
         WHERE tyyppi = 'asiakastyytyvaisyysbonus' AND rahasumma = 10000 AND sopimus = " sop)))
         kyselyn-kautta (laskutusyhteenveto/laske-erilliskustannuksen-indeksit
                          (:db jarjestelma)
-                         {:urakka-id   ur
-                          :pvm    maksupvm
+                         {:urakka-id ur
+                          :pvm maksupvm
+                          :laskutuskuukausi maksupvm
                           :indeksinimi ind_nimi
-                          :summa       summa
+                          :summa summa
                           :erilliskustannustyyppi "asiakastyytyvaisyysbonus"
                           :pyorista? false})
         haku (format "select * from erilliskustannuksen_indeksilaskenta(
@@ -97,10 +98,11 @@
                                            (ffirst (q (str "select * from indeksilaskennan_perusluku(" ur ");"))))
                                palvelun-kautta (laskutusyhteenveto/laske-erilliskustannuksen-indeksit
                                                  (:db jarjestelma)
-                                                 {:urakka-id   ur
-                                                  :pvm    maksupvm
+                                                 {:urakka-id ur
+                                                  :pvm maksupvm
+                                                  :laskutuskuukausi maksupvm
                                                   :indeksinimi indeksinimi
-                                                  :summa       summa
+                                                  :summa summa
                                                   :erilliskustannustyyppi "asiakastyytyvaisyysbonus"
                                                   :pyorista? false})
                                hk-alkuvuosi (if (or (= 10 (pvm/kuukausi maksupvm))

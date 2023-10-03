@@ -35,6 +35,8 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     akilliset_val_aika_yht                NUMERIC,
     vahingot_hoitokausi_yht               NUMERIC,
     vahingot_val_aika_yht                 NUMERIC,
+    alihank_bon_hoitokausi_yht            NUMERIC,
+    alihank_bon_val_aika_yht              NUMERIC,
     tavhin_hoitokausi_yht                 NUMERIC,
     tavhin_val_aika_yht                   NUMERIC,
     hoitokauden_tavoitehinta              NUMERIC,
@@ -111,6 +113,9 @@ DECLARE
     paallyste_rivi                        RECORD;
 
     -- MHU ylläpito
+    alihankintabonus_rivi                 RECORD;
+    alihank_bon_val_aika_yht              NUMERIC;
+    alihank_bon_hoitokausi_yht            NUMERIC;
     yllapito_tpi_id                       NUMERIC;
     yllapito_hoitokausi_yht               NUMERIC;
     yllapito_val_aika_yht                 NUMERIC;
@@ -659,6 +664,42 @@ BEGIN
             END IF;
         END LOOP;
 
+    -- Haetaan alihankintabonus, joka on siirretty rahavarauksen alle ja merkitään se MHU Ylläpidon hankintoihin, jos hoitokausi on 2022 tai myöhemmin
+    alihank_bon_val_aika_yht := 0.0;
+    alihank_bon_hoitokausi_yht := 0.0;
+    IF (hk_alkupvm >= '2022-10-01'::DATE) THEN
+        FOR alihankintabonus_rivi IN SELECT ek.laskutuskuukausi, ek.rahasumma, ek.indeksin_nimi, ek.tyyppi, ek.urakka
+                                     FROM erilliskustannus ek
+                                     WHERE ek.sopimus = sopimus_id
+                                       AND ek.tyyppi = 'alihankintabonus'
+                                       AND ek.laskutuskuukausi >= hk_alkupvm
+                                       AND ek.laskutuskuukausi <= aikavali_loppupvm
+                                       AND ek.poistettu IS NOT TRUE
+            LOOP
+                RAISE NOTICE ' ********************************************* ERILLISKUSTANNUS - MHU Ylläpidolle: % ', alihankintabonus_rivi;
+
+                -- Alihankintabonukselle ei tule indeksikorotusta
+                -- Alihankintabonus käsitellään nykyään rahavarauksena ja se merkitään MHU Ylläpidon hankitoihin
+                IF alihankintabonus_rivi.laskutuskuukausi <= aikavali_loppupvm THEN
+                    -- Hoitokauden alusta
+                    alihank_bon_hoitokausi_yht :=
+                            alihank_bon_hoitokausi_yht + COALESCE(alihankintabonus_rivi.rahasumma, 0.0);
+
+                    IF alihankintabonus_rivi.laskutuskuukausi >= aikavali_alkupvm AND
+                       alihankintabonus_rivi.laskutuskuukausi <= aikavali_loppupvm THEN
+                        -- Laskutetaan nyt
+                        alihank_bon_val_aika_yht :=
+                                alihank_bon_val_aika_yht + COALESCE(alihankintabonus_rivi.rahasumma, 0.0);
+                    END IF;
+                END IF;
+            END LOOP;
+        RAISE NOTICE 'Alihankintabonus - Rahavaraukset - alihank_bon_val_aika_yht :: alihank_bon_hoitokausi_yht: % :: %', alihank_bon_val_aika_yht, alihank_bon_hoitokausi_yht;
+
+        -- Ei laiteta alihankintabonusta enää MHU Ylläpidon alle, vaan annetaan sille enemmän huomioita omalla rivillään rahavaraus kohdassa
+        --yllapito_val_aika_yht := yllapito_val_aika_yht + alihank_bon_val_aika_yht;
+        --yllapito_hoitokausi_yht := yllapito_hoitokausi_yht + alihank_bon_hoitokausi_yht;
+    END IF;
+
     RAISE NOTICE 'talvihoito_hoitokausi_yht: %', talvihoito_hoitokausi_yht;
     RAISE NOTICE 'talvihoito_val_aika_yht: %', talvihoito_val_aika_yht;
 
@@ -815,6 +856,8 @@ BEGIN
         END LOOP;
 
     -- Laskeskellaan tavoitehintaan kuuluvat yhteen
+    -- 2022-10-01 jälkeen alihankitabonus ei ole enää MHU ylläpitoon kuuluvana, vaan omana rivinään, niin iffitellään
+    -- se tarvittaessa mukaan
     tavhin_hoitokausi_yht := 0.0;
     tavhin_hoitokausi_yht := tavhin_hoitokausi_yht +
             talvihoito_hoitokausi_yht + lyh_hoitokausi_yht + sora_hoitokausi_yht +
@@ -827,6 +870,11 @@ BEGIN
             paallyste_val_aika_yht + yllapito_val_aika_yht + korvausinv_val_aika_yht +
             johtojahallinto_val_aika_yht +
             erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht + akilliset_val_aika_yht + vahingot_val_aika_yht;
+
+    IF (hk_alkupvm >= '2022-10-01'::DATE) THEN
+        tavhin_hoitokausi_yht := tavhin_hoitokausi_yht + alihank_bon_hoitokausi_yht;
+        tavhin_val_aika_yht := tavhin_val_aika_yht + alihank_bon_val_aika_yht;
+    END IF;
 
     -- Budjettia jäljellä
     budjettia_jaljella := 0.0;
@@ -852,14 +900,14 @@ BEGIN
     -----------------------------------------------------------------------------------------------------------
     ------------------- Bonukset, sanktiot ja päätöksen ylitykset ------------------------------------------------------------------
     -----------------------------------------------------------------------------------------------------------
-    -- HAetaan bonukset erilliskustannustaulusta pelkästään, koska ylläpidolle ei näytetä tätä raportti
-    -- Sanktiosta haetaan perus sanktiot, koska ylläpidosta ei tartte välittää
+    -- Haetaan bonukset erilliskustannustaulusta pelkästään, koska ylläpidolle ei näytetä tätä raporttia
+    -- Sanktiosta haetaan perus sanktiot, koska ylläpidosta ei tarvitse välittää
     bonukset_hoitokausi_yht := 0.0;
     bonukset_val_aika_yht := 0.0;
-    FOR bonukset_rivi IN SELECT ek.pvm                                              as pvm,
+    FOR bonukset_rivi IN SELECT ek.laskutuskuukausi                                 as laskutuskuukausi,
                                 ek.rahasumma                                        as summa,
                                 (SELECT korotettuna
-                                 from erilliskustannuksen_indeksilaskenta(ek.pvm, ek.indeksin_nimi, ek.rahasumma,
+                                 from erilliskustannuksen_indeksilaskenta(ek.laskutuskuukausi, ek.indeksin_nimi, ek.rahasumma,
                                                                           ek.urakka, ek.tyyppi,
                                                                           CASE
                                                                               WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi
@@ -882,7 +930,9 @@ BEGIN
                                                                                            AND m.toimenpideinstanssi = tpi.id
                                                                                            AND tpk2.koodi = '23150'
                                                                                          LIMIT 1)))
-                           AND ek.pvm BETWEEN hk_alkupvm AND aikavali_loppupvm
+                           -- Alihankintabonukset on siirretty rahavarauksiin, jos hoitokausi on 2022 tai myöhemmin
+                           AND (hk_alkupvm < '2022-10-01'::DATE OR (hk_alkupvm >= '2022-10-01'::DATE AND ek.tyyppi != 'alihankintabonus'))
+                           AND ek.laskutuskuukausi BETWEEN hk_alkupvm AND aikavali_loppupvm
                            AND ek.poistettu IS NOT TRUE
                            AND ek.tyyppi != 'muu'::erilliskustannustyyppi
 
@@ -891,13 +941,13 @@ BEGIN
             RAISE NOTICE 'bonukset_rivi: % ', bonukset_rivi;
             RAISE NOTICE 'bonukset_rivi.summa_korotettuna: %', bonukset_rivi.summa_korotettuna;
 
-            IF bonukset_rivi.pvm <= aikavali_loppupvm THEN
+            IF bonukset_rivi.laskutuskuukausi <= aikavali_loppupvm THEN
                 -- Hoitokauden alusta
                 bonukset_hoitokausi_yht := bonukset_hoitokausi_yht + COALESCE(bonukset_rivi.summa_korotettuna, 0.0);
-                RAISE NOTICE 'bonukset_rivi.pvm <= aikavali_loppupvm THEN: %', bonukset_hoitokausi_yht;
+                RAISE NOTICE 'bonukset_rivi.laskutuskuukausi <= aikavali_loppupvm THEN: %', bonukset_hoitokausi_yht;
 
-                IF bonukset_rivi.pvm >= aikavali_alkupvm AND
-                   bonukset_rivi.pvm <= aikavali_loppupvm THEN
+                IF bonukset_rivi.laskutuskuukausi >= aikavali_alkupvm AND
+                   bonukset_rivi.laskutuskuukausi <= aikavali_loppupvm THEN
                     -- Laskutetaan nyt
                     bonukset_val_aika_yht := bonukset_val_aika_yht + COALESCE(bonukset_rivi.summa_korotettuna, 0.0);
                 END IF;
@@ -1059,6 +1109,8 @@ BEGIN
               akilliset_hoitokausi_yht, akilliset_val_aika_yht,
         -- Vahingonkorvaukset yhteensä
               vahingot_hoitokausi_yht, vahingot_val_aika_yht,
+        -- Alihankintabonukset yhteensä
+              alihank_bon_hoitokausi_yht, alihank_bon_val_aika_yht,
         -- Tavoitehinnat yht.
               tavhin_hoitokausi_yht, tavhin_val_aika_yht,
         -- Tavoitehinnan muodostus

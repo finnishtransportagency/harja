@@ -6,6 +6,7 @@ SELECT e.id,
        e.sopimus                                           as sopimus_id,
        e.toimenpideinstanssi,
        e.pvm,
+       e.laskutuskuukausi,
        e.rahasumma,
        e.indeksin_nimi,
        e.lisatieto,
@@ -46,6 +47,6 @@ WHERE (:urakka_annettu IS FALSE OR e.sopimus in
       AND (:hallintayksikko_annettu IS FALSE OR
            u.id IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko))
       AND (:toimenpide::INTEGER IS NULL OR (tpi.toimenpide = :toimenpide AND e.urakka = tpi.urakka))
-      AND e.pvm :: DATE BETWEEN :alku AND :loppu
+      AND e.laskutuskuukausi :: DATE BETWEEN :alku AND :loppu
       AND e.poistettu IS NOT TRUE
-ORDER BY e.pvm, e.tyyppi;
+ORDER BY e.laskutuskuukausi, e.tyyppi;

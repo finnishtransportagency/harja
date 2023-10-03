@@ -431,33 +431,41 @@ UNION ALL
 -- Tässä ei ole siis mukana kustannusarvoitu_tyo tauluun tallennetut "Tilaajan rahavaraukset" jotka pohjimmiltaan on
 -- budjetoituja bonuksia ja jotka haetaan sitten erikseen toteutuneet_kustannukset taulusta, koska sinne siirretään kaikki toteutuneet
 -- kustannusarvoidut_työt
-SELECT 0                    AS budjetoitu_summa,
-       0                    AS budjetoitu_summa_indeksikorjattu,
-       SUM((SELECT korotettuna from erilliskustannuksen_indeksilaskenta(ek.pvm, ek.indeksin_nimi,
-                                                                        ek.rahasumma, ek.urakka , ek.tyyppi,
-                                                                        CASE
-                                                                            WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE
-                                                                            ELSE FALSE
-                                                                            END))) AS toteutunut_summa,
+SELECT 0                        AS budjetoitu_summa,
+       0                        AS budjetoitu_summa_indeksikorjattu,
+       SUM((SELECT korotettuna
+              FROM erilliskustannuksen_indeksilaskenta(ek.laskutuskuukausi, ek.indeksin_nimi,
+                 ek.rahasumma,ek.urakka , ek.tyyppi,
+CASE WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE ELSE FALSE END))) AS toteutunut_summa,
        CASE
            WHEN ek.tyyppi = 'lupausbonus' THEN 'lupausbonus'
-           ELSE 'bonus' END  AS maksutyyppi,
-       'bonus'              AS toimenpideryhma,
-       MIN(ek.tyyppi)::TEXT AS tehtava_nimi,
-       'bonukset'           AS toimenpide,
-       MIN(ek.luotu)        AS luotu,
-       MIN(ek.pvm)::TEXT    AS ajankohta,
-       'bonus'              as toteutunut,
-       0                    AS jarjestys,
-       'bonukset'           AS paaryhma,
-       NOW()                AS indeksikorjaus_vahvistettu -- erilliskustannuksia ei indeksivahvisteta, joten ne on aina "true"
+           WHEN ek.tyyppi = 'alihankintabonus' THEN 'alihankintabonus'
+           ELSE 'bonus' END     AS maksutyyppi,
+       CASE
+           WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN 'rahavaraus'
+           ELSE 'bonus' END     AS toimenpideryhma,
+       CASE
+           WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN 'Tilaajan rahavaraus (T3)'
+           ELSE MIN(ek.tyyppi)::TEXT END AS tehtava_nimi,
+       CASE
+           WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN 'MHU Ylläpito'
+           ELSE 'bonukset' END  AS toimenpide,
+       MIN(ek.luotu)            AS luotu,
+       MIN(ek.pvm)::TEXT        AS ajankohta,
+       CASE
+           WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN 'toteutunut'
+           ELSE 'bonus' END     AS toteutunut,
+       0                        AS jarjestys,
+       CASE
+           WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN 'rahavaraukset'
+           ELSE 'bonukset' END  AS paaryhma,
+       NOW()                    AS indeksikorjaus_vahvistettu -- erilliskustannuksia ei indeksivahvisteta, joten ne on aina "true"
 FROM erilliskustannus ek
      JOIN urakka u ON ek.urakka = u.id,
      sopimus s
 WHERE s.urakka = :urakka
   AND ek.sopimus = s.id
-  AND ek.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
-  AND ek.pvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+  AND ek.laskutuskuukausi BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND ek.poistettu IS NOT TRUE
 GROUP BY ek.tyyppi, ek.indeksin_nimi
 UNION ALL
