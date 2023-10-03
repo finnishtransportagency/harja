@@ -59,6 +59,10 @@
          (log/error "Virhe Velho-urakoiden haussa: " t)
          false)))
 
+(defn hae-urakan-varustetoteumat-velhosta [velho user {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
+  (velho-komponentti/hae-urakan-varustetoteumat velho urakka-id))
+
 (defrecord VarusteVelho []
   component/Lifecycle
   (start [this]
@@ -74,6 +78,10 @@
       (julkaise-palvelu http :hae-varustetoteumat-ulkoiset
                         (fn [user tiedot]
                           (hae-varustetoteumat-ulkoiset db user tiedot)))
+
+      (julkaise-palvelu http :hae-urakan-varustetoteumat
+        (fn [user tiedot]
+          (hae-urakan-varustetoteumat-velhosta velho user tiedot)))
 
       (when excel
         (excel-vienti/rekisteroi-excel-kasittelija! excel :varusteet-ulkoiset-excel

@@ -602,6 +602,12 @@ WHERE hanke = (SELECT id
                FROM hanke
                WHERE sampoid = :hanke_sampoid);
 
+-- name: hae-urakan-velho-oid
+-- single?: true
+SELECT velho_oid
+FROM urakka
+WHERE id = :id;
+
 -- name: paivita-velho_oid-null-kaikille!
 -- Tyhjentää velho_oid tiedon kaikilta urakoilta
 UPDATE urakka

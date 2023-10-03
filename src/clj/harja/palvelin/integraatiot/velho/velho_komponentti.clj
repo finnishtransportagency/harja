@@ -12,7 +12,8 @@
 
 (defprotocol VarustetoteumaHaku
   (tuo-uudet-varustetoteumat-velhosta [this])
-  (paivita-mhu-urakka-oidt-velhosta [this]))
+  (paivita-mhu-urakka-oidt-velhosta [this])
+  (hae-urakan-varustetoteumat [this urakka-id]))
 
 (defn suorita-ja-kirjaa-alku-loppu-ajat
   [funktio tunniste]
@@ -63,7 +64,9 @@
   (paivita-mhu-urakka-oidt-velhosta [this]
     (suorita-ja-kirjaa-alku-loppu-ajat
       #(varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki this) (:db this) asetukset)
-      "paivita-mhu-urakka-oidt-velhosta")))
+      "paivita-mhu-urakka-oidt-velhosta"))
+  (hae-urakan-varustetoteumat [this urakka-id]
+    (varusteet/hae-urakan-varustetoteumat (:integraatioloki this) (:db this) asetukset urakka-id)))
 
 ;; Esimerkki miten testiajojen suorittaminen onnistuu
 (comment 

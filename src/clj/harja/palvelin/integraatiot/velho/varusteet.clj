@@ -60,7 +60,7 @@
 (def +tietolajien-lahteet+ [+tl501+
                             +tl503_504_505_507_508_516+
                             +tl506+
-                            +tl509+
+                            #_+tl509+
                             +tl512+
                             +tl513+
                             +tl514_518+
@@ -690,3 +690,87 @@
     (catch Throwable t
       (lokita-urakkahakuvirhe (str "Poikkeus MHU urakoiden haussa Velhosta. Throwable: " t))
       false)))
+
+(defn hae-urakan-varustetoteumat [integraatioloki db {:keys [token-url
+                                                             varuste-kayttajatunnus
+                                                             varuste-salasana]} urakka-id]
+  (integraatiotapahtuma/suorita-integraatio db integraatioloki "velho" "varustetoteumien-haku" nil
+    (fn [konteksti]
+      (let [virheet (atom #{})]
+        (when-let [token (velho-yhteiset/hae-velho-token token-url varuste-kayttajatunnus varuste-salasana konteksti
+                           (fn [x]
+                             (swap! virheet conj (str "Virhe velho token haussa " x))
+                             (log/error "Virhe velho token haussa" x)))]
+          (let [otsikot {"Content-Type" "application/json"
+                         "Authorization" (str "Bearer " token)}
+                http-asetukset {:metodi :POST
+                                :otsikot otsikot
+                                ;; TODO: Ota url asetuksista
+                                :url "https://apiv2stgvelho.testivaylapilvi.fi/hakupalvelu/api/v1/haku/kohdeluokat"}
+                urakka-velho-oid (q-urakat/hae-urakan-velho-oid db {:id urakka-id})
+                payload {:asetukset {:tyyppi "kohdeluokkahaku"
+                                     :liitoshaku true
+                                     ;; TODO: Katso saako tämän toimimaan, jos haetaan turhia kenttiä
+                                     :palautettavat-kentat []}
+                         ;; TODO: Varmista haettavat aineistot
+                         :kohdeluokat (mapv :kohdeluokka +tietolajien-lahteet+)
+                         :lauseke ["kohdeluokka" "yleiset/perustiedot"
+                                   ["joukossa"
+                                    ["yleiset/perustiedot"
+                                     "muutoksen-lahde-oid"]
+                                    [urakka-velho-oid]]]}
+                {vastaus :body
+                 _ :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
+                varusteet (:osumat (json/read-str vastaus :key-fn keyword))
+
+                varusteet
+                ;; DONE: Pura json -> clj
+                (mapv (fn [varuste]
+                        (let [{tie :tie alkuet :etaisyys alkuosa :osa} (or (:sijainti varuste) (:alkusijainti varuste))
+                              {loppuetaisyys :etaisyys loppuosa :osa} (:loppusijainti varuste)
+                              alkupvm (or (get-in varuste [:version-voimassaolo :alku])
+                                        (:alkaen varuste))
+                              alkupvm (when alkupvm
+                                        (-> alkupvm
+                                          (pvm/iso-8601->pvm)
+                                          (varuste-vastaanottosanoma/aika->sql)))]
+                          {:alkupvm alkupvm
+                           :kuntoluokka (varuste-vastaanottosanoma/varusteen-kuntoluokka
+                                          (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)
+                                          varuste)
+                           ;; TODO: Lisää lisätieto kuten ennenkin
+                           :lisatieto nil
+                           :loppupvm (cond-> (get-in varuste [:version-voimassaolo :loppu])
+                                       (get-in varuste [:version-voimassaolo :loppu])
+                                       pvm/iso-8601->pvm
+                                       (get-in varuste [:version-voimassaolo :loppu])
+                                       varuste-vastaanottosanoma/aika->sql)
+                           :muokattu (when (:muokattu varuste) (varuste-vastaanottosanoma/aika->sql (pvm/psql-timestamp->aika (:muokattu varuste))))
+                           :muokkaaja (get-in varuste [:muokkaaja :kayttajanimi])
+                           :sijainti (or (varuste-vastaanottosanoma/velhogeo->harjageo (:keskilinjageometria varuste))
+                                       (sijainti-kohteelle db varuste))
+                           :tietolaji nil ;; TODO: toteuta jos tarvitaan
+                           :toteuma (varuste-vastaanottosanoma/varusteen-toteuma
+                                      (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)
+                                      varuste)
+                           :tr-numero tie
+                           :tr-alkuosa alkuosa
+                           :tr-alkuetaisyys alkuet
+                           :tr-loppuosa loppuosa
+                           :tr-loppuetaisyys loppuetaisyys
+                           :ulkoinen-oid (:oid varuste)
+                           })
+
+                        ) varusteet)]
+            (println "jere testaa::" (count varusteet))
+            {:urakka-id urakka-id :toteumat varusteet}
+
+            ))))))
+
+(comment
+  (def foo (hae-urakan-varustetoteumat (:integraatioloki harja.palvelin.main/harja-jarjestelma)
+             (:db harja.palvelin.main/harja-jarjestelma)
+             (:asetukset (:velho-integraatio harja.palvelin.main/harja-jarjestelma))
+             35))
+
+  (def foo2 (json/read-str foo :key-fn keyword)))

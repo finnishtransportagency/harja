@@ -140,15 +140,17 @@
       app
       (do
         (reset! varusteet-kartalla/karttataso-varusteet [])
+        (println "asdf")
         (-> app
           (assoc :haku-paalla true :varusteet [])
-          (tuck-apurit/post! :hae-urakan-varustetoteuma-ulkoiset
-            (hakuparametrit app)
+          (tuck-apurit/post! :hae-urakan-varustetoteumat
+            {:urakka-id @harja.tiedot.navigaatio/valittu-urakka-id}
             {:onnistui ->HaeVarusteetOnnistui
              :epaonnistui ->HaeVarusteetEpaonnistui})))))
 
   HaeVarusteetOnnistui
   (process-event [{:keys [vastaus]} app]
+    (println "jere testaa:: HaeVarusteetOnnistui" )
     (reset! varusteet-kartalla/karttataso-varusteet
       (map (fn [t]
              (assoc t :tr-osoite (muodosta-tr-osoite t)
@@ -161,6 +163,7 @@
 
   HaeVarusteetEpaonnistui
   (process-event [_ app]
+    (println "jere testaa:: HaeVarusteetEpaonnistui" )
     (reset! varusteet-kartalla/karttataso-varusteet nil)
     (viesti/nayta! "Varusteiden haku epäonnistui!" :danger)
     (-> app
