@@ -127,12 +127,12 @@
      {:luokka "css-grid sm-css-block css-grid-columns-12x1 css-grid-columns-gap-16 padding-horizontal-16"
       :muokkaa! #(e! (v/->AsetaValinnat %))
       :tarkkaile-ulkopuolisia-muutoksia? true
-      ;:footer-luokka "tyhjenna-hakuehdot"
+      :footer-luokka "tyhjenna-hakuehdot"
       :footer-fn (fn [data]
                    [napit/tallenna "Tyhjennä hakuehdot"
                     #(do
                        ;(merge valinnat-nyt tiedot/oletus-valinnat {:selite [nil ""]})
-                       (e! (v/->PalautaOletusHakuEhdot %)))
+                       (e! (v/->PalautaOletusHakuEhdot )))
                     {:disabled @tiedot/oletus-valinnat?
                      :luokka "button-secondary-default"
                      }])}

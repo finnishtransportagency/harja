@@ -3,7 +3,7 @@
 
 ;; Vaihtaa valinnat
 (defrecord AsetaValinnat [valinnat])
-(defrecord PalautaOletusHakuEhdot [valinnat])
+(defrecord PalautaOletusHakuEhdot [])
 
 ;; Kun valintojen reaktio muuttuu
 (defrecord YhdistaValinnat [valinnat])
