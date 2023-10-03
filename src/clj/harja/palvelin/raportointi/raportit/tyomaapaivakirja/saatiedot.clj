@@ -63,9 +63,7 @@
     [taulukko-vasen taulukko-oikea]))
 
 (defn saatietojen-taulukot [saa-asemat]
-  (let [paritioidut-saa-asemat (if (>= (count saa-asemat) 2)
-                                 (partition 2 saa-asemat)
-                                 (partition 1 saa-asemat))
+  (let [paritioidut-saa-asemat (partition-all 2 saa-asemat)
         asematietotaulukot (mapv
                              (fn [rivi]
                                (saatiedot-taulukkojen-parametrit (first rivi) (second rivi)))
