@@ -782,7 +782,7 @@ SELECT exists(SELECT FROM ilmoitus i WHERE i.ilmoitusid = :ilmoitusid AND i.urak
 -- name: ilmoituksen-alkuperainen-kesto
 SELECT extract(EPOCH FROM (SELECT vastaanotettu - "vastaanotettu-alunperin"
                            FROM ilmoitus
-                           WHERE id = :id));
+                           WHERE id = :id)) as kesto;
 
 -- name: tallenna-ilmoitusten-toimenpiteiden-aloitukset!
 UPDATE ilmoitus
