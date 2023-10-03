@@ -24,8 +24,7 @@ inputs:
   image:
     description: 'Cypress kontin imagen nimi'
     required: false
-    # TODO: Testaa versiota 10.2.0, Vaihda takaisin latest tagiin testauksen jälkeen
-    default: ghcr.io/finnishtransportagency/harja_cypress:10.2.0
+    default: ghcr.io/finnishtransportagency/harja_cypress:latest
   GITHUB_WORKSPACE:
     description: 'Github jobin workspace path. Tämä mountataan cypress kontin sisälle.'
     required: true
