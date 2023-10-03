@@ -325,10 +325,10 @@
                                                 r))))
     (hae-kulu-kohdistuksineen db user {:id (:id kulu)})))
 
-(defn poista-kulu
+(defn poista-kulu-tietokannasta
   "Merkitsee kulun sekä kaikki siihen liittyvät kohdistukset poistetuksi."
   [db user {:keys [urakka-id id]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (log/debug "kulut :: poista-kulu-tietokannasta" id urakka-id)
   (let [liitteet (into [] (q/hae-liitteet db {:kulu-id id}))
         poistettu-kulu (hae-kulu-kohdistuksineen db user {:id id})]
     (when (not (empty? liitteet))
@@ -343,6 +343,15 @@
     (kust-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi
                                                (:toimenpideinstanssi poistettu-kulu)})
     poistettu-kulu))
+
+(defn- poista-kulu
+  "Wrapperi funktio välikatselmuksen päätökseen liittyvän kulun poistamiseksi ja kulut -sivun kulun poistamiseksi.
+  Niillä on erilaiset käyttöoikeudet. Joudumme sallimaan erilaiset oikeudet eri tilanteiden hoitamiseksi.
+
+  Merkitsee kulun sekä kaikki siihen liittyvät kohdistukset poistetuksi."
+  [db user {:keys [urakka-id] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (poista-kulu-tietokannasta db user tiedot))
 
 (defn tallenna-kulu
   "Funktio tallentaa kulun kohdistuksineen. Käytetään teiden hoidon urakoissa (MHU)."

@@ -168,7 +168,7 @@ WHERE
 
 -- name: hae-urakan-bonukset
 -- row-fn: muunna-urakan-bonus
--- Palauttaa kaikki urakalle kirjatut bonukset perintäpäivämäärällä ja toimenpideinstanssilla rajattuna
+-- Palauttaa kaikki urakalle kirjatut bonukset laskutuskuukaudella ja toimenpideinstanssilla rajattuna
 -- Käytetään siis mm. Laadunseuranta/sanktiot välilehdellä
 -- Filtteröi muu tyyppiset erilliskustannukset pois, koska niitä ei voi tämän renderöivässä näkymässä muokata eikä lisätä
 
@@ -204,19 +204,7 @@ SELECT ek.id,
   FROM erilliskustannus ek
       JOIN urakka u ON ek.urakka = u.id
  WHERE ek.urakka = :urakka
-   -- MHU urakoille on olennaista, että bonukset on tallennettu 23150 koodilla olevalle toimenpideinstanssille
-   -- eli hoidon johdolle. Alueurakoilla tätä vaatimusta ei ole. Joten bonukset voivat kohdistua
-   -- vapaammin mille tahansa toimenpideinstanssille
-   AND (u.tyyppi = 'hoito' OR (u.tyyppi = 'teiden-hoito' AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
-                                   FROM toimenpideinstanssi tpi
-                                            JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
-                                            JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
-                                        maksuera m
-                                  WHERE tpi.urakka = :urakka
-                                    AND m.toimenpideinstanssi = tpi.id
-                                    AND tpk2.koodi = '23150'
-                                  LIMIT 1)))
-   AND ek.pvm BETWEEN :alku AND :loppu
+   AND ek.laskutuskuukausi BETWEEN :alku AND :loppu
    AND ek.poistettu IS NOT TRUE
    AND ek.tyyppi != 'muu'::erilliskustannustyyppi
 

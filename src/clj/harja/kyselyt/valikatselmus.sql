@@ -6,7 +6,7 @@ FROM urakka_tavoite ut
          LEFT JOIN (SELECT SUM(t.summa) AS summa, t."urakka-id", t."hoitokauden-alkuvuosi"
                     FROM tavoitehinnan_oikaisu t
                     WHERE NOT t.poistettu
-                    GROUP BY t."urakka-id", t."hoitokauden-alkuvuosi") t ON (ut.urakka = t."urakka-id")
+                    GROUP BY t."urakka-id", t."hoitokauden-alkuvuosi") t ON (ut.urakka = t."urakka-id" AND t."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi)
 WHERE ut.urakka = :urakka-id
   AND EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 = :hoitokauden-alkuvuosi;
 
@@ -61,6 +61,6 @@ limit 1;
 -- name: hae-paatos
 SELECT id, "hoitokauden-alkuvuosi", "urakka-id", "hinnan-erotus", "urakoitsijan-maksu", "tilaajan-maksu",
        siirto, tyyppi, "lupaus-luvatut-pisteet", "lupaus-toteutuneet-pisteet", "lupaus-tavoitehinta",
-       muokattu, "muokkaaja-id", "luoja-id", luotu, poistettu, erilliskustannus_id, sanktio_id
+       muokattu, "muokkaaja-id", "luoja-id", luotu, poistettu, erilliskustannus_id, sanktio_id, kulu_id
 FROM urakka_paatos
 WHERE id = :id;

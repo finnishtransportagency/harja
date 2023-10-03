@@ -77,14 +77,13 @@
 (defonce haetut-sanktiot-ja-bonukset
   (reaction<! [urakka (:id @nav/valittu-urakka)
                hoitokausi @urakka/valittu-hoitokausi
-               [kk-alku kk-loppu] @urakka/valittu-hoitokauden-kuukausi
                _ @nakymassa?
                _ @paivita-sanktiot-ja-bonukset-atom]
               {:nil-kun-haku-kaynnissa? true}
               (when @nakymassa?
                 (hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka
-                                                  :alku (or kk-alku (first hoitokausi))
-                                                  :loppu (or kk-loppu (second hoitokausi))}))))
+                                                  :alku (first hoitokausi)
+                                                  :loppu (second hoitokausi)}))))
 
 (defn paivita-sanktiot-ja-bonukset!
   "Vaihtaa paivita-sanktiot-ja-bonukset atomin arvon, joka käynnistää sanktioiden ja bonusten haun."
