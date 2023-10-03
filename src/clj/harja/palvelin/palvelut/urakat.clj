@@ -45,9 +45,9 @@
   [db urakkatyyppi x y]
   (loop [radius 50
          k 1]
-    ;; Palautetaan nil, jos ei löydy urakkaa kilometrin säteeltä.
+    ;; Palautetaan nil, jos ei löydy urakkaa 800 metrin säteeltä.
     ;; Jos on useampia urakoita, palautetaan lähin tai uusin, jos urakat ovat yhtä lähellä.
-    (when (and (< radius 500)
+    (when (and (< radius 801)
                (< k 10))
       (let [urakat (distinct (map #(dissoc % :etaisyys :urakkatyyppi )
                                   (q/hae-urakka-sijainnilla db {:x x :y y
