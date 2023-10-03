@@ -24,7 +24,7 @@
             [harja.ui.modal :as modal]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
-            [harja.ui.kentat :refer [tee-kentta]]
+            [harja.ui.kentat :refer [tee-kentta tee-otsikollinen-kentta]]
             [harja.fmt :as fmt]
             [harja.ui.ikonit :as ikonit]
             [reagent.core :as r]
@@ -216,6 +216,7 @@
     :default nil))
 
 (defn- urakan-indeksi [ur]
+  ; tästä
   (let [auki? (atom false)]
     (fn [ur]
       [:span
@@ -350,6 +351,72 @@
          (ikonit/livicon-wrench)
          " "])]]))
 
+(defn- urakan-kesa-aika [ur]
+  (let [auki? (atom false)]
+    (fn [ur]
+    (if (not @auki?)
+      [:<>
+       [:span (str (pvm/fmt-paiva-ja-kuukausi-lyhyt (:kesakausi-alkupvm ur))
+                "–" (pvm/fmt-paiva-ja-kuukausi-lyhyt (:kesakausi-loppupvm ur)))]
+       [:span " (tieliikenneilmoituksien kesävasteaika)"]
+       (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+               (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur)))
+         [:span
+          [:span.klikattava {:on-click (fn []
+                                         (swap! auki? not))}
+           " "
+           (ikonit/livicon-wrench)
+           " "]])]
+        (let [aikavali-alku (atom nil) ; on auki
+              aikavali-loppu (atom nil)]
+        [:<>
+         [:span
+          [tee-otsikollinen-kentta {:otsikko "Aikaväli alkaa"
+                                    :luokka "label-ja-kentta-kesa-aika"
+                                    :tyylit {:width "90px"
+                                             :min-width "90px"}
+                                    :kentta-params {:placeholder "pp.kk"
+                                                    :tyyppi :string
+                                                    :vayla-tyyli? true
+                                                    :pituus-max 6
+                                                    :pituus-min 4}
+                                    :arvo-atom aikavali-alku
+                                    } aikavali-alku]
+         [tee-otsikollinen-kentta {:otsikko "Aikaväli loppuu"
+                                   :luokka "label-ja-kentta-kesa-aika"
+                                   :tyylit {:width "90px"
+                                            :min-width "90px"}
+                                   :kentta-params {:placeholder "pp.kk"
+                                                   :tyyppi :string
+                                                   :vayla-tyyli? true
+                                                   :pituus-max 6
+                                                   :pituus-min 4}
+                                   :arvo-atom aikavali-loppu
+                                   } aikavali-loppu]
+         [napit/palvelinkutsu-nappi "Tallenna"
+          #(urakat/paivita-kesa-aika! ur @aikavali-alku @aikavali-loppu)
+          {:kun-onnistuu (fn [vastaus]
+                           (do
+                             (viesti/nayta! "Urakan kesäaika tallennettu" :success)
+                             (nav/paivita-urakan-tiedot! (:id ur)
+                               (fn [u]
+                                 (-> u
+                                   (assoc :kesakausi-alkupvm (:kesakausi-alkupvm (first vastaus)))
+                                   (assoc :kesakausi-loppupvm (:kesakausi-loppupvm (first vastaus))))))
+                             (reset! auki? false)
+                             (reset! aikavali-alku nil)
+                             (reset! aikavali-loppu nil)))
+           :virheviesti "Kesäajan tallennus epäonnistui."
+           :nayta-virheviesti? true
+           :kun-virhe (fn [vastaus]
+                        (viesti/nayta-toast! (:virhe (:response vastaus))
+                          :varoitus viesti/viestin-nayttoaika-keskipitka))}]
+         [napit/yleinen-toissijainen "Peruuta" #(do
+                                                  (reset! auki? false)
+                                                  (reset! aikavali-alku nil)
+                                                  (reset! aikavali-loppu nil))
+          {:luokka "nappi-toissijainen"}]]])))))
+
 (defn yleiset-tiedot [paivita-vastuuhenkilot! ur kayttajat vastuuhenkilot]
   (let [{:keys [paallystysurakka? paallystysurakka-sidottu?]
          :as yha-tiedot} (yha-tiedot ur)]
@@ -393,11 +460,7 @@
       "Sopimustyyppi: " (yllapitourakan-sopimustyyppi ur)
       "Indeksi: " (when-not (#{:paallystys :paikkaus} (:tyyppi ur))
                     [urakan-indeksi ur])
-      "Urakan kesäaika: " [:<>
-                           [:span (str (pvm/fmt-paiva-ja-kuukausi-lyhyt (:kesakausi-alkupvm ur))
-                                    "–" (pvm/fmt-paiva-ja-kuukausi-lyhyt (:kesakausi-loppupvm ur)))]
-                           [:span " (tieliikenneilmoituksien kesävasteaika)"]]]]))
-
+      "Urakan kesäaika: " [urakan-kesa-aika ur]]]))
 
 (defn yhteyshenkilot [ur]
   (let [yhteyshenkilot (atom nil)

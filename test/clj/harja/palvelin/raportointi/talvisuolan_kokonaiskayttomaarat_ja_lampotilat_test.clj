@@ -57,10 +57,11 @@
     (is (= nil nil))
     (is (= 1900 (talvisuola-rap/paattele-raportin-viimeinen-hoitovuosi (pvm/luo-pvm-dec-kk 1900 9 30))))
     ;; Nykyhetkeksi on määritelty 2023 elokuu, joten hoitokausi on kesken, ja oikeaa päätösvuotta ei voida käyttää
-    (is (= 2022 (talvisuola-rap/paattele-raportin-viimeinen-hoitovuosi (pvm/luo-pvm-dec-kk 2023 9 30))))
-    ;; Nykyhetkeksi on määritelty 2023 elokuu, joten hoitokausi on kesken, ja oikeaa päätösvuotta ei voida käyttää
+    (is (= 2023 (talvisuola-rap/paattele-raportin-viimeinen-hoitovuosi (pvm/luo-pvm-dec-kk 2023 9 30))))
+    ;; Nykyhetkeksi on määritelty 3023 elokuu, joten hoitokausi on kesken, ja oikeaa päätösvuotta ei voida käyttää
     ;; Vaikka se olisi kuinka myöhään tulevaisuudessa
-    (is (= 2022 (talvisuola-rap/paattele-raportin-viimeinen-hoitovuosi (pvm/luo-pvm-dec-kk 3023 9 30))))))
+    (is (= (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))
+          (talvisuola-rap/paattele-raportin-viimeinen-hoitovuosi (pvm/luo-pvm-dec-kk 3023 9 30))))))
 
 (deftest kohtuullistettu-kayttoraja-test
   (is (= 1.0 (talvisuola-rap/kohtuullistettu-kayttoraja 1 0)))
@@ -110,7 +111,8 @@
   (let [urakan-nimi "Oulun MHU 2019-2024"
         urakka-id (hae-urakan-id-nimella urakan-nimi)
         urakan-tiedot (first (q-map (str "select alkupvm, loppupvm from urakka where id = " urakka-id ";")))
-        hoitovuodet '(2019 2020 2021)
+        kuluva-tai-viimeinen-hoitokausi (min 2024 (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt)))))
+        hoitovuodet (range 2019 kuluva-tai-viimeinen-hoitokausi)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
@@ -126,7 +128,7 @@
       (is (= vastaus
             [:raportti {:nimi "Oulun MHU 2019-2024"
                         :orientaatio :landscape}
-             [:taulukko {:otsikko "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu 01.10.2019 - 30.09.2022", :tyhja nil, :sheet-nimi "Talvihoitosuolat"}
+             [:taulukko {:otsikko (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu 01.10.2019 - 30.09." (inc (apply max hoitovuodet))), :tyhja nil, :sheet-nimi "Talvihoitosuolat"}
               [{:otsikko "Hoitovuosi", :leveys 1, :fmt :kokonaisluku, :tasaa :vasen}
                {:otsikko "Keskilämpötilojen keskiarvo tarkastelujaksolla (°C)", :leveys 1, :fmt :numero, :tasaa :oikea}
                {:otsikko "Keskilämpötilojen keskiarvo pitkällä aikavälillä (°C)", :leveys 1, :fmt :numero, :tasaa :oikea} {:otsikko "Erotus (°C)", :leveys 1, :fmt :numero, :tasaa :oikea}
@@ -135,22 +137,27 @@
                {:otsikko "Kohtuullistettu käyttöraja (kuivatonnia)", :leveys 1, :fmt :numero, :tasaa :oikea}
                {:otsikko "Toteuma (kuivatonnia)", :leveys 1, :fmt :numero, :tasaa :oikea}
                {:otsikko "Erotus (kuivatonnia)", :leveys 1, :fmt :numero, :tasaa :oikea}]
-              [[[:arvo {:arvo "2019-2020"}] -3.50M -5.60M 2.10M "+10 %" [:arvo {:arvo "Käyttöraja puuttuu", :huomio? true}] [:arvo {:arvo "-"}] 1300M
-                [:arvo {:arvo 0, :jos-tyhja "-", :desimaalien-maara 2, :ryhmitelty? true, :korosta-hennosti? true}]]
-               [[:arvo {:arvo "2020-2021"}] [:arvo {:arvo "Lämpötilatieto puuttuu", :huomio? true}] [:arvo {:arvo "Lämpötilatieto puuttuu", :huomio? true}] 0 "0 %" [:arvo {:arvo "Käyttöraja puuttuu", :huomio? true}] [:arvo {:arvo "-"}] [:arvo {:arvo "-"}] [:arvo {:arvo 0, :jos-tyhja "-", :desimaalien-maara 2, :ryhmitelty? true, :korosta-hennosti? true}]]
-               [[:arvo {:arvo "2021-2022"}] [:arvo {:arvo "Lämpötilatieto puuttuu", :huomio? true}] [:arvo {:arvo "Lämpötilatieto puuttuu", :huomio? true}] 0 "0 %" [:arvo {:arvo "Käyttöraja puuttuu", :huomio? true}] [:arvo {:arvo "-"}] [:arvo {:arvo "-"}] [:arvo {:arvo 0, :jos-tyhja "-", :desimaalien-maara 2, :ryhmitelty? true, :korosta-hennosti? true}]]
-               {:lihavoi? true, :korosta-hennosti? true,
-                :rivi [[:arvo {:arvo "Yhteensä"}] nil nil nil nil
-                       [:arvo
-                        {:arvo      nil
-                         :jos-tyhja "-"}]
-                       [:arvo
-                        {:arvo      nil
-                         :jos-tyhja "-"}]
-                       1300M
-                       [:arvo
-                        {:arvo              0
-                         :desimaalien-maara 2
-                         :jos-tyhja         "-"
-                         :korosta-hennosti? true
-                         :ryhmitelty?       true}]]}]]])))))
+              (concat
+                [[[:arvo {:arvo "2019-2020"}] -3.50M -5.60M 2.10M "+10 %" [:arvo {:arvo "Käyttöraja puuttuu", :huomio? true}] [:arvo {:arvo "-"}] 1300M
+                  [:arvo {:arvo 0, :jos-tyhja "-", :desimaalien-maara 2, :ryhmitelty? true, :korosta-hennosti? true}]]]
+
+                (mapv
+                  (fn [vuosi]
+                    [[:arvo {:arvo (str vuosi "-" (inc vuosi))}] [:arvo {:arvo "Lämpötilatieto puuttuu", :huomio? true}] [:arvo {:arvo "Lämpötilatieto puuttuu", :huomio? true}] 0 "0 %" [:arvo {:arvo "Käyttöraja puuttuu", :huomio? true}] [:arvo {:arvo "-"}] [:arvo {:arvo "-"}] [:arvo {:arvo 0, :jos-tyhja "-", :desimaalien-maara 2, :ryhmitelty? true, :korosta-hennosti? true}]])
+                  (rest hoitovuodet))
+
+                [{:lihavoi? true, :korosta-hennosti? true,
+                  :rivi [[:arvo {:arvo "Yhteensä"}] nil nil nil nil
+                         [:arvo
+                          {:arvo nil
+                           :jos-tyhja "-"}]
+                         [:arvo
+                          {:arvo nil
+                           :jos-tyhja "-"}]
+                         1300M
+                         [:arvo
+                          {:arvo 0
+                           :desimaalien-maara 2
+                           :jos-tyhja "-"
+                           :korosta-hennosti? true
+                           :ryhmitelty? true}]]}])]])))))
