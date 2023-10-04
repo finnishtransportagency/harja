@@ -1,8 +1,6 @@
 # Security hardening for GitHub Actions
 # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
 
-# TODO: Toteuta workflow VHAR-8197
-
 name: 'Harja: Test Pull Request'
 
 concurrency:
@@ -13,40 +11,31 @@ on:
   # Manuaalisen käynnistyksen asetukset
   workflow_dispatch:
   # Workflow ajetaan automaattisesti jokaiselle PR:lle, jonka base branch on develop
-#  pull_request:
-#    branches: [ develop ]
-
-# Tässä voi määritellä yhteiset permissionit kaikille jobeille workflowissa tarvittaessa
-# README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
-permissions:
-  # Contents read lupaa tarvitaan checkout actionissa
-  contents: read
-  # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-  packages: read
-
-env:
-  GH_DOCKER_REGISTRY: ghcr.io
+  pull_request:
+    branches: [ develop ]
 
 jobs:
-  # Linter job
-  lint-clj:
-    name: "Lint Clojure"
-    runs-on: ubuntu-latest
-    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+  tests:
+    uses: ./.github/workflows/reusable_run_app_tests.yml
+    # Permissions
+    # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    # https://docs.github.com/en/actions/using-workflows/reusing-workflows#access-and-permissions
     permissions:
       # Contents read lupaa tarvitaan checkout actionissa
       contents: read
+      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
+      packages: read
+      # Actions write oikeudella voidaan esim. listata ja poistaa artifacteja
+      actions: write
+      # Tarvitaan test-reportin julkaisuun PR:ssä
+      checks: write
+    strategy:
+      matrix:
+        configs: [
+          { testDBImageTag: "12", e2eBrowsers: ['chrome'] },
+          { testDBImageTag: "15", e2eBrowsers: ['chrome', 'edge'] },
+        ]
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup clojure environment
-        uses: ./.github/actions/setup-clojure-env
-        with:
-          install-tools: true
-
-      # https://github.com/clj-kondo/clj-kondo/blob/master/doc/ci-integration.md
-      - name: Lint
-        continue-on-error: true
-        run: clj-kondo --lint src --config '{:output {:pattern "::{{level}} file={{filename}},line={{row}},col={{col}}::{{message}}"}}'
+    with:
+      test-db-image-tag: ${{ matrix.configs.testDBImageTag }}
+      e2e-browsers: ${{ toJSON(matrix.configs.e2eBrowsers) }}

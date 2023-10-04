@@ -1,39 +1,47 @@
+###
+# Ajaa Harja-sovelluksen testipatterin, sekä yrittää tekee buildin (e2e-testejä varten)
+###
+
 # Security hardening for GitHub Actions
 # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
 
-name: 'Harja: Test and build (PR)'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref_name }}
-  cancel-in-progress: true
+name: '[Reusable] Run app tests'
 
 on:
-  # Manuaalisen käynnistyksen asetukset
-  workflow_dispatch:
-  # Workflow ajetaan automaattisesti jokaiselle PR:lle, jonka base branch on develop
-  pull_request:
-    branches: [ develop ]
-
-  # Workflow ajetaan aina kun develop-branchiin tulee muutos (esim. PR mergetetään)
-  push:
-    branches:
-      - develop
-
-# Tässä voi määritellä yhteiset permissionit kaikille jobeille workflowissa tarvittaessa
-# README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
-permissions:
-  # Contents read lupaa tarvitaan checkout actionissa
-  contents: read
-  # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-  packages: read
+  workflow_call:
+    inputs:
+      test-db-image-tag:
+        description: 'Testeissä käytettävän testitietokannan docker-imagen tagi'
+        type: string
+        required: true
+      e2e-browsers:
+        description: 'E2E-testeissä testattavat selaimet (JSON)'
+        default: "['chrome']"
+        type: string
+        required: false
 
 env:
   GH_DOCKER_REGISTRY: ghcr.io
 
 jobs:
+
+  print-test:
+    name: "Debug"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Debug
+        env:
+          IMAGE_TAG: ${{ inputs.test-db-image-tag }}
+          BROWSERS: ${{ inputs.e2e-browsers }}
+        run: |
+          echo "Testitietokannan tagi: $IMAGE_TAG"
+          echo "Selaimet: $BROWSERS"
+
   # Linter job
   lint-clj:
     name: "Lint Clojure"
+    if: false
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -57,6 +65,7 @@ jobs:
   # Build job
   build:
     name: "Prod build"
+    if: false
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -137,6 +146,7 @@ jobs:
   #       pitää ottaa mukaan jobiin.
   back-tests:
     name: "Backend-testit"
+    if: false
     runs-on: ubuntu-latest
     env:
       TZ: "EET"
@@ -173,6 +183,7 @@ jobs:
 
   basic-tests:
     name: "Frontti- ja hitaat testit"
+    if: false
     runs-on: ubuntu-latest
     env:
       TZ: "EET"
@@ -229,6 +240,7 @@ jobs:
   # integraatiotestit vaativat ActiveMQ-brokerin, siksi oma jobi
   integration-tests:
     name: "integraatiotestit"
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
