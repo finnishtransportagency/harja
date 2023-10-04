@@ -12,7 +12,7 @@
                    [harja.atom :refer [reaction<!]]))
 
 (def alkutila {:yhteydenotto {:otsikko ""
-                              :sisalto "[Älä vastaa tähän sähköpostiviestiin. Palautetta voit lähettää osoitteeseen harjapalaute@solita.fi]\n\nYstävällisin terveisin, \nHarjan ylläpito"}
+                              :sisalto "Hei,\n\n<Kirjoita viestisi tähän>\n[Älä vastaa tähän sähköpostiviestiin. Palautetta voit lähettää osoitteeseen harjapalaute@solita.fi]\n\nYstävällisin terveisin, \nHarjan ylläpito"}
                :lahetys-kaynnissa? false})
 (def nakymassa? (atom false))
 (def data (atom alkutila))
