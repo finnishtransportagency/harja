@@ -149,7 +149,7 @@
      {:otsikko (if (>= lkm v/+max-toteumat+)
                  (str "Varustetoimenpiteet (Liikaa osumia. Näytetään vain " v/+max-toteumat+ " ensimmäistä.)")
                  (str "Varustetoimenpiteet (" lkm ")"))
-      :tunniste :id
+      :tunniste :ulkoinen-oid
       :luokat ["varuste-taulukko" "margin-top-32"]
       :tyhja (if haku-paalla
                [ajax-loader "Haetaan varustetapahtumia..."]
@@ -176,8 +176,7 @@
        :hae v/muodosta-tr-osoite}
       {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3
        :fmt varuste-ulkoiset/toteuma->toimenpide}
-      {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tietolaji :leveys 5
-       :fmt v/tietolaji->varustetyyppi}
+      {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tyyppi :leveys 5}
       {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
       {:otsikko "Kunto\u00ADluoki\u00ADtus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
        :komponentti (fn [rivi]

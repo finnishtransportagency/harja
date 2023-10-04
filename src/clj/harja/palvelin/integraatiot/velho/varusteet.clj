@@ -735,15 +735,14 @@
                                         (-> alkupvm
                                           (pvm/iso-8601->pvm)
                                           (varuste-vastaanottosanoma/aika->sql)))
-                              tyyppi (get-in varuste [:rakenteelliset-ominaisuudet :tyyppi])
-                              tietolaji nil
-                              ]
+                              tyyppi (get-in varuste [:ominaisuudet :rakenteelliset-ominaisuudet :tyyppi])
+                              tyyppi (q-nimikkeistot/hae-nimikkeen-otsikko db {:nimiavaruus_nimike tyyppi})]
                           {:alkupvm alkupvm
                            :kuntoluokka (varuste-vastaanottosanoma/varusteen-kuntoluokka
                                           (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)
                                           varuste)
                            ;; TODO: Lisää lisätieto kuten ennenkin
-                           :lisatieto (varuste-vastaanottosanoma/varusteen-lisatieto (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe) tietolaji varuste)
+                           :lisatieto (varuste-vastaanottosanoma/varusteen-lisatieto (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe) tyyppi varuste)
                            :loppupvm (cond-> (get-in varuste [:version-voimassaolo :loppu])
                                        (get-in varuste [:version-voimassaolo :loppu])
                                        pvm/iso-8601->pvm
@@ -753,7 +752,7 @@
                            :muokkaaja (get-in varuste [:muokkaaja :kayttajanimi])
                            :sijainti (or (varuste-vastaanottosanoma/velhogeo->harjageo (:keskilinjageometria varuste))
                                        (sijainti-kohteelle db varuste))
-                           :tietolaji tietolaji
+                           :tyyppi tyyppi
                            :toteuma (varuste-vastaanottosanoma/varusteen-toteuma
                                       (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)
                                       varuste)

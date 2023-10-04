@@ -158,12 +158,9 @@
 
   HaeVarusteetOnnistui
   (process-event [{:keys [vastaus]} app]
-    (println "jere testaa:: HaeVarusteetOnnistui" )
     (reset! varusteet-kartalla/karttataso-varusteet
       (map (fn [t]
-             (assoc t :tr-osoite (muodosta-tr-osoite t)
-                      :toimenpide (varuste-ulkoiset/toteuma->toimenpide (:toteuma t))
-                      :varustetyyppi (tietolaji->varustetyyppi (:tietolaji t))))
+             (assoc t :tr-osoite (muodosta-tr-osoite t)))
         (:toteumat vastaus)))
     (-> app
       (assoc :haku-paalla false)
