@@ -36,7 +36,7 @@ jobs:
           TEST_DB_SERVICE: ${{ inputs.test-db-service }}
           BROWSERS: ${{ inputs.e2e-browsers }}
         run: |
-          echo "Testitietokannan tagi: $IMAGE_VERSION"
+          echo "Testitietokannan tagi: $TEST_DB_SERVICE"
           echo "Selaimet: $BROWSERS"
 
   # Linter job

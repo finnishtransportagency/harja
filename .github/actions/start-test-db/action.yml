@@ -54,6 +54,12 @@ runs:
 
     - name: Print DB version details
       run: |
+        echo ""
+        echo "-------------"
+        echo ""
+        
+        echo "PostgreSQL version details:"
+        
         docker exec --user postgres harjadb psql -c 'SELECT version();'
-        docker exec --user postgres harjadb psql -c 'SELECT PostGIS_Full_Version();'
+        docker exec --user postgres harjadb psql -U harja -c 'SELECT extname, extversion FROM pg_extension;'
       shell: bash
