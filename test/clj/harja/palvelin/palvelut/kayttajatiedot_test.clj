@@ -35,7 +35,7 @@
         odotettu-jalkeen (ffirst (q "SELECT count(*) FROM kayttaja where sahkoposti IS NOT NULL AND muokattu >  now() - interval '1 year' ;"))]
     (is (= (count tulos) odotettu-ennen))
     (is (= (count tulos-jalkeen) odotettu-jalkeen))
-    (is (= (vec (distinct (mapcat keys tulos))) [:etunimi :sukunimi :sahkoposti]))))
+    (is (= (vec (distinct (mapcat keys tulos-jalkeen))) [:etunimi :sukunimi :sahkoposti]))))
 
 (deftest yhdista-kayttajan-urakat-alueittain
   (let [ely-kaakkoissuomi {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3}
