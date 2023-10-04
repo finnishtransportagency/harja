@@ -10,7 +10,7 @@
 (deftest hae-kustannussuunnitelman-yksikkohintaiset-summat-kanavaurakalle
   (let [db (:db jarjestelma)
         maksueranumero (ffirst (q "select numero from maksuera where nimi = 'Väylänhoito : Lisätyöt' and tyyppi = 'lisatyo';"))
-        odotettu [{:vuosi 2017.0, :summa nil}
-                  {:vuosi 2016.0, :summa nil}]]
+        odotettu [{:vuosi 2017.0M, :summa nil}
+                  {:vuosi 2016.0M, :summa nil}]]
     (is (= odotettu (vec(kustannussuunnitelmat-q/hae-kustannussuunnitelman-yksikkohintaiset-summat db maksueranumero))))))
 
