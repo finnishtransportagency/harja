@@ -21,7 +21,6 @@ tietokanta.tgz
 /resources/gitlog.edn
 .lein-failures
 figwheel_server.log
-karma-test-results.xml
 node_modules
 .idea/
 harja.iml
