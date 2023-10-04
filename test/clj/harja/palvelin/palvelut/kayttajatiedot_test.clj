@@ -22,13 +22,19 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (deftest yhteydenpito-vastaanottajat-toimii
   (let [tulos (kutsu-palvelua (:http-palvelin jarjestelma)
-                              :yhteydenpito-vastaanottajat +kayttaja-jvh+ nil)
-        odotettu-maara (ffirst (q "SELECT count(*) FROM kayttaja where sahkoposti IS NOT NULL;"))]
-    (is (= (count tulos) odotettu-maara))
+                :yhteydenpito-vastaanottajat +kayttaja-jvh+ nil)
+        odotettu-ennen (ffirst (q "SELECT count(*) FROM kayttaja where sahkoposti IS NOT NULL AND muokattu >  now() - interval '1 year' ;"))
+        ;; lisätään yhdelle muokattu aikaleima alle vuosi tästä hetkestä
+        _ (u "UPDATE kayttaja SET muokattu = NOW() WHERE id = " (:id +kayttaja-jvh+))
+        tulos-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                :yhteydenpito-vastaanottajat +kayttaja-jvh+ nil)
+        odotettu-jalkeen (ffirst (q "SELECT count(*) FROM kayttaja where sahkoposti IS NOT NULL AND muokattu >  now() - interval '1 year' ;"))]
+    (is (= (count tulos) odotettu-ennen))
+    (is (= (count tulos-jalkeen) odotettu-jalkeen))
     (is (= (vec (distinct (mapcat keys tulos))) [:etunimi :sukunimi :sahkoposti]))))
 
 (deftest yhdista-kayttajan-urakat-alueittain
