@@ -31,12 +31,12 @@ jobs:
       checks: write
     strategy:
       matrix:
-        # Katso saatavilla olevat harjadb 'versiot' docker-compose.yml:stä
+        # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä
         configs: [
-          { testDBImageVersion: "harjadb-latest", e2eBrowsers: ['chrome'] },
-          { testDBImageVersion: "harjadb-12-3.1", e2eBrowsers: ['chrome', 'edge'] },
+          { testDBService: "harjadb-latest", e2eBrowsers: ['chrome'] },
+          { testDBService: "harjadb-12-3.1", e2eBrowsers: ['chrome', 'edge'] },
         ]
 
     with:
-      test-db-image-version: ${{ matrix.configs.testDBImageVersion }}
+      test-db-service: ${{ matrix.configs.testDBService }}
       e2e-browsers: ${{ toJSON(matrix.configs.e2eBrowsers) }}

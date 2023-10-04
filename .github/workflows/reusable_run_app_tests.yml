@@ -10,8 +10,9 @@ name: '[Reusable] Run app tests'
 on:
   workflow_call:
     inputs:
-      test-db-image-version:
-        description: 'Testeissä käytettävän testitietokannan docker-imagen tagi'
+      test-db-service:
+        # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä (esim. harjadb-latest)
+        description: 'Testeissä käytettävän testitietokannan docker compose servicen nimi'
         type: string
         required: true
       e2e-browsers:
@@ -32,7 +33,7 @@ jobs:
     steps:
       - name: Debug
         env:
-          IMAGE_VERSION: ${{ inputs.test-db-image-version }}
+          TEST_DB_SERVICE: ${{ inputs.test-db-service }}
           BROWSERS: ${{ inputs.e2e-browsers }}
         run: |
           echo "Testitietokannan tagi: $IMAGE_VERSION"
@@ -83,12 +84,12 @@ jobs:
       - name: Start test database
         uses: ./.github/actions/start-test-db
         env:
-          IMAGE_VERSION: ${{ inputs.test-db-image-version }}
+          TEST_DB_SERVICE: ${{ inputs.test-db-service }}
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          image-version: ${{ env.IMAGE_VERSION }}
+          service-name: ${{ env.TEST_DB_SERVICE }}
 
        # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
 

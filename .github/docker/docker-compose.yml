@@ -9,7 +9,7 @@ networks:
     driver: bridge
 
 services:
-  # Uusin saatavilla oleva testietiokannan konfiguraatio
+  # Uusin saatavilla oleva testietiekannan konfiguraatio
   harjadb-latest:
     # Hae latest image GitHubin container registrystä
     image: ghcr.io/finnishtransportagency/harja_harjadb:latest
