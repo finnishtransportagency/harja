@@ -13,7 +13,8 @@
 (defprotocol VarustetoteumaHaku
   (tuo-uudet-varustetoteumat-velhosta [this])
   (paivita-mhu-urakka-oidt-velhosta [this])
-  (hae-urakan-varustetoteumat [this urakka-id]))
+  (hae-urakan-varustetoteumat [this urakka-id])
+  (tuo-velho-nimikkeisto [this]))
 
 (defn suorita-ja-kirjaa-alku-loppu-ajat
   [funktio tunniste]
@@ -40,12 +41,23 @@
            (paivita-mhu-urakka-oidt-velhosta this)
            (tuo-uudet-varustetoteumat-velhosta this))))))
 
+(defn tee-velho-nimikkeisto-tuonti-tehtava [{:keys [db :as this]} suoritusaika]
+  (ajastettu-tehtava/ajasta-paivittain
+    suoritusaika
+    (fn [_]
+      (lukko/yrita-ajaa-lukon-kanssa db
+        "tuo-velhon-nimikkeisto"
+        #(tuo-velho-nimikkeisto this)))))
+
 (defrecord Velho [asetukset]
   component/Lifecycle
   (start [this]
-    (let [suoritusaika (:varuste-tuonti-suoritusaika asetukset)]
-      (log/info (str "Käynnistetään tuo-uudet-varustetoteumat-velhosta -komponentti. Suoritusaika: " suoritusaika))
-      (assoc this :varustetoteuma-tuonti-tehtava (tee-varustetoteuma-haku-tehtava-fn this suoritusaika))))
+    (let [varustetuonti-suoritusaika (:varuste-tuonti-suoritusaika asetukset)
+          nimikkeistotuonti-suoritusaika (:varuste-tuonti-suoritusaika asetukset)]
+      (log/info (str "Käynnistetään tuo-uudet-varustetoteumat-velhosta -komponentti. Suoritusaika: " varustetuonti-suoritusaika))
+      (-> this
+        (assoc :varustetoteuma-tuonti-tehtava (tee-varustetoteuma-haku-tehtava-fn this varustetuonti-suoritusaika))
+        (assoc :velho-nimikkeisto-tuonti-tehtava (tee-velho-nimikkeisto-tuonti-tehtava this nimikkeistotuonti-suoritusaika)))))
   (stop [this]
     (log/info "Sammutetaan tuo-uudet-varustetoteumat-velhosta -komponentti.")
     (when-let [varustetoteuma-tuonti-tehtava-cancel (:varustetoteuma-tuonti-tehtava this)]
@@ -66,7 +78,9 @@
       #(varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki this) (:db this) asetukset)
       "paivita-mhu-urakka-oidt-velhosta"))
   (hae-urakan-varustetoteumat [this urakka-id]
-    (varusteet/hae-urakan-varustetoteumat (:integraatioloki this) (:db this) asetukset urakka-id)))
+    (varusteet/hae-urakan-varustetoteumat (:integraatioloki this) (:db this) asetukset urakka-id))
+  (tuo-velho-nimikkeisto [this]
+    (varusteet/tuo-velho-nimikkeisto this)))
 
 ;; Esimerkki miten testiajojen suorittaminen onnistuu
 (comment 

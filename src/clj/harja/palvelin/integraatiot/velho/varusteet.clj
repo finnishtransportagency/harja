@@ -11,6 +11,7 @@
     [harja.kyselyt.koodistot :as koodistot]
     [harja.kyselyt.toteumat :as q-toteumat]
     [harja.kyselyt.urakat :as q-urakat]
+    [harja.kyselyt.velho-nimikkeistot :as q-nimikkeistot]
     [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-timestamp]]
     [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
     [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
@@ -53,7 +54,7 @@
 (def +tl524+
   "tl524 Viherkuviot" {:kohdeluokka "ymparisto/viherkuviot" :palvelu "tiekohderekisteri" :api-versio "v1"})
 
-(def +valimaiset-varustetoimenpiteet+ 
+(def +valimaiset-varustetoimenpiteet+
   "Välimäiset varustetoimenpiteet" {:kohdeluokka "toimenpiteet/valimaiset-varustetoimenpiteet" :palvelu "toimenpiderekisteri" :api-versio "v1"})
 
 
@@ -260,7 +261,7 @@
                            (map :oid a)
                            (set a))
         puuttuvat-oidit (set/difference haetut-oidit saadut-oidit)
-        ylimaaraiset-oidit (set/difference saadut-oidit haetut-oidit) 
+        ylimaaraiset-oidit (set/difference saadut-oidit haetut-oidit)
         tallennettavat-oidit (set/difference saadut-oidit ylimaaraiset-oidit (virhe-oidit-fn))
         tallennettavat-kohteet (filter #(contains? tallennettavat-oidit (:oid %)) saadut-kohteet)]
     (if jasennys-onnistui?
@@ -500,9 +501,9 @@
                                             alkupvm (-> (get-in valimainen-toimepide [:version-voimassaolo :alku])
                                                       varuste-vastaanottosanoma/velho-pvm->pvm
                                                       varuste-vastaanottosanoma/aika->sql)
-                                            toimenpide (get-in valimainen-toimepide [:ominaisuudet :toimenpide]) 
+                                            toimenpide (get-in valimainen-toimepide [:ominaisuudet :toimenpide])
                                             konversio (koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe "v/vtp" toimenpide valimainen-toimepide)
-                                            _ (log/debug "Päivitetään välimäistä toimenpidettä: oid:" varuste-oid "alkupvm:" alkupvm "toteuma:" konversio) 
+                                            _ (log/debug "Päivitetään välimäistä toimenpidettä: oid:" varuste-oid "alkupvm:" alkupvm "toteuma:" konversio)
                                             paivitetyt-varusteet (try (q-toteumat/paivita-varustetoteumat-oidilla-ulkoiset
                                                                       db
                                                                       {:ulkoinen_oid varuste-oid
@@ -527,7 +528,7 @@
         tallenna-hakuaika-fn (partial tallenna-viimeisin-hakuaika-kohdeluokalle db tietolahteen-kohdeluokka)
         tallenna-virhe-fn (partial velho-yhteiset/lokita-ja-tallenna-hakuvirhe db)
         virhe-oidit-fn (partial virhe-oidit db)
-        tallenna-toteuma-fn (partial tallenna-kohde-tai-lokita-virhe db tietolahteen-kohdeluokka)] 
+        tallenna-toteuma-fn (partial tallenna-kohde-tai-lokita-virhe db tietolahteen-kohdeluokka)]
       (hae-ja-tallenna
         tietolahde viimeksi-haettu konteksti varuste-api-juuri-url token-fn tallenna-toteuma-fn tallenna-hakuaika-fn
         tallenna-virhe-fn virhe-oidit-fn)))
@@ -560,11 +561,11 @@
           (if token
             (let [tulos (doall (map
                                  (fn [tietolahde]
-                                   (hae-ja-tallenna-tietolajin-lahde tietolahde db konteksti varuste-api-juuri-url token-fn)) 
+                                   (hae-ja-tallenna-tietolajin-lahde tietolahde db konteksti varuste-api-juuri-url token-fn))
                                  +tietolajien-lahteet+))
-                  valimaiset-toimenpiteet (hae-ja-palauta-tietolajin-lahde +valimaiset-varustetoimenpiteet+ db konteksti varuste-api-juuri-url token-fn) 
+                  valimaiset-toimenpiteet (hae-ja-palauta-tietolajin-lahde +valimaiset-varustetoimenpiteet+ db konteksti varuste-api-juuri-url token-fn)
                   _ (log/debug "Haettuja välimäisiä toimenpiteitä: " (when (seq valimaiset-toimenpiteet) (count valimaiset-toimenpiteet)))
-                  _ (log/debug "Päivitetään välimäiset toimenpiteet kohteille lopuksi") 
+                  _ (log/debug "Päivitetään välimäiset toimenpiteet kohteille lopuksi")
                   _ (paivita-varustetoteumat-valimaisille-kohteille valimaiset-toimenpiteet db)]
               (when-not (every? true? tulos)
                 (virheet/heita-poikkeus virheet/+ulkoinen-kasittelyvirhe-koodi+ "Tietolajien lähteiden haussa virheitä")))
@@ -768,6 +769,68 @@
 
             ))))))
 
+(defn hae-ja-tallenna-kohdeluokan-nimikkeisto [{:keys [db]} virheet hae-token-fn konteksti kohdeluokka]
+  (when-let [token (hae-token-fn)]
+    (let [otsikot {"Content-Type" "application/json"
+                   "Authorization" (str "Bearer " token)}
+          http-asetukset {:metodi :GET
+                          :otsikot otsikot
+                          ;; TODO: Ota url asetuksista
+                          :url (str "https://apiv2stgvelho.testivaylapilvi.fi/metatietopalvelu/api/v2/metatiedot/kohdeluokka/" kohdeluokka)}
+          {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
+
+          vastaus (json/read-str vastaus :key-fn keyword)
+          nimikkeistot (->> vastaus
+                         :components
+                         :schemas
+                         (filter (fn [[avain _arvo]] (str/starts-with? (name avain) "nimikkeisto")))
+                         (into {}))]
+
+      ;; Velhon nimikkeistöhaku on jäsennetty hieman hankalasti, joten sen purku on myös sen näköinen
+      ;; Purku on jaettu useaan looppiin.
+      ;; 1. kerroksessa on nimikkeistön tunnus ja lista sen nimikkeistä.
+      ;;    Tämä kaivetaan vastauksen :components -> :schemas -> "nimikkeisto_"-alkavista avaimista.
+      ;; 2. Versio. Nimikkeistöillä voi olla eri versioita. Kirjoitushetkellä niitä on aina vain yksi, mutta se voi muuttua
+      ;;    Jos versio muuttuu, sen mukana pitäisi tulla muunnosfunktio, jotka pitää ajaa aina järjestyksessä. Tämän toteutus on vielä epäselvää, jos se tulee koskaan esille.
+      ;;    Versiotiedon sisällä on kuvaus jokaisesta nimikkeestä.
+      ;; 3. Nimike. Lopuksi muodostetaan jokaisesta yksittäisestä nimikkeestä kantaan kirjoitettavaksi valmis olio.
+      (flatten (mapv (fn [[nimikkeisto {:keys [enum]}]]
+
+                       (let [nimikkeisto (-> nimikkeisto
+                                           name
+                                           (str/split #"_")
+                                           rest ;; nimikkeisto-alku pois.
+                                           (#(str/join "/" %)))]
+
+                         (mapv (fn [[versio nimike-info]]
+                                 (mapv (fn [nimike]
+                                         (let [[nimiavaruus nimike] (str/split nimike #"/")]
+                                           (q-nimikkeistot/luo-velho-nimikkeisto<! db {:nimiavaruus nimiavaruus
+                                                                                       :nimi nimike
+                                                                                       :nimikkeisto nimikkeisto
+                                                                                       :versio (Integer/parseInt (name versio))
+                                                                                       :otsikko (:otsikko ((keyword nimiavaruus nimike) nimike-info))})))
+                                   enum))
+                           (-> vastaus :info :x-velho-nimikkeistot ((keyword nimikkeisto)) :nimikkeistoversiot))
+                         )) nimikkeistot)))))
+
+(defn tuo-velho-nimikkeisto [{db :db integraatioloki :integraatioloki
+                              {:keys [token-url varuste-kayttajatunnus varuste-salasana]} :asetukset :as this}]
+  (integraatiotapahtuma/suorita-integraatio db integraatioloki "velho" "nimikkeiston-tuonti" nil
+    (fn [konteksti]
+      (let [virheet (atom #{})
+            hae-token-fn #(velho-yhteiset/hae-velho-token token-url varuste-kayttajatunnus varuste-salasana konteksti
+                            (fn [x]
+                              (swap! virheet conj (str "Virhe velho token haussa " x))
+                              (log/error "Virhe velho token haussa" x)))]
+        (loop [kohdeluokat (mapv :kohdeluokka +tietolajien-lahteet+)]
+          (when-not (empty? kohdeluokat)
+            (hae-ja-tallenna-kohdeluokan-nimikkeisto this virheet hae-token-fn konteksti (first kohdeluokat))
+            (recur (rest kohdeluokat))))
+
+        (when-not (empty? @virheet)
+          (log/error "Velhon nimikkeistön tuonnissa virheitä!" @virheet))))))
+
 (comment
   (mapv :kohdeluokka +tietolajien-lahteet+)
 
@@ -776,4 +839,6 @@
              (:asetukset (:velho-integraatio harja.palvelin.main/harja-jarjestelma))
              35))
 
-  (def foo2 (json/read-str foo :key-fn keyword)))
+  (def foo2 (json/read-str foo :key-fn keyword))
+
+  (tuo-velho-nimikkeisto (:velho-integraatio harja.palvelin.main/harja-jarjestelma)))
