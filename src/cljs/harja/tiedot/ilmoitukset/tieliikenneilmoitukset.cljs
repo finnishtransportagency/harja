@@ -184,14 +184,12 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   v/PalautaOletusHakuEhdot
   (process-event [_ app]
     (let [app (update-in app [:valinnat] merge oletus-valinnat {:vaikutukset #{}
-                                                                 :tunniste ""
-                                                                 })
-          app (update-in app [:valinnat] dissoc :tr-numero :tarkenne :aihe :hakuehto :selite)
-          app (update-in app [:valinnat] assoc :toimenpiteet-aloitettu-vakioaikavali (first toimenpiteiden-aikavalit))
-          app (update-in app [:valinnat] assoc :valitetty-urakkaan-vakioaikavali (second aikavalit))
-          ;app (update-in app [:valinnat] assoc :selite [nil ""])
-          app (update-in app [:valinnat] assoc :selite nil)
-          _ (println "PALAUTETUT: " (:valinnat app))]
+                                                                :tunniste ""})
+          ; näitä ei ole kun sivulle alunperin  tullaan
+          app (update-in app [:valinnat] dissoc :tr-numero :tarkenne :aihe)
+          ; :haku tyyppisele kentälle pakotettu renderöinti jos arvo nil, muuten ei renderöidy jos muutos
+          ; tällä tavoin ulkopuolisesta lähteestä
+          app (update-in app [:valinnat] assoc :selite nil)]
     (hae app)))
 
   v/YhdistaValinnat
