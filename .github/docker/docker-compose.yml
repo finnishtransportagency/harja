@@ -9,7 +9,8 @@ networks:
     driver: bridge
 
 services:
-  harjadb:
+  # Uusin saatavilla oleva testietiokannan konfiguraatio
+  harjadb-latest:
     # Hae latest image GitHubin container registrystä
     image: ghcr.io/finnishtransportagency/harja_harjadb:latest
 
@@ -31,6 +32,28 @@ services:
       - ../../tietokanta:/var/lib/postgresql/harja/tietokanta
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "harja", "-d", "harja"]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+
+  # Vanhempaa testattavaa imagen versiota varten tehty tähän oma compose konfiguraatio, koska
+  # 'latest' imagen versioissa healthcheck, volumet ym. asetukset voivat muuttua.
+  harjadb-12-3.1:
+    image: ghcr.io/finnishtransportagency/harja_harjadb:12-3.1
+
+    container_name: harjadb
+    networks:
+      - harja_net
+    environment:
+      HARJA_TIETOKANTA_PORTTI: 5432
+    ports:
+      - "127.0.0.1:5432:5432"
+    # Huom: Mountissa viitataan Harja-repon juuressa olevaan tietokanta-hakemistoon, jossa migraatiotiedostot ovat.
+    volumes:
+      - ../../tietokanta:/var/lib/postgresql/harja/tietokanta
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "harja", "-d", "harja" ]
       interval: 10s
       retries: 5
       start_period: 20s

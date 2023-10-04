@@ -12,6 +12,12 @@ inputs:
   password:
     description: ''
     required: true
+  # Katso saatavilla olevat versiot docker-compose.yml:stä (esim. harjadb-latest)
+  # Versiot on lukittu docker-compose konfiguraatioksi ja konfiguraatiossa viitataan aina tiettyyn imagen
+  # versioon.
+  image-version:
+    description: 'Testitietokannan imagen versio. Saatavilla olevat versiot on määritelty docker-compose.yml:ään'
+    required: true
 
 runs:
   using: "composite"
@@ -24,13 +30,15 @@ runs:
         password: ${{ inputs.password }}
 
     - name: Pull and start test database
+      env:
+        IMAGE_VERSION: ${{ inputs.image-version }}
       run: |
         cd .github/docker
         echo "Pulling harja test database image (Docker Compose version: $(docker-compose version --short))"
-        docker compose pull harjadb
+        docker compose pull "${IMAGE_VERSION}"
 
         echo "Starting harja test database and waiting for it to start (Docker Compose version: $(docker-compose version --short))"
-        docker compose up -d --wait --wait-timeout 60 harjadb
+        docker compose up -d --wait --wait-timeout 60 "${IMAGE_VERSION}"
       shell: bash
 
     - name: Run migrations and test data into harja-postgres service
