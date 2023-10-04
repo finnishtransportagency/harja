@@ -10,7 +10,7 @@ name: '[Reusable] Run app tests'
 on:
   workflow_call:
     inputs:
-      test-db-image-tag:
+      test-db-image-version:
         description: 'Testeissä käytettävän testitietokannan docker-imagen tagi'
         type: string
         required: true
@@ -32,10 +32,10 @@ jobs:
     steps:
       - name: Debug
         env:
-          IMAGE_TAG: ${{ inputs.test-db-image-tag }}
+          IMAGE_VERSION: ${{ inputs.test-db-image-version }}
           BROWSERS: ${{ inputs.e2e-browsers }}
         run: |
-          echo "Testitietokannan tagi: $IMAGE_TAG"
+          echo "Testitietokannan tagi: $IMAGE_VERSION"
           echo "Selaimet: $BROWSERS"
 
   # Linter job
@@ -65,7 +65,6 @@ jobs:
   # Build job
   build:
     name: "Prod build"
-    if: false
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -83,10 +82,13 @@ jobs:
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen ja Harjan buildaamiseen
       - name: Start test database
         uses: ./.github/actions/start-test-db
+        env:
+          IMAGE_VERSION: ${{ inputs.test-db-image-version }}
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+          image-version: ${{ env.IMAGE_VERSION }}
 
        # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
 
