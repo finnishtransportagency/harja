@@ -311,13 +311,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
+      # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen ja Harjan buildaamiseen
       - name: Start test database
         uses: ./.github/actions/start-test-db
+        env:
+          TEST_DB_SERVICE: ${{ inputs.test-db-service }}
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+          service-name: ${{ env.TEST_DB_SERVICE }}
 
       # Asenna pelkkä java
       - name: Prepare java
