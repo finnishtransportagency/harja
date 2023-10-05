@@ -16,8 +16,8 @@ services:
 
     # Alla saatavilla olevia versioita
     # https://github.com/finnishtransportagency/harja/pkgs/container/harja_harjadb/versions
+    #image: ghcr.io/finnishtransportagency/harja_harjadb:15.3-3.3.2 (uusin vakaa)
     #image: ghcr.io/finnishtransportagency/harja_harjadb:13.11-3.3.2
-    #image: ghcr.io/finnishtransportagency/harja_harjadb:13-3.1
     #image: ghcr.io/finnishtransportagency/harja_harjadb:12-3.1
 
     container_name: harjadb
