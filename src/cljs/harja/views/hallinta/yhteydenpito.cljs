@@ -12,18 +12,22 @@
             [harja.loki :refer [log]]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]))
 
+
+(def lomakkeen-tarkoitus-teksti
+  "Tämä lomake lähettää sähköpostin niille Harja-käyttäjille, jotka ovat käyttäneet Harjaa viimeisen vuoden aikana. Omainaisuus on olemassa viestintään vakavissa häiriötilanteissa, kuten palvelunestohyökkäyksissä.")
 (defn yhteydenttolomake [e! {yhteydenotto :yhteydenotto
                              lahetys-kaynnissa? :lahetys-kaynnissa?
                              :as app}]
   [:div.yhteydenpito
    [:h3 "Sähköpostin lähettäminen Harja-käyttäjille"]
+   [:p lomakkeen-tarkoitus-teksti]
    [lomake/lomake
     {:ei-borderia? true
      :footer-fn (fn [yhteydenotto]
                   [napit/tallenna "Lähetä"
                    #(varmista-kayttajalta/varmista-kayttajalta
                       {:otsikko "Sähköposti kaikille Harja käyttäjille"
-                       :sisalto [:div "Oletko varma, että haluat lähettää viestin kaikille Harjan käyttäjille?"]
+                       :sisalto [:div "Oletko varma, että haluat lähettää viestin kaikille vuoden sisällä kirjautuneille Harjan käyttäjille?"]
                        :hyvaksy "Lähetä"
                        :toiminto-fn (fn [] (e! (tiedot/->Laheta yhteydenotto)))
                        :disabled (true? lahetys-kaynnissa?)})])
@@ -36,7 +40,7 @@
      {:nimi :sisalto
       :otsikko "Sisältö"
       :tyyppi :text
-      :koko [80 :auto]
+      :koko [80 20]
       :pituus-max 2048
       :palstoja 2
       :pakollinen? true}]
