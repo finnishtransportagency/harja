@@ -433,5 +433,6 @@ SELECT
   etunimi,
   sukunimi,
   sahkoposti
-FROM kayttaja
-WHERE sahkoposti IS NOT NULL;
+ FROM kayttaja
+WHERE sahkoposti IS NOT NULL
+  AND muokattu >  now() - interval '1 year' ;
