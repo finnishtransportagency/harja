@@ -9,7 +9,10 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IMAGE=ghcr.io/finnishtransportagency/harja_harjadb:latest
 
 # Alla saatavilla olevia versioita kokeiluja varten
-# https://github.com/finnishtransportagency/harja/pkgs/container/harja_harjadb/versions
+# https://github.com/finnishtransportagency/harja/pkgs/container/harja_harjadb
+#image: ghcr.io/finnishtransportagency/harja_harjadb:15.3-3.3.2 (uusin vakaa)
+#image: ghcr.io/finnishtransportagency/harja_harjadb:13.11-3.3.2
+#image: ghcr.io/finnishtransportagency/harja_harjadb:12-3.1
 
 
 devdb_image_lkm=$(docker image list -q --filter=reference=${IMAGE} 2>/dev/null | wc -l)
