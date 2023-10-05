@@ -43,23 +43,23 @@ runs:
         docker compose up -d --wait --wait-timeout 60 "${SERVICE_NAME}"
       shell: bash
 
-    - name: Run migrations and test data into harja-postgres service
-      run: |
-        docker ps -a
-
-        echo "Running migrations and test data into harja-postgres service..."
-        docker exec --user postgres harjadb /bin/bash -c "~/aja-migraatiot.sh"
-        docker exec --user postgres harjadb /bin/bash -c "~/aja-testidata.sh"
-      shell: bash
-
     - name: Print DB version details
       run: |
+        docker ps -a
+        
         echo ""
         echo "-------------"
         echo ""
-        
+
         echo "PostgreSQL version details:"
-        
+
         docker exec --user postgres harjadb psql -c 'SELECT version();'
         docker exec --user postgres harjadb psql -U harja -c 'SELECT extname, extversion FROM pg_extension;'
+      shell: bash
+
+    - name: Run migrations and test data into harja-postgres service
+      run: |
+        echo "Running migrations and test data into harja-postgres service..."
+        docker exec --user postgres harjadb /bin/bash -c "~/aja-migraatiot.sh"
+        docker exec --user postgres harjadb /bin/bash -c "~/aja-testidata.sh"
       shell: bash
