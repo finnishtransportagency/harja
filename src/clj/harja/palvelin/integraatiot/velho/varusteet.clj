@@ -25,34 +25,83 @@
 (def +oid-hakujen-epokki-sqllle+ "2000-01-01T00:00:00Z")
 (def +urakka-memoize-ttl+ (* 10 60 1000))
 
+(defn varuste-kohdeluokka->tyyppi
+  "Hakee varusteiden kohdeluokan tyypin metatiedosta" [kohdeluokka]
+  (->> kohdeluokka
+    :allOf
+    (some :properties)
+    :ominaisuudet
+    :allOf
+    (some :properties)
+    :rakenteelliset-ominaisuudet
+    :properties
+    :tyyppi))
+
+(defn kaivo-kohdeluokka->tyyppi
+  "Hakee kaivojen kohdeluokan tyypin metatiedosta"
+  [kohdeluokka]
+  (->> kohdeluokka
+    :allOf
+    (some :properties)
+    :ominaisuudet
+    :allOf
+    (some :properties)
+    :rakenteelliset-ominaisuudet
+    :properties
+    :kaivon-tyyppi))
+
+(defn muu-kohdeluokka->tyyppi
+  "Hakee muiden kohdeluokkien tyypin metatiedosta" [kohdeluokka]
+  (->> kohdeluokka
+    :allOf
+    (some :properties)
+    :ominaisuudet
+    :allOf
+    (some :properties)
+    :tyyppi))
+
+
 ; tl523 "Tekninen piste" Lähde puuttuu - "Siirtyy Fintraffic:n vastuulle (tiedon masterjärjestelmä)! Tietolajia ei migroida."
 
 (def +tl501+
-  "tl501 Kaiteet" {:kohdeluokka "varusteet/kaiteet" :palvelu "varusterekisteri" :api-versio "v1"})
+  "tl501 Kaiteet" {:kohdeluokka "varusteet/kaiteet" :palvelu "varusterekisteri" :api-versio "v1"
+                   :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
 (def +tl503_504_505_507_508_516+
-  "tl503 tl504 tl505 tl507 tl508 tl516 *" {:kohdeluokka "varusteet/tienvarsikalusteet" :palvelu "varusterekisteri" :api-versio "v1"})
+  "tl503 tl504 tl505 tl507 tl508 tl516 *" {:kohdeluokka "varusteet/tienvarsikalusteet" :palvelu "varusterekisteri" :api-versio "v1"
+                                           :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
 (def +tl506+
-  "tl506 Liikennemerkki" {:kohdeluokka "varusteet/liikennemerkit" :palvelu "varusterekisteri" :api-versio "v1"})
+  "tl506 Liikennemerkki" {:kohdeluokka "varusteet/liikennemerkit" :palvelu "varusterekisteri" :api-versio "v1"
+                          :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
 (def +tl509+
-  "tl509 Rummut" {:kohdeluokka "varusteet/rumpuputket" :palvelu "varusterekisteri" :api-versio "v1"})
+  "tl509 Rummut" {:kohdeluokka "varusteet/rumpuputket" :palvelu "varusterekisteri" :api-versio "v1"
+                  :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
 (def +tl512+
-  "tl512 Viemärit" {:kohdeluokka "varusteet/kaivot" :palvelu "varusterekisteri" :api-versio "v1"})
+  "tl512 Viemärit" {:kohdeluokka "varusteet/kaivot" :palvelu "varusterekisteri" :api-versio "v1"
+                    :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn kaivo-kohdeluokka->tyyppi})
 (def +tl513+
-  "tl513 Reunapaalut" {:kohdeluokka "varusteet/reunapaalut" :palvelu "varusterekisteri" :api-versio "v1"})
+  "tl513 Reunapaalut" {:kohdeluokka "varusteet/reunapaalut" :palvelu "varusterekisteri" :api-versio "v1"
+                       :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
 (def +tl514_518+
-  "tl514 Melurakenteet tl518 Kivetyt alueet" {:kohdeluokka "tiealueen-poikkileikkaus/luiskat" :palvelu "sijaintipalvelu" :api-versio "v3"})
+  "tl514 Melurakenteet tl518 Kivetyt alueet" {:kohdeluokka "tiealueen-poikkileikkaus/luiskat" :palvelu "sijaintipalvelu" :api-versio "v3"
+                                              :nimiavaruus "tiealueen-poikkileikkaus" :kohdeluokka->tyyppi-fn muu-kohdeluokka->tyyppi})
 (def +tl515+
-  "tl515 Aidat" {:kohdeluokka "varusteet/aidat" :palvelu "varusterekisteri" :api-versio "v1"})
+  "tl515 Aidat" {:kohdeluokka "varusteet/aidat" :palvelu "varusterekisteri" :api-versio "v1"
+                 :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
 (def +tl517+
-  "tl517 Portaat" {:kohdeluokka "varusteet/portaat" :palvelu "varusterekisteri" :api-versio "v1"})
+  "tl517 Portaat" {:kohdeluokka "varusteet/portaat" :palvelu "varusterekisteri" :api-versio "v1"
+                   :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
 (def +tl518+
-  "tl518 Kivetyt alueet" {:kohdeluokka "tiealueen-poikkileikkaus/erotusalueet" :palvelu "sijaintipalvelu" :api-versio "v3"})
+  "tl518 Kivetyt alueet" {:kohdeluokka "tiealueen-poikkileikkaus/erotusalueet" :palvelu "sijaintipalvelu" :api-versio "v3"
+                          :nimiavaruus "tiealueen-poikkileikkaus" :kohdeluokka->tyyppi-fn muu-kohdeluokka->tyyppi})
 (def +tl520+
-  "tl520 Puomit" {:kohdeluokka "varusteet/puomit-sulkulaitteet-pollarit" :palvelu "varusterekisteri" :api-versio "v1"})
+  "tl520 Puomit" {:kohdeluokka "varusteet/puomit-sulkulaitteet-pollarit" :palvelu "varusterekisteri" :api-versio "v1"
+                  :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
 (def +tl522+
-  "tl522 Reunakivet" {:kohdeluokka "varusteet/reunatuet" :palvelu "varusterekisteri" :api-versio "v1"})
+  "tl522 Reunakivet" {:kohdeluokka "varusteet/reunatuet" :palvelu "varusterekisteri" :api-versio "v1"
+                      :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
 (def +tl524+
-  "tl524 Viherkuviot" {:kohdeluokka "ymparisto/viherkuviot" :palvelu "tiekohderekisteri" :api-versio "v1"})
+  "tl524 Viherkuviot" {:kohdeluokka "ymparisto/viherkuviot" :palvelu "tiekohderekisteri" :api-versio "v1"
+                       :nimiavaruus "ymparisto" :kohdeluokka->tyyppi-fn muu-kohdeluokka->tyyppi})
 
 (def +valimaiset-varustetoimenpiteet+
   "Välimäiset varustetoimenpiteet" {:kohdeluokka "toimenpiteet/valimaiset-varustetoimenpiteet" :palvelu "toimenpiderekisteri" :api-versio "v1"})
@@ -725,7 +774,6 @@
                 varusteet (:osumat (json/read-str vastaus :key-fn keyword))
 
                 varusteet
-                ;; DONE: Pura json -> clj
                 (mapv (fn [varuste]
                         (let [{tie :tie alkuet :etaisyys alkuosa :osa} (or (:sijainti varuste) (:alkusijainti varuste))
                               {loppuetaisyys :etaisyys loppuosa :osa} (:loppusijainti varuste)
@@ -735,8 +783,11 @@
                                         (-> alkupvm
                                           (pvm/iso-8601->pvm)
                                           (varuste-vastaanottosanoma/aika->sql)))
-                              tyyppi (get-in varuste [:ominaisuudet :rakenteelliset-ominaisuudet :tyyppi])
-                              tyyppi (q-nimikkeistot/hae-nimikkeen-otsikko db {:nimiavaruus_nimike tyyppi})]
+                              tyyppi (or
+                                       (get-in varuste [:ominaisuudet :rakenteelliset-ominaisuudet :tyyppi])
+                                       (get-in varuste [:ominaisuudet :tyyppi])
+                                       (get-in varuste [:ominaisuudet :rakenteelliset-ominaisuudet :kaivon-tyyppi]))
+                              {tyyppi :otsikko kohdeluokka :kohdeluokka} (first (q-nimikkeistot/hae-nimikkeen-tiedot db {:nimiavaruus_nimike tyyppi}))]
                           {:alkupvm alkupvm
                            :kuntoluokka (varuste-vastaanottosanoma/varusteen-kuntoluokka
                                           (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)
@@ -753,6 +804,7 @@
                            :sijainti (or (varuste-vastaanottosanoma/velhogeo->harjageo (:keskilinjageometria varuste))
                                        (sijainti-kohteelle db varuste))
                            :tyyppi tyyppi
+                           :kohdeluokka kohdeluokka
                            :toteuma (varuste-vastaanottosanoma/varusteen-toteuma
                                       (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)
                                       varuste)
@@ -764,11 +816,10 @@
                            :ulkoinen-oid (:oid varuste) }))
                   varusteet)]
 
-            {:urakka-id urakka-id :toteumat varusteet}
+            {:urakka-id urakka-id :toteumat varusteet}))))))
 
-            ))))))
-
-(defn hae-ja-tallenna-kohdeluokan-nimikkeisto [{:keys [db]} virheet hae-token-fn konteksti kohdeluokka]
+(defn hae-ja-tallenna-kohdeluokan-nimikkeisto [{:keys [db]} virheet hae-token-fn konteksti
+                                               {:keys [kohdeluokka kohdeluokka->tyyppi-fn nimiavaruus]}]
   (when-let [token (hae-token-fn)]
     (let [otsikot {"Content-Type" "application/json"
                    "Authorization" (str "Bearer " token)}
@@ -779,39 +830,35 @@
           {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
 
           vastaus (json/read-str vastaus :key-fn keyword)
-          nimikkeistot (->> vastaus
-                         :components
-                         :schemas
-                         (filter (fn [[avain _arvo]] (str/starts-with? (name avain) "nimikkeisto")))
-                         (into {}))]
 
-      ;; Velhon nimikkeistöhaku on jäsennetty hieman hankalasti, joten sen purku on myös sen näköinen
-      ;; Purku on jaettu useaan looppiin.
-      ;; 1. kerroksessa on nimikkeistön tunnus ja lista sen nimikkeistä.
-      ;;    Tämä kaivetaan vastauksen :components -> :schemas -> "nimikkeisto_"-alkavista avaimista.
-      ;; 2. Versio. Nimikkeistöillä voi olla eri versioita. Kirjoitushetkellä niitä on aina vain yksi, mutta se voi muuttua
-      ;;    Jos versio muuttuu, sen mukana pitäisi tulla muunnosfunktio, jotka pitää ajaa aina järjestyksessä. Tämän toteutus on vielä epäselvää, jos se tulee koskaan esille.
-      ;;    Versiotiedon sisällä on kuvaus jokaisesta nimikkeestä.
-      ;; 3. Nimike. Lopuksi muodostetaan jokaisesta yksittäisestä nimikkeestä kantaan kirjoitettavaksi valmis olio.
-      (flatten (mapv (fn [[nimikkeisto {:keys [enum]}]]
+          ;; nimikkeisto_nimiavaruus_kohdeluokka-tyyppi
+          kohdeluokan-tyyppi-nimike (-> vastaus
+                                      :components
+                                      :schemas
+                                      ((keyword (str "kohdeluokka_" (str/replace kohdeluokka "/" "_"))))
+                                      kohdeluokka->tyyppi-fn
+                                      :$ref
+                                      (str/split #"/")
+                                      last)
+          ;; kohdeluokka-tyyppi
+          kohdeluokan-tyyppi (last (str/split kohdeluokan-tyyppi-nimike #"_"))]
 
-                       (let [nimikkeisto (-> nimikkeisto
-                                           name
-                                           (str/split #"_")
-                                           rest ;; nimikkeisto-alku pois.
-                                           (#(str/join "/" %)))]
-
-                         (mapv (fn [[versio nimike-info]]
-                                 (mapv (fn [nimike]
-                                         (let [[nimiavaruus nimike] (str/split nimike #"/")]
-                                           (q-nimikkeistot/luo-velho-nimikkeisto<! db {:nimiavaruus nimiavaruus
-                                                                                       :nimi nimike
-                                                                                       :nimikkeisto nimikkeisto
-                                                                                       :versio (Integer/parseInt (name versio))
-                                                                                       :otsikko (:otsikko ((keyword nimiavaruus nimike) nimike-info))})))
-                                   enum))
-                           (-> vastaus :info :x-velho-nimikkeistot ((keyword nimikkeisto)) :nimikkeistoversiot))
-                         )) nimikkeistot)))))
+      ;; Kohdeluokilla on tyyppi, jonka avain on uniikki joka kohdeluokalle.
+      ;; Haetaan siis se saadun metatiedon kuvauksesta
+      ;; Tämän jälkeen haetaan sen kaikille versioille sen kaikki mahdolliset arvot ja tallennetaan ne kantaan.
+      ;; Tallennetaan myös tieto siitä, mille kohdeluokalle tyyppi kuuluu, jotta voidaan tunnistaa varusteen kohdeluokka sen kohdeluokkatyypistä.
+      (mapv (fn [[versio tyyppi-info]]
+              (mapv (fn [nimike]
+                      (let [[tyyppi-avain nimi] (str/split nimike #"/")]
+                        (q-nimikkeistot/luo-velho-nimikkeisto<! db
+                          {:tyyppi-avain tyyppi-avain
+                           :kohdeluokka (last (str/split kohdeluokka #"/"))
+                           :nimiavaruus nimiavaruus
+                           :nimi nimi
+                           :versio (Integer/parseInt (name versio))
+                           :otsikko (:otsikko ((keyword tyyppi-avain nimi) tyyppi-info))})))
+                (get-in vastaus [:components :schemas (keyword kohdeluokan-tyyppi-nimike) :enum])))
+        (-> vastaus :info :x-velho-nimikkeistot ((keyword nimiavaruus kohdeluokan-tyyppi)) :nimikkeistoversiot)))))
 
 (defn tuo-velho-nimikkeisto [{db :db integraatioloki :integraatioloki
                               {:keys [token-url varuste-kayttajatunnus varuste-salasana]} :asetukset :as this}]
@@ -822,7 +869,7 @@
                             (fn [x]
                               (swap! virheet conj (str "Virhe velho token haussa " x))
                               (log/error "Virhe velho token haussa" x)))]
-        (loop [kohdeluokat (mapv :kohdeluokka +tietolajien-lahteet+)]
+        (loop [kohdeluokat +tietolajien-lahteet+]
           (when-not (empty? kohdeluokat)
             (hae-ja-tallenna-kohdeluokan-nimikkeisto this virheet hae-token-fn konteksti (first kohdeluokat))
             (recur (rest kohdeluokat))))
