@@ -17,7 +17,10 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot])
-  (:import (java.util Date)))
+  (:import (java.util Date))
+  (:import (java.time YearMonth))
+  (:import (java.time ZoneId))
+  )
 
 (def ilmoitus-xf
   (comp
@@ -135,12 +138,41 @@
                  aloituskuittaukset))]
     aloituskuittauksia-annetuna-ajan-valissa))
 
+(defn- LocalDate->Date [localDate]
+  (Date/from (. (. localDate atStartOfDay (ZoneId/systemDefault)) toInstant)))
+
+(defn tama-kuu []
+  (YearMonth/now))
+
+(defn- viime-kuu []
+  (. (tama-kuu) minusMonths 1))
+
+(defn- taman-kuun-eka []
+  (LocalDate->Date (. (tama-kuu) atDay 1)))
+
+(defn- viime-kuun-eka []
+  (LocalDate->Date (. (viime-kuu) atDay 1)))
+
+(defn- viime-kuun-viimeinen []
+  (LocalDate->Date (. (viime-kuu) atEndOfMonth)))
+
+(defn- parsi-kalenterikuukausi [vakioaikavali]
+  (let [kalenterikuukausi (:kalenterikuukausi vakioaikavali)]
+    (cond
+      (= :kuluva kalenterikuukausi) [(taman-kuun-eka) (pvm/nyt)]
+      (= :edellinen kalenterikuukausi) [(viime-kuun-eka) (viime-kuun-viimeinen)]
+      :else (throw (IllegalArgumentException. (format "Tuntematon kalenterikuukausiaikaväli %s" kalenterikuukausi))))))
+(defn- parsi-vakio-ajan-alku-ja-loppu [vakioaikavali]
+  (if-let [tunteja (:tunteja vakioaikavali)]
+    [(c/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt)]
+    (parsi-kalenterikuukausi vakioaikavali)))
+
 (defn aikavaliehto [hakuehdot vakioaikavali-avain alkuaika-avain loppuaika-avain]
   (let [vakioaikavali (get hakuehdot vakioaikavali-avain)
         alkuaika (get hakuehdot alkuaika-avain)
         loppuaika (get hakuehdot loppuaika-avain)]
-    (if-let [tunteja (:tunteja vakioaikavali)]
-      [(c/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt)]
+    (if (or (:tunteja vakioaikavali) (:kalenterikuukausi vakioaikavali))
+     (parsi-vakio-ajan-alku-ja-loppu vakioaikavali)
       [alkuaika loppuaika])))
 
 (defn hae-ilmoitukset
@@ -151,7 +183,8 @@
                     ilmoittaja-nimi ilmoittaja-puhelin vaikutukset
                     aihe tarkenne] :as hakuehdot}
     max-maara]
-   (let [valitetty-urakkaan-aikavali (or (:aikavali hakuehdot) (aikavaliehto hakuehdot :valitetty-urakkaan-vakioaikavali :valitetty-urakkaan-alkuaika :valitetty-urakkaan-loppuaika))
+   (let [valitetty-urakkaan-aikavali (or (:aikavali hakuehdot)
+                                       (aikavaliehto hakuehdot :valitetty-urakkaan-vakioaikavali :valitetty-urakkaan-alkuaika :valitetty-urakkaan-loppuaika))
          valitetty-urakkaan-aikavali-alku (when (first valitetty-urakkaan-aikavali)
                                     (konv/sql-timestamp (first valitetty-urakkaan-aikavali)))
          valitetty-urakkaan-aikavali-loppu (when (second valitetty-urakkaan-aikavali)
