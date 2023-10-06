@@ -1,5 +1,5 @@
 ###
-# Ajaa Harja-sovelluksen testipatterin, sekä yrittää tekee buildin (e2e-testejä varten)
+# Ajaa Harja-sovelluksen testipatterin, sekä yrittää tehdä buildin (e2e-testejä varten)
 ###
 
 # Security hardening for GitHub Actions
@@ -32,6 +32,11 @@ on:
         required: false
       backend-tests:
         description: 'Enabloi back-tests job'
+        default: 'true'
+        type: string
+        required: false
+      basic-tests:
+        description: 'Enabloi basic-tests job'
         default: 'true'
         type: string
         required: false
