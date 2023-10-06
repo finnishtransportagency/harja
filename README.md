@@ -117,9 +117,6 @@ https://docs.github.com/en/packages/working-with-a-github-packages-registry/work
 ## GitHub Actions & Docker
 Lue: [.github/docker/README.md](.github/docker/README.md)
 
-# GitHub Actions ja muut GitHub integraatiot
-Lue: [.github/README.md](.github/README.md)
-
 
 
 
