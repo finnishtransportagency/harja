@@ -33,10 +33,11 @@ jobs:
       matrix:
         # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä
         configs: [
-          { testDBService: "harjadb-latest", e2eBrowsers: ['chrome'] },
-          { testDBService: "harjadb-12-3.1", e2eBrowsers: ['chrome', 'edge'] },
+          { testDBService: "harjadb-latest", e2eBrowsers: ['chrome'], artifactPrefix: 'harjadb-latest_' },
+          { testDBService: "harjadb-12-3.1", e2eBrowsers: ['chrome', 'edge'], artifactPrefix: 'harjadb-12-3.1_' },
         ]
 
     with:
       test-db-service: ${{ matrix.configs.testDBService }}
       e2e-browsers: ${{ toJSON(matrix.configs.e2eBrowsers) }}
+      artifact-prefix: ${{ matrix.configs.artifactPrefix }}

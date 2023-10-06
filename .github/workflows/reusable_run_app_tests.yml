@@ -20,6 +20,11 @@ on:
         default: "['chrome']"
         type: string
         required: false
+      artifact-prefix:
+        description: 'Optional prefix tämän jobin uploadaamien/downloadaamien artifactien nimeen. Tarpeellinen, jos tätä jobia kutsutaan esim. matrix-strategialla.'
+        default: ''
+        type: string
+        required: false
 
 env:
   GH_DOCKER_REGISTRY: ghcr.io
@@ -110,8 +115,9 @@ jobs:
         id: artifact-name
         env:
           REF: ${{ github.ref }}
+          NAME_PREFIX: ${{ inputs.artifact-prefix }}
           # Branchin nimen "/"-merkit muunnetaan "-"-merkeiksi, ja muodostetaan branchiin pohjautuva nimi
-        run: echo "value=${REF////-}-uberjar" >> $GITHUB_OUTPUT
+        run: echo "value=${NAME_PREFIX}${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
 #      - name: Delete old branch build artifacts (only the latest is needed)
 #        uses: actions/github-script@v6
@@ -333,8 +339,9 @@ jobs:
         id: artifact-name
         env:
           REF: ${{ github.ref }}
+          NAME_PREFIX: ${{ inputs.artifact-prefix }}
           # Branchin nimen "/"-merkit muunnetaan "-"-merkeiksi, ja muodostetaan branchiin pohjautuva nimi
-        run: echo "value=${REF////-}-uberjar" >> $GITHUB_OUTPUT
+        run: echo "value=${NAME_PREFIX}${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
       - name: Download uberjar artifact
         uses: actions/download-artifact@v3
