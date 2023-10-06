@@ -171,26 +171,42 @@
 ;; Aineistot on isoja ja se pitäisi generoida valmiiksi, jos haluaisi tietää tarkan summan. Joten hanska-arvio on
 ;; nopea, mutta suuntaa-antava. Tällä hetkellä se antaa n. 20% liian suuria kokoja. Mittausten mukaan n. 0.0044 alkaa olla lälhellä totuutta.
 (def arvioitu-toteuman-koko 0.006)
+
 (defn palauta-toteumat
   "Haetaan toteumat annettujen alku- ja loppuajan puitteissa.
   koordinaattimuutos-parametrilla voidaan hakea lisäksi reittipisteet EPSG:4326-muodossa."
-  [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
+  [db {:keys [alkuaika loppuaika koordinaattimuutos koko] :as parametrit} kayttaja]
+  (println "palauta-toteumat :: parametrit" (pr-str parametrit))
   (tarkista-haun-parametrit parametrit true)
-  (let [;; Materiaalikoodeja ei ole montaa, mutta niitä on vaikea yhdistää tietokantalauseeseen tehokkaasti
+  (let [;; Koordinaattimuutos on oltava boolean
+        kmuutos (if (and koordinaattimuutos (= "true" koordinaattimuutos))
+                  true
+                  false)
+        ;; Koko parametri on oltava Integer - Jos sitä ei ole annettu, niin anna valtava koko, ettei se rajoita mitään
+        koko (if koko
+               (Integer/parseInt koko)
+               1000)
+        ;; Materiaalikoodeja ei ole montaa, mutta niitä on vaikea yhdistää tietokantalauseeseen tehokkaasti
         ;; joten hoidetaan se koodilla
         materiaalikoodit (materiaalit-kyselyt/hae-materiaalikoodit db)
         ;; Haetaan reittitoteumat tietokannasta
         alkudb (System/currentTimeMillis)
         toteumat (toteuma-kyselyt/hae-reittitoteumat-analytiikalle db {:alkuaika alkuaika
                                                                        :loppuaika loppuaika
-                                                                       :koordinaattimuutos koordinaattimuutos})
-        koko (count toteumat)
+                                                                       :koordinaattimuutos kmuutos})
+        maara (count toteumat)
+        loydetyn-aineiston-koko (* (count toteumat) arvioitu-toteuman-koko)
         loppudb (System/currentTimeMillis)
-        _ (log/info "Analytiikka-toteumat db haku" (- loppudb alkudb) " ms. Toteumamäärä: "koko)
-        _ (when (= koko 100000)
-            (log/info "Analytiikka-toteumat :: liian suuri aineisto:" koko "kpl"))
+        _ (log/info "Analytiikka-toteumat db haku" (- loppudb alkudb) " ms. Toteumamäärä: " maara)
+        _ (when (>= maara 100000)
+            (log/info "Analytiikka-toteumat :: liian suuri aineisto:" maara "kpl"))
+
+        ;; Päätellään aineistosta myös megabyte määräinen koko ja verrataan sitä parametrina saatuun
+        _ (when (>= loydetyn-aineiston-koko koko)
+            (log/info "Analytiikka-toteumat :: liian suuri aineisto (mb):" loydetyn-aineiston-koko " > " koko))
+
         ;; Toteumien kutsu ei käytä streamiä, joten on riskinä, että muisti loppuu kesken. Joten rajoitetaan määrää
-        toteumat (when (< koko 100000)
+        toteumat (when (and (< maara 100000) (< loydetyn-aineiston-koko koko))
                    (->> toteumat
                      (map (fn [toteuma]
                             (-> toteuma
@@ -233,7 +249,7 @@
                                              (poista-reittipistetaso))]
                                      r))
                                  rivit))))))
-        toteumat (when (< koko 100000)
+        toteumat (when (and (< koko 100000) (< loydetyn-aineiston-koko koko))
                    {:reittitoteumat
                     (map (fn [toteuma]
                            (konversio/alaviiva->rakenne toteuma))
