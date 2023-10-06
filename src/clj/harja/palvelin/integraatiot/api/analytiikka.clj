@@ -167,6 +167,10 @@
     (assoc :materiaalit (get-in reitti [:reittipiste :materiaalit]))
     (dissoc :reittipiste)))
 
+;; Meillä ei ole tietoa, että minkä kokoinen (MB) yksi toteuma on json muodossa. Joten otetaan joku hanska-arvio
+;; Aineistot on isoja ja se pitäisi generoida valmiiksi, jos haluaisi tietää tarkan summan. Joten hanska-arvio on
+;; nopea, mutta suuntaa-antava. Tällä hetkellä se antaa n. 20% liian suuria kokoja. Mittausten mukaan n. 0.0044 alkaa olla lälhellä totuutta.
+(def arvioitu-toteuman-koko 0.006)
 (defn palauta-toteumat
   "Haetaan toteumat annettujen alku- ja loppuajan puitteissa.
   koordinaattimuutos-parametrilla voidaan hakea lisäksi reittipisteet EPSG:4326-muodossa."
