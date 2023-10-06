@@ -1,7 +1,7 @@
 # Security hardening for GitHub Actions
 # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
 
-name: 'Harja: Test develop-branch'
+name: 'Harja: Test develop'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
