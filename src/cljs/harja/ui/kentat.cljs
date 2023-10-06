@@ -72,7 +72,8 @@
     [komponentti data]))
 
 (defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake? sort-fn disabled?
-                                     kun-muuttuu hae-kun-yli-n-merkkia vayla-tyyli?]} data]
+                                     kun-muuttuu hae-kun-yli-n-merkkia vayla-tyyli? tarkkaile-ulkopuolisia-muutoksia?]}
+                             data]
   (let [nyt-valittu @data
         teksti (atom (if nyt-valittu
                        ((or nayta str) nyt-valittu) ""))
@@ -83,6 +84,8 @@
       (komp/klikattu-ulkopuolelle #(reset! tulokset nil))
 
       (fn [_ data]
+        (when (and tarkkaile-ulkopuolisia-muutoksia? (nil? @data))
+          (reset! teksti nil))
         [:div.hakukentta.dropdown {:class (when (some? @tulokset) "open")}
 
          [:input {:class (cond-> nil
