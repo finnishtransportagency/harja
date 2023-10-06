@@ -164,10 +164,13 @@ jobs:
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
         uses: ./.github/actions/start-test-db
+        env:
+          TEST_DB_SERVICE: ${{ inputs.test-db-service }}
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+          service-name: ${{ env.TEST_DB_SERVICE }}
 
       - name: Setup clojure environment
         uses: ./.github/actions/setup-clojure-env
@@ -205,10 +208,13 @@ jobs:
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
         uses: ./.github/actions/start-test-db
+        env:
+          TEST_DB_SERVICE: ${{ inputs.test-db-service }}
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+          service-name: ${{ env.TEST_DB_SERVICE }}
 
       - name: Setup clojure environment
         uses: ./.github/actions/setup-clojure-env
@@ -264,10 +270,13 @@ jobs:
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
         uses: ./.github/actions/start-test-db
+        env:
+          TEST_DB_SERVICE: ${{ inputs.test-db-service }}
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+          service-name: ${{ env.TEST_DB_SERVICE }}
 
       # Käynnistetään ActiveMQ JMS-testejä varten
       - name: Start ActiveMQ
