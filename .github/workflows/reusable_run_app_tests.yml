@@ -182,7 +182,7 @@ jobs:
         if: always()
         with:
           report_paths: 'test2junit/xml/*.xml'
-          check_name: 'Test Report: ${{ NAME_PREFIX }}Backend'
+          check_name: 'Test Report: ${{ env.NAME_PREFIX }}Backend'
 
   basic-tests:
     name: "Frontti- ja hitaat testit"
@@ -223,7 +223,7 @@ jobs:
         if: always()
         with:
           report_paths: 'test2junit/xml/*.xml'
-          check_name: 'Test Report: ${{ NAME_PREFIX }}Slow'
+          check_name: 'Test Report: ${{ env.NAME_PREFIX }}Slow'
 
       - name: Install PhantomJS
         env:
@@ -290,7 +290,7 @@ jobs:
         if: always()
         with:
           report_paths: 'test2junit/xml/*.xml'
-          check_name: 'Test Report: ${{ NAME_PREFIX }}Integration'
+          check_name: 'Test Report: ${{ env.NAME_PREFIX }}Integration'
 
   e2e-tests:
     name: "e2e-testit (Cypress)"
@@ -423,7 +423,7 @@ jobs:
         if: always()
         with:
           report_paths: 'cypress/test-results/*.xml'
-          check_name: 'Test Report: Cypress (${{ NAME_PREFIX }}${{ matrix.browser }})'
+          check_name: 'Test Report: Cypress (${{ env.NAME_PREFIX }}${{ matrix.browser }})'
 
       # Mikäli testit epäonnistuvat, tallenna cypress screenshotit ja videot artifakteina
       - uses: actions/upload-artifact@v3
