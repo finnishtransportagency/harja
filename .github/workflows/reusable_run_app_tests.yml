@@ -297,6 +297,9 @@ jobs:
     env:
       # Asetetaan Suomen aikavyöhyke testejä varten
       TZ: "EET"
+    strategy:
+      matrix:
+        browser: ${{ fromJSON(inputs.e2e-browsers) }}
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -402,35 +405,33 @@ jobs:
 
       # Ajaa cypress testit erillisessä kontissa
       # Konttiin mountataan GITHUB_WORKSPACE, joka sisältää myös aiemmin asennetut node-moduulit, joita testit tarvitsevat
-      - name: Run cypress
+      - name: Run cypress for ${{ matrix.browser }}
         uses: ./.github/actions/start-cypress
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_WORKSPACE: ${{ env.GITHUB_WORKSPACE }}
+          browser: ${{ matrix.browser }}
 
-      # TODO: Kokeillaan testiksi erästä käyttöön hyväksyttyä test-report actionia.
-      #       Tehdään lopullinen meille parhaiten sopiva raportointityökalun valinta myöhemmin
-      # https://github.com/mikepenz/action-junit-report
-      - name: Publish Test Report
+      - name: Publish Test Report for ${{ matrix.browser }}
         uses: mikepenz/action-junit-report@75b84e78b3f0aaea7ed7cf8d1d100d7f97f963ec
         if: always()
         with:
           report_paths: 'cypress/test-results/*.xml'
-          check_name: 'Test Report: Cypress'
+          check_name: 'Test Report: Cypress (${{ matrix.browser }})'
 
       # Mikäli testit epäonnistuvat, tallenna cypress screenshotit ja videot artifakteina
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: cypress-screenshots
+          name: cypress-screenshots-${{ matrix.browser }}
           path: cypress/screenshots
           retention-days: 4
 
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: cypress-videos
+          name: cypress-videos-${{ matrix.browser }}
           path: cypress/videos
           retention-days: 2
