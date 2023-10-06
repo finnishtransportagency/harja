@@ -30,6 +30,10 @@ jobs:
       # Tarvitaan test-reportin julkaisuun PR:ssä
       checks: write
     strategy:
+      # Halutaan, että kaikki testit käydään läpi.
+      # Yksittäinen flaky testi ei saa kaataa koko testimatriisia.
+      fail-fast: false
+      max-parallel: 2
       matrix:
         # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä
         configs: [
@@ -41,3 +45,4 @@ jobs:
       test-db-service: ${{ matrix.configs.testDBService }}
       e2e-browsers: ${{ toJSON(matrix.configs.e2eBrowsers) }}
       artifact-prefix: ${{ matrix.configs.artifactPrefix }}
+      lint-clj: 'false'

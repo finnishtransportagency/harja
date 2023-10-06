@@ -25,6 +25,27 @@ on:
         default: ''
         type: string
         required: false
+      lint-clj:
+        description: 'Enabloi lint-clj job'
+        default: 'true'
+        type: string
+        required: false
+      backend-tests:
+        description: 'Enabloi back-tests job'
+        default: 'true'
+        type: string
+        required: false
+      integration-tests:
+        description: 'Enabloi integration-tests job'
+        default: 'true'
+        type: string
+        required: false
+      e2e-tests:
+        description: 'Enabloi e2e-tests job'
+        default: 'true'
+        type: string
+        required: false
+
 
 env:
   GH_DOCKER_REGISTRY: ghcr.io
@@ -46,6 +67,7 @@ jobs:
 
   # Linter job
   lint-clj:
+    if: ${{ inputs.lint-clj == 'true' }}
     name: "Lint Clojure"
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
@@ -146,7 +168,8 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  back-tests:
+  backend-tests:
+    if: ${{ inputs.backend-tests == 'true' }}
     name: "Backend-testit"
     runs-on: ubuntu-latest
     env:
@@ -188,6 +211,7 @@ jobs:
           check_name: 'Test Report: ${{ env.NAME_PREFIX }}Backend'
 
   basic-tests:
+    if: ${{ inputs.basic-tests == 'true' }}
     name: "Frontti- ja hitaat testit"
     runs-on: ubuntu-latest
     env:
@@ -249,6 +273,7 @@ jobs:
 
   # integraatiotestit vaativat ActiveMQ-brokerin, siksi oma jobi
   integration-tests:
+    if: ${{ inputs.integration-tests == 'true' }}
     name: "integraatiotestit"
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -302,6 +327,7 @@ jobs:
           check_name: 'Test Report: ${{ env.NAME_PREFIX }}Integration'
 
   e2e-tests:
+    if: ${{ inputs.e2e-tests == 'true' }}
     name: "e2e-testit (Cypress)"
     needs: build
     runs-on: ubuntu-latest
