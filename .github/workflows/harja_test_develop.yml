@@ -1,0 +1,53 @@
+# Security hardening for GitHub Actions
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
+
+name: 'Harja: Test develop'
+
+# TODO: Toteuta workflow VHAR-8197
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+on:
+  # Manuaalisen käynnistyksen asetukset
+  workflow_dispatch:
+  # Workflow ajetaan aina kun develop-branchiin tulee muutos (esim. PR mergetetään)
+  #push:
+  #  branches:
+  #    - develop
+
+# Tässä voi määritellä yhteiset permissionit kaikille jobeille workflowissa tarvittaessa
+# README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+permissions:
+  # Contents read lupaa tarvitaan checkout actionissa
+  contents: read
+  # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
+  packages: read
+
+env:
+  GH_DOCKER_REGISTRY: ghcr.io
+
+jobs:
+  # Linter job
+  lint-clj:
+    name: "Lint Clojure"
+    runs-on: ubuntu-latest
+    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    permissions:
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup clojure environment
+        uses: ./.github/actions/setup-clojure-env
+        with:
+          install-tools: true
+
+      # https://github.com/clj-kondo/clj-kondo/blob/master/doc/ci-integration.md
+      - name: Lint
+        continue-on-error: true
+        run: clj-kondo --lint src --config '{:output {:pattern "::{{level}} file={{filename}},line={{row}},col={{col}}::{{message}}"}}'

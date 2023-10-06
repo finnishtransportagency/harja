@@ -144,12 +144,12 @@
                                                               :viesti-id (:viesti-id ilmoitus) :tapahtuma-id tapahtuma-id
                                                               :kehitysmoodi? kehitysmoodi? :uudelleen-lahetys? uudelleen-lahetys?})
           ilmoituksen-alkuperainen-kesto (when uudelleen-lahetys?
-                                           (->> ilmoitus-kanta-id (ilmoitukset-q/ilmoituksen-alkuperainen-kesto db) first :date_part))
+                                           (->> ilmoitus-kanta-id (ilmoitukset-q/ilmoituksen-alkuperainen-kesto db) first :kesto))
           lisatietoja (if uudelleen-lahetys?
                         (str "Ilmoituksen päivityksen saapuminen kesti " (ilmoituksen-kesto kulunut-aika)
                              " - alkuperäisellä kestänyt: "
                              (if (< ilmoituksen-alkuperainen-kesto 1)
-                               "alle 0s"
+                               "alle 1s"
                                (ilmoituksen-kesto (Math/floor ilmoituksen-alkuperainen-kesto))))
                         (str "Illmoituksella kesti " (ilmoituksen-kesto kulunut-aika) " saapua HARJA:an"))
           ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
