@@ -3,13 +3,13 @@
 
 ;; Vaihtaa valinnat
 (defrecord AsetaValinnat [valinnat])
+(defrecord PalautaOletusHakuEhdot [])
 
 ;; Kun valintojen reaktio muuttuu
 (defrecord YhdistaValinnat [valinnat])
 
 (defrecord HaeIlmoitukset []) ;; laukaise ilmoitushaku
 (defrecord IlmoitusHaku [tulokset]) ;; Ilmoitusten palvelinhaun tulokset
-
 
 ;; Valitsee ilmoituksen tarkasteltavaksi
 (defrecord ValitseIlmoitus [id])
