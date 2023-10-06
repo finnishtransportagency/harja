@@ -89,7 +89,7 @@
 (defrecord ValitseHoitovuodenKuukausi [hoitovuoden-kuukausi])
 (defrecord ValitseTR-osoite [arvo avain])
 (defrecord ValitseVarustetyyppi [varustetyyppi valittu?])
-(defrecord ValitseKohdeluokka [kohdeluokka valittu?])
+(defrecord ValitseKohdeluokka [kohdeluokka valittu? varustetyypit-atom])
 (defrecord ValitseVarustetyyppi2 [varustetyyppi])
 (defrecord ValitseKuntoluokka [kuntoluokka valittu?])
 (defrecord ValitseToteuma [toteuma])
@@ -139,7 +139,8 @@
     (pavittaa-valitut app :varustetyypit varustetyyppi valittu?))
 
   ValitseKohdeluokka
-  (process-event [{:keys [kohdeluokka valittu?]} app]
+  (process-event [{:keys [kohdeluokka valittu? varustetyypit-atom]} app]
+    (reset! varustetyypit-atom nil)
     (as-> app app
       (pavittaa-valitut app :kohdeluokat kohdeluokka valittu?)
       (assoc app :varustetyyppihaku (tee-varustetyyppihaku (:valinnat app) (:nimikkeisto app)))

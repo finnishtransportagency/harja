@@ -91,13 +91,21 @@
                                  (swap! data conj valinta)))
         tulokset (atom nil)
         valittu-idx (atom nil)
-        hae-kun-yli-n-merkkia (or hae-kun-yli-n-merkkia 2)]
+        hae-kun-yli-n-merkkia (or hae-kun-yli-n-merkkia 2)
+        edellinen-data (atom @data)]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! tulokset nil))
 
       (fn [{:keys [lahde]} data]
-        (when (and tarkkaile-ulkopuolisia-muutoksia? (nil? @data))
-          (reset! teksti nil))
+        (when (and
+                tarkkaile-ulkopuolisia-muutoksia?
+                (nil? @data)
+                (not= @edellinen-data @data))
+          (reset! teksti (if monivalinta?
+                           (monivalinta-teksti nil)
+                           ((or nayta str) nil))))
+        (reset! edellinen-data @data)
+
         [:div.hakukentta.dropdown {:class (when (some? @tulokset) "open")}
 
          [:input {:class (cond-> nil
@@ -168,21 +176,23 @@
                 (doall (map-indexed (fn [i t]
                                       ^{:key (hash t)}
                                       [:li {:class [(when (= i idx) "korostettu") "padding-left-8"
-                                                    "harja-alasvetolistaitemi display-flex items-center"]
-                                            :role "presentation"}
+                                                    "harja-alasvetolistaitemi display-flex items-center klikattava"]
+                                            :role "presentation"
+                                            :on-click #(do
+                                                        (.preventDefault %)
+                                                        (if monivalinta?
+                                                          (reset! teksti (monivalinta-teksti (monivalinta-valitse! t)))
+                                                          (reset! teksti ((or nayta str) (reset! data t))))
+                                                        (when kun-muuttuu (kun-muuttuu nil))
+                                                        (reset! tulokset nil))}
                                        [ikonit/ikoni-ja-elementti
-                                        (if (some #{t} @data)
+                                        (if (or (= t @data) (some #{t} @data))
                                           [ikonit/harja-icon-status-completed]
                                           ;; Tyhjä inline-block, joka on yhtä leveä kuin ikoni, jotta tekstit asettuu
                                           ;; samalle tasolle
                                           [:span {:style {:width "12px"
                                                           :display :inline-block}}])
-                                        [linkki ((or nayta str) t) #(do
-                                                                      (if monivalinta?
-                                                                        (reset! teksti (monivalinta-teksti (monivalinta-valitse! t)))
-                                                                        (reset! teksti ((or nayta str) (reset! data t))))
-                                                                      (when kun-muuttuu (kun-muuttuu nil))
-                                                                      (reset! tulokset nil))]]])
+                                        ((or nayta str) t)]])
                          nykyiset-tulokset)))))]]))))
 
 
