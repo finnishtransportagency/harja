@@ -147,12 +147,6 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  # Ajaa esim. perustestit (back-testit, front-testit, integraatiotestit
-  # -- OHJEITA KEHITYKSEEN --
-  # TODO: Jos testien ajoa haluaa pilkkoa erillisiksi Status Checkeiksi, niin ne pitää pilkkoa erillisiksi jobeiksi.
-  #       Halutut status checkit valikoidaan Harjan Github-repon asetuksista.
-  #       Jokainen jobi ajetaan omassa VM:ssä, joten perusasiat ja tarvittaessa testitietokannan käynnistys action
-  #       pitää ottaa mukaan jobiin.
   back-tests:
     name: "Backend-testit"
     if: false
