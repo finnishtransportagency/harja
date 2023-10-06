@@ -51,20 +51,6 @@ env:
   GH_DOCKER_REGISTRY: ghcr.io
 
 jobs:
-
-  print-test:
-    name: "Debug"
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Debug
-        env:
-          TEST_DB_SERVICE: ${{ inputs.test-db-service }}
-          BROWSERS: ${{ inputs.e2e-browsers }}
-        run: |
-          echo "Testitietokannan tagi: $TEST_DB_SERVICE"
-          echo "Selaimet: $BROWSERS"
-
   # Linter job
   lint-clj:
     if: ${{ inputs.lint-clj == 'true' }}
