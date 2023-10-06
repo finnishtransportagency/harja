@@ -25,6 +25,11 @@ on:
         default: ''
         type: string
         required: false
+      build-harja:
+        description: 'Buildataanko harja kevyesti ("light") vai täysi build ("full") tai ei ollenkaan "false"'
+        default: 'full'
+        type: string
+        required: false
       lint-clj:
         description: 'Enabloi lint-clj job'
         default: 'true'
@@ -81,7 +86,8 @@ jobs:
         run: clj-kondo --lint src --config '{:output {:pattern "::{{level}} file={{filename}},line={{row}},col={{col}}::{{message}}"}}'
 
   # Build job
-  build:
+  build-harja:
+    if: ${{ inputs.build-harja != 'false' }}
     name: "Prod build"
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
@@ -110,17 +116,16 @@ jobs:
 
        # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
 
-      # Huom: Build ajetaan ilman laadunseurantaa ja dokumentaatiota kaikille muille brancheille
-      #       Develop-branchille ajetaan aina täysi build.
+      # Kevyestä buildistä on jätetty laadunseurannan ja dokumentaation build pois
       - name: Build Harja Uberjar (Kevyt)
-        if: ${{ github.ref != 'refs/heads/develop' }}
+        if: ${{ inputs.build-harja == 'light' }}
         uses: ./.github/actions/build-harja-app
         with:
           build-laadunseuranta: 'false'
           build-documentation: 'false'
 
       - name: Build Harja Uberjar (Täysi build)
-        if: ${{ github.ref == 'refs/heads/develop' }}
+        if: ${{ inputs.build-harja == 'full' }}
         uses: ./.github/actions/build-harja-app
 
       - name: Name build artifact using the branch name
@@ -320,7 +325,7 @@ jobs:
   e2e-tests:
     if: ${{ inputs.e2e-tests == 'true' }}
     name: "e2e-testit (Cypress)"
-    needs: build
+    needs: build-harja
     runs-on: ubuntu-latest
     env:
       # Asetetaan Suomen aikavyöhyke testejä varten
