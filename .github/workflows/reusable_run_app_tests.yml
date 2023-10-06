@@ -47,7 +47,6 @@ jobs:
   # Linter job
   lint-clj:
     name: "Lint Clojure"
-    if: false
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -149,7 +148,6 @@ jobs:
 
   back-tests:
     name: "Backend-testit"
-    if: false
     runs-on: ubuntu-latest
     env:
       TZ: "EET"
@@ -188,7 +186,6 @@ jobs:
 
   basic-tests:
     name: "Frontti- ja hitaat testit"
-    if: false
     runs-on: ubuntu-latest
     env:
       TZ: "EET"
@@ -247,7 +244,6 @@ jobs:
   # integraatiotestit vaativat ActiveMQ-brokerin, siksi oma jobi
   integration-tests:
     name: "integraatiotestit"
-    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
