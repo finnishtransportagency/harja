@@ -73,7 +73,7 @@
 
 (defmethod tee-kentta :haku [{:keys [_lahde nayta placeholder pituus lomake? sort-fn disabled?
                                      kun-muuttuu hae-kun-yli-n-merkkia vayla-tyyli? monivalinta?
-                                     monivalinta-teksti]} data]
+                                     tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti]} data]
   (when monivalinta?
     (assert (ifn? monivalinta-teksti) "Monivalintahakukentällä pitää olla funktio monivalinta-teksti!"))
   (let [nyt-valittu @data
@@ -96,12 +96,14 @@
       (komp/klikattu-ulkopuolelle #(reset! tulokset nil))
 
       (fn [{:keys [lahde]} data]
+        (when (and tarkkaile-ulkopuolisia-muutoksia? (nil? @data))
+          (reset! teksti nil))
         [:div.hakukentta.dropdown {:class (when (some? @tulokset) "open")}
 
          [:input {:class (cond-> nil
-                                 lomake? (str "form-control ")
-                                 vayla-tyyli? (str "input-default komponentin-input ")
-                                 disabled? (str "disabled"))
+                           lomake? (str "form-control ")
+                           vayla-tyyli? (str "input-default komponentin-input ")
+                           disabled? (str "disabled"))
                   :value @teksti
                   :placeholder placeholder
                   :disabled disabled?
