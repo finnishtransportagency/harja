@@ -29,20 +29,14 @@ jobs:
       actions: write
       # Tarvitaan test-reportin julkaisuun PR:ssä
       checks: write
-    strategy:
-      # Halutaan, että kaikki testit käydään läpi.
-      # Yksittäinen flaky testi ei saa kaataa koko testimatriisia.
-      fail-fast: false
-      max-parallel: 2
-      matrix:
-        # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä
-        configs: [
-          { testDBService: "harjadb-latest", e2eBrowsers: ['chrome'], artifactPrefix: 'harjadb-latest_' },
-          { testDBService: "harjadb-12-3.1", e2eBrowsers: ['chrome', 'edge'], artifactPrefix: 'harjadb-12-3.1_' },
-        ]
 
     with:
-      test-db-service: ${{ matrix.configs.testDBService }}
-      e2e-browsers: ${{ toJSON(matrix.configs.e2eBrowsers) }}
-      artifact-prefix: ${{ matrix.configs.artifactPrefix }}
-      lint-clj: 'false'
+      # HUOM: PR:t Testataan vanhemmalla PostgreSQL-versiolla, jotta on-prem ympäristöön ei lipsahda
+      #       siirtymäaikana vain uudemmissa PostgreSQL-versioissa toimivia kantamuutoksia, jotka voivat rikkoa
+      #       Harjan toimintoja on-prem ympäristössä
+      #       On-prem ympäristön deployment tapahtuu automaattisesti eri ympäristössä kuin GH Actions, joten
+      #       deploymenttiä ei voi täällä rajoittaa GH Actions testitulosten perusteella.
+
+      # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä
+      test-db-service: harjadb-12-3.1
+      e2e-browsers: "['chrome']"
