@@ -566,6 +566,16 @@
           "analytiikka")))
 
     (julkaise-reitti
+      http :analytiikka-toteumat-koko
+      (GET "/api/analytiikka/toteumat/:alkuaika/:loppuaika/:koordinaattimuutos/:koko" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki
+          :analytiikka-hae-toteumat request
+          (fn [parametrit kayttaja db]
+            (palauta-toteumat db parametrit kayttaja))
+          ;; Vaaditaan analytiikka-oikeudet
+          "analytiikka")))
+
+    (julkaise-reitti
       http :analytiikka-suunnitellut-materiaalit-hoitovuosi
       (GET "/api/analytiikka/suunnitellut-materiaalit/:alkuvuosi/:loppuvuosi" request
         (kasittele-kevyesti-get-kutsu db integraatioloki
@@ -658,6 +668,7 @@
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
       :analytiikka-toteumat
+      :analytiikka-toteumat-koko
       :analytiikka-materiaalit
       :analytiikka-tehtavat
       :analytiikka-urakat
