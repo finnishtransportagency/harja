@@ -339,8 +339,8 @@
       (when kuittaa-monta-nyt
         [kuittaukset/kuittaa-monta-lomake e! kuittaa-monta])
 
-      [:h2 (str (count haetut-ilmoitukset) " Ilmoitusta"
-             (when @nav/valittu-urakka (str " Urakassa " (or (:lyhyt_nimi @nav/valittu-urakka) (:nimi @nav/valittu-urakka)))))]
+      [:h2 (str (count haetut-ilmoitukset) " ilmoitusta"
+             (when @nav/valittu-urakka (str " urakassa " (or (:lyhyt_nimi @nav/valittu-urakka) (:nimi @nav/valittu-urakka)))))]
       
       [grid
        {:tyhja (if haetut-ilmoitukset
