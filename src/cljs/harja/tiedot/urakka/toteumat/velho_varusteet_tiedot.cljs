@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.toteumat.velho-varusteet-tiedot
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [harja.ui.protokollat :as protokollat]
+            [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<!]]
             [tuck.core :refer [process-event] :as tuck]
             [harja.loki :refer [log tarkkaile!]]
@@ -68,12 +69,28 @@
     (str tr-numero "/" tr-alkuosa "/" tr-alkuetaisyys "/" tr-loppuosa "/" tr-loppuetaisyys)
     (str tr-numero "/" tr-alkuosa "/" tr-alkuetaisyys)))
 
+(defn tee-varustetyyppihaku [valinnat nimikkeisto]
+  (reify protokollat/Haku
+    (hae [_ teksti]
+      (go (let [varustetyypit (flatten (into [] (if (:kohdeluokat valinnat)
+                                                  (vals (select-keys nimikkeisto (:kohdeluokat valinnat)))
+                                                  (vals nimikkeisto))))
+
+                itemit (if (< (count teksti) 1)
+                         varustetyypit
+                         (filter #(not= (.indexOf (.toLowerCase (:otsikko %))
+                                          (.toLowerCase teksti)) -1)
+                           varustetyypit))]
+            (vec (sort-by :otsikko itemit)))))))
+
 (def +max-toteumat+ 1000)
 
 (defrecord ValitseHoitokausi [hoitokauden-alkuvuosi])
 (defrecord ValitseHoitovuodenKuukausi [hoitovuoden-kuukausi])
 (defrecord ValitseTR-osoite [arvo avain])
 (defrecord ValitseVarustetyyppi [varustetyyppi valittu?])
+(defrecord ValitseKohdeluokka [kohdeluokka valittu?])
+(defrecord ValitseVarustetyyppi2 [varustetyyppi])
 (defrecord ValitseKuntoluokka [kuntoluokka valittu?])
 (defrecord ValitseToteuma [toteuma])
 (defrecord HaeVarusteet [lahde])
@@ -87,6 +104,9 @@
 (defrecord SuljeVarusteLomake [])
 (defrecord TyhjennaSuodattimet [hoitokauden-alkuvuosi])
 (defrecord TaydennaTR-osoite-suodatin [tie aosa aeta losa leta])
+(defrecord HaeNimikkeisto [])
+(defrecord HaeNimikkeistoOnnistui [vastaus])
+(defrecord HaeNimikkeistoEpaonnistui [vastaus])
 
 (def fin-hk-alkupvm "01.10.")
 (def fin-hk-loppupvm "30.09.")
@@ -117,6 +137,17 @@
   ValitseVarustetyyppi
   (process-event [{:keys [varustetyyppi valittu?]} app]
     (pavittaa-valitut app :varustetyypit varustetyyppi valittu?))
+
+  ValitseKohdeluokka
+  (process-event [{:keys [kohdeluokka valittu?]} app]
+    (as-> app app
+      (pavittaa-valitut app :kohdeluokat kohdeluokka valittu?)
+      (assoc app :varustetyyppihaku (tee-varustetyyppihaku (:valinnat app) (:nimikkeisto app)))
+      (assoc-in app [:valinnat :varustetyypit2] nil)))
+
+  ValitseVarustetyyppi2
+  (process-event [{:keys [varustetyyppi]} app]
+    (assoc-in app [:valinnat :varustetyypit2] varustetyyppi))
 
   ValitseKuntoluokka
   (process-event [{:keys [kuntoluokka valittu?]} app]
@@ -168,7 +199,6 @@
 
   HaeVarusteetEpaonnistui
   (process-event [_ app]
-    (println "jere testaa:: HaeVarusteetEpaonnistui" )
     (reset! varusteet-kartalla/karttataso-varusteet nil)
     (viesti/nayta! "Varusteiden haku epäonnistui!" :danger)
     (-> app
@@ -227,5 +257,22 @@
           leta (or leta 99999)]
       (if tie
         (assoc app :valinnat (merge valinnat {:aosa aosa :aeta aeta :losa losa :leta leta}))
-        (assoc app :valinnat (merge valinnat {:aosa nil :aeta nil :losa nil :leta nil}))))))
+        (assoc app :valinnat (merge valinnat {:aosa nil :aeta nil :losa nil :leta nil})))))
 
+  HaeNimikkeisto
+  (process-event [_ app]
+    (tuck-apurit/post! app :hae-varustetoteuma-nimikkeistot
+      {}
+      {:onnistui ->HaeNimikkeistoOnnistui
+       :epaonnistui ->HaeNimikkeistoEpaonnistui}))
+
+  HaeNimikkeistoOnnistui
+  (process-event [{:keys [vastaus]} {:keys [valinnat] :as app}]
+    (assoc app
+      :nimikkeisto (group-by :kohdeluokka vastaus)
+      :varustetyyppihaku (tee-varustetyyppihaku valinnat (group-by :kohdeluokka vastaus))))
+
+  HaeNimikkeistoEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! "Kohdeluokkien haku epäonnistui!" :varoitus)
+    app))

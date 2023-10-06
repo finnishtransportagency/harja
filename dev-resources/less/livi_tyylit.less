@@ -168,7 +168,11 @@ table.table-striped {
     display: flex;
     min-height: 40px;
     line-height: 1rem;
-    border-bottom: 1px solid @gray230;
+
+    &:not(:last-child) {
+      border-bottom: 1px solid @gray230;
+    }
+
     &:hover,
     &:focus {
         background-color: @gray245;
@@ -212,6 +216,21 @@ table.table-striped {
             color: @harmaa1;
         }
     }
+
+
+  .harja-icon-status-completed {
+    color: @blue-dark;
+  }
+
+  &.alasveto-erotin {
+    &-ylos {
+      border-top: 1px solid @black-light;
+    }
+
+    &-alas {
+      border-bottom: 1px solid @black-light;
+    }
+  }
 }
 
 .livi-valittu {

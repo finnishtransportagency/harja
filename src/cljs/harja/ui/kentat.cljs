@@ -71,18 +71,31 @@
   (let [komponentti (:komponentti skeema)]
     [komponentti data]))
 
-(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake? sort-fn disabled?
-                                     kun-muuttuu hae-kun-yli-n-merkkia vayla-tyyli?]} data]
+(defmethod tee-kentta :haku [{:keys [_lahde nayta placeholder pituus lomake? sort-fn disabled?
+                                     kun-muuttuu hae-kun-yli-n-merkkia vayla-tyyli? monivalinta?
+                                     monivalinta-teksti]} data]
+  (when monivalinta?
+    (assert (ifn? monivalinta-teksti) "Monivalintahakukentällä pitää olla funktio monivalinta-teksti!"))
   (let [nyt-valittu @data
-        teksti (atom (if nyt-valittu
-                       ((or nayta str) nyt-valittu) ""))
+        teksti (atom (cond
+                       (and (not monivalinta?) nyt-valittu)
+                       ((or nayta str) nyt-valittu)
+
+                       (and monivalinta? (fn? monivalinta-teksti))
+                       (monivalinta-teksti nyt-valittu)
+
+                       :else ""))
+        monivalinta-valitse! (fn [valinta]
+                               (if (and (some? valinta) (some #{valinta} @data))
+                                 (swap! data #(remove #{valinta} %))
+                                 (swap! data conj valinta)))
         tulokset (atom nil)
         valittu-idx (atom nil)
         hae-kun-yli-n-merkkia (or hae-kun-yli-n-merkkia 2)]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! tulokset nil))
 
-      (fn [_ data]
+      (fn [{:keys [lahde]} data]
         [:div.hakukentta.dropdown {:class (when (some? @tulokset) "open")}
 
          [:input {:class (cond-> nil
@@ -97,45 +110,46 @@
                                 ;; tehdään haku vain jos elementti on fokusoitu
                                 ;; IE triggeröi on-change myös ohjelmallisista muutoksista
                                 (let [v (-> % .-target .-value str/triml)]
-                                  (reset! data nil)
+                                  (if-not monivalinta? (reset! data nil))
                                   (reset! teksti v)
                                   (when kun-muuttuu (kun-muuttuu v))
                                   (if (> (count v) hae-kun-yli-n-merkkia)
                                     (do (reset! tulokset :haetaan)
-                                        (go (let [tul (<! (hae lahde v))]
-                                              (reset! tulokset tul)
-                                              (reset! valittu-idx nil))))
+                                      (go (let [tul (<! (hae lahde v))]
+                                            (reset! tulokset tul)
+                                            (reset! valittu-idx nil))))
                                     (reset! tulokset nil))))
                   :on-key-down (nuolivalinta #(let [t @tulokset]
                                                 (log "YLÖS " @valittu-idx)
                                                 (when (vector? t)
                                                   (swap! valittu-idx
-                                                         (fn [idx]
-                                                           (if (or (= 0 idx) (nil? idx))
-                                                             (dec (count t))
-                                                             (dec idx))))))
-                                             #(let [t @tulokset]
-                                                (log "ALAS " @valittu-idx)
-                                                (when (vector? t)
-                                                  (swap! valittu-idx
-                                                         (fn [idx]
-                                                           (if (and (nil? idx) (not (empty? t)))
-                                                             0
-                                                             (if (< idx (dec (count t)))
-                                                               (inc idx)
-                                                               0))))))
-                                             #(let [t @tulokset
-                                                    idx @valittu-idx]
-                                                (when (number? idx)
-                                                  (let [v (nth t idx)]
-                                                    (reset! data v)
-                                                    (reset! teksti ((or nayta str) v))
-                                                    (when kun-muuttuu (kun-muuttuu nil))
-                                                    (reset! tulokset nil)))))}]
+                                                    (fn [idx]
+                                                      (if (or (= 0 idx) (nil? idx))
+                                                        (dec (count t))
+                                                        (dec idx))))))
+                                 #(let [t @tulokset]
+                                    (log "ALAS " @valittu-idx)
+                                    (when (vector? t)
+                                      (swap! valittu-idx
+                                        (fn [idx]
+                                          (if (and (nil? idx) (not (empty? t)))
+                                            0
+                                            (if (< idx (dec (count t)))
+                                              (inc idx)
+                                              0))))))
+                                 #(let [t @tulokset
+                                        idx @valittu-idx]
+                                    (when (number? idx)
+                                      (let [v (nth t idx)]
+                                        (if monivalinta?
+                                          (reset! teksti (monivalinta-teksti (monivalinta-valitse! v)))
+                                          (reset! teksti ((or nayta str) (reset! data v))))
+                                        (when kun-muuttuu (kun-muuttuu nil))
+                                        (reset! tulokset nil)))))}]
          (when (zero? hae-kun-yli-n-merkkia)
            [:button.nappi-hakualasveto
             {:on-click #(go (reset! tulokset (<! (hae lahde "")))
-                            (reset! valittu-idx nil))
+                          (reset! valittu-idx nil))
              :disabled disabled?}
             [:span.livicon-chevron-down]])
 
@@ -151,26 +165,36 @@
                 [:span.ei-hakutuloksia "Ei tuloksia"]
                 (doall (map-indexed (fn [i t]
                                       ^{:key (hash t)}
-                                      [:li {:class (when (= i idx) "korostettu") :role "presentation"}
-                                       [linkki ((or nayta str) t) #(do
-                                                                     (reset! data t)
-                                                                     (reset! teksti ((or nayta str) t))
-                                                                     (when kun-muuttuu (kun-muuttuu nil))
-                                                                     (reset! tulokset nil))]])
-                                    nykyiset-tulokset)))))]]))))
+                                      [:li {:class [(when (= i idx) "korostettu") "padding-left-8"
+                                                    "harja-alasvetolistaitemi display-flex items-center"]
+                                            :role "presentation"}
+                                       [ikonit/ikoni-ja-elementti
+                                        (if (some #{t} @data)
+                                          [ikonit/harja-icon-status-completed]
+                                          ;; Tyhjä inline-block, joka on yhtä leveä kuin ikoni, jotta tekstit asettuu
+                                          ;; samalle tasolle
+                                          [:span {:style {:width "12px"
+                                                          :display :inline-block}}])
+                                        [linkki ((or nayta str) t) #(do
+                                                                      (if monivalinta?
+                                                                        (reset! teksti (monivalinta-teksti (monivalinta-valitse! t)))
+                                                                        (reset! teksti ((or nayta str) (reset! data t))))
+                                                                      (when kun-muuttuu (kun-muuttuu nil))
+                                                                      (reset! tulokset nil))]]])
+                         nykyiset-tulokset)))))]]))))
 
 
 (defn placeholder [{:keys [placeholder placeholder-fn rivi] :as kentta} data]
   (or placeholder
-      (and placeholder-fn (placeholder-fn rivi))))
+    (and placeholder-fn (placeholder-fn rivi))))
 
 (defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe? regex focus on-focus on-blur lomake? toiminta-f disabled? vihje elementin-id muokattu?]
                                 :as kentta} data]
   [:input {:class (cond-> nil
-                          (and lomake?
-                               (not vayla-tyyli?)) (str "form-control ")
-                          vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
-                          disabled? (str "disabled"))
+                    (and lomake?
+                      (not vayla-tyyli?)) (str "form-control ")
+                    vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
+                    disabled? (str "disabled"))
            :placeholder (placeholder kentta data)
            :on-change #(let [v (-> % .-target .-value)]
                          (when (or (not regex) (re-matches regex v))

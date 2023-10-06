@@ -4,6 +4,7 @@
             [com.stuartsierra.component :as component]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.toteumat :as toteumat-q]
+            [harja.kyselyt.velho-nimikkeistot :as nimikkeistot-q]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-komponentti]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
@@ -63,6 +64,10 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (velho-komponentti/hae-urakan-varustetoteumat velho urakka-id))
 
+(defn hae-varustetoteuma-nimikkeistot [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user)
+  (nimikkeistot-q/hae-nimikkeistot db))
+
 (defrecord VarusteVelho []
   component/Lifecycle
   (start [this]
@@ -82,6 +87,10 @@
       (julkaise-palvelu http :hae-urakan-varustetoteumat
         (fn [user tiedot]
           (hae-urakan-varustetoteumat-velhosta velho user tiedot)))
+
+      (julkaise-palvelu http :hae-varustetoteuma-nimikkeistot
+        (fn [user _]
+          (hae-varustetoteuma-nimikkeistot db user)))
 
       (when excel
         (excel-vienti/rekisteroi-excel-kasittelija! excel :varusteet-ulkoiset-excel

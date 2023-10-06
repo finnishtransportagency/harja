@@ -6,7 +6,8 @@
 
   Harjaan tallennettu varustetoimenpide sisältää Tievelhosta haetun kopion toimenpiteestä ja sen kohteesta rajatuilla tiedoilla.
   Tarkemmat tiedot löytyvät Tievelhosta."
-  (:require [reagent.core :refer [atom]]
+  (:require [clojure.string :as str]
+            [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.varuste-ulkoiset :as varuste-ulkoiset]
@@ -19,14 +20,17 @@
             [harja.ui.debug :refer [debug]]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.kentat :as kentat]
             [harja.ui.komponentti :as komp]
             [harja.ui.lomake :as lomake]
+            [harja.ui.protokollat :as protokollat]
             [harja.ui.napit :as napit]
             [harja.ui.sivupalkki :as sivupalkki]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader]]
             [harja.views.kartta :as kartta]
-            [harja.views.kartta.tasot :as kartta-tasot]))
+            [harja.views.kartta.tasot :as kartta-tasot])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn kuntoluokka-komponentti [kuntoluokka]
   [yleiset/tila-indikaattori kuntoluokka
@@ -35,7 +39,9 @@
     :wrapper-luokka "inline-block"
     :fmt-fn str}])
 
-(defn suodatuslomake [e! {:keys [valinnat urakka] :as app}]
+
+
+(defn suodatuslomake [e! {:keys [valinnat urakka nimikkeisto varustetyyppihaku] :as app}]
   (let [alkupvm (:alkupvm urakka)
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
@@ -43,17 +49,18 @@
         valittu-toteuma (:toteuma valinnat)
         hoitovuoden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
         itse-tai-kaikki #(if % % "Kaikki")
-        multimap-fn (fn [avain] (fn [{:keys [id nimi] :as t}]
+        multimap-fn (fn [avain] (fn [{:keys [id nimi alasveto-eritin?] :as t}]
                                   {:id id
                                    :nimi (or nimi t)
                                    :valittu? (if nimi
                                                (contains? (get valinnat avain) nimi)
-                                               (nil? (get valinnat avain)))}))
-        varustetyypit-ja-suosikit (map-indexed (fn [idx itm] {:id idx :nimi itm})
-                                    (into ["Aidat" "Liikennemerkit" "Portaalit" "Rummut"]
-                                      (sort (vals v/tietolaji->varustetyyppi-map))))
-        varustetyypit (map (multimap-fn :varustetyypit) (into ["Kaikki"] varustetyypit-ja-suosikit))
+                                               (nil? (get valinnat avain)))
+                                   :alavetos-eritin? alasveto-eritin?}))
         kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] v/kuntoluokat))
+        kohdeluokat (map (multimap-fn :kohdeluokat) (into ["Kaikki"] (map-indexed (fn [i v]
+                                                                                    {:id i
+                                                                                     :nimi v})
+                                                                       (keys nimikkeisto))))
         toteumat (into [nil] (keys varuste-ulkoiset/toteuma->toimenpide-map))
         tr-kentan-valitse-fn (fn [avain]
                                (fn [event]
@@ -89,7 +96,7 @@
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        hoitovuoden-kuukaudet]
       [yleiset/tr-kentat-flex
-       {:wrap-luokka "col-md-3 filtteri varusteet tr-osoite-wrap"}
+       {:wrap-luokka "col-md-2 filtteri varusteet tr-osoite-wrap"}
        {:tie [yleiset/tr-kentan-elementti {:otsikko "Tie" :valitse-fn (tr-kentan-valitse-fn :tie) :luokka "tr-numero" :arvo tie}]
         :aosa [yleiset/tr-kentan-elementti {:otsikko "aosa" :valitse-fn (tr-kentan-valitse-fn :aosa) :luokka "tr-alkuosa" :arvo aosa}]
         :aeta [yleiset/tr-kentan-elementti {:otsikko "aet" :valitse-fn (tr-kentan-valitse-fn :aeta) :luokka "tr-alkuetaisyys" :arvo aeta}]
@@ -106,17 +113,36 @@
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        toteumat]
       [valinnat/monivalinta-pudotusvalikko
-       "Varustetyyppi"
-       varustetyypit
-       (fn [varustetyyppi valittu?]
-         (e! (v/->ValitseVarustetyyppi (:nimi varustetyyppi) valittu?)))
-       [" Varustetyyppiä valittu" " Varustetyyppiä valittu"]
-       {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
+       "Kohdeluokka"
+       kohdeluokat
+       (fn [kohdetyyppi valittu?]
+         (e! (v/->ValitseKohdeluokka (:nimi kohdetyyppi) valittu?)))
+       [" Kohdeluokka valittu" " Kohdeluokkaa valittu"]
+       {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
         :vayla-tyyli? true
-        :fmt itse-tai-kaikki
-        :valintojen-maara (count (:varustetyypit valinnat))
-        :li-luokka-fn (fn [valinta]
-                        (when (= "Aidat" (:teksti (second valinta))) "varusteet alasveto-erotin"))}]
+        :fmt (comp str/capitalize itse-tai-kaikki)
+        :valintojen-maara (count (:kohdeluokat valinnat))}]
+
+      [:div {:class "col-md-2 filtteri label-ja-alasveto-grid"}
+       [:label.alasvedon-otsikko-vayla "Varustetyyppi"]
+       (println (harja.ui.protokollat/hae varustetyyppihaku "pen"))
+       [kentat/tee-kentta
+        {:tyyppi :haku
+         :nayta :otsikko :fmt :otsikko
+         :hae-kun-yli-n-merkkia 0
+         :vayla-tyyli? true
+         :lahde varustetyyppihaku
+         :monivalinta? true
+         :monivalinta-teksti #(do
+                                (case (count %)
+                                  0 "Kaikki valittu"
+                                  1 (:otsikko (first %))
+
+                                  (str (count %) " varustetyyppiä valittu")))}
+        (r/wrap (:varustetyypit2 valinnat)
+          #(do (e! (v/->ValitseVarustetyyppi2 %))
+             %))]]
+
       [valinnat/monivalinta-pudotusvalikko
        "Kuntoluokitus"
        kuntoluokat
@@ -129,15 +155,15 @@
      [:div.row
       ;; TODO: poista
       [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä VANHA" #(do
-                                                                (e! (v/->TaydennaTR-osoite-suodatin tie aosa aeta losa leta))
-                                                                (e! (v/->HaeVarusteet :harja))) {:luokka "nappi-korkeus-32"
-                                                                                          :disabled false
-                                                                                          :ikoni (ikonit/livicon-search)}]
+                                                                      (e! (v/->TaydennaTR-osoite-suodatin tie aosa aeta losa leta))
+                                                                      (e! (v/->HaeVarusteet :harja))) {:luokka "nappi-korkeus-32"
+                                                                                                       :disabled false
+                                                                                                       :ikoni (ikonit/livicon-search)}]
       [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä" #(do
                                                                 (e! (v/->TaydennaTR-osoite-suodatin tie aosa aeta losa leta))
                                                                 (e! (v/->HaeVarusteet :velho))) {:luokka "nappi-korkeus-32"
-                                                                                          :disabled false
-                                                                                          :ikoni (ikonit/livicon-search)}]
+                                                                                                 :disabled false
+                                                                                                 :ikoni (ikonit/livicon-search)}]
       [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet (pvm/vuosi (get-in app [:urakka :alkupvm]))))
        {:luokka "nappi-korkeus-32"
         :disabled (and (every? nil? (vals (dissoc valinnat :hoitokauden-alkuvuosi)))
@@ -268,6 +294,7 @@
          (nav/vaihda-kartan-koko! :M)
          (kartta-tasot/taso-paalle! :varusteet-ulkoiset)
          (e! (v/->ValitseHoitokausi (pvm/vuosi (get-in app [:urakka :alkupvm]))))
+         (e! (v/->HaeNimikkeisto))
          (reset! varusteet-kartalla/varuste-klikattu-fn
            (fn [varuste-kartalla]
              (e! (v/->AvaaVarusteLomake varuste-kartalla))
