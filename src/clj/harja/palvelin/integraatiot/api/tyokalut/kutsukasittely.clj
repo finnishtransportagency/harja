@@ -538,7 +538,7 @@
                         payload (kasittele-kutsu-fn parametrit kayttaja db)]
                        (if (nil? payload)
                          ;; Saatiin null vastaus, joka viittaa siihen, että vastaus on liian suuri käsiteltäväksi
-                         {:status 413
+                         {:status 400
                           :body "Virhe: Liian suuri aineisto palautettavaksi."}
                          (tee-optimoitu-json-vastaus 200 payload request-origin))))]
       (when integraatioloki
