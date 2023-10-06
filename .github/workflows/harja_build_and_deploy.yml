@@ -94,7 +94,7 @@ jobs:
   deploy-to-ecs-matrix:
     uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
     if: ${{ github.event_name == 'workflow_run' }}
-    needs: test-and-build
+    needs: build-harja
     # Deployment ajetaan dev ympäristöön ja
     # stg ympäristöön myöhemmin, kunhan stg-ympäristö on saatu AWS:n puolella konffattua
     strategy:
