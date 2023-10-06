@@ -1,5 +1,6 @@
 import {avaaKustannussuunnittelu} from "../support/kustannussuunnitelmaFns.js";
 import * as ks from "../support/kustannussuunnitelmaFns.js";
+import {kuluvaHoitokausiAlkuvuosi} from "../support/apurit";
 
 const indeksit = [];
 
@@ -15,6 +16,13 @@ describe('Johto- & Hallintokorvaukset, 2022->', () => {
     
     describe('Ennen urakkaa valmistelukausi', () => {
         it('Taulukossa rivi näkyy ekalla hoitovuodella', () => {
+            let kuluvaHKVuosi = kuluvaHoitokausiAlkuvuosi();
+            let kuluvaHoitokausiNro = kuluvaHKVuosi - 2022 + 1;
+
+            let hoitokausiNyt = kuluvaHoitokausiNro + ". hoitovuosi (" + kuluvaHKVuosi + "—" + (kuluvaHKVuosi + 1) + ")";
+            let valittavaHoitokausi = "1. hoitovuosi (2022—2023)";
+            ks.valitseHoitokausi(hoitokausiNyt, valittavaHoitokausi);
+
             cy.get('[data-cy=tuntimaarat-ja-palkat-taulukko-suodattimet]')
                 .find('.pudotusvalikko-filter')
                 .find('.valittu.overflow-ellipsis').contains('1. hoitovuosi').should('exist')
@@ -277,7 +285,15 @@ describe('Johto- & Hallintokorvaukset, 2022->', () => {
         })
         it('Vakiotoimenkuvien erikseen syotetyt summat palautuvat oikein', () => {
             avaaKustannussuunnittelu('Tampereen MHU 2022-2026', 'Pirkanmaa', indeksit);
-            cy.get('#toimenkuvat-taulukko')            
+
+            let kuluvaHKVuosi = kuluvaHoitokausiAlkuvuosi();
+            let kuluvaHoitokausiNro = kuluvaHKVuosi - 2022 + 1;
+
+            let hoitokausiNyt = kuluvaHoitokausiNro + ". hoitovuosi (" + kuluvaHKVuosi + "—" + (kuluvaHKVuosi + 1) + ")";
+            let valittavaHoitokausi = "1. hoitovuosi (2022—2023)";
+            ks.valitseHoitokausi(hoitokausiNyt, valittavaHoitokausi);
+
+            cy.get('#toimenkuvat-taulukko')
                 .contains('Päätoiminen apulainen')
                 .next()
                 .click()

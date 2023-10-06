@@ -49,8 +49,12 @@ RUN apt-get update && \
     procps \
     xauth \
     xvfb \
+    # Edge riippuvuuksia
+    gnupg \
+    dirmngr \
       \
       \
+   # Muita aputyökaluja
    && apt-get install -y \
     postgresql-client \
     fonts-liberation \
@@ -77,10 +81,25 @@ RUN apt-get update && \
 
 # Asenna uusin Chrome selain
 # Apt-get update täytyy ajaa ennen chromen asennusta, jotta chromen asennuksen yhteydessä löytyy tarvittavat depsut
-ADD  "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb" /usr/src/google-chrome-stable_current_amd64.deb
-RUN apt-get update &&  \
+# HUOM: Estetään asennus ARM-arkkitehtuurilla, koska Chrome:sta ei ole tarjolla ARM-arkkitehtuurin pakettia.
+RUN node -p "process.arch === 'arm64' ? 'Not downloading Chrome since we are on arm64: https://crbug.com/677140' : process.exit(1)" || \
+    (wget --no-verbose -O /usr/src/google-chrome-stable_current_amd64.deb "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb" \
+    && apt-get update &&  \
     apt-get install -f -y /usr/src/google-chrome-stable_current_amd64.deb ; \
-  rm -f /usr/src/google-chrome-stable_current_amd64.deb
+  rm -f /usr/src/google-chrome-stable_current_amd64.deb)
+
+
+# Asenna uusin Edge
+# HUOM: Estetään asennus ARM-arkkitehtuurilla, koska Edgestä ei ole tarjolla ARM-arkkitehtuurin pakettia.
+RUN node -p "process.arch === 'arm64' ? 'Not downloading Edge since we are on arm64: https://techcommunity.microsoft.com/t5/discussions/edge-for-linux-arm64/m-p/1532272' : process.exit(1)" || \
+    (curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg && \
+    install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/ && \
+    sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.d/microsoft-edge-dev.list' && \
+    rm microsoft.gpg && \
+    apt-get update && \
+    apt-get install -y microsoft-edge-dev && \
+    # Luo symbolinen linkki
+    ln -s /usr/bin/microsoft-edge /usr/bin/edge)
 
 
 ### Env muuttujia liittyen NPM pakettien asentamiseen ja cypressin ajamisee ###
@@ -137,6 +156,7 @@ RUN echo  " Node version:    $(node -v) \n" \
     "NPM version:     $(npm -v) \n" \
     "Debian version:  $(cat /etc/debian_version) \n" \
     "Chrome version:  $(google-chrome --version) \n" \
+    "Edge version:    $(edge --version) \n" \
     "User:          $(whoami) \n"
 
 

@@ -207,7 +207,7 @@
                  hoitokauden-alkuvuosi
                  ::valikatselmus/tavoitehinnan-ylitys
                  urakan-paatokset)
-        paatos-tehty? (some? paatos)
+        paatos-tehty? (map? paatos)
         paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
                                  ::valikatselmus/tyyppi ::valikatselmus/tavoitehinnan-ylitys
                                  ::valikatselmus/urakoitsijan-maksu urakoitsijan-osuus
@@ -223,7 +223,7 @@
 
       [:div.urakoitsijan-maksu
        [:p "Urakoitsija maksaa " [:strong (fmt/euro-opt urakoitsijan-osuus)] " (30 %)"]
-       [:p.vihjeteksti "Urakoitsija kirjaa kulun harjaan"]]
+       [:p.vihjeteksti "Kulu luodaan automaattisesti."]]
       [:div
        [:p "Tilaaja maksaa " [:strong (fmt/euro-opt tilaajan-osuus)] " (70 %)"]]
 
@@ -241,9 +241,7 @@
          #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id paatos) ::valikatselmus/tavoitehinnan-alitus))
          {:disabled (not voi-muokata?)
           :luokka "nappi-toissijainen napiton-nappi"
-          :ikoni [ikonit/harja-icon-action-undo]}])]]
-    )
-  )
+          :ikoni [ikonit/harja-icon-action-undo]}])]]))
 
 (defn tavoitehinnan-alitus-lomake [e! {:keys [hoitokauden-alkuvuosi urakan-paatokset]} toteuma
                                    oikaistu-tavoitehinta tavoitehinta voi-muokata?]

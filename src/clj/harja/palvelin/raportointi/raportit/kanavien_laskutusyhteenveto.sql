@@ -65,7 +65,7 @@ SELECT tpi.id as "tpi-id", tpi.nimi as "tpi-nimi",
   FROM erilliskustannus ek
       LEFT JOIN toimenpideinstanssi tpi ON ek.toimenpideinstanssi = tpi.id
  WHERE ek.poistettu IS NOT TRUE
-      AND ek.pvm <= :loppupvm
-      AND ek.pvm >= :alkupvm
+      AND ek.laskutuskuukausi <= :loppupvm
+      AND ek.laskutuskuukausi >= :alkupvm
       AND tpi.urakka = :urakkaid
  GROUP BY tpi.id;
