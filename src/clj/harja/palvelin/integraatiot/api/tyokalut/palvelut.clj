@@ -6,7 +6,7 @@
 
 (defn- valita-kutsu [async db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn oikeus]
   (if async
-    (kasittele-kutsu-async db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn)
+    (kasittele-kutsu-async db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn oikeus)
     (kasittele-kutsu db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn oikeus)))
 
 (defn julkaise [http db integraatioloki palvelut]

@@ -558,7 +558,7 @@
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
   käsittelyvirhe."
-  [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
+  [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn vaadittu-api-oikeus]
 
   ;; mekanismi ei toimi asyncin kanssa, joten tämän alla oikeustarkistukset jäävät tarkistamatta
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
@@ -566,12 +566,13 @@
   (with-channel request channel
     (go
       (let [vastaus (<! (thread (kasittele-kutsu db
-                                                 integraatioloki
-                                                 resurssi
-                                                 request
-                                                 kutsun-skeema
-                                                 vastauksen-skeema
-                                                 kasittele-kutsu-fn)))]
+                                  integraatioloki
+                                  resurssi
+                                  request
+                                  kutsun-skeema
+                                  vastauksen-skeema
+                                  kasittele-kutsu-fn
+                                  vaadittu-api-oikeus)))]
         (send! channel vastaus)))))
 
 

@@ -58,7 +58,8 @@
   (with-fake-http
     [(str "http://localhost:" portti "/api/urakat/yhteystiedot/13371") :allow
      fim-url fim-vastaus]
-    (let [vastaus (api-tyokalut/get-kutsu "/api/urakat/yhteystiedot/13371" livi-jarjestelmakayttaja portti)
+    (let [_ (anna-lukuoikeus livi-jarjestelmakayttaja)
+          vastaus (api-tyokalut/get-kutsu "/api/urakat/yhteystiedot/13371" livi-jarjestelmakayttaja portti)
           {:keys [alkupvm loppupvm]} (first (q-map "SELECT * FROM urakka WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
           formaatti "yyyy-MM-dd'T'HH:mm:ss"
           alkupvm (str (df/unparse (df/formatter formaatti) (tc/from-date alkupvm)) "Z")
@@ -88,14 +89,16 @@
     (with-fake-http
       [(str "http://localhost:" portti (str "/api/urakat/yhteystiedot/" kanava-urakkanumero)) :allow
        fim-url fim-vastaus]
-      (let [vastaus (api-tyokalut/get-kutsu (str "/api/urakat/yhteystiedot/" kanava-urakkanumero) livi-jarjestelmakayttaja portti)
+      (let [_ (anna-lukuoikeus livi-jarjestelmakayttaja)
+            vastaus (api-tyokalut/get-kutsu (str "/api/urakat/yhteystiedot/" kanava-urakkanumero) livi-jarjestelmakayttaja portti)
             odotettu-vastaus (format "{\"virheet\":[{\"virhe\":{\"koodi\":\"tuntematon-urakka\",\"viesti\":\"Urakkanumerolla: %s ei löydy voimassa olevaa urakkaa Harjassa.\"}}]}" kanava-urakkanumero)
             data (walk/keywordize-keys (cheshire/decode (:body vastaus)))]
         (is (= 400 (:status vastaus)) "Haku epäonnistui epävalidilla urakkanumerolla")
         (is (= odotettu-vastaus (:body vastaus)))))))
 
 (deftest tarkista-oikeudet-rajapintaan
-  (let [vastaus (api-tyokalut/get-kutsu "/api/urakat/yhteystiedot/13371" urakoitsija-jarjestelmakayttaja portti)]
+  (let [_ (anna-lukuoikeus urakoitsija-jarjestelmakayttaja)
+        vastaus (api-tyokalut/get-kutsu "/api/urakat/yhteystiedot/13371" urakoitsija-jarjestelmakayttaja portti)]
     (is (= 403 (:status vastaus)) "Urakoitsijan järjestelmätunnuksella ei ole oikeutta palveluun")))
 
 
