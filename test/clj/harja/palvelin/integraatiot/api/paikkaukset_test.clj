@@ -48,6 +48,7 @@
                (slurp "test/resurssit/api/paikkauksen-kirjaus.json")
                (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste)))
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json)
         odotettu-leveys 10M
         tr-osoite {::tierekisteri/aet 1
@@ -124,6 +125,7 @@
                (slurp "test/resurssit/api/paikkaustoteuman-kirjaus.json")
                (.replace "<TOTEUMATUNNISTE>" (str toteumatunniste))
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste)))
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus/kustannus"] kayttaja portti json)
         poisto-json (slurp "test/resurssit/api/paikkaustietojen-poisto.json")
         poistettu-ennen (:poistettu (first (q-map "SELECT * FROM paikkauskohde WHERE lisatiedot = 'Oulun testipaikkauskohde';")))
@@ -180,6 +182,7 @@
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste))
                (.replace "<AOSA>" (str 5))
                (.replace "<LOSA>" (str 3)))
+        _ (anna-kirjoitusoikeus kayttaja)
         json-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json)
         paikkaukset (palvelu-paikkaukset/hae-urakan-paikkaukset db +kayttaja-jvh+
                       {:urakka-id urakka
@@ -210,6 +213,7 @@
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste))
                (.replace "<AOSA>" (str 3))
                (.replace "<LOSA>" (str 3)))
+        _ (anna-kirjoitusoikeus kayttaja)
         json-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json)
         paikkaukset (palvelu-paikkaukset/hae-urakan-paikkaukset db +kayttaja-jvh+
                       {:urakka-id urakka
@@ -254,6 +258,7 @@
                 (.replace "<AOSA>" (str 3))
                 (.replace "<LOSA>" (str 22))
                 )
+        _ (anna-kirjoitusoikeus kayttaja)
         json1-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json1)
         let-3000 (trosoite-obj->map (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " paikkaustunniste ";")))
         json2-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json2)
