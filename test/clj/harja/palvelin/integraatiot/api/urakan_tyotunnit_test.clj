@@ -31,6 +31,7 @@
     (with-fake-http [+testi-turi-url+ (fn [_ _ _]
                                         {:status 200 :body "ok"})
                      (str "http://localhost:" portti kutsu) :allow]
-      (let [vastaus (api-tyokalut/post-kutsu [kutsu] kayttaja portti kutsu-data)]
+      (let [_ (anna-kirjoitusoikeus kayttaja)
+            vastaus (api-tyokalut/post-kutsu [kutsu] kayttaja portti kutsu-data)]
         (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
         (is (.contains (:body vastaus) "Työtunnit kirjattu onnistuneesti"))))))
