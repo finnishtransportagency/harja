@@ -311,7 +311,10 @@
                     ;; vaadittu-api-oikeus voi olla nil esim testitapauksissa, joten riittää, että on järjestelmä käyttäjä
                     (kayttajat/onko-jarjestelma-ja-api-oikeus? db {:kayttajanimi (:kayttajanimi kayttaja)
                                                                    :api-oikeus vaadittu-api-oikeus})
-                    (kayttajat/onko-jarjestelma? db {:kayttajanimi (:kayttajanimi kayttaja)}))]
+                    (kayttajat/onko-jarjestelma? db {:kayttajanimi (:kayttajanimi kayttaja)}))
+        
+        _ (println "\non oikeus: " on-oikeus " vaadittu: " vaadittu-api-oikeus " kayttaja: " (:kayttajanimi kayttaja) " query jarj: " (kayttajat/onko-jarjestelma-ja-api-oikeus? db {:kayttajanimi (:kayttajanimi kayttaja)
+                                                                                                                                                                                   :api-oikeus vaadittu-api-oikeus}))]
     (if (nil? on-oikeus)
       (do
         (log/error "Käyttäjällä ei ole järjestelmäoikeuksia: " (:kayttajanimi kayttaja))
