@@ -4,13 +4,13 @@
             [compojure.core :refer [make-route]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu kasittele-kutsu-async]]))
 
-(defn- valita-kutsu [async db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn]
+(defn- valita-kutsu [async db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn oikeus]
   (if async
     (kasittele-kutsu-async db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn)
-    (kasittele-kutsu db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn)))
+    (kasittele-kutsu db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn oikeus)))
 
 (defn julkaise [http db integraatioloki palvelut]
-  (doseq [{:keys [palvelu polku tyyppi vastaus-skeema kutsu-skeema kasittely-fn async]} palvelut]
+  (doseq [{:keys [palvelu polku tyyppi vastaus-skeema kutsu-skeema kasittely-fn async oikeus]} palvelut]
     (julkaise-reitti
       http palvelu
       (make-route
@@ -21,7 +21,7 @@
          :DELETE :delete)
        polku
        (fn [request]
-         (valita-kutsu async db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn))))))
+         (valita-kutsu async db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn oikeus))))))
 
 (defn poista [http palvelut]
   (doseq [{:keys [palvelu]} palvelut]

@@ -1097,6 +1097,12 @@
         urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")]
     [kohde-id pot2-id urakka-id]))
 
+(defn anna-lukuoikeus [kayttaja]
+  (u (format "update kayttaja set api_oikeudet = ARRAY['luku'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja)))
+
+(defn anna-kirjoitusoikeus [kayttaja]
+  (u (format "update kayttaja set api_oikeudet = ARRAY['kirjoitus'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja)))
+
 (defn asenna-pot-lahetyksen-tila [kohde-id pot2-id]
   (u (str "UPDATE paallystysilmoitus
               SET paatos_tekninen_osa = 'hyvaksytty',

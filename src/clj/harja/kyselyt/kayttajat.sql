@@ -414,7 +414,7 @@ WHERE kayttajanimi = :kayttajanimi;
 -- single?: true
 SELECT jarjestelma
 FROM kayttaja
-WHERE api_oikeus = :api-oikeus::apioikeus
+WHERE :api-oikeus::apioikeus = ANY(api_oikeudet)
   AND kayttajanimi = :kayttajanimi;
 
 -- name: liikenneviraston-jarjestelma?

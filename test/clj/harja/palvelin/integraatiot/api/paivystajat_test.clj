@@ -43,6 +43,7 @@
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         urakoitsija-id (hae-oulun-alueurakan-2005-2012-urakoitsija)
         ulkoinen-id (hae-vapaa-yhteyshenkilo-ulkoinen-id)
+        _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/paivystajatiedot"] kayttaja-yit portti
                                                 (-> "test/resurssit/api/kirjaa_paivystajatiedot.json"
                                                     slurp
@@ -82,6 +83,7 @@
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
         _ (luo-urakalle-paivystys-menneisyyteen urakka-id) ;; Ei pitäisi palautua API:sta
+        _ (anna-lukuoikeus kayttaja-yit)
         vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/paivystajatiedot"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
@@ -92,6 +94,7 @@
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         _ (luo-urakalle-paivystys-tulevaisuuteen urakka-id)
         _ (luo-urakalle-paivystys-menneisyyteen urakka-id) ;; Ei pitäisi palautua API:sta
+        _ (anna-lukuoikeus kayttaja-yit)
         vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/paivystajatiedot"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
@@ -114,7 +117,8 @@
   (is (not= (fmt/trimmaa-puhelinnumero "+0400-123-123") (fmt/trimmaa-puhelinnumero "358400 123 123"))))
 
 (deftest hae-paivystajatiedot-puhelinnumerolla-aikavalilla
-  (let [vastaus (api-tyokalut/get-kutsu
+  (let [_ (anna-lukuoikeus kayttaja-jvh)
+        vastaus (api-tyokalut/get-kutsu
                   ["/api/paivystajatiedot/haku/puhelinnumerolla?alkaen=2029-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z&puhelinnumero=0505555555"]
                   kayttaja-jvh portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
@@ -124,6 +128,7 @@
 (deftest hae-paivystajatiedot-puhelinnumerolla
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
+        _ (anna-lukuoikeus kayttaja-jvh)
         vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?puhelinnumero=0505555555"] kayttaja-jvh portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
@@ -131,12 +136,14 @@
     (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 1))))
 
 (deftest esta-hae-paivystajatiedot-puhelinnumerolla-ilman-oikeuksia
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z&puhelinnumero=0505555555"] kayttaja-yit portti)]
+  (let [_ (anna-lukuoikeus kayttaja-yit)
+        vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z&puhelinnumero=0505555555"] kayttaja-yit portti)]
     (is (= 400 (:status vastaus)))))
 
 (deftest hae-paivystajatiedot-sijainnilla-kayttaen-lyhytta-aikavalia
   (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
+        _ (anna-lukuoikeus kayttaja-yit)
         vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=443199&y=7377324"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
@@ -144,7 +151,8 @@
     (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 1))))
 
 (deftest hae-paivystajatiedot-sijainnilla-kayttaen-pitkaa-aikavalia
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395&alkaen=2029-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z"] kayttaja-yit portti)
+  (let [_ (anna-lukuoikeus kayttaja-yit)
+        vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395&alkaen=2029-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (count (:paivystajatiedot encoodattu-body)) 0))))
@@ -152,6 +160,7 @@
 (deftest hae-paivystajatiedot-sijainnilla
   (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
+        _ (anna-lukuoikeus kayttaja-yit)
         vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=443199&y=7377324"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
@@ -170,7 +179,8 @@
 (deftest paivystajatietojen-poisto-test
   (let [paivystys-id-1 123456789
         paivystys-id-2 987654321
-        paivystys-id-3 657483920]
+        paivystys-id-3 657483920
+        _ (anna-kirjoitusoikeus kayttaja-yit)]
     (tee-testiyhteyshenkilo 9876543456)
     (tee-urakalle-paivystys 4 paivystys-id-1 9876543456 kayttaja-yit)
     (tee-urakalle-paivystys 1 paivystys-id-2 9876543456 kayttaja-yit)
@@ -190,7 +200,9 @@
       (is (= 1 (count (q " SELECT * FROM paivystys WHERE yhteyshenkilo = (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '9876543456') "))) " toisen urakan paivystaja samalla ulkoisella id:lla edelleen olemassa "))))
 
 (deftest hae-tarkista-paivamaarakasittelyt
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/paivystajatiedot?paattyen=2016-09-30"] kayttaja-yit portti)]
+  (let [_ (anna-lukuoikeus kayttaja-yit)
+        _ (anna-lukuoikeus kayttaja-jvh)
+        vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/paivystajatiedot?paattyen=2016-09-30"] kayttaja-yit portti)]
     (is (= 400 (:status vastaus)))
     (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"puutteelliset-parametrit\",\"viesti\":\"Päivämäärävälillä ei voi hakea ilman alkupäivämäärää\"}}]}"
            (:body vastaus))))
