@@ -34,6 +34,8 @@
 (deftest tallenna-pistetoteuma
   (let [ulkoinen-id (hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        _ (anna-kirjoitusoikeus kayttaja)
+        _ (anna-kirjoitusoikeus kayttaja-jvh)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
                                                 (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
                                                     slurp
@@ -79,6 +81,8 @@
 (deftest tallenna-ja-poista-reittitoteuma
   (let [ulkoinen-id (hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        _ (anna-kirjoitusoikeus kayttaja)
+        _ (anna-kirjoitusoikeus kayttaja-jvh)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                                                 (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                                                     slurp

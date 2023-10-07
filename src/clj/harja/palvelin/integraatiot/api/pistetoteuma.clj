@@ -75,12 +75,14 @@
       http :lisaa-pistetoteuma
       (POST "/api/urakat/:id/toteumat/piste" request
         (kasittele-kutsu db integraatioloki :lisaa-pistetoteuma request json-skeemat/pistetoteuman-kirjaus json-skeemat/kirjausvastaus
-                         (fn [parametit data kayttaja db] (kirjaa-toteuma db parametit data kayttaja)))))
+                         (fn [parametit data kayttaja db] (kirjaa-toteuma db parametit data kayttaja))
+          "kirjoitus")))
     (julkaise-reitti
       http :poista-pistetoteuma
       (DELETE "/api/urakat/:id/toteumat/piste" request
         (kasittele-kutsu db integraatioloki :poista-pistetoteuma request json-skeemat/pistetoteuman-poisto json-skeemat/kirjausvastaus
-                         (fn [parametit data kayttaja db] (poista-toteuma db parametit data kayttaja)))))
+                         (fn [parametit data kayttaja db] (poista-toteuma db parametit data kayttaja))
+          "kirjoitus")))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-pistetoteuma)
