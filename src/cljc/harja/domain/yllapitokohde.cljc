@@ -980,7 +980,7 @@ yllapitoluokkanimi->numero
                                   (mapv #((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:rivi-indeksi %))
                                         muukohde-paallekkyys))
         alustatoimenpiteet-paallekkain (when alustatoimenpide-paallekkyys
-                                         (mapv #((get-in paallekkaisyys-virhetekstit [:alikohde :alustatoimenpiteet-paallekkain]) (:rivi-indeksi %))
+                                         (mapv #((get-in paallekkaisyys-virhetekstit [:alustatoimenpide :alustatoimenpiteet-paallekkain]) (:rivi-indeksi %))
                                                alustatoimenpide-paallekkyys))]
     (into {}
           (keep (fn [[k v]]
