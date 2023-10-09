@@ -296,7 +296,8 @@
               :nimi ::lt/aika
               :tyyppi :komponentti
               :komponentti (fn []
-                             (let [tallennushetken-aika? (::lt/tallennuksen-aika? valittu-liikennetapahtuma)]
+                             (let [aika-atom (::lt/aika valittu-liikennetapahtuma)
+                                   tallennushetken-aika? (::lt/tallennuksen-aika? valittu-liikennetapahtuma)]
                                [:div (when uusi-tapahtuma? {:style {:padding-top "15px" :padding-bottom "10px"}})
                                 ;; Kun kirjataan uutta tapahtumaa, näytetään checkbox 
                                 (when uusi-tapahtuma?
@@ -312,11 +313,7 @@
                                 (when (or
                                         (not uusi-tapahtuma?)
                                         (not tallennushetken-aika?))
-                                  [kentat/tee-kentta
-                                   {:tyyppi :pvm-aika}
-                                   (r/wrap
-                                     (::lt/aika valittu-liikennetapahtuma)
-                                     #(e! (tiedot/->AsetaTallennusAika %)))])]))}
+                                  [kentat/tee-kentta {:tyyppi :pvm-aika} aika-atom])]))}
              {:otsikko "Kohde"
               :nimi ::lt/kohde
               :tyyppi :valinta

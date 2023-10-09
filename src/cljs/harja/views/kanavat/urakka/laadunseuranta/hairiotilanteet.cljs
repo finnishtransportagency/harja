@@ -276,7 +276,8 @@
         :pakollinen? true
         :tyyppi :komponentti
         :komponentti (fn []
-                       (let [tallennushetken-aika? (::hairiotilanne/tallennuksen-aika? valittu-hairiotilanne)]
+                       (let [aika-atom (::hairiotilanne/havaintoaika valittu-hairiotilanne)
+                             tallennushetken-aika? (::hairiotilanne/tallennuksen-aika? valittu-hairiotilanne)]
                          [:div (when uusi-hairiotilanne? {:style {:padding-top "15px" :padding-bottom "10px"}})
                           ;; Kun kirjataan uutta tapahtumaa, näytetään checkbox 
                           (when uusi-hairiotilanne?
@@ -292,12 +293,7 @@
                           (when (or
                                   (not uusi-hairiotilanne?)
                                   (not tallennushetken-aika?))
-
-                            [kentat/tee-kentta
-                             {:tyyppi :pvm-aika}
-                             (r/wrap
-                               (::hairiotilanne/havaintoaika valittu-hairiotilanne)
-                               #(e! (tiedot/->AsetaHavaintoaika %)))])]))}
+                            [kentat/tee-kentta {:tyyppi :pvm-aika} aika-atom])]))}
        (lomake/ryhma
          {:otsikko "Sijainti tai kohde"}
          {:nimi ::hairiotilanne/sijainti

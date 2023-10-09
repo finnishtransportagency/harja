@@ -58,7 +58,7 @@
 
 (defn uusi-tapahtuma
   ([]
-   (uusi-tapahtuma istunto/kayttaja u/valittu-sopimusnumero nav/valittu-urakka (pvm/nyt)))
+   (uusi-tapahtuma istunto/kayttaja u/valittu-sopimusnumero nav/valittu-urakka (atom (pvm/nyt))))
   ([kayttaja sopimus urakka aika]
    {::lt/kuittaaja (namespacefy @kayttaja {:ns :harja.domain.kayttaja})
     ::lt/aika aika
@@ -91,7 +91,6 @@
 (defrecord KayttajanUrakatHaettu [urakat])
 ;; Lomake
 (defrecord ValitseAjanTallennus [valittu?])
-(defrecord AsetaTallennusAika [aika])
 (defrecord ValitseTapahtuma [tapahtuma])
 (defrecord HaeEdellisetTiedot [tapahtuma])
 (defrecord EdellisetTiedotHaettu [tulos])
@@ -286,7 +285,11 @@
   (-> t
     (assoc ::lt/aika (if (::lt/tallennuksen-aika? t) ;; Jos halutaan käyttää tallennushetken aikaa -> pvm/nyt
                        (pvm/nyt)
-                      (::lt/aika t)))
+                       (cond 
+                         (some? (::lt/aika t))
+                         @(::lt/aika t)
+                         :else 
+                         (::lt/aika t))))
     (assoc ::lt/kuittaaja-id (get-in t [::lt/kuittaaja ::kayttaja/id]))
     (assoc ::lt/kohde-id (get-in t [::lt/kohde ::kohde/id]))
     (assoc ::lt/urakka-id (:id @nav/valittu-urakka))
@@ -599,10 +602,6 @@
     (assoc app
       :liikennetapahtumien-haku-kaynnissa? false
       :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false))
-
-  AsetaTallennusAika
-  (process-event [{aika :aika} app]
-    (assoc-in app [:valittu-liikennetapahtuma ::lt/aika] aika))
 
   ValitseAjanTallennus
   (process-event [{valittu? :valittu?} app]

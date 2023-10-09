@@ -38,7 +38,6 @@
 (defrecord MateriaalienHakuEpaonnistui [])
 ;; Muokkaukset
 (defrecord ValitseAjanTallennus [valittu?])
-(defrecord AsetaHavaintoaika [aika])
 (defrecord LisaaHairiotilanne [])
 (defrecord TyhjennaValittuHairiotilanne [])
 (defrecord AsetaHairiotilanteenTiedot [hairiotilanne])
@@ -66,7 +65,7 @@
      ::hairiotilanne/kuittaaja {::kayttaja/id (:id kayttaja)
                                 ::kayttaja/etunimi (:etunimi kayttaja)
                                 ::kayttaja/sukunimi (:sukunimi kayttaja)}
-     ::hairiotilanne/havaintoaika (pvm/nyt)}))
+     ::hairiotilanne/havaintoaika (atom (pvm/nyt))}))
 
 (defn voi-tallentaa? [hairiotilanne]
   (and
@@ -80,7 +79,11 @@
                         ;; ;; Jos halutaan käyttää tallennushetken aikaa -> pvm/nyt
                         (assoc ::hairiotilanne/havaintoaika (if (::hairiotilanne/tallennuksen-aika? hairiotilanne)
                                            (pvm/nyt)
-                                           (::hairiotilanne/havaintoaika hairiotilanne)))
+                                           (cond 
+                                             (some? (::hairiotilanne/havaintoaika hairiotilanne))
+                                               @(::hairiotilanne/havaintoaika hairiotilanne)
+                                             :else 
+                                             (::hairiotilanne/havaintoaika hairiotilanne))))
                           (select-keys [::hairiotilanne/id
                                         ::hairiotilanne/sopimus-id
                                         ::hairiotilanne/paikallinen-kaytto?
@@ -103,7 +106,7 @@
 (defn tallennettava-materiaali [hairiotilanne]
   (let [materiaali-kirjaukset (::materiaalit/materiaalit hairiotilanne)
         muokkaamattomat-materiaali-kirjaukset (filter
-                                                #(= (::materiaalit/pvm %) (::hairiotilanne/havaintoaika hairiotilanne))
+                                                #(= (::materiaalit/pvm %) @(::hairiotilanne/havaintoaika hairiotilanne))
                                                 (::materiaalit/muokkaamattomat-materiaalit hairiotilanne))
         hairiotilanne-id (::hairiotilanne/id hairiotilanne)
         korjaustoimenpide (::hairiotilanne/korjaustoimenpide hairiotilanne)
@@ -125,7 +128,7 @@
         (map :tallennetut-materiaalit)
         ;; Lisätään lisätieto ja materiaalin pvm, koska se on required field. Materiaalia
         ;; muokatessa kumminkin ei vaihdeta pvm:ää
-        (map #(assoc % ::materiaalit/pvm (or (::hairiotilanne/havaintoaika hairiotilanne) (pvm/nyt))
+        (map #(assoc % ::materiaalit/pvm (or @(::hairiotilanne/havaintoaika hairiotilanne) (pvm/nyt))
                        ::materiaalit/lisatieto  (str "Käytetty kohteen " kohteen-nimi " häiriötilanteen korjaamiseen."
                                                      (when korjaustoimenpide (str " Korjaustoimenpide: " korjaustoimenpide)))))
         ;; Otetaan joitain vv_materiaalilistaus tietoja pois (muuten tulee herjaa palvelin päässä)
@@ -212,10 +215,6 @@
   ValitseAjanTallennus
   (process-event [{valittu? :valittu?} app]
     (assoc-in app [:valittu-hairiotilanne ::hairiotilanne/tallennuksen-aika?] (not valittu?)))
-  
-  AsetaHavaintoaika
-  (process-event [{aika :aika} app]
-    (assoc-in app [:valittu-hairiotilanne ::hairiotilanne/havaintoaika] aika))
 
   LisaaHairiotilanne
   (process-event [_ app]
