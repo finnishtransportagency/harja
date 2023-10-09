@@ -44,50 +44,50 @@
 
 (def palvelut
   [{:palvelu :lisaa-tiestotarkastus
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :polku "/api/urakat/:id/tarkastus/tiestotarkastus"
     :pyynto-skeema json-skeemat/tiestotarkastuksen-kirjaus
     :tyyppi :tiesto
     :metodi :post}
    {:palvelu :poista-tiestotarkastus
     :polku "/api/urakat/:id/tarkastus/tiestotarkastus"
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :pyynto-skeema json-skeemat/tiestotarkastuksen-poisto
     :tyyppi :tiesto
     :metodi :delete}
    {:palvelu :lisaa-talvihoitotarkastus
     :polku "/api/urakat/:id/tarkastus/talvihoitotarkastus"
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :pyynto-skeema json-skeemat/talvihoitotarkastuksen-kirjaus
     :tyyppi :talvihoito
     :metodi :post}
    {:palvelu :poista-talvihoitotarkastus
     :polku "/api/urakat/:id/tarkastus/talvihoitotarkastus"
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :pyynto-skeema json-skeemat/talvihoitotarkastuksen-poisto
     :tyyppi :talvihoito
     :metodi :delete}
    {:palvelu :lisaa-tieturvallisuustarkastus
     :polku "/api/urakat/:id/tarkastus/tieturvallisuustarkastus"
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :pyynto-skeema json-skeemat/tieturvallisuustarkastuksen-kirjaus
     :tyyppi :tieturvallisuus
     :metodi :post}
    {:palvelu :poista-tieturvallisuustarkastus
     :polku "/api/urakat/:id/tarkastus/tieturvallisuustarkastus"
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :pyynto-skeema json-skeemat/tieturvallisuustarkastuksen-poisto
     :tyyppi :tieturvallisuus
     :metodi :delete}
    {:palvelu :lisaa-soratietarkastus
     :polku "/api/urakat/:id/tarkastus/soratietarkastus"
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :pyynto-skeema json-skeemat/soratietarkastuksen-kirjaus
     :tyyppi :soratie
     :metodi :post}
    {:palvelu :poista-soratietarkastus
     :polku "/api/urakat/:id/tarkastus/soratietarkastus"
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :pyynto-skeema json-skeemat/soratietarkastuksen-poisto
     :tyyppi :soratie
     :metodi :delete}])
@@ -95,13 +95,13 @@
 (defrecord Tarkastukset []
   component/Lifecycle
   (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta integraatioloki :integraatioloki :as this}]
-    (doseq [{:keys [palvelu polku pyynto-skeema tyyppi metodi oikeus]} palvelut]
+    (doseq [{:keys [palvelu polku pyynto-skeema tyyppi metodi api-oikeus]} palvelut]
       (let [kasittele (fn [kasittele-tarkastus-fn request]
                         (kasittele-kutsu db integraatioloki palvelu request
                                          pyynto-skeema json-skeemat/kirjausvastaus
                                          (fn [parametrit data kayttaja db]
                                            (kasittele-tarkastus-fn db liitteiden-hallinta kayttaja tyyppi parametrit data))
-                          oikeus))]
+                          api-oikeus))]
         (julkaise-reitti http palvelu
                          (condp = metodi
                            :post

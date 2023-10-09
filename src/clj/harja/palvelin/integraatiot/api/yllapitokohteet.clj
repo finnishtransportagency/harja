@@ -425,14 +425,14 @@
 
 (defn palvelut [{:keys [fim email liitteiden-hallinta]}]
   [{:palvelu :hae-yllapitokohteet
-    :oikeus "luku"
+    :api-oikeus "luku"
     :polku "/api/urakat/:id/yllapitokohteet"
     :tyyppi :GET
     :vastaus-skeema json-skeemat/urakan-yllapitokohteiden-haku-vastaus
     :kasittely-fn (fn [parametit _ kayttaja db]
                     (hae-yllapitokohteet db parametit kayttaja))}
    {:palvelu :kirjaa-paallystyksen-aikataulu
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu-paallystys"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/paallystyksen-aikataulun-kirjaus
@@ -443,7 +443,7 @@
                                        :parametrit parametrit :data data
                                        :endpoint-urakkatyyppi :paallystys}))}
    {:palvelu :kirjaa-tiemerkinnan-aikataulu
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu-tiemerkinta"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/tiemerkinnan-aikataulun-kirjaus
@@ -454,7 +454,7 @@
                                        :parametrit parametrit :data data
                                        :endpoint-urakkatyyppi :tiemerkinta}))}
    {:palvelu :kirjaa-tietyomaa
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tietyomaa"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/tietyomaan-kirjaus
@@ -462,7 +462,7 @@
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (kirjaa-tietyomaa db kayttaja parametrit data))}
    {:palvelu :poista-tietyomaa
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tietyomaa"
     :tyyppi :DELETE
     :kutsu-skeema json-skeemat/tietyomaan-poisto
@@ -470,7 +470,7 @@
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (poista-tietyomaa db kayttaja parametrit data))}
    {:palvelu :kirjaa-maaramuutokset
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/maaramuutokset"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-maaramuutosten-kirjaus-request
@@ -478,7 +478,7 @@
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (kirjaa-maaramuutokset db kayttaja parametrit data))}
    {:palvelu :kirjaa-yllapitokohteen-tarkastus
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tarkastus"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-tarkastuksen-kirjaus-request
@@ -486,7 +486,7 @@
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (kirjaa-tarkastuksia db liitteiden-hallinta kayttaja parametrit data))}
    {:palvelu :poista-yllapitokohteen-tarkastus
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tarkastus"
     :tyyppi :DELETE
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-tarkastuksen-poisto-request
@@ -494,7 +494,7 @@
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (poista-tarkastuksia db kayttaja parametrit data))}
    {:palvelu :kirjaa-yllapitokohteen-tiemerkintatoteuma
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tiemerkintatoteuma"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request
@@ -502,7 +502,7 @@
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (kirjaa-tiemerkintatoteumia db kayttaja parametrit data))}
    {:palvelu :poista-yllapitokohteen-tiemerkintatoteuma
-    :oikeus "kirjoitus"
+    :api-oikeus "kirjoitus"
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tiemerkintatoteuma"
     :tyyppi :DELETE
     :kutsu-skeema json-skeemat/pistetoteuman-poisto
