@@ -1,12 +1,12 @@
--- Annetaan kaikille järjestelmäkäyttäjille kirjoitusoikeus alkuun. Eli tilanne aivan sama kuten ennen.
--- Ei yliaja vanhoja oikeuksia, eli jos käyttäjällä on ennestään 'analytiikka', siihen tulee nyt ['analytiikka', 'kirjoitus']
--- Tämän migraation jälkeen Hallinnasta voidaan naputella pelkkä luku oikeus niille käyttäjille ketkä ei kirjoitusta tarvitse
-UPDATE kayttaja 
-SET api_oikeudet = 
-    CASE
-        WHEN api_oikeudet IS NULL THEN ARRAY['kirjoitus'::apioikeus]
-        ELSE api_oikeudet || ARRAY['kirjoitus'::apioikeus]
-    END
-WHERE poistettu IS FALSE 
-AND jarjestelma IS TRUE 
-AND (api_oikeudet IS NULL OR NOT api_oikeudet @> ARRAY['kirjoitus'::apioikeus]);
+-- Tehdään oikeudet kolumnista array jotta käyttäjille voidaan antaa usea enum (usea oikeus)
+ALTER TABLE kayttaja ADD COLUMN api_oikeudet apioikeus[];
+
+-- Importtaa kaikki käyttäjien vanhat arvot uuteen array kolumniin 
+UPDATE kayttaja SET api_oikeudet = ARRAY[api_oikeus] WHERE api_oikeus IS NOT NULL;
+
+-- Vanhan kolumnin voi nyt poistaa 
+ALTER TABLE kayttaja DROP COLUMN api_oikeus;
+
+-- Lisää pari uutta oikeustyyppiä 
+ALTER TYPE apioikeus ADD VALUE 'luku'; -- Voi tehdä GET kutsuja 
+ALTER TYPE apioikeus ADD VALUE 'kirjoitus'; -- Voi tehdä POST/PUT/DELETE sekä GET kutsuja 
