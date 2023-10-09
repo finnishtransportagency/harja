@@ -666,8 +666,8 @@ yllapitoluokkanimi->numero
                                                           (filter #(and (tr-valit-paallekkain? alustatoimenpide %)
                                                                      ;; VHAR-5627 POT2:ssa halutaan sallia sama päällekkäinen alustatoimenpide
                                                                      (when-not pot2?
-                                                                          (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))) ;
-                                                                  toiset-alustatoimenpiteet))
+                                                                       (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))) ;
+                                                            toiset-alustatoimenpiteet))
              kaikkien-teiden-tiedot (apply concat osien-tiedot muiden-kohteiden-osien-tiedot)
              validoitu-paikka (when (empty? validoitu-muoto)
                                 (validoi-paikka alustatoimenpide kaikkien-teiden-tiedot false))]
