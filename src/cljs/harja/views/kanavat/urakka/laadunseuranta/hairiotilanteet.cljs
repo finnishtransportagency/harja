@@ -234,7 +234,14 @@
 (defn hairiolomake [e! {:keys [valittu-hairiotilanne valinnat tallennus-kaynnissa?] :as app} kohteet]
   (let [valittu-kohde-id (get-in valittu-hairiotilanne [::hairiotilanne/kohde ::kohde/id])
         valitun-kohteen-osat (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))
-        uusi-hairiotilanne? (not (some? valittu-kohde-id))]
+        valittu-hairiotilanne-id (get-in valittu-hairiotilanne [::hairiotilanne/id])
+        uusi-hairiotilanne? (not (some? valittu-hairiotilanne-id))
+        oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))
+        disabled? (or
+                    (not oikeus?)
+                    (not (empty? (:materiaalit-taulukon-virheet valittu-hairiotilanne)))
+                    (not (tiedot/voi-tallentaa? valittu-hairiotilanne))
+                    (not (lomake/voi-tallentaa? valittu-hairiotilanne)))]
     [:div
      [napit/takaisin "Takaisin häiriölistaukseen"
       #(e! (tiedot/->TyhjennaValittuHairiotilanne))]
@@ -245,29 +252,24 @@
        :tarkkaile-ulkopuolisia-muutoksia? true
        :muokkaa! #(e! (tiedot/->AsetaHairiotilanteenTiedot %))
        :footer-fn (fn [hairiotilanne]
-                    (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))]
-                      [:div
-                       [:div {:style {:width "100%"}}
-                        [lomake/nayta-puuttuvat-pakolliset-kentat hairiotilanne]]
-                       [napit/tallenna
-                        "Tallenna"
-                        #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
-                        {:tallennus-kaynnissa? tallennus-kaynnissa?
-                         :disabled (or
-                                     (not oikeus?)
-                                     (not (empty? (:materiaalit-taulukon-virheet valittu-hairiotilanne)))
-                                     (not (tiedot/voi-tallentaa? valittu-hairiotilanne))
-                                     (not (lomake/voi-tallentaa? valittu-hairiotilanne)))}]
+                    [:div
+                     [:div {:style {:width "100%"}}
+                      [lomake/nayta-puuttuvat-pakolliset-kentat hairiotilanne]]
+                     [napit/tallenna
+                      "Tallenna"
+                      #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
+                      {:tallennus-kaynnissa? tallennus-kaynnissa?
+                       :disabled disabled?}]
 
-                       (when (not (nil? (::hairiotilanne/id valittu-hairiotilanne)))
-                         [napit/poista
-                          "Poista"
-                          #(varmista-kayttajalta/varmista-kayttajalta
-                             {:otsikko "Häiriötilanteen poistaminen"
-                              :sisalto [:div "Haluatko varmasti poistaa häiriötilanteen?"]
-                              :hyvaksy "Poista"
-                              :toiminto-fn (fn [] (e! (tiedot/->PoistaHairiotilanne hairiotilanne)))
-                              :disabled (not oikeus?)})])]))}
+                     (when (not (nil? (::hairiotilanne/id valittu-hairiotilanne)))
+                       [napit/poista
+                        "Poista"
+                        #(varmista-kayttajalta/varmista-kayttajalta
+                           {:otsikko "Häiriötilanteen poistaminen"
+                            :sisalto [:div "Haluatko varmasti poistaa häiriötilanteen?"]
+                            :hyvaksy "Poista"
+                            :toiminto-fn (fn [] (e! (tiedot/->PoistaHairiotilanne hairiotilanne)))
+                            :disabled (not oikeus?)})])])}
 
       [{:otsikko "Havaintoaika"
         :nimi ::hairiotilanne/havaintoaika
