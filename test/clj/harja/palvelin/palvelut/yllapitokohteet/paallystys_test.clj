@@ -1302,13 +1302,51 @@
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
                                        "Alustassa väärät lisätiedot.")))
 
-(deftest ei-saa-tallenna-pot2-jos-sama-tr-osoite-samalla-alustatoimenpiteella
-  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
+(deftest saa-tallentaa-pot2-jos-sama-tr-osoite-samalla-alustatoimenpiteella
+  (let [kohteen-nimi "Tärkeä kohde mt20"
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        vuosi 2021
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella kohteen-nimi)
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
-                               (assoc :alusta pot2-alusta-esimerkki)
-                               (update-in [:alusta 1] merge {:tr-kaista 11}))]
-    (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
-                                       "Kohteenosa on päällekkäin toisen osan kanssa.")))
+                             (assoc :alusta pot2-alusta-esimerkki)
+                             (update-in [:alusta 1] merge {:tr-kaista 11}))
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
+                                                         :sopimus-id sopimus-id
+                                                         :vuosi vuosi
+                                                         :paallystysilmoitus paallystysilmoitus})
+        eka-odotettu-alustarivi {:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
+                                 :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32,
+                                 :massa 1, :massamaara 100}
+        toka-odotettu-alustarivi {:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
+                                  :tr-alkuetaisyys (inc 1066), :tr-numero 20, :toimenpide 32,
+                                  :massa 1, :massamaara 100}
+        tallennuksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :urakan-paallystysilmoitus-paallystyskohteella +kayttaja-jvh+
+                               {:urakka-id urakka-id
+                                :sopimus-id sopimus-id
+                                :paallystyskohde-id paallystyskohde-id})
+        nimi-tallennuksen-jalkeen (:kohdenimi tallennuksen-jalkeen)
+        alusta-tallennuksen-jalkeen (:alusta tallennuksen-jalkeen)
+        paallystekerros-tallennuksen-jalkeen (:paallystekerros tallennuksen-jalkeen)
+        normalisoidut-alustarivit (map #(select-keys % [:tr-kaista
+                                                        :tr-ajorata
+                                                        :tr-loppuosa
+                                                        :tr-alkuosa
+                                                        :tr-loppuetaisyys
+                                                        :materiaali
+                                                        :pituus
+                                                        :tr-alkuetaisyys
+                                                        :tr-numero
+                                                        :toimenpide
+                                                        :massa
+                                                        :massamaara])
+                                    alusta-tallennuksen-jalkeen)]
+    (is (= nimi-tallennuksen-jalkeen kohteen-nimi) "Kohteen nimi")
+    (is (= 2 (count paallystekerros-tallennuksen-jalkeen)) "paallystekerros-tallennuksen-jalkeen rivien määrä")
+    (is (some #(= eka-odotettu-alustarivi %) normalisoidut-alustarivit) "Ensimmäinen päällekkäisistä alustariveistä")
+    (is (some #(= toka-odotettu-alustarivi %) normalisoidut-alustarivit) "Toinen päällekkäisistä alustariveistä")))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-on-vaarat-lisatiedot
   (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
