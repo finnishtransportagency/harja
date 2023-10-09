@@ -127,6 +127,20 @@
     (sisaltaa-perustiedot (:body poistetut))
     (is (= true (:poistettu (first (:reittitoteumat poistetut-body)))))))
 
+(deftest hae-toteumat-test-koordinaattimuunnos
+  (let [alkuaika "2015-01-19T00:00:00+03"
+        loppuaika "2015-01-19T21:00:00+03"
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/50" )] kayttaja-analytiikka portti)]
+    (is (= 200 (:status vastaus)))
+    (sisaltaa-perustiedot (:body vastaus))))
+
+(deftest hae-toteumat-test-koko-liian-pieni
+  (let [alkuaika "2015-01-19T00:00:00+03"
+        loppuaika "2015-01-19T21:00:00+03"
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/0.001" )] kayttaja-analytiikka portti)]
+    (is (= 400 (:status vastaus)))
+    (is (true? (str/includes? (:body vastaus) "Virhe: Liian suuri aineisto palautettavaksi.")))))
+
 (deftest materiaalin-maara-muuttuu
   (let [paiva-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/luo-pvm 2004 9 19)))
         paiva-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/luo-pvm 2004 9 19)))
