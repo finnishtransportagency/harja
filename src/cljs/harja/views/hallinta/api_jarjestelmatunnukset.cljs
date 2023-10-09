@@ -38,68 +38,73 @@
                                                     :else (update-in user [:oikeudet] #(conj (set %) oikeus)))
                                                   user))
                                               users))))]
-    
-    [grid/grid {:otsikko "API järjestelmätunnukset"
-                :tallenna tiedot/tallenna-jarjestelmatunnukset
-                :tyhja (if (nil? @jarjestelmatunnukset-atom)
-                         [ajax-loader "Haetaan järjestelmätunnuksia..."]
-                         "Järjestelmätunnuksia ei löytynyt")}
-     [{:otsikko "Käyttäjänimi"
-       :nimi :kayttajanimi
-       :tyyppi :string
-       :leveys 5}
-      {:otsikko "Organisaatio"
-       :nimi :organisaatio
-       :fmt :nimi
-       :tyyppi :valinta
-       :valinnat (sort-by :nimi (tiedot/organisaatiovalinnat))
-       :valinta-nayta :nimi
-       :leveys 5}
-      {:otsikko "Käynnissä olevat urakat"
-       :nimi :urakat
-       :fmt #(str/join ", " %)
-       :muokattava? ei-muokattava
-       :leveys 15}
-      {:otsikko "Luotu"
-       :nimi :luotu
-       :tyyppi :pvm
-       :fmt pvm/pvm-aika-opt
-       :muokattava? ei-muokattava
-       :leveys 5}
-      {:otsikko "Kuvaus"
-       :nimi :kuvaus :tyyppi :string
-       :leveys 5}
-      {:otsikko "Oikeudet"
-       :leveys 5
-       :tyyppi :komponentti
-       ;; Komponentti käyttäjän oikeuksien päivittämiseen
-       ;; Ei saanut niin nätisti että muokkausnäkymässä voitaisiin valita checkboxit ja tallenna- funktiossa tehdään muutokset, vaatisi tuckin käyttöä
-       :komponentti (fn
-                      ;; Destrukturoi ja uudelleennimeä ensimmäisestä parametrista (kayttaja) :kayttajanimi sekä :oikeudet
-                      [{kayttajanimi :kayttajanimi kayttajan-oikeudet :oikeudet} {:keys [muokataan?]}]
-                      (if muokataan?
-                        ;; Kun gridi on muokattava, tehdään alasveto valinnat oikeuksilla 
-                        [:span.label-ja-kentta
-                         [:div.kentta
-                          [yleiset/livi-pudotusvalikko
-                           ;; Näytä dropdownissa montako oikeutta käyttäjällä on 
-                           {:naytettava-arvo (str (count kayttajan-oikeudet) " valittu")
-                            :itemit-komponentteja? true}
+    [:div.jarjestelmatunnukset-grid
+     [:div
+      [:h2.header-yhteiset "API järjestelmätunnukset"]
+      [:p "Tästä voi muokata myös käyttäjien api-oikeuksia, 'kirjoitus' oikeus antaa myös 'luku' oikeuden."]
+      [:p "Lukuoikeudella voidaan hakea tietoja esim. yhteystiedot, urakan tiedot tms."]
+      [:p "Kirjoitus oikeudella voidaan sekä hakea tietoja että kirjoittaa esim. toteumien lisäystä/poistoa tms."]]
 
-                           ;; Destrukturoi ja uudelleennimeä (:enumlabel @api-oikeudet-atom)
-                           (mapv (fn [{oikeus :enumlabel}]
-                                   [:span.api-tunnus-alasveto-valinnat
-                                    oikeus
-                                    [:div [:input {:type "checkbox"
-                                                   :checked (some #(= % oikeus) kayttajan-oikeudet)
-                                                   :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                                 ;; Päivitä gridin atomi, tämä triggeröi uudelleenrenderöimisen ja queryttää muokatun oikeuden suoraan tietokantaan 
-                                                                 (fn-paivita-tunnuksen-oikeudet kayttajanimi oikeus (not valittu?))
-                                                                 (tiedot/aseta-oikeudet-kayttajalle kayttajanimi oikeus valittu?))}]]])
-                             @api-oikeudet-atom)]]]
-                        ;; Kun gridi ei ole muokattava, näytetään käyttäjän oikeudet 
-                        [:span (str/join ", " kayttajan-oikeudet)]))}]
-     @jarjestelmatunnukset-atom]))
+     [grid/grid {:tallenna tiedot/tallenna-jarjestelmatunnukset
+                 :tyhja (if (nil? @jarjestelmatunnukset-atom)
+                          [ajax-loader "Haetaan järjestelmätunnuksia..."]
+                          "Järjestelmätunnuksia ei löytynyt")}
+      [{:otsikko "Käyttäjänimi"
+        :nimi :kayttajanimi
+        :tyyppi :string
+        :leveys 5}
+       {:otsikko "Organisaatio"
+        :nimi :organisaatio
+        :fmt :nimi
+        :tyyppi :valinta
+        :valinnat (sort-by :nimi (tiedot/organisaatiovalinnat))
+        :valinta-nayta :nimi
+        :leveys 5}
+       {:otsikko "Käynnissä olevat urakat"
+        :nimi :urakat
+        :fmt #(str/join ", " %)
+        :muokattava? ei-muokattava
+        :leveys 15}
+       {:otsikko "Luotu"
+        :nimi :luotu
+        :tyyppi :pvm
+        :fmt pvm/pvm-aika-opt
+        :muokattava? ei-muokattava
+        :leveys 5}
+       {:otsikko "Kuvaus"
+        :nimi :kuvaus :tyyppi :string
+        :leveys 5}
+       {:otsikko "Oikeudet"
+        :leveys 5
+        :tyyppi :komponentti
+        ;; Komponentti käyttäjän oikeuksien päivittämiseen
+        ;; Ei saanut niin nätisti että muokkausnäkymässä voitaisiin valita checkboxit ja tallenna- funktiossa tehdään muutokset, vaatisi tuckin käyttöä
+        :komponentti (fn
+                       ;; Destrukturoi ja uudelleennimeä ensimmäisestä parametrista (kayttaja) :kayttajanimi sekä :oikeudet
+                       [{kayttajanimi :kayttajanimi kayttajan-oikeudet :oikeudet} {:keys [muokataan?]}]
+                       (if muokataan?
+                         ;; Kun gridi on muokattava, tehdään alasveto valinnat oikeuksilla 
+                         [:span.label-ja-kentta
+                          [:div.kentta
+                           [yleiset/livi-pudotusvalikko
+                            ;; Näytä dropdownissa montako oikeutta käyttäjällä on 
+                            {:naytettava-arvo (str (count kayttajan-oikeudet) " valittu")
+                             :itemit-komponentteja? true}
+
+                            ;; Destrukturoi ja uudelleennimeä (:enumlabel @api-oikeudet-atom)
+                            (mapv (fn [{oikeus :enumlabel}]
+                                    [:span.api-tunnus-alasveto-valinnat
+                                     oikeus
+                                     [:div [:input {:type "checkbox"
+                                                    :checked (some #(= % oikeus) kayttajan-oikeudet)
+                                                    :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                                  ;; Päivitä gridin atomi, tämä triggeröi uudelleenrenderöimisen ja queryttää muokatun oikeuden suoraan tietokantaan 
+                                                                  (fn-paivita-tunnuksen-oikeudet kayttajanimi oikeus (not valittu?))
+                                                                  (tiedot/aseta-oikeudet-kayttajalle kayttajanimi oikeus valittu?))}]]])
+                              @api-oikeudet-atom)]]]
+                         ;; Kun gridi ei ole muokattava, näytetään käyttäjän oikeudet 
+                         [:span (str/join ", " kayttajan-oikeudet)]))}]
+      @jarjestelmatunnukset-atom]]))
 
 (defn jarjestelmatunnuksen-lisaoikeudet [kayttaja-id]
   (let [tunnuksen-oikeudet (atom nil)]
@@ -129,25 +134,28 @@
        @tunnuksen-oikeudet])))
 
 (defn- jarjestelmatunnuksien-lisaoikeudet [jarjestelmatunnukset-atom]
-  [grid/grid
-   {:otsikko "API-järjestelmätunnusten lisäoikeudet urakoihin"
-    :tunniste :id
-    :tallenna nil
-    :vetolaatikot (into {} (map (juxt :id #(-> [jarjestelmatunnuksen-lisaoikeudet (:id %)]))
-                                @jarjestelmatunnukset-atom))}
-   [{:tyyppi :vetolaatikon-tila :leveys 1}
-    {:otsikko "Käyttäjänimi"
-     :nimi :kayttajanimi
-     :muokattava (constantly false)
-     :tyyppi :string
-     :leveys 15}
-    {:otsikko "Urakoitsija"
-     :nimi :organisaatio
-     :fmt :nimi
-     :tyyppi :string
-     :muokattava (constantly false)
-     :leveys 30}]
-   @jarjestelmatunnukset-atom])
+  [:div
+   [:div
+    [:h2.header-yhteiset "API-järjestelmätunnusten lisäoikeudet urakoihin"]
+    [:p "Tästä annetaan käyttäjille urakoihin oikeuksia."]]
+   [grid/grid
+    {:tunniste :id
+     :tallenna nil
+     :vetolaatikot (into {} (map (juxt :id #(-> [jarjestelmatunnuksen-lisaoikeudet (:id %)]))
+                              @jarjestelmatunnukset-atom))}
+    [{:tyyppi :vetolaatikon-tila :leveys 1}
+     {:otsikko "Käyttäjänimi"
+      :nimi :kayttajanimi
+      :muokattava (constantly false)
+      :tyyppi :string
+      :leveys 15}
+     {:otsikko "Urakoitsija"
+      :nimi :organisaatio
+      :fmt :nimi
+      :tyyppi :string
+      :muokattava (constantly false)
+      :leveys 30}]
+    @jarjestelmatunnukset-atom]])
 
 (defn api-jarjestelmatunnukset-paakomponentti []
   (komp/luo
