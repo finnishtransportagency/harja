@@ -1,5 +1,5 @@
 -- name: tuhoa-tieturvallisuusverkko!
-DELETE FROM pohjavesialue geometriapaivitys;
+DELETE FROM geometriapaivitys;
 
 -- name: lisaa-tieturvallisuusverkko!
 INSERT INTO tieturvallisuusverkko (tasoluokka, aosa, tie, let, losa, aet, tenluokka,
