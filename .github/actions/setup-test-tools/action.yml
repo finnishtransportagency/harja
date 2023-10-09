@@ -1,0 +1,33 @@
+name: 'Setup Test Tools'
+description: 'Asentaa testeissä tarvittavia työkaluja'
+
+inputs:
+  phantom-js:
+    description: 'Asennetaanko PhantomJS'
+    # Huom, composite actionit eivät tue tyyppimäärityksiä inputeille.
+    default: ''
+
+runs:
+  using: "composite"
+  steps:
+    - name: Cache PhantomJS
+      id: cache-phantom-js
+      uses: actions/cache@v3
+      with:
+        path: /usr/local/bin/phantomjs
+        key: ${{ runner.os }}-phantom-js-${{ inputs.phantom-js }}
+
+    - name: Install PhantomJS
+      if: ${{ inputs.phantom-js != '' && steps.cache-phantom-js.outputs.cache-hit != 'true' }}
+      env:
+        PHANTOMJS_VERSIO: ${{ inputs.phantom-js }}
+      run: |
+        cd /tmp
+        wget -O /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2
+        if [ "$(sha512sum /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 )" != "039b62ecf2fa4196357e129727871a53b046948e17b21900c78a1af4d0b523e41b9d4137e7454b0a638333d7fc27e65d14f4af8c665e982a504c12f828525419  /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2" ]; then exit 1; fi;
+        tar -xf /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2 -C /tmp/
+        mv -f /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64/bin/phantomjs /usr/local/bin/phantomjs
+        rm /tmp/phantomjs-${PHANTOMJS_VERSIO}-linux-x86_64.tar.bz2
+        cd -
+      shell: bash
+

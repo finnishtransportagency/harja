@@ -14,6 +14,8 @@ on:
       AWS_ACCOUNT_ID:
         required: true
 
+run-name: Deploy to '${{ inputs.environment }}' AWS env by @${{ github.actor }}
+
 
 # Note: Each job runs in a fresh VM, so the environment is not shared between jobs.
 jobs:
