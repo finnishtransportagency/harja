@@ -202,6 +202,7 @@
 
 (defn liikennetapahtumalomake [e! {:keys [valittu-liikennetapahtuma
                                           tallennus-kaynnissa?
+                                          liikennetapahtumien-haku-kaynnissa?
                                           liikennetapahtumien-haku-tulee-olemaan-kaynnissa?
                                           edellisten-haku-kaynnissa?
                                           edelliset] :as app}
@@ -220,9 +221,11 @@
      [napit/takaisin "Takaisin tapahtumaluetteloon" #(e! (tiedot/->ValitseTapahtuma nil))]
 
      ;; Jos käyttäjä vaihtaa urakkaa, näytetään hyrrä
-     (if liikennetapahtumien-haku-tulee-olemaan-kaynnissa?
+     (if (or 
+           liikennetapahtumien-haku-kaynnissa? 
+           liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
        [:div {:style {:padding "16px"}} 
-        [ajax-loader (str "Haetaan tietoja... ")]]
+        [ajax-loader-pieni (str "Haetaan tietoja...")]]
        
        ;; Tiedot ovat ladanneet 
        [lomake/lomake
@@ -440,14 +443,12 @@
                                                                  " urakkaa valittu")))
             :itemit-komponentteja? true}
            (mapv (fn [urakka]
-                   [:span
-                    (:nimi urakka)
-                    [:input {:style {:display "inline-block"
-                                     :float "right"}
-                             :type "checkbox"
+                    [:span.liikenne-urakat-suodatin
+                     (:nimi urakka)
+                     [:div [:input {:type "checkbox"
                              :checked (:valittu? urakka)
                              :on-change #(let [valittu? (-> % .-target .-checked)]
-                                           (e! (tiedot/->UrakkaValittu urakka valittu?)))}]])
+                                           (e! (tiedot/->UrakkaValittu urakka valittu?)))}]]])
              kayttajan-urakat)]]]
         [valinnat/aikavali (atomi :aikavali)]
         [kentat/tee-otsikollinen-kentta
@@ -584,21 +585,24 @@
   [:div
    [debug app]
    [valinnat e! app kohteet]
-   [grid/grid
-    {:otsikko (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
-                [ajax-loader-pieni "Päivitetään listaa.."]
-                [liikennetapahtumien-yhteenveto])
-     :tunniste (juxt ::lt/id ::lt-alus/id)
-     :sivuta grid/vakiosivutus
-     ;; Muunna aika atomiksi koska lomakkeessa käytetään kenttää joka odottaa atomia
-     :rivi-klikattu #(e! (tiedot/->ValitseTapahtuma (assoc % ::lt/aika (atom (::lt/aika %)))))
-     :tyhja (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
-              [ajax-loader "Haku käynnissä"]
-              "Ei liikennetapahtumia")
-     :raporttivienti #{:excel :pdf}
-     :raporttiparametrit raporttiparametrit}
-    liikennetapahtumat-sarakkeet
-    (tiedot/jarjesta-tapahtumat tapahtumarivit)]])
+
+   (if (or
+         liikennetapahtumien-haku-kaynnissa?
+         liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
+     [ajax-loader-pieni "Päivitetään listaa.."]
+     [grid/grid
+      {:otsikko [liikennetapahtumien-yhteenveto]
+       :tunniste (juxt ::lt/id ::lt-alus/id)
+       :sivuta grid/vakiosivutus
+       ;; Muunna aika atomiksi koska lomakkeessa käytetään kenttää joka odottaa atomia
+       :rivi-klikattu #(e! (tiedot/->ValitseTapahtuma (assoc % ::lt/aika (atom (::lt/aika %)))))
+       :tyhja (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
+                [ajax-loader "Haku käynnissä"]
+                "Ei liikennetapahtumia")
+       :raporttivienti #{:excel :pdf}
+       :raporttiparametrit raporttiparametrit}
+      liikennetapahtumat-sarakkeet
+      (tiedot/jarjesta-tapahtumat tapahtumarivit)])])
 
 (defn liikenne* [e! app valinnat]
   (komp/luo
@@ -612,12 +616,13 @@
     (fn [e! {:keys [valittu-liikennetapahtuma] :as app}]
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
       (if-not valittu-liikennetapahtuma
+        ;; Tapahtumaa ei ole valittu, näytä taulukko
         [liikennetapahtumataulukko e! app @kanavaurakka/kanavakohteet]
-        (do
-          (let [sopimus-id (-> app :valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
-                urakka-id @nav/valittu-urakka-id]
-            (e! (hallinta-tiedot/->HaeSopimukset sopimus-id urakka-id))
-            [liikennetapahtumalomake e! app @kanavaurakka/kanavakohteet]))))))
+        ;; Tapahtuma valittu, näytä lomake
+        (let [sopimus-id (-> app :valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
+              urakka-id @nav/valittu-urakka-id]
+          (e! (hallinta-tiedot/->HaeSopimukset sopimus-id urakka-id))
+          [liikennetapahtumalomake e! app @kanavaurakka/kanavakohteet])))))
 
 (defn liikennetapahtumat [e! app]
   [liikenne* e! app {:aikavali @u/valittu-aikavali}])
