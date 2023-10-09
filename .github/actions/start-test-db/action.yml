@@ -12,6 +12,12 @@ inputs:
   password:
     description: ''
     required: true
+  # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä (esim. harjadb-latest)
+  # Servicen asetukset on lukittu docker-compose konfiguraatioksi ja konfiguraatiossa viitataan aina tiettyyn imagen
+  # versioon.
+  service-name:
+    description: 'Testitietokannan compose servicen nimi. Saatavilla olevat servicet on määritelty docker-compose.yml:ään'
+    required: true
 
 runs:
   using: "composite"
@@ -24,20 +30,36 @@ runs:
         password: ${{ inputs.password }}
 
     - name: Pull and start test database
+      env:
+        SERVICE_NAME: ${{ inputs.service-name }}
       run: |
         cd .github/docker
-        echo "Pulling harja test database image (Docker Compose version: $(docker-compose version --short))"
-        docker compose pull harjadb
+        echo "Docker Compose version: $(docker-compose version --short)"
+        
+        echo "Pulling harja test database docker image for service: ${SERVICE_NAME}"
+        docker compose pull "${SERVICE_NAME}"
 
-        echo "Starting harja test database and waiting for it to start (Docker Compose version: $(docker-compose version --short))"
-        docker compose up -d --wait --wait-timeout 60 harjadb
+        echo "Starting test database service and waiting for it to start..."
+        docker compose up -d --wait --wait-timeout 60 "${SERVICE_NAME}"
+      shell: bash
+
+    - name: Print DB version details
+      run: |
+        docker ps -a
+        
+        echo ""
+        echo "-------------"
+        echo ""
+
+        echo "PostgreSQL version details:"
+
+        docker exec --user postgres harjadb psql -c 'SELECT version();'
+        docker exec --user postgres harjadb psql -U harja -c 'SELECT extname, extversion FROM pg_extension;'
       shell: bash
 
     - name: Run migrations and test data into harja-postgres service
       run: |
-        docker ps -a
-
-        echo "Running migrations and test data into harja-postgres service"
+        echo "Running migrations and test data into harja-postgres service..."
         docker exec --user postgres harjadb /bin/bash -c "~/aja-migraatiot.sh"
         docker exec --user postgres harjadb /bin/bash -c "~/aja-testidata.sh"
       shell: bash

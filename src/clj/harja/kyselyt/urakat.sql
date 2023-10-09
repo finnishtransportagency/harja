@@ -171,6 +171,7 @@ WHERE o.id = :hy;
 SELECT
   u.id,
   u.nimi,
+  u.lyhyt_nimi,
   u.sampoid,
   CASE WHEN u.tyyppi = 'paallystys' :: urakkatyyppi
       THEN ST_SimplifyPreserveTopology(u.alue, 50)
