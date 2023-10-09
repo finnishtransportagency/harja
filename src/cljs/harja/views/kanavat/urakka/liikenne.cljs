@@ -212,8 +212,7 @@
         toimenpide (::toiminto/toimenpide (first (::lt/toiminnot valittu-liikennetapahtuma)))
         palvelumuoto (::toiminto/palvelumuoto (first (::lt/toiminnot valittu-liikennetapahtuma)))
         _ (swap! lt/toimenpide-atom assoc :arvo toimenpide)
-        _ (swap! lt/palvelu-atom assoc :arvo palvelumuoto)
-        _ (lt/paivita-suunnat-ja-toimenpide!)]
+        _ (swap! lt/palvelu-atom assoc :arvo palvelumuoto)]
 
     [:div
      [debug app]

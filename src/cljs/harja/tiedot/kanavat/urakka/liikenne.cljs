@@ -375,7 +375,6 @@
          (:id b)))))
 
 (defn paivita-toiminnon-tiedot [tapahtuma toiminto]
-  
   ;; Koska itsepalvelulla ja Tyhjennys toimenpiteellä halutaan suunta "ei määritelty",
   ;; jos käyttäjä vaihtaa toimenpidettä tai palvelumuotoa toiseen, korvaa suunnattomat alukset.
   (let [korvaa-suunnattomat-alukset (map (fn [alus]
@@ -610,16 +609,17 @@
     (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
     (swap! lt/suunnat-atom assoc :ei-suuntaa "Ei määritelty")
 
-    (let [app (-> app
+    (let [tapahtuma (if (::lt/id t) (koko-tapahtuma t app) t)
+          app (cond-> app
+                tapahtuma
                 (assoc :valittu-liikennetapahtuma
-                  (when-let [tapahtuma (if (::lt/id t) (koko-tapahtuma t app) t)]
-                    (kohteenosatiedot-toimintoihin tapahtuma (::lt/kohde tapahtuma))))
+                  (kohteenosatiedot-toimintoihin tapahtuma (::lt/kohde tapahtuma)))
+                true
                 (assoc :siirretyt-alukset #{})
-                (assoc :ketjutuksen-poistot #{}))
-
-          app (if (and t (::lt/aika t))
-                (assoc-in app [:valittu-liikennetapahtuma ::lt/aika] (::lt/aika t))
-                app)]
+                true
+                (assoc :ketjutuksen-poistot #{})
+                (and t (::lt/aika t))
+                (assoc-in [:valittu-liikennetapahtuma ::lt/aika] (::lt/aika t)))]
       app))
 
   HaeEdellisetTiedot
