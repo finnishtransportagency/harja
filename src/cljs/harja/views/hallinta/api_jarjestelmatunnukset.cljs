@@ -5,15 +5,40 @@
             [reagent.core :refer [atom]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.hallinta.api-jarjestelmatunnukset :as tiedot]
-            [harja.ui.yleiset :refer [ajax-loader]]
+            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [clojure.string :as str]
             [cljs.core.async :refer [<!]])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn- api-jarjestelmatunnukset [jarjestelmatunnukset-atom]
-  (let [ei-muokattava (constantly false)]
+(defn- api-jarjestelmatunnukset [jarjestelmatunnukset-atom api-oikeudet-atom]
+  (let [ei-muokattava (constantly false)
+        ;; Päivittää jarjestelmatunnukset-atom :oikeus arvon valitulle tunnukselle
+        fn-paivita-tunnuksen-oikeudet (fn [kayttajanimi oikeus poista?]
+                                        (swap! jarjestelmatunnukset-atom
+                                          (fn [users]
+                                            (map-indexed
+                                              (fn [_ user]
+                                                (if (= (:kayttajanimi user) kayttajanimi)
+                                                  (cond
+                                                    ;; Jos halutaan poistaa, poistetaan oikeus
+                                                    poista? (update user :oikeudet #(remove (fn [a] (= a oikeus)) %))
+
+                                                    ;; Jos halutaan lisätä lukuoikeus, poistetaan kirjoitusoikeus
+                                                    (= oikeus "luku") (-> user
+                                                                        (update :oikeudet #(remove (fn [a] (= a "kirjoitus")) %))
+                                                                        (update :oikeudet #(conj (set %) "luku")))
+                                                    ;; Jos halutaan lisätä kirjoitusoikeus, poistetaan luku
+                                                    (= oikeus "kirjoitus") (-> user
+                                                                             (update :oikeudet #(remove (fn [a] (= a "luku")) %))
+                                                                             (update :oikeudet #(conj (set %) "kirjoitus")))
+
+                                                    ;; Muut arvot lisätään vaan jos ei ole olemassa 
+                                                    :else (update-in user [:oikeudet] #(conj (set %) oikeus)))
+                                                  user))
+                                              users))))]
+    
     [grid/grid {:otsikko "API järjestelmätunnukset"
                 :tallenna tiedot/tallenna-jarjestelmatunnukset
                 :tyhja (if (nil? @jarjestelmatunnukset-atom)
@@ -43,7 +68,37 @@
        :leveys 5}
       {:otsikko "Kuvaus"
        :nimi :kuvaus :tyyppi :string
-       :leveys 5}]
+       :leveys 5}
+      {:otsikko "Oikeudet"
+       :leveys 5
+       :tyyppi :komponentti
+       ;; Komponentti käyttäjän oikeuksien päivittämiseen
+       ;; Ei saanut niin nätisti että muokkausnäkymässä voitaisiin valita checkboxit ja tallenna- funktiossa tehdään muutokset, vaatisi tuckin käyttöä
+       :komponentti (fn
+                      ;; Destrukturoi ja uudelleennimeä ensimmäisestä parametrista (kayttaja) :kayttajanimi sekä :oikeudet
+                      [{kayttajanimi :kayttajanimi kayttajan-oikeudet :oikeudet} {:keys [muokataan?]}]
+                      (if muokataan?
+                        ;; Kun gridi on muokattava, tehdään alasveto valinnat oikeuksilla 
+                        [:span.label-ja-kentta
+                         [:div.kentta
+                          [yleiset/livi-pudotusvalikko
+                           ;; Näytä dropdownissa montako oikeutta käyttäjällä on 
+                           {:naytettava-arvo (str (count kayttajan-oikeudet) " valittu")
+                            :itemit-komponentteja? true}
+
+                           ;; Destrukturoi ja uudelleennimeä (:enumlabel @api-oikeudet-atom)
+                           (mapv (fn [{oikeus :enumlabel}]
+                                   [:span.api-tunnus-alasveto-valinnat
+                                    oikeus
+                                    [:div [:input {:type "checkbox"
+                                                   :checked (some #(= % oikeus) kayttajan-oikeudet)
+                                                   :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                                 ;; Päivitä gridin atomi, tämä triggeröi uudelleenrenderöimisen ja queryttää muokatun oikeuden suoraan tietokantaan 
+                                                                 (fn-paivita-tunnuksen-oikeudet kayttajanimi oikeus (not valittu?))
+                                                                 (tiedot/aseta-oikeudet-kayttajalle kayttajanimi oikeus valittu?))}]]])
+                             @api-oikeudet-atom)]]]
+                        ;; Kun gridi ei ole muokattava, näytetään käyttäjän oikeudet 
+                        [:span (str/join ", " kayttajan-oikeudet)]))}]
      @jarjestelmatunnukset-atom]))
 
 (defn jarjestelmatunnuksen-lisaoikeudet [kayttaja-id]
@@ -101,6 +156,6 @@
       (let [nakyma-alustettu? (some? @tiedot/urakkavalinnat)]
         (if nakyma-alustettu?
           [:div
-           [api-jarjestelmatunnukset tiedot/jarjestelmatunnukset]
+           [api-jarjestelmatunnukset tiedot/jarjestelmatunnukset tiedot/kaikki-api-oikeudet]
            [jarjestelmatunnuksien-lisaoikeudet tiedot/jarjestelmatunnukset]]
           [ajax-loader "Ladataan..."])))))

@@ -1106,6 +1106,12 @@
 (defn anna-analytiikkaoikeus [kayttaja]
   (u (format "update kayttaja set api_oikeudet = ARRAY['analytiikka'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja)))
 
+(defn anna-tielupaoikeus [kayttaja]
+    (u (format "update kayttaja set api_oikeudet = ARRAY['tielupa'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja)))
+
+(defn poista-kayttajan-api-oikeudet [kayttaja]
+  (u (format "update kayttaja set api_oikeudet = NULL WHERE kayttajanimi = '%s'" kayttaja)))
+
 (defn asenna-pot-lahetyksen-tila [kohde-id pot2-id]
   (u (str "UPDATE paallystysilmoitus
               SET paatos_tekninen_osa = 'hyvaksytty',

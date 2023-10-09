@@ -45,7 +45,8 @@
     "Ei yksilöity"})
 
 (deftest urakan-haku-idlla-toimii
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] kayttaja portti)
+  (let [_ (anna-lukuoikeus kayttaja)
+        vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] kayttaja portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)
         materiaalien-lkm (ffirst (q
                                    (str "SELECT count(*) FROM materiaalikoodi")))]
@@ -64,12 +65,14 @@
       (is (= materiaalien-lkm (count (get-in encoodattu-body [:urakka :materiaalit])))))))
 
 (deftest urakan-haku-idlla-ei-toimi-ilman-oikeuksia
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] "Erkki Esimerkki" portti)]
+  (let [_ (anna-lukuoikeus "Erkki Esimerkki")
+        vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] "Erkki Esimerkki" portti)]
     (is (= 403 (:status vastaus)))
     (is (.contains (:body vastaus) "Tuntematon käyttäjätunnus: Erkki Esimerkki" ))))
 
 (deftest urakan-haku-ytunnuksella-toimii
   (let [ytunnus "1565583-5"
+        _ (anna-lukuoikeus kayttaja)
         vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/" ytunnus] kayttaja portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     ;(log/debug "Urakan haku ytunnuksella löytyi " (count (:urakat encoodattu-body)) " urakkaa: " (:body vastaus))
@@ -79,5 +82,6 @@
     (is (= (get-in (first (:urakat encoodattu-body)) [:urakka :tiedot :urakoitsija :ytunnus]) ytunnus))))
 
 (deftest urakan-haku-ytunnuksella-ei-toimi-ilman-oikeuksia
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/" "1565583-5"] "Erkki Esimerkki" portti)]
+  (let [_ (anna-lukuoikeus "Erkki Esimerkki")
+        vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/" "1565583-5"] "Erkki Esimerkki" portti)]
     (is (not (= 200 (:status vastaus))))))

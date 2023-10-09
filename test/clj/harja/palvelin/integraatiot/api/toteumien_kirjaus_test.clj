@@ -7,6 +7,7 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
             [taoensso.timbre :as log]
+            [clojure.string :as str]
             [specql.core :refer [fetch columns]]
             [harja.domain.reittipiste :as rp])
   (:import (java.util Date)))
@@ -81,14 +82,31 @@
 (deftest tallenna-ja-poista-reittitoteuma
   (let [ulkoinen-id (hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
-        _ (anna-kirjoitusoikeus kayttaja)
         _ (anna-kirjoitusoikeus kayttaja-jvh)
-        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
-                                                (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
-                                                    slurp
-                                                    (.replace "__SOPIMUS_ID__" (str sopimus-id))
-                                                    (.replace "__ID__" (str ulkoinen-id))
-                                                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
+        fn-tee-kutsu (fn []
+                       (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+                         (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                           slurp
+                           (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                           (.replace "__ID__" (str ulkoinen-id))
+                           (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy"))))
+
+        ;; Poistetaan oikeudet 
+        _ (poista-kayttajan-api-oikeudet kayttaja)
+        ;; Näillä oikeuksilla ei pysty tallentamaan toteumia 
+        _ (anna-lukuoikeus kayttaja)
+        _ (anna-analytiikkaoikeus kayttaja)
+        _ (anna-tielupaoikeus kayttaja)
+        vastaus-lisays (fn-tee-kutsu)
+
+        ;; Käyttäjällä ei ole kirjoitusoikeutta
+        _ (is (= 403 (:status vastaus-lisays)) "Käyttäjältä ei löydy kirjoitus oikeuksia")
+        _ (is (str/includes? (:body vastaus-lisays) "Käyttäjätunnuksella puutteelliset oikeudet") "Virheviesti löytyy")
+
+        ;; Annetaan kirjoitus oikeudet ja tehdään kutsu uudelleen
+        _ (poista-kayttajan-api-oikeudet kayttaja)
+        _ (anna-kirjoitusoikeus kayttaja)
+        vastaus-lisays (fn-tee-kutsu)]
     (log/info "vastaus-lisays: " vastaus-lisays)
     (is (= 200 (:status vastaus-lisays)))
     (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
@@ -96,16 +114,16 @@
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-jvh portti
-                                                      (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
-                                                          slurp
-                                                          (.replace "__SOPIMUS_ID__" (str sopimus-id))
-                                                          (.replace "__ID__" (str ulkoinen-id))
-                                                          (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))]
+                               (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                                 slurp
+                                 (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                                 (.replace "__ID__" (str ulkoinen-id))
+                                 (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))]
         (is (= 200 (:status vastaus-paivitys)))
         (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               {reittipisteet ::rp/reittipisteet} (first (fetch ds ::rp/toteuman-reittipisteet
-                                                               (columns ::rp/toteuman-reittipisteet)
-                                                               {::rp/toteuma-id toteuma-id}))
+                                                          (columns ::rp/toteuman-reittipisteet)
+                                                          {::rp/toteuma-id toteuma-id}))
               toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, lisatieto FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))
               toteuma-materiaali-idt (into [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuma-id))))
@@ -131,11 +149,11 @@
           (u (str "DELETE FROM toteuma_materiaali WHERE toteuma = " toteuma-id))
           (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id)))))
     (let [vastaus-poisto (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
-                                                  (-> "test/resurssit/api/toteuman-poisto.json"
-                                                      slurp
-                                                      (.replace "__ID__" (str ulkoinen-id))
-                                                      (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
-                                                      (.replace "__PVM__" (json-tyokalut/json-pvm (Date.)))))
+                           (-> "test/resurssit/api/toteuman-poisto.json"
+                             slurp
+                             (.replace "__ID__" (str ulkoinen-id))
+                             (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
+                             (.replace "__PVM__" (json-tyokalut/json-pvm (Date.)))))
           toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE poistettu IS NOT TRUE AND ulkoinen_id = " ulkoinen-id)))
           toteuma-id-poistettu (first (q (str "SELECT id FROM toteuma WHERE poistettu IS TRUE AND ulkoinen_id = " ulkoinen-id)))]
       (is (= 200 (:status vastaus-poisto)))

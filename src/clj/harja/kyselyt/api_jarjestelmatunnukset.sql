@@ -6,12 +6,44 @@ SELECT k.id, k.kayttajanimi, k.kuvaus, k.luotu,
          FROM urakka u
         WHERE u.urakoitsija = o.id AND
 	      u.alkupvm <= current_date AND
-	      u.loppupvm >= current_date) as urakat
+	      u.loppupvm >= current_date) as urakat,
+        k.api_oikeudet AS oikeudet
   FROM kayttaja k
        JOIN organisaatio o ON k.organisaatio = o.id
  WHERE jarjestelma = true AND
        k.poistettu = false
 ORDER BY organisaatio_nimi, k.kayttajanimi;
+
+-- name: hae-mahdolliset-api-oikeudet
+SELECT enumlabel FROM pg_enum WHERE enumtypid = 'apioikeus'::regtype;
+
+-- name: lisaa-kayttajalle-oikeus!
+UPDATE kayttaja 
+SET api_oikeudet = 
+  CASE
+    -- Jos halutaan lisätä 'luku' -> poistetaan aina 'kirjoitus' 
+    WHEN :oikeus = 'luku' THEN 
+      array_append(ARRAY_REMOVE(api_oikeudet, 'kirjoitus'::apioikeus), 'luku'::apioikeus)
+    -- Jos halutaan lisätä 'kirjoitus' -> poistetaan aina 'luku'
+    WHEN :oikeus = 'kirjoitus' THEN 
+      array_append(ARRAY_REMOVE(api_oikeudet, 'luku'::apioikeus), 'kirjoitus'::apioikeus)
+    ELSE 
+      CASE 
+        WHEN api_oikeudet IS NULL THEN ARRAY[:oikeus::apioikeus]
+        WHEN NOT api_oikeudet @> ARRAY[:oikeus::apioikeus] THEN array_append(api_oikeudet, :oikeus::apioikeus)
+        ELSE api_oikeudet
+      END
+  END
+WHERE kayttajanimi = :kayttajanimi;
+
+-- name: poista-kayttajalta-oikeus!
+UPDATE kayttaja 
+SET api_oikeudet = 
+    CASE -- Jos käyttäjältä poistettiin kaikki oikeudet, aseta sarake NULLiksi
+        WHEN ARRAY_REMOVE(api_oikeudet, :oikeus::apioikeus) = ARRAY[]::apioikeus[] THEN NULL
+        ELSE ARRAY_REMOVE(api_oikeudet, :oikeus::apioikeus)
+    END
+WHERE kayttajanimi = :kayttajanimi;
 
 -- name: hae-jarjestelmatunnuksen-lisaoikeudet
 SELECT

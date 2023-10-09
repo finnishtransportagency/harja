@@ -9,4 +9,4 @@ ALTER TABLE kayttaja DROP COLUMN api_oikeus;
 
 -- Lisää pari uutta oikeustyyppiä 
 ALTER TYPE apioikeus ADD VALUE 'luku'; -- Voi tehdä GET kutsuja 
-ALTER TYPE apioikeus ADD VALUE 'kirjoitus'; -- Voi tehdä GET sekä POST kutsuja 
+ALTER TYPE apioikeus ADD VALUE 'kirjoitus'; -- Voi tehdä POST/PUT/DELETE sekä GET kutsuja 
