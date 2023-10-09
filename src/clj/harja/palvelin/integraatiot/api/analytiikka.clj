@@ -179,13 +179,12 @@
   (println "palauta-toteumat :: parametrit" (pr-str parametrit))
   (tarkista-haun-parametrit parametrit true)
   (let [;; Koordinaattimuutos on oltava boolean
-        kmuutos (if (and koordinaattimuutos (= "true" koordinaattimuutos))
-                  true
-                  false)
+        kmuutos (= "true" koordinaattimuutos)
         ;; Koko parametri on oltava Integer - Jos sitä ei ole annettu, niin anna valtava koko, ettei se rajoita mitään
-        koko (if koko
-               (Integer/parseInt koko)
-               1000)
+        koko (cond
+               (and koko (not (str/includes? koko "."))) (Integer/parseInt koko)
+               (and koko (str/includes? koko ".")) (Double/parseDouble koko)
+               :default 1000)
         ;; Materiaalikoodeja ei ole montaa, mutta niitä on vaikea yhdistää tietokantalauseeseen tehokkaasti
         ;; joten hoidetaan se koodilla
         materiaalikoodit (materiaalit-kyselyt/hae-materiaalikoodit db)
