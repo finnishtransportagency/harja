@@ -361,13 +361,16 @@
     (do
       (when (= 42 (:toimenpide alustalomake))
          ;; Päivitettään LJYR toimenpiteelle pinta-ala tierekisteriosoitteen pituuden perusteella
-        (tuck/action!
-          (fn [e!]
-            (e! (->LaskeTieosoitteenPituus {:tie (:tr-numero alustalomake)
-                                            :aosa (:tr-alkuosa alustalomake)
-                                            :aet (:tr-alkuetaisyys alustalomake)
-                                            :losa (:tr-loppuosa alustalomake)
-                                            :let (:tr-loppuetaisyys alustalomake)})))))
+        (let [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]} alustalomake]
+          ;; pituutta ei voi laskea, voi jokin arvoista puuttuu
+          (when (and tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys)
+            (tuck/action!
+             (fn [e!]
+               (e! (->LaskeTieosoitteenPituus {:tie tr-numero
+                                               :aosa tr-alkuosa
+                                               :aet tr-alkuetaisyys
+                                               :losa tr-loppuosa
+                                               :let tr-loppuetaisyys})))))))
       (assoc-in app [:paallystysilmoitus-lomakedata :alustalomake] alustalomake)))
 
   TallennaAlustalomake
