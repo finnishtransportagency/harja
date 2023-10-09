@@ -224,8 +224,7 @@
       :debug-laheta-emailapi
       (vaadi-jvh! (partial #'laheta-emailapi api-sahkoposti))
       :debug-hae-tieturvalliusuus-geometriat
-      (vaadi-jvh! (partial #'hae-tieturvalliusuus-geometriat db))
-      )
+      (vaadi-jvh! (partial #'hae-tieturvalliusuus-geometriat db)))
     this)
 
   (stop [{http :http-palvelin :as this}]
