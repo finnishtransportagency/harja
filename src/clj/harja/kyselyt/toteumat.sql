@@ -402,6 +402,7 @@ SELECT e.id,
        e.sopimus,
        e.toimenpideinstanssi,
        e.pvm,
+       e.laskutuskuukausi,
        e.rahasumma,
        e.indeksin_nimi,
        e.lisatieto,
@@ -424,8 +425,8 @@ SELECT e.id,
 FROM erilliskustannus e
          JOIN urakka u ON e.urakka = u.id
 WHERE e.urakka = :urakka
-  AND e.pvm >= :alkupvm
-  AND e.pvm <= :loppupvm
+  AND e.laskutuskuukausi >= :alkupvm
+  AND e.laskutuskuukausi <= :loppupvm
   AND e.poistettu IS NOT TRUE;
 
 -- name: listaa-urakan-maarien-toteumat

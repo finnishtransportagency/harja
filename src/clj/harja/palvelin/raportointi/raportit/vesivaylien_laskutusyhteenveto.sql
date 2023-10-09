@@ -195,6 +195,6 @@ SELECT COALESCE(SUM(rahasumma), 0) AS summa
 FROM erilliskustannus ek
   LEFT JOIN toimenpideinstanssi tpi ON ek.toimenpideinstanssi = tpi.id
 WHERE ek.poistettu IS NOT TRUE
-      AND ek.pvm <= :loppupvm
-      AND ek.pvm >= :alkupvm
+      AND ek.laskutuskuukausi <= :loppupvm
+      AND ek.laskutuskuukausi >= :alkupvm
       AND tpi.urakka = :urakkaid;

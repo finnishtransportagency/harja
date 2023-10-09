@@ -381,7 +381,7 @@ WITH ilmoitus_urakat AS (SELECT u.id as id, u.urakkanro as urakkanro
                                 JOIN organisaatio o ON o.id = u.urakoitsija AND o.ytunnus = :ytunnus
                                 -- Haetaan vain käynnissäolevista urakoista. Urakat ovat vastuussa tieliikenneilmoituksista
                                 -- 12 h urakan päättymisvuorokauden jälkeenkin.
-                          WHERE (((u.loppupvm + interval '36 hour') >= NOW() AND (u.alkupvm + interval '36 hour') <= NOW()) OR
+                          WHERE (((u.loppupvm + interval '36 hour') >= NOW()) OR
                                 (u.loppupvm IS NULL AND u.alkupvm <= NOW()))),
      loydetyt_ilmoitukset AS (SELECT distinct i.id as id, u.urakkanro
                               from ilmoitus_urakat u,
@@ -782,7 +782,7 @@ SELECT exists(SELECT FROM ilmoitus i WHERE i.ilmoitusid = :ilmoitusid AND i.urak
 -- name: ilmoituksen-alkuperainen-kesto
 SELECT extract(EPOCH FROM (SELECT vastaanotettu - "vastaanotettu-alunperin"
                            FROM ilmoitus
-                           WHERE id = :id));
+                           WHERE id = :id)) as kesto;
 
 -- name: tallenna-ilmoitusten-toimenpiteiden-aloitukset!
 UPDATE ilmoitus

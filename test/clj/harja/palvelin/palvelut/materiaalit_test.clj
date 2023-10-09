@@ -176,8 +176,8 @@
 
 
 (deftest tallenna-toteuma-materiaaleja-test
-  (let [[toteuma_id sopimus] (first (q (str "SELECT id, sopimus FROM toteuma WHERE urakka=" @oulun-alueurakan-2005-2010-id
-                                            "AND luoja IN (SELECT id FROM kayttaja WHERE jarjestelma IS NOT TRUE) LIMIT 1")))
+  (let [[toteuma_id sopimus] (first (q (str "SELECT id, sopimus FROM toteuma WHERE urakka = " @oulun-alueurakan-2005-2010-id
+                                            " AND luoja IN (SELECT id FROM kayttaja WHERE jarjestelma IS NOT TRUE) LIMIT 1")))
         vanha-maara 12398751
         uusi-maara 12
         toteumamateriaalit (atom [{:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1}

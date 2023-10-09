@@ -188,8 +188,7 @@
                                    ;:parallel-build false Failaa randomisti
                                    :libs ["src/js/kuvataso.js"]
                                    :closure-output-charset "US-ASCII"
-                                   :main harja.runner}
-                        :notify-command ["./run-karma.sh"]}
+                                   :main harja.runner}}
                        {:id "laadunseuranta-test"
                         :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"
                                        "laadunseuranta/test-src/cljs" "test/shared-cljs"]

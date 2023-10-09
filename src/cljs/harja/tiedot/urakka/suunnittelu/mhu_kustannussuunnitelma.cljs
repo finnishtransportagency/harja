@@ -179,7 +179,6 @@
           args (-> args
                  (assoc :onnistui! onnistui! :epaonnistui! epaonnistui!)
                  (dissoc :onnistui :epaonnistui))]
-      (println "palvelujono" palvelujono-tyhja? "tallennusjono?" @tallennus-jono)
       (if palvelujono-tyhja?
         (swap! tallennus-jono assoc palvelu [args])
         (swap! tallennus-jono update palvelu conj args))

@@ -452,10 +452,10 @@
                                      (ffirst (q "SELECT hintaryhma FROM vv_hinnoittelu WHERE id = " hinnoittelu-id ";")))
         hae-toimenpiteen-hinnoittelut-idt (fn [toimenpide-id]
                                             (map :hinnoittelu-id
-                                                 (q-map "SELECT \"hinnoittelu-id\"
+                                                 (q-map (str "SELECT \"hinnoittelu-id\"
                                               FROM vv_hinnoittelu_toimenpide
                                               WHERE \"toimenpide-id\" = " toimenpide-id
-                                                        "AND poistettu IS NOT TRUE;")))
+                                                          " AND poistettu IS NOT TRUE;"))))
         urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
         toimenpiteen-hinnoittelu-idt-ennen (hae-toimenpiteen-hinnoittelut-idt toimenpide-id)

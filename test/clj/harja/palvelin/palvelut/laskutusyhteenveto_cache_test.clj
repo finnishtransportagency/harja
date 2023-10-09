@@ -282,7 +282,7 @@
 
           ;; muuta yks.hintaa tehtävälle Metsän harvennus ko. ajalle --> cachen pitäisi tyhjentyä
           erilliskustannus-hyotykuorma
-          {:pvm (pvm/->pvm "24.8.2015") :rahasumma ek-summa, :urakka-id @oulun-alueurakan-2014-2019-id,
+          {:pvm (pvm/->pvm "24.8.2015") :laskutuskuukausi (pvm/->pvm "15.8.2015") :rahasumma ek-summa, :urakka-id @oulun-alueurakan-2014-2019-id,
            :loppupvm (pvm/->pvm "30.9.2015") :urakka @oulun-alueurakan-2014-2019-id, :maksaja :tilaaja, :indeksin_nimi "MAKU 2005"
            :toimenpideinstanssi (hae-oulun-alueurakan-talvihoito-tpi-id), :sopimus @oulun-alueurakan-2014-2019-paasopimuksen-id :alkupvm (pvm/->pvm "1.10.2014")
            :tyyppi "muu"}]

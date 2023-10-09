@@ -1,0 +1,44 @@
+# Security hardening for GitHub Actions
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
+
+name: 'Harja: Test Pull Request'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+on:
+  # Manuaalisen käynnistyksen asetukset
+  workflow_dispatch:
+  # Workflow ajetaan automaattisesti jokaiselle PR:lle, jonka base branch on develop
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  tests:
+    uses: ./.github/workflows/reusable_run_app_tests.yml
+    # Permissions
+    # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    # https://docs.github.com/en/actions/using-workflows/reusing-workflows#access-and-permissions
+    permissions:
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
+      packages: read
+      # Actions write oikeudella voidaan esim. listata ja poistaa artifacteja
+      actions: write
+      # Tarvitaan test-reportin julkaisuun PR:ssä
+      checks: write
+
+    with:
+      # HUOM: PR:t Testataan vanhemmalla PostgreSQL-versiolla, jotta on-prem ympäristöön ei lipsahda
+      #       siirtymäaikana vain uudemmissa PostgreSQL-versioissa toimivia kantamuutoksia, jotka voivat rikkoa
+      #       Harjan toimintoja on-prem ympäristössä
+      #       On-prem ympäristön deployment tapahtuu automaattisesti eri ympäristössä kuin GH Actions, joten
+      #       deploymenttiä ei voi täällä rajoittaa GH Actions testitulosten perusteella.
+
+      # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä
+      test-db-service: harjadb-12-3.1
+      e2e-browsers: "['chrome']"
+      # PR-testeissä ajetaan vain kevyt build ja testauksen kannalta epärelevantit osat on jätetty pois.
+      build-harja: 'light'

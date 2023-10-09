@@ -109,6 +109,7 @@ ORDER BY yllapitoluokka;
 -- tässä haussa ei tarvitse hakea ylläpidon bonuksia sanktiot taulusta.
 SELECT ek.id,
        ek.pvm                                              AS pvm,
+       ek.laskutuskuukausi                                 AS laskutuskuukausi,
        ek.rahasumma                                        AS summa,
        ek.tyyppi::TEXT                                     AS laji,
        u.id                                                AS "urakka-id",
@@ -137,19 +138,6 @@ FROM erilliskustannus ek
     AND ((:hallintayksikko::INTEGER IS NULL AND u.urakkanro IS NOT NULL)
         OR
          (u.hallintayksikko = :hallintayksikko AND u.urakkanro IS NOT NULL))
-    -- MHU urakoille on olennaista, että bonukset on tallennettu 23150 koodilla olevalle toimenpideinstanssille
-    -- eli hoidon johdolle. Alueurakoilla tätä vaatimusta ei ole. Joten bonukset voivat kohdistua
-    -- vapaammin mille tahansa toimenpideinstanssille
-    AND (u.tyyppi = 'hoito' OR (u.tyyppi = 'teiden-hoito'
-        AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
-                                      FROM toimenpideinstanssi tpi
-                                               JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
-                                               JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
-                                           maksuera m
-                                      WHERE tpi.urakka = u.id
-                                        AND m.toimenpideinstanssi = tpi.id
-                                        AND tpk2.koodi = '23150'
-                                      LIMIT 1)))
-WHERE ek.pvm BETWEEN :alku AND :loppu
+WHERE ek.laskutuskuukausi BETWEEN :alku AND :loppu
   AND ek.poistettu IS NOT TRUE
   AND ek.tyyppi != 'muu'::erilliskustannustyyppi;
