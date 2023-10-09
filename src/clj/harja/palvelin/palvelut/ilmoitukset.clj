@@ -17,10 +17,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot])
-  (:import (java.util Date))
-  (:import (java.time YearMonth))
-  (:import (java.time ZoneId))
-  )
+  (:import (java.util Date)))
 
 (def ilmoitus-xf
   (comp
@@ -138,29 +135,11 @@
                  aloituskuittaukset))]
     aloituskuittauksia-annetuna-ajan-valissa))
 
-(defn- LocalDate->Date [localDate]
-  (Date/from (. (. localDate atStartOfDay (ZoneId/systemDefault)) toInstant)))
-
-(defn tama-kuu []
-  (YearMonth/now))
-
-(defn- viime-kuu []
-  (. (tama-kuu) minusMonths 1))
-
-(defn- taman-kuun-eka []
-  (LocalDate->Date (. (tama-kuu) atDay 1)))
-
-(defn- viime-kuun-eka []
-  (LocalDate->Date (. (viime-kuu) atDay 1)))
-
-(defn- viime-kuun-viimeinen []
-  (LocalDate->Date (. (viime-kuu) atEndOfMonth)))
-
 (defn- parsi-kalenterikuukausi [vakioaikavali]
   (let [kalenterikuukausi (:kalenterikuukausi vakioaikavali)]
     (cond
-      (= :kuluva kalenterikuukausi) [(taman-kuun-eka) (pvm/nyt)]
-      (= :edellinen kalenterikuukausi) [(viime-kuun-eka) (viime-kuun-viimeinen)]
+      (= :kuluva kalenterikuukausi) [(pvm/taman-kuun-eka) (pvm/nyt)]
+      (= :edellinen kalenterikuukausi) [(pvm/viime-kuun-eka) (pvm/viime-kuun-viimeinen)]
       :else (throw (IllegalArgumentException. (format "Tuntematon kalenterikuukausiaikaväli %s" kalenterikuukausi))))))
 (defn- parsi-vakio-ajan-alku-ja-loppu [vakioaikavali]
   (if-let [tunteja (:tunteja vakioaikavali)]

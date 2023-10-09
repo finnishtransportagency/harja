@@ -465,7 +465,7 @@
               (is (t/equal? (c/from-sql-time (:valitetty ilmoitus)) valitetty) "Valitetty-aika on oikein.")))
 
 (deftest aikavalihaku-kuluva-kalenterikuukausi
-  (with-redefs [ilmoitukset/tama-kuu (fn [] (YearMonth/of 2005 Month/OCTOBER))
+  (with-redefs [pvm/tama-kuu (fn [] (YearMonth/of 2005 Month/OCTOBER))
                 pvm/nyt (fn [] (pvm/luo-pvm-dec-kk 2005 10 20))]
   (let [parametrit {:hallintayksikko nil
                     :urakka nil
@@ -482,7 +482,7 @@
     (is (some #(= "Soittakaa Sepolle" (:otsikko %)) ilmoitukset-palvelusta)))))
 
 (deftest aikavalihaku-edellinen-kalenterikuukausi
-  (with-redefs [ilmoitukset/tama-kuu (fn [] (YearMonth/of 2005 Month/NOVEMBER))
+  (with-redefs [pvm/tama-kuu (fn [] (YearMonth/of 2005 Month/NOVEMBER))
                 pvm/nyt (fn [] (pvm/luo-pvm-dec-kk 2005 11 20))]
     (let [parametrit {:hallintayksikko nil
                       :urakka nil

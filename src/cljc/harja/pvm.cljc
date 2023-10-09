@@ -22,7 +22,8 @@
      :clj
            (:import (java.util Calendar Date)
                     (java.text SimpleDateFormat)
-                    (org.joda.time DateTime DateTimeZone))))
+                    (org.joda.time DateTime DateTimeZone)
+                    (java.time YearMonth ZoneId))))
 
 (def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
                   "Touko" "Kesä" "Heinä" "Elo"
@@ -60,6 +61,42 @@
      (or (instance? org.joda.time.DateTime pvm)
          (instance? org.joda.time.LocalDate pvm)
          (instance? org.joda.time.LocalDateTime pvm))))
+
+#?(:clj
+   (defn LocalDate->Date
+     "java.time.LocalDate muunnos java.util.Date tyypiksi, vuorokauden alussa oletusaikavyöhykkeessä"
+     [localDate]
+     (Date/from (. (. localDate atStartOfDay (ZoneId/systemDefault)) toInstant))))
+
+#?(:clj
+   (defn tama-kuu
+     "Meneillään oleva kuukausi java.time.YearMonth tyyppinä."
+     []
+     (YearMonth/now)))
+
+#?(:clj
+   (defn viime-kuu
+     "Edellinen kuukausi java.time.YearMonth tyyppinä."
+     []
+     (. (tama-kuu) minusMonths 1)))
+
+#?(:clj
+   (defn taman-kuun-eka
+     "Meneillään oleva kuukauden ensimmäinen päivä java.util.Date tyyppinä."
+     []
+     (LocalDate->Date (. (tama-kuu) atDay 1))))
+
+#?(:clj
+   (defn viime-kuun-eka
+     "Viime kuukauden ensimmäinen päivä java.util.Date tyyppinä."
+     []
+     (LocalDate->Date (. (viime-kuu) atDay 1))))
+
+#?(:clj
+   (defn viime-kuun-viimeinen
+     "Viime kuukauden viimeinen päivä java.util.Date tyyppinä."
+     []
+     (LocalDate->Date (. (viime-kuu) atEndOfMonth))))
 
 #?(:clj
    (def suomen-aikavyohyke (DateTimeZone/forID "Europe/Helsinki")))
