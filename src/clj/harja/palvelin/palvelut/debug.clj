@@ -16,6 +16,8 @@
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
+            [harja.kyselyt.tieturvallisuusverkko :as tieturvallisuusverkko-kyselyt]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieturvallisuusverkko :as tieturvallisuusverkko-tuonti]
             [harja.geo :as geo]))
 
 (defn hae-toteuman-reitti-ja-pisteet [db toteuma-id]
@@ -156,6 +158,28 @@
               :viesti vastaus}})
     vastaus))
 
+(defn hae-tieturvalliusuus-geometriat
+  "Kokeillaan hakea kaikki tieturvallisuusgeometriat. Jos haluat lokaalisti ajaa geometriat kantaan, päivitä polku, josta niitä
+  tallennetaan. Lokaalisti tieturvallisuusgeometrioita ei välttämättä ole ajettu kantaan."
+  [db tiedot]
+  (let [_ (log/debug "hae-tieturvalliusuus-geometriat")
+        tiedostopolku-kunnossa? false
+        geometriat (tieturvallisuusverkko-kyselyt/hae-tieturvallisuusgeometriat db)
+        geometriat (if (and (empty? geometriat) tiedostopolku-kunnossa?)
+                     (do
+                       (tieturvallisuusverkko-tuonti/vie-tieturvallisuusverkko-kantaan
+                           db
+                           "file:///Users/<username>/Downloads/tieturvallisuustarkastustiesto/tieturvallisuustarkastustiestö.shp")
+                       ;; HAetaan generoidut geometriat
+                       (tieturvallisuusverkko-kyselyt/hae-tieturvallisuusgeometriat db))
+                     geometriat)
+
+        geometriat (map (fn [s]
+                           (-> s
+                             (assoc :geometria (geo/pg->clj (:geometria s)))))
+                      geometriat)]
+    geometriat))
+
 (defn vaadi-jvh! [palvelu-fn]
   (fn [user payload]
     (if-not (roolit/jvh? user)
@@ -198,7 +222,9 @@
       :debug-laheta-email
       (vaadi-jvh! (partial #'laheta-email ulkoinen-sahkoposti))
       :debug-laheta-emailapi
-      (vaadi-jvh! (partial #'laheta-emailapi api-sahkoposti)))
+      (vaadi-jvh! (partial #'laheta-emailapi api-sahkoposti))
+      :debug-hae-tieturvalliusuus-geometriat
+      (vaadi-jvh! (partial #'hae-tieturvalliusuus-geometriat db)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -216,5 +242,6 @@
       :debug-hae-paivan-suolatoteumat
       :debug-hae-urakan-geometriat
       :debug-laheta-email
-      :debug-laheta-emailapi)
+      :debug-laheta-emailapi
+      :debug-hae-tieturvalliusuus-geometriat)
     this))
