@@ -81,6 +81,7 @@ hakutiheys-historiakuva 1200000)
              tk/linjahiekoitus false
              tk/lumivallien-madaltaminen false
              tk/sulamisveden-haittojen-torjunta false
+             tk/sohjo-ojien-teko false
              ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
              ;; hetkellä pieni informaatiouupelo. Nämä rivit voi poistaa tulevaisuudessa, jos lukija
              ;; kokee tietävänsä asian varmaksi.
@@ -88,6 +89,7 @@ hakutiheys-historiakuva 1200000)
              tk/aurausviitoitus-ja-kinostimet false
              tk/lumensiirto false
              tk/paannejaan-poisto false
+             tk/liikenteen-varmistaminen-kelirikkokohteessa false
              tk/muu false
              ;; Pinnan tasaus on mielestämme kesätoimenpide, mutta Anne
              ;; mailissaan pyysi, että pinnan tasaus tulee myös
@@ -100,8 +102,12 @@ hakutiheys-historiakuva 1200000)
             tk/liikennemerkkien-puhdistus false
             tk/liikennemerkkien-opasteiden-ja-liikenteenohjauslaitteiden-hoito-seka-reunapaalujen-kunnossapito false
             tk/palteen-poisto false
+            tk/palteen-poisto-kaiteen-alta false
             tk/paallystetyn-tien-sorapientareen-taytto false
+            tk/paallystetyn-tien-polynsidonta false
             tk/ojitus false
+            tk/reunapaalujen-uusiminen false
+            tk/roskien-keruu false
             tk/sorapientareen-taytto false
             tk/sorateiden-muokkaushoylays false
             tk/sorateiden-polynsidonta false
