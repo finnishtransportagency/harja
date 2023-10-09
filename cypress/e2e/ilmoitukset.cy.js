@@ -69,7 +69,7 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
         cy.get('label[for=aihe] + div > button').click();
         cy.get('label[for=aihe] + div').contains("Testaus").click({force: true});
         cy.wait('@ihaku', {timeout: timeout});
-        cy.contains("2 Ilmoitusta");
+        cy.contains("2 ilmoitusta");
         cy.get('[data-cy=ilmoitukset-grid]').contains("Testaaminen");
         cy.get('[data-cy=ilmoitukset-grid]').contains("Testailu");
     })
@@ -89,7 +89,7 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
         cy.get('label[for=tarkenne] + div > ul').children().should('have.length', 5);
         cy.get('label[for=tarkenne] + div > ul').contains('Toinen testaaminen').click()
         cy.wait('@ihaku', {timeout: timeout});
-        cy.contains("1 Ilmoitusta");
+        cy.contains("1 ilmoitusta");
         cy.get('[data-cy=ilmoitukset-grid]').contains("Toinen testaaminen");
     })
 

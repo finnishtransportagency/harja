@@ -28,6 +28,10 @@ inputs:
   GITHUB_WORKSPACE:
     description: 'Github jobin workspace path. Tämä mountataan cypress kontin sisälle.'
     required: true
+  browser:
+    description: 'Selain, jota vasten testit ajetaan. Cypress-konttiin asennetut selaimet: chrome, edge'
+    default: 'chrome'
+    required: false
 
 
 runs:
@@ -54,6 +58,7 @@ runs:
       env:
         IMAGE_NAME: ${{ inputs.registry }}
         GITHUB_WORKSPACE: ${{ inputs.GITHUB_WORKSPACE }}
+        BROWSER: ${{ inputs.browser }}
       run: |
         echo "Ajetaan cypress komento kontissa"
         
@@ -62,6 +67,6 @@ runs:
           -v $GITHUB_WORKSPACE:/harja \
           -w /harja \
           ghcr.io/finnishtransportagency/harja_cypress:latest \
-          cypress run --browser chrome
+          cypress run --browser "${BROWSER}"
       shell: bash
 

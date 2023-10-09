@@ -14,19 +14,21 @@ on:
         description: 'Valitse deploy-ympäristö'
         type: environment
         required: true
-
-# Tässä voi määritellä yhteiset permissionit kaikille jobeille workflowissa tarvittaessa
-# README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
-#permissions:
+ # Käynnistä workflow automaattisesti, kun Harja: Test develop on suoriutunut loppuun
+  workflow_run:
+    workflows: [ "Harja: Test develop" ]
+    branches:
+      - develop
+    types:
+      - completed
 
 
 env:
   GH_DOCKER_REGISTRY: ghcr.io
 
 
-# Huom. Jokainen job ajetaan omassa VM:ssä, joten ympäristö ei ole jaettu jobien välillä.
 jobs:
-  test-and-build:
+  build-harja:
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -39,12 +41,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Testitietokantaa tarvitaan buildin yhteydessä
       - name: Start test database
         uses: ./.github/actions/start-test-db
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+          # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä (esim. harjadb-latest)
+          # Käytetään uusinta saatavilla olevaa testidb:tä AWS buildeissa.
+          service-name: harjadb-latest
 
       # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
       - name: Build Harja Uberjar
@@ -52,6 +58,7 @@ jobs:
         with:
           build-laadunseuranta: 'false'
 
+      # Uploadaa build-artifact. Deploy-workflow lataa sen myöhemmässä vaiheessa.
       - name: Upload uberjar as artifact
         uses: actions/upload-artifact@v3
         with:
@@ -60,13 +67,13 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  deploy-to-ecs:
+
+  # -- Deployment -- #
+
+  deploy-to-ecs-manually:
     uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
-    needs: test-and-build
-    # Deployment ajetaan dev ja stg ympäristöihin
-#    strategy:
-#      matrix:
-#        environment: [dev, stg]
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: build-harja
     # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -75,8 +82,34 @@ jobs:
       # Contents read lupaa tarvitaan checkout actionissa
       contents: read
     with:
-      environment: ${{ github.event.inputs.environment }} # tai ${{ matrix.environment }}
-    # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattiesesti envinronmentista reusable workfloweissa
+      environment: ${{ github.event.inputs.environment }}
+    # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattisesti envinronmentista reusable workfloweissa
+    #       Tässä määritetään mitkä yksittäiset salaisuudet reusable workflow saa lukea GitHub environmentista.
+    #       Vaihtoehtoisesti, voi käyttää secrets: inherit toimintoa, jolloin reusable workflow saa kaikki salaisuudet
+    #       kuin kutsuva workflowikin.
+    secrets:
+      aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+
+  # Automaattinen matrix-deployment
+  deploy-to-ecs-matrix:
+    uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
+    if: ${{ github.event_name == 'workflow_run' }}
+    needs: build-harja
+    # Deployment ajetaan dev ympäristöön ja
+    # stg ympäristöön myöhemmin, kunhan stg-ympäristö on saatu AWS:n puolella konffattua
+    strategy:
+      matrix:
+        environment: [dev]
+    # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
+    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    permissions:
+      # OIDC tokenia tarvitaan AWS jobeissa roolin omaksumiseen
+      id-token: write
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+    with:
+      environment: ${{ matrix.environment }}
+    # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattisesti envinronmentista reusable workfloweissa
     #       Tässä määritetään mitkä yksittäiset salaisuudet reusable workflow saa lukea GitHub environmentista.
     #       Vaihtoehtoisesti, voi käyttää secrets: inherit toimintoa, jolloin reusable workflow saa kaikki salaisuudet
     #       kuin kutsuva workflowikin.
