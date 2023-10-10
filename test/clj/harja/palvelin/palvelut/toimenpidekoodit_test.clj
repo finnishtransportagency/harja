@@ -34,7 +34,7 @@
   {1 6
    2 25
    3 50
-   4 364})
+   4 368})
 
 (defn- tason-lukumaarat-samat [palvelusta kannasta kovakoodattu taso]
   (= (count (get palvelusta taso)) kannasta (get kovakoodattu taso)))
