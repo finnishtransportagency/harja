@@ -299,7 +299,7 @@
               :nimi ::lt/aika
               :tyyppi :komponentti
               :komponentti (fn []
-                             (let [aika-atom (::lt/aika valittu-liikennetapahtuma)
+                             (let [aika (::lt/aika valittu-liikennetapahtuma)
                                    tallennushetken-aika? (::lt/tallennuksen-aika? valittu-liikennetapahtuma)]
                                [:div (when uusi-tapahtuma? {:style {:padding-top "15px" :padding-bottom "10px"}})
                                 ;; Kun kirjataan uutta tapahtumaa, näytetään checkbox 
@@ -316,7 +316,11 @@
                                 (when (or
                                         (not uusi-tapahtuma?)
                                         (not tallennushetken-aika?))
-                                  [kentat/tee-kentta {:tyyppi :pvm-aika} aika-atom])]))}
+                                  [kentat/tee-kentta 
+                                   {:tyyppi :pvm-aika} 
+                                   (r/wrap
+                                     aika
+                                     #(e! (tiedot/->AsetaTallennusAika %)))])]))}
              {:otsikko "Kohde"
               :nimi ::lt/kohde
               :tyyppi :valinta
@@ -594,8 +598,7 @@
       {:otsikko [liikennetapahtumien-yhteenveto]
        :tunniste (juxt ::lt/id ::lt-alus/id)
        :sivuta grid/vakiosivutus
-       ;; Muunna aika atomiksi koska lomakkeessa käytetään kenttää joka odottaa atomia
-       :rivi-klikattu #(e! (tiedot/->ValitseTapahtuma (assoc % ::lt/aika (atom (::lt/aika %)))))
+       :rivi-klikattu #(e! (tiedot/->ValitseTapahtuma (assoc % ::lt/aika (::lt/aika %))))
        :tyhja (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
                 [ajax-loader "Haku käynnissä"]
                 "Ei liikennetapahtumia")
