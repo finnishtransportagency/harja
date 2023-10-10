@@ -41,7 +41,7 @@
     [:div.jarjestelmatunnukset-grid
      [:div
       [:h2.header-yhteiset "API järjestelmätunnukset"]
-      [:p "Tästä voi muokata myös käyttäjien api-oikeuksia, 'kirjoitus' oikeus antaa myös 'luku' oikeuden."]
+      [:p "Tästä voi muokata käyttäjätunnuksia ja niiden api-oikeuksia, 'kirjoitus' oikeus antaa myös 'luku' oikeuden."]
       [:p "Lukuoikeudella voidaan hakea tietoja esim. yhteystiedot, urakan tiedot tms."]
       [:p "Kirjoitus oikeudella voidaan sekä hakea tietoja että kirjoittaa esim. toteumien lisäystä/poistoa tms."]]
 
