@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.toteumat.velho-varusteet-tiedot
-  (:require [harja.ui.protokollat :as protokollat]
+  (:require [clojure.string :as str]
+            [harja.ui.protokollat :as protokollat]
             [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<!]]
             [tuck.core :refer [process-event] :as tuck]
@@ -83,6 +84,11 @@
                            varustetyypit))]
             (vec (sort-by :otsikko itemit)))))))
 
+(defn muodosta-varustetyypin-hakuparametri [varustetyyppi]
+  {:kohdeluokka (:kohdeluokka varustetyyppi)
+   :nimiavaruus (:nimiavaruus varustetyyppi)
+   :tyyppi ((comp #(str/join "/" %) (juxt :tyyppi_avain :nimi)) varustetyyppi)})
+
 (def +max-toteumat+ 1000)
 
 (defrecord ValitseHoitokausi [hoitokauden-alkuvuosi])
@@ -93,7 +99,7 @@
 (defrecord ValitseVarustetyyppi2 [varustetyyppi])
 (defrecord ValitseKuntoluokka [kuntoluokka valittu?])
 (defrecord ValitseToteuma [toteuma])
-(defrecord HaeVarusteet [lahde])
+(defrecord HaeVarusteet [lahde varustetyypit])
 (defrecord HaeVarusteetOnnistui [vastaus])
 (defrecord HaeVarusteetEpaonnistui [vastaus])
 (defrecord HaeToteumat [])
@@ -167,26 +173,29 @@
       (assoc-in app [:valinnat :toteuma] toteuma)))
 
   HaeVarusteet
-  (process-event [{lahde :lahde} {:keys [haku-paalla] :as app}]
+  (process-event [{lahde :lahde varustetyypit :varustetyypit} {:keys [haku-paalla valinnat] :as app}]
     (if haku-paalla
       app
-      (do
-        (reset! varusteet-kartalla/karttataso-varusteet [])
-        (-> app
-          (assoc :haku-paalla true :varusteet [])
-          (tuck-apurit/post! (case lahde
-                               :velho
-                               :hae-urakan-varustetoteumat
-                               :harja
-                               :hae-urakan-varustetoteuma-ulkoiset)
-            (case lahde
-              :velho
-              {:urakka-id @harja.tiedot.navigaatio/valittu-urakka-id}
+      (let [varustetyypit (map muodosta-varustetyypin-hakuparametri varustetyypit)]
+        (do
+          (reset! varusteet-kartalla/karttataso-varusteet [])
+          (-> app
+            (assoc :haku-paalla true :varusteet [])
+            (tuck-apurit/post! (case lahde
+                                 :velho
+                                 :hae-urakan-varustetoteumat
+                                 :harja
+                                 :hae-urakan-varustetoteuma-ulkoiset)
+              (case lahde
+                :velho
+                (merge (select-keys valinnat [:kohdeluokat :tie :aosa :aeta :losa :leta])
+                  {:urakka-id @harja.tiedot.navigaatio/valittu-urakka-id
+                   :varustetyypit varustetyypit})
 
-              :harja
-              (hakuparametrit app))
-            {:onnistui ->HaeVarusteetOnnistui
-             :epaonnistui ->HaeVarusteetEpaonnistui})))))
+                :harja
+                (hakuparametrit app))
+              {:onnistui ->HaeVarusteetOnnistui
+               :epaonnistui ->HaeVarusteetEpaonnistui}))))))
 
   HaeVarusteetOnnistui
   (process-event [{:keys [vastaus]} app]

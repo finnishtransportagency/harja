@@ -37,6 +37,9 @@
     :properties
     :tyyppi))
 
+(def varuste-tyyppi-polku
+  [:ominaisuudet :rakenteelliset-ominaisuudet :tyyppi])
+
 (defn kaivo-kohdeluokka->tyyppi
   "Hakee kaivojen kohdeluokan tyypin metatiedosta"
   [kohdeluokka]
@@ -50,6 +53,9 @@
     :properties
     :kaivon-tyyppi))
 
+(def kaivo-tyyppi-polku
+  [:ominaisuudet :rakenteelliset-ominaisuudet :kaivon-tyyppi])
+
 (defn muu-kohdeluokka->tyyppi
   "Hakee muiden kohdeluokkien tyypin metatiedosta" [kohdeluokka]
   (->> kohdeluokka
@@ -60,48 +66,68 @@
     (some :properties)
     :tyyppi))
 
+(def muu-kohdeluokka-tyyppi-polku
+  [:ominaisuudet :tyyppi])
+
 
 ; tl523 "Tekninen piste" Lähde puuttuu - "Siirtyy Fintraffic:n vastuulle (tiedon masterjärjestelmä)! Tietolajia ei migroida."
 
 (def +tl501+
-  "tl501 Kaiteet" {:kohdeluokka "varusteet/kaiteet" :palvelu "varusterekisteri" :api-versio "v1"
-                   :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
+  "tl501 Kaiteet" {:kohdeluokka "kaiteet" :palvelu "varusterekisteri" :api-versio "v1"
+                   :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi
+                   :tyyppi-polku varuste-tyyppi-polku})
 (def +tl503_504_505_507_508_516+
-  "tl503 tl504 tl505 tl507 tl508 tl516 *" {:kohdeluokka "varusteet/tienvarsikalusteet" :palvelu "varusterekisteri" :api-versio "v1"
-                                           :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
+  "tl503 tl504 tl505 tl507 tl508 tl516 *" {:kohdeluokka "tienvarsikalusteet" :palvelu "varusterekisteri" :api-versio "v1"
+                                           :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi
+                                           :tyyppi-polku varuste-tyyppi-polku})
 (def +tl506+
-  "tl506 Liikennemerkki" {:kohdeluokka "varusteet/liikennemerkit" :palvelu "varusterekisteri" :api-versio "v1"
-                          :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
+  "tl506 Liikennemerkki" {:kohdeluokka "liikennemerkit" :palvelu "varusterekisteri" :api-versio "v1"
+                          :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi
+                          :tyyppi-polku varuste-tyyppi-polku})
 (def +tl509+
-  "tl509 Rummut" {:kohdeluokka "varusteet/rumpuputket" :palvelu "varusterekisteri" :api-versio "v1"
-                  :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
+  "tl509 Rummut" {:kohdeluokka "rumpuputket" :palvelu "varusterekisteri" :api-versio "v1"
+                  :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi
+                  :tyyppi-polku varuste-tyyppi-polku})
 (def +tl512+
-  "tl512 Viemärit" {:kohdeluokka "varusteet/kaivot" :palvelu "varusterekisteri" :api-versio "v1"
-                    :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn kaivo-kohdeluokka->tyyppi})
+  "tl512 Viemärit" {:kohdeluokka "kaivot" :palvelu "varusterekisteri" :api-versio "v1"
+                    :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn kaivo-kohdeluokka->tyyppi
+                    :tyyppi-polku kaivo-tyyppi-polku})
 (def +tl513+
-  "tl513 Reunapaalut" {:kohdeluokka "varusteet/reunapaalut" :palvelu "varusterekisteri" :api-versio "v1"
-                       :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
+  "tl513 Reunapaalut" {:kohdeluokka "reunapaalut" :palvelu "varusterekisteri" :api-versio "v1"
+                       :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi
+                       :tyyppi-polku varuste-tyyppi-polku})
 (def +tl514_518+
-  "tl514 Melurakenteet tl518 Kivetyt alueet" {:kohdeluokka "tiealueen-poikkileikkaus/luiskat" :palvelu "sijaintipalvelu" :api-versio "v3"
-                                              :nimiavaruus "tiealueen-poikkileikkaus" :kohdeluokka->tyyppi-fn muu-kohdeluokka->tyyppi})
+  "tl514 Melurakenteet tl518 Kivetyt alueet" {:kohdeluokka "luiskat" :palvelu "sijaintipalvelu" :api-versio "v3"
+                                              :nimiavaruus "tiealueen-poikkileikkaus" :kohdeluokka->tyyppi-fn muu-kohdeluokka->tyyppi
+                                              :tyyppi-polku muu-kohdeluokka-tyyppi-polku})
 (def +tl515+
-  "tl515 Aidat" {:kohdeluokka "varusteet/aidat" :palvelu "varusterekisteri" :api-versio "v1"
-                 :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
+  "tl515 Aidat" {:kohdeluokka "aidat" :palvelu "varusterekisteri" :api-versio "v1"
+                 :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi
+                 :tyyppi-polku varuste-tyyppi-polku})
 (def +tl517+
-  "tl517 Portaat" {:kohdeluokka "varusteet/portaat" :palvelu "varusterekisteri" :api-versio "v1"
-                   :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
+  "tl517 Portaat" {:kohdeluokka "portaat" :palvelu "varusterekisteri" :api-versio "v1"
+                   :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi
+                   :tyyppi-polku varuste-tyyppi-polku})
 (def +tl518+
-  "tl518 Kivetyt alueet" {:kohdeluokka "tiealueen-poikkileikkaus/erotusalueet" :palvelu "sijaintipalvelu" :api-versio "v3"
-                          :nimiavaruus "tiealueen-poikkileikkaus" :kohdeluokka->tyyppi-fn muu-kohdeluokka->tyyppi})
+  "tl518 Kivetyt alueet" {:kohdeluokka "erotusalueet" :palvelu "sijaintipalvelu" :api-versio "v3"
+                          :nimiavaruus "tiealueen-poikkileikkaus" :kohdeluokka->tyyppi-fn muu-kohdeluokka->tyyppi
+                          :tyyppi-polku muu-kohdeluokka-tyyppi-polku})
 (def +tl520+
-  "tl520 Puomit" {:kohdeluokka "varusteet/puomit-sulkulaitteet-pollarit" :palvelu "varusterekisteri" :api-versio "v1"
-                  :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
+  "tl520 Puomit" {:kohdeluokka "puomit-sulkulaitteet-pollarit" :palvelu "varusterekisteri" :api-versio "v1"
+                  :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi
+                  :tyyppi-polku varuste-tyyppi-polku})
 (def +tl522+
-  "tl522 Reunakivet" {:kohdeluokka "varusteet/reunatuet" :palvelu "varusterekisteri" :api-versio "v1"
-                      :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi})
+  "tl522 Reunakivet" {:kohdeluokka "reunatuet" :palvelu "varusterekisteri" :api-versio "v1"
+                      :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi
+                      :tyyppi-polku varuste-tyyppi-polku})
 (def +tl524+
-  "tl524 Viherkuviot" {:kohdeluokka "ymparisto/viherkuviot" :palvelu "tiekohderekisteri" :api-versio "v1"
-                       :nimiavaruus "ymparisto" :kohdeluokka->tyyppi-fn muu-kohdeluokka->tyyppi})
+  "tl524 Viherkuviot" {:kohdeluokka "viherkuviot" :palvelu "tiekohderekisteri" :api-versio "v1"
+                       :nimiavaruus "ymparisto" :kohdeluokka->tyyppi-fn muu-kohdeluokka->tyyppi
+                       :tyyppi-polku muu-kohdeluokka-tyyppi-polku})
+
+(def +pylvaat+
+  {:kohdeluokka "pylvaat" :api-versio "v1" :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi
+   :tyyppi-polku varuste-tyyppi-polku})
 
 (def +valimaiset-varustetoimenpiteet+
   "Välimäiset varustetoimenpiteet" {:kohdeluokka "toimenpiteet/valimaiset-varustetoimenpiteet" :palvelu "toimenpiderekisteri" :api-versio "v1"})
@@ -110,7 +136,7 @@
 (def +tietolajien-lahteet+ [+tl501+
                             +tl503_504_505_507_508_516+
                             +tl506+
-                            #_+tl509+
+                            +tl509+
                             +tl512+
                             +tl513+
                             +tl514_518+
@@ -119,7 +145,8 @@
                             +tl518+
                             +tl520+
                             +tl522+
-                            +tl524+])
+                            +tl524+
+                            +pylvaat+])
 
 ; * tl503 "Levähdysalueiden varusteet"
 ;   tl504 "WC"
@@ -741,9 +768,20 @@
       (lokita-urakkahakuvirhe (str "Poikkeus MHU urakoiden haussa Velhosta. Throwable: " t))
       false)))
 
+(defn- tee-varustetyyppi-hakuparametri
+  "Tekee velhon hakuparametrin varustetyypeille, joilla on sama kohdeluokka"
+  [varustetyypit kohdeluokka]
+  ["kohdeluokka" ((comp #(str/join "/" %) (juxt :nimiavaruus :kohdeluokka)) kohdeluokka)
+   ["joukossa"
+    (concat
+      [((comp #(str/join "/" %) (juxt :nimiavaruus :kohdeluokka)) kohdeluokka)]
+      (:tyyppi-polku kohdeluokka))
+    (mapv :tyyppi varustetyypit)]])
+
 (defn hae-urakan-varustetoteumat [integraatioloki db {:keys [token-url
                                                              varuste-kayttajatunnus
-                                                             varuste-salasana]} urakka-id]
+                                                             varuste-salasana]}
+                                  {:keys [urakka-id kohdeluokat varustetyypit] :as tiedot}]
   (integraatiotapahtuma/suorita-integraatio db integraatioloki "velho" "varustetoteumien-haku" nil
     (fn [konteksti]
       (let [virheet (atom #{})]
@@ -753,22 +791,37 @@
                              (log/error "Virhe velho token haussa" x)))]
           (let [otsikot {"Content-Type" "application/json"
                          "Authorization" (str "Bearer " token)}
+                kohdeluokat (if (and (set? kohdeluokat) (seq kohdeluokat))
+                              (filter #(kohdeluokat (:kohdeluokka %)) +tietolajien-lahteet+)
+                              +tietolajien-lahteet+)
                 http-asetukset {:metodi :POST
                                 :otsikot otsikot
                                 ;; TODO: Ota url asetuksista
                                 :url "https://apiv2stgvelho.testivaylapilvi.fi/hakupalvelu/api/v1/haku/kohdeluokat"}
                 urakka-velho-oid (q-urakat/hae-urakan-velho-oid db {:id urakka-id})
+
+                varustetyypit (group-by :kohdeluokka varustetyypit)
+
+                varustetyyppi-parametrit (mapv (fn [[kohdeluokka varustetyypit]]
+                                                 (let [kohdeluokka (first (filter #(= (:kohdeluokka %) kohdeluokka) kohdeluokat))]
+                                                   (tee-varustetyyppi-hakuparametri varustetyypit kohdeluokka)))
+                                           varustetyypit)
+
                 payload {:asetukset {:tyyppi "kohdeluokkahaku"
                                      :liitoshaku true
                                      ;; TODO: Katso saako tämän toimimaan, jos haetaan turhia kenttiä
                                      :palautettavat-kentat []}
-                         ;; TODO: Varmista haettavat aineistot
-                         :kohdeluokat (mapv :kohdeluokka +tietolajien-lahteet+)
-                         :lauseke ["kohdeluokka" "yleiset/perustiedot"
-                                   ["joukossa"
-                                    ["yleiset/perustiedot"
-                                     "muutoksen-lahde-oid"]
-                                    [urakka-velho-oid]]]}
+                         :kohdeluokat (mapv (comp #(str/join "/" %) (juxt :nimiavaruus :kohdeluokka)) kohdeluokat)
+                         :lauseke (keep identity
+                                    ["ja"
+                                     ["kohdeluokka" "yleiset/perustiedot"
+                                      ["joukossa"
+                                       ["yleiset/perustiedot"
+                                        "muutoksen-lahde-oid"]
+                                       [urakka-velho-oid]]]
+                                     (when (seq varustetyyppi-parametrit)
+                                       (into ["tai"]
+                                         varustetyyppi-parametrit))])}
                 {vastaus :body
                  _ :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
                 varusteet (:osumat (json/read-str vastaus :key-fn keyword))

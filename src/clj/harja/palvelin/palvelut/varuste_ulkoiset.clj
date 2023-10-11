@@ -60,9 +60,9 @@
          (log/error "Virhe Velho-urakoiden haussa: " t)
          false)))
 
-(defn hae-urakan-varustetoteumat-velhosta [velho user {:keys [urakka-id]}]
+(defn hae-urakan-varustetoteumat-velhosta [velho user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
-  (velho-komponentti/hae-urakan-varustetoteumat velho urakka-id))
+  (velho-komponentti/hae-urakan-varustetoteumat velho tiedot))
 
 (defn hae-varustetoteuma-nimikkeistot [db user]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user)

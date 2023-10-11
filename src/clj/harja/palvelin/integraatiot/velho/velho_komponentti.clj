@@ -13,7 +13,7 @@
 (defprotocol VarustetoteumaHaku
   (tuo-uudet-varustetoteumat-velhosta [this])
   (paivita-mhu-urakka-oidt-velhosta [this])
-  (hae-urakan-varustetoteumat [this urakka-id])
+  (hae-urakan-varustetoteumat [this tiedot])
   (tuo-velho-nimikkeisto [this]))
 
 (defn suorita-ja-kirjaa-alku-loppu-ajat
@@ -77,8 +77,8 @@
     (suorita-ja-kirjaa-alku-loppu-ajat
       #(varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki this) (:db this) asetukset)
       "paivita-mhu-urakka-oidt-velhosta"))
-  (hae-urakan-varustetoteumat [this urakka-id]
-    (varusteet/hae-urakan-varustetoteumat (:integraatioloki this) (:db this) asetukset urakka-id))
+  (hae-urakan-varustetoteumat [this tiedot]
+    (varusteet/hae-urakan-varustetoteumat (:integraatioloki this) (:db this) asetukset tiedot))
   (tuo-velho-nimikkeisto [this]
     (varusteet/tuo-velho-nimikkeisto this)))
 
