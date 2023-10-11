@@ -19,9 +19,24 @@
 (defn hae-jarjestelmatunnukset [db user]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
   (into []
-        (comp (map konv/alaviiva->rakenne)
-              (map #(konv/array->vec % :urakat)))
-        (q/hae-jarjestelmatunnukset db)))
+    (comp (map konv/alaviiva->rakenne)
+      (map #(konv/array->vec % :urakat))
+      (map #(konv/array->vec % :oikeudet)))
+    (q/hae-jarjestelmatunnukset db)))
+
+(defn hae-mahdolliset-api-oikeudet [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
+  (into [] (q/hae-mahdolliset-api-oikeudet db)))
+
+(defn lisaa-kayttajalle-oikeus [db user payload]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
+  (q/lisaa-kayttajalle-oikeus! db {:oikeus (:oikeus payload)
+                                   :kayttajanimi (:kayttajanimi payload)}))
+
+(defn poista-kayttajalta-oikeus [db user payload]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
+  (q/poista-kayttajalta-oikeus! db {:oikeus (:oikeus payload)
+                                    :kayttajanimi (:kayttajanimi payload)}))
 
 (defn tallenna-jarjestelmatunnukset [db user tunnukset]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
@@ -55,28 +70,40 @@
 (defrecord APIJarjestelmatunnukset []
   component/Lifecycle
   (start [{http :http-palvelin db :db :as this}]
+    
     (julkaise-palvelu http :hae-jarjestelmatunnukset
-                      (fn [user _]
-                        (hae-jarjestelmatunnukset db user)))
+      (fn [user _] (hae-jarjestelmatunnukset db user)))
+    
+    (julkaise-palvelu http :lisaa-kayttajalle-oikeus
+      (fn [user payload] (lisaa-kayttajalle-oikeus db user payload)))
+    
+    (julkaise-palvelu http :poista-kayttajalta-oikeus
+      (fn [user payload] (poista-kayttajalta-oikeus db user payload)))
+    
+    (julkaise-palvelu http :hae-mahdolliset-api-oikeudet
+      (fn [user _] (hae-mahdolliset-api-oikeudet db user)))
+    
     (julkaise-palvelu http :hae-jarjestelmatunnuksen-lisaoikeudet
-                      (fn [user payload]
-                        (hae-jarjestelmatunnuksen-lisaoikeudet db user payload)))
+      (fn [user payload] (hae-jarjestelmatunnuksen-lisaoikeudet db user payload)))
+    
     (julkaise-palvelu http :hae-urakat-lisaoikeusvalintaan
-                      (fn [user _]
-                        (hae-urakat-lisaoikeusvalintaan db user)))
+      (fn [user _] (hae-urakat-lisaoikeusvalintaan db user)))
+    
     (julkaise-palvelu http :tallenna-jarjestelmatunnukset
-                      (fn [user payload]
-                        (tallenna-jarjestelmatunnukset db user payload)))
+      (fn [user payload] (tallenna-jarjestelmatunnukset db user payload)))
+    
     (julkaise-palvelu http :tallenna-jarjestelmatunnuksen-lisaoikeudet
-                      (fn [user payload]
-                        (tallenna-jarjestelmatunnuksen-lisaoikeudet db user payload)))
+      (fn [user payload] (tallenna-jarjestelmatunnuksen-lisaoikeudet db user payload)))
     this)
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
-                     :hae-jarjestelmatunnukset
-                     :hae-jarjestelmatunnuksen-lisaoikeudet
-                     :hae-urakat-lisaoikeusvalintaan
-                     :tallenna-jarjestelmatunnukset
-                     :tallenna-jarjestelmatunnuksen-lisaoikeudet)
+      :hae-mahdolliset-api-oikeudet
+      :lisaa-kayttajalle-oikeus
+      :poista-kayttajalta-oikeus
+      :hae-jarjestelmatunnukset
+      :hae-jarjestelmatunnuksen-lisaoikeudet
+      :hae-urakat-lisaoikeusvalintaan
+      :tallenna-jarjestelmatunnukset
+      :tallenna-jarjestelmatunnuksen-lisaoikeudet)
     this))

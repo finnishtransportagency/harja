@@ -58,6 +58,7 @@
   ;; Testataan että rajoitus toimii 
   (let [alkuaika "2004-10-19T00:00:00+03"
         loppuaika "2004-10-20T00:00:00+03"
+        _ (anna-analytiikkaoikeus kayttaja-analytiikka)
         vastaus-ok (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti)
         ;; Asetetaan ajaksi yli 24 tuntia
         alkuaika "2004-10-19T00:00:00+03"
@@ -74,6 +75,7 @@
   (let [; Aseta tiukka hakuväli, josta löytyy vain vähän toteumia
         alkuaika "2004-10-19T00:00:00+03"
         loppuaika "2004-10-20T00:00:00+03"
+        _ (anna-analytiikkaoikeus kayttaja-analytiikka)
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))
     (sisaltaa-perustiedot (:body vastaus))))
@@ -81,6 +83,20 @@
 (deftest hae-toteumat-test-reitillinen-onnistuu
   (let [alkuaika "2015-01-19T00:00:00+03"
         loppuaika "2015-01-19T21:00:00+03"
+        ;; Poistetaan oikeudet 
+        _ (poista-kayttajan-api-oikeudet kayttaja-analytiikka)
+        ;; Näillä oikeuksilla ei pitäisi pystyä kutsumaan analytiikan rajapintoja 
+        _ (anna-kirjoitusoikeus kayttaja-analytiikka)
+        _ (anna-tielupaoikeus kayttaja-analytiikka)
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti)
+
+        ;; Käyttäjällä ei ole analytiikkaoikeuksia 
+        _ (is (= 403 (:status vastaus)) "Käyttäjältä ei löydy analytiikka api oikeuksia")
+        _ (is (str/includes? (:body vastaus) "Käyttäjätunnuksella puutteelliset oikeudet") "Virheviesti löytyy")
+        
+        ;; Annetaan oikeudet ja tehdään kutsu uudelleen
+        _ (poista-kayttajan-api-oikeudet kayttaja-analytiikka)
+        _ (anna-analytiikkaoikeus kayttaja-analytiikka)
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))
     (sisaltaa-perustiedot (:body vastaus))))
@@ -88,6 +104,14 @@
 (deftest hae-toteumat-test-reitillinen-onnistuu-2
   (let [alkuaika-paiva-sitten (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* 1 86400 1000))))
         loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        ; Poistetaan oikeudet 
+        _ (poista-kayttajan-api-oikeudet kayttaja-analytiikka)
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika-paiva-sitten "/" loppuaika)] kayttaja-analytiikka portti)
+        ;; Käyttäjällä ei ole analytiikkaoikeuksia 
+        _ (is (= 403 (:status vastaus)) "Käyttäjältä ei löydy analytiikka api oikeuksia")
+        _ (is (str/includes? (:body vastaus) "Käyttäjätunnuksella puutteelliset oikeudet") "Virheviesti löytyy")
+        ;; Annetaan oikeudet ja tehdään kutsu uudelleen
+        _ (anna-analytiikkaoikeus kayttaja-analytiikka)
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika-paiva-sitten "/" loppuaika)] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))
     (sisaltaa-perustiedot (:body vastaus))))
@@ -104,6 +128,7 @@
 (deftest hae-toteumat-test-vaara-paivamaaraformaatti
   (let [alkuaika "2005-01-01T00:00:00"
         loppuaika "2005-12-31T21:00:00+03"
+        _ (anna-analytiikkaoikeus kayttaja-analytiikka)
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti)]
     (is (= 400 (:status vastaus)))
     (is (str/includes? (:body vastaus) "Alkuaika väärässä muodossa"))))
@@ -116,6 +141,7 @@
         ;; Haetaan poistetut, jotka on muuttuneet tänään (eli muokkauksen jälkeen)
         paivan-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/nyt)))
         paivan-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/nyt)))
+        _ (anna-analytiikkaoikeus kayttaja-analytiikka)
         
         poistetut (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paivan-alussa "/" paivan-lopussa)] kayttaja-analytiikka portti)
         _ (u (str "UPDATE toteuma SET poistettu = false, muokattu = null WHERE id = 9;"))
@@ -127,12 +153,27 @@
     (sisaltaa-perustiedot (:body poistetut))
     (is (= true (:poistettu (first (:reittitoteumat poistetut-body)))))))
 
+(deftest hae-toteumat-test-koordinaattimuunnos
+  (let [alkuaika "2015-01-19T00:00:00+03"
+        loppuaika "2015-01-19T21:00:00+03"
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/50" )] kayttaja-analytiikka portti)]
+    (is (= 200 (:status vastaus)))
+    (sisaltaa-perustiedot (:body vastaus))))
+
+(deftest hae-toteumat-test-koko-liian-pieni
+  (let [alkuaika "2015-01-19T00:00:00+03"
+        loppuaika "2015-01-19T21:00:00+03"
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/0.001" )] kayttaja-analytiikka portti)]
+    (is (= 400 (:status vastaus)))
+    (is (true? (str/includes? (:body vastaus) "Virhe: Liian suuri aineisto palautettavaksi.")))))
+
 (deftest materiaalin-maara-muuttuu
   (let [paiva-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/luo-pvm 2004 9 19)))
         paiva-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/luo-pvm 2004 9 19)))
 
         nyt-paivan-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/nyt)))
         nyt-paivan-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/nyt)))
+        _ (anna-analytiikkaoikeus kayttaja-analytiikka)
 
         ;; Haetaan alkuperäinen tieto
         alkup-vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paiva-alussa "/" paiva-lopussa)] kayttaja-analytiikka portti)
@@ -185,6 +226,7 @@
 (deftest hae-turvallisuuspoikkeamat-analytiikalle-ei-kayttajaa
   (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        _ (anna-analytiikkaoikeus "olematonkäyttäjä")
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
                   "olematonkäyttäjä" portti)]
     ;; Harjan käyttöoikeuksien tarkistuksessa on virhe, joka aiheuttaa 500 errorin, jos käytetään haussa käyttäjää, jota ei ole olemassa.
@@ -203,6 +245,8 @@
   (let [;; Luo väliaikainen turvallisuuspoikkeama
         tapahtuma-paiva "2016-01-30T12:00:01Z"
         urakka (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
+        _ (anna-kirjoitusoikeus "yit-rakennus")
+        _ (anna-analytiikkaoikeus "analytiikka-testeri")
         _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
             "yit-rakennus" portti
             (-> "test/resurssit/api/turvallisuuspoikkeama.json"
@@ -225,6 +269,9 @@
 (deftest hae-turvallisuuspoikkeamat-analytiikalle-epaonnistuu
   (let [;; Luo väliaikainen turvallisuuspoikkeama
         urakka (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
+        _ (anna-analytiikkaoikeus "234")
+        _ (anna-analytiikkaoikeus "yit-rakennus")
+        _ (anna-analytiikkaoikeus "analytiikka-testeri")
         _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
             "yit-rakennus" portti
             (-> "test/resurssit/api/turvallisuuspoikkeama.json"
@@ -266,6 +313,8 @@
 
         ;; Luo väliaikainen turvallisuuspoikkeama
         urakka (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
+        _ (anna-kirjoitusoikeus "yit-rakennus")
+        _ (anna-analytiikkaoikeus "analytiikka-testeri")
         _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
             "yit-rakennus" portti
             (-> "test/resurssit/api/turvallisuuspoikkeama.json"
@@ -292,6 +341,8 @@
 
         ;; Luo väliaikainen turvallisuuspoikkeama
         urakka (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
+        _ (anna-kirjoitusoikeus "yit-rakennus")
+        _ (anna-analytiikkaoikeus "analytiikka-testeri")
         _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
             "yit-rakennus" portti
             (-> "test/resurssit/api/turvallisuuspoikkeama.json"

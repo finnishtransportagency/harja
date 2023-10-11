@@ -167,26 +167,45 @@
     (assoc :materiaalit (get-in reitti [:reittipiste :materiaalit]))
     (dissoc :reittipiste)))
 
+;; Meillä ei ole tietoa, että minkä kokoinen (MB) yksi toteuma on json muodossa. Joten otetaan joku hanska-arvio
+;; Aineistot on isoja ja se pitäisi generoida valmiiksi, jos haluaisi tietää tarkan summan. Joten hanska-arvio on
+;; nopea, mutta suuntaa-antava. Tällä hetkellä se antaa n. 20% liian suuria kokoja. Mittausten mukaan n. 0.0044 alkaa olla lälhellä totuutta.
+(def arvioitu-toteuman-koko 0.006)
+
 (defn palauta-toteumat
   "Haetaan toteumat annettujen alku- ja loppuajan puitteissa.
   koordinaattimuutos-parametrilla voidaan hakea lisäksi reittipisteet EPSG:4326-muodossa."
-  [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
+  [db {:keys [alkuaika loppuaika koordinaattimuutos koko] :as parametrit} kayttaja]
+  (println "palauta-toteumat :: parametrit" (pr-str parametrit))
   (tarkista-haun-parametrit parametrit true)
-  (let [;; Materiaalikoodeja ei ole montaa, mutta niitä on vaikea yhdistää tietokantalauseeseen tehokkaasti
+  (let [;; Koordinaattimuutos on oltava boolean
+        kmuutos (= "true" koordinaattimuutos)
+        ;; Koko parametri on oltava Integer - Jos sitä ei ole annettu, niin anna valtava koko, ettei se rajoita mitään
+        koko (cond
+               (and koko (not (str/includes? koko "."))) (Integer/parseInt koko)
+               (and koko (str/includes? koko ".")) (Double/parseDouble koko)
+               :default 1000)
+        ;; Materiaalikoodeja ei ole montaa, mutta niitä on vaikea yhdistää tietokantalauseeseen tehokkaasti
         ;; joten hoidetaan se koodilla
         materiaalikoodit (materiaalit-kyselyt/hae-materiaalikoodit db)
         ;; Haetaan reittitoteumat tietokannasta
         alkudb (System/currentTimeMillis)
         toteumat (toteuma-kyselyt/hae-reittitoteumat-analytiikalle db {:alkuaika alkuaika
                                                                        :loppuaika loppuaika
-                                                                       :koordinaattimuutos koordinaattimuutos})
-        koko (count toteumat)
+                                                                       :koordinaattimuutos kmuutos})
+        maara (count toteumat)
+        loydetyn-aineiston-koko (* (count toteumat) arvioitu-toteuman-koko)
         loppudb (System/currentTimeMillis)
-        _ (log/info "Analytiikka-toteumat db haku" (- loppudb alkudb) " ms. Toteumamäärä: "koko)
-        _ (when (= koko 100000)
-            (log/info "Analytiikka-toteumat :: liian suuri aineisto:" koko "kpl"))
+        _ (log/info "Analytiikka-toteumat db haku" (- loppudb alkudb) " ms. Toteumamäärä: " maara)
+        _ (when (>= maara 100000)
+            (log/info "Analytiikka-toteumat :: liian suuri aineisto:" maara "kpl"))
+
+        ;; Päätellään aineistosta myös megabyte määräinen koko ja verrataan sitä parametrina saatuun
+        _ (when (>= loydetyn-aineiston-koko koko)
+            (log/info "Analytiikka-toteumat :: liian suuri aineisto (mb):" loydetyn-aineiston-koko " > " koko))
+
         ;; Toteumien kutsu ei käytä streamiä, joten on riskinä, että muisti loppuu kesken. Joten rajoitetaan määrää
-        toteumat (when (< koko 100000)
+        toteumat (when (and (< maara 100000) (< loydetyn-aineiston-koko koko))
                    (->> toteumat
                      (map (fn [toteuma]
                             (-> toteuma
@@ -229,7 +248,7 @@
                                              (poista-reittipistetaso))]
                                      r))
                                  rivit))))))
-        toteumat (when (< koko 100000)
+        toteumat (when (and (< koko 100000) (< loydetyn-aineiston-koko koko))
                    {:reittitoteumat
                     (map (fn [toteuma]
                            (konversio/alaviiva->rakenne toteuma))
@@ -563,7 +582,17 @@
           (fn [parametrit kayttaja db]
             (palauta-toteumat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
+
+    (julkaise-reitti
+      http :analytiikka-toteumat-koko
+      (GET "/api/analytiikka/toteumat/:alkuaika/:loppuaika/:koordinaattimuutos/:koko" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki
+          :analytiikka-hae-toteumat request
+          (fn [parametrit kayttaja db]
+            (palauta-toteumat db parametrit kayttaja))
+          ;; Vaaditaan analytiikka-oikeudet
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-suunnitellut-materiaalit-hoitovuosi
@@ -573,7 +602,7 @@
           (fn [parametrit kayttaja db]
             (palauta-suunnitellut-materiaalimaarat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-suunnitellut-materiaalit-urakka
@@ -583,7 +612,7 @@
           (fn [parametrit kayttaja db]
             (palauta-urakan-suunnitellut-materiaalimaarat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-suunnitellut-tehtavamaarat-hoitovuosi
@@ -593,7 +622,7 @@
           (fn [parametrit kayttaja db]
             (palauta-suunnitellut-tehtavamaarat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-suunnitellut-tehtavamaarat-urakka
@@ -603,7 +632,7 @@
           (fn [parametrit kayttaja db]
             (palauta-urakan-suunnitellut-tehtavamaarat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-materiaalit
@@ -613,7 +642,7 @@
           (fn [parametrit kayttaja db]
             (palauta-materiaalit db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-tehtavat
@@ -623,7 +652,7 @@
           (fn [parametrit kayttaja db]
             (palauta-tehtavat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-urakat
@@ -633,7 +662,7 @@
           (fn [parametrit kayttaja db]
             (palauta-urakat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-organisaatiot
@@ -643,7 +672,7 @@
           (fn [parametrit kayttaja db]
             (palauta-organisaatiot db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
     (julkaise-reitti
       http :analytiikka-turvallisuuspoikkeamat
       (GET "/api/analytiikka/turvallisuuspoikkeamat/:alkuaika/:loppuaika" request
@@ -652,12 +681,13 @@
           (fn [parametrit kayttaja db]
             (hae-turvallisuuspoikkeamat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
     this)
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
       :analytiikka-toteumat
+      :analytiikka-toteumat-koko
       :analytiikka-materiaalit
       :analytiikka-tehtavat
       :analytiikka-urakat

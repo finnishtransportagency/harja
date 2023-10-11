@@ -37,6 +37,8 @@
 (defrecord MateriaalitHaettu [materiaalit])
 (defrecord MateriaalienHakuEpaonnistui [])
 ;; Muokkaukset
+(defrecord ValitseAjanTallennus [valittu?])
+(defrecord AsetaHavaintoaika [aika])
 (defrecord LisaaHairiotilanne [])
 (defrecord TyhjennaValittuHairiotilanne [])
 (defrecord AsetaHairiotilanteenTiedot [hairiotilanne])
@@ -59,7 +61,8 @@
 
 (defn esitaytetty-hairiotilanne []
   (let [kayttaja @istunto/kayttaja]
-    {::hairiotilanne/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
+    {::hairiotilanne/tallennuksen-aika? true
+     ::hairiotilanne/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
      ::hairiotilanne/kuittaaja {::kayttaja/id (:id kayttaja)
                                 ::kayttaja/etunimi (:etunimi kayttaja)
                                 ::kayttaja/sukunimi (:sukunimi kayttaja)}
@@ -74,6 +77,10 @@
 
 (defn tallennettava-hairiotilanne [hairiotilanne]
   (let [hairiotilanne (-> hairiotilanne
+                        ;; ;; Jos halutaan käyttää tallennushetken aikaa -> pvm/nyt
+                        (assoc ::hairiotilanne/havaintoaika (if (::hairiotilanne/tallennuksen-aika? hairiotilanne)
+                                           (pvm/nyt)
+                                           (::hairiotilanne/havaintoaika hairiotilanne)))
                           (select-keys [::hairiotilanne/id
                                         ::hairiotilanne/sopimus-id
                                         ::hairiotilanne/paikallinen-kaytto?
@@ -201,6 +208,14 @@
     (viesti/nayta! "Häiriötilanteiden haku epäonnistui!" :danger)
     (assoc app :hairiotilanteiden-haku-kaynnissa? false
                :hairiotilanteet []))
+  
+  AsetaHavaintoaika
+  (process-event [{aika :aika} app]
+    (assoc-in app [:valittu-hairiotilanne ::hairiotilanne/havaintoaika] aika))
+
+  ValitseAjanTallennus
+  (process-event [{valittu? :valittu?} app]
+    (assoc-in app [:valittu-hairiotilanne ::hairiotilanne/tallennuksen-aika?] (not valittu?)))
 
   LisaaHairiotilanne
   (process-event [_ app]

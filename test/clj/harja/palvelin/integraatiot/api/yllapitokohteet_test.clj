@@ -48,6 +48,7 @@
 
 (deftest tarkista-yllapitokohteiden-haku
   (let [muhoksen-paallystysurakan-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        _ (anna-lukuoikeus kayttaja-paallystys)
         vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" muhoksen-paallystysurakan-id "/yllapitokohteet")]
                                         kayttaja-paallystys
                                         portti)
@@ -84,6 +85,7 @@
 
 (deftest yllapitokohteiden-haku-ei-toimi-ilman-oikeuksia
   (let [muhoksen-paallystysurakan-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        _ (anna-lukuoikeus "Erkki Esimerkki")
         vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" muhoksen-paallystysurakan-id "/yllapitokohteet") urakka]
                                         "Erkki Esimerkki"
                                         portti)]
@@ -91,7 +93,8 @@
     (is (str/includes? (:body vastaus) "Tuntematon käyttäjätunnus: Erkki Esimerkki"))))
 
 (deftest yllapitokohteiden-haku-ei-toimi-tuntemattomalle-urakalle
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/123467890/yllapitokohteet" urakka] kayttaja-paallystys portti)]
+  (let [_ (anna-lukuoikeus kayttaja-paallystys)
+        vastaus (api-tyokalut/get-kutsu ["/api/urakat/123467890/yllapitokohteet" urakka] kayttaja-paallystys portti)]
     (is (= 400 (:status vastaus)))
     (is (str/includes? (:body vastaus) "tuntematon-urakka"))))
 
@@ -99,6 +102,7 @@
 (deftest aikataulun-kirjaaminen-ilmoituksettomalle-kohteelle-toimii
   (let [urakka (hae-urakan-id-nimella "Utajärven päällystysurakka")
         kohde (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
+        _ (anna-kirjoitusoikeus kayttaja-paallystys)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
@@ -109,6 +113,7 @@
 (deftest paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis-tiemerkintaan-paivittyy
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
         sahkoposti-lahetys-url "http://localhost:8084/harja/api/sahkoposti/xml"
+        _ (anna-kirjoitusoikeus kayttaja-paallystys)
         viesti-id (str (UUID/randomUUID))]
     (with-fake-http
       [+testi-fim+ fim-vastaus
@@ -146,6 +151,7 @@
        {:url sahkoposti-lahetys-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
             kohde-id (hae-yllapitokohteen-id-nimella "Nakkilan ramppi")
+            _ (anna-kirjoitusoikeus kayttaja-paallystys)
             vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
                               kayttaja-paallystys portti
                               (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json")))
@@ -168,6 +174,7 @@
        {:url sahkoposti-lahetys-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
             kohde-id (hae-yllapitokohteen-id-nimella "Nakkilan ramppi")
+            _ (anna-kirjoitusoikeus kayttaja-tiemerkinta)
             vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-tiemerkinta")]
                               kayttaja-tiemerkinta portti
                               (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json")))
@@ -194,6 +201,7 @@
 (deftest aikataulun-kirjaaminen-toimii-kohteelle-jolla-ilmoitus
   (let [urakka (hae-urakan-id-nimella "Utajärven päällystysurakka")
         kohde (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
+        _ (anna-kirjoitusoikeus kayttaja-paallystys)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
@@ -209,6 +217,7 @@
                                                  valmis_tiemerkintaan, tiemerkinta_alku,
                                                  tiemerkinta_loppu FROM yllapitokohteen_aikataulu
                                                  WHERE yllapitokohde = " kohde)))
+        _ (anna-kirjoitusoikeus kayttaja-paallystys)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
@@ -235,6 +244,7 @@
                                                  valmis_tiemerkintaan, tiemerkinta_alku,
                                                  tiemerkinta_loppu FROM yllapitokohteen_aikataulu
                                                  WHERE yllapitokohde = " kohde)))
+        _ (anna-kirjoitusoikeus kayttaja-tiemerkinta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
                                          kayttaja-tiemerkinta portti
                                          (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
@@ -258,6 +268,7 @@
 (deftest aikataulun-kirjaaminen-paallystykseen-ei-toimi-ilman-oikeuksia
   (let [urakka (hae-urakan-id-nimella "Utajärven päällystysurakka")
         kohde (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
+        _ (anna-kirjoitusoikeus "LX123456789")
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          "LX123456789" portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
@@ -267,6 +278,7 @@
 (deftest aikataulun-kirjaaminen-tiemerkintaan-ei-toimi-ilman-oikeuksia
   (let [urakka (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
+        _ (anna-kirjoitusoikeus "LX123456789")
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
                                          "LX123456789" portti
                                          (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
@@ -276,6 +288,7 @@
 (deftest tiemerkinnan-aikataulun-kirjaus-ei-onnistu-paallystysurakalle
   (let [urakka (hae-urakan-id-nimella "Utajärven päällystysurakka")
         kohde (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
+        _ (anna-kirjoitusoikeus kayttaja-paallystys)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
@@ -286,6 +299,7 @@
 (deftest paallystyksen-aikataulun-kirjaus-ei-onnistu-tiemerkintaurakalle
   (let [urakka (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
+        _ (anna-kirjoitusoikeus kayttaja-tiemerkinta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-tiemerkinta portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
@@ -296,6 +310,7 @@
 (deftest paallystyksen-viallisen-aikataulun-kirjaus-ei-onnistu-tiemerkintapvm-vaarin
   (let [urakka (hae-urakan-id-nimella "Utajärven päällystysurakka")
         kohde (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
+        _ (anna-kirjoitusoikeus kayttaja-paallystys)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus_viallinen_tiemerkintapvm_ilman_paallystyksen_loppua.json"))]
@@ -308,6 +323,7 @@
 (deftest paallystyksen-viallisen-aikataulun-kirjaus-ei-onnistu-paallystyksen-valmispvm-vaarin
   (let [urakka (hae-urakan-id-nimella "Utajärven päällystysurakka")
         kohde (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
+        _ (anna-kirjoitusoikeus kayttaja-paallystys)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus_viallinen_paallystys_valmis_ilman_paallystyksen_alkua.json"))]
@@ -318,6 +334,7 @@
 (deftest tiemerkinnan-viallisen-aikataulun-kirjaus-ei-onnistu-tiemerkinnan-valmispvm-vaarin
   (let [urakka (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         kohde (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka)
+        _ (anna-kirjoitusoikeus kayttaja-tiemerkinta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
                                          kayttaja-tiemerkinta portti
                                          (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus_viallinen_tiemerkinta_valmis_ilman_alkua.json"))]
@@ -328,6 +345,7 @@
 (deftest aikataulun-kirjaus-vaatii-paallystys-valmis-jos-paallystys-aloitettu-annettu
   (let [urakka (hae-urakan-id-nimella "Utajärven päällystysurakka")
         kohde (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)
+        _ (anna-kirjoitusoikeus kayttaja-paallystys)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/aikataulun-kirjaus-vaatii-paallystys-valmis-jos-paallystys-aloitettu-annettu.json"))]
@@ -337,6 +355,7 @@
 (deftest aikataulun-kirjaus-vaatii-tiemerkinta-valmis-jos-tiemerkinta-aloitettu-annettu
   (let [urakka (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         kohde (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka)
+        _ (anna-kirjoitusoikeus kayttaja-tiemerkinta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
                                          kayttaja-tiemerkinta portti
                                          (slurp "test/resurssit/api/aikataulun-kirjaus-vaatii-tiemerkinta-valmis-jos-tiemerkinta-aloitettu-annettu.json"))]
@@ -347,6 +366,7 @@
 (deftest aikataulun-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
   (let [urakka (hae-urakan-id-nimella "Utajärven päällystysurakka")
         kohde (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka)
+        _ (anna-kirjoitusoikeus kayttaja-paallystys)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
@@ -363,6 +383,7 @@
         harjan-kautta-kirjattu (first maaramuutokset-ennen-kirjausta)
         polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/maaramuutokset"]
         kutsudata (slurp "test/resurssit/api/maaramuutosten-kirjaus-request.json")
+        _ (anna-kirjoitusoikeus kayttaja-paallystys)
         vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)
         maaramuutokset-kirjauksen-jalkeen (hae-maaramuutokset)]
 
@@ -396,6 +417,7 @@
         kohde-id (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka-id)
         kutsudata (slurp "test/resurssit/api/maaramuutosten-kirjaus-request.json")
         polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/maaramuutokset"]
+        _ (anna-kirjoitusoikeus kayttaja-paallystys)
         vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)]
     (is (= 400 (:status vastaus)))
     (is (str/includes? (:body vastaus) "tuntematon-yllapitokohde"))))
@@ -409,6 +431,7 @@
         tarkastukset-ennen-kirjausta (hae-tarkastukset)
         polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tarkastus"]
         kutsudata (slurp "test/resurssit/api/yllapitokohteen-tarkastuksen-kirjaus-request.json")
+        _ (anna-kirjoitusoikeus kayttaja-paallystys)
         vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)
         tarkastukset-kirjauksen-jalkeen (hae-tarkastukset)
         tarkastus (first tarkastukset-kirjauksen-jalkeen)]
@@ -450,6 +473,7 @@
         tarkastukset-ennen-kirjausta (hae-tarkastukset)
         polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tarkastus"]
         kutsudata (slurp "test/resurssit/api/usean-yllapitokohteen-tarkastuksen-kirjaus-request.json")
+        _ (anna-kirjoitusoikeus kayttaja-paallystys)
         vastaus (with-redefs [sijainnit/hae-tierekisteriosoite (fn [db alkusijainti loppusijainti]
                                                                  (when (= (:x alkusijainti) 443673.469)
                                                                    (throw (PSQLException. "Foo" (PSQLState/DATA_ERROR)))))]
@@ -466,6 +490,7 @@
         toteumat-ennen-kirjausta (hae-toteumat)
         polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tiemerkintatoteuma"]
         kutsudata (slurp "test/resurssit/api/yllapitokohteen-tiemerkintatoteuman-kirjaus-request.json")
+        _ (anna-kirjoitusoikeus kayttaja-tiemerkinta)
         vastaus (api-tyokalut/post-kutsu polku kayttaja-tiemerkinta portti kutsudata)
         toteumat-kirjauksen-jalkeen (hae-toteumat)
         toteuma (first (filter #(= ulkoinen-id (:ulkoinen_id %)) toteumat-kirjauksen-jalkeen))]

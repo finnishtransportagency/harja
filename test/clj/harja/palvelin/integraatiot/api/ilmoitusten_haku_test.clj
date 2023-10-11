@@ -84,6 +84,7 @@
   (let [kuukausi-sitten (nykyhetki-iso8061-formaatissa-menneisyyteen 30)
         huomenna (nykyhetki-iso8061-formaatissa-tulevaisuuteen 1)
         y-tunnus "1565583-5"
+        _ (anna-lukuoikeus kayttaja)
         vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" kuukausi-sitten "/"huomenna)]
                   kayttaja portti)]
     (is (= 200 (:status vastaus)))
@@ -94,6 +95,7 @@
 (deftest hae-ilmoitukset-ytunnuksella-onnistuu-ilman-loppuaikaa
   (let [alkuaika "2022-01-01T00:00:00+03"
         y-tunnus "1565583-5"
+        _ (anna-lukuoikeus kayttaja)
         vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" alkuaika)]
                   kayttaja portti)]
     (is (= 200 (:status vastaus)))))
@@ -140,6 +142,7 @@
         _ (luo-kuittaus ilmoituksen-id ilmoitusid "vastaanotto" vastaanotto-kuitattu)
         _ (luo-kuittaus ilmoituksen-id ilmoitusid "aloitus" aloitus-kuitattu)
         _ (luo-kuittaus ilmoituksen-id ilmoitusid "lopetus" lopetus-kuitattu)
+        _ (anna-lukuoikeus kayttaja)
         vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" haku-timestamp-51min-sitten "/" haku-timestamp-45min-sitten)]
                   kayttaja portti)
         siivotut-ilmoitukset (poista-ilmoista-turhat (cheshire/decode (:body vastaus)))
@@ -151,10 +154,12 @@
     (is (= (str-timestamp->json-ajaksi vastaanotto-kuitattu) (get (first kuittaukset) "kuitattu")))
     (is (= (str-timestamp->json-ajaksi aloitus-kuitattu) (get (second kuittaukset) "kuitattu")))
     (is (= (str-timestamp->json-ajaksi lopetus-kuitattu) (get (nth kuittaukset 2) "kuitattu")))))
+
 (deftest hae-ilmoitukset-ytunnuksella-epaonnistuu-ei-kayttoikeutta
   (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         y-tunnus "1234567-8"
+        _ (anna-lukuoikeus kayttaja)
         vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" alkuaika "/" loppuaika)]
                   kayttaja portti)
         odotettu-vastaus-json "{\"virheet\":[{\"virhe\":{\"koodi\":\"kayttajalla-puutteelliset-oikeudet\",\"viesti\":\"Käyttäjällä: yit-rakennus ei ole oikeuksia organisaatioon: 1234567-8\"}}]}"]
@@ -165,6 +170,7 @@
     (let [alkuaika (.format (SimpleDateFormat. "YY-MM-d'T'HH:mm:ssX") (Date.))
           loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
           y-tunnus "1565583-5"
+          _ (anna-lukuoikeus kayttaja)
           vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" alkuaika "/" loppuaika)]
                     kayttaja portti)]
       (is (= 400 (:status vastaus)))
