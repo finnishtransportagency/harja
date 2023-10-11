@@ -310,7 +310,7 @@
   (let [on-oikeus (if vaadittu-api-oikeus
                     ;; vaadittu-api-oikeus voi olla nil esim testitapauksissa, joten riittää, että on järjestelmä käyttäjä
                     (kayttajat/onko-jarjestelma-ja-api-oikeus? db {:kayttajanimi (:kayttajanimi kayttaja)
-                                                                   :api-oikeus vaadittu-api-oikeus})
+                                                                   :api-oikeus (name vaadittu-api-oikeus)})
                     (kayttajat/onko-jarjestelma? db {:kayttajanimi (:kayttajanimi kayttaja)}))]
     (if (nil? on-oikeus)
       (do
