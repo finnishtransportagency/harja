@@ -441,24 +441,14 @@ CASE WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE ELSE FALSE END))) AS
            WHEN ek.tyyppi = 'lupausbonus' THEN 'lupausbonus'
            WHEN ek.tyyppi = 'alihankintabonus' THEN 'alihankintabonus'
            ELSE 'bonus' END     AS maksutyyppi,
-       CASE
-           WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN 'rahavaraus'
-           ELSE 'bonus' END     AS toimenpideryhma,
-       CASE
-           WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN 'Tilaajan rahavaraus (T3)'
-           ELSE MIN(ek.tyyppi)::TEXT END AS tehtava_nimi,
-       CASE
-           WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN 'MHU Ylläpito'
-           ELSE 'bonukset' END  AS toimenpide,
+       'bonus'                  AS toimenpideryhma,
+       MIN(ek.tyyppi)::TEXT     AS tehtava_nimi,
+       'bonukset'               AS toimenpide,
        MIN(ek.luotu)            AS luotu,
        MIN(ek.pvm)::TEXT        AS ajankohta,
-       CASE
-           WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN 'toteutunut'
-           ELSE 'bonus' END     AS toteutunut,
+       'bonus'                  AS toteutunut,
        0                        AS jarjestys,
-       CASE
-           WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN 'rahavaraukset'
-           ELSE 'bonukset' END  AS paaryhma,
+       'bonukset'               AS paaryhma,
        NOW()                    AS indeksikorjaus_vahvistettu -- erilliskustannuksia ei indeksivahvisteta, joten ne on aina "true"
 FROM erilliskustannus ek
      JOIN urakka u ON ek.urakka = u.id,
