@@ -94,7 +94,7 @@
                             ;; Destrukturoi ja uudelleennimeä (:enumlabel @api-oikeudet-atom)
                             (mapv (fn [{oikeus :enumlabel}]
                                     [:span.api-tunnus-alasveto-valinnat
-                                     oikeus
+                                     (str/replace oikeus "kirjoitus" "kirjoitus + luku")
                                      [:div [:input {:type "checkbox"
                                                     :checked (some #(= % oikeus) kayttajan-oikeudet)
                                                     :on-change #(let [valittu? (-> % .-target .-checked)]
@@ -103,7 +103,7 @@
                                                                   (tiedot/aseta-oikeudet-kayttajalle kayttajanimi oikeus valittu?))}]]])
                               @api-oikeudet-atom)]]]
                          ;; Kun gridi ei ole muokattava, näytetään käyttäjän oikeudet 
-                         [:span (str/join ", " kayttajan-oikeudet)]))}]
+                         [:span (str/replace (str/join ", " kayttajan-oikeudet) "kirjoitus" "kirjoitus + luku")]))}]
       @jarjestelmatunnukset-atom]]))
 
 (defn jarjestelmatunnuksen-lisaoikeudet [kayttaja-id]
