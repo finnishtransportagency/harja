@@ -260,14 +260,14 @@
         (kasittele-kevyesti-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
           (fn [parametrit kayttaja db]
             (hae-ilmoitukset-ytunnuksella db parametrit kayttaja))
-          "luku")))
+          :luku)))
     (julkaise-reitti
       http :hae-ilmoitukset-ytunnuksella
       (GET "/api/ilmoitukset/:ytunnus/:alkuaika" request
         (kasittele-kevyesti-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
           (fn [parametrit kayttaja db]
             (hae-ilmoitukset-ytunnuksella db parametrit kayttaja))
-          "luku")))
+          :luku)))
 
 
     ;; Tässä rajapinnassa on virheellisesti kauttaviiva. Rajapinta duplikoitu ilman kauttaviivaa,
@@ -280,14 +280,14 @@
                          (fn [parametrit data _ db]
                            (log/warn ":kirjaa-ilmoitustoimenpide kutsuttu kauttaviivalla osoitteen lopussa!")
                            (kirjaa-ilmoitustoimenpide db tloik parametrit data))
-             "kirjoitus")))
+             :kirjoitus)))
 
     (julkaise-reitti
       http :kirjaa-ilmoitustoimenpide
       (PUT "/api/ilmoitukset/:id" request
         (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/ilmoitustoimenpiteen-kirjaaminen json-skeemat/kirjausvastaus
           (fn [parametrit data _ db] (kirjaa-ilmoitustoimenpide db tloik parametrit data))
-          "kirjoitus")))
+          :kirjoitus)))
     this)
 
   (stop [{http :http-palvelin :as this}]

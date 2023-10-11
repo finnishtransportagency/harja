@@ -36,7 +36,7 @@
 (defn palvelut []
   [{:palvelu :kirjaa-urakan-tyotunnit
     :polku "/api/urakat/:id/tyotunnit"
-    :api-oikeus "kirjoitus"
+    :api-oikeus :kirjoitus
     :tyyppi :POST
     :kutsu-skeema json-skeemat/urakan-tyotuntien-kirjaus-request
     :vastaus-skeema json-skeemat/kirjausvastaus

@@ -50,7 +50,7 @@
 (def hakutyypit
   [{:palvelu :hae-urakan-materiaaliraportti
     :polku "/api/urakat/:id/raportit/materiaali/:alkupvm/:loppupvm"
-    :api-oikeus "luku"
+    :api-oikeus :luku
     :vastaus-skeema json-skeemat/raportti-materiaaliraportti-response
     :kasittely-fn (fn [parametrit _ kayttaja db]
                     (hae-urakan-materiaaliraportti db parametrit kayttaja))}])

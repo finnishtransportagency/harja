@@ -103,14 +103,14 @@
                                         :tallenna-tyokoneenseurantakirjaus
                                         request json-skeemat/tyokoneenseuranta-kirjaus json-skeemat/kirjausvastaus
                                         tallenna-seurantakirjaus
-                         "kirjoitus")))
+                         :kirjoitus)))
     (julkaise-reitti http :tallenna-tyokoneen-reitti
                      (POST +tyokone-reitti-url+ request
                        (kasittele-kutsu db nil
                                         :tallenna-tyokoneen-reitti
                                         request json-skeemat/tyokoneenseuranta-kirjaus-viivageometrialla json-skeemat/kirjausvastaus
                                         tallenna-seurantakirjaus-viivageometriana
-                         "kirjoitus")))
+                         :kirjoitus)))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :tallenna-tyokoneenseurantakirjaus

@@ -432,7 +432,7 @@
           json-skeemat/tyomaapaivakirja-kirjaus-response
           (fn [parametrit data kayttaja db]
             (kirjaa-tyomaapaivakirja db parametrit data kayttaja))
-          "kirjoitus"))
+          :kirjoitus))
       true)
     (julkaise-reitti
       http :paivita-tyomaapaivakirja
@@ -445,7 +445,7 @@
           json-skeemat/tyomaapaivakirja-kirjaus-response
           (fn [parametrit data kayttaja db]
             (kirjaa-tyomaapaivakirja db parametrit data kayttaja))
-          "kirjoitus"))
+          :kirjoitus))
       true)
     (julkaise-palvelu (:http-palvelin this)
       :hae-tyomaapaivakirjan-versiotiedot

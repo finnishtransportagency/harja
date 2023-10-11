@@ -28,7 +28,7 @@
         (kasittele-kutsu db integraatioloki :ping-sisaan request nil json-skeemat/kirjausvastaus
                          (fn [_ _ _ _]
                            (tarkista-yhteydet db))
-          "ping")))
+          :ei-api-oikeustarkastusta)))
     this)
 
   (stop [{http :http-palvelin :as this}]

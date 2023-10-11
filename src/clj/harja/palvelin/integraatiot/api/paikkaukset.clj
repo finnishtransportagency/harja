@@ -133,7 +133,7 @@
                          json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
                            (kirjaa-paikkaus db parametrit data kayttaja))
-          "kirjoitus"))
+          :kirjoitus))
       true)
     (julkaise-reitti
       http :kirjaa-paikkaustoteuma
@@ -146,7 +146,7 @@
                          json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
                            (kirjaa-paikkaustoteuma db parametrit data kayttaja))
-          "kirjoitus"))
+          :kirjoitus))
       true)
     (julkaise-reitti
       http :poista-paikkaustiedot
@@ -159,7 +159,7 @@
                          json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
                            (poista-paikkaustiedot db yha-paikkaus parametrit data kayttaja))
-          "kirjoitus"))
+          :kirjoitus))
       true)
     this)
 

@@ -34,7 +34,7 @@
                   json-skeemat/laatupoikkeaman-kirjaus
                   json-skeemat/kirjausvastaus
                   (fn [_])
-                  "luku")]
+                  :luku)]
     (is (= 400 (:status vastaus)))
     (is (= {"Content-Type" "application/json" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
     (is (.contains (:body vastaus) "invalidi-json"))))
@@ -72,7 +72,7 @@
                          json-skeemat/laatupoikkeaman-kirjaus
                          json-skeemat/kirjausvastaus
                          (fn [_])
-                         "luku")]
+                         :luku)]
            (is (= 415 (:status vastaus)))
            (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
            (is (.contains (:body vastaus) "kutsu lomakedatan content-typellä"))))
@@ -122,7 +122,7 @@
                          json-skeemat/laatupoikkeaman-kirjaus
                          json-skeemat/kirjausvastaus
                          (fn [_])
-                         "luku")]
+                         :luku)]
            (is (= 403 (:status vastaus)))
            (is (= "http://localhost:3000" (get (:headers vastaus) "Access-Control-Allow-Origin")) "CORS-headerit palautuvat.")
            (is (.contains (:body vastaus) "tuntematon-kayttaja"))))

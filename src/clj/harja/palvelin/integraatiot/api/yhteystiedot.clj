@@ -69,7 +69,7 @@
           json-skeemat/urakan-yhteystietojen-haku-vastaus
           (fn [parametit _ kayttaja db]
             (hae-urakan-yhteystiedot db fim parametit kayttaja))
-          "luku")))
+          :luku)))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :hae-yhteystiedot)

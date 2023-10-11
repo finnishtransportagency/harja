@@ -281,7 +281,7 @@ maksimi-linnuntien-etaisyys 200)
                          (fn [parametit data kayttaja db]
                            (#'kirjaa-toteuma db db-replica
                              parametit data kayttaja))
-          "kirjoitus")))
+          :kirjoitus)))
 
     (julkaise-reitti
      http :lisaa-reittitoteuma
@@ -295,7 +295,7 @@ maksimi-linnuntien-etaisyys 200)
                          (fn [parametit data kayttaja db]
                            (#'poista-toteuma db db-replica
                                              parametit data kayttaja))
-          "kirjoitus")))
+          :kirjoitus)))
 
     this)
   (stop [{http :http-palvelin :as this}]

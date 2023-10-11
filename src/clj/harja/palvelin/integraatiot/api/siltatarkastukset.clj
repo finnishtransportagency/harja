@@ -175,7 +175,7 @@
                          json-skeemat/siltatarkastuksen-kirjaus json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
                            (lisaa-siltatarkastus parametrit data kayttaja db liitteiden-hallinta))
-          "kirjoitus")))
+          :kirjoitus)))
     (julkaise-reitti
       http :api-poista-siltatarkastus
       (DELETE "/api/urakat/:id/tarkastus/siltatarkastus" request
@@ -183,7 +183,7 @@
                          json-skeemat/siltatarkastuksen-poisto json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
                            (poista-siltatarkastus parametrit data kayttaja db))
-          "kirjoitus")))
+          :kirjoitus)))
     this)
 
   (stop [{http :http-palvelin :as this}]

@@ -418,13 +418,12 @@
                        [kayttaja (hae-kayttaja db (get
                                                     (todennus/prosessoi-kayttaja-headerit (:headers request))
                                                     "oam_remote_user"))
-                        ;; Ei vaadita ping kutsulta oikeuksia 
-                        vaadittu-api-oikeus (if (= vaadittu-api-oikeus "ping")
-                                              nil
+                        ;; Tarkista api oikeus mikäli halutaan tarkistaa 
+                        vaadittu-api-oikeus (if-not (= vaadittu-api-oikeus :ei-api-oikeustarkastusta)
                                               (do
-                                                ;; Muuten tarkistetaan arvo 
                                                 (tarkista-api-oikeus vaadittu-api-oikeus)
-                                                vaadittu-api-oikeus))
+                                                vaadittu-api-oikeus)
+                                              nil)
                         _ (vaadi-api-oikeudet db kayttaja vaadittu-api-oikeus)
                         origin-header (get (:headers request) "origin")
                         kutsun-data (lue-kutsu xml? kutsun-skeema request body)
