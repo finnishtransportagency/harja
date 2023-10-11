@@ -887,14 +887,17 @@
             {:urakka-id urakka-id :toteumat varusteet}))))))
 
 (defn hae-ja-tallenna-kohdeluokan-nimikkeisto [{:keys [db]} virheet hae-token-fn konteksti
-                                               {:keys [kohdeluokka kohdeluokka->tyyppi-fn nimiavaruus]}]
+                                               {:keys [kohdeluokka kohdeluokka->tyyppi-fn nimiavaruus]}
+                                               hae-kuntoluokat?]
   (when-let [token (hae-token-fn)]
     (let [otsikot {"Content-Type" "application/json"
                    "Authorization" (str "Bearer " token)}
           http-asetukset {:metodi :GET
                           :otsikot otsikot
                           ;; TODO: Ota url asetuksista
-                          :url (str "https://apiv2stgvelho.testivaylapilvi.fi/metatietopalvelu/api/v2/metatiedot/kohdeluokka/" kohdeluokka)}
+                          :url (str/join "/"
+                                 ["https://apiv2stgvelho.testivaylapilvi.fi/metatietopalvelu/api/v2/metatiedot/kohdeluokka/"
+                                  nimiavaruus kohdeluokka])}
           {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
 
           vastaus (json/read-str vastaus :key-fn keyword)
@@ -903,30 +906,49 @@
           kohdeluokan-tyyppi-nimike (-> vastaus
                                       :components
                                       :schemas
-                                      ((keyword (str "kohdeluokka_" (str/replace kohdeluokka "/" "_"))))
+                                      ((keyword (str/join "_" ["kohdeluokka" nimiavaruus kohdeluokka])))
                                       kohdeluokka->tyyppi-fn
                                       :$ref
                                       (str/split #"/")
                                       last)
           ;; kohdeluokka-tyyppi
-          kohdeluokan-tyyppi (last (str/split kohdeluokan-tyyppi-nimike #"_"))]
+          kohdeluokan-tyyppi (last (str/split kohdeluokan-tyyppi-nimike #"_"))
 
-      ;; Kohdeluokilla on tyyppi, jonka avain on uniikki joka kohdeluokalle.
-      ;; Haetaan siis se saadun metatiedon kuvauksesta
-      ;; Tämän jälkeen haetaan sen kaikille versioille sen kaikki mahdolliset arvot ja tallennetaan ne kantaan.
-      ;; Tallennetaan myös tieto siitä, mille kohdeluokalle tyyppi kuuluu, jotta voidaan tunnistaa varusteen kohdeluokka sen kohdeluokkatyypistä.
-      (mapv (fn [[versio tyyppi-info]]
-              (mapv (fn [nimike]
-                      (let [[tyyppi-avain nimi] (str/split nimike #"/")]
-                        (q-nimikkeistot/luo-velho-nimikkeisto<! db
-                          {:tyyppi-avain tyyppi-avain
-                           :kohdeluokka (last (str/split kohdeluokka #"/"))
-                           :nimiavaruus nimiavaruus
-                           :nimi nimi
-                           :versio (Integer/parseInt (name versio))
-                           :otsikko (:otsikko ((keyword tyyppi-avain nimi) tyyppi-info))})))
-                (get-in vastaus [:components :schemas (keyword kohdeluokan-tyyppi-nimike) :enum])))
-        (-> vastaus :info :x-velho-nimikkeistot ((keyword nimiavaruus kohdeluokan-tyyppi)) :nimikkeistoversiot)))))
+          ;; Kohdeluokilla on tyyppi, jonka avain on uniikki joka kohdeluokalle.
+          ;; Haetaan siis se saadun metatiedon kuvauksesta
+          ;; Tämän jälkeen haetaan sen kaikille versioille sen kaikki mahdolliset arvot ja tallennetaan ne kantaan.
+          ;; Tallennetaan myös tieto siitä, mille kohdeluokalle tyyppi kuuluu, jotta voidaan tunnistaa varusteen kohdeluokka sen kohdeluokkatyypistä.
+          kohdeluokkatyyppien-haku-onnistui?
+          (seq (mapv (fn [[versio tyyppi-info]]
+                       (mapv (fn [nimike]
+                               (let [[tyyppi-avain nimi] (str/split nimike #"/")]
+                                 (q-nimikkeistot/luo-velho-nimikkeisto<! db
+                                   {:tyyppi-avain tyyppi-avain
+                                    :kohdeluokka kohdeluokka
+                                    :nimiavaruus nimiavaruus
+                                    :nimi nimi
+                                    :versio (Integer/parseInt (name versio))
+                                    :otsikko (:otsikko ((keyword tyyppi-avain nimi) tyyppi-info))})))
+                         (get-in vastaus [:components :schemas (keyword kohdeluokan-tyyppi-nimike) :enum])))
+                 (-> vastaus :info :x-velho-nimikkeistot ((keyword nimiavaruus kohdeluokan-tyyppi)) :nimikkeistoversiot)))
+
+          kuntoluokkien-haku-onnistui?
+          (seq (when hae-kuntoluokat?
+                 (mapv (fn [[versio kuntoluokka-info]]
+                         (mapv (fn [kuntoluokka]
+                                 (let [[nimiavaruus kuntoluokka] (str/split kuntoluokka #"/")]
+                                   (q-nimikkeistot/luo-velho-nimikkeisto<! db
+                                     {:tyyppi-avain ""
+                                      :kohdeluokka ""
+                                      :nimiavaruus nimiavaruus
+                                      :nimi kuntoluokka
+                                      :versio (Integer/parseInt (name versio))
+                                      :otsikko (:otsikko ((keyword nimiavaruus kuntoluokka) kuntoluokka-info))}))
+                                 ) (-> vastaus :components :schemas :nimikkeisto_kunto-ja-vauriotiedot_kuntoluokka :enum)))
+                   (-> vastaus :info :x-velho-nimikkeistot :kunto-ja-vauriotiedot/kuntoluokka :nimikkeistoversiot))))]
+
+      {:kohdeluokkatyyppien-haku-onnistui? kohdeluokkatyyppien-haku-onnistui?
+       :kuntoluokkien-haku-onnistui? kuntoluokkien-haku-onnistui?})))
 
 (defn tuo-velho-nimikkeisto [{db :db integraatioloki :integraatioloki
                               {:keys [token-url varuste-kayttajatunnus varuste-salasana]} :asetukset :as this}]
@@ -937,10 +959,15 @@
                             (fn [x]
                               (swap! virheet conj (str "Virhe velho token haussa " x))
                               (log/error "Virhe velho token haussa" x)))]
-        (loop [kohdeluokat +tietolajien-lahteet+]
+        (loop [kohdeluokat +tietolajien-lahteet+
+               hae-kohdeluokat? true]
           (when-not (empty? kohdeluokat)
-            (hae-ja-tallenna-kohdeluokan-nimikkeisto this virheet hae-token-fn konteksti (first kohdeluokat))
-            (recur (rest kohdeluokat))))
+            ;; TODO: Paranna virheiden lokitusta. Kohdeluokan nimikkeistön epäonnistuessa älä keskeytä koko integraatiota
+            ;;       vaan lokita virhe ja jatka.
+            (let [{:keys [kuntoluokkien-haku-onnistui?]}
+                  (hae-ja-tallenna-kohdeluokan-nimikkeisto
+                    this virheet hae-token-fn konteksti (first kohdeluokat) hae-kohdeluokat?)]
+              (recur (rest kohdeluokat) (and hae-kohdeluokat? (not kuntoluokkien-haku-onnistui?))))))
 
         (when-not (empty? @virheet)
           (log/error "Velhon nimikkeistön tuonnissa virheitä!" @virheet))))))
