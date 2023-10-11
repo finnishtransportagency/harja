@@ -162,9 +162,7 @@
                                                                           (e! (v/->HaeVarusteet :harja nil))) {:luokka "nappi-korkeus-32"
                                                                                                            :disabled false
                                                                                                            :ikoni (ikonit/livicon-search)}]
-          [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä" #(do
-                                                                    (e! (v/->TaydennaTR-osoite-suodatin tie aosa aeta losa leta))
-                                                                    (e! (v/->HaeVarusteet :velho @varustetyypit))) {:luokka "nappi-korkeus-32"
+          [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä" #(e! (v/->HaeVarusteet :velho @varustetyypit)) {:luokka "nappi-korkeus-32"
                                                                                                                     :disabled false
                                                                                                                     :ikoni (ikonit/livicon-search)}]
           [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet (pvm/vuosi (get-in app [:urakka :alkupvm]))))

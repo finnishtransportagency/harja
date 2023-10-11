@@ -781,7 +781,7 @@
 (defn hae-urakan-varustetoteumat [integraatioloki db {:keys [token-url
                                                              varuste-kayttajatunnus
                                                              varuste-salasana]}
-                                  {:keys [urakka-id kohdeluokat varustetyypit] :as tiedot}]
+                                  {:keys [urakka-id kohdeluokat varustetyypit tie aosa aeta losa leta] :as tiedot}]
   (integraatiotapahtuma/suorita-integraatio db integraatioloki "velho" "varustetoteumien-haku" nil
     (fn [konteksti]
       (let [virheet (atom #{})]
@@ -802,10 +802,26 @@
 
                 varustetyypit (group-by :kohdeluokka varustetyypit)
 
-                varustetyyppi-parametrit (mapv (fn [[kohdeluokka varustetyypit]]
-                                                 (let [kohdeluokka (first (filter #(= (:kohdeluokka %) kohdeluokka) kohdeluokat))]
-                                                   (tee-varustetyyppi-hakuparametri varustetyypit kohdeluokka)))
-                                           varustetyypit)
+                varustetyyppi-parametrit (when (seq varustetyypit)
+                                           (into ["tai"]
+                                             (mapv (fn [[kohdeluokka varustetyypit]]
+                                                     (let [kohdeluokka (first (filter #(= (:kohdeluokka %) kohdeluokka) kohdeluokat))]
+                                                       (tee-varustetyyppi-hakuparametri varustetyypit kohdeluokka)))
+                                               varustetyypit)))
+
+                tieosoite-parametri (when tie
+                                      (if losa
+                                        ["kohteen-tieosoite-valilla"
+                                         (cond-> {:tie tie}
+                                           aosa (assoc :osa aosa)
+                                           aeta (assoc :etaisyys aeta))
+                                         (cond-> {:tie tie}
+                                           losa (assoc :osa aosa)
+                                           leta (assoc :etaisyys leta))]
+                                        ["kohteen-tieosoite"
+                                         (cond-> {:tie tie}
+                                           aosa (assoc :osa aosa)
+                                           aeta (assoc :etaisyys aeta))]))
 
                 payload {:asetukset {:tyyppi "kohdeluokkahaku"
                                      :liitoshaku true
@@ -819,9 +835,8 @@
                                        ["yleiset/perustiedot"
                                         "muutoksen-lahde-oid"]
                                        [urakka-velho-oid]]]
-                                     (when (seq varustetyyppi-parametrit)
-                                       (into ["tai"]
-                                         varustetyyppi-parametrit))])}
+                                     varustetyyppi-parametrit
+                                     tieosoite-parametri])}
                 {vastaus :body
                  _ :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
                 varusteet (:osumat (json/read-str vastaus :key-fn keyword))
