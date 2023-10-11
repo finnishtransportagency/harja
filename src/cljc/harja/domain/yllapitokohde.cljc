@@ -664,10 +664,10 @@ yllapitoluokkanimi->numero
        (let [validoitu-muoto (oikean-muotoinen-tr alustatoimenpide tr-vali-spec)
              validoitu-alustatoimenpiteiden-paallekkyys (when (empty? validoitu-muoto)
                                                           (filter #(and (tr-valit-paallekkain? alustatoimenpide %)
-                                                                        (if pot2?
-                                                                          (= (:toimenpide alustatoimenpide) (:toimenpide %))
-                                                                          (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))) ;
-                                                                  toiset-alustatoimenpiteet))
+                                                                     ;; VHAR-5627 POT2:ssa halutaan sallia sama päällekkäinen alustatoimenpide
+                                                                     (when-not pot2?
+                                                                       (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))) ;
+                                                            toiset-alustatoimenpiteet))
              kaikkien-teiden-tiedot (apply concat osien-tiedot muiden-kohteiden-osien-tiedot)
              validoitu-paikka (when (empty? validoitu-muoto)
                                 (validoi-paikka alustatoimenpide kaikkien-teiden-tiedot false))]
@@ -980,7 +980,7 @@ yllapitoluokkanimi->numero
                                   (mapv #((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:rivi-indeksi %))
                                         muukohde-paallekkyys))
         alustatoimenpiteet-paallekkain (when alustatoimenpide-paallekkyys
-                                         (mapv #((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:rivi-indeksi %))
+                                         (mapv #((get-in paallekkaisyys-virhetekstit [:alustatoimenpide :alustatoimenpiteet-paallekkain]) (:rivi-indeksi %))
                                                alustatoimenpide-paallekkyys))]
     (into {}
           (keep (fn [[k v]]

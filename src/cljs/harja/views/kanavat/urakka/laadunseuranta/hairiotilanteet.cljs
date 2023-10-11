@@ -9,7 +9,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
-            [harja.ui.kentat :refer [tee-kentta]]
+            [harja.ui.kentat :as kentat]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.debug :refer [debug]]
 
@@ -93,7 +93,8 @@
     :tyhja (if (nil? hairiotilanteet)
              [ajax-loader "Haetaan häiriötilanteita"]
              "Häiriötilanteita ei löytynyt")
-    :rivi-klikattu #(e! (tiedot/->ValitseHairiotilanne %))}
+    :rivi-klikattu #(e! (tiedot/->ValitseHairiotilanne 
+                         (assoc % ::hairiotilanne/havaintoaika (::hairiotilanne/havaintoaika %))))}
    [{:otsikko "Havaintoaika"
      :nimi
      ::hairiotilanne/havaintoaika
@@ -230,17 +231,26 @@
                        {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))}])})))
 
 (defn hairiolomake [e! {:keys [valittu-hairiotilanne valinnat tallennus-kaynnissa?] :as app} kohteet]
-  [:div
-   [napit/takaisin "Takaisin häiriölistaukseen"
-    #(e! (tiedot/->TyhjennaValittuHairiotilanne))]
-   [lomake/lomake
-    {:otsikko "Uusi häiriötilanne"
-     :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))
-     :validoi-alussa? true
-     :tarkkaile-ulkopuolisia-muutoksia? true
-     :muokkaa! #(e! (tiedot/->AsetaHairiotilanteenTiedot %))
-     :footer-fn (fn [hairiotilanne]
-                  (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))]
+  (let [valittu-kohde-id (get-in valittu-hairiotilanne [::hairiotilanne/kohde ::kohde/id])
+        valitun-kohteen-osat (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))
+        valittu-hairiotilanne-id (get-in valittu-hairiotilanne [::hairiotilanne/id])
+        uusi-hairiotilanne? (not (some? valittu-hairiotilanne-id))
+        oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))
+        disabled? (or
+                    (not oikeus?)
+                    (not (empty? (:materiaalit-taulukon-virheet valittu-hairiotilanne)))
+                    (not (tiedot/voi-tallentaa? valittu-hairiotilanne))
+                    (not (lomake/voi-tallentaa? valittu-hairiotilanne)))]
+    [:div
+     [napit/takaisin "Takaisin häiriölistaukseen"
+      #(e! (tiedot/->TyhjennaValittuHairiotilanne))]
+     [lomake/lomake
+      {:otsikko (if uusi-hairiotilanne? "Uusi häiriötilanne" "Muokkaa häiriötilannetta")
+       :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))
+       :validoi-alussa? true
+       :tarkkaile-ulkopuolisia-muutoksia? true
+       :muokkaa! #(e! (tiedot/->AsetaHairiotilanteenTiedot %))
+       :footer-fn (fn [hairiotilanne]
                     [:div
                      [:div {:style {:width "100%"}}
                       [lomake/nayta-puuttuvat-pakolliset-kentat hairiotilanne]]
@@ -248,11 +258,7 @@
                       "Tallenna"
                       #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
                       {:tallennus-kaynnissa? tallennus-kaynnissa?
-                       :disabled (or
-                                   (not oikeus?)
-                                   (not (empty? (:materiaalit-taulukon-virheet valittu-hairiotilanne)))
-                                   (not (tiedot/voi-tallentaa? valittu-hairiotilanne))
-                                   (not (lomake/voi-tallentaa? valittu-hairiotilanne)))}]
+                       :disabled disabled?}]
 
                      (when (not (nil? (::hairiotilanne/id valittu-hairiotilanne)))
                        [napit/poista
@@ -262,14 +268,35 @@
                             :sisalto [:div "Haluatko varmasti poistaa häiriötilanteen?"]
                             :hyvaksy "Poista"
                             :toiminto-fn (fn [] (e! (tiedot/->PoistaHairiotilanne hairiotilanne)))
-                            :disabled (not oikeus?)})])]))}
-    (let [valittu-kohde-id (get-in valittu-hairiotilanne [::hairiotilanne/kohde ::kohde/id])
-          valitun-kohteen-osat (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))]
+                            :disabled (not oikeus?)})])])}
+
       [{:otsikko "Havaintoaika"
         :nimi ::hairiotilanne/havaintoaika
         :pakollinen? true
-        :tyyppi :pvm-aika
-        :fmt pvm/pvm-aika-opt}
+        :tyyppi :komponentti
+        :komponentti (fn []
+                       (let [aika (::hairiotilanne/havaintoaika valittu-hairiotilanne)
+                             tallennushetken-aika? (::hairiotilanne/tallennuksen-aika? valittu-hairiotilanne)]
+                         [:div (when uusi-hairiotilanne? {:style {:padding-top "15px" :padding-bottom "10px"}})
+                          ;; Kun kirjataan uutta tapahtumaa, näytetään checkbox 
+                          (when uusi-hairiotilanne?
+                            [:span {:style {:position "relative" :bottom "10px"}}
+                             [kentat/tee-kentta {:tyyppi :checkbox
+                                                 :teksti "Käytä tallennushetken aikaa"
+                                                 :nayta-rivina? true
+                                                 :valitse! (fn []
+                                                             (e! (tiedot/->ValitseAjanTallennus tallennushetken-aika?))
+                                                             tallennushetken-aika?)}
+                              tallennushetken-aika?]])
+                          ;; Kun muokataan tapahtumaa näytetään aikavalinta
+                          (when (or
+                                  (not uusi-hairiotilanne?)
+                                  (not tallennushetken-aika?))
+                            [kentat/tee-kentta 
+                             {:tyyppi :pvm-aika} 
+                             (r/wrap
+                               aika
+                               #(e! (tiedot/->AsetaHavaintoaika %)))])]))}
        (lomake/ryhma
          {:otsikko "Sijainti tai kohde"}
          {:nimi ::hairiotilanne/sijainti
@@ -280,13 +307,13 @@
           ;; Pitää tietää onko haku käynnissä vai ei, jotta voidaan estää kohteen valinta
           ;; haun aikana
           :paikannus-kaynnissa?-atom (r/wrap (:paikannus-kaynnissa? valittu-hairiotilanne)
-                                             (fn [_]
-                                               #(e! (tiedot/->KytkePaikannusKaynnissa))))
+                                       (fn [_]
+                                         #(e! (tiedot/->KytkePaikannusKaynnissa))))
           :poista-valinta? true
           :karttavalinta-tehty-fn :kayta-lomakkeen-atomia}
          {:otsikko "Kohde"
           :disabled? (or (some? (::hairiotilanne/sijainti valittu-hairiotilanne))
-                         (:paikannus-kaynnissa? valittu-hairiotilanne))
+                       (:paikannus-kaynnissa? valittu-hairiotilanne))
           :nimi ::hairiotilanne/kohde
           :tyyppi :valinta
           :uusi-rivi? true
@@ -336,8 +363,8 @@
         :tyyppi :string
         :uusi-rivi? true
         :hae #(kayttaja/kokonimi (::hairiotilanne/kuittaaja %))
-        :muokattava? (constantly false)}])
-    valittu-hairiotilanne]])
+        :muokattava? (constantly false)}]
+      valittu-hairiotilanne]]))
 
 (defn hairiotilanteet* [e! app]
   (komp/luo

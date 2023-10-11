@@ -46,6 +46,7 @@
 
   [auraus-ja-sohjonpoisto "auraus ja sohjonpoisto" "Auraus ja sohjonpoisto"]
   [suolaus "suolaus" "Suolaus"]
+  [sohjo-ojien-teko "sohjo-ojien teko" "Sohjo-ojien teko"]
   [pistehiekoitus "pistehiekoitus" "Pistehiekoitus"]
   [linjahiekoitus "linjahiekoitus" "Linjahiekoitus"]
   [pinnan-tasaus "pinnan tasaus" "Pinnan tasaus"]
@@ -55,12 +56,15 @@
    "liik. opast. ja ohjausl. hoito seka reunapaalujen kun.pito"
    "Liikennemerkkien, opasteiden ja liikenteenohjauslaitteiden hoito sekä reunapaalujen kunnossapito"]
   [palteen-poisto "palteen poisto" "Palteen poisto"]
+  [palteen-poisto-kaiteen-alta "palteen poisto kaiteen alta" "Palteen poisto kaiteen alta"]
   [paallystetyn-tien-sorapientareen-taytto
    "paallystetyn tien sorapientareen taytto"
    "Päällystetyn tien sorapientareen täyttö"]
+  [paallystetyn-tien-polynsidonta "paallystetyn tien polynsidonta" "Päällystetyn tien pölynsidonta"]
   [ojitus "ojitus" "Ojitus"]
   [sorapientareen-taytto "sorapientareen taytto" "Sorapientareen täyttö"]
   [lumivallien-madaltaminen "lumivallien madaltaminen" "Lumivallien madaltaminen"]
+  [liikenteen-varmistaminen-kelirikkokohteessa "liikenteen varmistaminen kelirikkokohteessa" "Liikenteen varmistaminen kelirikkokohteessa"]
   [sulamisveden-haittojen-torjunta "sulamisveden haittojen torjunta" "Sulamisveden haittojen torjunta"]
   [tiestotarkastus "tiestotarkastus" "Tiestötarkastus"]
   [kelintarkastus "kelintarkastus" "Kelintarkastus"]
@@ -68,6 +72,8 @@
   [koneellinen-niitto "koneellinen niitto" "Koneellinen niitto"]
   [koneellinen-vesakonraivaus "koneellinen vesakonraivaus"
    "Koneellinen vesakonraivaus"]
+  [reunapaalujen-uusiminen "reunapaalujen uusiminen" "Reunapaalujen uusiminen"]
+  [roskien-keruu "roskien keruu" "Roskien keruu"]
   [sorateiden-muokkaushoylays "sorateiden muokkaushoylays"
    "Sorateiden muokkaushöyläys"]
   [sorateiden-polynsidonta "sorateiden polynsidonta" "Sorateiden pölynsidonta"]
@@ -113,7 +119,9 @@
            linjahiekoitus
            pinnan-tasaus
            lumivallien-madaltaminen
+           liikenteen-varmistaminen-kelirikkokohteessa
            sulamisveden-haittojen-torjunta
+           sohjo-ojien-teko
            aurausviitoitus-ja-kinostimet
            lumensiirto
            paannejaan-poisto
@@ -137,8 +145,12 @@
           siltojen-puhdistus
           liikennemerkkien-opasteiden-ja-liikenteenohjauslaitteiden-hoito-seka-reunapaalujen-kunnossapito
           palteen-poisto
+          palteen-poisto-kaiteen-alta
           paallystetyn-tien-sorapientareen-taytto
+          paallystetyn-tien-polynsidonta
           ojitus
+          reunapaalujen-uusiminen
+          roskien-keruu
           muu]})
 
 (def yllapidon-reaaliaikaseurattavat

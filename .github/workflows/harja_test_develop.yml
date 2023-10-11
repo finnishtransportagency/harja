@@ -3,8 +3,6 @@
 
 name: 'Harja: Test develop'
 
-# TODO: Toteuta workflow VHAR-8197
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: true
@@ -13,41 +11,44 @@ on:
   # Manuaalisen käynnistyksen asetukset
   workflow_dispatch:
   # Workflow ajetaan aina kun develop-branchiin tulee muutos (esim. PR mergetetään)
-  #push:
-  #  branches:
-  #    - develop
-
-# Tässä voi määritellä yhteiset permissionit kaikille jobeille workflowissa tarvittaessa
-# README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
-permissions:
-  # Contents read lupaa tarvitaan checkout actionissa
-  contents: read
-  # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-  packages: read
-
-env:
-  GH_DOCKER_REGISTRY: ghcr.io
+  push:
+    branches:
+      - develop
 
 jobs:
-  # Linter job
-  lint-clj:
-    name: "Lint Clojure"
-    runs-on: ubuntu-latest
-    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+  tests:
+    uses: ./.github/workflows/reusable_run_app_tests.yml
+    # Permissions
+    # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    # https://docs.github.com/en/actions/using-workflows/reusing-workflows#access-and-permissions
     permissions:
       # Contents read lupaa tarvitaan checkout actionissa
       contents: read
+      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
+      packages: read
+      # Actions write oikeudella voidaan esim. listata ja poistaa artifacteja
+      actions: write
+      # Tarvitaan test-reportin julkaisuun PR:ssä
+      checks: write
+    strategy:
+      # Halutaan, että kaikki testit käydään läpi.
+      # Yksittäinen flaky testi ei saa kaataa koko testimatriisia.
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä
+        configs: [
+          { testDBService: "harjadb-latest", e2eBrowsers: ['chrome'], artifactPrefix: 'harjadb-latest_' },
+          { testDBService: "harjadb-12-3.1", e2eBrowsers: ['chrome'], artifactPrefix: 'harjadb-12-3.1_' },
+        ]
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup clojure environment
-        uses: ./.github/actions/setup-clojure-env
-        with:
-          install-tools: true
-
-      # https://github.com/clj-kondo/clj-kondo/blob/master/doc/ci-integration.md
-      - name: Lint
-        continue-on-error: true
-        run: clj-kondo --lint src --config '{:output {:pattern "::{{level}} file={{filename}},line={{row}},col={{col}}::{{message}}"}}'
+    with:
+      test-db-service: ${{ matrix.configs.testDBService }}
+      e2e-browsers: ${{ toJSON(matrix.configs.e2eBrowsers) }}
+      # Artifactien nimet täytyy prefixata, jotta jokainen matrix-job tuottaa uniikit build artifactit
+      # ja nimeltään toisistaan erottuvat Test Reportit
+      artifact-prefix: ${{ matrix.configs.artifactPrefix }}
+      # Ei tehdä turhaan lint-testausta develop-branchille. Löydökset käsitellään PR:ien yhteydessä.
+      lint-clj: 'false'
+      # Develop-branchille ajetaan täysi Harja-build, joka kestää pidempään.
+      build-harja: 'full'
