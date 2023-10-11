@@ -40,9 +40,6 @@
         xsd "nikuxog_product.xsd"]
     (is (xml/validi-xml? +xsd-polku+ xsd maksuera) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
-(defn kuluvuosi []
-  (str "kulu" (pvm/vuosi (pvm/nyt))))
-
 (deftest tarkista-maksueran-sisalto
   (let [maksuera-xml (xml-zip (parse (ByteArrayInputStream. (.getBytes (html (maksuera_sanoma/maksuera-xml +maksuera+)) "UTF-8"))))]
     (is (= "2015-10-01T00:00:00" (z/xml1-> maksuera-xml :Products :Product (z/attr :start))))
@@ -51,8 +48,8 @@
     (is (= "Testimaksuera" (z/xml1-> maksuera-xml :Products :Product (z/attr :name))))
     (is (= "HA123456789" (z/xml1-> maksuera-xml :Products :Product (z/attr :objectID))))
     (is (= "SAMPOID" (z/xml1-> maksuera-xml :Products :Product :InvestmentAssociations :Allocations :ParentInvestment (z/attr :InvestmentID))))
-    (is (= (kuluvuosi) (z/xml1-> maksuera-xml :Products :Product :InvestmentResources :Resource (z/attr :resourceID))))
-    (is (= (kuluvuosi) (z/xml1-> maksuera-xml :Products :Product :InvestmentTasks :Task :Assignments :TaskLabor (z/attr :resourceID))))
+    (is (= "kulu2020" (z/xml1-> maksuera-xml :Products :Product :InvestmentResources :Resource (z/attr :resourceID))))
+    (is (= "kulu2020" (z/xml1-> maksuera-xml :Products :Product :InvestmentTasks :Task :Assignments :TaskLabor (z/attr :resourceID))))
     (is (= "Testimaksuera" (z/xml1-> maksuera-xml :Products :Product :InvestmentTasks :Task (z/attr :name))))
     (is (= "polku/talousosasto" (z/xml1-> maksuera-xml :Products :Product :OBSAssocs :OBSAssoc (z/attr= :id "LiiviKP") (z/attr :unitPath))))
     (is (= "polku/tuote" (z/xml1-> maksuera-xml :Products :Product :OBSAssocs :OBSAssoc (z/attr= :id "tuote2013") (z/attr :unitPath))))

@@ -74,7 +74,8 @@
    :tyhjennys "Tyhjennys"
    :veden-korkeus "Vedenkorkeus"
    :avaus "Sillan avaus"
-   :ei-avausta "Ei avausta"})
+   :ei-avausta "Ei avausta"
+   :ei-maaritelty "Ei määritelty"})
 
 (defn kaikki-toimenpiteet->str [toimenpide]
   (kaikki-toimenpiteet*
@@ -84,7 +85,8 @@
   ^{:private true}
   {:sulutus "Sulutus"
    :tyhjennys "Tyhjennys"
-   :veden-korkeus "Vedenkorkeus"})
+   :veden-korkeus "Vedenkorkeus"
+   :ei-maaritelty "Ei määritelty"})
 
 (def silta-toimenpiteet*
   ^{:private true}

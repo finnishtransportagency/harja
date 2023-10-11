@@ -15,8 +15,13 @@
 
 (defonce jarjestelmatunnukset
   (reaction<! [nakymassa? @nakymassa?]
-              (when nakymassa?
-                (k/post! :hae-jarjestelmatunnukset nil))))
+    (when nakymassa?
+      (k/post! :hae-jarjestelmatunnukset nil))))
+
+(defonce kaikki-api-oikeudet
+  (reaction<! [nakymassa? @nakymassa?]
+    (when nakymassa?
+      (k/post! :hae-mahdolliset-api-oikeudet nil))))
 
 (defn organisaatiovalinnat []
   (distinct (map #(select-keys % [:id :nimi]) @organisaatiot)))
@@ -24,20 +29,27 @@
 (defonce urakkavalinnat
   (reaction<! [nakymassa? @nakymassa?
                oikeus? (oikeudet/hallinta-api-jarjestelmatunnukset)]
-              (when (and nakymassa? oikeus?)
-                (k/post! :hae-urakat-lisaoikeusvalintaan nil))))
+    (when (and nakymassa? oikeus?)
+      (k/post! :hae-urakat-lisaoikeusvalintaan nil))))
 
 (defn tallenna-jarjestelmatunnukset [muuttuneet-tunnukset]
   (go (let [uudet-tunnukset (<! (k/post! :tallenna-jarjestelmatunnukset
-                                         muuttuneet-tunnukset))]
+                                  muuttuneet-tunnukset))]
         (reset! jarjestelmatunnukset uudet-tunnukset))))
 
 (defn tallenna-jarjestelmatunnuksen-lisaoikeudet [muuttuneet-oikeudet kayttaja-id tulos-atom]
   (go (let [uudet-oikeudet (<! (k/post! :tallenna-jarjestelmatunnuksen-lisaoikeudet
-                                        {:oikeudet muuttuneet-oikeudet
-                                         :kayttaja-id kayttaja-id}))]
+                                 {:oikeudet muuttuneet-oikeudet
+                                  :kayttaja-id kayttaja-id}))]
         (reset! tulos-atom uudet-oikeudet))))
 
 (defn hae-jarjestelmatunnuksen-lisaoikeudet [kayttaja-id tulos-atom]
   (go (let [oikeudet (<! (k/post! :hae-jarjestelmatunnuksen-lisaoikeudet {:kayttaja-id kayttaja-id}))]
         (reset! tulos-atom oikeudet))))
+
+(defn aseta-oikeudet-kayttajalle [kayttajanimi valittu-oikeus asetetaan?]
+  (let [http-kutsu (if asetetaan? :lisaa-kayttajalle-oikeus :poista-kayttajalta-oikeus)]
+    (k/post!
+      http-kutsu
+      {:oikeus valittu-oikeus
+       :kayttajanimi kayttajanimi})))

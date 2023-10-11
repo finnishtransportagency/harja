@@ -46,6 +46,8 @@
 (deftest tallenna-soratietarkastus
   (let [pvm (pvm/nyt)
         id (hae-vapaa-tarkastus-ulkoinen-id)
+        _ (anna-kirjoitusoikeus kayttaja)
+        _ (anna-kirjoitusoikeus kayttaja-jvh)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
                                          (json-sapluunasta "test/resurssit/api/soratietarkastus.json" pvm id))]
 
@@ -66,7 +68,8 @@
       (is (-> poista-vastaus :status (= 200))))))
 
 (deftest tallenna-virheellinen-soratietarkastus
-  (let [vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
+  (let [_ (anna-kirjoitusoikeus kayttaja)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
                                          (-> "test/resurssit/api/soratietarkastus-virhe.json"
                                              slurp))]
     (is (= 400 (:status vastaus)))
@@ -83,6 +86,7 @@
                                           " WHERE t.ulkoinen_id = " id
                                           "   AND t.poistettu IS NOT TRUE"
                                           "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))
+        _ (anna-kirjoitusoikeus kayttaja)
         tallenna-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
                                                   (json-sapluunasta "test/resurssit/api/talvihoitotarkastus.json" pvm id))]
 
@@ -98,7 +102,8 @@
       (is (= tark ["talvihoito" "jotain talvisen outoa" 15.00M "talvihoitotarkastus.jpg"
                    odotetut-pisteet]) (str "Tarkastuksen data tallentunut ok " id)))
 
-    (let [poista-vastaus (api-tyokalut/delete-kutsu
+    (let [_ (anna-kirjoitusoikeus kayttaja-jvh)
+          poista-vastaus (api-tyokalut/delete-kutsu
                            ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
                            kayttaja-jvh portti
                            (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-poisto.json" pvm id))
@@ -113,6 +118,7 @@
 
 (deftest tallenna-ja-poista-tieturvallisuustarkastus
   (let [pvm (pvm/nyt)
+        _ (anna-kirjoitusoikeus kayttaja)
         tallenna-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/tieturvallisuustarkastus"] kayttaja portti
                            (json-sapluunasta "test/resurssit/api/tieturvallisuustarkastus.json" pvm nil))
         tallennetun-tarkastuksen-ulkoinen-id 1240
@@ -132,7 +138,9 @@
                              geo/clj->pg
                              geo/geometry)])
 
-    (let [poista-vastaus (api-tyokalut/delete-kutsu
+    (let [_ (anna-kirjoitusoikeus kayttaja)
+          _ (anna-kirjoitusoikeus kayttaja-jvh)
+          poista-vastaus (api-tyokalut/delete-kutsu
                            ["/api/urakat/" urakka "/tarkastus/tieturvallisuustarkastus"]
                            kayttaja-jvh portti
                            (json-sapluunasta "test/resurssit/api/tieturvallisuustarkastus-poisto.json" pvm nil))
@@ -173,6 +181,7 @@
                       :tarkastukset [tarkastus-tarkastajan-kanssa
                                      tarkastus-ilman-tarkastajaa
                                      tarkastus-ilman-vailinasella-tarkastajalla]}
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus (api-tyokalut/post-kutsu
                   ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
                   kayttaja
@@ -199,6 +208,8 @@
                                          " WHERE t.ulkoinen_id = " id
                                          "   AND t.poistettu IS NOT TRUE"
                                          "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))
+          _ (anna-kirjoitusoikeus kayttaja)
+          _ (anna-kirjoitusoikeus kayttaja-jvh)
           vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
                     (json-sapluunasta "test/resurssit/api/talvihoitotarkastus.json" pvm id))
           vastaus2 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja-jvh portti
@@ -235,6 +246,7 @@
                                   " WHERE t.ulkoinen_id = " id
                                   "   AND t.poistettu IS NOT TRUE"
                                   "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')"))
+          _ (anna-kirjoitusoikeus kayttaja)
           vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
                     (json-sapluunasta "test/resurssit/api/talvihoitotarkastus.json" pvm id))
           vastaus2 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
@@ -275,6 +287,7 @@
                                        " WHERE t.ulkoinen_id = " ulkoinen-id
                                        "   AND t.poistettu IS NOT TRUE"
                                        "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='KariKonsultti')")))
+        _ (anna-kirjoitusoikeus "KariKonsultti")
         tallenna-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tarkastus/talvihoitotarkastus"] "KariKonsultti" portti
                            (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-tilaajan-konsultti.json" pvm ulkoinen-id))
         ;; Hae tarkastus urakoitsijalle
@@ -290,6 +303,7 @@
     (is (= 200 (:status tallenna-vastaus)))
     (is (= [] urakkavastaavan-haku) "Urakkavastaava ei löydä tarkastuksia, koska ne on konsultin tekemiä")
     (is (> (count tilaajan-haku) 0) "Tilaaja löytää tarkastukset, koska ne on konsultin tekemiä")
+    _ (anna-kirjoitusoikeus kayttaja)
     (let [poista-vastaus (api-tyokalut/delete-kutsu
                            ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
                            kayttaja portti

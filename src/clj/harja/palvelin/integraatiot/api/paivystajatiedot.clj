@@ -189,31 +189,35 @@
 
 (def palvelut
   [{:palvelu :hae-paivystajatiedot-urakka-idlla
+    :api-oikeus :luku
     :polku "/api/urakat/:id/paivystajatiedot"
     :tyyppi :GET
     :vastaus-skeema json-skeemat/paivystajatietojen-haku-vastaus
     :kasittely-fn (fn [parametrit _ kayttaja-id db]
                     (let [urakka-id (Integer/parseInt (:id parametrit))
                           pvm-vali (parsi-aikaparametrit (get parametrit "alkaen")
-                                                         (get parametrit "paattyen"))]
+                                     (get parametrit "paattyen"))]
                       (hae-paivystajatiedot-urakan-idlla db urakka-id kayttaja-id pvm-vali)))}
    {:palvelu :hae-paivystajatiedot-sijainnilla
+    :api-oikeus :luku
     :polku "/api/paivystajatiedot/haku/sijainnilla"
     :tyyppi :GET
     :vastaus-skeema json-skeemat/paivystajatietojen-haku-vastaus
     :kasittely-fn (fn [parametrit _ kayttaja-id db]
                     (hae-paivystajatiedot-sijainnilla db
-                                                      (apurit/muuta-mapin-avaimet-keywordeiksi parametrit)
-                                                      kayttaja-id))}
+                      (apurit/muuta-mapin-avaimet-keywordeiksi parametrit)
+                      kayttaja-id))}
    {:palvelu :hae-paivystajatiedot-puhelinnumerolla
+    :api-oikeus :luku
     :polku "/api/paivystajatiedot/haku/puhelinnumerolla"
     :tyyppi :GET
     :vastaus-skeema json-skeemat/paivystajatietojen-haku-vastaus
     :kasittely-fn (fn [parametrit _ kayttaja-id db]
                     (hae-paivystajatiedot-puhelinnumerolla db
-                                                           (apurit/muuta-mapin-avaimet-keywordeiksi parametrit)
-                                                           kayttaja-id))}
+                      (apurit/muuta-mapin-avaimet-keywordeiksi parametrit)
+                      kayttaja-id))}
    {:palvelu :lisaa-paivystajatiedot
+    :api-oikeus :kirjoitus
     :polku "/api/urakat/:id/paivystajatiedot"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/paivystajatietojen-kirjaus
@@ -221,6 +225,7 @@
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (kirjaa-paivystajatiedot db parametrit data kayttaja))}
    {:palvelu :poista-paivystajatiedot
+    :api-oikeus :kirjoitus
     :polku "/api/urakat/:id/paivystajatiedot"
     :tyyppi :DELETE
     :kutsu-skeema json-skeemat/paivystyksen-poisto

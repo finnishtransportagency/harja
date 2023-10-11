@@ -46,6 +46,7 @@
         odotettu-kohteen-lisatieto (fn [kohde]
                                      (case kohde
                                        4 "Kansi likainen" 9 "Saumat lohkeilleet" 19 "Korjattava" nil))
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
                                                 (-> "test/resurssit/api/siltatarkastus.json"
                                                     slurp
@@ -77,6 +78,7 @@
         tarkastusaika "2004-01-30T12:00:00Z"
         tarkastaja-etunimi "Simo"
         tarkastaja-sukunimi "Siili"
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
                                                 (-> "test/resurssit/api/virheellinen_siltatarkastus_ei_kaikkia_kohteita.json"
                                                     slurp
@@ -93,6 +95,7 @@
         tarkastusaika "2004-01-30T12:00:00Z"
         tarkastaja-etunimi "Martti"
         tarkastaja-sukunimi "Ahtisaari"
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
                                                 (-> "test/resurssit/api/siltatarkastus.json"
                                                     slurp
@@ -109,6 +112,8 @@
         tarkastusaika "2016-01-30T12:00:00Z"
         tarkastaja-etunimi "Siooo"
         tarkastaja-sukunimi "Silttttttarkaja"
+        _ (anna-kirjoitusoikeus kayttaja)
+        _ (anna-kirjoitusoikeus kayttaja-jvh)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
                                                 (-> "test/resurssit/api/siltatarkastus.json"
                                                     slurp
@@ -144,6 +149,8 @@
   (let [ulkoinen-id 787879
         tarkastusaika "2016-02-01T12:00:00Z"
         siltatunnus (first (second (hae-siltatunnukset)))
+        _ (anna-kirjoitusoikeus kayttaja)
+        _ (anna-kirjoitusoikeus kayttaja-jvh)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
                                                 (-> "test/resurssit/api/siltatarkastus.json"
                                                     slurp
@@ -170,6 +177,8 @@
         ulkoinen-id 787880
         tarkastusaika "2022-01-10T12:00:00Z"
         siltatunnus (first (second (hae-siltatunnukset)))
+        _ (anna-kirjoitusoikeus kayttaja)
+        _ (anna-kirjoitusoikeus kayttaja-jvh)
         vastaus-lisays1 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
                          (-> "test/resurssit/api/siltatarkastus-liitteella.json"
                            slurp

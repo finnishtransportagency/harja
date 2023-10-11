@@ -114,7 +114,7 @@
           json-skeemat/kirjausvastaus
           (fn [_ data kayttaja db]
             (kirjaa-tielupa liitteiden-hallinta db data kayttaja))
-          "tielupa")))
+          :tielupa)))
     this)
 
   (stop [{http :http-palvelin :as this}]
