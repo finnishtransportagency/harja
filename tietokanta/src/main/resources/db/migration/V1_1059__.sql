@@ -133,3 +133,54 @@ SET kattohinta_indeksikorjattu = indeksikorjaus.korjattu,
 FROM indeksikorjaus
 WHERE ut2.id = indeksikorjaus.ut_id
   AND indeksikorjaus.korjattu IS NOT NULL;
+
+
+-- ### Hae indeksikorjatut arvot tarkastelua varten ###
+-- -- kiinteahintainen_tyo
+-- (SELECT u.nimi, kt.id, kt.summa_indeksikorjattu
+--  FROM kiinteahintainen_tyo kt
+--           JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+--           JOIN urakka u ON tpi.urakka = u.id
+--  WHERE u.tyyppi = 'teiden-hoito'
+--    AND EXTRACT(YEAR FROM u.alkupvm) IN (2023)
+--    AND summa_indeksikorjattu IS NOT NULL
+--  GROUP BY u.nimi, kt.id, kt.summa_indeksikorjattu
+--  ORDER BY u.nimi, kt.id);
+--
+-- -- kustannusarvioitu_tyo
+-- (SELECT u.nimi, kt.id, kt.summa_indeksikorjattu
+--  FROM kustannusarvioitu_tyo kt
+--           JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+--           JOIN urakka u ON tpi.urakka = u.id
+--  WHERE u.tyyppi = 'teiden-hoito'
+--    AND EXTRACT(YEAR FROM u.alkupvm) IN (2023)
+--    AND summa_indeksikorjattu IS NOT NULL
+--  GROUP BY u.nimi, kt.id, kt.summa_indeksikorjattu
+--  ORDER BY u.nimi, kt.id);
+--
+-- -- johto_ja_hallintokorvaus
+-- (SELECT u.nimi, jk.id, jk.tuntipalkka_indeksikorjattu
+--  FROM johto_ja_hallintokorvaus jk
+--           JOIN urakka u ON jk."urakka-id" = u.id
+--  WHERE u.tyyppi = 'teiden-hoito'
+--    AND EXTRACT(YEAR FROM u.alkupvm) IN (2023)
+--    AND tuntipalkka_indeksikorjattu IS NOT NULL
+--  GROUP BY u.nimi, jk.id, jk.tuntipalkka_indeksikorjattu
+--  ORDER BY u.nimi, jk.id);
+--
+-- -- urakka_tavoite
+-- (SELECT u.nimi,
+--         ut.id,
+--         ut.tavoitehinta_indeksikorjattu,
+--         ut.tavoitehinta_siirretty_indeksikorjattu,
+--         ut.kattohinta_indeksikorjattu
+--  FROM urakka_tavoite ut
+--           JOIN urakka u ON ut.urakka = u.id
+--  WHERE u.tyyppi = 'teiden-hoito'
+--    AND EXTRACT(YEAR FROM u.alkupvm) IN (2023)
+--    AND (ut.tavoitehinta_indeksikorjattu IS NOT NULL
+--      OR ut.tavoitehinta_siirretty_indeksikorjattu IS NOT NULL
+--      OR ut.kattohinta_indeksikorjattu IS NOT NULL)
+--  GROUP BY u.nimi, ut.id, ut.tavoitehinta_indeksikorjattu, ut.tavoitehinta_siirretty_indeksikorjattu,
+--           ut.kattohinta_indeksikorjattu
+--  ORDER BY u.nimi, ut.id);
