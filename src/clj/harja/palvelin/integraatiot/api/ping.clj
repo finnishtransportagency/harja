@@ -27,7 +27,8 @@
       (GET "/api/ping" request
         (kasittele-kutsu db integraatioloki :ping-sisaan request nil json-skeemat/kirjausvastaus
                          (fn [_ _ _ _]
-                           (tarkista-yhteydet db)))))
+                           (tarkista-yhteydet db))
+          "ping")))
     this)
 
   (stop [{http :http-palvelin :as this}]
