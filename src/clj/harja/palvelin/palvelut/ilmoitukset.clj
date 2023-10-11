@@ -135,11 +135,15 @@
                  aloituskuittaukset))]
     aloituskuittauksia-annetuna-ajan-valissa))
 
+(defn- edellisen-kuukauden-alku-ja-loppu []
+  (let [edellinen-kk (pvm/ed-kk-aikavalina (pvm/joda-timeksi (pvm/nyt)))]
+    [(first edellinen-kk) (second edellinen-kk)]))
+
 (defn- parsi-kalenterikuukausi [vakioaikavali]
   (let [kalenterikuukausi (:kalenterikuukausi vakioaikavali)]
     (cond
-      (= :kuluva kalenterikuukausi) [(pvm/taman-kuun-eka) (pvm/nyt)]
-      (= :edellinen kalenterikuukausi) [(pvm/viime-kuun-eka) (pvm/viime-kuun-viimeinen)]
+      (= :kuluva kalenterikuukausi) [(pvm/paivan-alussa (pvm/kuukauden-ensimmainen-paiva (pvm/nyt))) (pvm/nyt)]
+      (= :edellinen kalenterikuukausi) (edellisen-kuukauden-alku-ja-loppu)
       :else (throw (IllegalArgumentException. (format "Tuntematon kalenterikuukausiaikaväli %s" kalenterikuukausi))))))
 (defn- parsi-vakio-ajan-alku-ja-loppu [vakioaikavali]
   (if-let [tunteja (:tunteja vakioaikavali)]

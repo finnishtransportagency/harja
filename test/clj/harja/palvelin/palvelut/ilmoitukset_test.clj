@@ -13,8 +13,9 @@
             [com.stuartsierra.component :as component]
             [clj-time.core :as t]
             [clj-time.coerce :as c])
-  (:import (java.time LocalDateTime Month YearMonth ZoneId)
-           (java.util Date)))
+  (:import (java.time LocalDateTime Month ZoneId)
+           (java.util Date)
+           (org.joda.time DateTime)))
 
 (defn jarjestelma-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
@@ -465,7 +466,7 @@
               (is (t/equal? (c/from-sql-time (:valitetty ilmoitus)) valitetty) "Valitetty-aika on oikein.")))
 
 (deftest aikavalihaku-kuluva-kalenterikuukausi
-  (with-redefs [pvm/tama-kuu (fn [] (YearMonth/of 2005 Month/OCTOBER))
+  (with-redefs [pvm/joda-timeksi (fn [] (DateTime. 2005 10 20 13 15 0))
                 pvm/nyt (fn [] (pvm/luo-pvm-dec-kk 2005 10 20))]
   (let [parametrit {:hallintayksikko nil
                     :urakka nil
@@ -482,8 +483,7 @@
     (is (some #(= "Soittakaa Sepolle" (:otsikko %)) ilmoitukset-palvelusta)))))
 
 (deftest aikavalihaku-edellinen-kalenterikuukausi
-  (with-redefs [pvm/tama-kuu (fn [] (YearMonth/of 2005 Month/NOVEMBER))
-                pvm/nyt (fn [] (pvm/luo-pvm-dec-kk 2005 11 20))]
+  (with-redefs [pvm/nyt (fn [] (pvm/luo-pvm-dec-kk 2005 11 20))]
     (let [parametrit {:hallintayksikko nil
                       :urakka nil
                       :hoitokausi nil
