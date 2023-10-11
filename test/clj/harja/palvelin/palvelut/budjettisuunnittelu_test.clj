@@ -236,7 +236,7 @@
     (is (= 1.068 (bs/indeksikerroin iin-indeksit 1)))
 
     ;; 2023 ja eteenpäin alkavilla urakoilla indeksien vertailukuukausi on poikkeuksellisesti elokuu, eikä syyskuu
-    (is (= 1.06 (bs/indeksikerroin raahen-mhu-2023-indeksit 1)))))
+    (is (= 1.052 (bs/indeksikerroin raahen-mhu-2023-indeksit 1)))))
 
 (deftest indeksikorjauksen-laskenta
   (is (= 112.603394 (bs/indeksikorjaa 1.12345 100.230))))
