@@ -22,23 +22,46 @@
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest huomaa-kutsu-jossa-epavalidia-json-dataa
-  (let [
-        kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
-        vastaus (kutsukasittely/kasittele-kutsu (:db jarjestelma)
-                                                (:integraatioloki jarjestelma)
-                                                "hae-urakka"
-                                                {:body kutsun-data
-                                                 :request-method :post
-                                                 :headers {"oam_remote_user" "yit-rakennus", "origin" "http://localhost:3000"}}
-                                                json-skeemat/laatupoikkeaman-kirjaus
-                                                json-skeemat/kirjausvastaus
-                                                (fn [_]))]
+  (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
+        _ (anna-lukuoikeus "yit-rakennus")
+        vastaus (kutsukasittely/kasittele-kutsu
+                  (:db jarjestelma)
+                  (:integraatioloki jarjestelma)
+                  "hae-urakka"
+                  {:body kutsun-data
+                   :request-method :post
+                   :headers {"oam_remote_user" "yit-rakennus", "origin" "http://localhost:3000"}}
+                  json-skeemat/laatupoikkeaman-kirjaus
+                  json-skeemat/kirjausvastaus
+                  (fn [_])
+                  "luku")]
     (is (= 400 (:status vastaus)))
     (is (= {"Content-Type" "application/json" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
     (is (.contains (:body vastaus) "invalidi-json"))))
 
+(deftest kutsunkasittely-parametri-ei-ole-validi
+  (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
+        _ (anna-lukuoikeus "yit-rakennus")
+        fn-tee-kutsu (fn [api-oikeus]
+                       (kutsukasittely/kasittele-kutsu
+                         (:db jarjestelma)
+                         (:integraatioloki jarjestelma)
+                         "hae-urakka"
+                         {:body kutsun-data
+                          :request-method :post
+                          :headers {"oam_remote_user" "yit-rakennus", "origin" "http://localhost:3000"}}
+                         json-skeemat/laatupoikkeaman-kirjaus
+                         json-skeemat/kirjausvastaus
+                         (fn [_])
+                         api-oikeus))
+        vastaus (fn-tee-kutsu nil)]
+    (is (= 400 (:status vastaus)))
+    (is (.contains (:body vastaus) "sisainen-kasittelyvirhe"))
+    (is (.contains (:body vastaus) "Parametri vaadittu-api-oikeus puuttuu sisäisestä kutsunkäsittelystä"))))
+
 (deftest huomaa-kutsu-jossa-vaara-content-type
          (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
+               _ (anna-lukuoikeus "yit-rakennus")
                vastaus (kutsukasittely/kasittele-kutsu
                          (:db jarjestelma)
                          (:integraatioloki jarjestelma)
@@ -48,10 +71,11 @@
                           :headers {"oam_remote_user" "yit-rakennus", "content-type" "application/x-www-form-urlencoded" "origin" "http://localhost:3000"}}
                          json-skeemat/laatupoikkeaman-kirjaus
                          json-skeemat/kirjausvastaus
-                         (fn [_]))]
-              (is (= 415 (:status vastaus)))
-              (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
-              (is (.contains (:body vastaus) "kutsu lomakedatan content-typellä"))))
+                         (fn [_])
+                         "luku")]
+           (is (= 415 (:status vastaus)))
+           (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
+           (is (.contains (:body vastaus) "kutsu lomakedatan content-typellä"))))
 
 (deftest huomaa-kutsu-sahkoposti-jossa-vaara-content-type
   (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
@@ -87,6 +111,7 @@
 
 (deftest huomaa-kutsu-jossa-tuntematon-kayttaja
          (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
+               _ (anna-lukuoikeus "tuntematon")
                vastaus (kutsukasittely/kasittele-kutsu
                          (:db jarjestelma)
                          (:integraatioloki jarjestelma)
@@ -96,10 +121,11 @@
                           :headers {"oam_remote_user" "tuntematon", "origin" "http://localhost:3000"}}
                          json-skeemat/laatupoikkeaman-kirjaus
                          json-skeemat/kirjausvastaus
-                         (fn [_]))]
-              (is (= 403 (:status vastaus)))
-              (is (= "http://localhost:3000" (get (:headers vastaus) "Access-Control-Allow-Origin")) "CORS-headerit palautuvat.")
-              (is (.contains (:body vastaus) "tuntematon-kayttaja"))))
+                         (fn [_])
+                         "luku")]
+           (is (= 403 (:status vastaus)))
+           (is (= "http://localhost:3000" (get (:headers vastaus) "Access-Control-Allow-Origin")) "CORS-headerit palautuvat.")
+           (is (.contains (:body vastaus) "tuntematon-kayttaja"))))
 
 (deftest testaa-response-headerien-lisaaminen
          (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "*" "Vary" "Origin"} (kutsukasittely/lisaa-request-headerit-cors {"Content-Type" "text/plain"} nil)) "Palauta asterix, jos Origin on nil.")
