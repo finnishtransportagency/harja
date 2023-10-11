@@ -170,11 +170,13 @@
 
 (def hakutyypit
   [{:palvelu :hae-urakka
+    :api-oikeus :luku
     :polku "/api/urakat/:id"
     :vastaus-skeema json-skeemat/urakan-haku-vastaus
     :kasittely-fn (fn [parametrit _ kayttaja-id db]
                     (hae-urakka-idlla db parametrit kayttaja-id))}
    {:palvelu :hae-kayttajan-urakat
+    :api-oikeus :luku
     :polku "/api/urakat/haku/"
     :vastaus-skeema json-skeemat/urakoiden-haku-vastaus
     :kasittely-fn (fn [parametrit _ kayttaja db]
@@ -184,6 +186,7 @@
     ;; Mahdollinen jousto tulevaisuudessa: Helppo lisätä uusia optioita esim. &crs=EPSG:4326&threshold=1000&hakutyyppi=piste,
     ;; eikä hakuparametrien järjestyksellä ole väliä.
     ;; HUOM: Tämä polku täytyy määritellä järjestyksessä ennen /haku/:y-tunnus polkua (alla), jotta kyselyä ei ohjata väärälle käsittelijälle.
+    :api-oikeus :luku
     :polku "/api/urakat/haku/sijainnilla"
     :vastaus-skeema json-skeemat/urakoiden-haku-vastaus
     :kasittely-fn (fn [parametrit _ kayttaja-id db]
@@ -193,6 +196,7 @@
    ;; TODO: Urakoiden hakua voisi yhtenäistää tulevaisuudessa.
    ;;      Olisiko y-tunnuksella haku oikeastaan /api/urakat/haku parametri &ytunnus=...?
    {:palvelu :hae-urakka-ytunnuksella
+    :api-oikeus :luku
     :polku "/api/urakat/haku/:ytunnus"
     :vastaus-skeema json-skeemat/urakoiden-haku-vastaus
     :kasittely-fn (fn [parametrit _ kayttaja-id db]
@@ -201,11 +205,11 @@
 (defrecord Urakat []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
-    (doseq [{:keys [palvelu polku vastaus-skeema kasittely-fn]} hakutyypit]
+    (doseq [{:keys [palvelu polku vastaus-skeema kasittely-fn api-oikeus]} hakutyypit]
       (julkaise-reitti
         http palvelu
         (GET polku request
-          (kasittele-kutsu db integraatioloki palvelu request nil vastaus-skeema kasittely-fn))))
+          (kasittele-kutsu db integraatioloki palvelu request nil vastaus-skeema kasittely-fn api-oikeus))))
     this)
 
   (stop [{http :http-palvelin :as this}]
