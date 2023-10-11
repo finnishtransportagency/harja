@@ -174,14 +174,16 @@
         (kasittele-kutsu db integraatioloki :lisaa-siltatarkastus request
                          json-skeemat/siltatarkastuksen-kirjaus json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
-                           (lisaa-siltatarkastus parametrit data kayttaja db liitteiden-hallinta)))))
+                           (lisaa-siltatarkastus parametrit data kayttaja db liitteiden-hallinta))
+          :kirjoitus)))
     (julkaise-reitti
       http :api-poista-siltatarkastus
       (DELETE "/api/urakat/:id/tarkastus/siltatarkastus" request
         (kasittele-kutsu db integraatioloki :poista-siltatarkastus request
                          json-skeemat/siltatarkastuksen-poisto json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
-                           (poista-siltatarkastus parametrit data kayttaja db)))))
+                           (poista-siltatarkastus parametrit data kayttaja db))
+          :kirjoitus)))
     this)
 
   (stop [{http :http-palvelin :as this}]

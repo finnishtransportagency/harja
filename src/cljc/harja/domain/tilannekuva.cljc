@@ -46,7 +46,7 @@
 
   [auraus-ja-sohjonpoisto "auraus ja sohjonpoisto" "Auraus ja sohjonpoisto"]
   [suolaus "suolaus" "Suolaus"]
-  [sohjo-ojien-teko "sohjo-ojien-teko" "Sohjo-ojien teko"]
+  [sohjo-ojien-teko "sohjo-ojien teko" "Sohjo-ojien teko"]
   [pistehiekoitus "pistehiekoitus" "Pistehiekoitus"]
   [linjahiekoitus "linjahiekoitus" "Linjahiekoitus"]
   [pinnan-tasaus "pinnan tasaus" "Pinnan tasaus"]
