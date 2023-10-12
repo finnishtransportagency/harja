@@ -27,6 +27,8 @@
                 {:nimi "12 tunnin ajalta" :tunteja 12}
                 {:nimi "1 päivän ajalta" :tunteja 24}
                 {:nimi "1 viikon ajalta" :tunteja 168}
+                {:nimi "Edellinen kalenterikuukausi" :kalenterikuukausi :edellinen}
+                {:nimi "Kuluva kalenterikuukausi" :kalenterikuukausi :kuluva}
                 {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
 
 (def toimenpiteiden-aikavalit
