@@ -135,12 +135,22 @@
                  aloituskuittaukset))]
     aloituskuittauksia-annetuna-ajan-valissa))
 
+(defn- parsi-kalenterikuukausi [{:keys [kalenterikuukausi] :as vakioaikavali}]
+    (cond
+      (= :kuluva kalenterikuukausi) [(pvm/paivan-alussa (pvm/kuukauden-ensimmainen-paiva (pvm/nyt))) (pvm/nyt)]
+      (= :edellinen kalenterikuukausi) (pvm/ed-kk-aikavalina (pvm/joda-timeksi (pvm/nyt)))
+      :else (throw (IllegalArgumentException. (format "Tuntematon kalenterikuukausiaikaväli %s" kalenterikuukausi)))))
+(defn- parsi-vakio-ajan-alku-ja-loppu [vakioaikavali]
+  (if-let [tunteja (:tunteja vakioaikavali)]
+    [(c/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt)]
+    (parsi-kalenterikuukausi vakioaikavali)))
+
 (defn aikavaliehto [hakuehdot vakioaikavali-avain alkuaika-avain loppuaika-avain]
   (let [vakioaikavali (get hakuehdot vakioaikavali-avain)
         alkuaika (get hakuehdot alkuaika-avain)
         loppuaika (get hakuehdot loppuaika-avain)]
-    (if-let [tunteja (:tunteja vakioaikavali)]
-      [(c/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt)]
+    (if (or (:tunteja vakioaikavali) (:kalenterikuukausi vakioaikavali))
+     (parsi-vakio-ajan-alku-ja-loppu vakioaikavali)
       [alkuaika loppuaika])))
 
 (defn hae-ilmoitukset
@@ -151,7 +161,8 @@
                     ilmoittaja-nimi ilmoittaja-puhelin vaikutukset
                     aihe tarkenne] :as hakuehdot}
     max-maara]
-   (let [valitetty-urakkaan-aikavali (or (:aikavali hakuehdot) (aikavaliehto hakuehdot :valitetty-urakkaan-vakioaikavali :valitetty-urakkaan-alkuaika :valitetty-urakkaan-loppuaika))
+   (let [valitetty-urakkaan-aikavali (or (:aikavali hakuehdot)
+                                       (aikavaliehto hakuehdot :valitetty-urakkaan-vakioaikavali :valitetty-urakkaan-alkuaika :valitetty-urakkaan-loppuaika))
          valitetty-urakkaan-aikavali-alku (when (first valitetty-urakkaan-aikavali)
                                     (konv/sql-timestamp (first valitetty-urakkaan-aikavali)))
          valitetty-urakkaan-aikavali-loppu (when (second valitetty-urakkaan-aikavali)
