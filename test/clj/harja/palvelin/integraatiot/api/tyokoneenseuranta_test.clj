@@ -61,7 +61,8 @@
     "turvalaite"})
 
 (deftest tallenna-tyokoneen-seurantakirjaus-uusi
-  (let [kutsu (api-tyokalut/post-kutsu
+  (let [_ (anna-kirjoitusoikeus kayttaja)
+        kutsu (api-tyokalut/post-kutsu
                 ;; kokonaan uusi tyokone, kantaan pitäisi tulla uusi rivi
                 ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneseuranta_testi.json"
                                                               slurp
@@ -74,7 +75,8 @@
       (is (= tehtavat #{"suolaus"})))))
 
 (deftest tallenna-tyokoneen-seurantakirjaus-olemassaoleva
-  (let [kutsu (api-tyokalut/post-kutsu
+  (let [_ (anna-kirjoitusoikeus kayttaja)
+        kutsu (api-tyokalut/post-kutsu
                 ;; tyokone 31337 on jo kannassa, katsotaan tuleeko uusi rivi
                 ["/api/seuranta/tyokone"] kayttaja portti (slurp "test/resurssit/api/tyokoneseuranta.json"))]
     (let [rivit
@@ -86,7 +88,8 @@
       (is (= (str (second rivit)) "POINT(429005 7198151)")))))
 
 (deftest tallenna-tyokoneen-seurantakirjaus-viivageometrialla
-  (let [kutsu (api-tyokalut/post-kutsu
+  (let [_ (anna-kirjoitusoikeus kayttaja)
+        kutsu (api-tyokalut/post-kutsu
                 ["/api/seuranta/tyokone/reitti"] kayttaja portti (slurp "test/resurssit/api/tyokoneenseurannan-kirjaus-viivageometrialla-testi.json"))
         sijainti (first (q "SELECT  st_asgeojson(sijainti) FROM tyokonehavainto WHERE tyokoneid=999"))
         tehtavat (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid = 999 ORDER BY tehtavat"))
@@ -100,7 +103,8 @@
 
 (deftest kaikkien-tehtavien-kirjaus-toimii
   (doseq [tehtava skeeman-tehtavat]
-    (let [kutsu (api-tyokalut/post-kutsu
+    (let [_ (anna-kirjoitusoikeus kayttaja)
+          kutsu (api-tyokalut/post-kutsu
                   ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneseuranta_testi.json"
                                                                 slurp
                                                                 (.replace "__TEHTAVA__" tehtava)))]

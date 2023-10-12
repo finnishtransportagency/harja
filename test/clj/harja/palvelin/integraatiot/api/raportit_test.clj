@@ -30,6 +30,7 @@
           alueurakkanumero (konv/konvertoi->int (:urakkanro urakka))
           alkupvm "2014-10-01"
           loppupvm "2015-09-30"
+          _ (anna-lukuoikeus kayttaja)
           vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id "/raportit/materiaali/" alkupvm "/" loppupvm)]
                     kayttaja portti)
 

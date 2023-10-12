@@ -3,7 +3,8 @@
   (:require
     [clojure.test :refer [deftest is use-fixtures testing]]
     [harja.pvm :as pvm]
-    [clj-time.core :as t]))
+    [clj-time.core :as t])
+  (:import (org.joda.time LocalDateTime)))
 
 (def nyt (let [tama-paiva (t/local-date 2005 10 10)]
            (t/date-time (t/year tama-paiva)
@@ -159,15 +160,17 @@
       (is (= 59 (t/minute (second tulos))))))
 
   (testing "Edellinen kuukausi aikavälina"
-    (let [tulos (pvm/ed-kk-aikavalina nyt)]
+    (let [tulos (pvm/ed-kk-aikavalina nyt)
+          alku (LocalDateTime/fromDateFields (first tulos))
+          loppu (LocalDateTime/fromDateFields (second tulos))]
       (is (= 2 (count tulos)))
-      (is (= (t/month (first tulos))
-             (t/month (second tulos))
+      (is (= (t/month alku)
+             (t/month loppu)
              (t/month (t/minus nyt (t/months 1)))))
-      (is (= 0 (t/hour (first tulos))))
-      (is (= 0 (t/minute (first tulos))))
-      (is (= 23 (t/hour (second tulos))))
-      (is (= 59 (t/minute (second tulos))))))
+      (is (= 0 (t/hour alku)))
+      (is (= 0 (t/minute alku)))
+      (is (= 23 (t/hour loppu)))
+      (is (= 59 (t/minute loppu)))))
 
   (testing "Edellinen kuukausi date vektorina tammikuu"
     (let [tulos (pvm/ed-kk-date-vektorina (pvm/joda-timeksi  (pvm/->pvm "5.1.2022")))]

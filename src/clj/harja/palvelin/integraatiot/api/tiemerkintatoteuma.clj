@@ -44,6 +44,7 @@
 (def palvelut
   [{:palvelu :kirjaa-tiemerkintatoteuma
     :polku "/api/urakat/:id/toteumat/tiemerkinta"
+    :api-oikeus :kirjoitus
     :tyyppi :POST
     :kutsu-skeema json-skeemat/urakan-tiemerkintatoteuman-kirjaus-request
     :vastaus-skeema json-skeemat/kirjausvastaus
@@ -51,6 +52,7 @@
                     (kirjaa-tiemerkintatoteuma db kayttaja parametrit data))}
    {:palvelu :poista-tiemerkintatoteuma
     :polku "/api/urakat/:id/toteumat/tiemerkinta"
+    :api-oikeus :kirjoitus
     :tyyppi :DELETE
     :kutsu-skeema json-skeemat/pistetoteuman-poisto
     :vastaus-skeema json-skeemat/kirjausvastaus

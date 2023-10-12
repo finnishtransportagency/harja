@@ -18,6 +18,7 @@ services:
     # https://github.com/finnishtransportagency/harja/pkgs/container/harja_harjadb/versions
     #image: ghcr.io/finnishtransportagency/harja_harjadb:15.3-3.3.2 (uusin vakaa)
     #image: ghcr.io/finnishtransportagency/harja_harjadb:13.11-3.3.2
+    #image: ghcr.io/finnishtransportagency/harja_harjadb:13-3.1
     #image: ghcr.io/finnishtransportagency/harja_harjadb:12-3.1
 
     container_name: harjadb
@@ -37,8 +38,29 @@ services:
       start_period: 20s
       timeout: 10s
 
-  # Vanhempaa testattavaa imagen versiota varten tehty tähän oma compose konfiguraatio, koska
+  # Vanhempia testattavia imagen versiota varten on tehty tähän omia compose konfiguraatioita, koska
   # 'latest' imagen versioissa healthcheck, volumet ym. asetukset voivat muuttua.
+
+  harjadb-13-3.1:
+    image: ghcr.io/finnishtransportagency/harja_harjadb:13-3.1
+
+    container_name: harjadb
+    networks:
+      - harja_net
+    environment:
+      HARJA_TIETOKANTA_PORTTI: 5432
+    ports:
+      - "127.0.0.1:5432:5432"
+    # Huom: Mountissa viitataan Harja-repon juuressa olevaan tietokanta-hakemistoon, jossa migraatiotiedostot ovat.
+    volumes:
+      - ../../tietokanta:/var/lib/postgresql/harja/tietokanta
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "harja", "-d", "harja" ]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+
   harjadb-12-3.1:
     image: ghcr.io/finnishtransportagency/harja_harjadb:12-3.1
 

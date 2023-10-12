@@ -13,7 +13,9 @@
             [com.stuartsierra.component :as component]
             [clj-time.core :as t]
             [clj-time.coerce :as c])
-  (:import (java.util Date)))
+  (:import (java.time LocalDateTime Month ZoneId)
+           (java.util Date)
+           (org.joda.time DateTime)))
 
 (defn jarjestelma-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
@@ -462,6 +464,106 @@
               (is (t/before? (c/from-sql-time (:valitetty-urakkaan ilmoitus)) loppuaika) "Välitetty urakkaan loppuaikaa ennen.")
               (is (t/equal? (c/from-sql-time (:ilmoitettu ilmoitus)) ilmoittettu) "Ilmoitettu-aika on oikein.")
               (is (t/equal? (c/from-sql-time (:valitetty ilmoitus)) valitetty) "Valitetty-aika on oikein.")))
+
+(deftest aikavalihaku-kuluva-kalenterikuukausi
+  (with-redefs [pvm/joda-timeksi (fn [] (DateTime. 2005 10 20 13 15 0))
+                pvm/nyt (fn [] (pvm/luo-pvm-dec-kk 2005 10 20))]
+  (let [parametrit {:hallintayksikko nil
+                    :urakka nil
+                    :hoitokausi nil
+                    :valitetty-urakkaan-vakioaikavali {:nimi "Kuluva kalenterikuukausi", :kalenterikuukausi :kuluva}
+                    :tyypit +ilmoitustyypit+
+                    :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
+                    :aloituskuittauksen-ajankohta :kaikki
+                    :hakuehto ""}
+        ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :hae-ilmoitukset +kayttaja-jvh+ parametrit)]
+    (is (= (count ilmoitukset-palvelusta) 2) "Annettu aikaväli palauttaa kaksi ilmoitusta")
+    (is (some #(= "Tiellä 6 on taas vikaa" (:otsikko %)) ilmoitukset-palvelusta))
+    (is (some #(= "Soittakaa Sepolle" (:otsikko %)) ilmoitukset-palvelusta)))))
+
+(deftest aikavalihaku-edellinen-kalenterikuukausi
+  (with-redefs [pvm/nyt (fn [] (pvm/luo-pvm-dec-kk 2005 11 20))]
+    (let [parametrit {:hallintayksikko nil
+                      :urakka nil
+                      :hoitokausi nil
+                      :valitetty-urakkaan-vakioaikavali {:nimi "Kuluva kalenterikuukausi", :kalenterikuukausi :edellinen}
+                      :tyypit +ilmoitustyypit+
+                      :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
+                      :aloituskuittauksen-ajankohta :kaikki
+                      :hakuehto ""}
+          ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :hae-ilmoitukset +kayttaja-jvh+ parametrit)]
+      (is (= (count ilmoitukset-palvelusta) 2) "Annettu aikaväli palauttaa kaksi ilmoitusta")
+      (is (some #(= "Tiellä 6 on taas vikaa" (:otsikko %)) ilmoitukset-palvelusta))
+      (is (some #(= "Soittakaa Sepolle" (:otsikko %)) ilmoitukset-palvelusta)))))
+
+(deftest aikavalihaku-kalenterikuukausi-tuntematon
+  (let [parametrit {:hallintayksikko nil
+                    :urakka nil
+                    :hoitokausi nil
+                    :valitetty-urakkaan-vakioaikavali {:nimi "Kuluva kalenterikuukausi", :kalenterikuukausi :diipadaa}
+                    :tyypit +ilmoitustyypit+
+                    :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
+                    :aloituskuittauksen-ajankohta :kaikki
+                    :hakuehto ""}
+        vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
+                       :hae-ilmoitukset +kayttaja-jvh+ parametrit)
+                  (catch Exception e e))]
+    (is (= IllegalArgumentException (type vastaus)))
+    (is (= (.getMessage vastaus) "Tuntematon kalenterikuukausiaikaväli :diipadaa"))))
+
+(defn- LocalDateTime->Date [localDateTime]
+  (Date/from (. (. localDateTime atZone (ZoneId/systemDefault)) toInstant)))
+(defn- nyt-localdatetimena [pv]
+  (LocalDateTime/of 2005 Month/OCTOBER pv 6 25))
+(deftest aikavalihaku-edellinen-tunti
+  (with-redefs [pvm/nyt (fn [] (LocalDateTime->Date (nyt-localdatetimena 11)))
+                pvm/tuntia-sitten (fn [tuntia] (LocalDateTime->Date (. (nyt-localdatetimena 11) minusHours tuntia)))]
+    (let [parametrit {:hallintayksikko nil
+                      :urakka nil
+                      :hoitokausi nil
+                      :valitetty-urakkaan-vakioaikavali {:nimi "1 tunnin ajalta" :tunteja 1}
+                      :tyypit +ilmoitustyypit+
+                      :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
+                      :aloituskuittauksen-ajankohta :kaikki
+                      :hakuehto ""}
+          ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :hae-ilmoitukset +kayttaja-jvh+ parametrit)]
+      (is (= (count ilmoitukset-palvelusta) 1) "Annettu aikaväli palauttaa yhden ilmoituksen")
+      (is (some #(= "Tiellä 6 on taas vikaa" (:otsikko %)) ilmoitukset-palvelusta)))))
+
+(deftest aikavalihaku-edellinen-12-tuntia
+  (with-redefs [pvm/nyt (fn [] (LocalDateTime->Date (nyt-localdatetimena 11)))
+                pvm/tuntia-sitten (fn [tuntia] (LocalDateTime->Date (. (nyt-localdatetimena 11) minusHours tuntia)))]
+    (let [parametrit {:hallintayksikko nil
+                      :urakka nil
+                      :hoitokausi nil
+                      :valitetty-urakkaan-vakioaikavali {:nimi "1 tunnin ajalta" :tunteja 12}
+                      :tyypit +ilmoitustyypit+
+                      :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
+                      :aloituskuittauksen-ajankohta :kaikki
+                      :hakuehto ""}
+          ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :hae-ilmoitukset +kayttaja-jvh+ parametrit)]
+      (is (= (count ilmoitukset-palvelusta) 1) "Annettu aikaväli palauttaa yhden ilmoituksen")
+      (is (some #(= "Tiellä 6 on taas vikaa" (:otsikko %)) ilmoitukset-palvelusta)))))
+
+(deftest aikavalihaku-edellinen-paiva-ei-ilmoitusta
+  (with-redefs [pvm/nyt (fn [] (LocalDateTime->Date (nyt-localdatetimena 20)))
+                ; 20 lokakuuta 2005 tienoilla ei toivottavasti ole eikä tule ilmoitusta
+                pvm/tuntia-sitten (fn [tuntia] (LocalDateTime->Date (. (nyt-localdatetimena 20) minusHours tuntia)))]
+    (let [parametrit {:hallintayksikko nil
+                      :urakka nil
+                      :hoitokausi nil
+                      :valitetty-urakkaan-vakioaikavali {:nimi "1 päivän ajalta" :tunteja 24}
+                      :tyypit +ilmoitustyypit+
+                      :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
+                      :aloituskuittauksen-ajankohta :kaikki
+                      :hakuehto ""}
+          ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :hae-ilmoitukset +kayttaja-jvh+ parametrit)]
+      (is (= (count ilmoitukset-palvelusta) 0) "Annettu aikaväli ei palauta yhtään ilmoitusta"))))
 
 (deftest hae-ilmoitus-oikeudet
   (let [hae-ilmoitus-kayttajana #(kutsu-palvelua (:http-palvelin jarjestelma)

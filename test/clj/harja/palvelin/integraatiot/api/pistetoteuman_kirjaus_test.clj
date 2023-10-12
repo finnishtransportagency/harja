@@ -20,13 +20,14 @@
 (deftest tallenna-kokonaishintainen-pistetoteuma
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
-       vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
-                                               (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
-                                                   slurp
-                                                   (.replace "__SOPIMUS_ID__" (str sopimus-id))
-                                                   (.replace "__ID__" (str ulkoinen-id))
-                                                   (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
-                                                   (.replace "__TOTEUMA_TYYPPI__" "kokonaishintainen")))]
+        _ (anna-kirjoitusoikeus kayttaja)
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
+                         (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
+                           slurp
+                           (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                           (.replace "__ID__" (str ulkoinen-id))
+                           (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
+                           (.replace "__TOTEUMA_TYYPPI__" "kokonaishintainen")))]
     (is (= 200 (:status vastaus-lisays)))
     (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
           toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
@@ -36,12 +37,12 @@
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
-                                                      (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
-                                                          slurp
-                                                          (.replace "__SOPIMUS_ID__" (str sopimus-id))
-                                                          (.replace "__ID__" (str ulkoinen-id))
-                                                          (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")
-                                                          (.replace "__TOTEUMA_TYYPPI__" "kokonaishintainen")))]
+                               (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
+                                 slurp
+                                 (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                                 (.replace "__ID__" (str ulkoinen-id))
+                                 (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")
+                                 (.replace "__TOTEUMA_TYYPPI__" "kokonaishintainen")))]
         (is (= 200 (:status vastaus-paivitys)))
         (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))]
@@ -57,6 +58,7 @@
         ulkoinen-id-1 (first ulkoiset-idt)
         ulkoinen-id-2 (second ulkoiset-idt)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
                                                 (-> "test/resurssit/api/pistetoteuma_monta.json"
                                                     slurp

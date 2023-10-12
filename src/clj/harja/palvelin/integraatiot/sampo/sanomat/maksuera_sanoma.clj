@@ -9,12 +9,9 @@
   (:import (java.util Date Calendar)))
 
 (def +xsd-polku+ "xsd/sampo/outbound/")
-
 (defn muodosta-kulu-id []
-  (str/join "" ["kulu"
-                (let [calendar (Calendar/getInstance)]
-                  (.setTime calendar (Date.))
-                  (.get calendar Calendar/YEAR))]))
+  ;; Sovittu SAMPOn kanssa, että kulu-id:ssä on aina vuosi 2020
+  "kulu2020")
 
 (defn maksueranumero [numero]
   (str/join "" ["HA" numero]))

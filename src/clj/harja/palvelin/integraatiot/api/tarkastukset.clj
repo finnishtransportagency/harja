@@ -44,42 +44,50 @@
 
 (def palvelut
   [{:palvelu :lisaa-tiestotarkastus
+    :api-oikeus :kirjoitus
     :polku "/api/urakat/:id/tarkastus/tiestotarkastus"
     :pyynto-skeema json-skeemat/tiestotarkastuksen-kirjaus
     :tyyppi :tiesto
     :metodi :post}
    {:palvelu :poista-tiestotarkastus
     :polku "/api/urakat/:id/tarkastus/tiestotarkastus"
+    :api-oikeus :kirjoitus
     :pyynto-skeema json-skeemat/tiestotarkastuksen-poisto
     :tyyppi :tiesto
     :metodi :delete}
    {:palvelu :lisaa-talvihoitotarkastus
     :polku "/api/urakat/:id/tarkastus/talvihoitotarkastus"
+    :api-oikeus :kirjoitus
     :pyynto-skeema json-skeemat/talvihoitotarkastuksen-kirjaus
     :tyyppi :talvihoito
     :metodi :post}
    {:palvelu :poista-talvihoitotarkastus
     :polku "/api/urakat/:id/tarkastus/talvihoitotarkastus"
+    :api-oikeus :kirjoitus
     :pyynto-skeema json-skeemat/talvihoitotarkastuksen-poisto
     :tyyppi :talvihoito
     :metodi :delete}
    {:palvelu :lisaa-tieturvallisuustarkastus
     :polku "/api/urakat/:id/tarkastus/tieturvallisuustarkastus"
+    :api-oikeus :kirjoitus
     :pyynto-skeema json-skeemat/tieturvallisuustarkastuksen-kirjaus
     :tyyppi :tieturvallisuus
     :metodi :post}
    {:palvelu :poista-tieturvallisuustarkastus
     :polku "/api/urakat/:id/tarkastus/tieturvallisuustarkastus"
+    :api-oikeus :kirjoitus
     :pyynto-skeema json-skeemat/tieturvallisuustarkastuksen-poisto
     :tyyppi :tieturvallisuus
     :metodi :delete}
    {:palvelu :lisaa-soratietarkastus
     :polku "/api/urakat/:id/tarkastus/soratietarkastus"
+    :api-oikeus :kirjoitus
     :pyynto-skeema json-skeemat/soratietarkastuksen-kirjaus
     :tyyppi :soratie
     :metodi :post}
    {:palvelu :poista-soratietarkastus
     :polku "/api/urakat/:id/tarkastus/soratietarkastus"
+    :api-oikeus :kirjoitus
     :pyynto-skeema json-skeemat/soratietarkastuksen-poisto
     :tyyppi :soratie
     :metodi :delete}])
@@ -87,12 +95,13 @@
 (defrecord Tarkastukset []
   component/Lifecycle
   (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta integraatioloki :integraatioloki :as this}]
-    (doseq [{:keys [palvelu polku pyynto-skeema tyyppi metodi]} palvelut]
+    (doseq [{:keys [palvelu polku pyynto-skeema tyyppi metodi api-oikeus]} palvelut]
       (let [kasittele (fn [kasittele-tarkastus-fn request]
                         (kasittele-kutsu db integraatioloki palvelu request
                                          pyynto-skeema json-skeemat/kirjausvastaus
                                          (fn [parametrit data kayttaja db]
-                                           (kasittele-tarkastus-fn db liitteiden-hallinta kayttaja tyyppi parametrit data))))]
+                                           (kasittele-tarkastus-fn db liitteiden-hallinta kayttaja tyyppi parametrit data))
+                          api-oikeus))]
         (julkaise-reitti http palvelu
                          (condp = metodi
                            :post
