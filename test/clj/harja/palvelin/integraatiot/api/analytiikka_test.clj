@@ -153,12 +153,14 @@
     (sisaltaa-perustiedot (:body poistetut))
     (is (= true (:poistettu (first (:reittitoteumat poistetut-body)))))))
 
-(deftest hae-toteumat-test-koordinaattimuunnos
-  (let [alkuaika "2015-01-19T00:00:00+03"
-        loppuaika "2015-01-19T21:00:00+03"
+(deftest hae-toteumat-test-koordinaattimuunnos-toimii
+  (let [alkuaika "2015-12-17T00:00:00+03"
+        loppuaika "2015-12-17T23:59:59+03"
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/50" )] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))
-    (sisaltaa-perustiedot (:body vastaus))))
+    (sisaltaa-perustiedot (:body vastaus))
+    ;; Sisältää lisäksi koordinaattimuunnoksen
+    (is (true? (str/includes? (:body vastaus) "koordinaatit-4326")))))
 
 (deftest hae-toteumat-test-koko-liian-pieni
   (let [alkuaika "2015-01-19T00:00:00+03"
