@@ -1020,10 +1020,10 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      (let [pvm-ed-kkna (t/minus (joda-timeksi p) (t/months 1))]
        [(paivan-alussa (kuukauden-ensimmainen-paiva pvm-ed-kkna))
         (paivan-lopussa (kuukauden-viimeinen-paiva pvm-ed-kkna))]))
-#?(:cljs
-   (let [pvm-ed-kkna (t/minus p (t/months 1))]
-     [(paivan-alussa (t/first-day-of-the-month pvm-ed-kkna))
-      (paivan-lopussa (t/last-day-of-the-month pvm-ed-kkna))])))
+  #?(:cljs
+     (let [pvm-ed-kkna (t/minus p (t/months 1))]
+       [(paivan-alussa (t/first-day-of-the-month pvm-ed-kkna))
+        (paivan-lopussa (t/last-day-of-the-month pvm-ed-kkna))])))
 
 #?(:clj
    (defn ed-kk-date-vektorina
