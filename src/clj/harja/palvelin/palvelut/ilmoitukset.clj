@@ -139,8 +139,7 @@
   (let [edellinen-kk (pvm/ed-kk-aikavalina (pvm/joda-timeksi (pvm/nyt)))]
     [(first edellinen-kk) (second edellinen-kk)]))
 
-(defn- parsi-kalenterikuukausi [vakioaikavali]
-  (let [kalenterikuukausi (:kalenterikuukausi vakioaikavali)]
+(defn- parsi-kalenterikuukausi [{:keys [kalenterikuukausi] :as vakioaikavali}]
     (cond
       (= :kuluva kalenterikuukausi) [(pvm/paivan-alussa (pvm/kuukauden-ensimmainen-paiva (pvm/nyt))) (pvm/nyt)]
       (= :edellinen kalenterikuukausi) (edellisen-kuukauden-alku-ja-loppu)
