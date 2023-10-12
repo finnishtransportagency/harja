@@ -136,8 +136,7 @@
     aloituskuittauksia-annetuna-ajan-valissa))
 
 (defn- edellisen-kuukauden-alku-ja-loppu []
-  (let [edellinen-kk (pvm/ed-kk-aikavalina (pvm/joda-timeksi (pvm/nyt)))]
-    [(first edellinen-kk) (second edellinen-kk)]))
+  (pvm/ed-kk-aikavalina (pvm/joda-timeksi (pvm/nyt)))
 
 (defn- parsi-kalenterikuukausi [{:keys [kalenterikuukausi] :as vakioaikavali}]
     (cond
