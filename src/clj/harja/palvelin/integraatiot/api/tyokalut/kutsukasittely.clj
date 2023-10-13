@@ -310,7 +310,7 @@
   (let [on-oikeus (if vaadittu-api-oikeus
                     ;; vaadittu-api-oikeus voi olla nil esim testitapauksissa, joten riittää, että on järjestelmä käyttäjä
                     (kayttajat/onko-jarjestelma-ja-api-oikeus? db {:kayttajanimi (:kayttajanimi kayttaja)
-                                                                   :api-oikeus vaadittu-api-oikeus})
+                                                                   :api-oikeus (name vaadittu-api-oikeus)})
                     (kayttajat/onko-jarjestelma? db {:kayttajanimi (:kayttajanimi kayttaja)}))]
     (if (nil? on-oikeus)
       (do
@@ -384,6 +384,13 @@
           (slurp gzip))
         (slurp body)))))
 
+(defn- tarkista-api-oikeus [api-oikeus]
+  (when (nil? api-oikeus)
+    (log/error "Parametri vaadittu-api-oikeus puuttuu sisäisestä kutsunkäsittelystä")
+    (throw+ {:type virheet/+puutteelliset-parametrit+
+             :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
+                        :viesti "Parametri vaadittu-api-oikeus puuttuu sisäisestä kutsunkäsittelystä"}]})))
+
 (defn kasittele-kutsu
   "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja
   lähetetty data on JSON/ tai XML -formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos
@@ -391,41 +398,44 @@
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
   käsittelyvirhe."
-
-  ([db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
-   (kasittele-kutsu db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn nil))
-  ([db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn vaadittu-api-oikeus]
-   (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
-     {:status 415
-      :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
-      :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
-     (let [xml? (= (kutsun-formaatti request) "xml")
-           body (lue-body request)
-           tapahtuma-id (when integraatioloki
-                          (lokita-kutsu integraatioloki resurssi request body))
-           parametrit (:params request)
-           headerit (:headers request)
-           vastaus (aja-virhekasittelyn-kanssa
-                     resurssi
-                     parametrit
-                     headerit
-                     body
-                     #(let
-                        [kayttaja (hae-kayttaja db (get
-                                                     (todennus/prosessoi-kayttaja-headerit (:headers request))
-                                                     "oam_remote_user"))
-                         _ (vaadi-api-oikeudet db kayttaja vaadittu-api-oikeus)
-                         origin-header (get (:headers request) "origin")
-                         kutsun-data (lue-kutsu xml? kutsun-skeema request body)
-                         vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
-                        (tee-vastaus 200
-                          vastauksen-skeema
-                          vastauksen-data
-                          origin-header
-                          xml?)))]
-       (when integraatioloki
-         (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
-       vastaus))))
+  [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn vaadittu-api-oikeus]
+  (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
+    {:status 415
+     :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
+     :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
+    (let [xml? (= (kutsun-formaatti request) "xml")
+          body (lue-body request)
+          tapahtuma-id (when integraatioloki
+                         (lokita-kutsu integraatioloki resurssi request body))
+          parametrit (:params request)
+          headerit (:headers request)
+          vastaus (aja-virhekasittelyn-kanssa
+                    resurssi
+                    parametrit
+                    headerit
+                    body
+                    #(let
+                       [kayttaja (hae-kayttaja db (get
+                                                    (todennus/prosessoi-kayttaja-headerit (:headers request))
+                                                    "oam_remote_user"))
+                        ;; Tarkista api oikeus mikäli halutaan tarkistaa 
+                        vaadittu-api-oikeus (if-not (= vaadittu-api-oikeus :ei-api-oikeustarkastusta)
+                                              (do
+                                                (tarkista-api-oikeus vaadittu-api-oikeus)
+                                                vaadittu-api-oikeus)
+                                              nil)
+                        _ (vaadi-api-oikeudet db kayttaja vaadittu-api-oikeus)
+                        origin-header (get (:headers request) "origin")
+                        kutsun-data (lue-kutsu xml? kutsun-skeema request body)
+                        vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
+                       (tee-vastaus 200
+                         vastauksen-skeema
+                         vastauksen-data
+                         origin-header
+                         xml?)))]
+      (when integraatioloki
+        (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
+      vastaus)))
 
 (defn kasittele-sahkoposti-kutsu
   "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja
@@ -436,7 +446,6 @@
   käsittelyvirhe.
   Hox. Tämä lähes identtinen muiden kasittele-kutsu funktioiden kanssa, mutta on eriytetty, jotta sähköpostiapin hallinta
   yksinkertaistuu"
-
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
   (if-not (= (kutsun-formaatti request) "xml")
     {:status 415
@@ -479,7 +488,6 @@
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
   käsittelyvirhe."
-
   [db integraatioloki resurssi request vastauksen-skeema kasittele-kutsu-fn vaadittu-api-oikeus]
   (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
     {:status 415
@@ -499,7 +507,8 @@
                     otsikot
                     nil
                     #(let
-                       [_ (vaadi-api-oikeudet db kayttaja vaadittu-api-oikeus)
+                       [_ (tarkista-api-oikeus vaadittu-api-oikeus)
+                        _ (vaadi-api-oikeudet db kayttaja vaadittu-api-oikeus)
                         vastauksen-data (kasittele-kutsu-fn parametrit kayttaja db)]
                        (tee-vastaus 200 vastauksen-skeema vastauksen-data (get (:headers request) "origin") xml?)))]
       (when integraatioloki
@@ -514,7 +523,6 @@
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
   käsittelyvirhe."
-
   [db integraatioloki resurssi request kasittele-kutsu-fn vaadittu-api-oikeus]
   (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
     {:status 415
@@ -534,7 +542,8 @@
                     (:headers request)
                     nil
                     #(let
-                       [_ (vaadi-api-oikeudet db kayttaja vaadittu-api-oikeus)
+                       [_ (tarkista-api-oikeus vaadittu-api-oikeus)
+                        _ (vaadi-api-oikeudet db kayttaja vaadittu-api-oikeus)
                         payload (kasittele-kutsu-fn parametrit kayttaja db)]
                        (if (nil? payload)
                          ;; Saatiin null vastaus, joka viittaa siihen, että vastaus on liian suuri käsiteltäväksi
@@ -555,7 +564,7 @@
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
   käsittelyvirhe."
-  [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
+  [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn vaadittu-api-oikeus]
 
   ;; mekanismi ei toimi asyncin kanssa, joten tämän alla oikeustarkistukset jäävät tarkistamatta
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
@@ -563,12 +572,13 @@
   (with-channel request channel
     (go
       (let [vastaus (<! (thread (kasittele-kutsu db
-                                                 integraatioloki
-                                                 resurssi
-                                                 request
-                                                 kutsun-skeema
-                                                 vastauksen-skeema
-                                                 kasittele-kutsu-fn)))]
+                                  integraatioloki
+                                  resurssi
+                                  request
+                                  kutsun-skeema
+                                  vastauksen-skeema
+                                  kasittele-kutsu-fn
+                                  vaadittu-api-oikeus)))]
         (send! channel vastaus)))))
 
 

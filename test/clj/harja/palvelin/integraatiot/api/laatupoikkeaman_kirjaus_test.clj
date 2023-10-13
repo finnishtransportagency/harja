@@ -25,6 +25,8 @@
 (deftest tallenna-laatupoikkeama
   (let [laatupoikkeamat-kannassa-ennen-pyyntoa (ffirst (q (str "SELECT COUNT(*) FROM laatupoikkeama;")))
         liitteiden-maara-ennen (first (first (q "select count(id) FROM liite")))
+        _ (anna-kirjoitusoikeus kayttaja)
+        _ (anna-kirjoitusoikeus kayttaja-jvh)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/laatupoikkeama"] kayttaja portti
                                          (-> "test/resurssit/api/laatupoikkeama.json" slurp))
         vastaus2 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/laatupoikkeama"] kayttaja-jvh portti

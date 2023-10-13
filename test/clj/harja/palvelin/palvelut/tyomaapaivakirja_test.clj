@@ -75,6 +75,7 @@
 
         ;; Generoidaan päiväkirja
         versio 1
+        _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja"] kayttaja-yit portti typa)
         typa-id (varmista-typa-tiedot typa vastaus urakka-id paivamaara versio false)
 
@@ -90,7 +91,8 @@
                (.replace "__PAIVAMAARA__" paivamaara)
                (.replace "__VERSIO__" (str versio))
                (.replace "__UUSI_SAA-ASEMA-TUNNISTE__" aseman-tunniste))
-
+        
+        _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja/" typa-id] kayttaja-yit portti typa)
         typa-id (varmista-typa-tiedot typa vastaus urakka-id paivamaara versio true)
         alkuaika (pvm/->pvm-aika "30.5.2023 00:00")
@@ -115,7 +117,7 @@
         _ (is (= vanha-s-sum 5) "Vanha sadesummaa 5")
         _ (is (= uusi-s-sum 3) "Uusi sadesumma 3")
         _ (is (= vanha-versio (dec versio)) (str "Vanha versio " (dec versio)))
-        
+
         ;; Toinen asema lisättiin
         v2-toiminto (-> muutoshistoria first second :toiminto)
         nyk-versio (-> muutoshistoria first second :uudet :versio)
@@ -265,7 +267,8 @@
                (.replace "__LÄHETYSAIKA__" "2016-01-30T12:00:00+02:00")
                (.replace "__ULKOINENID__" "123456")
                (.replace "__PAIVAMAARA__" paivamaara))
-
+        
+        _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja"] kayttaja-yit portti typa)
         typa-id (varmista-typa-tiedot typa vastaus urakka-id paivamaara 1 false)
 
@@ -344,6 +347,7 @@
                (.replace "__PAIVAMAARA__" paivamaara))
 
         versio 1
+        _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja"] kayttaja-yit portti typa)
         typa-id (varmista-typa-tiedot typa vastaus urakka-id paivamaara versio false)
 

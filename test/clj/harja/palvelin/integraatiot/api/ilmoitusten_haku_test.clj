@@ -39,118 +39,7 @@
              [:db :itmf :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
-
-(defn odotettu-ilmoitus [ilmoitettu lahetetty]
-  {"ilmoitettu" ilmoitettu
-   "ilmoittaja" {"email" "matti.meikalainen@palvelu.fi"
-                 "etunimi" "Matti"
-                 "matkapuhelin" "08023394852"
-                 "sukunimi" "Meikäläinen"}
-   "ilmoitusid" 123456789
-   "tunniste" "UV-1509-1a"
-   "ilmoitustyyppi" "toimenpidepyynto"
-   "lahettaja" {"email" "pekka.paivystaja@livi.fi"
-                "etunimi" "Pekka"
-                "sukunimi" "Päivystäjä"}
-   "lisatieto" "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."
-   "otsikko" "Korkeat vallit"
-   "paikankuvaus" "Jossain kentällä."
-   "selitteet" [{"selite" "tyomaajarjestelyihinLiittyvaIlmoitus"}
-                {"selite" "kuoppiaTiessa"}
-                {"selite" "kelikysely"}
-                {"selite" "soratienKuntoHuono"}
-                {"selite" "saveaTiella"}
-                {"selite" "liikennettaVaarantavaEsteTiella"}
-                {"selite" "irtokiviaTiella"}
-                {"selite" "kevyenLiikenteenVaylaanLiittyvaIlmoitus"}
-                {"selite" "raivausJaKorjaustoita"}
-                {"selite" "auraustarve"}
-                {"selite" "yliauraus"}
-                {"selite" "kaivonKansiRikki"}
-                {"selite" "kevyenLiikenteenVaylatOvatLiukkaita"}
-                {"selite" "routaheitto"}
-                {"selite" "avattavatPuomit"}
-                {"selite" "tievalaistusVioittunutOnnettomuudessa"}
-                {"selite" "muuKyselyTaiNeuvonta"}
-                {"selite" "soratienTasaustarve"}
-                {"selite" "tieTaiTienReunaOnPainunut"}
-                {"selite" "siltaanLiittyvaIlmoitus"}
-                {"selite" "polynsidontatarve"}
-                {"selite" "liikennevalotEivatToimi"}
-                {"selite" "kunnossapitoJaHoitotyo"}
-                {"selite" "vettaTiella"}
-                {"selite" "aurausvallitNakemaesteena"}
-                {"selite" "ennakoivaVaroitus"}
-                {"selite" "levahdysalueeseenLiittyvaIlmoitus"}
-                {"selite" "sohjonPoisto"}
-                {"selite" "liikennekeskusKuitannutLoppuneeksi"}
-                {"selite" "muuToimenpidetarve"}
-                {"selite" "hiekoitustarve"}
-                {"selite" "tietOvatJaatymassa"}
-                {"selite" "jaatavaaSadetta"}
-                {"selite" "tienvarsilaitteisiinLiittyvaIlmoitus"}
-                {"selite" "oljyaTiella"}
-                {"selite" "sahkojohtoOnPudonnutTielle"}
-                {"selite" "tieOnSortunut"}
-                {"selite" "tievalaistusVioittunut"}
-                {"selite" "testilahetys"}
-                {"selite" "tievalaistuksenLamppujaPimeana"}
-                {"selite" "virkaApupyynto"}
-                {"selite" "tiemerkintoihinLiittyvaIlmoitus"}
-                {"selite" "tulvavesiOnNoussutTielle"}
-                {"selite" "niittotarve"}
-                {"selite" "kuormaOnLevinnytTielle"}
-                {"selite" "tieOnLiukas"}
-                {"selite" "tiellaOnEste"}
-                {"selite" "harjaustarve"}
-                {"selite" "hoylaystarve"}
-                {"selite" "tietyokysely"}
-                {"selite" "paallystevaurio"}
-                {"selite" "rikkoutunutAjoneuvoTiella"}
-                {"selite" "mustaaJaataTiella"}
-                {"selite" "kevyenLiikenteenVaylillaOnLunta"}
-                {"selite" "hirviaitaVaurioitunut"}
-                {"selite" "korvauskysely"}
-                {"selite" "puitaOnKaatunutTielle"}
-                {"selite" "rumpuunLiittyvaIlmoitus"}
-                {"selite" "lasiaTiella"}
-                {"selite" "liukkaudentorjuntatarve"}
-                {"selite" "alikulkukaytavassaVetta"}
-                {"selite" "kevyenliikenteenAlikulkukaytavassaVetta"}
-                {"selite" "tievalaistuksenLamppuPimeana"}
-                {"selite" "kevyenLiikenteenVaylatOvatJaisiaJaLiukkaita"}
-                {"selite" "kuoppa"}
-                {"selite" "toimenpidekysely"}
-                {"selite" "pysakkiinLiittyvaIlmoitus"}
-                {"selite" "nakemaalueenRaivaustarve"}
-                {"selite" "vesakonraivaustarve"}
-                {"selite" "muuttuvatOpasteetEivatToimi"}
-                {"selite" "tievalaistus"}
-                {"selite" "vesiSyovyttanytTienReunaa"}
-                {"selite" "raskasAjoneuvoJumissa"}
-                {"selite" "myrskyvaurioita"}
-                {"selite" "kaidevaurio"}
-                {"selite" "liikennemerkkeihinLiittyvaIlmoitus"}
-                {"selite" "siirrettavaAjoneuvo"}
-                {"selite" "tielleOnVuotanutNestettaLiikkuvastaAjoneuvosta"}
-                {"selite" "tapahtumaOhi"}
-                {"selite" "kevyenLiikenteenVaylatOvatjaatymassa"}
-                {"selite" "tietOvatjaisiaJamarkia"}]
-   "sijainti" {"koordinaatit" {"x" 443199.0
-                               "y" 7377324.0}}
-   "tienumero" 79
-   "yhteydenottopyynto" false})
-
 ;; Apufunktiot
-(defn urakkaidt-ytunnuksella [ytunnus-str]
-  (let [idt (q-map (format "(SELECT u.id as id, u.urakkanro as urakkanro
-                             FROM urakka u
-                                  JOIN organisaatio o ON o.id = u.urakoitsija AND o.ytunnus = '%s'
-                                  -- Haetaan vain käynnissäolevista urakoista. Urakat ovat vastuussa tieliikenneilmoituksista
-                                  -- 12 h urakan päättymisvuorokauden jälkeenkin.
-                              WHERE (((u.loppupvm + interval '36 hour') >= NOW() AND (u.alkupvm + interval '36 hour') <= NOW()) OR
-                                    (u.loppupvm IS NULL AND u.alkupvm <= NOW())))" ytunnus-str))]
-    idt))
 
 (deftest hae-muuttuneet-ilmoitukset
   (u (str "UPDATE ilmoitus SET muokattu = NOW() + INTERVAL '1 hour'
@@ -195,6 +84,7 @@
   (let [kuukausi-sitten (nykyhetki-iso8061-formaatissa-menneisyyteen 30)
         huomenna (nykyhetki-iso8061-formaatissa-tulevaisuuteen 1)
         y-tunnus "1565583-5"
+        _ (anna-lukuoikeus kayttaja)
         vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" kuukausi-sitten "/"huomenna)]
                   kayttaja portti)]
     (is (= 200 (:status vastaus)))
@@ -205,6 +95,7 @@
 (deftest hae-ilmoitukset-ytunnuksella-onnistuu-ilman-loppuaikaa
   (let [alkuaika "2022-01-01T00:00:00+03"
         y-tunnus "1565583-5"
+        _ (anna-lukuoikeus kayttaja)
         vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" alkuaika)]
                   kayttaja portti)]
     (is (= 200 (:status vastaus)))))
@@ -251,6 +142,7 @@
         _ (luo-kuittaus ilmoituksen-id ilmoitusid "vastaanotto" vastaanotto-kuitattu)
         _ (luo-kuittaus ilmoituksen-id ilmoitusid "aloitus" aloitus-kuitattu)
         _ (luo-kuittaus ilmoituksen-id ilmoitusid "lopetus" lopetus-kuitattu)
+        _ (anna-lukuoikeus kayttaja)
         vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" haku-timestamp-51min-sitten "/" haku-timestamp-45min-sitten)]
                   kayttaja portti)
         siivotut-ilmoitukset (poista-ilmoista-turhat (cheshire/decode (:body vastaus)))
@@ -262,10 +154,12 @@
     (is (= (str-timestamp->json-ajaksi vastaanotto-kuitattu) (get (first kuittaukset) "kuitattu")))
     (is (= (str-timestamp->json-ajaksi aloitus-kuitattu) (get (second kuittaukset) "kuitattu")))
     (is (= (str-timestamp->json-ajaksi lopetus-kuitattu) (get (nth kuittaukset 2) "kuitattu")))))
+
 (deftest hae-ilmoitukset-ytunnuksella-epaonnistuu-ei-kayttoikeutta
   (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         y-tunnus "1234567-8"
+        _ (anna-lukuoikeus kayttaja)
         vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" alkuaika "/" loppuaika)]
                   kayttaja portti)
         odotettu-vastaus-json "{\"virheet\":[{\"virhe\":{\"koodi\":\"kayttajalla-puutteelliset-oikeudet\",\"viesti\":\"Käyttäjällä: yit-rakennus ei ole oikeuksia organisaatioon: 1234567-8\"}}]}"]
@@ -276,6 +170,7 @@
     (let [alkuaika (.format (SimpleDateFormat. "YY-MM-d'T'HH:mm:ssX") (Date.))
           loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
           y-tunnus "1565583-5"
+          _ (anna-lukuoikeus kayttaja)
           vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" alkuaika "/" loppuaika)]
                     kayttaja portti)]
       (is (= 400 (:status vastaus)))

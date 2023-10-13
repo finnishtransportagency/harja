@@ -160,12 +160,13 @@
 (defn- poista-reittipistetaso
   "Tiivistetään json formaattia poistamalla reittipiste sen jälkeen, kun sen alle on saatu koottua kaikki tiedot."
   [reitti]
-  (-> reitti
-    (assoc :aika (get-in reitti [:reittipiste :aika]))
-    (assoc :tehtavat (get-in reitti [:reittipiste :tehtavat]))
-    (assoc :koordinaatit (get-in reitti [:reittipiste :koordinaatit]))
-    (assoc :materiaalit (get-in reitti [:reittipiste :materiaalit]))
-    (dissoc :reittipiste)))
+  (cond-> reitti
+    true (assoc :aika (get-in reitti [:reittipiste :aika]))
+    true (assoc :tehtavat (get-in reitti [:reittipiste :tehtavat]))
+    true (assoc :koordinaatit (get-in reitti [:reittipiste :koordinaatit]))
+    (not (nil? (get-in reitti [:reittipiste :koordinaatit-4326]))) (assoc :koordinaatit-4326 (get-in reitti [:reittipiste :koordinaatit-4326]))
+    true (assoc :materiaalit (get-in reitti [:reittipiste :materiaalit]))
+    true (dissoc :reittipiste)))
 
 ;; Meillä ei ole tietoa, että minkä kokoinen (MB) yksi toteuma on json muodossa. Joten otetaan joku hanska-arvio
 ;; Aineistot on isoja ja se pitäisi generoida valmiiksi, jos haluaisi tietää tarkan summan. Joten hanska-arvio on
@@ -582,7 +583,7 @@
           (fn [parametrit kayttaja db]
             (palauta-toteumat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-toteumat-koko
@@ -592,7 +593,7 @@
           (fn [parametrit kayttaja db]
             (palauta-toteumat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-suunnitellut-materiaalit-hoitovuosi
@@ -602,7 +603,7 @@
           (fn [parametrit kayttaja db]
             (palauta-suunnitellut-materiaalimaarat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-suunnitellut-materiaalit-urakka
@@ -612,7 +613,7 @@
           (fn [parametrit kayttaja db]
             (palauta-urakan-suunnitellut-materiaalimaarat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-suunnitellut-tehtavamaarat-hoitovuosi
@@ -622,7 +623,7 @@
           (fn [parametrit kayttaja db]
             (palauta-suunnitellut-tehtavamaarat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-suunnitellut-tehtavamaarat-urakka
@@ -632,7 +633,7 @@
           (fn [parametrit kayttaja db]
             (palauta-urakan-suunnitellut-tehtavamaarat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-materiaalit
@@ -642,7 +643,7 @@
           (fn [parametrit kayttaja db]
             (palauta-materiaalit db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-tehtavat
@@ -652,7 +653,7 @@
           (fn [parametrit kayttaja db]
             (palauta-tehtavat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-urakat
@@ -662,7 +663,7 @@
           (fn [parametrit kayttaja db]
             (palauta-urakat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-organisaatiot
@@ -672,7 +673,7 @@
           (fn [parametrit kayttaja db]
             (palauta-organisaatiot db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
     (julkaise-reitti
       http :analytiikka-turvallisuuspoikkeamat
       (GET "/api/analytiikka/turvallisuuspoikkeamat/:alkuaika/:loppuaika" request
@@ -681,7 +682,7 @@
           (fn [parametrit kayttaja db]
             (hae-turvallisuuspoikkeamat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          "analytiikka")))
+          :analytiikka)))
     this)
 
   (stop [{http :http-palvelin :as this}]

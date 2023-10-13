@@ -218,7 +218,8 @@
                (.replace "__LÄHETYSAIKA__" "2016-01-30T12:00:00+02:00")
                (.replace "__ULKOINENID__" ulkoinenid)
                (.replace "__PAIVAMAARA__" paivamaara))
-
+        
+        _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja"] kayttaja-yit portti typa)
         vastaus-body (cheshire/decode (:body vastaus) true)
 
@@ -245,7 +246,8 @@
                (.replace "__LÄHETYSAIKA__" "2016-01-30T12:00:00+02:00")
                (.replace "__ULKOINENID__" ulkoinenid)
                (.replace "__PAIVAMAARA__" paivamaara))
-
+        
+        _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja"] kayttaja-yit portti typa)
         vastaus-body (cheshire/decode (:body vastaus) true)
         ;; Tyomaapaivakirjaid talteen
@@ -292,7 +294,8 @@
                (.replace "__LÄHETYSAIKA__" "2016-01-30T12:00:00+02:00")
                (.replace "__ULKOINENID__" ulkoinenid)
                (.replace "__PAIVAMAARA__" paivamaara))
-
+        
+        _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja"] kayttaja-yit portti typa)
         vastaus-body (cheshire/decode (:body vastaus) true)]
     (is (= "puutteelliset-parametrit") (get-in vastaus-body [:virheet 0 :virhe :koodi]))))
