@@ -89,6 +89,9 @@
    :nimiavaruus (:nimiavaruus varustetyyppi)
    :tyyppi ((comp #(str/join "/" %) (juxt :tyyppi_avain :nimi)) varustetyyppi)})
 
+(defn muodosta-kuntoluokan-hakuparametri [kuntoluokka]
+  (str/join "/" [(:nimiavaruus kuntoluokka) (:nimi kuntoluokka)]))
+
 (def +max-toteumat+ 1000)
 
 (defrecord ValitseHoitokausi [hoitokauden-alkuvuosi])
@@ -176,7 +179,8 @@
   (process-event [{lahde :lahde varustetyypit :varustetyypit} {:keys [haku-paalla valinnat] :as app}]
     (if haku-paalla
       app
-      (let [varustetyypit (map muodosta-varustetyypin-hakuparametri varustetyypit)]
+      (let [varustetyypit (map muodosta-varustetyypin-hakuparametri varustetyypit)
+            kuntoluokat (map muodosta-kuntoluokan-hakuparametri (:kuntoluokat valinnat))]
         (do
           (reset! varusteet-kartalla/karttataso-varusteet [])
           (-> app
@@ -188,9 +192,10 @@
                                  :hae-urakan-varustetoteuma-ulkoiset)
               (case lahde
                 :velho
-                (merge (select-keys valinnat [:kohdeluokat :tie :aosa :aeta :losa :leta])
+                (merge valinnat
                   {:urakka-id @harja.tiedot.navigaatio/valittu-urakka-id
-                   :varustetyypit varustetyypit})
+                   :varustetyypit varustetyypit
+                   :kuntoluokat kuntoluokat})
 
                 :harja
                 (hakuparametrit app))
@@ -279,7 +284,8 @@
   HaeNimikkeistoOnnistui
   (process-event [{:keys [vastaus]} {:keys [valinnat] :as app}]
     (assoc app
-      :nimikkeisto (group-by :kohdeluokka vastaus)
+      :kohdeluokat (dissoc (group-by :kohdeluokka vastaus) "")
+      :kuntoluokat (filter #(= "kuntoluokka" (:nimiavaruus %)) vastaus)
       :varustetyyppihaku (tee-varustetyyppihaku valinnat (group-by :kohdeluokka vastaus))))
 
   HaeNimikkeistoEpaonnistui

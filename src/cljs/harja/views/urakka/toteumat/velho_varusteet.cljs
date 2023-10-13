@@ -45,7 +45,7 @@
   ;; Varustetyypit on muista valinnoista poiketen toteutettu atomilla.
   ;; Voisi olla mahdollista toteuttaa käyttäen r/wrapia, mutta se osoittautui toistaiseksi liian haastavaksi.
   (let [varustetyypit (atom nil)]
-    (fn [e! {:keys [valinnat urakka nimikkeisto varustetyyppihaku] :as app}]
+    (fn [e! {:keys [valinnat urakka kuntoluokat kohdeluokat varustetyyppihaku] :as app}]
       (let [alkupvm (:alkupvm urakka)
             vuosi (pvm/vuosi alkupvm)
             hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
@@ -60,11 +60,14 @@
                                                    (contains? (get valinnat avain) nimi)
                                                    (nil? (get valinnat avain)))
                                        :alavetos-eritin? alasveto-eritin?}))
-            kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] v/kuntoluokat))
+            kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] (map-indexed (fn [i v]
+                                                                                        {:id i
+                                                                                         :nimi v})
+                                                                           kuntoluokat)))
             kohdeluokat (map (multimap-fn :kohdeluokat) (into ["Kaikki"] (map-indexed (fn [i v]
                                                                                         {:id i
                                                                                          :nimi v})
-                                                                           (keys nimikkeisto))))
+                                                                           (keys kohdeluokat))))
             toteumat (into [nil] (keys varuste-ulkoiset/toteuma->toimenpide-map))
             tr-kentan-valitse-fn (fn [avain]
                                    (fn [event]
@@ -154,7 +157,7 @@
            [" Kuntoluokka valittu" " Kuntoluokkaa valittu"]
            {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
             :vayla-tyyli? true
-            :fmt itse-tai-kaikki}]]
+            :fmt (comp itse-tai-kaikki :otsikko)}]]
          [:div.row
           ;; TODO: poista
           [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä VANHA" #(do

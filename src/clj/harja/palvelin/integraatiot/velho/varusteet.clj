@@ -781,7 +781,8 @@
 (defn hae-urakan-varustetoteumat [integraatioloki db {:keys [token-url
                                                              varuste-kayttajatunnus
                                                              varuste-salasana]}
-                                  {:keys [urakka-id kohdeluokat varustetyypit tie aosa aeta losa leta] :as tiedot}]
+                                  {:keys [urakka-id kohdeluokat varustetyypit kuntoluokat tie aosa aeta losa leta
+                                          hoitovuoden-kuukausi hoitokauden-alkuvuosi] :as tiedot}]
   (integraatiotapahtuma/suorita-integraatio db integraatioloki "velho" "varustetoteumien-haku" nil
     (fn [konteksti]
       (let [virheet (atom #{})]
@@ -802,7 +803,7 @@
 
                 varustetyypit (group-by :kohdeluokka varustetyypit)
 
-                varustetyyppi-parametrit (when (seq varustetyypit)
+                varustetyypit-parametri (when (seq varustetyypit)
                                            (into ["tai"]
                                              (mapv (fn [[kohdeluokka varustetyypit]]
                                                      (let [kohdeluokka (first (filter #(= (:kohdeluokka %) kohdeluokka) kohdeluokat))]
@@ -823,6 +824,38 @@
                                            aosa (assoc :osa aosa)
                                            aeta (assoc :etaisyys aeta))]))
 
+                kuntoluokat-parametri (when (seq kuntoluokat)
+                                         ["kohdeluokka" "kunto-ja-vauriotiedot/yleinen-kuntoluokka"
+                                          ["joukossa"
+                                           ["kunto-ja-vauriotiedot/yleinen-kuntoluokka"
+                                            "ominaisuudet"
+                                            "kunto-ja-vauriotiedot"
+                                            "yleinen-kuntoluokka"]
+                                           kuntoluokat]])
+
+                aikavali (if hoitovuoden-kuukausi
+                           (->>
+                             (pvm/hoitokauden-alkuvuosi-kk->pvm hoitokauden-alkuvuosi hoitovuoden-kuukausi)
+                             pvm/joda-timeksi
+                             pvm/suomen-aikavyohykkeeseen
+                             pvm/kuukauden-aikavali
+                             (map (comp pvm/pvm->iso-8601-pvm-aika-ei-ms pvm/joda-date-timeksi)))
+
+                           (->>
+                             (pvm/hoitokauden-alkuvuosi-kk->pvm hoitokauden-alkuvuosi 9)
+                             pvm/paivamaaran-hoitokausi
+                             (map (comp pvm/pvm->iso-8601-pvm-aika-ei-ms pvm/utc-aikavyohykkeeseen pvm/joda-timeksi))))
+
+                alkuaika-parametri ["kohdeluokka" "yleiset/perustiedot"
+                                    ["pvm-suurempi-kuin"
+                                     ["yleiset/perustiedot" "alkaen"]
+                                     (first aikavali)]]
+
+                loppuaika-parametri ["kohdeluokka" "yleiset/perustiedot"
+                                    ["pvm-pienempi-kuin"
+                                     ["yleiset/perustiedot" "alkaen"]
+                                     (second aikavali)]]
+
                 payload {:asetukset {:tyyppi "kohdeluokkahaku"
                                      :liitoshaku true
                                      ;; TODO: Katso saako tämän toimimaan, jos haetaan turhia kenttiä
@@ -835,8 +868,11 @@
                                        ["yleiset/perustiedot"
                                         "muutoksen-lahde-oid"]
                                        [urakka-velho-oid]]]
-                                     varustetyyppi-parametrit
-                                     tieosoite-parametri])}
+                                     varustetyypit-parametri
+                                     tieosoite-parametri
+                                     kuntoluokat-parametri
+                                     alkuaika-parametri
+                                     loppuaika-parametri])}
                 {vastaus :body
                  _ :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
                 varusteet (:osumat (json/read-str vastaus :key-fn keyword))
@@ -845,12 +881,9 @@
                 (mapv (fn [varuste]
                         (let [{tie :tie alkuet :etaisyys alkuosa :osa} (or (:sijainti varuste) (:alkusijainti varuste))
                               {loppuetaisyys :etaisyys loppuosa :osa} (:loppusijainti varuste)
-                              alkupvm (or (get-in varuste [:version-voimassaolo :alku])
-                                        (:alkaen varuste))
-                              alkupvm (when alkupvm
-                                        (-> alkupvm
-                                          (pvm/iso-8601->pvm)
-                                          (varuste-vastaanottosanoma/aika->sql)))
+                              alkupvm (some-> (:alkaen varuste)
+                                        (pvm/iso-8601->pvm)
+                                        (varuste-vastaanottosanoma/aika->sql))
                               tyyppi (or
                                        (get-in varuste [:ominaisuudet :rakenteelliset-ominaisuudet :tyyppi])
                                        (get-in varuste [:ominaisuudet :tyyppi])

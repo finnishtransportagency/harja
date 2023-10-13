@@ -87,6 +87,15 @@
        joda-time
        (t/to-time-zone joda-time suomen-aikavyohyke))))
 
+#?(:clj
+   (defn utc-aikavyohykkeeseen
+     "Palauttaa uuden Joda-ajan niin, että aika on sama, mutta aikavyöhyke on UTC+0.
+      Lisää aikaan 2/3h, joten ei tule käyttää sisäisissä tietokantakyselyissä.
+      Voidaan käyttää, jos halutaan esimerkiksi päivän alku formatoitua oikealle päivälle ulkoiseen palveluun
+      tehtävää kyselyä varten."
+     [^DateTime aika]
+     (t/from-time-zone (suomen-aikavyohykkeeseen aika) DateTimeZone/UTC)))
+
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
      (when dt
@@ -152,6 +161,10 @@
 
        (instance? java.sql.Timestamp dt)
        (tc/from-sql-time dt))))
+
+#?(:clj
+   (defn joda-date-timeksi [dt]
+     (tc/to-date-time dt)))
 
 #?(:clj
    (defn dateksi [dt]
@@ -1157,6 +1170,12 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      "Parsii annetun päivämäärän ISO-8601 (yyyy-MM-DD) muotoon."
      [pvm]
      (df/unparse (df/formatter "yyyy-MM-dd") pvm)))
+
+#?(:clj
+   (defn pvm->iso-8601-pvm-aika-ei-ms
+     "Parsii annetun päivämäärän ISO-8601 (yyyy-MM-DD'T'HH:mm:ssX) muotoon."
+     [^DateTime pvm]
+     (df/unparse (:date-time-no-ms df/formatters) pvm)))
 
 #?(:clj
    (defn iso-8601->aika
