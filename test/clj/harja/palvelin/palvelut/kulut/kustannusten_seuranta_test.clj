@@ -306,7 +306,7 @@ UNION ALL
          AND lk.poistettu IS NOT TRUE
          AND tpi.toimenpide = tk.id
          AND lk.maksueratyyppi::TEXT = 'kokonaishintainen'
-         AND tr.nimi != 'Tilaajan rahavaraus (T3)'
+         AND tr.nimi != 'Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)'
   -- Näillä toimenpidekoodi.koodi rajauksilla rajataan johto- ja hallintakorvaus, hoidonjohdonpalkkio ja erilliskorvaus ulos
   AND (tk.koodi = '23104' OR tk.koodi = '23116'
     OR tk.koodi = '23124' OR tk.koodi = '20107' OR tk.koodi = '20191' OR

@@ -176,9 +176,9 @@
                            :valitse-fn #(muokkaa-lomaketta
                                           (assoc data :toimenpideinstanssi (:tpi_id %)))}
                           toimenpideinstanssit]
-                         ;; Näytetään alihankintabonuksille, että se oikeasti näytetään tehtäväryhmässä Tilaajan rahavaraus (T3)
+                         ;; Näytetään alihankintabonuksille, että se oikeasti näytetään tehtäväryhmässä Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)
                          (when (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) (= :alihankintabonus (:laji data)))
-                           [:div.caption-small-weak.padding-4 "Tehtäväryhmä: Tilaajan rahavaraus (T3)"])]))}
+                           [:div.caption-small-weak.padding-4 "Tehtäväryhmä: Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)"])]))}
       (lomake/ryhma
         {:rivi? true}
         {:otsikko "Summa"

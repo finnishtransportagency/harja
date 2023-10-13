@@ -213,7 +213,7 @@
   (let [;; Kulujen lisäämisessä tehtäväryhmä alasvetovalikosta poistetaan muutamia tehtäväryhmiä, joita ei voida valita.
         ;; Jos niitä on saatu kululle jotain muuta kautta, niin ne kuitenkin näytetään.
         ;; Nöitä on
-        ;; Tilaajan Rahavaraus (T3), yksilöllinen tunniste: '0e78b556-74ee-437f-ac67-7a03381c64f6'
+        ;; Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3), yksilöllinen tunniste: '0e78b556-74ee-437f-ac67-7a03381c64f6'
         ;; Hoitovuoden päättäminen / Tavoitepalkkio, yksilöllinen tunniste: '55c920e7-5656-4bb0-8437-1999add714a3'
         ;; Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä, yksilöllinen tunniste: '19907c24-dd26-460f-9cb4-2ed974b891aa'
         ;; Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä, yksilöllinen tunniste: 'be34116b-2264-43e0-8ac8-3762b27a9557'
@@ -221,7 +221,7 @@
                        (fn [rivi]
                          (when (and (= tehtavaryhma (:id rivi))
                                  (or
-                                   (= "Tilaajan rahavaraus (T3)" (:tehtavaryhma rivi))
+                                   (= "Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)" (:tehtavaryhma rivi))
                                    (= "Hoitovuoden päättäminen / Tavoitepalkkio" (:tehtavaryhma rivi))
                                    (= "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä" (:tehtavaryhma rivi))
                                    (= "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä" (:tehtavaryhma rivi))))
@@ -232,7 +232,7 @@
                         (filter
                           (fn [rivi]
                             (when-not (or
-                                        (= "Tilaajan rahavaraus (T3)" (:tehtavaryhma rivi))
+                                        (= "Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)" (:tehtavaryhma rivi))
                                         (= "Hoitovuoden päättäminen / Tavoitepalkkio" (:tehtavaryhma rivi))
                                         (= "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä" (:tehtavaryhma rivi))
                                         (= "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä" (:tehtavaryhma rivi))) rivi))
@@ -681,7 +681,7 @@
        (when (and (pvm/ennen? (pvm/nyt) (pvm/->pvm "01.01.2025"))
                (or (= kulutyyppi :normaali-kulu) (= kulutyyppi :eri-tehtavat)))
          [yleiset/info-laatikko :vahva-ilmoitus
-          "Tilaajan rahavaraus (T3) -tehtäväryhmälle ei kirjata enää kuluja tällä lomakkeella. T3-kulut muodostuvat Harjaan automaattisesti samalla, kun hoidon projektipäällikkö kirjaa alihankintasopimusten maksuehtobonuksen."
+          "Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3) -tehtäväryhmälle ei kirjata enää kuluja tällä lomakkeella. T3-kulut muodostuvat Harjaan automaattisesti samalla, kun hoidon projektipäällikkö kirjaa alihankintasopimusten maksuehtobonuksen."
           nil nil])]
      [:div.palstat
       [:div.palsta
