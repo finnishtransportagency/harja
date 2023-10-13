@@ -266,6 +266,9 @@
         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 20 2))}
        {:otsikko "Kok.m. (t)" :nimi :kokonaismassamaara :tyyppi :positiivinen-numero :tasaa :oikea
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]
+        :varoita [(fn [arvo rivi]
+                    (when (> (:massamenekki rivi) 200)
+                      "Massamenekki on yleensä välillä 10-150. Tarkistaisitko vielä massaan ja leveyden."))]
         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
        {:otsikko "Pinta-ala (m²)" :nimi :pinta_ala :tyyppi :positiivinen-numero :tasaa :oikea :muokattava? (constantly false)
         :fmt #(fmt/desimaaliluku-opt % 1)
