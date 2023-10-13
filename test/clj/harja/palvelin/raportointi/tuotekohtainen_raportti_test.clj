@@ -67,8 +67,7 @@
         soratiet-yhteensa (-> (nth laskutusyhteenveto 2) (nth 3) (nth 5) second second :arvo)
         paallyste-yhteensa (-> (nth laskutusyhteenveto 3) (nth 3) (nth 3) second second :arvo)
         ;; Vuosina 2019 tai 2022 on vain neljä riviä ylläpito sarakkeessa, koska
-        ;; Tilaajan rahavaraus (alihankintasopimusten maksuehtobonukset) tulee vasta vuonna 2022 alkaville hoitokausille
-        mhu-yllapito-yhteensa (-> (nth laskutusyhteenveto 4) (nth 3) (nth 3) second second :arvo)
+        mhu-yllapito-yhteensa (-> (nth laskutusyhteenveto 4) (nth 3) (nth 4) second second :arvo)
         mhu-korvaus-yhteensa (-> (nth laskutusyhteenveto 5) (nth 3) (nth 3) second second :arvo)
         mhu-bonukset (-> (nth laskutusyhteenveto 6) (nth 3) (nth 3) second second :arvo)]
 

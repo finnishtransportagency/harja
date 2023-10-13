@@ -44,19 +44,10 @@
                                (rivi-taulukolle data kyseessa-kk-vali? "Hoidonjohtopalkkio" :hjpalkkio_hoitokausi_yht :hjpalkkio_val_aika_yht false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :hoidonjohto_hoitokausi_yht :hoidonjohto_val_aika_yht true)]
 
-                              ;; 2022-10-01 jälkeen Alihankintabonus merkitään tilaajan rahavarauksena, eikä
-                              ;; listata muiden bonusten joukkoon
-                              (and (pvm/sama-tai-jalkeen? hk-alkupvm (pvm/->pvm "01.10.2022"))
-                                (= "Rahavaraukset" otsikko))
+                              (= "Rahavaraukset" otsikko)
                               [(rivi-taulukolle data kyseessa-kk-vali? "Äkilliset hoitotyöt" :akilliset_hoitokausi_yht :akilliset_val_aika_yht false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Vahinkojen korjaukset" :vahingot_hoitokausi_yht :vahingot_val_aika_yht false)
-                               (rivi-taulukolle data kyseessa-kk-vali? "Tilaajan rahavaraus (alihankintasopimusten maksuehtobonukset)" :alihank_bon_hoitokausi_yht :alihank_bon_val_aika_yht false)]
-
-                              ;; Ennen 2022-10-01 alihankintabonukset ovat ihan tavallisia bonuksia ja löytyvät bonukset osiosta
-                              (and (pvm/ennen? hk-alkupvm (pvm/->pvm "01.10.2022"))
-                                (= "Rahavaraukset" otsikko))
-                              [(rivi-taulukolle data kyseessa-kk-vali? "Äkilliset hoitotyöt" :akilliset_hoitokausi_yht :akilliset_val_aika_yht false)
-                               (rivi-taulukolle data kyseessa-kk-vali? "Vahinkojen korjaukset" :vahingot_hoitokausi_yht :vahingot_val_aika_yht false)]
+                               (rivi-taulukolle data kyseessa-kk-vali? "Tilaajan rahavaraus" :tilaajan_rahavaraus_hoitokausi_yht :tilaajan_rahavaraus_val_aika_yht false)]
 
                               (= "Lisätyöt" otsikko)
                               [(rivi-taulukolle data kyseessa-kk-vali? "Lisätyöt (talvihoito)" :lisatyo_talvihoito_hoitokausi_yht :lisatyo_talvihoito_val_aika_yht false)
