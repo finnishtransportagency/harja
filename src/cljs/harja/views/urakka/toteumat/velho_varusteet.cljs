@@ -32,14 +32,20 @@
             [harja.views.kartta.tasot :as kartta-tasot])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn kuntoluokka-komponentti [kuntoluokka]
-  [yleiset/tila-indikaattori kuntoluokka
-   {:class-skeema (zipmap (map :nimi v/kuntoluokat) (map :css-luokka v/kuntoluokat))
-    :luokka "body-text"
-    :wrapper-luokka "inline-block"
-    :fmt-fn str}])
 
+(defn ns-ja-nimi->otsikko [nimikkeisto ns-ja-nimi]
+  (or
+    (when (str/includes? ns-ja-nimi "/")
+      (:otsikko (first (filter #(= (str/join "/" [(:nimiavaruus %) (:nimi %)]) ns-ja-nimi) nimikkeisto))))
+    ns-ja-nimi))
 
+(defn kuntoluokka-komponentti [kuntoluokat kuntoluokka]
+  (let [kuntoluokka (ns-ja-nimi->otsikko kuntoluokat kuntoluokka)]
+    [yleiset/tila-indikaattori kuntoluokka
+     {:class-skeema (zipmap (map :nimi v/kuntoluokat) (map :css-luokka v/kuntoluokat))
+      :luokka "body-text"
+      :wrapper-luokka "inline-block"
+      :fmt-fn str}]))
 
 (defn suodatuslomake [_e! _app]
   ;; Varustetyypit on muista valinnoista poiketen toteutettu atomilla.
@@ -174,13 +180,8 @@
             :disabled (and (every? nil? (vals (dissoc valinnat :hoitokauden-alkuvuosi)))
                         (= (pvm/vuosi (get-in app [:urakka :alkupvm])) (:hoitokauden-alkuvuosi valinnat)))}]]]))))
 
-(defn varustetoimenpide-otsikko [nimikkeisto varustetoimenpide]
-  (or
-    (when (str/includes? varustetoimenpide "/")
-      (:otsikko (first (filter #(= (str/join "/" [(:nimiavaruus %) (:nimi %)]) varustetoimenpide) nimikkeisto))))
-    varustetoimenpide))
 
-(defn listaus [e! {:keys [varusteet haku-paalla toimenpiteet] :as app}]
+(defn listaus [e! {:keys [varusteet haku-paalla toimenpiteet kuntoluokat] :as app}]
   (let [lkm (count varusteet)]
     [grid/grid
      {:otsikko (if (>= lkm v/+max-toteumat+)
@@ -212,16 +213,16 @@
       {:otsikko "Tie\u00ADrekis\u00ADteri\u00ADosoi\u00ADte" :leveys 5
        :hae v/muodosta-tr-osoite}
       {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toimenpide :leveys 3
-       :fmt (partial varustetoimenpide-otsikko toimenpiteet)}
+       :fmt (partial ns-ja-nimi->otsikko toimenpiteet)}
       {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tyyppi :leveys 5}
       {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
       {:otsikko "Kunto\u00ADluoki\u00ADtus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
        :komponentti (fn [rivi]
-                      [kuntoluokka-komponentti (:kuntoluokka rivi)])}
+                      [kuntoluokka-komponentti kuntoluokat (:kuntoluokka rivi)])}
       {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
      varusteet]))
 
-(defn listaus-toteumat [_ valittu-toteumat]
+(defn listaus-toteumat [_ valittu-toteumat kuntoluokat]
   [grid/grid
    {:otsikko "Käyntihistoria"
     :tunniste :id
@@ -234,12 +235,12 @@
      :fmt varuste-ulkoiset/toteuma->toimenpide}
     {:otsikko "Kunto\u00ADluoki\u00ADtus muu\u00ADtos" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
-                    [kuntoluokka-komponentti (:kuntoluokka rivi)])}
+                    [kuntoluokka-komponentti kuntoluokat (:kuntoluokka rivi)])}
     {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
    valittu-toteumat])
 
 (defn varustelomake-nakyma
-  [e! _varuste _toteumat]
+  [e! _app]
   (let [saa-sulkea? (atom false)]
     (komp/luo
       (komp/piirretty #(yleiset/fn-viiveella (fn []
@@ -247,7 +248,8 @@
       (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
                                      (e! (v/->SuljeVarusteLomake)))
         {:tarkista-komponentti? true})
-      (fn [e! varuste toteumat]
+      (fn [e! {varuste :valittu-varuste toteumat :valittu-toteumat
+               kuntoluokat :kuntoluokat}]
         [:div.varustelomake {:on-click #(.stopPropagation %)}
          [sivupalkki/oikea
           {:leveys "600px"}
@@ -272,7 +274,7 @@
              :komponentti (fn [data]
                             [:span
                              "Kuntoluokitus: "
-                             [kuntoluokka-komponentti (get-in data [:data :kuntoluokka])]])
+                             [kuntoluokka-komponentti kuntoluokat (get-in data [:data :kuntoluokka])]])
              ::lomake/col-luokka "margin-top-16"
              :piilota-label? true}
             {:tyyppi :komponentti
@@ -294,7 +296,7 @@
             {:tyyppi :komponentti :palstoja 3
              ::lomake/col-luokka "margin-top-32"
              :piilota-label? true
-             :komponentti listaus-toteumat :komponentti-args [toteumat]}]
+             :komponentti listaus-toteumat :komponentti-args [toteumat kuntoluokat]}]
            varuste]]]))))
 
 (defn- varusteet* [e! app]
@@ -318,7 +320,7 @@
     (fn [e! app]
       [:div
        (when (:valittu-varuste app)
-         [varustelomake-nakyma e! (:valittu-varuste app) (:valittu-toteumat app)])
+         [varustelomake-nakyma e! app])
        [suodatuslomake e! app]
        [kartta/kartan-paikka]
        [listaus e! app]])))

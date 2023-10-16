@@ -899,9 +899,7 @@
                                        (get-in varuste [:ominaisuudet :rakenteelliset-ominaisuudet :kaivon-tyyppi]))
                               {tyyppi :otsikko kohdeluokka :kohdeluokka} (first (q-nimikkeistot/hae-nimikkeen-tiedot db {:nimiavaruus_nimike tyyppi}))]
                           {:alkupvm alkupvm
-                           :kuntoluokka (varuste-vastaanottosanoma/varusteen-kuntoluokka
-                                          (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)
-                                          varuste)
+                           :kuntoluokka (get-in varuste [:ominaisuudet :kunto-ja-vauriotiedot :yleinen-kuntoluokka])
                            ;; TODO: Lisää lisätieto kuten ennenkin
                            :lisatieto (varuste-vastaanottosanoma/varusteen-lisatieto (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe) tyyppi varuste)
                            :loppupvm (cond-> (get-in varuste [:version-voimassaolo :loppu])
