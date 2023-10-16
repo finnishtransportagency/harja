@@ -150,32 +150,44 @@
       (when urakkatyyppi
         (validointi/tarkista-urakkatyyppi urakkatyyppi))
 
-      (let [kilometrit 100 
-            _ (println "bool: " palauta-lahin-hoitourakka)
-            urakat (if palauta-lahin-hoitourakka 
+      (let [fn-suodata-urakat-oikeuksilla (fn [urakat]
+                                            (let
+                                              [urakat (konv/vector-mappien-alaviiva->rakenne urakat)
+                                               urakat-suodatettu (into []
+                                                                   (filter (fn [urakka]
+                                                                             ;; Ota tuloksiin mukaan vain urakat, joihin käyttäjällä on oikeus
+                                                                             ;; Validointi heittää slingshot-virheen, jos käyttäjällä ei ole oikeuksia.
+                                                                             (try+
+                                                                               (validointi/tarkista-kayttajan-oikeudet-urakkaan
+                                                                                 db (:id urakka) kayttaja)
+                                                                               true
+                                                                               (catch Object _
+                                                                                 false))))
+                                                                   urakat)]
+                                              urakat-suodatettu))
+            kilometrit 100
+            urakat-sijainilla (hae-urakka-sijainnilla* db {:x x-easting :y y-northing
+                                                           :aloitustoleranssi aloitustoleranssi
+                                                           :maksimitoleranssi maksimitolenranssi
+                                                           :urakkatyyppi urakkatyyppi})
+            ;; Suodata kaikki urakat johon ei ole oikeuksia 
+            urakat-sijainilla (fn-suodata-urakat-oikeuksilla urakat-sijainilla)
+            ;; Jos sijainnilla ei löydy tuloksia ja palauta-lahin-hoitourakka on true, haetaan lähin hoitourakka
+            hae-lahin-hoitourakka? (and
+                                     ;; Kun parametri on true, palautetaan lähin hoitourakka jos sijainnilla ei löydy urakoita
+                                     palauta-lahin-hoitourakka
+                                     (empty? urakat-sijainilla))
+            ;; Jos halutaan etsiä lähin hoitourakka
+            urakat (if hae-lahin-hoitourakka?
+                     ;; Hakee 50 urakkaa kilometrisäteellä
                      (q-urakat/hae-lahin-hoidon-alueurakka db {:x x-easting :y y-northing :maksimietaisyys (* kilometrit 1000)})
-                     (hae-urakka-sijainnilla* db {:x x-easting :y y-northing
-                                                :aloitustoleranssi aloitustoleranssi
-                                                :maksimitoleranssi maksimitolenranssi
-                                                :urakkatyyppi urakkatyyppi}))
-            _ (println "\n\n urakat: " (q-urakat/hae-lahin-hoidon-alueurakka db {:x x-easting :y y-northing :maksimietaisyys (* kilometrit 1000)}))
-            _ (println "\n\n urakat: " (hae-urakka-sijainnilla* db {:x x-easting :y y-northing
-                                                                    :aloitustoleranssi aloitustoleranssi
-                                                                    :maksimitoleranssi maksimitolenranssi
-                                                                    :urakkatyyppi urakkatyyppi}))
-
-            urakat (konv/vector-mappien-alaviiva->rakenne urakat)
-            urakat-suodatettu (into []
-                                (filter (fn [urakka]
-                                          ;; Ota tuloksiin mukaan vain urakat, joihin käyttäjällä on oikeus
-                                          ;; Validointi heittää slingshot-virheen, jos käyttäjällä ei ole oikeuksia.
-                                          (try+
-                                            (validointi/tarkista-kayttajan-oikeudet-urakkaan
-                                              db (:id urakka) kayttaja)
-                                            true
-                                            (catch Object _
-                                              false))))
-                                urakat)]
+                     urakat-sijainilla)
+            ;; Suodata kaikki urakat johon ei ole oikeuksia 
+            urakat-suodatettu (fn-suodata-urakat-oikeuksilla urakat)
+            ;; Jos halutaan palauttaa lähin urakka, palauta (first)
+            urakat-suodatettu (if hae-lahin-hoitourakka?
+                                [(first urakat-suodatettu)]
+                                urakat-suodatettu)]
         (muodosta-vastaus-urakoiden-haulle urakat-suodatettu)))))
 
 (def hakutyypit

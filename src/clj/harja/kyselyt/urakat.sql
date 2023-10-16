@@ -964,7 +964,7 @@ WHERE u.alkupvm + interval '12 hour' <= current_timestamp
   AND u.loppupvm + interval '36 hour' >= current_timestamp
   AND ST_Distance84(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys 
 ORDER BY etaisyys ASC 
-LIMIT 1;
+LIMIT 50;
 
 -- name: hae-kaynnissaoleva-urakka-urakkanumerolla
 -- single? : true
