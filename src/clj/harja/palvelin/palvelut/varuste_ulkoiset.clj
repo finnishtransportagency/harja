@@ -25,40 +25,10 @@
     ; ei ole annettu mitään tr-osotteen kenttää
     (every? nil? [tie aosa aeta losa leta])))
 
-(defn hae-urakan-uusimmat-varustetoteuma-ulkoiset
-  [db user {:keys [urakka-id hoitokauden-alkuvuosi tie aosa aeta losa leta] :as tiedot}]
-  (when (nil? urakka-id) (throw (IllegalArgumentException. "urakka-id on pakollinen")))
-  (when (nil? hoitokauden-alkuvuosi) (throw (IllegalArgumentException. "hoitokauden-alkuvuosi on pakollinen")))
-  (when-not (kelvollinen-tr-filter tie aosa aeta losa leta)
-    (throw (IllegalArgumentException. "tr-osoitteessa pakolliset, tie TAI tie aosa aeta TAI kaikki")))
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
-  {:urakka-id urakka-id :toteumat (toteumat-q/hae-uusimmat-varustetoteuma-ulkoiset db tiedot)})
 
-(defn hae-varustetoteumat-ulkoiset
-  [db user {:keys [urakka-id ulkoinen-oid]}]
-  (when (nil? ulkoinen-oid) (throw (IllegalArgumentException. "ulkoinen-oid on pakollinen")))
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
-  (let [toteumat (toteumat-q/hae-urakan-varustetoteuma-ulkoiset db {:urakka urakka-id :ulkoinen_oid ulkoinen-oid})]
-    {:urakka-id urakka-id :toteumat toteumat}))
 
-(defn tuo-uudet-varustetoteumat-velhosta
-  "Integraation kutsu selaimen avulla. Tämä on olemassa vain testausta varten."
-  [velho user]
-  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user)
-  (try (velho-komponentti/tuo-uudet-varustetoteumat-velhosta velho)
-       (catch Throwable t
-         (log/error "Virhe Velho-varusteiden haussa: " t)
-         false))
-  true)
 
-(defn hae-mhu-urakka-oidt-velhosta
-  "Integraation kutsu selaimen avulla. Tämä on olemassa vain testausta varten."
-  [velho user]
-  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user)
-  (try (velho-komponentti/paivita-mhu-urakka-oidt-velhosta velho)
-       (catch Throwable t
-         (log/error "Virhe Velho-urakoiden haussa: " t)
-         false)))
+
 
 (defn hae-urakan-varustetoteumat-velhosta [velho user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
@@ -80,13 +50,7 @@
           excel (:excel-vienti this)
           db (:db this)]
 
-      (julkaise-palvelu http :hae-urakan-varustetoteuma-ulkoiset
-                        (fn [user tiedot]
-                          (hae-urakan-uusimmat-varustetoteuma-ulkoiset db user tiedot)))
 
-      (julkaise-palvelu http :hae-varustetoteumat-ulkoiset
-                        (fn [user tiedot]
-                          (hae-varustetoteumat-ulkoiset db user tiedot)))
 
       (julkaise-palvelu http :hae-urakan-varustetoteumat
         (fn [user tiedot]
@@ -100,22 +64,14 @@
         (fn [user _]
           (hae-varustetoteuma-nimikkeistot db user)))
 
+      ;; TODO: Toteuta exceliin vienti
       (when excel
         (excel-vienti/rekisteroi-excel-kasittelija! excel :varusteet-ulkoiset-excel
           (partial #'v-excel/vie-ulkoiset-varusteet-exceliin db)))
-
-
-      (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-varustetoteumat
-                        (fn [user _]
-                          (tuo-uudet-varustetoteumat-velhosta velho user)))
-
-      (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-hae-velhosta-mhu-urakka-oidt
-                        (fn [user _]
-                          (hae-mhu-urakka-oidt-velhosta velho user)))
     this))
   (stop [this]
     (let [http (:http-palvelin this)]
-      (poista-palvelut http :hae-ulkoiset-varustetoteumat)
-      (poista-palvelut http :petrisi-manuaalinen-testirajapinta-varustetoteumat)
-      (poista-palvelut http :petrisi-manuaalinen-testirajapinta-hae-velhosta-mhu-urakka-oidt))
+      (poista-palvelut http :hae-urakan-varustetoteumat)
+      (poista-palvelut http :hae-varusteen-historia)
+      (poista-palvelut http :hae-varustetoteuma-nimikkeistot))
     this))

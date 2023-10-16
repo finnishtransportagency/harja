@@ -11,8 +11,6 @@
   (laheta-kohde [this urakka-id kohde-id]))
 
 (defprotocol VarustetoteumaHaku
-  (tuo-uudet-varustetoteumat-velhosta [this])
-  (paivita-mhu-urakka-oidt-velhosta [this])
   (hae-urakan-varustetoteumat [this tiedot])
   (tuo-velho-nimikkeisto [this])
   (hae-varusteen-historia [this tiedot]))
@@ -70,24 +68,9 @@
     (pot-lahetys/laheta-kohde-velhoon (:integraatioloki this) (:db this) asetukset urakka-id kohde-id))
 
   VarustetoteumaHaku
-  (tuo-uudet-varustetoteumat-velhosta [this]
-    (suorita-ja-kirjaa-alku-loppu-ajat
-      #(varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki this) (:db this) asetukset)
-      "tuo-uudet-varustetoteumat-velhosta"))
-  (paivita-mhu-urakka-oidt-velhosta [this]
-    (suorita-ja-kirjaa-alku-loppu-ajat
-      #(varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki this) (:db this) asetukset)
-      "paivita-mhu-urakka-oidt-velhosta"))
   (hae-urakan-varustetoteumat [this tiedot]
     (varusteet/hae-urakan-varustetoteumat (:integraatioloki this) (:db this) asetukset tiedot))
   (hae-varusteen-historia [this tiedot]
     (varusteet/hae-varusteen-historia (:integraatioloki this) (:db this) asetukset tiedot))
   (tuo-velho-nimikkeisto [this]
     (varusteet/tuo-velho-nimikkeisto this)))
-
-;; Esimerkki miten testiajojen suorittaminen onnistuu
-(comment 
-  (def j harja.palvelin.main/harja-jarjestelma)
-  (def asetukset (get-in j [:velho-integraatio :asetukset]))
-  (varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki j) (:db j) asetukset)
-  (varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki j) (:db j) asetukset))
