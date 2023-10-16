@@ -8,4 +8,5 @@ CREATE TABLE velho_nimikkeisto
  otsikko TEXT,
  UNIQUE(versio, tyyppi_avain, nimiavaruus, nimi));
 
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('velho', 'nimikkeiston-tuonti')
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('velho', 'nimikkeiston-tuonti');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('velho', 'varustetoteuman-historian-haku');

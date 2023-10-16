@@ -64,6 +64,10 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (velho-komponentti/hae-urakan-varustetoteumat velho tiedot))
 
+(defn hae-varusteen-historia-velhosta [velho user {:keys [urakka-id] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
+  (velho-komponentti/hae-varusteen-historia velho tiedot))
+
 (defn hae-varustetoteuma-nimikkeistot [db user]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user)
   (nimikkeistot-q/hae-nimikkeistot db))
@@ -87,6 +91,10 @@
       (julkaise-palvelu http :hae-urakan-varustetoteumat
         (fn [user tiedot]
           (hae-urakan-varustetoteumat-velhosta velho user tiedot)))
+
+      (julkaise-palvelu http :hae-varusteen-historia
+        (fn [user tiedot]
+          (hae-varusteen-historia-velhosta velho user tiedot)))
 
       (julkaise-palvelu http :hae-varustetoteuma-nimikkeistot
         (fn [user _]

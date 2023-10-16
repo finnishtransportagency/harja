@@ -798,6 +798,49 @@
         (some? version-loppu) "Poistettu" ; uusimmalla versiolla on loppu
         :else "Päivitetty"))))
 
+
+(defn varuste-velhosta->harja
+  "Luetaan velhosta tullut varuste harjalle sopivampaan muotoon"
+  [db varuste]
+  (let [{tie :tie alkuet :etaisyys alkuosa :osa} (or (:sijainti varuste) (:alkusijainti varuste))
+        {loppuetaisyys :etaisyys loppuosa :osa} (:loppusijainti varuste)
+        alkupvm (some-> (:alkaen varuste)
+                  (pvm/iso-8601->pvm)
+                  (varuste-vastaanottosanoma/aika->sql))
+        tyyppi (or
+                 (get-in varuste [:ominaisuudet :rakenteelliset-ominaisuudet :tyyppi])
+                 (get-in varuste [:ominaisuudet :tyyppi])
+                 (get-in varuste [:ominaisuudet :rakenteelliset-ominaisuudet :kaivon-tyyppi]))
+        kuntoluokka (get-in varuste [:ominaisuudet
+                                     :kunto-ja-vauriotiedot
+                                     :yleinen-kuntoluokka])
+        {tyyppi :otsikko kohdeluokka :kohdeluokka} (first (q-nimikkeistot/hae-nimikkeen-tiedot db
+                                                            {:tyyppi-nimi tyyppi}))
+        {kuntoluokka :otsikko} (first (q-nimikkeistot/hae-nimikkeen-tiedot db
+                                        {:tyyppi-nimi kuntoluokka}))]
+    {:alkupvm alkupvm
+     :kuntoluokka kuntoluokka
+     ;; TODO: Lisää lisätieto kuten ennenkin
+     :lisatieto (varuste-vastaanottosanoma/varusteen-lisatieto (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe) tyyppi varuste)
+     :loppupvm (cond-> (get-in varuste [:version-voimassaolo :loppu])
+                 (get-in varuste [:version-voimassaolo :loppu])
+                 pvm/iso-8601->pvm
+                 (get-in varuste [:version-voimassaolo :loppu])
+                 varuste-vastaanottosanoma/aika->sql)
+     :muokattu (when (:muokattu varuste) (varuste-vastaanottosanoma/aika->sql (pvm/psql-timestamp->aika (:muokattu varuste))))
+     :muokkaaja (get-in varuste [:muokkaaja :kayttajanimi])
+     :sijainti (or (varuste-vastaanottosanoma/velhogeo->harjageo (:keskilinjageometria varuste))
+                 (sijainti-kohteelle db varuste))
+     :tyyppi tyyppi
+     :kohdeluokka kohdeluokka
+     :toimenpide (varusteen-toimenpide db varuste)
+     :tr-numero tie
+     :tr-alkuosa alkuosa
+     :tr-alkuetaisyys alkuet
+     :tr-loppuosa loppuosa
+     :tr-loppuetaisyys loppuetaisyys
+     :ulkoinen-oid (:oid varuste)}))
+
 (defn hae-urakan-varustetoteumat [integraatioloki db {:keys [token-url
                                                              varuste-kayttajatunnus
                                                              varuste-salasana]}
@@ -907,48 +950,40 @@
                 varusteet (:osumat (json/read-str vastaus :key-fn keyword))
 
                 varusteet
-                (mapv (fn [varuste]
-                        (let [{tie :tie alkuet :etaisyys alkuosa :osa} (or (:sijainti varuste) (:alkusijainti varuste))
-                              {loppuetaisyys :etaisyys loppuosa :osa} (:loppusijainti varuste)
-                              alkupvm (some-> (:alkaen varuste)
-                                        (pvm/iso-8601->pvm)
-                                        (varuste-vastaanottosanoma/aika->sql))
-                              tyyppi (or
-                                       (get-in varuste [:ominaisuudet :rakenteelliset-ominaisuudet :tyyppi])
-                                       (get-in varuste [:ominaisuudet :tyyppi])
-                                       (get-in varuste [:ominaisuudet :rakenteelliset-ominaisuudet :kaivon-tyyppi]))
-                              kuntoluokka (get-in varuste [:ominaisuudet
-                                                           :kunto-ja-vauriotiedot
-                                                           :yleinen-kuntoluokka])
-                              ;; TODO: Hae myös toimenpide ja kuntoluokka yms. tässä eikä frontissa
-                              {tyyppi :otsikko kohdeluokka :kohdeluokka} (first (q-nimikkeistot/hae-nimikkeen-tiedot db {:tyyppi-nimi tyyppi}))
-                              {kuntoluokka :otsikko} (first (q-nimikkeistot/hae-nimikkeen-tiedot db
-                                                          {:tyyppi-nimi kuntoluokka}))]
-                          {:alkupvm alkupvm
-                           :kuntoluokka kuntoluokka
-                           ;; TODO: Lisää lisätieto kuten ennenkin
-                           :lisatieto (varuste-vastaanottosanoma/varusteen-lisatieto (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe) tyyppi varuste)
-                           :loppupvm (cond-> (get-in varuste [:version-voimassaolo :loppu])
-                                       (get-in varuste [:version-voimassaolo :loppu])
-                                       pvm/iso-8601->pvm
-                                       (get-in varuste [:version-voimassaolo :loppu])
-                                       varuste-vastaanottosanoma/aika->sql)
-                           :muokattu (when (:muokattu varuste) (varuste-vastaanottosanoma/aika->sql (pvm/psql-timestamp->aika (:muokattu varuste))))
-                           :muokkaaja (get-in varuste [:muokkaaja :kayttajanimi])
-                           :sijainti (or (varuste-vastaanottosanoma/velhogeo->harjageo (:keskilinjageometria varuste))
-                                       (sijainti-kohteelle db varuste))
-                           :tyyppi tyyppi
-                           :kohdeluokka kohdeluokka
-                           :toimenpide (varusteen-toimenpide db varuste)
-                           :tr-numero tie
-                           :tr-alkuosa alkuosa
-                           :tr-alkuetaisyys alkuet
-                           :tr-loppuosa loppuosa
-                           :tr-loppuetaisyys loppuetaisyys
-                           :ulkoinen-oid (:oid varuste)}))
-                  varusteet)]
-
+                (mapv (partial varuste-velhosta->harja db) varusteet)]
             {:urakka-id urakka-id :toteumat varusteet}))))))
+
+(defn hae-varusteen-historia [integraatioloki db {:keys [token-url
+                                                             varuste-kayttajatunnus
+                                                             varuste-salasana]}
+                                  {:keys [ulkoinen-oid kohdeluokka]}]
+  (integraatiotapahtuma/suorita-integraatio db integraatioloki "velho" "varustetoteuman-historian-haku" nil
+    (fn [konteksti]
+      (let [virheet (atom #{})]
+        (when-let [token (velho-yhteiset/hae-velho-token token-url varuste-kayttajatunnus varuste-salasana konteksti
+                           (fn [x]
+                             (swap! virheet conj (str "Virhe velho token haussa " x))
+                             (log/error "Virhe velho token haussa" x)))]
+          (let [otsikot {"Content-Type" "application/json"
+                         "Authorization" (str "Bearer " token)}
+
+                {:keys [api-versio palvelu]} (first (filter #(= (:kohdeluokka %) kohdeluokka) +tietolajien-lahteet+))
+
+                http-asetukset {:metodi :GET
+                                :otsikot otsikot
+                                ;; TODO: Ota url asetuksista
+                                :url (str "https://apiv2stgvelho.testivaylapilvi.fi/"
+                                       palvelu "/api/" api-versio
+                                       (when-not (= "sijaintipalvelu" palvelu) "/historia/")
+                                       "/kohde/" ulkoinen-oid)}
+
+                {vastaus :body
+                 _ :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
+                varusteet (json/read-str vastaus :key-fn keyword)
+
+                varusteet
+                (mapv (partial varuste-velhosta->harja db) varusteet)]
+            varusteet))))))
 
 (defn hae-ja-tallenna-kohdeluokan-nimikkeisto [{:keys [db]} virheet hae-token-fn konteksti
                                                {:keys [kohdeluokka kohdeluokka->tyyppi-fn nimiavaruus]}
@@ -1067,5 +1102,11 @@
              35))
 
   (def foo2 (json/read-str foo :key-fn keyword))
+
+  (def foo3 (hae-varusteen-historia (:integraatioloki harja.palvelin.main/harja-jarjestelma)
+              (:db harja.palvelin.main/harja-jarjestelma)
+              (:asetukset (:velho-integraatio harja.palvelin.main/harja-jarjestelma))
+              {:ulkoinen-oid "1.2.246.578.4.3.15.506.300920159"
+               :kohdeluokka "liikennemerkit"}))
 
   (tuo-velho-nimikkeisto (:velho-integraatio harja.palvelin.main/harja-jarjestelma)))
