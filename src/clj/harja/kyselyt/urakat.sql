@@ -945,15 +945,25 @@ VALUES (ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus, current_timestam
 
 -- name: hae-lahin-hoidon-alueurakka
 -- Päättyvän urakan vastuu tieliikenneilmoituksista loppuu 1.10. klo 12. Siksi alkupvm ja loppupvm laskettu tunteja lisää.
-SELECT
-  u.id,
-  ST_Distance84(au.alue, st_makepoint(:x, :y)) AS etaisyys
+SELECT 
+      u.id,
+      u.nimi,
+      u.tyyppi,
+      u.alkupvm,
+      u.loppupvm,
+      u.takuu_loppupvm,
+      u.urakkanro AS alueurakkanumero,
+      urk.nimi    AS urakoitsija_nimi,
+      urk.ytunnus AS urakoitsija_ytunnus,
+      ST_Distance84(au.alue, st_makepoint(:x, :y)) AS etaisyys 
 FROM urakka u
-         JOIN alueurakka au ON au.alueurakkanro = u.urakkanro AND u.tyyppi IN ('hoito', 'teiden-hoito')
+      LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
+      JOIN organisaatio urk ON u.urakoitsija = urk.id
+      JOIN alueurakka au ON au.alueurakkanro = u.urakkanro AND u.tyyppi IN ('hoito', 'teiden-hoito')
 WHERE u.alkupvm + interval '12 hour' <= current_timestamp
   AND u.loppupvm + interval '36 hour' >= current_timestamp
-  AND ST_Distance84(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
-ORDER BY etaisyys ASC
+  AND ST_Distance84(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys 
+ORDER BY etaisyys ASC 
 LIMIT 1;
 
 -- name: hae-kaynnissaoleva-urakka-urakkanumerolla

@@ -123,7 +123,7 @@
                                                        :y "Y-koordinaatti puuttuu"})
 
   (jdbc/with-db-transaction [db db]
-    (let [{:keys [x y urakkatyyppi]} parametrit
+    (let [{:keys [x y urakkatyyppi palauta-lahin-hoitourakka]} parametrit
           x-easting (try+
                       (muunnos/str->double x)
                       (catch NumberFormatException _
@@ -150,10 +150,20 @@
       (when urakkatyyppi
         (validointi/tarkista-urakkatyyppi urakkatyyppi))
 
-      (let [urakat (hae-urakka-sijainnilla* db {:x x-easting :y y-northing
+      (let [kilometrit 100 
+            _ (println "bool: " palauta-lahin-hoitourakka)
+            urakat (if palauta-lahin-hoitourakka 
+                     (q-urakat/hae-lahin-hoidon-alueurakka db {:x x-easting :y y-northing :maksimietaisyys (* kilometrit 1000)})
+                     (hae-urakka-sijainnilla* db {:x x-easting :y y-northing
                                                 :aloitustoleranssi aloitustoleranssi
                                                 :maksimitoleranssi maksimitolenranssi
-                                                :urakkatyyppi urakkatyyppi})
+                                                :urakkatyyppi urakkatyyppi}))
+            _ (println "\n\n urakat: " (q-urakat/hae-lahin-hoidon-alueurakka db {:x x-easting :y y-northing :maksimietaisyys (* kilometrit 1000)}))
+            _ (println "\n\n urakat: " (hae-urakka-sijainnilla* db {:x x-easting :y y-northing
+                                                                    :aloitustoleranssi aloitustoleranssi
+                                                                    :maksimitoleranssi maksimitolenranssi
+                                                                    :urakkatyyppi urakkatyyppi}))
+
             urakat (konv/vector-mappien-alaviiva->rakenne urakat)
             urakat-suodatettu (into []
                                 (filter (fn [urakka]
