@@ -782,7 +782,7 @@
                                                              varuste-kayttajatunnus
                                                              varuste-salasana]}
                                   {:keys [urakka-id kohdeluokat varustetyypit kuntoluokat tie aosa aeta losa leta
-                                          hoitovuoden-kuukausi hoitokauden-alkuvuosi] :as tiedot}]
+                                          hoitovuoden-kuukausi hoitokauden-alkuvuosi toimenpide] :as tiedot}]
   (integraatiotapahtuma/suorita-integraatio db integraatioloki "velho" "varustetoteumien-haku" nil
     (fn [konteksti]
       (let [virheet (atom #{})]
@@ -856,6 +856,14 @@
                                      ["yleiset/perustiedot" "alkaen"]
                                      (second aikavali)]]
 
+                varustetoimenpide-parametri (when toimenpide
+                                              ["kohdeluokka" "toimenpiteet/varustetoimenpiteet"
+                                               ["joukossa"
+                                                ["toimenpiteet/varustetoimenpiteet"
+                                                 "ominaisuudet"
+                                                 "toimenpiteet"]
+                                                [toimenpide]]])
+
                 payload {:asetukset {:tyyppi "kohdeluokkahaku"
                                      :liitoshaku true
                                      ;; TODO: Katso saako tämän toimimaan, jos haetaan turhia kenttiä
@@ -871,6 +879,7 @@
                                      varustetyypit-parametri
                                      tieosoite-parametri
                                      kuntoluokat-parametri
+                                     varustetoimenpide-parametri
                                      alkuaika-parametri
                                      loppuaika-parametri])}
                 {vastaus :body
@@ -906,22 +915,20 @@
                                        (sijainti-kohteelle db varuste))
                            :tyyppi tyyppi
                            :kohdeluokka kohdeluokka
-                           :toteuma (varuste-vastaanottosanoma/varusteen-toteuma
-                                      (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe)
-                                      varuste)
+                           :toimenpide (varuste-vastaanottosanoma/varusteen-toteuma varuste)
                            :tr-numero tie
                            :tr-alkuosa alkuosa
                            :tr-alkuetaisyys alkuet
                            :tr-loppuosa loppuosa
                            :tr-loppuetaisyys loppuetaisyys
-                           :ulkoinen-oid (:oid varuste) }))
+                           :ulkoinen-oid (:oid varuste)}))
                   varusteet)]
 
             {:urakka-id urakka-id :toteumat varusteet}))))))
 
 (defn hae-ja-tallenna-kohdeluokan-nimikkeisto [{:keys [db]} virheet hae-token-fn konteksti
                                                {:keys [kohdeluokka kohdeluokka->tyyppi-fn nimiavaruus]}
-                                               hae-kuntoluokat?]
+                                               hae-kuntoluokat? hae-varustetoimenpiteet?]
   (when-let [token (hae-token-fn)]
     (let [otsikot {"Content-Type" "application/json"
                    "Authorization" (str "Bearer " token)}
@@ -978,10 +985,30 @@
                                       :versio (Integer/parseInt (name versio))
                                       :otsikko (:otsikko ((keyword nimiavaruus kuntoluokka) kuntoluokka-info))}))
                                  ) (-> vastaus :components :schemas :nimikkeisto_kunto-ja-vauriotiedot_kuntoluokka :enum)))
-                   (-> vastaus :info :x-velho-nimikkeistot :kunto-ja-vauriotiedot/kuntoluokka :nimikkeistoversiot))))]
+                   (-> vastaus :info :x-velho-nimikkeistot :kunto-ja-vauriotiedot/kuntoluokka :nimikkeistoversiot))))
+
+
+          varustetoimenpiteiden-haku-onnistui?
+          (seq (when hae-varustetoimenpiteet?
+                 (mapv (fn [[versio varustetoimenpide-info]]
+                         (println versio)
+                         (mapv (fn [varustetoimenpide]
+
+                                 (println varustetoimenpide)
+                                 (let [[nimiavaruus nimi] (str/split varustetoimenpide #"/")]
+                                   (q-nimikkeistot/luo-velho-nimikkeisto<! db
+                                     {:tyyppi-avain ""
+                                      :kohdeluokka ""
+                                      :nimiavaruus nimiavaruus
+                                      :nimi nimi
+                                      :versio (Integer/parseInt (name versio))
+                                      :otsikko (:otsikko ((keyword varustetoimenpide) varustetoimenpide-info))})))
+                           (-> vastaus :components :schemas :nimikkeisto_toimenpiteet_varustetoimenpide :enum)))
+                   (-> vastaus :info :x-velho-nimikkeistot :toimenpiteet/varustetoimenpide :nimikkeistoversiot))))]
 
       {:kohdeluokkatyyppien-haku-onnistui? kohdeluokkatyyppien-haku-onnistui?
-       :kuntoluokkien-haku-onnistui? kuntoluokkien-haku-onnistui?})))
+       :kuntoluokkien-haku-onnistui? kuntoluokkien-haku-onnistui?
+       :varustetoimenpiteiden-haku-onnistui? varustetoimenpiteiden-haku-onnistui?})))
 
 (defn tuo-velho-nimikkeisto [{db :db integraatioloki :integraatioloki
                               {:keys [token-url varuste-kayttajatunnus varuste-salasana]} :asetukset :as this}]
@@ -993,14 +1020,19 @@
                               (swap! virheet conj (str "Virhe velho token haussa " x))
                               (log/error "Virhe velho token haussa" x)))]
         (loop [kohdeluokat +tietolajien-lahteet+
-               hae-kohdeluokat? true]
+               hae-kohdeluokat? true
+               hae-varustetoimenpiteet? true]
           (when-not (empty? kohdeluokat)
             ;; TODO: Paranna virheiden lokitusta. Kohdeluokan nimikkeistön epäonnistuessa älä keskeytä koko integraatiota
             ;;       vaan lokita virhe ja jatka.
-            (let [{:keys [kuntoluokkien-haku-onnistui?]}
+            (let [{:keys [kuntoluokkien-haku-onnistui?
+                          varustetoimenpiteiden-haku-onnistui?]}
                   (hae-ja-tallenna-kohdeluokan-nimikkeisto
-                    this virheet hae-token-fn konteksti (first kohdeluokat) hae-kohdeluokat?)]
-              (recur (rest kohdeluokat) (and hae-kohdeluokat? (not kuntoluokkien-haku-onnistui?))))))
+                    this virheet hae-token-fn konteksti (first kohdeluokat)
+                    hae-kohdeluokat? hae-varustetoimenpiteet?)]
+              (recur (rest kohdeluokat)
+                (and hae-kohdeluokat? (not kuntoluokkien-haku-onnistui?))
+                (and hae-varustetoimenpiteet? (not varustetoimenpiteiden-haku-onnistui?))))))
 
         (when-not (empty? @virheet)
           (log/error "Velhon nimikkeistön tuonnissa virheitä!" @virheet))))))

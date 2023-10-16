@@ -45,12 +45,12 @@
   ;; Varustetyypit on muista valinnoista poiketen toteutettu atomilla.
   ;; Voisi olla mahdollista toteuttaa käyttäen r/wrapia, mutta se osoittautui toistaiseksi liian haastavaksi.
   (let [varustetyypit (atom nil)]
-    (fn [e! {:keys [valinnat urakka kuntoluokat kohdeluokat varustetyyppihaku] :as app}]
+    (fn [e! {:keys [valinnat urakka kuntoluokat kohdeluokat toimenpiteet varustetyyppihaku] :as app}]
       (let [alkupvm (:alkupvm urakka)
             vuosi (pvm/vuosi alkupvm)
             hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
             hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi valinnat)
-            valittu-toteuma (:toteuma valinnat)
+            valittu-toimenpide (:toimenpide valinnat)
             hoitovuoden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
             itse-tai-kaikki #(if % % "Kaikki")
             multimap-fn (fn [avain] (fn [{:keys [id nimi alasveto-eritin?] :as t}]
@@ -68,6 +68,8 @@
                                                                                         {:id i
                                                                                          :nimi v})
                                                                            (keys kohdeluokat))))
+            toimenpiteet (into [nil] toimenpiteet)
+
             toteumat (into [nil] (keys varuste-ulkoiset/toteuma->toimenpide-map))
             tr-kentan-valitse-fn (fn [avain]
                                    (fn [event]
@@ -109,16 +111,15 @@
             :aeta [yleiset/tr-kentan-elementti {:otsikko "aet" :valitse-fn (tr-kentan-valitse-fn :aeta) :luokka "tr-alkuetaisyys" :arvo aeta}]
             :losa [yleiset/tr-kentan-elementti {:otsikko "losa" :valitse-fn (tr-kentan-valitse-fn :losa) :luokka "tr-loppuosa" :arvo losa}]
             :leta [yleiset/tr-kentan-elementti {:otsikko "let" :valitse-fn (tr-kentan-valitse-fn :leta) :luokka "tr-loppuetaisyys" :arvo leta}]}]
+
           [yleiset/pudotusvalikko "Toimenpide"
            {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
-            :valinta valittu-toteuma
+            :valinta valittu-toimenpide
             :vayla-tyyli? true
-            :valitse-fn #(e! (v/->ValitseToteuma %))
-            :format-fn #(if %
-                          (varuste-ulkoiset/toteuma->toimenpide %)
-                          "Kaikki")
+            :valitse-fn #(e! (v/->ValitseToimenpide %))
+            :format-fn #(or (:otsikko %) "Kaikki")
             :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-           toteumat]
+           toimenpiteet]
           [valinnat/monivalinta-pudotusvalikko
            "Kohdeluokka"
            kohdeluokat
@@ -173,7 +174,13 @@
             :disabled (and (every? nil? (vals (dissoc valinnat :hoitokauden-alkuvuosi)))
                         (= (pvm/vuosi (get-in app [:urakka :alkupvm])) (:hoitokauden-alkuvuosi valinnat)))}]]]))))
 
-(defn listaus [e! {:keys [varusteet haku-paalla] :as app}]
+(defn varustetoimenpide-otsikko [nimikkeisto varustetoimenpide]
+  (or
+    (when (str/includes? varustetoimenpide "/")
+      (:otsikko (first (filter #(= (str/join "/" [(:nimiavaruus %) (:nimi %)]) varustetoimenpide) nimikkeisto))))
+    varustetoimenpide))
+
+(defn listaus [e! {:keys [varusteet haku-paalla toimenpiteet] :as app}]
   (let [lkm (count varusteet)]
     [grid/grid
      {:otsikko (if (>= lkm v/+max-toteumat+)
@@ -204,8 +211,8 @@
        :fmt pvm/pvm-opt}
       {:otsikko "Tie\u00ADrekis\u00ADteri\u00ADosoi\u00ADte" :leveys 5
        :hae v/muodosta-tr-osoite}
-      {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3
-       :fmt varuste-ulkoiset/toteuma->toimenpide}
+      {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toimenpide :leveys 3
+       :fmt (partial varustetoimenpide-otsikko toimenpiteet)}
       {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tyyppi :leveys 5}
       {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
       {:otsikko "Kunto\u00ADluoki\u00ADtus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4

@@ -89,8 +89,9 @@
    :nimiavaruus (:nimiavaruus varustetyyppi)
    :tyyppi ((comp #(str/join "/" %) (juxt :tyyppi_avain :nimi)) varustetyyppi)})
 
-(defn muodosta-kuntoluokan-hakuparametri [kuntoluokka]
-  (str/join "/" [(:nimiavaruus kuntoluokka) (:nimi kuntoluokka)]))
+(defn muodosta-ns-nimi-hakuparametri [param]
+  (when param
+    (str/join "/" [(:nimiavaruus param) (:nimi param)])))
 
 (def +max-toteumat+ 1000)
 
@@ -102,6 +103,7 @@
 (defrecord ValitseVarustetyyppi2 [varustetyyppi])
 (defrecord ValitseKuntoluokka [kuntoluokka valittu?])
 (defrecord ValitseToteuma [toteuma])
+(defrecord ValitseToimenpide [toimenpide])
 (defrecord HaeVarusteet [lahde varustetyypit])
 (defrecord HaeVarusteetOnnistui [vastaus])
 (defrecord HaeVarusteetEpaonnistui [vastaus])
@@ -175,12 +177,17 @@
     (do
       (assoc-in app [:valinnat :toteuma] toteuma)))
 
+  ValitseToimenpide
+  (process-event [{toimenpide :toimenpide} app]
+    (assoc-in app [:valinnat :toimenpide] toimenpide))
+
   HaeVarusteet
   (process-event [{lahde :lahde varustetyypit :varustetyypit} {:keys [haku-paalla valinnat] :as app}]
     (if haku-paalla
       app
       (let [varustetyypit (map muodosta-varustetyypin-hakuparametri varustetyypit)
-            kuntoluokat (map muodosta-kuntoluokan-hakuparametri (:kuntoluokat valinnat))]
+            kuntoluokat (map muodosta-ns-nimi-hakuparametri (:kuntoluokat valinnat))
+            toimenpide (muodosta-ns-nimi-hakuparametri (:toimenpide valinnat))]
         (do
           (reset! varusteet-kartalla/karttataso-varusteet [])
           (-> app
@@ -195,7 +202,8 @@
                 (merge valinnat
                   {:urakka-id @harja.tiedot.navigaatio/valittu-urakka-id
                    :varustetyypit varustetyypit
-                   :kuntoluokat kuntoluokat})
+                   :kuntoluokat kuntoluokat
+                   :toimenpide toimenpide})
 
                 :harja
                 (hakuparametrit app))
@@ -286,6 +294,7 @@
     (assoc app
       :kohdeluokat (dissoc (group-by :kohdeluokka vastaus) "")
       :kuntoluokat (filter #(= "kuntoluokka" (:nimiavaruus %)) vastaus)
+      :toimenpiteet (filter #(= "varustetoimenpide" (:nimiavaruus %)) vastaus)
       :varustetyyppihaku (tee-varustetyyppihaku valinnat (group-by :kohdeluokka vastaus))))
 
   HaeNimikkeistoEpaonnistui

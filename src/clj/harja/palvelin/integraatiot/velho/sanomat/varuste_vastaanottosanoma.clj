@@ -276,34 +276,31 @@
       (konversio-fn "v/vtykl" kuntoluokka kohde)
       "Puuttuu")))
 
-(defn varusteen-toteuma [konversio-fn {:keys [version-voimassaolo alkaen paattyen uusin-versio ominaisuudet tekninen-tapahtuma] :as kohde}]
+(defn varusteen-toteuma [{:keys [version-voimassaolo alkaen paattyen uusin-versio ominaisuudet tekninen-tapahtuma] :as kohde}]
   (let [version-alku (:alku version-voimassaolo)
         version-loppu (:loppu version-voimassaolo)
-        toimenpiteet (:toimenpiteet ominaisuudet)
-        toimenpidelista (->> toimenpiteet
-                             (map #(konversio-fn "v/vtp" % kohde))
-                             (keep not-empty))]
-    (cond (< 1 (count toimenpidelista))
+        toimenpiteet (:toimenpiteet ominaisuudet)]
+    (cond (< 1 (count toimenpiteet))
           (do
             ; Kuvittelemme, ettei ole kovin yleistä, että yhdessä
             ; varusteen versiossa on monta toimenpidettä
             (log/warn (str "Löytyi varusteversio, jolla on monta toimenpidettä: oid: " (:ulkoinen-oid kohde)
-                           " version-alku: " version-alku " toimenpiteet(suodatettu): (" (str/join ", " (map #(str "\"" % "\"") toimenpidelista))
+                           " version-alku: " version-alku " toimenpiteet(suodatettu): (" (str/join ", " (map #(str "\"" % "\"") toimenpiteet))
                            ") Otimme vain 1. toimenpiteen talteen."))
-            (first toimenpidelista))
+            (first toimenpiteet))
 
-          (= 1 (count toimenpidelista))
-          (first toimenpidelista)
+          (= 1 (count toimenpiteet))
+          (first toimenpiteet)
 
-          (= 0 (count toimenpidelista))
+          (= 0 (count toimenpiteet))
           ; Varusteiden lisäys, poisto ja muokkaus eivät ole toimenpiteitä Velhossa. Harjassa ne ovat.
-          (cond (= "tekninen-tapahtuma/tt01" tekninen-tapahtuma) "tt01" ; Tieosoitemuutos
-                (= "tekninen-tapahtuma/tt02" tekninen-tapahtuma) "tt02" ; Muu tekninen toimenpide
-                (and (nil? version-voimassaolo) paattyen) "poistettu" ;Sijaintipalvelu ei palauta versioita
-                (and (nil? version-voimassaolo) (not paattyen)) "lisatty"
-                (= alkaen version-alku) "lisatty"           ; varusteen syntymäpäivä, onnea!
-                (and uusin-versio (some? version-loppu)) "poistettu" ; uusimmalla versiolla on loppu
-                :else "paivitetty"))))
+          (cond (= "tekninen-tapahtuma/tt01" tekninen-tapahtuma) "Tieosoitemuutos"
+                (= "tekninen-tapahtuma/tt02" tekninen-tapahtuma) "Muu tekninen toimenpide"
+                (and (nil? version-voimassaolo) paattyen) "Poistettu" ; Sijaintipalvelu ei palauta versioita
+                (and (nil? version-voimassaolo) (not paattyen)) "Lisätty"
+                (= alkaen version-alku) "Lisätty"           ; varusteen syntymäpäivä, onnea!
+                (and uusin-versio (some? version-loppu)) "Poistettu" ; uusimmalla versiolla on loppu
+                :else "Päivitetty"))))
 
 (defn velhogeo->harjageo [geo]
   (let [tyyppi (get {"MultiLineString" :multiline
@@ -377,7 +374,7 @@
                                     (sijainti-kohteelle-fn kohde)) ;tr-osoite fallbackina
                         :tietolaji tietolaji
                         :lisatieto (varusteen-lisatieto konversio-fn tietolaji kohde)
-                        :toteuma (varusteen-toteuma konversio-fn kohde)
+                        :toteuma (varusteen-toteuma kohde)
                         :kuntoluokka (varusteen-kuntoluokka konversio-fn kohde)
                         :alkupvm alkupvm
                         :loppupvm loppupvm
