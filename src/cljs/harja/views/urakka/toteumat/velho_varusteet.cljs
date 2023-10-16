@@ -183,9 +183,11 @@
       :tyhja (if haku-paalla
                [ajax-loader "Haetaan varustetapahtumia..."]
                "Suorita haku syöttämällä hakuehdot ja klikkaamalla Hae varustetoimenpiteitä.")
-      :rivi-klikattu #(do
-                        (e! (v/->AvaaVarusteLomake %))
-                        (e! (v/->HaeToteumat)))
+      :rivi-klikattu #(yleiset/fn-viiveella
+                        (fn [] (do
+                                  (e! (v/->AvaaVarusteLomake %))
+                                  (e! (v/->HaeVarusteenHistoria %))
+                                  (e! (v/->HaeToteumat)))))
       :otsikkorivi-klikattu (fn [opts]
                               (e! (v/->JarjestaVarusteet (:nimi opts))))
       :paneelikomponentit [(fn [] [:span.inline-block
@@ -215,14 +217,13 @@
 (defn listaus-toteumat [_ valittu-toteumat]
   [grid/grid
    {:otsikko "Käyntihistoria"
-    :tunniste :id
+    :tunniste :ulkoinen-oid
     :luokat ["varuste-taulukko"]
     :voi-lisata? false :voi-kumota? false
     :voi-poistaa? (constantly false) :voi-muokata? true}
    [{:otsikko "Käyty" :nimi :alkupvm :leveys 3
      :fmt pvm/fmt-p-k-v-lyhyt}
-    {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3
-     :fmt varuste-ulkoiset/toteuma->toimenpide}
+    {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toimenpide :leveys 3}
     {:otsikko "Kunto\u00ADluoki\u00ADtus muu\u00ADtos" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
                     [kuntoluokka-komponentti (:kuntoluokka rivi)])}
@@ -238,7 +239,7 @@
       (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
                                      (e! (v/->SuljeVarusteLomake)))
         {:tarkista-komponentti? true})
-      (fn [e! {varuste :valittu-varuste toteumat :valittu-toteumat}]
+      (fn [e! {{:keys [ulkoinen-oid historia] :as varuste} :valittu-varuste}]
         [:div.varustelomake {:on-click #(.stopPropagation %)}
          [sivupalkki/oikea
           {:leveys "600px"}
@@ -246,7 +247,7 @@
            {:luokka "padding-32"
             :otsikko-komp (fn [_]
                             [:span
-                             "Velho OID: " (:ulkoinen-oid varuste)])
+                             "Velho OID: " ulkoinen-oid])
             :voi-muokata? false
             :sulje-fn #(e! (v/->SuljeVarusteLomake))
             :ei-borderia? true
@@ -285,7 +286,7 @@
             {:tyyppi :komponentti :palstoja 3
              ::lomake/col-luokka "margin-top-32"
              :piilota-label? true
-             :komponentti listaus-toteumat :komponentti-args [toteumat]}]
+             :komponentti listaus-toteumat :komponentti-args [historia]}]
            varuste]]]))))
 
 (defn- varusteet* [e! app]

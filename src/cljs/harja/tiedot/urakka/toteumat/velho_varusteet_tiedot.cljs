@@ -11,6 +11,7 @@
             [harja.domain.varuste-ulkoiset :as varuste-ulkoiset]
             [harja.pvm :as pvm]
             [harja.ui.viesti :as viesti]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.varusteet-kartalla :as varusteet-kartalla]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
@@ -104,6 +105,9 @@
 (defrecord HaeVarusteet [lahde varustetyypit])
 (defrecord HaeVarusteetOnnistui [vastaus])
 (defrecord HaeVarusteetEpaonnistui [vastaus])
+(defrecord HaeVarusteenHistoria [varuste])
+(defrecord HaeVarusteenHistoriaOnnistui [vastaus])
+(defrecord HaeVarusteenHistoriaEpaonnistui [vastaus])
 (defrecord HaeToteumat [])
 (defrecord HaeToteumatOnnistui [vastaus])
 (defrecord HaeToteumatEpaonnistui [vastaus])
@@ -197,7 +201,7 @@
               (case lahde
                 :velho
                 (merge valinnat
-                  {:urakka-id @harja.tiedot.navigaatio/valittu-urakka-id
+                  {:urakka-id @nav/valittu-urakka-id
                    :varustetyypit varustetyypit
                    :kuntoluokat kuntoluokat
                    :toimenpide toimenpide})
@@ -220,10 +224,28 @@
   HaeVarusteetEpaonnistui
   (process-event [_ app]
     (reset! varusteet-kartalla/karttataso-varusteet nil)
-    (viesti/nayta! "Varusteiden haku epäonnistui!" :danger)
+    (viesti/nayta! "Varusteiden haku epäonnistui!" :varoitus)
     (-> app
         (assoc :haku-paalla false)
         (assoc :varusteet [])))
+
+  HaeVarusteenHistoria
+  (process-event [{{:keys [kohdeluokka ulkoinen-oid]} :varuste} app]
+    (tuck-apurit/post! app :hae-varusteen-historia
+      {:urakka-id @nav/valittu-urakka-id
+       :kohdeluokka kohdeluokka
+       :ulkoinen-oid ulkoinen-oid}
+      {:onnistui ->HaeVarusteenHistoriaOnnistui
+       :epaonnistui ->HaeVarusteenHistoriaEpaonnistui}))
+
+  HaeVarusteenHistoriaOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (assoc-in app [:valittu-varuste :historia] vastaus))
+
+  HaeVarusteenHistoriaEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta! "Varusteen historian haku epäonnistui!" :varoitus)
+    (assoc-in app [:valittu-varuste :historia] :haku-epaonnistui))
 
   HaeToteumat
   (process-event [_ {:keys [valinnat] :as app}]
