@@ -35,8 +35,8 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     akilliset_val_aika_yht                NUMERIC,
     vahingot_hoitokausi_yht               NUMERIC,
     vahingot_val_aika_yht                 NUMERIC,
-    alihank_bon_hoitokausi_yht            NUMERIC,
-    alihank_bon_val_aika_yht              NUMERIC,
+    tilaajan_rahavaraus_hoitokausi_yht    NUMERIC,
+    tilaajan_rahavaraus_val_aika_yht      NUMERIC,
     tavhin_hoitokausi_yht                 NUMERIC,
     tavhin_val_aika_yht                   NUMERIC,
     hoitokauden_tavoitehinta              NUMERIC,
@@ -73,8 +73,6 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     yhteensa_kaikki_hoitokausi_yht        NUMERIC,
     yhteensa_kaikki_val_aika_yht          NUMERIC,
     perusluku                             NUMERIC
-
-
 );
 
 -- Tätä kutsummalla saadaan työmaakokouksen laskutusyhteenvetoon kaikki tarvittavat tiedot
@@ -113,9 +111,6 @@ DECLARE
     paallyste_rivi                        RECORD;
 
     -- MHU ylläpito
-    alihankintabonus_rivi                 RECORD;
-    alihank_bon_val_aika_yht              NUMERIC;
-    alihank_bon_hoitokausi_yht            NUMERIC;
     yllapito_tpi_id                       NUMERIC;
     yllapito_hoitokausi_yht               NUMERIC;
     yllapito_val_aika_yht                 NUMERIC;
@@ -162,6 +157,10 @@ DECLARE
     vahingot_hoitokausi_yht               NUMERIC;
     vahingot_val_aika_yht                 NUMERIC;
     vahingot_rivi                         RECORD;
+    -- Tilaajan rahavaraukset
+    tilaajan_rahavaraus_hoitokausi_yht    NUMERIC;
+    tilaajan_rahavaraus_val_aika_yht      NUMERIC;
+    tilaajan_rahavaraus_rivi              RECORD;
 
     -- Tavoitehinnat yhteensä
     tavhin_hoitokausi_yht                 NUMERIC;
@@ -327,6 +326,8 @@ BEGIN
     paallyste_val_aika_yht := 0.0;
     yllapito_hoitokausi_yht := 0.0;
     yllapito_val_aika_yht := 0.0;
+    tilaajan_rahavaraus_val_aika_yht := 0.0;
+    tilaajan_rahavaraus_hoitokausi_yht := 0.0;
     korvausinv_hoitokausi_yht := 0.0;
     korvausinv_val_aika_yht := 0.0;
 
@@ -348,8 +349,7 @@ BEGIN
     lisatyo_hoidonjohto_hoitokausi_yht := 0.0;
     lisatyo_hoidonjohto_val_aika_yht := 0.0;
 
-    RAISE NOTICE '*** HAETAAN talvihoito tpi: % ', talvihoito_tpi_id;
-    FOR rivi IN SELECT summa AS kht_summa, l.erapaiva AS erapaiva, tpi.id as toimenpideinstanssi_id, lk.maksueratyyppi
+    FOR rivi IN SELECT summa AS kht_summa, l.erapaiva AS erapaiva, tpi.id as toimenpideinstanssi_id, lk.maksueratyyppi, tr.yksiloiva_tunniste
                 FROM kulu l
                          JOIN kulu_kohdistus lk ON lk.kulu = l.id
                          JOIN toimenpideinstanssi tpi
@@ -357,6 +357,7 @@ BEGIN
                                                                      (talvihoito_tpi_id, lyh_tpi_id, sora_tpi_id,
                                                                       paallyste_tpi_id, yllapito_tpi_id,
                                                                       korvausinv_tpi_id, hoidonjohto_tpi_id)
+                         JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
                      -- Äkillisethoitotyöt ja vahingonkorvaukset niputetaan erikseen omiin laareihinsa, joten jätetään ne tässä pois
                 WHERE lk.maksueratyyppi != 'akillinen-hoitotyo'
                   AND lk.maksueratyyppi != 'muu'
@@ -455,7 +456,9 @@ BEGIN
             END IF;
 
             -- Kohdista MHU ylläpidon liittyvät rivit yllapito_rivi:lle
-            IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+            IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' AND
+               (rivi.yksiloiva_tunniste IS NULL or
+                (rivi.yksiloiva_tunniste IS NOT NULL AND rivi.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6')) THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -466,7 +469,9 @@ BEGIN
             END IF;
 
             -- Kohdista MHU ylläpidon liittyvät lisätyö rivit lisatyo_yllapito_rivi:lle
-            IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+            IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' AND
+               (rivi.yksiloiva_tunniste IS NULL or
+                (rivi.yksiloiva_tunniste IS NOT NULL AND rivi.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6')) THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -474,6 +479,17 @@ BEGIN
 
                 RAISE NOTICE 'lisatyo_yllapito_rivi: % ', lisatyo_yllapito_rivi;
                 RAISE NOTICE 'lisatyo_yllapito_rivi.summa: %', lisatyo_yllapito_rivi.summa;
+            END IF;
+
+            -- Kohdista MHU ylläpidon liittyvät Tilaajan rahavarukset omalle riville
+            IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6' THEN
+                SELECT rivi.kht_summa AS summa,
+                       rivi.kht_summa AS korotettuna,
+                       0::NUMERIC     AS korotus
+                INTO tilaajan_rahavaraus_rivi;
+
+                RAISE NOTICE 'tilaajan_rahavaraus_rivi: % ', tilaajan_rahavaraus_rivi;
+                RAISE NOTICE 'tilaajan_rahavaraus_rivi.summa: %', tilaajan_rahavaraus_rivi.summa;
             END IF;
 
             -- Kohdista MHU korvausinvestointeihin liittyvät rivit korvausinv_rivi:lle
@@ -602,8 +618,10 @@ BEGIN
                                 lisatyo_paallyste_val_aika_yht + COALESCE(lisatyo_paallyste_rivi.summa, 0.0);
                     END IF;
                 END IF;
-                -- MHU ylläpidon Hoitokauden alusta
-                IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+                -- MHU ylläpidon kulut, jotka eivät ole lisätöitä, eivätkä Tilaajan rahavarauksia (yksilöivätunniste='0e78b556-74ee-437f-ac67-7a03381c64f6')
+                IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' AND
+                   (rivi.yksiloiva_tunniste IS NULL or
+                    (rivi.yksiloiva_tunniste IS NOT NULL AND rivi.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6')) THEN
                     yllapito_hoitokausi_yht := yllapito_hoitokausi_yht + COALESCE(yllapito_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && yllapito_tpi  THEN: %', yllapito_hoitokausi_yht;
 
@@ -613,7 +631,10 @@ BEGIN
                         yllapito_val_aika_yht := yllapito_val_aika_yht + COALESCE(yllapito_rivi.summa, 0.0);
                     END IF;
                 END IF;
-                IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+                -- MHU ylläpidon kulut, joka on lisätyö , mutta ei Tilaajan rahavaraus (yksilöivätunniste='0e78b556-74ee-437f-ac67-7a03381c64f6')
+                IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' AND
+                   (rivi.yksiloiva_tunniste IS NULL or
+                    (rivi.yksiloiva_tunniste IS NOT NULL AND rivi.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6')) THEN
                     lisatyo_yllapito_hoitokausi_yht :=
                             lisatyo_yllapito_hoitokausi_yht + COALESCE(lisatyo_yllapito_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && yllapito_tpi AND lisätyö THEN: %', lisatyo_yllapito_hoitokausi_yht;
@@ -623,6 +644,18 @@ BEGIN
                         -- Laskutetaan nyt
                         lisatyo_yllapito_val_aika_yht :=
                                 lisatyo_yllapito_val_aika_yht + COALESCE(lisatyo_yllapito_rivi.summa, 0.0);
+                    END IF;
+                END IF;
+                -- MHU ylläpidon kulut, jotka on Tilaajan rahavaraus (yksilöivätunniste='0e78b556-74ee-437f-ac67-7a03381c64f6')
+                IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6' THEN
+                    tilaajan_rahavaraus_hoitokausi_yht :=
+                            tilaajan_rahavaraus_hoitokausi_yht + COALESCE(tilaajan_rahavaraus_rivi.summa, 0.0);
+
+                    IF rivi.erapaiva >= aikavali_alkupvm AND
+                       rivi.erapaiva <= aikavali_loppupvm THEN
+                        -- Laskutetaan nyt
+                        tilaajan_rahavaraus_val_aika_yht :=
+                                tilaajan_rahavaraus_val_aika_yht + COALESCE(tilaajan_rahavaraus_rivi.summa, 0.0);
                     END IF;
                 END IF;
                 -- Korvausinvestointi Hoitokauden alusta
@@ -663,42 +696,6 @@ BEGIN
                 END IF;
             END IF;
         END LOOP;
-
-    -- Haetaan alihankintabonus, joka on siirretty rahavarauksen alle ja merkitään se MHU Ylläpidon hankintoihin, jos hoitokausi on 2022 tai myöhemmin
-    alihank_bon_val_aika_yht := 0.0;
-    alihank_bon_hoitokausi_yht := 0.0;
-    IF (hk_alkupvm >= '2022-10-01'::DATE) THEN
-        FOR alihankintabonus_rivi IN SELECT ek.laskutuskuukausi, ek.rahasumma, ek.indeksin_nimi, ek.tyyppi, ek.urakka
-                                     FROM erilliskustannus ek
-                                     WHERE ek.sopimus = sopimus_id
-                                       AND ek.tyyppi = 'alihankintabonus'
-                                       AND ek.laskutuskuukausi >= hk_alkupvm
-                                       AND ek.laskutuskuukausi <= aikavali_loppupvm
-                                       AND ek.poistettu IS NOT TRUE
-            LOOP
-                RAISE NOTICE ' ********************************************* ERILLISKUSTANNUS - MHU Ylläpidolle: % ', alihankintabonus_rivi;
-
-                -- Alihankintabonukselle ei tule indeksikorotusta
-                -- Alihankintabonus käsitellään nykyään rahavarauksena ja se merkitään MHU Ylläpidon hankitoihin
-                IF alihankintabonus_rivi.laskutuskuukausi <= aikavali_loppupvm THEN
-                    -- Hoitokauden alusta
-                    alihank_bon_hoitokausi_yht :=
-                            alihank_bon_hoitokausi_yht + COALESCE(alihankintabonus_rivi.rahasumma, 0.0);
-
-                    IF alihankintabonus_rivi.laskutuskuukausi >= aikavali_alkupvm AND
-                       alihankintabonus_rivi.laskutuskuukausi <= aikavali_loppupvm THEN
-                        -- Laskutetaan nyt
-                        alihank_bon_val_aika_yht :=
-                                alihank_bon_val_aika_yht + COALESCE(alihankintabonus_rivi.rahasumma, 0.0);
-                    END IF;
-                END IF;
-            END LOOP;
-        RAISE NOTICE 'Alihankintabonus - Rahavaraukset - alihank_bon_val_aika_yht :: alihank_bon_hoitokausi_yht: % :: %', alihank_bon_val_aika_yht, alihank_bon_hoitokausi_yht;
-
-        -- Ei laiteta alihankintabonusta enää MHU Ylläpidon alle, vaan annetaan sille enemmän huomioita omalla rivillään rahavaraus kohdassa
-        --yllapito_val_aika_yht := yllapito_val_aika_yht + alihank_bon_val_aika_yht;
-        --yllapito_hoitokausi_yht := yllapito_hoitokausi_yht + alihank_bon_hoitokausi_yht;
-    END IF;
 
     RAISE NOTICE 'talvihoito_hoitokausi_yht: %', talvihoito_hoitokausi_yht;
     RAISE NOTICE 'talvihoito_val_aika_yht: %', talvihoito_val_aika_yht;
@@ -863,18 +860,13 @@ BEGIN
             talvihoito_hoitokausi_yht + lyh_hoitokausi_yht + sora_hoitokausi_yht +
             paallyste_hoitokausi_yht + yllapito_hoitokausi_yht + korvausinv_hoitokausi_yht +
             johtojahallinto_hoitokausi_yht + erillishankinnat_hoitokausi_yht + hjpalkkio_hoitokausi_yht +
-            akilliset_hoitokausi_yht + vahingot_hoitokausi_yht;
+            akilliset_hoitokausi_yht + vahingot_hoitokausi_yht + tilaajan_rahavaraus_hoitokausi_yht;
     tavhin_val_aika_yht := 0.0;
     tavhin_val_aika_yht := tavhin_val_aika_yht +
             talvihoito_val_aika_yht + lyh_val_aika_yht + sora_val_aika_yht +
             paallyste_val_aika_yht + yllapito_val_aika_yht + korvausinv_val_aika_yht +
             johtojahallinto_val_aika_yht +
-            erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht + akilliset_val_aika_yht + vahingot_val_aika_yht;
-
-    IF (hk_alkupvm >= '2022-10-01'::DATE) THEN
-        tavhin_hoitokausi_yht := tavhin_hoitokausi_yht + alihank_bon_hoitokausi_yht;
-        tavhin_val_aika_yht := tavhin_val_aika_yht + alihank_bon_val_aika_yht;
-    END IF;
+            erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht + akilliset_val_aika_yht + vahingot_val_aika_yht + tilaajan_rahavaraus_val_aika_yht;
 
     -- Budjettia jäljellä
     budjettia_jaljella := 0.0;
@@ -930,8 +922,6 @@ BEGIN
                                                                                            AND m.toimenpideinstanssi = tpi.id
                                                                                            AND tpk2.koodi = '23150'
                                                                                          LIMIT 1)))
-                           -- Alihankintabonukset on siirretty rahavarauksiin, jos hoitokausi on 2022 tai myöhemmin
-                           AND (hk_alkupvm < '2022-10-01'::DATE OR (hk_alkupvm >= '2022-10-01'::DATE AND ek.tyyppi != 'alihankintabonus'))
                            AND ek.laskutuskuukausi BETWEEN hk_alkupvm AND aikavali_loppupvm
                            AND ek.poistettu IS NOT TRUE
                            AND ek.tyyppi != 'muu'::erilliskustannustyyppi
@@ -1109,8 +1099,8 @@ BEGIN
               akilliset_hoitokausi_yht, akilliset_val_aika_yht,
         -- Vahingonkorvaukset yhteensä
               vahingot_hoitokausi_yht, vahingot_val_aika_yht,
-        -- Alihankintabonukset yhteensä
-              alihank_bon_hoitokausi_yht, alihank_bon_val_aika_yht,
+        -- Tilaajan rahavaraukset
+              tilaajan_rahavaraus_hoitokausi_yht, tilaajan_rahavaraus_val_aika_yht,
         -- Tavoitehinnat yht.
               tavhin_hoitokausi_yht, tavhin_val_aika_yht,
         -- Tavoitehinnan muodostus

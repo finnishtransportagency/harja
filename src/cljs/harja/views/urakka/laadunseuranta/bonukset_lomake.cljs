@@ -88,17 +88,7 @@
          ;; Aseta toimenpideinstanssi, jos se voidaan tietää ennalta
          :aseta (fn [rivi arvo]
                   ;; Aseta toimenpideinstanssi, mikäli sitä ei ole asetettu ennakkoon oikein
-                  (let [asetettava-tpi (cond (and
-                                               (not (nil? arvo))
-                                               (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
-                                               (= :alihankintabonus arvo)
-                                               (pvm/sama-tai-jalkeen? (:perintapvm rivi) (pvm/->pvm "01.10.2022")))
-                                         ;; Maksuehto/alihankintabonukselle otetaan aina defaulttina MHU Ylläpito toimenpideinstanssiksi
-                                         (first (filter #(= "20190" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit))
-                                         (or
-                                           (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) (not= :alihankintabonus arvo))
-                                           (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) (= :alihankintabonus arvo)
-                                             (pvm/ennen? (:perintapvm rivi) (pvm/->pvm "01.10.2022"))))
+                  (let [asetettava-tpi (cond (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
                                          (first (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit))
 
                                          :else
@@ -147,18 +137,7 @@
                       (let [;; MHU urakoiden toimenpideinstanssi on määrätty. Alueurakoilla ei
                             ;; Lisäksi alihankintabonus laitetaan MHU Ylläpidon alle, kun se tehdään 1.10.2022 jälkeen, muut Hoidon johtoon
                             toimenpideinstanssit (cond
-                                                   ;; :alihankintabonus ja 1.10.2022 jälkeen
-                                                   (and
-                                                     (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
-                                                     (= :alihankintabonus (:laji data))
-                                                     (pvm/sama-tai-jalkeen? (:perintapvm data) (pvm/->pvm "01.10.2022")))
-                                                   (filter #(= "20190" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit)
-
-                                                   ;; Muu kuin :alihankintabonus tai on :alihankintabonus, mutta ennen 1.10.2022
-                                                   (or
-                                                     (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) (not= :alihankintabonus (:laji data)))
-                                                     (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) (= :alihankintabonus (:laji data))
-                                                       (pvm/ennen? (:perintapvm data) (pvm/->pvm "01.10.2022"))))
+                                                   (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
                                                    (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit)
 
                                                    ;; Muille urakakkatyypeille näytetään kaikki toimenpideinstanssit
@@ -172,13 +151,11 @@
                            :format-fn :tpi_nimi
                            :valinta (first toimenpideinstanssit)
                            ;; Koska MHU urakoilla on määrätty toimenpideinstanssi, niin ei anneta käyttäjän vaihtaa, mutta alueurakoille se sallitaan
-                           :disabled (if (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) true false)
+                           :disabled (if (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) true fa
+                                       lse)
                            :valitse-fn #(muokkaa-lomaketta
                                           (assoc data :toimenpideinstanssi (:tpi_id %)))}
-                          toimenpideinstanssit]
-                         ;; Näytetään alihankintabonuksille, että se oikeasti näytetään tehtäväryhmässä Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)
-                         (when (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) (= :alihankintabonus (:laji data)))
-                           [:div.caption-small-weak.padding-4 "Tehtäväryhmä: Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)"])]))}
+                          toimenpideinstanssit]]))}
       (lomake/ryhma
         {:rivi? true}
         {:otsikko "Summa"

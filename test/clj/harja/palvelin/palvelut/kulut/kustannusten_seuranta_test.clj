@@ -358,7 +358,6 @@ UNION ALL
                   sopimus s
           WHERE s.urakka = "urakka"
             AND ek.sopimus = s.id
-            AND ("hoitokauden-alkuvuosi"::INT < 2022 OR ("hoitokauden-alkuvuosi" >= 2022 AND ek.tyyppi != 'alihankintabonus'))
             AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
                                             FROM toimenpideinstanssi tpi
                                                  JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
