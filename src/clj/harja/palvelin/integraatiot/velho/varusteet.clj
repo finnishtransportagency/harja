@@ -778,6 +778,26 @@
       (:tyyppi-polku kohdeluokka))
     (mapv :tyyppi varustetyypit)]])
 
+(defn varusteen-toimenpide [db {:keys [version-voimassaolo ominaisuudet tekninen-tapahtuma paattyen alkaen oid]}]
+  (let [version-alku (:alku version-voimassaolo)
+        version-loppu (:loppu version-voimassaolo)
+        toimenpiteet (:toimenpiteet ominaisuudet)]
+    (if (seq toimenpiteet)
+      (do
+        (when (< (count toimenpiteet) 1)
+          (log/warn (str "Löytyi varusteversio, jolla on monta toimenpidettä: oid: " oid
+                      " version-alku:" version-alku ". Toimenpiteet: (" (str/join ", " toimenpiteet) ")"
+                      " Otetaan vain 1. toimenpide talteen.")))
+        (:otsikko (first (q-nimikkeistot/hae-nimikkeen-tiedot db {:tyyppi-nimi (first toimenpiteet)}))))
+
+      (cond (= "tekninen-tapahtuma/tt01" tekninen-tapahtuma) "Tieosoitemuutos"
+        (= "tekninen-tapahtuma/tt02" tekninen-tapahtuma) "Muu tekninen toimenpide"
+        (and (nil? version-voimassaolo) paattyen) "Poistettu" ; Sijaintipalvelu ei palauta versioita
+        (and (nil? version-voimassaolo) (not paattyen)) "Lisätty"
+        (= alkaen version-alku) "Lisätty" ; varusteen syntymäpäivä, onnea!
+        (some? version-loppu) "Poistettu" ; uusimmalla versiolla on loppu
+        :else "Päivitetty"))))
+
 (defn hae-urakan-varustetoteumat [integraatioloki db {:keys [token-url
                                                              varuste-kayttajatunnus
                                                              varuste-salasana]}
@@ -897,9 +917,15 @@
                                        (get-in varuste [:ominaisuudet :rakenteelliset-ominaisuudet :tyyppi])
                                        (get-in varuste [:ominaisuudet :tyyppi])
                                        (get-in varuste [:ominaisuudet :rakenteelliset-ominaisuudet :kaivon-tyyppi]))
-                              {tyyppi :otsikko kohdeluokka :kohdeluokka} (first (q-nimikkeistot/hae-nimikkeen-tiedot db {:nimiavaruus_nimike tyyppi}))]
+                              kuntoluokka (get-in varuste [:ominaisuudet
+                                                           :kunto-ja-vauriotiedot
+                                                           :yleinen-kuntoluokka])
+                              ;; TODO: Hae myös toimenpide ja kuntoluokka yms. tässä eikä frontissa
+                              {tyyppi :otsikko kohdeluokka :kohdeluokka} (first (q-nimikkeistot/hae-nimikkeen-tiedot db {:tyyppi-nimi tyyppi}))
+                              {kuntoluokka :otsikko} (first (q-nimikkeistot/hae-nimikkeen-tiedot db
+                                                          {:tyyppi-nimi kuntoluokka}))]
                           {:alkupvm alkupvm
-                           :kuntoluokka (get-in varuste [:ominaisuudet :kunto-ja-vauriotiedot :yleinen-kuntoluokka])
+                           :kuntoluokka kuntoluokka
                            ;; TODO: Lisää lisätieto kuten ennenkin
                            :lisatieto (varuste-vastaanottosanoma/varusteen-lisatieto (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe) tyyppi varuste)
                            :loppupvm (cond-> (get-in varuste [:version-voimassaolo :loppu])
@@ -913,7 +939,7 @@
                                        (sijainti-kohteelle db varuste))
                            :tyyppi tyyppi
                            :kohdeluokka kohdeluokka
-                           :toimenpide (varuste-vastaanottosanoma/varusteen-toteuma varuste)
+                           :toimenpide (varusteen-toimenpide db varuste)
                            :tr-numero tie
                            :tr-alkuosa alkuosa
                            :tr-alkuetaisyys alkuet
@@ -976,7 +1002,7 @@
                          (mapv (fn [kuntoluokka]
                                  (let [[nimiavaruus kuntoluokka] (str/split kuntoluokka #"/")]
                                    (q-nimikkeistot/luo-velho-nimikkeisto<! db
-                                     {:tyyppi-avain ""
+                                     {:tyyppi-avain nimiavaruus
                                       :kohdeluokka ""
                                       :nimiavaruus nimiavaruus
                                       :nimi kuntoluokka
@@ -989,13 +1015,10 @@
           varustetoimenpiteiden-haku-onnistui?
           (seq (when hae-varustetoimenpiteet?
                  (mapv (fn [[versio varustetoimenpide-info]]
-                         (println versio)
                          (mapv (fn [varustetoimenpide]
-
-                                 (println varustetoimenpide)
                                  (let [[nimiavaruus nimi] (str/split varustetoimenpide #"/")]
                                    (q-nimikkeistot/luo-velho-nimikkeisto<! db
-                                     {:tyyppi-avain ""
+                                     {:tyyppi-avain nimiavaruus
                                       :kohdeluokka ""
                                       :nimiavaruus nimiavaruus
                                       :nimi nimi

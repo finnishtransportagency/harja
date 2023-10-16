@@ -44,9 +44,6 @@
                                    "tl522" "Reunakivet"
                                    "tl524" "Viherkuviot"})
 
-(defn tietolaji->varustetyyppi [tietolaji]
-  (or (get tietolaji->varustetyyppi-map tietolaji)
-      (str "tuntematon: " tietolaji)))
 
 (defn varustetyyppi->tietolaji [varustetyyppi]
   (get (s/map-invert tietolaji->varustetyyppi-map) varustetyyppi))

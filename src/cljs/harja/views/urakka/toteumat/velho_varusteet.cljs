@@ -32,20 +32,12 @@
             [harja.views.kartta.tasot :as kartta-tasot])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-
-(defn ns-ja-nimi->otsikko [nimikkeisto ns-ja-nimi]
-  (or
-    (when (str/includes? ns-ja-nimi "/")
-      (:otsikko (first (filter #(= (str/join "/" [(:nimiavaruus %) (:nimi %)]) ns-ja-nimi) nimikkeisto))))
-    ns-ja-nimi))
-
-(defn kuntoluokka-komponentti [kuntoluokat kuntoluokka]
-  (let [kuntoluokka (ns-ja-nimi->otsikko kuntoluokat kuntoluokka)]
-    [yleiset/tila-indikaattori kuntoluokka
-     {:class-skeema (zipmap (map :nimi v/kuntoluokat) (map :css-luokka v/kuntoluokat))
-      :luokka "body-text"
-      :wrapper-luokka "inline-block"
-      :fmt-fn str}]))
+(defn kuntoluokka-komponentti [kuntoluokka]
+  [yleiset/tila-indikaattori kuntoluokka
+   {:class-skeema (zipmap (map :nimi v/kuntoluokat) (map :css-luokka v/kuntoluokat))
+    :luokka "body-text"
+    :wrapper-luokka "inline-block"
+    :fmt-fn str}])
 
 (defn suodatuslomake [_e! _app]
   ;; Varustetyypit on muista valinnoista poiketen toteutettu atomilla.
@@ -76,7 +68,6 @@
                                                                            (keys kohdeluokat))))
             toimenpiteet (into [nil] toimenpiteet)
 
-            toteumat (into [nil] (keys varuste-ulkoiset/toteuma->toimenpide-map))
             tr-kentan-valitse-fn (fn [avain]
                                    (fn [event]
                                      (e! (v/->ValitseTR-osoite (-> event .-target .-value) avain))))
@@ -181,7 +172,7 @@
                         (= (pvm/vuosi (get-in app [:urakka :alkupvm])) (:hoitokauden-alkuvuosi valinnat)))}]]]))))
 
 
-(defn listaus [e! {:keys [varusteet haku-paalla toimenpiteet kuntoluokat] :as app}]
+(defn listaus [e! {:keys [varusteet haku-paalla] :as app}]
   (let [lkm (count varusteet)]
     [grid/grid
      {:otsikko (if (>= lkm v/+max-toteumat+)
@@ -212,17 +203,16 @@
        :fmt pvm/pvm-opt}
       {:otsikko "Tie\u00ADrekis\u00ADteri\u00ADosoi\u00ADte" :leveys 5
        :hae v/muodosta-tr-osoite}
-      {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toimenpide :leveys 3
-       :fmt (partial ns-ja-nimi->otsikko toimenpiteet)}
+      {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toimenpide :leveys 3}
       {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tyyppi :leveys 5}
       {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
       {:otsikko "Kunto\u00ADluoki\u00ADtus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
        :komponentti (fn [rivi]
-                      [kuntoluokka-komponentti kuntoluokat (:kuntoluokka rivi)])}
+                      [kuntoluokka-komponentti (:kuntoluokka rivi)])}
       {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
      varusteet]))
 
-(defn listaus-toteumat [_ valittu-toteumat kuntoluokat]
+(defn listaus-toteumat [_ valittu-toteumat]
   [grid/grid
    {:otsikko "Käyntihistoria"
     :tunniste :id
@@ -235,7 +225,7 @@
      :fmt varuste-ulkoiset/toteuma->toimenpide}
     {:otsikko "Kunto\u00ADluoki\u00ADtus muu\u00ADtos" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
-                    [kuntoluokka-komponentti kuntoluokat (:kuntoluokka rivi)])}
+                    [kuntoluokka-komponentti (:kuntoluokka rivi)])}
     {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
    valittu-toteumat])
 
@@ -248,8 +238,7 @@
       (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
                                      (e! (v/->SuljeVarusteLomake)))
         {:tarkista-komponentti? true})
-      (fn [e! {varuste :valittu-varuste toteumat :valittu-toteumat
-               kuntoluokat :kuntoluokat}]
+      (fn [e! {varuste :valittu-varuste toteumat :valittu-toteumat}]
         [:div.varustelomake {:on-click #(.stopPropagation %)}
          [sivupalkki/oikea
           {:leveys "600px"}
@@ -266,15 +255,15 @@
                           [napit/yleinen-toissijainen "Sulje"
                            #(e! (v/->SuljeVarusteLomake))]])
             :footer-luokka ""}
-           [{:otsikko "" :muokattava? (constantly false) :nimi :tietolaji
-             :fmt v/tietolaji->varustetyyppi :palstoja 1
+           [{:otsikko "" :muokattava? (constantly false) :nimi :tyyppi
+             :palstoja 1
              ::lomake/col-luokka "margin-top-4"
              :piilota-label? true :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"}
             {:nimi :kuntoluokka :tyyppi :komponentti
              :komponentti (fn [data]
                             [:span
                              "Kuntoluokitus: "
-                             [kuntoluokka-komponentti kuntoluokat (get-in data [:data :kuntoluokka])]])
+                             [kuntoluokka-komponentti (get-in data [:data :kuntoluokka])]])
              ::lomake/col-luokka "margin-top-16"
              :piilota-label? true}
             {:tyyppi :komponentti
@@ -296,7 +285,7 @@
             {:tyyppi :komponentti :palstoja 3
              ::lomake/col-luokka "margin-top-32"
              :piilota-label? true
-             :komponentti listaus-toteumat :komponentti-args [toteumat kuntoluokat]}]
+             :komponentti listaus-toteumat :komponentti-args [toteumat]}]
            varuste]]]))))
 
 (defn- varusteet* [e! app]

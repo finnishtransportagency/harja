@@ -4,7 +4,7 @@ VALUES (:versio, :kohdeluokka, :tyyppi-avain, :nimiavaruus, :nimi, :otsikko) ON 
 
 -- name: hae-nimikkeen-tiedot
 SELECT * FROM velho_nimikkeisto
-WHERE :nimiavaruus_nimike = CONCAT(tyyppi_avain, '/', nimi);
+WHERE :tyyppi-nimi = CONCAT(tyyppi_avain, '/', nimi);
 
 -- name: hae-nimikkeistot
 SELECT * FROM velho_nimikkeisto;
