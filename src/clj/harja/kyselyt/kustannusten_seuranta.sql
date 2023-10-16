@@ -223,7 +223,7 @@ UNION ALL
 -- Ensimmäisenä haetaan pelkästään Hankintakustannukset
 -- Maagiset yksilöivät tunnisteet:
 -- '4e3cf237-fdf5-4f58-b2ec-319787127b3e' viittaa tehtäväryhmään: Muut, MHU ylläpito (F)
--- '0e78b556-74ee-437f-ac67-7a03381c64f6' 'Tilaajan rahavaraus (T3)'
+-- '0e78b556-74ee-437f-ac67-7a03381c64f6' 'Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)'
 -- 'ce9264f7-0860-4be0-a447-ac79822c3ca6' 'Muut, liikenneympäristön hoito (F)'
 SELECT 0                          AS budjetoitu_summa,
        0                          AS budjetoitu_summa_indeksikorjattu,
