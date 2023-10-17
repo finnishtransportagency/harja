@@ -126,21 +126,21 @@
                         :toiminto #(let [tyhja-rivi {:id uusi-id ::lt-alus/laji :EI ::lt-alus/lkm 1}
                                          _ (swap! alukset-atom assoc uusi-id tyhja-rivi)
                                          alukset (vals @alukset-atom)]
-                                     (e! (tiedot/->MuokkaaAluksia alukset (tiedot/grid-virheita? tyhja-rivi))))
+                                     (e! (tiedot/->MuokkaaAluksia alukset (tiedot/grid-virheita? tyhja-rivi) false)))
                         :opts {:ikoni (ikonit/livicon-plus)
                                :luokka "nappi-toissijainen"}}
 
       :on-rivi-blur (fn [rivi rivinro]
                       (let [_ (swap! alukset-atom assoc rivinro rivi)
                             alukset (vals @alukset-atom)]
-                        (e! (tiedot/->MuokkaaAluksia alukset (tiedot/grid-virheita? rivi)))))
+                        (e! (tiedot/->MuokkaaAluksia alukset (tiedot/grid-virheita? rivi) false))))
 
       :toimintonappi-fn (fn [alus]
                           [napit/poista nil
                            #(do (let [_ (swap! alukset-atom dissoc alus)
                                       tyhja-rivi {:id uusi-id}
                                       alukset (vals @alukset-atom)]
-                                  (e! (tiedot/->MuokkaaAluksia alukset (tiedot/grid-virheita? tyhja-rivi)))
+                                  (e! (tiedot/->MuokkaaAluksia alukset (tiedot/grid-virheita? tyhja-rivi) true))
                                   (e! (tiedot/->SiirraTapahtumasta alus))))
 
                            {:teksti-nappi? true
@@ -173,13 +173,7 @@
       {:otsikko "Aluslaji"
        :tyyppi :valinta
        :nimi ::lt-alus/laji
-       :validoi [#(when
-                   (or (and (not= (:arvo @lt/toimenpide-atom) :tyhjennys)
-                            (or (nil? %) (= % :EI)))
-                       (nil? %))
-                    "Valitse aluslaji")]
-
-       ;:validoi [[:ei-tyhja "Valitse aluslaji"]]
+       :validoi [[:ei-tyhja "Valitse aluslaji"]]
        :valinnat (:sorted lajit-sortattu)
 
        :valinta-nayta #(or (lt-alus/aluslaji->koko-str %) "- Valitse -")
@@ -210,23 +204,19 @@
   (let [suunta->str (fn [suunta] (@lt/suunnat-atom suunta))
         suunta-vaihtoehdot (keys @lt/suunnat-atom)
         uusi-tapahtuma? (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))
-        alukset-atom (atom (zipmap (range) (::lt/alukset valittu-liikennetapahtuma)))
-        toimenpide (::toiminto/toimenpide (first (::lt/toiminnot valittu-liikennetapahtuma)))
-        palvelumuoto (::toiminto/palvelumuoto (first (::lt/toiminnot valittu-liikennetapahtuma)))
-        _ (swap! lt/toimenpide-atom assoc :arvo toimenpide)
-        _ (swap! lt/palvelu-atom assoc :arvo palvelumuoto)]
+        alukset-atom (atom (zipmap (range) (::lt/alukset valittu-liikennetapahtuma)))]
 
     [:div
      [debug app]
      [napit/takaisin "Takaisin tapahtumaluetteloon" #(e! (tiedot/->ValitseTapahtuma nil))]
 
      ;; Jos käyttäjä vaihtaa urakkaa, näytetään hyrrä
-     (if (or 
-           liikennetapahtumien-haku-kaynnissa? 
+     (if (or
+           liikennetapahtumien-haku-kaynnissa?
            liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
-       [:div {:style {:padding "16px"}} 
+       [:div {:style {:padding "16px"}}
         [ajax-loader-pieni (str "Haetaan tietoja...")]]
-       
+
        ;; Tiedot ovat ladanneet 
        [lomake/lomake
         {:otsikko (if uusi-tapahtuma?
@@ -316,8 +306,8 @@
                                 (when (or
                                         (not uusi-tapahtuma?)
                                         (not tallennushetken-aika?))
-                                  [kentat/tee-kentta 
-                                   {:tyyppi :pvm-aika} 
+                                  [kentat/tee-kentta
+                                   {:tyyppi :pvm-aika}
                                    (r/wrap
                                      aika
                                      #(e! (tiedot/->AsetaTallennusAika %)))])]))}
@@ -355,9 +345,9 @@
                    :vaihtoehto-nayta lt/toimenpide->str
                    :hae (constantly (::toiminto/toimenpide osa))
                    :aseta (fn [rivi arvo]
-                            (swap! lt/toimenpide-atom assoc :arvo arvo)
-                            (lt/paivita-suunnat-ja-toimenpide!)
-                            (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/toimenpide arvo)))}
+                            (let [paivitetyt-tiedot (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/toimenpide arvo))]
+                              (lt/paivita-suunnat-ja-toimenpide! paivitetyt-tiedot)
+                              paivitetyt-tiedot))}
                   (when (tiedot/nayta-palvelumuoto? osa)
                     {:otsikko "Palvelumuoto"
                      :nimi (str "palvelumuoto-" (::kohde/id (::lt/kohde valittu-liikennetapahtuma)))
@@ -367,9 +357,9 @@
                      :valinta-nayta #(if % (lt/palvelumuoto->str %) " - Valitse -")
                      :hae (constantly (::toiminto/palvelumuoto osa))
                      :aseta (fn [rivi arvo]
-                              (swap! lt/palvelu-atom assoc :arvo arvo)
-                              (lt/paivita-suunnat-ja-toimenpide!)
-                              (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/palvelumuoto arvo)))})
+                              (let [paivitetyt-tiedot (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/palvelumuoto arvo))]
+                                (lt/paivita-suunnat-ja-toimenpide! paivitetyt-tiedot)
+                                paivitetyt-tiedot))})
                   (when (tiedot/nayta-itsepalvelut? osa)
                     {:otsikko "Itsepalveluiden lukumäärä"
                      :nimi (str "lkm-" (::kohde/id (::lt/kohde valittu-liikennetapahtuma)))
@@ -625,6 +615,7 @@
         (let [sopimus-id (-> app :valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
               urakka-id @nav/valittu-urakka-id]
           (e! (hallinta-tiedot/->HaeSopimukset sopimus-id urakka-id))
+          (lt/paivita-suunnat-ja-toimenpide! valittu-liikennetapahtuma)
           [liikennetapahtumalomake e! app @kanavaurakka/kanavakohteet])))))
 
 (defn liikennetapahtumat [e! app]

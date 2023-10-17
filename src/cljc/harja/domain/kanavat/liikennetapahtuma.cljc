@@ -154,17 +154,25 @@
 (def palvelu-atom (atom {:arvo nil}))
 (def toimenpide-atom (atom {:arvo nil}))
 
-(defn paivita-suunnat-ja-toimenpide! []
-  ;; Jos toimenpide on tyhjennys, lisää "ei aluslajia" vaihtoehto
-  (if (= (:arvo @toimenpide-atom) :tyhjennys)
-    (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
-    (swap! lt-alus/aluslajit* dissoc :EI))
-  
-  ;; Jos toimenpide on tyhjennys/vedenkorkeus tai palvelumuoto itsepalvelu, lisätään "ei määritelty" suunta alukselle
-  (if (or (= (:arvo @palvelu-atom) :itse)
-          (or (= (:arvo @toimenpide-atom) :tyhjennys) (= (:arvo @toimenpide-atom) :veden-korkeus)))
-    (swap! suunnat-atom assoc :ei-suuntaa "Ei määritelty")
-    (swap! suunnat-atom dissoc :ei-suuntaa)))
+(defn paivita-suunnat-ja-toimenpide! [paivitetyt-tiedot]
+  (let [toiminnot (:harja.domain.kanavat.liikennetapahtuma/toiminnot paivitetyt-tiedot)
+        ;; Onko tyhjennys toimenpidettä valittuna kohteen osissa
+        tyhjennys-olemassa? (some #(= (::toiminto/toimenpide %) :tyhjennys) toiminnot)
+        ;; Onko itsepalvelu tai vedenkorkus/tyhjennys valittuna tapahtuman kohdeosissa
+        lisataan-ei-maaritelty? (some #(or
+                                         (= (::toiminto/palvelumuoto %) :itse)
+                                         (= (::toiminto/toimenpide %) :veden-korkeus)
+                                         (= (::toiminto/toimenpide %) :tyhjennys)) toiminnot)]
+
+    ;; Jos toimenpide tyhjennys olemassa, lisää "ei aluslajia" vaihtoehto 
+    (if tyhjennys-olemassa?
+      (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
+      (swap! lt-alus/aluslajit* dissoc :EI))
+
+    ;; Jos tyhjennys/vedenkorkeus tai palvelumuoto itsepalvelu valittuna kohdeosissa, lisätään "ei määritelty" suunta alukselle
+    (if lisataan-ei-maaritelty?
+      (swap! suunnat-atom assoc :ei-suuntaa "Ei määritelty")
+      (swap! suunnat-atom dissoc :ei-suuntaa))))
 
 (s/def ::alukset (s/coll-of ::lt-alus/liikennetapahtuman-alus))
 (s/def ::toiminnot (s/coll-of ::toiminto/liikennetapahtuman-toiminto))
