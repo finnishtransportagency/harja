@@ -631,7 +631,7 @@ BEGIN
                         yllapito_val_aika_yht := yllapito_val_aika_yht + COALESCE(yllapito_rivi.summa, 0.0);
                     END IF;
                 END IF;
-                -- MHU ylläpidon kulut, joka on lisätyö , mutta ei Tilaajan rahavaraus (yksilöivätunniste='0e78b556-74ee-437f-ac67-7a03381c64f6')
+                -- MHU ylläpidon kulut, joka on lisätyö , mutta ei kohdistettu tehtäväryhmään Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3) (yksilöivätunniste='0e78b556-74ee-437f-ac67-7a03381c64f6')
                 IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' AND
                    (rivi.yksiloiva_tunniste IS NULL or
                     (rivi.yksiloiva_tunniste IS NOT NULL AND rivi.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6')) THEN
@@ -646,7 +646,7 @@ BEGIN
                                 lisatyo_yllapito_val_aika_yht + COALESCE(lisatyo_yllapito_rivi.summa, 0.0);
                     END IF;
                 END IF;
-                -- MHU ylläpidon kulut, jotka on Tilaajan rahavaraus (yksilöivätunniste='0e78b556-74ee-437f-ac67-7a03381c64f6')
+                -- MHU ylläpidon kulut, jotka on kohdistettu tehtäväryhmään Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3) (yksilöivätunniste='0e78b556-74ee-437f-ac67-7a03381c64f6')
                 IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6' THEN
                     tilaajan_rahavaraus_hoitokausi_yht :=
                             tilaajan_rahavaraus_hoitokausi_yht + COALESCE(tilaajan_rahavaraus_rivi.summa, 0.0);
