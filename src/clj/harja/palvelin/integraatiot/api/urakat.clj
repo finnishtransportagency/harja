@@ -8,6 +8,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.urakat :as q-urakat]
+            [clojure.string :as str]
             [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodit]
             [harja.kyselyt.materiaalit :as q-materiaalit]
             [harja.kyselyt.konversio :as konv]
@@ -174,8 +175,10 @@
             urakat-sijainilla (fn-suodata-urakat-oikeuksilla urakat-sijainilla)
             ;; Jos sijainnilla ei löydy tuloksia ja palauta-lahin-hoitourakka on true, haetaan lähin hoitourakka
             hae-lahin-hoitourakka? (and
-                                     ;; Kun parametri on true, palautetaan lähin hoitourakka jos sijainnilla ei löydy urakoita
-                                     (= palauta-lahin-hoitourakka "true")
+                                     ;; Palautetaan lähin hoitourakka jos sijainnilla ei löydy urakoita, ja palauta-lahin-hoitourakka ei ole false
+                                     (or
+                                       (nil? palauta-lahin-hoitourakka)
+                                       (not= (str/lower-case palauta-lahin-hoitourakka) "false"))
                                      (empty? urakat-sijainilla))
             ;; Jos halutaan etsiä lähin hoitourakka
             urakat (if hae-lahin-hoitourakka?
