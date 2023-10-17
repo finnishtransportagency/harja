@@ -175,18 +175,28 @@
             ;; Jos sijainnilla ei löydy tuloksia ja palauta-lahin-hoitourakka on true, haetaan lähin hoitourakka
             hae-lahin-hoitourakka? (and
                                      ;; Kun parametri on true, palautetaan lähin hoitourakka jos sijainnilla ei löydy urakoita
-                                     palauta-lahin-hoitourakka
+                                     (= palauta-lahin-hoitourakka "true")
                                      (empty? urakat-sijainilla))
             ;; Jos halutaan etsiä lähin hoitourakka
             urakat (if hae-lahin-hoitourakka?
-                     ;; Hakee 50 urakkaa kilometrisäteellä
+                     ;; Palauttaa 50 urakkaa kilometrisäteellä
                      (q-urakat/hae-lahin-hoidon-alueurakka db {:x x-easting :y y-northing :maksimietaisyys (* kilometrit 1000)})
                      urakat-sijainilla)
             ;; Suodata kaikki urakat johon ei ole oikeuksia 
             urakat-suodatettu (fn-suodata-urakat-oikeuksilla urakat)
             ;; Jos halutaan palauttaa lähin urakka, palauta (first)
-            urakat-suodatettu (if hae-lahin-hoitourakka?
+            urakat-suodatettu (cond
+                                (and
+                                  hae-lahin-hoitourakka?
+                                  (first urakat-suodatettu))
                                 [(first urakat-suodatettu)]
+
+                                (and
+                                  hae-lahin-hoitourakka?
+                                  (nil? (first urakat-suodatettu)))
+                                []
+
+                                :else
                                 urakat-suodatettu)]
         (muodosta-vastaus-urakoiden-haulle urakat-suodatettu)))))
 
