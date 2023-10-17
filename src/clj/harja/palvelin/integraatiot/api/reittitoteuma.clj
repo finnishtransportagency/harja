@@ -280,7 +280,8 @@ maksimi-linnuntien-etaisyys 200)
                          json-skeemat/kirjausvastaus
                          (fn [parametit data kayttaja db]
                            (#'kirjaa-toteuma db db-replica
-                             parametit data kayttaja)))))
+                             parametit data kayttaja))
+          :kirjoitus)))
 
     (julkaise-reitti
      http :lisaa-reittitoteuma
@@ -293,7 +294,8 @@ maksimi-linnuntien-etaisyys 200)
                          json-skeemat/kirjausvastaus
                          (fn [parametit data kayttaja db]
                            (#'poista-toteuma db db-replica
-                                             parametit data kayttaja)))))
+                                             parametit data kayttaja))
+          :kirjoitus)))
 
     this)
   (stop [{http :http-palvelin :as this}]

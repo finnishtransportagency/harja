@@ -296,7 +296,7 @@
                                 (when uusi-tapahtuma?
                                   [:span {:style {:position "relative" :bottom "10px"}}
                                    [kentat/tee-kentta {:tyyppi :checkbox
-                                                       :teksti "Käytä tallennushetken aikaa"
+                                                       :teksti "Käytä nykyistä aikaa"
                                                        :nayta-rivina? true
                                                        :valitse! (fn []
                                                                    (e! (tiedot/->ValitseAjanTallennus tallennushetken-aika?))

@@ -25,7 +25,7 @@
 
 (def tarkkailija-asetukset {:loop-odotus 100})
 (def default-odottelu (+ (:loop-odotus tarkkailija-asetukset) 600))
-(def default-odottelu-pidennetty (+ default-odottelu 1000))
+(def default-odottelu-pidennetty (+ default-odottelu 2000))
 (def pitka-odottelu (+ default-odottelu-pidennetty 5000))
 
 (defn luo-jarjestelma [_]

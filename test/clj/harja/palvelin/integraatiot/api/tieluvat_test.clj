@@ -11,6 +11,7 @@
             [harja.kyselyt.tielupa-kyselyt :as tielupa-q]
             [slingshot.slingshot :refer [throw+]]
             [slingshot.test]
+            [clojure.string :as str]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]))
 
 (def kayttaja "livi")
@@ -60,7 +61,7 @@
 (deftest kirjaa-uusi-mainoslupa
   (let [db (luo-testitietokanta)
         ;; Lisää väliaikaisesti kayttaja :lle tielupa -oikeudet tietokantaan
-        _ (u (format "update kayttaja set api_oikeus = 'tielupa' WHERE kayttajanimi = '%s'" kayttaja))
+        _ (u (format "update kayttaja set api_oikeudet = ARRAY['tielupa'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja))
         tunniste 3453455
         tielupa-json (.replace (slurp "test/resurssit/api/tieluvan-kirjaus-mainoslupa.json") "<TUNNISTE>" (str tunniste))
         odotettu {::tielupa/tienpitoviranomainen-sahkopostiosoite "teijo.tienpitaja@example.com"
@@ -103,8 +104,25 @@
                   ::tielupa/hakija-puhelinnumero "987-7889087"
                   ::tielupa/tien-nimi "Kuusamontie"
                   ::tielupa/urakoitsija-yhteyshenkilo "Yrjänä Yhteyshenkilo"
-                  ::tielupa/urakoitsija-nimi "Puulaaki Oy"}]
-    (api-tyokalut/post-kutsu ["/api/tieluvat"] kayttaja portti tielupa-json)
+                  ::tielupa/urakoitsija-nimi "Puulaaki Oy"}
+
+        ;; Poistetaan oikeudet 
+        _ (poista-kayttajan-api-oikeudet kayttaja)
+        ;; Näillä oikeuksilla ei pitäisi pystyä kutsumaan tielupa rajapintaa
+        _ (anna-kirjoitusoikeus kayttaja)
+        _ (anna-analytiikkaoikeus kayttaja)
+        vastaus (api-tyokalut/post-kutsu ["/api/tieluvat"] kayttaja portti tielupa-json)
+
+        ;; Käyttäjällä ei ole tielupa oikeuksia  
+        _ (is (= 403 (:status vastaus)) "Käyttäjältä ei löydy tielupa oikeuksia")
+        _ (is (str/includes? (:body vastaus) "Käyttäjätunnuksella puutteelliset oikeudet") "Virheviesti löytyy")
+
+        ;; Annetaan tielupaoikeudet ja tehdään kutsu uudelleen
+        _ (poista-kayttajan-api-oikeudet kayttaja)
+        _ (anna-tielupaoikeus kayttaja)
+        vastaus (api-tyokalut/post-kutsu ["/api/tieluvat"] kayttaja portti tielupa-json)
+        _ (is (= 200 (:status vastaus)) "Vastaus OK")]
+    
     (let [haettu-tielupa (first (tielupa-q/hae-tieluvat db {::tielupa/ulkoinen-tunniste tunniste}))
           haettu-tielupa (-> haettu-tielupa
                              (dissoc ::muokkaustiedot/luotu)
@@ -115,7 +133,7 @@
 (deftest kirjaa-uusi-suojaalue-lupa
   (let [db (luo-testitietokanta)
         ;; Lisää väliaikaisesti kayttaja :lle tielupa -oikeudet tietokantaan
-        _ (u (format "update kayttaja set api_oikeus = 'tielupa' WHERE kayttajanimi = '%s'" kayttaja))
+        _ (u (format "update kayttaja set api_oikeudet = ARRAY['tielupa'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja))
         tunniste 373773
         tielupa-json (.replace (slurp "test/resurssit/api/tieluvan-kirjaus-suojaalue.json") "<TUNNISTE>" (str tunniste))
         odotettu #:harja.domain.tielupa{:urakoitsija-yhteyshenkilo
@@ -182,7 +200,7 @@
 (deftest kirjaa-uusi-liittymalupalupa
   (let [db (luo-testitietokanta)
         ;; Lisää väliaikaisesti kayttaja :lle tielupa -oikeudet tietokantaan
-        _ (u (format "update kayttaja set api_oikeus = 'tielupa' WHERE kayttajanimi = '%s'" kayttaja))
+        _ (u (format "update kayttaja set api_oikeudet = ARRAY['tielupa'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja))
         tunniste 43858
         tielupa-json (.replace (slurp "test/resurssit/api/tieluvan-kirjaus-liittymalupa.json") "<TUNNISTE>" (str tunniste))
         odotettu #:harja.domain.tielupa{:urakoitsija-yhteyshenkilo

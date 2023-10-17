@@ -30,7 +30,8 @@
 
 
 (deftest ^:perf yksittainen-kirjaus-ei-kesta-liian-kauan
-  (let [sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)]
+  (let [sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        _ (anna-kirjoitusoikeus kayttaja)]
     (is (apply
          gatling-onnistuu-ajassa?
          "Yksittäinen reittitoteuma"
@@ -50,6 +51,7 @@
 (deftest tallenna-yksittainen-reittitoteuma
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                                                 (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                                                     slurp
@@ -62,7 +64,8 @@
 
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
-      (let [vastaus-paivitys (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-jvh portti
+      (let [_ (anna-kirjoitusoikeus kayttaja-jvh)
+            vastaus-paivitys (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-jvh portti
                                                       (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                                                           slurp
                                                           (.replace "__SOPIMUS_ID__" (str sopimus-id))
@@ -102,6 +105,7 @@
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         api-payload (slurp "test/resurssit/api/reittitoteuma_yksittainen_talvisuola.json")
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                          (-> api-payload
                            (.replace "__SOPIMUS_ID__" (str sopimus-id))
@@ -113,7 +117,8 @@
 
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
-      (let [vastaus-paivitys (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-jvh portti
+      (let [_ (anna-kirjoitusoikeus kayttaja-jvh)
+            vastaus-paivitys (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-jvh portti
                                (-> "test/resurssit/api/reittitoteuma_yksittainen_talvisuola.json"
                                  slurp
                                  (.replace "__SOPIMUS_ID__" (str sopimus-id))
@@ -155,6 +160,7 @@
 (deftest tallenna-soratiehoitoluokalle-reittitoteuma
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                          (-> "test/resurssit/api/reittitoteuma_soratie_polyntorjunta.json"
                            slurp
@@ -197,6 +203,7 @@
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (ffirst (q "SELECT id FROM sopimus WHERE urakka = " urakka " AND paasopimus IS NULL"))
         tehtava-id (ffirst (q "SELECT id FROM tehtava WHERE nimi = 'Suolaus'"))
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                          (-> "test/resurssit/api/reittitoteuma_talvisuola_pyoratiella.json"
                            slurp
@@ -238,6 +245,7 @@
         sopimus-id (ffirst (q (str "SELECT id FROM sopimus WHERE urakka = " 2 " AND paasopimus IS NULL")))
         sopimuksen_kaytetty_materiaali-maara-ennen (ffirst (q (str "SELECT count(*) FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id)))
         kaytetty-talvisuolaliuos-odotettu 4.62M
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                                                 (-> "test/resurssit/api/reittitoteuma_yksittainen_ilman_sopimusta.json"
                                                     slurp
@@ -258,6 +266,7 @@
         ulkoinen-id-1 (first ulkoiset-idt)
         ulkoinen-id-2 (second ulkoiset-idt)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                                                 (-> "test/resurssit/api/reittitoteuma_monta.json"
                                                     slurp
@@ -275,6 +284,7 @@
 (deftest tarkista-toteuman-tallentaminen-paasopimukselle
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                                                 (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                                                     slurp
@@ -290,6 +300,7 @@
 (deftest tarkista-toteuman-tallentaminen-ilman-oikeuksia
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        _ (anna-kirjoitusoikeus "LX123456789")
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] "LX123456789" portti
                                                 (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                                                     slurp
@@ -302,6 +313,7 @@
      (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'destia';")) ");")
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        _ (anna-kirjoitusoikeus "destia")
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] "destia" portti
                                                 (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                                                     slurp
@@ -314,6 +326,7 @@
 (defn laheta-yksittainen-reittitoteuma [urakka-id annettu-kayttaja uusi-aika]
   (let [ulkoinen-id (str (tyokalut/hae-vapaa-toteuma-ulkoinen-id))
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
+        _ (anna-kirjoitusoikeus annettu-kayttaja)
         vastaus (tyokalut/post-kutsu
                  ["/api/urakat/" urakka-id "/toteumat/reitti"] annettu-kayttaja portti
                   (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
@@ -326,7 +339,8 @@
     ulkoinen-id))
 
 (defn poista-toteuma [ulkoinen-id urakka-id annettu-kayttaja]
-  (let [vastaus (tyokalut/delete-kutsu
+  (let [_ (anna-kirjoitusoikeus annettu-kayttaja)
+        vastaus (tyokalut/delete-kutsu
                  ["/api/urakat/" urakka-id "/toteumat/reitti"]
                   annettu-kayttaja portti
                  (-> "test/resurssit/api/toteuman-poisto.json"
@@ -383,6 +397,7 @@
                (.replace "__REITTITOTEUMA_MATERIAALIT__" (json/write-str reittitoteuma-materiaali))
                (.replace "__REITTIPISTE1_MATERIAALIT__" (json/write-str reittipiste1-materiaali))
                (.replace "__REITTIPISTE2_MATERIAALIT__" (json/write-str reittipiste2-materiaali)))
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus (tyokalut/post-kutsu
                   ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja portti data)]
     (is (= 200 (:status vastaus)) "Reittitoteuman tallennus onnistuu")
@@ -454,6 +469,7 @@
 (deftest lahetys-tuntemattomalle-urakalle-ei-toimi []
   (let [ulkoinen-id (str (tyokalut/hae-vapaa-toteuma-ulkoinen-id))
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus (tyokalut/post-kutsu
                   ["/api/urakat/" 666 "/toteumat/reitti"] kayttaja portti
                   (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
@@ -473,32 +489,34 @@
         kayttaja (ffirst (q (str "SELECT kayttajanimi
                                   FROM kayttaja
                                   WHERE organisaatio=(SELECT hallintayksikko FROM urakka WHERE id=" oulun-alueurakka-id ") AND "
-                                 "organisaatio=(SELECT hallintayksikko FROM urakka WHERE id=" kajaanin-alueurakka-id ")")))
+                              "organisaatio=(SELECT hallintayksikko FROM urakka WHERE id=" kajaanin-alueurakka-id ")")))
         ;; Annetaan käyttäjälle lisäoikeudet ja tehdään siitä järjestelmä, jotta api-kutsut menee läpi.
         _ (u "INSERT INTO kayttajan_lisaoikeudet_urakkaan (urakka, kayttaja) VALUES
         (" oulun-alueurakka-id ", " (ffirst (q (str "SELECT id FROM kayttaja WHERE kayttajanimi = '" kayttaja "'"))) "),
         (" kajaanin-alueurakka-id ", " (ffirst (q (str "SELECT id FROM kayttaja WHERE kayttajanimi = '" kayttaja "'"))) ")")
         _ (u "UPDATE kayttaja SET jarjestelma = TRUE WHERE kayttajanimi= '" kayttaja "'")
-
+        
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" oulun-alueurakka-id "/toteumat/reitti"] kayttaja portti
-                                                (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
-                                                    slurp
-                                                    (.replace "__SOPIMUS_ID__" (str oulun-sopimus-id))
-                                                    (.replace "__ID__" (str ulkoinen-id))
-                                                    (.replace "__SUORITTAJA_NIMI__" "Tienharjaajat Oy")))
+                         (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                           slurp
+                           (.replace "__SOPIMUS_ID__" (str oulun-sopimus-id))
+                           (.replace "__ID__" (str ulkoinen-id))
+                           (.replace "__SUORITTAJA_NIMI__" "Tienharjaajat Oy")))
         _ (is (= 200 (:status vastaus-lisays)))
         toinen-vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" kajaanin-alueurakka-id "/toteumat/reitti"] kayttaja portti
-                                                       (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
-                                                           slurp
-                                                           (.replace "__SOPIMUS_ID__" (str kajaanin-sopimus-id))
-                                                           (.replace "__ID__" (str ulkoinen-id))
-                                                           (.replace "__SUORITTAJA_NIMI__" "Tienharjaajat Oy")))]
+                                (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                                  slurp
+                                  (.replace "__SOPIMUS_ID__" (str kajaanin-sopimus-id))
+                                  (.replace "__ID__" (str ulkoinen-id))
+                                  (.replace "__SUORITTAJA_NIMI__" "Tienharjaajat Oy")))]
 
     (is (= 200 (:status toinen-vastaus-lisays)))))
 
 (deftest paivita-reittitoteuma-monesti-hoitoluokittaiset-summat-paivitetaan-oikein
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        _ (anna-kirjoitusoikeus kayttaja)
         reittototeumakutsu-joka-tehdaan-monesti (fn [urakka kayttaja portti sopimus-id ulkoinen-id]
                                                   (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                                                                            (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
@@ -559,6 +577,7 @@
   (let [urakka-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012")
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
+        _ (anna-kirjoitusoikeus kayttaja)
         toteuma (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                     slurp
                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
