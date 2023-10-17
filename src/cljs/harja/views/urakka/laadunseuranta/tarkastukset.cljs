@@ -41,13 +41,13 @@
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def +tarkastustyyppi-hoidolle+ [:tiesto :talvihoito :soratie :laatu])
+(def +tarkastustyyppi-hoidolle+ [:tieturvallisuus :tiesto :talvihoito :soratie :laatu])
 (def +tarkastustyyppi-yllapidolle+ [:katselmus :pistokoe :vastaanotto :takuu])
 
 (defn tarkastustyypit-hoidon-tekijalle [tekija]
   (case tekija
     :tilaaja [:laatu]
-    :urakoitsija [:tiesto :talvihoito :soratie]
+    :urakoitsija [:tieturvallisuus :tiesto :talvihoito :soratie]
     +tarkastustyyppi-hoidolle+))
 
 (defn tarkastustyypit-urakkatyypille-ja-tekijalle [urakkatyyppi tekija]
@@ -131,8 +131,7 @@
               (yleiset/wrap-if
                 (not oikeus?)
                 [yleiset/tooltip {} :%
-                 (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                                 oikeudet/urakat-laadunseuranta-tarkastukset)]
+                 (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-laadunseuranta-tarkastukset)]
                 ^{:key "uusi-tarkastus"}
                 [napit/uusi "Uusi tarkastus"
                  #(reset! tiedot/valittu-tarkastus (uusi-tarkastus (:tyyppi urakka)))
@@ -154,11 +153,13 @@
              :nimi :aika}
 
             {:otsikko "Tyyppi"
-             :nimi :tyyppi :fmt tiedot/+tarkastustyyppi->nimi+ :leveys 1}
+             :nimi :tyyppi
+             :fmt tiedot/+tarkastustyyppi->nimi+
+             :leveys 1}
 
             (when (or (= :paallystys (:nakyma optiot))
-                      (= :paikkaus (:nakyma optiot))
-                      (= :tiemerkinta (:nakyma optiot)))
+                    (= :paikkaus (:nakyma optiot))
+                    (= :tiemerkinta (:nakyma optiot)))
               {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
                :hae (fn [rivi]
                       (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
