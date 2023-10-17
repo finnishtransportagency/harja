@@ -365,8 +365,9 @@
         (or
           ;; Alukset ei ole tyhjiä 
           (not-empty alukset)
-          ;; Sallitaan tallennus myös jos aluksia ei ole, mutta palvelumuodot olemassa 
+          ;; Sallitaan tallennus myös jos aluksia ei ole, mutta toimenpide&palvelumuodot olemassa 
           (every? #(and
+                     (not (nil? (::toiminto/toimenpide %)))
                      (not (nil? (::toiminto/palvelumuoto %)))
                      (some (fn [lt] (contains? lt ::toiminto/palvelumuoto)) toiminnot)) toiminnot))))))
 
