@@ -204,20 +204,19 @@
   (let [suunta->str (fn [suunta] (@lt/suunnat-atom suunta))
         suunta-vaihtoehdot (keys @lt/suunnat-atom)
         uusi-tapahtuma? (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))
-        alukset-atom (atom (zipmap (range) (::lt/alukset valittu-liikennetapahtuma)))
-        _ (lt/paivita-suunnat-ja-toimenpide! valittu-liikennetapahtuma)]
+        alukset-atom (atom (zipmap (range) (::lt/alukset valittu-liikennetapahtuma)))]
 
     [:div
      [debug app]
      [napit/takaisin "Takaisin tapahtumaluetteloon" #(e! (tiedot/->ValitseTapahtuma nil))]
 
      ;; Jos käyttäjä vaihtaa urakkaa, näytetään hyrrä
-     (if (or 
-           liikennetapahtumien-haku-kaynnissa? 
+     (if (or
+           liikennetapahtumien-haku-kaynnissa?
            liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
-       [:div {:style {:padding "16px"}} 
+       [:div {:style {:padding "16px"}}
         [ajax-loader-pieni (str "Haetaan tietoja...")]]
-       
+
        ;; Tiedot ovat ladanneet 
        [lomake/lomake
         {:otsikko (if uusi-tapahtuma?
@@ -307,8 +306,8 @@
                                 (when (or
                                         (not uusi-tapahtuma?)
                                         (not tallennushetken-aika?))
-                                  [kentat/tee-kentta 
-                                   {:tyyppi :pvm-aika} 
+                                  [kentat/tee-kentta
+                                   {:tyyppi :pvm-aika}
                                    (r/wrap
                                      aika
                                      #(e! (tiedot/->AsetaTallennusAika %)))])]))}
@@ -616,6 +615,7 @@
         (let [sopimus-id (-> app :valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
               urakka-id @nav/valittu-urakka-id]
           (e! (hallinta-tiedot/->HaeSopimukset sopimus-id urakka-id))
+          (lt/paivita-suunnat-ja-toimenpide! valittu-liikennetapahtuma)
           [liikennetapahtumalomake e! app @kanavaurakka/kanavakohteet])))))
 
 (defn liikennetapahtumat [e! app]

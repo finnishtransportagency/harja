@@ -158,11 +158,11 @@
   (let [toiminnot (:harja.domain.kanavat.liikennetapahtuma/toiminnot paivitetyt-tiedot)
         ;; Onko tyhjennys toimenpidettä valittuna kohteen osissa
         tyhjennys-olemassa? (some #(= (::toiminto/toimenpide %) :tyhjennys) toiminnot)
-        ;; Onko itsepalvelu tai vednekorkeus/tyhjennys valittuna tapahtuman kohdeosissa
-        lisataan-ei-maaritelty? (or
-                                  (some #(= (::toiminto/palvelumuoto %) :itse) toiminnot)
-                                  (some #(= (::toiminto/toimenpide %) :veden-korkeus) toiminnot)
-                                  (some #(= (::toiminto/toimenpide %) :tyhjennys) toiminnot))]
+        ;; Onko itsepalvelu tai vedenkorkus/tyhjennys valittuna tapahtuman kohdeosissa
+        lisataan-ei-maaritelty? (some #(or
+                                         (= (::toiminto/palvelumuoto %) :itse)
+                                         (= (::toiminto/toimenpide %) :veden-korkeus)
+                                         (= (::toiminto/toimenpide %) :tyhjennys)) toiminnot)]
 
     ;; Jos toimenpide tyhjennys olemassa, lisää "ei aluslajia" vaihtoehto 
     (if tyhjennys-olemassa?
