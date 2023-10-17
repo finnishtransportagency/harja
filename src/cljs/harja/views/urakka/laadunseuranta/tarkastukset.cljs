@@ -65,7 +65,7 @@
 (defn uusi-tarkastus [urakkatyyppi]
   {:uusi? true
    :aika (pvm/nyt)
-   :tyyppi (if (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :katselmus nil)
+   :tyyppi (if (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :katselmus @tiedot/tarkastustyyppi)
    :tarkastaja @istunto/kayttajan-nimi
    :nayta-urakoitsijalle (or (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija) (nav/yllapitourakka-valittu?))
    :laadunalitus false})
@@ -136,7 +136,7 @@
                 [napit/uusi "Uusi tarkastus"
                  #(reset! tiedot/valittu-tarkastus (uusi-tarkastus (:tyyppi urakka)))
                  {:disabled (not oikeus?)}]))]]
-
+          
           [grid/grid
            {:otsikko "Tarkastukset"
             :tyhja (if (nil? @tiedot/urakan-tarkastukset)
@@ -366,9 +366,12 @@
                        [[:ei-tyhja "Anna tarkastuksen kohde"]])})
 
          (if vesivaylaurakka?
-           {:otsikko "Tar\u00ADkastus" :nimi :tyyppi :tyyppi :string
+           {:otsikko "Tar\u00ADkastus" 
+            :nimi :tyyppi 
+            :tyyppi :string
             :hae (constantly "Katselmus") :muokattava? (constantly false)}
-           {:otsikko "Tar\u00ADkastus" :nimi :tyyppi
+           {:otsikko "Tar\u00ADkastus" 
+            :nimi :tyyppi
             :pakollinen? true
             :tyyppi :valinta
             :valinnat (tarkastustyypit-urakkatyypille-ja-tekijalle urakkatyyppi (:tekija tarkastus))
