@@ -128,9 +128,9 @@
           x-easting (try+
                       (muunnos/str->double x)
                       (catch NumberFormatException _
-                             (throw+ {:type virheet/+viallinen-kutsu+
-                                      :virheet [{:koodi virheet/+virheellinen-sijainti+
-                                                 :viesti "Virheellinen X-koordinaatti"}]})))
+                        (throw+ {:type virheet/+viallinen-kutsu+
+                                 :virheet [{:koodi virheet/+virheellinen-sijainti+
+                                            :viesti "Virheellinen X-koordinaatti"}]})))
           y-northing (try+
                        (muunnos/str->double y)
                        (catch NumberFormatException _
@@ -182,26 +182,25 @@
                                      (empty? urakat-sijainilla))
             ;; Jos halutaan etsiä lähin hoitourakka
             urakat (if hae-lahin-hoitourakka?
-                     ;; Palauttaa 50 urakkaa kilometrisäteellä
-                     (q-urakat/hae-lahin-hoidon-alueurakka db {:x x-easting :y y-northing :maksimietaisyys (* kilometrit 1000)})
+                     ;; Suodatetaan tietokannasta haetut 50 urakkaa kilometrisäteellä oikeuksien perusteella
+                     (fn-suodata-urakat-oikeuksilla
+                       (q-urakat/hae-lahin-hoidon-alueurakka db {:x x-easting :y y-northing :maksimietaisyys (* kilometrit 1000)}))
                      urakat-sijainilla)
-            ;; Suodata kaikki urakat johon ei ole oikeuksia 
-            urakat-suodatettu (fn-suodata-urakat-oikeuksilla urakat)
             ;; Jos halutaan palauttaa lähin urakka, palauta (first)
-            urakat-suodatettu (cond
-                                (and
-                                  hae-lahin-hoitourakka?
-                                  (first urakat-suodatettu))
-                                [(first urakat-suodatettu)]
+            urakat (cond
+                     (and
+                       hae-lahin-hoitourakka?
+                       (first urakat))
+                     [(first urakat)]
 
-                                (and
-                                  hae-lahin-hoitourakka?
-                                  (nil? (first urakat-suodatettu)))
-                                []
+                     (and
+                       hae-lahin-hoitourakka?
+                       (nil? (first urakat)))
+                     []
 
-                                :else
-                                urakat-suodatettu)]
-        (muodosta-vastaus-urakoiden-haulle urakat-suodatettu)))))
+                     :else
+                     urakat)]
+        (muodosta-vastaus-urakoiden-haulle urakat)))))
 
 (def hakutyypit
   [{:palvelu :hae-urakka
