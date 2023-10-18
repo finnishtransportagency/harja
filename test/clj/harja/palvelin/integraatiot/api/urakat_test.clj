@@ -84,6 +84,33 @@
               (some #(clojure.string/includes? nimi %) #{"Oulun MHU" "Aktiivinen Oulu Testi"}))
             (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body))))))
 
+  (testing "palauta-lahin-hoitourakka"
+    (let [urakkatyyppi "hoito"
+          fn-vastaus (fn [palauta-lahin-hoitourakka]
+                       (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "yit-rakennus"
+                         {"urakkatyyppi" urakkatyyppi
+                          "x" 486225.3013260806    ;; Piste Pohjois-Pohjanmaan ulkopuolella  
+                          "y" 7086935.066015409
+                          "palauta-lahin-hoitourakka" palauta-lahin-hoitourakka} portti))
+          
+          ;; Palauta lähin hoitourakka == false 
+          vastaus (fn-vastaus false)
+          ;; Tuloksia ei löydy koska sijainti on liian kaukana 
+          enkoodattu-body (cheshire/decode (:body vastaus) true)
+          _ (is (= 0 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
+
+          ;; Palauta lähin hoitourakka == true 
+          vastaus (fn-vastaus true)
+          enkoodattu-body (cheshire/decode (:body vastaus) true)
+          ;; Yksi tulos löytyy 
+          _ (is (= 1 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))]
+      
+      (is (= 200 (:status vastaus)))
+      (is (every?
+            (fn [nimi]
+              (some #(clojure.string/includes? nimi %) #{"Oulun MHU"}))
+            (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body))))))
+
   (testing "Urakkatyyppi: paallystys (sopimustyyppi = palvelusopimus)"
     ;; Lisätään väliaikainen päällystyspalvelusopimus Porvoon päällystysurakalle (testisopimuksen geometria on Kouvolassa)
     (lisaa-paallystyspalvelusopimus "por1")
@@ -114,16 +141,16 @@
     ;; Ilmoitusten urakkahaku antaa väärän tuloksen mikäli tulee osuma 'kokonaisurakka' päällystysurakkaan.
     ;; Ilmoitusten suhteen ollaan ilmeisesti kiinnostuneita vain palvelusopimuksen piirissä olevista urakoista.
     (testing "Urakkatyyppi: paallystys (sopimustyyppi = kokonaisurakka)"
-             (let [urakkatyyppi "paallystys"
-                   _ (anna-lukuoikeus (:kayttajanimi +kayttaja-paakayttaja-skanska+))
-                   vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] (:kayttajanimi +kayttaja-paakayttaja-skanska+)
-                             {"urakkatyyppi" urakkatyyppi
+      (let [urakkatyyppi "paallystys"
+            _ (anna-lukuoikeus (:kayttajanimi +kayttaja-paakayttaja-skanska+))
+            vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] (:kayttajanimi +kayttaja-paakayttaja-skanska+)
+                      {"urakkatyyppi" urakkatyyppi
                               ;; Oulun lähiseutu (EPSG:3067)
-                              "x" 427232.596 "y" 7211474.342} portti)
-                   enkoodattu-body (cheshire/decode (:body vastaus) true)]
-               (is (= 200 (:status vastaus)))
-               (is (= 1 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
-               (is (= "Muhoksen päällystysurakka" (get-in (first (:urakat enkoodattu-body)) [:urakka :tiedot :nimi])))))))
+                       "x" 427232.596 "y" 7211474.342} portti)
+            enkoodattu-body (cheshire/decode (:body vastaus) true)]
+        (is (= 200 (:status vastaus)))
+        (is (= 1 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
+        (is (= "Muhoksen päällystysurakka" (get-in (first (:urakat enkoodattu-body)) [:urakka :tiedot :nimi])))))))
 
 (deftest hae-urakka-pelkalla-sijainnilla
   (testing "Sijainti (epsg:3067): 427232.596,7211474.342"
