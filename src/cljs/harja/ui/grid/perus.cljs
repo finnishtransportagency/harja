@@ -490,10 +490,10 @@
 
 (defn- sort-ikoni [suunta]
   (cond (= suunta :asc)
-    [ui-ikonit/livicon-arrow-up]
+    [ui-ikonit/action-sort-ascending]
     (= suunta :desc)
-    [ui-ikonit/livicon-arrow-down]
-    :default
+    [ui-ikonit/action-sort-descending]
+    :default ; ei näytetä ikonia jos kentällä ei parhaillaan sortata
     nil))
 (defn- otsikkorivi [{:keys [opts skeema nayta-toimintosarake? piilota-toiminnot? tallenna esta-tiivis-grid?]}]
   (let [otsikkorivi-klikattu (:otsikkorivi-klikattu opts)]
@@ -521,8 +521,10 @@
              [otsikko-komp]
              (if-not sarake-sort
                [:div otsikko]
+               [:div.ilmoitukset-sort
                [:span.klikattava {:on-click (:fn sarake-sort)}
-                otsikko " " (sort-ikoni (:suunta sarake-sort)) " "]))]) skeema)
+                otsikko " " (sort-ikoni (:suunta sarake-sort)) " "]]
+               ))]) skeema)
       (when (or nayta-toimintosarake?
                 (and (not piilota-toiminnot?)
                      tallenna))
