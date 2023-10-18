@@ -737,11 +737,11 @@
 (deftest alusten-muokkaus
   (is (= {:valittu-liikennetapahtuma {::lt/alukset [{:foo :bar, :harja.domain.kanavat.lt-alus/suunta nil}]
                                       :grid-virheita? false}}
-         (e! (tiedot/->MuokkaaAluksia [{:foo :bar}] false)
+         (e! (tiedot/->MuokkaaAluksia [{:foo :bar}] false false)
              {:valittu-liikennetapahtuma {}})))
 
   (is (= {:valittu-liikennetapahtuma nil}
-         (e! (tiedot/->MuokkaaAluksia [{:foo :bar}] true)
+         (e! (tiedot/->MuokkaaAluksia [{:foo :bar}] true false)
              {:valittu-liikennetapahtuma nil}))))
 
 (deftest suunnan-vaihto

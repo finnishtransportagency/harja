@@ -72,8 +72,8 @@
          :akilliset_val_aika_yht (nth raportti 23)
          :vahingot_hoitokausi_yht (nth raportti 24)
          :vahingot_val_aika_yht (nth raportti 25)
-         :alihank_bon_hoitokausi_yht (nth raportti 26)
-         :alihank_bon_val_aika_yht (nth raportti 27)
+         :tilaajan_rahavaraus_hoitokausi_yht (nth raportti 26)
+         :tilaajan_rahavaraus_val_aika_yht (nth raportti 27)
          :tavhin_hoitokausi_yht (nth raportti 28)
          :tavhin_val_aika_yht (nth raportti 29)
          :hoitokauden_tavoitehinta (nth raportti 30)
@@ -376,7 +376,6 @@
         ;; Poistetaan kaikki bonukset ja sanktiot urakalta
         _ (poista-bonukset-ja-sanktiot-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
 
-        ;; Luodaan alihankintabonus - ennen 1.10.2022 kuuluu hallinnollisiin toimenpiteisiin
         _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
                       VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
                sopimus-id tpi-hallinnolliset-toimenpiteet pvm pvm alihankintabonus_summa urakka-id "alihankintabonus"))
@@ -399,7 +398,6 @@
     (is (= (* -1 sanktio_summa) (:sanktiot_hoitokausi_yht purettu)))
     (is (= (* -1 sanktio_summa) (:sanktiot_val_aika_yht purettu)))))
 
-;; Alihankintabonus siirtyy rahavarauksiin 2022 ja jälkeen alkavilla urakoilla
 (deftest tyomaaraportti-bonukset-ja-sanktiot-toimii-jalkeen-2022
   (let [hk_alkupvm "2022-10-01"
         hk_loppupvm "2023-09-30"
@@ -427,5 +425,5 @@
 
         purettu (pura-tyomaaraportti-mapiksi (first raportti))]
 
-    (is (= bonus_summa (:bonukset_hoitokausi_yht purettu)))
-    (is (= bonus_summa (:bonukset_val_aika_yht purettu)))))
+    (is (= (* 2 bonus_summa) (:bonukset_hoitokausi_yht purettu)))
+    (is (= (* 2 bonus_summa) (:bonukset_val_aika_yht purettu)))))
