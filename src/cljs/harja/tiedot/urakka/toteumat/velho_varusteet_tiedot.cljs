@@ -1,53 +1,17 @@
 (ns harja.tiedot.urakka.toteumat.velho-varusteet-tiedot
   (:require [clojure.string :as str]
             [harja.ui.protokollat :as protokollat]
-            [reagent.core :refer [atom] :as r]
-            [cljs.core.async :refer [<!]]
             [tuck.core :refer [process-event] :as tuck]
-            [harja.loki :refer [log tarkkaile!]]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.tyokalut.functor :refer [fmap]]
-            [harja.domain.tierekisteri.varusteet :as v]
-            [harja.domain.varuste-ulkoiset :as varuste-ulkoiset]
-            [harja.pvm :as pvm]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.varusteet-kartalla :as varusteet-kartalla]
-            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
-            [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla]
             [clojure.set :as s])
-  (:require-macros [reagent.ratom :refer [reaction]]
-                   [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
-
-
-(defn hoitokausi-rajat [alkuvuosi]
-  [(pvm/hoitokauden-alkupvm alkuvuosi)
-   (pvm/hoitokauden-loppupvm (inc alkuvuosi))])
-
-(def tietolaji->varustetyyppi-map {"tl501" "Kaiteet"
-                                   "tl503" "Levähdysalueiden varusteet"
-                                   "tl504" "WC"
-                                   "tl505" "Jätehuolto"
-                                   "tl506" "Liikennemerkit"
-                                   "tl507" "Bussipysäkin varusteet"
-                                   "tl508" "Bussipysäkin katos"
-                                   "tl516" "Hiekkalaatikot"
-                                   "tl509" "Rummut"
-                                   "tl512" "Viemärit"
-                                   "tl513" "Reunapaalut"
-                                   "tl514" "Melurakenteet"
-                                   "tl515" "Aidat"
-                                   "tl517" "Portaat"
-                                   "tl518" "Kivetyt alueet"
-                                   "tl520" "Puomit"
-                                   "tl522" "Reunakivet"
-                                   "tl524" "Viherkuviot"})
-
-
-(defn varustetyyppi->tietolaji [varustetyyppi]
-  (get (s/map-invert tietolaji->varustetyyppi-map) varustetyyppi))
+;; Varustetyypit on muista valinnoista poiketen toteutettu atomilla.
+;; Voisi olla mahdollista toteuttaa käyttäen r/wrapia, mutta se osoittautui toistaiseksi liian haastavaksi.
+(def varustetyypit (atom nil))
 
 (def kuntoluokat [{:id 1 :nimi "Erittäin hyvä" :css-luokka "kl-erittain-hyva"}
                   {:id 2 :nimi "Hyvä" :css-luokka "kl-hyva"}
@@ -56,12 +20,6 @@
                   {:id 5 :nimi "Erittäin huono" :css-luokka "kl-erittain-huono"}
                   {:id 6 :nimi "Puuttuu" :css-luokka "kl-puuttuu"}
                   {:id 7 :nimi "Ei voitu tarkastaa" :css-luokka "kl-ei-voitu-tarkistaa"}])
-
-(defn hakuparametrit [{:keys [valinnat urakka]}]
-  (merge
-    (select-keys valinnat [:tie :aosa :aeta :losa :leta :hoitokauden-alkuvuosi :hoitovuoden-kuukausi :kuntoluokat :toteuma])
-    {:urakka-id (:id urakka)
-     :tietolajit (map varustetyyppi->tietolaji (:varustetyypit valinnat))}))
 
 (defn muodosta-tr-osoite [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as rivi}]
   (if tr-loppuosa
@@ -91,26 +49,32 @@
   (when param
     (str/join "/" [(:nimiavaruus param) (:nimi param)])))
 
+(defn hakuparametrit [{:keys [valinnat]}]
+  (let [varustetyypit (map muodosta-varustetyypin-hakuparametri @varustetyypit)
+        kuntoluokat (map muodosta-ns-nimi-hakuparametri (:kuntoluokat valinnat))
+        toimenpide (muodosta-ns-nimi-hakuparametri (:toimenpide valinnat))]
+    (merge
+      (select-keys valinnat [:tie :aosa :aeta :losa :leta :hoitokauden-alkuvuosi :hoitovuoden-kuukausi :kuntoluokat :toteuma])
+      {:urakka-id @nav/valittu-urakka-id
+       :varustetyypit varustetyypit
+       :kuntoluokat kuntoluokat
+       :toimenpide toimenpide})))
+
 (def +max-toteumat+ 1000)
 
 (defrecord ValitseHoitokausi [hoitokauden-alkuvuosi])
 (defrecord ValitseHoitovuodenKuukausi [hoitovuoden-kuukausi])
 (defrecord ValitseTR-osoite [arvo avain])
-(defrecord ValitseVarustetyyppi [varustetyyppi valittu?])
-(defrecord ValitseKohdeluokka [kohdeluokka valittu? varustetyypit-atom])
-(defrecord ValitseVarustetyyppi2 [varustetyyppi])
+(defrecord ValitseKohdeluokka [kohdeluokka valittu?])
 (defrecord ValitseKuntoluokka [kuntoluokka valittu?])
 (defrecord ValitseToteuma [toteuma])
 (defrecord ValitseToimenpide [toimenpide])
-(defrecord HaeVarusteet [lahde varustetyypit])
+(defrecord HaeVarusteet [])
 (defrecord HaeVarusteetOnnistui [vastaus])
 (defrecord HaeVarusteetEpaonnistui [vastaus])
 (defrecord HaeVarusteenHistoria [varuste])
 (defrecord HaeVarusteenHistoriaOnnistui [vastaus])
 (defrecord HaeVarusteenHistoriaEpaonnistui [vastaus])
-(defrecord HaeToteumat [])
-(defrecord HaeToteumatOnnistui [vastaus])
-(defrecord HaeToteumatEpaonnistui [vastaus])
 (defrecord JarjestaVarusteet [jarjestys])
 (defrecord AvaaVarusteLomake [varuste])
 (defrecord SuljeVarusteLomake [])
@@ -146,21 +110,12 @@
     (do
       (assoc-in app [:valinnat :hoitovuoden-kuukausi] hoitovuoden-kuukausi)))
 
-  ValitseVarustetyyppi
-  (process-event [{:keys [varustetyyppi valittu?]} app]
-    (pavittaa-valitut app :varustetyypit varustetyyppi valittu?))
-
   ValitseKohdeluokka
-  (process-event [{:keys [kohdeluokka valittu? varustetyypit-atom]} app]
-    (reset! varustetyypit-atom nil)
+  (process-event [{:keys [kohdeluokka valittu?]} app]
+    (reset! varustetyypit nil)
     (as-> app app
       (pavittaa-valitut app :kohdeluokat kohdeluokka valittu?)
-      (assoc app :varustetyyppihaku (tee-varustetyyppihaku (:valinnat app) (:nimikkeisto app)))
-      (assoc-in app [:valinnat :varustetyypit2] nil)))
-
-  ValitseVarustetyyppi2
-  (process-event [{:keys [varustetyyppi]} app]
-    (assoc-in app [:valinnat :varustetyypit2] varustetyyppi))
+      (assoc app :varustetyyppihaku (tee-varustetyyppihaku (:valinnat app) (:nimikkeisto app)))))
 
   ValitseKuntoluokka
   (process-event [{:keys [kuntoluokka valittu?]} app]
@@ -183,39 +138,25 @@
     (assoc-in app [:valinnat :toimenpide] toimenpide))
 
   HaeVarusteet
-  (process-event [{lahde :lahde varustetyypit :varustetyypit} {:keys [haku-paalla valinnat] :as app}]
+  (process-event [_ {:keys [haku-paalla] :as app}]
     (if haku-paalla
       app
-      (let [varustetyypit (map muodosta-varustetyypin-hakuparametri varustetyypit)
-            kuntoluokat (map muodosta-ns-nimi-hakuparametri (:kuntoluokat valinnat))
-            toimenpide (muodosta-ns-nimi-hakuparametri (:toimenpide valinnat))]
-        (do
-          (reset! varusteet-kartalla/karttataso-varusteet [])
-          (-> app
-            (assoc :haku-paalla true :varusteet [])
-            (tuck-apurit/post! (case lahde
-                                 :velho
-                                 :hae-urakan-varustetoteumat
-                                 :harja
-                                 :hae-urakan-varustetoteuma-ulkoiset)
-              (case lahde
-                :velho
-                (merge valinnat
-                  {:urakka-id @nav/valittu-urakka-id
-                   :varustetyypit varustetyypit
-                   :kuntoluokat kuntoluokat
-                   :toimenpide toimenpide})
-
-                :harja
-                (hakuparametrit app))
-              {:onnistui ->HaeVarusteetOnnistui
-               :epaonnistui ->HaeVarusteetEpaonnistui}))))))
+      (do
+        (reset! varusteet-kartalla/karttataso-varusteet [])
+        (-> app
+          (assoc :haku-paalla true :varusteet [])
+          (tuck-apurit/post! :hae-urakan-varustetoteumat
+            (hakuparametrit app)
+            {:onnistui ->HaeVarusteetOnnistui
+             :epaonnistui ->HaeVarusteetEpaonnistui})))))
 
   HaeVarusteetOnnistui
   (process-event [{:keys [vastaus]} app]
     (reset! varusteet-kartalla/karttataso-varusteet
       (map (fn [t]
-             (assoc t :tr-osoite (muodosta-tr-osoite t)))
+             (-> t
+               (assoc :tr-osoite (muodosta-tr-osoite t))
+               (assoc :toimenpide-id (:id (first (filter #(= (:otsikko %) (:toimenpide t)) (:toimenpiteet app)))))))
         (:toteumat vastaus)))
     (-> app
       (assoc :haku-paalla false)
@@ -226,8 +167,8 @@
     (reset! varusteet-kartalla/karttataso-varusteet nil)
     (viesti/nayta! "Varusteiden haku epäonnistui!" :varoitus)
     (-> app
-        (assoc :haku-paalla false)
-        (assoc :varusteet [])))
+      (assoc :haku-paalla false)
+      (assoc :varusteet [])))
 
   HaeVarusteenHistoria
   (process-event [{{:keys [kohdeluokka ulkoinen-oid]} :varuste} app]
@@ -243,27 +184,9 @@
     (assoc-in app [:valittu-varuste :historia] vastaus))
 
   HaeVarusteenHistoriaEpaonnistui
-  (process-event [{:keys [vastaus]} app]
+  (process-event [{:keys [_]} app]
     (viesti/nayta! "Varusteen historian haku epäonnistui!" :varoitus)
     (assoc-in app [:valittu-varuste :historia] :haku-epaonnistui))
-
-  HaeToteumat
-  (process-event [_ {:keys [valinnat] :as app}]
-    (-> app
-        (tuck-apurit/post! :hae-varustetoteumat-ulkoiset
-                           {:urakka-id (get-in app [:urakka :id])
-                            :ulkoinen-oid (get-in app [:valittu-varuste :ulkoinen-oid])}
-                           {:onnistui ->HaeToteumatOnnistui
-                            :epaonnistui ->HaeToteumatEpaonnistui})))
-
-  HaeToteumatOnnistui
-  (process-event [{:keys [vastaus] :as jotain} app]
-    (assoc app :valittu-toteumat (:toteumat vastaus)))
-
-  HaeToteumatEpaonnistui
-  (process-event [{:keys [vastaus] :as jotain-muuta} app]
-    (viesti/nayta! "Varusteiden toteuman haku epäonnistui!" :danger)
-    app)
 
   JarjestaVarusteet
   (process-event [{jarjestys :jarjestys} app]
@@ -275,9 +198,9 @@
                                                      :tr-loppuosa :tr-loppuetaisyys])
           avain-kentat (fn [x] ((apply juxt kaikki-jarjestys-kentat) x))]
       (-> app
-          (assoc-in [:jarjestys :nimi] jarjestys)
-          (assoc-in [:jarjestys :kaanteinen?] kaanteinen?)
-          (assoc :varusteet (sort-by avain-kentat (if kaanteinen? kaanteinen-jarjestaja compare) (:varusteet app))))))
+        (assoc-in [:jarjestys :nimi] jarjestys)
+        (assoc-in [:jarjestys :kaanteinen?] kaanteinen?)
+        (assoc :varusteet (sort-by avain-kentat (if kaanteinen? kaanteinen-jarjestaja compare) (:varusteet app))))))
 
   AvaaVarusteLomake
   (process-event [{:keys [varuste]} app]
@@ -317,6 +240,6 @@
       :varustetyyppihaku (tee-varustetyyppihaku valinnat (group-by :kohdeluokka vastaus))))
 
   HaeNimikkeistoEpaonnistui
-  (process-event [{:keys [vastaus]} app]
+  (process-event [{:keys [_]} app]
     (viesti/nayta! "Kohdeluokkien haku epäonnistui!" :varoitus)
     app))

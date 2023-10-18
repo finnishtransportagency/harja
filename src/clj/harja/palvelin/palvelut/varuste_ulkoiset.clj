@@ -8,7 +8,6 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.palvelut.varuste-ulkoiset-excel :as v-excel]))
 
-
 (defn hae-urakan-varustetoteumat-velhosta [velho user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (velho-komponentti/hae-urakan-varustetoteumat velho tiedot))
@@ -23,32 +22,26 @@
 
 (defrecord VarusteVelho []
   component/Lifecycle
-  (start [this]
-    (let [http (:http-palvelin this)
-          velho (:velho-integraatio this)
-          excel (:excel-vienti this)
-          db (:db this)]
+  (start [{http :http-palvelin velho :velho-integraatio excel :excel-vienti db :db :as this}]
+    (julkaise-palvelu http :hae-urakan-varustetoteumat
+      (fn [user tiedot]
+        (hae-urakan-varustetoteumat-velhosta velho user tiedot)))
 
-      (julkaise-palvelu http :hae-urakan-varustetoteumat
-        (fn [user tiedot]
-          (hae-urakan-varustetoteumat-velhosta velho user tiedot)))
+    (julkaise-palvelu http :hae-varusteen-historia
+      (fn [user tiedot]
+        (hae-varusteen-historia-velhosta velho user tiedot)))
 
-      (julkaise-palvelu http :hae-varusteen-historia
-        (fn [user tiedot]
-          (hae-varusteen-historia-velhosta velho user tiedot)))
+    (julkaise-palvelu http :hae-varustetoteuma-nimikkeistot
+      (fn [user _]
+        (hae-varustetoteuma-nimikkeistot db user)))
 
-      (julkaise-palvelu http :hae-varustetoteuma-nimikkeistot
-        (fn [user _]
-          (hae-varustetoteuma-nimikkeistot db user)))
-
-      ;; TODO: Toteuta exceliin vienti
-      (when excel
-        (excel-vienti/rekisteroi-excel-kasittelija! excel :varusteet-ulkoiset-excel
-          (partial #'v-excel/vie-ulkoiset-varusteet-exceliin velho)))
-    this))
-  (stop [this]
-    (let [http (:http-palvelin this)]
-      (poista-palvelut http :hae-urakan-varustetoteumat)
-      (poista-palvelut http :hae-varusteen-historia)
-      (poista-palvelut http :hae-varustetoteuma-nimikkeistot))
+    (when excel
+      (excel-vienti/rekisteroi-excel-kasittelija! excel :varusteet-ulkoiset-excel
+        (partial #'v-excel/vie-ulkoiset-varusteet-exceliin velho)))
+    this)
+  (stop [{http :http-palvelin excel :exel-vienti :as this}]
+    (poista-palvelut http :hae-urakan-varustetoteumat)
+    (poista-palvelut http :hae-varusteen-historia)
+    (poista-palvelut http :hae-varustetoteuma-nimikkeistot)
+    (excel-vienti/poista-excel-kasittelija! excel :varusteet-ulkoiset-excel)
     this))

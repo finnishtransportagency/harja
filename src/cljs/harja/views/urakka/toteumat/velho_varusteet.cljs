@@ -7,10 +7,9 @@
   Harjaan tallennettu varustetoimenpide sisältää Tievelhosta haetun kopion toimenpiteestä ja sen kohteesta rajatuilla tiedoilla.
   Tarkemmat tiedot löytyvät Tievelhosta."
   (:require [clojure.string :as str]
-            [reagent.core :refer [atom] :as r]
+            [reagent.core :refer [atom]]
             [tuck.core :as tuck]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.domain.varuste-ulkoiset :as varuste-ulkoiset]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.toteumat.velho-varusteet-tiedot :as v]
@@ -23,14 +22,12 @@
             [harja.ui.kentat :as kentat]
             [harja.ui.komponentti :as komp]
             [harja.ui.lomake :as lomake]
-            [harja.ui.protokollat :as protokollat]
             [harja.ui.napit :as napit]
             [harja.ui.sivupalkki :as sivupalkki]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader]]
             [harja.views.kartta :as kartta]
-            [harja.views.kartta.tasot :as kartta-tasot])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.views.kartta.tasot :as kartta-tasot]))
 
 (defn kuntoluokka-komponentti [kuntoluokka]
   [yleiset/tila-indikaattori kuntoluokka
@@ -40,139 +37,130 @@
     :fmt-fn str}])
 
 (defn suodatuslomake [_e! _app]
-  ;; Varustetyypit on muista valinnoista poiketen toteutettu atomilla.
-  ;; Voisi olla mahdollista toteuttaa käyttäen r/wrapia, mutta se osoittautui toistaiseksi liian haastavaksi.
-  (let [varustetyypit (atom nil)]
-    (fn [e! {:keys [valinnat urakka kuntoluokat kohdeluokat toimenpiteet varustetyyppihaku] :as app}]
-      (let [alkupvm (:alkupvm urakka)
-            vuosi (pvm/vuosi alkupvm)
-            hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
-            hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi valinnat)
-            valittu-toimenpide (:toimenpide valinnat)
-            hoitovuoden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
-            itse-tai-kaikki #(if % % "Kaikki")
-            multimap-fn (fn [avain] (fn [{:keys [id nimi alasveto-eritin?] :as t}]
-                                      {:id id
-                                       :nimi (or nimi t)
-                                       :valittu? (if nimi
-                                                   (contains? (get valinnat avain) nimi)
-                                                   (nil? (get valinnat avain)))
-                                       :alavetos-eritin? alasveto-eritin?}))
-            kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] (map-indexed (fn [i v]
-                                                                                        {:id i
-                                                                                         :nimi v})
-                                                                           kuntoluokat)))
-            kohdeluokat (map (multimap-fn :kohdeluokat) (into ["Kaikki"] (map-indexed (fn [i v]
-                                                                                        {:id i
-                                                                                         :nimi v})
-                                                                           (keys kohdeluokat))))
-            toimenpiteet (into [nil] toimenpiteet)
+  (fn [e! {:keys [valinnat urakka kuntoluokat kohdeluokat toimenpiteet varustetyyppihaku] :as app}]
+    (let [alkupvm (:alkupvm urakka)
+          vuosi (pvm/vuosi alkupvm)
+          hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
+          hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi valinnat)
+          valittu-toimenpide (:toimenpide valinnat)
+          hoitovuoden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
+          itse-tai-kaikki #(if % % "Kaikki")
+          multimap-fn (fn [avain] (fn [{:keys [id nimi alasveto-eritin?] :as t}]
+                                    {:id id
+                                     :nimi (or nimi t)
+                                     :valittu? (if nimi
+                                                 (contains? (get valinnat avain) nimi)
+                                                 (nil? (get valinnat avain)))
+                                     :alavetos-eritin? alasveto-eritin?}))
+          kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] (map-indexed (fn [i v]
+                                                                                      {:id i
+                                                                                       :nimi v})
+                                                                         kuntoluokat)))
+          kohdeluokat (map (multimap-fn :kohdeluokat) (into ["Kaikki"] (map-indexed (fn [i v]
+                                                                                      {:id i
+                                                                                       :nimi v})
+                                                                         (keys kohdeluokat))))
+          toimenpiteet (into [nil] toimenpiteet)
 
-            tr-kentan-valitse-fn (fn [avain]
-                                   (fn [event]
-                                     (e! (v/->ValitseTR-osoite (-> event .-target .-value) avain))))
-            tie (:tie valinnat)
-            aosa (:aosa valinnat)
-            aeta (:aeta valinnat)
-            losa (:losa valinnat)
-            leta (:leta valinnat)]
-        [:div
-         [debug app {:otsikko "TUCK STATE"}]
-         [:div.row.filtterit-container {:style {:height "100px"}}
-          [yleiset/pudotusvalikko "Hoitovuosi"
-           {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
-            :valinta hoitokauden-alkuvuosi
-            :vayla-tyyli? true
-            :data-cy "hoitokausi-valinta"
-            :valitse-fn #(e! (v/->ValitseHoitokausi %))
-            :format-fn #(str v/fin-hk-alkupvm % " \u2014 " v/fin-hk-loppupvm (inc %))
-            :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-           hoitokaudet]
-          [yleiset/pudotusvalikko "Kuukausi"
-           {:wrap-luokka "col-md-1 filtteri varusteet label-ja-alasveto-grid"
-            :valinta (:hoitovuoden-kuukausi valinnat)
-            :vayla-tyyli? true
-            :valitse-fn #(e! (v/->ValitseHoitovuodenKuukausi %))
-            :format-fn #(if %
-                          (str (pvm/kuukauden-nimi % true) " "
-                            (if (>= % 10)
-                              hoitokauden-alkuvuosi
-                              (inc hoitokauden-alkuvuosi)))
-                          "Kaikki")
-            :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-           hoitovuoden-kuukaudet]
-          [yleiset/tr-kentat-flex
-           {:wrap-luokka "col-md-2 filtteri varusteet tr-osoite-wrap"}
-           {:tie [yleiset/tr-kentan-elementti {:otsikko "Tie" :valitse-fn (tr-kentan-valitse-fn :tie) :luokka "tr-numero" :arvo tie}]
-            :aosa [yleiset/tr-kentan-elementti {:otsikko "aosa" :valitse-fn (tr-kentan-valitse-fn :aosa) :luokka "tr-alkuosa" :arvo aosa}]
-            :aeta [yleiset/tr-kentan-elementti {:otsikko "aet" :valitse-fn (tr-kentan-valitse-fn :aeta) :luokka "tr-alkuetaisyys" :arvo aeta}]
-            :losa [yleiset/tr-kentan-elementti {:otsikko "losa" :valitse-fn (tr-kentan-valitse-fn :losa) :luokka "tr-loppuosa" :arvo losa}]
-            :leta [yleiset/tr-kentan-elementti {:otsikko "let" :valitse-fn (tr-kentan-valitse-fn :leta) :luokka "tr-loppuetaisyys" :arvo leta}]}]
+          tr-kentan-valitse-fn (fn [avain]
+                                 (fn [event]
+                                   (e! (v/->ValitseTR-osoite (-> event .-target .-value) avain))))
+          tie (:tie valinnat)
+          aosa (:aosa valinnat)
+          aeta (:aeta valinnat)
+          losa (:losa valinnat)
+          leta (:leta valinnat)]
+      [:div
+       [debug app {:otsikko "TUCK STATE"}]
+       [:div.row.filtterit-container {:style {:height "100px"}}
+        [yleiset/pudotusvalikko "Hoitovuosi"
+         {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
+          :valinta hoitokauden-alkuvuosi
+          :vayla-tyyli? true
+          :data-cy "hoitokausi-valinta"
+          :valitse-fn #(e! (v/->ValitseHoitokausi %))
+          :format-fn #(str v/fin-hk-alkupvm % " \u2014 " v/fin-hk-loppupvm (inc %))
+          :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+         hoitokaudet]
+        [yleiset/pudotusvalikko "Kuukausi"
+         {:wrap-luokka "col-md-1 filtteri varusteet label-ja-alasveto-grid"
+          :valinta (:hoitovuoden-kuukausi valinnat)
+          :vayla-tyyli? true
+          :valitse-fn #(e! (v/->ValitseHoitovuodenKuukausi %))
+          :format-fn #(if %
+                        (str (pvm/kuukauden-nimi % true) " "
+                          (if (>= % 10)
+                            hoitokauden-alkuvuosi
+                            (inc hoitokauden-alkuvuosi)))
+                        "Kaikki")
+          :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+         hoitovuoden-kuukaudet]
+        [yleiset/tr-kentat-flex
+         {:wrap-luokka "col-md-2 filtteri varusteet tr-osoite-wrap"}
+         {:tie [yleiset/tr-kentan-elementti {:otsikko "Tie" :valitse-fn (tr-kentan-valitse-fn :tie) :luokka "tr-numero" :arvo tie}]
+          :aosa [yleiset/tr-kentan-elementti {:otsikko "aosa" :valitse-fn (tr-kentan-valitse-fn :aosa) :luokka "tr-alkuosa" :arvo aosa}]
+          :aeta [yleiset/tr-kentan-elementti {:otsikko "aet" :valitse-fn (tr-kentan-valitse-fn :aeta) :luokka "tr-alkuetaisyys" :arvo aeta}]
+          :losa [yleiset/tr-kentan-elementti {:otsikko "losa" :valitse-fn (tr-kentan-valitse-fn :losa) :luokka "tr-loppuosa" :arvo losa}]
+          :leta [yleiset/tr-kentan-elementti {:otsikko "let" :valitse-fn (tr-kentan-valitse-fn :leta) :luokka "tr-loppuetaisyys" :arvo leta}]}]
 
-          [yleiset/pudotusvalikko "Toimenpide"
-           {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
-            :valinta valittu-toimenpide
-            :vayla-tyyli? true
-            :valitse-fn #(e! (v/->ValitseToimenpide %))
-            :format-fn #(or (:otsikko %) "Kaikki")
-            :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-           toimenpiteet]
-          [valinnat/monivalinta-pudotusvalikko
-           "Kohdeluokka"
-           kohdeluokat
-           (fn [kohdetyyppi valittu?]
-             (e! (v/->ValitseKohdeluokka (:nimi kohdetyyppi) valittu? varustetyypit)))
-           [" Kohdeluokka valittu" " Kohdeluokkaa valittu"]
-           {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
-            :vayla-tyyli? true
-            :fmt (comp str/capitalize itse-tai-kaikki)
-            :valintojen-maara (count (:kohdeluokat valinnat))}]
+        [yleiset/pudotusvalikko "Toimenpide"
+         {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
+          :valinta valittu-toimenpide
+          :vayla-tyyli? true
+          :valitse-fn #(e! (v/->ValitseToimenpide %))
+          :format-fn #(or (:otsikko %) "Kaikki")
+          :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+         toimenpiteet]
+        [valinnat/monivalinta-pudotusvalikko
+         "Kohdeluokka"
+         kohdeluokat
+         (fn [kohdetyyppi valittu?]
+           (e! (v/->ValitseKohdeluokka (:nimi kohdetyyppi) valittu?)))
+         [" Kohdeluokka valittu" " Kohdeluokkaa valittu"]
+         {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
+          :vayla-tyyli? true
+          :fmt (comp str/capitalize itse-tai-kaikki)
+          :valintojen-maara (count (:kohdeluokat valinnat))}]
 
-          [:div {:class "col-md-2 filtteri label-ja-alasveto-grid"}
-           [:label.alasvedon-otsikko-vayla "Varustetyyppi"]
+        [:div {:class "col-md-2 filtteri label-ja-alasveto-grid"}
+         [:label.alasvedon-otsikko-vayla "Varustetyyppi"]
 
-           [kentat/tee-kentta
-            {:tyyppi :haku
-             :nayta :otsikko :fmt :otsikko
-             :hae-kun-yli-n-merkkia 0
-             :vayla-tyyli? true
-             :lahde varustetyyppihaku
-             :monivalinta? true
-             :tarkkaile-ulkopuolisia-muutoksia? true
-             :monivalinta-teksti #(do
-                                    (case (count %)
-                                      0 "Kaikki valittu"
-                                      1 (:otsikko (first %))
+         [kentat/tee-kentta
+          {:tyyppi :haku
+           :nayta :otsikko :fmt :otsikko
+           :hae-kun-yli-n-merkkia 0
+           :vayla-tyyli? true
+           :lahde varustetyyppihaku
+           :monivalinta? true
+           :tarkkaile-ulkopuolisia-muutoksia? true
+           :monivalinta-teksti #(do
+                                  (case (count %)
+                                    0 "Kaikki valittu"
+                                    1 (:otsikko (first %))
 
-                                      (str (count %) " varustetyyppiä valittu")))}
-            varustetyypit]]
+                                    (str (count %) " varustetyyppiä valittu")))}
+          v/varustetyypit]]
 
-          [valinnat/monivalinta-pudotusvalikko
-           "Kuntoluokitus"
-           kuntoluokat
-           (fn [kuntoluokka valittu?]
-             (e! (v/->ValitseKuntoluokka (:nimi kuntoluokka) valittu?)))
-           [" Kuntoluokka valittu" " Kuntoluokkaa valittu"]
-           {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
-            :vayla-tyyli? true
-            :fmt (comp itse-tai-kaikki :otsikko)}]]
-         [:div.row
-          ;; TODO: poista
-          [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä VANHA" #(do
-                                                                          (e! (v/->TaydennaTR-osoite-suodatin tie aosa aeta losa leta))
-                                                                          (e! (v/->HaeVarusteet :harja nil))) {:luokka "nappi-korkeus-32"
-                                                                                                           :disabled false
-                                                                                                           :ikoni (ikonit/livicon-search)}]
-          [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä" #(e! (v/->HaeVarusteet :velho @varustetyypit)) {:luokka "nappi-korkeus-32"
-                                                                                                                    :disabled false
-                                                                                                                    :ikoni (ikonit/livicon-search)}]
-          [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet (pvm/vuosi (get-in app [:urakka :alkupvm]))))
-           {:luokka "nappi-korkeus-32"
-            :disabled (and (every? nil? (vals (dissoc valinnat :hoitokauden-alkuvuosi)))
-                        (= (pvm/vuosi (get-in app [:urakka :alkupvm])) (:hoitokauden-alkuvuosi valinnat)))}]]]))))
+        [valinnat/monivalinta-pudotusvalikko
+         "Kuntoluokitus"
+         kuntoluokat
+         (fn [kuntoluokka valittu?]
+           (e! (v/->ValitseKuntoluokka (:nimi kuntoluokka) valittu?)))
+         [" Kuntoluokka valittu" " Kuntoluokkaa valittu"]
+         {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
+          :vayla-tyyli? true
+          :fmt (comp itse-tai-kaikki :otsikko)}]]
+       [:div.row
+        [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä" #(e! (v/->HaeVarusteet)) {:luokka "nappi-korkeus-32"
+                                                                                                        :disabled false
+                                                                                                        :ikoni (ikonit/livicon-search)}]
+        [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet (pvm/vuosi (get-in app [:urakka :alkupvm]))))
+         {:luokka "nappi-korkeus-32"
+          :disabled (and (every? nil? (vals (dissoc valinnat :hoitokauden-alkuvuosi)))
+                      (= (pvm/vuosi (get-in app [:urakka :alkupvm])) (:hoitokauden-alkuvuosi valinnat)))}]]])))
 
 
-(defn listaus [e! {:keys [varusteet haku-paalla] :as app}]
+(defn listaus [e! {:keys [varusteet haku-paalla valinnat] :as app}]
   (let [lkm (count varusteet)]
     [grid/grid
      {:otsikko (if (>= lkm v/+max-toteumat+)
@@ -185,9 +173,8 @@
                "Suorita haku syöttämällä hakuehdot ja klikkaamalla Hae varustetoimenpiteitä.")
       :rivi-klikattu #(yleiset/fn-viiveella
                         (fn [] (do
-                                  (e! (v/->AvaaVarusteLomake %))
-                                  (e! (v/->HaeVarusteenHistoria %))
-                                  (e! (v/->HaeToteumat)))))
+                                 (e! (v/->AvaaVarusteLomake %))
+                                 (e! (v/->HaeVarusteenHistoria %)))))
       :otsikkorivi-klikattu (fn [opts]
                               (e! (v/->JarjestaVarusteet (:nimi opts))))
       :paneelikomponentit [(fn [] [:span.inline-block
@@ -301,7 +288,7 @@
          (reset! varusteet-kartalla/varuste-klikattu-fn
            (fn [varuste-kartalla]
              (e! (v/->AvaaVarusteLomake varuste-kartalla))
-             (e! (v/->HaeToteumat)))))
+             (e! (v/->HaeVarusteenHistoria varuste-kartalla)))))
       #(do
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
          (kartta-tasot/taso-pois! :varusteet-ulkoiset)

@@ -4,6 +4,7 @@
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
             [harja.palvelin.integraatiot.velho.yhteiset-test :as yhteiset-test]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.testi :refer :all]
             [org.httpkit.fake :refer [with-fake-http]]
             [clojure.test :refer :all])
@@ -111,7 +112,7 @@
 (deftest hae-urakan-varustetoteumat-test
   (with-fake-http [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
                    +velho-varusteet-hakurajapinta-url+ (slurp "test/resurssit/velho/varusteet/varusteiden-hakurajapinta-vastaus.json")]
-    (with-redefs [harja.kyselyt.urakat/hae-urakan-velho-oid (constantly +urakan-velho-oid+)]
+    (with-redefs [urakat-q/hae-urakan-velho-oid (constantly +urakan-velho-oid+)]
       (let [vastaus (varusteet/hae-urakan-varustetoteumat (:velho-integraatio jarjestelma) {:urakka-id 123
                                                                                             :hoitokauden-alkuvuosi 2020})]
         (is (= 1 (count (:toteumat vastaus))))

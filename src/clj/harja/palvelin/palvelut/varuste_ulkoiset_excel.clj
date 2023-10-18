@@ -1,13 +1,9 @@
 (ns harja.palvelin.palvelut.varuste-ulkoiset-excel
   (:require [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
             [harja.palvelin.raportointi.excel :as excel]
-            [harja.kyselyt.toteumat :as toteumat-q]
-            [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.pvm :as pvm]
             [harja.domain.tierekisteri :as tierekisteri]
-            [harja.domain.varuste-ulkoiset :as v-yhteiset]
             [harja.palvelin.integraatiot.velho.varusteet :as velho]))
 
 (def sarakkeet
@@ -30,9 +26,8 @@
            muokkaaja]}) varustetoimenpiteet))
 
 (defn vie-ulkoiset-varusteet-exceliin
-  [{:keys [db asetukset] :as velho-integraatio} workbook user
-   {:keys [urakka-id kohdeluokat varustetyypit kuntoluokat tie aosa aeta losa leta
-           hoitovuoden-kuukausi hoitokauden-alkuvuosi toimenpide] :as tiedot}]
+  [{:keys [db] :as velho-integraatio} workbook user
+   {:keys [urakka-id hoitovuoden-kuukausi hoitokauden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (let [urakka (first (urakat-q/hae-urakka db urakka-id))
         varusteet (:toteumat (velho/hae-urakan-varustetoteumat velho-integraatio tiedot))

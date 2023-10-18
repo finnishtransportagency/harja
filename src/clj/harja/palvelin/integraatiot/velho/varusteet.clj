@@ -463,7 +463,6 @@
                        (-> vastaus :info :x-velho-nimikkeistot :varusteet/liikennemerkki-asetusnumero :nimikkeistoversiot))
 
                      (mapv (fn [[versio lakinumero-info]]
-                             (println "lakinro versio" versio)
                              (mapv (fn [lakinumero]
                                      (let [[nimiavaruus nimi] (str/split lakinumero #"/")]
                                        (q-nimikkeistot/luo-velho-nimikkeisto<! db
