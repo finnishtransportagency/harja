@@ -37,7 +37,8 @@
     :fmt-fn str}])
 
 (defn suodatuslomake [_e! _app]
-  (fn [e! {:keys [valinnat urakka kuntoluokat kohdeluokat toimenpiteet varustetyyppihaku] :as app}]
+  (fn [e! {:keys [valinnat urakka kuntoluokat-nimikkeisto kohdeluokat-nimikkeisto toimenpiteet-nimikkeisto
+                  varustetyyppihaku] :as app}]
     (let [alkupvm (:alkupvm urakka)
           vuosi (pvm/vuosi alkupvm)
           hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
@@ -55,12 +56,12 @@
           kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] (map-indexed (fn [i v]
                                                                                       {:id i
                                                                                        :nimi v})
-                                                                         kuntoluokat)))
+                                                                         kuntoluokat-nimikkeisto)))
           kohdeluokat (map (multimap-fn :kohdeluokat) (into ["Kaikki"] (map-indexed (fn [i v]
                                                                                       {:id i
                                                                                        :nimi v})
-                                                                         (keys kohdeluokat))))
-          toimenpiteet (into [nil] toimenpiteet)
+                                                                         (keys kohdeluokat-nimikkeisto))))
+          toimenpiteet (into [nil] toimenpiteet-nimikkeisto)
 
           tr-kentan-valitse-fn (fn [avain]
                                  (fn [event]
@@ -152,8 +153,8 @@
           :fmt (comp itse-tai-kaikki :otsikko)}]]
        [:div.row
         [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä" #(e! (v/->HaeVarusteet)) {:luokka "nappi-korkeus-32"
-                                                                                                        :disabled false
-                                                                                                        :ikoni (ikonit/livicon-search)}]
+                                                                                         :disabled false
+                                                                                         :ikoni (ikonit/livicon-search)}]
         [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet (pvm/vuosi (get-in app [:urakka :alkupvm]))))
          {:luokka "nappi-korkeus-32"
           :disabled (and (every? nil? (vals (dissoc valinnat :hoitokauden-alkuvuosi)))

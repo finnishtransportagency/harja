@@ -115,7 +115,7 @@
     (reset! varustetyypit nil)
     (as-> app app
       (pavittaa-valitut app :kohdeluokat kohdeluokka valittu?)
-      (assoc app :varustetyyppihaku (tee-varustetyyppihaku (:valinnat app) (:nimikkeisto app)))))
+      (assoc app :varustetyyppihaku (tee-varustetyyppihaku (:valinnat app) (:kohdeluokat app)))))
 
   ValitseKuntoluokka
   (process-event [{:keys [kuntoluokka valittu?]} app]
@@ -234,9 +234,9 @@
   HaeNimikkeistoOnnistui
   (process-event [{:keys [vastaus]} {:keys [valinnat] :as app}]
     (assoc app
-      :kohdeluokat (dissoc (group-by :kohdeluokka vastaus) "")
-      :kuntoluokat (filter #(= "kuntoluokka" (:nimiavaruus %)) vastaus)
-      :toimenpiteet (filter #(= "varustetoimenpide" (:nimiavaruus %)) vastaus)
+      :kohdeluokat-nimikkeisto (dissoc (group-by :kohdeluokka vastaus) "")
+      :kuntoluokat-nimikkeisto (filter #(= "kuntoluokka" (:nimiavaruus %)) vastaus)
+      :toimenpiteet-nimikkeisto (filter #(= "varustetoimenpide" (:nimiavaruus %)) vastaus)
       :varustetyyppihaku (tee-varustetyyppihaku valinnat (group-by :kohdeluokka vastaus))))
 
   HaeNimikkeistoEpaonnistui
