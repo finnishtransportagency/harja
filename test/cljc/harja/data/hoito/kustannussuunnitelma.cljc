@@ -124,8 +124,12 @@
                                                      {:vuosi urakan-aloitusvuosi
                                                       :kuukausi kuukausi
                                                       :osa-kuukaudesta osa-kuukaudesta
-                                                      :tunnit (gen/generate (s/gen ::bs-p/tunnit))
-                                                      :tuntipalkka (gen/generate (s/gen ::bs-p/tuntipalkka))}))
+                                                      :tunnit (gen/generate
+                                                                (s/gen (s/with-gen ::bs-p/tunnit
+                                                                         #(gen/large-integer* {:min 1 :max 200}))))
+                                                      :tuntipalkka (gen/generate
+                                                                     (s/gen (s/with-gen ::bs-p/tuntipalkka
+                                                                              #(gen/large-integer* {:min 50 :max 200}))))}))
                                            []
                                            kuukaudet-hoitokausille)
                                          (second
@@ -137,8 +141,12 @@
                                                                     {:vuosi (yleiset-tyokalut/vuosi-hoitokauden-numerosta-ja-kuukaudesta hoitokauden-numero kuukausi urakan-aloitusvuosi)
                                                                      :kuukausi kuukausi
                                                                      :osa-kuukaudesta osa-kuukaudesta
-                                                                     :tunnit (gen/generate (s/gen ::bs-p/tunnit))
-                                                                     :tuntipalkka (gen/generate (s/gen ::bs-p/tuntipalkka))})
+                                                                     :tunnit (gen/generate
+                                                                               (s/gen (s/with-gen ::bs-p/tunnit
+                                                                                        #(gen/large-integer* {:min 1 :max 200}))))
+                                                                     :tuntipalkka (gen/generate
+                                                                                    (s/gen (s/with-gen ::bs-p/tuntipalkka
+                                                                                             #(gen/large-integer* {:min 50 :max 200}))))})
                                                                hoitokauden-kuukaudet)))])
                                              [1 []]
                                              kuukaudet-hoitokausille)))}
