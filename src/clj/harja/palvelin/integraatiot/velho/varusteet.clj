@@ -177,6 +177,16 @@
         (some? version-loppu) "Poistettu" ; uusimmalla versiolla on loppu
         :else "Päivitetty"))))
 
+(defn liikennemerkin-lisatieto [db liikennemerkki]
+  (let [toiminnalliset-ominaisuudet (get-in liikennemerkki [:ominaisuudet :toiminnalliset-ominaisuudet])
+        laki-tai-asetusnumero (or
+                                (:asetusnumero toiminnalliset-ominaisuudet)
+                                (:lakinumero toiminnalliset-ominaisuudet))
+        laki-tai-asetusteksti (:otsikko (first (q-nimikkeistot/hae-nimikkeen-tiedot db
+                                                 {:tyyppi-nimi laki-tai-asetusnumero})))
+        lisatietoja (:lisatietoja toiminnalliset-ominaisuudet)]
+    (str/join ": " (keep identity [laki-tai-asetusteksti lisatietoja]))))
+
 (defn varuste-velhosta->harja
   "Luetaan velhosta tullut varuste harjalle sopivampaan muotoon"
   [db varuste]
@@ -198,8 +208,8 @@
                                         {:tyyppi-nimi kuntoluokka}))]
     {:alkupvm alkupvm
      :kuntoluokka kuntoluokka
-     ;; TODO: Lisää lisätieto kuten ennenkin
-     :lisatieto (varuste-vastaanottosanoma/varusteen-lisatieto (partial koodistot/konversio db velho-yhteiset/lokita-ja-tallenna-hakuvirhe) tyyppi varuste)
+     :lisatieto (when (= kohdeluokka (:kohdeluokka liikennemerkit))
+                  (liikennemerkin-lisatieto db varuste))
      :loppupvm (cond-> (get-in varuste [:version-voimassaolo :loppu])
                  (get-in varuste [:version-voimassaolo :loppu])
                  pvm/iso-8601->pvm
@@ -436,7 +446,37 @@
                                         :versio (Integer/parseInt (name versio))
                                         :otsikko (:otsikko ((keyword varustetoimenpide) varustetoimenpide-info))})))
                              (-> vastaus :components :schemas :nimikkeisto_toimenpiteet_varustetoimenpide :enum)))
-                     (some-> vastaus :info :x-velho-nimikkeistot :toimenpiteet/varustetoimenpide :nimikkeistoversiot))))]
+                     (some-> vastaus :info :x-velho-nimikkeistot :toimenpiteet/varustetoimenpide :nimikkeistoversiot))))
+
+            _liikennemerkkien-haku-onnistui?
+            (seq (when (= kohdeluokka (:kohdeluokka liikennemerkit))
+                   (concat
+                     (mapv (fn [[versio asetusnumero-info]]
+                             (mapv (fn [asetusnumero]
+                                     (let [[nimiavaruus nimi] (str/split asetusnumero #"/")]
+                                       (q-nimikkeistot/luo-velho-nimikkeisto<! db
+                                         {:tyyppi-avain nimiavaruus
+                                          :kohdeluokka ""
+                                          :nimiavaruus nimiavaruus
+                                          :nimi nimi
+                                          :versio (Integer/parseInt (name versio))
+                                          :otsikko (:otsikko ((keyword asetusnumero) asetusnumero-info))})))
+                               (-> vastaus :components :schemas :nimikkeisto_varusteet_liikennemerkki-asetusnumero :enum)))
+                       (-> vastaus :info :x-velho-nimikkeistot :varusteet/liikennemerkki-asetusnumero :nimikkeistoversiot))
+
+                     (mapv (fn [[versio lakinumero-info]]
+                             (println "lakinro versio" versio)
+                             (mapv (fn [lakinumero]
+                                     (let [[nimiavaruus nimi] (str/split lakinumero #"/")]
+                                       (q-nimikkeistot/luo-velho-nimikkeisto<! db
+                                         {:tyyppi-avain nimiavaruus
+                                          :kohdeluokka ""
+                                          :nimiavaruus nimiavaruus
+                                          :nimi nimi
+                                          :versio (Integer/parseInt (name versio))
+                                          :otsikko (:otsikko ((keyword lakinumero) lakinumero-info))})))
+                               (-> vastaus :components :schemas :nimikkeisto_varusteet_liikennemerkki-lakinumero :enum)))
+                       (-> vastaus :info :x-velho-nimikkeistot :varusteet/liikennemerkki-lakinumero :nimikkeistoversiot)))))]
 
         {:kohdeluokkatyyppien-haku-onnistui? kohdeluokkatyyppien-haku-onnistui?
          :kuntoluokkien-haku-onnistui? kuntoluokkien-haku-onnistui?

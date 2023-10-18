@@ -21,27 +21,6 @@
   (when teksti
     (df/parse (:date df/formatters) teksti)))
 
-(defn varusteen-lisatieto [konversio-fn tietolaji kohde]
-  (when (= (name +liikennemerkki-tietolaji+) tietolaji)
-    (let [asetusnumero (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :asetusnumero])
-          lakinumero (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :lakinumero])
-          lisatietoja (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :lisatietoja])
-          merkki (cond
-                   (and asetusnumero (nil? lakinumero))
-                   (str (konversio-fn "v/vtlm" asetusnumero kohde))
-
-                   (and (nil? asetusnumero) lakinumero)
-                   (konversio-fn "v/vtlmln" lakinumero kohde)
-
-                   (and (nil? asetusnumero) (nil? lakinumero))
-                   "VIRHE: Liikennemerkin asetusnumero ja lakinumero tyhjiä Tievelhossa"
-
-                   (and asetusnumero lakinumero)
-                   "VIRHE: Liikennemerkillä sekä asetusnumero että lakinumero Tievelhossa")]
-      (if lisatietoja
-        (str merkki ": " lisatietoja)
-        merkki))))
-
 (defn varusteen-toteuma [{:keys [version-voimassaolo alkaen paattyen uusin-versio ominaisuudet tekninen-tapahtuma] :as kohde}]
   (let [version-alku (:alku version-voimassaolo)
         version-loppu (:loppu version-voimassaolo)
