@@ -95,17 +95,9 @@
 
                      (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
 
-                    ;; "01.10.2022" jälkeen alihankintabonukset merkitään omalla rivillään
-                    (and (= "MHU Ylläpito" otsikko) (pvm/sama-tai-jalkeen? alkupvm (pvm/->pvm "01.10.2022")))
+                    (= "MHU Ylläpito" otsikko)
                     [(rivi-taulukolle data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
-                     (rivi-taulukolle data kyseessa-kk-vali? "Tilaajan rahavaraus (alihankintasopimusten maksuehtobonukset)" :rahavaraukset_laskutettu :rahavaraukset_laskutetaan false)
-                     (rivi-taulukolle data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
-                     (rivi-taulukolle data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
-                     (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
-
-                    ;; Ennen "01.10.2022" alihankintabonukset ovat vain bonuksia ja löytyvät bonuksista
-                    (and (= "MHU Ylläpito" otsikko) (pvm/ennen? alkupvm (pvm/->pvm "01.10.2022")))
-                    [(rivi-taulukolle data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
+                     (rivi-taulukolle data kyseessa-kk-vali? "Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään" :tilaajan_rahavaraukset_laskutettu :tilaajan_rahavaraukset_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]

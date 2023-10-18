@@ -76,7 +76,7 @@
      (list "Muut, liikenneympäristön hoito (F)" 0 0)
      (list "ELY-rahoitteiset, liikenneympäristön hoito (E)" 0 0)
      (list "ELY-rahoitteiset, ylläpito (E)" 0 0)
-     (list "Tilaajan rahavaraus (T3)" 0 0)
+     (list "Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)" 0 0)
      (list "Hoidonjohtopalkkio (G)" 110.20M 60.20M)
      (list "Johto- ja hallintokorvaus (J)" 10.20M 10.20M)
      (list "Erillishankinnat (W)" 344.20M 294.20M)
