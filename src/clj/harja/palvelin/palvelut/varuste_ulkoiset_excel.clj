@@ -1,12 +1,14 @@
 (ns harja.palvelin.palvelut.varuste-ulkoiset-excel
   (:require [harja.domain.oikeudet :as oikeudet]
+            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
             [harja.palvelin.raportointi.excel :as excel]
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.pvm :as pvm]
             [harja.domain.tierekisteri :as tierekisteri]
-            [harja.domain.varuste-ulkoiset :as v-yhteiset]))
+            [harja.domain.varuste-ulkoiset :as v-yhteiset]
+            [harja.palvelin.integraatiot.velho.varusteet :as velho]))
 
 (def sarakkeet
   [{:otsikko "Ajankohta" :fmt :pvm}
@@ -18,36 +20,32 @@
    {:otsikko "Tekijä"}])
 
 (defn- muodosta-excelrivit [varustetoimenpiteet]
-  (map (fn [{:keys [alkupvm toteuma tietolaji lisatieto kuntoluokka muokkaaja] :as vtp}]
+  (map (fn [{:keys [alkupvm lisatieto kuntoluokka muokkaaja toimenpide tyyppi] :as vtp}]
          {:rivi
           [alkupvm (tierekisteri/tierekisteriosoite-tekstina vtp)
-           (v-yhteiset/toteuma->toimenpide toteuma)
-           (v-yhteiset/tietolaji->varustetyyppi tietolaji)
+           toimenpide
+           tyyppi
            lisatieto
            kuntoluokka
            muokkaaja]}) varustetoimenpiteet))
 
 (defn vie-ulkoiset-varusteet-exceliin
-  [db workbook user {:keys [urakka-id hoitokauden-alkuvuosi tietolajit kuntoluokat hoitovuoden-kuukausi] :as tiedot}]
+  [{:keys [db asetukset] :as velho-integraatio} workbook user
+   {:keys [urakka-id kohdeluokat varustetyypit kuntoluokat tie aosa aeta losa leta
+           hoitovuoden-kuukausi hoitokauden-alkuvuosi toimenpide] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (let [urakka (first (urakat-q/hae-urakka db urakka-id))
+        varusteet (:toteumat (velho/hae-urakan-varustetoteumat velho-integraatio tiedot))
         hoitokauden-alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
         hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
-        tiedot (assoc tiedot
-                 :urakka urakka-id
-                 :hoitokauden_alkupvm (konv/sql-date hoitokauden-alkupvm)
-                 :hoitokauden_loppupvm (konv/sql-date hoitokauden-loppupvm)
-                 :tietolajit (or tietolajit [])
-                 :kuntoluokat (or kuntoluokat []))
-        varustetoimenpiteet (toteumat-q/hae-uusimmat-varustetoteuma-ulkoiset db tiedot)
         kuukausi-pvm (when hoitovuoden-kuukausi (pvm/hoitokauden-alkuvuosi-kk->pvm hoitokauden-alkuvuosi hoitovuoden-kuukausi))
         tiedostonimi (str "Varustetoimenpiteet "
                        (if hoitovuoden-kuukausi
                          (pvm/urakan-kuukausi-str hoitovuoden-kuukausi hoitokauden-alkuvuosi)
                          (pvm/hoitokausi-str-alkuvuodesta hoitokauden-alkuvuosi)))
         optiot {:nimi "Varustetoimenpiteet"
-                :tyhja (when (empty? varustetoimenpiteet) "Ei varustetoimenpiteitä")}
-        rivit (muodosta-excelrivit varustetoimenpiteet)
+                :tyhja (when (empty? varusteet) "Ei varustetoimenpiteitä")}
+        rivit (muodosta-excelrivit varusteet)
         taulukot [[:taulukko optiot sarakkeet rivit]]
         taulukko (vec (concat [:raportti
                                {:nimi tiedostonimi

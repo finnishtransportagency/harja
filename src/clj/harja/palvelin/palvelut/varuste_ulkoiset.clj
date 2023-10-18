@@ -44,7 +44,7 @@
       ;; TODO: Toteuta exceliin vienti
       (when excel
         (excel-vienti/rekisteroi-excel-kasittelija! excel :varusteet-ulkoiset-excel
-          (partial #'v-excel/vie-ulkoiset-varusteet-exceliin db)))
+          (partial #'v-excel/vie-ulkoiset-varusteet-exceliin velho)))
     this))
   (stop [this]
     (let [http (:http-palvelin this)]

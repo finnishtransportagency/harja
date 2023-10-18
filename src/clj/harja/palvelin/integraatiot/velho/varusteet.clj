@@ -3,7 +3,6 @@
             [clojure.string :as str]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [taoensso.timbre :as log]
-            [harja.kyselyt.koodistot :as koodistot]
             [harja.kyselyt.toteumat :as q-toteumat]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.kyselyt.velho-nimikkeistot :as q-nimikkeistot]
@@ -239,7 +238,6 @@
                     varuste-kayttajatunnus
                     varuste-salasana
                     varuste-api-juuri-url]} asetukset]
-        (println token-url)
         (when-let [token (velho-yhteiset/hae-velho-token token-url varuste-kayttajatunnus varuste-salasana konteksti
                            (fn [x]
                              (swap! virheet conj (str "Virhe velho token haussa " x))
