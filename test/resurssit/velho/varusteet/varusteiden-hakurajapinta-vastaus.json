@@ -1,0 +1,122 @@
+{
+  "osumat": [
+    {
+      "sijainti": {
+        "osa": 1,
+        "tie": 1,
+        "etaisyys": 101,
+        "enkoodattu": 1234568
+      },
+      "version-voimassaolo": {
+        "alku": "2022-10-15",
+        "loppu": null
+      },
+      "ominaisuudet": {
+        "korjausvastuu": [
+          "toimija/ttest"
+        ],
+        "toimenpiteet": [],
+        "omistaja": "toimija/ttest",
+        "toiminnalliset-ominaisuudet": {
+          "palvelualueen-tunnus": null,
+          "tehtava": null,
+          "bussipysakin-tunnus": null
+        },
+        "hoitovastuu": [
+          "toimija/ttest"
+        ],
+        "infranimikkeisto": {
+          "toiminnallinen-jarjestelmakokonaisuus": [],
+          "rakenteellinen-jarjestelmakokonaisuus": [
+            "rakenteellinen-jarjestelmakokonaisuus/rjktest"
+          ]
+        },
+        "kunto-ja-vauriotiedot": {
+          "arvioitu-jaljella-oleva-kayttoika": null,
+          "yleinen-kuntoluokka": "kuntoluokka/kltest",
+          "varustevauriot": []
+        },
+        "sijaintipoikkeus": null,
+        "rakenteelliset-ominaisuudet": {
+          "inva-wc": null,
+          "wc-talousvesi": null,
+          "varusteiden-lukumaara": 1,
+          "vakiorakenne": null,
+          "tunnus": null,
+          "wc-lammitys": null,
+          "siirrettava": null,
+          "yhteydet-muihin-kohteisiin": [],
+          "materiaali": "materiaali/matest",
+          "bussipysakin-katoksen-lapinakyvyys": null,
+          "tyyppi": "tienvarsikalustetyyppi/tvkttest",
+          "valaistus": false,
+          "lisatieto": null,
+          "pesutilat": null,
+          "wc-viemarointi": null,
+          "bussipysakin-seinien-lukumaara": null
+        }
+      },
+      "keskilinjageometria-wgs84": {
+        "coordinates": [
+          25.472828611,
+          65.011548611,
+          0.0
+        ],
+        "type": "Point"
+      },
+      "geometrycollection": {
+        "type": "GeometryCollection",
+        "geometries": [
+          {
+            "coordinates": [
+              25.472828611,
+              65.011548611,
+              0.0
+            ],
+            "type": "Point"
+          }
+        ]
+      },
+      "luotu": "2023-05-15T12:00:00Z",
+      "tekninen-tapahtuma": null,
+      "keskilinjageometria": {
+        "coordinates": [
+          6839198.670452601,
+          638694.7440636739,
+          0.0
+        ],
+        "type": "Point"
+      },
+      "lahdejarjestelman-id": null,
+      "tiekohteen-tila": "tiekohteen-tila/tttest",
+      "paattyen": null,
+      "sijainti-oid": "1.1.111.111.1.1.1.11111111",
+      "lahdejarjestelma": null,
+      "schemaversio": 1,
+      "luoja": {
+        "kayttajanimi": "LUOJA",
+        "api": true,
+        "client_id": "LUOJA-CLIENT-IF"
+      },
+      "sijaintitarkenne": {
+        "puoli": "puoli/p02",
+        "ajoradat": [
+          "ajorata/ajr0"
+        ]
+      },
+      "menetelma": "menetelma/mtest",
+      "muokkaaja": {
+        "kayttajanimi": "MUOKKAAJA",
+        "api": true,
+        "client_id": "MUOKKAAJA-CLIENT-ID"
+      },
+      "oid": "1.2.345.678.9.0.12.345.678901234",
+      "alkaen": "2022-10-15",
+      "_indeksointiaika": "2023-05-01T12:00:00.00000Z",
+      "muutoksen-lahde-oid": "urakan-velho-oid",
+      "muokattu": "2023-05-01T12:00:00.00000Z"
+    }
+  ],
+  "aggergaatiot": {},
+  "osumia": 1
+}

@@ -1,0 +1,143 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "paths": {},
+  "components": {
+    "schemas": {
+      "nimikkeisto_kunto-ja-vauriotiedot_kuntoluokka": {
+        "enum": [
+          "kuntoluokka/kl1234",
+          "kuntoluokka/kl4321"
+        ],
+        "format": "keyword",
+        "type": "string"
+      },
+      "kohdeluokka_varusteet_tienvarsikalusteet": {
+        "allOf": [
+          {
+            "properties": {
+              "ominaisuudet": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/komponentti_kunto-ja-vauriotiedot_yleinen-kuntoluokka"
+                  },
+                  {
+                    "$ref": "#/components/schemas/komponentti_toimenpiteet_varustetoimenpiteet"
+                  },
+                  {
+                    "properties": {
+                      "rakenteelliset-ominaisuudet": {
+                        "properties": {
+                          "tyyppi": {
+                            "$ref": "#/components/schemas/nimikkeisto_varusteet_tienvarsikalustetyyppi"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
+                  }
+                ]
+              }
+            },
+            "type": "object"
+          }
+        ]
+      },
+      "nimikkeisto_varusteet_tienvarsikalustetyyppi": {
+        "enum": [
+          "tienvarsikalustetyyppi/tvkt1234",
+          "tienvarsikalustetyyppi/tvkt4321"
+        ],
+        "format": "keyword",
+        "type": "string"
+      },
+      "nimikkeisto_toimenpiteet_varustetoimenpide": {
+        "enum": [
+          "varustetoimenpide/vtp1234",
+          "varustetoimenpide/vtp4321"
+        ],
+        "format": "keyword",
+        "type": "string"
+      },
+      "komponentti_toimenpiteet_varustetoimenpiteet": {
+        "properties": {
+          "toimenpiteet": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/nimikkeisto_toimenpiteet_varustetoimenpide"
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "toimenpiteet"
+        ]
+      },
+      "komponentti_kunto-ja-vauriotiedot_yleinen-kuntoluokka": {
+        "properties": {
+          "kunto-ja-vauriotiedot": {
+            "properties": {
+              "yleinen-kuntoluokka": {
+                "nullable": true,
+                "$ref": "#/components/schemas/nimikkeisto_kunto-ja-vauriotiedot_kuntoluokka"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "x-velho-nimikkeistot": {
+      "kunto-ja-vauriotiedot/kuntoluokka": {
+        "nimikkeistoversiot": {
+          "1": {
+            "kuntoluokka/kl1234": {
+              "koodi": 1234,
+              "otsikko": "Eka otsikko"
+            },
+            "kuntoluokka/kl4321": {
+              "koodi": 4321,
+              "otsikko": "Toka otsikko"
+            }
+          }
+        },
+        "transformaatiot": {},
+        "uusin-nimikkeistoversio": 1
+      },
+      "toimenpiteet/varustetoimenpide": {
+        "nimikkeistoversiot": {
+          "1": {
+            "varustetoimenpide/vtp1234": {
+              "otsikko": "Eka varustetoimenpide"
+            },
+            "varustetoimenpide/vtp4321": {
+              "otsikko": "Toka varustetoimenpide"
+            }
+          }
+        },
+        "transformaatiot": {},
+        "uusin-nimikkeistoversio": 1
+      },
+      "varusteet/tienvarsikalustetyyppi": {
+        "nimikkeistoversiot": {
+          "1": {
+            "tienvarsikalustetyyppi/tvkt1234": {
+              "otsikko": "Eka kalustetyyppi"
+            },
+            "tienvarsikalustetyyppi/tvkt4321": {
+              "otsikko": "Toka kalustetyyppi"
+            }
+          }
+        },
+        "transformaatiot": {},
+        "uusin-nimikkeistoversio": 1
+      }
+    },
+    "title": "Metatiedot: kohdeluokka varusteet/tienvarsikalusteet",
+    "version": "0"
+  },
+  "openapi": "3.0.3"
+}
