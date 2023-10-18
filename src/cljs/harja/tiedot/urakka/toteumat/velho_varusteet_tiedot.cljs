@@ -5,8 +5,7 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.varusteet-kartalla :as varusteet-kartalla]
-            [clojure.set :as s])
+            [harja.tiedot.urakka.varusteet-kartalla :as varusteet-kartalla])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; Varustetyypit on muista valinnoista poiketen toteutettu atomilla.
