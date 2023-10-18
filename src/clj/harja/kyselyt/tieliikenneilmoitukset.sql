@@ -106,9 +106,23 @@ WHERE ulompi_i.id IN
        sisempi_i.aihe = :aihe) AND
       (:tarkenne::INTEGER IS NULL OR
        sisempi_i.tarkenne = :tarkenne)
-       ORDER BY sisempi_i."valitetty-urakkaan" DESC
-       LIMIT :max-maara::INTEGER)
-ORDER BY ulompi_i."valitetty-urakkaan" DESC, it.kuitattu DESC;
+       ORDER BY
+            CASE WHEN :lajittelu-kentta = 'valitetty-urakkaan' AND :lajittelu-suunta = 'asc' THEN sisempi_i."valitetty-urakkaan" END ASC,
+            CASE WHEN :lajittelu-kentta = 'valitetty-urakkaan' AND :lajittelu-suunta = 'desc' THEN sisempi_i."valitetty-urakkaan" END DESC,
+            CASE WHEN :lajittelu-kentta = 'ilmoitustyyppi' AND :lajittelu-suunta = 'asc' THEN sisempi_i.ilmoitustyyppi END ASC,
+            CASE WHEN :lajittelu-kentta = 'ilmoitustyyppi' AND :lajittelu-suunta = 'desc' THEN sisempi_i.ilmoitustyyppi END DESC,
+            CASE WHEN :lajittelu-kentta = 'tr' AND :lajittelu-suunta = 'desc' THEN sisempi_i.tr_numero END ASC,
+            CASE WHEN :lajittelu-kentta = 'tr' AND :lajittelu-suunta = 'asc' THEN sisempi_i.tr_numero END DESC
+       LIMIT :max-maara::INTEGER
+       )
+ORDER BY
+    CASE WHEN :lajittelu-kentta = 'valitetty-urakkaan' AND :lajittelu-suunta = 'asc' THEN ulompi_i."valitetty-urakkaan" END ASC,
+         CASE WHEN :lajittelu-kentta = 'valitetty-urakkaan' AND :lajittelu-suunta = 'desc' THEN ulompi_i."valitetty-urakkaan" END DESC,
+         CASE WHEN :lajittelu-kentta = 'ilmoitustyyppi' AND :lajittelu-suunta = 'asc' THEN ulompi_i.ilmoitustyyppi END ASC,
+         CASE WHEN :lajittelu-kentta = 'ilmoitustyyppi' AND :lajittelu-suunta = 'desc' THEN ulompi_i.ilmoitustyyppi END DESC,
+         CASE WHEN :lajittelu-kentta = 'tr' AND :lajittelu-suunta = 'asc' THEN ulompi_i.tr_numero END DESC,
+         CASE WHEN :lajittelu-kentta = 'tr' AND :lajittelu-suunta = 'desc' THEN ulompi_i.tr_numero END ASC,
+         it.kuitattu DESC;
 
 -- name: hae-ilmoitukset-raportille
 SELECT

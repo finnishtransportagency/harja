@@ -159,7 +159,8 @@
                     kuittaustyypit hakuehto selite
                     aloituskuittauksen-ajankohta tr-numero tunniste
                     ilmoittaja-nimi ilmoittaja-puhelin vaikutukset
-                    aihe tarkenne] :as hakuehdot}
+                    aihe tarkenne
+                    lajittelu-kentta lajittelu-suunta] :as hakuehdot}
     max-maara]
    (let [valitetty-urakkaan-aikavali (or (:aikavali hakuehdot)
                                        (aikavaliehto hakuehdot :valitetty-urakkaan-vakioaikavali :valitetty-urakkaan-alkuaika :valitetty-urakkaan-loppuaika))
@@ -193,24 +194,25 @@
          vain-myohassa? (contains? vaikutukset :myohassa)
          vain-toimenpiteita-aiheuttaneet? (contains? vaikutukset :aiheutti-toimenpiteita)
          debug-viesti (str "Haetaan ilmoituksia: "
-                           (viesti urakat "urakoista" "ilman urakoita")
-                           (viesti valitetty-urakkaan-aikavali-alku "alkaen" "ilman alkuaikaa")
-                           (viesti valitetty-urakkaan-aikavali-loppu "päättyen" "ilman päättymisaikaa")
-                           (viesti toimenpiteet-aloitettu-aikavali-alku "toimenpiteet alkaen" "ilman toimenpiteiden alkuaikaa")
-                           (viesti toimenpiteet-aloitettu-aikavali-loppu "toimenpiteet päättyen" "ilman toimenpiteiden päättymisaikaa")
-                           (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
-                           (viesti kuittaustyypit "kuittaustyypeistä" "ilman kuittaustyyppirajoituksia")
-                           (viesti aloituskuittauksen-ajankohta "aloituskuittausrajaksella: " "ilman aloituskuittausrajausta")
-                           (viesti vain-myohassa? "vain myöhässä olevat: " "myös myöhästyneet")
-                           (viesti vain-toimenpiteita-aiheuttaneet? "vain toimenpiteitä aiheuttaneet olevat: " "myös toimenpiteitä aiheuttamattomat")
-                           (viesti selite "selitteellä:" "ilman selitettä")
-                           (viesti tunniste "tunnisteella:" "ilman tunnistetta")
-                           (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
-                           (viesti tr-numero "tienumerolla:" "ilman tienumeroa")
-                           (cond
-                             (:avoimet tilat) ", mutta vain avoimet."
-                             (and (:suljetut tilat) (:avoimet tilat)) ", ja näistä avoimet JA suljetut."
-                             (:suljetut tilat) ", ainoastaan suljetut."))
+                        (viesti urakat "urakoista" "ilman urakoita")
+                        (viesti valitetty-urakkaan-aikavali-alku "alkaen" "ilman alkuaikaa")
+                        (viesti valitetty-urakkaan-aikavali-loppu "päättyen" "ilman päättymisaikaa")
+                        (viesti toimenpiteet-aloitettu-aikavali-alku "toimenpiteet alkaen" "ilman toimenpiteiden alkuaikaa")
+                        (viesti toimenpiteet-aloitettu-aikavali-loppu "toimenpiteet päättyen" "ilman toimenpiteiden päättymisaikaa")
+                        (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
+                        (viesti kuittaustyypit "kuittaustyypeistä" "ilman kuittaustyyppirajoituksia")
+                        (viesti aloituskuittauksen-ajankohta "aloituskuittausrajaksella: " "ilman aloituskuittausrajausta")
+                        (viesti vain-myohassa? "vain myöhässä olevat: " "myös myöhästyneet")
+                        (viesti vain-toimenpiteita-aiheuttaneet? "vain toimenpiteitä aiheuttaneet olevat: " "myös toimenpiteitä aiheuttamattomat")
+                        (viesti selite "selitteellä:" "ilman selitettä")
+                        (viesti tunniste "tunnisteella:" "ilman tunnistetta")
+                        (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
+                        (viesti tr-numero "tienumerolla:" "ilman tienumeroa")
+                        (cond
+                          (:avoimet tilat) ", mutta vain avoimet."
+                          (and (:suljetut tilat) (:avoimet tilat)) ", ja näistä avoimet JA suljetut."
+                          (:suljetut tilat) ", ainoastaan suljetut.")
+                        (str " Sortataan " (:lajittelu-kentta hakuehdot) " mukaan, suunta " (:lajittelu-suunta hakuehdot)))
          _ (log/debug debug-viesti)
          ilmoitukset
          (when-not (empty? urakat)
@@ -218,36 +220,38 @@
              (into []
                    ilmoitus-xf
                    (q/hae-ilmoitukset db
-                                      {:urakat urakat
-                                       :alku_annettu (hakuehto-annettu? valitetty-urakkaan-aikavali-alku)
-                                       :loppu_annettu (hakuehto-annettu? valitetty-urakkaan-aikavali-loppu)
-                                       :toimenpiteet_alku_annettu (hakuehto-annettu? toimenpiteet-aloitettu-aikavali-alku)
-                                       :toimenpiteet_loppu_annettu (hakuehto-annettu? toimenpiteet-aloitettu-aikavali-loppu)
-                                       :kuittaamattomat (contains? tilat :kuittaamaton)
-                                       :vastaanotetut (contains? tilat :vastaanotettu)
-                                       :aloitetut (contains? tilat :aloitettu)
-                                       :lopetetut (contains? tilat :lopetettu)
-                                       :alku valitetty-urakkaan-aikavali-alku
-                                       :loppu valitetty-urakkaan-aikavali-loppu
-                                       :toimenpiteet_alku toimenpiteet-aloitettu-aikavali-alku
-                                       :toimenpiteet_loppu toimenpiteet-aloitettu-aikavali-loppu
-                                       :tyypit_annettu (hakuehto-annettu? tyypit)
-                                       :tyypit tyypit
-                                       :teksti_annettu (hakuehto-annettu? hakuehto)
-                                       :teksti (str "%" hakuehto "%")
-                                       :selite_annettu selite-annettu?
-                                       :selite selite
-                                       :tunniste_annettu (hakuehto-annettu? tunniste)
-                                       :tunniste (when-not (str/blank? tunniste)
-                                                   (str "%" tunniste "%"))
-                                       :tr-numero tr-numero
-                                       :ilmoittaja-nimi (when-not (str/blank? ilmoittaja-nimi)
-                                                          (str "%" ilmoittaja-nimi "%"))
-                                       :ilmoittaja-puhelin (when-not (str/blank? ilmoittaja-puhelin)
-                                                             (str "%" ilmoittaja-puhelin "%"))
-                                       :aihe aihe
-                                       :tarkenne tarkenne
-                                       :max-maara max-maara}))
+                     {:urakat urakat
+                      :alku_annettu (hakuehto-annettu? valitetty-urakkaan-aikavali-alku)
+                      :loppu_annettu (hakuehto-annettu? valitetty-urakkaan-aikavali-loppu)
+                      :toimenpiteet_alku_annettu (hakuehto-annettu? toimenpiteet-aloitettu-aikavali-alku)
+                      :toimenpiteet_loppu_annettu (hakuehto-annettu? toimenpiteet-aloitettu-aikavali-loppu)
+                      :kuittaamattomat (contains? tilat :kuittaamaton)
+                      :vastaanotetut (contains? tilat :vastaanotettu)
+                      :aloitetut (contains? tilat :aloitettu)
+                      :lopetetut (contains? tilat :lopetettu)
+                      :alku valitetty-urakkaan-aikavali-alku
+                      :loppu valitetty-urakkaan-aikavali-loppu
+                      :toimenpiteet_alku toimenpiteet-aloitettu-aikavali-alku
+                      :toimenpiteet_loppu toimenpiteet-aloitettu-aikavali-loppu
+                      :tyypit_annettu (hakuehto-annettu? tyypit)
+                      :tyypit tyypit
+                      :teksti_annettu (hakuehto-annettu? hakuehto)
+                      :teksti (str "%" hakuehto "%")
+                      :selite_annettu selite-annettu?
+                      :selite selite
+                      :tunniste_annettu (hakuehto-annettu? tunniste)
+                      :tunniste (when-not (str/blank? tunniste)
+                                  (str "%" tunniste "%"))
+                      :tr-numero tr-numero
+                      :ilmoittaja-nimi (when-not (str/blank? ilmoittaja-nimi)
+                                         (str "%" ilmoittaja-nimi "%"))
+                      :ilmoittaja-puhelin (when-not (str/blank? ilmoittaja-puhelin)
+                                            (str "%" ilmoittaja-puhelin "%"))
+                      :aihe aihe
+                      :tarkenne tarkenne
+                      :max-maara max-maara
+                      :lajittelu-kentta (name lajittelu-kentta)
+                      :lajittelu-suunta (name lajittelu-suunta)}))
              {:kuittaus :kuittaukset}))
          ilmoitukset (mapv
                        #(-> %
