@@ -219,7 +219,7 @@
      :tr-loppuetaisyys loppuetaisyys
      :ulkoinen-oid (:oid varuste)}))
 
-(defn hae-urakan-varustetoteumat [{:keys [integraatioloki db velho-integraatio]}
+(defn hae-urakan-varustetoteumat [{:keys [integraatioloki db asetukset]}
                                   {:keys [urakka-id kohdeluokat varustetyypit kuntoluokat tie aosa aeta losa leta
                                           hoitovuoden-kuukausi hoitokauden-alkuvuosi toimenpide]}]
   (integraatiotapahtuma/suorita-integraatio db integraatioloki "velho" "varustetoteumien-haku" nil
@@ -228,7 +228,8 @@
             {:keys [token-url
                     varuste-kayttajatunnus
                     varuste-salasana
-                    varuste-api-juuri-url]} (:asetukset velho-integraatio)]
+                    varuste-api-juuri-url]} asetukset]
+        (println token-url)
         (when-let [token (velho-yhteiset/hae-velho-token token-url varuste-kayttajatunnus varuste-salasana konteksti
                            (fn [x]
                              (swap! virheet conj (str "Virhe velho token haussa " x))
@@ -326,7 +327,7 @@
                 varusteet (mapv (partial varuste-velhosta->harja db) (:osumat (json/read-str vastaus :key-fn keyword)))]
             {:urakka-id urakka-id :toteumat varusteet}))))))
 
-(defn hae-varusteen-historia [{:keys [integraatioloki db velho-integraatio]}
+(defn hae-varusteen-historia [{:keys [integraatioloki db asetukset]}
                               {:keys [ulkoinen-oid kohdeluokka]}]
   (integraatiotapahtuma/suorita-integraatio db integraatioloki "velho" "varustetoteuman-historian-haku" nil
     (fn [konteksti]
@@ -334,7 +335,7 @@
             {:keys [token-url
                     varuste-api-juuri-url
                     varuste-kayttajatunnus
-                    varuste-salasana]} (:asetukset velho-integraatio)]
+                    varuste-salasana]} asetukset]
         (when-let [token (velho-yhteiset/hae-velho-token token-url varuste-kayttajatunnus varuste-salasana konteksti
                            (fn [x]
                              (swap! virheet conj (str "Virhe velho token haussa " x))
@@ -358,12 +359,12 @@
                 (mapv (partial varuste-velhosta->harja db) varusteet)]
             varusteet))))))
 
-(defn hae-ja-tallenna-kohdeluokan-nimikkeisto [{:keys [db velho-integraatio]} virheet hae-token-fn konteksti
+(defn hae-ja-tallenna-kohdeluokan-nimikkeisto [{:keys [db asetukset]} virheet hae-token-fn konteksti
                                                {:keys [kohdeluokka kohdeluokka->tyyppi-fn nimiavaruus]}
                                                hae-kuntoluokat? hae-varustetoimenpiteet?]
   (when-let [token (hae-token-fn)]
     (try+
-      (let [{:keys [varuste-api-juuri-url]} (:asetukset velho-integraatio)
+      (let [{:keys [varuste-api-juuri-url]} asetukset
             otsikot {"Content-Type" "application/json"
                      "Authorization" (str "Bearer " token)}
             http-asetukset {:metodi :GET
@@ -444,8 +445,8 @@
         (swap! virheet conj (:virheet error))
         nil))))
 
-(defn tuo-velho-nimikkeisto [{:keys [db integraatioloki velho-integraatio] :as this}]
-  (let [{:keys [token-url varuste-kayttajatunnus varuste-salasana]} (:asetukset velho-integraatio)]
+(defn tuo-velho-nimikkeisto [{:keys [db integraatioloki asetukset] :as this}]
+  (let [{:keys [token-url varuste-kayttajatunnus varuste-salasana]} asetukset]
     (integraatiotapahtuma/suorita-integraatio db integraatioloki "velho" "nimikkeiston-tuonti" nil
       (fn [konteksti]
         (let [virheet (atom #{})

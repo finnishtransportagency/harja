@@ -1,16 +1,9 @@
 (ns harja.palvelin.integraatiot.velho.varusteet-test
-  (:require [clojure.data.json :as json]
-            [clojure.java.io :as io]
-            [clojure.string :as str]
-            [clj-time.coerce :refer [to-date-time]]
-            [ring.util.codec :refer [form-decode]]
-            [com.stuartsierra.component :as component]
+  (:require [com.stuartsierra.component :as component]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
-            [harja.palvelin.integraatiot.velho.yhteiset :as velho-yhteiset]
             [harja.palvelin.integraatiot.velho.yhteiset-test :as yhteiset-test]
-            [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [org.httpkit.fake :refer [with-fake-http]]
             [clojure.test :refer :all])
@@ -70,7 +63,7 @@
                      +tienvarsikalusteet-nimikkeisto-url+ (slurp "test/resurssit/velho/varusteet/metatietopalvelu/kohdeluokka.json")
                      +velho-nimikkeisto-url+ "{}"]
       (u "DELETE FROM velho_nimikkeisto")
-      (varusteet/tuo-velho-nimikkeisto jarjestelma)
+      (varusteet/tuo-velho-nimikkeisto (:velho-integraatio jarjestelma))
 
       (let [nimikkeisto (q-map "SELECT versio, tyyppi_avain, kohdeluokka, nimiavaruus, nimi, otsikko FROM velho_nimikkeisto")
             odotettu-nimikkeisto [{:versio 1 :tyyppi_avain "tienvarsikalustetyyppi" :kohdeluokka "tienvarsikalusteet" :nimiavaruus "varusteet" :nimi "tvkt1234" :otsikko "Eka kalustetyyppi"}
@@ -86,7 +79,7 @@
                      +tienvarsikalusteet-nimikkeisto-url+ :deny
                      +velho-nimikkeisto-url+ "{}"]
       (is (thrown? Error
-            (varusteet/tuo-velho-nimikkeisto jarjestelma))))))
+            (varusteet/tuo-velho-nimikkeisto (:velho-integraatio jarjestelma)))))))
 
 (def odotettu-varuste
   {:alkupvm #inst "2022-10-15T00:00:00.000000000-00:00"
@@ -109,17 +102,17 @@
 (deftest hae-varusteen-historia-test
   (with-fake-http [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
                    (str +velho-api-juuri+ "/varusterekisteri/api/v1/historia/kohde/" +tienvarsikaluste-oid+) (slurp "test/resurssit/velho/varusteet/varusteen-historia.json")]
-    (let [vastaus (varusteet/hae-varusteen-historia jarjestelma {:ulkoinen-oid +tienvarsikaluste-oid+
-                                                                 :kohdeluokka "tienvarsikalusteet"})]
+    (let [vastaus (varusteet/hae-varusteen-historia (:velho-integraatio jarjestelma) {:ulkoinen-oid +tienvarsikaluste-oid+
+                                                                                      :kohdeluokka "tienvarsikalusteet"})]
       (is (= 2 (count vastaus)))
       (is (apply = (map #(dissoc % :alkupvm :loppupvm :tr-alkuetaisyys) vastaus)))
       (is (= odotettu-varuste (second vastaus))))))
 
 (deftest hae-urakan-varustetoteumat-test
   (with-fake-http [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
-                   (str +velho-api-juuri+ "/hakupalvelu/api/v1/haku/kohdeluokat") (slurp "test/resurssit/velho/varusteet/varusteiden-hakurajapinta-vastaus.json")]
+                   +velho-varusteet-hakurajapinta-url+ (slurp "test/resurssit/velho/varusteet/varusteiden-hakurajapinta-vastaus.json")]
     (with-redefs [harja.kyselyt.urakat/hae-urakan-velho-oid (constantly +urakan-velho-oid+)]
-      (let [vastaus (varusteet/hae-urakan-varustetoteumat jarjestelma {:urakka-id 123
-                                                                       :hoitokauden-alkuvuosi 2020})]
+      (let [vastaus (varusteet/hae-urakan-varustetoteumat (:velho-integraatio jarjestelma) {:urakka-id 123
+                                                                                            :hoitokauden-alkuvuosi 2020})]
         (is (= 1 (count (:toteumat vastaus))))
         (is (= odotettu-varuste (first (:toteumat vastaus))))))))

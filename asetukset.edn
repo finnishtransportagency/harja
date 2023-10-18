@@ -167,11 +167,10 @@
                                (clojure.string/trim-newline)))#_ #=(slurp "../.harja/velho-salasana")
          :varuste-api-juuri-url "https://apiv2stgvelho.testivaylapilvi.fi"
          :varuste-kayttajatunnus "6o9f1j147qvdvo49nufo0fhufp"
+         :varuste-tuonti-suoritusaika nil
          :varuste-salasana #=(eval (some->
                                        (slurp "../.harja/velho-varuste-salasana")
-                                       (clojure.string/trim-newline)))#_ #=(slurp "../.harja/velho-varuste-salasana")
-         :varuste-urakka-oid-url "https://apiv2stgvelho.testivaylapilvi.fi/hallintorekisteri/api/v1/tunnisteet/urakka/maanteiden-hoitourakka"
-         :varuste-urakka-kohteet-url "https://apiv2stgvelho.testivaylapilvi.fi/hallintorekisteri/api/v1/kohteet"}
+                                       (clojure.string/trim-newline)))}
 
  :yha-velho {}
 
