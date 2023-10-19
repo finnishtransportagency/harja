@@ -60,14 +60,8 @@ runs:
 
     - name: Install lessc
       if: ${{ inputs.install-tools == 'true' }}
-      env:
-        VERSION: 4.2.0
       run: |
-        cd /tmp
-        curl -o lessc.zip -sL "https://github.com/less/less.js/archive/refs/tags/v${VERSION}.zip"
-        unzip -qqo lessc.zip
-        rm lessc.zip
-        mv -f "/tmp/lessc/packages/less/bin/lessc" "/usr/local/bin/lessc"
-
+        NPM_LESS_VERSION=$(node -pe 'require("./package").devDependencies["less"]')
+        npm install -g "less@${NPM_LESS_VERSION}"
       shell: bash
 
