@@ -95,6 +95,9 @@
   (let [vahingoittunut-ruumiinosa (first vahingoittuneet-ruumiinosat)]
     {:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->teksti vahingoittunut-ruumiinosa)}))
 
+;; Korjaavan toimenpiteen tila Suljettu ja Toteutettu on sama asia.
+;; Harjassa käytetään ilmaisua Toteutettu, mutta kun tieto siirretään eteenpäin Analytiikkaportaaliin
+;; se välitetään muodossa Suljettu. Tämä on perua TURI-järjestelmän spekseistä.
 (def korjaava-toimenpide-tila->teksti
   {:avoin "Avoin"
    :siirretty "Siirretty"
