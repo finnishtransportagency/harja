@@ -37,7 +37,8 @@ runs:
       if: ${{ inputs.build-front-end == 'true' }}
       run: |
         echo "Building frontend"
-        lein do less once, with-profile prod-cljs compile-prod
+        lessc dev-resources/less/application/application.less /resources/public/css/application.css
+        lessc dev-resources/less/laadunseuranta/application/laadunseuranta.less /resources/public/css/laadunseuranta.css
       shell: bash
 
     - name: Build laadunseuranta
