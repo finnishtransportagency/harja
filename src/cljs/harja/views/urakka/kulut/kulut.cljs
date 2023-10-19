@@ -210,67 +210,43 @@
   [{:keys [paivitys-fn tehtavaryhma tehtavaryhmat tehtavaryhma-meta indeksi disabled
            toimenpiteet toimenpideinstanssi lisatyo? lisatyon-lisatieto lisatyon-lisatieto-meta
            vuoden-paatos-valittu?]}]
-  (let [;; Kulujen lisäämisessä tehtäväryhmä alasvetovalikosta poistetaan muutamia tehtäväryhmiä, joita ei voida valita.
-        ;; Jos niitä on saatu kululle jotain muuta kautta, niin ne kuitenkin näytetään.
-        ;; Nöitä on
-        ;; Hoitovuoden päättäminen / Tavoitepalkkio, yksilöllinen tunniste: '55c920e7-5656-4bb0-8437-1999add714a3'
-        ;; Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä, yksilöllinen tunniste: '19907c24-dd26-460f-9cb4-2ed974b891aa'
-        ;; Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä, yksilöllinen tunniste: 'be34116b-2264-43e0-8ac8-3762b27a9557'
-        kielletty-tr (some
-                       (fn [rivi]
-                         (when (and (= tehtavaryhma (:id rivi))
-                                 (or
-                                   (= "Hoitovuoden päättäminen / Tavoitepalkkio" (:tehtavaryhma rivi))
-                                   (= "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä" (:tehtavaryhma rivi))
-                                   (= "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä" (:tehtavaryhma rivi))))
-                           rivi))
-                       tehtavaryhmat)
-        tehtavaryhmat (if kielletty-tr
-                        tehtavaryhmat
-                        (filter
-                          (fn [rivi]
-                            (when-not (or
-                                        (= "Hoitovuoden päättäminen / Tavoitepalkkio" (:tehtavaryhma rivi))
-                                        (= "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä" (:tehtavaryhma rivi))
-                                        (= "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä" (:tehtavaryhma rivi))) rivi))
-                          tehtavaryhmat))]
-   [:div.palstat
-    [:div.palsta
-     [:label (if lisatyo?
-               "Toimenpide *"
-               "Tehtäväryhmä *")]
-     [tehtavaryhma-tai-toimenpide-dropdown {:paivitys-fn paivitys-fn
-                                            :valittu (if lisatyo?
-                                                       toimenpideinstanssi
-                                                       tehtavaryhma)
-                                            :valinnat (if lisatyo?
-                                                        toimenpiteet
-                                                        tehtavaryhmat)
-                                            :valittu-meta tehtavaryhma-meta
-                                            :indeksi indeksi
-                                            :lisatyo? lisatyo?
-                                            :ryhmat (when-not lisatyo?
-                                                      {:nayta-ryhmat [:ei-hallinnollinen :hallinnollinen]
-                                                       :ryhmittely hallinnollisen-ryhmittely
-                                                       :ryhman-otsikko hallinnollisen-otsikointi})
-                                            :nayta-vihje? (if lisatyo?
-                                                            #(false? true)
-                                                            jos-hallinnollinen)
-                                            :vihje-viesti hallinnollinen-vihje-viesti
-                                            :disabled (or disabled
-                                                        vuoden-paatos-valittu?)}]]
-    [:div.palsta
-     (when lisatyo?
-       [kentat/tee-otsikollinen-kentta
-        {:otsikko "Lisätieto *"
-         :luokka #{}
-         :kentta-params {:disabled disabled
-                         :vayla-tyyli? true
-                         :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? lisatyon-lisatieto-meta))
-                         :tyyppi :string}
-         :arvo-atom (r/wrap lisatyon-lisatieto (r/partial paivita-lomakkeen-arvo
-                                                 {:paivitys-fn paivitys-fn
-                                                  :polku [:kohdistukset indeksi :lisatyon-lisatieto]}))}])]]))
+  [:div.palstat
+   [:div.palsta
+    [:label (if lisatyo?
+              "Toimenpide *"
+              "Tehtäväryhmä *")]
+    [tehtavaryhma-tai-toimenpide-dropdown {:paivitys-fn paivitys-fn
+                                           :valittu (if lisatyo?
+                                                      toimenpideinstanssi
+                                                      tehtavaryhma)
+                                           :valinnat (if lisatyo?
+                                                       toimenpiteet
+                                                       tehtavaryhmat)
+                                           :valittu-meta tehtavaryhma-meta
+                                           :indeksi indeksi
+                                           :lisatyo? lisatyo?
+                                           :ryhmat (when-not lisatyo?
+                                                     {:nayta-ryhmat [:ei-hallinnollinen :hallinnollinen]
+                                                      :ryhmittely hallinnollisen-ryhmittely
+                                                      :ryhman-otsikko hallinnollisen-otsikointi})
+                                           :nayta-vihje? (if lisatyo?
+                                                           #(false? true)
+                                                           jos-hallinnollinen)
+                                           :vihje-viesti hallinnollinen-vihje-viesti
+                                           :disabled (or disabled
+                                                       vuoden-paatos-valittu?)}]]
+   [:div.palsta
+    (when lisatyo?
+      [kentat/tee-otsikollinen-kentta
+       {:otsikko "Lisätieto *"
+        :luokka #{}
+        :kentta-params {:disabled disabled
+                        :vayla-tyyli? true
+                        :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? lisatyon-lisatieto-meta))
+                        :tyyppi :string}
+        :arvo-atom (r/wrap lisatyon-lisatieto (r/partial paivita-lomakkeen-arvo
+                                                {:paivitys-fn paivitys-fn
+                                                 :polku [:kohdistukset indeksi :lisatyon-lisatieto]}))}])]])
 
 (defn useampi-kohdistus
   [{:keys [paivitys-fn disabled poistettu muokataan? indeksi
@@ -406,14 +382,14 @@
         tehtavaryhma-meta (get validius [:kohdistukset indeksi :tehtavaryhma])
         lisatyon-lisatieto-meta (get validius [:kohdistukset indeksi :lisatyon-lisatieto])
         yhteiset-tiedot (merge kohdistus
-                               {:paivitys-fn             paivitys-fn
-                                :tehtavaryhmat           tehtavaryhmat
-                                :toimenpiteet            toimenpiteet
-                                :tehtavaryhma-meta       tehtavaryhma-meta
-                                :indeksi                 indeksi
-                                :disabled                disabled
-                                :vuoden-paatos-valittu? vuoden-paatos-valittu?
-                                :lisatyon-lisatieto-meta lisatyon-lisatieto-meta})]
+                          {:paivitys-fn paivitys-fn
+                           :tehtavaryhmat (tiedot/kasittele-tehtavaryhmat tehtavaryhmat (:tehtavaryhma kohdistus))
+                           :toimenpiteet toimenpiteet
+                           :tehtavaryhma-meta tehtavaryhma-meta
+                           :indeksi indeksi
+                           :disabled disabled
+                           :vuoden-paatos-valittu? vuoden-paatos-valittu?
+                           :lisatyon-lisatieto-meta lisatyon-lisatieto-meta})]
     [:div (merge {} (when useampia-kohdistuksia?
                       {:class (apply conj #{"lomake-sisempi-osio"} (when poistettu #{"kohdistus-poistetaan"}))}))
      (if useampia-kohdistuksia?
