@@ -70,9 +70,6 @@ SELECT paivita_pohjavesialueet();
 -- Toteumat
 \i testidata/toteumat.sql
 
--- Varustetoteumat ulkoisista järjestelmistä
-\i testidata/varustetoteumat_ulkoiset.sql
-
 -- Kustannussuunnitelma
 \i testidata/kustannussuunnittelu.sql
 

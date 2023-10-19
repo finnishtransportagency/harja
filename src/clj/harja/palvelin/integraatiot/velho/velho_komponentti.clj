@@ -16,12 +16,13 @@
   (hae-varusteen-historia [this tiedot]))
 
 (defn tee-velho-nimikkeisto-tuonti-tehtava [{:keys [db :as this]} suoritusaika]
-  (ajastettu-tehtava/ajasta-paivittain
-    suoritusaika
-    (fn [_]
-      (lukko/yrita-ajaa-lukon-kanssa db
-        "tuo-velhon-nimikkeisto"
-        #(tuo-velho-nimikkeisto this)))))
+  (when suoritusaika
+    (ajastettu-tehtava/ajasta-paivittain
+      suoritusaika
+      (fn [_]
+        (lukko/yrita-ajaa-lukon-kanssa db
+          "tuo-velhon-nimikkeisto"
+          #(tuo-velho-nimikkeisto this))))))
 
 (defrecord Velho [asetukset]
   component/Lifecycle

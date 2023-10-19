@@ -16,3 +16,5 @@ INSERT INTO integraatio (jarjestelma, nimi)
 VALUES ('velho', 'varustetoteuman-historian-haku');
 
 DELETE FROM koodisto_konversio_koodit WHERE koodisto_konversio_id IN ('v/vtykl', 'v/vtlm', 'v/vtlmln', 'v/vtp');
+
+DROP TABLE varustetoteuma_ulkoiset, varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle, varustetoteuma_ulkoiset_virhe;
