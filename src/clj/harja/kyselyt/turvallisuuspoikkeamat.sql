@@ -355,8 +355,12 @@ SELECT
     k.suoritettu                          AS korjaavatoimenpide_suoritettu,
     k.otsikko                             AS korjaavatoimenpide_otsikko,
     k.toteuttaja                          AS korjaavatoimenpide_toteuttaja,
-    k.tila                                AS korjaavatoimenpide_tila,
-
+    CASE
+        WHEN k.tila = 'toteutettu' THEN
+            'suljettu' ::TEXT
+        ELSE
+            k.tila ::TEXT
+        END                               AS korjaavatoimenpide_tila,
     kom.id                                AS kommentti_id,
     kom.tekija                            AS kommentti_tekija,
     kom.kommentti                         AS kommentti_kommentti,
