@@ -43,5 +43,6 @@
     (poista-palvelut http :hae-urakan-varustetoteumat)
     (poista-palvelut http :hae-varusteen-historia)
     (poista-palvelut http :hae-varustetoteuma-nimikkeistot)
-    (excel-vienti/poista-excel-kasittelija! excel :varusteet-ulkoiset-excel)
+    (when excel
+      (excel-vienti/poista-excel-kasittelija! excel :varusteet-ulkoiset-excel))
     this))
