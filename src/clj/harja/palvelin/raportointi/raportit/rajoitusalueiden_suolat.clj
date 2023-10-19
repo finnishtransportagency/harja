@@ -36,9 +36,7 @@
                 :ryhmitelty? false}]]
        [[:arvo {:arvo (:talvisuola_t_per_ajoratakm rivi)
                 :jos-tyhja "-"
-                :korosta-hennosti? (if-not (< (or (:suolarajoitus rivi) 9999) (or (:talvisuola_t_per_ajoratakm rivi) 0))
-                                     true
-                                     false)
+                :korosta-hennosti? true
                 :desimaalien-maara 2
                 :varoitus? (< (or (:suolarajoitus rivi) 9999) (or (:talvisuola_t_per_ajoratakm rivi) 0))
                 :ryhmitelty? false}]]
