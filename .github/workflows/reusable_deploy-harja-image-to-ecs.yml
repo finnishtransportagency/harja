@@ -131,6 +131,7 @@ jobs:
       # Pakotetaan lopuksi Harjan Fargate taskit käynnistymään, mikäli ne on aiemmin laitettu alas.
       - name: Start Harja Fargate tasks
         uses: ./.github/actions/start-fargate-tasks
+        timeout-minutes: 10
         # Pakota uudelleenkäynnistyminen vaikka migraatio tai ECS deploy edellä olisi epäonnistunut
         # Fargate taskit sammutetaan ennen migraatioiden ajoa, mutta ne täytyy aina käynnistää uudelleen,
         # jotta palvelu pysyy toiminnassa.
