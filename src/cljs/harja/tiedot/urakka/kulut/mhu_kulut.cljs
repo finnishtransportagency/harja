@@ -467,7 +467,7 @@
       (assoc :syottomoodi auki?))))
 
 (defn kasittele-tehtavaryhmat
-  "Lisäättäessä tai muokatess akuluja tehtäväryhmä alasvetovalikosta poistetaan muutamia tehtäväryhmiä, joita ei enää saa valita.
+  "Lisättäessä tai muokatessa kuluja tehtäväryhmä alasvetovalikosta poistetaan muutamia tehtäväryhmiä, joita ei enää saa valita.
    Jos niitä on saatu kululle jotain muuta kautta, niin ne kuitenkin näytetään.
    Näitä on:
    Hoitovuoden päättäminen / Tavoitepalkkio, yksilöllinen tunniste: '55c920e7-5656-4bb0-8437-1999add714a3'
