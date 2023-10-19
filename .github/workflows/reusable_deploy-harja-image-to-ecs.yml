@@ -14,6 +14,8 @@ on:
       AWS_ACCOUNT_ID:
         required: true
 
+run-name: Deploy to '${{ inputs.environment }}' AWS env by @${{ github.actor }}
+
 
 # Note: Each job runs in a fresh VM, so the environment is not shared between jobs.
 jobs:
@@ -64,7 +66,7 @@ jobs:
       # Huomioi kuitenkin, että docker salasanan jakaminen jobien välillä ei onnistu mikäli se maskataan.
       - name: Authenticate with AWS ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
         with:
           mask-password: 'true'
 

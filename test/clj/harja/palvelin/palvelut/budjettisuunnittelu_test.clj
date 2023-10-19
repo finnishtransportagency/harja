@@ -221,23 +221,22 @@
                                    (into #{} (keys (group-by (juxt :hoitokausi :maksukausi) tiedot)))))))))))
 
 (deftest indeksikertoimien-haku
-  (let [rovaniemi-urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
-        ivalo-urakka-id (hae-urakan-id-nimella "Ivalon MHU testiurakka (uusi)")
+  (let [ii-urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        raasepori-urakka-id (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
         raahen-mhu-2023-id (hae-raahen-maanteiden-hoitourakan-2023-2028-id)
         db (:db jarjestelma)
 
-        rovaniemen-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id rovaniemi-urakka-id})
-        ivalon-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id ivalo-urakka-id})
+        iin-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id ii-urakka-id})
+        raaseporin-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id raasepori-urakka-id})
         ;; 2023 ja eteenpäin alkavilla urakoilla indeksien vertailukuukausi on poikkeuksellisesti elokuu, eikä syyskuu
         raahen-mhu-2023-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id raahen-mhu-2023-id})]
-    (is (= rovaniemen-indeksit ivalon-indeksit) "Indeksit pitäisi olla sama samaan aikaan alkaneille urakoillle")
+    (is (= iin-indeksit raaseporin-indeksit) "Indeksit pitäisi olla sama samaan aikaan alkaneille urakoillle")
 
-    ;; Hae Rovaniemen ensimmäisen hoitovuoden indeksi apurilla
-    ;; Korjattu olettaen, että koodi toimii. Tämä hajosi, kun Rovaniemen urakka alkoi, eli 1.10.2022
-    (is (= 1.064 (bs/indeksikerroin rovaniemen-indeksit 1)))
+    ;; Hae Iin urakan ensimmäisen hoitovuoden indeksi apurilla
+    (is (= 1.068 (bs/indeksikerroin iin-indeksit 1)))
 
     ;; 2023 ja eteenpäin alkavilla urakoilla indeksien vertailukuukausi on poikkeuksellisesti elokuu, eikä syyskuu
-    (is (= 1.06 (bs/indeksikerroin raahen-mhu-2023-indeksit 1)))))
+    (is (= 1.052 (bs/indeksikerroin raahen-mhu-2023-indeksit 1)))))
 
 (deftest indeksikorjauksen-laskenta
   (is (= 112.603394 (bs/indeksikorjaa 1.12345 100.230))))

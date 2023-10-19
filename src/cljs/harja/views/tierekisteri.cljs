@@ -591,6 +591,7 @@
       ;; Keskittäminen on ilmeisesti kartalle raskastoimenpide, joten otetaan se nyt tässä vaiheessa kokonaan pois käytöstä.
       #_ (when (not (empty? urakan-geometriat))
         (tiedot-kartta/keskita-kartta-alueeseen! (harja.geo/extent-monelle urakan-geometriat))))))
+
 (defn- urakan-geometriat []
   (let [urakka-id (r/atom nil)]
     (fn []
@@ -610,6 +611,44 @@
                                 (let []
                                   (hae-ja-nayta-urakan-geometriat @urakka-id)))}
           "Piirrä urakan geometriat kartalle"]]]])))
+
+(defonce tieturvallisuus-idt  (r/atom []))
+(defn- hae-ja-nayta-tieturvallisuus-geometriat []
+  (go
+    (let [;; Poista atomista löytyvät geometriat
+          _ (doall (for [p @tieturvallisuus-idt]
+                     (tasot/poista-geometria! p)))
+          ;; Hae geometriat
+          tieturvallisuus-geometriat (<! (k/post! :debug-hae-tieturvalliusuus-geometriat {}))
+          ;; Lisää uudet geometria atomiin
+          _ (map-indexed
+              (fn [idx g]
+                (when (:geometria g)
+                  (swap! tieturvallisuus-idt conj (keyword (str "tieturvallisuus-" idx)))))
+              tieturvallisuus-geometriat)]
+      
+      ;; Piirrä geometriat kartalle
+      (doseq [[idx s] (map-indexed vector tieturvallisuus-geometriat)]
+        (when (:geometria s)
+          (tasot/nayta-geometria! (keyword (str "tieturvallisuus-" idx))
+            {:type :tieturvallisuus-geometriat
+             :nimi "Tieturvallisuusgeometriat"
+             :alue (assoc (:geometria s)
+                     ;:fill "black"
+                     :radius 3
+                     :stroke {:color "blue"
+                              :width 1})}))))))
+
+(defn- tieturvallisuus-geometriat []
+  (let []
+    (fn []
+      [:div.lomake
+       [:div.row.lomakerivi
+        [:div.form-group.col-xs-12.col-sm-6.col-md-5.col-lg-4
+         [:button {:on-click #(do
+                                (let []
+                                  (hae-ja-nayta-tieturvallisuus-geometriat)))}
+          "Piirrä tieturvallisuusverkko kartalle"]]]])))
 
 
 (defn tierekisteri []
@@ -662,7 +701,9 @@
       [urakan-suolat]
       [:hr]
       [:h3 "Visualisoi urakan geometria kartalle"]
-      [urakan-geometriat]])))
+      [urakan-geometriat]
+      [:h3 "Piirrä tieturvallisuusverkon geometria kartalle"]
+      [tieturvallisuus-geometriat]])))
 
 ;; eism tie 20
 ;; x: 431418, y: 7213120

@@ -25,7 +25,7 @@
      [:varillinen-teksti {:arvo (or (avain_yht tp-rivi) (summa-fmt nil)) :fmt :raha :lihavoi? lihavoi?}])))
 
 (defn- taulukko [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
-                         kyseessa-kk-vali? sheet-nimi]}]
+                         kyseessa-kk-vali? sheet-nimi hk-alkupvm]}]
   (let [rivit (into []
                     (remove nil?
                             (cond
@@ -44,9 +44,10 @@
                                (rivi-taulukolle data kyseessa-kk-vali? "Hoidonjohtopalkkio" :hjpalkkio_hoitokausi_yht :hjpalkkio_val_aika_yht false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :hoidonjohto_hoitokausi_yht :hoidonjohto_val_aika_yht true)]
 
-                              (= "Äkilliset hoitotyöt ja vahinkojen korjaukset" otsikko)
+                              (= "Rahavaraukset" otsikko)
                               [(rivi-taulukolle data kyseessa-kk-vali? "Äkilliset hoitotyöt" :akilliset_hoitokausi_yht :akilliset_val_aika_yht false)
-                               (rivi-taulukolle data kyseessa-kk-vali? "Vahinkojen korjaukset" :vahingot_hoitokausi_yht :vahingot_val_aika_yht false)]
+                               (rivi-taulukolle data kyseessa-kk-vali? "Vahinkojen korjaukset" :vahingot_hoitokausi_yht :vahingot_val_aika_yht false)
+                               (rivi-taulukolle data kyseessa-kk-vali? "Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään" :tilaajan_rahavaraus_hoitokausi_yht :tilaajan_rahavaraus_val_aika_yht false)]
 
                               (= "Lisätyöt" otsikko)
                               [(rivi-taulukolle data kyseessa-kk-vali? "Lisätyöt (talvihoito)" :lisatyo_talvihoito_hoitokausi_yht :lisatyo_talvihoito_val_aika_yht false)
@@ -264,10 +265,11 @@
                             :kyseessa-kk-vali? kyseessa-kk-vali?})
 
      (taulukko {:data rivitiedot
-                :otsikko "Äkilliset hoitotyöt ja vahinkojen korjaukset"
+                :otsikko "Rahavaraukset"
                 :laskutettu-teksti laskutettu-teksti
                 :laskutetaan-teksti laskutetaan-teksti
-                :kyseessa-kk-vali? kyseessa-kk-vali?})
+                :kyseessa-kk-vali? kyseessa-kk-vali?
+                :hk-alkupvm hk-alkupvm})
 
      (kustannus-ja-tavoite-taulukko {:data rivitiedot
                                      :otsikko "Toteutuneet"

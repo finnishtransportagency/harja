@@ -27,6 +27,8 @@
                 {:nimi "12 tunnin ajalta" :tunteja 12}
                 {:nimi "1 päivän ajalta" :tunteja 24}
                 {:nimi "1 viikon ajalta" :tunteja 168}
+                {:nimi "Edellinen kalenterikuukausi" :kalenterikuukausi :edellinen}
+                {:nimi "Kuluva kalenterikuukausi" :kalenterikuukausi :kuluva}
                 {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
 
 (def toimenpiteiden-aikavalit
@@ -58,6 +60,20 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 (def aanimerkki-uusista-ilmoituksista? (local-storage (atom true) :aanimerkki-ilmoituksista))
 (def ws-kuuntelija-ominaisuus? (local-storage (atom false) :ws-kuuntelija-ominaisuus))
 
+(def oletus-valinnat {:tyypit                               +ilmoitustyypit+
+                      :tilat                                (into #{} tila-filtterit)
+                      :hakuehto                             ""
+                      :selite                               [nil ""]
+                      :vain-myohassa?                       false
+                      :aloituskuittauksen-ajankohta         :kaikki
+                      :ilmoittaja-nimi                      ""
+                      :ilmoittaja-puhelin                   ""
+                      :valitetty-urakkaan-vakioaikavali             (second aikavalit)
+                      :toimenpiteet-aloitettu-vakioaikavali (first toimenpiteiden-aikavalit)
+                      :valitetty-urakkaan-alkuaika                  (pvm/tuntia-sitten 12)
+                      :valitetty-urakkaan-loppuaika                 (pvm/nyt)})
+(def oletus-valinnat? (atom true))
+
 (defonce ilmoitukset
   (atom {:ilmoitusnakymassa?            false
          :edellinen-valittu-ilmoitus-id nil
@@ -67,18 +83,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
          :ilmoitushaku-id               nil ;; ilmoitushaun timeout
          :taustahaku?                   false ;; true jos haku tehdään taustapollauksena (ei käyttäjän syötteestä)
          :ilmoitukset                   nil ;; haetut ilmoitukset
-         :valinnat                      {:tyypit                               +ilmoitustyypit+
-                                         :tilat                                (into #{} tila-filtterit)
-                                         :hakuehto                             ""
-                                         :selite                               [nil ""]
-                                         :vain-myohassa?                       false
-                                         :aloituskuittauksen-ajankohta         :kaikki
-                                         :ilmoittaja-nimi                      ""
-                                         :ilmoittaja-puhelin                   ""
-                                         :valitetty-urakkaan-vakioaikavali             (second aikavalit)
-                                         :toimenpiteet-aloitettu-vakioaikavali (first toimenpiteiden-aikavalit)
-                                         :valitetty-urakkaan-alkuaika                  (pvm/tuntia-sitten 12)
-                                         :valitetty-urakkaan-loppuaika                 (pvm/nyt)}
+         :valinnat                      oletus-valinnat
          :kuittaa-monta                 nil}))
 
 (defn- jarjesta-ilmoitukset [tulos]
@@ -177,6 +182,17 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   (process-event [{valinnat :valinnat} app]
     (hae
       (assoc app :valinnat valinnat)))
+
+  v/PalautaOletusHakuEhdot
+  (process-event [_ app]
+    (let [app (update-in app [:valinnat] merge oletus-valinnat {:vaikutukset #{}
+                                                                :tunniste ""})
+          ; näitä ei ole kun sivulle alunperin  tullaan
+          app (update-in app [:valinnat] dissoc :tr-numero :tarkenne :aihe)
+          ; :haku tyyppisele kentälle pakotettu renderöinti jos arvo nil, muuten ei renderöidy jos muutos
+          ; tällä tavoin ulkopuolisesta lähteestä
+          app (update-in app [:valinnat] assoc :selite nil)]
+    (hae app)))
 
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat :as e} app]

@@ -252,15 +252,19 @@
 (defn luo-kustannustyypit [urakkatyyppi kayttaja toimenpideinstanssi]
   ;; Ei sallita urakoitsijan antaa itselleen bonuksia
   ;; Eikä sallita teiden-hoito tyyppisille urakoille kaikkia bonustyyppejä valita miten halutaan vaan hallinnollisille
-  ;; toimenpiteille on omat bonukset ja muille toimenpideinstansseille on vain "muu" erilliskustannus
+  ;; toimenpiteille on omat bonukset, MHU Ylläpito toimenpideinstanssille on omansa ja muille toimenpideinstansseille on vain "muu" erilliskustannus
   (filter #(if (= "urakoitsija" (get-in kayttaja [:organisaatio :tyyppi]))
              (= :muu-bonus %)
              true)
           (cond
             (urakka-domain/alueurakka? urakkatyyppi)
             [:asiakastyytyvaisyysbonus :muu-bonus]
+            ;; Hoidon johto
             (and (urakka-domain/mh-urakka? urakkatyyppi) (= "23150" (:t2_koodi toimenpideinstanssi)))
             [:asiakastyytyvaisyysbonus :alihankintabonus :muu-bonus] ;; :tavoitepalkkio :lupausbonus (25.11.2020 piilossa kunnes prosessi selvänä.)
+            ;; MHU Ylläpito
+            (and (urakka-domain/mh-urakka? urakkatyyppi) (= "20190" (:t2_koodi toimenpideinstanssi)))
+            [:asiakastyytyvaisyysbonus :alihankintabonus :muu-bonus]
             (and (urakka-domain/mh-urakka? urakkatyyppi) (not= "23150" (:t2_koodi toimenpideinstanssi)))
             [:muu-bonus]
 

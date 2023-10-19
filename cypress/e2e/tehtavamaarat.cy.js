@@ -1,4 +1,4 @@
-import {kuluvaHoitovuosi} from "../support/apurit.js";
+import {kuluvaHoitokausiAlkuvuosi} from "../support/apurit.js";
 
 Cypress.on('uncaught:exception', (err, runnable) => {
   // returning false here prevents Cypress from
@@ -7,6 +7,8 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 })
 
 describe('Tehtävämäärien syöttö ja käpistely', () => {
+  let urakanAlkuvuosi = kuluvaHoitokausiAlkuvuosi(-2);
+
   before(() => {
     cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=13&u=32')
     cy.intercept('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
@@ -30,16 +32,16 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
     cy.intercept('POST', '_/tallenna-sopimuksen-tehtavamaara').as('sop1')
     cy.get('table.grid').contains('Opastustaulun/-viitan uusiminen').parent().find('td.vetolaatikon-tila.klikattava').click()
     cy.get('table.grid').contains('Haluan syöttää joka vuoden erikseen').parent().find('input.vayla-checkbox').click()
-    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-2020').should('not.be.disabled')
-    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-2020').clear({force:true}).type('661', {force:true}).blur()
+    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-' + urakanAlkuvuosi).should('not.be.disabled')
+    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-' + (urakanAlkuvuosi + 0)).clear({force:true}).type('661', {force:true}).blur()
     cy.wait('@sop1')
-    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-2021').clear().type('662').blur()
+    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-' + (urakanAlkuvuosi + 1)).clear().type('662').blur()
     cy.wait('@sop1')    
-    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-2022').clear().type('663').blur()
+    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-' + (urakanAlkuvuosi + 2)).clear().type('663').blur()
     cy.wait('@sop1')
-    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-2023').clear().type('664').blur()
+    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-' + (urakanAlkuvuosi + 3)).clear().type('664').blur()
     cy.wait('@sop1')
-    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-2024').clear().type('665').blur()
+    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-' + (urakanAlkuvuosi + 4)).clear().type('665').blur()
     cy.wait('@sop1')
   })
 
@@ -64,8 +66,8 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
   })
 
   it('Hoitokautta voi vaihtaa', () => {
-    let hoitokausiNyt = "3. hoitovuosi (2022—2023)";
-    let hoitokausiViimeinen = "4. hoitovuosi (2023—2024)";
+    let hoitokausiNyt = "3. hoitovuosi (" + (urakanAlkuvuosi + 2) + "—" + (urakanAlkuvuosi + 3) + ")";
+    let hoitokausiViimeinen = "4. hoitovuosi (" + (urakanAlkuvuosi + 3) + "—" + (urakanAlkuvuosi + 4) + ")";
 
     cy.intercept('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
     cy.get('table.grid').contains('Sorateiden pölynsidonta (materiaali)').parent().find('td.muokattava').find('input').clear().type('667')

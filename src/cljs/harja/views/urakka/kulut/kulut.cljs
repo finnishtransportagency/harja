@@ -186,19 +186,20 @@
                                  :polku [:kohdistukset indeksi :toimenpideinstanssi] 
                                  :arvon-formatteri-fn :toimenpideinstanssi})
         optiot (merge ryhmat
-                      {:virhe?        (not (validi-ei-tarkistettu-tai-ei-koskettu? valittu-meta))
-                       :disabled      disabled
-                       :vayla-tyyli?  true
-                       :elementin-id  (str indeksi)
-                       :valinta       valittu-asia
-                       :skrollattava? true
-                       :class (when disabled "tehtavaryhma-valinta-disabled")
-                       :valitse-fn    (if lisatyo?
-                                        valitse-toimenpide-fn
-                                        valitse-tehtavaryhma-fn)
-                       :format-fn     (if lisatyo?
-                                        #(get % :toimenpide)
-                                        #(get % :tehtavaryhma))})]
+                 {:virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? valittu-meta))
+                  :disabled disabled
+                  :vayla-tyyli? true
+                  :elementin-id (str indeksi)
+                  :data-cy "kulu-tehtavaryhma-dropdown"
+                  :valinta valittu-asia
+                  :skrollattava? true
+                  :class (when disabled "tehtavaryhma-valinta-disabled")
+                  :valitse-fn (if lisatyo?
+                                valitse-toimenpide-fn
+                                valitse-tehtavaryhma-fn)
+                  :format-fn (if lisatyo?
+                               #(get % :toimenpide)
+                               #(get % :tehtavaryhma))})]
     [:<>
      [yleiset/livi-pudotusvalikko optiot
       valinnat]
@@ -212,8 +213,8 @@
   [:div.palstat
    [:div.palsta
     [:label (if lisatyo?
-       "Toimenpide *"
-       "Tehtäväryhmä *")]
+              "Toimenpide *"
+              "Tehtäväryhmä *")]
     [tehtavaryhma-tai-toimenpide-dropdown {:paivitys-fn paivitys-fn
                                            :valittu (if lisatyo?
                                                       toimenpideinstanssi
@@ -236,15 +237,15 @@
                                                        vuoden-paatos-valittu?)}]]
    [:div.palsta
     (when lisatyo?
-      [kentat/tee-otsikollinen-kentta 
+      [kentat/tee-otsikollinen-kentta
        {:otsikko "Lisätieto *"
         :luokka #{}
         :kentta-params {:disabled disabled
                         :vayla-tyyli? true
                         :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? lisatyon-lisatieto-meta))
                         :tyyppi :string}
-        :arvo-atom (r/wrap lisatyon-lisatieto (r/partial paivita-lomakkeen-arvo 
-                                                {:paivitys-fn paivitys-fn 
+        :arvo-atom (r/wrap lisatyon-lisatieto (r/partial paivita-lomakkeen-arvo
+                                                {:paivitys-fn paivitys-fn
                                                  :polku [:kohdistukset indeksi :lisatyon-lisatieto]}))}])]])
 
 (defn useampi-kohdistus
@@ -381,14 +382,14 @@
         tehtavaryhma-meta (get validius [:kohdistukset indeksi :tehtavaryhma])
         lisatyon-lisatieto-meta (get validius [:kohdistukset indeksi :lisatyon-lisatieto])
         yhteiset-tiedot (merge kohdistus
-                               {:paivitys-fn             paivitys-fn
-                                :tehtavaryhmat           tehtavaryhmat
-                                :toimenpiteet            toimenpiteet
-                                :tehtavaryhma-meta       tehtavaryhma-meta
-                                :indeksi                 indeksi
-                                :disabled                disabled
-                                :vuoden-paatos-valittu? vuoden-paatos-valittu?
-                                :lisatyon-lisatieto-meta lisatyon-lisatieto-meta})]
+                          {:paivitys-fn paivitys-fn
+                           :tehtavaryhmat (tiedot/kasittele-tehtavaryhmat tehtavaryhmat (:tehtavaryhma kohdistus))
+                           :toimenpiteet toimenpiteet
+                           :tehtavaryhma-meta tehtavaryhma-meta
+                           :indeksi indeksi
+                           :disabled disabled
+                           :vuoden-paatos-valittu? vuoden-paatos-valittu?
+                           :lisatyon-lisatieto-meta lisatyon-lisatieto-meta})]
     [:div (merge {} (when useampia-kohdistuksia?
                       {:class (apply conj #{"lomake-sisempi-osio"} (when poistettu #{"kohdistus-poistetaan"}))}))
      (if useampia-kohdistuksia?
@@ -589,7 +590,7 @@
                                                      ;; viimeisestä kohdistuksesta.
                                                       (= (:tehtavaryhma (last kohdistukset))
                                                         (:id (avain->tehtavaryhma tehtavaryhmat avain))))
-                                  :disabled (not= 0 haetaan)
+                                  :disabled true
                                   :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
                                                                                (fn [_]
                                                                                  (aseta-kohdistus avain)))
@@ -633,20 +634,26 @@
     urakoitsija-maksaa? :urakoitsija-maksaa? :as tila}]
   (let [kohdistukset-lkm (count kohdistukset)
         resetoi-kohdistukset (fn [kohdistukset]
-                               [tila/kulut-kohdistus-default])]
+                               [tila/kulut-kohdistus-default])
+        kulutyyppi (cond
+                     vuoden-paatos-valittu? :vuoden-paatos
+                     (> (count kohdistukset) 1) :eri-tehtavat
+                     (and
+                       (not vuoden-paatos-valittu?)
+                       (= (count kohdistukset) 1)
+                       (:lisatyo? (first kohdistukset))) :lisatyo
+                     :else :normaali-kulu)]
     [:div.row {:style {:max-width "960px"}}
      [:div.palstat
       [:div.palsta
        [:h3 {:style {:width "100%"}}
-        "Mihin työhön kulu liittyy?"]
+        "Mihin työhön kulu liittyy?"]]]
+     [:div.palstat
+      [:div.palsta
        [vayla-radio {:id "kulu-normaali"
                      :teksti "Normaali suunniteltu tai määrämitattava hankintakulu"
                      :ryhma "kulu-group"
-                     :oletus-valittu? (cond
-                                        vuoden-paatos-valittu? false
-                                        (> (count kohdistukset) 1) false
-                                        (= "lisatyo" (:maksueratyyppi (first kohdistukset))) false
-                                        :else true)
+                     :oletus-valittu? (if (= kulutyyppi :normaali-kulu) true false)
                      :disabloitu? (or (not= 0 haetaan) kulu-lukittu?)
                      :muutos-fn (r/partial #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
                                                                              resetoi-kohdistukset)
@@ -663,9 +670,7 @@
         [:input#kulu-useampi.vayla-radio
          {:type :radio
           :name "kulu-group"
-          :default-checked (if (and (not vuoden-paatos-valittu?) (> (count kohdistukset) 1))
-                             true
-                             false)
+          :default-checked (if (= kulutyyppi :eri-tehtavat) true false)
           :disabled (or (not= 0 haetaan) kulu-lukittu?)
           :on-change #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
                                                        lisaa-kohdistus
@@ -689,11 +694,7 @@
         [:input#kulu-lisatyo.vayla-radio
          {:type :radio
           :name "kulu-group"
-          :default-checked (cond
-                             vuoden-paatos-valittu? false
-                             (> (count kohdistukset) 1) false
-                             (not (= "lisatyo" (:maksueratyyppi (first kohdistukset)))) false
-                             :else true)
+          :default-checked (if (= kulutyyppi :lisatyo) true false)
           :disabled (or (not= 0 haetaan) kulu-lukittu?)
           :on-change #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
                                                        (fn [kohdistukset]
@@ -715,28 +716,29 @@
                         (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn
                           :vuoden-paatos-valittu? (constantly false)))}]
         [:label {:for "kulu-lisatyo"} "Lisätyö"]]
-       [:div.flex-row
-        [:input#kulu-hoitovuoden-paatos.vayla-radio
-         {:type :radio
-          :name "kulu-group"
-          :default-checked vuoden-paatos-valittu?
-          :disabled (or (not= 0 haetaan) kulu-lukittu?)
-          :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
-                                                       (fn [_]
-                                                         (let [tavoitepalkkio-tr (avain->tehtavaryhma tehtavaryhmat :tavoitepalkkio)]
-                                                           [(-> tila/kulut-kohdistus-default
-                                                              (assoc :tehtavaryhma (:id tavoitepalkkio-tr)
-                                                                     :toimenpideinstanssi (:toimenpideinstanssi tavoitepalkkio-tr)))])))
-                            jalkiprosessointi-fn (when (.. % -target -checked)
-                                                   (fn [lomake]
-                                                     (vary-meta
-                                                       lomake
-                                                       maaramitallisen-validoinnit
-                                                       {:lomake lomake
-                                                        :indeksi 0})))]
-                        (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn
-                          :vuoden-paatos-valittu? (constantly true)))}]
-        [:label {:for "kulu-hoitovuoden-paatos"} "Hoitovuoden päätös"]]]]
+       (when vuoden-paatos-valittu?
+         [:div.flex-row
+          [:input#kulu-hoitovuoden-paatos.vayla-radio
+           {:type :radio
+            :name "kulu-group"
+            :default-checked vuoden-paatos-valittu?
+            :disabled true
+            :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
+                                                         (fn [_]
+                                                           (let [tavoitepalkkio-tr (avain->tehtavaryhma tehtavaryhmat :tavoitepalkkio)]
+                                                             [(-> tila/kulut-kohdistus-default
+                                                                (assoc :tehtavaryhma (:id tavoitepalkkio-tr)
+                                                                  :toimenpideinstanssi (:toimenpideinstanssi tavoitepalkkio-tr)))])))
+                              jalkiprosessointi-fn (when (.. % -target -checked)
+                                                     (fn [lomake]
+                                                       (vary-meta
+                                                         lomake
+                                                         maaramitallisen-validoinnit
+                                                         {:lomake lomake
+                                                          :indeksi 0})))]
+                          (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn
+                            :vuoden-paatos-valittu? (constantly true)))}]
+          [:label {:for "kulu-hoitovuoden-paatos"} "Hoitovuoden päätös"]])]]
      (when vuoden-paatos-valittu?
        [vuoden-paatos-checkboxit opts tila])
      (into [:div.row] (map-indexed
@@ -772,7 +774,7 @@
 
 (defn kulun-tiedot
   [{:keys [paivitys-fn e! haetaan]}
-   {:keys [koontilaskun-kuukausi laskun-numero erapaiva erapaiva-tilapainen tarkistukset testidata] :as lomake}
+   {:keys [koontilaskun-kuukausi laskun-numero erapaiva erapaiva-tilapainen tarkistukset] :as lomake}
    vuosittaiset-valikatselmukset
    kulu-lukittu?]
   (let [{:keys [validius]} (meta lomake)
@@ -854,8 +856,6 @@
                  :erapaiva
                  pvm/pvm)
                ". Yhdellä laskun numerolla voi olla yksi päivämäärä, joten kulu kirjataan samalle päivämäärälle. Jos haluat kirjata laskun eri päivämäärälle, vaihda laskun numero.")])]))
-
-
 
 (defn- kulujen-syottolomake
   [e! _]

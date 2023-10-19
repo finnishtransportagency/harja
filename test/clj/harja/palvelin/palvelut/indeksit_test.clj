@@ -80,7 +80,7 @@
     (let [urakka-id (hae-raahen-maanteiden-hoitourakan-2023-2028-id)
           korotettu (ffirst (q (str "SELECT * FROM indeksikorjaa(1, 2023, 9, " urakka-id ")")))
           testidata-korotettu (ffirst (q (str "SELECT * FROM testidata_indeksikorjaa(1, 2023, 9, " urakka-id ")")))]
-      (is (= 0.984M korotettu testidata-korotettu)))))
+      (is (= 0.986M korotettu testidata-korotettu)))))
 
 (deftest urakkatyypin-indeksien-haku
   (let [indeksit (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -333,7 +333,7 @@
                      9          nil}]})
       (is (nil? (kiinteahintainen-tyo-summa-indeksikorjattu kiinteahintainen-tyo))
           "kiinteahintainen_tyo.summa_indeksikorjattu on poistettu indeksin poistamisen jälkeen")
-      (is (nil? (kustannusarvioitu-tyo-summa-indeksikorjattu kiinteahintainen-tyo))
+      (is (nil? (kustannusarvioitu-tyo-summa-indeksikorjattu kustannusarvioitu-tyo))
           "kustannusarvioitu_tyo.summa_indeksikorjattu on poistettu indeksin poistamisen jälkeen")
       (is (nil? (kustannusarvioitu-tyo-summa-indeksikorjattu tilaajan-rahavaraus))
           "tilaajan rahavaraukselle ei lasketa indeksikorjausta")
@@ -379,6 +379,6 @@
       (is (= summa (kiinteahintainen-tyo-summa-indeksikorjattu kiinteahintainen-tyo))
           "Vahvistettua indeksikorjattua summaa ei saa muuttaa"))))
 
-(deftest maku-2020-laitetaan-2023-urakalle
+(deftest maku-2015-laitetaan-2023-urakalle
   (let [urakka (first (q-map "SELECT * FROM urakka WHERE nimi = 'Raahen MHU 2023-2028'"))]
-    (is (= (:indeksi urakka) "MAKU 2020"))))
+    (is (= (:indeksi urakka) "MAKU 2015"))))

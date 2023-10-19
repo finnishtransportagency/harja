@@ -56,10 +56,11 @@
 (deftest LisaaHairiotilanne
   (let [t (e! (tiedot/->LisaaHairiotilanne))]
 
-    (is (= {::hairiotilanne/sopimus-id nil
-            ::hairiotilanne/kuittaaja {::kayttaja/id nil
-                                       ::kayttaja/etunimi nil
-                                       ::kayttaja/sukunimi nil}}
+    (is (= {:harja.domain.kanavat.hairiotilanne/tallennuksen-aika? true, 
+            :harja.domain.kanavat.hairiotilanne/sopimus-id nil, 
+            :harja.domain.kanavat.hairiotilanne/kuittaaja {:harja.domain.kayttaja/id nil, 
+                                                           :harja.domain.kayttaja/etunimi nil,
+                                                           :harja.domain.kayttaja/sukunimi nil}}
            (-> t
                :valittu-hairiotilanne
                (dissoc ::hairiotilanne/havaintoaika))))

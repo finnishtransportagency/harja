@@ -413,9 +413,14 @@ WHERE kayttajanimi = :kayttajanimi;
 -- name: onko-jarjestelma-ja-api-oikeus?
 -- single?: true
 SELECT jarjestelma
-FROM kayttaja
-WHERE api_oikeus = :api-oikeus::apioikeus
-  AND kayttajanimi = :kayttajanimi;
+FROM kayttaja 
+WHERE 
+(  -- Jos käyttäjällä on 'kirjoitus' oikeus, luetaan se myös lukuoikeutena 
+  (:api-oikeus = 'luku' AND 'kirjoitus'::apioikeus = ANY(api_oikeudet)) 
+  OR 
+  (:api-oikeus::apioikeus = ANY(api_oikeudet))
+)
+AND kayttajanimi = :kayttajanimi;
 
 -- name: liikenneviraston-jarjestelma?
 -- single?: true
@@ -433,5 +438,6 @@ SELECT
   etunimi,
   sukunimi,
   sahkoposti
-FROM kayttaja
-WHERE sahkoposti IS NOT NULL;
+ FROM kayttaja
+WHERE sahkoposti IS NOT NULL
+  AND muokattu >  now() - interval '1 year' ;

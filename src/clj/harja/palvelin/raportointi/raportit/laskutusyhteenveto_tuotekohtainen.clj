@@ -69,7 +69,7 @@
       [:varillinen-teksti {:arvo (or (avain_yht tp-rivi) (summa-fmt 0.00M)) :fmt :raha :lihavoi? lihavoi?}])))
 
 (defn- taulukko [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
-                         kyseessa-kk-vali? sheet-nimi]}]
+                         kyseessa-kk-vali? sheet-nimi alkupvm]}]
   (let [rivit (into []
                 (remove nil?
                   (cond
@@ -80,7 +80,7 @@
                      (rivi-taulukolle data kyseessa-kk-vali? "Bonukset" :bonukset_laskutettu :bonukset_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
 
-                     ;; Hoitovuoden päättäminen, näytetään vain jos arvot olemassa 
+                     ;; Hoitovuoden päättäminen, näytetään vain jos arvot olemassa
                      (when (raha-arvo-olemassa? (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu data))
                        (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päättäminen / Tavoitepalkkio"
                          :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan false))
@@ -93,6 +93,13 @@
                        (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"
                          :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan false))
 
+                     (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
+
+                    (= "MHU Ylläpito" otsikko)
+                    [(rivi-taulukolle data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
+                     (rivi-taulukolle data kyseessa-kk-vali? "Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään" :tilaajan_rahavaraukset_laskutettu :tilaajan_rahavaraukset_laskutetaan false)
+                     (rivi-taulukolle data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
+                     (rivi-taulukolle data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
 
                     :else
@@ -271,7 +278,8 @@
                               :sheet-nimi (when (= (.indexOf otsikot x) 0) sheet-nimi)
                               :laskutettu-teksti laskutettu-teksti
                               :laskutetaan-teksti laskutetaan-teksti
-                              :kyseessa-kk-vali? kyseessa-kk-vali?})))))
+                              :kyseessa-kk-vali? kyseessa-kk-vali?
+                              :alkupvm alkupvm})))))
 
      (toteutuneet-taulukko {:data (first koostettu-yhteenveto)
                             :otsikko "Toteutuneet"

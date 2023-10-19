@@ -50,6 +50,7 @@
 (def hakutyypit
   [{:palvelu :hae-urakan-materiaaliraportti
     :polku "/api/urakat/:id/raportit/materiaali/:alkupvm/:loppupvm"
+    :api-oikeus :luku
     :vastaus-skeema json-skeemat/raportti-materiaaliraportti-response
     :kasittely-fn (fn [parametrit _ kayttaja db]
                     (hae-urakan-materiaaliraportti db parametrit kayttaja))}])
@@ -58,11 +59,11 @@
 (defrecord Raportit []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
-    (doseq [{:keys [palvelu polku vastaus-skeema kasittely-fn]} hakutyypit]
+    (doseq [{:keys [palvelu polku vastaus-skeema kasittely-fn api-oikeus]} hakutyypit]
       (julkaise-reitti
         http palvelu
         (GET polku request
-          (kasittele-kutsu db integraatioloki palvelu request nil vastaus-skeema kasittely-fn))))
+          (kasittele-kutsu db integraatioloki palvelu request nil vastaus-skeema kasittely-fn api-oikeus))))
     this)
 
   (stop [{http :http-palvelin :as this}]

@@ -465,3 +465,34 @@
     (-> app
       (assoc :lomake (alusta-lomake app))
       (assoc :syottomoodi auki?))))
+
+(defn kasittele-tehtavaryhmat
+  "Lisättäessä tai muokatessa kuluja tehtäväryhmä alasvetovalikosta poistetaan muutamia tehtäväryhmiä, joita ei enää saa valita.
+   Jos niitä on saatu kululle jotain muuta kautta, niin ne kuitenkin näytetään.
+   Näitä on:
+   Hoitovuoden päättäminen / Tavoitepalkkio, yksilöllinen tunniste: '55c920e7-5656-4bb0-8437-1999add714a3'
+   Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä, yksilöllinen tunniste: '19907c24-dd26-460f-9cb4-2ed974b891aa'
+   Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä, yksilöllinen tunniste: 'be34116b-2264-43e0-8ac8-3762b27a9557'
+
+   Anna tälle funktiolle tehtäväryhmälistaus, josta 'kielletyt' tehtäväryhmät poistetaan sekä potentiaalisesti jo valittu
+   tehtavaryhma-id, joka näytetään, jos sellainen on kululle saatu lisättyä, esim automaattisen kulun lisäyksen kautta."
+  [tehtavaryhmat tehtavaryhma-id]
+  (let [kielletty-tr (some
+                       (fn [rivi]
+                         (when (and (= tehtavaryhma-id (:id rivi))
+                                 (or
+                                   (= "Hoitovuoden päättäminen / Tavoitepalkkio" (:tehtavaryhma rivi))
+                                   (= "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä" (:tehtavaryhma rivi))
+                                   (= "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä" (:tehtavaryhma rivi))))
+                           rivi))
+                       tehtavaryhmat)
+        tehtavaryhmat (if kielletty-tr
+                        tehtavaryhmat
+                        (filter
+                          (fn [rivi]
+                            (when-not (or
+                                        (= "Hoitovuoden päättäminen / Tavoitepalkkio" (:tehtavaryhma rivi))
+                                        (= "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä" (:tehtavaryhma rivi))
+                                        (= "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä" (:tehtavaryhma rivi))) rivi))
+                          tehtavaryhmat))]
+    tehtavaryhmat))

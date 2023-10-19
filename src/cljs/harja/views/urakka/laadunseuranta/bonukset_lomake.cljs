@@ -85,6 +85,18 @@
          ;; Valitse ainoa, jos tyyppejä on vain yksi.
          ;; Esimerkiksi ylläpitourakoiden tapauksessa on saatavilla vain "yllapidon_bonus"
          :valitse-ainoa? true
+         ;; Aseta toimenpideinstanssi, jos se voidaan tietää ennalta
+         :aseta (fn [rivi arvo]
+                  ;; Aseta toimenpideinstanssi, mikäli sitä ei ole asetettu ennakkoon oikein
+                  (let [asetettava-tpi (cond (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                                         (first (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit))
+
+                                         :else
+                                         ;; Muuten otetaan vain listan ensimmäinen
+                                         (first @tiedot-urakka/urakan-toimenpideinstanssit))]
+                    (-> rivi
+                      (assoc :toimenpideinstanssi (:tpi_id asetettava-tpi))
+                      (assoc :laji arvo))))
          :valinnat (sanktio-domain/luo-kustannustyypit (:tyyppi @nav/valittu-urakka) (:id @istunto/kayttaja) tpi)
          :valinta-nayta #(or (sanktio-domain/bonuslaji->teksti %) "- Valitse tyyppi -")
          ::lomake/col-luokka "col-xs-12"
@@ -118,18 +130,31 @@
        :validoi [[:ei-tyhja "Anna perustelu"]]}
       {:otsikko "Kulun kohdistus"
        :nimi :toimenpideinstanssi
-       :tyyppi :valinta
        :pakollinen? true
-       :valitse-oletus? true
-       :valinta-arvo :tpi_id
-       :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
-       ;; MHU urakoiden toimenpideinstanssi on määrätty. Alueurakoilla ei
-       :valinnat (if (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
-                   (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit)
-                   @tiedot-urakka/urakan-toimenpideinstanssit)
+       :tyyppi :komponentti
        ::lomake/col-luokka "col-xs-12"
-       ;; Koska MHU urakoilla on määrätty toimenpideinstanssi, niin ei anneta käyttäjän vaihtaa, mutta alueurakoille se sallitaan
-       :disabled? (if (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) true false)}
+       :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
+                      (let [;; MHU urakoiden toimenpideinstanssi on määrätty. Alueurakoilla ei
+                            ;; Lisäksi alihankintabonus laitetaan MHU Ylläpidon alle, kun se tehdään 1.10.2022 jälkeen, muut Hoidon johtoon
+                            toimenpideinstanssit (cond
+                                                   (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                                                   (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit)
+
+                                                   ;; Muille urakakkatyypeille näytetään kaikki toimenpideinstanssit
+                                                   :else
+                                                   @tiedot-urakka/urakan-toimenpideinstanssit)]
+                        [:<>
+                         [yleiset/livi-pudotusvalikko
+                          {:valitse-oletus? true
+                           :vayla-tyyli? true
+                           :pakollinen? true
+                           :format-fn :tpi_nimi
+                           :valinta (first toimenpideinstanssit)
+                           ;; Koska MHU urakoilla on määrätty toimenpideinstanssi, niin ei anneta käyttäjän vaihtaa, mutta alueurakoille se sallitaan
+                           :disabled (if (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) true false)
+                           :valitse-fn #(muokkaa-lomaketta
+                                          (assoc data :toimenpideinstanssi (:tpi_id %)))}
+                          toimenpideinstanssit]]))}
       (lomake/ryhma
         {:rivi? true}
         {:otsikko "Summa"
@@ -162,9 +187,9 @@
          :validoi [[:ei-tyhja "Valitse päivämäärä"]]
          :aseta (fn [rivi arvo]
                   (cond-> rivi
-                    ;; Jos laskutuskuukautta  ei ole vielä valittu, niin asetetaan
+                    ;; Jos laskutuskuukautta  ei ole vielä valittu ja bonusta ei ole tallennettu (id nil), niin asetetaan
                     ;; esivalintana perintapvm valittu kasittelyn pvm
-                    (nil? (:laskutuskuukausi-komp-tiedot rivi))
+                    (and (nil? (:laskutuskuukausi-komp-tiedot rivi)) (nil? (:id rivi)))
                     (assoc :perintapvm arvo)
 
                     ;; Tallennetaan aina valittu käsittelyaika :kasittelyaika avaimen alle

@@ -61,7 +61,7 @@
                                               (str "SELECT count(*)
                                                        FROM erilliskustannus
                                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @oulun-alueurakan-2005-2010-id
-                                                   ") AND pvm >= '2005-10-01' AND pvm <= '2006-09-30'")))]
+                                                   ") AND laskutuskuukausi >= '2005-10-01' AND laskutuskuukausi <= '2006-09-30'")))]
     (is (= (count res) oulun-alueurakan-toiden-lkm) "Erilliskustannusten määrä")))
 
 (deftest tallenna-erilliskustannus-testi
@@ -69,12 +69,14 @@
         hoitokauden-loppupvm (pvm/luo-pvm 2006 10 30)       ;;30.9.2006
         toteuman-pvm (pvm/luo-pvm 2005 11 12)
         toteuman-lisatieto "Testikeissin lisätieto"
-        ek {:urakka-id     @oulun-alueurakan-2005-2010-id
-            :alkupvm       hoitokauden-alkupvm
-            :loppupvm      hoitokauden-loppupvm
-            :pvm           toteuman-pvm :rahasumma 20000.0
+        ek {:urakka-id @oulun-alueurakan-2005-2010-id
+            :alkupvm hoitokauden-alkupvm
+            :loppupvm hoitokauden-loppupvm
+            :pvm toteuman-pvm
+            :laskutuskuukausi toteuman-pvm
+            :rahasumma 20000.0
             :indeksin_nimi "MAKU 2005" :toimenpideinstanssi 1 :sopimus 1
-            :tyyppi        "asiakastyytyvaisyysbonus" :lisatieto toteuman-lisatieto}
+            :tyyppi "asiakastyytyvaisyysbonus" :lisatieto toteuman-lisatieto}
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*)
                                                        FROM erilliskustannus
@@ -86,6 +88,7 @@
                                   (= (:pvm %) toteuman-pvm)
                                   (= (:lisatieto %) toteuman-lisatieto)) vastaus))]
     (is (= (:pvm lisatty) toteuman-pvm) "Tallennetun erilliskustannuksen pvm")
+    (is (= (:laskutuskuukausi lisatty) toteuman-pvm) "Tallennetun erilliskustannuksen pvm")
     (is (= (:lisatieto lisatty) toteuman-lisatieto) "Tallennetun erilliskustannuksen lisätieto")
     (is (= (:indeksin_nimi lisatty) "MAKU 2005") "Tallennetun erilliskustannuksen indeksin nimi")
     (is (= (:rahasumma lisatty) 20000.0) "Tallennetun erilliskustannuksen pvm")

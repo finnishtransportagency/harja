@@ -92,7 +92,8 @@
                          :lisaa-laatupoikkeama request
                          json-skeemat/laatupoikkeaman-kirjaus json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
-                           (kirjaa-laatupoikkeama liitteiden-hallinta db parametrit data kayttaja)))))
+                           (kirjaa-laatupoikkeama liitteiden-hallinta db parametrit data kayttaja))
+          :kirjoitus)))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-laatupoikkeama)

@@ -265,3 +265,17 @@ WHERE id = :id AND poistettu IS NOT TRUE;
 -- name: hae-tehtavaryhman-nimi
 SELECT nimi FROM tehtavaryhma
 WHERE id = :id AND poistettu IS NOT TRUE;
+
+-- name: hae-tehtavaryhman-tiedot-tunnisteella
+SELECT id, nimi, otsikko, jarjestys, luotu, luoja, muokattu, muokkaaja
+  FROM tehtavaryhma
+ WHERE yksiloiva_tunniste = :tunniste::UUID;
+
+-- name: hae-urakan-hoidon-johdon-toimenpideinstanssi
+SELECT tpi.id, tpi.toimenpide, tpi.nimi, tpi.alkupvm, tpi.loppupvm, tpi.sampoid
+FROM toimenpideinstanssi tpi
+         JOIN toimenpide tp1 ON tp1.id = tpi.toimenpide
+         JOIN toimenpide tp2 ON tp1.emo = tp2.id
+WHERE tpi.urakka = :urakka
+  AND tp2.koodi = '23150'
+limit 1;

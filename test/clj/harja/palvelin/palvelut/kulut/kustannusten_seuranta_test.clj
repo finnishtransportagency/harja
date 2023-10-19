@@ -306,7 +306,7 @@ UNION ALL
          AND lk.poistettu IS NOT TRUE
          AND tpi.toimenpide = tk.id
          AND lk.maksueratyyppi::TEXT = 'kokonaishintainen'
-         AND tr.nimi != 'Tilaajan rahavaraus (T3)'
+         AND tr.nimi != 'Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)'
   -- Näillä toimenpidekoodi.koodi rajauksilla rajataan johto- ja hallintakorvaus, hoidonjohdonpalkkio ja erilliskorvaus ulos
   AND (tk.koodi = '23104' OR tk.koodi = '23116'
     OR tk.koodi = '23124' OR tk.koodi = '20107' OR tk.koodi = '20191' OR
@@ -356,7 +356,7 @@ UNION ALL
                 'bonukset' AS paaryhma
            FROM erilliskustannus ek,
                   sopimus s
-          WHERE s.urakka = 35
+          WHERE s.urakka = "urakka"
             AND ek.sopimus = s.id
             AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
                                             FROM toimenpideinstanssi tpi
@@ -366,7 +366,7 @@ UNION ALL
                                            WHERE tpi.urakka = "urakka"
                                              AND m.toimenpideinstanssi = tpi.id
                                              AND tpk2.koodi = '23150')
-            AND ek.pvm BETWEEN '"alkupvm"'::DATE AND '"loppupvm"'::DATE
+            AND ek.laskutuskuukausi BETWEEN '"alkupvm"'::DATE AND '"loppupvm"'::DATE
             AND ek.poistettu IS NOT TRUE
           GROUP BY ek.tyyppi, ek.indeksin_nimi"))
 
@@ -633,7 +633,31 @@ UNION ALL
                                                    (+ summa b)
                                                    summa))
                                               0M (map #(first %) bonukset-toteutuneet-sql))]
-    (is (= bonus-toteutuneet bonukset-sql-toteutunut-summa))))
+    (is (= (bigdec bonus-toteutuneet) bonukset-sql-toteutunut-summa))))
+
+
+(deftest alihankintabonus-rahavarauksiin-test
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        alkupvm "2022-10-01"
+        loppupvm "2023-09-30"
+        hoitokauden-alkuvuosi 2022
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+        bonukset (filter
+                   #(when (and
+                            (= "bonukset" (:paaryhma %))
+                            ;; Filtteröidään vielä lisätyöt pois
+                            (not= "lisatyo" (:toimenpideryhma %)))
+                      true)
+                   vastaus)
+
+        bonus-toteutuneet (apply + (map (fn [rivi] (:toteutunut_summa rivi)) bonukset))
+        bonukset-toteutuneet-sql (q (bonukset-toteutuneet-sql-haku urakka-id alkupvm loppupvm hoitokauden-alkuvuosi))
+        bonukset-sql-toteutunut-summa (reduce  (fn [summa b]
+                                                 (if b
+                                                   (+ summa b)
+                                                   summa))
+                                        0M (map #(first %) bonukset-toteutuneet-sql))]
+    (is (= (bigdec bonus-toteutuneet) bonukset-sql-toteutunut-summa))))
 
 ;; Ulkopuoliset rahavaraukset
 (deftest ulkopuoliset-rahavaraukset-test

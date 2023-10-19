@@ -91,7 +91,7 @@
 
       (keep identity
             (conj (mapv #(rivi (when-not (= konteksti :urakka) (get-in % [:urakka :nimi]))
-                               (pvm/pvm (:pvm %))
+                               (pvm/pvm (:laskutuskuukausi %))
                                (get-in % [:sopimus :sampoid])
                                (:tpinimi %)
                                (erilliskustannuksen-nimi (:tyyppi %))

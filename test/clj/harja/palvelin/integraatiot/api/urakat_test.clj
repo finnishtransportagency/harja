@@ -34,21 +34,25 @@
   (u (str "DELETE FROM paallystyspalvelusopimus WHERE paallystyspalvelusopimusnro = '" urakkanro "';")))
 
 (deftest hae-jarjestelmakayttajan-urakat
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/"] "yit-rakennus" portti)
+  (let [_ (anna-lukuoikeus "yit-rakennus")
+        vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/"] "yit-rakennus" portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (ffirst (q "SELECT count(*) FROM urakka WHERE urakoitsija=(SELECT id FROM organisaatio WHERE nimi='YIT Rakennus Oy')")) (count (:urakat encoodattu-body))) "YIT:lle löytyy oikea määrä urakoita"))
 
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/"] "tuntematon-jarjestelma" portti)]
+  (let [_ (anna-lukuoikeus "tuntematon-jarjestelma")
+        vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/"] "tuntematon-jarjestelma" portti)]
     (is (= 403 (:status vastaus))))
 
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/"] "carement" portti)
+  (let [_ (anna-lukuoikeus "carement")
+        vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/"] "carement" portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= 1 (count (:urakat encoodattu-body))))
     (is (= "Oulun alueurakka 2014-2019" (get-in (first (:urakat encoodattu-body)) [:urakka :tiedot :nimi]))))
 
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/"] "livi" portti)
+  (let [_ (anna-lukuoikeus "livi")
+        vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/"] "livi" portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)
         urakoita-kannassa (ffirst (q "select count(id) from urakka where urakoitsija is not null and hallintayksikko is not null;"))]
     (is (= 200 (:status vastaus)))
@@ -56,6 +60,7 @@
 
 (deftest hae-jarjestelmakayttajan-urakat-tyypeittain
   (let [urakkatyyppi "paallystys"
+        _ (anna-lukuoikeus "livi")
         vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/"] "livi" {"urakkatyyppi" urakkatyyppi} portti)
         urakat (:urakat (cheshire/decode (:body vastaus) true))]
     (is (= 200 (:status vastaus)))
@@ -64,6 +69,7 @@
 (deftest hae-urakka-sijainnilla-ja-tyypilla
   (testing "Urakkatyyppi: hoito"
     (let [urakkatyyppi "hoito"
+          _ (anna-lukuoikeus "yit-rakennus")
           vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "yit-rakennus"
                     {"urakkatyyppi" urakkatyyppi
                      ;; Oulun lähiseutu (EPSG:3067)
@@ -78,11 +84,39 @@
               (some #(clojure.string/includes? nimi %) #{"Oulun MHU" "Aktiivinen Oulu Testi"}))
             (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body))))))
 
+  (testing "palauta-lahin-hoitourakka"
+    (let [urakkatyyppi "hoito"
+          fn-vastaus (fn [palauta-lahin-hoitourakka]
+                       (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "yit-rakennus"
+                         {"urakkatyyppi" urakkatyyppi
+                          "x" 486225.3013260806    ;; Piste Pohjois-Pohjanmaan ulkopuolella  
+                          "y" 7086935.066015409
+                          "palauta-lahin-hoitourakka" palauta-lahin-hoitourakka} portti))
+          
+          ;; Palauta lähin hoitourakka == false 
+          vastaus (fn-vastaus false)
+          ;; Tuloksia ei löydy koska sijainti on liian kaukana 
+          enkoodattu-body (cheshire/decode (:body vastaus) true)
+          _ (is (= 0 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
+
+          ;; Palauta lähin hoitourakka == true 
+          vastaus (fn-vastaus true)
+          enkoodattu-body (cheshire/decode (:body vastaus) true)
+          ;; Yksi tulos löytyy 
+          _ (is (= 1 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))]
+      
+      (is (= 200 (:status vastaus)))
+      (is (every?
+            (fn [nimi]
+              (some #(clojure.string/includes? nimi %) #{"Oulun MHU"}))
+            (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body))))))
+
   (testing "Urakkatyyppi: paallystys (sopimustyyppi = palvelusopimus)"
     ;; Lisätään väliaikainen päällystyspalvelusopimus Porvoon päällystysurakalle (testisopimuksen geometria on Kouvolassa)
     (lisaa-paallystyspalvelusopimus "por1")
 
     (let [urakkatyyppi "paallystys"
+          _ (anna-lukuoikeus (:kayttajanimi +kayttaja-paakayttaja-skanska+))
           vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] (:kayttajanimi +kayttaja-paakayttaja-skanska+)
                     {"urakkatyyppi" urakkatyyppi
                      ;; Kouvolan seutu (EPSG:3067)
@@ -107,21 +141,23 @@
     ;; Ilmoitusten urakkahaku antaa väärän tuloksen mikäli tulee osuma 'kokonaisurakka' päällystysurakkaan.
     ;; Ilmoitusten suhteen ollaan ilmeisesti kiinnostuneita vain palvelusopimuksen piirissä olevista urakoista.
     (testing "Urakkatyyppi: paallystys (sopimustyyppi = kokonaisurakka)"
-             (let [urakkatyyppi "paallystys"
-                   vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] (:kayttajanimi +kayttaja-paakayttaja-skanska+)
-                             {"urakkatyyppi" urakkatyyppi
+      (let [urakkatyyppi "paallystys"
+            _ (anna-lukuoikeus (:kayttajanimi +kayttaja-paakayttaja-skanska+))
+            vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] (:kayttajanimi +kayttaja-paakayttaja-skanska+)
+                      {"urakkatyyppi" urakkatyyppi
                               ;; Oulun lähiseutu (EPSG:3067)
-                              "x" 427232.596 "y" 7211474.342} portti)
-                   enkoodattu-body (cheshire/decode (:body vastaus) true)]
-               (is (= 200 (:status vastaus)))
-               (is (= 1 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
-               (is (= "Muhoksen päällystysurakka" (get-in (first (:urakat enkoodattu-body)) [:urakka :tiedot :nimi])))))))
+                       "x" 427232.596 "y" 7211474.342} portti)
+            enkoodattu-body (cheshire/decode (:body vastaus) true)]
+        (is (= 200 (:status vastaus)))
+        (is (= 1 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
+        (is (= "Muhoksen päällystysurakka" (get-in (first (:urakat enkoodattu-body)) [:urakka :tiedot :nimi])))))))
 
 (deftest hae-urakka-pelkalla-sijainnilla
   (testing "Sijainti (epsg:3067): 427232.596,7211474.342"
     ;; TODO: Pitäisi keksiä testikäyttäjä, jolla olisi oikeuksia vähän useampaan erilaiseen urakkatyyppiin.
     ;;       Siten saisi tässä testattua myös palautuuko samaan pisteeseen osuvat erilaiset urakkatyypit hausta.
-    (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] (:kayttajanimi +kayttaja-yit_uuvh+)
+    (let [_ (anna-lukuoikeus (:kayttajanimi +kayttaja-yit_uuvh+))
+          vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] (:kayttajanimi +kayttaja-yit_uuvh+)
                     {;; Oulun lähiseutu (EPSG:3067)
                      "x" 427232.596 "y" 7211474.342} portti)
           enkoodattu-body (cheshire/decode (:body vastaus) true)]
@@ -129,7 +165,8 @@
       (is (= 2 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))))
 
   (testing "Käyttäjällä ei oikeuksia urakoihin"
-    (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "livi"
+    (let [_ (anna-kirjoitusoikeus "livi")
+          vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "livi"
                     {;; Oulun lähiseutu (EPSG:3067)
                      "x" 427232.596 "y" 7211474.342} portti)
           enkoodattu-body (cheshire/decode (:body vastaus) true)]
@@ -140,7 +177,8 @@
 
 
 (deftest hae-urakka-idlla
-         (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/1"] "yit-rakennus" portti)
+         (let [_ (anna-lukuoikeus "yit-rakennus")
+               vastaus (api-tyokalut/get-kutsu ["/api/urakat/1"] "yit-rakennus" portti)
                encoodattu-body (cheshire/decode (:body vastaus) true)
                tunnukset (mapv #(get-in % [:tehtava :id]) (get-in encoodattu-body [:urakka :tehtavat :yksikkohintaiset]))
                apitunnus 987654]

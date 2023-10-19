@@ -62,6 +62,7 @@
   ([kayttaja sopimus urakka aika]
    {::lt/kuittaaja (namespacefy @kayttaja {:ns :harja.domain.kayttaja})
     ::lt/aika aika
+    ::lt/tallennuksen-aika? true
     ::lt/sopimus {::sop/id (first @sopimus)
                   ::sop/nimi (second @sopimus)}
     ::lt/urakka {::ur/id (:id @urakka)}}))
@@ -89,12 +90,14 @@
 (defrecord AsetaAloitusTiedot [aloitustiedot])
 (defrecord KayttajanUrakatHaettu [urakat])
 ;; Lomake
+(defrecord ValitseAjanTallennus [valittu?])
+(defrecord AsetaTallennusAika [aika])
 (defrecord ValitseTapahtuma [tapahtuma])
 (defrecord HaeEdellisetTiedot [tapahtuma])
 (defrecord EdellisetTiedotHaettu [tulos])
 (defrecord EdellisetTiedotEiHaettu [virhe])
 (defrecord TapahtumaaMuokattu [tapahtuma])
-(defrecord MuokkaaAluksia [alukset virheita?])
+(defrecord MuokkaaAluksia [alukset virheita? poista?])
 (defrecord VaihdaSuuntaa [alus suunta])
 (defrecord AsetaSuunnat [suunta])
 (defrecord TallennaLiikennetapahtuma [tapahtuma])
@@ -281,81 +284,92 @@
 
 (defn tallennusparametrit [t]
   (-> t
-      (assoc ::lt/kuittaaja-id (get-in t [::lt/kuittaaja ::kayttaja/id]))
-      (assoc ::lt/kohde-id (get-in t [::lt/kohde ::kohde/id]))
-      (assoc ::lt/urakka-id (:id @nav/valittu-urakka))
-      (assoc ::lt/sopimus-id (get-in t [::lt/sopimus ::sop/id]))
-      (update ::lt/alukset
-              (fn [alukset] (map
-                              (fn [alus]
-                                (let [alus
-                                      (-> alus
-                                          (dissoc ::m/poistettu?)
-                                          (set/rename-keys {:poistettu ::m/poistettu?})
-                                          (dissoc :id)
-                                          (dissoc :harja.ui.grid/virheet))]
-                                  (->> (keys alus)
-                                       (filter #(#{"harja.domain.kanavat.lt-alus"
-                                                   "harja.domain.muokkaustiedot"}
-                                                  (namespace %)))
-                                       (select-keys alus))))
-                              alukset)))
-      (update ::lt/toiminnot
-              (fn [toiminnot] (map (fn [toiminto]
-                                     (->
-                                       (->> (keys toiminto)
-                                            (filter #(= (namespace %) "harja.domain.kanavat.lt-toiminto"))
-                                            (select-keys toiminto))
-                                       (update ::toiminto/palvelumuoto #(if (= :ei-avausta (::toiminto/toimenpide toiminto))
-                                                                          nil
-                                                                          %))
-                                       (update ::toiminto/lkm #(cond (= :ei-avausta (::toiminto/toimenpide toiminto))
-                                                                     nil
-
-                                                                     (= :itse (::toiminto/palvelumuoto toiminto))
-                                                                     %
-
-                                                                     (nil? (::toiminto/palvelumuoto toiminto))
-                                                                     nil
-
-                                                                     :else 1))))
-                                   toiminnot)))
-      (dissoc :grid-virheita?
-              :valittu-suunta
-              ::lt/kuittaaja
-              ::lt/kohde
-              ::lt/urakka
-              ::lt/sopimus)))
+    (assoc ::lt/aika (if (::lt/tallennuksen-aika? t) ;; Jos halutaan käyttää tallennushetken aikaa -> pvm/nyt
+                       (pvm/nyt)
+                       (::lt/aika t)))
+    (assoc ::lt/kuittaaja-id (get-in t [::lt/kuittaaja ::kayttaja/id]))
+    (assoc ::lt/kohde-id (get-in t [::lt/kohde ::kohde/id]))
+    (assoc ::lt/urakka-id (:id @nav/valittu-urakka))
+    (assoc ::lt/sopimus-id (get-in t [::lt/sopimus ::sop/id]))
+    (update ::lt/alukset
+      (fn [alukset] (map
+                      (fn [alus]
+                        (let [alus
+                              (-> alus
+                                (dissoc ::m/poistettu?)
+                                (set/rename-keys {:poistettu ::m/poistettu?})
+                                (dissoc :id)
+                                (dissoc :harja.ui.grid/virheet))]
+                          (->> (keys alus)
+                            (filter #(#{"harja.domain.kanavat.lt-alus"
+                                        "harja.domain.muokkaustiedot"}
+                                      (namespace %)))
+                            (select-keys alus))))
+                      alukset)))
+    (update ::lt/toiminnot
+      (fn [toiminnot] (map (fn [toiminto]
+                             (->
+                               (->> (keys toiminto)
+                                 (filter #(= (namespace %) "harja.domain.kanavat.lt-toiminto"))
+                                 (select-keys toiminto))
+                               (update ::toiminto/palvelumuoto #(if (= :ei-avausta (::toiminto/toimenpide toiminto))
+                                                                  nil
+                                                                  %))
+                               (update ::toiminto/lkm #(cond (= :ei-avausta (::toiminto/toimenpide toiminto))
+                                                         nil
+                                                         (= :itse (::toiminto/palvelumuoto toiminto))
+                                                         %
+                                                         (nil? (::toiminto/palvelumuoto toiminto))
+                                                         nil
+                                                         :else 1))))
+                        toiminnot)))
+    (dissoc :grid-virheita?
+      :valittu-suunta
+      ::lt/kuittaaja
+      ::lt/kohde
+      ::lt/tallennuksen-aika?
+      ::lt/urakka
+      ::lt/sopimus)))
 
 (defn voi-tallentaa? [t]
-  (let [alukset (remove :poistettu (::lt/alukset t))]
+  (let [toiminnot (::lt/toiminnot t)
+        alukset (remove :poistettu (::lt/alukset t))]
     (boolean
-     (and (not (:grid-virheita? t))
-          (every? #(some? (::lt-alus/lkm %)) alukset)
-
-         ; Jos toimenpide ei ole tyhjennys niin alus laji ei saa olla "Ei alusta" eikä nil
-          (every? #(if
-                    (not= (:arvo @lt/toimenpide-atom) :tyhjennys)
-                     (and (not= (::lt-alus/laji %) :EI)
-                          (not (nil? (::lt-alus/laji %))))
-                     true)
-                  alukset)
-
-          (empty? (filter :koskematon (::lt/alukset t)))
-
-          (every? #(and (some? (::lt-alus/suunta %))
-                        (or (some? (::lt-alus/laji %))
-                            (= (:arvo @lt/toimenpide-atom) :tyhjennys)))
-                  alukset)
-          (or
-           (not-empty alukset)
-           ;; Sallitaan tallennus myös jos aluksia ei ole
-           (every? #(and 
+      (and
+        ;; Virheitä ei ole 
+        (not (:grid-virheita? t))
+        ;; Lkm kenttä pitää olla olemassa 
+        (every? #(some? (::lt-alus/lkm %)) alukset)
+        ;; Jos tyhjennys toimenpidettä ei ole niin alus laji ei saa olla "Ei alusta" eikä nil
+        (every? #(if
+                   ;; Jos tyhjennystä ei ole 
+                   (not (some (fn [lt] (= (::toiminto/toimenpide lt) :tyhjennys)) toiminnot))
+                   ;; Ei sallita aluslajiksi :EI / nil 
+                   (and
+                     (not= (::lt-alus/laji %) :EI)
+                     (not (nil? (::lt-alus/laji %))))
+                   ;; Jos tyhjennys on -> pass 
+                   true)
+          alukset)
+        (empty? (filter :koskematon (::lt/alukset t)))
+        ;; Onko aluslaji olemassa tai toimenpide tyhjennys (tyhjennyksellä voidaan tallentaa ilman aluslajia)
+        (every? #(and 
+                   ;; Suunta olemassa 
+                   (some? (::lt-alus/suunta %))
+                   (or 
+                     ;; Ja aluslaji olemassa tai tyhjennys toimenpide olemassa 
+                     (some? (::lt-alus/laji %))
+                     (some (fn [lt] (= (::toiminto/toimenpide lt) :tyhjennys)) toiminnot)))
+          alukset)
+        ;; Tai 
+        (or
+          ;; Alukset ei ole tyhjiä 
+          (not-empty alukset)
+          ;; Sallitaan tallennus myös jos aluksia ei ole, mutta toimenpide&palvelumuodot olemassa 
+          (every? #(and
+                     (not (nil? (::toiminto/toimenpide %)))
                      (not (nil? (::toiminto/palvelumuoto %)))
-                     (not (nil? (:arvo @lt/toimenpide-atom)))
-                     ) (::lt/toiminnot t))))
-                        
-                        )))
+                     (some (fn [lt] (contains? lt ::toiminto/palvelumuoto)) toiminnot)) toiminnot))))))
 
 (defn sama-alusrivi? [a b]
   ;; Tunnistetaan muokkausgridin rivi joko aluksen id:llä, tai jos rivi on uusi, gridin sisäisellä id:llä
@@ -372,7 +386,6 @@
          (:id b)))))
 
 (defn paivita-toiminnon-tiedot [tapahtuma toiminto]
-  
   ;; Koska itsepalvelulla ja Tyhjennys toimenpiteellä halutaan suunta "ei määritelty",
   ;; jos käyttäjä vaihtaa toimenpidettä tai palvelumuotoa toiseen, korvaa suunnattomat alukset.
   (let [korvaa-suunnattomat-alukset (map (fn [alus]
@@ -597,17 +610,32 @@
       :liikennetapahtumien-haku-kaynnissa? false
       :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false))
 
+  AsetaTallennusAika
+  (process-event [{aika :aika} app]
+    (assoc-in app [:valittu-liikennetapahtuma ::lt/aika] aika))
+
+  ValitseAjanTallennus
+  (process-event [{valittu? :valittu?} app]
+    (assoc-in app [:valittu-liikennetapahtuma ::lt/tallennuksen-aika?] (not valittu?)))
+
   ValitseTapahtuma
   (process-event [{t :tapahtuma} app]
-    (lt/paivita-suunnat-ja-toimenpide!)
+    (lt/paivita-suunnat-ja-toimenpide! t)
     (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
     (swap! lt/suunnat-atom assoc :ei-suuntaa "Ei määritelty")
-    (-> app
-      (assoc :valittu-liikennetapahtuma
-        (when-let [tapahtuma (if (::lt/id t) (koko-tapahtuma t app) t)]
-          (kohteenosatiedot-toimintoihin tapahtuma (::lt/kohde tapahtuma))))
-      (assoc :siirretyt-alukset #{})
-      (assoc :ketjutuksen-poistot #{})))
+
+    (let [tapahtuma (if (::lt/id t) (koko-tapahtuma t app) t)]
+      (cond-> app
+        tapahtuma
+        (assoc :valittu-liikennetapahtuma (kohteenosatiedot-toimintoihin tapahtuma (::lt/kohde tapahtuma)))
+        (not tapahtuma)
+        (assoc :valittu-liikennetapahtuma nil)
+        true
+        (assoc :siirretyt-alukset #{})
+        true
+        (assoc :ketjutuksen-poistot #{})
+        (and t (::lt/aika t))
+        (assoc-in [:valittu-liikennetapahtuma ::lt/aika] (::lt/aika t)))))
 
   HaeEdellisetTiedot
   (process-event [{t :tapahtuma} app]
@@ -649,10 +677,13 @@
     (assoc app :valittu-liikennetapahtuma t))
 
   MuokkaaAluksia
-  (process-event [{alukset :alukset v :virheita?} {tapahtuma :valittu-liikennetapahtuma :as app}]
+  (process-event [{alukset :alukset v :virheita? poista? :poista?} {tapahtuma :valittu-liikennetapahtuma :as app}]
     (if tapahtuma
-      (-> app
+      (cond-> app
+        ;; Ei tarvitse kutsua suunnan käsittelyä jos poistetaan rivi 
+        (not poista?)
         (assoc-in [:valittu-liikennetapahtuma ::lt/alukset] (kasittele-suunta-alukselle tapahtuma alukset))
+        true
         (assoc-in [:valittu-liikennetapahtuma :grid-virheita?] v))
       app))
 

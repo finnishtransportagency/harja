@@ -12,7 +12,7 @@
 # Muuta materiaalia: https://github.com/postgis/docker-postgis
 
 # https://hub.docker.com/_/postgres/tags
-ARG POSTGRES_IMAGE_VERSION=13.11-bullseye
+ARG POSTGRES_IMAGE_VERSION=15.3-bullseye
 # https://docs.aws.amazon.com/AmazonRDS/latest/AuroraPostgreSQLReleaseNotes/AuroraPostgreSQL.Extensions.html#AuroraPostgreSQL.Extensions.13
 ARG POSTGIS_VERSION=3.3.2
 

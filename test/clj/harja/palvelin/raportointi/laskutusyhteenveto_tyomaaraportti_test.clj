@@ -72,41 +72,43 @@
          :akilliset_val_aika_yht (nth raportti 23)
          :vahingot_hoitokausi_yht (nth raportti 24)
          :vahingot_val_aika_yht (nth raportti 25)
-         :tavhin_hoitokausi_yht (nth raportti 26)
-         :tavhin_val_aika_yht (nth raportti 27)
-         :hoitokauden_tavoitehinta (nth raportti 28)
-         :hk_tavhintsiirto_ed_vuodelta (nth raportti 29)
-         :budjettia_jaljella (nth raportti 30)
-         :lisatyo_talvihoito_hoitokausi_yht (nth raportti 31)
-         :lisatyo_talvihoito_val_aika_yht (nth raportti 32)
-         :lisatyo_lyh_hoitokausi_yht (nth raportti 33)
-         :lisatyo_lyh_val_aika_yht (nth raportti 34)
-         :lisatyo_sora_hoitokausi_yht (nth raportti 35)
-         :lisatyo_sora_val_aika_yht (nth raportti 36)
-         :lisatyo_paallyste_hoitokausi_yht (nth raportti 37)
-         :lisatyo_paallyste_val_aika_yht (nth raportti 38)
-         :lisatyo_yllapito_hoitokausi_yht (nth raportti 39)
-         :lisatyo_yllapito_val_aika_yht (nth raportti 40)
-         :lisatyo_korvausinv_hoitokausi_yht (nth raportti 41)
-         :lisatyo_korvausinv_val_aika_yht (nth raportti 42)
-         :lisatyo_hoindonjohto_hoitokausi_yht (nth raportti 43)
-         :lisatyo_hoidonjohto_val_aika_yht (nth raportti 44)
-         :lisatyot_hoitokausi_yht (nth raportti 45)
-         :lisatyot_val_aika_yht (nth raportti 46)
-         :bonukset_hoitokausi_yht (nth raportti 47)
-         :bonukset_val_aika_yht (nth raportti 48)
-         :sanktiot_hoitokausi_yht (nth raportti 49)
-         :sanktiot_val_aika_yht (nth raportti 50)
-         :paatos_tavoitepalkkio_hoitokausi_yht (nth raportti 51)
-         :paatos_tavoitepalkkio_val_aika_yht (nth raportti 52)
-         :paatos_tavoiteh_ylitys_hoitokausi_yht (nth raportti 53)
-         :paatos_tavoiteh_ylitys_val_aika_yht (nth raportti 54)
-         :paatos_kattoh_ylitys_hoitokausi_yht (nth raportti 55)
-         :paatos_kattoh_ylitys_val_aika_yht (nth raportti 56)
-         :muut_kustannukset_hoitokausi_yht (nth raportti 57)
-         :muut_kustannukset_val_aika_yht (nth raportti 58)
-         :yhteensa_kaikki_hoitokausi_yht (nth raportti 59)
-         :yhteensa_kaikki_val_aika_yht (nth raportti 60)}]
+         :tilaajan_rahavaraus_hoitokausi_yht (nth raportti 26)
+         :tilaajan_rahavaraus_val_aika_yht (nth raportti 27)
+         :tavhin_hoitokausi_yht (nth raportti 28)
+         :tavhin_val_aika_yht (nth raportti 29)
+         :hoitokauden_tavoitehinta (nth raportti 30)
+         :hk_tavhintsiirto_ed_vuodelta (nth raportti 31)
+         :budjettia_jaljella (nth raportti 32)
+         :lisatyo_talvihoito_hoitokausi_yht (nth raportti 33)
+         :lisatyo_talvihoito_val_aika_yht (nth raportti 34)
+         :lisatyo_lyh_hoitokausi_yht (nth raportti 35)
+         :lisatyo_lyh_val_aika_yht (nth raportti 36)
+         :lisatyo_sora_hoitokausi_yht (nth raportti 37)
+         :lisatyo_sora_val_aika_yht (nth raportti 38)
+         :lisatyo_paallyste_hoitokausi_yht (nth raportti 39)
+         :lisatyo_paallyste_val_aika_yht (nth raportti 40)
+         :lisatyo_yllapito_hoitokausi_yht (nth raportti 41)
+         :lisatyo_yllapito_val_aika_yht (nth raportti 42)
+         :lisatyo_korvausinv_hoitokausi_yht (nth raportti 43)
+         :lisatyo_korvausinv_val_aika_yht (nth raportti 44)
+         :lisatyo_hoindonjohto_hoitokausi_yht (nth raportti 45)
+         :lisatyo_hoidonjohto_val_aika_yht (nth raportti 46)
+         :lisatyot_hoitokausi_yht (nth raportti 47)
+         :lisatyot_val_aika_yht (nth raportti 48)
+         :bonukset_hoitokausi_yht (nth raportti 49)
+         :bonukset_val_aika_yht (nth raportti 50)
+         :sanktiot_hoitokausi_yht (nth raportti 51)
+         :sanktiot_val_aika_yht (nth raportti 52)
+         :paatos_tavoitepalkkio_hoitokausi_yht (nth raportti 53)
+         :paatos_tavoitepalkkio_val_aika_yht (nth raportti 54)
+         :paatos_tavoiteh_ylitys_hoitokausi_yht (nth raportti 55)
+         :paatos_tavoiteh_ylitys_val_aika_yht (nth raportti 56)
+         :paatos_kattoh_ylitys_hoitokausi_yht (nth raportti 57)
+         :paatos_kattoh_ylitys_val_aika_yht (nth raportti 58)
+         :muut_kustannukset_hoitokausi_yht (nth raportti 59)
+         :muut_kustannukset_val_aika_yht (nth raportti 60)
+         :yhteensa_kaikki_hoitokausi_yht (nth raportti 61)
+         :yhteensa_kaikki_val_aika_yht (nth raportti 62)}]
     tulos))
 
 (defn luo-kulu [urakka-id tyyppi erapaiva suoritushetki koontilaskun-kuukausi summa toimenpideinstanssi-id tehtavaryhma-id]
@@ -126,20 +128,6 @@
                    :tehtava nil}]
    :koontilaskun-kuukausi koontilaskun-kuukausi})
 
-(defn- poista-kulut-aikavalilta [urakka-id hk_alkupvm hk_loppupvm]
-  (let [kulut (flatten (q (format "SELECT id FROM kulu k WHERE k.urakka = %s and k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE;" urakka-id hk_alkupvm hk_loppupvm)))
-        _ (u (format "DELETE FROM kulu_kohdistus WHERE kulu IN (%s)" (str/join "," kulut)))
-        _ (u (format "DELETE FROM kulu_liite WHERE kulu IN (%s)" (str/join "," kulut)))
-        _ (u (format "delete from kulu k where k.urakka = %s and k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE; " urakka-id hk_alkupvm hk_loppupvm))]))
-
-(defn- poista-bonukset-ja-sanktiot-aikavalilta [urakka-id hk_alkupvm hk_loppupvm]
-  (let [toimenpideinstanssit (flatten (q (format "SELECT tpi.id as is
-                                                    FROM toimenpideinstanssi tpi
-                                                   WHERE tpi.urakka = %s;" urakka-id)))
-        _ (u (format "DELETE FROM erilliskustannus WHERE urakka = %s AND pvm BETWEEN '%s'::DATE AND '%s'::DATE;" urakka-id hk_alkupvm hk_loppupvm))
-        ;; Sanktioihin ei ole tallennettu urakkaa, niin se pitää niputtaa toimenpideinstanssien kautta
-        _ (u (format "DELETE FROM sanktio WHERE toimenpideinstanssi IN (%s) AND perintapvm BETWEEN '%s'::DATE AND '%s'::DATE;" (str/join "," toimenpideinstanssit) hk_alkupvm hk_loppupvm))]))
-
 (deftest raportin-suoritus-urakalle-toimii
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
@@ -149,7 +137,7 @@
         vastaus (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))]
     (is (not (nil? vastaus)) "Saatiin raportti")
-    (is (= (count (first vastaus)) 62) "Raportilla on oikea määrä rivejä")))
+    (is (= (count (first vastaus)) 64) "Raportilla on oikea määrä rivejä")))
 
 ;; Oulun MHU:n toimenpideinstanssit ja toimenpidekoodi taulun koodit
 ;Oulu MHU Talvihoito TP,23104
@@ -371,38 +359,71 @@
     (is (= hoitokauden_tavoitehinta (:hoitokauden_tavoitehinta purettu)))))
 
 
-(deftest tyomaaraportti-bonukset-ja-sanktiot-toimii
+(deftest tyomaaraportti-bonukset-ja-sanktiot-toimii-ennen-2022
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"
         aikavali_loppupvm "2020-09-30"
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
-        tpi (hae-toimenpideinstanssi-id urakka-id "23151") ;; Hallinnolliset toimenpiteet
+        tpi-hallinnolliset-toimenpiteet (hae-toimenpideinstanssi-id urakka-id "23151") ;; Hallinnolliset toimenpiteet
+        ;; Päivämäärä (käsittelypäivä) ja laskutuskuukausi, voi olla samat näissä testeissä, vaikka oikeasti ne voi vaihdella
         pvm (pvm/->pvm "15.10.2019")
         bonus_summa 1000M
+        alihankintabonus_summa 7777M
         sanktio_summa 1500M
+
         ;; Poistetaan kaikki bonukset ja sanktiot urakalta
         _ (poista-bonukset-ja-sanktiot-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
 
-        ;; Luodaan bonus
-        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, rahasumma, urakka, tyyppi)
-                      VALUES (%s, %s, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
-               sopimus-id tpi pvm bonus_summa urakka-id "alihankintabonus"))
+        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
+                      VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
+               sopimus-id tpi-hallinnolliset-toimenpiteet pvm pvm alihankintabonus_summa urakka-id "alihankintabonus"))
+        ;; Luodaan asiakastyytyvaisyysbonus
+        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
+                      VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
+               sopimus-id tpi-hallinnolliset-toimenpiteet pvm pvm bonus_summa urakka-id "asiakastyytyvaisyysbonus"))
 
         ;; Luodaan sanktio
         _ (u (format "INSERT INTO sanktio (maara, perintapvm, toimenpideinstanssi, tyyppi, suorasanktio, sakkoryhma)
                       VALUES (%s,'%s'::DATE, %s, %s, %s, '%s'::sanktiolaji)"
-               sanktio_summa pvm tpi 2 true "A"))
+               sanktio_summa pvm tpi-hallinnolliset-toimenpiteet 2 true "A"))
+
+        raportti (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+        purettu (pura-tyomaaraportti-mapiksi (first raportti))]
+
+    (is (= (+ alihankintabonus_summa bonus_summa) (:bonukset_hoitokausi_yht purettu)))
+    (is (= (+ alihankintabonus_summa bonus_summa) (:bonukset_val_aika_yht purettu)))
+    (is (= (* -1 sanktio_summa) (:sanktiot_hoitokausi_yht purettu)))
+    (is (= (* -1 sanktio_summa) (:sanktiot_val_aika_yht purettu)))))
+
+(deftest tyomaaraportti-bonukset-ja-sanktiot-toimii-jalkeen-2022
+  (let [hk_alkupvm "2022-10-01"
+        hk_loppupvm "2023-09-30"
+        aikavali_alkupvm "2022-10-01"
+        aikavali_loppupvm "2023-09-30"
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
+        tpi (hae-toimenpideinstanssi-id urakka-id "23151") ;; Hallinnolliset toimenpiteet
+        pvm (pvm/->pvm "15.10.2022")
+        bonus_summa 1000M
+        ;; Poistetaan kaikki bonukset ja sanktiot urakalta
+        _ (poista-bonukset-ja-sanktiot-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
+
+        ;; Luodaan alihankintabonus
+        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
+                      VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
+               sopimus-id tpi pvm pvm bonus_summa urakka-id "alihankintabonus"))
+        ;; Luodaan asiakastyytyvaisyysbonus
+        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
+                      VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
+               sopimus-id tpi pvm pvm bonus_summa urakka-id "asiakastyytyvaisyysbonus"))
 
         raportti (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                       hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
 
-        _ (println "raportti: " (pr-str raportti))
-
         purettu (pura-tyomaaraportti-mapiksi (first raportti))]
 
-    (is (= bonus_summa (:bonukset_hoitokausi_yht purettu)))
-    (is (= bonus_summa (:bonukset_val_aika_yht purettu)))
-    (is (= (* -1 sanktio_summa) (:sanktiot_hoitokausi_yht purettu)))
-    (is (= (* -1 sanktio_summa) (:sanktiot_val_aika_yht purettu)))))
+    (is (= (* 2 bonus_summa) (:bonukset_hoitokausi_yht purettu)))
+    (is (= (* 2 bonus_summa) (:bonukset_val_aika_yht purettu)))))

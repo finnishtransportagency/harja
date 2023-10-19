@@ -19,6 +19,7 @@
 (deftest uusi-tapahtuma
   (is (= {::lt/kuittaaja {::kayttaja/id 1}
           ::lt/aika 1234
+          ::lt/tallennuksen-aika? true
           ::lt/sopimus {::sop/id :a ::sop/nimi :b}
           ::lt/urakka {::ur/id :foo}}
          (tiedot/uusi-tapahtuma
@@ -120,7 +121,8 @@
                                                      {::lt/id 1 :foo :baz}]}))))
 
 (deftest tallennusparametrien-kasaus
-  (is (= {::lt/kuittaaja-id 1
+  (is (= {::lt/aika nil
+          ::lt/kuittaaja-id 1
           ::lt/kohde-id 1
           ::lt/urakka-id nil ;; tulee atomista, siksi nil.. :/
           ::lt/sopimus-id 1
@@ -735,11 +737,11 @@
 (deftest alusten-muokkaus
   (is (= {:valittu-liikennetapahtuma {::lt/alukset [{:foo :bar, :harja.domain.kanavat.lt-alus/suunta nil}]
                                       :grid-virheita? false}}
-         (e! (tiedot/->MuokkaaAluksia [{:foo :bar}] false)
+         (e! (tiedot/->MuokkaaAluksia [{:foo :bar}] false false)
              {:valittu-liikennetapahtuma {}})))
 
   (is (= {:valittu-liikennetapahtuma nil}
-         (e! (tiedot/->MuokkaaAluksia [{:foo :bar}] true)
+         (e! (tiedot/->MuokkaaAluksia [{:foo :bar}] true false)
              {:valittu-liikennetapahtuma nil}))))
 
 (deftest suunnan-vaihto

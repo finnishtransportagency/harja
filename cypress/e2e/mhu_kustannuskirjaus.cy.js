@@ -17,8 +17,8 @@ let haeUrakanPaatokset = (urakka, hoitokausi) => {
             `AND \\"hoitokauden-alkuvuosi\\" = ${hoitokausi}\"`)
             .then((dbTulos) => {
                 return Number.parseFloat(dbTulos.stdout.split('\n')[2])
-            })
-    })
+            });
+    });
 }
 
 let avaaKulunKirjaus = () => {
@@ -47,7 +47,6 @@ let tallennaJaTarkistaKulu = (kuluTaiKulut) => {
     cy.get('.pvm-kentta > input').eq(1).click().wait(3000).type('{selectall}29.09.2021');
     cy.get('.pvm-kentta > input').eq(1).should('have.value', "29.09.2021").type('{enter}');
 
-
     if (Array.isArray(kuluTaiKulut)) {
         cy.get('table.grid tr.klikattava').eq(0).click();
         kuluTaiKulut.forEach((kulu, i) => {
@@ -57,8 +56,7 @@ let tallennaJaTarkistaKulu = (kuluTaiKulut) => {
     } else {
         cy.get('table.grid tr.klikattava')
             .contains(kuluTaiKulut)
-    };
-
+    }
 }
 
 describe('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
@@ -68,63 +66,23 @@ describe('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
         avaaKulunKirjaus();
     });
 
-    it('Tee hoitovuoden tavoitehinnan ylityksen kulu', () => {
-        cy.contains('Hoitovuoden päätös').click();
-        cy.contains('Urakoitsija maksaa tavoitehinnan ylityksestä').click();
+    it('Tehdään Normaali suunniteltu tai määrämitattava hankintakulu', () => {
+        cy.contains('Normaali suunniteltu tai määrämitattava hankintakulu').click();
 
-        cy.contains('Kulun tyyppi');
-        cy.get('.tehtavaryhma-valinta-disabled')
-            .contains('Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä');
+        cy.get('[data-cy="kulu-tehtavaryhma-dropdown"]').within(() => {
+            cy.get('button').click({force: true});
+            cy.contains('Talvihoito (A)').click();
+        });
 
         valitseKulunPvm();
 
-        cy.get('input.maara-input').type('{selectall}1000').then(() => {
+        cy.get('input.maara-input').type('{selectall}-999').then(() => {
             cy.focused().blur({force: true})
-        })
-        cy.get('input.maara-input').should('have.value', '-1\u00a0000,00');
-        tallennaJaTarkistaKulu('Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä');
-    });
-
-    it('Muokkaa hoitovuoden päätöksen kulua', () => {
-        cy.get('table.grid tr.klikattava')
-            .contains('Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä').click();
-
-        cy.contains('Urakoitsija maksaa tavoite- ja kattohinnan ylityksestä').click();
-
-        [0, 1].forEach((i) => {
-            cy.get('.tehtavaryhma-valinta-disabled').eq(i)
-                .contains('Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä');
-
-            cy.get('input.maara-input').eq(i).type('{selectall}500').then(() => {
-                cy.focused().blur();
-            });
-            cy.get('input.maara-input').eq(i).should('have.value', '-500,00');
-        })
-
-        tallennaJaTarkistaKulu([
-            'Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä',
-            'Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä']);
-    })
-
-    it('Poista hoitovuoden päätöksen kulu', () => {
-        cy.get('table.grid tr.klikattava').eq(1).click();
-        cy.contains('Poista kulu').click();
-        cy.contains('Poista tiedot').click();
-
-        cy.contains('Annetuilla hakuehdoilla ei näytettäviä kuluja')
-
-    })
-
-    it('Tee hoitovuoden päätöksen kulu', () => {
-        haeUrakanPaatokset('Kittilän MHU 2019-2024', 2019).then((paatosSumma) => {
-            avaaKulunKirjaus();
-
-            cy.contains('Hoitovuoden päätös').click();
-            valitseKulunPvm();
-
-            cy.get('input.maara-input').type('{selectall}' + Math.abs(paatosSumma));
-
-            tallennaJaTarkistaKulu('Hoitovuoden päättäminen / Tavoitepalkkio');
         });
+        cy.get('input.maara-input').should('have.value', '-999,00');
+        tallennaJaTarkistaKulu('Talvihoito laaja TPI');
+
+
+        // TODO: Kun seuraavan kerran kehitetään kulujen Cypress testejä, niin lisää kulun poisto vielä tähän samaan.
     });
-})
+});
