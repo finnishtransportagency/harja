@@ -4,7 +4,6 @@
             [harja.domain.tieliikenneilmoitukset :refer [+ilmoitustyypit+ kuittaustyypit ilmoitustyypin-nimi +ilmoitustilat+]]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
-            [harja.domain.tierekisteri :as tr-domain]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.urakka :as u]
             [harja.ui.notifikaatiot :as notifikaatiot]
@@ -76,20 +75,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                       :valitetty-urakkaan-loppuaika                 (pvm/nyt)})
 (def oletus-valinnat? (atom true))
 
-(def sorttaus (atom {:kentta :valitetty-urakkaan :suunta :desc}))
-
-(defn- ilmoitustyyppi-sorttaus [tyyppi1, tyyppi2]
-  (if (= (:suunta @sorttaus) :desc)
-  (compare (domain/ilmoitustyypin-lyhenne tyyppi2) (domain/ilmoitustyypin-lyhenne tyyppi1))
-  (compare (domain/ilmoitustyypin-lyhenne tyyppi1) (domain/ilmoitustyypin-lyhenne tyyppi2))))
-
-(defn tieosoitteen-jarjestys
-  [kohde]
-  ((juxt :numero :alkuosa :alkuetaisyys) kohde))
-(defn- tie-sorttaus [tie1, tie2]
-  (if (= (:suunta @sorttaus) :desc)
-    (compare (tieosoitteen-jarjestys tie2) (tieosoitteen-jarjestys tie1))
-    (compare (tieosoitteen-jarjestys tie1) (tieosoitteen-jarjestys tie2))))
+(def sorttaus (atom {:suunta :desc}))
 
 (defn- valitettu-urakkaan-sorttaus [aika1 aika2]
   (if (= (:suunta @sorttaus) :desc)
@@ -111,16 +97,13 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 (defn- jarjesta-ilmoitukset [tulos]
   (reverse
     (sort-by
-      (:kentta @sorttaus)
-      (cond (= (:kentta @sorttaus) :valitetty-urakkaan) valitettu-urakkaan-sorttaus
-        (= (:kentta @sorttaus) :ilmoitustyyppi) ilmoitustyyppi-sorttaus
-        (= (:kentta @sorttaus) :tr) tie-sorttaus
-        :default nil)
-             (mapv
-               (fn [ilmo]
-                 (assoc ilmo :kuittaukset
-                             (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
-               tulos))))
+      :valitetty-urakkaan
+      valitettu-urakkaan-sorttaus
+      (mapv
+        (fn [ilmo]
+          (assoc ilmo :kuittaukset
+            (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
+        tulos))))
 
 (defn- merkitse-uudet-ilmoitukset [ilmoitukset uudet-ilmoitusidt]
   (map
@@ -200,15 +183,12 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                                            (t/send-async! v/->HaeIlmoitukset)
                                            timeout)))
            (assoc :taustahaku? taustahaku?)
-           (assoc :lajittelu-kentta (:kentta @sorttaus))
            (assoc :lajittelu-suunta (:suunta @sorttaus))
            (assoc :ensimmainen-haku-tehty? true))))))
-(defn- aseta-sorttaus [kentta]
-  (if (= (:kentta @sorttaus) kentta)
-    (if (= (:suunta @sorttaus) :desc) ; vaihdetaan suunta jos klikataan kenttää jonka mukaan jo sortattiin
-      (reset! sorttaus {:kentta kentta :suunta :asc})
-      (reset! sorttaus {:kentta kentta :suunta :desc}))
-    (reset! sorttaus {:kentta kentta :suunta :desc}))) ; vaihdettaessa sortattavaa kenttää suunta on laskeva
+(defn- aseta-sorttaus []
+    (if (= (:suunta @sorttaus) :desc)
+      (reset! sorttaus {:suunta :asc})
+      (reset! sorttaus {:suunta :desc})))
 
 ;; Kaikki mitä UI voi ilmoitusnäkymässä tehdä, käsitellään täällä
 (extend-protocol t/Event
@@ -218,13 +198,14 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
       (assoc app :valinnat valinnat)))
 
   v/MuutaIlmoitusHaunSorttausta
-  (process-event [{kentta :kentta} app]
-    (aseta-sorttaus kentta)
+  (process-event [_ app]
+    (aseta-sorttaus)
     (hae app))
 
   v/PalautaOletusHakuEhdot
   (process-event [_ app]
-    (let [app (update-in app [:valinnat] merge oletus-valinnat {:vaikutukset #{}
+    (let [__ (reset! sorttaus {:suunta :desc})
+          app (update-in app [:valinnat] merge oletus-valinnat {:vaikutukset #{}
                                                                 :tunniste ""})
           ; näitä ei ole kun sivulle alunperin  tullaan
           app (update-in app [:valinnat] dissoc :tr-numero :tarkenne :aihe)
@@ -248,7 +229,6 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                                #(if (empty? %) +ilmoitustyypit+ %))
                        (update :tilat
                                #(if (empty? %) (into #{} tila-filtterit) %))
-                     (assoc :lajittelu-kentta (:kentta @sorttaus))
                      (assoc :lajittelu-suunta (:suunta @sorttaus)))]
           (tulos!
             {:ilmoitukset (<! (k/post! :hae-ilmoitukset haku))

@@ -107,21 +107,12 @@ WHERE ulompi_i.id IN
       (:tarkenne::INTEGER IS NULL OR
        sisempi_i.tarkenne = :tarkenne)
        ORDER BY
-            CASE WHEN :lajittelu-kentta = 'valitetty-urakkaan' AND :lajittelu-suunta = 'asc' THEN sisempi_i."valitetty-urakkaan" END ASC,
-            CASE WHEN :lajittelu-kentta = 'valitetty-urakkaan' AND :lajittelu-suunta = 'desc' THEN sisempi_i."valitetty-urakkaan" END DESC,
-            CASE WHEN :lajittelu-kentta = 'ilmoitustyyppi' AND :lajittelu-suunta = 'asc' THEN sisempi_i.ilmoitustyyppi END ASC,
-            CASE WHEN :lajittelu-kentta = 'ilmoitustyyppi' AND :lajittelu-suunta = 'desc' THEN sisempi_i.ilmoitustyyppi END DESC,
-            CASE WHEN :lajittelu-kentta = 'tr' AND :lajittelu-suunta = 'desc' THEN sisempi_i.tr_numero END ASC,
-            CASE WHEN :lajittelu-kentta = 'tr' AND :lajittelu-suunta = 'asc' THEN sisempi_i.tr_numero END DESC
+            CASE WHEN :lajittelu-suunta = 'asc' THEN sisempi_i."valitetty-urakkaan" END ASC,
+            CASE WHEN :lajittelu-suunta = 'desc' THEN sisempi_i."valitetty-urakkaan" END DESC
        LIMIT :max-maara::INTEGER
        )
-ORDER BY
-    CASE WHEN :lajittelu-kentta = 'valitetty-urakkaan' AND :lajittelu-suunta = 'asc' THEN ulompi_i."valitetty-urakkaan" END ASC,
-         CASE WHEN :lajittelu-kentta = 'valitetty-urakkaan' AND :lajittelu-suunta = 'desc' THEN ulompi_i."valitetty-urakkaan" END DESC,
-         CASE WHEN :lajittelu-kentta = 'ilmoitustyyppi' AND :lajittelu-suunta = 'asc' THEN ulompi_i.ilmoitustyyppi END ASC,
-         CASE WHEN :lajittelu-kentta = 'ilmoitustyyppi' AND :lajittelu-suunta = 'desc' THEN ulompi_i.ilmoitustyyppi END DESC,
-         CASE WHEN :lajittelu-kentta = 'tr' AND :lajittelu-suunta = 'asc' THEN ulompi_i.tr_numero END DESC,
-         CASE WHEN :lajittelu-kentta = 'tr' AND :lajittelu-suunta = 'desc' THEN ulompi_i.tr_numero END ASC,
+ORDER BY CASE WHEN :lajittelu-suunta = 'asc' THEN ulompi_i."valitetty-urakkaan" END ASC,
+         CASE WHEN :lajittelu-suunta = 'desc' THEN ulompi_i."valitetty-urakkaan" END DESC,
          it.kuitattu DESC;
 
 -- name: hae-ilmoitukset-raportille

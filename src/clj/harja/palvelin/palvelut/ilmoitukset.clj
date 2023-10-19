@@ -159,8 +159,7 @@
                     kuittaustyypit hakuehto selite
                     aloituskuittauksen-ajankohta tr-numero tunniste
                     ilmoittaja-nimi ilmoittaja-puhelin vaikutukset
-                    aihe tarkenne
-                    lajittelu-kentta lajittelu-suunta] :as hakuehdot}
+                    aihe tarkenne lajittelu-suunta] :as hakuehdot}
     max-maara]
    (let [valitetty-urakkaan-aikavali (or (:aikavali hakuehdot)
                                        (aikavaliehto hakuehdot :valitetty-urakkaan-vakioaikavali :valitetty-urakkaan-alkuaika :valitetty-urakkaan-loppuaika))
@@ -212,7 +211,7 @@
                           (:avoimet tilat) ", mutta vain avoimet."
                           (and (:suljetut tilat) (:avoimet tilat)) ", ja näistä avoimet JA suljetut."
                           (:suljetut tilat) ", ainoastaan suljetut.")
-                        (str " Sortataan " (:lajittelu-kentta hakuehdot) " mukaan, suunta " (:lajittelu-suunta hakuehdot)))
+                        (str " Sortataan suuntaan " (:lajittelu-suunta hakuehdot)))
          _ (log/debug debug-viesti)
          ilmoitukset
          (when-not (empty? urakat)
@@ -250,7 +249,6 @@
                       :aihe aihe
                       :tarkenne tarkenne
                       :max-maara max-maara
-                      :lajittelu-kentta (name lajittelu-kentta)
                       :lajittelu-suunta (name lajittelu-suunta)}))
              {:kuittaus :kuittaukset}))
          ilmoitukset (mapv

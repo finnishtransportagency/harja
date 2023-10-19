@@ -294,9 +294,6 @@
           "Selitteet:\n")
         (domain/parsi-selitteet selitteet)))))
 
-(defn- sorttauksen-suunta [kentta]
-  (when (= (:kentta @tiedot/sorttaus) kentta)
-    (:suunta @tiedot/sorttaus)))
 (defn ilmoitusten-paanakyma
   [e! {ws-ilmoitusten-kuuntelu :ws-ilmoitusten-kuuntelu
        valinnat-nyt :valinnat
@@ -411,14 +408,12 @@
          :solun-tooltip (fn [rivi]
                           {:tooltip-tyyppi :komponentti
                            :tooltip-komponentti (tunniste-tooltip (:tunniste rivi))})
-         :sarake-sort {:fn #(e! (v/->MuutaIlmoitusHaunSorttausta :valitetty-urakkaan))
-                       :suunta (sorttauksen-suunta :valitetty-urakkaan)}}
+         :sarake-sort {:fn #(e! (v/->MuutaIlmoitusHaunSorttausta))
+                       :suunta (:suunta @tiedot/sorttaus)}}
         {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
          :tyyppi :komponentti
          :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))
-         :otsikkorivi-luokka "tyyppi" :leveys ""
-         :sarake-sort {:fn #(e! (v/->MuutaIlmoitusHaunSorttausta :ilmoitustyyppi))
-                       :suunta (sorttauksen-suunta :ilmoitustyyppi)}}
+         :otsikkorivi-luokka "tyyppi" :leveys ""}
         {:otsikko "Tarkenne" :nimi :tarkenne
          :tyyppi :string
          :luokka "pitka-teksti"
@@ -433,9 +428,7 @@
         {:otsikko "Tie" :nimi :tierekisteri
          :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %) {:teksti-tie? false})
          :tyyppi :string
-         :otsikkorivi-luokka "tie" :leveys ""
-         :sarake-sort {:fn #(e! (v/->MuutaIlmoitusHaunSorttausta :tr))
-                       :suunta (sorttauksen-suunta :tr)}}
+         :otsikkorivi-luokka "tie" :leveys ""}
         {:otsikko "Kuittaukset" :nimi :kuittaukset
          :tyyppi :komponentti
          :komponentti (partial kuittauslista e! pikakuittaus)
