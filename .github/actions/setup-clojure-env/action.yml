@@ -59,7 +59,6 @@ runs:
       shell: bash
 
     - name: Install lessc
-      if: ${{ inputs.install-tools == 'true' }}
       run: |
         NPM_LESS_VERSION=$(node -pe 'require("./package").devDependencies["less"]')
         npm install -g "less@${NPM_LESS_VERSION}"
