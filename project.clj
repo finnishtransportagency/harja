@@ -168,6 +168,10 @@
                  ]
 
   :plugins [[lein-cljsbuild "1.1.7"]
+            ;; Harjan pilviversiossa on luovuttu lein-lessistä, mutta on-prem harjassa
+            ;; käytetään sitä vielä. Riippuvuus ja käyttö aliaksissa voidaan poistaa, kun
+            ;; ollaan luovuttu on-premistä ja jenkinsin käytöstä.
+            [lein-less "1.7.5"]
             [lein-ancient "0.6.15"]
             [lein-codox "0.10.6"]
             [jonase/eastwood "0.3.5"]
@@ -211,6 +215,11 @@
                                     "resources/public/js/harja.js"
                                     "resources/public/js/harja"]
 
+  ;; Less CSS käännös tuotanto varten, käyttäen lein-lessiä on-prem-harjaa varten.
+  :less {:source-paths ["dev-resources/less/application"
+                        "dev-resources/less/laadunseuranta/application"]
+         :target-path "resources/public/css/"}
+
   ;; Palvelimen buildin tietoja
   :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"]
   :test-paths ["test/clj" "test/cljc" "laadunseuranta/test-src/clj"]
@@ -228,7 +237,9 @@
             "compile-laadunseuranta-dev" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/laadunseuranta-dev"]
             "compile-laadunseuranta-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/laadunseuranta-prod"]
             "tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
-                        "with-profile" "prod-cljs" "compile-prod,"
+                        ;; Harjan fronttibuildi ja LESS
+                        "less" "once,"
+                        "with-profile" "prod" "compile-prod,"
 
                         ;; Harja mobiili laadunseuranta fronttibuildi
                         "with-profile" "laadunseuranta-prod" "compile-laadunseuranta-prod,"
@@ -248,6 +259,7 @@
             "selainrepl" ["run" "-m" "harja.tyokalut.selainrepl"]
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
             "tuotanto-notest" ["do" "clean," "compile,"
+                               "less" "once,"
                                "with-profile" "prod-cljs" "compile-prod,"
                                "with-profile" "laadunseuranta-prod" "compile-laadunseuranta-prod,"
                                "uberjar"]}
