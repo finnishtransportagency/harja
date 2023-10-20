@@ -39,6 +39,7 @@ runs:
         echo "Building frontend"
         lessc dev-resources/less/application/application.less resources/public/css/application.css
         lessc dev-resources/less/laadunseuranta/application/laadunseuranta.less resources/public/css/laadunseuranta.css
+        lein with-profile prod-cljs compile-prod
       shell: bash
 
     - name: Build laadunseuranta
