@@ -68,6 +68,9 @@
           url (rakenna-osoite db paivitystunnus (get asetukset url-avain))
           tuontikohdepolku (rakenna-osoite db paivitystunnus (get asetukset tuontikohdepolku-avain))
           shapefile (rakenna-osoite db paivitystunnus (get asetukset shapefile-avain))
+          _ (log/info "maarittele-paivitystehtava :: url " url)
+          _ (log/info "maarittele-paivitystehtava :: tuontikohdepolku " tuontikohdepolku)
+          _ (log/info "maarittele-paivitystehtava :: shapefile " shapefile)
           kayttajatunnus (:kayttajatunnus asetukset)
           salasana (:salasana asetukset)]
          (when (and tuontivali

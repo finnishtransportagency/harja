@@ -43,7 +43,7 @@
                     paivitys
                     kayttajatunnus
                     salasana]
-      (log/debug (format "Päivitetään geometria-aineisto: %s. Päivitystyyppi on %s." paivitystunnus paivitystyyppi))
+      (log/info (format "Päivitetään geometria-aineisto: %s. Päivitystyyppi on %s." paivitystunnus paivitystyyppi))
 
       ;; Hae geometria-aineisto palvelimelta, jos niin määritelty
       (when (= :palvelimelta paivitystyyppi)
@@ -59,7 +59,7 @@
 ;; Päivitystyypit ovat :palvelimelta ja :paikallinen. Paikallinen päivitys ei vaatisi tiedostourlia eikä kohdetiedoston polkua, mutta
 ;; koska paikallinen päivitystapa on poikkeus, tehdään tarkistukset jotka varmistavat, että asetukset ovat oikein ja kansio olemassa.
 (defn kaynnista-paivitys [integraatioloki db paivitystunnus tiedostourl kohdetiedoston-polku shapefile paivitys kayttajatunnus salasana]
-      (log/debug (format "[KÄYNNISTETTY-GEOMETRIAPAIVITYS] %s" paivitystunnus))
+      (log/info (format "[KÄYNNISTETTY-GEOMETRIAPAIVITYS] %s" paivitystunnus))
       (try
         (let [paivitystyyppi (geometriapaivitykset/pitaako-paivittaa? db paivitystunnus)
               ava-paivitys (fn [] (aja-paivitys
@@ -79,15 +79,15 @@
                    (when (or (empty tiedostourl) (not (kohdekansio-ok? kohdetiedoston-polku)))
                          (throw (Exception. "Virhe geometria-aineston haun osoitteessa tai kohdekansiossa.")))
                    :ei-paivitystarvetta
-                   (log/debug (format "Geometria-aineiston %s seuraava päivitysajankohta on määritelty myöhemmäksi. Päivitystä ei tehdä." paivitystunnus))
+                   (log/info (format "Geometria-aineiston %s seuraava päivitysajankohta on määritelty myöhemmäksi. Päivitystä ei tehdä." paivitystunnus))
                    :ei-kaytossa
                    (log/warn (format "Geometriapäivitystä %s ei ajeta lainkaan. Päivitä geometriapaivitys-taulun tiedot, jos päivitys täytyy ajaa." paivitystunnus))
                    nil)
              ;; Päivitetään jos tarvetta
              (when (#{:palvelimelta :paikallinen} paivitystyyppi)
                (if (lukko/yrita-ajaa-lukon-kanssa db paivitystunnus ava-paivitys)
-                 (log/debug (format "[ONNISTUNUT-GEOMETRIAPAIVITYS] %s" paivitystunnus))
-                 (log/debug (format "[EPÄONNISTUNUT-GEOMETRIAPAIVITYS] %s. Päivitystä ei ajettu LUKKO-taulun konfiguraation takia." paivitystunnus)))))
+                 (log/info (format "[ONNISTUNUT-GEOMETRIAPAIVITYS] %s" paivitystunnus))
+                 (log/info (format "[EPÄONNISTUNUT-GEOMETRIAPAIVITYS] %s. Päivitystä ei ajettu LUKKO-taulun konfiguraation takia." paivitystunnus)))))
         (catch Exception e
           (do (log/warn (format "[EPÄONNISTUNUT-GEOMETRIAPAIVITYS] Geometria-aineiston päivityksessä: %s tapahtui poikkeus. %s Tarkista konfiguraatio asetukset.edn-tiedostossa ja tietokantatauluissa." paivitystunnus (.getMessage e)))
               (geometriapaivitykset/paivita-viimeisin-paivitys db paivitystunnus nil)))))
