@@ -7,7 +7,8 @@ LESS_TIEDOSTOT=$( ls -l "${HARJA_DIR}"/dev-resources/less/ );
 
 if ! command -v npx &> /dev/null
 then
-   echo "npx-komentoa ei löytynyt. Voit asentaa sen käyttämällä npm install -g npx"
+   echo "npx-komentoa ei löytynyt. Sen pitäisi kuulua npm-pakettiin version 7.0.0 jälkeen."
+   exit 1
 fi
 
 # Ajetaan less-käännös kerran heti ja aina kun tiedostot muuttuvat
