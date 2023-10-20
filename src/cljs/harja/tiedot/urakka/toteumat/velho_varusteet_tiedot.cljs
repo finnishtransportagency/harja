@@ -34,8 +34,10 @@
 
                 itemit (if (< (count teksti) 1)
                          varustetyypit
-                         (filter #(not= (.indexOf (.toLowerCase (:otsikko %))
-                                          (.toLowerCase teksti)) -1)
+                         (filter #(and
+                                    (:otsikko %)
+                                    (not= (.indexOf (.toLowerCase (:otsikko %))
+                                               (.toLowerCase teksti)) -1))
                            varustetyypit))]
             (vec (sort-by :otsikko itemit)))))))
 
