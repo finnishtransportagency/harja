@@ -527,3 +527,24 @@
     (is (= (count lpt-raahen-urakoitsija) 0) "Raahen urakoitsija ei näe Iin eikä Oulun urakan laatupoikkeamia (eri urakoitsija)")
     (is (= (count lpt-raahen-urakanvalvoja) 2) "Tilaaja näkee kaikki urakat, siksi sekä Iin että Oulun urakan laatupoikkeamatkin")
     (is (= (count lpt-jvh) 2) "Järjestelmävastaava näkee kaikki urakat, siksi sekä Iin että Oulun urakan laatupoikkeamatkin")))
+
+(deftest urakkaroolin-lukuoikeus-toimii-vaikka-org-olisi-eri
+  (let [urakka-id-jossa-lukuoikeudellinen_rooli (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        urakka-id-jossa-ei-roolia (hae-urakan-id-nimella "Kittilän MHU 2019-2024")
+        kayttaja  {:organisaation-urakat #{}, :sahkoposti "eri.kayttaja@example.org", :kayttajanimi "LX1234567", :puhelin "0501234567",
+                   :sukunimi "Sukunimi", :roolit #{}, :organisaatioroolit {}, :id 123, :etunimi "Etunimi",
+                   ;; keksitty organisaatio, joka ei varmuudella ole ko. urakan urakoitsija
+                   :organisaatio {:id 25354, :nimi "Ei tämän urakan urakoitsija", :tyyppi "urakoitsija"},
+                   :urakkaroolit {urakka-id-jossa-lukuoikeudellinen_rooli #{"Laadunvalvoja"}}}
+        hakuargumentit {:urakat #{urakka-id-jossa-lukuoikeudellinen_rooli 123 432 423}, :nykytilanne? true, :alue {:xmin 383991.5, :ymin 6691575, :xmax 507255.5, :ymax 6731511},
+                        :talvi #{59 58 60 27 31 40 41 61 29 28 26 30 42}, :ilmoitukset {},
+                        :alku #inst "2023-10-17T07:12:30.000-00:00", :loppu #inst "2023-10-20T07:12:30.000-00:00"}
+        db (luo-testitietokanta)
+        sallitut-urakat (rajaa-urakat-hakuoikeudella db kayttaja hakuargumentit)]
+    (is (sallitut-urakat urakka-id-jossa-lukuoikeudellinen_rooli) "Roolin perusteella oikeus ko. urakkaan myönnetty")
+    ;; tarkistetaan että muita hakuehdoissa olleita urakoita ei päästä katselemaan
+    ;; (oikeasti niitä ei pääse edes asettamaan hakuehtoihin mutta hyvä varmistaa asia)
+    (is (not (sallitut-urakat 123)) "Roolin puuttuessa oikeutta ei muodostu")
+    (is (not (sallitut-urakat 432)) "Roolin puuttuessa oikeutta ei muodostu")
+    (is (not (sallitut-urakat 423)) "Roolin puuttuessa oikeutta ei muodostu")
+    (is (not (sallitut-urakat urakka-id-jossa-ei-roolia)) "Roolin puuttuessa oikeutta ei muodostu")))
