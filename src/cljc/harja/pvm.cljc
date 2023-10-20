@@ -1173,7 +1173,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 
 #?(:clj
    (defn pvm->iso-8601-pvm-aika-ei-ms
-     "Parsii annetun päivämäärän ISO-8601 (yyyy-MM-DD'T'HH:mm:ssX) muotoon."
+     "Parsii annetun org.joda.time.DateTime-tyyppisen päivämäärän ISO-8601 (yyyy-MM-DD'T'HH:mm:ssX) muotoon."
      [^DateTime pvm]
      (df/unparse (:date-time-no-ms df/formatters) pvm)))
 
