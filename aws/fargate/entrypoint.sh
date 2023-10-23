@@ -33,10 +33,19 @@ tarkasta_riippuvuus sonic-crypto.jar
 ## Uusin kaista-aineisto (csv)
 
 echo "Ladataan uusin kaista-aineisto..."
-aws s3api get-object --bucket "$HARJA_CONFIG_S3_BUCKET" --key "$HARJA_CONFIG_S3_KAISTAT_TIEDOSTOPOLKU" uusin_tr_tieto.csv
+aws s3api get-object --bucket "$HARJA_CONFIG_S3_BUCKET" --key "${HARJA_CONFIG_S3_KAISTAT_TIEDOSTOPOLKU}" uusin_tr_tieto.csv
 echo "DONE"
 
 tarkasta_riippuvuus uusin_tr_tieto.csv
+
+
+## Asetukset.edn templaatti
+
+echo "Ladataan asetukset.edn..."
+aws s3api get-object --bucket "$HARJA_CONFIG_S3_BUCKET" --key "${HARJA_CONFIG_S3_ASETUKSET_TIEDOSTOPOLKU}" asetukset.edn
+echo "DONE"
+
+tarkasta_riippuvuus asetukset.edn
 
 # Valmistellaan java-optiot ja käynnistetään Harja app
 
