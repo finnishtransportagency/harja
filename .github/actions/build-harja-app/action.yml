@@ -13,9 +13,6 @@ inputs:
   build-laadunseuranta:
     description: 'Build laadunseuranta'
     default: 'true'
-  build-documentation:
-    description: 'Build documentation'
-    default: 'true'
   build-uberjar:
     description: 'Build uberjar'
     default: 'true'
@@ -47,13 +44,6 @@ runs:
       run: |
         echo "Building laadunseuranta"
         lein do with-profile laadunseuranta-prod compile-laadunseuranta-prod
-      shell: bash
-
-    - name: Build documentation
-      if: ${{ inputs.build-documentation == 'true' }}
-      run: |
-        echo "Building documentation"
-        lein codox
       shell: bash
 
     - name: Build uberjar
