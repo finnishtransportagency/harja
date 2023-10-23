@@ -180,7 +180,6 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                                            (t/send-async! v/->HaeIlmoitukset)
                                            timeout)))
            (assoc :taustahaku? taustahaku?)
-           (assoc :lajittelu-suunta (:lajittelu-suunta app))
            (assoc :ensimmainen-haku-tehty? true))))))
 
 (defn- vaihda-lajittelu-suunta [app]
