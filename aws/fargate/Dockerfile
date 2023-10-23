@@ -47,10 +47,6 @@ COPY ./aws/fargate/entrypoint.sh entrypoint.sh
 # Tässä oleteetaan, että uberjar on jo buildattu ja se on hakemistossa "target"
 COPY ./target/harja-0.0.1-SNAPSHOT-standalone.jar harja.jar
 
-# Kopioi asetusten templaatti
-# Asetuksien parametrit ja salaisuudet asetetaan AWS Fargate palvelun kautta ympäristömuuttujina
-COPY ./aws/fargate/asetukset.edn asetukset.edn
-
 # Harja-app tarkastaa tällä hetkellä jotkin asetetut ENV muuttujat .harja_env tiedoston mukaisesti
 # harja.palvelin.asetukset/tarkista-ymparisto! -funktiolla
 COPY ./aws/fargate/.harja_env .harja_env
