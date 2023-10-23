@@ -17,6 +17,7 @@ runs:
     - name: Cache PhantomJS
       id: cache-phantom-js
       uses: actions/cache@v3
+      if: ${{ inputs.phantom-js != '' }}
       with:
         path: /usr/local/bin/phantomjs
         key: ${{ runner.os }}-phantom-js-${{ inputs.phantom-js }}
@@ -38,6 +39,7 @@ runs:
     - name: Cache clj-kondo
       id: cache-clj-kondo
       uses: actions/cache@v3
+      if: ${{ inputs.clj-kondo != '' }}
       with:
         path: /usr/local/bin/clj-kondo
         key: ${{ runner.os }}-phantom-js-${{ inputs.clj-kondo }}
