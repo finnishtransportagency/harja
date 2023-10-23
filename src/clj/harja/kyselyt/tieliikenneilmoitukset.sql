@@ -107,12 +107,12 @@ WHERE ulompi_i.id IN
       (:tarkenne::INTEGER IS NULL OR
        sisempi_i.tarkenne = :tarkenne)
        ORDER BY
-            CASE WHEN :lajittelu-suunta = 'asc' THEN sisempi_i."valitetty-urakkaan" END ASC,
-            CASE WHEN :lajittelu-suunta = 'desc' THEN sisempi_i."valitetty-urakkaan" END DESC
+            CASE WHEN :lajittelu-suunta = 'nouseva' THEN sisempi_i."valitetty-urakkaan" END ASC,
+            CASE WHEN :lajittelu-suunta = 'laskeva' THEN sisempi_i."valitetty-urakkaan" END DESC
        LIMIT :max-maara::INTEGER
        )
-ORDER BY CASE WHEN :lajittelu-suunta = 'asc' THEN ulompi_i."valitetty-urakkaan" END ASC,
-         CASE WHEN :lajittelu-suunta = 'desc' THEN ulompi_i."valitetty-urakkaan" END DESC,
+ORDER BY CASE WHEN :lajittelu-suunta = 'nouseva' THEN ulompi_i."valitetty-urakkaan" END ASC,
+         CASE WHEN :lajittelu-suunta = 'laskeva' THEN ulompi_i."valitetty-urakkaan" END DESC,
          it.kuitattu DESC;
 
 -- name: hae-ilmoitukset-raportille

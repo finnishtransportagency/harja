@@ -211,7 +211,7 @@
                           (:avoimet tilat) ", mutta vain avoimet."
                           (and (:suljetut tilat) (:avoimet tilat)) ", ja näistä avoimet JA suljetut."
                           (:suljetut tilat) ", ainoastaan suljetut.")
-                        (str " Sortataan suuntaan " (:lajittelu-suunta hakuehdot)))
+                        (str " Lajitellaan suuntaan " (:lajittelu-suunta hakuehdot)))
          _ (log/debug debug-viesti)
          ilmoitukset
          (when-not (empty? urakat)

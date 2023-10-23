@@ -489,12 +489,13 @@
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])])
 
 (defn- sort-ikoni [suunta]
-  (cond (= suunta :asc)
+  (cond (= suunta :nouseva)
     [ui-ikonit/action-sort-ascending]
-    (= suunta :desc)
+    (= suunta :laskeva)
     [ui-ikonit/action-sort-descending]
-    :default ; ei näytetä ikonia jos kentällä ei parhaillaan sortata
+    :default ; ei näytetä ikonia jos kentällä ei parhaillaan lajitella
     nil))
+
 (defn- otsikkorivi [{:keys [opts skeema nayta-toimintosarake? piilota-toiminnot? tallenna esta-tiivis-grid?]}]
   (let [otsikkorivi-klikattu (:otsikkorivi-klikattu opts)]
     [:thead

@@ -301,7 +301,8 @@
        haetut-ilmoitukset :ilmoitukset
        ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
        pikakuittaus :pikakuittaus
-       aiheet-ja-tarkenteet :aiheet-ja-tarkenteet :as ilmoitukset}]
+       aiheet-ja-tarkenteet :aiheet-ja-tarkenteet :as ilmoitukset
+       lajittelu-suunta :lajittelu-suunta}]
 
   (let [{valitut-ilmoitukset :ilmoitukset :as kuittaa-monta-nyt} kuittaa-monta
         valitse-ilmoitus! (when kuittaa-monta-nyt
@@ -408,8 +409,8 @@
          :solun-tooltip (fn [rivi]
                           {:tooltip-tyyppi :komponentti
                            :tooltip-komponentti (tunniste-tooltip (:tunniste rivi))})
-         :sarake-sort {:fn #(e! (v/->MuutaIlmoitusHaunSorttausta))
-                       :suunta (:suunta @tiedot/sorttaus)}}
+         :sarake-sort {:fn #(e! (v/->MuutaIlmoitusHaunLajittelua))
+                       :suunta lajittelu-suunta}}
         {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
          :tyyppi :komponentti
          :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))

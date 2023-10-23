@@ -75,13 +75,6 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                       :valitetty-urakkaan-loppuaika                 (pvm/nyt)})
 (def oletus-valinnat? (atom true))
 
-(def sorttaus (atom {:suunta :desc}))
-
-(defn- valitettu-urakkaan-sorttaus [aika1 aika2]
-  (if (= (:suunta @sorttaus) :desc)
-    (pvm/ennen? aika1 aika2)
-    (pvm/ennen? aika2 aika1)))
-
 (defonce ilmoitukset
   (atom {:ilmoitusnakymassa?            false
          :edellinen-valittu-ilmoitus-id nil
@@ -92,13 +85,17 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
          :taustahaku?                   false ;; true jos haku tehdään taustapollauksena (ei käyttäjän syötteestä)
          :ilmoitukset                   nil ;; haetut ilmoitukset
          :valinnat                      oletus-valinnat
-         :kuittaa-monta                 nil}))
+         :kuittaa-monta                 nil
+         :lajittelu-suunta             :laskeva}))
 
-(defn- jarjesta-ilmoitukset [tulos]
+(defn- jarjesta-ilmoitukset [tulos suunta]
   (reverse
     (sort-by
       :valitetty-urakkaan
-      valitettu-urakkaan-sorttaus
+      (fn [aika1 aika2]
+        (if (= suunta :laskeva)
+          (pvm/ennen? aika1 aika2)
+          (pvm/ennen? aika2 aika1)))
       (mapv
         (fn [ilmo]
           (assoc ilmo :kuittaukset
@@ -183,12 +180,13 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                                            (t/send-async! v/->HaeIlmoitukset)
                                            timeout)))
            (assoc :taustahaku? taustahaku?)
-           (assoc :lajittelu-suunta (:suunta @sorttaus))
+           (assoc :lajittelu-suunta (:lajittelu-suunta app))
            (assoc :ensimmainen-haku-tehty? true))))))
-(defn- aseta-sorttaus []
-    (if (= (:suunta @sorttaus) :desc)
-      (reset! sorttaus {:suunta :asc})
-      (reset! sorttaus {:suunta :desc})))
+
+(defn- vaihda-lajittelu-suunta [app]
+    (if (= (:lajittelu-suunta app) :laskeva)
+      (assoc app :lajittelu-suunta :nouseva)
+      (assoc app :lajittelu-suunta :laskeva)))
 
 ;; Kaikki mitä UI voi ilmoitusnäkymässä tehdä, käsitellään täällä
 (extend-protocol t/Event
@@ -197,14 +195,13 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
     (hae
       (assoc app :valinnat valinnat)))
 
-  v/MuutaIlmoitusHaunSorttausta
+  v/MuutaIlmoitusHaunLajittelua
   (process-event [_ app]
-    (aseta-sorttaus)
-    (hae app))
+    (hae (vaihda-lajittelu-suunta app)))
 
   v/PalautaOletusHakuEhdot
   (process-event [_ app]
-    (let [__ (reset! sorttaus {:suunta :desc})
+    (let [app (assoc app :lajittelu-suunta :laskeva)
           app (update-in app [:valinnat] merge oletus-valinnat {:vaikutukset #{}
                                                                 :tunniste ""})
           ; näitä ei ole kun sivulle alunperin  tullaan
@@ -224,12 +221,12 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
     (let [tulos! (t/send-async! v/->IlmoitusHaku)]
       (go
         (let [haku (-> valinnat
-                       ;; jos tyyppiä/tilaa ei valittu, ota kaikki
-                       (update :tyypit
-                               #(if (empty? %) +ilmoitustyypit+ %))
-                       (update :tilat
-                               #(if (empty? %) (into #{} tila-filtterit) %))
-                     (assoc :lajittelu-suunta (:suunta @sorttaus)))]
+                     ;; jos tyyppiä/tilaa ei valittu, ota kaikki
+                     (update :tyypit
+                       #(if (empty? %) +ilmoitustyypit+ %))
+                     (update :tilat
+                       #(if (empty? %) (into #{} tila-filtterit) %))
+                     (assoc :lajittelu-suunta (:lajittelu-suunta app)))]
           (tulos!
             {:ilmoitukset (<! (k/post! :hae-ilmoitukset haku))
              :taustahaku? taustahaku?}))))
@@ -251,7 +248,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                                   (:taustahaku? tulokset)
                                   (merkitse-uudet-ilmoitukset uudet-ilmoitusidt)
                                   true
-                                  (jarjesta-ilmoitukset)))
+                                  (jarjesta-ilmoitukset (:lajittelu-suunta app))))
            taustahaun-viive-ms
            true)))
 
