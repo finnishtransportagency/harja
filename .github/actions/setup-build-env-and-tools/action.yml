@@ -1,11 +1,11 @@
-name: 'Setup Clojure environment'
-description: 'Asentaa Clojure-kehitysympäristön ja lataa riippuvuudet'
+name: 'Setup build environment and build tools'
+description: 'Asentaa clojure-kehitys ympäristön ja buildaamiseen liittyviä työkalua'
 
 inputs:
-  install-tools:
-    description: 'Asennetaanko clj-työkalut?'
+  install-node-deps:
+    description: 'Asennetaanko nodejs dependencyt? (less.js ym.)'
     # Huom, composite actionit eivät tue tyyppimäärityksiä inputeille.
-    default: 'false'
+    default: 'true'
 
 runs:
   using: "composite"
@@ -42,25 +42,18 @@ runs:
 #      uses: DeLaGuardo/setup-clojure@1c76ab0e154379260d7a6ea16b413679abe46785 # versio 11
 #      if: ${{ inputs.install-tools }} == 'true'
 #      with:
-#        clj-kondo: 2023.07.13
 #        #lein: 2.9.8
 
-    - name: Install clj-kondo
-      if: ${{ inputs.install-tools == 'true' }}
-      env:
-        VERSION: 2023.07.13
-      run: |
-        cd /tmp
-        curl -o clj-kondo.zip -sL "https://github.com/clj-kondo/clj-kondo/releases/download/v${VERSION}/clj-kondo-${VERSION}-linux-amd64.zip"
-        unzip -qqo clj-kondo.zip
-        rm clj-kondo.zip
-        mv -f "/tmp/clj-kondo" "/usr/local/bin/clj-kondo"
+    - name: Cache node modules
+      id: cache-npm
+      uses: actions/cache@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
 
-      shell: bash
-
-    - name: Install lessc
+    - name: Install node dependencies from package-lock.json (dependencies & devDependencies)
+      if: ${{ inputs.install-node-deps == 'true' && steps.cache-npm.outputs.cache-hit != 'true' }}
       run: |
-        NPM_LESS_VERSION=$(node -pe 'require("./package").devDependencies["less"]')
-        npm install -g "less@${NPM_LESS_VERSION}"
+        npm ci
       shell: bash
 

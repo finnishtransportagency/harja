@@ -76,9 +76,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup clojure environment
-        uses: ./.github/actions/setup-clojure-env
+        uses: ./.github/actions/setup-build-env-and-tools
+
+      - name: Setup test tools
+        uses: ./.github/actions/setup-test-tools
         with:
-          install-tools: true
+          clj-kondo: 2023.07.13
 
       # https://github.com/clj-kondo/clj-kondo/blob/master/doc/ci-integration.md
       - name: Lint
@@ -122,7 +125,6 @@ jobs:
         uses: ./.github/actions/build-harja-app
         with:
           build-laadunseuranta: 'false'
-          build-documentation: 'false'
 
       - name: Build Harja Uberjar (Täysi build)
         if: ${{ inputs.build-harja == 'full' }}
@@ -192,7 +194,7 @@ jobs:
           service-name: ${{ env.TEST_DB_SERVICE }}
 
       - name: Setup clojure environment
-        uses: ./.github/actions/setup-clojure-env
+        uses: ./.github/actions/setup-build-env-and-tools
 
       - name: Run backend tests
         run: lein test2junit
@@ -238,7 +240,7 @@ jobs:
           service-name: ${{ env.TEST_DB_SERVICE }}
 
       - name: Setup clojure environment
-        uses: ./.github/actions/setup-clojure-env
+        uses: ./.github/actions/setup-build-env-and-tools
 
       - name: run slow tests
         run: lein test2junit :hidas
@@ -303,7 +305,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup clojure environment
-        uses: ./.github/actions/setup-clojure-env
+        uses: ./.github/actions/setup-build-env-and-tools
 
       - name: Run integration tests
         run: lein test2junit :integraatio

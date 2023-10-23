@@ -3,7 +3,11 @@ description: 'Asentaa testeissä tarvittavia työkaluja'
 
 inputs:
   phantom-js:
-    description: 'Asennetaanko PhantomJS'
+    description: 'Asennetavan PhantomJS työkalun versio (esim. 2.1.1) (Jätä tyhjäksi, jos ei asenneta)'
+    # Huom, composite actionit eivät tue tyyppimäärityksiä inputeille.
+    default: ''
+  clj-kondo:
+    description: 'Asennetavan clj-kondo työkalun versio (esim. 2023.07.13) (Jätä tyhjäksi, jos ei asenneta)'
     # Huom, composite actionit eivät tue tyyppimäärityksiä inputeille.
     default: ''
 
@@ -31,3 +35,21 @@ runs:
         cd -
       shell: bash
 
+    - name: Cache clj-kondo
+      id: cache-clj-kondo
+      uses: actions/cache@v3
+      with:
+        path: /usr/local/bin/clj-kondo
+        key: ${{ runner.os }}-phantom-js-${{ inputs.clj-kondo }}
+
+    - name: Install clj-kondo
+      if: ${{ inputs.clj-kondo != '' && steps.cache-clj-kondo.outputs.cache-hit != 'true' }}
+      env:
+        VERSION: ${{ inputs.clj-kondo }}
+      run: |
+        cd /tmp
+        curl -o clj-kondo.zip -sL "https://github.com/clj-kondo/clj-kondo/releases/download/v${VERSION}/clj-kondo-${VERSION}-linux-amd64.zip"
+        unzip -qqo clj-kondo.zip
+        rm clj-kondo.zip
+        mv -f "/tmp/clj-kondo" "/usr/local/bin/clj-kondo"
+      shell: bash
