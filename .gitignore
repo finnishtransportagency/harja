@@ -67,6 +67,6 @@ figwheel_conf/luodut/
 yhdistetty_dc_env
 .lsp/
 lsp/
-.java-version
+/.java-version
 .calva/
 test.calva-repl

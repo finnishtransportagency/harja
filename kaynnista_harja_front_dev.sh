@@ -13,10 +13,10 @@ fi
 
 # shellcheck source=../harja_dir.sh
 source "$( dirname "${BASH_SOURCE[0]}" )/sh/harja_dir.sh" || exit
-bash ${HARJA_DIR}/sh/tarkkaile_less.sh
+bash "${HARJA_DIR}"/sh/tarkkaile_less.sh
 if [[ "$ENV_PROFILE" = "true" ]]
 then
-  lein trampoline do less once, build-dev
+  lein trampoline build-dev
 else
-  lein trampoline do less once, build-dev-no-env
+  lein trampoline build-dev-no-env
 fi
