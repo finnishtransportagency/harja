@@ -37,30 +37,29 @@
    :disabled {:font {:color :grey_80_percent}}})
 
 (defn solun-oletustyyli-excel [lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?]
-  (let [deep-merge (partial merge-with merge)]
-    (cond-> {}
-            lihavoi?
-            (merge {:font {:bold true}})
+  (merge-with merge
+    (cond
+      varoitus?
+      {:background :rose
+       :font {:color :black}}
 
-            korosta?
-            (deep-merge (merge rajat-excel {:background :dark_blue
-                                            :font       {:color :white}}))
+      huomio?
+      {:background :yellow
+       :font {:color :black}}
 
-            korosta-hennosti?
-            (deep-merge {:background :pale_blue
-                         :font       {:color :black}})
+      korosta?
+      (merge rajat-excel {:background :dark_blue
+                          :font {:color :white}})
 
-            varoitus?
-            (deep-merge {:background :rose
-                         :font       {:color :black}})
+      korosta-hennosti?
+      {:background :pale_blue
+       :font {:color :black}}
 
-            huomio?
-            (deep-merge {:background :yellow
-                         :font       {:color :black}})
-
-            korosta-harmaa?
-            (deep-merge (merge rajat-excel {:background :grey_25_percent
-                                            :font {:color :black}})))))
+      korosta-harmaa?
+      (merge rajat-excel {:background :grey_25_percent
+                          :font {:color :black}}))
+    (when lihavoi?
+      {:font {:bold true}})))
 
 (defn varillinen-teksti [tyyli teksti]
   [:varillinen-teksti {:arvo teksti :tyyli tyyli}])
