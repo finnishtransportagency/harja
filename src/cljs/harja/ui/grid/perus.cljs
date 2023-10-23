@@ -488,6 +488,14 @@
    (when nayta-otsikko? [:h6.panel-title otsikko])
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])])
 
+(defn- sort-ikoni [suunta]
+  (cond (= suunta :nouseva)
+    [ui-ikonit/action-sort-ascending]
+    (= suunta :laskeva)
+    [ui-ikonit/action-sort-descending]
+    :default ; ei näytetä ikonia jos kentällä ei parhaillaan lajitella
+    nil))
+
 (defn- otsikkorivi [{:keys [opts skeema nayta-toimintosarake? piilota-toiminnot? tallenna esta-tiivis-grid?]}]
   (let [otsikkorivi-klikattu (:otsikkorivi-klikattu opts)]
     [:thead
@@ -503,7 +511,7 @@
           rivi-ennen)])
      [:tr
       (map-indexed
-        (fn [i {:keys [otsikko otsikko-komp leveys nimi otsikkorivi-luokka tasaa] :as s-opts}]
+        (fn [i {:keys [otsikko otsikko-komp leveys nimi otsikkorivi-luokka tasaa sarake-sort] :as s-opts}]
           ^{:key (str i nimi)}
           [:th {:class (y/luokat otsikkorivi-luokka
                                  (y/tasaus-luokka tasaa)
@@ -512,8 +520,12 @@
                 :on-click (when otsikkorivi-klikattu #(otsikkorivi-klikattu s-opts))}
            (if otsikko-komp
              [otsikko-komp]
-             [:div otsikko])
-           ]) skeema)
+             (if-not sarake-sort
+               [:div otsikko]
+               [:div.ilmoitukset-sort
+               [:span.klikattava {:on-click (:fn sarake-sort)}
+                otsikko " " (sort-ikoni (:suunta sarake-sort)) " "]]
+               ))]) skeema)
       (when (or nayta-toimintosarake?
                 (and (not piilota-toiminnot?)
                      tallenna))
