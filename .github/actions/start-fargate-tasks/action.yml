@@ -13,6 +13,7 @@ runs:
         SHA: ${{ inputs.commit-sha }}
         CLUSTER_NAME: ${{ inputs.cluster }}
         DESIRED_COUNT: "1"
+        WAIT_TIME_SEC: "10"
 
       # Komennon 'update-service' stdout ohjataan /dev/nulliin, koska se voi tulostaa sensitiivisiä tietoja
       run: |
@@ -22,6 +23,18 @@ runs:
         echo "Starting tasks..."
         aws ecs update-service --cluster "${CLUSTER_NAME}" --service $AVAILABLE_SERVICE \
         --desired-count "${DESIRED_COUNT}" --region eu-west-1  1> /dev/null
+        
+         while true; do
+            runningTasks=$(aws ecs list-tasks --cluster "${CLUSTER_NAME}" --service-name "$AVAILABLE_SERVICE" --region eu-west-1 | jq '.taskArns')
+        
+            if [ $(echo "$runningTasks" | jq length) -eq 0 ]; then
+              echo "No running Fargate tasks found. Waiting ${WAIT_TIME_SEC} seconds..."
+              sleep "${WAIT_TIME_SEC}"
+            else
+              echo "Fargate service restart successful."
+              break
+            fi
+          done
         
         echo "Done."
       shell: bash
