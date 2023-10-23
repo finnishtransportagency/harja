@@ -168,7 +168,11 @@
 
                         :kanavien-shapefile #=(eval (harja.tyokalut.env/env "HARJA_KANAVIEN_SHAPEFILE"))
                         :kanavien-osoite #=(eval (harja.tyokalut.env/env "HARJA_KANAVIEN_OSOITE"))
-                        :kanavien-tuontikohde #=(eval (harja.tyokalut.env/env "HARJA_KANAVIEN_TUONTIKOHDE"))}
+                        :kanavien-tuontikohde #=(eval (harja.tyokalut.env/env "HARJA_KANAVIEN_TUONTIKOHDE"))
+
+                        :tieturvallisuustarkastus-tieverkko-shapefile #=(eval (harja.tyokalut.env/env "HARJA_TIETURVALLISUUSTARKASTUS_SHAPEFILE"))
+                        :tieturvallisuustarkastus-tieverkko-osoite #=(eval (harja.tyokalut.env/env "HARJA_TIETURVALLISUUSTARKASTUS_OSOITE"))
+                        :tieturvallisuustarkastus-tieverkko-tuontikohde #=(eval (harja.tyokalut.env/env "HARJA_TIETURVALLISUUSTARKASTUS_TUONTIKOHDE"))}
  ;; TODO: Väylät
  :vaylat {:geometria-url "https://extranet.vayla.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json"
           :paivittainen-tarkistusaika [15 10 00]
