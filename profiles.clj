@@ -30,6 +30,9 @@
                  :resource-paths ^:replace [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources"))
                                             "dev-resources/tmp"
                                             "resources"]
+                 :less ^:replace {:source-paths ["dev-resources/less/application"
+                                                 "dev-resources/less/laadunseuranta/application"]
+                                  :target-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources/css"))}
                  :jvm-opts ["-Xverify:none"]
                  :compile-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/harja-target/classes"))
                  :clean-targets ^{:protect false

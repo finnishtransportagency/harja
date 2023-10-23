@@ -239,7 +239,7 @@
             "tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
                         ;; Harjan fronttibuildi ja LESS
                         "less" "once,"
-                        "with-profile" "prod" "compile-prod,"
+                        "with-profile" "prod-cljs" "compile-prod,"
 
                         ;; Harja mobiili laadunseuranta fronttibuildi
                         "with-profile" "laadunseuranta-prod" "compile-laadunseuranta-prod,"
