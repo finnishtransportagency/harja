@@ -41,9 +41,11 @@ runs:
         echo "Building less styles..."
         npx lessc dev-resources/less/application/application.less resources/public/css/application.css
         npx lessc dev-resources/less/laadunseuranta/application/laadunseuranta.less resources/public/css/laadunseuranta.css
+        echo "Done."
         
         echo "Building cljs..."
         lein with-profile prod-cljs compile-prod
+        echo "Done."
       shell: bash
 
     - name: Build laadunseuranta
