@@ -70,6 +70,6 @@ runs:
       # NPM ci:tä pitää kutsua vaikka ~/.npm yleinen cache löytyykin. Komento npm ci asentaa package.jsonissa
       # määritellyt moduulit workspacen node_modules kansioon, mutta cachettaa ladatut paketit ~/.npm cacheen.
       run: |
-        npm ci --ignore-scripts
+        npm ci
       shell: bash
 
