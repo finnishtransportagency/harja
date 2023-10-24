@@ -28,7 +28,7 @@ runs:
     - name: Cache Clojure Dependencies
       id: cache-clojure-deps
       uses: actions/cache@v3
-      if: ${{ install-clojure-deps == 'true' }}
+      if: ${{ inputs.install-clojure-deps == 'true' }}
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-leiningen-${{ hashFiles('**/project.clj') }}
@@ -38,7 +38,7 @@ runs:
         #restore-keys: ${{ runner.os }}-leiningen-
 
     - name: Download Clojure dependencies
-      if: ${{ install-clojure-deps == 'true' && steps.cache-clojure-deps.outputs.cache-hit != 'true' }}
+      if: ${{ inputs.install-clojure-deps == 'true' && steps.cache-clojure-deps.outputs.cache-hit != 'true' }}
       run: |
         lein deps
         lein with-profile test deps
