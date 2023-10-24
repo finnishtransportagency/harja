@@ -356,12 +356,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           service-name: ${{ env.TEST_DB_SERVICE }}
 
-      # Asenna pelkkä java
-      - name: Prepare java
-        uses: actions/setup-java@v3
+      # Asenna pelkkä Java
+      - name: Setup environment
+        uses: ./.github/actions/setup-build-env-and-tools
         with:
-          distribution: 'temurin'
-          java-version-file: './.github/.java-version'
+          install-java: true
+          install-clojure-deps: false
+          install-node-deps: false
+
 
       - name: Get the build artifact name
         id: artifact-name
@@ -432,7 +434,7 @@ jobs:
         if: steps.cache-npm.outputs.cache-hit != 'true'
         run: |
           NPM_TRANSITJS_VERSION=$(node -pe 'require("./package").dependencies["transit-js"]')
-          npm install "transit-js@${NPM_TRANSITJS_VERSION}"
+          npm install "transit-js@${NPM_TRANSITJS_VERSION}" --ignore-scripts
 
       # Ajaa cypress testit erillisessä kontissa
       # Konttiin mountataan GITHUB_WORKSPACE, joka sisältää myös aiemmin asennetut node-moduulit, joita testit tarvitsevat

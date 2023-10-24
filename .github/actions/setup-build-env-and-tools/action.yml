@@ -2,6 +2,14 @@ name: 'Setup build environment and build tools'
 description: 'Asentaa clojure-kehitys ympäristön ja buildaamiseen liittyviä työkalua'
 
 inputs:
+  install-java:
+    description: 'Asenna java?'
+    # Huom, composite actionit eivät tue tyyppimäärityksiä inputeille.
+    default: 'true'
+  install-clojure-deps:
+    description: 'Asenna clojure dependencyt?'
+    # Huom, composite actionit eivät tue tyyppimäärityksiä inputeille.
+    default: 'true'
   install-node-deps:
     description: 'Asennetaanko nodejs dependencyt? (less.js ym.)'
     # Huom, composite actionit eivät tue tyyppimäärityksiä inputeille.
@@ -12,6 +20,7 @@ runs:
   steps:
     - name: Prepare java
       uses: actions/setup-java@v3
+      if: ${{ inputs.install-java == 'true' }}
       with:
         distribution: 'temurin'
         java-version-file: './.github/.java-version'
@@ -19,6 +28,7 @@ runs:
     - name: Cache Clojure Dependencies
       id: cache-clojure-deps
       uses: actions/cache@v3
+      if: ${{ install-clojure-deps == 'true' }}
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-leiningen-${{ hashFiles('**/project.clj') }}
@@ -28,7 +38,7 @@ runs:
         #restore-keys: ${{ runner.os }}-leiningen-
 
     - name: Download Clojure dependencies
-      if: steps.cache-clojure-deps.outputs.cache-hit != 'true'
+      if: ${{ install-clojure-deps == 'true' && steps.cache-clojure-deps.outputs.cache-hit != 'true' }}
       run: |
         lein deps
         lein with-profile test deps
@@ -44,17 +54,22 @@ runs:
 #      with:
 #        #lein: 2.9.8
 
-    - name: Cache node modules
+    # https://www.voorhoede.nl/en/blog/super-fast-npm-install-on-github-actions/
+    - name: Cache NPM packages
       id: cache-npm
       uses: actions/cache@v3
       if: ${{ inputs.install-node-deps == 'true' }}
       with:
         path: ~/.npm
-        key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+        # Mikäli package-lock.json muuttuu, käytetään kuitenkin vanhentunutta npm-cachea pohjana uudelle cachelle
+        restore-keys: ${{ runner.os }}-npm-
 
     - name: Install node dependencies from package-lock.json (dependencies & devDependencies)
-      if: ${{ inputs.install-node-deps == 'true' && steps.cache-npm.outputs.cache-hit != 'true' }}
+      if: ${{ inputs.install-node-deps == 'true' }}
+      # NPM ci:tä pitää kutsua vaikka ~/.npm yleinen cache löytyykin. Komento npm ci asentaa package.jsonissa
+      # määritellyt moduulit workspacen node_modules kansioon, mutta cachettaa ladatut paketit ~/.npm cacheen.
       run: |
-        npm ci
+        npm ci --ignore-scripts
       shell: bash
 
