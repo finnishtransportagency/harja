@@ -42,7 +42,7 @@ runs:
       if: ${{ inputs.clj-kondo != '' }}
       with:
         path: /usr/local/bin/clj-kondo
-        key: ${{ runner.os }}-phantom-js-${{ inputs.clj-kondo }}
+        key: ${{ runner.os }}-clj-kondo-${{ inputs.clj-kondo }}
 
     - name: Install clj-kondo
       if: ${{ inputs.clj-kondo != '' && steps.cache-clj-kondo.outputs.cache-hit != 'true' }}
