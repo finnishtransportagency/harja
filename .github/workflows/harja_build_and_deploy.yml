@@ -90,16 +90,17 @@ jobs:
     secrets:
       aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
 
-  # Automaattinen matrix-deployment
+  # Automaattinen matrix-deployment useaan ympäristöön (workflow_run triggerillä)
   deploy-to-ecs-matrix:
     uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
     if: ${{ github.event_name == 'workflow_run' }}
     needs: build-harja
-    # Deployment ajetaan dev ympäristöön ja
-    # stg ympäristöön myöhemmin, kunhan stg-ympäristö on saatu AWS:n puolella konffattua
+    # Deployment ajetaan automaattisesti dev ympäristöön ja stg ympäristöön
+    # TODO: Suunniteltava miten prod-deployment hoidetaan automaattisesti
+    #       tai semi-automaattisesti hyväksyntäprosessilla (github environment protection rules)
     strategy:
       matrix:
-        environment: [dev]
+        environment: [dev, stg]
     # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
