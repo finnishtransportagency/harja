@@ -82,7 +82,8 @@
                   tk/tarkastus-talvihoito true
                   tk/tarkastus-soratie true
                   tk/tarkastus-laatu true
-                  tk/tilaajan-laadunvalvonta true}
+                  tk/tilaajan-laadunvalvonta true
+                  tk/tarkastus-tieturvallisuus true}
    :talvi {tk/auraus-ja-sohjonpoisto true
            tk/suolaus true
            tk/pistehiekoitus true
@@ -350,7 +351,7 @@
                       (:http-palvelin jarjestelma)
                       :tilannekuva-tarkastukset +kayttaja-jvh+
                       {:ilmoitukset {}, :urakat #{4},
-                       :tarkastukset (map :id [tk/tarkastus-talvihoito tk/tarkastus-soratie tk/tilaajan-laadunvalvonta tk/tarkastus-tiesto tk/tarkastus-laatu]),
+                       :tarkastukset (map :id [tk/tarkastus-talvihoito tk/tarkastus-soratie tk/tilaajan-laadunvalvonta tk/tarkastus-tiesto tk/tarkastus-laatu tk/tarkastus-tieturvallisuus true]),
                        :alku #inst "2015-12-31T22:00:00.000-00:00", :nykytilanne? false, :loppu #inst "2016-12-31T21:59:59.000-00:00"}
                       [436352 7216512] nil)]
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :tarkastus tarkastus))
