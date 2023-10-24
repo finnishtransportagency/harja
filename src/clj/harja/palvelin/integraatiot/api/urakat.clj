@@ -8,6 +8,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.urakat :as q-urakat]
+            [clojure.string :as str]
             [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodit]
             [harja.kyselyt.materiaalit :as q-materiaalit]
             [harja.kyselyt.konversio :as konv]
@@ -123,13 +124,13 @@
                                                        :y "Y-koordinaatti puuttuu"})
 
   (jdbc/with-db-transaction [db db]
-    (let [{:keys [x y urakkatyyppi]} parametrit
+    (let [{:keys [x y urakkatyyppi palauta-lahin-hoitourakka]} parametrit
           x-easting (try+
                       (muunnos/str->double x)
                       (catch NumberFormatException _
-                             (throw+ {:type virheet/+viallinen-kutsu+
-                                      :virheet [{:koodi virheet/+virheellinen-sijainti+
-                                                 :viesti "Virheellinen X-koordinaatti"}]})))
+                        (throw+ {:type virheet/+viallinen-kutsu+
+                                 :virheet [{:koodi virheet/+virheellinen-sijainti+
+                                            :viesti "Virheellinen X-koordinaatti"}]})))
           y-northing (try+
                        (muunnos/str->double y)
                        (catch NumberFormatException _
@@ -150,23 +151,56 @@
       (when urakkatyyppi
         (validointi/tarkista-urakkatyyppi urakkatyyppi))
 
-      (let [urakat (hae-urakka-sijainnilla* db {:x x-easting :y y-northing
-                                                :aloitustoleranssi aloitustoleranssi
-                                                :maksimitoleranssi maksimitolenranssi
-                                                :urakkatyyppi urakkatyyppi})
-            urakat (konv/vector-mappien-alaviiva->rakenne urakat)
-            urakat-suodatettu (into []
-                                (filter (fn [urakka]
-                                          ;; Ota tuloksiin mukaan vain urakat, joihin käyttäjällä on oikeus
-                                          ;; Validointi heittää slingshot-virheen, jos käyttäjällä ei ole oikeuksia.
-                                          (try+
-                                            (validointi/tarkista-kayttajan-oikeudet-urakkaan
-                                              db (:id urakka) kayttaja)
-                                            true
-                                            (catch Object _
-                                              false))))
-                                urakat)]
-        (muodosta-vastaus-urakoiden-haulle urakat-suodatettu)))))
+      (let [fn-suodata-urakat-oikeuksilla (fn [urakat]
+                                            (let
+                                              [urakat (konv/vector-mappien-alaviiva->rakenne urakat)
+                                               urakat-suodatettu (into []
+                                                                   (filter (fn [urakka]
+                                                                             ;; Ota tuloksiin mukaan vain urakat, joihin käyttäjällä on oikeus
+                                                                             ;; Validointi heittää slingshot-virheen, jos käyttäjällä ei ole oikeuksia.
+                                                                             (try+
+                                                                               (validointi/tarkista-kayttajan-oikeudet-urakkaan
+                                                                                 db (:id urakka) kayttaja)
+                                                                               true
+                                                                               (catch Object _
+                                                                                 false))))
+                                                                   urakat)]
+                                              urakat-suodatettu))
+            kilometrit 100
+            urakat-sijainilla (hae-urakka-sijainnilla* db {:x x-easting :y y-northing
+                                                           :aloitustoleranssi aloitustoleranssi
+                                                           :maksimitoleranssi maksimitolenranssi
+                                                           :urakkatyyppi urakkatyyppi})
+            ;; Suodata kaikki urakat johon ei ole oikeuksia 
+            urakat-sijainilla (fn-suodata-urakat-oikeuksilla urakat-sijainilla)
+            ;; Jos sijainnilla ei löydy tuloksia ja palauta-lahin-hoitourakka on true, haetaan lähin hoitourakka
+            hae-lahin-hoitourakka? (and
+                                     ;; Palautetaan lähin hoitourakka jos sijainnilla ei löydy urakoita, ja palauta-lahin-hoitourakka ei ole false
+                                     (or
+                                       (nil? palauta-lahin-hoitourakka)
+                                       (not= (str/lower-case palauta-lahin-hoitourakka) "false"))
+                                     (empty? urakat-sijainilla))
+            ;; Jos halutaan etsiä lähin hoitourakka
+            urakat (if hae-lahin-hoitourakka?
+                     ;; Suodatetaan tietokannasta haetut 50 urakkaa kilometrisäteellä oikeuksien perusteella
+                     (fn-suodata-urakat-oikeuksilla
+                       (q-urakat/hae-lahin-hoidon-alueurakka db {:x x-easting :y y-northing :maksimietaisyys (* kilometrit 1000)}))
+                     urakat-sijainilla)
+            ;; Jos halutaan palauttaa lähin urakka, palauta (first)
+            urakat (cond
+                     (and
+                       hae-lahin-hoitourakka?
+                       (first urakat))
+                     [(first urakat)]
+
+                     (and
+                       hae-lahin-hoitourakka?
+                       (nil? (first urakat)))
+                     []
+
+                     :else
+                     urakat)]
+        (muodosta-vastaus-urakoiden-haulle urakat)))))
 
 (def hakutyypit
   [{:palvelu :hae-urakka

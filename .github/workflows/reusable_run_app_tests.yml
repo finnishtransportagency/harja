@@ -204,6 +204,7 @@ jobs:
         if: always()
         with:
           report_paths: 'test2junit/xml/*.xml'
+          require_passed_tests: true
           check_name: 'Test Report: ${{ env.NAME_PREFIX }}Backend'
 
   basic-tests:
@@ -249,6 +250,7 @@ jobs:
         if: always()
         with:
           report_paths: 'test2junit/xml/*.xml'
+          require_passed_tests: true
           check_name: 'Test Report: ${{ env.NAME_PREFIX }}Slow'
 
       - name: Setup test tools
@@ -313,6 +315,7 @@ jobs:
         if: always()
         with:
           report_paths: 'test2junit/xml/*.xml'
+          require_passed_tests: true
           check_name: 'Test Report: ${{ env.NAME_PREFIX }}Integration'
 
   e2e-tests:
@@ -356,7 +359,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '11'
+          java-version-file: './.github/.java-version'
 
       - name: Get the build artifact name
         id: artifact-name
@@ -447,6 +450,7 @@ jobs:
         if: always()
         with:
           report_paths: 'cypress/test-results/*.xml'
+          require_passed_tests: true
           check_name: 'Test Report: Cypress (${{ env.NAME_PREFIX }}${{ matrix.browser }})'
 
       # Mikäli testit epäonnistuvat, tallenna cypress screenshotit ja videot artifakteina

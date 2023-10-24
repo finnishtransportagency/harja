@@ -5,6 +5,8 @@
 (defrecord AsetaValinnat [valinnat])
 (defrecord PalautaOletusHakuEhdot [])
 
+(defrecord MuutaIlmoitusHaunLajittelua [])
+
 ;; Kun valintojen reaktio muuttuu
 (defrecord YhdistaValinnat [valinnat])
 

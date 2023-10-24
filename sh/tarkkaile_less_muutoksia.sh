@@ -1,23 +1,29 @@
 #!/bin/bash
 set -uo pipefail
 
-LEIN_PROFILE="$1"
 source "$( dirname "${BASH_SOURCE[0]}" )/harja_dir.sh" || exit
 
-LESS_TIEDOSTOT=$( ls -l ${HARJA_DIR}/dev-resources/less/ );
+LESS_TIEDOSTOT=$( ls -l "${HARJA_DIR}"/dev-resources/less/ );
+
+if ! command -v npx &> /dev/null
+then
+   echo "npx-komentoa ei löytynyt. Sen pitäisi kuulua npm-pakettiin version 7.0.0 jälkeen."
+   exit 1
+fi
+
+# Ajetaan less-käännös kerran heti ja aina kun tiedostot muuttuvat
+npx lessc "${HARJA_DIR}"/dev-resources/less/application/application.less "${HARJA_DIR}"/resources/public/css/application.css
+npx lessc "${HARJA_DIR}"/dev-resources/less/laadunseuranta/application/laadunseuranta.less "${HARJA_DIR}"/resources/public/css/laadunseuranta.css
 
 while true; do
   sleep 3;
-  LESS_TIEDOSTOT_UUSI=$( ls -l ${HARJA_DIR}/dev-resources/less/ );
+  LESS_TIEDOSTOT_UUSI=$( ls -l "${HARJA_DIR}"/dev-resources/less/ );
   if [ "$LESS_TIEDOSTOT" != "$LESS_TIEDOSTOT_UUSI" ];
   then
     echo "Muutoksia huomattu LESS tiedostoissa";
-    if [[ -z "$LEIN_PROFILE" ]]
-    then
-      lein less once;
-    else
-      lein with-profile "${LEIN_PROFILE}" less once;
-    fi
+    # shellcheck disable=SC2086
+    npx lessc "${HARJA_DIR}"/dev-resources/less/application/application.less ${HARJA_DIR}/resources/public/css/application.css
+    npx lessc "${HARJA_DIR}"/dev-resources/less/laadunseuranta/application/laadunseuranta.less "${HARJA_DIR}"/resources/public/css/laadunseuranta.css
   fi;
   LESS_TIEDOSTOT=$LESS_TIEDOSTOT_UUSI;
 done

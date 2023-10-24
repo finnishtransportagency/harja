@@ -110,7 +110,17 @@
     #(oikeudet/voi-lukea? oikeus-nakyma (:id %) user)
     (q/urakoitsijan-urakat db {:organisaatio (get-in user [:organisaatio :id])})))
 
-(defn- rajaa-urakat-hakuoikeudella [db user hakuargumentit]
+(defn- urakat-joihin-lukuoikeus-roolin-kautta
+  ;; On urakoita, joissa urakoitsijoita on useasta eri organisaatiosta. (VHAR-8222) Tällöin käyttäjän organisaatioon
+  ;; perustuva haku ei riitä, vaan on lisäksi poimittava roolitiedon perusteella urakat joihin käyttäjällä on lukuoikeus
+  [user oikeus-nakyma]
+  (let [urakka-idt (keys (:urakkaroolit user))]
+    (into #{}
+      (filter
+        #(oikeudet/voi-lukea? oikeus-nakyma % user)
+        urakka-idt))))
+
+(defn rajaa-urakat-hakuoikeudella [db user hakuargumentit]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (let [oikeus-nakyma (if (:nykytilanne? hakuargumentit)
                         oikeudet/tilannekuva-nykytilanne
@@ -126,14 +136,16 @@
                                (roolit/urakoitsija? user)
                                ;; Haetaan urakoitsijan organisaation urakat, ja otetaan listaan ne,
                                ;; joihin tällä käyttäjällä on lukuoikeus
-                               (let [urakat (oman-organisaation-urakat-joihin-lukuoikeus db user oikeus-nakyma)]
+                               (let [oman-organisaation-urakat (oman-organisaation-urakat-joihin-lukuoikeus db user oikeus-nakyma)
+                                     oman-roolin-urakat-set (urakat-joihin-lukuoikeus-roolin-kautta user oikeus-nakyma)]
                                  (if (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma nil user)
                                    ;; Jos käyttäjällä on johonkin urakkaan rooli, jolla on oman-urakan-ely oikeus,
                                    ;; filtteröidään kaikista urakoista ne urakat, otetaan niiden urakoiden
                                    ;; hallintayksiköt, ja haetaan näiden hallintayksiköiden kaikki urakat.
                                    (set
                                      (concat
-                                       (set (map :id urakat))
+                                       (set (map :id oman-organisaation-urakat))
+                                       oman-roolin-urakat-set
                                        (set
                                          (map
                                            :id
@@ -144,11 +156,13 @@
                                                                  (filter
                                                                    (fn [urakka]
                                                                      (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma (:id urakka) user))
-                                                                   urakat))})))))
+                                                                   oman-organisaation-urakat))})))))
 
                                    ;; Jos ei ole oman-urakan-ely oikeutta, otetaan vaan urakat, joihin
                                    ;; käyttäjällä on lukuoikeus
-                                   (set (map :id urakat))))
+                                   (union
+                                     (set (map :id oman-organisaation-urakat))
+                                     oman-roolin-urakat-set)))
 
                                :else
                                ;; Rakennuttajakonsultit näkevät oman hallintayksikkönsä urakat, joihin heille

@@ -14,7 +14,7 @@ runs:
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
-        java-version: '11'
+        java-version-file: './.github/.java-version'
 
     - name: Cache Clojure Dependencies
       id: cache-clojure-deps
@@ -58,4 +58,9 @@ runs:
 
       shell: bash
 
+    - name: Install lessc
+      run: |
+        NPM_LESS_VERSION=$(node -pe 'require("./package").devDependencies["less"]')
+        npm install -g "less@${NPM_LESS_VERSION}"
+      shell: bash
 

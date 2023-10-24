@@ -54,7 +54,8 @@
            :tyypit [:kysely :toimepidepyynto :ilmoitus]
            :aikavali nil
            :aloituskuittauksen-ajankohta :kaikki
-           :hakuehto nil}))))
+           :hakuehto nil
+           :lajittelu-suunta :laskeva}))))
 
 (def hae-ilmoitukset-parametrit
   {:hallintayksikko nil
@@ -64,7 +65,8 @@
    :tyypit +ilmoitustyypit+
    :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
    :aloituskuittauksen-ajankohta :kaikki
-   :hakuehto ""})
+   :hakuehto ""
+   :lajittelu-suunta :laskeva})
 
 (defn hae [parametrit]
   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -185,7 +187,8 @@
                           :tyypit +ilmoitustyypit+
                           :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
                           :aloituskuittauksen-ajankohta :kaikki
-                          :hakuehto ""}
+                          :hakuehto ""
+                          :lajittelu-suunta :laskeva}
         hae (fn [parametrit]
               (kutsu-palvelua (:http-palvelin jarjestelma)
                               :hae-ilmoitukset +kayttaja-jvh+
@@ -455,7 +458,8 @@
                            :tyypit                       +ilmoitustyypit+
                            :tilat                        [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
                            :aloituskuittauksen-ajankohta :kaikki
-                           :hakuehto                     ""}
+                           :hakuehto                     ""
+                           :lajittelu-suunta :laskeva}
                ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
                                                       :hae-ilmoitukset +kayttaja-jvh+ parametrit)
                ilmoitus (first ilmoitukset-palvelusta)]
@@ -475,12 +479,32 @@
                     :tyypit +ilmoitustyypit+
                     :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
                     :aloituskuittauksen-ajankohta :kaikki
-                    :hakuehto ""}
+                    :hakuehto ""
+                    :lajittelu-suunta :laskeva}
         ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :hae-ilmoitukset +kayttaja-jvh+ parametrit)]
     (is (= (count ilmoitukset-palvelusta) 2) "Annettu aikaväli palauttaa kaksi ilmoitusta")
     (is (some #(= "Tiellä 6 on taas vikaa" (:otsikko %)) ilmoitukset-palvelusta))
     (is (some #(= "Soittakaa Sepolle" (:otsikko %)) ilmoitukset-palvelusta)))))
+
+(deftest aikavalihaku-kuluva-kalenterikuukausi-lajittelu-nouseva
+  (with-redefs [pvm/joda-timeksi (fn [] (DateTime. 2005 10 20 13 15 0))
+                pvm/nyt (fn [] (pvm/luo-pvm-dec-kk 2005 10 20))]
+    (let [parametrit {:hallintayksikko nil
+                      :urakka nil
+                      :hoitokausi nil
+                      :valitetty-urakkaan-vakioaikavali {:nimi "Kuluva kalenterikuukausi", :kalenterikuukausi :kuluva}
+                      :tyypit +ilmoitustyypit+
+                      :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
+                      :aloituskuittauksen-ajankohta :kaikki
+                      :hakuehto ""
+                      :lajittelu-suunta :nouseva}
+          ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :hae-ilmoitukset +kayttaja-jvh+ parametrit)]
+      ; palauttaa samat kuin oletus suuntaan järjestettäessä koska tulosjoukon lukumäärä alle 500 rajaarvon
+      (is (= (count ilmoitukset-palvelusta) 2) "Annettu aikaväli palauttaa kaksi ilmoitusta")
+      (is (some #(= "Tiellä 6 on taas vikaa" (:otsikko %)) ilmoitukset-palvelusta))
+      (is (some #(= "Soittakaa Sepolle" (:otsikko %)) ilmoitukset-palvelusta)))))
 
 (deftest aikavalihaku-edellinen-kalenterikuukausi
   (with-redefs [pvm/nyt (fn [] (pvm/luo-pvm-dec-kk 2005 11 20))]
@@ -491,7 +515,8 @@
                       :tyypit +ilmoitustyypit+
                       :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
                       :aloituskuittauksen-ajankohta :kaikki
-                      :hakuehto ""}
+                      :hakuehto ""
+                      :lajittelu-suunta :laskeva}
           ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
                                    :hae-ilmoitukset +kayttaja-jvh+ parametrit)]
       (is (= (count ilmoitukset-palvelusta) 2) "Annettu aikaväli palauttaa kaksi ilmoitusta")
@@ -506,7 +531,8 @@
                     :tyypit +ilmoitustyypit+
                     :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
                     :aloituskuittauksen-ajankohta :kaikki
-                    :hakuehto ""}
+                    :hakuehto ""
+                    :lajittelu-suunta :laskeva}
         vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
                        :hae-ilmoitukset +kayttaja-jvh+ parametrit)
                   (catch Exception e e))]
@@ -527,7 +553,8 @@
                       :tyypit +ilmoitustyypit+
                       :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
                       :aloituskuittauksen-ajankohta :kaikki
-                      :hakuehto ""}
+                      :hakuehto ""
+                      :lajittelu-suunta :laskeva}
           ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
                                    :hae-ilmoitukset +kayttaja-jvh+ parametrit)]
       (is (= (count ilmoitukset-palvelusta) 1) "Annettu aikaväli palauttaa yhden ilmoituksen")
@@ -543,7 +570,8 @@
                       :tyypit +ilmoitustyypit+
                       :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
                       :aloituskuittauksen-ajankohta :kaikki
-                      :hakuehto ""}
+                      :hakuehto ""
+                      :lajittelu-suunta :laskeva}
           ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
                                    :hae-ilmoitukset +kayttaja-jvh+ parametrit)]
       (is (= (count ilmoitukset-palvelusta) 1) "Annettu aikaväli palauttaa yhden ilmoituksen")
@@ -560,7 +588,8 @@
                       :tyypit +ilmoitustyypit+
                       :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
                       :aloituskuittauksen-ajankohta :kaikki
-                      :hakuehto ""}
+                      :hakuehto ""
+                      :lajittelu-suunta :laskeva}
           ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
                                    :hae-ilmoitukset +kayttaja-jvh+ parametrit)]
       (is (= (count ilmoitukset-palvelusta) 0) "Annettu aikaväli ei palauta yhtään ilmoitusta"))))

@@ -9,9 +9,9 @@ SELECT
   u.urakkanro,
   hal.id        AS hallintayksikko_id,
   hal.nimi      AS hallintayksikko_nimi,
-  urk.id        AS urakoitsija_id,
-  urk.nimi      AS urakoitsija_nimi,
-  urk.ytunnus   AS urakoitsija_ytunnus,
+  org.id        AS urakoitsija_id,
+  org.nimi      AS urakoitsija_nimi,
+  org.ytunnus   AS urakoitsija_ytunnus,
   s.nimi        AS sopimus_nimi,
   s.id          AS sopimus_id,
   s.paasopimus  AS "sopimus_paasopimus-id",
@@ -23,7 +23,7 @@ SELECT
   array_to_string(ua.turvalaiteryhmat, ',') AS turvalaiteryhmat
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
-  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+  LEFT JOIN organisaatio org ON u.urakoitsija = org.id
   LEFT JOIN hanke h ON u.hanke = h.id
   LEFT JOIN sopimus s ON u.id = s.urakka
   LEFT JOIN sahkelahetys sl ON sl.urakka = u.id
@@ -195,9 +195,9 @@ SELECT
   hal.id                                  AS hallintayksikko_id,
   hal.nimi                                AS hallintayksikko_nimi,
   hal.lyhenne                             AS hallintayksikko_lyhenne,
-  urk.id                                  AS urakoitsija_id,
-  urk.nimi                                AS urakoitsija_nimi,
-  urk.ytunnus                             AS urakoitsija_ytunnus,
+  org.id                                  AS urakoitsija_id,
+  org.nimi                                AS urakoitsija_nimi,
+  org.ytunnus                             AS urakoitsija_ytunnus,
   yt.yhatunnus                            AS yha_yhatunnus,
   yt.yhaid                                AS yha_yhaid,
   yt.yhanimi                              AS yha_yhanimi,
@@ -231,7 +231,7 @@ SELECT
 
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
-  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+  LEFT JOIN organisaatio org ON u.urakoitsija = org.id
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
   LEFT JOIN tekniset_laitteet_urakka tlu ON u.urakkanro = tlu.urakkanro
   LEFT JOIN siltapalvelusopimus sps ON u.urakkanro = sps.urakkanro
@@ -242,7 +242,7 @@ WHERE hallintayksikko = :hallintayksikko
            OR (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
                 'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
                OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
-                   :kayttajan_org_id = urk.id)));
+                   :kayttajan_org_id = org.id)));
 
 -- name: hae-urakkatiedot-laskutusyhteenvetoon
 -- Listaa ELY-kohtaista laskutusyhteenvetoa varten aikavälillä käynnissäolevat hoitourakat
@@ -290,9 +290,9 @@ SELECT
   hal.id                        AS hallintayksikko_id,
   hal.nimi                      AS hallintayksikko_nimi,
   hal.lyhenne                   AS hallintayksikko_lyhenne,
-  urk.id                        AS urakoitsija_id,
-  urk.nimi                      AS urakoitsija_nimi,
-  urk.ytunnus                   AS urakoitsija_ytunnus,
+  org.id                        AS urakoitsija_id,
+  org.nimi                      AS urakoitsija_nimi,
+  org.ytunnus                   AS urakoitsija_ytunnus,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id
@@ -300,11 +300,11 @@ SELECT
   ST_Simplify(au.alue, 50)      AS alueurakan_alue
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
-  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+  LEFT JOIN organisaatio org ON u.urakoitsija = org.id
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
 WHERE u.nimi ILIKE :teksti
       OR hal.nimi ILIKE :teksti
-      OR urk.nimi ILIKE :teksti;
+      OR org.nimi ILIKE :teksti;
 
 -- name: hae-organisaation-urakat
 -- Hakee organisaation "omat" urakat, joko urakat joissa annettu hallintayksikko on tilaaja
@@ -322,9 +322,9 @@ SELECT
   hal.id                        AS hallintayksikko_id,
   hal.nimi                      AS hallintayksikko_nimi,
   hal.lyhenne                   AS hallintayksikko_lyhenne,
-  urk.id                        AS urakoitsija_id,
-  urk.nimi                      AS urakoitsija_nimi,
-  urk.ytunnus                   AS urakoitsija_ytunnus,
+  org.id                        AS urakoitsija_id,
+  org.nimi                      AS urakoitsija_nimi,
+  org.ytunnus                   AS urakoitsija_ytunnus,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id
@@ -332,9 +332,9 @@ SELECT
   ST_Simplify(au.alue, 50)      AS alueurakan_alue
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
-  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+  LEFT JOIN organisaatio org ON u.urakoitsija = org.id
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
-WHERE urk.id = :organisaatio
+WHERE org.id = :organisaatio
    OR hal.id = :organisaatio;
 
 -- name: tallenna-urakan-sopimustyyppi!
@@ -369,13 +369,13 @@ SELECT
   u.hallintayksikko,
   u.sampoid
 FROM urakka u
-  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+  LEFT JOIN organisaatio org ON u.urakoitsija = org.id
 WHERE (u.nimi ILIKE :teksti
        OR u.sampoid ILIKE :teksti)
       AND (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
             'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
            OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
-               :kayttajan_org_id = urk.id))
+               :kayttajan_org_id = org.id))
 LIMIT 11;
 
 -- name: hae-urakka
@@ -389,10 +389,10 @@ SELECT
   u.indeksi,
   u.takuu_loppupvm,
   u.urakkanro AS alueurakkanumero,
-  urk.nimi    AS urakoitsija_nimi,
-  urk.ytunnus AS urakoitsija_ytunnus
+  org.nimi    AS urakoitsija_nimi,
+  org.ytunnus AS urakoitsija_ytunnus
 FROM urakka u
-  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+  LEFT JOIN organisaatio org ON u.urakoitsija = org.id
 WHERE u.id = :id;
 
 -- name: hae-urakoiden-organisaatiotiedot
@@ -421,11 +421,11 @@ SELECT
   u.loppupvm,
   u.takuu_loppupvm,
   u.urakkanro AS alueurakkanumero,
-  urk.nimi    AS urakoitsija_nimi,
-  urk.ytunnus AS urakoitsija_ytunnus
+  org.nimi    AS urakoitsija_nimi,
+  org.ytunnus AS urakoitsija_ytunnus
 FROM urakka u
-  JOIN organisaatio urk ON u.urakoitsija = urk.id
-                           AND urk.ytunnus = :ytunnus;
+  JOIN organisaatio org ON u.urakoitsija = org.id
+                           AND org.ytunnus = :ytunnus;
 
 -- name: hae-urakan-sopimukset
 -- Hakee urakan sopimukset urakan id:llä.
@@ -663,9 +663,9 @@ SELECT
   hal.id                        AS hallintayksikko_id,
   hal.nimi                      AS hallintayksikko_nimi,
   hal.lyhenne                   AS hallintayksikko_lyhenne,
-  urk.id                        AS urakoitsija_id,
-  urk.nimi                      AS urakoitsija_nimi,
-  urk.ytunnus                   AS urakoitsija_ytunnus,
+  org.id                        AS urakoitsija_id,
+  org.nimi                      AS urakoitsija_nimi,
+  org.ytunnus                   AS urakoitsija_ytunnus,
   yt.yhatunnus                  AS yha_yhatunnus,
   yt.yhaid                      AS yha_yhaid,
   yt.yhanimi                    AS yha_yhanimi,
@@ -680,7 +680,7 @@ SELECT
   ST_Simplify(au.alue, 50)      AS alueurakan_alue
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
-  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+  LEFT JOIN organisaatio org ON u.urakoitsija = org.id
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
   LEFT JOIN yhatiedot yt ON u.id = yt.urakka
 WHERE u.id = :urakka_id;
@@ -747,65 +747,71 @@ SELECT EXISTS(
 
 
 -- name: hae-urakka-sijainnilla
--- Hakee sijainnin ja urakan tyypin perusteella urakan. Urakan täytyy myös olla käynnissä.
--- Päättyvän urakan vastuu tieliikenneilmoituksista loppuu 1.10. klo 12. Siksi alkupvm ja loppupvm laskettu tunteja lisää.
-SELECT u.id,
-       u.nimi,
-       u.tyyppi,
-       u.alkupvm,
-       u.loppupvm,
-       u.takuu_loppupvm,
-       u.urakkanro AS alueurakkanumero,
-       urk.nimi    AS urakoitsija_nimi,
-       urk.ytunnus AS urakoitsija_ytunnus,
-       COALESCE(ST_Distance84(u.alue, st_makepoint(:x, :y)),
-                ST_Distance84(vua.alue, st_makepoint(:x, :y)),
-                ST_Distance84(pua.alue, st_makepoint(:x, :y))) AS etaisyys
-FROM urakka u
-         LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
-         LEFT JOIN valaistusurakka vua ON vua.valaistusurakkanro = u.urakkanro
-         LEFT JOIN paallystyspalvelusopimus pua ON pua.paallystyspalvelusopimusnro = u.urakkanro
-         JOIN organisaatio urk ON u.urakoitsija = urk.id
-WHERE (CASE
-           WHEN (:urakkatyyppi = 'hoito' OR :urakkatyyppi = 'teiden-hoito') THEN
-               (u.tyyppi IN ('hoito', 'teiden-hoito') AND
-                (u.alkupvm IS NULL OR u.alkupvm + interval '12 hour' <= current_timestamp)
-                    AND (u.loppupvm IS NULL OR u.loppupvm + interval '36 hour' >= current_timestamp))
-           ELSE (u.tyyppi = :urakkatyyppi :: urakkatyyppi
-               AND (u.alkupvm IS NULL OR u.alkupvm <= current_date)
-               AND (u.loppupvm IS NULL OR u.loppupvm >= current_date))
-    END)
-    AND ((:urakkatyyppi IN ('hoito', 'teiden-hoito') AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
-    OR (:urakkatyyppi = 'valaistus' AND
-        exists(SELECT id
-               FROM valaistusurakka vu
-               WHERE vu.valaistusurakkanro = u.urakkanro
-                 AND st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
-    OR ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
-        (CASE
-             WHEN u.sopimustyyppi = 'palvelusopimus' THEN
-                 EXISTS(SELECT id
-                          FROM paallystyspalvelusopimus pps
-                         WHERE pps.paallystyspalvelusopimusnro = u.urakkanro
-                           AND st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold))
-            -- Kommentoitu toistaiseksi pois koska ilmoitusten urakan haku sijainnilla menee rikki.
-            -- TODO Täytyykö pystyä hakemaan sijainnilla myös 'kokonaisurakka' sopimuksen piirissä olevia urakoita?
-            --      Riittääkö keskittyminen pelkästään palvelusopimuksen piirissä oleviin päällystysurakoihin,
-            --      vai tehdäänkö esim. erillinen 'sopimustyyppi' parametri, jolla tätä hakua voi suodattaa?
-             --ELSE (u.sopimustyyppi = 'kokonaisurakka' AND
-             --      (st_contains(ua.alue, st_makepoint(:x, :y))))
-            END))
-    OR ((:urakkatyyppi = 'tekniset-laitteet') AND
-        exists(SELECT id
-               FROM tekniset_laitteet_urakka tlu
-               WHERE tlu.urakkanro = u.urakkanro
-                 AND st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold)))
-    OR ((:urakkatyyppi = 'siltakorjaus') AND
-        exists(SELECT id
-               FROM siltapalvelusopimus sps
-               WHERE sps.urakkanro = u.urakkanro
-                 AND st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))
-ORDER BY etaisyys ASC, u.alkupvm DESC;
+-- Hakee sijainnin ja urakan tyypin perusteella urakan, joka on vastuussa sijainnin tieliikenneilmoituksiin reagoinnista.
+-- Urakan täytyy olla käynnissä.
+-- Päättyvän MH-urakan vastuu tieliikenneilmoituksista loppuu 1.10 klo 12 urakan päätyttyä. Siksi alkupvm ja loppupvm laskettu tunteja lisää.
+-- Päällystysurakoista ainoastaan päällystyspalvelusopimukseen perustuvat urakat vastaavat tieliikenneilmoituksista. Siksi kokonaisurakka-tyyppisiä päällystysurakoita ei palauteta.
+SELECT id,
+       nimi,
+       tyyppi,
+       alkupvm,
+       loppupvm,
+       takuu_loppupvm,
+       alueurakkanumero,
+       urakoitsija_nimi,
+       urakoitsija_ytunnus,
+       MIN(etaisyys) as etaisyys
+FROM (SELECT u.id                                                    as id,
+             u.nimi                                                  as nimi,
+             u.tyyppi                                                as tyyppi,
+             u.alkupvm                                               as alkupvm,
+             u.loppupvm                                              as loppupvm,
+             u.takuu_loppupvm                                        as takuu_loppupvm,
+             u.urakkanro                                             AS alueurakkanumero,
+             org.nimi                                                AS urakoitsija_nimi,
+             org.ytunnus                                             AS urakoitsija_ytunnus,
+             COALESCE(ST_Distance84(u.alue, st_makepoint(:x, :y)),
+                      ST_Distance84(vua.alue, st_makepoint(:x, :y)),
+                      ST_Distance84(pua.alue, st_makepoint(:x, :y))) AS etaisyys
+      FROM urakka u
+               LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
+               LEFT JOIN valaistusurakka vua ON vua.valaistusurakkanro = u.urakkanro
+               LEFT JOIN paallystyspalvelusopimus pua ON pua.paallystyspalvelusopimusnro = u.urakkanro
+               JOIN organisaatio org ON u.urakoitsija = org.id
+      WHERE (CASE
+                 WHEN (:urakkatyyppi = 'hoito' OR :urakkatyyppi = 'teiden-hoito') THEN
+                     (u.tyyppi IN ('hoito', 'teiden-hoito') AND
+                      (u.alkupvm IS NULL OR u.alkupvm + interval '12 hour' <= current_timestamp)
+                         AND (u.loppupvm IS NULL OR u.loppupvm + interval '36 hour' >= current_timestamp))
+                 ELSE (u.tyyppi = :urakkatyyppi :: urakkatyyppi
+                     AND (u.alkupvm IS NULL OR u.alkupvm <= current_date)
+                     AND (u.loppupvm IS NULL OR u.loppupvm >= current_date))
+          END)
+        AND ((:urakkatyyppi IN ('hoito', 'teiden-hoito') AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
+          OR (:urakkatyyppi = 'valaistus' AND
+              exists(SELECT id
+                     FROM valaistusurakka vu
+                     WHERE vu.valaistusurakkanro = u.urakkanro
+                       AND st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
+          OR ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
+              (CASE
+                   WHEN u.sopimustyyppi = 'palvelusopimus' THEN
+                       EXISTS(SELECT id
+                              FROM paallystyspalvelusopimus pps
+                              WHERE pps.paallystyspalvelusopimusnro = u.urakkanro
+                                AND st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold))
+                  END))
+          OR ((:urakkatyyppi = 'tekniset-laitteet') AND
+              exists(SELECT id
+                     FROM tekniset_laitteet_urakka tlu
+                     WHERE tlu.urakkanro = u.urakkanro
+                       AND st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold)))
+          OR ((:urakkatyyppi = 'siltakorjaus') AND
+              exists(SELECT id
+                     FROM siltapalvelusopimus sps
+                     WHERE sps.urakkanro = u.urakkanro
+                       AND st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))) as result
+GROUP BY id, nimi, tyyppi, alkupvm, loppupvm, takuu_loppupvm, alueurakkanumero, urakoitsija_nimi, urakoitsija_ytunnus;
 
 -- name: hae-hoito-urakka-tr-pisteelle
 SELECT id
@@ -945,16 +951,26 @@ VALUES (ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus, current_timestam
 
 -- name: hae-lahin-hoidon-alueurakka
 -- Päättyvän urakan vastuu tieliikenneilmoituksista loppuu 1.10. klo 12. Siksi alkupvm ja loppupvm laskettu tunteja lisää.
-SELECT
-  u.id,
-  ST_Distance84(au.alue, st_makepoint(:x, :y)) AS etaisyys
+SELECT 
+      u.id,
+      u.nimi,
+      u.tyyppi,
+      u.alkupvm,
+      u.loppupvm,
+      u.takuu_loppupvm,
+      u.urakkanro AS alueurakkanumero,
+      org.nimi    AS urakoitsija_nimi,
+      org.ytunnus AS urakoitsija_ytunnus,
+      ST_Distance84(au.alue, st_makepoint(:x, :y)) AS etaisyys 
 FROM urakka u
-         JOIN alueurakka au ON au.alueurakkanro = u.urakkanro AND u.tyyppi IN ('hoito', 'teiden-hoito')
+      LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
+      JOIN organisaatio org ON u.urakoitsija = org.id
+      JOIN alueurakka au ON au.alueurakkanro = u.urakkanro AND u.tyyppi IN ('hoito', 'teiden-hoito')
 WHERE u.alkupvm + interval '12 hour' <= current_timestamp
   AND u.loppupvm + interval '36 hour' >= current_timestamp
-  AND ST_Distance84(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
-ORDER BY etaisyys ASC
-LIMIT 1;
+  AND ST_Distance84(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys 
+ORDER BY etaisyys ASC 
+LIMIT 50;
 
 -- name: hae-kaynnissaoleva-urakka-urakkanumerolla
 -- single? : true
@@ -1093,10 +1109,10 @@ SELECT
   u.loppupvm,
   u.takuu_loppupvm,
   u.urakkanro AS alueurakkanumero,
-  urk.nimi    AS urakoitsija_nimi,
-  urk.ytunnus AS urakoitsija_ytunnus
+  org.nimi    AS urakoitsija_nimi,
+  org.ytunnus AS urakoitsija_ytunnus
 FROM urakka u
-  JOIN organisaatio urk ON u.urakoitsija = urk.id
+  JOIN organisaatio org ON u.urakoitsija = org.id
   JOIN kayttajan_lisaoikeudet_urakkaan klu ON klu.urakka = u.id
   JOIN kayttaja k ON klu.kayttaja = k.id
 WHERE k.kayttajanimi = :kayttajanimi
@@ -1117,10 +1133,10 @@ SELECT
   u.loppupvm,
   u.takuu_loppupvm,
   u.urakkanro AS alueurakkanumero,
-  urk.nimi    AS urakoitsija_nimi,
-  urk.ytunnus AS urakoitsija_ytunnus
+  org.nimi    AS urakoitsija_nimi,
+  org.ytunnus AS urakoitsija_ytunnus
 FROM urakka u
-  JOIN organisaatio urk ON u.urakoitsija = urk.id
+  JOIN organisaatio org ON u.urakoitsija = org.id
 WHERE (exists(SELECT klu.id
               FROM kayttajan_lisaoikeudet_urakkaan klu
                 JOIN kayttaja k ON klu.kayttaja = k.id
@@ -1131,7 +1147,7 @@ WHERE (exists(SELECT klu.id
        exists(SELECT o.id
               FROM organisaatio o
                 JOIN kayttaja k ON o.id = k.organisaatio
-              WHERE o.id = urk.id
+              WHERE o.id = org.id
                     AND k.kayttajanimi = :kayttajanimi
                     AND k.jarjestelma)
        OR
