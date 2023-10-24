@@ -20,6 +20,7 @@
   [laatupoikkeama-konsultti :konsultti "Konsultti"]
 
   [tarkastukset :tarkastukset "Tarkastukset"]
+  [tarkastus-tieturvallisuus :tieturvallisuus "Tieturvallisuus"]
   [tarkastus-tiesto :tiesto "Tiestö"]
   [tarkastus-talvihoito :talvihoito "Talvihoito"]
   [tarkastus-soratie :soratie "Soratie"]
