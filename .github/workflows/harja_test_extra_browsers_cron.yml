@@ -1,0 +1,52 @@
+# Security hardening for GitHub Actions
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
+
+# Pääasiassa E2E-testit ajetaan chromea vasten Pull Requesteissa defaulttina.
+# Tässä workflowssa ajetaan säännölisesti ajastettuna Cypress-testejä muita suosittuja selaimia vasten selainyhteensopivuuden
+# varmistamiseksi.
+
+# Tällä hetkellä testataan selaimilla: Microsoft Edge
+# Muita selaimia voidaan lisätä Cypress Dockerimageen tarpeen vaatiessa
+
+name: '[Scheduled] Harja: E2E test extra browsers'
+run-name: 'Harja: E2E test extra browsers: Edge'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+on:
+  # Manuaalisen käynnistyksen asetukset
+  workflow_dispatch:
+  # Ajastettu käynnistys (Ajetaan testit joka maanantai klo 9)
+  schedule:
+    - cron: '0 9 * * MON'
+
+
+jobs:
+  tests:
+    uses: ./.github/workflows/reusable_run_app_tests.yml
+    # Permissions
+    # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    # https://docs.github.com/en/actions/using-workflows/reusing-workflows#access-and-permissions
+    permissions:
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
+      packages: read
+      # Actions write oikeudella voidaan esim. listata ja poistaa artifacteja
+      actions: write
+      # Tarvitaan test-reportin julkaisuun PR:ssä
+      checks: write
+
+    with:
+      test-db-service: harjadb-latest
+      e2e-browsers: "['edge']"
+      e2e-tests: 'true'
+      build-harja: 'light'
+      # Disabloidaan kaikki muut testit
+      lint-clj: 'false'
+      backend-tests: 'false'
+      basic-tests: 'false'
+      integration-tests: 'false'
+
