@@ -596,7 +596,7 @@
   (process-event
     [{parametrit :parametrit} app]
     (-> app
-      (tuck-apurit/post! :tehtavamaarat-hierarkiassa
+      (tuck-apurit/post! :hae-mhu-suunniteltavat-tehtavat
         {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
          :hoitokauden-alkuvuosi :kaikki}
         {:onnistui ->TehtavaHakuOnnistui

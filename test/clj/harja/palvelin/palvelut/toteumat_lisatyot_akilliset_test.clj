@@ -148,7 +148,7 @@
         hoitokauden-alkuvuosi 2019
         ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
         toteumat-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                         :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
+                                         :hae-mhu-toteumatehtavat +kayttaja-jvh+
                                          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                           :tehtavaryhma 0 ;;"Kaikki"
                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
@@ -211,7 +211,7 @@
         hoitokauden-alkuvuosi 2019
         ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
         akillinen-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                          :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
+                                          :hae-mhu-toteumatehtavat +kayttaja-jvh+
                                           {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                            :tehtavaryhma (hae-tehtavaryhman-id "Liikenteen varmistaminen")
                                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
@@ -267,7 +267,7 @@
         hoitokauden-alkuvuosi 2019
         ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
         lisatyo-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
+                                        :hae-mhu-toteumatehtavat +kayttaja-jvh+
                                         {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                          :tehtavaryhma 0 ;;"Kaikki"
                                          :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
@@ -335,7 +335,7 @@
           ;; Haetaan suunniteltuja tehtäviä
           ;; tehtavamaara-hierarkia ottaa hakuparametreina: urakka-id hoitokauden-alkuvuosi
           suunnitelmat-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :tehtavamaarat-hierarkiassa +kayttaja-jvh+
+                                               :hae-mhu-suunniteltavat-tehtavat +kayttaja-jvh+
                                                {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
           _ (log/debug "suunnitelmat-vastaus" (pr-str suunnitelmat-vastaus))

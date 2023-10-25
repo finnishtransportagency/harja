@@ -58,21 +58,21 @@
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         maarien-toteumat-ilman-suunnitelmaa-2019 (vain-suunnitellut-maarat
                                                    (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                                   :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
+                                                                   :hae-mhu-toteumatehtavat +kayttaja-jvh+
                                                                    {:urakka-id urakka-id
                                                                     :tehtavaryhma 0
                                                                     :hoitokauden-alkuvuosi 2019})
                                                    true)
         maarien-toteumat-2020 (vain-suunnitellut-maarat
                                 (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
+                                                :hae-mhu-toteumatehtavat +kayttaja-jvh+
                                                 {:urakka-id urakka-id
                                                  :tehtavaryhma 0
                                                  :hoitokauden-alkuvuosi 2020})
                                 true)
         maarien-toteumat-2021 (vain-suunnitellut-maarat
                                 (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
+                                                :hae-mhu-toteumatehtavat +kayttaja-jvh+
                                                 {:urakka-id urakka-id
                                                  :hoitokauden-alkuvuosi 2021})
                                 true)
@@ -114,14 +114,14 @@
         liikenneympariston-hoito-tr "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen"
         maarien-toteumat-21 (vain-suunnitellut-maarat
                               (kutsu-palvelua (:http-palvelin jarjestelma)
-                                              :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
+                                              :hae-mhu-toteumatehtavat +kayttaja-jvh+
                                               {:urakka-id urakka-id
                                                :tehtavaryhma liikenneympariston-hoito-tr
                                                :hoitokauden-alkuvuosi 2020})
                               true)
         muut-tr "8 MUUTA"
         maarien-toteumat-muuta (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
+                                               :hae-mhu-toteumatehtavat +kayttaja-jvh+
                                                {:urakka-id urakka-id
                                                 :tehtavaryhma muut-tr
                                                 :hoitokauden-alkuvuosi 2020})

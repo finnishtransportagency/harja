@@ -429,7 +429,8 @@ WHERE e.urakka = :urakka
   AND e.laskutuskuukausi <= :loppupvm
   AND e.poistettu IS NOT TRUE;
 
--- name: listaa-urakan-maarien-toteumat
+-- name: hae-urakan-toteumatehtavat
+-- Haetaan toteumatehtäviä ei materiaalitehtäviä. Esim suolaus on materiaalitehtävä.
 -- Ryhmittele ja summaa tiedot toimenpidekoodin eli tehtävän perusteella. Suunnitellut toteumat
 -- haetaan erikseen ja ilman suunnittelua olevat toteumat erikseen, käyttäen unionia.
 -- Haetaan tarpeeksi tietoa, jotta tehtävän sisältämät erilliset toteumat voidaan hakea erikseen.
@@ -572,8 +573,7 @@ FROM tehtava tk
          JOIN urakka u ON :urakka = u.id
          JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
                                           AND (:otsikko::TEXT IS NULL OR tr_alataso.otsikko = :otsikko)
-WHERE tk.tehtavaryhma = tr_alataso.id
-  AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+WHERE (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
   AND tk.poistettu IS NOT TRUE
   -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
