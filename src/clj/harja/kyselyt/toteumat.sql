@@ -474,17 +474,11 @@ WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjat
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
   -- Rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
-  -- mutta otetaan mukaan äkilliset hoitotyöt ja vahinkojen korjaukset sekä lisätyöt
+  -- mutta otetaan mukaan Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen
   AND ((tk.suunnitteluyksikko IS not null AND tk.suunnitteluyksikko != 'euroa') OR
-      tk.yksiloiva_tunniste IN ('1f12fe16-375e-49bf-9a95-4560326ce6cf',
-                               '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974',
-                               'd373c08b-32eb-4ac2-b817-04106b862fb1',
-                               '49b7388b-419c-47fa-9b1b-3797f1fab21d',
+      tk.yksiloiva_tunniste IN ('49b7388b-419c-47fa-9b1b-3797f1fab21d',
                                '63a2585b-5597-43ea-945c-1b25b16a06e2',
-                               'b3a7a210-4ba6-4555-905c-fef7308dc5ec',
-                               'e32341fc-775a-490a-8eab-c98b8849f968',
-                               '0c466f20-620d-407d-87b0-3cbb41e8342e',
-                               'c058933e-58d3-414d-99d1-352929aa8cf9'))
+                               'b3a7a210-4ba6-4555-905c-fef7308dc5ec'))
 GROUP BY tk.id, tk.nimi, tr_alataso.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
 ORDER BY tr_alataso.otsikko asc, tk.nimi asc;
 
@@ -587,16 +581,10 @@ WHERE tk.tehtavaryhma = tr_alataso.id
   -- haetaan Lisää toteuma-listaan vain MH-urakoissa käytössä olevat tehtävät, ei samaa tarkoittavia alueurakoiden tehtäviä.
   AND tk.ensisijainen = true
   -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
-  -- mutta otetaan mukaan äkilliset hoitotyöt ja vahinkojen korjaukset sekä lisätyöt
-  AND ((tk.suunnitteluyksikko IS not null AND tk.suunnitteluyksikko != 'euroa') OR tk.yksiloiva_tunniste IN ('1f12fe16-375e-49bf-9a95-4560326ce6cf',
-                                                                                                             '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974',
-                                                                                                             'd373c08b-32eb-4ac2-b817-04106b862fb1',
-                                                                                                             '49b7388b-419c-47fa-9b1b-3797f1fab21d',
+  -- mutta otetaan mukaan Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen
+  AND ((tk.suunnitteluyksikko IS not null AND tk.suunnitteluyksikko != 'euroa') OR tk.yksiloiva_tunniste IN ('49b7388b-419c-47fa-9b1b-3797f1fab21d',
                                                                                                              '63a2585b-5597-43ea-945c-1b25b16a06e2',
-                                                                                                             'b3a7a210-4ba6-4555-905c-fef7308dc5ec',
-                                                                                                             'e32341fc-775a-490a-8eab-c98b8849f968',
-                                                                                                             '0c466f20-620d-407d-87b0-3cbb41e8342e',
-                                                                                                             'c058933e-58d3-414d-99d1-352929aa8cf9'))
+                                                                                                             'b3a7a210-4ba6-4555-905c-fef7308dc5ec'))
   ORDER BY tk.jarjestys;
 
 -- name: tallenna-erilliskustannukselle-liitteet<!
