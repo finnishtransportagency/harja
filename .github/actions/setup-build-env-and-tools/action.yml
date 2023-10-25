@@ -1,0 +1,75 @@
+name: 'Setup build environment and build tools'
+description: 'Asentaa clojure-kehitys ympäristön ja buildaamiseen liittyviä työkalua'
+
+inputs:
+  install-java:
+    description: 'Asenna java?'
+    # Huom, composite actionit eivät tue tyyppimäärityksiä inputeille.
+    default: 'true'
+  install-clojure-deps:
+    description: 'Asenna clojure dependencyt?'
+    # Huom, composite actionit eivät tue tyyppimäärityksiä inputeille.
+    default: 'true'
+  install-node-deps:
+    description: 'Asennetaanko nodejs dependencyt? (less.js ym.)'
+    # Huom, composite actionit eivät tue tyyppimäärityksiä inputeille.
+    default: 'true'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Prepare java
+      uses: actions/setup-java@v3
+      if: ${{ inputs.install-java == 'true' }}
+      with:
+        distribution: 'temurin'
+        java-version-file: './.github/.java-version'
+
+    - name: Cache Clojure Dependencies
+      id: cache-clojure-deps
+      uses: actions/cache@v3
+      if: ${{ inputs.install-clojure-deps == 'true' }}
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-leiningen-${{ hashFiles('**/project.clj') }}
+        # https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#matching-a-cache-key
+        # "restore-keys allows you to specify a list of alternate restore keys to use when there is a cache miss on key. "
+        # Kommentoitu pois, jotta PR brancheissä ei haeta aina cachesta potentiaalisesti vääriä clojure depsuja
+        #restore-keys: ${{ runner.os }}-leiningen-
+
+    - name: Download Clojure dependencies
+      if: ${{ inputs.install-clojure-deps == 'true' && steps.cache-clojure-deps.outputs.cache-hit != 'true' }}
+      run: |
+        lein deps
+        lein with-profile test deps
+      shell: bash
+
+    # FIXME: delaguardo/setup-clojure@1c76ab0e154379260d7a6ea16b413679abe46785 is not allowed to be used in finnishtransportagency/harja.
+    #        Actions in this workflow must be: within a repository that belongs to your Enterprise account, created by GitHub,
+    #        verified in the GitHub Marketplace, or matching the following: haya14busa/action-bumpr@e184f8e5aa9d5045eb9f8194fc0977e723100d41.
+    # https://github.com/DeLaGuardo/setup-clojure
+#    - name: Install clojure tools
+#      uses: DeLaGuardo/setup-clojure@1c76ab0e154379260d7a6ea16b413679abe46785 # versio 11
+#      if: ${{ inputs.install-tools }} == 'true'
+#      with:
+#        #lein: 2.9.8
+
+    # https://www.voorhoede.nl/en/blog/super-fast-npm-install-on-github-actions/
+    - name: Cache NPM packages
+      id: cache-npm
+      uses: actions/cache@v3
+      if: ${{ inputs.install-node-deps == 'true' }}
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+        # Mikäli package-lock.json muuttuu, käytetään kuitenkin vanhentunutta npm-cachea pohjana uudelle cachelle
+        restore-keys: ${{ runner.os }}-npm-
+
+    - name: Install node dependencies from package-lock.json (dependencies & devDependencies)
+      if: ${{ inputs.install-node-deps == 'true' }}
+      # NPM ci:tä pitää kutsua vaikka ~/.npm yleinen cache löytyykin. Komento npm ci asentaa package.jsonissa
+      # määritellyt moduulit workspacen node_modules kansioon, mutta cachettaa ladatut paketit ~/.npm cacheen.
+      run: |
+        npm ci
+      shell: bash
+

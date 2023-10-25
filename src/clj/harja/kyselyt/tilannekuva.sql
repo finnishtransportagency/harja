@@ -706,7 +706,6 @@ SELECT t.id,
 
 
 -- name: urakoitsijan-urakat
--- TODO? erillisoikeudet urakoihin UNION:lla mukaan. Rooli-excelissäkin tähän liittyvä oikeus.
 SELECT
   u.id, u.hallintayksikko
 FROM urakka u

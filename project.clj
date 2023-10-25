@@ -168,6 +168,9 @@
                  ]
 
   :plugins [[lein-cljsbuild "1.1.7"]
+            ;; Harjan pilviversiossa on luovuttu lein-lessistä, mutta on-prem harjassa
+            ;; käytetään sitä vielä. Riippuvuus ja käyttö aliaksissa voidaan poistaa, kun
+            ;; ollaan luovuttu on-premistä ja jenkinsin käytöstä.
             [lein-less "1.7.5"]
             [lein-ancient "0.6.15"]
             [lein-codox "0.10.6"]
@@ -212,7 +215,7 @@
                                     "resources/public/js/harja.js"
                                     "resources/public/js/harja"]
 
-  ;; Less CSS käännös tuotanto varten (dev modessa selain tekee less->css muunnoksen)
+  ;; Less CSS käännös tuotanto varten, käyttäen lein-lessiä on-prem-harjaa varten.
   :less {:source-paths ["dev-resources/less/application"
                         "dev-resources/less/laadunseuranta/application"]
          :target-path "resources/public/css/"}

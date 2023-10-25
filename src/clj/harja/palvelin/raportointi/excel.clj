@@ -199,6 +199,9 @@
 (defmethod muodosta-solu :teksti-ja-info [[_ {:keys [arvo]}] solun-tyyli]
   [arvo solun-tyyli])
 
+(defmethod muodosta-solu :teksti [[_ teksti] solun-tyyli]
+  [teksti solun-tyyli])
+
 (defn- font-otsikko
   ([] (font-otsikko 14))
   ([font-koko]

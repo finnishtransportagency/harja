@@ -76,9 +76,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup clojure environment
-        uses: ./.github/actions/setup-clojure-env
+        uses: ./.github/actions/setup-build-env-and-tools
+
+      - name: Setup test tools
+        uses: ./.github/actions/setup-test-tools
         with:
-          install-tools: true
+          clj-kondo: 2023.07.13
 
       # https://github.com/clj-kondo/clj-kondo/blob/master/doc/ci-integration.md
       - name: Lint
@@ -122,7 +125,6 @@ jobs:
         uses: ./.github/actions/build-harja-app
         with:
           build-laadunseuranta: 'false'
-          build-documentation: 'false'
 
       - name: Build Harja Uberjar (Täysi build)
         if: ${{ inputs.build-harja == 'full' }}
@@ -192,7 +194,7 @@ jobs:
           service-name: ${{ env.TEST_DB_SERVICE }}
 
       - name: Setup clojure environment
-        uses: ./.github/actions/setup-clojure-env
+        uses: ./.github/actions/setup-build-env-and-tools
 
       - name: Run backend tests
         run: lein test2junit
@@ -204,6 +206,7 @@ jobs:
         if: always()
         with:
           report_paths: 'test2junit/xml/*.xml'
+          require_passed_tests: true
           check_name: 'Test Report: ${{ env.NAME_PREFIX }}Backend'
 
   basic-tests:
@@ -237,7 +240,7 @@ jobs:
           service-name: ${{ env.TEST_DB_SERVICE }}
 
       - name: Setup clojure environment
-        uses: ./.github/actions/setup-clojure-env
+        uses: ./.github/actions/setup-build-env-and-tools
 
       - name: run slow tests
         run: lein test2junit :hidas
@@ -249,6 +252,7 @@ jobs:
         if: always()
         with:
           report_paths: 'test2junit/xml/*.xml'
+          require_passed_tests: true
           check_name: 'Test Report: ${{ env.NAME_PREFIX }}Slow'
 
       - name: Setup test tools
@@ -301,7 +305,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup clojure environment
-        uses: ./.github/actions/setup-clojure-env
+        uses: ./.github/actions/setup-build-env-and-tools
 
       - name: Run integration tests
         run: lein test2junit :integraatio
@@ -313,6 +317,7 @@ jobs:
         if: always()
         with:
           report_paths: 'test2junit/xml/*.xml'
+          require_passed_tests: true
           check_name: 'Test Report: ${{ env.NAME_PREFIX }}Integration'
 
   e2e-tests:
@@ -351,12 +356,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           service-name: ${{ env.TEST_DB_SERVICE }}
 
-      # Asenna pelkkä java
-      - name: Prepare java
-        uses: actions/setup-java@v3
+      # Asenna pelkkä Java
+      - name: Setup environment
+        uses: ./.github/actions/setup-build-env-and-tools
         with:
-          distribution: 'temurin'
-          java-version: '11'
+          install-java: true
+          install-clojure-deps: false
+          install-node-deps: false
+
 
       - name: Get the build artifact name
         id: artifact-name
@@ -427,7 +434,7 @@ jobs:
         if: steps.cache-npm.outputs.cache-hit != 'true'
         run: |
           NPM_TRANSITJS_VERSION=$(node -pe 'require("./package").dependencies["transit-js"]')
-          npm install "transit-js@${NPM_TRANSITJS_VERSION}"
+          npm install "transit-js@${NPM_TRANSITJS_VERSION}" --ignore-scripts
 
       # Ajaa cypress testit erillisessä kontissa
       # Konttiin mountataan GITHUB_WORKSPACE, joka sisältää myös aiemmin asennetut node-moduulit, joita testit tarvitsevat
@@ -447,6 +454,7 @@ jobs:
         if: always()
         with:
           report_paths: 'cypress/test-results/*.xml'
+          require_passed_tests: true
           check_name: 'Test Report: Cypress (${{ env.NAME_PREFIX }}${{ matrix.browser }})'
 
       # Mikäli testit epäonnistuvat, tallenna cypress screenshotit ja videot artifakteina

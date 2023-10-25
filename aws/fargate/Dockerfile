@@ -1,7 +1,7 @@
 # -- Run-time vaihe --
-# Käytetään Eclipse Temurin 11 (OpenJDK) imagea
+# Käytetään Eclipse Temurin 17 LTS (OpenJDK) imagea (https://endoflife.date/java)
 # Pohjalla Ubuntu Jammy (Ubuntu 22.04 LTS)
-FROM eclipse-temurin:11.0.20.1_1-jre-jammy
+FROM eclipse-temurin:17.0.8.1_1-jre-jammy
 
 # Lisää labeleita AWS ECR:ää varten
 LABEL description="Harja app"
@@ -46,10 +46,6 @@ COPY ./aws/fargate/entrypoint.sh entrypoint.sh
 # Kopioi uberjar pipelinesta
 # Tässä oleteetaan, että uberjar on jo buildattu ja se on hakemistossa "target"
 COPY ./target/harja-0.0.1-SNAPSHOT-standalone.jar harja.jar
-
-# Kopioi asetusten templaatti
-# Asetuksien parametrit ja salaisuudet asetetaan AWS Fargate palvelun kautta ympäristömuuttujina
-COPY ./aws/fargate/asetukset.edn asetukset.edn
 
 # Harja-app tarkastaa tällä hetkellä jotkin asetetut ENV muuttujat .harja_env tiedoston mukaisesti
 # harja.palvelin.asetukset/tarkista-ymparisto! -funktiolla

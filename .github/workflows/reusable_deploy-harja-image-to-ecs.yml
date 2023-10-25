@@ -89,17 +89,18 @@ jobs:
       # Sammutetaan Harjan Fargate taskit migraatioiden ajoa varten, jotta ne eivät häiritse migraation onnistumista
       - name: Shutdown Harja Fargate tasks
         uses: ./.github/actions/shutdown-fargate-tasks
+        timeout-minutes: 15
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
-        # FIXME: Ajetaan migraatiot tällä hetkellä vain dev-ympäristölle,
-        #        kunnes stg/prod ympäristöjen tietokantojen data on saatu ojennukseen
-        if: ${{ inputs.environment }} == 'dev'
+        # FIXME: Sallitaan migraatioiden ajo toistaiseksi vain dev ja stg ympäristöille
+        #        Lisätään prod myöhemmin listalle, kunhan datamigraatio on saatu ojennukseen.
+        if: ${{ contains(fromJson('["dev", "stg"]'), inputs.environment)  }}
 
       - name: Run migrations to RDS
         uses: ./.github/actions/run-migrations-to-rds
-        # FIXME: Ajetaan migraatiot tällä hetkellä vain dev-ympäristölle,
-        #        kunnes stg/prod ympäristöjen tietokantojen data on saatu ojennukseen
-        if: ${{ inputs.environment }} == 'dev'
+        # FIXME: Sallitaan migraatioiden ajo toistaiseksi vain dev ja stg ympäristöille
+        #        Lisätään prod myöhemmin listalle, kunhan datamigraatio on saatu ojennukseen.
+        if: ${{ contains(fromJson('["dev", "stg"]'), inputs.environment)  }}
         with:
           # Migraatiot ajetaan samalle commit SHA:lle, kuin mistä fargate image on buildattu
           commit-sha: ${{ github.sha }}
@@ -127,11 +128,15 @@ jobs:
           service: ${{ vars.ECS_SERVICE_NAME }}
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           wait-for-service-stability: false
-          #wait-for-service-stability: true
 
       # Pakotetaan lopuksi Harjan Fargate taskit käynnistymään, mikäli ne on aiemmin laitettu alas.
       - name: Start Harja Fargate tasks
         uses: ./.github/actions/start-fargate-tasks
+        timeout-minutes: 10
+        # Pakota uudelleenkäynnistyminen vaikka migraatio tai ECS deploy edellä olisi epäonnistunut
+        # Fargate taskit sammutetaan ennen migraatioiden ajoa, mutta ne täytyy aina käynnistää uudelleen,
+        # jotta palvelu pysyy toiminnassa.
+        if: always()
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
 

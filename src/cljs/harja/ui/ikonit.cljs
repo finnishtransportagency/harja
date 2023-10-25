@@ -402,6 +402,8 @@
   [:img {:src "images/harja-icons/action/delete.svg" :alt "delete"}])
 (defn action-sort-descending []
   [:img {:src "images/harja-icons/action/sort-descending.svg" :alt "descending sort"}])
+(defn action-sort-ascending []
+  [:img {:src "images/harja-icons/action/sort-ascending.svg" :alt "ascending sort"}])
 (defn navigation-more []
   [:img {:src "images/harja-icons/navigation/more.svg" :alt "more"}])
 
