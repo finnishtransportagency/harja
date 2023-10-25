@@ -13,9 +13,6 @@ inputs:
   build-laadunseuranta:
     description: 'Build laadunseuranta'
     default: 'true'
-  build-documentation:
-    description: 'Build documentation'
-    default: 'true'
   build-uberjar:
     description: 'Build uberjar'
     default: 'true'
@@ -24,7 +21,10 @@ runs:
   using: "composite"
   steps:
     - name: Setup clojure environment
-      uses: ./.github/actions/setup-clojure-env
+      uses: ./.github/actions/setup-build-env-and-tools
+      with:
+        # Front-endin buildaamisesa tarvitaa nodejs dependencyjä
+        install-node-deps: true
 
     - name: Build back-end
       if: ${{ inputs.build-back-end == 'true' }}
@@ -37,9 +37,15 @@ runs:
       if: ${{ inputs.build-front-end == 'true' }}
       run: |
         echo "Building frontend"
-        lessc dev-resources/less/application/application.less resources/public/css/application.css
-        lessc dev-resources/less/laadunseuranta/application/laadunseuranta.less resources/public/css/laadunseuranta.css
+        
+        echo "Building less styles..."
+        npx lessc dev-resources/less/application/application.less resources/public/css/application.css
+        npx lessc dev-resources/less/laadunseuranta/application/laadunseuranta.less resources/public/css/laadunseuranta.css
+        echo "Done."
+        
+        echo "Building cljs..."
         lein with-profile prod-cljs compile-prod
+        echo "Done."
       shell: bash
 
     - name: Build laadunseuranta
@@ -47,13 +53,6 @@ runs:
       run: |
         echo "Building laadunseuranta"
         lein do with-profile laadunseuranta-prod compile-laadunseuranta-prod
-      shell: bash
-
-    - name: Build documentation
-      if: ${{ inputs.build-documentation == 'true' }}
-      run: |
-        echo "Building documentation"
-        lein codox
       shell: bash
 
     - name: Build uberjar
