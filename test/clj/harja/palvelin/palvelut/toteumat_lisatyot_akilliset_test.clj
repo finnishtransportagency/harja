@@ -64,7 +64,7 @@
                                         :toteuma-tehtava-id nil
                                         }]})
 
-(def default-akillinen-hoitotyo {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+#_ (def default-akillinen-hoitotyo {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                  :toimenpide {:id (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Talvihoito (T1)")
                                               :otsikko "5 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA"}
                                  :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "25.06.2020")
@@ -81,13 +81,13 @@
                                              :toteuma-id nil
                                              :toteuma-tehtava-id nil
                                              :maara 1M}]})
-(defn hae-default-lisatyon-tehtava []
+#_ (defn hae-default-lisatyon-tehtava []
   (let [res (first (q
                      (str "SELECT id,nimi,yksikko FROM tehtava where nimi = 'Lisätyö (talvihoito)'")))]
     {:id (first res)
      :otsikko (second res)
      :yksikko (nth res 2)}))
-(def default-lisatyo {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+#_ (def default-lisatyo {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                       :toimenpide {:id (hae-tehtavaryhman-id "Alataso Lisätyöt")
                                    :otsikko "9 LISÄTYÖT"}
                       :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "26.06.2020")
@@ -262,7 +262,9 @@
     (is (= "-muokattu" (:lisatieto haettu-muokattu-hoitotyo)))
     (is (= 1M (:toteutunut haettu-muokattu-hoitotyo)))))
 
-(deftest lisaa-lisatyo-test
+
+;; Lisätöille ei voi enää lisätä toteumia käyttöliittymästä
+#_ (deftest lisaa-lisatyo-test
   (let [t (lisaa-toteuma default-lisatyo)
         hoitokauden-alkuvuosi 2019
         ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
@@ -282,7 +284,7 @@
                            :toteuma-id (:toteuma_id tallennettu-lisatyo)})]
     (is (= 1 (count tallennettu-lisatyo)) "Yksi lisätty toteuma pitäisi löytyä")))
 
-(deftest muokkaa-lisatyo-test
+#_ (deftest muokkaa-lisatyo-test
   (let [tallennettu-lisatyo (lisaa-toteuma default-lisatyo)
         ;; :hae-maarien-toteuma ottaa hakuparametrina: id (toteuma-id)
         haettu-lisatyo (kutsu-palvelua (:http-palvelin jarjestelma)
