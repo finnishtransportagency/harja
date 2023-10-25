@@ -131,6 +131,7 @@
            :nayta :otsikko :fmt :otsikko
            :hae-kun-yli-n-merkkia 0
            :vayla-tyyli? true
+           :lomake? true
            :lahde varustetyyppihaku
            :monivalinta? true
            :tarkkaile-ulkopuolisia-muutoksia? true
