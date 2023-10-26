@@ -88,8 +88,8 @@
        (let [urakka @nav/valittu-urakka
              vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)
              tarkastukset (reverse (sort-by :aika @tiedot/urakan-tarkastukset))]
+         
          [:div.tarkastukset
-
           [ui-valinnat/urakkavalinnat {:urakka (:urakka optiot)}
            ^{:key "aikavali"}
            [valinnat/aikavali-nykypvm-taakse urakka tiedot/valittu-aikavali {:vayla-tyyli? true}]
