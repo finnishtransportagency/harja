@@ -44,7 +44,7 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-;; MH-urakoille määrien toteumat, äkilliset hoitotyöt ja lisätyöt
+;; MH-urakoille määrien toteumat
 (def default-toteuma-maara {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                             :toimenpide {:id (hae-tehtavaryhman-id "ELY-rahoitteiset, ylläpito (E)")
                                          :otsikko "8 MUUTA"}
@@ -61,33 +61,16 @@
                                         :lisatieto nil
                                         :maara 1
                                         :toteuma-id nil
-                                        :toteuma-tehtava-id nil
-                                        }]})
+                                        :toteuma-tehtava-id nil}]})
 
-#_ (def default-akillinen-hoitotyo {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                 :toimenpide {:id (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Talvihoito (T1)")
-                                              :otsikko "5 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA"}
-                                 :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "25.06.2020")
-                                 :tyyppi :akillinen-hoitotyo
-                                 :toteumat [{:tehtava {:id (hae-toimenpidekoodin-id "Äkillinen hoitotyö (talvihoito)" "23104")
-                                                       :otsikko "Äkillinen hoitotyö (talvihoito)" :yksikko nil}
-                                             :ei-sijaintia true
-                                             :sijainti {:numero nil
-                                                        :alkuosa nil
-                                                        :alkuetaisyys nil
-                                                        :loppuosa nil
-                                                        :loppuetaisyys nil}
-                                             :lisatieto nil
-                                             :toteuma-id nil
-                                             :toteuma-tehtava-id nil
-                                             :maara 1M}]})
-#_ (defn hae-default-lisatyon-tehtava []
+(defn hae-default-lisatyon-tehtava []
   (let [res (first (q
                      (str "SELECT id,nimi,yksikko FROM tehtava where nimi = 'Lisätyö (talvihoito)'")))]
     {:id (first res)
      :otsikko (second res)
      :yksikko (nth res 2)}))
-#_ (def default-lisatyo {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+
+(def default-lisatyo {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                       :toimenpide {:id (hae-tehtavaryhman-id "Alataso Lisätyöt")
                                    :otsikko "9 LISÄTYÖT"}
                       :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "26.06.2020")
@@ -205,66 +188,7 @@
     (is (= "-muokattu" (:lisatieto haettu-muokattu-toteuma)))
     (is (= (inc (:toteutunut haettu-toteuma)) (:toteutunut haettu-muokattu-toteuma)))))
 
-;; Äkillisiä hoitotöitä ei voi enää lisätä toteumasivulta
-#_ (deftest lisaa-akillinen-hoitotyo-test
-  (let [_ (lisaa-toteuma default-akillinen-hoitotyo)
-        hoitokauden-alkuvuosi 2019
-        ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
-        akillinen-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                          :hae-mhu-toteumatehtavat +kayttaja-jvh+
-                                          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                           :tehtavaryhma (hae-tehtavaryhman-id "Liikenteen varmistaminen")
-                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-
-        tallennettu-hoitotyo (keep #(when (= "Äkillinen hoitotyö (talvihoito)" (:tehtava %))
-                                      %)
-                                   akillinen-vastaus)
-        ;; Siivotaan toteuma pois
-        _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                          :poista-toteuma +kayttaja-jvh+
-                          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                           :toteuma-id (:toteuma_id tallennettu-hoitotyo)})]
-    (is (= 1 (count tallennettu-hoitotyo)) "Yksi lisätty toteuma pitäisi löytyä")))
-
-#_ (deftest muokkaa-akillinen-hoitotyo-test
-  (let [tallennettu-hoitotyo (lisaa-toteuma default-akillinen-hoitotyo)
-
-        ;; :hae-maarien-toteuma ottaa hakuparametrina: id (toteuma-id)
-        haettu-hoitotyo (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :hae-maarien-toteuma +kayttaja-jvh+
-                                        {:id (first tallennettu-hoitotyo)})
-        muokattava (muokkaa-toteuman-arvot-palvelua-varten haettu-hoitotyo (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
-        muokattu (lisaa-toteuma muokattava)
-        haettu-muokattu-hoitotyo (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                 :hae-maarien-toteuma +kayttaja-jvh+
-                                                 {:id (first muokattu)})
-        ;; Siivotaan toteuma pois
-        _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                          :poista-toteuma +kayttaja-jvh+
-                          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                           :toteuma-id (:toteuma_id haettu-hoitotyo)})]
-
-    (is (= (:lisatieto haettu-hoitotyo) (:lisatieto default-akillinen-hoitotyo))
-      "Toteuman lisätieto täsmää tallennuksen jälkeen")
-    (is (= (:tehtava haettu-hoitotyo) (get-in (first (:toteumat default-akillinen-hoitotyo)) [:tehtava :otsikko]))
-      "Toteuman tehtava täsmää tallennuksen jälkeen")
-    (is (= (:toimenpide_otsikko haettu-hoitotyo) (get-in default-akillinen-hoitotyo [:toimenpide :otsikko]))
-      "Toteuman tehtäväryhmä/toimenpide täsmää tallennuksen jälkeen")
-    (is (= (:toteutunut haettu-hoitotyo) (:maara (first (:toteumat default-akillinen-hoitotyo))))
-      "Toteuman määrä täsmää tallennuksen jälkeen")
-    (is (= (:yksikko haettu-hoitotyo) (get-in default-akillinen-hoitotyo [:tehtava :yksikko]))
-      "Toteuman yksikkö täsmää tallennuksen jälkeen")
-    (is (= (tyyppi-str->keyword (:tyyppi haettu-hoitotyo)) (:tyyppi default-akillinen-hoitotyo))
-      "Toteuman tyyppi täsmää tallennuksen jälkeen")
-
-    ;; Muokattu toteuma
-    (is (not (nil? haettu-muokattu-hoitotyo)))
-    (is (= "-muokattu" (:lisatieto haettu-muokattu-hoitotyo)))
-    (is (= 1M (:toteutunut haettu-muokattu-hoitotyo)))))
-
-
-;; Lisätöille ei voi enää lisätä toteumia käyttöliittymästä
-#_ (deftest lisaa-lisatyo-test
+(deftest lisaa-lisatyo-test
   (let [t (lisaa-toteuma default-lisatyo)
         hoitokauden-alkuvuosi 2019
         ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
@@ -284,7 +208,7 @@
                            :toteuma-id (:toteuma_id tallennettu-lisatyo)})]
     (is (= 1 (count tallennettu-lisatyo)) "Yksi lisätty toteuma pitäisi löytyä")))
 
-#_ (deftest muokkaa-lisatyo-test
+(deftest muokkaa-lisatyo-test
   (let [tallennettu-lisatyo (lisaa-toteuma default-lisatyo)
         ;; :hae-maarien-toteuma ottaa hakuparametrina: id (toteuma-id)
         haettu-lisatyo (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -319,11 +243,9 @@
     (is (= "-muokattu" (:lisatieto haettu-muokattu-lisatyo)))
     (is (= 1M (:toteutunut haettu-muokattu-lisatyo)))))
 
-#_(deftest hae-toteumalistaus-test
+#_ (deftest hae-toteumalistaus-test
     (let [hoitokauden-alkuvuosi 2019
-          _ (lisaa-toteuma (hae-oulun-maanteiden-hoitourakan-2019-2024-id) "6 MUUTA" 1
-                           {:id 3050 :otsikko "Pysäkkikatoksen uusiminen" :yksikko "kpl"}
-                           "24.06.2020" nil)
+          _ (lisaa-toteuma default-toteuma-maara)
           alkupvm "2019-10-01"
           loppupvm "2020-09-30"
           ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
