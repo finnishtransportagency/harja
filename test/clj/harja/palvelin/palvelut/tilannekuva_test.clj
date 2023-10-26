@@ -342,7 +342,7 @@
     (let [toteuma (kutsu-karttakuvapalvelua
                     (:http-palvelin jarjestelma)
                     :tilannekuva-toteumat +kayttaja-jvh+
-                    {:alku alku :loppu loppu :talvi #{27 24 50 51 25 34 23 35 26 52 49} :urakat #{4}}
+                    {:alku alku :loppu loppu :talvi #{28 25 51 52 26 35 24 36 27 53 50} :urakat #{4}}
                     [447806 7191966] nil)]
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :toteuma toteuma))
       (is (not (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama toteuma))))
