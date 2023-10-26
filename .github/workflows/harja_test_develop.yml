@@ -39,7 +39,7 @@ jobs:
         # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä
         configs: [
           { testDBService: "harjadb-latest", e2eBrowsers: ['chrome'], artifactPrefix: 'harjadb-latest_' },
-          { testDBService: "harjadb-12-3.1", e2eBrowsers: ['chrome'], artifactPrefix: 'harjadb-12-3.1_' },
+          #{ testDBService: "harjadb-13-3.1", e2eBrowsers: ['chrome'], artifactPrefix: 'harjadb-13-3.1_' },
         ]
 
     with:

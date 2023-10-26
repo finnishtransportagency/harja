@@ -89,6 +89,7 @@ jobs:
       # Sammutetaan Harjan Fargate taskit migraatioiden ajoa varten, jotta ne eivät häiritse migraation onnistumista
       - name: Shutdown Harja Fargate tasks
         uses: ./.github/actions/shutdown-fargate-tasks
+        timeout-minutes: 15
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
         # FIXME: Sallitaan migraatioiden ajo toistaiseksi vain dev ja stg ympäristöille

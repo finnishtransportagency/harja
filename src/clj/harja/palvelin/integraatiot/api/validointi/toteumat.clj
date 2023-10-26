@@ -2,12 +2,24 @@
   (:require [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodi]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.pvm :as pvm]))
+
+(def toteuman-sallittu-aikavali
+  [(pvm/luo-pvm-dec-kk 2014 1 1)
+   (pvm/luo-pvm-dec-kk 2040 1 1)])
 
 (defn validoi-toteuman-pvm-vali [alku loppu]
   (when (.after (aika-string->java-sql-date alku) (aika-string->java-sql-date loppu))
     (virheet/heita-viallinen-apikutsu-poikkeus {:koodi :toteuman-aika-viallinen
                                                 :viesti "Totauman alkuaika on loppuajan jälkeen."})))
+
+(defn validoi-ajan-vuosi [aika]
+  (let [aika (pvm/rajapinta-str-aika->sql-timestamp aika)]
+    (when (not (pvm/valissa? aika (first toteuman-sallittu-aikavali) (second toteuman-sallittu-aikavali)))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi :toteuman-aika-viallinen
+         :viesti "Toteuman alku- tai loppuaika on viallinen, täytyy olla vuosien 2014-2040 sisällä."}))))
 
 (defn tarkista-reittipisteet [reittitoteuma]
   (let [toteuman-alku (aika-string->java-sql-date (get-in reittitoteuma [:reittitoteuma :toteuma :alkanut]))
@@ -15,6 +27,7 @@
         reitti (get-in reittitoteuma [:reittitoteuma :reitti])]
     (doseq [reittipiste reitti]
       (let [pisteen-aika (aika-string->java-sql-date (get-in reittipiste [:reittipiste :aika]))]
+        (validoi-ajan-vuosi (get-in reittipiste [:reittipiste :aika]))
         (when (or (.before pisteen-aika toteuman-alku) (.after pisteen-aika toteuman-loppu))
           (virheet/heita-viallinen-apikutsu-poikkeus
             {:koodi :virheellinen-reittipiste
