@@ -11,7 +11,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
 
   before(() => {
     cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=13&u=32')
-    cy.intercept('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
+    cy.intercept('POST', '_/hae-mhu-suunniteltavat-tehtavat').as('tehtavamaarat')
     cy.wait('@tehtavamaarat')
     cy.viewport(1100, 2000)
   })
@@ -69,7 +69,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
     let hoitokausiNyt = "3. hoitovuosi (" + (urakanAlkuvuosi + 2) + "—" + (urakanAlkuvuosi + 3) + ")";
     let hoitokausiViimeinen = "4. hoitovuosi (" + (urakanAlkuvuosi + 3) + "—" + (urakanAlkuvuosi + 4) + ")";
 
-    cy.intercept('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
+    cy.intercept('POST', '_/hae-mhu-suunniteltavat-tehtavat').as('tehtavamaarat')
     cy.get('table.grid').contains('Sorateiden pölynsidonta (materiaali)').parent().find('td.muokattava').find('input').clear().type('667')
     cy.get('div.select-default').contains(hoitokausiNyt).click()
     cy.contains(hoitokausiViimeinen).click()
@@ -84,7 +84,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
   })
 
   it('Määrän voi vaihtaa', () => {
-    cy.intercept('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
+    cy.intercept('POST', '_/hae-mhu-suunniteltavat-tehtavat').as('tehtavamaarat')
     cy.get('div.select-default').first().find('button').click()
     cy.get('.harja-alasvetolistaitemi').contains('1.0 TALVIHOITO').click()
     cy.wait(2000)

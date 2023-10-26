@@ -216,7 +216,7 @@
   HaeToimenpiteenTehtavaYhteenveto
   (process-event [{rivi :rivi} app]
     (do
-      (tuck-apurit/post! :hae-toimenpiteen-tehtava-yhteenveto
+      (tuck-apurit/post! :hae-mhu-toteumatehtavat
                          {:urakka-id (-> @tila/yleiset :urakka :id)
                           :tehtavaryhma (:id rivi)
                           :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
@@ -627,7 +627,7 @@
     app))
 
 (defn hae-toteutuneet-maarat [urakka-id toimenpide hoitokauden-alkuvuosi]
-  (tuck-apurit/post! :hae-toimenpiteen-tehtava-yhteenveto
+  (tuck-apurit/post! :hae-mhu-toteumatehtavat
     {:urakka-id urakka-id
      :tehtavaryhma (:otsikko toimenpide)
      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}

@@ -357,7 +357,7 @@ BEGIN
                                                                      (talvihoito_tpi_id, lyh_tpi_id, sora_tpi_id,
                                                                       paallyste_tpi_id, yllapito_tpi_id,
                                                                       korvausinv_tpi_id, hoidonjohto_tpi_id)
-                         JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
+                        LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
                      -- Äkillisethoitotyöt ja vahingonkorvaukset niputetaan erikseen omiin laareihinsa, joten jätetään ne tässä pois
                 WHERE lk.maksueratyyppi != 'akillinen-hoitotyo'
                   AND lk.maksueratyyppi != 'muu'
