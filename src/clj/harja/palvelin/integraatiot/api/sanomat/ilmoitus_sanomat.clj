@@ -70,7 +70,6 @@
   "Tyhjät arrayt eivät mene validaatiosta läpi.
   Poistetaan avain kokonaan, jos sen arvo on tyhjä lista."
   [ilmoitus avain]
-  (println "Poistetaan tyhjä lista")
   (if (empty? (avain ilmoitus))
     (dissoc ilmoitus avain)
     ilmoitus))
