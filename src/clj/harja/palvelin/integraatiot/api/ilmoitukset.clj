@@ -130,6 +130,7 @@
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki request]
   (let [parametrit (pura-ilmoitusten-kuuntelun-kutsuparametrit request)
         headerit (:headers request)]
+    (log/info ":hae-ilmoitukset kutsuttu, käynnistetään ilmoitusten kuuntelu, parametrit: " parametrit)
     (aja-virhekasittelyn-kanssa
      "hae-ilmoitukset"
      parametrit
@@ -144,7 +145,6 @@
              kayttaja (hae-kayttaja db (get
                                          (todennus/prosessoi-kayttaja-headerit (:headers request))
                                          "oam_remote_user"))]
-         (log/debug (format "Käynnistetään ilmoitusten kuuntelu urakalle id: %s. Muutosaika: %s." urakka-id muuttunut-jalkeen))
          (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
          (with-channel request kanava
                        (let [laheta-ilmoitukset (ilmoituslahettaja integraatioloki kanava tapahtuma-id sulje-vastauksen-jalkeen?)
