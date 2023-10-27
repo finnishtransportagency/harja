@@ -4,3 +4,5 @@
 
 (defqueries "harja/kyselyt/tieturvallisuusverkko.sql"
   {:positional? true})
+
+

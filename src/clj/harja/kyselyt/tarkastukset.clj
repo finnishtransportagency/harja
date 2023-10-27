@@ -51,7 +51,8 @@
                 :laadunalitus laadunalitus
                 :yllapitokohde yllapitokohde
                 :nayta_urakoitsijalle (if urakoitsija? true (boolean nayta-urakoitsijalle))
-                :pisteet pisteet}]
+                :pisteet pisteet
+                :rajapinnasta_saadut_pisteet pisteet}]
 
     (do
       (log/debug "Luodaan uusi tarkastus" tarkastus " jonka params: " params)
@@ -80,7 +81,8 @@
                            :laadunalitus laadunalitus
                            :yllapitokohde yllapitokohde
                            :nayta_urakoitsijalle (if urakoitsija? true (boolean nayta-urakoitsijalle))
-                           :pisteet pisteet})
+                           :pisteet pisteet
+                           :rajapinnasta_saadut_pisteet pisteet})
       id))
 
 (defn luo-tai-paivita-tarkastus
