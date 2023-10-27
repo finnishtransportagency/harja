@@ -478,7 +478,7 @@
          [:h3 (str "Lupaukset: Urakoitsija saa bonusta " (fmt/euro-opt summa) " luvatun pistemäärän ylittämisestä.")]
          tavoite-taytetty?
          [:h3 (str "Lupaukset: Urakoitsija pääsi tavoitteeseen.")])
-       [:p "Urakoitsija sai " pisteet " ja lupasi " sitoutumis-pisteet " pistettä." " Tavoitehinta: " (fmt/euro-opt tavoitehinta)]
+       [:p "Urakoitsija sai " pisteet " ja lupasi " sitoutumis-pisteet " pistettä." " Tarjouksen tavoitehinta: " (fmt/euro-opt tavoitehinta)]
        [:div {:style {:padding-top "22px"}}
         (cond
           (or lupausbonus lupaussanktio)
