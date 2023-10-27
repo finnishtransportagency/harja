@@ -87,8 +87,7 @@
                                     :content sisalto}]}
           _ (log/debug "VainLahetys :: postal :: smtp-asetukset:" smtp-asetukset)
           _ (log/debug "VainLahetys :: postal :: viesti-asetukset:" viesti-asetukset)
-          vastaus (postal/send-message smtp-asetukset viesti-asetukset)
-          _ (println "VainLahetys :: posta ::  vastaus:" vastaus)]
+          vastaus (postal/send-message smtp-asetukset viesti-asetukset)]
       vastaus))
   (vastausosoite [_] vastausosoite)
   (laheta-viesti-ja-liite! [_ lahettaja vastaanottajat otsikko sisalto headers tiedosto-nimi]

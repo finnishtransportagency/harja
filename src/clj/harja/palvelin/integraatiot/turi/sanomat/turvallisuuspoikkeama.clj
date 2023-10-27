@@ -232,7 +232,6 @@
   Palauttaa XML-viestin merkkijonona."
   [turvallisuuspoikkeama]
   (let [sisalto (turvallisuuspoikkeamaviesti turvallisuuspoikkeama)
-        _ (println "SISÄLTÖ " sisalto)
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "poikkeama-rest.xsd" xml)]
       (let [lokitettava-virhe (format "Turvallisuuspoikkeaman TURI-lähetyksen XML ei ole validia.\n

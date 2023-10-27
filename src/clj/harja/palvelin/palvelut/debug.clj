@@ -34,13 +34,11 @@
         reitti (:sijainti (first tulos))]
     reitti))
 (defn hae-seuraava-vapaa-ulkoinen-id [db params]
-  (let [tulos (q/seuraava-vapaa-ulkoinen-id db)
-        _ (println "hae-seuraava-vapaa-ulkoinen-id :: tulos: " tulos)]
+  (let [tulos (q/seuraava-vapaa-ulkoinen-id db)]
     (:ulkoinen_id (first tulos))))
 
 (defn hae-urakan-tierekisteriosoitteita [db params]
-  (let [tulos (q/hae-urakan-tierekisteriosoitteita db {:urakka-id (:urakka-id params)})
-        _ (println "hae-urakan-tierekisteriosoitteita :: tulos: " tulos)]
+  (let [tulos (q/hae-urakan-tierekisteriosoitteita db {:urakka-id (:urakka-id params)})]
     tulos))
 
 (defn paivita-raportit [db params]
@@ -110,8 +108,7 @@
 (defn hae-urakan-geometriat
   "Osaa hakea vain hoido/mhu urakoiden ja valaistusurakoiden geometriat tällä hetkellä."
   [db tiedot]
-  (let [_ (println "hae-urakan-geometriat :: tiedot :" (pr-str tiedot))
-        urakka-id (Integer/parseInt (:urakka-id tiedot))
+  (let [urakka-id (Integer/parseInt (:urakka-id tiedot))
         ;; hoito ja teiden-hoito tyyppisten urakoiden geometriat ovat alueurakka -taulussa
         ;; valaistusurakoiden geometriatiedot ovat valaistusurakka -taulussa
         urakan-tyyppi (:tyyppi (first (urakat-kyselyt/hae-urakan-tyyppi db {:urakka urakka-id})))
