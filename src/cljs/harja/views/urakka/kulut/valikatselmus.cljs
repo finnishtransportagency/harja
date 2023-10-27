@@ -182,7 +182,7 @@
      (when (and paatoksia? voi-muokata?)
        [:div.oikaisu-paatos-varoitus
         [ikonit/harja-icon-status-alert]
-        [:span "Hinnan oikaisun jälkeen joudut tallentamaan päätökset uudestaan"]])
+        [:span "Tavoitehintaan liittyvä päätös on tallennettu. Jos teet uusia tavoitehinnan oikaisuja, päätös kumotaan automaattisesti."]])
 
      (when kattohinnan-oikaisu-mahdollinen?
        [kattohinnan-oikaisu e! app])]))
