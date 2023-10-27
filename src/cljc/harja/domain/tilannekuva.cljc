@@ -57,12 +57,9 @@
    "Liikennemerkkien, opasteiden ja liikenteenohjauslaitteiden hoito sekä reunapaalujen kunnossapito"]
   [palteen-poisto "palteen poisto" "Palteen poisto"]
   [palteen-poisto-kaiteen-alta "palteen poisto kaiteen alta" "Palteen poisto kaiteen alta"]
-  [paallystetyn-tien-sorapientareen-taytto
-   "paallystetyn tien sorapientareen taytto"
-   "Päällystetyn tien sorapientareen täyttö"]
   [paallystetyn-tien-polynsidonta "paallystetyn tien polynsidonta" "Päällystetyn tien pölynsidonta"]
   [ojitus "ojitus" "Ojitus"]
-  [sorapientareen-taytto "sorapientareen taytto" "Sorapientareen täyttö"]
+  [sorapientareen-taytto "sorapientareen taytto" "Reunantäyttö"]
   [lumivallien-madaltaminen "lumivallien madaltaminen" "Lumivallien madaltaminen"]
   [liikenteen-varmistaminen-kelirikkokohteessa "liikenteen varmistaminen kelirikkokohteessa" "Liikenteen varmistaminen kelirikkokohteessa"]
   [sulamisveden-haittojen-torjunta "sulamisveden haittojen torjunta" "Sulamisveden haittojen torjunta"]
@@ -146,7 +143,6 @@
           liikennemerkkien-opasteiden-ja-liikenteenohjauslaitteiden-hoito-seka-reunapaalujen-kunnossapito
           palteen-poisto
           palteen-poisto-kaiteen-alta
-          paallystetyn-tien-sorapientareen-taytto
           paallystetyn-tien-polynsidonta
           ojitus
           reunapaalujen-uusiminen
