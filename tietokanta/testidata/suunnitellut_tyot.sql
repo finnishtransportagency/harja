@@ -1882,11 +1882,11 @@ INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tu
 INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM toimenpide WHERE koodi='23124'), 'Oulu Aktiivinen Sorateiden hoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT loppupvm FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 
 -- Toimenpidekoodi-taulun apitunnus-kentän testaamista varten
-INSERT into tehtava (nimi, tehtavaryhma, hinnoittelu, yksikko, jarjestys, api_seuranta, api_tunnus, emo, luotu, luoja, ensisijainen, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi) VALUES
+INSERT into tehtava (nimi, tehtavaryhma, hinnoittelu, yksikko, jarjestys, api_seuranta, api_tunnus, emo, luotu, luoja, "mhu-tehtava?", voimassaolo_alkuvuosi, voimassaolo_loppuvuosi) VALUES
 ('Apitunnus-testitehtävä', (select id from tehtavaryhma where nimi = 'Talvihoito (A)'),	'{kokonaishintainen,yksikkohintainen}' :: hinnoittelutyyppi [], 'kpl',	999, TRUE, 987654,
 (select id from toimenpide where koodi = '23104'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE, null, null);
 
-INSERT into tehtava (nimi, tehtavaryhma, hinnoittelu, yksikko, jarjestys, api_seuranta, api_tunnus, emo, luotu, luoja, ensisijainen, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi) VALUES
+INSERT into tehtava (nimi, tehtavaryhma, hinnoittelu, yksikko, jarjestys, api_seuranta, api_tunnus, emo, luotu, luoja, "mhu-tehtava?", voimassaolo_alkuvuosi, voimassaolo_loppuvuosi) VALUES
 ('Apitunnus-testitehtävä, tupla', (select id from tehtavaryhma where nimi = 'Talvihoito (A)'),	'{kokonaishintainen,yksikkohintainen}' :: hinnoittelutyyppi [], 'kpl',	998, TRUE, 1370,
  (select id from toimenpide where koodi = '23104'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), TRUE, 1999, 2003);
 INSERT INTO toimenpideinstanssi (urakka,toimenpide,nimi,alkupvm,loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Utajärven päällystysurakka'), (SELECT id FROM toimenpide WHERE taso=3 AND nimi='Päällystyksen yksikköhintaiset työt'), 'Utajärven Päällystyksen yksikköhintaiset työt', (SELECT alkupvm FROM urakka WHERE nimi='Utajärven päällystysurakka'),(SELECT loppupvm FROM urakka WHERE nimi='Utajärven päällystysurakka'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');

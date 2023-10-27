@@ -72,6 +72,7 @@
     [harja.palvelin.palvelut.hallinta.rajoitusalue-pituudet :as rajoitusalue-pituudet]
     [harja.palvelin.palvelut.hallinta.palauteluokitukset :as palauteluokitukset-hallinta]
     [harja.palvelin.palvelut.hallinta.urakoiden-lyhytnimet :as urakoidenlyhytnimet-hallinta]
+    [harja.palvelin.palvelut.hallinta.tehtavat :as tehtavat-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
@@ -782,6 +783,12 @@
       :lyhytnimien-hallinta
       (component/using
         (urakoidenlyhytnimet-hallinta/->UrakkaLyhytnimienHallinta)
+        [:http-palvelin :db])
+
+
+      :tehtavat-hallinta
+      (component/using
+        (tehtavat-hallinta/->TehtavatHallinta)
         [:http-palvelin :db]))))
 
 (defonce harja-jarjestelma nil)

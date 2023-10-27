@@ -82,7 +82,7 @@
                                                               FROM urakka_tehtavamaara ut, tehtava tk
                                                               WHERE ut.tehtava = tk.id
                                                               AND tk.aluetieto = false
-                                                              AND tk.ensisijainen = true
+                                                              AND tk.\"mhu-tehtava?\" = true
                                                               AND tk.tehtavaryhma is not null
                                                               AND \"hoitokauden-alkuvuosi\" = '2019'::INT
                                                               AND urakka = " urakka-id)))
@@ -90,7 +90,7 @@
                                                         (str "SELECT count(*)
                                                               FROM urakka_tehtavamaara ut, tehtava tk
                                                               WHERE ut.tehtava = tk.id
-                                                              AND tk.ensisijainen = true
+                                                              AND tk.\"mhu-tehtava?\" = true
                                                               AND tk.aluetieto = false
                                                               AND tk.tehtavaryhma is not null
                                                               AND \"hoitokauden-alkuvuosi\" = '2020'::INT
@@ -99,7 +99,7 @@
                                                         (str "SELECT count(*)
                                                               FROM urakka_tehtavamaara ut, tehtava tk
                                                               WHERE ut.tehtava = tk.id
-                                                              AND tk.ensisijainen = true
+                                                              AND tk.\"mhu-tehtava?\" = true
                                                               AND tk.aluetieto = false
                                                               AND tk.tehtavaryhma is not null
                                                               AND \"hoitokauden-alkuvuosi\" = '2021'::INT
@@ -140,7 +140,7 @@
                                                               tehtavaryhma tr,
                                                               urakka u
                                                          WHERE tk.tehtavaryhma = tr.id
-                                                           AND tk.ensisijainen = true
+                                                           AND tk.\"mhu-tehtava?\" = true
                                                            AND tk.kasin_lisattava_maara = true
                                                            AND (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
                                                            AND tr.otsikko = '8 MUUTA'

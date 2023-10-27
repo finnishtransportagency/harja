@@ -87,7 +87,7 @@
                     (q (format "SELECT count(distinct tr3.id)
                                   FROM tehtavaryhma tr3
                                        LEFT JOIN tehtava tpk4 ON tr3.id = tpk4.tehtavaryhma
-                                            AND tpk4.ensisijainen is true
+                                            AND tpk4.\"mhu-tehtava?\" is true
                                             AND tpk4.poistettu is not true AND tpk4.piilota is not true
                                        JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
                                        JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id and tpi.urakka = %s"

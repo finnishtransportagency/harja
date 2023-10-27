@@ -21,6 +21,7 @@
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
             [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.views.hallinta.sahkopostitestaus-nakyma :as email-nakyma]
+            [harja.views.hallinta.tehtava-nakyma :as tehtava-nakyma]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -55,7 +56,7 @@
    :lyhytnimet
    (when (oikeudet/hallinta-indeksit) ; ei uutta roolia roolit exceliin
      ^{:key "lyhytnimet"}
-     [lyhytnimet/urakoiden-lyhytnimet ])
+     [lyhytnimet/urakoiden-lyhytnimet])
 
    "Integraatiotilanne"
    :integraatiotilanne
@@ -112,15 +113,13 @@
    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
            (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
      ^{:key "tyomaapaivakirjatyokalu"}
-     (do
-       (js/console.log "Rendataan tabile työmaapäiväkirjatyökalulle")
-       [paivakirjatyokalu-nakyma/simuloi-tyomaapaivakirja]))
+     [paivakirjatyokalu-nakyma/simuloi-tyomaapaivakirja])
 
-  "Koulutusvideot"
-  :koulutusvideot
-  (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-koulutusvideot)
-    ^{:key "koulutusvideot"}
-    [koulutusvideot/nakyma])
+   "Koulutusvideot"
+   :koulutusvideot
+   (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-koulutusvideot)
+     ^{:key "koulutusvideot"}
+     [koulutusvideot/nakyma])
 
    "Palauteluokitukset"
    :palauteluokitukset
@@ -132,4 +131,12 @@
    :sahkopostitestaus
    (when true
      ^{:key "sahkopostitestaus"}
-     [email-nakyma/email-testaus])])
+     [email-nakyma/email-testaus])
+
+
+   "MHU Tehtäväryhmät ja tehtävät"
+   :tehtavatjatehtavaryhmat
+   (when true
+     ^{:key "tehtavaryhmatjatehtavat"}
+     [tehtava-nakyma/tehtavat])])
+
