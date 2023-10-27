@@ -7,6 +7,7 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.kommentit :as kommentit]
             [harja.ui.komponentti :as komp]
+            [harja.ui.debug :as debug]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.viesti :as viesti]
@@ -329,6 +330,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
            (if (and yllapitokohdeurakka? (nil? yllapitokohteet)) ;; Pakko olla ylläpitokohteet ennen kuin lomaketta voi näyttää
              [ajax-loader "Ladataan..."]
              [:div.laatupoikkeama
+              [debug/debug @laatupoikkeama]
               [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id nil)]
               [lomake/lomake
                {:otsikko "Laatupoikkeaman tiedot"
