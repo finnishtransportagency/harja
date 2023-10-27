@@ -88,7 +88,7 @@
        (let [urakka @nav/valittu-urakka
              vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)
              tarkastukset (reverse (sort-by :aika @tiedot/urakan-tarkastukset))]
-         
+
          [:div.tarkastukset
           [ui-valinnat/urakkavalinnat {:urakka (:urakka optiot)}
            ^{:key "aikavali"}
@@ -136,7 +136,7 @@
                 [napit/uusi "Uusi tarkastus"
                  #(reset! tiedot/valittu-tarkastus (uusi-tarkastus (:tyyppi urakka)))
                  {:disabled (not oikeus?)}]))]]
-          
+
           [grid/grid
            {:otsikko "Tarkastukset"
             :tyhja (if (nil? @tiedot/urakan-tarkastukset)
@@ -195,7 +195,6 @@
              :komponentti (fn [rivi]
                             (liitteet/liitteet-numeroina (:liitteet rivi)))}]
            tarkastukset]])))))
-
 
 (defn talvihoitomittaus []
   (lomake/ryhma
@@ -504,7 +503,6 @@
                              :ikoni (ikonit/livicon-arrow-right)
                              :luokka :nappi-toissijainen}])})]
         tarkastus]])))
-
 
 (defn- vastaava-tarkastus [klikattu-tarkastus]
   ;; oletetaan että kartalla näkyvät tarkastukset ovat myös gridissä
