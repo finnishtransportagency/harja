@@ -182,7 +182,7 @@
      (when (and paatoksia? voi-muokata?)
        [:div.oikaisu-paatos-varoitus
         [ikonit/harja-icon-status-alert]
-        [:span "Hinnan oikaisun jälkeen joudut tallentamaan päätökset uudestaan"]])
+        [:span "Tavoitehintaan liittyvä päätös on tallennettu. Jos teet uusia tavoitehinnan oikaisuja, päätös kumotaan automaattisesti."]])
 
      (when kattohinnan-oikaisu-mahdollinen?
        [kattohinnan-oikaisu e! app])]))
@@ -478,7 +478,7 @@
          [:h3 (str "Lupaukset: Urakoitsija saa bonusta " (fmt/euro-opt summa) " luvatun pistemäärän ylittämisestä.")]
          tavoite-taytetty?
          [:h3 (str "Lupaukset: Urakoitsija pääsi tavoitteeseen.")])
-       [:p "Urakoitsija sai " pisteet " ja lupasi " sitoutumis-pisteet " pistettä." " Tavoitehinta: " (fmt/euro-opt tavoitehinta)]
+       [:p "Urakoitsija sai " pisteet " ja lupasi " sitoutumis-pisteet " pistettä." " Tarjouksen tavoitehinta: " (fmt/euro-opt tavoitehinta)]
        [:div {:style {:padding-top "22px"}}
         (cond
           (or lupausbonus lupaussanktio)
