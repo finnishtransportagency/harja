@@ -65,7 +65,7 @@
 (defn uusi-tarkastus [urakkatyyppi]
   {:uusi? true
    :aika (pvm/nyt)
-   :tyyppi (if (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :katselmus nil)
+   :tyyppi (if (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :katselmus @tiedot/tarkastustyyppi)
    :tarkastaja @istunto/kayttajan-nimi
    :nayta-urakoitsijalle (or (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija) (nav/yllapitourakka-valittu?))
    :laadunalitus false})
