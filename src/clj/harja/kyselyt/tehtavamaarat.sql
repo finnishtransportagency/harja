@@ -117,7 +117,7 @@ SELECT distinct tpk3.id       as "toimenpide-id",
                 tpi.id        as "toimenpideinstanssi"
 FROM tehtavaryhma tr
        LEFT JOIN tehtava tpk4
-                 ON tr.id = tpk4.tehtavaryhma AND tpk4.ensisijainen is true AND
+                 ON tr.id = tpk4.tehtavaryhma AND tpk4."mhu-tehtava?" is true AND
                     tpk4.poistettu is not true AND tpk4.piilota is not true
        JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
        JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id and tpi.urakka = :urakka
@@ -169,14 +169,14 @@ SELECT ut.urakka                   as "urakka",
        tpk4.api_tunnus             as "API-tunnus",
        tpk4.poistettu              as "Poistettu",
        tpk4.piilota                as "Piilota", -- älä näytä riviä käyttäjälle
-       tpk4.ensisijainen           as "Ensisijainen",
+       tpk4."mhu-tehtava?"           as "Ensisijainen",
        tpk4.voimassaolo_alkuvuosi  as "voimassaolo_alkuvuosi",
        tpk4.voimassaolo_loppuvuosi as "voimassaolo_loppuvuosi",
        tpk4.aluetieto              as "aluetieto",
        sp.tallennettu              as "sopimus-tallennettu"
 FROM tehtavaryhma tr3
        LEFT JOIN tehtava tpk4
-                 ON tr3.id = tpk4.tehtavaryhma AND tpk4.ensisijainen is true AND
+                 ON tr3.id = tpk4.tehtavaryhma AND tpk4."mhu-tehtava?" is true AND
                     tpk4.poistettu is not true AND tpk4.piilota is not true AND (tpk4.yksiloiva_tunniste NOT IN
                                                                                  (
                                                                                   'd373c08b-32eb-4ac2-b817-04106b862fb1', --'Äkillinen hoitotyö (talvihoito)',
@@ -198,7 +198,7 @@ WHERE u.id = :urakka
   AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
   AND tpk4.suunnitteluyksikko IS not null
   AND tpk4.suunnitteluyksikko != 'euroa' -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
-ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
+ORDER BY tpk4.jarjestys, tpk4."mhu-tehtava?" desc;
 
 
 -- name: hae-validit-tehtava-idt
@@ -268,3 +268,14 @@ WHERE ut.poistettu IS NOT TRUE
   AND ut.urakka = :urakka-id
   AND ut."hoitokauden-alkuvuosi" in (:hoitokauden-alkuvuodet)
 GROUP BY ut."hoitokauden-alkuvuosi", tk.id, ut.muokattu, ut.luotu;
+
+-- name: hae-mhu-tehtavaryhmat-ja-tehtavat
+SELECT tr.id, tr.otsikko, tr.nimi, tr.jarjestys, tr.nakyva, tr.versio, tr.yksiloiva_tunniste,
+       jsonb_agg(row_to_json(row(t.id, t.nimi, t.yksikko, t.jarjestys, t.api_seuranta, t.suoritettavatehtava,
+           t.piilota, t.api_tunnus, t."mhu-tehtava?", t.yksiloiva_tunniste,
+           t.voimassaolo_alkuvuosi, t.voimassaolo_loppuvuosi, t.kasin_lisattava_maara,
+           t."raportoi-tehtava?", t.materiaaliluokka_id, t.materiaalikoodi_id, t.aluetieto))) AS tehtavat
+  FROM tehtavaryhma tr
+       LEFT JOIN tehtava t ON t.tehtavaryhma = tr.id AND "mhu-tehtava?" = true
+ GROUP BY tr.id
+ ORDER BY tr.otsikko ASC;
