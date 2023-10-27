@@ -392,6 +392,8 @@
       (viesti/nayta-toast! "Tallennus onnistui")
       (swap! taulukko-tila paivita-kaikki-maarat valinnat)
       (-> app
+        (assoc-in [:valinnat :nayta-suunniteltavat-tehtavat?] true)
+        (assoc-in [:valinnat :nayta-aluetehtavat?] true)
         (assoc :sopimukset-syotetty? (:tallennettu vastaus))
         (update-in [:valinnat :noudetaan] dec))))
 
