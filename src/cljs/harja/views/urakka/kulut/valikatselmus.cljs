@@ -425,7 +425,7 @@
             {:luokka "nappi-toissijainen napiton-nappi"
              :ikoni [ikonit/harja-icon-action-undo]}]))]]]))
 
-(defn lupaus-lomake [e! oikaistu-tavoitehinta app voi-muokata?]
+(defn lupaus-lomake [e! app voi-muokata?]
   (let [yhteenveto (:yhteenveto app)
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         paatos-tehty? (or (= :katselmoitu-toteuma (:ennusteen-tila yhteenveto)) false)
@@ -457,7 +457,7 @@
                                  ::valikatselmus/tilaajan-maksu tilaajan-maksu
                                  ::valikatselmus/lupaus-luvatut-pisteet luvatut-pisteet
                                  ::valikatselmus/lupaus-toteutuneet-pisteet toteutuneet-pisteet
-                                 ::valikatselmus/lupaus-tavoitehinta oikaistu-tavoitehinta
+                                 ::valikatselmus/lupaus-tavoitehinta tavoitehinta
                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                  ::valikatselmus/siirto nil}
                            (when (get-in app [lomake-avain ::valikatselmus/paatoksen-id])
@@ -592,7 +592,7 @@
          [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?])
        [:h2 "Lupauksiin liittyvät päätökset"]
        (if lupaukset-valmiina?
-         [lupaus-lomake e! oikaistu-tavoitehinta app voi-muokata?]
+         [lupaus-lomake e! app voi-muokata?]
          [lupaus-ilmoitus e! app])])))
 
 (defn valikatselmus [e! app]
