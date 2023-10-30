@@ -20,7 +20,8 @@
    {"urakka" ::urakka-id}])
 
 (def +tarkastustyyppi->nimi+
-  {:tiesto "Tiestötarkastus"
+  {:tieturvallisuus "Tieturvallisuustarkastus"
+   :tiesto "Tiestötarkastus"
    :talvihoito "Kelitarkastus"
    :soratie "Soratien tarkastus"
    :laatu "Laaduntarkastus"
