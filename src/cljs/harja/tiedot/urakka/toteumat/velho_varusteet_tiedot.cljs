@@ -116,7 +116,7 @@
     (reset! varustetyypit nil)
     (as-> app app
       (pavittaa-valitut app :kohdeluokat kohdeluokka valittu?)
-      (assoc app :varustetyyppihaku (tee-varustetyyppihaku (:valinnat app) (:kohdeluokat app)))))
+      (assoc app :varustetyyppihaku (tee-varustetyyppihaku (:valinnat app) (:kohdeluokat-nimikkeisto app)))))
 
   ValitseKuntoluokka
   (process-event [{:keys [kuntoluokka valittu?]} app]
