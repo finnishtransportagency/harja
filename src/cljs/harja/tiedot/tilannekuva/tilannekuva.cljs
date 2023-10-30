@@ -69,7 +69,8 @@ hakutiheys-historiakuva 1200000)
                     tk/tarkastus-talvihoito false
                     tk/tarkastus-soratie false
                     tk/tarkastus-laatu false
-                    tk/tilaajan-laadunvalvonta false}
+                    tk/tilaajan-laadunvalvonta false
+                    tk/tarkastus-tieturvallisuus false}
      ;; Näiden pitää osua työkoneen enumeihin
      ;; Kelintarkastus ja tiestotarkastus liittyvät tarkastusten tekoon,
      ;; eivät ole "toteumia". Säilytetty kommenteissa, jotta JOS tarkasten
@@ -103,7 +104,6 @@ hakutiheys-historiakuva 1200000)
             tk/liikennemerkkien-opasteiden-ja-liikenteenohjauslaitteiden-hoito-seka-reunapaalujen-kunnossapito false
             tk/palteen-poisto false
             tk/palteen-poisto-kaiteen-alta false
-            tk/paallystetyn-tien-sorapientareen-taytto false
             tk/paallystetyn-tien-polynsidonta false
             tk/ojitus false
             tk/reunapaalujen-uusiminen false
