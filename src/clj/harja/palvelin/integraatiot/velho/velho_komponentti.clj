@@ -11,44 +11,28 @@
   (laheta-kohde [this urakka-id kohde-id]))
 
 (defprotocol VarustetoteumaHaku
-  (tuo-uudet-varustetoteumat-velhosta [this])
-  (paivita-mhu-urakka-oidt-velhosta [this]))
+  (hae-urakan-varustetoteumat [this tiedot])
+  (tuo-velho-nimikkeisto [this])
+  (hae-varusteen-historia [this tiedot]))
 
-(defn suorita-ja-kirjaa-alku-loppu-ajat
-  [funktio tunniste]
-  (let [aloitusaika-ms (System/currentTimeMillis)]
-    (log/info tunniste "suoritus alkoi")
-    (let [onnistui? (try
-                      (funktio)
-                      (catch Throwable t (log/error "Virhe suoritettaessa" tunniste "Throwable:" t) false))]
-      (log/info (str tunniste " suoritus päättyi "
-                     (when-not onnistui? "epäonnistuneesti") ; Suoritus voi onnistua kokonaan, osittain tai ei ollenkaan.
-                     ". Kesto: "
-                     (float (/ (- (System/currentTimeMillis) aloitusaika-ms) 1000)) " sekuntia")))))
-
-(defn tee-varustetoteuma-haku-tehtava-fn [{:keys [db] :as this} suoritusaika]
-  (log/debug "Ajastetaan varustetoteumien tuonti Tievelhosta tehtäväksi joka päivä kello: " suoritusaika)
-  (ajastettu-tehtava/ajasta-paivittain
-    suoritusaika
-    (fn [_]
-      (lukko/yrita-ajaa-lukon-kanssa
-        db
-        "tuo-uudet-varustetoteumat-ja-urakat-velhosta"
-        #(do
-           (log/info "ajasta-paivittain :: varustetoteumien tuonti :: Alkaa " (pvm/nyt))
-           (paivita-mhu-urakka-oidt-velhosta this)
-           (tuo-uudet-varustetoteumat-velhosta this))))))
+(defn tee-velho-nimikkeisto-tuonti-tehtava [{:keys [db :as this]} suoritusaika]
+  (when suoritusaika
+    (ajastettu-tehtava/ajasta-paivittain
+      suoritusaika
+      (fn [_]
+        (lukko/yrita-ajaa-lukon-kanssa db
+          "tuo-velhon-nimikkeisto"
+          #(tuo-velho-nimikkeisto this))))))
 
 (defrecord Velho [asetukset]
   component/Lifecycle
   (start [this]
-    (let [suoritusaika (:varuste-tuonti-suoritusaika asetukset)]
-      (log/info (str "Käynnistetään tuo-uudet-varustetoteumat-velhosta -komponentti. Suoritusaika: " suoritusaika))
-      (assoc this :varustetoteuma-tuonti-tehtava (tee-varustetoteuma-haku-tehtava-fn this suoritusaika))))
+    (let [nimikkeisto-tuonti-suoritusaika (:varuste-tuonti-suoritusaika asetukset)]
+      (assoc this :velho-nimikkeisto-tuonti-tehtava (tee-velho-nimikkeisto-tuonti-tehtava this nimikkeisto-tuonti-suoritusaika))))
   (stop [this]
     (log/info "Sammutetaan tuo-uudet-varustetoteumat-velhosta -komponentti.")
-    (when-let [varustetoteuma-tuonti-tehtava-cancel (:varustetoteuma-tuonti-tehtava this)]
-      (varustetoteuma-tuonti-tehtava-cancel))
+    (when-let [nimikkeisto-tuonti-tehtava (:velho-nimikkeisto-tuonti-tehtava this)]
+      (nimikkeisto-tuonti-tehtava))
     (dissoc this :varustetoteuma-tuonti-tehtava))
 
   PaallystysilmoituksenLahetys
@@ -56,18 +40,9 @@
     (pot-lahetys/laheta-kohde-velhoon (:integraatioloki this) (:db this) asetukset urakka-id kohde-id))
 
   VarustetoteumaHaku
-  (tuo-uudet-varustetoteumat-velhosta [this]
-    (suorita-ja-kirjaa-alku-loppu-ajat
-      #(varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki this) (:db this) asetukset)
-      "tuo-uudet-varustetoteumat-velhosta"))
-  (paivita-mhu-urakka-oidt-velhosta [this]
-    (suorita-ja-kirjaa-alku-loppu-ajat
-      #(varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki this) (:db this) asetukset)
-      "paivita-mhu-urakka-oidt-velhosta")))
-
-;; Esimerkki miten testiajojen suorittaminen onnistuu
-(comment 
-  (def j harja.palvelin.main/harja-jarjestelma)
-  (def asetukset (get-in j [:velho-integraatio :asetukset]))
-  (varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki j) (:db j) asetukset)
-  (varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki j) (:db j) asetukset))
+  (hae-urakan-varustetoteumat [this tiedot]
+    (varusteet/hae-urakan-varustetoteumat this tiedot))
+  (hae-varusteen-historia [this tiedot]
+    (varusteet/hae-varusteen-historia this tiedot))
+  (tuo-velho-nimikkeisto [this]
+    (varusteet/tuo-velho-nimikkeisto this)))
