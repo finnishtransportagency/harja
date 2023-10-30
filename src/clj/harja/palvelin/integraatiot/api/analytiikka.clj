@@ -177,7 +177,7 @@
   "Haetaan toteumat annettujen alku- ja loppuajan puitteissa.
   koordinaattimuutos-parametrilla voidaan hakea lisäksi reittipisteet EPSG:4326-muodossa."
   [db {:keys [alkuaika loppuaika koordinaattimuutos koko] :as parametrit} kayttaja]
-  (println "palauta-toteumat :: parametrit" (pr-str parametrit))
+  (log/info "Analytiikka API, toteumien haku, parametrit: " (pr-str parametrit))
   (tarkista-haun-parametrit parametrit true)
   (let [;; Koordinaattimuutos on oltava boolean
         kmuutos (= "true" koordinaattimuutos)
@@ -265,6 +265,7 @@
 (defn palauta-materiaalit
   "Haetaan materiaalit ja palautetaan ne json muodossa"
   [db _ _]
+  (log/info "Analytiikka API, materiaalien haku")
   (let [materiaalikoodit (materiaalit-kyselyt/listaa-materiaalikoodit db)
         materiaaliluokat (materiaalit-kyselyt/hae-materiaaliluokat db)
         vastaus {:materiaalikoodit materiaalikoodit
@@ -274,6 +275,7 @@
 (defn palauta-tehtavat
   "Haetaan tehtävät ja tehtäväryhmät ja palautetaan ne json muodossa"
   [db _ _]
+  (log/info "Analytiikka API, tehtävien haku")
   (let [tehtavat (toimenpidekoodi-kyselyt/listaa-tehtavat db)
         tehtavat (map
                    #(update % :hinnoittelu konversio/pgarray->vector)
@@ -286,6 +288,7 @@
 (defn palauta-urakat
   "Haetaan urakat ja palautetaan ne json muodossa"
   [db _ _]
+  (log/info "Analytiikka API, urakoiden haku")
   (let [urakat (urakat-kyselyt/listaa-kaikki-urakat-analytiikalle db)
         vastaus {:urakat urakat}]
     vastaus))
@@ -293,6 +296,7 @@
 (defn palauta-organisaatiot
   "Haetaan urakat ja palautetaan ne json muodossa"
   [db _ _]
+  (log/info "Analytiikka API, organisaatioiden haku")
   (let [organisaatiot (organisaatiot-kyselyt/listaa-organisaatiot-analytiikalle db)
         vastaus {:organisaatiot organisaatiot}]
     vastaus))
@@ -329,9 +333,9 @@
 (defn palauta-urakan-suunnitellut-materiaalimaarat
   "Palautetaan suunnitellut materiaalimaarat hoitovuosittain annetulle urakalle."
   [db {:keys [alkuvuosi loppuvuosi urakka-id] :as parametrit} kayttaja]
+  (log/info "Analytiikka API palauta-urakan-suunnitellut-materiaalimaarat :: parametrit" (pr-str parametrit))
   (tarkista-parametrit-urakka-aikavali parametrit)
-  (let [_ (log/debug "palauta-urakan-suunnitellut-materiaalimaarat :: parametrit" (pr-str parametrit))
-        alkuvuosi (when-not (nil? alkuvuosi)
+  (let [alkuvuosi (when-not (nil? alkuvuosi)
                     (konversio/konvertoi->int alkuvuosi))
         loppuvuosi (when-not (nil? loppuvuosi)
                      (konversio/konvertoi->int loppuvuosi))
@@ -452,9 +456,9 @@
 (defn palauta-suunnitellut-materiaalimaarat
   "Palautetaan suunnitellut materiaalimaarat hoitovuosittain."
   [db {:keys [alkuvuosi loppuvuosi] :as parametrit} kayttaja]
+  (log/info "Analytiikka API palauta-suunnitellut-materiaalimaarat :: parametrit" (pr-str parametrit))
   (tarkista-parametrit-aikavali parametrit)
-  (let [_ (log/debug "palauta-suunnitellut-materiaalimaarat :: parametrit" (pr-str parametrit))
-        ;; Haetaan vain ne urakat, jotka ovat olleet voimassa valittuna vuosina
+  (let [;; Haetaan vain ne urakat, jotka ovat olleet voimassa valittuna vuosina
         urakat (urakat-kyselyt/listaa-urakat-analytiikalle-hoitovuosittain db {:alkuvuosi alkuvuosi
                                                                                :loppuvuosi loppuvuosi})
         suunnitellut-materiaalit (mapv (fn [urakka]
@@ -481,9 +485,9 @@
 (defn palauta-urakan-suunnitellut-tehtavamaarat
   "Palautetaan suunnitellut tehtavamaarat yhdelle urakalle."
   [db {:keys [alkuvuosi loppuvuosi urakka-id] :as parametrit} kayttaja]
+  (log/info "Analytiikka API palauta-urakan-suunnitellut-tehtavamaarat :: parametrit" (pr-str parametrit))
   (tarkista-parametrit-urakka-aikavali parametrit)
-  (let [_ (log/debug "palauta-urakan-suunnitellut-tehtavamaarat :: parametrit" (pr-str parametrit))
-        urakka-id (if (integer? urakka-id)
+  (let [urakka-id (if (integer? urakka-id)
                     urakka-id
                     (konversio/konvertoi->int urakka-id))
         ;; Haetaan urakan tiedoista aikaväli, jolle suunnittelutiedot haetaan
@@ -532,9 +536,9 @@
 (defn palauta-suunnitellut-tehtavamaarat
   "Palautetaan suunnitellut tehtavamaarat hoitovuosittain."
   [db {:keys [alkuvuosi loppuvuosi] :as parametrit} kayttaja]
+  (log/info "Analytiikka API palauta-suunnitellut-tehtavamaarat :: parametrit" (pr-str parametrit))
   (tarkista-parametrit-aikavali parametrit)
-  (let [_ (log/debug "palauta-suunnitellut-tehtavamaarat :: parametrit" (pr-str parametrit))
-        urakat (urakat-kyselyt/listaa-urakat-analytiikalle-hoitovuosittain db {:alkuvuosi alkuvuosi
+  (let [urakat (urakat-kyselyt/listaa-urakat-analytiikalle-hoitovuosittain db {:alkuvuosi alkuvuosi
                                                                                :loppuvuosi loppuvuosi})
         suunnitellut-tehtavat (mapv (fn [urakka]
                                       (let [;; Rajoitetaan urakalta haettavia tietoja urakan voimassaoloon
@@ -557,10 +561,9 @@
     suunnitellut-tehtavat))
 
 (defn hae-turvallisuuspoikkeamat [db {:keys [alkuaika loppuaika] :as parametrit} kayttaja]
-  (log/debug "hae-turvallisuuspoikkeamat :: parametrit" (pr-str parametrit))
+  (log/info "Analytiikka API hae-turvallisuuspoikkeamat :: parametrit" (pr-str parametrit))
   (tarkista-haun-parametrit parametrit false)
-  (let [
-        turpot (turvallisuuspoikkeamat/hae-turvallisuuspoikkeamat-lahetettavaksi-analytiikalle db {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+  (let [turpot (turvallisuuspoikkeamat/hae-turvallisuuspoikkeamat-lahetettavaksi-analytiikalle db {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
                                                                                                    :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
         ;; Konvertoidaan turpot sellaiseen muotoon, että ne voidaan kääntää kutsukäsittelyssä jsoniksi. Tässä vaiheessa ne ovat mäppeineä nimestään huolimatta
         json-turpot (map

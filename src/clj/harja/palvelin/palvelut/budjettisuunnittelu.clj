@@ -270,8 +270,7 @@
                 :urakka urakka-id
                 :selite selite
                 :kuvaus muutoksen-syy
-                :luoja (:id user)}]
-    (println "blip blop -> " muutos tiedot)))
+                :luoja (:id user)}]))
 
 (defn hae-urakan-indeksikertoimet
   [db user {:keys [urakka-id]}]

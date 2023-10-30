@@ -100,7 +100,6 @@
           tk/liikennemerkkien-puhdistus true
           tk/liikennemerkkien-opasteiden-ja-liikenteenohjauslaitteiden-hoito-seka-reunapaalujen-kunnossapito true
           tk/palteen-poisto true
-          tk/paallystetyn-tien-sorapientareen-taytto true
           tk/ojitus true
           tk/sorapientareen-taytto true
           tk/sorateiden-muokkaushoylays true

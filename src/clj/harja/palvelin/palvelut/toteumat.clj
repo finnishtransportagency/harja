@@ -442,16 +442,19 @@
                                                      :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})]
     res))
 
-(defn hae-toimenpiteen-maarien-toteumat [db user {:keys [urakka-id tehtavaryhma hoitokauden-alkuvuosi] :as tiedot}]
+(defn mhu-toteumatehtavat
+  "Haetaan MH-urakan toteumatehtävät, eli ei materiaalitehtäviä. Esim. suolaus on materiaalitehtävä ja sitä ei
+  siis tässä haeta."
+  [db user {:keys [urakka-id tehtavaryhma hoitokauden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
   (let [t (if (or (= "Kaikki" tehtavaryhma) (= 0 tehtavaryhma)) nil tehtavaryhma)
         alkupvm (str hoitokauden-alkuvuosi "-10-01")
         loppupvm (str (inc hoitokauden-alkuvuosi) "-09-30")
-        vastaus (toteumat-q/listaa-urakan-maarien-toteumat db {:urakka urakka-id
-                                                               :tehtavaryhma t
-                                                               :alkupvm alkupvm
-                                                               :loppupvm loppupvm
-                                                               :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})]
+        vastaus (toteumat-q/hae-urakan-toteumatehtavat db {:urakka urakka-id
+                                                           :tehtavaryhma t
+                                                           :alkupvm alkupvm
+                                                           :loppupvm loppupvm
+                                                           :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})]
     vastaus))
 
 (defn hae-urakan-toimenpiteet [db user {:keys [urakka-id]}]
@@ -1070,9 +1073,9 @@
       :poista-toteuma
       (fn [user tiedot]
         (poista-maarien-toteuma! db user tiedot))
-      :hae-toimenpiteen-tehtava-yhteenveto
+      :hae-mhu-toteumatehtavat
       (fn [user tiedot]
-        (hae-toimenpiteen-maarien-toteumat db-replica user tiedot))
+        (mhu-toteumatehtavat db-replica user tiedot))
       :hae-tehtavan-toteumat
       (fn [user tiedot]
         (hae-tehtavan-toteumat db-replica user tiedot))

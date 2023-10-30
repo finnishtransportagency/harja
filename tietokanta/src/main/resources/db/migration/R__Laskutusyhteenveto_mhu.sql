@@ -764,7 +764,7 @@ BEGIN
                                                 JOIN toimenpideinstanssi tpi
                                                      ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
                                                 -- Poistetaan Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3) hankinnoista, ja lisätään se omalle rivilleen
-                                                JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id AND
+                                                LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id AND
                                                                         (tr.yksiloiva_tunniste IS NULL or
                                                                          (tr.yksiloiva_tunniste IS NOT NULL AND tr.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'))
                                        WHERE lk.maksueratyyppi NOT IN ('akillinen-hoitotyo', 'muu', 'lisatyo')

@@ -172,6 +172,7 @@
 (defn poista-kasin-syotetty-paikkaus
   "Poistaa paikkaukset tietokannasta, jos ulkoinen-id, urakka-id ja käyttäjä täsmäävät."
   [db kayttaja-id urakka-id paikkaus-id]
+  (log/info ":poista-kasinsyotetty-paikkaus paikkaus:" (pr-str paikkaus-id))
   (update! db ::paikkaus/paikkaus
            {::muokkaustiedot/poistettu? true
             ::muokkaustiedot/muokkaaja-id kayttaja-id
