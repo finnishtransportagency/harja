@@ -356,6 +356,10 @@
       (let [{:keys [tyyppi urakka-id sopimus toimenpideinstanssi
                     pvm rahasumma indeksin_nimi lisatieto poistettu id
                     kasittelytapa laskutuskuukausi liitteet]} ek
+            ;; Koska laskutuskuukausi voi olla antamatta, niin asetetaan se samaksi kuin pvm
+            laskutuskuukausi (if (nil? laskutuskuukausi)
+                               pvm
+                               laskutuskuukausi)
             ;; varmista sopimus (id) mikäli sitä ei ole annettu
             sopimus (if (nil? sopimus)
                       (:id (first (sopimukset-q/hae-urakan-paasopimus db urakka-id)))
