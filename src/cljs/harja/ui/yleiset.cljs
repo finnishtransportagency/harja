@@ -232,7 +232,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
            vaihtoehdot disabled-vaihtoehdot vayla-tyyli? auki? skrollattava? valittu-arvo
            pakollinen?] :as kaka}]
   [:ul (if vayla-tyyli?
-         {:style (merge {:padding-top "4px"
+         {:class "dropdown-menu livi-alasvetolista"
+          :style (merge {:padding-top "4px"
                          :z-index "1000"
                          :position :absolute
                          :display (if @auki?

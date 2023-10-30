@@ -594,27 +594,38 @@ tr-ikoni {:img (pinni-ikoni "musta")
 
     [nil nil nil nil]))
 
+(def varustetoteumien-kaytettavat-varit
+  (remove #{puhtaat/fig-default
+            puhtaat/lemon-default
+            puhtaat/eggplant-default
+            puhtaat/pitaya-default
+            puhtaat/pea-default
+            puhtaat/valkoinen} puhtaat/kaikki))
+
 (defn varustetoteuma [vt]
-  (conj (case (:toteuma vt)
-          "lisatty" ["Lisätty"
-                     (viiva-mustalla-rajalla puhtaat/fig-default)
-                     puhtaat/fig-default]
-          "paivitetty" ["Päivitetty"
-                        (viiva-mustalla-rajalla puhtaat/lemon-default)
-                        puhtaat/lemon-default]
-          "poistettu" ["Poistettu"
-                       (viiva-mustalla-rajalla puhtaat/eggplant-default)
-                       puhtaat/eggplant-default]
-          "tarkastus" ["Tarkistettu"
-                       (viiva-mustalla-rajalla puhtaat/pitaya-default)
-                       puhtaat/pitaya-default]
-          "korjaus" ["Korjattu"
-                     (viiva-mustalla-rajalla puhtaat/pea-default)
-                     puhtaat/pea-default]
-          "puhdistus" ["Puhdistettu"
-                       (viiva-mustalla-rajalla puhtaat/black-light)
-                       puhtaat/black-light]
-          ["Ei tietoa" (viiva-mustalla-rajalla puhtaat/valkoinen) puhtaat/valkoinen])
+  (conj (if (and (:toimenpide-id vt) (:toimenpide vt))
+          (let [vari (nth varustetoteumien-kaytettavat-varit
+                       (mod (:toimenpide-id vt) (count varustetoteumien-kaytettavat-varit)))]
+            [(:toimenpide vt)
+             (viiva-mustalla-rajalla vari)
+             vari])
+          (case (:toimenpide vt)
+            "Lisätty" ["Lisätty"
+                       (viiva-mustalla-rajalla puhtaat/fig-default)
+                       puhtaat/fig-default]
+            "Päivitetty" ["Päivitetty"
+                          (viiva-mustalla-rajalla puhtaat/lemon-default)
+                          puhtaat/lemon-default]
+            "Poistettu" ["Poistettu"
+                         (viiva-mustalla-rajalla puhtaat/eggplant-default)
+                         puhtaat/eggplant-default]
+            "Tieosoitemuutos" ["Tarkistettu"
+                         (viiva-mustalla-rajalla puhtaat/pitaya-default)
+                         puhtaat/pitaya-default]
+            "Muu tekninen toimenpide" ["Korjattu"
+                       (viiva-mustalla-rajalla puhtaat/pea-default)
+                       puhtaat/pea-default]
+            ["Ei tietoa" (viiva-mustalla-rajalla puhtaat/valkoinen) puhtaat/valkoinen]))
     (vesipisara-pinni-ikoni)))
 
 (defn tilan-vari [tila]
