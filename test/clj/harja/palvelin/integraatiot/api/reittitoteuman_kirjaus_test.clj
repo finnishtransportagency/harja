@@ -351,18 +351,18 @@
     (is (= 200 (:status vastaus)) "Toteuman poisto onnistuu")))
 
 (deftest materiaalin-kaytto-paivittyy-oikein
-  (let [urakka-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012")
+  (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
         poistetaan-aluksi-materiaalit-cachesta (u "DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = "urakka-id)
-        lasketaan-materiaalicache-uusiksi (q (str "select paivita_urakan_materiaalin_kaytto_hoitoluokittain("urakka-id",'2009-01-01'::DATE,'2100-12-31'::DATE);"))
-        ;; Vuonna 2009 ei pitäisi pudasjärven urakalla olla toteumia kannassa
-        hae-materiaalit #(q-map "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id " AND extract(year from pvm) = 2009 ")
+        lasketaan-materiaalicache-uusiksi (q (str "select paivita_urakan_materiaalin_kaytto_hoitoluokittain("urakka-id",'2017-01-01'::DATE,'2100-12-31'::DATE);"))
+        ;; Vuonna 2017 ei pitäisi oulun urakalla olla toteumia kannassa
+        hae-materiaalit #(q-map "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id " AND extract(year from pvm) = 2017 ")
         materiaalin-kaytto-ennen (hae-materiaalit)]
 
     (testing "Materiaalin käyttö on tyhjä aluksi"
       (is (empty? materiaalin-kaytto-ennen)))
 
     (testing "Uuden materiaalitoteuman lähetys lisää päivälle rivin"
-      (let [ulkoinen-id  (laheta-yksittainen-reittitoteuma urakka-id kayttaja "2009-01-30")]
+      (let [ulkoinen-id  (laheta-yksittainen-reittitoteuma urakka-id kayttaja-yit "2017-01-30")]
         (let [rivit1 (hae-materiaalit)
               maara1 (:maara (first rivit1))]
           (is (= 1 (count rivit1)))
@@ -370,17 +370,17 @@
 
           (testing "Uusi toteuma samalle päivälle, kasvattaa lukua"
             ;; Lähetetään uusi toteuma, määrän pitää tuplautua ja rivimäärä olla sama
-            (laheta-yksittainen-reittitoteuma urakka-id kayttaja-jvh "2009-01-30")
+            (laheta-yksittainen-reittitoteuma urakka-id kayttaja-jvh "2017-01-30")
             (let [rivit2 (hae-materiaalit)
                   maara2 (:maara (first rivit2))]
               (is (= 1 (count rivit2)) "rivien määrä pysyy samana")
               (is (=marginaalissa? maara2 (* 2 maara1)) "Määrä on tuplautunut")))
 
           (testing "Ensimmäisen toteuman poistaminen vähentää määriä"
-            (poista-toteuma ulkoinen-id urakka-id kayttaja)
+            (poista-toteuma ulkoinen-id urakka-id kayttaja-yit)
 
             (let [ ;; Koska suorituksen ajankohta muuttuu niin paljon, niin koko hoitoluokkahistoria pitää päivittää tälle yritykselle
-                  _ (q (str "select paivita_urakan_materiaalin_kaytto_hoitoluokittain("urakka-id",'2009-01-01'::DATE,'2100-12-31'::DATE);"))
+                  _ (q (str "select paivita_urakan_materiaalin_kaytto_hoitoluokittain("urakka-id",'2017-01-01'::DATE,'2100-12-31'::DATE);"))
                   rivit3 (hae-materiaalit)
                   maara3 (:maara (first rivit3))]
               (is (= 1 (count rivit3)) "Rivejä on sama määrä")

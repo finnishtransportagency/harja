@@ -3,7 +3,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
-            [harja.kyselyt.tehtavamaarat :as q]
+            [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.tyokalut.big :as big]
             [harja.domain.oikeudet :as oikeudet]
@@ -14,14 +14,14 @@
   "Palauttaa tehtava-id:t niille tehtäville, joille teiden hoidon urakoissa (MHU) voi kirjata."
   [db]
   (into []
-        (q/hae-validit-tehtava-idt db)))
+        (tehtavamaarat-kyselyt/hae-validit-tehtava-idt db)))
 
 (defn hae-suunnitellut-tehtavamaarat
   "Palauttaa urakan suunnitellut hoitokausikohtaiset tehtävämäärät."
   [db user {:keys [urakka-id hoitokauden-alkuvuosi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (into []
-    (q/hae-suunnitellut-hoitokauden-tehtavamaarat-urakassa db {:urakka urakka-id
+    (tehtavamaarat-kyselyt/hae-suunnitellut-hoitokauden-tehtavamaarat-urakassa db {:urakka urakka-id
                                                                :hoitokausi hoitokauden-alkuvuosi})))
 
 (defn tehtavaryhmat-ja-toimenpiteet
@@ -29,7 +29,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (when (not urakka-id)
     (throw (IllegalArgumentException. (str "Urakka-id puuttuu"))))
-  (into [] (q/tehtavaryhmat-ja-toimenpiteet-urakalle db {:urakka urakka-id})))
+  (into [] (tehtavamaarat-kyselyt/tehtavaryhmat-ja-toimenpiteet-urakalle db {:urakka urakka-id})))
 
 (defn- paivita-tarvittaessa [idt polku arvo]
   (if (nil? (get idt arvo))
@@ -137,7 +137,7 @@
             (throw (IllegalArgumentException. (str "Urakka ei ole olemassa."))))
         alkuvuosi (-> urakkatiedot :alkupvm pvm/vuosi)
         loppuvuosi (-> urakkatiedot :loppupvm pvm/vuosi)]
-    (q/hae-tehtavahierarkia-maarineen db {:urakka urakka
+    (tehtavamaarat-kyselyt/mhu-suunniteltavat-tehtavat db {:urakka urakka
                                           :hoitokausi (range alkuvuosi
                                                         (inc loppuvuosi))})))
 
@@ -173,18 +173,18 @@
       (not aluetieto) (assoc :sopimuksen-tehtavamaarat sopimusmaarat)
       true (assoc :samat-maarat-vuosittain? samat?))))
 
-(defn hae-tehtavahierarkia-maarineen
+(defn mhu-suunniteltavat-tehtavat
   "Palauttaa tehtävähierarkian otsikko- ja tehtävärivit Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten."
   [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as tiedot}]
-  (log/debug "hae-tehtavahierarkia-maarineen :: tiedot" tiedot)
+  (log/debug "mhu-suunniteltavat-tehtavat :: tiedot" tiedot)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (when (or (nil? urakka-id)
           (nil? hoitokauden-alkuvuosi))
     (throw (IllegalArgumentException. (str "Urakan id ja/tai hoitokauden alkuvuosi puuttuu."))))
-  (log/debug "hae-tehtavahierarkia-maarineen :: tiedot: " tiedot)
+  (log/debug "mhu-suunniteltavat-tehtavat :: tiedot: " tiedot)
   (let [hierarkia (muodosta-hierarkia
                     (let [urakan-sopimusmaarat (laske-tehtavien-sopimusmaarat-urakalle
-                                                 (q/hae-sopimuksen-tehtavamaarat-urakalle db {:urakka urakka-id}))
+                                                 (tehtavamaarat-kyselyt/hae-sopimuksen-tehtavamaarat-urakalle db {:urakka urakka-id}))
                           tehtavat (hae-tehtavahierarkia-koko-urakan-ajalle db {:urakka urakka-id})
                           yhdistetyt (mapv (partial yhdista-sopimusmaarat urakan-sopimusmaarat) tehtavat)]
                       yhdistetyt))]
@@ -216,7 +216,7 @@
                           :maara maara
                           :kayttaja (:id user)}
               sopimuksen-maarat (when (nil? maara)
-                                  (q/hae-sopimuksen-tehtavamaaran-maara c {:urakka-id urakka-id
+                                  (tehtavamaarat-kyselyt/hae-sopimuksen-tehtavamaaran-maara c {:urakka-id urakka-id
                                                                            :tehtava-id tehtava-id}))
               vuosittainen-sopimuksen-maara (fn [vuosi]
                                               ;; sopimuksen_tehtavamaarat tauluun tallennetaan kaikkille muille paitsi aluetiedoille jokaiselle vuodelle oma
@@ -238,20 +238,20 @@
                       (merge tm {:urakka urakka-id
                                  :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
             ;; insert
-            (q/lisaa-tehtavamaara<! c (merge parametrit
+            (tehtavamaarat-kyselyt/lisaa-tehtavamaara<! c (merge parametrit
                                               (if (:aluetieto? tehtava-kannasta)
                                                 {:muuttunut-tarjouksesta? false}
                                                 {:muuttunut-tarjouksesta? true})))
             ;;  update - Päivitetään mahdollisesti :muuttunut-tarjouksesta? falseksi, jos suunniteltavaksi määräksi annetaan nil.
             ;;  urakka_tehtavamaarat taulun pitää kuitenkin pitää sisällään aina suunniteltu määrä, joka nil tilanteessa tarkoittaa sopimukseen asetettua määrä.
             ;; Joten siinä tilanteessa haetaan sopimuksen määrä ja tallennetaan se suunnitelluksi määräksi.
-            (q/paivita-tehtavamaara! c
+            (tehtavamaarat-kyselyt/paivita-tehtavamaara! c
               (merge parametrit
                 {:muuttunut-tarjouksesta? (if (nil? maara) false true)
                  :maara (if (nil? maara)
                           (vuosittainen-sopimuksen-maara hoitokauden-alkuvuosi)
                           maara)}))))))
-    (hae-tehtavahierarkia-maarineen db user {:urakka-id urakka-id
+    (mhu-suunniteltavat-tehtavat db user {:urakka-id urakka-id
                                              :hoitokauden-alkuvuosi nykyinen-hoitokausi})))
 
 (defn tallenna-sopimuksen-tehtavamaara [db user {:keys [urakka-id tehtava-id maara hoitovuosi samat-maarat-vuosittain?] :as tiedot}]
@@ -273,9 +273,9 @@
           loppuvuosi (-> urakkatiedot :loppupvm pvm/vuosi)
           sopimuksen-tehtavamaarat (mapv (fn [hoitokauden-alkuvuosi]
                                            (if maara
-                                             (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitokauden-alkuvuosi)
+                                             (tehtavamaarat-kyselyt/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitokauden-alkuvuosi)
                                              (when (and (int? urakka-id) (int? tehtava-id) (int? hoitokauden-alkuvuosi))
-                                               (q/poista-sopimuksen-tehtavamaara! db {:urakka-id urakka-id
+                                               (tehtavamaarat-kyselyt/poista-sopimuksen-tehtavamaara! db {:urakka-id urakka-id
                                                                                       :tehtava-id tehtava-id
                                                                                       :vuosi hoitokauden-alkuvuosi}))))
                                      (if-not samat-maarat-vuosittain?
@@ -300,9 +300,9 @@
                                            (doseq [t validit-tehtavat]
                                              (when (and
                                                      (roolit/roolissa? user roolit/jarjestelmavastaava) kehitysmoodi?)
-                                               (q/tallenna-sopimuksen-tehtavamaara db user urakka-id (:tehtava-id t) maara hoitokauden-alkuvuosi))))
+                                               (tehtavamaarat-kyselyt/tallenna-sopimuksen-tehtavamaara db user urakka-id (:tehtava-id t) maara hoitokauden-alkuvuosi))))
                                          (range alkuvuosi loppuvuosi))]
-      (hae-tehtavahierarkia-maarineen db user {:urakka-id urakka-id
+      (mhu-suunniteltavat-tehtavat db user {:urakka-id urakka-id
                                                :hoitokauden-alkuvuosi alkuvuosi}))))
 
 (defn poista-namespace 
@@ -327,7 +327,7 @@
   (let [urakan-tiedot (first (urakat-q/hae-urakka db urakka-id))
         alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
-        sopimuksen-tehtavamaarat (q/hae-sopimuksen-tehtavamaarat-urakalle db {:urakka urakka-id})
+        sopimuksen-tehtavamaarat (tehtavamaarat-kyselyt/hae-sopimuksen-tehtavamaarat-urakalle db {:urakka urakka-id})
         sopimuksen-tehtavamaarat (reduce (fn [lopputulos rivi]
                                            (if (:aluetieto rivi)
                                              (let [lopputulos (remove #(= % rivi) lopputulos)]
@@ -340,7 +340,7 @@
                                    sopimuksen-tehtavamaarat sopimuksen-tehtavamaarat)]
     (doseq [rivi sopimuksen-tehtavamaarat]
       (let [{:keys [aluetieto hoitovuosi tehtava sopimuksen-tehtavamaara]} rivi]
-        (q/lisaa-urakka-tehtavamaara-mutta-ala-paivita<! db {:urakka urakka-id
+        (tehtavamaarat-kyselyt/lisaa-urakka-tehtavamaara-mutta-ala-paivita<! db {:urakka urakka-id
                                                              :hoitokauden-alkuvuosi hoitovuosi
                                                              :tehtava tehtava
                                                              :maara sopimuksen-tehtavamaara
@@ -360,7 +360,7 @@
     (when (:tallennettu parametrit)
       (kopioi-tarjouksen-tiedot-suunnitelmaksi db user urakka-id))
     (poista-tuloksista-namespace
-      (q/tallenna-sopimuksen-tila db parametrit (:tallennettu parametrit)))))
+      (tehtavamaarat-kyselyt/tallenna-sopimuksen-tila db parametrit (:tallennettu parametrit)))))
 
 (defn hae-sopimuksen-tila
   "Haetaan sopimuksen tila kannasta"
@@ -368,7 +368,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (let [tulos (first 
                 (poista-tuloksista-namespace 
-                  (q/hae-sopimuksen-tila db parametrit)))]
+                  (tehtavamaarat-kyselyt/hae-sopimuksen-tila db parametrit)))]
     (if-not tulos
       {:tallennettu nil}
       tulos)))
@@ -386,9 +386,9 @@
         (fn [user tiedot]
           (hae-sopimuksen-tila db user tiedot)))
       (julkaise-palvelu
-        :tehtavamaarat-hierarkiassa
+        :hae-mhu-suunniteltavat-tehtavat
         (fn [user tiedot]
-          (hae-tehtavahierarkia-maarineen db user tiedot)))
+          (mhu-suunniteltavat-tehtavat db user tiedot)))
       (julkaise-palvelu
         :tehtavamaarat
         (fn [user tiedot]
@@ -414,7 +414,7 @@
   (stop [this]
     (poista-palvelu (:http-palvelin this) :tallenna-sopimuksen-tila)
     (poista-palvelu (:http-palvelin this) :hae-sopimuksen-tila)
-    (poista-palvelu (:http-palvelin this) :tehtavamaarat-hierarkiassa)
+    (poista-palvelu (:http-palvelin this) :hae-mhu-suunniteltavat-tehtavat)
     (poista-palvelu (:http-palvelin this) :tehtavamaarat)
     (poista-palvelu (:http-palvelin this) :tallenna-tehtavamaarat)
     (poista-palvelu (:http-palvelin this) :tehtavaryhmat-ja-toimenpiteet)

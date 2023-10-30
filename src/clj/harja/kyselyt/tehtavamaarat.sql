@@ -150,7 +150,7 @@ DELETE
    AND st.tehtava = :tehtava-id
    AND st.hoitovuosi = :vuosi;
 
--- name: hae-tehtavahierarkia-maarineen
+-- name: mhu-suunniteltavat-tehtavat
 -- Palauttaa tehtävähierarkian käyttöliittymän Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten.
 -- Äkillistä hoitotyötä ja Kolmansien osapuolten aiheuttaminen vahinkojen korjausta ei suunnitella tehtävälistalla.
 SELECT ut.urakka                   as "urakka",

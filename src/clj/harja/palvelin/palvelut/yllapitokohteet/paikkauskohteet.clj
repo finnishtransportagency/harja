@@ -857,7 +857,6 @@
       (julkaise-palvelu http :poista-kasinsyotetty-paikkaus
                         (fn [user paikkaus]
                           (do
-                            (println ":poista-kasinsyotetty-paikkaus paikkaus:" (pr-str paikkaus))
                             (paikkaus-q/poista-kasin-syotetty-paikkaus
                               db (:id user) (:urakka-id paikkaus) (:id paikkaus)))))
       (julkaise-palvelu http :hae-paikkauskohteen-tiemerkintaurakat

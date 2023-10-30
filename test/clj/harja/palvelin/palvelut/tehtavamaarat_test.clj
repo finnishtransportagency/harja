@@ -111,7 +111,7 @@
 ; käyttää ennakkoon tallennettua testidataa
 (deftest tallenna-tehtavamaarat-testi
   (let [tehtavamaarat-ja-hierarkia (kutsu-palvelua (:http-palvelin jarjestelma)
-                                     :tehtavamaarat-hierarkiassa +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                                     :hae-mhu-suunniteltavat-tehtavat +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                                                                                  :hoitokauden-alkuvuosi 2020})
         tehtavamaarat (kutsu-palvelua (:http-palvelin jarjestelma)
                         :tehtavamaarat +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
@@ -131,7 +131,7 @@
                                             :tehtavamaarat +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                                                                            :hoitokauden-alkuvuosi 2020})
         tehtavahierarkia-paivityksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :tehtavamaarat-hierarkiassa +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+                                               :hae-mhu-suunniteltavat-tehtavat +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                                                                                            :hoitokauden-alkuvuosi 2020})
         tehtavamaarat-lisaa (kutsu-palvelua (:http-palvelin jarjestelma)
                               :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
@@ -240,7 +240,7 @@
                                             :tehtavamaarat         uuden-hoitokauden-tehtavat})
   (let [tehtavat-ja-maarat (kutsu-palvelua
                              (:http-palvelin jarjestelma)
-                             :tehtavamaarat-hierarkiassa
+                             :hae-mhu-suunniteltavat-tehtavat
                              +kayttaja-jvh+
                              {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
                               :hoitokauden-alkuvuosi 2020})
@@ -253,7 +253,7 @@
     (is (true? (every? #(= 2020 (:hoitokauden-alkuvuosi %)) (filter #(not (nil? (:hoitokauden-alkuvuosi %))) tehtavat-ja-maarat))) "Palauttaa tehtavahiearkian määrineen vuodelle"))
   (let [tehtavat-ja-maarat-urakan-ulkopuolelta (kutsu-palvelua
                                                  (:http-palvelin jarjestelma)
-                                                 :tehtavamaarat-hierarkiassa
+                                                 :hae-mhu-suunniteltavat-tehtavat
                                                  +kayttaja-jvh+
                                                  {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
                                                   :hoitokauden-alkuvuosi 2028})]
@@ -263,7 +263,7 @@
                          (some? (:maara %))) tehtavat-ja-maarat-urakan-ulkopuolelta)) "Urakan ulkopuolella ei löydy määriä"))
   (let [tehtavat-ja-maarat-kaikki (kutsu-palvelua
                                     (:http-palvelin jarjestelma)
-                                    :tehtavamaarat-hierarkiassa
+                                    :hae-mhu-suunniteltavat-tehtavat
                                     +kayttaja-jvh+
                                     {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
                                      :hoitokauden-alkuvuosi :kaikki})]
@@ -283,14 +283,14 @@
   ;; Annetulla urakalla ei voi olla sopimustietoja, koska urakan id on aivan väärä
   (is (thrown? IllegalArgumentException (kutsu-palvelua
                                           (:http-palvelin jarjestelma)
-                                          :tehtavamaarat-hierarkiassa
+                                          :hae-mhu-suunniteltavat-tehtavat
                                           +kayttaja-jvh+
                                           {:urakka-id 904569045
                                            :hoitokauden-alkuvuosi 2020})) "Urakkaa ei löydy.")
   ;; Muutakin pielessä, kuin urakan id
   (is (thrown? IllegalArgumentException (kutsu-palvelua
                                           (:http-palvelin jarjestelma)
-                                          :tehtavamaarat-hierarkiassa
+                                          :hae-mhu-suunniteltavat-tehtavat
                                           +kayttaja-jvh+
                                           {})) "Virhe jos ei parametria"))
 
@@ -370,7 +370,7 @@
 
 (deftest sopimuksen-tehtavamaarat-haku-test
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :tehtavamaarat-hierarkiassa
+                  :hae-mhu-suunniteltavat-tehtavat
                   +kayttaja-jvh+
                   {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                    :hoitokauden-alkuvuosi :kaikki})
