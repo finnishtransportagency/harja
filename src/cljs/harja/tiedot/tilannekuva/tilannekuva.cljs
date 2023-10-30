@@ -104,7 +104,6 @@ hakutiheys-historiakuva 1200000)
             tk/liikennemerkkien-opasteiden-ja-liikenteenohjauslaitteiden-hoito-seka-reunapaalujen-kunnossapito false
             tk/palteen-poisto false
             tk/palteen-poisto-kaiteen-alta false
-            tk/paallystetyn-tien-sorapientareen-taytto false
             tk/paallystetyn-tien-polynsidonta false
             tk/ojitus false
             tk/reunapaalujen-uusiminen false
