@@ -40,7 +40,64 @@
    :havainnot "kuvaus tähän"
    :laadunalitus true})
 
+(def tieturvallisuustarkastus
+  {:havainnot "Rovaniemen Mäkkärissä roskia",
+   :sijainti {:type :multiline,
+              :lines [{:type :line,
+                       :points [[443402.71700182755 7376606.463961007]
+                                [443430.205 7376632.809]
+                                [443445.87274596374 7376646.680096388]]}]},
+   :nayta-urakoitsijalle false,
+   :aika #inst "2023-10-24T00:40:08.000-00:00",
+   :tr {:numero 49501, :alkuosa 1, :alkuetaisyys 685, :loppuosa 1, :loppuetaisyys 744},
+   :uusi? true,
+   :laadunalitus false,
+   :tyyppi :tieturvallisuus,
+   :tarkastaja "Jarjestelmavastaava Mr. Valekoodari"})
+
 (use-fixtures :each (compose-fixtures jarjestelma-fixture tietokanta-fixture))
+
+(deftest tallenna-ja-paivita-tieturvallisuustarkastus
+  (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
+        kuvaus (str "kuvaus nyt " (System/currentTimeMillis))
+        hae-tarkastukset #(kutsu-http-palvelua :hae-urakan-tarkastukset +kayttaja-jvh+
+                            {:urakka-id urakka-id
+                             :alkupvm #inst "2023-09-01T00:00:00.000-00:00"
+                             :loppupvm #inst "2023-10-30T00:00:00.000-00:00"
+                             :tienumero %
+                             :vain-laadunalitukset? false})
+        tarkastuksia-ennen-kaikki (count (hae-tarkastukset nil))
+        tarkastuksia-ennen-tie-49501 (count (hae-tarkastukset 49501))]
+
+    (testing "Tieturvallisuustarkastuksen tallennus ja muokkaus"
+      (let [vastaus (kutsu-http-palvelua :tallenna-tarkastus +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :tarkastus (assoc-in tieturvallisuustarkastus [:havainnot] kuvaus)})
+            id (:id vastaus)
+
+            _ (is (number? id) "Tallennus palauttaa uuden id:n")
+            _ (is (= (count (hae-tarkastukset nil)) (inc tarkastuksia-ennen-kaikki)) "Kaikki tarkastukset kasvanut yhdellä")
+
+            listaus-tie-49501 (hae-tarkastukset 49501)
+            _ (is (= (count listaus-tie-49501) (inc tarkastuksia-ennen-tie-49501)) "Tie 49501 listaus kasvanut tallennuksen jälkeen")
+            _ (is (= (keyword "tilaajan laadunvalvonta")
+                     (:tyyppi (first (filter #(= (:id %) id) listaus-tie-49501)))))
+
+            tarkastus (kutsu-http-palvelua :hae-tarkastus +kayttaja-jvh+
+                        {:urakka-id urakka-id
+                         :tarkastus-id id})
+            _ (is (= kuvaus (:havainnot tarkastus)) "Tallennettu kuvaus täsmää")
+
+            muokattu-tarkastus (kutsu-http-palvelua :tallenna-tarkastus +kayttaja-jvh+
+                                 {:urakka-id urakka-id
+                                  :tarkastus (-> tarkastus
+                                               (assoc-in [:tr :loppuetaisyys] 745)
+                                               (assoc-in [:havainnot] "MUOKATTU KUVAUS"))})
+
+            _ (is (= (:id muokattu-tarkastus) id) "ID täsmää")
+            _ (is (= "MUOKATTU KUVAUS" (get-in muokattu-tarkastus [:havainnot])) "Muokattu kuvaus tallentuu")
+            _ (is (= 745 (get-in muokattu-tarkastus [:tr :loppuetaisyys])) "Muokattu loppuetäisyys tallentuu")
+            _ (is (= 744 (get-in tarkastus [:tr :loppuetaisyys])) "Vanha loppuetäisyys on sama")]))))
 
 (deftest tallenna-ja-paivita-soratietarkastus
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
