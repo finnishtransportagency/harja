@@ -816,6 +816,10 @@
           {toimenpideinstanssi-id :id} (first (tpi-q/hae-urakan-toimenpideinstanssi db {:urakka urakka-id :tp toimenpide-id}))
           _ (when (nil? toimenpideinstanssi-id)
               (throw (Exception. "Toimenpideinstanssia ei löydetty")))
+          _ (when (and tehtava (nil? tehtava-id))
+              (throw (Exception. "Tehtävän ID:tä ei löydetty")))
+          _ (when (and tehtavaryhma (nil? tehtavaryhma-id))
+              (throw (Exception. "Tehtäväryhmän ID:tä ei löydetty")))
           toteumatyyppi (keyword toteumatyyppi)
           ajat (muodosta-ajat ajat)
           kustannusarvioitu-tyo-params (into {}
