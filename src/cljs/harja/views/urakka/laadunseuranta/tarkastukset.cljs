@@ -41,13 +41,13 @@
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def +tarkastustyyppi-hoidolle+ [:tiesto :talvihoito :soratie :laatu])
+(def +tarkastustyyppi-hoidolle+ [:tieturvallisuus :tiesto :talvihoito :soratie :laatu])
 (def +tarkastustyyppi-yllapidolle+ [:katselmus :pistokoe :vastaanotto :takuu])
 
 (defn tarkastustyypit-hoidon-tekijalle [tekija]
   (case tekija
     :tilaaja [:laatu]
-    :urakoitsija [:tiesto :talvihoito :soratie]
+    :urakoitsija [:tieturvallisuus :tiesto :talvihoito :soratie]
     +tarkastustyyppi-hoidolle+))
 
 (defn tarkastustyypit-urakkatyypille-ja-tekijalle [urakkatyyppi tekija]
@@ -65,7 +65,7 @@
 (defn uusi-tarkastus [urakkatyyppi]
   {:uusi? true
    :aika (pvm/nyt)
-   :tyyppi (if (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :katselmus nil)
+   :tyyppi (if (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :katselmus @tiedot/tarkastustyyppi)
    :tarkastaja @istunto/kayttajan-nimi
    :nayta-urakoitsijalle (or (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija) (nav/yllapitourakka-valittu?))
    :laadunalitus false})
@@ -88,8 +88,8 @@
        (let [urakka @nav/valittu-urakka
              vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)
              tarkastukset (reverse (sort-by :aika @tiedot/urakan-tarkastukset))]
-         [:div.tarkastukset
 
+         [:div.tarkastukset
           [ui-valinnat/urakkavalinnat {:urakka (:urakka optiot)}
            ^{:key "aikavali"}
            [valinnat/aikavali-nykypvm-taakse urakka tiedot/valittu-aikavali {:vayla-tyyli? true}]
@@ -131,8 +131,7 @@
               (yleiset/wrap-if
                 (not oikeus?)
                 [yleiset/tooltip {} :%
-                 (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                                 oikeudet/urakat-laadunseuranta-tarkastukset)]
+                 (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-laadunseuranta-tarkastukset)]
                 ^{:key "uusi-tarkastus"}
                 [napit/uusi "Uusi tarkastus"
                  #(reset! tiedot/valittu-tarkastus (uusi-tarkastus (:tyyppi urakka)))
@@ -154,11 +153,13 @@
              :nimi :aika}
 
             {:otsikko "Tyyppi"
-             :nimi :tyyppi :fmt tiedot/+tarkastustyyppi->nimi+ :leveys 1}
+             :nimi :tyyppi
+             :fmt tiedot/+tarkastustyyppi->nimi+
+             :leveys 1}
 
             (when (or (= :paallystys (:nakyma optiot))
-                      (= :paikkaus (:nakyma optiot))
-                      (= :tiemerkinta (:nakyma optiot)))
+                    (= :paikkaus (:nakyma optiot))
+                    (= :tiemerkinta (:nakyma optiot)))
               {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
                :hae (fn [rivi]
                       (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
@@ -194,7 +195,6 @@
              :komponentti (fn [rivi]
                             (liitteet/liitteet-numeroina (:liitteet rivi)))}]
            tarkastukset]])))))
-
 
 (defn talvihoitomittaus []
   (lomake/ryhma
@@ -365,9 +365,12 @@
                        [[:ei-tyhja "Anna tarkastuksen kohde"]])})
 
          (if vesivaylaurakka?
-           {:otsikko "Tar\u00ADkastus" :nimi :tyyppi :tyyppi :string
+           {:otsikko "Tar\u00ADkastus" 
+            :nimi :tyyppi 
+            :tyyppi :string
             :hae (constantly "Katselmus") :muokattava? (constantly false)}
-           {:otsikko "Tar\u00ADkastus" :nimi :tyyppi
+           {:otsikko "Tar\u00ADkastus" 
+            :nimi :tyyppi
             :pakollinen? true
             :tyyppi :valinta
             :valinnat (tarkastustyypit-urakkatyypille-ja-tekijalle urakkatyyppi (:tekija tarkastus))
@@ -500,7 +503,6 @@
                              :ikoni (ikonit/livicon-arrow-right)
                              :luokka :nappi-toissijainen}])})]
         tarkastus]])))
-
 
 (defn- vastaava-tarkastus [klikattu-tarkastus]
   ;; oletetaan että kartalla näkyvät tarkastukset ovat myös gridissä

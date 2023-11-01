@@ -1,5 +1,47 @@
-.tarkastuksen-havaintolista {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
+.tarkastukset 
+{
+  .tarkastuksen-havaintolista {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .urakkavalinnat {
+    display: flex;
+    flex-direction: row;
+    padding-bottom: 24px;
+
+    .label-ja-alasveto {
+      margin: 0px;
+      padding-right: @valistys-4;
+    }
+    .alasvedon-otsikko {
+      line-height: @valistys-24;
+    }
+  }
+
+  .urakkatoiminnot-tyyliton {
+    margin-top: 38px;
+    margin-bottom: @valistys-6;
+    padding-left: @valistys-6;
+  }
+
+  /* Ryhmitä valinnat sarakkeisiin pienemmällä resoluutiolla */
+  @media (max-width: 1100px) 
+  {
+    .urakkavalinnat {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+
+      input, .livi-alasveto {
+        width: 300px;
+      }
+    }
+    .label-ja-alasveto {
+      padding-left: @valistys-4;
+    }
+    .urakkavalinnat-tyyliton {
+      margin-bottom: @valistys-24;
+    }
+  }
 }
