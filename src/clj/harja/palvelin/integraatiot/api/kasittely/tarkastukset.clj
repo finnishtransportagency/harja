@@ -18,21 +18,17 @@
     "soratie" (q-tarkastukset/luo-tai-paivita-soratiemittaus db id uusi? mittaus)
     nil))
 
-(defn- hae-tieturvallisuusgeometria-tienumerolla [db tie saatugeometria]
-  (let [_ (println "LÄHETETÄÄN GEOMETRIA " saatugeometria)
-        geometriat (tieturvallisuusverkko-kyselyt/hae-geometriaa-leikkaavat-tieturvallisuusgeometriat-tienumerolla db tie saatugeometria)
-        _ (println "Saatiin geometrioita " (count geometriat))
-        _ (println "JSONI: " (:jsoni (first geometriat)))]
-    (:unioni (first geometriat)))
-  )
+(defn- hae-tieturvallisuusgeometria [db tie geometria]
+  (:leikkaus
+    (first (tieturvallisuusverkko-kyselyt/hae-geometriaa-leikkaavat-tieturvallisuusgeometriat-tienumerolla db
+             {:tie tie :saatugeometria geometria}))))
 
 (defn luo-tai-paivita-tarkastukset
   "Käsittelee annetut tarkastukset ja palautta listan string-varoituksia."
   ([db liitteiden-hallinta kayttaja tyyppi urakka-id data]
    (luo-tai-paivita-tarkastukset db liitteiden-hallinta kayttaja tyyppi urakka-id data nil))
   ([db liitteiden-hallinta kayttaja tyyppi urakka-id data yllapitokohde]
-   (let [_ (println "TYYPPI " tyyppi)
-         tarkastukset (:tarkastukset data)]
+   (let [tarkastukset (:tarkastukset data)]
      (remove
        nil?
        (try
@@ -53,13 +49,20 @@
                      tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
                      tie (:tie tr-osoite)
                      aosa (:aosa tr-osoite)
+                     aet (:aet tr-osoite)
                      _ (println "TIE " tie)
                      _ (println "AOSA "aosa)
+                     _ (println "AET "aet)
                      geometria (if tr-osoite
                                  (:geometria tr-osoite)
                                  (sijainnit/tee-geometria (:alkusijainti tarkastus) (:loppusijainti tarkastus)))
-                     turvallisuus-geometria (hae-tieturvallisuusgeometria-tienumerolla db tie geometria)
-                     _ (println "turvallisuusgeometria " turvallisuus-geometria)
+                     tieturvallisuus-geometria (when (and (= tyyppi (name :tieturvallisuus)) tie)
+                                                 (hae-tieturvallisuusgeometria db tie geometria))
+                     tr-osoite
+                     (if (and (= tyyppi (name :tieturvallisuus)) tieturvallisuus-geometria)
+                       (sijainnit/hae-tierekisteriosoite-geometrialle db (geo/pg->clj tieturvallisuus-geometria))
+                       tr-osoite)
+                     _ (println "tr osoite " tr-osoite)
                      id (q-tarkastukset/luo-tai-paivita-tarkastus
                           db kayttaja urakka-id
                           {:id tarkastus-id
@@ -68,7 +71,7 @@
                            :tyyppi tyyppi
                            :aika aika
                            :tarkastaja (json/henkilo->nimi (:tarkastaja tarkastus))
-                           :sijainti geometria
+                           :sijainti (if-not tieturvallisuus-geometria geometria tieturvallisuus-geometria)
                            :tr {:numero (:tie tr-osoite)
                                 :alkuosa (:aosa tr-osoite)
                                 :alkuetaisyys (:aet tr-osoite)
@@ -91,7 +94,9 @@
                                 :coordinates [{:type :point :coordinates [(:x alkusijainti) (:y alkusijainti)]}
                                               {:type :point, :coordinates [(:x loppusijainti) (:y loppusijainti)]}]})
                              geo/clj->pg
-                             geo/geometry)})
+                             geo/geometry)
+                           :rajapinnasta_saatu_sijainti (if tieturvallisuus-geometria geometria nil)
+                           })
                      liitteet (:liitteet tarkastus)]
                  (tyokalut-liitteet/tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
                  (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? (:mittaus rivi))

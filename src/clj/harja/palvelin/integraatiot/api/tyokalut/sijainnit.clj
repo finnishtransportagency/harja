@@ -21,3 +21,9 @@
     (geo/geometry (LineString. (into-array [(Point. alku-x alku-y) (Point. loppu-x loppu-y)])))
     (when (and alku-x alku-y)
       (geo/geometry (Point. alku-x alku-y)))))
+
+(defn hae-tierekisteriosoite-geometrialle [db geometria]
+  (let [eka-piste (geo/ensimmainen-piste geometria)
+        viimeinen-piste (geo/viimeinen-piste geometria)]
+    (hae-tierekisteriosoite db
+      {:x (first eka-piste) :y (second eka-piste)} {:x (first viimeinen-piste) :y (second viimeinen-piste)})))
