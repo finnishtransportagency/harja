@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-alpine
+FROM eclipse-temurin:17-alpine
 
 # Yhdistä image harjan repositoryyn
 LABEL org.opencontainers.image.source https://github.com/finnishtransportagency/harja
