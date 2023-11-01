@@ -29,7 +29,7 @@ on:
         type: string
         required: true
 
-run-name: "Tools: Build and deploy GHA dockerfile '${{ inputs.dockerfile }}' with tag ${{ inputs.tag }} (Update latest-tag? ${{ inputs.update-latest }})"
+run-name: "Tools: Build & deploy GHA dockerfile '${{ inputs.dockerfile }}' with tag ${{ inputs.tag }} (Update latest-tag? ${{ inputs.update-latest }})"
 
 env:
   GH_DOCKER_REGISTRY: ghcr.io
