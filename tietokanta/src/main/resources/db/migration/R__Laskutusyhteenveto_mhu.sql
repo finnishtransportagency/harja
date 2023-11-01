@@ -763,13 +763,13 @@ BEGIN
                                                 JOIN kulu_kohdistus lk ON lk.kulu = l.id
                                                 JOIN toimenpideinstanssi tpi
                                                      ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
-                                                -- Poistetaan Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3) hankinnoista, ja lisätään se omalle rivilleen
-                                                LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id AND
-                                                                        (tr.yksiloiva_tunniste IS NULL or
-                                                                         (tr.yksiloiva_tunniste IS NOT NULL AND tr.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'))
+                                                LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
                                        WHERE lk.maksueratyyppi NOT IN ('akillinen-hoitotyo', 'muu', 'lisatyo')
                                          AND lk.poistettu IS NOT TRUE
                                          AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+                                         -- Poistetaan Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3) hankinnoista, ja lisätään se omalle rivilleen
+                                         AND (tr.yksiloiva_tunniste IS NULL or
+                                                (tr.yksiloiva_tunniste IS NOT NULL AND tr.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'))
                     LOOP
                         SELECT hankinnat_i.kht_summa AS summa,
                                hankinnat_i.kht_summa AS korotettuna,
@@ -819,9 +819,6 @@ BEGIN
                     RAISE NOTICE 'tilaajan_rahavaraukset_laskutetaan: %', tilaajan_rahavaraukset_laskutetaan;
                 END LOOP;
 
-            -- Lisätään tilaajan rahavaraukset hankintoihin
-            hankinnat_laskutettu := hankinnat_laskutettu + tilaajan_rahavaraukset_laskutettu;
-            hankinnat_laskutetaan := hankinnat_laskutetaan + tilaajan_rahavaraukset_laskutetaan;
             RAISE NOTICE 'hankinnat_laskutettu: %', hankinnat_laskutettu;
             RAISE NOTICE 'hankinnat_laskutetaan: %', hankinnat_laskutetaan;
 

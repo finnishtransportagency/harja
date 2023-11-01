@@ -17,6 +17,7 @@
                             <xs:element name="tloik" type="xs:integer" minOccurs="0"/>
                             <xs:element name="palautevayla" type="xs:integer" minOccurs="0"/>
                             <xs:element name="mobiilisovellus" type="xs:integer" minOccurs="0"/>
+                            <xs:element type="xs:byte" name="havainnot" minOccurs="0"/>
                         </xs:all>
                     </xs:complexType>
                 </xs:element>

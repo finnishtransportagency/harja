@@ -71,14 +71,16 @@
                                       [(:bitumi-indeksi yllapitokohde)
                                        (:kaasuindeksi yllapitokohde)
                                        (:maku-paallysteet yllapitokohde)
-                                       (:kokonaishinta yllapitokohde)])))]
+                                       (:kokonaishinta yllapitokohde)])))
+        ;; Sarakkeiden määrä
+        sarakkeita (if (= taulukkotyyppi :yha) 14 13)
+        ;; Kun näytetään arvonmuutos, lisätään sarakkeita jotta taulukon välitykset ovat oikeat
+        sarakkeita (if-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi) (+ sarakkeita 2) sarakkeita)]
 
     [:taulukko {:otsikko nimi
                 :tyhja (when (empty? kohteet) "Ei kohteita.")
                 :sheet-nimi nimi
-                :rivi-ennen [{:sarakkeita (if (= taulukkotyyppi :yha)
-                                            14
-                                            13)}
+                :rivi-ennen [{:sarakkeita sarakkeita}
                              {:sarakkeita 1}
                              {:teksti "Hintamuutokset"
                               :sarakkeita 3
