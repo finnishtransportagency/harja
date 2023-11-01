@@ -82,7 +82,7 @@ services:
       timeout: 10s
 
   activemq-itmf:
-    image: ghcr.io/finnishtransportagency/harja_activemq:latest
+    image: ghcr.io/finnishtransportagency/harja_activemq:5.15.16
     container_name: activemq-itmf
     networks:
       - harja_net
