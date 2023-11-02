@@ -23,7 +23,7 @@
       (geo/geometry (Point. alku-x alku-y)))))
 
 (defn hae-tierekisteriosoite-geometrialle [db geometria]
-  (let [eka-piste (geo/ensimmainen-piste geometria)
-        viimeinen-piste (geo/viimeinen-piste geometria)]
+  (let [eka-piste (geo/ensimmaisen-pisteen-koordinaatit geometria)
+        viimeinen-piste (geo/viimeisen-pisteen-koordinaatit geometria)]
     (hae-tierekisteriosoite db
       {:x (first eka-piste) :y (second eka-piste)} {:x (first viimeinen-piste) :y (second viimeinen-piste)})))

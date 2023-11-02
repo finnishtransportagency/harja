@@ -19,5 +19,3 @@ FROM (SELECT ST_Union(sisempi.geom) u
               AND ST_Intersects(:saatugeometria::GEOMETRY, geometria::geometry)
             ) AS sisempi
       ) AS ulompi;
-
-

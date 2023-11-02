@@ -167,15 +167,18 @@
      (PGpoint. x y)))
 
 #?(:clj
-   (defn ensimmainen-piste [geometria]
-     (when (= (:type geometria) :multiline)
-       (first (:points (first (:lines geometria)))))))
+   (defn ensimmaisen-pisteen-koordinaatit "Palauttaa vektorin, ensinnäisen pisteen x ja y" [geometria]
+     (cond
+       (= (:type geometria) :multiline) (first (:points (first (:lines geometria))))
+       (= (:type geometria) :multipoint) (:coordinates (first (:coordinates geometria)))
+       :else nil)))
 
-; EKA  {:type :line, :points [
  #?(:clj
-    (defn viimeinen-piste [geometria]
-      (when (= (:type geometria) :multiline)
-        (last (:points (last (:lines geometria)))))))
+    (defn viimeisen-pisteen-koordinaatit "Palauttaa vektorin, viimeisen pisteen x ja y" [geometria]
+      (cond
+        (= (:type geometria) :multiline) (last (:points (last (:lines geometria))))
+        (= (:type geometria) :multipoint) (:coordinates (last (:coordinates geometria)))
+        :else nil)))
 
  #?(:clj
     (defmulti clj->pg (fn [geometria]

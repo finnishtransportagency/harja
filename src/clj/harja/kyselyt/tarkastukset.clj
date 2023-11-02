@@ -88,7 +88,7 @@
 (defn luo-tai-paivita-tarkastus
   "Luo uuden tai päivittää tarkastuksen ja palauttaa id:n."
   [db user urakka-id {:keys [id yllapitokohde sijainti nayta-urakoitsijalle] :as tarkastus}]
-  ;  (log/debug "Tallenna tai päivitä urakan " urakka-id " tarkastus: " tarkastus)
+  (log/debug "Tallenna tai päivitä urakan " urakka-id " tarkastus: " tarkastus)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka-id yllapitokohde)
   (let [tarkastus (update tarkastus :sijainti
                           #(if (instance? PGgeometry %)

@@ -50,9 +50,6 @@
                      tie (:tie tr-osoite)
                      aosa (:aosa tr-osoite)
                      aet (:aet tr-osoite)
-                     _ (println "TIE " tie)
-                     _ (println "AOSA "aosa)
-                     _ (println "AET "aet)
                      geometria (if tr-osoite
                                  (:geometria tr-osoite)
                                  (sijainnit/tee-geometria (:alkusijainti tarkastus) (:loppusijainti tarkastus)))
@@ -62,7 +59,6 @@
                      (if (and (= tyyppi (name :tieturvallisuus)) tieturvallisuus-geometria)
                        (sijainnit/hae-tierekisteriosoite-geometrialle db (geo/pg->clj tieturvallisuus-geometria))
                        tr-osoite)
-                     _ (println "tr osoite " tr-osoite)
                      id (q-tarkastukset/luo-tai-paivita-tarkastus
                           db kayttaja urakka-id
                           {:id tarkastus-id
