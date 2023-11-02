@@ -869,9 +869,13 @@
 
 (defn sammuta-jarjestelma []
   (when harja-jarjestelma
-    (alter-var-root #'harja-jarjestelma (fn [s]
-                                          (component/stop s)
-                                          nil)))
+    (alter-var-root #'harja-jarjestelma
+      (fn [s]
+        (try
+          (component/stop s)
+          (catch Exception e
+            (throw (component/ex-without-components e))))
+        nil)))
   (sammuta-harja-tarkkailija!))
 
 (defn -main [& argumentit]
