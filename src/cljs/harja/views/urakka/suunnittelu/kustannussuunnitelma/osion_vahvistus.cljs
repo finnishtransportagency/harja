@@ -2,7 +2,6 @@
   (:require [reagent.core :as r]
             [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
             [harja.ui.yleiset :as yleiset]
-            [harja.loki :refer [log]]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]
             [harja.ui.modal :as modal]
             [harja.ui.debug :as debug]
@@ -11,6 +10,9 @@
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka :as urakka]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [clojure.string :as str]))
 
 
@@ -76,7 +78,11 @@
             vaaditut-vahvistettu? (vaaditut-osiot-vahvistettu? osioiden-tilat vahvistus-vaadittu-osiot hoitovuosi-nro)
             oikeus-vahvistaa? (ks-yhteiset/oikeus-vahvistaa-osio?
                                 @istunto/kayttaja
-                                (some-> @tila/yleiset :urakka :id))]
+                                (some-> @tila/yleiset :urakka :id))
+            valikatselmus-linkki [yleiset/linkki "Välikatselmus" #(siirtymat/avaa-valikatselmus
+                                                                    (nth (urakka/hoito-tai-sopimuskaudet @nav/valittu-urakka)
+                                                                      (dec hoitovuosi-nro)))
+                                  {:stop-propagation true}]]
         [:div.vahvista-osio {:class (cond
                                       (not indeksit-saatavilla?)
                                       "indeksit-puuttuvat"
@@ -139,12 +145,16 @@
               [:div.selite
                (if vahvistettu?
                  [:<>
-                  [:div "Jos suunnitelmaa muutetaan tämän jälkeen, ei erotukselle tehdä enää indeksikorjausta."]
+                  [:div "Vain hoitovuoden alussa tiedossa oleville kustannuksille lasketaan indeksikorjaus.
+                  Kesken hoitovuoden tulevat budjettimuutokset kirjataan tavoitehinnan oikaisuina "
+                   valikatselmus-linkki "-näytöllä"]
                   [:div "Indeksikorjaus on laskettu vain alkuperäiseen lukuun."]]
                  [:<>
                   [:div "Vahvistamalla vahvistat indeksikorjaukset ko. hoitovuodelle."]
-                  [:div "Jos suunnitelmaa muutetaan tämän jälkeen, ei erotukselle tehdä enää indeksikorjausta.
-                  Indeksikorjaus on laskettu vain alkuperäiseen lukuun."]])])
+                  [:div "Kun vahvistat osion, luvut ja indeksikorjaukset lukitaan.
+                  Vain hoitovuoden alussa tiedossa oleville kustannuksille lasketaan indeksikorjaus.
+                  Kesken hoitovuoden tulevat budjettimuutokset kirjataan tavoitehinnan oikaisuina "
+                   valikatselmus-linkki "-näytöllä"]])])
 
             ;; Kontrollit
             (when (and
