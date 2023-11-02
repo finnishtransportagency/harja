@@ -110,7 +110,7 @@
                        :tyyppi-polku muu-kohdeluokka-tyyppi-polku})
 
 (def +pylvaat+
-  {:kohdeluokka "pylvaat" :api-versio "v1" :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi
+  {:kohdeluokka "pylvaat" :palvelu "tiekohderekisteri" :api-versio "v1" :nimiavaruus "varusteet" :kohdeluokka->tyyppi-fn varuste-kohdeluokka->tyyppi
    :tyyppi-polku varuste-tyyppi-polku})
 
 (def +tietolajien-lahteet+ [kaiteet
@@ -355,10 +355,10 @@
 
                 http-asetukset {:metodi :GET
                                 :otsikot otsikot
-                                :url (str/join "/" [varuste-api-juuri-url
-                                                    palvelu "api" api-versio
-                                                    (when-not (= "sijaintipalvelu" palvelu) "historia")
-                                                    "kohde" ulkoinen-oid])}
+                                :url (str/join "/" (keep identity [varuste-api-juuri-url
+                                                                   palvelu "api" api-versio
+                                                                   (when-not (= "sijaintipalvelu" palvelu) "historia")
+                                                                   "kohde" ulkoinen-oid]))}
 
                 {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
                 varusteet (json/read-str vastaus :key-fn keyword)
