@@ -21,8 +21,8 @@
 (defn- hae-tieturvallisuusgeometria [db tie geometria]
   (let [tulos (first (tieturvallisuusverkko-kyselyt/hae-geometriaa-leikkaavat-tieturvallisuusgeometriat-tienumerolla db
                  {:tie tie :saatugeometria geometria}))
-        idt (:idt tulos)
-        _ (println "ID:T " idt)
+        ;idt (:idt tulos)
+        ;_ (println "ID:T " idt)
         ]
     (:leikkaus tulos)))
 
@@ -60,7 +60,6 @@
                      (if (and (= tyyppi (name :tieturvallisuus)) tieturvallisuus-geometria)
                        (sijainnit/hae-tierekisteriosoite-geometrialle db (geo/pg->clj tieturvallisuus-geometria))
                        tr-osoite)
-                     _ (println "TR OSOITE " tr-osoite)
                      id (q-tarkastukset/luo-tai-paivita-tarkastus
                           db kayttaja urakka-id
                           {:id tarkastus-id
