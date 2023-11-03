@@ -26,6 +26,9 @@
 
 (defn sammuta! []
   (alter-var-root #'harja-tarkkailija (fn [s]
-                                        (component/stop s)
+                                        (try
+                                          (component/stop s)
+                                          (catch Exception e
+                                            (throw (component/ex-without-components e))))
                                         nil)))
 
