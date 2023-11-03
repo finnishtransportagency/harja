@@ -69,7 +69,7 @@
                            :tyyppi tyyppi
                            :aika aika
                            :tarkastaja (json/henkilo->nimi (:tarkastaja tarkastus))
-                           :sijainti (if-not tieturvallisuus-geometria geometria tieturvallisuus-geometria)
+                           :sijainti (if (= tyyppi (name :tieturvallisuus)) tieturvallisuus-geometria geometria)
                            :tr {:numero (:tie tr-osoite)
                                 :alkuosa (:aosa tr-osoite)
                                 :alkuetaisyys (:aet tr-osoite)
@@ -93,7 +93,7 @@
                                               {:type :point, :coordinates [(:x loppusijainti) (:y loppusijainti)]}]})
                              geo/clj->pg
                              geo/geometry)
-                           :rajapinnasta_saatu_sijainti (if tieturvallisuus-geometria geometria nil)
+                           :rajapinnasta_saatu_sijainti (if (= tyyppi (name :tieturvallisuus)) geometria nil)
                            })
                      liitteet (:liitteet tarkastus)]
                  (tyokalut-liitteet/tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
