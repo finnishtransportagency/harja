@@ -144,17 +144,13 @@
             (when indeksit-saatavilla?
               [:div.selite
                (if vahvistettu?
-                 [:<>
-                  [:div "Vain hoitovuoden alussa tiedossa oleville kustannuksille lasketaan indeksikorjaus.
+                 [:div "Vain hoitovuoden alussa tiedossa oleville kustannuksille lasketaan indeksikorjaus.
                   Kesken hoitovuoden tulevat budjettimuutokset kirjataan tavoitehinnan oikaisuina "
-                   valikatselmus-linkki "-näytöllä"]
-                  [:div "Indeksikorjaus on laskettu vain alkuperäiseen lukuun."]]
-                 [:<>
-                  [:div "Vahvistamalla vahvistat indeksikorjaukset ko. hoitovuodelle."]
-                  [:div "Kun vahvistat osion, luvut ja indeksikorjaukset lukitaan.
+                  valikatselmus-linkki "-näytöllä"]
+                 [:div "Kun vahvistat osion, luvut ja indeksikorjaukset lukitaan.
                   Vain hoitovuoden alussa tiedossa oleville kustannuksille lasketaan indeksikorjaus.
                   Kesken hoitovuoden tulevat budjettimuutokset kirjataan tavoitehinnan oikaisuina "
-                   valikatselmus-linkki "-näytöllä"]])])
+                  valikatselmus-linkki "-näytöllä"])])
 
             ;; Kontrollit
             (when (and
