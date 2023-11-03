@@ -5,10 +5,6 @@
             [harja.palvelin.tyokalut.komponentti-protokollat :as kp])
   (:import (com.stuartsierra.component SystemMap)))
 
-(defn- restart-komp [komp]
-  (component/stop komp)
-  (component/start komp))
-
 (defonce ^:private uudelleen-kaynnistajan-lukko (Object.))
 
 (extend-type SystemMap
@@ -22,8 +18,16 @@
         (if (nil? component-key)
           system
           (let [uudelleen-kaynnistettavat-komponentit (drop-while #(not= % component-key) all-keys-sorted)
-                sammutettu-jarjestelma (component/update-system-reverse system uudelleen-kaynnistettavat-komponentit component/stop)
-                uudelleen-kaynnistetty-jarjestelma (component/update-system sammutettu-jarjestelma uudelleen-kaynnistettavat-komponentit component/start)]
+                sammutettu-jarjestelma
+                (try
+                  (component/update-system-reverse system uudelleen-kaynnistettavat-komponentit component/stop)
+                  (catch Exception e
+                    (throw (component/ex-without-components e))))
+                uudelleen-kaynnistetty-jarjestelma
+                (try
+                  (component/update-system sammutettu-jarjestelma uudelleen-kaynnistettavat-komponentit component/start)
+                  (catch Exception e
+                    (throw (component/ex-without-components e))))]
             (recur uudelleen-kaynnistetty-jarjestelma
                    component-keys)))))))
 

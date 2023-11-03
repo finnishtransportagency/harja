@@ -83,6 +83,8 @@ services:
 
   activemq-itmf:
     image: ghcr.io/finnishtransportagency/harja_activemq:latest
+    # FIXME: Versio 5.15.16 rikkoo integraatiotestit, selvitettävä mistä johtuu
+    #image: ghcr.io/finnishtransportagency/harja_activemq:5.15.16
     container_name: activemq-itmf
     networks:
       - harja_net
