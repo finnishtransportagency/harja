@@ -130,8 +130,6 @@
                alikohteet (xml/luetun-xmln-tagien-sisalto kohde :alikohteet)
                tr-osoite (xml/luetun-xmln-tagin-sisalto kohde :tierekisteriosoitevali)]
 
-           (println "jere testaa::" kohde)
-
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :yha-id) [(str urakka-yhaid)]))
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :harja-id) [(str urakka-id)]))
 
