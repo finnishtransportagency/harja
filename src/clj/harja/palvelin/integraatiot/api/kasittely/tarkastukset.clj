@@ -19,9 +19,12 @@
     nil))
 
 (defn- hae-tieturvallisuusgeometria [db tie geometria]
-  (:leikkaus
-    (first (tieturvallisuusverkko-kyselyt/hae-geometriaa-leikkaavat-tieturvallisuusgeometriat-tienumerolla db
-             {:tie tie :saatugeometria geometria}))))
+  (let [tulos (first (tieturvallisuusverkko-kyselyt/hae-geometriaa-leikkaavat-tieturvallisuusgeometriat-tienumerolla db
+                 {:tie tie :saatugeometria geometria}))
+        idt (:idt tulos)
+        _ (println "ID:T " idt)
+        ]
+    (:leikkaus tulos)))
 
 (defn luo-tai-paivita-tarkastukset
   "Käsittelee annetut tarkastukset ja palautta listan string-varoituksia."
@@ -48,8 +51,6 @@
                      aika (json/aika-string->java-sql-date (:aika tarkastus))
                      tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
                      tie (:tie tr-osoite)
-                     aosa (:aosa tr-osoite)
-                     aet (:aet tr-osoite)
                      geometria (if tr-osoite
                                  (:geometria tr-osoite)
                                  (sijainnit/tee-geometria (:alkusijainti tarkastus) (:loppusijainti tarkastus)))
@@ -59,6 +60,7 @@
                      (if (and (= tyyppi (name :tieturvallisuus)) tieturvallisuus-geometria)
                        (sijainnit/hae-tierekisteriosoite-geometrialle db (geo/pg->clj tieturvallisuus-geometria))
                        tr-osoite)
+                     _ (println "TR OSOITE " tr-osoite)
                      id (q-tarkastukset/luo-tai-paivita-tarkastus
                           db kayttaja urakka-id
                           {:id tarkastus-id

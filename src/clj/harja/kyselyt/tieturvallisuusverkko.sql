@@ -11,11 +11,11 @@ VALUES (:tasoluokka, :aosa, :tie, :let, :losa, :aet, :tenluokka,
 SELECT tie, aosa, losa, aet, let, geometria FROM tieturvallisuusverkko;
 
 -- name: hae-geometriaa-leikkaavat-tieturvallisuusgeometriat-tienumerolla
-SELECT ST_Intersection(:saatugeometria::GEOMETRY, ulompi.u) AS leikkaus
-FROM (SELECT ST_Union(sisempi.geom) u
-      FROM (SELECT geometria::geometry geom
+SELECT ST_Intersection(:saatugeometria::GEOMETRY, ulompi.u) AS leikkaus, ulompi.ids AS idt
+FROM (SELECT ST_CollectionExtract(ST_Collect(sisempi.geom::geometry)) u, string_agg(sisempi.id::TEXT, ' ') ids
+      FROM (SELECT geometria::geometry geom, id
             FROM tieturvallisuusverkko
             WHERE tie = :tie
               AND ST_Intersects(:saatugeometria::GEOMETRY, geometria::geometry)
-            ) AS sisempi
-      ) AS ulompi;
+           ) AS sisempi
+     ) AS ulompi;

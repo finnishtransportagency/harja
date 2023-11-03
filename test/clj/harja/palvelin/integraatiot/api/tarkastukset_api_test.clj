@@ -133,10 +133,12 @@
     (let [tark (tarkista-kannasta)
           odotetut-pisteet (->
                              {:type :multipoint,
-                              :coordinates [{:type :point :coordinates [378749.9 6728024.4]}
-                                            {:type :point, :coordinates [378195.7 6728647.5]}]}
+                              :coordinates [{:type :point :coordinates [367168.626 6671195.096]}
+                                            {:type :point, :coordinates [321043.835 6663458.447]}]}
                              geo/clj->pg
-                             geo/geometry)])
+                             geo/geometry)]
+      (is (= tark ["tieturvallisuus" odotetut-pisteet]) (str "Tarkastuksen data tallentunut ok ")))
+
 
     (let [_ (anna-kirjoitusoikeus kayttaja)
           _ (anna-kirjoitusoikeus kayttaja-jvh)
