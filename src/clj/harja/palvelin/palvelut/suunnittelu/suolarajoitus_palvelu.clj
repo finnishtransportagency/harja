@@ -71,7 +71,6 @@
         loppuosan-tiedot (if (and osat-annettu? (not loppuosa-olemassa?))
                            (first (tieverkko-kyselyt/hae-tr-osan-tiedot db {:tie tie :aosa losa}))
                            nil)
-        _ (println "loppuosan-tiedot:" loppuosan-tiedot)
         tr-osoitteen-virheet (if (and osat-annettu? (not loppuosa-olemassa?))
                                (cond-> tr-osoitteen-virheet
                                  true (conj "Tierekisteriosoitteen loppuosa tai loppuetäisyys virheellinen.")
@@ -93,12 +92,10 @@
                           validointi-info)
         vastaus {:validaatiovirheet (when-not (empty? tr-osoitteen-virheet) tr-osoitteen-virheet)
                  :validaatioinfot (when-not (empty? validointi-info) validointi-info)}]
-    (log/info "tr-osoitteen-validointi :: tr-osoitteen-virheet: " tr-osoitteen-virheet)
-    (log/info "tr-osoitteen-validointi :: validointi-info: " validointi-info)
-    (log/info "tr-osoitteen-validointi :: vastaus: " vastaus)
     vastaus))
 
 (defn tierekisterin-tiedot [db {:keys [urakka-id hoitokauden-alkuvuosi] :as suolarajoitus}]
+  (log/debug "tierekisterin-tiedot :: suolarajoitus" suolarajoitus)
   (let [validaatiot (tr-osoitteen-validointi db suolarajoitus)]
     (if (:validaatiovirheet validaatiot)
       ; Jos virheitä, palauta virheet
@@ -161,10 +158,11 @@
            :validaatioinfot nil
            :pituus nil
            :ajoratojen_pituus nil}
-          {:validaatioinfot (when-not (empty? (:validaatioinfot validaatiot)) (:validaatioinfot validaatiot))
-           :pituus (:pituus pituus)
-           :ajoratojen_pituus ajoratojen-pituus
-           :pohjavesialueet pohjavesialueet})))))
+          (merge (when-not (empty? (:validaatioinfot validaatiot))
+                   {::validaatioinfot (:validaatioinfot validaatiot)})
+            {:pituus (:pituus pituus)
+             :ajoratojen_pituus ajoratojen-pituus
+             :pohjavesialueet pohjavesialueet}))))))
 
 (defn hae-tierekisterin-tiedot [db user {:keys [urakka-id] :as suolarajoitus}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
