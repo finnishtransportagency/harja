@@ -19,12 +19,8 @@
     nil))
 
 (defn- hae-tieturvallisuusgeometria [db tie geometria]
-  (let [tulos (first (tieturvallisuusverkko-kyselyt/hae-geometriaa-leikkaavat-tieturvallisuusgeometriat-tienumerolla db
-                 {:tie tie :saatugeometria geometria}))
-        ;idt (:idt tulos)
-        ;_ (println "ID:T " idt)
-        ]
-    (:leikkaus tulos)))
+  (:leikkaus (first (tieturvallisuusverkko-kyselyt/hae-geometriaa-leikkaavat-tieturvallisuusgeometriat-tienumerolla db
+                      {:tie tie :saatugeometria geometria}))))
 
 (defn luo-tai-paivita-tarkastukset
   "Käsittelee annetut tarkastukset ja palautta listan string-varoituksia."
