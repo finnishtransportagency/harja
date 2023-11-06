@@ -418,7 +418,9 @@
                   nil)
           tievalidointi (merge
                           (get-in app [:lomake :harja.tiedot.urakka.urakka/validius [:tie]])
-                          {:validi? false :virheteksti virhe})]
+                          {:validi? false :virheteksti virhe})
+          validointi-info (when-not (empty? (:validaatioinfot vastaus))
+                            (:validaatioinfot vastaus))]
 
       (cond-> app
         (not virhe) (assoc-in [:lomake :palvelinvirheet :tierekisteri] nil)
@@ -428,6 +430,8 @@
         (not virhe) (assoc-in [:lomake :pituus] (:pituus vastaus))
         (not virhe) (assoc-in [:lomake :ajoratojen_pituus] (:ajoratojen_pituus vastaus))
         (not virhe) (assoc-in [:lomake :pohjavesialueet] (:pohjavesialueet vastaus))
+        validointi-info (assoc-in [:lomake :validaatioinfot] validointi-info)
+        (not validointi-info) (assoc-in [:lomake :validaatioinfot] nil)
         true (assoc :hae-tiedot-kaynnissa? false))))
 
   HaeTierekisterinTiedotEpaonnistui

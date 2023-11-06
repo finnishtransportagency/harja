@@ -3,13 +3,13 @@
   (:require [reagent.core :refer [atom wrap] :as r]
             [cljs.core.async :refer [<!]]
             [tuck.core :as tuck]
+            [clojure.string :as str]
 
             [harja.domain.oikeudet :as oikeudet]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
 
-            [harja.tiedot.urakka.toteumat.suola :as tiedot-suola]
             [harja.tiedot.urakka.suunnittelu.suolarajoitukset-tiedot :as suolarajoitukset-tiedot]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.hallinta.indeksit :as i]
@@ -143,14 +143,21 @@
           :virhe? (validointi/nayta-virhe? [:let] lomake)
           :rivi-luokka "lomakeryhman-rivi-tausta"})
        (when (validointi/nayta-virhe-teksti [:tie] lomake)
-         (lomake/ryhma {#_#_:ryhman-luokka "lomakeryhman-otsikko-tausta"
-                        :rivi true}
+         (lomake/ryhma {:rivi true}
            {:nimi :virhe
             :palstoja 3
             :virheteksti (validointi/nayta-virhe-teksti [:tie] lomake)
             :tyyppi :komponentti
             :komponentti (fn []
-                           [:div])}))
+                           [:div ])}))
+       (when (:validaatioinfot lomake)
+         (lomake/ryhma {#_#_:ryhman-luokka "lomakeryhman-otsikko-tausta"
+                        :rivi true}
+           {:nimi :validaatioinfot
+            :palstoja 3
+            :tyyppi :komponentti
+            :komponentti (fn []
+                           [yleiset/info-laatikko :vahva-ilmoitus (str/join (:validaatioinfot lomake))])}))
        (lomake/ryhma
          {:ryhman-luokka "lomakeryhman-otsikko-tausta"
           :rivi? true}
