@@ -26,6 +26,10 @@
     true))
 
 (defn tr-osoitteen-validointi
+  "Validoi tr-osoitteen lähinnä tien ja osan pituuden suhteen. Tie pitää löytyä. Ja osan pituus pitää täsmätä.
+  Tierekisteriosoitteessa saa kuitenkin olla katkoja, koska tierekisterit muuttuvat mm. kun jokin liittymä poistetaan
+  tieltä. Näin ollen tierekisteristä voi osasat 8 hypätä suoraan osaan 10. Näissä tilanteissa ei luoda virhettä,
+  vaan luodaan info."
   [db suolarajoitus]
   (let [{:keys [tie aosa losa aet]} suolarajoitus
         loppuet (:let suolarajoitus)
@@ -38,10 +42,10 @@
 
         osat (when osat-annettu? (range aosa (inc losa)))
         osien-lukumaara (count osat)
-
+        tr-osoitteen-virheet []
         tr-osoitteen-virheet (if-not osat-annettu?
-                               (str "Tierekisteriosoite ei ole kokonaan annettu. ")
-                               nil)
+                               (conj tr-osoitteen-virheet "Tierekisteriosoite ei ole kokonaan annettu.")
+                               tr-osoitteen-virheet)
         alkuosa-olemassa? (when osat-annettu?
                             (tieverkko-kyselyt/onko-tr-alkuosa-olemassa? db
                               {:tie tie
@@ -51,10 +55,13 @@
                           (first (tieverkko-kyselyt/hae-tr-osan-tiedot db {:tie tie :aosa aosa}))
                           nil)
         tr-osoitteen-virheet (if-not alkuosa-olemassa?
-                               (str tr-osoitteen-virheet " Tierekisteriosoitteen alkuosa tai alkuetäisyys virheellinen."
-                                 (when alkuosan-tiedot
-                                   (format " Anna alkuosan %s etäisyys %s - %s väliltä."
-                                         (:tr-osa alkuosan-tiedot) (:tr-alkuetaisyys alkuosan-tiedot) (:tr-loppuetaisyys alkuosan-tiedot))))
+                               (cond-> tr-osoitteen-virheet
+                                 true (conj "Tierekisteriosoitteen alkuosa tai alkuetäisyys virheellinen.")
+                                 (and alkuosan-tiedot (:tr-osa alkuosan-tiedot) (:tr-alkuetaisyys alkuosan-tiedot) (:tr-loppuetaisyys alkuosan-tiedot))
+                                 (conj (format "Anna alkuosan %s etäisyys %s - %s väliltä."
+                                         (:tr-osa alkuosan-tiedot) (:tr-alkuetaisyys alkuosan-tiedot) (:tr-loppuetaisyys alkuosan-tiedot)))
+                                 (not (:tr-osa alkuosan-tiedot))
+                                 (conj (str "Alkuosaa: " aosa " ei löydy.")))
                                tr-osoitteen-virheet)
         loppuosa-olemassa? (when osat-annettu?
                              (tieverkko-kyselyt/onko-tr-loppuosa-olemassa? db
@@ -64,86 +71,100 @@
         loppuosan-tiedot (if (and osat-annettu? (not loppuosa-olemassa?))
                            (first (tieverkko-kyselyt/hae-tr-osan-tiedot db {:tie tie :aosa losa}))
                            nil)
+        _ (println "loppuosan-tiedot:" loppuosan-tiedot)
         tr-osoitteen-virheet (if (and osat-annettu? (not loppuosa-olemassa?))
-                               (str tr-osoitteen-virheet
-                                 (format " Tierekisteriosoitteen loppuosa tai loppuetäisyys virheellinen.
-                                     Anna loppuosan %s etäisyys %s - %s väliltä."
-                                   (:tr-osa loppuosan-tiedot) (:tr-alkuetaisyys loppuosan-tiedot) (:tr-loppuetaisyys loppuosan-tiedot)))
+                               (cond-> tr-osoitteen-virheet
+                                 true (conj "Tierekisteriosoitteen loppuosa tai loppuetäisyys virheellinen.")
+                                 (and (:tr-osa loppuosan-tiedot) (:tr-alkuetaisyys loppuosan-tiedot) (:tr-loppuetaisyys loppuosan-tiedot))
+                                 (conj (format "Anna loppuosan %s etäisyys %s - %s väliltä."
+                                         (:tr-osa loppuosan-tiedot) (:tr-alkuetaisyys loppuosan-tiedot) (:tr-loppuetaisyys loppuosan-tiedot)))
+                                 (not (:tr-osa loppuosan-tiedot))
+                                 (conj "Loppuosaa:" losa " ei löydy."))
+
                                tr-osoitteen-virheet)
         onko-tr-yhtenainen? (when osat-annettu?
                               (= osien-lukumaara
                                 (tieverkko-kyselyt/onko-tr-yhtenainen? db
                                   {:tie tie
                                    :osat osat})))
-        tr-osoitteen-virheet (if-not onko-tr-yhtenainen?
-                               (str tr-osoitteen-virheet " Tierekisteriosoite ei ole yhtenäinen.")
-                               tr-osoitteen-virheet)]
-    (log/info "tr-osoitteen-virheet: " tr-osoitteen-virheet)
-    tr-osoitteen-virheet))
+        validointi-info []
+        validointi-info (if-not onko-tr-yhtenainen?
+                          (conj validointi-info "Tierekisteriosoite ei ole yhtenäinen.")
+                          validointi-info)
+        vastaus {:validaatiovirheet (when-not (empty? tr-osoitteen-virheet) tr-osoitteen-virheet)
+                 :validaatioinfot (when-not (empty? validointi-info) validointi-info)}]
+    (log/info "tr-osoitteen-validointi :: tr-osoitteen-virheet: " tr-osoitteen-virheet)
+    (log/info "tr-osoitteen-validointi :: validointi-info: " validointi-info)
+    (log/info "tr-osoitteen-validointi :: vastaus: " vastaus)
+    vastaus))
 
 (defn tierekisterin-tiedot [db {:keys [urakka-id hoitokauden-alkuvuosi] :as suolarajoitus}]
-  (if-let [validaatiovirheet (tr-osoitteen-validointi db suolarajoitus)]
-    ; Jos virheitä, palauta virheet
-    (do
-      (log/warn "tierekisterin-tiedot :: validaatiovirhe :: suolarajoitus: " suolarajoitus)
-      {:validaatiovirheet validaatiovirheet
-       :pituus nil
-       :ajoratojen_pituus nil})
-    ;; Jos ei virheitä, niin laske pituus
-    (let [_ (log/debug "tierekisterin-tiedot :: suolarajoitus: " suolarajoitus)
-          tarkistettava-suolarajoitus {:tie (:tie suolarajoitus)
-                                       :aosa (:aosa suolarajoitus)
-                                       :aet (:aet suolarajoitus)
-                                       :losa (:losa suolarajoitus)
-                                       :let (:let suolarajoitus)
-                                       :urakka-id urakka-id
-                                       :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                       :rajoitusalue-id (:rajoitusalue-id suolarajoitus)}
-          paallekaiset (suolarajoitus-kyselyt/onko-tierekisteriosoite-paallekainen db tarkistettava-suolarajoitus)
-          validaatiovirheet (when-not (empty? paallekaiset)
-                              (do
-                                (log/warn "tierekisterin-tiedot :: Löydettiin päällekäiset: " (into [] paallekaiset))
-                                (format "Tierekisteriosoitteessa on jo rajoitus. %s/%s/%s/%s/%s  " (:tie (first paallekaiset)) (:aosa (first paallekaiset))
-                                  (:aet (first paallekaiset)) (:losa (first paallekaiset)) (:let (first paallekaiset)))))
-
-          ;; Pilkotaan tierekisteri osiin tien osien mukaan
-          tie-osien-pituudet (tieverkko-kyselyt/hae-osien-pituudet db {:tie (:tie suolarajoitus)
-                                                                       :aosa (:aosa suolarajoitus)
-                                                                       :losa (:losa suolarajoitus)})
-          pituus (tieverkko-kyselyt/laske-tien-osien-pituudet tie-osien-pituudet suolarajoitus)
-          ajoratojen-pituudet (tieverkko-kyselyt/hae-ajoratojen-pituudet db {:tie (:tie suolarajoitus)
-                                                                             :aosa (:aosa suolarajoitus)
-                                                                             :losa (:losa suolarajoitus)})
-          yhdistetyt-ajoradat (mapv (fn [[osa data]]
-                                      (let [ajoratatiedot {:osa osa ;; Osa talteen
-                                                           :pituus (or (some #(when (and (= (:ajorata %) 0) (= (:osa %) osa)) (:pituus %)) ajoratojen-pituudet) 0) ;; Ensimmäisen ajoradan pituus talteen
-                                                           :ajoratojen-pituus (some #(when (and (= (:ajorata %) 1) (= (:osa %) osa)) (:pituus %)) ajoratojen-pituudet) ;; Oletetaan, että kaikki loput ajoradat ovat saman mittaisia
-                                                           :ajoratojen-maara (count (keep #(when (and (not= (:ajorata %) 0) (= (:osa %) osa)) %) ajoratojen-pituudet)) ;; Määritellään ajoratojen määrä (yleensa ajoratoja on 0,1,2) joten tähän tulisi arvo 2
-                                                           }
-                                            ;; Lasketaan vielä yhteen kokonaispituus, koska siitä pitää päätellä paljon asioita laskennassa
-                                            ajoratojen-kokonaispituus (if (and (:ajoratojen-pituus ajoratatiedot)
-                                                                            (> (:ajoratojen-maara ajoratatiedot) 0))
-                                                                        (* (:ajoratojen-pituus ajoratatiedot) (:ajoratojen-maara ajoratatiedot))
-                                                                        0)
-                                            ajoratatiedot (assoc ajoratatiedot :kokonaispituus (+ (:pituus ajoratatiedot) ajoratojen-kokonaispituus))]
-                                        ajoratatiedot))
-                                ;; Yhdistaä mahdolliset ajoradata samaan mäppiin
-                                (group-by :osa ajoratojen-pituudet))
-          ajoratojen-pituus (reduce (fn [summa ajorata]
-                                      (let [pituus (tieverkko-kyselyt/laske-tien-osien-pituudet (conj [] ajorata) suolarajoitus)
-                                            summa (+ summa (:pituus pituus))]
-                                        summa))
-                              0 yhdistetyt-ajoradat)
-          ;; Haetaan pohjavesialueet annetun tierekisterin perusteella
-          pohjavesialueet (suolarajoitus-kyselyt/hae-leikkaavat-pohjavesialueet-tierekisterille db (select-keys suolarajoitus [:tie :aosa :aet :losa :let]))]
-      ;; Palautetaan joko virheet, tai saadut tiedot
-      (if validaatiovirheet
-        {:validaatiovirheet validaatiovirheet
+  (let [validaatiot (tr-osoitteen-validointi db suolarajoitus)]
+    (if (:validaatiovirheet validaatiot)
+      ; Jos virheitä, palauta virheet
+      (do
+        (log/warn "tierekisterin-tiedot :: validaatiovirhe :: suolarajoitus: " suolarajoitus)
+        {:validaatiovirheet (:validaatiovirheet validaatiot)
+         :validaatioinfot (:validaatioinfot validaatiot)
          :pituus nil
-         :ajoratojen_pituus nil}
-        {:pituus (:pituus pituus)
-         :ajoratojen_pituus ajoratojen-pituus
-         :pohjavesialueet pohjavesialueet}))))
+         :ajoratojen_pituus nil})
+      ;; Jos ei virheitä, niin laske pituus
+      (let [_ (log/debug "tierekisterin-tiedot :: suolarajoitus: " suolarajoitus)
+            tarkistettava-suolarajoitus {:tie (:tie suolarajoitus)
+                                         :aosa (:aosa suolarajoitus)
+                                         :aet (:aet suolarajoitus)
+                                         :losa (:losa suolarajoitus)
+                                         :let (:let suolarajoitus)
+                                         :urakka-id urakka-id
+                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                         :rajoitusalue-id (:rajoitusalue-id suolarajoitus)}
+            paallekaiset (suolarajoitus-kyselyt/onko-tierekisteriosoite-paallekainen db tarkistettava-suolarajoitus)
+            validaatiovirheet (when-not (empty? paallekaiset)
+                                (do
+                                  (log/warn "tierekisterin-tiedot :: Löydettiin päällekäiset: " (into [] paallekaiset))
+                                  (format "Tierekisteriosoitteessa on jo rajoitus. %s/%s/%s/%s/%s  " (:tie (first paallekaiset)) (:aosa (first paallekaiset))
+                                    (:aet (first paallekaiset)) (:losa (first paallekaiset)) (:let (first paallekaiset)))))
+
+            ;; Pilkotaan tierekisteri osiin tien osien mukaan
+            tie-osien-pituudet (tieverkko-kyselyt/hae-osien-pituudet db {:tie (:tie suolarajoitus)
+                                                                         :aosa (:aosa suolarajoitus)
+                                                                         :losa (:losa suolarajoitus)})
+            pituus (tieverkko-kyselyt/laske-tien-osien-pituudet tie-osien-pituudet suolarajoitus)
+            ajoratojen-pituudet (tieverkko-kyselyt/hae-ajoratojen-pituudet db {:tie (:tie suolarajoitus)
+                                                                               :aosa (:aosa suolarajoitus)
+                                                                               :losa (:losa suolarajoitus)})
+            yhdistetyt-ajoradat (mapv (fn [[osa data]]
+                                        (let [ajoratatiedot {:osa osa ;; Osa talteen
+                                                             :pituus (or (some #(when (and (= (:ajorata %) 0) (= (:osa %) osa)) (:pituus %)) ajoratojen-pituudet) 0) ;; Ensimmäisen ajoradan pituus talteen
+                                                             :ajoratojen-pituus (some #(when (and (= (:ajorata %) 1) (= (:osa %) osa)) (:pituus %)) ajoratojen-pituudet) ;; Oletetaan, että kaikki loput ajoradat ovat saman mittaisia
+                                                             :ajoratojen-maara (count (keep #(when (and (not= (:ajorata %) 0) (= (:osa %) osa)) %) ajoratojen-pituudet)) ;; Määritellään ajoratojen määrä (yleensa ajoratoja on 0,1,2) joten tähän tulisi arvo 2
+                                                             }
+                                              ;; Lasketaan vielä yhteen kokonaispituus, koska siitä pitää päätellä paljon asioita laskennassa
+                                              ajoratojen-kokonaispituus (if (and (:ajoratojen-pituus ajoratatiedot)
+                                                                              (> (:ajoratojen-maara ajoratatiedot) 0))
+                                                                          (* (:ajoratojen-pituus ajoratatiedot) (:ajoratojen-maara ajoratatiedot))
+                                                                          0)
+                                              ajoratatiedot (assoc ajoratatiedot :kokonaispituus (+ (:pituus ajoratatiedot) ajoratojen-kokonaispituus))]
+                                          ajoratatiedot))
+                                  ;; Yhdistaä mahdolliset ajoradata samaan mäppiin
+                                  (group-by :osa ajoratojen-pituudet))
+            ajoratojen-pituus (reduce (fn [summa ajorata]
+                                        (let [pituus (tieverkko-kyselyt/laske-tien-osien-pituudet (conj [] ajorata) suolarajoitus)
+                                              summa (+ summa (:pituus pituus))]
+                                          summa))
+                                0 yhdistetyt-ajoradat)
+            ;; Haetaan pohjavesialueet annetun tierekisterin perusteella
+            pohjavesialueet (suolarajoitus-kyselyt/hae-leikkaavat-pohjavesialueet-tierekisterille db (select-keys suolarajoitus [:tie :aosa :aet :losa :let]))]
+        ;; Palautetaan joko virheet, tai saadut tiedot
+        (if validaatiovirheet
+          {:validaatiovirheet validaatiovirheet
+           :validaatioinfot nil
+           :pituus nil
+           :ajoratojen_pituus nil}
+          {:validaatioinfot (when-not (empty? (:validaatioinfot validaatiot)) (:validaatioinfot validaatiot))
+           :pituus (:pituus pituus)
+           :ajoratojen_pituus ajoratojen-pituus
+           :pohjavesialueet pohjavesialueet})))))
 
 (defn hae-tierekisterin-tiedot [db user {:keys [urakka-id] :as suolarajoitus}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
