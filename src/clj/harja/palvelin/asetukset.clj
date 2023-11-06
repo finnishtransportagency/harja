@@ -310,13 +310,4 @@
                         {:slack
                          (slack/luo-slack-appender (str/trim (:webhook-url slack))
                                                    (:taso slack)
-                                                   (:urls slack))}}))
-
-  (when-let [email (-> asetukset :log :email)]
-    (log/merge-config!
-      {:appenders
-       {:postal
-        (postal-appender
-          ^{:host (:palvelin email)}
-          {:from (str (.getHostName (java.net.InetAddress/getLocalHost)) "@solita.fi")
-           :to (:vastaanottaja email)})}})))
+                                                   (:urls slack))}})))
