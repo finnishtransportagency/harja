@@ -3,7 +3,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
+            [harja.kyselyt.tehtavaryhmat :as tehtavaryhmat-kyselyt]
             [harja.kyselyt.konversio :as konversio]
             [clojure.string :as str]))
 
@@ -26,33 +26,42 @@
    :f16 :materiaalikoodi_id,
    :f17 :aluetieto})
 
-(defn hae-mhu-tehtavaryhmat [db kayttaja tiedot]
+(defn hae-mhu-tehtavaryhmaotsikot [db kayttaja tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
-  (log/info "hae-mhu-tehtavaryhmat :: tiedot:" (pr-str tiedot))
-  (let [mhu-tehtavaryhmat (tehtavamaarat-kyselyt/hae-mhu-tehtavaryhmat-ja-tehtavat db)
-        mhu-tehtavaryhmat (->> mhu-tehtavaryhmat
-                            (map (fn [ryhma]
-                                   (-> ryhma
-                                     (update :tehtavat konversio/jsonb->clojuremap))))
-                            (map #(update % :tehtavat
-                                    (fn [rivit]
-                                      (keep
-                                        (fn [r]
-                                          (when (not (nil? (:f1 r))) ;; Varmista että Left joinilla haettuja rivejä on
-                                            (-> r
-                                              (clojure.set/rename-keys db-tehtavat->tehtavat))))
-                                        rivit)))))]
-    mhu-tehtavaryhmat))
+  (log/debug "hae-mhu-tehtavaryhmaotsikot :: tiedot:" (pr-str tiedot))
+  (let [mhu-tehtavaryhmaotsikot (sort-by first
+                                  (group-by :otsikko
+                                    (tehtavaryhmat-kyselyt/hae-mhu-tehtavaryhmaotsikot-tehtavaryhmat-ja-tehtavat db)))
+        otsikot-ja-ryhmat (reduce (fn [vastaus elementti]
+                                    (let [tehtavaryhmat (->> (second elementti)
+                                                          (map (fn [data]
+                                                                 (-> data
+                                                                   (update :tehtavat konversio/jsonb->clojuremap))))
+
+                                                          (map #(update % :tehtavat
+                                                                  (fn [rivit]
+                                                                    (keep
+                                                                      (fn [r]
+                                                                        (when (not (nil? (:f1 r))) ;; Varmista että Left joinilla haettuja rivejä on
+                                                                          (-> r
+                                                                            (clojure.set/rename-keys db-tehtavat->tehtavat))))
+                                                                      rivit)))))
+                                          data {:tehtavaryhmaotsikko_id (first elementti)
+                                                :otsikko (first elementti)
+                                                :tehtavaryhmat tehtavaryhmat}]
+                                      (conj vastaus data)))
+                            [] mhu-tehtavaryhmaotsikot)]
+    otsikot-ja-ryhmat))
 
 
 (defrecord TehtavatHallinta []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
-    (julkaise-palvelu http-palvelin :hae-mhu-tehtavaryhmat
+    (julkaise-palvelu http-palvelin :hae-mhu-tehtavaryhmaotsikot
       (fn [kayttaja tiedot]
-        (hae-mhu-tehtavaryhmat db kayttaja tiedot)))
+        (hae-mhu-tehtavaryhmaotsikot db kayttaja tiedot)))
     this)
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
-      :hae-mhu-tehtavaryhmat)
+      :hae-mhu-tehtavaryhmaotsikot)
     this))

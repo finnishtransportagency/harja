@@ -2,44 +2,33 @@
   "Tehtävien ja tehtäväryhmien ui controlleri."
   (:require [reagent.core :refer [atom] :as reagent]
             [tuck.core :as tuck]
-            [harja.pvm :as pvm]
-            [harja.tyokalut.tuck :as tuck-apurit]
-            [cljs.core.async :refer [<! >! chan close!]]
-            [cljs-http.client :as http]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.ui.viesti :as viesti]
-            [harja.tiedot.istunto :as istunto]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
-  (:require-macros [reagent.ratom :refer [reaction]]
-                   [cljs.core.async.macros :refer [go]]))
+            [harja.tyokalut.tuck :as tuck-apurit]))
 
 (def tila (atom nil))
 (def nakymassa? (atom false))
 
 
-(defrecord HaeTehtavaryhmat [])
-(defrecord HaeTehtavaryhmatOnnistui [vastaus])
-(defrecord HaeTehtavaryhmatEpaonnistui [vastaus])
+(defrecord HaeTehtavaryhmaotsikot [])
+(defrecord HaeTehtavaryhmaotsikotOnnistui [vastaus])
+(defrecord HaeTehtavaryhmaotsikotEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
 
-  HaeTehtavaryhmat
+  HaeTehtavaryhmaotsikot
   (process-event [{emailapi :emailapi} app]
-    (tuck-apurit/post! :hae-mhu-tehtavaryhmat
+    (tuck-apurit/post! :hae-mhu-tehtavaryhmaotsikot
       {}
-      {:onnistui ->HaeTehtavaryhmatOnnistui
-       :epaonnistui ->HaeTehtavaryhmatEpaonnistui
+      {:onnistui ->HaeTehtavaryhmaotsikotOnnistui
+       :epaonnistui ->HaeTehtavaryhmaotsikotEpaonnistui
        :paasta-virhe-lapi? true})
-    (js/console.log "HaeTehtavaryhmat")
     (assoc app :emailapi emailapi))
 
-  HaeTehtavaryhmatOnnistui
+  HaeTehtavaryhmaotsikotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc app :tehtavaryhmat vastaus))
+    (assoc app :tehtavaryhmaotsikot vastaus))
 
-  HaeTehtavaryhmatEpaonnistui
+  HaeTehtavaryhmaotsikotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
       (js/console.log "Error: " (pr-str vastaus))
-      (assoc app :tehtavaryhmat nil))))
+      (assoc app :tehtavaryhmaotsikot nil))))
