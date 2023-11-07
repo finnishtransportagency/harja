@@ -118,6 +118,9 @@ SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 \i testidata/tarkastukset.sql
 \i testidata/tarkastusajot.sql
 
+-- Tieturvallisuusverkko geometriat
+\i testidata/tieturvallisuusverkko.sql
+
 -- Tyokoneseurannan havainnot
 \i testidata/tyokonehavainnot.sql
 
