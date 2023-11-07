@@ -430,13 +430,11 @@
              ;; Parempi ratkaisu olisi lisätä disabled-attribuutti HTML:ään.
              {:class (when-not (get-in app [:domain :kirjoitusoikeus?])
                        "vain-luku")}
-             [:div [:p "Suunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten.
-              Kustannussuunnitelmaa voi tarkentaa hoitovuoden kuluessa."]
-              [:p "Hallinnollisiin toimenpiteisiin suunnitellut kustannukset siirtyvät kuukauden viimeisenä päivänä
-              kuluna Sampon maksuerään." [:br]
-               "Muut kulut urakoitsija syöttää Kulut-osiossa. Ne lasketaan mukaan maksueriin eräpäivän mukaan."]
-              [:p "Sampoon lähetettävien kustannussuunnitelmasummien ja maksuerien tiedot löydät Kulut > Maksuerät-sivulta. "
-               [:br]]]
+             [:div [:p "Suunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten."]
+              [:p "Harja muodostaa hallinnollisten toimenpiteiden kulut automaattisesti kustannussuunnitelman
+              perusteella. Kulut siirtyvät kuukauden viimeisenä päivänä Sampon maksuerään. Sampoon lähetettävien
+              kustannussuunnitelmasummien ja maksuerien tiedot löydät Kulut > Maksuerät -sivulta." [:br]]]
+
 
              (when (< (count @urakka/urakan-toimenpideinstanssit) 7)
                [yleiset/virheviesti-sailio
