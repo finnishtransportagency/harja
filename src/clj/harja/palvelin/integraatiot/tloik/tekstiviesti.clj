@@ -178,55 +178,38 @@
                       (merkkijono/leikkaa 500 (:lisatieto ilmoitus))
                       "")
         selitteet (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))
+        aihe? (get-in ilmoitus [:luokittelu :aihe])
         aihe (palautevayla/hae-aihe aiheet-ja-tarkenteet (get-in ilmoitus [:luokittelu :aihe]))
         tarkenne (palautevayla/hae-tarkenne aiheet-ja-tarkenteet (get-in ilmoitus [:luokittelu :tarkenne]))
         virka-apupyynto (if (ilm/virka-apupyynto? ilmoitus) "(VIRKA-APUPYYNTÖ)" "")]
-    (if-not (get-in ilmoitus [:luokittelu :aihe])
-      (str
-        (format +ilmoitusviesti+
-          virka-apupyynto
-          otsikko
-          viestinumero
-          tunniste
-          (:urakkanimi ilmoitus)
-          (fmt/totuus (:yhteydenottopyynto ilmoitus))
-          (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))
-          (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))
-          paikankuvaus
-          tr-osoite
-          selitteet
-          lisatietoja
-          viestinumero
-          viestinumero
-          viestinumero
-          viestinumero
-          viestinumero
-          viestinumero
-          viestinumero
-          viestinumero))
-      (str
-        (format +ilmoitusviesti-aiheella+
-          virka-apupyynto
-          otsikko
-          viestinumero
-          tunniste
-          (:urakkanimi ilmoitus)
-          (fmt/totuus (:yhteydenottopyynto ilmoitus))
-          (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))
-          (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))
-          paikankuvaus
-          tr-osoite
-          aihe
-          tarkenne
-          lisatietoja
-          viestinumero
-          viestinumero
-          viestinumero
-          viestinumero
-          viestinumero
-          viestinumero
-          viestinumero
-          viestinumero)))))
+    (str
+      (apply format (if aihe?
+                      +ilmoitusviesti-aiheella+
+                      +ilmoitusviesti+)
+        (concat
+          [virka-apupyynto
+           otsikko
+           viestinumero
+           tunniste
+           (:urakkanimi ilmoitus)
+           (fmt/totuus (:yhteydenottopyynto ilmoitus))
+           (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))
+           (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))
+           paikankuvaus
+           tr-osoite]
+          (if aihe?
+            [aihe
+             tarkenne]
+            [selitteet])
+          [lisatietoja
+           viestinumero
+           viestinumero
+           viestinumero
+           viestinumero
+           viestinumero
+           viestinumero
+           viestinumero
+           viestinumero])))))
 
 (defn laheta-ilmoitus-tekstiviestilla [sms db ilmoitus paivystaja]
   (try

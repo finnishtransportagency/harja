@@ -1,24 +1,14 @@
 (ns harja.palvelin.integraatiot.tloik.tekstiviesti-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [com.stuartsierra.component :as component]
-            [clojure.data.zip.xml :as z]
             [harja.kyselyt.palautevayla :as palautevayla-q]
-            [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
             [harja.jms-test :refer [feikki-jms]]
-            [harja.kyselyt.paivystajatekstiviestit :as paivystajatekstiviestit]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
-            [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
-            [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.tloik.tekstiviesti :as tekstiviestit]
-            [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
-            [harja.palvelin.integraatiot.jms :as jms-util]
-            [harja.tyokalut.xml :as xml]
             [clojure.string :as str]))
 
 (def kayttaja "jvh")
