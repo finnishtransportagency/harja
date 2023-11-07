@@ -33,7 +33,7 @@
 (defn- luo-tarkastus*
   [db user urakka-id {:keys [id lahde aika tr tyyppi tarkastaja sijainti
                              ulkoinen-id havainnot laadunalitus yllapitokohde
-                             nayta-urakoitsijalle pisteet] :as tarkastus} urakoitsija?]
+                             nayta-urakoitsijalle pisteet alkuperainen_sijainti] :as tarkastus} urakoitsija?]
   (let [params {:lahde lahde
                 :urakka urakka-id
                 :aika (konv/sql-timestamp aika)
@@ -51,7 +51,8 @@
                 :laadunalitus laadunalitus
                 :yllapitokohde yllapitokohde
                 :nayta_urakoitsijalle (if urakoitsija? true (boolean nayta-urakoitsijalle))
-                :pisteet pisteet}]
+                :pisteet pisteet
+                :alkuperainen_sijainti alkuperainen_sijainti}]
 
     (do
       (log/debug "Luodaan uusi tarkastus" tarkastus " jonka params: " params)
@@ -61,7 +62,7 @@
 (defn- paivita-tarkastus*
   [db user urakka-id {:keys [id aika tr tyyppi tarkastaja sijainti
                              havainnot laadunalitus yllapitokohde
-                             nayta-urakoitsijalle pisteet] :as tarkastus} urakoitsija?]
+                             nayta-urakoitsijalle pisteet alkuperainen_sijainti] :as tarkastus} urakoitsija?]
   (do (log/debug (format "Päivitetään tarkastus id: %s " id))
       (paivita-tarkastus! db
                           {:id id
@@ -80,7 +81,8 @@
                            :laadunalitus laadunalitus
                            :yllapitokohde yllapitokohde
                            :nayta_urakoitsijalle (if urakoitsija? true (boolean nayta-urakoitsijalle))
-                           :pisteet pisteet})
+                           :pisteet pisteet
+                           :alkuperainen_sijainti alkuperainen_sijainti})
       id))
 
 (defn luo-tai-paivita-tarkastus
