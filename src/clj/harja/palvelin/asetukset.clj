@@ -19,7 +19,8 @@
                  :julkaise-tila? s/Bool})
 (def Asetukset
   "Harja-palvelinasetuksien skeema"
-  {(s/optional-key :sahke-headerit) {s/Str {s/Str s/Str}}
+  {(s/optional-key :alusta) s/Keyword
+   (s/optional-key :sahke-headerit) {s/Str {s/Str s/Str}}
    :http-palvelin {:portti s/Int
                    :url s/Str
                    (s/optional-key :threads) s/Int
@@ -66,7 +67,7 @@
                                      :salasana s/Str}
 
    (s/optional-key :ulkoinen-sahkoposti) {:vastausosoite s/Str
-                                        (s/optional-key :palvelin/Str) s/Str}
+                                          (s/optional-key :palvelin/Str) s/Str}
    (s/optional-key :sampo-api) {:lahetys-url s/Str
                                 :paivittainen-lahetysaika [s/Num]
                                 :palvelin s/Str
@@ -310,13 +311,4 @@
                         {:slack
                          (slack/luo-slack-appender (str/trim (:webhook-url slack))
                                                    (:taso slack)
-                                                   (:urls slack))}}))
-
-  (when-let [email (-> asetukset :log :email)]
-    (log/merge-config!
-      {:appenders
-       {:postal
-        (postal-appender
-          ^{:host (:palvelin email)}
-          {:from (str (.getHostName (java.net.InetAddress/getLocalHost)) "@solita.fi")
-           :to (:vastaanottaja email)})}})))
+                                                   (:urls slack))}})))
