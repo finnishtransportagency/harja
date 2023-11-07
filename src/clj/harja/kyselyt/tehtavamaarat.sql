@@ -268,14 +268,3 @@ WHERE ut.poistettu IS NOT TRUE
   AND ut.urakka = :urakka-id
   AND ut."hoitokauden-alkuvuosi" in (:hoitokauden-alkuvuodet)
 GROUP BY ut."hoitokauden-alkuvuosi", tk.id, ut.muokattu, ut.luotu;
-
--- name: hae-mhu-tehtavaryhmat-ja-tehtavat
-SELECT tr.id, tr.otsikko, tr.nimi, tr.jarjestys, tr.nakyva, tr.versio, tr.yksiloiva_tunniste,
-       jsonb_agg(row_to_json(row(t.id, t.nimi, t.yksikko, t.jarjestys, t.api_seuranta, t.suoritettavatehtava,
-           t.piilota, t.api_tunnus, t."mhu-tehtava?", t.yksiloiva_tunniste,
-           t.voimassaolo_alkuvuosi, t.voimassaolo_loppuvuosi, t.kasin_lisattava_maara,
-           t."raportoi-tehtava?", t.materiaaliluokka_id, t.materiaalikoodi_id, t.aluetieto))) AS tehtavat
-  FROM tehtavaryhma tr
-       LEFT JOIN tehtava t ON t.tehtavaryhma = tr.id AND "mhu-tehtava?" = true
- GROUP BY tr.id
- ORDER BY tr.otsikko ASC;
