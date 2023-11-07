@@ -40,6 +40,7 @@
                      tyyppi (if (nil? tyyppi)
                               (:tarkastustyyppi rivi)
                               (name tyyppi))
+                     tieturvallisuustarkastus? (= tyyppi (name :tieturvallisuus))
                      {tarkastus-id :id}
                      (first
                        (q-tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id tyyppi urakka-id))
@@ -50,10 +51,10 @@
                      geometria (if tr-osoite
                                  (:geometria tr-osoite)
                                  (sijainnit/tee-geometria (:alkusijainti tarkastus) (:loppusijainti tarkastus)))
-                     tieturvallisuus-geometria (when (and (= tyyppi (name :tieturvallisuus)) tie)
+                     tieturvallisuus-geometria (when (and tieturvallisuustarkastus? tie)
                                                  (hae-tieturvallisuusgeometria db tie geometria))
                      tr-osoite
-                     (if (and (= tyyppi (name :tieturvallisuus)) tieturvallisuus-geometria)
+                     (if (and tieturvallisuustarkastus? tieturvallisuus-geometria)
                        (sijainnit/hae-tierekisteriosoite-geometrialle db (geo/pg->clj tieturvallisuus-geometria))
                        tr-osoite)
                      id (q-tarkastukset/luo-tai-paivita-tarkastus
@@ -64,7 +65,7 @@
                            :tyyppi tyyppi
                            :aika aika
                            :tarkastaja (json/henkilo->nimi (:tarkastaja tarkastus))
-                           :sijainti (if (= tyyppi (name :tieturvallisuus)) tieturvallisuus-geometria geometria)
+                           :sijainti (if tieturvallisuustarkastus? tieturvallisuus-geometria geometria)
                            :tr {:numero (:tie tr-osoite)
                                 :alkuosa (:aosa tr-osoite)
                                 :alkuetaisyys (:aet tr-osoite)
@@ -88,8 +89,7 @@
                                               {:type :point, :coordinates [(:x loppusijainti) (:y loppusijainti)]}]})
                              geo/clj->pg
                              geo/geometry)
-                           :rajapinnasta_saatu_sijainti (if (= tyyppi (name :tieturvallisuus)) geometria nil)
-                           })
+                           :alkuperainen_sijainti (if tieturvallisuustarkastus? geometria nil)})
                      liitteet (:liitteet tarkastus)]
                  (tyokalut-liitteet/tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
                  (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? (:mittaus rivi))

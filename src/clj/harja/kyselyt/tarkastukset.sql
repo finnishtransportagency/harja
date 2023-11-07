@@ -303,10 +303,10 @@ ORDER BY l.luotu ASC;
 INSERT
 INTO tarkastus
 (lahde, urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
- sijainti, tarkastaja, tyyppi, luoja, ulkoinen_id, havainnot, laadunalitus, yllapitokohde, nayta_urakoitsijalle, pisteet, rajapinnasta_saatu_sijainti)
+ sijainti, tarkastaja, tyyppi, luoja, ulkoinen_id, havainnot, laadunalitus, yllapitokohde, nayta_urakoitsijalle, pisteet, alkuperainen_sijainti)
 VALUES (:lahde :: lahde, :urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys,
                          :sijainti, :tarkastaja, :tyyppi :: tarkastustyyppi, :luoja, :ulkoinen_id,
-        :havainnot, :laadunalitus, :yllapitokohde, :nayta_urakoitsijalle, :pisteet, :rajapinnasta_saatu_sijainti);
+        :havainnot, :laadunalitus, :yllapitokohde, :nayta_urakoitsijalle, :pisteet, :alkuperainen_sijainti);
 
 -- name: luodun-tarkastuksen-id
 -- single?: true
@@ -333,7 +333,7 @@ SET aika               = :aika,
   yllapitokohde        = :yllapitokohde,
   nayta_urakoitsijalle = :nayta_urakoitsijalle,
   pisteet              = :pisteet,
-  rajapinnasta_saatu_sijainti = :rajapinnasta_saatu_sijainti,
+  alkuperainen_sijainti = :alkuperainen_sijainti,
   poistettu            = FALSE
 WHERE urakka = :urakka AND id = :id;
 

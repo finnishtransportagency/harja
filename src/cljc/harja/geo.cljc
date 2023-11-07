@@ -167,7 +167,7 @@
      (PGpoint. x y)))
 
 #?(:clj
-   (defn ensimmaisen-pisteen-koordinaatit "Palauttaa vektorin, ensinnäisen pisteen x ja y" [geometria]
+   (defn ensimmaisen-pisteen-koordinaatit "Palauttaa vektorin, ensimmäisen pisteen x ja y" [geometria]
      (cond
        (= (:type geometria) :multiline) (first (:points (first (:lines geometria))))
        (= (:type geometria) :multipoint) (:coordinates (first (:coordinates geometria)))
