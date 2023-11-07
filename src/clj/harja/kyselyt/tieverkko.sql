@@ -187,11 +187,14 @@ select exists(
        AND tr."tr-loppuetaisyys" >= :aet);
 
 -- name: hae-tr-osan-tiedot
-SELECT "tr-numero", "tr-osa", MIN("tr-alkuetaisyys") as "tr-alkuetaisyys", MAX("tr-loppuetaisyys") as "tr-loppuetaisyys"
-FROM tr_osoitteet tr
-WHERE tr."tr-numero" = :tie
-  AND tr."tr-osa" = :aosa
-GROUP BY "tr-numero", "tr-osa";
+SELECT "tr-numero",
+       "tr-osa",
+       MIN("tr-alkuetaisyys") as "tr-alkuetaisyys",
+       MAX("tr-loppuetaisyys") as "tr-loppuetaisyys"
+  FROM tr_osoitteet tr
+ WHERE tr."tr-numero" = :tie
+   AND tr."tr-osa" = :aosa
+ GROUP BY "tr-numero", "tr-osa";
 
 -- name: onko-tr-loppuosa-olemassa?
 -- single?: true

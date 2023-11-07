@@ -51,9 +51,8 @@
                               {:tie tie
                                :aosa aosa
                                :aet aet}))
-        alkuosan-tiedot (if (and osat-annettu? (not alkuosa-olemassa?))
-                          (first (tieverkko-kyselyt/hae-tr-osan-tiedot db {:tie tie :aosa aosa}))
-                          nil)
+        alkuosan-tiedot (when (and osat-annettu? (not alkuosa-olemassa?))
+                          (first (tieverkko-kyselyt/hae-tr-osan-tiedot db {:tie tie :aosa aosa})))
         tr-osoitteen-virheet (if-not alkuosa-olemassa?
                                (cond-> tr-osoitteen-virheet
                                  true (conj "Tierekisteriosoitteen alkuosa tai alkuetäisyys virheellinen.")
@@ -68,9 +67,8 @@
                                {:tie tie
                                 :losa losa
                                 :let loppuet}))
-        loppuosan-tiedot (if (and osat-annettu? (not loppuosa-olemassa?))
-                           (first (tieverkko-kyselyt/hae-tr-osan-tiedot db {:tie tie :aosa losa}))
-                           nil)
+        loppuosan-tiedot (when (and osat-annettu? (not loppuosa-olemassa?))
+                           (first (tieverkko-kyselyt/hae-tr-osan-tiedot db {:tie tie :aosa losa})))
         tr-osoitteen-virheet (if (and osat-annettu? (not loppuosa-olemassa?))
                                (cond-> tr-osoitteen-virheet
                                  true (conj "Tierekisteriosoitteen loppuosa tai loppuetäisyys virheellinen.")
@@ -119,8 +117,10 @@
             validaatiovirheet (when-not (empty? paallekaiset)
                                 (do
                                   (log/warn "tierekisterin-tiedot :: Löydettiin päällekäiset: " (into [] paallekaiset))
-                                  (format "Tierekisteriosoitteessa on jo rajoitus. %s/%s/%s/%s/%s  " (:tie (first paallekaiset)) (:aosa (first paallekaiset))
-                                    (:aet (first paallekaiset)) (:losa (first paallekaiset)) (:let (first paallekaiset)))))
+                                  (format "Tierekisteriosoitteessa on jo rajoitus. %s/%s/%s/%s/%s  "
+                                    (:tie (first paallekaiset)) (:aosa (first paallekaiset))
+                                    (:aet (first paallekaiset)) (:losa (first paallekaiset))
+                                    (:let (first paallekaiset)))))
 
             ;; Pilkotaan tierekisteri osiin tien osien mukaan
             tie-osien-pituudet (tieverkko-kyselyt/hae-osien-pituudet db {:tie (:tie suolarajoitus)

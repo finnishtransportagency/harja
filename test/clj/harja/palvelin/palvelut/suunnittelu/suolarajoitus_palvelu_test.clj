@@ -19,10 +19,7 @@
   (testit)
   (alter-var-root #'t/jarjestelma component/stop))
 
-(use-fixtures :each
-  jarjestelma-fixture
-  ;t/tietokanta-fixture
-  )
+(use-fixtures :each jarjestelma-fixture)
 
 (defn- suolarajoitus-pohja
   "Olettaa saavansa tierekisteriosoitteen muodossa: {:tie 86, :aosa 1, :aet 0, :losa 2, :let 10}"

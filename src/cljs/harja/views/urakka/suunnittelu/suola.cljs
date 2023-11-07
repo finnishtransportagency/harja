@@ -108,7 +108,6 @@
           :pakollinen? true
           :vayla-tyyli? true
           :virhe? (validointi/nayta-virhe? [:tie] lomake)
-          ;:virheteksti (validointi/nayta-virhe-teksti [:tie] lomake)
           :rivi-luokka "lomakeryhman-rivi-tausta"}
          {:nimi :aosa
           :otsikko "A-osa"
@@ -151,8 +150,7 @@
             :komponentti (fn []
                            [:div ])}))
        (when (:validaatioinfot lomake)
-         (lomake/ryhma {#_#_:ryhman-luokka "lomakeryhman-otsikko-tausta"
-                        :rivi true}
+         (lomake/ryhma {:rivi true}
            {:nimi :validaatioinfot
             :palstoja 3
             :tyyppi :komponentti
