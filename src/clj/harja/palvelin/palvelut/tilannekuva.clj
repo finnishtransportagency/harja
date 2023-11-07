@@ -504,6 +504,7 @@
     :tietyoilmoitukset :varustetoteumat :tieluvat})
 
 (defmulti hae-osio (fn [db user tiedot urakat osio] osio))
+
 (defmethod hae-osio :toteumat [db user tiedot urakat _]
   (tulosta-tulos! "uniikkia toteuman tehtävää"
                   (hae-toteumien-selitteet db user tiedot urakat)))

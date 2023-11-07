@@ -857,8 +857,7 @@
       (Thread/setDefaultUncaughtExceptionHandler
         (reify Thread$UncaughtExceptionHandler
           (uncaughtException [_ thread e]
-            (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e))
-            (log/error "Virhe: " e))))
+            (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e)))))
 
       (konfiguroi-lokitus asetukset)
       (if-let [virheet (tarkista-asetukset asetukset)]
@@ -877,9 +876,13 @@
 
 (defn sammuta-jarjestelma []
   (when harja-jarjestelma
-    (alter-var-root #'harja-jarjestelma (fn [s]
-                                          (component/stop s)
-                                          nil)))
+    (alter-var-root #'harja-jarjestelma
+      (fn [s]
+        (try
+          (component/stop s)
+          (catch Exception e
+            (throw (component/ex-without-components e))))
+        nil)))
   (sammuta-harja-tarkkailija!))
 
 (defn -main [& argumentit]

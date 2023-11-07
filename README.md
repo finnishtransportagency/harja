@@ -336,25 +336,6 @@ oikein eikä harja räsähdä.
 Uusille näkymille lisätään testi, jossa näkymään navigoidaan ja tarkistetaan jotain yksinkertaista
 sivun rakenteesta.
 
-### Tievelho
-
-Tievelhon varustetapahtumien tuonnin sekvenssikaavio löytyy sekalaista/Tievelho-varustet-tuonti.puml dokumentista.
-
-Testiajoja voi suorittaa kutsumalla REPL:ssa:
-```
-(in-ns 'harja.palvelin.integraatiot.velho.velho-komponentti)
-(def j harja.palvelin.main/harja-jarjestelma)
-(def asetukset (get-in j [:velho-integraatio :asetukset]))
-(varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki j) (:db j) asetukset)
-(varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki j) (:db j) asetukset)
-```
-
-Kannattaa huomata, että localhostilla ei löydy kovin montaa MHU:ta, joten iso osa kohteiste ei
-kohdistu urakoihin oikein ja siitä aiheutuu virheitä.
-
-Pitää myös katsoa `varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle` aikaleimoja, jos haluaa
-hakujen kohdistuvan tietyn päivämäärän jälkeisiin Velhon muutoksiin.
-
 ## Debug lokituksen näyttäminen
 
 Muokkaa asetukset.edn:aa ja muuta rivillä: 
