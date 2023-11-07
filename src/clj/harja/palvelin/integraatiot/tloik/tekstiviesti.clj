@@ -1,6 +1,8 @@
 (ns harja.palvelin.integraatiot.tloik.tekstiviesti
   "Ilmoitusten lähettäminen urakoitsijalle ja kuittausten vastaanottaminen"
-  (:require [taoensso.timbre :as log]
+  (:require [harja.domain.palautevayla-domain :as palautevayla]
+            [harja.kyselyt.palautevayla :as palautevayla-kyselyt]
+            [taoensso.timbre :as log]
             [clojure.string :as string]
             [harja.palvelin.integraatiot.labyrintti.sms :as sms]
             [harja.domain.tieliikenneilmoitukset :as apurit]
@@ -35,6 +37,29 @@
        "R%s = vastattu\n"
        "U%s = väärä urakka\n\n"
        "Vastaa lähettämällä kuittauskoodi sekä kommentti. Esim. A1 Työt aloitettu.\n"))
+
+(def +ilmoitusviesti-aiheella+
+  (str "Uusi toimenpidepyyntö %s: %s (viestinumero: %s).\n\n"
+    "Tunniste: %s\n\n"
+    "Urakka: %s\n\n"
+    "Yhteydenottopyyntö: %s\n\n"
+    "Ilmoittaja: %s\n\n"
+    "Lähettäjä: %s\n\n"
+    "Paikka: %s\n\n"
+    "Tienumero: %s\n\n"
+    "Aihe: %s.\n\n"
+    "Tarkenne: %s.\n\n"
+    "Lisätietoja: %s.\n\n"
+    "Kuittauskoodit:\n"
+    "V%s = vastaanotettu\n"
+    "A%s = aloitettu\n"
+    "K%s = toimenpiteet aloitettu\n"
+    "L%s = lopetettu\n"
+    "T%s = lopetettu toimenpitein\n"
+    "M%s = muutettu\n"
+    "R%s = vastattu\n"
+    "U%s = väärä urakka\n\n"
+    "Vastaa lähettämällä kuittauskoodi sekä kommentti. Esim. A1 Työt aloitettu.\n"))
 
 (def +onnistunut-viesti+ "Kuittaus käsiteltiin onnistuneesti. Kiitos!")
 (def +viestinumero-tai-toimenpide-puuttuuviesti+ "Viestiä ei voida käsitellä. Kuittauskoodi puuttuu.")
@@ -142,7 +167,7 @@
       (log/error e (format "Numerosta: %s vastaanotetun viestin: %s käsittelyssä tapahtui poikkeus." puhelinnumero viesti))
       +virhe-viesti+)))
 
-(defn ilmoitus-tekstiviesti [ilmoitus viestinumero]
+(defn ilmoitus-tekstiviesti [ilmoitus viestinumero aiheet-ja-tarkenteet]
   (let [tunniste (:tunniste ilmoitus)
         otsikko (:otsikko ilmoitus)
         paikankuvaus (:paikankuvaus ilmoitus)
@@ -153,29 +178,55 @@
                       (merkkijono/leikkaa 500 (:lisatieto ilmoitus))
                       "")
         selitteet (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))
+        aihe (palautevayla/hae-aihe aiheet-ja-tarkenteet (get-in ilmoitus [:luokittelu :aihe]))
+        tarkenne (palautevayla/hae-tarkenne aiheet-ja-tarkenteet (get-in ilmoitus [:luokittelu :tarkenne]))
         virka-apupyynto (if (ilm/virka-apupyynto? ilmoitus) "(VIRKA-APUPYYNTÖ)" "")]
-    (str
-      (format +ilmoitusviesti+
-              virka-apupyynto
-              otsikko
-              viestinumero
-              tunniste
-              (:urakkanimi ilmoitus)
-              (fmt/totuus (:yhteydenottopyynto ilmoitus))
-              (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))
-              (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))
-              paikankuvaus
-              tr-osoite
-              selitteet
-              lisatietoja
-              viestinumero
-              viestinumero
-              viestinumero
-              viestinumero
-              viestinumero
-              viestinumero
-              viestinumero
-              viestinumero))))
+    (if-not (get-in ilmoitus [:luokittelu :aihe])
+      (str
+        (format +ilmoitusviesti+
+          virka-apupyynto
+          otsikko
+          viestinumero
+          tunniste
+          (:urakkanimi ilmoitus)
+          (fmt/totuus (:yhteydenottopyynto ilmoitus))
+          (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))
+          (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))
+          paikankuvaus
+          tr-osoite
+          selitteet
+          lisatietoja
+          viestinumero
+          viestinumero
+          viestinumero
+          viestinumero
+          viestinumero
+          viestinumero
+          viestinumero
+          viestinumero))
+      (str
+        (format +ilmoitusviesti-aiheella+
+          virka-apupyynto
+          otsikko
+          viestinumero
+          tunniste
+          (:urakkanimi ilmoitus)
+          (fmt/totuus (:yhteydenottopyynto ilmoitus))
+          (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))
+          (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))
+          paikankuvaus
+          tr-osoite
+          aihe
+          tarkenne
+          lisatietoja
+          viestinumero
+          viestinumero
+          viestinumero
+          viestinumero
+          viestinumero
+          viestinumero
+          viestinumero
+          viestinumero)))))
 
 (defn laheta-ilmoitus-tekstiviestilla [sms db ilmoitus paivystaja]
   (try
@@ -185,7 +236,9 @@
                           (:ilmoitus-id ilmoitus) puhelinnumero))
         (let [viestinumero (paivystajatekstiviestit/kirjaa-uusi-viesti
                              db (:id paivystaja) (:ilmoitus-id ilmoitus) puhelinnumero)
-              viesti (ilmoitus-tekstiviesti ilmoitus viestinumero)]
+              aiheet-ja-tarkenteet (when (get-in ilmoitus [:luokittelu :aihe])
+                                     (palautevayla-kyselyt/hae-aiheet-ja-tarkenteet db))
+              viesti (ilmoitus-tekstiviesti ilmoitus viestinumero aiheet-ja-tarkenteet)]
           (sms/laheta sms puhelinnumero viesti {"X-Correlation-ID" (:ilmoitus-id ilmoitus)})
 
           (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide

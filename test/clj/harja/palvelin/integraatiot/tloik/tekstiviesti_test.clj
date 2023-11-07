@@ -2,6 +2,7 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [com.stuartsierra.component :as component]
             [clojure.data.zip.xml :as z]
+            [harja.kyselyt.palautevayla :as palautevayla-q]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
             [harja.jms-test :refer [feikki-jms]]
@@ -44,7 +45,7 @@
 
 (defn tekstiviestin-rivit [ilmoitus]
   (into #{} (str/split-lines
-              (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234))))
+              (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234 (palautevayla-q/hae-aiheet-ja-tarkenteet (:db jarjestelma))))))
 
 (use-fixtures :each jarjestelma-fixture)
 
@@ -105,6 +106,27 @@
     (is (rivit "Tienumero: Ei tierekisteriosoitetta"))
     (is (rivit "Selitteet: Toimenpidekysely."))))
 
+(deftest tekstiviestin-muodostus-aiheella
+  (let [ilmoitus {:tunniste "UV666"
+                  :otsikko "Testiympäristö liekeissä!"
+                  :paikankuvaus "Konesali"
+                  :sijainti {:tr-numero 1
+                             :tr-alkuosa 2
+                             :tr-alkuetaisyys 3
+                             :tr-loppuosa 4
+                             :tr-loppuetaisyys 5}
+                  :lisatieto "Soittakaapa äkkiä"
+                  :yhteydenottopyynto true
+                  :luokittelu {:aihe 900
+                               :tarkenne 9001}}
+        rivit (tekstiviestin-rivit ilmoitus)]
+    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (viestinumero: 1234)."))
+    (is (rivit "Yhteydenottopyyntö: Kyllä"))
+    (is (rivit "Paikka: Konesali"))
+    (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
+    (is (rivit "Tienumero: 1 / 2 / 3 / 4 / 5"))
+    (is (rivit "Aihe: Testaus."))
+    (is (rivit "Tarkenne: Testaaminen."))))
 
 
 (deftest tekstiviestin-parsinta
