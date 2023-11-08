@@ -20,10 +20,10 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup clojure environment
+    - name: Setup clojure environment and install nodejs deps
       uses: ./.github/actions/setup-build-env-and-tools
       with:
-        # Front-endin buildaamisesa tarvitaa nodejs dependencyjä
+        # Front-endin buildaamisessa tarvitaan nodejs dependencyjä
         install-node-deps: true
 
     - name: Build back-end
