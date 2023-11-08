@@ -13,7 +13,7 @@ inputs:
   install-node-deps:
     description: 'Asennetaanko nodejs dependencyt? (less.js ym.)'
     # Huom, composite actionit eivät tue tyyppimäärityksiä inputeille.
-    default: 'true'
+    default: 'false'
 
 runs:
   using: "composite"
