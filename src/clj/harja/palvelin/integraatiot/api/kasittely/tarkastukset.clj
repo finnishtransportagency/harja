@@ -4,6 +4,7 @@
             [clojure.string :as str]
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
             [harja.kyselyt.tarkastukset :as q-tarkastukset]
+            [harja.kyselyt.tieturvallisuusverkko :as tieturvallisuusverkko-kyselyt]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :as tyokalut-liitteet]
             [harja.geo :as geo]))
@@ -16,6 +17,10 @@
                                                                       (assoc :lampotila-ilma (:lampotilaIlma mittaus))))
     "soratie" (q-tarkastukset/luo-tai-paivita-soratiemittaus db id uusi? mittaus)
     nil))
+
+(defn- hae-tieturvallisuusgeometria [db tie geometria]
+  (:leikkaus (first (tieturvallisuusverkko-kyselyt/hae-geometriaa-leikkaavat-tieturvallisuusgeometriat-tienumerolla db
+                      {:tie tie :saatugeometria geometria}))))
 
 (defn luo-tai-paivita-tarkastukset
   "Käsittelee annetut tarkastukset ja palautta listan string-varoituksia."
@@ -35,15 +40,23 @@
                      tyyppi (if (nil? tyyppi)
                               (:tarkastustyyppi rivi)
                               (name tyyppi))
+                     tieturvallisuustarkastus? (= tyyppi (name :tieturvallisuus))
                      {tarkastus-id :id}
                      (first
                        (q-tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id tyyppi urakka-id))
                      uusi? (nil? tarkastus-id)
                      aika (json/aika-string->java-sql-date (:aika tarkastus))
                      tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
+                     tie (:tie tr-osoite)
                      geometria (if tr-osoite
                                  (:geometria tr-osoite)
                                  (sijainnit/tee-geometria (:alkusijainti tarkastus) (:loppusijainti tarkastus)))
+                     tieturvallisuus-geometria (when (and tieturvallisuustarkastus? tie)
+                                                 (hae-tieturvallisuusgeometria db tie geometria))
+                     tr-osoite
+                     (if (and tieturvallisuustarkastus? tieturvallisuus-geometria)
+                       (sijainnit/hae-tierekisteriosoite-geometrialle db (geo/pg->clj tieturvallisuus-geometria))
+                       tr-osoite)
                      id (q-tarkastukset/luo-tai-paivita-tarkastus
                           db kayttaja urakka-id
                           {:id tarkastus-id
@@ -52,7 +65,7 @@
                            :tyyppi tyyppi
                            :aika aika
                            :tarkastaja (json/henkilo->nimi (:tarkastaja tarkastus))
-                           :sijainti geometria
+                           :sijainti (if tieturvallisuustarkastus? tieturvallisuus-geometria geometria)
                            :tr {:numero (:tie tr-osoite)
                                 :alkuosa (:aosa tr-osoite)
                                 :alkuetaisyys (:aet tr-osoite)
@@ -75,7 +88,8 @@
                                 :coordinates [{:type :point :coordinates [(:x alkusijainti) (:y alkusijainti)]}
                                               {:type :point, :coordinates [(:x loppusijainti) (:y loppusijainti)]}]})
                              geo/clj->pg
-                             geo/geometry)})
+                             geo/geometry)
+                           :alkuperainen_sijainti (if tieturvallisuustarkastus? geometria nil)})
                      liitteet (:liitteet tarkastus)]
                  (tyokalut-liitteet/tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
                  (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? (:mittaus rivi))

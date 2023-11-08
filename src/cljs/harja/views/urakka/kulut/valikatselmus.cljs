@@ -364,6 +364,7 @@
                            siirto-valittu? 0
                            :else 0)
         maksettava-summa-prosenttina (* 100 (/ maksettava-summa ylityksen-maara))
+        siirrettava-summa-prosenttina (* 100 (/ siirto ylityksen-maara))
         paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
                                  ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
                                  ::valikatselmus/urakoitsijan-maksu maksettava-summa
@@ -397,9 +398,16 @@
                 :oletusarvo :maksu}
                (r/wrap maksun-tyyppi
                  #(e! (valikatselmus-tiedot/->PaivitaMaksunTyyppi %)))])
-            (if siirto-valittu?
+            (case maksun-tyyppi
+              :maksu
               [:p.maksurivi "Siirretään ensi vuoden kustannuksiksi " [:strong (fmt/euro-opt siirto)]]
-              [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)] " (" (fmt/desimaaliluku-opt maksettava-summa-prosenttina) " %)"])]
+              :siirto
+              [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)] " (" (fmt/desimaaliluku-opt maksettava-summa-prosenttina) " %)"]
+              :osa
+              [:<>
+               [:p.maksurivi "seuraavalle vuodelle siirretään " [:strong (fmt/euro-opt siirto)] " (" (fmt/desimaaliluku-opt siirrettava-summa-prosenttina) " %)"]
+               [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)] " (" (fmt/desimaaliluku-opt maksettava-summa-prosenttina) " %)"]])]
+
            [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)]])
 
          ;; FIXME: Ei figma-speksiä, korjaa kunhan sellainen löytyy.
