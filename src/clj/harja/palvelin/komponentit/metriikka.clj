@@ -59,12 +59,3 @@
                             (muutos-fn (get arvot avain))))
                    %
                    (partition 2 avaimet-ja-muutosfunktiot)))))
-
-(defn with-counter-incremented [mittari-ref avain & body]
-  `(let [ref# ~mittari-ref
-         key# ~avain]
-     (try
-       (inc! ref# key#)
-       (do ~@body)
-       (finally
-         (dec! ref# key#)))))
