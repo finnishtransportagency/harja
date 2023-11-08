@@ -10,6 +10,7 @@
             [slingshot.slingshot :refer [throw+]]
 
             [harja.kyselyt.toteumat :as toteumat-q]
+            [harja.kyselyt.tehtavaryhmat :as tehtavaryhmat-q]
             [harja.kyselyt.materiaalit :as materiaalit-q]
             [harja.kyselyt.muutoshintaiset-tyot :as mht-q]
             [harja.kyselyt.sopimukset :as sopimukset-q]
@@ -461,13 +462,13 @@
                                                            :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})]
     vastaus))
 
-(defn hae-urakan-toimenpiteet [db user {:keys [urakka-id]}]
+(defn hae-urakan-tehtavaryhmaotsikot [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
-  (toteumat-q/listaa-urakan-toteutumien-toimenpiteet db))
+  (tehtavaryhmat-q/tehtavaryhmaotsikot db))
 
-(defn hae-maarien-toteumien-toimenpiteiden-tehtavat [db user {:keys [urakka-id tehtavaryhma otsikko]}]
+(defn hae-tehtavat-tehtavaryhmaotsikoittain [db user {:keys [urakka-id tehtavaryhma otsikko]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
-  (toteumat-q/listaa-maarien-toteumien-toimenpiteiden-tehtavat db {:urakka urakka-id :otsikko otsikko}))
+  (tehtavaryhmat-q/tehtavat-tehtavaryhmaotsikoittain db {:urakka urakka-id :otsikko otsikko}))
 
 (defn poista-maarien-toteuma! [db user {:keys [urakka-id toteuma-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
@@ -1064,10 +1065,10 @@
         (poista-erilliskustannus db user erilliskustannus))
       :urakan-toteumien-toimenpiteet
       (fn [user tiedot]
-        (hae-urakan-toimenpiteet db-replica user tiedot))
+        (hae-urakan-tehtavaryhmaotsikot db-replica user tiedot))
       :maarien-toteutumien-toimenpiteiden-tehtavat
       (fn [user tiedot]
-        (hae-maarien-toteumien-toimenpiteiden-tehtavat db-replica user tiedot))
+        (hae-tehtavat-tehtavaryhmaotsikoittain db-replica user tiedot))
       :tallenna-toteuma
       (fn [user tiedot]
         (tallenna-toteuma! db user tiedot))
