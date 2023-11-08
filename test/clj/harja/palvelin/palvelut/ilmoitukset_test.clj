@@ -485,7 +485,8 @@
                                  :hae-ilmoitukset +kayttaja-jvh+ parametrit)]
     (is (= (count ilmoitukset-palvelusta) 2) "Annettu aikaväli palauttaa kaksi ilmoitusta")
     (is (some #(= "Tiellä 6 on taas vikaa" (:otsikko %)) ilmoitukset-palvelusta))
-    (is (some #(= "Soittakaa Sepolle" (:otsikko %)) ilmoitukset-palvelusta)))))
+    (is (some #(= "Soittakaa Sepolle" (:otsikko %)) ilmoitukset-palvelusta))
+    (is (= (:otsikko (first ilmoitukset-palvelusta)) "Tiellä 6 on taas vikaa")))))
 
 (deftest aikavalihaku-kuluva-kalenterikuukausi-lajittelu-nouseva
   (with-redefs [pvm/joda-timeksi (fn [] (DateTime. 2005 10 20 13 15 0))
@@ -504,7 +505,8 @@
       ; palauttaa samat kuin oletus suuntaan järjestettäessä koska tulosjoukon lukumäärä alle 500 rajaarvon
       (is (= (count ilmoitukset-palvelusta) 2) "Annettu aikaväli palauttaa kaksi ilmoitusta")
       (is (some #(= "Tiellä 6 on taas vikaa" (:otsikko %)) ilmoitukset-palvelusta))
-      (is (some #(= "Soittakaa Sepolle" (:otsikko %)) ilmoitukset-palvelusta)))))
+      (is (some #(= "Soittakaa Sepolle" (:otsikko %)) ilmoitukset-palvelusta))
+      (is (= (:otsikko (first ilmoitukset-palvelusta)) "Soittakaa Sepolle")))))
 
 (deftest aikavalihaku-edellinen-kalenterikuukausi
   (with-redefs [pvm/nyt (fn [] (pvm/luo-pvm-dec-kk 2005 11 20))]
@@ -538,6 +540,43 @@
                   (catch Exception e e))]
     (is (= IllegalArgumentException (type vastaus)))
     (is (= (.getMessage vastaus) "Tuntematon kalenterikuukausiaikaväli :diipadaa"))))
+
+(deftest aikavalihaku-lajittelu-suunta-puuttuu
+  (with-redefs [pvm/joda-timeksi (fn [] (DateTime. 2005 10 20 13 15 0))
+                pvm/nyt (fn [] (pvm/luo-pvm-dec-kk 2005 10 20))]
+    (let [parametrit {:hallintayksikko nil
+                      :urakka nil
+                      :hoitokausi nil
+                      :valitetty-urakkaan-vakioaikavali {:nimi "Kuluva kalenterikuukausi", :kalenterikuukausi :kuluva}
+                      :tyypit +ilmoitustyypit+
+                      :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
+                      :aloituskuittauksen-ajankohta :kaikki
+                      :hakuehto ""}
+          ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :hae-ilmoitukset +kayttaja-jvh+ parametrit)]
+      (is (= (count ilmoitukset-palvelusta) 2) "Annettu aikaväli palauttaa kaksi ilmoitusta")
+      (is (some #(= "Tiellä 6 on taas vikaa" (:otsikko %)) ilmoitukset-palvelusta))
+      (is (some #(= "Soittakaa Sepolle" (:otsikko %)) ilmoitukset-palvelusta))
+      (is (= (:otsikko (first ilmoitukset-palvelusta)) "Tiellä 6 on taas vikaa")))))
+
+(deftest aikavalihaku-lajittelu-suunta-nil
+  (with-redefs [pvm/joda-timeksi (fn [] (DateTime. 2005 10 20 13 15 0))
+                pvm/nyt (fn [] (pvm/luo-pvm-dec-kk 2005 10 20))]
+    (let [parametrit {:hallintayksikko nil
+                      :urakka nil
+                      :hoitokausi nil
+                      :valitetty-urakkaan-vakioaikavali {:nimi "Kuluva kalenterikuukausi", :kalenterikuukausi :kuluva}
+                      :tyypit +ilmoitustyypit+
+                      :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
+                      :aloituskuittauksen-ajankohta :kaikki
+                      :hakuehto ""
+                      :lajittelu-suunta nil}
+          ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :hae-ilmoitukset +kayttaja-jvh+ parametrit)]
+      (is (= (count ilmoitukset-palvelusta) 2) "Annettu aikaväli palauttaa kaksi ilmoitusta")
+      (is (some #(= "Tiellä 6 on taas vikaa" (:otsikko %)) ilmoitukset-palvelusta))
+      (is (some #(= "Soittakaa Sepolle" (:otsikko %)) ilmoitukset-palvelusta))
+      (is (= (:otsikko (first ilmoitukset-palvelusta)) "Tiellä 6 on taas vikaa")))))
 
 (defn- LocalDateTime->Date [localDateTime]
   (Date/from (. (. localDateTime atZone (ZoneId/systemDefault)) toInstant)))
