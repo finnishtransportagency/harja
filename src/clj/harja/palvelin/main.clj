@@ -785,7 +785,6 @@
         (urakoidenlyhytnimet-hallinta/->UrakkaLyhytnimienHallinta)
         [:http-palvelin :db])
 
-
       :tehtavat-hallinta
       (component/using
         (tehtavat-hallinta/->TehtavatHallinta)

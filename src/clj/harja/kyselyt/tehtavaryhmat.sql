@@ -4,9 +4,9 @@ SELECT tro.id, tro.otsikko
  ORDER BY tro.otsikko ASC;
 
 -- name: hae-mhu-tehtavaryhmaotsikot-tehtavaryhmat-ja-tehtavat
-SELECT tro.id                                                                                 AS tehtavaryhmaotsikko_id,
+SELECT tro.id        AS tehtavaryhmaotsikko_id,
        tro.otsikko,
-       tr.id                                                                                  AS tehtavaryhma_id,
+       tr.id         AS tehtavaryhma_id,
        tr.nimi,
        tr.jarjestys,
        tr.nakyva,

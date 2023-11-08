@@ -23,7 +23,6 @@
             [harja.views.hallinta.sahkopostitestaus-nakyma :as email-nakyma]
             [harja.views.hallinta.tehtava-nakyma :as tehtava-nakyma]
             [harja.tiedot.istunto :as istunto]))
-
 (defn hallinta []
   [bs/tabs {:style :tabs :classes "tabs-taso1"
             :active (nav/valittu-valilehti-atom :hallinta)}
@@ -132,7 +131,6 @@
    (when true
      ^{:key "sahkopostitestaus"}
      [email-nakyma/email-testaus])
-
 
    "MHU Tehtäväryhmät ja tehtävät"
    :tehtavatjatehtavaryhmat

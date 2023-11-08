@@ -7,7 +7,6 @@
 (def tila (atom nil))
 (def nakymassa? (atom false))
 
-
 (defrecord HaeTehtavaryhmaotsikot [])
 (defrecord HaeTehtavaryhmaotsikotOnnistui [vastaus])
 (defrecord HaeTehtavaryhmaotsikotEpaonnistui [vastaus])
