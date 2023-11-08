@@ -13,7 +13,14 @@ SELECT aurora_version() IS NOT NULL;
 -- name: hae-replikoinnin-viive-aurora
 -- single?: true
 -- Palauttaa replikoinnin viiveen sekunteina.
-SELECT FLOOR((SELECT replica_lag_in_msec FROM aurora_replica_status()) / 1000)::INT;
+-- HUOM: Replica-status palauttaa useita rivejä, varsinkin jos readereita on useampi.
+--       Tässä haetaan not-null arvo viiveelle ja rajoitetaan tulokset yhteen.
+--       Tapauksessa, jossa halutaan tietyn readerin replica_lag, täytyy kertoa kyselylle minkä readerin status halutaan.
+--       Tällä hetkellä käytössä on vain yksi master ja yksi reader, joten valintaa ei tarvi tehdä.
+SELECT FLOOR((SELECT replica_lag_in_msec
+              FROM aurora_replica_status()
+              WHERE replica_lag_in_msec IS NOT NULL
+              LIMIT 1) / 1000)::INT;
 
 
 -- name: tarkista-kantayhteys

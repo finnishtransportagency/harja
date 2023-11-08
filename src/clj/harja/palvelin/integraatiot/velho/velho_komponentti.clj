@@ -15,7 +15,7 @@
   (tuo-velho-nimikkeisto [this])
   (hae-varusteen-historia [this tiedot]))
 
-(defn tee-velho-nimikkeisto-tuonti-tehtava [{:keys [db :as this]} suoritusaika]
+(defn tee-velho-nimikkeisto-tuonti-tehtava [{:keys [db] :as this} suoritusaika]
   (when suoritusaika
     (ajastettu-tehtava/ajasta-paivittain
       suoritusaika

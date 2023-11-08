@@ -471,7 +471,7 @@ FROM tehtava tk
      JOIN urakka u on u.id = :urakka
 WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
       (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
-  AND tk.ensisijainen = true -- Rajataan pois ne, jotka eivät ole ensisijaisia.
+  AND tk."mhu-tehtava?" = true -- Rajataan pois ne, jotka eivät ole mhu tehtäviä.
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
   -- Rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
@@ -559,39 +559,6 @@ SELECT t.id        AS toteuma_id,
       AND tt.poistettu = FALSE
       AND t.luoja = k.id
       AND tr.id = tk.tehtavaryhma;
-
--- name: listaa-urakan-toteutumien-toimenpiteet
--- Listaa kaikki toimenpiteet (tehtäväryhmät) määrien toteumille. Ehtona toimii emo is null ja tyyppi 'ylataso'
-SELECT DISTINCT ON (tr.otsikko) otsikko, tr.id
-    FROM tehtavaryhma tr
-    ORDER BY otsikko ASC, tr.id ASC;
-
--- name: listaa-maarien-toteumien-toimenpiteiden-tehtavat
--- Listaa kaikki tehtävät tehtäväryhmän perusteella määrien toteumille. Äkillisille hoitotöille
--- on ihan oma tehtäväryhmä ja tätä ei voida käyttää siihen
-SELECT tk.id AS id,
-       tk.nimi AS tehtava,
-       tk.suunnitteluyksikko AS yksikko
-FROM tehtava tk
-         JOIN urakka u ON :urakka = u.id
-         JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
-                                          AND (:otsikko::TEXT IS NULL OR tr_alataso.otsikko = :otsikko)
-WHERE (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
-  AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
-  AND tk.poistettu IS NOT TRUE
-  -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
-  AND (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
-  -- haetaan Lisää toteuma-listaan vain MH-urakoissa käytössä olevat tehtävät, ei samaa tarkoittavia alueurakoiden tehtäviä.
-  AND tk.ensisijainen = true
-  -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
-  -- mutta otetaan mukaan Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen ja lisätyöt
-  AND ((tk.suunnitteluyksikko IS not null AND tk.suunnitteluyksikko != 'euroa') OR tk.yksiloiva_tunniste IN ('49b7388b-419c-47fa-9b1b-3797f1fab21d',
-                                                                                                             '63a2585b-5597-43ea-945c-1b25b16a06e2',
-                                                                                                             'b3a7a210-4ba6-4555-905c-fef7308dc5ec',
-                                                                                                             'e32341fc-775a-490a-8eab-c98b8849f968',
-                                                                                                             '0c466f20-620d-407d-87b0-3cbb41e8342e',
-                                                                                                             'c058933e-58d3-414d-99d1-352929aa8cf9'))
-  ORDER BY tk.jarjestys;
 
 -- name: tallenna-erilliskustannukselle-liitteet<!
 -- Lisää liitteet
