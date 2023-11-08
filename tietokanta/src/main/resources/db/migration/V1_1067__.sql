@@ -29,20 +29,11 @@ INSERT INTO tehtavaryhmaotsikko (otsikko, luotu, luoja)
 VALUES ('2.4 LIIKENNEYMPÄRISTÖN HOITO / Kuivatusjärjestelmän kaivojen, putkistojen ja pumppaamoiden hoito', NOW(),
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
 INSERT INTO tehtavaryhmaotsikko (otsikko, luotu, luoja)
-VALUES ('2.5 LIIKENNEYMPÄRISTÖN HOITO / Rumpujen kunnossapito ja uusiminen', NOW(),
-        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
-INSERT INTO tehtavaryhmaotsikko (otsikko, luotu, luoja)
 VALUES ('2.6 LIIKENNEYMPÄRISTÖN HOITO / Kaiteiden, riista- ja suoja-aitojen sekä kiveysten kunnossapito', NOW(),
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
 INSERT INTO tehtavaryhmaotsikko (otsikko, luotu, luoja)
 VALUES ('2.7 LIIKENNEYMPÄRISTÖN HOITO / Päällystettyjen teiden sorapientareen kunnossapito', NOW(),
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
-INSERT INTO tehtavaryhmaotsikko (otsikko, luotu, luoja)
-VALUES ('2.7 LIIKENNEYMPÄRISTÖN HOITO', NOW(),
-        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
-INSERT INTO tehtavaryhmaotsikko (otsikko, luotu, luoja)
-VALUES ('2.7 LIIKENNEYMPÄRISTÖN HOITO / Päällysteiden paikkaus paikkaukset siirretään lymp:sta korjaukseen / ASIAKIRJAMUUTOKSET',
-        NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
 INSERT INTO tehtavaryhmaotsikko (otsikko, luotu, luoja)
 VALUES ('2.8 LIIKENNEYMPÄRISTÖN HOITO / Siltojen ja laitureiden hoito', NOW(),
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
@@ -70,6 +61,3 @@ ALTER TABLE tehtavaryhma
 
 UPDATE tehtavaryhma tr
    SET tehtavaryhmaotsikko_id = (SELECT id FROM tehtavaryhmaotsikko WHERE otsikko = tr.otsikko);
-
-ALTER TABLE tehtavaryhma
-    ALTER COLUMN tehtavaryhmaotsikko_id SET NOT NULL;
