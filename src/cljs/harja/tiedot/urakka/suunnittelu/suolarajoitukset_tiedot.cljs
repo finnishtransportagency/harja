@@ -427,6 +427,8 @@
         virhe (assoc-in [:lomake :palvelinvirheet :tierekisteri :tie] tievalidointi)
         virhe (assoc-in [:lomake :harja.tiedot.urakka.urakka/validius [:tie]] tievalidointi)
         virhe (assoc-in [:lomake :harja.tiedot.urakka.urakka/validi?] false)
+        virhe (assoc-in [:lomake :pituus] nil)
+        virhe (assoc-in [:lomake :ajoratojen_pituus] nil)
         (not virhe) (assoc-in [:lomake :pituus] (:pituus vastaus))
         (not virhe) (assoc-in [:lomake :ajoratojen_pituus] (:ajoratojen_pituus vastaus))
         (not virhe) (assoc-in [:lomake :pohjavesialueet] (:pohjavesialueet vastaus))
