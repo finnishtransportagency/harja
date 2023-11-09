@@ -78,6 +78,7 @@
                        :client-ip (client-ip req)
                        :kayttajatunnus (or (get-in req [:headers "oam_remote_user"]) :tuntematon-kayttaja)}
       (handler req))))
+
 (defn- reitita
   "Reititä sisääntuleva pyyntö käsittelijöille."
   [req kasittelijat vaadi-oikeustarkistus?]
