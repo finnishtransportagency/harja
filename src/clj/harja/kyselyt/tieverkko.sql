@@ -212,3 +212,10 @@ SELECT count(distinct ("tr-osa")) as kpl
   FROM tr_osoitteet tr
  WHERE tr."tr-numero" = :tie
    AND tr."tr-osa" IN(:osat);
+
+-- name: onko-tie-olemassa?
+-- single?: true
+select exists(
+    SELECT "tr-numero"
+      FROM tr_osoitteet tr
+     WHERE tr."tr-numero" = :tie);
