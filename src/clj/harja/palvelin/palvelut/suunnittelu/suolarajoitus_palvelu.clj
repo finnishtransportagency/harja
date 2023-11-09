@@ -44,42 +44,47 @@
         osien-lukumaara (count osat)
         tr-osoitteen-virheet []
         tr-osoitteen-virheet (if-not osat-annettu?
-                               (conj tr-osoitteen-virheet "Tierekisteriosoite ei ole kokonaan annettu.")
+                               (conj tr-osoitteen-virheet "Tieosoite puutteellinen.")
                                tr-osoitteen-virheet)
-        alkuosa-olemassa? (when osat-annettu?
+        tie-olemassa? (when osat-annettu?
+                        (tieverkko-kyselyt/onko-tie-olemassa? db
+                          {:tie tie}))
+        tr-osoitteen-virheet (if-not tie-olemassa?
+                               (conj tr-osoitteen-virheet (format "Tietä %s ei ole." tie))
+                               tr-osoitteen-virheet)
+        alkuosa-olemassa? (when (and tie-olemassa? osat-annettu?)
                             (tieverkko-kyselyt/onko-tr-alkuosa-olemassa? db
                               {:tie tie
                                :aosa aosa
                                :aet aet}))
-        alkuosan-tiedot (when (and osat-annettu? (not alkuosa-olemassa?))
+        alkuosan-tiedot (when (and tie-olemassa? osat-annettu? (not alkuosa-olemassa?))
                           (first (tieverkko-kyselyt/hae-tr-osan-tiedot db {:tie tie :aosa aosa})))
-        tr-osoitteen-virheet (if-not alkuosa-olemassa?
+        tr-osoitteen-virheet (if (and tie-olemassa? osat-annettu? (not alkuosa-olemassa?))
                                (cond-> tr-osoitteen-virheet
-                                 true (conj "Tierekisteriosoitteen alkuosa tai alkuetäisyys virheellinen.")
-                                 (and alkuosan-tiedot (:tr-osa alkuosan-tiedot) (:tr-alkuetaisyys alkuosan-tiedot) (:tr-loppuetaisyys alkuosan-tiedot))
-                                 (conj (format "Anna alkuosan %s etäisyys %s - %s väliltä."
-                                         (:tr-osa alkuosan-tiedot) (:tr-alkuetaisyys alkuosan-tiedot) (:tr-loppuetaisyys alkuosan-tiedot)))
+                                 ;; Alkuosa on tieosaon ulkopuolella
+                                 (and alkuosan-tiedot (> aet (:tr-alkuetaisyys alkuosan-tiedot)))
+                                 (conj (format "Alkuetäisyys on tieosan %s ulkopuolella. Tieosa päättyy etäisyyteen %s."
+                                         aosa (:tr-loppuetaisyys alkuosan-tiedot)))
                                  (not (:tr-osa alkuosan-tiedot))
-                                 (conj (str "Alkuosaa: " aosa " ei löydy.")))
+                                 (conj (format "Tiellä %s ei ole tieosaa %s." tie aosa)))
                                tr-osoitteen-virheet)
-        loppuosa-olemassa? (when osat-annettu?
+        loppuosa-olemassa? (when (and tie-olemassa? osat-annettu?)
                              (tieverkko-kyselyt/onko-tr-loppuosa-olemassa? db
                                {:tie tie
                                 :losa losa
                                 :let loppuet}))
-        loppuosan-tiedot (when (and osat-annettu? (not loppuosa-olemassa?))
+        loppuosan-tiedot (when (and tie-olemassa? osat-annettu? (not loppuosa-olemassa?))
                            (first (tieverkko-kyselyt/hae-tr-osan-tiedot db {:tie tie :aosa losa})))
-        tr-osoitteen-virheet (if (and osat-annettu? (not loppuosa-olemassa?))
+        tr-osoitteen-virheet (if (and tie-olemassa? osat-annettu? (not loppuosa-olemassa?))
                                (cond-> tr-osoitteen-virheet
-                                 true (conj "Tierekisteriosoitteen loppuosa tai loppuetäisyys virheellinen.")
-                                 (and (:tr-osa loppuosan-tiedot) (:tr-alkuetaisyys loppuosan-tiedot) (:tr-loppuetaisyys loppuosan-tiedot))
-                                 (conj (format "Anna loppuosan %s etäisyys %s - %s väliltä."
-                                         (:tr-osa loppuosan-tiedot) (:tr-alkuetaisyys loppuosan-tiedot) (:tr-loppuetaisyys loppuosan-tiedot)))
+                                 (and alkuosan-tiedot (> aet (:tr-alkuetaisyys alkuosan-tiedot)))
+                                 (conj (format "Loppuetäisyys on tieosan %s ulkopuolella. Tieosa päättyy etäisyyteen %s."
+                                         losa (:tr-loppuetaisyys loppuosan-tiedot)))
                                  (not (:tr-osa loppuosan-tiedot))
-                                 (conj "Loppuosaa:" losa " ei löydy."))
+                                 (conj (format "Tiellä %s ei ole tieosaa %s." tie losa)))
 
                                tr-osoitteen-virheet)
-        onko-tr-yhtenainen? (when osat-annettu?
+        onko-tr-yhtenainen? (when (and tie-olemassa? osat-annettu?)
                               (= osien-lukumaara
                                 (tieverkko-kyselyt/onko-tr-yhtenainen? db
                                   {:tie tie
@@ -159,7 +164,7 @@
            :pituus nil
            :ajoratojen_pituus nil}
           (merge (when-not (empty? (:validaatioinfot validaatiot))
-                   {::validaatioinfot (:validaatioinfot validaatiot)})
+                   {:validaatioinfot (:validaatioinfot validaatiot)})
             {:pituus (:pituus pituus)
              :ajoratojen_pituus ajoratojen-pituus
              :pohjavesialueet pohjavesialueet}))))))
@@ -189,7 +194,7 @@
 (defn tallenna-suolarajoitus
   "Suolarajoitukset on tallennettu kahteen eri tietokantatauluun.
    Rajoitusalue -taulu sisältää sijaintitiedot ja rajoitusalue_rajoitus sisältää hoitovuosikohtaiset tiedot.
-   Pohjavesialueita ei tallenneta rajoitukselle ollenkaan, vaan ne haetaan tierekisteriosoitteen perusteella aina tarvittaessa lennossa."
+   Pohjavesialueita ei tallenneta rajoitukselle ollenkaan, vaan ne haetaan Tieosoitteen perusteella aina tarvittaessa lennossa."
   [db user suolarajoitus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user (:urakka_id suolarajoitus))
   (log/debug "tallenna-suolarajoitus :: suolarajoitus" suolarajoitus)
@@ -565,7 +570,7 @@
       (fn [user tiedot]
         (poista-suolarajoitus (:db this) user tiedot)))
 
-    ;; Tierekisteriosoitteen perusteella lasketaan ajoratojen pituus, reitin pituus sekä päätellään pohjavesialue/alueet
+    ;; Tieosoitteen perusteella lasketaan ajoratojen pituus, reitin pituus sekä päätellään pohjavesialue/alueet
     (julkaise-palvelu (:http-palvelin this)
       :tierekisterin-tiedot
       (fn [user tiedot]
