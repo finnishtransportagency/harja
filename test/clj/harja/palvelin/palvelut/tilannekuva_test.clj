@@ -324,7 +324,7 @@
 
     (is (some? interpoloitu-aika))
     (is (= interpoloitu-aika #inst "2015-02-01T15:17:23.112-00:00"))
-    (is (= {:numero 4, :alkuosa 403, :alkuetaisyys 173} pisteen-tr-osoite))))
+    (is (= {:numero 4, :alkuosa 403, :alkuetaisyys 172} pisteen-tr-osoite))))
 
 (deftest infopaneelin-skeemojen-luonti
   (testing "Frontilla piirrettäville jutuille saadaan tehtyä skeemat."

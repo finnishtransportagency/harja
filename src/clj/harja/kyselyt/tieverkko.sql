@@ -175,3 +175,27 @@ WHERE (:tiemax IS NULL OR tie < :tiemax::INT)
 GROUP BY tie
 ORDER BY tie
 LIMIT 100;
+
+-- name: hae-tieosan-tiedot
+SELECT "tr-numero",
+       "tr-osa",
+       MIN("tr-alkuetaisyys") as "tr-alkuetaisyys",
+       MAX("tr-loppuetaisyys") as "tr-loppuetaisyys"
+  FROM tr_osoitteet tr
+ WHERE tr."tr-numero" = :tie
+   AND tr."tr-osa" = :osa
+ GROUP BY "tr-numero", "tr-osa";
+
+-- name: onko-tr-yhtenainen?
+-- single?: true
+SELECT count(distinct ("tr-osa")) as kpl
+  FROM tr_osoitteet tr
+ WHERE tr."tr-numero" = :tie
+   AND tr."tr-osa" IN(:osat);
+
+-- name: onko-tie-olemassa?
+-- single?: true
+select exists(
+    SELECT "tr-numero"
+      FROM tr_osoitteet tr
+     WHERE tr."tr-numero" = :tie);
