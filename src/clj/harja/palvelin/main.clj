@@ -811,9 +811,13 @@
   ([asetukset]
    (alter-var-root #'harja-jarjestelma
                    (fn [_]
-                     (let [jarjestelma (-> asetukset
-                                           luo-jarjestelma
-                                           component/start)]
+                     (let [jarjestelma
+                           (try
+                             (-> asetukset
+                               luo-jarjestelma
+                               component/start)
+                             (catch Exception e
+                               (throw (component/ex-without-components e))))]
                        (when (ominaisuus-kaytossa? :itmf)
                          (jms/aloita-jms (:itmf jarjestelma)))
                        jarjestelma)))))

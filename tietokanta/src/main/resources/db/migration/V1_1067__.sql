@@ -61,6 +61,3 @@ ALTER TABLE tehtavaryhma
 
 UPDATE tehtavaryhma tr
    SET tehtavaryhmaotsikko_id = (SELECT id FROM tehtavaryhmaotsikko WHERE otsikko = tr.otsikko);
-
-ALTER TABLE tehtavaryhma
-    ALTER COLUMN tehtavaryhmaotsikko_id SET NOT NULL;
