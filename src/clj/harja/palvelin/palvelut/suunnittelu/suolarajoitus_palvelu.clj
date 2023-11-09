@@ -33,56 +33,48 @@
   [db suolarajoitus]
   (let [{:keys [tie aosa losa aet]} suolarajoitus
         loppuet (:let suolarajoitus)
-        osat-annettu? (and
-                        (pos-int? tie)
-                        (pos-int? aosa)
-                        (pos-int? losa)
-                        (int? aet)
-                        (int? loppuet))
-
+        osat-annettu? (and (pos-int? tie) (pos-int? aosa) (pos-int? losa) (int? aet) (int? loppuet))
         osat (when osat-annettu? (range aosa (inc losa)))
         osien-lukumaara (count osat)
         tr-osoitteen-virheet []
-        tr-osoitteen-virheet (if-not osat-annettu?
-                               (conj tr-osoitteen-virheet "Tieosoite puutteellinen.")
-                               tr-osoitteen-virheet)
-        tie-olemassa? (when osat-annettu?
+        tr-osoitteen-virheet (if osat-annettu?
+                               tr-osoitteen-virheet
+                               (conj tr-osoitteen-virheet "Tieosoite puutteellinen."))
+        ;; Palauttaa nil, jos ei ole kaikkea annettu
+        tie-olemassa? (when (and osat-annettu? (empty? tr-osoitteen-virheet))
                         (tieverkko-kyselyt/onko-tie-olemassa? db
                           {:tie tie}))
-        tr-osoitteen-virheet (if-not tie-olemassa?
+
+        tr-osoitteen-virheet (if (and (true? osat-annettu?) (false? tie-olemassa?))
                                (conj tr-osoitteen-virheet (format "Tietä %s ei ole." tie))
                                tr-osoitteen-virheet)
-        alkuosa-olemassa? (when (and tie-olemassa? osat-annettu?)
-                            (tieverkko-kyselyt/onko-tr-alkuosa-olemassa? db
-                              {:tie tie
-                               :aosa aosa
-                               :aet aet}))
-        alkuosan-tiedot (when (and tie-olemassa? osat-annettu? (not alkuosa-olemassa?))
-                          (first (tieverkko-kyselyt/hae-tr-osan-tiedot db {:tie tie :aosa aosa})))
-        tr-osoitteen-virheet (if (and tie-olemassa? osat-annettu? (not alkuosa-olemassa?))
-                               (cond-> tr-osoitteen-virheet
-                                 ;; Alkuosa on tieosaon ulkopuolella
-                                 (and alkuosan-tiedot (> aet (:tr-alkuetaisyys alkuosan-tiedot)))
-                                 (conj (format "Alkuetäisyys on tieosan %s ulkopuolella. Tieosa päättyy etäisyyteen %s."
-                                         aosa (:tr-loppuetaisyys alkuosan-tiedot)))
-                                 (not (:tr-osa alkuosan-tiedot))
-                                 (conj (format "Tiellä %s ei ole tieosaa %s." tie aosa)))
-                               tr-osoitteen-virheet)
-        loppuosa-olemassa? (when (and tie-olemassa? osat-annettu?)
-                             (tieverkko-kyselyt/onko-tr-loppuosa-olemassa? db
-                               {:tie tie
-                                :losa losa
-                                :let loppuet}))
-        loppuosan-tiedot (when (and tie-olemassa? osat-annettu? (not loppuosa-olemassa?))
-                           (first (tieverkko-kyselyt/hae-tr-osan-tiedot db {:tie tie :aosa losa})))
-        tr-osoitteen-virheet (if (and tie-olemassa? osat-annettu? (not loppuosa-olemassa?))
-                               (cond-> tr-osoitteen-virheet
-                                 (and alkuosan-tiedot (> aet (:tr-alkuetaisyys alkuosan-tiedot)))
-                                 (conj (format "Loppuetäisyys on tieosan %s ulkopuolella. Tieosa päättyy etäisyyteen %s."
-                                         losa (:tr-loppuetaisyys loppuosan-tiedot)))
-                                 (not (:tr-osa loppuosan-tiedot))
-                                 (conj (format "Tiellä %s ei ole tieosaa %s." tie losa)))
 
+        ;; Hae alkuosan tiedot ja päättele koodilla, että onko alkuosasta annettu liian iso alkuetäisyys
+        alkuosan-tiedot (when (and (true? osat-annettu?) (true? tie-olemassa?))
+                          (first (tieverkko-kyselyt/hae-tieosan-tiedot db {:tie tie :osa aosa})))
+        loppuosan-tiedot (when (and (true? osat-annettu?) (true? tie-olemassa?))
+                           (if (= losa aosa)
+                             alkuosan-tiedot
+                             (first (tieverkko-kyselyt/hae-tieosan-tiedot db {:tie tie :osa losa}))))
+        tr-osoitteen-virheet (if (and
+                                   (not (nil? alkuosan-tiedot))
+                                   (> aet (:tr-loppuetaisyys alkuosan-tiedot)))
+                               ;; Alkuosa on tieosaon ulkopuolella
+                               (conj tr-osoitteen-virheet (format "Alkuetäisyys on tieosan %s ulkopuolella. Tieosa päättyy etäisyyteen %s."
+                                                            aosa (:tr-loppuetaisyys alkuosan-tiedot)))
+                               tr-osoitteen-virheet)
+        tr-osoitteen-virheet (if (nil? alkuosan-tiedot)
+                               (conj tr-osoitteen-virheet (format "Tiellä %s ei ole tieosaa %s." tie aosa))
+                               tr-osoitteen-virheet)
+        tr-osoitteen-virheet (if (and
+                                   (not (nil? loppuosan-tiedot))
+                                   (> loppuet (:tr-loppuetaisyys loppuosan-tiedot)))
+                               ;; Loppuosa on tieosaon ulkopuolella
+                               (conj tr-osoitteen-virheet (format "Loppuetäisyys on tieosan %s ulkopuolella. Tieosa päättyy etäisyyteen %s."
+                                                            losa (:tr-loppuetaisyys loppuosan-tiedot)))
+                               tr-osoitteen-virheet)
+        tr-osoitteen-virheet (if (nil? loppuosan-tiedot)
+                               (conj tr-osoitteen-virheet (format "Tiellä %s ei ole tieosaa %s." tie losa))
                                tr-osoitteen-virheet)
         onko-tr-yhtenainen? (when (and tie-olemassa? osat-annettu?)
                               (= osien-lukumaara
