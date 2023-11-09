@@ -296,8 +296,31 @@
       (when-not ei-logiteta?
         msg))))
 
+;; Logituksen output-fn hyödyntää context-tietoja, jotka voidaan antaa lokittajalle eri nimiavaruuksissa
+;; Hyödynnetään kontekstista kayttajatunnus, client-ip ja korrelaatio-id mikäli konteksti on saatavilla
+(defn log-output-fn
+  "Harja (fn [data]) -> string output fn."
+  [data]
+  (let [{:keys [level ?err #_vargs msg_ ?ns-str ?file hostname_
+                timestamp_ ?line context #_?meta]} data
+        kayttajatunnus (:kayttajatunnus context :unidentified-user)
+        client-ip (:client-ip context :unknown-source)
+        korrelaatio-id (:korrelaatio-id context)]
+    (str
+      (force timestamp_) " "
+      (force hostname_) " "
+      (str/upper-case (name level)) " "
+      "[" (or ?ns-str ?file "?") ":" (or ?line "?") "] - "
+      (when context (str client-ip " "
+                      korrelaatio-id " "
+                      kayttajatunnus " "))
+      (force msg_)
+      (when-let [err ?err]
+        (str "\n" (log/stacktrace err {:stacktrace-fonts {}}))))))
+
 (defn konfiguroi-lokitus [asetukset]
-  (log/merge-config! {:middleware [(logitetaanko (:log asetukset))
+  (log/merge-config! {:output-fn log-output-fn
+                      :middleware [(logitetaanko (:log asetukset))
                                    crlf-filter]})
 
   (when-not (:kehitysmoodi asetukset)
