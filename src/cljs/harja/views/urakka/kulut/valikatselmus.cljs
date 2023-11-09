@@ -379,7 +379,6 @@
        [ikonit/livicon-check]]
       [:div.paatos-sisalto
        [:h3 (str "Kattohinnan ylitys " (fmt/euro-opt ylityksen-maara))]
-       (println maksun-tyyppi)
        (if voi-muokata?
          (if-not viimeinen-hoitokausi?
            [:<>
