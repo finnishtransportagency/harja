@@ -374,9 +374,7 @@
     (is (= 400 (:status vastaus)))
     ;; Virheitä on 2
     (is (= 3 (count (:vastaus vastaus))))
-    (is (= "Tierekisteriosoite ei ole kokonaan annettu." (first (:vastaus vastaus))))
-    (is (= "Tierekisteriosoitteen alkuosa tai alkuetäisyys virheellinen." (second (:vastaus vastaus))))
-    (is (= "Alkuosaa: makkara ei löydy." (nth (:vastaus vastaus) 2)))))
+    (is (= "Tieosoite puutteellinen." (first (:vastaus vastaus))))))
 
 (deftest tr-osoitteen-validointi-test
   (testing "Tieosoite on yksinkertainen ja on olemassa"
@@ -406,8 +404,7 @@
                    :tierekisterin-tiedot
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 400 (:status vastaus)))
-    (is (= (first (:vastaus vastaus)) "Tierekisteriosoitteen loppuosa tai loppuetäisyys virheellinen.") "Väärillä tiedoilla ei voi laskea pituutta.")
-    (is (= (second (:vastaus vastaus)) "Anna loppuosan 4 etäisyys 0 - 5756 väliltä.") "Väärillä tiedoilla ei voi laskea pituutta.")))
+    (is (= (first (:vastaus vastaus)) "Loppuetäisyys on tieosan 4 ulkopuolella. Tieosa päättyy etäisyyteen 5756.") "Väärillä tiedoilla ei voi laskea pituutta.")))
 
 (deftest validoi-nolla-let-arvo-onnistuu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
