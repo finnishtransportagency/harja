@@ -83,15 +83,17 @@
 (defn tee-kuittausten-monitorointi-tehtava
   "Monitoroidaan kuittausten kulkemista T-LOIKille. Jos HARJAsta lähtevälle kuittaukselle ei tule vastausta,
   heitetään varoitus tai virhe, riippuen myöhästymisen määrästä."
-  [{:keys [db]}]
-  (let [kuittausten-monitorointi-aikavali 1]
+  [{:keys [db]} kehitysmoodi?]
+  (let [kuittausten-monitorointi-aikavali (if kehitysmoodi?
+                                            10
+                                            1)]
     (log/debug "Käynnistetään kuittausten monitorointi")
     (ajastettu-tehtava/ajasta-minuutin-valein
       kuittausten-monitorointi-aikavali 30
       (fn [_]
         (ilmoitustoimenpiteet/varoita-vastaamattomista-kuittauksista db)))))
 
-(defrecord Tloik [asetukset kehitysmoodi? ]
+(defrecord Tloik [asetukset kehitysmoodi?]
   component/Lifecycle
   (start [{:keys [labyrintti api-sahkoposti] :as this}]
     (rekisteroi-kuittauskuuntelijat! this asetukset)
@@ -117,7 +119,7 @@
                                         this
                                         toimenpide-jms-lahettaja
                                         uudelleenlahetysvali-minuuteissa)
-        :kuittausten-monitorointi-tehtava (tee-kuittausten-monitorointi-tehtava this))))
+        :kuittausten-monitorointi-tehtava (tee-kuittausten-monitorointi-tehtava this kehitysmoodi?))))
   (stop [this]
     (let [kuuntelijat [:itmf-ilmoitusviestikuuntelija
                        :itmf-toimenpidekuittauskuuntelija]
