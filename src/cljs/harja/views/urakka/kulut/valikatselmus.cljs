@@ -379,6 +379,7 @@
        [ikonit/livicon-check]]
       [:div.paatos-sisalto
        [:h3 (str "Kattohinnan ylitys " (fmt/euro-opt ylityksen-maara))]
+       (println maksun-tyyppi)
        (if voi-muokata?
          (if-not viimeinen-hoitokausi?
            [:<>
@@ -393,20 +394,21 @@
                 :vaihtoehto-opts {:osa
                                   {:valittu-komponentti [kattohinnan-ylitys-siirto e! ylityksen-maara kattohinnan-ylitys-lomake]}}
                 :vaihtoehto-nayta {:maksu [:p "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt ylityksen-maara)] "(100 %)"]
-                                   :siirto [:p "Ylitys " [:strong (fmt/euro-opt ylityksen-maara)] "siirretään seuraavan vuoden hankintakustannuksiin"]
+                                   :siirto [:p "Ylitys " [:strong (fmt/euro-opt ylityksen-maara)] " siirretään seuraavan vuoden hankintakustannuksiin"]
                                    :osa "Osa siirretään ja osa maksetaan"}
                 :oletusarvo :maksu}
                (r/wrap maksun-tyyppi
                  #(e! (valikatselmus-tiedot/->PaivitaMaksunTyyppi %)))])
             (case maksun-tyyppi
               :maksu
-              [:p.maksurivi "Siirretään ensi vuoden kustannuksiksi " [:strong (fmt/euro-opt siirto)]]
-              :siirto
               [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)] " (" (fmt/desimaaliluku-opt maksettava-summa-prosenttina) " %)"]
+              :siirto
+              [:p.maksurivi "Siirretään ensi vuoden kustannuksiksi " [:strong (fmt/euro-opt siirto)]]
               :osa
               [:<>
-               [:p.maksurivi "seuraavalle vuodelle siirretään " [:strong (fmt/euro-opt siirto)] " (" (fmt/desimaaliluku-opt siirrettava-summa-prosenttina) " %)"]
-               [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)] " (" (fmt/desimaaliluku-opt maksettava-summa-prosenttina) " %)"]])]
+               [:p.maksurivi "Seuraavalle vuodelle siirretään " [:strong (fmt/euro-opt siirto)] " (" (fmt/desimaaliluku-opt siirrettava-summa-prosenttina) " %)"]
+               [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)] " (" (fmt/desimaaliluku-opt maksettava-summa-prosenttina) " %)"]]
+              nil)]
 
            [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)]])
 
