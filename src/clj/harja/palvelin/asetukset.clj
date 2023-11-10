@@ -323,12 +323,6 @@
                       :middleware [(logitetaanko (:log asetukset))
                                    crlf-filter]})
 
-  (when-not (:kehitysmoodi asetukset)
-    (log/merge-config! {:appenders {:println {:min-level :info}}}))
-
-  (when-let [gelf (-> asetukset :log :gelf)]
-    (log/merge-config! {:shared-appender-config {:gelf {:host (:palvelin gelf)}}}))
-
   (when-let [slack (-> asetukset :log :slack)]
     (log/merge-config! {:appenders
                         {:slack
