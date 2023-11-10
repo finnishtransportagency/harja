@@ -65,9 +65,10 @@
   ^{:doc "Vastauksen HTTP statuskoodit, joille ei vaadita oikeustarkistusta."}
   ei-oikeustarkistusta-statuskoodit #{403 404})
 
+(def vaylapilvi-client-ip-header "httpXForwardedFor")
 (defn- client-ip
   [req]
-  (get-in req [:headers "x-client-ip"] (:remote-addr req)))
+  (get-in req [:headers vaylapilvi-client-ip-header] (:remote-addr req)))
 
 (defn wrap-logging-context
   "Luo lokituskontekstin tälle kyselylle.
