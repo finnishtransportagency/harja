@@ -359,7 +359,7 @@
     (is (= yhteenveto odotettu-yhteenveto-2023))))
 
 (deftest teiden-pituus-laskenta-sql-toimii
-  (let [tie 86
+  (let [tie 286
         osa 1
         pituus 1500
         _ (i (format
@@ -379,26 +379,26 @@
                                 (tie, osa, pituus) 
                                 VALUES (%s, %s, %s);" tie osa pituus))
 
-        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 1, 895, 3, 143);"))
+        pituus (q-map (format "SELECT * FROM laske_tr_osoitteen_pituus(%s, 1, 895, 3, 143);" tie))
         _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 3248) "Tien pituuden laskenta toimii tieosat oikeinpäin, monta osaa")
 
-        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 1, 895, 1, 900);"))
+        pituus (q-map (format "SELECT * FROM laske_tr_osoitteen_pituus(%s, 1, 895, 1, 900);" tie))
         _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 5) "Tien pituuden laskenta toimii tieosat oikeinpäin, yksi osa")
 
-        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 1, 895, 1, 1501);"))
+        pituus (q-map (format "SELECT * FROM laske_tr_osoitteen_pituus(%s, 1, 895, 1, 1501);" tie))
         _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 0) "Loppuetäisyys menee yli osan pituuden, jolloin palautetaan 0")
 
         ;; Kun tieosat käännetään, käännetään myös etäisyydet, jolloin aet 144 ja let 895 eikä toisin päin, tulos on 4751
-        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 3, 895, 1, 144);"))
+        pituus (q-map (format "SELECT * FROM laske_tr_osoitteen_pituus(%s, 3, 895, 1, 144);" tie))
         _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 4751) "Tien pituuden laskenta toimii tieosat väärinpäin")
 
         pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(862424, 1, 142, 1, 895);"))
         _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 0) "Tie numeroa ei ole olemassa")
 
-        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, NULL, 142, 1, 895);"))
+        pituus (q-map (format "SELECT * FROM laske_tr_osoitteen_pituus(%s, NULL, 142, 1, 895);" tie))
         _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 0) "Tieosaa ei löydy")
 
         ;; Funktio sallii vielä samalle osalle etäisyyksien antamisen "väärinpäin", ja pituuden laskenta pitäisi onnistua
         ;; aet 900 let 895 -> pituus = 5
-        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 1, 900, 1, 895);"))
+        pituus (q-map (format "SELECT * FROM laske_tr_osoitteen_pituus(%s, 1, 900, 1, 895);" tie))
         _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 5) "Tien pituuden laskenta toimii etäisyydet väärinpäin, sama osa")]))

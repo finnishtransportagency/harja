@@ -539,7 +539,7 @@
         [{:tie 18637 :aosa 1 :aet 207 :losa 1 :let 187}
          {:tie 18637 :aosa 1 :aet 187 :losa 1 :let 11}
          {:tie 28409 :aosa 23 :aet 20 :losa 23 :let 401}
-         {:tie 4 :aosa 364 :aet 3586 :losa 367 :let 335}]]
+         {:tie 4 :aosa 364 :aet 3605 :losa 367 :let 339}]]
 
     ;; Muunnettu määrällisesti oikein
     (is (= (count pistemaiset) odotettu-pistemaisten-maara))
