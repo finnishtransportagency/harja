@@ -66,6 +66,7 @@
   ei-oikeustarkistusta-statuskoodit #{403 404})
 
 (def vaylapilvi-client-ip-header "httpXForwardedFor")
+
 (defn- client-ip
   [req]
   (get-in req [:headers vaylapilvi-client-ip-header] (:remote-addr req)))
