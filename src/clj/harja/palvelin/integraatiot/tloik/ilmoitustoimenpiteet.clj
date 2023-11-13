@@ -95,7 +95,6 @@
   [db]
   (lukko/yrita-ajaa-lukon-kanssa db "kuittausten-monitorointi"
     (fn []
-      (log/debug "Haetaan myöhästyneet ilmoitustoimenpiteet")
       (let [myohastyneet-ilmoitukset (->> (ilmoitukset/hae-myohastyneet-ilmoitustoimenpiteet db)
                                        (map #(konversio/array->vec % :idt))
                                        (map #(konversio/array->vec % :korrelaatioidt)))
