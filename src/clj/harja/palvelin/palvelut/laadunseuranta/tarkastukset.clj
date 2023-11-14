@@ -79,6 +79,7 @@
      tarkastukset)))
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
+  (log/info "hae-tarkastus id:llä " tarkastus-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
   (let [urakoitsija? (roolit/urakoitsija? user)
         tarkastus (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus
@@ -91,6 +92,7 @@
         :liitteet (into [] (tarkastukset/hae-tarkastuksen-liitteet db tarkastus-id))))))
 
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
+  (log/info "tallenna-tarkastus urakkaan " urakka-id)
   (vaadi-tarkastus-kuuluu-urakkaan db urakka-id (:id tarkastus))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
   (try
