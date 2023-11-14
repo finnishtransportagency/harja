@@ -3,10 +3,10 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
             [harja.kyselyt.tarkastukset :as tarkastukset]
+            [harja.kyselyt.tieturvallisuusverkko :as tieturvallisuusverkko]
 
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
-            [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
             [harja.geo :as geo]
 
             [taoensso.timbre :as log]
@@ -201,6 +201,17 @@
               :x x :y y
               :toleranssi toleranssi)))))
 
+(defn hae-urakan-tieturvallisuusverkko-kartalle [db _user urakka-id]
+  (oikeudet/ei-oikeustarkistusta!)
+  (into []
+    (comp
+      (geo/muunna-pg-tulokset :sijainti)
+      (map #(assoc %
+              :tyyppi-kartalla :tieturvallisuusverkko)))
+    (tieturvallisuusverkko/hae-urakan-tieturvallisuusverkko-kartalle
+      db
+      {:urakka urakka-id})))
+
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
   (vaadi-tarkastus-kuuluu-urakkaan db urakka-id tarkastus-id)
@@ -270,7 +281,11 @@
 
       :hae-tarkastusajon-reittipisteet
       (fn [user {:keys [tarkastusajon-id]}]
-        (hae-tarkastusajon-reittipisteet db user tarkastusajon-id)))
+        (hae-tarkastusajon-reittipisteet db user tarkastusajon-id))
+
+      :hae-urakan-tieturvallisuusverkko
+      (fn [user {:keys [urakka-id]}]
+        (hae-urakan-tieturvallisuusverkko-kartalle db user urakka-id)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]

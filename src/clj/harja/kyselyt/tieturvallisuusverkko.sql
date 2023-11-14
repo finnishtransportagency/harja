@@ -19,3 +19,12 @@ FROM (SELECT ST_Union(sisempi.geom) u
               AND ST_Intersects(:saatugeometria::GEOMETRY, geometria::geometry)
            ) AS sisempi
      ) AS ulompi;
+
+-- name: hae-urakan-tieturvallisuusverkko-kartalle
+SELECT
+    ST_INTERSECTION(geometria, u.alue) AS sijainti
+FROM tieturvallisuusverkko
+         LEFT JOIN urakka u ON u.id = :urakka
+WHERE
+    ST_Intersects(geometria,
+                  (SELECT alue FROM urakka WHERE id = :urakka));
