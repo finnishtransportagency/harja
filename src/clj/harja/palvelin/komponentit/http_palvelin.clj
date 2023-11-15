@@ -326,6 +326,13 @@
       (assoc kutsu :headers (conj headers {"oam_remote_user" "oletus-kaytto-oikeudet"}))
       kutsu)))
 
+(defn- wrap-with-common-wrappers
+  "Käärii HTTP-käsittelijän ympärille keksejä ja lokituskontekstin."
+  [handler]
+  (-> handler
+    (cookies/wrap-cookies)
+    (wrap-logging-context)))
+
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
                          http-server kehitysmoodi
                          mittarit]
@@ -342,7 +349,7 @@
       (swap! http-server
         (constantly
           (http/run-server
-            (cookies/wrap-cookies
+            (wrap-with-common-wrappers
               (fn [req]
                 (try+
                   (metriikka/inc! mittarit :aktiiviset_pyynnot)
@@ -362,8 +369,7 @@
                                          (wrap-anti-forgery db
                                            oam-kayttajanimi
                                            random-avain
-                                           csrf-token)
-                                         wrap-logging-context)]
+                                           csrf-token))]
                     (or (reitita req (conj (mapv :fn ei-todennettavat)
                                        dev-resurssit resurssit) false)
                       (reitita (todennus/todenna-pyynto todennus req)

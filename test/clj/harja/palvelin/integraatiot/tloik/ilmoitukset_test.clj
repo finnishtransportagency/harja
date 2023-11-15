@@ -1,29 +1,21 @@
 (ns ^:integraatio harja.palvelin.integraatiot.tloik.ilmoitukset-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
-            [clojure.xml :refer [parse]]
-            [clojure.zip :refer [xml-zip]]
             [clojure.data.zip.xml :as z]
-            [hiccup.core :refer [html]]
             [harja.testi :refer :all]
             [harja.integraatio :as integraatio]
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.komponentit.itmf :as itmf]
-            [org.httpkit.fake :refer [with-fake-http]]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
-            [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
-            [harja.jms-test :refer [feikki-jms]]
             [harja.tyokalut.xml :as xml]
+            [harja.domain.tieliikenneilmoitukset :as ti]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [harja.palvelin.integraatiot.jms.tyokalut :as jms-tk]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.tloik.aineistot.toimenpidepyynnot :as aineisto-toimenpidepyynnot]
-            [harja.pvm :as pvm]
             [clj-time
              [coerce :as tc]
              [format :as df]]
@@ -484,3 +476,17 @@
            valitetty)
         "Lähetysaika on parsittu oikein"))
   (poista-ilmoitus 123456789))
+
+(deftest ilmoitusten-selitteiden-parsinta
+  (let [skeema (slurp "resources/xsd/tloik/harja-tloik.xsd")
+        skeema (xml/lue skeema)
+        selitteet-skeemasta (->> (xml/luetun-xmln-tagin-sisalto skeema :xs:schema)
+                              (filter #(= "selite" (get-in % [:attrs :name])))
+                              first
+                              :content
+                              first
+                              :content
+                              (map (comp :value :attrs)))]
+    (is (= (sort (map name (keep identity (keys ti/+ilmoitusten-selitteet+))))
+          (sort selitteet-skeemasta))
+      "harja.domain.tieliikenneilmoitukset/+ilmoitusten-selitteet+ pitää vastata tloik-skeemaa!")))
