@@ -1,0 +1,5 @@
+### Hae urakat
+
+GET localhost:3000/api/urakat/haku/
+OAM_REMOTE_USER: Integraatio
+Content-Type: 'application/json'
