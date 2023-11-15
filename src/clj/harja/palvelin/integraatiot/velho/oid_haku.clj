@@ -33,7 +33,7 @@
                          :lauseke (keep identity
                                     ["kohdeluokka" kohdeluokka
                                      ["joukossa" [kohdeluokka ominaisuudet "urakkakoodi"]
-                                      (map pr-str urakka-numerot)]])}
+                                      urakka-numerot]])}
                 {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))]
             (:osumat (json/read-str vastaus :key-fn keyword))))))))
 
@@ -43,8 +43,8 @@
                                                          :lyhyt_nimi (:nimi (:ominaisuudet urakka))}))
 (defn hae-mh-urakoiden-oidit
   [integraatioloki db asetukset]
-  (let [urakka-numerot (map :urakkanro (q-urakat/hae-mh-urakoiden-urakka-numerot db))
-        _ (log/debug "urakkanumerot joita vastaava velho oid null: " (pr-str urakka-numerot))]
+  (let [urakka-numerot (mapv :urakkanro (q-urakat/hae-mh-urakoiden-urakka-numerot db))
+        _ (log/debug "Urakkanumerot joita vastaava velho oid null: " (pr-str urakka-numerot))]
     (if (empty? urakka-numerot)
       (log/debug "Urakkataulussa ei tyhjiä velho oid arvoja, ei tarpeen hakea velhosta")
       (let [urakat (hae-mh-urakoiden-oidit-velhosta integraatioloki db asetukset urakka-numerot)

@@ -41,7 +41,7 @@
   component/Lifecycle
   (start [this]
     (let [nimikkeisto-tuonti-suoritusaika (:varuste-tuonti-suoritusaika asetukset)
-          oid-tuonti-suoritusaika (:varuste-tuonti-suoritusaika asetukset)]
+          oid-tuonti-suoritusaika (:oid-tuonti-suoritusaika asetukset)]
       (assoc this :velho-nimikkeisto-tuonti-tehtava (tee-velho-nimikkeisto-tuonti-tehtava this nimikkeisto-tuonti-suoritusaika))
       (assoc this :velho-oid-tuonti-tehtava (tee-velho-oid-tuonti-tehtava this oid-tuonti-suoritusaika))))
 
