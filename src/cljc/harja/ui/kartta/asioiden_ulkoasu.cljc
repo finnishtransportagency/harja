@@ -1,5 +1,6 @@
 (ns harja.ui.kartta.asioiden-ulkoasu
   (:require [harja.ui.kartta.varit.puhtaat :as puhtaat]
+            [harja.ui.kartta.varit.alpha :as alpha]
             [harja.ui.kartta.ikonit :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni vesipisara-pinni-ikoni]]
             [clojure.string :as str]
 
@@ -627,6 +628,10 @@ tr-ikoni {:img (pinni-ikoni "musta")
                        puhtaat/pea-default]
             ["Ei tietoa" (viiva-mustalla-rajalla puhtaat/valkoinen) puhtaat/valkoinen]))
     (vesipisara-pinni-ikoni)))
+
+(def tieturvallisuusverkko
+  {:color alpha/fig-default
+   :width 8})
 
 (defn tilan-vari [tila]
   (case tila
