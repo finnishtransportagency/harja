@@ -135,10 +135,10 @@ UPDATE urakka
 SET lyhyt_nimi = :lyhytnimi
 WHERE id = :urakka;
 
--- name: hae-mh-urakoiden-urakka-numerot
+-- name: hae-mh-urakat-ilman-velho-oidia
 SELECT u.urakkanro, u.lyhyt_nimi
 FROM urakka u
-WHERE u.tyyppi = 'teiden-hoito' AND u.velho_oid IS NULL;
+WHERE u.tyyppi = 'teiden-hoito' AND u.velho_oid IS NULL AND u.urakkanro IS NOT NULL;
 
 -- name: hae-kaynnissa-olevat-hoitourakat
 SELECT

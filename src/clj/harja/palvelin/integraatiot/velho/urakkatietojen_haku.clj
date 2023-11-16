@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.velho.oid-haku
+(ns harja.palvelin.integraatiot.velho.urakkatietojen-haku
   (:require [clojure.data.json :as json]
             [taoensso.timbre :as log]
             [harja.kyselyt.urakat :as q-urakat]
@@ -8,14 +8,12 @@
 (defn- hae-mh-urakoiden-oidit-velhosta [integraatioloki db asetukset urakka-numerot]
   (integraatiotapahtuma/suorita-integraatio db integraatioloki "velho" "velho-oidien-haku" nil
     (fn [konteksti]
-      (let [virheet (atom #{})
-            {:keys [token-url
+      (let [{:keys [token-url
                     varuste-kayttajatunnus
                     varuste-salasana
                     varuste-api-juuri-url]} asetukset]
         (when-let [token (velho-yhteiset/hae-velho-token token-url varuste-kayttajatunnus varuste-salasana konteksti
                            (fn [x]
-                             (swap! virheet conj (str "Virhe velho token haussa " x))
                              (log/error "Virhe velho token haussa" x)))]
           (let [otsikot {"Content-Type" "application/json"
                          "Authorization" (str "Bearer " token)}
@@ -29,7 +27,7 @@
                                      :palautettavat-kentat [[kohdeluokka, ominaisuudet, "nimi"],
                                                             [kohdeluokka, ominaisuudet, "urakkakoodi"],
                                                             ["yleiset/perustiedot", "oid"]]}
-                         :kohdeluokat ["urakka/maanteiden-hoitourakka"]
+                         :kohdeluokat [kohdeluokka]
                          :lauseke (keep identity
                                     ["kohdeluokka" kohdeluokka
                                      ["joukossa" [kohdeluokka ominaisuudet "urakkakoodi"]
@@ -41,9 +39,10 @@
   (q-urakat/paivita-velho_oid-ja-lyhytnimi-urakalle! db {:urakkanro (:urakkakoodi (:ominaisuudet urakka))
                                                          :velho_oid (:oid urakka)
                                                          :lyhyt_nimi (:nimi (:ominaisuudet urakka))}))
-(defn hae-mh-urakoiden-oidit
+
+(defn hae-mh-urakoiden-oidit-ja-lyhytnimet
   [integraatioloki db asetukset]
-  (let [urakka-numerot (mapv :urakkanro (q-urakat/hae-mh-urakoiden-urakka-numerot db))
+  (let [urakka-numerot (mapv :urakkanro (q-urakat/hae-mh-urakat-ilman-velho-oidia db))
         _ (log/debug "Urakkanumerot joita vastaava velho oid null: " (pr-str urakka-numerot))]
     (if (empty? urakka-numerot)
       (log/debug "Urakkataulussa ei tyhjiä velho oid arvoja, ei tarpeen hakea velhosta")

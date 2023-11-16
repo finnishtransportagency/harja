@@ -3,7 +3,7 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.velho.pot-lahetys :as pot-lahetys]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
-            [harja.palvelin.integraatiot.velho.oid-haku :as oid-haku]
+            [harja.palvelin.integraatiot.velho.urakkatietojen-haku :as oid-haku]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.tyokalut.lukot :as lukko]
             [harja.pvm :as pvm]))
@@ -42,8 +42,9 @@
   (start [this]
     (let [nimikkeisto-tuonti-suoritusaika (:varuste-tuonti-suoritusaika asetukset)
           oid-tuonti-suoritusaika (:oid-tuonti-suoritusaika asetukset)]
-      (assoc this :velho-nimikkeisto-tuonti-tehtava (tee-velho-nimikkeisto-tuonti-tehtava this nimikkeisto-tuonti-suoritusaika))
-      (assoc this :velho-oid-tuonti-tehtava (tee-velho-oid-tuonti-tehtava this oid-tuonti-suoritusaika))))
+      (-> this
+        (assoc :velho-nimikkeisto-tuonti-tehtava (tee-velho-nimikkeisto-tuonti-tehtava this nimikkeisto-tuonti-suoritusaika)))
+        (assoc this :velho-oid-tuonti-tehtava (tee-velho-oid-tuonti-tehtava this oid-tuonti-suoritusaika))))
 
   (stop [this]
     (log/info "Sammutetaan tuo-uudet-varustetoteumat-velhosta -komponentti.")
@@ -51,7 +52,9 @@
       (nimikkeisto-tuonti-tehtava))
     (when-let [oid-tuonti-tehtava (:velho-oid-tuonti-tehtava this)]
       (oid-tuonti-tehtava))
-    (dissoc this :varustetoteuma-tuonti-tehtava))
+    (dissoc this :varustetoteuma-tuonti-tehtava)
+    (dissoc this :velho-oid-tuonti-tehtava)
+    (dissoc this :velho-nimikkeisto-tuonti-tehtava))
 
   PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]
@@ -59,7 +62,7 @@
 
   VelhoOidHaku
   (hae-velho-oidit [this]
-    (oid-haku/hae-mh-urakoiden-oidit (:integraatioloki this) (:db this) asetukset))
+    (oid-haku/hae-mh-urakoiden-oidit-ja-lyhytnimet (:integraatioloki this) (:db this) asetukset))
 
   VarustetoteumaHaku
   (hae-urakan-varustetoteumat [this tiedot]
