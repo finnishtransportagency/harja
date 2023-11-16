@@ -203,16 +203,12 @@
               :x x :y y
               :toleranssi toleranssi)))))
 
-(defn hae-urakan-tieturvallisuusverkko-kartalle [db _user urakka-id]
-  (oikeudet/ei-oikeustarkistusta!)
-  (into []
-    (comp
-      (geo/muunna-pg-tulokset :sijainti)
-      (map #(assoc %
-              :tyyppi-kartalla :tieturvallisuusverkko)))
-    (tieturvallisuusverkko/hae-urakan-tieturvallisuusverkko-kartalle
-      db
-      {:urakka urakka-id})))
+(defn hae-urakan-tieturvallisuusverkko-kartalle [db user urakka-id]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user)
+  (into [] (comp
+             (geo/muunna-pg-tulokset :sijainti)
+             (map #(assoc % :tyyppi-kartalla :tieturvallisuusverkko)))
+    (tieturvallisuusverkko/hae-urakan-tieturvallisuusverkko-kartalle db {:urakka urakka-id})))
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
