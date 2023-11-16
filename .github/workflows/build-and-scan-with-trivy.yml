@@ -1,0 +1,77 @@
+# build-workflowsta minimoitu versio trivy-lisäyksin
+name: 'Harja: Build & trivy test'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - trivy-testi
+
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest
+    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    permissions:
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
+      packages: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Testitietokantaa tarvitaan buildin yhteydessä
+      - name: Start test database
+        uses: ./.github/actions/start-test-db
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä (esim. harjadb-latest)
+          # Käytetään uusinta saatavilla olevaa testidb:tä AWS buildeissa.
+          service-name: harjadb-latest
+
+      # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
+      - name: Build Harja Uberjar
+        uses: ./.github/actions/build-harja-app
+        with:
+          build-laadunseuranta: 'false'
+
+      - name: Docker build
+        run: docker build -t harja-app:${{ github.sha }} --file aws/fargate/Dockerfile .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@2b6a709cf9c4025c5438138008beaddbb02086f0
+        with:
+          image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'        
+
+  # -- Deployment -- #
+
+  deploy-to-ecs-manually:
+    uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: build-harja
+    # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
+    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    permissions:
+      # OIDC tokenia tarvitaan AWS jobeissa roolin omaksumiseen
+      id-token: write
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+    with:
+      environment: ${{ github.event.inputs.environment }}
+    # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattisesti envinronmentista reusable workfloweissa
+    #       Tässä määritetään mitkä yksittäiset salaisuudet reusable workflow saa lukea GitHub environmentista.
+    #       Vaihtoehtoisesti, voi käyttää secrets: inherit toimintoa, jolloin reusable workflow saa kaikki salaisuudet
+    #       kuin kutsuva workflowikin.
+    secrets:
+      aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
