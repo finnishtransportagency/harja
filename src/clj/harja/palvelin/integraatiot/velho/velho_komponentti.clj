@@ -52,9 +52,10 @@
       (nimikkeisto-tuonti-tehtava))
     (when-let [oid-tuonti-tehtava (:velho-oid-tuonti-tehtava this)]
       (oid-tuonti-tehtava))
-    (dissoc this :varustetoteuma-tuonti-tehtava)
-    (dissoc this :velho-oid-tuonti-tehtava)
-    (dissoc this :velho-nimikkeisto-tuonti-tehtava))
+    (-> this
+      (dissoc :varustetoteuma-tuonti-tehtava)
+      (dissoc :velho-oid-tuonti-tehtava)
+      (dissoc :velho-nimikkeisto-tuonti-tehtava)))
 
   PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]
