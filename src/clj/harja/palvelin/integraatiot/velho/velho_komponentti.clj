@@ -43,8 +43,8 @@
     (let [nimikkeisto-tuonti-suoritusaika (:varuste-tuonti-suoritusaika asetukset)
           oid-tuonti-suoritusaika (:oid-tuonti-suoritusaika asetukset)]
       (-> this
-        (assoc :velho-nimikkeisto-tuonti-tehtava (tee-velho-nimikkeisto-tuonti-tehtava this nimikkeisto-tuonti-suoritusaika)))
-        (assoc :velho-oid-tuonti-tehtava (tee-velho-oid-tuonti-tehtava this oid-tuonti-suoritusaika))))
+        (assoc :velho-nimikkeisto-tuonti-tehtava (tee-velho-nimikkeisto-tuonti-tehtava this nimikkeisto-tuonti-suoritusaika))
+        (assoc :velho-oid-tuonti-tehtava (tee-velho-oid-tuonti-tehtava this oid-tuonti-suoritusaika)))))
 
   (stop [this]
     (log/info "Sammutetaan tuo-uudet-varustetoteumat-velhosta -komponentti.")
