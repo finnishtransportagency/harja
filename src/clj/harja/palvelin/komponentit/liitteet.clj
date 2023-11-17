@@ -111,7 +111,7 @@
   4. Jos tiedosto saadaan palautettua, merkataan se automaattisesti virustarkistetuksi tietokantaan."
   [s3hash db]
   (try
-    (let [_ (println "lue-s3-tiedosto")
+    (let [_ (log/debug "lue-s3-tiedosto")
           presignedurl "https://4ydqtenzhk.execute-api.eu-west-1.amazonaws.com/dev/generatepresignedurl"
           ;; Generoi presignedurl, josta liite haetaan
           vastaus @(http/post presignedurl
