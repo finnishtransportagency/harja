@@ -146,7 +146,7 @@
                           {(:linkkitaulu-domain-id domain-tiedot) domain-id
                            (:linkkitaulu-liite-id domain-tiedot) liite-id})))))
 
-(defn- onko-liite-virustarkistettu [db user urakka liite-id]
+(defn- onko-liite-virustarkastettu [db user urakka liite-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-liitteet user urakka)
   (let [tarkastettu? (:virustarkastettu? (first (liitteet-q/liite-virustarkastettu? db {:id liite-id})))]
     (if (true? tarkastettu?)
@@ -173,9 +173,9 @@
                                                         :domain domain
                                                         :liite-id liite-id
                                                         :domain-id domain-id})))
-    (julkaise-palvelu http-palvelin :onko-liite-virustarkistettu
+    (julkaise-palvelu http-palvelin :onko-liite-virustarkastettu
       (fn [user {:keys [liite-id urakka]}]
-        (onko-liite-virustarkistettu db user urakka liite-id)))
+        (onko-liite-virustarkastettu db user urakka liite-id)))
 
     this)
 
@@ -185,5 +185,5 @@
                      :lataa-liite
                      :lataa-pikkukuva
                      :poista-liite-linkki
-      :liite-virustarkistettu?)
+      :liite-virustarkastettu?)
     this))

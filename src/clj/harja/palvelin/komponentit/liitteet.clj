@@ -122,7 +122,7 @@
                                 (str/trim (get (cheshire.core/decode (:body vastaus)) "url")))
           liite (when varsinainen-get-url
                   @(http/get varsinainen-get-url))
-          ;; Jos liite saatiin, merkitään kantaan, että se on virustarkistettu
+          ;; Jos liite saatiin, merkitään kantaan, että se on virustarkastettu
           _ (when (= 200 (:status liite))
               (liitteet-q/merkitse-liite-virustarkistetuksi! db {:s3hash s3hash}))]
       ;; Jos osoitetta ei saatu, palautetaan liitteen sijasta nil
@@ -210,7 +210,7 @@
       [(io/input-stream temp-file) (io/input-stream temp-file)])))
 
 (defn- tallenna-liite [db alusta fileyard-client tiedostopesula virustarkistus luoja urakka tiedostonimi tyyppi uskoteltu-koko lahdetiedosto kuvaus lahde-jarjestelma]
-  (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan. alusta: " alusta)
+  (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan.")
   (log/debug "Tyyppi: " (pr-str tyyppi))
 
   (log/debug "Koko väitetty / havaittu: " (pr-str uskoteltu-koko) (and (instance? java.io.File lahdetiedosto) (.length lahdetiedosto)))

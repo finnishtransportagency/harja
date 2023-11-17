@@ -54,7 +54,7 @@
                   :src (k/liite-url (:id liite))}])
 
 (defn tarkista-liitteen-virustarkistus [liite-id urakka]
-  (k/post! :onko-liite-virustarkistettu {:liite-id liite-id
+  (k/post! :onko-liite-virustarkastettu {:liite-id liite-id
                                          :urakka urakka}))
 
 (defn- nayta-liite-modalissa [liite]
