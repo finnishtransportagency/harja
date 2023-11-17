@@ -170,7 +170,8 @@
          :varuste-tuonti-suoritusaika nil
          :varuste-salasana #=(eval (some->
                                        (slurp "../.harja/velho-varuste-salasana")
-                                       (clojure.string/trim-newline)))}
+                                       (clojure.string/trim-newline)))
+         :oid-tuonti-suoritusaika nil}
 
  :yha-velho {}
 

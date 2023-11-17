@@ -1,4 +1,4 @@
--- Liite tauluun tieto, jos liite on tallennettu aws s3
-ALTER TABLE liite
-    ADD COLUMN s3hash TEXT DEFAULT NULL,
-    ADD COLUMN "virustarkistettu?" BOOLEAN DEFAULT true;
+-- Lisätään valaistusurakoihin liittyvät suoritettavat tehtävät
+ALTER TYPE suoritettavatehtava ADD VALUE 'ryhmavaihto' AFTER 'roskien keruu';
+ALTER TYPE suoritettavatehtava ADD VALUE 'huoltokierros' AFTER 'harjaus';
+ALTER TYPE suoritettavatehtava ADD VALUE 'muut valaistusurakan toimenpiteet' AFTER 'muu';

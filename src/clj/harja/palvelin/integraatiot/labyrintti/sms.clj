@@ -50,7 +50,7 @@
     nil))
 
 (defn vastaanota-tekstiviesti [integraatioloki kutsu kuuntelijat]
-  (log/info (format "Vastaanotettiin tekstiviesti Labyrintin SMS Gatewaystä: %s" kutsu))
+  (log/info (format "Vastaanotettiin tekstiviesti Labyrintin SMS Gatewaystä: %s" (assoc-in kutsu [:headers "authorization"] "*****")))
   (let [url (:remote-addr kutsu)
         otsikot (:headers kutsu)
         ;; Jostain syystä parametrit katoavat, jos ne ovat form-enkoodattuna. Puretaan ne käsin bodystä.
