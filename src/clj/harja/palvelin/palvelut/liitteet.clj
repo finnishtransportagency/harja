@@ -146,6 +146,13 @@
                           {(:linkkitaulu-domain-id domain-tiedot) domain-id
                            (:linkkitaulu-liite-id domain-tiedot) liite-id})))))
 
+(defn- onko-liite-virustarkistettu [db user urakka liite-id]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-liitteet user urakka)
+  (let [tarkastettu? (:virustarkastettu? (first (liitteet-q/liite-virustarkastettu? db {:id liite-id})))]
+    (if (true? tarkastettu?)
+      true
+      false)))
+
 (defrecord Liitteet []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -166,6 +173,10 @@
                                                         :domain domain
                                                         :liite-id liite-id
                                                         :domain-id domain-id})))
+    (julkaise-palvelu http-palvelin :onko-liite-virustarkistettu
+      (fn [user {:keys [liite-id urakka]}]
+        (onko-liite-virustarkistettu db user urakka liite-id)))
+
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
@@ -173,5 +184,6 @@
                      :tallenna-liite
                      :lataa-liite
                      :lataa-pikkukuva
-                     :poista-liite-linkki)
+                     :poista-liite-linkki
+      :liite-virustarkistettu?)
     this))
