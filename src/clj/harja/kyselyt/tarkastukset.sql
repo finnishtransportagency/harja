@@ -287,16 +287,16 @@ WHERE t.urakka = :urakka
 
 -- name: hae-tarkastuksen-liitteet
 -- Hakee annetun tarkastuksen kaikki liitteet
-SELECT
-  l.id,
-  l.tyyppi,
-  l.koko,
-  l.nimi,
-  l.liite_oid AS oid
-FROM liite l
-  JOIN tarkastus_liite tl ON l.id = tl.liite
-WHERE tl.tarkastus = :tarkastus
-ORDER BY l.luotu ASC;
+SELECT l.id,
+       l.tyyppi,
+       l.koko,
+       l.nimi,
+       l.liite_oid AS oid,
+       l."virustarkastettu?"
+  FROM liite l
+           JOIN tarkastus_liite tl ON l.id = tl.liite
+ WHERE tl.tarkastus = :tarkastus
+ ORDER BY l.luotu ASC;
 
 -- name: luo-tarkastus<!
 -- Luo uuden tarkastuksen
