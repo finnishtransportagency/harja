@@ -51,13 +51,14 @@
     (io/copy (fileyard-client/fetch client uuid) out)
     (.toByteArray out)))
 
-(def tulos (atom nil))
+(def s3-virustarkistusvastaus (atom nil))
+
 (defn- odota-s3-virustarkistus [db s3hash]
   (async/go-loop []
     (async/<! (async/timeout 3000))
-    (let [_ (reset! tulos (lue-s3-tiedosto s3hash db))
-          _ (log/info "odota-s3-virustarkistus :: tulos:" (pr-str @tulos))]
-      (if-not (nil? @tulos)
+    (let [_ (reset! s3-virustarkistusvastaus (lue-s3-tiedosto s3hash db))
+          _ (log/info "odota-s3-virustarkistus :: tulos:" (pr-str @s3-virustarkistusvastaus))]
+      (if-not (nil? @s3-virustarkistusvastaus)
         (do
           (log/info "Liite on virustarkastettu.")
           ;; Merkitään se tarkastetuksi
@@ -65,14 +66,15 @@
         (do
           (log/info "Tiedosto tarkastamatta, odotetaan 3 sekuntia...")
           (recur))))))
+
 (defn- tallenna-s3
   "Anna lähetettävä tiedosto java.io.inputstreaminä.
   1. Luo ensin urlin POST komennolla, johon liite voidaan lähettää.
   2. Lähettää PUT komennolla liitteen S3 ämpäriin.
   3. S3 tarkistaa onko tiedostossa viruksia ja tagittaa tiedoston"
-  [db input-stream-sisalto tiedostonimi]
+  [input-stream-sisalto tiedostonimi]
   (try
-    (let [_ (log/debug "tallenna-s3")
+    (let [_ (log/debug "tallenna-s3 :: tiedostonimi: " tiedostonimi)
           presignedurl "https://4ydqtenzhk.execute-api.eu-west-1.amazonaws.com/dev/generatepresignedurl"
           ;; Siirretään tiedostot S3:lle nimettynä uusiksi. Uusi nimi on tallennettu kantaan, jota kautta
           ;; tiedostot saadaan sitten haettua
@@ -174,15 +176,17 @@
           (log/error "Uuden liitteen tallennus fileyard epäonnistui, tallennetaan tietokantaan. "
             {:liite_oid nil
              :s3hash nil
-             :fileyard-hash hash})
-          (tallenna-liitteen-data db nil lahde tiedostonimi))))
+             :fileyard-hash hash
+             :virustarkastettu? true})
+          (tallenna-liitteen-data db alusta nil lahde tiedostonimi))))
     ;; Jos S3 tallennus käytössä
     (ominaisuus-kaytossa? :s3-liitteet)
     (let [s3hash (tallenna-s3 db (io/input-stream lahde) tiedostonimi)]
       (if (string? s3hash)
         {:liite_oid nil
          :s3hash s3hash
-         :fileyard-hash nil}
+         :fileyard-hash nil
+         :virustarkastettu? false}
         (do
           (log/error "Uuden liitteen tallennus s3 epäonnistui, tallennetaan vain tietokantaan. ")
           (tallenna-liitteen-data db nil lahde tiedostonimi))))
@@ -190,7 +194,8 @@
     ;; Muuten tallennetaan paikalliseen tietokantaan
     :else {:liite_oid (tallenna-lob db (io/input-stream lahde))
            :fileyard-hash nil
-           :s3hash nil}))
+           :s3hash nil
+           :virustarkastettu? true}))
 
 (defn- kahdenna-stream [alkuperainen]
   (let [temp-file (java.io.File/createTempFile "harja-liite-tmp" ".bin")]
@@ -228,23 +233,32 @@
         (when (not (ominaisuus-kaytossa? :s3-liitteet))
           (virustarkistus/tarkista virustarkistus tiedostonimi (io/input-stream lahdetiedosto)))
         (let [pikkukuva (muodosta-pikkukuva (io/input-stream tallennettava-lahdetiedosto))
-              liite (liitteet-q/tallenna-liite<!
-                     db
-                     (merge {:nimi tiedostonimi
-                             :tyyppi tyyppi
-                             :koko tallennettava-koko
-                             :pikkukuva pikkukuva
-                             :luoja luoja
-                             :urakka urakka
-                             :kuvaus kuvaus
-                             :lahdejarjestelma lahde-jarjestelma}
-                            (tallenna-liitteen-data db fileyard-client tallennettava-lahdetiedosto tiedostonimi)))
+              ;; saadaa {:liite_oid <> :s3hash <> :fileyard-hash <>}
+              data (tallenna-liitteen-data db alusta fileyard-client tallennettava-lahdetiedosto tiedostonimi)
+              _ (println "data: " (pr-str data))
+              liite (when (or (not (nil? (:liite_oid data))) (not (nil? (:s3hash data))) (not (nil? (:fileyard-hash data))))
+                      (liitteet-q/tallenna-liite<!
+                        db
+                        (merge {:nimi tiedostonimi
+                                :tyyppi tyyppi
+                                :koko tallennettava-koko
+                                :pikkukuva pikkukuva
+                                :luoja luoja
+                                :urakka urakka
+                                :kuvaus kuvaus
+                                :lahdejarjestelma lahde-jarjestelma}
+                          data)))
 
               ;; S3 tallennuksessa käynnistetään virustarkastus
-              _ (when (and (ominaisuus-kaytossa? :s3-liitteet) (:s3hash liite))
+              _ (when (and (= :aws alusta) (:s3hash liite))
                             (async/thread (odota-s3-virustarkistus db (:s3hash liite))))]
-          (log/debug "Liite tallennettu.")
-          liite))
+          (if liite
+            (do
+              (log/info "Liite tallennettu.")
+              liite)
+            (throw+ {:type virheet/+ominaisuus-ei-kaytossa+ :virheet
+                     [{:koodi  virheet/+ominaisuus-ei-kaytossa+
+                       :viesti (str "Liitteen tallennus ei tällä hetkellä onnistu. Kokeile myöhemmin uudestaan.")}]}))))
       (do
         (log/debug "Liite hylätty: " (:viesti liitetarkistus))
         (throw+ {:type virheet/+virheellinen-liite+ :virheet

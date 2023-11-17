@@ -4,7 +4,7 @@ INSERT
   INTO liite
        (nimi, tyyppi, koko, liite_oid, "fileyard-hash", s3hash, pikkukuva, luoja, luotu, urakka, kuvaus, lahde, "virustarkastettu?")
 VALUES (:nimi, :tyyppi, :koko, :liite_oid, :fileyard-hash, :s3hash, :pikkukuva, :luoja, current_timestamp, :urakka,
-        :kuvaus, :lahdejarjestelma::lahde, false);
+        :kuvaus, :lahdejarjestelma::lahde, :virustarkastettu?);
 
 -- name: hae-liite-lataukseen
 -- Hakee liitteen tiedot sen latausta varten.
