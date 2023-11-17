@@ -83,13 +83,16 @@
           vastaus @(http/post presignedurl
                      {:body (cheshire.core/encode {"key" s3hash "operation" "put"})
                       :timeout 50000})
+          _ (log/debug "Generoi presignedurl :: vastaus " vastaus)
           ;; Vastauksesta parsitaan varsinainen url, johon liite lähetetään
           varsinainen-put-url (when (= 200 (:status vastaus))
                                  (str/trim (get (cheshire.core/decode (:body vastaus)) "url")))
-
+          _ (log/debug "Lähetetään tiedosto urliin: " varsinainen-put-url)
           liite-vastaus (when varsinainen-put-url
                           @(http/put varsinainen-put-url {:body input-stream-sisalto}))
-          _ (log/debug "Liitteen tallennuksen vastaus: " liite-vastaus)]
+          _ (if varsinainen-put-url
+              (log/debug "Liitteen tallennuksen vastaus: " liite-vastaus)
+              (log/error "Ei saatu yhteyttä S3:seen. Liitetiedosto jää lähettämättä "))]
 
       ;; Jos lataus osoitetta ei saatu, palautetaan nil
       (when varsinainen-put-url
@@ -164,14 +167,15 @@
   (lataa-liite [this liitteen-id])
   (lataa-pikkukuva [this liitteen-id]))
 
-(defn- tallenna-liitteen-data [db fileyard-client lahde tiedostonimi]
+(defn- tallenna-liitteen-data [db alusta fileyard-client lahde tiedostonimi]
   (cond (and (ominaisuus-kaytossa? :fileyard) fileyard-client)
     ;; Jos fileyard tallennus on käytössä, tallennetaan ulkoiseen palveluun
     (let [hash @(fileyard-client/save fileyard-client lahde)]
       (if (string? hash)
         {:liite_oid nil
          :s3hash nil
-         :fileyard-hash hash}
+         :fileyard-hash hash
+         :virustarkastettu? true}
         (do
           (log/error "Uuden liitteen tallennus fileyard epäonnistui, tallennetaan tietokantaan. "
             {:liite_oid nil
@@ -180,8 +184,9 @@
              :virustarkastettu? true})
           (tallenna-liitteen-data db alusta nil lahde tiedostonimi))))
     ;; Jos S3 tallennus käytössä
-    (ominaisuus-kaytossa? :s3-liitteet)
-    (let [s3hash (tallenna-s3 db (io/input-stream lahde) tiedostonimi)]
+
+    (= :aws alusta)
+    (let [s3hash (tallenna-s3 (io/input-stream lahde) tiedostonimi)]
       (if (string? s3hash)
         {:liite_oid nil
          :s3hash s3hash
@@ -189,7 +194,7 @@
          :virustarkastettu? false}
         (do
           (log/error "Uuden liitteen tallennus s3 epäonnistui, tallennetaan vain tietokantaan. ")
-          (tallenna-liitteen-data db nil lahde tiedostonimi))))
+          (tallenna-liitteen-data db alusta nil lahde tiedostonimi))))
 
     ;; Muuten tallennetaan paikalliseen tietokantaan
     :else {:liite_oid (tallenna-lob db (io/input-stream lahde))
@@ -204,8 +209,8 @@
       (io/copy alkuperainen temp-file)
       [(io/input-stream temp-file) (io/input-stream temp-file)])))
 
-(defn- tallenna-liite [db fileyard-client tiedostopesula virustarkistus luoja urakka tiedostonimi tyyppi uskoteltu-koko lahdetiedosto kuvaus lahde-jarjestelma]
-  (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan.")
+(defn- tallenna-liite [db alusta fileyard-client tiedostopesula virustarkistus luoja urakka tiedostonimi tyyppi uskoteltu-koko lahdetiedosto kuvaus lahde-jarjestelma]
+  (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan. alusta: " alusta)
   (log/debug "Tyyppi: " (pr-str tyyppi))
 
   (log/debug "Koko väitetty / havaittu: " (pr-str uskoteltu-koko) (and (instance? java.io.File lahdetiedosto) (.length lahdetiedosto)))
@@ -216,7 +221,7 @@
         liitetarkistus (t-liitteet/tarkista-liite {:tyyppi tyyppi :koko koko})
         pesty-lahdetiedosto (when (and
                                     ;; S3:sella virustarkastus tulee mukana
-                                    (not (ominaisuus-kaytossa? :s3-liitteet))
+                                    (not (= :aws alusta))
                                     (ominaisuus-kaytossa? :tiedostopesula) tiedostopesula (= tyyppi "application/pdf"))
                               (do (log/info "PDF-tiedosto -> tiedostopesula")
                                 (tiedostopesula/pdfa-muunna-file->file! tiedostopesula lahdetiedosto)))
@@ -230,12 +235,11 @@
     (if (:hyvaksytty liitetarkistus)
       (do
         ;; Virustarkastus tulee S3:sella automaattisest mukana
-        (when (not (ominaisuus-kaytossa? :s3-liitteet))
+        (when (not (= :aws alusta))
           (virustarkistus/tarkista virustarkistus tiedostonimi (io/input-stream lahdetiedosto)))
         (let [pikkukuva (muodosta-pikkukuva (io/input-stream tallennettava-lahdetiedosto))
-              ;; saadaa {:liite_oid <> :s3hash <> :fileyard-hash <>}
+              ;; saadaan {:liite_oid <> :s3hash <> :fileyard-hash <>}
               data (tallenna-liitteen-data db alusta fileyard-client tallennettava-lahdetiedosto tiedostonimi)
-              _ (println "data: " (pr-str data))
               liite (when (or (not (nil? (:liite_oid data))) (not (nil? (:s3hash data))) (not (nil? (:fileyard-hash data))))
                       (liitteet-q/tallenna-liite<!
                         db
@@ -265,7 +269,7 @@
                  [{:koodi  virheet/+virheellinen-liite-koodi+
                    :viesti (str "Virheellinen liite: " (:viesti liitetarkistus))}]})))))
 
-(defn- hae-liite [db fileyard-client liitteen-id]
+(defn- hae-liite [db alusta fileyard-client liitteen-id]
   (let [{:keys [fileyard-hash s3hash] :as liite}
         (first (liitteet-q/hae-liite-lataukseen db liitteen-id))]
 
@@ -274,7 +278,7 @@
         ;; Jos fileyard käytössä
         fileyard-hash (assoc liite :data (lue-fileyard-tiedosto fileyard-client fileyard-hash))
         ;; Jos S3 tallennus käytössä
-        (ominaisuus-kaytossa? :s3-liitteet)
+        (= :aws alusta)
         (assoc liite :data (lue-s3-tiedosto (str s3hash) db))
         :else (assoc liite :data (lue-lob db (:liite_oid liite))))
       :liite_oid :fileyard-hash)))
@@ -308,7 +312,7 @@
           (siirra-liite-fileyard db client liite)))
       lukon-vanhenemisaika-s)))
 
-(defrecord Liitteet [fileyard-url]
+(defrecord Liitteet [fileyard-url alusta]
   component/Lifecycle
   (start [{db :db :as this}]
     (assoc this ::lopeta-ajastettu-tehtava
@@ -323,11 +327,11 @@
   LiitteidenHallinta
   (luo-liite [{db :db virustarkistus :virustarkistus tiedostopesula :tiedostopesula}
               luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma]
-    (tallenna-liite db
-                    (when fileyard-url
-                      (fileyard-client/new-client fileyard-url))
-                    tiedostopesula virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma))
-  (lataa-liite [{db :db} liitteen-id]
-    (hae-liite db (fileyard-client/new-client fileyard-url) liitteen-id))
+    (tallenna-liite db alusta
+      (when fileyard-url
+        (fileyard-client/new-client fileyard-url))
+      tiedostopesula virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma))
+  (lataa-liite [{db :db :as this} liitteen-id]
+    (hae-liite db (:alusta this) (fileyard-client/new-client fileyard-url) liitteen-id))
   (lataa-pikkukuva [{db :db} liitteen-id]
     (hae-pikkukuva db liitteen-id)))

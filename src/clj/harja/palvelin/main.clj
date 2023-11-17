@@ -241,7 +241,7 @@
 
       :liitteiden-hallinta (component/using
                              (liitteet-komp/->Liitteet
-                               (get-in asetukset [:liitteet :fileyard-url]))
+                               (get-in asetukset [:liitteet :fileyard-url]) (:alusta asetukset))
                              [:db :virustarkistus :tiedostopesula])
 
       :kehitysmoodi (component/using
