@@ -1,4 +1,6 @@
--- Liite tauluun tieto, jos liite on tallennettu aws s3
-ALTER TABLE liite
-    ADD COLUMN s3hash TEXT DEFAULT NULL,
-    ADD COLUMN "virustarkastettu?" BOOLEAN DEFAULT true;
+UPDATE tehtava
+SET api_tunnus = id,
+    muokattu   = current_timestamp,
+    muokkaaja  = (select id from kayttaja where kayttajanimi = 'Integraatio')
+WHERE nimi IN ('Ryhmävaihto', 'Huoltokierros', 'Muut toimenpiteet')
+  AND emo = (SELECT id from toimenpide WHERE koodi = 'VALA_YKSHINT');
