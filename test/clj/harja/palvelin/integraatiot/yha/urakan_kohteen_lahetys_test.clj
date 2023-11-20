@@ -222,10 +222,10 @@
            ;; HAR-4692 Jos alusta tp on AB, on lähetettävä kg/m2 tieto eli massamenekki
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 2} :massamenekki)
-                  ["34"]))
+                  ["34.00"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 3} :massamenekki)
-                  ["55"]))
+                  ["55.00"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 4} :massamenekki)
                   nil))
