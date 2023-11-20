@@ -123,7 +123,7 @@
                         :soratien-hoitoluokkien-tuontikohde "./shp/Soratieluokat/soratieluokkaLine.shz"
 
                         :siltojen-shapefile "file://shp/Sillat/siltaPoint.shp"
-                        :siltojen-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=taitorakenteet:silta&outputFormat=SHAPE-ZIP"
+                        :siltojen-osoite nil #_"https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=taitorakenteet:silta&outputFormat=SHAPE-ZIP"
                         :siltojen-tuontikohde "./shp/Sillat/siltaPoint.shz"
 
                         :urakoiden-shapefile "file://shp/Hoitourakat/tie_hoitourakatPolygon.shp"
@@ -170,7 +170,8 @@
          :varuste-tuonti-suoritusaika nil
          :varuste-salasana #=(eval (some->
                                        (slurp "../.harja/velho-varuste-salasana")
-                                       (clojure.string/trim-newline)))}
+                                       (clojure.string/trim-newline)))
+         :oid-tuonti-suoritusaika nil}
 
  :yha-velho {}
 

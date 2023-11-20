@@ -192,6 +192,7 @@
          tilat (into #{} tilat)
          vain-myohassa? (contains? vaikutukset :myohassa)
          vain-toimenpiteita-aiheuttaneet? (contains? vaikutukset :aiheutti-toimenpiteita)
+         lajittelu-suunta (or lajittelu-suunta :laskeva)
          debug-viesti (str "Haetaan ilmoituksia: "
                         (viesti urakat "urakoista" "ilman urakoita")
                         (viesti valitetty-urakkaan-aikavali-alku "alkaen" "ilman alkuaikaa")
@@ -211,7 +212,7 @@
                           (:avoimet tilat) ", mutta vain avoimet."
                           (and (:suljetut tilat) (:avoimet tilat)) ", ja näistä avoimet JA suljetut."
                           (:suljetut tilat) ", ainoastaan suljetut.")
-                        (str " Lajitellaan suuntaan " (:lajittelu-suunta hakuehdot)))
+                        (str " Lajitellaan suuntaan " lajittelu-suunta))
          _ (log/debug debug-viesti)
          ilmoitukset
          (when-not (empty? urakat)
