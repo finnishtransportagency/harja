@@ -103,7 +103,6 @@
 (defrecord NollaaValikatselmuksenPaatokset [])
 
 (extend-protocol tuck/Event
-
   NollaaValikatselmuksenPaatokset
   (process-event [_ app]
     (dissoc app :kattohinnan-ylitys-lomake :lupausbonus-lomake :lupaussanktio-lomake :kattohinnan-oikaisu)))

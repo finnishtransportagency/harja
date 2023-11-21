@@ -264,7 +264,6 @@
       (assoc-in [:kattohinnan-oikaisu :uusi-kattohinta] kattohinta)))
 
   ;; Päätökset
-
   HaeUrakanPaatokset
   (process-event [{urakka :urakka} app]
     (do
