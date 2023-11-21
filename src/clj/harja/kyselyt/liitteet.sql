@@ -70,6 +70,10 @@ SELECT nimi, koko FROM liite l
 UPDATE liite SET "virustarkastettu?" = TRUE WHERE s3hash = :s3hash;
 
 -- name: liite-virustarkastettu?
-SELECT l."virustarkastettu?"
+-- luotu columni pitää sisällään suomen ajassa tallennetun timestampin. NOW() funktio palauttaa UTC ajan.
+-- Lisäämm
+SELECT l."virustarkastettu?" as "virustarkastettu?",
+       extract('epoch' FROM :nyt::TIMESTAMP) - extract('epoch' FROM l.luotu) as "sekuntia-luonnista",
+       l.s3hash
   FROM liite l
  WHERE l.id = :id;
