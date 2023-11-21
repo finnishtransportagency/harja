@@ -144,7 +144,7 @@
   {:datasource (tietokanta/luo-yhteyspool temppitietokanta)})
 
 (defn luo-liitteidenhallinta []
-  (liitteet/->Liitteet nil nil))
+  (liitteet/->Liitteet nil nil nil))
 
 (defonce db (:datasource (luo-testitietokanta)))
 (defonce temppidb (:datasource (luo-temppitietokanta)))
@@ -1574,7 +1574,7 @@
                                               [:db])
 
                            :liitteiden-hallinta (component/using
-                                                  (liitteet/->Liitteet nil nil)
+                                                  (liitteet/->Liitteet nil nil nil)
                                                   [:db])
 
                            ~@omat))))

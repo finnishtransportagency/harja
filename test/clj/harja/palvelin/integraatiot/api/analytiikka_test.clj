@@ -19,7 +19,7 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja-yit
-    :liitteiden-hallinta (component/using (liitteet/->Liitteet nil nil) [:db])
+    :liitteiden-hallinta (component/using (liitteet/->Liitteet nil nil nil) [:db])
     :api-analytiikka (component/using
                        (api-analytiikka/->Analytiikka false)
                        [:http-palvelin :db-replica :integraatioloki])
