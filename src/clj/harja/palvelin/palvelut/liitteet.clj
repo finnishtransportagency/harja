@@ -3,6 +3,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [ring.middleware.params :refer [wrap-params]]
+            [harja.pvm :as pvm]
             [harja.kyselyt.toteumat :as tot-q]
             [harja.kyselyt.liitteet :as liitteet-q]
             [taoensso.timbre :as log]
@@ -146,9 +147,21 @@
                           {(:linkkitaulu-domain-id domain-tiedot) domain-id
                            (:linkkitaulu-liite-id domain-tiedot) liite-id})))))
 
-(defn- onko-liite-virustarkastettu [db user urakka liite-id]
+(defn- onko-liite-virustarkastettu [db user urakka liite-id s3-url]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-liitteet user urakka)
-  (let [tarkastettu? (:virustarkastettu? (first (liitteet-q/liite-virustarkastettu? db {:id liite-id})))]
+  (let [tiedot (first (liitteet-q/liite-virustarkastettu? db {:id liite-id :nyt (pvm/nyt)}))
+        _ (log/debug "onko-liite-virustarkastettu :: tiedot:" tiedot)
+        ;; Verrataan tiedoston luontia ja virustarkistusta. Jos aikaa on mennyt yli 60 sekuntia
+        ;; tiedoston luomisesta ja virustarkistus on edelleen tekemättä.
+        ;; Niin tehdään se uusiksi.
+        liitetiedosto (if (and (> (:sekuntia-luonnista tiedot) 60) (:s3hash tiedot))
+                        (liitteet/lue-s3-tiedosto s3-url (:s3hash tiedot) db)
+                        nil)
+
+        tarkastettu? (cond
+                       (:virustarkastettu? tiedot) true
+                       (not (nil? liitetiedosto)) true
+                       :else false)]
     (if (true? tarkastettu?)
       true
       false)))
@@ -175,7 +188,7 @@
                                                         :domain-id domain-id})))
     (julkaise-palvelu http-palvelin :onko-liite-virustarkastettu
       (fn [user {:keys [liite-id urakka]}]
-        (onko-liite-virustarkastettu db user urakka liite-id)))
+        (onko-liite-virustarkastettu db user urakka liite-id (:s3-url (:liitteiden-hallinta this)))))
 
     this)
 
