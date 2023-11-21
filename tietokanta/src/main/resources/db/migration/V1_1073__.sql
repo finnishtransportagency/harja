@@ -1,4 +1,3 @@
--- Liite tauluun tieto, jos liite on tallennettu aws s3
-ALTER TABLE liite
-    ADD COLUMN s3hash TEXT DEFAULT NULL,
-    ADD COLUMN "virustarkastettu?" BOOLEAN DEFAULT true;
+ALTER TABLE pot2_alusta RENAME COLUMN massamaara TO massamenekki;
+
+ALTER TABLE pot2_alusta ALTER COLUMN massamenekki TYPE NUMERIC(10, 2);
