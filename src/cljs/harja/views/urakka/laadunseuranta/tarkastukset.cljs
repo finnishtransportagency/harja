@@ -527,6 +527,19 @@
                            (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
     (fn []
       [:span.tarkastukset
+       (when @nav/kartta-nakyvissa?
+         [ui-valinnat/segmentoitu-ohjaus
+          [{:nimi :tarkastukset
+            :teksti "Tarkastukset"
+            :oletus? true}
+           {:nimi :kayntimaarat
+            :teksti "Käyntimäärät"
+            :disabled? true}
+           {:nimi :ei-kayty
+            :teksti "Ei käyty"}]
+          tiedot/valittu-karttataso
+          {:luokka [:margin-top-32
+                    :margin-bottom-16]}])
        [kartta/kartan-paikka]
        (if @tiedot/valittu-tarkastus
          [tarkastuslomake tiedot/valittu-tarkastus @laadunseuranta/urakan-yllapitokohteet-lomakkeelle]

@@ -131,6 +131,7 @@
                   (go (into [] (<! (hae-urakan-tarkastukset parametrit))))))))
 
 (defonce valittu-tarkastus (atom nil))
+(defonce valittu-karttataso (atom nil))
 
 (defn paivita-tarkastus-listaan!
   "Päivittää annetun tarkastuksen urakan-tarkastukset listaan, jos se on valitun aikavälin sisällä."
