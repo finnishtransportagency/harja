@@ -4,6 +4,7 @@
             [com.stuartsierra.component :as component]
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
+            [harja.pvm :as pvm]
             [harja.domain.liite :as t-liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
@@ -52,20 +53,27 @@
     (.toByteArray out)))
 
 (def s3-virustarkistusvastaus (atom nil))
+(def s3-virustarkistus-maara (atom 0))
+(def virustarkistus-max-maara 8)
 
 (defn- odota-s3-virustarkistus [db s3-url s3hash]
   (async/go-loop []
-    (async/<! (async/timeout 3000))
+    (async/<! (async/timeout 15000))
     (let [_ (reset! s3-virustarkistusvastaus (lue-s3-tiedosto s3-url s3hash db))
+          _ (swap! s3-virustarkistus-maara inc)
           _ (log/info "odota-s3-virustarkistus :: tulos:" (pr-str @s3-virustarkistusvastaus))]
-      (if-not (nil? @s3-virustarkistusvastaus)
+      (cond
+        (and (not (nil? @s3-virustarkistusvastaus)) (< @s3-virustarkistus-maara virustarkistus-max-maara) )
         (do
           (log/info "Liite on virustarkastettu.")
           ;; Merkitään se tarkastetuksi
           (liitteet-q/merkitse-liite-virustarkistetuksi! db {:s3hash s3hash}))
+        (and (nil? @s3-virustarkistusvastaus) (< @s3-virustarkistus-maara virustarkistus-max-maara) )
         (do
-          (log/info "Tiedosto tarkastamatta, odotetaan 3 sekuntia...")
-          (recur))))))
+          (log/info "Tiedosto tarkastamatta, odotetaan 15 sekuntia...")
+          (recur))
+        (and (nil? @s3-virustarkistusvastaus) (>= @s3-virustarkistus-maara virustarkistus-max-maara) )
+        (log/error "Virustarkastus epäonnistui. Tarkistuskertojen maksimi ylittyi.")))))
 
 (defn- tallenna-s3
   "Anna lähetettävä tiedosto java.io.inputstreaminä.
@@ -77,11 +85,10 @@
     (let [_ (log/debug "tallenna-s3 :: tiedostonimi: " tiedostonimi)
           ;; Siirretään tiedostot S3:lle nimettynä uusiksi. Uusi nimi on tallennettu kantaan, jota kautta
           ;; tiedostot saadaan sitten haettua
-          s3hash (str/trim (str (UUID/randomUUID) "-" tiedostonimi))
+          s3hash (str/trim (str (pvm/iso8601 (pvm/nyt)) "-" (UUID/randomUUID) "-" tiedostonimi))
           ;; Generoi presignedurl, johon varsinainen liite lähetetään
-          vastaus @(http/post s3-url
-                     {:body (cheshire.core/encode {"key" s3hash "operation" "put"})
-                      :timeout 50000})
+          vastaus @(http/post s3-url {:body (cheshire.core/encode {"key" s3hash "operation" "put"})
+                                      :timeout 50000})
           _ (log/debug "Generoi presignedurl :: vastaus " vastaus)
           ;; Vastauksesta parsitaan varsinainen url, johon liite lähetetään
           varsinainen-put-url (when (= 200 (:status vastaus))
@@ -102,7 +109,7 @@
         ;; Palautetaan nil
         nil))))
 
-(defn- lue-s3-tiedosto
+(defn lue-s3-tiedosto
   "Anna ladattavan tiedoston s3hash.
   1. Luo ensin urlin POST komennolla, josta liite voidaan ladata.
   2. Hae GET komennolla liite S3 ämpäristä.
@@ -112,17 +119,21 @@
   (try
     (let [_ (log/debug "lue-s3-tiedosto")
           ;; Generoi presignedurl, josta liite haetaan
-          vastaus @(http/post s3-url
-                     {:body (cheshire.core/encode {"key" (str s3hash) "operation" "get"})
-                      :timeout 50000})
+          vastaus @(http/post s3-url {:body (cheshire.core/encode {"key" (str s3hash) "operation" "get"})
+                                      :timeout 50000})
+          _ (log/debug "lue-s3-tiedosto :: vastaus:" vastaus)
+          _ (when (not= 200 (:status vastaus))
+              (log/error "File: " s3hash " got download error: " (:body vastaus)))
+
           ;; Vastauksesta parsitaan varsinainen url, josta liite ladataan
-          varsinainen-get-url (when (= 200 (:status vastaus))
-                                (str/trim (get (cheshire.core/decode (:body vastaus)) "url")))
-          liite (when varsinainen-get-url
-                  @(http/get varsinainen-get-url))
+          varsinainen-get-url (when (= 200 (:status vastaus)) (str/trim (get (cheshire.core/decode (:body vastaus)) "url")))
+          _ (log/debug "lue-s3-tiedosto :: varsinainen-get-url:" varsinainen-get-url)
+
+          liite (when varsinainen-get-url @(http/get varsinainen-get-url))
+          _ (log/debug "lue-s3-tiedosto :: liite:" liite)
+
           ;; Jos liite saatiin, merkitään kantaan, että se on virustarkastettu
-          _ (when (= 200 (:status liite))
-              (liitteet-q/merkitse-liite-virustarkistetuksi! db {:s3hash s3hash}))]
+          _ (when (= 200 (:status liite)) (liitteet-q/merkitse-liite-virustarkistetuksi! db {:s3hash s3hash}))]
       ;; Jos osoitetta ei saatu, palautetaan liitteen sijasta nil
       (when varsinainen-get-url
         (with-open [out (ByteArrayOutputStream.)]
@@ -208,60 +219,80 @@
       (io/copy alkuperainen temp-file)
       [(io/input-stream temp-file) (io/input-stream temp-file)])))
 
-(defn- tallenna-liite [db alusta s3-url fileyard-client tiedostopesula virustarkistus luoja urakka tiedostonimi tyyppi uskoteltu-koko lahdetiedosto kuvaus lahde-jarjestelma]
+(defn- tallenna-liite-tietokantaan [db lahdetiedosto alusta s3-url fileyard-client liite-perustiedot]
+  (let [pikkukuva (muodosta-pikkukuva (io/input-stream lahdetiedosto))
+        data (tallenna-liitteen-data db alusta s3-url fileyard-client lahdetiedosto (:tiedostonimi liite-perustiedot))
+        liite (when (or (not (nil? (:liite_oid data))) (not (nil? (:s3hash data))) (not (nil? (:fileyard-hash data))))
+                (liitteet-q/tallenna-liite<!
+                  db
+                  (merge {:nimi (:tiedostonimi liite-perustiedot)
+                          :tyyppi (:tyyppi liite-perustiedot)
+                          :koko (:koko liite-perustiedot)
+                          :pikkukuva pikkukuva
+                          :luoja (:luoja liite-perustiedot)
+                          :urakka (:urakka liite-perustiedot)
+                          :kuvaus (:kuvaus liite-perustiedot)
+                          :lahdejarjestelma (:lahdejarjestelma liite-perustiedot)}
+                    data)))]
+    (if liite
+      (do
+        (log/info "Liite tallennettu.")
+        liite)
+      (throw+ {:type virheet/+ominaisuus-ei-kaytossa+ :virheet
+               [{:koodi virheet/+ominaisuus-ei-kaytossa+
+                 :viesti (str "Liitteen tallennus ei tällä hetkellä onnistu. Kokeile myöhemmin uudestaan.")}]}))))
+
+(defn- tallenna-liite-s3 [db lahdetiedosto s3-url {:keys [tyyppi koko] :as liite-perustiedot}]
+  (log/debug "Vastaanotettu pyyntö tallentaa liite s3:seen.")
+  (log/debug "Tyyppi: " (pr-str tyyppi))
+  (log/debug "Koko väitetty / havaittu: " (pr-str koko) (and (instance? java.io.File lahdetiedosto) (.length lahdetiedosto)))
+  (log/debug "lahde:" lahdetiedosto)
+  ;; Resetoidaan atomit jokaisen latauksen yhteydessä
+  (reset! s3-virustarkistusvastaus nil)
+  (reset! s3-virustarkistus-maara 0)
+  (let [koko (if (instance? java.io.File lahdetiedosto)
+               (.length lahdetiedosto)
+               koko)
+        liitetarkistus (t-liitteet/tarkista-liite {:tyyppi tyyppi :koko koko})]
+
+    (if (:hyvaksytty liitetarkistus)
+      (do
+        (let [liite (tallenna-liite-tietokantaan db lahdetiedosto :aws s3-url nil liite-perustiedot)
+              ;; S3 tallennuksessa käynnistetään virustarkastus
+              _ (when (:s3hash liite) (async/thread (odota-s3-virustarkistus db s3-url (:s3hash liite))))]
+          liite))
+      (do
+        (log/debug "Liite hylätty: " (:viesti liitetarkistus))
+        (throw+ {:type virheet/+virheellinen-liite+ :virheet
+                 [{:koodi  virheet/+virheellinen-liite-koodi+
+                   :viesti (str "Virheellinen liite: " (:viesti liitetarkistus))}]})))))
+
+(defn- tallenna-liite [db lahdetiedosto fileyard-client tiedostopesula virustarkistus {:keys [tiedostonimi tyyppi koko] :as liite-perustiedot}]
   (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan.")
   (log/debug "Tyyppi: " (pr-str tyyppi))
 
-  (log/debug "Koko väitetty / havaittu: " (pr-str uskoteltu-koko) (and (instance? java.io.File lahdetiedosto) (.length lahdetiedosto)))
+  (log/debug "Koko väitetty / havaittu: " (pr-str koko) (and (instance? java.io.File lahdetiedosto) (.length lahdetiedosto)))
   (log/debug "lahde:" lahdetiedosto)
   (let [koko (if (instance? java.io.File lahdetiedosto)
                (.length lahdetiedosto)
-               uskoteltu-koko)
+               koko)
         liitetarkistus (t-liitteet/tarkista-liite {:tyyppi tyyppi :koko koko})
         pesty-lahdetiedosto (when (and
-                                    ;; S3:sella virustarkastus tulee mukana
-                                    (not (= :aws alusta))
                                     (ominaisuus-kaytossa? :tiedostopesula) tiedostopesula (= tyyppi "application/pdf"))
                               (do (log/info "PDF-tiedosto -> tiedostopesula")
                                 (tiedostopesula/pdfa-muunna-file->file! tiedostopesula lahdetiedosto)))
         tallennettava-lahdetiedosto (or pesty-lahdetiedosto lahdetiedosto)
         tallennettava-koko (if pesty-lahdetiedosto
                              (.length tallennettava-lahdetiedosto)
-                             koko)]
+                             koko)
+        liite-perustiedot (assoc liite-perustiedot :koko tallennettava-koko)]
     (if pesty-lahdetiedosto
       (log/info "Tallennetaan tiedostopesulassa käsitelty liitetiedosto")
       (log/info "Tallennetaan alkuperäinen liitetiedosto"))
     (if (:hyvaksytty liitetarkistus)
       (do
-        ;; Virustarkastus tulee S3:sella automaattisest mukana
-        (when (not (= :aws alusta))
-          (virustarkistus/tarkista virustarkistus tiedostonimi (io/input-stream lahdetiedosto)))
-        (let [pikkukuva (muodosta-pikkukuva (io/input-stream tallennettava-lahdetiedosto))
-              ;; saadaan {:liite_oid <> :s3hash <> :fileyard-hash <>}
-              data (tallenna-liitteen-data db alusta s3-url fileyard-client tallennettava-lahdetiedosto tiedostonimi)
-              liite (when (or (not (nil? (:liite_oid data))) (not (nil? (:s3hash data))) (not (nil? (:fileyard-hash data))))
-                      (liitteet-q/tallenna-liite<!
-                        db
-                        (merge {:nimi tiedostonimi
-                                :tyyppi tyyppi
-                                :koko tallennettava-koko
-                                :pikkukuva pikkukuva
-                                :luoja luoja
-                                :urakka urakka
-                                :kuvaus kuvaus
-                                :lahdejarjestelma lahde-jarjestelma}
-                          data)))
-
-              ;; S3 tallennuksessa käynnistetään virustarkastus
-              _ (when (and (= :aws alusta) (:s3hash liite))
-                            (async/thread (odota-s3-virustarkistus db s3-url (:s3hash liite))))]
-          (if liite
-            (do
-              (log/info "Liite tallennettu.")
-              liite)
-            (throw+ {:type virheet/+ominaisuus-ei-kaytossa+ :virheet
-                     [{:koodi  virheet/+ominaisuus-ei-kaytossa+
-                       :viesti (str "Liitteen tallennus ei tällä hetkellä onnistu. Kokeile myöhemmin uudestaan.")}]}))))
+        (virustarkistus/tarkista virustarkistus tiedostonimi (io/input-stream lahdetiedosto))
+        (tallenna-liite-tietokantaan db lahdetiedosto nil nil fileyard-client liite-perustiedot))
       (do
         (log/debug "Liite hylätty: " (:viesti liitetarkistus))
         (throw+ {:type virheet/+virheellinen-liite+ :virheet
@@ -326,10 +357,20 @@
   LiitteidenHallinta
   (luo-liite [{db :db virustarkistus :virustarkistus tiedostopesula :tiedostopesula}
               luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma]
-    (tallenna-liite db alusta s3-url
-      (when fileyard-url
-        (fileyard-client/new-client fileyard-url))
-      tiedostopesula virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma))
+    (let [liite-perustiedot {:luoja luoja
+                             :urakka urakka
+                             :tiedostonimi tiedostonimi
+                             :tyyppi tyyppi
+                             :koko koko
+                             :kuvaus kuvaus
+                             :lahdejarjestelma lahdejarjestelma}]
+      ; Tallennetaan liitteet s3:een vähemmillä vaiheilla
+      (if (and alusta s3-url)
+        (tallenna-liite-s3 db lahde s3-url liite-perustiedot)
+        (tallenna-liite db lahde
+          (when fileyard-url
+            (fileyard-client/new-client fileyard-url))
+          tiedostopesula virustarkistus liite-perustiedot))))
   (lataa-liite [{db :db :as this} liitteen-id]
     (hae-liite db (:alusta this) s3-url (fileyard-client/new-client fileyard-url) liitteen-id))
   (lataa-pikkukuva [{db :db} liitteen-id]
