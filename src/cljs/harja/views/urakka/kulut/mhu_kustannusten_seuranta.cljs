@@ -11,7 +11,7 @@
             [harja.fmt :as fmt]
             [harja.ui.debug :as debug]
             [harja.ui.protokollat :refer [Haku hae]]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+]]
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+ ajax-loader-pieni]]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.komponentti :as komp]
             [harja.transit :as transit]
@@ -452,86 +452,102 @@
                         (second valittu-kuukausi)
                         (pvm/iso8601 (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi))))
         valikatselmus-tekematta? (t-yhteiset/valikatselmus-tekematta? app)]
-    [:div.kustannusten-seuranta.margin-top-16
-     ;[debug/debug app]
-     [:div
-      [:div.row.header
+
+    ;; Jos haku vielä käynnissä näytetään hyrrä
+    (if (:haku-kaynnissa? app) 
+      [:div.padding-16
+       [ajax-loader-pieni (str "Haetaan tietoja...")]]
+      
+      ;; Tiedot ladattu 
+      [:div.kustannusten-seuranta.margin-top-16
        [:div
-        [:h1 "Kustannusten seuranta"]
-        [:p.urakka (:nimi @nav/valittu-urakka)]
-        [:p "Tavoite- ja kattohinnat sekä budjetit on suunniteltu Suunnittelu-puolella.
+        [:div.row.header
+         [:div
+          [:h1 "Kustannusten seuranta"]
+          [:p.urakka (:nimi @nav/valittu-urakka)]
+          [:p "Tavoite- ja kattohinnat sekä budjetit on suunniteltu Suunnittelu-puolella.
      Toteutumissa näkyy ne kustannukset, jotka ovat Laskutus-osiossa syötetty järjestelmään."]
-        [:p "Taulukossa näkyvät luvut ovat indeksikorjattuja, mikäli indeksit ovat saatavilla."]]] ;; Ei speksissä, voi poistaa jos ei ole tarpeellinen.
+          [:p "Taulukossa näkyvät luvut ovat indeksikorjattuja, mikäli indeksit ovat saatavilla."]]] ;; Ei speksissä, voi poistaa jos ei ole tarpeellinen.
 
-      [:div.row.filtterit-container
-       [:div.filtteri
-        [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
-        [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
-                                      :vayla-tyyli? true
-                                      :data-cy "hoitokausi-valinta"
-                                      :valitse-fn #(do (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
+        [:div.row.filtterit-container
+         [:div.filtteri
+          [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
+          [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
+                                        :vayla-tyyli? true
+                                        :data-cy "hoitokausi-valinta"
+                                        :valitse-fn #(do (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
                                                        (e! (t-yhteiset/->NollaaValikatselmuksenPaatokset)))
-                                      :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet)
-                                      :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-         hoitokaudet]]
-       [:div.filtteri.kuukausi
-        [:span.alasvedon-otsikko-vayla "Kuukausi"]
-        [yleiset/livi-pudotusvalikko {:valinta valittu-kuukausi
-                                      :vayla-tyyli? true
-                                      :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseKuukausi (:id @nav/valittu-urakka) % valittu-hoitokausi))
-                                      :format-fn #(if %
-                                                    (if (= "Kaikki" %)
-                                                      "Kaikki"
-                                                      (let [[alkupvm _] %
-                                                            kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
-                                                        (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm))))
-                                                    "Kaikki")
-                                      :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-         hoitokauden-kuukaudet]]
-       [:div.filtteri {:style {:padding-top "21px"}}
-        ^{:key "raporttixls"}
-        [:form {:style {:margin-left "auto"}
-                :target "_blank" :method "POST"
-                :action (k/excel-url :kustannukset)}
-         [:input {:type "hidden" :name "parametrit"
-                  :value (transit/clj->transit {:urakka-id (:id @nav/valittu-urakka)
-                                                :urakka-nimi (:nimi @nav/valittu-urakka)
-                                                :hoitokauden-alkuvuosi valittu-hoitokausi
-                                                :alkupvm haun-alkupvm
-                                                :loppupvm haun-loppupvm})}]
-         [:button {:type "submit"
-                   :class "nappi-toissijainen"}
-          [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]
-       [:div.filtteri {:style {:padding-top "21px"}}
-        (if valikatselmus-tekematta?
-          [napit/yleinen-ensisijainen
-           "Tee välikatselmus"
-           #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))]
+                                        :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet)
+                                        :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+           hoitokaudet]]
+         [:div.filtteri.kuukausi
+          [:span.alasvedon-otsikko-vayla "Kuukausi"]
+          [yleiset/livi-pudotusvalikko {:valinta valittu-kuukausi
+                                        :vayla-tyyli? true
+                                        :valitse-fn #(e! (kustannusten-seuranta-tiedot/->ValitseKuukausi (:id @nav/valittu-urakka) % valittu-hoitokausi))
+                                        :format-fn #(if %
+                                                      (if (= "Kaikki" %)
+                                                        "Kaikki"
+                                                        (let [[alkupvm _] %
+                                                              kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
+                                                          (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm))))
+                                                      "Kaikki")
+                                        :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+           hoitokauden-kuukaudet]]
+         
+         [:div.filtteri {:style {:padding-top "21px"}}
+          ^{:key "raporttixls"}
+          [:form {:style {:margin-left "auto"}
+                  :target "_blank" :method "POST"
+                  :action (k/excel-url :kustannukset)}
+           [:input {:type "hidden" :name "parametrit"
+                    :value (transit/clj->transit {:urakka-id (:id @nav/valittu-urakka)
+                                                  :urakka-nimi (:nimi @nav/valittu-urakka)
+                                                  :hoitokauden-alkuvuosi valittu-hoitokausi
+                                                  :alkupvm haun-alkupvm
+                                                  :loppupvm haun-loppupvm})}]
+           [:button {:type "submit"
+                     :class "nappi-toissijainen"}
+            [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]
+         
+         [:div.filtteri {:style {:padding-top "21px"}}
+          (if valikatselmus-tekematta?
+            [napit/yleinen-ensisijainen
+             "Tee välikatselmus"
+             #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))]
+            [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}])]]]
 
-          [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}])]]]
-
-     (if (:haku-kaynnissa? app)
-       [:div {:style {:padding-left "20px"}} [yleiset/ajax-loader "Haetaan käynnissä"]]
-       [:div
-        [kustannukset-taulukko e! app taulukon-rivit]
-        [yhteenveto-laatikko e! app taulukon-rivit :kustannusten-seuranta]])]))
+       (if (:haku-kaynnissa? app)
+         [:div {:style {:padding-left "20px"}} [yleiset/ajax-loader "Haetaan käynnissä"]]
+         [:div
+          [kustannukset-taulukko e! app taulukon-rivit]
+          [yhteenveto-laatikko e! app taulukon-rivit :kustannusten-seuranta]])])))
 
 (defn kustannusten-seuranta* [e! app]
   (komp/luo
     (komp/lippu tila/kustannusten-seuranta-nakymassa?)
     (komp/piirretty (fn [this]
-                      (do
+                      (let [{:keys [valittu-kuukausi hoitokauden-alkuvuosi]} app
+                            valittu-urakka-id @nav/valittu-urakka-id
+                            urakan-hoitokaudet (urakka-tiedot/hoito-tai-sopimuskaudet (-> @tila/yleiset :urakka))
+                            kuluva-hoitokausi (first (filter #(pvm/valissa? (pvm/nyt) (first %) (second %)) urakan-hoitokaudet))
+                            kuluva-hoitokausi (if (nil? kuluva-hoitokausi)
+                                                (first urakan-hoitokaudet)
+                                                kuluva-hoitokausi)
+                            kuluva-vuosi (pvm/vuosi (first kuluva-hoitokausi))]
+                        (e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake))
                         (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))
-                        (e! (kustannusten-seuranta-tiedot/->HaeKustannukset (:hoitokauden-alkuvuosi app)
-                                                                            (if (= "Kaikki" (:valittu-kuukausi app))
-                                                                              nil
-                                                                              (first (:valittu-kuukausi app)))
-                                                                            (if (= "Kaikki" (:valittu-kuukausi app))
-                                                                              nil
-                                                                              (second (:valittu-kuukausi app)))))
-                        (e! (kustannusten-seuranta-tiedot/->HaeTavoitehintojenOikaisut (:id @nav/valittu-urakka)))
-                        (e! (kustannusten-seuranta-tiedot/->HaeKattohintojenOikaisut (:id @nav/valittu-urakka)))
-                        (e! (kustannusten-seuranta-tiedot/->HaeUrakanPaatokset (:id @nav/valittu-urakka))))))
+                        (e! (kustannusten-seuranta-tiedot/->HaeKustannukset hoitokauden-alkuvuosi
+                              (if (= "Kaikki" valittu-kuukausi)
+                                nil
+                                (first valittu-kuukausi))
+                              (if (= "Kaikki" valittu-kuukausi)
+                                nil
+                                (second valittu-kuukausi))))
+                        (e! (kustannusten-seuranta-tiedot/->HaeTavoitehintojenOikaisut valittu-urakka-id))
+                        (e! (kustannusten-seuranta-tiedot/->HaeKattohintojenOikaisut valittu-urakka-id))
+                        (e! (kustannusten-seuranta-tiedot/->HaeUrakanPaatokset valittu-urakka-id))
+                        (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi valittu-urakka-id kuluva-vuosi)))))
     (fn [e! {:keys [valikatselmus-auki?] :as app}]
       [:div {:id "vayla"}
        (if valikatselmus-auki?
