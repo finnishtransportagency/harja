@@ -527,10 +527,14 @@
   (komp/luo
     (komp/lippu tila/kustannusten-seuranta-nakymassa?)
     (komp/piirretty (fn [this]
-                      (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka)
-                            {:keys [valittu-kuukausi hoitokauden-alkuvuosi]} app
+                      (let [{:keys [valittu-kuukausi hoitokauden-alkuvuosi]} app
                             valittu-urakka-id @nav/valittu-urakka-id
-                            alkuvuosi (pvm/vuosi alkupvm)]
+                            urakan-hoitokaudet (urakka-tiedot/hoito-tai-sopimuskaudet (-> @tila/yleiset :urakka))
+                            kuluva-hoitokausi (first (filter #(pvm/valissa? (pvm/nyt) (first %) (second %)) urakan-hoitokaudet))
+                            kuluva-hoitokausi (if (nil? kuluva-hoitokausi)
+                                                (first urakan-hoitokaudet)
+                                                kuluva-hoitokausi)
+                            kuluva-vuosi (pvm/vuosi (first kuluva-hoitokausi))]
                         (e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake))
                         (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))
                         (e! (kustannusten-seuranta-tiedot/->HaeKustannukset hoitokauden-alkuvuosi
@@ -543,7 +547,7 @@
                         (e! (kustannusten-seuranta-tiedot/->HaeTavoitehintojenOikaisut valittu-urakka-id))
                         (e! (kustannusten-seuranta-tiedot/->HaeKattohintojenOikaisut valittu-urakka-id))
                         (e! (kustannusten-seuranta-tiedot/->HaeUrakanPaatokset valittu-urakka-id))
-                        (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi valittu-urakka-id alkuvuosi)))))
+                        (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi valittu-urakka-id kuluva-vuosi)))))
     (fn [e! {:keys [valikatselmus-auki?] :as app}]
       [:div {:id "vayla"}
        (if valikatselmus-auki?
