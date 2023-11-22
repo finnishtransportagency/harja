@@ -259,7 +259,7 @@
     rivit))
 
 (defn- summaa-paaryhman-toimenpiteet
-  "Summataan hankintakustannukset, johto ja hallintakorvaukset sekä rahavaraukset"
+  "Summataan hankintakustannukset, johto ja hallintokorvaukset sekä rahavaraukset"
   [taulukko-rivit indeksi toimenpiteet]
   (let [indeksikorjaus-vahvistettu-avain (keyword (str (nth raportin-paaryhmat indeksi) "-indeksikorjaus-vahvistettu"))
         ;; Jos yksikin arvo on false, niin osio on vahvistamatta
