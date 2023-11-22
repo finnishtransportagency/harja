@@ -454,8 +454,8 @@
         valikatselmus-tekematta? (t-yhteiset/valikatselmus-tekematta? app)]
 
     ;; Jos haku vielä käynnissä näytetään hyrrä
-    (if (:haku-kaynnissa? app)
-      [:div {:style {:padding "16px"}}
+    (if (:haku-kaynnissa? app) 
+      [:div.padding-16
        [ajax-loader-pieni (str "Haetaan tietoja...")]]
       
       ;; Tiedot ladattu 
