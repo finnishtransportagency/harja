@@ -288,7 +288,7 @@ WHERE l.urakka = :urakka
        tk.koodi = '14301')
 GROUP BY tr.nimi, tk.nimi, lk.maksueratyyppi, tk.koodi, tk_tehtava.jarjestys, tr.yksiloiva_tunniste
 UNION ALL
--- Toteutuneet erillishankinnat, hoidonjohdonpalkkio, johto- ja hallintakorvaukset
+-- Toteutuneet erillishankinnat, hoidonjohdonpalkkio, johto- ja hallintokorvaukset
 -- ja vuoden päättämiseen liittyvät kulut lasku_kohdistus taulusta.
 -- Rajaus tehty toimenpidekoodi.koodi = 23151 perusteella
 SELECT 0                          AS budjetoitu_summa,
