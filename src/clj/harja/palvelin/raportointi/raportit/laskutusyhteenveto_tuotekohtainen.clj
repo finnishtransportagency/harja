@@ -74,7 +74,7 @@
                 (remove nil?
                   (cond
                     (= "MHU ja HJU hoidon johto" otsikko)
-                    [(rivi-taulukolle data kyseessa-kk-vali? "Johto- ja hallintakorvaukset" :johto_ja_hallinto_laskutettu :johto_ja_hallinto_laskutetaan false)
+                    [(rivi-taulukolle data kyseessa-kk-vali? "Johto- ja hallintokorvaukset" :johto_ja_hallinto_laskutettu :johto_ja_hallinto_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "Erillishankinnat" :hj_erillishankinnat_laskutettu :hj_erillishankinnat_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "HJ-palkkio" :hj_palkkio_laskutettu :hj_palkkio_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "Bonukset" :bonukset_laskutettu :bonukset_laskutetaan false)
@@ -253,8 +253,8 @@
                  "Soratien hoito"
                  "Päällyste"
                  "MHU Ylläpito"
-                 "MHU Korvausinvestointi"
-                 "MHU ja HJU hoidon johto"]]
+                 "MHU ja HJU hoidon johto"
+                 "MHU Korvausinvestointi"]]
 
     [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")
                 :otsikon-koko :iso}
@@ -266,20 +266,19 @@
                                                    :hoitokausi (pvm/paivamaaran-hoitokausi alkupvm)}))
      ;; Data on vectorina järjestyksessä, käytetään 'otsikot' indeksiä oikean datan näyttämiseen  
      (concat (for [x otsikot]
-               (do
-                 (let [tiedot-indeksi (.indexOf otsikot x)
-                       data (try
-                              (nth (first laskutusyhteenvedot) tiedot-indeksi)
-                              (catch Throwable t
-                                (println "Tuotekohtainen - " x "tietoja ei löytynyt.")
-                                nil))]
-                   (taulukko {:data data
-                              :otsikko x
-                              :sheet-nimi (when (= (.indexOf otsikot x) 0) sheet-nimi)
-                              :laskutettu-teksti laskutettu-teksti
-                              :laskutetaan-teksti laskutetaan-teksti
-                              :kyseessa-kk-vali? kyseessa-kk-vali?
-                              :alkupvm alkupvm})))))
+               (let [tiedot-indeksi (.indexOf otsikot x)
+                     data (try
+                            (nth (first laskutusyhteenvedot) tiedot-indeksi)
+                            (catch Throwable t
+                              (log/error "Tuotekohtaisen laskutusyhteenvedon tietoja ei löytynyt.")
+                              nil))]
+                 (taulukko {:data data
+                            :otsikko x
+                            :sheet-nimi (when (= (.indexOf otsikot x) 0) sheet-nimi)
+                            :laskutettu-teksti laskutettu-teksti
+                            :laskutetaan-teksti laskutetaan-teksti
+                            :kyseessa-kk-vali? kyseessa-kk-vali?
+                            :alkupvm alkupvm}))))
 
      (toteutuneet-taulukko {:data (first koostettu-yhteenveto)
                             :otsikko "Toteutuneet"
