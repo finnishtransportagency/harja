@@ -531,20 +531,19 @@
                             {:keys [valittu-kuukausi hoitokauden-alkuvuosi]} app
                             valittu-urakka-id @nav/valittu-urakka-id
                             alkuvuosi (pvm/vuosi alkupvm)]
-                        (do
-                          (e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake))
-                          (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))
-                          (e! (kustannusten-seuranta-tiedot/->HaeKustannukset hoitokauden-alkuvuosi
-                                (if (= "Kaikki" valittu-kuukausi)
-                                  nil
-                                  (first valittu-kuukausi))
-                                (if (= "Kaikki" valittu-kuukausi)
-                                  nil
-                                  (second valittu-kuukausi))))
-                          (e! (kustannusten-seuranta-tiedot/->HaeTavoitehintojenOikaisut valittu-urakka-id))
-                          (e! (kustannusten-seuranta-tiedot/->HaeKattohintojenOikaisut valittu-urakka-id))
-                          (e! (kustannusten-seuranta-tiedot/->HaeUrakanPaatokset valittu-urakka-id))
-                          (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi valittu-urakka-id alkuvuosi))))))
+                        (e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake))
+                        (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))
+                        (e! (kustannusten-seuranta-tiedot/->HaeKustannukset hoitokauden-alkuvuosi
+                              (if (= "Kaikki" valittu-kuukausi)
+                                nil
+                                (first valittu-kuukausi))
+                              (if (= "Kaikki" valittu-kuukausi)
+                                nil
+                                (second valittu-kuukausi))))
+                        (e! (kustannusten-seuranta-tiedot/->HaeTavoitehintojenOikaisut valittu-urakka-id))
+                        (e! (kustannusten-seuranta-tiedot/->HaeKattohintojenOikaisut valittu-urakka-id))
+                        (e! (kustannusten-seuranta-tiedot/->HaeUrakanPaatokset valittu-urakka-id))
+                        (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi valittu-urakka-id alkuvuosi)))))
     (fn [e! {:keys [valikatselmus-auki?] :as app}]
       [:div {:id "vayla"}
        (if valikatselmus-auki?
