@@ -74,7 +74,7 @@
                 (remove nil?
                   (cond
                     (= "MHU ja HJU hoidon johto" otsikko)
-                    [(rivi-taulukolle data kyseessa-kk-vali? "Johto- ja hallintakorvaukset" :johto_ja_hallinto_laskutettu :johto_ja_hallinto_laskutetaan false)
+                    [(rivi-taulukolle data kyseessa-kk-vali? "Johto- ja hallintokorvaukset" :johto_ja_hallinto_laskutettu :johto_ja_hallinto_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "Erillishankinnat" :hj_erillishankinnat_laskutettu :hj_erillishankinnat_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "HJ-palkkio" :hj_palkkio_laskutettu :hj_palkkio_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "Bonukset" :bonukset_laskutettu :bonukset_laskutetaan false)
