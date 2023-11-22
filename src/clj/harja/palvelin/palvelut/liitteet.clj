@@ -154,17 +154,14 @@
         ;; Verrataan tiedoston luontia ja virustarkistusta. Jos aikaa on mennyt yli 60 sekuntia
         ;; tiedoston luomisesta ja virustarkistus on edelleen tekemättä.
         ;; Niin tehdään se uusiksi.
-        liitetiedosto (if (and (> (:sekuntia-luonnista tiedot) 60) (:s3hash tiedot))
-                        (liitteet/lue-s3-tiedosto s3-url (:s3hash tiedot) db)
-                        nil)
+        liitetiedosto (when (and (> (:sekuntia-luonnista tiedot) 60) (:s3hash tiedot))
+                        (liitteet/lue-s3-tiedosto s3-url (:s3hash tiedot) db))
 
         tarkastettu? (cond
                        (:virustarkastettu? tiedot) true
                        (not (nil? liitetiedosto)) true
                        :else false)]
-    (if (true? tarkastettu?)
-      true
-      false)))
+    tarkastettu?))
 
 (defrecord Liitteet []
   component/Lifecycle

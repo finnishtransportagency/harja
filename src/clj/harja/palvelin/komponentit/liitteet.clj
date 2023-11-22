@@ -222,7 +222,7 @@
 (defn- tallenna-liite-tietokantaan [db lahdetiedosto alusta s3-url fileyard-client liite-perustiedot]
   (let [pikkukuva (muodosta-pikkukuva (io/input-stream lahdetiedosto))
         data (tallenna-liitteen-data db alusta s3-url fileyard-client lahdetiedosto (:tiedostonimi liite-perustiedot))
-        liite (when (or (not (nil? (:liite_oid data))) (not (nil? (:s3hash data))) (not (nil? (:fileyard-hash data))))
+        liite (when (or (some? (:liite_oid data)) (some? (:s3hash data)) (some? (:fileyard-hash data)))
                 (liitteet-q/tallenna-liite<!
                   db
                   (merge {:nimi (:tiedostonimi liite-perustiedot)
