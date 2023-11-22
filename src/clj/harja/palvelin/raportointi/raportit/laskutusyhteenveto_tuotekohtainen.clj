@@ -270,7 +270,7 @@
                      data (try
                             (nth (first laskutusyhteenvedot) tiedot-indeksi)
                             (catch Throwable t
-                              (println "Tuotekohtainen - " x "tietoja ei löytynyt.")
+                              (log/error "Tuotekohtaisen laskutusyhteenvedon tietoja ei löytynyt.")
                               nil))]
                  (taulukko {:data data
                             :otsikko x
