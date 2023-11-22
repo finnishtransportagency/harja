@@ -52,6 +52,7 @@
         laskutusyhteenveto (take 15 raportit)
         perusluku (nth laskutusyhteenveto 2)
         indeksikerroin (nth laskutusyhteenveto 3)
+        laskutusyhteenveto-hoidon-johto-arvo (nth laskutusyhteenveto 10)
         muutos-ja-lisatoiden-raportin-otsikko (-> (nth raportit 13) second :otsikko)
         sanktioraportin-otsikko (second (nth raportit 16))]
     
@@ -59,6 +60,7 @@
     (is (= perusluku [:teksti "Indeksilaskennan perusluku: 110,8"]) "Peruslukuteksti")
     (is (= indeksikerroin [:teksti "Hoitokauden 2021-22 indeksikerroin: 1,261"]) "Laskutusyhteenvedon indeksikerroin")
     (is (= (-> laskutusyhteenveto first second) "Laskutusyhteenveto"))
+    (is (= 252.20M (:arvo (last (nth (first  (last laskutusyhteenveto-hoidon-johto-arvo)) 2)))))
     (is (= "Oulun MHU 2019-2024, Muutos- ja lisätöiden raportti, kaikki työtyypit tammikuussa 2022, Toimenpide: kaikki" muutos-ja-lisatoiden-raportin-otsikko))
     (is (= "Sanktiot, bonukset ja arvonvähennykset 01.01.2022 - 31.01.2022" sanktioraportin-otsikko))))
 
