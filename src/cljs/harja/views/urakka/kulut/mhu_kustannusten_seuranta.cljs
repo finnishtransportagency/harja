@@ -529,7 +529,7 @@
     (komp/piirretty (fn [this]
                       (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka)
                             {:keys [valittu-kuukausi hoitokauden-alkuvuosi]} app
-                            valittu-urakka-id (:id @nav/valittu-urakka)
+                            valittu-urakka-id @nav/valittu-urakka-id
                             alkuvuosi (pvm/vuosi alkupvm)]
                         (do
                           (e! (kustannusten-seuranta-tiedot/->SuljeValikatselmusLomake))
