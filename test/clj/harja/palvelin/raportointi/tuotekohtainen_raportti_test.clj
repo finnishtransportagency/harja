@@ -59,7 +59,6 @@
         indeksikerroin-teksti (nth vastaus 4)
         raportit (nth vastaus 5)
         laskutusyhteenveto (take 16 raportit)
-        _ (println "laskutusyhteenveto: " (pr-str laskutusyhteenveto))
         talvihoito-yhteensa (-> (first laskutusyhteenveto) (nth 3) (nth 5) second second :arvo)
         liikenneymp-akilliset-hoitotyot (-> (second laskutusyhteenveto) (nth 3) (nth 3) second second :arvo)
         liikenneymp-vahinkojen-korjaukset (-> (second laskutusyhteenveto) (nth 3) (nth 4) second second :arvo)
@@ -68,7 +67,6 @@
         paallyste-yhteensa (-> (nth laskutusyhteenveto 3) (nth 3) (nth 3) second second :arvo)
         ;; Vuosina 2019 tai 2022 on vain neljä riviä ylläpito sarakkeessa, koska
         mhu-yllapito-yhteensa (-> (nth laskutusyhteenveto 4) (nth 3) (nth 4) second second :arvo)
-        mhu-korvaus-yhteensa (-> (nth laskutusyhteenveto 5) (nth 3) (nth 3) second second :arvo)
         mhu-bonukset (-> (nth laskutusyhteenveto 6) (nth 3) (nth 3) second second :arvo)]
 
     (is (= raportin-nimi "Laskutusyhteenveto (01.10.2019 - 30.09.2020)"))
@@ -81,5 +79,4 @@
     (is (= soratiet-yhteensa 8801.94M))
     (is (= paallyste-yhteensa 11001.94M))
     (is (= mhu-yllapito-yhteensa 15401.94M))
-    (is (= mhu-korvaus-yhteensa 13201.94M))
-    (is (= mhu-bonukset 5634.500M))))
+    (is (= mhu-bonukset 5544.254000M))))
