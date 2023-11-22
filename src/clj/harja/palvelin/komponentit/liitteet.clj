@@ -365,7 +365,7 @@
                              :kuvaus kuvaus
                              :lahdejarjestelma lahdejarjestelma}]
       ; Tallennetaan liitteet s3:een vähemmillä vaiheilla
-      (if (and alusta s3-url)
+      (if (and (= :aws alusta) s3-url)
         (tallenna-liite-s3 db lahde s3-url liite-perustiedot)
         (tallenna-liite db lahde
           (when fileyard-url
