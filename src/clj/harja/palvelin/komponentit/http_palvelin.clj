@@ -1,5 +1,6 @@
 (ns harja.palvelin.komponentit.http-palvelin
   (:require [com.stuartsierra.component :as component]
+            [harja.domain.roolit :as roolit]
             [org.httpkit.server :as http]
             [compojure.core :as compojure]
             [compojure.route :as route]
@@ -74,12 +75,19 @@
 (defn wrap-logging-context
   "Luo lokituskontekstin tälle kyselylle.
   Lokituskontekstia hyödynnetään logituksen metadatassa."
-  [handler]
-  (fn [req]
-    (log/with-context {:korrelaatio-id (UUID/randomUUID)
-                       :client-ip (client-ip req)
-                       :kayttajatunnus (or (get-in req [:headers "oam_remote_user"]) :tuntematon-kayttaja)}
-      (handler req))))
+  ([handler] (wrap-logging-context handler nil))
+  ([handler kayttaja]
+   (fn [req]
+     (log/with-context
+       (merge {:korrelaatio-id (UUID/randomUUID)
+               :client-ip (client-ip req)
+               :kayttajatunnus (or (get-in req [:headers "oam_remote_user"]) :tuntematon-kayttaja)}
+         ;; Jos käyttäjä-objekti on annettu, poimitaan siitä mukaan relevantteja tietoja.
+         (when kayttaja
+           ;; Admin (jarjestelmavastuuhenkilo)?
+           {:jvh? (roolit/jvh? kayttaja)}))
+
+       (handler req)))))
 
 (defn- reitita
   "Reititä sisääntuleva pyyntö käsittelijöille."
@@ -370,22 +378,31 @@
                                            oam-kayttajanimi
                                            random-avain
                                            csrf-token))]
-                    (or (reitita req (conj (mapv :fn ei-todennettavat)
+                    ;; Reititä ei-todennettavat käsittelijät
+                    (or
+                      (reitita req (conj (mapv :fn ei-todennettavat)
                                        dev-resurssit resurssit) false)
-                      (reitita (todennus/todenna-pyynto todennus req)
-                        (-> (mapv :fn todennettavat)
-                          (conj (partial index-kasittelija
-                                  db
-                                  oam-kayttajanimi
-                                  kehitysmoodi
-                                  anti-csrf-token-secret-key))
-                          (conj (partial ls-index-kasittelija
-                                  db
-                                  oam-kayttajanimi
-                                  kehitysmoodi
-                                  anti-csrf-token-secret-key))
-                          (conj ui-kasittelija))
-                        true)))
+                      ;; Reititä todennettavat käsittelijät
+                      (let [req (todennus/todenna-pyynto todennus req)
+                            todennettavat-kasittelijat (-> (mapv :fn todennettavat)
+                                                         (conj (partial index-kasittelija
+                                                                 db
+                                                                 oam-kayttajanimi
+                                                                 kehitysmoodi
+                                                                 anti-csrf-token-secret-key))
+                                                         (conj (partial ls-index-kasittelija
+                                                                 db
+                                                                 oam-kayttajanimi
+                                                                 kehitysmoodi
+                                                                 anti-csrf-token-secret-key))
+                                                         (conj ui-kasittelija))
+                            ;; Todennettaville käsittelijöille ajetaan wrap-logging-context ja annetaan
+                            ;; kontekstille todennetun käyttäjä tiedot. Tämä korvaa default wrap-logging-context
+                            ;; kutsun bindaaman kontekstin, joka on tehty 'wrap-with-common-wrappers'-funktiossa.
+                            todennettavat-kasittelijat (mapv
+                                                         #(wrap-logging-context % (:kayttaja req))
+                                                         todennettavat-kasittelijat)]
+                        (reitita req todennettavat-kasittelijat true))))
                   (catch [:virhe :todennusvirhe] _
                     {:status 403 :body "Todennusvirhe"})
 
