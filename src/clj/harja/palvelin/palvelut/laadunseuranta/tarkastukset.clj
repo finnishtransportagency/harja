@@ -246,7 +246,7 @@
         (tarkastukset/hae-tarkastusajon-reittipisteet db {:tarkastusajoid tarkastusajon-id})))
 
 (defn hae-tarkastamattomat-tiet [db user {:keys [urakka-id alkupvm loppupvm]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
   (into [] (comp
              (geo/muunna-pg-tulokset :sijainti)
              (map #(assoc % :tyyppi-kartalla :ei-kayty-tieturvallisuusverkko))
