@@ -12,6 +12,8 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
+(defonce nakymassa? (atom false))
+
 (def +tarkastustyyppi->nimi+
   ;; Piilotetaan toistaiseksi tieturvallisuus kirjaus tuotannosta
   ;; Kun kaikki valmista, tämän koodin voi muuttaa vaan: (def +tarkastustyyppi->nimi+ tarkastukset/+tarkastustyyppi->nimi+)

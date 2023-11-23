@@ -245,6 +245,16 @@
           (geo/muunna-pg-tulokset :sijainti))
         (tarkastukset/hae-tarkastusajon-reittipisteet db {:tarkastusajoid tarkastusajon-id})))
 
+(defn hae-tarkastamattomat-tiet [db user {:keys [urakka-id alkupvm loppupvm]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user)
+  (into [] (comp
+             (geo/muunna-pg-tulokset :sijainti)
+             (map #(assoc % :tyyppi-kartalla :ei-kayty-tieturvallisuusverkko))
+             (map #(update % :tyyppi keyword)))
+    (tarkastukset/hae-urakan-ei-kayty-tieturvallisuusverkko db {:urakka urakka-id
+                                                                :alku alkupvm
+                                                                :loppu loppupvm})))
+
 (defrecord Tarkastukset []
   component/Lifecycle
   (start [{:keys [http-palvelin db karttakuvat] :as this}]
@@ -283,7 +293,11 @@
 
       :hae-urakan-tieturvallisuusverkko
       (fn [user {:keys [urakka-id]}]
-        (hae-urakan-tieturvallisuusverkko-kartalle db user urakka-id)))
+        (hae-urakan-tieturvallisuusverkko-kartalle db user urakka-id))
+
+      :hae-tarkastamattomat-tiet
+      (fn [user tiedot]
+        (hae-tarkastamattomat-tiet db user tiedot)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
@@ -292,5 +306,7 @@
                      :tallenna-tarkastus
                      :hae-tarkastus
                      :lisaa-tarkastukselle-laatupoikkeama
-                     :hae-tarkastusajon-reittipisteet)
+                     :hae-tarkastusajon-reittipisteet
+                     :hae-urakan-tieturvallisuusverkko
+                     :hae-tarkastamattomat-tiet)
     this))

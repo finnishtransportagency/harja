@@ -513,18 +513,22 @@
   "Tarkastuksien pääkomponentti"
   []
   (komp/luo
-    (komp/lippu tarkastukset-kartalla/karttataso-tarkastukset)
+    (komp/lippu tiedot/nakymassa?)
     (komp/kuuntelija :tarkastus-klikattu #(reset! tiedot/valittu-tarkastus %2))
     (komp/ulos (kartta-tiedot/kuuntele-valittua! tiedot/valittu-tarkastus))
     (komp/sisaan-ulos #(do
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                         (when-not @tarkastukset-kartalla/karttataso-ei-kayty-tieturvallisuusverkko
+                           (reset! tarkastukset-kartalla/karttataso-tarkastukset true))
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                            {:tarkastus {:toiminto (fn [klikattu-tarkastus] ;; asiat-pisteessa -asia joka on tyypiltään tarkastus
                                                     (reset! tiedot/valittu-tarkastus (vastaava-tarkastus klikattu-tarkastus)))
                                         :teksti "Valitse tarkastus"}})
                          (nav/vaihda-kartan-koko! :M))
-                      #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
-                           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
+                      #(do
+                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+                         (reset! tarkastukset-kartalla/karttataso-tarkastukset false)
+                         (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
     (fn []
       [:span.tarkastukset
        (when @nav/kartta-nakyvissa?
@@ -536,10 +540,14 @@
             :teksti "Käyntimäärät"
             :disabled? true}
            {:nimi :ei-kayty
-            :teksti "Ei käyty"}]
-          tiedot/valittu-karttataso
+            :teksti "Ei käyty"
+            :disabled? (not= :ei-kayty @tiedot/valittu-karttataso)}]
+          @tiedot/valittu-karttataso
           {:luokka [:margin-top-32
-                    :margin-bottom-16]}])
+                    :margin-bottom-16]
+           :kun-valittu #(do
+                           (reset! tiedot/valittu-karttataso %)
+                           (reset! tarkastukset-kartalla/karttataso-tarkastukset (not= % :ei-kayty)))}])
        [kartta/kartan-paikka]
        (if @tiedot/valittu-tarkastus
          [tarkastuslomake tiedot/valittu-tarkastus @laadunseuranta/urakan-yllapitokohteet-lomakkeelle]

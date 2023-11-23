@@ -29,6 +29,7 @@
 (def pitaya-default "#E50083")
 (def pea-default "#8DCB6D")
 (def black-light "#5C5C5C")
+(def red-default "#DE3618")
 
 (def kaikki
   ^{:doc "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan
@@ -36,7 +37,7 @@
     :const true}
   [punainen oranssi keltainen magenta vihrea turkoosi syaani sininen
    tummansininen violetti lime pinkki
-   fig-default lemon-default eggplant-default pitaya-default pea-default black-light])
+   fig-default lemon-default eggplant-default pitaya-default pea-default black-light red-default])
 
 #?(:clj
    (defn- poista-testit [setti]
