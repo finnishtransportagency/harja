@@ -228,6 +228,69 @@
      :tr-loppuetaisyys loppuetaisyys
      :ulkoinen-oid (:oid varuste)}))
 
+(def loppuaika-olemassa ["olemassa", [
+                                      "yleiset/perustiedot",
+                                      "paattyen"
+                                      ]])
+
+(defn- tee-loppuaika-parametri [operaattori]
+  [
+   operaattori,
+   [
+    "yleiset/perustiedot",
+    "paattyen"
+    ],
+   (pvm/pvm->iso-8601-pvm-aika-ei-ms (pvm/suomen-aikavyohykkeeseen (pvm/joda-date-timeksi (pvm/nyt))))])
+
+(def varustetoimenpiteet-polku
+  [
+   "toimenpiteet/varustetoimenpiteet",
+   "ominaisuudet",
+   "toimenpiteet"
+   ])
+(defn- tee-toimenpide-lisatty-parametri []
+  ["ja", ["ei", [
+                 "kohdeluokka",
+                 "toimenpiteet/varustetoimenpiteet",
+                 ["olemassa",
+                  varustetoimenpiteet-polku]]],
+   ["tai",
+    ["ei", loppuaika-olemassa],
+    (tee-loppuaika-parametri "pvm-suurempi-kuin")]])
+
+(defn- tee-kohteen-poisto-parametri []
+  ["ja", loppuaika-olemassa,
+   (tee-loppuaika-parametri "pvm-pienempi-kuin")])
+
+(defn- tee-muut-varustetoimenpiteet-parametri [db]
+  (let [nimikkeet (map #(str (:nimiavaruus %) "/" (:nimi %)) (q-nimikkeistot/hae-muut-varustetoimenpide-nimikkeet db))
+        ]
+    ["ja",
+    ["kohdeluokka" "toimenpiteet/varustetoimenpiteet"
+     ["joukossa"
+      varustetoimenpiteet-polku
+       nimikkeet]],
+     ["tai",
+      ["ei", loppuaika-olemassa
+       ],
+      (tee-loppuaika-parametri "pvm-suurempi-kuin")]]))
+(defn tee-toimenpide-parametri [db toimenpide]
+  (cond (= toimenpide :lisatty) (tee-toimenpide-lisatty-parametri)
+    (= toimenpide :kohteen-poisto) (tee-kohteen-poisto-parametri)
+    (= toimenpide :muut) (tee-muut-varustetoimenpiteet-parametri db)
+   :else (let [otsikko (cond
+                         (= toimenpide :korjaus) "Korjaus"
+                         (= toimenpide :tarkastettu) "Tarkastettu"
+                         (= toimenpide :puhdistaminen) "Puhdistaminen"
+
+                         :else (str "tuntematon varustetoimenpide " (name toimenpide)))
+          param (str "varustetoimenpide/" (:nimi (first (q-nimikkeistot/hae-nimike-otsikolla db {:otsikko otsikko}))))]
+
+      ["kohdeluokka" "toimenpiteet/varustetoimenpiteet"
+       ["joukossa"
+        varustetoimenpiteet-polku
+        [param]]])))
+
 (defn hae-urakan-varustetoteumat [{:keys [integraatioloki db asetukset]}
                                   {:keys [urakka-id kohdeluokat varustetyypit kuntoluokat tie aosa aeta losa leta
                                           hoitovuoden-kuukausi hoitokauden-alkuvuosi toimenpide]}]
@@ -307,13 +370,7 @@
                                       ["yleiset/perustiedot" "alkaen"]
                                       (second aikavali)]]
 
-                varustetoimenpide-parametri (when toimenpide
-                                              ["kohdeluokka" "toimenpiteet/varustetoimenpiteet"
-                                               ["joukossa"
-                                                ["toimenpiteet/varustetoimenpiteet"
-                                                 "ominaisuudet"
-                                                 "toimenpiteet"]
-                                                [toimenpide]]])
+                varustetoimenpide-parametri (when toimenpide (tee-toimenpide-parametri db toimenpide))
 
                 payload {:asetukset {:tyyppi "kohdeluokkahaku"
                                      :liitoshaku true}
@@ -429,7 +486,6 @@
                                         :otsikko (:otsikko ((keyword nimiavaruus kuntoluokka) kuntoluokka-info))}))
                                    ) (-> vastaus :components :schemas :nimikkeisto_kunto-ja-vauriotiedot_kuntoluokka :enum)))
                      (some-> vastaus :info :x-velho-nimikkeistot :kunto-ja-vauriotiedot/kuntoluokka :nimikkeistoversiot))))
-
 
             varustetoimenpiteiden-haku-onnistui?
             (seq (when hae-varustetoimenpiteet?

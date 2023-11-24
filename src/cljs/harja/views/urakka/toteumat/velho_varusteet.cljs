@@ -37,8 +37,7 @@
     :fmt-fn str}])
 
 (defn suodatuslomake [_e! _app]
-  (fn [e! {:keys [valinnat urakka kuntoluokat-nimikkeisto kohdeluokat-nimikkeisto toimenpiteet-nimikkeisto
-                  varustetyyppihaku] :as app}]
+  (fn [e! {:keys [valinnat urakka kuntoluokat-nimikkeisto kohdeluokat-nimikkeisto varustetyyppihaku] :as app}]
     (let [alkupvm (:alkupvm urakka)
           vuosi (pvm/vuosi alkupvm)
           hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
@@ -61,7 +60,7 @@
                                                                                       {:id i
                                                                                        :nimi v})
                                                                          (keys kohdeluokat-nimikkeisto))))
-          toimenpiteet (into [nil] toimenpiteet-nimikkeisto)
+          toimenpiteet (into [nil] v/varuste_toimenpiteet)
 
           tr-kentan-valitse-fn (fn [avain]
                                  (fn [event]
@@ -109,7 +108,7 @@
           :valinta valittu-toimenpide
           :vayla-tyyli? true
           :valitse-fn #(e! (v/->ValitseToimenpide %))
-          :format-fn #(or (:otsikko %) "Kaikki")
+          :format-fn #(or (:nimi %) "Kaikki")
           :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          toimenpiteet]
         [valinnat/monivalinta-pudotusvalikko

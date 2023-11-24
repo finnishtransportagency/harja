@@ -6,5 +6,13 @@ VALUES (:versio, :kohdeluokka, :tyyppi-avain, :nimiavaruus, :nimi, :otsikko) ON 
 SELECT * FROM velho_nimikkeisto
 WHERE :tyyppi-nimi = CONCAT(tyyppi_avain, '/', nimi);
 
+--name: hae-nimike-otsikolla
+SELECT nimi from velho_nimikkeisto
+WHERE tyyppi_avain = 'varustetoimenpide' AND otsikko = :otsikko;
+
+--name: hae-muut-varustetoimenpide-nimikkeet
+SELECT nimi as nimi, nimiavaruus as nimiavaruus FROM velho_nimikkeisto
+WHERE tyyppi_avain = 'varustetoimenpide' AND otsikko NOT IN ('Korjaus', 'Tarkastettu', 'Puhdistaminen');
+
 -- name: hae-nimikkeistot
 SELECT * FROM velho_nimikkeisto;

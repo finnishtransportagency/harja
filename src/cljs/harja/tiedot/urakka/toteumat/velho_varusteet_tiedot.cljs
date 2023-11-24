@@ -20,6 +20,13 @@
                   {:id 6 :nimi "Puuttuu" :css-luokka "kl-puuttuu"}
                   {:id 7 :nimi "Ei voitu tarkastaa" :css-luokka "kl-ei-voitu-tarkistaa"}])
 
+(def varuste_toimenpiteet [{:nimi "Lisätty" :toimenpide :lisatty }
+                  {:nimi "Korjaus" :toimenpide :korjaus }
+                  {:nimi "Tarkastettu" :toimenpide  :tarkastettu }
+                  {:nimi "Puhdistaminen" :toimenpide :puhdistaminen }
+                  {:nimi "Kohteen poisto" :toimenpide :kohteen-poisto }
+                  {:nimi "Muut" :toimenpide :muut }])
+
 (defn muodosta-tr-osoite [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as rivi}]
   (if tr-loppuosa
     (str tr-numero "/" tr-alkuosa "/" tr-alkuetaisyys "/" tr-loppuosa "/" tr-loppuetaisyys)
@@ -53,7 +60,7 @@
 (defn hakuparametrit [{:keys [valinnat]}]
   (let [varustetyypit (map muodosta-varustetyypin-hakuparametri @varustetyypit)
         kuntoluokat (map muodosta-ns-nimi-hakuparametri (:kuntoluokat valinnat))
-        toimenpide (muodosta-ns-nimi-hakuparametri (:toimenpide valinnat))]
+        toimenpide (:toimenpide (:toimenpide valinnat))]
     (merge
       (select-keys valinnat [:tie :aosa :aeta :losa :leta :hoitokauden-alkuvuosi :hoitovuoden-kuukausi :kuntoluokat :toteuma])
       {:urakka-id @nav/valittu-urakka-id
@@ -232,12 +239,12 @@
       {:onnistui ->HaeNimikkeistoOnnistui
        :epaonnistui ->HaeNimikkeistoEpaonnistui}))
 
+  ;
   HaeNimikkeistoOnnistui
   (process-event [{:keys [vastaus]} {:keys [valinnat] :as app}]
     (assoc app
       :kohdeluokat-nimikkeisto (dissoc (group-by :kohdeluokka vastaus) "")
       :kuntoluokat-nimikkeisto (filter #(= "kuntoluokka" (:nimiavaruus %)) vastaus)
-      :toimenpiteet-nimikkeisto (filter #(= "varustetoimenpide" (:nimiavaruus %)) vastaus)
       :varustetyyppihaku (tee-varustetyyppihaku valinnat (group-by :kohdeluokka vastaus))))
 
   HaeNimikkeistoEpaonnistui
