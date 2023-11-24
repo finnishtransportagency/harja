@@ -862,7 +862,7 @@
       (Thread/setDefaultUncaughtExceptionHandler
         (reify Thread$UncaughtExceptionHandler
           (uncaughtException [_ thread e]
-            (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e)))))
+            (log/error e "Säie " (.getName thread) " kaatui virheeseen: " (.getMessage e)))))
 
       (konfiguroi-lokitus asetukset)
       (if-let [virheet (tarkista-asetukset asetukset)]
