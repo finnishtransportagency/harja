@@ -72,40 +72,39 @@
   [req]
   (get-in req [:headers vaylapilvi-client-ip-header] (:remote-addr req)))
 
-(defn wrap-logging-context
-  "Luo lokituskontekstin tälle kyselylle.
-  Lokituskontekstia hyödynnetään logituksen metadatassa."
-  ([handler] (wrap-logging-context handler nil))
-  ([handler kayttaja]
-   (fn [req]
-     (log/with-context
-       (merge {:korrelaatio-id (UUID/randomUUID)
-               :client-ip (client-ip req)
-               :kayttajatunnus (or (get-in req [:headers "oam_remote_user"]) :tuntematon-kayttaja)}
-         ;; Jos käyttäjä-objekti on annettu, poimitaan siitä mukaan relevantteja tietoja.
-         (when kayttaja
-           ;; Admin (jarjestelmavastuuhenkilo)?
-           {:jvh? (roolit/jvh? kayttaja)}))
+(defmacro with-log-context
+  "Wrappaa kyselyyn liittyvän koodin lokituskontekstilla."
+  [req & body]
+  `(log/with-context
+    (merge {:korrelaatio-id (UUID/randomUUID)
+            :client-ip (client-ip ~req)
+            :kayttajatunnus (or (get-in ~req [:headers "oam_remote_user"]) :tuntematon-kayttaja)}
+      ;; Jos käyttäjä-objekti on annettu, poimitaan siitä mukaan relevantteja tietoja.
+      (when (:kayttaja ~req)
+        ;; Admin (jarjestelmavastuuhenkilo)?
+        {:jvh? (roolit/jvh? (:kayttaja ~req))}))
 
-       (handler req)))))
+     ~@body))
 
 (defn- reitita
   "Reititä sisääntuleva pyyntö käsittelijöille."
   [req kasittelijat vaadi-oikeustarkistus?]
-  (binding [oikeudet/*oikeustarkistus-tehty* (atom false)]
-    (try
-      (let [res (apply compojure/routing
-                  (if
-                    (= "/" (:uri req))
-                    (assoc req :uri "/index.html")
-                    req)
-                  (remove nil? kasittelijat))]
-        (when (ei-oikeustarkistusta-statuskoodit (:status res))
-          (oikeudet/ei-oikeustarkistusta!))
-        res)
-      (finally
-        (when (and vaadi-oikeustarkistus? (not @oikeudet/*oikeustarkistus-tehty*))
-          (log/warn "virhe: oikeustarkistusta ei tehty - uri:" (:uri req)))))))
+  (with-log-context req
+    (binding [oikeudet/*oikeustarkistus-tehty* (atom false)]
+      (try
+        (log/info (:uri req))
+        (let [res (apply compojure/routing
+                    (if
+                      (= "/" (:uri req))
+                      (assoc req :uri "/index.html")
+                      req)
+                    (remove nil? kasittelijat))]
+          (when (ei-oikeustarkistusta-statuskoodit (:status res))
+            (oikeudet/ei-oikeustarkistusta!))
+          res)
+        (finally
+          (when (and vaadi-oikeustarkistus? (not @oikeudet/*oikeustarkistus-tehty*))
+            (log/warn "virhe: oikeustarkistusta ei tehty - uri:" (:uri req))))))))
 
 (defn- transit-palvelun-polku [nimi]
   (str "/_/" (name nimi)))
@@ -335,11 +334,10 @@
       kutsu)))
 
 (defn- wrap-with-common-wrappers
-  "Käärii HTTP-käsittelijän ympärille keksejä ja lokituskontekstin."
+  "Käärii HTTP-pääkäsittelijän ympärille yleisiä wrappereita."
   [handler]
   (-> handler
-    (cookies/wrap-cookies)
-    (wrap-logging-context)))
+    (cookies/wrap-cookies)))
 
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
                          http-server kehitysmoodi
@@ -383,8 +381,7 @@
                       (reitita req (conj (mapv :fn ei-todennettavat)
                                        dev-resurssit resurssit) false)
                       ;; Reititä todennettavat käsittelijät
-                      (let [req (todennus/todenna-pyynto todennus req)
-                            todennettavat-kasittelijat (-> (mapv :fn todennettavat)
+                      (let [todennettavat-kasittelijat (-> (mapv :fn todennettavat)
                                                          (conj (partial index-kasittelija
                                                                  db
                                                                  oam-kayttajanimi
@@ -395,14 +392,8 @@
                                                                  oam-kayttajanimi
                                                                  kehitysmoodi
                                                                  anti-csrf-token-secret-key))
-                                                         (conj ui-kasittelija))
-                            ;; Todennettaville käsittelijöille ajetaan wrap-logging-context ja annetaan
-                            ;; kontekstille todennetun käyttäjä tiedot. Tämä korvaa default wrap-logging-context
-                            ;; kutsun bindaaman kontekstin, joka on tehty 'wrap-with-common-wrappers'-funktiossa.
-                            todennettavat-kasittelijat (mapv
-                                                         #(wrap-logging-context % (:kayttaja req))
-                                                         todennettavat-kasittelijat)]
-                        (reitita req todennettavat-kasittelijat true))))
+                                                         (conj ui-kasittelija))]
+                        (reitita (todennus/todenna-pyynto todennus req) todennettavat-kasittelijat true))))
                   (catch [:virhe :todennusvirhe] _
                     {:status 403 :body "Todennusvirhe"})
 
