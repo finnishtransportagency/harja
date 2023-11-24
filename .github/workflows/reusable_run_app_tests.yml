@@ -139,7 +139,7 @@ jobs:
         run: echo "value=${NAME_PREFIX}${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
       - name: Delete old branch build artifacts (only the latest is needed)
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         id: artifact
         with:
           script: |

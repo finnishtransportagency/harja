@@ -2,17 +2,17 @@
 -- Tallentaa uuden liitteen. Liitteen pitää olla tallennettuna jo ja fileyard UUID annettava.
 INSERT
   INTO liite
-       (nimi, tyyppi, koko, liite_oid, "fileyard-hash", pikkukuva, luoja, luotu, urakka, kuvaus, lahde)
-VALUES (:nimi, :tyyppi, :koko, :liite_oid, :fileyard-hash, :pikkukuva, :luoja, current_timestamp, :urakka,
-        :kuvaus, :lahdejarjestelma::lahde);
+       (nimi, tyyppi, koko, liite_oid, "fileyard-hash", s3hash, pikkukuva, luoja, luotu, urakka, kuvaus, lahde, "virustarkastettu?")
+VALUES (:nimi, :tyyppi, :koko, :liite_oid, :fileyard-hash, :s3hash, :pikkukuva, :luoja, current_timestamp, :urakka,
+        :kuvaus, :lahdejarjestelma::lahde, :virustarkastettu?);
 
 -- name: hae-liite-lataukseen
 -- Hakee liitteen tiedot sen latausta varten.
-SELECT "fileyard-hash", liite_oid, tyyppi, koko, urakka FROM liite WHERE id = :id;
+SELECT "fileyard-hash", liite_oid, s3hash, tyyppi, koko, urakka, "virustarkastettu?" FROM liite WHERE id = :id;
 
 -- name: hae-pikkukuva-lataukseen
 -- Hakee liitteen pikkukuvan sen latausta varten.
-SELECT pikkukuva, urakka FROM liite WHERE id = :id;
+SELECT pikkukuva, urakka, "virustarkastettu?" FROM liite WHERE id = :id;
 
 
 -- name: hae-urakan-liite-id
@@ -63,3 +63,17 @@ WHERE id IN (
 SELECT nimi, koko FROM liite l
  WHERE l.nimi = :nimi
    AND l.urakka = :urakka-id;
+
+-- name: merkitse-liite-virustarkistetuksi!
+-- Merkitsee annetulle s3hash arvolle liitteen virustarkistetuksi.
+-- Tätä tarvitaan s3 ämpäriin liitettyjen liitteiden käsittelyyn.
+UPDATE liite SET "virustarkastettu?" = TRUE WHERE s3hash = :s3hash;
+
+-- name: liite-virustarkastettu?
+-- luotu columni pitää sisällään suomen ajassa tallennetun timestampin. NOW() funktio palauttaa UTC ajan.
+-- Lisäämm
+SELECT l."virustarkastettu?" as "virustarkastettu?",
+       extract('epoch' FROM :nyt::TIMESTAMP) - extract('epoch' FROM l.luotu) as "sekuntia-luonnista",
+       l.s3hash
+  FROM liite l
+ WHERE l.id = :id;

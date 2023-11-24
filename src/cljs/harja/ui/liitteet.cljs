@@ -1,13 +1,12 @@
 (ns harja.ui.liitteet
   "Yleisiä UI-komponentteja liitteiden lataamisen hoitamiseksi."
   (:require [reagent.core :refer [atom] :as r]
-            [cljs.core.async :refer [<! >! timeout]]
+            [cljs.core.async :refer [<! >! timeout take!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.modal :as modal]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.ikonit :as ikonit]
             [harja.ui.img-with-exif :refer [img-with-exif]]
             [harja.fmt :as fmt]
             [harja.ui.komponentti :as komp]
@@ -54,12 +53,25 @@
   [img-with-exif {:class "kuva-modalissa"
                   :src (k/liite-url (:id liite))}])
 
+(defn tarkista-liitteen-virustarkistus [liite-id urakka]
+  (k/post! :onko-liite-virustarkastettu {:liite-id liite-id
+                                         :urakka urakka}))
+
 (defn- nayta-liite-modalissa [liite]
-  (modal/nayta!
-    {:otsikko (str "Liite: " (:nimi liite))
-     :leveys "80%"
-     :luokka "kuva-modal"}
-    (liitekuva-modalissa liite)))
+  (go (let [res (if (:virustarkastettu? liite)
+                  true
+                  (<! (tarkista-liitteen-virustarkistus (:id liite) (:urakka liite))))]
+        (if res
+          (modal/nayta!
+            {:otsikko (str "Liite: " (:nimi liite))
+             :leveys "80%"
+             :luokka "kuva-modal"}
+            (liitekuva-modalissa liite))
+          (modal/nayta!
+            {:otsikko (str "Liitteen virustarkastus käynnissä")
+             :leveys "80%"
+             :luokka "kuva-modal"}
+            (str "Liite voidaan näyttää, kun virustarkastus on tehty. Kokeile hetken päästä uudelleen."))))))
 
 (defn liitteen-poisto [liite poista-fn]
   [:span
@@ -99,15 +111,19 @@
   ([tiedosto] (liitetiedosto tiedosto {}))
   ([tiedosto {:keys [salli-poisto? poista-liite-fn nayta-koko?] :as optiot}]
    (let [nimi (:nimi tiedosto)
-         koko (:koko tiedosto)]
+         koko (:koko tiedosto)
+         virustarkastettu? (:virustarkastettu? tiedosto)]
      [:div.liite
       (if (naytettava-liite? tiedosto)
-        [:span
-         [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
-                                     :on-click #(nayta-liite-modalissa tiedosto)}]
-         [:span.liite-nimi (str nimi (when nayta-koko? (str " (" (sievenna-liitteen-koko koko) ") ")))]
-         (when salli-poisto?
-           [liitteen-poisto tiedosto poista-liite-fn])]
+        [:div
+         [:div
+          [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
+                                      :on-click #(nayta-liite-modalissa tiedosto)}]
+          [:span.liite-nimi (str nimi (when nayta-koko? (str " (" (sievenna-liitteen-koko koko) ") ")))]
+          (when salli-poisto?
+            [liitteen-poisto tiedosto poista-liite-fn])]
+         (when-not virustarkastettu?
+           [:span.virustarkistus (str "Virustarkastus käynnissä. Liitteen voi avata, kun tarkastus on tehty.")])]
         [:span
          [:a.liite-linkki
           {:target "_blank" :href (k/liite-url (:id tiedosto))}

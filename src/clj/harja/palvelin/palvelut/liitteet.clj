@@ -3,6 +3,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [ring.middleware.params :refer [wrap-params]]
+            [harja.pvm :as pvm]
             [harja.kyselyt.toteumat :as tot-q]
             [harja.kyselyt.liitteet :as liitteet-q]
             [taoensso.timbre :as log]
@@ -146,6 +147,22 @@
                           {(:linkkitaulu-domain-id domain-tiedot) domain-id
                            (:linkkitaulu-liite-id domain-tiedot) liite-id})))))
 
+(defn- onko-liite-virustarkastettu [db user urakka liite-id s3-url]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-liitteet user urakka)
+  (let [tiedot (first (liitteet-q/liite-virustarkastettu? db {:id liite-id :nyt (pvm/nyt)}))
+        _ (log/debug "onko-liite-virustarkastettu :: tiedot:" tiedot)
+        ;; Verrataan tiedoston luontia ja virustarkistusta. Jos aikaa on mennyt yli 60 sekuntia
+        ;; tiedoston luomisesta ja virustarkistus on edelleen tekemättä.
+        ;; Niin tehdään se uusiksi.
+        liitetiedosto (when (and (> (:sekuntia-luonnista tiedot) 60) (:s3hash tiedot))
+                        (liitteet/lue-s3-tiedosto s3-url (:s3hash tiedot) db))
+
+        tarkastettu? (cond
+                       (:virustarkastettu? tiedot) true
+                       (not (nil? liitetiedosto)) true
+                       :else false)]
+    tarkastettu?))
+
 (defrecord Liitteet []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -166,6 +183,10 @@
                                                         :domain domain
                                                         :liite-id liite-id
                                                         :domain-id domain-id})))
+    (julkaise-palvelu http-palvelin :onko-liite-virustarkastettu
+      (fn [user {:keys [liite-id urakka]}]
+        (onko-liite-virustarkastettu db user urakka liite-id (:s3-url (:liitteiden-hallinta this)))))
+
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
@@ -173,5 +194,6 @@
                      :tallenna-liite
                      :lataa-liite
                      :lataa-pikkukuva
-                     :poista-liite-linkki)
+                     :poista-liite-linkki
+      :liite-virustarkastettu?)
     this))
