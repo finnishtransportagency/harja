@@ -63,7 +63,6 @@
                         :paasta-virhe-lapi? true})))
 
 (extend-protocol tuck/Event
-
   HaeKustannukset
   (process-event [{hoitokauden-alkuvuosi :hoitokauden-alkuvuosi
                    aikavali-alkupvm :aikavali-alkupvm aikavali-loppupvm :aikavali-loppupvm} app]
@@ -75,9 +74,9 @@
   (process-event [{vastaus :vastaus} app]
     (let [data (kustannusten-seuranta/jarjesta-tehtavat vastaus)]
       (-> app
-          (assoc-in [:kustannukset-yhteensa] (:yhteensa data))
-          (assoc-in [:kustannukset] (:taulukon-rivit data))
-          (assoc :haku-kaynnissa? false))))
+        (assoc-in [:kustannukset-yhteensa] (:yhteensa data))
+        (assoc-in [:kustannukset] (:taulukon-rivit data))
+        (assoc :haku-kaynnissa? false))))
 
   KustannustenHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -87,15 +86,17 @@
   HaeBudjettitavoite
   (process-event [_ app]
     (tuck-apurit/post! :budjettitavoite
-                       {:urakka-id (-> @tila/yleiset :urakka :id)}
-                       {:onnistui ->HaeBudjettitavoiteHakuOnnistui
-                        :epaonnistui ->HaeBudjettitavoiteHakuEpaonnistui
-                        :paasta-virhe-lapi? true})
+      {:urakka-id (-> @tila/yleiset :urakka :id)}
+      {:onnistui ->HaeBudjettitavoiteHakuOnnistui
+       :epaonnistui ->HaeBudjettitavoiteHakuEpaonnistui
+       :paasta-virhe-lapi? true})
     app)
 
   HaeBudjettitavoiteHakuOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc app :budjettitavoite vastaus))
+    (assoc app
+      :budjettitavoite vastaus
+      :valittu-urakka (-> @tila/yleiset :urakka :id)))
 
   HaeBudjettitavoiteHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -105,9 +106,9 @@
   HaeTavoitehintojenOikaisut
   (process-event [{urakka :urakka} app]
     (tuck-apurit/post! :hae-tavoitehintojen-oikaisut
-                       {::urakka/id urakka}
-                       {:onnistui ->HaeTavoitehintojenOikaisutOnnistui
-                        :epaonnistui ->HaeTavoitehintojenOikaisutEpaonnistui})
+      {::urakka/id urakka}
+      {:onnistui ->HaeTavoitehintojenOikaisutOnnistui
+       :epaonnistui ->HaeTavoitehintojenOikaisutEpaonnistui})
     app)
 
   HaeTavoitehintojenOikaisutOnnistui
@@ -116,12 +117,12 @@
     ;; Muutetaan se {vuosi {0 {data}
     ;;                      1 {data}}}
     (assoc app :tavoitehinnan-oikaisut
-               ;; Merkitään samalla koskemattomiksi, jotta voidaan välttää turhien päivitysten tekeminen
-               (fmap #(zipmap (range) (map (fn [o] (-> o
-                                                      (assoc :koskematon true)
-                                                      (assoc :lisays-tai-vahennys (if (neg? (::valikatselmus/summa o))
-                                                                                    :vahennys
-                                                                                    :lisays)))) %)) vastaus)))
+      ;; Merkitään samalla koskemattomiksi, jotta voidaan välttää turhien päivitysten tekeminen
+      (fmap #(zipmap (range) (map (fn [o] (-> o
+                                            (assoc :koskematon true)
+                                            (assoc :lisays-tai-vahennys (if (neg? (::valikatselmus/summa o))
+                                                                          :vahennys
+                                                                          :lisays)))) %)) vastaus)))
 
   HaeTavoitehintojenOikaisutEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -149,9 +150,9 @@
   HaeUrakanPaatokset
   (process-event [{urakka :urakka} app]
     (tuck-apurit/post! :hae-urakan-paatokset
-                       {::urakka/id urakka}
-                       {:onnistui ->HaeUrakanPaatoksetOnnistui
-                        :epaonnistui ->HaeUrakanPaatoksetEpaonnistui})
+      {::urakka/id urakka}
+      {:onnistui ->HaeUrakanPaatoksetOnnistui
+       :epaonnistui ->HaeUrakanPaatoksetEpaonnistui})
     app)
 
   HaeUrakanPaatoksetOnnistui
@@ -182,12 +183,12 @@
           (e! (->HaeBudjettitavoite))))
       (hae-kustannukset urakka vuosi nil nil)
       (-> app
-          (assoc :valittu-kuukausi nil)
-          ;; Lupaukset on kiinteässä linkissä kustannusten seurannan kanssa joten tarvitaan hoitokaudellekin sama avain
-          (assoc :valittu-hoitokausi [(pvm/hoitokauden-alkupvm vuosi)
-                                      (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
-          (assoc :haku-kaynnissa? true)
-          (assoc :hoitokauden-alkuvuosi vuosi))))
+        (assoc :valittu-kuukausi nil)
+        ;; Lupaukset on kiinteässä linkissä kustannusten seurannan kanssa joten tarvitaan hoitokaudellekin sama avain
+        (assoc :valittu-hoitokausi [(pvm/hoitokauden-alkupvm vuosi)
+                                    (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+        (assoc :haku-kaynnissa? true)
+        (assoc :hoitokauden-alkuvuosi vuosi))))
 
   ValitseKuukausi
   (process-event [{urakka :urakka kuukausi :kuukausi vuosi :vuosi} app]
@@ -202,8 +203,8 @@
             (e! (->HaeBudjettitavoite))))
         (hae-kustannukset urakka vuosi (first valittu-kuukausi) (second valittu-kuukausi))
         (-> app
-            (assoc :haku-kaynnissa? true)
-            (assoc-in [:valittu-kuukausi] kuukausi)))))
+          (assoc :haku-kaynnissa? true)
+          (assoc-in [:valittu-kuukausi] kuukausi)))))
 
   AvaaValikatselmusLomake
   (process-event [_ app]

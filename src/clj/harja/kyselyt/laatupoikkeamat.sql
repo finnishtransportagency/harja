@@ -288,29 +288,29 @@ ORDER BY k.luotu ASC;
 
 -- name: hae-laatupoikkeaman-liitteet
 -- Hakee annetun laatupoikkeaman kaikki liitteet
-SELECT
-  l.id        AS id,
-  l.tyyppi    AS tyyppi,
-  l.koko      AS koko,
-  l.nimi      AS nimi,
-  l.liite_oid AS oid
-FROM liite l
-  JOIN laatupoikkeama_liite hl ON l.id = hl.liite
-WHERE hl.laatupoikkeama = :laatupoikkeamaid
-ORDER BY l.luotu ASC;
+SELECT l.id                  AS id,
+       l.tyyppi              AS tyyppi,
+       l.koko                AS koko,
+       l.nimi                AS nimi,
+       l.liite_oid           AS oid,
+       l."virustarkastettu?" AS "virustarkastettu?"
+  FROM liite l
+           JOIN laatupoikkeama_liite hl ON l.id = hl.liite
+ WHERE hl.laatupoikkeama = :laatupoikkeamaid
+ ORDER BY l.luotu ASC;
 
 -- name: hae-bonuksen-liitteet
 -- Hakee bonuksen liitteet
-select
-  l.id        as id,
-  l.tyyppi    as tyyppi,
-  l.koko      as koko,
-  l.nimi      as nimi,
-  l.liite_oid as oid
-from liite l
-  join erilliskustannus_liite el on l.id = el.liite
-where el.bonus = :bonus
-order by l.luotu asc;
+SELECT l.id                  AS id,
+       l.tyyppi              AS tyyppi,
+       l.koko                AS koko,
+       l.nimi                AS nimi,
+       l.liite_oid           AS oid,
+       l."virustarkastettu?" AS "virustarkastettu?"
+  FROM liite l
+           JOIN erilliskustannus_liite el ON l.id = el.liite
+ WHERE el.bonus = :bonus
+ ORDER BY l.luotu ASC;
 
 -- name: paivita-laatupoikkeaman-perustiedot<!
 -- Päivittää aiemmin luodun laatupoikkeaman perustiedot

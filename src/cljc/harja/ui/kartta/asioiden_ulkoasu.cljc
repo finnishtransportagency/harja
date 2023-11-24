@@ -633,6 +633,14 @@ tr-ikoni {:img (pinni-ikoni "musta")
   {:color alpha/fig-default
    :width 8})
 
+(def ei-kayty-tieturvallisuusverkko
+  {:ajovayla
+   {:color puhtaat/red-default
+    :width 8}
+   :kapy
+   {:color puhtaat/lemon-default
+    :width 8}})
+
 (defn tilan-vari [tila]
   (case tila
     "ehdotettu" "#f1b371" ;; LESS @orange
