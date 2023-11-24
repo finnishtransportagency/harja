@@ -942,5 +942,5 @@ SELECT CASE
            ELSE
                'ajovayla' END AS tyyppi
 FROM tieturvallisuusverkko
-         LEFT JOIN urakka u ON u.id = :urakka AND u.tyyppi = 'teiden-hoito'
+         JOIN urakka u ON u.id = :urakka AND u.tyyppi = 'teiden-hoito'
 WHERE ST_Intersects(geometria, (SELECT alue FROM urakka WHERE id = :urakka));
