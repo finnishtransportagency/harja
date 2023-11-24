@@ -795,7 +795,7 @@
 (defonce harja-jarjestelma nil)
 
 (defn- merkkaa-kaynnistyminen! []
-  (log/debug "Merkataan HARJAn käynnistyminen")
+  (log/info "Yritetään seuraavaksi käynnistää HARJA")
   (event-apurit/julkaise-tapahtuma :harja-tila
                                    {:viesti "Harja käynnistyy"
                                     :kaikki-ok? false}))
