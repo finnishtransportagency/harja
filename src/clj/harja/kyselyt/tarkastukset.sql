@@ -943,4 +943,4 @@ SELECT CASE
                'ajovayla' END AS tyyppi
 FROM tieturvallisuusverkko
          JOIN urakka u ON u.id = :urakka AND u.tyyppi = 'teiden-hoito'
-WHERE ST_Intersects(geometria, (SELECT alue FROM urakka WHERE id = :urakka));
+WHERE ST_Intersects(geometria, u.alue);
