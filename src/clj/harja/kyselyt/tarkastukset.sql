@@ -927,7 +927,7 @@ WITH tieturvallisuustarkastukset AS
           FROM tarkastus t
           WHERE t.urakka = :urakka
             AND t.aika BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP
-            AND t.tyyppi = 'tieturvallisuus'
+            AND t.tyyppi = 'tieturvallisuus'::tarkastustyyppi
             AND t.poistettu IS NOT TRUE)
 SELECT CASE
            WHEN (EXISTS(SELECT * FROM tieturvallisuustarkastukset WHERE sijainti IS NOT NULL)) THEN
