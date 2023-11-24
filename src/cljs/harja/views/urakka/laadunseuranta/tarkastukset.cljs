@@ -531,7 +531,9 @@
                          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
     (fn []
       [:span.tarkastukset
-       (when @nav/kartta-nakyvissa?
+       (when (and @nav/kartta-nakyvissa?
+               ;; Piilotettu toistaiseksi tuotannosta, kunnes tieturvallisuustarkastukset otetaan käyttöön.
+               (k/kehitysymparistossa?))
          [ui-valinnat/segmentoitu-ohjaus
           [{:nimi :tarkastukset
             :teksti "Tarkastukset"
