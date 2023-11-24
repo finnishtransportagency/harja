@@ -287,16 +287,16 @@ WHERE t.urakka = :urakka
 
 -- name: hae-tarkastuksen-liitteet
 -- Hakee annetun tarkastuksen kaikki liitteet
-SELECT
-  l.id,
-  l.tyyppi,
-  l.koko,
-  l.nimi,
-  l.liite_oid AS oid
-FROM liite l
-  JOIN tarkastus_liite tl ON l.id = tl.liite
-WHERE tl.tarkastus = :tarkastus
-ORDER BY l.luotu ASC;
+SELECT l.id,
+       l.tyyppi,
+       l.koko,
+       l.nimi,
+       l.liite_oid AS oid,
+       l."virustarkastettu?"
+  FROM liite l
+           JOIN tarkastus_liite tl ON l.id = tl.liite
+ WHERE tl.tarkastus = :tarkastus
+ ORDER BY l.luotu ASC;
 
 -- name: luo-tarkastus<!
 -- Luo uuden tarkastuksen
@@ -920,3 +920,27 @@ WHERE id = :id;
 
 --name: tarkastuksen-urakka
 SELECT urakka FROM tarkastus WHERE id = :id;
+
+-- name: hae-urakan-ei-kayty-tieturvallisuusverkko
+WITH tieturvallisuustarkastukset AS
+         (SELECT ST_UNION(t.sijainti) AS sijainti
+          FROM tarkastus t
+          WHERE t.urakka = :urakka
+            AND t.aika BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP
+            AND t.tyyppi = 'tieturvallisuus'::tarkastustyyppi
+            AND t.poistettu IS NOT TRUE)
+SELECT CASE
+           WHEN (EXISTS(SELECT * FROM tieturvallisuustarkastukset WHERE sijainti IS NOT NULL)) THEN
+               ST_DIFFERENCE(ST_INTERSECTION(geometria, u.alue),
+                             (SELECT sijainti FROM tieturvallisuustarkastukset))
+           ELSE
+               ST_INTERSECTION(geometria, u.alue)
+           END                AS sijainti,
+       CASE
+           WHEN tieturvallisuusverkko.tie > 70000 THEN
+               'kapy'
+           ELSE
+               'ajovayla' END AS tyyppi
+FROM tieturvallisuusverkko
+         JOIN urakka u ON u.id = :urakka AND u.tyyppi = 'teiden-hoito'
+WHERE ST_Intersects(geometria, u.alue);

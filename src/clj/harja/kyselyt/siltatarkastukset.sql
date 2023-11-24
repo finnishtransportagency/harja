@@ -203,7 +203,8 @@ SELECT st.id,
        liite.nimi                       AS liite_nimi,
        liite.tyyppi                     AS liite_tyyppi,
        liite.koko                       AS liite_koko,
-       liite.liite_oid                  AS liite_oid
+       liite.liite_oid                  AS liite_oid,
+       liite."virustarkastettu?"        AS "liite_virustarkastettu?"
 FROM siltatarkastus st
        LEFT JOIN siltatarkastus_kohde_liite skl ON st.id = skl.siltatarkastus
        LEFT JOIN liite ON skl.liite = liite.id
