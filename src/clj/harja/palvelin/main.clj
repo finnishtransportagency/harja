@@ -801,7 +801,7 @@
                                     :kaikki-ok? false}))
 
 (defn- merkkaa-kaynnistetyksi! []
-  (log/debug "Merkataan HARJA käynnistetyksi")
+  (log/info "HARJA käynnistetty")
   (event-apurit/julkaise-tapahtuma :harja-tila
                                    {:viesti "Harja käynnistetty"
                                     :kaikki-ok? true}))
@@ -880,6 +880,7 @@
         (System/exit 1)))))
 
 (defn sammuta-jarjestelma []
+  (log/info "HARJA sammutetaan")
   (when harja-jarjestelma
     (alter-var-root #'harja-jarjestelma
       (fn [s]
