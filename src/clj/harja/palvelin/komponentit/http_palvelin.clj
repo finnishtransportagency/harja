@@ -88,23 +88,28 @@
 
 (defn- reitita
   "Reititä sisääntuleva pyyntö käsittelijöille."
-  [req kasittelijat vaadi-oikeustarkistus?]
-  (with-log-context req
-    (binding [oikeudet/*oikeustarkistus-tehty* (atom false)]
-      (try
-        (log/info (:uri req))
-        (let [res (apply compojure/routing
-                    (if
-                      (= "/" (:uri req))
-                      (assoc req :uri "/index.html")
-                      req)
-                    (remove nil? kasittelijat))]
-          (when (ei-oikeustarkistusta-statuskoodit (:status res))
-            (oikeudet/ei-oikeustarkistusta!))
-          res)
-        (finally
-          (when (and vaadi-oikeustarkistus? (not @oikeudet/*oikeustarkistus-tehty*))
-            (log/warn "virhe: oikeustarkistusta ei tehty - uri:" (:uri req))))))))
+  ([req kasittelijat {:keys [vaadi-oikeustarkistus? lokita-kysely?]
+                      :or {vaadi-oikeustarkistus? true
+                           lokita-kysely? true}}]
+   (with-log-context req
+     (binding [oikeudet/*oikeustarkistus-tehty* (atom false)]
+       (try
+         (let [res (apply compojure/routing
+                     (if
+                       (= "/" (:uri req))
+                       (assoc req :uri "/index.html")
+                       req)
+                     (remove nil? kasittelijat))]
+
+           (when (and res lokita-kysely?)
+             (log/info (:uri req)))
+
+           (when (ei-oikeustarkistusta-statuskoodit (:status res))
+             (oikeudet/ei-oikeustarkistusta!))
+           res)
+         (finally
+           (when (and vaadi-oikeustarkistus? (not @oikeudet/*oikeustarkistus-tehty*))
+             (log/warn "virhe: oikeustarkistusta ei tehty - uri:" (:uri req)))))))))
 
 (defn- transit-palvelun-polku [nimi]
   (str "/_/" (name nimi)))
@@ -376,10 +381,14 @@
                                            oam-kayttajanimi
                                            random-avain
                                            csrf-token))]
-                    ;; Reititä ei-todennettavat käsittelijät
                     (or
-                      (reitita req (conj (mapv :fn ei-todennettavat)
-                                       dev-resurssit resurssit) false)
+                      ;; Reititä resurssien käsittelijät
+                      (reitita req [resurssit dev-resurssit] {:vaadi-oikeustarkistus? false
+                                                              :lokita-kysely? false})
+
+                      ; Reititä ei-todennettavat käsittelijät
+                      (reitita req (mapv :fn ei-todennettavat) {:vaadi-oikeustarkistus? false
+                                                                :lokita-kysely? true})
                       ;; Reititä todennettavat käsittelijät
                       (let [todennettavat-kasittelijat (-> (mapv :fn todennettavat)
                                                          (conj (partial index-kasittelija
@@ -393,7 +402,9 @@
                                                                  kehitysmoodi
                                                                  anti-csrf-token-secret-key))
                                                          (conj ui-kasittelija))]
-                        (reitita (todennus/todenna-pyynto todennus req) todennettavat-kasittelijat true))))
+                        (reitita (todennus/todenna-pyynto todennus req) todennettavat-kasittelijat
+                          {:vaadi-oikeustarkistus? true
+                           :lokita-kysely? true}))))
                   (catch [:virhe :todennusvirhe] _
                     {:status 403 :body "Todennusvirhe"})
 
