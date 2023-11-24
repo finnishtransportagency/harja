@@ -12,6 +12,8 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
+(defonce nakymassa? (atom false))
+
 (def +tarkastustyyppi->nimi+
   ;; Piilotetaan toistaiseksi tieturvallisuus kirjaus tuotannosta
   ;; Kun kaikki valmista, tämän koodin voi muuttaa vaan: (def +tarkastustyyppi->nimi+ tarkastukset/+tarkastustyyppi->nimi+)
@@ -131,6 +133,7 @@
                   (go (into [] (<! (hae-urakan-tarkastukset parametrit))))))))
 
 (defonce valittu-tarkastus (atom nil))
+(defonce valittu-karttataso (atom nil))
 
 (defn paivita-tarkastus-listaan!
   "Päivittää annetun tarkastuksen urakan-tarkastukset listaan, jos se on valitun aikavälin sisällä."

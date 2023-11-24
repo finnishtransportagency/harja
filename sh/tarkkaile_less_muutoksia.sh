@@ -22,8 +22,11 @@ while true; do
   then
     echo "Muutoksia huomattu LESS tiedostoissa";
     # shellcheck disable=SC2086
+    set +e
     npx lessc "${HARJA_DIR}"/dev-resources/less/application/application.less ${HARJA_DIR}/resources/public/css/application.css
     npx lessc "${HARJA_DIR}"/dev-resources/less/laadunseuranta/application/laadunseuranta.less "${HARJA_DIR}"/resources/public/css/laadunseuranta.css
+
+    echo "LESS käännös valmis";
   fi;
   LESS_TIEDOSTOT=$LESS_TIEDOSTOT_UUSI;
 done

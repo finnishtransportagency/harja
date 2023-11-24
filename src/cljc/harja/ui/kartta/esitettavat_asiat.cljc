@@ -290,6 +290,14 @@
   {:teksti "Tieturvallisuustarkastu-\nkseen kuuluva tie"
    :vari puhtaat/fig-default})
 
+(def ei-kayty-tieturvallisuusverkko-selite
+  {:ajovayla
+   {:teksti "Ei tarkastettu ollenkaan, ajoväylät"
+    :vari puhtaat/red-default}
+   :kapy
+   {:teksti "Ei tarkastettu ollenkaan, Kävely-\nja pyöräilytiet"
+    :vari puhtaat/lemon-default}})
+
 (defmethod asia-kartalle :tarkastus [tarkastus valittu?]
   (let [ikoni (ulkoasu/tarkastuksen-ikoni tarkastus (reitillinen-asia? tarkastus))
         viiva (ulkoasu/tarkastuksen-reitti tarkastus)
@@ -310,6 +318,11 @@
   {:type :tieturvallisuusverkko
    :selite tieturvallisuusverkko-selite
    :alue (maarittele-feature tieturvallisuustie false nil ulkoasu/tieturvallisuusverkko)})
+
+(defmethod asia-kartalle :ei-kayty-tieturvallisuusverkko [tieturvallisuustie _valittu?]
+  {:type :ei-kayty-tieturvallisuusverkko
+   :selite ((:tyyppi tieturvallisuustie) ei-kayty-tieturvallisuusverkko-selite)
+   :alue (maarittele-feature tieturvallisuustie false nil ((:tyyppi tieturvallisuustie) ulkoasu/ei-kayty-tieturvallisuusverkko))})
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma valittu?]
   (let [ikoni (ulkoasu/varustetoteuman-ikoni)]
