@@ -541,7 +541,7 @@
             :disabled? true}
            {:nimi :ei-kayty
             :teksti "Ei käyty"
-            :disabled? (not= :ei-kayty @tiedot/valittu-karttataso)}]
+            :disabled? (not= :tieturvallisuus @tiedot/tarkastustyyppi)}]
           @tiedot/valittu-karttataso
           {:luokka [:margin-top-32
                     :margin-bottom-16]
