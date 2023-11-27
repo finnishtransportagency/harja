@@ -5,6 +5,7 @@
 (defn koristele-lokiviesti
   "Käytä tätä apuria lokiviestin koristeluun määritellyillä koristelutageilla:
   esim. (log/error (koristele-lokiviesti loki/alert \"Hälytystason virhe!\"))"
-  [tag viesti]
-  (str " - " tag " - " viesti))
+  ([viesti] (koristele-lokiviesti viesti nil))
+  ([viesti tag]
+   (str (when tag (str " - " tag " - ")) viesti)))
 
