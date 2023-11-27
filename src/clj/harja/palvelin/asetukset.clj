@@ -295,6 +295,14 @@
       (when-not ei-logiteta?
         msg))))
 
+(defn- log-tag [context]
+  (let [tag (cond
+              ;; Admin? (jarjestelmavastuuhenkilo)
+              (:jvh? context) "ADMIN"
+              :else nil)]
+    (when tag
+      (str tag " "))))
+
 ;; Logituksen output-fn hyödyntää context-tietoja, jotka voidaan antaa lokittajalle eri nimiavaruuksissa
 ;; Hyödynnetään kontekstista kayttajatunnus, client-ip ja korrelaatio-id mikäli konteksti on saatavilla
 (defn log-output-fn
@@ -302,13 +310,14 @@
   [data]
   (let [{:keys [level ?err #_vargs msg_ ?ns-str ?file hostname_
                 timestamp_ ?line context #_?meta]} data
-        kayttajatunnus (:kayttajatunnus context :unidentified-user)
-        client-ip (:client-ip context :unknown-source)
-        korrelaatio-id (:korrelaatio-id context)]
+        {:keys [kayttajatunnus client-ip korrelaatio-id]} context
+        kayttajatunnus (or kayttajatunnus :tuntematon-kayttaja)
+        client-ip (or client-ip :tuntematon-client)]
     (str
       (force timestamp_) " "
       (force hostname_) " "
       (str/upper-case (name level)) " "
+      (log-tag context)
       "[" (or ?ns-str ?file "?") ":" (or ?line "?") "] - "
       (when context (str client-ip " "
                       korrelaatio-id " "

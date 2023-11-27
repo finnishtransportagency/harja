@@ -1,5 +1,6 @@
 (ns harja.palvelin.komponentit.http-palvelin
   (:require [com.stuartsierra.component :as component]
+            [harja.domain.roolit :as roolit]
             [org.httpkit.server :as http]
             [compojure.core :as compojure]
             [compojure.route :as route]
@@ -71,33 +72,42 @@
   [req]
   (get-in req [:headers vaylapilvi-client-ip-header] (:remote-addr req)))
 
-(defn wrap-logging-context
-  "Luo lokituskontekstin tälle kyselylle.
-  Lokituskontekstia hyödynnetään logituksen metadatassa."
-  [handler]
-  (fn [req]
-    (log/with-context {:korrelaatio-id (UUID/randomUUID)
-                       :client-ip (client-ip req)
-                       :kayttajatunnus (or (get-in req [:headers "oam_remote_user"]) :tuntematon-kayttaja)}
-      (handler req))))
+(defmacro with-log-context
+  "Wrappaa kyselyyn liittyvän koodin lokituskontekstilla."
+  [req & body]
+  `(log/with-context
+    (merge {:korrelaatio-id (UUID/randomUUID)
+            :client-ip (client-ip ~req)
+            :kayttajatunnus (or (get-in ~req [:headers "oam_remote_user"]) :tuntematon-kayttaja)}
+      ;; Jos käyttäjä-objekti on annettu, poimitaan siitä mukaan relevantteja tietoja.
+      (when (:kayttaja ~req)
+        ;; Admin (jarjestelmavastuuhenkilo)?
+        {:jvh? (roolit/jvh? (:kayttaja ~req))}))
+
+     ~@body))
 
 (defn- reitita
   "Reititä sisääntuleva pyyntö käsittelijöille."
-  [req kasittelijat vaadi-oikeustarkistus?]
-  (binding [oikeudet/*oikeustarkistus-tehty* (atom false)]
-    (try
-      (let [res (apply compojure/routing
-                  (if
-                    (= "/" (:uri req))
-                    (assoc req :uri "/index.html")
-                    req)
-                  (remove nil? kasittelijat))]
-        (when (ei-oikeustarkistusta-statuskoodit (:status res))
-          (oikeudet/ei-oikeustarkistusta!))
-        res)
-      (finally
-        (when (and vaadi-oikeustarkistus? (not @oikeudet/*oikeustarkistus-tehty*))
-          (log/warn "virhe: oikeustarkistusta ei tehty - uri:" (:uri req)))))))
+  ([req kasittelijat {:keys [vaadi-oikeustarkistus? lokita-kysely?]
+                      :or {vaadi-oikeustarkistus? true}}]
+   ;; Wrappaa lokituskonteksti reitityksen tasolla, jotta mahdollisen autentikoidun käyttäjän
+   ;; tiedot tulevat mukaan lokikontekstiin
+   (with-log-context req
+     (binding [oikeudet/*oikeustarkistus-tehty* (atom false)]
+       (try
+         (let [res (apply compojure/routing
+                     (if
+                       (= "/" (:uri req))
+                       (assoc req :uri "/index.html")
+                       req)
+                     (remove nil? kasittelijat))]
+
+           (when (ei-oikeustarkistusta-statuskoodit (:status res))
+             (oikeudet/ei-oikeustarkistusta!))
+           res)
+         (finally
+           (when (and vaadi-oikeustarkistus? (not @oikeudet/*oikeustarkistus-tehty*))
+             (log/warn "virhe: oikeustarkistusta ei tehty - uri:" (:uri req)))))))))
 
 (defn- transit-palvelun-polku [nimi]
   (str "/_/" (name nimi)))
@@ -314,6 +324,17 @@
        :headers {"Content-Type" "text/html"}
        :body "Virheellinen CSRF-token"})))
 
+(defn- wrap-lokita-kysely
+  "Lokittaa käsittelijän saaman kyselyn URI-polun"
+  [handler nimi lokita-kysely?]
+  (let [polku (transit-palvelun-polku nimi)]
+    (fn [req]
+      ;; Lokita ainoastaan polkuun osuvat kyselyt ja vain jos kyselyiden lokitus on sallittu
+      (when (and req (= polku (:uri req)) lokita-kysely?)
+        (log/info (:uri req)))
+
+      (handler req))))
+
 (defn- jaa-todennettaviin-ja-ei-todennettaviin [kasittelijat]
   (let [{ei-todennettavat true
          todennettavat false} (group-by #(or (:ei-todennettava %) false) kasittelijat)]
@@ -327,11 +348,10 @@
       kutsu)))
 
 (defn- wrap-with-common-wrappers
-  "Käärii HTTP-käsittelijän ympärille keksejä ja lokituskontekstin."
+  "Käärii HTTP-pääkäsittelijän ympärille yleisiä wrappereita."
   [handler]
   (-> handler
-    (cookies/wrap-cookies)
-    (wrap-logging-context)))
+    (cookies/wrap-cookies)))
 
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
                          http-server kehitysmoodi
@@ -370,22 +390,27 @@
                                            oam-kayttajanimi
                                            random-avain
                                            csrf-token))]
-                    (or (reitita req (conj (mapv :fn ei-todennettavat)
-                                       dev-resurssit resurssit) false)
-                      (reitita (todennus/todenna-pyynto todennus req)
-                        (-> (mapv :fn todennettavat)
-                          (conj (partial index-kasittelija
-                                  db
-                                  oam-kayttajanimi
-                                  kehitysmoodi
-                                  anti-csrf-token-secret-key))
-                          (conj (partial ls-index-kasittelija
-                                  db
-                                  oam-kayttajanimi
-                                  kehitysmoodi
-                                  anti-csrf-token-secret-key))
-                          (conj ui-kasittelija))
-                        true)))
+                    (or
+                      ;; Reititä resurssien käsittelijät
+                      (reitita req [resurssit dev-resurssit] {:vaadi-oikeustarkistus? false})
+
+                      ; Reititä ei-todennettavat käsittelijät
+                      (reitita req (mapv :fn ei-todennettavat) {:vaadi-oikeustarkistus? false})
+                      ;; Reititä todennettavat käsittelijät
+                      (let [todennettavat-kasittelijat (-> (mapv :fn todennettavat)
+                                                         (conj (partial index-kasittelija
+                                                                 db
+                                                                 oam-kayttajanimi
+                                                                 kehitysmoodi
+                                                                 anti-csrf-token-secret-key))
+                                                         (conj (partial ls-index-kasittelija
+                                                                 db
+                                                                 oam-kayttajanimi
+                                                                 kehitysmoodi
+                                                                 anti-csrf-token-secret-key))
+                                                         (conj ui-kasittelija))]
+                        (reitita (todennus/todenna-pyynto todennus req) todennettavat-kasittelijat
+                          {:vaadi-oikeustarkistus? true}))))
                   (catch [:virhe :todennusvirhe] _
                     {:status 403 :body "Todennusvirhe"})
 
@@ -417,7 +442,11 @@
   HttpPalvelut
   (julkaise-palvelu [http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))
   (julkaise-palvelu [http-palvelin nimi palvelu-fn optiot]
-    (let [ar (tyokalut/arityt palvelu-fn)
+    ;; Palvelun julkaisun yhteydessä käsittelijöitä wrapataan wrap-lokita-kysely kääreellä
+    ;; Wrappaus tehdään tällä tasolla, jotta rajapinnan optioissa voidaan joustavasti kytkeä lokitus
+    ;; lokituksen kannalta epärelevanteilta rajapinnoilta pois.
+    (let [lokita-kysely? (get optiot :lokita-kysely? true)
+          ar (tyokalut/arityt palvelu-fn)
           transaktio-fn (if (get optiot :trace true)
                           (fn [& args]
                             (nr/with-newrelic-transaction
@@ -430,9 +459,11 @@
                           palvelu-fn)]
       (if (:ring-kasittelija? optiot)
         (swap! sessiottomat-kasittelijat conj {:nimi nimi
-                                               :fn (if (= false (:tarkista-polku? optiot))
-                                                     transaktio-fn
-                                                     (ring-kasittelija nimi transaktio-fn))
+                                               :fn (->
+                                                     (if (= false (:tarkista-polku? optiot))
+                                                       transaktio-fn
+                                                       (ring-kasittelija nimi transaktio-fn))
+                                                     (wrap-lokita-kysely nimi lokita-kysely?))
                                                :ei-todennettava (:ei-todennettava optiot)})
         (do
           (when-let [liikaa-parametreja (some #(when (or (= 0 %) (> % 2)) %) ar)]
@@ -443,11 +474,15 @@
           (when (ar 2)
             ;; POST metodi, kutsutaan kutsusta parsitulla EDN objektilla
             (swap! kasittelijat
-              conj {:nimi nimi :fn (transit-post-kasittelija nimi transaktio-fn optiot)}))
+              conj {:nimi nimi :fn (->
+                                     (transit-post-kasittelija nimi transaktio-fn optiot)
+                                     (wrap-lokita-kysely nimi lokita-kysely?))}))
           (when (ar 1)
             ;; GET metodi, vain käyttäjätiedot parametrina
             (swap! kasittelijat
-              conj {:nimi nimi :fn (transit-get-kasittelija nimi transaktio-fn optiot)}))))))
+              conj {:nimi nimi :fn (->
+                                     (transit-get-kasittelija nimi transaktio-fn optiot)
+                                     (wrap-lokita-kysely nimi lokita-kysely?))}))))))
 
   (poista-palvelu [this nimi]
     (swap! kasittelijat
