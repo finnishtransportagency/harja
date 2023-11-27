@@ -795,13 +795,13 @@
 (defonce harja-jarjestelma nil)
 
 (defn- merkkaa-kaynnistyminen! []
-  (log/debug "Merkataan HARJAn käynnistyminen")
+  (log/info "Yritetään seuraavaksi käynnistää HARJA")
   (event-apurit/julkaise-tapahtuma :harja-tila
                                    {:viesti "Harja käynnistyy"
                                     :kaikki-ok? false}))
 
 (defn- merkkaa-kaynnistetyksi! []
-  (log/debug "Merkataan HARJA käynnistetyksi")
+  (log/info "HARJA käynnistetty")
   (event-apurit/julkaise-tapahtuma :harja-tila
                                    {:viesti "Harja käynnistetty"
                                     :kaikki-ok? true}))
@@ -862,7 +862,7 @@
       (Thread/setDefaultUncaughtExceptionHandler
         (reify Thread$UncaughtExceptionHandler
           (uncaughtException [_ thread e]
-            (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e)))))
+            (log/error e "Säie " (.getName thread) " kaatui virheeseen: " (.getMessage e)))))
 
       (konfiguroi-lokitus asetukset)
       (if-let [virheet (tarkista-asetukset asetukset)]
@@ -880,6 +880,7 @@
         (System/exit 1)))))
 
 (defn sammuta-jarjestelma []
+  (log/info "HARJA sammutetaan")
   (when harja-jarjestelma
     (alter-var-root #'harja-jarjestelma
       (fn [s]
