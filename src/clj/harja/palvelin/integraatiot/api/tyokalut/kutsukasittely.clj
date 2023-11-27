@@ -415,9 +415,7 @@
                     headerit
                     body
                     #(let
-                       [kayttaja (hae-kayttaja db (get
-                                                    (todennus/prosessoi-kayttaja-headerit (:headers request))
-                                                    "oam_remote_user"))
+                       [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
                         ;; Tarkista api oikeus mikäli halutaan tarkistaa 
                         vaadittu-api-oikeus (if-not (= vaadittu-api-oikeus :ei-api-oikeustarkastusta)
                                               (do
@@ -463,9 +461,7 @@
                     headerit
                     body
                     #(let
-                       [kayttaja (hae-kayttaja db (get
-                                                    (todennus/prosessoi-kayttaja-headerit (:headers request))
-                                                    "oam_remote_user"))
+                       [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
                         origin-header (get (:headers request) "origin")
                         kutsun-data (lue-kutsu xml? kutsun-skeema request body)
                         vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)
@@ -493,9 +489,7 @@
     {:status 415
      :headers {"Content-Type" "text/plain"}
      :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
-    (let [kayttaja (hae-kayttaja db (get
-                                      (todennus/prosessoi-kayttaja-headerit (:headers request))
-                                      "oam_remote_user"))
+    (let [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
           xml? (= (kutsun-formaatti request) "xml")
           tapahtuma-id (when integraatioloki
                          (lokita-kutsu integraatioloki resurssi request nil))
@@ -530,9 +524,7 @@
      :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
     (let [kutsun-kesto-alkaa (System/currentTimeMillis)
           request-origin (get (:headers request) "origin")
-          kayttaja (hae-kayttaja db (get
-                                      (todennus/prosessoi-kayttaja-headerit (:headers request))
-                                      "oam_remote_user"))
+          kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
           tapahtuma-id (when integraatioloki
                          (lokita-kutsu integraatioloki resurssi request nil))
           parametrit (:params request)
@@ -601,9 +593,7 @@
                     body
                     #(let
                        [kayttaja (hae-kayttaja db
-                                   (get
-                                     (todennus/prosessoi-kayttaja-headerit (:headers request))
-                                     "oam_remote_user"))
+                                   (get (:headers request) "oam_remote_user"))
                         origin-header (get (:headers request) "origin")
                         kutsun-data (lue-kutsu xml? kutsun-skeema request body)
                         vastauksen-data (kasittele-kutsu-fn db kutsun-data tapahtuma-id)
