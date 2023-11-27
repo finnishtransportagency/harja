@@ -250,7 +250,7 @@ UPDATE kustannusarvioitu_tyo
 SET osio = 'hoidonjohtopalkkio'
 WHERE id IN (SELECT id FROM hoidonjohtopalkkio);
 
--- Johto- ja hallintokorvaukset
+-- Johto- ja hallintakorvaukset
 WITH hoidonjohtopalkkio AS
          (SELECT kat.id
           FROM kustannusarvioitu_tyo kat
