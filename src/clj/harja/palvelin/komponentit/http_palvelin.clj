@@ -76,13 +76,13 @@
   "Wrappaa kyselyyn liittyvän koodin lokituskontekstilla."
   [req & body]
   `(log/with-context
-    (merge {:korrelaatio-id (UUID/randomUUID)
-            :client-ip (client-ip ~req)
-            :kayttajatunnus (or (get-in ~req [:headers "oam_remote_user"]) :tuntematon-kayttaja)}
-      ;; Jos käyttäjä-objekti on annettu, poimitaan siitä mukaan relevantteja tietoja.
-      (when (:kayttaja ~req)
-        ;; Admin (jarjestelmavastuuhenkilo)?
-        {:jvh? (roolit/jvh? (:kayttaja ~req))}))
+     (merge {:korrelaatio-id (UUID/randomUUID)
+             :client-ip (client-ip ~req)
+             :kayttajatunnus (or (get-in ~req [:headers "oam_remote_user"]) :tuntematon-kayttaja)}
+       ;; Jos käyttäjä-objekti on annettu, poimitaan siitä mukaan relevantteja tietoja.
+       (when (:kayttaja ~req)
+         ;; Admin (jarjestelmavastuuhenkilo)?
+         {:jvh? (roolit/jvh? (:kayttaja ~req))}))
 
      ~@body))
 
@@ -335,6 +335,23 @@
 
       (handler req))))
 
+(defn wrap-prosessoi-headerit
+  "Palauttaa headerit sellaisenaan, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
+  Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään
+  muiden headereiden joukkoon."
+  [handler]
+  (fn [req]
+    (->
+      (assoc req :headers (todennus/prosessoi-kayttaja-headerit (:headers req)))
+      (handler))))
+
+(defn wrap-with-common-wrappers
+  "Käärii HTTP-pääkäsittelijän ympärille yleisiä wrappereita."
+  [handler]
+  (-> handler
+    (cookies/wrap-cookies)
+    (wrap-prosessoi-headerit)))
+
 (defn- jaa-todennettaviin-ja-ei-todennettaviin [kasittelijat]
   (let [{ei-todennettavat true
          todennettavat false} (group-by #(or (:ei-todennettava %) false) kasittelijat)]
@@ -342,16 +359,10 @@
 
 (defn korvaa-ehka-oletuskayttajalla [kutsu]
   ;; Jos asetukset mahdollistaa ja kutsussa ei ole käyttäjätietoja, käytetään oletuskäyttöoikeuksia
-  (let [headers (todennus/prosessoi-kayttaja-headerit (:headers kutsu))]
+  (let [headers (:headers kutsu)]
     (if (empty? (get headers "oam_remote_user"))
       (assoc kutsu :headers (conj headers {"oam_remote_user" "oletus-kaytto-oikeudet"}))
       kutsu)))
-
-(defn- wrap-with-common-wrappers
-  "Käärii HTTP-pääkäsittelijän ympärille yleisiä wrappereita."
-  [handler]
-  (-> handler
-    (cookies/wrap-cookies)))
 
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
                          http-server kehitysmoodi
@@ -379,9 +390,7 @@
                               (korvaa-ehka-oletuskayttajalla req)
                               req)
                         ui-kasittelijat (mapv :fn @kasittelijat)
-                        oam-kayttajanimi (get
-                                           (todennus/prosessoi-kayttaja-headerit (:headers req))
-                                           "oam_remote_user")
+                        oam-kayttajanimi (get (:headers req) "oam_remote_user")
                         random-avain (get (:headers req) "x-csrf-token")
                         csrf-token (when random-avain (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key))
                         _ (when csrf-token (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi csrf-token (time/now)))
