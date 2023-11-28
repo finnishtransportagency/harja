@@ -1,17 +1,17 @@
 (ns harja.palvelin.integraatiot.yha.yha-paikkauskomponentti
   (:require [com.stuartsierra.component :as component]
-            [hiccup.core :refer [html]]
-            [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
-            [harja.palvelin.integraatiot.yha.sanomat
-             [paikkauskohteen-lahetyssanoma :as paikkauskohteen-lahetyssanoma]
-             [paikkauskohteen-poistosanoma :as paikkauskohteen-poistosanoma]]
-            [harja.kyselyt.paikkaus :as q-paikkaus]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [cheshire.core :as cheshire]
-            [harja.pvm :as pvm]
-            [harja.palvelin.integraatiot.yha.yha-yhteiset :as yha-yhteiset])
+    [harja.palvelin.tyokalut.lukot :as lukot]
+    [taoensso.timbre :as log]
+    [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
+    [harja.palvelin.integraatiot.yha.sanomat
+     [paikkauskohteen-lahetyssanoma :as paikkauskohteen-lahetyssanoma]
+     [paikkauskohteen-poistosanoma :as paikkauskohteen-poistosanoma]]
+    [harja.kyselyt.paikkaus :as q-paikkaus]
+    [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+    [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+    [cheshire.core :as cheshire]
+    [harja.pvm :as pvm]
+    [harja.palvelin.integraatiot.yha.yha-yhteiset :as yha-yhteiset])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-paikkauskohteen-lahetyksessa+ ::yha-virhe-paikkauskohteen-lahetyksessa)
@@ -131,11 +131,15 @@
 (defn- laheta-tiedot-yhaan-uudelleen! [integraatioloki db asetukset]
   (ajastettu-tehtava/ajasta-paivittain [1 10 0]
     (do
-      (log/info "ajasta-paivittain :: YHA uudelleenlähetykset :: Alkaa " (pvm/nyt))
+      (log/info "ajasta-paivittain :: YHA-paikkausten uudelleenlähetykset" )
       (fn [_]
-          (log/debug "Ajastettu tehtävä käynnistyy: YHA uudelleenlähetykset.")
-          (laheta-paikkauskohteet-yhaan-uudelleen integraatioloki db asetukset)
-          (poista-paikkauskohteet-yhasta-uudelleen integraatioloki db asetukset)))))
+        (lukot/yrita-ajaa-lukon-kanssa
+          db
+          "yha-paikkaukset"
+          #(do
+             (log/info "Ajastettu tehtävä käynnistyy: YHA-paikkausten uudelleenlähetykset")
+             (laheta-paikkauskohteet-yhaan-uudelleen integraatioloki db asetukset)
+             (poista-paikkauskohteet-yhasta-uudelleen integraatioloki db asetukset)))))))
 
 
 (defrecord YhaPaikkaukset [asetukset]
@@ -143,7 +147,7 @@
   (start [{:keys [integraatioloki db] :as this}]
 
     (assoc this ::uudelleen-lahetykset-yhaan
-                (laheta-tiedot-yhaan-uudelleen! integraatioloki db asetukset)))
+      (laheta-tiedot-yhaan-uudelleen! integraatioloki db asetukset)))
   (stop [this]
     ((::uudelleen-lahetykset-yhaan this))
     this)
