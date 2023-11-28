@@ -335,7 +335,7 @@
 
       (handler req))))
 
-(defn- wrap-prosessoi-headerit
+(defn wrap-prosessoi-headerit
   "Palauttaa headerit sellaisenaan, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
   Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään
   muiden headereiden joukkoon."
@@ -345,7 +345,7 @@
       (assoc req :headers (todennus/prosessoi-kayttaja-headerit (:headers req)))
       (handler))))
 
-(defn- wrap-with-common-wrappers
+(defn wrap-with-common-wrappers
   "Käärii HTTP-pääkäsittelijän ympärille yleisiä wrappereita."
   [handler]
   (-> handler
