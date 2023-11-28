@@ -74,7 +74,7 @@
         :body [{:type "text/html; charset=UTF-8"
                 :content sisalto}]})))
   (laheta-ulkoisella-jarjestelmalla-viesti! [_ lahettaja vastaanottaja otsikko sisalto headers username password port]
-    (let [_ (log/debug "VainLahetys :: postal :: Lähetetään ulkoisen smtp palvelimen kautta")
+    (let [_ (log/info "VainLahetys :: postal :: Lähetetään ulkoisen smtp palvelimen kautta")
           smtp-asetukset {:host palvelin
                           :user username
                           :pass password
