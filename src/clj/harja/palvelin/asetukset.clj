@@ -159,7 +159,9 @@
 
    (s/optional-key :labyrintti) {:url s/Str
                                  :kayttajatunnus s/Str
-                                 :salasana s/Str}
+                                 :salasana s/Str
+                                 :sms-url s/Str
+                                 :apiavain s/Str}
 
    (s/optional-key :virustarkistus) {:url s/Str}
    (s/optional-key :tiedostopesula) {:base-url s/Str}
