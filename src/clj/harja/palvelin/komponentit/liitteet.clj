@@ -82,22 +82,22 @@
   3. S3 tarkistaa onko tiedostossa viruksia ja tagittaa tiedoston"
   [s3-url input-stream-sisalto tiedostonimi]
   (try
-    (let [_ (log/debug "tallenna-s3 :: tiedostonimi: " tiedostonimi)
+    (let [_ (log/info "tallenna-s3 :: tiedostonimi: " tiedostonimi)
           ;; Siirretään tiedostot S3:lle nimettynä uusiksi. Uusi nimi on tallennettu kantaan, jota kautta
           ;; tiedostot saadaan sitten haettua
           s3hash (str/trim (str (pvm/iso8601 (pvm/nyt)) "-" (UUID/randomUUID) "-" tiedostonimi))
           ;; Generoi presignedurl, johon varsinainen liite lähetetään
           vastaus @(http/post s3-url {:body (cheshire.core/encode {"key" s3hash "operation" "put"})
                                       :timeout 50000})
-          _ (log/debug "Generoi presignedurl :: vastaus " vastaus)
+          _ (log/info "Generoi presignedurl :: vastaus " vastaus)
           ;; Vastauksesta parsitaan varsinainen url, johon liite lähetetään
           varsinainen-put-url (when (= 200 (:status vastaus))
                                  (str/trim (get (cheshire.core/decode (:body vastaus)) "url")))
-          _ (log/debug "Lähetetään tiedosto urliin: " varsinainen-put-url)
+          _ (log/info "Lähetetään tiedosto urliin: " varsinainen-put-url)
           liite-vastaus (when varsinainen-put-url
                           @(http/put varsinainen-put-url {:body input-stream-sisalto}))
           _ (if varsinainen-put-url
-              (log/debug "Liitteen tallennuksen vastaus: " liite-vastaus)
+              (log/info "Liitteen tallennuksen vastaus: " liite-vastaus)
               (log/error "Ei saatu yhteyttä S3:seen. Liitetiedosto jää lähettämättä "))]
 
       ;; Jos lataus osoitetta ei saatu, palautetaan nil
