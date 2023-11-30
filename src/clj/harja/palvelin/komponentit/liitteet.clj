@@ -306,7 +306,7 @@
     (dissoc
       (cond
         ;; Jos fileyard käytössä
-        fileyard-hash (assoc liite :data (lue-fileyard-tiedosto fileyard-client fileyard-hash))
+        (and fileyard-client fileyard-hash) (assoc liite :data (lue-fileyard-tiedosto fileyard-client fileyard-hash))
         ;; Jos S3 tallennus käytössä
         (= :aws alusta)
         (assoc liite :data (lue-s3-tiedosto s3-url (str s3hash) db))
