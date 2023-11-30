@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.api-jarjestelmatunnukset
-  (:require [harja.kyselyt.konversio :as konv]
+  (:require [clojure.string :as str]
+            [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.api-jarjestelmatunnukset :as q]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
@@ -30,16 +31,23 @@
 
 (defn lisaa-kayttajalle-oikeus [db user payload]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
+  (log/info "Lisätään käyttäjälle:" (:kayttajanimi payload) "oikeus:" (:oikeus payload))
+
   (q/lisaa-kayttajalle-oikeus! db {:oikeus (:oikeus payload)
                                    :kayttajanimi (:kayttajanimi payload)}))
 
 (defn poista-kayttajalta-oikeus [db user payload]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
+  (log/info "Poistetaan käyttäjältä:" (:kayttajanimi payload) "oikeus:" (:oikeus payload))
+
   (q/poista-kayttajalta-oikeus! db {:oikeus (:oikeus payload)
                                     :kayttajanimi (:kayttajanimi payload)}))
 
 (defn tallenna-jarjestelmatunnukset [db user tunnukset]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
+
+  (log/info "Tallennetaan järjestelmätunnukset:" (str/join "," (map :kayttajanimi tunnukset)))
+
   (jdbc/with-db-transaction [c db]
     (doseq [{:keys [id kayttajanimi kuvaus organisaatio poistettu]} tunnukset]
       (if poistettu
@@ -56,6 +64,9 @@
 
 (defn tallenna-jarjestelmatunnuksen-lisaoikeudet [db user {:keys [oikeudet kayttaja-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
+
+  (log/info "Tallennetaan järjestelmätunnusten lisäoikeudet:" (pr-str oikeudet))
+
   (jdbc/with-db-transaction [c db]
     (doseq [{:keys [id urakka-id poistettu]} oikeudet]
       (if poistettu

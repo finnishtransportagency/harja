@@ -113,10 +113,14 @@
         jwt (str (str/join "." jwt) "." (nth x-iam-data 2))]
     {"x-iam-data" jwt}))
 (deftest cognito-headereiden-purku
-  (let [todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)
+  (let [handler (->
+                  (fn [req] req)
+                  (harja.palvelin.komponentit.http-palvelin/wrap-with-common-wrappers))
+        todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)
         destia-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'")))]
     (testing "Cognito headeri: x-iam-data on purettu oikein ja tarvittava OAM-data on saatu"
-      (let [req (todenna {:headers (testi-cognito-headerit)})]
+      (let [req (handler {:headers (testi-cognito-headerit)})
+            req (todenna req)]
 
         (is (= (get-in req [:kayttaja :organisaatio :id]) destia-id))
         (is (= (get-in req [:kayttaja :sahkoposti]) "daniel@example.com"))
