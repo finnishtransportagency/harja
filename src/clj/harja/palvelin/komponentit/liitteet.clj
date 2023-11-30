@@ -85,7 +85,7 @@
     (let [_ (log/info "tallenna-s3 :: tiedostonimi: " tiedostonimi)
           ;; Siirretään tiedostot S3:lle nimettynä uusiksi. Uusi nimi on tallennettu kantaan, jota kautta
           ;; tiedostot saadaan sitten haettua
-          s3hash (str/trim (str (pvm/iso8601 (pvm/nyt)) "-" (UUID/randomUUID) "-" tiedostonimi))
+          s3hash (str/trim (str (pvm/iso8601 (pvm/nyt)) "-" (UUID/randomUUID)))
           ;; Generoi presignedurl, johon varsinainen liite lähetetään
           vastaus @(http/post s3-url {:body (cheshire.core/encode {"key" s3hash "operation" "put"})
                                       :timeout 50000})
@@ -306,7 +306,7 @@
     (dissoc
       (cond
         ;; Jos fileyard käytössä
-        fileyard-hash (assoc liite :data (lue-fileyard-tiedosto fileyard-client fileyard-hash))
+        (and fileyard-client fileyard-hash) (assoc liite :data (lue-fileyard-tiedosto fileyard-client fileyard-hash))
         ;; Jos S3 tallennus käytössä
         (= :aws alusta)
         (assoc liite :data (lue-s3-tiedosto s3-url (str s3hash) db))
