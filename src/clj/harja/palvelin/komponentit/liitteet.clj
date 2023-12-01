@@ -117,20 +117,20 @@
   4. Jos tiedosto saadaan palautettua, merkataan se automaattisesti virustarkistetuksi tietokantaan."
   [s3-url s3hash db]
   (try
-    (let [_ (log/debug "lue-s3-tiedosto")
+    (let [_ (log/info "lue-s3-tiedosto")
           ;; Generoi presignedurl, josta liite haetaan
           vastaus @(http/post s3-url {:body (cheshire.core/encode {"key" (str s3hash) "operation" "get"})
                                       :timeout 50000})
-          _ (log/debug "lue-s3-tiedosto :: vastaus:" vastaus)
+          _ (log/info "lue-s3-tiedosto :: vastaus:" vastaus)
           _ (when (not= 200 (:status vastaus))
               (log/error "File: " s3hash " got download error: " (:body vastaus)))
 
           ;; Vastauksesta parsitaan varsinainen url, josta liite ladataan
           varsinainen-get-url (when (= 200 (:status vastaus)) (str/trim (get (cheshire.core/decode (:body vastaus)) "url")))
-          _ (log/debug "lue-s3-tiedosto :: varsinainen-get-url:" varsinainen-get-url)
+          _ (log/info "lue-s3-tiedosto :: varsinainen-get-url:" varsinainen-get-url)
 
           liite (when varsinainen-get-url @(http/get varsinainen-get-url))
-          _ (log/debug "lue-s3-tiedosto :: liite:" liite)
+          _ (log/info "lue-s3-tiedosto :: liite:" liite)
 
           ;; Jos liite saatiin, merkitään kantaan, että se on virustarkastettu
           _ (when (= 200 (:status liite)) (liitteet-q/merkitse-liite-virustarkistetuksi! db {:s3hash s3hash}))]
