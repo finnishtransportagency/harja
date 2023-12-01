@@ -89,6 +89,7 @@ jobs:
     #       kuin kutsuva workflowikin.
     secrets:
       aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   # Automaattinen matrix-deployment useaan ympäristöön (workflow_run triggerillä)
   deploy-to-ecs-matrix:
@@ -116,4 +117,5 @@ jobs:
     #       kuin kutsuva workflowikin.
     secrets:
       aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
