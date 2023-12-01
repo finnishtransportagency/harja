@@ -93,26 +93,6 @@ SELECT id,
   FROM lupaus_vastaus
  WHERE id = :id;
 
--- name: lisaa-lupaus-vastaus<!
-INSERT INTO lupaus_vastaus
-("lupaus-id",
- "urakka-id",
- kuukausi,
- vuosi,
- paatos,
- vastaus,
- "lupaus-vaihtoehto-id",
- luoja)
-VALUES
-(:lupaus-id,
- :urakka-id,
- :kuukausi,
- :vuosi,
- :paatos,
- :vastaus,
- :lupaus-vaihtoehto-id,
- :kayttaja-id);
-
 -- name: paivita-lupaus-vastaus!
 UPDATE lupaus_vastaus
    SET vastaus                = :vastaus,
