@@ -137,9 +137,9 @@
                          (throw+ {:type virheet/+viallinen-kutsu+
                                   :virheet [{:koodi virheet/+virheellinen-sijainti+
                                              :viesti "Virheellinen Y-koordinaatti"}]})))
-          ;; Aloitetaan pistehaku 50 m aloitustoleranssilla
+          ;; Aloitetaan pistehaku 1 m aloitustoleranssilla
           ;; Mikäli osumia ei tule, hakutoleranssia kasvatetaan vähitellen maksimitoleranssia kohti
-          aloitustoleranssi 50
+          aloitustoleranssi 1
           ;; Pistehaun toleranssia kasvatatetaan maksimitoleranssiin asti
           maksimitolenranssi 500]
 
