@@ -211,7 +211,6 @@ jobs:
           # https://github.com/mikepenz/action-junit-report/issues/40#issuecomment-1607743568
           # Kiertotie sille, että test result checkit menevät väärän workflown tuloksiin
           # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
-          annotate_only: true
           detailed_summary: true
 
   basic-tests:
@@ -262,7 +261,6 @@ jobs:
           # https://github.com/mikepenz/action-junit-report/issues/40#issuecomment-1607743568
           # Kiertotie sille, että test result checkit menevät väärän workflown tuloksiin
           # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
-          annotate_only: true
           detailed_summary: true
 
       - name: Setup test tools
@@ -332,7 +330,6 @@ jobs:
           # https://github.com/mikepenz/action-junit-report/issues/40#issuecomment-1607743568
           # Kiertotie sille, että test result checkit menevät väärän workflown tuloksiin
           # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
-          annotate_only: true
           detailed_summary: true
 
   e2e-tests:
@@ -474,7 +471,6 @@ jobs:
           # https://github.com/mikepenz/action-junit-report/issues/40#issuecomment-1607743568
           # Kiertotie sille, että test result checkit menevät väärän workflown tuloksiin
           # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
-          annotate_only: true
           detailed_summary: true
 
       # Mikäli testit epäonnistuvat, tallenna cypress screenshotit ja videot artifakteina
