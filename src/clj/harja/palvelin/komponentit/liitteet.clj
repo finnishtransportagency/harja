@@ -305,7 +305,10 @@
         _ (log/info "hae-liite :: fileyard-client: " fileyard-client)
         {:keys [fileyard-hash s3hash] :as liite}
         (first (liitteet-q/hae-liite-lataukseen db liitteen-id))
-        _ (log/info "hae-liite :: ehto: " (and fileyard-client fileyard-hash))]
+        _ (log/info "hae-liite :: liitteen-id: " liitteen-id)
+        _ (log/info "hae-liite :: ehto: " (and fileyard-client fileyard-hash))
+        _ (log/info "hae-liite :: s3hash: " s3hash)
+        ]
 
     (dissoc
       (cond
