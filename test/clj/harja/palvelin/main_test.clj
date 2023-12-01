@@ -92,8 +92,7 @@
 (use-fixtures :once testiasetukset)
 
 (def halutut-komponentit
-  #{:FAIL
-    :metriikka
+  #{:metriikka
     :info
     :db :db-replica
     :todennus :http-palvelin
