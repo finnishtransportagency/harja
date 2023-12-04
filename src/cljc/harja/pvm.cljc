@@ -1502,13 +1502,14 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   ;; samassa: 1.1.2024 ja 30.3.2024, erissä 2.1.2024 ja 1.4.2024
   [pvm1 pvm2]
   #?(:clj
-     (assert (or (and
-                (= java.util.Date (type pvm1))
-                (= java.util.Date (type pvm2)))
-            (and
-              (= java.sql.Timestamp (type pvm1))
-              (= java.sql.Timestamp (type pvm2))))
-    "Päivämäärien oltava keskenään samaa tyyppiä, ja joko java.util.Date tai java.sql.Timestamp"))
+     (assert (or
+               (and
+                 (= java.util.Date (type pvm1))
+                 (= java.util.Date (type pvm2)))
+               (and
+                 (= java.sql.Timestamp (type pvm1))
+                 (= java.sql.Timestamp (type pvm2))))
+       "Päivämäärien oltava keskenään samaa tyyppiä, ja joko java.util.Date tai java.sql.Timestamp"))
   ;; päivämäärät ovat samassa kvartaalissa, kun niillä on
   ;; 1) sama vuosi
   ;; 2) kuukausi osuu samaan kvartaaliväliin, vaihtoehtoihin 1-3, 4-6, 7-9 ja 10-12
