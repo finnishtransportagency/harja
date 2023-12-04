@@ -160,9 +160,9 @@
   (let [version-alku (:alku version-voimassaolo)
         version-loppu (:loppu version-voimassaolo)
         toimenpiteet (:toimenpiteet ominaisuudet)
-        poistettu? (and (or version-loppu paattyen)
+        poistettu? (and paattyen
                      (pvm/sama-tai-jalkeen?
-                       (pvm/iso-8601->pvm (or version-loppu paattyen))
+                       (pvm/iso-8601->pvm paattyen)
                        (pvm/nyt-suomessa)))]
     (if (seq toimenpiteet)
       (do
@@ -173,9 +173,7 @@
         (:otsikko (first (q-nimikkeistot/hae-nimikkeen-tiedot db {:tyyppi-nimi (first toimenpiteet)}))))
 
       (cond
-        (or
-          (and (nil? version-voimassaolo) poistettu?)
-          (some? poistettu?)) "Poistettu"
+        (some? poistettu?) "Poistettu"
         (or
           (and (nil? version-voimassaolo) alkaen (not poistettu?))
           (and alkaen version-alku (not version-loppu) (not poistettu?))) "Lisätty"
