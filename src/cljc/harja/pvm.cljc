@@ -1487,3 +1487,23 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   (when (= 2 (count hoitokausi))
     (str (vuosi (first hoitokausi)) "-"
       (subs (str (vuosi (second hoitokausi))) 2 4))))
+
+(defn pvmn-kvartaali [pvm]
+  (case (kuukausi pvm)
+    (1 2 3) 1
+    (4 5 6) 2
+    (7 8 9) 3
+    (10 11 12) 4
+
+    (do #(log/warn "Ei tunnistettu pvm:n kvartaalia: " pvm) nil)))
+
+(defn samassa-kvartaalissa?
+  "Palauttaa totuusarvon, ovatko kaksi PVM:ää samassa kvartaalissa"
+  ;; samassa: 1.1.2024 ja 30.3.2024, erissä 2.1.2024 ja 1.4.2024
+  [pvm1 pvm2]
+  ;; päivämäärät ovat samassa kvartaalissa, kun niillä on
+  ;; 1) sama vuosi
+  ;; 2) kuukausi osuu samaan kvartaaliväliin, vaihtoehtoihin 1-3, 4-6, 7-9 ja 10-12
+  (and
+    (= (vuosi pvm1) (vuosi pvm2))
+    (= (pvmn-kvartaali pvm1) (pvmn-kvartaali pvm2))))
