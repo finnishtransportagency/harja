@@ -246,7 +246,6 @@
       {:onnistui ->HaeNimikkeistoOnnistui
        :epaonnistui ->HaeNimikkeistoEpaonnistui}))
 
-  ;
   HaeNimikkeistoOnnistui
   (process-event [{:keys [vastaus]} {:keys [valinnat] :as app}]
     (assoc app
