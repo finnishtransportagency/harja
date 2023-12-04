@@ -202,21 +202,24 @@
       {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
      varusteet]))
 
-(defn listaus-toteumat [_ valittu-toteumat]
-  [grid/grid
-   {:otsikko "Käyntihistoria"
-    :tunniste :ulkoinen-oid
-    :luokat ["varuste-taulukko"]
-    :voi-lisata? false :voi-kumota? false
-    :voi-poistaa? (constantly false) :voi-muokata? true}
-   [{:otsikko "Käyty" :nimi :alkupvm :leveys 3
-     :fmt pvm/fmt-p-k-v-lyhyt}
-    {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toimenpide :leveys 3}
-    {:otsikko "Kunto\u00ADluoki\u00ADtus muu\u00ADtos" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
-     :komponentti (fn [rivi]
-                    [kuntoluokka-komponentti (:kuntoluokka rivi)])}
-    {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
-   valittu-toteumat])
+(defn listaus-toteumat [_ {:keys [historia-haku-paalla?]} valittu-toteumat]
+  (if (and (not historia-haku-paalla?) (nil? valittu-toteumat))
+    [:div "Varusteelle ei löytynyt historiaa velhosta"]
+
+    [grid/grid
+     {:otsikko "Käyntihistoria"
+      :tunniste :ulkoinen-oid
+      :luokat ["varuste-taulukko"]
+      :voi-lisata? false :voi-kumota? false
+      :voi-poistaa? (constantly false) :voi-muokata? true}
+     [{:otsikko "Käyty" :nimi :alkupvm :leveys 3
+       :fmt pvm/fmt-p-k-v-lyhyt}
+      {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toimenpide :leveys 3}
+      {:otsikko "Kunto\u00ADluoki\u00ADtus muu\u00ADtos" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
+       :komponentti (fn [rivi]
+                      [kuntoluokka-komponentti (:kuntoluokka rivi)])}
+      {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
+     valittu-toteumat]))
 
 (defn varustelomake-nakyma
   [e! _app]
@@ -227,7 +230,7 @@
       (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
                                      (e! (v/->SuljeVarusteLomake)))
         {:tarkista-komponentti? true})
-      (fn [e! {{:keys [ulkoinen-oid historia] :as varuste} :valittu-varuste}]
+      (fn [e! {{:keys [ulkoinen-oid historia] :as varuste} :valittu-varuste :as app}]
         [:div.varustelomake {:on-click #(.stopPropagation %)}
          [sivupalkki/oikea
           {:leveys "600px"}
@@ -274,7 +277,7 @@
             {:tyyppi :komponentti :palstoja 3
              ::lomake/col-luokka "margin-top-32"
              :piilota-label? true
-             :komponentti listaus-toteumat :komponentti-args [historia]}]
+             :komponentti listaus-toteumat :komponentti-args [app historia]}]
            varuste]]]))))
 
 (defn- varusteet* [e! app]

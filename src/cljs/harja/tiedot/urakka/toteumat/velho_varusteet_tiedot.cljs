@@ -62,7 +62,7 @@
         kuntoluokat (map muodosta-ns-nimi-hakuparametri (:kuntoluokat valinnat))
         toimenpide (:toimenpide (:toimenpide valinnat))]
     (merge
-      (select-keys valinnat [:tie :aosa :aeta :losa :leta :hoitokauden-alkuvuosi :hoitovuoden-kuukausi :kuntoluokat :toteuma])
+      (select-keys valinnat [:tie :aosa :aeta :losa :leta :hoitokauden-alkuvuosi :hoitovuoden-kuukausi :kohdeluokat :toteuma])
       {:urakka-id @nav/valittu-urakka-id
        :varustetyypit varustetyypit
        :kuntoluokat kuntoluokat
@@ -164,7 +164,8 @@
       (map (fn [t]
              (-> t
                (assoc :tr-osoite (muodosta-tr-osoite t))
-               (assoc :toimenpide-id (:id (first (filter #(= (:otsikko %) (:toimenpide t)) (:toimenpiteet app)))))))
+               (assoc :toimenpide-id (:id (first (filter #(= (:otsikko %) (:toimenpide t))
+                                                   (:toimenpiteet-nimikkeisto app)))))))
         (:toteumat vastaus)))
     (-> app
       (assoc :haku-paalla false)
@@ -180,21 +181,27 @@
 
   HaeVarusteenHistoria
   (process-event [{{:keys [kohdeluokka ulkoinen-oid]} :varuste} app]
-    (tuck-apurit/post! app :hae-varusteen-historia
-      {:urakka-id @nav/valittu-urakka-id
-       :kohdeluokka kohdeluokka
-       :ulkoinen-oid ulkoinen-oid}
-      {:onnistui ->HaeVarusteenHistoriaOnnistui
-       :epaonnistui ->HaeVarusteenHistoriaEpaonnistui}))
+    (-> app
+      (assoc :historia-haku-paalla? true)
+      (tuck-apurit/post! :hae-varusteen-historia
+        {:urakka-id @nav/valittu-urakka-id
+         :kohdeluokka kohdeluokka
+         :ulkoinen-oid ulkoinen-oid}
+        {:onnistui ->HaeVarusteenHistoriaOnnistui
+         :epaonnistui ->HaeVarusteenHistoriaEpaonnistui})))
 
   HaeVarusteenHistoriaOnnistui
   (process-event [{:keys [vastaus]} app]
-    (assoc-in app [:valittu-varuste :historia] vastaus))
+    (-> app
+      (assoc :historia-haku-paalla? false)
+      (assoc-in [:valittu-varuste :historia] vastaus)))
 
   HaeVarusteenHistoriaEpaonnistui
   (process-event [{:keys [_]} app]
-    (viesti/nayta! "Varusteen historian haku epäonnistui!" :varoitus)
-    (assoc-in app [:valittu-varuste :historia] :haku-epaonnistui))
+    (viesti/nayta-toast! "Varusteen historian haku epäonnistui!" :varoitus)
+    (-> app
+      (assoc :historia-haku-paalla? false)
+      (assoc-in [:valittu-varuste :historia] nil)))
 
   JarjestaVarusteet
   (process-event [{jarjestys :jarjestys} app]
@@ -245,6 +252,7 @@
     (assoc app
       :kohdeluokat-nimikkeisto (dissoc (group-by :kohdeluokka vastaus) "")
       :kuntoluokat-nimikkeisto (filter #(= "kuntoluokka" (:nimiavaruus %)) vastaus)
+      :toimenpiteet-nimikkeisto (filter #(= "varustetoimenpide" (:nimiavaruus %)) vastaus)
       :varustetyyppihaku (tee-varustetyyppihaku valinnat (group-by :kohdeluokka vastaus))))
 
   HaeNimikkeistoEpaonnistui

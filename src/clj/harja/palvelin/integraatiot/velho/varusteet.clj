@@ -212,8 +212,7 @@
                                         {:tyyppi-nimi kuntoluokka}))]
     {:alkupvm alkupvm
      :kuntoluokka kuntoluokka
-     :lisatieto (when (= kohdeluokka (:kohdeluokka liikennemerkit))
-                  (liikennemerkin-lisatieto db varuste))
+     :lisatieto (liikennemerkin-lisatieto db varuste)
      :loppupvm (cond-> (get-in varuste [:version-voimassaolo :loppu])
                  (get-in varuste [:version-voimassaolo :loppu])
                  pvm/iso-8601->pvm
