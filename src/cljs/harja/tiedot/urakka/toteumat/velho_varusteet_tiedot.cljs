@@ -174,7 +174,7 @@
   HaeVarusteetEpaonnistui
   (process-event [_ app]
     (reset! varusteet-kartalla/karttataso-varusteet nil)
-    (viesti/nayta! "Varusteiden haku epäonnistui!" :varoitus)
+    (viesti/nayta-toast! "Varusteiden haku epäonnistui!" :varoitus)
     (-> app
       (assoc :haku-paalla false)
       (assoc :varusteet [])))
@@ -257,5 +257,5 @@
 
   HaeNimikkeistoEpaonnistui
   (process-event [{:keys [_]} app]
-    (viesti/nayta! "Kohdeluokkien haku epäonnistui!" :varoitus)
+    (viesti/nayta-toast! "Kohdeluokkien haku epäonnistui!" :varoitus)
     app))
