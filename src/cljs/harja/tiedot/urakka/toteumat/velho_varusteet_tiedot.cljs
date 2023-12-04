@@ -20,12 +20,12 @@
                   {:id 6 :nimi "Puuttuu" :css-luokka "kl-puuttuu"}
                   {:id 7 :nimi "Ei voitu tarkastaa" :css-luokka "kl-ei-voitu-tarkistaa"}])
 
-(def varuste_toimenpiteet [{:nimi "Lisätty" :toimenpide :lisatty }
-                  {:nimi "Korjaus" :toimenpide :korjaus }
-                  {:nimi "Tarkastettu" :toimenpide  :tarkastettu }
-                  {:nimi "Puhdistaminen" :toimenpide :puhdistaminen }
-                  {:nimi "Kohteen poisto" :toimenpide :kohteen-poisto }
-                  {:nimi "Muut" :toimenpide :muut }])
+(def varuste_toimenpiteet [{:nimi "Lisätty" :toimenpide :lisatty}
+                           {:nimi "Korjaus" :toimenpide :korjaus}
+                           {:nimi "Tarkastettu" :toimenpide :tarkastettu}
+                           {:nimi "Puhdistaminen" :toimenpide :puhdistaminen}
+                           {:nimi "Kohteen poisto" :toimenpide :kohteen-poisto}
+                           {:nimi "Muut" :toimenpide :muut}])
 
 (defn muodosta-tr-osoite [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as rivi}]
   (if tr-loppuosa
@@ -44,7 +44,7 @@
                          (filter #(and
                                     (:otsikko %)
                                     (not= (.indexOf (.toLowerCase (:otsikko %))
-                                               (.toLowerCase teksti)) -1))
+                                            (.toLowerCase teksti)) -1))
                            varustetyypit))]
             (vec (sort-by :otsikko itemit)))))))
 
