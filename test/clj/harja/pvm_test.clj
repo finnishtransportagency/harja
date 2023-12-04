@@ -446,6 +446,9 @@
     (is (true? (pvm/samassa-kvartaalissa? pvm1_a pvm1_b)))
     (is (true? (pvm/samassa-kvartaalissa? sql-ts-pvm1-a sql-ts-pvm1-b)))
 
+    ;; keskenään erityyppiset pvm:t heittää poikkeuksen
+    (is (thrown? AssertionError (pvm/samassa-kvartaalissa? pvm1_a sql-ts-pvm1-b)))
+
     ;; eri kvartaali
     (is (false? (pvm/samassa-kvartaalissa? pvm2_a pvm2_b)))
     (is (false? (pvm/samassa-kvartaalissa? sql-ts-pvm2-a sql-ts-pvm2-b)))

@@ -35,7 +35,7 @@
                 jo-kannassa-oleva (first
                                     (q-tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db {:id ulkoinen-id
                                                                                                    :tyyppi (name tyyppi)
-                                                                                                   :urakka-id urakka-id}))]
+                                                                                                   :urakka-id urakka-id}))]]
     (when (and
             jo-kannassa-oleva
             (not (pvm/samassa-kvartaalissa? aika (:aika jo-kannassa-oleva))))
