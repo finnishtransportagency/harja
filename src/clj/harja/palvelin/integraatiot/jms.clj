@@ -54,16 +54,16 @@
 
 (def aikakatkaisu-virhe {:type :jms-kaskytysvirhe
                          :virheet [{:koodi :ruuhkaa
-                                    :viesti "JMS-säije ei kyennyt käsittelemään viestiä ajallaan."}]})
+                                    :viesti "JMS-säie ei kyennyt käsittelemään viestiä ajallaan."}]})
 (def kasykytyskanava-taynna-virhe {:type :jms-kaskytysvirhe
                                    :virheet [{:koodi :taynna
-                                              :viesti "JMS-säije ei pysty käsittelemään enempää viestejä."}]})
+                                              :viesti "JMS-säie ei pysty käsittelemään enempää viestejä."}]})
 (def jms-saije-sammutetaan-virhe {:type :jms-kaskytysvirhe
                                   :virheet [{:koodi :saije-sammutetaan
-                                             :viesti "JMS-säijetta samutetaan."}]})
+                                             :viesti "JMS-säietta samutetaan."}]})
 (def jms-saije-sammutettu-virhe {:type :jms-kaskytysvirhe
                                  :virheet [{:koodi :saije-sammutettu
-                                            :viesti "JMS-säije on sammutettu."}]})
+                                            :viesti "JMS-säie on sammutettu."}]})
 
 (def viestin-kasittely-timeout 15000)
 
@@ -127,7 +127,7 @@
     viestit välitetään jokaiselle kuuntelijalle.
     Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti.
     Kuuntelija blokkaa käsittelyn ajan, joten samasta jonosta voidaan lukea vain yksi viesti kerrallaan.
-    Kuuntelija ei saa luoda uutta säijettä, koska AUTO_ACKNOWLEDGE on päällä. Tämä tarkoittaa sitä, että jos viestin
+    Kuuntelija ei saa luoda uutta säiettä, koska AUTO_ACKNOWLEDGE on päällä. Tämä tarkoittaa sitä, että jos viestin
     käsittely epäonnistuu uudessa säikeessä ja varsinainen consumer on lopettanut jo hommansa, niin viesti on jo poistettu
     jonosta.
     Jos 'jarjestelma' on annettu, niin tässä määritetyn jonon viestit käsitellään samassa sessiossa kuin muut
@@ -224,7 +224,7 @@
   [istunto jono]
   (when (and istunto jono)
     ;; ainakin ActiveMQ:ssa createBrowser saattaa blokata ikuisesti jos istunto ei ole kunnossa. Tämän takia luodaan
-    ;; browseri omassa säikessään vaikkei näin suositella tekevän. Jms-säije kumminkin työstää tämän läpi ennen
+    ;; browseri omassa säikessään vaikkei näin suositella tekevän. Jms-säie kumminkin työstää tämän läpi ennen
     ;; kuin tekee mitään muuta
     (first (async/alts!! [(async/thread (try (with-open [selailija (.createBrowser istunto jono)]
                                                (let [viesti-elementit (.getEnumeration selailija)]
@@ -525,9 +525,9 @@
 
 (defn luo-jms-saije
   "JMS spesifikaation mukaan connection oliota voi käyttää ihan vapaasti useasta eri säikeestä, mutta session olioita ja
-   kaikkia sen luomia olioita ei voi. Niitä tulisi kohdella säijekohtaisesti. Mikään ei estä niiden käsittelyä useasta eri
+   kaikkia sen luomia olioita ei voi. Niitä tulisi kohdella säiekohtaisesti. Mikään ei estä niiden käsittelyä useasta eri
    säikeestä, mutta se on käyttäjän vastuulla, että samaa oliota ei käytetä yhtä aikaa, jonka takia tosiaan suositellaan,
-   että manipulaatio tehdään yhdestä säikeestä. Tässä luodaan vain yksi säije, jossa luodaan kaikki sessiot ja siihen
+   että manipulaatio tehdään yhdestä säikeestä. Tässä luodaan vain yksi säie, jossa luodaan kaikki sessiot ja siihen
    liittyvät muut oliot. Myöhemmin voi luoda useampia säikeitä joihin tulee vaikkapa vain tietyn järjestelmän sessiot, jos
    tähän on tarvesta. ActiveMQ ja SonicMQ ovat kumminkin implementoitu niin, että useamman session luominen johtaa jo
    threadpoolien käyttämiseen eikä kaikkea varsinaisesti suoriteta yhdessä säikeessä.
@@ -698,7 +698,7 @@
       (tapahtuma-apurit/julkaise-tapahtuma :jms-tila {nimi :suljetaan})
       (async/>!! lopeta-tarkkailu-kanava true)
       (async/close! lopeta-tarkkailu-kanava))
-    ;; Jos on jossain muuaalla jo käsketty sammuuttaa jms-säije, niin tämä jumittaisi. (esim. testeissä)
+    ;; Jos on jossain muuaalla jo käsketty sammuuttaa jms-säie, niin tämä jumittaisi. (esim. testeissä)
     (when-not @jms-saije-sammutettu?
       (async/>!! saikeen-sammutus-kanava true))
     ;; Odotetaan, että käsitteillä olevat viestit on käsitelty

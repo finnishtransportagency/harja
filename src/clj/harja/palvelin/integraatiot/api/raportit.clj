@@ -17,7 +17,7 @@
 (defn muodosta-materiaaliraportti [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
   (jdbc/with-db-transaction [db db]
     (let [urakka (first (urakat-kyselyt/hae-urakka db urakka-id))
-          alueurakkanumero (konv/konvertoi->int (:alueurakkanumero urakka))
+          alueurakkanumero (:alueurakkanumero urakka)
           materiaalien-toteumat (when (and urakka-id alkupvm loppupvm)
                                   (raportit-materiaali/muodosta-materiaaliraportti-urakalle db user
                                     {:urakka-id urakka-id

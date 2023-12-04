@@ -12,9 +12,10 @@
     (let [http (:http-palvelin this)
           db (:db this)]
       (julkaise-palvelu http :ping
-                        (fn [user tiedot]
-                          (oikeudet/ei-oikeustarkistusta!)
-                          (kasittele-ping db user tiedot)))
+        (fn [user tiedot]
+          (oikeudet/ei-oikeustarkistusta!)
+          (kasittele-ping db user tiedot))
+        {:lokita-kysely? false})
       this))
 
   (stop [this]
