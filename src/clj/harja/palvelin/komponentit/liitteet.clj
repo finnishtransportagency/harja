@@ -236,7 +236,7 @@
                     data)))]
     (if liite
       (do
-        (log/info "Liite tallennettu.")
+        (log/info "Liite tallennettu vain tietokantaan.")
         liite)
       (throw+ {:type virheet/+ominaisuus-ei-kaytossa+ :virheet
                [{:koodi virheet/+ominaisuus-ei-kaytossa+
@@ -300,15 +300,8 @@
                    :viesti (str "Virheellinen liite: " (:viesti liitetarkistus))}]})))))
 
 (defn- hae-liite [db alusta s3-url fileyard-client liitteen-id]
-  (let [_ (log/info "hae-liite :: alusta: " alusta)
-        _ (log/info "hae-liite :: s3-url: " s3-url)
-        _ (log/info "hae-liite :: fileyard-client: " fileyard-client)
-        {:keys [fileyard-hash s3hash] :as liite}
-        (first (liitteet-q/hae-liite-lataukseen db liitteen-id))
-        _ (log/info "hae-liite :: liitteen-id: " liitteen-id)
-        _ (log/info "hae-liite :: ehto: " (and fileyard-client fileyard-hash))
-        _ (log/info "hae-liite :: s3hash: " s3hash)
-        ]
+  (let [{:keys [fileyard-hash s3hash] :as liite}
+        (first (liitteet-q/hae-liite-lataukseen db liitteen-id))]
 
     (dissoc
       (cond
