@@ -451,7 +451,7 @@ WITH osa_toteumat AS
             AND t.poistettu = FALSE
           GROUP BY tt.toimenpidekoodi)
 SELECT tk.id                    AS toimenpidekoodi_id,
-       tr_alataso.otsikko       AS toimenpide,
+       o.otsikko                AS toimenpide,
        tk.nimi                  AS tehtava,
        sum(ot.maara)            AS maara,
        sum(ot.materiaalimaara)  AS materiaalimaara,
@@ -459,12 +459,13 @@ SELECT tk.id                    AS toimenpidekoodi_id,
        tk.kasin_lisattava_maara AS kasin_lisattava_maara,
        tk.suunnitteluyksikko    AS yk,
        CASE
-           WHEN tr_alataso.otsikko = '9 LISÄTYÖT'
+           WHEN o.otsikko = '9 LISÄTYÖT'
                THEN 'lisatyo'
            ELSE 'kokonaishintainen' END AS tyyppi
 FROM tehtava tk
      -- Alataso on linkitetty toimenpidekoodiin
-     JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma AND (:tehtavaryhma::TEXT IS NULL OR tr_alataso.otsikko = :tehtavaryhma)
+     JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
+     JOIN tehtavaryhmaotsikko o ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
      LEFT JOIN urakka_tehtavamaara ut ON ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
                        AND ut.poistettu IS NOT TRUE AND tk.id = ut.tehtava
      LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi
@@ -483,8 +484,8 @@ WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjat
                                'e32341fc-775a-490a-8eab-c98b8849f968',
                                '0c466f20-620d-407d-87b0-3cbb41e8342e',
                                'c058933e-58d3-414d-99d1-352929aa8cf9'))
-GROUP BY tk.id, tk.nimi, tr_alataso.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
-ORDER BY tr_alataso.otsikko asc, tk.nimi asc;
+GROUP BY tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
+ORDER BY o.otsikko asc, tk.nimi asc;
 
 -- name: listaa-tehtavan-toteumat
 -- Haetaan yksittäiselle tehtavalle kaikki toteumat.
@@ -536,7 +537,7 @@ SELECT t.id        AS toteuma_id,
        tt.maara                   AS toteutunut,
        t.alkanut                  AS toteuma_aika,
        tk.suunnitteluyksikko      AS yksikko,
-       tr.otsikko                 AS toimenpide_otsikko,
+       o.otsikko                  AS toimenpide_otsikko,
        tr.id                      AS toimenpide_id,
        tt.id                      AS toteuma_tehtava_id,
        tt.lisatieto               AS lisatieto,
@@ -552,6 +553,7 @@ SELECT t.id        AS toteuma_id,
          toteuma t,
          kayttaja k,
          tehtavaryhma tr
+    JOIN tehtavaryhmaotsikko o ON tr.tehtavaryhmaotsikko_id = o.id
     WHERE t.id = :id
       AND tk.id = tt.toimenpidekoodi
       AND t.id = tt.toteuma
