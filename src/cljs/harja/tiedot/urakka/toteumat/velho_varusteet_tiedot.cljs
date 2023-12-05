@@ -181,14 +181,13 @@
 
   HaeVarusteenHistoria
   (process-event [{{:keys [kohdeluokka ulkoinen-oid]} :varuste} app]
-    (-> app
-      (assoc :historia-haku-paalla? true)
-      (tuck-apurit/post! :hae-varusteen-historia
-        {:urakka-id @nav/valittu-urakka-id
-         :kohdeluokka kohdeluokka
-         :ulkoinen-oid ulkoinen-oid}
-        {:onnistui ->HaeVarusteenHistoriaOnnistui
-         :epaonnistui ->HaeVarusteenHistoriaEpaonnistui})))
+    (tuck-apurit/post! :hae-varusteen-historia
+      {:urakka-id @nav/valittu-urakka-id
+       :kohdeluokka kohdeluokka
+       :ulkoinen-oid ulkoinen-oid}
+      {:onnistui ->HaeVarusteenHistoriaOnnistui
+       :epaonnistui ->HaeVarusteenHistoriaEpaonnistui})
+    (assoc app :historia-haku-paalla? true))
 
   HaeVarusteenHistoriaOnnistui
   (process-event [{:keys [vastaus]} app]
