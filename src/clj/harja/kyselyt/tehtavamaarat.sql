@@ -153,27 +153,27 @@ DELETE
 -- name: mhu-suunniteltavat-tehtavat
 -- Palauttaa tehtävähierarkian käyttöliittymän Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten.
 -- Äkillistä hoitotyötä ja Kolmansien osapuolten aiheuttaminen vahinkojen korjausta ei suunnitella tehtävälistalla.
-SELECT ut.urakka                   as "urakka",
-       ut."hoitokauden-alkuvuosi"  as "hoitokauden-alkuvuosi",
-       tpk4.jarjestys              as "jarjestys",
-       tpk4.id                     as "tehtava-id",
-       ut.maara                    as "suunniteltu-maara",
-       ut."muuttunut-tarjouksesta?" as "muuttunut-tarjouksesta?",
-       tr3.otsikko                 as "otsikko",
-       tpk3.nimi                   as "Toimenpide",
-       tpk3.koodi                  as "Toimenpidekoodi",
-       tr3.nimi                    as "alataso",
-       tpk4.nimi                   as "tehtava",
-       tpk4.suunnitteluyksikko     as "yksikko",
-       tpk4.api_seuranta           as "API-seuranta",
-       tpk4.api_tunnus             as "API-tunnus",
-       tpk4.poistettu              as "Poistettu",
-       tpk4.piilota                as "Piilota", -- älä näytä riviä käyttäjälle
-       tpk4."mhu-tehtava?"           as "Ensisijainen",
-       tpk4.voimassaolo_alkuvuosi  as "voimassaolo_alkuvuosi",
-       tpk4.voimassaolo_loppuvuosi as "voimassaolo_loppuvuosi",
-       tpk4.aluetieto              as "aluetieto",
-       sp.tallennettu              as "sopimus-tallennettu"
+SELECT ut.urakka                    AS "urakka",
+       ut."hoitokauden-alkuvuosi"   AS "hoitokauden-alkuvuosi",
+       tpk4.jarjestys               AS "jarjestys",
+       tpk4.id                      AS "tehtava-id",
+       ut.maara                     AS "suunniteltu-maara",
+       ut."muuttunut-tarjouksesta?" AS "muuttunut-tarjouksesta?",
+       o.otsikko                    AS "otsikko",
+       tpk3.nimi                    AS "Toimenpide",
+       tpk3.koodi                   AS "Toimenpidekoodi",
+       tr3.nimi                     AS "alataso",
+       tpk4.nimi                    AS "tehtava",
+       tpk4.suunnitteluyksikko      AS "yksikko",
+       tpk4.api_seuranta            AS "API-seuranta",
+       tpk4.api_tunnus              AS "API-tunnus",
+       tpk4.poistettu               AS "Poistettu",
+       tpk4.piilota                 AS "Piilota", -- älä näytä riviä käyttäjälle
+       tpk4."mhu-tehtava?"          AS "Ensisijainen",
+       tpk4.voimassaolo_alkuvuosi   AS "voimassaolo_alkuvuosi",
+       tpk4.voimassaolo_loppuvuosi  AS "voimassaolo_loppuvuosi",
+       tpk4.aluetieto               AS "aluetieto",
+       sp.tallennettu               AS "sopimus-tallennettu"
 FROM tehtavaryhma tr3
        LEFT JOIN tehtava tpk4
                  ON tr3.id = tpk4.tehtavaryhma AND tpk4."mhu-tehtava?" is true AND
@@ -191,7 +191,8 @@ FROM tehtavaryhma tr3
        JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
        LEFT OUTER JOIN urakka_tehtavamaara ut
                        ON tpk4.id = ut.tehtava AND ut.urakka = :urakka AND (ut."hoitokauden-alkuvuosi" in (:hoitokausi) OR tpk4.aluetieto IS TRUE)
-       LEFT JOIN sopimuksen_tehtavamaarat_tallennettu sp on sp.urakka = :urakka,
+       LEFT JOIN sopimuksen_tehtavamaarat_tallennettu sp on sp.urakka = :urakka
+       JOIN tehtavaryhmaotsikko o ON tr3.tehtavaryhmaotsikko_id = o.id,
      urakka u
 WHERE u.id = :urakka
   AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
