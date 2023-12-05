@@ -2,6 +2,7 @@
   "Harjan pvm-namespacen backendin testit"
   (:require
     [clojure.test :refer [deftest is use-fixtures testing]]
+    [harja.kyselyt.konversio :as konv]
     [harja.pvm :as pvm]
     [clj-time.core :as t])
   (:import (org.joda.time LocalDateTime)))
@@ -409,3 +410,50 @@
   (let [testipvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 12 22))
         seuraava-pvm (pvm/joda-timeksi (pvm/luo-pvm-dec-kk 2023 12 27))]
     (is (= (pvm/seuraava-arkipaiva testipvm) seuraava-pvm))))
+
+(deftest kvartaalin-paattely-toimii
+  (is (= 1
+        (pvm/pvmn-kvartaali (pvm/->pvm "1.1.2021"))
+        (pvm/pvmn-kvartaali (pvm/->pvm "1.2.2022"))
+        (pvm/pvmn-kvartaali (pvm/->pvm "31.1.2023"))) "Ensimmäinen kvartaali")
+  (is (= 2
+        (pvm/pvmn-kvartaali (pvm/->pvm "1.4.2021"))
+        (pvm/pvmn-kvartaali (pvm/->pvm "1.5.2022"))
+        (pvm/pvmn-kvartaali (pvm/->pvm "30.6.2023"))) "Toinen kvartaali")
+  (is (= 3
+        (pvm/pvmn-kvartaali (pvm/->pvm "1.7.2021"))
+        (pvm/pvmn-kvartaali (pvm/->pvm "1.8.2022"))
+        (pvm/pvmn-kvartaali (pvm/->pvm "30.9.2023"))) "Kolmas kvartaali")
+  (is (= 4
+        (pvm/pvmn-kvartaali (pvm/->pvm "1.10.2021"))
+        (pvm/pvmn-kvartaali (pvm/->pvm "1.11.2022"))
+        (pvm/pvmn-kvartaali (pvm/->pvm "31.12.2023"))) "Neljäs kvartaali"))
+
+(deftest pvmt-samassa-kvartaalissa
+  (let [pvm1_a (pvm/->pvm "1.1.2022")
+        pvm1_b (pvm/->pvm "1.3.2022")
+        sql-ts-pvm1-a (konv/sql-timestamp  (pvm/->pvm "1.1.2022"))
+        sql-ts-pvm1-b (konv/sql-timestamp  (pvm/->pvm "1.3.2022"))
+        pvm2_a (pvm/->pvm "1.3.2023")
+        pvm2_b (pvm/->pvm "1.4.2023")
+        sql-ts-pvm2-a (konv/sql-timestamp  (pvm/->pvm "1.3.2023"))
+        sql-ts-pvm2-b (konv/sql-timestamp  (pvm/->pvm "1.4.2023"))
+        pvm3_a (pvm/->pvm "1.3.2023")
+        pvm3_b (pvm/->pvm "1.3.2024")
+        sql-ts-pvm3-a (konv/sql-timestamp  (pvm/->pvm "1.3.2023"))
+        sql-ts-pvm3-b (konv/sql-timestamp  (pvm/->pvm "1.3.2024"))]
+    ;; sama kvartaali
+    (is (true? (pvm/samassa-kvartaalissa? pvm1_a pvm1_b)))
+    (is (true? (pvm/samassa-kvartaalissa? sql-ts-pvm1-a sql-ts-pvm1-b)))
+
+    ;; keskenään erityyppiset pvm:t heittää poikkeuksen
+    (is (thrown? AssertionError (pvm/samassa-kvartaalissa? pvm1_a sql-ts-pvm1-b)))
+
+    ;; eri kvartaali
+    (is (false? (pvm/samassa-kvartaalissa? pvm2_a pvm2_b)))
+    (is (false? (pvm/samassa-kvartaalissa? sql-ts-pvm2-a sql-ts-pvm2-b)))
+
+    ;; vuosi vaihtuu, eri kvartaali
+    (is (false? (pvm/samassa-kvartaalissa? pvm3_a pvm3_b)))
+    (is (false? (pvm/samassa-kvartaalissa? sql-ts-pvm3-a sql-ts-pvm3-b)))))
+
