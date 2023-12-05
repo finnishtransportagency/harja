@@ -156,24 +156,27 @@
       (:tyyppi-polku kohdeluokka))
     (mapv :tyyppi varustetyypit)]])
 
-(defn varusteen-toimenpide [db {:keys [version-voimassaolo ominaisuudet tekninen-tapahtuma paattyen alkaen oid]}]
+(defn varusteen-toimenpide [db {:keys [version-voimassaolo ominaisuudet paattyen alkaen oid]}]
   (let [version-alku (:alku version-voimassaolo)
         version-loppu (:loppu version-voimassaolo)
-        toimenpiteet (:toimenpiteet ominaisuudet)]
+        toimenpiteet (:toimenpiteet ominaisuudet)
+        poistettu? (and paattyen
+                     (pvm/sama-tai-jalkeen?
+                       (pvm/iso-8601->pvm paattyen)
+                       (pvm/nyt-suomessa)))]
     (if (seq toimenpiteet)
       (do
         (when (< (count toimenpiteet) 1)
           (log/warn (str "Löytyi varusteversio, jolla on monta toimenpidettä: oid: " oid
-                      " version-alku:" version-alku ". Toimenpiteet: (" (str/join ", " toimenpiteet) ")"
+                      " version-alku:" version-alku ". Toimenpiteet: " (str/join ", " toimenpiteet)
                       " Otetaan vain 1. toimenpide talteen.")))
         (:otsikko (first (q-nimikkeistot/hae-nimikkeen-tiedot db {:tyyppi-nimi (first toimenpiteet)}))))
 
-      (cond (= "tekninen-tapahtuma/tt01" tekninen-tapahtuma) "Tieosoitemuutos"
-        (= "tekninen-tapahtuma/tt02" tekninen-tapahtuma) "Muu tekninen toimenpide"
-        (and (nil? version-voimassaolo) paattyen) "Poistettu" ; Sijaintipalvelu ei palauta versioita
-        (and (nil? version-voimassaolo) (not paattyen)) "Lisätty"
-        (= alkaen version-alku) "Lisätty" ; varusteen syntymäpäivä, onnea!
-        (some? version-loppu) "Poistettu" ; uusimmalla versiolla on loppu
+      (cond
+        (some? poistettu?) "Poistettu"
+        (or
+          (and (nil? version-voimassaolo) alkaen (not poistettu?))
+          (and alkaen version-alku (not version-loppu) (not poistettu?))) "Lisätty"
         :else "Päivitetty"))))
 
 (defn liikennemerkin-lisatieto [db liikennemerkki]
@@ -191,7 +194,7 @@
   [db varuste]
   (let [{tie :tie alkuet :etaisyys alkuosa :osa} (or (:sijainti varuste) (:alkusijainti varuste))
         {loppuetaisyys :etaisyys loppuosa :osa} (:loppusijainti varuste)
-        alkupvm (some-> (:alkaen varuste)
+        alkupvm (some-> (or (get-in varuste [:version-voimassaolo :alku]) (:alkaen varuste))
                   (pvm/iso-8601->pvm)
                   (varuste-vastaanottosanoma/aika->sql))
         tyyppi (or
@@ -207,8 +210,7 @@
                                         {:tyyppi-nimi kuntoluokka}))]
     {:alkupvm alkupvm
      :kuntoluokka kuntoluokka
-     :lisatieto (when (= kohdeluokka (:kohdeluokka liikennemerkit))
-                  (liikennemerkin-lisatieto db varuste))
+     :lisatieto (liikennemerkin-lisatieto db varuste)
      :loppupvm (cond-> (get-in varuste [:version-voimassaolo :loppu])
                  (get-in varuste [:version-voimassaolo :loppu])
                  pvm/iso-8601->pvm
@@ -227,6 +229,69 @@
      :tr-loppuosa loppuosa
      :tr-loppuetaisyys loppuetaisyys
      :ulkoinen-oid (:oid varuste)}))
+
+(def loppuaika-olemassa ["tai" ["olemassa" ["yleiset/perustiedot"
+                                             "paattyen"]]
+                         ["olemassa" ["yleiset/versioitu"
+                                       "version-voimassaolo"
+                                       "loppu"]]])
+
+(defn- tee-loppuaika-parametri [operaattori]
+  [operaattori
+   ["yleiset/perustiedot"
+    "paattyen"]
+   (->
+     (pvm/nyt)
+     (pvm/joda-date-timeksi)
+     (pvm/suomen-aikavyohykkeeseen)
+     pvm/pvm->iso-8601-pvm-aika-ei-ms)])
+
+(def varustetoimenpiteet-polku
+  ["toimenpiteet/varustetoimenpiteet"
+   "ominaisuudet"
+   "toimenpiteet"])
+
+(defn- tee-toimenpide-lisatty-parametri []
+  ["ja"
+   ["ei" [
+           "kohdeluokka"
+           "toimenpiteet/varustetoimenpiteet"
+           ["olemassa"
+            varustetoimenpiteet-polku]]]
+   ["tai"
+    ["ei" loppuaika-olemassa]
+    (tee-loppuaika-parametri "pvm-suurempi-kuin")]])
+
+(defn- tee-kohteen-poisto-parametri []
+  ["ja" loppuaika-olemassa
+   (tee-loppuaika-parametri "pvm-pienempi-kuin")])
+
+(defn- tee-muut-varustetoimenpiteet-parametri [db]
+  (let [nimikkeet (map #(str (:nimiavaruus %) "/" (:nimi %)) (q-nimikkeistot/hae-muut-varustetoimenpide-nimikkeet db))]
+    ["ja"
+     ["kohdeluokka" "toimenpiteet/varustetoimenpiteet"
+      ["joukossa"
+       varustetoimenpiteet-polku
+       nimikkeet]]
+     ["tai"
+      ["ei" loppuaika-olemassa]
+      (tee-loppuaika-parametri "pvm-suurempi-kuin")]]))
+
+(defn- tee-varustetoimenpide-parametri [db otsikko]
+  (let [varustetoimenpidenimike (q-nimikkeistot/hae-nimike-otsikolla db {:otsikko otsikko})]
+    (when varustetoimenpidenimike
+      ["kohdeluokka" "toimenpiteet/varustetoimenpiteet"
+       ["joukossa"
+        varustetoimenpiteet-polku
+        [(str "varustetoimenpide/" varustetoimenpidenimike)]]])))
+
+(defn tee-toimenpide-parametri [db toimenpide]
+  (case toimenpide
+    :lisatty (tee-toimenpide-lisatty-parametri)
+    :kohteen-poisto (tee-kohteen-poisto-parametri)
+    :muut (tee-muut-varustetoimenpiteet-parametri db)
+    (:korjaus :tarkastettu :puhdistaminen) (tee-varustetoimenpide-parametri db (str/capitalize (name toimenpide)))
+    (log/error "Yritettiin hakea varustetoimenpiteitä tuntemattomalla varustetoimenpiteellä" (name toimenpide))))
 
 (defn hae-urakan-varustetoteumat [{:keys [integraatioloki db asetukset]}
                                   {:keys [urakka-id kohdeluokat varustetyypit kuntoluokat tie aosa aeta losa leta
@@ -297,23 +362,17 @@
                              pvm/paivamaaran-hoitokausi
                              (map (comp pvm/pvm->iso-8601-pvm-aika-ei-ms pvm/utc-aikavyohykkeeseen pvm/joda-timeksi))))
 
-                alkuaika-parametri ["kohdeluokka" "yleiset/perustiedot"
+                alkuaika-parametri ["kohdeluokka" "yleiset/versioitu"
                                     ["pvm-suurempi-kuin"
-                                     ["yleiset/perustiedot" "alkaen"]
+                                     ["yleiset/versioitu" "version-voimassaolo" "alku"]
                                      (first aikavali)]]
 
-                loppuaika-parametri ["kohdeluokka" "yleiset/perustiedot"
+                loppuaika-parametri ["kohdeluokka" "yleiset/versioitu"
                                      ["pvm-pienempi-kuin"
-                                      ["yleiset/perustiedot" "alkaen"]
+                                      ["yleiset/versioitu" "version-voimassaolo" "alku"]
                                       (second aikavali)]]
 
-                varustetoimenpide-parametri (when toimenpide
-                                              ["kohdeluokka" "toimenpiteet/varustetoimenpiteet"
-                                               ["joukossa"
-                                                ["toimenpiteet/varustetoimenpiteet"
-                                                 "ominaisuudet"
-                                                 "toimenpiteet"]
-                                                [toimenpide]]])
+                varustetoimenpide-parametri (when toimenpide (tee-toimenpide-parametri db toimenpide))
 
                 payload {:asetukset {:tyyppi "kohdeluokkahaku"
                                      :liitoshaku true}
@@ -429,7 +488,6 @@
                                         :otsikko (:otsikko ((keyword nimiavaruus kuntoluokka) kuntoluokka-info))}))
                                    ) (-> vastaus :components :schemas :nimikkeisto_kunto-ja-vauriotiedot_kuntoluokka :enum)))
                      (some-> vastaus :info :x-velho-nimikkeistot :kunto-ja-vauriotiedot/kuntoluokka :nimikkeistoversiot))))
-
 
             varustetoimenpiteiden-haku-onnistui?
             (seq (when hae-varustetoimenpiteet?
