@@ -31,7 +31,8 @@ SELECT tk.id                 AS id,
   FROM tehtava tk
            JOIN urakka u ON :urakka = u.id
            JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
-      AND (:otsikko::TEXT IS NULL OR tr_alataso.otsikko = :otsikko)
+           JOIN tehtavaryhmaotsikko o ON tr_alataso.tehtavaryhmaotsikko_id = o.id
+      AND (:otsikko::TEXT IS NULL OR o.otsikko = :otsikko)
  WHERE (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= DATE_PART('year', u.alkupvm)::INTEGER)
    AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= DATE_PART('year', u.alkupvm)::INTEGER)
    AND tk.poistettu IS NOT TRUE

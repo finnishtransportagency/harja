@@ -76,7 +76,7 @@
         [:span.livicon-chevron-down]]
 
        ;; Alasvetovalikko urakan nopeaa vaihtamista varten
-       [:ul.dropdown-menu.livi-alasvetolista {:role "menu"}
+       [:ul.urakkalista.dropdown-menu.livi-alasvetolista {:role "menu"}
 
         (let [muut-kaynnissaolevat-urakat (sort-by :nimi
                                                    (filter #(and

@@ -267,8 +267,9 @@ SELECT nimi FROM tehtavaryhma
 WHERE id = :id AND poistettu IS NOT TRUE;
 
 -- name: hae-tehtavaryhman-tiedot-tunnisteella
-SELECT id, nimi, otsikko, jarjestys, luotu, luoja, muokattu, muokkaaja
-  FROM tehtavaryhma
+SELECT tr.id, nimi, o.otsikko, tr.jarjestys, tr.luotu, tr.luoja, tr.muokattu, tr.muokkaaja
+  FROM tehtavaryhma tr
+  JOIN tehtavaryhmaotsikko o ON tr.tehtavaryhmaotsikko_id = o.id
  WHERE yksiloiva_tunniste = :tunniste::UUID;
 
 -- name: hae-urakan-hoidon-johdon-toimenpideinstanssi

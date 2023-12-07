@@ -620,12 +620,6 @@ tr-ikoni {:img (pinni-ikoni "musta")
             "Poistettu" ["Poistettu"
                          (viiva-mustalla-rajalla puhtaat/eggplant-default)
                          puhtaat/eggplant-default]
-            "Tieosoitemuutos" ["Tarkistettu"
-                         (viiva-mustalla-rajalla puhtaat/pitaya-default)
-                         puhtaat/pitaya-default]
-            "Muu tekninen toimenpide" ["Korjattu"
-                       (viiva-mustalla-rajalla puhtaat/pea-default)
-                       puhtaat/pea-default]
             ["Ei tietoa" (viiva-mustalla-rajalla puhtaat/valkoinen) puhtaat/valkoinen]))
     (vesipisara-pinni-ikoni)))
 
