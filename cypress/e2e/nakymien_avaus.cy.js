@@ -1,3 +1,5 @@
+let clickTimeout = 6000;
+
 describe('Päänäkymien avaamiset', function () {
     beforeEach(function () {
         cy.visit("/")
@@ -34,5 +36,11 @@ describe('Päänäkymien avaamiset', function () {
         cy.contains('ul#sivut a span', 'Tienpidon luvat').click()
         cy.contains('button', "Hae lupia").should('exist')
         cy.contains('Hupsista').should('not.exist')
+    })
+
+    it("Info -sivu toimii", function () {
+        cy.contains('ul div#info a span', 'INFO').click()
+        cy.contains('Hupsista').should('not.exist')
+        cy.contains('Harja uutiset').should('exist')
     })
 })
