@@ -14,6 +14,7 @@ on:
   push:
     branches:
       - develop
+      - VHAR-8429-junit-report-korjauksia
 
 jobs:
   tests:
