@@ -156,7 +156,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":alert-slow: ECS deploy -> ${{ inputs.environment }}: ${{ job.status }}${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    "text": ":alert-slow: ECS deploy -> ${{ inputs.environment }} epäonnistui!\n${{ env.JOB_RUN_URL }}"
                   }
                 }
               ]
@@ -164,4 +164,5 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+          JOB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
