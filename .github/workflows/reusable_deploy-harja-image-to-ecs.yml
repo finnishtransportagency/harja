@@ -151,7 +151,6 @@ jobs:
           # Slack Block Kit -tyyppinen rikastettu viesti
           payload: |
             {
-              "text": ":alert-slow: ECS deploy -> ${{ inputs.environment }}: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
               "blocks": [
                 {
                   "type": "section",
