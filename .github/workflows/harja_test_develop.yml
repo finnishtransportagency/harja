@@ -75,7 +75,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":alert-slow: Develop-branchin testeissä tapahtui virhe!\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+                    "text": ":warning: Develop-branchin testeissä tapahtui virhe!\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
                   }
                 }
               ]
