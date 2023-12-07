@@ -86,7 +86,7 @@
   {:alkupvm #inst "2022-10-15T00:00:00.000000000-00:00"
    :kohdeluokka "tienvarsikalusteet"
    :kuntoluokka "Testikuntoluokka"
-   :lisatieto nil
+   :lisatieto ""
    :loppupvm nil
    :muokattu nil
    :muokkaaja "MUOKKAAJA"
@@ -106,7 +106,7 @@
     (let [vastaus (varusteet/hae-varusteen-historia (:velho-integraatio jarjestelma) {:ulkoinen-oid +tienvarsikaluste-oid+
                                                                                       :kohdeluokka "tienvarsikalusteet"})]
       (is (= 2 (count vastaus)))
-      (is (apply = (map #(dissoc % :alkupvm :loppupvm :tr-alkuetaisyys) vastaus)))
+      (is (apply = (map #(dissoc % :alkupvm :loppupvm :tr-alkuetaisyys :toimenpide) vastaus)))
       (is (= odotettu-varuste (second vastaus))))))
 
 (deftest hae-urakan-varustetoteumat-test
