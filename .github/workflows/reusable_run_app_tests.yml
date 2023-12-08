@@ -208,6 +208,10 @@ jobs:
           report_paths: 'test2junit/xml/*.xml'
           require_passed_tests: true
           check_name: 'Test Report: ${{ env.NAME_PREFIX }}Backend'
+          # https://github.com/mikepenz/action-junit-report/issues/40#issuecomment-1607743568
+          # Kiertotie sille, että test result checkit menevät väärän workflown tuloksiin
+          # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
+          detailed_summary: true
 
   basic-tests:
     if: ${{ inputs.basic-tests == 'true' }}
@@ -254,6 +258,10 @@ jobs:
           report_paths: 'test2junit/xml/*.xml'
           require_passed_tests: true
           check_name: 'Test Report: ${{ env.NAME_PREFIX }}Slow'
+          # https://github.com/mikepenz/action-junit-report/issues/40#issuecomment-1607743568
+          # Kiertotie sille, että test result checkit menevät väärän workflown tuloksiin
+          # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
+          detailed_summary: true
 
       - name: Setup test tools
         uses: ./.github/actions/setup-test-tools
@@ -319,6 +327,10 @@ jobs:
           report_paths: 'test2junit/xml/*.xml'
           require_passed_tests: true
           check_name: 'Test Report: ${{ env.NAME_PREFIX }}Integration'
+          # https://github.com/mikepenz/action-junit-report/issues/40#issuecomment-1607743568
+          # Kiertotie sille, että test result checkit menevät väärän workflown tuloksiin
+          # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
+          detailed_summary: true
 
   e2e-tests:
     if: ${{ inputs.e2e-tests == 'true' }}
@@ -456,6 +468,10 @@ jobs:
           report_paths: 'cypress/test-results/*.xml'
           require_passed_tests: true
           check_name: 'Test Report: Cypress (${{ env.NAME_PREFIX }}${{ matrix.browser }})'
+          # https://github.com/mikepenz/action-junit-report/issues/40#issuecomment-1607743568
+          # Kiertotie sille, että test result checkit menevät väärän workflown tuloksiin
+          # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
+          detailed_summary: true
 
       # Mikäli testit epäonnistuvat, tallenna cypress screenshotit ja videot artifakteina
       - uses: actions/upload-artifact@v3
