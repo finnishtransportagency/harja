@@ -126,10 +126,15 @@ describe('MH-Urakan näkymien avaamiset', function () {
         // Siirry Toteumat päätabille
         cy.get('[data-cy=tabs-taso1-Toteumat]').click()
         // Käydään alatabit läpi
-        cy.get('[data-cy="tabs-taso2-Vanhat varustekirjaukset (Tierekisteri)"]').click()
-        cy.contains('Vanhat varustekirjaukset Harjassa').should('exist')
-        cy.get('[data-cy=tabs-taso2-Varusteet]').click()
-        cy.contains('Varustetoimenpiteet').should('exist')
+        
+        // Vaatii ominaisuuden :tierekisterin-varusteet - ja meillä ei ole vielä kyvykkyyttä
+        // Cypress testeistä tarkistaa, että onko ominaisuus käytössä vai ei
+        //cy.get('[data-cy="tabs-taso2-Vanhat varustekirjaukset (Tierekisteri)"]').click()
+        //cy.contains('Vanhat varustekirjaukset Harjassa').should('exist')
+
+        // Vaatii ominaisuuden :tierekisterin-varusteet - ja meillä ei ole vielä kyvykkyyttä
+        //cy.get('[data-cy=tabs-taso2-Varusteet]').click()
+        //cy.contains('Varustetoimenpiteet').should('exist')
         cy.get('[data-cy="tabs-taso2-Muut materiaalit"]').click()
         cy.contains('Materiaalien käyttö').should('exist')
         cy.get('[data-cy="tabs-taso2-Pohjavesialueiden suola"]').click()
