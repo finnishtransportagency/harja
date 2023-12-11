@@ -334,7 +334,7 @@
       ;; Tarkastustehtävät
 
       :paivystystarkistukset (component/using
-                               (paivystystarkistukset/->Paivystystarkistukset (:paivystystarkistus asetukset))
+                               (paivystystarkistukset/->Paivystystarkistukset (:paivystystarkistus asetukset) (:kehitysmoodi asetukset))
                                [:http-palvelin :db :fim :api-sahkoposti])
       :reittitarkistukset (component/using
                             (reittitarkistukset/->Reittitarkistukset (:reittitarkistus asetukset))
