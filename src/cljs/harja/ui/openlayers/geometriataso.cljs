@@ -30,6 +30,18 @@
   #{:polygon :point :circle :multipolygon :multiline :line
     :geometry-collection})
 
+(defn create-heatmap-layer [features]
+  (let [source (ol.source.Vector. #js {:features (clj->js features)})
+        heatmap-layer (ol.layer.Heatmap. #js {:source source
+                                              :blur 40
+                                              :radius 35})]
+    heatmap-layer))
+
+(defn sample-points []
+  (map (fn [coords]
+         (ol.Feature. (ol.geom.Point.  (clj->js coords))))
+    [[367320.5130002269 7244045.459997045] [367350.7086205464 7250511.133134752]])) ; Oulu  
+
 (defn update-ol3-layer-geometries
   "Given a vector of ol3 layer and map of current geometries and a
   sequence of new geometries, updates (creates/removes) the geometries
@@ -38,6 +50,14 @@
   If incoming layer & map vector is nil, a new ol3 layer will be created."
   [ol3 geometry-layer geometries-map items]
   (let [create? (nil? geometry-layer)
+        heatmap-points (mapcat (fn [item]
+                                 (when (= (:type item) :heatmap)
+                                   (mapcat :points (:lines (:alue item)))))
+                         items)
+        heatmap? (seq? heatmap-points)
+        heatmap (create-heatmap-layer (sample-points))
+        
+        ;_ (println "Heatmap? " heatmap?)
         geometry-layer (if create?
                          (doto (create-geometry-layer
                                 (taso/opacity items))

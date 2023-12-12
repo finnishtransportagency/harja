@@ -49,7 +49,6 @@
 (defn asia-on-piste? [asia]
   (not (reitillinen-asia? asia)))
 
-
 ;; Jos annettu asetus on merkkijono, palautetaan [{:img merkkijono}]
 (defn- validoi-merkkiasetukset [merkit]
   (cond
