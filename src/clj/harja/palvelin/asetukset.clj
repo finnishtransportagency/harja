@@ -95,7 +95,9 @@
    (s/optional-key :digiroad) {:url s/Str
                                :api-key s/Str}
 
-   :ilmatieteenlaitos {:lampotilat-url s/Str}
+   ;; TODO: Siirtymävaiheen jälkeen apiavain ei enää ole valinnainen paramteri
+   :ilmatieteenlaitos {:lampotilat-url s/Str
+                       (s/optional-key :apiavain) s/Str}
 
    (s/optional-key :geometriapaivitykset) {(s/optional-key :tuontivali) s/Int
                                            (s/optional-key :tieosoiteverkon-shapefile) s/Str
@@ -157,9 +159,12 @@
 
    (s/optional-key :yha-velho) {}
 
+   ;; TODO: Siirtymävaiheen jälkeen sms-url ja apiavain ei enää ole valinnainen paramteri
    (s/optional-key :labyrintti) {:url s/Str
                                  :kayttajatunnus s/Str
-                                 :salasana s/Str}
+                                 :salasana s/Str
+                                 (s/optional-key :sms-url) s/Str
+                                 (s/optional-key :apiavain) s/Str}
 
    (s/optional-key :virustarkistus) {:url s/Str}
    (s/optional-key :tiedostopesula) {:base-url s/Str}
