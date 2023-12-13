@@ -20,11 +20,11 @@
   "Poistetaan tässä vaiheessa vain rivinvaihdot. Voit lisätä myös muita merkkejä, jotka tulee poistaa, jos käy
   ilmi, että niille on tarvetta."
   [teksti]
-  (let [teksti (str/replace teksti #"\n" "")
-        teksti (str/replace teksti #"\r" "")
-        teksti (str/replace teksti #"'" "")
-        teksti (str/replace teksti #"\"" "")]
-    teksti))
+  (-> teksti
+    (str/replace #"\n" "")
+    (str/replace #"\r" "")
+    (str/replace #"'" "")
+    (str/replace #"\"" "")))
 
 (defn hae-viesti-id [data]
   (or (z/xml1-> data (z/attr :messageId))
