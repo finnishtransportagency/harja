@@ -28,7 +28,7 @@
   "Haetaan talvikausi ilmatieteenlaitoksen rajapinnasta.
    1971-2000 väli käyttää vanhempaa rajapintaa, joka ei ota vastaan aikaväliä. Jos käytät tätä, jätä keskiarvon-alkuvuosi tyhjäksi.
    1981-2010 ja 1991-2020 käyttävät uudempaa rajapintaa, ja aikaväli laitetaan climatology-parametrissa. Välitä tämä keskiarvon-alkuvuosi-parametrissa. "
-  [db integraatioloki endpoint-url talvikauden-alkuvuosi keskiarvon-alkuvuosi]
+  [db integraatioloki endpoint-url apiavain talvikauden-alkuvuosi keskiarvon-alkuvuosi]
   (log/debug "hae talvikausi ilmatieteenlaitokselta: " endpoint-url " talvikauden alkuvuosi " talvikauden-alkuvuosi)
   (let [{:keys [status body error headers]}
         (integraatiotapahtuma/suorita-integraatio db integraatioloki "ilmatieteenlaitos" "lampotilojen-haku"
@@ -39,9 +39,18 @@
                   parametrit {:season talvikausi
                               :climatology keskiarvokausi
                               :newversion 1}
-                  http-asetukset {:metodi :POST
-                                  :url endpoint-url
-                                  :parametrit parametrit}]
+                  http-asetukset (if (empty? apiavain)
+                                   ;; Vanhan Harjan kutsut kulkevat entiseen tapaan suoraan ilmatieteenlaitoksen palveluun ilman autentikaatiota.
+                                   {:metodi :POST
+                                    :url endpoint-url
+                                    :parametrit parametrit}
+                                   ;; Pilvi-Harjan kutsut ilmatieteenlaitokselle kulkevat integraatioväylän kautta ja autentikoidaan api-avaimella.
+                                   {:metodi :GET
+                                    :url endpoint-url
+                                    :parametrit parametrit
+                                    :otsikot {"Content-Type" "application/x-www-form-urlencoded"
+                                              "x-api-key" apiavain}})
+                  _ (println "HTTP-ASETUKSET " http-asetukset)]
               (integraatiotapahtuma/laheta konteksti :http http-asetukset))))]
     (log/debug "STATUS: " status)
     (log/debug "HEADERS: " headers)

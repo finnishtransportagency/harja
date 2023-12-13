@@ -14,21 +14,21 @@
             [clojure.string :as str]))
 
 
-(defn hae-lampotilat-ilmatieteenlaitokselta [db integraatioloki user url vuosi]
+(defn hae-lampotilat-ilmatieteenlaitokselta [db integraatioloki user url apiavain vuosi]
   (log/debug "hae-lampotilat-ilmatieteenlaitokselta, url " url " vuosi " vuosi)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-lampotilat user) ;; vaatii KIRJOITUS oikeuden
   (assert (and url vuosi) "Annettava url ja vuosi kun haetaan ilmatieteenlaitokselta lämpötiloja.")
   ;; Ilmatieteenlaitos käyttää :urakka-id -kentässään Harjan :alueurakkanro -kenttää, siksi muunnoksia alla
-  (let [hae-urakoiden-lampotilat (fn [url keskiarvo-alkuvuosi]
+  (let [hae-urakoiden-lampotilat (fn [url apiavain keskiarvo-alkuvuosi]
                                    (into {}
                                          (map (juxt :urakka-id #(dissoc % :urakka-id)))
-                                         (ilmatieteenlaitos/hae-talvikausi db integraatioloki url vuosi keskiarvo-alkuvuosi)))
+                                         (ilmatieteenlaitos/hae-talvikausi db integraatioloki url apiavain vuosi keskiarvo-alkuvuosi)))
         hoidon-urakoiden-lampotilat-1971-2000 (hae-urakoiden-lampotilat
-                                                (str/replace url "tieindeksi2" "tieindeksi") nil)
-        hoidon-urakoiden-lampotilat-1981-2010 (hae-urakoiden-lampotilat url 1981)
+                                                (str/replace url "tieindeksi2" "tieindeksi") apiavain nil)
+        hoidon-urakoiden-lampotilat-1981-2010 (hae-urakoiden-lampotilat url apiavain 1981)
         ;; Ei voida hakea 91-20 keskiarvoa ennen vuotta 2021, koska keskiarvoa ei ole muodostettu.
         hoidon-urakoiden-lampotilat-1991-2020 (when (> vuosi 2020)
-                                                (hae-urakoiden-lampotilat url 1991))
+                                                (hae-urakoiden-lampotilat url apiavain 1991))
         hoidon-urakka-ja-alueurakkanro-avaimet
         (urakat/hae-aktiivisten-hoitourakoiden-alueurakkanumerot db vuosi)
         tulos (into {}
@@ -148,7 +148,7 @@
 
     (hae-urakan-suolasakot-ja-lampotilat db user urakka)))
 
-(defrecord Lampotilat [ilmatieteenlaitos-url]
+(defrecord Lampotilat [ilmatieteenlaitos-url apiavain]
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
@@ -156,7 +156,7 @@
           integraatioloki (:integraatioloki this)]
       (julkaise-palvelu http :hae-lampotilat-ilmatieteenlaitokselta
                         (fn [user {:keys [vuosi]}]
-                          (hae-lampotilat-ilmatieteenlaitokselta db integraatioloki user ilmatieteenlaitos-url vuosi)))
+                          (hae-lampotilat-ilmatieteenlaitokselta db integraatioloki user ilmatieteenlaitos-url apiavain vuosi)))
       (julkaise-palvelu http :hae-teiden-hoitourakoiden-lampotilat
                         (fn [user {:keys [hoitokausi]}]
                           (hae-teiden-hoitourakoiden-lampotilat db user hoitokausi)))
