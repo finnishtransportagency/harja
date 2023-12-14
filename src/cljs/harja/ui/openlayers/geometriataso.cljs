@@ -30,17 +30,18 @@
   #{:polygon :point :circle :multipolygon :multiline :line
     :geometry-collection})
 
-(defn create-heatmap-layer [features]
+(defn tee-heatmap-layer [features]
   (let [source (ol.source.Vector. #js {:features (clj->js features)})
         heatmap-layer (ol.layer.Heatmap. #js {:source source
-                                              :blur 40
-                                              :radius 35})]
+                                              :blur 22
+                                              :radius 3})] ;; 28 & 4 myös aika hyvä jos haluaa hieman isompana  
     heatmap-layer))
 
-(defn sample-points []
+(defn heatmap-pisteet [heatmap-points]
   (map (fn [coords]
          (ol.Feature. (ol.geom.Point.  (clj->js coords))))
-    [[367320.5130002269 7244045.459997045] [367350.7086205464 7250511.133134752]])) ; Oulu  
+    #_[[367320.5130002269 7244045.459997045] [367350.7086205464 7250511.133134752]]
+    heatmap-points)) ; Oulu  
 
 (defn update-ol3-layer-geometries
   "Given a vector of ol3 layer and map of current geometries and a
@@ -54,13 +55,13 @@
                                  (when (= (:type item) :heatmap)
                                    (mapcat :points (:lines (:alue item)))))
                          items)
-        heatmap? (seq? heatmap-points)
-        heatmap (create-heatmap-layer (sample-points))
-        
-        ;_ (println "Heatmap? " heatmap?)
+        heatmap? (= (-> items first :type) :heatmap)
+        heatmap (tee-heatmap-layer (heatmap-pisteet heatmap-points))
         geometry-layer (if create?
-                         (doto (create-geometry-layer
-                                (taso/opacity items))
+                         (doto
+                           (if heatmap?
+                             heatmap
+                             (create-geometry-layer (taso/opacity items)))
                            (.setZIndex (or (:zindex (meta items)) 0)))
                          geometry-layer)
         geometries-map (if create? {} geometries-map)
@@ -70,41 +71,42 @@
     (when create?
       (.addLayer ol3 geometry-layer))
 
-    ;; Remove all ol3 feature objects that are no longer in the new geometries
-    (doseq [[avain feature] (seq geometries-map)
-            :when (and feature (not (geometries-set avain)))]
-      (.removeFeature features feature))
+    (if heatmap?
+      [geometry-layer items]
+      ;; Create new features for new geometries and update the geometries map
+      (do
+        ;; Remove all ol3 feature objects that are no longer in the new geometries
+        (doseq [[avain feature] (seq geometries-map)
+                :when (and feature (not (geometries-set avain)))]
+          (.removeFeature features feature))
 
-    ;; Create new features for new geometries and update the geometries map
-    (loop [new-geometries-map {}
-           [item & items] items]
-      (if-not item
-        ;; When all items are processed, return layer and new geometries map
-        [geometry-layer new-geometries-map]
-
-        (let [alue (:alue item)]
-          (recur
-           (assoc new-geometries-map item
+        (loop [new-geometries-map {}
+               [item & items] items]
+          (if-not item
+            ;; When all items are processed, return layer and new geometries map
+            [geometry-layer new-geometries-map]
+            (let [alue (:alue item)]
+              (recur
+                (assoc new-geometries-map item
                   (or (geometries-map item)
-                      (when-let [new-shape (luo-feature alue)]
-                        (aseta-feature-geometria! new-shape item)
-                        (.addFeature features new-shape)
+                    (when-let [new-shape (luo-feature alue)]
+                      (aseta-feature-geometria! new-shape item)
+                      (.addFeature features new-shape)
 
-                        ;; Aseta geneerinen tyyli tyypeille,
-                        ;; joiden luo-feature ei sitä tee
-                        (when (tyyppi-tarvitsee-tyylit (:type alue))
-                          (featuret/aseta-tyylit new-shape alue))
+                      ;; Aseta geneerinen tyyli tyypeille,
+                      ;; joiden luo-feature ei sitä tee
+                      (when (tyyppi-tarvitsee-tyylit (:type alue))
+                        (featuret/aseta-tyylit new-shape alue))
 
-                        new-shape)))
-           items))))))
+                      new-shape)))
+                items))))))))
 
 ;; Laajenna vektorit olemaan tasoja
 (extend-protocol Taso
   PersistentVector
   (aseta-z-index [this z-index]
     (with-meta this
-      (merge (meta this)
-             {:zindex z-index})))
+      (merge (meta this) {:zindex z-index})))
   (extent [this]
     (-> this meta :extent))
   (opacity [this]
