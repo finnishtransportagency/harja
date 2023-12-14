@@ -463,7 +463,6 @@ describe('Hankintakustannukset osio', function () {
                 .contains('1.')
 
             // Varmista, että "Kopioi kuluvan hoitovuoden määrät tuleville vuosille" ei ole aktiivinen.
-            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
             cy.get('div[data-cy="hankintakustannukset-rahavaraukset-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
                 .should('not.be.checked')
@@ -638,7 +637,6 @@ describe('Hankintakustannukset osio', function () {
                 .click();
 
             // Disabloi "Kopioi hankinnat tuleville hoitovuosille".
-            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
             cy.get('div[data-cy="hankintakustannukset-rahavaraukset-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
                 .should('be.checked')
@@ -667,7 +665,6 @@ describe('Erillishankinnat osio', function () {
                 .contains('1.')
 
             // Varmista, että "Kopioi kuluvan hoitovuoden määrät tuleville vuosille" ei ole aktiivinen.
-            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
             cy.get('div[data-cy="erillishankinnat-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
                 .should('not.be.checked')
@@ -848,7 +845,6 @@ describe('Erillishankinnat osio', function () {
                 .click();
 
             // Disabloi "Kopioi hankinnat tuleville hoitovuosille".
-            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
             cy.get('div[data-cy="erillishankinnat-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
                 .should('be.checked')
@@ -878,7 +874,6 @@ describe.skip('Johto- ja hallintokorvaus osio', function () {
                 .contains('1.')
 
             // Varmista, että "Kopioi kuluvan hoitovuoden määrät tuleville vuosille" ei ole aktiivinen.
-            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
             cy.get('div[data-cy="tuntimaarat-ja-palkat-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
                 .should('not.be.checked')
@@ -1113,7 +1108,6 @@ describe.skip('Johto- ja hallintokorvaus osio', function () {
                 .click();
 
             // Disabloi "Kopioi hankinnat tuleville hoitovuosille".
-            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
             cy.get('div[data-cy="tuntimaarat-ja-palkat-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
                 .should('be.checked')
@@ -1305,7 +1299,6 @@ describe.skip('Johto- ja hallintokorvaus osio', function () {
                 .contains('1.')
 
             // Varmista, että "Kopioi kuluvan hoitovuoden määrät tuleville vuosille" ei ole aktiivinen.
-            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
             cy.get('div[data-cy="johto-ja-hallinto-muut-kulut-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
                 .should('not.be.checked')
@@ -1492,7 +1485,6 @@ describe.skip('Johto- ja hallintokorvaus osio', function () {
                 .click();
 
             // Disabloi "Kopioi hankinnat tuleville hoitovuosille".
-            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
             cy.get('div[data-cy="johto-ja-hallinto-muut-kulut-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
                 .should('be.checked')
@@ -1520,7 +1512,6 @@ describe('Hoidonjohtopalkkio osio', function () {
                 .contains('1.')
 
             // Varmista, että "Kopioi kuluvan hoitovuoden määrät tuleville vuosille" ei ole aktiivinen.
-            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
             cy.get('div[data-cy="hoidonjohtopalkkio-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
                 .should('not.be.checked')
@@ -1704,7 +1695,6 @@ describe('Hoidonjohtopalkkio osio', function () {
                 .click();
 
             // Disabloi "Kopioi hankinnat tuleville hoitovuosille".
-            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
             cy.get('div[data-cy="hoidonjohtopalkkio-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
                 .should('be.checked')
@@ -1734,7 +1724,6 @@ describe('Tavoitehinnan ulkopuoliset rahavaraukset osio', function () {
                 .contains('1.')
 
             // Varmista, että "Kopioi kuluvan hoitovuoden määrät tuleville vuosille" ei ole aktiivinen.
-            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
             cy.get('div[data-cy="tilaajan-varaukset-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
                 .should('not.be.checked')
@@ -1890,7 +1879,6 @@ describe('Tavoitehinnan ulkopuoliset rahavaraukset osio', function () {
                 .click();
 
             // Disabloi "Kopioi hankinnat tuleville hoitovuosille".
-            // FIXME: Tämä vaihe muuttuu tarpeettomaksi, kun toteutetaan: https://issues.solita.fi/browse/VHAR-5213
             cy.get('div[data-cy="tilaajan-varaukset-taulukko-suodattimet"]')
                 .find('input[id*="kopioi-tuleville-hoitovuosille"]')
                 .should('be.checked')

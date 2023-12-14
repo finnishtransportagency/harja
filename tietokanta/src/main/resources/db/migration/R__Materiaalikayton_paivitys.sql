@@ -74,7 +74,7 @@ $$ LANGUAGE plpgsql;
 
 -- Allaoleva funktio päivittää sopimuksen käytetyn materiaalin cachen päivämääräväliltä
 -- Se voidaan suorittaa hätätilanteessa esim. SQL-tulkin avulla tuotantokantaa vasten AINA transaktion sisällä (BEGIN... do stuff; COMMIT/ROLLBACK;)
--- Mahdolliset rivien deletoinnit tehtävä käsin ennen ajoa. Ks. VHAR-1691
+-- Mahdolliset rivien deletoinnit tehtävä käsin ennen ajoa.
 CREATE OR REPLACE FUNCTION paivita_sopimuksen_kaytetty_materiaali_pvm_aikavalille(alku DATE, loppu DATE)
 RETURNS void AS $$
 DECLARE

@@ -152,7 +152,7 @@ WHERE
   AND s.sakkoryhma != 'yllapidon_bonus'::SANKTIOLAJI
   AND lp.poistettu IS NOT TRUE AND s.poistettu IS NOT TRUE
   AND (s.perintapvm >= :alku AND s.perintapvm <= :loppu
-   -- VHAR-5849 halutaan että urakan päättymisen jälkeiset sanktiot näkyvät viimeisen hoitokauden listauksessa
+   -- Halutaan että urakan päättymisen jälkeiset sanktiot näkyvät viimeisen hoitokauden listauksessa
    OR
         (CASE
                     date_part('year', :loppu::date)::integer = date_part('year', u.loppupvm)::integer

@@ -664,9 +664,9 @@ yllapitoluokkanimi->numero
        (let [validoitu-muoto (oikean-muotoinen-tr alustatoimenpide tr-vali-spec)
              validoitu-alustatoimenpiteiden-paallekkyys (when (empty? validoitu-muoto)
                                                           (filter #(and (tr-valit-paallekkain? alustatoimenpide %)
-                                                                     ;; VHAR-5627 POT2:ssa halutaan sallia sama päällekkäinen alustatoimenpide
+                                                                     ;; POT2:ssa halutaan sallia sama päällekkäinen alustatoimenpide
                                                                      (when-not pot2?
-                                                                       (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %)))) ;
+                                                                       (= (:kasittelymenetelma alustatoimenpide) (:kasittelymenetelma %))))
                                                             toiset-alustatoimenpiteet))
              kaikkien-teiden-tiedot (apply concat osien-tiedot muiden-kohteiden-osien-tiedot)
              validoitu-paikka (when (empty? validoitu-muoto)

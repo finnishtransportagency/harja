@@ -510,16 +510,6 @@
   (hae-asiat-pisteessa! tasot event asiat-pisteessa)
   (tiedot/nayta-infopaneeli!))
 
-(defn- piilota-infopaneeli-jos-muuttunut
-  "Jos annetut geometriat ovat muuttuneet (pl. näkymän geometriat), piilota infopaneeli."
-  [vanha uusi]
-  (when (not= (dissoc vanha :infopaneelin-merkki)
-              (dissoc uusi :infopaneelin-merkki))
-    ;; Kun karttatasoissa muuttuu jotain muuta kuin :nakyman-geometriat
-    ;; (klikattu piste), piilotetaan infopaneeli ja poistetaan
-    ;; klikattu piste näkymän geometrioista.
-    (tiedot/piilota-infopaneeli!)))
-
 (defn- zoomaa-geometrioihin-jos-muuttunut
   "Zoomaa geometrioihin uudelleen, jos ne ovat muuttuneet."
   [vanha uusi]
@@ -549,8 +539,6 @@
 (defn- geometriat-muuttuneet
   "Käsittelee geometrioiden muutoksen. Parametrina vanhat ja uudet geometriat."
   [vanha uusi]
-  ;; HAR-4461: kokeillaan tuleeko tämän poistamisesta haittavaikutuksia.
-  #_(piilota-infopaneeli-jos-muuttunut vanha uusi)
   (zoomaa-geometrioihin-jos-muuttunut vanha uusi))
 
 (defn- nayta-paneelissa?-fn

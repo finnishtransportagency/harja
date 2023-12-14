@@ -11,7 +11,7 @@
  :output-dir "resources/public/js/"
  :asset-path "js/"
 
- ;; frontti kaatuu, mm. VHAR-2413 ilman prefixiä
+ ;; frontti kaatuu ilman prefixiä
  :rename-prefix "h"
 
  ;:parallel-build false Failaa randomisti

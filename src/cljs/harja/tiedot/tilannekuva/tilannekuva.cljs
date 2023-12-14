@@ -32,7 +32,8 @@
        :const true}
 bufferi 1000)
 
-;; Vaihdettu 60s etteivät tiedot häviä liian pian tarkastellessa (VHAR-1057)
+;; Vaihdettu 60s etteivät tiedot häviä liian pian tarkastellessa.
+;; Aiemmin saattoi käydä niin, että edellinen lataus oli vielä kesken, kun tehtiin uusi haku.
 (def ^{:doc "Päivitystiheys tilannekuvassa, kun parametrit eivät muutu"
        :const true}
 hakutiheys-nykytilanne 60000)
