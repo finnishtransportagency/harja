@@ -3,6 +3,9 @@
             [slingshot.slingshot :refer [throw+]]
             [taoensso.truss :refer [have]]))
 
+(declare hae-integraatiotapahtuman-tila)
+(declare hae-integraation-id)
+
 (defqueries "harja/kyselyt/integraatiot.sql"
   {:positional? true})
 
