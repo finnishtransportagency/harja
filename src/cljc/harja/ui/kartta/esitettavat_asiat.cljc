@@ -198,10 +198,14 @@
                           :points koordinaatit})
 
                        (= :multiline tyyppi)
-                       (merge
-                         (maarittele-viiva valittu? merkit viivat)
-                         {:type :moniviiva
-                          :lines (:lines geo)}))))]
+                       ;; TODO....
+                       (if (:heatmap? asia)
+                         {:type :heatmap
+                          :lines (:lines geo)}
+                         (merge
+                           (maarittele-viiva valittu? merkit viivat)
+                           {:type :moniviiva
+                            :lines (:lines geo)})))))]
      vastaus)))
 
 ;;;;;;
@@ -228,7 +232,6 @@
        " ("
        (str/lower-case (ilmoitukset/tilan-selite (:tila ilmoitus)))
        ")"))
-
 
 (defn ilmoitus-kartalle [{:keys [tila ilmoitustyyppi] :as ilmoitus} valittu?]
   (let [ikoni (ulkoasu/ilmoituksen-ikoni ilmoitus)]
@@ -315,6 +318,12 @@
 
 (defmethod asia-kartalle :tieturvallisuusverkko [tieturvallisuustie _valittu?]
   {:type :tieturvallisuusverkko
+   :selite tieturvallisuusverkko-selite
+   :alue (maarittele-feature tieturvallisuustie false nil ulkoasu/tieturvallisuusverkko)})
+
+(defmethod asia-kartalle :heatmap [tieturvallisuustie _valittu?]
+  ;; TODO ... 
+  {:type :heatmap
    :selite tieturvallisuusverkko-selite
    :alue (maarittele-feature tieturvallisuustie false nil ulkoasu/tieturvallisuusverkko)})
 
