@@ -517,6 +517,7 @@
     (komp/kuuntelija :tarkastus-klikattu #(reset! tiedot/valittu-tarkastus %2))
     (komp/ulos (kartta-tiedot/kuuntele-valittua! tiedot/valittu-tarkastus))
     (komp/sisaan-ulos #(do
+                         (reset! tiedot/valittu-karttataso nil)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                          (reset! tarkastukset-kartalla/karttataso-tarkastukset (and
                                                                                  (not @tarkastukset-kartalla/karttataso-tieturvallisuus-heatmap)
