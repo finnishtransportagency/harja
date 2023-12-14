@@ -38,10 +38,9 @@
     heatmap-layer))
 
 (defn heatmap-pisteet [heatmap-koordinaatit]
-  (map (fn [coords]
-         (ol.Feature. (ol.geom.Point.  (clj->js coords))))
-    #_[[367320.5130002269 7244045.459997045] [367350.7086205464 7250511.133134752]]
-    heatmap-koordinaatit)) ; Oulu  
+  (map (fn [pisteet]
+         (ol.Feature. (ol.geom.Point. (clj->js pisteet))))
+    heatmap-koordinaatit))
 
 (defn paivita-ol3-tason-geometriat
   "Kun annetaan tason vektori, nykyisten geometrioiden map ja 
