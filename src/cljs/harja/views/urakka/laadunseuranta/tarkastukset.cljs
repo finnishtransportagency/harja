@@ -518,11 +518,9 @@
     (komp/ulos (kartta-tiedot/kuuntele-valittua! tiedot/valittu-tarkastus))
     (komp/sisaan-ulos #(do
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                         (if (and
-                               (not @tarkastukset-kartalla/karttataso-tieturvallisuus-heatmap)
-                               (not @tarkastukset-kartalla/karttataso-ei-kayty-tieturvallisuusverkko))
-                           (reset! tarkastukset-kartalla/karttataso-tarkastukset true)
-                           (reset! tarkastukset-kartalla/karttataso-tarkastukset false))
+                         (reset! tarkastukset-kartalla/karttataso-tarkastukset (and
+                                                                                 (not @tarkastukset-kartalla/karttataso-tieturvallisuus-heatmap)
+                                                                                 (not @tarkastukset-kartalla/karttataso-ei-kayty-tieturvallisuusverkko)))
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                            {:tarkastus {:toiminto (fn [klikattu-tarkastus] ;; asiat-pisteessa -asia joka on tyypiltään tarkastus
                                                     (reset! tiedot/valittu-tarkastus (vastaava-tarkastus klikattu-tarkastus)))
