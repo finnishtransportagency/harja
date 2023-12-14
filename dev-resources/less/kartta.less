@@ -1,4 +1,6 @@
+@import "./laadunseuranta/yleiset/varit";
 @kartan-transition-kesto: .1s;
+
 #kartta {
   &.piilossa {
     border: @black-default 0 ridge;
@@ -86,6 +88,23 @@
       margin-right: auto;
     }
   }
+}
+
+.heatmap-infolaatikko {
+  padding: @valistys-12;
+}
+
+.heatmap-varipalkki {
+  width: 10px;
+  height: 120px; 
+  background: linear-gradient(
+    to bottom, 
+    @punainen6, 
+    @keltainen1,
+    @keltainen2,
+    @vihrea6,
+    @sininen6
+  );
 }
 
 .kartan-ohjelaatikko {
