@@ -68,15 +68,19 @@
                  :loppupvm loppupvm})))))))
 
 (defonce tieturvallisuus-heatmap-kartalla
-  ;; TODO...
   (reaction<!
     [paalla? @karttataso-tieturvallisuus-heatmap
-     urakka @nav/valittu-urakka-id]
+     urakka @nav/valittu-urakka-id
+     [alkupvm loppupvm] (tarkastukset/naytettava-aikavali
+                          @tiedot-urakka/valittu-urakka-kaynnissa?
+                          @tiedot-urakka/valittu-hoitokausi
+                          @tiedot-urakka/valittu-hoitokauden-kuukausi
+                          @tarkastukset/valittu-aikavali)]
     (when (and paalla? urakka)
       (go
         (esitettavat-asiat/kartalla-esitettavaan-muotoon
-          (<! (k/post! :hae-heatmap-test
-                {:urakka-id urakka})))))))
+          (<! (k/post! :hae-tarkastuspisteet-heatmapille
+                (tarkastukset/kasaa-heatmap-parametrit urakka alkupvm loppupvm))))))))
 
 (def tarkastusreitit-kartalla
   (reaction
