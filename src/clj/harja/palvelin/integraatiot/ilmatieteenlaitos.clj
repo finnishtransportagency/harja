@@ -49,8 +49,7 @@
                                     :url endpoint-url
                                     :parametrit parametrit
                                     :otsikot {"Content-Type" "application/x-www-form-urlencoded"
-                                              "x-api-key" apiavain}})
-                  _ (println "HTTP-ASETUKSET " http-asetukset)]
+                                              "x-api-key" apiavain}})]
               (integraatiotapahtuma/laheta konteksti :http http-asetukset))))]
     (log/debug "STATUS: " status)
     (log/debug "HEADERS: " headers)
