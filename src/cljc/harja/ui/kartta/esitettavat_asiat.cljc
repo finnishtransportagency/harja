@@ -198,10 +198,8 @@
                           :points koordinaatit})
 
                        (= :multiline tyyppi)
-                       ;; TODO....
                        (if (:heatmap? asia)
-                         {:type :heatmap
-                          :lines (:lines geo)}
+                         nil
                          (merge
                            (maarittele-viiva valittu? merkit viivat)
                            {:type :moniviiva
@@ -292,6 +290,11 @@
   {:teksti "Tieturvallisuustarkastu-\nkseen kuuluva tie"
    :vari puhtaat/fig-default})
 
+(def heatmap-selite
+  {:heatmap? true
+   :teksti-ylä "Enemmän käyntejä"
+   :teksti-ala "Vähemmän käyntejä"})
+
 (def ei-kayty-tieturvallisuusverkko-selite
   {:ajovayla
    {:teksti "Ei tarkastettu ollenkaan, ajoväylät"
@@ -322,9 +325,8 @@
    :alue (maarittele-feature tieturvallisuustie false nil ulkoasu/tieturvallisuusverkko)})
 
 (defmethod asia-kartalle :heatmap [tieturvallisuustie _valittu?]
-  ;; TODO ... 
   {:type :heatmap
-   :selite tieturvallisuusverkko-selite
+   :selite heatmap-selite
    :alue (maarittele-feature tieturvallisuustie false nil ulkoasu/tieturvallisuusverkko)})
 
 (defmethod asia-kartalle :ei-kayty-tieturvallisuusverkko [tieturvallisuustie _valittu?]
