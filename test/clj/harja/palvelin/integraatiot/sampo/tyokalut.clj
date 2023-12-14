@@ -359,3 +359,18 @@
         SELECT id
         FROM yhteyshenkilo
         WHERE sampoid = 'TESTIHENKILO')));"))))
+
+(deftest varmista-kielletyt-merkit
+  (let [oikea "urakka"
+        v1 "urakka\n"
+        v2 "urakka\r"
+        v3 "urakka\r\n"
+        v4 "ura\r\nkka"
+        v5 "ura'kka"
+        v6 "ura\"kka"]
+    (is (= oikea (sampo-sanoma/poista-kielletyt-merkit v1)))
+    (is (= oikea (sampo-sanoma/poista-kielletyt-merkit v2)))
+    (is (= oikea (sampo-sanoma/poista-kielletyt-merkit v3)))
+    (is (= oikea (sampo-sanoma/poista-kielletyt-merkit v4)))
+    (is (= oikea (sampo-sanoma/poista-kielletyt-merkit v5)))
+    (is (= oikea (sampo-sanoma/poista-kielletyt-merkit v6)))))

@@ -3,7 +3,8 @@
             [clojure.zip :refer [xml-zip]]
             [clojure.data.zip.xml :as z]
             [taoensso.timbre :as log]
-            [harja.tyokalut.xml :as xml])
+            [harja.tyokalut.xml :as xml]
+            [clojure.string :as str])
   (:import (java.text SimpleDateFormat ParseException)
            (java.sql Date)))
 
@@ -14,6 +15,16 @@
        (catch ParseException e
          (log/error e "Virhe parsiessa päivämäärää: " teksti)
          nil)))
+
+(defn poista-kielletyt-merkit
+  "Poistetaan tässä vaiheessa vain rivinvaihdot. Voit lisätä myös muita merkkejä, jotka tulee poistaa, jos käy
+  ilmi, että niille on tarvetta."
+  [teksti]
+  (-> teksti
+    (str/replace #"\n" "")
+    (str/replace #"\r" "")
+    (str/replace #"'" "")
+    (str/replace #"\"" "")))
 
 (defn hae-viesti-id [data]
   (or (z/xml1-> data (z/attr :messageId))
@@ -33,7 +44,7 @@
 (defn lue-urakka [project]
   {:viesti-id (hae-viesti-id project)
    :sampo-id (z/xml1-> project (z/attr :id))
-   :nimi (z/xml1-> project (z/attr :name))
+   :nimi (poista-kielletyt-merkit (z/xml1-> project (z/attr :name)))
    :alkupvm (parsi-paivamaara (z/xml1-> project (z/attr :schedule_start)))
    :loppupvm (parsi-paivamaara (z/xml1-> project (z/attr :schedule_finish)))
    :hanke-sampo-id (z/xml1-> project (z/attr :programId))
