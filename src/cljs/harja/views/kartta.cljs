@@ -317,7 +317,10 @@
            (if heatmap?
              [:tbody
               [:div.heatmap-infolaatikko
-               [:div.heatmap-varipalkki]]]
+               [:div.heatmap-varipalkki]
+               [:div.heatmap-selitteet
+                [:div.heatmap-selite (-> selitteet first :teksti-ylä)]
+                [:div.heatmap-selite (-> selitteet first :teksti-ala)]]]]
              [:tbody
               (for [{:keys [img vari teksti]} (sort-by :teksti selitteet)]
                 (when
@@ -363,10 +366,7 @@
 
                      :else [:td.kartan-ikonien-selitykset-ikoni-sarake
                             [:img.kartan-ikonien-selitykset-ikoni {:src img}]])
-                   [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys teksti]]]))])
-
-                 
-                 ]
+                   [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys teksti]]]))])]
           [:div.kartan-ikonien-selitykset-sulje.klikattava
            {:on-click (fn [event]
                         (reset! tiedot/ikonien-selitykset-auki false)
