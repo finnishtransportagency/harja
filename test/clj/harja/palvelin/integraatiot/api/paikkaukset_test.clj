@@ -116,52 +116,6 @@
                             (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id kohdetunniste}))
                             ::paikkaus/id ::muokkaustiedot/luotu)))))
 
-(deftest kirjaa-paikkaustietoja
-  (let [db (luo-testitietokanta)
-        urakka (hae-oulun-alueurakan-2014-2019-id)
-        toteumatunniste 234531
-        kohdetunniste 466645
-        json (->
-               (slurp "test/resurssit/api/paikkaustoteuman-kirjaus.json")
-               (.replace "<TOTEUMATUNNISTE>" (str toteumatunniste))
-               (.replace "<KOHDETUNNISTE>" (str kohdetunniste)))
-        _ (anna-kirjoitusoikeus kayttaja)
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus/kustannus"] kayttaja portti json)
-        poisto-json (slurp "test/resurssit/api/paikkaustietojen-poisto.json")
-        poistettu-ennen (:poistettu (first (q-map "SELECT * FROM paikkauskohde WHERE lisatiedot = 'Oulun testipaikkauskohde';")))
-        poisto-vastaus (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti poisto-json)
-        poistettu-jalkeen (:poistettu (first (q-map "SELECT * FROM paikkauskohde WHERE lisatiedot = 'Oulun testipaikkauskohde';")))
-        odotetut-paikkaustoteumat [{:harja.domain.paikkaus/selite "Lähtömaksu",
-                                    :harja.domain.paikkaus/urakka-id 4,
-                                    :harja.domain.paikkaus/hinta 450.3M,
-                                    :harja.domain.paikkaus/ulkoinen-id 234531,
-                                    :harja.domain.paikkaus/tyyppi "kokonaishintainen"}
-                                   {:harja.domain.paikkaus/selite "Liikennejärjestelyt",
-                                    :harja.domain.paikkaus/urakka-id 4,
-                                    :harja.domain.paikkaus/hinta 2000M,
-                                    :harja.domain.paikkaus/ulkoinen-id 234531,
-                                    :harja.domain.paikkaus/tyyppi "kokonaishintainen"}]
-        odotettu-kohde #:harja.domain.paikkaus{:nimi "Testipaikkauskohde"
-                                               :ulkoinen-id 466645
-                                               :paikkauskohteen-tila "tilattu"
-                                               :urakka-id 4}]
-
-    (is (false? poistettu-ennen) "Ei ole alussa poistettu")
-    (is (true? poistettu-jalkeen) "Poisto onnistui")
-    (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
-    (is (.contains (:body vastaus) "Paikkauskustannukset kirjattu onnistuneesti"))
-    (is (= odotetut-paikkaustoteumat (mapv
-                                       #(dissoc % ::paikkaus/id ::paikkaus/paikkauskohde-id ::paikkaus/kirjattu)
-                                       (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/ulkoinen-id toteumatunniste}))))
-    (is (= odotettu-kohde (dissoc
-                            (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id kohdetunniste}))
-                            ::paikkaus/id
-                            ::paikkaus/kirjattu
-                            ::muokkaustiedot/luotu
-                            ::muokkaustiedot/muokattu)))
-    ;; palauttaa 500, koska yha-paikkauskomponenttia ei ole mockattu. No biggie.
-    (is (= 500 (:status poisto-vastaus)) "Poistokutsu epäonnistui")))
-
 ;; Paikkaukset yleisimmin kirjataan tieoisoitteelle tyyliin tie: 1, aosa 1, losa: 2. aet:1 let: 1, josta voi tulla
 ;; pituudeksi esim 1000m
 ;; Mutta kirjauksen voi tehdä myös toisen päin, eli tie: 1, aosa 2, losa: 1. aet:1 let: 1, josta voi tulla esim 1000m,

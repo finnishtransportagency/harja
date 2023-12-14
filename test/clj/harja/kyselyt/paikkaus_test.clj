@@ -61,16 +61,6 @@
                                        ::paikkaus/ajouravalit [1]
                                        ::paikkaus/reunat [0]}]})
 
-(def testipaikkaustoteuma
-  {::paikkaus/selite "Testi"
-   ::paikkaus/urakka-id 4
-   ::paikkaus/hinta 3500M
-   ::paikkaus/paikkauskohde {::paikkaus/ulkoinen-id testikohteen-ulkoinen-id
-                                         ::paikkaus/nimi "Testikohde"}
-   ::paikkaus/ulkoinen-id testipaikkaustoteuman-ulkoinen-id
-   ::paikkaus/tyyppi "kokonaishintainen"
-   ::paikkaus/kirjattu #inst"2018-02-22T08:00:15.937759000-00:00"})
-
 (deftest hae-paikkaustoimenpiteet
   (let [db (:db jarjestelma)
         ulkoinen-id 6661
@@ -192,43 +182,6 @@
                                                                                ::paikkaus/nimi "Testikohde"}))
     (is (= (+ kohteiden-maara-luonnin-jalkeen 1) (hae-kohteiden-maara)) "Uusi kohde luotiin")
     (is (= 1 (count (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id uuden-kohteen-ulkoinen-id}))))))
-
-(deftest luo-uusi-paikkaustoteuma
-  (let [db (:db jarjestelma)
-        toteumien-maara-luonnin-jalkeen (+ (hae-paikkaustoteumien-maara) 1)
-        kohteiden-maara-luonnin-jalkeen (+ (hae-kohteiden-maara) 1)]
-
-    (paikkaus-q/tallenna-paikkaustoteuma db oikean-urakan-id destian-kayttaja-id testipaikkaustoteuma)
-    (is (= (true? (paikkaus-q/onko-paikkaustoteuma-olemassa-ulkoisella-idlla?
-                    db
-                    oikean-urakan-id
-                    testipaikkauksen-ulkoinen-id)))
-        "Toteuma löytyy ulkoisella id:lla")
-    (is (= toteumien-maara-luonnin-jalkeen (hae-paikkaustoteumien-maara))
-        "Toteumien määrä on noussut yhdellä")
-    (is (= (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db oikean-urakan-id testikohteen-ulkoinen-id)))
-        "Kohde löytyy ulkoisella id:lla")
-    (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara))
-        "Kohteiden määrä on noussut yhdellä")
-
-    (let [toteuma (hae-testipaikkaustoteuma db testipaikkaustoteuman-ulkoinen-id)]
-      (is (= (dissoc toteuma
-                     ::paikkaus/kirjattu
-                     ::paikkaus/id
-                     ::paikkaus/paikkauskohde-id)
-             {::paikkaus/selite "Testi"
-              ::paikkaus/urakka-id 4
-              ::paikkaus/hinta 3500M
-              ::paikkaus/ulkoinen-id 666987
-              ::paikkaus/tyyppi "kokonaishintainen"})))))
-
-(deftest poista-paikkaustoteuma
-  (let [db (:db jarjestelma)]
-    (paikkaus-q/tallenna-paikkaustoteuma db oikean-urakan-id destian-kayttaja-id testipaikkaustoteuma)
-    (is (= 1 (first(first(q (str "select count (id) from paikkaustoteuma where poistettu is not true and \"ulkoinen-id\" = " testipaikkaustoteuman-ulkoinen-id " ;"))))) "Paikkaustoteuma löytyy tallennuksen jälkeen.")
-    (paikkaus-q/paivita-paikkaustoteumat-poistetuksi db destian-kayttaja-id oikean-urakan-id [testipaikkaustoteuman-ulkoinen-id])
-    (is (= 0 (first(first(q (str "select count (id) from paikkaustoteuma where poistettu is not true and \"ulkoinen-id\" = " testipaikkaustoteuman-ulkoinen-id " ;" ))))) "Paikkaustoteuma ei ole voimassa poiston jälkeen.")
-    (is (= 1 (first(first(q (str "select count (id) from paikkaustoteuma where poistettu is true and \"ulkoinen-id\" = " testipaikkaustoteuman-ulkoinen-id " ;" ))))) "Paikkaustoteuma on merkitty poistetuksi.")))
 
 (deftest luo-uusi-paikkaus-ja-paikkauskohde-massamaaralla
   (let [db (:db jarjestelma)

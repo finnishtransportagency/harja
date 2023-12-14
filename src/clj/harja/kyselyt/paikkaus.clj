@@ -252,11 +252,6 @@
   [db paikkaus]
   (insert! db ::paikkaus/paikkaus paikkaus))
 
-(defn luo-paikkaustoteuma
-  "Tallentaa tietokantaan uuden paikkauskustannuksen."
-  [db toteuma]
-  (insert! db ::paikkaus/paikkaustoteuma toteuma))
-
 (defn- tallenna-materiaalit
   "Tallentaa paikkauksen materiaalit. Päivitys tapahtuu poistamalla ensin kaikki paikkauksen materiaalit ja tallentamalla sitten kaikki materiaalit uudelleen."
   [db toteuma-id materiaalit]
@@ -315,11 +310,6 @@
                                                 ::paikkaus/ulkoinen-id ulkoinen-id
                                                 ::muokkaustiedot/luoja-id kayttaja-id}))
         (::paikkaus/id (tallenna-paikkauskohde db urakka-id kayttaja-id paikkauskohde)))))
-
-(defn poista-paikkaustoteuma [db kayttaja-id urakka-id ulkoinen-id]
-  (delete! db ::paikkaus/paikkaustoteuma {::muokkaustiedot/luoja-id kayttaja-id
-                                          ::paikkaus/urakka-id urakka-id
-                                          ::paikkaus/ulkoinen-id ulkoinen-id}))
 
 (defn tallenna-paikkaus
   "APIa varten tehty paikkauksen tallennus. Olettaa saavansa ulkoisen id:n"
@@ -475,22 +465,6 @@
         paikkaus (luo-paikkaus db (dissoc paikkaus ::paikkaus/tienkohdat))]
     (tallenna-tienkohdat db (::paikkaus/id paikkaus) [tienkohdat])
     paikkaus))
-
-(defn tallenna-paikkaustoteuma
-  "Tallentaa paikkauskustannuksiin liittyvän yksittäisen rivin tiedot."
-  [db urakka-id kayttaja-id toteuma]
-  (let [ulkoinen-id (::paikkaus/ulkoinen-id toteuma)
-        paikkauskohde-id (::paikkaus/id (tallenna-paikkauskohde db urakka-id kayttaja-id (::paikkaus/paikkauskohde toteuma)))
-        tallennettava-toteuma (dissoc (assoc toteuma ::paikkaus/paikkauskohde-id paikkauskohde-id
-                                                     ::muokkaustiedot/luoja-id kayttaja-id)
-                                      ::paikkaus/materiaalit
-                                      ::paikkaus/tienkohdat
-                                      ::paikkaus/paikkauskohde)]
-    (luo-paikkaustoteuma db tallennettava-toteuma)))
-
-(defn hae-urakan-paikkaukset [db urakka-id]
-  (hae-paikkaukset db {::paikkaus/urakka-id urakka-id
-                       ::muokkaustiedot/poistettu? false}))
 
 (defn hae-urakan-paikkauskohteet [db urakka-id]
   (let [paikkauskohteet (fetch db
