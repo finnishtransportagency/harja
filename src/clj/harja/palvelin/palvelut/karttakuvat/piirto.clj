@@ -152,6 +152,10 @@ minimi-etaisyys 40)
       (piirra-viiva g  alue viiva))
     (piirra-ikonit g alue ruudukko)))
 
+(defmethod piirra :heatmap [_ _ _ _]
+  ;; TODO...
+  nil)
+
 (defmethod piirra :moniviiva [g toteuma {:keys [lines viivat ikonit] :as alue} ruudukko]
   (let [viivat (reverse (sort-by :width viivat))]
     (doseq [viiva viivat
