@@ -316,9 +316,9 @@
           [:table
            (if heatmap?
              [:tbody
-              [:div.heatmap-infolaatikko
-               [:div.heatmap-varipalkki]
-               [:div.heatmap-selitteet
+              [:tr.heatmap-infolaatikko
+               [:td.heatmap-varipalkki]
+               [:td.heatmap-selitteet
                 [:div.heatmap-selite (-> selitteet first :teksti-ylä)]
                 [:div.heatmap-selite (-> selitteet first :teksti-ala)]]]]
              [:tbody
