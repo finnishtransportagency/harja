@@ -326,29 +326,11 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn aseta-zoom [zoom]
   (some-> @the-kartta (.getView) (.setZoom zoom)))
 
-
-(defn create-heatmap-layer [features]
-  (let [source (ol.source.Vector. #js {:features (clj->js features)})
-        heatmap-layer (ol.layer.Heatmap. #js {:source source
-                                                 :blur 40
-                                                 :radius 35})]
-    heatmap-layer))
-
-(defn sample-points []
-  (map (fn [coords]
-         (ol.Feature. (ol.geom.Point.  (clj->js coords))))
-    [[367320.5130002269 7244045.459997045] [367350.7086205464 7250511.133134752]])) ; Oulu  
-
-
 (defn- ol3-did-mount
   "Initialize OpenLayers map for a newly mounted map component."
   [this]
   (let [{layers :layers
          geometry-layers :geometry-layers :as mapspec} (:mapspec (reagent/state this))
-        heatmap (create-heatmap-layer (sample-points))
-        ;_ (println "Layers: " layers )
-        ;_ (println "Geometry layers: " geometry-layers)
-
         interaktiot (let [oletukset (ol-interaction/defaults
                                       #js {:mouseWheelZoom true
                                            :dragPan        false})]
@@ -357,11 +339,11 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                       oletukset)
         kontrollit (ol-control/defaults #js {})
 
-        map-optiot (clj->js {:layers       (mapv taustakartta/luo-taustakartta layers) ; (conj (mapv taustakartta/luo-taustakartta layers) heatmap)
+        map-optiot (clj->js {:layers       (mapv taustakartta/luo-taustakartta layers)
                              :target       (:id mapspec)
                              :controls     kontrollit
                              :interactions interaktiot})
-        ; _ (println "Optiot: " map-optiot)
+        
         ol3 (ol/Map. map-optiot)
 
         _ (.addControl ol3 (tasovalinta/tasovalinta ol3 layers geometry-layers))
