@@ -56,6 +56,7 @@
     :sillat
     :tieturvallisuusverkko
     :ei-kayty-tieturvallisuusverkko
+    :tieturvallisuus-heatmap
     :tarkastusreitit
     :laatupoikkeamat
     :turvallisuus
@@ -110,6 +111,7 @@
     :pohjavesialueet 2
     :tieturvallisuusverkko 3
     :ei-kayty-tieturvallisuusverkko 3
+    :tieturvallisuus-heatmap 4
     :sillat 3
     :tienakyma-muut 3
     :tilannekuva-paallystys 3
@@ -240,6 +242,7 @@
    :tietyoilmoitukset tietyoilmoitukset/tietyoilmoitukset-kartalla
    :tarkastusreitit tarkastukset/tarkastusreitit-kartalla
    :ei-kayty-tieturvallisuusverkko tarkastukset/ei-kayty-tieturvallisuusverkko-kartalla
+   :tieturvallisuus-heatmap tarkastukset/tieturvallisuus-heatmap-kartalla
    :tieturvallisuusverkko tarkastukset/tieturvallisuusverkko-kartalla
    :laatupoikkeamat laatupoikkeamat/laatupoikkeamat-kartalla
    :yks-hint-toteumat yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
@@ -317,6 +320,7 @@
        :sillat (taso :sillat :sillat)
        :tarkastusreitit (taso :tarkastusreitit)
        :ei-kayty-tieturvallisuusverkko (taso :ei-kayty-tieturvallisuusverkko)
+       :tieturvallisuus-heatmap (taso :tieturvallisuus-heatmap)
        :tieturvallisuusverkko (taso :tieturvallisuusverkko)
        :laatupoikkeamat (taso :laatupoikkeamat)
        :turvallisuus (taso :turvallisuus)
@@ -365,6 +369,7 @@
    :sillat sillat/karttataso-sillat
    :tieturvallisuusverkko tarkastukset/karttataso-tieturvallisuusverkko
    :ei-kayty-tieturvallisuusverkko tarkastukset/karttataso-ei-kayty-tieturvallisuusverkko
+   :tieturvallisuus-heatmap tarkastukset/karttataso-tieturvallisuus-heatmap
    :tarkastusreitit tarkastukset/karttataso-tarkastukset
    :laatupoikkeamat laatupoikkeamat/karttataso-laatupoikkeamat
    :turvallisuus turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
