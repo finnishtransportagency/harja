@@ -4,7 +4,9 @@
             [harja.tyokalut.tuck :as tt]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.domain.roolit :as roolit]
             [harja.domain.laadunseuranta.laatupoikkeama :as laatupoikkeamat]
             [harja.pvm :as pvm]
@@ -119,6 +121,11 @@
     {:onnistui ->HaeLaatupoikkeamatOnnistui
      :epaonnistui ->HaeLaatupoikkeamatEpaonnistui}))
 
+(defn- resetoi-ja-hae-poikkeamat [tyyppi urakka-id aikavali]
+  (reset! valittu-laatupoikkeama nil)
+  (reset! valittu-laatupoikkeama-id nil)
+  (hae-laatupoikkeamat tyyppi urakka-id aikavali))
+
 (extend-protocol tuck/Event
 
   HoitokausiVaihdettu
@@ -126,6 +133,8 @@
     (do
       (hae-laatupoikkeamat (:listaus-tyyppi app) urakka-id hoitokausi)
       (-> app
+        ;; Resetoi laatupoikkeamat jotta ajax loader tulee näkyviin 
+        (assoc :laatupoikkeamat nil)
         (assoc :valittu-aikavali hoitokausi)
         (assoc :valittu-hoitokausi hoitokausi))))
 
@@ -143,9 +152,21 @@
 
   HaeLaatupoikkeamat
   (process-event [{urakka-id :urakka-id tyyppi :tyyppi aikavali :aikavali} app]
-    (do
-      (hae-laatupoikkeamat tyyppi urakka-id aikavali)
-      app))
+    (let [;; Listaa urakan hoitokaudet ja hae kuluva hoitokausi
+          urakan-hoitokaudet (u/hoito-tai-sopimuskaudet (-> @tila/yleiset :urakka))
+          kuluva-hoitokausi (first (filter #(pvm/valissa? (pvm/nyt) (first %) (second %)) urakan-hoitokaudet))
+          ;; Fallback 
+          kuluva-hoitokausi (if (nil? kuluva-hoitokausi)
+                              (first urakan-hoitokaudet)
+                              kuluva-hoitokausi)]
+      (do
+        ;; Kun urakkaa vaihdetaan, resetoidaan ja päivitetään valitut tiedot 
+        ;; Valituksi ajaksi ja hoitokaudeksi valitaan defaulttina aina kuluva hoitokausi
+        (resetoi-ja-hae-poikkeamat tyyppi urakka-id aikavali)
+        (-> app
+          (assoc :laatupoikkeamat nil)
+          (assoc :valittu-hoitokausi kuluva-hoitokausi)
+          (assoc :valittu-aikavali kuluva-hoitokausi)))))
 
   HaeLaatupoikkeamatOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -180,24 +201,10 @@
          :epaonnistui ->TallennaLaatuPoikkeamaEpaonnistui})))
 
   TallennaLaatuPoikkeamaOnnistui
-  (process-event [{:keys [vastaus laatupoikkeama]} {:keys [laatupoikkeamat] :as app}]
-    (let [uusi-laatupoikkeama vastaus
-          aika (:aika uusi-laatupoikkeama)
-          [alku loppu] @urakka/valittu-aikavali]
-      (reset! valittu-laatupoikkeama-id nil)
-      (if (and (pvm/sama-tai-jalkeen? aika alku)
-              (pvm/sama-tai-ennen? aika loppu))
-        ;; Kuuluu aikavälille, lisätään tai päivitetään
-        (if (:id laatupoikkeama)
-          ;; Päivitetty olemassaolevaa
-          (assoc app :laatupoikkeamat
-            (mapv (fn [lp]
-                    (if (= (:id lp) (:id uusi-laatupoikkeama))
-                      uusi-laatupoikkeama
-                      lp)) laatupoikkeamat))
-          ;; Luotu uusi
-          (update app :laatupoikkeamat conj uusi-laatupoikkeama))
-        app)))
+  (process-event [_ {:keys [listaus-tyyppi valittu-aikavali] :as app}]
+    ;; Kun poikkeama tallennetaan, päivitetään kaikki tiedot jotta karttaan tulee uusikin reitti näkyviin
+    (resetoi-ja-hae-poikkeamat listaus-tyyppi (-> @tila/yleiset :urakka :id) valittu-aikavali)
+    (assoc app :laatupoikkeamat nil))
 
   TallennaLaatuPoikkeamaEpaonnistui
   (process-event [{vastaus :vastaus} app]

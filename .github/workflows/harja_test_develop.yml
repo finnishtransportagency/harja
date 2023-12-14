@@ -38,7 +38,7 @@ jobs:
       matrix:
         # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä
         configs: [
-          { testDBService: "harjadb-latest", e2eBrowsers: ['chrome'], artifactPrefix: 'harjadb-latest_' },
+          { testDBService: "harjadb-latest", e2eBrowsers: [ 'chrome' ], artifactPrefix: 'harjadb-latest_' },
           #{ testDBService: "harjadb-13-3.1", e2eBrowsers: ['chrome'], artifactPrefix: 'harjadb-13-3.1_' },
         ]
 
@@ -52,3 +52,34 @@ jobs:
       lint-clj: 'false'
       # Develop-branchille ajetaan täysi Harja-build, joka kestää pidempään.
       build-harja: 'full'
+
+
+  # Tarkistaa testijobin yleisen statuksen ja lähettää notifikaation, mikäli jotain meni pieleen
+  check-status-and-notify:
+    needs: tests
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send deploy failure message to Slack
+        id: slack
+        uses: slackapi/slack-github-action@e28cf165c92ffef168d23c5c9000cffc8a25e117
+        # Lähetetään virheviesti, mikäli tämä tai tests-jobi ei palauta success
+        if: ${{ job.status != 'success' || needs.tests.result != 'success' }}
+        with:
+          # Slack Block Kit -tyyppinen rikastettu viesti
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":warning: Develop-branchin testeissä tapahtui virhe!\n${{ env.JOB_RUN_URL }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+          JOB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

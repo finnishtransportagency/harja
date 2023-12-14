@@ -2,8 +2,10 @@
   "Hankkeisiin liittyvät tietokantakyselyt"
   (:require [jeesql.core :refer [defqueries]]))
 
+(declare onko-tuotu-samposta)
+
 (defqueries "harja/kyselyt/hankkeet.sql"
   {:positional? true})
 
 (defn onko-tuotu-samposta? [db sampo-id]
-  (:exists (first (harja.kyselyt.hankkeet/onko-tuotu-samposta db sampo-id))))
+  (:exists (first (onko-tuotu-samposta db sampo-id))))

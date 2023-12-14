@@ -1092,17 +1092,17 @@
                     :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2}],
    :alusta [{:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500, :materiaali 1,
              :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32, :pot2a_id 1,
-             :massa 1, :kokonaismassamaara 100, :massamaara 5}]})
+             :massa 1, :kokonaismassamaara 100, :massamenekki 5}]})
 
 (def pot2-alusta-esimerkki
   [{:tr-kaista       11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
     :materiaali      1, :pituus 434,
     :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32,
-    :massa           1, :massamaara 100}
+    :massa           1, :massamenekki 100}
    {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
     :materiaali      1, :pituus 434,
     :tr-alkuetaisyys (inc 1066), :tr-numero 20, :toimenpide 32,
-    :massa           1, :massamaara 100}
+    :massa           1, :massamenekki 100}
    {:tr-kaista       12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys (- 2000 1),
     :materiaali      1, :pituus 500,
     :tr-alkuetaisyys 1500, :tr-numero 20, :toimenpide 11,
@@ -1181,13 +1181,13 @@
         paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                (assoc :alusta pot2-alusta-esimerkki)
-                               (update-in [:alusta 2] dissoc :murske :massamaara))
+                               (update-in [:alusta 2] dissoc :murske :massamenekki))
         [_ paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
                                                   urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
         alustarivit-jalkeen (:alusta paallystysilmoitus-kannassa-jalkeen)
         alustarivi-9 (alustarivi-idlla alustarivit-jalkeen 10)]
-    (is (= {:kasittelysyvyys 55, :sideaine 1, :sideainepitoisuus 10.0M, :murske nil, :massamaara nil}
-           (select-keys alustarivi-9 [:kasittelysyvyys :sideaine :sideainepitoisuus :murske :massamaara])))
+    (is (= {:kasittelysyvyys 55, :sideaine 1, :sideainepitoisuus 10.0M, :murske nil, :massamenekki nil}
+           (select-keys alustarivi-9 [:kasittelysyvyys :sideaine :sideainepitoisuus :murske :massamenekki])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest tallenna-pot2-jossa-on-alikohde-muulla-tiella-lisaa-alustarivi
@@ -1207,7 +1207,7 @@
                                          {:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 10, :tr-alkuosa 10, :tr-loppuetaisyys 1500,
                                           :materiaali 1, :pituus 434,
                                           :tr-alkuetaisyys 1066, :tr-numero muu-tr-numero, :toimenpide 32,
-                                          :kokonaismassamaara 100, :massa 1, :massamaara 20}))
+                                          :kokonaismassamaara 100, :massa 1, :massamenekki 20}))
         ;; Tehdään tallennus joka lisää kaksi alustariviä
         [_ paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
                                                                                   urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
@@ -1318,10 +1318,10 @@
                                                          :paallystysilmoitus paallystysilmoitus})
         eka-odotettu-alustarivi {:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
                                  :tr-alkuetaisyys 1066, :tr-numero 20, :toimenpide 32,
-                                 :massa 1, :massamaara 100}
+                                 :massa 1, :massamenekki 100M}
         toka-odotettu-alustarivi {:tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 1500,
                                   :tr-alkuetaisyys (inc 1066), :tr-numero 20, :toimenpide 32,
-                                  :massa 1, :massamaara 100}
+                                  :massa 1, :massamenekki 100M}
         tallennuksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
                                :urakan-paallystysilmoitus-paallystyskohteella +kayttaja-jvh+
                                {:urakka-id urakka-id
@@ -1341,7 +1341,7 @@
                                                         :tr-numero
                                                         :toimenpide
                                                         :massa
-                                                        :massamaara])
+                                                        :massamenekki])
                                     alusta-tallennuksen-jalkeen)]
     (is (= nimi-tallennuksen-jalkeen kohteen-nimi) "Kohteen nimi")
     (is (= 2 (count paallystekerros-tallennuksen-jalkeen)) "paallystekerros-tallennuksen-jalkeen rivien määrä")
@@ -1350,7 +1350,7 @@
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-on-vaarat-lisatiedot
   (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
-        verkon-tiedot {:verkon-tyyppi 1 :verkon-sijainti 3 :verkon-tarkoitus 1 :massamaara 1}
+        verkon-tiedot {:verkon-tyyppi 1 :verkon-sijainti 3 :verkon-tarkoitus 1 :massamenekki 1}
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                (assoc :alusta pot2-alusta-esimerkki)
                                (update-in [:alusta 3] merge verkon-tiedot))]

@@ -35,10 +35,10 @@
                       urakkatieto-fixture))
 
 (def odotettu-yha-kohteet-2017
-  [:taulukko {:otsikko "YHA-kohteet", :tyhja nil, :sheet-nimi "YHA-kohteet", :rivi-ennen [{:sarakkeita 14} {:sarakkeita 1} {:teksti "Hintamuutokset", :sarakkeita 3, :luokka "paallystys-tausta-tumma", :tummenna-teksti? true, :tasaa :keskita} {:sarakkeita 1}], :lisaa-excel-valiotsikot true} [{:otsikko "Urakka", :leveys 10} {:otsikko "Kohde­numero", :leveys 5} {:otsikko "Tunnus", :leveys 5} {:otsikko "Nimi", :leveys 10} {:otsikko "Yö­työ", :leveys 3, :fmt :boolean} {:otsikko "Tie­numero", :leveys 3, :tasaa :oikea} {:otsikko "Aosa", :leveys 3, :tasaa :oikea} {:otsikko "Aet", :leveys 3, :tasaa :oikea} {:otsikko "Losa", :leveys 3, :tasaa :oikea} {:otsikko "Let", :leveys 3, :tasaa :oikea} {:otsikko "Pit. (m)", :leveys 3, :tasaa :oikea} {:otsikko "KVL", :leveys 3, :tasaa :oikea} {:otsikko "YP-lk", :leveys 3} {:otsikko "Tarjous­hinta", :leveys 5, :fmt :raha} {:otsikko "Määrä­muu­tokset", :leveys 5, :fmt :raha} {:otsikko "Arvon muu­tok­set", :leveys 5, :fmt :raha} {:otsikko "Sakko­/bonus", :leveys 5, :fmt :raha} {:otsikko "Bitu­mi-indek­si", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "Neste­kaasu ja kevyt poltto­öljy", :leveys 10, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "MAKU-pääl­lys­teet", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}] (list (list "Muhoksen päällystysurakka" "L03" nil "Leppäjärven ramppi" [:boolean {:arvo false}] 20 1 0 3 0 3833 500 8 400M nil 100M 2000M 4543.95M 0M nil 7043.95M) (list "Muhoksen päällystysurakka" "308a" nil "Oulun ohitusramppi" [:boolean {:arvo false}] 20 4 334 10 10 29092 605 8 9000M nil 200M nil 565M 100M nil 9865M) (list "Muhoksen päällystysurakka" "310" nil "Oulaisten ohitusramppi" [:boolean {:arvo false}] 20 19 5 21 15 10137 900 10 500M nil 3457M -3000M 5M 6M nil 968M) (list "Muhoksen päällystysurakka" "666" nil "Kuusamontien testi" [:boolean {:arvo false}] 20 26 1 41 15 79359 66 2 500M nil 3457M nil 5M 6M nil 3968M))])
+  [:taulukko {:otsikko "YHA-kohteet", :tyhja nil, :sheet-nimi "YHA-kohteet", :rivi-ennen [{:sarakkeita 16} {:sarakkeita 1} {:teksti "Hintamuutokset", :sarakkeita 3, :luokka "paallystys-tausta-tumma", :tummenna-teksti? true, :tasaa :keskita} {:sarakkeita 1}], :lisaa-excel-valiotsikot true} [{:otsikko "Urakka", :leveys 10} {:otsikko "Kohde­numero", :leveys 5} {:otsikko "Tunnus", :leveys 5} {:otsikko "Nimi", :leveys 10} {:otsikko "Yö­työ", :leveys 3, :fmt :boolean} {:otsikko "Tie­numero", :leveys 3, :tasaa :oikea} {:otsikko "Aosa", :leveys 3, :tasaa :oikea} {:otsikko "Aet", :leveys 3, :tasaa :oikea} {:otsikko "Losa", :leveys 3, :tasaa :oikea} {:otsikko "Let", :leveys 3, :tasaa :oikea} {:otsikko "Pit. (m)", :leveys 3, :tasaa :oikea} {:otsikko "KVL", :leveys 3, :tasaa :oikea} {:otsikko "YP-lk", :leveys 3} {:otsikko "Tarjous­hinta", :leveys 5, :fmt :raha} {:otsikko "Määrä­muu­tokset", :leveys 5, :fmt :raha} {:otsikko "Arvon muu­tok­set", :leveys 5, :fmt :raha} {:otsikko "Sakko­/bonus", :leveys 5, :fmt :raha} {:otsikko "Bitu­mi-indek­si", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "Neste­kaasu ja kevyt poltto­öljy", :leveys 10, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "MAKU-pääl­lys­teet", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}] (list (list "Muhoksen päällystysurakka" "L03" nil "Leppäjärven ramppi" [:boolean {:arvo false}] 20 1 0 3 0 3833 500 8 400M nil 100M 2000M 4543.95M 0M nil 7043.95M) (list "Muhoksen päällystysurakka" "308a" nil "Oulun ohitusramppi" [:boolean {:arvo false}] 20 4 334 10 10 29092 605 8 9000M nil 200M nil 565M 100M nil 9865M) (list "Muhoksen päällystysurakka" "310" nil "Oulaisten ohitusramppi" [:boolean {:arvo false}] 20 19 5 21 15 10137 900 10 500M nil 3457M -3000M 5M 6M nil 968M) (list "Muhoksen päällystysurakka" "666" nil "Kuusamontien testi" [:boolean {:arvo false}] 20 26 1 41 15 79359 66 2 500M nil 3457M nil 5M 6M nil 3968M))])
 
 (def odotettu-paikkauskohteet-2017
-  [:taulukko {:otsikko "Muut kohteet", :tyhja nil, :sheet-nimi "Muut kohteet", :rivi-ennen [{:sarakkeita 13} {:sarakkeita 1} {:teksti "Hintamuutokset", :sarakkeita 3, :luokka "paallystys-tausta-tumma", :tummenna-teksti? true, :tasaa :keskita} {:sarakkeita 1}], :lisaa-excel-valiotsikot true} [{:otsikko "Urakka", :leveys 10} {:otsikko "Kohde­numero", :leveys 5} {:otsikko "Tunnus", :leveys 5} {:otsikko "Nimi", :leveys 10} {:otsikko "Yö­työ", :leveys 3, :fmt :boolean} {:otsikko "Tie­numero", :leveys 3, :tasaa :oikea} {:otsikko "Aosa", :leveys 3, :tasaa :oikea} {:otsikko "Aet", :leveys 3, :tasaa :oikea} {:otsikko "Losa", :leveys 3, :tasaa :oikea} {:otsikko "Let", :leveys 3, :tasaa :oikea} {:otsikko "Pit. (m)", :leveys 3, :tasaa :oikea} {:otsikko "KVL", :leveys 3, :tasaa :oikea} {:otsikko "YP-lk", :leveys 3} {:otsikko "Toteutunut hinta", :leveys 10, :fmt :raha} {:otsikko "Arvon muu­tok­set", :leveys 5, :fmt :raha} {:otsikko "Sakko­/bonus", :leveys 5, :fmt :raha} {:otsikko "Bitu­mi-indek­si", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "Neste­kaasu ja kevyt poltto­öljy", :leveys 10, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "MAKU-pääl­lys­teet", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}] (list (list "Muhoksen päällystysurakka" "3456" nil "Ei YHA-kohde" [:boolean {:arvo false}] 20 26 1 41 15 79359 66 2 nil 3457M nil 5M 6M nil 3968M))])
+  [:taulukko {:otsikko "Muut kohteet", :tyhja nil, :sheet-nimi "Muut kohteet", :rivi-ennen [{:sarakkeita 15} {:sarakkeita 1} {:teksti "Hintamuutokset", :sarakkeita 3, :luokka "paallystys-tausta-tumma", :tummenna-teksti? true, :tasaa :keskita} {:sarakkeita 1}], :lisaa-excel-valiotsikot true} [{:otsikko "Urakka", :leveys 10} {:otsikko "Kohde­numero", :leveys 5} {:otsikko "Tunnus", :leveys 5} {:otsikko "Nimi", :leveys 10} {:otsikko "Yö­työ", :leveys 3, :fmt :boolean} {:otsikko "Tie­numero", :leveys 3, :tasaa :oikea} {:otsikko "Aosa", :leveys 3, :tasaa :oikea} {:otsikko "Aet", :leveys 3, :tasaa :oikea} {:otsikko "Losa", :leveys 3, :tasaa :oikea} {:otsikko "Let", :leveys 3, :tasaa :oikea} {:otsikko "Pit. (m)", :leveys 3, :tasaa :oikea} {:otsikko "KVL", :leveys 3, :tasaa :oikea} {:otsikko "YP-lk", :leveys 3} {:otsikko "Toteutunut hinta", :leveys 10, :fmt :raha} {:otsikko "Arvon muu­tok­set", :leveys 5, :fmt :raha} {:otsikko "Sakko­/bonus", :leveys 5, :fmt :raha} {:otsikko "Bitu­mi-indek­si", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "Neste­kaasu ja kevyt poltto­öljy", :leveys 10, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "MAKU-pääl­lys­teet", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}] (list (list "Muhoksen päällystysurakka" "3456" nil "Ei YHA-kohde" [:boolean {:arvo false}] 20 26 1 41 15 79359 66 2 nil 3457M nil 5M 6M nil 3968M))])
 
 (def odotettu-muut-kustannukset-2017
   [:taulukko {:otsikko "Muut kustannukset", :tyhja "Ei muita kustannuksia.", :sheet-nimi "Muut kustannukset", :lisaa-excel-valiotsikot true} [{:otsikko "Pvm", :leveys 10, :fmt :pvm} {:otsikko "Selitys", :leveys 10} {:otsikko "Summa", :leveys 10, :fmt :raha}] (list [(inst/read-instant-timestamp "2017-01-01T22:06:06.370000000-00:00") "Sakko" -1500M] [(inst/read-instant-timestamp "2017-01-01T22:06:06.370000000-00:00") "Sakko: Oulaisten ohitusramppi (yhaid: 456896958)" -1500M] [(inst/read-instant-timestamp "2017-01-02T22:12:06.370000000-00:00") "Sakko: Oulaisten ohitusramppi (yhaid: 456896958)" -1500M] [(inst/read-instant-timestamp "2017-01-02T22:12:06.370000000-00:00") "Bonus: Leppäjärven ramppi (yhaid: 1233534)" 2000M])])
@@ -60,40 +60,40 @@
         odotettu-maku-paallysteet 1000M
         odotettu-yhteensa 7400M]
 
-    [:taulukko 
-     {:otsikko "YHA-kohteet", 
-      :tyhja nil, 
-      :sheet-nimi "YHA-kohteet", 
-      :rivi-ennen 
-      [{:sarakkeita 14} 
-       {:sarakkeita 1} 
-       {:teksti "Hintamuutokset", :sarakkeita 3, :luokka "paallystys-tausta-tumma", :tummenna-teksti? true, :tasaa :keskita} 
-       {:sarakkeita 1}], :lisaa-excel-valiotsikot true} 
-     [{:otsikko "Urakka", :leveys 10} 
-      {:otsikko "Kohde­numero", :leveys 5} 
-      {:otsikko "Tunnus", :leveys 5} 
-      {:otsikko "Nimi", :leveys 10} 
-      {:otsikko "Yö­työ", :leveys 3, :fmt :boolean} 
-      {:otsikko "Tie­numero", :leveys 3, :tasaa :oikea} 
-      {:otsikko "Aosa", :leveys 3, :tasaa :oikea} 
-      {:otsikko "Aet", :leveys 3, :tasaa :oikea} 
-      {:otsikko "Losa", :leveys 3, :tasaa :oikea} 
-      {:otsikko "Let", :leveys 3, :tasaa :oikea} 
-      {:otsikko "Pit. (m)", :leveys 3, :tasaa :oikea} 
-      {:otsikko "KVL", :leveys 3, :tasaa :oikea} 
-      {:otsikko "YP-lk", :leveys 3} 
-      {:otsikko "Tarjous­hinta", :leveys 5, :fmt :raha} 
-      {:otsikko "Määrä­muu­tokset", :leveys 5, :fmt :raha} 
-      {:otsikko "Bitu­mi-indek­si", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} 
-      {:otsikko "Neste­kaasu ja kevyt poltto­öljy", :leveys 10, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} 
-      {:otsikko "MAKU-pääl­lys­teet", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} 
-      {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}] 
-     (list 
-       (list "Utajärven päällystysurakka" "L14" nil "Ouluntie 2" [:boolean {:arvo nil}] 22 13 0 13 3888 0 nil nil 0M 0M 0M 0M 0M 0M) 
-       (list "Utajärven päällystysurakka" "L15" "A" "Puolangantie" [:boolean {:arvo true}] 837 2 0 2 1000 0 nil nil 
-         odotettu-sopimuksen-mukaiset-tyot odotettu-maaramuutokset 
-         odotettu-sideaineen-hintamuutokset odotettu-polttooljyn-hintamuutokset 
-         odotettu-maku-paallysteet odotettu-yhteensa))] ))
+    [:taulukko
+     {:otsikko "YHA-kohteet",
+      :tyhja nil,
+      :sheet-nimi "YHA-kohteet",
+      :rivi-ennen
+      [{:sarakkeita 14}
+       {:sarakkeita 1}
+       {:teksti "Hintamuutokset", :sarakkeita 3, :luokka "paallystys-tausta-tumma", :tummenna-teksti? true, :tasaa :keskita}
+       {:sarakkeita 1}], :lisaa-excel-valiotsikot true}
+     [{:otsikko "Urakka", :leveys 10}
+      {:otsikko "Kohde­numero", :leveys 5}
+      {:otsikko "Tunnus", :leveys 5}
+      {:otsikko "Nimi", :leveys 10}
+      {:otsikko "Yö­työ", :leveys 3, :fmt :boolean}
+      {:otsikko "Tie­numero", :leveys 3, :tasaa :oikea}
+      {:otsikko "Aosa", :leveys 3, :tasaa :oikea}
+      {:otsikko "Aet", :leveys 3, :tasaa :oikea}
+      {:otsikko "Losa", :leveys 3, :tasaa :oikea}
+      {:otsikko "Let", :leveys 3, :tasaa :oikea}
+      {:otsikko "Pit. (m)", :leveys 3, :tasaa :oikea}
+      {:otsikko "KVL", :leveys 3, :tasaa :oikea}
+      {:otsikko "YP-lk", :leveys 3}
+      {:otsikko "Tarjous­hinta", :leveys 5, :fmt :raha}
+      {:otsikko "Määrä­muu­tokset", :leveys 5, :fmt :raha}
+      {:otsikko "Bitu­mi-indek­si", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"}
+      {:otsikko "Neste­kaasu ja kevyt poltto­öljy", :leveys 10, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"}
+      {:otsikko "MAKU-pääl­lys­teet", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"}
+      {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}]
+     (list
+       (list "Utajärven päällystysurakka" "L14" nil "Ouluntie 2" [:boolean {:arvo nil}] 22 13 0 13 3888 0 nil nil 0M 0M 0M 0M 0M 0M)
+       (list "Utajärven päällystysurakka" "L15" "A" "Puolangantie" [:boolean {:arvo true}] 837 2 0 2 1000 0 nil nil
+         odotettu-sopimuksen-mukaiset-tyot odotettu-maaramuutokset
+         odotettu-sideaineen-hintamuutokset odotettu-polttooljyn-hintamuutokset
+         odotettu-maku-paallysteet odotettu-yhteensa))]))
 
 (def odotettu-yhteenveto-2023
   (let [odotettu-sopimuksen-mukaiset-tyot 400M
@@ -102,43 +102,43 @@
         odotettu-polttooljyn-hintamuutokset 0M
         odotettu-maku-paallysteet 1000M
         odotettu-yhteensa 7400M]
-    [:taulukko 
-     {:otsikko "Yhteenveto", 
-      :tyhja nil, 
-      :sheet-nimi "Ylläpitokohteet yhteensä"} 
-     (list 
-       {:otsikko "", :leveys 5} 
-       {:otsikko "", :leveys 5} 
-       {:otsikko "", :leveys 3} 
-       {:otsikko "", :leveys 3} 
-       {:otsikko "", :leveys 3} 
-       {:otsikko "", :leveys 3} 
-       {:otsikko "", :leveys 3} 
-       {:otsikko "Toteu­tunut hinta (muut kohteet)", :nimi :toteutunut-hinta, :fmt :raha, :leveys 5} 
-       {:otsikko "Sakot ja bonukset", :leveys 5,  :fmt :raha} 
-       {:otsikko "Muut kustannukset", :leveys 5, :fmt :raha} 
-       {:otsikko "Tarjous­hinta", :leveys 5, :fmt :raha} 
-       {:otsikko "Määrä­muutok­set", :leveys 5, :fmt :raha} 
-       {:otsikko "Bitu­mi-indek­si", :leveys 5, :fmt :raha} 
-       {:otsikko "Neste­kaasu ja kevyt poltto­öljy", :leveys 5, :fmt :raha} 
-       {:otsikko "MAKU-pääl­lys­teet", :leveys 5, :fmt :raha} 
-       {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}) 
-     [(list 
-        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}] 
-        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}] 
-        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}] 
-        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}] 
-        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}] 
-        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}] 
-        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}] 
-        [:arvo-ja-yksikko-korostettu {:arvo 0, :fmt :raha, :korosta-hennosti? true}] 
-        [:arvo-ja-yksikko-korostettu {:arvo 0, :fmt :raha, :korosta-hennosti? true}] 
-        [:arvo-ja-yksikko-korostettu {:arvo 0, :fmt :raha, :korosta-hennosti? true}] 
-        [:arvo-ja-yksikko-korostettu {:arvo odotettu-sopimuksen-mukaiset-tyot, :fmt :raha, :korosta-hennosti? true}] 
-        [:arvo-ja-yksikko-korostettu {:arvo odotettu-maaramuutokset, :fmt :raha, :korosta-hennosti? true}] 
-        [:arvo-ja-yksikko-korostettu {:arvo odotettu-sideaineen-hintamuutokset, :fmt :raha, :korosta-hennosti? true}] 
-        [:arvo-ja-yksikko-korostettu {:arvo odotettu-polttooljyn-hintamuutokset, :fmt :raha, :korosta-hennosti? true}] 
-        [:arvo-ja-yksikko-korostettu {:arvo odotettu-maku-paallysteet, :fmt :raha, :korosta-hennosti? true}] 
+    [:taulukko
+     {:otsikko "Yhteenveto",
+      :tyhja nil,
+      :sheet-nimi "Ylläpitokohteet yhteensä"}
+     (list
+       {:otsikko "", :leveys 5}
+       {:otsikko "", :leveys 5}
+       {:otsikko "", :leveys 3}
+       {:otsikko "", :leveys 3}
+       {:otsikko "", :leveys 3}
+       {:otsikko "", :leveys 3}
+       {:otsikko "", :leveys 3}
+       {:otsikko "Toteu­tunut hinta (muut kohteet)", :nimi :toteutunut-hinta, :fmt :raha, :leveys 5}
+       {:otsikko "Sakot ja bonukset", :leveys 5,  :fmt :raha}
+       {:otsikko "Muut kustannukset", :leveys 5, :fmt :raha}
+       {:otsikko "Tarjous­hinta", :leveys 5, :fmt :raha}
+       {:otsikko "Määrä­muutok­set", :leveys 5, :fmt :raha}
+       {:otsikko "Bitu­mi-indek­si", :leveys 5, :fmt :raha}
+       {:otsikko "Neste­kaasu ja kevyt poltto­öljy", :leveys 5, :fmt :raha}
+       {:otsikko "MAKU-pääl­lys­teet", :leveys 5, :fmt :raha}
+       {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha})
+     [(list
+        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo 0, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo 0, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo 0, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo odotettu-sopimuksen-mukaiset-tyot, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo odotettu-maaramuutokset, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo odotettu-sideaineen-hintamuutokset, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo odotettu-polttooljyn-hintamuutokset, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo odotettu-maku-paallysteet, :fmt :raha, :korosta-hennosti? true}]
         [:arvo-ja-yksikko-korostettu {:arvo odotettu-yhteensa, :fmt :raha, :korosta-hennosti? true}])]]))
 
 (def odotettu-aikataulu-2023
@@ -359,7 +359,7 @@
     (is (= yhteenveto odotettu-yhteenveto-2023))))
 
 (deftest teiden-pituus-laskenta-sql-toimii
-  (let [tie 86
+  (let [tie 286
         osa 1
         pituus 1500
         _ (i (format
@@ -379,26 +379,26 @@
                                 (tie, osa, pituus) 
                                 VALUES (%s, %s, %s);" tie osa pituus))
 
-        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 1, 895, 3, 143);"))
+        pituus (q-map (format "SELECT * FROM laske_tr_osoitteen_pituus(%s, 1, 895, 3, 143);" tie))
         _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 3248) "Tien pituuden laskenta toimii tieosat oikeinpäin, monta osaa")
 
-        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 1, 895, 1, 900);"))
+        pituus (q-map (format "SELECT * FROM laske_tr_osoitteen_pituus(%s, 1, 895, 1, 900);" tie))
         _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 5) "Tien pituuden laskenta toimii tieosat oikeinpäin, yksi osa")
 
-        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 1, 895, 1, 1501);"))
+        pituus (q-map (format "SELECT * FROM laske_tr_osoitteen_pituus(%s, 1, 895, 1, 1501);" tie))
         _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 0) "Loppuetäisyys menee yli osan pituuden, jolloin palautetaan 0")
 
         ;; Kun tieosat käännetään, käännetään myös etäisyydet, jolloin aet 144 ja let 895 eikä toisin päin, tulos on 4751
-        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 3, 895, 1, 144);"))
+        pituus (q-map (format "SELECT * FROM laske_tr_osoitteen_pituus(%s, 3, 895, 1, 144);" tie))
         _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 4751) "Tien pituuden laskenta toimii tieosat väärinpäin")
 
         pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(862424, 1, 142, 1, 895);"))
         _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 0) "Tie numeroa ei ole olemassa")
 
-        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, NULL, 142, 1, 895);"))
+        pituus (q-map (format "SELECT * FROM laske_tr_osoitteen_pituus(%s, NULL, 142, 1, 895);" tie))
         _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 0) "Tieosaa ei löydy")
 
         ;; Funktio sallii vielä samalle osalle etäisyyksien antamisen "väärinpäin", ja pituuden laskenta pitäisi onnistua
         ;; aet 900 let 895 -> pituus = 5
-        pituus (q-map (str "SELECT * FROM laske_tr_osoitteen_pituus(86, 1, 900, 1, 895);"))
+        pituus (q-map (format "SELECT * FROM laske_tr_osoitteen_pituus(%s, 1, 900, 1, 895);" tie))
         _ (is (= (-> pituus first :laske_tr_osoitteen_pituus) 5) "Tien pituuden laskenta toimii etäisyydet väärinpäin, sama osa")]))

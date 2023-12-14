@@ -72,6 +72,7 @@
     [harja.palvelin.palvelut.hallinta.rajoitusalue-pituudet :as rajoitusalue-pituudet]
     [harja.palvelin.palvelut.hallinta.palauteluokitukset :as palauteluokitukset-hallinta]
     [harja.palvelin.palvelut.hallinta.urakoiden-lyhytnimet :as urakoidenlyhytnimet-hallinta]
+    [harja.palvelin.palvelut.hallinta.tehtavat :as tehtavat-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
@@ -240,7 +241,9 @@
 
       :liitteiden-hallinta (component/using
                              (liitteet-komp/->Liitteet
-                               (get-in asetukset [:liitteet :fileyard-url]))
+                               (get-in asetukset [:liitteet :fileyard-url])
+                               (get-in asetukset [:liitteet :s3-url])
+                               (:alusta asetukset))
                              [:db :virustarkistus :tiedostopesula])
 
       :kehitysmoodi (component/using
@@ -331,7 +334,7 @@
       ;; Tarkastustehtävät
 
       :paivystystarkistukset (component/using
-                               (paivystystarkistukset/->Paivystystarkistukset (:paivystystarkistus asetukset))
+                               (paivystystarkistukset/->Paivystystarkistukset (:paivystystarkistus asetukset) (:kehitysmoodi asetukset))
                                [:http-palvelin :db :fim :api-sahkoposti])
       :reittitarkistukset (component/using
                             (reittitarkistukset/->Reittitarkistukset (:reittitarkistus asetukset))
@@ -782,18 +785,23 @@
       :lyhytnimien-hallinta
       (component/using
         (urakoidenlyhytnimet-hallinta/->UrakkaLyhytnimienHallinta)
+        [:http-palvelin :db])
+
+      :tehtavat-hallinta
+      (component/using
+        (tehtavat-hallinta/->TehtavatHallinta)
         [:http-palvelin :db]))))
 
 (defonce harja-jarjestelma nil)
 
 (defn- merkkaa-kaynnistyminen! []
-  (log/debug "Merkataan HARJAn käynnistyminen")
+  (log/info "Yritetään seuraavaksi käynnistää HARJA")
   (event-apurit/julkaise-tapahtuma :harja-tila
                                    {:viesti "Harja käynnistyy"
                                     :kaikki-ok? false}))
 
 (defn- merkkaa-kaynnistetyksi! []
-  (log/debug "Merkataan HARJA käynnistetyksi")
+  (log/info "HARJA käynnistetty")
   (event-apurit/julkaise-tapahtuma :harja-tila
                                    {:viesti "Harja käynnistetty"
                                     :kaikki-ok? true}))
@@ -805,9 +813,13 @@
   ([asetukset]
    (alter-var-root #'harja-jarjestelma
                    (fn [_]
-                     (let [jarjestelma (-> asetukset
-                                           luo-jarjestelma
-                                           component/start)]
+                     (let [jarjestelma
+                           (try
+                             (-> asetukset
+                               luo-jarjestelma
+                               component/start)
+                             (catch Exception e
+                               (throw (component/ex-without-components e))))]
                        (when (ominaisuus-kaytossa? :itmf)
                          (jms/aloita-jms (:itmf jarjestelma)))
                        jarjestelma)))))
@@ -850,8 +862,7 @@
       (Thread/setDefaultUncaughtExceptionHandler
         (reify Thread$UncaughtExceptionHandler
           (uncaughtException [_ thread e]
-            (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e))
-            (log/error "Virhe: " e))))
+            (log/error e "Säie " (.getName thread) " kaatui virheeseen: " (.getMessage e)))))
 
       (konfiguroi-lokitus asetukset)
       (if-let [virheet (tarkista-asetukset asetukset)]
@@ -869,10 +880,15 @@
         (System/exit 1)))))
 
 (defn sammuta-jarjestelma []
+  (log/info "HARJA sammutetaan")
   (when harja-jarjestelma
-    (alter-var-root #'harja-jarjestelma (fn [s]
-                                          (component/stop s)
-                                          nil)))
+    (alter-var-root #'harja-jarjestelma
+      (fn [s]
+        (try
+          (component/stop s)
+          (catch Exception e
+            (throw (component/ex-without-components e))))
+        nil)))
   (sammuta-harja-tarkkailija!))
 
 (defn -main [& argumentit]

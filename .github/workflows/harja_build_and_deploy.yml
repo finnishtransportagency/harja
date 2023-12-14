@@ -67,6 +67,30 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+      # Docs: https://github.com/slackapi/slack-github-action
+      - name: Send deploy failure message to Slack
+        id: slack
+        uses: slackapi/slack-github-action@e28cf165c92ffef168d23c5c9000cffc8a25e117
+        if: failure()
+        with:
+          # Slack Block Kit -tyyppinen rikastettu viesti
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":alert-slow: Harjan build epäonnistui! Automaattista deploymenttia ei tehdä.\n${{ env.JOB_RUN_URL }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+          JOB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
 
   # -- Deployment -- #
 
@@ -89,6 +113,7 @@ jobs:
     #       kuin kutsuva workflowikin.
     secrets:
       aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   # Automaattinen matrix-deployment useaan ympäristöön (workflow_run triggerillä)
   deploy-to-ecs-matrix:
@@ -116,4 +141,5 @@ jobs:
     #       kuin kutsuva workflowikin.
     secrets:
       aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 

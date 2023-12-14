@@ -229,7 +229,7 @@ ORDER BY jarjestys;
 -- Listataan tehtävät APIa varten toimenpidekoodin alatasot eli tehtävät
 SELECT t.id, t.nimi, t.voimassaolo_alkuvuosi, t.voimassaolo_loppuvuosi, t.jarjestys, t.jarjestys, t.emo,
        t.yksikko, t.suunnitteluyksikko,  t.hinnoittelu,
-       t.suoritettavatehtava, t.tehtavaryhma, t.ensisijainen, t.yksiloiva_tunniste,
+       t.suoritettavatehtava, t.tehtavaryhma, t."mhu-tehtava?" as ensisijainen, t.yksiloiva_tunniste,
        t.kasin_lisattava_maara, t."raportoi-tehtava?", t.materiaaliluokka_id,
        t.materiaalikoodi_id, t.aluetieto, t.piilota, t.poistettu, t.luotu, t.muokattu
   FROM tehtava t
@@ -239,6 +239,7 @@ SELECT t.id, t.nimi, t.voimassaolo_alkuvuosi, t.voimassaolo_loppuvuosi, t.jarjes
 
 -- name: listaa-tehtavaryhmat
 -- Listataan tehtäväryhmät APIa varten
-SELECT id, nimi, otsikko, jarjestys, poistettu, versio, yksiloiva_tunniste, luotu, muokattu
-  FROM tehtavaryhma
- ORDER BY otsikko ASC, nimi ASC;
+SELECT tr.id, tr.nimi, o.otsikko, tr.jarjestys, tr.poistettu, tr.versio, tr.yksiloiva_tunniste, tr.luotu, tr.muokattu
+  FROM tehtavaryhma tr
+  JOIN tehtavaryhmaotsikko o ON tr.tehtavaryhmaotsikko_id = o.id
+ ORDER BY o.otsikko ASC, tr.nimi ASC;

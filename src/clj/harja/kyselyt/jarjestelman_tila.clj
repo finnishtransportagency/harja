@@ -1,8 +1,9 @@
 (ns harja.kyselyt.jarjestelman-tila
   (:require [jeesql.core :refer [defqueries]]))
 
-(defqueries "harja/kyselyt/jarjestelman_tila.sql")
+(declare hae-jarjestelman-tila)
 
+(defqueries "harja/kyselyt/jarjestelman_tila.sql")
 
 (defn itmfn-tila
   ([db] (itmfn-tila db false))

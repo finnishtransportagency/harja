@@ -1,6 +1,6 @@
 (ns harja.kyselyt.kanavat.kanavan-toimenpide
   "Kyselyt kanavatoimenpiteille"
-  (:require [specql.core :refer [fetch insert! update!]]
+  (:require [specql.core :refer [fetch insert! update! upsert!]]
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
@@ -11,7 +11,6 @@
             [harja.pvm :as pvm]
             [harja.geo :as geo]
             [jeesql.core :refer [defqueries]]
-            [specql.core :as specql]
             [specql.op :as op]
             [clojure.set :as set]))
 
@@ -90,20 +89,19 @@
                     ::muokkaustiedot/muokkaaja-id (:id user)}))]
     m))
 
-(defn tallenna-toimenpiteen-omat-hinnat! [{:keys [db user hinnat toimenpide-id]}]
+(defn tallenna-toimenpiteen-omat-hinnat! [{:keys [db user hinnat]}]
   (doseq [hinta (map #(poista-frontin-keksima-id % ::hinta/id) hinnat)]
+    (upsert! db
+      ::hinta/toimenpiteen-hinta
+      (kasittele-muokkaustiedot user hinta ::hinta/id)
+      {::muokkaustiedot/poistettu? (op/not= true)})))
 
-    (specql/upsert! db
-                    ::hinta/toimenpiteen-hinta
-                    (kasittele-muokkaustiedot user hinta ::hinta/id)
-                    {::muokkaustiedot/poistettu? (op/not= true)})))
-
-(defn tallenna-toimenpiteen-tyot! [{:keys [db user tyot toimenpide-id]}]
+(defn tallenna-toimenpiteen-tyot! [{:keys [db user tyot]}]
   (doseq [tyo (map #(poista-frontin-keksima-id % ::tyo/id) tyot)]
-    (specql/upsert! db
-                    ::tyo/toimenpiteen-tyo
-                    (kasittele-muokkaustiedot user tyo ::tyo/id)
-                    {::muokkaustiedot/poistettu? (op/not= true)})))
+    (upsert! db
+      ::tyo/toimenpiteen-tyo
+      (kasittele-muokkaustiedot user tyo ::tyo/id)
+      {::muokkaustiedot/poistettu? (op/not= true)})))
 
 (defn tallenna-toimenpide [db kayttaja-id kanavatoimenpide]
   (let [id? (id-olemassa? (::toimenpide/id kanavatoimenpide))

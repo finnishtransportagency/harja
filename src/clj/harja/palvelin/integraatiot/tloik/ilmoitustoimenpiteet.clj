@@ -5,7 +5,7 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitustoimenpide-sanoma :as toimenpide-sanoma]
             [harja.palvelin.tyokalut.lukot :as lukko]
-            [harja.pvm :as pvm])
+            [harja.tyokalut.loki :as loki])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.util UUID)))
 
@@ -95,7 +95,6 @@
   [db]
   (lukko/yrita-ajaa-lukon-kanssa db "kuittausten-monitorointi"
     (fn []
-      (log/debug "Haetaan myöhästyneet ilmoitustoimenpiteet")
       (let [myohastyneet-ilmoitukset (->> (ilmoitukset/hae-myohastyneet-ilmoitustoimenpiteet db)
                                        (map #(konversio/array->vec % :idt))
                                        (map #(konversio/array->vec % :korrelaatioidt)))
@@ -112,9 +111,13 @@
                                                                           :varoitus "varoitus"}))
 
         (when (and kymmenen-min-myohastyneet (pos? (:maara kymmenen-min-myohastyneet)))
-          (log/error (format "Ilmoitusten kuittauksissa viivettä! Lähetetty %s kuittausviestiä T-LOIK:ille ilman vastausta kymmenessä minuutissa. Korrelaatio-id:t: (%s)"
-                       (:maara kymmenen-min-myohastyneet)
-                       (str/join ", " (:korrelaatioidt kymmenen-min-myohastyneet))))
+          (log/error
+            (->
+              (format "Ilmoitusten kuittauksissa viivettä! Lähetetty %s kuittausviestiä T-LOIK:ille ilman vastausta kymmenessä minuutissa. Korrelaatio-id:t: (%s)"
+                (:maara kymmenen-min-myohastyneet)
+                (str/join ", " (:korrelaatioidt kymmenen-min-myohastyneet)))
+              ;; Tee lokiviestistä hälytys
+              (loki/koristele-lokiviesti loki/alert)))
           (ilmoitukset/merkitse-ilmoitustoimenpide-varoitus-annetuksi! db {:idt (:idt kymmenen-min-myohastyneet)
                                                                           :varoitus "halytys"}))))
     55))

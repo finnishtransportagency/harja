@@ -12,7 +12,15 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def +tarkastustyyppi->nimi+ tarkastukset/+tarkastustyyppi->nimi+)
+(defonce nakymassa? (atom false))
+
+(def +tarkastustyyppi->nimi+
+  ;; Piilotetaan toistaiseksi tieturvallisuus kirjaus tuotannosta
+  ;; Kun kaikki valmista, tämän koodin voi muuttaa vaan: (def +tarkastustyyppi->nimi+ tarkastukset/+tarkastustyyppi->nimi+)
+  (let [tarkastukset tarkastukset/+tarkastustyyppi->nimi+]
+    (if-not (k/kehitysymparistossa?)
+      (dissoc tarkastukset :tieturvallisuus)
+      tarkastukset)))
 
 (defonce tienumero (atom nil)) ;; tienumero, tai kaikki
 (defonce tarkastustyyppi (atom nil)) ;; nil = kaikki, :tiesto, :talvihoito, :soratie
@@ -22,7 +30,6 @@
   [[nil "Kaikki"]
    [:tilaaja "Tilaaja/konsultti"]
    [:urakoitsija "Urakoitsija"]])
-
 
 (def +naytettevat-tarkastukset-valinnat+
   [[nil "Kaikki"]
@@ -126,6 +133,7 @@
                   (go (into [] (<! (hae-urakan-tarkastukset parametrit))))))))
 
 (defonce valittu-tarkastus (atom nil))
+(defonce valittu-karttataso (atom nil))
 
 (defn paivita-tarkastus-listaan!
   "Päivittää annetun tarkastuksen urakan-tarkastukset listaan, jos se on valitun aikavälin sisällä."
@@ -149,7 +157,6 @@
                                      (into []
                                            (remove #(= (:id %) id))
                                            tarkastukset)))))))
-
 
 (defn lisaa-laatupoikkeama
   "Lisää tarkastukselle laatupoikkeaman"

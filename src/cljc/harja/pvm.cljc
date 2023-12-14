@@ -87,6 +87,15 @@
        joda-time
        (t/to-time-zone joda-time suomen-aikavyohyke))))
 
+#?(:clj
+   (defn utc-aikavyohykkeeseen
+     "Palauttaa uuden Joda-ajan niin, että aika on sama, mutta aikavyöhyke on UTC+0.
+      Lisää aikaan 2/3h, joten ei tule käyttää sisäisissä tietokantakyselyissä.
+      Voidaan käyttää, jos halutaan esimerkiksi päivän alku formatoitua oikealle päivälle ulkoiseen palveluun
+      tehtävää kyselyä varten."
+     [^DateTime aika]
+     (t/from-time-zone (suomen-aikavyohykkeeseen aika) DateTimeZone/UTC)))
+
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
      (when dt
@@ -152,6 +161,10 @@
 
        (instance? java.sql.Timestamp dt)
        (tc/from-sql-time dt))))
+
+#?(:clj
+   (defn joda-date-timeksi [dt]
+     (tc/to-date-time dt)))
 
 #?(:clj
    (defn dateksi [dt]
@@ -1159,6 +1172,12 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      (df/unparse (df/formatter "yyyy-MM-dd") pvm)))
 
 #?(:clj
+   (defn pvm->iso-8601-pvm-aika-ei-ms
+     "Parsii annetun org.joda.time.DateTime-tyyppisen päivämäärän ISO-8601 (yyyy-MM-DD'T'HH:mm:ssX) muotoon."
+     [^DateTime pvm]
+     (df/unparse (:date-time-no-ms df/formatters) pvm)))
+
+#?(:clj
    (defn iso-8601->aika
      "Parsii annetun ISO-8601 (yyyy-MM-dd HH:mm:ss.SSSSSS) formaatissa olevan merkkijonon päivämääräksi."
      [teksti]
@@ -1468,3 +1487,32 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   (when (= 2 (count hoitokausi))
     (str (vuosi (first hoitokausi)) "-"
       (subs (str (vuosi (second hoitokausi))) 2 4))))
+
+(defn pvmn-kvartaali [pvm]
+  (case (kuukausi pvm)
+    (1 2 3) 1
+    (4 5 6) 2
+    (7 8 9) 3
+    (10 11 12) 4
+
+    (do #(log/warn "Ei tunnistettu pvm:n kvartaalia: " pvm) nil)))
+
+(defn samassa-kvartaalissa?
+  "Palauttaa totuusarvon, ovatko kaksi PVM:ää samassa kvartaalissa"
+  ;; samassa: 1.1.2024 ja 30.3.2024, erissä 2.1.2024 ja 1.4.2024
+  [pvm1 pvm2]
+  #?(:clj
+     (assert (or
+               (and
+                 (= java.util.Date (type pvm1))
+                 (= java.util.Date (type pvm2)))
+               (and
+                 (= java.sql.Timestamp (type pvm1))
+                 (= java.sql.Timestamp (type pvm2))))
+       "Päivämäärien oltava keskenään samaa tyyppiä, ja joko java.util.Date tai java.sql.Timestamp"))
+  ;; päivämäärät ovat samassa kvartaalissa, kun niillä on
+  ;; 1) sama vuosi
+  ;; 2) kuukausi osuu samaan kvartaaliväliin, vaihtoehtoihin 1-3, 4-6, 7-9 ja 10-12
+  (and
+    (= (vuosi pvm1) (vuosi pvm2))
+    (= (pvmn-kvartaali pvm1) (pvmn-kvartaali pvm2))))

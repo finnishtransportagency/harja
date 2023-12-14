@@ -260,7 +260,9 @@
    :tapahtumaOhi "Tapahtuma ohi"
    :kevyenLiikenteenVaylatOvatjaatymassa "Kevyenliikenteen vaylat ovat jäätymässä"
    :tietOvatjaisiaJamarkia "Tiet ovat jäisia ja märkiä"
-   :kiertotienKunnossapito "Kiertotien kunnossapito"})
+   :kiertotienKunnossapito "Kiertotien kunnossapito"
+   :jarjestelmanTilanTarkistus "Järjestelmän tilan tarkistus"
+   :jarjestelmanVikaTila "Järjestelmän vikatila"})
 
 (defn parsi-selitteet [selitteet]
   (string/join ", "

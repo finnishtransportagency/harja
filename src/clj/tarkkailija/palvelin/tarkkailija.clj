@@ -10,22 +10,28 @@
 
 (defn kaynnista! [{:keys [tietokanta tarkkailija komponenttien-tila kehitysmoodi]}]
   (alter-var-root #'harja-tarkkailija
-                  (constantly
-                    (component/start
-                      (component/system-map
-                        :db-event (event-tietokanta/luo-tietokanta tietokanta)
-                        :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat {:tarkkailija tarkkailija
-                                                                            :kehitysmoodi kehitysmoodi})
-                                                {:db :db-event})
-                        :tapahtuma (component/using
-                                     (tapahtuma/->Tapahtuma)
-                                     [:klusterin-tapahtumat :rajapinta])
-                        :rajapinta (rajapinta/->Rajapintakasittelija)
-                        :uudelleen-kaynnistaja (uudelleen-kaynnistaja/->UudelleenKaynnistaja komponenttien-tila (atom nil)))))))
+    (constantly
+      (try
+        (component/start
+          (component/system-map
+            :db-event (event-tietokanta/luo-tietokanta tietokanta)
+            :klusterin-tapahtumat (component/using
+                                    (tapahtumat/luo-tapahtumat {:tarkkailija tarkkailija
+                                                                :kehitysmoodi kehitysmoodi})
+                                    {:db :db-event})
+            :tapahtuma (component/using
+                         (tapahtuma/->Tapahtuma)
+                         [:klusterin-tapahtumat :rajapinta])
+            :rajapinta (rajapinta/->Rajapintakasittelija)
+            :uudelleen-kaynnistaja (uudelleen-kaynnistaja/->UudelleenKaynnistaja komponenttien-tila (atom nil))))
+        (catch Exception e
+          (throw (component/ex-without-components e)))))))
 
 (defn sammuta! []
   (alter-var-root #'harja-tarkkailija (fn [s]
-                                        (component/stop s)
+                                        (try
+                                          (component/stop s)
+                                          (catch Exception e
+                                            (throw (component/ex-without-components e))))
                                         nil)))
 

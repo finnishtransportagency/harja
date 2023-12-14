@@ -100,7 +100,8 @@
 
  :integraatiot {:paivittainen-lokin-puhdistusaika nil}
 
- :ilmatieteenlaitos {:lampotilat-url "https://tieindeksi.weatherproof.fi/tieindeksi2/tulokset.php"}
+ :ilmatieteenlaitos {:lampotilat-url "https://tieindeksi.weatherproof.fi/tieindeksi2/tulokset.php"
+                     :apiavain ""}
 
  ;; Voit hallinnoida geometria-aineistojen päivitystä GEOMETRIAPAIVITYS-taulussa.
  ;; Jos aineiston nimi muuttuu, voit tallentaa nimen ja sen voimassaolon GEOMETRIAAINEISTO-tauluun.
@@ -123,7 +124,7 @@
                         :soratien-hoitoluokkien-tuontikohde "./shp/Soratieluokat/soratieluokkaLine.shz"
 
                         :siltojen-shapefile "file://shp/Sillat/siltaPoint.shp"
-                        :siltojen-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=taitorakenteet:silta&outputFormat=SHAPE-ZIP"
+                        :siltojen-osoite nil #_"https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=taitorakenteet:silta&outputFormat=SHAPE-ZIP"
                         :siltojen-tuontikohde "./shp/Sillat/siltaPoint.shz"
 
                         :urakoiden-shapefile "file://shp/Hoitourakat/tie_hoitourakatPolygon.shp"
@@ -167,18 +168,20 @@
                                (clojure.string/trim-newline)))#_ #=(slurp "../.harja/velho-salasana")
          :varuste-api-juuri-url "https://apiv2stgvelho.testivaylapilvi.fi"
          :varuste-kayttajatunnus "6o9f1j147qvdvo49nufo0fhufp"
+         :varuste-tuonti-suoritusaika nil
          :varuste-salasana #=(eval (some->
                                        (slurp "../.harja/velho-varuste-salasana")
-                                       (clojure.string/trim-newline)))#_ #=(slurp "../.harja/velho-varuste-salasana")
-         :varuste-urakka-oid-url "https://apiv2stgvelho.testivaylapilvi.fi/hallintorekisteri/api/v1/tunnisteet/urakka/maanteiden-hoitourakka"
-         :varuste-urakka-kohteet-url "https://apiv2stgvelho.testivaylapilvi.fi/hallintorekisteri/api/v1/kohteet"}
+                                       (clojure.string/trim-newline)))
+         :oid-tuonti-suoritusaika nil}
 
  :yha-velho {}
 
  ;; Labyrintin SMS Gatewayn testaukseen tarvitaan SSH tunneli harja-app1-stg serverille porttiin 28080
  :labyrintti {:url "http://localhost:28080/sendsms"
               :kayttajatunnus "solita-2"
-              :salasana #=(slurp "../.harja/labyrintti-salasana")}
+              :salasana #=(slurp "../.harja/labyrintti-salasana")
+              :sms-url ""
+              :apiavain ""}
 
  ;; ClamAV-palvelun osoite
  :virustarkistus {:url "http://localhost:8080/scan"}
@@ -227,7 +230,12 @@
 
  :vkm {:url "https://avoinapi.testivaylapilvi.fi/viitekehysmuunnin/"}
 
- :liitteet {:fileyard-url "http://localhost:3333/"}
+ ;; Ota s3 liitetallennus käyttöön poistamalla kommenttimerkki alta,
+ ;; lisäämällä oikean s3-urlin ja varmistamalla, että järjestelmä pyörii sallitussa IP:ssä
+ ;:alusta :aws
+ :liitteet {:fileyard-url "http://localhost:3333/"
+            :s3-url nil ;"https://4ydqtenzhk.execute-api.eu-west-1.amazonaws.com/dev/generatepresignedurl"
+            }
 
  :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [12 12 00]}
 
@@ -237,7 +245,7 @@
                       :db-replica {:paivitystiheys-ms 10000
                                    :replikoinnin-max-viive-ms 100000}}
 
- :palautevayla {:url "fipadev.service-now.com"
+ :palautevayla {:url "https://fipadev.service-now.com"
                 :kayttajatunnus "integration.harja"
                 :salasana #=(eval (harja.tyokalut.env/env "HARJA_PALAUTEVAYLA_SALASANA" ""))
                 :paivitysaika [2 30 00]}}

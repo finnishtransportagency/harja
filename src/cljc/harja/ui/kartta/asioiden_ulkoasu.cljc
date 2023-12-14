@@ -1,5 +1,6 @@
 (ns harja.ui.kartta.asioiden-ulkoasu
   (:require [harja.ui.kartta.varit.puhtaat :as puhtaat]
+            [harja.ui.kartta.varit.alpha :as alpha]
             [harja.ui.kartta.ikonit :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni vesipisara-pinni-ikoni]]
             [clojure.string :as str]
 
@@ -594,28 +595,45 @@ tr-ikoni {:img (pinni-ikoni "musta")
 
     [nil nil nil nil]))
 
+(def varustetoteumien-kaytettavat-varit
+  (remove #{puhtaat/fig-default
+            puhtaat/lemon-default
+            puhtaat/eggplant-default
+            puhtaat/pitaya-default
+            puhtaat/pea-default
+            puhtaat/valkoinen} puhtaat/kaikki))
+
 (defn varustetoteuma [vt]
-  (conj (case (:toteuma vt)
-          "lisatty" ["Lisätty"
-                     (viiva-mustalla-rajalla puhtaat/fig-default)
-                     puhtaat/fig-default]
-          "paivitetty" ["Päivitetty"
-                        (viiva-mustalla-rajalla puhtaat/lemon-default)
-                        puhtaat/lemon-default]
-          "poistettu" ["Poistettu"
-                       (viiva-mustalla-rajalla puhtaat/eggplant-default)
-                       puhtaat/eggplant-default]
-          "tarkastus" ["Tarkistettu"
-                       (viiva-mustalla-rajalla puhtaat/pitaya-default)
-                       puhtaat/pitaya-default]
-          "korjaus" ["Korjattu"
-                     (viiva-mustalla-rajalla puhtaat/pea-default)
-                     puhtaat/pea-default]
-          "puhdistus" ["Puhdistettu"
-                       (viiva-mustalla-rajalla puhtaat/black-light)
-                       puhtaat/black-light]
-          ["Ei tietoa" (viiva-mustalla-rajalla puhtaat/valkoinen) puhtaat/valkoinen])
+  (conj (if (and (:toimenpide-id vt) (:toimenpide vt))
+          (let [vari (nth varustetoteumien-kaytettavat-varit
+                       (mod (:toimenpide-id vt) (count varustetoteumien-kaytettavat-varit)))]
+            [(:toimenpide vt)
+             (viiva-mustalla-rajalla vari)
+             vari])
+          (case (:toimenpide vt)
+            "Lisätty" ["Lisätty"
+                       (viiva-mustalla-rajalla puhtaat/fig-default)
+                       puhtaat/fig-default]
+            "Päivitetty" ["Päivitetty"
+                          (viiva-mustalla-rajalla puhtaat/lemon-default)
+                          puhtaat/lemon-default]
+            "Poistettu" ["Poistettu"
+                         (viiva-mustalla-rajalla puhtaat/eggplant-default)
+                         puhtaat/eggplant-default]
+            ["Ei tietoa" (viiva-mustalla-rajalla puhtaat/valkoinen) puhtaat/valkoinen]))
     (vesipisara-pinni-ikoni)))
+
+(def tieturvallisuusverkko
+  {:color alpha/fig-default
+   :width 8})
+
+(def ei-kayty-tieturvallisuusverkko
+  {:ajovayla
+   {:color puhtaat/red-default
+    :width 8}
+   :kapy
+   {:color puhtaat/lemon-default
+    :width 8}})
 
 (defn tilan-vari [tila]
   (case tila

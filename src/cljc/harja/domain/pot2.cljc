@@ -23,9 +23,9 @@
                      :validoi [[:rajattu-numero-tai-tyhja 1 500 "Arvon tulee olla välillä 1-500cm"]]
                      :tyyppi :positiivinen-numero :kokonaisluku? true
                      :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 1 500 0))}
-   :massamaara {:nimi :massamaara :otsikko "Massa\u00ADmäärä" :yksikko "kg/m²"
-                :tyyppi :positiivinen-numero :desimaalien-maara 1
-                :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
+   :massamenekki {:nimi :massamenekki :otsikko "Massa\u00ADmäärä" :yksikko "kg/m²"
+                  :tyyppi :positiivinen-numero :desimaalien-maara 1
+                  :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
    :murske {:nimi :murske :otsikko "Murske"
             :tyyppi :valinta
             :valinta-arvo ::murske-id}
@@ -37,18 +37,18 @@
             :tyyppi :positiivinen-numero :desimaalien-maara 2
             :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 20 2))}
    :pinta-ala {:nimi :pinta_ala :tyyppi :positiivinen-numero :otsikko "Pinta-ala" :yksikko "m²"
-                        :pakollinen? (constantly false)
-                        :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))
-                        :muokattava? (fn [rivi]
-                                       ;; 2 = AB 
-                                       ;; 21 = ABK 
-                                       ;; 22 = ABS
-                                       (or
-                                         (= (:toimenpide rivi) 2)
-                                         (= (:toimenpide rivi) 21)
-                                         (= (:toimenpide rivi) 22)))
-                        :fmt #(fmt/desimaaliluku-opt % 1)
-                        }
+               :pakollinen? (constantly false)
+               :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))
+               :muokattava? (fn [rivi]
+                              ;; 2 = AB
+                              ;; 21 = ABK
+                              ;; 22 = ABS
+                              (or
+                                (= (:toimenpide rivi) 2)
+                                (= (:toimenpide rivi) 21)
+                                (= (:toimenpide rivi) 22)))
+               :fmt #(fmt/desimaaliluku-opt % 1)
+               }
    :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmäärä" :yksikko "t"
                         :tyyppi :positiivinen-numero :desimaalien-maara 1
                         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
@@ -88,12 +88,12 @@
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
                                                [:kasittelysyvyys :lisatty-paksuus :murske]
                                                2            ;; AB
-                                               [:massa :pinta-ala :kokonaismassamaara :massamaara]
+                                               [:massa :pinta-ala :kokonaismassamaara :massamenekki]
                                                3            ;; Verkko
                                                [:verkon-tyyppi :verkon-sijainti
                                                 {:nimi :verkon-tarkoitus :pakollinen? false}]
                                                4            ;; REM-TAS
-                                               [:massa {:nimi :kokonaismassamaara :pakollinen? false} :massamaara]
+                                               [:massa {:nimi :kokonaismassamaara :pakollinen? false} :massamenekki]
                                                11           ;; BEST
                                                [:kasittelysyvyys :sideaine :sideainepitoisuus
                                                 {:nimi :murske :pakollinen? false}]
@@ -120,9 +120,9 @@
                                                 {:nimi :sideaine2 :otsikko "Sideaine 2"}
                                                 {:nimi :murske :pakollinen? false}]
                                                21           ;; ABK
-                                               [:massa :pinta-ala :kokonaismassamaara :massamaara]
+                                               [:massa :pinta-ala :kokonaismassamaara :massamenekki]
                                                22           ;; ABS
-                                               [:massa :pinta-ala :kokonaismassamaara :massamaara]
+                                               [:massa :pinta-ala :kokonaismassamaara :massamenekki]
                                                23           ;; MS
                                                [:lisatty-paksuus :murske]
                                                24           ;; SJYR
@@ -132,7 +132,7 @@
                                                31           ;; TASK
                                                []
                                                32           ;; TAS
-                                               [:massa {:nimi :kokonaismassamaara :pakollinen? false} :massamaara]
+                                               [:massa {:nimi :kokonaismassamaara :pakollinen? false} :massamenekki]
                                                41           ;; TJYR
                                                []
                                                42           ;; LJYR

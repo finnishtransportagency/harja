@@ -19,7 +19,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :liitteiden-hallinta
                         (component/using
-                          (harja.palvelin.komponentit.liitteet/->Liitteet nil)
+                          (harja.palvelin.komponentit.liitteet/->Liitteet nil nil nil)
                           [:db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))

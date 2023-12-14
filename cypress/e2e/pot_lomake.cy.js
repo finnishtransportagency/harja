@@ -4,9 +4,10 @@ let odotaElementtia = 45000;
 let valitseVuosi = function (vuosi) {
     // Tämä rivi on estämässä taasen jo poistettujen elementtien käsittelyä. Eli odotellaan
     // paallystysilmoituksien näkymistä guilla ennen kuin valitaan 2017 vuosi.
+    cy.intercept('POST', '_/urakan-paallystysilmoitukset').as('hae-urakan-paallystysilmoitukset')
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: ajaxLoaderTimeout}).should('not.exist')
     cy.get('[data-cy=valinnat-vuosi]').valinnatValitse({valinta: vuosi.toString()})
-    cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: ajaxLoaderTimeout}).should('exist')
+    cy.wait('@hae-urakan-paallystysilmoitukset', {timeout: ajaxLoaderTimeout});
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('not.exist')
 };
 

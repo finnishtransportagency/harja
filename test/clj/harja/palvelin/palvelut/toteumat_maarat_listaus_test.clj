@@ -82,7 +82,7 @@
                                                               FROM urakka_tehtavamaara ut, tehtava tk
                                                               WHERE ut.tehtava = tk.id
                                                               AND tk.aluetieto = false
-                                                              AND tk.ensisijainen = true
+                                                              AND tk.\"mhu-tehtava?\" = true
                                                               AND tk.tehtavaryhma is not null
                                                               AND \"hoitokauden-alkuvuosi\" = '2019'::INT
                                                               AND urakka = " urakka-id)))
@@ -90,7 +90,7 @@
                                                         (str "SELECT count(*)
                                                               FROM urakka_tehtavamaara ut, tehtava tk
                                                               WHERE ut.tehtava = tk.id
-                                                              AND tk.ensisijainen = true
+                                                              AND tk.\"mhu-tehtava?\" = true
                                                               AND tk.aluetieto = false
                                                               AND tk.tehtavaryhma is not null
                                                               AND \"hoitokauden-alkuvuosi\" = '2020'::INT
@@ -99,7 +99,7 @@
                                                         (str "SELECT count(*)
                                                               FROM urakka_tehtavamaara ut, tehtava tk
                                                               WHERE ut.tehtava = tk.id
-                                                              AND tk.ensisijainen = true
+                                                              AND tk.\"mhu-tehtava?\" = true
                                                               AND tk.aluetieto = false
                                                               AND tk.tehtavaryhma is not null
                                                               AND \"hoitokauden-alkuvuosi\" = '2021'::INT
@@ -130,20 +130,22 @@
                                                             urakka_tehtavamaara ut,
                                                             tehtava tk,
                                                             tehtavaryhma tr
+                                                       LEFT JOIN tehtavaryhmaotsikko o ON tr.tehtavaryhmaotsikko_id = o.id
                                                        WHERE tk.id = ut.tehtava
                                                          AND tr.id = tk.tehtavaryhma
                                                          AND ut.\"hoitokauden-alkuvuosi\" = 2020
-                                                         AND tr.otsikko = '2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen'
+                                                         AND o.otsikko = '2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen'
                                                          AND ut.urakka = " urakka-id))
         oulun-mhu-urakan-maarien-toteuma-muuta (q (str "SELECT *
                                                          FROM tehtava tk,
-                                                              tehtavaryhma tr,
+                                                              tehtavaryhma tr
+                                                              JOIN tehtavaryhmaotsikko o ON tr.tehtavaryhmaotsikko_id = o.id,
                                                               urakka u
                                                          WHERE tk.tehtavaryhma = tr.id
-                                                           AND tk.ensisijainen = true
+                                                           AND tk.\"mhu-tehtava?\" = true
                                                            AND tk.kasin_lisattava_maara = true
                                                            AND (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
-                                                           AND tr.otsikko = '8 MUUTA'
+                                                           AND o.otsikko = '8 MUUTA'
                                                            AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
                                                            AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
                                                            AND ((tk.suunnitteluyksikko IS not null AND tk.suunnitteluyksikko != 'euroa') OR

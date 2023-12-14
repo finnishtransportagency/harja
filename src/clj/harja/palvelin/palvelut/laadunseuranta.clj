@@ -83,12 +83,14 @@
 (defn- hae-bonuksen-liitteet
   "Hakee bonuksen liitteet"
   [db user urakka-id bonus-id]
+  (log/info "hae-bonuksen-liitteet, bonus-id " bonus-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-erilliskustannukset user urakka-id)
   (into [] (laatupoikkeamat-q/hae-bonuksen-liitteet db bonus-id)))
 
 (defn- hae-sanktion-liitteet
   "Hakee yhden sanktion (laatupoikkeaman kautta) liitteet"
   [db user urakka-id laatupoikkeama-id]
+  (log/info "hae-sanktion-liitteet, laatupoikkeama-id " laatupoikkeama-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
   (vaadi-laatupoikkeama-kuuluu-urakkaan db urakka-id laatupoikkeama-id)
   (into [] (laatupoikkeamat-q/hae-laatupoikkeaman-liitteet db laatupoikkeama-id)))
@@ -98,6 +100,7 @@
    Ottaa urakka-id:n ja laatupoikkeama-id:n. Urakka id:tä käytetään oikeustarkistukseen, laatupoikkeaman tulee olla annetun urakan
    toimenpiteeseen kytketty."
   [db user urakka-id laatupoikkeama-id]
+  (log/info "hae-laatupoikkeaman-tiedot laatupoikkeama-id " laatupoikkeama-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
   (let [laatupoikkeama (first (into []
                                     yhteiset/laatupoikkeama-xf
@@ -311,7 +314,7 @@
 
 (defn tallenna-laatupoikkeama [{:keys [db user fim email sms laatupoikkeama]}]
   (let [urakka-id (:urakka laatupoikkeama)]
-    (log/debug "Tallenna laatupoikkeama: " laatupoikkeama)
+    (log/info "Tallenna laatupoikkeama urakkaan: " urakka-id)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
     (jdbc/with-db-transaction [db db]
       (let [osapuoli (roolit/osapuoli user)

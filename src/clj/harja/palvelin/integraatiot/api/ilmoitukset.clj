@@ -142,9 +142,7 @@
               odota-uusia? :odota-uusia?
               sulje-vastauksen-jalkeen? :sulje-vastauksen-jalkeen?} parametrit
              tapahtuma-id (lokita-kutsu integraatioloki :hae-ilmoitukset request nil)
-             kayttaja (hae-kayttaja db (get
-                                         (todennus/prosessoi-kayttaja-headerit (:headers request))
-                                         "oam_remote_user"))]
+             kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))]
          (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
          (with-channel request kanava
                        (let [laheta-ilmoitukset (ilmoituslahettaja integraatioloki kanava tapahtuma-id sulje-vastauksen-jalkeen?)

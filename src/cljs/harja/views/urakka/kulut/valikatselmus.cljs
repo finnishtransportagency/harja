@@ -182,7 +182,7 @@
      (when (and paatoksia? voi-muokata?)
        [:div.oikaisu-paatos-varoitus
         [ikonit/harja-icon-status-alert]
-        [:span "Hinnan oikaisun jälkeen joudut tallentamaan päätökset uudestaan"]])
+        [:span "Tavoitehintaan liittyvä päätös on tallennettu. Jos teet uusia tavoitehinnan oikaisuja, päätös kumotaan automaattisesti."]])
 
      (when kattohinnan-oikaisu-mahdollinen?
        [kattohinnan-oikaisu e! app])]))
@@ -364,6 +364,7 @@
                            siirto-valittu? 0
                            :else 0)
         maksettava-summa-prosenttina (* 100 (/ maksettava-summa ylityksen-maara))
+        siirrettava-summa-prosenttina (* 100 (/ siirto ylityksen-maara))
         paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
                                  ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
                                  ::valikatselmus/urakoitsijan-maksu maksettava-summa
@@ -392,14 +393,22 @@
                 :vaihtoehto-opts {:osa
                                   {:valittu-komponentti [kattohinnan-ylitys-siirto e! ylityksen-maara kattohinnan-ylitys-lomake]}}
                 :vaihtoehto-nayta {:maksu [:p "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt ylityksen-maara)] "(100 %)"]
-                                   :siirto [:p "Ylitys " [:strong (fmt/euro-opt ylityksen-maara)] "siirretään seuraavan vuoden hankintakustannuksiin"]
+                                   :siirto [:p "Ylitys " [:strong (fmt/euro-opt ylityksen-maara)] " siirretään seuraavan vuoden hankintakustannuksiin"]
                                    :osa "Osa siirretään ja osa maksetaan"}
                 :oletusarvo :maksu}
                (r/wrap maksun-tyyppi
                  #(e! (valikatselmus-tiedot/->PaivitaMaksunTyyppi %)))])
-            (if siirto-valittu?
+            (case maksun-tyyppi
+              :maksu
+              [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)] " (" (fmt/desimaaliluku-opt maksettava-summa-prosenttina) " %)"]
+              :siirto
               [:p.maksurivi "Siirretään ensi vuoden kustannuksiksi " [:strong (fmt/euro-opt siirto)]]
-              [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)] " (" (fmt/desimaaliluku-opt maksettava-summa-prosenttina) " %)"])]
+              :osa
+              [:<>
+               [:p.maksurivi "Seuraavalle vuodelle siirretään " [:strong (fmt/euro-opt siirto)] " (" (fmt/desimaaliluku-opt siirrettava-summa-prosenttina) " %)"]
+               [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)] " (" (fmt/desimaaliluku-opt maksettava-summa-prosenttina) " %)"]]
+              nil)]
+
            [:p.maksurivi "Urakoitsija maksaa hyvitystä " [:strong (fmt/euro-opt maksettava-summa)]])
 
          ;; FIXME: Ei figma-speksiä, korjaa kunhan sellainen löytyy.
@@ -425,7 +434,7 @@
             {:luokka "nappi-toissijainen napiton-nappi"
              :ikoni [ikonit/harja-icon-action-undo]}]))]]]))
 
-(defn lupaus-lomake [e! oikaistu-tavoitehinta app voi-muokata?]
+(defn lupaus-lomake [e! app voi-muokata?]
   (let [yhteenveto (:yhteenveto app)
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         paatos-tehty? (or (= :katselmoitu-toteuma (:ennusteen-tila yhteenveto)) false)
@@ -457,7 +466,7 @@
                                  ::valikatselmus/tilaajan-maksu tilaajan-maksu
                                  ::valikatselmus/lupaus-luvatut-pisteet luvatut-pisteet
                                  ::valikatselmus/lupaus-toteutuneet-pisteet toteutuneet-pisteet
-                                 ::valikatselmus/lupaus-tavoitehinta oikaistu-tavoitehinta
+                                 ::valikatselmus/lupaus-tavoitehinta tavoitehinta
                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                  ::valikatselmus/siirto nil}
                            (when (get-in app [lomake-avain ::valikatselmus/paatoksen-id])
@@ -478,7 +487,7 @@
          [:h3 (str "Lupaukset: Urakoitsija saa bonusta " (fmt/euro-opt summa) " luvatun pistemäärän ylittämisestä.")]
          tavoite-taytetty?
          [:h3 (str "Lupaukset: Urakoitsija pääsi tavoitteeseen.")])
-       [:p "Urakoitsija sai " pisteet " ja lupasi " sitoutumis-pisteet " pistettä." " Tavoitehinta: " (fmt/euro-opt tavoitehinta)]
+       [:p "Urakoitsija sai " pisteet " ja lupasi " sitoutumis-pisteet " pistettä." " Tarjouksen tavoitehinta: " (fmt/euro-opt tavoitehinta)]
        [:div {:style {:padding-top "22px"}}
         (cond
           (or lupausbonus lupaussanktio)
@@ -592,7 +601,7 @@
          [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?])
        [:h2 "Lupauksiin liittyvät päätökset"]
        (if lupaukset-valmiina?
-         [lupaus-lomake e! oikaistu-tavoitehinta app voi-muokata?]
+         [lupaus-lomake e! app voi-muokata?]
          [lupaus-ilmoitus e! app])])))
 
 (defn valikatselmus [e! app]

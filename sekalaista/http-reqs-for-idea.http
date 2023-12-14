@@ -1,0 +1,21 @@
+### Hae urakat
+
+GET localhost:3000/api/urakat/haku/
+OAM_REMOTE_USER: Integraatio
+Content-Type: 'application/json'
+
+### Lisää tiestötarkastus
+POST localhost:3000/api/urakat/365/tarkastus/tiestotarkastus
+OAM_REMOTE_USER: svc_elyetela_harja
+Content-Type: 'application/json'
+
+{"otsikko":{"lahettaja":{"jarjestelma":"Tietopaja Oy","organisaatio":{"ytunnus":"4","nimi":"ELY-keskus (eteläinen hankinta-alue, pistokoe)"}},
+"viestintunniste":{"id":50298742},"lahetysaika":"2023-11-28T09:40:52Z"},"tarkastukset":[{"tarkastus":{"tunniste":{"id":12922052},
+"aika":"2023-11-28T05:52:05Z","tarkastaja":{"etunimi":"Tiedon","sukunimi":"Tuottaja"},
+"alkusijainti":{"x":403391.66200000647,"y":6718687.0749999955},"loppusijainti":{"x":400656.347000006,"y":6714916.0749999965}}},{"tarkastus":{"tunniste":{"id":12922053},
+"aika":"2021-11-28T05:56:25Z","tarkastaja":{"etunimi":"Tiedon","sukunimi":"Tuottaja"},"alkusijainti":{"x":400656.347000006,"y":6714916.0749999965},
+"loppusijainti":{"x":397599.76000000589,"y":6708545.2549999906}}},{"tarkastus":{"tunniste":{"id":12922054},"aika":"2023-11-28T05:59:45Z",
+"tarkastaja":{"etunimi":"Tiedon","sukunimi":"Tuottaja"},"alkusijainti":{"x":397599.76000000589,"y":6708545.2549999906},
+"loppusijainti":{"x":396908.14104064211,"y":6703492.5333504211}}}]}
+
+

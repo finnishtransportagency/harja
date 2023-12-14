@@ -1,5 +1,6 @@
 (ns harja.tiedot.hallinta.hairiot
-  (:require [reagent.core :refer [atom]]
+  (:require [harja.pvm :as pvm]
+            [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.domain.hairioilmoitus :as hairio]
             [harja.tiedot.hairioilmoitukset :as hairio-ui]
@@ -10,8 +11,12 @@
 (def nakymassa? (atom false))
 (def hairiot (atom nil))
 (def asetetaan-hairioilmoitus? (atom false))
-(def tuore-hairioilmoitus (atom {:tyyppi :hairio
-                                 :teksti nil}))
+
+(def tyhja-hairioilmoitus {:tyyppi :hairio
+                           :teksti nil
+                           :alkuaika (pvm/nyt)})
+
+(def tuore-hairioilmoitus (atom tyhja-hairioilmoitus))
 (def tallennus-kaynnissa? (atom false))
 
 (defn hae-hairiot []
@@ -36,7 +41,7 @@
             :varoitus
             (* 60 1000))
           (do (reset! hairiot vastaus)
-            (reset! tuore-hairioilmoitus {:tyyppi :hairio :teksti nil})
+            (reset! tuore-hairioilmoitus tyhja-hairioilmoitus)
             (hairio-ui/hae-tuorein-hairioilmoitus!))))))
 
 (defn poista-hairioilmoitus [{:keys [id]}]

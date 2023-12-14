@@ -451,7 +451,7 @@ WITH osa_toteumat AS
             AND t.poistettu = FALSE
           GROUP BY tt.toimenpidekoodi)
 SELECT tk.id                    AS toimenpidekoodi_id,
-       tr_alataso.otsikko       AS toimenpide,
+       o.otsikko                AS toimenpide,
        tk.nimi                  AS tehtava,
        sum(ot.maara)            AS maara,
        sum(ot.materiaalimaara)  AS materiaalimaara,
@@ -459,19 +459,20 @@ SELECT tk.id                    AS toimenpidekoodi_id,
        tk.kasin_lisattava_maara AS kasin_lisattava_maara,
        tk.suunnitteluyksikko    AS yk,
        CASE
-           WHEN tr_alataso.otsikko = '9 LISÄTYÖT'
+           WHEN o.otsikko = '9 LISÄTYÖT'
                THEN 'lisatyo'
            ELSE 'kokonaishintainen' END AS tyyppi
 FROM tehtava tk
      -- Alataso on linkitetty toimenpidekoodiin
-     JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma AND (:tehtavaryhma::TEXT IS NULL OR tr_alataso.otsikko = :tehtavaryhma)
+     JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
+     JOIN tehtavaryhmaotsikko o ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
      LEFT JOIN urakka_tehtavamaara ut ON ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
                        AND ut.poistettu IS NOT TRUE AND tk.id = ut.tehtava
      LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi
      JOIN urakka u on u.id = :urakka
 WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
       (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
-  AND tk.ensisijainen = true -- Rajataan pois ne, jotka eivät ole ensisijaisia.
+  AND tk."mhu-tehtava?" = true -- Rajataan pois ne, jotka eivät ole mhu tehtäviä.
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
   -- Rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
@@ -483,8 +484,8 @@ WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjat
                                'e32341fc-775a-490a-8eab-c98b8849f968',
                                '0c466f20-620d-407d-87b0-3cbb41e8342e',
                                'c058933e-58d3-414d-99d1-352929aa8cf9'))
-GROUP BY tk.id, tk.nimi, tr_alataso.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
-ORDER BY tr_alataso.otsikko asc, tk.nimi asc;
+GROUP BY tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
+ORDER BY o.otsikko asc, tk.nimi asc;
 
 -- name: listaa-tehtavan-toteumat
 -- Haetaan yksittäiselle tehtavalle kaikki toteumat.
@@ -536,7 +537,7 @@ SELECT t.id        AS toteuma_id,
        tt.maara                   AS toteutunut,
        t.alkanut                  AS toteuma_aika,
        tk.suunnitteluyksikko      AS yksikko,
-       tr.otsikko                 AS toimenpide_otsikko,
+       o.otsikko                  AS toimenpide_otsikko,
        tr.id                      AS toimenpide_id,
        tt.id                      AS toteuma_tehtava_id,
        tt.lisatieto               AS lisatieto,
@@ -552,6 +553,7 @@ SELECT t.id        AS toteuma_id,
          toteuma t,
          kayttaja k,
          tehtavaryhma tr
+    JOIN tehtavaryhmaotsikko o ON tr.tehtavaryhmaotsikko_id = o.id
     WHERE t.id = :id
       AND tk.id = tt.toimenpidekoodi
       AND t.id = tt.toteuma
@@ -559,39 +561,6 @@ SELECT t.id        AS toteuma_id,
       AND tt.poistettu = FALSE
       AND t.luoja = k.id
       AND tr.id = tk.tehtavaryhma;
-
--- name: listaa-urakan-toteutumien-toimenpiteet
--- Listaa kaikki toimenpiteet (tehtäväryhmät) määrien toteumille. Ehtona toimii emo is null ja tyyppi 'ylataso'
-SELECT DISTINCT ON (tr.otsikko) otsikko, tr.id
-    FROM tehtavaryhma tr
-    ORDER BY otsikko ASC, tr.id ASC;
-
--- name: listaa-maarien-toteumien-toimenpiteiden-tehtavat
--- Listaa kaikki tehtävät tehtäväryhmän perusteella määrien toteumille. Äkillisille hoitotöille
--- on ihan oma tehtäväryhmä ja tätä ei voida käyttää siihen
-SELECT tk.id AS id,
-       tk.nimi AS tehtava,
-       tk.suunnitteluyksikko AS yksikko
-FROM tehtava tk
-         JOIN urakka u ON :urakka = u.id
-         JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
-                                          AND (:otsikko::TEXT IS NULL OR tr_alataso.otsikko = :otsikko)
-WHERE (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
-  AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
-  AND tk.poistettu IS NOT TRUE
-  -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
-  AND (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
-  -- haetaan Lisää toteuma-listaan vain MH-urakoissa käytössä olevat tehtävät, ei samaa tarkoittavia alueurakoiden tehtäviä.
-  AND tk.ensisijainen = true
-  -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
-  -- mutta otetaan mukaan Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen ja lisätyöt
-  AND ((tk.suunnitteluyksikko IS not null AND tk.suunnitteluyksikko != 'euroa') OR tk.yksiloiva_tunniste IN ('49b7388b-419c-47fa-9b1b-3797f1fab21d',
-                                                                                                             '63a2585b-5597-43ea-945c-1b25b16a06e2',
-                                                                                                             'b3a7a210-4ba6-4555-905c-fef7308dc5ec',
-                                                                                                             'e32341fc-775a-490a-8eab-c98b8849f968',
-                                                                                                             '0c466f20-620d-407d-87b0-3cbb41e8342e',
-                                                                                                             'c058933e-58d3-414d-99d1-352929aa8cf9'))
-  ORDER BY tk.jarjestys;
 
 -- name: tallenna-erilliskustannukselle-liitteet<!
 -- Lisää liitteet
@@ -818,154 +787,6 @@ SET
   muokkaaja               = :kayttaja,
   muokattu                = current_timestamp
 WHERE id = :id;
-
--- name: varustetoteuma-ulkoiset-virhe-oidit
-SELECT DISTINCT virhekohteen_oid
-FROM varustetoteuma_ulkoiset_virhe
-WHERE virhekohteen_oid IS NOT NULL;
-
--- name: varustetoteuma-ulkoiset-viimeisin-hakuaika-kohdeluokalle
-SELECT viimeisin_hakuaika
-FROM varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle
-WHERE kohdeluokka = :kohdeluokka :: kohdeluokka_tyyppi;
-
--- name: varustetoteuma-ulkoiset-luo-viimeisin-hakuaika-kohdeluokalle>!
-INSERT INTO varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle (kohdeluokka, viimeisin_hakuaika)
-VALUES (:kohdeluokka :: kohdeluokka_tyyppi, :viimeisin_hakuaika);
-
--- name: varustetoteuma-ulkoiset-paivita-viimeisin-hakuaika-kohdeluokalle!
-UPDATE varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle
-SET viimeisin_hakuaika = :viimeisin_hakuaika
-WHERE kohdeluokka = :kohdeluokka ::kohdeluokka_tyyppi;
-
--- name: hae-urakan-uusimmat-varustetoteuma-ulkoiset
--- SELECT array_length(ARRAY[] ::kuntoluokka_tyyppi[], 1);
-WITH x AS (
-    SELECT ulkoinen_oid, MAX(alkupvm) AS maxalkupvm
-    FROM varustetoteuma_ulkoiset
-    WHERE urakka_id = :urakka
-      AND alkupvm BETWEEN :hoitokauden_alkupvm AND :hoitokauden_loppupvm
-      AND (:kuukausi ::int IS NULL OR extract(MONTH FROM alkupvm) = :kuukausi ::int)
-      AND (TRUE IN (SELECT UNNEST(ARRAY[:kuntoluokat] ::kuntoluokka_tyyppi[]) IS NULL) OR
-           kuntoluokka = ANY(ARRAY[:kuntoluokat] ::kuntoluokka_tyyppi[]))
-      AND (:toteuma ::varustetoteuma_tyyppi IS NULL OR toteuma = :toteuma ::varustetoteuma_tyyppi)
-      AND varuste_leikkaus(tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
-          :tie ::int, :aosa ::int, :aeta ::int, :losa ::int, :leta ::int)
-      AND (TRUE IN (SELECT UNNEST(ARRAY[:tietolajit]) IS NULL) OR
-           tietolaji = ANY(ARRAY[:tietolajit]))
-    GROUP BY ulkoinen_oid)
-SELECT v.id,
-       v.ulkoinen_oid     AS "ulkoinen-oid",
-       v.tr_numero        AS "tr-numero",
-       v.tr_alkuosa       AS "tr-alkuosa",
-       v.tr_alkuetaisyys  AS "tr-alkuetaisyys",
-       v.tr_loppuosa      AS "tr-loppuosa",
-       v.tr_loppuetaisyys AS "tr-loppuetaisyys",
-       v.sijainti,
-       v.tietolaji,
-       v.lisatieto,
-       v.toteuma,
-       v.kuntoluokka,
-       v.alkupvm,
-       v.loppupvm,
-       v.muokkaaja,
-       v.muokattu
-FROM x
-    INNER JOIN varustetoteuma_ulkoiset AS v ON v.ulkoinen_oid = x.ulkoinen_oid AND v.alkupvm = x.maxalkupvm
-ORDER BY v.alkupvm
-LIMIT 1001;
-
--- name: hae-urakan-varustetoteuma-ulkoiset
-SELECT v.id,
-       v.ulkoinen_oid     AS "ulkoinen-oid",
-       v.tietolaji,
-       v.lisatieto,
-       v.toteuma,
-       v.kuntoluokka,
-       v.alkupvm,
-       v.loppupvm,
-       v.muokkaaja,
-       v.muokattu
-FROM varustetoteuma_ulkoiset v
-WHERE urakka_id = :urakka
-  AND ulkoinen_oid = :ulkoinen_oid
-ORDER BY v.alkupvm;
-
--- name: paivita-varusteen-toteuma
-UPDATE varustetoteuma_ulkoiset
-SET toteuma = :toteuma :: varustetoteuma_tyyppi
-WHERE ulkoinen_oid = :ulkoinen_oid 
-AND :alkupvm >= COALESCE(alkupvm, '1900-01-01') 
-AND :alkupvm < COALESCE(loppupvm, '9999-12-31')
-RETURNING *;
-
--- name: luo-varustetoteuma-ulkoiset<!
--- Luo uuden Velhosta tuodun varustetoteuman
-INSERT INTO varustetoteuma_ulkoiset (ulkoinen_oid,
-                                     urakka_id,
-                                     tr_numero,
-                                     tr_alkuosa,
-                                     tr_alkuetaisyys,
-                                     tr_loppuosa,
-                                     tr_loppuetaisyys,
-                                     sijainti,
-                                     tietolaji,
-                                     lisatieto,
-                                     toteuma,
-                                     kuntoluokka,
-                                     alkupvm,
-                                     loppupvm,
-                                     muokkaaja,
-                                     muokattu)
-VALUES (:ulkoinen_oid,
-        :urakka_id,
-        :tr_numero,
-        :tr_alkuosa,
-        :tr_alkuetaisyys,
-        :tr_loppuosa,
-        :tr_loppuetaisyys,
-        :sijainti,
-        :tietolaji,
-        :lisatieto,
-        :toteuma :: varustetoteuma_tyyppi,
-        :kuntoluokka :: kuntoluokka_tyyppi,
-        :alkupvm,
-        :loppupvm,
-        :muokkaaja,
-        :muokattu);
-
--- name: paivita-varustetoteuma-ulkoiset!
--- Päivittää Velhosta tuodun varustetoteuman, joka oli jo kannassa. Uusin tieto voittaa!
-UPDATE varustetoteuma_ulkoiset
-SET urakka_id        = :urakka_id,
-    tr_numero        = :tr_numero,
-    tr_alkuosa       = :tr_alkuosa,
-    tr_alkuetaisyys  = :tr_alkuetaisyys,
-    tr_loppuosa      = :tr_loppuosa,
-    tr_loppuetaisyys = :tr_loppuetaisyys,
-    sijainti         = :sijainti,
-    tietolaji        = :tietolaji,
-    lisatieto        = :lisatieto,
-    toteuma          = :toteuma :: varustetoteuma_tyyppi,
-    kuntoluokka      = :kuntoluokka :: kuntoluokka_tyyppi,
-    loppupvm         = :loppupvm,
-    muokkaaja        = :muokkaaja,
-    muokattu         = :muokattu
-WHERE ulkoinen_oid = :ulkoinen_oid
-  AND alkupvm = :alkupvm;
-
--- name: tallenna-varustetoteuma-ulkoiset-virhe<!
--- Tallentaa virheen tiedot tulevaa toipumista varten. Virheet tallennetaan velho-oid + muokattu avaimilla.
-INSERT INTO varustetoteuma_ulkoiset_virhe (aikaleima,
-                                           virhekuvaus,
-                                           virhekohteen_oid,
-                                           virhekohteen_alkupvm,
-                                           virhekohteen_vastaus)
-VALUES (:aikaleima,
-        :virhekuvaus,
-        :virhekohteen_oid,
-        :virhekohteen_alkupvm,
-        :virhekohteen_vastaus);
 
 -- name: hae-yksikkohintaisten-toiden-reitit
 -- fetch-size: 64
@@ -1405,16 +1226,16 @@ SELECT t.alkanut, t.urakka AS "urakka-id", u.hallintayksikko AS "hallintayksikko
 INSERT INTO toteuma_liite (toteuma, liite) VALUES (:toteuma, :liite);
 
 -- name: hae-toteuman-liitteet
-SELECT
-  l.id        AS id,
-  l.tyyppi    AS tyyppi,
-  l.koko      AS koko,
-  l.nimi      AS nimi,
-  l.liite_oid AS oid
-FROM liite l
-  JOIN toteuma_liite tl ON l.id = tl.liite
-WHERE tl.toteuma = :toteumaid
-ORDER BY l.luotu ASC;
+SELECT l.id                  AS id,
+       l.tyyppi              AS tyyppi,
+       l.koko                AS koko,
+       l.nimi                AS nimi,
+       l.liite_oid           AS oid,
+       l."virustarkastettu?" AS "virustarkastettu?"
+  FROM liite l
+           JOIN toteuma_liite tl ON l.id = tl.liite
+ WHERE tl.toteuma = :toteumaid
+ ORDER BY l.luotu ASC;
 
 -- name: hae-toteumien-reitit
 SELECT

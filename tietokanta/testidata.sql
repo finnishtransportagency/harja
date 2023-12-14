@@ -70,9 +70,6 @@ SELECT paivita_pohjavesialueet();
 -- Toteumat
 \i testidata/toteumat.sql
 
--- Varustetoteumat ulkoisista järjestelmistä
-\i testidata/varustetoteumat_ulkoiset.sql
-
 -- Kustannussuunnitelma
 \i testidata/kustannussuunnittelu.sql
 
@@ -120,6 +117,9 @@ SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 -- Tarkastukset
 \i testidata/tarkastukset.sql
 \i testidata/tarkastusajot.sql
+
+-- Tieturvallisuusverkko geometriat
+\i testidata/tieturvallisuusverkko.sql
 
 -- Tyokoneseurannan havainnot
 \i testidata/tyokonehavainnot.sql

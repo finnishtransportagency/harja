@@ -54,6 +54,8 @@
   #{:organisaatio
     :pohjavesi
     :sillat
+    :tieturvallisuusverkko
+    :ei-kayty-tieturvallisuusverkko
     :tarkastusreitit
     :laatupoikkeamat
     :turvallisuus
@@ -106,6 +108,8 @@
     :urakka 1
     :tienumerot 1
     :pohjavesialueet 2
+    :tieturvallisuusverkko 3
+    :ei-kayty-tieturvallisuusverkko 3
     :sillat 3
     :tienakyma-muut 3
     :tilannekuva-paallystys 3
@@ -235,6 +239,8 @@
    :ilmoitukset ilmoitukset/ilmoitukset-kartalla
    :tietyoilmoitukset tietyoilmoitukset/tietyoilmoitukset-kartalla
    :tarkastusreitit tarkastukset/tarkastusreitit-kartalla
+   :ei-kayty-tieturvallisuusverkko tarkastukset/ei-kayty-tieturvallisuusverkko-kartalla
+   :tieturvallisuusverkko tarkastukset/tieturvallisuusverkko-kartalla
    :laatupoikkeamat laatupoikkeamat/laatupoikkeamat-kartalla
    :yks-hint-toteumat yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
    :kok-hint-toteumat kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
@@ -310,6 +316,8 @@
        :pohjavesi (taso :pohjavesi :pohjavesialueet)
        :sillat (taso :sillat :sillat)
        :tarkastusreitit (taso :tarkastusreitit)
+       :ei-kayty-tieturvallisuusverkko (taso :ei-kayty-tieturvallisuusverkko)
+       :tieturvallisuusverkko (taso :tieturvallisuusverkko)
        :laatupoikkeamat (taso :laatupoikkeamat)
        :turvallisuus (taso :turvallisuus)
        :ilmoitukset (taso :ilmoitukset)
@@ -355,6 +363,8 @@
   {:organisaatio (atom true)
    :pohjavesi pohjavesialueet/karttataso-pohjavesialueet
    :sillat sillat/karttataso-sillat
+   :tieturvallisuusverkko tarkastukset/karttataso-tieturvallisuusverkko
+   :ei-kayty-tieturvallisuusverkko tarkastukset/karttataso-ei-kayty-tieturvallisuusverkko
    :tarkastusreitit tarkastukset/karttataso-tarkastukset
    :laatupoikkeamat laatupoikkeamat/karttataso-laatupoikkeamat
    :turvallisuus turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat

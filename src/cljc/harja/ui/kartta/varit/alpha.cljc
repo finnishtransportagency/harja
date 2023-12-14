@@ -28,6 +28,7 @@
 (def pitaya-default (rgba 229 0 131 0.7))
 (def pea-default (rgba 141 203 109 0.7))
 (def black-light (rgba 92 92 92 0.7))
+(def red-default (rgba 222 54 24 0.7))
 
 (def kaikki
   ^{:doc   "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan
@@ -35,6 +36,6 @@
     :const true}
   [punainen oranssi keltainen magenta vihrea turkoosi syaani sininen
     tummansininen violetti lime pinkki
-   fig-default lemon-default eggplant-default pitaya-default pea-default black-light])
+   fig-default lemon-default eggplant-default pitaya-default pea-default black-light red-default])
 
 #?(:clj (core/varmenna-sisalto 'harja.ui.kartta.varit.alpha))

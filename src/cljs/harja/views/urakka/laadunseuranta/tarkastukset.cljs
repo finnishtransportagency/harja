@@ -41,13 +41,13 @@
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def +tarkastustyyppi-hoidolle+ [:tiesto :talvihoito :soratie :laatu])
+(def +tarkastustyyppi-hoidolle+ [:tieturvallisuus :tiesto :talvihoito :soratie :laatu])
 (def +tarkastustyyppi-yllapidolle+ [:katselmus :pistokoe :vastaanotto :takuu])
 
 (defn tarkastustyypit-hoidon-tekijalle [tekija]
   (case tekija
     :tilaaja [:laatu]
-    :urakoitsija [:tiesto :talvihoito :soratie]
+    :urakoitsija [:tieturvallisuus :tiesto :talvihoito :soratie]
     +tarkastustyyppi-hoidolle+))
 
 (defn tarkastustyypit-urakkatyypille-ja-tekijalle [urakkatyyppi tekija]
@@ -65,7 +65,7 @@
 (defn uusi-tarkastus [urakkatyyppi]
   {:uusi? true
    :aika (pvm/nyt)
-   :tyyppi (if (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :katselmus nil)
+   :tyyppi (if (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :katselmus @tiedot/tarkastustyyppi)
    :tarkastaja @istunto/kayttajan-nimi
    :nayta-urakoitsijalle (or (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija) (nav/yllapitourakka-valittu?))
    :laadunalitus false})
@@ -77,20 +77,19 @@
 
 (defn tarkastuslistaus
   "Tarkastuksien listauskomponentti"
-  ([] (tarkastuslistaus {}))
-  ([optiot]
+  []
    (komp/luo
      (komp/sisaan #(when (u-domain/vesivaylaurakka? @nav/valittu-urakka)
                      ;; VV-urakassa nämä filtterit eivät saa vaikuttaa.
                      (reset! tiedot/tienumero nil)
                      (reset! tiedot/tarkastustyyppi nil)))
-     (fn [optiot]
+     (fn []
        (let [urakka @nav/valittu-urakka
+             urakkatyyppi (:tyyppi urakka)
              vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)
              tarkastukset (reverse (sort-by :aika @tiedot/urakan-tarkastukset))]
          [:div.tarkastukset
-
-          [ui-valinnat/urakkavalinnat {:urakka (:urakka optiot)}
+          [ui-valinnat/urakkavalinnat {:urakka urakka}
            ^{:key "aikavali"}
            [valinnat/aikavali-nykypvm-taakse urakka tiedot/valittu-aikavali {:vayla-tyyli? true}]
 
@@ -99,7 +98,7 @@
              [tee-otsikollinen-kentta
               {:otsikko "Tyyppi"
                :kentta-params {:tyyppi :valinta
-                               :valinnat (conj (tarkastustyypit-urakkatyypille (:tyyppi urakka)) nil)
+                               :valinnat (conj (tarkastustyypit-urakkatyypille urakkatyyppi) nil)
                                :valinta-nayta #(or (tiedot/+tarkastustyyppi->nimi+ %) "Kaikki")}
                :arvo-atom tiedot/tarkastustyyppi}])
 
@@ -124,18 +123,17 @@
              [valinnat/tienumero tiedot/tienumero])
 
            ^{:key "urakkatoiminnot"}
-           [ui-valinnat/urakkatoiminnot {:urakka (:urakka optiot)}
+           [ui-valinnat/urakkatoiminnot {:urakka urakka}
             (let [oikeus? (oikeudet/voi-kirjoittaa?
                             oikeudet/urakat-laadunseuranta-tarkastukset
-                            (:id @nav/valittu-urakka))]
+                            (:id urakka))]
               (yleiset/wrap-if
                 (not oikeus?)
                 [yleiset/tooltip {} :%
-                 (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                                 oikeudet/urakat-laadunseuranta-tarkastukset)]
+                 (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-laadunseuranta-tarkastukset)]
                 ^{:key "uusi-tarkastus"}
                 [napit/uusi "Uusi tarkastus"
-                 #(reset! tiedot/valittu-tarkastus (uusi-tarkastus (:tyyppi urakka)))
+                 #(reset! tiedot/valittu-tarkastus (uusi-tarkastus urakkatyyppi))
                  {:disabled (not oikeus?)}]))]]
 
           [grid/grid
@@ -154,11 +152,13 @@
              :nimi :aika}
 
             {:otsikko "Tyyppi"
-             :nimi :tyyppi :fmt tiedot/+tarkastustyyppi->nimi+ :leveys 1}
+             :nimi :tyyppi
+             :fmt tiedot/+tarkastustyyppi->nimi+
+             :leveys 1}
 
-            (when (or (= :paallystys (:nakyma optiot))
-                      (= :paikkaus (:nakyma optiot))
-                      (= :tiemerkinta (:nakyma optiot)))
+            (when (or (= :paallystys urakkatyyppi)
+                    (= :paikkaus urakkatyyppi)
+                    (= :tiemerkinta urakkatyyppi))
               {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
                :hae (fn [rivi]
                       (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
@@ -193,8 +193,7 @@
             {:otsikko "Liit\u00ADteet" :nimi :liitteet :leveys 1 :tyyppi :komponentti
              :komponentti (fn [rivi]
                             (liitteet/liitteet-numeroina (:liitteet rivi)))}]
-           tarkastukset]])))))
-
+           tarkastukset]]))))
 
 (defn talvihoitomittaus []
   (lomake/ryhma
@@ -272,7 +271,7 @@
         "Tallentaa muutokset ja kirjaa tarkastuksen pohjalta uuden laatupoikkeaman.")
       huom-teksti)))
 
-(defn tarkastuslomake [tarkastus-atom optiot]
+(defn tarkastuslomake [tarkastus-atom yllapitokohteet]
   (let [valittu-urakka @nav/valittu-urakka
         urakka-id (:id valittu-urakka)
         urakkatyyppi (:tyyppi valittu-urakka)
@@ -283,7 +282,6 @@
         voi-muokata? (and voi-kirjoittaa?
                           (not jarjestelmasta?))
         kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
-        yllapitokohteet (:yllapitokohteet optiot)
         yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
         yllapidon-palvelusopimus? (tiedot-urakka/yllapidon-palvelusopimus? valittu-urakka)
         vesivaylaurakka? (u-domain/vesivaylaurakkatyyppi? urakkatyyppi)]
@@ -325,7 +323,7 @@
                            (tiedot/tallenna-tarkastus
                              (:id valittu-urakka)
                              (lomake/ilman-lomaketietoja tarkastus)
-                             (:nakyma optiot)))
+                             urakkatyyppi))
                          {:disabled (not (lomake/voi-tallentaa? tarkastus))
                           :kun-onnistuu (fn [tarkastus]
                                           (reset! tiedot/valittu-tarkastus nil)
@@ -365,9 +363,12 @@
                        [[:ei-tyhja "Anna tarkastuksen kohde"]])})
 
          (if vesivaylaurakka?
-           {:otsikko "Tar\u00ADkastus" :nimi :tyyppi :tyyppi :string
+           {:otsikko "Tar\u00ADkastus" 
+            :nimi :tyyppi 
+            :tyyppi :string
             :hae (constantly "Katselmus") :muokattava? (constantly false)}
-           {:otsikko "Tar\u00ADkastus" :nimi :tyyppi
+           {:otsikko "Tar\u00ADkastus" 
+            :nimi :tyyppi
             :pakollinen? true
             :tyyppi :valinta
             :valinnat (tarkastustyypit-urakkatyypille-ja-tekijalle urakkatyyppi (:tekija tarkastus))
@@ -487,7 +488,7 @@
                             (if (:laatupoikkeamaid tarkastus) "Tallenna ja avaa laatupoikkeama" "Tallenna ja lisää laatupoikkeama")
                             (fn []
                               (go
-                                (let [tarkastus (<! (tiedot/tallenna-tarkastus urakka-id tarkastus (:nakyma optiot)))
+                                (let [tarkastus (<! (tiedot/tallenna-tarkastus urakka-id tarkastus urakkatyyppi))
                                       tarkastus-ja-laatupoikkeama (if (k/virhe? tarkastus)
                                                                     tarkastus
                                                                     (<! (tiedot/lisaa-laatupoikkeama tarkastus)))]
@@ -501,7 +502,6 @@
                              :luokka :nappi-toissijainen}])})]
         tarkastus]])))
 
-
 (defn- vastaava-tarkastus [klikattu-tarkastus]
   ;; oletetaan että kartalla näkyvät tarkastukset ovat myös gridissä
   (some (fn [urakan-tarkastus]
@@ -511,26 +511,46 @@
 
 (defn tarkastukset
   "Tarkastuksien pääkomponentti"
-  [optiot]
+  []
   (komp/luo
-    (komp/lippu tarkastukset-kartalla/karttataso-tarkastukset)
+    (komp/lippu tiedot/nakymassa?)
     (komp/kuuntelija :tarkastus-klikattu #(reset! tiedot/valittu-tarkastus %2))
     (komp/ulos (kartta-tiedot/kuuntele-valittua! tiedot/valittu-tarkastus))
     (komp/sisaan-ulos #(do
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                         (when-not @tarkastukset-kartalla/karttataso-ei-kayty-tieturvallisuusverkko
+                           (reset! tarkastukset-kartalla/karttataso-tarkastukset true))
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                            {:tarkastus {:toiminto (fn [klikattu-tarkastus] ;; asiat-pisteessa -asia joka on tyypiltään tarkastus
                                                     (reset! tiedot/valittu-tarkastus (vastaava-tarkastus klikattu-tarkastus)))
-                                        :teksti "Valitse tarkastus"}
-                            })
+                                        :teksti "Valitse tarkastus"}})
                          (nav/vaihda-kartan-koko! :M))
-                      #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
-                           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
-    (fn [optiot]
+                      #(do
+                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+                         (reset! tarkastukset-kartalla/karttataso-tarkastukset false)
+                         (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
+    (fn []
       [:span.tarkastukset
+       (when (and @nav/kartta-nakyvissa?
+               ;; Piilotettu toistaiseksi tuotannosta, kunnes tieturvallisuustarkastukset otetaan käyttöön.
+               (k/kehitysymparistossa?))
+         [ui-valinnat/segmentoitu-ohjaus
+          [{:nimi :tarkastukset
+            :teksti "Tarkastukset"
+            :oletus? true}
+           {:nimi :kayntimaarat
+            :teksti "Käyntimäärät"
+            :disabled? true}
+           {:nimi :ei-kayty
+            :teksti "Ei käyty"
+            :disabled? (not= :tieturvallisuus @tiedot/tarkastustyyppi)}]
+          @tiedot/valittu-karttataso
+          {:luokka [:margin-top-32
+                    :margin-bottom-16]
+           :kun-valittu #(do
+                           (reset! tiedot/valittu-karttataso %)
+                           (reset! tarkastukset-kartalla/karttataso-tarkastukset (not= % :ei-kayty)))}])
        [kartta/kartan-paikka]
        (if @tiedot/valittu-tarkastus
-         [tarkastuslomake tiedot/valittu-tarkastus
-          (merge optiot
-                 {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle})]
-         [tarkastuslistaus optiot])])))
+         [tarkastuslomake tiedot/valittu-tarkastus @laadunseuranta/urakan-yllapitokohteet-lomakkeelle]
+         [tarkastuslistaus])])))

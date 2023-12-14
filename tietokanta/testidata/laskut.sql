@@ -48,7 +48,7 @@ $$
         tinst_yllapito := (select id from toimenpideinstanssi where nimi = 'Oulu MHU MHU Ylläpito TP');
         tinst_mhu_hoidon_johto := (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP');
         tehtava_talvihoito := (select id from tehtavaryhma where nimi = 'Talvihoito (A)');
-        tehtava_soratie := (select id from tehtavaryhma where nimi = 'Sorastus (M)');
+        tehtava_soratie := (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)');
         tehtava_paikkaus := (select id from tehtavaryhma where nimi = 'Kuumapäällyste (Y1)');
         tehtava_yllapito := (select id from tehtavaryhma where nimi = 'Avo-ojitus, soratiet (Z)');
         tehtava_palkkio := (select id from tehtavaryhma where nimi = 'Hoidonjohtopalkkio (G)');
