@@ -518,8 +518,11 @@
     (komp/ulos (kartta-tiedot/kuuntele-valittua! tiedot/valittu-tarkastus))
     (komp/sisaan-ulos #(do
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                         (when-not @tarkastukset-kartalla/karttataso-ei-kayty-tieturvallisuusverkko
-                           (reset! tarkastukset-kartalla/karttataso-tarkastukset true))
+                         (if (and
+                               (not @tarkastukset-kartalla/karttataso-tieturvallisuus-heatmap)
+                               (not @tarkastukset-kartalla/karttataso-ei-kayty-tieturvallisuusverkko))
+                           (reset! tarkastukset-kartalla/karttataso-tarkastukset true)
+                           (reset! tarkastukset-kartalla/karttataso-tarkastukset false))
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                            {:tarkastus {:toiminto (fn [klikattu-tarkastus] ;; asiat-pisteessa -asia joka on tyypiltään tarkastus
                                                     (reset! tiedot/valittu-tarkastus (vastaava-tarkastus klikattu-tarkastus)))
@@ -540,7 +543,7 @@
             :oletus? true}
            {:nimi :kayntimaarat
             :teksti "Käyntimäärät"
-            :disabled? true}
+            :disabled? (not= :tieturvallisuus @tiedot/tarkastustyyppi)}
            {:nimi :ei-kayty
             :teksti "Ei käyty"
             :disabled? (not= :tieturvallisuus @tiedot/tarkastustyyppi)}]
@@ -549,7 +552,9 @@
                     :margin-bottom-16]
            :kun-valittu #(do
                            (reset! tiedot/valittu-karttataso %)
-                           (reset! tarkastukset-kartalla/karttataso-tarkastukset (not= % :ei-kayty)))}])
+                           (reset! tarkastukset-kartalla/karttataso-tarkastukset (and
+                                                                                   (not= % :kayntimaarat)
+                                                                                   (not= % :ei-kayty))))}])
        [kartta/kartan-paikka]
        (if @tiedot/valittu-tarkastus
          [tarkastuslomake tiedot/valittu-tarkastus @laadunseuranta/urakan-yllapitokohteet-lomakkeelle]
