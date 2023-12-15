@@ -6,6 +6,10 @@
             [cljs.core.async :as async])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+;; Heatmap pisteiden asetukset 
+(def +heatmap-blur-maara+ 25)
+(def +heatmap-radius-maara+ 3)
+
 (defn- luo-feature [geom]
   (try
     (featuret/luo-feature geom)
@@ -33,8 +37,8 @@
 (defn tee-heatmap-layer [ominaisuudet]
   (let [source (ol.source.Vector. #js {:features (clj->js ominaisuudet)})
         heatmap-layer (ol.layer.Heatmap. #js {:source source
-                                              :blur 22
-                                              :radius 3})] ;; 28 & 4 myös aika hyvä jos haluaa hieman isompana  
+                                              :blur +heatmap-blur-maara+
+                                              :radius +heatmap-radius-maara+})]
     heatmap-layer))
 
 (defn heatmap-pisteet [heatmap-koordinaatit]
