@@ -327,7 +327,7 @@
 (defmethod asia-kartalle :heatmap [tieturvallisuustie _valittu?]
   {:type :heatmap
    :selite heatmap-selite
-   :alue (maarittele-feature tieturvallisuustie false nil ulkoasu/tieturvallisuusverkko)})
+   :alue (maarittele-feature tieturvallisuustie false nil nil)})
 
 (defmethod asia-kartalle :ei-kayty-tieturvallisuusverkko [tieturvallisuustie _valittu?]
   {:type :ei-kayty-tieturvallisuusverkko
