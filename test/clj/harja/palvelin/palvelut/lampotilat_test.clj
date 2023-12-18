@@ -16,10 +16,10 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :hae-teiden-hoitourakoiden-lampotilat (component/using
-                                                                (->Lampotilat "ilmatieteenlaitos-urlin-paikka")
+                                                                (->Lampotilat "ilmatieteenlaitos-urlin-paikka" "apiavaimen-paikka")
                                                                [:http-palvelin :db])
                         :tallenna-teiden-hoitourakoiden-lampotilat (component/using
-                                                                (->Lampotilat "ilmatieteenlaitos-urlin-paikka")
+                                                                (->Lampotilat "ilmatieteenlaitos-urlin-paikka" "")
                                                                 [:http-palvelin :db])))))
 
   (testit)
