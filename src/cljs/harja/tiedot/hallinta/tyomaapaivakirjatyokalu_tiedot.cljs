@@ -111,6 +111,8 @@
              :lahetysaika (get-in app [:paivakirja :lahetysaika])}
    :tyomaapaivakirja {:kaluston-kaytto (generoi-kalusto app),
                       :muut-kirjaukset {:kuvaus "Huomatus vielä että kiire tuli hommissa"},
+                      ;; Urakoitsijan merkinnät tulee oikeasti yleensä "luultavasti" jälkeenpäin, mutta tämä testausta varten
+                      :urakoitsijan-merkinnat {:kuvaus "Jälkikommentti: tuli kova lumipyry"},
                       :saatiedot (generoi-saaasematiedot
                                    (get-in app [:paivakirja :saa-asematietojen-lkm])
                                    (get-in app [:paivakirja :lahetysaika])),

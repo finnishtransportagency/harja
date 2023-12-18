@@ -149,17 +149,26 @@
                                 (format "Kentän '%s' kuvausteksti pitää olla asiallisen mittainen. Saatiin: '%s'." (name key) kuvaus)
                                 nil)))
         ;; Funktio jolla käydään kaikki annetut kategoriat läpi ja validoidaan niiden kuvaukset
+        ;; Eli jos kategoria (avain) olemassa datassa, sen kuvaus validoidaan
         fn-validoi-avain (fn [virheet-acc [key cat-key]]
                            (reduce (fn [acc item]
                                      (let [virhe (fn-validoi-kuvaus item key)]
                                        (if virhe (conj acc virhe) acc)))
                              virheet-acc
                              (cat-key data)))
+        ;; Data joka tulee hieman erissä muodossa (muut kirjaukset, urakoitsijan merkinät)
+        fn-validoi-yksittainen (fn [virheet-acc avain tarkista-nil?]
+                                 (let [kentta (avain data)]
+                                   (if (or tarkista-nil? (and kentta (> (count (:kuvaus kentta)) 0)))
+                                     (if-let [virhe (fn-validoi-kuvaus kentta avain)]
+                                       (conj virheet-acc virhe)
+                                       virheet-acc)
+                                     virheet-acc)))
         virheet-acc (reduce fn-validoi-avain virheet kategoriat)]
-    ;; Muut kirjaukset tulee vähän erissä huodossa, mutta validoidaan nekin
-    (if-let [muut-kirjaus-error (fn-validoi-kuvaus (:muut-kirjaukset data) :muut-kirjaukset)]
-      (conj virheet-acc muut-kirjaus-error)
-      virheet-acc)))
+    ;; Käydään vielä loput läpi, sallitaan nil arvot uraokitsijan merkinnöille koska nämä voi tulla vasta jälkeenpäin
+    (-> virheet-acc
+      (fn-validoi-yksittainen :muut-kirjaukset true)
+      (fn-validoi-yksittainen :urakoitsijan-merkinnat false))))
 
 (defn validoi-tyomaapaivakirja [db data]
   (let [virheet (->> []
