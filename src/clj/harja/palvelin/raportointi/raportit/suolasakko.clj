@@ -18,7 +18,7 @@
   ; Suolasakko hoitokaudelle 2016-2017 laskutetaan yhtenä kk:na touko-syyskuun aikana vuonna 2017.
   ; Samposta tulee usein hoitourakat niin että urakan loppupvm on 31.12., vaikka oikeasti
   ; viimeinen hoitokausi urakassa loppuikin jo 30.9. Tällöin voi olla sama alueurakka kahteen kertaan
-  ; elykohtaisessa raportissa. Korjataan tästä aiheutuva bugi HAR-6145 tutkimalla urakan loppupvm:ää tarkemmin.
+  ; elykohtaisessa raportissa. Korjataan tästä aiheutuva bugi tutkimalla urakan loppupvm:ää tarkemmin.
   "Kertoo meneekö urakan suolasakon laskutuskk varmuudella ohi valitusta aikavälistä"
   [valitun-hkn-loppupvm urakka]
   (let [urakan-loppupvm (pvm/joda-timeksi (:loppupvm urakka))

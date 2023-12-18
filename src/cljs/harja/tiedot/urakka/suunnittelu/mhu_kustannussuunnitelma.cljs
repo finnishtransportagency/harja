@@ -499,7 +499,6 @@
                                    (+ summa
                                      ;; Jos osa-kuukaudesta arvoa ei ole määritelty,
                                      ;; oletetaan sen olevan 1, jotta tunnit eivät ole nil.
-                                     ;; VHAR-3505
                                      (* tunnit (or osa-kuukaudesta 1) tuntipalkka))))
                          0
                          hoitokauden-arvot)]
@@ -1250,13 +1249,11 @@
                                                           ;; Kun tunnit-solua päivitetään, täytyy myös päivittää kaikille kuukausille varmuuden vuoksi myös tuntipalkka.
                                                           ;; Tämä johtuu siitä, että kun vaihdetaan custom-rivi 12-kuukaudesta 7:ään (tai 5:een) ja takaisin 12,
                                                           ;; niin osa kuukausien tuntipalkoista jää nilliksi.
-                                                          ;; VHAR-5520
                                                           (= osa :tunnit)
                                                           (assoc :tuntipalkka (some :tuntipalkka hoitokauden-jh-korvaukset))
 
                                                           ;; Jos osa-kuukaudesta ei ole vielä määritelty, laita siihen oletusarvoksi 1,
                                                           ;; jotta muualla ei käytetä kertolaskuissa vahingossa nil-arvoa.
-                                                          ;; VHAR-3505
                                                           (not (:osa-kuukaudesta kuukauden-jh-korvaus))
                                                           (assoc :osa-kuukaudesta 1))
                                                         #_#__ (println "###\n"
@@ -1447,13 +1444,11 @@
                                                ;; Täytyy myös päivittää kaikille kuukausille varmuuden vuoksi myös tuntipalkka.
                                                ;; Tämä johtuu siitä, että kun vaihdetaan custom-rivi 12-kuukaudesta 7:ään (tai 5:een) ja takaisin 12,
                                                ;; niin osa kuukausien tuntipalkoista jää nilliksi.
-                                               ;; VHAR-5520
                                                (not (:tuntipalkka kuukauden-jh-korvaus))
                                                (assoc :tuntipalkka (some :tuntipalkka hoitokauden-jh-korvaukset))
 
                                                ;; Jos osa-kuukaudesta ei ole vielä määritelty, laita siihen oletusarvoksi 1,
                                                ;; jotta muualla ei käytetä kertolaskuissa vahingossa nil-arvoa.
-                                               ;; VHAR-3505
                                                (not (:osa-kuukaudesta kuukauden-jh-korvaus))
                                                (assoc :osa-kuukaudesta 1)))
                                        hoitokauden-jh-korvaukset)))
@@ -1526,13 +1521,11 @@
                                                ;; Täytyy myös päivittää kaikille kuukausille varmuuden vuoksi myös tuntipalkka.
                                                ;; Tämä johtuu siitä, että kun vaihdetaan custom-rivi 12-kuukaudesta 7:ään (tai 5:een) ja takaisin 12,
                                                ;; niin osa kuukausien tuntipalkoista jää nilliksi.
-                                               ;; VHAR-5520, VHAR-5530
                                                (and (:tunnit kuukauden-jh-korvaus) (not (:tuntipalkka kuukauden-jh-korvaus)))
                                                (assoc :tuntipalkka (some :tuntipalkka hoitokauden-jh-korvaukset))
 
                                                ;; Jos osa-kuukaudesta ei ole vielä määritelty, laita siihen oletusarvoksi 1,
                                                ;; jotta muualla ei käytetä kertolaskuissa vahingossa nil-arvoa.
-                                               ;; VHAR-3505
                                                (not (:osa-kuukaudesta kuukauden-jh-korvaus))
                                                (assoc :osa-kuukaudesta 1)))
                                        hoitokauden-jh-korvaukset)))
@@ -3307,7 +3300,6 @@
                                                                  (if (poistettava-kustannus? kustannus)
                                                                    ;; Poista kustannukset, mutta jätä muut kuukauden tiedot talteen,
                                                                    ;; jotta gridin alitaulukossa kuukausirivit eivät katoa kokonaan kuukausia vaihtaessa.
-                                                                   ;; VHAR-5445
                                                                    (dissoc kustannus :tunnit :tuntipalkka :tuntipalkka-indeksikorjattu)
                                                                    kustannus))
                                                            hoitokausikohtaiset)))

@@ -76,7 +76,16 @@
   [shp kentta-keyword callback]
 
   ;; Tämä pitää tehdä clojuren puolella, jos featureita hakee
-  ;; geotoolsin Sort queryllä, häviää featureita, ks. HAR-4685
+  ;; geotoolsin Sort queryllä, häviää featureita.
+  ;; Tatu Tarvainen, 28.02.2017:
+  ;; Näyttää olevan bugi geotoolsissa:
+
+  ;; > harja.shp> (count (featuret-lazy tv))
+  ;; > 26778
+  ;; > harja.shp> (count (featuret-lazy tv (sort-by-query "TIE" true))
+  ;; > 26026
+
+  ;; Sortattuna iterator hävittää 522 featurea!
 
   (let [ryhmiteltyna (group-by kentta-keyword
                                (map feature-propertyt (featuret-lazy shp)))]

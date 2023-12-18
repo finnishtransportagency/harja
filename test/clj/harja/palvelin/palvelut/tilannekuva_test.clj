@@ -497,14 +497,14 @@
 
 ;; tuotannossa (ja singletonia vasten) tuotti bugin ERROR: Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
 ;                                     Hint: Change argument 2: 'GEOMETRYCOLLECTION(POINT(449110.781 6788879.145))'
-#_(def haku-params-vhar-1815
+#_(def haku-params-lwgeomcollection
   {:kuva [256.0 256.0], :extent [440848.0 6787072.0 454944.0 6882976.0], :resoluutio 16.0, :parametrit {:aikavalinta 504, "ind" "n1587995345871", :ilmoitukset {}, :yllapito #{17}, :urakat #{275 65 377 281 363 314 313 258 125 158 378 14 326 147 362}, :nykytilanne? true}})
 
 ;; Ei ole tarkoituskaan ajaa CI:ssä, vaan voi todeta ettei enää tule poikkeusta db-singletonia vasten
 #_(deftest hae-paallystysten-reitit-kartalle-test
   (let [vastaus (<!! (hae-paallystysten-sijainnit-kartalle (:db harja.palvelin.main/harja-jarjestelma)
                                                            +kayttaja-jvh+
-                                                           haku-params-vhar-1815))]))
+                                                           haku-params-lwgeomcollection))]))
 
 
 (deftest laatupoikkeama-ei-saa-nakya-eri-urakoitsijalle

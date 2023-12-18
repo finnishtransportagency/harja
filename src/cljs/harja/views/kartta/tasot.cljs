@@ -204,7 +204,7 @@
              @nav/valittu-sivu
              (nav/valittu-valilehti @nav/valittu-sivu)
              @nav/urakat-kartalla))
-      ;; koska HAR-5117 Tilannekuva: Selite mustille urakkarajoille
+      ; Selite mustille urakkarajoille tilannekuvassa
       {:selitteet
        (if (and
              (= :tilannekuva @nav/valittu-sivu)

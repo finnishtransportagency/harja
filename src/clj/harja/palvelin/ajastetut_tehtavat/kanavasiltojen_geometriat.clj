@@ -85,7 +85,7 @@
 (defn muodosta-tr-osoite-array [osoitteet]
   (poista-viimeinen-pilkku (pr-str "ARRAY[" (doall (map muunna-tallennettavaan-muotoon osoitteet)) "]")))
 
-;; Avattavat sillat haetaan TREX:sta. TREX:in (= taitorakennerekisteri) rajapinnan kuvaus on liitetty tikettiin HAR-6948.
+;; Avattavat sillat haetaan TREX:sta. TREX:in (= taitorakennerekisteri) rajapinnan kuvaus on liitetty confluenceen Tekninen dokumentaatio > TREX rajapintadokumentaatio
 (defn tallenna-kanavasilta [db kanavasilta sivunro]
   (let [siltanro (kanavasilta :siltanro)
         nimi (kanavasilta :siltanimi)

@@ -341,7 +341,6 @@
                (:kaikki_laskutetaan_ind_korotus cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutetaan_ind_korotus laskutusyhteenvedossa")))))
 
 
-;; HAR-7520
 (deftest laskutusyhteenvedon-cache-tyhjenee-jos-urakan-kayttama-indeksi-muuttuu
   (testing "laskutusyhteenvedon-cache-tyhjenee-jos-urakan-kayttama-indeksi-muuttuu"
     (let [urakka-id @oulun-alueurakan-2014-2019-id

@@ -279,7 +279,8 @@
         (testi/tarkista-map-arvot odotetut-soratiet haetut-tiedot-oulu-soratiet)))))
 
 
-;; HAR-1959: Laskutusyhteenveto ottaa talvisuolasakon väärään hoitokauteen loka-joulukuussa
+;; Varmistetaan, että laskutusyhteenveton ja suolasakkoon liittyvä bugi onn korjaantunut:
+;; Laskutusyhteenveto ottaa talvisuolasakon väärään hoitokauteen loka-joulukuussa
 (deftest suolasakko-oikean-vuoden-laskutusyhteenvedossa
   (testing "suolasakko-oikean-vuoden-laskutusyhteenvedossa"
     (let [haetut-tiedot-oulu (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
@@ -298,7 +299,7 @@
       (is (= (:suolasakot_laskutetaan_ind_korotettuna haetut-tiedot-oulu-talvihoito) 0.0M) "suolasakko laskutusyhteenvedossa")
       (is (= (:suolasakot_laskutetaan_ind_korotus haetut-tiedot-oulu-talvihoito) 0.0M) "suolasakko laskutusyhteenvedossa"))))
 
-(deftest suolasakko-oikein-hoitokauden-laskutusyhteenvedossa ;HAR-3477
+(deftest suolasakko-oikein-hoitokauden-laskutusyhteenvedossa
   (testing "suolasakko-oikein-hoitokauden-laskutusyhteenvedossa"
     (let [haetut-tiedot-oulu (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                                (:db jarjestelma)
@@ -317,7 +318,7 @@
       (is (=marginaalissa? (:suolasakot_laskutetaan_ind_korotus haetut-tiedot-oulu-talvihoito) -104.5M) "suolasakko laskutusyhteenvedossa"))))
 
 
-(deftest kuun-viimeisen-paivan-yht-oikein-laskutusyhteenvedossa ;HAR-3965
+(deftest kuun-viimeisen-paivan-yht-oikein-laskutusyhteenvedossa
   (testing "kuun-viimeisen-paivan-yht-oikein-laskutusyhteenvedossa"
     (let [haetut-tiedot-oulu (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                                (:db jarjestelma)

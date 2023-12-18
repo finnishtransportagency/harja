@@ -151,7 +151,7 @@
 (defn generoi-saa-ikoni-pdf [olom]
   ;; Koska meillä ei ole ikoneita PDFään, palautetaan vaan lyhyt string joka kuvaa sää olomuotoa
   ;; Olomuodoksi annetaan NWS / WMO koodi pöydästä SYNOP koodi
-  ;; https://issues.solita.fi/browse/VHAR-7868
+  ;; Dokumentit löytyy väyläviraston confluencesta, Tekninen dokumentaatio > Sateen olomuodon sensoreiden dokumentaatio.
   (cond
     ;; Selkeää
     (olomuoto? olom 0)

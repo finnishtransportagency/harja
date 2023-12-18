@@ -52,7 +52,7 @@
 
 (defn hae-urakan-yhteyshenkilot [db user urakka-id salli-ristiinnakeminen?]
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
-  ;; HAR-7872 Tilannekuvasta on kyettävä näkemään dialogissa eri urakoiden yhteystietoja
+  ;; Tilannekuvasta on kyettävä näkemään dialogissa eri urakoiden yhteystietoja
   (if salli-ristiinnakeminen?
     (oikeudet/ei-oikeustarkistusta!)
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id))

@@ -665,7 +665,7 @@
         ilmoitukset-palvelusta (hae parametrit)
         aika-jalkeen (pvm/millisekunteina (pvm/nyt))
         palvelukutsun-kesto-ms (- aika-jalkeen aika-ennen)]
-    ;; patologisella kyselyllä, kuten tuotantoon eksynyt HAR-7003 tämä räjähtää yli 3s kestäväksi.
+    ;; patologisella kyselyllä tämä räjähtää yli 3s kestäväksi.
     ;; Pyritään pitämään silti kestovaatimus tiukempana, niin että mahdolliset vähemmän katastrofaalisetkin
     ;; perffihuonontumiset jäisivät kiinni. Toivottavasti ei ole kovin ajoympäristöherkkä tämä kesto.
     (is (< palvelukutsun-kesto-ms 800) "Ilmoituksien haku kestää liian kauan")

@@ -517,7 +517,7 @@
                                                              (t/pohjadatan-versio)))]]
                                   (rividisable! g index kuukausitasolla?)))))}
 
-              ;; Näyttää tai piilottaa "ennen urakkaa"-rivit. VHAR-3127
+              ;; Näyttää tai piilottaa "ennen urakkaa"-rivit.
               :nayta-tai-piilota-ennen-urakkaa-rivit
               {:polut [[:suodattimet :hoitokauden-numero]]
                :toiminto! (fn [g _ hoitovuoden-nro]
@@ -530,7 +530,7 @@
                             ;; NOTE: ::g-pohjat/data täytyy olla polun alussa, koska taulukko on luotu "g-pohjat/uusi-taulukko"-apufunktion avulla.
                             ;;       Taulukon rivit tulevat tällöin ::g-pohjat/data alle.
                             (let [rivi (grid/get-in-grid g [::g-pohjat/data ::t/data-yhteenveto])
-                                  ;; Piilotetaan "Ennen urakkaa"-rivi mikäli hoitovuosi ei ole ensimmäinen. VHAR-3127
+                                  ;; Piilotetaan "Ennen urakkaa"-rivi mikäli hoitovuosi ei ole ensimmäinen.
                                   piilotetaan? (not= hoitovuoden-nro 1)]
                               (when (grid/rivi? rivi)
                                 (if piilotetaan?
