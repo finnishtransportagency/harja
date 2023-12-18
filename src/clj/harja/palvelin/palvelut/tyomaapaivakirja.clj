@@ -3,6 +3,8 @@
             [taoensso.timbre :as log]
             [clj-time.coerce :as c]
             [harja.pvm :as pvm]
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.kyselyt.urakat :as urakka-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.tyomaapaivakirja :as tyomaapaivakirja-kyselyt]
             [harja.kyselyt.konversio :as konversio]
@@ -72,8 +74,13 @@
                                                                 :versio (:versio tiedot)
                                                                 :kommentti (:kommentti tiedot)
                                                                 :luoja (:id user)})
-        onnistui? (some? (:kommentti vastaus))]
-    (println "\n Vastaus: " onnistui?))
+        onnistui? (some? (:kommentti vastaus))
+        sampo-id (urakka-kyselyt/hae-urakan-sampo-id db (:urakka-id tiedot))
+        roolit #{"urakan vastuuhenkilö"}
+        vastaanottajat (when fim (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
+        _ (println "")
+        ]
+    (println "\n kehitysmoodi?: " kehitysmoodi? " onnistui?: " onnistui? " Vastaanottajat: " vastaanottajat))
   (hae-kommentit db tiedot))
 
 (defn- poista-tyomaapaivakirjan-kommentti [db user tiedot]
