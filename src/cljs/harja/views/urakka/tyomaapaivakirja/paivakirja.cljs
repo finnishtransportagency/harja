@@ -333,21 +333,21 @@
 
         kommentit (:kommentit valittu-rivi)
         ;; Muunna luotu pvm js ajaksi
-        formatoi-kommenttien-pvm (map (fn [asd]
-                                        (assoc asd :luotu (js/Date. (:luotu asd))))
+        formatoi-kommenttien-pvm (map (fn [kommentti]
+                                        (assoc kommentti :luotu (js/Date. (:luotu kommentti))))
                                    kommentit)
 
         kommentit (map list formatoi-kommenttien-pvm)
         ;; Tee sama muutoshistorialle
-        muutoshistoria-kommentit (map (fn [muutos]
-                                        (map (fn [x]
-                                               (let [pvm (or (-> x :uudet :muokattu) (-> x :vanhat :muokattu))
+        muutoshistoria-kommentit (map (fn [muutokset]
+                                        (map (fn [muutos]
+                                               (let [pvm (or (-> muutos :uudet :muokattu) (-> muutos :vanhat :muokattu))
                                                      pvm (js/Date. pvm)]
-                                                 (assoc x :luotu pvm)))
-                                          muutos))
+                                                 (assoc muutos :luotu pvm)))
+                                          muutokset))
                                    muutoshistoria)
         ;; Sortataan kaikki kommentit pvm mukaan
-        sortatut-kommentit-pvm-mukaan (sort-by (fn [x] (-> x first :luotu .getTime))
+        sortatut-kommentit-pvm-mukaan (sort-by (fn [rivi] (-> rivi first :luotu .getTime))
                                         (concat kommentit muutoshistoria-kommentit))]
 
     ;; Käyttäjien sekä muutoshistoria kommentit pvm mukaan
