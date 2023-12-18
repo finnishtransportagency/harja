@@ -517,8 +517,8 @@
                                 [:http-palvelin :db :turi])
 
       :tyomaapaivakirja (component/using
-                          (tyomaapaivakirja/->Tyomaapaivakirja)
-                          [:http-palvelin :db])
+                          (tyomaapaivakirja/->Tyomaapaivakirja (:kehitysmoodi asetukset))
+                          [:http-palvelin :db :fim :api-sahkoposti])
 
       :valikatselmukset (component/using
                           (valikatselmukset/->Valikatselmukset)

@@ -65,13 +65,15 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/raportit-tyomaapaivakirja user (:urakka-id tiedot))
   (hae-kommentit db tiedot))
 
-(defn- tallenna-kommentti [db user tiedot]
+(defn- tallenna-kommentti [db user tiedot fim api-sahkoposti kehitysmoodi?]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/raportit-kommentit user (:urakka-id tiedot))
-  (tyomaapaivakirja-kyselyt/lisaa-kommentti<! db {:urakka_id (:urakka-id tiedot)
-                                                  :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)
-                                                  :versio (:versio tiedot)
-                                                  :kommentti (:kommentti tiedot)
-                                                  :luoja (:id user)})
+  (let [vastaus (tyomaapaivakirja-kyselyt/lisaa-kommentti<! db {:urakka_id (:urakka-id tiedot)
+                                                                :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)
+                                                                :versio (:versio tiedot)
+                                                                :kommentti (:kommentti tiedot)
+                                                                :luoja (:id user)})
+        onnistui? (some? (:kommentti vastaus))]
+    (println "\n Vastaus: " onnistui?))
   (hae-kommentit db tiedot))
 
 (defn- poista-tyomaapaivakirjan-kommentti [db user tiedot]
@@ -245,9 +247,9 @@
           ryhmitetyt-versiomuutokset (map fn-generoi-idt-riveille ryhmitetyt-versiomuutokset)]
       ryhmitetyt-versiomuutokset)))
 
-(defrecord Tyomaapaivakirja []
+(defrecord Tyomaapaivakirja [kehitysmoodi?]
   component/Lifecycle
-  (start [{:keys [http-palvelin db] :as this}]
+  (start [{:keys [http-palvelin db fim api-sahkoposti] :as this}]
 
     (julkaise-palvelu http-palvelin
       :tyomaapaivakirja-hae
@@ -257,7 +259,7 @@
     (julkaise-palvelu http-palvelin
       :tyomaapaivakirja-tallenna-kommentti
       (fn [user tiedot]
-        (tallenna-kommentti db user tiedot)))
+        (tallenna-kommentti db user tiedot fim api-sahkoposti kehitysmoodi?)))
 
     (julkaise-palvelu http-palvelin
       :tyomaapaivakirja-hae-kommentit
