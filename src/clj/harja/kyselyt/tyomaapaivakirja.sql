@@ -228,8 +228,10 @@ INSERT INTO tyomaapaivakirja_toimeksianto (urakka_id, tyomaapaivakirja_id, versi
 VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kuvaus, :aika, now());
 
 -- name: lisaa-kommentti<!
-INSERT INTO tyomaapaivakirja_kommentti (urakka_id, tyomaapaivakirja_id, versio, kommentti, luotu, luoja)
-VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kommentti, now(), :luoja);
+INSERT INTO tyomaapaivakirja_kommentti (urakka_id, tyomaapaivakirja_id, versio, kommentti, luotu, luoja, urakoitsijan_merkinta)
+VALUES (:urakka_id, :tyomaapaivakirja_id, :versio, :kommentti, now(), 
+        COALESCE(:luoja, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')),
+        :urakoitsijan_merkinta);
 
 -- name: hae-tyomaapaivakirjan-versiotiedot
 SELECT t_kalusto.versio, t.id as tyomaapaivakirja_id

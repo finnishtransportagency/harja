@@ -332,6 +332,15 @@
                                                   :urakka_id urakka-id
                                                   :tyyppi "muut_kirjaukset"}))
 
+(defn- tallenna-urakoitsijan-merkinnat [db data versio tyomaapaivakirja-id urakka-id]
+  (tyomaapaivakirja-kyselyt/lisaa-kommentti<! db {:urakka_id urakka-id
+                                                  :tyomaapaivakirja_id tyomaapaivakirja-id
+                                                  :versio versio
+                                                  :kommentti (get-in data [:urakoitsijan-merkinnat :kuvaus])
+                                                  ;; Kun luoja on nil, insert lause asettaa luojaksi integraation 
+                                                  :luoja nil
+                                                  :urakoitsijan_merkinta true}))
+
 (defn- tallenna-toimeksiannot [db data versio tyomaapaivakirja-id urakka-id]
   (doseq [v (get-in data [:viranomaisen-avustaminen])]
     (tyomaapaivakirja-kyselyt/lisaa-toimeksianto<! db (merge
@@ -387,7 +396,8 @@
         _ (tallenna-palautteet db data versio tyomaapaivakirja-id urakka-id)
         _ (tallenna-toimeksiannot db data versio tyomaapaivakirja-id urakka-id)
         _ (tallenna-tapahtuma db data versio tyomaapaivakirja-id urakka-id :tilaajan-yhteydenotot :tilaajan-yhteydenotto "tilaajan-yhteydenotto")
-        _ (tallenna-muut-kirjaukset db data versio tyomaapaivakirja-id urakka-id)]
+        _ (tallenna-muut-kirjaukset db data versio tyomaapaivakirja-id urakka-id)
+        _ (tallenna-urakoitsijan-merkinnat db data versio tyomaapaivakirja-id urakka-id)]
     tyomaapaivakirja-id))
 
 (defn kirjaa-tyomaapaivakirja [db {:keys [id tid] :as parametrit} data kayttaja]
