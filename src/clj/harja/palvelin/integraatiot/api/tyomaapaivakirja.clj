@@ -138,52 +138,28 @@
     virheet avustukset))
 
 (defn validoi-muut-kuvaustekstit [data virheet]
-  (let [;; liikenteenohjaus-muutokset
-        virheet (reduce (fn [virheet a]
-                          (let [ohjaus (:liikenteenohjaus-muutos a)
-                                ;; Kuvaus pitää olla järkevän mittainen
-                                virheet (if (> 4 (count (:kuvaus ohjaus)))
-                                          (conj virheet (format "Liikenteenohjausmuustosten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus ohjaus)))
-                                          virheet)]
-                            virheet))
-                  virheet (:liikenteenohjaus-muutokset data))
-
-        ;; onnettomuudet
-        virheet (reduce (fn [virheet a]
-                          (let [onnettomuus (:onnettomuus a)
-                                ;; Kuvaus pitää olla järkevän mittainen
-                                virheet (if (> 4 (count (:kuvaus onnettomuus)))
-                                          (conj virheet (format "Onnettomuuden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus onnettomuus)))
-                                          virheet)]
-                            virheet))
-                  virheet (:onnettomuudet data))
-        ;; palautteet
-        virheet (reduce (fn [virheet a]
-                          (let [palaute (:palaute a)
-                                ;; Kuvaus pitää olla järkevän mittainen
-                                virheet (if (> 4 (count (:kuvaus palaute)))
-                                          (conj virheet (format "Palautteiden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus palaute)))
-                                          virheet)]
-                            virheet))
-                  virheet (:palautteet data))
-
-        ;; tilaajan-yhteydenotot
-        virheet (reduce (fn [virheet a]
-                          (let [yhteydenotto (:tilaajan-yhteydenotto a)
-                                ;; Kuvaus pitää olla järkevän mittainen
-                                virheet (if (> 4 (count (:kuvaus yhteydenotto)))
-                                          (conj virheet (format "Yhteydenoton kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus yhteydenotto)))
-                                          virheet)]
-                            virheet))
-                  virheet (:tilaajan-yhteydenotot data))
-
-        ;; muut-kirjaukset
-        ;; Kuvaus pitää olla järkevän mittainen
-        virheet (if (> 4 (count (:kuvaus (:muut-kirjaukset data))))
-                  (conj virheet (format "Muiden kirjausten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus (:muut-kirjaukset data))))
-                  virheet)]
-    virheet))
-
+  (let [kategoriat {:liikenteenohjaus-muutos :liikenteenohjaus-muutokset
+                    :onnettomuus :onnettomuudet
+                    :palaute :palautteet
+                    :tilaajan-yhteydenotto :tilaajan-yhteydenotot}
+        ;; Funktio joka validoi annetun kentän (:kuvaus) arvon
+        fn-validoi-kuvaus (fn [item key]
+                            (let [kuvaus (or (:kuvaus (key item)) (:kuvaus item))]
+                              (if (> 4 (count kuvaus))
+                                (format "Kentän '%s' kuvausteksti pitää olla asiallisen mittainen. Saatiin: '%s'." (name key) kuvaus)
+                                nil)))
+        ;; Funktio jolla käydään kaikki annetut kategoriat läpi ja validoidaan niiden kuvaukset
+        fn-validoi-avain (fn [virheet-acc [key cat-key]]
+                           (reduce (fn [acc item]
+                                     (let [virhe (fn-validoi-kuvaus item key)]
+                                       (if virhe (conj acc virhe) acc)))
+                             virheet-acc
+                             (cat-key data)))
+        virheet-acc (reduce fn-validoi-avain virheet kategoriat)]
+    ;; Muut kirjaukset tulee vähän erissä huodossa, mutta validoidaan nekin
+    (if-let [muut-kirjaus-error (fn-validoi-kuvaus (:muut-kirjaukset data) :muut-kirjaukset)]
+      (conj virheet-acc muut-kirjaus-error)
+      virheet-acc)))
 
 (defn validoi-tyomaapaivakirja [db data]
   (let [virheet (->> []
