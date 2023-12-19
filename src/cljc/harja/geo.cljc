@@ -3,13 +3,13 @@
   #?(:clj
      (:import (org.postgresql.geometric PGpoint PGpolygon)
               (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString
-                           GeometryCollection Geometry MultiPoint)))
+                GeometryCollection Geometry MultiPoint)))
   (:require
-    [harja.math :as math]
-    [clojure.spec.alpha :as s]
-    [taoensso.timbre :as log]
-    #?(:cljs
-       [ol.proj :as ol-proj])))
+   [harja.math :as math]
+   [clojure.spec.alpha :as s]
+   [taoensso.timbre :as log]
+   #?(:cljs
+      [ol.proj :as ol-proj])))
 
 (s/def ::single-coordinate (s/every number? :min-count 2 :max-count 2))
 (s/def ::multiple-coordinates (s/every ::single-coordinate))
@@ -173,427 +173,423 @@
        (= (:type geometria) :multipoint) (:coordinates (first (:coordinates geometria)))
        :else nil)))
 
- #?(:clj
-    (defn viimeisen-pisteen-koordinaatit "Palauttaa vektorin, viimeisen pisteen x ja y" [geometria]
-      (cond
-        (= (:type geometria) :multiline) (last (:points (last (:lines geometria))))
-        (= (:type geometria) :multipoint) (:coordinates (last (:coordinates geometria)))
-        :else nil)))
+#?(:clj
+   (defn viimeisen-pisteen-koordinaatit "Palauttaa vektorin, viimeisen pisteen x ja y" [geometria]
+     (cond
+       (= (:type geometria) :multiline) (last (:points (last (:lines geometria))))
+       (= (:type geometria) :multipoint) (:coordinates (last (:coordinates geometria)))
+       :else nil)))
 
- #?(:clj
-    (defmulti clj->pg (fn [geometria]
-                        (if (vector? geometria)
-                          :geometry-collection
-                          (:type geometria)))))
+#?(:clj
+   (defmulti clj->pg (fn [geometria]
+                       (if (vector? geometria)
+                         :geometry-collection
+                         (:type geometria)))))
 
- #?(:clj
-    (defmethod clj->pg :geometry-collection [geometriat]
-      (if (= 1 (count geometriat))
-        (clj->pg (first geometriat))
-        (GeometryCollection. (into-array Geometry
-                               (map clj->pg geometriat))))))
+#?(:clj
+   (defmethod clj->pg :geometry-collection [geometriat]
+     (if (= 1 (count geometriat))
+       (clj->pg (first geometriat))
+       (GeometryCollection. (into-array Geometry
+                              (map clj->pg geometriat))))))
 
- #?(:clj
-    (defmethod clj->pg :multiline [{lines :lines}]
-      (MultiLineString. (into-array LineString
-                          (map clj->pg lines)))))
+#?(:clj
+   (defmethod clj->pg :multiline [{lines :lines}]
+     (MultiLineString. (into-array LineString
+                         (map clj->pg lines)))))
 
- #?(:clj
-    (defmethod clj->pg :line [{points :points}]
-      (LineString. (into-array Point
-                     (map (fn [[x y]]
-                            (Point. x y))
-                       points)))))
+#?(:clj
+   (defmethod clj->pg :line [{points :points}]
+     (LineString. (into-array Point
+                    (map (fn [[x y]]
+                           (Point. x y))
+                      points)))))
 
- #?(:clj
-    (defmethod clj->pg :point [{c :coordinates :as p}]
-      (Point. (first c) (second c))))
+#?(:clj
+   (defmethod clj->pg :point [{c :coordinates :as p}]
+     (Point. (first c) (second c))))
 
- #?(:clj
-    (defmethod clj->pg :multipoint [{c :coordinates :as mp}]
-      (MultiPoint. (into-array Point
-                     (map clj->pg c)))))
+#?(:clj
+   (defmethod clj->pg :multipoint [{c :coordinates :as mp}]
+     (MultiPoint. (into-array Point
+                    (map clj->pg c)))))
 
- #?(:clj
-    (defn geometry-collection [geometriat]
-      (GeometryCollection. (into-array Geometry geometriat))))
+#?(:clj
+   (defn geometry-collection [geometriat]
+     (GeometryCollection. (into-array Geometry geometriat))))
 
- #?(:clj
-    (defn geometry [g]
-      (PGgeometry. g)))
-
-
- #?(:clj
-    (defmacro muunna-pg-tulokset
-      "Palauttaa transducerin, joka muuntaa jokaisen SQL tulosrivin annetut sarakkeet PG geometriatyypeistä Clojure dataksi."
-      [& sarakkeet]
-      (let [tulosrivi (gensym)]
-        `(map (fn [~tulosrivi]
-                (assoc ~tulosrivi
-                  ~@(mapcat (fn [sarake]
-                              [sarake `(pg->clj (get ~tulosrivi ~sarake))])
-                      sarakkeet)))))))
-
- #?(:clj
-    (defn muunna-reitti [{reitti :reitti :as rivi}]
-      (if reitti
-        (assoc rivi
-          :reitti (pg->clj reitti))
-        rivi)))
-
- #?(:clj
-    (def wgs84-wkt "PROJCS[\"WGS 84 / Pseudo-Mercator\", \n  GEOGCS[\"WGS 84\", \n    DATUM[\"World Geodetic System 1984\", \n      SPHEROID[\"WGS 84\", 6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]], \n      AUTHORITY[\"EPSG\",\"6326\"]], \n    PRIMEM[\"Greenwich\", 0.0, AUTHORITY[\"EPSG\",\"8901\"]], \n    UNIT[\"degree\", 0.017453292519943295], \n    AXIS[\"Geodetic longitude\", EAST], \n    AXIS[\"Geodetic latitude\", NORTH], \n    AUTHORITY[\"EPSG\",\"4326\"]], \n  PROJECTION[\"Popular Visualisation Pseudo Mercator\"], \n  PARAMETER[\"semi_minor\", 6378137.0], \n  PARAMETER[\"latitude_of_origin\", 0.0], \n  PARAMETER[\"central_meridian\", 0.0], \n  PARAMETER[\"scale_factor\", 1.0], \n  PARAMETER[\"false_easting\", 0.0], \n  PARAMETER[\"false_northing\", 0.0], \n  UNIT[\"m\", 1.0], \n  AXIS[\"Easting\", EAST], \n  AXIS[\"Northing\", NORTH], \n  AUTHORITY[\"EPSG\",\"3857\"]]"))
-
- #?(:clj
-    (def euref-wkt "PROJCS[\"EUREF_FIN_TM35FIN\", \n  GEOGCS[\"GCS_EUREF_FIN\", \n    DATUM[\"D_ETRS_1989\", \n      SPHEROID[\"GRS_1980\", 6378137.0, 298.257222101]], \n    PRIMEM[\"Greenwich\", 0.0], \n    UNIT[\"degree\", 0.017453292519943295], \n    AXIS[\"Longitude\", EAST], \n    AXIS[\"Latitude\", NORTH]], \n  PROJECTION[\"Transverse_Mercator\"], \n  PARAMETER[\"central_meridian\", 27.0], \n  PARAMETER[\"latitude_of_origin\", 0.0], \n  PARAMETER[\"scale_factor\", 0.9996], \n  PARAMETER[\"false_easting\", 500000.0], \n  PARAMETER[\"false_northing\", 0.0], \n  UNIT[\"m\", 1.0], \n  AXIS[\"x\", EAST], \n  AXIS[\"y\", NORTH]]"))
-
- #?(:clj
-    (def wgs84 org.geotools.referencing.crs.DefaultGeographicCRS/WGS84)) ; (org.geotools.referencing.CRS/parseWKT osm-wkt))
- #?(:clj
-    (def euref (org.geotools.referencing.CRS/parseWKT euref-wkt)))
- #?(:clj
-    (def euref->wgs84-transform (org.geotools.referencing.CRS/findMathTransform euref wgs84 true)))
-
- #?(:clj
-    (defn euref->wgs84
-      "Muunnetaan WGS84 (GPS) koordinaatistoon"
-      [coordinate]
-      (if (vector? coordinate)
-        (let [c (org.geotools.geometry.jts.JTS/transform
-                  (org.locationtech.jts.geom.Coordinate. (first coordinate) (second coordinate))
-                  nil euref->wgs84-transform)]
-          [(.y c) (.x c)])
-        (org.geotools.geometry.jts.JTS/transform coordinate nil euref->wgs84-transform))))
-
- #?(:clj
-    (def wgs84->euref-transform (org.geotools.referencing.CRS/findMathTransform wgs84 euref true)))
-
- #?(:clj
-    (defn wgs84->euref
-      [coord]
-      (let [c (org.geotools.geometry.jts.JTS/transform (org.locationtech.jts.geom.Coordinate. (:x coord) (:y coord))
-                nil wgs84->euref-transform)]
-        {:x (.x c) :y (.y c)})))
-
- (def +etrs-tm35fin+ "EPSG:3067")
- (def +wgs84+ "EPSG:4326")
-
- #?(:cljs
-    (defn wgs84->etrsfin
-      "Sijainti on [lon lat] vector."
-      [sijainti]
-      (ol-proj/transform (clj->js sijainti) +wgs84+ +etrs-tm35fin+)))
-
- #?(:cljs
-    (defn geolocation-api []
-      (.-geolocation js/navigator)))
-
- #?(:cljs
-    (defn geolokaatio-tuettu? []
-      (not (nil? (geolocation-api)))))
-
- #?(:cljs
-    (defn nykyinen-geolokaatio [sijainti-saatu-fn virhe-fn]
-      (let [paikannusoptiot {:enableHighAccuracy true
-                             :maximumAge 1000
-                             :timeout 10000}]
-        (.getCurrentPosition (geolocation-api)
-          sijainti-saatu-fn
-          virhe-fn
-          paikannusoptiot))))
-
- (defn- laske-pisteiden-extent
-   "Laskee pisteiden alueen."
-   [pisteet]
-   (let [[ensimmainen-x ensimmainen-y] (first pisteet)
-         pisteet (rest pisteet)]
-     (loop [minx ensimmainen-x
-            miny ensimmainen-y
-            maxx ensimmainen-x
-            maxy ensimmainen-y
-            [[x y] & pisteet] pisteet]
-       (if-not x
-         [minx miny maxx maxy]
-         (recur (min x minx)
-           (min y miny)
-           (max x maxx)
-           (max y maxy)
-           pisteet)))))
+#?(:clj
+   (defn geometry [g]
+     (PGgeometry. g)))
 
 
- (defn laajenna-extent [[minx miny maxx maxy] d]
-   [(- minx d) (- miny d) (+ maxx d) (+ maxy d)])
+#?(:clj
+   (defmacro muunna-pg-tulokset
+     "Palauttaa transducerin, joka muuntaa jokaisen SQL tulosrivin annetut sarakkeet PG geometriatyypeistä Clojure dataksi."
+     [& sarakkeet]
+     (let [tulosrivi (gensym)]
+       `(map (fn [~tulosrivi]
+               (assoc ~tulosrivi
+                 ~@(mapcat (fn [sarake]
+                             [sarake `(pg->clj (get ~tulosrivi ~sarake))])
+                     sarakkeet)))))))
 
- (defn- muuta-valimatkaa* [funktio a b prosentti] [(funktio a (* prosentti (Math/abs (- a b)))) b])
+#?(:clj
+   (defn muunna-reitti [{reitti :reitti :as rivi}]
+     (if reitti
+       (assoc rivi
+         :reitti (pg->clj reitti))
+       rivi)))
 
- (defn- kasvata-vasemmalle [[minx _ maxx _] prosentti]
-   (first (muuta-valimatkaa* - minx maxx prosentti)))
+#?(:clj
+   (def wgs84-wkt "PROJCS[\"WGS 84 / Pseudo-Mercator\", \n  GEOGCS[\"WGS 84\", \n    DATUM[\"World Geodetic System 1984\", \n      SPHEROID[\"WGS 84\", 6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]], \n      AUTHORITY[\"EPSG\",\"6326\"]], \n    PRIMEM[\"Greenwich\", 0.0, AUTHORITY[\"EPSG\",\"8901\"]], \n    UNIT[\"degree\", 0.017453292519943295], \n    AXIS[\"Geodetic longitude\", EAST], \n    AXIS[\"Geodetic latitude\", NORTH], \n    AUTHORITY[\"EPSG\",\"4326\"]], \n  PROJECTION[\"Popular Visualisation Pseudo Mercator\"], \n  PARAMETER[\"semi_minor\", 6378137.0], \n  PARAMETER[\"latitude_of_origin\", 0.0], \n  PARAMETER[\"central_meridian\", 0.0], \n  PARAMETER[\"scale_factor\", 1.0], \n  PARAMETER[\"false_easting\", 0.0], \n  PARAMETER[\"false_northing\", 0.0], \n  UNIT[\"m\", 1.0], \n  AXIS[\"Easting\", EAST], \n  AXIS[\"Northing\", NORTH], \n  AUTHORITY[\"EPSG\",\"3857\"]]"))
 
- (defn- kasvata-alaspain [[_ miny _ maxy] prosentti]
-   (first (muuta-valimatkaa* - miny maxy prosentti)))
+#?(:clj
+   (def euref-wkt "PROJCS[\"EUREF_FIN_TM35FIN\", \n  GEOGCS[\"GCS_EUREF_FIN\", \n    DATUM[\"D_ETRS_1989\", \n      SPHEROID[\"GRS_1980\", 6378137.0, 298.257222101]], \n    PRIMEM[\"Greenwich\", 0.0], \n    UNIT[\"degree\", 0.017453292519943295], \n    AXIS[\"Longitude\", EAST], \n    AXIS[\"Latitude\", NORTH]], \n  PROJECTION[\"Transverse_Mercator\"], \n  PARAMETER[\"central_meridian\", 27.0], \n  PARAMETER[\"latitude_of_origin\", 0.0], \n  PARAMETER[\"scale_factor\", 0.9996], \n  PARAMETER[\"false_easting\", 500000.0], \n  PARAMETER[\"false_northing\", 0.0], \n  UNIT[\"m\", 1.0], \n  AXIS[\"x\", EAST], \n  AXIS[\"y\", NORTH]]"))
 
- (defn- kasvata-oikealle [[minx _ maxx _] prosentti]
-   (first (muuta-valimatkaa* + maxx minx prosentti)))
+#?(:clj
+   (def wgs84 org.geotools.referencing.crs.DefaultGeographicCRS/WGS84)) ; (org.geotools.referencing.CRS/parseWKT osm-wkt))
+#?(:clj
+   (def euref (org.geotools.referencing.CRS/parseWKT euref-wkt)))
+#?(:clj
+   (def euref->wgs84-transform (org.geotools.referencing.CRS/findMathTransform euref wgs84 true)))
 
- (defn- kasvata-ylospain [[_ miny _ maxy] prosentti]
-   (first (muuta-valimatkaa* + maxy miny prosentti)))
+#?(:clj
+   (defn euref->wgs84
+     "Muunnetaan WGS84 (GPS) koordinaatistoon"
+     [coordinate]
+     (if (vector? coordinate)
+       (let [c (org.geotools.geometry.jts.JTS/transform
+                 (org.locationtech.jts.geom.Coordinate. (first coordinate) (second coordinate))
+                 nil euref->wgs84-transform)]
+         [(.y c) (.x c)])
+       (org.geotools.geometry.jts.JTS/transform coordinate nil euref->wgs84-transform))))
 
- (defn extent-pinta-ala [[minx miny maxx maxy]]
-   (Math/abs (* (- maxx minx) (- maxy miny))))
+#?(:clj
+   (def wgs84->euref-transform (org.geotools.referencing.CRS/findMathTransform wgs84 euref true)))
 
- (defn toisen-asteen-yhtalo [a b c]
-   [(/ (+ (- b) (Math/sqrt (- (* b b) (* 4 a c)))) (* 2 a))
-    (/ (- (- b) (Math/sqrt (- (* b b) (* 4 a c)))) (* 2 a))])
+#?(:clj
+   (defn wgs84->euref
+     [coord]
+     (let [c (org.geotools.geometry.jts.JTS/transform (org.locationtech.jts.geom.Coordinate. (:x coord) (:y coord))
+               nil wgs84->euref-transform)]
+       {:x (.x c) :y (.y c)})))
 
- (defn laajenna-pinta-alaan [[minx miny maxx maxy :as ext] haluttu-ala]
+(def +etrs-tm35fin+ "EPSG:3067")
+(def +wgs84+ "EPSG:4326")
+
+#?(:cljs
+   (defn wgs84->etrsfin
+     "Sijainti on [lon lat] vector."
+     [sijainti]
+     (ol-proj/transform (clj->js sijainti) +wgs84+ +etrs-tm35fin+)))
+
+#?(:cljs
+   (defn geolocation-api []
+     (.-geolocation js/navigator)))
+
+#?(:cljs
+   (defn geolokaatio-tuettu? []
+     (not (nil? (geolocation-api)))))
+
+#?(:cljs
+   (defn nykyinen-geolokaatio [sijainti-saatu-fn virhe-fn]
+     (let [paikannusoptiot {:enableHighAccuracy true
+                            :maximumAge 1000
+                            :timeout 10000}]
+       (.getCurrentPosition (geolocation-api)
+         sijainti-saatu-fn
+         virhe-fn
+         paikannusoptiot))))
+
+(defn- laske-pisteiden-extent
+  "Laskee pisteiden alueen."
+  [pisteet]
+  (let [[ensimmainen-x ensimmainen-y] (first pisteet)
+        pisteet (rest pisteet)]
+    (loop [minx ensimmainen-x
+           miny ensimmainen-y
+           maxx ensimmainen-x
+           maxy ensimmainen-y
+           [[x y] & pisteet] pisteet]
+      (if-not x
+        [minx miny maxx maxy]
+        (recur (min x minx)
+          (min y miny)
+          (max x maxx)
+          (max y maxy)
+          pisteet)))))
+
+(defn laajenna-extent [[minx miny maxx maxy] d]
+  [(- minx d) (- miny d) (+ maxx d) (+ maxy d)])
+
+(defn- muuta-valimatkaa* [funktio a b prosentti] [(funktio a (* prosentti (Math/abs (- a b)))) b])
+
+(defn- kasvata-vasemmalle [[minx _ maxx _] prosentti]
+  (first (muuta-valimatkaa* - minx maxx prosentti)))
+
+(defn- kasvata-alaspain [[_ miny _ maxy] prosentti]
+  (first (muuta-valimatkaa* - miny maxy prosentti)))
+
+(defn- kasvata-oikealle [[minx _ maxx _] prosentti]
+  (first (muuta-valimatkaa* + maxx minx prosentti)))
+
+(defn- kasvata-ylospain [[_ miny _ maxy] prosentti]
+  (first (muuta-valimatkaa* + maxy miny prosentti)))
+
+(defn extent-pinta-ala [[minx miny maxx maxy]]
+  (Math/abs (* (- maxx minx) (- maxy miny))))
+
+(defn toisen-asteen-yhtalo [a b c]
+  [(/ (+ (- b) (Math/sqrt (- (* b b) (* 4 a c)))) (* 2 a))
+   (/ (- (- b) (Math/sqrt (- (* b b) (* 4 a c)))) (* 2 a))])
+
+(defn laajenna-pinta-alaan [[minx miny maxx maxy :as ext] haluttu-ala]
    ;; Käytetään estämään liian lähelle zoomaamista
-   (if (> haluttu-ala (extent-pinta-ala ext))
-     (let [x-pituus (- maxx minx)
-           y-pituus (- maxy miny)
-           laajennos (/ (apply max (toisen-asteen-yhtalo
-                                     1
-                                     (+ x-pituus y-pituus)
-                                     (- (* x-pituus y-pituus) haluttu-ala)))
-                       2)]
-       (laajenna-extent ext laajennos))
+  (if (> haluttu-ala (extent-pinta-ala ext))
+    (let [x-pituus (- maxx minx)
+          y-pituus (- maxy miny)
+          laajennos (/ (apply max (toisen-asteen-yhtalo
+                                    1
+                                    (+ x-pituus y-pituus)
+                                    (- (* x-pituus y-pituus) haluttu-ala)))
+                      2)]
+      (laajenna-extent ext laajennos))
 
-     ext))
+    ext))
 
+(defn laajenna-extent-prosentilla
+  ([extent] (laajenna-extent-prosentilla extent [0.001 0.001 0.001 0.05]))
+  ([extent [vasen alas oikea ylos]]
+   [(kasvata-vasemmalle extent vasen)
+    (kasvata-alaspain extent alas)
+    (kasvata-oikealle extent oikea)
+    (kasvata-ylospain extent ylos)]))
 
- (defn laajenna-extent-prosentilla
-   ([extent] (laajenna-extent-prosentilla extent [0.001 0.001 0.001 0.05]))
-   ([extent [vasen alas oikea ylos]]
-    [(kasvata-vasemmalle extent vasen)
-     (kasvata-alaspain extent alas)
-     (kasvata-oikealle extent oikea)
-     (kasvata-ylospain extent ylos)]))
+(defn extent-keskipiste [[minx miny maxx maxy]]
+  (let [width (- maxx minx)
+        height (- maxy miny)]
+    [(float (+ minx (/ width 2)))
+     (float (+ miny (/ height 2)))]))
 
- (defn extent-keskipiste [[minx miny maxx maxy]]
-   (let [width (- maxx minx)
-         height (- maxy miny)]
-     [(float (+ minx (/ width 2)))
-      (float (+ miny (/ height 2)))]))
-
- (defn yhdista-extent
-   "Yhdistää kaksi annettua extentiä ja palauttaa uuden extentin,
+(defn yhdista-extent
+  "Yhdistää kaksi annettua extentiä ja palauttaa uuden extentin,
    johon molemmat mahtuvat"
-   ([] nil)
-   ([[e1-minx e1-miny e1-maxx e1-maxy] [e2-minx e2-miny e2-maxx e2-maxy]]
-    [(Math/min e1-minx e2-minx) (Math/min e1-miny e2-miny)
-     (Math/max e1-maxx e2-maxx) (Math/max e1-maxy e2-maxy)]))
+  ([] nil)
+  ([[e1-minx e1-miny e1-maxx e1-maxy] [e2-minx e2-miny e2-maxx e2-maxy]]
+   [(Math/min e1-minx e2-minx) (Math/min e1-miny e2-miny)
+    (Math/max e1-maxx e2-maxx) (Math/max e1-maxy e2-maxy)]))
 
- (defn pisteet
-   "Palauttaa annetun geometrian pisteet sekvenssinä"
-   [{type :type :as g}]
-   (when-not (nil? type)
-     (case type
-       :line (:points g)
-       :multiline (mapcat :points (:lines g))
-       :polygon (:coordinates g)
-       :multipolygon (mapcat :coordinates (:polygons g))
-       :point [(:coordinates g)]
-       ;; Multipointit tulevat muodossa
-       ;; {:type :multipoint,
-       ;          :coordinates [{:type :point, :coordinates [204441.1091 6783735.807300001]}
-       ;                        {:type :point, :coordinates [104441.1091 6783735.80730002]}]}
-       :multipoint (mapv #(:coordinates %) (:coordinates g))
-       :icon [(:coordinates g)]
-       :circle [(:coordinates g)]
-       :viiva (:points g)
-       :moniviiva (mapcat :points (:lines g))
-       :merkki [(:coordinates g)]
-       :geometry-collection (mapcat pisteet (:geometries g)))))
+(defn pisteet
+  "Palauttaa annetun geometrian pisteet sekvenssinä"
+  [{type :type :as g}]
+  (when-not (nil? type)
+    (case type
+      :line (:points g)
+      :multiline (mapcat :points (:lines g))
+      :polygon (:coordinates g)
+      :multipolygon (mapcat :coordinates (:polygons g))
+      :point [(:coordinates g)]
+      ;; Multipointit tulevat muodossa
+      ;; {:type :multipoint,
+      ;          :coordinates [{:type :point, :coordinates [204441.1091 6783735.807300001]}
+      ;                        {:type :point, :coordinates [104441.1091 6783735.80730002]}]}
+      :multipoint (mapv #(:coordinates %) (:coordinates g))
+      :icon [(:coordinates g)]
+      :circle [(:coordinates g)]
+      :viiva (:points g)
+      :moniviiva (mapcat :points (:lines g))
+      :merkki [(:coordinates g)]
+      :geometry-collection (mapcat pisteet (:geometries g)))))
 
- (defn laske-extent-xf
-   "Luo transducerin, joka laskee extentiä läpi menevistä geometrioista ja
- lopuksi kirjoittaa sen annettuun volatileen."
-   [extent-volatile]
-   (assert (volatile? extent-volatile) "Anna volatile!, johon extent palautetaan")
-   (fn [xf]
-     (let [minx (volatile! nil)
-           miny (volatile! nil)
-           maxx (volatile! nil)
-           maxy (volatile! nil)]
-       (fn
-         ([] (xf))
-         ([result]
-          (vreset! extent-volatile
-            (when @minx
-              [@minx @miny @maxx @maxy]))
-          (xf result))
-         ([result input]
-          (when-let [alue (:alue input)]
-            (loop [minx- @minx
-                   miny- @miny
-                   maxx- @maxx
-                   maxy- @maxy
-                   [[x y] & pisteet] (pisteet alue)]
-              (if-not x
-                (do (vreset! minx minx-)
-                  (vreset! miny miny-)
-                  (vreset! maxx maxx-)
-                  (vreset! maxy maxy-))
-                (if minx-
-                  (recur (Math/min minx- x) (Math/min miny- y)
-                    (Math/max maxx- x) (Math/max maxy- y)
-                    pisteet)
-                  (recur x y x y pisteet)))))
-          (xf result input))))))
+(defn laske-extent-xf
+  "Luo transducerin, joka laskee extentiä läpi menevistä geometrioista ja
+    lopuksi kirjoittaa sen annettuun volatileen."
+  [extent-volatile]
+  (assert (volatile? extent-volatile) "Anna volatile!, johon extent palautetaan")
+  (fn [xf]
+    (let [minx (volatile! nil)
+          miny (volatile! nil)
+          maxx (volatile! nil)
+          maxy (volatile! nil)]
+      (fn
+        ([] (xf))
+        ([result]
+         (vreset! extent-volatile
+           (when @minx
+             [@minx @miny @maxx @maxy]))
+         (xf result))
+        ([result input]
+         (when-let [alue (:alue input)]
+           (loop [minx- @minx
+                  miny- @miny
+                  maxx- @maxx
+                  maxy- @maxy
+                  [[x y] & pisteet] (pisteet alue)]
+             (if-not x
+               (do (vreset! minx minx-)
+                 (vreset! miny miny-)
+                 (vreset! maxx maxx-)
+                 (vreset! maxy maxy-))
+               (if minx-
+                 (recur (Math/min minx- x) (Math/min miny- y)
+                   (Math/max maxx- x) (Math/max maxy- y)
+                   pisteet)
+                 (recur x y x y pisteet)))))
+         (xf result input))))))
 
- (defn keskipiste
-   "Laske annetun geometrian keskipiste ottamalla keskiarvon kaikista pisteistä.
- Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
-   [g]
-   (loop [x 0
-          y 0
-          i 0
-          [piste & pisteet] (pisteet g)]
-     (if-not piste
-       (if (zero? i)
-         nil ; ei pisteitä
-         [(/ x i) (/ y i)])
-       (recur (+ x (first piste))
-         (+ y (second piste))
-         (inc i)
-         pisteet))))
+(defn keskipiste
+  "Laske annetun geometrian keskipiste ottamalla keskiarvon kaikista pisteistä.
+   Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
+  [g]
+  (loop [x 0
+         y 0
+         i 0
+         [piste & pisteet] (pisteet g)]
+    (if-not piste
+      (if (zero? i)
+        nil ; ei pisteitä
+        [(/ x i) (/ y i)])
+      (recur (+ x (first piste))
+        (+ y (second piste))
+        (inc i)
+        pisteet))))
 
+(defmulti extent (fn [geometry] (:type geometry)))
 
+(defmethod extent :line [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
- (defmulti extent (fn [geometry] (:type geometry)))
-
- (defmethod extent :line [geo]
-   (laske-pisteiden-extent (pisteet geo)))
-
- (defmethod extent :multiline [geo]
-   (laske-pisteiden-extent (pisteet geo)))
+(defmethod extent :multiline [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
  ;; Kuinka paljon yksittäisen pisteen extentiä laajennetaan joka suuntaan
- (def pisteen-extent-laajennus 2000)
+(def pisteen-extent-laajennus 2000)
 
- (defn- extent-point-circle [c]
-   (let [d pisteen-extent-laajennus
-         [[x y]] c]
-     [(- x d) (- y d) (+ x d) (+ y d)]))
+(defn- extent-point-circle [c]
+  (let [d pisteen-extent-laajennus
+        [[x y]] c]
+    [(- x d) (- y d) (+ x d) (+ y d)]))
 
- (defmethod extent :point [geo]
-   (extent-point-circle (pisteet geo)))
+(defmethod extent :point [geo]
+  (extent-point-circle (pisteet geo)))
 
- (defmethod extent :multipoint [geo]
+(defmethod extent :multipoint [geo]
    ;; Multipoint voi sisältää yhden tai useamman pisteen. Yksi piste vaatii pistemäisen extent-käsittelyn
-   (let [pisteet (pisteet geo)]
-     (if (> (count pisteet) 1)
-       (laske-pisteiden-extent pisteet)
-       (extent-point-circle pisteet))))
+  (let [pisteet (pisteet geo)]
+    (if (> (count pisteet) 1)
+      (laske-pisteiden-extent pisteet)
+      (extent-point-circle pisteet))))
 
- (defmethod extent :circle [geo]
-   (extent-point-circle (pisteet geo)))
+(defmethod extent :circle [geo]
+  (extent-point-circle (pisteet geo)))
 
- (defmethod extent :icon [geo]
-   (extent-point-circle (pisteet geo)))
+(defmethod extent :icon [geo]
+  (extent-point-circle (pisteet geo)))
 
- (defmethod extent :merkki [geo]
-   (extent-point-circle (pisteet geo)))
+(defmethod extent :merkki [geo]
+  (extent-point-circle (pisteet geo)))
 
- (defmethod extent :viiva [geo]
-   (laske-pisteiden-extent (pisteet geo)))
+(defmethod extent :viiva [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
- (defmethod extent :moniviiva [geo]
-   (laske-pisteiden-extent (pisteet geo)))
+(defmethod extent :moniviiva [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
- (defmethod extent :multipolygon [geo]
-   (laske-pisteiden-extent (pisteet geo)))
+(defmethod extent :multipolygon [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
- (defmethod extent :polygon [geo]
-   (laske-pisteiden-extent (pisteet geo)))
+(defmethod extent :polygon [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
- (defmethod extent :default [geo]
-   (laske-pisteiden-extent (pisteet geo)))
+(defmethod extent :default [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
- (defn extent-monelle [geometriat]
-   (laske-pisteiden-extent (mapcat pisteet geometriat)))
+(defn extent-monelle [geometriat]
+  (laske-pisteiden-extent (mapcat pisteet geometriat)))
 
- (defn extent-hypotenuusa
-   "Laskee extent hypotenuusan, jotta tiedetään minkä kokoista aluetta katsotaan."
-   [[x1 y1 x2 y2]]
-   (let [dx (- x2 x1)
-         dy (- y2 y1)]
-     (Math/sqrt (+ (* dx dx) (* dy dy)))))
+(defn extent-hypotenuusa
+  "Laskee extent hypotenuusan, jotta tiedetään minkä kokoista aluetta katsotaan."
+  [[x1 y1 x2 y2]]
+  (let [dx (- x2 x1)
+        dy (- y2 y1)]
+    (Math/sqrt (+ (* dx dx) (* dy dy)))))
 
  ;; Päättelee annetulle geometrialle hyvän ikonisijainnin
  ;; geometry -> [x y]
- (defmulti ikonin-sijainti (fn [geometry] (:type geometry)))
+(defmulti ikonin-sijainti (fn [geometry] (:type geometry)))
 
- (defmethod ikonin-sijainti :point [geom]
-   (:coordinates geom))
+(defmethod ikonin-sijainti :point [geom]
+  (:coordinates geom))
 
- (defmethod ikonin-sijainti :circle [geom]
-   (:coordinates geom))
+(defmethod ikonin-sijainti :circle [geom]
+  (:coordinates geom))
 
- (defmethod ikonin-sijainti :merkki [geom]
-   (:coordinates geom))
+(defmethod ikonin-sijainti :merkki [geom]
+  (:coordinates geom))
 
- (defmethod ikonin-sijainti :icon [geom]
-   (:coordinates geom))
+(defmethod ikonin-sijainti :icon [geom]
+  (:coordinates geom))
 
- (defmethod ikonin-sijainti :default [g]
-   (keskipiste g))
+(defmethod ikonin-sijainti :default [g]
+  (keskipiste g))
 
- (defn extent-sisalla?
-   "Tarkistaa onko piste extentin sisällä. Ottaa sisään extentin [x1 y1 x2 y2] ja
+(defn extent-sisalla?
+  "Tarkistaa onko piste extentin sisällä. Ottaa sisään extentin [x1 y1 x2 y2] ja
  pisteen [px py]."
-   [[x1 y1 x2 y2] [px py]]
-   (and (<= x1 px x2)
-     (<= y1 py y2)))
+  [[x1 y1 x2 y2] [px py]]
+  (and (<= x1 px x2)
+    (<= y1 py y2)))
 
- (defn etaisyys [[x1 y1] [x2 y2]]
-   (let [dx (- x2 x1)
-         dy (- y2 y1)]
-     (Math/sqrt (+ (* dx dx) (* dy dy)))))
+(defn etaisyys [[x1 y1] [x2 y2]]
+  (let [dx (- x2 x1)
+        dy (- y2 y1)]
+    (Math/sqrt (+ (* dx dx) (* dy dy)))))
 
- (defn alueen-hypotenuusa
-   "Laskee alueen hypotenuusan, jotta tiedetään minkä kokoista aluetta katsotaan."
-   [{:keys [xmin ymin xmax ymax]}]
-   (let [dx (- xmax xmin)
-         dy (- ymax ymin)]
-     (Math/sqrt (+ (* dx dx) (* dy dy)))))
+(defn alueen-hypotenuusa
+  "Laskee alueen hypotenuusan, jotta tiedetään minkä kokoista aluetta katsotaan."
+  [{:keys [xmin ymin xmax ymax]}]
+  (let [dx (- xmax xmin)
+        dy (- ymax ymin)]
+    (Math/sqrt (+ (* dx dx) (* dy dy)))))
 
- (defn karkeistustoleranssi
-   "Määrittelee reittien karkeistustoleranssin alueen koon mukaan."
-   [alue]
-   (let [pit (alueen-hypotenuusa alue)]
-     (/ pit 200)))
+(defn karkeistustoleranssi
+  "Määrittelee reittien karkeistustoleranssin alueen koon mukaan."
+  [alue]
+  (let [pit (alueen-hypotenuusa alue)]
+    (/ pit 200)))
 
- (defn klikkaustoleranssi
-   "Määrittelee klikattavan pisteen tarkkuustoleranssin extent koolle"
-   [extent]
-   (let [pit (extent-hypotenuusa extent)
-         toleranssi (/ pit 200)]
-     toleranssi))
+(defn klikkaustoleranssi
+  "Määrittelee klikattavan pisteen tarkkuustoleranssin extent koolle"
+  [extent]
+  (let [pit (extent-hypotenuusa extent)
+        toleranssi (/ pit 200)]
+    toleranssi))
 
- (defn kulma
-   "Palauttaa kahden pisteen välisen kulman radiaaneina"
-   [[x1 y1] [x2 y2]]
-   (let [dx (- x2 x1)
-         dy (- y2 y1)]
-     (Math/atan2 dy dx)))
+(defn kulma
+  "Palauttaa kahden pisteen välisen kulman radiaaneina"
+  [[x1 y1] [x2 y2]]
+  (let [dx (- x2 x1)
+        dy (- y2 y1)]
+    (Math/atan2 dy dx)))
 
- (defn viivojen-paatepisteet-koskettavat-toisiaan? [viiva1 viiva2 threshold]
-   (boolean
-     (some (fn [sijainti1]
-             (some (fn [sijainti2]
-                     (<= (math/pisteiden-etaisyys sijainti1 sijainti2) threshold))
-               (:points viiva2)))
-       (:points viiva1))))
+(defn viivojen-paatepisteet-koskettavat-toisiaan? [viiva1 viiva2 threshold]
+  (boolean
+    (some (fn [sijainti1]
+            (some (fn [sijainti2]
+                    (<= (math/pisteiden-etaisyys sijainti1 sijainti2) threshold))
+              (:points viiva2)))
+      (:points viiva1))))
 
- (defprotocol IPiste
-   (xy [this] "Palauttaa vektorin [x y]"))
+(defprotocol IPiste
+  (xy [this] "Palauttaa vektorin [x y]"))
 
- (extend-protocol IPiste
-   #?(:clj  clojure.lang.PersistentVector
-      :cljs PersistentVector)
-   (xy [this]
-     this)
-   #?(:clj  clojure.lang.PersistentArrayMap
-      :cljs PersistentArrayMap)
-   (xy [{:keys [x y]}]
-     [x y]))
+(extend-protocol IPiste
+  #?(:clj  clojure.lang.PersistentVector
+     :cljs PersistentVector)
+  (xy [this]
+    this)
+  #?(:clj  clojure.lang.PersistentArrayMap
+     :cljs PersistentArrayMap)
+  (xy [{:keys [x y]}]
+    [x y]))

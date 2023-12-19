@@ -57,6 +57,32 @@
 
 (use-fixtures :each (compose-fixtures jarjestelma-fixture tietokanta-fixture))
 
+(deftest hae-tarkastuspisteet-heatmapille-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
+        kuvaus (str "kuvaus nyt " (System/currentTimeMillis))]
+
+    (testing "Uuden tieturvallisuustarkastuksen teko ja heatmap pisteiden haku"
+      (let [vastaus (kutsu-http-palvelua :tallenna-tarkastus +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :tarkastus (assoc-in tieturvallisuustarkastus [:havainnot] kuvaus)})
+            id (:id vastaus)
+            _ (is (number? id) "Tallennus palauttaa uuden id:n")
+
+            heatmap-pisteet (kutsu-http-palvelua :hae-tarkastuspisteet-heatmapille +kayttaja-jvh+
+                              {:urakka-id urakka-id
+                               :alkupvm #inst "2023-09-01T00:00:00.000-00:00"
+                               :loppupvm #inst "2023-10-30T00:00:00.000-00:00"
+                               :tienumero nil,
+                               :tyyppi :tieturvallisuus,
+                               :havaintoja-sisaltavat? false,
+                               :vain-laadunalitukset? false,
+                               :tekija nil})
+
+            haetut-pisteet (-> heatmap-pisteet first :sijainti :lines first :points)
+            _ (is (= (first haetut-pisteet) [443402.71700182755 7376606.463961007]) "Heatmap koordinaatit täsmää")
+            _ (is (= (second haetut-pisteet) [443430.205 7376632.809]) "Heatmap koordinaatit täsmää")
+            _ (is (= (nth haetut-pisteet 2 nil) [443445.87274596374 7376646.680096388]) "Heatmap koordinaatit täsmää")]))))
+
 (deftest tallenna-ja-paivita-tieturvallisuustarkastus
   (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
         kuvaus (str "kuvaus nyt " (System/currentTimeMillis))
