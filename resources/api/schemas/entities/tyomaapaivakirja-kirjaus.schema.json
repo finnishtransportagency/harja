@@ -452,6 +452,19 @@
                 }
             }
         },
+        "urakoitsijan-merkinnat": {
+          "id": "urn:harja/urakoitsijan-merkinnat",
+          "type": "object",
+          "required": false,
+          "description": "Vapaa kenttä urakoitsijan merkinnöille.",
+          "properties": {
+              "kuvaus": {
+                  "id": "urn:harja/urakoitsijan-merkinnat/kuvaus",
+                  "required": true,
+                  "type": "string"
+              }
+          }
+        },
         "tilaajan-yhteydenotot": {
             "id": "urn:harja/tilaajan-yhteydenotot",
             "type": "array",

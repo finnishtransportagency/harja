@@ -489,48 +489,57 @@
               :onnettomuudet [{:onnettomuus {:kuvaus "Kuvaus"}}]
               :palautteet [{:palaute {:kuvaus "Kuvaus"}}]
               :tilaajan-yhteydenotot [{:tilaajan-yhteydenotto {:kuvaus "Kuvaus"}}]
-              :muut-kirjaukset {:kuvaus "Kuvaus"}}]
+              :muut-kirjaukset {:kuvaus "Kuvaus"}
+              :urakoitsijan-merkinnat {:kuvaus "Kuvaus"}}]
     (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit data []))
       "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
 
     ;; liikenteenohjaus-muutokset
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:liikenteenohjaus-muutokset 0 :liikenteenohjaus-muutos :kuvaus] "nil") [])
-          ["Liikenteenohjausmuustosten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+           ["Liikenteenohjausmuustosten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:liikenteenohjaus-muutokset 0 :liikenteenohjaus-muutos :kuvaus] nil) [])
-          ["Liikenteenohjausmuustosten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+           ["Liikenteenohjausmuustosten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
     (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:liikenteenohjaus-muutokset 0 :liikenteenohjaus-muutos :kuvaus] "Kuvaus on kunnossa.") []))
       "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
 
     ;; onnettomuudet
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:onnettomuudet 0 :onnettomuus :kuvaus] "nil") [])
-          ["Onnettomuuden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+           ["Onnettomuuden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:onnettomuudet 0 :onnettomuus :kuvaus] nil) [])
-          ["Onnettomuuden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+           ["Onnettomuuden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
     (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:onnettomuudet 0 :onnettomuus :kuvaus] "Kuvaus on kunnossa.") []))
       "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
 
     ;; tilaajan-yhteydenotot
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:tilaajan-yhteydenotot 0 :tilaajan-yhteydenotto :kuvaus] "nil") [])
-          ["Yhteydenoton kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+           ["Yhteydenoton kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:tilaajan-yhteydenotot 0 :tilaajan-yhteydenotto :kuvaus] nil) [])
-          ["Yhteydenoton kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+           ["Yhteydenoton kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
     (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:tilaajan-yhteydenotot 0 :tilaajan-yhteydenotto :kuvaus] "Kuvaus on kunnossa.") []))
       "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
 
     ;; palautteet
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:palautteet 0 :palaute :kuvaus] "nil") [])
-          ["Palautteiden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+           ["Palautteiden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:palautteet 0 :palaute :kuvaus] nil) [])
-          ["Palautteiden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+           ["Palautteiden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
     (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:palautteet 0 :palaute :kuvaus] "Kuvaus on kunnossa.") []))
       "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
 
     ;; muut-kirjaukset
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:muut-kirjaukset :kuvaus] "nil") [])
-          ["Muiden kirjausten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+           ["Muiden kirjausten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:muut-kirjaukset :kuvaus] nil) [])
-          ["Muiden kirjausten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+           ["Muiden kirjausten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
     (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:muut-kirjaukset :kuvaus] "Kuvaus on kunnossa.") []))
+      "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
+
+    ;; urakoitsijan-merkinnat
+    (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:urakoitsijan-merkinnat :kuvaus] "nil") [])
+           ["Urakoitsijan merkinnän kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+    (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:urakoitsijan-merkinnat :kuvaus] nil) [])
+           ["Urakoitsijan merkinnän kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+    (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:urakoitsijan-merkinnat :kuvaus] "Kuvaus on kunnossa.") []))
       "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")))
 
 (deftest validoi-typa-arvot-laajemmin
