@@ -6,7 +6,6 @@
       [clojure.string :as string])
     (:require-macros [planck.shell :as shell]))
 
-;; Viralliset värit löytyy täältä: https://issues.solita.fi/browse/HAR-921
 ;; Testin vuoksi voit muuttaa pelkkää värin arvoa, mutta pyritään noudattamaan
 ;; virallista listaa.
 ;; Jos lisäät uuden värin, lisää se myös puhtaat.cljc ja alpha.cljc, ikonit.cljc

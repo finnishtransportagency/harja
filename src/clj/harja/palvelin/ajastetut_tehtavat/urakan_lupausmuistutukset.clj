@@ -84,7 +84,7 @@
 (defn ajastus [db fim email]
   "Ajastetaan muistutukset urakan lupauksista ajettavaksi vain kuukauden ensimmäinen päivä."
   (ajastettu-tehtava/ajasta-paivittain
-    [10 00 0] ; VHAR-5523: lähetetään virka-aikaan, jotta Destian päivystäjä ei herää turhaan
+    [10 00 0] ; Lähetetään virka-aikaan, jotta urakoitsijan päivystäjä ei herää turhaan
     (do
       (log/info "ajasta-paivittain :: muistutus urakan lupauksista :: Alkaa " (pvm/nyt))
       (fn [_]

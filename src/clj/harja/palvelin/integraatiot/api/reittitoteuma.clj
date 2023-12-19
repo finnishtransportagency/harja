@@ -190,7 +190,7 @@ maksimi-linnuntien-etaisyys 200)
                                        (get-in % [:reittitoteuma :toteuma :tehtavat]))
                                     reittitoteumat)]
     (assert (integer? urakka-id) "Oltava urakka-id kun päivitetään materiaalicachet.")
-    ;; HAR-7896 urakoitsijat joskus "poistavat" materiaalitoteumia lähettämällä toteuman uudestaan
+    ;; Urakoitsijat joskus "poistavat" materiaalitoteumia lähettämällä toteuman uudestaan
     ;; tehtävänä suolaus mutta kokonaan ilman materiaalit-payloadia. Tämä siksi käsiteltävä erikseen
     ;; ja varmuuden vuoksi päivitettävä silloinkin materiaalicachet
     (when (or materiaaleja-hyotykuormassa? tehtavissa-suolausta?)

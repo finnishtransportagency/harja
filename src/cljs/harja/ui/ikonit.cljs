@@ -501,7 +501,7 @@
 (defn generoi-saa-ikoni [olom maara aika]
   ;; Sääikoni "moottori" simplifioituna, käytetään työmaapäiväkirjassa
   ;; Olomuodoksi annetaan NWS / WMO koodi pöydästä SYNOP koodi
-  ;; https://issues.solita.fi/browse/VHAR-7868
+  ;; Dokumentit löytyy väyläviraston confluencesta, Tekninen dokumentaatio > Sateen olomuodon sensoreiden dokumentaatio.
   (cond
     ;; Selkeää
     (olomuoto? olom 0)

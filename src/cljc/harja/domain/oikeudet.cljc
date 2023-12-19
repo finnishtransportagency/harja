@@ -100,8 +100,7 @@
   "Tarkistaa :luku, :kirjoitus tai muun tyyppisen oikeuden"
   [tyyppi oikeus urakka-id {:keys [organisaation-urakat roolit organisaatio
                                    urakkaroolit organisaatioroolit] :as kayttaja}]
-  (let [urakka-id (or (:urakka urakka-id) urakka-id) ;; HAR-6409 hotfix
-        ]
+  (let [urakka-id (or (:urakka urakka-id) urakka-id)]
     (when-not (or (nil? urakka-id) (number? urakka-id))
      (#?(:clj  log/error
          :cljs log/debug)

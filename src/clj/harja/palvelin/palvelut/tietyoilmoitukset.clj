@@ -186,7 +186,7 @@
                       q-tietyoilmoitukset/ilmoitus-pdf-kentat
                       {::t/id (:id params)}))
         ;; Vasta kun Tieliikennekeskuksesta on tullut kuittaus, että ilmoitus on kertaalleen tullut perille,
-        ;; voidaan jatkossa PDF:ssä käyttää ilmoituksessa termiä Muutos aiempaan VHAR-2465
+        ;; voidaan jatkossa PDF:ssä käyttää ilmoituksessa termiä Muutos aiempaan
         :lahetetty? (boolean (some :harja.domain.tietyoilmoituksen-email/kuitattu ilmoituksen-emailit))))))
 
 (defn tallenna-tietyoilmoitus [tloik db email pdf user ilmoitus sahkopostitiedot]

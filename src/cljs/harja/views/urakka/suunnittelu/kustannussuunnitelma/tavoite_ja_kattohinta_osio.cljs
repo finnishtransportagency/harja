@@ -118,7 +118,6 @@
 
 (defn osio
   [e! vahvistettu? urakka yhteenvedot kuluva-hoitokausi indeksit suodattimet kantahaku-valmis?]
-  ;; TODO: Toteuta kattohinnalle käsin syöttämisen mahdollisuus myöhemmin: VHAR-4858
   (let [tavoitehinnat (mapv (fn [summa]
                               {:summa summa})
                         (t/tavoitehinnan-summaus yhteenvedot))

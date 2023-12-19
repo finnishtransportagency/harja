@@ -1200,7 +1200,8 @@
       ;; Sulje mahdollisesti auki jäänyt datepicker kun focus poistuu
       {:component-will-receive-props
        (fn [this _ {:keys [focus] :as s} data]
-         ;; VHAR-8149: Jätetään nil-arvo huomiotta, jotta datepicker ei sulkeudu itsestään, kun päivämäärää valitaan ensimmäisen kerran.
+         ;; Jätetään nil-arvo huomiotta, jotta datepicker ei sulkeudu itsestään, kun päivämäärää valitaan ensimmäisen kerran.
+         ;; Aiemmin siis oli bugi, jossa ensimmäistä kertaa päivämäärää valittaessa datepicker sulkeutui eikä päivämäärä tullut valituksi.
          (and (not (nil? focus)) (not focus)
            (reset! auki false)))}
 

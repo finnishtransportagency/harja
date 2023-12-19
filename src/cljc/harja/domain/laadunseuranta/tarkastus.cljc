@@ -84,10 +84,10 @@
   (boolean (#{"ok" "OK" "Ok" "oK"} (:havainnot data))))
 
 (defn- tyhja-mittaus?* [mittaus]
-  ;; VHAR-1104: On urakoitijoita jotka raportoivat vain hoitoluokan sisältäviä mittauksia
+  ;; On urakoitijoita jotka raportoivat vain hoitoluokan sisältäviä mittauksia
   ;; nämä aiheuttivat tuotannossa räsähdykisä. Poistetaan hoitoluokka ennen tyhjyyden vertailua
   ;; Huom: Kartalle vietäessä mittauksessa on vain string, esim 'Talvihoitomittaus'. Sen dissoc
-  ;; aiheutti paljon ClassCastExceptioneita HAR-9415
+  ;; aiheutti paljon ClassCastExceptioneita.
   (let [mittaus (if (map? mittaus)
                   (dissoc mittaus :hoitoluokka)
                   mittaus)]

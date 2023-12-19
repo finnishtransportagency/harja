@@ -485,7 +485,8 @@
                            [:http-palvelin :db])
       :lampotilat (component/using
                     (lampotilat/->Lampotilat
-                      (:lampotilat-url (:ilmatieteenlaitos asetukset)))
+                      (:lampotilat-url (:ilmatieteenlaitos asetukset))
+                      (:apiavain (:ilmatieteenlaitos asetukset)))
                     [:http-palvelin :db :integraatioloki])
       :maksuerat (component/using
                    (maksuerat/->Maksuerat)

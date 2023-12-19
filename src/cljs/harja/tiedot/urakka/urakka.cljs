@@ -443,9 +443,10 @@
              (swap! tila (fn [tila]
                            (-> tila
                                (assoc-in [:yleiset :urakka] (dissoc uusi-urakka :alue))
-                             ;; NOTE: Disabloitu, koska VHAR-4909. Tämä resetoi kustannussuunnitelman tilan ennen kuin un-mount on ehtinyt suorittua
+                             ;; NOTE: Disabloitu räsähdykseen johtavan bugin takia.
+                             ;; Tämä resetoi kustannussuunnitelman tilan ennen kuin un-mount on ehtinyt suorittua
                              ;;       ja kustannussuunnitelman gridit jäävät täten siivoamatta.
                                #_(assoc :suunnittelu suunnittelu-default-arvot))))
              ;dereffataan kursorit, koska ne on laiskoja
-             ;; NOTE: Disabloitu, koska VHAR-4909
+             ;; NOTE: Disabloitu samasta syystä kuin ylempi.
              #_@suunnittelu-kustannussuunnitelma))

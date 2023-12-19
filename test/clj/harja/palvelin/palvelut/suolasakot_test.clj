@@ -16,7 +16,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :lampotilat (component/using
-                                      (->Lampotilat "ilmatieteenlaitos-urlin-paikka")
+                                      (->Lampotilat "ilmatieteenlaitos-urlin-paikka" "apiavaimen-paikka")
                                       [:http-palvelin :db])))))
 
   (testit)
