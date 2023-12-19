@@ -165,9 +165,9 @@
                                        virheet-acc)
                                      virheet-acc)))
         virheet-acc (reduce fn-validoi-avain virheet kategoriat)]
-    ;; Käydään vielä loput läpi, sallitaan nil arvot uraokitsijan merkinnöille koska nämä voi tulla vasta jälkeenpäin
+    ;; Käydään vielä loput läpi, sallitaan nil arvot koska nämä tiedot eivät ole pakollisia, jos ne ovat kuitenkin olemassa ne validoidaan
     (-> virheet-acc
-      (fn-validoi-yksittainen :muut-kirjaukset true)
+      (fn-validoi-yksittainen :muut-kirjaukset false)
       (fn-validoi-yksittainen :urakoitsijan-merkinnat false))))
 
 (defn validoi-tyomaapaivakirja [db data]
@@ -326,11 +326,13 @@
                                                       :tyyppi tyyppi}))))
 
 (defn- tallenna-muut-kirjaukset [db data versio tyomaapaivakirja-id urakka-id]
-  (tyomaapaivakirja-kyselyt/lisaa-tapahtuma<! db {:kuvaus (get-in data [:muut-kirjaukset :kuvaus])
-                                                  :versio versio
-                                                  :tyomaapaivakirja_id tyomaapaivakirja-id
-                                                  :urakka_id urakka-id
-                                                  :tyyppi "muut_kirjaukset"}))
+  ;; Tarkistetaan onko muita kirjauksia annettu, kun tämä ei ole json skeemassa pakolinen tieto
+  (when (:muut-kirjaukset data)
+    (tyomaapaivakirja-kyselyt/lisaa-tapahtuma<! db {:kuvaus (get-in data [:muut-kirjaukset :kuvaus])
+                                                    :versio versio
+                                                    :tyomaapaivakirja_id tyomaapaivakirja-id
+                                                    :urakka_id urakka-id
+                                                    :tyyppi "muut_kirjaukset"})))
 
 (defn- tallenna-urakoitsijan-merkinnat [db data versio tyomaapaivakirja-id urakka-id]
   (tyomaapaivakirja-kyselyt/lisaa-kommentti<! db {:urakka_id urakka-id
