@@ -85,7 +85,7 @@
                                                                 :versio versio
                                                                 :kommentti kommentti
                                                                 :luoja (:id user)})
-        
+
         tyomaapaivakirjan-paivamaara (pvm/palvelimen-aika->suomen-aikaan tyomaapaivakirjan-paivamaara)
         tyomaapaivakirjan-paivamaara (pvm/fmt-p-k-v-lyhyt tyomaapaivakirjan-paivamaara)
 
@@ -100,13 +100,13 @@
     ;; ({:kayttajatunnus, :sahkoposti, :puhelin, :sukunimi :roolit [Urakan vastuuhenkilö], :roolinimet [vastuuhenkilo], :poistettu, :etunimi, :tunniste, :organisaatio}
     ;; { ... }
     ;; { ... } )
-    (when
+    (if
       ;; Tarkista onnistuiko tallennus, onko lähettäjä urakanvalvoja, ollaanko tuotannossa ja onko vastaanottajia olemassa
-      (and 
+      (and
         sampo-id
-        onnistui? 
-        urakanvalvoja? 
-        (not kehitysmoodi?) 
+        onnistui?
+        urakanvalvoja?
+        (not kehitysmoodi?)
         (some? vastaanottajat))
       (try
         (doseq [henkilo vastaanottajat]
@@ -118,10 +118,10 @@
                                    (html-tyokalut/tietoja [[(format "Urakassa %s on uusi kommentti koskien %s työmaapäiväkirjaa. Voit käydä lukemassa kommentin tästä linkistä."
                                                               (pr-str urakka-nimi)
                                                               (pr-str tyomaapaivakirjan-paivamaara))]
-                                                           
-                                                           [(format "%s#urakat/tyomaapaivakirja?&hy=%s&u=%s" 
-                                                              harja-url 
-                                                              (pr-str hallintayksikko-id) 
+
+                                                           [(format "%s#urakat/tyomaapaivakirja?&hy=%s&u=%s"
+                                                              harja-url
+                                                              (pr-str hallintayksikko-id)
                                                               (pr-str urakka-id))]])
                                    [:p "Tämä on automaattisesti luotu viesti HARJA-järjestelmästä. Älä vastaa tähän viestiin."]])]
             (sahkoposti/laheta-viesti!
@@ -140,7 +140,10 @@
                        "kehitysmoodi?: " kehitysmoodi?
                        "sampo-id: " sampo-id
                        "urakanvalvoja?: " urakanvalvoja?
-                       "vastaanottajat:" (map :sahkoposti vastaanottajat)))))))
+                       "vastaanottajat:" (map :sahkoposti vastaanottajat)))))
+      (log/log "Työmaapäiväkirja - Sähköpostia ei lähetetä, saatiin parametrit: "
+        (str (format "sampo-id %s onnistui? %s urakanvalvoja? %s kehitysmoodi? %s vastaanottajat löytyi? %s"
+               sampo-id onnistui? urakanvalvoja? kehitysmoodi? (some? vastaanottajat))))))
   (hae-kommentit db tiedot))
 
 (defn- poista-tyomaapaivakirjan-kommentti [db user tiedot]

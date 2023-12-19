@@ -28,7 +28,7 @@
           :db (tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
           :tyomaapaivakirja (component/using
-                              (tyomaapaivakirja/->Tyomaapaivakirja)
+                              (tyomaapaivakirja/->Tyomaapaivakirja true)
                               [:db :http-palvelin])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -363,7 +363,10 @@
                          :tyomaapaivakirja_id id
                          :versio 1
                          :kommentti kommentti
-                         :luoja (:id +kayttaja-jvh+)}))
+                         :luoja (:id +kayttaja-jvh+)
+                         :paivamaara #inst "2023-12-01T21:00:00.000-00:00"
+                         :urakka-nimi "Oulun MHU 2019-2024"
+                         :hallintayksikko-id 12}))
 
         kommentti "testi kommentti"
         alkuaika (pvm/->pvm-aika "30.5.2023 00:00")
