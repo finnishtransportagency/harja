@@ -8,7 +8,7 @@
 
 ;; Heatmap pisteiden asetukset 
 (def +heatmap-blur-maara+ 20)
-(def heatmap-radius-maara+ 2)
+(def +heatmap-radius-maara+ 2)
 
 (defn- luo-feature [geom]
   (try
