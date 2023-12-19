@@ -94,8 +94,6 @@
         roolit #{"urakan vastuuhenkilö"}
         vastaanottajat (when fim (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
         urakanvalvoja? (roolit/roolissa? user roolit/urakanvalvoja)]
-    
-    (println "\n kehitysmoodi?: " kehitysmoodi? " urakanvalvoja?: " urakanvalvoja? " onnistui?: " onnistui? " Vastaanottajat: " (map :sahkoposti vastaanottajat))
 
     ;; Jos kommentoija on urakanvalvoja, lähetetään sähköposti ilmoitus kaikille urakan vastuuhenkilöille
     ;; Vastaanottajat:  
@@ -103,31 +101,36 @@
     ;; { ... }
     ;; { ... } )
     (when
-      ;; Laita kehitysmoodi? false  urakanvalvoja?
-      (and onnistui? kehitysmoodi? sampo-id (some? vastaanottajat))
+      ;; Tarkista onnistuiko tallennus, onko lähettäjä urakanvalvoja, ollaanko tuotannossa ja onko vastaanottajia olemassa
+      (and 
+        sampo-id
+        onnistui? 
+        urakanvalvoja? 
+        (not kehitysmoodi?) 
+        (some? vastaanottajat))
       (try
         (doseq [henkilo vastaanottajat]
           (let [{sahkoposti :sahkoposti} henkilo
                 viestin-otsikko "Työmaapäiväkirjassa uusi kommentti"
-                harja-url "https://extranet.vayla.fi/harja/"
+                harja-url "https://extranet.vayla.fi/harja/" ;; http://localhost:3000/
                 viestin-vartalo (html
                                   [:div
                                    (html-tyokalut/tietoja [[(format "Urakassa %s on uusi kommentti koskien %s työmaapäiväkirjaa. Voit käydä lukemassa kommentin tästä linkistä."
                                                               (pr-str urakka-nimi)
                                                               (pr-str tyomaapaivakirjan-paivamaara))]
-                                                           [(format "%s#urakat/tyomaapaivakirja?&hy=%s&u=%s" harja-url (pr-str hallintayksikko-id) (pr-str urakka-id))]])
-                                   [:p "Tämä on automaattisesti luotu viesti HARJA-järjestelmästä. Älä vastaa tähän viestiin."]])
-                _ (println "\n Vartalo: " viestin-vartalo)
-                _ (println "Päivämäärä: " tyomaapaivakirjan-paivamaara)
-                _ (println "hallintayksikko-id: " hallintayksikko-id)
-                _ (println "urakka-nimi: " urakka-nimi)]
-            #_(sahkoposti/laheta-viesti!
-                api-sahkoposti
-                (sahkoposti/vastausosoite api-sahkoposti)
-                sahkoposti
-                (str "Harja: " viestin-otsikko)
-                viestin-vartalo
-                {})
+                                                           
+                                                           [(format "%s#urakat/tyomaapaivakirja?&hy=%s&u=%s" 
+                                                              harja-url 
+                                                              (pr-str hallintayksikko-id) 
+                                                              (pr-str urakka-id))]])
+                                   [:p "Tämä on automaattisesti luotu viesti HARJA-järjestelmästä. Älä vastaa tähän viestiin."]])]
+            (sahkoposti/laheta-viesti!
+              api-sahkoposti
+              (sahkoposti/vastausosoite api-sahkoposti)
+              sahkoposti
+              (str "Harja: " viestin-otsikko)
+              viestin-vartalo
+              {})
             (log/debug "Työmaapäiväkirjan urakanvalvojan kommentin sähköposti ilmoitus lähtetty kaikille urakan vastuuhenkilöille.")))
 
         (catch Exception e
@@ -136,6 +139,7 @@
                        "Tallennus onnistui?: " onnistui?
                        "kehitysmoodi?: " kehitysmoodi?
                        "sampo-id: " sampo-id
+                       "urakanvalvoja?: " urakanvalvoja?
                        "vastaanottajat:" (map :sahkoposti vastaanottajat)))))))
   (hae-kommentit db tiedot))
 
