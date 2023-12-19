@@ -5,6 +5,9 @@
             [harja.pvm :as pvm]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.kyselyt.urakat :as urakka-kyselyt]
+            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
+            [hiccup.core :refer [html]]
+            [harja.tyokalut.html :as html-tyokalut]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.tyomaapaivakirja :as tyomaapaivakirja-kyselyt]
             [harja.kyselyt.konversio :as konversio]
@@ -78,9 +81,42 @@
         sampo-id (urakka-kyselyt/hae-urakan-sampo-id db (:urakka-id tiedot))
         roolit #{"urakan vastuuhenkilö"}
         vastaanottajat (when fim (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
-        _ (println "")
-        ]
-    (println "\n kehitysmoodi?: " kehitysmoodi? " onnistui?: " onnistui? " Vastaanottajat: " vastaanottajat))
+        _ (println "")]
+    (println "\n kehitysmoodi?: " kehitysmoodi? " onnistui?: " onnistui? " Vastaanottajat: " (map :sahkoposti vastaanottajat))
+    ;; Lähetetään sähköposti 
+    ;; Vastaanottajat:  
+    ;; ({:kayttajatunnus, :sahkoposti, :puhelin, :sukunimi :roolit [Urakan vastuuhenkilö], :roolinimet [vastuuhenkilo], :poistettu, :etunimi, :tunniste, :organisaatio}
+    ;; { ... }
+    ;; { ... } )
+    (when
+      ;; Laita kehitysmoodi? false 
+      (and onnistui? kehitysmoodi? sampo-id (some? vastaanottajat))
+      (try
+        (doseq [henkilo vastaanottajat]
+          (let [{sahkoposti :sahkoposti} henkilo
+                viestin-otsikko "Työmaapäiväkirjassa uusi kommentti"
+                viestin-vartalo (html
+                                  [:div
+                                   (html-tyokalut/tietoja [["Urakassa [urakan nimi] on uusi kommentti koskien [dd.mm.yyyy] työmaapäiväkirjaa. Voit käydä lukemassa kommentin tästä linkistä."]
+                                                           ["http://localhost:3000/#urakat/tyomaapaivakirja?&hy=12&u=35"]])
+                                   [:p "Tämä on automaattisesti luotu viesti HARJA-järjestelmästä. Älä vastaa tähän viestiin."]])
+                _ (println "\n Vartalo: " viestin-vartalo)]
+            #_(sahkoposti/laheta-viesti!
+                api-sahkoposti
+                (sahkoposti/vastausosoite api-sahkoposti)
+                sahkoposti
+                (str "Harja: " viestin-otsikko)
+                viestin-vartalo
+                {})
+            (log/debug "Työmaapäiväkirjan urakanvalvojan kommentin sähköposti ilmoitus lähtetty kaikille urakan vastuuhenkilöille.")))
+
+        (catch Exception e
+          (log/error (str
+                       (format "Työmaapäiväkirjan kommentin sähköpostin lähetys epäonnistui. Virhe: %s" (pr-str e))
+                       "Tallennus onnistui?: " onnistui?
+                       "kehitysmoodi?: " kehitysmoodi?
+                       "sampo-id: " sampo-id
+                       "vastaanottajat:" (map :sahkoposti vastaanottajat)))))))
   (hae-kommentit db tiedot))
 
 (defn- poista-tyomaapaivakirjan-kommentti [db user tiedot]

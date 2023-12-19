@@ -32,14 +32,16 @@
                                  (nil? (:lahettaja emailapi)))
                              true
                              false)]
-    [:div [:p "Voit testata täällä eri ympäristöissä sähköpostien lähettämistä. Sähköpostin lähettämiseen on
-  kaksi formaattia. Viestit voidaan lähettää suoraan 'postal' nimisellä kirjastolla, jolloin tarvitset esim gmailia varten
-  gmailin tarvitsemat asetukset ja tunnukset. Toinen vaihtoehto on lähettää viestit Digian tarjoamaa api-rajapintaa hyödyntäen.
-  Jälkimmäinen tapa simuloi paremmin sitä, mitä Harja tekee, kun se lähettää sähköposteja. Ensimmäinen on lähinnä
-  lokaaliin ympäristöön testitarkoituksissa."]
-     [:p "Viestin lähetykseen voit käyttää vaikka Gmailia. Vaihdat asetukset.edn tiedostoon :ulkoinen-sahkoposti :palvelin arvon 'stmp.gmail.com'."]
-     [:p "Jos Gmailissa on käytössä 2FA, niin luo sähköpostin lähettämistä varten erillinen sovelluskohtainen salasana Google Tilillä: 'https://myaccount.google.com/security?hl=fi'."]
-     [:p "Tunnus ja lähettäjä on Gmailissa sinun oma sähköpostiosoite. Porttina 587 ja tsl = true. Lähettävä palvelin on stmp.gmail.com."]
+    [:div {:style {:padding-top "24px" :padding-left "8px" :font-size "14px"}}
+     [:p (str
+           "Voit testata täällä eri ympäristöissä sähköpostien lähettämistä. Sähköpostin lähettämiseen on"
+           "kaksi formaattia. Viestit voidaan lähettää suoraan 'postal' nimisellä kirjastolla, jolloin tarvitset esim gmailia varten"
+           "gmailin tarvitsemat asetukset ja tunnukset. Toinen vaihtoehto on lähettää viestit Digian tarjoamaa api-rajapintaa hyödyntäen."
+           "Jälkimmäinen tapa simuloi paremmin sitä, mitä Harja tekee, kun se lähettää sähköposteja. Ensimmäinen on lähinnä"
+           "lokaaliin ympäristöön testitarkoituksissa.")]
+     [:p "Viestin lähetykseen voit käyttää vaikka Gmailia. Vaihdat asetukset.edn tiedostoon :ulkoinen-sahkoposti :palvelin smtp.gmail.com"]
+     [:p "Jos Gmailissa on käytössä 2FA, niin luo sähköpostin lähettämistä varten erillinen sovelluskohtainen salasana Google Tilillä: https://myaccount.google.com/security?hl=fi"]
+     [:p "Tunnus ja lähettäjä on Gmailissa sinun oma sähköpostiosoite. Porttina 587 ja tsl = true. Lähettävä palvelin on smtp.gmail.com"]
      [:h2 "Lähetä 'postal' kirjastolla"]
      [debug/debug app]
      [lomake/lomake
