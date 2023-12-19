@@ -273,7 +273,10 @@
       {:urakka-id (:id @nav/valittu-urakka)
        :tyomaapaivakirja_id (:tyomaapaivakirja_id valittu-rivi)
        :versio (:versio valittu-rivi)
-       :kommentti kommentti}
+       :kommentti kommentti
+       :paivamaara (:paivamaara valittu-rivi)
+       :urakka-nimi (:nimi @nav/valittu-urakka)
+       :hallintayksikko-id @nav/valittu-hallintayksikko-id}
       {:onnistui ->TallennaKommenttiOnnistui
        :epaonnistui ->TallennaKommenttiEpaonnistui})
     app)

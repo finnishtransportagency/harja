@@ -5,6 +5,7 @@
             [harja.pvm :as pvm]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.kyselyt.urakat :as urakka-kyselyt]
+            [harja.domain.roolit :as roolit]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [hiccup.core :refer [html]]
             [harja.tyokalut.html :as html-tyokalut]
@@ -72,35 +73,54 @@
 
 (defn- tallenna-kommentti [db user tiedot fim api-sahkoposti kehitysmoodi?]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/raportit-kommentit user (:urakka-id tiedot))
-  (let [vastaus (tyomaapaivakirja-kyselyt/lisaa-kommentti<! db {:urakka_id (:urakka-id tiedot)
-                                                                :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)
-                                                                :versio (:versio tiedot)
-                                                                :kommentti (:kommentti tiedot)
+  (let [{tyomaapaivakirjan-paivamaara :paivamaara
+         urakka-nimi :urakka-nimi
+         hallintayksikko-id :hallintayksikko-id
+         urakka-id :urakka-id
+         tyomaapaivakirja_id :tyomaapaivakirja_id
+         versio :versio
+         kommentti :kommentti} tiedot
+        vastaus (tyomaapaivakirja-kyselyt/lisaa-kommentti<! db {:urakka_id urakka-id
+                                                                :tyomaapaivakirja_id tyomaapaivakirja_id
+                                                                :versio versio
+                                                                :kommentti kommentti
                                                                 :luoja (:id user)})
+        
+        tyomaapaivakirjan-paivamaara (pvm/palvelimen-aika->suomen-aikaan tyomaapaivakirjan-paivamaara)
+        tyomaapaivakirjan-paivamaara (pvm/fmt-p-k-v-lyhyt tyomaapaivakirjan-paivamaara)
+
         onnistui? (some? (:kommentti vastaus))
         sampo-id (urakka-kyselyt/hae-urakan-sampo-id db (:urakka-id tiedot))
         roolit #{"urakan vastuuhenkilö"}
         vastaanottajat (when fim (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
-        _ (println "")]
-    (println "\n kehitysmoodi?: " kehitysmoodi? " onnistui?: " onnistui? " Vastaanottajat: " (map :sahkoposti vastaanottajat))
-    ;; Lähetetään sähköposti 
+        urakanvalvoja? (roolit/roolissa? user roolit/urakanvalvoja)]
+    
+    (println "\n kehitysmoodi?: " kehitysmoodi? " urakanvalvoja?: " urakanvalvoja? " onnistui?: " onnistui? " Vastaanottajat: " (map :sahkoposti vastaanottajat))
+
+    ;; Jos kommentoija on urakanvalvoja, lähetetään sähköposti ilmoitus kaikille urakan vastuuhenkilöille
     ;; Vastaanottajat:  
     ;; ({:kayttajatunnus, :sahkoposti, :puhelin, :sukunimi :roolit [Urakan vastuuhenkilö], :roolinimet [vastuuhenkilo], :poistettu, :etunimi, :tunniste, :organisaatio}
     ;; { ... }
     ;; { ... } )
     (when
-      ;; Laita kehitysmoodi? false 
+      ;; Laita kehitysmoodi? false  urakanvalvoja?
       (and onnistui? kehitysmoodi? sampo-id (some? vastaanottajat))
       (try
         (doseq [henkilo vastaanottajat]
           (let [{sahkoposti :sahkoposti} henkilo
                 viestin-otsikko "Työmaapäiväkirjassa uusi kommentti"
+                harja-url "https://extranet.vayla.fi/harja/"
                 viestin-vartalo (html
                                   [:div
-                                   (html-tyokalut/tietoja [["Urakassa [urakan nimi] on uusi kommentti koskien [dd.mm.yyyy] työmaapäiväkirjaa. Voit käydä lukemassa kommentin tästä linkistä."]
-                                                           ["http://localhost:3000/#urakat/tyomaapaivakirja?&hy=12&u=35"]])
+                                   (html-tyokalut/tietoja [[(format "Urakassa %s on uusi kommentti koskien %s työmaapäiväkirjaa. Voit käydä lukemassa kommentin tästä linkistä."
+                                                              (pr-str urakka-nimi)
+                                                              (pr-str tyomaapaivakirjan-paivamaara))]
+                                                           [(format "%s#urakat/tyomaapaivakirja?&hy=%s&u=%s" harja-url (pr-str hallintayksikko-id) (pr-str urakka-id))]])
                                    [:p "Tämä on automaattisesti luotu viesti HARJA-järjestelmästä. Älä vastaa tähän viestiin."]])
-                _ (println "\n Vartalo: " viestin-vartalo)]
+                _ (println "\n Vartalo: " viestin-vartalo)
+                _ (println "Päivämäärä: " tyomaapaivakirjan-paivamaara)
+                _ (println "hallintayksikko-id: " hallintayksikko-id)
+                _ (println "urakka-nimi: " urakka-nimi)]
             #_(sahkoposti/laheta-viesti!
                 api-sahkoposti
                 (sahkoposti/vastausosoite api-sahkoposti)
