@@ -354,7 +354,7 @@
     [:div#Kommentit.row.filtterit.kommentit-valistys
      [:h2 "Kommentit"]
      (for* [versiomuutokset sortatut-kommentit-pvm-mukaan]
-       (if (some #(or  (contains? % :uudet) (contains? % :vanhat)) versiomuutokset)
+       (if (some #(or (contains? % :uudet) (contains? % :vanhat)) versiomuutokset)
          ;; Rivi on muutoshistoria kommentti
          (let [muutos-indeksi (first (keep-indexed (fn [idx subseq]
                                                      (when (= subseq (map #(dissoc % :luotu) versiomuutokset)) idx))
@@ -404,11 +404,19 @@
                 kommentti :kommentti
                 etunimi :etunimi
                 sukunimi :sukunimi
-                luoja :luoja} (first versiomuutokset)]
+                luoja :luoja} (first versiomuutokset)
+               urakoitsijan-merkinta? (and 
+                                        (nil? etunimi)
+                                        (nil? sukunimi))]
+           ;; Käsittele urakoitsijan merkinnät
            [:span
-            [:div.alarivi-tiedot
-             [:span (str (pvm/js-date->pvm luotu))]
-             [:span (str etunimi " " sukunimi)]]
+            (if urakoitsijan-merkinta?
+              [:div.alarivi-tiedot
+               [:span (str (pvm/js-date->pvm luotu))]
+               [:span.muutos-info "Jälkikäteismerkintä urakoitsijajärjestelmästä"]]
+              [:div.alarivi-tiedot
+               [:span (str (pvm/js-date->pvm luotu))]
+               [:span (str etunimi " " sukunimi)]])
 
             [:div.kommentti
              [:h1.tieto-rivi kommentti]
