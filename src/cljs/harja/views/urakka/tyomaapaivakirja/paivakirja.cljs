@@ -404,10 +404,9 @@
                 kommentti :kommentti
                 etunimi :etunimi
                 sukunimi :sukunimi
-                luoja :luoja} (first versiomuutokset)
-               urakoitsijan-merkinta? (and 
-                                        (nil? etunimi)
-                                        (nil? sukunimi))]
+                luoja :luoja
+                urakoitsijan-merkinta? :urakoitsijan_merkinta} (first versiomuutokset)]
+           
            ;; Käsittele urakoitsijan merkinnät
            [:span
             (if urakoitsijan-merkinta?

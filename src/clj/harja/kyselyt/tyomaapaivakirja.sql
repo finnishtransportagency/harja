@@ -165,7 +165,8 @@ SELECT
   tk.kommentti, 
   k.etunimi, 
   k.sukunimi, 
-  tk.luoja 
+  tk.luoja,
+  tk.urakoitsijan_merkinta 
   FROM tyomaapaivakirja_kommentti tk 
   LEFT JOIN kayttaja k ON k.id = tk.luoja
 WHERE tk.tyomaapaivakirja_id = :tyomaapaivakirja_id 
