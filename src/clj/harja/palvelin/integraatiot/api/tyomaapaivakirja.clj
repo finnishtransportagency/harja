@@ -335,13 +335,15 @@
                                                     :tyyppi "muut_kirjaukset"})))
 
 (defn- tallenna-urakoitsijan-merkinnat [db data versio tyomaapaivakirja-id urakka-id]
-  (tyomaapaivakirja-kyselyt/lisaa-kommentti<! db {:urakka_id urakka-id
-                                                  :tyomaapaivakirja_id tyomaapaivakirja-id
-                                                  :versio versio
-                                                  :kommentti (get-in data [:urakoitsijan-merkinnat :kuvaus])
-                                                  ;; Kun luoja on nil, insert lause asettaa luojaksi integraation 
-                                                  :luoja nil
-                                                  :urakoitsijan_merkinta true}))
+  ;; Tarkista, annettiinko urakoitsijan merkintä ennen tallennusta, tämä on vapaaehtoinen kenttä
+  (when (:urakoitsijan-merkinnat data)
+    (tyomaapaivakirja-kyselyt/lisaa-kommentti<! db {:urakka_id urakka-id
+                                                    :tyomaapaivakirja_id tyomaapaivakirja-id
+                                                    :versio versio
+                                                    :kommentti (get-in data [:urakoitsijan-merkinnat :kuvaus])
+                                                    ;; Kun luoja on nil, insert lause asettaa luojaksi integraation 
+                                                    :luoja nil
+                                                    :urakoitsijan_merkinta true})))
 
 (defn- tallenna-toimeksiannot [db data versio tyomaapaivakirja-id urakka-id]
   (doseq [v (get-in data [:viranomaisen-avustaminen])]
