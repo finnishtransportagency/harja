@@ -105,6 +105,17 @@
      :tekija (when tekija
                (name tekija))}))
 
+(defn kasaa-heatmap-parametrit [urakka-id alkupvm loppupvm]
+  {:urakka-id urakka-id
+   :alkupvm alkupvm
+   :loppupvm loppupvm
+   :tienumero @tienumero
+   :tyyppi @tarkastustyyppi
+   :havaintoja-sisaltavat? @havaintoja-sisaltavat?
+   :vain-laadunalitukset? @vain-laadunalitukset?
+   :tekija (when (-> @tarkastuksen-tekija first some?)
+             (name @tarkastuksen-tekija))})
+
 (defonce valittu-aikavali (atom nil))
 
 (def urakan-tarkastukset

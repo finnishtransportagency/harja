@@ -6,6 +6,10 @@
             [cljs.core.async :as async])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+;; Heatmap pisteiden asetukset 
+(def +heatmap-blur-maara+ 20)
+(def +heatmap-radius-maara+ 2)
+
 (defn- luo-feature [geom]
   (try
     (featuret/luo-feature geom)
@@ -14,7 +18,7 @@
       (log (pr-str "luo-feature palautti virheen, geom: " geom))
       nil)))
 
-(defn- create-geometry-layer
+(defn- tee-geometria-taso
   "Create a new ol3 Vector layer with a vector source."
   [opacity]
   (ol.layer.Vector. #js {:source          (ol.source.Vector.)
@@ -30,61 +34,82 @@
   #{:polygon :point :circle :multipolygon :multiline :line
     :geometry-collection})
 
-(defn update-ol3-layer-geometries
-  "Given a vector of ol3 layer and map of current geometries and a
-  sequence of new geometries, updates (creates/removes) the geometries
-  in the layer to match the new items. Returns a new vector with the updates
-  ol3 layer and map of geometries.
-  If incoming layer & map vector is nil, a new ol3 layer will be created."
-  [ol3 geometry-layer geometries-map items]
-  (let [create? (nil? geometry-layer)
-        geometry-layer (if create?
-                         (doto (create-geometry-layer
-                                (taso/opacity items))
+(defn tee-heatmap-layer [ominaisuudet]
+  (let [source (ol.source.Vector. #js {:features (clj->js ominaisuudet)})
+        heatmap-layer (ol.layer.Heatmap. #js {:source source
+                                              :blur +heatmap-blur-maara+
+                                              :radius +heatmap-radius-maara+})]
+    heatmap-layer))
+
+(defn heatmap-pisteet [heatmap-koordinaatit]
+  (map (fn [pisteet]
+         (ol.Feature. (ol.geom.Point. (clj->js pisteet))))
+    heatmap-koordinaatit))
+
+(defn paivita-ol3-tason-geometriat
+  "Kun annetaan tason vektori, nykyisten geometrioiden map ja 
+   uusien geometrioiden sequenssi, päivittää (luo/poistaa) geometriat
+   tasossa vastaamaan uusia kohteita. Palauttaa uuden vektorin päivitysten kanssa (taso & geometria map)
+   Jos saapuvan tason ja vectorin arvo on nil, luodaan uusi ol3-taso."
+  [ol3 geometria-taso geometria-map items]
+  (let [tee-uusi-taso? (nil? geometria-taso)
+        heatmap-koordinaatit (mapcat (fn [item]
+                                       (when (= (:type item) :heatmap)
+                                         (mapcat :points (:lines (:alue item)))))
+                               items)
+        heatmap? (= (-> items first :type) :heatmap)
+        heatmap (tee-heatmap-layer (heatmap-pisteet heatmap-koordinaatit))
+        geometria-taso (if tee-uusi-taso?
+                         (doto
+                           (if heatmap?
+                             heatmap
+                             (tee-geometria-taso (taso/opacity items)))
                            (.setZIndex (or (:zindex (meta items)) 0)))
-                         geometry-layer)
-        geometries-map (if create? {} geometries-map)
+                         geometria-taso)
+        geometria-map (if tee-uusi-taso? {} geometria-map)
         geometries-set (into #{} items)
-        features (.getSource geometry-layer)]
+        ominaisuudet (.getSource geometria-taso)]
 
-    (when create?
-      (.addLayer ol3 geometry-layer))
+    (when tee-uusi-taso?
+      (.addLayer ol3 geometria-taso))
 
-    ;; Remove all ol3 feature objects that are no longer in the new geometries
-    (doseq [[avain feature] (seq geometries-map)
-            :when (and feature (not (geometries-set avain)))]
-      (.removeFeature features feature))
+    (if heatmap?
+      ;; Jos kyseessä heatmap taso, se on jo käsitelty, palauta taso ja geometriat
+      [geometria-taso items]
+      ;; Muussa tapauksessa käsitellään uudet geometriat
+      (do
+        ;; Poista kaikki ol3-ominaisuusobjektit jotka eivät enää ole uusissa geometrioissa
+        (doseq [[avain feature] (seq geometria-map)
+                :when (and feature (not (geometries-set avain)))]
+          (.removeFeature ominaisuudet feature))
 
-    ;; Create new features for new geometries and update the geometries map
-    (loop [new-geometries-map {}
-           [item & items] items]
-      (if-not item
-        ;; When all items are processed, return layer and new geometries map
-        [geometry-layer new-geometries-map]
+        (loop [uudet-geometriat {} [item & items] items]
+          (if-not item
+            ;; Kun kaikki kohteet on käsitelty, palauta taso ja uusi geometria mappi
+            [geometria-taso uudet-geometriat]
+            ;; Luo ominaisuudet uusille geometrioille ja päivitä geometriat
+            (let [alue (:alue item)]
+              (recur
+                (assoc uudet-geometriat item
+                  (or (geometria-map item)
+                    (when-let [new-shape (luo-feature alue)]
+                      (aseta-feature-geometria! new-shape item)
+                      (.addFeature ominaisuudet new-shape)
 
-        (let [alue (:alue item)]
-          (recur
-           (assoc new-geometries-map item
-                  (or (geometries-map item)
-                      (when-let [new-shape (luo-feature alue)]
-                        (aseta-feature-geometria! new-shape item)
-                        (.addFeature features new-shape)
+                      ;; Aseta geneerinen tyyli tyypeille,
+                      ;; joiden luo-feature ei sitä tee
+                      (when (tyyppi-tarvitsee-tyylit (:type alue))
+                        (featuret/aseta-tyylit new-shape alue))
 
-                        ;; Aseta geneerinen tyyli tyypeille,
-                        ;; joiden luo-feature ei sitä tee
-                        (when (tyyppi-tarvitsee-tyylit (:type alue))
-                          (featuret/aseta-tyylit new-shape alue))
-
-                        new-shape)))
-           items))))))
+                      new-shape)))
+                items))))))))
 
 ;; Laajenna vektorit olemaan tasoja
 (extend-protocol Taso
   PersistentVector
   (aseta-z-index [this z-index]
     (with-meta this
-      (merge (meta this)
-             {:zindex z-index})))
+      (merge (meta this) {:zindex z-index})))
   (extent [this]
     (-> this meta :extent))
   (opacity [this]
@@ -94,7 +119,7 @@
   (aktiivinen? [this]
     (some? (taso/extent this)))
   (paivita [items ol3 ol-layer aiempi-paivitystieto]
-    (update-ol3-layer-geometries ol3 ol-layer aiempi-paivitystieto items))
+    (paivita-ol3-tason-geometriat ol3 ol-layer aiempi-paivitystieto items))
   (hae-asiat-pisteessa [this koordinaatti extent]
     (let [ch (async/chan)]
       (if-let [hae-asiat (-> this meta :hae-asiat)]
