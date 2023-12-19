@@ -551,11 +551,11 @@
                                                      :lopetus "2015-01-30T14:00:00+02:00"
                                                      :tehtavat [{:tehtava {:kuvaus "e"}}]}}]
         kuvaukset {:liikenteenohjaus-muutokset [{:liikenteenohjaus-muutos {:kuvaus "Kuvaus"}}
-                                           {:liikenteenohjaus-muutos {:kuvaus "k"}}]
-              :onnettomuudet [{:onnettomuus {:kuvaus "Kuvaus"}}]
-              :palautteet [{:palaute {:kuvaus "Kuvaus"}}]
-              :tilaajan-yhteydenotot [{:tilaajan-yhteydenotto {:kuvaus "Kuvaus"}}]
-              :muut-kirjaukset {:kuvaus "Kuvaus"}}
+                                                {:liikenteenohjaus-muutos {:kuvaus "k"}}]
+                   :onnettomuudet [{:onnettomuus {:kuvaus "Kuvaus"}}]
+                   :palautteet [{:palaute {:kuvaus "Kuvaus"}}]
+                   :tilaajan-yhteydenotot [{:tilaajan-yhteydenotto {:kuvaus "Kuvaus"}}]
+                   :muut-kirjaukset {:kuvaus "Kuvaus"}}
         saatiedot [{:saatieto {:havaintoaika "2016-01-30T12:00:00+02:00",
                                :aseman-tunniste "101500",
                                :aseman-tietojen-paivityshetki "2016-01-30T12:00:00+02:00",
@@ -581,9 +581,9 @@
         _ (println "typa: " (pr-str typa))
         vastaus (try+
                   (api-tyomaapaivakirja/validoi-tyomaapaivakirja (:db jarjestelma) typa)
-          (catch [:type tyokalut-virheet/+invalidi-json+] {:keys [virheet]}
+                  (catch [:type tyokalut-virheet/+invalidi-json+] {:keys [virheet]}
 
-            virheet))]
+                    virheet))]
 
     (is (= (:viesti (first vastaus))
-          "Ilman lämpötila täytyy olla väliltä -80 - 80. Oli nyt -100. Tien lämpötila täytyy olla väliltä -80 - 80. Oli nyt 100. Keskituuli täytyy olla väliltä 0 - 150. Oli nyt 160. Sateen olomuoto täytyy olla väliltä 0 - 150. Oli nyt 231.0. Sadesumma täytyy olla väliltä 0 - 10000. Oli nyt 599999. Tiestön muun toimenpiteen lopetusaika täytyy olla aloitusajan jälkeen. Tiestön muun toimenpiteen kuvaus on liian lyhyt. Tarkenna kuvasta. Oli nyt: e. Liikenteenohjausmuustosten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: k."))))
+           "Ilman lämpötila täytyy olla väliltä -80 - 80. Oli nyt -100. Tien lämpötila täytyy olla väliltä -80 - 80. Oli nyt 100. Keskituuli täytyy olla väliltä 0 - 150. Oli nyt 160. Sateen olomuoto täytyy olla väliltä 0 - 150. Oli nyt 231.0. Sadesumma täytyy olla väliltä 0 - 10000. Oli nyt 599999. Tiestön muun toimenpiteen lopetusaika täytyy olla aloitusajan jälkeen. Tiestön muun toimenpiteen kuvaus on liian lyhyt. Tarkenna kuvasta. Oli nyt: e. Kentän 'liikenteenohjaus-muutos' kuvausteksti pitää olla asiallisen mittainen. Saatiin: 'k'."))))
