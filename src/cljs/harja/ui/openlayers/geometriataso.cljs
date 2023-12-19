@@ -7,8 +7,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; Heatmap pisteiden asetukset 
-(def +heatmap-blur-maara+ 25)
-(def +heatmap-radius-maara+ 3)
+(def +heatmap-blur-maara+ 20)
+(def heatmap-radius-maara+ 2)
 
 (defn- luo-feature [geom]
   (try
