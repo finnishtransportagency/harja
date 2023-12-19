@@ -138,37 +138,60 @@
     virheet avustukset))
 
 (defn validoi-muut-kuvaustekstit [data virheet]
-  (let [kategoriat {:liikenteenohjaus-muutos :liikenteenohjaus-muutokset
-                    :onnettomuus :onnettomuudet
-                    :palaute :palautteet
-                    :tilaajan-yhteydenotto :tilaajan-yhteydenotot}
-        ;; Funktio joka validoi annetun kentän (:kuvaus) arvon
-        fn-validoi-kuvaus (fn [item key]
-                            (let [kuvaus (or (:kuvaus (key item)) (:kuvaus item))]
-                              (if (> 4 (count kuvaus))
-                                (format "Kentän '%s' kuvausteksti pitää olla asiallisen mittainen. Saatiin: '%s'." (name key) kuvaus)
-                                nil)))
-        ;; Funktio jolla käydään kaikki annetut kategoriat läpi ja validoidaan niiden kuvaukset
-        ;; Eli jos kategoria (avain) olemassa datassa, sen kuvaus validoidaan
-        fn-validoi-avain (fn [virheet-acc [key cat-key]]
-                           (reduce (fn [acc item]
-                                     (let [virhe (fn-validoi-kuvaus item key)]
-                                       (if virhe (conj acc virhe) acc)))
-                             virheet-acc
-                             (cat-key data)))
-        ;; Data joka tulee hieman erissä muodossa (muut kirjaukset, urakoitsijan merkinät)
-        fn-validoi-yksittainen (fn [virheet-acc avain tarkista-nil?]
-                                 (let [kentta (avain data)]
-                                   (if (or tarkista-nil? (and kentta (> (count (:kuvaus kentta)) 0)))
-                                     (if-let [virhe (fn-validoi-kuvaus kentta avain)]
-                                       (conj virheet-acc virhe)
-                                       virheet-acc)
-                                     virheet-acc)))
-        virheet-acc (reduce fn-validoi-avain virheet kategoriat)]
-    ;; Käydään vielä loput läpi, sallitaan nil arvot koska nämä tiedot eivät ole pakollisia, jos ne ovat kuitenkin olemassa ne validoidaan
-    (-> virheet-acc
-      (fn-validoi-yksittainen :muut-kirjaukset false)
-      (fn-validoi-yksittainen :urakoitsijan-merkinnat false))))
+  (let [;; liikenteenohjaus-muutokset
+        virheet (reduce (fn [virheet a]
+                          (let [ohjaus (:liikenteenohjaus-muutos a)
+                                ;; Kuvaus pitää olla järkevän mittainen
+                                virheet (if (> 4 (count (:kuvaus ohjaus)))
+                                          (conj virheet (format "Liikenteenohjausmuustosten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus ohjaus)))
+                                          virheet)]
+                            virheet))
+                  virheet (:liikenteenohjaus-muutokset data))
+
+        ;; onnettomuudet
+        virheet (reduce (fn [virheet a]
+                          (let [onnettomuus (:onnettomuus a)
+                                ;; Kuvaus pitää olla järkevän mittainen
+                                virheet (if (> 4 (count (:kuvaus onnettomuus)))
+                                          (conj virheet (format "Onnettomuuden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus onnettomuus)))
+                                          virheet)]
+                            virheet))
+                  virheet (:onnettomuudet data))
+        ;; palautteet
+        virheet (reduce (fn [virheet a]
+                          (let [palaute (:palaute a)
+                                ;; Kuvaus pitää olla järkevän mittainen
+                                virheet (if (> 4 (count (:kuvaus palaute)))
+                                          (conj virheet (format "Palautteiden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus palaute)))
+                                          virheet)]
+                            virheet))
+                  virheet (:palautteet data))
+
+        ;; tilaajan-yhteydenotot
+        virheet (reduce (fn [virheet a]
+                          (let [yhteydenotto (:tilaajan-yhteydenotto a)
+                                ;; Kuvaus pitää olla järkevän mittainen
+                                virheet (if (> 4 (count (:kuvaus yhteydenotto)))
+                                          (conj virheet (format "Yhteydenoton kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus yhteydenotto)))
+                                          virheet)]
+                            virheet))
+                  virheet (:tilaajan-yhteydenotot data))
+
+        ;; muut-kirjaukset & urakoitsijan-merkinnat
+        ;; Nämä eivät ole pakollisia kenttiä, joten katsotaan ensin että onko näitä edes annettu
+        virheet (if (and
+                      (some? (:muut-kirjaukset data))
+                      (> 4 (count (:kuvaus (:muut-kirjaukset data)))))
+                  (conj virheet (format "Muiden kirjausten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus (:muut-kirjaukset data))))
+                  virheet)
+        ;; urakoitsijan-merkinnat
+        virheet (if (and
+                      (some? (:urakoitsijan-merkinnat data))
+                      (> 4 (count (:kuvaus (:urakoitsijan-merkinnat data)))))
+                  (conj virheet (format "Urakoitsijan merkintöjen kuvausteksti pitää olla asiallisen mittainen. Oli nyt: %s." (:kuvaus (:urakoitsijan-merkinnat data))))
+                  virheet)]
+    virheet))
+
 
 (defn validoi-tyomaapaivakirja [db data]
   (let [virheet (->> []
