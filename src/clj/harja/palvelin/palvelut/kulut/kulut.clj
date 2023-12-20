@@ -276,8 +276,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (varmista-erapaiva-on-koontilaskun-kuukauden-sisalla db koontilaskun-kuukausi erapaiva urakka-id)
   (jdbc/with-db-transaction [db db]
-    (let [_ (println "luo-tai-paivita-kulukohdistukset :: tiedot" tiedot)
-          vanha-erapaiva (when id (:erapaiva (first (q/hae-kulu db {:id id}))))
+    (let [vanha-erapaiva (when id (:erapaiva (first (q/hae-kulu db {:id id}))))
           saako-tallentaa (tarkista-saako-kulua-tallentaa db urakka-id erapaiva vanha-erapaiva)
           _ (when (not saako-tallentaa)
               (throw (IllegalArgumentException.

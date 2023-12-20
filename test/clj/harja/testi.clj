@@ -1802,7 +1802,6 @@
 
 (defn poista-kulut-aikavalilta [urakka-id hk_alkupvm hk_loppupvm]
   (let [kulut (flatten (q (format "SELECT id FROM kulu k WHERE k.urakka = %s and k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE;" urakka-id hk_alkupvm hk_loppupvm)))
-        _ (println "kulut: " kulut)
         _ (when-not (empty? kulut) (u (format "DELETE FROM kulu_kohdistus WHERE kulu IN (%s)" (str/join "," kulut))))
         _ (when-not (empty? kulut) (u (format "DELETE FROM kulu_liite WHERE kulu IN (%s)" (str/join "," kulut))))
         _ (when-not (empty? kulut) (u (format "delete from kulu k where k.urakka = %s and k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE; " urakka-id hk_alkupvm hk_loppupvm)))]))
