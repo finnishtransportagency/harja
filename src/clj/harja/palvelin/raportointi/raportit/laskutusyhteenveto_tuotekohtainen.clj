@@ -1,6 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen
   "Tuotekohtainen laskutusyhteenveto MHU-urakoissa"
-  (:require [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
+  (:require [clojure.string :as str]
+            [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
@@ -247,14 +248,24 @@
         tavoite (koosta-tavoite tiedot urakka-tavoite)
         koostettu-yhteenveto (conj [] yhteenveto tavoite)
 
-        sheet-nimi "Työmaakokous"
-        otsikot ["Talvihoito"
-                 "Liikenneympäristön hoito"
-                 "Soratien hoito"
-                 "Päällyste"
-                 "MHU Ylläpito"
-                 "MHU ja HJU hoidon johto"
-                 "MHU Korvausinvestointi"]]
+        sheet-nimi "Tuotekohtainen"
+        otsikot [["Talvihoito" "alvi"]
+                 ["Liikenneympäristön hoito" "ympä"]
+                 ["Soratien hoito" "sora"]
+                 ["Päällyste" "pääl"]
+                 ["MHU Ylläpito" "yllä"]
+                 ["MHU ja HJU hoidon johto" "johto"]
+                 ["MHU Korvausinvestointi" "korv"]]
+
+        ;; Etsitään otsikon indeksi Toimenpideinstanssin nimen osan peruteella
+        etsi-indeksi (fn [otsikon-osa rivit]
+                       (let [indeksi (some #(when-not (nil? %) %)
+                                       (map-indexed
+                                         (fn [i rivi]
+                                           (when (str/includes? (str/lower-case (:nimi rivi)) otsikon-osa)
+                                             i))
+                                         rivit))]
+                         indeksi))]
 
     [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")
                 :otsikon-koko :iso}
@@ -266,14 +277,14 @@
                                                    :hoitokausi (pvm/paivamaaran-hoitokausi alkupvm)}))
      ;; Data on vectorina järjestyksessä, käytetään 'otsikot' indeksiä oikean datan näyttämiseen  
      (concat (for [x otsikot]
-               (let [tiedot-indeksi (.indexOf otsikot x)
+               (let [tiedot-indeksi (etsi-indeksi (second x) (first laskutusyhteenvedot))
                      data (try
                             (nth (first laskutusyhteenvedot) tiedot-indeksi)
                             (catch Throwable t
                               (log/error "Tuotekohtaisen laskutusyhteenvedon tietoja ei löytynyt.")
                               nil))]
                  (taulukko {:data data
-                            :otsikko x
+                            :otsikko (first x)
                             :sheet-nimi (when (= (.indexOf otsikot x) 0) sheet-nimi)
                             :laskutettu-teksti laskutettu-teksti
                             :laskutetaan-teksti laskutetaan-teksti
