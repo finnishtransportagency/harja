@@ -60,7 +60,7 @@ jobs:
 
       # Uploadaa build-artifact. Deploy-workflow lataa sen myöhemmässä vaiheessa.
       - name: Upload uberjar as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: harja-uberjar
           path: ./target/harja-0.0.1-SNAPSHOT-standalone.jar
