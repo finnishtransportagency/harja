@@ -308,7 +308,7 @@ SELECT 0                          AS budjetoitu_summa,
                THEN 'Hoitokauden päättäminen'
            END                   AS toimenpideryhma,
        CASE
-           WHEN lk.tehtavaryhma IS NULL AND lk.tehtava IS NULL AND lk.maksueratyyppi::TEXT = 'lisatyo' THEN tk.nimi
+           WHEN lk.tehtavaryhma IS NULL AND lk.maksueratyyppi::TEXT = 'lisatyo' THEN tk.nimi
            ELSE tr.nimi
            END                   AS tehtava_nimi,
        CASE
