@@ -43,7 +43,7 @@
                        (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                        [:http-palvelin :db :integraatioloki :itmf])
     :labyrintti (component/using
-                  (labyrintti/->Labyrintti "foo" "testi" "testi" (atom #{}))
+                  (labyrintti/->Labyrintti "foo" "testi" "testi" "" "" (atom #{}))
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (luo-tloik-komponentti)
