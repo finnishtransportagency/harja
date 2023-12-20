@@ -91,7 +91,7 @@
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
           AND tr.nimi = 'Erillishankinnat (W)'
-          AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+          AND (tk.koodi = '23151')
         UNION ALL
         SELECT
         coalesce(sum(t.summa_indeksikorjattu), 0) AS toteutunut_summa,
@@ -141,7 +141,7 @@
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
           AND tr.nimi = 'Hoidonjohtopalkkio (G)'
-          AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+          AND (tk.koodi = '23151')
         UNION ALL
         SELECT
           coalesce(sum(t.summa_indeksikorjattu), 0) AS toteutunut_summa,
@@ -198,8 +198,8 @@
           AND lk.kulu = l.id
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
-          AND (tr.nimi = 'Johto- ja hallintokorvaus (J)' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
-          AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+          AND (tr.nimi = 'Johto- ja hallintokorvaus (J)')
+          AND (tk.koodi = '23151')
         UNION ALL
         SELECT
         coalesce(sum(t.summa_indeksikorjattu), 0) AS toteutunut_summa,
