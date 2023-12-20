@@ -138,7 +138,6 @@ SELECT k.id                   as "id",
        kk.summa               as "summa",
        kk.toimenpideinstanssi as "toimenpideinstanssi",
        kk.tehtavaryhma        as "tehtavaryhma",
-       kk.tehtava             as "tehtava",
        kk.suoritus_alku       as "suoritus-alku",
        kk.suoritus_loppu      as "suoritus-loppu",
        kk.lisatyon_lisatieto  as "lisatyon-lisatieto",
@@ -181,7 +180,6 @@ where k.id = :id
 SELECT kk.id                  as "kohdistus-id",
        kk.rivi                as "rivi",
        kk.summa               as "summa",
-       kk.tehtava             as "tehtava",
        kk.tehtavaryhma        as "tehtavaryhma",
        kk.toimenpideinstanssi as "toimenpideinstanssi",
        kk.suoritus_alku       as "suoritus-alku",
@@ -280,3 +278,6 @@ FROM toimenpideinstanssi tpi
 WHERE tpi.urakka = :urakka
   AND tp2.koodi = '23150'
 limit 1;
+
+-- name: tarkista-kohdistuksen-yhteensopivuus
+select * from tarkista_t_tr_ti_yhteensopivuus(:tehtava-id::INTEGER, :tehtavaryhma-id::INTEGER, :toimenpideinstanssi-id::INTEGER);
