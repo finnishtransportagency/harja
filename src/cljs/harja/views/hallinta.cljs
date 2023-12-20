@@ -20,7 +20,7 @@
             [harja.views.hallinta.tyomaapaivakirjatyokalu-nakyma :as paivakirjatyokalu-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
             [harja.views.hallinta.palauteluokitukset :as pl]
-            [harja.views.hallinta.sahkopostitestaus-nakyma :as email-nakyma]
+            [harja.views.hallinta.viestitestaus-nakyma :as viestinakyma]
             [harja.views.hallinta.tehtava-nakyma :as tehtava-nakyma]
             [harja.tiedot.istunto :as istunto]))
 (defn hallinta []
@@ -126,11 +126,11 @@
      ^{:key "palauteluokitukset"}
      [pl/palauteluokitukset])
 
-   "Sähköpostitestaus"
-   :sahkopostitestaus
+   "Viestitestaus"
+   :viestitestaus
    (when true
-     ^{:key "sahkopostitestaus"}
-     [email-nakyma/email-testaus])
+     ^{:key "viestitestaus"}
+     [viestinakyma/viestitestaus])
 
    "MHU Tehtäväryhmät ja tehtävät"
    :tehtavatjatehtavaryhmat

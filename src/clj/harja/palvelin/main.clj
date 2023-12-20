@@ -603,7 +603,8 @@
                {:db :db-replica
                 :http-palvelin :http-palvelin
                 :ulkoinen-sahkoposti :ulkoinen-sahkoposti
-                :api-sahkoposti :api-sahkoposti})
+                :api-sahkoposti :api-sahkoposti
+                :labyrintti :labyrintti})
 
       :vkm (component/using
              (let [{url :url} (:vkm asetukset)]
