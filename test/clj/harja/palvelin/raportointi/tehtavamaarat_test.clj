@@ -295,8 +295,9 @@
   (ffirst (q (str (format "select tehtavamaara from raportti_toteuma_maarat where urakka_id = %s and toimenpidekoodi = %s and alkanut = '%s';" urakka-id tpk-id pvm)))))
 
 
-;; VHAR-7356 vian korjaus: aiemmin materialized view raportti_toteuma_maarat virheellisesti ryhmitteli t.luotu perusteella (kantaan kirjoittamishetki),
+;; vian korjaus: aiemmin materialized view raportti_toteuma_maarat virheellisesti ryhmitteli t.luotu perusteella (kantaan kirjoittamishetki),
 ;; kun täytyy ryhmitellä t.alkanut perusteella (toteuman alkamishetki)
+;; Johti siihen, että vemtr-raportille laskettiin jotkut toteumat useamman kerran.
 (deftest tehtavamaara-raportti-ryhmittelee-toteuman-alkanut-kentan-perusteella
   (let [oulun-mhu-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         tpk-id (hae-toimenpidekoodin-id "Pysäkkikatosten puhdistus" "23104")

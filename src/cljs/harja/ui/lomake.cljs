@@ -60,7 +60,7 @@
 
 #_(defn rivi
   "Asettaa annetut skeemat vierekkäin samalle riville"
-   ;; Kommentoitu toistaiseksi pois, koska aiheuttaa joidenkin käyttöliittymäelementtien katoamisen (VHAR-5129)
+   ;; Kommentoitu toistaiseksi pois, koska aiheuttaa joidenkin käyttöliittymäelementtien katoamisen, esim. tieliikenneilmoitusten massakuittaus.
   [& skeemat]
   (let [{{::keys [rivi-optiot]} :optiot skeemat :skeemat} (s/conform ::rivi-optioilla skeemat)]
     (->Ryhma nil (merge {:rivi? true} rivi-optiot) skeemat)))

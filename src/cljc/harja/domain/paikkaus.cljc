@@ -182,7 +182,6 @@
 (s/def ::massamaara number?)
 (s/def ::pinta-ala number?)
 
-;; VHAR-1384, huom. nämä lyhenteitä
 (def paikkaustyomenetelmat-jotka-kiinnostaa-yhaa
   #{"UREM" "KTVA" "REPA" "SIPA" "SIPU"})
 

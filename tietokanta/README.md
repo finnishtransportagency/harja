@@ -18,7 +18,7 @@ sitten psql komento:
 
 ## Tietokantojen salasanat
 
-Kyselepä tiimiläisiltä. Saatat päästä eteenpäin myös tällä: HAR-4599
+Kyselepä tiimiläisiltä.
 
 ## Tietokannan lokitus paikallisessa Docker-kontissa. Tällä sisään kantakoneelle:
 > docker exec -it harjadb /bin/bash

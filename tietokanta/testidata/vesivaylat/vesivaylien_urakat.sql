@@ -47,7 +47,7 @@ VALUES
     'vesivayla-hoito',
     true, '2017-10-01'::DATE, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
     '3332,555,3331', 'vv-HAR-124');
--- Huom. Tiedoston lopussa päivitetään vesiväyläurakoiden urakkanumerot ja luodaan urakka-alueet HAR-8439.
+-- Huom. Tiedoston lopussa päivitetään vesiväyläurakoiden urakkanumerot ja luodaan urakka-alueet
 
 
 INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, tyyppi,  harjassa_luotu, luotu, luoja, sampoid)
@@ -157,7 +157,7 @@ INSERT INTO toimenpide (taso, emo, nimi)
 VALUES (3, 132, 'Rannikon muut');
 
 -- URAKKA-ALUEET
--- Päivitä olemassaolevien vesiväyläurakoiden urakka-aluetieto vastaamaan uutta toteutusta HAR-8439
+-- Päivitä olemassaolevien vesiväyläurakoiden urakka-aluetieto vastaamaan uutta toteutusta
 INSERT INTO vv_urakka_turvalaiteryhma (urakka, turvalaiteryhmat, alkupvm, loppupvm, luotu, luoja)
   (SELECT id, string_to_array(urakkanro, ','), alkupvm, loppupvm, NOW(),
           (select id from kayttaja where kayttajanimi = 'Integraatio') from urakka where tyyppi = 'vesivayla-hoito' and urakkanro is not null);

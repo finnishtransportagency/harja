@@ -210,6 +210,16 @@
              (map #(assoc % :tyyppi-kartalla :tieturvallisuusverkko)))
     (tieturvallisuusverkko/hae-urakan-tieturvallisuusverkko-kartalle db {:urakka urakka-id})))
 
+(defn hae-tarkastuspisteet-heatmapille [db user tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user)
+  (let [parametrit (assoc
+                     (tarkastusreittien-parametrit user tiedot)
+                     :maxrivimaara 501)]
+    (into [] (comp
+               (geo/muunna-pg-tulokset :sijainti)
+               (map #(assoc % :tyyppi-kartalla :heatmap)))
+      (tarkastukset/hae-urakan-tarkastukset db parametrit))))
+
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
   (vaadi-tarkastus-kuuluu-urakkaan db urakka-id tarkastus-id)
@@ -271,6 +281,10 @@
       (fn [user tiedot]
         (hae-urakan-tarkastukset db user tiedot))
 
+      :hae-tarkastuspisteet-heatmapille
+      (fn [user tiedot]
+        (hae-tarkastuspisteet-heatmapille db user tiedot))
+
       :tallenna-tarkastus
       (fn [user {:keys [urakka-id tarkastus]}]
         (tallenna-tarkastus db user urakka-id tarkastus))
@@ -302,11 +316,12 @@
 
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
-                     :hae-urakan-tarkastukset
-                     :tallenna-tarkastus
-                     :hae-tarkastus
-                     :lisaa-tarkastukselle-laatupoikkeama
-                     :hae-tarkastusajon-reittipisteet
-                     :hae-urakan-tieturvallisuusverkko
-                     :hae-tarkastamattomat-tiet)
+      :hae-urakan-tarkastukset
+      :tallenna-tarkastus
+      :hae-tarkastus
+      :lisaa-tarkastukselle-laatupoikkeama
+      :hae-tarkastusajon-reittipisteet
+      :hae-urakan-tieturvallisuusverkko
+      :hae-tarkastamattomat-tiet
+      :hae-tarkastuspisteet-heatmapille)
     this))

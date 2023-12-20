@@ -35,7 +35,7 @@
           (let [;; Asiakkaalta saatu lupa olettaa, että paikkaukset kohdistuvat yhdelle tielle joka on sama kuin paikkauskohteella
                 tie (or (:harja.domain.tierekisteri/tie kohde)
                         (:harja.domain.tierekisteri/tie (first (::paikkaus/paikkaukset kohde))))
-                ;; VHAR-7783 Korjataan paikkauksen pituuden laskenta
+                ;; Paikkauksen pituuden laskenta epäonnistui, jos paikkauksen tien osa ei ole tilatun paikkauskohteen sisällä.
                 ;; huomioitava että alkuosa ja loppuosa voivat tulla myös toisin päin, eli haetaan absoluuttisesti
                 ;; pienin ja suurin tien osa
                 tien-osat (apply concat

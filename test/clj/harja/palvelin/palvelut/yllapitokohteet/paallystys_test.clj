@@ -1226,7 +1226,7 @@
            (clojure.set/project alustarivit-jalkeen [:pot2a_id :tr-numero])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
-;; VHAR-5750 Liian herkästi muun kohteen päällekkäisyys vaikka ei ollut
+;; Jossain tilanteessa heitettiin virhe Liian herkästi muun kohteen päällekkäisyydestä vaikka ei ollut
 (deftest tallenna-pot2-jossa-on-alikohde-muulla-tiella-validointi-ottaa-tie-huomioon.
   (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)

@@ -285,7 +285,7 @@
                                   urakan-loppuvuosi (-> loppupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
                                   vertailu-kk-mhu (fn [urakan-akuvuosi]
                                                     (cond
-                                                      ;; 2023 ja jälkeen alkavilla urakoilla käytetään indeksin tarkastelukuukautena elokuuta (VHAR-6948)
+                                                      ;; 2023 ja jälkeen alkavilla urakoilla käytetään indeksin tarkastelukuukautena elokuuta
                                                       (>= urakan-akuvuosi 2023) 8
                                                       ;; Muihin aikoihin alkavilla urakoilla käytetään tarkastelukuukautena syyskuuta
                                                       :else 9))
@@ -309,9 +309,9 @@
                                 (vec indeksiluvut-urakan-aikana)
                                 (mapv (fn [index]
                                         (if (empty? indeksiluvut-urakan-aikana)
-                                          ;; VHAR-5334: Palautetaan nil indeksikertoimeksi urakoille, jotka eivät ole vielä alkaneet.
+                                          ;;Palautetaan nil indeksikertoimeksi urakoille, jotka eivät ole vielä alkaneet.
                                           nil
-                                          ;; VHAR-5334: Palautetaan indeksit vain hoitovuosille, joilla on indeksejä.
+                                          ;; Palautetaan indeksit vain hoitovuosille, joilla on indeksejä.
                                           ;; Lopuille hoitovuosille nil.
                                           (nth indeksiluvut-urakan-aikana index nil)))
                                       (range 0 5))))))

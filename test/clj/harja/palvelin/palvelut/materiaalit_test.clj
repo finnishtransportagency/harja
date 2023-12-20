@@ -73,7 +73,7 @@
                     (= (:id (:materiaali %)) 5))
               vastaus))))
 
-;; VHAR-5571 aiheutti unique constraint poikkeuksen ennen korjausta
+;; Hoitokausi tuli eri muodossa tietokannassa ja käliltä, mikä aiheutti unique constraint poikkeuksen ennen korjausta
 (deftest tallenna-suunniteltu-materiaali-tulevillekin-hoitokausille
   (let [urakka-id @oulun-alueurakan-2014-2019-id
         sopimus-id @oulun-alueurakan-2014-2019-paasopimuksen-id

@@ -45,14 +45,12 @@
 
 
 
-;; HAR-4035 bugin verifiointi
 (deftest kuukauden-indeksikorotuksen-laskenta
   (let [korotus
         (ffirst (q (str "SELECT korotus from laske_kuukauden_indeksikorotus
  (2016, 10, 'MAKU 2005', 387800, 135.4, false);")))]
     (is (=marginaalissa? korotus 1145.64))))
 
-;; VHAR-6948
 (deftest kuukauden-indeksikorotuksen-laskenta-urakalle
   ;; Testataan, että tuleeko eri korotukset, jos urakan alkuvuosi muuttuu. Pidetään muut parametrit samoina.
   (testing "Ennen 2023 alkaneet urakat (käytetään vertailukuukautena syyskuuta)"
@@ -75,7 +73,6 @@
           korotettu (ffirst (q (str "SELECT * FROM indeksikorjaa(1, 2023, 9, " urakka-id ")")))
           testidata-korotettu (ffirst (q (str "SELECT * FROM testidata_indeksikorjaa(1, 2023, 9, " urakka-id ")")))]
       (is (= 1.352M korotettu testidata-korotettu))))
-  ;; VHAR-6948
   (testing "2023 ja sen jälkeen alkaneet urakat (käytetään vertailukuukautena elokuuta)"
     (let [urakka-id (hae-raahen-maanteiden-hoitourakan-2023-2028-id)
           korotettu (ffirst (q (str "SELECT * FROM indeksikorjaa(1, 2023, 9, " urakka-id ")")))

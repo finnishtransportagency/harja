@@ -212,14 +212,14 @@
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 1} :verkon-sijainti)
                   ["1"]))
-           ;; VHAR-4691 Jos alusta tp on verkko, ei saa olla massamenekkiä eikä käsittelypaksuutta
+           ;; Jos alusta tp on verkko, ei saa olla massamenekkiä eikä käsittelypaksuutta
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 1} :kasittelypaksuus)
                   nil))
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 1} :massamenekki)
                   nil))
-           ;; HAR-4692 Jos alusta tp on AB, on lähetettävä kg/m2 tieto eli massamenekki
+           ;; Jos alusta tp on AB, on lähetettävä kg/m2 tieto eli massamenekki
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 2} :massamenekki)
                   ["34.00"]))

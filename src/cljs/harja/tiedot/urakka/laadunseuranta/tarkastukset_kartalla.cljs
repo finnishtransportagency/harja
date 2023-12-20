@@ -25,6 +25,12 @@
                                                        (= :tieturvallisuus @tarkastukset/tarkastustyyppi)
                                                        (= :ei-kayty @tarkastukset/valittu-karttataso))))
 
+(defonce karttataso-tieturvallisuus-heatmap (reaction
+                                              (and
+                                                @tarkastukset/nakymassa?
+                                                (= :tieturvallisuus @tarkastukset/tarkastustyyppi)
+                                                (= :kayntimaarat @tarkastukset/valittu-karttataso))))
+
 (defn- luo-tarkastusreitit-kuvataso [taso-paalla? urakkatyyppi parametrit]
   (when taso-paalla?
     (openlayers/luo-kuvataso
@@ -60,6 +66,21 @@
                 {:urakka-id urakka
                  :alkupvm alkupvm
                  :loppupvm loppupvm})))))))
+
+(defonce tieturvallisuus-heatmap-kartalla
+  (reaction<!
+    [paalla? @karttataso-tieturvallisuus-heatmap
+     urakka @nav/valittu-urakka-id
+     [alkupvm loppupvm] (tarkastukset/naytettava-aikavali
+                          @tiedot-urakka/valittu-urakka-kaynnissa?
+                          @tiedot-urakka/valittu-hoitokausi
+                          @tiedot-urakka/valittu-hoitokauden-kuukausi
+                          @tarkastukset/valittu-aikavali)]
+    (when (and paalla? urakka)
+      (go
+        (esitettavat-asiat/kartalla-esitettavaan-muotoon
+          (<! (k/post! :hae-tarkastuspisteet-heatmapille
+                (tarkastukset/kasaa-heatmap-parametrit urakka alkupvm loppupvm))))))))
 
 (def tarkastusreitit-kartalla
   (reaction
