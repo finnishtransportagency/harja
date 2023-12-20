@@ -316,7 +316,7 @@
 
       (doseq [kohdistusrivi kohdistukset]
         (let [;; Tarkistetaan kohdistusrivi
-              yhteensopiva? (::tarkista_t_tr_ti_yhteensopivuus
+              yhteensopiva? (:tarkista_t_tr_ti_yhteensopivuus
                               (first (q/tarkista-kohdistuksen-yhteensopivuus db
                                        {:tehtava-id nil
                                         :tehtavaryhma-id (:tehtavaryhma kohdistusrivi)
