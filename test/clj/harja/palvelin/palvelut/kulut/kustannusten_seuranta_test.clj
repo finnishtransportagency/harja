@@ -81,7 +81,6 @@
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
         FROM kulu_kohdistus lk
-                 LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
                  JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
              toimenpide tk,
@@ -132,7 +131,6 @@
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
         FROM kulu_kohdistus lk
-                 LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
                  JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
              toimenpide tk,
@@ -191,8 +189,7 @@
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
         FROM kulu_kohdistus lk
-                 LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
-                 JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
+             JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
              toimenpide tk,
              kulu l
@@ -293,8 +290,7 @@ UNION ALL
            WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
        END                 AS toimenpide
        FROM kulu_kohdistus lk
-             LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
-             LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
+            JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
             toimenpideinstanssi tpi,
            toimenpide tk,
            kulu l
@@ -326,7 +322,6 @@ UNION ALL
                  WHEN tk.koodi = '23151' THEN 'MHU Hoidonjohto'
              END                 AS toimenpide
         FROM kulu_kohdistus lk
-                 LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
                  LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
              toimenpide tk,
