@@ -109,29 +109,30 @@
         (not kehitysmoodi?)
         (some? vastaanottajat))
       (try
-        (doseq [henkilo vastaanottajat]
-          (let [{sahkoposti :sahkoposti} henkilo
-                viestin-otsikko "Työmaapäiväkirjassa uusi kommentti"
-                harja-url "https://extranet.vayla.fi/harja/" ;; http://localhost:3000/
-                viestin-vartalo (html
-                                  [:div
-                                   (html-tyokalut/tietoja [[(format "Urakassa %s on uusi kommentti koskien %s työmaapäiväkirjaa. Voit käydä lukemassa kommentin tästä linkistä."
-                                                              (pr-str urakka-nimi)
-                                                              (pr-str tyomaapaivakirjan-paivamaara))]
+        (do
+          (doseq [henkilo vastaanottajat]
+            (let [{sahkoposti :sahkoposti} henkilo
+                  viestin-otsikko "Työmaapäiväkirjassa uusi kommentti"
+                  harja-url "https://extranet.vayla.fi/harja/" ;; http://localhost:3000/
+                  viestin-vartalo (html
+                                    [:div
+                                     (html-tyokalut/tietoja [[(format "Urakassa %s on uusi kommentti koskien %s työmaapäiväkirjaa. Voit käydä lukemassa kommentin tästä linkistä."
+                                                                (pr-str urakka-nimi)
+                                                                (pr-str tyomaapaivakirjan-paivamaara))]
 
-                                                           [(format "%s#urakat/tyomaapaivakirja?&hy=%s&u=%s"
-                                                              harja-url
-                                                              (pr-str hallintayksikko-id)
-                                                              (pr-str urakka-id))]])
-                                   [:p "Tämä on automaattisesti luotu viesti HARJA-järjestelmästä. Älä vastaa tähän viestiin."]])]
-            (sahkoposti/laheta-viesti!
-              api-sahkoposti
-              (sahkoposti/vastausosoite api-sahkoposti)
-              sahkoposti
-              (str "Harja: " viestin-otsikko)
-              viestin-vartalo
-              {})
-            (log/debug "Työmaapäiväkirjan urakanvalvojan kommentin sähköposti ilmoitus lähtetty kaikille urakan vastuuhenkilöille.")))
+                                                             [(format "%s#urakat/tyomaapaivakirja?&hy=%s&u=%s"
+                                                                harja-url
+                                                                (pr-str hallintayksikko-id)
+                                                                (pr-str urakka-id))]])
+                                     [:p "Tämä on automaattisesti luotu viesti HARJA-järjestelmästä. Älä vastaa tähän viestiin."]])]
+              (sahkoposti/laheta-viesti!
+                api-sahkoposti
+                (sahkoposti/vastausosoite api-sahkoposti)
+                sahkoposti
+                (str "Harja: " viestin-otsikko)
+                viestin-vartalo
+                {})))
+          (log/debug "Työmaapäiväkirjan urakanvalvojan kommentin sähköposti ilmoitus lähtetty kaikille urakan vastuuhenkilöille."))
 
         (catch Exception e
           (log/error (str
@@ -141,7 +142,7 @@
                        "sampo-id: " sampo-id
                        "urakanvalvoja?: " urakanvalvoja?
                        "vastaanottajat:" (map :sahkoposti vastaanottajat)))))
-      (log/log "Työmaapäiväkirja - Sähköpostia ei lähetetä, saatiin parametrit: "
+      (log/debug "Työmaapäiväkirja - Sähköpostia ei lähetetä, saatiin parametrit: "
         (str (format "sampo-id %s onnistui? %s urakanvalvoja? %s kehitysmoodi? %s vastaanottajat löytyi? %s"
                sampo-id onnistui? urakanvalvoja? kehitysmoodi? (some? vastaanottajat))))))
   (hae-kommentit db tiedot))
