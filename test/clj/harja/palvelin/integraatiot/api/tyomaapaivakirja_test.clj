@@ -301,52 +301,105 @@
     (is (= "puutteelliset-parametrit") (get-in vastaus-body [:virheet 0 :virhe :koodi]))))
 
 (deftest validoi-typa-arvot-saa
-  (let [saatiedot [{:saatieto {:havaintoaika "2016-01-30T12:00:00+02:00",
-                               :aseman-tunniste "101500",
-                               :aseman-tietojen-paivityshetki "2016-01-30T12:00:00+02:00",
-                               :ilman-lampotila 10,
-                               :tien-lampotila 10,
-                               :keskituuli 16,
-                               :sateen-olomuoto 23.0,
-                               :sadesumma 5}}]]
+  (let [saatiedot {:tyomaapaivakirja
+                   {:saatiedot
+                    [{:saatieto {:havaintoaika "2016-01-30T12:00:00+02:00",
+                                 :aseman-tunniste "101500",
+                                 :aseman-tietojen-paivityshetki "2016-01-30T12:00:00+02:00",
+                                 :ilman-lampotila 10,
+                                 :tien-lampotila 10,
+                                 :keskituuli 16,
+                                 :sateen-olomuoto 23.0,
+                                 :sadesumma 5}}]}}]
 
-    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :ilman-lampotila] 81.1) [])
-          ["Ilman lämpötila täytyy olla väliltä -80 - 80. Oli nyt 81.1."]))
-    (is (thrown? Exception (api-tyomaapaivakirja/validoi-tyomaapaivakirja (:db jarjestelma) (assoc-in saatiedot [0 :saatieto :ilman-lampotila] 81.1)))
+    ;; Ilman lämpötila 
+    (is (thrown? Exception
+          (api-tyomaapaivakirja/validoi-tyomaapaivakirja (:db jarjestelma)
+            (assoc-in saatiedot [:tyomaapaivakirja :saatiedot 0 :saatieto :ilman-lampotila] 81.1)))
       "Poikkeus heitetään, kun ilman lämpötila on väärä tai uupuu")
-    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :ilman-lampotila] -81.1) [])
-          ["Ilman lämpötila täytyy olla väliltä -80 - 80. Oli nyt -81.1."]))
-    (is (empty? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :ilman-lampotila] 79.1) []))
+
+    (is (= (api-tyomaapaivakirja/validoi-saa
+             (-> saatiedot (assoc-in [:tyomaapaivakirja :saatiedot 0 :saatieto :ilman-lampotila] 81.1) (get-in [:tyomaapaivakirja :saatiedot]))
+             [])
+           ["Ilman lämpötila täytyy olla väliltä -80 - 80. Oli nyt 81.1."]))
+
+    (is (= (api-tyomaapaivakirja/validoi-saa
+             (-> saatiedot (assoc-in [:tyomaapaivakirja :saatiedot 0 :saatieto :ilman-lampotila] -81.1) (get-in [:tyomaapaivakirja :saatiedot]))
+             [])
+           ["Ilman lämpötila täytyy olla väliltä -80 - 80. Oli nyt -81.1."]))
+
+    (is (empty? (api-tyomaapaivakirja/validoi-saa
+                  (-> saatiedot (assoc-in [:tyomaapaivakirja :saatiedot 0 :saatieto :ilman-lampotila] 79.1) (get-in [:tyomaapaivakirja :saatiedot]))
+                  []))
       "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
 
-    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :tien-lampotila] 81.1) [])
-          ["Tien lämpötila täytyy olla väliltä -80 - 80. Oli nyt 81.1."]))
-    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :tien-lampotila] -81.1) [])
-          ["Tien lämpötila täytyy olla väliltä -80 - 80. Oli nyt -81.1."]))
-    (is (empty? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :tien-lampotila] 79.1) []))
+    ;; Tien lämpötila 
+    (is (= (api-tyomaapaivakirja/validoi-saa
+             (-> saatiedot (assoc-in [:tyomaapaivakirja :saatiedot 0 :saatieto :tien-lampotila] 81.1) (get-in [:tyomaapaivakirja :saatiedot]))
+             [])
+           ["Tien lämpötila täytyy olla väliltä -80 - 80. Oli nyt 81.1."]))
+
+    (is (= (api-tyomaapaivakirja/validoi-saa
+             (-> saatiedot (assoc-in [:tyomaapaivakirja :saatiedot 0 :saatieto :tien-lampotila] -81.1) (get-in [:tyomaapaivakirja :saatiedot]))
+             [])
+           ["Tien lämpötila täytyy olla väliltä -80 - 80. Oli nyt -81.1."]))
+
+    (is (empty? (api-tyomaapaivakirja/validoi-saa
+                  (-> saatiedot (assoc-in [:tyomaapaivakirja :saatiedot 0 :saatieto :tien-lampotila] 79.1) (get-in [:tyomaapaivakirja :saatiedot]))
+                  []))
       "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
 
-    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :keskituuli] 151) [])
-          ["Keskituuli täytyy olla väliltä 0 - 150. Oli nyt 151."]))
-    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :keskituuli] -1) [])
-          ["Keskituuli täytyy olla väliltä 0 - 150. Oli nyt -1."]))
-    (is (empty? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :keskituuli] 1) []))
+    ;; Keskituuli 
+    (is (= (api-tyomaapaivakirja/validoi-saa
+             (-> saatiedot (assoc-in [:tyomaapaivakirja :saatiedot 0 :saatieto :keskituuli] 151) (get-in [:tyomaapaivakirja :saatiedot]))
+             [])
+           ["Keskituuli täytyy olla väliltä 0 - 150. Oli nyt 151."]))
+
+    (is (= (api-tyomaapaivakirja/validoi-saa
+             (-> saatiedot (assoc-in [:tyomaapaivakirja :saatiedot 0 :saatieto :keskituuli] -1) (get-in [:tyomaapaivakirja :saatiedot]))
+             [])
+           ["Keskituuli täytyy olla väliltä 0 - 150. Oli nyt -1."]))
+
+    (is (empty? (api-tyomaapaivakirja/validoi-saa
+                  (-> saatiedot (assoc-in [:tyomaapaivakirja :saatiedot 0 :saatieto :keskituuli] 1) (get-in [:tyomaapaivakirja :saatiedot]))
+                  []))
       "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
 
-    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sateen-olomuoto] -1) [])
-          ["Sateen olomuoto täytyy olla väliltä 0 - 150. Oli nyt -1."]))
-    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sateen-olomuoto] 151) [])
-          ["Sateen olomuoto täytyy olla väliltä 0 - 150. Oli nyt 151."]))
-    (is (empty? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sateen-olomuoto] 1) []))
+    ;; Sateen olomuoto 
+    (is (= (api-tyomaapaivakirja/validoi-saa
+             (-> saatiedot (assoc-in [:tyomaapaivakirja :saatiedot 0 :saatieto :sateen-olomuoto] -1) (get-in [:tyomaapaivakirja :saatiedot]))
+             [])
+           ["Sateen olomuoto täytyy olla väliltä 0 - 150. Oli nyt -1."]))
+
+    (is (= (api-tyomaapaivakirja/validoi-saa
+             (-> saatiedot (assoc-in [:tyomaapaivakirja :saatiedot 0 :saatieto :sateen-olomuoto] 151) (get-in [:tyomaapaivakirja :saatiedot]))
+             [])
+           ["Sateen olomuoto täytyy olla väliltä 0 - 150. Oli nyt 151."]))
+
+    (is (empty? (api-tyomaapaivakirja/validoi-saa
+                  (-> saatiedot (assoc-in [:tyomaapaivakirja :saatiedot 0 :saatieto :sateen-olomuoto] 1) (get-in [:tyomaapaivakirja :saatiedot]))
+                  []))
       "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
 
-    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sadesumma] -1) [])
-          ["Sadesumma täytyy olla väliltä 0 - 10000. Oli nyt -1."]))
-    (is (= (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sadesumma] 10001) [])
-          ["Sadesumma täytyy olla väliltä 0 - 10000. Oli nyt 10001."]))
-    (is (empty? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sadesumma] 1) []))
+    ;; Sadesumma
+    (is (= (api-tyomaapaivakirja/validoi-saa
+             (-> saatiedot (assoc-in [:tyomaapaivakirja :saatiedot 0 :saatieto :sadesumma] -1) (get-in [:tyomaapaivakirja :saatiedot]))
+             [])
+           ["Sadesumma täytyy olla väliltä 0 - 10000. Oli nyt -1."]))
+
+    (is (= (api-tyomaapaivakirja/validoi-saa
+             (-> saatiedot (assoc-in [:tyomaapaivakirja :saatiedot 0 :saatieto :sadesumma] 10001) (get-in [:tyomaapaivakirja :saatiedot]))
+             [])
+           ["Sadesumma täytyy olla väliltä 0 - 10000. Oli nyt 10001."]))
+
+    (is (empty? (api-tyomaapaivakirja/validoi-saa
+                  (-> saatiedot (assoc-in [:tyomaapaivakirja :saatiedot 0 :saatieto :sadesumma] 1) (get-in [:tyomaapaivakirja :saatiedot]))
+                  []))
       "Poikkeusta ei heitetä, koska arvo on oikean suuruinen.")
-    (is (empty? (api-tyomaapaivakirja/validoi-saa (assoc-in saatiedot [0 :saatieto :sadesumma] nil) []))
+
+    (is (empty? (api-tyomaapaivakirja/validoi-saa
+                  (-> saatiedot (assoc-in [:tyomaapaivakirja :saatiedot 0 :saatieto :sadesumma] nil) (get-in [:tyomaapaivakirja :saatiedot]))
+                  []))
       "Poikkeusta ei heitetä, koska arvo ei ole pakollinen")))
 
 (deftest validoi-typa-arvot-kalusto
@@ -496,49 +549,51 @@
 
     ;; liikenteenohjaus-muutokset
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:liikenteenohjaus-muutokset 0 :liikenteenohjaus-muutos :kuvaus] "nil") [])
-           ["Liikenteenohjausmuustosten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+           ["Kentän 'liikenteenohjaus-muutos' kuvausteksti pitää olla asiallisen mittainen. Saatiin: 'nil'."]))
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:liikenteenohjaus-muutokset 0 :liikenteenohjaus-muutos :kuvaus] nil) [])
-           ["Liikenteenohjausmuustosten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+           ["Kentän 'liikenteenohjaus-muutos' kuvausteksti pitää olla asiallisen mittainen. Saatiin: 'null'."]))
     (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:liikenteenohjaus-muutokset 0 :liikenteenohjaus-muutos :kuvaus] "Kuvaus on kunnossa.") []))
       "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
 
     ;; onnettomuudet
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:onnettomuudet 0 :onnettomuus :kuvaus] "nil") [])
-           ["Onnettomuuden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+           ["Kentän 'onnettomuus' kuvausteksti pitää olla asiallisen mittainen. Saatiin: 'nil'."]))
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:onnettomuudet 0 :onnettomuus :kuvaus] nil) [])
-           ["Onnettomuuden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+           ["Kentän 'onnettomuus' kuvausteksti pitää olla asiallisen mittainen. Saatiin: 'null'."]))
     (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:onnettomuudet 0 :onnettomuus :kuvaus] "Kuvaus on kunnossa.") []))
       "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
 
     ;; tilaajan-yhteydenotot
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:tilaajan-yhteydenotot 0 :tilaajan-yhteydenotto :kuvaus] "nil") [])
-           ["Yhteydenoton kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+           ["Kentän 'tilaajan-yhteydenotto' kuvausteksti pitää olla asiallisen mittainen. Saatiin: 'nil'."]))
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:tilaajan-yhteydenotot 0 :tilaajan-yhteydenotto :kuvaus] nil) [])
-           ["Yhteydenoton kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+           ["Kentän 'tilaajan-yhteydenotto' kuvausteksti pitää olla asiallisen mittainen. Saatiin: 'null'."]))
     (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:tilaajan-yhteydenotot 0 :tilaajan-yhteydenotto :kuvaus] "Kuvaus on kunnossa.") []))
       "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
 
     ;; palautteet
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:palautteet 0 :palaute :kuvaus] "nil") [])
-           ["Palautteiden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+           ["Kentän 'palaute' kuvausteksti pitää olla asiallisen mittainen. Saatiin: 'nil'."]))
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:palautteet 0 :palaute :kuvaus] nil) [])
-           ["Palautteiden kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+           ["Kentän 'palaute' kuvausteksti pitää olla asiallisen mittainen. Saatiin: 'null'."]))
     (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:palautteet 0 :palaute :kuvaus] "Kuvaus on kunnossa.") []))
       "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
 
     ;; muut-kirjaukset
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:muut-kirjaukset :kuvaus] "nil") [])
-           ["Muiden kirjausten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+           ["Kentän 'muut-kirjaukset' kuvausteksti pitää olla asiallisen mittainen. Saatiin: 'nil'."]))
+    
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:muut-kirjaukset :kuvaus] nil) [])
-           ["Muiden kirjausten kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+           ["Kentän 'muut-kirjaukset' kuvausteksti pitää olla asiallisen mittainen. Saatiin: 'null'."]))
+    
     (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:muut-kirjaukset :kuvaus] "Kuvaus on kunnossa.") []))
       "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")
 
     ;; urakoitsijan-merkinnat
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:urakoitsijan-merkinnat :kuvaus] "nil") [])
-           ["Urakoitsijan merkintöjen kuvausteksti pitää olla asiallisen mittainen. Oli nyt: nil."]))
+           ["Kentän 'urakoitsijan-merkinnat' kuvausteksti pitää olla asiallisen mittainen. Saatiin: 'nil'."]))
     (is (= (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:urakoitsijan-merkinnat :kuvaus] nil) [])
-           ["Urakoitsijan merkintöjen kuvausteksti pitää olla asiallisen mittainen. Oli nyt: null."]))
+           ["Kentän 'urakoitsijan-merkinnat' kuvausteksti pitää olla asiallisen mittainen. Saatiin: 'null'."]))
     (is (empty? (api-tyomaapaivakirja/validoi-muut-kuvaustekstit (assoc-in data [:urakoitsijan-merkinnat :kuvaus] "Kuvaus on kunnossa.") []))
       "Poikkeusta ei heitetä, koska kuvaukset on kunnossa.")))
 
@@ -555,7 +610,9 @@
                    :onnettomuudet [{:onnettomuus {:kuvaus "Kuvaus"}}]
                    :palautteet [{:palaute {:kuvaus "Kuvaus"}}]
                    :tilaajan-yhteydenotot [{:tilaajan-yhteydenotto {:kuvaus "Kuvaus"}}]
-                   :muut-kirjaukset {:kuvaus "Kuvaus"}}
+                   :muut-kirjaukset {:kuvaus "Kuvaus"}
+                   ;; Urakoitsijan merkinnöissä virhe
+                   :urakoitsijan-merkinnat {:kuvaus "K"}}
         saatiedot [{:saatieto {:havaintoaika "2016-01-30T12:00:00+02:00",
                                :aseman-tunniste "101500",
                                :aseman-tietojen-paivityshetki "2016-01-30T12:00:00+02:00",
@@ -578,12 +635,15 @@
                 :tieston-muut-toimenpiteet muut-toimenpiteet}
                kuvaukset)
         typa {:tyomaapaivakirja typa}
-        _ (println "typa: " (pr-str typa))
         vastaus (try+
                   (api-tyomaapaivakirja/validoi-tyomaapaivakirja (:db jarjestelma) typa)
                   (catch [:type tyokalut-virheet/+invalidi-json+] {:keys [virheet]}
-
                     virheet))]
 
     (is (= (:viesti (first vastaus))
-           "Ilman lämpötila täytyy olla väliltä -80 - 80. Oli nyt -100. Tien lämpötila täytyy olla väliltä -80 - 80. Oli nyt 100. Keskituuli täytyy olla väliltä 0 - 150. Oli nyt 160. Sateen olomuoto täytyy olla väliltä 0 - 150. Oli nyt 231.0. Sadesumma täytyy olla väliltä 0 - 10000. Oli nyt 599999. Tiestön muun toimenpiteen lopetusaika täytyy olla aloitusajan jälkeen. Tiestön muun toimenpiteen kuvaus on liian lyhyt. Tarkenna kuvasta. Oli nyt: e. Kentän 'liikenteenohjaus-muutos' kuvausteksti pitää olla asiallisen mittainen. Saatiin: 'k'."))))
+           (str
+             "Ilman lämpötila täytyy olla väliltä -80 - 80. Oli nyt -100. Tien lämpötila täytyy olla väliltä -80 - 80. Oli nyt 100. "
+             "Keskituuli täytyy olla väliltä 0 - 150. Oli nyt 160. Sateen olomuoto täytyy olla väliltä 0 - 150. Oli nyt 231.0. Sadesumma täytyy olla väliltä 0 - 10000. "
+             "Oli nyt 599999. Tiestön muun toimenpiteen lopetusaika täytyy olla aloitusajan jälkeen. Tiestön muun toimenpiteen kuvaus on liian lyhyt. "
+             "Tarkenna kuvasta. Oli nyt: e. Kentän 'liikenteenohjaus-muutos' kuvausteksti pitää olla asiallisen mittainen. Saatiin: 'k'. "
+             "Kentän 'urakoitsijan-merkinnat' kuvausteksti pitää olla asiallisen mittainen. Saatiin: 'K'.")))))
