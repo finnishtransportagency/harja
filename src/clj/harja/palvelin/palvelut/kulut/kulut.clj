@@ -1,7 +1,8 @@
-(ns harja.palvelin.palvelut.kulut
+(ns harja.palvelin.palvelut.kulut.kulut
   "Nimiavaruutta käytetään vain urakkatyypissä teiden-hoito (MHU)."
   (:require [com.stuartsierra.component :as component]
             [clojure.string :as str]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [taoensso.timbre :as log]
             [harja.kyselyt
              [kulut :as q]
@@ -19,7 +20,9 @@
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.raportointi.excel :as excel]
             [harja.pvm :as pvm]
-            [harja.kyselyt.konversio :as konversio]))
+            [harja.kyselyt.konversio :as konversio]
+            [clojure.java.jdbc :as jdbc])
+  (:use [slingshot.slingshot :only [throw+]]))
 
 
 (defn jarjesta-vuoden-ja-kuukauden-mukaan
@@ -269,61 +272,72 @@
   Päivittää kulun tai kohdistuksen tiedot, jos rivi on jo kannassa.
   Palauttaa tallennetut tiedot."
   [db user urakka-id {:keys [erapaiva kokonaissumma urakka tyyppi laskun-numero
-                             lisatieto koontilaskun-kuukausi id kohdistukset liitteet]}]
+                             lisatieto koontilaskun-kuukausi id kohdistukset liitteet] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (varmista-erapaiva-on-koontilaskun-kuukauden-sisalla db koontilaskun-kuukausi erapaiva urakka-id)
-  (let [vanha-erapaiva (when id (:erapaiva (first (q/hae-kulu db {:id id}))))
-        saako-tallentaa (tarkista-saako-kulua-tallentaa db urakka-id erapaiva vanha-erapaiva)
-        _ (when (not saako-tallentaa)
-            (throw (IllegalArgumentException.
-                     (str "Kulu on tai kohdistuu hoitokaudelle, jonka välikatselmus on jo pidetty. Tallentaminen ei enää onnistu!"))))
-        yhteiset-tiedot {:erapaiva              (konv/sql-date erapaiva)
-                         :kokonaissumma         kokonaissumma
-                         :urakka                urakka
-                         :tyyppi                tyyppi
-                         :numero                laskun-numero
-                         :lisatieto             lisatieto
-                         :kayttaja              (:id user)
-                         :koontilaskun-kuukausi koontilaskun-kuukausi}
-        kulu (if (nil? id)
-                (q/luo-kulu<! db yhteiset-tiedot)
-                (q/paivita-kulu<! db (assoc yhteiset-tiedot
+  (jdbc/with-db-transaction [db db]
+    (let [vanha-erapaiva (when id (:erapaiva (first (q/hae-kulu db {:id id}))))
+          saako-tallentaa (tarkista-saako-kulua-tallentaa db urakka-id erapaiva vanha-erapaiva)
+          _ (when (not saako-tallentaa)
+              (throw (IllegalArgumentException.
+                       (str "Kulu on tai kohdistuu hoitokaudelle, jonka välikatselmus on jo pidetty. Tallentaminen ei enää onnistu!"))))
+          yhteiset-tiedot {:erapaiva (konv/sql-date erapaiva)
+                           :kokonaissumma kokonaissumma
+                           :urakka urakka
+                           :tyyppi tyyppi
+                           :numero laskun-numero
+                           :lisatieto lisatieto
+                           :kayttaja (:id user)
+                           :koontilaskun-kuukausi koontilaskun-kuukausi}
+          kulu (if (nil? id)
+                 (q/luo-kulu<! db yhteiset-tiedot)
+                 (q/paivita-kulu<! db (assoc yhteiset-tiedot
                                         :id id)))
-        vanhat-kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kulu)})
-        sisaan-tulevat-kohdistus-idt (into #{} (map :kohdistus-id kohdistukset))
-        puuttuvat-kohdistukset (remove
-                                 #(sisaan-tulevat-kohdistus-idt (:kohdistus-id %))
-                                 vanhat-kohdistukset)]
-    (when-not (or (nil? liitteet)
+          vanhat-kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kulu)})
+          sisaan-tulevat-kohdistus-idt (into #{} (map :kohdistus-id kohdistukset))
+          puuttuvat-kohdistukset (remove
+                                   #(sisaan-tulevat-kohdistus-idt (:kohdistus-id %))
+                                   vanhat-kohdistukset)]
+      (when-not (or (nil? liitteet)
                   (empty? liitteet))
-      (doseq [liite liitteet]
-        (q/linkita-kulu-ja-liite<! db {:kulu-id (:id kulu)
-                                        :liite-id (:liite-id liite)
-                                        :kayttaja (:id user)})))
+        (doseq [liite liitteet]
+          (q/linkita-kulu-ja-liite<! db {:kulu-id (:id kulu)
+                                         :liite-id (:liite-id liite)
+                                         :kayttaja (:id user)})))
 
-    ;; Kannassa on kohdistuksia, joita ei lähetetty kulun päivityksen yhteydessä. Poistetaan ne.
-    (doseq [puuttuva-kohdistus puuttuvat-kohdistukset]
+      ;; Kannassa on kohdistuksia, joita ei lähetetty kulun päivityksen yhteydessä. Poistetaan ne.
+      (doseq [puuttuva-kohdistus puuttuvat-kohdistukset]
         (poista-kulun-kohdistus db user
           {:id id
            :urakka-id urakka-id
            :kohdistuksen-id (:kohdistus-id puuttuva-kohdistus)
            :kohdistus puuttuva-kohdistus}))
 
-    (doseq [kohdistusrivi kohdistukset]
-      (as-> kohdistusrivi r
-            (update r :summa big/unwrap)
-            (assoc r :kulu (:id kulu))
-            (if (true? (:poistettu r))
-              (poista-kulun-kohdistus db user {:id              id
-                                                :urakka-id          urakka-id
-                                                :kohdistuksen-id (:kohdistus-id r)
-                                                :kohdistus r})
-              (luo-tai-paivita-kulun-kohdistus db
-                                                user
-                                                urakka
-                                                (:id kulu)
-                                                r))))
-    (hae-kulu-kohdistuksineen db user {:id (:id kulu)})))
+      (doseq [kohdistusrivi kohdistukset]
+        (let [;; Tarkistetaan kohdistusrivi
+              yhteensopiva? (:tarkista_t_tr_ti_yhteensopivuus
+                              (first (q/tarkista-kohdistuksen-yhteensopivuus db
+                                       {:tehtava-id nil
+                                        :tehtavaryhma-id (:tehtavaryhma kohdistusrivi)
+                                        :toimenpideinstanssi-id (:toimenpideinstanssi kohdistusrivi)})))]
+          (if yhteensopiva?
+            (as-> kohdistusrivi r
+              (update r :summa big/unwrap)
+              (assoc r :kulu (:id kulu))
+              (if (true? (:poistettu r))
+                (poista-kulun-kohdistus db user {:id id
+                                                 :urakka-id urakka-id
+                                                 :kohdistuksen-id (:kohdistus-id r)
+                                                 :kohdistus r})
+                (luo-tai-paivita-kulun-kohdistus db
+                  user
+                  urakka
+                  (:id kulu)
+                  r)))
+            (throw+ {:type virheet/+viallinen-kutsu+
+                     :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
+                                :viesti (str "Tehtäväryhmä ja toimenpideinstanssi ristiriidassa! ")}]}))))
+      (hae-kulu-kohdistuksineen db user {:id (:id kulu)}))))
 
 (defn poista-kulu-tietokannasta
   "Merkitsee kulun sekä kaikki siihen liittyvät kohdistukset poistetuksi."

@@ -226,11 +226,12 @@
 
 (def ^{:private true
        :doc "Mahdolliset checkbox valintaryhmät nykytilanne/historia näkymissä."}
-suodatinryhmat
+  suodatinryhmat
   [["Ilmoitukset" [:ilmoitukset :tyypit]]
    ["Ylläpito" [:yllapito]]
    ["Talvihoitotyöt" [:talvi]]
    ["Kesähoitotyöt" [:kesa]]
+   ["Valaistustyöt" [:valaistus]]
    ["Laatupoikkeamat" [:laatupoikkeamat]]
    ["Tarkastukset" [:tarkastukset]]])
 

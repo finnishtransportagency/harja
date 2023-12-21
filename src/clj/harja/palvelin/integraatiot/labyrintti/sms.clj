@@ -14,29 +14,43 @@
   (laheta [this numero viesti otsikot]))
 
 (defn kasittele-vastaus [body headers]
-  (log/debug (format "Labyrintin SMS Gateway vastasi: sisältö: %s, otsikot: %s" body headers))
+  (log/debug (format "LinkMobilityn LinkSMS-palvelu (entinen Labyrintti) vastasi: sisältö: %s, otsikot: %s" body headers))
   (when (and body (.contains (string/lower-case body) "error"))
     (throw+ {:type :sms-lahetys-epaonnistui
              :error body}))
   {:sisalto body :otsikot headers})
 
-(defn laheta-sms [db integraatioloki kayttajatunnus salasana url numero viesti otsikot]
-  (if (or (empty? kayttajatunnus) (empty? salasana) (empty? url))
-    (log/warn "Käyttäjätunnusta, salasanaa tai URL Labyrintin SMS Gatewayhyn ei ole annettu. Viestiä ei voida lähettää.")
+(defn laheta-sms [db integraatioloki kayttajatunnus salasana url sms-url apiavain numero viesti otsikot]
+  (if (and (or (empty? kayttajatunnus) (empty? salasana) (empty? url))
+        (or (empty? apiavain) (empty? sms-url)))
+    (log/warn "Tunnistautumistietoja tai URLia LinkMobilityn LinkSMS-palveluun (entinen Labyrintti) ei ole annettu. Viestiä ei voida lähettää.
+    Pilviympäristössä käytössä on api-avain ja sms-url. Vanhassa ympäristössä käyttäjätunnus, salasana ja url.")
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "labyrintti" "laheta"
       (fn [konteksti]
         (let [otsikot (merge
-                        {"Content-Type" "application/x-www-form-urlencoded"}
+                        ;; TODO: #yliheitto Poista yliheiton jälkeen vaihtoehto, jossa ei lähetetä apiavainta
+                        (if (empty? apiavain)
+                          {"Content-Type" "application/x-www-form-urlencoded"}
+                          {"Content-Type" "application/x-www-form-urlencoded"
+                           "x-api-key" apiavain})
                         otsikot)
               parametrit {"dests" numero
                           "text" viesti}
-              http-asetukset {:metodi :GET
-                              :url url
-                              :kayttajatunnus kayttajatunnus
-                              :salasana salasana
-                              :otsikot otsikot
-                              :parametrit parametrit}
+              http-asetukset (if (empty? apiavain)
+                               ;; Vanha Harja-ympäristö
+                               {:metodi :GET
+                                :url url
+                                :kayttajatunnus kayttajatunnus
+                                :salasana salasana
+                                :otsikot otsikot
+                                :parametrit parametrit}
+                               ;; Pilviympäristö
+                               {:metodi :POST
+                                :url sms-url
+                                :apiavain apiavain
+                                :otsikot otsikot
+                                :parametrit parametrit})
               {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
           (kasittele-vastaus body headers))))))
 
@@ -50,7 +64,7 @@
     nil))
 
 (defn vastaanota-tekstiviesti [integraatioloki kutsu kuuntelijat]
-  (log/info (format "Vastaanotettiin tekstiviesti Labyrintin SMS Gatewaystä: %s" (assoc-in kutsu [:headers "authorization"] "*****")))
+  (log/info (format "Vastaanotettiin tekstiviesti LinkMobilityn LinkSMS-palvelusta (entinen Labyrintti) : %s" (assoc-in kutsu [:headers "authorization"] "*****")))
   (let [url (:remote-addr kutsu)
         otsikot (:headers kutsu)
         ;; Jostain syystä parametrit katoavat, jos ne ovat form-enkoodattuna. Puretaan ne käsin bodystä.
@@ -87,7 +101,7 @@
         (kasittele-epaonnistunut-viestin-kasittely integraatioloki tapahtuma-id e)
         {:status 500}))))
 
-(defrecord Labyrintti [url kayttajatunnus salasana kuuntelijat]
+(defrecord Labyrintti [url kayttajatunnus salasana sms-url apiavain kuuntelijat]
   component/Lifecycle
   (start [{http :http-palvelin integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
@@ -97,7 +111,9 @@
     (assoc this
       :url url
       :kayttajatunnus kayttajatunnus
-      :salasana salasana))
+      :salasana salasana
+      :sms-url sms-url
+      :apiavain apiavain))
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :vastaanota-tekstiviesti)
@@ -115,12 +131,14 @@
                 (:kayttajatunnus this)
                 (:salasana this)
                 (:url this)
+                (:sms-url this)
+                (:apiavain this)
                 numero
                 viesti
                 otsikot)))
 
 (defn luo-labyrintti [asetukset]
-  (->Labyrintti (:url asetukset) (:kayttajatunnus asetukset) (:salasana asetukset) (atom #{})))
+  (->Labyrintti (:url asetukset) (:kayttajatunnus asetukset) (:salasana asetukset) (:sms-url asetukset) (:apiavain asetukset) (atom #{})))
 
 (defrecord FeikkiLabyrintti []
   component/Lifecycle

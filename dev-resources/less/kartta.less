@@ -1,4 +1,6 @@
+@import "./laadunseuranta/yleiset/varit";
 @kartan-transition-kesto: .1s;
+
 #kartta {
   &.piilossa {
     border: @black-default 0 ridge;
@@ -86,6 +88,39 @@
       margin-right: auto;
     }
   }
+}
+
+.heatmap-infolaatikko {
+  padding: @valistys-12;
+}
+
+.heatmap-varipalkki {
+  width: 10px;
+  height: 120px; 
+  margin-right: @valistys-6;
+  background: linear-gradient(
+    to bottom, 
+    @punainen6, 
+    @keltainen1,
+    @keltainen2,
+    @vihrea6,
+    @sininen5,
+    @sininen6
+  );
+}
+
+.heatmap-infolaatikko {
+  display: flex;
+  align-items: center;
+  height: 140px;
+}
+
+.heatmap-selitteet {
+  display: flex;
+  flex-direction: column; 
+  justify-content: space-between; 
+  height: 100%;
+  margin-left: 10px; 
 }
 
 .kartan-ohjelaatikko {
