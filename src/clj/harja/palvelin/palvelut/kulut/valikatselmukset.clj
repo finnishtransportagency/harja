@@ -14,7 +14,7 @@
     [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
     [harja.palvelin.palvelut.toteumat :as toteumat-palvelu]
-    [harja.palvelin.palvelut.kulut :as kulut-palvelu]
+    [harja.palvelin.palvelut.kulut.kulut :as kulut-palvelu]
     [harja.palvelin.palvelut.kulut.paatos-apurit :as paatos-apurit]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
     [harja.pvm :as pvm]

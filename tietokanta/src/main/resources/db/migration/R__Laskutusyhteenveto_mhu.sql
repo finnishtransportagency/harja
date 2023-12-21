@@ -661,6 +661,7 @@ BEGIN
                           JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
                       maksuera m
                  WHERE tpi.urakka = ur AND m.toimenpideinstanssi = tpi.id
+                 ORDER BY m.numero asc
         LOOP
             RAISE NOTICE '*************************************** Laskutusyhteenvedon laskenta alkaa toimenpiteelle: % , ID % *****************************************', t.nimi, t.tpi;
 
