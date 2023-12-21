@@ -26,6 +26,24 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
  ./aws/install && \
  rm -rf awscliv2.zip aws
 
+# Lataa Prometheus Java Agent
+ENV PROMETHEUS_JAR_VERSION=0.20.0
+# https://repo.maven.apache.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar.sha1
+ENV PROMETHEUS_JAR_SHA1="7b8a98e3482cee8889698ef391b85c47a3c4ce5b"
+ENV PROMETHEUS_MAVEN_REPO_URL_BASE="https://repo.maven.apache.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent"
+RUN curl "$PROMETHEUS_MAVEN_REPO_URL_BASE/${PROMETHEUS_JAR_VERSION}/jmx_prometheus_javaagent-${PROMETHEUS_JAR_VERSION}.jar" \
+    -o "jmx_prometheus_javaagent.jar"
+
+# Validoi latauksen checksum
+RUN if [ "$PROMETHEUS_JAR_SHA1" != "$(sha1sum jmx_prometheus_javaagent.jar | awk '{print $1}')" ]; then \
+        echo "Downloaded JAR SHA1: $(sha1sum jmx_prometheus_javaagent.jar | awk '{print $1}')"; \
+        echo "Prometheus jar sha1 values doesn't match! exiting."; \
+        exit 1; \
+    fi
+
+# Kopioi Prometheus JMX exporter config
+COPY ./aws/fargate/jmx-exporter-config.yml /
+
 
 # Luo Non-root ryhmä ja käyttäjä, jotta sovellus ei pyöri roottina
 ARG USERNAME=harja
@@ -41,7 +59,10 @@ RUN mkdir -p /app && chown -R harja:harja /app
 USER $USERNAME
 WORKDIR /app
 
+# Kopioi entrypoint
 COPY ./aws/fargate/entrypoint.sh entrypoint.sh
+
+COPY ./asetukset.edn asetukset.edn
 
 # Kopioi uberjar pipelinesta
 # Tässä oleteetaan, että uberjar on jo buildattu ja se on hakemistossa "target"
@@ -53,11 +74,14 @@ COPY ./aws/fargate/.harja_env .harja_env
 
 
 # Aseta ENV muuttujat (default-arvot)
-# ENV-muuttujien varsinaiset arvot tuodaan ulkopuolelta containeriin.
+# ENV-muuttujien arvoja voidaan tuoda myös ulkopuolelta containeriin infran toimesta.
 
-ENV HARJA_JAVA_AGENT=""
+# Aseta Java agenttien asetukset
+# Erottele useampi agentti välilyönnillä:  "-javaagent:/jmx_prometheus_javaagent.jar=7071 -javaagent:/some-other.jar"
+ENV HARJA_JAVA_AGENT_OPTS="-javaagent:/jmx_prometheus_javaagent.jar=7071:/jmx-exporter-config.yml"
 
 # Käytä lisäksi -XshowSettings:all, jos haluat nähdä mitä asetuksia käytetään
+# Erotele optiot välilyönnillä: "-Xms256m -Xmx2g"
 ENV HARJA_JVM_OPTS="-Xmx6g"
 
 #ENV HARJA_LIBS=""

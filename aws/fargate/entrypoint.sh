@@ -52,17 +52,20 @@ tarkasta_riippuvuus asetukset.edn
 ## Luodaan java-optioille array, johon otetaan mukaan lisäoptioita mikäli ne on määritelty
 cmd_opts=()
 
-if [[ -n "$HARJA_JAVA_AGENT" ]]; then
-  cmd_opts+=("$HARJA_JAVA_AGENT")
+if [[ -n "$HARJA_JAVA_AGENT_OPTS" ]]; then
+  IFS=' ' read -ra java_agents_arr <<< "$HARJA_JAVA_AGENT_OPTS"
+  cmd_opts+=("${java_agents_arr[@]}")
 fi
 
 if [[ -n "$HARJA_JVM_OPTS" ]]; then
-  cmd_opts+=("$HARJA_JVM_OPTS")
+  IFS=' ' read -ra jvm_opts_arr <<< "$HARJA_JVM_OPTS"
+  cmd_opts+=("${jvm_opts_arr[@]}")
 fi
 
 cmd_opts+=("-cp" "$HARJA_LIBS":harja.jar harja.palvelin.main)
 
 ## Aja java-komento
 echo "Käynnistetään java-sovellus..."
+echo "Java CMD opts: ${cmd_opts[*]}"
 
 java "${cmd_opts[@]}"
