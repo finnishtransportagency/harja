@@ -93,6 +93,10 @@
   [lumensiirto "lumensiirto" "Lumensiirto"]
   [paannejaan-poisto "paannejaan poisto" "Paannejään poisto"]
 
+  [huoltokierros "huoltokierros" "Huoltokierros"]
+  [ryhmavaihto "ryhmavaihto" "Ryhmävaihto"]
+  [muut-valaistus-toimenpiteet "muut valaistusurakan toimenpiteet" "Muut toimenpiteet"]
+
   [varustetoteumat "varustetoteumat" "Varustetoteumat"])
 
 (def tehtavien-jarjestys
@@ -148,7 +152,10 @@
           ojitus
           reunapaalujen-uusiminen
           roskien-keruu
-          muu]})
+          muu]
+   :valaistus [ryhmavaihto
+               huoltokierros
+               muut-valaistus-toimenpiteet]})
 
 (def yllapidon-reaaliaikaseurattavat
   #{(:id paaasfalttilevitin)
