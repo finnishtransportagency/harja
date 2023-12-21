@@ -402,8 +402,8 @@
       {:tehtavat tehtavat
        :viimeisin viimeisin})))
 
-(defn- toteumien-toimenpidekoodit [db {:keys [talvi kesa]}]
-  (let [koodit (some->> (union talvi kesa)
+(defn- toteumien-toimenpidekoodit [db {:keys [talvi kesa valaistus]}]
+  (let [koodit (some->> (union talvi kesa valaistus)
                         haettavat
                         (q/hae-toimenpidekoodit db)
                         (map :id))]
