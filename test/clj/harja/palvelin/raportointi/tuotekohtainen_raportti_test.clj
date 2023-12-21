@@ -67,7 +67,10 @@
         paallyste-yhteensa (-> (nth laskutusyhteenveto 3) (nth 3) (nth 3) second second :arvo)
         ;; Vuosina 2019 tai 2022 on vain neljä riviä ylläpito sarakkeessa, koska
         mhu-yllapito-yhteensa (-> (nth laskutusyhteenveto 4) (nth 3) (nth 4) second second :arvo)
-        mhu-bonukset (-> (nth laskutusyhteenveto 6) (nth 3) (nth 3) second second :arvo)]
+        mhu-korvausinvestointi-yhteensa (-> (nth laskutusyhteenveto 6) (nth 3) (nth 3) second second :arvo)
+        mhu-korvausinvestointi-hankinnat (-> (nth laskutusyhteenveto 6) (nth 3) (nth 0) second second :arvo)
+        mhu-korvausinvestointi-lisatyot (-> (nth laskutusyhteenveto 6) (nth 3) (nth 1) second second :arvo)
+        mhu-korvausinvestointi-sanktiot (-> (nth laskutusyhteenveto 6) (nth 3) (nth 2) second second :arvo)]
 
     (is (= raportin-nimi "Laskutusyhteenveto (01.10.2019 - 30.09.2020)"))
     (is (= perusluku-teksti [:teksti "Indeksilaskennan perusluku: 110,8"]) "perusluku")
@@ -79,4 +82,7 @@
     (is (= soratiet-yhteensa 8801.94M))
     (is (= paallyste-yhteensa 11001.94M))
     (is (= mhu-yllapito-yhteensa 15401.94M))
-    (is (= mhu-bonukset 5544.254000M))))
+    (is (= mhu-korvausinvestointi-yhteensa 13201.94M))
+    (is (= mhu-korvausinvestointi-hankinnat 12000.97M))
+    (is (= mhu-korvausinvestointi-lisatyot 1200.97M))
+    (is (= mhu-korvausinvestointi-sanktiot 0.0M))))
