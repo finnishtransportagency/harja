@@ -109,18 +109,18 @@ WHERE urakka = :urakka
 -- Pois jätetyt lisätyöhön viittaavat tehtäväryhmät ovat ainoastaan toteumien kirjaamista varten.
 -- Nämä dummy-tehtäväryhmät ja niihin liitetyt tehtävät tarvitaan, koska toteumiin on pakko liittää tehtävä.
 -- Lisätöiden kulut voidaan kohdistaa ilman tehtävää ja tehtäväryhmää suoraan toimenpiteelle.
-SELECT distinct tpk3.id       as "toimenpide-id",
-                tpk3.nimi     as "toimenpide",
+SELECT distinct tp.id       as "toimenpide-id",
+                tp.nimi     as "toimenpide",
                 tr.nimi      as "tehtavaryhma-nimi",
                 tr.id        as "tehtavaryhma-id",
                 tr.jarjestys as "jarjestys",
                 tpi.id        as "toimenpideinstanssi"
 FROM tehtavaryhma tr
-       LEFT JOIN tehtava tpk4
-                 ON tr.id = tpk4.tehtavaryhma AND tpk4."mhu-tehtava?" is true AND
-                    tpk4.poistettu is not true AND tpk4.piilota is not true
-       JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
-       JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id and tpi.urakka = :urakka
+       LEFT JOIN tehtava t
+                 ON tr.id = t.tehtavaryhma AND t."mhu-tehtava?" is true AND
+                    t.poistettu is not true AND t.piilota is not true
+       JOIN toimenpide tp ON t.emo = tp.id
+       JOIN toimenpideinstanssi tpi on tpi.toimenpide = tp.id and tpi.urakka = :urakka
  WHERE tr.nimi not like ('%Lisätyöt%')
  order by tr.jarjestys;
 

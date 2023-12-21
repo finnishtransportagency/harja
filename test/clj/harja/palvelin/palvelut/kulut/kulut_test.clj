@@ -3,7 +3,7 @@
             [clojure.string :as s]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
-            [harja.palvelin.palvelut.kulut :as kulut]
+            [harja.palvelin.palvelut.kulut.kulut :as kulut]
             [harja.kyselyt.valikatselmus :as valikatselmus-kyselyt]
             [harja.domain.kulut :as tyokalut]
             [harja.pvm :as pvm]))
@@ -476,7 +476,7 @@
       (apply conj kaikki rivit))))
 
 (def odotettu-kulu-id-9
-  {:id 9, :tyyppi "laskutettava", :kokonaissumma 400.77M, :erapaiva #inst "2019-10-15T21:00:00.000-00:00", :laskun-numero nil, :koontilaskun-kuukausi "lokakuu/1-hoitovuosi", :liitteet [], :suoritus-alku #inst "2019-09-30T21:00:00.000000000-00:00", :lisatyon-lisatieto nil, :maksueratyyppi "lisatyo", :suoritus-loppu #inst "2019-10-30T22:00:00.000000000-00:00", :tehtava nil, :summa 400.77M, :kohdistus-id 12, :toimenpideinstanssi (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Soratien hoito TP'")), :tehtavaryhma 15, :lisatieto nil, :rivi 1})
+  {:id 9, :tyyppi "laskutettava", :kokonaissumma 400.77M, :erapaiva #inst "2019-10-15T21:00:00.000-00:00", :laskun-numero nil, :koontilaskun-kuukausi "lokakuu/1-hoitovuosi", :liitteet [], :suoritus-alku #inst "2019-09-30T21:00:00.000000000-00:00", :lisatyon-lisatieto nil, :maksueratyyppi "lisatyo", :suoritus-loppu #inst "2019-10-30T22:00:00.000000000-00:00", :summa 400.77M, :kohdistus-id 12, :toimenpideinstanssi (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Soratien hoito TP'")), :tehtavaryhma 15, :lisatieto nil, :rivi 1})
 
 (deftest hae-aikavalilla-kaikki-kulu-kohdistuksineent
   (testing "hae-aikavalilla-kaikki-kulu-kohdistuksineent"

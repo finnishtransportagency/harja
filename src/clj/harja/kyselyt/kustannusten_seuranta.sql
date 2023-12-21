@@ -257,7 +257,7 @@ SELECT 0                          AS budjetoitu_summa,
        MIN(lk.luotu)              AS luotu,
        MIN(l.erapaiva)::TEXT      AS ajankohta,
        'toteutunut'               AS toteutunut,
-       tk_tehtava.jarjestys       AS jarjestys,
+       tr.jarjestys       AS jarjestys,
        CASE
            WHEN lk.maksueratyyppi::TEXT = 'akillinen-hoitotyo' THEN 'rahavaraukset'
            WHEN lk.maksueratyyppi::TEXT = 'muu' THEN 'rahavaraukset' -- muu = vahinkojen-korjaukset
@@ -270,7 +270,6 @@ SELECT 0                          AS budjetoitu_summa,
            END                    AS paaryhma,
        NOW()                     AS indeksikorjaus_vahvistettu -- kuluja ei indeksivahvisteta, joten ne on aina "true"
 FROM kulu_kohdistus lk
-         LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
      toimenpideinstanssi tpi,
      toimenpide tk,
@@ -286,7 +285,7 @@ WHERE l.urakka = :urakka
   AND (tk.koodi = '23104' OR tk.koodi = '23116'
     OR tk.koodi = '23124' OR tk.koodi = '20107' OR tk.koodi = '20191' OR
        tk.koodi = '14301')
-GROUP BY tr.nimi, tk.nimi, lk.maksueratyyppi, tk.koodi, tk_tehtava.jarjestys, tr.yksiloiva_tunniste
+GROUP BY tr.nimi, tk.nimi, lk.maksueratyyppi, tk.koodi, tr.jarjestys, tr.yksiloiva_tunniste
 UNION ALL
 -- Toteutuneet erillishankinnat, hoidonjohdonpalkkio, johto- ja hallintokorvaukset
 -- ja vuoden päättämiseen liittyvät kulut lasku_kohdistus taulusta.
@@ -297,10 +296,9 @@ SELECT 0                          AS budjetoitu_summa,
        lk.maksueratyyppi::TEXT    AS maksutyyppi,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
-           WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'toimistokulut'
            WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'toimistokulut'
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
-           WHEN lk.tehtavaryhma IS NULL AND lk.tehtava IS NULL AND lk.maksueratyyppi::TEXT = 'lisatyo'
+           WHEN lk.tehtavaryhma IS NULL AND lk.maksueratyyppi::TEXT = 'lisatyo'
                THEN 'lisatyo'
            WHEN tr.yksiloiva_tunniste IN ('55c920e7-5656-4bb0-8437-1999add714a3',
                                            '19907c24-dd26-460f-9cb4-2ed974b891aa',
@@ -308,12 +306,11 @@ SELECT 0                          AS budjetoitu_summa,
                THEN 'Hoitokauden päättäminen'
            END                   AS toimenpideryhma,
        CASE
-           WHEN lk.tehtavaryhma IS NULL AND lk.tehtava IS NULL AND lk.maksueratyyppi::TEXT = 'lisatyo' THEN tk.nimi
+           WHEN lk.tehtavaryhma IS NULL AND lk.maksueratyyppi::TEXT = 'lisatyo' THEN tk.nimi
            ELSE tr.nimi
            END                   AS tehtava_nimi,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'Erillishankinnat'
-           WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'Johto- ja Hallintakorvaus'
            WHEN tr.yksiloiva_tunniste = '55c920e7-5656-4bb0-8437-1999add714a3' THEN 'Tavoitepalkkio'
            WHEN tr.yksiloiva_tunniste = '19907c24-dd26-460f-9cb4-2ed974b891aa' THEN 'Urakoitsija maksaa tavoitehinnan ylityksestä'
            WHEN tr.yksiloiva_tunniste = 'be34116b-2264-43e0-8ac8-3762b27a9557' THEN 'Urakoitsija maksaa kattohinnan ylityksestä'
@@ -322,13 +319,12 @@ SELECT 0                          AS budjetoitu_summa,
        MIN(lk.luotu)             AS luotu,
        MIN(l.erapaiva)::TEXT     AS ajankohta,
        'toteutunut'              AS toteutunut,
-       MIN(tk_tehtava.jarjestys) AS jarjestys,
+       MIN(tr.jarjestys) AS jarjestys,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
-           WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'johto-ja-hallintakorvaus'
            WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'johto-ja-hallintakorvaus'
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
-           WHEN lk.tehtavaryhma IS NULL AND lk.tehtava IS NULL AND lk.maksueratyyppi::TEXT = 'lisatyo'
+           WHEN lk.tehtavaryhma IS NULL AND lk.maksueratyyppi::TEXT = 'lisatyo'
                THEN 'johto-ja-hallintakorvaus'
            WHEN tr.yksiloiva_tunniste = '55c920e7-5656-4bb0-8437-1999add714a3' THEN 'tavoitepalkkio'
            WHEN tr.yksiloiva_tunniste = '19907c24-dd26-460f-9cb4-2ed974b891aa' THEN 'tavoitehinnan-ylitys'
@@ -336,8 +332,7 @@ SELECT 0                          AS budjetoitu_summa,
            END                   AS paaryhma,
        NOW()                     AS indeksikorjaus_vahvistettu -- kuluja ei indeksivahvisteta, joten ne on aina "true"
 FROM kulu_kohdistus lk
-         LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
-         LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
+     LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
      toimenpideinstanssi tpi,
      toimenpide tk,
      kulu l
@@ -350,7 +345,7 @@ WHERE l.urakka = :urakka
   AND tpi.toimenpide = tk.id
   -- Näillä toimenpidekoodi.koodi rajauksilla rajataan Hankintakustannukset ulos
   AND tk.koodi = '23151'
-GROUP BY tehtava_nimi, tr.nimi, tr.yksiloiva_tunniste, lk.maksueratyyppi, toimenpideryhma, toimenpide, paaryhma, tk_tehtava.yksiloiva_tunniste
+GROUP BY tehtava_nimi, tr.nimi, tr.yksiloiva_tunniste, lk.maksueratyyppi, toimenpideryhma, toimenpide, paaryhma
 UNION ALL
 -- Osa toteutuneista erillishankinnoista, hoidonjohdonpalkkioista ja johdon- hallintakorvauksesta
 -- siirretään kustannusarvoitu_tyo taulusta toteutuneet_kustannukset tauluun aina kuukauden viimeisenä päivänä.
