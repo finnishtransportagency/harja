@@ -29,6 +29,7 @@
       db integraatioloki "labyrintti" "laheta"
       (fn [konteksti]
         (let [otsikot (merge
+                        ;; TODO: #yliheitto Poista yliheiton jälkeen vaihtoehto, jossa ei lähetetä apiavainta
                         (if (empty? apiavain)
                           {"Content-Type" "application/x-www-form-urlencoded"}
                           {"Content-Type" "application/x-www-form-urlencoded"
