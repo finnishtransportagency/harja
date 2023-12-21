@@ -71,7 +71,8 @@
                                                   :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)
                                                   :versio (:versio tiedot)
                                                   :kommentti (:kommentti tiedot)
-                                                  :luoja (:id user)})
+                                                  :luoja (:id user)
+                                                  :urakoitsijan_merkinta false})
   (hae-kommentit db tiedot))
 
 (defn- poista-tyomaapaivakirjan-kommentti [db user tiedot]
