@@ -29,7 +29,10 @@
       db integraatioloki "labyrintti" "laheta"
       (fn [konteksti]
         (let [otsikot (merge
-                        {"Content-Type" "application/x-www-form-urlencoded"}
+                        (if (empty? apiavain)
+                          {"Content-Type" "application/x-www-form-urlencoded"}
+                          {"Content-Type" "application/x-www-form-urlencoded"
+                           "x-api-key" apiavain})
                         otsikot)
               parametrit {"dests" numero
                           "text" viesti}
