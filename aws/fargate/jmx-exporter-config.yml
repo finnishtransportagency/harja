@@ -1,6 +1,14 @@
-# TODO: Placeholder
-ssl: false
-lowercaseOutputName: false
-lowercaseOutputLabelNames: false
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+
+# https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/ContainerInsights-Prometheus-Sample-Workloads-javajmx.html
 rules:
+  - pattern: 'java.lang<type=OperatingSystem><>(FreePhysicalMemorySize|TotalPhysicalMemorySize|FreeSwapSpaceSize|TotalSwapSpaceSize|SystemCpuLoad|ProcessCpuLoad|OpenFileDescriptorCount|AvailableProcessors)'
+    name: java_lang_OperatingSystem_$1
+    type: GAUGE
+
+  - pattern: 'java.lang<type=Threading><>(TotalStartedThreadCount|ThreadCount)'
+    name: java_lang_threading_$1
+    type: GAUGE
+
   - pattern: ".*"
