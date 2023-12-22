@@ -86,8 +86,8 @@ ENV HARJA_JVM_OPTS="-Xmx6g"
 
 #ENV HARJA_LIBS=""
 
-# Aseta portti
-EXPOSE 3000
+# Aseta portit
+EXPOSE 3000 7071
 
 # Aseta entrypoint,
 ENTRYPOINT ["./entrypoint.sh"]
