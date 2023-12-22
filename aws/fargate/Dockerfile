@@ -62,8 +62,6 @@ WORKDIR /app
 # Kopioi entrypoint
 COPY ./aws/fargate/entrypoint.sh entrypoint.sh
 
-COPY ./asetukset.edn asetukset.edn
-
 # Kopioi uberjar pipelinesta
 # Tässä oleteetaan, että uberjar on jo buildattu ja se on hakemistossa "target"
 COPY ./target/harja-0.0.1-SNAPSHOT-standalone.jar harja.jar
