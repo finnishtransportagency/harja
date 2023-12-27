@@ -4,6 +4,7 @@
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [compojure.core :refer [POST GET]]
+            [cheshire.core :as cheshire]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma])
@@ -28,8 +29,10 @@
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "labyrintti" "laheta"
       (fn [konteksti]
+        ;; TODO: #yliheitto
+        ;; Poista yliheiton jälkeen vaihtoehto, jossa ei lähetetä apiavainta (metodi GET) ja
+        ;; parametrien lähetys urlissa eli ilman jsoniksi muuntamista
         (let [otsikot (merge
-                        ;; TODO: #yliheitto Poista yliheiton jälkeen vaihtoehto, jossa ei lähetetä apiavainta
                         (if (empty? apiavain)
                           {"Content-Type" "application/x-www-form-urlencoded"}
                           {"Content-Type" "application/x-www-form-urlencoded"
@@ -37,21 +40,22 @@
                         otsikot)
               parametrit {"dests" numero
                           "text" viesti}
+              sisalto (if (empty? apiavain)
+                        parametrit
+                        (cheshire/encode parametrit)) ;; Pilviympäristössä sisältö lähetetään bodyssä
               http-asetukset (if (empty? apiavain)
-                               ;; Vanha Harja-ympäristö
+                               ;; TODO: #yliheitto Poista yliheiton jälkeen vanhan ympäristön http-asetukset
                                {:metodi :GET
                                 :url url
                                 :kayttajatunnus kayttajatunnus
                                 :salasana salasana
                                 :otsikot otsikot
                                 :parametrit parametrit}
-                               ;; Pilviympäristö
                                {:metodi :POST
                                 :url sms-url
-                                :apiavain apiavain
-                                :otsikot otsikot
-                                :parametrit parametrit})
-              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+                                :apiavain apiavain ;; Pilviympäristössä tunnistaudutaan apiavaimella
+                                :otsikot otsikot})
+              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset sisalto)]
           (kasittele-vastaus body headers))))))
 
 (defn kasittele-epaonnistunut-viestin-kasittely [integraatioloki tapahtuma-id poikkeus]
