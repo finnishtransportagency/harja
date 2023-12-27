@@ -16,7 +16,7 @@ SELECT
     o.id               as hallintayksikko_id
 FROM
     urakka u
-        JOIN toteuma t on t.urakka = u.id AND t.poistettu = FALSE and t.urakka = 365
+        JOIN toteuma t on t.urakka = u.id AND t.poistettu = FALSE
         JOIN toteuma_tehtava tt on tt.toteuma = t.id AND tt.poistettu = FALSE
         JOIN tehtava te on tt.toimenpidekoodi = te.id
         JOIN toimenpide tp on te.emo = tp.id
