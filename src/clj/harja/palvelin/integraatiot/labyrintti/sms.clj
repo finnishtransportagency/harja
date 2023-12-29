@@ -29,9 +29,7 @@
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "labyrintti" "laheta"
       (fn [konteksti]
-        ;; TODO: #yliheitto
-        ;; Poista yliheiton jälkeen vaihtoehto, jossa ei lähetetä apiavainta (metodi GET) ja
-        ;; parametrien lähetys urlissa eli ilman jsoniksi muuntamista
+        ;; TODO: #yliheitto Poista yliheiton jälkeen vaihtoehto, jossa ei lähetetä apiavainta ja http-asetukset, joissa metodi on GET.
         (let [otsikot (merge
                         (if (empty? apiavain)
                           {"Content-Type" "application/x-www-form-urlencoded"}
@@ -40,11 +38,7 @@
                         otsikot)
               parametrit {"dests" numero
                           "text" viesti}
-              sisalto (if (empty? apiavain)
-                        parametrit
-                        (cheshire/encode parametrit)) ;; Pilviympäristössä sisältö lähetetään bodyssä
               http-asetukset (if (empty? apiavain)
-                               ;; TODO: #yliheitto Poista yliheiton jälkeen vanhan ympäristön http-asetukset
                                {:metodi :GET
                                 :url url
                                 :kayttajatunnus kayttajatunnus
@@ -53,9 +47,9 @@
                                 :parametrit parametrit}
                                {:metodi :POST
                                 :url sms-url
-                                :apiavain apiavain ;; Pilviympäristössä tunnistaudutaan apiavaimella
-                                :otsikot otsikot})
-              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset sisalto)]
+                                :otsikot otsikot
+                                :lomakedatana? true})       ;; Pilviympäristössä parametrit lähetetään avain-arvo-pareina form-parametreissä
+              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset parametrit)]
           (kasittele-vastaus body headers))))))
 
 (defn kasittele-epaonnistunut-viestin-kasittely [integraatioloki tapahtuma-id poikkeus]
