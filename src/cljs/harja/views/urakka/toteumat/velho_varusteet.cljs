@@ -36,6 +36,24 @@
     :wrapper-luokka "inline-block"
     :fmt-fn str}])
 
+(def kuntoluokat-jarjestys
+  {"Erittäin hyvä" 1
+   "Hyvä" 2
+   "Tyydyttävä" 3
+   "Huono" 4
+   "Erittäin huono" 5
+   "Ei voitu tarkastaa" 6})
+
+(defn kohdeluokka-teksti
+  "Kääntää kohdeluokan tekstiksi. Lisätään puuttuvat ääkköset, muotoillaan erikoistapausket tai
+  lisätään vain iso alkukirjain."
+  [kohdeluokka]
+  (case kohdeluokka
+    "puomit-sulkulaitteet-pollarit" "Puomit, sulkulaitteet ja pollarit"
+    "pylvaat" "Pylväät"
+    nil "Kaikki"
+    (str/capitalize kohdeluokka)))
+
 (defn suodatuslomake [_e! _app]
   (fn [e! {:keys [valinnat urakka kuntoluokat-nimikkeisto kohdeluokat-nimikkeisto varustetyyppihaku] :as app}]
     (let [alkupvm (:alkupvm urakka)
@@ -45,17 +63,20 @@
           valittu-toimenpide (:toimenpide valinnat)
           hoitovuoden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
           itse-tai-kaikki #(if % % "Kaikki")
-          multimap-fn (fn [avain] (fn [{:keys [id nimi alasveto-eritin?] :as t}]
+          multimap-fn (fn [avain] (fn [{:keys [id nimi] :as t}]
                                     {:id id
                                      :nimi (or nimi t)
                                      :valittu? (if nimi
                                                  (contains? (get valinnat avain) nimi)
-                                                 (nil? (get valinnat avain)))
-                                     :alavetos-eritin? alasveto-eritin?}))
-          kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] (map-indexed (fn [i v]
-                                                                                      {:id i
-                                                                                       :nimi v})
-                                                                         kuntoluokat-nimikkeisto)))
+                                                 (nil? (get valinnat avain)))}))
+          kuntoluokat (map (multimap-fn :kuntoluokat)
+                        (conj (into ["Kaikki"] (map-indexed (fn [i v]
+                                                              {:id i
+                                                               :nimi v})
+                                                 (conj (vec (sort-by #(kuntoluokat-jarjestys (:otsikko %))
+                                                              kuntoluokat-nimikkeisto))
+                                                   {:otsikko "Kuntoluokka puuttuu"
+                                                    :nimi :ei-kuntoluokkaa})))))
           kohdeluokat (map (multimap-fn :kohdeluokat) (into ["Kaikki"] (map-indexed (fn [i v]
                                                                                       {:id i
                                                                                        :nimi v})
@@ -119,7 +140,7 @@
          [" Kohdeluokka valittu" " Kohdeluokkaa valittu"]
          {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
           :vayla-tyyli? true
-          :fmt (comp str/capitalize itse-tai-kaikki)
+          :fmt kohdeluokka-teksti
           :valintojen-maara (count (:kohdeluokat valinnat))}]
 
         [:div {:class "col-md-2 filtteri label-ja-alasveto-grid"}
