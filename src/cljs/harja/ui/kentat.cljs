@@ -680,9 +680,9 @@
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
 (defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina? label-luokka
-                                         vayla-tyyli? disabled? iso-clickalue?]} data]
+                                         vayla-tyyli? disabled? iso-clickalue? label-id input-id]} data]
   (let [boolean-arvo? (not (or (instance? ratom/RAtom data) (instance? ratom/Wrapper data) (instance? ratom/RCursor data)))
-        input-id (str "harja-checkbox-" (gensym))
+        input-id (or input-id (str "harja-checkbox-" (gensym)))
         paivita-valitila #(when-let [node (.getElementById js/document input-id)]
                             (set! (.-indeterminate node)
                                   (= @data ::indeterminate)))]
@@ -703,14 +703,16 @@
                                      #(do
                                         (.stopPropagation %)
                                         (swap! data not)))}
-           (let [checkbox (vayla-checkbox {:data data
+           (let [checkbox [vayla-checkbox {:data data
+                                           ;; label- ja input-id on tarkoituksella jätetty toistamatta sisemmmässä funktiossa.
                                            :input-id input-id
+                                           :label-id label-id
                                            :teksti teksti
                                            :disabled? disabled?
                                            :valitse! valitse!
                                            :arvo arvo
                                            :label-luokka label-luokka
-                                           :indeterminate (= ::indeterminate data)})]
+                                           :indeterminate (= ::indeterminate data)}]]
              (if nayta-rivina?
                [:table.boolean-group
                 [:tbody

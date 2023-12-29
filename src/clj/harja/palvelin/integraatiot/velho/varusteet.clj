@@ -206,8 +206,9 @@
                                      :yleinen-kuntoluokka])
         {tyyppi :otsikko kohdeluokka :kohdeluokka} (first (q-nimikkeistot/hae-nimikkeen-tiedot db
                                                             {:tyyppi-nimi tyyppi}))
-        {kuntoluokka :otsikko} (first (q-nimikkeistot/hae-nimikkeen-tiedot db
-                                        {:tyyppi-nimi kuntoluokka}))]
+        kuntoluokka (or (:otsikko (first (q-nimikkeistot/hae-nimikkeen-tiedot db
+                                           {:tyyppi-nimi kuntoluokka})))
+                      "Kuntoluokka puuttuu")]
     {:alkupvm alkupvm
      :kuntoluokka kuntoluokka
      :lisatieto (liikennemerkin-lisatieto db varuste)
@@ -231,10 +232,10 @@
      :ulkoinen-oid (:oid varuste)}))
 
 (def loppuaika-olemassa ["tai" ["olemassa" ["yleiset/perustiedot"
-                                             "paattyen"]]
+                                            "paattyen"]]
                          ["olemassa" ["yleiset/versioitu"
-                                       "version-voimassaolo"
-                                       "loppu"]]])
+                                      "version-voimassaolo"
+                                      "loppu"]]])
 
 (defn- tee-loppuaika-parametri [operaattori]
   [operaattori
@@ -253,11 +254,10 @@
 
 (defn- tee-toimenpide-lisatty-parametri []
   ["ja"
-   ["ei" [
-           "kohdeluokka"
-           "toimenpiteet/varustetoimenpiteet"
-           ["olemassa"
-            varustetoimenpiteet-polku]]]
+   ["ei" ["kohdeluokka"
+          "toimenpiteet/varustetoimenpiteet"
+          ["olemassa"
+           varustetoimenpiteet-polku]]]
    ["tai"
     ["ei" loppuaika-olemassa]
     (tee-loppuaika-parametri "pvm-suurempi-kuin")]])
@@ -340,7 +340,7 @@
                                            aosa (assoc :osa aosa)
                                            aeta (assoc :etaisyys aeta))]))
 
-                kuntoluokat-parametri (when (seq kuntoluokat)
+                kuntoluokat-parametri (when (seq (filter #(string? %) kuntoluokat))
                                         ["kohdeluokka" "kunto-ja-vauriotiedot/yleinen-kuntoluokka"
                                          ["joukossa"
                                           ["kunto-ja-vauriotiedot/yleinen-kuntoluokka"
@@ -348,6 +348,18 @@
                                            "kunto-ja-vauriotiedot"
                                            "yleinen-kuntoluokka"]
                                           kuntoluokat]])
+
+                ei-kuntoluokkaa-parametri (when (some #(= :ei-kuntoluokkaa %) kuntoluokat)
+                                            ["kohdeluokka" "kunto-ja-vauriotiedot/yleinen-kuntoluokka"
+                                             ["ei" ["olemassa" ["kunto-ja-vauriotiedot/yleinen-kuntoluokka"
+                                                                "ominaisuudet"
+                                                                "kunto-ja-vauriotiedot"
+                                                                "yleinen-kuntoluokka"]]]])
+
+                kuntoluokat-parametri (when (or kuntoluokat-parametri ei-kuntoluokkaa-parametri)
+                                        (keep identity ["tai"
+                                                        kuntoluokat-parametri
+                                                        ei-kuntoluokkaa-parametri]))
 
                 aikavali (if hoitovuoden-kuukausi
                            (->>
