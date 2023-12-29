@@ -20,12 +20,11 @@ FROM
         JOIN toteuma_tehtava tt on tt.toteuma = t.id AND tt.poistettu = FALSE
         JOIN tehtava te on tt.toimenpidekoodi = te.id
         JOIN toimenpide tp on te.emo = tp.id
-        JOIN kayttaja k on t.luoja = k.id
         LEFT JOIN toteuma_materiaali tm on tm.toteuma = t.id AND tm.poistettu = FALSE,
     organisaatio o
 WHERE o.id = u.hallintayksikko
 -- Suodatetaan pois päöllystystehtäviin työkoneelta kirjatut toteumat, koska niissä ei ole raportoitu tehtävän mukaista yksikköä (tonni) vaan matkaa.
-  AND NOT (tp.koodi = '20107' AND te.yksikko = 'tonni' AND k.jarjestelma IS TRUE)
+  AND NOT (tp.koodi = '20107' AND te.yksikko = 'tonni' AND t.lahde = 'harja-api')
 GROUP BY t.alkanut::DATE, t.urakka, t.sopimus, t.tyyppi, tm.materiaalikoodi, tt.toimenpidekoodi, o.id;
 
 -- Lisätään muutama indeksi
