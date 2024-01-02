@@ -133,7 +133,7 @@
           :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          toimenpiteet]
         [valinnat/monivalinta-pudotusvalikko
-         "Kohdeluokka"
+         "Luokka"
          kohdeluokat
          (fn [kohdetyyppi valittu?]
            (e! (v/->ValitseKohdeluokka (:nimi kohdetyyppi) valittu?)))
@@ -152,15 +152,14 @@
            :hae-kun-yli-n-merkkia 0
            :vayla-tyyli? true
            :lomake? true
+           :disabled? (empty? (:kohdeluokat valinnat))
            :lahde varustetyyppihaku
            :monivalinta? true
            :tarkkaile-ulkopuolisia-muutoksia? true
-           :monivalinta-teksti #(do
-                                  (case (count %)
-                                    0 "Kaikki valittu"
-                                    1 (:otsikko (first %))
-
-                                    (str (count %) " varustetyyppiä valittu")))}
+           :monivalinta-teksti #(case (count %)
+                                  0 "Kaikki valittu"
+                                  1 (:otsikko (first %))
+                                  (str (count %) " varustetyyppiä valittu"))}
           v/varustetyypit]]
 
         [valinnat/monivalinta-pudotusvalikko
