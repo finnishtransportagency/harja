@@ -89,7 +89,6 @@
       {:otsikko "MAKU-pääl­lys­teet", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"}
       {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}]
      (list
-       (list "Utajärven päällystysurakka" "L14" nil "Ouluntie 2" [:boolean {:arvo nil}] 22 13 0 13 3888 0 nil nil 0M 0M 0M 0M 0M 0M)
        (list "Utajärven päällystysurakka" "L15" "A" "Puolangantie" [:boolean {:arvo true}] 837 2 0 2 1000 0 nil nil
          odotettu-sopimuksen-mukaiset-tyot odotettu-maaramuutokset
          odotettu-sideaineen-hintamuutokset odotettu-polttooljyn-hintamuutokset
@@ -144,29 +143,7 @@
 (def odotettu-aikataulu-2023
   [:aikajana
    {}
-   (list #:harja.ui.aikajana{:ajat [#:harja.ui.aikajana{:alku #inst "2023-05-15T21:00:00.000-00:00"
-                                                        :drag nil
-                                                        :kohde-nimi "Ouluntie 2"
-                                                        :loppu #inst "2023-05-23T21:00:00.000-00:00"
-                                                        :reuna "black"
-                                                        :sahkopostitiedot nil
-                                                        :teksti "Koko kohde: 16.05.2023 – 24.05.2023"}
-                                    #:harja.ui.aikajana{:alku #inst "2023-05-18T21:00:00.000-00:00"
-                                                        :drag nil
-                                                        :kohde-nimi "Ouluntie 2"
-                                                        :loppu #inst "2023-05-20T21:00:00.000-00:00"
-                                                        :sahkopostitiedot nil
-                                                        :teksti "Päällystys: 19.05.2023 – 21.05.2023"
-                                                        :vari "#282B2A"}
-                                    #:harja.ui.aikajana{:alku #inst "2023-05-21T21:00:00.000-00:00"
-                                                        :drag nil
-                                                        :kohde-nimi "Ouluntie 2"
-                                                        :loppu #inst "2023-05-22T21:00:00.000-00:00"
-                                                        :sahkopostitiedot nil
-                                                        :teksti "Tiemerkintä: 22.05.2023 – 23.05.2023"
-                                                        :vari "#DECB03"}]
-                             :otsikko "L14 - Ouluntie 2"
-                             :valitavoitteet nil}
+   (list
      #:harja.ui.aikajana{:ajat [#:harja.ui.aikajana{:alku #inst "2023-06-13T21:00:00.000-00:00"
                                                     :drag nil
                                                     :kohde-nimi "Puolangantie"
@@ -249,22 +226,7 @@
      :nimi :aikataulu-kohde-valmis
      :otsikko "Pääl­lystys­koh­de val­mis"
      :tyyppi :pvm}]
-   [["L14"
-     "Ouluntie 2"
-     "22 / 13 / 0 / 13 / 3888"
-     "1"
-     "11"
-     ""
-     "-"
-     "16.05.2023"
-     "19.05.2023"
-     "21.05.2023"
-     "21.05.2023"
-     "04.06.2023"
-     "22.05.2023"
-     "23.05.2023"
-     "24.05.2023"]
-    ["L15"
+   [["L15"
      "Puolangantie"
      "837 / 2 / 0 / 2 / 1000"
      "0"
@@ -281,7 +243,7 @@
      ""]]])
 
 (def odotettu-yha-kohteet-kokomaa-2023
-  [:taulukko {:otsikko "YHA-kohteet", :tyhja nil, :sheet-nimi "YHA-kohteet", :rivi-ennen [{:sarakkeita 14} {:sarakkeita 1} {:teksti "Hintamuutokset", :sarakkeita 3, :luokka "paallystys-tausta-tumma", :tummenna-teksti? true, :tasaa :keskita} {:sarakkeita 1}], :lisaa-excel-valiotsikot true} [{:otsikko "Urakka", :leveys 10} {:otsikko "Kohde­numero", :leveys 5} {:otsikko "Tunnus", :leveys 5} {:otsikko "Nimi", :leveys 10} {:otsikko "Yö­työ", :leveys 3, :fmt :boolean} {:otsikko "Tie­numero", :leveys 3, :tasaa :oikea} {:otsikko "Aosa", :leveys 3, :tasaa :oikea} {:otsikko "Aet", :leveys 3, :tasaa :oikea} {:otsikko "Losa", :leveys 3, :tasaa :oikea} {:otsikko "Let", :leveys 3, :tasaa :oikea} {:otsikko "Pit. (m)", :leveys 3, :tasaa :oikea} {:otsikko "KVL", :leveys 3, :tasaa :oikea} {:otsikko "YP-lk", :leveys 3} {:otsikko "Tarjous­hinta", :leveys 5, :fmt :raha} {:otsikko "Määrä­muu­tokset", :leveys 5, :fmt :raha} {:otsikko "Bitu­mi-indek­si", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "Neste­kaasu ja kevyt poltto­öljy", :leveys 10, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "MAKU-pääl­lys­teet", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}] (list {:otsikko "12 Pohjois-Pohjanmaa", :leveys 10} (list "Utajärven päällystysurakka" "L14" nil "Ouluntie 2" [:boolean {:arvo nil}] 22 13 0 13 3888 0 nil nil 0M 0M 0M 0M 0M 0M) (list "Utajärven päällystysurakka" "L15" "A" "Puolangantie" [:boolean {:arvo true}] 837 2 0 2 1000 0 nil nil 400M 1000M 5000M 0M 1000M 7400M))])
+  [:taulukko {:otsikko "YHA-kohteet", :tyhja nil, :sheet-nimi "YHA-kohteet", :rivi-ennen [{:sarakkeita 14} {:sarakkeita 1} {:teksti "Hintamuutokset", :sarakkeita 3, :luokka "paallystys-tausta-tumma", :tummenna-teksti? true, :tasaa :keskita} {:sarakkeita 1}], :lisaa-excel-valiotsikot true} [{:otsikko "Urakka", :leveys 10} {:otsikko "Kohde­numero", :leveys 5} {:otsikko "Tunnus", :leveys 5} {:otsikko "Nimi", :leveys 10} {:otsikko "Yö­työ", :leveys 3, :fmt :boolean} {:otsikko "Tie­numero", :leveys 3, :tasaa :oikea} {:otsikko "Aosa", :leveys 3, :tasaa :oikea} {:otsikko "Aet", :leveys 3, :tasaa :oikea} {:otsikko "Losa", :leveys 3, :tasaa :oikea} {:otsikko "Let", :leveys 3, :tasaa :oikea} {:otsikko "Pit. (m)", :leveys 3, :tasaa :oikea} {:otsikko "KVL", :leveys 3, :tasaa :oikea} {:otsikko "YP-lk", :leveys 3} {:otsikko "Tarjous­hinta", :leveys 5, :fmt :raha} {:otsikko "Määrä­muu­tokset", :leveys 5, :fmt :raha} {:otsikko "Bitu­mi-indek­si", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "Neste­kaasu ja kevyt poltto­öljy", :leveys 10, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "MAKU-pääl­lys­teet", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"} {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}] (list {:otsikko "12 Pohjois-Pohjanmaa", :leveys 10} (list "Utajärven päällystysurakka" "L15" "A" "Puolangantie" [:boolean {:arvo true}] 837 2 0 2 1000 0 nil nil 400M 1000M 5000M 0M 1000M 7400M))])
 
 (def odotettu-muut-kustannukset-kokomaa-2023
   [:taulukko {:otsikko "Muut kustannukset", :tyhja "Ei muita kustannuksia.", :sheet-nimi "Muut kustannukset", :lisaa-excel-valiotsikot true} [{:otsikko "Pvm", :leveys 10, :fmt :pvm} {:otsikko "Selitys", :leveys 10} {:otsikko "Summa", :leveys 10, :fmt :raha}] ()])

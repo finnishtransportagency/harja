@@ -211,7 +211,7 @@
                       ikoni-sisaan?]}]
          (when-not (= aikavalin-rajoitus (:aikavalin-rajoitus @asetukset-atom))
            (swap! asetukset-atom assoc :aikavalin-rajoitus aikavalin-rajoitus))
-         [:span {:class (cond 
+         [:span {:class (cond
                           luokka (apply str luokka)
                           lomake? "label-ja-aikavali-lomake"
                           :else "label-ja-aikavali")}
@@ -222,14 +222,14 @@
                      :for (or for-teksti otsikko "Aikaväli")} (or otsikko "Aikaväli")])
           [:div.aikavali-valinnat
            [tee-kentta {:tyyppi tyyppi
-                        :pakota-suunta aloitusaika-pakota-suunta 
+                        :pakota-suunta aloitusaika-pakota-suunta
                         :validointi validointi
                         :ikoni-sisaan? ikoni-sisaan?
                         :vayla-tyyli? vayla-tyyli?}
             aikavalin-alku]
            [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
            [tee-kentta {:tyyppi tyyppi
-                        :pakota-suunta paattymisaika-pakota-suunta 
+                        :pakota-suunta paattymisaika-pakota-suunta
                         :validointi validointi
                         :ikoni-sisaan? ikoni-sisaan?
                         :vayla-tyyli? vayla-tyyli?}
@@ -610,14 +610,16 @@
               :itemit-komponentteja? true}
              (when kaikki-valinta-fn
                {:class "pudotusvalikko"}))
-           (map (fn [{:keys [id nimi valittu?] :as valinta}]
-                  [harja.ui.kentat/tee-kentta
-                   {:tyyppi :checkbox
-                    :teksti (fmt nimi)
-                    :valitse! #(let [valittu? (-> % .-target .-checked)]
-                                 (on-change valinta valittu?))}
-                   valittu?])
-                valinnat)]
+           (map-indexed (fn [idx {:keys [nimi valittu?] :as valinta}]
+                          [harja.ui.kentat/tee-kentta
+                           {:input-id (str idn-alku-cb idx)
+                            :label-id (str idn-alku-label idx)
+                            :tyyppi :checkbox
+                            :teksti (fmt nimi)
+                            :valitse! #(let [valittu? (-> % .-target .-checked)]
+                                         (on-change valinta valittu?))}
+                           valittu?])
+             valinnat)]
           (when kaikki-valinta-fn
             [napit/yleinen-ensisijainen (if (some :valittu? valinnat)
                                           "Poista valinnat"
@@ -683,3 +685,53 @@
                                  :valitse-fn valitse-fn
                                  :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % urakan-hoitokaudet) "Valitse")}
     hoitovuosien-jarjestysluvut]])
+
+(defn segmentoitu-ohjaus
+  "Toteuttaa Design Libraryn mukaisen `Segmented Control`-tyyppisen komponentin.
+
+  vaihtoehdot: Lista mappeja, jotka tukevat seuraavia optioita:
+      :nimi      - Pakollinen, Keyword. Yksilöivä tunniste valinnalle.
+      :teksti    - Pakollinen, String. Tekstimuotoinen kuvaus valinnasta, näkyy napin tekstinä.
+      :oletus?   - Boolean. Jos arvo on tyhjä, tämä on valittu (vain yhdellä)
+      :disabled? - Boolean. Jos true, ei voida valita.
+
+  arvo: Keyword tai atom, jonka arvo on yksi vaihtoehdoista. Kuvaa nyt valittua vaihtoehtoa.
+
+  Optiot: Vapaaehtoiset optiot:
+    :kun-valittu - Funktio, joka ajetaan kun jokin vaihtoehto valitaan. Saa parametriksi valitun vaihtoehdon avaimen.
+    :luokka      - Teksti, avainsana tai lista. Käärivän elementin luokka/luokat."
+  ([vaihtoehdot arvo]
+   (segmentoitu-ohjaus vaihtoehdot arvo nil))
+  ([_vaihtoehdot _arvo _opts]
+   (let [hash (str (gensym "seg-ohj"))]
+     (fn [vaihtoehdot arvo {:keys [kun-valittu luokka]}]
+       (let [atomi? (satisfies? IDeref arvo)
+             kun-valittu (or kun-valittu
+                           (if atomi?
+                             #(reset! arvo %)
+                             (do
+                               (js/console.warn "Segmentoitu ohjaus-komponentille ei ole asetettu kun-valittu-funktiota, eikä arvo ole atom!")
+                               (constantly nil))))
+             arvo (if atomi?
+                    @arvo
+                    arvo)]
+         [:div.segmentoitu-ohjaus
+          {:class luokka}
+          (for* [{:keys [nimi teksti oletus? disabled?]} vaihtoehdot]
+            [:div.segmentti
+             [:input
+              {:type :radio
+               :disabled disabled?
+               :on-change #(kun-valittu nimi)
+               :name hash
+               :value nimi
+               :id (str hash nimi)
+               ;; default-checked pitää komponentin "ohjaamattomana".
+               ;; Arvo muuttuu vain HTML:n natiiveilla ohjaimilla, ei meidän omilla.
+               ;; Tämä pitää vain huolen siitä, että haluttu valinta pysyy valittuna kun komponentti käy pois näkyvistä.
+               :default-checked (if (nil? arvo)
+                                  oletus?
+                                  (= arvo nimi))}]
+             [:label
+              {:for (str hash nimi)}
+              teksti]])])))))

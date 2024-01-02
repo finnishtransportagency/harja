@@ -135,6 +135,11 @@ UPDATE urakka
 SET lyhyt_nimi = :lyhytnimi
 WHERE id = :urakka;
 
+-- name: hae-mh-urakat-ilman-velho-oidia
+SELECT u.urakkanro, u.lyhyt_nimi
+FROM urakka u
+WHERE u.tyyppi = 'teiden-hoito' AND u.velho_oid IS NULL AND u.urakkanro IS NOT NULL;
+
 -- name: hae-kaynnissa-olevat-hoitourakat
 SELECT
     u.id,
@@ -622,6 +627,13 @@ UPDATE urakka
 SET velho_oid = :velho_oid
 WHERE urakkanro = :urakkanro
   AND tyyppi IN ('hoito', 'teiden-hoito');
+
+-- name: paivita-velho_oid-ja-lyhytnimi-urakalle!
+UPDATE urakka
+SET velho_oid = :velho_oid,
+    lyhyt_nimi = CASE WHEN lyhyt_nimi IS NULL THEN :lyhyt_nimi ELSE lyhyt_nimi END
+WHERE urakkanro = :urakkanro
+  AND tyyppi = 'teiden-hoito';
 
 -- name: hae-id-sampoidlla
 -- Hakee urakan id:n sampo id:llä

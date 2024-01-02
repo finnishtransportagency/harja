@@ -49,18 +49,17 @@
                             (oikeudet/urakat-laadunseuranta-siltatarkastukset id))
     :mobiilityokalu (not (urakka/vesivaylaurakka? urakka))))
 
-(defn laadunseuranta [ur]
+(defn laadunseuranta [_ur]
   (komp/luo
     (komp/lippu urakka-laadunseuranta/laadunseurannassa?)
-    (fn [{:keys [id tyyppi] :as ur}]
+    (fn [ur]
       [bs/tabs
        {:style :tabs :classes "tabs-taso2"
         :active (nav/valittu-valilehti-atom :laadunseuranta)}
 
        "Tarkastukset" :tarkastukset
        (when (valilehti-mahdollinen? :tarkastukset ur)
-         [tarkastukset/tarkastukset {:nakyma tyyppi
-                                     :urakka ur}])
+         [tarkastukset/tarkastukset])
 
        "Laatupoikkeamat" :laatupoikkeamat
        (when (valilehti-mahdollinen? :laatupoikkeamat ur)

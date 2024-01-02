@@ -53,7 +53,7 @@
                            (NumberFormat/getNumberInstance))
                        (.setMaximumFractionDigits 2)
                        (.setMinimumFractionDigits 2)
-                       (.setNegativePrefix "\u002D")) eur)     ;; Try to fix VHAR-2391 replacing - with its unicode representation
+                       (.setNegativePrefix "\u002D")) eur) ;; Korvataan "-" sen unicodella. Aiheutti ongelmia pdf-raporteissa.
           #" €" " €")))))
 
 

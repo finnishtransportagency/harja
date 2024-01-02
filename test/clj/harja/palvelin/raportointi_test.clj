@@ -219,7 +219,7 @@
                                        2]]}]]
     (is (= kuvaus-liitetty odotettu-liitetty) "Raporttiin liitetty suorituskonteksti ihan okei")))
 
-;; VHAR-5683 Materialisoitu näkymä unohtui päivittää
+;; Varmistetaan, että korjataan ongelma, jossa materialisoitu näkymä unohtui päivittää
 ;; Kaksi näkymää liittyy Suolauksen Käyttöraja arvon välittymiseen raporteille.
 ;;   pohjavesialue_talvisuola.talvisuolaraja -> Materialized View - pohjavesialue_kooste.suolarajoitus
 ;;   pohjavesialue_kooste.suolarajoitus -> raportti_pohjavesialueiden_suolatoteumat.kayttoraja

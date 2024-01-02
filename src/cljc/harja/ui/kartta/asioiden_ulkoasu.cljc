@@ -1,5 +1,6 @@
 (ns harja.ui.kartta.asioiden-ulkoasu
   (:require [harja.ui.kartta.varit.puhtaat :as puhtaat]
+            [harja.ui.kartta.varit.alpha :as alpha]
             [harja.ui.kartta.ikonit :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni vesipisara-pinni-ikoni]]
             [clojure.string :as str]
 
@@ -619,14 +620,20 @@ tr-ikoni {:img (pinni-ikoni "musta")
             "Poistettu" ["Poistettu"
                          (viiva-mustalla-rajalla puhtaat/eggplant-default)
                          puhtaat/eggplant-default]
-            "Tieosoitemuutos" ["Tarkistettu"
-                         (viiva-mustalla-rajalla puhtaat/pitaya-default)
-                         puhtaat/pitaya-default]
-            "Muu tekninen toimenpide" ["Korjattu"
-                       (viiva-mustalla-rajalla puhtaat/pea-default)
-                       puhtaat/pea-default]
             ["Ei tietoa" (viiva-mustalla-rajalla puhtaat/valkoinen) puhtaat/valkoinen]))
     (vesipisara-pinni-ikoni)))
+
+(def tieturvallisuusverkko
+  {:color alpha/fig-default
+   :width 8})
+
+(def ei-kayty-tieturvallisuusverkko
+  {:ajovayla
+   {:color puhtaat/red-default
+    :width 8}
+   :kapy
+   {:color puhtaat/lemon-default
+    :width 8}})
 
 (defn tilan-vari [tila]
   (case tila

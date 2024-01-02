@@ -110,7 +110,7 @@
           :urakka
           (let [haettu-urakka (<! (k/post! :hae-urakka (:id tulos)))
                 ;; hae hallintayksikön urakat jo tässä, jottei urakkaa aseteta ennen kuin
-                ;; urakkalista on päivittynyt. Muuten voi tulla ajoitusongelma toisinaan HAR-2044
+                ;; urakkalista on päivittynyt. Muuten voi tulla ajoitusongelma toisinaan, mikä johtaa siihen että URL-parametriin ei tule urakan id:tä.
                 hallintayksikon-urakkalista (<! (urakat/hae-hallintayksikon-urakat
                                                   {:id (get-in haettu-urakka [:hallintayksikko :id])}))]
             (reset! nav/hallintayksikon-urakkalista hallintayksikon-urakkalista)

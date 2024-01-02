@@ -67,7 +67,8 @@
           (concat [nil] @istunto/testikayttajat)]]))))
 
 (defn harja-info [s]
-  [:div {:role "presentation"
+  [:div {:id "info"
+         :role "presentation"
          :class (str "info-nakyma" (when (= s :info) " aktiivinen"))}
 
    [ikonit/livicon-info-circle]

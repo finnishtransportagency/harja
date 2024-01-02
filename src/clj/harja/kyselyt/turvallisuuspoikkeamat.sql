@@ -418,7 +418,8 @@ FROM turvallisuuspoikkeama t
 
          LEFT JOIN organisaatio o ON u.hallintayksikko = o.id
 
-WHERE t.luotu BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP;
+WHERE t.luotu BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP
+AND t.tapahtunut is not null;
 
 -- name: onko-olemassa-ulkoisella-idlla
 -- Tarkistaa löytyykö turvallisuuspoikkeamaa ulkoisella id:llä
@@ -437,16 +438,16 @@ VALUES (:turvallisuuspoikkeama, :liite);
 
 -- name: hae-turvallisuuspoikkeaman-liitteet
 -- Hakee annetun turvallisuuspoikkeaman kaikki liitteet
-SELECT
-  l.id        AS id,
-  l.tyyppi    AS tyyppi,
-  l.koko      AS koko,
-  l.nimi      AS nimi,
-  l.liite_oid AS oid
-FROM liite l
-  JOIN turvallisuuspoikkeama_liite hl ON l.id = hl.liite
-WHERE hl.turvallisuuspoikkeama = :turvallisuuspoikkeamaid
-ORDER BY l.luotu ASC;
+SELECT l.id                  AS id,
+       l.tyyppi              AS tyyppi,
+       l.koko                AS koko,
+       l.nimi                AS nimi,
+       l.liite_oid           AS oid,
+       l."virustarkastettu?" AS "virustarkastettu?"
+  FROM liite l
+           JOIN turvallisuuspoikkeama_liite hl ON l.id = hl.liite
+ WHERE hl.turvallisuuspoikkeama = :turvallisuuspoikkeamaid
+ ORDER BY l.luotu ASC;
 
 --name: paivita-korjaava-toimenpide<!
 UPDATE korjaavatoimenpide

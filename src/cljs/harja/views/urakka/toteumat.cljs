@@ -71,7 +71,6 @@
          (when (and (oikeudet/urakat-toteumat-erilliskustannukset id)
                  ;; Piilotetaan Erilliskustannukset-tab 'teiden-hoito' (eli mh-urakoilta), paitsi HJ-urakoilta.
                  ;; HJ-urakat ovat 'teiden-hoito'-urakoita, jotka ovat alkaneet ennen vuotta 2019
-                 ;; VHAR-6675
                  (or hj-urakka? (not mhu-urakka?)))
            [erilliskustannukset/erilliskustannusten-toteumat ur])
 

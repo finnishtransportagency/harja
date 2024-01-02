@@ -720,7 +720,7 @@ FROM urakka u
 WHERE hal.id IN (:hallintayksikot);
 
 -- name: hae-viimeisin-toteuma
--- VHAR-2590 urakkakohtaisesti tarkasteltuna ajaudutaan patologisen hitaaseen kyselyyn
+-- Urakkakohtaisesti tarkasteltuna ajaudutaan patologisen hitaaseen kyselyyn
 -- Tilannekuva tsekkaa tämän nykyisellään kerran minuutissa, joten voidaan hakea uudet
 -- toteumat aina jos Harjaan on tullut uusi toteuma ed. tarkistuksen jälkeen. Se on
 -- pienempi paha kuin täysin jumiutuva max(id) kysely.

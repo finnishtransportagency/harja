@@ -20,6 +20,13 @@
                   {:id 6 :nimi "Puuttuu" :css-luokka "kl-puuttuu"}
                   {:id 7 :nimi "Ei voitu tarkastaa" :css-luokka "kl-ei-voitu-tarkistaa"}])
 
+(def varuste_toimenpiteet [{:nimi "Lisätty" :toimenpide :lisatty}
+                           {:nimi "Korjaus" :toimenpide :korjaus}
+                           {:nimi "Tarkastettu" :toimenpide :tarkastettu}
+                           {:nimi "Puhdistaminen" :toimenpide :puhdistaminen}
+                           {:nimi "Kohteen poisto" :toimenpide :kohteen-poisto}
+                           {:nimi "Muut" :toimenpide :muut}])
+
 (defn muodosta-tr-osoite [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as rivi}]
   (if tr-loppuosa
     (str tr-numero "/" tr-alkuosa "/" tr-alkuetaisyys "/" tr-loppuosa "/" tr-loppuetaisyys)
@@ -37,7 +44,7 @@
                          (filter #(and
                                     (:otsikko %)
                                     (not= (.indexOf (.toLowerCase (:otsikko %))
-                                               (.toLowerCase teksti)) -1))
+                                            (.toLowerCase teksti)) -1))
                            varustetyypit))]
             (vec (sort-by :otsikko itemit)))))))
 
@@ -46,16 +53,19 @@
    :nimiavaruus (:nimiavaruus varustetyyppi)
    :tyyppi ((comp #(str/join "/" %) (juxt :tyyppi_avain :nimi)) varustetyyppi)})
 
-(defn muodosta-ns-nimi-hakuparametri [param]
+(defn muodosta-kuntoluokan-hakuparametri [param]
   (when param
-    (str/join "/" [(:nimiavaruus param) (:nimi param)])))
+    (if (string? (:nimi param))
+      (str/join "/" [(:nimiavaruus param) (:nimi param)])
+      ;; Erityistapaukset, kuten puuttuva kuntoluokka, on avainsanoja.
+      (:nimi param))))
 
 (defn hakuparametrit [{:keys [valinnat]}]
   (let [varustetyypit (map muodosta-varustetyypin-hakuparametri @varustetyypit)
-        kuntoluokat (map muodosta-ns-nimi-hakuparametri (:kuntoluokat valinnat))
-        toimenpide (muodosta-ns-nimi-hakuparametri (:toimenpide valinnat))]
+        kuntoluokat (map muodosta-kuntoluokan-hakuparametri (:kuntoluokat valinnat))
+        toimenpide (:toimenpide (:toimenpide valinnat))]
     (merge
-      (select-keys valinnat [:tie :aosa :aeta :losa :leta :hoitokauden-alkuvuosi :hoitovuoden-kuukausi :kuntoluokat :toteuma])
+      (select-keys valinnat [:tie :aosa :aeta :losa :leta :hoitokauden-alkuvuosi :hoitovuoden-kuukausi :kohdeluokat :toteuma])
       {:urakka-id @nav/valittu-urakka-id
        :varustetyypit varustetyypit
        :kuntoluokat kuntoluokat
@@ -157,7 +167,8 @@
       (map (fn [t]
              (-> t
                (assoc :tr-osoite (muodosta-tr-osoite t))
-               (assoc :toimenpide-id (:id (first (filter #(= (:otsikko %) (:toimenpide t)) (:toimenpiteet app)))))))
+               (assoc :toimenpide-id (:id (first (filter #(= (:otsikko %) (:toimenpide t))
+                                                   (:toimenpiteet-nimikkeisto app)))))))
         (:toteumat vastaus)))
     (-> app
       (assoc :haku-paalla false)
@@ -166,28 +177,33 @@
   HaeVarusteetEpaonnistui
   (process-event [_ app]
     (reset! varusteet-kartalla/karttataso-varusteet nil)
-    (viesti/nayta! "Varusteiden haku epäonnistui!" :varoitus)
+    (viesti/nayta-toast! "Varusteiden haku epäonnistui!" :varoitus)
     (-> app
       (assoc :haku-paalla false)
       (assoc :varusteet [])))
 
   HaeVarusteenHistoria
   (process-event [{{:keys [kohdeluokka ulkoinen-oid]} :varuste} app]
-    (tuck-apurit/post! app :hae-varusteen-historia
+    (tuck-apurit/post! :hae-varusteen-historia
       {:urakka-id @nav/valittu-urakka-id
        :kohdeluokka kohdeluokka
        :ulkoinen-oid ulkoinen-oid}
       {:onnistui ->HaeVarusteenHistoriaOnnistui
-       :epaonnistui ->HaeVarusteenHistoriaEpaonnistui}))
+       :epaonnistui ->HaeVarusteenHistoriaEpaonnistui})
+    (assoc app :historia-haku-paalla? true))
 
   HaeVarusteenHistoriaOnnistui
   (process-event [{:keys [vastaus]} app]
-    (assoc-in app [:valittu-varuste :historia] vastaus))
+    (-> app
+      (assoc :historia-haku-paalla? false)
+      (assoc-in [:valittu-varuste :historia] vastaus)))
 
   HaeVarusteenHistoriaEpaonnistui
   (process-event [{:keys [_]} app]
-    (viesti/nayta! "Varusteen historian haku epäonnistui!" :varoitus)
-    (assoc-in app [:valittu-varuste :historia] :haku-epaonnistui))
+    (viesti/nayta-toast! "Varusteen historian haku epäonnistui!" :varoitus)
+    (-> app
+      (assoc :historia-haku-paalla? false)
+      (assoc-in [:valittu-varuste :historia] nil)))
 
   JarjestaVarusteet
   (process-event [{jarjestys :jarjestys} app]
@@ -242,5 +258,5 @@
 
   HaeNimikkeistoEpaonnistui
   (process-event [{:keys [_]} app]
-    (viesti/nayta! "Kohdeluokkien haku epäonnistui!" :varoitus)
+    (viesti/nayta-toast! "Kohdeluokkien haku epäonnistui!" :varoitus)
     app))

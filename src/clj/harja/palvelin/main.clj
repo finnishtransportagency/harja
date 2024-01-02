@@ -52,7 +52,7 @@
     [harja.palvelin.palvelut.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
     [harja.palvelin.palvelut.muut-tyot :as muut-tyot]
     [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
-    [harja.palvelin.palvelut.kulut :as kulut]
+    [harja.palvelin.palvelut.kulut.kulut :as kulut]
     [harja.palvelin.palvelut.toteumat :as toteumat]
     [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
@@ -241,7 +241,9 @@
 
       :liitteiden-hallinta (component/using
                              (liitteet-komp/->Liitteet
-                               (get-in asetukset [:liitteet :fileyard-url]))
+                               (get-in asetukset [:liitteet :fileyard-url])
+                               (get-in asetukset [:liitteet :s3-url])
+                               (:alusta asetukset))
                              [:db :virustarkistus :tiedostopesula])
 
       :kehitysmoodi (component/using
@@ -332,7 +334,7 @@
       ;; Tarkastustehtävät
 
       :paivystystarkistukset (component/using
-                               (paivystystarkistukset/->Paivystystarkistukset (:paivystystarkistus asetukset))
+                               (paivystystarkistukset/->Paivystystarkistukset (:paivystystarkistus asetukset) (:kehitysmoodi asetukset))
                                [:http-palvelin :db :fim :api-sahkoposti])
       :reittitarkistukset (component/using
                             (reittitarkistukset/->Reittitarkistukset (:reittitarkistus asetukset))
@@ -483,7 +485,8 @@
                            [:http-palvelin :db])
       :lampotilat (component/using
                     (lampotilat/->Lampotilat
-                      (:lampotilat-url (:ilmatieteenlaitos asetukset)))
+                      (:lampotilat-url (:ilmatieteenlaitos asetukset))
+                      (:apiavain (:ilmatieteenlaitos asetukset)))
                     [:http-palvelin :db :integraatioloki])
       :maksuerat (component/using
                    (maksuerat/->Maksuerat)
@@ -600,7 +603,8 @@
                {:db :db-replica
                 :http-palvelin :http-palvelin
                 :ulkoinen-sahkoposti :ulkoinen-sahkoposti
-                :api-sahkoposti :api-sahkoposti})
+                :api-sahkoposti :api-sahkoposti
+                :labyrintti :labyrintti})
 
       :vkm (component/using
              (let [{url :url} (:vkm asetukset)]
@@ -793,13 +797,13 @@
 (defonce harja-jarjestelma nil)
 
 (defn- merkkaa-kaynnistyminen! []
-  (log/debug "Merkataan HARJAn käynnistyminen")
+  (log/info "Yritetään seuraavaksi käynnistää HARJA")
   (event-apurit/julkaise-tapahtuma :harja-tila
                                    {:viesti "Harja käynnistyy"
                                     :kaikki-ok? false}))
 
 (defn- merkkaa-kaynnistetyksi! []
-  (log/debug "Merkataan HARJA käynnistetyksi")
+  (log/info "HARJA käynnistetty")
   (event-apurit/julkaise-tapahtuma :harja-tila
                                    {:viesti "Harja käynnistetty"
                                     :kaikki-ok? true}))
@@ -860,7 +864,7 @@
       (Thread/setDefaultUncaughtExceptionHandler
         (reify Thread$UncaughtExceptionHandler
           (uncaughtException [_ thread e]
-            (log/error e "Säije " (.getName thread) " kaatui virheeseen: " (.getMessage e)))))
+            (log/error e "Säie " (.getName thread) " kaatui virheeseen: " (.getMessage e)))))
 
       (konfiguroi-lokitus asetukset)
       (if-let [virheet (tarkista-asetukset asetukset)]
@@ -878,6 +882,7 @@
         (System/exit 1)))))
 
 (defn sammuta-jarjestelma []
+  (log/info "HARJA sammutetaan")
   (when harja-jarjestelma
     (alter-var-root #'harja-jarjestelma
       (fn [s]

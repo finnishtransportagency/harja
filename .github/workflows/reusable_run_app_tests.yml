@@ -139,7 +139,7 @@ jobs:
         run: echo "value=${NAME_PREFIX}${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
       - name: Delete old branch build artifacts (only the latest is needed)
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         id: artifact
         with:
           script: |
@@ -159,7 +159,7 @@ jobs:
               })
 
       - name: Upload a new build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.artifact-name.outputs.value }}
           path: ./target/harja-0.0.1-SNAPSHOT-standalone.jar
@@ -208,6 +208,10 @@ jobs:
           report_paths: 'test2junit/xml/*.xml'
           require_passed_tests: true
           check_name: 'Test Report: ${{ env.NAME_PREFIX }}Backend'
+          # https://github.com/mikepenz/action-junit-report/issues/40#issuecomment-1607743568
+          # Kiertotie sille, että test result checkit menevät väärän workflown tuloksiin
+          # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
+          detailed_summary: true
 
   basic-tests:
     if: ${{ inputs.basic-tests == 'true' }}
@@ -254,6 +258,10 @@ jobs:
           report_paths: 'test2junit/xml/*.xml'
           require_passed_tests: true
           check_name: 'Test Report: ${{ env.NAME_PREFIX }}Slow'
+          # https://github.com/mikepenz/action-junit-report/issues/40#issuecomment-1607743568
+          # Kiertotie sille, että test result checkit menevät väärän workflown tuloksiin
+          # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
+          detailed_summary: true
 
       - name: Setup test tools
         uses: ./.github/actions/setup-test-tools
@@ -319,6 +327,10 @@ jobs:
           report_paths: 'test2junit/xml/*.xml'
           require_passed_tests: true
           check_name: 'Test Report: ${{ env.NAME_PREFIX }}Integration'
+          # https://github.com/mikepenz/action-junit-report/issues/40#issuecomment-1607743568
+          # Kiertotie sille, että test result checkit menevät väärän workflown tuloksiin
+          # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
+          detailed_summary: true
 
   e2e-tests:
     if: ${{ inputs.e2e-tests == 'true' }}
@@ -374,7 +386,7 @@ jobs:
         run: echo "value=${NAME_PREFIX}${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
       - name: Download uberjar artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ steps.artifact-name.outputs.value }}
           path: ./
@@ -456,16 +468,20 @@ jobs:
           report_paths: 'cypress/test-results/*.xml'
           require_passed_tests: true
           check_name: 'Test Report: Cypress (${{ env.NAME_PREFIX }}${{ matrix.browser }})'
+          # https://github.com/mikepenz/action-junit-report/issues/40#issuecomment-1607743568
+          # Kiertotie sille, että test result checkit menevät väärän workflown tuloksiin
+          # develop-branchin mergen tai muun samantyyppisesti triggeröityjen workflowien kohdalla
+          detailed_summary: true
 
       # Mikäli testit epäonnistuvat, tallenna cypress screenshotit ja videot artifakteina
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: cypress-screenshots-${{ matrix.browser }}
           path: cypress/screenshots
           retention-days: 4
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: cypress-videos-${{ matrix.browser }}

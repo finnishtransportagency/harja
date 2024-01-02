@@ -27,7 +27,7 @@
                                        FROM urakka
                                       WHERE nimi = 'Oulun alueurakka 2014-2019'")))
           urakka-id (:id urakka)
-          alueurakkanumero (konv/konvertoi->int (:urakkanro urakka))
+          alueurakkanumero (:urakkanro urakka)
           alkupvm "2014-10-01"
           loppupvm "2015-09-30"
           _ (anna-lukuoikeus kayttaja)

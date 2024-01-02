@@ -36,9 +36,26 @@
     :wrapper-luokka "inline-block"
     :fmt-fn str}])
 
+(def kuntoluokat-jarjestys
+  {"Erittäin hyvä" 1
+   "Hyvä" 2
+   "Tyydyttävä" 3
+   "Huono" 4
+   "Erittäin huono" 5
+   "Ei voitu tarkastaa" 6})
+
+(defn kohdeluokka-teksti
+  "Kääntää kohdeluokan tekstiksi. Lisätään puuttuvat ääkköset, muotoillaan erikoistapausket tai
+  lisätään vain iso alkukirjain."
+  [kohdeluokka]
+  (case kohdeluokka
+    "puomit-sulkulaitteet-pollarit" "Puomit, sulkulaitteet ja pollarit"
+    "pylvaat" "Pylväät"
+    nil "Kaikki"
+    (str/capitalize kohdeluokka)))
+
 (defn suodatuslomake [_e! _app]
-  (fn [e! {:keys [valinnat urakka kuntoluokat-nimikkeisto kohdeluokat-nimikkeisto toimenpiteet-nimikkeisto
-                  varustetyyppihaku] :as app}]
+  (fn [e! {:keys [valinnat urakka kuntoluokat-nimikkeisto kohdeluokat-nimikkeisto varustetyyppihaku] :as app}]
     (let [alkupvm (:alkupvm urakka)
           vuosi (pvm/vuosi alkupvm)
           hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
@@ -46,22 +63,25 @@
           valittu-toimenpide (:toimenpide valinnat)
           hoitovuoden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
           itse-tai-kaikki #(if % % "Kaikki")
-          multimap-fn (fn [avain] (fn [{:keys [id nimi alasveto-eritin?] :as t}]
+          multimap-fn (fn [avain] (fn [{:keys [id nimi] :as t}]
                                     {:id id
                                      :nimi (or nimi t)
                                      :valittu? (if nimi
                                                  (contains? (get valinnat avain) nimi)
-                                                 (nil? (get valinnat avain)))
-                                     :alavetos-eritin? alasveto-eritin?}))
-          kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] (map-indexed (fn [i v]
-                                                                                      {:id i
-                                                                                       :nimi v})
-                                                                         kuntoluokat-nimikkeisto)))
+                                                 (nil? (get valinnat avain)))}))
+          kuntoluokat (map (multimap-fn :kuntoluokat)
+                        (conj (into ["Kaikki"] (map-indexed (fn [i v]
+                                                              {:id i
+                                                               :nimi v})
+                                                 (conj (vec (sort-by #(kuntoluokat-jarjestys (:otsikko %))
+                                                              kuntoluokat-nimikkeisto))
+                                                   {:otsikko "Kuntoluokka puuttuu"
+                                                    :nimi :ei-kuntoluokkaa})))))
           kohdeluokat (map (multimap-fn :kohdeluokat) (into ["Kaikki"] (map-indexed (fn [i v]
                                                                                       {:id i
                                                                                        :nimi v})
                                                                          (keys kohdeluokat-nimikkeisto))))
-          toimenpiteet (into [nil] toimenpiteet-nimikkeisto)
+          toimenpiteet (into [nil] v/varuste_toimenpiteet)
 
           tr-kentan-valitse-fn (fn [avain]
                                  (fn [event]
@@ -109,7 +129,7 @@
           :valinta valittu-toimenpide
           :vayla-tyyli? true
           :valitse-fn #(e! (v/->ValitseToimenpide %))
-          :format-fn #(or (:otsikko %) "Kaikki")
+          :format-fn #(or (:nimi %) "Kaikki")
           :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          toimenpiteet]
         [valinnat/monivalinta-pudotusvalikko
@@ -120,7 +140,7 @@
          [" Kohdeluokka valittu" " Kohdeluokkaa valittu"]
          {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
           :vayla-tyyli? true
-          :fmt (comp str/capitalize itse-tai-kaikki)
+          :fmt kohdeluokka-teksti
           :valintojen-maara (count (:kohdeluokat valinnat))}]
 
         [:div {:class "col-md-2 filtteri label-ja-alasveto-grid"}
@@ -203,21 +223,24 @@
       {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
      varusteet]))
 
-(defn listaus-toteumat [_ valittu-toteumat]
-  [grid/grid
-   {:otsikko "Käyntihistoria"
-    :tunniste :ulkoinen-oid
-    :luokat ["varuste-taulukko"]
-    :voi-lisata? false :voi-kumota? false
-    :voi-poistaa? (constantly false) :voi-muokata? true}
-   [{:otsikko "Käyty" :nimi :alkupvm :leveys 3
-     :fmt pvm/fmt-p-k-v-lyhyt}
-    {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toimenpide :leveys 3}
-    {:otsikko "Kunto\u00ADluoki\u00ADtus muu\u00ADtos" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
-     :komponentti (fn [rivi]
-                    [kuntoluokka-komponentti (:kuntoluokka rivi)])}
-    {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
-   valittu-toteumat])
+(defn listaus-toteumat [_ {:keys [historia-haku-paalla?]} valittu-toteumat]
+  (if (and (not historia-haku-paalla?) (nil? valittu-toteumat))
+    [:div "Varusteelle ei löytynyt historiaa velhosta"]
+
+    [grid/grid
+     {:otsikko "Käyntihistoria"
+      :tunniste :ulkoinen-oid
+      :luokat ["varuste-taulukko"]
+      :voi-lisata? false :voi-kumota? false
+      :voi-poistaa? (constantly false) :voi-muokata? true}
+     [{:otsikko "Käyty" :nimi :alkupvm :leveys 3
+       :fmt pvm/fmt-p-k-v-lyhyt}
+      {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toimenpide :leveys 3}
+      {:otsikko "Kunto\u00ADluoki\u00ADtus muu\u00ADtos" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
+       :komponentti (fn [rivi]
+                      [kuntoluokka-komponentti (:kuntoluokka rivi)])}
+      {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
+     valittu-toteumat]))
 
 (defn varustelomake-nakyma
   [e! _app]
@@ -228,7 +251,7 @@
       (komp/klikattu-ulkopuolelle #(when @saa-sulkea?
                                      (e! (v/->SuljeVarusteLomake)))
         {:tarkista-komponentti? true})
-      (fn [e! {{:keys [ulkoinen-oid historia] :as varuste} :valittu-varuste}]
+      (fn [e! {{:keys [ulkoinen-oid historia] :as varuste} :valittu-varuste :as app}]
         [:div.varustelomake {:on-click #(.stopPropagation %)}
          [sivupalkki/oikea
           {:leveys "600px"}
@@ -275,7 +298,7 @@
             {:tyyppi :komponentti :palstoja 3
              ::lomake/col-luokka "margin-top-32"
              :piilota-label? true
-             :komponentti listaus-toteumat :komponentti-args [historia]}]
+             :komponentti listaus-toteumat :komponentti-args [app historia]}]
            varuste]]]))))
 
 (defn- varusteet* [e! app]

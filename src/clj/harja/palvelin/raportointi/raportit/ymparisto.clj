@@ -251,6 +251,7 @@
                :sivuttain-rullattava? true
                :ensimmainen-sarake-sticky? true
                :samalle-sheetille? true
+               :sheet-nimi "Ympäristöraportti"
                ;; Tässä muutetaan vektori setiksi, koska se on kätevä gridissä. Ehkä voi muuttaa?
                :avattavat-rivit (into #{} avattavat-rivit)}
     (into []

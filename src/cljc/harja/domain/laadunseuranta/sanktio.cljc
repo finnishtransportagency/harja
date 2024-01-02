@@ -173,7 +173,7 @@
 (def +yllapidon-sanktiofraasit+
   (sort-by
     second
-    ;; ao. lista perustuu ylläpidon sopimusasiakirjoihin, ks. HAR-3683
+    ;; ao. lista perustuu ylläpidon sopimusasiakirjoihin vuodelta 2016.
     [[:valitavoitteen-viivastyminen "Välitavoitteen viivästyminen"]
      [:laatusuunnitelman-vastainen-toiminta "Laatusuunnitelman vastainen toiminta työmaalla"]
      [:toistuva-laatusuunnitelman-vastainen-toiminta "Toistuva laatusuunnitelman vastainen toiminta työmaalla"]

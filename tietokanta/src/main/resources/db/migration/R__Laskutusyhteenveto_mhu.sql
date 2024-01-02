@@ -377,7 +377,7 @@ BEGIN
 
     IF (toimenpide_koodi = '23150') THEN
 
-        RAISE NOTICE 'Johto- ja hallintakorvaukset lasketaan mukaan, koska toimenpideinstanssi on hoidon johto. %', t_instanssi;
+        RAISE NOTICE 'Johto- ja hallintokorvaukset lasketaan mukaan, koska toimenpideinstanssi on hoidon johto. %', t_instanssi;
 
         -- Ennen tarkasteltavaa aikaväliä ja aikavälillä laskutetut hoidonjohdon kustannukset
         -- Käytetään taulua: johto_ja_hallintokorvaus
@@ -661,6 +661,7 @@ BEGIN
                           JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
                       maksuera m
                  WHERE tpi.urakka = ur AND m.toimenpideinstanssi = tpi.id
+                 ORDER BY m.numero asc
         LOOP
             RAISE NOTICE '*************************************** Laskutusyhteenvedon laskenta alkaa toimenpiteelle: % , ID % *****************************************', t.nimi, t.tpi;
 

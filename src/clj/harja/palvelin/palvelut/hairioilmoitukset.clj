@@ -95,7 +95,8 @@
       http
       :hae-voimassaoleva-hairioilmoitus
       (fn [user _]
-        (hae-voimassaoleva-hairioilmoitus db user)))
+        (hae-voimassaoleva-hairioilmoitus db user))
+      {:lokita-kysely? false})
 
     (julkaise-palvelu
       http

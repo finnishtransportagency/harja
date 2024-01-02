@@ -28,31 +28,33 @@
           (sanitoi urakka-nimi)
           (fmt/pvm (c/to-date pvm))))
 
-(defn- laheta-ilmoitus-henkiloille [email urakka-nimi henkilot pvm]
+(defn- laheta-ilmoitus-henkiloille [email urakka-nimi henkilot pvm kehitysmoodi?]
   (doseq [henkilo henkilot]
-    (sahkoposti/laheta-viesti! email
-                               (sahkoposti/vastausosoite email)
-                               (:sahkoposti henkilo)
-                               (format "Harja: Urakalta %s puuttuu päivystystiedot päivämäärälle %s"
-                                       urakka-nimi
-                                       (fmt/pvm (c/to-date pvm)))
-                               (viesti-puuttuvasta-paivystyksesta urakka-nimi pvm)
-                               {})))
+    (if-not kehitysmoodi?
+      (sahkoposti/laheta-viesti! email
+        (sahkoposti/vastausosoite email)
+        (:sahkoposti henkilo)
+        (format "Harja: Urakalta %s puuttuu päivystystiedot päivämäärälle %s"
+          urakka-nimi
+          (fmt/pvm (c/to-date pvm)))
+        (viesti-puuttuvasta-paivystyksesta urakka-nimi pvm)
+        {})
+      (log/info (format "Kehitysympäristö :: päivystäjä ilmoitusta ei lähetetä urakasta:  %s" urakka-nimi)))))
 
 (defn hae-ilmoituksen-saajat [fim sampo-id]
   (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id #{"ely urakanvalvoja" "urakan vastuuhenkilö"}))
 
-(defn- ilmoita-paivystyksettomasta-urakasta [urakka fim email pvm]
+(defn- ilmoita-paivystyksettomasta-urakasta [urakka fim email pvm kehitysmoodi?]
   (let [ilmoituksen-saajat (hae-ilmoituksen-saajat fim (:sampoid urakka))]
     (if-not (empty? ilmoituksen-saajat)
-      (laheta-ilmoitus-henkiloille email (:nimi urakka) ilmoituksen-saajat pvm)
+      (laheta-ilmoitus-henkiloille email (:nimi urakka) ilmoituksen-saajat pvm kehitysmoodi?)
       (log/warn (format "Urakalla %s ei ole päivystystä %s ja urakalle ei löydy FIM:stä henkiöä, jolle tehdä ilmoitus."
                         (:nimi urakka)
                         pvm)))))
 
-(defn- ilmoita-paivystyksettomista-urakoista [urakat-ilman-paivystysta fim email pvm]
+(defn- ilmoita-paivystyksettomista-urakoista [urakat-ilman-paivystysta fim email pvm kehitysmoodi?]
   (doseq [urakka urakat-ilman-paivystysta]
-    (ilmoita-paivystyksettomasta-urakasta urakka fim email pvm)))
+    (ilmoita-paivystyksettomasta-urakasta urakka fim email pvm kehitysmoodi?)))
 
 (defn urakat-ilman-paivystysta
   "Palauttaa urakat, joille ei ole päivystystä kyseisenä päivänä"
@@ -106,16 +108,16 @@
                                                           :tyypit (when urakkatyypit
                                                                     (mapv name urakkatyypit))})))
 
-(defn- paivystyksien-tarkistustehtava [db fim email nykyhetki]
+(defn- paivystyksien-tarkistustehtava [db fim email nykyhetki kehitysmoodi?]
   (let [voimassa-olevat-urakat (hae-urakat-paivystystarkistukseen db nykyhetki #{:valaistus :hoito :teiden-hoito})
         paivystykset (hae-voimassa-olevien-urakoiden-paivystykset db nykyhetki)
         urakat-ilman-paivystysta (urakat-ilman-paivystysta paivystykset voimassa-olevat-urakat nykyhetki)]
-    (ilmoita-paivystyksettomista-urakoista urakat-ilman-paivystysta fim email nykyhetki)))
+    (ilmoita-paivystyksettomista-urakoista urakat-ilman-paivystysta fim email nykyhetki kehitysmoodi?)))
 
 (defn tee-paivystyksien-tarkistustehtava
   "Tarkistaa, onko urakalle olemassa päivystys tarkistushetkeä seuraavana päivänä.
    Käsittelee vain ne urakat, jotka ovat voimassa annettuna päivänä."
-  [{:keys [db fim api-sahkoposti] :as this} paivittainen-aika]
+  [{:keys [db fim api-sahkoposti] :as this} paivittainen-aika kehitysmoodi?]
   (log/debug "Ajastetaan päivystäjien tarkistus")
   (when paivittainen-aika
     (ajastettu-tehtava/ajasta-paivittain
@@ -126,13 +128,13 @@
             (lukot/yrita-ajaa-lukon-kanssa
               db
               "paivystystarkistukset"
-              #(paivystyksien-tarkistustehtava db fim api-sahkoposti (t/plus (t/now) (t/days 1)))))))))
+              #(paivystyksien-tarkistustehtava db fim api-sahkoposti (t/plus (t/now) (t/days 1)) kehitysmoodi?)))))))
 
-(defrecord Paivystystarkistukset [asetukset]
+(defrecord Paivystystarkistukset [asetukset kehitysmoodi?]
   component/Lifecycle
   (start [this]
     (assoc this
-      :paivystyksien-tarkistus (tee-paivystyksien-tarkistustehtava this (:paivittainen-aika asetukset))))
+      :paivystyksien-tarkistus (tee-paivystyksien-tarkistustehtava this (:paivittainen-aika asetukset) kehitysmoodi?)))
   (stop [this]
     (doseq [tehtava [:paivystyksien-tarkistus]
             :let [lopeta-fn (get this tehtava)]]

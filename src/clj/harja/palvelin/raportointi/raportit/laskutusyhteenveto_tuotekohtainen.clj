@@ -1,6 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen
   "Tuotekohtainen laskutusyhteenveto MHU-urakoissa"
-  (:require [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
+  (:require [clojure.string :as str]
+            [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
@@ -74,7 +75,7 @@
                 (remove nil?
                   (cond
                     (= "MHU ja HJU hoidon johto" otsikko)
-                    [(rivi-taulukolle data kyseessa-kk-vali? "Johto- ja hallintakorvaukset" :johto_ja_hallinto_laskutettu :johto_ja_hallinto_laskutetaan false)
+                    [(rivi-taulukolle data kyseessa-kk-vali? "Johto- ja hallintokorvaukset" :johto_ja_hallinto_laskutettu :johto_ja_hallinto_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "Erillishankinnat" :hj_erillishankinnat_laskutettu :hj_erillishankinnat_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "HJ-palkkio" :hj_palkkio_laskutettu :hj_palkkio_laskutetaan false)
                      (rivi-taulukolle data kyseessa-kk-vali? "Bonukset" :bonukset_laskutettu :bonukset_laskutetaan false)
@@ -247,14 +248,24 @@
         tavoite (koosta-tavoite tiedot urakka-tavoite)
         koostettu-yhteenveto (conj [] yhteenveto tavoite)
 
-        sheet-nimi "Työmaakokous"
-        otsikot ["Talvihoito"
-                 "Liikenneympäristön hoito"
-                 "Soratien hoito"
-                 "Päällyste"
-                 "MHU Ylläpito"
-                 "MHU Korvausinvestointi"
-                 "MHU ja HJU hoidon johto"]]
+        sheet-nimi "Tuotekohtainen"
+        otsikot [["Talvihoito" "alvi"]
+                 ["Liikenneympäristön hoito" "ympä"]
+                 ["Soratien hoito" "sora"]
+                 ["Päällyste" "pääl"]
+                 ["MHU Ylläpito" "yllä"]
+                 ["MHU ja HJU hoidon johto" "johto"]
+                 ["MHU Korvausinvestointi" "korv"]]
+
+        ;; Etsitään otsikon indeksi Toimenpideinstanssin nimen osan peruteella
+        etsi-indeksi (fn [otsikon-osa rivit]
+                       (let [indeksi (some #(when-not (nil? %) %)
+                                       (map-indexed
+                                         (fn [i rivi]
+                                           (when (str/includes? (str/lower-case (:nimi rivi)) otsikon-osa)
+                                             i))
+                                         rivit))]
+                         indeksi))]
 
     [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")
                 :otsikon-koko :iso}
@@ -266,20 +277,19 @@
                                                    :hoitokausi (pvm/paivamaaran-hoitokausi alkupvm)}))
      ;; Data on vectorina järjestyksessä, käytetään 'otsikot' indeksiä oikean datan näyttämiseen  
      (concat (for [x otsikot]
-               (do
-                 (let [tiedot-indeksi (.indexOf otsikot x)
-                       data (try
-                              (nth (first laskutusyhteenvedot) tiedot-indeksi)
-                              (catch Throwable t
-                                (println "Tuotekohtainen - " x "tietoja ei löytynyt.")
-                                nil))]
-                   (taulukko {:data data
-                              :otsikko x
-                              :sheet-nimi (when (= (.indexOf otsikot x) 0) sheet-nimi)
-                              :laskutettu-teksti laskutettu-teksti
-                              :laskutetaan-teksti laskutetaan-teksti
-                              :kyseessa-kk-vali? kyseessa-kk-vali?
-                              :alkupvm alkupvm})))))
+               (let [tiedot-indeksi (etsi-indeksi (second x) (first laskutusyhteenvedot))
+                     data (try
+                            (nth (first laskutusyhteenvedot) tiedot-indeksi)
+                            (catch Throwable t
+                              (log/error "Tuotekohtaisen laskutusyhteenvedon tietoja ei löytynyt.")
+                              nil))]
+                 (taulukko {:data data
+                            :otsikko (first x)
+                            :sheet-nimi (when (= (.indexOf otsikot x) 0) sheet-nimi)
+                            :laskutettu-teksti laskutettu-teksti
+                            :laskutetaan-teksti laskutetaan-teksti
+                            :kyseessa-kk-vali? kyseessa-kk-vali?
+                            :alkupvm alkupvm}))))
 
      (toteutuneet-taulukko {:data (first koostettu-yhteenveto)
                             :otsikko "Toteutuneet"

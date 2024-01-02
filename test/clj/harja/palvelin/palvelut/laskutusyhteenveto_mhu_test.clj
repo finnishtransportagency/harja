@@ -33,6 +33,7 @@
 
 ;; Tallenna monissa testeissa käytetty raportti atomiin, jotta tietokantahakuihin ei tarvitse tuhlata aikaa
 (def oulun-mhu-urakka-2020-03 (atom []))
+(def oulun-mhu-urakka-2022-2023 (atom []))
 (def oulun-mhu-urakka-2020-04 (atom []))
 (def oulun-mhu-urakka-2020-06 (atom []))
 
@@ -47,6 +48,15 @@
      :urakkatyyppi "teiden-hoito"
      :alkupvm (pvm/->pvm "1.3.2020")
      :loppupvm (pvm/->pvm "31.3.2020")}))
+
+(defn hae-2022-2023-oulu-mhu-tiedot []
+  (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
+    (:db jarjestelma)
+    +kayttaja-jvh+
+    {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+     :urakkatyyppi "teiden-hoito"
+     :alkupvm (pvm/->pvm "1.10.2022")
+     :loppupvm (pvm/->pvm "30.9.2023")}))
 
 (defn hae-2020-04-tiedot []
   (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
@@ -283,6 +293,49 @@
           latautuu (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit )]
       (is (not (nil? latautuu))))))
 
+(deftest mhu-korvausinvestointi
+  (let [alkuaika "2022-10-01"
+        loppuaika "2022-10-01"
+        urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+
+        ;;Hae Korvausinvestoinnin toimenpideinstanssi
+        korvausinvestointi (first (q-map (format "SELECT id, toimenpide FROM toimenpideinstanssi WHERE nimi = '%s' and urakka = %s"
+                                  "Oulu MHU MHU Korvausinvestointi TP" urakka-id)))
+        ;; Haetaan toimenpideinstanssille määritellyn toimenpiteen kautta tehtävä
+        tehtava (first (q-map (format "SELECT id, nimi, tehtavaryhma FROM tehtava t WHERE t.emo = %s" (:toimenpide korvausinvestointi))))
+
+        ;;  Poista kaikki mhu-korvausinvestointihommat oululta
+        _ (poista-kulut-aikavalilta urakka-id alkuaika loppuaika)
+
+        ;; Lisätään hankintakulu korvausinvestointi toimenpideinstanssille
+        _ (lisaa-kulu-urakalle 100 alkuaika urakka-id (:id korvausinvestointi) (:tehtavaryhma tehtava) "kokonaishintainen")
+
+        ;; Lisätään lisätyö korvausinvestointi toimenpideinstanssille
+        _ (lisaa-kulu-urakalle 11 alkuaika urakka-id (:id korvausinvestointi) nil "lisatyo")
+
+        ;; Lisätään sanktiot korvausinvestointi toimenpideinstanssille
+        ;; Hae hallinnolliset laiminlyönnit sanktiotyypin id
+        sanktiotyyppi-id (:id (first (q-map (format "SELECT id FROM sanktiotyyppi st WHERE st.nimi = '%s';"
+                                              "Hallinnolliset laiminlyönnit"))))
+        _ (lisaa-sanktio-urakalle 12 "C" alkuaika urakka-id (:id korvausinvestointi) sanktiotyyppi-id)
+
+
+        _ (when (= (empty? @oulun-mhu-urakka-2022-2023))
+            (reset! oulun-mhu-urakka-2022-2023 (hae-2022-2023-oulu-mhu-tiedot)))
+        poista-tpi (fn [tiedot]
+                     (map #(dissoc %
+                             :tpi) tiedot))
+        haetut-tiedot-oulu-ilman-tpita (poista-tpi @oulun-mhu-urakka-2022-2023)
+        haetut-tiedot-oulu-mhu-korvausinvestointi (first (filter #(= (:tuotekoodi %) "14300") haetut-tiedot-oulu-ilman-tpita))
+
+        _ (is (= 100M (:hankinnat_laskutettu haetut-tiedot-oulu-mhu-korvausinvestointi)))
+        _ (is (= 11M (:lisatyot_laskutettu haetut-tiedot-oulu-mhu-korvausinvestointi)))
+        _ (is (= -12M (:sakot_laskutettu haetut-tiedot-oulu-mhu-korvausinvestointi)))
+        _ (is (= 100M (:hankinnat_laskutetaan haetut-tiedot-oulu-mhu-korvausinvestointi)))
+        _ (is (= 11M (:lisatyot_laskutetaan haetut-tiedot-oulu-mhu-korvausinvestointi)))
+        _ (is (= -12M (:sakot_laskutetaan haetut-tiedot-oulu-mhu-korvausinvestointi)))]))
+
+
 (deftest laskutusyhteenvedon-sementointi
   (testing "laskutusyhteenvedon-sementoiti"
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
@@ -298,6 +351,7 @@
           haetut-tiedot-oulu-paallyste (first (filter #(= (:tuotekoodi %) "20100") haetut-tiedot-oulu-ilman-tpita))
           haetut-tiedot-oulu-mhu-yllapito (first (filter #(= (:tuotekoodi %) "20190") haetut-tiedot-oulu-ilman-tpita))
           haetut-tiedot-oulu-mhu-korvausinvestointi (first (filter #(= (:tuotekoodi %) "14300") haetut-tiedot-oulu-ilman-tpita))
+          _ (println "haetut-tiedot-oulu-mhu-korvausinvestointi; " (pr-str haetut-tiedot-oulu-mhu-korvausinvestointi))
           haetut-tiedot-oulu-mhu-ja-hoidon-johto (first (filter #(= (:tuotekoodi %) "23150") haetut-tiedot-oulu-ilman-tpita))
           ;; Kommentoin nämä pois, koska oletettavasti jotain vielä muuttuu, niin ei hajoa testit ihan heti.
           ;_ (log/debug "haetut-tiedot-oulu-talvihoito")

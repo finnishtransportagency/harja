@@ -32,7 +32,8 @@
        :const true}
 bufferi 1000)
 
-;; Vaihdettu 60s etteivät tiedot häviä liian pian tarkastellessa (VHAR-1057)
+;; Vaihdettu 60s etteivät tiedot häviä liian pian tarkastellessa.
+;; Aiemmin saattoi käydä niin, että edellinen lataus oli vielä kesken, kun tehtiin uusi haku.
 (def ^{:doc "Päivitystiheys tilannekuvassa, kun parametrit eivät muutu"
        :const true}
 hakutiheys-nykytilanne 60000)
@@ -119,6 +120,9 @@ hakutiheys-historiakuva 1200000)
             tk/siltojen-puhdistus false
             tk/l-ja-p-alueiden-puhdistus false
             tk/muu false}
+     :valaistus {tk/huoltokierros false
+                 tk/ryhmavaihto false
+                 tk/muut-valaistus-toimenpiteet false}
      :alueet oletusalueet
      :varustetoteumat {tk/varustetoteumat false}
      :tieluvat {tk/tieluvat false}}))

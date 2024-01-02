@@ -256,7 +256,7 @@
                             :paivita!   (fn [polku indeksi arvo]
                                           (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku indeksi)))})]
     [:div#vayla
-     [debug/debug app]
+     #_#_#_[debug/debug app]
      [debug/debug lomake]
      [debug/debug validius]
      [:div.flex-row {:style {:padding-left  "15px"

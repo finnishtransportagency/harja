@@ -26,6 +26,7 @@
     [clojure.string :as str]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.kyselyt.konversio :as konv]
+    [harja.domain.kulut :as kulut-domain]
     [harja.pvm :as pvm]
     [clj-gatling.core :as gatling]
     [clojure.java.jdbc :as jdbc]
@@ -144,7 +145,7 @@
   {:datasource (tietokanta/luo-yhteyspool temppitietokanta)})
 
 (defn luo-liitteidenhallinta []
-  (liitteet/->Liitteet nil))
+  (liitteet/->Liitteet nil nil nil))
 
 (defonce db (:datasource (luo-testitietokanta)))
 (defonce temppidb (:datasource (luo-temppitietokanta)))
@@ -1574,7 +1575,7 @@
                                               [:db])
 
                            :liitteiden-hallinta (component/using
-                                                  (liitteet/->Liitteet nil)
+                                                  (liitteet/->Liitteet nil nil nil)
                                                   [:db])
 
                            ~@omat))))
@@ -1801,9 +1802,9 @@
 
 (defn poista-kulut-aikavalilta [urakka-id hk_alkupvm hk_loppupvm]
   (let [kulut (flatten (q (format "SELECT id FROM kulu k WHERE k.urakka = %s and k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE;" urakka-id hk_alkupvm hk_loppupvm)))
-        _ (u (format "DELETE FROM kulu_kohdistus WHERE kulu IN (%s)" (str/join "," kulut)))
-        _ (u (format "DELETE FROM kulu_liite WHERE kulu IN (%s)" (str/join "," kulut)))
-        _ (u (format "delete from kulu k where k.urakka = %s and k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE; " urakka-id hk_alkupvm hk_loppupvm))]))
+        _ (when-not (empty? kulut) (u (format "DELETE FROM kulu_kohdistus WHERE kulu IN (%s)" (str/join "," kulut))))
+        _ (when-not (empty? kulut) (u (format "DELETE FROM kulu_liite WHERE kulu IN (%s)" (str/join "," kulut))))
+        _ (when-not (empty? kulut) (u (format "delete from kulu k where k.urakka = %s and k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE; " urakka-id hk_alkupvm hk_loppupvm)))]))
 
 (defn poista-bonukset-ja-sanktiot-aikavalilta [urakka-id hk_alkupvm hk_loppupvm]
   (let [toimenpideinstanssit (flatten (q (format "SELECT tpi.id as is
@@ -1812,6 +1813,58 @@
         _ (u (format "DELETE FROM erilliskustannus WHERE urakka = %s AND pvm BETWEEN '%s'::DATE AND '%s'::DATE;" urakka-id hk_alkupvm hk_loppupvm))
         ;; Sanktioihin ei ole tallennettu urakkaa, niin se pitää niputtaa toimenpideinstanssien kautta
         _ (u (format "DELETE FROM sanktio WHERE toimenpideinstanssi IN (%s) AND perintapvm BETWEEN '%s'::DATE AND '%s'::DATE;" (str/join "," toimenpideinstanssit) hk_alkupvm hk_loppupvm))]))
+
+(defn lisaa-kulu-urakalle
+  "Anna summa muodossa integer
+  Anna eräpäivä stringinä muodossa yyyy-MM-dd
+  Anna urakan-id muodossa integer
+  Anna tpi-id muodossa integer
+  Anna tryhma-id muodossa integer
+  Anna maksueratyyppi kokonaishintainen/lisatyo"
+  [summa erapaiva urakka-id tpi-id tryhma-id maksueratyyppi]
+  (let [urakan-tiedot (first (q-map (format "SELECT alkupvm FROM urakka WHERE id = %s" urakka-id)))
+        laskutuspvm (pvm/iso-8601->pvm erapaiva)
+        koontilaskun-kuukausi (kulut-domain/pvm->koontilaskun-kuukausi laskutuspvm (:alkupvm urakan-tiedot))
+
+        _ (u (format "INSERT INTO kulu (tyyppi, kokonaissumma, erapaiva, urakka, koontilaskun_kuukausi, luotu)
+                      VALUES ('laskutettava'::LASKUTYYPPI, %s, '%s'::DATE, %s, '%s', NOW());"
+               summa erapaiva urakka-id koontilaskun-kuukausi))
+
+        ;; HAetaan viimeisin id
+        kulu-id (:id (first (q-map (format "SELECT id FROM kulu
+                                            WHERE kokonaissumma = %s AND urakka = %s
+                                            ORDER BY ID DESC LIMIT 1"
+                                     summa urakka-id))))
+
+        _ (u (format "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi,
+                                                  suoritus_alku, suoritus_loppu, luotu)
+                      VALUES (0, %s, %s, %s, %s, '%s', '%s'::TIMESTAMP, '%s'::TIMESTAMP, now());"
+               kulu-id summa tpi-id tryhma-id maksueratyyppi laskutuspvm laskutuspvm))]))
+
+(defn lisaa-sanktio-urakalle
+  "Anna sakkoryhma 'C'
+  Anna määrä integerina
+  pvm on perintäpäivämäärä
+  urakka-id on urakan id
+  tpi on toimenpideinstanssi, jolle sanktio laitetaan, anna integer.
+  sanktiotyyppi taulusta id, "
+  [maara sakkoryhma pvm urakka-id tpi sanktiotyyppi-id]
+  (let [;; Lisätään ensin laatupoikkeama, jotta voidaan lisätä sanktio
+        aika (pvm/iso-8601->pvm pvm)
+        _ (u (format "INSERT INTO laatupoikkeama (kohde, tekija, kasittelytapa, paatos, perustelu, luotu, aika,
+        kasittelyaika, urakka, lahde)
+        VALUES ('xx', 'tilaaja','puhelin','sanktio', 'xx', now(), '%s', '%s', %s, 'harja-ui');"
+               aika aika urakka-id))
+
+        ;; HAetaan viimeisin id
+        laatupoikkeama-id (:id (first (q-map (format "SELECT id FROM laatupoikkeama
+                                            WHERE urakka = %s
+                                            ORDER BY ID DESC LIMIT 1" urakka-id))))
+
+        _ (u (format "INSERT INTO sanktio (maara, perintapvm, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio,
+        luotu, sakkoryhma)
+        VALUES (%s, '%s', %s, %s, %s, true, now(), '%s');"
+               maara pvm laatupoikkeama-id tpi sanktiotyyppi-id sakkoryhma))]))
 
 (defn lahes-sama?
   "Laske Levenshtein Distance -arvon kahden tekstin välille ja kertoo, onko se sallitun thresholdin puitteissa.

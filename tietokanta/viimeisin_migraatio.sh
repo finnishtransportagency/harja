@@ -7,7 +7,7 @@
 # Viimeisimmät migraatiot:
 # develop
 # 892
-# VHAR-4778
+# nykyinen-haara
 # 890
 #
 # ./viimeisin_migraatio.sh develop other-branch

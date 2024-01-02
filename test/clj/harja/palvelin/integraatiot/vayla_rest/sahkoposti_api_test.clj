@@ -59,7 +59,7 @@
                            (:vastausosoite integraatio/ulkoinen-sahkoposti-asetukset))
                          [:integraatioloki :db])
     :labyrintti (component/using
-                  (labyrintti/->Labyrintti "foo" "testi" "testi" (atom #{}))
+                  (labyrintti/->Labyrintti "foo" "testi" "testi" "" "" (atom #{}))
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (tloik-testi-tyokalut/luo-tloik-komponentti)

@@ -513,6 +513,7 @@
 
 (defn siirra-urakan-pohjavesialueet [db user tiedot]
   (log/debug "siirra-urakan-pohjavesialueet :: tiedot" tiedot)
+
   (let [urakkaid (:urakkaid tiedot)
         urakkatiedot (first (urakat-kyselyt/hae-urakka db {:id urakkaid}))
         urakan-loppuvuosi (pvm/vuosi (:loppupvm urakkatiedot))
@@ -537,6 +538,8 @@
                                                 (assoc :ajoratojen_pituus (:ajoratojen_pituus tr-tiedot)))]
               ;; Tallennetaan ensin rajoitusalue uutena tai päivityksenä
               (tallenna-suolarajoitus db user tallennettava-suolarajoitus)))]
+    (log/info (format "siirra-urakan-pohjavesialueet :: urakkaid %s" urakkaid))
+
     urakan-pohjavesialueet))
 
 (defn tarkista-onko-suolatoteumia [db user tiedot]

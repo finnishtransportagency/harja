@@ -71,7 +71,7 @@
 
 (defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi verkon-tyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                                               tr-ajorata tr-kaista verkon-tarkoitus kasittelymenetelma paksuus lisatty-paksuus
-                                              verkon-sijainti toimenpide kasittelysyvyys massamaara]}
+                                              verkon-sijainti toimenpide kasittelysyvyys massamenekki]}
                                       kohteen-tienumero karttapvm]
   (let [tekninen-toimenpide (if-not (#{42 41 32 31 4} toimenpide) ;; LJYR TJYR TAS TASK REM-TAS
                               4 ;; "Kevyt rakenteen parantaminen"
@@ -100,7 +100,7 @@
      (when verkon-sijainti
        [:verkon-sijainti verkon-sijainti])
      [:tekninen-toimenpide tekninen-toimenpide]
-     (when massamaara [:massamenekki massamaara])]))
+     (when massamenekki [:massamenekki massamenekki])]))
 
 ;; YHA ohjaa paikkauskohteiden pot-lomakkeet poikkeuskäsittelyllä yhteisesti sovitun kohde id:n avulla
 (def paikkauskohteiden-yha-id 99)

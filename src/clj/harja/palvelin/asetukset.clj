@@ -95,7 +95,9 @@
    (s/optional-key :digiroad) {:url s/Str
                                :api-key s/Str}
 
-   :ilmatieteenlaitos {:lampotilat-url s/Str}
+   ;; TODO: Siirtymävaiheen jälkeen apiavain ei enää ole valinnainen paramteri
+   :ilmatieteenlaitos {:lampotilat-url s/Str
+                       (s/optional-key :apiavain) s/Str}
 
    (s/optional-key :geometriapaivitykset) {(s/optional-key :tuontivali) s/Int
                                            (s/optional-key :tieosoiteverkon-shapefile) s/Str
@@ -150,17 +152,19 @@
                             :kayttajatunnus s/Str
                             :salasana s/Str
                             :varuste-api-juuri-url s/Str
-                            (s/optional-key :varuste-tuonti-suoritusaika) [s/Num]
                             :varuste-kayttajatunnus s/Str
                             :varuste-salasana s/Str
-                            :varuste-urakka-oid-url s/Str
-                            :varuste-urakka-kohteet-url s/Str}
+                            (s/optional-key :varuste-tuonti-suoritusaika) [s/Num]
+                            (s/optional-key :oid-tuonti-suoritusaika) [s/Num]}
 
    (s/optional-key :yha-velho) {}
 
+   ;; TODO: Siirtymävaiheen jälkeen sms-url ja apiavain ei enää ole valinnainen paramteri
    (s/optional-key :labyrintti) {:url s/Str
                                  :kayttajatunnus s/Str
-                                 :salasana s/Str}
+                                 :salasana s/Str
+                                 (s/optional-key :sms-url) s/Str
+                                 (s/optional-key :apiavain) s/Str}
 
    (s/optional-key :virustarkistus) {:url s/Str}
    (s/optional-key :tiedostopesula) {:base-url s/Str}
@@ -191,7 +195,8 @@
 
    (s/optional-key :vkm) {:url s/Str}
 
-   (s/optional-key :liitteet) {:fileyard-url s/Str}
+   (s/optional-key :liitteet) {:fileyard-url s/Str
+                               :s3-url s/Str}
 
    (s/optional-key :yllapitokohteet) {:paivittainen-sahkopostin-lahetysaika [s/Num]}
    :komponenttien-tila {:itmf {:paivitystiheys-ms s/Int}
@@ -225,7 +230,7 @@
   (merge-with #(if (map? %1)
                  (merge %1 %2)
                  %2)
-              oletukset asetukset))
+    oletukset asetukset))
 
 (defn tarkista-asetukset [asetukset]
   (s/check Asetukset asetukset))
@@ -234,8 +239,8 @@
   (let [env-muuttujat (with-open [rdr (io/reader ".harja_env")]
                         (reduce (fn [tulos rivi]
                                   (conj tulos (str/trim rivi)))
-                                []
-                                (line-seq rdr)))]
+                          []
+                          (line-seq rdr)))]
     (doseq [env-muuttuja env-muuttujat]
       (when (nil? (System/getenv env-muuttuja))
         (log/error (str "Ympäristömuuttujaa " env-muuttuja " ei ole asetettu!"))))))
@@ -273,14 +278,14 @@
                             (if (string? s)
                               (str/replace s #"[\n\r]" "")
                               s))
-                          (:vargs msg))))
+                      (:vargs msg))))
 
 (defn- logituksen-tunnus [msg]
   (let [ensimmainen-arg (-> msg :vargs first)
         tunnus (when (string? ensimmainen-arg)
                  (second
                    (re-find #"^\[([^\]]*)\]"
-                            ensimmainen-arg)))]
+                     ensimmainen-arg)))]
     (when tunnus
       (str/lower-case tunnus))))
 
@@ -292,9 +297,17 @@
   (fn [msg]
     (let [ei-logiteta? (when-let [tunnus (logituksen-tunnus msg)]
                          (and (contains? ei-logiteta tunnus)
-                              testidata?))]
+                           testidata?))]
       (when-not ei-logiteta?
         msg))))
+
+(defn- log-tag [context]
+  (let [tag (cond
+              ;; Admin? (jarjestelmavastuuhenkilo)
+              (:jvh? context) "ADMIN"
+              :else nil)]
+    (when tag
+      (str tag " "))))
 
 ;; Logituksen output-fn hyödyntää context-tietoja, jotka voidaan antaa lokittajalle eri nimiavaruuksissa
 ;; Hyödynnetään kontekstista kayttajatunnus, client-ip ja korrelaatio-id mikäli konteksti on saatavilla
@@ -303,13 +316,14 @@
   [data]
   (let [{:keys [level ?err #_vargs msg_ ?ns-str ?file hostname_
                 timestamp_ ?line context #_?meta]} data
-        kayttajatunnus (:kayttajatunnus context :unidentified-user)
-        client-ip (:client-ip context :unknown-source)
-        korrelaatio-id (:korrelaatio-id context)]
+        {:keys [kayttajatunnus client-ip korrelaatio-id]} context
+        kayttajatunnus (or kayttajatunnus :tuntematon-kayttaja)
+        client-ip (or client-ip :tuntematon-client)]
     (str
       (force timestamp_) " "
       (force hostname_) " "
       (str/upper-case (name level)) " "
+      (log-tag context)
       "[" (or ?ns-str ?file "?") ":" (or ?line "?") "] - "
       (when context (str client-ip " "
                       korrelaatio-id " "
@@ -330,5 +344,5 @@
     (log/merge-config! {:appenders
                         {:slack
                          (slack/luo-slack-appender (str/trim (:webhook-url slack))
-                                                   (:taso slack)
-                                                   (:urls slack))}})))
+                           (:taso slack)
+                           (:urls slack))}})))

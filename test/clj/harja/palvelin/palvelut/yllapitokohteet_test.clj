@@ -1970,20 +1970,6 @@
 
 (def excel-rivit-utajarvi-2023
   (list {:lihavoi? false
-         :rivi [13374
-                "L14"
-                nil
-                "Ouluntie 2"
-                0M
-                0M
-                0M
-                0M
-                0M
-                [:kaava
-                 {:alkusarake "E"
-                  :kaava :summaa-vieressaolevat
-                  :loppusarake "I"}]]}
-        {:lihavoi? false
          :rivi [13375
                 "L15"
                 "A"
@@ -2006,32 +1992,78 @@
          [:kaava
           {:alkurivi 5
            :kaava :summaa-yllaolevat
-           :loppurivi 6}]
+           :loppurivi 5}]
          [:kaava
           {:alkurivi 5
            :kaava :summaa-yllaolevat
-           :loppurivi 6}]
+           :loppurivi 5}]
          [:kaava
           {:alkurivi 5
            :kaava :summaa-yllaolevat
-           :loppurivi 6}]
+           :loppurivi 5}]
          [:kaava
           {:alkurivi 5
            :kaava :summaa-yllaolevat
-           :loppurivi 6}]
+           :loppurivi 5}]
          [:kaava
           {:alkurivi 5
            :kaava :summaa-yllaolevat
-           :loppurivi 6}]
+           :loppurivi 5}]
          [:kaava
           {:alkurivi 5
            :kaava :summaa-yllaolevat
-           :loppurivi 6}]]))
+           :loppurivi 5}]]))
 
-(deftest muodosta-paallystysexcelin-kohteiden-rivit
+(def excel-rivit-utajarvi-nyt
+  (list {:lihavoi? false
+         :rivi [13374
+                "L14"
+                nil
+                "Ouluntie 2"
+                0M
+                0M
+                0M
+                0M
+                0M
+                [:kaava
+                 {:alkusarake "E"
+                  :kaava :summaa-vieressaolevat
+                  :loppusarake "I"}]]}
+    [nil nil nil nil nil nil nil nil nil nil]
+    [nil nil nil nil nil nil nil nil nil nil]
+    [nil
+     nil
+     nil
+     "Yhteensä:"
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat
+       :loppurivi 5}]
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat
+       :loppurivi 5}]
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat
+       :loppurivi 5}]
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat
+       :loppurivi 5}]
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat
+       :loppurivi 5}]
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat
+       :loppurivi 5}]]))
+
+(deftest muodosta-paallystysexcelin-kohteiden-rivit-2023
   (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
-        vuosi (pvm/vuosi (pvm/nyt))
+        vuosi 2023
         kohteet (yllapitokohteet-domain/jarjesta-yllapitokohteet
                   (hae-urakan-yllapitokohteet (:db jarjestelma)
                                               +kayttaja-jvh+
@@ -2040,6 +2072,19 @@
                                                :vuosi vuosi}))
         excelin-kohderivit (paallystyskohteet-excel/muodosta-excelrivit kohteet vuosi)]
     (is (= excel-rivit-utajarvi-2023 excelin-kohderivit) "Päällystyskohteiden kustannusten excelrivien muodostus")))
+
+(deftest muodosta-paallystysexcelin-kohteiden-rivit-nyt
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        vuosi (pvm/vuosi (pvm/nyt))
+        kohteet (yllapitokohteet-domain/jarjesta-yllapitokohteet
+                  (hae-urakan-yllapitokohteet (:db jarjestelma)
+                    +kayttaja-jvh+
+                    {:urakka-id urakka-id
+                     :sopimus-id sopimus-id
+                     :vuosi vuosi}))
+        excelin-kohderivit (paallystyskohteet-excel/muodosta-excelrivit kohteet vuosi)]
+    (is (= excel-rivit-utajarvi-nyt excelin-kohderivit) "Päällystyskohteiden kustannusten excelrivien muodostus")))
 
 (def excel-rivit-muhos-2017
   (list

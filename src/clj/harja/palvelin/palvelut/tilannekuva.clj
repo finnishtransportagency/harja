@@ -111,7 +111,7 @@
     (q/urakoitsijan-urakat db {:organisaatio (get-in user [:organisaatio :id])})))
 
 (defn- urakat-joihin-lukuoikeus-roolin-kautta
-  ;; On urakoita, joissa urakoitsijoita on useasta eri organisaatiosta. (VHAR-8222) Tällöin käyttäjän organisaatioon
+  ;; On urakoita, joissa urakoitsijoita on useasta eri organisaatiosta. Tällöin käyttäjän organisaatioon
   ;; perustuva haku ei riitä, vaan on lisäksi poimittava roolitiedon perusteella urakat joihin käyttäjällä on lukuoikeus
   [user oikeus-nakyma]
   (let [urakka-idt (keys (:urakkaroolit user))]
@@ -402,8 +402,8 @@
       {:tehtavat tehtavat
        :viimeisin viimeisin})))
 
-(defn- toteumien-toimenpidekoodit [db {:keys [talvi kesa]}]
-  (let [koodit (some->> (union talvi kesa)
+(defn- toteumien-toimenpidekoodit [db {:keys [talvi kesa valaistus]}]
+  (let [koodit (some->> (union talvi kesa valaistus)
                         haettavat
                         (q/hae-toimenpidekoodit db)
                         (map :id))]

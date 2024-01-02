@@ -29,7 +29,7 @@ BEGIN
 
     -- Käytetään vertailukuukauden default-arvona syyskuuta.
     vertailukk := 9;
-    -- 2023 tai sen jälkeen alkaville urakoille vertailuukausi on elokuu (VHAR-6948)
+    -- 2023 tai sen jälkeen alkaville urakoille vertailuukausi on elokuu
     IF urakan_alkuvuosi >= 2023 THEN
         vertailukk := 8;
     END IF;
