@@ -137,9 +137,10 @@
          kohdeluokat
          (fn [kohdetyyppi valittu?]
            (e! (v/->ValitseKohdeluokka (:nimi kohdetyyppi) valittu?)))
-         [" Kohdeluokka valittu" " Kohdeluokkaa valittu"]
+         [nil " Kohdeluokkaa valittu"]
          {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
           :vayla-tyyli? true
+          :yksi-valittu-teksti (kohdeluokka-teksti (first (:kohdeluokat valinnat)))
           :fmt kohdeluokka-teksti
           :valintojen-maara (count (:kohdeluokat valinnat))}]
 
@@ -167,10 +168,12 @@
          kuntoluokat
          (fn [kuntoluokka valittu?]
            (e! (v/->ValitseKuntoluokka (:nimi kuntoluokka) valittu?)))
-         [" Kuntoluokka valittu" " Kuntoluokkaa valittu"]
+         [nil " Kuntoluokkaa valittu"]
          {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
           :vayla-tyyli? true
+          :yksi-valittu-teksti (:otsikko (first (:kuntoluokat valinnat)))
           :fmt (comp itse-tai-kaikki :otsikko)}]]
+
        [:div.row
         [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä" #(e! (v/->HaeVarusteet)) {:luokka "nappi-korkeus-32"
                                                                                          :disabled false
