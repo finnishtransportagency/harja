@@ -465,7 +465,8 @@
     (let [
           viimeinen-rivi (last data)
           aiempi-sheet (last (excel/sheet-seq workbook))
-          [sheet nolla] (if (and (nil? sheet-nimi)
+          [sheet nolla] (if (and
+                              (or samalle-sheetille? (nil? sheet-nimi))
                               (or samalle-sheetille? (nil? nimi))
                               aiempi-sheet)
                           [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
