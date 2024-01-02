@@ -89,7 +89,6 @@
       {:otsikko "MAKU-pääl­lys­teet", :leveys 5, :fmt :raha, :otsikkorivi-luokka "paallystys-tausta-tumma"}
       {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}]
      (list
-       (list "Utajärven päällystysurakka" "L14" nil "Ouluntie 2" [:boolean {:arvo nil}] 22 13 0 13 3888 0 nil nil 0M 0M 0M 0M 0M 0M)
        (list "Utajärven päällystysurakka" "L15" "A" "Puolangantie" [:boolean {:arvo true}] 837 2 0 2 1000 0 nil nil
          odotettu-sopimuksen-mukaiset-tyot odotettu-maaramuutokset
          odotettu-sideaineen-hintamuutokset odotettu-polttooljyn-hintamuutokset
@@ -144,29 +143,7 @@
 (def odotettu-aikataulu-2023
   [:aikajana
    {}
-   (list #:harja.ui.aikajana{:ajat [#:harja.ui.aikajana{:alku #inst "2023-05-15T21:00:00.000-00:00"
-                                                        :drag nil
-                                                        :kohde-nimi "Ouluntie 2"
-                                                        :loppu #inst "2023-05-23T21:00:00.000-00:00"
-                                                        :reuna "black"
-                                                        :sahkopostitiedot nil
-                                                        :teksti "Koko kohde: 16.05.2023 – 24.05.2023"}
-                                    #:harja.ui.aikajana{:alku #inst "2023-05-18T21:00:00.000-00:00"
-                                                        :drag nil
-                                                        :kohde-nimi "Ouluntie 2"
-                                                        :loppu #inst "2023-05-20T21:00:00.000-00:00"
-                                                        :sahkopostitiedot nil
-                                                        :teksti "Päällystys: 19.05.2023 – 21.05.2023"
-                                                        :vari "#282B2A"}
-                                    #:harja.ui.aikajana{:alku #inst "2023-05-21T21:00:00.000-00:00"
-                                                        :drag nil
-                                                        :kohde-nimi "Ouluntie 2"
-                                                        :loppu #inst "2023-05-22T21:00:00.000-00:00"
-                                                        :sahkopostitiedot nil
-                                                        :teksti "Tiemerkintä: 22.05.2023 – 23.05.2023"
-                                                        :vari "#DECB03"}]
-                             :otsikko "L14 - Ouluntie 2"
-                             :valitavoitteet nil}
+   (list
      #:harja.ui.aikajana{:ajat [#:harja.ui.aikajana{:alku #inst "2023-06-13T21:00:00.000-00:00"
                                                     :drag nil
                                                     :kohde-nimi "Puolangantie"
@@ -249,22 +226,7 @@
      :nimi :aikataulu-kohde-valmis
      :otsikko "Pääl­lystys­koh­de val­mis"
      :tyyppi :pvm}]
-   [["L14"
-     "Ouluntie 2"
-     "22 / 13 / 0 / 13 / 3888"
-     "1"
-     "11"
-     ""
-     "-"
-     "16.05.2023"
-     "19.05.2023"
-     "21.05.2023"
-     "21.05.2023"
-     "04.06.2023"
-     "22.05.2023"
-     "23.05.2023"
-     "24.05.2023"]
-    ["L15"
+   [["L15"
      "Puolangantie"
      "837 / 2 / 0 / 2 / 1000"
      "0"
