@@ -9,6 +9,8 @@ on:
   push:
     branches:
       - trivy-testi
+env:
+  GH_DOCKER_REGISTRY: ghcr.io
 
 jobs:
   build-and-scan:
@@ -22,6 +24,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       # Testitietokantaa tarvitaan buildin yhteydessä
       - name: Start test database
