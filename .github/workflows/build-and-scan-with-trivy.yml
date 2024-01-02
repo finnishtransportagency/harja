@@ -22,6 +22,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Testitietokantaa tarvitaan buildin yhteydessä
+      - name: Start test database
+        uses: ./.github/actions/start-test-db
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä (esim. harjadb-latest)
+          # Käytetään uusinta saatavilla olevaa testidb:tä AWS buildeissa.
+          service-name: harjadb-latest
+
+
       # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
       - name: Build Harja Uberjar
         uses: ./.github/actions/build-harja-app
