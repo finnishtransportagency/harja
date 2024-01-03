@@ -17,7 +17,6 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [clj-time.core :as t]
@@ -259,11 +258,6 @@
       (tallenna-liitteet-turvallisuuspoikkeamalle db liitteiden-hallinta urakka-id tp-id kirjaaja liitteet)
       tp-id)))
 
-(defn laheta-poikkeamat-turin [turi idt]
-  (when turi
-    (doseq [id idt]
-      (turi/laheta-turvallisuuspoikkeama turi id))))
-
 (defn kirjaa-turvallisuuspoikkeama [liitteiden-hallinta turi db {id :id} {turvallisuuspoikkeamat :turvallisuuspoikkeamat} kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
     (log/debug (format "Kirjataan: %s uutta turvallisuuspoikkeamaa urakalle id: %s kayttäjän: %s (id: %s) tekemänä."
@@ -276,8 +270,7 @@
 
     (let [idt (mapv (fn [turvallisuuspoikkeama]
                       (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama))
-                    turvallisuuspoikkeamat)]
-      (async/thread (laheta-poikkeamat-turin turi idt)))
+                    turvallisuuspoikkeamat)])
     (vastaus turvallisuuspoikkeamat)))
 
 (defrecord Turvallisuuspoikkeama []
