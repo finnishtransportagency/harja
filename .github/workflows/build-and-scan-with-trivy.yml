@@ -20,6 +20,7 @@ jobs:
       # Contents read lupaa tarvitaan checkout actionissa
       contents: read
       packages: read
+      security-events: write
 
     steps:
       - name: Checkout code
