@@ -585,7 +585,8 @@
   ([valinnat on-change teksti asetukset]
    (let [idn-alku-label (gensym "label")
          idn-alku-cb (gensym "cb")]
-     (fn [valinnat on-change teksti {:keys [kaikki-valinta-fn fmt valintojen-maara] :as asetukset}]
+     (fn [valinnat on-change teksti {:keys [kaikki-valinta-fn fmt valintojen-maara
+                                            yksi-valittu-teksti] :as asetukset}]
        (let [fmt (or fmt identity)]
          [:div.checkbox-pudotusvalikko
           [livi-pudotusvalikko
@@ -604,7 +605,9 @@
                                                          (and
                                                            (= 0 (:id (first valinnat)))
                                                            (:valittu? (first valinnat))) "Kaikki valittu"
-                                                         (= valittujen-valintojen-maara 1) (str "1" (first teksti))
+                                                         (= valittujen-valintojen-maara 1) (or
+                                                                                             yksi-valittu-teksti
+                                                                                             (str "1" (first teksti)))
                                                          :else (str valittujen-valintojen-maara (second teksti)))]
                                  naytettava-teksti)
               :itemit-komponentteja? true}

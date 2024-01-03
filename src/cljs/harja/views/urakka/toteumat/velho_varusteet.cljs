@@ -133,13 +133,14 @@
           :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          toimenpiteet]
         [valinnat/monivalinta-pudotusvalikko
-         "Kohdeluokka"
+         "Luokka"
          kohdeluokat
          (fn [kohdetyyppi valittu?]
            (e! (v/->ValitseKohdeluokka (:nimi kohdetyyppi) valittu?)))
-         [" Kohdeluokka valittu" " Kohdeluokkaa valittu"]
+         [nil " Kohdeluokkaa valittu"]
          {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
           :vayla-tyyli? true
+          :yksi-valittu-teksti (kohdeluokka-teksti (first (:kohdeluokat valinnat)))
           :fmt kohdeluokka-teksti
           :valintojen-maara (count (:kohdeluokat valinnat))}]
 
@@ -152,15 +153,14 @@
            :hae-kun-yli-n-merkkia 0
            :vayla-tyyli? true
            :lomake? true
+           :disabled? (empty? (:kohdeluokat valinnat))
            :lahde varustetyyppihaku
            :monivalinta? true
            :tarkkaile-ulkopuolisia-muutoksia? true
-           :monivalinta-teksti #(do
-                                  (case (count %)
-                                    0 "Kaikki valittu"
-                                    1 (:otsikko (first %))
-
-                                    (str (count %) " varustetyyppiä valittu")))}
+           :monivalinta-teksti #(case (count %)
+                                  0 "Kaikki valittu"
+                                  1 (:otsikko (first %))
+                                  (str (count %) " varustetyyppiä valittu"))}
           v/varustetyypit]]
 
         [valinnat/monivalinta-pudotusvalikko
@@ -168,10 +168,12 @@
          kuntoluokat
          (fn [kuntoluokka valittu?]
            (e! (v/->ValitseKuntoluokka (:nimi kuntoluokka) valittu?)))
-         [" Kuntoluokka valittu" " Kuntoluokkaa valittu"]
+         [nil " Kuntoluokkaa valittu"]
          {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
           :vayla-tyyli? true
+          :yksi-valittu-teksti (:otsikko (first (:kuntoluokat valinnat)))
           :fmt (comp itse-tai-kaikki :otsikko)}]]
+
        [:div.row
         [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä" #(e! (v/->HaeVarusteet)) {:luokka "nappi-korkeus-32"
                                                                                          :disabled false
