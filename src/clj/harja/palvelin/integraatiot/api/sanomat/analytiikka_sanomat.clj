@@ -249,7 +249,7 @@
 
 (defn turvallisuuspoikkeamaviesti-json [turvallisuuspoikkeama]
   (merge
-    {:imp:poikkeama {:xmlns:imp "http://restimport.xml.turi.oikeatoliot.fi"}}
+    {:imp:poikkeama {:xmlns:imp "https://harja.vaylapilvi.fi"}}
     (lahde turvallisuuspoikkeama)
     (tapahtumatiedot turvallisuuspoikkeama)
     (tapahtumapaikka turvallisuuspoikkeama)
