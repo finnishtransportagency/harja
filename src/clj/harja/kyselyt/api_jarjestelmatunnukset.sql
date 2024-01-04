@@ -76,7 +76,6 @@ SET kayttajanimi = :kayttajanimi,
   api_oikeudet = ARRAY_REMOVE(ARRAY[:oikeudet], null)::apioikeus[]
 WHERE id = :id;
 
-
 -- name: paivita-jarjestelmatunnuksen-lisaoikeus-urakkaan!
 UPDATE kayttajan_lisaoikeudet_urakkaan SET
   urakka = :urakka
