@@ -77,6 +77,7 @@
           enkoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 200 (:status vastaus)))
       (is (= 2 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
+      (is (some (comp :lyhyt-nimi :tiedot :urakka) (:urakat enkoodattu-body)))
       (is (every?
             (fn [nimi]
               ;; Testataan löytyykö resultsetistä oikeat urakan nimet, mutta ei oteta MHU:ssa huomioon vuosilukuja,

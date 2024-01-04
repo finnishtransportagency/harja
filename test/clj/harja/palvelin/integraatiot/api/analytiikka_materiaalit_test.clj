@@ -63,6 +63,7 @@
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/urakat")] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
+    (is (= (some :lyhyt_nimi (:urakat encoodattu-body))))
     (is (= (count urakat-kannasta) (count (:urakat encoodattu-body))))))
 
 (deftest hae-organisaatiot-yksinkertainen-onnistuu-test

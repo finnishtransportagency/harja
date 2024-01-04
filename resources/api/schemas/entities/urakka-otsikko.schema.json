@@ -31,6 +31,11 @@
         }
       }
     },
+    "lyhyt-nimi": {
+      "id": "urn:harja/lyhyt-nimi",
+      "type": "string",
+      "required": false
+    },
     "vaylamuoto": {
       "id": "urn:harja/vaylamuoto",
       "type": "string",

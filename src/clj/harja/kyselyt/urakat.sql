@@ -388,6 +388,7 @@ LIMIT 11;
 SELECT
   u.id,
   u.nimi,
+  u.lyhyt_nimi AS "lyhyt-nimi",
   u.tyyppi,
   u.alkupvm,
   u.loppupvm,
@@ -421,6 +422,7 @@ WHERE u.id IN (:id);
 SELECT
   u.id,
   u.nimi,
+  u.lyhyt_nimi AS "lyhyt-nimi",
   u.tyyppi,
   u.alkupvm,
   u.loppupvm,
@@ -771,6 +773,7 @@ SELECT EXISTS(
 -- Päällystysurakoista ainoastaan päällystyspalvelusopimukseen perustuvat urakat vastaavat tieliikenneilmoituksista. Siksi kokonaisurakka-tyyppisiä päällystysurakoita ei palauteta.
 SELECT id,
        nimi,
+       lyhyt_nimi AS "lyhyt-nimi",
        tyyppi,
        alkupvm,
        loppupvm,
@@ -781,6 +784,7 @@ SELECT id,
        MIN(etaisyys) as etaisyys
 FROM (SELECT u.id                                                    as id,
              u.nimi                                                  as nimi,
+             u.lyhyt_nimi                                            as lyhyt_nimi,
              u.tyyppi                                                as tyyppi,
              u.alkupvm                                               as alkupvm,
              u.loppupvm                                              as loppupvm,
@@ -829,7 +833,7 @@ FROM (SELECT u.id                                                    as id,
                      FROM siltapalvelusopimus sps
                      WHERE sps.urakkanro = u.urakkanro
                        AND st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))) as result
-GROUP BY id, nimi, tyyppi, alkupvm, loppupvm, takuu_loppupvm, alueurakkanumero, urakoitsija_nimi, urakoitsija_ytunnus;
+GROUP BY id, nimi, lyhyt_nimi, tyyppi, alkupvm, loppupvm, takuu_loppupvm, alueurakkanumero, urakoitsija_nimi, urakoitsija_ytunnus;
 
 -- name: hae-hoito-urakka-tr-pisteelle
 SELECT id
@@ -1122,6 +1126,7 @@ WHERE u.id = :urakkaid;
 SELECT
   u.id,
   u.nimi,
+  u.lyhyt_nimi AS "lyhyt-nimi",
   u.tyyppi,
   u.alkupvm,
   u.loppupvm,
@@ -1146,6 +1151,7 @@ WHERE u.sampoid = :sampoid;
 SELECT
   u.id,
   u.nimi,
+  u.lyhyt_nimi AS "lyhyt-nimi",
   u.tyyppi,
   u.alkupvm,
   u.loppupvm,
@@ -1222,7 +1228,7 @@ SELECT id, sampoid, nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke
 -- name: listaa-kaikki-urakat-analytiikalle
 -- Haetaan kaikki urakat ilman geometriatietoja
 -- jos vuodet on annettu, niin rajaa haku voimassaolon perusteella
-SELECT id, sampoid, nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, sopimustyyppi, indeksi,
+SELECT id, sampoid, nimi, lyhyt_nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, sopimustyyppi, indeksi,
        urakkanro as alueurakkanro, tyyppi, poistettu, velho_oid, luotu, muokattu
 FROM urakka
 ORDER BY alkupvm ASC;
