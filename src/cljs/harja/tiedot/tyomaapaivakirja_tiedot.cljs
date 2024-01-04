@@ -275,6 +275,7 @@
        :versio (:versio valittu-rivi)
        :kommentti kommentti
        :paivamaara (:paivamaara valittu-rivi)
+       :harja-url (str js/window.location.protocol "//" js/window.location.host js/window.location.pathname)
        :urakka-nimi (:nimi @nav/valittu-urakka)
        :hallintayksikko-id @nav/valittu-hallintayksikko-id}
       {:onnistui ->TallennaKommenttiOnnistui

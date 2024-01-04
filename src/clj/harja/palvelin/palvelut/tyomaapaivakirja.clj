@@ -79,6 +79,7 @@
          urakka-id :urakka-id
          tyomaapaivakirja_id :tyomaapaivakirja_id
          versio :versio
+         harja-url :harja-url
          kommentti :kommentti} tiedot
         vastaus (tyomaapaivakirja-kyselyt/lisaa-kommentti<! db {:urakka_id urakka-id
                                                                 :tyomaapaivakirja_id tyomaapaivakirja_id
@@ -113,7 +114,6 @@
           (doseq [henkilo vastaanottajat]
             (let [{sahkoposti :sahkoposti} henkilo
                   viestin-otsikko "Työmaapäiväkirjassa uusi kommentti"
-                  harja-url "https://extranet.vayla.fi/harja/" ;; http://localhost:3000/
                   viestin-vartalo (html
                                     [:div
                                      (html-tyokalut/tietoja [[(format "Urakassa %s on uusi kommentti koskien %s työmaapäiväkirjaa. Voit käydä lukemassa kommentin tästä linkistä."
