@@ -80,6 +80,7 @@
          tyomaapaivakirja_id :tyomaapaivakirja_id
          versio :versio
          harja-url :harja-url
+         lahettaja :lahettaja
          kommentti :kommentti} tiedot
         vastaus (tyomaapaivakirja-kyselyt/lisaa-kommentti<! db {:urakka_id urakka-id
                                                                 :tyomaapaivakirja_id tyomaapaivakirja_id
@@ -116,14 +117,18 @@
                   viestin-otsikko "Työmaapäiväkirjassa uusi kommentti"
                   viestin-vartalo (html
                                     [:div
-                                     (html-tyokalut/tietoja [[(format "Urakassa %s on uusi kommentti koskien %s työmaapäiväkirjaa. Voit käydä lukemassa kommentin tästä linkistä."
-                                                                (pr-str urakka-nimi)
-                                                                (pr-str tyomaapaivakirjan-paivamaara))]
-
-                                                             [(format "%s#urakat/tyomaapaivakirja?&hy=%s&u=%s"
-                                                                harja-url
-                                                                (pr-str hallintayksikko-id)
-                                                                (pr-str urakka-id))]])
+                                     [:span (format "Urakassa %s on uusi kommentti koskien %s työmaapäiväkirjaa."
+                                              (pr-str urakka-nimi)
+                                              (pr-str tyomaapaivakirjan-paivamaara))] [:br]
+                                     [:div
+                                      [:p (str lahettaja ":")]
+                                      [:p  (str "'" kommentti "'")]] [:br]
+                                     [:span "Voit käydä lukemassa kommentin tästä linkistä:"]
+                                     [:p
+                                      (format "%s#urakat/tyomaapaivakirja?&hy=%s&u=%s"
+                                        harja-url
+                                        (pr-str hallintayksikko-id)
+                                        (pr-str urakka-id))] [:br]
                                      [:p "Tämä on automaattisesti luotu viesti HARJA-järjestelmästä. Älä vastaa tähän viestiin."]])]
               (sahkoposti/laheta-viesti!
                 api-sahkoposti
