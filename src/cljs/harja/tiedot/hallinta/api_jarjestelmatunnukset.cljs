@@ -1,55 +1,154 @@
 (ns harja.tiedot.hallinta.api-jarjestelmatunnukset
   "Hallinnoi integraatiolokin tietoja"
-  (:require [reagent.core :refer [atom]]
-            [cljs.core.async :refer [<!]]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :refer [log tarkkaile!]]
-            [harja.domain.oikeudet :as oikeudet]
+  (:require [cljs.core.async :refer [>! <!]]
+            [taoensso.timbre :as log]
+            [tuck.core :as tuck]
             [harja.tiedot.organisaatiot :refer [organisaatiot]]
-            [harja.atom :refer [paivita!]])
-  (:require-macros [harja.atom :refer [reaction<!]]
-                   [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction]]))
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.ui.viesti :as viesti]
+            [reagent.core :refer [atom]])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce nakymassa? (atom false))
 
-(defonce jarjestelmatunnukset
-  (reaction<! [nakymassa? @nakymassa?]
-    (when nakymassa?
-      (k/post! :hae-jarjestelmatunnukset nil))))
-
-(defonce kaikki-api-oikeudet
-  (reaction<! [nakymassa? @nakymassa?]
-    (when nakymassa?
-      (k/post! :hae-mahdolliset-api-oikeudet nil))))
+(def tila (atom {}))
 
 (defn organisaatiovalinnat []
   (distinct (map #(select-keys % [:id :nimi]) @organisaatiot)))
 
-(defonce urakkavalinnat
-  (reaction<! [nakymassa? @nakymassa?
-               oikeus? (oikeudet/hallinta-api-jarjestelmatunnukset)]
-    (when (and nakymassa? oikeus?)
-      (k/post! :hae-urakat-lisaoikeusvalintaan nil))))
+(defrecord HaeUrakat [])
+(defrecord HaeUrakatOnnistui [vastaus])
+(defrecord HaeUrakatEpaonnistui [vastaus])
 
-(defn tallenna-jarjestelmatunnukset [muuttuneet-tunnukset]
-  (go (let [uudet-tunnukset (<! (k/post! :tallenna-jarjestelmatunnukset
-                                  muuttuneet-tunnukset))]
-        (reset! jarjestelmatunnukset uudet-tunnukset))))
+(defrecord HaeJarjestelmatunnukset [])
+(defrecord HaeJarjestelmatunnuksetOnnistui [vastaus])
+(defrecord HaeJarjestelmatunnuksetEpannistui [vastaus])
 
-(defn tallenna-jarjestelmatunnuksen-lisaoikeudet [muuttuneet-oikeudet kayttaja-id tulos-atom]
-  (go (let [uudet-oikeudet (<! (k/post! :tallenna-jarjestelmatunnuksen-lisaoikeudet
-                                 {:oikeudet muuttuneet-oikeudet
-                                  :kayttaja-id kayttaja-id}))]
-        (reset! tulos-atom uudet-oikeudet))))
+(defrecord HaeMahdollisetApiOikeudet [])
+(defrecord HaeMahdollisetApiOikeudetOnnistui [vastaus])
+(defrecord HaeMahdollisetApiOikeudetEpaonnistui [vastaus])
 
-(defn hae-jarjestelmatunnuksen-lisaoikeudet [kayttaja-id tulos-atom]
-  (go (let [oikeudet (<! (k/post! :hae-jarjestelmatunnuksen-lisaoikeudet {:kayttaja-id kayttaja-id}))]
-        (reset! tulos-atom oikeudet))))
+(defrecord TallennaJarjestelmatunnukset [muuttuneet-tunnukset paluukanava])
+(defrecord TallennaJarjestelmatunnuksetOnnistui [vastaus paluukanava])
+(defrecord TallennaJarjestelmatunnuksetEpaonnistui [vastaus paluukanava])
 
-(defn aseta-oikeudet-kayttajalle [kayttajanimi valittu-oikeus asetetaan?]
-  (let [http-kutsu (if asetetaan? :lisaa-kayttajalle-oikeus :poista-kayttajalta-oikeus)]
-    (k/post!
-      http-kutsu
-      {:oikeus valittu-oikeus
-       :kayttajanimi kayttajanimi})))
+(defrecord HaeJarjestelmaTunnuksenLisaoikeudet [id])
+(defrecord HaeJarjestelmaTunnuksenLisaoikeudetOnnistui [vastaus])
+(defrecord HaeJarjestelmaTunnuksenLisaoikeudetEpaonnistui [vastaus])
+
+(defrecord AsetaJarjestelmaTunnuksenLisaoikeudet [id oikeudet])
+(defrecord TallennaJarjestelmaTunnuksenLisaoikeudet [muuttuneet-oikeudet kayttaja-id paluukanava])
+(defrecord TallennaJarjestelmaTunnuksenLisaoikeudetOnnistui [vastaus paluukanava])
+(defrecord TallennaJarjestelmaTunnuksenLisaoikeudetEpaonnistui [vastaus paluukanava])
+
+(extend-protocol tuck/Event
+  HaeUrakat
+  (process-event [_ app]
+    (tuck-apurit/post! app :hae-urakat-lisaoikeusvalintaan
+      {}
+      {:onnistui ->HaeUrakatOnnistui
+       :epaonnistui ->HaeUrakatEpaonnistui}))
+
+  HaeUrakatOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :urakkavalinnat vastaus))
+
+  HaeUrakatEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (log/error "Hallintapaneelin urakoiden haussa virhe" vastaus)
+    (viesti/nayta-toast! "Urakoiden haussa virhe" :varoitus)
+    app)
+
+  HaeJarjestelmatunnukset
+  (process-event [_ app]
+    (tuck-apurit/post! app :hae-jarjestelmatunnukset
+      {}
+      {:onnistui ->HaeJarjestelmatunnuksetOnnistui
+       :epaonnistui ->HaeJarjestelmatunnuksetEpannistui}))
+
+  HaeJarjestelmatunnuksetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :jarjestelmatunnukset vastaus))
+
+  HaeJarjestelmatunnuksetEpannistui
+  (process-event [{vastaus :vastaus} app]
+    (log/error "Hallintapaneelin järjestelmäoikeuksien haussa virhe" vastaus)
+    (viesti/nayta-toast! "Järjestelmäoikeuksien haussa virhe" :varoitus)
+    app)
+
+  HaeMahdollisetApiOikeudet
+  (process-event [_ app]
+    (tuck-apurit/post! app :hae-mahdolliset-api-oikeudet
+      {}
+      {:onnistui ->HaeMahdollisetApiOikeudetOnnistui
+       :epaonnistui ->HaeMahdollisetApiOikeudetEpaonnistui}))
+
+  HaeMahdollisetApiOikeudetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :mahdolliset-api-oikeudet vastaus))
+
+  HaeMahdollisetApiOikeudetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (log/error "Hallintapaneelin mahdollisten apioikeuksien haussa virhe" vastaus)
+    (viesti/nayta-toast! "Apioikeuksien haussa virhe" :varoitus) app)
+
+  TallennaJarjestelmatunnukset
+  (process-event [{:keys [muuttuneet-tunnukset paluukanava]} app]
+    (tuck-apurit/post! app :tallenna-jarjestelmatunnukset
+      muuttuneet-tunnukset
+      {:onnistui ->TallennaJarjestelmatunnuksetOnnistui
+       :epaonnistui ->TallennaJarjestelmatunnuksetEpaonnistui
+       :epaonnistui-parametrit [paluukanava]}))
+
+  TallennaJarjestelmatunnuksetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :jarjestelmatunnukset vastaus))
+
+  TallennaJarjestelmatunnuksetEpaonnistui
+  (process-event [{:keys [vastaus paluukanava]} app]
+    (go (>! paluukanava (:jarjestelmatunnukset app)))
+    (log/error "Hallintapaneelin järjestelmätunnusten tallennuksessa virhe" vastaus)
+    (viesti/nayta-toast! "Järjestelmätunnusten tallennuksessa virhe" :varoitus)
+    app)
+
+  HaeJarjestelmaTunnuksenLisaoikeudet
+  (process-event [{id :id} app]
+    (-> app
+      (assoc-in [:jarjestelmatunnuksen-lisaoikeudet id] nil)
+      (tuck-apurit/post! :hae-jarjestelmatunnuksen-lisaoikeudet
+        {:kayttaja-id id}
+        {:onnistui ->HaeJarjestelmaTunnuksenLisaoikeudetOnnistui
+         :epaonnistui ->HaeJarjestelmaTunnuksenLisaoikeudetEpaonnistui})))
+
+  HaeJarjestelmaTunnuksenLisaoikeudetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc-in app [:jarjestelmatunnuksen-lisaoikeudet (:kayttaja (first vastaus))] vastaus))
+
+  HaeJarjestelmaTunnuksenLisaoikeudetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (log/error "Hallintapaneelin mahdollisten apioikeuksien haussa virhe" vastaus)
+    (viesti/nayta-toast! "Apioikeuksien haussa virhe" :varoitus) app)
+
+  AsetaJarjestelmaTunnuksenLisaoikeudet
+  (process-event [{id :id oikeudet :oikeudet} app]
+    (assoc-in app [:jarjestelmatunnuksen-lisaoikeudet id] oikeudet))
+
+  TallennaJarjestelmaTunnuksenLisaoikeudet
+  (process-event [{:keys [muuttuneet-oikeudet kayttaja-id paluukanava]} app]
+    (tuck-apurit/post! app :tallenna-jarjestelmatunnuksen-lisaoikeudet
+      {:oikeudet muuttuneet-oikeudet
+       :kayttaja-id kayttaja-id}
+      {:onnistui ->TallennaJarjestelmaTunnuksenLisaoikeudetOnnistui
+       :epaonnistui ->TallennaJarjestelmaTunnuksenLisaoikeudetEpaonnistui
+       :epaonnistui-parametrit [paluukanava]}))
+
+  TallennaJarjestelmaTunnuksenLisaoikeudetOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (assoc-in app [:jarjestelmatunnuksen-lisaoikeudet (:kayttaja (first vastaus))] vastaus))
+
+  TallennaJarjestelmaTunnuksenLisaoikeudetEpaonnistui
+  (process-event [{:keys [vastaus paluukanava]} app]
+    (go (>! paluukanava (:jarjestelmatunnuksen-lisaoikeudet app)))
+    (log/error "Hallintapaneelin järjestelmätunnuksen oikeuksien tallennuksessa virhe" vastaus)
+    (viesti/nayta-toast! "Järjestelmätunnusten oikeukisen tallennuksessa virhe" :varoitus)
+    app))

@@ -29,37 +29,25 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
   (into [] (q/hae-mahdolliset-api-oikeudet db)))
 
-(defn lisaa-kayttajalle-oikeus [db user payload]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
-  (log/info "Lisätään käyttäjälle:" (:kayttajanimi payload) "oikeus:" (:oikeus payload))
-
-  (q/lisaa-kayttajalle-oikeus! db {:oikeus (:oikeus payload)
-                                   :kayttajanimi (:kayttajanimi payload)}))
-
-(defn poista-kayttajalta-oikeus [db user payload]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
-  (log/info "Poistetaan käyttäjältä:" (:kayttajanimi payload) "oikeus:" (:oikeus payload))
-
-  (q/poista-kayttajalta-oikeus! db {:oikeus (:oikeus payload)
-                                    :kayttajanimi (:kayttajanimi payload)}))
-
 (defn tallenna-jarjestelmatunnukset [db user tunnukset]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
 
   (log/info "Tallennetaan järjestelmätunnukset:" (str/join "," (map :kayttajanimi tunnukset)))
 
   (jdbc/with-db-transaction [c db]
-    (doseq [{:keys [id kayttajanimi kuvaus organisaatio poistettu]} tunnukset]
+    (doseq [{:keys [id kayttajanimi kuvaus organisaatio poistettu oikeudet]} tunnukset]
       (if poistettu
         (q/poista-jarjestelmatunnus! c {:id id})
         (if-not (id-olemassa? id)
           (q/luo-jarjestelmatunnus<! c {:kayttajanimi kayttajanimi
                                         :kuvaus kuvaus
-                                        :organisaatio (:id organisaatio)})
+                                        :organisaatio (:id organisaatio)
+                                        :oikeudet oikeudet})
           (q/paivita-jarjestelmatunnus! c {:kayttajanimi kayttajanimi
                                            :kuvaus kuvaus
                                            :organisaatio (:id organisaatio)
-                                           :id id})))))
+                                           :id id
+                                           :oikeudet oikeudet})))))
   (hae-jarjestelmatunnukset db user))
 
 (defn tallenna-jarjestelmatunnuksen-lisaoikeudet [db user {:keys [oikeudet kayttaja-id]}]
@@ -85,12 +73,7 @@
     (julkaise-palvelu http :hae-jarjestelmatunnukset
       (fn [user _] (hae-jarjestelmatunnukset db user)))
     
-    (julkaise-palvelu http :lisaa-kayttajalle-oikeus
-      (fn [user payload] (lisaa-kayttajalle-oikeus db user payload)))
-    
-    (julkaise-palvelu http :poista-kayttajalta-oikeus
-      (fn [user payload] (poista-kayttajalta-oikeus db user payload)))
-    
+
     (julkaise-palvelu http :hae-mahdolliset-api-oikeudet
       (fn [user _] (hae-mahdolliset-api-oikeudet db user)))
     
@@ -110,8 +93,6 @@
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
       :hae-mahdolliset-api-oikeudet
-      :lisaa-kayttajalle-oikeus
-      :poista-kayttajalta-oikeus
       :hae-jarjestelmatunnukset
       :hae-jarjestelmatunnuksen-lisaoikeudet
       :hae-urakat-lisaoikeusvalintaan
