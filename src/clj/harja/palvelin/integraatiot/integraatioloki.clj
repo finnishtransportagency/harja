@@ -53,7 +53,10 @@
    :siirtotyyppi "HTTP"
    :osoite osoite
    :sisalto (str sisalto)
-   :otsikko (when otsikko (str otsikko))
+   :otsikko (when otsikko
+              (str (if (map? otsikko)
+                     (dissoc otsikko "x-api-key")           ;; Siivoa apiavain pois, ettei sitä lokiteta mihinkään
+                     otsikko)))
    :parametrit parametrit})
 
 (defn tee-tiedoston-hakuviesti [osoite]
@@ -172,7 +175,7 @@
           (kirjaa-saapunut-jms-kuittaus integraatioloki kuittaus ulkoinen-id integraatio onnistunut jono))
 
         :saapunut-jms-viesti
-        (let [[viesti-id viesti jono] argumentit ]
+        (let [[viesti-id viesti jono] argumentit]
           (kirjaa-saapunut-jms-viesti integraatioloki jarjestelma integraation-nimi viesti-id viesti jono))
 
         :lahteva-jms-kuittaus

@@ -1,20 +1,12 @@
-(ns harja.views.hallinta.sahkopostitestaus-nakyma
+(ns harja.views.hallinta.viestitestaus-nakyma
   "Työkalu toteumien lisäämiseksi testiurakoille."
   (:require [tuck.core :refer [tuck send-value! send-async!]]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.komponentti :as komp]
             [harja.ui.debug :as debug]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
-            [harja.ui.grid :as grid]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.hallintayksikot :as hal]
-            [harja.tiedot.hallinta.sahkopostitestaus-tiedot :as tiedot])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.tiedot.hallinta.viestitestaus-tiedot :as tiedot]))
 
-
-
-(defn email-testaus* [e! {:keys [email emailapi] :as app}]
+(defn viestitestaus* [e! {:keys [email emailapi tekstiviesti] :as app}]
   (let [disable-laheta? (if (or (nil? (:palvelin email))
                               (nil? (:tunnus email))
                               (nil? (:salasana email))
@@ -31,17 +23,22 @@
                                  (nil? (:vastaanottaja emailapi))
                                  (nil? (:lahettaja emailapi)))
                              true
-                             false)]
-    [:div {:style {:padding-top "24px" :padding-left "8px" :font-size "14px"}}
-     [:p (str
-           "Voit testata täällä eri ympäristöissä sähköpostien lähettämistä. Sähköpostin lähettämiseen on"
-           "kaksi formaattia. Viestit voidaan lähettää suoraan 'postal' nimisellä kirjastolla, jolloin tarvitset esim gmailia varten"
-           "gmailin tarvitsemat asetukset ja tunnukset. Toinen vaihtoehto on lähettää viestit Digian tarjoamaa api-rajapintaa hyödyntäen."
-           "Jälkimmäinen tapa simuloi paremmin sitä, mitä Harja tekee, kun se lähettää sähköposteja. Ensimmäinen on lähinnä"
-           "lokaaliin ympäristöön testitarkoituksissa.")]
-     [:p "Viestin lähetykseen voit käyttää vaikka Gmailia. Vaihdat asetukset.edn tiedostoon :ulkoinen-sahkoposti :palvelin smtp.gmail.com"]
-     [:p "Jos Gmailissa on käytössä 2FA, niin luo sähköpostin lähettämistä varten erillinen sovelluskohtainen salasana Google Tilillä: https://myaccount.google.com/security?hl=fi"]
-     [:p "Tunnus ja lähettäjä on Gmailissa sinun oma sähköpostiosoite. Porttina 587 ja tsl = true. Lähettävä palvelin on smtp.gmail.com"]
+                             false)
+        disable-laheta-sms? (if (or
+                                  (nil? (:puhelinnumero tekstiviesti))
+                                  (nil? (:viesti tekstiviesti)))
+                              true
+                              false)]
+    [:div
+     [:h1 "Sähköpostin ja tekstiviestin lähetyksen testaustoiminnot"]
+     [:p "Voit testata täällä eri ympäristöissä sähköpostin ja tekstiviestin lähettämistä."]
+     [:p " Sähköpostin lähettämiseen on kaksi formaattia. Viestit voidaan lähettää suoraan 'postal' nimisellä kirjastolla, jolloin tarvitset esim gmailia varten
+          gmailin tarvitsemat asetukset ja tunnukset. Toinen vaihtoehto on lähettää viestit Digian tarjoamaa api-rajapintaa hyödyntäen.
+  Jälkimmäinen tapa simuloi paremmin sitä, mitä Harja tekee, kun se lähettää sähköposteja. Ensimmäinen on lähinnä
+  lokaaliin ympäristöön testitarkoituksissa."]
+     [:p "Viestin lähetykseen voit käyttää vaikka Gmailia. Vaihdat asetukset.edn tiedostoon :ulkoinen-sahkoposti :palvelin arvon 'stmp.gmail.com'."]
+     [:p "Jos Gmailissa on käytössä 2FA, niin luo sähköpostin lähettämistä varten erillinen sovelluskohtainen salasana Google Tilillä: 'https://myaccount.google.com/security?hl=fi'."]
+     [:p "Tunnus ja lähettäjä on Gmailissa sinun oma sähköpostiosoite. Porttina 587 ja tsl = true. Lähettävä palvelin on stmp.gmail.com."]
      [:h2 "Lähetä 'postal' kirjastolla"]
      [debug/debug app]
      [lomake/lomake
@@ -124,7 +121,28 @@
         :otsikko "Lähettäjä"
         :tyyppi :string
         :pakollinen? true}]
-      emailapi]]))
+      emailapi]
+     [:h2 "Lähetä tekstiviesti LinkMobilityn LinkSMS-palvelulla."]
+     [:p "LinkSMS-palveusta on Harjassa usein käytetty vanhaa nimeä Labyrintti. Jos testaat kehitysympäristössä, katso ReadMe-tiedostosta mitä muutoksia pitää tehdä main.clj-tiedostoon ja millainen ssh-yhteys tarvitaan." ]
+     [lomake/lomake
+      {:ei-borderia? true
+       :tarkkaile-ulkopuolisia-muutoksia? true
+       :footer-fn (fn [email]
+                    [:div
+                     [napit/tallenna "Lähetä SMS"
+                      #(e! (tiedot/->LahetaSMS tekstiviesti))
+                      {:disabled disable-laheta-sms? :paksu? true}]])
+       :muokkaa! #(e! (tiedot/->MuokkaaSMS %))}
+      [{:nimi :puhelinnumero
+        :otsikko "Puhelinnumero"
+        :tyyppi :string
+        :pakollinen? true}
+       {:nimi :viesti
+        :otsikko "Viesti"
+        :tyyppi :string
+        :pakollinen? true}]
+      tekstiviesti]
+     ]))
 
-(defn email-testaus []
-  [tuck tiedot/tila email-testaus*])
+(defn viestitestaus []
+  [tuck tiedot/tila viestitestaus*])

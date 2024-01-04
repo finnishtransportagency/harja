@@ -22,6 +22,9 @@
             [ol.source.Vector]
             [ol.layer.Vector]
             [ol.layer.Layer]
+            [ol.layer.Heatmap]
+            [ol.geom.Point]
+            [ol.Feature]
 
             [ol.control :as ol-control]
             [ol.interaction :as ol-interaction]
@@ -147,9 +150,6 @@
     (.calculateExtent (.getView k) (.getSize k))))
 
 (defonce openlayers-kartan-leveys (atom nil))
-
-
-
 
 (defn luo-kuvataso
   "Luo uuden kuvatason joka hakee serverillä renderöidyn kuvan.
@@ -301,7 +301,6 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                            :position  koordinaatti
                            :stopEvent false}))))
 
-
 (defn- nayta-popup!
   "Näyttää annetun popup sisällön annetussa koordinaatissa.
   Mahdollinen edellinen popup poistetaan."
@@ -327,16 +326,14 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn aseta-zoom [zoom]
   (some-> @the-kartta (.getView) (.setZoom zoom)))
 
-
-
 (defn- ol3-did-mount
   "Initialize OpenLayers map for a newly mounted map component."
   [this]
   (let [{layers :layers
          geometry-layers :geometry-layers :as mapspec} (:mapspec (reagent/state this))
         interaktiot (let [oletukset (ol-interaction/defaults
-                                     #js {:mouseWheelZoom true
-                                          :dragPan        false})]
+                                      #js {:mouseWheelZoom true
+                                           :dragPan        false})]
                       ;; ei kinetic-ominaisuutta!
                       (.push oletukset (ol-interaction/DragPan. #js {}))
                       oletukset)
@@ -346,6 +343,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                              :target       (:id mapspec)
                              :controls     kontrollit
                              :interactions interaktiot})
+        
         ol3 (ol/Map. map-optiot)
 
         _ (.addControl ol3 (tasovalinta/tasovalinta ol3 layers geometry-layers))

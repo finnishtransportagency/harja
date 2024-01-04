@@ -3,7 +3,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
-            [harja.palvelin.palvelut.kulut :as kulut]
+            [harja.palvelin.palvelut.kulut.kulut :as kulut]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -81,7 +81,6 @@
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
         FROM kulu_kohdistus lk
-                 LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
                  JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
              toimenpide tk,
@@ -92,7 +91,7 @@
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
           AND tr.nimi = 'Erillishankinnat (W)'
-          AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+          AND (tk.koodi = '23151')
         UNION ALL
         SELECT
         coalesce(sum(t.summa_indeksikorjattu), 0) AS toteutunut_summa,
@@ -132,7 +131,6 @@
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
         FROM kulu_kohdistus lk
-                 LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
                  JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
              toimenpide tk,
@@ -143,7 +141,7 @@
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
           AND tr.nimi = 'Hoidonjohtopalkkio (G)'
-          AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+          AND (tk.koodi = '23151')
         UNION ALL
         SELECT
           coalesce(sum(t.summa_indeksikorjattu), 0) AS toteutunut_summa,
@@ -191,8 +189,7 @@
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
         FROM kulu_kohdistus lk
-                 LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
-                 JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
+             JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
              toimenpide tk,
              kulu l
@@ -201,8 +198,8 @@
           AND lk.kulu = l.id
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id
-          AND (tr.nimi = 'Johto- ja hallintokorvaus (J)' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
-          AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
+          AND (tr.nimi = 'Johto- ja hallintokorvaus (J)')
+          AND (tk.koodi = '23151')
         UNION ALL
         SELECT
         coalesce(sum(t.summa_indeksikorjattu), 0) AS toteutunut_summa,
@@ -293,8 +290,7 @@ UNION ALL
            WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
        END                 AS toimenpide
        FROM kulu_kohdistus lk
-             LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
-             LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
+            JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
             toimenpideinstanssi tpi,
            toimenpide tk,
            kulu l
@@ -326,7 +322,6 @@ UNION ALL
                  WHEN tk.koodi = '23151' THEN 'MHU Hoidonjohto'
              END                 AS toimenpide
         FROM kulu_kohdistus lk
-                 LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = lk.tehtava
                  LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
              toimenpideinstanssi tpi,
              toimenpide tk,

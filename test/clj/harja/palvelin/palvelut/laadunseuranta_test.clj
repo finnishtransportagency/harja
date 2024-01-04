@@ -62,7 +62,7 @@
                                                                            :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                                           [:http-palvelin :db :integraatioloki :itmf])
                         :labyrintti (component/using (labyrintti/->Labyrintti +testi-sms-url+
-                                                                              "testi" "testi" (atom #{}))
+                                                                              "testi" "testi" "" "" (atom #{}))
                                                      [:db :integraatioloki :http-palvelin])
                         :laadunseuranta (component/using
                                           (ls/->Laadunseuranta)

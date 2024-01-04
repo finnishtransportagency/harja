@@ -69,13 +69,6 @@
  ;        :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
  ;        :uudelleenlahetysvali-minuuteissa 30}
 
-
- :turi {:turvallisuuspoikkeamat-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/turi/poikkeamaTuonti"
-        :kayttajatunnus "Harja"
-        :salasana #=(slurp "../.harja/turi-salasana")
-        :paivittainen-lahetysaika [0 0 0]}
-
-
  :ulkoinen-sahkoposti {:vastausosoite "harja-ala-vastaa@vayla.fi"
                      ;; :palvelin "solita-service-1.solita.fi"
                      }

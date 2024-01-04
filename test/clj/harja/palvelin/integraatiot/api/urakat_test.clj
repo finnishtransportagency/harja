@@ -125,7 +125,7 @@
           enkoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 200 (:status vastaus)))
       (is (= 1 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
-      (is (= "Porvoon päällystysurakka" (get-in (first (:urakat enkoodattu-body)) [:urakka :tiedot :nimi]))))
+      (is (= "UUD Raasepori  MHU 2021- 2026, P" (get-in (first (:urakat enkoodattu-body)) [:urakka :tiedot :nimi]))))
 
     ;; Poistetaan väliaikainen päällystyspalvelusopimus
     (poista-paallytyspalvelusopimus "por1"))

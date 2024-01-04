@@ -95,8 +95,8 @@
         edellinen-data (atom @data)]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! tulokset nil))
+      (fn [{:keys [lahde disabled?]} data]
 
-      (fn [{:keys [lahde]} data]
         (when (and
                 tarkkaile-ulkopuolisia-muutoksia?
                 (nil? @data)
@@ -153,9 +153,10 @@
                                       (let [v (nth t idx)]
                                         (if monivalinta?
                                           (reset! teksti (monivalinta-teksti (monivalinta-valitse! v)))
-                                          (reset! teksti ((or nayta str) (reset! data v))))
-                                        (when kun-muuttuu (kun-muuttuu nil))
-                                        (reset! tulokset nil)))))}]
+                                          (do
+                                            (reset! teksti ((or nayta str) (reset! data v)))
+                                            (reset! tulokset nil)))
+                                        (when kun-muuttuu (kun-muuttuu nil))))))}]
          (when (zero? hae-kun-yli-n-merkkia)
            [:button.nappi-hakualasveto
             {:on-click #(go (reset! tulokset (<! (hae lahde "")))
@@ -177,22 +178,19 @@
                                       ^{:key (hash t)}
                                       [:li {:class [(when (= i idx) "korostettu") "padding-left-8"
                                                     "harja-alasvetolistaitemi display-flex items-center klikattava"]
-                                            :role "presentation"
-                                            :on-click #(do
-                                                        (.preventDefault %)
-                                                        (if monivalinta?
-                                                          (reset! teksti (monivalinta-teksti (monivalinta-valitse! t)))
-                                                          (reset! teksti ((or nayta str) (reset! data t))))
-                                                        (when kun-muuttuu (kun-muuttuu nil))
-                                                        (reset! tulokset nil))}
-                                       [ikonit/ikoni-ja-elementti
-                                        (if (or (= t @data) (some #{t} @data))
-                                          [ikonit/harja-icon-status-completed]
-                                          ;; Tyhjä inline-block, joka on yhtä leveä kuin ikoni, jotta tekstit asettuu
-                                          ;; samalle tasolle
-                                          [:span {:style {:width "12px"
-                                                          :display :inline-block}}])
-                                        ((or nayta str) t)]])
+                                            :role "presentation"}
+                                       [tee-kentta
+                                        {:tyyppi :checkbox
+                                         :teksti ((or nayta str) t)
+                                         :valitse! #(do
+                                                      (.preventDefault %)
+                                                      (if monivalinta?
+                                                        (reset! teksti (monivalinta-teksti (monivalinta-valitse! t)))
+                                                        (do
+                                                          (reset! teksti ((or nayta str) (reset! data t)))
+                                                          (reset! tulokset nil)))
+                                                      (when kun-muuttuu (kun-muuttuu nil)))}
+                                        (or (= t @data) (some #{t} @data))]])
                          nykyiset-tulokset)))))]]))))
 
 
@@ -680,9 +678,9 @@
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
 (defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina? label-luokka
-                                         vayla-tyyli? disabled? iso-clickalue?]} data]
+                                         vayla-tyyli? disabled? iso-clickalue? label-id input-id]} data]
   (let [boolean-arvo? (not (or (instance? ratom/RAtom data) (instance? ratom/Wrapper data) (instance? ratom/RCursor data)))
-        input-id (str "harja-checkbox-" (gensym))
+        input-id (or input-id (str "harja-checkbox-" (gensym)))
         paivita-valitila #(when-let [node (.getElementById js/document input-id)]
                             (set! (.-indeterminate node)
                                   (= @data ::indeterminate)))]
@@ -703,14 +701,16 @@
                                      #(do
                                         (.stopPropagation %)
                                         (swap! data not)))}
-           (let [checkbox (vayla-checkbox {:data data
+           (let [checkbox [vayla-checkbox {:data data
+                                           ;; label- ja input-id on tarkoituksella jätetty toistamatta sisemmmässä funktiossa.
                                            :input-id input-id
+                                           :label-id label-id
                                            :teksti teksti
                                            :disabled? disabled?
                                            :valitse! valitse!
                                            :arvo arvo
                                            :label-luokka label-luokka
-                                           :indeterminate (= ::indeterminate data)})]
+                                           :indeterminate (= ::indeterminate data)}]]
              (if nayta-rivina?
                [:table.boolean-group
                 [:tbody

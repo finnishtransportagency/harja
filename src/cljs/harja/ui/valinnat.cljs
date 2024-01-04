@@ -211,7 +211,7 @@
                       ikoni-sisaan?]}]
          (when-not (= aikavalin-rajoitus (:aikavalin-rajoitus @asetukset-atom))
            (swap! asetukset-atom assoc :aikavalin-rajoitus aikavalin-rajoitus))
-         [:span {:class (cond 
+         [:span {:class (cond
                           luokka (apply str luokka)
                           lomake? "label-ja-aikavali-lomake"
                           :else "label-ja-aikavali")}
@@ -222,14 +222,14 @@
                      :for (or for-teksti otsikko "Aikaväli")} (or otsikko "Aikaväli")])
           [:div.aikavali-valinnat
            [tee-kentta {:tyyppi tyyppi
-                        :pakota-suunta aloitusaika-pakota-suunta 
+                        :pakota-suunta aloitusaika-pakota-suunta
                         :validointi validointi
                         :ikoni-sisaan? ikoni-sisaan?
                         :vayla-tyyli? vayla-tyyli?}
             aikavalin-alku]
            [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
            [tee-kentta {:tyyppi tyyppi
-                        :pakota-suunta paattymisaika-pakota-suunta 
+                        :pakota-suunta paattymisaika-pakota-suunta
                         :validointi validointi
                         :ikoni-sisaan? ikoni-sisaan?
                         :vayla-tyyli? vayla-tyyli?}
@@ -585,7 +585,8 @@
   ([valinnat on-change teksti asetukset]
    (let [idn-alku-label (gensym "label")
          idn-alku-cb (gensym "cb")]
-     (fn [valinnat on-change teksti {:keys [kaikki-valinta-fn fmt valintojen-maara] :as asetukset}]
+     (fn [valinnat on-change teksti {:keys [kaikki-valinta-fn fmt valintojen-maara
+                                            yksi-valittu-teksti] :as asetukset}]
        (let [fmt (or fmt identity)]
          [:div.checkbox-pudotusvalikko
           [livi-pudotusvalikko
@@ -604,20 +605,24 @@
                                                          (and
                                                            (= 0 (:id (first valinnat)))
                                                            (:valittu? (first valinnat))) "Kaikki valittu"
-                                                         (= valittujen-valintojen-maara 1) (str "1" (first teksti))
+                                                         (= valittujen-valintojen-maara 1) (or
+                                                                                             yksi-valittu-teksti
+                                                                                             (str "1" (first teksti)))
                                                          :else (str valittujen-valintojen-maara (second teksti)))]
                                  naytettava-teksti)
               :itemit-komponentteja? true}
              (when kaikki-valinta-fn
                {:class "pudotusvalikko"}))
-           (map (fn [{:keys [id nimi valittu?] :as valinta}]
-                  [harja.ui.kentat/tee-kentta
-                   {:tyyppi :checkbox
-                    :teksti (fmt nimi)
-                    :valitse! #(let [valittu? (-> % .-target .-checked)]
-                                 (on-change valinta valittu?))}
-                   valittu?])
-                valinnat)]
+           (map-indexed (fn [idx {:keys [nimi valittu?] :as valinta}]
+                          [harja.ui.kentat/tee-kentta
+                           {:input-id (str idn-alku-cb idx)
+                            :label-id (str idn-alku-label idx)
+                            :tyyppi :checkbox
+                            :teksti (fmt nimi)
+                            :valitse! #(let [valittu? (-> % .-target .-checked)]
+                                         (on-change valinta valittu?))}
+                           valittu?])
+             valinnat)]
           (when kaikki-valinta-fn
             [napit/yleinen-ensisijainen (if (some :valittu? valinnat)
                                           "Poista valinnat"

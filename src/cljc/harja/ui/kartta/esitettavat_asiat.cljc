@@ -49,7 +49,6 @@
 (defn asia-on-piste? [asia]
   (not (reitillinen-asia? asia)))
 
-
 ;; Jos annettu asetus on merkkijono, palautetaan [{:img merkkijono}]
 (defn- validoi-merkkiasetukset [merkit]
   (cond
@@ -199,10 +198,12 @@
                           :points koordinaatit})
 
                        (= :multiline tyyppi)
-                       (merge
-                         (maarittele-viiva valittu? merkit viivat)
-                         {:type :moniviiva
-                          :lines (:lines geo)}))))]
+                       (if (:heatmap? asia)
+                         nil
+                         (merge
+                           (maarittele-viiva valittu? merkit viivat)
+                           {:type :moniviiva
+                            :lines (:lines geo)})))))]
      vastaus)))
 
 ;;;;;;
@@ -229,7 +230,6 @@
        " ("
        (str/lower-case (ilmoitukset/tilan-selite (:tila ilmoitus)))
        ")"))
-
 
 (defn ilmoitus-kartalle [{:keys [tila ilmoitustyyppi] :as ilmoitus} valittu?]
   (let [ikoni (ulkoasu/ilmoituksen-ikoni ilmoitus)]
@@ -290,6 +290,11 @@
   {:teksti "Tieturvallisuustarkastu-\nkseen kuuluva tie"
    :vari puhtaat/fig-default})
 
+(def heatmap-selite
+  {:heatmap? true
+   :teksti-ylä "Enemmän käyntejä"
+   :teksti-ala "Vähemmän käyntejä"})
+
 (def ei-kayty-tieturvallisuusverkko-selite
   {:ajovayla
    {:teksti "Ei tarkastettu ollenkaan, ajoväylät"
@@ -318,6 +323,11 @@
   {:type :tieturvallisuusverkko
    :selite tieturvallisuusverkko-selite
    :alue (maarittele-feature tieturvallisuustie false nil ulkoasu/tieturvallisuusverkko)})
+
+(defmethod asia-kartalle :heatmap [tieturvallisuustie _valittu?]
+  {:type :heatmap
+   :selite heatmap-selite
+   :alue (maarittele-feature tieturvallisuustie false nil nil)})
 
 (defmethod asia-kartalle :ei-kayty-tieturvallisuusverkko [tieturvallisuustie _valittu?]
   {:type :ei-kayty-tieturvallisuusverkko

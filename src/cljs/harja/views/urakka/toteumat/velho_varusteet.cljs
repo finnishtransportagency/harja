@@ -36,6 +36,24 @@
     :wrapper-luokka "inline-block"
     :fmt-fn str}])
 
+(def kuntoluokat-jarjestys
+  {"Erittäin hyvä" 1
+   "Hyvä" 2
+   "Tyydyttävä" 3
+   "Huono" 4
+   "Erittäin huono" 5
+   "Ei voitu tarkastaa" 6})
+
+(defn kohdeluokka-teksti
+  "Kääntää kohdeluokan tekstiksi. Lisätään puuttuvat ääkköset, muotoillaan erikoistapausket tai
+  lisätään vain iso alkukirjain."
+  [kohdeluokka]
+  (case kohdeluokka
+    "puomit-sulkulaitteet-pollarit" "Puomit, sulkulaitteet ja pollarit"
+    "pylvaat" "Pylväät"
+    nil "Kaikki"
+    (str/capitalize kohdeluokka)))
+
 (defn suodatuslomake [_e! _app]
   (fn [e! {:keys [valinnat urakka kuntoluokat-nimikkeisto kohdeluokat-nimikkeisto varustetyyppihaku] :as app}]
     (let [alkupvm (:alkupvm urakka)
@@ -45,17 +63,20 @@
           valittu-toimenpide (:toimenpide valinnat)
           hoitovuoden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
           itse-tai-kaikki #(if % % "Kaikki")
-          multimap-fn (fn [avain] (fn [{:keys [id nimi alasveto-eritin?] :as t}]
+          multimap-fn (fn [avain] (fn [{:keys [id nimi] :as t}]
                                     {:id id
                                      :nimi (or nimi t)
                                      :valittu? (if nimi
                                                  (contains? (get valinnat avain) nimi)
-                                                 (nil? (get valinnat avain)))
-                                     :alavetos-eritin? alasveto-eritin?}))
-          kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] (map-indexed (fn [i v]
-                                                                                      {:id i
-                                                                                       :nimi v})
-                                                                         kuntoluokat-nimikkeisto)))
+                                                 (nil? (get valinnat avain)))}))
+          kuntoluokat (map (multimap-fn :kuntoluokat)
+                        (conj (into ["Kaikki"] (map-indexed (fn [i v]
+                                                              {:id i
+                                                               :nimi v})
+                                                 (conj (vec (sort-by #(kuntoluokat-jarjestys (:otsikko %))
+                                                              kuntoluokat-nimikkeisto))
+                                                   {:otsikko "Kuntoluokka puuttuu"
+                                                    :nimi :ei-kuntoluokkaa})))))
           kohdeluokat (map (multimap-fn :kohdeluokat) (into ["Kaikki"] (map-indexed (fn [i v]
                                                                                       {:id i
                                                                                        :nimi v})
@@ -112,14 +133,15 @@
           :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          toimenpiteet]
         [valinnat/monivalinta-pudotusvalikko
-         "Kohdeluokka"
+         "Luokka"
          kohdeluokat
          (fn [kohdetyyppi valittu?]
            (e! (v/->ValitseKohdeluokka (:nimi kohdetyyppi) valittu?)))
-         [" Kohdeluokka valittu" " Kohdeluokkaa valittu"]
+         [nil " Kohdeluokkaa valittu"]
          {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
           :vayla-tyyli? true
-          :fmt (comp str/capitalize itse-tai-kaikki)
+          :yksi-valittu-teksti (kohdeluokka-teksti (first (:kohdeluokat valinnat)))
+          :fmt kohdeluokka-teksti
           :valintojen-maara (count (:kohdeluokat valinnat))}]
 
         [:div {:class "col-md-2 filtteri label-ja-alasveto-grid"}
@@ -131,15 +153,14 @@
            :hae-kun-yli-n-merkkia 0
            :vayla-tyyli? true
            :lomake? true
+           :disabled? (empty? (:kohdeluokat valinnat))
            :lahde varustetyyppihaku
            :monivalinta? true
            :tarkkaile-ulkopuolisia-muutoksia? true
-           :monivalinta-teksti #(do
-                                  (case (count %)
-                                    0 "Kaikki valittu"
-                                    1 (:otsikko (first %))
-
-                                    (str (count %) " varustetyyppiä valittu")))}
+           :monivalinta-teksti #(case (count %)
+                                  0 "Kaikki valittu"
+                                  1 (:otsikko (first %))
+                                  (str (count %) " varustetyyppiä valittu"))}
           v/varustetyypit]]
 
         [valinnat/monivalinta-pudotusvalikko
@@ -147,10 +168,12 @@
          kuntoluokat
          (fn [kuntoluokka valittu?]
            (e! (v/->ValitseKuntoluokka (:nimi kuntoluokka) valittu?)))
-         [" Kuntoluokka valittu" " Kuntoluokkaa valittu"]
+         [nil " Kuntoluokkaa valittu"]
          {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
           :vayla-tyyli? true
+          :yksi-valittu-teksti (:otsikko (first (:kuntoluokat valinnat)))
           :fmt (comp itse-tai-kaikki :otsikko)}]]
+
        [:div.row
         [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä" #(e! (v/->HaeVarusteet)) {:luokka "nappi-korkeus-32"
                                                                                          :disabled false

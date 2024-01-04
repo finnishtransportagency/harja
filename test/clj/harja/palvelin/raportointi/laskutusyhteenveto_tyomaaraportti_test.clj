@@ -12,7 +12,7 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.palvelut.raportit :as raportit]
-            [harja.palvelin.palvelut.kulut :as kulut]
+            [harja.palvelin.palvelut.kulut.kulut :as kulut]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]))
 

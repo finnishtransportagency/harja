@@ -53,13 +53,16 @@
    :nimiavaruus (:nimiavaruus varustetyyppi)
    :tyyppi ((comp #(str/join "/" %) (juxt :tyyppi_avain :nimi)) varustetyyppi)})
 
-(defn muodosta-ns-nimi-hakuparametri [param]
+(defn muodosta-kuntoluokan-hakuparametri [param]
   (when param
-    (str/join "/" [(:nimiavaruus param) (:nimi param)])))
+    (if (string? (:nimi param))
+      (str/join "/" [(:nimiavaruus param) (:nimi param)])
+      ;; Erityistapaukset, kuten puuttuva kuntoluokka, on avainsanoja.
+      (:nimi param))))
 
 (defn hakuparametrit [{:keys [valinnat]}]
   (let [varustetyypit (map muodosta-varustetyypin-hakuparametri @varustetyypit)
-        kuntoluokat (map muodosta-ns-nimi-hakuparametri (:kuntoluokat valinnat))
+        kuntoluokat (map muodosta-kuntoluokan-hakuparametri (:kuntoluokat valinnat))
         toimenpide (:toimenpide (:toimenpide valinnat))]
     (merge
       (select-keys valinnat [:tie :aosa :aeta :losa :leta :hoitokauden-alkuvuosi :hoitovuoden-kuukausi :kohdeluokat :toteuma])

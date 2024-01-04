@@ -1,5 +1,5 @@
-(ns harja.tiedot.hallinta.sahkopostitestaus-tiedot
-  "Sähköpostitestauksen ui controlleri."
+(ns harja.tiedot.hallinta.viestitestaus-tiedot
+  "Sähköposti- ja tekstiviestitestauksen ui controlleri."
   (:require [reagent.core :refer [atom] :as reagent]
             [tuck.core :as tuck]
             [harja.pvm :as pvm]
@@ -30,7 +30,10 @@
                           :vastaanottaja "<vastaanottajansahkoposti>"
                           :otsikko "<anna otsikko>"
                           :viesti "<anna viesti>"
-                          :lahetys-kaynnissa? false}})
+                          :lahetys-kaynnissa? false}
+               :tekstiviesti {:puhelinnumero "<vastaanottajan puhelinnumero>"
+                              :viesti "<anna viesti>"
+                              :lahetys-kaynnissa? false}})
 (def tila (atom alkutila))
 (def nakymassa? (atom false))
 
@@ -45,6 +48,12 @@
 (defrecord LahetaAPI [emailapi])
 (defrecord LahetysAPIOnnistui [vastaus])
 (defrecord LahetysAPIEpaonnistui [vastaus])
+
+;; Tekstiviestilähetys
+(defrecord MuokkaaSMS [tekstiviesti])
+(defrecord LahetaSMS [tekstiviesti])
+(defrecord LahetysSMSOnnistui [vastaus])
+(defrecord LahetysSMSEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
 
@@ -118,6 +127,44 @@
       (assoc app :lahetys-kaynnissa? false)))
 
   LahetysAPIEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (viesti/nayta-toast! "Lähetys epäonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
+      (js/console.error "Virhe: " (pr-str vastaus))
+      (assoc app :lahetys-kaynnissa? false)))
+
+  MuokkaaSMS
+  (process-event [{tekstiviesti :tekstiviesti} app]
+    (assoc app :tekstiviesti tekstiviesti))
+
+  LahetaSMS
+  (process-event [{tekstiviesti :tekstiviesti} app]
+    (let [data (dissoc tekstiviesti
+                 :harja.ui.lomake/skeema
+                 :harja.ui.lomake/puuttuvat-pakolliset-kentat
+                 :harja.ui.lomake/viimeisin-muokkaus
+                 :harja.ui.lomake/ensimmainen-muokkaus
+                 :harja.ui.lomake/viimeksi-muokattu-kentta
+                 :harja.ui.lomake/muokatut
+                 :lahetys-kaynnissa?
+                 :harja.ui.lomake/virheet
+                 :harja.ui.lomake/varoitukset
+                 :harja.ui.lomake/huomautukset)]
+      (js/console.log "Lähetetään tekstiviesti: " (pr-str data))
+      (tuck-apurit/post! :debug-laheta-tekstiviesti data
+        {:onnistui ->LahetysSMSOnnistui
+         :epaonnistui ->LahetysSMSEpaonnistui})
+      (js/console.log "Lähetys matkalla!")
+      (assoc app :lahetys-kaynnissa? true)))
+
+  LahetysSMSOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (viesti/nayta-toast! "Tekstiviesti lähetetty" :onnistui)
+      (js/console.log "Vastaus: " (pr-str vastaus))
+      (assoc app :lahetys-kaynnissa? false)))
+
+  LahetysSMSEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
       (viesti/nayta-toast! "Lähetys epäonnistui" :varoitus viesti/viestin-nayttoaika-pitka)

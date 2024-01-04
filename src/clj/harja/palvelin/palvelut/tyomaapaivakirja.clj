@@ -86,7 +86,8 @@
                                                                 :tyomaapaivakirja_id tyomaapaivakirja_id
                                                                 :versio versio
                                                                 :kommentti kommentti
-                                                                :luoja (:id user)})
+                                                                :luoja (:id user)
+                                                                :urakoitsijan_merkinta false})
 
         tyomaapaivakirjan-paivamaara (pvm/palvelimen-aika->suomen-aikaan tyomaapaivakirjan-paivamaara)
         tyomaapaivakirjan-paivamaara (pvm/fmt-p-k-v-lyhyt tyomaapaivakirjan-paivamaara)

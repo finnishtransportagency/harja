@@ -28,7 +28,6 @@
     [harja.palvelin.integraatiot.digiroad.digiroad-komponentti :as digiroad-integraatio]
     [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
-    [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
     [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
     [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
@@ -52,7 +51,7 @@
     [harja.palvelin.palvelut.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
     [harja.palvelin.palvelut.muut-tyot :as muut-tyot]
     [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
-    [harja.palvelin.palvelut.kulut :as kulut]
+    [harja.palvelin.palvelut.kulut.kulut :as kulut]
     [harja.palvelin.palvelut.toteumat :as toteumat]
     [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
@@ -306,10 +305,6 @@
                       (labyrintti/luo-labyrintti (:labyrintti asetukset)))
                     [:http-palvelin :db :integraatioloki])
 
-      :turi (component/using
-              (turi/->Turi (:turi asetukset))
-              [:db :integraatioloki :liitteiden-hallinta])
-
       :yha-integraatio (component/using
                          (yha-integraatio/->Yha (:yha asetukset))
                          [:db :integraatioloki])
@@ -514,7 +509,7 @@
 
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
-                                [:http-palvelin :db :turi])
+                                [:http-palvelin :db])
 
       :tyomaapaivakirja (component/using
                           (tyomaapaivakirja/->Tyomaapaivakirja (:kehitysmoodi asetukset))
@@ -603,7 +598,8 @@
                {:db :db-replica
                 :http-palvelin :http-palvelin
                 :ulkoinen-sahkoposti :ulkoinen-sahkoposti
-                :api-sahkoposti :api-sahkoposti})
+                :api-sahkoposti :api-sahkoposti
+                :labyrintti :labyrintti})
 
       :vkm (component/using
              (let [{url :url} (:vkm asetukset)]
@@ -661,7 +657,7 @@
       :api-turvallisuuspoikkeama (component/using
                                    (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
                                    [:http-palvelin :db :integraatioloki
-                                    :liitteiden-hallinta :turi])
+                                    :liitteiden-hallinta])
       :api-suolasakkojen-lahetys (component/using
                                    (suolasakkojen-lahetys/->SuolasakkojenLahetys)
                                    [:db])
