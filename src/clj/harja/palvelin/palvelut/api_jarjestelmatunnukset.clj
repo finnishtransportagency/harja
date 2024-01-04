@@ -72,7 +72,6 @@
     
     (julkaise-palvelu http :hae-jarjestelmatunnukset
       (fn [user _] (hae-jarjestelmatunnukset db user)))
-    
 
     (julkaise-palvelu http :hae-mahdolliset-api-oikeudet
       (fn [user _] (hae-mahdolliset-api-oikeudet db user)))
