@@ -113,4 +113,14 @@
                     :roolit         "kanava-HAR-123_Tilaajan_Urakanvalvoja"
                     :organisaatio   "organisaatio"
                     :poistettu      false}]
- }
+ ;; Oulun MHU 2019-2024
+ "1242141-OULU3" [{:tunniste       133
+                   :kayttajatunnus "LXV"
+                   :etunimi        "Samuli"
+                   :sukunimi       "Ely TM"
+                   :sahkoposti     "sinunmailisi@solita.fi"
+                   :puhelin        "0123456789"
+                   :roolit         "1242141-OULU3_vastuuhenkilo"
+                   :organisaatio   "organisaatio"
+                   :poistettu      false}]
+}

@@ -3,6 +3,12 @@
             [taoensso.timbre :as log]
             [clj-time.coerce :as c]
             [harja.pvm :as pvm]
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.kyselyt.urakat :as urakka-kyselyt]
+            [harja.domain.roolit :as roolit]
+            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
+            [hiccup.core :refer [html]]
+            [harja.tyokalut.html :as html-tyokalut]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.tyomaapaivakirja :as tyomaapaivakirja-kyselyt]
             [harja.kyselyt.konversio :as konversio]
@@ -65,14 +71,86 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/raportit-tyomaapaivakirja user (:urakka-id tiedot))
   (hae-kommentit db tiedot))
 
-(defn- tallenna-kommentti [db user tiedot]
+(defn- tallenna-kommentti [db user tiedot fim api-sahkoposti kehitysmoodi?]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/raportit-kommentit user (:urakka-id tiedot))
-  (tyomaapaivakirja-kyselyt/lisaa-kommentti<! db {:urakka_id (:urakka-id tiedot)
-                                                  :tyomaapaivakirja_id (:tyomaapaivakirja_id tiedot)
-                                                  :versio (:versio tiedot)
-                                                  :kommentti (:kommentti tiedot)
-                                                  :luoja (:id user)
-                                                  :urakoitsijan_merkinta false})
+  (let [{tyomaapaivakirjan-paivamaara :paivamaara
+         urakka-nimi :urakka-nimi
+         hallintayksikko-id :hallintayksikko-id
+         urakka-id :urakka-id
+         tyomaapaivakirja_id :tyomaapaivakirja_id
+         versio :versio
+         harja-url :harja-url
+         lahettaja :lahettaja
+         kommentti :kommentti} tiedot
+        vastaus (tyomaapaivakirja-kyselyt/lisaa-kommentti<! db {:urakka_id urakka-id
+                                                                :tyomaapaivakirja_id tyomaapaivakirja_id
+                                                                :versio versio
+                                                                :kommentti kommentti
+                                                                :luoja (:id user)
+                                                                :urakoitsijan_merkinta false})
+
+        tyomaapaivakirjan-paivamaara (pvm/palvelimen-aika->suomen-aikaan tyomaapaivakirjan-paivamaara)
+        tyomaapaivakirjan-paivamaara (pvm/fmt-p-k-v-lyhyt tyomaapaivakirjan-paivamaara)
+
+        onnistui? (some? (:kommentti vastaus))
+        sampo-id (urakka-kyselyt/hae-urakan-sampo-id db (:urakka-id tiedot))
+        roolit #{"urakan vastuuhenkilö"}
+        vastaanottajat (when fim (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
+        urakanvalvoja? (roolit/roolissa? user roolit/urakanvalvoja)]
+
+    ;; Jos kommentoija on urakanvalvoja, lähetetään sähköposti ilmoitus kaikille urakan vastuuhenkilöille
+    ;; Vastaanottajat:  
+    ;; ({:kayttajatunnus, :sahkoposti, :puhelin, :sukunimi :roolit [Urakan vastuuhenkilö], :roolinimet [vastuuhenkilo], :poistettu, :etunimi, :tunniste, :organisaatio}
+    ;; { ... }
+    ;; { ... } )
+    (if
+      ;; Tarkista onnistuiko tallennus, onko lähettäjä urakanvalvoja, ollaanko tuotannossa ja onko vastaanottajia olemassa
+      (and
+        sampo-id
+        onnistui?
+        urakanvalvoja?
+        (not kehitysmoodi?)
+        (some? vastaanottajat))
+      (try
+        (do
+          (doseq [henkilo vastaanottajat]
+            (let [{sahkoposti :sahkoposti} henkilo
+                  viestin-otsikko "Työmaapäiväkirjassa uusi kommentti"
+                  viestin-vartalo (html
+                                    [:div
+                                     [:span (format "Urakassa %s on uusi kommentti koskien %s työmaapäiväkirjaa."
+                                              (pr-str urakka-nimi)
+                                              (pr-str tyomaapaivakirjan-paivamaara))] [:br]
+                                     [:div
+                                      [:p (str lahettaja ":")]
+                                      [:p  (str "'" kommentti "'")]] [:br]
+                                     [:span "Voit käydä lukemassa kommentin tästä linkistä:"]
+                                     [:p
+                                      (format "%s#urakat/tyomaapaivakirja?&hy=%s&u=%s"
+                                        harja-url
+                                        (pr-str hallintayksikko-id)
+                                        (pr-str urakka-id))] [:br]
+                                     [:p "Tämä on automaattisesti luotu viesti HARJA-järjestelmästä. Älä vastaa tähän viestiin."]])]
+              (sahkoposti/laheta-viesti!
+                api-sahkoposti
+                (sahkoposti/vastausosoite api-sahkoposti)
+                sahkoposti
+                (str "Harja: " viestin-otsikko)
+                viestin-vartalo
+                {})))
+          (log/debug "Työmaapäiväkirjan urakanvalvojan kommentin sähköposti ilmoitus lähtetty kaikille urakan vastuuhenkilöille."))
+
+        (catch Exception e
+          (log/error (str
+                       (format "Työmaapäiväkirjan kommentin sähköpostin lähetys epäonnistui. Virhe: %s" (pr-str e))
+                       "Tallennus onnistui?: " onnistui?
+                       "kehitysmoodi?: " kehitysmoodi?
+                       "sampo-id: " sampo-id
+                       "urakanvalvoja?: " urakanvalvoja?
+                       "vastaanottajat:" (map :sahkoposti vastaanottajat)))))
+      (log/debug "Työmaapäiväkirja - Sähköpostia ei lähetetä, saatiin parametrit: "
+        (str (format "sampo-id %s onnistui? %s urakanvalvoja? %s kehitysmoodi? %s vastaanottajat löytyi? %s"
+               sampo-id onnistui? urakanvalvoja? kehitysmoodi? (some? vastaanottajat))))))
   (hae-kommentit db tiedot))
 
 (defn- poista-tyomaapaivakirjan-kommentti [db user tiedot]
@@ -246,9 +324,9 @@
           ryhmitetyt-versiomuutokset (map fn-generoi-idt-riveille ryhmitetyt-versiomuutokset)]
       ryhmitetyt-versiomuutokset)))
 
-(defrecord Tyomaapaivakirja []
+(defrecord Tyomaapaivakirja [kehitysmoodi?]
   component/Lifecycle
-  (start [{:keys [http-palvelin db] :as this}]
+  (start [{:keys [http-palvelin db fim api-sahkoposti] :as this}]
 
     (julkaise-palvelu http-palvelin
       :tyomaapaivakirja-hae
@@ -258,7 +336,7 @@
     (julkaise-palvelu http-palvelin
       :tyomaapaivakirja-tallenna-kommentti
       (fn [user tiedot]
-        (tallenna-kommentti db user tiedot)))
+        (tallenna-kommentti db user tiedot fim api-sahkoposti kehitysmoodi?)))
 
     (julkaise-palvelu http-palvelin
       :tyomaapaivakirja-hae-kommentit
