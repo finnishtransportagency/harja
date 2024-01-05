@@ -156,6 +156,8 @@
 (defrecord LisaaOikeudetUrakkaan [urakka-id])
 (defrecord LisaaOikeudetUrakkaanOnnistui [vastaus])
 (defrecord LisaaOikeudetUrakkaanEpaonnistui [vastaus])
+(defrecord LisaaKirjoitusOikeusOnnistui [vastaus])
+(defrecord LisaaKirjoitusOikeusEpaonnistui [vastaus])
 
 (defn hae-hallintayksikon-urakat [hal]
   (let [_ (tuck-apurit/post! :hallintayksikon-urakat
@@ -284,6 +286,14 @@
     (let [payload {:oikeudet (conj [] {:urakka-id urakka-id
                                        :poistettu false})
                    :kayttaja-id (:id @istunto/kayttaja)}
+          ;; Käyttäjä tarvitsee myös kirjoitusoikeudet, joten lisätty tällainen koodipalikka
+          _ (tuck-apurit/post! :lisaa-kayttajalle-oikeus
+              {:oikeus "kirjoitus"
+               :kayttajanimi (:kayttajanimi @istunto/kayttaja)}
+              {:onnistui ->LisaaKirjoitusOikeusOnnistui
+               :epaonnistui ->LisaaKirjoitusOikeusEpaonnistui
+               :paasta-virhe-lapi? true})
+          
           _ (tuck-apurit/post! :tallenna-jarjestelmatunnuksen-lisaoikeudet
               payload
               {:onnistui ->LisaaOikeudetUrakkaanOnnistui
@@ -301,6 +311,18 @@
   LisaaOikeudetUrakkaanEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.log "LisaaOikeudetUrakkaanEpaonnistui :: vastaus" (pr-str vastaus))
+    app)
+  
+  LisaaKirjoitusOikeusOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "LisaaKirjoitusOikeusOnnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "LisaaKirjoitusOikeusOnnistui" :onnistui)
+    (hae-kayttajan-kaytto-oikeudet)
+    app)
+  
+  LisaaKirjoitusOikeusEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "LisaaKirjoitusOikeusEpaonnistui :: vastaus" (pr-str vastaus))
     app)
 
   HaeVersiotiedot
