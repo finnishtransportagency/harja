@@ -26,7 +26,8 @@
     (is (= (toimenpiteet/muodosta-kohteiden-hakuargumentit {:urakka {:id 666}
                                                             :sopimus-id 666
                                                             :toimenpide {:id 666}
-                                                            :aikavali aikavali}
+                                                            :aikavali aikavali
+                                                            :huoltokohde nil}
                                                            :kokonaishintainen)
            odotettu))
     (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely odotettu))))
