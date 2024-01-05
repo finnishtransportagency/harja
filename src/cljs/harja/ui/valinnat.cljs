@@ -517,6 +517,15 @@
                          :valitse-fn #(reset! valittu-aluslaji-atom %)}
     kohteet]])
 
+(defn kanava-huoltokohde
+  [valittu-huoltokohde-atom kohteet format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Huoltokohde"]
+   [livi-pudotusvalikko {:valinta @valittu-huoltokohde-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-huoltokohde-atom %)}
+    kohteet]])
+
 (defn urakkavalinnat [{:keys [urakka]} & sisalto]
   [:div.urakkavalinnat (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
                          {:class "urakkavalinnat-tyyliton"})
