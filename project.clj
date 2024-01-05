@@ -4,20 +4,22 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Väylän Harja"
 
-  :dependencies [[org.clojure/clojure "1.10.0"]
-                 [org.clojure/clojurescript "1.10.520"]
+  :dependencies [[org.clojure/clojure "1.11.1"]
+                 [org.clojure/clojurescript "1.11.60"]
                  [org.clojure/spec.alpha "0.2.176"]
                  ;;;;;;; Yleiset ;;;;;;;
 
                  [prismatic/schema "1.1.10"]
-                 [org.clojure/core.async "0.3.443"]
+                 [org.clojure/core.async "1.5.648"]
+                 [thheller/shadow-cljs "2.26.2"]
+                 [com.google.javascript/closure-compiler-unshaded "v20230802"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.256"]
                  [com.cognitect/transit-clj "0.8.313"]
                  ;; Pätevä yksinkertainen työkalu esimerkiksi config-tiedostojen mergeämiseen
                  [meta-merge "1.0.0"]
 
-                 [cljsjs/exif "2.1.1-1"]
+                 #_[cljsjs/exif "2.1.1-1"]
 
                  ;;;;;;; Palvelin ;;;;;;;
 
@@ -96,7 +98,7 @@
                  [com.andrewmcveigh/cljs-time "0.5.2"]
 
                  ;; Kuvataso error tulee ol.source.Image inheritistä, jos päivittää neloseen
-                 [cljsjs/openlayers "3.15.1"] ; TODO Voisi päivittää, mutta laadunseurannan buildi hajoaa (4.4.1-1) puuttuviin requireihin
+                 #_[cljsjs/openlayers "3.15.1"] ; TODO Voisi päivittää, mutta laadunseurannan buildi hajoaa (4.4.1-1) puuttuviin requireihin
 
                  ;; Microsoft dokumenttimuotojen tuki
                  [org.apache.poi/poi "4.1.0"]
@@ -142,10 +144,9 @@
 
                  ;; Laadunseurantatyökalua varten
                  [org.clojure/data.codec "0.1.1"]
-                 [devcards "0.2.4" :exclusions [cljsjs/react]]
 
                  ;; Arbitrary precision math frontilla
-                 [cljsjs/big "3.1.3-1"]
+                 #_[cljsjs/big "3.1.3-1"]
 
                  [clj-gatling "0.13.0" :exclusions [[clj-time]]]
                  ;; Tarvitaan käännöksessä
@@ -221,7 +222,8 @@
          :target-path "resources/public/css/"}
 
   ;; Palvelimen buildin tietoja
-  :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"]
+  :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"
+                 "src/cljs" "src/js"]
   :test-paths ["test/clj" "test/cljc" "laadunseuranta/test-src/clj"]
   :aot :all
   :main harja.palvelin.main

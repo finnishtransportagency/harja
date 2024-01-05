@@ -1,12 +1,18 @@
 {
   "dependencies": {
+    "big.js": "^6.2.1",
     "cypress": "10.2.0",
+    "exif-js": "^2.3.0",
+    "ol": "^8.2.0",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
     "transit-js": "^0.8.867"
   },
   "engines": {
     "node": "^18.0.0"
   },
   "devDependencies": {
-    "less": "4.2.0"
+    "less": "4.2.0",
+    "shadow-cljs": "^2.26.2"
   }
 }

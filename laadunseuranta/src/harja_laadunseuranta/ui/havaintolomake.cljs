@@ -12,10 +12,7 @@
             [cljs-time.format :as time-fmt]
             [harja-laadunseuranta.tiedot.fmt :as fmt]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
-            [harja-laadunseuranta.ui.yleiset.yleiset :as yleiset])
-
-  (:require-macros [reagent.ratom :refer [run!]]
-                   [devcards.core :refer [defcard]]))
+            [harja-laadunseuranta.ui.yleiset.yleiset :as yleiset]))
 
 (defn- havaintolomakekomponentti [{:keys [lomakedata tallenna-fn peruuta-fn
                                           tr-osoite-lomakkeen-avauksessa
@@ -121,11 +118,3 @@
                                   :lat 7208956
                                   :heading 45}}))
 
-(defcard havaintolomake-card
-  (fn [_ _]
-    (reagent/as-element [havaintolomake (str "http://localhost:8000" asetukset/+wmts-url+)
-                         (str "http://localhost:8000" asetukset/+wmts-url-kiinteistojaotus+)
-                         (str "http://localhost:8000" asetukset/+wmts-url-ortokuva+) test-model #() #()]))
-  test-model
-  {:watch-atom true
-   :inspect-data true})

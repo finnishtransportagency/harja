@@ -787,7 +787,7 @@ jatkon."
         wrapperin-koko (:wrapperin-koko opts)]
     (komp/luo
       (komp/piirretty
-        #(let [n (r/dom-node %)
+        #(let [n (reagent.dom/dom-node %)
                parent-rect (aget (.getClientRects (.-parentNode n)) 0)
                width (if (map? wrapperin-koko)
                        (:leveys wrapperin-koko)

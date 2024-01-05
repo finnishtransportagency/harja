@@ -1,20 +1,14 @@
 (ns harja-laadunseuranta.ui.kartta
   (:require [reagent.core :as reagent :refer [atom]]
-            [ol]
-            [ol.Map]
-            [ol.Feature]
-            [ol.layer.Tile]
-            [ol.layer.Vector]
-            [ol.geom.Point]
-            [ol.geom.LineString]
-            [ol.source.WMTS]
-            [ol.style.Style]
-            [ol.style.Stroke]
-            [ol.style.Icon]
-            [ol.style.Text]
-            [ol.animation]
-            [ol.control :as ol-control]
-            [ol.interaction :as ol-interaction]
+            ["ol"]
+            ["ol/source" :as ol-source]
+            ["ol/layer" :as ol-layer]
+            ["ol/tilegrid" :as ol-tilegrid]
+            ["ol/style" :as ol-style]
+            ["ol/geom" :as ol-geom]
+            ["ol/animation" :as ol-animation]
+            ["ol/interaction" :as ol-interaction]
+            ["ol.control" :as ol-control]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]
@@ -22,8 +16,7 @@
             [harja.math :as math]
             [cljs-time.local :as l]
             [cljs-time.core :as t])
-  (:require-macros [reagent.ratom :refer [run!]]
-                   [devcards.core :refer [defcard]]))
+  (:require-macros [reagent.ratom :refer [run!]]))
 
 (defn lisaa-kirjausikoni [teksti]
   (swap! s/kirjauspisteet
@@ -31,13 +24,13 @@
                 :label teksti)))
 
 (defn- wmts-source [layer url]
-  (ol.source.WMTS. #js {:attributions [(ol.Attribution. #js {:html "MML"})]
+  (ol-source/WMTS. #js {:attributions [(ol/Attribution. #js {:html "MML"})]
                         :url url
                         :layer layer
                         :matrixSet "ETRS-TM35FIN"
                         :format (if (= "ortokuva" layer) "image/jpeg" "image/png")
                         :projection projektiot/projektio
-                        :tileGrid (ol.tilegrid.WMTS. (clj->js (projektiot/tilegrid 16)))
+                        :tileGrid (ol-tilegrid/WMTS. (clj->js (projektiot/tilegrid 16)))
                         :style "default"
                         :wrapX true}))
 
@@ -68,12 +61,12 @@
 (def wmts-source-maastokartta (partial wmts-source "maastokartta"))
 
 (defn- tile-layer [source]
-  (ol.layer.Tile.
+  (ol-layer/Tile.
     #js {;:preload asetukset/+preload-taso+
          :source source}))
 
 (defn- tee-ikoni [suunta kuva]
-  (ol.style.Icon. #js {:anchor #js [0.5 0.5]
+  (ol-style/Icon. #js {:anchor #js [0.5 0.5]
                        :anchorXUnits "fraction"
                        :anchorYUnits "fraction"
                        :opacity 1
@@ -81,7 +74,7 @@
                        :src kuva}))
 
 (defn- tee-offset-ikoni [offset kuva]
-  (ol.style.Icon. #js {:anchor (clj->js offset)
+  (ol-style/Icon. #js {:anchor (clj->js offset)
                        :anchorXUnits "pixels"
                        :anchorYUnits "pixels"
                        :opacity 1
@@ -89,44 +82,44 @@
                        :src kuva}))
 
 (defn- nuoli-ikoni-tyyli [suunta]
-  (ol.style.Style. #js {:image (tee-ikoni suunta kuvat/+autonuoli+)}))
+  (ol-style/Style. #js {:image (tee-ikoni suunta kuvat/+autonuoli+)}))
 
 (defn- reittiviivan-tyyli [leveys vari]
-  (ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:width leveys
+  (ol-style/Style. #js {:stroke (ol-style/Stroke. #js {:width leveys
                                                        :color vari})}))
 
 (defn- havaintopisteen-teksti [havainto]
-  (ol.style.Text. #js {:text (:label havainto)
+  (ol-style/Text. #js {:text (:label havainto)
                        :offsetX 0
                        :offsetY -30
                        :scale 2}))
 
 (defn- kirjauspiste-ikoni-tyyli [havainto]
-  (ol.style.Style. #js {:image (tee-offset-ikoni [24 48] kuvat/+havaintopiste+)
+  (ol-style/Style. #js {:image (tee-offset-ikoni [24 48] kuvat/+havaintopiste+)
                         :text (havaintopisteen-teksti havainto)}))
 
 (defn- tee-piste [piste]
-  (ol.geom.Point. (clj->js (projektiot/latlon-vektoriksi piste))))
+  (ol-geom/Point. (clj->js (projektiot/latlon-vektoriksi piste))))
 
 (defn- tee-viiva [pisteet]
-  (ol.geom.LineString. (clj->js pisteet)))
+  (ol-geom/LineString. (clj->js pisteet)))
 
 (defn- laske-suunta [heading]
   (* (/ (+ heading asetukset/+heading-ikonikorjaus+) 360) (* 2 Math/PI)))
 
 (defn- tee-piste-feature [coords]
-  (doto (ol.Feature. #js {:geometry (tee-piste coords)})
+  (doto (ol/Feature. #js {:geometry (tee-piste coords)})
     (.setStyle (nuoli-ikoni-tyyli (laske-suunta (:heading coords))))))
 
 (defn- tee-viiva-feature [piste]
-  (doto (ol.Feature. #js {:geometry (tee-viiva (:segmentti piste))})
+  (doto (ol/Feature. #js {:geometry (tee-viiva (:segmentti piste))})
     (.setStyle (reittiviivan-tyyli asetukset/+reittiviivan-leveys+ (:vari piste)))))
 
 (defn- tee-viiva-featuret [pisteet]
   (mapv tee-viiva-feature pisteet))
 
 (defn- tee-ikoni-feature [ikoni]
-  (doto (ol.Feature. #js {:geometry (tee-piste ikoni)})
+  (doto (ol/Feature. #js {:geometry (tee-piste ikoni)})
     (.setStyle (kirjauspiste-ikoni-tyyli ikoni))))
 
 (defn- tee-ikoni-featuret [ikonit]
@@ -144,10 +137,10 @@
                                 :pinchZoom false}))
 
 (defn- tee-vektorilahde [features]
-  (ol.source.Vector. #js {:features (clj->js features)}))
+  (ol-source/Vector. #js {:features (clj->js features)}))
 
 (defn- vector-layer [lahde]
-  (ol.layer.Vector. #js {:source lahde}))
+  (ol-layer/Vector. #js {:source lahde}))
 
 (defn- luo-kontrollit []
   (ol-control/defaults #js {:zoom true
@@ -185,7 +178,7 @@
   (.changed (.getView kartta)))
 
 (defn- smooth-pan [old-center duration]
-  (ol.animation.pan #js {:duration duration
+  (ol-animation/pan #js {:duration duration
                          :source old-center}))
 
 (defn- paivita-kartan-keskipiste [kartta keskipiste]
@@ -231,7 +224,7 @@
 (defn- kytke-dragpan [kartta enable]
   (if enable
     (when-not (etsi-dragpan kartta)
-      (.addInteraction kartta (ol.interaction.DragPan.)))
+      (.addInteraction kartta (ol-interaction/DragPan.)))
     (when-let [dragpan (etsi-dragpan kartta)]
       (.removeInteraction kartta dragpan))))
 
@@ -303,7 +296,7 @@
                                      ajoneuvon-sijainti-atomi reittipisteet-atomi kirjatut-pisteet-atomi optiot
                                      kayttaja-muutti-zoomausta-aikaleima-atom keskita-ajoneuvoon-atom]}]
   (let [alustava-sijainti-saatu? (cljs.core/atom false)
-        map-element (reagent/dom-node this)
+        map-element (reagent.dom/dom-node this)
 
         ajoneuvo (tee-piste-feature (:nykyinen @ajoneuvon-sijainti-atomi))
         ajettu-reitti (tee-viiva-featuret @reittipisteet-atomi)
@@ -419,49 +412,3 @@
       :on-click #(do (swap! s/keskita-ajoneuvoon? not))}
      [kuvat/svg-sprite "tahtain-24"]]
     [taustakartan-valinta @s/taustakartta #(reset! s/taustakartta %)]]])
-
-;; devcards
-
-(def test-sijainti (atom {:lon 428147
-                          :lat 7208956
-                          :heading 45}))
-
-(def test-ikonit (atom [{:lat 7208942 :lon 428131
-                         :label "0.45"}]))
-(def testioptiot (atom {:seuraa-sijaintia? true}))
-
-(def test-reittipisteet (atom [[[428131 7208942] [428131 7208942]]
-                               [[428141 7208952] [428147 7208956]]]))
-
-(defn- paikallinen [url]
-  (str "http://localhost:8000" url))
-
-(defcard kartta-card
-  "Karttakomponentti"
-  (fn [sijainti _]
-    (reagent/as-element
-      [:div {:style {:width "100%"
-                     :height "800px"}}
-       [karttakomponentti {:wmts-url (paikallinen asetukset/+wmts-url+)
-                           :wmts-url-kiinteistorajat (paikallinen asetukset/+wmts-url-kiinteistojaotus+)
-                           :wmts-url-ortokuva (paikallinen asetukset/+wmts-url-ortokuva+)
-                           :sijainti-atomi sijainti
-                           :ajoneuvon-sijainti-atomi sijainti
-                           :reittipisteet-atomi test-reittipisteet
-                           :kirjauspisteet-atomi test-ikonit
-                           :optiot testioptiot}]]))
-  test-sijainti
-  {:inspect-data true
-   :watch-atom true})
-
-(defcard kartan-ohjaus
-  "Siirrä karttaa muuttamalla sijaintiatomia. Autonuolen pitäisi liikkua kartalla, ei jäädä paikalleen"
-  (fn [sijainti _]
-    (reagent/as-element
-      [:div
-       [:button {:on-click #(swap! sijainti update-in [:lat] (fn [x] (+ x 100)))}
-        "Siirrä"]
-       [:button {:on-click #(swap! sijainti update-in [:heading] (fn [suunta] (+ suunta 10)))}
-        "Suuntaa"]]))
-  test-sijainti
-  {:watch-atom true})

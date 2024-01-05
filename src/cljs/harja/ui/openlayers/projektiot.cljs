@@ -1,6 +1,6 @@
 (ns harja.ui.openlayers.projektiot
   "Karttaa varten tarvittavat extent alueet ja projektiot"
-  (:require [ol.proj :as ol-proj]))
+  (:require ["ol/proj" :as ol-proj]))
 
 (def suomen-extent
   "Suomalaisissa kartoissa olevan projektion raja-arvot."

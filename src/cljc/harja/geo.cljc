@@ -9,7 +9,7 @@
    [clojure.spec.alpha :as s]
    [taoensso.timbre :as log]
    #?(:cljs
-      [ol.proj :as ol-proj])))
+      ["ol/proj" :as ol-proj])))
 
 (s/def ::single-coordinate (s/every number? :min-count 2 :max-count 2))
 (s/def ::multiple-coordinates (s/every ::single-coordinate))

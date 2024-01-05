@@ -1,6 +1,6 @@
 (ns harja-laadunseuranta.tiedot.fmt
-  (:require [ol.proj :as ol-proj]
-            [ol.extent :as ol-extent]
+  (:require ["ol/proj" :as ol-proj]
+            ["ol/extent" :as ol-extent]
             [cljs-time.format :as time-fmt]
             [clojure.string :as str]))
 

@@ -1,27 +1,27 @@
 (ns harja.ui.openlayers.taustakartta
   "Taustakarttatasojen muodostus. Luo karttakomponentille annetun määrittelyn
   perusteella sopivat OpenLayersin WMTS tasojen objektit."
-  (:require [ol.source.WMTS]
-            [ol.tilegrid.WMTS]
-            [ol.layer.Tile]
-            [ol.source.ImageWMS]
-            [ol.layer.Image]
-            [ol.extent :as ol-extent]
-            [harja.ui.openlayers.projektiot :as p]
-            [taoensso.timbre :as log]))
+  (:require
+    ["ol/control" :as ol-control]
+    ["ol/source" :as ol-source]
+    ["ol/tilegrid" :as ol-tilegrid]
+    ["ol/layer" :as ol-layer]
+    ["ol/extent" :as ol-extent]
+    [harja.ui.openlayers.projektiot :as p]
+    [taoensso.timbre :as log]))
 
 
 (defn tilegrid []
-  (ol.tilegrid.WMTS.
+  (ol-tilegrid/WMTS.
    (clj->js {:origin (ol-extent/getTopLeft (.getExtent p/projektio))
              :resolutions [8192 4096 2048 1024 512 256 128 64 32 16 8 4 2 1 0.5 0.25]
              :matrixIds (range 16)
              :tileSize 256})))
 
 (defn- wmts-layer [matrixset attribuutio url layer visible?]
-  (doto (ol.layer.Tile.
+  (doto (ol-layer/Tile.
          #js {:source
-              (ol.source.WMTS. #js {:attributions [(ol.Attribution.
+              (ol-source/WMTS. #js {:attributions [(ol-control/Attribution.
                                                     #js {:html attribuutio})]
                                     :url          url
                                     :layer        layer
@@ -45,8 +45,8 @@
 
 (defmethod luo-taustakartta :wms [{:keys [url layer style default] :as params}]
   (log/info "Luodaan WMS karttataso: " params)
-  (doto (ol.layer.Image.
-         #js {:source (ol.source.ImageWMS.
+  (doto (ol-layer/Image.
+         #js {:source (ol-source/ImageWMS.
                        #js {:url url
                             :params #js {:LAYERS layer :STYLE style :FORMAT "image/png"}})})
     (.setVisible default)))

@@ -8,8 +8,7 @@
             [harja-laadunseuranta.ui.yleiset.dropdown :refer [dropdown]]
             [harja-laadunseuranta.tiedot.sovellus :as s])
   (:require-macros [reagent.ratom :refer [run!]]
-                   [cljs.core.async.macros :refer [go]]
-                   [devcards.core :refer [defcard]]))
+                   [cljs.core.async.macros :refer [go]]))
 
 (defn ajo-paatetaan-dialogi []
   [:div.tarkastusajon-paattaminen-dialog
@@ -85,6 +84,3 @@
    [tarkastusajon-jatkamisdialogi
     {:jatka-ajoa! luonti/jatka-ajoa!
      :pakota-ajon-lopetus! paattaminen/pakota-ajon-lopetus!}]])
-
-(defcard luontidialogi-card
-  (reagent/as-element [tarkastusajon-luontidialogi #() #()]))

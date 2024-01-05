@@ -14,8 +14,7 @@
             [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
-    [cljs.core.async.macros :refer [go go-loop]]
-    [devcards.core :as dc :refer [defcard deftest]]))
+    [cljs.core.async.macros :refer [go go-loop]]))
 
 (def edellinen-header-leveys (atom nil))
 (def +header-reuna-padding+ 80)
@@ -215,7 +214,7 @@
 
     (r/create-class
       {:component-did-mount (fn [this]
-                              (reset! dom-node (reagent/dom-node this))
+                              (reset! dom-node (reagent.dom/dom-node this))
                               (reset! body-click-kuuntelija
                                       (tapahtumat/kuuntele! :body-click
                                                             #(when-not (dom/sisalla? @dom-node (:tapahtuma %))

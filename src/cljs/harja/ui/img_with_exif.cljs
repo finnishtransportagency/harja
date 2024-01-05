@@ -50,7 +50,7 @@
     (komp/luo
       (komp/piirretty
         (fn [this]
-          (reset! img-node (.-lastChild (r/dom-node this)))))
+          (reset! img-node (.-lastChild (reagent.dom/dom-node this)))))
       (fn [optiot]
         (let [lopulliset-optiot (merge optiot exif-optiot)
               lopulliset-optiot (maarita-kuvan-luokat lopulliset-optiot @exif-orientaatio @exif-luettu?)]

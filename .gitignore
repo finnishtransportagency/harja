@@ -70,3 +70,4 @@ lsp/
 /.java-version
 .calva/
 test.calva-repl
+.shadow-cljs/

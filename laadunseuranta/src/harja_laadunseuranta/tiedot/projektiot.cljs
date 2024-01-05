@@ -1,7 +1,7 @@
 (ns harja-laadunseuranta.tiedot.projektiot
   (:require [harja.geo :as geo]
-            [ol.proj :as ol-proj]
-            [ol.extent :as ol-extent]))
+            ["ol/proj" :as ol-proj]
+            ["ol/extent" :as ol-extent]))
 
 (def +suomen-extent+ [-548576.000000, 6291456.000000, 1548576.000000, 8388608.000000])
 

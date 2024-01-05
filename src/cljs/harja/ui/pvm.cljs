@@ -17,9 +17,9 @@
 
 (defn selvita-kalenterin-suunta [komponentti sijainti-atom]
   (let [etaisyys-alareunaan (dom/elementin-etaisyys-viewportin-alareunaan
-                              (.-parentNode (r/dom-node komponentti)))
+                              (.-parentNode (reagent.dom/dom-node komponentti)))
         etaisyys-oikeaan-reunaan (dom/elementin-etaisyys-viewportin-oikeaan-reunaan
-                                   (.-parentNode (r/dom-node komponentti)))
+                                   (.-parentNode (reagent.dom/dom-node komponentti)))
         uusi-suunta (if (< etaisyys-alareunaan 250)
                       (if (< etaisyys-oikeaan-reunaan 200)
                         :ylos-vasen

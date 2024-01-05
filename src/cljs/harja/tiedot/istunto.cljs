@@ -10,7 +10,7 @@
             [goog.dom :as dom]
             [goog.events :as events]
             [reagent.core :as reagent]
-            [goog.net.cookies :as cookie])
+            [goog.net.Cookies :as cookie])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -68,29 +68,29 @@
 (defn nayta-varoitus-aikakatkaisusta! []
   (let [kayttoaikaa-jaljella? (> @kayttoaikaa-jaljella-sekunteina 0)]
     (modal/nayta! {:otsikko (if kayttoaikaa-jaljella? "Haluatko jatkaa käyttöä?" "Käyttö aikakatkaistu")
-                   :footer  (if kayttoaikaa-jaljella?
-                              [:span
-                               [:button.nappi-kielteinen {:type     "button"
-                                                          :on-click #(do (.preventDefault %)
-                                                                         (aikakatkaise-istunto!)
-                                                                         (modal/piilota!))}
-                                "Kirjaudu ulos"]
-                               [:button.nappi-myonteinen {:type     "button"
-                                                          :on-click #(do (.preventDefault %)
-                                                                         (resetoi-ajastin!)
-                                                                         (modal/piilota!))}
-                                "Jatka käyttöä"]])
+                   :footer (if kayttoaikaa-jaljella?
+                             [:span
+                              [:button.nappi-kielteinen {:type "button"
+                                                         :on-click #(do (.preventDefault %)
+                                                                      (aikakatkaise-istunto!)
+                                                                      (modal/piilota!))}
+                               "Kirjaudu ulos"]
+                              [:button.nappi-myonteinen {:type "button"
+                                                         :on-click #(do (.preventDefault %)
+                                                                      (resetoi-ajastin!)
+                                                                      (modal/piilota!))}
+                               "Jatka käyttöä"]])
                    }
-                  [:div
-                   (if kayttoaikaa-jaljella?
-                     [:span
-                      [:p (str "Et ole käyttänyt Harjaa aktiivisesti pian kahteen tuntiin. Jos et jatka käyttöä, Harja suljetaan. Haluatko jatkaa käyttöä?")]
-                      [:p (str "Käyttöaikaa jäljellä: " (nayta-kayttoaika))]]
-                     [:p (str "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen.")])])))
+      [:div
+       (if kayttoaikaa-jaljella?
+         [:span
+          [:p (str "Et ole käyttänyt Harjaa aktiivisesti pian kahteen tuntiin. Jos et jatka käyttöä, Harja suljetaan. Haluatko jatkaa käyttöä?")]
+          [:p (str "Käyttöaikaa jäljellä: " (nayta-kayttoaika))]]
+         [:p (str "Harjan käyttö aikakatkaistu kahden tunnin käyttämättömyyden takia. Lataa sivu uudelleen.")])])))
 
 (defn varoita-jos-kayttoaika-umpeutumassa! []
   (when (and (< @kayttoaikaa-jaljella-sekunteina (* 60 5)))
-    (nayta-varoitus-aikakatkaisusta!)))                      ; Kutsutaan tarkoituksella joka kerta, jotta modalin sisältö päivittyy
+    (nayta-varoitus-aikakatkaisusta!))) ; Kutsutaan tarkoituksella joka kerta, jotta modalin sisältö päivittyy
 
 (defn kaynnista-ajastin! []
   (reset! ajastin-paalla? true)

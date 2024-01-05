@@ -1,21 +1,10 @@
 (ns harja.ui.openlayers.featuret
   "OpenLayers featureiden luonti Clojure data kuvauksien perusteella"
-  (:require [ol.Feature]
+  (:require ["ol" :as ol]
 
-            [ol.geom.Polygon]
-            [ol.geom.MultiPolygon]
-            [ol.geom.Point]
-            [ol.geom.Circle]
-            [ol.geom.LineString]
-            [ol.geom.MultiLineString]
-            [ol.geom.GeometryCollection]
+            ["ol/geom" :as ol-geom]
 
-            [ol.style.Style]
-            [ol.style.Fill]
-            [ol.style.Stroke]
-            [ol.style.Icon]
-            [ol.style.Circle]
-            [ol.style.Text]
+            ["ol/style" :as ol-style]
 
             [harja.loki :refer [log]]
 
@@ -44,18 +33,17 @@ pienemmällä zindexillä." :const true}
 (defmulti luo-geometria :type)
 
 (defn- circle-style [{:keys [fill stroke radius] :as circle}]
-  (ol.style.Circle. #js {:fill (ol.style.Fill. #js {:color fill})
-                         :stroke (ol.style.Stroke. #js {:color stroke :width 1})
-                         :radius (:radius circle)
-                         }))
+  (ol-style/Circle. #js {:fill (ol-style/Fill. #js {:color fill})
+                         :stroke (ol-style/Stroke. #js {:color stroke :width 1})
+                         :radius (:radius circle)}))
 
 (defn aseta-tyylit [feature {:keys [fill color stroke marker zindex circle] :as geom}]
   (doto feature
-    (.setStyle (ol.style.Style.
+    (.setStyle (ol-style/Style.
                 #js {:image (some-> circle circle-style)
                      :fill (when fill
-                             (ol.style.Fill. #js {:color (or color "red")}))
-                     :stroke (ol.style.Stroke.
+                             (ol-style/Fill. #js {:color (or color "red")}))
+                     :stroke (ol-style/Stroke.
                               #js {:color (or (:color stroke) "black")
                                    :width (or (:width stroke) 1)})
                      ;; Default zindex asetetaan harja.views.kartta:ssa.
@@ -66,10 +54,10 @@ pienemmällä zindexillä." :const true}
 
 (defn- tee-nuoli
   [kasvava-zindex {:keys [img scale zindex anchor rotation]} [piste rotaatio] reso]
-  (ol.style.Style.
+  (ol-style/Style.
     #js {:geometry piste
          :zIndex (or zindex (swap! kasvava-zindex inc))
-         :image (ol.style.Icon.
+         :image (ol-style/Icon.
                   #js {:src (str img)
                        :scale (apurit/ikonin-skaala-resoluutiolle reso (or scale 1))
                        :rotation (or rotation rotaatio) ;; Rotaatio on laskettu, rotation annettu.
@@ -95,10 +83,10 @@ pienemmällä zindexillä." :const true}
                                    "Merkin paikan pitää olla :alku, :loppu, :taitokset")
                            (condp = paikka
                              :alku
-                             [[(-> (laske-taitokset-fn) first :sijainti first clj->js ol.geom.Point.)
+                             [[(-> (laske-taitokset-fn) first :sijainti first clj->js ol-geom/Point.)
                                (-> (laske-taitokset-fn) first :rotaatio)]]
                              :loppu
-                             [[(-> (laske-taitokset-fn) last :sijainti second clj->js ol.geom.Point.)
+                             [[(-> (laske-taitokset-fn) last :sijainti second clj->js ol-geom/Point.)
                                (-> (laske-taitokset-fn) last :rotaatio)]]
                              :taitokset
                              (apurit/taitokset-valimatkoin
@@ -112,20 +100,20 @@ pienemmällä zindexillä." :const true}
 ;; Käytetään sisäisesti :viiva featurea rakentaessa
 (defn- tee-viivalle-tyyli
   [kasvava-zindex {:keys [color width zindex dash cap join miter]} reso]
-  (ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
+  (ol-style/Style. #js {:stroke (ol-style/Stroke. #js {:color (or color "black")
                                                        :width (or width 2)
                                                        :lineDash (or (clj->js dash) nil)
                                                        :lineCap (or cap "round")
                                                        :lineJoin (or join "round")
                                                        :miterLimit (or miter 10)})
-                        :zindex (or zindex (swap! kasvava-zindex inc))}))
+                        :zIndex (or zindex (swap! kasvava-zindex inc))}))
 
 (defmethod luo-geometria :viiva [{points :points}]
-  (ol.geom.LineString. (clj->js points)))
+  (ol-geom/LineString. (clj->js points)))
 
 (defn luo-viiva
   [{:keys [viivat points ikonit] :as viiva}]
-  (let [feature (ol.Feature. #js {:geometry (luo-geometria viiva)})
+  (let [feature (ol/Feature. #js {:geometry (luo-geometria viiva)})
         kasvava-zindex (atom oletus-zindex)
         taitokset (atom [])
         laske-taitokset (fn []
@@ -145,7 +133,7 @@ pienemmällä zindexillä." :const true}
 
 (defmethod luo-geometria :moniviiva
   [{lines :lines}]
-  (ol.geom.MultiLineString.
+  (ol-geom/MultiLineString.
    (clj->js (mapv :points lines))))
 
 (defmethod luo-feature :moniviiva
@@ -154,12 +142,12 @@ pienemmällä zindexillä." :const true}
 
 (defmethod luo-geometria :merkki
   [{c :coordinates}]
-  (ol.geom.Point. (clj->js c)))
+  (ol-geom/Point. (clj->js c)))
 
 (defmethod luo-feature :merkki [{:keys [coordinates img scale zindex anchor color] :as merkki}]
-  (doto (ol.Feature. #js {:geometry (luo-geometria merkki)})
-    (.setStyle (ol.style.Style.
-                 #js {:image (ol.style.Icon.
+  (doto (ol/Feature. #js {:geometry (luo-geometria merkki)})
+    (.setStyle (ol-style/Style.
+                 #js {:image (ol-style/Icon.
                                (clj->js
                                  (merge
                                    (when color {:color color})
@@ -170,29 +158,29 @@ pienemmällä zindexillä." :const true}
 
 (defmethod luo-geometria :teksti
   [{c :coordinates}]
-  (ol.geom.Point. (clj->js c)))
+  (ol-geom/Point. (clj->js c)))
 
 (defmethod luo-feature :teksti [{:keys [text color zindex offsetX offsetY scale] :as teksti}]
-  (doto (ol.Feature. #js {:geometry (luo-geometria teksti)})
-    (.setStyle (ol.style.Style.
-                 #js {:text (ol.style.Text. (clj->js {:text (str text)
+  (doto (ol/Feature. #js {:geometry (luo-geometria teksti)})
+    (.setStyle (ol-style/Style.
+                 #js {:text (ol-style/Text. (clj->js {:text (str text)
                                                       :offsetX (or offsetY 0)
                                                       :offsetY (or offsetX 0)
                                                       :scale (or scale 2)
-                                                      :stroke (ol.style.Stroke. (clj->js {:color "white" :width 2}))
-                                                      :fill (ol.style.Fill. (clj->js {:color (or color "black")}))}))
+                                                      :stroke (ol-style/Stroke. (clj->js {:color "white" :width 2}))
+                                                      :fill (ol-style/Fill. (clj->js {:color (or color "black")}))}))
                       :zIndex (or zindex oletus-zindex)}))))
 
 (defmethod luo-geometria :polygon [{c :coordinates}]
-  (ol.geom.Polygon. (clj->js [c])))
+  (ol-geom/Polygon. (clj->js [c])))
 
 (defmethod luo-geometria :icon [{c :coordinates}]
-  (ol.geom.Point. (clj->js c)))
+  (ol-geom/Point. (clj->js c)))
 
 (defmethod luo-feature :icon [{:keys [coordinates img direction anchor] :as icon}]
-  (doto (ol.Feature. #js {:geometry (luo-geometria icon)})
-    (.setStyle (ol.style.Style.
-                 #js {:image  (ol.style.Icon.
+  (doto (ol/Feature. #js {:geometry (luo-geometria icon)})
+    (.setStyle (ol-style/Style.
+                 #js {:image  (ol-style/Icon.
                                 #js {:src          img
                                      :anchor       (if anchor
                                                      (clj->js anchor)
@@ -204,7 +192,7 @@ pienemmällä zindexillä." :const true}
                       :zIndex oletus-zindex}))))
 
 (defmethod luo-geometria :point [{c :coordinates}]
-  (ol.geom.Point. (clj->js c)))
+  (ol-geom/Point. (clj->js c)))
 
 (defmethod luo-feature :point [{:keys [coordinates radius] :as point}]
   (aseta-tyylit
@@ -214,34 +202,34 @@ pienemmällä zindexillä." :const true}
    point))
 
 (defmethod luo-geometria :circle [{:keys [coordinates radius]}]
-  (ol.geom.Circle. (clj->js coordinates) radius))
+  (ol-geom/Circle. (clj->js coordinates) radius))
 
 (defmethod luo-geometria :multipolygon [{polygons :polygons}]
-  (let [multi (ol.geom.MultiPolygon.)]
+  (let [multi (ol-geom/MultiPolygon.)]
     (doseq [polygon polygons]
-      (.appendPolygon multi (ol.geom.Polygon. (clj->js [(:coordinates polygon)]))))
+      (.appendPolygon multi (ol-geom/Polygon. (clj->js [(:coordinates polygon)]))))
     multi))
 
 (defmethod luo-feature :multipolygon [{:keys [stroke] :as geom}]
-  (doto (ol.Feature. #js {:geometry (luo-geometria geom)})
-    (.setStyle (ol.style.Style.
-                 #js {:stroke (ol.style.Stroke.
+  (doto (ol/Feature. #js {:geometry (luo-geometria geom)})
+    (.setStyle (ol-style/Style.
+                 #js {:stroke (ol-style/Stroke.
                                 #js {:width (or (:width stroke) 1)
                                      :color (or (:color stroke) "black")})}))))
 
 (defmethod luo-geometria :multiline [{lines :lines}]
-  (ol.geom.MultiLineString. (clj->js (mapv :points lines))))
+  (ol-geom/MultiLineString. (clj->js (mapv :points lines))))
 
 (defmethod luo-geometria :line [{points :points}]
-  (ol.geom.LineString. (clj->js points)))
+  (ol-geom/LineString. (clj->js points)))
 
 (defmethod luo-geometria :geometry-collection [{gs :geometries}]
-  (ol.geom.GeometryCollection. (clj->js (mapv luo-geometria gs))))
+  (ol-geom/GeometryCollection. (clj->js (mapv luo-geometria gs))))
 
 (defmethod luo-feature :geometry-collection [gc]
   (aseta-tyylit
-   (ol.Feature. #js {:geometry (luo-geometria gc)})
+   (ol/Feature. #js {:geometry (luo-geometria gc)})
    gc))
 
 (defmethod luo-feature :default [this]
-  (ol.Feature. #js {:geometry (luo-geometria this)}))
+  (ol/Feature. #js {:geometry (luo-geometria this)}))

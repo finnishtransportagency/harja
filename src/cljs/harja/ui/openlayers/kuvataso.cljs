@@ -1,9 +1,9 @@
 (ns harja.ui.openlayers.kuvataso
   "Taso, joka hakee kuvan Harja palvelimelta"
-  (:require [kuvataso.Lahde]
-            [ol.layer.Tile]
-            [ol.source.TileImage]
-            [ol.extent :as ol-extent]
+  (:require #_["./kuvataso" :as kuvataso :refer [lahde]]
+            ["ol/layer" :as ol-layer]
+            ["ol/source" :as ol-source]
+            ["ol/extent" :as ol-extent]
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :refer [karttakuva-url]]
             [harja.ui.openlayers.edistymispalkki :as palkki]
@@ -13,7 +13,6 @@
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :as async])
   (:require-macros [cljs.core.async.macros :refer [go]]))
-
 
 (defn hae-url [source parametrit coord pixel-ratio projection]
   (let [tile-grid (.getTileGridForProjection source projection)
@@ -41,13 +40,13 @@
           luo? (nil? ol-layer)
           source (if (and sama? (not luo?))
                    (.getSource ol-layer)
-                   (doto (ol.source.TileImage. #js {:projection projection})
+                   (doto (ol-source/TileImage. #js {:projection projection})
                      (.on "tileloadstart" palkki/kuvataso-aloita-lataus!)
                      (.on "tileloadend" palkki/kuvataso-lataus-valmis!)
                      (.on "tileloaderror" palkki/kuvataso-lataus-valmis!)))
 
           ol-layer (or ol-layer
-                       (ol.layer.Tile.
+                       (ol-layer/Tile.
                         #js {:source source
                              :wrapX true}))]
 

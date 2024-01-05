@@ -44,7 +44,7 @@
     (r/create-class
      {:display-name "Perus-gridin-muokkauselementti"
       :component-did-mount (fn [this]
-                             (reset! this-node (r/dom-node this))
+                             (reset! this-node (reagent.dom/dom-node this))
                              (.addEventListener js/window EventType/RESIZE virhelaatikon-max-koon-asetus)
                              (virhelaatikon-max-koon-asetus nil))
       :component-will-unmount (fn [this]
@@ -555,7 +555,7 @@
         aseta-leijuvan-otsikkorivin-sarakkeet! (fn [this & _]
                                                  (when @taulukon-ref-atom
                                                    (aseta-leijuvan-otsikkorivin-sarakkeet!
-                                                     (r/dom-node this)
+                                                     (reagent.dom/dom-node this)
                                                      @taulukon-ref-atom
                                                      taulukon-leveys
                                                      @taulukon-scroll
@@ -1150,18 +1150,18 @@
         kiinnita-otsikkorivi? (atom false) ;; Jos true, otsikkorivi naulataan kiinni selaimen yläreunaan scrollatessa
         kiinnitetyn-otsikkorivin-leveys (atom 0)
         maarita-kiinnitetyn-otsikkorivin-leveys (fn [this]
-                                                  (reset! kiinnitetyn-otsikkorivin-leveys (dom/elementin-leveys (r/dom-node this))))
+                                                  (reset! kiinnitetyn-otsikkorivin-leveys (dom/elementin-leveys (reagent.dom/dom-node this))))
         maarita-rendattavien-rivien-maara (fn [this]
                                             ;; Kasvatetaan max. rendattavien rivien määrää jos viewportissa on tilaa
-                                            (when (and (pos? (dom/elementin-etaisyys-viewportin-alareunaan (r/dom-node this)))
+                                            (when (and (pos? (dom/elementin-etaisyys-viewportin-alareunaan (reagent.dom/dom-node this)))
                                                        (< @renderoi-max-rivia @rivien-maara))
                                               (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))
         kasittele-otsikkorivin-kiinnitys (fn [this]
                                            (if (and
                                                  (empty? @vetolaatikot-auki) ;; Jottei naulattu otsikkorivi peitä sisältöä
-                                                 (> (dom/elementin-korkeus (r/dom-node this)) @dom/korkeus)
-                                                 (< (dom/elementin-etaisyys-viewportin-ylareunaan (r/dom-node this)) -20)
-                                                 (pos? (dom/elementin-etaisyys-viewportin-ylareunaan-alareunasta (r/dom-node this))))
+                                                 (> (dom/elementin-korkeus (reagent.dom/dom-node this)) @dom/korkeus)
+                                                 (< (dom/elementin-etaisyys-viewportin-ylareunaan (reagent.dom/dom-node this)) -20)
+                                                 (pos? (dom/elementin-etaisyys-viewportin-ylareunaan-alareunasta (reagent.dom/dom-node this))))
                                              (reset! kiinnita-otsikkorivi? true)
                                              (reset! kiinnita-otsikkorivi? false)))
         kasittele-scroll-event (fn [this _]
@@ -1202,7 +1202,7 @@
 
        :component-did-mount
        (fn [this _]
-         (swap! gridin-tietoja assoc :grid-node (r/dom-node this))
+         (swap! gridin-tietoja assoc :grid-node (reagent.dom/dom-node this))
          (maarita-kiinnitetyn-otsikkorivin-leveys this)
          (maarita-rendattavien-rivien-maara this))
 

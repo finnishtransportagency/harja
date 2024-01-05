@@ -49,7 +49,7 @@
                                                            :alkupvm (:alkupvm kohde)}
                                      :ikonit [{:tyyppi :merkki
                                                :paikka [:loppu]
-                                               :zindex 21
+                                               :zIndex 21
                                                :img (pinni-ikoni "sininen")}]}))
                                 kohteet)
                           {:selitteet [{:vari (map :color asioiden-ulkoasu/paikkaukset)

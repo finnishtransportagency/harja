@@ -282,7 +282,7 @@
   ([alipolku]
    (piirretty
     (fn [this]
-      (let [elt (r/dom-node this)]
+      (let [elt (reagent.dom/dom-node this)]
         (when-let [elt (if alipolku
                          (.querySelector elt alipolku)
                          elt)]
@@ -293,7 +293,7 @@
   []
   (piirretty
    (fn [this]
-     (let [node (r/dom-node this)
+     (let [node (reagent.dom/dom-node this)
            [_ y _ h] (dom/sijainti node)
            korkeus @dom/korkeus]
        (when (> (+ y h) korkeus)

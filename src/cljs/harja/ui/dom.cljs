@@ -13,7 +13,7 @@
   "Tarkistaa onko annettu tapahtuma tämän React komponentin sisällä."
   ([komponentti tapahtuma] (sisalla? komponentti tapahtuma nil))
   ([komponentti tapahtuma {elementti? :elementti?}]
-   (let [dom (r/dom-node komponentti)
+   (let [dom (reagent.dom/dom-node komponentti)
          elt (if elementti? tapahtuma (.-target tapahtuma))]
      (when (and (not (nil? elt)) (not (nil? (.-parentNode elt))))
        (loop [ylempi (.-parentNode elt)]

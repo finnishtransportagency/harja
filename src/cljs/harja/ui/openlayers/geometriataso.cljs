@@ -3,7 +3,11 @@
   (:require [harja.ui.openlayers.featuret :as featuret]
             [harja.ui.openlayers.taso :as taso :refer [Taso]]
             [harja.loki :refer [log]]
-            [cljs.core.async :as async])
+            [cljs.core.async :as async]
+            ["ol" :as ol]
+            ["ol/geom" :as ol-geom]
+            ["ol/source" :as ol-source]
+            ["ol/layer" :as ol-layer])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; Heatmap pisteiden asetukset 
@@ -21,7 +25,7 @@
 (defn- tee-geometria-taso
   "Create a new ol3 Vector layer with a vector source."
   [opacity]
-  (ol.layer.Vector. #js {:source          (ol.source.Vector.)
+  (ol-layer/Vector. #js {:source          (ol-source/Vector.)
                          :rendererOptions {:zIndexing true
                                            :yOrdering true}
                          :opacity opacity}))
@@ -35,15 +39,15 @@
     :geometry-collection})
 
 (defn tee-heatmap-layer [ominaisuudet]
-  (let [source (ol.source.Vector. #js {:features (clj->js ominaisuudet)})
-        heatmap-layer (ol.layer.Heatmap. #js {:source source
+  (let [source (ol-source/Vector. #js {:features (clj->js ominaisuudet)})
+        heatmap-layer (ol-layer/Heatmap. #js {:source source
                                               :blur +heatmap-blur-maara+
                                               :radius +heatmap-radius-maara+})]
     heatmap-layer))
 
 (defn heatmap-pisteet [heatmap-koordinaatit]
   (map (fn [pisteet]
-         (ol.Feature. (ol.geom.Point. (clj->js pisteet))))
+         (ol/Feature. (ol-geom/Point. (clj->js pisteet))))
     heatmap-koordinaatit))
 
 (defn paivita-ol3-tason-geometriat

@@ -150,7 +150,7 @@
        (when sticky?
          (komp/piirretty #(reset! napin-etaisyys-ylareunaan
                                   (dom/elementin-etaisyys-dokumentin-ylareunaan
-                                    (r/dom-node %)))))
+                                    (reagent.dom/dom-node %)))))
        (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes tabindex type
                                     ikoni-oikealle? esta-prevent-default?] :as optiot}]
          [:button

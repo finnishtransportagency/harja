@@ -553,7 +553,7 @@
                           (maarita-sticky!)))
       (komp/piirretty #(reset! elementin-etaisyys-ylareunaan
                                (dom/elementin-etaisyys-dokumentin-ylareunaan
-                                 (r/dom-node %))))
+                                 (reagent.dom/dom-node %))))
       (fn [{:keys [urakka] :as optiot} & sisalto]
         [:div.urakkatoiminnot {:class (str (when @naulattu? "urakkatoiminnot-naulattu ")
                                            (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))

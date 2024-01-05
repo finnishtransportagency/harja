@@ -4,6 +4,7 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [specql.impl.registry]
             [specql.data-types]
+            [specql.transform]
             [harja.domain.urakka :as urakka]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.tierekisteri :as tr]

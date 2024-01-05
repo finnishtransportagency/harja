@@ -14,7 +14,7 @@
   #?(:clj (:import java.math.BigDecimal
                    java.math.RoundingMode))
   (:require [clojure.string :as str]
-            #?@(:cljs [[cljsjs.big]
+            #?@(:cljs [["big.js"]
                        [harja.tyokalut.yleiset :as yleiset]])))
 
 

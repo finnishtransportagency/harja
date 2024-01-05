@@ -13,23 +13,15 @@
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.geo :as geo]
 
-            [ol]
-            [ol.Map]
-            [ol.Attribution]
+            ["ol" :as ol]
+            ["ol/extent" :as ol-extent]
 
-            [ol.View]
+            ["ol/geom" :as ol-geom]
 
-            [ol.source.Vector]
-            [ol.layer.Vector]
-            [ol.layer.Layer]
-            [ol.layer.Heatmap]
-            [ol.geom.Point]
-            [ol.Feature]
+            ["ol/control" :as ol-control]
+            ["ol/interaction" :as ol-interaction]
 
-            [ol.control :as ol-control]
-            [ol.interaction :as ol-interaction]
-
-            [ol.Overlay]                                    ;; popup
+            ["ol/Overlay" :as Overlay] ;; popup
             [harja.virhekasittely :as vk]
             [harja.asiakas.tapahtumat :as t]
             [harja.ui.openlayers.kuvataso :as kuvataso]
@@ -41,8 +33,7 @@
 
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]
-                   [harja.loki :refer [mittaa-aika]]
-                   [harja.ui.openlayers :refer [disable-rendering]]))
+                   [harja.loki :refer [mittaa-aika]]))
 
 (def ^{:doc "Odotusaika millisekunteina, joka odotetaan että
  kartan animoinnit on valmistuneet." :const true}
@@ -137,7 +128,7 @@
   (assert (and (= 4 (count iso)) (= 4 (count pieni)))
           "Alueen tulee olla vektori [minx miny maxx maxy]")
 
-  (ol/extent.containsExtent (clj->js iso) (clj->js pieni)))
+  (ol-extent/containsExtent (clj->js iso) (clj->js pieni)))
 
 (defn ^:export debug-keskita [x y]
   (keskita-kartta-pisteeseen! [x y]))
@@ -297,7 +288,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn luo-overlay [koordinaatti sisalto]
   (let [elt (js/document.createElement "span")
         comp (reagent/render sisalto elt)]
-    (ol.Overlay. (clj->js {:element   elt
+    (Overlay. (clj->js {:element   elt
                            :position  koordinaatti
                            :stopEvent false}))))
 
@@ -350,7 +341,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 
         _ (reset!
             openlayers-kartan-leveys
-            (.-offsetWidth (aget (.-childNodes (reagent/dom-node this)) 0)))
+            (.-offsetWidth (aget (.-childNodes (reagent.dom/dom-node this)) 0)))
         _ (reset! the-kartta ol3)
         extent (:extent mapspec)
         selection (:selection mapspec)
@@ -399,7 +390,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                (recur (alts! [komento-ch unmount-ch]))))
 
     (.setView
-     ol3 (ol.View. #js {:center     (clj->js (geo/extent-keskipiste extent))
+     ol3 (ol/View. #js {:center     (clj->js (geo/extent-keskipiste extent))
                         :resolution initial-resolution
                         :maxZoom    max-zoom
                         :minZoom    min-zoom
@@ -441,7 +432,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 
 (defn- ol3-did-update [this _]
   (let [uusi-leveys (.-offsetWidth
-                     (aget (.-childNodes (reagent/dom-node this)) 0))]
+                     (aget (.-childNodes (reagent.dom/dom-node this)) 0))]
     (when-not (= uusi-leveys
                  @openlayers-kartan-leveys)
       (reset! openlayers-kartan-leveys uusi-leveys)

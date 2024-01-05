@@ -3,7 +3,8 @@
     [harja.geo :as geo]
     [harja.domain.urakka :as ur]
     #?@(:cljs
-        [[ol.geom.Point]])))
+        [["ol/geom"]
+         #_[ol.geom.Point]])))
 
 (def kulmaraja-nuolelle (/ Math/PI 4)) ;; pi / 4 = 45 astetta
 (defn abs [i] (max i (- i)))

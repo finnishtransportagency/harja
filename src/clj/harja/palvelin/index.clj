@@ -58,7 +58,7 @@
        [:div {:style "display: flex;"}
         [:div {:style "flex: 1; display: flex; justify-content: center; align-items: center; height: 100vh;"}
          [:img {:src "images/ajax-loader.gif"}]]]]
-      [:script {:type "text/javascript" :src "js/harja.js"}]]]))
+      [:script {:type "text/javascript" :src "js/out/main.js"}]]]))
 
 (defn tee-ls-paasivu [random-avain devmode]
   (let [livicons-osoite (if devmode "resources/public/laadunseuranta/img/"

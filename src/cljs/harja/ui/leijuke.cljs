@@ -30,7 +30,7 @@
                 :top "auto"}})
 
 (defn- maarita-suunta [komponentti]
-  (let [wrapper-node (r/dom-node komponentti)
+  (let [wrapper-node (reagent.dom/dom-node komponentti)
         komponentti-node (.-firstChild wrapper-node)
         [_ _ leveys korkeus :as sij] (dom/sijainti komponentti-node)
         viewport-korkeus @dom/korkeus

@@ -1,6 +1,6 @@
 (ns harja.tiedot.exif
   (:require [reagent.core :refer [atom]]
-            [cljsjs.exif]
+            ["exif-js"]
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<!]]
             [cljs-time.core :as t])

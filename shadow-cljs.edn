@@ -1,0 +1,8 @@
+;; shadow-cljs configuration
+{:lein true
+ :builds
+ {:dev {:target :browser
+        :output-dir "dev-resources/js/out"
+        :asset-path "dev-resources/js/out"
+        :ignore-warnings true
+        :modules {:main {:entries [harja.asiakas.main]}}}}}
