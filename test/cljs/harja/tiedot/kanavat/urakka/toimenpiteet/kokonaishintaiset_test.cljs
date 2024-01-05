@@ -23,7 +23,7 @@
                   ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen
                   :alkupvm (pvm/luo-pvm 2017 1 1)
                   :loppupvm (pvm/luo-pvm 2018 1 1)
-                  :huoltokohde nil}]
+                  ::kanavan-toimenpide/huoltokohde-id nil}]
     (is (= (toimenpiteet/muodosta-kohteiden-hakuargumentit {:urakka {:id 666}
                                                             :sopimus-id 666
                                                             :toimenpide {:id 666}
