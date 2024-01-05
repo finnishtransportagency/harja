@@ -258,7 +258,7 @@
       (tallenna-liitteet-turvallisuuspoikkeamalle db liitteiden-hallinta urakka-id tp-id kirjaaja liitteet)
       tp-id)))
 
-(defn kirjaa-turvallisuuspoikkeama [liitteiden-hallinta turi db {id :id} {turvallisuuspoikkeamat :turvallisuuspoikkeamat} kirjaaja]
+(defn kirjaa-turvallisuuspoikkeama [liitteiden-hallinta db {id :id} {turvallisuuspoikkeamat :turvallisuuspoikkeamat} kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
     (log/debug (format "Kirjataan: %s uutta turvallisuuspoikkeamaa urakalle id: %s kayttäjän: %s (id: %s) tekemänä."
                        (count turvallisuuspoikkeamat)
@@ -275,7 +275,7 @@
 
 (defrecord Turvallisuuspoikkeama []
   component/Lifecycle
-  (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta turi :turi
+  (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta
            integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
       http :lisaa-turvallisuuspoikkeama
@@ -283,7 +283,7 @@
         (kasittele-kutsu db integraatioloki :lisaa-turvallisuuspoikkeama request
                          json-skeemat/turvallisuuspoikkeamien-kirjaus json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
-                           (kirjaa-turvallisuuspoikkeama liitteiden-hallinta turi db parametrit data kayttaja))
+                           (kirjaa-turvallisuuspoikkeama liitteiden-hallinta db parametrit data kayttaja))
           :kirjoitus)))
     this)
 
