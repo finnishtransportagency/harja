@@ -1,43 +1,16 @@
 (ns harja.views.hallinta.api-jarjestelmatunnukset
   "Harja API:n järjestelmätunnuksien listaus ja muokkaus."
-  (:require [harja.ui.grid :as grid]
+  (:require [clojure.string :as str]
+            [tuck.core :as tuck]
             [harja.pvm :as pvm]
-            [reagent.core :refer [atom]]
-            [harja.ui.komponentti :as komp]
             [harja.tiedot.hallinta.api-jarjestelmatunnukset :as tiedot]
-            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
-            [clojure.string :as str]
-            [cljs.core.async :refer [<!]])
-  (:require-macros [reagent.ratom :refer [reaction]]
-                   [harja.atom :refer [reaction<!]]
-                   [cljs.core.async.macros :refer [go]]))
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.ui.grid :as grid]
+            [harja.ui.komponentti :as komp]
+            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]))
 
-(defn- api-jarjestelmatunnukset [jarjestelmatunnukset-atom api-oikeudet-atom]
-  (let [ei-muokattava (constantly false)
-        ;; Päivittää jarjestelmatunnukset-atom :oikeus arvon valitulle tunnukselle
-        fn-paivita-tunnuksen-oikeudet (fn [kayttajanimi oikeus poista?]
-                                        (swap! jarjestelmatunnukset-atom
-                                          (fn [users]
-                                            (map-indexed
-                                              (fn [_ user]
-                                                (if (= (:kayttajanimi user) kayttajanimi)
-                                                  (cond
-                                                    ;; Jos halutaan poistaa, poistetaan oikeus
-                                                    poista? (update user :oikeudet #(remove (fn [a] (= a oikeus)) %))
-
-                                                    ;; Jos halutaan lisätä lukuoikeus, poistetaan kirjoitusoikeus
-                                                    (= oikeus "luku") (-> user
-                                                                        (update :oikeudet #(remove (fn [a] (= a "kirjoitus")) %))
-                                                                        (update :oikeudet #(conj (set %) "luku")))
-                                                    ;; Jos halutaan lisätä kirjoitusoikeus, poistetaan luku
-                                                    (= oikeus "kirjoitus") (-> user
-                                                                             (update :oikeudet #(remove (fn [a] (= a "luku")) %))
-                                                                             (update :oikeudet #(conj (set %) "kirjoitus")))
-
-                                                    ;; Muut arvot lisätään vaan jos ei ole olemassa 
-                                                    :else (update-in user [:oikeudet] #(conj (set %) oikeus)))
-                                                  user))
-                                              users))))]
+(defn- api-jarjestelmatunnukset [e! {:keys [jarjestelmatunnukset mahdolliset-api-oikeudet]}]
+  (let [ei-muokattava (constantly false)]
     [:div.jarjestelmatunnukset-grid
      [:div
       [:h2.header-yhteiset "API järjestelmätunnukset"]
@@ -45,8 +18,8 @@
       [:p "Lukuoikeudella voidaan hakea tietoja esim. yhteystiedot, urakan tiedot tms."]
       [:p "Kirjoitus oikeudella voidaan sekä hakea tietoja että kirjoittaa esim. toteumien lisäystä/poistoa tms."]]
 
-     [grid/grid {:tallenna tiedot/tallenna-jarjestelmatunnukset
-                 :tyhja (if (nil? @jarjestelmatunnukset-atom)
+     [grid/grid {:tallenna #(tuck-apurit/e-kanavalla! e! tiedot/->TallennaJarjestelmatunnukset %)
+                 :tyhja (if (nil? jarjestelmatunnukset)
                           [ajax-loader "Haetaan järjestelmätunnuksia..."]
                           "Järjestelmätunnuksia ei löytynyt")}
       [{:otsikko "Käyttäjänimi"
@@ -77,63 +50,78 @@
        {:otsikko "Oikeudet"
         :leveys 5
         :tyyppi :komponentti
-        ;; Komponentti käyttäjän oikeuksien päivittämiseen
-        ;; Ei saanut niin nätisti että muokkausnäkymässä voitaisiin valita checkboxit ja tallenna- funktiossa tehdään muutokset, vaatisi tuckin käyttöä
+        :aseta (fn [rivi uusi]
+                 (assoc rivi :oikeudet uusi))
         :komponentti (fn
                        ;; Destrukturoi ja uudelleennimeä ensimmäisestä parametrista (kayttaja) :kayttajanimi sekä :oikeudet
-                       [{kayttajanimi :kayttajanimi kayttajan-oikeudet :oikeudet} {:keys [muokataan?]}]
+                       [{oikeudet :oikeudet :as rivi} {:keys [muokataan?
+                                                              komp-muokkaa-fn]}]
                        (if muokataan?
                          ;; Kun gridi on muokattava, tehdään alasveto valinnat oikeuksilla 
                          [:span.label-ja-kentta
                           [:div.kentta
                            [yleiset/livi-pudotusvalikko
                             ;; Näytä dropdownissa montako oikeutta käyttäjällä on 
-                            {:naytettava-arvo (str (count kayttajan-oikeudet) " valittu")
+                            {:naytettava-arvo (str (count oikeudet) " valittu")
                              :itemit-komponentteja? true}
 
                             ;; Destrukturoi ja uudelleennimeä (:enumlabel @api-oikeudet-atom)
                             (mapv (fn [{oikeus :enumlabel}]
-                                    [:span.api-tunnus-alasveto-valinnat
-                                     (str/replace oikeus "kirjoitus" "kirjoitus + luku")
-                                     [:div [:input {:type "checkbox"
-                                                    :checked (some #(= % oikeus) kayttajan-oikeudet)
-                                                    :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                                  ;; Päivitä gridin atomi, tämä triggeröi uudelleenrenderöimisen ja queryttää muokatun oikeuden suoraan tietokantaan 
-                                                                  (fn-paivita-tunnuksen-oikeudet kayttajanimi oikeus (not valittu?))
-                                                                  (tiedot/aseta-oikeudet-kayttajalle kayttajanimi oikeus valittu?))}]]])
-                              @api-oikeudet-atom)]]]
+                                    [harja.ui.kentat/tee-kentta
+                                     {:input-id (str "input-" oikeus "-" (:id rivi))
+                                      :label-id (str "label-" oikeus "-" (:id rivi))
+                                      :tyyppi :checkbox
+                                      :teksti (str/replace oikeus "kirjoitus" "kirjoitus + luku")
+                                      :valitse! (fn [e]
+                                                  (let [valittu? (-> e .-target .-checked)]
+                                                    (komp-muokkaa-fn rivi
+                                                      (cond
+                                                        ;; Jos halutaan poistaa, poistetaan oikeus
+                                                        (not valittu?) (remove (fn [a] (= a oikeus)) oikeudet)
+
+                                                        ;; Jos halutaan lisätä lukuoikeus, poistetaan kirjoitusoikeus
+                                                        (= oikeus "luku") (as-> oikeudet oikeudet
+                                                                            (remove (fn [a] (= a "kirjoitus")) oikeudet)
+                                                                            (conj (set oikeudet) "luku"))
+                                                        ;; Jos halutaan lisätä kirjoitusoikeus, poistetaan luku
+                                                        (= oikeus "kirjoitus") (as-> oikeudet oikeudet
+                                                                                 (remove (fn [a] (= a "luku")) oikeudet)
+                                                                                 (conj (set oikeudet) "kirjoitus"))
+
+                                                        ;; Muut arvot lisätään vaan jos ei ole olemassa
+                                                        :else (conj (set oikeudet) oikeus))
+                                                      )))}
+                                     (some #(= % oikeus) oikeudet)])
+                              mahdolliset-api-oikeudet)]]]
                          ;; Kun gridi ei ole muokattava, näytetään käyttäjän oikeudet 
-                         [:span (str/replace (str/join ", " kayttajan-oikeudet) "kirjoitus" "kirjoitus + luku")]))}]
-      @jarjestelmatunnukset-atom]]))
+                         [:span (str/replace (str/join ", " oikeudet) "kirjoitus" "kirjoitus + luku")]))}]
+      jarjestelmatunnukset]]))
 
-(defn jarjestelmatunnuksen-lisaoikeudet [kayttaja-id]
-  (let [tunnuksen-oikeudet (atom nil)]
-    (tiedot/hae-jarjestelmatunnuksen-lisaoikeudet kayttaja-id tunnuksen-oikeudet)
-    (fn []
-      [grid/grid
-       {:otsikko "Lisäoikeudet urakoihin"
-        :tunniste :urakka-id
-        :tyhja "Ei lisäoikeuksia"
-        :tallenna #(tiedot/tallenna-jarjestelmatunnuksen-lisaoikeudet % kayttaja-id tunnuksen-oikeudet)}
-       [{:otsikko "Urakka"
-         :nimi :urakka-id
-         :fmt #(:nimi (first (filter
-                               (fn [urakka] (= (:id urakka) %))
-                               @tiedot/urakkavalinnat)))
-         :tyyppi :valinta
-         :valinta-arvo :id
-         :valinnat @tiedot/urakkavalinnat
-         :valinta-nayta #(or (:nimi %) "- Valitse urakka -")
-         :leveys 3}
-        {:otsikko "Oikeus"
-         :nimi :kuvaus
-         :hae (fn [] "Täydet oikeudet")
-         :tyyppi :string
-         :muokattava? (constantly false)
-         :leveys 2}]
-       @tunnuksen-oikeudet])))
+(defn jarjestelmatunnuksen-lisaoikeudet [e! _app kayttaja-id]
+  (e! (tiedot/->HaeJarjestelmaTunnuksenLisaoikeudet kayttaja-id))
+  (fn [e! {:keys [jarjestelmatunnuksen-lisaoikeudet urakkavalinnat]} kayttaja-id]
+    [grid/grid
+     {:otsikko "Lisäoikeudet urakoihin"
+      :tunniste :urakka-id
+      :tyhja "Ei lisäoikeuksia"
+      :tallenna #(tuck-apurit/e-kanavalla! e! tiedot/->TallennaJarjestelmaTunnuksenLisaoikeudet % kayttaja-id)}
+     [{:otsikko "Urakka"
+       :nimi :urakka-id
+       :fmt #(:nimi (first (filter (fn [urakka] (= (:id urakka) %)) urakkavalinnat)))
+       :tyyppi :valinta
+       :valinta-arvo :id
+       :valinnat urakkavalinnat
+       :valinta-nayta #(or (:nimi %) "- Valitse urakka -")
+       :leveys 3}
+      {:otsikko "Oikeus"
+       :nimi :kuvaus
+       :hae (fn [] "Täydet oikeudet")
+       :tyyppi :string
+       :muokattava? (constantly false)
+       :leveys 2}]
+     (get jarjestelmatunnuksen-lisaoikeudet kayttaja-id)]))
 
-(defn- jarjestelmatunnuksien-lisaoikeudet [jarjestelmatunnukset-atom]
+(defn- jarjestelmatunnuksien-lisaoikeudet [e! {:keys [jarjestelmatunnukset] :as app}]
   [:div
    [:div
     [:h2.header-yhteiset "API-järjestelmätunnusten lisäoikeudet urakoihin"]
@@ -141,8 +129,8 @@
    [grid/grid
     {:tunniste :id
      :tallenna nil
-     :vetolaatikot (into {} (map (juxt :id #(-> [jarjestelmatunnuksen-lisaoikeudet (:id %)]))
-                              @jarjestelmatunnukset-atom))}
+     :vetolaatikot (into {} (map (juxt :id #(-> [jarjestelmatunnuksen-lisaoikeudet e! app (:id %)]))
+                              jarjestelmatunnukset))}
     [{:tyyppi :vetolaatikon-tila :leveys 1}
      {:otsikko "Käyttäjänimi"
       :nimi :kayttajanimi
@@ -155,15 +143,23 @@
       :tyyppi :string
       :muokattava (constantly false)
       :leveys 30}]
-    @jarjestelmatunnukset-atom]])
+    jarjestelmatunnukset]])
 
-(defn api-jarjestelmatunnukset-paakomponentti []
+(defn api-jarjestelmatunnukset-paakomponentti* [e! _app]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-    (fn []
-      (let [nakyma-alustettu? (some? @tiedot/urakkavalinnat)]
+    (komp/sisaan
+      #(do
+         (e! (tiedot/->HaeUrakat))
+         (e! (tiedot/->HaeJarjestelmatunnukset))
+         (e! (tiedot/->HaeMahdollisetApiOikeudet))))
+    (fn [e! app]
+      (let [nakyma-alustettu? (some? (:urakkavalinnat app))]
         (if nakyma-alustettu?
           [:div
-           [api-jarjestelmatunnukset tiedot/jarjestelmatunnukset tiedot/kaikki-api-oikeudet]
-           [jarjestelmatunnuksien-lisaoikeudet tiedot/jarjestelmatunnukset]]
+           [api-jarjestelmatunnukset e! app]
+           [jarjestelmatunnuksien-lisaoikeudet e! app]]
           [ajax-loader "Ladataan..."])))))
+
+(defn api-jarjestelmatunnukset-paakomponentti []
+  [tuck/tuck tiedot/tila api-jarjestelmatunnukset-paakomponentti*])
