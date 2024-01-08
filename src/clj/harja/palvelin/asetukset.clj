@@ -190,8 +190,8 @@
 
    (s/optional-key :vkm) {:url s/Str}
 
-   (s/optional-key :liitteet) {:fileyard-url s/Str
-                               :s3-url s/Str}
+   (s/optional-key :liitteet) {(s/optional-key :fileyard-url) s/Str
+                               (s/optional-key :s3-url) s/Str}
 
    (s/optional-key :yllapitokohteet) {:paivittainen-sahkopostin-lahetysaika [s/Num]}
    :komponenttien-tila {:itmf {:paivitystiheys-ms s/Int}
