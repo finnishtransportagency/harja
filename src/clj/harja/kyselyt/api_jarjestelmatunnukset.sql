@@ -72,7 +72,8 @@ UPDATE kayttaja
 UPDATE kayttaja
 SET kayttajanimi = :kayttajanimi,
   organisaatio = :organisaatio,
-  kuvaus = :kuvaus
+  kuvaus = :kuvaus,
+  api_oikeudet = ARRAY_REMOVE(ARRAY[:oikeudet], null)::apioikeus[]
 WHERE id = :id;
 
 -- name: paivita-jarjestelmatunnuksen-lisaoikeus-urakkaan!
@@ -90,5 +91,5 @@ INSERT INTO kayttajan_lisaoikeudet_urakkaan (urakka, kayttaja)
 
 -- name: luo-jarjestelmatunnus<!
 INSERT
-   INTO kayttaja (kayttajanimi, kuvaus, organisaatio, luotu, jarjestelma, poistettu)
-   VALUES (:kayttajanimi, :kuvaus, :organisaatio, NOW(), true, false)
+   INTO kayttaja (kayttajanimi, kuvaus, organisaatio, luotu, jarjestelma, poistettu, api_oikeudet)
+   VALUES (:kayttajanimi, :kuvaus, :organisaatio, NOW(), true, false, :oikeudet::apioikeus[])
