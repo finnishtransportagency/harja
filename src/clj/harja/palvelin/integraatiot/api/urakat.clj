@@ -42,7 +42,7 @@
                  (assoc urakka :tyyppi "hoito")
                                 urakka)]
               (-> urakka
-                  (select-keys #{:id :nimi :tyyppi :alkupvm :loppupvm
+                  (select-keys #{:id :nimi :lyhyt-nimi :tyyppi :alkupvm :loppupvm
                                  :takuu_loppupvm :alueurakkanumero :urakoitsija})
                   (assoc :vaylamuoto "tie"))))
 

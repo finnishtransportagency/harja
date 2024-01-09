@@ -93,7 +93,7 @@
         ;; Käyttäjällä ei ole analytiikkaoikeuksia 
         _ (is (= 403 (:status vastaus)) "Käyttäjältä ei löydy analytiikka api oikeuksia")
         _ (is (str/includes? (:body vastaus) "Käyttäjätunnuksella puutteelliset oikeudet") "Virheviesti löytyy")
-        
+
         ;; Annetaan oikeudet ja tehdään kutsu uudelleen
         _ (poista-kayttajan-api-oikeudet kayttaja-analytiikka)
         _ (anna-analytiikkaoikeus kayttaja-analytiikka)
@@ -142,7 +142,7 @@
         paivan-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/nyt)))
         paivan-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/nyt)))
         _ (anna-analytiikkaoikeus kayttaja-analytiikka)
-        
+
         poistetut (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paivan-alussa "/" paivan-lopussa)] kayttaja-analytiikka portti)
         _ (u (str "UPDATE toteuma SET poistettu = false, muokattu = null WHERE id = 9;"))
         _ (Thread/sleep 3500)
@@ -182,12 +182,12 @@
         alkup-vastaus-body (-> (:body alkup-vastaus)
                              (json/read-str)
                              (clojure.walk/keywordize-keys))
-        
+
         toteuma-9 (first (filter
                            #(when (= 9 (get-in % [:toteuma :tunniste :id]))
                               %)
                            (:reittitoteumat alkup-vastaus-body)))
-        
+
         ;; Muokkaa materiaalin muokattu aikaa ja määrää
         uusi-maara 114022
         _ (u (format "UPDATE toteuma_materiaali set muokattu = NOW(), maara=%s where toteuma=9" uusi-maara))
