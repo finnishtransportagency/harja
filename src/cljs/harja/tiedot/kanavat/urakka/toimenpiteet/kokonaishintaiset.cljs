@@ -75,6 +75,7 @@
 (defn alkuvalinnat []
   {:urakka @navigaatio/valittu-urakka
    :sopimus-id (first @urakkatiedot/valittu-sopimusnumero)
+   :urakkavuosi @urakkatiedot/valittu-hoitokausi
    :aikavali @urakkatiedot/valittu-aikavali
    :toimenpide @urakkatiedot/valittu-toimenpideinstanssi})
 

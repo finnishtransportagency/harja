@@ -106,7 +106,8 @@
                                        alkupvm :alkupvm loppupvm :loppupvm
                                        toimenpidekoodi ::toimenpidekoodi/id
                                        tyyppi ::toimenpide/kanava-toimenpidetyyppi
-                                       kohde ::toimenpide/kohde-id}]
+                                       kohde ::toimenpide/kohde-id
+                                       huoltokohde-id ::toimenpide/huoltokohde-id}]
   (tarkista-kutsu user urakka-id tyyppi)
   (let [tyyppi (name tyyppi)]
     (q-toimenpide/hae-kanavatomenpiteet-jeesql
@@ -117,7 +118,8 @@
        :loppupvm loppupvm
        :toimenpidekoodi toimenpidekoodi
        :tyyppi tyyppi
-       :kohde kohde})))
+       :kohde kohde
+       :huoltokohde huoltokohde-id})))
 
 (defn siirra-kanavatoimenpiteet [db user tiedot]
   (let [urakka-id (::toimenpide/urakka-id tiedot)

@@ -9,4 +9,5 @@ WHERE kt.urakka = :urakka AND
       (kt.pvm BETWEEN :alkupvm AND :loppupvm) AND
       (:toimenpidekoodi :: INTEGER IS NULL OR tpk3.id = :toimenpidekoodi) AND
       (kt.tyyppi = :tyyppi :: KAN_TOIMENPIDETYYPPI) AND
-      (:kohde :: INTEGER IS NULL OR "kohde-id" = :kohde);
+      (:kohde :: INTEGER IS NULL OR "kohde-id" = :kohde) AND
+      (:huoltokohde :: INTEGER IS NULL OR huoltokohde = :huoltokohde);

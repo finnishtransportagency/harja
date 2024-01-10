@@ -22,11 +22,13 @@
                   ::kanavan-toimenpide/kohde-id nil
                   ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen
                   :alkupvm (pvm/luo-pvm 2017 1 1)
-                  :loppupvm (pvm/luo-pvm 2018 1 1)}]
+                  :loppupvm (pvm/luo-pvm 2018 1 1)
+                  ::kanavan-toimenpide/huoltokohde-id nil}]
     (is (= (toimenpiteet/muodosta-kohteiden-hakuargumentit {:urakka {:id 666}
                                                             :sopimus-id 666
                                                             :toimenpide {:id 666}
-                                                            :aikavali aikavali}
+                                                            :aikavali aikavali
+                                                            :huoltokohde nil}
                                                            :kokonaishintainen)
            odotettu))
     (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely odotettu))))
