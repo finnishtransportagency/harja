@@ -143,7 +143,7 @@
           (is (= (count reittipisteet) 3))
           (is (= (count toteuma-tehtava-idt) 3))
           (is (= (count toteuma-materiaali-idt) 1))
-          (is (= 6 (count suolatoteumatoteuma-reittipisteet)))
+          (is (= (count suolatoteumatoteuma-reittipisteet) 3))
           (is (every? #(= materiaalikoodi-id (:materiaalikoodi %)) suolatoteumatoteuma-reittipisteet))
           (is (= toteuman-materiaali "Talvisuola, rakeinen NaCl"))
 
