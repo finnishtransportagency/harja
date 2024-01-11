@@ -1,6 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat
   (:require [jeesql.core :refer [defqueries]]
             [harja.pvm :as pvm]
+            [clojure.string :as str]
             [taoensso.timbre :as log]
             [harja.kyselyt.kanavat.liikennetapahtumat :as q]
 
@@ -10,6 +11,7 @@
             [harja.domain.kanavat.lt-alus :as a]
             [harja.domain.kanavat.lt-toiminto :as t]
             [harja.domain.kayttaja :as kayttaja]
+            [harja.domain.kanavat.kohteenosa :as ko]
 
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko rivi]]
             [harja.kyselyt.urakat :as urakat-q]))
@@ -88,6 +90,23 @@
       [(taulukko tiedot)
        (osion-otsikko "Liikennetapahtumat")])))
 
+
+(defn toimenpide->str [tapahtuma]
+  (str/join ", "
+    (into #{} (sort (keep (comp lt/kaikki-toimenpiteet->str
+                            ::t/toimenpide)
+                      (::lt/toiminnot tapahtuma))))))
+
+(defn silta-avattu->str [tapahtuma]
+  (when (boolean (some (comp (partial = :avaus) ::t/toimenpide) (::lt/toiminnot tapahtuma)))
+    "✓"))
+
+(defn palvelumuoto->str [tapahtuma]
+  (str/join ", "
+    (into #{} (sort (map lt/fmt-palvelumuoto
+                      (filter ::t/palvelumuoto
+                        (::lt/toiminnot tapahtuma)))))))
+
 (defn suorita [db user {:keys [urakoiden-nimet sarakkeet rivit parametrit hakuparametrit yhteenveto]
                         :as kaikki-parametrit}]
 
@@ -97,33 +116,31 @@
         urakoiden-nimet (or urakoiden-nimet (first valitut-urakat))
         raportin-otsikko (raportin-otsikko urakoiden-nimet raportin-nimi alkupvm loppupvm)
         liikennetapahtumat (q/hae-liikennetapahtumat db user hakuparametrit)
-        ;_ (println "\n Kutsutaan liikenneraportti, tapahtumat: " liikennetapahtumat " \n -----------")
+        
+        _ (println "\n LT: " liikennetapahtumat " \n --------")
 
-        test (first liikennetapahtumat)
+        tapahtumarivit (mapv (fn [a]
+                               {:aika (::lt/aika a)
+                                :kohde (-> a ::lt/kohde ::k/nimi)
+                                :tyyppi (toimenpide->str a)
+                                :avaus (silta-avattu->str a)
+                                :palvelumuoto (palvelumuoto->str a)
+                                :suunta "%"
+                                :alus "%"
+                                :aluslaji "%"
+                                :aluksia "%"
+                                :matkustajia "%"
+                                :nippuja "%"
+                                :ylavesi "%"
+                                :alavesi "%"
+                                :lisatiedot "%"
+                                :kuittaaja "%"})
+                         liikennetapahtumat)
+        _ (println "\n test: " tapahtumarivit " \n ")]
 
-        _ (dorun (map (fn [a]
-                        (println "\n a: " a))test))
-        _ (println "\n test: " test " \n ")]
-    
     [:raportti {:orientaatio :landscape
                 :nimi raportin-otsikko}
 
      ; klo kohde tyyppi avaus palvelumuoto suunta alus aluslaji  aluksia matkustajia nippuja ylavesi alavesi lisatiedot kuittaaja
-     (koosta-liikennetapahtuma-taulukko [{:aika #inst "2024-01-11T07:40:39.000-00:00",
-                                          :kohde "Kauhava",
-                                          :tyyppi ""
-                                          :avaus "Ei avausta"
-                                          :kuvaus "Kuvaus tapahtumasta"
-                                          :palvelumuoto "Kaukopalvelu"
-                                          :suunta "Ylös"
-                                          :alus "Alus testi"
-                                          :aluslaji "HVV"
-                                          :aluksia "52"
-                                          :matkustajia "11"
-                                          :nippuja "24"
-                                          :ylavesi "24.24"
-                                          :alavesi "1024.24"
-                                          :lisatiedot "The contents of fo:block line 1 exceed the available area in the inline-progression direction by 545 millipoints"
-                                          :kuittaaja "Mika Korhonen"}])
-
+     (koosta-liikennetapahtuma-taulukko tapahtumarivit)
      [:liikenneyhteenveto yhteenveto]]))
