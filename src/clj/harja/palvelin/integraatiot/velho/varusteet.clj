@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.velho.varusteet
   (:require [clojure.data.json :as json]
             [clojure.string :as str]
+            [clojure.core.memoize :as memo]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [taoensso.timbre :as log]
             [harja.kyselyt.toteumat :as q-toteumat]
@@ -11,6 +12,12 @@
             [harja.palvelin.integraatiot.velho.yhteiset :as velho-yhteiset]
             [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+ try+]]))
+
+
+ (def memoized-hae-nimikkeen-tiedot
+   (memo/ttl
+     q-nimikkeistot/hae-nimikkeen-tiedot
+     :ttl/threshold (* 24 60 60))) ; 24 tunnin cache nimikkeistoille
 
 (defn varuste-kohdeluokka->tyyppi
   "Hakee varusteiden kohdeluokan tyypin metatiedosta" [kohdeluokka]
@@ -170,7 +177,7 @@
           (log/warn (str "Löytyi varusteversio, jolla on monta toimenpidettä: oid: " oid
                       " version-alku:" version-alku ". Toimenpiteet: " (str/join ", " toimenpiteet)
                       " Otetaan vain 1. toimenpide talteen.")))
-        (:otsikko (first (q-nimikkeistot/hae-nimikkeen-tiedot db {:tyyppi-nimi (first toimenpiteet)}))))
+        (:otsikko (first (memoized-hae-nimikkeen-tiedot db {:tyyppi-nimi (first toimenpiteet)}))))
 
       (cond
         (some? poistettu?) "Poistettu"
@@ -184,7 +191,7 @@
         laki-tai-asetusnumero (or
                                 (:asetusnumero toiminnalliset-ominaisuudet)
                                 (:lakinumero toiminnalliset-ominaisuudet))
-        laki-tai-asetusteksti (:otsikko (first (q-nimikkeistot/hae-nimikkeen-tiedot db
+        laki-tai-asetusteksti (:otsikko (first (memoized-hae-nimikkeen-tiedot db
                                                  {:tyyppi-nimi laki-tai-asetusnumero})))
         lisatietoja (:lisatietoja toiminnalliset-ominaisuudet)]
     (str/join ": " (keep identity [laki-tai-asetusteksti lisatietoja]))))
@@ -204,9 +211,9 @@
         kuntoluokka (get-in varuste [:ominaisuudet
                                      :kunto-ja-vauriotiedot
                                      :yleinen-kuntoluokka])
-        {tyyppi :otsikko kohdeluokka :kohdeluokka} (first (q-nimikkeistot/hae-nimikkeen-tiedot db
+        {tyyppi :otsikko kohdeluokka :kohdeluokka} (first (memoized-hae-nimikkeen-tiedot db
                                                             {:tyyppi-nimi tyyppi}))
-        kuntoluokka (or (:otsikko (first (q-nimikkeistot/hae-nimikkeen-tiedot db
+        kuntoluokka (or (:otsikko (first (memoized-hae-nimikkeen-tiedot db
                                            {:tyyppi-nimi kuntoluokka})))
                       "Kuntoluokka puuttuu")]
     {:alkupvm alkupvm
