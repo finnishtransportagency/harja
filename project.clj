@@ -73,7 +73,7 @@
                  [com.draines/postal "2.0.3"]
 
                  [javax.jms/jms-api "1.1-rev-1"]
-                 [org.apache.activemq/activemq-client "6.0.1"]
+                 [org.apache.activemq/activemq-client "5.18.3"]
 
 
                  ;; Fileyard  liitetiedostojen tallennus
