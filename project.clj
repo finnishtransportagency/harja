@@ -5,7 +5,7 @@
   :description "Väylän Harja"
 
   :dependencies [[org.clojure/clojure "1.10.0"]
-                 [org.clojure/clojurescript "1.10.520"]
+                 [org.clojure/clojurescript "1.11.60"]
                  [org.clojure/spec.alpha "0.2.176"]
                  ;;;;;;; Yleiset ;;;;;;;
 
@@ -26,6 +26,7 @@
 
                  ;; Lokitus
                  [com.taoensso/timbre "4.10.0"]
+                 [org.apache.logging.log4j/log4j-core "2.22.1"]
 
                  ;; Metriikkadata
                  [org.clojure/java.jmx "0.3.4"]
@@ -36,9 +37,10 @@
                  ;; HTTP palvelin ja reititys
                  [cljs-http "0.1.46"]
                  [http-kit "2.5.3"]
-                 [compojure "1.6.1"]
+                 ;; Compojuren mukana tulee liian vanha commons-fileupload
+                 [commons-fileupload/commons-fileupload "1.5"]
+                 [compojure "1.7.0"]
                  ;; Ring tarvitsee
-                 ;[javax.servlet/servlet-api "2.5"]
                  [javax.servlet/javax.servlet-api "3.1.0"]
                  [hiccup "1.0.5"]
 
@@ -55,9 +57,9 @@
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
-                 [org.geotools/gt-process-raster "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-process-raster "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
                  [org.geotools/gt-epsg-wkt "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-swing "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
 
                  ;; XML zipper
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
@@ -92,16 +94,16 @@
 
                  [alandipert/storage-atom "2.0.1"]
 
-                 [clj-time "0.15.0"]
+                 [clj-time "0.15.2"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
 
                  ;; Kuvataso error tulee ol.source.Image inheritistä, jos päivittää neloseen
                  [cljsjs/openlayers "3.15.1"] ; TODO Voisi päivittää, mutta laadunseurannan buildi hajoaa (4.4.1-1) puuttuviin requireihin
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "4.1.0"]
-                 [org.apache.poi/poi-scratchpad "4.1.0"] ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "4.1.0"] ;; .xlsx tiedoston lukua varten
+                 [org.apache.poi/poi "5.2.5"]
+                 [org.apache.poi/poi-scratchpad "5.2.5"] ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "5.2.5"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
 
                  ;; Chime -ajastuskirjasto
@@ -117,7 +119,7 @@
                  [slingshot "0.12.2"]
 
                  ;; PDF:n generointi
-                 [org.apache.xmlgraphics/fop "2.3"]
+                 [org.apache.xmlgraphics/fop "2.9"]
 
                  ;; Fake-HTTP testaukseen
                  [http-kit.fake "0.2.2"]
@@ -138,7 +140,7 @@
 
                  ;; Tuck UI apuri
                  [webjure/tuck "0.4.4"]
-                 [webjure/tuck-remoting "20190213"]
+                 [webjure/tuck-remoting "20190213" :exclusions [webjure/tuck]]
 
                  ;; Laadunseurantatyökalua varten
                  [org.clojure/data.codec "0.1.1"]
@@ -147,15 +149,31 @@
                  ;; Arbitrary precision math frontilla
                  [cljsjs/big "3.1.3-1"]
 
+                 ;; Gatlingin logback versio ei ole vielä ehtinyt päivittyä, niin haetaan se erikseen
+                 [ch.qos.logback/logback-classic "1.4.14"]
                  [clj-gatling "0.18.0" :exclusions [[clj-time]]]
                  ;; Tarvitaan käännöksessä
+                 ;; figwheel-main ei ole päivittynyt jetty-serverin ja jetty-io:n osalta. Niistä on ladattava erikseen uudemmat versiot
+                 [org.eclipse.jetty/jetty-server "12.0.5"]
+                 [org.eclipse.jetty/jetty-io "12.0.5"]
+                 [org.eclipse.jetty/jetty-client "12.0.5"]
+                 [org.eclipse.jetty/jetty-util "12.0.5"]
+                 [org.eclipse.jetty/jetty-http "12.0.5"]
+                 [org.eclipse.jetty/jetty-servlet "11.0.19"]
+                 [org.eclipse.jetty/jetty-security "12.0.5"]
+                 [org.eclipse.jetty/jetty-util-ajax "12.0.5"]
                  [com.bhauman/figwheel-main "0.2.18"]
                  [digest "1.4.9"]
                  ;; Nätimpi xml:n printtaus mahdollistettu
-                 [org.clojure/data.xml "0.0.8"]]
-  :managed-dependencies [[org.apache.poi/poi "4.1.0"]
-                         [org.apache.poi/poi-scratchpad "4.1.0"]
-                         [org.apache.poi/poi-ooxml "4.1.0"]]
+                 [org.clojure/data.xml "0.0.8"]
+                 ;; Uusin gson
+                 [com.google.code.gson/gson "2.10.1"]]
+  :managed-dependencies [[org.apache.poi/poi "5.2.5"]
+                         [org.apache.poi/poi-scratchpad "5.2.5"]
+                         [org.apache.poi/poi-ooxml "5.2.5"]
+                         ;; Joku kirjasto, ottaa googlen gson kirjaston matkaan ja riiputtaa mukana vanhaa versiota.
+                         ;; lein deps :tree komento ei osaa kertoa, että mikä kirjasto se on, joten pakotetaan se uudempaan.
+                         [com.google.code.gson/gson "2.10.1"]]
   :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
