@@ -550,21 +550,27 @@
     :fmt kayttaja/kayttaja->str}]))
 
 (defn liikennetapahtumien-yhteenveto [{:keys [yhteenveto] :as app}]
-  (println "Tiedot, hakuparams: " (tiedot/hakuparametrit app)
-    " \n App, yhteenveto: " (:yhteenveto @tiedot/tila))
-  [:div
-   [:div.napit.ei-reunoja.klikattava
+  [:div.liikenne-header
+   [:div.raporttivienti
+    ;; Raporttiviennit
+    ;; PDF
     ^{:key "raporttipdf"}
     [:form {:target "_blank" :method "POST"
             :action (k/pdf-url :raportointi)}
      [:input {:type "hidden" :name "parametrit"
               :value (t/clj->transit @tiedot/raportin-parametrit)}]
-
-     [:button {:type "submit"}
-      [:span.nuoli
-       [ikonit/livicon-download]]
-      [:span "Tallenna PDF"]]]]
-
+     [napit/tallenna "Tallenna PDF" (constantly true)
+      {:ikoni (ikonit/harja-icon-action-download) :luokka "nappi-ensisijainen" :type "submit" :vayla-tyyli? false :esta-prevent-default? true}]]
+    
+    ;; Excel
+    ^{:key "raporttixls"}
+    [:form {:target "_blank" :method "POST"
+            :action (k/excel-url :raportointi)}
+     [:input {:type "hidden" :name "parametrit"
+              :value (t/clj->transit @tiedot/raportin-parametrit)}]
+     [napit/tallenna "Tallenna Excel" (constantly true)
+      {:ikoni (ikonit/harja-icon-action-download) :luokka "nappi-ensisijainen" :type "submit" :vayla-tyyli? false :esta-prevent-default? true}]]]
+   
    [:h3 "Liikennetapahtumat"]
    [:div.urakkavalinnat
     [:div.liikenneyhteenveto
