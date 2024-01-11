@@ -495,7 +495,7 @@
         (" oulun-alueurakka-id ", " (ffirst (q (str "SELECT id FROM kayttaja WHERE kayttajanimi = '" kayttaja "'"))) "),
         (" kajaanin-alueurakka-id ", " (ffirst (q (str "SELECT id FROM kayttaja WHERE kayttajanimi = '" kayttaja "'"))) ")")
         _ (u "UPDATE kayttaja SET jarjestelma = TRUE WHERE kayttajanimi= '" kayttaja "'")
-        
+
         _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" oulun-alueurakka-id "/toteumat/reitti"] kayttaja portti
                          (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
@@ -650,3 +650,56 @@
             "sopimuksen-mat-kaytto-eka-kutsun-jalkeen")
         (is (= sopimuksen-mat-kaytto-toisen-kutsun-jalkeen [[5 #inst "2014-12-31T22:00:00.000-00:00" 1 4.62M]])
             "sopimuksen-mat-kaytto-toisen-kutsun-jalkeen")))))
+
+;; Varmistetaan että suolatoteuma_reittipiste-taulu päivittyy oikein kun reittitoteumaa päivitetään.
+(deftest suolarajoitusalueen-toteumat-paivittyy-oikein
+  (let [urakka (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        ulkoinen-id (str (tyokalut/hae-vapaa-toteuma-ulkoinen-id))
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        api-payload (-> (slurp "test/resurssit/api/reittitoteuma_yksittainen_talvisuola.json")
+                      (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                      (.replace "__ID__" (str ulkoinen-id))
+                      (.replace "__SUORITTAJA_NIMI__" "Tiensuolaajat Oy")
+
+                      ;; Siirretään testikirjauksen pisteet osumaan urakalle määritellylle rajoitusalueelle
+                      (.replace "\"x\": 429451.2124" "\"x\": 276355.9988502257")
+                      (.replace "\"y\": 7199520.6102" "\"y\": 6640833.27780571")
+
+                      (.replace "\"x\": 429449.505" "\"x\": 276355.9988502257")
+                      (.replace "\"y\": 7199521.6673" "\"y\": 6640833.27780571")
+
+                      (.replace "\"x\": 429440.5079" "\"x\": 276355.9988502257")
+                      (.replace "\"y\": 7199523.6547" "\"y\": 6640833.27780571"))
+        vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-yit portti
+                  api-payload)
+
+        toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id=" ulkoinen-id)))
+        rajoitusalue (ffirst (q (str "SELECT pisteen_rajoitusalue(st_makepoint(276355.9988502257,6640833.27780571)::POINT, 20, " toteuma-id ")")))
+        suolatoteuma-reittipiste-maara-fn #(ffirst (q (str "SELECT sum(maara) FROM suolatoteuma_reittipiste WHERE rajoitusalue_id=" rajoitusalue)))
+
+        reittipiste-suolamaara-fn #(ffirst (q (str "SELECT sum(mat.maara) FROM toteuman_reittipisteet trp"
+                                                " LEFT JOIN LATERAL UNNEST(trp.reittipisteet) rp ON TRUE"
+                                                " LEFT JOIN LATERAL UNNEST(rp.materiaalit) mat ON TRUE"
+                                                " WHERE toteuma="
+                                                toteuma-id)))
+
+        suolatoteuma-reittipiste-suola-1 (suolatoteuma-reittipiste-maara-fn)
+        toteuma-reittipiste-suola-1 (reittipiste-suolamaara-fn)
+
+        vastaus2 (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-yit portti
+                   (-> api-payload
+                     (.replace "\"maara\": 4.62" "\"maara\": 3.62")
+                     (.replace "\"maara\": 1.32" "\"maara\": 0.32")))
+
+        suolatoteuma-reittipiste-suola-2 (suolatoteuma-reittipiste-maara-fn)
+        toteuma-reittipiste-suola-2 (reittipiste-suolamaara-fn)]
+
+    (is (= 200 (:status vastaus)))
+    (is (= 200 (:status vastaus2)))
+
+    (is (= 4.62M suolatoteuma-reittipiste-suola-1) "Suolan määrä suolatoteuma_reittipiste-taulussa täsmää alussa")
+    (is (= 3.62M suolatoteuma-reittipiste-suola-2) "Suolan määrä suolatoteuma_reittipiste-taulussa täsmää lopussa")
+
+    (is (= 4.62M toteuma-reittipiste-suola-1) "Suolan määrä toteuma_reittipiste-taulussa täsmää alussa")
+    (is (= 3.62M toteuma-reittipiste-suola-2) "Suolan määrä toteuma_reittipiste-taulussa täsmää alussa")))

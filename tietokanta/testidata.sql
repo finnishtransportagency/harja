@@ -38,6 +38,9 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 -- Luodaan hankkeet
 \i testidata/hankkeet.sql
 
+-- Tieverkko
+\i testidata/tierekisteri.sql
+
 -- Lisätään ELY numerot hallintayksiköille
 
 UPDATE organisaatio SET elynumero=1 WHERE lyhenne='UUD';
@@ -72,9 +75,6 @@ SELECT paivita_pohjavesialueet();
 
 -- Kustannussuunnitelma
 \i testidata/kustannussuunnittelu.sql
-
--- Tieverkko
-\i testidata/tierekisteri.sql
 
 -- Sillat
 \i testidata/sillat.sql
