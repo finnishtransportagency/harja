@@ -71,8 +71,8 @@
                  [org.apache.httpcomponents/httpcore "4.4.14"]
                  [org.apache.httpcomponents/httpmime "4.5.13" :exclusions [org.clojure/clojure commons-codec commons-logging org.apache.httpcomponents/httpcore]]
                  [com.draines/postal "2.0.3"]
-
-                 [javax.jms/jms-api "1.1-rev-1"]
+                 
+                 [javax.jms/javax.jms-api "2.0.1"]
                  [org.apache.activemq/activemq-client "5.18.3"]
 
 
