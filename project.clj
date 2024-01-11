@@ -38,6 +38,8 @@
                  [cljs-http "0.1.46"]
                  [http-kit "2.5.3"]
                  ;; Compojuren mukana tulee liian vanha commons-fileupload
+                 ;; Ja fileuploadin mukana liian vanha commons-io
+                 [commons-io/commons-io "2.15.1"]
                  [commons-fileupload/commons-fileupload "1.5"]
                  [compojure "1.7.0"]
                  ;; Ring tarvitsee
@@ -133,7 +135,7 @@
                  [com.taoensso/truss "1.5.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
-                 [dk.ative/docjure "1.14.0"]
+                 [dk.ative/docjure "1.19.0"]
 
                  ;; Performance metriikat
                  [yleisradio/new-reliquary "1.1.0"]
