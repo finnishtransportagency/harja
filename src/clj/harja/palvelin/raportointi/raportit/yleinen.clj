@@ -258,7 +258,13 @@
 
     (cond
       (and urakka raportin-nimi alkupvm loppupvm)
-      (str urakka ", " raportin-nimi ", " (str alkupvm " - " loppupvm))
+      ;; Vähän ehkä rumaa iffittelyä, mutta kanavaurakoissa on urakkavalinta erikseen joka hieman sekoittaa 
+      ;; Jolloin urakan nimet on raportin nimessä jo -> urakan voi jättää pois
+      (if (or 
+            (str/includes? raportin-nimi "kanava") 
+            (str/includes? urakka "kanava"))
+        (str raportin-nimi ", " (str alkupvm " - " loppupvm))
+        (str urakka ", " raportin-nimi ", " (str alkupvm " - " loppupvm)))
 
       (and (not urakka) raportin-nimi alkupvm (not loppupvm))
       (str raportin-nimi ", " alkupvm)
