@@ -6,7 +6,7 @@
             [harja.kyselyt.urakat :as urakat-q]))
 
 
-(defn suorita [db user {:keys [urakoiden-nimet sarakkeet rivit parametrit]
+(defn suorita [db user {:keys [urakoiden-nimet sarakkeet rivit parametrit yhteenveto]
                         :as kaikki-parametrit}]
 
   (let [{:keys [alkupvm loppupvm valitut-urakat]} parametrit

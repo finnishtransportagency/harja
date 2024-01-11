@@ -550,21 +550,15 @@
     :fmt kayttaja/kayttaja->str}]))
 
 (defn liikennetapahtumien-yhteenveto [{:keys [yhteenveto] :as app}]
-  
   (println "Tiedot, hakuparams: " (tiedot/hakuparametrit app)
-    " \n App, yhteenveto: " (:yhteenveto @tiedot/tila)
-    )
+    " \n App, yhteenveto: " (:yhteenveto @tiedot/tila))
   [:div
-
    [:div.napit.ei-reunoja.klikattava
     ^{:key "raporttipdf"}
     [:form {:target "_blank" :method "POST"
-            :action (k/pdf-url :raportointi)
-            }
+            :action (k/pdf-url :raportointi)}
      [:input {:type "hidden" :name "parametrit"
-              :value (t/clj->transit @tiedot/raportin-parametrit)
-              ;:value "1"
-              }]
+              :value (t/clj->transit @tiedot/raportin-parametrit)}]
 
      [:button {:type "submit"}
       [:span.nuoli
@@ -572,27 +566,25 @@
       [:span "Tallenna PDF"]]]]
 
    [:h3 "Liikennetapahtumat"]
-   [:div {:class "urakkavalinnat"}
-    [:div {:class "liikenneyhteenveto"}
-
-     [:div {:class "toimenpiteet-rivi"}
-
-      [:span {:class "caption musta"} "Toimenpiteet"]
-      [:span {:class "body-text semibold"} "Sulutukset ylös: " [:span {:class "caption musta"} (get-in yhteenveto [:toimenpiteet :sulutukset-ylos])]]
-      [:span {:class "body-text semibold"} "Sulutukset alas: " [:span {:class "caption musta"} (get-in yhteenveto [:toimenpiteet :sulutukset-alas])]]
-      [:span {:class "body-text semibold"} "Sillan avaukset: " [:span {:class "caption musta"} (get-in yhteenveto [:toimenpiteet :sillan-avaukset])]]
-      [:span {:class "body-text semibold"} "Tyhjennykset: " [:span {:class "caption musta"} (get-in yhteenveto [:toimenpiteet :tyhjennykset])]]]
+   [:div.urakkavalinnat
+    [:div.liikenneyhteenveto
+     [:div.toimenpiteet-rivi
+      [:span.caption.musta "Toimenpiteet"]
+      [:span.body-text.semibold "Sulutukset ylös: " [:span.caption.musta (get-in yhteenveto [:toimenpiteet :sulutukset-ylos])]]
+      [:span.body-text.semibold "Sulutukset alas: " [:span.caption.musta (get-in yhteenveto [:toimenpiteet :sulutukset-alas])]]
+      [:span.body-text.semibold "Sillan avaukset: " [:span.caption.musta (get-in yhteenveto [:toimenpiteet :sillan-avaukset])]]
+      [:span.body-text.semibold "Tyhjennykset: " [:span.caption.musta (get-in yhteenveto [:toimenpiteet :tyhjennykset])]]]
 
      [:hr {:style
            {:width "98%" :height "0px" :border ".5px solid #D6D6D6"}}]
 
-     [:div {:class "palvelumuodot-rivi"}
-      [:span {:class "caption musta"} "Palvelumuoto, sulutukset"]
-      [:span {:class "body-text strong"} "Paikallispalvelu: " [:span {:class "caption musta"} (get-in yhteenveto [:palvelumuoto :paikallispalvelu])]]
-      [:span {:class "body-text strong"} "Kaukopalvelu: " [:span {:class "caption musta"} (get-in yhteenveto [:palvelumuoto :kaukopalvelu])]]
-      [:span {:class "body-text strong"} "Itsepalvelu: " [:span {:class "caption musta"} (get-in yhteenveto [:palvelumuoto :itsepalvelu])]]
-      [:span {:class "body-text strong"} "Muu: " [:span {:class "caption musta"} (get-in yhteenveto [:palvelumuoto :muu])]]
-      [:span {:class "body-text strong"} "Sulutukset yhteensä: " [:span {:class "caption musta"} (get-in yhteenveto [:palvelumuoto :yhteensa])]]]]]])
+     [:div.palvelumuodot-rivi
+      [:span.caption.musta "Palvelumuoto, sulutukset"]
+      [:span.body-text.strong "Paikallispalvelu: " [:span.caption.musta (get-in yhteenveto [:palvelumuoto :paikallispalvelu])]]
+      [:span.body-text.strong "Kaukopalvelu: " [:span.caption.musta (get-in yhteenveto [:palvelumuoto :kaukopalvelu])]]
+      [:span.body-text.strong "Itsepalvelu: " [:span.caption.musta (get-in yhteenveto [:palvelumuoto :itsepalvelu])]]
+      [:span.body-text.strong "Muu: " [:span.caption.musta (get-in yhteenveto [:palvelumuoto :muu])]]
+      [:span.body-text.strong "Sulutukset yhteensä: " [:span.caption.musta (get-in yhteenveto [:palvelumuoto :yhteensa])]]]]]])
 
 (defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?
                                             liikennetapahtumien-haku-tulee-olemaan-kaynnissa?] :as app}
