@@ -8,6 +8,8 @@
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
             [harja.ui.komponentti :as komp]
+            [harja.transit :as t]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja totuus-ikoni] :as yleiset]
@@ -547,8 +549,28 @@
     :nimi ::lt/kuittaaja
     :fmt kayttaja/kayttaja->str}]))
 
-(defn liikennetapahtumien-yhteenveto []
+(defn liikennetapahtumien-yhteenveto [{:keys [yhteenveto] :as app}]
+  
+  (println "Tiedot, hakuparams: " (tiedot/hakuparametrit app)
+    " \n App, yhteenveto: " (:yhteenveto @tiedot/tila)
+    )
   [:div
+
+   [:div.napit.ei-reunoja.klikattava
+    ^{:key "raporttipdf"}
+    [:form {:target "_blank" :method "POST"
+            :action (k/pdf-url :raportointi)
+            }
+     [:input {:type "hidden" :name "parametrit"
+              :value (t/clj->transit @tiedot/raportin-parametrit)
+              ;:value "1"
+              }]
+
+     [:button {:type "submit"}
+      [:span.nuoli
+       [ikonit/livicon-download]]
+      [:span "Tallenna PDF"]]]]
+
    [:h3 "Liikennetapahtumat"]
    [:div {:class "urakkavalinnat"}
     [:div {:class "liikenneyhteenveto"}
@@ -556,25 +578,24 @@
      [:div {:class "toimenpiteet-rivi"}
 
       [:span {:class "caption musta"} "Toimenpiteet"]
-      [:span {:class "body-text semibold"} "Sulutukset ylös: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :toimenpiteet :sulutukset-ylos)]]
-      [:span {:class "body-text semibold"} "Sulutukset alas: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :toimenpiteet :sulutukset-alas)]]
-      [:span {:class "body-text semibold"} "Sillan avaukset: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :toimenpiteet :sillan-avaukset)]]
-      [:span {:class "body-text semibold"} "Tyhjennykset: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :toimenpiteet :tyhjennykset)]]]
+      [:span {:class "body-text semibold"} "Sulutukset ylös: " [:span {:class "caption musta"} (get-in yhteenveto [:toimenpiteet :sulutukset-ylos])]]
+      [:span {:class "body-text semibold"} "Sulutukset alas: " [:span {:class "caption musta"} (get-in yhteenveto [:toimenpiteet :sulutukset-alas])]]
+      [:span {:class "body-text semibold"} "Sillan avaukset: " [:span {:class "caption musta"} (get-in yhteenveto [:toimenpiteet :sillan-avaukset])]]
+      [:span {:class "body-text semibold"} "Tyhjennykset: " [:span {:class "caption musta"} (get-in yhteenveto [:toimenpiteet :tyhjennykset])]]]
 
      [:hr {:style
            {:width "98%" :height "0px" :border ".5px solid #D6D6D6"}}]
-     
+
      [:div {:class "palvelumuodot-rivi"}
       [:span {:class "caption musta"} "Palvelumuoto, sulutukset"]
-      [:span {:class "body-text strong"} "Paikallispalvelu: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :palvelumuoto :paikallispalvelu)]]
-      [:span {:class "body-text strong"} "Kaukopalvelu: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :palvelumuoto :kaukopalvelu)]]
-      [:span {:class "body-text strong"} "Itsepalvelu: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :palvelumuoto :itsepalvelu)]]
-      [:span {:class "body-text strong"} "Muu: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :palvelumuoto :muu)]]
-      [:span {:class "body-text strong"} "Sulutukset yhteensä: " [:span {:class "caption musta"} (lt/yhteenveto-arvo :palvelumuoto :yhteensa)]]]]]])
+      [:span {:class "body-text strong"} "Paikallispalvelu: " [:span {:class "caption musta"} (get-in yhteenveto [:palvelumuoto :paikallispalvelu])]]
+      [:span {:class "body-text strong"} "Kaukopalvelu: " [:span {:class "caption musta"} (get-in yhteenveto [:palvelumuoto :kaukopalvelu])]]
+      [:span {:class "body-text strong"} "Itsepalvelu: " [:span {:class "caption musta"} (get-in yhteenveto [:palvelumuoto :itsepalvelu])]]
+      [:span {:class "body-text strong"} "Muu: " [:span {:class "caption musta"} (get-in yhteenveto [:palvelumuoto :muu])]]
+      [:span {:class "body-text strong"} "Sulutukset yhteensä: " [:span {:class "caption musta"} (get-in yhteenveto [:palvelumuoto :yhteensa])]]]]]])
 
 (defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?
-                                            liikennetapahtumien-haku-tulee-olemaan-kaynnissa?
-                                            raporttiparametrit] :as app}
+                                            liikennetapahtumien-haku-tulee-olemaan-kaynnissa?] :as app}
                                  kohteet]
   [:div
    [debug app]
@@ -585,15 +606,13 @@
          liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
      [ajax-loader-pieni "Päivitetään listaa.."]
      [grid/grid
-      {:otsikko [liikennetapahtumien-yhteenveto]
+      {:otsikko [liikennetapahtumien-yhteenveto app]
        :tunniste (juxt ::lt/id ::lt-alus/id)
        :sivuta grid/vakiosivutus
        :rivi-klikattu #(e! (tiedot/->ValitseTapahtuma (assoc % ::lt/aika (::lt/aika %))))
        :tyhja (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
                 [ajax-loader "Haku käynnissä"]
-                "Ei liikennetapahtumia")
-       :raporttivienti #{:excel :pdf}
-       :raporttiparametrit raporttiparametrit}
+                "Ei liikennetapahtumia")}
       liikennetapahtumat-sarakkeet
       (tiedot/jarjesta-tapahtumat tapahtumarivit)])])
 
