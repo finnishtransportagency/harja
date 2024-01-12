@@ -51,11 +51,11 @@
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
                  [org.postgresql/postgresql "42.6.0"]
-                 [net.postgis/postgis-jdbc "2.5.0" :exclusions [org.eclipse.jetty/jetty-servlet org.eclipse.jetty/jetty-security org.eclipse.jetty/jetty-server org.eclipse.jetty/jetty-http org.eclipse.jetty/jetty-io org.eclipse.jetty/jetty-util]]
+                 [net.postgis/postgis-jdbc "2.5.0"]
                  [org.locationtech.jts/jts-core "1.19.0"]
                  [com.mchange/c3p0 "0.9.5.4"]
                  [webjure/jeesql "0.4.7"]
-                 [specql "20190301"]
+                 [specql "20190301" :exclusions [org.clojure/java.jdbc]]
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
@@ -77,7 +77,7 @@
                  [com.draines/postal "2.0.3"]
                  
                  [javax.jms/javax.jms-api "2.0.1"]
-                 [org.apache.activemq/activemq-client "5.18.3"]
+                 [org.apache.activemq/activemq-client "5.18.3" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Fileyard  liitetiedostojen tallennus
@@ -152,18 +152,9 @@
                  [cljsjs/big "3.1.3-1"]
 
                  ;; Gatlingin logback versio ei ole vielä ehtinyt päivittyä, niin haetaan se erikseen
-                 [ch.qos.logback/logback-classic "1.4.14"]
-                 [clj-gatling "0.18.0" :exclusions [clj-time org.slf4j/slf4j-api org.clojure/core.memoize org.clojure/tools.analyzer org.clojure/data.priority-map]]
+                 [ch.qos.logback/logback-classic "1.4.14" :exclusions [org.slf4j/slf4j-api]]
+                 [clj-gatling "0.18.0" :exclusions [clj-time org.slf4j/slf4j-api org.clojure/core.memoize org.clojure/tools.analyzer org.clojure/data.priority-map io.pebbletemplates/pebble]]
                  ;; Tarvitaan käännöksessä
-                 ;; figwheel-main ei ole päivittynyt jetty-serverin ja jetty-io:n osalta. Niistä on ladattava erikseen uudemmat versiot
-                 [org.eclipse.jetty/jetty-server "12.0.5" :exclusions [org.slf4j/slf4j-api]]
-                 [org.eclipse.jetty/jetty-io "12.0.5" :exclusions [org.slf4j/slf4j-api]]
-                 [org.eclipse.jetty/jetty-client "12.0.5" :exclusions [org.slf4j/slf4j-api]]
-                 [org.eclipse.jetty/jetty-util "12.0.5" :exclusions [org.slf4j/slf4j-api]]
-                 [org.eclipse.jetty/jetty-http "12.0.5" :exclusions [org.slf4j/slf4j-api]]
-                 [org.eclipse.jetty/jetty-servlet "11.0.19"]
-                 [org.eclipse.jetty/jetty-security "12.0.5" :exclusions [org.slf4j/slf4j-api]]
-                 [org.eclipse.jetty/jetty-util-ajax "12.0.5" :exclusions [org.slf4j/slf4j-api]]
                  [com.bhauman/figwheel-main "0.2.18"]
                  [digest "1.4.9"]
                  ;; Nätimpi xml:n printtaus mahdollistettu
