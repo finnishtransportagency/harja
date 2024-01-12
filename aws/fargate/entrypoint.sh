@@ -58,6 +58,10 @@ if [[ -n "$HARJA_JAVA_AGENT_OPTS" ]]; then
 fi
 
 if [[ -n "$HARJA_JVM_OPTS" ]]; then
+  # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/taskdef-envfiles.html#taskdef-envfiles-considerations
+  # "Spaces or quotation marks are included as part of the values for Amazon ECS files."
+  # Poistetaan quotet, eli " tai ' ympäristömuuttujan alusta ja lopusta, mikäli sellaisia löytyy.
+  HARJA_JVM_OPTS=$(sed 's/^["'\'']\(.*\)["'\'']$/\1/' <<< "$HARJA_JVM_OPTS")
   IFS=' ' read -ra jvm_opts_arr <<< "$HARJA_JVM_OPTS"
   cmd_opts+=("${jvm_opts_arr[@]}")
 fi
