@@ -158,9 +158,7 @@
                  [com.bhauman/figwheel-main "0.2.18"]
                  [digest "1.4.9"]
                  ;; Nätimpi xml:n printtaus mahdollistettu
-                 [org.clojure/data.xml "0.0.8"]
-                 ;; Uusin gson
-                 [com.google.code.gson/gson "2.10.1"]]
+                 [org.clojure/data.xml "0.0.8"]]
   :managed-dependencies [[org.apache.poi/poi "5.2.5"]
                          [org.apache.poi/poi-scratchpad "5.2.5"]
                          [org.apache.poi/poi-ooxml "5.2.5"]
