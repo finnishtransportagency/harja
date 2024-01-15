@@ -1,0 +1,57 @@
+# Security hardening for GitHub Actions
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
+
+name: "Harja: Start Fargate Tasks"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Valitse deploy-ympäristö"
+        type: environment
+        required: true
+
+jobs:
+  deploy-image-to-ecs:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    permissions:
+      # OIDC token is needed for AWS actions assume the role
+      id-token: write
+      # Contents is needed for the checkout action
+      contents: read
+
+    steps:
+      - name: List used environment variables
+        run: |
+          echo "Target environment: ${{ inputs.environment }}"
+          echo "Environment variables:"
+          echo "  ECR_REPOSITORY_NAME: ${{ vars.ECR_REPOSITORY_NAME }}"
+          echo "  ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}"
+          echo "  ECS_CONTAINER_NAME: ${{ vars.ECS_CONTAINER_NAME }}"
+          echo "  ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}"
+          echo "  ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}"
+
+        shell: bash
+
+      - name: Assume role with OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: "eu-west-1"
+          role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-infra-admin"
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+
+      - name: Start Harja Fargate tasks
+        uses: ./.github/actions/start-fargate-tasks
+        timeout-minutes: 10
+        # Pakota uudelleenkäynnistyminen
+        if: always()
+        with:
+          cluster: ${{ vars.ECS_CLUSTER_NAME }}
