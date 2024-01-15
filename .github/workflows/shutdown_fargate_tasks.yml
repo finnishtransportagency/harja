@@ -1,7 +1,7 @@
 # Security hardening for GitHub Actions
 # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
 
-name: "Harja: Start Fargate Tasks"
+name: "Harja: Shutdown Fargate Tasks"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
@@ -39,6 +39,14 @@ jobs:
           echo "  ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}"
 
         shell: bash
+
+      - name: Assume role with OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: "eu-west-1"
+          role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-infra-admin"
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
 
       # Sammutetaan Harjan Fargate taskit
       - name: Shutdown Harja Fargate tasks
