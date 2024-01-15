@@ -1,5 +1,5 @@
 # build-workflowsta minimoitu versio trivy-lisäyksin
-name: 'Harja: Build & trivy test'
+name: 'Harja: Scan container image'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
