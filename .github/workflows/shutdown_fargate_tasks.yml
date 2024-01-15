@@ -16,7 +16,7 @@ on:
         required: true
 
 jobs:
-  deploy-image-to-ecs:
+  shutdown-fargate-tasks:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
 
