@@ -1,0 +1,72 @@
+# build-workflowsta minimoitu versio trivy-lisäyksin
+name: 'Harja: Scan container image'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest
+    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    permissions:
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+      packages: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Testitietokantaa tarvitaan buildin yhteydessä
+      - name: Start test database
+        uses: ./.github/actions/start-test-db
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä (esim. harjadb-latest)
+          # Käytetään uusinta saatavilla olevaa testidb:tä AWS buildeissa.
+          service-name: harjadb-latest
+
+
+      # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
+      - name: Build Harja Uberjar
+        uses: ./.github/actions/build-harja-app
+        with:
+          build-laadunseuranta: 'false'
+
+      - name: Docker build
+        run: docker build -t harja-app:${{ github.sha }} --file aws/fargate/Dockerfile .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@91713af97dc80187565512baba96e4364e983601 # v0.16.0
+        with:
+          image-ref: 'harja-app:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          # format: 'table'
+          # exit-code: '1'
+          # ignore-unfixed: true
+          scanners: vuln,secret,misconfig
+          vuln-type: 'os,library'
+          # severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
