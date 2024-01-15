@@ -28,6 +28,9 @@ jobs:
       contents: read
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: List used environment variables
         run: |
           echo "Target environment: ${{ inputs.environment }}"
