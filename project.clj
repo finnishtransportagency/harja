@@ -25,7 +25,7 @@
                  [com.stuartsierra/component "1.0.0"]
 
                  ;; Lokitus
-                 [com.taoensso/timbre "4.10.0"]
+                 [com.taoensso/timbre "5.2.1"]
                  [org.apache.logging.log4j/log4j-core "2.22.1"]
 
                  ;; Metriikkadata
@@ -35,7 +35,7 @@
                  [cheshire "5.11.0"]
 
                  ;; HTTP palvelin ja reititys
-                 [cljs-http "0.1.46"]
+                 [cljs-http "0.1.48"]
                  [http-kit "2.5.3"]
                  ;; Compojuren mukana tulee liian vanha commons-fileupload
                  ;; Ja fileuploadin mukana liian vanha commons-io
@@ -57,7 +57,7 @@
                  [org.locationtech.jts/jts-core "1.19.0"]
                  [com.mchange/c3p0 "0.9.5.4"]
                  [webjure/jeesql "0.4.7"]
-                 [specql "20190301" :exclusions [org.clojure/java.jdbc]]
+                 [io.github.tatut/specql "20230316" :exclusions [org.clojure/java.jdbc]]
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
