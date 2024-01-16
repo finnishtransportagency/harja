@@ -1222,7 +1222,7 @@ SELECT id, sampoid, nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke
 -- name: listaa-kaikki-urakat-analytiikalle
 -- Haetaan kaikki urakat ilman geometriatietoja
 -- jos vuodet on annettu, niin rajaa haku voimassaolon perusteella
-SELECT id, sampoid, nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, sopimustyyppi, indeksi,
+SELECT id, sampoid, nimi, lyhyt_nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, sopimustyyppi, indeksi,
        urakkanro as alueurakkanro, tyyppi, poistettu, velho_oid, luotu, muokattu
 FROM urakka
 ORDER BY alkupvm ASC;

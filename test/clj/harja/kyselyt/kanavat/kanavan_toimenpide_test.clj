@@ -21,7 +21,8 @@
                    :loppupvm (harja.pvm/luo-pvm 2018 1 1)
                    :toimenpidekoodi 597
                    :tyyppi "kokonaishintainen"
-                   :kohde nil})]
+                   :kohde nil
+                   :huoltokohde nil})]
     (is (every? ::kanavan-toimenpide/id vastaus))
     (is (every? ::kanavan-toimenpide/kohde vastaus))
     (is (every? ::kanavan-toimenpide/toimenpidekoodi vastaus))
