@@ -4,7 +4,7 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Väylän Harja"
 
-  :dependencies [[org.clojure/clojure "1.10.0"]
+  :dependencies [[org.clojure/clojure "1.11.1"]
                  [org.clojure/clojurescript "1.11.60"]
                  [org.clojure/spec.alpha "0.2.176"]
                  ;;;;;;; Yleiset ;;;;;;;
@@ -47,6 +47,8 @@
                  [hiccup "1.0.5"]
 
                  [org.clojure/core.cache "0.7.2"]
+
+                 [org.clojure/tools.analyzer "1.1.1" :refer clojure :exclude [update-vars update-keys]]
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
