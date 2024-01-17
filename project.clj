@@ -4,8 +4,8 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Väylän Harja"
 
-  :dependencies [[org.clojure/clojure "1.11.1"]
-                 [org.clojure/clojurescript "1.11.60"]
+  :dependencies [[org.clojure/clojure "1.10.0"]
+                 [org.clojure/clojurescript "1.10.773"]
                  [org.clojure/spec.alpha "0.2.176"]
                  ;;;;;;; Yleiset ;;;;;;;
 
@@ -77,7 +77,8 @@
                  [org.apache.httpcomponents/httpcore "4.4.14"]
                  [org.apache.httpcomponents/httpmime "4.5.13" :exclusions [org.clojure/clojure commons-codec commons-logging org.apache.httpcomponents/httpcore]]
                  [com.draines/postal "2.0.3"]
-                 
+
+                 ;; JMS on käytössä vain yksikkötesteissä
                  [javax.jms/javax.jms-api "2.0.1"]
                  [org.apache.activemq/activemq-client "5.18.3" :exclusions [org.slf4j/slf4j-api]]
 
