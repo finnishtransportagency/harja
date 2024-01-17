@@ -43,6 +43,7 @@
                  [hiccup "1.0.5"]
 
                  [org.clojure/core.cache "0.7.2"]
+                 [org.clojure/core.memoize "1.0.257"]
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
