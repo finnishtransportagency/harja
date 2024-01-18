@@ -440,11 +440,11 @@
             :itemit-komponentteja? true}
            (mapv (fn [urakka]
                     [:span.liikenne-urakat-suodatin
-                     (:nimi urakka)
                      [:div [:input {:type "checkbox"
                              :checked (:valittu? urakka)
                              :on-change #(let [valittu? (-> % .-target .-checked)]
-                                           (e! (tiedot/->UrakkaValittu urakka valittu?)))}]]])
+                                           (e! (tiedot/->UrakkaValittu urakka valittu?)))}]]
+                     (:nimi urakka)])
              kayttajan-urakat)]]]
         [valinnat/aikavali (atomi :aikavali)]
         [kentat/tee-otsikollinen-kentta
