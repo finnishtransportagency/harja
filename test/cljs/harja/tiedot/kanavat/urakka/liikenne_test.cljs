@@ -780,6 +780,7 @@
                     ::lt/alukset [{::lt-alus/suunta :ylos
                                    ::lt-alus/nimi "Ronsu"}]}]
     (is (= {:tallennus-kaynnissa? false
+            :rivimaara-ylittynyt false
             :valittu-liikennetapahtuma nil
             :liikennetapahtumien-haku-kaynnissa? false
             :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false
@@ -789,13 +790,15 @@
                               tapahtuma2
                               {::lt-alus/suunta :ylos
                                ::lt-alus/nimi "Ronsu"})]
-            :raporttiparametrit {:nimi :kanavien-liikennetapahtumat, :konteksti "monta-urakkaa", :urakoiden-nimet (),
-                                 :parametrit {:valitut-urakat ()
-                                              :alkupvm nil
-                                              :loppupvm nil
-                                              :urakkatyyppi :vesivayla-kanavien-hoito
-                                              :yhteenveto {:toimenpiteet {:sulutukset-ylos 0, :sulutukset-alas 0, :sillan-avaukset 0, :tyhjennykset 0},
-                                                           :palvelumuoto {:paikallispalvelu 0, :kaukopalvelu 0, :itsepalvelu 0, :muu 0, :yhteensa 0}}}}}
+            :yhteenveto {:toimenpiteet {:sulutukset-ylos 0,
+                                        :sulutukset-alas 0,
+                                        :sillan-avaukset 0,
+                                        :tyhjennykset 0},
+                         :palvelumuoto {:paikallispalvelu 0,
+                                        :kaukopalvelu 0,
+                                        :itsepalvelu 0,
+                                        :muu 0,
+                                        :yhteensa 0}}}
            (e! (tiedot/->TapahtumaTallennettu [tapahtuma1 tapahtuma2])))))
 
   (is (false? (:nakyvissa? @modal/modal-sisalto))))
