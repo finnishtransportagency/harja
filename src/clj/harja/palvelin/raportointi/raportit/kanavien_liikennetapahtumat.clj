@@ -89,7 +89,7 @@
         ;; Urakoiden-nimet on nil kun 1 urakka valittuna, haetaan tällöin valitun urakan nimi toisesta muuttujasta
         urakoiden-nimet (or urakoiden-nimet (first valitut-urakat))
         raportin-otsikko (raportin-otsikko urakoiden-nimet liikennetapahtuma-raportin-nimi alkupvm loppupvm)
-        liikennetapahtumat (q/hae-liikennetapahtumat db user hakuparametrit)
+        liikennetapahtumat (q/hae-liikennetapahtumat db user (assoc hakuparametrit :rajoita lt/+rajoita-tapahtumien-maara+))
         ;; Muunnetaan alusten suunta tekstiksi
         suunta->str (fn [suunta] (@lt/suunnat-atom suunta))
         ;; Käyttäjämuunnos
@@ -151,7 +151,11 @@
                                [yleiset])))
                          liikennetapahtumat)
 
-        tapahtumarivit (jarjesta-tapahtumat tapahtumarivit)]
+        tapahtumarivit (jarjesta-tapahtumat tapahtumarivit)
+        tapahtumarivit (take lt/+rajoita-tapahtumien-maara+ tapahtumarivit)
+        tapahtumien-maara (count tapahtumarivit)
+        _ (println "\n Tapahtumien määrä: " tapahtumien-maara  (> tapahtumien-maara lt/+rajoita-tapahtumien-maara+) lt/+rajoita-tapahtumien-maara+" \n --------")
+        ]
 
     [:raportti {:orientaatio :landscape
                 :nimi raportin-otsikko}

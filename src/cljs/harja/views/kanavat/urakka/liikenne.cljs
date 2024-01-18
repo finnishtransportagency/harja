@@ -549,7 +549,7 @@
     :nimi ::lt/kuittaaja
     :fmt kayttaja/kayttaja->str}]))
 
-(defn liikennetapahtumien-yhteenveto [{:keys [yhteenveto] :as app}]
+(defn liikennetapahtumien-yhteenveto [{:keys [yhteenveto rivimaara-ylittynyt] :as app}]
   [:div.liikenne-header
    [:div.raporttivienti
     ;; Raporttiviennit
@@ -571,7 +571,11 @@
      [napit/tallenna "Tallenna Excel" (constantly true)
       {:ikoni (ikonit/harja-icon-action-download) :luokka "nappi-ensisijainen" :type "submit" :vayla-tyyli? false :esta-prevent-default? true}]]]
    
-   [:h3 "Liikennetapahtumat"]
+   (if rivimaara-ylittynyt
+     [:div.kayttajia-ei-loydy.fontti-14
+      [yleiset/keltainen-vihjelaatikko [:div "Tulokset rajoitettu 10 000 tapahtumaan, tarkenna hakua."] :info]
+      [:h3 "Liikennetapahtumat"]]
+     [:h3 "Liikennetapahtumat"])
    [:div.urakkavalinnat
     [:div.liikenneyhteenveto
      [:div.toimenpiteet-rivi

@@ -267,7 +267,12 @@
               )) 0 tapahtumat))
 
 (defn tapahtumat-haettu [app tulos]
-  (let [sulutukset-alas (laske-yhteenveto tulos :sulutus :alas nil)
+  (let [;; Rajoitetaan rivimäärä, voi mennä muuten selain hitaaksi
+        tapahtumien-maara (count tulos)
+        tulos (if (> tapahtumien-maara lt/+rajoita-tapahtumien-maara+)
+                (take lt/+rajoita-tapahtumien-maara+ tulos)
+                tulos)
+        sulutukset-alas (laske-yhteenveto tulos :sulutus :alas nil)
         sulutukset-ylos (laske-yhteenveto tulos :sulutus :ylos nil)
         sillan-avaukset (laske-yhteenveto tulos :avaus nil nil)
         tyhjennykset (laske-yhteenveto tulos :tyhjennys nil nil)
@@ -289,14 +294,18 @@
                                  paikallispalvelut
                                  kaukopalvelut
                                  itsepalvelut
-                                 muut)}]
-    (-> app
-      (assoc-in [:yhteenveto :toimenpiteet] toimenpiteet)
-      (assoc-in [:yhteenveto :palvelumuoto] palvelumuoto)
-      (assoc :liikennetapahtumien-haku-kaynnissa? false)
-      (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false)
-      (assoc :haetut-tapahtumat tulos)
-      (assoc :tapahtumarivit (mapcat #(tapahtumarivit app %) tulos)))))
+                                 muut)}
+        app-yleiset (-> app
+                      (assoc-in [:yhteenveto :toimenpiteet] toimenpiteet)
+                      (assoc-in [:yhteenveto :palvelumuoto] palvelumuoto)
+                      (assoc :liikennetapahtumien-haku-kaynnissa? false)
+                      (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false)
+                      (assoc :haetut-tapahtumat tulos)
+                      (assoc :tapahtumarivit (mapcat #(tapahtumarivit app %) tulos)))]
+    ;; Laitetaan app stateen tieto jos rivit ovat rajoitettu, ja näytetään info käyttöliittymässä
+    (if (> tapahtumien-maara lt/+rajoita-tapahtumien-maara+)
+      (assoc app-yleiset :rivimaara-ylittynyt true)
+      (assoc app-yleiset :rivimaara-ylittynyt false))))
 
 (defn tallennusparametrit [t]
   (-> t
