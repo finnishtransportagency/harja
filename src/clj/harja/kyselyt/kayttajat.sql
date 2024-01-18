@@ -1,22 +1,23 @@
--- name: hae-kirjautumistiedot
--- Hakee annetulle KOKA käyttäjätunnukselle kirjautumistiedot
-SELECT
-  k.id,
-  k.kayttajanimi,
-  k.etunimi,
-  k.sukunimi,
-  k.sahkoposti,
-  k.puhelin,
-  o.id     AS organisaatio_id,
-  o.nimi   AS organisaatio_nimi,
-  o.tyyppi AS organisaatio_tyyppi,
-  (SELECT array_agg(u.id)
-     FROM urakka u
-    WHERE u.urakoitsija = o.id OR u.hallintayksikko = o.id) as "organisaation-urakat"
-FROM kayttaja k
-     LEFT JOIN organisaatio o ON k.organisaatio = o.id
-WHERE k.kayttajanimi = :koka
-      AND k.poistettu = FALSE
+-- name: luo-kayttaja<!
+-- single?: true
+-- Luo uuden käyttäjän
+INSERT
+  INTO kayttaja
+  (kayttajanimi, etunimi, sukunimi, sahkoposti, puhelin, organisaatio, luotu)
+VALUES (:kayttajanimi, :etunimi, :sukunimi, :sahkoposti, :puhelin, :organisaatio, NOW())
+RETURNING id;
+
+-- name: paivita-kayttaja!
+-- Päivittää käyttäjän tiedot
+UPDATE kayttaja
+   SET kayttajanimi = :kayttajanimi,
+       etunimi = :etunimi,
+       sukunimi = :sukunimi,
+       sahkoposti = :sahkoposti,
+       puhelin = :puhelin,
+       organisaatio = :organisaatio,
+       muokattu = NOW()
+ WHERE id = :id;
 
 -- name: varmista-kayttaja
 -- single?: true
@@ -270,14 +271,6 @@ SELECT
 FROM organisaatio o
 WHERE o.nimi ILIKE :haku
 
-
--- name: luo-kayttaja<!
--- Luo uuden käyttäjän FIM tietojen pohjalta
-INSERT
-INTO kayttaja
-(kayttajanimi, etunimi, sukunimi, sahkoposti, puhelin, organisaatio)
-VALUES (:kayttajanimi, :etunimi, :sukunimi, :sahkoposti, :puhelin, :organisaatio)
-
 -- name: hae-kayttajien-tunnistetiedot
 -- Hakee käyttäjistä ydintiedot tekstihaulla.
 SELECT
@@ -339,7 +332,7 @@ SELECT
 FROM kayttaja k
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
 WHERE k.poistettu = FALSE
-      AND k.kayttajanimi = :kaytajanimi;
+      AND k.kayttajanimi = :kayttajanimi;
 
 -- name: onko-kayttaja-urakan-organisaatiossa
 -- Tarkistaa onko käyttäjä urakan urakoitsijaorganisaation jäsen
