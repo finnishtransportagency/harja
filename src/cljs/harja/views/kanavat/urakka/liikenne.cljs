@@ -577,9 +577,10 @@
    
    (if rivimaara-ylittynyt
      [:div.kayttajia-ei-loydy.fontti-14
-      [yleiset/keltainen-vihjelaatikko [:div "Tulokset rajoitettu 10 000 tapahtumaan, tarkenna hakua."] :info]
+      [yleiset/keltainen-vihjelaatikko [:div "Tulokset rajattu 10 000 tapahtumaan. Tarkenna hakua."] :info]
       [:h3 "Liikennetapahtumat"]]
      [:h3 "Liikennetapahtumat"])
+   
    [:div.urakkavalinnat
     [:div.liikenneyhteenveto
      [:div.toimenpiteet-rivi

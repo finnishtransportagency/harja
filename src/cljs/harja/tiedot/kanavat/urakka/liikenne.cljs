@@ -693,8 +693,31 @@
   PaivitaValinnat
   (process-event [{u :uudet} app]
     (let [uudet-valinnat (merge (:valinnat app) (select-keys u valintojen-avaimet))
+          valinnat-app (:valinnat app)
+          aikavali-vanha (:aikavali valinnat-app)
+          aikavali-uusi (:aikavali uudet-valinnat)
+          vain-aikavali-muuttunut? (=
+                                    (dissoc uudet-valinnat :aikavali)
+                                    (dissoc valinnat-app :aikavali))
+          ;; Onko aikaväli tällä hetkellä olemassa käyttäjän lomakkeessa?
+          aikavali-olemassa? (boolean (and (first aikavali-uusi) (second aikavali-uusi)))
+          ;; Tyhjennettiinkö aikaväli kokonaan?
+          aikavali-tyhjennettiin? (and
+                                    (or
+                                      (some? (first aikavali-vanha))
+                                      (some? (second aikavali-vanha)))
+                                    (nil? (first aikavali-uusi))
+                                    (nil? (second aikavali-uusi)))
+          ;; Onko tarve tehdä uutta hakua
+          ;; Tässä katsotaan, muokkasiko, tai tyhjensikö käyttäjä aikaväli filtterin
+          ;; Tämä tehty sen takia että ei tehdä turhia kutsuja, kun käyttäjä syöttää pelkästään alkupvm eikä loppupvm
+          tarve-hakea? (or aikavali-tyhjennettiin?
+                         (not
+                           (and vain-aikavali-muuttunut? (not aikavali-olemassa?))))
           haku (tuck/send-async! ->HaeLiikennetapahtumat)]
-      (go (haku uudet-valinnat))
+      ;; Jos tarve tehdä uusi haku, tehdään se
+      (when tarve-hakea?
+        (go (haku uudet-valinnat)))
       (assoc app :valinnat uudet-valinnat)))
 
   TapahtumaaMuokattu
@@ -834,13 +857,12 @@
                                              #{}
                                              (disj s id))))))
   AsetaAloitusTiedot
-  (process-event [{:keys [aikavali]} app]
+  (process-event [_ app]
     (let [kanava-hallintayksikko (some
                                    #(when (= (:nimi %) "Kanavat ja avattavat sillat") (:id %))
                                    @hallintayksikot/vaylamuodon-hallintayksikot)]
       (-> app
-        (tt/post! :kayttajan-urakat [kanava-hallintayksikko] {:onnistui ->KayttajanUrakatHaettu})
-        (assoc-in [:valinnat :aikavali] aikavali))))
+        (tt/post! :kayttajan-urakat [kanava-hallintayksikko] {:onnistui ->KayttajanUrakatHaettu}))))
 
   KayttajanUrakatHaettu
   (process-event [{urakat :urakat} app]
@@ -857,6 +879,7 @@
           app (assoc-in app [:valinnat :kayttajan-urakat] urakat)]
       (tuck/process-event (->PaivitaValinnat (:valinnat app)) app)
       app))
+
   UrakkaValittu
   (process-event [{{:keys [id]} :urakka valittu? :valittu?} app]
     (let [uudet-urakkavalinnat (map #(if (= (:id %) id)
