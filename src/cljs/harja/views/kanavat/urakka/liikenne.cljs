@@ -441,9 +441,13 @@
            (mapv (fn [urakka]
                     [:span.liikenne-urakat-suodatin
                      [:div [:input {:type "checkbox"
-                             :checked (:valittu? urakka)
-                             :on-change #(let [valittu? (-> % .-target .-checked)]
-                                           (e! (tiedot/->UrakkaValittu urakka valittu?)))}]]
+                                    ;; Kun tapahtumia haku kesken, disabloi urakoiden valinta
+                                    :disabled (or
+                                                (:liikennetapahtumien-haku-kaynnissa? app)
+                                                (:liikennetapahtumien-haku-tulee-olemaan-kaynnissa? app))
+                                    :checked (:valittu? urakka)
+                                    :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                  (e! (tiedot/->UrakkaValittu urakka valittu?)))}]]
                      (:nimi urakka)])
              kayttajan-urakat)]]]
         [valinnat/aikavali (atomi :aikavali)]
