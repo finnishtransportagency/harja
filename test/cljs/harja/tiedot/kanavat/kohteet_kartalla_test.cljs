@@ -13,6 +13,7 @@
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.pvm :as pvm]
+            [harja.loki :refer [log error]]
             [harja.testutils :as testutils]))
 
 ;;;;;;;;;
@@ -49,20 +50,21 @@
                                                        (into #{} @kanavaurakka/kanavakohteet))]
                                    (gen/fmap (fn [[kohde toimenpide huoltokohde kayttaja toimenpidekoodi]]
                                                (let [toimenpide (into {}
-                                                                      (map (fn [[avain arvo]]
-                                                                             (if (instance? js/Date arvo)
-                                                                               [avain (doto
-                                                                                        (js/goog.date.DateTime.)
-                                                                                        (.setTime (.getTime arvo)))]
-                                                                               [avain arvo]))
-                                                                           toimenpide))]
+                                                                  (map (fn [[avain arvo]]
+                                                                         (if (or
+                                                                               (= :harja.domain.muokkaustiedot/luotu (keyword avain))
+                                                                               (= :harja.domain.muokkaustiedot/muokattu (keyword avain))
+                                                                               (= :harja.domain.kanavat.kanavan-toimenpide/pvm (keyword avain)))
+                                                                           [avain (pvm/nyt)]
+                                                                           [avain arvo]))
+                                                                    toimenpide))]
                                                  (merge toimenpide
-                                                        (when kohde
-                                                          {::kanavan-toimenpide/kohde kohde
-                                                           ::kanavan-toimenpide/huoltokohde huoltokohde
-                                                           ::kanavan-toimenpide/kohteenosa (-> kohde ::kohde/kohteenosat first)
-                                                           ::kanavan-toimenpide/kuittaaja kayttaja
-                                                           ::kanavan-toimenpide/toimenpidekoodi toimenpidekoodi}))))
+                                                   (when kohde
+                                                     {::kanavan-toimenpide/kohde kohde
+                                                      ::kanavan-toimenpide/huoltokohde huoltokohde
+                                                      ::kanavan-toimenpide/kohteenosa (-> kohde ::kohde/kohteenosat first)
+                                                      ::kanavan-toimenpide/kuittaaja kayttaja
+                                                      ::kanavan-toimenpide/toimenpidekoodi toimenpidekoodi}))))
                                              (gen/tuple (s/gen kanavakohteet)
                                                         (s/gen ::kanavan-toimenpide/kanava-toimenpide)
                                                         (generaattori-setista-speceja huoltokohde/perustiedot)
@@ -94,7 +96,7 @@
                                                          (s/gen ::kohde/sijainti)
                                                          (s/gen ::kohde/nimi)
                                                          (s/gen ::kohde/urakat))))))
-(s/def ::kanavakohteet (s/coll-of ::kanavakohde :min-count 1))
+(s/def ::kanavakohteet (s/coll-of ::kanavakohde :min-count 3))
 
 ;; Speckien loppu
 ;;;;;;;;;;
@@ -110,6 +112,8 @@
     (reset! kohteet-kartalla/karttataso-kohteet true)
     ;; Laitetaan kokonaishintasten tilaksi joku generoitu arvo
     (reset! kokonaishintaiset/tila kokonaishintaiset-tila)
+    (log "2@kohteet-kartalla/aktiivinen-nakyma" (pr-str @kohteet-kartalla/aktiivinen-nakyma))
+    (log "2@kohteet-kartalla/naytettavat-kanavakohteet" (pr-str @kohteet-kartalla/naytettavat-kanavakohteet))
     (is (= (count (-> @kohteet-kartalla/aktiivinen-nakyma :tila :gridissa-olevat-kohteen-tiedot))
            (count @kohteet-kartalla/naytettavat-kanavakohteet))
         "Kartalla pitäisi olla yhtä monta näytettävää kohdetta, kuin mitä toimenpiteitä on tehty")
