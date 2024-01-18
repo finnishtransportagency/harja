@@ -580,15 +580,9 @@
                              (merge sulutus-ylos {::lt-alus/suunta :ylos}) 
                              sillan-avaus 
                              tyhjennys]
-            :raporttiparametrit {:nimi :kanavien-liikennetapahtumat,
-                                 :konteksti "monta-urakkaa",
-                                 :urakoiden-nimet (),
-                                 :parametrit {:valitut-urakat ()
-                                              :alkupvm nil 
-                                              :loppupvm nil
-                                              :urakkatyyppi :vesivayla-kanavien-hoito
-                                              :yhteenveto {:toimenpiteet {:sulutukset-ylos 1, :sulutukset-alas 1, :sillan-avaukset 1, :tyhjennykset 1},
-                                                           :palvelumuoto {:paikallispalvelu 0, :kaukopalvelu 1, :itsepalvelu 1, :muu 0, :yhteensa 2}}}}}
+            :rivimaara-ylittynyt false
+            :yhteenveto {:toimenpiteet {:sulutukset-ylos 1, :sulutukset-alas 1, :sillan-avaukset 1, :tyhjennykset 1},
+                         :palvelumuoto {:paikallispalvelu 0, :kaukopalvelu 1, :itsepalvelu 1, :muu 0, :yhteensa 2}}}
            
            (e! (tiedot/->LiikennetapahtumatHaettu [sulutus-alas sulutus-ylos sillan-avaus tyhjennys]))))))
 
