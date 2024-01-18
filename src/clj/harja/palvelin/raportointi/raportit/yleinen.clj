@@ -253,16 +253,14 @@
         alkupvm (:alkupvm (:raportin-yleiset-tiedot raportin-tunnistetiedot))
         loppupvm (:loppupvm (:raportin-yleiset-tiedot raportin-tunnistetiedot))
         raportin-nimi (:raportin-nimi (:raportin-yleiset-tiedot raportin-tunnistetiedot))
+        lyhennetty? (:lyhennetty-tiedostonimi raportin-tunnistetiedot)
         ;; Jos loppupvm on täysin sama, sitä ei tarvitse mainita
         loppupvm (if (= loppupvm alkupvm) nil loppupvm)]
 
     (cond
       (and urakka raportin-nimi alkupvm loppupvm)
-      ;; Vähän ehkä rumaa iffittelyä, mutta kanavaurakoissa on urakkavalinta erikseen joka hieman sekoittaa 
-      ;; Jolloin urakan nimet on raportin nimessä jo -> urakan voi jättää pois
-      (if (or 
-            (str/includes? raportin-nimi "kanava") 
-            (str/includes? urakka "kanava"))
+      ;; Jos nimessä käytetään urakan lyhytnimiä, ei tarvitse urakkaa mainita erikseen
+      (if lyhennetty?
         (str raportin-nimi ", " (str alkupvm " - " loppupvm))
         (str urakka ", " raportin-nimi ", " (str alkupvm " - " loppupvm)))
 
