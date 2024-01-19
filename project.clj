@@ -5,12 +5,12 @@
   :description "Väylän Harja"
 
   :dependencies [[org.clojure/clojure "1.10.0"]
-                 [org.clojure/clojurescript "1.10.773"]
+                 [org.clojure/clojurescript "1.10.520"]
                  [org.clojure/spec.alpha "0.2.176"]
                  ;;;;;;; Yleiset ;;;;;;;
 
                  [prismatic/schema "1.1.10"]
-                 [org.clojure/core.async "1.6.681"]
+                 [org.clojure/core.async "0.3.443"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.256"]
                  [com.cognitect/transit-clj "0.8.313"]
