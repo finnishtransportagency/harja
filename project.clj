@@ -47,6 +47,7 @@
                  [hiccup "1.0.5"]
 
                  [org.clojure/core.cache "0.7.2"]
+                 [org.clojure/core.memoize "1.0.257"]
 
                  [org.clojure/tools.analyzer "1.1.1" :refer clojure :exclude [update-vars update-keys]]
 
