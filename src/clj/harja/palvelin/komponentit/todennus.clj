@@ -231,17 +231,27 @@ ja palauttaa käyttäjätiedot"
                                    oikeudet/roolit
                                    ryhmat)
           organisaatio (hae-kayttajalle-organisaatio db ely y-tunnus organisaatio roolit)
-
-         kayttaja {:kayttajanimi kayttajanimi
-                   :etunimi etunimi
-                   :sukunimi sukunimi
-                   :sahkoposti sahkoposti
-                   :puhelin puhelin
-                   :organisaatio (:id organisaatio)}
-         kayttaja-id (q/varmista-kayttaja
-                       db
-                       (assoc kayttaja
-                         :organisaatio (:id organisaatio)))]
+          kayttaja {:kayttajanimi kayttajanimi
+                    :etunimi etunimi
+                    :sukunimi sukunimi
+                    :sahkoposti sahkoposti
+                    :puhelin puhelin
+                    :organisaatio (:id organisaatio)}
+          kayttaja-kannassa (first (q/hae-kayttaja-kayttajanimella db {:kayttajanimi kayttajanimi}))
+          kayttaja-id-kannassa (:id kayttaja-kannassa)
+          kayttaja-kannassa (merge (select-keys kayttaja-kannassa #{:kayttajanimi
+                                                                    :etunimi
+                                                                    :sukunimi
+                                                                    :sahkoposti
+                                                                    :puhelin})
+                              {:organisaatio (:org_id kayttaja-kannassa)})
+          kayttajan-tiedot-samat? (= kayttaja kayttaja-kannassa)
+          kayttaja-id (or
+                      kayttaja-id-kannassa
+                       (:id (q/luo-kayttaja<! db kayttaja)))]
+      (when (and kayttaja-id-kannassa (not kayttajan-tiedot-samat?))
+        (q/paivita-kayttaja! db (merge kayttaja
+                                  {:id kayttaja-id})))
      (log/info "SÄHKE HEADERIT: " (str kayttajanimi ": " ryhmat)
                "; KÄYTTÄJÄ ID: " kayttaja-id
                "; ORGANISAATIO: " organisaatio)
