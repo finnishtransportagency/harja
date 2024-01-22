@@ -6,12 +6,17 @@
    [harja.pvm :as pvm]
    [taoensso.timbre :as log]))
 
-(defn suorita [_ _ {:keys [parametrit]}]
 
-  (let [{:keys [tiedot urakka]} parametrit
-        otsikko "T"]
+(defn suorita [_ _ {:keys [sarakkeet rivit parametrit]}]
+  
+  (let [{:keys [tiedot]} parametrit
+        otsikko "Häiriötilanteet"]
 
     [:raportti {:nimi otsikko
                 :piilota-otsikko? true}
-     
-                ]))
+
+     [:taulukko {:otsikko otsikko
+                 :tyhja (when (empty? rivit) "Ei raportoitavaa.")
+                 :sheet-nimi otsikko}
+      sarakkeet
+      rivit]]))
