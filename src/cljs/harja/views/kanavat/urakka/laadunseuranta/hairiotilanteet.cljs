@@ -103,7 +103,7 @@
                           :kanavien-hairiotilanteet
                           {:urakka @nav/valittu-urakka
                            :hallintayksikko @nav/valittu-hallintayksikko
-                           :tiedot hairiotilanteet
+                           :aikavali @u/valittu-aikavali
                            :urakkatyyppi (:tyyppi @nav/valittu-urakka)})}
    [{:otsikko "Havaintoaika"
      :nimi

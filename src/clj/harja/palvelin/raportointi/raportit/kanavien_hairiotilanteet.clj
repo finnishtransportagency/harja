@@ -1,7 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.kanavien-hairiotilanteet
   "Häiriötilanne raportti"
   (:require
-   [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
+   [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi raportin-otsikko]]
    [clojure.string :as str]
    [harja.pvm :as pvm]
    [taoensso.timbre :as log]))
@@ -9,8 +9,13 @@
 
 (defn suorita [_ _ {:keys [rivit parametrit]}]
   
-  (let [{:keys [tiedot]} parametrit
+  (let [{:keys [aikavali urakka]} parametrit
         otsikko "Häiriötilanteet"
+        urakka (:nimi urakka)
+        alkupvm (first aikavali)
+        loppupvm (second aikavali)
+        raportin-otsikko (raportin-otsikko urakka otsikko alkupvm loppupvm)
+        _ (println "\n Params: " aikavali " " (pvm/pvm-aika alkupvm) (pvm/pvm-aika loppupvm) " " alkupvm loppupvm " - " )
         ;; Sarakkeet normaalisti passataan tähän gridin mukana, mutta koska sarakkeiden otsikon ovat niin pitkiä
         ;; niitä pakko vähän muotoilla, PDF rapsasta tulee muuten ihan mössöä
         sarakkeet (rivi
@@ -26,7 +31,7 @@
                     {:otsikko "Korjaus tila" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.6 :tyyppi :varillinen-teksti}
                     {:otsikko "Paikallinen" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.7 :tyyppi :varillinen-teksti})]
     
-    [:raportti {:nimi otsikko
+    [:raportti {:nimi raportin-otsikko
                 :piilota-otsikko? true}
 
      [:taulukko {:otsikko otsikko
