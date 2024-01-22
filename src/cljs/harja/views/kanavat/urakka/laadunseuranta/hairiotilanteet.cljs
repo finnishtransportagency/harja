@@ -12,6 +12,7 @@
             [harja.ui.kentat :as kentat]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.debug :refer [debug]]
+            [harja.tiedot.raportit :as raportit]
 
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.kanavat.kohde :as kohde]
@@ -93,8 +94,17 @@
     :tyhja (if (nil? hairiotilanteet)
              [ajax-loader "Haetaan häiriötilanteita"]
              "Häiriötilanteita ei löytynyt")
-    :rivi-klikattu #(e! (tiedot/->ValitseHairiotilanne 
-                         (assoc % ::hairiotilanne/havaintoaika (::hairiotilanne/havaintoaika %))))}
+    :rivi-klikattu #(e! (tiedot/->ValitseHairiotilanne
+                          (assoc % ::hairiotilanne/havaintoaika (::hairiotilanne/havaintoaika %))))
+
+    :raporttivienti #{:excel :pdf}
+    :raporttiparametrit (raportit/urakkaraportin-parametrit
+                          (:id @nav/valittu-urakka)
+                          :kanavien-hairiotilanteet
+                          {:urakka @nav/valittu-urakka
+                           :hallintayksikko @nav/valittu-hallintayksikko
+                           :tiedot hairiotilanteet
+                           :urakkatyyppi (:tyyppi @nav/valittu-urakka)})}
    [{:otsikko "Havaintoaika"
      :nimi
      ::hairiotilanne/havaintoaika

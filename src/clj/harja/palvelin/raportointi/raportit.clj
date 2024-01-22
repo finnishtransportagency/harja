@@ -42,6 +42,7 @@
   [harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto]
   [harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto]
   [harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto]
+  [harja.palvelin.raportointi.raportit.kanavien-hairiotilanteet]
   [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
   [harja.palvelin.raportointi.raportit.vastaanottotarkastus]
   [harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot]
@@ -383,6 +384,12 @@
     :kuvaus       "Liikennetapahtumat"
     :suorita      #'harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat/suorita
     :urakkatyyppi urakka-domain/kanava-urakkatyypit}
+   
+   {:nimi         :kanavien-hairiotilanteet
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti    #{"koko maa" "urakka"}
+    :kuvaus       "Häiriötilanteet"
+    :suorita      #'harja.palvelin.raportointi.raportit.kanavien-hairiotilanteet/suorita}
 
    {:nimi         :pohjavesialueiden-suolatoteumat
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
