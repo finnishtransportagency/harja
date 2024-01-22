@@ -3,12 +3,10 @@
   (:require
    [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi raportin-otsikko]]
    [clojure.string :as str]
-   [harja.pvm :as pvm]
-   [harja.kyselyt.urakat :as urakat-q]
-   [taoensso.timbre :as log]))
+   [harja.kyselyt.urakat :as urakat-q]))
 
 
-(defn suorita [db user {:keys [rivit parametrit]}]
+(defn suorita [db _ {:keys [rivit parametrit]}]
   
   (let [{:keys [aikavali urakka]} parametrit
         otsikko "Häiriötilanteet"
