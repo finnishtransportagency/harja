@@ -433,7 +433,7 @@ jobs:
           echo +++++++++++++++++++
           echo
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         id: cache-npm
         with:
           path: node_modules
