@@ -4,18 +4,31 @@
    [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi raportin-otsikko]]
    [clojure.string :as str]
    [harja.pvm :as pvm]
+   [harja.kyselyt.urakat :as urakat-q]
    [taoensso.timbre :as log]))
 
 
-(defn suorita [_ _ {:keys [rivit parametrit]}]
+(defn suorita [db user {:keys [rivit parametrit]}]
   
   (let [{:keys [aikavali urakka]} parametrit
         otsikko "Häiriötilanteet"
-        urakka (:nimi urakka)
+        urakka-id (:id urakka)
         alkupvm (first aikavali)
         loppupvm (second aikavali)
-        raportin-otsikko (raportin-otsikko urakka otsikko alkupvm loppupvm)
-        _ (println "\n Params: " aikavali " " (pvm/pvm-aika alkupvm) (pvm/pvm-aika loppupvm) " " alkupvm loppupvm " - " )
+        lyhytnimet (urakat-q/hae-urakoiden-nimet db {:urakkatyyppi "vesivayla-kanavien-hoito" :vain-puuttuvat false :urakantila "kaikki"})
+
+        fn-suodata-urakat (fn [data idt]
+                            (filter #(idt (:id %)) data))
+        
+        fn-kokoa-lyhytnimet (fn [data]
+                              (->> data
+                                (map #(or (:lyhyt_nimi %) (:nimi %)))
+                                (str/join ", ")))
+        
+        ;; Käyttää lyhytnimeä jos olemassa, jos ei -> urakan koko nimi
+        urakan-nimi (fn-suodata-urakat lyhytnimet  #{urakka-id})
+        urakan-nimi (fn-kokoa-lyhytnimet urakan-nimi)
+        raportin-otsikko (raportin-otsikko urakan-nimi otsikko alkupvm loppupvm)
         ;; Sarakkeet normaalisti passataan tähän gridin mukana, mutta koska sarakkeiden otsikon ovat niin pitkiä
         ;; niitä pakko vähän muotoilla, PDF rapsasta tulee muuten ihan mössöä
         sarakkeet (rivi
