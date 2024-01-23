@@ -1,38 +1,30 @@
 (ns harja.views.kanavat.urakka.toimenpiteet.kokonaishintaiset
-  (:require [reagent.core :refer [atom]]
-            [tuck.core :refer [tuck]]
+  (:require [tuck.core :refer [tuck]]
             [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
             [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.tiedot.urakka :as urakkatiedot]
-            [harja.loki :refer [tarkkaile! log]]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
-            [harja.ui.kentat :refer [tee-kentta]]
-            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
-            [harja.ui.debug :refer [debug]]
+            [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.valinnat :as valinnat]
             [harja.domain.urakka :as urakka-domain]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
-            [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as tasot]
-            [harja.ui.debug :as debug]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.yleiset :as yleiset]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
             [reagent.core :as r]
-            [taoensso.timbre :as log]
+            [harja.tiedot.raportit :as raportit]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as u]
             [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros
-    [cljs.core.async.macros :refer [go]]
-    [harja.makrot :refer [defc fnc]]))
+    [harja.makrot :refer [defc]]))
 
 (defn hakuehdot [e! {:keys [huoltokohteet] :as app} kohteet]
   (let [urakka-map (get-in app [:valinnat :urakka])]
@@ -81,7 +73,17 @@
      :rivi-klikattu (fn [rivi] (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot rivi)))
      :tyhja (if haku-kaynnissa? [ajax-loader "Haetaan toimenpiteitä"] "Ei toimenpiteitä")
      :jarjesta ::kanavan-toimenpide/pvm
-     :tunniste ::kanavan-toimenpide/id}
+     :tunniste ::kanavan-toimenpide/id
+     
+     :raporttivienti #{:excel :pdf}
+     :raporttiparametrit (raportit/urakkaraportin-parametrit
+                           (:id @nav/valittu-urakka)
+                           :kanavien-kokonaishintaiset-toimenpiteet
+                           {:urakka @nav/valittu-urakka
+                            :hallintayksikko @nav/valittu-hallintayksikko
+                            :aikavali @u/valittu-aikavali
+                            :urakkatyyppi (:tyyppi @nav/valittu-urakka)})
+     }
     (toimenpiteet-view/toimenpidesarakkeet
       e! app
       {:kaikki-valittu?-fn #(= (count (:toimenpiteet app))
@@ -122,8 +124,7 @@
           [kokonaishintainen-toimenpidelomake e! app]
           [:div
            [hakuehdot e! app kohteet]
-           [kokonaishintaiset-toimenpiteet-taulukko e! app]])
-        [debug/debug app]]]
+           [kokonaishintaiset-toimenpiteet-taulukko e! app]])]]
       [ajax-loader "Ladataan..."])))
 
 (defn kokonaishintaiset* [e! _]
