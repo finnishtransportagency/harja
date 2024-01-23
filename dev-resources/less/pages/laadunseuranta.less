@@ -20,6 +20,24 @@
   }
 }
 
+.hairiotilanteet-suodattimet {
+  display: flex;
+  justify-content: left;
+  padding: @valistys-16;
+  gap: 120px;
+
+  .ryhma {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: @valistys-16;
+
+    &:first-child {
+      max-width: 430px;
+    }
+  }
+}
+
 .sanktiot {
   .header-rivi {
     display: flex;

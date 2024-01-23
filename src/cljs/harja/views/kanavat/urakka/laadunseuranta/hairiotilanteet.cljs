@@ -44,39 +44,45 @@
   (let [valittu-urakka (get-in app [:valinnat :urakka])]
     [valinnat/urakkavalinnat {:urakka valittu-urakka}
      ^{:key "urakkavalinnat"}
-     [:div
-      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
-       valittu-urakka {:sopimus {:optiot {:kaikki-valinta? true}}}]
-      [valinnat/vikaluokka
-       (r/wrap (get-in app [:valinnat :vikaluokka])
-               (fn [uusi]
-                 (e! (tiedot/->PaivitaValinnat {:vikaluokka uusi}))))
-       hairio/vikaluokat+kaikki
-       #(if % (hairio/fmt-vikaluokka %) "Kaikki")]
-      [valinnat/korjauksen-tila
-       (r/wrap (get-in app [:valinnat :korjauksen-tila])
-               (fn [uusi]
-                 (e! (tiedot/->PaivitaValinnat {:korjauksen-tila uusi}))))
-       hairio/korjauksen-tlat+kaikki
-       #(if % (hairio/fmt-korjauksen-tila %) "Kaikki")]
-      [valinnat/paikallinen-kaytto
-       (r/wrap (get-in app [:valinnat :paikallinen-kaytto?])
-               (fn [uusi]
-                 (e! (tiedot/->PaivitaValinnat {:paikallinen-kaytto? uusi}))))
-       [nil true false]
-       #(if (some? %) (fmt/totuus %) "Kaikki")]
-      [valinnat/numerovali
-       (r/wrap (get-in app [:valinnat :odotusaika-h])
-               (fn [uusi]
-                 (e! (tiedot/->PaivitaValinnat {:odotusaika-h uusi}))))
-       {:otsikko "Odotusaika (h)"
-        :vain-positiivinen? true}]
-      [valinnat/numerovali
-       (r/wrap (get-in app [:valinnat :korjausaika-h])
-               (fn [uusi]
-                 (e! (tiedot/->PaivitaValinnat {:korjausaika-h uusi}))))
-       {:otsikko "Korjausaika (h)"
-        :vain-positiivinen? true}]]
+     
+     [:div.hairiotilanteet-suodattimet
+      [:div.ryhma
+       [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
+        valittu-urakka {:sopimus {:optiot {:kaikki-valinta? true}}}]
+       [valinnat/vikaluokka
+        (r/wrap (get-in app [:valinnat :vikaluokka])
+          (fn [uusi]
+            (e! (tiedot/->PaivitaValinnat {:vikaluokka uusi}))))
+        hairio/vikaluokat+kaikki
+        #(if % (hairio/fmt-vikaluokka %) "Kaikki")]
+
+       [valinnat/korjauksen-tila
+        (r/wrap (get-in app [:valinnat :korjauksen-tila])
+          (fn [uusi]
+            (e! (tiedot/->PaivitaValinnat {:korjauksen-tila uusi}))))
+        hairio/korjauksen-tlat+kaikki
+        #(if % (hairio/fmt-korjauksen-tila %) "Kaikki")]]
+
+      [:div.ryhma
+       [valinnat/paikallinen-kaytto
+        (r/wrap (get-in app [:valinnat :paikallinen-kaytto?])
+          (fn [uusi]
+            (e! (tiedot/->PaivitaValinnat {:paikallinen-kaytto? uusi}))))
+        [nil true false]
+        #(if (some? %) (fmt/totuus %) "Kaikki")]
+       [valinnat/numerovali
+        (r/wrap (get-in app [:valinnat :odotusaika-h])
+          (fn [uusi]
+            (e! (tiedot/->PaivitaValinnat {:odotusaika-h uusi}))))
+        {:otsikko "Odotusaika (h)"
+         :vain-positiivinen? true}]
+       [valinnat/numerovali
+        (r/wrap (get-in app [:valinnat :korjausaika-h])
+          (fn [uusi]
+            (e! (tiedot/->PaivitaValinnat {:korjausaika-h uusi}))))
+        {:otsikko "Korjausaika (h)"
+         :vain-positiivinen? true}]]]
+     
      ^{:key "urakkatoiminnot"}
      [valinnat/urakkatoiminnot {:urakka valittu-urakka}
       (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (:id valittu-urakka))]
