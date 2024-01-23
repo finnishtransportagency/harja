@@ -47,6 +47,7 @@
   [harja.palvelin.raportointi.raportit.vastaanottotarkastus]
   [harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot]
   [harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat]
+  [harja.palvelin.raportointi.raportit.kanavien-toimenpiteet]
   [harja.palvelin.raportointi.raportit.pohjavesialueiden-suolat]
   [harja.palvelin.raportointi.raportit.rajoitusalueiden-suolat]
   [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara]
@@ -390,6 +391,12 @@
     :konteksti    #{"koko maa" "urakka"}
     :kuvaus       "Häiriötilanteet"
     :suorita      #'harja.palvelin.raportointi.raportit.kanavien-hairiotilanteet/suorita}
+
+   {:nimi         :kanavien-kokonaishintaiset-toimenpiteet
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti    #{"koko maa" "urakka"}
+    :kuvaus       "Kokonaishintaiset toimenpiteet"
+    :suorita      #'harja.palvelin.raportointi.raportit.kanavien-toimenpiteet/suorita}
 
    {:nimi         :pohjavesialueiden-suolatoteumat
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
