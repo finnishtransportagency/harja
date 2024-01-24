@@ -7,6 +7,13 @@ FROM eclipse-temurin:17.0.9_9-jre-jammy
 LABEL description="Harja app"
 LABEL version="1.0"
 
+# https://github.com/aws/amazon-ecs-agent/issues/3594
+# Lisää /tmp volumena, jotta voidaan käyttää sitä kiertotienä ECS Agent ongelmaan.
+# Korjaa ohjeen mukaan 0755 luvat
+# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/bind-mounts.html#specify-volume-config
+RUN mkdir -p /tmp && chmod 1777 /tmp
+VOLUME ["/tmp"]
+
 # Asenna apurit
 
 RUN apt-get update && apt-get install -y \
