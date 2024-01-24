@@ -102,6 +102,7 @@
         ;; Urakoiden nimet on koossa, tätä käytetään tiedostonimeen
         urakoiden-nimet (fn-kokoa-lyhytnimet valitut-urakat-nimet)
         raportin-otsikko (raportin-otsikko urakoiden-nimet liikennetapahtuma-raportin-nimi alkupvm loppupvm)
+        ;; Rajoitetaan raportin rivit
         liikennetapahtumat (q/hae-liikennetapahtumat db user (assoc hakuparametrit :rajoita lt/+rajoita-tapahtumien-maara+))
         ;; Muunnetaan alusten suunta tekstiksi
         fn-suunta->str (fn [suunta] (@lt/suunnat-atom suunta))
@@ -129,7 +130,7 @@
                                  (sort-by
                                    (juxt :aika :nimi :alus :aluslaji :aluksia)
                                    (fn [[a-aika & _ :as a] [b-aika & _ :as b]]
-                                  ;; Konverttaa java.sql.Timestamp -> org.joda.time.DateTime, muuten tulee erroria
+                                     ;; Konverttaa java.sql.Timestamp -> org.joda.time.DateTime, muuten tulee erroria
                                      (when (and a b)
                                        (let [a-joda-time (coerce/from-sql-time a-aika)
                                              b-joda-time (coerce/from-sql-time b-aika)]
@@ -165,6 +166,7 @@
                          liikennetapahtumat)
 
         tapahtumarivit (fn-jarjesta-tapahtumat tapahtumarivit)
+        ;; Koska niputetaan alukset uusina riveinä mukaan, voi mennä vielä tuon rajoituksen yli, eli pilkotaan vielä ne pois
         tapahtumarivit (take lt/+rajoita-tapahtumien-maara+ tapahtumarivit)]
 
     [:raportti {:orientaatio :landscape

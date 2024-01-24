@@ -45,10 +45,8 @@
     ::kuittaaja (specql.rel/has-one ::kuittaaja-id
                                     :harja.domain.kayttaja/kayttaja
                                     :harja.domain.kayttaja/id)}])
-#?(:cljs
-   (def +rajoita-tapahtumien-maara+ 10000))
-#?(:clj
-   (def +rajoita-tapahtumien-maara+ 10000))
+
+(def +rajoita-tapahtumien-maara+ 10000)
 
 (def perustiedot
   #{::id
