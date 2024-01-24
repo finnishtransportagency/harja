@@ -165,12 +165,15 @@ on nil."
 
 (defn prosessoi-apikayttaja-header
   "Integraatioväylä välittää apikäyttäjän tunnuksen Harjaan username-nimisessä headerissä.
-  Koodissa käyttäjätieto luetaan oam_remote_user-headeristä. Muutetaan headerin nimi."
+  Koodissa käyttäjätieto luetaan oam_remote_user-headeristä. Muutetaan headerin nimi, jotta tarvittava apikäyttäjätunnus saadaan käyttöön.
+  Tilannetta jolloin cognito-headereitten käsittelystä syntyy oam_remote_user ja headereissa on välitetty username, ei pitäisi syntyä.
+  Poistetaan kuitenkin varalta mahdollinen ylimääräinen oam_remote_user-header ennen usernamen uudelleennimeämistä.
+  Funktio suoritetaan pilvipuolella, kun koka- ei oam-headereitä ei saada kutsun yhteydessä."
   [headerit]
-  ;; TODO: Poista alla oleva kommetti kun #yliheitto on tehty.
-  ;; Vanhassa ympäristössä integraatioväylältä Harjaan asti välittyy sekä username että OAM_REMOTE_USER, eikä uudelleennimeämistä tarvita.
-  ;; Siksi tänne tullaan vain silloin kun koko-headerit on tyhjä-ehto täyttyy. OAM_REMOTE_USER sisältyy nk. koka-headereihin.
-  (set/rename-keys headerit {"username" "oam_remote_user"}))
+  (if (contains? headerit "username")
+    (set/rename-keys (apply dissoc headerit ["oam_remote_user"]) {"username" "oam_remote_user"})
+    headerit))
+
 
 (defn prosessoi-kayttaja-headerit
   "Palauttaa headerit sellaisenaan, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
@@ -178,8 +181,7 @@ on nil."
   muiden headereiden joukkoon."
   [headerit]
   (if (empty? (koka-headerit headerit))
-    (merge  (prosessoi-apikayttaja-header headerit)
-            (pura-cognito-headerit headerit))
+    (prosessoi-apikayttaja-header (merge headerit (pura-cognito-headerit headerit)))
     headerit))
 
 (defn- hae-organisaatio-elynumerolla [db ely]
