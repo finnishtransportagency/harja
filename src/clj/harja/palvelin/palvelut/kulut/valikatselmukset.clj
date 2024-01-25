@@ -163,7 +163,7 @@
   (let [urakka-id (::urakka/id tiedot)
         urakka (first (q-urakat/hae-urakka db urakka-id))
         hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi tiedot)
-        _ (do (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
+        _ (do (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus
                 kayttaja
                 urakka-id)
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu))
@@ -190,7 +190,7 @@
         ;; Rakennetaan valittu hoitokausi
         valittu-hoitokausi [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
                             (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
-        _ (do (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
+        _ (do (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus
                 kayttaja
                 urakka-id)
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
@@ -199,7 +199,7 @@
     (valikatselmus-q/poista-oikaisu db tiedot)))
 
 (defn hae-tavoitehintojen-oikaisut [db kayttaja tiedot]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja (::urakka/id tiedot))
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (::urakka/id tiedot))
   (let [urakka-id (::urakka/id tiedot)]
     (assert (number? urakka-id) "Virhe urakan ID:ssä.")
     (valikatselmus-q/hae-oikaisut db tiedot)))
@@ -226,7 +226,7 @@
                 :as tiedot}]
   {:pre [(number? urakka-id) (pos-int? hoitokauden-alkuvuosi) (number? uusi-kattohinta) (pos? uusi-kattohinta)]}
   (log/debug "tallenna-kattohinnan-oikaisu :: tiedot" (pr-str tiedot))
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus
     kayttaja
     urakka-id)
   (jdbc/with-db-transaction [db db]
@@ -259,7 +259,7 @@
 (defn poista-kattohinnan-oikaisu [db kayttaja {hoitokauden-alkuvuosi ::valikatselmus/hoitokauden-alkuvuosi urakka-id ::urakka/id :as tiedot}]
   {:pre [(number? urakka-id) (pos-int? hoitokauden-alkuvuosi)]}
   (log/debug "poista-kattohinnan-oikaisu :: tiedot" (pr-str tiedot))
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus
     kayttaja
     urakka-id)
   (jdbc/with-db-transaction [db db]
@@ -295,13 +295,13 @@
                  ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt))}))
 
 (defn hae-urakan-paatokset [db kayttaja tiedot]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-valikatselmus
     kayttaja
     (::urakka/id tiedot))
   (valikatselmus-q/hae-urakan-paatokset db tiedot))
 
 (defn tee-paatos-urakalle [db kayttaja tiedot]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus
     kayttaja
     (::urakka/id tiedot))
   (log/debug "tee-paatos-urakalle :: tiedot" (pr-str tiedot))
@@ -325,9 +325,8 @@
         ::valikatselmus/lupausbonus (paatos-apurit/tarkista-lupausbonus db kayttaja tiedot)
         ::valikatselmus/lupaussanktio (paatos-apurit/tarkista-lupaussanktio db kayttaja tiedot))
       (valikatselmus-q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi erilliskustannus_id sanktio_id kulu_id)))))
-
 (defn poista-paatos [db kayttaja {::valikatselmus/keys [paatoksen-id] :as tiedot}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja (::urakka/id tiedot))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (::urakka/id tiedot))
   (log/debug "poista-paatos :: tiedot:" (pr-str tiedot))
   (if (number? paatoksen-id)
     (jdbc/with-db-transaction [db db]
