@@ -163,13 +163,26 @@ on nil."
                  ;; Sähköposti ja puhelin
                  "oam_user_mail" "oam_user_mobile"])))
 
+(defn prosessoi-apikayttaja-header
+  "Integraatioväylä välittää apikäyttäjän tunnuksen Harjaan username-nimisessä headerissä.
+  Koodissa käyttäjätieto luetaan oam_remote_user-headeristä. Muutetaan headerin nimi, jotta tarvittava apikäyttäjätunnus saadaan käyttöön.
+  Tilannetta jolloin cognito-headereitten käsittelystä syntyy oam_remote_user ja headereissa on välitetty username, ei pitäisi syntyä.
+  Ylikirjoitetaan kuitenkin varalta mahdollinen ylimääräinen oam_remote_user-header.
+  Funktio suoritetaan pilvipuolella, kun koka- ei oam-headereitä ei saada kutsun yhteydessä."
+  [headerit]
+  (if (get headerit "username")
+    (assoc-in headerit ["oam_remote_user"] (get headerit "username"))
+    headerit))
+
 (defn prosessoi-kayttaja-headerit
   "Palauttaa headerit sellaisenaan, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
   Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään
   muiden headereiden joukkoon."
   [headerit]
   (if (empty? (koka-headerit headerit))
-    (merge headerit (pura-cognito-headerit headerit))
+    (->
+      (merge headerit (pura-cognito-headerit headerit))
+      (prosessoi-apikayttaja-header))
     headerit))
 
 (defn- hae-organisaatio-elynumerolla [db ely]
