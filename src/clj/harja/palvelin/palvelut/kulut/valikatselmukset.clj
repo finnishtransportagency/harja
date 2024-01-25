@@ -81,7 +81,8 @@
   (let [siirto (::valikatselmus/siirto tiedot)
         siirto? (and (some? siirto)
                   (pos? siirto))
-        viimeinen-vuosi? (= (pvm/vuosi (:loppupvm urakka)) (pvm/vuosi (pvm/nyt)))]
+        hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi tiedot)
+        viimeinen-vuosi? (= (pvm/vuosi (:loppupvm urakka)) (inc hoitokauden-alkuvuosi))]
     (when (and siirto? viimeinen-vuosi?) (heita-virhe "Kattohinnan ylitystä ei voi siirtää ensi vuodelle urakan viimeisenä vuotena"))))
 
 (defn tarkista-ei-siirtoa-tavoitehinnan-ylityksessa [tiedot]
