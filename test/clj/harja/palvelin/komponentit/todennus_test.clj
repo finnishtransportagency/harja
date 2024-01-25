@@ -147,6 +147,30 @@
         (is (= (get-in req [:kayttaja :sukunimi]) "Destialainen"))
         (is (= (get-in req [:kayttaja :organisaatioroolit]) {23 #{"Paakayttaja"}}))))))
 
+(deftest cognito-headereiden-purku-usernamella
+  (let [handler (->
+                  (fn [req] req)
+                  (harja.palvelin.komponentit.http-palvelin/wrap-with-common-wrappers))
+        todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)]
+
+    (testing "Cognito headeri: username-headerin arvo löytyy custom:uid-headerin arvon sijaan"
+      (let [req (handler {:headers (merge (testi-cognito-headerit) {"username" "LOTTA"}) })
+            req (todenna req)]
+
+        (is (= (get-in req [:kayttaja :kayttajanimi]) "LOTTA"))
+        (is (= (get-in req [:kayttaja :etunimi]) "Daniel"))
+        (is (= (get-in req [:kayttaja :sukunimi]) "Destialainen"))))
+
+    (testing "Koska headereissa saatiin username, oam_remote_userista löytyy sen, eikä custom:uid-headerin arvo"
+      (let [req (todenna {:headers {"oam_remote_user" "LOTTA"
+                                    "oam_user_first_name" "Daniel"
+                                    "oam_user_last_name" "Destialainen"
+                                    "oam_groups" "2234567-8_Paakayttaja"}})]
+
+        (is (= (get-in req [:kayttaja :kayttajanimi]) "LOTTA"))
+        (is (= (get-in req [:kayttaja :etunimi]) "Daniel"))
+        (is (= (get-in req [:kayttaja :sukunimi]) "Destialainen"))))))
+
 (deftest ota-organisaatio-roolin-y-tunnuksesta
   (let [todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)
         destia-id (first (first (q "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'")))
