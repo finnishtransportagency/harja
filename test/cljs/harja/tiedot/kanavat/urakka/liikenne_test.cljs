@@ -531,6 +531,7 @@
     (vaadi-async-kutsut
       #{}
       (is (= {:liikennetapahtumien-haku-kaynnissa? true
+              :lataa-aloitustiedot false
               :valinnat {::ur/id 1 ::sop/id 1}}
              (e! (tiedot/->HaeLiikennetapahtumat)
                  {:liikennetapahtumien-haku-kaynnissa? true
@@ -712,7 +713,8 @@
     (vaadi-async-kutsut
       #{tiedot/->HaeLiikennetapahtumat}
       (is (= {:valinnat {:foo 1
-                         :aikavali [1 1]}}
+                         ;; Molemmat aikavälit muuttunut joten palautetaan nil nil, bar ei pitäisi kuitenkaan tulla
+                         :aikavali [nil nil]}}
              (e! (tiedot/->PaivitaValinnat {:bar 2
                                             :aikavali [1 1]})
                  {:valinnat {:foo 1}})))))
@@ -720,8 +722,8 @@
   (testing "Parametrien ylikirjoitus"
     (vaadi-async-kutsut
       #{tiedot/->HaeLiikennetapahtumat}
-      (is (= {:valinnat {:aikavali [3 3]}}
-             (e! (tiedot/->PaivitaValinnat {:aikavali [3 3]})
+      (is (= {:valinnat {:aikavali [1 3]}}
+             (e! (tiedot/->PaivitaValinnat {:aikavali [1 3]})
                  {:valinnat {:aikavali [1 1]}}))))))
 
 (deftest tapahtuman-muokkaus

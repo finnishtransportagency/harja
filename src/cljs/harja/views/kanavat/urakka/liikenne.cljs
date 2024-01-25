@@ -2,9 +2,7 @@
   (:require [clojure.string :as str]
             [reagent.core :refer [atom] :as r]
             [tuck.core :refer [tuck]]
-
-            [harja.fmt :as fmt]
-            [harja.loki :refer [tarkkaile! log]]
+            [harja.domain.urakka :as urakka]
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
             [harja.ui.komponentti :as komp]
@@ -12,7 +10,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
-            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja totuus-ikoni] :as yleiset]
+            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni totuus-ikoni] :as yleiset]
             [harja.ui.debug :refer [debug]]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.napit :as napit]
@@ -23,8 +21,6 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.tiedot.kanavat.urakka.liikenne :as tiedot]
-            [harja.views.urakka.valinnat :as suodattimet]
-            [harja.ui.grid.protokollat :as grid-protokollat]
             [harja.tiedot.vesivaylat.hallinta.liikennetapahtumien-ketjutus :as hallinta-tiedot]
             [harja.ui.viesti :as viesti]
 
@@ -36,10 +32,9 @@
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-toiminto :as toiminto]
             [harja.domain.kanavat.kohde :as kohde]
-            [harja.domain.kanavat.kohteenosa :as osa]
-            [harja.tiedot.raportit :as raportit])
+            [harja.domain.kanavat.kohteenosa :as osa])
   (:require-macros
-    [harja.makrot :refer [defc fnc]]
+    [harja.makrot :refer [defc]]
     [harja.tyokalut.ui :refer [for*]]))
 
 (defn edelliset-grid [e! app {:keys [edelliset-alukset]}]
@@ -625,8 +620,9 @@
 
 (defn liikenne* [e! _ valinnat]
   (komp/luo
-    (komp/watcher tiedot/valinnat (fn [_ _ uusi]
-                                    (e! (tiedot/->PaivitaValinnat uusi))))
+    (komp/watcher tiedot/valinnat (fn [_ vanha uusi]
+                                    (when (= (::urakka/id vanha) (::urakka/id uusi))
+                                      (e! (tiedot/->PaivitaValinnat uusi)))))
     (komp/sisaan-ulos #(do
                          (e! (tiedot/->Nakymassa? true))
                          (tiedot/nakymaan e! valinnat))

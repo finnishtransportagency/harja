@@ -879,6 +879,7 @@
                                    @hallintayksikot/vaylamuodon-hallintayksikot)]
       (-> app
         (assoc :lataa-aloitustiedot true)
+        (assoc :liikennetapahtumien-haku-kaynnissa? false)
         (assoc-in [:valinnat :aikavali] aikavali)
         (tt/post! :kayttajan-urakat [kanava-hallintayksikko] {:onnistui ->KayttajanUrakatHaettu}))))
 
