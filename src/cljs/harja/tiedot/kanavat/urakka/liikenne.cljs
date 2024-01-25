@@ -606,15 +606,15 @@
         (-> app
           (tt/post! :hae-liikennetapahtumat
             params
-            ;; Checkbox-group ja aluksen nimen kirjoitus generoisi
-            ;; liikaa requesteja ilman viivettä.
+            ;; Checkbox-group ja aluksen nimen kirjoitus generoisi liikaa requesteja ilman viivettä.
             {:viive 1000
              :tunniste :hae-liikennetapahtumat-liikenne-nakymaan
              :lahetetty ->HaeLiikennetapahtumatKutsuLahetetty
              :onnistui ->LiikennetapahtumatHaettu
              :epaonnistui ->LiikennetapahtumatEiHaettu})
+          (assoc :lataa-aloitustiedot false)
           (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? true)))
-      app))
+      (assoc app :lataa-aloitustiedot false)))
 
   HaeLiikennetapahtumatKutsuLahetetty
   (process-event [_ app]
@@ -691,14 +691,13 @@
       (assoc :edellisten-haku-kaynnissa? false)))
 
   PaivitaValinnat
-  (process-event [{u :uudet} app]
-    (let [uudet-valinnat (merge (:valinnat app) (select-keys u valintojen-avaimet))
-          valinnat-app (:valinnat app)
-          aikavali-vanha (:aikavali valinnat-app)
+  (process-event [{u :uudet} {:keys [valinnat lataa-aloitustiedot] :as app}]
+    (let [uudet-valinnat (merge valinnat (select-keys u valintojen-avaimet))
+          aikavali-vanha (:aikavali valinnat)
           aikavali-uusi (:aikavali uudet-valinnat)
           vain-aikavali-muuttunut? (=
                                     (dissoc uudet-valinnat :aikavali)
-                                    (dissoc valinnat-app :aikavali))
+                                    (dissoc valinnat :aikavali))
           ;; Onko aikaväli tällä hetkellä olemassa käyttäjän lomakkeessa?
           aikavali-olemassa? (boolean (and (first aikavali-uusi) (second aikavali-uusi)))
           ;; Tyhjennettiinkö aikaväli kokonaan?
@@ -708,17 +707,34 @@
                                       (some? (second aikavali-vanha)))
                                     (nil? (first aikavali-uusi))
                                     (nil? (second aikavali-uusi)))
+
+          ;; Jostain syystä, jos valitset minkä vaan alku ja / tai loppupvm
+          ;; -> vaihdat urakkaa murupolusta, aikaväliksi muuttuu itsestään hoitokausi joka ei tallennu app-stateen eikä haku välttämättä vastaa sitä
+          ;; En keksinyt tähän muuta kun koodata tämä päälle
+          uudet-valinnat (if
+                           (and
+                             (not= (first aikavali-vanha) (first aikavali-uusi))
+                             (not= (second aikavali-vanha) (second aikavali-uusi)))
+                           ;; Ignorataan jos molemmat vaihtuneet yhtäaikaa, mitä käyttäjä ei voi tehdä 
+                           (assoc uudet-valinnat :aikavali [nil nil])
+                           uudet-valinnat)
+
           ;; Onko tarve tehdä uutta hakua
           ;; Tässä katsotaan, muokkasiko, tai tyhjensikö käyttäjä aikaväli filtterin
           ;; Tämä tehty sen takia että ei tehdä turhia kutsuja, kun käyttäjä syöttää pelkästään alkupvm eikä loppupvm
-          tarve-hakea? (or aikavali-tyhjennettiin?
+          tarve-hakea? (or
+                         lataa-aloitustiedot
+                         aikavali-tyhjennettiin?
                          (not
                            (and vain-aikavali-muuttunut? (not aikavali-olemassa?))))
           haku (tuck/send-async! ->HaeLiikennetapahtumat)]
+
       ;; Jos tarve tehdä uusi haku, tehdään se
       (when tarve-hakea?
         (go (haku uudet-valinnat)))
-      (assoc app :valinnat uudet-valinnat)))
+
+      (-> app
+        (assoc :valinnat uudet-valinnat))))
 
   TapahtumaaMuokattu
   (process-event [{t :tapahtuma} app]
@@ -857,11 +873,13 @@
                                              #{}
                                              (disj s id))))))
   AsetaAloitusTiedot
-  (process-event [_ app]
+  (process-event [{:keys [aikavali]} app]
     (let [kanava-hallintayksikko (some
                                    #(when (= (:nimi %) "Kanavat ja avattavat sillat") (:id %))
                                    @hallintayksikot/vaylamuodon-hallintayksikot)]
       (-> app
+        (assoc :lataa-aloitustiedot true)
+        (assoc-in [:valinnat :aikavali] aikavali)
         (tt/post! :kayttajan-urakat [kanava-hallintayksikko] {:onnistui ->KayttajanUrakatHaettu}))))
 
   KayttajanUrakatHaettu

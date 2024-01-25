@@ -623,7 +623,7 @@
       liikennetapahtumat-sarakkeet
       (tiedot/jarjesta-tapahtumat tapahtumarivit)])])
 
-(defn liikenne* [e! app valinnat]
+(defn liikenne* [e! _ valinnat]
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
