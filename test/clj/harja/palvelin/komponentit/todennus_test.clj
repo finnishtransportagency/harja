@@ -147,21 +147,21 @@
         (is (= (get-in req [:kayttaja :sukunimi]) "Destialainen"))
         (is (= (get-in req [:kayttaja :organisaatioroolit]) {23 #{"Paakayttaja"}}))))))
 
-(deftest cognito-headereiden-purku-usernamella
+(deftest cognito-headereiden-purku-harja_api_usernamella
   (let [handler (->
                   (fn [req] req)
                   (harja.palvelin.komponentit.http-palvelin/wrap-with-common-wrappers))
         todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)]
 
-    (testing "Cognito headeri: username-headerin arvo löytyy custom:uid-headerin arvon sijaan"
-      (let [req (handler {:headers (merge (testi-cognito-headerit) {"username" "LOTTA"}) })
+    (testing "Cognito headeri: harja_api_username-headerin arvo löytyy custom:uid-headerin arvon sijaan"
+      (let [req (handler {:headers (merge (testi-cognito-headerit) {"harja_api_username" "LOTTA"}) })
             req (todenna req)]
 
         (is (= (get-in req [:kayttaja :kayttajanimi]) "LOTTA"))
         (is (= (get-in req [:kayttaja :etunimi]) "Daniel"))
         (is (= (get-in req [:kayttaja :sukunimi]) "Destialainen"))))
 
-    (testing "Koska headereissa saatiin username, oam_remote_userista löytyy sen, eikä custom:uid-headerin arvo"
+    (testing "Koska headereissa saatiin harja_api_username, oam_remote_userista löytyy sen, eikä custom:uid-headerin arvo"
       (let [req (todenna {:headers {"oam_remote_user" "LOTTA"
                                     "oam_user_first_name" "Daniel"
                                     "oam_user_last_name" "Destialainen"
