@@ -388,13 +388,13 @@
    
    {:nimi         :kanavien-hairiotilanteet
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
-    :konteksti    #{"koko maa" "urakka"}
+    :konteksti    #{"urakka"}
     :kuvaus       "Häiriötilanteet"
     :suorita      #'harja.palvelin.raportointi.raportit.kanavien-hairiotilanteet/suorita}
 
    {:nimi         :kanavien-kokonaishintaiset-toimenpiteet
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
-    :konteksti    #{"koko maa" "urakka"}
+    :konteksti    #{"urakka"}
     :kuvaus       "Kokonaishintaiset toimenpiteet"
     :suorita      #'harja.palvelin.raportointi.raportit.kanavien-toimenpiteet/suorita}
 

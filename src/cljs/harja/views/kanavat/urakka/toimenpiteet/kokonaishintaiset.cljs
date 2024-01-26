@@ -15,13 +15,10 @@
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as tasot]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.ui.yleiset :as yleiset]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
             [reagent.core :as r]
             [harja.tiedot.raportit :as raportit]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
             [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros
     [harja.makrot :refer [defc]]))
@@ -93,18 +90,17 @@
                                    {:kaikki-valittu? uusi-arvo})))
        :rivi-valittu?-fn (fn [rivi]
                            (boolean ((:valitut-toimenpide-idt app)
-                                      (::kanavan-toimenpide/id rivi))))
+                                     (::kanavan-toimenpide/id rivi))))
        :rivi-valittu-fn (fn [rivi uusi-arvo]
                           (e! (tiedot/->ValitseToimenpide
                                 {:id (::kanavan-toimenpide/id rivi)
                                  :valittu? uusi-arvo})))})
     (sort-by ::kanavan-toimenpide/pvm >
-             (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet))]])
+      (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet))]])
 
 
 
-(defn kokonaishintainen-toimenpidelomake [e! {:keys [avattu-toimenpide kohteet toimenpideinstanssit
-                                                     tehtavat huoltokohteet tallennus-kaynnissa?] :as app}]
+(defn kokonaishintainen-toimenpidelomake [e! app]
   [toimenpiteet-view/toimenpidelomake app {:tyhjenna-fn #(e! (tiedot/->TyhjennaAvattuToimenpide))
                                            :aseta-toimenpiteen-tiedot-fn #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
                                            :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide % false))
