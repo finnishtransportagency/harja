@@ -8,6 +8,7 @@
             [clojure.set :as set]
             [dk.ative.docjure.spreadsheet :as xls]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
+            [harja.id :refer [id-olemassa?]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.tierekisteri.validointi :as tr-validointi]
             [harja.domain.roolit :as roolit]
@@ -438,70 +439,65 @@
         kohde (tarkista-pot-raportointi db kohde vanha-kohde (:id user))
         ;; Kohteen valmistumispäivä kaivellaan pot raportoitavalla vähä eri tavalla
         valmistumispvm (or (and (:pot? kohde) (:pot-valmistumispvm kohde)) (:valmistumispvm kohde) nil)
-        tr-osoite {::paikkaus/tierekisteriosoite_laajennettu
-                   {:harja.domain.tielupa/tie (konversio/konvertoi->int (:tie kohde))
-                    :harja.domain.tielupa/aosa (konversio/konvertoi->int (:aosa kohde))
-                    :harja.domain.tielupa/aet (konversio/konvertoi->int (:aet kohde))
-                    :harja.domain.tielupa/losa (konversio/konvertoi->int (:losa kohde))
-                    :harja.domain.tielupa/let (konversio/konvertoi->int (:let kohde))
-                    :harja.domain.tielupa/ajorata (konversio/konvertoi->int (or (:ajorata kohde) 0))
-                    :harja.domain.tielupa/puoli nil
-                    :harja.domain.tielupa/geometria nil
-                    :harja.domain.tielupa/karttapvm nil
-                    :harja.domain.tielupa/kaista nil}}
+
         paikkauskohde (merge
-                        {::paikkaus/ulkoinen-id (konversio/konvertoi->int (:ulkoinen-id kohde))
-                         ::paikkaus/urakka-id (:urakka-id kohde)
-                         ::muokkaustiedot/luotu (pvm/nyt)
-                         ::muokkaustiedot/luoja-id (:id user)
-                         ::paikkaus/nimi (:nimi kohde)
-                         ::muokkaustiedot/poistettu? (or (:poistettu kohde) false)
-                         ::paikkaus/yhalahetyksen-tila (or (:yhalahetyksen-tila kohde) nil)
-                         ::paikkaus/virhe (or (:virhe kohde) nil)
-                         ::paikkaus/tarkistettu (or (:tarkistettu kohde) nil)
-                         ::paikkaus/tarkistaja-id (or (:tarkistaja-id kohde) nil)
-                         ::paikkaus/ilmoitettu-virhe (or (:ilmoitettu-virhe kohde) nil)
-                         ::paikkaus/alkupvm (:alkupvm kohde)
-                         ::paikkaus/loppupvm (:loppupvm kohde)
-                         ::paikkaus/tyomenetelma (or (:tyomenetelma kohde) nil)
-                         ::paikkaus/pot? (or (:pot? kohde) false)
-                         ::paikkaus/paikkauskohteen-tila (:paikkauskohteen-tila kohde)
-                         ::paikkaus/suunniteltu-maara (when (:suunniteltu-maara kohde)
-                                                        (bigdec (:suunniteltu-maara kohde)))
-                         ::paikkaus/yksikko (:yksikko kohde)
-                         ::paikkaus/lisatiedot (or (:lisatiedot kohde) nil)
-                         ::paikkaus/valmistumispvm valmistumispvm
-                         ::paikkaus/tilattupvm (or (:tilattupvm kohde) nil)
-                         ::paikkaus/toteutunut-hinta (when (:toteutunut-hinta kohde)
-                                                       (bigdec (:toteutunut-hinta kohde)))
-                         ::paikkaus/tiemerkintaa-tuhoutunut? (or (:tiemerkintaa-tuhoutunut? kohde) nil)
-                         ::paikkaus/takuuaika (when (:takuuaika kohde) (bigdec (:takuuaika kohde)))
-                         ::paikkaus/tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))
-                         ::paikkaus/yllapitokohde-id (:yllapitokohde-id kohde)}
+                        {:ulkoinen-id (konversio/konvertoi->int (:ulkoinen-id kohde))
+                         :urakka-id (:urakka-id kohde)
+                         :luotu (pvm/nyt)
+                         :luoja-id (:id user)
+                         :nimi (:nimi kohde)
+                         :poistettu? (or (:poistettu kohde) false)
+                         :yhalahetyksen-tila (or (:yhalahetyksen-tila kohde) nil)
+                         :virhe (or (:virhe kohde) nil)
+                         :tarkistettu (or (:tarkistettu kohde) nil)
+                         :tarkistaja-id (or (:tarkistaja-id kohde) nil)
+                         :ilmoitettu-virhe (or (:ilmoitettu-virhe kohde) nil)
+                         :alkupvm (:alkupvm kohde)
+                         :loppupvm (:loppupvm kohde)
+                         :tyomenetelma (or (:tyomenetelma kohde) nil)
+                         :pot? (or (:pot? kohde) false)
+                         :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
+                         :suunniteltu-maara (when (:suunniteltu-maara kohde)
+                                              (bigdec (:suunniteltu-maara kohde)))
+                         :yksikko (:yksikko kohde)
+                         :lisatiedot (or (:lisatiedot kohde) nil)
+                         :valmistumispvm valmistumispvm
+                         :tilattupvm (or (:tilattupvm kohde) nil)
+                         :toteutunut-hinta (when (:toteutunut-hinta kohde)
+                                             (bigdec (:toteutunut-hinta kohde)))
+                         :tiemerkintaa-tuhoutunut? (or (:tiemerkintaa-tuhoutunut? kohde) nil)
+                         :takuuaika (when (:takuuaika kohde) (bigdec (:takuuaika kohde)))
+                         :tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))
+                         :yllapitokohde-id (:yllapitokohde-id kohde)
+                         :tie (konversio/konvertoi->int (:tie kohde))
+                         :aosa (konversio/konvertoi->int (:aosa kohde))
+                         :aet (konversio/konvertoi->int (:aet kohde))
+                         :losa (konversio/konvertoi->int (:losa kohde))
+                         :let (konversio/konvertoi->int (:let kohde))
+                         :ajorata (konversio/konvertoi->int (or (:ajorata kohde) 0))}
                         (when on-kustannusoikeudet?
-                          {::paikkaus/suunniteltu-hinta (bigdec (or (:suunniteltu-hinta kohde) 0))})
+                          {:suunniteltu-hinta (bigdec (or (:suunniteltu-hinta kohde) 0))})
                         (when kohde-id
-                          {::paikkaus/id kohde-id
-                           ::muokkaustiedot/muokattu (pvm/nyt)
-                           ::muokkaustiedot/muokkaaja-id (:id user)})
-                        tr-osoite)
+                          {:id kohde-id
+                           :muokattu (pvm/nyt)
+                           :muokkaaja-id (:id user)}))
+
         ;; Jos annetulla kohteella on olemassa id, niin päivitetään. Muuten tehdään uusi
         kohde (when (empty? validointivirheet)
-                (let [p (specql/upsert! db ::paikkaus/paikkauskohde paikkauskohde)
-                      p (set/rename-keys p paikkaus/specql-avaimet->paikkauskohde)
-                      p (-> p
-                            (assoc :tie (get-in p [::paikkaus/tierekisteriosoite_laajennettu :harja.domain.tielupa/tie]))
-                            (assoc :aosa (get-in p [::paikkaus/tierekisteriosoite_laajennettu :harja.domain.tielupa/aosa]))
-                            (assoc :aet (get-in p [::paikkaus/tierekisteriosoite_laajennettu :harja.domain.tielupa/aet]))
-                            (assoc :losa (get-in p [::paikkaus/tierekisteriosoite_laajennettu :harja.domain.tielupa/losa]))
-                            (assoc :let (get-in p [::paikkaus/tierekisteriosoite_laajennettu :harja.domain.tielupa/let]))
-                            (assoc :ajorata (get-in p [::paikkaus/tierekisteriosoite_laajennettu :harja.domain.tielupa/ajorata]))
-                            (dissoc ::paikkaus/tierekisteriosoite_laajennettu :virhe))]
-                  p))
-
-        _ (log/debug "kohde: " (pr-str kohde))
-        _ (log/debug "validaatiovirheet:" (pr-str (not (empty? validointivirheet))) (pr-str validointivirheet))
-        ]
+                (let [p (if (id-olemassa? (:id paikkauskohde))
+                          (do
+                            (println "*********upsert koska id")
+                            (paikkaus-q/paivita-paikkauskohde! db paikkauskohde)
+                            (first (paikkaus-q/hae-paikkauskohde db {:id (:id paikkauskohde)
+                                                                     :urakka-id (:urakka-id kohde)})))
+                          #_(specql/update! db ::paikkaus/paikkauskohde paikkauskohde {::paikkaus/id (::paikkaus/id paikkauskohde)})
+                          (let [_ (println "*********insert koska ei id:tä")
+                                tallennettu-paikkauskohde (paikkaus-q/tallenna-paikkauskohde<! db paikkauskohde)
+                                _ (println "tallennettu-paikkauskohde: " tallennettu-paikkauskohde)
+                                haettu-paikkauskohde (first (paikkaus-q/hae-paikkauskohde db {:id (:id tallennettu-paikkauskohde)
+                                                                                              :urakka-id (:urakka-id kohde)}))]
+                            haettu-paikkauskohde))]
+                  p))]
     (if (empty? validointivirheet)
       kohde
       (throw+ {:type "Validaatiovirhe"
