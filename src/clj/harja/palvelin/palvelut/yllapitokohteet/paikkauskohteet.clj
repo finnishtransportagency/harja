@@ -486,14 +486,10 @@
         kohde (when (empty? validointivirheet)
                 (let [p (if (id-olemassa? (:id paikkauskohde))
                           (do
-                            (println "*********upsert koska id")
                             (paikkaus-q/paivita-paikkauskohde! db paikkauskohde)
                             (first (paikkaus-q/hae-paikkauskohde db {:id (:id paikkauskohde)
                                                                      :urakka-id (:urakka-id kohde)})))
-                          #_(specql/update! db ::paikkaus/paikkauskohde paikkauskohde {::paikkaus/id (::paikkaus/id paikkauskohde)})
-                          (let [_ (println "*********insert koska ei id:tä")
-                                tallennettu-paikkauskohde (paikkaus-q/tallenna-paikkauskohde<! db paikkauskohde)
-                                _ (println "tallennettu-paikkauskohde: " tallennettu-paikkauskohde)
+                          (let [tallennettu-paikkauskohde (paikkaus-q/tallenna-paikkauskohde<! db paikkauskohde)
                                 haettu-paikkauskohde (first (paikkaus-q/hae-paikkauskohde db {:id (:id tallennettu-paikkauskohde)
                                                                                               :urakka-id (:urakka-id kohde)}))]
                             haettu-paikkauskohde))]
