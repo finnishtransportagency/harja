@@ -1,8 +1,6 @@
 {:main harja.asiakas.main
  :optimizations :advanced
  ;;:preamble ["reagent/react.min.js"]
- ;; Kun käytetään :optimization :advanced, niin jotain uusimmissa clojurescript versioissa on muuttunut aiheuttaen ongelmia
- ;; Kun asetetaan input language ECMASCRIPT_2019 tai uudempi, niin ongelma korjaantuu.
  :output-to "resources/public/js/harja.js"
 
  :closure-warnings {:non-standard-jsdoc :off}
