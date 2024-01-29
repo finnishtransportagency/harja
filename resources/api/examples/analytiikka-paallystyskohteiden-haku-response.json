@@ -16,6 +16,12 @@
         "let": 6218,
         "karttapaivamaara": "2023-01-29"
       },
+      "tarjoushinta": 100000.00,
+      "maaramuutokset": -10000.00,
+      "bitumiIndeksi": -1000.00,
+      "nestekaasuJaKevytPolttooljy": -1000.00,
+      "makuPaallysteet": -100.00,
+      "kokonaishinta": 87900,
       "alikohteet": [
         {
           "yhaId": 234,
@@ -77,6 +83,12 @@
         "let": 355,
         "karttapaivamaara": "2023-01-29"
       },
+      "tarjoushinta": 10000.00,
+      "maaramuutokset": -1000.00,
+      "bitumiIndeksi": -100.00,
+      "nestekaasuJaKevytPolttooljy": -100.00,
+      "makuPaallysteet": 100.00,
+      "kokonaishinta": 8900,
       "alikohteet": [
         {
           "yhaId": 236,

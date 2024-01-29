@@ -3,6 +3,21 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "paallystysilmoitukset": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["paikkauskohde"],
+        "properties": {
+          "paikkauskohde": {
+            "type": "integer",
+            "description": "Paikkauskohteen ID HARJAn tietokannassa, eli HarjaId",
+            "multipleOf": 1
+          },
+        }
+      }
+    },
     "paikkauskohteet": {
       "type": "array",
       "items": {
@@ -48,30 +63,6 @@
           },
           "tierekisteriosoitevali": {
             "$ref": "#/definitions/tierekisteriosoitevali"
-          },
-          "tarjoushinta": {
-            "type": "number",
-            "multipleOf": 0.01
-          },
-          "maaramuutokset": {
-            "type": "number",
-            "multipleOf": 0.01
-          },
-          "bitumiIndeksi": {
-            "type": "number",
-            "multipleOf": 0.01
-          },
-          "nestekaasuJaKevytPolttooljy": {
-            "type": "number",
-            "multipleOf": 0.01
-          },
-          "makuPaallysteet": {
-            "type": "number",
-            "multipleOf": 0.01
-          },
-          "kokonaishinta": {
-            "type": "number",
-            "multipleOf": 0.01
           },
           "alikohteet": {
             "type": "array",
