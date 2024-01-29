@@ -3,6 +3,19 @@
     {
       "yhaId": 123,
       "harjaId": 10203,
+      "urakka": {
+        "yhaId": 789,
+        "harjaId": 70809,
+        "nimi": "Testitienpäällystysurakka",
+        "elyt": [
+          "POP"
+        ],
+        "vuodet": [
+          2023
+        ],
+        "sampotunnus": "PR00012345",
+        "tunnus": "DHJ POP ELY ET9 2023"
+      },
       "kohdenumero": 456,
       "kohdetyyppi": "päällyste",
       "nimi": "Mt 88 Malmitie",
@@ -11,7 +24,7 @@
         "tienumero": 88,
         "aosa": 6,
         "aet": 0,
-        "losa":  7,
+        "losa": 7,
         "let": 6218,
         "karttapäivämäärä": "2023-01-29"
       },
@@ -23,7 +36,7 @@
             "tienumero": 88,
             "aosa": 6,
             "aet": 0,
-            "losa": 6 ,
+            "losa": 6,
             "let": 6316,
             "karttapäivämäärä": "2023-01-29"
           },
@@ -44,7 +57,7 @@
             "tienumero": 88,
             "aosa": 7,
             "aet": 0,
-            "losa": 7 ,
+            "losa": 7,
             "let": 6218,
             "karttapäivämäärä": "2023-01-29"
           },

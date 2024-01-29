@@ -21,8 +21,52 @@
           "harjaId": {
             "type": "number"
           },
+          "urakka": {
+            "type": "object",
+            "required": [
+              "yhaId",
+              "harjaId",
+              "tunnus"
+            ],
+            "properties": {
+              "yhaId": {
+                "type": "number",
+                "multipleOf": 1
+              },
+              "harjaId": {
+                "type": "number",
+                "multipleOf": 1
+              },
+              "nimi": {
+                "type": "string"
+              },
+              "elyt": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "vuodet": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "multipleOf": 1
+                }
+              },
+              "sampotunnus": {
+                "type": "string",
+                "maxLength": 50
+              },
+              "tunnus": {
+                "description": "Urakan tunnus YHAssa",
+                "type": "string",
+                "maxLength": 20
+              }
+            }
+          },
           "kohdenumero": {
-            "type": "number"
+            "type": "number",
+            "multipleOf": 1
           },
           "kohdetyyppi": {
             "type": "string",
@@ -121,22 +165,27 @@
         },
         "tienumero": {
           "type": "integer",
+          "multipleOf": 1,
           "description": "Tien numero, jolle tieosoiteväli kohdistuu."
         },
         "aosa": {
           "type": "integer",
+          "multipleOf": 1,
           "description": "Tieosoitevälin alun tieosa"
         },
         "aet": {
           "type": "integer",
+          "multipleOf": 1,
           "description": "Etäisyys alkuosan sisällä"
         },
         "losa": {
           "type": "integer",
+          "multipleOf": 1,
           "description": "Tieosoitevälin lopun tieosa"
         },
         "let": {
           "type": "integer",
+          "multipleOf": 1,
           "description": "Etäisyys loppuosan sisällä"
         }
       }
