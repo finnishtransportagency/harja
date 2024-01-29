@@ -106,6 +106,8 @@ jobs:
       contents: read
       # Sarif-upload
       security-events: write
+      # Packages write lupaa tarvitaan image cachen pushaamiseen GH Docker Registryyn
+      packages: write
 
     steps:
       - name: Checkout code
