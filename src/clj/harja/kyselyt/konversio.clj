@@ -346,10 +346,10 @@
         (recur
          (assoc m nimi
                 (case tyyppi
-                  :long (Long/parseLong arvo)
+                  :long (when-not (str/blank? arvo) (Long/parseLong arvo))
                   :double (Double/parseDouble arvo)
                   :string arvo
-                  :date (lue-pgobject-date arvo)
+                  :date (when-not (str/blank? arvo) (lue-pgobject-date arvo))
                   (assert false (str "Ei tuettu tyyppi: " tyyppi ", arvo: " arvo))))
          kentat
          arvot)))))
