@@ -25,10 +25,12 @@
 (defrecord NakymaAvattu [])
 (defrecord NakymaSuljettu [])
 (defrecord PaivitaValinnat [valinnat])
+
 ;; Haut
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteidenHakuEpaonnistui [])
+
 ;; Lomake
 (defrecord UusiToimenpide [])
 (defrecord AsetaLomakkeenToimenpiteenTiedot [toimenpide])
@@ -42,15 +44,8 @@
 (defrecord ToimenpiteenTallentaminenEpaonnistui [tulos poisto?])
 (defrecord PoistaToimenpide [toimenpide])
 (defrecord KytkePaikannusKaynnissa [])
-;; Rivien valinta ja niiden toiminnot
-(defrecord ValitseToimenpide [tiedot])
-(defrecord ValitseToimenpiteet [tiedot])
-(defrecord SiirraValitut [])
-(defrecord ValitutSiirretty [])
-(defrecord ValitutEiSiirretty [])
 
 ;; Materiaalit
-
 (defrecord HaeMateriaalit [])
 (defrecord MuokkaaMateriaaleja [materiaalit])
 (defrecord MateriaalitHaettu [materiaalit])
@@ -83,12 +78,6 @@
   (reaction
     (when (:nakymassa? @tila)
       (alkuvalinnat))))
-
-(defn kokonashintaiset-tehtavat [tehtavat]
-  (filter
-    (fn [tehtava]
-      (some #(= % "kokonaishintainen") (:hinnoittelu tehtava)))
-    (map #(nth % 3) tehtavat)))
 
 (extend-protocol tuck/Event
   NakymaAvattu
@@ -146,53 +135,6 @@
     (viesti/nayta! "Kokonaishintaisten toimenpiteiden haku epäonnistui!" :danger)
     (assoc app :haku-kaynnissa? false
                :toimenpiteet []))
-
-  ValitseToimenpide
-  (process-event [{tiedot :tiedot} app]
-    (let [toimenpide-id (:id tiedot)
-          valittu? (:valittu? tiedot)
-          aseta-valinta (if valittu? conj disj)]
-      (assoc app :valitut-toimenpide-idt
-                 (aseta-valinta (:valitut-toimenpide-idt app) toimenpide-id))))
-
-  ValitseToimenpiteet
-  (process-event [{tiedot :tiedot} app]
-    (let [kaikki-valittu? (:kaikki-valittu? tiedot)]
-      (if kaikki-valittu?
-        (assoc app :valitut-toimenpide-idt
-                   (set (map ::kanavan-toimenpide/id (:toimenpiteet app))))
-        (assoc app :valitut-toimenpide-idt #{}))))
-
-
-  SiirraValitut
-  (process-event [_ app]
-    (if-not (:toimenpiteiden-siirto-kaynnissa? app)
-      (-> app
-          (tuck-apurit/post! :siirra-kanavatoimenpiteet
-                             {::kanavan-toimenpide/toimenpide-idt (:valitut-toimenpide-idt app)
-                              ::kanavan-toimenpide/urakka-id (get-in app [:valinnat :urakka :id])
-                              ::kanavan-toimenpide/tyyppi :muutos-lisatyo}
-                             {:onnistui ->ValitutSiirretty
-                              :epaonnistui ->ValitutEiSiirretty})
-          (assoc :toimenpiteiden-siirto-kaynnissa? true))
-      app))
-
-  ValitutSiirretty
-  (process-event [_ app]
-    (viesti/nayta! (toimenpiteet/toimenpiteiden-toiminto-suoritettu
-                     (count (:valitut-toimenpide-idt app)) "siirretty") :success)
-    (assoc app :toimenpiteiden-siirto-kaynnissa? false
-               :valitut-toimenpide-idt #{}
-               :toimenpiteet (filter
-                               (fn [toimenpide]
-                                 (not ((:valitut-toimenpide-idt app)
-                                        (::kanavan-toimenpide/id toimenpide))))
-                               (:toimenpiteet app))))
-
-  ValitutEiSiirretty
-  (process-event [_ app]
-    (viesti/nayta! "Siiro epäonnistui" :danger)
-    (assoc app :toimenpiteiden-siirto-kaynnissa? false))
 
   UusiToimenpide
   (process-event [_ app]

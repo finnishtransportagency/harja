@@ -29,6 +29,7 @@
      ^{:key "valinnat"}
      [:div
       [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka-map]
+
       [valinnat/kanava-kohde
        (r/wrap (first (filter #(= (::kohde/id %) (get-in app [:valinnat :kanava-kohde-id])) kohteet))
                (fn [uusi]
@@ -36,22 +37,16 @@
        (into [nil] kohteet)
        #(let [nimi (kohde/fmt-kohteen-nimi %)]
           (if (empty? nimi) "Kaikki" nimi))]
+      
       [valinnat/kanava-huoltokohde
        (r/wrap (first (filter #(= (::huoltokohde/id %) (get-in app [:valinnat :huoltokohde-id])) huoltokohteet))
          #(e! (tiedot/->PaivitaValinnat {:huoltokohde-id (::huoltokohde/id %)})))
        (into [nil] huoltokohteet)
        #(or (::huoltokohde/nimi %) "Kaikki")]]
+     
      ^{:key "toiminnot"}
      [valinnat/urakkatoiminnot {:urakka urakka-map :sticky? true}
       
-      ; Piilotetaan nappi kanavaurakoilta
-      (when (not (urakka-domain/kanavaurakka? urakka-map))
-        ^{:key "uusi-nappi"}
-        [napit/yleinen-ensisijainen
-         "Siirrä valitut muutos- ja lisätöihin"
-         (fn [_]
-           (e! (tiedot/->SiirraValitut)))
-         {:disabled (zero? (count (:valitut-toimenpide-idt app)))}])
       [napit/uusi
        "Uusi toimenpide"
        (fn [_]
@@ -71,34 +66,17 @@
      :tyhja (if haku-kaynnissa? [ajax-loader "Haetaan toimenpiteitä"] "Ei toimenpiteitä")
      :jarjesta ::kanavan-toimenpide/pvm
      :tunniste ::kanavan-toimenpide/id
-     
      :raporttivienti #{:excel :pdf}
      :raporttiparametrit (raportit/urakkaraportin-parametrit
-                           (:id @nav/valittu-urakka)
+                           (:id @navigaatio/valittu-urakka)
                            :kanavien-kokonaishintaiset-toimenpiteet
-                           {:urakka @nav/valittu-urakka
-                            :hallintayksikko @nav/valittu-hallintayksikko
-                            :aikavali @u/valittu-aikavali
-                            :urakkatyyppi (:tyyppi @nav/valittu-urakka)})
-     }
-    (toimenpiteet-view/toimenpidesarakkeet
-      e! app
-      {:kaikki-valittu?-fn #(= (count (:toimenpiteet app))
-                               (count (:valitut-toimenpide-idt app)))
-       :otsikko-valittu-fn (fn [uusi-arvo]
-                             (e! (tiedot/->ValitseToimenpiteet
-                                   {:kaikki-valittu? uusi-arvo})))
-       :rivi-valittu?-fn (fn [rivi]
-                           (boolean ((:valitut-toimenpide-idt app)
-                                     (::kanavan-toimenpide/id rivi))))
-       :rivi-valittu-fn (fn [rivi uusi-arvo]
-                          (e! (tiedot/->ValitseToimenpide
-                                {:id (::kanavan-toimenpide/id rivi)
-                                 :valittu? uusi-arvo})))})
+                           {:urakka @navigaatio/valittu-urakka
+                            :hallintayksikko @navigaatio/valittu-hallintayksikko
+                            :aikavali @urakkatiedot/valittu-aikavali
+                            :urakkatyyppi (:tyyppi @navigaatio/valittu-urakka)})}
+    (toimenpiteet-view/toimenpidesarakkeet)
     (sort-by ::kanavan-toimenpide/pvm >
       (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet))]])
-
-
 
 (defn kokonaishintainen-toimenpidelomake [e! app]
   [toimenpiteet-view/toimenpidelomake app {:tyhjenna-fn #(e! (tiedot/->TyhjennaAvattuToimenpide))
