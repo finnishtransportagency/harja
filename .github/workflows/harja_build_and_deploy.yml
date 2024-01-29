@@ -156,17 +156,6 @@ jobs:
           # Lataa buildattu image paikallisesti 'docker images':iin tämän jobin käyttöön
           load: true
 
-      #      - name: Build and tag Harja app test image
-      #        id: build-test-image
-      #        env:
-      #          IMAGE_TAG: ${{ github.sha }}
-      #          DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
-      #        run: |
-      #          echo "Building an image with a tag $IMAGE_TAG"
-      #          docker build -t harja-app-test:$IMAGE_TAG --file $DOCKERFILE_PATH .
-      #
-      #          echo "image=harja-app-test:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@d43c1f16c00cfd3978dde6c07f4bbcf9eb6993ca # v0.16.1
         with:
