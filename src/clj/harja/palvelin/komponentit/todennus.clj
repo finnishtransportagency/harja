@@ -164,14 +164,14 @@ on nil."
                  "oam_user_mail" "oam_user_mobile"])))
 
 (defn prosessoi-apikayttaja-header
-  "Integraatioväylä välittää apikäyttäjän tunnuksen Harjaan username-nimisessä headerissä.
+  "Integraatioväylä välittää apikäyttäjän tunnuksen Harjaan harja-api-username-nimisessä headerissä.
   Koodissa käyttäjätieto luetaan oam_remote_user-headeristä. Muutetaan headerin nimi, jotta tarvittava apikäyttäjätunnus saadaan käyttöön.
   Tilannetta jolloin cognito-headereitten käsittelystä syntyy oam_remote_user ja headereissa on välitetty username, ei pitäisi syntyä.
   Ylikirjoitetaan kuitenkin varalta mahdollinen ylimääräinen oam_remote_user-header.
   Funktio suoritetaan pilvipuolella, kun koka- ei oam-headereitä ei saada kutsun yhteydessä."
   [headerit]
-  (if (get headerit "username")
-    (assoc-in headerit ["oam_remote_user"] (get headerit "username"))
+  (if (get headerit "harja-api-username")
+    (assoc-in headerit ["oam_remote_user"] (get headerit "harja-api-username"))
     headerit))
 
 (defn prosessoi-kayttaja-headerit
