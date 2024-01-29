@@ -104,6 +104,8 @@ jobs:
       id-token: write
       # Contents is needed for the checkout action
       contents: read
+      # Sarif-upload
+      security-events: write
 
     steps:
       - name: Checkout code
