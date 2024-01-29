@@ -1,0 +1,64 @@
+{
+  "paikkauskohteet": [
+    {
+      "yhaId": 123,
+      "harjaId": 10203,
+      "kohdenumero": 456,
+      "kohdetyyppi": "päällyste",
+      "nimi": "Mt 88 Malmitie",
+      "tunnus": "Esimerkkitunnus 1",
+      "tierekisteriosoiteväli": {
+        "tienumero": 88,
+        "aosa": 6,
+        "aet": 0,
+        "losa":  7,
+        "let": 6218,
+        "karttapäivämäärä": "2023-01-29"
+      },
+      "alikohteet": [
+        {
+          "yhaId": 234,
+          "harjaId": 20304,
+          "tierekisteriosoiteväli": {
+            "tienumero": 88,
+            "aosa": 6,
+            "aet": 0,
+            "losa": 6 ,
+            "let": 6316,
+            "karttapäivämäärä": "2023-01-29"
+          },
+          "päällystetoimenpide": {
+            "uusi-päällyste": "asfalttibetoni",
+            "raekoko": 1,
+            "massamenekki": 100,
+            "kokonaismassamäärä": 456,
+            "rc-prosentti": 50,
+            "kuulamylly": "AN19",
+            "päällystetyömenetelmä": "massapintaus"
+          }
+        },
+        {
+          "yhaId": 234,
+          "harjaId": 20304,
+          "tierekisteriosoiteväli": {
+            "tienumero": 88,
+            "aosa": 7,
+            "aet": 0,
+            "losa": 7 ,
+            "let": 6218,
+            "karttapäivämäärä": "2023-01-29"
+          },
+          "päällystetoimenpide": {
+            "uusi-päällyste": "asfalttibetoni",
+            "raekoko": 1,
+            "massamenekki": 100,
+            "kokonaismassamäärä": 448,
+            "rc-prosentti": 50,
+            "kuulamylly": "AN19",
+            "päällystetyömenetelmä": "massapintaus"
+          }
+        }
+      ]
+    }
+  ]
+}
