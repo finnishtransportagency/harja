@@ -165,10 +165,7 @@
                  [org.clojure/data.xml "0.0.8"]]
   :managed-dependencies [[org.apache.poi/poi "5.2.5"]
                          [org.apache.poi/poi-scratchpad "5.2.5"]
-                         [org.apache.poi/poi-ooxml "5.2.5"]
-                         ;; Joku kirjasto, ottaa googlen gson kirjaston matkaan ja riiputtaa mukana vanhaa versiota.
-                         ;; lein deps :tree komento ei osaa kertoa, että mikä kirjasto se on, joten pakotetaan se uudempaan.
-                         [com.google.code.gson/gson "2.10.1"]]
+                         [org.apache.poi/poi-ooxml "5.2.5"]]
   :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
