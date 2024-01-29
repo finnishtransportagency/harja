@@ -5,6 +5,7 @@
             [harja.domain.roolit :as roolit]
             [harja.domain.urakka :as urakka]
             [harja.domain.lupaus-domain :as lupaus-domain]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.tiedot.istunto :as istunto]
@@ -28,11 +29,7 @@
 
 ;; TODO: Parempi olisi muokata tämä käyttämään normaalia oikeustarkistusta.
 (defn onko-oikeudet-tehda-paatos? [urakka-id]
-  (or
-    (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja)
-    (roolit/roolissa? @istunto/kayttaja roolit/ely-paakayttaja)
-    (roolit/jvh? @istunto/kayttaja)
-    (roolit/rooli-urakassa? @istunto/kayttaja roolit/ely-urakanvalvoja urakka-id)))
+  (oikeudet/voi-kirjoittaa? oikeudet/urakat-kulut-valikatselmus urakka-id @istunto/kayttaja))
 
 (defn- onko-hoitokausi-tulevaisuudessa? [hoitokausi nykyhetki]
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first hoitokausi))
