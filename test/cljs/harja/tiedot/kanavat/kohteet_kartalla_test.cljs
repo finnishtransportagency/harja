@@ -112,8 +112,6 @@
     (reset! kohteet-kartalla/karttataso-kohteet true)
     ;; Laitetaan kokonaishintasten tilaksi joku generoitu arvo
     (reset! kokonaishintaiset/tila kokonaishintaiset-tila)
-    (log "2@kohteet-kartalla/aktiivinen-nakyma" (pr-str @kohteet-kartalla/aktiivinen-nakyma))
-    (log "2@kohteet-kartalla/naytettavat-kanavakohteet" (pr-str @kohteet-kartalla/naytettavat-kanavakohteet))
     (is (= (count (-> @kohteet-kartalla/aktiivinen-nakyma :tila :gridissa-olevat-kohteen-tiedot))
            (count @kohteet-kartalla/naytettavat-kanavakohteet))
         "Kartalla pitäisi olla yhtä monta näytettävää kohdetta, kuin mitä toimenpiteitä on tehty")
