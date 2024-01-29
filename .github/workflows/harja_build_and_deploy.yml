@@ -135,6 +135,7 @@ jobs:
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
           BUILD_PLATFORMS: linux/amd64
         with:
+          context: .
           file: ${{ env.DOCKERFILE_PATH }}
           platforms: ${{ env.BUILD_PLATFORMS }}
           tags: ${{ env.GH_DOCKER_REGISTRY }}/finnishtransportagency/harja_buildtest:${{ env.IMAGE_TAG }}
