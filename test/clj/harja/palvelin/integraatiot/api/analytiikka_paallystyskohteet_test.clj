@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.api.analytiikka-paikkauskohteet-test
+(ns harja.palvelin.integraatiot.api.analytiikka-paallystyskohteet-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
@@ -18,8 +18,8 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
-(deftest paikkauskohteiden-haku-esimerkki-validoituu
-  (let [esimerkki (slurp "resources/api/examples/analytiikka-paikkauskohteiden-haku-response.json")]
-    (is (= nil (json/validoi json-skeemat/+analytiikka-paikkauskohteiden-haku-vastaus+ esimerkki false)))
-    )
-  )
+(deftest paallystyskohteiden-haku-esimerkki-validoituu
+  (let [paallystyskohteet-esimerkki (slurp "resources/api/examples/analytiikka-paallystyskohteiden-haku-response.json")
+        aikataulut-esimerkki (slurp "resources/api/examples/analytiikka-paallystyskohteiden-aikataulujen-haku-response.json")]
+    (is (nil? (json/validoi json-skeemat/+analytiikka-paallystyskohteiden-haku-vastaus+ paallystyskohteet-esimerkki false)))
+    (is (nil? (json/validoi json-skeemat/+analytiikka-paallystyskohteiden-aikataulujen-haku-vastaus+ aikataulut-esimerkki false)))))

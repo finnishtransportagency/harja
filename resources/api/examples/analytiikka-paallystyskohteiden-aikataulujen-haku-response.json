@@ -1,0 +1,26 @@
+{
+  "aikataulut": [
+    {
+      "paallystyskohde": 10203,
+      "kohdeAloitettu": "2023-05-01T14:10:00+00:00",
+      "paallystysAloitettu": "2023-05-02T13:20:00+00:00",
+      "paallystysValmis": "2023-05-03T15:25:00+00:00",
+      "valmisTiemerkintaan": "2023-05-04T13:25:00+00:00",
+      "tiemerkintaTakaraja": "2023-05-05T15:30:00+00:00",
+      "tiemerkintaAloitettu": "2023-05-06T13:40:00+00:00",
+      "tiemerkintaValmis": "2023-05-07T15:45:00+00:00",
+      "kohdeValmis": "2023-05-08T13:55:00+00:00"
+    },
+    {
+      "paallystyskohde": 10204,
+      "kohdeAloitettu": "2023-06-01T14:10:00+00:00",
+      "paallystysAloitettu": "2023-06-02T13:20:00+00:00",
+      "paallystysValmis": null,
+      "valmisTiemerkintaan": null,
+      "tiemerkintaTakaraja": null,
+      "tiemerkintaAloitettu": null,
+      "tiemerkintaValmis": null,
+      "kohdeValmis": null
+    }
+  ]
+}

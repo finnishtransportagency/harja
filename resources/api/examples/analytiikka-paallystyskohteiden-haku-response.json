@@ -1,0 +1,105 @@
+{
+  "paikkauskohteet": [
+    {
+      "yhaId": 123,
+      "harjaId": 10203,
+      "urakka": 789,
+      "kohdenumero": 456,
+      "kohdetyyppi": "päällyste",
+      "nimi": "Mt 88 Malmitie",
+      "tunnus": "Esimerkkitunnus 1",
+      "tierekisteriosoitevali": {
+        "tienumero": 88,
+        "aosa": 6,
+        "aet": 0,
+        "losa": 7,
+        "let": 6218,
+        "karttapaivamaara": "2023-01-29"
+      },
+      "alikohteet": [
+        {
+          "yhaId": 234,
+          "harjaId": 20304,
+          "tierekisteriosoitevali": {
+            "tienumero": 88,
+            "aosa": 6,
+            "aet": 0,
+            "losa": 6,
+            "let": 6316,
+            "karttapaivamaara": "2023-01-29"
+          },
+          "paallystetoimenpide": {
+            "uusi-paallyste": "asfalttibetoni",
+            "raekoko": 1,
+            "massamenekki": 100,
+            "kokonaismassamaara": 456,
+            "rc-prosentti": 50,
+            "kuulamylly": "AN19",
+            "paallystetyomenetelma": "massapintaus"
+          }
+        },
+        {
+          "yhaId": 235,
+          "harjaId": 20305,
+          "tierekisteriosoitevali": {
+            "tienumero": 88,
+            "aosa": 7,
+            "aet": 0,
+            "losa": 7,
+            "let": 6218,
+            "karttapaivamaara": "2023-01-29"
+          },
+          "paallystetoimenpide": {
+            "uusi-paallyste": "asfalttibetoni",
+            "raekoko": 1,
+            "massamenekki": 100,
+            "kokonaismassamaara": 448,
+            "rc-prosentti": 50,
+            "kuulamylly": "AN19",
+            "paallystetyomenetelma": "massapintaus"
+          }
+        }
+      ]
+    },
+    {
+      "yhaId": 124,
+      "harjaId": 10204,
+      "urakka":  789,
+      "kohdenumero": 457,
+      "kohdetyyppi": "päällyste",
+      "nimi": "Mt 86 Paavolantie",
+      "tunnus": "Esimerkkitunnus 2",
+      "tierekisteriosoitevali": {
+        "tienumero": 86,
+        "aosa": 20,
+        "aet": 0,
+        "losa": 20,
+        "let": 355,
+        "karttapaivamaara": "2023-01-29"
+      },
+      "alikohteet": [
+        {
+          "yhaId": 236,
+          "harjaId": 20306,
+          "tierekisteriosoitevali": {
+            "tienumero": 86,
+            "aosa": 20,
+            "aet": 0,
+            "losa": 20,
+            "let": 335,
+            "karttapaivamaara": "2023-01-29"
+          },
+          "paallystetoimenpide": {
+            "uusi-paallyste": "asfalttibetoni",
+            "raekoko": 1,
+            "massamenekki": 100,
+            "kokonaismassamaara": 24,
+            "rc-prosentti": 50,
+            "kuulamylly": "AN19",
+            "paallystetyomenetelma": "massapintaus"
+          }
+        }
+      ]
+    }
+  ]
+}

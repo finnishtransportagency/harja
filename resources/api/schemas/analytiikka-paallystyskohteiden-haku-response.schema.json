@@ -11,7 +11,7 @@
         "required": [
           "harjaId",
           "kohdetyyppi",
-          "tierekisteriosoiteväli",
+          "tierekisteriosoitevali",
           "alikohteet"
         ],
         "properties": {
@@ -22,47 +22,9 @@
             "type": "number"
           },
           "urakka": {
-            "type": "object",
-            "required": [
-              "yhaId",
-              "harjaId",
-              "tunnus"
-            ],
-            "properties": {
-              "yhaId": {
-                "type": "number",
-                "multipleOf": 1
-              },
-              "harjaId": {
-                "type": "number",
-                "multipleOf": 1
-              },
-              "nimi": {
-                "type": "string"
-              },
-              "elyt": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "vuodet": {
-                "type": "array",
-                "items": {
-                  "type": "integer",
-                  "multipleOf": 1
-                }
-              },
-              "sampotunnus": {
-                "type": "string",
-                "maxLength": 50
-              },
-              "tunnus": {
-                "description": "Urakan tunnus YHAssa",
-                "type": "string",
-                "maxLength": 20
-              }
-            }
+            "type": "integer",
+            "description": "Urakan ID HARJAn tietokannassa, eli HarjaId.",
+            "multipleOf": 1
           },
           "kohdenumero": {
             "type": "number",
@@ -84,8 +46,8 @@
             "type": "string",
             "maxLength": 30
           },
-          "tierekisteriosoiteväli": {
-            "$ref": "#/definitions/tierekisteriosoiteväli"
+          "tierekisteriosoitevali": {
+            "$ref": "#/definitions/tierekisteriosoitevali"
           },
           "alikohteet": {
             "type": "array",
@@ -93,7 +55,7 @@
               "type": "object",
               "required": [
                 "harjaId",
-                "tierekisteriosoiteväli"
+                "tierekisteriosoitevali"
               ],
               "properties": {
                 "yhaId": {
@@ -102,14 +64,14 @@
                 "harjaId": {
                   "type": "number"
                 },
-                "tierekisteriosoiteväli": {
-                  "$ref": "#/definitions/tierekisteriosoiteväli"
+                "tierekisteriosoitevali": {
+                  "$ref": "#/definitions/tierekisteriosoitevali"
                 },
-                "päällystetoimenpide": {
+                "paallystetoimenpide": {
                   "type": "object",
                   "properties": {
-                    "uusi-päällyste": {
-                      "$ref": "#/definitions/päällyste"
+                    "uusi-paallyste": {
+                      "$ref": "#/definitions/paallyste"
                     },
                     "raekoko": {
                       "type": "integer",
@@ -123,7 +85,7 @@
                       "minimum": 0,
                       "maximum": 999
                     },
-                    "kokonaismassamäärä": {
+                    "kokonaismassamaara": {
                       "description": "Yhteensä käytetty massa tonneina",
                       "type": "number"
                     },
@@ -136,8 +98,8 @@
                     "kuulamylly": {
                       "$ref": "#/definitions/kuulamylly"
                     },
-                    "päällystetyömenetelmä": {
-                      "$ref": "#/definitions/päällystetyömenetelmä"
+                    "paallystetyomenetelma": {
+                      "$ref": "#/definitions/paallystetyomenetelma"
                     }
                   }
                 }
@@ -149,7 +111,7 @@
     }
   },
   "definitions": {
-    "tierekisteriosoiteväli": {
+    "tierekisteriosoitevali": {
       "type": "object",
       "required": [
         "tienumero",
@@ -159,7 +121,7 @@
         "let"
       ],
       "properties": {
-        "karttapaivamäärä": {
+        "karttapaivamaara": {
           "type": "string",
           "format": "date"
         },
@@ -190,7 +152,7 @@
         }
       }
     },
-    "päällyste": {
+    "paallyste": {
       "type": "string",
       "enum": [
         "betoni",
@@ -224,7 +186,7 @@
         "Ei tietoa"
       ]
     },
-    "päällystetyömenetelmä": {
+    "paallystetyomenetelma": {
       "type": "string",
       "enum": [
         "paksuudeltaan vakio laatta",
