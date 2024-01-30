@@ -65,6 +65,8 @@ jobs:
         id: slack
         uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001
         # Lähetetään virheviesti, mikäli tämä tai tests-jobi ei palauta success
+        # TODO: Tämä virheviesti lähtee myös jos koko deployment workflow tai testit canceloidaan.
+        #       Pitäisikö erillisessä stepissä tarkastaa needs.test.result == 'cancelled' ja kertoa, että deployment peruttiin?
         if: ${{ job.status != 'success' || needs.tests.result != 'success' }}
         with:
           # Slack Block Kit -tyyppinen rikastettu viesti
