@@ -1117,15 +1117,15 @@ BEGIN
                                   hj_palkkio_laskutetaan + hj_erillishankinnat_laskutetaan + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan +
                                   hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan;
 
-            -- Tavoitehintaan sisältyy: Hankinnat, Johto- ja Hallintokorvaukset, (hoidonjohto tässä), Erillishankinnat, HJ-Palkkio.
+            -- Tavoitehintaan sisältyy: Hankinnat, Johto- ja Hallintokorvaukset, (hoidonjohto tässä), Erillishankinnat, HJ-Palkkio, Äkilliset hoitotyöt.
             -- Tavoitehintaan ei sisälly: Lisätyöt, Sanktiot, Suolasanktiot, Bonukset, Hoitovuoden päättämiseen liittyvät kulut.
             tavoitehintaiset_laskutettu :=
                         hankinnat_laskutettu + tilaajan_rahavaraukset_laskutettu + johto_ja_hallinto_laskutettu + hj_erillishankinnat_laskutettu +
-                        hj_palkkio_laskutettu;
+                        hj_palkkio_laskutettu + akilliset_laskutettu;
 
             tavoitehintaiset_laskutetaan :=
                         hankinnat_laskutetaan + tilaajan_rahavaraukset_laskutetaan + johto_ja_hallinto_laskutetaan + hj_erillishankinnat_laskutetaan +
-                        hj_palkkio_laskutetaan;
+                        hj_palkkio_laskutetaan + akilliset_laskutetaan;
 
             RAISE NOTICE '
     Yhteenveto:';

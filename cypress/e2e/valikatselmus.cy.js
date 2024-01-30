@@ -3,6 +3,7 @@ const testiaika = new Date(2021, 9, 15, 12).getTime() // Urakan 1. vuoden loppu
 
 describe('Välikatselmus aukeaa', () => {
     it('Välikatselmuksen voi avata kustannusten seurannasta', () => {
+        cy.intercept('POST', 'urakan-kustannusten-seuranta-paaryhmittain' ).as('hae-kustannukset')
         cy.viewport(1100, 2000)
         cy.visit('/')
         cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa', {timeout}).click()
@@ -10,6 +11,7 @@ describe('Välikatselmus aukeaa', () => {
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Iin MHU 2021-2026', {timeout}).click()
         cy.get('[data-cy=tabs-taso1-Kulut]').click()
         cy.get('[data-cy="tabs-taso2-Kustannusten seuranta"]').click()
+        cy.wait('@hae-kustannukset')
         cy.get('[data-cy=hoitokausi-valinta]').valinnatValitse({valinta: '1. hoitovuosi (2021—2022)'})
         cy.contains('Tee välikatselmus').click()
         cy.contains('Välikatselmuksen päätökset')

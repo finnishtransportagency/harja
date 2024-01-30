@@ -72,3 +72,11 @@
     (varusteet/hae-varusteen-historia this tiedot))
   (tuo-velho-nimikkeisto [this]
     (varusteet/tuo-velho-nimikkeisto this)))
+
+;; Käyttö replissä
+(comment
+  (def j harja.palvelin.main/harja-jarjestelma)
+  (def asetukset (get-in j [:velho-integraatio :asetukset]))
+  (varusteet/tuo-velho-nimikkeisto {:integraatioloki (:integraatioloki j)
+                                    :db (:db j)
+                                    :asetukset asetukset}))

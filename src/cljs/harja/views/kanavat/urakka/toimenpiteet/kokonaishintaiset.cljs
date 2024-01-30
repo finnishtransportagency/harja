@@ -26,6 +26,7 @@
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.yleiset :as yleiset]
             [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
             [reagent.core :as r]
             [taoensso.timbre :as log]
             [harja.tiedot.kartta :as kartta-tiedot])
@@ -33,7 +34,7 @@
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
 
-(defn hakuehdot [e! app kohteet]
+(defn hakuehdot [e! {:keys [huoltokohteet] :as app} kohteet]
   (let [urakka-map (get-in app [:valinnat :urakka])]
     [valinnat/urakkavalinnat {:urakka urakka-map}
      ^{:key "valinnat"}
@@ -45,7 +46,12 @@
                  (e! (tiedot/->PaivitaValinnat {:kanava-kohde-id (::kohde/id uusi)}))))
        (into [nil] kohteet)
        #(let [nimi (kohde/fmt-kohteen-nimi %)]
-          (if (empty? nimi) "Kaikki" nimi))]]
+          (if (empty? nimi) "Kaikki" nimi))]
+      [valinnat/kanava-huoltokohde
+       (r/wrap (first (filter #(= (::huoltokohde/id %) (get-in app [:valinnat :huoltokohde-id])) huoltokohteet))
+         #(e! (tiedot/->PaivitaValinnat {:huoltokohde-id (::huoltokohde/id %)})))
+       (into [nil] huoltokohteet)
+       #(or (::huoltokohde/nimi %) "Kaikki")]]
      ^{:key "toiminnot"}
      [valinnat/urakkatoiminnot {:urakka urakka-map :sticky? true}
       

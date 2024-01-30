@@ -154,7 +154,7 @@
 
    (s/optional-key :yha-velho) {}
 
-   ;; TODO: Siirtymävaiheen jälkeen sms-url ja apiavain ei enää ole valinnainen paramteri
+   ;; TODO: Siirtymävaiheen jälkeen sms-url ja apiavain ei enää ole valinnainen paramteri #yliheitto
    (s/optional-key :labyrintti) {:url s/Str
                                  :kayttajatunnus s/Str
                                  :salasana s/Str
@@ -200,6 +200,9 @@
                         :db-replica {:paivitystiheys-ms s/Int
                                      :replikoinnin-max-viive-ms s/Int}}
    (s/optional-key :palautevayla) {:url s/Str
+                                   ;; TODO: Käyttäjätunnus ja salasana ovat käytössä vanhassa Harja-ympäristössä. Poista kun ei tarvita. #yliheitto
+                                   ;; TODO: Muuta samalla myös :apiavain pakolliseksi.
+                                   (s/optional-key :apiavain) s/Str
                                    :kayttajatunnus s/Str
                                    :salasana s/Str
                                    :paivitysaika [s/Num]}})

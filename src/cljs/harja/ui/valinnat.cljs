@@ -170,26 +170,17 @@
                              aikavali
                              (if-not aikavalin-rajoitus
                               (pvm/varmista-aikavali-opt aikavali paa)
-                              (pvm/varmista-aikavali-opt aikavali aikavalin-rajoitus paa)))))
-         tarkasta-esitettavat-arvot! (fn [uusi-aikavali]
-                                       (r/next-tick (fn []
-                                                      (let [[uusi-alku uusi-loppu] uusi-aikavali]
-                                                        (when-not (= @aikavalin-alku uusi-alku)
-                                                          (reset! aikavalin-alku uusi-alku))
-                                                        (when-not (= @aikavalin-loppu uusi-loppu)
-                                                          (reset! aikavalin-loppu uusi-loppu))))))]
+                              (pvm/varmista-aikavali-opt aikavali aikavalin-rajoitus paa)))))]
      (komp/luo
        (komp/sisaan-ulos #(do
                             (add-watch aikavalin-alku :ui-valinnat-aikavalin-alku
                                        (fn [_ _ vanha-arvo uusi-arvo]
                                          (let [uusi-arvo (uusi-aikavali :alku uusi-arvo)]
-                                           (tarkasta-esitettavat-arvot! uusi-arvo)
                                            (when-not (= vanha-arvo uusi-arvo)
                                              (reset! valittu-aikavali-atom uusi-arvo)))))
                             (add-watch aikavalin-loppu :ui-valinnat-aikavalin-loppu
                                        (fn [_ _ vanha-arvo uusi-arvo]
                                          (let [uusi-arvo (uusi-aikavali :loppu uusi-arvo)]
-                                           (tarkasta-esitettavat-arvot! uusi-arvo)
                                            (when-not (= vanha-arvo uusi-arvo)
                                              (reset! valittu-aikavali-atom uusi-arvo)))))
                             (add-watch valittu-aikavali-atom
@@ -524,6 +515,15 @@
    [livi-pudotusvalikko {:valinta @valittu-aluslaji-atom
                          :format-fn format-fn
                          :valitse-fn #(reset! valittu-aluslaji-atom %)}
+    kohteet]])
+
+(defn kanava-huoltokohde
+  [valittu-huoltokohde-atom kohteet format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Huoltokohde"]
+   [livi-pudotusvalikko {:valinta @valittu-huoltokohde-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-huoltokohde-atom %)}
     kohteet]])
 
 (defn urakkavalinnat [{:keys [urakka]} & sisalto]

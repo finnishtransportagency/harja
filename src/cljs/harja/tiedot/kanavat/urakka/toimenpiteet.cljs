@@ -26,7 +26,8 @@
    ::kanavatoimenpide/kanava-toimenpidetyyppi tyyppi
    :alkupvm (first (:aikavali valinnat))
    :loppupvm (second (:aikavali valinnat))
-   ::kanavatoimenpide/kohde-id (:kanava-kohde-id valinnat)})
+   ::kanavatoimenpide/kohde-id (:kanava-kohde-id valinnat)
+   ::kanavatoimenpide/huoltokohde-id (:huoltokohde-id valinnat)})
 
 (defn esitaytetty-toimenpidelomake [kayttaja urakka]
   {::kanavatoimenpide/sopimus-id (:paasopimus urakka)

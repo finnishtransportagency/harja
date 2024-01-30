@@ -42,7 +42,7 @@
 (defn hae-urakan-maksuerat
   "Palvelu, joka palauttaa urakan maksuerät."
   [db user urakka-id]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-maksuerat user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-maksuerat user urakka-id)
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
   (let [summat (into {}
                      (map (juxt :tpi_id identity))
@@ -61,7 +61,7 @@
 (defn laheta-maksuerat-sampoon
   "Palvelu, joka lähettää annetut maksuerät Sampoon."
   [db user {:keys [api-sampo maksueranumerot urakka-id]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-maksuerat user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-maksuerat user urakka-id)
   (mapv (fn [maksueranumero]
           (laheta-maksuera-sampoon api-sampo db user maksueranumero))
         maksueranumerot))
