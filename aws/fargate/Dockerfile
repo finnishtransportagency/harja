@@ -16,7 +16,9 @@ VOLUME ["/tmp"]
 
 # Aseta aikavyöhyke
 RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki apt-get -y install tzdata
+    && DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki apt-get -y install tzdata \
+    && cp /usr/share/zoneinfo/Europe/Helsinki /etc/localtime \
+    && echo "Europe/Helsinki" > /etc/timezone
 
 # Asenna apurit
 RUN apt-get update && apt-get install -y \
