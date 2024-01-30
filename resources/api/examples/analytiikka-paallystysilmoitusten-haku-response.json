@@ -2,6 +2,23 @@
   "paallystysilmoitukset": [
     {
       "paallystyskohde": 10203,
+      "takuupaivamaara": "2024-06-01",
+      "toteutunutHinta": 87895.50,
+      "alustalleTehdytToimet": [
+        {
+          "tierekisteriosoitevali": {
+            "tienumero": 88,
+            "aosa": 6,
+            "aet": 0,
+            "losa": 6,
+            "let": 6316,
+            "karttapaivamaara": "2023-01-29"
+          },
+          "kasittelymenetelma": "Kantavan kerroksen AB",
+          "tekninenToimenpide": "kevyt rakenteen parantaminen",
+          "massamenekki": 150
+        }
+      ],
       "alikohteet": [
         {
           "alikohde": 20304,
@@ -14,16 +31,14 @@
             "let": 6316,
             "karttapaivamaara": "2023-01-29"
           },
-          "takuupaivamaara": "2024-06-01",
-          "toteutunutHinta": 87895.50,
           "paallystystoimenpide": {
             "leveys": 7.2,
-            "pinta-ala": 45475.2,
-            "uusi-paallyste": "asfalttibetoni",
+            "pintaAla": 45475.2,
+            "uusiPaallyste": "asfalttibetoni",
             "raekoko": 16,
             "massamenekki": 100,
             "kokonaismassamaara": 4547.52,
-            "rc-prosentti": 50,
+            "rcProsentti": 50,
             "kuulamylly": "AN19",
             "paallystetyomenetelma": "massapintaus"
           },

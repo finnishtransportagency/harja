@@ -35,11 +35,11 @@
             "karttapaivamaara": "2023-01-29"
           },
           "paallystystoimenpide": {
-            "uusi-paallyste": "asfalttibetoni",
+            "uusiPaallyste": "asfalttibetoni",
             "raekoko": 1,
             "massamenekki": 100,
             "kokonaismassamaara": 456,
-            "rc-prosentti": 50,
+            "rcProsentti": 50,
             "kuulamylly": "AN19",
             "paallystetyomenetelma": "massapintaus"
           }
@@ -56,11 +56,11 @@
             "karttapaivamaara": "2023-01-29"
           },
           "paallystystoimenpide": {
-            "uusi-paallyste": "asfalttibetoni",
+            "uusiPaallyste": "asfalttibetoni",
             "raekoko": 1,
             "massamenekki": 100,
             "kokonaismassamaara": 448,
-            "rc-prosentti": 50,
+            "rcProsentti": 50,
             "kuulamylly": "AN19",
             "paallystetyomenetelma": "massapintaus"
           }
@@ -102,11 +102,11 @@
             "karttapaivamaara": "2023-01-29"
           },
           "paallystystoimenpide": {
-            "uusi-paallyste": "asfalttibetoni",
+            "uusiPaallyste": "asfalttibetoni",
             "raekoko": 1,
             "massamenekki": 100,
             "kokonaismassamaara": 24,
-            "rc-prosentti": 50,
+            "rcProsentti": 50,
             "kuulamylly": "AN19",
             "paallystetyomenetelma": "massapintaus"
           }

@@ -26,8 +26,9 @@
             "type": "number",
             "multipleOf": 0.01
           },
-          "alustalle-tehdyt-toimet": {
+          "alustalleTehdytToimet": {
             "type": "array",
+            "additionalProperties": false,
             "items": {
               "type": "object",
               "properties": {
@@ -117,6 +118,7 @@
             "minItems": 1,
             "items": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "alikohde": {
                   "type": "integer",
@@ -189,18 +191,19 @@
     },
     "paallystystoimenpide": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "leveys": {
           "type": "number",
           "description": "Yksikkö: Metri",
           "multipleOf": 0.01
         },
-        "pinta-ala": {
+        "pintaAla": {
           "type": "number",
           "description": "Yksikkö: Neliömetri",
           "multipleOf": 0.01
         },
-        "uusi-paallyste": {
+        "uusiPaallyste": {
           "$ref": "#/definitions/paallyste"
         },
         "raekoko": {
@@ -216,7 +219,7 @@
           "description": "Yhteensä käytetty massa tonneina",
           "type": "number"
         },
-        "rc-prosentti": {
+        "rcProsentti": {
           "type": "integer",
           "multipleOf": 1,
           "minimum": 0,
