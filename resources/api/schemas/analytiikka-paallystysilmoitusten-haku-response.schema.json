@@ -8,114 +8,134 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["paikkauskohde"],
-        "properties": {
-          "paikkauskohde": {
-            "type": "integer",
-            "description": "Paikkauskohteen ID HARJAn tietokannassa, eli HarjaId",
-            "multipleOf": 1
-          },
-        }
-      }
-    },
-    "paikkauskohteet": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
         "required": [
-          "harjaId",
-          "kohdetyyppi",
-          "tierekisteriosoitevali",
+          "paallystyskohde",
           "alikohteet"
         ],
         "properties": {
-          "yhaId": {
-            "type": "number"
-          },
-          "harjaId": {
-            "type": "number"
-          },
-          "urakka": {
+          "paallystyskohde": {
             "type": "integer",
-            "description": "Urakan ID HARJAn tietokannassa, eli HarjaId.",
+            "description": "Päällystyskohteen ID HARJAn tietokannassa, eli HarjaId",
             "multipleOf": 1
           },
-          "kohdenumero": {
+          "takuupaivamaara": {
+            "type": "string",
+            "format": "date"
+          },
+          "toteutunutHinta": {
             "type": "number",
-            "multipleOf": 1
+            "multipleOf": 0.01
           },
-          "kohdetyyppi": {
-            "type": "string",
-            "enum": [
-              "päällyste",
-              "kevytliikenne",
-              "sora"
-            ]
-          },
-          "nimi": {
-            "type": "string",
-            "maxLength": 30
-          },
-          "tunnus": {
-            "type": "string",
-            "maxLength": 30
-          },
-          "tierekisteriosoitevali": {
-            "$ref": "#/definitions/tierekisteriosoitevali"
-          },
-          "alikohteet": {
+          "alustalle-tehdyt-toimet": {
             "type": "array",
             "items": {
               "type": "object",
-              "required": [
-                "harjaId",
-                "tierekisteriosoitevali"
-              ],
               "properties": {
-                "yhaId": {
-                  "type": "number"
+                "tierekisteriosoitevali": {
+                  "$ref": "#/definitions/tierekisteriosoitevali"
                 },
-                "harjaId": {
-                  "type": "number"
+                "kasittelymenetelma": {
+                  "type": "string",
+                  "enum": [
+                    "Massanvaihto",
+                    "AB",
+                    "Verkko",
+                    "REM-TAS",
+                    "Bitumiemulsiostabilointi",
+                    "Vaahtobitumistabilointi",
+                    "Remix-stabilointi",
+                    "Sementtistabilointi",
+                    "Masuunihiekkastabilointi",
+                    "Komposiittistabilointi",
+                    "Kantavan kerroksen AB",
+                    "Sidekerroksen AB",
+                    "Murske",
+                    "Sekoitusjyrsintä",
+                    "Kuumennustasaus",
+                    "Massatasaus",
+                    "Tasausjyrsintä",
+                    "Laatikkojyrsintä",
+                    "Reunajyrsintä",
+                    "ei tietoa"
+                  ]
+                },
+                "kasittelypaksuus": {
+                  "type": "integer",
+                  "multipleOf": 1,
+                  "description": "Yksikkö: Senttimetri"
+                },
+                "verkkotyyppi": {
+                  "type": "string",
+                  "enum": [
+                    "Teräsverkko",
+                    "Lasikuituverkko",
+                    "Muoviverkko",
+                    "Lujitekangas",
+                    "Suodatinkangas",
+                    "Muu materiaali"
+                  ]
+                },
+                "verkonTarkoitus": {
+                  "type": "string",
+                  "enum": [
+                    "Pituushalkeamien ehkäisy",
+                    "Muiden routavaurioiden ehkäisy",
+                    "Levennyksen tukeminen",
+                    "Painumien ehkäisy",
+                    "Moniongelmaisen tukeminen",
+                    "Muu tarkoitus"
+                  ]
+                },
+                "verkonSijainti": {
+                  "type": "string",
+                  "enum": [
+                    "Päällysteessä",
+                    "Kantavan kerroksen yläpinnassa",
+                    "Kantavassa kerroksessa",
+                    "Kantavan kerroksen alapinnassa",
+                    "Muu sijainti"
+                  ]
+                },
+                "tekninenToimenpide": {
+                  "type": "string",
+                  "enum": [
+                    "rakentaminen",
+                    "suuntauksen parantaminen",
+                    "rakenteen parantaminen",
+                    "kevyt rakenteen parantaminen",
+                    "ei tietoa"
+                  ]
+                },
+                "massamenekki": {
+                  "$ref": "#/definitions/massamenekki"
+                }
+              }
+            }
+          },
+          "alikohteet": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "alikohde": {
+                  "type": "integer",
+                  "description": "Alikohteen ID HARJAn tietokannassa, eli HarjaId",
+                  "multipleOf": 1
+                },
+                "poistettu": {
+                  "type": "boolean"
                 },
                 "tierekisteriosoitevali": {
                   "$ref": "#/definitions/tierekisteriosoitevali"
                 },
-                "paallystetoimenpide": {
-                  "type": "object",
-                  "properties": {
-                    "uusi-paallyste": {
-                      "$ref": "#/definitions/paallyste"
-                    },
-                    "raekoko": {
-                      "type": "integer",
-                      "multipleOf": 1,
-                      "minimum": 0,
-                      "maximum": 99
-                    },
-                    "massamenekki": {
-                      "description": "Käytetty massa kg/m2",
-                      "type": "number",
-                      "minimum": 0,
-                      "maximum": 999
-                    },
-                    "kokonaismassamaara": {
-                      "description": "Yhteensä käytetty massa tonneina",
-                      "type": "number"
-                    },
-                    "rc-prosentti": {
-                      "type": "integer",
-                      "multipleOf": 1,
-                      "minimum": 0,
-                      "maximum": 100
-                    },
-                    "kuulamylly": {
-                      "$ref": "#/definitions/kuulamylly"
-                    },
-                    "paallystetyomenetelma": {
-                      "$ref": "#/definitions/paallystetyomenetelma"
-                    }
+                "paallystystoimenpide": {
+                  "$ref": "#/definitions/paallystystoimenpide"
+                },
+                "materiaalit": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/materiaali"
                   }
                 }
               }
@@ -167,6 +187,99 @@
         }
       }
     },
+    "paallystystoimenpide": {
+      "type": "object",
+      "properties": {
+        "leveys": {
+          "type": "number",
+          "description": "Yksikkö: Metri",
+          "multipleOf": 0.01
+        },
+        "pinta-ala": {
+          "type": "number",
+          "description": "Yksikkö: Neliömetri",
+          "multipleOf": 0.01
+        },
+        "uusi-paallyste": {
+          "$ref": "#/definitions/paallyste"
+        },
+        "raekoko": {
+          "type": "integer",
+          "multipleOf": 1,
+          "minimum": 0,
+          "maximum": 99
+        },
+        "massamenekki": {
+          "$ref": "#/definitions/massamenekki"
+        },
+        "kokonaismassamaara": {
+          "description": "Yhteensä käytetty massa tonneina",
+          "type": "number"
+        },
+        "rc-prosentti": {
+          "type": "integer",
+          "multipleOf": 1,
+          "minimum": 0,
+          "maximum": 100
+        },
+        "kuulamylly": {
+          "$ref": "#/definitions/kuulamylly"
+        },
+        "paallystetyomenetelma": {
+          "$ref": "#/definitions/paallystetyomenetelma"
+        }
+      }
+    },
+    "materiaali": {
+      "type": "object",
+      "properties": {
+        "kiviainesesiintymanNimi": {
+          "type": "string"
+        },
+        "kiviaineksenKmArvo": {
+          "type": "string",
+          "description": "Kiviaineksen kuulamyllyarvo"
+        },
+        "kiviaineksenMuotoarvo": {
+          "type": "string"
+        },
+        "sideainetyyppi": {
+          "type": "string",
+          "enum": [
+            "20/30",
+            "35/50",
+            "50/70",
+            "70/100",
+            "100/150",
+            "160/220",
+            "250/330",
+            "330/430",
+            "500/650",
+            "650/900",
+            "V1500",
+            "V3000",
+            "KB65",
+            "KB75",
+            "KB85",
+            "BL5",
+            "BL2K",
+            "BL2 Bio",
+            "BE-L",
+            "BE-SIP",
+            "BE-SOP",
+            "BE-PAB",
+            "Ei tietoa"
+          ]
+        },
+        "sideainepitoisuus": {
+          "type": "number",
+          "multipleOf": 0.1
+        },
+        "lisaAineet": {
+          "type": "string"
+        }
+      }
+    },
     "paallyste": {
       "type": "string",
       "enum": [
@@ -187,6 +300,12 @@
         "sora",
         "ei päällystetyyppiä"
       ]
+    },
+    "massamenekki": {
+      "description": "Käytetty massa kg/m2",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 999
     },
     "kuulamylly": {
       "type": "string",

@@ -1,0 +1,44 @@
+{
+  "paallystysilmoitukset": [
+    {
+      "paallystyskohde": 10203,
+      "alikohteet": [
+        {
+          "alikohde": 20304,
+          "poistettu": false,
+          "tierekisteriosoitevali": {
+            "tienumero": 88,
+            "aosa": 6,
+            "aet": 0,
+            "losa": 6,
+            "let": 6316,
+            "karttapaivamaara": "2023-01-29"
+          },
+          "takuupaivamaara": "2024-06-01",
+          "toteutunutHinta": 87895.50,
+          "paallystystoimenpide": {
+            "leveys": 7.2,
+            "pinta-ala": 45475.2,
+            "uusi-paallyste": "asfalttibetoni",
+            "raekoko": 16,
+            "massamenekki": 100,
+            "kokonaismassamaara": 4547.52,
+            "rc-prosentti": 50,
+            "kuulamylly": "AN19",
+            "paallystetyomenetelma": "massapintaus"
+          },
+          "materiaalit": [
+            {
+              "kiviainesesiintymanNimi": "Vittakangas",
+              "kiviaineksenKmArvo": "19.0",
+              "kiviaineksenMuotoarvo": "FI35",
+              "sideainetyyppi": "100/150",
+              "sideainepitoisuus": 5.2,
+              "lisaAineet": "Tartuke: 0.4%"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

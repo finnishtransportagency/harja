@@ -16,10 +16,12 @@
         ],
         "properties": {
           "yhaId": {
-            "type": "number"
+            "type": "integer",
+            "multipleOf": 1
           },
           "harjaId": {
-            "type": "number"
+            "type": "integer",
+            "multipleOf": 1
           },
           "urakka": {
             "type": "integer",
@@ -27,7 +29,7 @@
             "multipleOf": 1
           },
           "kohdenumero": {
-            "type": "number",
+            "type": "integer",
             "multipleOf": 1
           },
           "kohdetyyppi": {
@@ -91,41 +93,8 @@
                 "tierekisteriosoitevali": {
                   "$ref": "#/definitions/tierekisteriosoitevali"
                 },
-                "paallystetoimenpide": {
-                  "type": "object",
-                  "properties": {
-                    "uusi-paallyste": {
-                      "$ref": "#/definitions/paallyste"
-                    },
-                    "raekoko": {
-                      "type": "integer",
-                      "multipleOf": 1,
-                      "minimum": 0,
-                      "maximum": 99
-                    },
-                    "massamenekki": {
-                      "description": "Käytetty massa kg/m2",
-                      "type": "number",
-                      "minimum": 0,
-                      "maximum": 999
-                    },
-                    "kokonaismassamaara": {
-                      "description": "Yhteensä käytetty massa tonneina",
-                      "type": "number"
-                    },
-                    "rc-prosentti": {
-                      "type": "integer",
-                      "multipleOf": 1,
-                      "minimum": 0,
-                      "maximum": 100
-                    },
-                    "kuulamylly": {
-                      "$ref": "#/definitions/kuulamylly"
-                    },
-                    "paallystetyomenetelma": {
-                      "$ref": "#/definitions/paallystetyomenetelma"
-                    }
-                  }
+                "paallystystoimenpide": {
+                  "$ref": "#/definitions/paallystystoimenpide"
                 }
               }
             }
@@ -234,6 +203,52 @@
         "vauriopaikkaus",
         "ei tietoa"
       ]
+    },
+    "paallystystoimenpide": {
+      "type": "object",
+      "properties": {
+        "leveys": {
+          "type": "number",
+          "description": "Yksikkö: Metri",
+          "multipleOf": 0.01
+        },
+        "pinta-ala": {
+          "type": "number",
+          "description": "Yksikkö: Neliömetri",
+          "multipleOf": 0.01
+        },
+        "uusi-paallyste": {
+          "$ref": "#/definitions/paallyste"
+        },
+        "raekoko": {
+          "type": "integer",
+          "multipleOf": 1,
+          "minimum": 0,
+          "maximum": 99
+        },
+        "massamenekki": {
+          "description": "Käytetty massa kg/m2",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 999
+        },
+        "kokonaismassamaara": {
+          "description": "Yhteensä käytetty massa tonneina",
+          "type": "number"
+        },
+        "rc-prosentti": {
+          "type": "integer",
+          "multipleOf": 1,
+          "minimum": 0,
+          "maximum": 100
+        },
+        "kuulamylly": {
+          "$ref": "#/definitions/kuulamylly"
+        },
+        "paallystetyomenetelma": {
+          "$ref": "#/definitions/paallystetyomenetelma"
+        }
+      }
     }
   }
 }

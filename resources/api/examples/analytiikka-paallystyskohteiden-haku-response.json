@@ -34,7 +34,7 @@
             "let": 6316,
             "karttapaivamaara": "2023-01-29"
           },
-          "paallystetoimenpide": {
+          "paallystystoimenpide": {
             "uusi-paallyste": "asfalttibetoni",
             "raekoko": 1,
             "massamenekki": 100,
@@ -55,7 +55,7 @@
             "let": 6218,
             "karttapaivamaara": "2023-01-29"
           },
-          "paallystetoimenpide": {
+          "paallystystoimenpide": {
             "uusi-paallyste": "asfalttibetoni",
             "raekoko": 1,
             "massamenekki": 100,
@@ -101,7 +101,7 @@
             "let": 335,
             "karttapaivamaara": "2023-01-29"
           },
-          "paallystetoimenpide": {
+          "paallystystoimenpide": {
             "uusi-paallyste": "asfalttibetoni",
             "raekoko": 1,
             "massamenekki": 100,
