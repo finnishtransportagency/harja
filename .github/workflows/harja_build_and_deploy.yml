@@ -154,7 +154,7 @@ jobs:
 
   scan-and-test-image:
     runs-on: ubuntu-latest
-    needs: [ tests, build-harja ]
+    needs: build-harja
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -239,7 +239,7 @@ jobs:
   deploy-to-ecs-manually:
     uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
     if: ${{ github.event_name == 'workflow_dispatch' }}
-    needs: scan-and-test-image
+    needs: [ tests, scan-and-test-image ]
     # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -261,7 +261,7 @@ jobs:
   deploy-to-ecs-matrix:
     uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
     if: ${{ github.event_name == 'workflow_run' }}
-    needs: scan-and-test-image
+    needs: [ tests, scan-and-test-image ]
     # Deployment ajetaan automaattisesti dev ympäristöön ja stg ympäristöön
     # TODO: Suunniteltava miten prod-deployment hoidetaan automaattisesti
     #       tai semi-automaattisesti hyväksyntäprosessilla (github environment protection rules)
