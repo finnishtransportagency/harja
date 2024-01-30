@@ -14,8 +14,13 @@ LABEL version="1.0"
 RUN mkdir -p /tmp && chmod 1777 /tmp
 VOLUME ["/tmp"]
 
-# Asenna apurit
+# Aseta aikavyöhyke
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki apt-get -y install tzdata \
+    && cp /usr/share/zoneinfo/Europe/Helsinki /etc/localtime \
+    && echo "Europe/Helsinki" > /etc/timezone
 
+# Asenna apurit
 RUN apt-get update && apt-get install -y \
     bash \
     curl \
