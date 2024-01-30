@@ -53,8 +53,7 @@ jobs:
       artifact-prefix: ${{ matrix.configs.artifactPrefix }}
       # Ei tehdä turhaan lint-testausta develop-branchille. Löydökset käsitellään PR:ien yhteydessä.
       lint-clj: 'false'
-      # Develop-branchille ajetaan täysi Harja-build, joka kestää pidempään.
-      build-harja: 'full'
+      build-harja: 'light'
 
   # Tarkistaa testijobin yleisen statuksen ja lähettää notifikaation, mikäli jotain meni pieleen
   check-tests-status-and-notify:
