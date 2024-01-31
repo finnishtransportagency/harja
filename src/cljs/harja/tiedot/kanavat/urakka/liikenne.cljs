@@ -146,8 +146,7 @@
                          (:kayttajan-urakat (:valinnat valittu-tila)))
 
         urakkaa-valittuna (count valitut-urakat)
-        raporttiparametrit {:valitut-urakat valitut-urakat
-                            :alkupvm (first (:aikavali (:valinnat valittu-tila)))
+        raporttiparametrit {:alkupvm (first (:aikavali (:valinnat valittu-tila)))
                             :loppupvm (second (:aikavali (:valinnat valittu-tila)))
                             :urakkatyyppi :vesivayla-kanavien-hoito
                             :yhteenveto (:yhteenveto valittu-tila)

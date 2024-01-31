@@ -85,10 +85,11 @@
       [(taulukko tiedot)
        (osion-otsikko liikennetapahtuma-raportin-nimi)])))
 
-(defn suorita [db user {:keys [valitut-urakat parametrit hakuparametrit yhteenveto]}]
+(defn suorita [db user {:keys [urakkatyyppi parametrit hakuparametrit yhteenveto]}]
   (let [{:keys [alkupvm loppupvm]} parametrit
+        urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
         ;; Hae urakoiden lyhytnimet
-        lyhytnimet (urakat-q/hae-urakoiden-nimet db {:urakkatyyppi "vesivayla-kanavien-hoito" :vain-puuttuvat false :urakantila "kaikki"})
+        lyhytnimet (urakat-q/hae-urakoiden-nimet db {:urakkatyyppi urakkatyyppi :vain-puuttuvat false :urakantila "kaikki"})
         ;; Funktio suodatukseen 
         fn-suodata-urakat (fn [data idt]
                             (filter #(idt (:id %)) data))
