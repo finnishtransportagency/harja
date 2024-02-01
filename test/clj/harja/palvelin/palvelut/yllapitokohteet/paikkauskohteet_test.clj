@@ -119,7 +119,12 @@
                                         :paikkauskohteet-urakalle
                                         +kayttaja-jvh+
                                         {:urakka-id urakka-id})]
-    (is (> (count paikkauskohteet) 3))))
+    (is (> (count paikkauskohteet) 3))
+    ;; Vielä lisävarmistus, että tallennettuun paikkauskohteeseen tallentuu myös tierekisteriosoite ja se haetaan oikein
+    (is (= 22 (:tie (first paikkauskohteet))))
+    (is (= 10 (:aet (first paikkauskohteet))))
+    (is (= 20 (:let (first paikkauskohteet))))
+    (is (= 2 (:losa (first paikkauskohteet))))))
 
 (deftest luo-uusi-paikkauskohde-virheellisin-tiedoin-testi
   (let [urakka-id @kemin-alueurakan-2019-2023-id
