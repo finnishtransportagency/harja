@@ -14,20 +14,79 @@ on:
         description: 'Valitse deploy-ympäristö'
         type: environment
         required: true
- # Käynnistä workflow automaattisesti, kun Harja: Test develop on suoriutunut loppuun
-  workflow_run:
-    workflows: [ "Harja: Test develop" ]
-    branches:
-      - develop
-    types:
-      - completed
-
 
 env:
   GH_DOCKER_REGISTRY: ghcr.io
 
-
+# Testit ja build ajetaan rinnakkain, jotta ne suorituisivat mahdollisimman nopeasti
 jobs:
+  tests:
+    uses: ./.github/workflows/reusable_run_app_tests.yml
+    # Permissions
+    # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    # https://docs.github.com/en/actions/using-workflows/reusing-workflows#access-and-permissions
+    permissions:
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
+      packages: read
+      # Actions write oikeudella voidaan esim. listata ja poistaa artifacteja
+      actions: write
+      # Tarvitaan test-reportin julkaisuun PR:ssä
+      checks: write
+    strategy:
+      # Halutaan, että kaikki testit käydään läpi.
+      # Yksittäinen flaky testi ei saa kaataa koko testimatriisia.
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä
+        configs: [
+          { testDBService: "harjadb-latest", e2eBrowsers: [ 'chrome' ], artifactPrefix: 'harjadb-latest_' }
+        ]
+
+    with:
+      test-db-service: ${{ matrix.configs.testDBService }}
+      e2e-browsers: ${{ toJSON(matrix.configs.e2eBrowsers) }}
+      # Artifactien nimet täytyy prefixata, jotta jokainen matrix-job tuottaa uniikit build artifactit
+      # ja nimeltään toisistaan erottuvat Test Reportit
+      artifact-prefix: ${{ matrix.configs.artifactPrefix }}
+      # Ei tehdä turhaan lint-testausta develop-branchille. Löydökset käsitellään PR:ien yhteydessä.
+      lint-clj: 'false'
+      build-harja: 'light'
+
+  # Tarkistaa testijobin yleisen statuksen ja lähettää notifikaation, mikäli jotain meni pieleen
+  check-tests-status-and-notify:
+    needs: tests
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send deploy failure message to Slack
+        id: slack
+        uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001
+        # Lähetetään virheviesti, mikäli tämä tai tests-jobi ei palauta success
+        # TODO: Tämä virheviesti lähtee myös jos koko deployment workflow tai testit canceloidaan.
+        #       Pitäisikö erillisessä stepissä tarkastaa needs.test.result == 'cancelled' ja kertoa, että deployment peruttiin?
+        if: ${{ job.status != 'success' || needs.tests.result != 'success' }}
+        with:
+          # Slack Block Kit -tyyppinen rikastettu viesti
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":warning: Develop-branchin testeissä tapahtui virhe!\n${{ env.JOB_RUN_URL }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+          JOB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
   build-harja:
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
@@ -92,12 +151,96 @@ jobs:
           JOB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
 
+  # -- Scan Harja image -- #
+
+  scan-and-test-image:
+    runs-on: ubuntu-latest
+    needs: build-harja
+
+    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    permissions:
+      # OIDC token is needed for AWS actions assume the role
+      id-token: write
+      # Contents is needed for the checkout action
+      contents: read
+      # Sarif-upload
+      security-events: write
+      # Packages write lupaa tarvitaan image cachen pushaamiseen GH Docker Registryyn
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download uberjar artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: harja-uberjar
+          # Download to the same directory as the uberjar is built to
+          path: ./target
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and tag Harja app test image
+        id: build-test-image
+        uses: docker/build-push-action@v5
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+          DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
+          BUILD_PLATFORMS: linux/amd64
+        with:
+          context: .
+          file: ${{ env.DOCKERFILE_PATH }}
+          platforms: ${{ env.BUILD_PLATFORMS }}
+          tags: ${{ env.GH_DOCKER_REGISTRY }}/finnishtransportagency/harja_buildtest:${{ env.IMAGE_TAG }}
+          labels: |
+            "commit=${{ github.sha }}"
+            org.opencontainers.image.title=harja_buildtest
+            org.opencontainers.image.source=https://github.com/finnishtransportagency/harja
+          # Cacheta, jotta tulevaisuuden buildit ovat nopeampia.
+          cache-from: type=registry,ref=${{ env.GH_DOCKER_REGISTRY }}/finnishtransportagency/harja_buildtest:buildcache
+          cache-to: type=registry,ref=${{ env.GH_DOCKER_REGISTRY }}/finnishtransportagency/harja_buildtest:buildcache,mode=max
+          # On myös mahdollista käyttää (experimental) GH Actions cachea: https://docs.docker.com/build/cache/backends/gha/
+          #cache-from: type=gha
+          #cache-to: type=gha,mode=max
+          # Disabloi provenance attestations: https://github.com/docker/build-push-action/issues/820
+          provenance: false
+          # Lataa buildattu image paikallisesti 'docker images':iin tämän jobin käyttöön
+          load: true
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@d43c1f16c00cfd3978dde6c07f4bbcf9eb6993ca # v0.16.1
+        with:
+          # Hae viittaus buildattuun imageen build-test-image stepin outputeista
+          image-ref: ${{ steps.build-test-image.outputs.imageid }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          # format: 'table'
+          # exit-code: '1'
+          # ignore-unfixed: true
+          scanners: vuln,secret,misconfig
+          vuln-type: 'os,library'
+          # severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
   # -- Deployment -- #
 
   deploy-to-ecs-manually:
     uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
     if: ${{ github.event_name == 'workflow_dispatch' }}
-    needs: build-harja
+    needs: [ tests, scan-and-test-image ]
     # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -119,13 +262,13 @@ jobs:
   deploy-to-ecs-matrix:
     uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
     if: ${{ github.event_name == 'workflow_run' }}
-    needs: build-harja
+    needs: [ tests, scan-and-test-image ]
     # Deployment ajetaan automaattisesti dev ympäristöön ja stg ympäristöön
     # TODO: Suunniteltava miten prod-deployment hoidetaan automaattisesti
     #       tai semi-automaattisesti hyväksyntäprosessilla (github environment protection rules)
     strategy:
       matrix:
-        environment: [dev, stg]
+        environment: [ dev, stg ]
     # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
