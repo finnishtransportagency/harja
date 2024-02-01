@@ -121,7 +121,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('button').contains('.nappi-ensisijainen', 'Tallenna', {timeout: clickTimeout}).click({force: true})
 
         // Varmista, että tallennus onnistui
-        cy.get('.toast-viesti', {timeout: 6000}).should('be.visible')
+        cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
 
         // Vaihda oikeaan vuoteen
         cy.get('label[for=filtteri-vuosi] + div').filtteriValitse({valinta: '2021'})
@@ -149,7 +149,8 @@ describe('Paikkauskohteet latautuu oikein', function () {
         // Vahvista tilaus
         cy.get('button').contains('.nappi-ensisijainen', 'Tilaa kohde', {timeout: clickTimeout}).click({force: true})
         cy.wait('@tilaus', {timeout: 60000})
-
+        // Varmista, että tallennus onnistui
+        cy.get('.toast-viesti').contains('', 'Kohde tilattu', {timeout: 60000}).should('be.visible')
     })
 
     it('Lisää levittimellä tehtävälle paikkauskohteelle toteuma', function () {
@@ -182,7 +183,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('label[for=leveys] + span > input').type('5')
         cy.contains('Tallenna').should('not.be.disabled')
         cy.contains('Tallenna').click()
-        cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
+        cy.get('.toast-viesti').contains('', 'Toteuma tallennettu', {timeout: 60000}).should('be.visible')
     })
 
 
@@ -209,7 +210,7 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('label[for=leveys] + span > input').type('5')
         cy.contains('Tallenna').should('not.be.disabled')
         cy.contains('Tallenna').click()
-        cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
+        cy.get('.toast-viesti').contains('', 'Toteuma tallennettu', {timeout: 60000}).should('be.visible')
     })
 
     it('Tarkastellaan toteumaa', () => {
@@ -243,6 +244,7 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('.modal', {timeout: clickTimeout}).should('be.visible')
         cy.get('.modal').contains('Poista toteuma').click()
         cy.get('.modal', {timeout: clickTimeout}).should('not.exist')
+        cy.get('.toast-viesti').contains('', 'Toteuma poistettu', {timeout: 60000}).should('be.visible')
     })
 })
 
@@ -266,7 +268,6 @@ describe('Päällystysilmoitukset toimii', function () {
         cy.get('label[for=ajorata] + div').valinnatValitse({valinta: '1'})
         cy.get('label[for=aosa] + span > input').type("421")
         cy.get('label[for=aet] + span > input').type("225")
-
         cy.get('label[for=losa] + span > input').type("421")
         cy.get('label[for=let] + span > input').type("2000")
         // Ajankohta

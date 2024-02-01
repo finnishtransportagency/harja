@@ -481,7 +481,6 @@
                           {:id kohde-id
                            :muokattu (pvm/nyt)
                            :muokkaaja-id (:id user)}))
-
         ;; Jos annetulla kohteella on olemassa id, niin päivitetään. Muuten tehdään uusi
         kohde (when (empty? validointivirheet)
                 (let [p (if (id-olemassa? (:id paikkauskohde))
@@ -494,6 +493,7 @@
                                                                                               :urakka-id (:urakka-id kohde)}))]
                             haettu-paikkauskohde))]
                   p))]
+
     (if (empty? validointivirheet)
       kohde
       (throw+ {:type "Validaatiovirhe"

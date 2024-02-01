@@ -1,0 +1,352 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "paallystysilmoitukset": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "paallystyskohde",
+          "alikohteet"
+        ],
+        "properties": {
+          "paallystyskohde": {
+            "type": "integer",
+            "description": "Päällystyskohteen ID HARJAn tietokannassa, eli HarjaId",
+            "multipleOf": 1
+          },
+          "takuupaivamaara": {
+            "type": "string",
+            "format": "date"
+          },
+          "toteutunutHinta": {
+            "type": "number",
+            "multipleOf": 0.01
+          },
+          "alustalleTehdytToimet": {
+            "type": "array",
+            "additionalProperties": false,
+            "items": {
+              "type": "object",
+              "properties": {
+                "tierekisteriosoitevali": {
+                  "$ref": "#/definitions/tierekisteriosoitevali"
+                },
+                "kasittelymenetelma": {
+                  "type": "string",
+                  "enum": [
+                    "Massanvaihto",
+                    "AB",
+                    "Verkko",
+                    "REM-TAS",
+                    "Bitumiemulsiostabilointi",
+                    "Vaahtobitumistabilointi",
+                    "Remix-stabilointi",
+                    "Sementtistabilointi",
+                    "Masuunihiekkastabilointi",
+                    "Komposiittistabilointi",
+                    "Kantavan kerroksen AB",
+                    "Sidekerroksen AB",
+                    "Murske",
+                    "Sekoitusjyrsintä",
+                    "Kuumennustasaus",
+                    "Massatasaus",
+                    "Tasausjyrsintä",
+                    "Laatikkojyrsintä",
+                    "Reunajyrsintä",
+                    "ei tietoa"
+                  ]
+                },
+                "kasittelypaksuus": {
+                  "type": "integer",
+                  "multipleOf": 1,
+                  "description": "Yksikkö: Senttimetri"
+                },
+                "verkkotyyppi": {
+                  "type": "string",
+                  "enum": [
+                    "Teräsverkko",
+                    "Lasikuituverkko",
+                    "Muoviverkko",
+                    "Lujitekangas",
+                    "Suodatinkangas",
+                    "Muu materiaali"
+                  ]
+                },
+                "verkonTarkoitus": {
+                  "type": "string",
+                  "enum": [
+                    "Pituushalkeamien ehkäisy",
+                    "Muiden routavaurioiden ehkäisy",
+                    "Levennyksen tukeminen",
+                    "Painumien ehkäisy",
+                    "Moniongelmaisen tukeminen",
+                    "Muu tarkoitus"
+                  ]
+                },
+                "verkonSijainti": {
+                  "type": "string",
+                  "enum": [
+                    "Päällysteessä",
+                    "Kantavan kerroksen yläpinnassa",
+                    "Kantavassa kerroksessa",
+                    "Kantavan kerroksen alapinnassa",
+                    "Muu sijainti"
+                  ]
+                },
+                "tekninenToimenpide": {
+                  "type": "string",
+                  "enum": [
+                    "rakentaminen",
+                    "suuntauksen parantaminen",
+                    "rakenteen parantaminen",
+                    "kevyt rakenteen parantaminen",
+                    "ei tietoa"
+                  ]
+                },
+                "massamenekki": {
+                  "$ref": "#/definitions/massamenekki"
+                }
+              }
+            }
+          },
+          "alikohteet": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "alikohde": {
+                  "type": "integer",
+                  "description": "Alikohteen ID HARJAn tietokannassa, eli HarjaId",
+                  "multipleOf": 1
+                },
+                "poistettu": {
+                  "type": "boolean"
+                },
+                "tierekisteriosoitevali": {
+                  "$ref": "#/definitions/tierekisteriosoitevali"
+                },
+                "paallystystoimenpide": {
+                  "$ref": "#/definitions/paallystystoimenpide"
+                },
+                "materiaalit": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/materiaali"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "tierekisteriosoitevali": {
+      "type": "object",
+      "required": [
+        "tienumero",
+        "aosa",
+        "aet",
+        "losa",
+        "let"
+      ],
+      "properties": {
+        "karttapaivamaara": {
+          "type": "string",
+          "format": "date"
+        },
+        "tienumero": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Tien numero, jolle tieosoiteväli kohdistuu."
+        },
+        "aosa": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Tieosoitevälin alun tieosa"
+        },
+        "aet": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Etäisyys alkuosan sisällä"
+        },
+        "losa": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Tieosoitevälin lopun tieosa"
+        },
+        "let": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Etäisyys loppuosan sisällä"
+        }
+      }
+    },
+    "paallystystoimenpide": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "leveys": {
+          "type": "number",
+          "description": "Yksikkö: Metri",
+          "multipleOf": 0.01
+        },
+        "pintaAla": {
+          "type": "number",
+          "description": "Yksikkö: Neliömetri",
+          "multipleOf": 0.01
+        },
+        "uusiPaallyste": {
+          "$ref": "#/definitions/paallyste"
+        },
+        "raekoko": {
+          "type": "integer",
+          "multipleOf": 1,
+          "minimum": 0,
+          "maximum": 99
+        },
+        "massamenekki": {
+          "$ref": "#/definitions/massamenekki"
+        },
+        "kokonaismassamaara": {
+          "description": "Yhteensä käytetty massa tonneina",
+          "type": "number"
+        },
+        "rcProsentti": {
+          "type": "integer",
+          "multipleOf": 1,
+          "minimum": 0,
+          "maximum": 100
+        },
+        "kuulamylly": {
+          "$ref": "#/definitions/kuulamylly"
+        },
+        "paallystetyomenetelma": {
+          "$ref": "#/definitions/paallystetyomenetelma"
+        }
+      }
+    },
+    "materiaali": {
+      "type": "object",
+      "properties": {
+        "kiviainesesiintymanNimi": {
+          "type": "string"
+        },
+        "kiviaineksenKmArvo": {
+          "type": "string",
+          "description": "Kiviaineksen kuulamyllyarvo"
+        },
+        "kiviaineksenMuotoarvo": {
+          "type": "string"
+        },
+        "sideainetyyppi": {
+          "type": "string",
+          "enum": [
+            "20/30",
+            "35/50",
+            "50/70",
+            "70/100",
+            "100/150",
+            "160/220",
+            "250/330",
+            "330/430",
+            "500/650",
+            "650/900",
+            "V1500",
+            "V3000",
+            "KB65",
+            "KB75",
+            "KB85",
+            "BL5",
+            "BL2K",
+            "BL2 Bio",
+            "BE-L",
+            "BE-SIP",
+            "BE-SOP",
+            "BE-PAB",
+            "Ei tietoa"
+          ]
+        },
+        "sideainepitoisuus": {
+          "type": "number",
+          "multipleOf": 0.1
+        },
+        "lisaAineet": {
+          "type": "string"
+        }
+      }
+    },
+    "paallyste": {
+      "type": "string",
+      "enum": [
+        "betoni",
+        "kivi",
+        "avoin asfaltti",
+        "asfalttibetoni",
+        "epäjatkuva asfaltti",
+        "kivimastiksiasfaltti",
+        "kantavan kerroksen AB",
+        "bit.sidottu kantava ker.",
+        "valuasfaltti",
+        "pehmeä asfalttibetoni (b)",
+        "pehmeä asfalttibetoni (v)",
+        "pehmeä asfalttibetoni (o)",
+        "sirotepintaus",
+        "soratien pintaus",
+        "sora",
+        "ei päällystetyyppiä"
+      ]
+    },
+    "massamenekki": {
+      "description": "Käytetty massa kg/m2",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 999
+    },
+    "kuulamylly": {
+      "type": "string",
+      "enum": [
+        "AN5",
+        "AN7",
+        "AN10",
+        "AN14",
+        "AN19",
+        "AN30",
+        "AN22",
+        "Ei tietoa"
+      ]
+    },
+    "paallystetyomenetelma": {
+      "type": "string",
+      "enum": [
+        "paksuudeltaan vakio laatta",
+        "massapintaus",
+        "kuumennuspintaus",
+        "MP kuumalle tasatulle alustalle",
+        "remix-pintaus",
+        "2-kerroksinen remix-pintaus",
+        "PAB-O/V:n remix-pintaus",
+        "ART-pintaus",
+        "Novachip-massapintaus",
+        "karhinta",
+        "sorastus",
+        "soratien kevyt korjaus",
+        "soratien kelirikon poistava korjaus",
+        "soratien raskas rakenteen parantaminen",
+        "hienojyrsintä",
+        "sirotepintaus",
+        "urapaikkaus",
+        "ura-remix",
+        "vauriopaikkaus",
+        "ei tietoa"
+      ]
+    }
+  }
+}

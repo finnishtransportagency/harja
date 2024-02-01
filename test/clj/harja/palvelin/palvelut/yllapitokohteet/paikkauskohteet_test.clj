@@ -121,10 +121,13 @@
                                         +kayttaja-jvh+
                                         {:urakka-id urakka-id})]
     (is (> (count paikkauskohteet) 3))
-    ;; Seuraava testi ei mene läpi uusimmalla specql versiolla ilman muutoksia itse koodiin
-    (is (not (nil? (:tie (first paikkauskohteet)))))))
+    ;; Vielä lisävarmistus, että tallennettuun paikkauskohteeseen tallentuu myös tierekisteriosoite ja se haetaan oikein
+    (is (= 22 (:tie (first paikkauskohteet))))
+    (is (= 10 (:aet (first paikkauskohteet))))
+    (is (= 20 (:let (first paikkauskohteet))))
+    (is (= 1 (:losa (first paikkauskohteet))))))
 
-(deftest varmistellaan-specql->sql-muutos
+(deftest muokkaa-paikkauskohdetta-testi2
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         alkuperainen (into (sorted-map) {
                                          :paikkauskohteen-tila "ehdotettu"
