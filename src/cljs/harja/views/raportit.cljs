@@ -458,7 +458,6 @@
    "Turvallisuusraportti" :turvallisuus
    "Yksikköhintaiset työt kuukausittain" :yks-hint-kuukausiraportti
    "Yksikköhintaiset työt päivittäin" :yksikkohintaiset-tyot
-   "Yksikköhintaisten töiden raportti" :yksikkohintaiset-tyot
    "Yksikköhintaiset työt tehtävittäin" :yks-hint-tehtavien-summat
    "Ympäristöraportti" :ymparisto
    "Toimenpiteiden ajoittuminen" :toimenpideajat})
