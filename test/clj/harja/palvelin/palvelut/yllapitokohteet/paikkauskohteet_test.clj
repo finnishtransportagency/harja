@@ -163,9 +163,8 @@
                                          :urakka-id 37,
                                          :toteutunut-hinta nil,
                                          :takuuaika nil})
-        alkuperainen-vertailuun (-> alkuperainen
-                                  (dissoc :ilmoitettu-virhe :luoja-id :poistettu? :tarkistaja-id :tarkistettu :virhe
-                                    :yhalahetyksen-tila :luotu))
+        alkuperainen-vertailuun (dissoc alkuperainen :ilmoitettu-virhe :luoja-id :poistettu? :tarkistaja-id :tarkistettu
+                                  :virhe :yhalahetyksen-tila :luotu)
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
             :tallenna-paikkauskohde-urakalle
             +kayttaja-jvh+
@@ -195,8 +194,7 @@
             +kayttaja-jvh+
             paivitetty-vertailuun)
         ;; Asetetaan päivitetylle oletukset kuntoon
-        paivitetty-vertailuun (-> paivitetty-vertailuun
-                                (dissoc :id :tilattupvm))
+        paivitetty-vertailuun (dissoc paivitetty-vertailuun :id :tilattupvm)
         ;; HAetaan paikkauskohteet ja varmistetaan, että juuri päivitetty tuli päivitetyksi
         paivitetyt-paikkauskohteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                      :paikkauskohteet-urakalle
