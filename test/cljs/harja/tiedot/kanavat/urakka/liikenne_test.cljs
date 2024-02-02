@@ -531,7 +531,6 @@
     (vaadi-async-kutsut
       #{}
       (is (= {:liikennetapahtumien-haku-kaynnissa? true
-              :lataa-aloitustiedot false
               :valinnat {::ur/id 1 ::sop/id 1}}
              (e! (tiedot/->HaeLiikennetapahtumat)
                  {:liikennetapahtumien-haku-kaynnissa? true
@@ -573,7 +572,8 @@
                    ::lt/toiminnot [{::toiminto/palvelumuoto :muu
                                     ::toiminto/toimenpide :tyhjennys}]}]
     
-    (is (= {:valittu-liikennetapahtuma nil
+    (is (= {:lataa-aloitustiedot false 
+            :valittu-liikennetapahtuma nil
             :liikennetapahtumien-haku-kaynnissa? false
             :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false
             :haetut-tapahtumat [sulutus-alas sulutus-ylos sillan-avaus tyhjennys]
@@ -713,8 +713,7 @@
     (vaadi-async-kutsut
       #{tiedot/->HaeLiikennetapahtumat}
       (is (= {:valinnat {:foo 1
-                         ;; Molemmat aikavälit muuttunut joten palautetaan nil nil, bar ei pitäisi kuitenkaan tulla
-                         :aikavali [nil nil]}}
+                         :aikavali [1 1]}}
              (e! (tiedot/->PaivitaValinnat {:bar 2
                                             :aikavali [1 1]})
                  {:valinnat {:foo 1}})))))
@@ -781,7 +780,8 @@
         tapahtuma2 {::lt/kohde {::kohde/nimi "Iso mutka"}
                     ::lt/alukset [{::lt-alus/suunta :ylos
                                    ::lt-alus/nimi "Ronsu"}]}]
-    (is (= {:tallennus-kaynnissa? false
+    (is (= {:lataa-aloitustiedot false 
+            :tallennus-kaynnissa? false
             :rivimaara-ylittynyt false
             :valittu-liikennetapahtuma nil
             :liikennetapahtumien-haku-kaynnissa? false
