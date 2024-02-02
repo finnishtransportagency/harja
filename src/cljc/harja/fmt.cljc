@@ -1,13 +1,12 @@
 (ns harja.fmt
   "Yleisiä apureita erityyppisen datan formatointiin."
   (:require [harja.pvm :as pvm]
+            [harja.tyokalut.big :as big]
+            [clojure.string :as s]
     #?(:cljs [goog.i18n.currencyCodeMap])
     #?(:cljs [goog.i18n.NumberFormatSymbols])
     #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
-    #?(:cljs [goog.i18n.NumberFormat])
-            [clojure.string :as s]
-            [harja.tyokalut.big :as big]
-    #?(:cljs [harja.ui.ikonit :as ikonit]))
+    #?(:cljs [goog.i18n.NumberFormat]))
   #?(:clj
      (:import (java.text NumberFormat)
               (java.util Locale)

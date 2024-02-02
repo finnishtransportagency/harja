@@ -44,9 +44,10 @@
    :paikkauskohteen-tila "valmis"
    :tie 22
    :aosa 1
-   :losa 2
+   :losa 1
    :aet 10
    :let 20
+   :ajorata 0
    :yksikko "jm"
    :suunniteltu-hinta 1000.00
    :suunniteltu-maara 100
@@ -124,7 +125,93 @@
     (is (= 22 (:tie (first paikkauskohteet))))
     (is (= 10 (:aet (first paikkauskohteet))))
     (is (= 20 (:let (first paikkauskohteet))))
-    (is (= 2 (:losa (first paikkauskohteet))))))
+    (is (= 1 (:losa (first paikkauskohteet))))))
+
+(deftest muokkaa-paikkauskohdetta-testi2
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        alkuperainen (into (sorted-map) {
+                                         :paikkauskohteen-tila "ehdotettu"
+                                         :yksikko "kpl"
+                                         :tyomenetelma 11
+                                         :ulkoinen-id 1123423
+                                         :nimi "Testataan tierekisteriä"
+                                         :yllapitokohde-id nil,
+                                         :virhe nil,
+                                         :alkupvm #inst "2021-04-30T21:00:00.000-00:00",
+                                         :loppupvm #inst "2021-04-30T21:00:00.000-00:00",
+                                         :poistettu? false,
+                                         :yhalahetyksen-tila nil,
+                                         :suunniteltu-maara 355M,
+                                         :tilattupvm nil,
+                                         :tie 4,
+                                         :aosa 420,
+                                         :aet 0,
+                                         :losa 420,
+                                         :let 5000,
+                                         :ajorata 0,
+                                         :tarkistaja-id nil,
+                                         :valmistumispvm nil,
+                                         :luotu (pvm/nyt),
+                                         :tiemerkintapvm nil,
+                                         :tiemerkintaa-tuhoutunut? nil,
+                                         :lisatiedot nil,
+                                         :suunniteltu-hinta 40000M,
+                                         :tarkistettu nil,
+                                         :ilmoitettu-virhe nil,
+                                         :luoja-id 3,
+                                         :pot? false,
+                                         :urakka-id 37,
+                                         :toteutunut-hinta nil,
+                                         :takuuaika nil})
+        alkuperainen-vertailuun (dissoc alkuperainen :ilmoitettu-virhe :luoja-id :poistettu? :tarkistaja-id :tarkistettu
+                                  :virhe :yhalahetyksen-tila :luotu)
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-paikkauskohde-urakalle
+            +kayttaja-jvh+
+            alkuperainen)
+        ;; HAetaan paikkauskohteet ja varmistetaan, että juuri lisätty tuli mukaan
+        paikkauskohteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :paikkauskohteet-urakalle
+                          +kayttaja-jvh+
+                          {:urakka-id urakka-id})
+
+        tulos-vertailuun (-> (first paikkauskohteet)
+                           (dissoc :id :paikkaustyo-valmis? :pituus :pot-id :pot-paatos :pot-tila :pot-tyo-alkoi :pot-tyo-paattyi
+                             :pot-valmistumispvm :sijainti :toteutumien-maara :toteutunut-juoksumetri :toteumien-maara
+                             :toteutunut-kpl :toteutunut-massamaara :toteutunut-massamenekki :toteutunut-pinta-ala
+                             :toteutus-alkuaika :toteutus-loppuaika :muokattu :urakoitsija :urakoitsija :luotu)
+                           (into (sorted-map)))
+
+        ;; Päivitetään ja varmistetaan tiedot
+        paivitetty-vertailuun (assoc alkuperainen-vertailuun
+                                :id (:id (first paikkauskohteet))
+                                :aet 10
+                                :losa 4900
+                                :paikkauskohteen-tila "tilattu"
+                                :nimi "Testataan tierekisteriä - päivitetty")
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-paikkauskohde-urakalle
+            +kayttaja-jvh+
+            paivitetty-vertailuun)
+        ;; Asetetaan päivitetylle oletukset kuntoon
+        paivitetty-vertailuun (dissoc paivitetty-vertailuun :id :tilattupvm)
+        ;; HAetaan paikkauskohteet ja varmistetaan, että juuri päivitetty tuli päivitetyksi
+        paivitetyt-paikkauskohteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :paikkauskohteet-urakalle
+                                     +kayttaja-jvh+
+                                     {:urakka-id urakka-id})
+        tulos-paivitetty-vertailuun (-> (first paivitetyt-paikkauskohteet)
+                                      (dissoc :id :paikkaustyo-valmis? :pituus :pot-id :pot-paatos :pot-tila :pot-tyo-alkoi :pot-tyo-paattyi
+                                        :pot-valmistumispvm :sijainti :toteutumien-maara :toteutunut-juoksumetri :toteumien-maara
+                                        :toteutunut-kpl :toteutunut-massamaara :toteutunut-massamenekki :toteutunut-pinta-ala
+                                        :toteutus-alkuaika :toteutus-loppuaika :muokattu :urakoitsija :urakoitsija :luotu :tilattupvm)
+                                      (into (sorted-map)))]
+    (is (= (:tie alkuperainen-vertailuun) (:tie tulos-vertailuun)))
+    (is (= alkuperainen-vertailuun tulos-vertailuun))
+    (is (= paivitetty-vertailuun tulos-paivitetty-vertailuun))
+    ;; Muutama arvo on validoitava erikseen
+    (is (= (not (nil? (:id (first paivitetyt-paikkauskohteet))))))
+    (is (= (not (nil? (:tilattupvm (first paivitetyt-paikkauskohteet))))))))
 
 (deftest luo-uusi-paikkauskohde-virheellisin-tiedoin-testi
   (let [urakka-id @kemin-alueurakan-2019-2023-id
@@ -236,13 +323,14 @@
                                      :paikkauskohteen-tila "ehdotettu"
                                      :nimi "Tilamuutosten testikohde: ehdotettu2"))
         ;; Urakoitsija luo kohteen, joka on tilattu tilassa
+        tilattu-kohde (assoc (default-paikkauskohde (rand-int 999999))
+                        :urakka-id @kemin-alueurakan-2019-2023-id
+                        :paikkauskohteen-tila "tilattu"
+                        :nimi "Tilamuutosten testikohde: tilattu")
         tilattu (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-paikkauskohde-urakalle
                                 urakoitsija
-                                (assoc (default-paikkauskohde (rand-int 999999))
-                                  :urakka-id @kemin-alueurakan-2019-2023-id
-                                  :paikkauskohteen-tila "tilattu"
-                                  :nimi "Tilamuutosten testikohde: tilattu"))
+                                tilattu-kohde)
         ;; Urakoitsija luo kohteen, joka on hylatty
         hylatty (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-paikkauskohde-urakalle
