@@ -416,80 +416,83 @@
 
 (defn valinnat [e! {{:keys [kayttajan-urakat]} :valinnat :as app} kohteet]
   (let [atomi (partial tiedot/valinta-wrap e! app)
+        {lataa-aloitustiedot :lataa-aloitustiedot} app
         suunta-vaihtoehdot (keys @lt/suunnat-atom)
         suunta->str (fn [suunta] (@lt/suunnat-atom suunta))]
     [:div.liikennetapahtumien-suodattimet
-     [valinnat/urakkavalinnat
-      {}
-      ^{:key "valinnat"}
-      [valinnat/valintaryhmat-3
-       [:div.liikenne-valinnat
-        [:span.label-ja-kentta
-         [:span.kentan-otsikko "Urakat"]
-         [:div.kentta
-          [yleiset/livi-pudotusvalikko
-           {:naytettava-arvo (let [valittujen-urakoiden-maara (count (filter :valittu? kayttajan-urakat))]
-                               (str valittujen-urakoiden-maara (if (= 1 valittujen-urakoiden-maara)
-                                                                 " urakka valittu"
-                                                                 " urakkaa valittu")))
-            :itemit-komponentteja? true}
-           (mapv (fn [urakka]
-                    [:span.liikenne-urakat-suodatin
-                     [:div [:input {:type "checkbox"
-                                    ;; Kun tapahtumia haku kesken, disabloi urakoiden valinta
-                                    :disabled (or
-                                                (:liikennetapahtumien-haku-kaynnissa? app)
-                                                (:liikennetapahtumien-haku-tulee-olemaan-kaynnissa? app))
-                                    :checked (:valittu? urakka)
-                                    :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                  (e! (tiedot/->UrakkaValittu urakka valittu?)))}]]
-                     (:nimi urakka)])
-             kayttajan-urakat)]]]
-        [valinnat/aikavali (atomi :aikavali)]
-        [kentat/tee-otsikollinen-kentta
-         {:otsikko "Aluksen nimi"
-          :kentta-params {:tyyppi :string}
-          :arvo-atom (atomi ::lt-alus/nimi)}]]
+     ;; Näytä suodattimet kun aloitustiedot ladattu 
+     (when-not lataa-aloitustiedot
+       [valinnat/urakkavalinnat
+        {}
+        ^{:key "valinnat"}
+        [valinnat/valintaryhmat-3
+         [:div.liikenne-valinnat
+          [:span.label-ja-kentta
+           [:span.kentan-otsikko "Urakat"]
+           [:div.kentta
+            [yleiset/livi-pudotusvalikko
+             {:naytettava-arvo (let [valittujen-urakoiden-maara (count (filter :valittu? kayttajan-urakat))]
+                                 (str valittujen-urakoiden-maara (if (= 1 valittujen-urakoiden-maara)
+                                                                   " urakka valittu"
+                                                                   " urakkaa valittu")))
+              :itemit-komponentteja? true}
+             (mapv (fn [urakka]
+                     [:span.liikenne-urakat-suodatin
+                      [:div [:input {:type "checkbox"
+                                     ;; Kun tapahtumia haku kesken, disabloi urakoiden valinta
+                                     :disabled (or
+                                                 (:liikennetapahtumien-haku-kaynnissa? app)
+                                                 (:liikennetapahtumien-haku-tulee-olemaan-kaynnissa? app))
+                                     :checked (:valittu? urakka)
+                                     :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                   (e! (tiedot/->UrakkaValittu urakka valittu?)))}]]
+                      (:nimi urakka)])
+               kayttajan-urakat)]]]
+          [valinnat/aikavali (atomi :aikavali)]
+          [kentat/tee-otsikollinen-kentta
+           {:otsikko "Aluksen nimi"
+            :kentta-params {:tyyppi :string}
+            :arvo-atom (atomi ::lt-alus/nimi)}]]
 
-       [:div.liikenne-valinnat
-        [valinnat/kanava-kohde
-         (atomi ::lt/kohde)
-         (into [nil] kohteet)
-         #(let [nimi (kohde/fmt-kohteen-nimi %)]
-            (if-not (empty? nimi)
-              nimi
-              "Kaikki"))]
-        [kentat/tee-otsikollinen-kentta
-         {:otsikko "Aluslaji"
-          :kentta-params {:tyyppi :checkbox-group
-                          :palstoja 2
-                          :vaihtoehdot lt-alus/aluslajit
-                          :vaihtoehto-nayta lt-alus/aluslaji->laji-str}
-          :arvo-atom (atomi ::lt-alus/aluslajit)}]]
+         [:div.liikenne-valinnat
+          [valinnat/kanava-kohde
+           (atomi ::lt/kohde)
+           (into [nil] kohteet)
+           #(let [nimi (kohde/fmt-kohteen-nimi %)]
+              (if-not (empty? nimi)
+                nimi
+                "Kaikki"))]
+          [kentat/tee-otsikollinen-kentta
+           {:otsikko "Aluslaji"
+            :kentta-params {:tyyppi :checkbox-group
+                            :palstoja 2
+                            :vaihtoehdot lt-alus/aluslajit
+                            :vaihtoehto-nayta lt-alus/aluslaji->laji-str}
+            :arvo-atom (atomi ::lt-alus/aluslajit)}]]
 
-       [:div.liikenne-valinnat
-        [kentat/tee-otsikollinen-kentta
-         {:otsikko "Suunta"
-          :luokka "liikennetapahtuma-suunta-suodatin"
-          :kentta-params {:tyyppi :valinta
-                          :valinnat (into [nil] suunta-vaihtoehdot)
-                          :valinta-nayta #(or (suunta->str %) "Kaikki")}
-          :arvo-atom (atomi ::lt-alus/suunta)}]
-        [kentat/tee-otsikollinen-kentta
-         {:otsikko "Uittoniput"
-          :kentta-params {:tyyppi :checkbox
-                          :teksti "Näytä vain uittoniput"}
-          :arvo-atom (atomi :niput?)}]
-        [kentat/tee-otsikollinen-kentta
-         {:otsikko "Toimenpidetyyppi"
-          :kentta-params {:tyyppi :checkbox-group
-                          :vaihtoehdot lt/sulku-toimenpide-vaihtoehdot
-                          :vaihtoehto-nayta lt/sulku-toimenpide->str}
-          :arvo-atom (atomi ::toiminto/toimenpiteet)}]]]
-      [valinnat/urakkatoiminnot {:urakka @nav/valittu-urakka}
-       [napit/uusi
-        "Kirjaa liikennetapahtuma"
-        #(e! (tiedot/->ValitseTapahtuma (tiedot/uusi-tapahtuma)))]]]]))
+         [:div.liikenne-valinnat
+          [kentat/tee-otsikollinen-kentta
+           {:otsikko "Suunta"
+            :luokka "liikennetapahtuma-suunta-suodatin"
+            :kentta-params {:tyyppi :valinta
+                            :valinnat (into [nil] suunta-vaihtoehdot)
+                            :valinta-nayta #(or (suunta->str %) "Kaikki")}
+            :arvo-atom (atomi ::lt-alus/suunta)}]
+          [kentat/tee-otsikollinen-kentta
+           {:otsikko "Uittoniput"
+            :kentta-params {:tyyppi :checkbox
+                            :teksti "Näytä vain uittoniput"}
+            :arvo-atom (atomi :niput?)}]
+          [kentat/tee-otsikollinen-kentta
+           {:otsikko "Toimenpidetyyppi"
+            :kentta-params {:tyyppi :checkbox-group
+                            :vaihtoehdot lt/sulku-toimenpide-vaihtoehdot
+                            :vaihtoehto-nayta lt/sulku-toimenpide->str}
+            :arvo-atom (atomi ::toiminto/toimenpiteet)}]]]
+        [valinnat/urakkatoiminnot {:urakka @nav/valittu-urakka}
+         [napit/uusi
+          "Kirjaa liikennetapahtuma"
+          #(e! (tiedot/->ValitseTapahtuma (tiedot/uusi-tapahtuma)))]]])]))
 
 (def liikennetapahtumat-sarakkeet
   (let [suunta->str (fn [suunta] (@lt/suunnat-atom suunta))]

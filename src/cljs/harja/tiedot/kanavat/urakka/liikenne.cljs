@@ -294,9 +294,11 @@
                                  kaukopalvelut
                                  itsepalvelut
                                  muut)}
+
         app-yleiset (-> app
                       (assoc-in [:yhteenveto :toimenpiteet] toimenpiteet)
                       (assoc-in [:yhteenveto :palvelumuoto] palvelumuoto)
+                      (assoc :lataa-aloitustiedot false)
                       (assoc :liikennetapahtumien-haku-kaynnissa? false)
                       (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false)
                       (assoc :haetut-tapahtumat tulos)
@@ -599,9 +601,10 @@
     (assoc app :nakymassa? nakymassa?))
 
   HaeLiikennetapahtumat
-  (process-event [_ app]
+  (process-event [_ {:keys [lataa-aloitustiedot] :as app}]
     (if-not (:liikennetapahtumien-haku-kaynnissa? app)
-      (let [params (hakuparametrit app)]
+      (let [params (hakuparametrit app)
+            params (if lataa-aloitustiedot (select-keys params [:urakka-idt]) params)]
         (-> app
           (tt/post! :hae-liikennetapahtumat
             params
@@ -611,9 +614,8 @@
              :lahetetty ->HaeLiikennetapahtumatKutsuLahetetty
              :onnistui ->LiikennetapahtumatHaettu
              :epaonnistui ->LiikennetapahtumatEiHaettu})
-          (assoc :lataa-aloitustiedot false)
           (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? true)))
-      (assoc app :lataa-aloitustiedot false)))
+      app))
 
   HaeLiikennetapahtumatKutsuLahetetty
   (process-event [_ app]
@@ -706,18 +708,6 @@
                                       (some? (second aikavali-vanha)))
                                     (nil? (first aikavali-uusi))
                                     (nil? (second aikavali-uusi)))
-
-          ;; Jostain syystä, jos valitset minkä vaan alku ja / tai loppupvm
-          ;; -> vaihdat urakkaa murupolusta, aikaväliksi muuttuu itsestään hoitokausi joka ei tallennu app-stateen eikä haku välttämättä vastaa sitä
-          ;; En keksinyt tähän muuta kun koodata tämä päälle
-          uudet-valinnat (if
-                           (and
-                             (not= (first aikavali-vanha) (first aikavali-uusi))
-                             (not= (second aikavali-vanha) (second aikavali-uusi)))
-                           ;; Ignorataan jos molemmat vaihtuneet yhtäaikaa, mitä käyttäjä ei voi tehdä 
-                           (assoc uudet-valinnat :aikavali [nil nil])
-                           uudet-valinnat)
-
           ;; Onko tarve tehdä uutta hakua
           ;; Tässä katsotaan, muokkasiko, tai tyhjensikö käyttäjä aikaväli filtterin
           ;; Tämä tehty sen takia että ei tehdä turhia kutsuja, kun käyttäjä syöttää pelkästään alkupvm eikä loppupvm
@@ -872,11 +862,14 @@
                                              #{}
                                              (disj s id))))))
   AsetaAloitusTiedot
-  (process-event [{:keys [aikavali]} app]
+  (process-event [{:keys [aikavali valinnat]} app]
     (let [kanava-hallintayksikko (some
                                    #(when (= (:nimi %) "Kanavat ja avattavat sillat") (:id %))
-                                   @hallintayksikot/vaylamuodon-hallintayksikot)]
+                                   @hallintayksikot/vaylamuodon-hallintayksikot)
+          ;; Siivoa suodattimet kun urakkaa vaihdetaan murupolusta tai tullaan näkymään 
+          valinnat (select-keys valinnat [:kayttajan-urakat :urakka-idt])]
       (-> app
+        (assoc :valinnat valinnat)
         (assoc :lataa-aloitustiedot true)
         (assoc :liikennetapahtumien-haku-kaynnissa? false)
         (assoc-in [:valinnat :aikavali] aikavali)
@@ -899,10 +892,12 @@
       app))
 
   UrakkaValittu
-  (process-event [{{:keys [id]} :urakka valittu? :valittu?} app]
+  (process-event [{{:keys [id]} :urakka valittu? :valittu? lataa-aloitustiedot :lataa-aloitustiedot} app]
     (let [uudet-urakkavalinnat (map #(if (= (:id %) id)
                                        (assoc % :valittu? valittu?)
                                        %)
                                  (get-in app [:valinnat :kayttajan-urakat]))]
-      (tuck/process-event (->PaivitaValinnat {:kayttajan-urakat uudet-urakkavalinnat}) app)
+      ;; Älä tee turhia kutsuja
+      (when-not lataa-aloitustiedot 
+        (tuck/process-event (->PaivitaValinnat {:kayttajan-urakat uudet-urakkavalinnat}) app))
       (assoc-in app [:valinnat :kayttajan-urakat] uudet-urakkavalinnat))))
