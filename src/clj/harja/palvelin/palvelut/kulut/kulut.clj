@@ -140,7 +140,7 @@
 (defn hae-urakan-kulut
   "Palauttaa urakan kulut valitulta ajanjaksolta ilman kohdistuksia."
   [db user hakuehdot]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user (:urakka-id hakuehdot))
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user (:urakka-id hakuehdot))
   (q/hae-urakan-kulut db {:urakka   (:urakka-id hakuehdot)
                            :alkupvm  (:alkupvm hakuehdot)
                            :loppupvm (:loppupvm hakuehdot)}))
@@ -168,13 +168,13 @@
 (defn hae-urakan-kulut-kohdistuksineen
   "Palauttaa urakan kulut valitulta ajanjaksolta kohdistuksineen."
   [db user hakuehdot]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user (:urakka-id hakuehdot))
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user (:urakka-id hakuehdot))
   (hae-kulut-kohdistuksineen db hakuehdot))
 
 (defn hae-kulu-kohdistuksineen
   "Hakee yksittäisen kulun tiedot kohdistuksineen."
   [db user {:keys [urakka-id id]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (let [kulu (first (q/hae-kulu db {:urakka urakka-id
                                     :id     id}))
         kulun-kohdistukset (into []
@@ -206,7 +206,7 @@
 (defn luo-tai-paivita-kulun-kohdistus
   "Luo uuden kohdistuksen kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan kulun viitteen ja rivinumeron perusteella."
   [db user urakka-id kulu-id kohdistus]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (let [yhteiset {:id                  (:kohdistus-id kohdistus)
                   :summa               (:summa kohdistus)
                   :toimenpideinstanssi (:toimenpideinstanssi kohdistus)
@@ -224,7 +224,7 @@
                                              (:toimenpideinstanssi kohdistus)}))
 
 (defn- tarkista-laskun-numeron-paivamaara [db user {:keys [urakka] :as hakuehdot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka)
   (let [erapaivat (q/hae-pvm-laskun-numerolla db hakuehdot)]
     (if (empty? erapaivat)
       false
@@ -243,7 +243,7 @@
 (defn poista-kulun-kohdistus
   "Poistaa yksittäisen rivin kulun kohdistuksista. Palauttaa päivittyneen kantatilanteen."
   [db user {:keys [urakka-id id kohdistuksen-id kohdistus]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (q/poista-kulun-kohdistus! db {:id              id
                                   :urakka          urakka-id
                                   :kohdistuksen-id kohdistuksen-id
@@ -273,7 +273,7 @@
   Palauttaa tallennetut tiedot."
   [db user urakka-id {:keys [erapaiva kokonaissumma urakka tyyppi laskun-numero
                              lisatieto koontilaskun-kuukausi id kohdistukset liitteet] :as tiedot}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (varmista-erapaiva-on-koontilaskun-kuukauden-sisalla db koontilaskun-kuukausi erapaiva urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [vanha-erapaiva (when id (:erapaiva (first (q/hae-kulu db {:id id}))))
@@ -364,25 +364,25 @@
 
   Merkitsee kulun sekä kaikki siihen liittyvät kohdistukset poistetuksi."
   [db user {:keys [urakka-id] :as tiedot}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (poista-kulu-tietokannasta db user tiedot))
 
 (defn tallenna-kulu
   "Funktio tallentaa kulun kohdistuksineen. Käytetään teiden hoidon urakoissa (MHU)."
   [db user {:keys [urakka-id kulu-kohdistuksineen] :as tiedot}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (luo-tai-paivita-kulukohdistukset db user urakka-id kulu-kohdistuksineen))
 
 (defn- poista-kulun-liite
   "Merkkaa kulun liitteen poistetuksi"
   [db user {:keys [urakka-id kulu-id liite-id]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (q/poista-kulun-ja-liitteen-linkitys! db {:kulu-id kulu-id :liite-id liite-id :kayttaja (:id user)})
   (hae-kulu-kohdistuksineen db user {:id kulu-id}))
 
 (defn- kulu-pdf
   [db user {:keys [urakka-id urakka-nimi alkupvm loppupvm] :as loput}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (assert (and alkupvm loppupvm) "alkupvm ja loppupvm oltava annettu")
   (let [kulut (q/hae-kulut-kohdistuksineen-tietoineen-vientiin db {:urakka   urakka-id
                                                             :alkupvm  (konversio/sql-timestamp alkupvm)
@@ -399,7 +399,7 @@
   "Haetaan urakalle vuodet, joille on olemassa välikatselmus/päätös. Ja ui:lla voidaan sen mukaan näyttää päiviä,
   joille kuluja voidaan lisäillä"
   [db user {:keys [urakka-id] :as hakuehdot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (let [urakan-tiedot (first (urakka-kyselyt/hae-urakka db {:id urakka-id}))
         _ (when (nil? urakan-tiedot)
             (throw (IllegalArgumentException.
@@ -415,7 +415,7 @@
 
 (defn- kulu-excel
   [db workbook user {:keys [urakka-id urakka-nimi alkupvm loppupvm] :as loput}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (assert (and alkupvm loppupvm) "alkupvm ja loppupvm oltava annettu")
   (let [kulut (sort-by :erapaiva
                        (q/hae-kulut-kohdistuksineen-tietoineen-vientiin db {:urakka   urakka-id

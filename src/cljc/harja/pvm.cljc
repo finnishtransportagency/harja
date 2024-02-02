@@ -7,6 +7,7 @@
     #?(:cljs [cljs-time.core :as t])
     #?(:cljs [cljs-time.coerce :as tc])
     #?(:cljs [cljs-time.extend])
+    #?(:cljs [goog.i18n.DateTimeFormat])
     #?(:clj [clj-time.format :as df])
     #?(:clj
        [clj-time.core :as t])

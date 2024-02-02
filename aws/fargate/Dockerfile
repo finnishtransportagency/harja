@@ -1,14 +1,26 @@
 # -- Run-time vaihe --
 # Käytetään Eclipse Temurin 17 LTS (OpenJDK) imagea (https://endoflife.date/java)
 # Pohjalla Ubuntu Jammy (Ubuntu 22.04 LTS)
-FROM eclipse-temurin:17.0.9_9-jre-jammy
+FROM eclipse-temurin:17.0.10_7-jre-jammy
 
 # Lisää labeleita AWS ECR:ää varten
 LABEL description="Harja app"
 LABEL version="1.0"
 
-# Asenna apurit
+# https://github.com/aws/amazon-ecs-agent/issues/3594
+# Lisää /tmp volumena, jotta voidaan käyttää sitä kiertotienä ECS Agent ongelmaan.
+# Korjaa ohjeen mukaan 0755 luvat
+# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/bind-mounts.html#specify-volume-config
+RUN mkdir -p /tmp && chmod 1777 /tmp
+VOLUME ["/tmp"]
 
+# Aseta aikavyöhyke
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki apt-get -y install tzdata \
+    && cp /usr/share/zoneinfo/Europe/Helsinki /etc/localtime \
+    && echo "Europe/Helsinki" > /etc/timezone
+
+# Asenna apurit
 RUN apt-get update && apt-get install -y \
     bash \
     curl \

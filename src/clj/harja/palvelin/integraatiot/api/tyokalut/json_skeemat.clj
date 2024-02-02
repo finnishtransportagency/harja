@@ -36,6 +36,11 @@
 (def turvallisuuspoikkeamien-kirjaus (tee-validaattori "api/schemas/turvallisuuspoikkeamien-kirjaus-request.schema.json"))
 (def +turvallisuuspoikkeamien-vastaus+ "api/schemas/turvallisuuspoikkeama-vastaus.schema.json")
 
+(def +analytiikka-paallystyskohteiden-haku-vastaus+ "api/schemas/analytiikka-paallystyskohteiden-haku-response.schema.json")
+(def +analytiikka-paallystyskohteiden-aikataulujen-haku-vastaus+ "api/schemas/analytiikka-paallystyskohteiden-aikataulujen-haku-response.schema.json")
+(def +analytiikka-paallystysurakoiden-haku-vastaus+ "api/schemas/analytiikka-paallystysurakoiden-haku-response.schema.json")
+(def +analytiikka-paallystysilmoitusten-haku-vastaus+ "api/schemas/analytiikka-paallystysilmoitusten-haku-response.schema.json")
+
 (def +tielupien-haku+ "api/schemas/tielupien-haku-request.schema.json")
 (def tielupien-haku (tee-validaattori "api/schemas/tielupien-haku-request.schema.json"))
 (def +tielupien-haku-vastaus+ "api/schemas/tielupien-haku-response.schema.json")

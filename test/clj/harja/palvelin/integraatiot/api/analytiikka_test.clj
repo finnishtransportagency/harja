@@ -48,8 +48,8 @@
   (is (str/includes? vastaus "reitti"))
   (is (str/includes? vastaus "poistettu"))
   (is (str/includes? vastaus "toteuma"))
-    (is (str/includes? vastaus "muutostiedot"))
-    (is (str/includes? vastaus "tehtavat"))
+  (is (str/includes? vastaus "muutostiedot"))
+  (is (str/includes? vastaus "tehtavat"))
   (is (str/includes? vastaus "yksikko"))
   (is (str/includes? vastaus "tehtava")))
 
@@ -114,6 +114,7 @@
         _ (anna-analytiikkaoikeus kayttaja-analytiikka)
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika-paiva-sitten "/" loppuaika)] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))
+    ;; Tämä antaa 7 virhettä, mikäli lokaali kanta on liian vanha. Resetoi tietokanta, niin ongelmat korjautuu
     (sisaltaa-perustiedot (:body vastaus))))
 
 (deftest hae-toteumat-test-ei-kayttoikeutta
