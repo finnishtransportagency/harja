@@ -289,15 +289,11 @@
         loppuaika (nykyhetki-iso8061-formaatissa-tulevaisuuteen 1)
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
                   "analytiikka-testeri" portti)
-
-        _ (println "vastaus1: " (pr-str vastaus))
         body (cheshire/decode (:body vastaus))
 
         ;; Muokataan tietokantaan muokattu ja luotu -kentät, ja katsotaan löydetäänkö turpo vaikka luotu aika ei enää osukaan aikamäärävälille
         luotu-hetki-sitten (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja (* 12000))
         muokattu-nyt (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 1)
-        _ (println "luotu-hetki-sitten: " luotu-hetki-sitten)
-        _ (println "muokattu-nyt: " muokattu-nyt)
         _ (u (format "update turvallisuuspoikkeama SET luotu = '%s', muokattu = '%s' WHERE paikan_kuvaus = '%s'",
                luotu-hetki-sitten
                muokattu-nyt
