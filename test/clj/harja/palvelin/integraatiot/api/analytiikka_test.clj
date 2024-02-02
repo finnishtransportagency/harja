@@ -3,6 +3,7 @@
             [harja.pvm :as pvm]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
+            [cheshire.core :as cheshire]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
             [harja.palvelin.komponentit.liitteet :as liitteet]
@@ -268,6 +269,58 @@
     (is (= 200 (:status vastaus)))
     ;; Tarkistetaan vain, että saadaan pitkä vastaus
     (is (< 1000 (count (:body vastaus))))))
+
+(deftest hae-muokattu-turvallisuuspoikkeama-analytiikalle-onnistuu
+  (let [;; Luo väliaikainen turvallisuuspoikkeama
+        tapahtuma-paiva "2016-01-30T12:00:01Z"
+        paikkakuvaus "Aivan superyksilöllinen paikkakuvaus"
+        urakka (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
+        _ (anna-kirjoitusoikeus "yit-rakennus")
+        _ (anna-analytiikkaoikeus "analytiikka-testeri")
+        _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
+            "yit-rakennus" portti
+            (-> "test/resurssit/api/turvallisuuspoikkeama.json"
+              slurp
+              (.replace "__PAIKKA__" paikkakuvaus)
+              (.replace "__TAPAHTUMAPAIVAMAARA__" tapahtuma-paiva)))
+
+        ;; Hae turvallisuuspoikkeamat uuden apin kautta
+        alkuaika (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 50)
+        loppuaika (nykyhetki-iso8061-formaatissa-tulevaisuuteen 1)
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
+                  "analytiikka-testeri" portti)
+
+        _ (println "vastaus1: " (pr-str vastaus))
+        body (cheshire/decode (:body vastaus))
+
+        ;; Muokataan tietokantaan muokattu ja luotu -kentät, ja katsotaan löydetäänkö turpo vaikka luotu aika ei enää osukaan aikamäärävälille
+        luotu-hetki-sitten (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja (* 12000))
+        muokattu-nyt (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 1)
+        _ (println "luotu-hetki-sitten: " luotu-hetki-sitten)
+        _ (println "muokattu-nyt: " muokattu-nyt)
+        _ (u (format "update turvallisuuspoikkeama SET luotu = '%s', muokattu = '%s' WHERE paikan_kuvaus = '%s'",
+               luotu-hetki-sitten
+               muokattu-nyt
+               paikkakuvaus))
+        _ (println "Löydetään muokattava turpo" (q-map (format "SELECT * from turvallisuuspoikkeama WHERE paikan_kuvaus = '%s'", paikkakuvaus)))
+        muokattu-vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
+                           "analytiikka-testeri" portti)
+        muokattu-body (cheshire/decode (:body muokattu-vastaus))
+
+        tapahtumakasittely1 (get (first (get body "turvallisuuspoikkeamat")) "tapahtumankasittely")
+        tapahtumakasittely2 (get (first (get muokattu-body "turvallisuuspoikkeamat")) "tapahtumankasittely")
+
+        ;; Poistetaan molemmista tapahtumakäsittelyt, koska siellä on luontipäivä muuttunut
+        body (update body "turvallisuuspoikkeamat" (fn [turvallisuuspoikkeamat]
+                                                     (map #(dissoc % "tapahtumankasittely") turvallisuuspoikkeamat)))
+        muokattu-body (update body "turvallisuuspoikkeamat" (fn [turvallisuuspoikkeamat]
+                                                              (map #(dissoc % "tapahtumankasittely") turvallisuuspoikkeamat)))
+        ;; Poista väliaikainen turvallisuuspoikkeama
+        _ (poista-viimeisin-turpo)]
+    (is (= 200 (:status vastaus)))
+    (is (= body muokattu-body))
+    (is (not= tapahtumakasittely1 tapahtumakasittely2))))
+
 
 (deftest hae-turvallisuuspoikkeamat-analytiikalle-epaonnistuu
   (let [;; Luo väliaikainen turvallisuuspoikkeama
