@@ -540,14 +540,13 @@
 (deftest kattohinnan-ylitys-siirto-viimeisena-vuotena
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2025
-        vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
-                       (kutsu-palvelua (:http-palvelin jarjestelma)
-                                       :tallenna-urakan-paatos
-                                       (kayttaja urakka-id)
-                                       {::urakka/id urakka-id
-                                        ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                        ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
-                                        ::valikatselmus/siirto 20000}))
+        vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
+                       :tallenna-urakan-paatos
+                       (kayttaja urakka-id)
+                       {::urakka/id urakka-id
+                        ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                        ::valikatselmus/tyyppi ::valikatselmus/kattohinnan-ylitys
+                        ::valikatselmus/siirto 20000})
                      (catch Exception e e))]
     (is (= "Kattohinnan ylitystä ei voi siirtää ensi vuodelle urakan viimeisenä vuotena" (-> vastaus ex-data :virheet :viesti)))))
 

@@ -253,12 +253,16 @@
         alkupvm (:alkupvm (:raportin-yleiset-tiedot raportin-tunnistetiedot))
         loppupvm (:loppupvm (:raportin-yleiset-tiedot raportin-tunnistetiedot))
         raportin-nimi (:raportin-nimi (:raportin-yleiset-tiedot raportin-tunnistetiedot))
+        lyhennetty? (:lyhennetty-tiedostonimi raportin-tunnistetiedot)
         ;; Jos loppupvm on täysin sama, sitä ei tarvitse mainita
         loppupvm (if (= loppupvm alkupvm) nil loppupvm)]
 
     (cond
       (and urakka raportin-nimi alkupvm loppupvm)
-      (str urakka ", " raportin-nimi ", " (str alkupvm " - " loppupvm))
+      ;; Jos nimessä käytetään urakan lyhytnimiä, ei tarvitse urakkaa mainita erikseen
+      (if lyhennetty?
+        (str raportin-nimi ", " (str alkupvm " - " loppupvm))
+        (str urakka ", " raportin-nimi ", " (str alkupvm " - " loppupvm)))
 
       (and (not urakka) raportin-nimi alkupvm (not loppupvm))
       (str raportin-nimi ", " alkupvm)

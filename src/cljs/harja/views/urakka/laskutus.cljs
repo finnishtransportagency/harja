@@ -37,7 +37,7 @@
           "Maksuerät"
           :maksuerat
           ^{:key "maksuerat"}
-          (when (oikeudet/urakat-laskutus-maksuerat (:id @nav/valittu-urakka))
+          (when (oikeudet/urakat-kulut-maksuerat (:id @nav/valittu-urakka))
             [maksuerat/maksuerat-listaus])
 
           "Kustannusten seuranta"

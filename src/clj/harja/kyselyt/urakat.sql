@@ -85,7 +85,8 @@ WHERE ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND 
                                                     WHEN :urakkatyyppi = 'hoito'
                                                         THEN u.tyyppi IN ('hoito', 'teiden-hoito')
                                                     ELSE u.tyyppi = :urakkatyyppi :: urakkatyyppi END)
-  AND (:hallintayksikko_annettu = FALSE OR u.hallintayksikko IN (:hallintayksikko));
+  AND (:hallintayksikko_annettu = FALSE OR u.hallintayksikko IN (:hallintayksikko))
+  AND u.poistettu = FALSE;
 
 -- name: hae-kaynnissa-olevat-urakat
 SELECT
@@ -94,7 +95,8 @@ SELECT
   u.tyyppi
 FROM urakka u
 WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date)
-      AND (u.loppupvm IS NULL OR u.loppupvm >= current_date);
+      AND (u.loppupvm IS NULL OR u.loppupvm >= current_date)
+      AND u.poistettu = FALSE;
 
 -- name: hae-kaynnissa-olevat-urakkatyypin-urakat
 SELECT
@@ -104,7 +106,8 @@ SELECT
 FROM urakka u
 WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date)
       AND (u.loppupvm IS NULL OR u.loppupvm >= current_date)
-      AND (:urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi);
+      AND (:urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi)
+      AND u.poistettu = FALSE;
 
 -- name: hae-urakoiden-nimet
 SELECT
@@ -127,6 +130,7 @@ WHERE (:urakkatyyppi :: urakkatyyppi IS NULL OR CASE
            WHEN :urakantila = 'paattyneet'
                THEN u.loppupvm < current_date
            ELSE true END)
+  AND u.poistettu = FALSE
 ORDER BY u.nimi ASC;
 
 -- name: tallenna-urakan-lyhytnimi!
@@ -160,7 +164,8 @@ SELECT
 FROM urakka u
 WHERE u.alkupvm >= current_date
       OR (u.alkupvm <= current_date AND
-          u.loppupvm >= current_date);
+          u.loppupvm >= current_date)
+      AND u.poistettu = FALSE;
 
 -- name: hae-hallintayksikon-urakat
 SELECT
@@ -169,7 +174,8 @@ SELECT
   u.tyyppi
 FROM urakka u
   JOIN organisaatio o ON o.id = u.hallintayksikko
-WHERE o.id = :hy;
+WHERE o.id = :hy
+AND u.poistettu = false;
 
 -- name: listaa-urakat-hallintayksikolle
 -- Palauttaa listan annetun hallintayksikön (id) urakoista. Sisältää perustiedot ja geometriat.
@@ -243,6 +249,7 @@ FROM urakka u
   LEFT JOIN yhatiedot yt ON u.id = yt.urakka
   LEFT JOIN kayttaja k ON k.id = yt.kohdeluettelo_paivittaja
 WHERE hallintayksikko = :hallintayksikko
+      AND u.poistettu = false
       AND (u.id IN (:sallitut_urakat)
            OR (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
                 'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
@@ -309,7 +316,8 @@ FROM urakka u
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
 WHERE u.nimi ILIKE :teksti
       OR hal.nimi ILIKE :teksti
-      OR org.nimi ILIKE :teksti;
+      OR org.nimi ILIKE :teksti
+      AND u.poistettu = FALSE;
 
 -- name: hae-organisaation-urakat
 -- Hakee organisaation "omat" urakat, joko urakat joissa annettu hallintayksikko on tilaaja
@@ -381,6 +389,7 @@ WHERE (u.nimi ILIKE :teksti
             'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
            OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
                :kayttajan_org_id = org.id))
+      AND u.poistettu = false
 LIMIT 11;
 
 -- name: hae-urakka
@@ -584,19 +593,8 @@ SET urakkanro = :urakkanro,
     muokkaaja = :kayttaja
 WHERE id = :urakka;
 
---name: hae-velho-oid-lkm
--- Palauttaa velho_oid NOT NULL rivien lukumäärän
-SELECT count(*) as lkm
-FROM urakka
-WHERE velho_oid IS NOT NULL;
-
 --name: hae-kaikki-urakat-pvm
 SELECT id, alkupvm, loppupvm
-FROM urakka
-WHERE velho_oid IS NOT NULL;
-
---name: hae-kaikki-urakka-velho-oid
-SELECT velho_oid, id
 FROM urakka
 WHERE velho_oid IS NOT NULL;
 
@@ -613,20 +611,6 @@ WHERE hanke = (SELECT id
 SELECT velho_oid
 FROM urakka
 WHERE id = :id;
-
--- name: paivita-velho_oid-null-kaikille!
--- Tyhjentää velho_oid tiedon kaikilta urakoilta
-UPDATE urakka
-SET velho_oid = NULL
-WHERE velho_oid IS NOT NULL
-  AND tyyppi IN ('hoito', 'teiden-hoito');
-
--- name: paivita-velho_oid-urakalle!
--- Päivittää velho_oid avaimen urakalle
-UPDATE urakka
-SET velho_oid = :velho_oid
-WHERE urakkanro = :urakkanro
-  AND tyyppi IN ('hoito', 'teiden-hoito');
 
 -- name: paivita-velho_oid-ja-lyhytnimi-urakalle!
 UPDATE urakka
