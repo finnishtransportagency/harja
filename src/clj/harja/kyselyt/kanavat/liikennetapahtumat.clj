@@ -133,7 +133,7 @@
                         ilman-poistettuja-aluksia]))
         tapahtumat))
 
-(defn hae-tapahtumien-perustiedot [db {:keys [aikavali] :as tiedot}]
+(defn hae-tapahtumien-perustiedot [db {:keys [aikavali rajoita] :as tiedot}]
   (let [urakka-idt (:urakka-idt tiedot)
         kohde-id (get-in tiedot [::lt/kohde ::kohde/id])
         aluslajit (::lt-alus/aluslajit tiedot)
@@ -163,7 +163,13 @@
                                               (op/in (map name lt-alus/aluslajit))
                                               (op/in (map name aluslajit)))})})
           {::m/poistettu? false
-           ::lt/urakka-id (op/in urakka-idt)}))
+           ::lt/urakka-id (op/in urakka-idt)})
+        ;; Jos rajoitus annettu, rajoita tulokset 
+        (when (and
+                rajoita
+                (> rajoita 0))
+          {::specql/limit rajoita}))
+
       tiedot)))
 
 (defn hae-liikennetapahtumat [db user tiedot]
