@@ -33,7 +33,12 @@
               "type": "object",
               "properties": {
                 "tierekisteriosoitevali": {
-                  "$ref": "#/definitions/tierekisteriosoitevali"
+                  "$ref": "#/definitions/tierekisteriosoitevali-kaista-ja-ajorata"
+                },
+                "pituus": {
+                  "type": "integer",
+                  "multipleOf": 1,
+                  "description": "Pituus metreinä, laskettu tieosoitteista HARJAssa."
                 },
                 "kasittelymenetelma": {
                   "type": "string",
@@ -129,7 +134,12 @@
                   "type": "boolean"
                 },
                 "tierekisteriosoitevali": {
-                  "$ref": "#/definitions/tierekisteriosoitevali"
+                  "$ref": "#/definitions/tierekisteriosoitevali-kaista-ja-ajorata"
+                },
+                "pituus": {
+                  "type": "integer",
+                  "multipleOf": 1,
+                  "description": "Pituus metreinä, laskettu tieosoitteista HARJAssa."
                 },
                 "paallystystoimenpide": {
                   "$ref": "#/definitions/paallystystoimenpide"
@@ -148,8 +158,9 @@
     }
   },
   "definitions": {
-    "tierekisteriosoitevali": {
+    "tierekisteriosoitevali-kaista-ja-ajorata": {
       "type": "object",
+      "additionalProperties": false,
       "required": [
         "tienumero",
         "aosa",
@@ -186,6 +197,39 @@
           "type": "integer",
           "multipleOf": 1,
           "description": "Etäisyys loppuosan sisällä"
+        },
+        "ajorata": {
+          "type": "integer",
+          "enum": [
+            0,
+            1,
+            2
+          ]
+        },
+        "kaista": {
+          "type": "integer",
+          "enum": [
+            1,
+            11,
+            12,
+            13,
+            21,
+            22,
+            23,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            31
+          ]
         }
       }
     },
