@@ -396,7 +396,7 @@
             <xs:element name="verkkotyyppi" type="alustan-verkkotyyppi" nillable="true" minOccurs="0"/>
             <xs:element name="verkon-tarkoitus" type="alustan-verkon-tarkoitus" nillable="true" minOccurs="0"/>
             <xs:element name="verkon-sijainti" type="alustan-verkon-sijainti" nillable="true" minOccurs="0"/>
-            <xs:element name="massamenekki" minOccurs="0">
+            <xs:element name="massamenekki" nillable="true" minOccurs="0">
                 <xs:simpleType>
                     <xs:annotation>
                         <xs:documentation>
@@ -409,7 +409,7 @@
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
-            <xs:element name="kokonaismassamaara" minOccurs="0" type="xs:decimal">
+            <xs:element name="kokonaismassamaara" nillable="true" minOccurs="0" type="xs:decimal">
                 <xs:annotation>
                     <xs:documentation>
                         Yksikkö: tonni
@@ -503,7 +503,6 @@
                     </xs:sequence>
                 </xs:complexType>
             </xs:element>
-
             <xs:element name="lisaaineet" nillable="true" minOccurs="0">
                 <xs:complexType>
                     <xs:sequence>
@@ -1600,7 +1599,7 @@
             <xs:enumeration value="3">
                 <xs:annotation>
                     <xs:documentation>
-                        (UUSIO) Ra, Asfalttirouhe
+                        (UUSIO) RA, Asfalttirouhe
                     </xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
