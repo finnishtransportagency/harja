@@ -31,6 +31,8 @@ ALTER TABLE tarkastus_2021_q4 ADD CONSTRAINT tarkastus_2021_q4_pkey PRIMARY KEY 
 ALTER TABLE tarkastus_2022_q1 ADD CONSTRAINT tarkastus_2022_q1_pkey PRIMARY KEY USING INDEX tarkastus_2022_q1_id_idx;
 ALTER TABLE tarkastus_2022_q2 ADD CONSTRAINT tarkastus_2022_q2_pkey PRIMARY KEY USING INDEX tarkastus_2022_q2_id_idx;
 ALTER TABLE tarkastus_2022_q3 ADD CONSTRAINT tarkastus_2022_q3_pkey PRIMARY KEY USING INDEX tarkastus_2022_q3_id_idx;
+ALTER TABLE tarkastus_2022_q4 ADD CONSTRAINT tarkastus_2022_q4_pkey PRIMARY KEY USING INDEX tarkastus_2022_q4_id_idx;
+ALTER TABLE tarkastus_2023_q1 ADD CONSTRAINT tarkastus_2023_q1_pkey PRIMARY KEY USING INDEX tarkastus_2023_q1_id_idx;
 ALTER TABLE tarkastus_2023_q2 ADD CONSTRAINT tarkastus_2023_q2_pkey PRIMARY KEY USING INDEX tarkastus_2023_q2_id_idx;
 ALTER TABLE tarkastus_2023_q3 ADD CONSTRAINT tarkastus_2023_q3_pkey PRIMARY KEY USING INDEX tarkastus_2023_q3_id_idx;
 ALTER TABLE tarkastus_2023_q4 ADD CONSTRAINT tarkastus_2023_q4_pkey PRIMARY KEY USING INDEX tarkastus_2023_q4_id_idx;
@@ -85,6 +87,7 @@ BEGIN
     EXECUTE 'CREATE INDEX ' || partitio || '_urakka_idx ON ' || partitio || '(urakka)';
     EXECUTE 'CREATE INDEX ' || partitio || '_sopimus_idx ON ' || partitio || '(sopimus)';
     EXECUTE 'CREATE INDEX ' || partitio || '_tyyppi_urakka_alkanut_idx ON ' || partitio || '(tyyppi, urakka, alkanut)';
+    EXECUTE 'CREATE INDEX ' || partitio || '_urakka_alkanut_poistettu_idx ON ' || partitio || '(urakka, alkanut, poistettu)';
     EXECUTE 'CREATE INDEX ' || partitio || '_envelope_idx ON ' || partitio || ' USING GIST (envelope);';
 
     -- FOREIGN KEYS
