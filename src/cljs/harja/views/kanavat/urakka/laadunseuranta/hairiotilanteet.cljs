@@ -45,7 +45,7 @@
     [valinnat/urakkavalinnat {:urakka valittu-urakka}
      ^{:key "urakkavalinnat"}
      
-     [:div.hairiotilanteet-suodattimet
+     [:div.kanava-suodattimet
       [:div.ryhma
        [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
         valittu-urakka {:sopimus {:optiot {:kaikki-valinta? true}}}]

@@ -25,28 +25,32 @@
 
 (defn hakuehdot [e! {:keys [huoltokohteet] :as app} kohteet]
   (let [urakka-map (get-in app [:valinnat :urakka])]
+
     [valinnat/urakkavalinnat {:urakka urakka-map}
      ^{:key "valinnat"}
-     [:div
-      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka-map]
-
-      [valinnat/kanava-kohde
-       (r/wrap (first (filter #(= (::kohde/id %) (get-in app [:valinnat :kanava-kohde-id])) kohteet))
-               (fn [uusi]
-                 (e! (tiedot/->PaivitaValinnat {:kanava-kohde-id (::kohde/id uusi)}))))
-       (into [nil] kohteet)
-       #(let [nimi (kohde/fmt-kohteen-nimi %)]
-          (if (empty? nimi) "Kaikki" nimi))]
+     [:div.kanava-suodattimet
       
-      [valinnat/kanava-huoltokohde
-       (r/wrap (first (filter #(= (::huoltokohde/id %) (get-in app [:valinnat :huoltokohde-id])) huoltokohteet))
-         #(e! (tiedot/->PaivitaValinnat {:huoltokohde-id (::huoltokohde/id %)})))
-       (into [nil] huoltokohteet)
-       #(or (::huoltokohde/nimi %) "Kaikki")]]
-     
+      [:div.ryhma
+       [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka-map]]
+      
+      [:div.ryhma
+       [valinnat/kanava-kohde
+        (r/wrap (first (filter #(= (::kohde/id %) (get-in app [:valinnat :kanava-kohde-id])) kohteet))
+          (fn [uusi]
+            (e! (tiedot/->PaivitaValinnat {:kanava-kohde-id (::kohde/id uusi)}))))
+        (into [nil] kohteet)
+        #(let [nimi (kohde/fmt-kohteen-nimi %)]
+           (if (empty? nimi) "Kaikki" nimi))]
+
+       [valinnat/kanava-huoltokohde
+        (r/wrap (first (filter #(= (::huoltokohde/id %) (get-in app [:valinnat :huoltokohde-id])) huoltokohteet))
+          #(e! (tiedot/->PaivitaValinnat {:huoltokohde-id (::huoltokohde/id %)})))
+        (into [nil] huoltokohteet)
+        #(or (::huoltokohde/nimi %) "Kaikki")]]]
+
      ^{:key "toiminnot"}
      [valinnat/urakkatoiminnot {:urakka urakka-map :sticky? true}
-      
+
       [napit/uusi
        "Uusi toimenpide"
        (fn [_]
