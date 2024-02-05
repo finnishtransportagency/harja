@@ -17,7 +17,6 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.hallintayksikot :as hallintayksikot]
             [harja.tiedot.raportit :as raporttitiedot]
-
             [harja.domain.urakka :as ur]
             [harja.domain.sopimus :as sop]
             [harja.domain.muokkaustiedot :as m]
@@ -36,13 +35,22 @@
                  :tallennus-kaynnissa? false
                  :valittu-liikennetapahtuma nil
                  :tapahtumarivit nil
-                 :raporttiparametrit {}
                  :valinnat {:kayttajan-urakat '()
                             :aikavali nil
                             ::lt/kohde nil
                             ::lt-alus/suunta nil
                             ::lt-alus/aluslajit #{}
-                            :niput? false}})
+                            :niput? false}
+                 :yhteenveto {:toimenpiteet {:sulutukset-ylos 0
+                                             :sulutukset-alas 0
+                                             :sillan-avaukset 0
+                                             :tyhjennykset 0
+                                             :yhteensa 0}
+                              :palvelumuoto {:paikallispalvelu 0
+                                             :kaukopalvelu 0
+                                             :itsepalvelu 0
+                                             :muu 0
+                                             :yhteensa 0}}})
 
 (def tila (atom tila-arvot))
 
@@ -124,6 +132,42 @@
                                         (get-in app [:valinnat :kayttajan-urakat])))]
     (into {} (filter val
                      (-> app :valinnat (dissoc :kayttajan-urakat) (assoc :urakka-idt urakka-idt))))))
+
+
+(defonce raportti-avain :kanavien-liikennetapahtumat)
+
+(defn- koosta-liikenneraportin-parametrit [tila]
+  (let [valittu-tila tila
+        hakuparametrit (hakuparametrit valittu-tila)
+
+        valitut-urakat (keep #(when
+                                (:valittu? %)
+                                (:nimi %))
+                         (:kayttajan-urakat (:valinnat valittu-tila)))
+
+        urakkaa-valittuna (count valitut-urakat)
+        raporttiparametrit {:alkupvm (first (:aikavali (:valinnat valittu-tila)))
+                            :loppupvm (second (:aikavali (:valinnat valittu-tila)))
+                            :urakkatyyppi :vesivayla-kanavien-hoito
+                            :yhteenveto (:yhteenveto valittu-tila)
+                            :hakuparametrit hakuparametrit}
+
+        parametrit (if (= 1 urakkaa-valittuna)
+                     ;; 1 urakka valittuna, suoritetaan raportti yhden urakan kontekstissa
+                     ;; Tämä korjaa excel tallennuksen oikeudet urakoitsijoiden laadunvalvojille 
+                     (raporttitiedot/urakkaraportin-parametrit
+                       (:id @nav/valittu-urakka)
+                       raportti-avain
+                       raporttiparametrit)
+                     ;; Jos useita urakoita valittu, suoritetaan raportti monen urakan kontekstissa
+                     (raporttitiedot/usean-urakan-raportin-parametrit
+                       valitut-urakat
+                       raportti-avain
+                       raporttiparametrit))]
+    parametrit))
+
+(defonce raportin-parametrit
+  (reaction (koosta-liikenneraportin-parametrit @tila)))
 
 (defn nakymaan [e! aloitustiedot]
   (e! (->AsetaAloitusTiedot aloitustiedot)))
@@ -222,7 +266,12 @@
               )) 0 tapahtumat))
 
 (defn tapahtumat-haettu [app tulos]
-  (let [sulutukset-alas (laske-yhteenveto tulos :sulutus :alas nil)
+  (let [;; Rajoitetaan rivimäärä, voi mennä muuten selain hitaaksi
+        tapahtumien-maara (count tulos)
+        tulos (if (> tapahtumien-maara lt/+rajoita-tapahtumien-maara+)
+                (take lt/+rajoita-tapahtumien-maara+ tulos)
+                tulos)
+        sulutukset-alas (laske-yhteenveto tulos :sulutus :alas nil)
         sulutukset-ylos (laske-yhteenveto tulos :sulutus :ylos nil)
         sillan-avaukset (laske-yhteenveto tulos :avaus nil nil)
         tyhjennykset (laske-yhteenveto tulos :tyhjennys nil nil)
@@ -244,43 +293,20 @@
                                  paikallispalvelut
                                  kaukopalvelut
                                  itsepalvelut
-                                 muut)}]
+                                 muut)}
 
-    (swap! lt/yhteenveto-atom assoc :toimenpiteet toimenpiteet)
-    (swap! lt/yhteenveto-atom assoc :palvelumuoto palvelumuoto)
-
-    (let [valitut-urakat (keep #(when
-                                  (:valittu? %)
-                                  (:nimi %))
-                           (:kayttajan-urakat (:valinnat app)))
-
-          urakkaa-valittuna (count valitut-urakat)
-          raportin-avain :kanavien-liikennetapahtumat
-          raporttiparametrit {:valitut-urakat valitut-urakat
-                              :alkupvm (first (:aikavali (:valinnat app)))
-                              :loppupvm (second (:aikavali (:valinnat app)))
-                              :urakkatyyppi :vesivayla-kanavien-hoito
-                              :yhteenveto @lt/yhteenveto-atom}
-
-          raporttitiedot (if (= 1 urakkaa-valittuna)
-                           ;; 1 urakka valittuna, suoritetaan raportti yhden urakan kontekstissa
-                           ;; Tämä korjaa excel tallennuksen oikeudet urakoitsijoiden laadunvalvojille 
-                           (raporttitiedot/urakkaraportin-parametrit
-                             (:id @nav/valittu-urakka)
-                             raportin-avain
-                             raporttiparametrit)
-
-                           ;; Jos useita urakoita valittu, suoritetaan raportti monen urakan kontekstissa
-                           (raporttitiedot/usean-urakan-raportin-parametrit
-                             valitut-urakat
-                             raportin-avain
-                             raporttiparametrit))]
-      (-> app
-        (assoc :liikennetapahtumien-haku-kaynnissa? false)
-        (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false)
-        (assoc :haetut-tapahtumat tulos)
-        (assoc :tapahtumarivit (mapcat #(tapahtumarivit app %) tulos))
-        (assoc :raporttiparametrit raporttitiedot)))))
+        app-yleiset (-> app
+                      (assoc-in [:yhteenveto :toimenpiteet] toimenpiteet)
+                      (assoc-in [:yhteenveto :palvelumuoto] palvelumuoto)
+                      (assoc :lataa-aloitustiedot false)
+                      (assoc :liikennetapahtumien-haku-kaynnissa? false)
+                      (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false)
+                      (assoc :haetut-tapahtumat tulos)
+                      (assoc :tapahtumarivit (mapcat #(tapahtumarivit app %) tulos)))]
+    ;; Laitetaan app stateen tieto jos rivit ovat rajoitettu, ja näytetään info käyttöliittymässä
+    (if (> tapahtumien-maara lt/+rajoita-tapahtumien-maara+)
+      (assoc app-yleiset :rivimaara-ylittynyt true)
+      (assoc app-yleiset :rivimaara-ylittynyt false))))
 
 (defn tallennusparametrit [t]
   (-> t
@@ -575,14 +601,14 @@
     (assoc app :nakymassa? nakymassa?))
 
   HaeLiikennetapahtumat
-  (process-event [_ app]
+  (process-event [_ {:keys [lataa-aloitustiedot] :as app}]
     (if-not (:liikennetapahtumien-haku-kaynnissa? app)
-      (let [params (hakuparametrit app)]
+      (let [params (hakuparametrit app)
+            params (if lataa-aloitustiedot (select-keys params [:urakka-idt]) params)]
         (-> app
           (tt/post! :hae-liikennetapahtumat
             params
-            ;; Checkbox-group ja aluksen nimen kirjoitus generoisi
-            ;; liikaa requesteja ilman viivettä.
+            ;; Checkbox-group ja aluksen nimen kirjoitus generoisi liikaa requesteja ilman viivettä.
             {:viive 1000
              :tunniste :hae-liikennetapahtumat-liikenne-nakymaan
              :lahetetty ->HaeLiikennetapahtumatKutsuLahetetty
@@ -666,11 +692,38 @@
       (assoc :edellisten-haku-kaynnissa? false)))
 
   PaivitaValinnat
-  (process-event [{u :uudet} app]
-    (let [uudet-valinnat (merge (:valinnat app) (select-keys u valintojen-avaimet))
+  (process-event [{u :uudet} {:keys [valinnat lataa-aloitustiedot] :as app}]
+    (let [uudet-valinnat (merge valinnat (select-keys u valintojen-avaimet))
+          aikavali-vanha (:aikavali valinnat)
+          aikavali-uusi (:aikavali uudet-valinnat)
+          vain-aikavali-muuttunut? (=
+                                    (dissoc uudet-valinnat :aikavali)
+                                    (dissoc valinnat :aikavali))
+          ;; Onko aikaväli tällä hetkellä olemassa käyttäjän lomakkeessa?
+          aikavali-olemassa? (boolean (and (first aikavali-uusi) (second aikavali-uusi)))
+          ;; Tyhjennettiinkö aikaväli kokonaan?
+          aikavali-tyhjennettiin? (and
+                                    (or
+                                      (some? (first aikavali-vanha))
+                                      (some? (second aikavali-vanha)))
+                                    (nil? (first aikavali-uusi))
+                                    (nil? (second aikavali-uusi)))
+          ;; Onko tarve tehdä uutta hakua
+          ;; Tässä katsotaan, muokkasiko, tai tyhjensikö käyttäjä aikaväli filtterin
+          ;; Tämä tehty sen takia että ei tehdä turhia kutsuja, kun käyttäjä syöttää pelkästään alkupvm eikä loppupvm
+          tarve-hakea? (or
+                         lataa-aloitustiedot
+                         aikavali-tyhjennettiin?
+                         (not
+                           (and vain-aikavali-muuttunut? (not aikavali-olemassa?))))
           haku (tuck/send-async! ->HaeLiikennetapahtumat)]
-      (go (haku uudet-valinnat))
-      (assoc app :valinnat uudet-valinnat)))
+
+      ;; Jos tarve tehdä uusi haku, tehdään se
+      (when tarve-hakea?
+        (go (haku uudet-valinnat)))
+
+      (-> app
+        (assoc :valinnat uudet-valinnat))))
 
   TapahtumaaMuokattu
   (process-event [{t :tapahtuma} app]
@@ -809,13 +862,18 @@
                                              #{}
                                              (disj s id))))))
   AsetaAloitusTiedot
-  (process-event [{:keys [aikavali]} app]
+  (process-event [{:keys [aikavali valinnat]} app]
     (let [kanava-hallintayksikko (some
                                    #(when (= (:nimi %) "Kanavat ja avattavat sillat") (:id %))
-                                   @hallintayksikot/vaylamuodon-hallintayksikot)]
+                                   @hallintayksikot/vaylamuodon-hallintayksikot)
+          ;; Siivoa suodattimet kun urakkaa vaihdetaan murupolusta tai tullaan näkymään 
+          valinnat (select-keys valinnat [:kayttajan-urakat :urakka-idt])]
       (-> app
-        (tt/post! :kayttajan-urakat [kanava-hallintayksikko] {:onnistui ->KayttajanUrakatHaettu})
-        (assoc-in [:valinnat :aikavali] aikavali))))
+        (assoc :valinnat valinnat)
+        (assoc :lataa-aloitustiedot true)
+        (assoc :liikennetapahtumien-haku-kaynnissa? false)
+        (assoc-in [:valinnat :aikavali] aikavali)
+        (tt/post! :kayttajan-urakat [kanava-hallintayksikko] {:onnistui ->KayttajanUrakatHaettu}))))
 
   KayttajanUrakatHaettu
   (process-event [{urakat :urakat} app]
@@ -832,11 +890,14 @@
           app (assoc-in app [:valinnat :kayttajan-urakat] urakat)]
       (tuck/process-event (->PaivitaValinnat (:valinnat app)) app)
       app))
+
   UrakkaValittu
-  (process-event [{{:keys [id]} :urakka valittu? :valittu?} app]
+  (process-event [{{:keys [id]} :urakka valittu? :valittu? lataa-aloitustiedot :lataa-aloitustiedot} app]
     (let [uudet-urakkavalinnat (map #(if (= (:id %) id)
                                        (assoc % :valittu? valittu?)
                                        %)
                                  (get-in app [:valinnat :kayttajan-urakat]))]
-      (tuck/process-event (->PaivitaValinnat {:kayttajan-urakat uudet-urakkavalinnat}) app)
+      ;; Älä tee turhia kutsuja
+      (when-not lataa-aloitustiedot 
+        (tuck/process-event (->PaivitaValinnat {:kayttajan-urakat uudet-urakkavalinnat}) app))
       (assoc-in app [:valinnat :kayttajan-urakat] uudet-urakkavalinnat))))
