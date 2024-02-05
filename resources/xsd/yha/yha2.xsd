@@ -489,19 +489,17 @@
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
-            <xs:element name="runkoaineet" nillable="true" minOccurs="0">
+            <xs:element name="runkoaineet">
                 <xs:complexType>
                     <xs:sequence>
-                        <xs:element name="runkoaine" type="runkoaine" nillable="true" minOccurs="0"
-                                    maxOccurs="unbounded"/>
+                        <xs:element name="runkoaine" type="runkoaine" maxOccurs="unbounded"/>
                     </xs:sequence>
                 </xs:complexType>
             </xs:element>
-            <xs:element name="sideaineet" nillable="true" minOccurs="0">
+            <xs:element name="sideaineet">
                 <xs:complexType>
                     <xs:sequence>
-                        <xs:element name="sideaine" type="sideaine" nillable="true" minOccurs="0"
-                                    maxOccurs="unbounded"/>
+                        <xs:element name="sideaine" type="sideaine" maxOccurs="unbounded"/>
                     </xs:sequence>
                 </xs:complexType>
             </xs:element>
