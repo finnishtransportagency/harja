@@ -57,28 +57,22 @@
             "description": "Pituus metreinä, laskettu tieosoitteista HARJAssa."
           },
           "tarjoushinta": {
-            "type": "number",
-            "multipleOf": 0.01
+            "type": "number"
           },
           "maaramuutokset": {
-            "type": "number",
-            "multipleOf": 0.01
+            "type": "number"
           },
           "bitumiIndeksi": {
-            "type": "number",
-            "multipleOf": 0.01
+            "type": "number"
           },
           "nestekaasuJaKevytPolttooljy": {
-            "type": "number",
-            "multipleOf": 0.01
+            "type": "number"
           },
           "makuPaallysteet": {
-            "type": "number",
-            "multipleOf": 0.01
+            "type": "number"
           },
           "kokonaishinta": {
-            "type": "number",
-            "multipleOf": 0.01
+            "type": "number"
           },
           "alikohteet": {
             "type": "array",
@@ -291,13 +285,11 @@
       "properties": {
         "leveys": {
           "type": "number",
-          "description": "Yksikkö: Metri",
-          "multipleOf": 0.01
+          "description": "Yksikkö: Metri"
         },
         "pintaAla": {
           "type": "number",
-          "description": "Yksikkö: Neliömetri",
-          "multipleOf": 0.01
+          "description": "Yksikkö: Neliömetri"
         },
         "uusiPaallyste": {
           "$ref": "#/definitions/paallyste"

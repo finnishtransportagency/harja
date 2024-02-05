@@ -8,10 +8,6 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "paallystyskohde",
-          "alikohteet"
-        ],
         "properties": {
           "paallystyskohde": {
             "type": "integer",
@@ -23,8 +19,7 @@
             "format": "date"
           },
           "toteutunutHinta": {
-            "type": "number",
-            "multipleOf": 0.01
+            "type": "number"
           },
           "alustalleTehdytToimet": {
             "type": "array",
@@ -34,6 +29,9 @@
               "properties": {
                 "tierekisteriosoitevali": {
                   "$ref": "#/definitions/tierekisteriosoitevali-kaista-ja-ajorata"
+                },
+                "poistettu": {
+                  "type": "boolean"
                 },
                 "pituus": {
                   "type": "integer",
@@ -152,6 +150,153 @@
                 }
               }
             }
+          },
+          "kulutuskerrokselleTehdytToimetPOT2": {
+            "type": "array",
+            "minItems": 1,
+            "description": "POT2-tiedot sisältävä listaus kulutuskerroksen toimenpiteistä, aiemmin nimetty alikohteiden toimenpiteiksi.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "alikohde": {
+                  "type": "integer",
+                  "multipleOf": 1,
+                  "description": "Alikohteen ID HARJAn tietokannassa, eli HarjaId"
+                },
+                "poistettu": {
+                  "type": "boolean"
+                },
+                "tierekisteriosoitevali": {
+                  "$ref": "#/definitions/tierekisteriosoitevali-kaista-ja-ajorata"
+                },
+                "pituus": {
+                  "type": "integer",
+                  "multipleOf": 1,
+                  "description": "Pituus metreinä, laskettu tieosoitteista HARJAssa."
+                },
+                "leveys": {
+                  "type": "number",
+                  "description": "Yksikkö: Metri"
+                },
+                "pintaAla": {
+                  "type": "number",
+                  "description": "Yksikkö: Neliömetri"
+                },
+                "paallystetyomenetelma": {
+                  "$ref": "#/definitions/paallystetyomenetelma"
+                },
+                "massamenekki": {
+                  "type": "number",
+                  "description": "Yksikkö: Kg/m2"
+                },
+                "kokonaismassamaara": {
+                  "type": "number",
+                  "description": "Yksikkö: tonni"
+                },
+                "massa": {
+                  "$ref": "#/definitions/massa"
+                }
+              }
+            }
+          },
+          "alustalleTehdytToimetPOT2": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "POT2-tiedot sisältävä listaus alustalle tehdyistä toimenpiteistä",
+              "additionalProperties": false,
+              "required": ["tierekisteriosoitevali", "pituus", "kasittelymenetelma"],
+              "properties": {
+                "poistettu": {
+                  "type": "boolean"
+                },
+                "tierekisteriosoitevali": {
+                  "$ref": "#/definitions/tierekisteriosoitevali-kaista-ja-ajorata"
+                },
+                "pituus": {
+                  "type": "integer",
+                  "multipleOf": 1,
+                  "description": "Pituus metreinä, laskettu tieosoitteista HARJAssa."
+                },
+                "kasittelymenetelma": {
+                  "type": "string",
+                  "enum": [
+                    "Massanvaihto",
+                    "AB",
+                    "Verkko",
+                    "REM-TAS",
+                    "Bitumiemulsiostabilointi",
+                    "Vaahtobitumistabilointi",
+                    "Remix-stabilointi",
+                    "Sementtistabilointi",
+                    "Masuunihiekkastabilointi",
+                    "Komposiittistabilointi",
+                    "Kantavan kerroksen AB",
+                    "Sidekerroksen AB",
+                    "Murske",
+                    "Sekoitusjyrsintä",
+                    "Kuumennustasaus",
+                    "Massatasaus",
+                    "Tasausjyrsintä",
+                    "Laatikkojyrsintä",
+                    "Reunajyrsintä",
+                    "ei tietoa"
+                  ]
+                },
+                "kasittelypaksuus": {
+                  "type": "integer",
+                  "multipleOf": 1,
+                  "description": "Yksikkö: Senttimetri"
+                },
+                "verkkotyyppi": {
+                  "type": "string",
+                  "enum": [
+                    "Teräsverkko",
+                    "Lasikuituverkko",
+                    "Muoviverkko",
+                    "Lujitekangas",
+                    "Suodatinkangas",
+                    "Muu materiaali"
+                  ]
+                },
+                "verkonTarkoitus": {
+                  "type": "string",
+                  "enum": [
+                    "Pituushalkeamien ehkäisy",
+                    "Muiden routavaurioiden ehkäisy",
+                    "Levennyksen tukeminen",
+                    "Painumien ehkäisy",
+                    "Moniongelmaisen tukeminen",
+                    "Muu tarkoitus"
+                  ]
+                },
+                "verkonSijainti": {
+                  "type": "string",
+                  "enum": [
+                    "Päällysteessä",
+                    "Kantavan kerroksen yläpinnassa",
+                    "Kantavassa kerroksessa",
+                    "Kantavan kerroksen alapinnassa",
+                    "Muu sijainti"
+                  ]
+                },
+                "massamenekki": {
+                  "type": "number",
+                  "description": "Yksikkö: Kg/m2"
+                },
+                "kokonaismassamaara": {
+                  "type": "number",
+                  "description": "Yksikkö: tonni"
+                },
+                "massa": {
+                  "$ref": "#/definitions/massa"
+                },
+                "murske": {
+                  "$ref": "#/definitions/murske"
+                }
+              }
+            }
           }
         }
       }
@@ -239,13 +384,11 @@
       "properties": {
         "leveys": {
           "type": "number",
-          "description": "Yksikkö: Metri",
-          "multipleOf": 0.01
+          "description": "Yksikkö: Metri"
         },
         "pintaAla": {
           "type": "number",
-          "description": "Yksikkö: Neliömetri",
-          "multipleOf": 0.01
+          "description": "Yksikkö: Neliömetri"
         },
         "uusiPaallyste": {
           "$ref": "#/definitions/paallyste"
@@ -319,8 +462,7 @@
           ]
         },
         "sideainepitoisuus": {
-          "type": "number",
-          "multipleOf": 0.1
+          "type": "number"
         },
         "lisaAineet": {
           "type": "string"
@@ -391,6 +533,198 @@
         "vauriopaikkaus",
         "ei tietoa"
       ]
+    },
+    "massa": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "massatyyppi": {
+          "type": "string",
+          "enum": [
+            "BET, Betoni",
+            "AA, Avoin asfaltti",
+            "AB, Asfalttibetoni",
+            "EA, Epäjatkuva asfaltti (poistunut)",
+            "SMA, Kivimastiksiasfaltti",
+            "ABK, Kantavan kerroksen AB",
+            "ABS, Sidekerroksen AB",
+            "VA, Valuasfaltti",
+            "PAB-B, Pehmeät asfalttibetonit",
+            "PAB-V, Pehmeät asfalttibetonit",
+            "PAB-O, Pehmeät asfalttibetonit",
+            "Ei tietoa",
+            "EAB, Asfalttibetoni",
+            "ABtiivis",
+            "EABK, Kantavan kerroksen EAB",
+            "EPAB-B, Pehmeät E asfalttibetonit",
+            "EPAB-V, Pehmeät asfalttibetonit",
+            "Komposiittiasfaltti"
+          ]
+        },
+        "kuulamyllyluokka": {
+          "$ref": "#/definitions/kuulamylly"
+        },
+        "litteyslukuluokka": {
+          "type": "string",
+          "enum": [
+            "F10",
+            "F15",
+            "F20",
+            "F35"
+          ]
+        },
+        "runkoaineet": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/runkoaine"
+          }
+        },
+        "sideaineet": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "tyyppi": {
+                "$ref": "#/definitions/sideainetyyppi"
+              },
+              "pitoisuus": {
+                "type": "number",
+                "description": "Sideaineen pitoisuus prosentteina"
+              }
+            }
+          }
+        },
+        "lisaaineet": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "tyyppi": {
+                "$ref": "#/definitions/lisaainetyyppi"
+              },
+              "pitoisuus": {
+                "type": "number",
+                "description": "Lisäaineen pitoisuus prosentteina"
+              }
+            }
+          }
+        }
+      }
+    },
+    "murske": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mursketyyppi": {
+          "type": "string",
+          "enum": [
+            "Kalliomurske",
+            "Sorastusmurske",
+            "(UUSIO) RA, Asfalttirouhe"
+          ]
+        },
+        "rakeisuus": {
+          "type": "string"
+        },
+        "iskunkestavyys": {
+          "type": "string",
+          "enum": [
+            "LA30",
+            "LA35",
+            "LA40"
+          ]
+        }
+      }
+    },
+    "sideainetyyppi": {
+      "type": "string",
+      "enum": [
+        "Bitumi, 20/30",
+        "Bitumi, 35/50",
+        "Bitumi, 50/70",
+        "Bitumi, 70/100",
+        "Bitumi, 100/150",
+        "Bitumi, 160/220",
+        "Bitumi, 250/330",
+        "Bitumi, 330/430",
+        "Bitumi, 500/650",
+        "Bitumi, 650/900",
+        "Bitumi, V1500",
+        "Bitumi, V3000",
+        "Polymeerimodifioitu bitumi, PMB 75/130-65",
+        "Polymeerimodifioitu bitumi, PMB 75/130-70",
+        "Polymeerimodifioitu bitumi, PMB 40/100-70",
+        "Polymeerimodifioitu bitumi, PMB 40/100-75",
+        "Bitumiliuokset ja fluksatut bitumit, BL0",
+        "Bitumiliuokset ja fluksatut bitumit, BL5",
+        "Bitumiliuokset ja fluksatut bitumit, BL2Bio",
+        "Bitumiemulsiot, BE-L",
+        "Bitumiemulsiot, PBE-L",
+        "Bitumiemulsiot, BE-SIP",
+        "Bitumiemulsiot, BE-SOP",
+        "Bitumiemulsiot, BE-AB",
+        "Bitumiemulsiot, BE-PAB",
+        "KF, Kalkkifilleri",
+        "Muu, erikoisbitumi"
+      ]
+    },
+    "lisaainetyyppi": {
+      "type": "string",
+      "enum": [
+        "Kuitu",
+        "Tartuke",
+        "Sementti",
+        "Bitumikaterouhe",
+        "Kumi- tai muovirouhe",
+        "Väriaine",
+        "Muu kemiallinen aine"
+      ]
+    },
+    "runkoaine": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runkoainetyyppi": {
+          "type": "string",
+          "enum": [
+            "Kiviaines",
+            "Asfalttirouhe",
+            "Erikseen lisättävä fillerikiviaines",
+            "Masuunikuomajauhe",
+            "Ferrokromikuona (OKTO)",
+            "Teräskuona",
+            "Muu"
+          ]
+        },
+        "kuulamyllyarvo": {
+          "type": "number"
+        },
+        "litteysluku": {
+          "type": "number"
+        },
+        "massaprosentti": {
+          "type": "integer",
+          "description": "Prosentuaalinen osuus massasta, aiemmin asfalttirouheen osalta rc-prosentti",
+          "multipleOf": 1
+        },
+        "fillerityyppi": {
+          "type": "string",
+          "enum": [
+            "Kalkkifilleri (KF)",
+            "Lentotuhka (LT)",
+            "Muu fillerikiviaines"
+          ]
+        },
+        "kuvaus": {
+          "type": "string",
+          "description": "Käytetään, kun valittuna runkoainetyyppi 'Muu'"
+        }
+      }
     }
   }
 }
