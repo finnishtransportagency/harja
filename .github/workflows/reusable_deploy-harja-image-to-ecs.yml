@@ -105,7 +105,8 @@ jobs:
         # TODO: STG migraatiot kytketty pois päältä datamigraation testailun ajaksi.
         #       Migraatioiden ajo voi aiheuttaa häiriöitä datan tuoreistuksessa.
         #if: ${{ contains(fromJson('["dev", "stg"]'), inputs.environment)  }}
-        if: ${{ contains(fromJson('["dev"]'), inputs.environment)  }}
+        #if: ${{ contains(fromJson('["dev"]'), inputs.environment)  }}
+        if: false
         with:
           # Migraatiot ajetaan samalle commit SHA:lle, kuin mistä fargate image on buildattu
           commit-sha: ${{ github.sha }}
