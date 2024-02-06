@@ -52,8 +52,8 @@
         laskutusyhteenveto (take 15 raportit)
         perusluku (nth laskutusyhteenveto 2)
         indeksikerroin (nth laskutusyhteenveto 3)
-        muutos-ja-lisatoiden-raportin-otsikko (-> (nth raportit 13) second :otsikko)
-        sanktioraportin-otsikko (second (nth raportit 16))]
+        muutos-ja-lisatoiden-raportin-otsikko (-> (nth raportit 16) second :otsikko)
+        sanktioraportin-otsikko (second (nth raportit 19))]
     
     (is (= raportin-nimi "Oulun MHU 2019-2024, Työmaakokousraportti tammikuussa 2022"))
     (is (= perusluku [:teksti "Indeksilaskennan perusluku: 110,8"]) "Peruslukuteksti")
