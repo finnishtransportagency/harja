@@ -261,10 +261,10 @@ jobs:
       aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  # Automaattinen matrix-deployment useaan ympäristöön (workflow_run triggerillä)
+  # Automaattinen matrix-deployment useaan testiympäristöön (Kun develop-branchiin on pushattu uusi muutos)
   deploy-to-ecs-matrix:
     uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
-    if: ${{ github.event_name == 'workflow_run' }}
+    if: ${{ github.event_name == 'push' }}
     needs: [ tests, scan-and-test-image ]
     # Deployment ajetaan automaattisesti dev ympäristöön ja stg ympäristöön
     # TODO: Suunniteltava miten prod-deployment hoidetaan automaattisesti

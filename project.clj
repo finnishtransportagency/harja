@@ -25,7 +25,8 @@
                  [com.stuartsierra/component "1.0.0"]
 
                  ;; Lokitus
-                 [com.taoensso/timbre "4.10.0"]
+                 [com.taoensso/timbre "5.2.1"]
+                 [org.apache.logging.log4j/log4j-core "2.22.1"]
 
                  ;; Metriikkadata
                  [org.clojure/java.jmx "0.3.4"]
@@ -34,16 +35,21 @@
                  [cheshire "5.11.0"]
 
                  ;; HTTP palvelin ja reititys
-                 [cljs-http "0.1.46"]
+                 [cljs-http "0.1.48"]
                  [http-kit "2.5.3"]
-                 [compojure "1.6.1"]
+                 ;; Compojuren mukana tulee liian vanha commons-fileupload
+                 ;; Ja fileuploadin mukana liian vanha commons-io
+                 [commons-io/commons-io "2.15.1"]
+                 [commons-fileupload/commons-fileupload "1.5"]
+                 [compojure "1.7.0"]
                  ;; Ring tarvitsee
-                 ;[javax.servlet/servlet-api "2.5"]
                  [javax.servlet/javax.servlet-api "3.1.0"]
                  [hiccup "1.0.5"]
 
                  [org.clojure/core.cache "0.7.2"]
                  [org.clojure/core.memoize "1.0.257"]
+
+                 [org.clojure/tools.analyzer "1.1.1" :refer clojure :exclude [update-vars update-keys]]
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
@@ -52,13 +58,13 @@
                  [org.locationtech.jts/jts-core "1.19.0"]
                  [com.mchange/c3p0 "0.9.5.4"]
                  [webjure/jeesql "0.4.7"]
-                 [specql "20190301"]
+                 [io.github.tatut/specql "20230316" :exclusions [org.clojure/java.jdbc]]
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
-                 [org.geotools/gt-process-raster "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-process-raster "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
                  [org.geotools/gt-epsg-wkt "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-swing "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
 
                  ;; XML zipper
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
@@ -72,9 +78,10 @@
                  [org.apache.httpcomponents/httpcore "4.4.14"]
                  [org.apache.httpcomponents/httpmime "4.5.13" :exclusions [org.clojure/clojure commons-codec commons-logging org.apache.httpcomponents/httpcore]]
                  [com.draines/postal "2.0.3"]
-                 
+
+                 ;; JMS on käytössä vain yksikkötesteissä
                  [javax.jms/javax.jms-api "2.0.1"]
-                 [org.apache.activemq/activemq-client "5.18.3"]
+                 [org.apache.activemq/activemq-client "5.18.3" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Fileyard  liitetiedostojen tallennus
@@ -93,16 +100,16 @@
 
                  [alandipert/storage-atom "2.0.1"]
 
-                 [clj-time "0.15.0"]
+                 [clj-time "0.15.2"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
 
                  ;; Kuvataso error tulee ol.source.Image inheritistä, jos päivittää neloseen
                  [cljsjs/openlayers "3.15.1"] ; TODO Voisi päivittää, mutta laadunseurannan buildi hajoaa (4.4.1-1) puuttuviin requireihin
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "4.1.0"]
-                 [org.apache.poi/poi-scratchpad "4.1.0"] ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "4.1.0"] ;; .xlsx tiedoston lukua varten
+                 [org.apache.poi/poi "5.2.5"]
+                 [org.apache.poi/poi-scratchpad "5.2.5"] ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "5.2.5"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
 
                  ;; Chime -ajastuskirjasto
@@ -118,7 +125,7 @@
                  [slingshot "0.12.2"]
 
                  ;; PDF:n generointi
-                 [org.apache.xmlgraphics/fop "2.3"]
+                 [org.apache.xmlgraphics/fop "2.9"]
 
                  ;; Fake-HTTP testaukseen
                  [http-kit.fake "0.2.2"]
@@ -132,14 +139,14 @@
                  [com.taoensso/truss "1.5.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
-                 [dk.ative/docjure "1.14.0"]
+                 [dk.ative/docjure "1.19.0"]
 
                  ;; Performance metriikat
                  [yleisradio/new-reliquary "1.1.0"]
 
                  ;; Tuck UI apuri
                  [webjure/tuck "0.4.4"]
-                 [webjure/tuck-remoting "20190213"]
+                 [webjure/tuck-remoting "20190213" :exclusions [webjure/tuck]]
 
                  ;; Laadunseurantatyökalua varten
                  [org.clojure/data.codec "0.1.1"]
@@ -148,15 +155,17 @@
                  ;; Arbitrary precision math frontilla
                  [cljsjs/big "3.1.3-1"]
 
-                 [clj-gatling "0.18.0" :exclusions [[clj-time]]]
+                 ;; Gatlingin logback versio ei ole vielä ehtinyt päivittyä, niin haetaan se erikseen
+                 [ch.qos.logback/logback-classic "1.4.14" :exclusions [org.slf4j/slf4j-api]]
+                 [clj-gatling "0.18.0" :exclusions [clj-time org.slf4j/slf4j-api org.clojure/core.memoize org.clojure/tools.analyzer org.clojure/data.priority-map io.pebbletemplates/pebble]]
                  ;; Tarvitaan käännöksessä
                  [com.bhauman/figwheel-main "0.2.18"]
                  [digest "1.4.9"]
                  ;; Nätimpi xml:n printtaus mahdollistettu
                  [org.clojure/data.xml "0.0.8"]]
-  :managed-dependencies [[org.apache.poi/poi "4.1.0"]
-                         [org.apache.poi/poi-scratchpad "4.1.0"]
-                         [org.apache.poi/poi-ooxml "4.1.0"]]
+  :managed-dependencies [[org.apache.poi/poi "5.2.5"]
+                         [org.apache.poi/poi-scratchpad "5.2.5"]
+                         [org.apache.poi/poi-ooxml "5.2.5"]]
   :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]

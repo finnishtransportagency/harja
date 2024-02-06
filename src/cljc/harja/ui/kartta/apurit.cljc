@@ -6,7 +6,7 @@
         [[ol.geom.Point]])))
 
 (def kulmaraja-nuolelle (/ Math/PI 4)) ;; pi / 4 = 45 astetta
-(defn abs [i] (max i (- i)))
+(defn absoluteval [i] (max i (- i)))
 
 (def +koko-suomi-extent+ [60000 6613000 736400 7780300])
 
@@ -46,7 +46,7 @@
           (cond
             (when edellisen-taitoksen-kulma
               (and (or (nil? viimeisin-sijanti) (> dist min-etaisyys))
-                   (> (abs (- (abs edellisen-taitoksen-kulma) (abs rotaatio))) kulmaraja-nuolelle)))
+                   (> (absoluteval (- (absoluteval edellisen-taitoksen-kulma) (absoluteval rotaatio))) kulmaraja-nuolelle)))
             ;; Datassa on paikoin suoralla tiellä todella lyhyitä pätkiä, kun tehdään muka tiukka käännös
             ;;  |
             ;;  |

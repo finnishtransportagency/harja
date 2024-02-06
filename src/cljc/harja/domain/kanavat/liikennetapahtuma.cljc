@@ -46,6 +46,8 @@
                                     :harja.domain.kayttaja/kayttaja
                                     :harja.domain.kayttaja/id)}])
 
+(def +rajoita-tapahtumien-maara+ 10000)
+
 (def perustiedot
   #{::id
     ::aika
@@ -131,28 +133,10 @@
        (when (= :itse (::toiminto/palvelumuoto toiminto))
          (str " (" (::toiminto/lkm toiminto) " kpl)"))))
 
-;; Yhteenvedon tiedot, asetetaan tapahtumien haun yhteydessä 
-(def yhteenveto-atom (atom {:toimenpiteet {:sulutukset-ylos 0
-                                           :sulutukset-alas 0
-                                           :sillan-avaukset 0
-                                           :tyhjennykset 0
-                                           :yhteensa 0}
-                            :palvelumuoto {:paikallispalvelu 0
-                                           :kaukopalvelu 0
-                                           :itsepalvelu 0
-                                           :muu 0
-                                           :yhteensa 0}}))
-
-(defn yhteenveto-arvo [tyyppi avain]
-  (avain (get @yhteenveto-atom tyyppi)))
-
 (def suunnat-atom (atom
                    {:ylos "Ylös"
                     :alas "Alas"
                     :ei-suuntaa "Ei määritelty"}))
-
-(def palvelu-atom (atom {:arvo nil}))
-(def toimenpide-atom (atom {:arvo nil}))
 
 (defn paivita-suunnat-ja-toimenpide! [paivitetyt-tiedot]
   (let [toiminnot (:harja.domain.kanavat.liikennetapahtuma/toiminnot paivitetyt-tiedot)
