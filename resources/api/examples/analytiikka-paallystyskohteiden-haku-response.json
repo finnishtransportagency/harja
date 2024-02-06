@@ -16,6 +16,7 @@
         "let": 6218,
         "karttapaivamaara": "2023-01-29"
       },
+      "pituus": 12531,
       "tarjoushinta": 100000.00,
       "maaramuutokset": -10000.00,
       "bitumiIndeksi": -1000.00,
@@ -32,8 +33,11 @@
             "aet": 0,
             "losa": 6,
             "let": 6316,
+            "kaista": 1,
+            "ajorata": 1,
             "karttapaivamaara": "2023-01-29"
           },
+          "pituus": 6316,
           "paallystystoimenpide": {
             "uusiPaallyste": "asfalttibetoni",
             "raekoko": 1,
@@ -53,8 +57,11 @@
             "aet": 0,
             "losa": 7,
             "let": 6218,
+            "kaista": 1,
+            "ajorata": 1,
             "karttapaivamaara": "2023-01-29"
           },
+          "pituus": 6218,
           "paallystystoimenpide": {
             "uusiPaallyste": "asfalttibetoni",
             "raekoko": 1,
@@ -83,6 +90,7 @@
         "let": 355,
         "karttapaivamaara": "2023-01-29"
       },
+      "pituus": 355,
       "tarjoushinta": 10000.00,
       "maaramuutokset": -1000.00,
       "bitumiIndeksi": -100.00,
@@ -99,8 +107,11 @@
             "aet": 0,
             "losa": 20,
             "let": 335,
+            "kaista": 1,
+            "ajorata": 1,
             "karttapaivamaara": "2023-01-29"
           },
+          "pituus": 355,
           "paallystystoimenpide": {
             "uusiPaallyste": "asfalttibetoni",
             "raekoko": 1,

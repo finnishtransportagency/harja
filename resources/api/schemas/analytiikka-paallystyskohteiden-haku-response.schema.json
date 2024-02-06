@@ -12,7 +12,8 @@
           "harjaId",
           "kohdetyyppi",
           "tierekisteriosoitevali",
-          "alikohteet"
+          "alikohteet",
+          "pituus"
         ],
         "properties": {
           "yhaId": {
@@ -75,7 +76,7 @@
                   "type": "number"
                 },
                 "tierekisteriosoitevali": {
-                  "$ref": "#/definitions/tierekisteriosoitevali"
+                  "$ref": "#/definitions/tierekisteriosoitevali-kaista-ja-ajorata"
                 },
                 "paallystystoimenpide": {
                   "$ref": "#/definitions/paallystystoimenpide"
