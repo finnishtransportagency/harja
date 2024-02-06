@@ -344,6 +344,7 @@
   (let [ylityksen-maara (- toteuma oikaistu-kattohinta)
         muokattava? (or (not (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)) (:muokataan? kattohinnan-ylitys-lomake))
         maksun-tyyppi (:maksun-tyyppi kattohinnan-ylitys-lomake)
+        alustettu? (coll? kattohinnan-ylitys-lomake)
         osa-valittu? (= :osa maksun-tyyppi)
         maksu-valittu? (= :maksu maksun-tyyppi)
         siirto-valittu? (= :siirto maksun-tyyppi)
@@ -379,7 +380,7 @@
        (if voi-muokata?
          (if-not viimeinen-hoitokausi?
            [:<>
-            (when muokattava?
+            (when (and muokattava? alustettu?)
               [kentat/tee-kentta
                {:nimi :maksun-tyyppi
                 :tyyppi :radio-group
