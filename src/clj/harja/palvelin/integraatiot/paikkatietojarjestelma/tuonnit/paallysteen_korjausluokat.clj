@@ -4,8 +4,6 @@
             [harja.kyselyt.paallysteen-korjausluokat :as paallysteen-korjausluokat]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
-;; "file:///Users/markusva/Downloads/paallysteen_korjausluokka/paallysteen_korjausluokkaLine.shp"
-
 (defn vie-korjausluokat-entry [db rivi]
     (paallysteen-korjausluokat/tallenna-paallysteen-korjausluokka! db
       {:tie (:alkusijain rivi)
