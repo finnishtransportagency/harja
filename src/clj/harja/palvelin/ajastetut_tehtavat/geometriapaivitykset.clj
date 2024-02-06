@@ -11,6 +11,7 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.ava :as ava]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko :as tieverkon-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieturvallisuusverkko :as tieturvallisuusverkon-tuonti]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.paallysteen-korjausluokat :as paallysteen-korjausluokat]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat :as siltojen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet :as pohjavesialueen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.soratien-hoitoluokat :as soratien-hoitoluokkien-tuonti]
@@ -107,6 +108,14 @@
     :tieturvallisuustarkastus-tieverkko-tuontikohde
     :tieturvallisuustarkastus-tieverkko-shapefile
     tieturvallisuusverkon-tuonti/vie-tieturvallisuusverkko-kantaan))
+
+(def tee-paallysteen-korjausluokka-paivitystehtava
+  (maarittele-paivitystehtava
+    "paallysteen-korjausluokka"
+    :paallysteen-korjausluokka-osoite
+    :paallysteen-korjausluokka-tuontikohde
+    :paallysteen-korjausluokka-shapefile
+    paallysteen-korjausluokat/vie-korjausluokat-kantaan))
 
 (def tee-laajennetun-tieverkon-paivitystehtava
   (fn [this asetukset]
@@ -222,6 +231,7 @@
     (assoc this
       :tieverkon-paivitys (tee-tieverkon-paivitystehtava this asetukset)
       :tieturvallisuusverkon-paivitys (tee-tieturvallisuusverkon-paivitystehtava this asetukset)
+      :paallysteen-korjausluokka-paivitys (tee-paallysteen-korjausluokka-paivitystehtava this asetukset)
       :laajennetun-tieverkon-paivitys (tee-laajennetun-tieverkon-paivitystehtava this asetukset)
       :pohjavesialueiden-paivitys (tee-pohjavesialueiden-paivitystehtava this asetukset)
       :talvihoidon-hoitoluokkien-paivitys (tee-talvihoidon-hoitoluokkien-paivitystehtava this asetukset)
@@ -239,6 +249,7 @@
   (stop [this]
     (doseq [tehtava [:tieverkon-paivitys
                      :tieturvallisuusverkon-paivitys
+                     :paallysteen-korjausluokka-paivitys
                      :laajennetun-tieverkon-paivitys
                      :pohjavesialueiden-paivitys
                      :talvihoidon-hoitoluokkien-paivitys
