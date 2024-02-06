@@ -56,21 +56,6 @@
             "multipleOf": 1,
             "description": "Pituus metreinä, laskettu tieosoitteista HARJAssa."
           },
-          "tarjoushinta": {
-            "type": "number"
-          },
-          "maaramuutokset": {
-            "type": "number"
-          },
-          "bitumiIndeksi": {
-            "type": "number"
-          },
-          "nestekaasuJaKevytPolttooljy": {
-            "type": "number"
-          },
-          "makuPaallysteet": {
-            "type": "number"
-          },
           "kokonaishinta": {
             "type": "number"
           },

@@ -3,6 +3,21 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "yhaLahetyksienTila": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "onnistuneita": {
+          "type": "integer"
+        },
+        "epaonnistuneita": {
+          "type": "integer"
+        },
+        "eiLahetettyja": {
+          "type": "integer"
+        }
+      }
+    },
     "paallystysilmoitukset": {
       "type": "array",
       "items": {
@@ -14,6 +29,10 @@
             "description": "Päällystyskohteen ID HARJAn tietokannassa, eli HarjaId",
             "multipleOf": 1
           },
+          "yhaLahetyksenTila": {
+            "type": "string",
+            "enum": ["Ei lähetetty", "Lähetetty onnistuneesti", "Epäonnistunut"]
+          },
           "takuupaivamaara": {
             "type": "string",
             "format": "date"
@@ -23,6 +42,7 @@
           },
           "alustalleTehdytToimet": {
             "type": "array",
+            "description": "Vanhemman POT1-mallin tyyppiset alustatoimenpiteet",
             "additionalProperties": false,
             "items": {
               "type": "object",
@@ -118,6 +138,7 @@
           },
           "alikohteet": {
             "type": "array",
+            "description": "Vanhemman POT1-mallin tyyppiset alikohteisiin, eli kulutuskerrokseen liittyvät toimenpiteet",
             "minItems": 1,
             "items": {
               "type": "object",
@@ -423,9 +444,6 @@
     "materiaali": {
       "type": "object",
       "properties": {
-        "kiviainesesiintymanNimi": {
-          "type": "string"
-        },
         "kiviaineksenKmArvo": {
           "type": "string",
           "description": "Kiviaineksen kuulamyllyarvo"
