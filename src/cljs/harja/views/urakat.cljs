@@ -1,20 +1,25 @@
 (ns harja.views.urakat
   "Harjan näkymä, jossa näytetään karttaa sekä kontekstisidonnaiset asiat."
-  (:require [harja.ui.kentat :as kentat]
-            [reagent.core :refer [atom] :as reagent]
+  (:require [reagent.core :refer [atom] :as reagent]
             [cljs.core.async :as async :refer [chan <! >!]]
+            [harja.ui.bootstrap :as bs]
             [harja.ui.listings :refer [suodatettu-lista]]
             [harja.ui.yleiset :as yleiset]
 
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.urakat :as ur]
+            [harja.loki :refer [log]]
+
+            [harja.asiakas.tapahtumat :as t]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
 
             [harja.views.kartta :as kartta]
             [harja.views.urakka :as urakka]
             [harja.pvm :as pvm]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.ui.kentat :as kentat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn valitse-hallintayksikko []

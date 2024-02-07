@@ -1,11 +1,11 @@
 (ns harja.tiedot.urakat
   "Harjan urakkalistausten tietojen hallinta"
   (:require [clojure.string :as str]
+            [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [chan <! >! close!]]
             [reagent.core :refer [atom]]
-            [alandipert.storage-atom :refer [local-storage]]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.protokollat :refer [Haku hae]])
+            [harja.ui.protokollat :refer [Haku hae]]
+            [alandipert.storage-atom :refer [local-storage]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
