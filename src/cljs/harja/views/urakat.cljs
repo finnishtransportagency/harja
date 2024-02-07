@@ -1,17 +1,13 @@
 (ns harja.views.urakat
   "Harjan näkymä, jossa näytetään karttaa sekä kontekstisidonnaiset asiat."
-  (:require [reagent.core :refer [atom] :as reagent]
+  (:require [harja.ui.kentat :as kentat]
+            [reagent.core :refer [atom] :as reagent]
             [cljs.core.async :as async :refer [chan <! >!]]
-            [harja.ui.bootstrap :as bs]
             [harja.ui.listings :refer [suodatettu-lista]]
             [harja.ui.yleiset :as yleiset]
 
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.urakat :as ur]
-            [harja.loki :refer [log]]
-
-            [harja.asiakas.tapahtumat :as t]
-            [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
 
             [harja.views.kartta :as kartta]
@@ -51,13 +47,16 @@
                                  (keep identity)
                                  [(when tulevia? :tulevat)
                                   (when kaynnissaolevia? :kaynnissa)
-                                  (when paattyneita? :paattyneet)])]
+                                  (when (and paattyneita? @ur/nayta-paattyneet-urakat?) :paattyneet)])]
     [:div.row {:data-cy "urakat-valitse-urakka"}
      [:div.col-md-4
       (if (nil? suodatettu-urakkalista)
         [yleiset/ajax-loader "Urakoita haetaan..."]
         [:span
          [:h5.haku-otsikko "Valitse hallintayksikön urakka"]
+         [kentat/tee-kentta {:tyyppi :checkbox
+                             :teksti "Näytä päättyneet"}
+          ur/nayta-paattyneet-urakat?]
          [:div
           ^{:key "ur-lista"}
           [suodatettu-lista {:format         :nimi :haku :nimi
