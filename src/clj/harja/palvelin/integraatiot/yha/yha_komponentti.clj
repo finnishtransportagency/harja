@@ -3,6 +3,7 @@
             [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
             [harja.domain.paallystysilmoitus :as pot-domain]
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.yha.sanomat
              [urakoiden-hakuvastaussanoma :as urakoiden-hakuvastaus]
@@ -176,7 +177,9 @@
     (let [maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
                                    db {:urakka-id (:urakka kohde) :yllapitokohde-id kohde-id}))
           paallystysilmoitus (hae-kohteen-paallystysilmoitus db kohde-id)
-          paallystysilmoitus (assoc paallystysilmoitus :maaramuutokset maaramuutokset)
+          paallystysilmoitus (if (yllapitokohde-domain/eritellyt-maaramuutokset-kaytossa? (:vuodet paallystysilmoitus))
+                               (assoc paallystysilmoitus :maaramuutokset maaramuutokset)
+                               paallystysilmoitus)
           paallystysilmoitus (if (= (:versio paallystysilmoitus) 2)
                                (let [keep-some (fn [map-jossa-on-nil]
                                                  (into {} (filter
