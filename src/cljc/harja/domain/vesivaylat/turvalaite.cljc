@@ -7,8 +7,8 @@
     #?@(:clj [
     [harja.kyselyt.specql-db :refer [define-tables]]
     ]
-        :cljs [
-               [specql.impl.registry]]))
+        :cljs [[specql.impl.registry]
+               [specql.data-types]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
