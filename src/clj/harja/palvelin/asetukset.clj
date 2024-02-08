@@ -137,7 +137,10 @@
                                            (s/optional-key :kanavien-tuontikohde) s/Str
                                            (s/optional-key :tieturvallisuustarkastus-tieverkko-shapefile) s/Str
                                            (s/optional-key :tieturvallisuustarkastus-tieverkko-osoite) s/Str
-                                           (s/optional-key :tieturvallisuustarkastus-tieverkko-tuontikohde) s/Str}
+                                           (s/optional-key :tieturvallisuustarkastus-tieverkko-tuontikohde) s/Str
+                                           (s/optional-key :paallysteen-korjausluokka-shapefile) s/Str
+                                           (s/optional-key :paallysteen-korjausluokka-osoite) s/Str
+                                           (s/optional-key :paallysteen-korjausluokka-tuontikohde) s/Str}
 
    (s/optional-key :yha) {:url s/Str
                           :api-key s/Str}
