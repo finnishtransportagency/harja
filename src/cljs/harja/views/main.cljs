@@ -2,7 +2,6 @@
   "Harjan päänäkymä"
   (:require [harja.ui.bootstrap :as bs]
             [reagent.core :refer [atom]]
-            [specql.core]                    ;; käännösjärjestyksen vuoksi tässä
             [harja.tiedot.istunto :as istunto]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [linkki staattinen-linkki-uuteen-ikkunaan ajax-loader livi-pudotusvalikko]]
