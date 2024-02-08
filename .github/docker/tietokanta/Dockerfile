@@ -11,17 +11,16 @@
 #
 # Muuta materiaalia: https://github.com/postgis/docker-postgis
 
-# https://hub.docker.com/_/postgres/tags
-ARG POSTGRES_IMAGE_VERSION=15.3-bullseye
-# https://docs.aws.amazon.com/AmazonRDS/latest/AuroraPostgreSQLReleaseNotes/AuroraPostgreSQL.Extensions.html#AuroraPostgreSQL.Extensions.13
-ARG POSTGIS_VERSION=3.3.2
+# https://docs.aws.amazon.com/AmazonRDS/latest/AuroraPostgreSQLReleaseNotes/AuroraPostgreSQL.Extensions.html#AuroraPostgreSQL.Extensions.15
+ARG POSTGIS_VERSION=3.3.3
 
 
 #-------------------------------#
 #----- Rakenna pohja-image -----#
 #-------------------------------#
 
-FROM postgres:${POSTGRES_IMAGE_VERSION} as base
+# https://hub.docker.com/_/postgres/tags
+FROM postgres:15.4-bullseye as base
 # https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
 ARG POSTGIS_VERSION
 
