@@ -80,3 +80,20 @@
   (varusteet/tuo-velho-nimikkeisto {:integraatioloki (:integraatioloki j)
                                     :db (:db j)
                                     :asetukset asetukset}))
+
+(comment
+  (def j harja.palvelin.main/harja-jarjestelma)
+  (varusteet/hae-urakan-varustetoteumat
+    (get-in j [:velho-integraatio]) 
+    {:urakka-id 32 ;; Pellon MHU testiurakka (3. hoitovuosi)
+     :kohdeluokat []
+     :varustetyypit []
+     :kuntoluokat []
+     :tie nil
+     :aosa nil
+     :aeta nil
+     :losa nil
+     :leta nil
+     :hoitovuoden-kuukausi nil
+     :hoitokauden-alkuvuosi 2021 
+     :toimenpide nil}))
