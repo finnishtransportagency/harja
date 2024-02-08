@@ -18,7 +18,8 @@
             [harja.views.urakka :as urakka]
             [harja.pvm :as pvm]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.ui.kentat :as kentat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn valitse-hallintayksikko []
@@ -51,13 +52,16 @@
                                  (keep identity)
                                  [(when tulevia? :tulevat)
                                   (when kaynnissaolevia? :kaynnissa)
-                                  (when paattyneita? :paattyneet)])]
+                                  (when (and paattyneita? @ur/nayta-paattyneet-urakat?) :paattyneet)])]
     [:div.row {:data-cy "urakat-valitse-urakka"}
      [:div.col-md-4
       (if (nil? suodatettu-urakkalista)
         [yleiset/ajax-loader "Urakoita haetaan..."]
         [:span
          [:h5.haku-otsikko "Valitse hallintayksikön urakka"]
+         [kentat/tee-kentta {:tyyppi :checkbox
+                             :teksti "Näytä päättyneet"}
+          ur/nayta-paattyneet-urakat?]
          [:div
           ^{:key "ur-lista"}
           [suodatettu-lista {:format         :nimi :haku :nimi
