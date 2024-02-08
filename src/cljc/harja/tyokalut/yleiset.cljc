@@ -68,3 +68,13 @@
       (> hoitokauden-numero 1)) (dec (+ hoitokauden-numero urakan-aloitusvuosi))
     (and (>= kuukausi 1) (<= kuukausi 9)
       (> hoitokauden-numero 1)) (+ hoitokauden-numero urakan-aloitusvuosi)))
+
+
+(defn left-join-maps-and-replace-key [{:keys [coll1 coll2 yhteinen-key1 yhteinen-key2 etsittava-avain asetettava-avain] :as m}]
+  (map (fn [item1]
+         (let [yhteinen-arvo (get-in item1 yhteinen-key1)]
+           (merge
+             item1
+             {asetettava-avain (vec (->> coll2
+                                      (filter #(= yhteinen-arvo (get-in % yhteinen-key2)))
+                                      (map #(get-in % etsittava-avain))))}))) coll1))
