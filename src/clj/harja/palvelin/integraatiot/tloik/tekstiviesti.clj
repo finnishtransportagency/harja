@@ -3,7 +3,6 @@
   (:require [harja.domain.palautevayla-domain :as palautevayla]
             [harja.kyselyt.palautevayla :as palautevayla-kyselyt]
             [taoensso.timbre :as log]
-            [clojure.string :as string]
             [harja.palvelin.integraatiot.labyrintti.sms :as sms]
             [harja.domain.tieliikenneilmoitukset :as apurit]
             [harja.kyselyt.paivystajatekstiviestit :as paivystajatekstiviestit]
@@ -112,7 +111,7 @@
     (throw+ {:type :tuntematon-ilmoitus})))
 
 (defn vastaanota-tekstiviestikuittaus [jms-lahettaja db puhelinnumero viesti]
-  (log/warn (format "Vastaanotettiin T-LOIK kuittaus tekstiviestillä. Numero: %s, viesti: %s." puhelinnumero viesti))
+  (log/info (format "Vastaanotettiin T-LOIK kuittaus tekstiviestillä. Numero: %s, viesti: %s." puhelinnumero viesti))
   (try+
     (let [{:keys [toimenpide vapaateksti viestinumero aiheutti-toimenpiteita]} (parsi-tekstiviesti viesti)
           {:keys [ilmoitus ilmoitusid yhteyshenkilo]} (hae-paivystajatekstiviesti db viestinumero puhelinnumero)
