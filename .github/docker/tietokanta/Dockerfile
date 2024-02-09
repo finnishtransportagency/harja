@@ -9,9 +9,11 @@
 #  $ sudo docker exec --user postgres harjadb /bin/bash -c "~/aja-migraatiot.sh"
 #  $ sudo docker exec --user postgres harjadb /bin/bash -c "~/aja-testidata.sh"
 #
-# Muuta materiaalia: https://github.com/postgis/docker-postgis
 
 # https://docs.aws.amazon.com/AmazonRDS/latest/AuroraPostgreSQLReleaseNotes/AuroraPostgreSQL.Extensions.html#AuroraPostgreSQL.Extensions.15
+# Muuta materiaalia:
+# https://github.com/postgis/docker-postgis
+# https://postgis.net/docs/manual-3.3/postgis_installation.html#install_requirements
 ARG POSTGIS_VERSION=3.3.3
 
 
@@ -20,7 +22,7 @@ ARG POSTGIS_VERSION=3.3.3
 #-------------------------------#
 
 # https://hub.docker.com/_/postgres/tags
-FROM postgres:15.4-bullseye as base
+FROM postgres:13.13-bullseye as base
 # https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
 ARG POSTGIS_VERSION
 
@@ -47,9 +49,11 @@ RUN --mount=type=cache,target=/var/cache/apt \
       bison \
       build-essential \
       ca-certificates \
+      clang \
       cmake \
       g++ \
       git \
+      llvm-dev \
       libboost-all-dev \
       libcgal-dev \
       libcurl4-gnutls-dev \
@@ -77,12 +81,19 @@ RUN  cd postgis-${POSTGIS_VERSION} \
 
 
 ## Asenna maven
-ENV MAVEN_VERSIO=3.9.4
+ENV MAVEN_VERSIO=3.9.6
+# https://downloads.apache.org/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.tar.gz.sha512
+ENV MAVEN_SHA512="706f01b20dec0305a822ab614d51f32b07ee11d0218175e55450242e49d2156386483b506b3a4e8a03ac8611bae96395fd5eec15f50d3013d5deed6d1ee18224"
+
 RUN apt-get update && apt-get install -y openjdk-17-jdk \
-    && wget "https://downloads.apache.org/maven/maven-3/${MAVEN_VERSIO}/binaries/apache-maven-${MAVEN_VERSIO}-bin.tar.gz"; \
-        if [ "$(sha512sum /apache-maven-${MAVEN_VERSIO}-bin.tar.gz )" != "deaa39e16b2cf20f8cd7d232a1306344f04020e1f0fb28d35492606f647a60fe729cc40d3cba33e093a17aed41bd161fe1240556d0f1b80e773abd408686217e  /apache-maven-${MAVEN_VERSIO}-bin.tar.gz" ]; then exit 1; fi; \
-        tar xzvf "apache-maven-${MAVEN_VERSIO}-bin.tar.gz"; \
-        rm "apache-maven-${MAVEN_VERSIO}-bin.tar.gz";
+    && wget "https://downloads.apache.org/maven/maven-3/${MAVEN_VERSIO}/binaries/apache-maven-${MAVEN_VERSIO}-bin.tar.gz" \
+    && if [ "$MAVEN_SHA512" != "$(sha512sum apache-maven-${MAVEN_VERSIO}-bin.tar.gz | awk '{print $1}')" ]; then \
+               echo "Downloaded Maven SHA512: $(sha512sum apache-maven-${MAVEN_VERSIO}-bin.tar.gz | awk '{print $1}')"; \
+               echo "Maven package sha512 values don't match! exiting."; \
+               exit 1; \
+           fi \
+    && tar xzvf "apache-maven-${MAVEN_VERSIO}-bin.tar.gz" \
+    && rm "apache-maven-${MAVEN_VERSIO}-bin.tar.gz"
 
 # Lisää maven bin kansio PATH:iin
 ENV PATH="/apache-maven-${MAVEN_VERSIO}/bin/:${PATH}"
