@@ -373,7 +373,6 @@
 
     <xs:complexType name="materiaali">
         <xs:sequence>
-            <xs:element name="kiviainesesiintyman-nimi" type="xs:string" minOccurs="0"/>
             <xs:element name="kiviaineksen-km-arvo" type="xs:string" minOccurs="0"/>
             <xs:element name="kiviaineksen-muotoarvo" type="xs:string" minOccurs="0"/>
             <xs:element name="sideainetyyppi" type="sideainetyyppi" minOccurs="0"/>
