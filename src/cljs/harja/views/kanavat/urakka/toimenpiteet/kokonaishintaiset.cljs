@@ -23,16 +23,26 @@
   (:require-macros
     [harja.makrot :refer [defc]]))
 
-(defn hakuehdot [e! {:keys [huoltokohteet] :as app} kohteet]
+(defn hakuehdot [e! {:keys [huoltokohteet valinnat] :as app} kohteet]
   (let [urakka-map (get-in app [:valinnat :urakka])]
-
     [valinnat/urakkavalinnat {:urakka urakka-map}
      ^{:key "valinnat"}
      [:div.kanava-suodattimet
-      
+
       [:div.ryhma
-       [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka-map]]
-      
+       [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka-map]
+       ;; Sarakkeiden järjestys
+       [valinnat/kanava-jarjesta
+        (r/wrap
+          (second (get-in app [:valinnat :jarjesta]))
+          #(do
+             (println "ws: " (second %) " app: " (first (:jarjesta valinnat)))
+             (e! (tiedot/->PaivitaValinnat {:jarjesta %}))))
+        (into [] tiedot/taulukon-jarjestys-valinnat)
+        #(do
+           (println "s : " %)
+           (or % "not set"))]]
+
       [:div.ryhma
        [valinnat/kanava-kohde
         (r/wrap (first (filter #(= (::kohde/id %) (get-in app [:valinnat :kanava-kohde-id])) kohteet))
@@ -56,7 +66,7 @@
        (fn [_]
          (e! (tiedot/->UusiToimenpide)))]]]))
 
-(defn kokonaishintaiset-toimenpiteet-taulukko [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
+(defn kokonaishintaiset-toimenpiteet-taulukko [e! {:keys [toimenpiteet]}]
   [:div
    [toimenpiteet-view/ei-yksiloity-vihje]
    [grid/grid
@@ -67,7 +77,6 @@
      :voi-kumota? false
      :piilota-toiminnot? true
      :rivi-klikattu (fn [rivi] (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot rivi)))
-     :tyhja (if haku-kaynnissa? [ajax-loader "Haetaan toimenpiteitä"] "Ei toimenpiteitä")
      :jarjesta ::kanavan-toimenpide/pvm
      :tunniste ::kanavan-toimenpide/id
      :raporttivienti #{:excel :pdf}
@@ -118,17 +127,19 @@
                                                          (kartta-tiedot/piilota-infopaneeli!))
                                              :teksti "Avaa toimenpide"}})
                          (e! (tiedot/->NakymaAvattu)))
-                      #(do
-                         (tasot/taso-pois! :kan-kohteet)
-                         (tasot/taso-pois! :kan-toimenpiteet)
-                         (tasot/taso-paalle! :organisaatio)
-                         (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
-                         (e! (tiedot/->NakymaSuljettu))))
-    (fn [e! app]
+      #(do
+         (tasot/taso-pois! :kan-kohteet)
+         (tasot/taso-pois! :kan-toimenpiteet)
+         (tasot/taso-paalle! :organisaatio)
+         (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
+         (e! (tiedot/->NakymaSuljettu))))
+    (fn [e! {:keys [haku-kaynnissa?] :as app}]
       ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
       @tiedot/valinnat
-
-      [kokonaishintaiset-nakyma e! app @kanavaurakka/kanavakohteet])))
+      [:span
+       (if haku-kaynnissa?
+         [ajax-loader "Haetaan toimenpiteitä"]
+         [kokonaishintaiset-nakyma e! app @kanavaurakka/kanavakohteet])])))
 
 (defc kokonaishintaiset []
       [tuck tiedot/tila kokonaishintaiset*])

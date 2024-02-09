@@ -53,7 +53,6 @@
 (defrecord LisaaMateriaali [])
 (defrecord LisaaVirhe [virhe])
 
-
 (def tila (atom {:nakymassa? false
                  :valinnat nil
                  :avattu-toimenpide nil
@@ -66,6 +65,9 @@
                  :materiaalien-haku-kaynnissa? false
                  :valitut-toimenpide-idt #{}
                  :toimenpiteet nil}))
+
+(def taulukon-jarjestys-valinnat {::kanavan-toimenpide/pvm "Päivämäärä"
+                                  ::kanavan-toimenpide/huoltokohde "Huoltokohde"})
 
 (defn alkuvalinnat []
   {:urakka @navigaatio/valittu-urakka
