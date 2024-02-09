@@ -279,24 +279,6 @@
         </xs:sequence>
     </xs:complexType>
 
-    <xs:complexType name="toteuma-alikohde">
-        <xs:sequence>
-            <xs:element name="yha-id" type="xs:long" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="harja-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="poistettu" type="poistettu" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali-kaistalla-ja-ajoradalla" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="paallystystoimenpide" type="toteumapaallystystoimenpide" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="materiaalit" minOccurs="0" maxOccurs="1">
-                <xs:complexType>
-                    <xs:sequence>
-                        <xs:element name="materiaali" type="materiaali" minOccurs="0" maxOccurs="unbounded">
-                        </xs:element>
-                    </xs:sequence>
-                </xs:complexType>
-            </xs:element>
-        </xs:sequence>
-    </xs:complexType>
-
     <xs:complexType name="paallystystoimenpide">
         <xs:sequence>
             <xs:element name="uusi-paallyste" type="paallyste" minOccurs="0" maxOccurs="1"/>
@@ -338,40 +320,6 @@
             </xs:element>
             <xs:element name="kuulamylly" type="kuulamylly" minOccurs="0" maxOccurs="1"/>
             <xs:element name="paallystetyomenetelma" type="paallystetyomenetelma" nillable="false" minOccurs="1" maxOccurs="1"/>
-        </xs:sequence>
-    </xs:complexType>
-
-    <xs:complexType name="toteumapaallystystoimenpide">
-        <xs:complexContent>
-            <xs:extension base="paallystystoimenpide">
-                <xs:sequence>
-                    <xs:element name="leveys" type="xs:decimal" minOccurs="0" maxOccurs="1">
-                        <xs:annotation>
-                            <xs:documentation>
-                                Yksikkö: metri
-                            </xs:documentation>
-                        </xs:annotation>
-                    </xs:element>
-                    <xs:element name="pinta-ala" type="xs:decimal" minOccurs="0" maxOccurs="1">
-                        <xs:annotation>
-                            <xs:documentation>
-                                Yksikkö: neliömetri
-                            </xs:documentation>
-                        </xs:annotation>
-                    </xs:element>
-                </xs:sequence>
-            </xs:extension>
-        </xs:complexContent>
-    </xs:complexType>
-
-    <xs:complexType name="materiaali">
-        <xs:sequence>
-            <xs:element name="kiviainesesiintyman-nimi" type="xs:string" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="kiviaineksen-km-arvo" type="xs:string" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="kiviaineksen-muotoarvo" type="xs:string" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="sideainetyyppi" type="sideainetyyppi" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="sideainepitoisuus" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="lisa-aineet" type="xs:string" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
 
@@ -1185,35 +1133,6 @@
             <xs:enumeration value="9">
                 <xs:annotation>
                     <xs:documentation>Muu sijainti</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-        </xs:restriction>
-    </xs:simpleType>
-    <xs:simpleType name="alustan-tekninen-toimenpide">
-        <xs:restriction base="xs:integer">
-            <xs:enumeration value="1">
-                <xs:annotation>
-                    <xs:documentation>rakentaminen</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="2">
-                <xs:annotation>
-                    <xs:documentation>suuntauksen parantaminen</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="3">
-                <xs:annotation>
-                    <xs:documentation>rakenteen parantaminen</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="4">
-                <xs:annotation>
-                    <xs:documentation>kevyt rakenteen parantaminen</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="9">
-                <xs:annotation>
-                    <xs:documentation>ei tietoa</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
         </xs:restriction>
