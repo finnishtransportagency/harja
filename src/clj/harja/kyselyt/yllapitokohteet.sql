@@ -1245,3 +1245,6 @@ WHERE vuodet @> ARRAY [:vuosi] :: INT [] AND
 -- Hakee urakan ylläpitokohteen vuodet, joilla kohdetta työstetään.
 SELECT vuodet FROM yllapitokohde
 WHERE id = :id;
+
+-- name: paivita-yllapitokohteen-paallysteen-korjausluokka
+SELECT paivita_yllapitokohteen_paallysteen_korjausluokka(:id);
