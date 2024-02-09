@@ -27,7 +27,7 @@
   "Ohjaa laskutusyhteenvedon oikeaan paikkaan urakkatyypin mukaisesti"
   [db user tiedot]
   (if (= :teiden-hoito (:urakkatyyppi tiedot))
-    (laskutusyhteenveto-tuotekohtainen/suorita db user tiedot)
+    (harja.palvelin.raportointi.raportit.laskutusyhteenveto-tyomaa/suorita db user tiedot)
     (laskutusyhteenveto/suorita db user tiedot)))
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as tiedot}]
