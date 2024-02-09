@@ -22,7 +22,7 @@ ARG POSTGIS_VERSION=3.3.3
 #-------------------------------#
 
 # https://hub.docker.com/_/postgres/tags
-FROM postgres:13.13-bullseye as base
+FROM postgres:15.4-bullseye as base
 # https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
 ARG POSTGIS_VERSION
 
