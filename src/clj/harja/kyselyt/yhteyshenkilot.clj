@@ -20,7 +20,7 @@
   (->> urakkaid
        (hae-urakan-taman-hetkiset-paivystajat db)))
 
-(defn luo-yhteyshenkilo [db etu suku tyopuhelin matkapuhelin email org sampoid kayttajatunnus ulkoinen_id]
+(defn luo-yhteyshenkilo [db etu suku tyopuhelin matkapuhelin email org sampoid kayttajatunnus ulkoinen_id luoja]
   (luo-yhteyshenkilo<!
     db
     etu
@@ -31,7 +31,8 @@
     org
     sampoid
     kayttajatunnus
-    ulkoinen_id))
+    ulkoinen_id
+    luoja))
 
 (defn paivita-yhteyshenkilo [db etunimi sukunimi tyopuhelin matkapuhelin sahkoposti organisaatio id]
   (paivita-yhteyshenkilo<! db
