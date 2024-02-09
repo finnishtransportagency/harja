@@ -572,7 +572,8 @@
                    ::lt/toiminnot [{::toiminto/palvelumuoto :muu
                                     ::toiminto/toimenpide :tyhjennys}]}]
     
-    (is (= {:valittu-liikennetapahtuma nil
+    (is (= {:lataa-aloitustiedot false 
+            :valittu-liikennetapahtuma nil
             :liikennetapahtumien-haku-kaynnissa? false
             :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false
             :haetut-tapahtumat [sulutus-alas sulutus-ylos sillan-avaus tyhjennys]
@@ -580,15 +581,9 @@
                              (merge sulutus-ylos {::lt-alus/suunta :ylos}) 
                              sillan-avaus 
                              tyhjennys]
-            :raporttiparametrit {:nimi :kanavien-liikennetapahtumat,
-                                 :konteksti "monta-urakkaa",
-                                 :urakoiden-nimet (),
-                                 :parametrit {:valitut-urakat ()
-                                              :alkupvm nil 
-                                              :loppupvm nil
-                                              :urakkatyyppi :vesivayla-kanavien-hoito
-                                              :yhteenveto {:toimenpiteet {:sulutukset-ylos 1, :sulutukset-alas 1, :sillan-avaukset 1, :tyhjennykset 1},
-                                                           :palvelumuoto {:paikallispalvelu 0, :kaukopalvelu 1, :itsepalvelu 1, :muu 0, :yhteensa 2}}}}}
+            :rivimaara-ylittynyt false
+            :yhteenveto {:toimenpiteet {:sulutukset-ylos 1, :sulutukset-alas 1, :sillan-avaukset 1, :tyhjennykset 1},
+                         :palvelumuoto {:paikallispalvelu 0, :kaukopalvelu 1, :itsepalvelu 1, :muu 0, :yhteensa 2}}}
            
            (e! (tiedot/->LiikennetapahtumatHaettu [sulutus-alas sulutus-ylos sillan-avaus tyhjennys]))))))
 
@@ -718,17 +713,17 @@
     (vaadi-async-kutsut
       #{tiedot/->HaeLiikennetapahtumat}
       (is (= {:valinnat {:foo 1
-                         :aikavali 1}}
+                         :aikavali [1 1]}}
              (e! (tiedot/->PaivitaValinnat {:bar 2
-                                            :aikavali 1})
+                                            :aikavali [1 1]})
                  {:valinnat {:foo 1}})))))
 
   (testing "Parametrien ylikirjoitus"
     (vaadi-async-kutsut
       #{tiedot/->HaeLiikennetapahtumat}
-      (is (= {:valinnat {:aikavali 3}}
-             (e! (tiedot/->PaivitaValinnat {:aikavali 3})
-                 {:valinnat {:aikavali 1}}))))))
+      (is (= {:valinnat {:aikavali [1 3]}}
+             (e! (tiedot/->PaivitaValinnat {:aikavali [1 3]})
+                 {:valinnat {:aikavali [1 1]}}))))))
 
 (deftest tapahtuman-muokkaus
   (is (= {:valittu-liikennetapahtuma {:foo :bar}}
@@ -785,7 +780,9 @@
         tapahtuma2 {::lt/kohde {::kohde/nimi "Iso mutka"}
                     ::lt/alukset [{::lt-alus/suunta :ylos
                                    ::lt-alus/nimi "Ronsu"}]}]
-    (is (= {:tallennus-kaynnissa? false
+    (is (= {:lataa-aloitustiedot false 
+            :tallennus-kaynnissa? false
+            :rivimaara-ylittynyt false
             :valittu-liikennetapahtuma nil
             :liikennetapahtumien-haku-kaynnissa? false
             :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false
@@ -795,13 +792,15 @@
                               tapahtuma2
                               {::lt-alus/suunta :ylos
                                ::lt-alus/nimi "Ronsu"})]
-            :raporttiparametrit {:nimi :kanavien-liikennetapahtumat, :konteksti "monta-urakkaa", :urakoiden-nimet (),
-                                 :parametrit {:valitut-urakat ()
-                                              :alkupvm nil
-                                              :loppupvm nil
-                                              :urakkatyyppi :vesivayla-kanavien-hoito
-                                              :yhteenveto {:toimenpiteet {:sulutukset-ylos 0, :sulutukset-alas 0, :sillan-avaukset 0, :tyhjennykset 0},
-                                                           :palvelumuoto {:paikallispalvelu 0, :kaukopalvelu 0, :itsepalvelu 0, :muu 0, :yhteensa 0}}}}}
+            :yhteenveto {:toimenpiteet {:sulutukset-ylos 0,
+                                        :sulutukset-alas 0,
+                                        :sillan-avaukset 0,
+                                        :tyhjennykset 0},
+                         :palvelumuoto {:paikallispalvelu 0,
+                                        :kaukopalvelu 0,
+                                        :itsepalvelu 0,
+                                        :muu 0,
+                                        :yhteensa 0}}}
            (e! (tiedot/->TapahtumaTallennettu [tapahtuma1 tapahtuma2])))))
 
   (is (false? (:nakyvissa? @modal/modal-sisalto))))

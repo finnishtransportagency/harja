@@ -1,14 +1,11 @@
-# build-workflowsta minimoitu versio trivy-lisäyksin
-name: 'Harja: Scan container image'
+name: 'Harja: Scan fargate image (manual)'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: true
 
 on:
-  push:
-    branches:
-      - develop
+  workflow_dispatch:
 
 jobs:
   build-and-scan:
