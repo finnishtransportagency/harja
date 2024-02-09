@@ -873,7 +873,7 @@
         (assoc :lataa-aloitustiedot true)
         (assoc :liikennetapahtumien-haku-kaynnissa? false)
         (assoc-in [:valinnat :aikavali] aikavali)
-        (tt/post! :kayttajan-urakat [kanava-hallintayksikko] {:onnistui ->KayttajanUrakatHaettu}))))
+        (tt/post! :kayttajan-urakat [kanava-hallintayksikko :urakkatyyppi :vesivayla-kanavien-hoito] {:onnistui ->KayttajanUrakatHaettu}))))
 
   KayttajanUrakatHaettu
   (process-event [{urakat :urakat} app]
