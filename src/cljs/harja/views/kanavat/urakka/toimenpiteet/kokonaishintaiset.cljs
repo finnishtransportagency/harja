@@ -9,7 +9,6 @@
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.valinnat :as valinnat]
-            [harja.domain.urakka :as urakka-domain]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.views.kartta :as kartta]
@@ -23,25 +22,13 @@
   (:require-macros
     [harja.makrot :refer [defc]]))
 
-(defn hakuehdot [e! {:keys [huoltokohteet valinnat] :as app} kohteet]
+(defn hakuehdot [e! {:keys [huoltokohteet] :as app} kohteet]
   (let [urakka-map (get-in app [:valinnat :urakka])]
     [valinnat/urakkavalinnat {:urakka urakka-map}
      ^{:key "valinnat"}
      [:div.kanava-suodattimet
-
       [:div.ryhma
-       [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka-map]
-       ;; Sarakkeiden järjestys
-       [valinnat/kanava-jarjesta
-        (r/wrap
-          (second (get-in app [:valinnat :jarjesta]))
-          #(do
-             (println "ws: " (second %) " app: " (first (:jarjesta valinnat)))
-             (e! (tiedot/->PaivitaValinnat {:jarjesta %}))))
-        (into [] tiedot/taulukon-jarjestys-valinnat)
-        #(do
-           (println "s : " %)
-           (or % "not set"))]]
+       [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka-map]]
 
       [:div.ryhma
        [valinnat/kanava-kohde
