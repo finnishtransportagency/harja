@@ -75,10 +75,13 @@
 
                :else
                (urakat-q/hae-kaikki-urakat-aikavalilla
-                 db (konv/sql-date alku) (konv/sql-date loppu)
-                 (when urakoitsija urakoitsija)
-                 (when urakkatyyppi (name urakkatyyppi))
-                 (not (empty? hallintayksikot)) hallintayksikot))))
+                 db 
+                 {:urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                  :alku (konv/sql-date alku)
+                  :loppu (konv/sql-date loppu)
+                  :urakoitsija (when urakoitsija urakoitsija)
+                  :hallintayksikko_annettu (not (empty? hallintayksikot))
+                  :hallintayksikko hallintayksikot}))))
      {:urakka :urakat}
      (juxt :tyyppi (comp :id :hallintayksikko)))))
 

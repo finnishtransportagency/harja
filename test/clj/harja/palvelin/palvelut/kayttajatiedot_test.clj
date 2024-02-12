@@ -24,6 +24,75 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
+
+(deftest hae-kayttajan-urakat-toimii-oikein
+  ;; Testaa että käyttäjän urakoiden haku toimii, halutaan normaalisti palauttaa vain käynnissä olevat urakat
+  ;; Vesiväyläurakoihin halutaan hakea myös päättyneet urakat kun haetaan käyttäjän urakoita 
+  (let [urakka-id-saimaa (hae-urakan-id-nimella "Saimaan kanava")
+        urakka-id-joensuu (hae-urakan-id-nimella "Joensuun kanava")
+        urakka-id-yha (hae-urakan-id-nimella "YHA-päällystysurakka")
+        urakka-id-oulu (hae-urakan-id-nimella "Oulun päällystyksen palvelusopimus")
+
+        ;; Testikannan hallintayksiköt
+        kanava-hallintayksikko 1
+        pohjanmaa-hallintayksikko 12
+
+        ;; Aseta Saimaan kanava päättyneeksi 
+        _ (u "UPDATE urakka SET alkupvm = '1996-12-19', loppupvm = '1996-12-20' WHERE id = " urakka-id-saimaa " AND hallintayksikko = " kanava-hallintayksikko ";")
+        ;; Aseta Joensuun kanava käynnissä olevaksi  
+        _ (u "UPDATE urakka SET alkupvm = '2012-12-19', loppupvm = '2052-12-20' WHERE id = " urakka-id-joensuu " AND hallintayksikko = " kanava-hallintayksikko ";")
+        ;; Aseta Oulun urakka käynnissä olevaksi  
+        _ (u "UPDATE urakka SET alkupvm = '2012-12-19', loppupvm = '2052-12-20' WHERE id = " urakka-id-oulu " AND hallintayksikko = " pohjanmaa-hallintayksikko ";")
+        ;; Aseta YHA urakka päättyneeksi 
+        _ (u "UPDATE urakka SET alkupvm = '1996-12-19', loppupvm = '1996-12-20' WHERE id = " urakka-id-yha " AND hallintayksikko = " pohjanmaa-hallintayksikko ";")
+
+        ;; Haetaan käyttäjän kanavaurakat normaalisti
+        tulos-kanava (kutsu-palvelua
+                       (:http-palvelin jarjestelma)
+                       :kayttajan-urakat +kayttaja-jvh+
+                       [kanava-hallintayksikko])
+        ;; Lisätään vesiväylä urakkatyyppi
+        tulos-vesivayla (kutsu-palvelua
+                          (:http-palvelin jarjestelma)
+                          :kayttajan-urakat +kayttaja-jvh+
+                          [kanava-hallintayksikko :urakkatyyppi :vesivayla-kanavien-hoito])
+        ;; Lisätään päällystys urakkatyyppi pohjanmaan hallintayksikköön
+        tulos-pohjanmaa-paallystys (kutsu-palvelua
+                                     (:http-palvelin jarjestelma)
+                                     :kayttajan-urakat +kayttaja-jvh+
+                                     [pohjanmaa-hallintayksikko :urakkatyyppi :paallystys])
+        ;; Normaali haku, tätä käytetään harjassa yleensä
+        tulos-pohjanmaa (kutsu-palvelua
+                          (:http-palvelin jarjestelma)
+                          :kayttajan-urakat +kayttaja-jvh+
+                          [pohjanmaa-hallintayksikko])
+
+        fn-urakka-id-loytyy (fn [id data]
+                              (some #(= id (:id %)) (mapcat :urakat data)))]
+
+    ;; Tehdään haku ilman määriteltyä urakkatyyppiä, palauta vain käynnissä olevat
+    ;; Joensuu löytyy (käynnissä oleva)
+    (is (true? (fn-urakka-id-loytyy urakka-id-joensuu tulos-kanava)) "Käynnissä oleva urakka löytyy, ei urakkatyyppiä")
+    ;; Saimaa ei löydy (päättynyt)
+    (is (nil? (fn-urakka-id-loytyy urakka-id-saimaa tulos-kanava)) "Päättynyttä urakkaa ei löydy, ei urakkatyyppiä")
+
+    ;; Vesiväyläurakoiden haku, palautetaan myös päättyneet urakat 
+    ;; Joensuu löytyy (käynnissä oleva)
+    (is (true? (fn-urakka-id-loytyy urakka-id-joensuu tulos-vesivayla)) "Käynnissä oleva urakka löytyy, vesiväylä")
+    ;; Saimaa löytyy myös (päättynyt)
+    (is (true? (fn-urakka-id-loytyy urakka-id-saimaa tulos-vesivayla)) "Päättynyt urakka löytyy, vesiväylä")
+
+    ;; Oulun urakka löytyy (käynnissä oleva), urakkatyyppi passattu
+    (is (true? (fn-urakka-id-loytyy urakka-id-oulu tulos-pohjanmaa-paallystys)) "Käynnissä oleva urakka löytyy, päällystys")
+    ;; YHA urakkaa ei löydy (päättynyt), urakkatyyppi passattu
+    (is (nil? (fn-urakka-id-loytyy urakka-id-yha tulos-pohjanmaa-paallystys)) "Päättynyttä urakkaa ei löydy, päällystys")
+
+    ;; Oulun urakka löytyy (käynnissä oleva), pelkästään hallintayksikkö passattu
+    (is (true? (fn-urakka-id-loytyy urakka-id-oulu tulos-pohjanmaa)) "Käynnissä oleva urakka löytyy, hallintayksikkö")
+    ;; YHA urakkaa ei löydy (päättynyt), pelkästään hallintayksikkö passattu
+    (is (nil? (fn-urakka-id-loytyy urakka-id-yha tulos-pohjanmaa)) "Päättynyttä urakkaa ei löydy, hallintayksikkö")))
+
+
 (deftest yhteydenpito-vastaanottajat-toimii
   (let [tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                 :yhteydenpito-vastaanottajat +kayttaja-jvh+ nil)
@@ -36,6 +105,7 @@
     (is (= (count tulos) odotettu-ennen))
     (is (= (count tulos-jalkeen) odotettu-jalkeen))
     (is (= (vec (distinct (mapcat keys tulos-jalkeen))) [:etunimi :sukunimi :sahkoposti]))))
+
 
 (deftest yhdista-kayttajan-urakat-alueittain
   (let [ely-kaakkoissuomi {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3}
