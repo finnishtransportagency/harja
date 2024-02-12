@@ -152,22 +152,27 @@
   käyttäjällä on jokin lukuoikeus."
   [db user hallintayksikot]
   (oikeudet/ei-oikeustarkistusta!)
-  (println "\n Hallinta: " hallintayksikot (count hallintayksikot))
-  (let [urakkatyyppi (when (=
+  (let [;; Jos urakkatyyppi passataan, liitä se hakuun, muuten nil 
+        urakkatyyppi (when (=
                             (count hallintayksikot) 3) (nth hallintayksikot 2))
         hallintayksikot (if (=
                              (count hallintayksikot) 3)
                           [(first hallintayksikot)]
                           hallintayksikot)]
-    (println "\n urakkatyyppi " urakkatyyppi " hallintayksikot " hallintayksikot)
-    
+    ; db user 
+    ; oikeustarkistus-fn 
+    ; urakka-id urakoitsija urakkatyyppi hallintayksikot alku lopp
     (kayttajan-urakat-aikavalilta
       db user
       (partial oikeudet/voi-lukea? oikeudet/urakat)
-      nil nil nil (if (empty? hallintayksikot)
-                    nil
-                    hallintayksikot)
-      (pvm/nyt) (pvm/nyt))))
+      nil
+      nil
+      urakkatyyppi
+      (if (empty? hallintayksikot)
+        nil
+        hallintayksikot)
+      (pvm/nyt)
+      (pvm/nyt))))
 
 (defn laheta-sahkoposti-kaikille-kayttajille
   "Lähettää annetun viestin kaikille Harjan käyttäjille, joille löytyy sähköpostiosoite"
