@@ -1,0 +1,166 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "kulut": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "harjaId": {
+            "type": "integer",
+            "multipleOf": 1,
+            "description": "Kulun tunniste HARAJAssa, eli HarjaId."
+          },
+          "paivamaara": {
+            "type": "string",
+            "format": "date"
+          },
+          "poistettu": {
+            "type": "boolean"
+          },
+          "urakka": {
+            "type": "integer",
+            "multipleOf": 1,
+            "description": "Urakan tunniste HARJASsa, eli HarjaId."
+          },
+          "summa": {
+            "type": "number",
+            "description": "Yksikkö: Euro."
+          },
+          "tehtavaryhma": {
+            "$ref": "#/definitions/tehtavaryhma"
+          }
+        }
+      }
+    },
+    "paikkaukset": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "harjaId": {
+            "type": "integer",
+            "multipleOf": 1,
+            "description": "Toteuman tunniste HARJAssa, eli HarjaId."
+          },
+          "urakka": {
+            "type": "integer",
+            "multipleOf": 1,
+            "description": "Urakan tunniste HARJASsa, eli HarjaId."
+          },
+          "poistettu": {
+            "type": "boolean"
+          },
+          "paivamaara": {
+            "type": "string",
+            "format": "date"
+          },
+          "maara": {
+            "type": "number"
+          },
+          "yksikko": {
+            "type": "string",
+            "description": "maara-kentässä kuvatun määrän yksikkö, esim. tonni."
+          },
+          "tehtavaryhma": {
+            "$ref": "#/definitions/tehtavaryhma"
+          },
+          "tehtava": {
+            "$ref": "#/definitions/tehtava"
+          },
+          "tierekisteriosoitevali": {
+            "$ref": "#/definitions/tierekisteriosoitevali"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "tehtava": {
+      "type": "string",
+      "enum": [
+        "AB-paikkaus levittäjällä",
+        "Kannukaatosaumaus",
+        "KT-reikävaluasfalttipaikkaus",
+        "KT-valuasfalttipaikkaus K",
+        "KT-valuasfalttipaikkaus T",
+        "KT-valuasfalttisaumaus",
+        "Kuumapäällyste",
+        "Käsin tehtävät paikkaukset pikapaikkausmassalla",
+        "Massasaumaus",
+        "PAB-paikkaus käsin",
+        "PAB-paikkaus levittäjällä",
+        "Puhallus-SIP",
+        "Päällysteiden paikkaus - kuumapäällyste",
+        "Päällysteiden paikkaus, kylmäpäällyste",
+        "Päällysteiden paikkaus (ml. sillat ja siltapaikat) -konetivistetty valuasvaltti",
+        "Päällysteiden paikkaus -saumojen juottaminen bitumilla",
+        "Reunapalkin ja päällysteen väl. sauman tiivistäminen",
+        "Reunapalkin liikuntasauman tiivistäminen",
+        "Sillan kannen päällysteen päätysauman korjaukset",
+        "Sillan päällysteen halkeaman avarrussaumaus",
+        "Sirotepuhalluspaikkaus (SIPU)",
+        "Valuasfaltti"
+      ]
+    },
+    "tehtavaryhma": {
+      "type": "string",
+      "enum": [
+        "KT-Valu (Y3)",
+        "Kuumapäällyste (Y1)",
+        "Kylmäpäällyste (Y2)",
+        "Käsipaikkaus pikapaikkausmassalla (Y4)",
+        "Puhallus-SIP (Y5)",
+        "Saumojen juottaminen bitumilla (Y6)",
+        "Siltapäällysteet (H)",
+        "Valu (Y7)"
+      ]
+    },
+    "tierekisteriosoitevali": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tienumero",
+        "aosa",
+        "aet",
+        "losa",
+        "let"
+      ],
+      "properties": {
+        "karttapaivamaara": {
+          "type": "string",
+          "format": "date"
+        },
+        "tienumero": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Tien numero, jolle tieosoiteväli kohdistuu."
+        },
+        "aosa": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Tieosoitevälin alun tieosa"
+        },
+        "aet": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Etäisyys alkuosan sisällä"
+        },
+        "losa": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Tieosoitevälin lopun tieosa"
+        },
+        "let": {
+          "type": "integer",
+          "multipleOf": 1,
+          "description": "Etäisyys loppuosan sisällä"
+        }
+      }
+    }
+  }
+}
