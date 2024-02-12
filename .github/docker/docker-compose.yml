@@ -12,9 +12,7 @@ services:
   # Uusin saatavilla oleva testietiekannan konfiguraatio
   harjadb-latest:
     # Hae latest image GitHubin container registrystä
-    #image: ghcr.io/finnishtransportagency/harja_harjadb:latest
-    # FIXME: Testaa uusinta
-    image: ghcr.io/finnishtransportagency/harja_harjadb:15.4-3.3.3
+    image: ghcr.io/finnishtransportagency/harja_harjadb:latest
 
     # Alla saatavilla olevia versioita
     # https://github.com/finnishtransportagency/harja/pkgs/container/harja_harjadb/versions
