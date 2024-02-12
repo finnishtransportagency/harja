@@ -27,6 +27,7 @@
     [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
     [harja.palvelin.integraatiot.digiroad.digiroad-komponentti :as digiroad-integraatio]
     [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
+    [harja.palvelin.integraatiot.labyrintti.tekstiviesti :as tekstiviesti]
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
@@ -298,12 +299,17 @@
                               (digiroad-integraatio/->Digiroad (:digiroad asetukset))
                               [:http-palvelin :db :integraatioloki])
 
-      ;; Labyrintti SMS Gateway
+      ;; LinkMobilityn LinkSMS, vanha Harja + pilvi-Harjan sms-lähetys. Refaktoroi vanha toteutus pois, kun #yliheitto ok.
       :labyrintti (component/using
                     (if kehitysmoodi
                       (labyrintti/feikki-labyrintti)
                       (labyrintti/luo-labyrintti (:labyrintti asetukset)))
                     [:http-palvelin :db :integraatioloki])
+
+      ;; LinkMobilityn LinkSMS, pilvi-Harjan sms-vastaanotto. Refaktoroi tänne myös lähetys, kun #yliheitto ok.
+      :tekstiviesti (component/using
+                      (tekstiviesti/->Tekstiviesti (:labyrintti asetukset))
+                      [:http-palvelin :db :integraatioloki :itmf])
 
       :yha-integraatio (component/using
                          (yha-integraatio/->Yha (:yha asetukset))

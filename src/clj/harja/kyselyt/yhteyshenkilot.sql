@@ -118,9 +118,9 @@ FROM yhteyshenkilo_urakka;
 
 -- name: luo-yhteyshenkilo<!
 -- Tekee uuden yhteyshenkilön
-INSERT INTO yhteyshenkilo (etunimi, sukunimi, tyopuhelin, matkapuhelin, sahkoposti, organisaatio, sampoid, kayttajatunnus, ulkoinen_id)
+INSERT INTO yhteyshenkilo (etunimi, sukunimi, tyopuhelin, matkapuhelin, sahkoposti, organisaatio, sampoid, kayttajatunnus, ulkoinen_id, luoja)
 VALUES (:etunimi, :sukunimi, :tyopuhelin, :matkapuhelin, :sahkoposti, :organisaatio,
-        :sampoid, :kayttajatunnus, :ulkoinen_id);
+        :sampoid, :kayttajatunnus, :ulkoinen_id, :luoja);
 
 -- name: aseta-yhteyshenkilon-rooli!
 UPDATE yhteyshenkilo_urakka
