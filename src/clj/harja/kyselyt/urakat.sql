@@ -1216,3 +1216,19 @@ ORDER BY alkupvm ASC;
 SELECT ST_Simplify(v.alue, 20, true) as alue
   FROM valaistusurakka v
        JOIN urakka u ON u.id = :id AND u.urakkanro = v.valaistusurakkanro;
+
+-- name: hae-paallystysurakat-analytiikalle
+SELECT yt.yhaid,
+       u.id AS harjaid,
+       yt.elyt,
+       yt.vuodet,
+       u.sampoid,
+       yt.yhatunnus
+FROM urakka u
+         LEFT JOIN yhatiedot yt ON u.id = yt.urakka
+WHERE
+   u.tyyppi = 'paallystys'
+   AND u.luotu BETWEEN :alku AND :loppu
+   OR u.muokattu BETWEEN :alku AND :loppu
+   OR yt.luotu BETWEEN :alku AND :loppu
+   OR yt.muokattu BETWEEN :alku AND :loppu

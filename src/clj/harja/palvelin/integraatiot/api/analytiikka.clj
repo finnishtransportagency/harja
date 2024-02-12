@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.api.analytiikka
   "Analytiikkaportaalille endpointit"
-  (:require [com.stuartsierra.component :as component]
+  (:require [clojure.set :as set]
+            [com.stuartsierra.component :as component]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [compojure.core :refer [GET]]
@@ -575,6 +576,20 @@
                          :kommentti :kommentit}))]
     {:turvallisuuspoikkeamat json-turpot}))
 
+(defn hae-paallystysurakat [db {:keys [alkuaika loppuaika] :as parametrit}]
+  (log/info "Analytiikka API paallystysurakat :: parametrit" (pr-str parametrit))
+  (tarkista-haun-parametrit parametrit false)
+  (let [paallystysurakat (urakat-kyselyt/hae-paallystysurakat-analytiikalle db {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                                                                                :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
+        paallystysurakat (mapv #(-> % (set/rename-keys {:yhaid :yhaId
+                                                        :harjaid :harjaId
+                                                        :sampoid :sampotunnus})
+                                  (konversio/array->vec :elyt)
+                                  (konversio/array->vec :vuodet)
+                                  )
+                           paallystysurakat)]
+    {:paallystysurakat paallystysurakat}))
+
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
   (start [{http :http-palvelin db :db-replica integraatioloki :integraatioloki :as this}]
@@ -685,6 +700,15 @@
           (fn [parametrit kayttaja db]
             (hae-turvallisuuspoikkeamat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
+          :analytiikka)))
+
+    (julkaise-reitti
+      http :analytiikka-paallystysurakat
+      (GET "/api/analytiikka/paallystysurakat/:alkuaika/:loppuaika" parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paallystysurakat parametrit
+          json-skeemat/+analytiikka-paallystysurakoiden-haku-vastaus+
+          (fn [parametrit _kayttaja db]
+            (hae-paallystysurakat db parametrit))
           :analytiikka)))
     this)
 
