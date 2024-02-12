@@ -1,31 +1,35 @@
 #!/usr/bin/env bash
 
+# Lue Ohjeet GitHub Container Registryn käyttöön:
+# https://github.com/finnishtransportagency/harja/blob/develop/README.md#kehitt%C3%A4j%C3%A4n-kirjautuminen-container-registryyn
+
 set -e
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-if [ "$(uname -m)" == "arm64" ]; then
-  IMAGE=solita/harjadb:postgis-3.1-arm64
-else
-  IMAGE=solita/harjadb:postgis-3.1
-fi
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+IMAGE=ghcr.io/finnishtransportagency/harja_harjadb:latest
+
+# Alla saatavilla olevia versioita kokeiluja varten
+# https://github.com/finnishtransportagency/harja/pkgs/container/harja_harjadb
+#image: harja_harjadb:15.4-3.3.3 (uusin vakaa, Flyway v10 yhteensopiva)
+#image: ghcr.io/finnishtransportagency/harja_harjadb:13.13-3.3.3 (PR-testiversio, Flyway v10 yhteensopiva)
+
 
 devdb_image_lkm=$(docker image list -q --filter=reference=${IMAGE} 2>/dev/null | wc -l)
 if [[ "${devdb_image_lkm}" != *1 ]]; then # wc tulostaa välilyöntejä ennen numeroa, siksi *1 glob
     echo "Imagea" $IMAGE "ei löydetty. Yritetään pullata."
     if ! docker pull $IMAGE; then
-        echo $IMAGE "ei ole docker hubissa. Buildataan."
-        docker build -t $IMAGE . ;
+        echo $IMAGE "ei ole GitHub Container Registryssä. Buildataan."
+        (
+            cd ../.github/docker/tietokanta
+            ./build-image.sh
+        )
     fi
     echo ""
 fi
 
 docker run -p "127.0.0.1:${HARJA_TIETOKANTA_PORTTI:-5432}:${HARJA_TIETOKANTA_PORTTI:-5432}" \
-  --name "${POSTGRESQL_NAME:-harjadb}" -dit -v "$DIR":/var/lib/pgsql/harja/tietokanta \
-  ${IMAGE} /bin/bash -c \
-       "sed -i 's/port = 5432/port = ${HARJA_TIETOKANTA_PORTTI:-5432}/g' /var/lib/pgsql/${POSTGRESQL_VERSION:-12}/data/postgresql.conf;
-        sed -i 's/#port =/port =/g' /var/lib/pgsql/${POSTGRESQL_VERSION:-12}/data/postgresql.conf;
-        sudo -iu postgres /usr/pgsql-${POSTGRESQL_VERSION:-12}/bin/pg_ctl start -D /var/lib/pgsql/${POSTGRESQL_VERSION:-12}/data;
-        /bin/bash"; > /dev/null
+    --name "${POSTGRESQL_NAME:-harjadb}" -dit -v "$DIR":/var/lib/postgresql/harja/tietokanta \
+    ${IMAGE} >/dev/null
 
 echo "Käynnistetään Docker-image" $IMAGE
 echo ""
@@ -35,10 +39,10 @@ docker images | grep "$(echo "$IMAGE" | sed "s/:.*//")" | grep "$(echo "$IMAGE" 
 echo ""
 echo "Odotetaan, että PostgreSQL on käynnissä ja vastaa yhteyksiin portissa ${HARJA_TIETOKANTA_PORTTI:-5432}"
 
-until docker exec ${POSTGRESQL_NAME:-harjadb} pg_isready ; do
+until docker exec "${POSTGRESQL_NAME:-harjadb}" pg_isready; do
     echo "nukutaan..."
-    sleep 0.5;
-done;
+    sleep 0.5
+done
 
 # shellcheck disable=SC2088
 docker exec --user postgres -e HARJA_TIETOKANTA_HOST -e HARJA_TIETOKANTA_PORTTI "${HARJA_TIETOKANTA_HOST:-harjadb}" /bin/bash -c "~/aja-migraatiot.sh"
