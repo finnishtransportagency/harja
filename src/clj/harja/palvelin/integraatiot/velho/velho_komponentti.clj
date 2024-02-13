@@ -86,7 +86,7 @@
   (varusteet/hae-urakan-varustetoteumat
     (get-in j [:velho-integraatio]) 
     {:urakka-id 32 ;; Pellon MHU testiurakka (3. hoitovuosi)
-     :kohdeluokat []
+     :kohdeluokat #{"aidat"}
      :varustetyypit []
      :kuntoluokat []
      :tie nil
