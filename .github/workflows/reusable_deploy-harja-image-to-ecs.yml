@@ -102,7 +102,11 @@ jobs:
         uses: ./.github/actions/run-migrations-to-rds
         # FIXME: Sallitaan migraatioiden ajo toistaiseksi vain dev ja stg ympäristöille
         #        Lisätään prod myöhemmin listalle, kunhan datamigraatio on saatu ojennukseen.
-        if: ${{ contains(fromJson('["dev", "stg"]'), inputs.environment)  }}
+        # TODO: STG migraatiot kytketty pois päältä datamigraation testailun ajaksi.
+        #       Migraatioiden ajo voi aiheuttaa häiriöitä datan tuoreistuksessa.
+        #if: ${{ contains(fromJson('["dev", "stg"]'), inputs.environment)  }}
+        #if: ${{ contains(fromJson('["dev"]'), inputs.environment)  }}
+        if: false
         with:
           # Migraatiot ajetaan samalle commit SHA:lle, kuin mistä fargate image on buildattu
           commit-sha: ${{ github.sha }}
@@ -145,7 +149,7 @@ jobs:
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@e28cf165c92ffef168d23c5c9000cffc8a25e117
+        uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001
         if: failure()
         with:
           # Slack Block Kit -tyyppinen rikastettu viesti

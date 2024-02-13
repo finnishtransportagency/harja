@@ -1,0 +1,1 @@
+DROP TABLE johto_ja_hallintokorvaus_temp;

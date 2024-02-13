@@ -163,13 +163,26 @@ on nil."
                  ;; Sähköposti ja puhelin
                  "oam_user_mail" "oam_user_mobile"])))
 
+(defn prosessoi-apikayttaja-header
+  "Integraatioväylä välittää apikäyttäjän tunnuksen Harjaan harja-api-username-nimisessä headerissä.
+  Koodissa käyttäjätieto luetaan oam_remote_user-headeristä. Muutetaan headerin nimi, jotta tarvittava apikäyttäjätunnus saadaan käyttöön.
+  Tilannetta jolloin cognito-headereitten käsittelystä syntyy oam_remote_user ja headereissa on välitetty username, ei pitäisi syntyä.
+  Ylikirjoitetaan kuitenkin varalta mahdollinen ylimääräinen oam_remote_user-header.
+  Funktio suoritetaan pilvipuolella, kun koka- ei oam-headereitä ei saada kutsun yhteydessä."
+  [headerit]
+  (if (get headerit "harja-api-username")
+    (assoc-in headerit ["oam_remote_user"] (get headerit "harja-api-username"))
+    headerit))
+
 (defn prosessoi-kayttaja-headerit
   "Palauttaa headerit sellaisenaan, mikäli headereiden joukosta löytyy jokin OAM_-headeri.
   Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään
   muiden headereiden joukkoon."
   [headerit]
   (if (empty? (koka-headerit headerit))
-    (merge headerit (pura-cognito-headerit headerit))
+    (->
+      (merge headerit (pura-cognito-headerit headerit))
+      (prosessoi-apikayttaja-header))
     headerit))
 
 (defn- hae-organisaatio-elynumerolla [db ely]
@@ -231,17 +244,27 @@ ja palauttaa käyttäjätiedot"
                                    oikeudet/roolit
                                    ryhmat)
           organisaatio (hae-kayttajalle-organisaatio db ely y-tunnus organisaatio roolit)
-
-         kayttaja {:kayttajanimi kayttajanimi
-                   :etunimi etunimi
-                   :sukunimi sukunimi
-                   :sahkoposti sahkoposti
-                   :puhelin puhelin
-                   :organisaatio (:id organisaatio)}
-         kayttaja-id (q/varmista-kayttaja
-                       db
-                       (assoc kayttaja
-                         :organisaatio (:id organisaatio)))]
+          kayttaja {:kayttajanimi kayttajanimi
+                    :etunimi etunimi
+                    :sukunimi sukunimi
+                    :sahkoposti sahkoposti
+                    :puhelin puhelin
+                    :organisaatio (:id organisaatio)}
+          kayttaja-kannassa (first (q/hae-kayttaja-kayttajanimella db {:kayttajanimi kayttajanimi}))
+          kayttaja-id-kannassa (:id kayttaja-kannassa)
+          kayttaja-kannassa (merge (select-keys kayttaja-kannassa #{:kayttajanimi
+                                                                    :etunimi
+                                                                    :sukunimi
+                                                                    :sahkoposti
+                                                                    :puhelin})
+                              {:organisaatio (:org_id kayttaja-kannassa)})
+          kayttajan-tiedot-samat? (= kayttaja kayttaja-kannassa)
+          kayttaja-id (or
+                      kayttaja-id-kannassa
+                       (:id (q/luo-kayttaja<! db kayttaja)))]
+      (when (and kayttaja-id-kannassa (not kayttajan-tiedot-samat?))
+        (q/paivita-kayttaja! db (merge kayttaja
+                                  {:id kayttaja-id})))
      (log/info "SÄHKE HEADERIT: " (str kayttajanimi ": " ryhmat)
                "; KÄYTTÄJÄ ID: " kayttaja-id
                "; ORGANISAATIO: " organisaatio)

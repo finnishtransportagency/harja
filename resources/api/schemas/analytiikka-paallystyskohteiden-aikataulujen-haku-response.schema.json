@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "aikataulut": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["paallystyskohde"],
+        "properties": {
+          "paallystyskohde": {
+            "type": "integer",
+            "description": "Päällystyskohteen ID Harjan tietokannassa, eli harjaId",
+            "multipleOf": 1
+          },
+          "kohdeAloitettu": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "paallystysAloitettu": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "paallystysValmis": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "valmisTiemerkintaan": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "tiemerkintaTakaraja": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "tiemerkintaAloitettu": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "tiemerkintaValmis": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "kohdeValmis": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

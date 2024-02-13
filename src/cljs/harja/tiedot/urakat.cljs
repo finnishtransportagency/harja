@@ -3,8 +3,9 @@
   (:require [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [chan <! >! close!]]
+            [reagent.core :refer [atom]]
             [harja.ui.protokollat :refer [Haku hae]]
-            )
+            [alandipert.storage-atom :refer [local-storage]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -14,6 +15,8 @@
 
 (defn hae-hallintayksikon-urakat [hallintayksikko]
   (k/post! :hallintayksikon-urakat (:id hallintayksikko) urakka-xf))
+
+(def nayta-paattyneet-urakat? (local-storage (atom false) :nayta-paattyneet-urakat))
 
 (def urakka-haku
   "Yleinen urakoista hakeva hakulähde."

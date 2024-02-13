@@ -29,6 +29,7 @@ let avaaPaikkauskohteetSuoraan = function () {
     cy.contains('.haku-lista-item', 'Lappi').click()
     cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
+    cy.contains('Näytä päättyneet').click();
     cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
     // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
     cy.contains('.nappi-toissijainen', 'Sulje').click()
@@ -51,6 +52,7 @@ let avaaToteumat = () => {
     cy.contains('.haku-lista-item', 'Lappi').click()
     cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
+    cy.contains('Näytä päättyneet').click();
     cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
     // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
     cy.contains('.nappi-toissijainen', 'Sulje').click()
@@ -76,6 +78,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
+        cy.contains('Näytä päättyneet').click();
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
         // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
         cy.contains('.nappi-toissijainen', 'Sulje').click()
@@ -105,12 +108,12 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('label[for=ulkoinen-id] + span > input').type(uniikkiUlkoinenId)
         // Valitse työmenetelmä
         cy.get('label[for=tyomenetelma] + div').valinnatValitse({valinta: 'PAB-paikkaus levittäjällä'})
-        cy.get('label[for=tie] + span > input').type("81")
-        cy.get('label[for=ajorata] + div').valinnatValitse({valinta: '2'})
-        cy.get('label[for=aosa] + span > input').type("4")
-        cy.get('label[for=aet] + span > input').type("4")
-        cy.get('label[for=losa] + span > input').type("5")
-        cy.get('label[for=let] + span > input').type("5")
+        cy.get('label[for=tie] + span > input').type("4")
+        cy.get('label[for=ajorata] + div').valinnatValitse({valinta: '1'})
+        cy.get('label[for=aosa] + span > input').type("420")
+        cy.get('label[for=aet] + span > input').type("0")
+        cy.get('label[for=losa] + span > input').type("420")
+        cy.get('label[for=let] + span > input').type("5000")
         // Ajankohta
         cy.get('label[for=alkupvm] + .pvm-kentta > .input-default').type("1.5.2021")
         cy.get('label[for=loppupvm] + .pvm-kentta > .input-default').type("1.6.2021")
@@ -121,7 +124,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('button').contains('.nappi-ensisijainen', 'Tallenna', {timeout: clickTimeout}).click({force: true})
 
         // Varmista, että tallennus onnistui
-        cy.get('.toast-viesti', {timeout: 6000}).should('be.visible')
+        cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
 
         // Vaihda oikeaan vuoteen
         cy.get('label[for=filtteri-vuosi] + div').filtteriValitse({valinta: '2021'})
@@ -149,7 +152,8 @@ describe('Paikkauskohteet latautuu oikein', function () {
         // Vahvista tilaus
         cy.get('button').contains('.nappi-ensisijainen', 'Tilaa kohde', {timeout: clickTimeout}).click({force: true})
         cy.wait('@tilaus', {timeout: 60000})
-
+        // Varmista, että tallennus onnistui
+        cy.get('.toast-viesti').contains('', 'Kohde tilattu', {timeout: 60000}).should('be.visible')
     })
 
     it('Lisää levittimellä tehtävälle paikkauskohteelle toteuma', function () {
@@ -182,7 +186,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('label[for=leveys] + span > input').type('5')
         cy.contains('Tallenna').should('not.be.disabled')
         cy.contains('Tallenna').click()
-        cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
+        cy.get('.toast-viesti').contains('', 'Toteuma tallennettu', {timeout: 60000}).should('be.visible')
     })
 
 
@@ -209,7 +213,7 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('label[for=leveys] + span > input').type('5')
         cy.contains('Tallenna').should('not.be.disabled')
         cy.contains('Tallenna').click()
-        cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
+        cy.get('.toast-viesti').contains('', 'Toteuma tallennettu', {timeout: 60000}).should('be.visible')
     })
 
     it('Tarkastellaan toteumaa', () => {
@@ -243,6 +247,7 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('.modal', {timeout: clickTimeout}).should('be.visible')
         cy.get('.modal').contains('Poista toteuma').click()
         cy.get('.modal', {timeout: clickTimeout}).should('not.exist')
+        cy.get('.toast-viesti').contains('', 'Toteuma poistettu', {timeout: 60000}).should('be.visible')
     })
 })
 
@@ -262,12 +267,12 @@ describe('Päällystysilmoitukset toimii', function () {
         cy.get('label[for=ulkoinen-id] + span > input').type("87654321")
         // Valitse työmenetelmä
         cy.get('label[for=tyomenetelma] + div').valinnatValitse({valinta: 'SMA-paikkaus levittäjällä'})
-        cy.get('label[for=tie] + span > input').type("13873")
-        cy.get('label[for=ajorata] + div').valinnatValitse({valinta: '0'})
-        cy.get('label[for=aosa] + span > input').type("1")
-        cy.get('label[for=aet] + span > input').type("0")
-        cy.get('label[for=losa] + span > input').type("1")
-        cy.get('label[for=let] + span > input').type("1000")
+        cy.get('label[for=tie] + span > input').type("4")
+        cy.get('label[for=ajorata] + div').valinnatValitse({valinta: '1'})
+        cy.get('label[for=aosa] + span > input').type("421")
+        cy.get('label[for=aet] + span > input').type("225")
+        cy.get('label[for=losa] + span > input').type("421")
+        cy.get('label[for=let] + span > input').type("2000")
         // Ajankohta
         cy.get('label[for=alkupvm] + .pvm-kentta > .input-default').type("1.8.2021")
         cy.get('label[for=loppupvm] + .pvm-kentta > .input-default').type("1.9.2021")

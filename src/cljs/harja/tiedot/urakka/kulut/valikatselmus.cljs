@@ -59,7 +59,7 @@
 (defn nollaa-paatokset [app]
   (assoc app :urakan-paatokset nil
              ;; Nollataan kattohinnan ylitys-lomake
-             :kattohinnan-ylitys-lomake nil))
+             :kattohinnan-ylitys-lomake {}))
 
 (defn filtteroi-paatos [hoitokauden-alkuvuosi tyyppi paatokset]
   (first (filter #(and
@@ -74,14 +74,15 @@
         kattohinnan-ylitys (filtteroi-paatos ::valikatselmus/kattohinnan-ylitys)
         lupausbonus (filtteroi-paatos ::valikatselmus/lupausbonus)
         lupaussanktio (filtteroi-paatos ::valikatselmus/lupaussanktio)]
-    {:kattohinnan-ylitys-lomake (when (some? kattohinnan-ylitys)
+    {:kattohinnan-ylitys-lomake (if (some? kattohinnan-ylitys)
                                   {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id kattohinnan-ylitys)
                                    :maksun-tyyppi (cond (and
                                                           (pos? (::valikatselmus/urakoitsijan-maksu kattohinnan-ylitys))
                                                           (pos? (::valikatselmus/siirto kattohinnan-ylitys))) :osa
                                                         (pos? (::valikatselmus/siirto kattohinnan-ylitys)) :siirto
                                                         :else :maksu)
-                                   :siirto (when (pos? (::valikatselmus/siirto kattohinnan-ylitys)) (::valikatselmus/siirto kattohinnan-ylitys))})
+                                   :siirto (when (pos? (::valikatselmus/siirto kattohinnan-ylitys)) (::valikatselmus/siirto kattohinnan-ylitys))}
+                                  {})
      :lupausbonus-lomake (when (not (nil? lupausbonus))
                             {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id lupausbonus)})
      :lupaussanktio-lomake (when (not (nil? lupaussanktio))

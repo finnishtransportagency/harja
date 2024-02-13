@@ -5,6 +5,7 @@
             [harja.domain.roolit :as roolit]
             [harja.domain.urakka :as urakka]
             [harja.domain.lupaus-domain :as lupaus-domain]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.tiedot.istunto :as istunto]
@@ -28,11 +29,7 @@
 
 ;; TODO: Parempi olisi muokata tämä käyttämään normaalia oikeustarkistusta.
 (defn onko-oikeudet-tehda-paatos? [urakka-id]
-  (or
-    (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja)
-    (roolit/roolissa? @istunto/kayttaja roolit/ely-paakayttaja)
-    (roolit/jvh? @istunto/kayttaja)
-    (roolit/rooli-urakassa? @istunto/kayttaja roolit/ely-urakanvalvoja urakka-id)))
+  (oikeudet/voi-kirjoittaa? oikeudet/urakat-kulut-valikatselmus urakka-id @istunto/kayttaja))
 
 (defn- onko-hoitokausi-tulevaisuudessa? [hoitokausi nykyhetki]
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first hoitokausi))
@@ -347,6 +344,7 @@
   (let [ylityksen-maara (- toteuma oikaistu-kattohinta)
         muokattava? (or (not (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)) (:muokataan? kattohinnan-ylitys-lomake))
         maksun-tyyppi (:maksun-tyyppi kattohinnan-ylitys-lomake)
+        alustettu? (coll? kattohinnan-ylitys-lomake)
         osa-valittu? (= :osa maksun-tyyppi)
         maksu-valittu? (= :maksu maksun-tyyppi)
         siirto-valittu? (= :siirto maksun-tyyppi)
@@ -382,7 +380,7 @@
        (if voi-muokata?
          (if-not viimeinen-hoitokausi?
            [:<>
-            (when muokattava?
+            (when (and muokattava? alustettu?)
               [kentat/tee-kentta
                {:nimi :maksun-tyyppi
                 :tyyppi :radio-group
