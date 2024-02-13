@@ -1,0 +1,76 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>harja-tietokanta</groupId>
+    <artifactId>harja-tietokanta</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>harja-tietokanta</name>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <harja.tietokanta.host>localhost</harja.tietokanta.host>
+        <harja.tietokanta.port>5432</harja.tietokanta.port>
+    </properties>
+
+    <dependencies></dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>8.5.13</version>
+                <configuration>
+                    <baselineOnMigrate>true</baselineOnMigrate>
+                    <baselineVersion>0</baselineVersion>
+                    <url>${databaseUrl}</url>
+                    <user>${databaseUser}</user>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>42.7.1</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+
+        <!-- Harja -->
+        <profile>
+            <id>harja</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <databaseUrl>jdbc:postgresql://${harja.tietokanta.host}:${harja.tietokanta.port}/harja</databaseUrl>
+                <databaseUser>harja</databaseUser>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>harja_template</id>
+            <properties>
+                <databaseUrl>jdbc:postgresql://${harja.tietokanta.host}:${harja.tietokanta.port}/harja_template</databaseUrl>
+                <databaseUser>harja</databaseUser>
+            </properties>
+        </profile>
+
+        <!-- Harja Test -->
+        <profile>
+            <id>harjatest</id>
+            <properties>
+                <databaseUrl>jdbc:postgresql://${harja.tietokanta.host}:${harja.tietokanta.port}/harjatest_template</databaseUrl>
+                <databaseUser>harjatest</databaseUser>
+            </properties>
+        </profile>
+    </profiles>
+</project>
