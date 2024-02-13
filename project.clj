@@ -107,9 +107,9 @@
                  [cljsjs/openlayers "3.15.1"] ; TODO Voisi päivittää, mutta laadunseurannan buildi hajoaa (4.4.1-1) puuttuviin requireihin
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "5.2.5"]
-                 [org.apache.poi/poi-scratchpad "5.2.5"] ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "5.2.5"] ;; .xlsx tiedoston lukua varten
+                 [org.apache.poi/poi "4.1.0"]
+                 [org.apache.poi/poi-scratchpad "4.1.0"] ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "4.1.0"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
 
                  ;; Chime -ajastuskirjasto
@@ -139,7 +139,7 @@
                  [com.taoensso/truss "1.5.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
-                 [dk.ative/docjure "1.19.0"]
+                 [dk.ative/docjure "1.14.0"]
 
                  ;; Performance metriikat
                  [yleisradio/new-reliquary "1.1.0"]
@@ -163,9 +163,9 @@
                  [digest "1.4.9"]
                  ;; Nätimpi xml:n printtaus mahdollistettu
                  [org.clojure/data.xml "0.0.8"]]
-  :managed-dependencies [[org.apache.poi/poi "5.2.5"]
-                         [org.apache.poi/poi-scratchpad "5.2.5"]
-                         [org.apache.poi/poi-ooxml "5.2.5"]]
+  :managed-dependencies [[org.apache.poi/poi "4.1.0"]
+                         [org.apache.poi/poi-scratchpad "4.1.0"]
+                         [org.apache.poi/poi-ooxml "4.1.0"]]
   :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
