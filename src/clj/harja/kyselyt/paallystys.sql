@@ -834,3 +834,58 @@ UPDATE pot2_mk_urakan_murske
 
 -- name: hae-paikkauskohde-yllapitokohde-idlla
 select p.id FROM paikkauskohde p WHERE p."yllapitokohde-id" = :yllapitokohde-id;
+
+-- name: hae-paallystyskohteet-analytiikalle
+SELECT ypk.id,
+       ypk.yhaid,
+       ypk.poistettu,
+       ypk.urakka,
+       ypk.yha_kohdenumero        AS kohdenumero,
+       ypk.yllapitokohdetyotyyppi AS kohdetyyppi,
+       ypk.nimi,
+       ypk.tunnus,
+       ypk.tr_numero              AS "tr-numero",
+       ypk.tr_alkuosa             AS "tr-alkuosa",
+       ypk.tr_alkuetaisyys        AS "tr-alkuetaisyys",
+       ypk.tr_loppuosa            AS "tr-loppuosa",
+       ypk.tr_loppuetaisyys       AS "tr-loppuetaisyys",
+       ypk.karttapaivamaara,
+       (k.sopimuksen_mukaiset_tyot +
+        k.maaramuutokset +
+        k.bitumi_indeksi +
+        k.kaasuindeksi +
+        k.maku_paallysteet)       AS kokonaishinta
+FROM yllapitokohde ypk
+         LEFT JOIN yllapitokohteen_kustannukset k ON ypk.id = k.yllapitokohde
+WHERE ypk.luotu BETWEEN :alku AND :loppu
+   OR ypk.muokattu BETWEEN :alku AND :loppu
+   OR k.muokattu BETWEEN :alku AND :loppu
+   OR EXISTS(SELECT *
+             FROM yllapitokohdeosa osa
+             WHERE osa.yllapitokohde = ypk.id
+               AND (osa.muokattu BETWEEN :alku AND :loppu
+                 OR osa.luotu BETWEEN :alku AND :loppu));
+
+-- name: hae-paallystyksen-alikohteet-analytiikalle
+SELECT osa.yllapitokohde,
+       osa.yhaid,
+       osa.id,
+       osa.tr_numero        AS "tr-numero",
+       osa.tr_alkuosa       AS "tr-alkuosa",
+       osa.tr_alkuetaisyys  AS "tr-alkuetaisyys",
+       osa.tr_loppuosa      AS "tr-loppuosa",
+       osa.tr_loppuetaisyys AS "tr-loppuetaisyys",
+       osa.tr_kaista        AS "tr-kaista",
+       osa.tr_ajorata       AS "tr-ajorata",
+       osa.karttapaivamaara,
+       osa.paallystetyyppi  AS uusi_paallyste,
+       osa.raekoko,
+       osa.massamenekki,
+       osa.massamaara,
+       osa.tyomenetelma
+FROM yllapitokohdeosa osa
+         LEFT JOIN yllapitokohde kohde ON osa.yllapitokohde = kohde.id
+WHERE osa.muokattu BETWEEN :alku AND :loppu
+   OR osa.luotu BETWEEN :alku AND :loppu
+   OR kohde.muokattu BETWEEN :alku AND :loppu
+   OR kohde.luotu BETWEEN :alku AND :loppu;

@@ -7,6 +7,9 @@
             [compojure.core :refer [GET]]
             [compojure.core :refer :all]
             [compojure.route :refer :all]
+            [harja.domain.tierekisteri :as tr-domain]
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [ring.util.response :refer [file-response header content-type]]
             [clojure.java.io :as io]
             [clojure.data.json :as json]
@@ -27,6 +30,7 @@
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+            [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
             [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat])
@@ -82,7 +86,7 @@
           aikavali-sekunteina (pvm/aikavali-sekuntteina alkuaika-pvm loppuaika-pvm)
           syotetty-aikavali-tunteina-str (str (int (/ aikavali-sekunteina 60 60)))
           paiva-sekunteina 90000] ;; Käytetään 25 tuntia
-    ;; Jos pyydetty aikaväli ylittää 25 tuntia, palautetaan virhe
+      ;; Jos pyydetty aikaväli ylittää 25 tuntia, palautetaan virhe
       (when (> aikavali-sekunteina paiva-sekunteina)
         (virheet/heita-viallinen-apikutsu-poikkeus
           {:koodi virheet/+puutteelliset-parametrit+
@@ -260,8 +264,8 @@
 (defn- wrappaa-toteumat
   "Funktio jää näin hieman keskeneräiseksi"
   [db parametrit kayttaja]
-  (let [toteumat (palauta-toteumat db parametrit kayttaja )]
-   {:reittitoteumat toteumat}))
+  (let [toteumat (palauta-toteumat db parametrit kayttaja)]
+    {:reittitoteumat toteumat}))
 
 (defn palauta-materiaalit
   "Haetaan materiaalit ja palautetaan ne json muodossa"
@@ -549,15 +553,15 @@
                                             max-vuosi (if (> (konversio/konvertoi->int loppuvuosi) (pvm/vuosi (:loppupvm urakka)))
                                                         (pvm/vuosi (:loppupvm urakka))
                                                         loppuvuosi)]
-                                       {:urakka (:nimi urakka)
-                                        :urakka-id (:id urakka)
-                                        :vuosittaiset-suunnitelmat
-                                        (palauta-urakan-suunnitellut-tehtavamaarat db
-                                          {:alkuvuosi min-vuosi
-                                           :loppuvuosi max-vuosi
-                                           ;; Validaation yksinkertaistamiseksi välitetään kaikki stringinä
-                                           :urakka-id (str (:id urakka))}
-                                          kayttaja)}))
+                                        {:urakka (:nimi urakka)
+                                         :urakka-id (:id urakka)
+                                         :vuosittaiset-suunnitelmat
+                                         (palauta-urakan-suunnitellut-tehtavamaarat db
+                                           {:alkuvuosi min-vuosi
+                                            :loppuvuosi max-vuosi
+                                            ;; Validaation yksinkertaistamiseksi välitetään kaikki stringinä
+                                            :urakka-id (str (:id urakka))}
+                                           kayttaja)}))
                                 urakat)]
     suunnitellut-tehtavat))
 
@@ -581,14 +585,51 @@
   (tarkista-haun-parametrit parametrit false)
   (let [paallystysurakat (urakat-kyselyt/hae-paallystysurakat-analytiikalle db {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
                                                                                 :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
-        paallystysurakat (mapv #(-> % (set/rename-keys {:yhaid :yhaId
+        paallystysurakat (map #(-> % (set/rename-keys {:yhaid :yhaId
                                                         :harjaid :harjaId
                                                         :sampoid :sampotunnus})
                                   (konversio/array->vec :elyt)
-                                  (konversio/array->vec :vuodet)
-                                  )
+                                  (konversio/array->vec :vuodet))
                            paallystysurakat)]
     {:paallystysurakat paallystysurakat}))
+
+(defn- muodosta-paallystyskohdesanoma [kohde osien-pituudet]
+  (let [pituus (tr-domain/laske-tien-pituus (osien-pituudet (:tr-numero kohde)) kohde)]
+    (-> kohde
+      (set/rename-keys {:yhaid :yhaId
+                        :id :harjaId})
+      (assoc :tierekisteriosoitevali (merge {:karttapaivamaara (:karttapaivamaara kohde)
+                                         :tienumero (:tr-numero kohde)
+                                         :aosa (:tr-alkuosa kohde)
+                                         :aet (:tr-alkuetaisyys kohde)
+                                         :losa (:tr-loppuosa kohde)
+                                         :let (:tr-loppuetaisyys kohde)}))
+      (assoc :pituus pituus)
+      (dissoc :tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :karttapaivamaara))))
+
+(defn- muodosta-alikohdesanoma [alikohde osien-pituudet]
+  (-> alikohde
+    (muodosta-paallystyskohdesanoma osien-pituudet)
+    (assoc-in [:tierekisteriosoitevali :kaista] (:tr-kaista alikohde))
+    (assoc-in [:tierekisteriosoitevali :ajorata] (:tr-ajorata alikohde))
+    (dissoc [:tr-kaista :tr-ajorata])))
+
+(defn hae-paallystyskohteet [db {:keys [alkuaika loppuaika] :as parametrit}]
+  (log/info "Analytiikka API paallystyskohteet :: parametrit" (pr-str parametrit))
+  (tarkista-haun-parametrit parametrit false)
+  (let [paallystyskohteet (paallystys-kyselyt/hae-paallystyskohteet-analytiikalle db
+                            {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                             :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
+        osien-pituudet (yllapitokohteet-yleiset/laske-osien-pituudet db paallystyskohteet)
+        alikohteet (paallystys-kyselyt/hae-paallystyksen-alikohteet-analytiikalle db
+                     {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                      :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
+        paallystyskohteet (map (fn [kohde]
+                                 (assoc (muodosta-paallystyskohdesanoma kohde osien-pituudet)
+                                   :alikohteet (map #(muodosta-alikohdesanoma % osien-pituudet)
+                                                 (filter #(= (:yllapitokohde %) (:id kohde)) alikohteet))))
+                            paallystyskohteet)]
+    {:paallystyskohteet paallystyskohteet}))
 
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
@@ -710,6 +751,16 @@
           (fn [parametrit _kayttaja db]
             (hae-paallystysurakat db parametrit))
           :analytiikka)))
+
+    (julkaise-reitti
+      http :analytiikka-paallystyskohteet
+      (GET "/api/analytiikka/paallystyskohteet/:alkuaika/:loppuaika" parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paallystyskohteet parametrit
+          json-skeemat/+analytiikka-paallystyskohteiden-haku-vastaus+
+          (fn [parametrit _kayttaja db]
+            (hae-paallystyskohteet db parametrit))
+          :analytiikka)))
+
     this)
 
   (stop [{http :http-palvelin :as this}]

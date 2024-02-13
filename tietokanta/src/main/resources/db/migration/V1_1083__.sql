@@ -24,6 +24,10 @@ UPDATE yllapitokohdeosa
 SET luotu = muokattu
 WHERE muokattu IS NOT NULL;
 
+UPDATE yllapitokohteen_aikataulu
+SET luotu = muokattu
+WHERE muokattu IS NOT NULL;
+
 -- Jos kohdetta ei ole muokattu, asetetaan se sen vuoden ensimmäiselle päivälle klo 12.
 UPDATE yllapitokohde
 SET luotu = MAKE_TIMESTAMP(vuodet[1], 1, 12, 0, 0, 0)
@@ -32,6 +36,10 @@ WHERE muokattu IS NULL
 
 UPDATE yllapitokohdeosa
 SET luotu = (SELECT luotu FROM yllapitokohde WHERE yllapitokohde.id = yllapitokohdeosa.yllapitokohde)
+WHERE muokattu IS NULL;
+
+UPDATE yllapitokohteen_aikataulu aika
+SET luotu = (SELECT luotu FROM yllapitokohde WHERE yllapitokohde.id = aika.yllapitokohde)
 WHERE muokattu IS NULL;
 
 -- Uusille riveille default-arvo.

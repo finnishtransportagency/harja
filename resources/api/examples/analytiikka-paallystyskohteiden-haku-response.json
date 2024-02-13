@@ -1,11 +1,11 @@
 {
-  "paikkauskohteet": [
+  "paallystyskohteet": [
     {
       "yhaId": 123,
       "harjaId": 10203,
       "urakka": 789,
       "kohdenumero": 456,
-      "kohdetyyppi": "päällyste",
+      "kohdetyyppi": "paallystys",
       "nimi": "Mt 88 Malmitie",
       "tunnus": "Esimerkkitunnus 1",
       "tierekisteriosoitevali": {
@@ -43,8 +43,6 @@
             "raekoko": 1,
             "massamenekki": 100,
             "kokonaismassamaara": 456,
-            "rcProsentti": 50,
-            "kuulamylly": "AN19",
             "paallystetyomenetelma": "massapintaus"
           }
         },
@@ -67,8 +65,6 @@
             "raekoko": 1,
             "massamenekki": 100,
             "kokonaismassamaara": 448,
-            "rcProsentti": 50,
-            "kuulamylly": "AN19",
             "paallystetyomenetelma": "massapintaus"
           }
         }
@@ -79,7 +75,7 @@
       "harjaId": 10204,
       "urakka":  789,
       "kohdenumero": 457,
-      "kohdetyyppi": "päällyste",
+      "kohdetyyppi": "paallystys",
       "nimi": "Mt 86 Paavolantie",
       "tunnus": "Esimerkkitunnus 2",
       "tierekisteriosoitevali": {
@@ -117,8 +113,6 @@
             "raekoko": 1,
             "massamenekki": 100,
             "kokonaismassamaara": 24,
-            "rcProsentti": 50,
-            "kuulamylly": "AN19",
             "paallystetyomenetelma": "massapintaus"
           }
         }
