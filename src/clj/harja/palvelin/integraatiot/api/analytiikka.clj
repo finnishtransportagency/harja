@@ -631,6 +631,23 @@
                             paallystyskohteet)]
     {:paallystyskohteet paallystyskohteet}))
 
+(defn hae-paallystyskohteiden-aikataulut [db {:keys [alkuaika loppuaika] :as parametrit}]
+  (log/info "Analytiikka API paallystyskohteden aikataulut :: parametrit" (pr-str parametrit))
+  (tarkista-haun-parametrit parametrit false)
+  (let [aikataulut (paallystys-kyselyt/hae-paallystyskohteiden-aikataulut-analytiikalle db
+                     {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                      :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
+        aikataulut (map #(set/rename-keys % {:yllapitokohde :paallystyskohde
+                                             :kohde_alku :kohdeAloitettu
+                                             :paallystys_alku :paallystysAloitettu
+                                             :paallystys_loppu :paallystysValmis
+                                             :valmis_tiemerkintaan :valmisTiemerkintaan
+                                             :tiemerkinta_takaraja :tiemerkintaTakaraja
+                                             :tiemerkinta_alku :tiemerkintaAloitettu
+                                             :tiemerkinta_loppu :tiemerkintaValmis
+                                             :kohde_valmis :kohdeValmis}) aikataulut)]
+    {:aikataulut aikataulut}))
+
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
   (start [{http :http-palvelin db :db-replica integraatioloki :integraatioloki :as this}]
@@ -761,6 +778,14 @@
             (hae-paallystyskohteet db parametrit))
           :analytiikka)))
 
+    (julkaise-reitti
+      http :analytiikka-hae-paallystyskohteiden-aikataulut
+      (GET "/api/analytiikka/paallystyskohteiden-aikataulut/:alkuaika/:loppuaika" parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paallystyskohteiden-aikataulut parametrit
+          json-skeemat/+analytiikka-paallystyskohteiden-aikataulujen-haku-vastaus+
+          (fn [parametrit _kayttaja db]
+            (hae-paallystyskohteiden-aikataulut db parametrit))
+          :analytiikka)))
     this)
 
   (stop [{http :http-palvelin :as this}]

@@ -1,7 +1,7 @@
 INSERT INTO integraatio (jarjestelma, nimi)
 VALUES ('api', 'analytiikka-hae-paallystysurakat'),
        ('api', 'analytiikka-hae-paallystyskohteet'),
-       ('api', 'analytiikka-hae-paallystyskohteiden-aikataulu'),
+       ('api', 'analytiikka-hae-paallystyskohteiden-aikataulut'),
        ('api', 'analytiikka-hae-paallystysilmoitukset');
 
 -- Lisätään ylläpitokohteelle luotu-kolumni, jotta voidaan rajata analytiikalle lähetettäviä kohteita.

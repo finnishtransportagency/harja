@@ -889,3 +889,17 @@ WHERE osa.muokattu BETWEEN :alku AND :loppu
    OR osa.luotu BETWEEN :alku AND :loppu
    OR kohde.muokattu BETWEEN :alku AND :loppu
    OR kohde.luotu BETWEEN :alku AND :loppu;
+
+-- name: hae-paallystyskohteiden-aikataulut-analytiikalle
+SELECT yllapitokohde,
+       kohde_alku,
+       paallystys_alku,
+       paallystys_loppu,
+       valmis_tiemerkintaan,
+       tiemerkinta_takaraja,
+       tiemerkinta_alku,
+       tiemerkinta_loppu,
+       kohde_valmis
+FROM yllapitokohteen_aikataulu
+WHERE luotu BETWEEN :alku AND :loppu
+   OR muokattu BETWEEN :alku AND :loppu
