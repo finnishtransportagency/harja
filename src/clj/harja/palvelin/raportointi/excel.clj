@@ -607,8 +607,8 @@
               sarakkeet))))
         data))
 
-      ;; Laitetaan automaattiset leveydet
-      (dotimes [i (count sarakkeet)]
+      ;; Laitetaan automaattiset leveydet hetkeksi piiloon - tätä todennäköisesti ei ole koskaan otettu huomioon.
+      #_ (dotimes [i (count sarakkeet)]
         (.autoSizeColumn sheet i))
       
       ;; Luodaan tiedot sisältävä rivi sheetin alkuun tässä, koska tämä tietostringi on todennäköisesti tarpeeksi pitkä, että autosizecolumn tekisi ekasta sarakkeesta tosi leveän
@@ -644,6 +644,11 @@
         tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)]
     (doseq [elementti (remove nil? sisalto)]
       (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook))
+    ;; Käydään lopuksi koko excel läpi ja pakotetaan solujen koot automaattisesti 20% suuremmaksi, kuin 5.2.5 versio poi kirjastosta laskee
+    (doseq [sheet (excel/sheet-seq workbook)]
+      (dotimes [i 4]
+        (.autoSizeColumn sheet i)
+        (.setColumnWidth sheet i (* 1.15 (.getColumnWidth sheet i)))))
     tiedoston-nimi))
 
 (defmethod muodosta-excel :default [elementti workbook]
