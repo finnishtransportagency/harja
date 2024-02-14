@@ -11,7 +11,8 @@
        :aet (:alkusijai1 rivi)
        :losa (:loppusija0 rivi)
        :let (:loppusija1 rivi)
-       :korjausluokka (:paallystee rivi)}))
+       :korjausluokka (:paallystee rivi)
+       :geometria (when (:the_geom rivi) (.toString (:the_geom rivi)))}))
 
 ;; Voit testata päällysteen korjausluokkien shapefilen kanta-ajoa vaihtamalla namespacen replissä tähän tiedostoon
 ;; ja kutsumalla (vie-korjausluokat-kantaan db "<polku shapefileen, esim. file:///Users/<user>/Downloads/paallysteen_korjausluokka/paallysteen_korjausluokkaLine.shp")
