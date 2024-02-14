@@ -24,6 +24,7 @@ runs:
       with:
         distribution: 'temurin'
         java-version-file: './.github/.java-version'
+        check-latest: true
 
     - name: Cache Clojure Dependencies
       id: cache-clojure-deps

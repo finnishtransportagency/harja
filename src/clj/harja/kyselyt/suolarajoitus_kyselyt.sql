@@ -178,6 +178,7 @@ FROM toteuma tot
      JOIN kayttaja k ON tot.luoja = k.id AND k.jarjestelma = :koneellinen?
 WHERE tot.urakka = :urakka-id
   AND tot.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+  AND tot.poistettu = FALSE
 GROUP BY tot.id;
 
 -- name: hae-suolarajoitus

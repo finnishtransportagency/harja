@@ -1,14 +1,11 @@
-# build-workflowsta minimoitu versio trivy-lisäyksin
-name: 'Harja: Scan container image'
+name: 'Harja: Scan fargate image (manual)'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: true
 
 on:
-  push:
-    branches:
-      - develop
+  workflow_dispatch:
 
 jobs:
   build-and-scan:
@@ -53,7 +50,7 @@ jobs:
         run: docker build -t harja-app:${{ github.sha }} --file aws/fargate/Dockerfile .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@d43c1f16c00cfd3978dde6c07f4bbcf9eb6993ca # v0.16.1
+        uses: aquasecurity/trivy-action@84384bd6e777ef152729993b8145ea352e9dd3ef # v0.17.0
         with:
           image-ref: 'harja-app:${{ github.sha }}'
           format: 'sarif'

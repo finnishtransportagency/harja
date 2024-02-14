@@ -293,7 +293,8 @@ FROM turvallisuuspoikkeama t
 
          LEFT JOIN organisaatio o ON u.hallintayksikko = o.id
 
-WHERE t.luotu BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP
+WHERE (t.luotu BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP
+           OR t.muokattu BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP)
 AND t.tapahtunut is not null;
 
 -- name: onko-olemassa-ulkoisella-idlla

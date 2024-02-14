@@ -352,13 +352,13 @@
   OnkoLaskunNumeroKaytossa
   (process-event [{laskun-numero :laskun-numero} app]
     (tuck-apurit/post! :tarkista-laskun-numeron-paivamaara
-                       {:laskun-numero laskun-numero
-                        :urakka        (-> @tila/yleiset :urakka :id)}
-                       {:onnistui               ->TarkistusOnnistui
-                        :onnistui-parametrit    [{:ei-async-laskuria true}]
-                        :epaonnistui            ->KutsuEpaonnistui
-                        :epaonnistui-parametrit [{:ei-async-laskuria true}]
-                        :paasta-virhe-lapi?     true})
+      {:laskun-numero (when (seq laskun-numero) laskun-numero)
+       :urakka (-> @tila/yleiset :urakka :id)}
+      {:onnistui ->TarkistusOnnistui
+       :onnistui-parametrit [{:ei-async-laskuria true}]
+       :epaonnistui ->KutsuEpaonnistui
+       :epaonnistui-parametrit [{:ei-async-laskuria true}]
+       :paasta-virhe-lapi? true})
     app)
 
   PaivitaLomake
@@ -372,6 +372,7 @@
                   (assoc-in [:lomake :validi?] validi?)
                   (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake)))))]
       app))
+
   TallennaKulu
   (process-event
     [_ {{:keys [kohdistukset koontilaskun-kuukausi liitteet
@@ -381,32 +382,33 @@
           kokonaissumma (reduce #(+ %1 (if (true? (:poistettu %2))
                                          0
                                          (parsi-summa (:summa %2))))
-                                0
-                                kohdistukset)
+                          0
+                          kohdistukset)
           {validoi-fn :validoi} (meta lomake)
           validoitu-lomake (validoi-fn lomake)
           {validi? :validi?} (meta validoitu-lomake)
           tyyppi (or "laskutettava" "kiinteasti-hinnoiteltu")]
       (when (true? validi?)
         (tuck-apurit/post! :tallenna-kulu
-                           {:urakka-id     urakka
-                            :kulu-kohdistuksineen
-                            {:kohdistukset          kohdistukset
-                             :erapaiva              erapaiva
-                             :id                    (when-not (nil? id) id)
-                             :urakka                urakka
-                             :kokonaissumma         kokonaissumma
-                             :laskun-numero         laskun-numero
-                             :lisatieto             lisatieto
-                             :tyyppi                tyyppi
-                             :liitteet              liitteet
-                             :koontilaskun-kuukausi koontilaskun-kuukausi}}
-                           {:onnistui            ->TallennusOnnistui
-                            :epaonnistui         ->KutsuEpaonnistui
-                            :epaonnistui-parametrit [{:viesti "Kulun tallentaminen epäonnistui"}]}))
+          {:urakka-id urakka
+           :kulu-kohdistuksineen
+           {:kohdistukset kohdistukset
+            :erapaiva erapaiva
+            :id (when-not (nil? id) id)
+            :urakka urakka
+            :kokonaissumma kokonaissumma
+            :laskun-numero (when (seq laskun-numero) laskun-numero)
+            :lisatieto lisatieto
+            :tyyppi tyyppi
+            :liitteet liitteet
+            :koontilaskun-kuukausi koontilaskun-kuukausi}}
+          {:onnistui ->TallennusOnnistui
+           :epaonnistui ->KutsuEpaonnistui
+           :epaonnistui-parametrit [{:viesti "Kulun tallentaminen epäonnistui"}]}))
       (cond-> app
-              true (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake))))
-              (true? validi?) (update-in [:parametrit :haetaan] inc))))
+        true (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake))))
+        (true? validi?) (update-in [:parametrit :haetaan] inc))))
+
   PoistoOnnistui
   (process-event
     [{tulos :tulos} {{:keys [viimeisin-haku]} :parametrit :as app}]
