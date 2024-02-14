@@ -71,7 +71,7 @@
 
 
 (defn liita-yhteen-mapit-ja-korvaa-avain 
-  "Tekee join-liitokseksen kahden kokoelman valilla jotka sisaltavat mappeja
+  "Tekee join-liitoksen kahden kokoelman välillä jotka sisältävät mappeja.
    Parametrit:
   * kokoelma1: Kokoelma mappeja johon liitos tehdään
   * kokoelma2: Kokoelma mappeja josta löytyy liitettävä arvo
