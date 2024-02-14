@@ -1247,4 +1247,4 @@ SELECT vuodet FROM yllapitokohde
 WHERE id = :id;
 
 -- name: paivita-yllapitokohteen-paallysteen-korjausluokka
-SELECT paivita_yllapitokohdeosan_korjausluokat(:id::INTEGER);
+SELECT paivita_yllapitokohteen_korjausluokat(:id::INTEGER);

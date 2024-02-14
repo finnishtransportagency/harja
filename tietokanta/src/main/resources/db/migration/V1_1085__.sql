@@ -65,7 +65,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Lasketaan yllapitokohdeosan pkluokkapituudet valmiiksi ja päivitetään yllapitokohteelle pkluokaksi suurimman pituuden saanut pkluokka.
-CREATE OR REPLACE FUNCTION paivita_yllapitokohdeosan_korjausluokat(alkupaiva DATE, loppupaiva DATE)
+CREATE OR REPLACE FUNCTION paivita_yllapitokohteiden_korjausluokat(alkupaiva DATE, loppupaiva DATE)
     RETURNS VOID AS
 $$
 DECLARE
@@ -129,7 +129,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Päivitä yksittäisen ylläpitkohteen päällysteen korjausluokka
-CREATE OR REPLACE FUNCTION paivita_yllapitokohdeosan_korjausluokat(yllapitkohde_id INTEGER)
+CREATE OR REPLACE FUNCTION paivita_yllapitokohteen_korjausluokat(yllapitkohde_id INTEGER)
     RETURNS VOID AS
 $$
 DECLARE
@@ -179,4 +179,4 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Voit päivittää päällystyskohteen korjausluokat tällä komennolla koko ajalle tai vaikka jollekin päivälle
--- select paivita_yllapitokohdeosan_korjausluokat('2000-06-01'::DATE, '2024-06-30'::DATE);
+-- select paivita_yllapitokohteiden_korjausluokat('2000-06-01'::DATE, '2024-06-30'::DATE);
