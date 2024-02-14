@@ -1,5 +1,5 @@
--- name: hae-kayttajan-kanavaurakat
--- Palauttaa käyttäjän kanavaurakat 
+-- name: hae-kanavaurakat
+-- Palauttaa kaikki kanavaurakat annetulla hallintayksiköllä
 SELECT u.id        AS urakka_id,
        u.nimi      AS urakka_nimi,
        u.tyyppi    AS tyyppi,
