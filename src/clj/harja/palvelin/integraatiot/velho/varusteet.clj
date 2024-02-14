@@ -552,7 +552,7 @@
                                     urakka-velho-oid 
                                     alkuaika-parametri
                                     loppuaika-parametri)
-                oidit (vec (map :oid valimaiset-oidit))
+                oidit (mapv :oid valimaiset-oidit)
                 valimaiset-toimenpiteet (hae-valimaiset-varuste-toimenpiteet-oideille db oidit http-asetukset konteksti toimenpide)
                 toimenpiteella-suodatetut-valimaiset-oidit (vec (map #(get-in % [:ominaisuudet :toimenpiteen-kohde]) valimaiset-toimenpiteet))
                 varustetoimenpide-parametri (when toimenpide (tee-toimenpide-parametri db toimenpide toimenpiteella-suodatetut-valimaiset-oidit)) 
