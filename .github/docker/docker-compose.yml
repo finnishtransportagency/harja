@@ -16,10 +16,9 @@ services:
 
     # Alla saatavilla olevia versioita
     # https://github.com/finnishtransportagency/harja/pkgs/container/harja_harjadb/versions
-    #image: ghcr.io/finnishtransportagency/harja_harjadb:15.3-3.3.2 (uusin vakaa)
+    #image: ghcr.io/finnishtransportagency/harja_harjadb:15.4-3.3.3 (uusin vakaa)
+    #image: ghcr.io/finnishtransportagency/harja_harjadb:15.3-3.3.2
     #image: ghcr.io/finnishtransportagency/harja_harjadb:13.11-3.3.2
-    #image: ghcr.io/finnishtransportagency/harja_harjadb:13-3.1
-    #image: ghcr.io/finnishtransportagency/harja_harjadb:12-3.1
 
     container_name: harjadb
     networks:
@@ -41,8 +40,8 @@ services:
   # Vanhempia testattavia imagen versiota varten on tehty tähän omia compose konfiguraatioita, koska
   # 'latest' imagen versioissa healthcheck, volumet ym. asetukset voivat muuttua.
 
-  harjadb-13-3.1:
-    image: ghcr.io/finnishtransportagency/harja_harjadb:13-3.1
+  harjadb-13.13-3.3.3:
+    image: ghcr.io/finnishtransportagency/harja_harjadb:13.13-3.3.3
 
     container_name: harjadb
     networks:
@@ -61,8 +60,9 @@ services:
       start_period: 20s
       timeout: 10s
 
-  harjadb-12-3.1:
-    image: ghcr.io/finnishtransportagency/harja_harjadb:12-3.1
+  # Huom. Uudempi flyway v10 ei toimi enää tässä imagessa
+  harjadb-13-3.1:
+    image: ghcr.io/finnishtransportagency/harja_harjadb:13-3.1
 
     container_name: harjadb
     networks:

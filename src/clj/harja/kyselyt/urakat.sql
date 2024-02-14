@@ -384,16 +384,20 @@ SELECT
   u.id,
   u.nimi,
   u.hallintayksikko,
-  u.sampoid
+  u.sampoid,
+  u.tyyppi as urakkatyyppi,
+  (SELECT NOW() BETWEEN u.alkupvm AND u.loppupvm) as kaynnissa
 FROM urakka u
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
-WHERE (u.nimi ILIKE :teksti
-       OR u.sampoid ILIKE :teksti)
+WHERE (u.nimi ILIKE :termi
+       OR u.sampoid ILIKE :termi OR
+       :numero::INTEGER IS NOT NULL AND u.id = :numero)
       AND (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
             'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
            OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
                :kayttajan_org_id = org.id))
       AND u.poistettu = false
+ORDER BY NOW() BETWEEN u.alkupvm AND u.loppupvm DESC, u.tyyppi DESC, u.nimi
 LIMIT 11;
 
 -- name: hae-urakka

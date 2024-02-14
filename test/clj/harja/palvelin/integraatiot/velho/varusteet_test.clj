@@ -117,3 +117,33 @@
                                                                                             :hoitokauden-alkuvuosi 2020})]
         (is (= 1 (count (:toteumat vastaus))))
         (is (= odotettu-varuste (first (:toteumat vastaus))))))))
+
+
+(deftest yhdista-valimaiset-toimenpiteet-varusteisiin
+  (testing "Toimenpide tieto yhdistyy varusteisiin oikein"
+    (let [varusteet [{:oid "1.2.246.578.4.3.14.2171636297.4142310432"}
+                     {:oid "1.2.246.578.4.3.14.2171636297.4142310433"}
+                     {:oid "1.2.246.578.4.3.14.2171636297.4142310434"}
+                     {:oid "1.2.246.578.4.3.14.2171636297.4142310435"}
+                     {:oid "1.2.246.578.4.3.14.2171636297.4142310436"}]
+          toimenpiteet [{:ominaisuudet {:toimenpiteen-kohde "1.2.246.578.4.3.14.2171636297.4142310432" :toimenpide "varustetoimenpide/vtp01"} :oid "1.2.246.578.12.2.2171636297.4142310443"}
+                        {:ominaisuudet {:toimenpiteen-kohde "1.2.246.578.4.3.14.2171636297.4142310433" :toimenpide "varustetoimenpide/vtp01"} :oid "1.2.246.578.12.2.2171636297.4142310444"}
+                        {:ominaisuudet {:toimenpiteen-kohde "1.2.246.578.4.3.14.2171636297.4142310434" :toimenpide "varustetoimenpide/vtp01"} :oid "1.2.246.578.12.2.2171636297.4142310445"}]
+          vastaus (varusteet/yhdista-valimaiset-toimenpiteet-varusteisiin {:kokoelma1 varusteet
+                                                                           :kokoelma2 toimenpiteet
+                                                                           :yhteinen-key1 [:oid]
+                                                                           :yhteinen-key2 [:ominaisuudet :toimenpiteen-kohde]
+                                                                           :etsittava-avain [:ominaisuudet :toimenpide]
+                                                                           :asetettava-avain :valimaiset-toimenpiteet})]
+      (is (= 5 (count vastaus)))
+      (is (= (list
+               {:oid "1.2.246.578.4.3.14.2171636297.4142310432",
+                :valimaiset-toimenpiteet ["varustetoimenpide/vtp01"]}
+               {:oid "1.2.246.578.4.3.14.2171636297.4142310433",
+                :valimaiset-toimenpiteet ["varustetoimenpide/vtp01"]}
+               {:oid "1.2.246.578.4.3.14.2171636297.4142310434",
+                :valimaiset-toimenpiteet ["varustetoimenpide/vtp01"]}
+               {:oid "1.2.246.578.4.3.14.2171636297.4142310435",
+                :valimaiset-toimenpiteet []}
+               {:oid "1.2.246.578.4.3.14.2171636297.4142310436",
+                :valimaiset-toimenpiteet []}) vastaus)))))

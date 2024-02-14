@@ -46,12 +46,18 @@
     :vesivayla-kanavien-hoito
     :vesivayla-turvalaitteiden-korjaus})
 
+
 (def urakkatyyppi->otsikko
   {:hoito "Hoito"
+   :teiden-hoito "Hoito"
    :paallystys "Päällystys"
    :valaistus "Valaistus"
    :paikkaus "Paikkaus"
-   :tiemerkinta "Tiemerkintä"})
+   :tiemerkinta "Tiemerkintä"
+   :siltakorjaus "Siltakorjaus"
+   :vesivayla-hoito "Vesiväylät"
+   :vesivayla-kanavien-hoito "Kanavat"
+   :tekniset-laitteet "Tekniset laitteet"})
 
 (s/def ::hae-harjassa-luodut-urakat-vastaus
   (s/coll-of (s/and ::urakka
