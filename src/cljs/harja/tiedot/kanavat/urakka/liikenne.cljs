@@ -5,10 +5,9 @@
             [reagent.core :as r :refer [atom]]
             [tuck.core :as tuck]
             [namespacefy.core :refer [namespacefy]]
-
+            [harja.tiedot.kanavat.urakka.yhteiset :as yhteiset]
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
-            [harja.loki :refer [log tarkkaile!]]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.viesti :as viesti]
             [harja.ui.modal :as modal]
@@ -694,28 +693,7 @@
   PaivitaValinnat
   (process-event [{u :uudet} {:keys [valinnat lataa-aloitustiedot] :as app}]
     (let [uudet-valinnat (merge valinnat (select-keys u valintojen-avaimet))
-          aikavali-vanha (:aikavali valinnat)
-          aikavali-uusi (:aikavali uudet-valinnat)
-          vain-aikavali-muuttunut? (=
-                                    (dissoc uudet-valinnat :aikavali)
-                                    (dissoc valinnat :aikavali))
-          ;; Onko aikaväli tällä hetkellä olemassa käyttäjän lomakkeessa?
-          aikavali-olemassa? (boolean (and (first aikavali-uusi) (second aikavali-uusi)))
-          ;; Tyhjennettiinkö aikaväli kokonaan?
-          aikavali-tyhjennettiin? (and
-                                    (or
-                                      (some? (first aikavali-vanha))
-                                      (some? (second aikavali-vanha)))
-                                    (nil? (first aikavali-uusi))
-                                    (nil? (second aikavali-uusi)))
-          ;; Onko tarve tehdä uutta hakua
-          ;; Tässä katsotaan, muokkasiko, tai tyhjensikö käyttäjä aikaväli filtterin
-          ;; Tämä tehty sen takia että ei tehdä turhia kutsuja, kun käyttäjä syöttää pelkästään alkupvm eikä loppupvm
-          tarve-hakea? (or
-                         lataa-aloitustiedot
-                         aikavali-tyhjennettiin?
-                         (not
-                           (and vain-aikavali-muuttunut? (not aikavali-olemassa?))))
+          tarve-hakea? (yhteiset/onko-tarve-hakea-aikavali-muuttunut? valinnat uudet-valinnat lataa-aloitustiedot)
           haku (tuck/send-async! ->HaeLiikennetapahtumat)]
 
       ;; Jos tarve tehdä uusi haku, tehdään se
