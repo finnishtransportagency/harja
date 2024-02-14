@@ -1,7 +1,7 @@
 (ns harja.kyselyt.kanavat.liikennetapahtumat
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as s]
-            
+
             [clojure.set :as set]
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
@@ -12,7 +12,8 @@
 
             [harja.id :refer [id-olemassa?]]
             [harja.pvm :as pvm]
-
+            
+            [harja.kyselyt.kanavat.urakat :as urakat-q]
             [harja.kyselyt.kanavat.kohteet :as kohteet-q]
 
             [harja.domain.urakka :as ur]
