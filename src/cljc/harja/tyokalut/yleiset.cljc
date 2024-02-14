@@ -68,3 +68,22 @@
       (> hoitokauden-numero 1)) (dec (+ hoitokauden-numero urakan-aloitusvuosi))
     (and (>= kuukausi 1) (<= kuukausi 9)
       (> hoitokauden-numero 1)) (+ hoitokauden-numero urakan-aloitusvuosi)))
+
+
+(defn liita-yhteen-mapit-ja-korvaa-avain 
+  "Tekee join-liitoksen kahden kokoelman välillä jotka sisältävät mappeja.
+   Parametrit:
+  * kokoelma1: Kokoelma mappeja johon liitos tehdään
+  * kokoelma2: Kokoelma mappeja josta löytyy liitettävä arvo
+  * yhteinen-key1: Avain kokoelma1:ssa jota kaytetaan liitokseen
+  * yhteinen-key2: Avain jolla poimitaan arvo kokoelma2:sta
+  * etsittava-avain: Kokoelma2:sta etsitaan kaikki taman avaimen arvot
+  * asetettava-avain: Etsityt arvot asetetaan asetettava-avain nimelle liitettyna kokoelma1:een"
+  [{:keys [kokoelma1 kokoelma2 yhteinen-key1 yhteinen-key2 etsittava-avain asetettava-avain] :as m}]
+  (map (fn [item1]
+         (let [yhteinen-arvo (get-in item1 yhteinen-key1)]
+           (merge
+             item1
+             {asetettava-avain (vec (->> kokoelma2
+                                      (filter #(= yhteinen-arvo (get-in % yhteinen-key2)))
+                                      (map #(get-in % etsittava-avain))))}))) kokoelma1))
