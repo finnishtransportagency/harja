@@ -639,6 +639,24 @@
 (defmethod muodosta-excel :otsikko-heading [[_ _] _] nil)
 (defmethod muodosta-excel :otsikko-heading-small [[_ _] _] nil)
 
+;; Esimerkki erillisen otsikko/teksti kentän luomisesta exceliin. Nykyiset exceliin ensimmäiseksi lisättävät
+;; tekstikentät (esim laskutusyhteenvetojen perusluvun näyttäminen) eivät toimi, koska ne eivät olet :taulukko -elementin sisällä.
+;; Tällaisella rakenteella myös :taulukko -elementin ulkopuoliset tekstit saadaan exceliin.
+;; Tämä luo tällaisenaan vain uuden sheetin, joka ei ole optimaalista, koska sen :teksti -elementin
+;; kuuluisi olla samalla sheetillä kuin muutkin elementit. Joten se on nyt kommentoitu, mutta jätetty tähän esimerkiksi.
+#_ (defmethod muodosta-excel :teksti [[_ teksti] workbook]
+  (let [sheet (last (excel/sheet-seq workbook))
+        sheet (if sheet
+                sheet
+                (excel/add-sheet! workbook
+                  (WorkbookUtil/createSafeSheetName "Tyhja")))
+        rivi-numero (inc (.getLastRowNum sheet))
+        rivi (.createRow sheet rivi-numero)
+        cell (.createCell rivi 0)
+        sarake-tyyli (excel/create-cell-style! workbook {:font {:color :black :name "Open Sans" :size 12}})]
+    (excel/set-cell! cell teksti)
+    (excel/set-cell-style! cell sarake-tyyli)))
+
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
   (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)
         tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)]
