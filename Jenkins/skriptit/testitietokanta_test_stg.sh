@@ -9,7 +9,7 @@ psql -h localhost -U harjatest harjatest_template -c "CREATE EXTENSION IF NOT EX
 
 cd tietokanta
 
-mvn clean compile flyway:migrate -Dflyway.url=jdbc:postgresql://localhost/harjatest_template -Dflyway.user=harjatest
+mvn -f pom.vanha.xml clean compile flyway:migrate -Dflyway.url=jdbc:postgresql://localhost/harjatest_template -Dflyway.user=harjatest
 
 sh ../Jenkins/skriptit/kannan_puukotus.sh
 
