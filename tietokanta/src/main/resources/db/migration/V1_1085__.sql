@@ -38,9 +38,9 @@ BEGIN
             RAISE NOTICE 'Ylläpitokode: % :: osa :: id: % pituus: % erop1: % erop2: % erop3 %',
                 yllapitokohde_id, yosa.id, yosa.pituus, yosa.eropituus_pk1,
                 yosa.eropituus_pk2, yosa.eropituus_pk3;
-            yko_pk1_pituus := ROUND((yosa.pituus - yosa.eropituus_pk1)::numeric, 2)::numeric;
-            yko_pk2_pituus := ROUND((yosa.pituus - yosa.eropituus_pk2)::numeric, 2)::numeric;
-            yko_pk3_pituus := ROUND((yosa.pituus - yosa.eropituus_pk3)::numeric, 2)::numeric;
+            yko_pk1_pituus := CASE WHEN yosa.eropituus_pk1 > 0 THEN ROUND((yosa.pituus - yosa.eropituus_pk1)::numeric, 2)::numeric ELSE null END;
+            yko_pk2_pituus := CASE WHEN yosa.eropituus_pk2 > 0 THEN ROUND((yosa.pituus - yosa.eropituus_pk2)::numeric, 2)::numeric ELSE null END;
+            yko_pk3_pituus := CASE WHEN yosa.eropituus_pk3 > 0 THEN ROUND((yosa.pituus - yosa.eropituus_pk3)::numeric, 2)::numeric ELSE null END;
 
             RAISE NOTICE 'Pituudet: % :: % ::  %',
                 yko_pk1_pituus, yko_pk2_pituus, yko_pk3_pituus;
