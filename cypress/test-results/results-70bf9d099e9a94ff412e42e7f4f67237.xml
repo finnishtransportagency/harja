@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="44.2010" tests="13" failures="1">
+  <testsuite name="Root Suite" timestamp="2024-02-14T08:18:42" tests="0" file="cypress/e2e/nakymien_avaus.cy.js" time="0.0000" failures="0">
+  </testsuite>
+  <testsuite name="Päänäkymien avaamiset" timestamp="2024-02-14T08:18:42" tests="6" time="8.4730" failures="0">
+    <testcase name="Päänäkymien avaamiset Urakkavalinta listan kautta toimii" time="3.7470" classname="Urakkavalinta listan kautta toimii">
+    </testcase>
+    <testcase name="Päänäkymien avaamiset Raportit välilehti toimii" time="1.4810" classname="Raportit välilehti toimii">
+    </testcase>
+    <testcase name="Päänäkymien avaamiset Tilannekuva välilehti toimii" time="0.8310" classname="Tilannekuva välilehti toimii">
+    </testcase>
+    <testcase name="Päänäkymien avaamiset Ilmoitukset välilehti toimii" time="0.9070" classname="Ilmoitukset välilehti toimii">
+    </testcase>
+    <testcase name="Päänäkymien avaamiset Tienpidon luvat välilehti toimii" time="0.4820" classname="Tienpidon luvat välilehti toimii">
+    </testcase>
+    <testcase name="Päänäkymien avaamiset Info -sivu toimii" time="1.0250" classname="Info -sivu toimii">
+    </testcase>
+  </testsuite>
+  <testsuite name="MH-Urakan näkymien avaamiset" timestamp="2024-02-14T08:18:51" tests="7" time="35.7280" failures="1">
+    <testcase name="MH-Urakan näkymien avaamiset Avaa Yleiset, Työmaapäiväkirja Turvallisuus" time="23.5440" classname="Avaa Yleiset, Työmaapäiväkirja Turvallisuus">
+    </testcase>
+    <testcase name="MH-Urakan näkymien avaamiset Avaa Suunnittelun alatabit" time="0.0000" classname="Avaa Suunnittelun alatabit">
+      <failure message="Timed out retrying after 4000ms: Expected to find content: &apos;sdfgSuunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten.&apos; but never did." type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 4000ms: Expected to find content: 'sdfgSuunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten.' but never did.
+    at Context.eval (http://localhost:3000/__cypress/tests?p=cypress/e2e/nakymien_avaus.cy.js:212:111)]]></failure>
+    </testcase>
+    <testcase name="MH-Urakan näkymien avaamiset Avaa Kulut ja sen alatabit" time="2.6560" classname="Avaa Kulut ja sen alatabit">
+    </testcase>
+    <testcase name="MH-Urakan näkymien avaamiset Avaa Toteumat ja sen alatabit" time="2.5850" classname="Avaa Toteumat ja sen alatabit">
+    </testcase>
+    <testcase name="MH-Urakan näkymien avaamiset Avaa Laadunseuranta ja sen alatabit" time="2.5180" classname="Avaa Laadunseuranta ja sen alatabit">
+    </testcase>
+    <testcase name="MH-Urakan näkymien avaamiset Avaa Lupaukset ja tavoitteet ja sen alatabit" time="2.1700" classname="Avaa Lupaukset ja tavoitteet ja sen alatabit">
+    </testcase>
+    <testcase name="MH-Urakan näkymien avaamiset Avaa Paikkaukset ja sen alatabit" time="2.2550" classname="Avaa Paikkaukset ja sen alatabit">
+    </testcase>
+  </testsuite>
+</testsuites>
