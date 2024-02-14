@@ -196,6 +196,14 @@
       (:tyyppi-polku kohdeluokka))
     (mapv :tyyppi varustetyypit)]])
 
+(defn yhdista-valimaiset-toimenpiteet-stringiksi [db valimaiset-toimenpiteet]
+  (str/join ","
+    (keep
+      (fn [toimenpide]
+        (:otsikko
+         (first (memoized-hae-nimikkeen-tiedot db {:tyyppi-nimi toimenpide}))))
+      valimaiset-toimenpiteet)))
+
 (defn varusteen-toimenpide [db {:keys [version-voimassaolo ominaisuudet paattyen alkaen oid valimaiset-toimenpiteet]}]
   (let [version-alku (:alku version-voimassaolo)
         version-loppu (:loppu version-voimassaolo)
@@ -212,12 +220,7 @@
                       " Otetaan vain 1. toimenpide talteen.")))
         (:otsikko (first (memoized-hae-nimikkeen-tiedot db {:tyyppi-nimi (first toimenpiteet)}))))
       (cond
-        (seq valimaiset-toimenpiteet) (str/join ","
-                                        (keep
-                                          (fn [toimenpide]
-                                            (:otsikko
-                                             (first (memoized-hae-nimikkeen-tiedot db {:tyyppi-nimi toimenpide}))))
-                                          valimaiset-toimenpiteet))
+        (seq valimaiset-toimenpiteet) (yhdista-valimaiset-toimenpiteet-stringiksi db valimaiset-toimenpiteet)
         (some? poistettu?) "Poistettu"
         (or
           (and (nil? version-voimassaolo) alkaen (not poistettu?))
