@@ -415,6 +415,8 @@
                                                                                 :kohde_valmis (or (:pot-valmistumispvm uusi-kohde) (:kohde-valmis ypka))
                                                                                 :valmis_tiemerkintaan (:valmis-tiemerkintaan ypka)}))
         ]
+    ;; Päivitä lopuksi ylläpitokohteelle päällysteen korjausluokka
+    (yllapitokohteet-q/paivita-yllapitokohteen-paallysteen-korjausluokka db {:id yllapitokohde-id})
     uusi-kohde))
 
 (defn tallenna-paikkauskohde! [db fim email user kohde kehitysmoodi?]
