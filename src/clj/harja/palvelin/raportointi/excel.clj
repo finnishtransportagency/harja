@@ -145,7 +145,7 @@
         solun-tyyli (if varoitus?
                       (merge solun-tyyli
                         {:background :red
-                         :font {:color :white}})
+                         :font {:color :white :name "Open Sans" :size 12}})
                       solun-tyyli)]
     [(str etuliite
        (cond desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
@@ -170,11 +170,11 @@
                       varoitus?
                       (merge solun-tyyli
                         {:background :red
-                         :font       {:color :white}})
+                         :font       {:color :white :name "Open Sans" :size 12}})
                       huomio?
                       (merge solun-tyyli
                         {:background :orange
-                         :font       {:color :black}})
+                         :font       {:color :black :name "Open Sans" :size 12}})
                       :default solun-tyyli)]
     [arvo solun-tyyli
      (when desimaalien-maara
@@ -187,8 +187,10 @@
 
 (defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli fmt lihavoi?]}] solun-tyyli]
   (let [solun-tyyli (if lihavoi?
-                      (merge solun-tyyli {:font {:bold true}})
-                      solun-tyyli)]
+                      (merge solun-tyyli {:font {:bold true :name "Open Sans" :size 12}})
+                      (if (nil? solun-tyyli)
+                        {:font {:name "Open Sans" :size 12}}
+                        solun-tyyli))]
     [arvo
      (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))
      fmt]))
@@ -207,7 +209,7 @@
   ([font-koko]
    {:color :black
     :size font-koko
-    :name "Arial"
+    :name "Open Sans"
     :bold true}))
 
 (defn- luo-saraketyyli
@@ -219,7 +221,7 @@
                                         :border-right :thin
                                         :font (font-otsikko 14)}
                                        {:background (or taustavari :grey_25_percent)
-                                        :font {:color :black}})))
+                                        :font {:color :black :name "Open Sans" :size 12}})))
 
 (defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet workbook lista-tyyli?]
   (dorun
@@ -297,7 +299,7 @@
 (defn- font-leipateksti
   ([] (font-leipateksti 11))
   ([font-koko]
-   {:color :black :size font-koko}))
+   {:color :black :size font-koko :name "Open Sans"}))
 
 (defn- tasaa-solu [solu tasaa]
   (CellUtil/setAlignment solu
@@ -317,7 +319,7 @@
                                        {:background (or taustavari (if tummenna-teksti? 
                                                                      :pale_blue 
                                                                      :grey_25_percent))
-                                        :font {:color :black}})))
+                                        :font {:color :black :name "Open Sans" :size 12}})))
 
 (defn luo-rivi-jalkeen-tyyli [workbook]
   (excel/create-cell-style! workbook {:font (font-leipateksti)}))
@@ -367,7 +369,7 @@
   (let [aiempi-sheet (last (excel/sheet-seq workbook))
         [sheet rivi-nro] [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
 
-        tyyli-tiedot {:font {:color :black :size 12 :name "Aria"}}
+        tyyli-tiedot {:font {:color :black :size 12 :name "Open Sans"}}
         tyyli-normaali (excel/create-cell-style! workbook tyyli-tiedot)
         tyyli-otsikko (excel/create-cell-style! workbook (assoc-in tyyli-tiedot [:font :bold] true))
 
@@ -443,7 +445,7 @@
   ;; Tekee väliotsikon exceliin mikäli tämä puuttuu, annetaan raportin taulukon parametreissa 
   (let [aiempi-sheet (last (excel/sheet-seq workbook))
         [sheet rivi-numero] [aiempi-sheet (inc (.getLastRowNum aiempi-sheet))]
-        tyyli-tiedot {:border-bottom :thin :background :grey_25_percent :font {:bold true :color :black :size 12 :name "Aria"}}
+        tyyli-tiedot {:border-bottom :thin :background :grey_25_percent :font {:bold true :color :black :size 12 :name "Open Sans"}}
         tyyli (excel/create-cell-style! workbook tyyli-tiedot)
 
         rivi (.createRow sheet rivi-numero)
