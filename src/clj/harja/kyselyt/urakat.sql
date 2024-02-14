@@ -79,11 +79,7 @@ SELECT u.id        AS urakka_id,
        u.urakkanro AS urakka_urakkanro
 FROM urakka u
          JOIN organisaatio o ON u.hallintayksikko = o.id
-WHERE ( -- Vesiväylille saa hakea myös päättyneet urakat 
-        :urakkatyyppi = 'vesivayla-kanavien-hoito'
-   OR   (u.loppupvm >= :alku AND u.alkupvm <= :loppu) 
-   OR   (u.loppupvm IS NULL AND u.alkupvm <= :loppu)
-  )
+WHERE ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu))
   AND (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija)
   AND (:urakkatyyppi :: urakkatyyppi IS NULL OR CASE
                                                     WHEN :urakkatyyppi = 'hoito'
