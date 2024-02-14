@@ -4,49 +4,60 @@ ALTER TABLE paallysteen_korjausluokka
 
 -- Lisätään päällystyskohteen osalle jokaisen korjausluokan pituus
 ALTER TABLE yllapitokohdeosa
-    ADD COLUMN pk1_pituus numeric,
-    ADD COLUMN pk2_pituus numeric,
-    ADD COLUMN pk3_pituus numeric;
+    ADD COLUMN pk1_pituus NUMERIC,
+    ADD COLUMN pk2_pituus NUMERIC,
+    ADD COLUMN pk3_pituus NUMERIC;
 
 -- Lisätään pääkohteelle pk-luokka, joka määräytyy sen mukaan, mitä pk-luokkaa on pituudeltaa alikohteella eniten
 ALTER TABLE yllapitokohde
-    ADD COLUMN pkluokka text;
+    ADD COLUMN pkluokka TEXT;
 
 -- Tehdään funktio, joka laskee pituudet jokaiselle ylläpitokohdeosalle
 -- Pituuden laskennan jälkeen määritetään yllapitokohteelle pkluokka sen mukaan, mitä pk-luokkaa on alikohteella eniten
-CREATE OR REPLACE FUNCTION laske_yllapitokohdeosan_pk_pituudet(yllapitokohde_id Integer, pk1geom geometry,
-                                                               pk2geom geometry, pk3geom geometry)
-    RETURNS void AS $$
+CREATE OR REPLACE FUNCTION laske_yllapitokohdeosien_pk_pituudet(yllapitokohde_id INTEGER, pk1geom geometry,
+                                                                pk2geom geometry, pk3geom geometry)
+    RETURNS VOID AS
+$$
 DECLARE
-    yosa      RECORD;
-    yko_pk1_pituus         numeric;
-    yko_pk2_pituus         numeric;
-    yko_pk3_pituus         numeric;
-    ypkluokka               text;
+    yosa           RECORD;
+    yko_pk1_pituus NUMERIC;
+    yko_pk2_pituus NUMERIC;
+    yko_pk3_pituus NUMERIC;
+    ypkluokka      TEXT;
 
 BEGIN
 
     RAISE NOTICE 'Haetaan yllapitokohdeosat:';
 
-    FOR yosa IN (SELECT y.id, COALESCE(st_length(y.sijainti),0) AS pituus,
-                        COALESCE(st_length(st_difference(y.sijainti, pk1geom)),0) AS eropituus_pk1,
-                        COALESCE(st_length(st_difference(y.sijainti, pk2geom)),0) AS eropituus_pk2,
-                        COALESCE(st_length(st_difference(y.sijainti, pk3geom)),0) AS eropituus_pk3
+    FOR yosa IN (SELECT y.id,
+                        COALESCE(st_length(y.sijainti), 0)                         AS pituus,
+                        COALESCE(st_length(st_difference(y.sijainti, pk1geom)), 0) AS eropituus_pk1,
+                        COALESCE(st_length(st_difference(y.sijainti, pk2geom)), 0) AS eropituus_pk2,
+                        COALESCE(st_length(st_difference(y.sijainti, pk3geom)), 0) AS eropituus_pk3
                    FROM yllapitokohdeosa y
                   WHERE y.yllapitokohde = yllapitokohde_id)
         LOOP
             RAISE NOTICE 'Ylläpitokode: % :: osa :: id: % pituus: % erop1: % erop2: % erop3 %',
                 yllapitokohde_id, yosa.id, yosa.pituus, yosa.eropituus_pk1,
                 yosa.eropituus_pk2, yosa.eropituus_pk3;
-            yko_pk1_pituus := CASE WHEN yosa.eropituus_pk1 > 0 THEN ROUND((yosa.pituus - yosa.eropituus_pk1)::numeric, 2)::numeric ELSE null END;
-            yko_pk2_pituus := CASE WHEN yosa.eropituus_pk2 > 0 THEN ROUND((yosa.pituus - yosa.eropituus_pk2)::numeric, 2)::numeric ELSE null END;
-            yko_pk3_pituus := CASE WHEN yosa.eropituus_pk3 > 0 THEN ROUND((yosa.pituus - yosa.eropituus_pk3)::numeric, 2)::numeric ELSE null END;
+            yko_pk1_pituus := CASE
+                                  WHEN yosa.eropituus_pk1 > 0 THEN ROUND((yosa.pituus - yosa.eropituus_pk1)::NUMERIC, 2)::NUMERIC
+                                  ELSE NULL END;
+            yko_pk2_pituus := CASE
+                                  WHEN yosa.eropituus_pk2 > 0 THEN ROUND((yosa.pituus - yosa.eropituus_pk2)::NUMERIC, 2)::NUMERIC
+                                  ELSE NULL END;
+            yko_pk3_pituus := CASE
+                                  WHEN yosa.eropituus_pk3 > 0 THEN ROUND((yosa.pituus - yosa.eropituus_pk3)::NUMERIC, 2)::NUMERIC
+                                  ELSE NULL END;
 
             RAISE NOTICE 'Pituudet: % :: % ::  %',
                 yko_pk1_pituus, yko_pk2_pituus, yko_pk3_pituus;
 
-            UPDATE yllapitokohdeosa SET pk1_pituus = yko_pk1_pituus, pk2_pituus = yko_pk2_pituus,
-                                        pk3_pituus = yko_pk3_pituus WHERE id = yosa.id;
+            UPDATE yllapitokohdeosa
+               SET pk1_pituus = yko_pk1_pituus,
+                   pk2_pituus = yko_pk2_pituus,
+                   pk3_pituus = yko_pk3_pituus
+             WHERE id = yosa.id;
 
             -- Lisään ylläpitokohteelle pkluokka sen perusteella, mitä pkluokkaa on eniten
             CASE
@@ -69,11 +80,11 @@ CREATE OR REPLACE FUNCTION paivita_yllapitokohteiden_korjausluokat(alkupaiva DAT
     RETURNS VOID AS
 $$
 DECLARE
-    yllapitokohde   RECORD;
-    tienumerot   INTEGER[];
-    pk1geom         geometry;
-    pk2geom         geometry;
-    pk3geom         geometry;
+    yllapitokohde RECORD;
+    tienumerot    INTEGER[];
+    pk1geom       geometry;
+    pk2geom       geometry;
+    pk3geom       geometry;
 
 BEGIN
 
@@ -121,33 +132,35 @@ BEGIN
                            ORDER BY y.id ASC)
         LOOP
             RAISE NOTICE 'Yllapitokohde :: id: %', yllapitokohde.id;
-            PERFORM laske_yllapitokohdeosan_pk_pituudet(yllapitokohde.id, pk1geom::geometry,
-                                                        pk2geom::geometry, pk3geom::geometry);
+            PERFORM laske_yllapitokohdeosien_pk_pituudet(yllapitokohde.id, pk1geom::geometry,
+                                                         pk2geom::geometry, pk3geom::geometry);
 
         END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
--- Päivitä yksittäisen ylläpitkohteen päällysteen korjausluokka
-CREATE OR REPLACE FUNCTION paivita_yllapitokohteen_korjausluokat(yllapitkohde_id INTEGER)
+-- Päivitä yksittäisen ylläpitokohteen päällysteen korjausluokka
+CREATE OR REPLACE FUNCTION paivita_yllapitokohteen_korjausluokat(yllapitokohde_id INTEGER)
     RETURNS VOID AS
 $$
 DECLARE
-    yllapitokohde   RECORD;
-    tienumerot   INTEGER[];
-    pk1geom         geometry;
-    pk2geom         geometry;
-    pk3geom         geometry;
+    yllapitokohde RECORD;
+    tienumerot    INTEGER[];
+    pk1geom       geometry;
+    pk2geom       geometry;
+    pk3geom       geometry;
 
 BEGIN
 
-    RAISE NOTICE 'Haetaan yllapitokohteen:  % tienumerot.', yllapitkohde_id;
+    RAISE NOTICE 'Haetaan yllapitokohteen:  % tienumerot.', yllapitokohde_id;
 
-    tienumerot := (WITH tiet AS (SELECT y.tr_numero AS tie FROM yllapitokohde y WHERE y.id = yllapitkohde_id
+    tienumerot := (WITH tiet AS (SELECT y.tr_numero AS tie
+                                   FROM yllapitokohde y
+                                  WHERE y.id = yllapitokohde_id
                                   UNION
                                  SELECT yo.tr_numero AS tie
                                    FROM yllapitokohde y
-                                            JOIN yllapitokohdeosa yo ON yo.yllapitokohde = y.id AND y.id = yllapitkohde_id)
+                                            JOIN yllapitokohdeosa yo ON yo.yllapitokohde = y.id AND y.id = yllapitokohde_id)
                  SELECT ARRAY_AGG(DISTINCT tie)
                    FROM tiet);
 
@@ -172,8 +185,8 @@ BEGIN
 
     RAISE NOTICE 'Geometriat haettu';
 
-    PERFORM laske_yllapitokohdeosan_pk_pituudet(yllapitkohde_id, pk1geom::geometry,
-                                                pk2geom::geometry, pk3geom::geometry);
+    PERFORM laske_yllapitokohdeosien_pk_pituudet(yllapitokohde_id, pk1geom::geometry,
+                                                 pk2geom::geometry, pk3geom::geometry);
 
 END;
 $$ LANGUAGE plpgsql;
