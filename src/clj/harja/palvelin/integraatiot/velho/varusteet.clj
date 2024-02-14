@@ -212,7 +212,12 @@
                       " Otetaan vain 1. toimenpide talteen.")))
         (:otsikko (first (memoized-hae-nimikkeen-tiedot db {:tyyppi-nimi (first toimenpiteet)}))))
       (cond
-        (seq valimaiset-toimenpiteet) (str/join "," (keep #(:otsikko (first (memoized-hae-nimikkeen-tiedot db {:tyyppi-nimi %}))) valimaiset-toimenpiteet))
+        (seq valimaiset-toimenpiteet) (str/join ","
+                                        (keep
+                                          (fn [toimenpide]
+                                            (:otsikko
+                                             (first (memoized-hae-nimikkeen-tiedot db {:tyyppi-nimi toimenpide}))))
+                                          valimaiset-toimenpiteet))
         (some? poistettu?) "Poistettu"
         (or
           (and (nil? version-voimassaolo) alkaen (not poistettu?))
@@ -407,7 +412,7 @@
     (log/error "Yritettiin hakea valimaisia-varustetoimenpiteitä tuntemattomalla varustetoimenpiteellä" (name toimenpide))))
 
 (defn yhdista-valimaiset-toimenpiteet-varusteisiin [map]
-  (let [varusteet-toimenpiteilla (yleiset/left-join-maps-and-replace-key map)]
+  (let [varusteet-toimenpiteilla (yleiset/liita-yhteen-mapit-ja-korvaa-avain map)]
     varusteet-toimenpiteilla))
 
 (defn hae-valimaiset-varuste-toimenpiteet-oideille [db oidit http-asetukset konteksti toimenpide]
@@ -566,14 +571,14 @@
                                      loppuaika-parametri])}
                 
                 {vastaus-str :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload)) 
-                varusteet-vastaus (:osumat (json/read-str vastaus-str :key-fn keyword)) 
-                varusteet-valimaisilla-toimenpiteilla (yhdista-valimaiset-toimenpiteet-varusteisiin 
-                                                        {:coll1 varusteet-vastaus
-                                                        :coll2 valimaiset-toimenpiteet
-                                                        :yhteinen-key1 [:oid]
-                                                        :yhteinen-key2 [:ominaisuudet :toimenpiteen-kohde]
-                                                        :etsittava-avain [:ominaisuudet :toimenpide]
-                                                        :asetettava-avain :valimaiset-toimenpiteet})
+                varusteet-vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))
+                varusteet-valimaisilla-toimenpiteilla (yhdista-valimaiset-toimenpiteet-varusteisiin
+                                                        {:kokoelma1 varusteet-vastaus
+                                                         :kokoelma2 valimaiset-toimenpiteet
+                                                         :yhteinen-key1 [:oid]
+                                                         :yhteinen-key2 [:ominaisuudet :toimenpiteen-kohde]
+                                                         :etsittava-avain [:ominaisuudet :toimenpide]
+                                                         :asetettava-avain :valimaiset-toimenpiteet})
                 varusteet (mapv (partial varuste-velhosta->harja db) varusteet-valimaisilla-toimenpiteilla)]
             {:urakka-id urakka-id :toteumat varusteet}))))))
 

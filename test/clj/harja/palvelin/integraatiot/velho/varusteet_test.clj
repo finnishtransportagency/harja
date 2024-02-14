@@ -129,8 +129,8 @@
           toimenpiteet [{:ominaisuudet {:toimenpiteen-kohde "1.2.246.578.4.3.14.2171636297.4142310432" :toimenpide "varustetoimenpide/vtp01"} :oid "1.2.246.578.12.2.2171636297.4142310443"}
                         {:ominaisuudet {:toimenpiteen-kohde "1.2.246.578.4.3.14.2171636297.4142310433" :toimenpide "varustetoimenpide/vtp01"} :oid "1.2.246.578.12.2.2171636297.4142310444"}
                         {:ominaisuudet {:toimenpiteen-kohde "1.2.246.578.4.3.14.2171636297.4142310434" :toimenpide "varustetoimenpide/vtp01"} :oid "1.2.246.578.12.2.2171636297.4142310445"}]
-          vastaus (varusteet/yhdista-valimaiset-toimenpiteet-varusteisiin {:coll1 varusteet
-                                                                           :coll2 toimenpiteet
+          vastaus (varusteet/yhdista-valimaiset-toimenpiteet-varusteisiin {:kokoelma1 varusteet
+                                                                           :kokoelma2 toimenpiteet
                                                                            :yhteinen-key1 [:oid]
                                                                            :yhteinen-key2 [:ominaisuudet :toimenpiteen-kohde]
                                                                            :etsittava-avain [:ominaisuudet :toimenpide]

@@ -70,11 +70,20 @@
       (> hoitokauden-numero 1)) (+ hoitokauden-numero urakan-aloitusvuosi)))
 
 
-(defn left-join-maps-and-replace-key [{:keys [coll1 coll2 yhteinen-key1 yhteinen-key2 etsittava-avain asetettava-avain] :as m}]
+(defn liita-yhteen-mapit-ja-korvaa-avain 
+  "Tekee join-liitokseksen kahden kokoelman valilla jotka sisaltavat mappeja
+   Parametrit:
+  * kokoelma1: Kokoelma mappeja johon liitos tehdään
+  * kokoelma2: Kokoelma mappeja josta löytyy liitettävä arvo
+  * yhteinen-key1: Avain kokoelma1:ssa jota kaytetaan liitokseen
+  * yhteinen-key2: Avain jolla poimitaan arvo kokoelma2:sta
+  * etsittava-avain: Kokoelma2:sta etsitaan kaikki taman avaimen arvot
+  * asetettava-avain: Etsityt arvot asetetaan asetettava-avain nimelle liitettyna kokoelma1:een"
+  [{:keys [kokoelma1 kokoelma2 yhteinen-key1 yhteinen-key2 etsittava-avain asetettava-avain] :as m}]
   (map (fn [item1]
          (let [yhteinen-arvo (get-in item1 yhteinen-key1)]
            (merge
              item1
-             {asetettava-avain (vec (->> coll2
+             {asetettava-avain (vec (->> kokoelma2
                                       (filter #(= yhteinen-arvo (get-in % yhteinen-key2)))
-                                      (map #(get-in % etsittava-avain))))}))) coll1))
+                                      (map #(get-in % etsittava-avain))))}))) kokoelma1))
