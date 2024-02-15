@@ -140,48 +140,53 @@
 (defn materiaalitaulukko [e! {:keys [materiaalit valittu-hairiotilanne] :as app}]
   (let [voi-muokata? (boolean (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))
         virhe-atom (r/wrap (:materiaalit-taulukon-virheet valittu-hairiotilanne)
-                           (fn [virhe] (e! (tiedot/->LisaaVirhe virhe))))
+                     (fn [virhe] (e! (tiedot/->LisaaVirhe virhe))))
         sort-fn (fn [materiaalin-kirjaus]
                   (if (and (get-in materiaalin-kirjaus [:tallennetut-materiaalit ::materiaali/nimi])
-                           (nil? (:jarjestysnumero materiaalin-kirjaus)))
+                        (nil? (:jarjestysnumero materiaalin-kirjaus)))
                     [nil (get-in materiaalin-kirjaus [:tallennetut-materiaalit ::materiaali/nimi])]
                     [(:jarjestysnumero materiaalin-kirjaus) nil]))
         materiaalit-atom (r/wrap
-                        (zipmap (range)
-                          (sort-by sort-fn (::materiaali/materiaalit valittu-hairiotilanne)))
-                        #(e! (tiedot/->MuokkaaMateriaaleja (sort-by sort-fn (vals %)))))]
+                           (zipmap (range)
+                             (sort-by sort-fn (::materiaali/materiaalit valittu-hairiotilanne)))
+                           #(e! (tiedot/->MuokkaaMateriaaleja (sort-by sort-fn (vals %)))))]
     ;; Estä taulukon näyttäminen, mikäli materiaaleja ei ole lisättäväksi. Mahdollisesti parempi teksit olisi kehoitus
     ;; käydä lisäämässä materiaaleja jotenkin hienovaraisesti
     (if (empty? materiaalit)
       [:p "Ei materiaaleja lisättäväksi. Lisää niitä materiaalit välilehdeltä."]
-      [grid/muokkaus-grid
-       {:voi-muokata? voi-muokata?
-        :voi-lisata? false
-        :voi-poistaa? (constantly voi-muokata?)
-        :voi-kumota? false
-        :virheet virhe-atom
-        :piilota-toiminnot? false
-        :tyhja "Ei materiaaleja"
-        :otsikko "Materiaalit"
-        :muutos #(materiaali-view/hoida-materiaalitaulukon-yksikko %)}
-       [{:otsikko "Materiaali"
-         :nimi :tallennetut-materiaalit
-         :leveys 3
-         :validoi [[:ei-tyhja "Tieto puuttuu"]]
-         :tyyppi :valinta
-         :valinta-nayta #(or (::materiaali/nimi %) "- Valitse materiaali -")
-         :valinnat materiaalit}
-        {:otsikko "Käytettävä määrä"
-         :nimi :maara
-         :leveys 3
-         :validoi [[:ei-tyhja "Tieto puuttuu"]]
-         :tyyppi :positiivinen-numero
-         :kokonaisluku? true}
-        {:otsikko "Yksikkö"
-         :nimi :yksikko
-         :leveys 1
-         :muokattava? (constantly false)}]
-       materiaalit-atom])))
+      [:div.kanava-hairio-materiaalit
+       [grid/muokkaus-grid
+        {:voi-muokata? voi-muokata?
+         :voi-lisata? false
+         :voi-poistaa? (constantly voi-muokata?)
+         :voi-kumota? false
+         :virheet virhe-atom
+         :piilota-toiminnot? false
+         :tyhja "Ei materiaaleja"
+         :otsikko "Materiaalit"
+         :muutos #(materiaali-view/hoida-materiaalitaulukon-yksikko %)}
+        [{:otsikko "Materiaali"
+          :nimi :tallennetut-materiaalit
+          :leveys 3
+          :validoi [[:ei-tyhja "Tieto puuttuu"]]
+          :tyyppi :valinta
+          :valinta-nayta #(or (::materiaali/nimi %) "- Valitse materiaali -")
+          :valinnat materiaalit}
+         {:otsikko "Käytettävä määrä"
+          :nimi :maara
+          :leveys 3
+          :validoi [[:ei-tyhja "Tieto puuttuu"]]
+          :tyyppi :positiivinen-numero
+          :kokonaisluku? true}
+         {:otsikko "Yksikkö"
+          :nimi :yksikko
+          :leveys 1
+          :muokattava? (constantly false)}]
+        materiaalit-atom]])))
+
+(defn- lomake-valiotsikko []
+  {:tyyppi :komponentti
+   :komponentti (fn []  [:div.kanava-hairio-lomake])})
 
 (defn odottavan-liikenteen-kentat []
   (lomake/ryhma
@@ -230,6 +235,7 @@
                    :nimi "Valmis"}]}
       {:tyyppi :checkbox
        :nimi ::hairiotilanne/paikallinen-kaytto?
+       :label-luokka "hairio-siirrytty-paikalliskayttoon"
        :teksti "Siirrytty paikalliskäyttöön"})
     {:nimi :materiaalitaulukko
      :tyyppi :komponentti
@@ -372,8 +378,13 @@
         :tyyppi :text
         :koko [90 8]
         :uusi-rivi? true}
+       
+       (lomake-valiotsikko)
        (odottavan-liikenteen-kentat)
+
+       (lomake-valiotsikko)
        (korjauksen-kentat e! app)
+       
        {:otsikko "Kuittaaja"
         :nimi ::hairiotilanne/kuittaaja
         :tyyppi :string
