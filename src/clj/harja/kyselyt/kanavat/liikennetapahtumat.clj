@@ -1,14 +1,10 @@
 (ns harja.kyselyt.kanavat.liikennetapahtumat
   (:require [clojure.java.jdbc :as jdbc]
-            [clojure.spec.alpha :as s]
             
             [clojure.set :as set]
-            [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
             [specql.op :as op]
-            [specql.rel :as rel]
             [taoensso.timbre :as log]
-            [jeesql.core :refer [defqueries]]
 
             [harja.id :refer [id-olemassa?]]
             [harja.pvm :as pvm]
@@ -22,9 +18,7 @@
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-toiminto :as toiminto]
             [harja.domain.kanavat.lt-ketjutus :as ketjutus]
-            [harja.domain.kanavat.kohde :as kohde]
-            [clojure.string :as str]
-            [clojure.core :as c]))
+            [harja.domain.kanavat.kohde :as kohde]))
 
 (defn- liita-kohteen-urakkatiedot [kohteiden-haku tapahtumat]
   (let [kohteet (group-by ::kohde/id (kohteiden-haku (map ::lt/kohde tapahtumat)))]
