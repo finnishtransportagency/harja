@@ -730,12 +730,8 @@
                                             (keep (fn [a] (when (= (:paallystysilmoitus a) (:id %))
                                                             (dissoc a :paallystysilmoitus))) alustatp))
                                       (muodosta-paallystysilmoitus))
-
                                 paallystysilmoitukset)]
     {:paallystysilmoitukset paallystysilmoitukset}))
-
-(comment
-  (hae-paallystysilmoitukset (:db harja.palvelin.main/harja-jarjestelma) {:alkuaika "2024-01-01T00:00:00+03" :loppuaika "2025-01-01T00:00:00+03"}))
 
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
