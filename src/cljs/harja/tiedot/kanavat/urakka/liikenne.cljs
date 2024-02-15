@@ -851,7 +851,9 @@
         (assoc :lataa-aloitustiedot true)
         (assoc :liikennetapahtumien-haku-kaynnissa? false)
         (assoc-in [:valinnat :aikavali] aikavali)
-        (tt/post! :kayttajan-urakat [kanava-hallintayksikko] {:onnistui ->KayttajanUrakatHaettu}))))
+        (tt/post! :hae-kayttajan-kanavaurakat {:hallintayksikko kanava-hallintayksikko
+                                               :urakka-id @nav/valittu-urakka-id}
+          {:onnistui ->KayttajanUrakatHaettu}))))
 
   KayttajanUrakatHaettu
   (process-event [{urakat :urakat} app]
@@ -876,6 +878,6 @@
                                        %)
                                  (get-in app [:valinnat :kayttajan-urakat]))]
       ;; Älä tee turhia kutsuja
-      (when-not lataa-aloitustiedot 
+      (when-not lataa-aloitustiedot
         (tuck/process-event (->PaivitaValinnat {:kayttajan-urakat uudet-urakkavalinnat}) app))
       (assoc-in app [:valinnat :kayttajan-urakat] uudet-urakkavalinnat))))

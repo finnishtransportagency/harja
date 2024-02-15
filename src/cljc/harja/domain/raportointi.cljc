@@ -41,25 +41,25 @@
     (cond
       varoitus?
       {:background :rose
-       :font {:color :black}}
+       :font {:color :black :name "Open Sans" :size 12}}
 
       huomio?
       {:background :yellow
-       :font {:color :black}}
+       :font {:color :black :name "Open Sans" :size 12}}
 
       korosta?
       (merge rajat-excel {:background :dark_blue
-                          :font {:color :white}})
+                          :font {:color :white :name "Open Sans" :size 12}})
 
       korosta-hennosti?
       {:background :pale_blue
-       :font {:color :black}}
+       :font {:color :black :name "Open Sans" :size 12}}
 
       korosta-harmaa?
       (merge rajat-excel {:background :grey_25_percent
-                          :font {:color :black}}))
+                          :font {:color :black :name "Open Sans" :size 12}}))
     (when lihavoi?
-      {:font {:bold true}})))
+      {:font {:bold true :name "Open Sans" :size 12}})))
 
 (defn varillinen-teksti [tyyli teksti]
   [:varillinen-teksti {:arvo teksti :tyyli tyyli}])

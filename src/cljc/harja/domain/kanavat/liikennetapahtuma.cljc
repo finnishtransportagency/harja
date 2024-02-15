@@ -168,6 +168,7 @@
                                                      ::toiminto/toimenpiteet]
                                                :req-un [::urakka-idt]
                                                :opt-un [::aikavali ::niput?]))
+
 (s/def ::hae-liikennetapahtumat-vastaus (s/coll-of
                                           (s/keys :req
                                                   [::id
@@ -200,6 +201,7 @@
                                                          ::m/poistettu?
                                                          ::alukset]
                                                    :req-un [::hakuparametrit]))
+
 (s/def ::tallenna-liikennetapahtuma-vastaus ::hae-liikennetapahtumat-vastaus)
 
 (s/def ::hae-edelliset-tapahtumat-kysely (s/keys :req [::urakka-id
@@ -224,11 +226,16 @@
                                            ::ketjutus/urakka-id
                                            ::kohde/id
                                            ::kohde/nimi]))
+
 (s/def ::edelliset-alukset (s/coll-of ::edellinen-alustieto))
-(s/def ::ylos (s/nilable (s/keys :req [::kohde/nimi
-                             ::kohde/id]
-                       :req-un [::edelliset-alukset])))
+
+(s/def ::ylos (s/nilable (s/keys
+                           :req [::kohde/nimi
+                                 ::kohde/id]
+                           :req-un [::edelliset-alukset])))
+
 (s/def ::alas ::ylos)
+
 (s/def ::hae-edelliset-tapahtumat-vastaus (s/keys :req-un [::ylos
                                                            ::alas
                                                            ::edellinen]))
