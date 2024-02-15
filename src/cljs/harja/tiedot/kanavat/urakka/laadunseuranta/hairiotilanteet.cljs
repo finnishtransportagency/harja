@@ -35,6 +35,7 @@
 ;; Muokkaukset
 (defrecord ValitseAjanTallennus [valittu?])
 (defrecord AsetaHavaintoaika [aika])
+(defrecord AsetaKorjausaika [aloitus? aika])
 (defrecord LisaaHairiotilanne [])
 (defrecord TyhjennaValittuHairiotilanne [])
 (defrecord AsetaHairiotilanteenTiedot [hairiotilanne])
@@ -208,6 +209,12 @@
   AsetaHavaintoaika
   (process-event [{aika :aika} app]
     (assoc-in app [:valittu-hairiotilanne ::hairiotilanne/havaintoaika] aika))
+  
+  AsetaKorjausaika
+  (process-event [{aloitus? :aloitus? aika :aika} app]
+    (if aloitus?
+      (assoc-in app [:valittu-hairiotilanne ::hairiotilanne/korjauksen-aloitus] aika)
+      (assoc-in app [:valittu-hairiotilanne ::hairiotilanne/korjauksen-lopetus] aika)))
 
   ValitseAjanTallennus
   (process-event [{valittu? :valittu?} app]

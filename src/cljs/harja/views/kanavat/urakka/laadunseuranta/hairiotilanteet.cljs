@@ -199,82 +199,86 @@
      :yksikko-kentalle "kpl"}))
 
 (defn korjauksen-kentat [e! {:keys [valittu-hairiotilanne] :as app}]
-  (lomake/ryhma
-    ;; Korjaus
-    {:otsikko "Korjaus"
-     :uusi-rivi? true}
-    {:otsikko "Korjaustoimenpide"
-     :nimi ::hairiotilanne/korjaustoimenpide
-     :palstoja 2
-     :tyyppi :text
-     :koko [90 8]}
+  (let [korjaus-valmis? (= (::hairiotilanne/korjauksen-tila valittu-hairiotilanne) :valmis)]
+    (lomake/ryhma
+      ;; Korjaus
+      {:otsikko "Korjaus"
+       :uusi-rivi? true}
+      {:otsikko "Korjaustoimenpide"
+       :nimi ::hairiotilanne/korjaustoimenpide
+       :palstoja 2
+       :tyyppi :text
+       :koko [90 8]}
 
-    ;; Korjaajan nimi sekä korjauksen aikaleimat
-    (lomake/rivi
-      {:tyyppi :string
-       :nimi ::hairiotilanne/korjaajan-nimi
-       :otsikko "Korjaajan nimi"}
-      ;; TODO ..
-      {:nimi ::hairiotilanne/korjauksen-aloitus
-       :otsikko "Korjauksen aloitus"
-       :tyyppi :komponentti
-       :komponentti (fn []
-                      (let [aika (::hairiotilanne/havaintoaika valittu-hairiotilanne)]
-                        [:span.hairio-korjaus
-                         [kentat/tee-kentta
-                          {:tyyppi :pvm-aika}
-                          (r/wrap
-                            aika
-                            #(e! (tiedot/->AsetaHavaintoaika %)))]]))}
+      ;; Korjaajan nimi sekä korjauksen aikaleimat
+      (lomake/rivi
+        {:tyyppi :string
+         :nimi ::hairiotilanne/korjaajan-nimi
+         :otsikko "Korjaajan nimi"}
+        ;; TODO ..
+        {:nimi ::hairiotilanne/korjauksen-aloitus
+         :otsikko "Korjauksen aloitus"
+         :pakollinen? true
+         :tyyppi :komponentti
+         :komponentti (fn []
+                        (let [aika (or (::hairiotilanne/korjauksen-aloitus valittu-hairiotilanne) (pvm/nyt))]
+                          [:span.hairio-korjaus
+                           [kentat/tee-kentta
+                            {:tyyppi :pvm-aika}
+                            (r/wrap
+                              aika
+                              #(e! (tiedot/->AsetaKorjausaika true %)))]]))}
 
-      ;; TODO .. Näytä jos korjauksen tila valmis 
-      {:nimi ::hairiotilanne/korjauksen-lopetus
-       :otsikko "Korjauksen lopetus"
+        ;; Näytä lopetus vain jos käyttäjä valinnut että korjaus on valmis, ja tee tästä pakollinen
+        (when korjaus-valmis?
+          {:nimi ::hairiotilanne/korjauksen-lopetus
+           :otsikko "Korjauksen lopetus"
+           :tyyppi :komponentti
+           :pakollinen? true
+           :komponentti (fn []
+                          (let [aika (or (::hairiotilanne/korjauksen-lopetus valittu-hairiotilanne) (pvm/nyt))]
+                            [:span.hairio-korjaus
+                             [kentat/tee-kentta
+                              {:tyyppi :pvm-aika}
+                              (r/wrap
+                                aika
+                                #(e! (tiedot/->AsetaKorjausaika false %)))]]))}))
+      ;; Korjaus 
+      (lomake/rivi
+        {:otsikko "Korjausaika tunteina"
+         :tyyppi :positiivinen-numero
+         :nimi ::hairiotilanne/korjausaika-h
+         :hae #(or (::hairiotilanne/korjausaika-h %) 0)
+         :muokattava? (constantly false)}
+        {:otsikko "Korjauksen tila"
+         :nimi ::hairiotilanne/korjauksen-tila
+         :tyyppi :valinta
+         :pakollinen? true
+         :valinta-nayta #(or (:nimi %) "- Valitse korjauksen tila -")
+         :valinta-arvo :arvo
+         :valinnat [{:arvo :kesken
+                     :nimi "Kesken"}
+                    {:arvo :valmis
+                     :nimi "Valmis"}]}
+        {:tyyppi :checkbox
+         :nimi ::hairiotilanne/paikallinen-kaytto?
+         :label-luokka "hairio-siirrytty-paikalliskayttoon"
+         :teksti "Siirrytty paikalliskäyttöön"})
+      ;; Materiaalit
+      {:nimi :materiaalitaulukko
        :tyyppi :komponentti
-       :komponentti (fn []
-                      (let [aika (::hairiotilanne/havaintoaika valittu-hairiotilanne)]
-                        [:span.hairio-korjaus
-                         [kentat/tee-kentta
-                          {:tyyppi :pvm-aika}
-                          (r/wrap
-                            aika
-                            #(e! (tiedot/->AsetaHavaintoaika %)))]]))})
-    ;; Korjaus 
-    (lomake/rivi
-      {:otsikko "Korjausaika tunteina"
-       :tyyppi :positiivinen-numero
-       :nimi ::hairiotilanne/korjausaika-h
-       :hae #(or (::hairiotilanne/korjausaika-h %) 0)
-       :muokattava? (constantly false)}
-      {:otsikko "Korjauksen tila"
-       :nimi ::hairiotilanne/korjauksen-tila
-       :tyyppi :valinta
-       :pakollinen? true
-       :valinta-nayta #(or (:nimi %) "- Valitse korjauksen tila -")
-       :valinta-arvo :arvo
-       :valinnat [{:arvo :kesken
-                   :nimi "Kesken"}
-                  {:arvo :valmis
-                   :nimi "Valmis"}]}
-      {:tyyppi :checkbox
-       :nimi ::hairiotilanne/paikallinen-kaytto?
-       :label-luokka "hairio-siirrytty-paikalliskayttoon"
-       :teksti "Siirrytty paikalliskäyttöön"})
-    ;; Materiaalit
-    {:nimi :materiaalitaulukko
-     :tyyppi :komponentti
-     :palstoja 2
-     :komponentti (fn [_]
-                    [materiaalitaulukko e! app])}
-    ;; Estetään Lisää Materiaali napin näyttäminen, jos materiaalit listauksessa ei ole materiaaleja. 
-    (when (not (empty? (:materiaalit app)))
-      {:nimi :lisaa-materiaali
-       :tyyppi :komponentti
-       :uusi-rivi? true
+       :palstoja 2
        :komponentti (fn [_]
-                      [napit/uusi "Lisää materiaali"
-                       #(e! (tiedot/->LisaaMateriaali))
-                       {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))}])})))
+                      [materiaalitaulukko e! app])}
+      ;; Estetään Lisää Materiaali napin näyttäminen, jos materiaalit listauksessa ei ole materiaaleja. 
+      (when (not (empty? (:materiaalit app)))
+        {:nimi :lisaa-materiaali
+         :tyyppi :komponentti
+         :uusi-rivi? true
+         :komponentti (fn [_]
+                        [napit/uusi "Lisää materiaali"
+                         #(e! (tiedot/->LisaaMateriaali))
+                         {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))}])}))))
 
 (defn hairiolomake [e! {:keys [valittu-hairiotilanne valinnat tallennus-kaynnissa?] :as app} kohteet]
   (let [valittu-kohde-id (get-in valittu-hairiotilanne [::hairiotilanne/kohde ::kohde/id])
