@@ -8,6 +8,7 @@
             [harja.kyselyt.hallintayksikot :as org-q]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.urakka :as urakka-domain]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]))
 
 (defn hae-harjasta
@@ -21,11 +22,15 @@
                                 (filter #(if (= "urakoitsija" (:tyyppi kayttajan-org))
                                            (oikeudet/voi-lukea? oikeudet/urakat (:id %) user)
                                            true))
-                                (map #(assoc % :tyyppi :urakka
-                                               :hakusanat (str (:nimi %) ", " (:sampoid %)))
-                                     (ur-q/hae-urakoiden-tunnistetiedot db termi
-                                                                        (name (:tyyppi kayttajan-org))
-                                                                        (:id kayttajan-org)))))
+                             (map #(assoc % :tyyppi :urakka
+                                     :hakusanat (str (:id %) " " (:nimi %) ", " (:sampoid %))
+                                     :format (str (:nimi %) ", " (:sampoid %) " (" (urakka-domain/urakkatyyppi->otsikko (keyword (:urakkatyyppi %))) ")"))
+                                     (ur-q/hae-urakoiden-tunnistetiedot db
+                                       {:termi termi
+                                        :kayttajan_org_tyyppi (name (:tyyppi kayttajan-org))
+                                        :kayttajan_org_id (:id kayttajan-org)
+                                        :numero (when (re-matches (re-pattern "\\d+") hakutermi)
+                                                  (Integer/parseInt hakutermi))}))))
         loytyneet-kayttajat (when kayttajan-org             ;sallitaan haku vain jos on organisaatio tiedossa (oikeustarkistus)
                               (into []
                                    (map #(assoc % :tyyppi :kayttaja

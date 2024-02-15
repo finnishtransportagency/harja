@@ -25,7 +25,10 @@
   (reaction<! [termi @hakutermi]
               {:odota 500
                :nil-kun-haku-kaynnissa? true}
-              (when (> (count termi) 1)
+              (when (or
+                      (> (count termi) 1)
+                      ;; jos haetaan urakka-id:llä, sallitaan myös yksi merkki (re-matches (re-pattern "\\d+") termi)
+                      (and (= (count termi) 1) (re-matches (re-pattern "\\d+") termi)))
                 (k/post! :hae termi))))
 
 (defn nayta-organisaation-yhteystiedot
@@ -135,12 +138,17 @@
     (fn []
       [:form.navbar-form.navbar-left {:role "search"}
        [:div.form-group.haku
-        [suodatettu-lista {:format :hakusanat
+        [suodatettu-lista {:format (fn [tulos]
+                                     [:div {:class (when (and
+                                                           (= :urakka (:tyyppi tulos))
+                                                           (:kaynnissa tulos))
+                                                     "haku-urakka-kaynnissa")}
+                                      (or (:format tulos) (:hakusanat tulos))])
                            :haku :hakusanat
                            :term (r/wrap @hakutermi
-                                         (fn [uusi-termi]
-                                           (reset! hakutermi
-                                                   (str/triml (str/replace uusi-termi #"\s{2,}" " ")))))
+                                   (fn [uusi-termi]
+                                     (reset! hakutermi
+                                       (str/triml (str/replace uusi-termi #"\s{2,}" " ")))))
                            :ryhmittely :tyyppi
                            :ryhman-otsikko #(case %
                                               :urakka "Urakat"
@@ -156,5 +164,5 @@
                                         (if (nil? (:organisaatio @istunto/kayttaja))
                                           "Käyttäjän organisaatiota ei tunnistettu, hakutoiminto ei käytössä. Ota yhteys pääkäyttäjään."
                                           (when (= [] @hakutulokset)
-                                           (str "Ei tuloksia haulla " @hakutermi)))))}
+                                            (str "Ei tuloksia haulla " @hakutermi)))))}
          @hakutulokset]]])))
