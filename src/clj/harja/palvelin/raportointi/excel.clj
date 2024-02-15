@@ -145,7 +145,7 @@
         solun-tyyli (if varoitus?
                       (merge solun-tyyli
                         {:background :red
-                         :font {:color :white}})
+                         :font {:color :white :name "Open Sans" :size 12}})
                       solun-tyyli)]
     [(str etuliite
        (cond desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
@@ -170,11 +170,11 @@
                       varoitus?
                       (merge solun-tyyli
                         {:background :red
-                         :font       {:color :white}})
+                         :font       {:color :white :name "Open Sans" :size 12}})
                       huomio?
                       (merge solun-tyyli
                         {:background :orange
-                         :font       {:color :black}})
+                         :font       {:color :black :name "Open Sans" :size 12}})
                       :default solun-tyyli)]
     [arvo solun-tyyli
      (when desimaalien-maara
@@ -187,8 +187,10 @@
 
 (defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli fmt lihavoi?]}] solun-tyyli]
   (let [solun-tyyli (if lihavoi?
-                      (merge solun-tyyli {:font {:bold true}})
-                      solun-tyyli)]
+                      (merge solun-tyyli {:font {:bold true :name "Open Sans" :size 12}})
+                      (if (nil? solun-tyyli)
+                        {:font {:name "Open Sans" :size 12}}
+                        solun-tyyli))]
     [arvo
      (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))
      fmt]))
@@ -207,7 +209,7 @@
   ([font-koko]
    {:color :black
     :size font-koko
-    :name "Arial"
+    :name "Open Sans"
     :bold true}))
 
 (defn- luo-saraketyyli
@@ -219,7 +221,7 @@
                                         :border-right :thin
                                         :font (font-otsikko 14)}
                                        {:background (or taustavari :grey_25_percent)
-                                        :font {:color :black}})))
+                                        :font {:color :black :name "Open Sans" :size 12}})))
 
 (defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet workbook lista-tyyli?]
   (dorun
@@ -297,7 +299,7 @@
 (defn- font-leipateksti
   ([] (font-leipateksti 11))
   ([font-koko]
-   {:color :black :size font-koko}))
+   {:color :black :size font-koko :name "Open Sans"}))
 
 (defn- tasaa-solu [solu tasaa]
   (CellUtil/setAlignment solu
@@ -317,7 +319,7 @@
                                        {:background (or taustavari (if tummenna-teksti? 
                                                                      :pale_blue 
                                                                      :grey_25_percent))
-                                        :font {:color :black}})))
+                                        :font {:color :black :name "Open Sans" :size 12}})))
 
 (defn luo-rivi-jalkeen-tyyli [workbook]
   (excel/create-cell-style! workbook {:font (font-leipateksti)}))
@@ -367,7 +369,7 @@
   (let [aiempi-sheet (last (excel/sheet-seq workbook))
         [sheet rivi-nro] [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
 
-        tyyli-tiedot {:font {:color :black :size 12 :name "Aria"}}
+        tyyli-tiedot {:font {:color :black :size 12 :name "Open Sans"}}
         tyyli-normaali (excel/create-cell-style! workbook tyyli-tiedot)
         tyyli-otsikko (excel/create-cell-style! workbook (assoc-in tyyli-tiedot [:font :bold] true))
 
@@ -433,17 +435,14 @@
                 hoitokauden-arvo (nth arvot (inc n))]
 
             (raportti-domain/tee-solu rivin-solu (str elem ":") tyyli-otsikko)
-            (raportti-domain/tee-solu hoitokausi-solu (str (fmt/euro hoitokauden-arvo)) tyyli-normaali)))))
-            
-            (dotimes [i (count sarakkeet)]
-              (.autoSizeColumn sheet i))))
+            (raportti-domain/tee-solu hoitokausi-solu (str (fmt/euro hoitokauden-arvo)) tyyli-normaali)))))))
 
 
 (defn taulukon-valiotsikko [otsikko workbook]
   ;; Tekee väliotsikon exceliin mikäli tämä puuttuu, annetaan raportin taulukon parametreissa 
   (let [aiempi-sheet (last (excel/sheet-seq workbook))
         [sheet rivi-numero] [aiempi-sheet (inc (.getLastRowNum aiempi-sheet))]
-        tyyli-tiedot {:border-bottom :thin :background :grey_25_percent :font {:bold true :color :black :size 12 :name "Aria"}}
+        tyyli-tiedot {:border-bottom :thin :background :grey_25_percent :font {:bold true :color :black :size 12 :name "Open Sans"}}
         tyyli (excel/create-cell-style! workbook tyyli-tiedot)
 
         rivi (.createRow sheet rivi-numero)
@@ -604,10 +603,6 @@
                      (tasaa-solu cell (:tasaa sarake)))))
               sarakkeet))))
         data))
-
-      ;; Laitetaan automaattiset leveydet
-      (dotimes [i (count sarakkeet)]
-        (.autoSizeColumn sheet i))
       
       ;; Luodaan tiedot sisältävä rivi sheetin alkuun tässä, koska tämä tietostringi on todennäköisesti tarpeeksi pitkä, että autosizecolumn tekisi ekasta sarakkeesta tosi leveän
       ;; Ja tehdään tämä vain kerran, koska ei haluta montaa tietoriviä, jos useampi taulukko on samalla sheetillä.
@@ -637,11 +632,40 @@
 (defmethod muodosta-excel :otsikko-heading [[_ _] _] nil)
 (defmethod muodosta-excel :otsikko-heading-small [[_ _] _] nil)
 
+;; Esimerkki erillisen otsikko/teksti kentän luomisesta exceliin. Nykyiset exceliin ensimmäiseksi lisättävät
+;; tekstikentät (esim laskutusyhteenvetojen perusluvun näyttäminen) eivät toimi, koska ne eivät olet :taulukko -elementin sisällä.
+;; Tällaisella rakenteella myös :taulukko -elementin ulkopuoliset tekstit saadaan exceliin.
+;; Tämä luo tällaisenaan vain uuden sheetin, joka ei ole optimaalista, koska sen :teksti -elementin
+;; kuuluisi olla samalla sheetillä kuin muutkin elementit. Joten se on nyt kommentoitu, mutta jätetty tähän esimerkiksi.
+#_ (defmethod muodosta-excel :teksti [[_ teksti] workbook]
+  (let [sheet (last (excel/sheet-seq workbook))
+        sheet (if sheet
+                sheet
+                (excel/add-sheet! workbook
+                  (WorkbookUtil/createSafeSheetName "Tyhja")))
+        rivi-numero (inc (.getLastRowNum sheet))
+        rivi (.createRow sheet rivi-numero)
+        cell (.createCell rivi 0)
+        sarake-tyyli (excel/create-cell-style! workbook {:font {:color :black :name "Open Sans" :size 12}})]
+    (excel/set-cell! cell teksti)
+    (excel/set-cell-style! cell sarake-tyyli)))
+
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
   (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)
         tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)]
     (doseq [elementti (remove nil? sisalto)]
       (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook))
+    ;; Käydään lopuksi koko excel läpi ja pakotetaan solujen koot automaattisesti 20% suuremmaksi, kuin 5.2.5 versio poi kirjastosta laskee
+    (doseq [sheet (excel/sheet-seq workbook)]
+      (let [sarake-maara (reduce (fn [maksimi i]
+                                   (if i
+                                     (max maksimi (.getLastCellNum i))
+                                     maksimi))
+                           0
+                           (excel/row-seq sheet))]
+        (dotimes [i sarake-maara]
+          (.autoSizeColumn sheet i)
+          (.setColumnWidth sheet i (* 1.25 (.getColumnWidth sheet i))))))
     tiedoston-nimi))
 
 (defmethod muodosta-excel :default [elementti workbook]

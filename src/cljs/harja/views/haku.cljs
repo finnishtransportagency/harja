@@ -141,7 +141,7 @@
         [suodatettu-lista {:format (fn [tulos]
                                      [:div {:class (when (and
                                                            (= :urakka (:tyyppi tulos))
-                                                           (:kaynnissa tulos))
+                                                           (= "käynnissä" (:urakan_ajankohtaisuus tulos)))
                                                      "haku-urakka-kaynnissa")}
                                       (or (:format tulos) (:hakusanat tulos))])
                            :haku :hakusanat

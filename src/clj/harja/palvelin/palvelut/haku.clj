@@ -24,7 +24,11 @@
                                            true))
                              (map #(assoc % :tyyppi :urakka
                                      :hakusanat (str (:id %) " " (:nimi %) ", " (:sampoid %))
-                                     :format (str (:nimi %) ", " (:sampoid %) " (" (urakka-domain/urakkatyyppi->otsikko (keyword (:urakkatyyppi %))) ")"))
+                                     :format (str (:nimi %) ", " (:sampoid %)
+                                               " (" (urakka-domain/urakkatyyppi->otsikko (keyword (:urakkatyyppi %)))
+                                               (when-not (= "käynnissä" (:urakan_ajankohtaisuus %))
+                                                 (str ", " (:urakan_ajankohtaisuus %)))
+                                               ")"))
                                      (ur-q/hae-urakoiden-tunnistetiedot db
                                        {:termi termi
                                         :kayttajan_org_tyyppi (name (:tyyppi kayttajan-org))
