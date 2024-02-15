@@ -657,9 +657,15 @@
       (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook))
     ;; Käydään lopuksi koko excel läpi ja pakotetaan solujen koot automaattisesti 20% suuremmaksi, kuin 5.2.5 versio poi kirjastosta laskee
     (doseq [sheet (excel/sheet-seq workbook)]
-      (dotimes [i 4]
-        (.autoSizeColumn sheet i)
-        (.setColumnWidth sheet i (* 1.15 (.getColumnWidth sheet i)))))
+      (let [sarake-maara (reduce (fn [maksimi i]
+                                   (if i
+                                     (max maksimi (.getLastCellNum i))
+                                     maksimi))
+                           0
+                           (excel/row-seq sheet))]
+        (dotimes [i sarake-maara]
+          (.autoSizeColumn sheet i)
+          (.setColumnWidth sheet i (* 1.25 (.getColumnWidth sheet i))))))
     tiedoston-nimi))
 
 (defmethod muodosta-excel :default [elementti workbook]
