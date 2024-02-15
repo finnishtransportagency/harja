@@ -1,20 +1,16 @@
 (ns harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
-            [harja.id :refer [id-olemassa?]]
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
-            [harja.domain.urakka :as urakka]
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.vesivaylat.materiaali :as materiaalit]
-            [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakkatiedot]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.istunto :as istunto]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -62,7 +58,7 @@
 (defn esitaytetty-hairiotilanne []
   (let [kayttaja @istunto/kayttaja]
     {::hairiotilanne/tallennuksen-aika? true
-     ::hairiotilanne/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
+     ::hairiotilanne/sopimus-id (:paasopimus @nav/valittu-urakka)
      ::hairiotilanne/kuittaaja {::kayttaja/id (:id kayttaja)
                                 ::kayttaja/etunimi (:etunimi kayttaja)
                                 ::kayttaja/sukunimi (:sukunimi kayttaja)}
@@ -95,7 +91,7 @@
                                         ::muokkaustiedot/poistettu?
                                         ::hairiotilanne/havaintoaika
                                         ::hairiotilanne/sijainti])
-                          (assoc ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
+                          (assoc ::hairiotilanne/urakka-id (:id @nav/valittu-urakka)
                                  ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])
                                  ::hairiotilanne/kohteenosa-id (get-in hairiotilanne [::hairiotilanne/kohteenosa ::osa/id])))]
     hairiotilanne))
@@ -165,7 +161,7 @@
   (process-event [_ {:keys [materiaalien-haku-kaynnissa?] :as app}]
     (if materiaalien-haku-kaynnissa?
       (assoc app :nakymassa? true)
-      (let [urakka-id (:id @navigaatio/valittu-urakka)]
+      (let [urakka-id (:id @nav/valittu-urakka)]
         (-> app
             (tuck-apurit/post! :hae-vesivayla-materiaalilistaus
                                {::materiaalit/urakka-id urakka-id}

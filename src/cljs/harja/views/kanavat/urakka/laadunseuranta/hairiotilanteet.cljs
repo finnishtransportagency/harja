@@ -1,24 +1,18 @@
 (ns harja.views.kanavat.urakka.laadunseuranta.hairiotilanteet
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [reagent.core :as r]
             [tuck.core :refer [tuck]]
-
             [harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet :as tiedot]
-            [harja.loki :refer [tarkkaile! log]]
             [harja.pvm :as pvm]
-
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
             [harja.ui.kentat :as kentat]
-            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
-            [harja.ui.debug :refer [debug]]
+            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
             [harja.tiedot.raportit :as raportit]
-
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.vesivaylat.materiaali :as materiaali]
-
             [harja.ui.valinnat :as valinnat]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.views.vesivaylat.urakka.materiaalit :as materiaali-view]
@@ -26,7 +20,6 @@
             [harja.fmt :as fmt]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
-            [harja.domain.kanavat.hairiotilanne :as hairio]
             [harja.ui.debug :as debug]
             [harja.domain.kayttaja :as kayttaja]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
@@ -34,11 +27,7 @@
             [harja.domain.kanavat.kohteenosa :as kohteenosa]
             [harja.views.kartta.tasot :as tasot]
             [harja.views.kartta :as kartta]
-            [harja.tiedot.kartta :as kartta-tiedot])
-  (:require-macros
-    [cljs.core.async.macros :refer [go]]
-    [harja.makrot :refer [defc fnc]]
-    [harja.tyokalut.ui :refer [for*]]))
+            [harja.tiedot.kartta :as kartta-tiedot]))
 
 (defn- suodattimet-ja-toiminnot [e! app]
   (let [valittu-urakka (get-in app [:valinnat :urakka])]
@@ -53,15 +42,15 @@
         (r/wrap (get-in app [:valinnat :vikaluokka])
           (fn [uusi]
             (e! (tiedot/->PaivitaValinnat {:vikaluokka uusi}))))
-        hairio/vikaluokat+kaikki
-        #(if % (hairio/fmt-vikaluokka %) "Kaikki")]
+        hairiotilanne/vikaluokat+kaikki
+        #(if % (hairiotilanne/fmt-vikaluokka %) "Kaikki")]
 
        [valinnat/korjauksen-tila
         (r/wrap (get-in app [:valinnat :korjauksen-tila])
           (fn [uusi]
             (e! (tiedot/->PaivitaValinnat {:korjauksen-tila uusi}))))
-        hairio/korjauksen-tlat+kaikki
-        #(if % (hairio/fmt-korjauksen-tila %) "Kaikki")]]
+        hairiotilanne/korjauksen-tlat+kaikki
+        #(if % (hairiotilanne/fmt-korjauksen-tila %) "Kaikki")]]
 
       [:div.ryhma
        [valinnat/paikallinen-kaytto
@@ -124,7 +113,7 @@
      :fmt (fn [[kohde osa]] (kohde/fmt-kohde-ja-osa-nimi kohde osa))
      :leveys 6}
     {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string :leveys 4
-     :fmt hairio/fmt-vikaluokka}
+     :fmt hairiotilanne/fmt-vikaluokka}
     {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string :leveys 6}
     {:otsikko "Odo\u00ADtus\u00ADaika (h)" :nimi ::hairiotilanne/odotusaika-h :tyyppi :numero :leveys 3}
     {:otsikko "Am\u00ADmat\u00ADti\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/ammattiliikenne-lkm :tyyppi :numero :leveys 3}
@@ -132,7 +121,7 @@
     {:otsikko "Kor\u00ADjaus\u00ADtoimenpide" :nimi ::hairiotilanne/korjaustoimenpide :tyyppi :string :leveys 10}
     {:otsikko "Kor\u00ADjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika-h :tyyppi :numero :leveys 3}
     {:otsikko "Kor\u00ADjauk\u00ADsen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string :leveys 3
-     :fmt hairio/fmt-korjauksen-tila}
+     :fmt hairiotilanne/fmt-korjauksen-tila}
     {:otsikko "Paikal\u00ADlinen käyt\u00ADtö" :nimi ::hairiotilanne/paikallinen-kaytto?
      :tyyppi :string :fmt fmt/totuus :leveys 4}]
    hairiotilanteet])
@@ -209,8 +198,9 @@
      :kokonaisluku? true
      :yksikko-kentalle "kpl"}))
 
-(defn korjauksen-kentat [e! app]
+(defn korjauksen-kentat [e! {:keys [valittu-hairiotilanne] :as app}]
   (lomake/ryhma
+    ;; Korjaus
     {:otsikko "Korjaus"
      :uusi-rivi? true}
     {:otsikko "Korjaustoimenpide"
@@ -218,11 +208,44 @@
      :palstoja 2
      :tyyppi :text
      :koko [90 8]}
+
+    ;; Korjaajan nimi sekä korjauksen aikaleimat
     (lomake/rivi
-      {:tyyppi :positiivinen-numero
+      {:tyyppi :string
+       :nimi ::hairiotilanne/korjaajan-nimi
+       :otsikko "Korjaajan nimi"}
+      ;; TODO ..
+      {:nimi ::hairiotilanne/korjauksen-aloitus
+       :otsikko "Korjauksen aloitus"
+       :tyyppi :komponentti
+       :komponentti (fn []
+                      (let [aika (::hairiotilanne/havaintoaika valittu-hairiotilanne)]
+                        [:span.hairio-korjaus
+                         [kentat/tee-kentta
+                          {:tyyppi :pvm-aika}
+                          (r/wrap
+                            aika
+                            #(e! (tiedot/->AsetaHavaintoaika %)))]]))}
+
+      ;; TODO .. Näytä jos korjauksen tila valmis 
+      {:nimi ::hairiotilanne/korjauksen-lopetus
+       :otsikko "Korjauksen lopetus"
+       :tyyppi :komponentti
+       :komponentti (fn []
+                      (let [aika (::hairiotilanne/havaintoaika valittu-hairiotilanne)]
+                        [:span.hairio-korjaus
+                         [kentat/tee-kentta
+                          {:tyyppi :pvm-aika}
+                          (r/wrap
+                            aika
+                            #(e! (tiedot/->AsetaHavaintoaika %)))]]))})
+    ;; Korjaus 
+    (lomake/rivi
+      {:otsikko "Korjausaika tunteina"
+       :tyyppi :positiivinen-numero
        :nimi ::hairiotilanne/korjausaika-h
-       :yksikko-kentalle "h"
-       :otsikko "Korjausaika"}
+       :hae #(or (::hairiotilanne/korjausaika-h %) 0)
+       :muokattava? (constantly false)}
       {:otsikko "Korjauksen tila"
        :nimi ::hairiotilanne/korjauksen-tila
        :tyyppi :valinta
@@ -237,6 +260,7 @@
        :nimi ::hairiotilanne/paikallinen-kaytto?
        :label-luokka "hairio-siirrytty-paikalliskayttoon"
        :teksti "Siirrytty paikalliskäyttöön"})
+    ;; Materiaalit
     {:nimi :materiaalitaulukko
      :tyyppi :komponentti
      :palstoja 2
