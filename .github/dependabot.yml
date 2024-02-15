@@ -18,3 +18,8 @@ updates:
     directory: /tietokanta
     schedule:
       interval: "weekly"
+      groups:
+        # Ryhmittele flyway päivitykset samaan PR:ään
+        flyway:
+          patterns:
+            - "org.flywaydb*"
