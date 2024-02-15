@@ -606,10 +606,6 @@
                      (tasaa-solu cell (:tasaa sarake)))))
               sarakkeet))))
         data))
-
-      ;; Laitetaan automaattiset leveydet hetkeksi piiloon - tätä todennäköisesti ei ole koskaan otettu huomioon.
-      #_ (dotimes [i (count sarakkeet)]
-        (.autoSizeColumn sheet i))
       
       ;; Luodaan tiedot sisältävä rivi sheetin alkuun tässä, koska tämä tietostringi on todennäköisesti tarpeeksi pitkä, että autosizecolumn tekisi ekasta sarakkeesta tosi leveän
       ;; Ja tehdään tämä vain kerran, koska ei haluta montaa tietoriviä, jos useampi taulukko on samalla sheetillä.
