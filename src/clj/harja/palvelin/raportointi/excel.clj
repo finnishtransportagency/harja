@@ -435,10 +435,7 @@
                 hoitokauden-arvo (nth arvot (inc n))]
 
             (raportti-domain/tee-solu rivin-solu (str elem ":") tyyli-otsikko)
-            (raportti-domain/tee-solu hoitokausi-solu (str (fmt/euro hoitokauden-arvo)) tyyli-normaali)))))
-            
-            (dotimes [i (count sarakkeet)]
-              (.autoSizeColumn sheet i))))
+            (raportti-domain/tee-solu hoitokausi-solu (str (fmt/euro hoitokauden-arvo)) tyyli-normaali)))))))
 
 
 (defn taulukon-valiotsikko [otsikko workbook]

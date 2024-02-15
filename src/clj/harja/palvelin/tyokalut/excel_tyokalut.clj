@@ -35,10 +35,7 @@
           solu-laskutetaan (.createCell rivi 2)]
       (tee-solu solu-laskutettu (str (fmt/euro laskutettu)) tyyli-normaali)
       (when kyseessa-kk-vali?
-        (tee-solu solu-laskutetaan (str (fmt/euro laskutetaan)) tyyli-normaali))
-
-      (dotimes [i 2]
-        (.autoSizeColumn sheet i)))))
+        (tee-solu solu-laskutetaan (str (fmt/euro laskutetaan)) tyyli-normaali)))))
 
 
 (defn liikenneyhteenveto-arvo-str [arvot tyyppi avain]
@@ -86,8 +83,6 @@
             ;; Tehdään uusi rivi ja ensimmäinen sarake
             (excel/set-cell! ensimmainen-sarake (str (x sarakkeen-ensimmainen-solu)))
             (excel/set-cell-style! ensimmainen-sarake tyyli-normaali)
-            ; palvelumuoto rivin otsakesolu saatava näkymään kokonaan
-            (.autoSizeColumn sheet 0)
 
             ;; Loput sarakkeet
             (doseq [y (get sarakkeiden-arvot x)]
