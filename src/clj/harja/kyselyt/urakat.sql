@@ -382,7 +382,11 @@ SELECT
   u.hallintayksikko,
   u.sampoid,
   u.tyyppi as urakkatyyppi,
-  (SELECT NOW() BETWEEN u.alkupvm AND u.loppupvm) as kaynnissa
+  CASE WHEN (SELECT NOW() BETWEEN u.alkupvm AND u.loppupvm) THEN 'käynnissä'
+       WHEN u.loppupvm < NOW() THEN 'päättynyt'
+       ELSE 'tuleva'
+      END
+      as urakan_ajankohtaisuus
 FROM urakka u
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
 WHERE (u.nimi ILIKE :termi
