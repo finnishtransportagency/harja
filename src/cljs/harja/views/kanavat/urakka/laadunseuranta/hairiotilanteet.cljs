@@ -302,14 +302,17 @@
        :muokkaa! #(e! (tiedot/->AsetaHairiotilanteenTiedot %))
        :footer-fn (fn [hairiotilanne]
                     [:div
-                     [:div {:style {:width "100%"}}
-                      [lomake/nayta-puuttuvat-pakolliset-kentat hairiotilanne]]
-                     [napit/tallenna
-                      "Tallenna"
-                      #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
-                      {:tallennus-kaynnissa? tallennus-kaynnissa?
-                       :disabled disabled?}]
 
+                     [:div
+                      [lomake/nayta-puuttuvat-pakolliset-kentat hairiotilanne]]
+
+                     [:div.kanava-hairio-tallenna
+                      [napit/tallenna
+                       "Tallenna"
+                       #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
+                       {:tallennus-kaynnissa? tallennus-kaynnissa?
+                        :disabled disabled?}]]
+                     
                      (when (not (nil? (::hairiotilanne/id valittu-hairiotilanne)))
                        [napit/poista
                         "Poista"
