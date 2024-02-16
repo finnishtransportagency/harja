@@ -26,7 +26,7 @@
         sopimus-id (:haku-sopimus-id hakuehdot)
         vikaluokka (:haku-vikaluokka hakuehdot)
         korjauksen-tila (:haku-korjauksen-tila hakuehdot)
-        [odotusaika-alku odotusaika-loppu] (:haku-odotusaika-h hakuehdot)
+        [odotusaika-alku odotusaika-loppu] (:haku-vesiodotusaika-h hakuehdot)
         [korjausaika-alku korjausaika-loppu] (:haku-korjausaika-h hakuehdot)
         paikallinen-kaytto? (:haku-paikallinen-kaytto? hakuehdot)
         [aikavali-alku aikavali-loppu] (:haku-aikavali hakuehdot)]
@@ -45,7 +45,7 @@
                                    (when (some? paikallinen-kaytto?)
                                      {::hairiotilanne/paikallinen-kaytto? paikallinen-kaytto?})
                                    (when (and odotusaika-alku odotusaika-loppu)
-                                     {::hairiotilanne/odotusaika-h (op/between odotusaika-alku odotusaika-loppu)})
+                                     {::hairiotilanne/vesiodotusaika-h (op/between odotusaika-alku odotusaika-loppu)})
                                    (when (and korjausaika-alku korjausaika-loppu)
                                      {::hairiotilanne/korjausaika-h (op/between korjausaika-alku korjausaika-loppu)})
                                    (when (and aikavali-alku aikavali-loppu)

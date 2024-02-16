@@ -28,9 +28,14 @@
     "huviliikenne_lkm" ::huviliikenne-lkm
     "paikallinen_kaytto" ::paikallinen-kaytto?
     "korjausaika_h" ::korjausaika-h
-    "odotusaika_h" ::odotusaika-h
+    "vesiodotusaika_h" ::vesiodotusaika-h
     "korjauksen_tila" ::korjauksen-tila
     "kuittaaja" ::kuittaaja-id
+    "tieodotusaika_h" ::tieodotusaika-h
+    "ajoneuvo_lkm" ::ajoneuvo-lkm
+    "korjaajan_nimi" ::korjaajan-nimi
+    "korjauksen_aloitus" ::korjauksen-aloitus
+    "korjauksen_lopetus" ::korjauksen-lopetus
     ::kuittaaja (specql.rel/has-one ::kuittaaja-id
                                     :harja.domain.kayttaja/kayttaja
                                     :harja.domain.kayttaja/id)
@@ -58,7 +63,12 @@
     ::paikallinen-kaytto?
     ::havaintoaika
     ::korjausaika-h
-    ::odotusaika-h
+    ::vesiodotusaika-h
+    ::tieodotusaika-h
+    ::ajoneuvo-lkm
+    ::korjaajan-nimi
+    ::korjauksen-aloitus
+    ::korjauksen-lopetus
     ::syy
     ::id
     ::korjauksen-tila
@@ -87,7 +97,7 @@
                                             ;; numerovälit esitetään vectoreina
                                             :opt-un [::haku-aikavali
                                                      ::haku-korjausaika-h
-                                                     ::haku-odotusaika-h
+                                                     ::haku-vesiodotusaika-h
                                                      ::haku-vikaluokka
                                                      ::haku-sopimus-id
                                                      ::haku-korjauksen-tila
@@ -97,8 +107,10 @@
 ;; Häiriötilanteen odotus & korjausaika. Frontilta lähetetään POST kutsu -> validointi haluaa datan BIG muodossa,
 ;; mutta frontissa tätä muunnosta ei saa tehtyä tuckin kautta, joten korjataan tässä validointi numeroksi
 ;; Tietokannasta sarakkeet on muutettu NUMERIC, joten tässä toimii nyt molemmat int & float numerot
-(s/def ::odotusaika-h number?)
+(s/def ::vesiodotusaika-h number?)
+(s/def ::tieodotusaika-h number?)
 (s/def ::korjausaika-h number?)
+
 
 (s/def ::tallenna-hairiotilanne-kutsu
   (s/keys :req [::hae-hairiotilanteet-kysely

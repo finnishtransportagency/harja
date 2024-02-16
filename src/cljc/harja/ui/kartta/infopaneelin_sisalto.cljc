@@ -672,7 +672,7 @@
             {:otsikko "Syy" :nimi ::ht/syy :tyyppi :string}
             {:otsikko "Korjaustoimenpide" :nimi ::ht/korjaustoimenpide :tyyppi :string}
             {:otsikko "Korjausaika" :nimi ::ht/korjausaika-h :tyyppi :string}
-            {:otsikko "Odotusaika" :nimi ::ht/odotusaika-h :tyyppi :string}
+            {:otsikko "Odotusaika" :nimi ::ht/vesiodotusaika-h :tyyppi :string}
             {:otsikko "Ammattiliikenne lkm" :nimi ::ht/ammattiliikenne-lkm :tyyppi :string}
             {:otsikko "Huviliikenne lkm" :nimi ::ht/huviliikenne-lkm :tyyppi :string}
             {:otsikko "Kuittaaja" :hae (hakufunktio

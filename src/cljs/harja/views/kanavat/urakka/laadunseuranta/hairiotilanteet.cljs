@@ -33,8 +33,9 @@
   (let [valittu-urakka (get-in app [:valinnat :urakka])]
     [valinnat/urakkavalinnat {:urakka valittu-urakka}
      ^{:key "urakkavalinnat"}
-     
+
      [:div.kanava-suodattimet
+      
       [:div.ryhma
        [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
         valittu-urakka {:sopimus {:optiot {:kaikki-valinta? true}}}]
@@ -42,6 +43,7 @@
         (r/wrap (get-in app [:valinnat :vikaluokka])
           (fn [uusi]
             (e! (tiedot/->PaivitaValinnat {:vikaluokka uusi}))))
+        
         hairiotilanne/vikaluokat+kaikki
         #(if % (hairiotilanne/fmt-vikaluokka %) "Kaikki")]
 
@@ -49,6 +51,7 @@
         (r/wrap (get-in app [:valinnat :korjauksen-tila])
           (fn [uusi]
             (e! (tiedot/->PaivitaValinnat {:korjauksen-tila uusi}))))
+        
         hairiotilanne/korjauksen-tlat+kaikki
         #(if % (hairiotilanne/fmt-korjauksen-tila %) "Kaikki")]]
 
@@ -57,21 +60,26 @@
         (r/wrap (get-in app [:valinnat :paikallinen-kaytto?])
           (fn [uusi]
             (e! (tiedot/->PaivitaValinnat {:paikallinen-kaytto? uusi}))))
+        
         [nil true false]
         #(if (some? %) (fmt/totuus %) "Kaikki")]
+
        [valinnat/numerovali
-        (r/wrap (get-in app [:valinnat :odotusaika-h])
+        (r/wrap (get-in app [:valinnat :vesiodotusaika-h])
           (fn [uusi]
-            (e! (tiedot/->PaivitaValinnat {:odotusaika-h uusi}))))
+            (e! (tiedot/->PaivitaValinnat {:vesiodotusaika-h uusi}))))
+        
         {:otsikko "Odotusaika (h)"
          :vain-positiivinen? true}]
+
        [valinnat/numerovali
         (r/wrap (get-in app [:valinnat :korjausaika-h])
           (fn [uusi]
             (e! (tiedot/->PaivitaValinnat {:korjausaika-h uusi}))))
+        
         {:otsikko "Korjausaika (h)"
          :vain-positiivinen? true}]]]
-     
+
      ^{:key "urakkatoiminnot"}
      [valinnat/urakkatoiminnot {:urakka valittu-urakka}
       (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (:id valittu-urakka))]
@@ -115,7 +123,7 @@
     {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string :leveys 4
      :fmt hairiotilanne/fmt-vikaluokka}
     {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string :leveys 6}
-    {:otsikko "Odo\u00ADtus\u00ADaika (h)" :nimi ::hairiotilanne/odotusaika-h :tyyppi :numero :leveys 3}
+    {:otsikko "Odo\u00ADtus\u00ADaika (h)" :nimi ::hairiotilanne/vesiodotusaika-h :tyyppi :numero :leveys 3}
     {:otsikko "Am\u00ADmat\u00ADti\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/ammattiliikenne-lkm :tyyppi :numero :leveys 3}
     {:otsikko "Hu\u00ADvi\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/huviliikenne-lkm :tyyppi :numero :leveys 3}
     {:otsikko "Kor\u00ADjaus\u00ADtoimenpide" :nimi ::hairiotilanne/korjaustoimenpide :tyyppi :string :leveys 10}
@@ -183,7 +191,7 @@
      :rivi? true
      :uusi-rivi? true}
     {:otsikko "Odotusaika"
-     :nimi ::hairiotilanne/odotusaika-h
+     :nimi ::hairiotilanne/vesiodotusaika-h
      :tyyppi :positiivinen-numero
      :desimaalien-maara 2
      :yksikko-kentalle "h"}

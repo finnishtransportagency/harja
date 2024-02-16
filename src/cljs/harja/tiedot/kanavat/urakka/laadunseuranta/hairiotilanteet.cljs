@@ -87,7 +87,12 @@
                                         ::hairiotilanne/huviliikenne-lkm
                                         ::hairiotilanne/korjausaika-h
                                         ::hairiotilanne/syy
-                                        ::hairiotilanne/odotusaika-h
+                                        ::hairiotilanne/vesiodotusaika-h
+                                        ::hairiotilanne/tieodotusaika-h
+                                        ::hairiotilanne/ajoneuvo-lkm
+                                        ::hairiotilanne/korjaajan-nimi
+                                        ::hairiotilanne/korjauksen-aloitus
+                                        ::hairiotilanne/korjauksen-lopetus
                                         ::hairiotilanne/ammattiliikenne-lkm
                                         ::muokkaustiedot/poistettu?
                                         ::hairiotilanne/havaintoaika
@@ -152,7 +157,7 @@
    :haku-sopimus-id (:sopimus-id valinnat)
    :haku-vikaluokka (:vikaluokka valinnat)
    :haku-korjauksen-tila (:korjauksen-tila valinnat)
-   :haku-odotusaika-h (:odotusaika-h valinnat)
+   :haku-vesiodotusaika-h (:vesiodotusaika-h valinnat)
    :haku-korjausaika-h (:korjausaika-h valinnat)
    :haku-paikallinen-kaytto? (:paikallinen-kaytto? valinnat)
    :haku-aikavali (:aikavali valinnat)})
