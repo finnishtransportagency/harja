@@ -177,9 +177,9 @@
   {:tyyppi :komponentti
    :komponentti (fn []  [:div.kanava-hairio-lomake])})
 
-(defn odottavan-liikenteen-kentat []
+(defn odottavan-vesiliikenteen-kentat []
   (lomake/ryhma
-    {:otsikko "Odottava liikenne"
+    {:otsikko "Odottava vesiliikenne"
      :rivi? true
      :uusi-rivi? true}
     {:otsikko "Odotusaika"
@@ -194,6 +194,22 @@
      :yksikko-kentalle "kpl"}
     {:otsikko "Huviliikenne"
      :nimi ::hairiotilanne/huviliikenne-lkm
+     :tyyppi :positiivinen-numero
+     :kokonaisluku? true
+     :yksikko-kentalle "kpl"}))
+
+(defn odottavan-tieliikenteen-kentat []
+  (lomake/ryhma
+    {:otsikko "Odottava tieliikenne"
+     :rivi? true
+     :uusi-rivi? true}
+    {:otsikko "Odotusaika"
+     :nimi ::hairiotilanne/tieodotusaika-h
+     :tyyppi :positiivinen-numero
+     :desimaalien-maara 2
+     :yksikko-kentalle "h"}
+    {:otsikko "Ajoneuvomäärä"
+     :nimi ::hairiotilanne/ajoneuvo-lkm
      :tyyppi :positiivinen-numero
      :kokonaisluku? true
      :yksikko-kentalle "kpl"}))
@@ -411,7 +427,9 @@
         :uusi-rivi? true}
        
        (lomake-valiotsikko)
-       (odottavan-liikenteen-kentat)
+       (odottavan-vesiliikenteen-kentat)
+       (lomake-valiotsikko)
+       (odottavan-tieliikenteen-kentat)
 
        (lomake-valiotsikko)
        (korjauksen-kentat e! app)
