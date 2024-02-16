@@ -25,7 +25,7 @@ VALUES (
    WHERE kayttajanimi = 'jvh'), 
    1,
    2,
-   "Samppa poju",
+   'Samppa poju',
    NOW(),
    NOW());
 
@@ -56,7 +56,7 @@ VALUES (
    WHERE kayttajanimi = 'jvh'),
    5,
    6,
-   "Jarno poju",
+   'Jarno poju',
    NOW(),
    NOW());
 
