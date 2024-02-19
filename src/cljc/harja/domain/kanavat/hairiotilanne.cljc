@@ -98,6 +98,7 @@
                                             :opt-un [::haku-aikavali
                                                      ::haku-korjausaika-h
                                                      ::haku-vesiodotusaika-h
+                                                     ::haku-tieodotusaika-h
                                                      ::haku-vikaluokka
                                                      ::haku-sopimus-id
                                                      ::haku-korjauksen-tila

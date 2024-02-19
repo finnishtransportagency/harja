@@ -60,7 +60,7 @@
         (r/wrap (get-in app [:valinnat :paikallinen-kaytto?])
           (fn [uusi]
             (e! (tiedot/->PaivitaValinnat {:paikallinen-kaytto? uusi}))))
-        
+
         [nil true false]
         #(if (some? %) (fmt/totuus %) "Kaikki")]
 
@@ -68,15 +68,20 @@
         (r/wrap (get-in app [:valinnat :vesiodotusaika-h])
           (fn [uusi]
             (e! (tiedot/->PaivitaValinnat {:vesiodotusaika-h uusi}))))
-        
-        {:otsikko "Odotusaika (h)"
+        {:otsikko "Vesiliikenteen odotusaika (h)"
+         :vain-positiivinen? true}]
+
+       [valinnat/numerovali
+        (r/wrap (get-in app [:valinnat :tieodotusaika-h])
+          (fn [uusi]
+            (e! (tiedot/->PaivitaValinnat {:tieodotusaika-h uusi}))))
+        {:otsikko "Tieliikenteen odotusaika (h)"
          :vain-positiivinen? true}]
 
        [valinnat/numerovali
         (r/wrap (get-in app [:valinnat :korjausaika-h])
           (fn [uusi]
             (e! (tiedot/->PaivitaValinnat {:korjausaika-h uusi}))))
-        
         {:otsikko "Korjausaika (h)"
          :vain-positiivinen? true}]]]
 
@@ -123,12 +128,17 @@
     {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string :leveys 4
      :fmt hairiotilanne/fmt-vikaluokka}
     {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string :leveys 6}
-    {:otsikko "Odo\u00ADtus\u00ADaika (h)" :nimi ::hairiotilanne/vesiodotusaika-h :tyyppi :numero :leveys 3}
-    {:otsikko "Am\u00ADmat\u00ADti\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/ammattiliikenne-lkm :tyyppi :numero :leveys 3}
-    {:otsikko "Hu\u00ADvi\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/huviliikenne-lkm :tyyppi :numero :leveys 3}
+    ;; Vesiliikenne
+    {:otsikko "Vesi odotus (h)" :nimi ::hairiotilanne/vesiodotusaika-h :tyyppi :numero :leveys 3.5}
+    {:otsikko "Ammatti lkm" :nimi ::hairiotilanne/ammattiliikenne-lkm :tyyppi :numero :leveys 3.5}
+    {:otsikko "Huvi lkm" :nimi ::hairiotilanne/huviliikenne-lkm :tyyppi :numero :leveys 3.5}
+    ;; Tieliikenne
+    {:otsikko "Tie odotus (h)" :nimi ::hairiotilanne/tieodotusaika-h :tyyppi :numero :leveys 3.5}
+    {:otsikko "Ajoneuvo lkm" :nimi ::hairiotilanne/ajoneuvo-lkm :tyyppi :numero :leveys 3.5}
+
     {:otsikko "Kor\u00ADjaus\u00ADtoimenpide" :nimi ::hairiotilanne/korjaustoimenpide :tyyppi :string :leveys 10}
-    {:otsikko "Kor\u00ADjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika-h :tyyppi :numero :desimaalien-maara 0 :leveys 3}
-    {:otsikko "Kor\u00ADjauk\u00ADsen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string :leveys 3
+    {:otsikko "Kor\u00ADjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika-h :tyyppi :numero :desimaalien-maara 0 :leveys 3.5}
+    {:otsikko "Kor\u00ADjauk\u00ADsen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string :leveys 5
      :fmt hairiotilanne/fmt-korjauksen-tila}
     {:otsikko "Paikal\u00ADlinen käyt\u00ADtö" :nimi ::hairiotilanne/paikallinen-kaytto?
      :tyyppi :string :fmt fmt/totuus :leveys 4}]

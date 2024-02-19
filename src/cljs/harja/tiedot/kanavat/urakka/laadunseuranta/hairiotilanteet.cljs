@@ -158,6 +158,7 @@
    :haku-vikaluokka (:vikaluokka valinnat)
    :haku-korjauksen-tila (:korjauksen-tila valinnat)
    :haku-vesiodotusaika-h (:vesiodotusaika-h valinnat)
+   :haku-tieodotusaika-h (:tieodotusaika-h valinnat)
    :haku-korjausaika-h (:korjausaika-h valinnat)
    :haku-paikallinen-kaytto? (:paikallinen-kaytto? valinnat)
    :haku-aikavali (:aikavali valinnat)})
