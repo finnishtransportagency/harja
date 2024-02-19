@@ -24,21 +24,22 @@
 
 
 (deftest hae-kayttajan-kanavaurakat-toimii
-  (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
+  (let [urakka-id-saimaa (hae-urakan-id-nimella "Saimaan kanava")
+        urakka-id-joensuu (hae-urakan-id-nimella "Joensuun kanava")
         kanava-hallintayksikko 1
          ;; Aseta Saimaan kanava päättyneeksi, pitäisi tulla tuloksiin silti
-        _ (u "UPDATE urakka SET alkupvm = '1996-12-19', loppupvm = '1996-12-20' WHERE id = " urakka-id " AND hallintayksikko = " kanava-hallintayksikko ";")
+        _ (u "UPDATE urakka SET alkupvm = '1996-12-19', loppupvm = '1996-12-20' WHERE id = " urakka-id-saimaa " AND hallintayksikko = " kanava-hallintayksikko ";")
         ;; Haetaan jvh:n kanavaurakat, pitäisi tulla saimaan ja joensuun kanavat
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-kayttajan-kanavaurakat +kayttaja-jvh+
                   {:hallintayksikko kanava-hallintayksikko
-                   :urakka-id urakka-id})
+                   :urakka-id urakka-id-saimaa})
         vastaus-joensuu (-> vastaus first :urakat first)
         vastaus-saimaa (-> vastaus first :urakat second)]
 
-    (is (= (:id vastaus-joensuu) 50))
+    (is (= (:id vastaus-joensuu) urakka-id-joensuu))
     (is (= (:nimi vastaus-joensuu) "Joensuun kanava"))
     (is (= (:urakkanro vastaus-joensuu) "089123"))
-    (is (= (:id vastaus-saimaa) 49))
+    (is (= (:id vastaus-saimaa) urakka-id-saimaa))
     (is (= (:nimi vastaus-saimaa) "Saimaan kanava"))
     (is (= (:urakkanro vastaus-saimaa) "089123"))))
