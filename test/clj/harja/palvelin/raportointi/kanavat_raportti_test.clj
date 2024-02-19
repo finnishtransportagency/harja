@@ -145,40 +145,36 @@
                                 ;; Yhteenveto passataan raporttiparametrina suoraan joten tehdään sellainen tässä manuaalisesti 
                                 :yhteenveto {:toimenpiteet {:sulutukset-ylos 1, :sulutukset-alas 2, :sillan-avaukset 2, :tyhjennykset 1},
                                              :palvelumuoto {:paikallispalvelu 1, :kaukopalvelu 2, :itsepalvelu 0, :muu 0, :yhteensa 3}}}})
-        raportin-nimi (-> vastaus second :nimi)]
-
+        raportin-nimi (-> vastaus second :nimi)
+        taulukon-parametrit (-> vastaus (nth 2) second second)
+        taulukon-sarakkeet (-> vastaus (nth 2) second (nth 2))
+        liikenneyhteenveto (-> vastaus (nth 3))
+        raportin-otsikko (-> vastaus (nth 2) first)]
+    
     (is (= raportin-nimi "Saimaan kanava, Liikennetapahtumat"))
-    (is (= vastaus
-           [:raportti
-            {:orientaatio :landscape, :nimi "Saimaan kanava, Liikennetapahtumat", :lyhennetty-tiedostonimi true}
-            (list
-              [:otsikko-heading "Liikennetapahtumat" {:padding-top "50px"}]
-              [:taulukko {:otsikko nil, :oikealle-tasattavat-kentat #{}, :tyhja "Ei Tietoja.", :piilota-border? false, :viimeinen-rivi-yhteenveto? false}
-               [{:otsikko "Aika", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "vaalen-tumma-tausta", :leveys 0.75, :tyyppi :varillinen-teksti}
-                {:otsikko "Kohde", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.8, :tyyppi :varillinen-teksti}
-                {:otsikko "Tyyppi", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}
-                {:otsikko "Sillan avaus", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}
-                {:otsikko "Palvelumuoto", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 1, :tyyppi :varillinen-teksti}
-                {:otsikko "Suunta", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}
-                {:otsikko "Alus", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 1, :tyyppi :varillinen-teksti}
-                {:otsikko "Aluslaji", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}
-                {:otsikko "Aluksia", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}
-                {:otsikko "Matkustajia", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.7, :tyyppi :varillinen-teksti}
-                {:otsikko "Nippuja", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.5, :tyyppi :varillinen-teksti}
-                {:otsikko "Ylävesi", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}
-                {:otsikko "Alavesi", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}
-                {:otsikko "Lisätiedot", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 1, :tyyppi :varillinen-teksti}
-                {:otsikko "Kuittaaja", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 1, :tyyppi :varillinen-teksti}]
-               [[[:varillinen-teksti {:arvo "19.02.2024 klo 07:10"}] [:varillinen-teksti {:arvo "Pälli"}] [:varillinen-teksti {:arvo "Sillan avaus"}] [:varillinen-teksti {:arvo "✓"}] [:varillinen-teksti {:arvo "Itsepalvelu (20 kpl)"}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo 8900M}] [:varillinen-teksti {:arvo 7020M}] [:varillinen-teksti {:arvo "Testidata 7"}] [:varillinen-teksti {:arvo "Tero Toripolliisi"}]]
-                [[:varillinen-teksti {:arvo "19.02.2024 klo 07:10"}] [:varillinen-teksti {:arvo "Pälli"}] [:varillinen-teksti {:arvo "Ei avausta"}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo ""}] [:varillinen-teksti {:arvo "Alas"}] [:varillinen-teksti {:arvo "Antin onni"}] [:varillinen-teksti {:arvo "HUV"}] [:varillinen-teksti {:arvo 4}] [:varillinen-teksti {:arvo 26}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo 8900M}] [:varillinen-teksti {:arvo 7020M}] [:varillinen-teksti {:arvo "Testidata 2"}] [:varillinen-teksti {:arvo "Tero Toripolliisi"}]]
-                [[:varillinen-teksti {:arvo "19.02.2024 klo 07:10"}] [:varillinen-teksti {:arvo "Pälli"}] [:varillinen-teksti {:arvo "Ei avausta"}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo ""}] [:varillinen-teksti {:arvo "Ylös"}] [:varillinen-teksti {:arvo "Vanha leski"}] [:varillinen-teksti {:arvo "HUV"}] [:varillinen-teksti {:arvo 1}] [:varillinen-teksti {:arvo 4}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo 8900M}] [:varillinen-teksti {:arvo 7020M}] [:varillinen-teksti {:arvo "Testidata 2"}] [:varillinen-teksti {:arvo "Tero Toripolliisi"}]]
-                [[:varillinen-teksti {:arvo "19.02.2024 klo 07:09"}] [:varillinen-teksti {:arvo "Kansola"}] [:varillinen-teksti {:arvo "Sulutus"}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo "Kauko"}] [:varillinen-teksti {:arvo "Ylös"}] [:varillinen-teksti {:arvo "Rohmu"}] [:varillinen-teksti {:arvo "RAH"}] [:varillinen-teksti {:arvo 1}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo 7300M}] [:varillinen-teksti {:arvo 7100M}] [:varillinen-teksti {:arvo "Testidata 1"}] [:varillinen-teksti {:arvo "Tero Toripolliisi"}]]
-                [[:varillinen-teksti {:arvo "19.02.2024 klo 07:09"}] [:varillinen-teksti {:arvo "Kansola"}] [:varillinen-teksti {:arvo "Sulutus"}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo "Kauko"}] [:varillinen-teksti {:arvo "Ylös"}] [:varillinen-teksti {:arvo "Rölli"}] [:varillinen-teksti {:arvo "ÖLJ"}] [:varillinen-teksti {:arvo 1}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo 7300M}] [:varillinen-teksti {:arvo 7100M}] [:varillinen-teksti {:arvo "Testidata 1"}] [:varillinen-teksti {:arvo "Tero Toripolliisi"}]]
-                [[:varillinen-teksti {:arvo "19.02.2024 klo 07:08"}] [:varillinen-teksti {:arvo "Kansola"}] [:varillinen-teksti {:arvo "Sulutus"}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo "Paikallis"}] [:varillinen-teksti {:arvo "Alas"}] [:varillinen-teksti {:arvo "Merikukko"}] [:varillinen-teksti {:arvo "SEK"}] [:varillinen-teksti {:arvo 1}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo 8400M}] [:varillinen-teksti {:arvo 5000M}] [:varillinen-teksti {:arvo "Testidata 3"}] [:varillinen-teksti {:arvo "Tero Toripolliisi"}]]
-                [[:varillinen-teksti {:arvo "19.02.2024 klo 07:08"}] [:varillinen-teksti {:arvo "Kansola"}] [:varillinen-teksti {:arvo "Sulutus"}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo "Paikallis"}] [:varillinen-teksti {:arvo "Alas"}] [:varillinen-teksti {:arvo "Ronsu"}] [:varillinen-teksti {:arvo "LAU"}] [:varillinen-teksti {:arvo 1}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo 8400M}] [:varillinen-teksti {:arvo 5000M}] [:varillinen-teksti {:arvo "Testidata 3"}] [:varillinen-teksti {:arvo "Tero Toripolliisi"}]]
-                [[:varillinen-teksti {:arvo "19.02.2024 klo 07:05"}] [:varillinen-teksti {:arvo "Kansola"}] [:varillinen-teksti {:arvo "Tyhjennys"}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo "Muu"}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo 8103M}] [:varillinen-teksti {:arvo 7010M}] [:varillinen-teksti {:arvo "Testidata 5"}] [:varillinen-teksti {:arvo "Tero Toripolliisi"}]]
-                [[:varillinen-teksti {:arvo "19.02.2024 klo 07:05"}] [:varillinen-teksti {:arvo "Soskua"}] [:varillinen-teksti {:arvo "Sulutus, Ei avausta"}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo "Kauko"}] [:varillinen-teksti {:arvo "Alas"}] [:varillinen-teksti {:arvo "KEMIRA-12"}] [:varillinen-teksti {:arvo "ÖLJ"}] [:varillinen-teksti {:arvo 1}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo 8103M}] [:varillinen-teksti {:arvo 7010M}] [:varillinen-teksti {:arvo "Testidata 6"}] [:varillinen-teksti {:arvo "Tero Toripolliisi"}]]
-                [[:varillinen-teksti {:arvo "19.02.2024 klo 06:55"}] [:varillinen-teksti {:arvo "Joensuun mutkan sillat"}] [:varillinen-teksti {:arvo "Sillan avaus, Ei avausta"}] [:varillinen-teksti {:arvo "✓"}] [:varillinen-teksti {:arvo "Kauko"}] [:varillinen-teksti {:arvo "Alas"}] [:varillinen-teksti {:arvo ""}] [:varillinen-teksti {:arvo "ÖLJ"}] [:varillinen-teksti {:arvo 1}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo nil}] [:varillinen-teksti {:arvo 8103M}] [:varillinen-teksti {:arvo 7010M}] [:varillinen-teksti {:arvo "Testidata 8"}] [:varillinen-teksti {:arvo "Tero Toripolliisi"}]]]])
-            ;; Tässä pitäisi näkyä yllä passattu yhteenveto
-            [:liikenneyhteenveto {:toimenpiteet {:sulutukset-ylos 1, :sulutukset-alas 2, :sillan-avaukset 2, :tyhjennykset 1},
-                                  :palvelumuoto {:paikallispalvelu 1, :kaukopalvelu 2, :itsepalvelu 0, :muu 0, :yhteensa 3}}]]))))
+
+    (is (= raportin-otsikko
+           [:otsikko-heading "Liikennetapahtumat" {:padding-top "50px"}]))
+
+    (is (= taulukon-parametrit
+           {:otsikko nil, :oikealle-tasattavat-kentat #{}, :tyhja "Ei Tietoja.", :piilota-border? false, :viimeinen-rivi-yhteenveto? false}))
+
+    (is (= taulukon-sarakkeet  [{:otsikko "Aika", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "vaalen-tumma-tausta", :leveys 0.75, :tyyppi :varillinen-teksti}
+                                {:otsikko "Kohde", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.8, :tyyppi :varillinen-teksti}
+                                {:otsikko "Tyyppi", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}
+                                {:otsikko "Sillan avaus", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}
+                                {:otsikko "Palvelumuoto", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 1, :tyyppi :varillinen-teksti}
+                                {:otsikko "Suunta", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}
+                                {:otsikko "Alus", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 1, :tyyppi :varillinen-teksti}
+                                {:otsikko "Aluslaji", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}
+                                {:otsikko "Aluksia", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}
+                                {:otsikko "Matkustajia", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.7, :tyyppi :varillinen-teksti}
+                                {:otsikko "Nippuja", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.5, :tyyppi :varillinen-teksti}
+                                {:otsikko "Ylävesi", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}
+                                {:otsikko "Alavesi", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti}
+                                {:otsikko "Lisätiedot", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 1, :tyyppi :varillinen-teksti}
+                                {:otsikko "Kuittaaja", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 1, :tyyppi :varillinen-teksti}]))
+
+    (is (= liikenneyhteenveto
+           [:liikenneyhteenveto {:toimenpiteet {:sulutukset-ylos 1, :sulutukset-alas 2, :sillan-avaukset 2, :tyhjennykset 1},
+                                 :palvelumuoto {:paikallispalvelu 1, :kaukopalvelu 2, :itsepalvelu 0, :muu 0, :yhteensa 3}}]))))
