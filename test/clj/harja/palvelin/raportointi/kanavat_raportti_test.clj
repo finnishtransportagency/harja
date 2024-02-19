@@ -1,4 +1,4 @@
-(ns harja.palvelin.raportointi.kanavien-hairio-raportti-test
+(ns harja.palvelin.raportointi.kanavat-raportti-test
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -38,6 +38,8 @@
 
 (deftest kanavat-hairiotilanteet-raportti-toimii
   (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
+        alkupvm (c/to-date (t/local-date 2023 10 1))
+        loppupvm (c/to-date (t/local-date 2024 9 30))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
@@ -47,7 +49,7 @@
                    ;; Tämä generoidaan normaalisti suoraan frontin gridin kautta joten parametrit passataan hieman erillä lailla verrattuna normaaliin, mutta tämä ei testaamista estä 
                    :parametrit {:parametrit {:hallintayksikko 1
                                              :urakka {:id urakka-id}
-                                             :aikavali [(c/to-date (t/local-date 2023 10 1)) (c/to-date (t/local-date 2024 9 30))]
+                                             :aikavali [alkupvm loppupvm]
                                              :urakkatyyppi :vesivayla-kanavien-hoito}
                                 ;; Manuaalisesti generoidut gridin rivit 
                                 :rivit [(list "19.2.2024 6:38" "Kansola" "Liikennevaurio" "Test" 23 2 nil nil nil nil nil 48 "Valmis" "Ei")
@@ -82,3 +84,44 @@
               (list "19.2.2024 4:07" "Soskua" "Sähkötekninen vika" "Jotain meni vikaan" 60 1 2 1 2 "Vika korjattiin" 92 "Valmis" "Kyllä")
               (list "19.2.2024 4:03" "Soskua" "Konetekninen vika" "Syy ei tiedossa" nil nil nil nil nil nil 0 "Kesken" "Ei")
               (list "19.2.2024 3:48" "Pälli" "Sähkötekninen vika" "Edellinen korjaus tehtiin huonosti, korjattu nyt uudestaan." 70 5 6 5 6 "Vika korjattiin" 20 "Valmis" "Kyllä")]]]))))
+
+
+(deftest kanavat-toimenpiteet-raportti-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
+        alkupvm (c/to-date (t/local-date 2023 10 1))
+        loppupvm (c/to-date (t/local-date 2024 9 30))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi       :kanavien-kokonaishintaiset-toimenpiteet
+                   :konteksti  "urakka"
+                   :urakka-id  urakka-id
+                   ;; Tämä generoidaan normaalisti suoraan frontin gridin kautta joten parametrit passataan hieman erillä lailla verrattuna normaaliin, mutta tämä ei testaamista estä 
+                   :parametrit {:parametrit {:hallintayksikko 1
+                                             :urakka {:id urakka-id}
+                                             :aikavali [alkupvm loppupvm]
+                                             :urakkatyyppi :vesivayla-kanavien-hoito}
+                                ;; Manuaalisesti generoidut gridin rivit 
+                                :rivit [(list "19.2.2024 6:38" "Kansola" "Testi kohde" "Testi tehtävä" "Tehtiin juttuja" "Lisätietoja antaa päällikkö" "Samu Salminen" "Panu Harjalainen")
+                                        (list "19.2.2024 6:38" "Kansola" "Testi kohde" "Testi tehtävä" "Tehtiin juttuja" "Lisätietoja antaa päällikkö" "Tea Salminen" "Markus Harjalainen")
+                                        (list "19.2.2024 6:38" "Kansola" "Testi kohde" "Testi tehtävä" "Tehtiin juttuja" "Lisätietoja antaa päällikkö" "Santtu Salminen" "Paula Harjalainen")]}})
+        raportin-nimi (-> vastaus second :nimi)]
+
+    ;; Nimeksi tulee aina urakka, raportti ja passattu aikaväli
+    (is (= raportin-nimi "Saimaan kanava, Kokonaishintaiset toimenpiteet ajalta 01.10.2023 - 30.09.2024"))
+    ;; Raportilla pitäisi näkyä passatut tiedot 
+    (is (= vastaus
+           [:raportti 
+            {:nimi "Saimaan kanava, Kokonaishintaiset toimenpiteet ajalta 01.10.2023 - 30.09.2024", :piilota-otsikko? true} 
+            [:taulukko {:otsikko "Kokonaishintaiset toimenpiteet", :tyhja nil, :sheet-nimi "Kokonaishintaiset toimenpiteet"} 
+             [{:otsikko "Pvm", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "vaalen-tumma-tausta", :leveys 0.5, :tyyppi :varillinen-teksti} 
+              {:otsikko "Kohde", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.8, :tyyppi :varillinen-teksti}
+              {:otsikko "Huoltokohde", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.8, :tyyppi :varillinen-teksti} 
+              {:otsikko "Tehtävä", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.45, :tyyppi :varillinen-teksti}
+              {:otsikko "Muu toimenpide", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.6, :tyyppi :varillinen-teksti} 
+              {:otsikko "Lisätieto", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.8, :tyyppi :varillinen-teksti}
+              {:otsikko "Suorittaja", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.5, :tyyppi :varillinen-teksti} 
+              {:otsikko "Kuittaaja", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.8, :tyyppi :varillinen-teksti}] 
+             [(list "19.2.2024 6:38" "Kansola" "Testi kohde" "Testi tehtävä" "Tehtiin juttuja" "Lisätietoja antaa päällikkö" "Samu Salminen" "Panu Harjalainen") 
+              (list "19.2.2024 6:38" "Kansola" "Testi kohde" "Testi tehtävä" "Tehtiin juttuja" "Lisätietoja antaa päällikkö" "Tea Salminen" "Markus Harjalainen")
+              (list "19.2.2024 6:38" "Kansola" "Testi kohde" "Testi tehtävä" "Tehtiin juttuja" "Lisätietoja antaa päällikkö" "Santtu Salminen" "Paula Harjalainen")]]]))))
