@@ -169,12 +169,12 @@
       (assoc app :nakymassa? true)
       (let [urakka-id (:id @nav/valittu-urakka)]
         (-> app
-            (tuck-apurit/post! :hae-vesivayla-materiaalilistaus
-                               {::materiaalit/urakka-id urakka-id}
-                               {:onnistui ->MateriaalitHaettu
-                                :epaonnistui ->MateriaalienHakuEpaonnistui})
-            (assoc :nakymassa? true
-                   :materiaalien-haku-kaynnissa? true)))))
+          (tuck-apurit/post! :hae-vesivayla-materiaalilistaus
+            {::materiaalit/urakka-id urakka-id}
+            {:onnistui ->MateriaalitHaettu
+             :epaonnistui ->MateriaalienHakuEpaonnistui})
+          (assoc :nakymassa? true
+            :materiaalien-haku-kaynnissa? true)))))
 
   NakymaSuljettu
   (process-event [_ app]
@@ -190,36 +190,43 @@
   HaeHairiotilanteet
   (process-event [{valinnat :valinnat} app]
     (if (and (not (:hairiotilanteiden-haku-kaynnissa? app))
-             (some? (get-in valinnat [:urakka :id])))
+          (some? (get-in valinnat [:urakka :id])))
       (let [argumentit (hairiotilanteiden-hakuparametrit valinnat)]
         (-> app
-            (tuck-apurit/post! :hae-hairiotilanteet
-                               argumentit
-                               {:onnistui ->HairiotilanteetHaettu
-                                :epaonnistui ->HairiotilanteetEiHaettu})
-            (assoc :hairiotilanteiden-haku-kaynnissa? true)))
+          (tuck-apurit/post! :hae-hairiotilanteet
+            argumentit
+            {:onnistui ->HairiotilanteetHaettu
+             :epaonnistui ->HairiotilanteetEiHaettu})
+          (assoc :hairiotilanteiden-haku-kaynnissa? true)))
       app))
 
   HairiotilanteetHaettu
   (process-event [{tulos :tulos} app]
     (assoc app :hairiotilanteiden-haku-kaynnissa? false
-               :hairiotilanteet tulos))
+      :hairiotilanteet tulos))
 
   HairiotilanteetEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Häiriötilanteiden haku epäonnistui!" :danger)
     (assoc app :hairiotilanteiden-haku-kaynnissa? false
-               :hairiotilanteet []))
-  
+      :hairiotilanteet []))
+
   AsetaHavaintoaika
   (process-event [{aika :aika} app]
     (assoc-in app [:valittu-hairiotilanne ::hairiotilanne/havaintoaika] aika))
-  
+
   AsetaKorjausaika
   (process-event [{aloitus? :aloitus? aika :aika} app]
-    (if aloitus?
-      (assoc-in app [:valittu-hairiotilanne ::hairiotilanne/korjauksen-aloitus] aika)
-      (assoc-in app [:valittu-hairiotilanne ::hairiotilanne/korjauksen-lopetus] aika)))
+    ;; Lisää aloituksen/lopetuksen, ja laskee näiden välisen korjausajan
+    (let [app-korjaus (if aloitus?
+                        (assoc-in app [:valittu-hairiotilanne ::hairiotilanne/korjauksen-aloitus] aika)
+                        (assoc-in app [:valittu-hairiotilanne ::hairiotilanne/korjauksen-lopetus] aika))
+          aloitus (-> app-korjaus :valittu-hairiotilanne ::hairiotilanne/korjauksen-aloitus)
+          lopetus (-> app-korjaus :valittu-hairiotilanne ::hairiotilanne/korjauksen-lopetus)
+          aikaa-valissa (if (and aloitus lopetus)
+                          (pvm/aikaa-valissa aloitus lopetus)
+                          0)]
+      (assoc-in app-korjaus [:valittu-hairiotilanne ::hairiotilanne/korjausaika-h] aikaa-valissa)))
 
   ValitseAjanTallennus
   (process-event [{valittu? :valittu?} app]
@@ -236,8 +243,8 @@
   AsetaHairiotilanteenTiedot
   (process-event [{hairiotilanne :hairiotilanne} app]
     (let [kohdeosa-vaihtui? (and (some? (get-in app [:valittu-hairiotilanne ::hairiotilanne/kohteenosa]))
-                                 (not= (::hairiotilanne/kohde hairiotilanne)
-                                       (get-in app [:valittu-hairiotilanne ::hairiotilanne/kohde])))
+                              (not= (::hairiotilanne/kohde hairiotilanne)
+                                (get-in app [:valittu-hairiotilanne ::hairiotilanne/kohde])))
           hairiotilanne (if kohdeosa-vaihtui?
                           (assoc hairiotilanne ::hairiotilanne/kohteenosa nil)
                           hairiotilanne)]
@@ -252,27 +259,27 @@
             pois-materiaalit (poistettava-materiaali hairiotilanne)
             parametrit (hairiotilanteiden-hakuparametrit valinnat)]
         (-> app
-            (tuck-apurit/post! :tallenna-hairiotilanne
-                               {::hairiotilanne/hairiotilanne tal-hairiotilanne
-                                ::materiaalit/materiaalikirjaukset tal-materiaalit
-                                ::materiaalit/poista-materiaalikirjauksia pois-materiaalit
-                                ::hairiotilanne/hae-hairiotilanteet-kysely parametrit}
-                               {:onnistui ->HairiotilanneTallennettu
-                                :epaonnistui ->HairiotilanteenTallentaminenEpaonnistui})
-            (assoc :tallennus-kaynnissa? true)))))
+          (tuck-apurit/post! :tallenna-hairiotilanne
+            {::hairiotilanne/hairiotilanne tal-hairiotilanne
+             ::materiaalit/materiaalikirjaukset tal-materiaalit
+             ::materiaalit/poista-materiaalikirjauksia pois-materiaalit
+             ::hairiotilanne/hae-hairiotilanteet-kysely parametrit}
+            {:onnistui ->HairiotilanneTallennettu
+             :epaonnistui ->HairiotilanteenTallentaminenEpaonnistui})
+          (assoc :tallennus-kaynnissa? true)))))
 
   PoistaHairiotilanne
   (process-event [{hairiotilanne :hairiotilanne} app]
     (let [tallennus! (tuck/send-async! ->TallennaHairiotilanne)]
       (go (tallennus! (assoc hairiotilanne ::muokkaustiedot/poistettu? true
-                                           ::materiaalit/materiaalit (map #(assoc % :poistettu true)
-                                                                          (::materiaalit/materiaalit hairiotilanne)))))
+                        ::materiaalit/materiaalit (map #(assoc % :poistettu true)
+                                                    (::materiaalit/materiaalit hairiotilanne)))))
       app))
 
   MateriaalitHaettu
   (process-event [{materiaalit :materiaalit} app]
     (assoc app :materiaalit materiaalit
-               :materiaalien-haku-kaynnissa? false))
+      :materiaalien-haku-kaynnissa? false))
 
   MateriaalienHakuEpaonnistui
   (process-event [_ app]
@@ -284,9 +291,9 @@
     (let [{hairiotilanteet :hairiotilanteet
            materiaalilistaukset :materiaalilistaukset} tallennuksen-vastaus]
       (assoc app :tallennus-kaynnissa? false
-                 :valittu-hairiotilanne nil
-                 :hairiotilanteet hairiotilanteet
-                 :materiaalit materiaalilistaukset)))
+        :valittu-hairiotilanne nil
+        :hairiotilanteet hairiotilanteet
+        :materiaalit materiaalilistaukset)))
 
   HairiotilanteenTallentaminenEpaonnistui
   (process-event [_ app]
@@ -310,16 +317,16 @@
                                               (map #(identity {:maara (- (::materiaalit/maara %))
                                                                :yksikko (::materiaalit/yksikko materiaalilistaus)
                                                                :tallennetut-materiaalit {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
-                                                                         ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
-                                                                         ::materiaalit/pvm (::materiaalit/pvm %)
-                                                                         ::materiaalit/id (::materiaalit/id %)
-                                                                         ::materiaalit/yksikko (::materiaalit/yksikko materiaalilistaus)}})))
+                                                                                         ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
+                                                                                         ::materiaalit/pvm (::materiaalit/pvm %)
+                                                                                         ::materiaalit/id (::materiaalit/id %)
+                                                                                         ::materiaalit/yksikko (::materiaalit/yksikko materiaalilistaus)}})))
                                             conj (::materiaalit/muutokset materiaalilistaus)))
-                                        materiaalit)]
+                                  materiaalit)]
       (-> app
-          (assoc :valittu-hairiotilanne hairiotilanne)
-          (assoc-in [:valittu-hairiotilanne ::materiaalit/materiaalit] materiaali-kirjaukset)
-          (assoc-in [:valittu-hairiotilanne ::materiaalit/muokkaamattomat-materiaalit] materiaali-kirjaukset))))
+        (assoc :valittu-hairiotilanne hairiotilanne)
+        (assoc-in [:valittu-hairiotilanne ::materiaalit/materiaalit] materiaali-kirjaukset)
+        (assoc-in [:valittu-hairiotilanne ::materiaalit/muokkaamattomat-materiaalit] materiaali-kirjaukset))))
 
   MuokkaaMateriaaleja
   (process-event [{materiaalit :materiaalit} app]
@@ -332,10 +339,10 @@
     ;; Materiaalien järjestystä varten täytyy käyttää järjestysnumeroa. Nyt ei voida käyttää muokkaus-gridin generoimaa
     ;; numeroa, koska rivinlisäysnappi ei ole normaali gridin lisäysnappi
     (update-in app
-               [:valittu-hairiotilanne ::materiaalit/materiaalit]
-               #(let [vanha-id (apply max (map :jarjestysnumero %))
-                      uusi-id (if (nil? vanha-id) 0 (inc vanha-id))]
-                  (conj (vec %) {:jarjestysnumero uusi-id}))))
+      [:valittu-hairiotilanne ::materiaalit/materiaalit]
+      #(let [vanha-id (apply max (map :jarjestysnumero %))
+             uusi-id (if (nil? vanha-id) 0 (inc vanha-id))]
+         (conj (vec %) {:jarjestysnumero uusi-id}))))
 
   LisaaVirhe
   (process-event [{virhe :virhe} app]

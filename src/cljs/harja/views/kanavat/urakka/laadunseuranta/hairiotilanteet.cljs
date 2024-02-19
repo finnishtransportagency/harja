@@ -127,7 +127,7 @@
     {:otsikko "Am\u00ADmat\u00ADti\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/ammattiliikenne-lkm :tyyppi :numero :leveys 3}
     {:otsikko "Hu\u00ADvi\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/huviliikenne-lkm :tyyppi :numero :leveys 3}
     {:otsikko "Kor\u00ADjaus\u00ADtoimenpide" :nimi ::hairiotilanne/korjaustoimenpide :tyyppi :string :leveys 10}
-    {:otsikko "Kor\u00ADjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika-h :tyyppi :numero :leveys 3}
+    {:otsikko "Kor\u00ADjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika-h :tyyppi :numero :desimaalien-maara 0 :leveys 3}
     {:otsikko "Kor\u00ADjauk\u00ADsen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string :leveys 3
      :fmt hairiotilanne/fmt-korjauksen-tila}
     {:otsikko "Paikal\u00ADlinen käyt\u00ADtö" :nimi ::hairiotilanne/paikallinen-kaytto?
@@ -239,7 +239,7 @@
         {:tyyppi :string
          :nimi ::hairiotilanne/korjaajan-nimi
          :otsikko "Korjaajan nimi"}
-        ;; TODO ..
+        
         {:nimi ::hairiotilanne/korjauksen-aloitus
          :otsikko "Korjauksen aloitus"
          :pakollinen? true
@@ -271,6 +271,7 @@
       (lomake/rivi
         {:otsikko "Korjausaika tunteina"
          :tyyppi :positiivinen-numero
+         :desimaalien-maara 0
          :nimi ::hairiotilanne/korjausaika-h
          :hae #(or (::hairiotilanne/korjausaika-h %) 0)
          :muokattava? (constantly false)}
@@ -325,27 +326,28 @@
        :tarkkaile-ulkopuolisia-muutoksia? true
        :muokkaa! #(e! (tiedot/->AsetaHairiotilanteenTiedot %))
        :footer-fn (fn [hairiotilanne]
-                    [:div
-
-                     [:div
+                    [:div.hairiotilanne-kirjaus-footer
+                     [:div.hairiotilanne-pakolliset
                       [lomake/nayta-puuttuvat-pakolliset-kentat hairiotilanne]]
 
-                     [:div.kanava-hairio-tallenna
-                      [napit/tallenna
-                       "Tallenna"
-                       #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
-                       {:tallennus-kaynnissa? tallennus-kaynnissa?
-                        :disabled disabled?}]]
-                     
-                     (when (not (nil? (::hairiotilanne/id valittu-hairiotilanne)))
-                       [napit/poista
-                        "Poista"
-                        #(varmista-kayttajalta/varmista-kayttajalta
-                           {:otsikko "Häiriötilanteen poistaminen"
-                            :sisalto [:div "Haluatko varmasti poistaa häiriötilanteen?"]
-                            :hyvaksy "Poista"
-                            :toiminto-fn (fn [] (e! (tiedot/->PoistaHairiotilanne hairiotilanne)))
-                            :disabled (not oikeus?)})])])}
+                     [:div.hairio-kirjaus-napit
+                      [:div.kanava-hairio-tallenna
+                       [napit/tallenna
+                        "Tallenna"
+                        #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
+                        {:tallennus-kaynnissa? tallennus-kaynnissa?
+                         :disabled disabled?}]]
+
+                      (when (not (nil? (::hairiotilanne/id valittu-hairiotilanne)))
+                        [:span.kanava-hairio-poista
+                         [napit/poista
+                          "Poista"
+                          #(varmista-kayttajalta/varmista-kayttajalta
+                             {:otsikko "Häiriötilanteen poistaminen"
+                              :sisalto [:div "Haluatko varmasti poistaa häiriötilanteen?"]
+                              :hyvaksy "Poista"
+                              :toiminto-fn (fn [] (e! (tiedot/->PoistaHairiotilanne hairiotilanne)))
+                              :disabled (not oikeus?)})]])]])}
 
       [{:otsikko "Havaintoaika"
         :nimi ::hairiotilanne/havaintoaika
@@ -369,8 +371,8 @@
                           (when (or
                                   (not uusi-hairiotilanne?)
                                   (not tallennushetken-aika?))
-                            [kentat/tee-kentta 
-                             {:tyyppi :pvm-aika} 
+                            [kentat/tee-kentta
+                             {:tyyppi :pvm-aika}
                              (r/wrap
                                aika
                                #(e! (tiedot/->AsetaHavaintoaika %)))])]))}
@@ -433,7 +435,7 @@
         :tyyppi :text
         :koko [90 8]
         :uusi-rivi? true}
-       
+
        (lomake-valiotsikko)
        (odottavan-vesiliikenteen-kentat)
        (lomake-valiotsikko)
@@ -441,7 +443,7 @@
 
        (lomake-valiotsikko)
        (korjauksen-kentat e! app)
-       
+
        {:otsikko "Kuittaaja"
         :nimi ::hairiotilanne/kuittaaja
         :tyyppi :string

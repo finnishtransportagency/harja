@@ -59,6 +59,28 @@
   top: 6px;
 }
 
+// Pakolliset kentät, Tallenna/Poista
+.hairiotilanne-kirjaus-footer {
+  display: flex;
+  flex-direction: column;
+  gap: @valistys-16;
+
+  // Pakolliset kentät päällimmäisenä
+  .hairiotilanne-pakolliset {
+    flex-grow: 1;
+  }
+
+  // Napit pohjalla sarakkeina 
+  .hairio-kirjaus-napit {
+    display: flex;
+    flex-grow: 1;
+
+    .kanava-hairio-tallenna, .kanava-hairio-poista {
+      flex-basis: 30%; 
+    }
+  }
+}
+
 .sanktiot {
   .header-rivi {
     display: flex;
