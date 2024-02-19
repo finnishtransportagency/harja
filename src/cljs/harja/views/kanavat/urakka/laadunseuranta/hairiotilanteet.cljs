@@ -129,15 +129,15 @@
      :fmt hairiotilanne/fmt-vikaluokka}
     {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string :leveys 6}
     ;; Vesiliikenne
-    {:otsikko "Vesi odotus (h)" :nimi ::hairiotilanne/vesiodotusaika-h :tyyppi :numero :leveys 3.5}
-    {:otsikko "Ammatti lkm" :nimi ::hairiotilanne/ammattiliikenne-lkm :tyyppi :numero :leveys 3.5}
-    {:otsikko "Huvi lkm" :nimi ::hairiotilanne/huviliikenne-lkm :tyyppi :numero :leveys 3.5}
+    {:otsikko "Vesi odotus (h)" :nimi ::hairiotilanne/vesiodotusaika-h :tyyppi :numero :leveys 3.5 :desimaalien-maara 0}
+    {:otsikko "Ammatti lkm" :nimi ::hairiotilanne/ammattiliikenne-lkm :tyyppi :numero :leveys 3.5 :desimaalien-maara 0}
+    {:otsikko "Huvi lkm" :nimi ::hairiotilanne/huviliikenne-lkm :tyyppi :numero :leveys 3.5 :desimaalien-maara 0}
     ;; Tieliikenne
-    {:otsikko "Tie odotus (h)" :nimi ::hairiotilanne/tieodotusaika-h :tyyppi :numero :leveys 3.5}
-    {:otsikko "Ajoneuvo lkm" :nimi ::hairiotilanne/ajoneuvo-lkm :tyyppi :numero :leveys 3.5}
+    {:otsikko "Tie odotus (h)" :nimi ::hairiotilanne/tieodotusaika-h :tyyppi :numero :leveys 3.5 :desimaalien-maara 0}
+    {:otsikko "Ajoneuvo lkm" :nimi ::hairiotilanne/ajoneuvo-lkm :tyyppi :numero :leveys 3.5 :desimaalien-maara 0}
 
     {:otsikko "Kor\u00ADjaus\u00ADtoimenpide" :nimi ::hairiotilanne/korjaustoimenpide :tyyppi :string :leveys 10}
-    {:otsikko "Kor\u00ADjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika-h :tyyppi :numero :desimaalien-maara 0 :leveys 3.5}
+    {:otsikko "Kor\u00ADjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika-h :tyyppi :numero :leveys 3.5 :desimaalien-maara 0}
     {:otsikko "Kor\u00ADjauk\u00ADsen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string :leveys 5
      :fmt hairiotilanne/fmt-korjauksen-tila}
     {:otsikko "Paikal\u00ADlinen käyt\u00ADtö" :nimi ::hairiotilanne/paikallinen-kaytto?
@@ -255,7 +255,7 @@
          :pakollinen? true
          :tyyppi :komponentti
          :komponentti (fn []
-                        (let [aika (or (::hairiotilanne/korjauksen-aloitus valittu-hairiotilanne) (pvm/nyt))]
+                        (let [aika (::hairiotilanne/korjauksen-aloitus valittu-hairiotilanne)]
                           [:span.hairio-korjaus
                            [kentat/tee-kentta
                             {:tyyppi :pvm-aika}
@@ -263,14 +263,14 @@
                               aika
                               #(e! (tiedot/->AsetaKorjausaika true %)))]]))}
 
-        ;; Näytä lopetus vain jos käyttäjä valinnut että korjaus on valmis, ja tee tästä pakollinen
+        ;; Näytä lopetus vain jos käyttäjä valinnut että korjaus on valmis
         (when korjaus-valmis?
           {:nimi ::hairiotilanne/korjauksen-lopetus
            :otsikko "Korjauksen lopetus"
            :tyyppi :komponentti
            :pakollinen? true
            :komponentti (fn []
-                          (let [aika (or (::hairiotilanne/korjauksen-lopetus valittu-hairiotilanne) (pvm/nyt))]
+                          (let [aika (::hairiotilanne/korjauksen-lopetus valittu-hairiotilanne)]
                             [:span.hairio-korjaus
                              [kentat/tee-kentta
                               {:tyyppi :pvm-aika}
