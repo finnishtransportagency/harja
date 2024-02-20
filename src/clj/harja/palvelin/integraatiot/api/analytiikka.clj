@@ -835,7 +835,6 @@
           :analytiikka)))
 
     (julkaise-reitti
-      ;; TODO: Tee skeema ja esimerkki analytiikkaa varten.
       http :analytiikka-urakat
       (GET "/api/analytiikka/urakat" request
         (kasittele-kevyesti-get-kutsu db integraatioloki
