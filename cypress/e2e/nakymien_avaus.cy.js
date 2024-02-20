@@ -89,7 +89,7 @@ describe('MH-Urakan näkymien avaamiset', function () {
         cy.get('[data-cy="tabs-taso2-Tehtavat ja maarat"]').click()
         cy.contains('Tehtävät ja määrät').should('exist')
         cy.get('[data-cy=tabs-taso2-Kustannussuunnitelma]').click()
-        cy.contains('Suunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten.').should('exist')
+        cy.contains('Suunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten.', {timeout: clickTimeout}).should('exist')
     })
 
     it("Avaa Kulut ja sen alatabit", function () {

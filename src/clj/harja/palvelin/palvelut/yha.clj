@@ -144,7 +144,10 @@
                              :tyomenetelma (:paallystetyomenetelma paallystystoimenpide)
                              :paallystetyyppi (:uusi-paallyste paallystystoimenpide)
                              :massamaara (:kokonaismassamaara paallystystoimenpide)
-                             :massamenekki (:massamenekki paallystystoimenpide)})]))))
+                             :massamenekki (:massamenekki paallystystoimenpide)})]))
+
+    ;; Päivitä lopuksi ylläpitokohteelle päällysteen korjausluokka
+    (yllapitokohteet-q/paivita-yllapitokohteen-paallysteen-korjausluokka db {:id (:id kohde)})))
 
 (defn lisaa-kohteisiin-validointitiedot [db kohteet]
   (map

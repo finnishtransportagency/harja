@@ -76,7 +76,6 @@
 
          "Varusteet" :varusteet-ulkoiset
          (when (and (istunto/ominaisuus-kaytossa? :varusteet-ulkoiset)
-                 (roolit/jvh? @istunto/kayttaja)
                  (oikeudet/urakat-toteumat-varusteet id)
                  (#{:hoito :teiden-hoito} (:tyyppi ur)))
            [velho-varusteet/velho-varusteet ur])
