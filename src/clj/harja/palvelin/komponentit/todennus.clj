@@ -179,6 +179,7 @@ on nil."
   Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään
   muiden headereiden joukkoon."
   [headerit]
+  (log/warn "Header debug " headerit)
   (if (empty? (koka-headerit headerit))
     (->
       (merge headerit (pura-cognito-headerit headerit))
@@ -238,7 +239,9 @@ ja palauttaa käyttäjätiedot"
   ;; Järjestelmätunnuksilla ei saa kirjautua varsinaiseen Harjaan
   (log/debug "onko-jarjestelma?" kayttajanimi "->" (q/onko-jarjestelma? db kayttajanimi))
   (if (q/onko-jarjestelma? db kayttajanimi)
-    (throw+ todennusvirhe)
+    (do
+      (log/warn (str "Todennusvirhe. Järjestelmätunnuksella " kayttajanimi " ei saa kirjautua Harja-sovellukseen."))
+      (throw+ todennusvirhe))
     (let [roolit (kayttajan-roolit (partial q/hae-urakan-id-sampo-idlla db)
                                    (partial q/hae-urakoitsijan-id-ytunnuksella db)
                                    oikeudet/roolit
@@ -317,12 +320,12 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
           kayttaja-id (headerit "oam_remote_user")]
       (if (nil? kayttaja-id)
         (do
-          (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan" headerit))
+          (log/warn (str "Todennusvirhe. Todennusheader oam_remote_user puuttui kokonaan" headerit))
           (throw+ todennusvirhe))
         (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet)]
           (assoc req :kayttaja kayttajatiedot)
           (do
-            (log/warn (str "Ei löydetty koka-käyttäjätietoja id:lle: " (headerit "oam_remote_user")
+            (log/warn (str "Todennusvirhe. Ei löydetty koka-käyttäjätietoja id:lle: " (headerit "oam_remote_user")
                         " Jos kyseessä on järjestelmäkäyttäjä, tarkista kutsutaanko oikeaa endpointtia: " (:uri req)))
             (throw+ todennusvirhe)))))))
 
