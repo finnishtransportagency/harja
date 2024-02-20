@@ -11,7 +11,7 @@
 
 (defn luo-yhteyshenkilo [db sampo-id etunimi sukunimi kayttajatunnus sahkoposti]
   (log/debug "Luodaan uusi yhteyshenkilo.")
-  (let [uusi-id (:id (yhteyshenkilot/luo-yhteyshenkilo db etunimi sukunimi nil nil sahkoposti nil sampo-id kayttajatunnus nil))]
+  (let [uusi-id (:id (yhteyshenkilot/luo-yhteyshenkilo db etunimi sukunimi nil nil sahkoposti nil sampo-id kayttajatunnus nil nil))]
     (log/debug "Uusi yhteyshenkilo id on:" uusi-id)
     uusi-id))
 

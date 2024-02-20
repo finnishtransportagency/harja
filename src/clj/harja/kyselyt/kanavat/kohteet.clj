@@ -1,19 +1,11 @@
 (ns harja.kyselyt.kanavat.kohteet
   (:require [clojure.java.jdbc :as jdbc]
-            [clojure.spec.alpha :as s]
-            
             [clojure.set :as set]
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
             [specql.op :as op]
-            [specql.rel :as rel]
-            [taoensso.timbre :as log]
-            [jeesql.core :refer [defqueries]]
-            [clojure.string :as str]
-
             [harja.id :refer [id-olemassa?]]
             [harja.pvm :as pvm]
-
             [harja.domain.urakka :as ur]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.kanavat.kohdekokonaisuus :as kok]

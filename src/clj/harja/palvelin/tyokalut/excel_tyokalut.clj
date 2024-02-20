@@ -15,7 +15,7 @@
   (let [aiempi-sheet (last (excel/sheet-seq workbook))
         [sheet rivi-nro] [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
 
-        tyyli-tiedot {:font {:color :black :size 12 :name "Aria"}}
+        tyyli-tiedot {:font {:color :black :size 12 :name "Open Sans"}}
         tyyli-normaali (excel/create-cell-style! workbook tyyli-tiedot)
         tyyli-otsikko (excel/create-cell-style! workbook (assoc-in tyyli-tiedot [:font :bold] true))
 
@@ -35,10 +35,7 @@
           solu-laskutetaan (.createCell rivi 2)]
       (tee-solu solu-laskutettu (str (fmt/euro laskutettu)) tyyli-normaali)
       (when kyseessa-kk-vali?
-        (tee-solu solu-laskutetaan (str (fmt/euro laskutetaan)) tyyli-normaali))
-
-      (dotimes [i 2]
-        (.autoSizeColumn sheet i)))))
+        (tee-solu solu-laskutetaan (str (fmt/euro laskutetaan)) tyyli-normaali)))))
 
 
 (defn liikenneyhteenveto-arvo-str [arvot tyyppi avain]
@@ -67,7 +64,7 @@
           raportin-tiedot-tyyli (excel/create-cell-style! workbook {:font {:color :black
                                                                            :size 12
                                                                            :bold true
-                                                                           :name "Aria"}})
+                                                                           :name "Open Sans"}})
           nolla (+ 2 nolla)]
 
       (doall
@@ -80,14 +77,12 @@
                 tyyli-normaali (excel/create-cell-style! workbook {:font {:color :black
                                                                           :size 12
                                                                           :bold false
-                                                                          :name "Aria"}})
+                                                                          :name "Open Sans"}})
                 ensimmainen-sarake (.createCell rivi 0)]
 
             ;; Tehdään uusi rivi ja ensimmäinen sarake
             (excel/set-cell! ensimmainen-sarake (str (x sarakkeen-ensimmainen-solu)))
             (excel/set-cell-style! ensimmainen-sarake tyyli-normaali)
-            ; palvelumuoto rivin otsakesolu saatava näkymään kokonaan
-            (.autoSizeColumn sheet 0)
 
             ;; Loput sarakkeet
             (doseq [y (get sarakkeiden-arvot x)]

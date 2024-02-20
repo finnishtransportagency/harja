@@ -211,7 +211,8 @@
      (if (or
            liikennetapahtumien-haku-kaynnissa?
            liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
-       [:div {:style {:padding "16px"}}
+       
+       [:div.ajax-loader-liikennetapahtumat
         [ajax-loader-pieni (str "Haetaan tietoja...")]]
 
        ;; Tiedot ovat ladanneet 
@@ -599,17 +600,22 @@
       [:span.body-text.strong "Muu: " [:span.caption.musta (get-in yhteenveto [:palvelumuoto :muu])]]
       [:span.body-text.strong "Sulutukset yhteensä: " [:span.caption.musta (get-in yhteenveto [:palvelumuoto :yhteensa])]]]]]])
 
-(defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?
+(defn liikennetapahtumataulukko [e! {:keys [lataa-aloitustiedot 
+                                            tapahtumarivit liikennetapahtumien-haku-kaynnissa?
                                             liikennetapahtumien-haku-tulee-olemaan-kaynnissa?] :as app}
                                  kohteet]
   [:div
-   [debug app]
+   [debug app] 
    [valinnat e! app kohteet]
 
    (if (or
+         lataa-aloitustiedot
          liikennetapahtumien-haku-kaynnissa?
          liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
-     [ajax-loader-pieni "Päivitetään listaa.."]
+     
+     [:div.ajax-loader-liikennetapahtumat
+      [ajax-loader-pieni "Päivitetään listaa.."]]
+     
      [grid/grid
       {:otsikko [liikennetapahtumien-yhteenveto app]
        :tunniste (juxt ::lt/id ::lt-alus/id)

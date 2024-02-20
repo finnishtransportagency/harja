@@ -109,7 +109,7 @@
         id
         (:id kirjaaja)))))
 
-(defn- paivita-tai-luo-uusi-paivystaja [db {:keys [id etunimi sukunimi email matkapuhelin tyopuhelin liviTunnus]} urakoitsija-id]
+(defn- paivita-tai-luo-uusi-paivystaja [db {:keys [id etunimi sukunimi email matkapuhelin tyopuhelin liviTunnus]} urakoitsija-id kirjaaja]
   (let [matkapuhelin (puhelinnumero/kanonisoi matkapuhelin)
         tyopuhelin (puhelinnumero/kanonisoi tyopuhelin)]
     (if (yhteyshenkilot-q/onko-olemassa-yhteyshenkilo-ulkoisella-idlla? db (str id))
@@ -120,14 +120,14 @@
       (do
         (log/debug "Päivystäjää ei löytynyt ulkoisella id:llä. Lisätään uusi päivystäjä")
         (:id (yhteyshenkilot-q/luo-yhteyshenkilo<! db etunimi sukunimi tyopuhelin matkapuhelin email
-                                                   urakoitsija-id nil liviTunnus (str id)))))))
+                                                   urakoitsija-id nil liviTunnus (str id) (:id kirjaaja)))))))
 
 (defn- tallenna-paivystajatiedot [db urakka-id kirjaaja data]
   (log/debug "Aloitetaan päivystäjätietojen kirjaus")
   (jdbc/with-db-transaction [db db]
     (let [urakoitsija (:urakoitsija (first (urakat-q/hae-urakan-urakoitsija db urakka-id)))]
       (doseq [paivystys (:paivystykset data)]
-        (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db (get-in paivystys [:paivystys :paivystaja]) urakoitsija)]
+        (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db (get-in paivystys [:paivystys :paivystaja]) urakoitsija kirjaaja)]
           (paivita-tai-luo-uusi-paivystys db urakka-id (:paivystys paivystys) paivystaja-id kirjaaja))))))
 
 (defn- kirjaa-paivystajatiedot
