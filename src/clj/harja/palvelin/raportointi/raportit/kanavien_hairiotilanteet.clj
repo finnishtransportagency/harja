@@ -35,7 +35,8 @@
                     {:otsikko "Tila" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.6 :tyyppi :varillinen-teksti}
                     {:otsikko "Paikallinen" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.8 :tyyppi :varillinen-teksti})]
     
-    [:raportti {:nimi raportin-otsikko
+    [:raportti {:orientaatio :landscape
+                :nimi raportin-otsikko
                 :piilota-otsikko? true}
 
      [:taulukko {:otsikko otsikko
