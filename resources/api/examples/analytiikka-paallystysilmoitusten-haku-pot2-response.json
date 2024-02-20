@@ -21,13 +21,13 @@
           "pituus": 6316,
           "leveys": 7.2,
           "pintaAla": 45475.2,
-          "paallystetyomenetelma": "massapintaus",
+          "paallystetyomenetelma": "Massapintaus",
           "massamenekki": 100,
           "kokonaismassamaara": 4547.52,
           "massa": {
             "massatyyppi": "AB, Asfalttibetoni",
             "kuulamyllyluokka": "AN19",
-            "litteyslukuluokka": "F15",
+            "litteyslukuluokka": "FI15",
             "runkoaineet": [
               {
                 "runkoainetyyppi": "Kiviaines",
@@ -73,7 +73,7 @@
           "massamenekki": 100,
           "kokonaismassamaara": 4547.52,
           "murske": {
-            "mursketyyppi": "Kalliomurske",
+            "tyyppi": "Kalliomurske",
             "rakeisuus": "0/40",
             "iskunkestavyys": "LA40"
           }

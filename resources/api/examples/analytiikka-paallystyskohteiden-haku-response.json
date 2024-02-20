@@ -3,6 +3,7 @@
     {
       "yhaId": 123,
       "harjaId": 10203,
+      "poistettu": false,
       "urakka": 789,
       "kohdenumero": 456,
       "kohdetyyppi": "paallystys",
@@ -17,11 +18,6 @@
         "karttapaivamaara": "2023-01-29"
       },
       "pituus": 12531,
-      "tarjoushinta": 100000.00,
-      "maaramuutokset": -10000.00,
-      "bitumiIndeksi": -1000.00,
-      "nestekaasuJaKevytPolttooljy": -1000.00,
-      "makuPaallysteet": -100.00,
       "kokonaishinta": 87900,
       "alikohteet": [
         {
@@ -73,6 +69,7 @@
     {
       "yhaId": 124,
       "harjaId": 10204,
+      "poistettu": false,
       "urakka":  789,
       "kohdenumero": 457,
       "kohdetyyppi": "paallystys",
@@ -87,11 +84,6 @@
         "karttapaivamaara": "2023-01-29"
       },
       "pituus": 355,
-      "tarjoushinta": 10000.00,
-      "maaramuutokset": -1000.00,
-      "bitumiIndeksi": -100.00,
-      "nestekaasuJaKevytPolttooljy": -100.00,
-      "makuPaallysteet": 100.00,
       "kokonaishinta": 8900,
       "alikohteet": [
         {
