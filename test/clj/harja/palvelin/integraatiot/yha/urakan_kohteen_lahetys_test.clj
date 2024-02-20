@@ -251,7 +251,7 @@
 
            (assertoi-tr-osoite (alikohteen-tr-osoite alikohteet 0)
                                {:ajorata "1"
-                                :kaista "11"
+                                :kaista "12"
                                 :tienumero "20"
                                 :aosa "1"
                                 :aet "1066"
@@ -259,7 +259,7 @@
                                 :let "3827"})
            (assertoi-tr-osoite (alikohteen-tr-osoite alikohteet 1)
                                {:ajorata "1"
-                                :kaista "12"
+                                :kaista "11"
                                 :tienumero "20"
                                 :aosa "1"
                                 :aet "1066"
@@ -267,16 +267,16 @@
                                 :let "3827"})
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 0} :paallystystoimenpide :uusi-paallyste)
-                  ["12"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
-                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :uusi-paallyste)
                   ["14"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :uusi-paallyste)
+                  ["12"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 0} :paallystystoimenpide :paallystetyomenetelma)
-                  ["22"]))
+                  ["23"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 1} :paallystystoimenpide :paallystetyomenetelma)
-                  ["23"]))
+                  ["22"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 0} :paallystystoimenpide :raekoko)
                   ["16"]))
@@ -285,10 +285,10 @@
                   ["16"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 0} :paallystystoimenpide :kuulamylly)
-                  ["4"])) ;; AN14
+                  ["2"])) ;; AN14
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 1} :paallystystoimenpide :kuulamylly)
-                  ["2"])) ;; AN7
+                  ["4"])) ;; AN7
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 0} :paallystystoimenpide :pinta-ala)
                   ["8283"]))
@@ -297,39 +297,39 @@
                   ["8283"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 0} :paallystystoimenpide :massamenekki)
-                  ["100.2"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
-                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :massamenekki)
                   ["100.0"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
+                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :massamenekki)
+                  ["100.2"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 0} :paallystystoimenpide :rc-prosentti)
-                  nil))
+                  ["5"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
                                                   {:tagi :alikohde :positio 1} :paallystystoimenpide :rc-prosentti)
-                  ["5"]))
+                  nil))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :tierekisteriosoitevali :kaista)
-                  ["11"]))
+                  ["12"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
                                                   {:tagi :materiaali :positio 0} :sideainetyyppi)
-                  ["6"]))
+                  ["5"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
                                                   {:tagi :materiaali :positio 0} :kiviainesesiintyman-nimi)
-                  ["Kaiskakallio"]))
+                  ["Sammalkallio"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
                                                   {:tagi :materiaali :positio 0} :kiviaineksen-km-arvo)
-                  ["10.0"]))
+                  ["9.2"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
-                                                  {:tagi :materiaali :positio 0} :kiviaineksen-muotoarvo)
-                  ["FI15"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 1} :materiaalit
                                                   {:tagi :materiaali :positio 0} :kiviaineksen-muotoarvo)
                   ["FI20"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 1} :materiaalit
+                                                  {:tagi :materiaali :positio 0} :kiviaineksen-muotoarvo)
+                  ["FI15"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
                                                   {:tagi :materiaali :positio 0} :sideainepitoisuus)
-                  ["4.8"]))
+                  ["5.5"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
                                                   {:tagi :materiaali :positio 0} :lisa-aineet)
-                  ["Tartuke: 0.5%"]))
+                  ["Kuitu: 0.5%"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :tienumero) ["20"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aosa) ["1"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aet) ["1066"]))
