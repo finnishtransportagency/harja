@@ -1,11 +1,12 @@
 {
-  "paikkauskohteet": [
+  "paallystyskohteet": [
     {
       "yhaId": 123,
       "harjaId": 10203,
+      "poistettu": false,
       "urakka": 789,
       "kohdenumero": 456,
-      "kohdetyyppi": "päällyste",
+      "kohdetyyppi": "paallystys",
       "nimi": "Mt 88 Malmitie",
       "tunnus": "Esimerkkitunnus 1",
       "tierekisteriosoitevali": {
@@ -16,11 +17,7 @@
         "let": 6218,
         "karttapaivamaara": "2023-01-29"
       },
-      "tarjoushinta": 100000.00,
-      "maaramuutokset": -10000.00,
-      "bitumiIndeksi": -1000.00,
-      "nestekaasuJaKevytPolttooljy": -1000.00,
-      "makuPaallysteet": -100.00,
+      "pituus": 12531,
       "kokonaishinta": 87900,
       "alikohteet": [
         {
@@ -32,15 +29,16 @@
             "aet": 0,
             "losa": 6,
             "let": 6316,
+            "kaista": 1,
+            "ajorata": 1,
             "karttapaivamaara": "2023-01-29"
           },
+          "pituus": 6316,
           "paallystystoimenpide": {
             "uusiPaallyste": "asfalttibetoni",
             "raekoko": 1,
             "massamenekki": 100,
             "kokonaismassamaara": 456,
-            "rcProsentti": 50,
-            "kuulamylly": "AN19",
             "paallystetyomenetelma": "massapintaus"
           }
         },
@@ -53,15 +51,16 @@
             "aet": 0,
             "losa": 7,
             "let": 6218,
+            "kaista": 1,
+            "ajorata": 1,
             "karttapaivamaara": "2023-01-29"
           },
+          "pituus": 6218,
           "paallystystoimenpide": {
             "uusiPaallyste": "asfalttibetoni",
             "raekoko": 1,
             "massamenekki": 100,
             "kokonaismassamaara": 448,
-            "rcProsentti": 50,
-            "kuulamylly": "AN19",
             "paallystetyomenetelma": "massapintaus"
           }
         }
@@ -70,9 +69,10 @@
     {
       "yhaId": 124,
       "harjaId": 10204,
+      "poistettu": false,
       "urakka":  789,
       "kohdenumero": 457,
-      "kohdetyyppi": "päällyste",
+      "kohdetyyppi": "paallystys",
       "nimi": "Mt 86 Paavolantie",
       "tunnus": "Esimerkkitunnus 2",
       "tierekisteriosoitevali": {
@@ -83,11 +83,7 @@
         "let": 355,
         "karttapaivamaara": "2023-01-29"
       },
-      "tarjoushinta": 10000.00,
-      "maaramuutokset": -1000.00,
-      "bitumiIndeksi": -100.00,
-      "nestekaasuJaKevytPolttooljy": -100.00,
-      "makuPaallysteet": 100.00,
+      "pituus": 355,
       "kokonaishinta": 8900,
       "alikohteet": [
         {
@@ -99,15 +95,16 @@
             "aet": 0,
             "losa": 20,
             "let": 335,
+            "kaista": 1,
+            "ajorata": 1,
             "karttapaivamaara": "2023-01-29"
           },
+          "pituus": 355,
           "paallystystoimenpide": {
             "uusiPaallyste": "asfalttibetoni",
             "raekoko": 1,
             "massamenekki": 100,
             "kokonaismassamaara": 24,
-            "rcProsentti": 50,
-            "kuulamylly": "AN19",
             "paallystetyomenetelma": "massapintaus"
           }
         }
