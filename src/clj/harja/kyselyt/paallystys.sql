@@ -918,8 +918,7 @@ WHERE pi.luotu BETWEEN :alku AND :loppu
    OR pi.muokattu BETWEEN :alku AND :loppu;
 
 -- name: hae-paallystysilmoitusten-kulutuskerroksen-toimenpiteet-analytiikalle
-SELECT
-    pi.id                       AS paallystysilmoitus,
+SELECT pi.id                       AS paallystysilmoitus,
        pk_osa.id                   AS alikohde,
        pk_osa.poistettu            AS poistettu,
        pk_osa.tr_numero            AS "tr-numero",
@@ -929,7 +928,12 @@ SELECT
        pk_osa.tr_loppuetaisyys     AS "tr-loppuetaisyys",
        pk_osa.tr_kaista            AS "tr-kaista",
        pk_osa.tr_ajorata           AS "tr-ajorata",
-       -- pituus lasketaan clj-puolella.
+       (SELECT laske_tr_osoitteen_pituus(pk_osa.tr_numero,
+                                         pk_osa.tr_alkuosa,
+                                         pk_osa.tr_alkuetaisyys,
+                                         pk_osa.tr_loppuosa,
+                                         pk_osa.tr_loppuetaisyys))
+                                   AS pituus,
        pot2pk.leveys               AS leveys,
        pot2pk.pinta_ala            AS "pinta-ala",
        kktp.nimi                   AS paallystetyomenetelma,
@@ -973,7 +977,6 @@ WHERE pi.luotu BETWEEN :alku AND :loppu
 
 -- name: hae-paallystysilmoitusten-alustan-toimenpiteet-analytiikalle
 SELECT pi.id                           AS paallystysilmoitus,
-       alusta.id                       AS id,
        alusta.poistettu                AS poistettu,
        alusta.tr_numero                AS "tr-numero",
        alusta.tr_alkuosa               AS "tr-alkuosa",
@@ -982,7 +985,12 @@ SELECT pi.id                           AS paallystysilmoitus,
        alusta.tr_loppuetaisyys         AS "tr-loppuetaisyys",
        alusta.tr_kaista                AS "tr-kaista",
        alusta.tr_ajorata               AS "tr-ajorata",
-       -- pituus lasketaan clj-puolella.
+       (SELECT laske_tr_osoitteen_pituus(alusta.tr_numero,
+                                         alusta.tr_alkuosa,
+                                         alusta.tr_alkuetaisyys,
+                                         alusta.tr_loppuosa,
+                                         alusta.tr_loppuetaisyys))
+           AS pituus,
        a_toimenpide.nimi               AS kasittelymenetelma,
        alusta.lisatty_paksuus          AS "lisatty-paksuus",
        alusta.kasittelysyvyys          AS kasittelysyvyys,
@@ -993,7 +1001,7 @@ SELECT pi.id                           AS paallystysilmoitus,
        alusta.kokonaismassamaara       AS kokonaismassamaara,
 
        alusta_massa.id                 AS massa_id,
-       alusta_massatyyppi.nimi         AS massa_tyyppi,
+       alusta_massatyyppi.nimi         AS massa_massatyyppi,
        alusta_massa.kuulamyllyluokka   AS massa_kuulamyllyluokka,
        alusta_massa.litteyslukuluokka  AS massa_litteyslukuluokka,
        alusta_runkoaine.id             AS massa_runkoaine_id,

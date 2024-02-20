@@ -665,9 +665,8 @@
                                 "Lähetetty onnistuneesti"))
     (dissoc :lahetys-onnistunut :lahetetty :id)))
 
-(defn- muodosta-kulutuskerrostoimenpide [kulutuskerrostoimenpide osien-pituudet]
+(defn- muodosta-kulutuskerrostoimenpide [kulutuskerrostoimenpide]
   (-> kulutuskerrostoimenpide
-    (assoc :pituus (tr-domain/laske-tien-pituus (osien-pituudet (:tr-numero kulutuskerrostoimenpide)) kulutuskerrostoimenpide))
     (update :massat #(-> (konversio/sarakkeet-vektoriin % {:runkoaine :runkoaineet
                                                            :lisaaine :lisaaineet
                                                            :sideaine :sideaineet})
@@ -681,9 +680,8 @@
     (set/rename-keys {:pinta-ala :pintaAla
                       :massat :massa})))
 
-(defn- muodosta-alustatoimenpide [alustatoimenpide osien-pituudet]
+(defn- muodosta-alustatoimenpide [alustatoimenpide]
   (-> alustatoimenpide
-    (assoc :pituus (tr-domain/laske-tien-pituus (osien-pituudet (:tr-numero alustatoimenpide)) alustatoimenpide))
     (update :massat #(-> (konversio/sarakkeet-vektoriin % {:runkoaine :runkoaineet
                                                            :lisaaine :lisaaineet
                                                            :sideaine :sideaineet})
@@ -697,6 +695,10 @@
     (dissoc :karttapaivamaara :tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :tr-ajorata
       :tr-kaista)
     (set/rename-keys {:pinta-ala :pintaAla
+                      :lisatty-paksuus :lisattyPaksuus
+                      :verkon-tyyppi :verkonTyyppi
+                      :verkon-tarkoitus :verkonTarkoitus
+                      :verkon-sijainti :verkonSijainti
                       :massat :massa})))
 
 (defn hae-paallystysilmoitukset [db {:keys [alkuaika loppuaika] :as parametrit}]
@@ -711,8 +713,7 @@
                                  :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}) kktp
                           (konversio/sarakkeet-vektoriin (map konversio/alaviiva->rakenne kktp)
                             {:massa :massat} :alikohde)
-                          (map #(muodosta-kulutuskerrostoimenpide %
-                                  (yllapitokohteet-yleiset/laske-osien-pituudet db kktp))
+                          (map muodosta-kulutuskerrostoimenpide
                             kktp))
 
         alustatp (as-> (paallystys-kyselyt/hae-paallystysilmoitusten-alustan-toimenpiteet-analytiikalle db
@@ -720,8 +721,7 @@
                           :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}) atp
                    (konversio/sarakkeet-vektoriin (map konversio/alaviiva->rakenne atp)
                      {:massa :massat})
-                   (map #(muodosta-alustatoimenpide %
-                           (yllapitokohteet-yleiset/laske-osien-pituudet db atp)) atp))
+                   (map muodosta-alustatoimenpide atp))
 
         paallystysilmoitukset (map #(-> % (assoc
                                             :kulutuskerrokselleTehdytToimetPOT2
