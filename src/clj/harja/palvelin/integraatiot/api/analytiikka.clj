@@ -31,6 +31,7 @@
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
+            [harja.kyselyt.kulut :as kulut-kyselyt]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
             [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat])
@@ -733,6 +734,23 @@
                                 paallystysilmoitukset)]
     {:paallystysilmoitukset paallystysilmoitukset}))
 
+(defn hae-hoidon-paikkaukset [db {:keys [alkuaika loppuaika] :as parametrit}]
+  (log/info "Analytiikka API hoidon päällystykset :: parametrit" (pr-str parametrit))
+  (tarkista-haun-parametrit parametrit false)
+  (let [kulut (map #(set/rename-keys % {:id :harjaId})
+                (paallystys-kyselyt/hae-hoidon-paallystyksen-kulut-analytiikalle db
+                {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                 :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}))
+
+        paikkaukset (map (comp #(set/rename-keys % {:id :harjaId})
+                           konversio/alaviiva->rakenne)
+                      (paallystys-kyselyt/hae-hoidon-paallystyksen-toimenpiteet-analytiikalle db
+                                                               {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                                                                :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}))]
+
+    {:kulut kulut
+     :paikkaukset paikkaukset}))
+
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
   (start [{http :http-palvelin db :db-replica integraatioloki :integraatioloki :as this}]
@@ -880,6 +898,15 @@
           json-skeemat/+analytiikka-paallystysilmoitusten-haku-vastaus+
           (fn [parametrit _kayttaja db]
             (hae-paallystysilmoitukset db parametrit))
+          :analytiikka)))
+
+    (julkaise-reitti
+      http :analytiikka-hae-hoidon-paikkaukset
+      (GET "/api/analytiikka/hoidon-paikkaukset/:alkuaika/:loppuaika" parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-hoidon-paikkaukset parametrit
+          json-skeemat/+analytiikka-hoidon-paikkaukset-haku-vastaus+
+          (fn [parametrit _kayttaja db]
+            (hae-hoidon-paikkaukset db parametrit))
           :analytiikka)))
     this)
 

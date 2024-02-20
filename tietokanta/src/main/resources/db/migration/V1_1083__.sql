@@ -2,7 +2,8 @@ INSERT INTO integraatio (jarjestelma, nimi)
 VALUES ('api', 'analytiikka-hae-paallystysurakat'),
        ('api', 'analytiikka-hae-paallystyskohteet'),
        ('api', 'analytiikka-hae-paallystyskohteiden-aikataulut'),
-       ('api', 'analytiikka-hae-paallystysilmoitukset');
+       ('api', 'analytiikka-hae-paallystysilmoitukset'),
+       ('api', 'analytiikka-hae-hoidon-paikkaukset');
 
 -- Lisätään ylläpitokohteelle luotu-kolumni, jotta voidaan rajata analytiikalle lähetettäviä kohteita.
 ALTER TABLE yllapitokohde
@@ -43,7 +44,10 @@ SET luotu = (SELECT luotu FROM yllapitokohde WHERE yllapitokohde.id = aika.yllap
 WHERE muokattu IS NULL;
 
 -- Uusille riveille default-arvo.
-ALTER TABLE yllapitokohde ALTER COLUMN luotu SET DEFAULT current_timestamp;
-ALTER TABLE yllapitokohdeosa ALTER COLUMN luotu SET DEFAULT current_timestamp;
-ALTER TABLE yllapitokohteen_aikataulu ALTER COLUMN luotu SET DEFAULT current_timestamp;
+ALTER TABLE yllapitokohde
+    ALTER COLUMN luotu SET DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE yllapitokohdeosa
+    ALTER COLUMN luotu SET DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE yllapitokohteen_aikataulu
+    ALTER COLUMN luotu SET DEFAULT CURRENT_TIMESTAMP;
 
