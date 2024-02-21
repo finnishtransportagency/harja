@@ -106,6 +106,7 @@
     [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
     [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
+    [harja.palvelin.palvelut.reikapaikkaukset :as reikapaikkaukset]
     [harja.palvelin.palvelut.tyomaapaivakirja :as tyomaapaivakirja]
     [harja.palvelin.palvelut.palauteluokitukset :as palauteluokitukset]
 
@@ -516,6 +517,10 @@
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
                                 [:http-palvelin :db])
+      
+      :reikapaikkaukset (component/using
+                          (reikapaikkaukset/->Reikapaikkaukset)
+                          [:http-palvelin :db])
 
       :tyomaapaivakirja (component/using
                           (tyomaapaivakirja/->Tyomaapaivakirja (:kehitysmoodi asetukset))

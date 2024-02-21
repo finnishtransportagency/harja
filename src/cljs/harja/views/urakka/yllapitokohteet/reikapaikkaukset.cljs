@@ -1,5 +1,6 @@
 (ns harja.views.urakka.yllapitokohteet.reikapaikkaukset
   "Reikäpaikkaukset päänäkymä"
+  ;; TODO.. lisätty valmiiksi requireja, poista myöhemmin turhat 
   (:require [tuck.core :refer [tuck]]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-reikapaikkaukset :as tiedot]
             [harja.ui.debug :refer [debug]]
@@ -34,7 +35,7 @@
          :aikavalin-rajoitus [6 :kuukausi]}]]
 
       [grid/grid {:tyhja "Valitulle aikavälille ei löytynyt mitään."
-                  :tunniste :tunniste
+                  :tunniste :id ;; TODO korjaa tämä 
                   :sivuta grid/vakiosivutus
                   :voi-kumota? false
                   :piilota-toiminnot? true
