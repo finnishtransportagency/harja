@@ -806,10 +806,6 @@
                          :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}))]
     {:paikkaukset paikkaukset}))
 
-(comment
-  (hae-paikkaukset (:db harja.palvelin.main/harja-jarjestelma)
-    {:alkuaika "2024-02-21T07:00:00Z" :loppuaika "2024-02-21T23:00:00Z"}))
-
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
   (start [{http :http-palvelin db :db-replica integraatioloki :integraatioloki :as this}]
