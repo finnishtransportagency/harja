@@ -36,7 +36,7 @@
         tulokset-pohj (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :hae +kayttaja-jvh+ "Pohj")
         urakat (filter #(= (:tyyppi %) :urakka) tulokset-oulu)
-        oulun-kaynnissaoleva-urakka (first (filter #(= "Oulun alueurakka 2014-2019" (:nimi %)) urakat))
+        oulun-urakka-2014-2019 (first (filter #(= "Oulun alueurakka 2014-2019" (:nimi %)) urakat))
         kayttajat (filter #(= (:tyyppi %) :kayttaja) tulokset-tero)
         kayttajat-2 (filter #(= (:tyyppi %) :kayttaja) tulokset-tori)
         kayttajat-3 (filter #(= (:tyyppi %) :kayttaja) tulokset-terotori)
@@ -45,11 +45,11 @@
         pop-ely (first (filter #(= "Pohjois-Pohjanmaa" (:nimi %)) organisaatiot))]
 
     (is (> (count urakat) 0) "haku: urakoiden määrä")
-    (is (= "Oulun alueurakka 2014-2019" (:nimi oulun-kaynnissaoleva-urakka)) "haku: urakan nimi")
-    (is (= "Oulun alueurakka 2014-2019, 1242141-OULU2" (:hakusanat oulun-kaynnissaoleva-urakka)) "haku: urakan hakusanat")
-    (is (= :urakka (:tyyppi oulun-kaynnissaoleva-urakka)) "haku: urakan tyyppi")
-    (is (number? (:hallintayksikko oulun-kaynnissaoleva-urakka)) "haku: urakan hallintayksikkö")
-    (is (number? (:id oulun-kaynnissaoleva-urakka)) "haku: urakan id")
+    (is (= "Oulun alueurakka 2014-2019" (:nimi oulun-urakka-2014-2019)) "haku: urakan nimi")
+    (is (= (str (:id oulun-urakka-2014-2019) " Oulun alueurakka 2014-2019, 1242141-OULU2") (:hakusanat oulun-urakka-2014-2019)) "haku: urakan hakusanat")
+    (is (= :urakka (:tyyppi oulun-urakka-2014-2019)) "haku: urakan tyyppi")
+    (is (number? (:hallintayksikko oulun-urakka-2014-2019)) "haku: urakan hallintayksikkö")
+    (is (number? (:id oulun-urakka-2014-2019)) "haku: urakan id")
 
     (is (> (count kayttajat) 0) "haku: käyttäjien määrä")
     (is (some #(= (:id kayttaja-tero-toripolliisi) (:id %)) kayttajat-2) "Torikin palauttaa Tero Toripollisiin")

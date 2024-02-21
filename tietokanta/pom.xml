@@ -15,27 +15,60 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <harja.tietokanta.host>localhost</harja.tietokanta.host>
         <harja.tietokanta.port>5432</harja.tietokanta.port>
+        <!--
+            https://documentation.red-gate.com/fd/postgresql-transactional-lock-224919738.html
+            Tämä kannataa asettaa falseksi, jotta komennot kuten CREATE INDEX CONCURRENTLY menevät läpi.
+            Kun käytetään arvoa false, käytetään session lukkoja transakionaalisten lukkojen sijasta
+            https://github.com/flyway/flyway/issues/3508
+            Asetataan asetus tässä properties-blokissa, koska flyway-maven-plugin muotoilee asetuksen väärin.
+            https://github.com/flyway/flyway/issues/3508#issuecomment-1227170268
+        -->
+        <flyway.postgresql.transactional.lock>false</flyway.postgresql.transactional.lock>
     </properties>
 
-    <dependencies></dependencies>
+    <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.flywaydb/flyway-database-postgresql -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>10.8.1</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
             <plugin>
+                <!-- https://mvnrepository.com/artifact/org.flywaydb/flyway-core -->
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version>8.5.13</version>
+                <version>10.8.1</version>
                 <configuration>
                     <baselineOnMigrate>true</baselineOnMigrate>
                     <baselineVersion>0</baselineVersion>
+                    <!--
+                        Disabloidaanko Flyway clean, default: true
+                        https://documentation.red-gate.com/fd/clean-disabled-224919701.html
+                        Tuotantoympäristössä cleanin estäminen on suotavaa asettamalla arvoksi true
+                        TODO: Selvitä onko tarpeen tuoda asetus muuttujana eri ympäristöille
+                    -->
+                    <cleanDisabled>false</cleanDisabled>
                     <url>${databaseUrl}</url>
                     <user>${databaseUser}</user>
+                    <!--
+                        https://documentation.red-gate.com/fd/postgresql-transactional-lock-224919738.html
+                        Tämä kannataa asettaa falseksi, jotta komennot kuten CREATE INDEX CONCURRENTLY menevät läpi.
+                        Kun käytetään arvoa false, käytetään session lukkoja transakionaalisten lukkojen sijasta
+                        FIXME: Asetus määritelty <properties> tagin alle ylös (ks. https://github.com/flyway/flyway/issues/3508#issuecomment-1227170268)
+                    -->
+                    <!--pluginConfiguration>
+                        <postgresqlTransactionalLock>false</postgresqlTransactionalLock>
+                    </pluginConfiguration-->
                 </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>org.postgresql</groupId>
                         <artifactId>postgresql</artifactId>
-                        <version>42.6.0</version>
+                        <version>42.7.1</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -59,7 +92,8 @@
         <profile>
             <id>harja_template</id>
             <properties>
-                <databaseUrl>jdbc:postgresql://${harja.tietokanta.host}:${harja.tietokanta.port}/harja_template</databaseUrl>
+                <databaseUrl>jdbc:postgresql://${harja.tietokanta.host}:${harja.tietokanta.port}/harja_template
+                </databaseUrl>
                 <databaseUser>harja</databaseUser>
             </properties>
         </profile>
@@ -68,7 +102,8 @@
         <profile>
             <id>harjatest</id>
             <properties>
-                <databaseUrl>jdbc:postgresql://${harja.tietokanta.host}:${harja.tietokanta.port}/harjatest_template</databaseUrl>
+                <databaseUrl>jdbc:postgresql://${harja.tietokanta.host}:${harja.tietokanta.port}/harjatest_template
+                </databaseUrl>
                 <databaseUser>harjatest</databaseUser>
             </properties>
         </profile>

@@ -4,7 +4,6 @@
             [harja.loki :refer [log tarkkaile!]]
 
             [reagent.core :refer [atom]]
-            [cljs.core.async :refer [<!]]
             [cljs.core.async :refer [<! >! timeout chan]]
             [harja.ui.modal :as modal]
             [goog.dom :as dom]

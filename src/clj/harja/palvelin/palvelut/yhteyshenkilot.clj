@@ -106,13 +106,14 @@
 
           ;; Uusi yhteyshenkilö, luodaan rivi
           (let [id (:id (q/luo-yhteyshenkilo c
-                                               (:etunimi yht) (:sukunimi yht)
-                                               (:tyopuhelin yht) (:matkapuhelin yht)
-                                               (:sahkoposti yht)
-                                               (:id (:organisaatio yht))
-                                               nil
-                                               nil
-                                               nil))]
+                          (:etunimi yht) (:sukunimi yht)
+                          (:tyopuhelin yht) (:matkapuhelin yht)
+                          (:sahkoposti yht)
+                          (:id (:organisaatio yht))
+                          nil
+                          nil
+                          nil
+                          (:id user)))]
             (q/liita-yhteyshenkilo-urakkaan<! c (:rooli yht) id urakka-id))))
 
       ;; kaikki ok
@@ -175,7 +176,8 @@
                                    :organisaatio (:id (:organisaatio p))
                                    :sampoid nil
                                    :kayttajatunnus nil
-                                   :ulkoinen_id nil}
+                                   :ulkoinen_id nil
+                                   :luoja (:id user)}
                     paivystys {:alku (Date. (.getTime (:alku p)))
                                :loppu (Date. (.getTime (:loppu p)))
                                :urakka urakka-id

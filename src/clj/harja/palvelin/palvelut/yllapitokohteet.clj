@@ -548,6 +548,8 @@
                                                   :toteutunut_hinta toteutunut-hinta
                                                   :maaramuutokset maaramuutokset
                                                   :maku_paallysteet maku-paallysteet})
+      ;; Päivitä lopuksi ylläpitokohteelle päällysteen korjausluokka
+      (q/paivita-yllapitokohteen-paallysteen-korjausluokka db {:id (:id kohde)})
       (:id kohde))))
 
 (defmulti poista-yllapitokohde
@@ -633,7 +635,9 @@
         (tallenna-yllapitokohdeosat db user {:urakka-id        urakka-id
                                              :sopimus-id       sopimus-id
                                              :yllapitokohde-id id
-                                             :osat             korjatut+muut}))))
+                                             :osat             korjatut+muut})
+        ;; Päivitä lopuksi ylläpitokohteelle päällysteen korjausluokka
+        (q/paivita-yllapitokohteen-paallysteen-korjausluokka db {:id id}))))
 
 (defn validoi-kohde [db kohde urakka-id vuosi]
   (let [tr-osoite (select-keys kohde #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})

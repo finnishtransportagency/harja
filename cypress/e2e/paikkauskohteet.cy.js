@@ -29,6 +29,7 @@ let avaaPaikkauskohteetSuoraan = function () {
     cy.contains('.haku-lista-item', 'Lappi').click()
     cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
+    cy.contains('Näytä päättyneet').click();
     cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
     // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
     cy.contains('.nappi-toissijainen', 'Sulje').click()
@@ -51,6 +52,7 @@ let avaaToteumat = () => {
     cy.contains('.haku-lista-item', 'Lappi').click()
     cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
+    cy.contains('Näytä päättyneet').click();
     cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
     // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
     cy.contains('.nappi-toissijainen', 'Sulje').click()
@@ -76,6 +78,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
+        cy.contains('Näytä päättyneet').click();
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
         // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
         cy.contains('.nappi-toissijainen', 'Sulje').click()

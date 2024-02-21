@@ -56,7 +56,7 @@
    [:div.flex-row
     [:div
      [:h1 "Kustannussuunnitelma"]
-     [:div.pieni-teksti urakka]]
+     [:div.pieni-teksti (:nimi urakka)]]
     (let [hoitokaudet (urakka/hoito-tai-sopimuskaudet urakka)]
       [valinnat/hoitovuosi-jarjestysluvulla (into [] (range 1 (inc (count hoitokaudet))))
        hoitokausi

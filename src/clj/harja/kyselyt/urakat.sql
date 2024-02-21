@@ -380,16 +380,24 @@ SELECT
   u.id,
   u.nimi,
   u.hallintayksikko,
-  u.sampoid
+  u.sampoid,
+  u.tyyppi as urakkatyyppi,
+  CASE WHEN (SELECT NOW() BETWEEN u.alkupvm AND u.loppupvm) THEN 'käynnissä'
+       WHEN u.loppupvm < NOW() THEN 'päättynyt'
+       ELSE 'tuleva'
+      END
+      as urakan_ajankohtaisuus
 FROM urakka u
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
-WHERE (u.nimi ILIKE :teksti
-       OR u.sampoid ILIKE :teksti)
+WHERE (u.nimi ILIKE :termi
+       OR u.sampoid ILIKE :termi OR
+       :numero::INTEGER IS NOT NULL AND u.id = :numero)
       AND (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
             'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
            OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
                :kayttajan_org_id = org.id))
       AND u.poistettu = false
+ORDER BY NOW() BETWEEN u.alkupvm AND u.loppupvm DESC, u.tyyppi DESC, u.nimi
 LIMIT 11;
 
 -- name: hae-urakka
@@ -1216,3 +1224,19 @@ ORDER BY alkupvm ASC;
 SELECT ST_Simplify(v.alue, 20, true) as alue
   FROM valaistusurakka v
        JOIN urakka u ON u.id = :id AND u.urakkanro = v.valaistusurakkanro;
+
+-- name: hae-paallystysurakat-analytiikalle
+SELECT yt.yhaid,
+       u.id AS harjaid,
+       yt.elyt,
+       yt.vuodet,
+       u.sampoid,
+       yt.yhatunnus
+FROM urakka u
+         LEFT JOIN yhatiedot yt ON u.id = yt.urakka
+WHERE
+   u.tyyppi = 'paallystys'
+   AND u.luotu BETWEEN :alku AND :loppu
+   OR u.muokattu BETWEEN :alku AND :loppu
+   OR yt.luotu BETWEEN :alku AND :loppu
+   OR yt.muokattu BETWEEN :alku AND :loppu
