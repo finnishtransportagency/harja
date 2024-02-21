@@ -52,6 +52,10 @@
             "type": ["null", "string"],
             "maxLength": 30
           },
+          "yotyo": {
+            "type": "boolean",
+            "description": "Onko päällystyskohde tehty yötöinä"
+          },
           "tierekisteriosoitevali": {
             "$ref": "#/definitions/tierekisteriosoitevali"
           },

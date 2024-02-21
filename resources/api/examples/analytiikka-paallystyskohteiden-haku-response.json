@@ -9,6 +9,7 @@
       "kohdetyyppi": "paallystys",
       "nimi": "Mt 88 Malmitie",
       "tunnus": "Esimerkkitunnus 1",
+      "yotyo": false,
       "tierekisteriosoitevali": {
         "tienumero": 88,
         "aosa": 6,
