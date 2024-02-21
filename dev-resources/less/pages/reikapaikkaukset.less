@@ -16,12 +16,38 @@
         top: -21px;
         margin-left: 120px;
       }
+
       .alasvedon-otsikko-vayla {
         font-weight: 600;
         line-height: @valistys-16;
         margin-bottom: @valistys-4;
       }
     }
+
+    .taulukko-header {
+      display: flex;
+      margin: auto;
+      justify-content: space-between;
+
+      font-family: "Open Sans", Arial, sans-serif;
+      font-style: normal;
+      font-weight: 600;
+      font-size: 0.75rem;
+
+      .lataus-nappi {
+        color: @blue-dark;
+        margin: auto;
+      }
+
+      .flex-oikealla {
+        display: flex;
+
+        :not(:last-child) {
+          margin-right: 35px;
+        }
+      }
+    }
+
     @media (max-width: 950px) {
       .row.filtterit {
         flex-direction: column;
@@ -32,5 +58,10 @@
         }
       }
     }
+  }
+
+  .klikattava:hover {
+    /* Tätä ei näköjään vakiona ole, pitäisikös heittää johonkin ylemmälle tasolle? */
+    text-decoration: underline;
   }
 }

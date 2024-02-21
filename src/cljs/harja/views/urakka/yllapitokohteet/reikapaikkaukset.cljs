@@ -23,7 +23,7 @@
     ;; wrappaa reikapaikkausluokkaan niin ei yliajeta mitään 
     [:div.reikapaikkaukset
      [:div.reikapaikkaus-listaus
-      
+
       ;; suodattimet
       [:div.row.filtterit
        [:div
@@ -41,7 +41,17 @@
           :ikoni-sisaan? true
           :vayla-tyyli? true
           :aikavalin-rajoitus [6 :kuukausi]}]]]
-      
+
+      [:div.taulukko-header.header-yhteiset
+       [:h3 "1 800 riviä, 1000.0 EUR"]
+
+       [:div.flex-oikealla
+        [:div.lataus-nappi.klikattava {:on-click #(do  (println "Klikattu tuo tiedot"))}
+         [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tuo tiedot Excelistä"]]
+        
+        [:div.lataus-nappi.klikattava {:on-click #(do  (println "Klikattu lataa"))}
+         [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Lataa Excel-pohja"]]]]
+
       ;; taulukko
       [grid/grid {:tyhja "Valitulle aikavälille ei löytynyt mitään."
                   :tunniste :id ;; TODO korjaa tämä 
