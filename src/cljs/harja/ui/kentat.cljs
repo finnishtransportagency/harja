@@ -1389,21 +1389,28 @@
                    (when pakollinen? [:span.required-tahti])])])]
     (fn [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
          piste? vaadi-vali?]
-     [:div
-      [:div.tierekisteriosoite-flex
-       [osio alaotsikot? tie "Tie"]
-       [osio alaotsikot? aosa "Aosa"]
-       [osio alaotsikot? aet "Aet"]
-       (when-not piste?
-         [:<>
-          [osio alaotsikot? losa "Losa"]
-          [osio alaotsikot? loppuet "Let"]])
-       (when virhe
-         [:div virhe])
-       (when karttavalinta
-         [:div {:style {:padding-left "16px" :align-self "flex-end"}}
-          [:div.karttavalinta
-           karttavalinta]])]])))
+      ;; Jos alaotsikot valittuna, ryhmitä valitse sijainti oikein 
+      (let [flex (if alaotsikot?
+                   "flex-start"
+                   "flex-end")
+            top (if alaotsikot?
+                  "2px"
+                  "0px")]
+        [:div
+         [:div.tierekisteriosoite-flex
+          [osio alaotsikot? tie "Tie"]
+          [osio alaotsikot? aosa "Aosa"]
+          [osio alaotsikot? aet "Aet"]
+          (when-not piste?
+            [:<>
+             [osio alaotsikot? losa "Losa"]
+             [osio alaotsikot? loppuet "Let"]])
+          (when virhe
+            [:div virhe])
+          (when karttavalinta
+            [:div {:style {:padding-left "16px" :padding-top top :align-self flex}}
+             [:div.karttavalinta
+              karttavalinta]])]]))))
 
 
 (defn- tierekisterikentat-rivitetty
@@ -1551,9 +1558,13 @@
               avaimet
 
               tierekisterikentat (cond
-                                   (and (not vayla-tyyli?) (= tyyli :rivitetty)) tierekisterikentat-rivitetty
-                                   vayla-tyyli? tierekisterikentat-flex
-                                   :default tierekisterikentat-table)
+                                   (and (not vayla-tyyli?) (= tyyli :rivitetty)) 
+                                   tierekisterikentat-rivitetty
+
+                                   vayla-tyyli? 
+                                   tierekisterikentat-flex
+                                   
+                                   :else tierekisterikentat-table)
 
               osoite @data
 

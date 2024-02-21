@@ -17,23 +17,32 @@
 
 
 (defn reikapaikkaus-listaus [e! {:keys [valinnat rivit] :as app}]
-  (let [
-    ;;tänne varmaankin jotain
-  ]
+  (let [tr-atomi (atom (:tr valinnat))
+        sijainti-atomi (atom (:sijainti valinnat))]
+    
     ;; wrappaa reikapaikkausluokkaan niin ei yliajeta mitään 
     [:div.reikapaikkaukset
      [:div.reikapaikkaus-listaus
-      [:h1.header-yhteiset "Reikäpaikkaukset"]
+      
+      ;; suodattimet
       [:div.row.filtterit
-       [valinnat/aikavali
-        tiedot/aikavali-atom
-        {:otsikko "Aikaväli"
-         :for-teksti "filtteri-aikavali"
-         :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta "}
-         :ikoni-sisaan? true
-         :vayla-tyyli? true
-         :aikavalin-rajoitus [6 :kuukausi]}]]
-
+       [:div
+        [:div.alasvedon-otsikko-vayla "Tieosoite"]
+        [kentat/tee-kentta {:tyyppi :tierekisteriosoite
+                            :alaotsikot? true
+                            :sijainti sijainti-atomi
+                            :vayla-tyyli? true} tr-atomi]]
+       [:div
+        [valinnat/aikavali
+         tiedot/aikavali-atom
+         {:otsikko "Päivämäärä"
+          :for-teksti "filtteri-aikavali"
+          :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta reikapaikkaus-pvm "}
+          :ikoni-sisaan? true
+          :vayla-tyyli? true
+          :aikavalin-rajoitus [6 :kuukausi]}]]]
+      
+      ;; taulukko
       [grid/grid {:tyhja "Valitulle aikavälille ei löytynyt mitään."
                   :tunniste :id ;; TODO korjaa tämä 
                   :sivuta grid/vakiosivutus

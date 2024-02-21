@@ -2,11 +2,35 @@
 
 .reikapaikkaukset 
 {
-  .reikapaikkaus-listaus {
-    padding: @valistys-48 @valistys-64;
+  .reikapaikkaus-listaus 
+  {
+    padding: 16px 24px;
 
     .row.filtterit {
+      display: flex;
       padding: @valistys-16;
+
+      .reikapaikkaus-pvm {
+        /* Koska tr valinnan komponentti toimii vähän omalla tavalla (otsikot alhalla), tähän lyöty tällaista ehkä epätavallista tyylittelyä */
+        position: relative;
+        top: -21px;
+        margin-left: 120px;
+      }
+      .alasvedon-otsikko-vayla {
+        font-weight: 600;
+        line-height: @valistys-16;
+        margin-bottom: @valistys-4;
+      }
+    }
+    @media (max-width: 950px) {
+      .row.filtterit {
+        flex-direction: column;
+
+        .reikapaikkaus-pvm {
+          margin-left: 0px;
+          margin-top: 40px;
+        }
+      }
     }
   }
 }
