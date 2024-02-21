@@ -179,10 +179,12 @@
              (not (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur))))
     (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
           sopimustyyppi (:sopimustyyppi ur)]
-      [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
+      [yleiset/livi-pudotusvalikko {:class "alasveto-sopimustyyppi"
                                     :valinta sopimustyyppi
-                                    :format-fn #(if %
-                                                  (str/capitalize (name %))
+                                    :format-fn #(case %
+                                                  :palvelusopimus "Palvelusopimus"
+                                                  :kokonaisurakka "Kokonaisurakka"
+                                                  :mpu "Palvelusopimus (MPU)"
                                                   "Ei sopimustyyppiä")
                                     :valitse-fn #(tallenna-sopimustyyppi ur %)
                                     :disabled (not kirjoitusoikeus?)}
