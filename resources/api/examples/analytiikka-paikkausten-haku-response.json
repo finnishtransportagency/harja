@@ -1,0 +1,46 @@
+{
+  "paikkaukset": [
+    {
+      "leveys": 1,
+      "massamaara": 100,
+      "tierekisteriosoitevali": {
+        "aosa": 1,
+        "let": 100,
+        "losa": 1,
+        "tienumero": 8155,
+        "aet": 0
+      },
+      "loppupvm": "2024-02-28T22:00:00Z",
+      "paikkaustyomenetelma": "AB-paikkaus levittäjällä",
+      "massamenekki": 1,
+      "kuulamylly": "AN10",
+      "raekoko": 16,
+      "harjaId": 265,
+      "poistettu": false,
+      "alkupvm": "2024-02-20T22:00:00Z",
+      "paikkauskohdeId": 14
+    },
+    {
+      "leveys": 1.0,
+      "massamaara": 20.0,
+      "tierekisteriosoitevali": {
+        "aosa": 1,
+        "let": 100,
+        "losa": 1,
+        "tienumero": 8155,
+        "aet": 0
+      },
+      "loppupvm": "2024-02-20T22:00:00Z",
+      "paikkaustyomenetelma": "Urapaikkaus (UREM/RREM)",
+      "pintaAla": 100.0,
+      "massamenekki": 200,
+      "kuulamylly": "AN10",
+      "raekoko": 16,
+      "harjaId": 266,
+      "reunat": 1,
+      "poistettu": false,
+      "alkupvm": "2024-02-20T22:00:00Z",
+      "paikkauskohdeId": 16
+    }
+  ]
+}

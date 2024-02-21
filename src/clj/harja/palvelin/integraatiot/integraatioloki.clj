@@ -77,6 +77,7 @@
      sisalto otsikko parametrit kasitteleva-palvelin)))
 
 (defn luo-alkanut-integraatio [db jarjestelma nimi ulkoinen-id viesti]
+  (println nimi)
   (let [tapahtumaid (:id (integraatioloki/luo-integraatiotapahtuma<! db jarjestelma nimi ulkoinen-id))]
     (when viesti
       (kirjaa-viesti db tapahtumaid viesti))

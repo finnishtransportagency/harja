@@ -515,3 +515,68 @@ SELECT p.id, p.nimi, p.valmistumispvm, p.alkupvm
         (:id::INT is not null AND p.id != :id))
    AND p."ulkoinen-id" = :ulkoinen-id
    AND p."urakka-id" = :urakka-id;
+
+-- name: hae-paikkauskohteet-analytiikalle
+SELECT pk.id,
+       pk."ulkoinen-id",
+       pk."yllapitokohde-id"                       AS paallystyskohde,
+       pk.nimi,
+       pk."urakka-id"                              AS urakka,
+       pk.poistettu,
+       pk."yhalahetyksen-tila",
+       pk."paikkauskohteen-tila"                   AS tila,
+       tm.nimi                                     AS paikkaustyomenetelma,
+       (pk.tierekisteriosoite_laajennettu).tie     AS tierekisteriosoitevali_tienumero,
+       (pk.tierekisteriosoite_laajennettu).aosa    AS tierekisteriosoitevali_aosa,
+       (pk.tierekisteriosoite_laajennettu).aet     AS tierekisteriosoitevali_aet,
+       (pk.tierekisteriosoite_laajennettu).losa    AS tierekisteriosoitevali_losa,
+       (pk.tierekisteriosoite_laajennettu).let     AS tierekisteriosoitevali_let,
+       (pk.tierekisteriosoite_laajennettu).ajorata AS tierekisteriosoitevali_ajorata,
+       pk."suunniteltu-maara",
+       pk.yksikko,
+       pk."suunniteltu-hinta",
+       pk.lisatiedot,
+       pk.alkupvm,
+       pk.loppupvm,
+       pk.tilattupvm                               AS tilattu,
+       pk.tarkistettu,
+       pk.valmistumispvm                           AS valmistunut,
+       pk.tiemerkintapvm,
+       pk."ilmoitettu-virhe",
+       pk."toteutunut-hinta",
+       pk."tiemerkintaa-tuhoutunut?",
+       pk.takuuaika
+FROM paikkauskohde pk
+         LEFT JOIN paikkauskohde_tyomenetelma tm ON pk.tyomenetelma = tm.id
+WHERE luotu BETWEEN :alku AND :loppu
+   OR muokattu BETWEEN :alku AND :loppu;
+
+-- name: hae-paikkaukset-analytiikalle
+SELECT p.id,
+       p."paikkauskohde-id",
+       p.poistettu,
+       tm.nimi                     AS paikkaustyomenetelma,
+       (p.tierekisteriosoite).tie  AS tierekisteriosoitevali_tienumero,
+       (p.tierekisteriosoite).aosa AS tierekisteriosoitevali_aosa,
+       (p.tierekisteriosoite).aet  AS tierekisteriosoitevali_aet,
+       (p.tierekisteriosoite).losa AS tierekisteriosoitevali_losa,
+       (p.tierekisteriosoite).let  AS tierekisteriosoitevali_let,
+       ptk.reunat[1]               AS reunat,
+       ptk.ajourat[1]              AS ajourat,
+       ptk.ajouravalit[1]          AS ajouravalit,
+       ptk.keskisaumat[1]          AS keskisaumat,
+       p.alkuaika::DATE            AS alkupvm,
+       p.loppuaika::DATE           AS loppupvm,
+       p.leveys,
+       p.raekoko,
+       p.kuulamylly,
+       p.massamaara,
+       p."pinta-ala",
+       p.juoksumetri,
+       p.kpl,
+       p.massamenekki
+FROM paikkaus p
+         LEFT JOIN paikkauksen_tienkohta ptk ON p.id = ptk."paikkaus-id"
+         LEFT JOIN paikkauskohde_tyomenetelma tm ON p.tyomenetelma = tm.id
+WHERE p.luotu BETWEEN :alku AND :loppu
+   OR p.muokattu BETWEEN :alku AND :loppu

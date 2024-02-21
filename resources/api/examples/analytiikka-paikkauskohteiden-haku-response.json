@@ -1,0 +1,29 @@
+{
+  "paikkauskohteet": [
+    {
+      "harjaId": 14,
+      "ulkoinenId": 1,
+      "nimi": "Esimerkkipaikkauskohde",
+      "urakka": 28,
+      "poistettu": false,
+      "yhalahetyksenTila": "Ei lähetetty",
+      "tila": "Tilattu",
+      "paikkaustyomenetelma": "AB-paikkaus levittäjällä",
+      "tierekisteriosoitevali": {
+        "aet": 0,
+        "ajorata": 1,
+        "aosa": 1,
+        "let": 200,
+        "losa": 1,
+        "tienumero": 8155
+      },
+      "suunniteltuMaara": 100,
+      "yksikko": "t",
+      "suunniteltuHinta": 123,
+      "alkupvm": "2024-02-20T22:00:00Z",
+      "loppupvm": "2024-02-28T22:00:00Z",
+      "tilattu": "2024-02-20T22:00:00Z",
+      "toteutunutHinta": 666,
+    }
+  ]
+}

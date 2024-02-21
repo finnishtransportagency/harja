@@ -45,7 +45,7 @@
           "tila": {
             "type": "string",
             "enum": [
-              "Ehdotutettu",
+              "Ehdotettu",
               "Hylätty",
               "Tilattu",
               "Valmis",
