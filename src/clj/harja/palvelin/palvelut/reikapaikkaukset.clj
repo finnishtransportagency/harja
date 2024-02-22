@@ -18,7 +18,8 @@
   (oikeudet/ei-oikeustarkistusta!)
   (let [_ (log/debug "hae-reikapaikkaukset :: tiedot" (pr-str tiedot))
         vastaus (q/hae-reikapaikkaukset db {:urakka-id (:urakka-id tiedot)})
-        _ (println "\n saatiin vastaus ; " vastaus)]
+        ;;_ (println "\n saatiin vastaus ; " vastaus)
+        ]
     vastaus))
 
 

@@ -1,2 +1,6 @@
 -- name: hae-reikapaikkaukset
-SELECT id, tyomenetelma, massatyyppi FROM paikkaus WHERE "urakka-id" = :urakka-id LIMIT 10;
+SELECT 
+    id, 
+    sijainti, 
+    tyomenetelma, 
+    massatyyppi FROM paikkaus WHERE "urakka-id" = :urakka-id LIMIT 20;

@@ -7,31 +7,34 @@
             [harja.ui.valinnat :as valinnat]
             [harja.ui.kentat :as kentat]
             [harja.ui.ikonit :as ikonit]
+            [harja.tiedot.navigaatio :as nav]
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
             [harja.pvm :as pvm]
-            [clojure.string :as str])
-   (:require-macros [harja.tyokalut.ui :refer [for*]]))
+            [clojure.string :as str]
+            [harja.views.kartta :as kartta])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
 (defn reikapaikkaus-listaus [e! {:keys [valinnat rivit] :as app}]
   (let [tr-atomi (atom (:tr valinnat))
         sijainti-atomi (atom (:sijainti valinnat))]
     
-    ;; wrappaa reikapaikkausluokkaan niin ei yliajeta mitään 
+    ;; Wrappaa reikapaikkausluokkaan niin ei yliajeta mitään 
     [:div.reikapaikkaukset
      [:div.reikapaikkaus-listaus
-
-      ;; suodattimet
+      ;; Suodattimet
       [:div.row.filtterit
+       ;; TR valinta
        [:div
         [:div.alasvedon-otsikko-vayla "Tieosoite"]
         [kentat/tee-kentta {:tyyppi :tierekisteriosoite
                             :alaotsikot? true
                             :sijainti sijainti-atomi
                             :vayla-tyyli? true} tr-atomi]]
+       ;; Pvm valinta
        [:div
         [valinnat/aikavali
          tiedot/aikavali-atom
@@ -41,18 +44,22 @@
           :ikoni-sisaan? true
           :vayla-tyyli? true
           :aikavalin-rajoitus [6 :kuukausi]}]]]
-
+      
+      [:div.reikapaikkaukset-kartta 
+       [kartta/kartan-paikka]]
+      
+      ;; Taulukon ylhäällä olevat tekstit
       [:div.taulukko-header.header-yhteiset
        [:h3 "1 800 riviä, 1000.0 EUR"]
-
+       ;; Oikealla puolella olevat lataus / tuontinapit
        [:div.flex-oikealla
         [:div.lataus-nappi.klikattava {:on-click #(do  (println "Klikattu tuo tiedot"))}
          [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tuo tiedot Excelistä"]]
-        
+
         [:div.lataus-nappi.klikattava {:on-click #(do  (println "Klikattu lataa"))}
          [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Lataa Excel-pohja"]]]]
 
-      ;; taulukko
+      ;; Grid
       [grid/grid {:tyhja "Valitulle aikavälille ei löytynyt mitään."
                   :tunniste :id ;; TODO korjaa tämä 
                   :sivuta grid/vakiosivutus
@@ -97,10 +104,11 @@
 
 (defn reikapaikkaukset* [e! _app]
   (komp/luo
-    (komp/lippu tiedot/nakymassa?)
-    (komp/sisaan-ulos
-      ;; sisään, tee aikavälivahti
+    (komp/lippu tiedot/nakymassa? tiedot/karttataso-reikapaikkaukset)
+    (komp/sisaan-ulos 
+      ;; Sisään
       #(do
+         ;; Aikaväli tarkkailu
          (add-watch tiedot/aikavali-atom :aikavali-haku
            (fn [_ _ vanha uusi]
              (when-not
@@ -108,14 +116,18 @@
                  (pvm/sama-pvm? (first vanha) (first uusi))
                  (pvm/sama-pvm? (second vanha) (second uusi)))
                (e! (tiedot/->PaivitaAikavali {:aikavali uusi})))))
+         ;; Kartta
+         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+         (nav/vaihda-kartan-koko! :M)
+         ;; Hae tiedot 
          (e! (tiedot/->HaeTiedot)))
-      ;; ulos
+      ;; Ulos
       #(do
-         (println "komp ulos en nyt muista mitä nämä tekee ")
+         ;; do stuff 
          ;; (remove-watch tiedot/aikavali-atom :aikavali-haku)
          ))
-    
-    ;; näytä listaus
+
+    ;; Näytä listaus
     (fn [e! app]
       [:div
        [reikapaikkaus-listaus e! app]])))
