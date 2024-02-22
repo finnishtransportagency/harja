@@ -148,5 +148,6 @@
          [laatupoikkeamalomake e! laatupoikkeamat/valittu-laatupoikkeama
           (merge optiot
                  {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
-                  :nakyma (:tyyppi @nav/valittu-urakka)})]
+                  :nakyma (:tyyppi @nav/valittu-urakka)
+                  :tallennus-kaynnissa? (:tallennus-kaynnissa? app)})]
          [laatupoikkeamalistaus e! app optiot])])))
