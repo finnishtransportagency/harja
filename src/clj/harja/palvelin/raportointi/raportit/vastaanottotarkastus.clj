@@ -360,4 +360,8 @@
                    (yleinen/osat (raportti-fn db user tiedot))))
          [[:yllapidon-aikataulu "Aikataulu" yllapidon-aikataulu/suorita]]))
      ;; Yhteenveto 
-     (yhteensa-taulukko yllapitokohteet+kustannukset muut-kustannukset urakan-sanktiot vuosi)]))
+     (yhteensa-taulukko yllapitokohteet+kustannukset muut-kustannukset urakan-sanktiot vuosi)
+
+     ;; Eurot / PK-luokka - Näytetään vain hallintayksiköille ja valtakunnallisesti
+     (when-not urakka-id
+       (pkluokka-taulukko hallintayksikon-korjausluokkasummat))]))
