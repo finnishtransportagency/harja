@@ -118,6 +118,7 @@
                        (k/kehitysymparistossa?)
                        (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava)
                        (oikeudet/urakat-paikkaukset id)
+                       (= tyyppi :paallystys)
                        (= :mpu sopimustyyppi))
     false))
 
