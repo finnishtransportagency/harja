@@ -763,7 +763,7 @@
                                                   :yhalahetyksen-tila :yhalahetyksenTila
                                                   :suunniteltu-maara :suunniteltuMaara
                                                   :suunniteltu-hinta :suunniteltuHinta
-                                                  :valmis-tiemerkintaan :valmisTiemerkintaan
+                                                  :tiemerkintapvm :valmisTiemerkintaan
                                                   :ilmoitettu-virhe :ilmoitettuVirhe
                                                   :toteutunut-hinta :toteutunutHinta
                                                   :tiemerkintaa-tuhoutunut? :tiemerkintaaTuhoutunut})

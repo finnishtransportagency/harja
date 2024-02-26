@@ -545,7 +545,18 @@ SELECT pk.id,
        pk."ilmoitettu-virhe",
        pk."toteutunut-hinta",
        pk."tiemerkintaa-tuhoutunut?",
-       pk.takuuaika
+       pk.takuuaika,
+       CASE
+           WHEN (pk.tierekisteriosoite_laajennettu).tie IS NOT NULL THEN
+               (SELECT ST_ASTEXT(
+                           st_simplify(
+                               tierekisteriosoitteelle_viiva(
+                                   CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
+                                   CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
+                                   CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
+                                   CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
+                                   CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)), 1)))
+           END                                     AS geometria
 FROM paikkauskohde pk
          LEFT JOIN paikkauskohde_tyomenetelma tm ON pk.tyomenetelma = tm.id
 WHERE luotu BETWEEN :alku AND :loppu
