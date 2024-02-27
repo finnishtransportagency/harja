@@ -5,7 +5,23 @@
                       [org.apache.pdfbox/pdfbox "2.0.30"]
                       [data-frisk-reagent "0.4.5"]
                       [cider/piggieback "0.5.2"]
-                      [com.bhauman/rebel-readline-cljs "0.1.4"]]
+                      [com.bhauman/rebel-readline-cljs "0.1.4"]
+
+                      ;; Tarvitaan käännöksessä
+                      [com.bhauman/figwheel-main "0.2.18"]
+
+                      ;; -- Tarvitaan testeissä --
+                      [org.clojure/core.match "1.0.0"]
+
+                      ;; Fake-HTTP testaukseen
+                      [http-kit.fake "0.2.2"]
+
+                      ;; JMS API (esim. tieliikenneilmoitukset) JMS-jonojen testausta varten
+                      [javax.jms/javax.jms-api "2.0.1"]
+
+                      ;; Gatlingin logback versio ei ole vielä ehtinyt päivittyä, niin haetaan se erikseen
+                      [ch.qos.logback/logback-classic "1.4.14" :exclusions [org.slf4j/slf4j-api]]
+                      [clj-gatling "0.18.0" :exclusions [clj-time org.slf4j/slf4j-api org.clojure/core.memoize org.clojure/data.priority-map io.pebbletemplates/pebble]]]
        :source-paths ["src/clj-dev" "src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
        :resource-paths ["dev-resources/js" "dev-resources/tmp" "resources/public/css" "resources"]
        :plugins [[test2junit "1.4.4"]
