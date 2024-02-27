@@ -1,5 +1,9 @@
 (ns harja.views.hallinta.tarjoushinnat
-  (:require [tuck.core :refer [tuck send-value! send-async!]]
+  (:require [clojure.string :as str]
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.kentat :as kentat]
+            [reagent.core :as r]
+            [tuck.core :refer [tuck send-value! send-async!]]
             [harja.ui.komponentti :as komp]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
@@ -30,28 +34,58 @@
 (defn tarjoushinnat* [e! app]
   (komp/luo
     (komp/sisaan #(e! (tiedot/->HaeTarjoushinnat)))
-    (fn [e! {:keys [tarjoushinnat] :as app}]
-      [:div
-       [debug/debug app]
-       [:h1 "MH-Urakoiden tarjoushinnat"]
-       [:p "Tarjouksen mukaisten tavoitehintojen syöttö."]
-       [:p "Mikäli kentän syöttö on estetty, kyseiselle hoitokaudelle on kirjattu välikatselmuksessa lupauksia, eikä tarjoushintaa voi muokata ennen kuin päätös perutaan."]
-       [grid/grid
-        {:otsikko "MH-urakoiden tarjoushinnat"
-         :tunniste :urakka
-         :vetolaatikot (into {}
-                         (map (fn [[urakka tavoitehinnat]]
-                                [urakka [urakan-tarjoushinnat e! tavoitehinnat]])
-                           (group-by :urakka tarjoushinnat)))}
-        [{:tyyppi :vetolaatikon-tila :leveys 0.5}
-         {:otsikko "Urakka" :nimi :urakka-nimi :leveys 15}]
-        (vec (into #{} (map #(select-keys % [:urakka :urakka-nimi])
-                         tarjoushinnat)))]])))
-
-;; TODO: Riviin näkuviin, onko tarjoushintoja syöttämättä
-;;       Päättyneet urakat erikseen
-;;       Haku urakalla
-;;       Checkbox näytä vain puutteelliset
+    (fn [e! {:keys [tarjoushinnat haettava-urakka vain-puutteelliset?] :as app}]
+      (let [urakka-haku-id (gensym "urakkahaku")
+            tarjoushinnat (filter #(and (str/includes?
+                                          (str/lower-case (:urakka-nimi %))
+                                          (str/lower-case haettava-urakka))
+                                     (or (not vain-puutteelliset?) (:puutteellisia? %)))
+                            tarjoushinnat)
+            tarjoushinnat (sort-by #(cond
+                                      (grid/otsikko? %) 2
+                                      (:urakka-paattynyt? %) 3
+                                      :else 1)
+                            (if (some :urakka-paattynyt? tarjoushinnat)
+                              (conj tarjoushinnat (grid/otsikko "Päättyneet urakat"))
+                              tarjoushinnat))]
+        [:div.hallinta-tarjoushinnat
+         [debug/debug app]
+         [:h1 "MH-Urakoiden tarjoushinnat"]
+         [:p "Tarjouksen mukaisten tavoitehintojen syöttö."]
+         [:p "Mikäli kentän syöttö on estetty, kyseiselle hoitokaudelle on kirjattu välikatselmuksessa lupauksia, eikä tarjoushintaa voi muokata ennen kuin päätös perutaan."]
+         [:div.suodattimet
+          [:label {:for urakka-haku-id}
+           "Urakka"]
+          [kentat/tee-kentta
+           {:vayla-tyyli? true
+            :elementin-id urakka-haku-id
+            :placeholder "Hae urakan nimellä..."
+            :tyyppi :string}
+           (r/wrap haettava-urakka
+             #(do
+                (e! (tiedot/->AsetaHaettavaUrakka %))))]
+          [kentat/tee-kentta
+           {:vayla-tyyli? true
+            :tyyppi :checkbox
+            :teksti "Näytä vain puutteelliset"}
+           (r/wrap vain-puutteelliset?
+             #(do
+                (e! (tiedot/->AsetaVainPuutteelliset %))))]]
+         [grid/grid
+          {:otsikko "MH-urakoiden tarjoushinnat"
+           :tunniste :urakka
+           :vetolaatikot (into {}
+                           (map (fn [{:keys [urakka tarjoushinnat]}]
+                                  [urakka [urakan-tarjoushinnat e! tarjoushinnat]])
+                             tarjoushinnat))}
+          [{:tyyppi :vetolaatikon-tila :leveys 0.5}
+           {:otsikko "Urakka" :nimi :urakka-nimi :leveys 10}
+           {:nimi :puutteellisia? :leveys 5
+            :tyyppi :komponentti
+            :komponentti (fn [rivi]
+                           (when (:puutteellisia? rivi)
+                             [:span.tarjoushintoja-puuttuu [ikonit/harja-icon-status-error] "Tarjoushintoja puuttuu"]))}]
+          tarjoushinnat]]))))
 
 (defn tarjoushinnat []
   [tuck tiedot/tila tarjoushinnat*])

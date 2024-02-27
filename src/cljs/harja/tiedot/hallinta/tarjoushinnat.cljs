@@ -7,7 +7,8 @@
             [harja.tyokalut.tuck :as tuck-apurit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def tila (atom {}))
+(def tila (atom {:vain-puutteelliset? false
+                 :haettava-urakka ""}))
 
 (defrecord HaeTarjoushinnat [])
 (defrecord HaeTarjoushinnatOnnistui [vastaus])
@@ -17,9 +18,10 @@
 (defrecord PaivitaTarjoushinnatOnnistui [vastaus paluukanava])
 (defrecord PaivitaTarjoushinnatEpaonnistui [vastaus paluukanava])
 
+(defrecord AsetaVainPuutteelliset [vain-puutteelliset?])
+(defrecord AsetaHaettavaUrakka [teksti])
 
 (extend-protocol tuck/Event
-
   HaeTarjoushinnat
   (process-event [_ app]
     (tuck-apurit/post! :hae-tarjoushinnat
@@ -58,4 +60,13 @@
   (process-event [{:keys [vastaus paluukanava]} app]
     (go (>! paluukanava false))
     (viesti/nayta-toast! "Tarjoushintojen päivitys epäonnistui" :varoitus)
-    app))
+    app)
+
+  AsetaVainPuutteelliset
+  (process-event [{:keys [vain-puutteelliset?]} app]
+    (assoc app :vain-puutteelliset? vain-puutteelliset?))
+
+  AsetaHaettavaUrakka
+  (process-event [{:keys [teksti]} app]
+    (assoc app :haettava-urakka teksti)))
+
