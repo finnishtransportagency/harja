@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.api.analytiikka-paallystyskohteet-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
+            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.tyokalut.json-validointi :as json]
@@ -16,7 +17,7 @@
                        (api-analytiikka/->Analytiikka false)
                        [:http-palvelin :db-replica :integraatioloki])))
 
-(use-fixtures :each jarjestelma-fixture)
+(use-fixtures :once jarjestelma-fixture)
 
 (deftest paallystyskohteiden-haku-esimerkki-validoituu
   (let [paallystyskohteet-esimerkki (slurp "resources/api/examples/analytiikka-paallystyskohteiden-haku-response.json")
@@ -29,3 +30,11 @@
     (is (nil? (json/validoi json-skeemat/+analytiikka-paallystysurakoiden-haku-vastaus+ urakat-esimerkki false)))
     (is (nil? (json/validoi json-skeemat/+analytiikka-paallystysilmoitusten-haku-vastaus+ paallystysilmoitukset-pot2-esimerkki false)))
     (is (nil? (json/validoi json-skeemat/+analytiikka-hoidon-paikkaukset-haku-vastaus+ hoidon-paikkaukset-esimerkki false)))))
+
+(deftest paallystysurakoiden-haku-toimii
+  (let [odotettu-vastaus (slurp "resources/api/examples/analytiikka-paallystysurakoiden-haku-response.json")
+        alkuaika "2022-07-01T00:00:00Z"
+        loppuaika "2022-07-02T23:59:59Z"
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
+          "analytiikka-testeri" portti)]
+    (is (= odotettu-vastaus vastaus))))
