@@ -13,6 +13,7 @@
 
 (defonce tila (atom {:rivit nil
                      :valittu-rivi nil
+                     :muokataan false
                      :valinnat {:aikavali (pvm/kuukauden-aikavali (pvm/nyt))
                                 :tr-osoite nil}}))
 
@@ -50,6 +51,7 @@
 ;; Tuck 
 (defrecord PaivitaAikavali [uudet])
 (defrecord HaeTiedot [])
+(defrecord AvaaMuokkausModal [])
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
 
@@ -64,7 +66,7 @@
 
 
 (extend-protocol tuck/Event
-  
+
   HaeTiedot
   (process-event [_ app]
     (println "call hae tiedot ")
@@ -82,6 +84,10 @@
     (js/console.warn "HaeTiedotEpaonnistui :: vastaus: " (pr-str vastaus))
     (viesti/nayta-toast! (str "HaeTiedotEpaonnistui Vastaus: " (pr-str vastaus)) :varoitus)
     app)
+
+  AvaaMuokkausModal
+  (process-event [_ app]
+    (assoc app :muokataan true))
 
   PaivitaAikavali
   (process-event [{uudet :uudet} app]

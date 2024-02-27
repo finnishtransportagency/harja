@@ -18,12 +18,18 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
-(defn reikapaikkaus-listaus [e! {:keys [valinnat rivit] :as app}]
+(defn reikapaikkaus-listaus [e! {:keys [valinnat rivit muokataan] :as app}]
   (let [tr-atomi (atom (:tr valinnat))
         sijainti-atomi (atom (:sijainti valinnat))]
     
     ;; Wrappaa reikapaikkausluokkaan niin ei yliajeta mitään 
     [:div.reikapaikkaukset
+
+     ;; Muokkauspaneeli
+     (when muokataan
+       [:div.overlay-oikealla
+        "test"])
+
      [:div.reikapaikkaus-listaus
       ;; Suodattimet
       [:div.row.filtterit
@@ -44,10 +50,10 @@
           :ikoni-sisaan? true
           :vayla-tyyli? true
           :aikavalin-rajoitus [6 :kuukausi]}]]]
-      
-      [:div.reikapaikkaukset-kartta 
+
+      [:div.reikapaikkaukset-kartta
        [kartta/kartan-paikka]]
-      
+
       ;; Taulukon ylhäällä olevat tekstit
       [:div.taulukko-header.header-yhteiset
        [:h3 "1 800 riviä, 1000.0 EUR"]
@@ -67,8 +73,7 @@
                   :piilota-toiminnot? true
                   :jarjesta :pvm
                   :mahdollista-rivin-valinta? true
-                  ;; TODO tähän tulee varmaankin muokkaus :rivi-klikattu #(funktio..)
-                  }
+                  :rivi-klikattu #(e! (tiedot/->AvaaMuokkausModal))}
 
        [{:otsikko "Pvm"
          :tyyppi :komponentti
