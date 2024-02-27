@@ -28,7 +28,16 @@
      ;; Muokkauspaneeli
      (when muokataan
        [:div.overlay-oikealla
-        "test"])
+        ;; Footer
+        [:div
+         [:hr]
+         [:div.muokkaus-modal-napit
+          ;; Tallenna
+          [napit/tallenna "Tallenna muutokset" #(println "tallenna") {:disabled false :paksu? true}] ;; TODO 
+          ;; Poista 
+          [napit/poista "Poista" #(println "poista")] ;; TODO 
+          ;; Sulje 
+          [napit/yleinen-toissijainen "Sulje" #(e! (tiedot/->SuljeMuokkaus)) {:paksu? true}]]]])
 
      [:div.reikapaikkaus-listaus
       ;; Suodattimet
@@ -67,7 +76,7 @@
 
       ;; Grid
       [grid/grid {:tyhja "Valitulle aikavälille ei löytynyt mitään."
-                  :tunniste :id ;; TODO korjaa tämä 
+                  :tunniste :id ;; TODO korjaa tämä, ehkä 
                   :sivuta grid/vakiosivutus
                   :voi-kumota? false
                   :piilota-toiminnot? true

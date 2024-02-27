@@ -52,6 +52,7 @@
 (defrecord PaivitaAikavali [uudet])
 (defrecord HaeTiedot [])
 (defrecord AvaaMuokkausModal [])
+(defrecord SuljeMuokkaus [])
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
 
@@ -88,6 +89,10 @@
   AvaaMuokkausModal
   (process-event [_ app]
     (assoc app :muokataan true))
+  
+  SuljeMuokkaus
+  (process-event [_ app]
+    (assoc app :muokataan false))
 
   PaivitaAikavali
   (process-event [{uudet :uudet} app]
