@@ -4,6 +4,7 @@
   (:require [tuck.core :refer [tuck]]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-reikapaikkaukset :as tiedot]
             [harja.ui.debug :refer [debug]]
+            [harja.ui.lomake :as lomake]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.kentat :as kentat]
             [harja.ui.ikonit :as ikonit]
@@ -24,20 +25,39 @@
     
     ;; Wrappaa reikapaikkausluokkaan niin ei yliajeta mitään 
     [:div.reikapaikkaukset
-
      ;; Muokkauspaneeli
      (when muokataan
        [:div.overlay-oikealla
-        ;; Footer
-        [:div
-         [:hr]
-         [:div.muokkaus-modal-napit
-          ;; Tallenna
-          [napit/tallenna "Tallenna muutokset" #(println "tallenna") {:disabled false :paksu? true}] ;; TODO 
-          ;; Poista 
-          [napit/poista "Poista" #(println "poista")] ;; TODO 
-          ;; Sulje 
-          [napit/yleinen-toissijainen "Sulje" #(e! (tiedot/->SuljeMuokkaus)) {:paksu? true}]]]])
+        ;; Lomake
+        [lomake/lomake
+         {:ei-borderia? true
+          :muokkaa! #(println "Muokkaa " %)
+          ;; Header
+          :header [:<>
+                   [:h2.header-yhteiset "Muokkaa toteumaa"]
+                   [:hr]]
+          ;; Footer
+          :footer [:<>
+                   [:hr]
+                   [:div.muokkaus-modal-napit
+                    ;; Tallenna
+                    [napit/tallenna "Tallenna muutokset" #(println "tallenna") {:disabled false}] ;; TODO halutaan varmaan asettaa jokin disabled arvo
+                    ;; Poista 
+                    [napit/poista "Poista" #(println "poista")] ;; TODO 
+                    ;; Sulje 
+                    [napit/yleinen-toissijainen "Sulje" #(e! (tiedot/->SuljeMuokkaus))]]]
+          :footer-luokka ""} ;; Yliajaa col-md-12 luokan mitä ei tässä haluta 
+
+         [(lomake/rivi
+            {:otsikko "Pvm"
+             :tyyppi :komponentti
+             :komponentti (fn []
+                            [kentat/tee-kentta {:tyyppi :pvm
+                                                :ikoni-sisaan? true
+                                                :vayla-tyyli? true}
+                             (atom nil)])})]
+         ;;@tiedot/lomake  =?
+         ]])
 
      [:div.reikapaikkaus-listaus
       ;; Suodattimet
