@@ -44,6 +44,15 @@ VALUES
     ('Turvallisuus ja osaamisen kehittäminen', 4, 2019, NOW()),
     ('Viestintä ja tienkäyttäjäasiakkaan palvelu', 5, 2019, NOW());
 
+-- Lupausryhmien linkitys urakkaan 2024 alkavalla urakalle linkkitaulun kautta - Kajaani MHU
+INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
+VALUES
+    (1, 43),
+    (2, 43),
+    (3, 43),
+    (4, 43),
+    (5, 43);
+
 INSERT INTO lupaus (jarjestys, "lupausryhma-id", "urakka-id", lupaustyyppi, "pisteet", "kirjaus-kkt", "paatos-kk", "joustovara-kkta", kuvaus, sisalto, "urakan-alkuvuosi") VALUES
 
 -- A. Kannustavat alihankintasopimukset
