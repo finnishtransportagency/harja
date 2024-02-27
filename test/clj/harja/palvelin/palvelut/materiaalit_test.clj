@@ -504,7 +504,7 @@
     :pvm #inst "2015-02-18T22:00:00.000000001-00:00"
     :rivinumero 1
     :tid 1074
-    :tmid 13
+    :tmid 14
     :toteumaidt [1074]}
    {:koneellinen false
     :lisatieto "LYV-toteuma"
@@ -515,11 +515,11 @@
     :pvm #inst "2015-02-17T22:00:00.000000001-00:00"
     :rivinumero 2
     :tid 1073
-    :tmid 12
+    :tmid 13
     :toteumaidt [1073]}])
 
 (def lisatty-toteuma
-  {:tid 1156, :pvm #inst "2015-02-15T22:00:00.000000000-00:00", :toteumaidt [1156], :rivinumero 3, :tmid 27, :lukumaara 1, :koneellinen false, :maara 666M, :materiaali {:id 1, :nimi "Talvisuolaliuos NaCl"}, :lisatieto "555"})
+  {:tid 1156, :pvm #inst "2015-02-15T22:00:00.000000000-00:00", :toteumaidt [1156], :rivinumero 3, :tmid 28, :lukumaara 1, :koneellinen false, :maara 666M, :materiaali {:id 1, :nimi "Talvisuolaliuos NaCl"}, :lisatieto "555"})
 
 
 
