@@ -134,8 +134,7 @@
                  ;; Kevyt Java 11 java.net.http wrapper WebSocket-testaukseen
                  [java-http-clj "0.4.3"]
 
-                 ;; Apache ANT core
-                 ;; TODO: Onko käytössä?
+                 ;; Apache ANT core (arkistoiden purku yms. org.apache.tools.tar)
                  [org.apache.ant/ant "1.10.5"]
 
                  ;; Clojure(Script) assertointi
