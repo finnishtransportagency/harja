@@ -5,7 +5,6 @@
             [reagent.core :as r]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.ui.komponentti :as komp]
-            [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.hallinta.tarjoushinnat :as tiedot]))
@@ -36,20 +35,27 @@
     (komp/sisaan #(e! (tiedot/->HaeTarjoushinnat)))
     (fn [e! {:keys [tarjoushinnat haettava-urakka vain-puutteelliset?] :as app}]
       (let [urakka-haku-id (gensym "urakkahaku")
-            tarjoushinnat (filter #(and (str/includes?
-                                          (str/lower-case (:urakka-nimi %))
-                                          (str/lower-case haettava-urakka))
-                                     (or (not vain-puutteelliset?) (:puutteellisia? %)))
-                            tarjoushinnat)
-            tarjoushinnat (sort-by #(cond
-                                      (grid/otsikko? %) 2
-                                      (:urakka-paattynyt? %) 3
-                                      :else 1)
-                            (if (some :urakka-paattynyt? tarjoushinnat)
-                              (conj tarjoushinnat (grid/otsikko "Päättyneet urakat"))
-                              tarjoushinnat))]
+            tarjoushinnat (->> tarjoushinnat
+                            ;; Suodatetaan valintojen perusteella
+                            (filter #(and (str/includes?
+                                            (str/lower-case (:urakka-nimi %))
+                                            (str/lower-case haettava-urakka))
+                                       (or (not vain-puutteelliset?) (:puutteellisia? %))))
+
+                            ;; Järjestys urakan nimellä
+                            (sort-by :urakka-nimi)
+
+                            ;; Lisätään väliotsikko jos mukana on päättyneitä urakoita
+                            (#(if (some :urakka-paattynyt? %)
+                                (conj % (grid/otsikko "Päättyneet urakat"))
+                                %))
+
+                            ;; Pääättyneet urakat pohjalle, jos niitä on.
+                            (sort-by #(cond
+                                        (grid/otsikko? %) 2
+                                        (:urakka-paattynyt? %) 3
+                                        :else 1)))]
         [:div.hallinta-tarjoushinnat
-         [debug/debug app]
          [:h1 "MH-Urakoiden tarjoushinnat"]
          [:p "Tarjouksen mukaisten tavoitehintojen syöttö."]
          [:p "Mikäli kentän syöttö on estetty, kyseiselle hoitokaudelle on kirjattu välikatselmuksessa lupauksia, eikä tarjoushintaa voi muokata ennen kuin päätös perutaan."]
