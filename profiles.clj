@@ -21,7 +21,8 @@
 
                       ;; Gatlingin logback versio ei ole vielä ehtinyt päivittyä, niin haetaan se erikseen
                       [ch.qos.logback/logback-classic "1.4.14" :exclusions [org.slf4j/slf4j-api]]
-                      [clj-gatling "0.18.0" :exclusions [clj-time org.slf4j/slf4j-api org.clojure/core.memoize org.clojure/data.priority-map io.pebbletemplates/pebble]]]
+                      [clj-gatling "0.18.0" :exclusions [clj-time org.slf4j/slf4j-api org.clojure/core.memoize
+                                                         org.clojure/tools.analyzer org.clojure/data.priority-map io.pebbletemplates/pebble]]]
        :source-paths ["src/clj-dev" "src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
        :resource-paths ["dev-resources/js" "dev-resources/tmp" "resources/public/css" "resources"]
        :plugins [[test2junit "1.4.4"]
