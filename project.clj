@@ -49,7 +49,6 @@
                  [org.clojure/core.cache "0.7.2"]
                  [org.clojure/core.memoize "1.0.257"]
 
-                 [org.clojure/tools.analyzer "1.1.1" :refer clojure :exclude [update-vars update-keys]]
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
@@ -157,7 +156,7 @@
 
                  ;; Gatlingin logback versio ei ole vielä ehtinyt päivittyä, niin haetaan se erikseen
                  [ch.qos.logback/logback-classic "1.4.14" :exclusions [org.slf4j/slf4j-api]]
-                 [clj-gatling "0.18.0" :exclusions [clj-time org.slf4j/slf4j-api org.clojure/core.memoize org.clojure/tools.analyzer org.clojure/data.priority-map io.pebbletemplates/pebble]]
+                 [clj-gatling "0.18.0" :exclusions [clj-time org.slf4j/slf4j-api org.clojure/core.memoize org.clojure/data.priority-map io.pebbletemplates/pebble]]
                  ;; Tarvitaan käännöksessä
                  [com.bhauman/figwheel-main "0.2.18"]
                  [digest "1.4.9"]
