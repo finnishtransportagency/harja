@@ -198,16 +198,19 @@
         laatupoikkeama
         {:onnistui ->TallennaLaatuPoikkeamaOnnistui
          :onnistui-parametrit [laatupoikkeama]
-         :epaonnistui ->TallennaLaatuPoikkeamaEpaonnistui})))
-
+         :epaonnistui ->TallennaLaatuPoikkeamaEpaonnistui})
+      (assoc app :tallennus-kaynnissa? true)))
+  
   TallennaLaatuPoikkeamaOnnistui
   (process-event [_ {:keys [listaus-tyyppi valittu-aikavali] :as app}]
-    ;; Kun poikkeama tallennetaan, päivitetään kaikki tiedot jotta karttaan tulee uusikin reitti näkyviin
+      ;; Kun poikkeama tallennetaan, päivitetään kaikki tiedot jotta karttaan tulee uusikin reitti näkyviin
     (resetoi-ja-hae-poikkeamat listaus-tyyppi (-> @tila/yleiset :urakka :id) valittu-aikavali)
-    (assoc app :laatupoikkeamat nil))
+    (-> app
+      (assoc :laatupoikkeamat nil)
+      (assoc :tallennus-kaynnissa? false)))
 
   TallennaLaatuPoikkeamaEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (log/error "Laatupoikkeaman tallennuksessa virhe!" vastaus)
     (viesti/nayta-toast! "Oikaisun tallennuksessa tapahtui virhe" :varoitus)
-    app))
+    (assoc app :tallennus-kaynnissa? false)))

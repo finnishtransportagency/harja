@@ -834,3 +834,249 @@ UPDATE pot2_mk_urakan_murske
 
 -- name: hae-paikkauskohde-yllapitokohde-idlla
 select p.id FROM paikkauskohde p WHERE p."yllapitokohde-id" = :yllapitokohde-id;
+
+-- name: hae-paallystyskohteet-analytiikalle
+SELECT ypk.id,
+       ypk.yhaid,
+       ypk.poistettu,
+       ypk.urakka,
+       ypk.yha_kohdenumero        AS kohdenumero,
+       ypk.yllapitokohdetyotyyppi AS kohdetyyppi,
+       ypk.nimi,
+       ypk.tunnus,
+       ypk.tr_numero              AS "tr-numero",
+       ypk.tr_alkuosa             AS "tr-alkuosa",
+       ypk.tr_alkuetaisyys        AS "tr-alkuetaisyys",
+       ypk.tr_loppuosa            AS "tr-loppuosa",
+       ypk.tr_loppuetaisyys       AS "tr-loppuetaisyys",
+       ypk.karttapaivamaara,
+       (k.sopimuksen_mukaiset_tyot +
+        k.maaramuutokset +
+        k.bitumi_indeksi +
+        k.kaasuindeksi +
+        k.maku_paallysteet)       AS kokonaishinta
+FROM yllapitokohde ypk
+         LEFT JOIN yllapitokohteen_kustannukset k ON ypk.id = k.yllapitokohde
+WHERE ypk.luotu BETWEEN :alku AND :loppu
+   OR ypk.muokattu BETWEEN :alku AND :loppu
+   OR k.muokattu BETWEEN :alku AND :loppu
+   OR EXISTS(SELECT *
+             FROM yllapitokohdeosa osa
+             WHERE osa.yllapitokohde = ypk.id
+               AND (osa.muokattu BETWEEN :alku AND :loppu
+                 OR osa.luotu BETWEEN :alku AND :loppu));
+
+-- name: hae-paallystyksen-alikohteet-analytiikalle
+SELECT osa.yllapitokohde,
+       osa.yhaid,
+       osa.id,
+       osa.tr_numero        AS "tr-numero",
+       osa.tr_alkuosa       AS "tr-alkuosa",
+       osa.tr_alkuetaisyys  AS "tr-alkuetaisyys",
+       osa.tr_loppuosa      AS "tr-loppuosa",
+       osa.tr_loppuetaisyys AS "tr-loppuetaisyys",
+       osa.tr_kaista        AS "tr-kaista",
+       osa.tr_ajorata       AS "tr-ajorata",
+       osa.karttapaivamaara,
+       osa.paallystetyyppi  AS uusi_paallyste,
+       osa.raekoko,
+       osa.massamenekki,
+       osa.massamaara,
+       osa.tyomenetelma
+FROM yllapitokohdeosa osa
+         LEFT JOIN yllapitokohde kohde ON osa.yllapitokohde = kohde.id
+WHERE osa.muokattu BETWEEN :alku AND :loppu
+   OR osa.luotu BETWEEN :alku AND :loppu
+   OR kohde.muokattu BETWEEN :alku AND :loppu
+   OR kohde.luotu BETWEEN :alku AND :loppu;
+
+-- name: hae-paallystyskohteiden-aikataulut-analytiikalle
+SELECT yllapitokohde,
+       kohde_alku,
+       paallystys_alku,
+       paallystys_loppu,
+       valmis_tiemerkintaan,
+       tiemerkinta_takaraja,
+       tiemerkinta_alku,
+       tiemerkinta_loppu,
+       kohde_valmis
+FROM yllapitokohteen_aikataulu
+WHERE luotu BETWEEN :alku AND :loppu
+   OR muokattu BETWEEN :alku AND :loppu;
+
+-- name: hae-paallystysilmoitukset-analytiikalle
+SELECT paallystyskohde,
+       pi.id,
+       ypk.lahetetty,
+       ypk.lahetys_onnistunut AS "lahetys-onnistunut",
+       takuupvm               AS takuupaivamaara,
+       k.toteutunut_hinta     AS "toteutunut-hinta"
+FROM paallystysilmoitus pi
+         LEFT JOIN yllapitokohde ypk ON pi.paallystyskohde = ypk.id
+         LEFT JOIN yllapitokohteen_kustannukset k ON ypk.id = k.yllapitokohde
+WHERE pi.luotu BETWEEN :alku AND :loppu
+   OR pi.muokattu BETWEEN :alku AND :loppu;
+
+-- name: hae-paallystysilmoitusten-kulutuskerroksen-toimenpiteet-analytiikalle
+SELECT pi.id                       AS paallystysilmoitus,
+       pk_osa.id                   AS alikohde,
+       pk_osa.poistettu            AS poistettu,
+       pk_osa.tr_numero            AS "tr-numero",
+       pk_osa.tr_alkuosa           AS "tr-alkuosa",
+       pk_osa.tr_alkuetaisyys      AS "tr-alkuetaisyys",
+       pk_osa.tr_loppuosa          AS "tr-loppuosa",
+       pk_osa.tr_loppuetaisyys     AS "tr-loppuetaisyys",
+       pk_osa.tr_kaista            AS "tr-kaista",
+       pk_osa.tr_ajorata           AS "tr-ajorata",
+       (SELECT laske_tr_osoitteen_pituus(pk_osa.tr_numero,
+                                         pk_osa.tr_alkuosa,
+                                         pk_osa.tr_alkuetaisyys,
+                                         pk_osa.tr_loppuosa,
+                                         pk_osa.tr_loppuetaisyys))
+                                   AS pituus,
+       pot2pk.leveys               AS leveys,
+       pot2pk.pinta_ala            AS "pinta-ala",
+       kktp.nimi                   AS paallystetyomenetelma,
+
+       pot2pk.massamenekki         AS massamenekki,
+       pot2pk.kokonaismassamaara   AS kokonaismassamaara,
+       kk_massa.id                 AS massa_id,
+       kk_massatyyppi.nimi         AS massa_massatyyppi,
+       kk_massa.kuulamyllyluokka   AS massa_kuulamyllyluokka,
+       kk_massa.litteyslukuluokka  AS massa_litteyslukuluokka,
+       kk_runkoaine.id             AS massa_runkoaine_id,
+       kk_runkoainetyyppi.nimi     AS massa_runkoaine_runkoainetyyppi,
+       kk_runkoaine.kuulamyllyarvo AS massa_runkoaine_kuulamyllyarvo,
+       kk_runkoaine.litteysluku    AS massa_runkoaine_litteysluku,
+       kk_runkoaine.massaprosentti AS massa_runkoaine_massaprosentti,
+       kk_runkoaine.fillerityyppi  AS massa_runkoaine_fillerityyppi,
+       kk_runkoaine.kuvaus         AS massa_runkoaine_kuvaus,
+       kk_sideaine.id              AS massa_sideaine_id,
+       kk_sideainetyyppi.nimi      AS massa_sideaine_tyyppi,
+       kk_sideaine.pitoisuus       AS massa_sideaine_pitoisuus,
+       kk_lisaaine.id              AS massa_lisaaine_id,
+       kk_lisaainetyyppi.nimi      AS massa_lisaaine_tyyppi,
+       kk_lisaaine.pitoisuus       AS massa_lisaaine_pitoisuus
+FROM paallystysilmoitus pi
+         LEFT JOIN yllapitokohde ypk ON pi.paallystyskohde = ypk.id
+         LEFT JOIN yllapitokohteen_kustannukset k ON ypk.id = k.yllapitokohde
+         LEFT JOIN pot2_paallystekerros pot2pk ON pi.id = pot2pk.pot2_id
+
+         LEFT JOIN yllapitokohdeosa pk_osa ON pot2pk.kohdeosa_id = pk_osa.id
+         LEFT JOIN pot2_mk_paallystekerros_toimenpide kktp ON pot2pk.toimenpide = kktp.koodi
+         LEFT JOIN pot2_mk_urakan_massa kk_massa ON pot2pk.materiaali = kk_massa.id
+         LEFT JOIN pot2_mk_massatyyppi kk_massatyyppi ON kk_massa.tyyppi = kk_massatyyppi.koodi
+         LEFT JOIN pot2_mk_massan_runkoaine kk_runkoaine ON kk_massa.id = kk_runkoaine.pot2_massa_id
+         LEFT JOIN pot2_mk_runkoainetyyppi kk_runkoainetyyppi ON kk_runkoaine.tyyppi = kk_runkoainetyyppi.koodi
+         LEFT JOIN pot2_mk_massan_sideaine kk_sideaine ON kk_massa.id = kk_sideaine.pot2_massa_id
+         LEFT JOIN pot2_mk_sideainetyyppi kk_sideainetyyppi ON kk_sideaine.tyyppi = kk_sideainetyyppi.koodi
+         LEFT JOIN pot2_mk_massan_lisaaine kk_lisaaine ON kk_massa.id = kk_lisaaine.pot2_massa_id
+         LEFT JOIN pot2_mk_lisaainetyyppi kk_lisaainetyyppi ON kk_lisaaine.tyyppi = kk_lisaainetyyppi.koodi
+WHERE pi.luotu BETWEEN :alku AND :loppu
+   OR pi.muokattu BETWEEN :alku AND :loppu;
+
+-- name: hae-paallystysilmoitusten-alustan-toimenpiteet-analytiikalle
+SELECT pi.id                           AS paallystysilmoitus,
+       alusta.poistettu                AS poistettu,
+       alusta.tr_numero                AS "tr-numero",
+       alusta.tr_alkuosa               AS "tr-alkuosa",
+       alusta.tr_alkuetaisyys          AS "tr-alkuetaisyys",
+       alusta.tr_loppuosa              AS "tr-loppuosa",
+       alusta.tr_loppuetaisyys         AS "tr-loppuetaisyys",
+       alusta.tr_kaista                AS "tr-kaista",
+       alusta.tr_ajorata               AS "tr-ajorata",
+       (SELECT laske_tr_osoitteen_pituus(alusta.tr_numero,
+                                         alusta.tr_alkuosa,
+                                         alusta.tr_alkuetaisyys,
+                                         alusta.tr_loppuosa,
+                                         alusta.tr_loppuetaisyys))
+           AS pituus,
+       a_toimenpide.nimi               AS kasittelymenetelma,
+       alusta.lisatty_paksuus          AS "lisatty-paksuus",
+       alusta.kasittelysyvyys          AS kasittelysyvyys,
+       verkon_tyyppi.nimi              AS "verkon-tyyppi",
+       verkon_tarkoitus.nimi           AS "verkon-tarkoitus",
+       verkon_sijainti.nimi            AS "verkon-sijainti",
+       alusta.massamenekki             AS massamenekki,
+       alusta.kokonaismassamaara       AS kokonaismassamaara,
+
+       alusta_massa.id                 AS massa_id,
+       alusta_massatyyppi.nimi         AS massa_massatyyppi,
+       alusta_massa.kuulamyllyluokka   AS massa_kuulamyllyluokka,
+       alusta_massa.litteyslukuluokka  AS massa_litteyslukuluokka,
+       alusta_runkoaine.id             AS massa_runkoaine_id,
+       alusta_runkoainetyyppi.nimi     AS massa_runkoaine_runkoainetyyppi,
+       alusta_runkoaine.kuulamyllyarvo AS massa_runkoaine_kuulamyllyarvo,
+       alusta_runkoaine.litteysluku    AS massa_runkoaine_litteysluku,
+       alusta_runkoaine.massaprosentti AS massa_runkoaine_massaprosentti,
+       alusta_runkoaine.fillerityyppi  AS massa_runkoaine_fillerityyppi,
+       alusta_runkoaine.kuvaus         AS massa_runkoaine_kuvaus,
+       alusta_sideaine.id              AS massa_sideaine_id,
+       alusta_sideainetyyppi.nimi      AS massa_sideaine_tyyppi,
+       alusta_sideaine.pitoisuus       AS massa_sideaine_pitoisuus,
+       alusta_lisaainetyyppi.nimi      AS massa_lisaaine_tyyppi,
+       alusta_lisaaine.pitoisuus       AS massa_lisaaine_pitoisuus,
+
+       mursketyyppi.nimi               AS murske_tyyppi,
+       murske.rakeisuus                AS murske_rakeisuus,
+       murske.iskunkestavyys           AS murske_iskunkestavyys
+FROM paallystysilmoitus pi
+         LEFT JOIN yllapitokohde ypk ON pi.paallystyskohde = ypk.id
+         LEFT JOIN yllapitokohteen_kustannukset k ON ypk.id = k.yllapitokohde
+
+         LEFT JOIN pot2_alusta alusta ON pi.id = alusta.pot2_id
+         LEFT JOIN pot2_mk_alusta_toimenpide a_toimenpide ON alusta.toimenpide = a_toimenpide.koodi
+         LEFT JOIN pot2_verkon_tyyppi verkon_tyyppi ON alusta.verkon_tyyppi = verkon_tyyppi.koodi
+         LEFT JOIN pot2_verkon_tarkoitus verkon_tarkoitus ON alusta.verkon_tarkoitus = verkon_tarkoitus.koodi
+         LEFT JOIN pot2_verkon_sijainti verkon_sijainti ON alusta.verkon_sijainti = verkon_sijainti.koodi
+         LEFT JOIN pot2_mk_urakan_massa alusta_massa ON alusta.massa = alusta_massa.id
+         LEFT JOIN pot2_mk_massatyyppi alusta_massatyyppi ON alusta_massa.tyyppi = alusta_massatyyppi.koodi
+         LEFT JOIN pot2_mk_massan_runkoaine alusta_runkoaine ON alusta_massa.id = alusta_runkoaine.pot2_massa_id
+         LEFT JOIN pot2_mk_runkoainetyyppi alusta_runkoainetyyppi
+                   ON alusta_runkoaine.tyyppi = alusta_runkoainetyyppi.koodi
+         LEFT JOIN pot2_mk_massan_sideaine alusta_sideaine ON alusta_massa.id = alusta_sideaine.pot2_massa_id
+         LEFT JOIN pot2_mk_sideainetyyppi alusta_sideainetyyppi ON alusta_sideaine.tyyppi = alusta_sideainetyyppi.koodi
+         LEFT JOIN pot2_mk_massan_lisaaine alusta_lisaaine ON alusta_massa.id = alusta_lisaaine.pot2_massa_id
+         LEFT JOIN pot2_mk_lisaainetyyppi alusta_lisaainetyyppi ON alusta_lisaaine.tyyppi = alusta_lisaainetyyppi.koodi
+         LEFT JOIN pot2_mk_urakan_murske murske ON alusta.murske = murske.id
+         LEFT JOIN pot2_mk_mursketyyppi mursketyyppi ON murske.tyyppi = mursketyyppi.koodi
+WHERE pi.luotu BETWEEN :alku AND :loppu
+   OR pi.muokattu BETWEEN :alku AND :loppu;
+
+-- name: hae-hoidon-paallystyksen-kulut-analytiikalle
+SELECT k.id,
+       k.urakka,
+       k.poistettu,
+       k.erapaiva AS paivamaara,
+       k.kokonaissumma AS summa,
+       tr.nimi AS tehtavaryhma
+FROM kulu k
+         LEFT JOIN kulu_kohdistus kk ON k.id = kk.kulu
+         LEFT JOIN tehtavaryhma tr ON kk.tehtavaryhma = tr.id
+         LEFT JOIN tehtavaryhmaotsikko tro ON tr.tehtavaryhmaotsikko_id = tro.id
+WHERE tro.otsikko = '4 PÄÄLLYSTEIDEN PAIKKAUS'
+  AND (k.luotu BETWEEN :alku AND :loppu OR
+       k.muokattu BETWEEN :alku AND :loppu);
+
+-- name: hae-hoidon-paallystyksen-toimenpiteet-analytiikalle
+SELECT t.id,
+       t.urakka,
+       t.poistettu,
+       t.alkanut          AS paivamaara,
+       tt.maara,
+       yksikko,
+       tr.nimi            AS tehtavaryhma,
+       te.nimi            AS tehtava,
+       t.tr_numero        AS tierekisteriosoitevali_tienumero,
+       t.tr_alkuosa       AS tierekisteriosoitevali_aosa,
+       t.tr_alkuetaisyys  AS tierekisteriosoitevali_aet,
+       t.tr_loppuosa      AS tierekisteriosoitevali_losa,
+       t.tr_loppuetaisyys AS tierekisteriosoitevali_let
+FROM toteuma t
+         JOIN toteuma_tehtava tt ON t.id = tt.toteuma
+         JOIN tehtava te ON tt.toimenpidekoodi = te.id
+         JOIN tehtavaryhma tr ON te.tehtavaryhma = tr.id
+         JOIN tehtavaryhmaotsikko tro ON tr.tehtavaryhmaotsikko_id = tro.id
+WHERE tro.otsikko = '4 PÄÄLLYSTEIDEN PAIKKAUS'
+  AND (t.luotu BETWEEN :alku AND :loppu OR
+       t.muokattu BETWEEN :alku AND :loppu);

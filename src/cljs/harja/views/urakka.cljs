@@ -42,10 +42,12 @@
     :suunnittelu (and (oikeudet/urakat-suunnittelu id)
                       (not (urakka/kanavaurakka? urakka))
                       (not= sopimustyyppi :kokonaisurakka)
+                      (not= sopimustyyppi :mpu)
                       (not= tyyppi :tiemerkinta))
     :toteumat (and (oikeudet/urakat-toteumat id)
                    (not= sopimustyyppi :kokonaisurakka)
                    (not (urakka/vesivaylaurakkatyyppi? tyyppi))
+                   (not= sopimustyyppi :mpu)
                    (not= tyyppi :tiemerkinta))
     :toimenpiteet (and (oikeudet/urakat-vesivaylatoimenpiteet id)
                        (urakka/vesivaylaurakkatyyppi? tyyppi)
@@ -95,6 +97,9 @@
     :tiemerkinnan-kustannukset (and (oikeudet/urakat-kustannukset id)
                                     (= tyyppi :tiemerkinta))
 
+    :paikkaukset-mpu (and (oikeudet/urakat-paikkaukset id)
+                          (= :mpu sopimustyyppi))
+
     false))
 
 (defn urakka
@@ -105,6 +110,7 @@
             (nav/aseta-valittu-valilehti! :urakat :yleiset))
         mhu-urakka? (= :teiden-hoito
                        (:tyyppi ur))
+        sopimustyyppi (:sopimustyyppi ur)
         valittu-valilehti (nav/valittu-valilehti :urakat)
         _ (js/console.log "Urakkanäkymä :: valittu välilehti:" (pr-str valittu-valilehti))
         _ (js/console.log "Urakkanäkymä :: valittu sivu" (pr-str (nav/valittu-valilehti valittu-valilehti)))
@@ -200,11 +206,19 @@
          ^{:key "paallystykset"}
          [paallystyksen-kohdeluettelo/kohdeluettelo ur])
 
-       "Paikkaukset"
+       (if (= sopimustyyppi :mpu)
+         "Muut paikkaukset"
+         "Paikkaukset")
        :paikkaukset-yllapito
        (when (valilehti-mahdollinen? :paikkaukset-yllapito ur)
          ^{:key "paikkaukset"}
          [paikkaukset/paikkaukset ur])
+
+       "Reikäpaikkaukset"
+       :paikkaukset-mpu
+       (when (valilehti-mahdollinen? :paikkaukset-mpu ur)
+         ^{:key "paikkaukset-mpu"}
+         [:div "Maanteiden paikkausurakoiden reikäpaikkaukset tulevat tälle välilehdelle myöhemmin"])
 
        "Laadunseuranta"
        :laadunseuranta
