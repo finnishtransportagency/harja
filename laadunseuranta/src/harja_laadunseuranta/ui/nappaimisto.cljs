@@ -16,8 +16,7 @@
             [clojure.string :as str])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
-    [cljs.core.async.macros :refer [go go-loop]]
-    [devcards.core :as dc :refer [defcard deftest]]))
+    [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn- lopeta-mittaus [{:keys [nimi avain lopeta-jatkuva-havainto] :as tiedot}]
   [nappi (str nimi " päättyy") {:on-click (fn [_]

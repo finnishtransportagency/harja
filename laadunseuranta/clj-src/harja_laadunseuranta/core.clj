@@ -15,7 +15,6 @@
             [clojure.java.jdbc :as jdbc]
             [compojure.route :as route]
             [clojure.java.io :as io]
-            [clojure.data.codec.base64 :as b64]
             [com.stuartsierra.component :as component]
             [clojure.walk :as walk]
             [harja.domain.oikeudet :as oikeudet]

@@ -14,8 +14,7 @@
             [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
-    [cljs.core.async.macros :refer [go go-loop]]
-    [devcards.core :as dc :refer [defcard deftest]]))
+    [cljs.core.async.macros :refer [go go-loop]]))
 
 (def edellinen-header-leveys (atom nil))
 (def +header-reuna-padding+ 80)

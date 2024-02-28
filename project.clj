@@ -155,8 +155,6 @@
                  [webjure/tuck-remoting "20190213" :exclusions [webjure/tuck]]
 
                  ;; -- Laadunseurantatyökalua varten
-                 ;; TODO: Onko käytössä?
-                 [org.clojure/data.codec "0.1.1"]
                  ;; TODO: Käytössä vain laadunseurannassa, voisi siirtää sinne
                  [devcards "0.2.4" :exclusions [cljsjs/react]]
 
