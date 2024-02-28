@@ -1,29 +1,21 @@
 (ns harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
-            [cljs.core.async :as async]
-            [harja.pvm :as pvm]
+            [harja.tiedot.kanavat.yhteiset :as yhteiset]
             [harja.id :refer [id-olemassa?]]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :refer [log warn tarkkaile!]]
+            [harja.loki :refer [warn]]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka :as u]
-            [harja.domain.urakka :as urakka]
-            [harja.domain.sopimus :as sopimus]
-            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [harja.domain.vesivaylat.materiaali :as materiaalit]
             [harja.domain.kanavat.hinta :as hinta]
             [harja.domain.kanavat.tyo :as tyo]
             [harja.domain.kanavat.kommentti :as kommentti]
-            [harja.domain.muokkaustiedot :as m]
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
-            [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.navigaatio :as navigaatio]
-            [harja.tiedot.urakka :as urakkatiedot])
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -133,7 +125,7 @@
 (defn ilman-poistettuja [mapit-muokkaustiedoilla]
   {:pre [(every? map? mapit-muokkaustiedoilla)]
    :post [(every? map? %)]}
-  (let [ok-mapit (remove ::m/poistettu? mapit-muokkaustiedoilla)]
+  (let [ok-mapit (remove ::muokkaustiedot/poistettu? mapit-muokkaustiedoilla)]
     ok-mapit))
 
 (defn hintaryhman-tyot [app ryhma-kriteeri]
@@ -287,7 +279,7 @@
           (filterv #(not= (id-avain %) id) rivit)
 
           (mapv #(if (= (id-avain %) id)
-                   (assoc % ::m/poistettu? true)
+                   (assoc % ::muokkaustiedot/poistettu? true)
                    %)
                 rivit))]
     (assoc-in app [:hinnoittele-toimenpide tyot-tai-hinnat] paivitetyt)))
@@ -326,16 +318,16 @@
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
     (merge app
-           {:nakymassa? nakymassa?}
-           (when nakymassa?
-             {:tehtavat (toimenpiteet/tehtavat-tyypilla @urakkatiedot/urakan-toimenpiteet-ja-tehtavat
-                                                        "muutoshintainen")
-              :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit})))
+      {:nakymassa? nakymassa?}
+      (when nakymassa?
+        {:tehtavat (toimenpiteet/tehtavat-tyypilla @u/urakan-toimenpiteet-ja-tehtavat
+                     "muutoshintainen")
+         :toimenpideinstanssit @u/urakan-toimenpideinstanssit})))
 
   PaivitaValinnat
   (process-event [{valinnat :valinnat} app]
     (let [uudet-valinnat (merge (:valinnat app)
-                                valinnat)
+                           valinnat)
           tp-haku (tuck/send-async! ->HaeToimenpiteet)
           ml-haku (tuck/send-async! ->HaeMateriaalit)]
       (go (tp-haku uudet-valinnat))
@@ -352,16 +344,16 @@
           haku-ei-kaynnissa (not (:suunniteltujen-toiden-haku-kaynnissa? app))]
       (if (and haku-ei-kaynnissa (some? urakka-id))
         (do (tuck-apurit/post! :yksikkohintaiset-tyot
-                               urakka-id
-                               {:onnistui ->SuunnitellutTyotHaettu
-                                :epaonnistui ->SuunnitellutTyotEiHaettu})
-            (assoc app :suunniteltujen-toiden-haku-kaynnissa? true))
+              urakka-id
+              {:onnistui ->SuunnitellutTyotHaettu
+               :epaonnistui ->SuunnitellutTyotEiHaettu})
+          (assoc app :suunniteltujen-toiden-haku-kaynnissa? true))
         app)))
 
   SuunnitellutTyotHaettu
   (process-event [{vastaus :vastaus} app]
     (assoc app :suunnitellut-tyot (remove (comp nil? :yksikkohinta) vastaus)
-               :suunniteltujen-toiden-haku-kaynnissa? false))
+      :suunniteltujen-toiden-haku-kaynnissa? false))
 
   SuunnitellutTyotEiHaettu
   (process-event [_ app]
@@ -371,26 +363,26 @@
   HaeToimenpiteet
   (process-event [{valinnat :valinnat} app]
     (if (and (not (:toimenpiteiden-haku-kaynnissa? app))
-             (get-in valinnat [:urakka :id]))
+          (get-in valinnat [:urakka :id]))
       (let [argumentit (toimenpiteet/muodosta-kohteiden-hakuargumentit valinnat :muutos-lisatyo)]
         (-> app
-            (tuck-apurit/post! :hae-kanavatoimenpiteet
-                               argumentit
-                               {:onnistui ->ToimenpiteetHaettu
-                                :epaonnistui ->ToimenpiteetEiHaettu})
-            (assoc :toimenpiteiden-haku-kaynnissa? true)))
+          (tuck-apurit/post! :hae-kanavatoimenpiteet
+            argumentit
+            {:onnistui ->ToimenpiteetHaettu
+             :epaonnistui ->ToimenpiteetEiHaettu})
+          (assoc :toimenpiteiden-haku-kaynnissa? true)))
       app))
 
   ToimenpiteetHaettu
   (process-event [{tulos :tulos} app]
     (assoc app :toimenpiteiden-haku-kaynnissa? false
-               :toimenpiteet tulos))
+      :toimenpiteet tulos))
 
   ToimenpiteetEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
     (assoc app :toimenpiteiden-haku-kaynnissa? false
-               :toimenpiteet []))
+      :toimenpiteet []))
 
   ValitseToimenpide
   (process-event [{tiedot :tiedot} app]
@@ -398,39 +390,39 @@
           valittu? (:valittu? tiedot)
           aseta-valinta (if valittu? conj disj)]
       (assoc app :valitut-toimenpide-idt
-                 (aseta-valinta (:valitut-toimenpide-idt app) toimenpide-id))))
+        (aseta-valinta (:valitut-toimenpide-idt app) toimenpide-id))))
 
   ValitseToimenpiteet
   (process-event [{tiedot :tiedot} app]
     (let [kaikki-valittu? (:kaikki-valittu? tiedot)]
       (if kaikki-valittu?
         (assoc app :valitut-toimenpide-idt
-                   (set (map ::toimenpide/id (:toimenpiteet app))))
+          (set (map ::toimenpide/id (:toimenpiteet app))))
         (assoc app :valitut-toimenpide-idt #{}))))
 
   SiirraValitut
   (process-event [_ app]
     (when-not (:toimenpiteiden-siirto-kaynnissa? app)
       (-> app
-          (tuck-apurit/post! :siirra-kanavatoimenpiteet
-                             {::toimenpide/toimenpide-idt (:valitut-toimenpide-idt app)
-                              ::toimenpide/urakka-id (get-in app [:valinnat :urakka :id])
-                              ::toimenpide/tyyppi :kokonaishintainen}
-                             {:onnistui ->ValitutSiirretty
-                              :epaonnistui ->ValitutEiSiirretty})
-          (assoc :toimenpiteiden-siirto-kaynnissa? true))))
+        (tuck-apurit/post! :siirra-kanavatoimenpiteet
+          {::toimenpide/toimenpide-idt (:valitut-toimenpide-idt app)
+           ::toimenpide/urakka-id (get-in app [:valinnat :urakka :id])
+           ::toimenpide/tyyppi :kokonaishintainen}
+          {:onnistui ->ValitutSiirretty
+           :epaonnistui ->ValitutEiSiirretty})
+        (assoc :toimenpiteiden-siirto-kaynnissa? true))))
 
   ValitutSiirretty
   (process-event [_ app]
     (viesti/nayta! (toimenpiteet/toimenpiteiden-toiminto-suoritettu
                      (count (:valitut-toimenpide-idt app)) "siirretty") :success)
     (assoc app :toimenpiteiden-siirto-kaynnissa? false
-               :valitut-toimenpide-idt #{}
-               :toimenpiteet (filter
-                               (fn [toimenpide]
-                                 (not ((:valitut-toimenpide-idt app)
-                                        (::toimenpide/id toimenpide))))
-                               (:toimenpiteet app))))
+      :valitut-toimenpide-idt #{}
+      :toimenpiteet (filter
+                      (fn [toimenpide]
+                        (not ((:valitut-toimenpide-idt app)
+                              (::toimenpide/id toimenpide))))
+                      (:toimenpiteet app))))
 
   ValitutEiSiirretty
   (process-event [_ app]
@@ -447,19 +439,19 @@
                                                          (remove (fn [materiaali]
                                                                    (some #(= (:nimi materiaali)
                                                                              (::hinta/otsikko %))
-                                                                         hinnat)))
+                                                                     hinnat)))
                                                          (map materiaali->hinta))
-                                                       materiaalit)
+                                               materiaalit)
           yhdistetyt-hinnat (concat hinnat tallentamattomat-materiaali-hinnat)
           tyot (or (::toimenpide/tyot hinnoiteltava-toimenpide) [])
           urakka-id (get-in app [:valinnat :urakka :id])]
       (if urakka-id
         (assoc app :hinnoittele-toimenpide
-                   {::toimenpide/id toimenpide-id
-                    ::toimenpide/pvm (::toimenpide/pvm hinnoiteltava-toimenpide)
-                    ::hinta/hinnat (toimenpiteen-hintakentat yhdistetyt-hinnat)
-                    ::tyo/tyot tyot
-                    :urakka urakka-id})
+          {::toimenpide/id toimenpide-id
+           ::toimenpide/pvm (::toimenpide/pvm hinnoiteltava-toimenpide)
+           ::hinta/hinnat (toimenpiteen-hintakentat yhdistetyt-hinnat)
+           ::tyo/tyot tyot
+           :urakka urakka-id})
         (do
           (warn "Ei aloiteta hinnoittelua, koska ei tiedetä urakkaa - valinnat: " (pr-str (:valinnat app)))
           app))))
@@ -478,14 +470,14 @@
   AsetaHintakentalleTiedot
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-toimenpide ::hinta/hinnat]
-              (hinta/paivita-hintajoukon-hinnan-tiedot-idlla (get-in app [:hinnoittele-toimenpide
-                                                                          ::hinta/hinnat]) tiedot)))
+      (hinta/paivita-hintajoukon-hinnan-tiedot-idlla (get-in app [:hinnoittele-toimenpide
+                                                                  ::hinta/hinnat]) tiedot)))
 
   AsetaTyorivilleTiedot
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-toimenpide ::tyo/tyot]
-              (tyo/paivita-tyon-tiedot-idlla (get-in app [:hinnoittele-toimenpide ::tyo/tyot])
-                                             tiedot)))
+      (tyo/paivita-tyon-tiedot-idlla (get-in app [:hinnoittele-toimenpide ::tyo/tyot])
+        tiedot)))
 
   LisaaHinnoiteltavaTyorivi
   (process-event [_ app]
@@ -534,7 +526,7 @@
              ::tyo/tallennettavat-tyot (get-in app [:hinnoittele-toimenpide ::tyo/tyot])}
             {:onnistui ->ToimenpiteenHinnoitteluTallennettu
              :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu})
-          (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? true))
+        (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? true))
       app))
 
   ToimenpiteenHinnoitteluTallennettu
@@ -548,8 +540,8 @@
                                     (:toimenpiteet app))]
 
       (assoc app :toimenpiteet paivitetyt-toimenpiteet
-                 :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false
-                 :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu)))
+        :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false
+        :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu)))
 
   ToimenpiteenHinnoitteluEiTallennettu
   (process-event [_ app]
@@ -569,7 +561,7 @@
              ::toimenpide/urakka-id (get-in app [:valinnat :urakka :id])}
             {:onnistui ->ToimenpiteenKommenttiTallennettu
              :epaonnistui ->ToimenpiteenKommenttiEiTallennettu})
-          (assoc app :toimenpiteen-kommentin-tallennus-kaynnissa? true))
+        (assoc app :toimenpiteen-kommentin-tallennus-kaynnissa? true))
       app))
 
   ToimenpiteenKommenttiTallennettu
@@ -583,8 +575,8 @@
                                     (:toimenpiteet app))]
 
       (assoc app :toimenpiteet paivitetyt-toimenpiteet
-                 :toimenpiteen-kommentin-tallennus-kaynnissa? false
-                 :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu)))
+        :toimenpiteen-kommentin-tallennus-kaynnissa? false
+        :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu)))
 
   ToimenpiteenKommenttiEiTallennettu
   (process-event [_ app]
@@ -593,7 +585,7 @@
 
   UusiToimenpide
   (process-event [_ app]
-    (toimenpiteet/uusi-toimenpide app @istunto/kayttaja @navigaatio/valittu-urakka))
+    (toimenpiteet/uusi-toimenpide app @istunto/kayttaja @nav/valittu-urakka))
 
   TyhjennaAvattuToimenpide
   (process-event [_ app]
@@ -626,15 +618,15 @@
   (process-event [{toimenpide :toimenpide} app]
     (let [tallennus! (tuck/send-async! ->TallennaToimenpide)]
       (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)
-                      true))
+            true))
       (update app :valitut-toimenpide-idt
-              #(toimenpiteet/poista-valittu-toimenpide % (::toimenpide/id toimenpide)))))
+        #(toimenpiteet/poista-valittu-toimenpide % (::toimenpide/id toimenpide)))))
 
   HaeHuoltokohteet
   (process-event [{toimenpide :toimenpide} app]
     (tuck-apurit/get! :hae-kanavien-huoltokohteet
-                      {:onnistui ->HuoltokohteetHaettu
-                       :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
+      {:onnistui ->HuoltokohteetHaettu
+       :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
     app)
 
   HuoltokohteetHaettu
@@ -653,14 +645,14 @@
   (process-event [_ {:keys [materiaalien-haku-kaynnissa?] :as app}]
     (assert (some? materiaalien-haku-kaynnissa?) "huono tila: materiaalien-haku-kaynnissa? oli nil")
     (when-not materiaalien-haku-kaynnissa?
-      (let [urakka-id (:id @navigaatio/valittu-urakka)]
+      (let [urakka-id (:id @nav/valittu-urakka)]
         (-> app
-            (tuck-apurit/post! :hae-vesivayla-materiaalilistaus
-                               {::materiaalit/urakka-id urakka-id}
-                               {:onnistui ->MateriaalitHaettu
-                                :epaonnistui ->MateriaalienHakuEpaonnistui})
-            (assoc :materiaalien-haku-kaynnissa? true
-                   :urakan-materiaalit nil)))))
+          (tuck-apurit/post! :hae-vesivayla-materiaalilistaus
+            {::materiaalit/urakka-id urakka-id}
+            {:onnistui ->MateriaalitHaettu
+             :epaonnistui ->MateriaalienHakuEpaonnistui})
+          (assoc :materiaalien-haku-kaynnissa? true
+            :urakan-materiaalit nil)))))
 
   MateriaalitHaettu
   (process-event [{materiaalit :materiaalit} app]
@@ -679,22 +671,18 @@
     ;; urakan materiaaleista lisätyt voidaan tunnistaa muutokset-avaimella
     (if (:avattu-toimenpide app)
       (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit]
-                (vec
-                  (for [m materiaalit]
-                    (if (-> m :materiaalitaulukko ::materiaalit/muutokset)
-                      (update m :tallennetut-materiaalit dissoc ::materiaalit/muutokset ::materiaalit/id)
-                      m))))
+        (vec
+          (for [m materiaalit]
+            (if (-> m :materiaalitaulukko ::materiaalit/muutokset)
+              (update m :tallennetut-materiaalit dissoc ::materiaalit/muutokset ::materiaalit/id)
+              m))))
       app))
 
   LisaaMateriaali
   (process-event [_ app]
     ;; Materiaalien järjestystä varten täytyy käyttää järjestysnumeroa. Nyt ei voida käyttää muokkaus-gridin generoimaa
     ;; numeroa, koska rivinlisäysnappi ei ole normaali gridin lisäysnappi
-    (update-in app
-               [:avattu-toimenpide ::materiaalit/materiaalit]
-               #(let [vanha-id (apply max (map :jarjestysnumero %))
-                      uusi-id (if (nil? vanha-id) 0 (inc vanha-id))]
-                  (conj (vec %) {:jarjestysnumero uusi-id}))))
+    (update-in app [:avattu-toimenpide ::materiaalit/materiaalit] yhteiset/lisaa-jarjestysnumero))
 
   LisaaVirhe
   (process-event [{virhe :virhe} app]

@@ -47,7 +47,7 @@
               ::hairiotilanne/huviliikenne-lkm 1
               ::hairiotilanne/korjausaika-h 1
               ::hairiotilanne/syy "Liikaa sähköä"
-              ::hairiotilanne/odotusaika-h 4
+              ::hairiotilanne/vesiodotusaika-h 4
               ::hairiotilanne/ammattiliikenne-lkm 2}
         uusi-tallennettu (hairiotilanne-q/tallenna-hairiotilanne db kayttaja-id uusi)
         maara-uuden-luonnin-jalkeen (hae-maara)
