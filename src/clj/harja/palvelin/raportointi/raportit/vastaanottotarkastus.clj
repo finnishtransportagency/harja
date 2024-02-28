@@ -223,28 +223,36 @@
                                               (let [pk1 (if (= "PK1" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
                                                     pk2 (if (= "PK2" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
                                                     pk3 (if (= "PK3" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
-                                                    eitiedossa (if (or (= "" (:pkluokka rivi)) (nil? (:pkluokka rivi)) (= "Ei tiedossa" (:pkluokka rivi))) (:kokonaishinta rivi) 0)]
+                                                    ei-tiedossa (if (or (= "" (:pkluokka rivi)) (nil? (:pkluokka rivi)) (= "Ei tiedossa" (:pkluokka rivi)))
+                                                                  (:kokonaishinta rivi)
+                                                                  0)]
+
                                                 (assoc yht-rivi
                                                   :pk1 (+ (:pk1 yht-rivi) pk1)
                                                   :pk2 (+ (:pk2 yht-rivi) pk2)
                                                   :pk3 (+ (:pk3 yht-rivi) pk3)
-                                                  :eitiedossa (+ (:eitiedossa yht-rivi) eitiedossa))))
+                                                  :eitiedossa (+ (:eitiedossa yht-rivi) ei-tiedossa))))
+
                                       {:nimi "Valtakunnallisesti yhteensä" :pk1 0 :pk2 0 :pk3 0 :eitiedossa 0}
                                       rivit)
         elyttain-jaoteltu (group-by :hallintayksikko_nimi rivit)
         formatoi-elyt-fn (fn [ely]
                            (let [elyrivi {:otsikko (first ely)}
-                                 kohteet-lista (mapv (fn [r] (pkluokka-rivi r false false)) (second ely))
+                                 kohteet-lista (mapv (fn [kohde] (pkluokka-rivi kohde false false)) (second ely))
                                  ely-yhteensa (reduce (fn [yht-rivi rivi]
                                                         (let [pk1 (if (= "PK1" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
                                                               pk2 (if (= "PK2" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
                                                               pk3 (if (= "PK3" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
-                                                              eitiedossa (if (or (= "" (:pkluokka rivi)) (nil? (:pkluokka rivi)) (= "Ei tiedossa" (:pkluokka rivi))) (:kokonaishinta rivi) 0)]
+                                                              ei-tiedossa (if (or (= "" (:pkluokka rivi)) (nil? (:pkluokka rivi)) (= "Ei tiedossa" (:pkluokka rivi)))
+                                                                            (:kokonaishinta rivi)
+                                                                            0)]
+
                                                           (assoc yht-rivi
                                                             :pk1 (+ (:pk1 yht-rivi) pk1)
                                                             :pk2 (+ (:pk2 yht-rivi) pk2)
                                                             :pk3 (+ (:pk3 yht-rivi) pk3)
-                                                            :eitiedossa (+ (:eitiedossa yht-rivi) eitiedossa))))
+                                                            :eitiedossa (+ (:eitiedossa yht-rivi) ei-tiedossa))))
+
                                                 {:nimi (str (first ely) " yhteensä") :pk1 0 :pk2 0 :pk3 0 :eitiedossa 0}
                                                 (second ely))]
 
