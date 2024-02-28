@@ -7,8 +7,7 @@
    (defn onko-tarve-hakea-aikavali-muuttunut? 
      "Palauttaa booleanin onko tarve tehdä uutta hakua jos käyttäjä muuttaa aikaväliä suodattimista"
      [valinnat uudet-valinnat tiedot-ladattu-konditio]
-     (let [aikavali-vanha (:aikavali valinnat)
-           aikavali-uusi (:aikavali uudet-valinnat)
+     (let [aikavali-uusi (:aikavali uudet-valinnat)
            vain-aikavali-muuttunut? (=
                                      (dissoc uudet-valinnat :aikavali)
                                      (dissoc valinnat :aikavali))
@@ -16,9 +15,6 @@
            aikavali-olemassa? (boolean (and (first aikavali-uusi) (second aikavali-uusi)))
            ;; Tyhjennettiinkö aikaväli kokonaan?
            aikavali-tyhjennettiin? (and
-                                     (or
-                                       (some? (first aikavali-vanha))
-                                       (some? (second aikavali-vanha)))
                                      (nil? (first aikavali-uusi))
                                      (nil? (second aikavali-uusi)))
            ;; Onko tarve tehdä uutta hakua
