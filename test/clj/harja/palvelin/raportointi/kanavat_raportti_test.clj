@@ -149,8 +149,11 @@
         taulukon-parametrit (-> vastaus (nth 2) second second)
         taulukon-sarakkeet (-> vastaus (nth 2) second (nth 2))
         liikenneyhteenveto (-> vastaus (nth 3))
-        raportin-otsikko (-> vastaus (nth 2) first)]
-    
+        raportin-otsikko (-> vastaus (nth 2) first)
+        ;; Rivien sisältöä ei aleta testaamaan koska siellä on aikaleimoja jotka riippuu koska testikanta laitettiin pystyyn (ei suoriudu putkessa)
+        ;; Mutta voidaan katsoa rivimäärä 
+        rivimäärä  (-> vastaus (nth 2) second (nth 3) count)]
+
     (is (= raportin-nimi "Saimaan kanava, Liikennetapahtumat"))
 
     (is (= raportin-otsikko
@@ -158,6 +161,8 @@
 
     (is (= taulukon-parametrit
            {:otsikko nil, :oikealle-tasattavat-kentat #{}, :tyhja "Ei Tietoja.", :piilota-border? false, :viimeinen-rivi-yhteenveto? false}))
+    
+    (is (= rivimäärä 10))
 
     (is (= taulukon-sarakkeet  [{:otsikko "Aika", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "vaalen-tumma-tausta", :leveys 0.75, :tyyppi :varillinen-teksti}
                                 {:otsikko "Kohde", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.8, :tyyppi :varillinen-teksti}
