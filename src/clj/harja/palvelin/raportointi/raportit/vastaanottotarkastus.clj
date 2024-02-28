@@ -308,7 +308,7 @@
   (let [urakka-tai-hallintayksikko? (or
                                       (some? urakka-id)
                                       (and (some? hallintayksikko-id) (not urakka-id)))
-        
+
         raportin-nimi (if urakka-id
                         "Vastaanottotarkastus"
                         "Päällystysurakoiden yhteenveto")
@@ -327,12 +327,12 @@
                         :koko-maa (str raportin-nimi ", KOKO MAA " vuosi))
 
         yllapitokohteet+kustannukset (->> (into []
-                                                (hae-yllapitokohteet db {:urakka urakka-id
-                                                                         :vuosi vuosi
-                                                                         :hallintayksikko hallintayksikko-id}))
-                                       
+                                            (hae-yllapitokohteet db {:urakka urakka-id
+                                                                     :vuosi vuosi
+                                                                     :hallintayksikko hallintayksikko-id}))
+
                                        (map #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi)))
-                                       
+
                                        (yllapitokohteet-domain/jarjesta-yllapitokohteet))
 
         muut-kustannukset (hae-muut-kustannukset db {:urakka urakka-id
@@ -343,7 +343,15 @@
                             (hae-yllapitourakan-sanktiot db {:urakka urakka-id
                                                              :vuosi vuosi
                                                              :hallintayksikko hallintayksikko-id}))
-                          (map #(assoc % :maara (- (:maara %)))))]
+                          (map #(assoc % :maara (- (:maara %)))))
+        ;; Yhteenvetoraportilla on lisäksi Eurot / PK-luokka osio
+        pkluokkien-kustannukset (when-not urakka-id
+                                  (pkluokkien-kustannukset-hallintayksikoittain db {:vuosi vuosi
+                                                                                    :hallintayksikko hallintayksikko-id}))
+        hallintayksikon-korjausluokkasummat (when-not urakka-id
+                                              (map
+                                                #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi))
+                                                pkluokkien-kustannukset))]
 
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
