@@ -324,6 +324,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                yllapitokohteet (:yllapitokohteet optiot)
                yllapito? @urakka/yllapitourakka?
                nakyma (:nakyma optiot)
+               tallennus-kaynnissa? (:tallennus-kaynnissa? optiot)
                vesivayla? (u-domain/vesivaylaurakkatyyppi? nakyma)
                yllapitokohdeurakka? @urakka/yllapitokohdeurakka?]
            (if (and yllapitokohdeurakka? (nil? yllapitokohteet)) ;; Pakko olla ylläpitokohteet ennen kuin lomaketta voi näyttää
@@ -359,6 +360,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                     (e! (laatupoikkeamat/->TallennaLaatuPoikkeama (lomake/ilman-lomaketietoja sisalto) nakyma))))
                                 {:ikoni (ikonit/tallenna)
                                  :disabled (or
+                                             tallennus-kaynnissa?
                                              (not (validoi-sanktiotiedot sisalto))
                                              (not (sanktiorivit-ok? sisalto (cond yllapito? :yllapito
                                                                               vesivayla? :vesivayla
