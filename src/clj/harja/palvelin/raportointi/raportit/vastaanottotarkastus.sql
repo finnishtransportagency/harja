@@ -108,7 +108,6 @@ SELECT DISTINCT ON (CONCAT(u.id, ' ', u.nimi)) CONCAT(u.id, ' ', u.nimi)        
                                                o.id                               AS "hallintayksikko_id",
                                                o.nimi                             AS "hallintayksikko_nimi",
                                                ypk.pkluokka,
-                                               SUM(-s.maara)                      AS "sakot-ja-bonukset",
                                                SUM(ypkk.sopimuksen_mukaiset_tyot) AS "sopimuksen-mukaiset-tyot",
                                                SUM(ypkk.maaramuutokset)           AS "maaramuutokset",
                                                SUM(ypkk.arvonvahennykset)         AS "arvonvahennykset",
@@ -117,15 +116,9 @@ SELECT DISTINCT ON (CONCAT(u.id, ' ', u.nimi)) CONCAT(u.id, ' ', u.nimi)        
                                                SUM(ypkk.kaasuindeksi)             AS "kaasuindeksi",
                                                SUM(ypkk.maku_paallysteet)         AS "maku-paallysteet"
   FROM yllapitokohde ypk
-           JOIN yllapitokohteen_kustannukset ypkk ON ypk.id = ypkk.yllapitokohde
+           LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypk.id = ypkk.yllapitokohde
            JOIN urakka u ON ypk.urakka = u.id
            JOIN organisaatio o ON u.hallintayksikko = o.id
-           LEFT JOIN laatupoikkeama lp
-                     ON (lp.yllapitokohde = ypk.id
-                         AND lp.urakka = ypk.urakka AND lp.poistettu IS NOT TRUE)
-           LEFT JOIN sanktio s
-                     ON s.laatupoikkeama = lp.id
-                         AND s.poistettu IS NOT TRUE
  WHERE :vuosi = ANY (ypk.vuodet)
    AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
    AND ypk.poistettu IS NOT TRUE
