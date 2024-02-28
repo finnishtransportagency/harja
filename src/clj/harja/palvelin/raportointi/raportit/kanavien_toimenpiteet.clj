@@ -31,7 +31,8 @@
     [:raportti {:nimi raportin-otsikko
                 :piilota-otsikko? true}
 
-     [:taulukko {:otsikko otsikko
+     [:taulukko {:orientaatio :landscape
+                 :otsikko otsikko
                  :tyhja (when (empty? rivit) "Ei raportoitavaa.")
                  :sheet-nimi otsikko}
       sarakkeet
