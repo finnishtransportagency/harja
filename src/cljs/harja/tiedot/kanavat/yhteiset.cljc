@@ -1,5 +1,7 @@
-(ns harja.tiedot.kanavat.urakka.yhteiset
-  "Kanavat yhteiset")
+(ns harja.tiedot.kanavat.yhteiset
+  "Kanavat yhteiset
+   Olisi tarkoitus siirtää hieman toistuvia konversiofunktioita, 
+   esim kanavien_liikennetapahtumat.clj raportissa on paljon konversiofunktioita mitä on jo olemassa liikenne.cljs frontin koodissa")
 
 #?(:cljs
    (defn onko-tarve-hakea-aikavali-muuttunut? 

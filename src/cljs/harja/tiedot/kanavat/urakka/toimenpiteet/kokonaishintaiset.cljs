@@ -2,7 +2,7 @@
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
-            [harja.tiedot.kanavat.urakka.yhteiset :as yhteiset]
+            [harja.tiedot.kanavat.yhteiset :as yhteiset]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]

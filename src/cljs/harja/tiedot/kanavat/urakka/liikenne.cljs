@@ -5,7 +5,7 @@
             [reagent.core :as r :refer [atom]]
             [tuck.core :as tuck]
             [namespacefy.core :refer [namespacefy]]
-            [harja.tiedot.kanavat.urakka.yhteiset :as yhteiset]
+            [harja.tiedot.kanavat.yhteiset :as yhteiset]
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
             [harja.tyokalut.tuck :as tt]
