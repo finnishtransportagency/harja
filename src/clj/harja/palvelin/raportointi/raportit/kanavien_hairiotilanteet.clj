@@ -9,10 +9,9 @@
 (defn suorita [db _ {:keys [rivit parametrit]}]
   
   (let [{:keys [aikavali urakka]} parametrit
+        [alkupvm loppupvm] aikavali
         otsikko "Häiriötilanteet"
         urakka-id (:id urakka)
-        alkupvm (first aikavali)
-        loppupvm (second aikavali)
         lyhytnimet (urakat-q/hae-urakoiden-nimet db {:urakkatyyppi "vesivayla-kanavien-hoito" :vain-puuttuvat false :urakantila "kaikki"})
         ;; Käyttää lyhytnimeä jos olemassa, jos ei -> urakan koko nimi
         urakan-nimi (k-raportointi/suodata-urakat lyhytnimet  #{urakka-id})
