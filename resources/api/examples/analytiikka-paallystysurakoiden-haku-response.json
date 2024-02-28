@@ -1,16 +1,16 @@
 {
   "paallystysurakat": [
     {
-      "yhaId": 321,
-      "harjaId": 789,
       "elyt": [
         "POP"
       ],
       "vuodet": [
         2023
       ],
-      "sampotunnus": "PR00012345",
-      "yhatunnus": "DHJ POP ELY ET9 2023"
+      "yhatunnus": "YHA5731289",
+      "yhaId": 5731289,
+      "harjaId": 51,
+      "sampotunnus": "5731289-TES2"
     }
   ]
 }

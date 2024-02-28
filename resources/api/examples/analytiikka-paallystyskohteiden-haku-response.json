@@ -1,115 +1,63 @@
 {
   "paallystyskohteet": [
     {
-      "yhaId": 123,
-      "harjaId": 10203,
-      "poistettu": false,
-      "urakka": 789,
-      "kohdenumero": 456,
-      "kohdetyyppi": "paallystys",
-      "nimi": "Mt 88 Malmitie",
-      "tunnus": "Esimerkkitunnus 1",
-      "yotyo": false,
-      "tierekisteriosoitevali": {
-        "tienumero": 88,
-        "aosa": 6,
-        "aet": 0,
-        "losa": 7,
-        "let": 6218,
-        "karttapaivamaara": "2023-01-29"
-      },
-      "pituus": 12531,
-      "kokonaishinta": 87900,
       "alikohteet": [
         {
-          "yhaId": 234,
-          "harjaId": 20304,
-          "tierekisteriosoitevali": {
-            "tienumero": 88,
-            "aosa": 6,
-            "aet": 0,
-            "losa": 6,
-            "let": 6316,
-            "kaista": 1,
-            "ajorata": 1,
-            "karttapaivamaara": "2023-01-29"
-          },
-          "pituus": 6316,
-          "paallystystoimenpide": {
-            "uusiPaallyste": "asfalttibetoni",
-            "raekoko": 1,
-            "massamenekki": 100,
-            "kokonaismassamaara": 456,
-            "paallystetyomenetelma": "massapintaus"
-          }
-        },
-        {
-          "yhaId": 235,
-          "harjaId": 20305,
-          "tierekisteriosoitevali": {
-            "tienumero": 88,
-            "aosa": 7,
-            "aet": 0,
-            "losa": 7,
-            "let": 6218,
-            "kaista": 1,
-            "ajorata": 1,
-            "karttapaivamaara": "2023-01-29"
-          },
-          "pituus": 6218,
-          "paallystystoimenpide": {
-            "uusiPaallyste": "asfalttibetoni",
-            "raekoko": 1,
-            "massamenekki": 100,
-            "kokonaismassamaara": 448,
-            "paallystetyomenetelma": "massapintaus"
-          }
-        }
-      ]
-    },
-    {
-      "yhaId": 124,
-      "harjaId": 10204,
-      "poistettu": false,
-      "urakka":  789,
-      "kohdenumero": 457,
-      "kohdetyyppi": "paallystys",
-      "nimi": "Mt 86 Paavolantie",
-      "tunnus": "Esimerkkitunnus 2",
-      "tierekisteriosoitevali": {
-        "tienumero": 86,
-        "aosa": 20,
-        "aet": 0,
-        "losa": 20,
-        "let": 355,
-        "karttapaivamaara": "2023-01-29"
-      },
-      "pituus": 355,
-      "kokonaishinta": 8900,
-      "alikohteet": [
-        {
-          "yhaId": 236,
-          "harjaId": 20306,
+          "tr-kaista": 1,
+          "yllapitokohde": 32,
+          "geometria": "MULTILINESTRING((404340.853 7152734.231,404363.924 7152792.263,404405.774 7152883.486,404440.966 7152952.267,404473.6 7153009.904,404509.82 7153070.445,404562.38 7153149.582,404597.509 7153198.329,404670.47793504497 7153291.048912377))",
+          "tr-ajorata": 1,
           "tierekisteriosoitevali": {
             "tienumero": 86,
             "aosa": 20,
             "aet": 0,
             "losa": 20,
-            "let": 335,
+            "let": 650,
             "kaista": 1,
-            "ajorata": 1,
-            "karttapaivamaara": "2023-01-29"
+            "ajorata": 1
           },
-          "pituus": 355,
-          "paallystystoimenpide": {
-            "uusiPaallyste": "asfalttibetoni",
-            "raekoko": 1,
-            "massamenekki": 100,
-            "kokonaismassamaara": 24,
-            "paallystetyomenetelma": "massapintaus"
-          }
+          "harjaId": 45,
+          "yhaId": 1235,
+          "pituus": 650
+        },
+        {
+          "tr-kaista": 1,
+          "yllapitokohde": 32,
+          "geometria": "MULTILINESTRING((404670.47793504497 7153291.048912377,404729.438 7153358.259,404785.274 7153415.888,404827.675 7153455.344,404920.263 7153531.503,404962.361 7153561.851,405017.426 7153597.401,405073.513 7153630.544,405179.2810128755 7153687.045217191))",
+          "tr-ajorata": 1,
+          "tierekisteriosoitevali": {
+            "tienumero": 86,
+            "aosa": 20,
+            "aet": 650,
+            "losa": 20,
+            "let": 1300,
+            "kaista": 1,
+            "ajorata": 1
+          },
+          "harjaId": 46,
+          "yhaId": 1236,
+          "pituus": 650
         }
-      ]
+      ],
+      "kohdenumero": 1,
+      "tierekisteriosoitevali": {
+        "karttapaivamaara": "2022-07-15T09:00:00Z",
+        "tienumero": 86,
+        "aosa": 20,
+        "aet": 0,
+        "losa": 20,
+        "let": 1300
+      },
+      "kohdetyyppi": "paallystys",
+      "tunnus": "ANALYTIIKKA1",
+      "urakka": 51,
+      "nimi": "Kirkonkylä - Toppinen",
+      "harjaId": 32,
+      "poistettu": false,
+      "yhaId": 1234,
+      "pituus": 1300,
+      "yotyo": false,
+      "kokonaishinta": 98900
     }
   ]
 }

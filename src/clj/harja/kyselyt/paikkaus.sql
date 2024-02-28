@@ -551,11 +551,11 @@ SELECT pk.id,
                (SELECT ST_ASTEXT(
                            st_simplify(
                                tierekisteriosoitteelle_viiva(
-                                   CAST((pk.tierekisteriosoite_laajennettu).tie AS INTEGER),
-                                   CAST((pk.tierekisteriosoite_laajennettu).aosa AS INTEGER),
-                                   CAST((pk.tierekisteriosoite_laajennettu).aet AS INTEGER),
-                                   CAST((pk.tierekisteriosoite_laajennettu).losa AS INTEGER),
-                                   CAST((pk.tierekisteriosoite_laajennettu).let AS INTEGER)), 1)))
+                                   (pk.tierekisteriosoite_laajennettu).tie,
+                                   (pk.tierekisteriosoite_laajennettu).aosa,
+                                   (pk.tierekisteriosoite_laajennettu).aet,
+                                   (pk.tierekisteriosoite_laajennettu).losa,
+                                   (pk.tierekisteriosoite_laajennettu).let), 1)))
            END                                     AS geometria
 FROM paikkauskohde pk
          LEFT JOIN paikkauskohde_tyomenetelma tm ON pk.tyomenetelma = tm.id

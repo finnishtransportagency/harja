@@ -676,13 +676,13 @@
     (update-in [:massat :runkoaineet] (fn [runkoaineet] (map #(dissoc % :id) runkoaineet)))
     (update-in [:massat :lisaaineet] (fn [lisaaineet] (map #(dissoc % :id) lisaaineet)))
     (update-in [:massat :sideaineet] (fn [sideaineet] (map #(dissoc % :id) sideaineet)))
-    (dissoc :karttapaivamaara :tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :tr-ajorata
-      :tr-kaista)
+    (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa)) massa)))
     (set/rename-keys {:pinta-ala :pintaAla
                       :massat :massa})))
 
 (defn- muodosta-alustatoimenpide [alustatoimenpide]
   (-> alustatoimenpide
+    (dissoc :id)
     (update :massat #(-> (konversio/sarakkeet-vektoriin % {:runkoaine :runkoaineet
                                                            :lisaaine :lisaaineet
                                                            :sideaine :sideaineet})
@@ -691,10 +691,8 @@
     (update-in [:massat :runkoaineet] (fn [runkoaineet] (map #(dissoc % :id) runkoaineet)))
     (update-in [:massat :lisaaineet] (fn [lisaaineet] (map #(dissoc % :id) lisaaineet)))
     (update-in [:massat :sideaineet] (fn [sideaineet] (map #(dissoc % :id) sideaineet)))
-    (update :massat (fn [massa] (when-not (nil? (:tyyppi massa)) massa)))
+    (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa)) massa)))
     (update :murske (fn [murske] (when-not (nil? (:tyyppi murske)) murske)))
-    (dissoc :karttapaivamaara :tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :tr-ajorata
-      :tr-kaista)
     (set/rename-keys {:pinta-ala :pintaAla
                       :lisatty-paksuus :lisattyPaksuus
                       :verkon-tyyppi :verkonTyyppi
@@ -999,5 +997,8 @@
       :analytiikka-paallystysurakat
       :analytiikka-paallystyskohteet
       :analytiikka-hae-paallystyskohteiden-aikataulut
-      :analytiikka-hae-paallystysilmoitukset)
+      :analytiikka-hae-paallystysilmoitukset
+      :analytiikka-hae-hoidon-paikkaukset
+      :analytiikka-hae-paikkauskohteet
+      :analytiikka-hae-paikkaukset)
     this))
