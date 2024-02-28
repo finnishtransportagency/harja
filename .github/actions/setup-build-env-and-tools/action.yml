@@ -32,7 +32,7 @@ runs:
       if: ${{ inputs.install-clojure-deps == 'true' }}
       with:
         path: ~/.m2/repository
-        key: ${{ runner.os }}-leiningen-${{ hashFiles('**/project.clj') }}
+        key: ${{ runner.os }}-leiningen-${{ hashFiles('**/project.clj', '**/profiles.clj') }}
         # https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#matching-a-cache-key
         # "restore-keys allows you to specify a list of alternate restore keys to use when there is a cache miss on key. "
         # Kommentoitu pois, jotta PR brancheissä ei haeta aina cachesta potentiaalisesti vääriä clojure depsuja
