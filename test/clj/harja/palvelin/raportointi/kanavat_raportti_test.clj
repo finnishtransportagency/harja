@@ -64,7 +64,9 @@
     ;; Raportilla pitäisi näkyä passatut tiedot 
     (is (= vastaus
            [:raportti
-            {:nimi "Saimaan kanava, Häiriötilanteet ajalta 01.10.2023 - 30.09.2024", :piilota-otsikko? true}
+            {:orientaatio :landscape
+             :nimi "Saimaan kanava, Häiriötilanteet ajalta 01.10.2023 - 30.09.2024", 
+             :piilota-otsikko? true}
             [:taulukko {:otsikko "Häiriötilanteet", :tyhja nil, :sheet-nimi "Häiriötilanteet"}
              [{:otsikko "Havainto", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "vaalen-tumma-tausta", :leveys 0.75, :tyyppi :varillinen-teksti}
               {:otsikko "Kohde", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.8, :tyyppi :varillinen-teksti}
