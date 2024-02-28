@@ -33,20 +33,19 @@
          {:ei-borderia? true
           :muokkaa! #(println "Muokkaa " %)
           ;; Header
-          :header [:<>
+          :header [:div.col-md-12
                    [:h2.header-yhteiset "Muokkaa toteumaa"]
                    [:hr]]
-          ;; Footer
+          ;; Footer, joka on vakiona col-md-12
           :footer [:<>
                    [:hr]
                    [:div.muokkaus-modal-napit
                     ;; Tallenna
                     [napit/tallenna "Tallenna muutokset" #(println "tallenna") {:disabled false}] ;; TODO halutaan varmaan asettaa jokin disabled arvo
                     ;; Poista 
-                    [napit/poista "Poista" #(println "poista")] ;; TODO 
+                    [napit/yleinen-toissijainen "Poista" #(println "poista") {:ikoni (ikonit/livicon-trash) :paksu? true}]
                     ;; Sulje 
-                    [napit/yleinen-toissijainen "Sulje" #(e! (tiedot/->SuljeMuokkaus))]]]
-          :footer-luokka ""} ;; Yliajaa col-md-12 luokan mitä ei tässä haluta 
+                    [napit/yleinen-toissijainen "Sulje" #(e! (tiedot/->SuljeMuokkaus))]]]}
 
          [(lomake/rivi
             {:otsikko "Pvm"
@@ -55,7 +54,48 @@
                             [kentat/tee-kentta {:tyyppi :pvm
                                                 :ikoni-sisaan? true
                                                 :vayla-tyyli? true}
-                             (atom nil)])})]
+                             (atom nil)])})
+
+          (lomake/ryhma
+            {:otsikko "Sijainti"
+             :ryhman-luokka "lomakeryhman-otsikko-tausta lomake-tr-otsikko"}
+            
+            (lomake/rivi
+            {:nimi :tie
+             :otsikko "Tie"
+             :tyyppi :numero
+             :input-luokka "lomake-tr-valinta"
+             :rivi-luokka "lomakeryhman-rivi-tausta"
+             :desimaalien-maara 0
+             ::lomake/col-luokka "col-xs-2 tr-input"}
+            {:nimi :aosa
+             :otsikko "A-osa"
+             :tyyppi :numero
+             :input-luokka "lomake-tr-valinta"
+             ::lomake/col-luokka "col-xs-2 tr-input"
+             :desimaalien-maara 0}
+            {:nimi :aet
+             :otsikko "A-et"
+             :tyyppi :numero
+             :input-luokka "lomake-tr-valinta"
+             ::lomake/col-luokka "col-xs-2 tr-input"
+             :desimaalien-maara 0}
+            {:nimi :losa
+             :otsikko "L-osa"
+             :tyyppi :numero
+             :input-luokka "lomake-tr-valinta"
+             ::lomake/col-luokka "col-xs-2 tr-input"
+             :desimaalien-maara 0}
+            {:nimi :let
+             :otsikko "L-et"
+             :tyyppi :numero
+             :input-luokka "lomake-tr-valinta"
+             ::lomake/col-luokka "col-xs-2 tr-input"
+             :desimaalien-maara 0}
+            )
+            
+            )]
+         
          ;;@tiedot/lomake  =?
          ]])
 

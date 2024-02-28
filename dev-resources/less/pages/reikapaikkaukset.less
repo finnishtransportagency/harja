@@ -5,7 +5,32 @@
   .overlay-oikealla {
     width: 600px;
     overflow: auto;
-    padding: 32px;
+    padding: 22px;
+
+    .sijainti-sarakkeet {
+      display: flex;
+      flex-direction: column;
+      gap: 20px; 
+
+      :first-child {
+        gap: 0px;
+      }
+
+    }
+
+    .lomake-tr-valinta {
+      width: 93px;
+    }
+
+    .lomake-tr-otsikko {
+      padding-bottom: 0px;
+    }
+
+    .tr-input {
+      margin-right: 12px;
+      margin-left: 0px;
+      padding-left: 17px;
+    }
 
     .muokkaus-modal-napit {
       .nappi-ensisijainen  {
