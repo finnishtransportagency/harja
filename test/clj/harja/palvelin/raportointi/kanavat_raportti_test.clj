@@ -114,7 +114,9 @@
     ;; Raportilla pitäisi näkyä passatut tiedot 
     (is (= vastaus
            [:raportti 
-            {:nimi "Saimaan kanava, Kokonaishintaiset toimenpiteet ajalta 01.10.2023 - 30.09.2024", :piilota-otsikko? true} 
+            {:orientaatio :landscape
+             :nimi "Saimaan kanava, Kokonaishintaiset toimenpiteet ajalta 01.10.2023 - 30.09.2024", 
+             :piilota-otsikko? true} 
             [:taulukko {:otsikko "Kokonaishintaiset toimenpiteet", :tyhja nil, :sheet-nimi "Kokonaishintaiset toimenpiteet"} 
              [{:otsikko "Pvm", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "vaalen-tumma-tausta", :leveys 0.5, :tyyppi :varillinen-teksti} 
               {:otsikko "Kohde", :otsikkorivi-luokka "nakyma-otsikko", :sarakkeen-luokka "nakyma-valkoinen-solu", :leveys 0.8, :tyyppi :varillinen-teksti}

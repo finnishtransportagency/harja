@@ -27,11 +27,11 @@
                     {:otsikko "Suorittaja" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.5 :tyyppi :varillinen-teksti}
                     {:otsikko "Kuittaaja" :otsikkorivi-luokka "nakyma-otsikko" :sarakkeen-luokka "nakyma-valkoinen-solu" :leveys 0.8 :tyyppi :varillinen-teksti})]
 
-    [:raportti {:nimi raportin-otsikko
+    [:raportti {:orientaatio :landscape
+                :nimi raportin-otsikko
                 :piilota-otsikko? true}
 
-     [:taulukko {:orientaatio :landscape
-                 :otsikko otsikko
+     [:taulukko {:otsikko otsikko
                  :tyhja (when (empty? rivit) "Ei raportoitavaa.")
                  :sheet-nimi otsikko}
       sarakkeet
