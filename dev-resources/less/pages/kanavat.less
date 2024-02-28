@@ -1,0 +1,153 @@
+.otsikko-ja-valinta-rivi {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+
+  .otsikko {
+    margin: 0px;
+    font-weight: bold;
+    flex: 1;
+  }
+  .valinta {
+    margin: 0px;
+    flex: 1;
+  }
+}
+
+.kanava-suodattimet {
+  display: flex;
+  justify-content: left;
+  padding: @valistys-16;
+  gap: 120px;
+
+  .ryhma {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: @valistys-16;
+
+    &:first-child {
+      max-width: 430px;
+    }
+  }
+}
+
+.kanava-hairio-lomake {
+  padding: @valistys-16;
+}
+
+.kanava-hairio-materiaalit {
+  padding-top: 50px;
+}
+
+.kanava-hairio-tallenna {
+  padding-top: @valistys-4;
+}
+
+.hairio-siirrytty-paikalliskayttoon {
+  display: flex;
+}
+
+.hairio-korjaus {
+  position: relative;
+  top: 6px;
+}
+
+// Pakolliset kentät, Tallenna/Poista
+.hairiotilanne-kirjaus-footer {
+  display: flex;
+  flex-direction: column;
+  gap: @valistys-16;
+
+  // Pakolliset kentät päällimmäisenä
+  .hairiotilanne-pakolliset {
+    flex-grow: 1;
+  }
+
+  // Napit pohjalla sarakkeina 
+  .hairio-kirjaus-napit {
+    display: flex;
+    flex-grow: 1;
+
+    .kanava-hairio-tallenna, .kanava-hairio-poista {
+      flex-basis: 30%; 
+    }
+  }
+}
+
+// Liikennetapahtumien yhteenveto
+.liikenneyhteenveto>*:first-child {
+  padding-bottom: 0px;
+}
+
+.liikenneyhteenveto>*:last-child {
+  padding-top: 0px;
+}
+
+.liikenne-header .raporttivienti {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.palvelumuodot-rivi {
+  display: grid;
+  align-items: start;
+  text-align: left;
+  grid-template-columns: repeat(6, 1fr);
+  padding: @valistys-16;
+  gap: @valistys-8;
+}
+
+// Sarakkeista tulee hieman luettavampia pienemmällä resoluttiolla
+.palvelumuodot-rivi>* {
+  width: 70%;
+}
+
+// Yhteensä-sarake
+.palvelumuodot-rivi>*:last-child {
+  text-align: right;
+}
+
+.toimenpiteet-rivi {
+  display: grid;
+  align-items: start;
+  text-align: left;
+  grid-template-columns: repeat(6, 1fr);
+  padding: @valistys-16;
+  gap: @valistys-8;
+}
+
+.toimenpiteet-rivi>* {
+  width: 70%;
+}
+
+.liikenne-valinnat {
+  display: flex;
+  flex-direction: column;
+}
+
+.liikennetapahtuma-suunta-suodatin {
+  width: 300px;
+
+  .kentan-otsikko {
+    margin-top: 0px;
+  }
+}
+
+.ajax-loader-liikennetapahtumat {
+padding: @valistys-16;
+}
+
+.liikennetapahtumien-suodattimet {
+  .row {
+    padding: @valistys-16;
+  }
+
+  .liikenne-urakat-suodatin {
+    gap: @valistys-4;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: auto;
+  }
+}
