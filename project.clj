@@ -53,6 +53,9 @@
                  [org.clojure/core.cache "0.7.2"]
                  [org.clojure/core.memoize "1.0.257"]
 
+                 ;; Pattern match kirjasto
+                 [org.clojure/core.match "1.0.0"]
+
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
@@ -105,9 +108,9 @@
                  [clj-time "0.15.2"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
 
+                 ;; -- Karttatasot front-end
                  ;; Kuvataso error tulee ol.source.Image inheritistä, jos päivittää neloseen
                  ;; TODO: Päivitys vaatii siirtymisen shadow-cljs:ään
-                 ;;
                  [cljsjs/openlayers "3.15.1"] ; TODO Voisi päivittää, mutta laadunseurannan buildi hajoaa (4.4.1-1) puuttuviin requireihin
 
                  ;; Microsoft dokumenttimuotojen tuki
@@ -116,7 +119,7 @@
                  [org.apache.poi/poi-ooxml "5.2.5"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
 
-                 ;; Chime -ajastuskirjasto
+                 ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
                  [jarohen/chime "0.2.2"]
 
                  ;; Pikkukuvien (thumbnail) muodostamiseen
@@ -165,9 +168,11 @@
 
                  ;; data.xml tarvitaan mm. XML-tiedostojen parsimiseen ja pretty-printtaukseen
                  [org.clojure/data.xml "0.0.8"]]
+
   :managed-dependencies [[org.apache.poi/poi "5.2.5"]
                          [org.apache.poi/poi-scratchpad "5.2.5"]
                          [org.apache.poi/poi-ooxml "5.2.5"]]
+
   :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
@@ -180,6 +185,7 @@
                  ]
 
   :plugins [[lein-cljsbuild "1.1.7"]
+            ;; TODO: Pilvisiirtymän jälkeen poistetaan lein-less riippuvuus
             ;; Harjan pilviversiossa on luovuttu lein-lessistä, mutta on-prem harjassa
             ;; käytetään sitä vielä. Riippuvuus ja käyttö aliaksissa voidaan poistaa, kun
             ;; ollaan luovuttu on-premistä ja jenkinsin käytöstä.
@@ -251,10 +257,10 @@
             "tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
                         ;; Harjan fronttibuildi ja LESS
                         "less" "once,"
-                        "with-profile" "prod-cljs" "compile-prod,"
+                        "with-profile" "+prod-cljs" "compile-prod,"
 
                         ;; Harja mobiili laadunseuranta fronttibuildi
-                        "with-profile" "laadunseuranta-prod" "compile-laadunseuranta-prod,"
+                        "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
 
                         "uberjar," "codox"]
             "testit" ["do" "clean,"
@@ -272,8 +278,8 @@
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
             "tuotanto-notest" ["do" "clean," "compile,"
                                "less" "once,"
-                               "with-profile" "prod-cljs" "compile-prod,"
-                               "with-profile" "laadunseuranta-prod" "compile-laadunseuranta-prod,"
+                               "with-profile" "+prod-cljs" "compile-prod,"
+                               "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
                                "uberjar"]}
   :test-selectors {;; lein test :perf
                    ;; :all ajaa kaikki, älä kuitenkaan laita tänne :default :all, se ei toimi :)

@@ -42,7 +42,7 @@ runs:
       if: ${{ inputs.install-clojure-deps == 'true' && steps.cache-clojure-deps.outputs.cache-hit != 'true' }}
       run: |
         lein deps
-        lein with-profile test deps
+        lein with-profile +test deps
       shell: bash
 
     # FIXME: delaguardo/setup-clojure@1c76ab0e154379260d7a6ea16b413679abe46785 is not allowed to be used in finnishtransportagency/harja.
