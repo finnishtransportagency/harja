@@ -53,7 +53,7 @@
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
-                 [org.postgresql/postgresql "42.7.1"]
+                 [org.postgresql/postgresql "42.7.2"]
                  [net.postgis/postgis-jdbc "2.5.0"]
                  [org.locationtech.jts/jts-core "1.19.0"]
                  [com.mchange/c3p0 "0.9.5.4"]

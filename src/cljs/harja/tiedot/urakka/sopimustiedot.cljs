@@ -12,4 +12,4 @@
             :sopimustyyppi sopimustyyppi}))
 
 (def +sopimustyypit+
-  [:palvelusopimus :kokonaisurakka])
+  [:palvelusopimus :kokonaisurakka :mpu])

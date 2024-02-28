@@ -56,6 +56,9 @@ RUN if [ "$PROMETHEUS_JAR_SHA1" != "$(sha1sum jmx_prometheus_javaagent.jar | awk
 # Kopioi Prometheus JMX exporter config
 COPY ./aws/fargate/jmx-exporter-config.yml /
 
+# Kopioi entrypoint
+COPY ./aws/fargate/entrypoint.sh /entrypoint.sh
+
 
 # Luo Non-root ryhmä ja käyttäjä, jotta sovellus ei pyöri roottina
 ARG USERNAME=harja
@@ -71,16 +74,17 @@ RUN mkdir -p /app && chown -R harja:harja /app
 USER $USERNAME
 WORKDIR /app
 
-# Kopioi entrypoint
-COPY ./aws/fargate/entrypoint.sh entrypoint.sh
-
 # Kopioi uberjar pipelinesta
-# Tässä oleteetaan, että uberjar on jo buildattu ja se on hakemistossa "target"
+# Tässä oletetaan, että uberjar on jo buildattu ja se on hakemistossa "target"
 COPY ./target/harja-0.0.1-SNAPSHOT-standalone.jar harja.jar
 
 # Harja-app tarkastaa tällä hetkellä jotkin asetetut ENV muuttujat .harja_env tiedoston mukaisesti
 # harja.palvelin.asetukset/tarkista-ymparisto! -funktiolla
 COPY ./aws/fargate/.harja_env .harja_env
+
+# Aseta volume
+# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/bind-mounts.html
+VOLUME ["/app"]
 
 
 # Aseta ENV muuttujat (default-arvot)
@@ -100,4 +104,4 @@ ENV HARJA_JVM_OPTS="-Xmx6g"
 EXPOSE 3000 7071
 
 # Aseta entrypoint,
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
