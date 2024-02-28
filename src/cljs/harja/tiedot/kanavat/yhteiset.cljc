@@ -4,7 +4,7 @@
    esim kanavien_liikennetapahtumat.clj raportissa on paljon konversiofunktioita mitä on jo olemassa liikenne.cljs frontin koodissa")
 
 #?(:cljs
-   (defn onko-tarve-hakea-aikavali-muuttunut? 
+   (defn onko-tarve-hakea-aikavali-muuttunut?
      "Palauttaa booleanin onko tarve tehdä uutta hakua jos käyttäjä muuttaa aikaväliä suodattimista"
      [valinnat uudet-valinnat tiedot-ladattu-konditio]
      (let [aikavali-uusi (:aikavali uudet-valinnat)
@@ -26,3 +26,9 @@
                           (not
                             (and vain-aikavali-muuttunut? (not aikavali-olemassa?))))]
        tarve-hakea?)))
+
+#?(:cljs
+   (defn lisaa-jarjestysnumero [data]
+     (let [vanha-id (apply max (map :jarjestysnumero data))
+           uusi-id (if (nil? vanha-id) 0 (inc vanha-id))]
+       (conj (vec data) {:jarjestysnumero uusi-id}))))

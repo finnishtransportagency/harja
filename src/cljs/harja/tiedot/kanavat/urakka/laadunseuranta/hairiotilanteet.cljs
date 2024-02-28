@@ -1,6 +1,7 @@
 (ns harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
+            [harja.tiedot.kanavat.yhteiset :as yhteiset]
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.kanavat.kohde :as kohde]
@@ -339,11 +340,7 @@
   (process-event [_ app]
     ;; Materiaalien järjestystä varten täytyy käyttää järjestysnumeroa. Nyt ei voida käyttää muokkaus-gridin generoimaa
     ;; numeroa, koska rivinlisäysnappi ei ole normaali gridin lisäysnappi
-    (update-in app
-      [:valittu-hairiotilanne ::materiaalit/materiaalit]
-      #(let [vanha-id (apply max (map :jarjestysnumero %))
-             uusi-id (if (nil? vanha-id) 0 (inc vanha-id))]
-         (conj (vec %) {:jarjestysnumero uusi-id}))))
+    (update-in app [:valittu-hairiotilanne ::materiaalit/materiaalit] yhteiset/lisaa-jarjestysnumero))
 
   LisaaVirhe
   (process-event [{virhe :virhe} app]

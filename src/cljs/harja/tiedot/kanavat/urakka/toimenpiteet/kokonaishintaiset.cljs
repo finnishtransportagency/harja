@@ -185,7 +185,7 @@
   PoistaToimenpide
   (process-event [{toimenpide :toimenpide} app]
     (let [tallennus! (tuck/send-async! ->TallennaToimenpide)]
-      (go 
+      (go
         (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true) true))
       (update app :valitut-toimenpide-idt
         #(toimenpiteet/poista-valittu-toimenpide % (::kanavan-toimenpide/id toimenpide)))))
@@ -236,11 +236,7 @@
   (process-event [_ app]
     ;; Materiaalien järjestystä varten täytyy käyttää järjestysnumeroa. Nyt ei voida käyttää muokkaus-gridin generoimaa
     ;; numeroa, koska rivinlisäysnappi ei ole normaali gridin lisäysnappi
-    (update-in app
-      [:avattu-toimenpide ::materiaalit/materiaalit]
-      #(let [vanha-id (apply max (map :jarjestysnumero %))
-             uusi-id (if (nil? vanha-id) 0 (inc vanha-id))]
-         (conj (vec %) {:jarjestysnumero uusi-id}))))
+    (update-in app [:avattu-toimenpide ::materiaalit/materiaalit] yhteiset/lisaa-jarjestysnumero))
 
   LisaaVirhe
   (process-event [{virhe :virhe} app]
