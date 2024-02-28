@@ -19,8 +19,7 @@
             [harja.kyselyt.paallystys-kyselyt :as paallystys-q]
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.id :as id])
-  (:use org.httpkit.fake))
+            [harja.id :as id]))
 
 (defn tarkista-urakkatyypin-mukainen-kirjoitusoikeus [db user urakka-id]
   (let [urakan-tyyppi (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
