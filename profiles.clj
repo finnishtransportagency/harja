@@ -77,8 +77,16 @@
         :source-paths ["test/cljs" "test/doo" "test/shared-cljs"]}
  :prod-cljs {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]}
 
- :laadunseuranta-dev {:source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]}
- :laadunseuranta-test {:source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"
-                                      "laadunseuranta/test-src/cljs" "test/shared-cljs"]}
- :laadunseuranta-prod {:source-paths ^:replace ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"
-                                                "src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]}}
+ ;; -- Laadunseuranta --
+ ;; Ainoastaan laadunseurantaan liittyvät riippuvuudet
+ :laadunseuranta-common {:dependencies [[devcards "0.2.4" :exclusions [cljsjs/react]]]}
+ :laadunseuranta-dev-paths {:source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]}
+ :laadunseuranta-test-paths {:source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"
+                                            "laadunseuranta/test-src/cljs" "test/shared-cljs"]}
+ :laadunseuranta-prod-paths {:source-paths ^:replace ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"
+                                                      "src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]}
+
+ ;; Laadunseurantaan liittyvät profiilit (komposiittiprofiilit)
+ :laadunseuranta-dev [:laadunseuranta-common :laadunseuranta-dev-paths]
+ :laadunseuranta-test [:laadunseuranta-common :laadunseuranta-test-paths]
+ :laadunseuranta-prod [:laadunseuranta-common :laadunseuranta-prod-paths]}

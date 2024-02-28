@@ -154,10 +154,6 @@
                  [webjure/tuck "0.4.4"]
                  [webjure/tuck-remoting "20190213" :exclusions [webjure/tuck]]
 
-                 ;; -- Laadunseurantatyökalua varten
-                 ;; TODO: Käytössä vain laadunseurannassa, voisi siirtää sinne
-                 [devcards "0.2.4" :exclusions [cljsjs/react]]
-
                  ;; Arbitrary precision math frontilla
                  [cljsjs/big "3.1.3-1"]
 
