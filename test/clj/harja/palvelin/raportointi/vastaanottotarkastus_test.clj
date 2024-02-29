@@ -95,12 +95,12 @@
          odotettu-maku-paallysteet odotettu-yhteensa))]))
 
 (def odotettu-yhteenveto-2023
-  (let [odotettu-sopimuksen-mukaiset-tyot 100400M
-        odotettu-maaramuutokset 0M
-        odotettu-sideaineen-hintamuutokset 4900M
-        odotettu-polttooljyn-hintamuutokset -100M
-        odotettu-maku-paallysteet 1100M
-        odotettu-yhteensa 106300M]
+  (let [odotettu-sopimuksen-mukaiset-tyot 400M
+        odotettu-maaramuutokset 1000M
+        odotettu-sideaineen-hintamuutokset 5000M
+        odotettu-polttooljyn-hintamuutokset 0M
+        odotettu-maku-paallysteet 1000M
+        odotettu-yhteensa 7400M]
     [:taulukko
      {:otsikko "Yhteenveto",
       :tyhja nil,
@@ -130,7 +130,7 @@
         [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
         [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
         [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
-        [:arvo-ja-yksikko-korostettu {:arvo 0M, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo 0, :fmt :raha, :korosta-hennosti? true}]
         [:arvo-ja-yksikko-korostettu {:arvo 0, :fmt :raha, :korosta-hennosti? true}]
         [:arvo-ja-yksikko-korostettu {:arvo 0, :fmt :raha, :korosta-hennosti? true}]
         [:arvo-ja-yksikko-korostettu {:arvo odotettu-sopimuksen-mukaiset-tyot, :fmt :raha, :korosta-hennosti? true}]
