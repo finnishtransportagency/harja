@@ -1,74 +1,59 @@
 (ns harja.views.kanavat.urakka.toimenpiteet.kokonaishintaiset
-  (:require [reagent.core :refer [atom]]
-            [tuck.core :refer [tuck]]
+  (:require [tuck.core :refer [tuck]]
             [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
             [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.tiedot.urakka :as urakkatiedot]
-            [harja.loki :refer [tarkkaile! log]]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
-            [harja.ui.kentat :refer [tee-kentta]]
-            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
-            [harja.ui.debug :refer [debug]]
+            [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.valinnat :as valinnat]
-            [harja.domain.urakka :as urakka-domain]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
-            [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as tasot]
-            [harja.ui.debug :as debug]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.ui.yleiset :as yleiset]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
             [reagent.core :as r]
-            [taoensso.timbre :as log]
+            [harja.tiedot.raportit :as raportit]
             [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros
-    [cljs.core.async.macros :refer [go]]
-    [harja.makrot :refer [defc fnc]]))
+    [harja.makrot :refer [defc]]))
 
 (defn hakuehdot [e! {:keys [huoltokohteet] :as app} kohteet]
   (let [urakka-map (get-in app [:valinnat :urakka])]
     [valinnat/urakkavalinnat {:urakka urakka-map}
      ^{:key "valinnat"}
-     [:div
-      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka-map]
-      [valinnat/kanava-kohde
-       (r/wrap (first (filter #(= (::kohde/id %) (get-in app [:valinnat :kanava-kohde-id])) kohteet))
-               (fn [uusi]
-                 (e! (tiedot/->PaivitaValinnat {:kanava-kohde-id (::kohde/id uusi)}))))
-       (into [nil] kohteet)
-       #(let [nimi (kohde/fmt-kohteen-nimi %)]
-          (if (empty? nimi) "Kaikki" nimi))]
-      [valinnat/kanava-huoltokohde
-       (r/wrap (first (filter #(= (::huoltokohde/id %) (get-in app [:valinnat :huoltokohde-id])) huoltokohteet))
-         #(e! (tiedot/->PaivitaValinnat {:huoltokohde-id (::huoltokohde/id %)})))
-       (into [nil] huoltokohteet)
-       #(or (::huoltokohde/nimi %) "Kaikki")]]
+     [:div.kanava-suodattimet
+      [:div.ryhma
+       [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka-map]]
+
+      [:div.ryhma
+       [valinnat/kanava-kohde
+        (r/wrap (first (filter #(= (::kohde/id %) (get-in app [:valinnat :kanava-kohde-id])) kohteet))
+          (fn [uusi]
+            (e! (tiedot/->PaivitaValinnat {:kanava-kohde-id (::kohde/id uusi)}))))
+        (into [nil] kohteet)
+        #(let [nimi (kohde/fmt-kohteen-nimi %)]
+           (if (empty? nimi) "Kaikki" nimi))]
+
+       [valinnat/kanava-huoltokohde
+        (r/wrap (first (filter #(= (::huoltokohde/id %) (get-in app [:valinnat :huoltokohde-id])) huoltokohteet))
+          #(e! (tiedot/->PaivitaValinnat {:huoltokohde-id (::huoltokohde/id %)})))
+        (into [nil] huoltokohteet)
+        #(or (::huoltokohde/nimi %) "Kaikki")]]]
+
      ^{:key "toiminnot"}
      [valinnat/urakkatoiminnot {:urakka urakka-map :sticky? true}
-      
-      ; Piilotetaan nappi kanavaurakoilta
-      (when (not (urakka-domain/kanavaurakka? urakka-map))
-        ^{:key "uusi-nappi"}
-        [napit/yleinen-ensisijainen
-         "Siirrä valitut muutos- ja lisätöihin"
-         (fn [_]
-           (e! (tiedot/->SiirraValitut)))
-         {:disabled (zero? (count (:valitut-toimenpide-idt app)))}])
+
       [napit/uusi
        "Uusi toimenpide"
        (fn [_]
          (e! (tiedot/->UusiToimenpide)))]]]))
 
-(defn kokonaishintaiset-toimenpiteet-taulukko [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
+(defn kokonaishintaiset-toimenpiteet-taulukko [e! {:keys [toimenpiteet]}]
   [:div
    [toimenpiteet-view/ei-yksiloity-vihje]
    [grid/grid
@@ -79,30 +64,21 @@
      :voi-kumota? false
      :piilota-toiminnot? true
      :rivi-klikattu (fn [rivi] (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot rivi)))
-     :tyhja (if haku-kaynnissa? [ajax-loader "Haetaan toimenpiteitä"] "Ei toimenpiteitä")
      :jarjesta ::kanavan-toimenpide/pvm
-     :tunniste ::kanavan-toimenpide/id}
-    (toimenpiteet-view/toimenpidesarakkeet
-      e! app
-      {:kaikki-valittu?-fn #(= (count (:toimenpiteet app))
-                               (count (:valitut-toimenpide-idt app)))
-       :otsikko-valittu-fn (fn [uusi-arvo]
-                             (e! (tiedot/->ValitseToimenpiteet
-                                   {:kaikki-valittu? uusi-arvo})))
-       :rivi-valittu?-fn (fn [rivi]
-                           (boolean ((:valitut-toimenpide-idt app)
-                                      (::kanavan-toimenpide/id rivi))))
-       :rivi-valittu-fn (fn [rivi uusi-arvo]
-                          (e! (tiedot/->ValitseToimenpide
-                                {:id (::kanavan-toimenpide/id rivi)
-                                 :valittu? uusi-arvo})))})
+     :tunniste ::kanavan-toimenpide/id
+     :raporttivienti #{:excel :pdf}
+     :raporttiparametrit (raportit/urakkaraportin-parametrit
+                           (:id @navigaatio/valittu-urakka)
+                           :kanavien-kokonaishintaiset-toimenpiteet
+                           {:urakka @navigaatio/valittu-urakka
+                            :hallintayksikko @navigaatio/valittu-hallintayksikko
+                            :aikavali @urakkatiedot/valittu-aikavali
+                            :urakkatyyppi (:tyyppi @navigaatio/valittu-urakka)})}
+    (toimenpiteet-view/toimenpidesarakkeet)
     (sort-by ::kanavan-toimenpide/pvm >
-             (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet))]])
+      (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet))]])
 
-
-
-(defn kokonaishintainen-toimenpidelomake [e! {:keys [avattu-toimenpide kohteet toimenpideinstanssit
-                                                     tehtavat huoltokohteet tallennus-kaynnissa?] :as app}]
+(defn kokonaishintainen-toimenpidelomake [e! app]
   [toimenpiteet-view/toimenpidelomake app {:tyhjenna-fn #(e! (tiedot/->TyhjennaAvattuToimenpide))
                                            :aseta-toimenpiteen-tiedot-fn #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
                                            :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide % false))
@@ -122,8 +98,7 @@
           [kokonaishintainen-toimenpidelomake e! app]
           [:div
            [hakuehdot e! app kohteet]
-           [kokonaishintaiset-toimenpiteet-taulukko e! app]])
-        [debug/debug app]]]
+           [kokonaishintaiset-toimenpiteet-taulukko e! app]])]]
       [ajax-loader "Ladataan..."])))
 
 (defn kokonaishintaiset* [e! _]
@@ -139,17 +114,19 @@
                                                          (kartta-tiedot/piilota-infopaneeli!))
                                              :teksti "Avaa toimenpide"}})
                          (e! (tiedot/->NakymaAvattu)))
-                      #(do
-                         (tasot/taso-pois! :kan-kohteet)
-                         (tasot/taso-pois! :kan-toimenpiteet)
-                         (tasot/taso-paalle! :organisaatio)
-                         (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
-                         (e! (tiedot/->NakymaSuljettu))))
-    (fn [e! app]
+      #(do
+         (tasot/taso-pois! :kan-kohteet)
+         (tasot/taso-pois! :kan-toimenpiteet)
+         (tasot/taso-paalle! :organisaatio)
+         (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
+         (e! (tiedot/->NakymaSuljettu))))
+    (fn [e! {:keys [haku-kaynnissa?] :as app}]
       ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
       @tiedot/valinnat
-
-      [kokonaishintaiset-nakyma e! app @kanavaurakka/kanavakohteet])))
+      [:span
+       (if haku-kaynnissa?
+         [ajax-loader "Haetaan toimenpiteitä"]
+         [kokonaishintaiset-nakyma e! app @kanavaurakka/kanavakohteet])])))
 
 (defc kokonaishintaiset []
       [tuck tiedot/tila kokonaishintaiset*])

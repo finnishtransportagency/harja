@@ -44,6 +44,22 @@ VALUES
     ('Turvallisuus ja osaamisen kehittäminen', 4, 2019, NOW()),
     ('Viestintä ja tienkäyttäjäasiakkaan palvelu', 5, 2019, NOW());
 
+-- Lupausryhmien linkitys urakkaan 2024 alkavalla urakalle linkkitaulun kautta - Kajaani MHU
+DO $$
+    DECLARE
+        urakkaid INTEGER;
+    BEGIN
+        urakkaid = (SELECT id FROM urakka where nimi = 'POP MHU Kajaani 2024-2029');  
+        INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
+        VALUES
+            (1, urakkaid),
+            (2, urakkaid),
+            (3, urakkaid),
+            (4, urakkaid),
+            (5, urakkaid);
+    END
+$$ LANGUAGE plpgsql;
+
 INSERT INTO lupaus (jarjestys, "lupausryhma-id", "urakka-id", lupaustyyppi, "pisteet", "kirjaus-kkt", "paatos-kk", "joustovara-kkta", kuvaus, sisalto, "urakan-alkuvuosi") VALUES
 
 -- A. Kannustavat alihankintasopimukset

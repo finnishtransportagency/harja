@@ -3,6 +3,7 @@
             [clojure.string :as str]
             [clj-time.core :as time]
             [clj-time.coerce :as coerce]
+            [harja.domain.kanavat.raportointi :as k-raportointi]
             [harja.kyselyt.kanavat.liikennetapahtumat :as q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
@@ -90,18 +91,10 @@
         urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
         ;; Hae urakoiden lyhytnimet
         lyhytnimet (urakat-q/hae-urakoiden-nimet db {:urakkatyyppi urakkatyyppi :vain-puuttuvat false :urakantila "kaikki"})
-        ;; Funktio suodatukseen 
-        fn-suodata-urakat (fn [data idt]
-                            (filter #(idt (:id %)) data))
         ;; Suodata hakutulokset 
-        valitut-urakat-nimet (fn-suodata-urakat lyhytnimet (:urakka-idt hakuparametrit))
-        ;; Mäppää valittujen urakoiden lyhytnimet, jos sellainen olemassa
-        fn-kokoa-lyhytnimet (fn [data]
-                              (->> data
-                                (map #(or (:lyhyt_nimi %) (:nimi %)))
-                                (str/join ", ")))
+        valitut-urakat-nimet (k-raportointi/suodata-urakat lyhytnimet (:urakka-idt hakuparametrit))
         ;; Urakoiden nimet on koossa, tätä käytetään tiedostonimeen
-        urakoiden-nimet (fn-kokoa-lyhytnimet valitut-urakat-nimet)
+        urakoiden-nimet (k-raportointi/kokoa-lyhytnimet valitut-urakat-nimet)
         raportin-otsikko (raportin-otsikko urakoiden-nimet liikennetapahtuma-raportin-nimi alkupvm loppupvm)
         ;; Rajoitetaan raportin rivit
         liikennetapahtumat (q/hae-liikennetapahtumat db user (assoc hakuparametrit :rajoita lt/+rajoita-tapahtumien-maara+))

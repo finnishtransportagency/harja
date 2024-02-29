@@ -4,9 +4,12 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Väylän Harja"
 
-  :dependencies [[org.clojure/clojure "1.10.0"]
+  :dependencies [
+                 ;; Clojure ja ClojureScript
+                 [org.clojure/clojure "1.10.0"]
                  [org.clojure/clojurescript "1.10.520"]
                  [org.clojure/spec.alpha "0.2.176"]
+
                  ;;;;;;; Yleiset ;;;;;;;
 
                  [prismatic/schema "1.1.10"]
@@ -17,24 +20,25 @@
                  ;; Pätevä yksinkertainen työkalu esimerkiksi config-tiedostojen mergeämiseen
                  [meta-merge "1.0.0"]
 
+                 ;; Exif-kirjasto kuvien metadatan lukemiseen
                  [cljsjs/exif "2.1.1-1"]
 
                  ;;;;;;; Palvelin ;;;;;;;
 
-                 ;; Komponenttituki
+                 ;; Komponenttituki palvelimen komponenttien hallintaan
                  [com.stuartsierra/component "1.0.0"]
 
-                 ;; Lokitus
+                 ;; -- Lokitus
                  [com.taoensso/timbre "5.2.1"]
                  [org.apache.logging.log4j/log4j-core "2.22.1"]
 
-                 ;; Metriikkadata
+                 ;; -- Metriikkadata
                  [org.clojure/java.jmx "0.3.4"]
 
-                 ;; JSON encode/decode
+                 ;; -- JSON encode/decode
                  [cheshire "5.11.0"]
 
-                 ;; HTTP palvelin ja reititys
+                 ;; -- HTTP palvelin, reititys ja kyselyiden cahetus
                  [cljs-http "0.1.48"]
                  [http-kit "2.5.3"]
                  ;; Compojuren mukana tulee liian vanha commons-fileupload
@@ -49,61 +53,64 @@
                  [org.clojure/core.cache "0.7.2"]
                  [org.clojure/core.memoize "1.0.257"]
 
-                 [org.clojure/tools.analyzer "1.1.1" :refer clojure :exclude [update-vars update-keys]]
+                 ;; Pattern match kirjasto
+                 [org.clojure/core.match "1.0.0"]
 
-                 ;; Tietokanta: ajuri, kirjastot ja -migraatiot
+
+                 ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
                  [org.postgresql/postgresql "42.7.2"]
                  [net.postgis/postgis-jdbc "2.5.0"]
                  [org.locationtech.jts/jts-core "1.19.0"]
+                 ;; cp3p0 on tietokantayhteyksien hallintaan
                  [com.mchange/c3p0 "0.9.5.4"]
+                 ;; Jeesql ja specql ovat SQL-kyselyjen generointiin
                  [webjure/jeesql "0.4.7"]
                  [io.github.tatut/specql "20230316" :exclusions [org.clojure/java.jdbc]]
 
-                 ;; GeoTools
+                 ;; -- GeoTools kirjastot geospatiaalisten tietojen käsittelyyn
                  [org.geotools/gt-shapefile "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
                  [org.geotools/gt-process-raster "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
                  [org.geotools/gt-epsg-wkt "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
                  [org.geotools/gt-swing "29.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
 
-                 ;; XML zipper
+                 ;; -- XML zipper XML-tietorakenteiden käsittelyyn
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
 
-                 ;; Match
-                 [org.clojure/core.match "1.0.0"]
-
+                 ;; -- Kirjasto mappien avainten nimiavaruuksien käsittelyyn
                  [namespacefy "0.4"]
 
-                 ;; Sähköposti lähetys
+                 ;; -- Sähköposti lähetys
                  [org.apache.httpcomponents/httpcore "4.4.14"]
                  [org.apache.httpcomponents/httpmime "4.5.13" :exclusions [org.clojure/clojure commons-codec commons-logging org.apache.httpcomponents/httpcore]]
                  [com.draines/postal "2.0.3"]
 
-                 ;; JMS on käytössä vain yksikkötesteissä
-                 [javax.jms/javax.jms-api "2.0.1"]
+                 ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
                  [org.apache.activemq/activemq-client "5.18.3" :exclusions [org.slf4j/slf4j-api]]
 
 
-                 ;; Fileyard  liitetiedostojen tallennus
+                 ;; -- Liitetiedostojen tallennus
+                 ;; Fileyard liitetiedostojen tallennus (on-prem)
+                 ;; TODO: Pilvisiirtymän jälkeen poistetaan tämä riippuvuus
                  [fileyard "0.2"]
 
-                 ;; Asiakas
-                                        ; Tämä dev riippuvuuksiin
-                                        ; [spyscope "0.1.6"]
-                                        ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
-
+                 ;; Ajax-kirjasto frontille
                  [cljs-ajax "0.8.0"]
 
+                 ;; React-wrapper frontille
                  [reagent "0.9.1"]
 
 
-
+                 ;; Local-storage apuri frontille
                  [alandipert/storage-atom "2.0.1"]
 
+                 ;; -- Aika- ja päivämääräkäsittely
                  [clj-time "0.15.2"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
 
+                 ;; -- Karttatasot front-end
                  ;; Kuvataso error tulee ol.source.Image inheritistä, jos päivittää neloseen
+                 ;; TODO: Päivitys vaatii siirtymisen shadow-cljs:ään
                  [cljsjs/openlayers "3.15.1"] ; TODO Voisi päivittää, mutta laadunseurannan buildi hajoaa (4.4.1-1) puuttuviin requireihin
 
                  ;; Microsoft dokumenttimuotojen tuki
@@ -112,10 +119,10 @@
                  [org.apache.poi/poi-ooxml "5.2.5"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
 
-                 ;; Chime -ajastuskirjasto
+                 ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
                  [jarohen/chime "0.2.2"]
 
-                 ;; Pikkukuvien muodostamiseen
+                 ;; Pikkukuvien (thumbnail) muodostamiseen
                  [net.coobird/thumbnailator "0.4.8"]
 
                  ;; JSON -validointikirjastot
@@ -127,12 +134,10 @@
                  ;; PDF:n generointi
                  [org.apache.xmlgraphics/fop "2.9"]
 
-                 ;; Fake-HTTP testaukseen
-                 [http-kit.fake "0.2.2"]
                  ;; Kevyt Java 11 java.net.http wrapper WebSocket-testaukseen
                  [java-http-clj "0.4.3"]
 
-                 ;; Apache ANT core
+                 ;; Apache ANT core (arkistoiden purku yms. org.apache.tools.tar)
                  [org.apache.ant/ant "1.10.5"]
 
                  ;; Clojure(Script) assertointi
@@ -142,30 +147,26 @@
                  [dk.ative/docjure "1.19.0"]
 
                  ;; Performance metriikat
+                 ;; TODO: Pilvisiirtymän jälkeen poistetaan tämä riippuvuus
                  [yleisradio/new-reliquary "1.1.0"]
 
-                 ;; Tuck UI apuri
+                 ;; -- Front-end tilan hallinta
                  [webjure/tuck "0.4.4"]
                  [webjure/tuck-remoting "20190213" :exclusions [webjure/tuck]]
-
-                 ;; Laadunseurantatyökalua varten
-                 [org.clojure/data.codec "0.1.1"]
-                 [devcards "0.2.4" :exclusions [cljsjs/react]]
 
                  ;; Arbitrary precision math frontilla
                  [cljsjs/big "3.1.3-1"]
 
-                 ;; Gatlingin logback versio ei ole vielä ehtinyt päivittyä, niin haetaan se erikseen
-                 [ch.qos.logback/logback-classic "1.4.14" :exclusions [org.slf4j/slf4j-api]]
-                 [clj-gatling "0.18.0" :exclusions [clj-time org.slf4j/slf4j-api org.clojure/core.memoize org.clojure/tools.analyzer org.clojure/data.priority-map io.pebbletemplates/pebble]]
-                 ;; Tarvitaan käännöksessä
-                 [com.bhauman/figwheel-main "0.2.18"]
+                 ;; Digest-algoritmeja (md5, sha-256, ...)
                  [digest "1.4.9"]
-                 ;; Nätimpi xml:n printtaus mahdollistettu
+
+                 ;; data.xml tarvitaan mm. XML-tiedostojen parsimiseen ja pretty-printtaukseen
                  [org.clojure/data.xml "0.0.8"]]
+
   :managed-dependencies [[org.apache.poi/poi "5.2.5"]
                          [org.apache.poi/poi-scratchpad "5.2.5"]
                          [org.apache.poi/poi-ooxml "5.2.5"]]
+
   :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
@@ -178,15 +179,14 @@
                  ]
 
   :plugins [[lein-cljsbuild "1.1.7"]
+            ;; TODO: Pilvisiirtymän jälkeen poistetaan lein-less riippuvuus
             ;; Harjan pilviversiossa on luovuttu lein-lessistä, mutta on-prem harjassa
             ;; käytetään sitä vielä. Riippuvuus ja käyttö aliaksissa voidaan poistaa, kun
             ;; ollaan luovuttu on-premistä ja jenkinsin käytöstä.
             [lein-less "1.7.5"]
             [lein-ancient "0.6.15"]
             [lein-codox "0.10.6"]
-            [jonase/eastwood "0.3.5"]
             [lein-auto "0.1.2"]
-            [lein-pdo "0.1.1"]
             [lein-doo "0.1.10"]]
 
   ;; Näitä cljsbuild tarvitsee testaamista varten doo:n kanssa.
@@ -249,10 +249,10 @@
             "tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
                         ;; Harjan fronttibuildi ja LESS
                         "less" "once,"
-                        "with-profile" "prod-cljs" "compile-prod,"
+                        "with-profile" "+prod-cljs" "compile-prod,"
 
                         ;; Harja mobiili laadunseuranta fronttibuildi
-                        "with-profile" "laadunseuranta-prod" "compile-laadunseuranta-prod,"
+                        "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
 
                         "uberjar," "codox"]
             "testit" ["do" "clean,"
@@ -270,8 +270,8 @@
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
             "tuotanto-notest" ["do" "clean," "compile,"
                                "less" "once,"
-                               "with-profile" "prod-cljs" "compile-prod,"
-                               "with-profile" "laadunseuranta-prod" "compile-laadunseuranta-prod,"
+                               "with-profile" "+prod-cljs" "compile-prod,"
+                               "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
                                "uberjar"]}
   :test-selectors {;; lein test :perf
                    ;; :all ajaa kaikki, älä kuitenkaan laita tänne :default :all, se ei toimi :)
