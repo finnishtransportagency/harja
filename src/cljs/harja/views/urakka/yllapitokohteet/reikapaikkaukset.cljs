@@ -18,6 +18,7 @@
             [clojure.string :as str]
             [harja.views.kartta :as kartta]
             [harja.tiedot.istunto :as istunto]
+            [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.roolit :as roolit])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
@@ -172,6 +173,8 @@
 
         [:div.lataus-nappi.klikattava {:on-click #(do  (println "Klikattu lataa"))}
          [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Lataa Excel-pohja"]]]]
+      
+      ;; (println "Rivit: " rivit)
 
       ;; Grid
       [grid/grid {:tyhja "Valitulle aikavälille ei löytynyt mitään."
@@ -181,23 +184,24 @@
                   :piilota-toiminnot? true
                   :jarjesta :pvm
                   :mahdollista-rivin-valinta? true
-                  :rivi-klikattu #(e! (tiedot/->AvaaMuokkausModal))}
+                  :rivi-klikattu #(e! (tiedot/->AvaaMuokkausModal %))}
 
        [{:otsikko "Pvm"
-         :tyyppi :komponentti
-         :komponentti (fn [arvo _]  "test")
+         :tyyppi :pvm
+         :nimi :alkuaika
          :luokka "text-nowrap"
          :leveys 0.4}
 
         {:otsikko "Sijainti"
          :tyyppi :komponentti
-         :komponentti (fn [arvo _] "test")
+         :komponentti (fn [arvo _]
+                        (tr-domain/tierekisteriosoite-tekstina arvo))
          :luokka "text-nowrap"
          :leveys 0.5}
 
         {:otsikko "Menetelmä"
-         :tyyppi :komponentti
-         :komponentti (fn [arvo _] "test")
+         :tyyppi :string
+         :nimi :tyomenetelma
          :luokka "text-nowrap"
          :leveys 1}
 

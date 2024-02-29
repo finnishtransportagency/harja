@@ -51,7 +51,7 @@
 ;; Tuck 
 (defrecord PaivitaAikavali [uudet])
 (defrecord HaeTiedot [])
-(defrecord AvaaMuokkausModal [])
+(defrecord AvaaMuokkausModal [rivi])
 (defrecord SuljeMuokkaus [])
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
@@ -87,8 +87,10 @@
     app)
 
   AvaaMuokkausModal
-  (process-event [_ app]
-    (assoc app :muokataan true))
+  (process-event [{rivi :rivi} app]
+    (-> app
+      (assoc :muokataan true)
+      (assoc :valittu-rivi rivi)))
   
   SuljeMuokkaus
   (process-event [_ app]

@@ -1,6 +1,12 @@
 -- name: hae-reikapaikkaukset
 SELECT 
-    id, 
-    sijainti, 
-    tyomenetelma, 
-    massatyyppi FROM paikkaus WHERE "urakka-id" = :urakka-id LIMIT 20;
+    p.id, 
+    (p.tierekisteriosoite).tie     AS tie,
+    (p.tierekisteriosoite).aosa    AS aosa,
+    (p.tierekisteriosoite).aet     AS aet,
+    (p.tierekisteriosoite).losa    AS losa,
+    (p.tierekisteriosoite).let     AS let,
+    (SELECT nimi FROM paikkauskohde_tyomenetelma WHERE id = p.tyomenetelma) AS "tyomenetelma", 
+    p.massatyyppi,
+    p.alkuaika
+FROM paikkaus p WHERE p."urakka-id" = :urakka-id LIMIT 20;
