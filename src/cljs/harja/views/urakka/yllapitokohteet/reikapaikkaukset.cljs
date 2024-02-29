@@ -4,7 +4,9 @@
   (:require [tuck.core :refer [tuck]]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-reikapaikkaukset :as tiedot]
             [harja.ui.debug :refer [debug]]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.lomake :as lomake]
+            [harja.ui.liitteet :as liitteet]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.kentat :as kentat]
@@ -160,17 +162,23 @@
           :vayla-tyyli? true
           :aikavalin-rajoitus [6 :kuukausi]}]]]
 
-      [:div.reikapaikkaukset-kartta
-       [kartta/kartan-paikka]]
+      [:div.reikapaikkaukset-kartta [kartta/kartan-paikka]]
 
       ;; Taulukon ylhäällä olevat tekstit
       [:div.taulukko-header.header-yhteiset
        [:h3 "1 800 riviä, 1000.0 EUR"]
+
        ;; Oikealla puolella olevat lataus / tuontinapit
        [:div.flex-oikealla
-        [:div.lataus-nappi.nappi-reunaton {:on-click #(do  (println "Klikattu tuo tiedot"))}
-         [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tuo tiedot Excelistä"]]
-
+        ;; Excel tuonti
+        [:div.lataus-nappi
+         [liitteet/lataa-tiedosto
+          {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
+          {:nappi-teksti "Tuo tiedot excelistä"
+           :url "lue-reikapaikkauskohteet-excelista"
+           :lataus-epaonnistui #(println "Epäonnistui: " %)
+           :tiedosto-ladattu #(println "Onnistui: " %)}]]
+        ;; Pohjan lataus
         [:div.lataus-nappi
          [yleiset/tiedoston-lataus-linkki
           "Lataa Excel-pohja"
