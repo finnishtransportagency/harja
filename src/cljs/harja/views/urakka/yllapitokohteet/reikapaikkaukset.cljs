@@ -5,6 +5,7 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-reikapaikkaukset :as tiedot]
             [harja.ui.debug :refer [debug]]
             [harja.ui.lomake :as lomake]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.kentat :as kentat]
             [harja.ui.ikonit :as ikonit]
@@ -15,7 +16,9 @@
             [harja.ui.napit :as napit]
             [harja.pvm :as pvm]
             [clojure.string :as str]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.tiedot.istunto :as istunto]
+            [harja.domain.roolit :as roolit])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
@@ -244,4 +247,9 @@
 
 
 (defn reikapaikkaukset []
-  [tuck tiedot/tila reikapaikkaukset*])
+  ;; Ei näytetä tuotannossa vielä
+  (if (and 
+        (k/kehitysymparistossa?)
+        (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava))
+    [tuck tiedot/tila reikapaikkaukset*]
+    [:div {:style {:padding "20px" :font-size "18px"}} "Maanteiden paikkausurakoiden reikäpaikkaukset tulevat tälle välilehdelle myöhemmin."]))
