@@ -46,7 +46,7 @@
                     ;; Tallenna
                     [napit/tallenna "Tallenna muutokset" #(println "tallenna") {:disabled false}] ;; TODO halutaan varmaan asettaa jokin disabled arvo
                     ;; Poista 
-                    [napit/yleinen-toissijainen "Poista" #(println "poista") {:ikoni (ikonit/livicon-trash) :paksu? true}]
+                    [napit/yleinen-toissijainen "Poista" #(println "poista") {:ikoni (ikonit/livicon-trash) :paksu? true :luokka "lomake-poista"}]
                     ;; Sulje 
                     [napit/yleinen-toissijainen "Sulje" #(e! (tiedot/->SuljeMuokkaus))]]]}
 
@@ -61,7 +61,7 @@
           ;; Sijainti
           (lomake/ryhma
             {:otsikko "Sijainti"
-             :ryhman-luokka "lomakeryhman-otsikko-tausta lomake-tr-otsikko"}
+             :ryhman-luokka "lomakeryhman-otsikko-tausta lomake-ryhma-otsikko"}
             ;; TR- valinnat
             (lomake/rivi
               {:nimi :tie
@@ -99,7 +99,7 @@
           ;; Menetelmä
           (lomake/ryhma
             {:otsikko "Menetelmä"
-             :ryhman-luokka "lomakeryhman-otsikko-tausta lomake-tr-otsikko"}
+             :ryhman-luokka "lomakeryhman-otsikko-tausta lomake-ryhma-otsikko"}
             ;; Alasveto
             (lomake/rivi
               {:otsikko "Kalenterivuosi"
@@ -109,8 +109,29 @@
                :tyyppi :valinta
                :valinnat (into [nil] valinnat-test)
                :valinta-nayta #(if % (valinnat-kuvaus %) "- Valitse -") ;; TODO
-               ::lomake/col-luokka "leveys-tiivis"}))]
+               ::lomake/col-luokka "leveys-kokonainen"}))
 
+          ;; Määrä 
+          (lomake/ryhma
+            {:otsikko "Määrä"
+             :ryhman-luokka "lomakeryhman-otsikko-tausta lomake-ryhma-otsikko"}
+            (lomake/rivi
+              {:otsikko "Paikkauksia"
+               :rivi-luokka "lomakeryhman-rivi-tausta"
+               :nimi :paikkaus-lkm
+               :tyyppi :numero
+               :teksti-oikealla "kpl"
+               :vayla-tyyli? true
+               ::lomake/col-luokka "maara-valinnat"}
+              {:otsikko "Kustannus"
+               :rivi-luokka "lomakeryhman-rivi-tausta"
+               :nimi :kustannus
+               :tyyppi :euro
+               :teksti-oikealla "EUR"
+               :vayla-tyyli? true
+               :vaadi-positiivinen-numero? true
+               ::lomake/col-luokka "maara-valinnat"}))]
+         
          ;;@tiedot/lomake  =?
          ]])
 
