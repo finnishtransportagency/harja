@@ -95,6 +95,52 @@
          odotettu-maku-paallysteet odotettu-yhteensa))]))
 
 (def odotettu-yhteenveto-2023
+  (let [odotettu-sopimuksen-mukaiset-tyot 100400M
+        odotettu-maaramuutokset 0M
+        odotettu-sideaineen-hintamuutokset 4900M
+        odotettu-polttooljyn-hintamuutokset -100M
+        odotettu-maku-paallysteet 1100M
+        odotettu-yhteensa 106300M]
+    [:taulukko
+     {:otsikko "Yhteenveto",
+      :tyhja nil,
+      :sheet-nimi "Ylläpitokohteet yhteensä"}
+     (list
+       {:otsikko "", :leveys 5}
+       {:otsikko "", :leveys 5}
+       {:otsikko "", :leveys 3}
+       {:otsikko "", :leveys 3}
+       {:otsikko "", :leveys 3}
+       {:otsikko "", :leveys 3}
+       {:otsikko "", :leveys 3}
+       {:otsikko "Toteu­tunut hinta (muut kohteet)", :nimi :toteutunut-hinta, :fmt :raha, :leveys 5}
+       {:otsikko "Sakot ja bonukset", :leveys 5,  :fmt :raha}
+       {:otsikko "Muut kustannukset", :leveys 5, :fmt :raha}
+       {:otsikko "Tarjous­hinta", :leveys 5, :fmt :raha}
+       {:otsikko "Määrä­muutok­set", :leveys 5, :fmt :raha}
+       {:otsikko "Bitu­mi-indek­si", :leveys 5, :fmt :raha}
+       {:otsikko "Neste­kaasu ja kevyt poltto­öljy", :leveys 5, :fmt :raha}
+       {:otsikko "MAKU-pääl­lys­teet", :leveys 5, :fmt :raha}
+       {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha})
+     [(list
+        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo nil, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo 0M, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo 0, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo 0, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo odotettu-sopimuksen-mukaiset-tyot, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo odotettu-maaramuutokset, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo odotettu-sideaineen-hintamuutokset, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo odotettu-polttooljyn-hintamuutokset, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo odotettu-maku-paallysteet, :fmt :raha, :korosta-hennosti? true}]
+        [:arvo-ja-yksikko-korostettu {:arvo odotettu-yhteensa, :fmt :raha, :korosta-hennosti? true}])]]))
+
+(def odotettu-yhteenveto-utajarvi-2023
   (let [odotettu-sopimuksen-mukaiset-tyot 400M
         odotettu-maaramuutokset 1000M
         odotettu-sideaineen-hintamuutokset 5000M
@@ -296,7 +342,7 @@
     (is (= yha-kohteet odotettu-yha-kohteet-2023))
     ;; muut kustannukset ja paikkauskohteet -osalta ei ole loogisia sarakemuutoksia vs. 2017, eikä testidatassa mitään sisältöä, joten ei assertoida
     ;; muita kustannuksia ja paikkauskohteita koska se on tehty 2017-testissä
-    (is (= yhteenveto odotettu-yhteenveto-2023))
+    (is (= yhteenveto odotettu-yhteenveto-utajarvi-2023))
     (is (= aikataulu-otsikko [:otsikko "Aikataulu"]))
     (is (= aikataulu odotettu-aikataulu-2023))
     (is (= kohdeluettelo odotettu-kohdeluettelo-2023))))
