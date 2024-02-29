@@ -97,7 +97,6 @@
    :toimenpidepyynto "punainen"
    :turvallisuuspoikkeama "magenta"
    :suolatoteuma "harmaa"
-   :reikapaikkaus "sininen"
 
    ;; tilaa osoittavat värit (sijaint-ikonin sisempi väri)
    :ilmoitus-auki "punainen"
@@ -288,13 +287,8 @@
                     :valmis (:kt-valmis tiepuolen-ikonien-varit))
                   (:turvallisuuspoikkeama tiepuolen-ikonien-varit)))
 
-(defn reikapaikkaus-ikoni [kt-tila]
-  ;; TODO .. tätä voisi varmaankin muokata
-  (sijainti-ikoni (case kt-tila
-                    :tyhja (:kt-tyhja tiepuolen-ikonien-varit)
-                    :avoimia (:kt-avoimia tiepuolen-ikonien-varit)
-                    :valmis (:kt-valmis tiepuolen-ikonien-varit))
-    (:reikapaikkaus tiepuolen-ikonien-varit)))
+(defn reikapaikkaus-ikoni []
+  (sijainti-ikoni "vaaleanharmaa" "vihrea"))
 
 (defn turvalaitteen-ikoni-ja-selite [turvalaite]
   [(pinni-ikoni (turvalaitteiden-varit (::tu/tyyppi turvalaite)
@@ -635,6 +629,10 @@ tr-ikoni {:img (pinni-ikoni "musta")
 (def tieturvallisuusverkko
   {:color alpha/fig-default
    :width 8})
+
+(def reikapaikkaukset
+  {:color alpha/tummanvihrea
+   :width 12})
 
 (def ei-kayty-tieturvallisuusverkko
   {:ajovayla

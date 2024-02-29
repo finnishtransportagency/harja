@@ -319,15 +319,13 @@
       :selite selite
       :alue (maarittele-feature tarkastus valittu? ikoni viiva))))
 
-(defmethod asia-kartalle :reikapaikkaus [tp valittu?]
-  (let [[kt-tila selite] [:tyhja "Valmis reikäpaikkaus"]
-        ikoni (ulkoasu/reikapaikkaus-ikoni kt-tila)]
-    (when (:sijainti tp)
-      (assoc tp
-        :type :reikapaikkaus
-        :nimi (or (:nimi tp) "Reikäpaikkaus")
-        :selite {:teksti selite :img ikoni}
-        :alue (maarittele-feature tp valittu? ikoni)))))
+(defmethod asia-kartalle :reikapaikkaus [paikkaus valittu?]
+  (when (:sijainti paikkaus)
+    (assoc paikkaus
+      :type :reikapaikkaus
+      :nimi "Reikäpaikkaus"
+      :selite {:teksti "Reikäpaikkaus" :img (ulkoasu/reikapaikkaus-ikoni)}
+      :alue (maarittele-feature paikkaus valittu? (ulkoasu/reikapaikkaus-ikoni) ulkoasu/reikapaikkaukset))))
 
 (defmethod asia-kartalle :tieturvallisuusverkko [tieturvallisuustie _valittu?]
   {:type :tieturvallisuusverkko
