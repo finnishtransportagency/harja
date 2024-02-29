@@ -210,11 +210,13 @@ E'Huoltokohteet ovat asioita, joita kanavasta korjataan. Huoltokohteita ei pidä
 
 COMMENT ON TABLE kan_hairio IS
 E'Kuvaa häiriötilannetta. Urakoitsija vastaa hoitourakoissa tapahtuvien häiriötilanteiden tietojen kirjaamisesta.';
-COMMENT ON COLUMN kan_hairio.odotusaika_h IS 'Aika, jonka liikennöivät alukset joutuvat odottamaan häiriön takia';
+COMMENT ON COLUMN kan_hairio.vesiodotusaika_h IS 'Aika, jonka liikennöivät alukset joutuvat odottamaan häiriön takia';
 COMMENT ON COLUMN kan_hairio.ammattiliikenne_lkm IS 'Ammattiliikennealusten määrä, jotka joutuvat odottamaan häiriön takia';
 COMMENT ON COLUMN kan_hairio.huviliikenne_lkm IS 'Huviliikennealusten määrä, jotka joutuvat odottamaan häiriön takia';
 COMMENT ON COLUMN kan_hairio.korjaustoimenpide IS 'Vapaamuotoinen toimenpiteen kuvaus, esim. "Kamera resetoitu"';
 COMMENT ON COLUMN kan_hairio.paikallinen_kaytto IS 'Valitaan, onko siirrytty paikallliskäyttöön';
+COMMENT ON COLUMN kan_hairio.tieodotusaika_h IS 'Aika, jonka liikennöivät ajoneuvot tiellä joutuvat odottamaan häiriön takia';
+COMMENT ON COLUMN kan_hairio.ajoneuvo_lkm IS 'Odottavan tieliikenteen ajoneuvomäärä';
 
 COMMENT ON TABLE kan_toimenpide IS
 E'Kuvaa konkreettiset toimenpiteet joita on tehty tietyn kanavan kohteelle, eli sillalle tai sululle, jotka kohdistuvat taas tietttyyn huoltokohteeseen, kuten esim. hydrauliikkaan. Voivat olla hinnoittelultaan esim. kokonais- tai yksikköhintaisia.';

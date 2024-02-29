@@ -1,7 +1,5 @@
 (ns harja.palvelin.palvelut.kanavat.kanavatoimenpiteet
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
-            [clojure.set :as set]
             [taoensso.timbre :as log]
             [specql.core :as specql]
             [specql.op :as op]
@@ -21,9 +19,7 @@
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kommentti :as kommentti]
-            [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodit]
             [harja.kyselyt.kanavat.kanavan-toimenpide :as q-toimenpide]
-            [clojure.java.jdbc :as jdbc]
             [harja.tyokalut.tietoturva :as tietoturva]))
 
 (defn- vaadi-rivit-kuuluvat-emoon* [taulu rivit rivi-idt rivin-emo-id-avain vaadittu-emo-id]
