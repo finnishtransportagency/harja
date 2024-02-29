@@ -21,7 +21,10 @@
 
 (defn reikapaikkaus-listaus [e! {:keys [valinnat rivit muokataan] :as app}]
   (let [tr-atomi (atom (:tr valinnat))
-        sijainti-atomi (atom (:sijainti valinnat))]
+        sijainti-atomi (atom (:sijainti valinnat))
+        ;; Menetelmän valinnat, testiajaksi 
+        valinnat-test [:test-1 :test-2]
+        valinnat-kuvaus {:test-1 "Testi 1" :test-2 "testi 2"}]
     
     ;; Wrappaa reikapaikkausluokkaan niin ei yliajeta mitään 
     [:div.reikapaikkaukset
@@ -55,47 +58,59 @@
                                                 :ikoni-sisaan? true
                                                 :vayla-tyyli? true}
                              (atom nil)])})
-
+          ;; Sijainti
           (lomake/ryhma
             {:otsikko "Sijainti"
              :ryhman-luokka "lomakeryhman-otsikko-tausta lomake-tr-otsikko"}
-            
+            ;; TR- valinnat
             (lomake/rivi
-            {:nimi :tie
-             :otsikko "Tie"
-             :tyyppi :numero
-             :input-luokka "lomake-tr-valinta"
-             :rivi-luokka "lomakeryhman-rivi-tausta"
-             :desimaalien-maara 0
-             ::lomake/col-luokka "col-xs-2 tr-input"}
-            {:nimi :aosa
-             :otsikko "A-osa"
-             :tyyppi :numero
-             :input-luokka "lomake-tr-valinta"
-             ::lomake/col-luokka "col-xs-2 tr-input"
-             :desimaalien-maara 0}
-            {:nimi :aet
-             :otsikko "A-et"
-             :tyyppi :numero
-             :input-luokka "lomake-tr-valinta"
-             ::lomake/col-luokka "col-xs-2 tr-input"
-             :desimaalien-maara 0}
-            {:nimi :losa
-             :otsikko "L-osa"
-             :tyyppi :numero
-             :input-luokka "lomake-tr-valinta"
-             ::lomake/col-luokka "col-xs-2 tr-input"
-             :desimaalien-maara 0}
-            {:nimi :let
-             :otsikko "L-et"
-             :tyyppi :numero
-             :input-luokka "lomake-tr-valinta"
-             ::lomake/col-luokka "col-xs-2 tr-input"
-             :desimaalien-maara 0}
-            )
-            
-            )]
-         
+              {:nimi :tie
+               :otsikko "Tie"
+               :tyyppi :numero
+               :input-luokka "lomake-tr-valinta"
+               :rivi-luokka "lomakeryhman-rivi-tausta"
+               :desimaalien-maara 0
+               ::lomake/col-luokka "col-xs-2 tr-input"}
+              {:nimi :aosa
+               :otsikko "A-osa"
+               :tyyppi :numero
+               :input-luokka "lomake-tr-valinta"
+               ::lomake/col-luokka "col-xs-2 tr-input"
+               :desimaalien-maara 0}
+              {:nimi :aet
+               :otsikko "A-et"
+               :tyyppi :numero
+               :input-luokka "lomake-tr-valinta"
+               ::lomake/col-luokka "col-xs-2 tr-input"
+               :desimaalien-maara 0}
+              {:nimi :losa
+               :otsikko "L-osa"
+               :tyyppi :numero
+               :input-luokka "lomake-tr-valinta"
+               ::lomake/col-luokka "col-xs-2 tr-input"
+               :desimaalien-maara 0}
+              {:nimi :let
+               :otsikko "L-et"
+               :tyyppi :numero
+               :input-luokka "lomake-tr-valinta"
+               ::lomake/col-luokka "col-xs-2 tr-input"
+               :desimaalien-maara 0}))
+
+          ;; Menetelmä
+          (lomake/ryhma
+            {:otsikko "Menetelmä"
+             :ryhman-luokka "lomakeryhman-otsikko-tausta lomake-tr-otsikko"}
+            ;; Alasveto
+            (lomake/rivi
+              {:otsikko "Kalenterivuosi"
+               :rivi-luokka "lomakeryhman-rivi-tausta"
+               :validoi [[:ei-tyhja "Valitse tila"]] ;; TODO 
+               :nimi :test-nimi
+               :tyyppi :valinta
+               :valinnat (into [nil] valinnat-test)
+               :valinta-nayta #(if % (valinnat-kuvaus %) "- Valitse -") ;; TODO
+               ::lomake/col-luokka "leveys-tiivis"}))]
+
          ;;@tiedot/lomake  =?
          ]])
 
