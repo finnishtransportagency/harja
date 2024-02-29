@@ -1,0 +1,28 @@
+@import "../yleiset.less";
+
+.hallinta-tarjoushinnat {
+  .urakan-tarjoushinnat-taulukko {
+    max-width: 500px;
+  }
+
+  .tarjoushintoja-puuttuu {
+    color: @red-dark;
+  }
+
+  .suodattimet {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    width: fit-content;
+    align-items: center;
+    column-gap: 1rem;
+
+    // Asetetaan labelit gridin yläriville, muut toiselle.
+    * {
+      grid-row: 2;
+    }
+
+    label {
+      grid-row: 1;
+    }
+  }
+}

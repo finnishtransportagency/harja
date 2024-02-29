@@ -30,7 +30,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
   it('Voi suunnitella eri määrät eri vuosille', () => {
     cy.viewport(1100, 2000)
     cy.intercept('POST', '_/tallenna-sopimuksen-tehtavamaara').as('sop1')
-    cy.get('table.grid').contains('Opastustaulun/-viitan uusiminen').parent().find('td.vetolaatikon-tila.klikattava').click()
+    cy.get('table.grid').contains('Opastustaulun/-viitan uusiminen').parent().find('button.vetolaatikon-sailio').click()
     cy.get('table.grid').contains('Haluan syöttää joka vuoden erikseen').parent().find('input.vayla-checkbox').click()
     cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-' + urakanAlkuvuosi).should('not.be.disabled')
     cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-' + (urakanAlkuvuosi + 0)).clear({force:true}).type('661', {force:true}).blur()
