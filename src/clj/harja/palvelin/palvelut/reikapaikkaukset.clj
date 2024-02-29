@@ -14,7 +14,8 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.konversio :as konversio]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.reikapaikkaukset :as q]))
+            [harja.kyselyt.reikapaikkaukset :as q]
+            [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]))
 
 
 (defn hae-reikapaikkaukset [db _user tiedot]
@@ -27,6 +28,7 @@
 
 (defn- kasittele-excel [db urakka-id kayttaja pyynto]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in pyynto [:params "file" :tempfile]))))
+        paikkauskohteet (p-excel/erottele-reikapaikkaukset workbook)
         _ (println "\n Workhook: " workbook)
         ]
     {:status 200

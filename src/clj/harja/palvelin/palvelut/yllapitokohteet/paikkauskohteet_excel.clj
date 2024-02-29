@@ -12,27 +12,46 @@
             [harja.domain.paikkaus :as paikkaus]))
 
 
+(defn- lue-excel-raaka-data [sivu]
+  (->> sivu
+    xls/row-seq
+    (remove nil?)
+    (map xls/cell-seq)
+    (mapv
+      (fn [rivi]
+        (map-indexed (fn [indeksi arvo]
+                       (if (or
+                             (= indeksi 8)
+                             (= indeksi 9))
+                         (try
+                           (.getDateCellValue arvo)
+                           (catch Exception e
+                             ;(println "Saatiin virhe päivämäärän luvusta, ei välitetä" (pr-str e))
+                             (xls/read-cell arvo)))
+                         (xls/read-cell arvo)))
+          rivi)))))
+
+
+(defn erottele-reikapaikkaukset [workbook]
+  (let [sivu (first (xls/sheet-seq workbook))
+        raaka-data (lue-excel-raaka-data sivu)
+        _ (println "\n Raaka data: " raaka-data)
+        
+        ;; Syötetty data mistä leikattu kaikki otsikot sun muut 
+        ;; Tämä siis leikkaa kaikki aikaisemmat rivit siihen asti kun "Tunniste*" löytyy, joka on otsikkorivi, sen jälkeen tulee oikea data
+        syotetty-data (->> raaka-data
+                        (drop-while #(not (some (fn [data] (= "Tunniste*" data)) %1)))
+                        rest
+                        (remove (fn [item] (some nil? item))))
+
+        _ (println "\n Syötetty data: " syotetty-data)]))
+
+
 (defn erottele-paikkauskohteet [workbook]
   (let [sivu (first (xls/sheet-seq workbook)) ;; Käsitellään excelin ensimmäinen sivu tai tabi
         ;; Esimerkki excelissä paikkauskohteet alkavat vasta kuudennelta riviltä.
         ;; Me emme voi olla tästä kuitenkaan ihan varmoja, niin luetaan varalta kaikki data excelistä ulos
-        raaka-data (->> sivu
-                        xls/row-seq
-                        (remove nil?)
-                        (map xls/cell-seq)
-                        (mapv
-                          (fn [rivi]
-                            (map-indexed (fn [indeksi arvo]
-                                           (if (or
-                                                 (= indeksi 8)
-                                                 (= indeksi 9))
-                                             (try
-                                               (.getDateCellValue arvo)
-                                               (catch Exception e
-                                                 ;(println "Saatiin virhe päivämäärän luvusta, ei välitetä" (pr-str e))
-                                                 (xls/read-cell arvo)))
-                                             (xls/read-cell arvo)))
-                                         rivi))))
+        raaka-data (lue-excel-raaka-data sivu)
 
         ;; Tämä toimii nykyisellä excel-pohjalla toistaiseksi.
         ;; Katsotaan, millä rivillä otsikkorivi on, oletuksena että sieltä löytyy ainakin "Nro." ja "kohde" otsikot.
