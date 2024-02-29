@@ -41,6 +41,8 @@
 (def +analytiikka-paallystysurakoiden-haku-vastaus+ "api/schemas/analytiikka-paallystysurakoiden-haku-response.schema.json")
 (def +analytiikka-paallystysilmoitusten-haku-vastaus+ "api/schemas/analytiikka-paallystysilmoitusten-haku-response.schema.json")
 (def +analytiikka-hoidon-paikkaukset-haku-vastaus+ "api/schemas/analytiikka-hoitourakoiden-paikkausten-haku-response.schema.json")
+(def +analytiikka-paikkauskohteiden-haku-vastaus+ "api/schemas/analytiikka-paikkauskohteiden-haku-response.schema.json")
+(def +analytiikka-paikkausten-haku-vastaus+ "api/schemas/analytiikka-paikkausten-haku-response.schema.json")
 
 (def +tielupien-haku+ "api/schemas/tielupien-haku-request.schema.json")
 (def tielupien-haku (tee-validaattori "api/schemas/tielupien-haku-request.schema.json"))
