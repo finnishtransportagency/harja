@@ -168,13 +168,13 @@
        [:h3 "1 800 riviä, 1000.0 EUR"]
        ;; Oikealla puolella olevat lataus / tuontinapit
        [:div.flex-oikealla
-        [:div.lataus-nappi.klikattava {:on-click #(do  (println "Klikattu tuo tiedot"))}
+        [:div.lataus-nappi.nappi-reunaton {:on-click #(do  (println "Klikattu tuo tiedot"))}
          [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tuo tiedot Excelistä"]]
 
-        [:div.lataus-nappi.klikattava {:on-click #(do  (println "Klikattu lataa"))}
-         [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Lataa Excel-pohja"]]]]
-      
-      ;; (println "Rivit: " rivit)
+        [:div.lataus-nappi
+         [yleiset/tiedoston-lataus-linkki
+          "Lataa Excel-pohja"
+          (str (when-not (k/kehitysymparistossa?)  "/harja") "/excel/harja_reikapaikkausten_pohja.xlsx")]]]]
 
       ;; Grid
       [grid/grid {:tyhja "Valitulle aikavälille ei löytynyt mitään."
