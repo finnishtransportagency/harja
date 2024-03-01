@@ -28,6 +28,7 @@
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
+            [harja.kyselyt.paikkaus :as paikkaus-kyselyt]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
@@ -675,13 +676,13 @@
     (update-in [:massat :runkoaineet] (fn [runkoaineet] (map #(dissoc % :id) runkoaineet)))
     (update-in [:massat :lisaaineet] (fn [lisaaineet] (map #(dissoc % :id) lisaaineet)))
     (update-in [:massat :sideaineet] (fn [sideaineet] (map #(dissoc % :id) sideaineet)))
-    (dissoc :karttapaivamaara :tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :tr-ajorata
-      :tr-kaista)
+    (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa)) massa)))
     (set/rename-keys {:pinta-ala :pintaAla
                       :massat :massa})))
 
 (defn- muodosta-alustatoimenpide [alustatoimenpide]
   (-> alustatoimenpide
+    (dissoc :id)
     (update :massat #(-> (konversio/sarakkeet-vektoriin % {:runkoaine :runkoaineet
                                                            :lisaaine :lisaaineet
                                                            :sideaine :sideaineet})
@@ -690,10 +691,8 @@
     (update-in [:massat :runkoaineet] (fn [runkoaineet] (map #(dissoc % :id) runkoaineet)))
     (update-in [:massat :lisaaineet] (fn [lisaaineet] (map #(dissoc % :id) lisaaineet)))
     (update-in [:massat :sideaineet] (fn [sideaineet] (map #(dissoc % :id) sideaineet)))
-    (update :massat (fn [massa] (when-not (nil? (:tyyppi massa)) massa)))
+    (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa)) massa)))
     (update :murske (fn [murske] (when-not (nil? (:tyyppi murske)) murske)))
-    (dissoc :karttapaivamaara :tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :tr-ajorata
-      :tr-kaista)
     (set/rename-keys {:pinta-ala :pintaAla
                       :lisatty-paksuus :lisattyPaksuus
                       :verkon-tyyppi :verkonTyyppi
@@ -750,6 +749,60 @@
 
     {:kulut kulut
      :paikkaukset paikkaukset}))
+
+(defn hae-paikkauskohteet [db {:keys [alkuaika loppuaika] :as parametrit}]
+  (log/info "Analytiikka API paikkauskohteet :: parametrit" (pr-str parametrit))
+  (tarkista-haun-parametrit parametrit false)
+  (let [paikkauskohteet (map #(-> %
+                                (konversio/alaviiva->rakenne)
+                                (set/rename-keys {:id :harjaId
+                                                  :ulkoinen-id :ulkoinenId
+                                                  :paallystyskohde :paallystyskohdeId
+                                                  :yhalahetyksen-tila :yhalahetyksenTila
+                                                  :suunniteltu-maara :suunniteltuMaara
+                                                  :suunniteltu-hinta :suunniteltuHinta
+                                                  :tiemerkintapvm :valmisTiemerkintaan
+                                                  :ilmoitettu-virhe :ilmoitettuVirhe
+                                                  :toteutunut-hinta :toteutunutHinta
+                                                  :tiemerkintaa-tuhoutunut? :tiemerkintaaTuhoutunut})
+                                (update :tila (fn [tila] (case tila
+                                                           "hylatty"
+                                                           "Hylätty"
+                                                           ("tilattu"
+                                                             "valmis"
+                                                             "tarkistettu"
+                                                             "ehdotettu")
+                                                           (str/capitalize tila))))
+                                (update :yhalahetyksenTila
+                                  (fn [tila]
+                                    (case tila
+                                      ("odottaa_vastausta"
+                                        "lahetetty")
+                                      "Lähetetty onnistuneesti"
+
+                                      "virhe"
+                                      "Epäonnistunut"
+
+                                      "Ei lähetetty"))))
+                          (paikkaus-kyselyt/hae-paikkauskohteet-analytiikalle db
+                            {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                             :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}))]
+
+    {:paikkauskohteet paikkauskohteet}))
+
+(defn hae-paikkaukset [db {:keys [alkuaika loppuaika] :as parametrit}]
+  (log/info "Analytiikka API paikkaukset  :: parametrit" (pr-str parametrit))
+  (tarkista-haun-parametrit parametrit false)
+  (let [paikkaukset (map #(-> %
+                            (konversio/alaviiva->rakenne)
+                            (set/rename-keys {:id :harjaId
+                                              :ulkoinen-id :ulkoinenId
+                                              :paikkauskohde-id :paikkauskohdeId
+                                              :pinta-ala :pintaAla}))
+                      (paikkaus-kyselyt/hae-paikkaukset-analytiikalle db
+                        {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                         :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}))]
+    {:paikkaukset paikkaukset}))
 
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
@@ -907,6 +960,25 @@
           (fn [parametrit _kayttaja db]
             (hae-hoidon-paikkaukset db parametrit))
           :analytiikka)))
+
+    (julkaise-reitti
+      http :analytiikka-hae-paikkauskohteet
+      (GET "/api/analytiikka/paikkauskohteet/:alkuaika/:loppuaika" parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paikkauskohteet parametrit
+          json-skeemat/+analytiikka-paikkauskohteiden-haku-vastaus+
+          (fn [parametrit _kayttaja db]
+            (hae-paikkauskohteet db parametrit))
+          :analytiikka)))
+
+    (julkaise-reitti
+      http :analytiikka-hae-paikkaukset
+      (GET "/api/analytiikka/paikkaukset/:alkuaika/:loppuaika" parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paikkaukset parametrit
+          json-skeemat/+analytiikka-paikkausten-haku-vastaus+
+          (fn [parametrit _kayttaja db]
+            (hae-paikkaukset db parametrit))
+          :analytiikka)))
+
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -925,5 +997,8 @@
       :analytiikka-paallystysurakat
       :analytiikka-paallystyskohteet
       :analytiikka-hae-paallystyskohteiden-aikataulut
-      :analytiikka-hae-paallystysilmoitukset)
+      :analytiikka-hae-paallystysilmoitukset
+      :analytiikka-hae-hoidon-paikkaukset
+      :analytiikka-hae-paikkauskohteet
+      :analytiikka-hae-paikkaukset)
     this))

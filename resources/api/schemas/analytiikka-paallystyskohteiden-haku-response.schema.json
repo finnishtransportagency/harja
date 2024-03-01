@@ -40,17 +40,19 @@
             "type": "string",
             "enum": [
               "paallystys",
-              "kevytliikenne",
-              "sora"
+              "paikkaus"
             ]
           },
           "nimi": {
-            "type": "string",
-            "maxLength": 30
+            "type": "string"
           },
           "tunnus": {
             "type": ["null", "string"],
             "maxLength": 30
+          },
+          "yotyo": {
+            "type": "boolean",
+            "description": "Onko päällystyskohde tehty yötöinä"
           },
           "tierekisteriosoitevali": {
             "$ref": "#/definitions/tierekisteriosoitevali"
@@ -77,6 +79,11 @@
                 },
                 "harjaId": {
                   "type": "number"
+                },
+                "geometria": {
+                  "type": "string",
+                  "format": "wkt",
+                  "description": "Geometria WKT-muodossa, SRID 3067"
                 },
                 "tierekisteriosoitevali": {
                   "$ref": "#/definitions/tierekisteriosoitevali-kaista-ja-ajorata"

@@ -38,7 +38,6 @@
             [harja.id :refer [id-olemassa?]]
             [harja.pvm :as pvm]
             [harja.tyokalut.functor :refer [fmap]])
-  (:use org.httpkit.fake)
   (:import (harja.domain.roolit EiOikeutta)))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id] :as tiedot}]

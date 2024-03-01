@@ -182,14 +182,13 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 (defn vetolaatikon-tila [ohjaus vetolaatikot id luokat]
   (let [vetolaatikko? (contains? vetolaatikot id)]
     ^{:key (str "vetolaatikontila" id)}
-    [:td {:class (conj (if (coll? luokat) luokat [luokat])
-                   (when vetolaatikko? "klikattava"))
-          :on-click (when vetolaatikko?
-                      #(do (.preventDefault %)
-                         (.stopPropagation %)
-                         (avaa-tai-sulje-vetolaatikko! ohjaus id)))}
+    [:td {:class (if (coll? luokat) luokat [luokat])}
      (when vetolaatikko?
-       [:div.vetolaatikon-sailio
+       [:button.vetolaatikon-sailio
+        {:on-click #(do
+                      (.preventDefault %)
+                      (.stopPropagation %)
+                      (avaa-tai-sulje-vetolaatikko! ohjaus id))}
         [:div.inline-block.vetolaatikon-pylvas]
         (if (vetolaatikko-auki? ohjaus id)
           [ikonit/navigation-ympyrassa :down]
@@ -198,13 +197,13 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 (defn avattavat-rivi-tila [ohjaus avattavat-rivit id luokat]
   (let [avattava-rivi? (contains? avattavat-rivit id)]
     ^{:key (str "avattava-rivi-tila" id)}
-    [:td {:class (str luokat (when avattava-rivi? " klikattava "))
-          :on-click (when avattava-rivi?
-                      #(do (.preventDefault %)
-                           (.stopPropagation %)
-                           (avaa-tai-sulje-avattavat-rivit! ohjaus id)))}
+    [:td {:class (str luokat)}
      (when avattava-rivi?
-       [:div.vetolaatikon-sailio
+       [:button.vetolaatikon-sailio
+        {:on-click #(do
+                      (.preventDefault %)
+                      (.stopPropagation %)
+                      (avaa-tai-sulje-avattavat-rivit! ohjaus id))}
         [:div.inline-block.vetolaatikon-pylvas]
         (if (avattavat-rivit-auki? ohjaus id)
           [ikonit/navigation-ympyrassa :down]

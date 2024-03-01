@@ -1,31 +1,32 @@
 {
   "kulut": [
     {
-      "urakka": 789,
+      "urakka": 42,
       "poistettu": false,
-      "paivamaara": "2019-10-15T21:00:00Z",
-      "summa": 5000.77,
+      "paivamaara": "2023-10-31T22:00:00Z",
+      "summa": 1000,
       "tehtavaryhma": "Kuumapäällyste (Y1)",
-      "harjaId": 10
+      "harjaId": 41
     }
   ],
   "paikkaukset": [
     {
       "tierekisteriosoitevali": {
-        "aosa": 2,
-        "let": 200,
-        "losa": 2,
-        "tienumero": 1,
-        "aet": 0
+        "aosa": 20,
+        "let": 300,
+        "losa": 20,
+        "tienumero": 86,
+        "aet": 200
       },
       "yksikko": "tonni",
-      "tehtava": "Massasaumaus",
-      "urakka": 789,
-      "harjaId": 1158,
-      "maara": 321,
-      "tehtavaryhma": "KT-Valu (Y3)",
-      "paivamaara": "2024-02-19T22:00:00Z",
+      "tehtava": "Kuumapäällyste",
+      "urakka": 42,
+      "harjaId": 1159,
+      "maara": 10,
+      "tehtavaryhma": "Kuumapäällyste (Y1)",
+      "paivamaara": "2023-11-01T10:00:00Z",
       "poistettu": false
     }
   ]
 }
+

@@ -26,7 +26,7 @@
   (or (::kanavan-toimenpide/toimenpidekoodi-id toimenpide)
       (get-in toimenpide [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/id])))
 
-(defn toimenpidesarakkeet [e! app {:keys [rivi-valittu?-fn rivi-valittu-fn kaikki-valittu?-fn otsikko-valittu-fn]}]
+(defn toimenpidesarakkeet []
   [{:otsikko "Päivä\u00ADmäärä"
     :nimi ::kanavan-toimenpide/pvm
     :tyyppi :pvm
@@ -63,14 +63,7 @@
     :nimi ::kanavan-toimenpide/kuittaaja
     :tyyppi :string
     :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))
-    :leveys 10}
-   (grid/rivinvalintasarake
-     {:otsikkovalinta? true
-      :kaikki-valittu?-fn kaikki-valittu?-fn
-      :otsikko-valittu-fn otsikko-valittu-fn
-      :rivi-valittu?-fn rivi-valittu?-fn
-      :rivi-valittu-fn rivi-valittu-fn
-      :leveys 5})])
+    :leveys 10}])
 
 (defn materiaalitaulukko [urakan-materiaalit avattu-toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn materiaali-virheet]
   (when urakan-materiaalit

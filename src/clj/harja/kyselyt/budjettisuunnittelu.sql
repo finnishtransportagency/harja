@@ -306,3 +306,26 @@ set tavoitehinta_indeksikorjattu           = muuttuneet.tavoitehinta_indeksikorj
     muokattu                               = NOW()
 from muuttuneet
 where muuttuneet.id = urakka_tavoite.id;
+
+-- name: hae-urakoiden-tarjoushinnat
+SELECT u.id                           AS urakka,
+       COALESCE(u.lyhyt_nimi, u.nimi) AS "urakka-nimi",
+       ut.id,
+       ut.tarjous_tavoitehinta        AS "tarjous-tavoitehinta",
+       ut.hoitokausi,
+       u.loppupvm < CURRENT_DATE      AS "urakka-paattynyt?",
+       EXISTS(SELECT *
+              FROM urakka_paatos up
+              WHERE up.tyyppi IN ('lupausbonus', 'lupaussanktio')
+                AND up."urakka-id" = ut.urakka
+                AND up."hoitokauden-alkuvuosi" = EXTRACT(YEAR FROM u.alkupvm) + ut.hoitokausi - 1
+                AND up.poistettu = FALSE) AS "on-paatos"
+FROM urakka_tavoite ut
+         LEFT JOIN urakka u ON ut.urakka = u.id
+ORDER BY u.alkupvm DESC, ut.hoitokausi;
+
+
+-- name: paivita-tarjoushinta<!
+UPDATE urakka_tavoite
+SET tarjous_tavoitehinta = :tarjous-tavoitehinta
+WHERE id = :id;
