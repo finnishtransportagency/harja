@@ -104,17 +104,17 @@ ORDER BY s.perintapvm DESC;
 -- name: pkluokkien-kustannukset-hallintayksikoittain
 -- Päätellään päällystyskohteen pk-luokka laskemalla alikohteiden (yllapitokohdeosa) pituudet ja ottamalla se
 -- pk-luokka, jonka pituus on suurin
-SELECT DISTINCT ON (CONCAT(u.id, ' ', u.nimi)) CONCAT(u.id, ' ', u.nimi)          AS nimi,
-                                               o.id                               AS "hallintayksikko_id",
-                                               o.nimi                             AS "hallintayksikko_nimi",
-                                               ypk.pkluokka,
-                                               SUM(ypkk.sopimuksen_mukaiset_tyot) AS "sopimuksen-mukaiset-tyot",
-                                               SUM(ypkk.maaramuutokset)           AS "maaramuutokset",
-                                               SUM(ypkk.arvonvahennykset)         AS "arvonvahennykset",
-                                               SUM(ypkk.toteutunut_hinta)         AS "toteutunut-hinta",
-                                               SUM(ypkk.bitumi_indeksi)           AS "bitumi-indeksi",
-                                               SUM(ypkk.kaasuindeksi)             AS "kaasuindeksi",
-                                               SUM(ypkk.maku_paallysteet)         AS "maku-paallysteet"
+SELECT DISTINCT ON (u.id) u.nimi                             AS nimi,
+                          o.id                               AS "hallintayksikko_id",
+                          o.nimi                             AS "hallintayksikko_nimi",
+                          ypk.pkluokka,
+                          SUM(ypkk.sopimuksen_mukaiset_tyot) AS "sopimuksen-mukaiset-tyot",
+                          SUM(ypkk.maaramuutokset)           AS "maaramuutokset",
+                          SUM(ypkk.arvonvahennykset)         AS "arvonvahennykset",
+                          SUM(ypkk.toteutunut_hinta)         AS "toteutunut-hinta",
+                          SUM(ypkk.bitumi_indeksi)           AS "bitumi-indeksi",
+                          SUM(ypkk.kaasuindeksi)             AS "kaasuindeksi",
+                          SUM(ypkk.maku_paallysteet)         AS "maku-paallysteet"
   FROM yllapitokohde ypk
            LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypk.id = ypkk.yllapitokohde
            JOIN urakka u ON ypk.urakka = u.id
@@ -122,4 +122,30 @@ SELECT DISTINCT ON (CONCAT(u.id, ' ', u.nimi)) CONCAT(u.id, ' ', u.nimi)        
  WHERE :vuosi = ANY (ypk.vuodet)
    AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
    AND ypk.poistettu IS NOT TRUE
- GROUP BY o.id, ypk.pkluokka, u.id;
+ GROUP BY o.id, ypk.pkluokka, u.id, u.nimi;
+
+
+-- name: pkluokkien-yotyot-hallintayksikoittain
+SELECT u.nimi                             AS nimi,
+       u.id                               AS urakka_id,
+       o.id                               AS "hallintayksikko_id",
+       o.nimi                             AS "hallintayksikko_nimi",
+       ypk.yotyo,
+       ypk.pkluokka,
+       SUM((SELECT *
+              FROM laske_tr_osoitteen_pituus(
+                  ypk.tr_numero,
+                  ypk.tr_alkuosa,
+                  ypk.tr_alkuetaisyys,
+                  ypk.tr_loppuosa,
+                  ypk.tr_loppuetaisyys))) AS "pituus",
+       10                                 AS prosentti
+  FROM yllapitokohde ypk
+           LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypk.id = ypkk.yllapitokohde
+           JOIN urakka u ON ypk.urakka = u.id
+           JOIN organisaatio o ON u.hallintayksikko = o.id
+ WHERE :vuosi = ANY (ypk.vuodet)
+   AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
+   AND ypk.poistettu IS NOT TRUE
+ GROUP BY o.id, ypk.pkluokka, ypk.yotyo, u.id
+ ORDER BY o.id ASC;

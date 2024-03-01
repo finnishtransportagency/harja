@@ -96,8 +96,8 @@
        :fatal
 
        :default
-       ;:debug -- Aseta Debug level käyttöön, mikäli tarvitsee selvittää jotain tiettyä ongelmaa, joka ei muuten tule esille
-       :info
+       :debug                                               ;-- Aseta Debug level käyttöön, mikäli tarvitsee selvittää jotain tiettyä ongelmaa, joka ei muuten tule esille
+       ;:info
        )}}})
 
 (def testitietokanta {:palvelin (env/env "HARJA_TIETOKANTA_HOST" "localhost")
