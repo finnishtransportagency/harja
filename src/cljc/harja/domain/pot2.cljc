@@ -434,3 +434,9 @@
                        (reverse
                          (sort-by :runkoaine/massaprosentti
                                   (::runkoaineet rivi)))))])
+
+(defn massan-yhteenlaskettu-kuulamyllyarvo
+  "Laskee massan runkoaineiden kuulamyllyarvojen painotetun keskiarvon"
+  [massa]
+  (apply + (map #(/ (* (or (:runkoaine/massaprosentti %) 0) (or (:runkoaine/kuulamyllyarvo %) 0)) 100)
+             (::runkoaineet massa))))

@@ -203,7 +203,7 @@
      [:div.nimi-ja-yksityiskohdat
       [:div.nimi aineen-otsikko]
       [:div.massan-yksityiskohdat
-       (when kuulamyllyarvo [:span.yksityiskohta (str "KM-arvo " kuulamyllyarvo)])
+       (when kuulamyllyarvo [:span.yksityiskohta (str "KM-arvo " kuulamyllyarvo " %")])
        (when litteysluku [:span.yksityiskohta (str "Litteysluku " litteysluku)])
        (when esiintyma [:span.yksityiskohta esiintyma])]]]))
 
@@ -260,7 +260,13 @@
                 [runko-ja-lisa-aineen-lukutila tiedot (::pot2-domain/nimi t)]
 
                 :sideaineet
-                [sideaineen-lukutila tiedot (::pot2-domain/nimi t) aineet])])))))])
+                [sideaineen-lukutila tiedot (::pot2-domain/nimi t) aineet])])))))
+
+   (when (= tyyppi :runkoaineet)
+     [:div {:class (str "aineiden-lukutila " (name tyyppi))}
+      [:div.aineen-pitoisuus-ja-nimi
+       [:div.pitoisuus]
+       [:div.nimi-ja-yksityiskohdat [:div.massan-yksityiskohdat [:div.yksityiskohta "KM-arvo yhteensä " (str (get-in rivi [:data :yhteenlaskettu-kuulamyllyarvo]) " %")]]]]])])
 
 
 (defn massa-lomake [e! {:keys [pot2-massa-lomake materiaalikoodistot] :as app}]
