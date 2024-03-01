@@ -195,9 +195,18 @@
     display: none;
   }
 
-  .vetolaatikon-sailio {
-    text-align: right;
+  td.vetolaatikon-tila {
+    // Siirretään padding td:stä buttoniin, jotta siihen on helpompi osua
+    padding: 0;
+
+    button.vetolaatikon-sailio {
+      text-align: right;
+      background-color: transparent;
+      border: none;
+      padding: 8px 16px;
+    }
   }
+
   // halutaan sisentää vain avatun väliotsikon alla olevat tr:t, ja tällöin piirtää sininen palkki
   // käytetään ns. general sibling selectoria (~)
   tr.gridin-collapsoitava-valiotsikko ~ tr {

@@ -194,6 +194,8 @@ SELECT paivita_pohjavesialueet();
 -- Suunnitellut kulut Kittilän urakan 1. vuodelle vuoden päätöstä varten.
 \i testidata/vuodenpaatos.sql
 
+\i testidata/analytiikka-paallystyskohteet.sql
+
 SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 select paivita_materiaalin_kaytto_hoitoluokittain_aikavalille('0001-01-01'::DATE,'2100-12-31'::DATE);
 SELECT paivita_raportti_toteutuneet_materiaalit();

@@ -1,0 +1,67 @@
+{
+  "paikkauskohteet": [
+    {
+      "tila": "Valmis",
+      "geometria": "MULTILINESTRING((404702.9476343218 7153329.068177836,404771.4405341906 7153401.904072549))",
+      "suunniteltuHinta": 1000,
+      "tierekisteriosoitevali": {
+        "ajorata": 1,
+        "aosa": 20,
+        "let": 800,
+        "losa": 20,
+        "tienumero": 86,
+        "aet": 700
+      },
+      "loppupvm": "2023-11-01T22:00:00Z",
+      "yksikko": "m2",
+      "yhalahetyksenTila": "Lähetetty onnistuneesti",
+      "paikkaustyomenetelma": "AB-paikkaus levittäjällä",
+      "suunniteltuMaara": 700,
+      "tiemerkintaaTuhoutunut": false,
+      "urakka": 52,
+      "takuuaika": 1,
+      "tilattu": "2023-10-31T22:00:00Z",
+      "tarkistettu": "2023-11-02T10:00:00Z",
+      "nimi": "MT 86 Paavolantie",
+      "harjaId": 14,
+      "valmisTiemerkintaan": "2023-11-01T22:00:00Z",
+      "ulkoinenId": 1,
+      "toteutunutHinta": 1001.10,
+      "poistettu": false,
+      "alkupvm": "2023-10-31T22:00:00Z",
+      "valmistunut": "2023-11-01T22:00:00Z"
+    },
+    {
+      "tila": "Valmis",
+      "geometria": "MULTILINESTRING((404340.853 7152734.231,404351.19 7152762.029,404379.00227326556 7152826.636592349))",
+      "suunniteltuHinta": 200,
+      "tierekisteriosoitevali": {
+        "aosa": 20,
+        "let": 100,
+        "losa": 20,
+        "tienumero": 86,
+        "aet": 0
+      },
+      "loppupvm": "2023-11-01T22:00:00Z",
+      "yksikko": "m2",
+      "yhalahetyksenTila": "Lähetetty onnistuneesti",
+      "paikkaustyomenetelma": "SMA-paikkaus levittäjällä",
+      "suunniteltuMaara": 100,
+      "tiemerkintaaTuhoutunut": false,
+      "urakka": 52,
+      "takuuaika": 1,
+      "tilattu": "2023-10-31T22:00:00Z",
+      "tarkistettu": "2023-11-02T10:00:00Z",
+      "nimi": "MT 86 Paavolantie 2",
+      "harjaId": 15,
+      "valmisTiemerkintaan": "2023-11-01T22:00:00Z",
+      "ulkoinenId": 2,
+      "toteutunutHinta": 201.10,
+      "poistettu": false,
+      "alkupvm": "2023-10-31T22:00:00Z",
+      "paallystyskohdeId": 33,
+      "valmistunut": "2023-11-01T22:00:00Z"
+    }
+  ]
+}
+
