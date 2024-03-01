@@ -1,0 +1,95 @@
+# Security hardening for GitHub Actions
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
+
+name: 'Scan Docker image'
+description: 'Scan a Docker image for vulnerabilities using Trivy. You must build the image before using this action.'
+
+inputs:
+  image-ref:
+    description: 'Reference to a previously built Docker image to scan'
+    required: true
+  dockerfile-path-for-sarif:
+    description: 'Path to the dockerfile, to be used in the Sarif report as an identifier'
+    required: true
+  trivyignores:
+    description: 'A comma-separated list of relative paths in repository to one or more .trivyignore files'
+  fail-job-on-severity:
+    description: 'Fail scanning job when encountering a vuln of specific severity, such as: "CRITICAL,HIGH,MEDIUM"'
+    default: 'CRITICAL,HIGH'
+  vuln-types:
+    description: 'Comma-separated list of vuln types to scan, such as: "os,library"'
+    default: 'os,library'
+  ignore-unfixed:
+    description: 'Ignore unfixed vulnerabilities'
+    default: 'false'
+  upload-sarif:
+    description: 'Upload Sarif report to GitHub'
+    default: 'false'
+
+
+runs:
+  using: "composite"
+  steps:
+    # Note: Currently, the trivy action must be run multiple times to achieve different goals
+    # Run a full scan and show results
+    - name: Run Trivy vulnerability scanner (Full scan, all vuln-types, all severities, no job failure)
+      uses: aquasecurity/trivy-action@84384bd6e777ef152729993b8145ea352e9dd3ef # v0.17.0
+      env:
+        IMAGE_REF: ${{ inputs.image-ref }}
+      with:
+        image-ref: ${{ env.IMAGE_REF}}
+        format: 'table'
+        exit-code: '0'
+        scanners: vuln,secret,misconfig
+        vuln-type: 'os,library'
+        severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+        trivyignores: ${{ inputs.trivyignores }}
+
+    - name: Run Trivy and generate a Sarif report
+      uses: aquasecurity/trivy-action@84384bd6e777ef152729993b8145ea352e9dd3ef # v0.17.0
+      if: ${{ inputs.upload-sarif == 'true' }}
+      env:
+        IMAGE_REF: ${{ inputs.image-ref }}
+      with:
+        image-ref: ${{ env.IMAGE_REF}}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        exit-code: '0'
+        scanners: vuln
+        vuln-type: 'os,library'
+        severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+        trivyignores: ${{ inputs.trivyignores }}
+
+    - name: Upload the sarif report as an artifact for debugging
+      uses: actions/upload-artifact@v4
+      if: ${{ inputs.upload-sarif == 'true' }}
+      with:
+        name: 'trivy-results.sarif'
+        path: 'trivy-results.sarif'
+        if-no-files-found: error
+        retention-days: 1
+
+    #      - name: Upload Trivy scan results to GitHub Security tab
+    #        uses: github/codeql-action/upload-sarif@v3
+    #        if: ${{ inputs.upload-sarif == 'true' }}
+    #        with:
+    #          sarif_file: 'trivy-results.sarif'
+
+    # To fail the job on specific severity, we have to run the scanner again
+    - name: Run Trivy vulnerability scanner (Limited scan, fail job if vulns found)
+      uses: aquasecurity/trivy-action@84384bd6e777ef152729993b8145ea352e9dd3ef # v0.17.0
+      if: ${{ inputs.fail-job-on-severity != 'false' }}
+      env:
+        SEVERITIES: ${{ inputs.fail-job-on-severity }}
+        VULN_TYPES: ${{ inputs.vuln-types }}
+        IGNORE_UNFIXED: ${{ inputs.ignore-unfixed }}
+        IMAGE_REF: ${{ inputs.image-ref }}
+      with:
+        image-ref: ${{ env.IMAGE_REF}}
+        format: 'table'
+        exit-code: '1'
+        scanners: vuln,secret,misconfig
+        ignore-unfixed: ${{ env.IGNORE_UNFIXED }}
+        vuln-type: ${{ env.VULN_TYPES }}
+        severity: ${{ env.SEVERITIES }}
+        trivyignores: ${{ inputs.trivyignores }}
