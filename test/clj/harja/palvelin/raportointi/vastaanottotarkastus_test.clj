@@ -30,7 +30,7 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -288,6 +288,15 @@
      ""
      ""]]])
 
+(def odotettu-PK-luokka-2023
+  [:taulukko {:otsikko "Eurot / PK-luokka", :tyhja nil, :sheet-nimi "Eurot / PK-luokka"} '({:otsikko "Urakka", :leveys 10} {:otsikko "PK1", :leveys 2, :fmt :raha} {:otsikko "PK2", :leveys 2, :fmt :raha} {:otsikko "PK3", :leveys 2, :fmt :raha} {:otsikko "Ei tiedossa", :leveys 2, :fmt :raha}) '({:otsikko "12 Pohjois-Pohjanmaa"} {:lihavoi? false, :rivi [[:arvo {:arvo "52 Analytiikan testipäällystysurakka", :korosta-hennosti? false}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 98900M, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}]]} {:lihavoi? false, :rivi [[:arvo {:arvo "7 Utajärven päällystysurakka", :korosta-hennosti? false}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 7400M, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}]]} {:lihavoi? true, :rivi [[:arvo {:arvo "Pohjois-Pohjanmaa yhteensä", :korosta-hennosti? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 106300M, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}]]} {:lihavoi? true, :rivi [[:arvo {:arvo "Valtakunnallisesti yhteensä", :korosta-hennosti? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 106300M, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}]]})])
+
+(def odotettu-tyhjat-PKLuokat
+  [:taulukko {:otsikko "Eurot / PK-luokka", :tyhja nil, :sheet-nimi "Eurot / PK-luokka"} '({:otsikko "Urakka", :leveys 10} {:otsikko "PK1", :leveys 2, :fmt :raha} {:otsikko "PK2", :leveys 2, :fmt :raha} {:otsikko "PK3", :leveys 2, :fmt :raha} {:otsikko "Ei tiedossa", :leveys 2, :fmt :raha}) '({:otsikko "12 Pohjois-Pohjanmaa"} {:lihavoi? false, :rivi [[:arvo {:arvo "52 Analytiikan testipäällystysurakka", :korosta-hennosti? false}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 0M, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}]]} {:lihavoi? false, :rivi [[:arvo {:arvo "7 Utajärven päällystysurakka", :korosta-hennosti? false}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 0M, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}]]} {:lihavoi? true, :rivi [[:arvo {:arvo "Pohjois-Pohjanmaa yhteensä", :korosta-hennosti? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 0M, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}]]} {:lihavoi? true, :rivi [[:arvo {:arvo "Valtakunnallisesti yhteensä", :korosta-hennosti? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 0M, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}]]})])
+
+(def odotettu-taydennetyt-PKLuokat
+  [:taulukko {:otsikko "Eurot / PK-luokka", :tyhja nil, :sheet-nimi "Eurot / PK-luokka"} '({:otsikko "Urakka", :leveys 10} {:otsikko "PK1", :leveys 2, :fmt :raha} {:otsikko "PK2", :leveys 2, :fmt :raha} {:otsikko "PK3", :leveys 2, :fmt :raha} {:otsikko "Ei tiedossa", :leveys 2, :fmt :raha}) '({:otsikko "12 Pohjois-Pohjanmaa"} {:lihavoi? false, :rivi [[:arvo {:arvo "52 Analytiikan testipäällystysurakka", :korosta-hennosti? false}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 1140M, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}]]} {:lihavoi? false, :rivi [[:arvo {:arvo "7 Utajärven päällystysurakka", :korosta-hennosti? false}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo nil, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 1140M, :jos-tyhja "", :korosta-hennosti? false, :desimaalien-maara 2, :ryhmitelty? true}]]} {:lihavoi? true, :rivi [[:arvo {:arvo "Pohjois-Pohjanmaa yhteensä", :korosta-hennosti? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 2280M, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}]]} {:lihavoi? true, :rivi [[:arvo {:arvo "Valtakunnallisesti yhteensä", :korosta-hennosti? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 0, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}] [:arvo {:arvo 2280M, :jos-tyhja "", :korosta-hennosti? true, :desimaalien-maara 2, :ryhmitelty? true}]]})])
+
 (def odotettu-yha-kohteet-kokomaa-2023
   [:taulukko {:lisaa-excel-valiotsikot true :otsikko "YHA-kohteet" :rivi-ennen [{:sarakkeita 14} {:sarakkeita 1} {:luokka "paallystys-tausta-tumma" :sarakkeita 3 :tasaa :keskita :teksti "Hintamuutokset" :tummenna-teksti? true} {:sarakkeita 1}] :sheet-nimi "YHA-kohteet" :tyhja nil} [{:leveys 10 :otsikko "Urakka"} {:leveys 5 :otsikko "Kohde­numero"} {:leveys 5 :otsikko "Tunnus"} {:leveys 10 :otsikko "Nimi"} {:fmt :boolean :leveys 3 :otsikko "Yö­työ"} {:leveys 3 :otsikko "Tie­numero" :tasaa :oikea} {:leveys 3 :otsikko "Aosa" :tasaa :oikea} {:leveys 3 :otsikko "Aet" :tasaa :oikea} {:leveys 3 :otsikko "Losa" :tasaa :oikea} {:leveys 3 :otsikko "Let" :tasaa :oikea} {:leveys 3 :otsikko "Pit. (m)" :tasaa :oikea} {:leveys 3 :otsikko "KVL" :tasaa :oikea} {:leveys 3 :otsikko "YP-lk"} {:fmt :raha :leveys 5 :otsikko "Tarjous­hinta"} {:fmt :raha :leveys 5 :otsikko "Määrä­muu­tokset"} {:fmt :raha :leveys 5 :otsikko "Bitu­mi-indek­si" :otsikkorivi-luokka "paallystys-tausta-tumma"} {:fmt :raha :leveys 10 :otsikko "Neste­kaasu ja kevyt poltto­öljy" :otsikkorivi-luokka "paallystys-tausta-tumma"} {:fmt :raha :leveys 5 :otsikko "MAKU-pääl­lys­teet" :otsikkorivi-luokka "paallystys-tausta-tumma"} {:fmt :raha :leveys 5 :otsikko "Kokonais­hinta"}] [{:leveys 10 :otsikko "12 Pohjois-Pohjanmaa"} ["Analytiikan testipäällystysurakka" "1" "ANALYTIIKKA1" "Kirkonkylä - Toppinen" [:boolean {:arvo false}] 86 20 0 20 1300 1300 1000 1 100000M -1000M -100M -100M 100M 98900M] ["Utajärven päällystysurakka" "L15" "A" "Puolangantie" [:boolean {:arvo true}] 837 2 0 2 1000 0 nil nil 400M 1000M 5000M 0M 1000M 7400M]]])
 
@@ -333,10 +342,10 @@
                    :parametrit {:vuosi 2023 :urakkatyyppi :paallystys}})
         otsikko (-> vastaus (nth 1))
         yha-kohteet (-> vastaus (nth 2))
-        yhteenveto (-> vastaus last)
         aikataulu-otsikko (-> vastaus (nth 5) first)
         aikataulu (-> vastaus (nth 5) second)
-        kohdeluettelo (-> vastaus (nth 5) last)]
+        kohdeluettelo (-> vastaus (nth 5) last)
+        yhteenveto (-> vastaus (nth 6))]
     (is (vector? vastaus))
     (is (= otsikko {:orientaatio :landscape, :nimi "Utajärven päällystysurakka, Vastaanottotarkastus 2023"}))
     (is (= yha-kohteet odotettu-yha-kohteet-2023))
@@ -358,13 +367,71 @@
         yha-kohteet (-> vastaus (nth 2))
         muut-kustannukset (-> vastaus (nth 4))
         muut-kohteet (-> vastaus (nth 3))
-        yhteenveto (-> vastaus (nth 6))]
+        yhteenveto (-> vastaus (nth 6))
+        pkluokat (-> vastaus (nth 7))]
     (is (vector? vastaus))
     (is (= otsikko {:orientaatio :landscape, :nimi "Päällystysurakoiden yhteenveto, KOKO MAA 2023"}))
     (is (= muut-kohteet odotettu-muut-kohteet-kokomaa-2023))
     (is (= muut-kustannukset odotettu-muut-kustannukset-kokomaa-2023))
     (is (= yha-kohteet odotettu-yha-kohteet-kokomaa-2023))
-    (is (= yhteenveto odotettu-yhteenveto-2023))))
+    (is (= yhteenveto odotettu-yhteenveto-2023))
+    (is (= pkluokat odotettu-PK-luokka-2023))))
+
+(deftest generoitu-paallystys-pk-luokka-toimii-vuosi-2023
+  (let [;; Poistetaan kaikki ylläpitokohteiden kustannukset ja lisätään hallitusti
+        yllapitokohteet (q-map (str "SELECT id, nimi FROM yllapitokohde;"))
+        ;; Näytä kustannukset
+        kustannukset (map
+              #(q-map (format "SELECT yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi,
+             kaasuindeksi,
+             toteutunut_hinta,
+             maaramuutokset,
+             maku_paallysteet
+             FROM yllapitokohteen_kustannukset
+             WHERE yllapitokohde = %s;" (:id %)))
+              yllapitokohteet)
+        ;; Siivotaan niiden kustannukset
+        _ (mapv
+            #(u (format "UPDATE yllapitokohteen_kustannukset
+            SET sopimuksen_mukaiset_tyot = 0,
+             arvonvahennykset = 0,
+             bitumi_indeksi = 0,
+             kaasuindeksi = 0,
+             toteutunut_hinta = 0,
+             maaramuutokset = 0,
+             maku_paallysteet = 0 WHERE yllapitokohde = %s;" (:id %)))
+            yllapitokohteet)
+
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi :vastaanottotarkastusraportti
+                   :konteksti "koko maa"
+                   :parametrit {:vuosi 2023 :urakkatyyppi :paallystys}})
+
+        pkluokat (-> vastaus (nth 7))
+
+        _ (is (= pkluokat odotettu-tyhjat-PKLuokat))
+
+        ;; Lisätään kustannukset takaisin hallituilla luvuilla
+        _ (mapv
+            #(u (format "UPDATE yllapitokohteen_kustannukset
+            SET sopimuksen_mukaiset_tyot = 1000,
+             bitumi_indeksi = 20,
+             kaasuindeksi = 30,
+             toteutunut_hinta = 0,
+             maaramuutokset = 40,
+             maku_paallysteet = 50 WHERE yllapitokohde = %s;" (:id %)))
+            yllapitokohteet)
+
+        vastaus2 (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi :vastaanottotarkastusraportti
+                   :konteksti "koko maa"
+                   :parametrit {:vuosi 2023 :urakkatyyppi :paallystys}})
+        pkluokat2 (-> vastaus2 (nth 7))
+        _ (is (= pkluokat2 odotettu-taydennetyt-PKLuokat))]))
 
 (deftest teiden-pituus-laskenta-sql-toimii
   (let [tie 286
