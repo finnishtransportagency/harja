@@ -192,31 +192,25 @@
            muut-kustannukset-yhteensa))])]]))
 
 (defn pkluokka-rivi [rivi korosta? lihavoi?]
+(let [formatoi-arvo (fn [a]
+                      [:arvo {:arvo a
+                              :jos-tyhja ""
+                              :korosta-hennosti? korosta?
+                              :desimaalien-maara 2
+                              :ryhmitelty? true}])]
   {:lihavoi? lihavoi?
    :rivi
    (into []
      (concat
        [[:arvo {:arvo (:nimi rivi) :korosta-hennosti? korosta?}]]
-       [[:arvo {:arvo (or (:pk1 rivi) (when (= "PK1" (:pkluokka rivi)) (:kokonaishinta rivi)))
-                :jos-tyhja ""
-                :korosta-hennosti? korosta?
-                :desimaalien-maara 2
-                :ryhmitelty? true}]]
-       [[:arvo {:arvo (or (:pk2 rivi) (when (= "PK2" (:pkluokka rivi)) (:kokonaishinta rivi)))
-                :jos-tyhja ""
-                :korosta-hennosti? korosta?
-                :desimaalien-maara 2
-                :ryhmitelty? true}]]
-       [[:arvo {:arvo (or (:pk3 rivi) (when (= "PK3" (:pkluokka rivi)) (:kokonaishinta rivi)))
-                :jos-tyhja ""
-                :korosta-hennosti? korosta?
-                :desimaalien-maara 2
-                :ryhmitelty? true}]]
-       [[:arvo {:arvo (or (:eitiedossa rivi) (when (or (= "" (:pkluokka rivi)) (nil? (:pkluokka rivi)) (= "Ei tiedossa" (:pkluokka rivi))) (:kokonaishinta rivi)))
-                :jos-tyhja ""
-                :korosta-hennosti? korosta?
-                :desimaalien-maara 2
-                :ryhmitelty? true}]]))})
+       [(formatoi-arvo (or (:pk1 rivi) (when (= "PK1" (:pkluokka rivi)) (:kokonaishinta rivi))))]
+       [(formatoi-arvo (or (:pk2 rivi) (when (= "PK2" (:pkluokka rivi)) (:kokonaishinta rivi))))]
+       [(formatoi-arvo (or (:pk1 rivi) (or (:pk3 rivi) (when (= "PK3" (:pkluokka rivi)) (:kokonaishinta rivi)))))]
+       [(formatoi-arvo (or (:eitiedossa rivi) (when (or (= "" (:pkluokka rivi))
+                                                      (nil? (:pkluokka rivi))
+                                                      (= "Ei tiedossa" (:pkluokka rivi)))
+                                                (:kokonaishinta rivi))))]))}))
+
 
 (defn pkluokka-taulukko [rivit]
   (let [valtakunnallisesti-yhteensa (reduce (fn [yht-rivi rivi]
@@ -237,7 +231,8 @@
                                       rivit)
         elyttain-jaoteltu (group-by :hallintayksikko_nimi rivit)
         formatoi-elyt-fn (fn [ely]
-                           (let [elyrivi {:otsikko (first ely)}
+                           (let [elyid (:hallintayksikko_id (first (second ely)))
+                                 elyrivi {:otsikko (str elyid " " (first ely))}
                                  kohteet-lista (mapv (fn [kohde] (pkluokka-rivi kohde false false)) (second ely))
                                  ely-yhteensa (reduce (fn [yht-rivi rivi]
                                                         (let [pk1 (if (= "PK1" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
