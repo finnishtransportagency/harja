@@ -32,11 +32,10 @@
           rivi)))))
 
 
-(defn erottele-reikapaikkaukset [workbook]
+(defn parsi-syotetyt-reikapaikkaukset [workbook]
   (let [sivu (first (xls/sheet-seq workbook))
         raaka-data (lue-excel-raaka-data sivu)
         _ (println "\n Raaka data: " raaka-data)
-        
         ;; Syötetty data mistä leikattu kaikki otsikot sun muut 
         ;; Tämä siis leikkaa kaikki aikaisemmat rivit siihen asti kun "Tunniste*" löytyy, joka on otsikkorivi, sen jälkeen tulee oikea data
         syotetty-data (->> raaka-data
@@ -44,7 +43,14 @@
                         rest
                         (remove (fn [item] (some nil? item))))
 
-        _ (println "\n Syötetty data: " syotetty-data)]))
+        ;; Sarakkeet avaimina, eli excelin otsikot
+        sarakkeet [:tunniste :pvm :tie :aosa :aet :losa :let :menetelma :maara :yksikko :kustannus]
+        ;; Mäppää sekvenssi vectoriin, jonka sisällä on mappeja, eli (() ()) -> [{} {}]
+        syotetty-data (mapv (fn [sisempi-sekvenssi] (zipmap sarakkeet sisempi-sekvenssi)) syotetty-data)
+
+        ;; TODO.. validoi data
+        _ (println "\n Syötetty data: " syotetty-data " datatype: " (type syotetty-data))]
+    syotetty-data))
 
 
 (defn erottele-paikkauskohteet [workbook]

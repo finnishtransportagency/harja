@@ -28,8 +28,11 @@
 
 (defn- kasittele-excel [db urakka-id kayttaja pyynto]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in pyynto [:params "file" :tempfile]))))
-        paikkauskohteet (p-excel/erottele-reikapaikkaukset workbook)
-        _ (println "\n Workhook: " workbook)
+        paikkauskohteet (p-excel/parsi-syotetyt-reikapaikkaukset workbook)
+        _ (println "\n Syötetyt: " paikkauskohteet)
+        tuloksia? (empty? paikkauskohteet)
+        _ (println "empty?: " (empty? paikkauskohteet))
+        ;;_ (println "\n Workhook: " workbook)
         ]
     {:status 200
      :headers {"Content-Type" "application/json; charset=UTF-8"}
