@@ -28,20 +28,34 @@
 
 (defn- kasittele-excel [db urakka-id kayttaja pyynto]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in pyynto [:params "file" :tempfile]))))
-        paikkauskohteet (p-excel/parsi-syotetyt-reikapaikkaukset workbook)
-        _ (println "\n Syötetyt: " paikkauskohteet)
-        tuloksia? (empty? paikkauskohteet)
-        _ (println "empty?: " (empty? paikkauskohteet))
-        
+        reikapaikkaukset (p-excel/parsi-syotetyt-reikapaikkaukset workbook)
+        _ (println "\n Syötetyt: " reikapaikkaukset)
+        _ (println "empty?: " (empty? reikapaikkaukset))
         ;; {:pvm 08.08.2018, :aosa 21.0, :kustannus 200000.0, :tie 81.0, :let 4270.0, :yksikko m2, :losa 21.0, :aet 4040.0, :menetelma Urapaikkaus (UREM/RREM), :maara 81.0, :tunniste 1234444.0}
-        _ (dorun (for [x paikkauskohteet]
+        _ (dorun (for [x reikapaikkaukset]
                    (println "validoitu: " x)))
-        
-        ;;_ (println "\n Workhook: " workbook)
-        ]
-    {:status 200
+
+        ;; Kerää kaikki parsinnan virheet
+        virheet (reduce (fn [acc arvo]
+                          (if-let [virhe (get arvo :virhe)]
+                            (conj acc virhe)
+                            acc))
+                  []
+                  reikapaikkaukset)
+
+        _ (println "\n Virheet: " virheet " count: " (count virheet) " empty? " (empty? virheet))
+        ;; --
+        status (if (empty? virheet)
+                 200
+                 400)
+        ;; -- 
+        body (if (empty? virheet)
+               reikapaikkaukset
+               virheet)]
+    
+    {:status status
      :headers {"Content-Type" "application/json; charset=UTF-8"}
-     :body (cheshire/encode paikkauskohteet)}))
+     :body (cheshire/encode body)}))
 
 
 (defn vastaanota-excel [db pyynto]
