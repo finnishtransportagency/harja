@@ -15,6 +15,7 @@
                      :valittu-rivi nil
                      :muokataan false
                      :nayta-virhe-modal false
+                     :excel-virheet nil
                      :valinnat {:aikavali (pvm/kuukauden-aikavali (pvm/nyt))
                                 :tr-osoite nil}}))
 
@@ -106,20 +107,24 @@
   
   TiedostoLadattu
   (process-event [{vastaus :vastaus} app]
-    (do
-      ;; Tarkista virheet
+    (let [status (:status vastaus)
+          response (:response vastaus)]
       (cond
+        ;; Virheitä Excel tuonnissa
         (and
-          (not (nil? (:status vastaus)))
-          (not= 200 (:status vastaus)))
+          (not (nil? status))
+          (not= 200 status))
         (do
           (viesti/nayta-toast! "Ladatun tiedoston käsittelyssä virhe" :varoitus viesti/viestin-nayttoaika-lyhyt)
-          (println "\nVirhe excel tuonnissa")) 
-
+          ;; Lisää virheet app stateen jotka näytetään modalissa
+          (-> app
+            (assoc :nayta-virhe-modal true)
+            (assoc :excel-virheet response)))
+        ;; Ei virheitä
         :else
-        (println "\nOK.")))
-    
-    (assoc app :nayta-virhe-modal true))
+        (-> app
+          (assoc :excel-virheet nil)
+          (assoc :nayta-virhe-modal false)))))
 
   PaivitaAikavali
   (process-event [{uudet :uudet} app]

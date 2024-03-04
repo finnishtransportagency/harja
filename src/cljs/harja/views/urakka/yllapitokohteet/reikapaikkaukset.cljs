@@ -26,7 +26,7 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
-(defn reikapaikkaus-listaus [e! {:keys [valinnat rivit muokataan nayta-virhe-modal] :as app}]
+(defn reikapaikkaus-listaus [e! {:keys [valinnat rivit muokataan nayta-virhe-modal excel-virheet] :as app}]
   (let [tr-atomi (atom (:tr valinnat))
         sijainti-atomi (atom (:sijainti valinnat))
         ;; Menetelmän valinnat, testiajaksi 
@@ -177,15 +177,14 @@
          [:p "Tuotua Exceliä ei voitu lukea. Varmista, että käytät HARJAsta ladattua pohjaa jonka sarakkeita A-K ei ole muokattu, ja paikkaukset alkavat riviltä 4."]
          [:<>
           [:br]
-          ;;(for* [[rivi virheet] validointivirheet]
           [:<>
-           [:p "Rivi x"  ":"]
+           [:p "Virheet:"]
            [:ul
-            ;;(for* [virhe virheet]
-            [:li "virhe!"]]]]]
+            (for* [virhe excel-virheet]
+              [:li virhe])]]]]
         [:<>
          [:br]
-         [:p "Tuotu excel ei näytä oikeanlaiselta. Varmista, että käytät HARJAsta ladattua pohjaa jonka sarakkeita A-K eikä otsikkorivejä ei ole muokattu."]]]]
+         [:p "Tarkista virheet ja yritä tuontia uudelleen."]]]]
       
 
       ;; Taulukon ylhäällä olevat tekstit
