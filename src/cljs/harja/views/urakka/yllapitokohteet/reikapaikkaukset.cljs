@@ -238,14 +238,14 @@
          :leveys 1}
 
         {:otsikko "Määrä"
-         :tyyppi :komponentti
-         :komponentti (fn [arvo _] "test")
+         :tyyppi :string
+         :nimi :massamaara
          :luokka "text-nowrap"
          :leveys 0.3}
 
         {:otsikko "Kustannus (EUR)"
-         :tyyppi :komponentti
-         :komponentti (fn [arvo _] "test")
+         :tyyppi :string
+         :nimi :kustannus
          :luokka "text-nowrap"
          :leveys 0.3}]
        rivit]]]))

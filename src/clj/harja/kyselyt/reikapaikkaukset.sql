@@ -9,8 +9,12 @@ SELECT
     (p.tierekisteriosoite).let     AS let,
     (SELECT nimi FROM paikkauskohde_tyomenetelma WHERE id = p.tyomenetelma) AS "tyomenetelma", 
     p.massatyyppi,
-    p.alkuaika
-FROM paikkaus p WHERE p."urakka-id" = :urakka-id LIMIT 20;
+    p.alkuaika,
+    p.massamaara, 
+    p.kustannus
+FROM paikkaus p 
+WHERE p."urakka-id" = :urakka-id 
+AND p.tyyppi = 'reikapaikkaus';
 
 
 -- name: luo-tai-paivita-reikapaikkaus!
