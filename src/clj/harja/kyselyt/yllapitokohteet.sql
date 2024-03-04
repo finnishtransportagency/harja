@@ -1129,10 +1129,6 @@ SET
   muokkaaja         = :muokkaaja
 WHERE yllapitokohde = :id;
 
--- name: poista-yllapitokohteen-kohdeosat!
-DELETE FROM yllapitokohdeosa
-WHERE yllapitokohde = :id;
-
 -- name: hae-kohteen-tienumero
 SELECT tr_numero
 FROM yllapitokohde
