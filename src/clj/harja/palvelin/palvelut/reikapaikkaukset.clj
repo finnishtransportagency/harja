@@ -32,11 +32,16 @@
         _ (println "\n Syötetyt: " paikkauskohteet)
         tuloksia? (empty? paikkauskohteet)
         _ (println "empty?: " (empty? paikkauskohteet))
+        
+        ;; {:pvm 08.08.2018, :aosa 21.0, :kustannus 200000.0, :tie 81.0, :let 4270.0, :yksikko m2, :losa 21.0, :aet 4040.0, :menetelma Urapaikkaus (UREM/RREM), :maara 81.0, :tunniste 1234444.0}
+        _ (dorun (for [x paikkauskohteet]
+                   (println "validoitu: " x)))
+        
         ;;_ (println "\n Workhook: " workbook)
         ]
     {:status 200
      :headers {"Content-Type" "application/json; charset=UTF-8"}
-     :body (cheshire/encode {:message "OK"})}))
+     :body (cheshire/encode paikkauskohteet)}))
 
 
 (defn vastaanota-excel [db pyynto]

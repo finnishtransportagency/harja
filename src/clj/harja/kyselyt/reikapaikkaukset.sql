@@ -1,6 +1,7 @@
 -- name: hae-reikapaikkaukset
 SELECT 
     p.id, 
+    p.sijainti,
     (p.tierekisteriosoite).tie     AS tie,
     (p.tierekisteriosoite).aosa    AS aosa,
     (p.tierekisteriosoite).aet     AS aet,
