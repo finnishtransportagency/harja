@@ -22,7 +22,9 @@
             [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.views.hallinta.viestitestaus-nakyma :as viestinakyma]
             [harja.views.hallinta.tehtava-nakyma :as tehtava-nakyma]
+            [harja.views.hallinta.tarjoushinnat :as tarjoushinnat]
             [harja.tiedot.istunto :as istunto]))
+
 (defn hallinta []
   [bs/tabs {:style :tabs :classes "tabs-taso1"
             :active (nav/valittu-valilehti-atom :hallinta)}
@@ -136,5 +138,11 @@
    :tehtavatjatehtavaryhmat
    (when true
      ^{:key "tehtavaryhmatjatehtavat"}
-     [tehtava-nakyma/tehtavat])])
+     [tehtava-nakyma/tehtavat])
+
+   "MHU tarjoushinnat"
+   :mhu-tarjoushinnat
+   (when (oikeudet/hallinta-tarjoushinnat)
+     ^{:key "mhu-tarjoushinnat"}
+     [tarjoushinnat/tarjoushinnat])])
 

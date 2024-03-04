@@ -163,7 +163,8 @@
     :palauteluokitukset
     :palauteluokitukset-hallinta
     :lyhytnimien-hallinta
-    :tehtavat-hallinta})
+    :tehtavat-hallinta
+    :tarjoushinnat-hallinta})
 
 (def ei-statusta
   #{:metriikka
@@ -236,7 +237,8 @@
     :palauteluokitukset
     :palauteluokitukset-hallinta
     :lyhytnimien-hallinta
-    :tehtavat-hallinta})
+    :tehtavat-hallinta
+    :tarjoushinnat-hallinta})
 
 (def hidas-ok-status #{:itmf})
 

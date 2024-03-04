@@ -58,7 +58,9 @@
         (first kuittaukset))
       (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus ei-kriittinen?]}
         (do
-          (log/error "Sampo sisään luvussa tapahtui poikkeus: " virheet)
+          (if ei-kriittinen?
+            (log/info "Sampo sisäänluvussa ei-kriittinen poikkeus: " virheet)
+            (log/error "Sampo sisään luvussa tapahtui poikkeus: " virheet))
           ;; Muodosta virheviesti välitettäväksi Sampoon vastauksena REST-API kutsuun
           (kuittaus-sampoon-sanoma/tee-xml-sanoma
             (kuittaus-sampoon-sanoma/muodosta-viesti viesti-id viestityyppi "CUSTOM" virheet))))

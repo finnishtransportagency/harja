@@ -1,0 +1,26 @@
+{
+  "paikkaukset": [
+    {
+      "leveys": 1.4,
+      "massamaara": 6.3,
+      "tierekisteriosoitevali": {
+        "aosa": 20,
+        "let": 800,
+        "losa": 20,
+        "tienumero": 86,
+        "aet": 700
+      },
+      "loppupvm": "2023-11-01T22:00:00Z",
+      "paikkaustyomenetelma": "AB-paikkaus levittäjällä",
+      "pintaAla": 140,
+      "massamenekki": 45,
+      "kuulamylly": "AN14",
+      "raekoko": 16,
+      "harjaId": 265,
+      "poistettu": false,
+      "alkupvm": "2023-11-01T22:00:00Z",
+      "paikkauskohdeId": 14
+    }
+  ]
+}
+

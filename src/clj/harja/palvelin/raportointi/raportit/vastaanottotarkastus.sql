@@ -100,3 +100,26 @@ WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL)
       AND (SELECT EXTRACT(YEAR FROM lp.aika)) = :vuosi
       AND s.poistettu IS NOT TRUE
 ORDER BY s.perintapvm DESC;
+
+-- name: pkluokkien-kustannukset-hallintayksikoittain
+-- Päätellään päällystyskohteen pk-luokka laskemalla alikohteiden (yllapitokohdeosa) pituudet ja ottamalla se
+-- pk-luokka, jonka pituus on suurin
+SELECT DISTINCT ON (CONCAT(u.id, ' ', u.nimi)) CONCAT(u.id, ' ', u.nimi)          AS nimi,
+                                               o.id                               AS "hallintayksikko_id",
+                                               o.nimi                             AS "hallintayksikko_nimi",
+                                               ypk.pkluokka,
+                                               SUM(ypkk.sopimuksen_mukaiset_tyot) AS "sopimuksen-mukaiset-tyot",
+                                               SUM(ypkk.maaramuutokset)           AS "maaramuutokset",
+                                               SUM(ypkk.arvonvahennykset)         AS "arvonvahennykset",
+                                               SUM(ypkk.toteutunut_hinta)         AS "toteutunut-hinta",
+                                               SUM(ypkk.bitumi_indeksi)           AS "bitumi-indeksi",
+                                               SUM(ypkk.kaasuindeksi)             AS "kaasuindeksi",
+                                               SUM(ypkk.maku_paallysteet)         AS "maku-paallysteet"
+  FROM yllapitokohde ypk
+           LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypk.id = ypkk.yllapitokohde
+           JOIN urakka u ON ypk.urakka = u.id
+           JOIN organisaatio o ON u.hallintayksikko = o.id
+ WHERE :vuosi = ANY (ypk.vuodet)
+   AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
+   AND ypk.poistettu IS NOT TRUE
+ GROUP BY o.id, ypk.pkluokka, u.id;

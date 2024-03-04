@@ -21,4 +21,4 @@
                            (update :aet #(Integer/parseInt %))
                            (update :pituus #(Integer/parseInt %)))]
             (tieturvallisuusverkko-kyselyt/lisaa-tieturvallisuusverkko! db datarivi)))))
-    (throw (Exception. (format "Error. Tuontia ei suoriteta." shapefile)))))
+    (throw (Exception. (format "Error. Tuontia ei suoritettu tiedostolle: %s" shapefile)))))

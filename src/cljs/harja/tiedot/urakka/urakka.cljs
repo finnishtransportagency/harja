@@ -373,6 +373,7 @@
 (def laskutus-default {:kohdistetut-kulut kulut-default})
 (def lupaukset-default {})
 (def laatupoikkeamat-default {:listaus-tyyppi :kaikki
+                              :tallennus-kaynnissa? false
                               :hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))
                               :valittu-hoitokausi [(pvm/hoitokauden-alkupvm (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))
                                                    (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))))]

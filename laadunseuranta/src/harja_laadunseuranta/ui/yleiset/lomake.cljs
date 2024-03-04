@@ -10,8 +10,7 @@
             [harja-laadunseuranta.ui.yleiset.yleiset :as yleiset]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja.domain.tierekisteri :as tr-domain])
-  (:require-macros [reagent.ratom :refer [run!]]
-                   [devcards.core :refer [defcard]]))
+  (:require-macros [reagent.ratom :refer [run!]]))
 
 ;; Lomakkeessa käytettävät kentät
 

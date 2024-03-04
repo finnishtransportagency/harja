@@ -5,8 +5,7 @@
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
-    [cljs.core.async.macros :refer [go go-loop]]
-    [devcards.core :as dc :refer [defcard deftest]]))
+    [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn file-input [on-change]
   [:div.file-input-container

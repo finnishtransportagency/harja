@@ -191,6 +191,82 @@
            kohdistamattomat-sanktiot-yhteensa
            muut-kustannukset-yhteensa))])]]))
 
+(defn pkluokka-rivi [rivi korosta? lihavoi?]
+(let [formatoi-arvo (fn [a]
+                      [:arvo {:arvo a
+                              :jos-tyhja ""
+                              :korosta-hennosti? korosta?
+                              :desimaalien-maara 2
+                              :ryhmitelty? true}])]
+  {:lihavoi? lihavoi?
+   :rivi
+   (into []
+     (concat
+       [[:arvo {:arvo (:nimi rivi) :korosta-hennosti? korosta?}]]
+       [(formatoi-arvo (or (:pk1 rivi) (when (= "PK1" (:pkluokka rivi)) (:kokonaishinta rivi))))]
+       [(formatoi-arvo (or (:pk2 rivi) (when (= "PK2" (:pkluokka rivi)) (:kokonaishinta rivi))))]
+       [(formatoi-arvo (or (:pk1 rivi) (or (:pk3 rivi) (when (= "PK3" (:pkluokka rivi)) (:kokonaishinta rivi)))))]
+       [(formatoi-arvo (or (:eitiedossa rivi) (when (or (= "" (:pkluokka rivi))
+                                                      (nil? (:pkluokka rivi))
+                                                      (= "Ei tiedossa" (:pkluokka rivi)))
+                                                (:kokonaishinta rivi))))]))}))
+
+
+(defn pkluokka-taulukko [rivit]
+  (let [valtakunnallisesti-yhteensa (reduce (fn [yht-rivi rivi]
+                                              (let [pk1 (if (= "PK1" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
+                                                    pk2 (if (= "PK2" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
+                                                    pk3 (if (= "PK3" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
+                                                    ei-tiedossa (if (or (= "" (:pkluokka rivi)) (nil? (:pkluokka rivi)) (= "Ei tiedossa" (:pkluokka rivi)))
+                                                                  (:kokonaishinta rivi)
+                                                                  0)]
+
+                                                (assoc yht-rivi
+                                                  :pk1 (+ (:pk1 yht-rivi) pk1)
+                                                  :pk2 (+ (:pk2 yht-rivi) pk2)
+                                                  :pk3 (+ (:pk3 yht-rivi) pk3)
+                                                  :eitiedossa (+ (:eitiedossa yht-rivi) ei-tiedossa))))
+
+                                      {:nimi "Valtakunnallisesti yhteensä" :pk1 0 :pk2 0 :pk3 0 :eitiedossa 0}
+                                      rivit)
+        elyttain-jaoteltu (group-by :hallintayksikko_nimi rivit)
+        formatoi-elyt-fn (fn [ely]
+                           (let [elyid (:hallintayksikko_id (first (second ely)))
+                                 elyrivi {:otsikko (str elyid " " (first ely))}
+                                 kohteet-lista (mapv (fn [kohde] (pkluokka-rivi kohde false false)) (second ely))
+                                 ely-yhteensa (reduce (fn [yht-rivi rivi]
+                                                        (let [pk1 (if (= "PK1" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
+                                                              pk2 (if (= "PK2" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
+                                                              pk3 (if (= "PK3" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
+                                                              ei-tiedossa (if (or (= "" (:pkluokka rivi)) (nil? (:pkluokka rivi)) (= "Ei tiedossa" (:pkluokka rivi)))
+                                                                            (:kokonaishinta rivi)
+                                                                            0)]
+
+                                                          (assoc yht-rivi
+                                                            :pk1 (+ (:pk1 yht-rivi) pk1)
+                                                            :pk2 (+ (:pk2 yht-rivi) pk2)
+                                                            :pk3 (+ (:pk3 yht-rivi) pk3)
+                                                            :eitiedossa (+ (:eitiedossa yht-rivi) ei-tiedossa))))
+
+                                                {:nimi (str (first ely) " yhteensä") :pk1 0 :pk2 0 :pk3 0 :eitiedossa 0}
+                                                (second ely))]
+
+                             (vec (flatten [elyrivi (into [] kohteet-lista) (pkluokka-rivi ely-yhteensa true true)]))))
+
+        valtukunnallinen-rivi (pkluokka-rivi valtakunnallisesti-yhteensa true true)]
+    [:taulukko {:otsikko "Eurot / PK-luokka"
+                :tyhja (when (empty? rivit) "Ei kohteita.")
+                :sheet-nimi "Eurot / PK-luokka"}
+     ;; Otsikot
+     (concat
+       [{:otsikko "Urakka" :leveys 10}
+        {:otsikko "PK1" :leveys 2 :fmt :raha}
+        {:otsikko "PK2" :leveys 2 :fmt :raha}
+        {:otsikko "PK3" :leveys 2 :fmt :raha}
+        {:otsikko "Ei tiedossa" :leveys 2 :fmt :raha}])
+     ;; Data
+     (concat (into [] (mapcat formatoi-elyt-fn elyttain-jaoteltu)) [valtukunnallinen-rivi])]))
+
 (defn muut-kustannukset-taulukko [muut-kustannukset urakan-sanktiot urakka-tai-hallintayksikko?]
   (let [nimi "Muut kustannukset"
         ;; Ryhmitä sanktiot isommassa kontekstissa
@@ -235,7 +311,7 @@
   (let [urakka-tai-hallintayksikko? (or
                                       (some? urakka-id)
                                       (and (some? hallintayksikko-id) (not urakka-id)))
-        
+
         raportin-nimi (if urakka-id
                         "Vastaanottotarkastus"
                         "Päällystysurakoiden yhteenveto")
@@ -254,12 +330,12 @@
                         :koko-maa (str raportin-nimi ", KOKO MAA " vuosi))
 
         yllapitokohteet+kustannukset (->> (into []
-                                                (hae-yllapitokohteet db {:urakka urakka-id
-                                                                         :vuosi vuosi
-                                                                         :hallintayksikko hallintayksikko-id}))
-                                       
+                                            (hae-yllapitokohteet db {:urakka urakka-id
+                                                                     :vuosi vuosi
+                                                                     :hallintayksikko hallintayksikko-id}))
+
                                        (map #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi)))
-                                       
+
                                        (yllapitokohteet-domain/jarjesta-yllapitokohteet))
 
         muut-kustannukset (hae-muut-kustannukset db {:urakka urakka-id
@@ -270,7 +346,15 @@
                             (hae-yllapitourakan-sanktiot db {:urakka urakka-id
                                                              :vuosi vuosi
                                                              :hallintayksikko hallintayksikko-id}))
-                          (map #(assoc % :maara (- (:maara %)))))]
+                          (map #(assoc % :maara (- (:maara %)))))
+        ;; Yhteenvetoraportilla on lisäksi Eurot / PK-luokka osio
+        pkluokkien-kustannukset (when-not urakka-id
+                                  (pkluokkien-kustannukset-hallintayksikoittain db {:vuosi vuosi
+                                                                                    :hallintayksikko hallintayksikko-id}))
+        hallintayksikon-korjausluokkasummat (when-not urakka-id
+                                              (map
+                                                #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi))
+                                                pkluokkien-kustannukset))]
 
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
@@ -287,4 +371,8 @@
                    (yleinen/osat (raportti-fn db user tiedot))))
          [[:yllapidon-aikataulu "Aikataulu" yllapidon-aikataulu/suorita]]))
      ;; Yhteenveto 
-     (yhteensa-taulukko yllapitokohteet+kustannukset muut-kustannukset urakan-sanktiot vuosi)]))
+     (yhteensa-taulukko yllapitokohteet+kustannukset muut-kustannukset urakan-sanktiot vuosi)
+
+     ;; Eurot / PK-luokka - Näytetään vain hallintayksiköille ja valtakunnallisesti
+     (when-not urakka-id
+       (pkluokka-taulukko hallintayksikon-korjausluokkasummat))]))
