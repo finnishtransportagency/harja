@@ -26,15 +26,29 @@
     vastaus))
 
 
+(defn tallenna-reikapaikkaukset
+  "Tallentaa kaikki Excelin reikäpaikkaukset valitulle urakalle"
+  [db {:keys [id] :as kayttaja} urakka-id reikapaikkaukset]
+  ;; TODO lisää oikeustarkastus! 
+  (oikeudet/ei-oikeustarkistusta!)
+  (doseq [{:keys [tunniste tie aosa aet losa let menetelma maara yksikko kustannus]} reikapaikkaukset]
+    (q/luo-tai-paivita-reikapaikkaus! db {:luoja_id id
+                                          :urakka_id urakka-id
+                                          :ulkoinen_id tunniste
+                                          :tie tie
+                                          :aosa aosa
+                                          :aet aet
+                                          :losa losa
+                                          :let let
+                                          :tyomenetelma menetelma
+                                          :massamaara maara
+                                          :kustannus kustannus
+                                          :yksikko yksikko})))
+
+
 (defn- kasittele-excel [db urakka-id kayttaja pyynto]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in pyynto [:params "file" :tempfile]))))
         reikapaikkaukset (p-excel/parsi-syotetyt-reikapaikkaukset workbook)
-        _ (println "\n Syötetyt: " reikapaikkaukset)
-        _ (println "empty?: " (empty? reikapaikkaukset))
-        ;; {:pvm 08.08.2018, :aosa 21.0, :kustannus 200000.0, :tie 81.0, :let 4270.0, :yksikko m2, :losa 21.0, :aet 4040.0, :menetelma Urapaikkaus (UREM/RREM), :maara 81.0, :tunniste 1234444.0}
-        _ (dorun (for [x reikapaikkaukset]
-                   (println "validoitu: " x)))
-
         ;; Kerää kaikki parsinnan virheet
         virheet (reduce (fn [acc arvo]
                           (if-let [virhe (get arvo :virhe)]
@@ -42,17 +56,15 @@
                             acc))
                   []
                   reikapaikkaukset)
+        virheita? (false? (empty? virheet))
+        status (if virheita? 400 200)
+        body (if virheita? virheet reikapaikkaukset)]
 
-        _ (println "\n Virheet: " virheet " count: " (count virheet) " empty? " (empty? virheet))
-        ;; --
-        status (if (empty? virheet)
-                 200
-                 400)
-        ;; -- 
-        body (if (empty? virheet)
-               reikapaikkaukset
-               virheet)]
+    ;; Jos virheitä ei ollut, tallenna kaikki rivit tietokantaan
+    (when-not virheita?
+      (tallenna-reikapaikkaukset db kayttaja urakka-id reikapaikkaukset))
     
+    ;; Palauta status
     {:status status
      :headers {"Content-Type" "application/json; charset=UTF-8"}
      :body (cheshire/encode body)}))

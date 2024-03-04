@@ -108,18 +108,22 @@
   TiedostoLadattu
   (process-event [{vastaus :vastaus} app]
     (let [status (:status vastaus)
-          response (:response vastaus)]
+          response (:response vastaus)
+          virheet (cond
+                    (= status 500) ["Sisäinen käsittelyvirhe"]
+                    :else response)]
       (cond
         ;; Virheitä Excel tuonnissa
         (and
           (not (nil? status))
           (not= 200 status))
         (do
+          (println "Status: " status)
           (viesti/nayta-toast! "Ladatun tiedoston käsittelyssä virhe" :varoitus viesti/viestin-nayttoaika-lyhyt)
           ;; Lisää virheet app stateen jotka näytetään modalissa
           (-> app
             (assoc :nayta-virhe-modal true)
-            (assoc :excel-virheet response)))
+            (assoc :excel-virheet virheet)))
         ;; Ei virheitä
         :else
         (-> app

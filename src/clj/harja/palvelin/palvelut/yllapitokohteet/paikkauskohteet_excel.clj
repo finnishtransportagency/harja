@@ -68,7 +68,6 @@
   (let [pvm-sarakkeet #{1} ;; Sarakkeet jotka ovat PVM muodossa
         sivu (first (xls/sheet-seq workbook))
         raaka-data (lue-excel-raaka-data sivu pvm-sarakkeet)
-        _ (println "\n Raaka data: " raaka-data)
         ;; Syötetty data mistä leikattu kaikki otsikot sun muut 
         ;; Tämä siis leikkaa kaikki aikaisemmat rivit siihen asti kun "Tunniste*" löytyy, joka on otsikkorivi, sen jälkeen tulee oikea data
         syotetty-data (->> raaka-data
@@ -90,8 +89,6 @@
                                                   sisempi-sekvenssi)]
                                 (zipmap sarakkeet konvertoitu)))
                         syotetty-data)
-
-        _ (println "\n Syötetty data: " syotetty-data " datatype: " (type syotetty-data))
         validoitu-data (validoi-reikapaikkaus-rivit syotetty-data)]
     validoitu-data))
 
