@@ -1,6 +1,7 @@
 (ns harja.views.urakka.yleiset
   "Urakan 'Yleiset' välilehti: perustiedot ja yhteyshenkilöt"
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [harja.ui.valinnat :as valinnat]
+            [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
@@ -258,6 +259,28 @@
                                 {:luokka "nappi-toissijainen pull-right"}]]]))
              {:luokka "nappi-kielteinen btn-xs"}])])])))
 
+(defn- varahenkiloiden-valinta [{:keys [muokkaa-lomaketta data]} mahdolliset-henkilot varalla]
+  (let [valinnat (map-indexed (fn [i valinta]
+                                {:id i
+                                 :valittu? (some #(= (:kayttajatunnus valinta) (:kayttajatunnus %))
+                                             (if (seq? (:varalla data))
+                                               (:varalla data)
+                                               varalla))
+                                 :nimi (str (:etunimi valinta) " " (:sukunimi valinta))
+                                 :arvo valinta}) mahdolliset-henkilot)
+        valitut (keep #(when (:valittu? %) (:arvo %)) valinnat)]
+    [valinnat/checkbox-pudotusvalikko valinnat
+     #(muokkaa-lomaketta (if (:valittu? %)
+                           (assoc data :varalla
+                             (filter (fn [valittu] (not=
+                                                     (:kayttajatunnus (:arvo %))
+                                                     (:kayttajatunnus valittu)))
+                               valitut))
+                           (assoc data :varalla
+                             (conj valitut (:arvo %)))))
+     [nil " Varahenkilöä valittu"]
+     {:vayla-tyyli? true
+      :yksi-valittu-teksti (:nimi (first (filter :valittu? valinnat)))}]))
 
 (defn- aseta-vastuuhenkilo [paivita-vastuuhenkilot!
                             urakka-id kayttaja kayttajat vastuuhenkilot rooli
@@ -276,15 +299,15 @@
                        :footer-fn (fn [data]
                                     [napit/palvelinkutsu-nappi "Tallenna yhteyshenkilöt"
                                      #(let [{uusi-ensisijainen :ensisijainen
-                                             uusi-varalla :varalla} @henkilot]
+                                             uudet-varalla :varalla} @henkilot]
                                         (tiedot/tallenna-urakan-vastuuhenkilot-roolille
                                           urakka-id rooli
                                           (if (= :ei-muutosta uusi-ensisijainen)
                                             ensisijainen
                                             uusi-ensisijainen)
-                                          (if (= :ei-muutosta uusi-varalla)
+                                          (if (= :ei-muutosta uudet-varalla)
                                             varalla
-                                            uusi-varalla)))
+                                            uudet-varalla)))
                                      {:kun-onnistuu #(do
                                                        (paivita-vastuuhenkilot! %)
                                                        (modal/piilota!))}])}
@@ -299,11 +322,9 @@
          {:otsikko "Varalla"
           :nimi :varalla
           :leveys 2
-          :tyyppi :valinta
-          :valinta-nayta #(if (= :ei-muutosta %)
-                            (fmt/kayttaja varalla)
-                            (fmt/kayttaja %))
-          :valinnat mahdolliset-henkilot}]
+          :tyyppi :reagent-komponentti
+          :komponentti varahenkiloiden-valinta
+          :komponentti-args [mahdolliset-henkilot varalla]}]
         @henkilot]
 
        ;; Jos mahdollisia käyttäjiä ei löydy, näytä viesti
@@ -323,7 +344,7 @@
         kayttaja-tyyppi (case rooli
                           ("ELY_Urakanvalvoja" "Tilaajan_Urakanvalvoja") "urakanvalvoja"
                           "vastuuhenkilo" "vastuuhenkilö")
-        varalla (first (filter (comp not :ensisijainen) roolin-henkilot))
+        varalla (filter (comp not :ensisijainen) roolin-henkilot)
         voi-muokata? (and (not (k/virhe? kayttajat))
                        (not (empty? kayttajat))
                        (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset urakka-id)
@@ -337,9 +358,13 @@
          [vastuuhenkilo-tooltip ensisijainen]]
         [:span.vastuuhenkilo-ei-tiedossa "Ei tiedossa"])
       " "
-      (when varalla
+      (when (= 1 (count varalla))
         [yleiset/tooltip {}
-         [:span.vastuuhenkilo-varalla "(sijainen " (fmt/kayttaja varalla) ")"]
+         [:span.vastuuhenkilo-varalla "(sijainen " (fmt/kayttaja (first varalla)) ")"]
+         [vastuuhenkilo-tooltip varalla]])
+      (when (< 1 (count varalla))
+        [yleiset/tooltip {}
+         [:span.vastuuhenkilo-varalla "(" (count varalla) " sijaista)"]
          [vastuuhenkilo-tooltip varalla]])
       (when voi-muokata?
         [:span.klikattava {:on-click #(modal/nayta!

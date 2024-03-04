@@ -218,7 +218,7 @@
   (q/hae-urakan-vastuuhenkilot db urakka-id))
 
 (defn tallenna-urakan-vastuuhenkilot-roolille
-  [db user {:keys [urakka-id rooli vastuuhenkilo varahenkilo] :as tiedot}]
+  [db user {:keys [urakka-id rooli vastuuhenkilo varahenkilot] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (when (and (= (roolit/osapuoli user) :urakoitsija)
              (not= rooli "vastuuhenkilo"))
@@ -239,8 +239,9 @@
       (q/poista-urakan-vastuuhenkilot-roolille! c {:urakka urakka-id :rooli rooli})
       (when vastuuhenkilo
         (luo<! c vastuuhenkilo true))
-      (when varahenkilo
-        (luo<! c varahenkilo false)))
+      (when varahenkilot
+        (doseq [varahenkilo varahenkilot]
+          (luo<! c varahenkilo false))))
     (hae-urakan-vastuuhenkilot db user urakka-id)))
 
 (defrecord Yhteyshenkilot []

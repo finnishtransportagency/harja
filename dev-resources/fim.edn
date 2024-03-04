@@ -122,5 +122,22 @@
                    :puhelin        "0123456789"
                    :roolit         "1242141-OULU3_vastuuhenkilo"
                    :organisaatio   "organisaatio"
-                   :poistettu      false}]
-}
+                   :poistettu      false}
+                  {:tunniste       134
+                   :kayttajatunnus "LX987456"
+                   :etunimi        "Väinämöinen"
+                   :sukunimi       "Ely TM"
+                   :sahkoposti     "sinunmailisi@solita.fi"
+                   :puhelin        "0123456789"
+                   :roolit         "1242141-OULU3_vastuuhenkilo"
+                   :organisaatio   "organisaatio"
+                   :poistettu      false}
+                  {:tunniste       135
+                   :kayttajatunnus "LX987654"
+                   :etunimi        "Joukahainen"
+                   :sukunimi       "Ely TM"
+                   :sahkoposti     "sinunmailisi@solita.fi"
+                   :puhelin        "0123456789"
+                   :roolit         "1242141-OULU3_vastuuhenkilo"
+                   :organisaatio   "organisaatio"
+                   :poistettu      false}]}
