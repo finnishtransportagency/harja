@@ -4,6 +4,7 @@
   (:require [tuck.core :refer [tuck]]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-reikapaikkaukset :as tiedot]
             [harja.ui.debug :refer [debug]]
+            [reagent.core :refer [atom] :as r]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.lomake :as lomake]
             [harja.ui.liitteet :as liitteet]
@@ -26,8 +27,11 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
-(defn reikapaikkaus-listaus [e! {:keys [valinnat rivit muokataan nayta-virhe-modal excel-virheet] :as app}]
-  (let [tr-atomi (atom (:tr valinnat))
+(defn reikapaikkaus-listaus [e! {:keys [valinnat rivit 
+                                        muokataan nayta-virhe-modal 
+                                        excel-virheet valittu-rivi] :as app}]
+  (let [alkuaika (:alkuaika valittu-rivi)
+        tr-atomi (atom (:tr valinnat))
         sijainti-atomi (atom (:sijainti valinnat))
         ;; Menetelmän valinnat, testiajaksi 
         valinnat-test [:test-1 :test-2]
@@ -41,6 +45,7 @@
         ;; Lomake
         [lomake/lomake
          {:ei-borderia? true
+          :tarkkaile-ulkopuolisia-muutoksia? true
           :muokkaa! #(println "Muokkaa " %)
           ;; Header
           :header [:div.col-md-12
@@ -64,7 +69,9 @@
                             [kentat/tee-kentta {:tyyppi :pvm
                                                 :ikoni-sisaan? true
                                                 :vayla-tyyli? true}
-                             (atom nil)])})
+                             (r/wrap
+                               alkuaika
+                               #(e! (tiedot/->AsetaToteumanPvm %)))])})
           ;; Sijainti
           (lomake/ryhma
             {:otsikko "Sijainti"
@@ -109,7 +116,7 @@
              :ryhman-luokka "lomakeryhman-otsikko-tausta lomake-ryhma-otsikko"}
             ;; Alasveto
             (lomake/rivi
-              {:otsikko "Kalenterivuosi"
+              {:otsikko "Kalenterivuosi" ;;TODO 
                :rivi-luokka "lomakeryhman-rivi-tausta"
                :validoi [[:ei-tyhja "Valitse tila"]] ;; TODO 
                :nimi :test-nimi
@@ -138,9 +145,7 @@
                :vayla-tyyli? true
                :vaadi-positiivinen-numero? true
                ::lomake/col-luokka "maara-valinnat"}))]
-         
-         ;;@tiedot/lomake  =?
-         ]])
+         valittu-rivi]])
 
      [:div.reikapaikkaus-listaus
       ;; Suodattimet
@@ -185,7 +190,7 @@
         [:<>
          [:br]
          [:p "Tarkista virheet ja yritä tuontia uudelleen."]]]]
-      
+
 
       ;; Taulukon ylhäällä olevat tekstit
       [:div.taulukko-header.header-yhteiset
@@ -201,7 +206,7 @@
            :url "lue-reikapaikkauskohteet-excelista"
            :lataus-epaonnistui #(e! (tiedot/->TiedostoLadattu %))
            :tiedosto-ladattu #(e! (tiedot/->TiedostoLadattu %))}]]
-        
+
         ;; Pohjan lataus
         [:div.lataus-nappi
          [yleiset/tiedoston-lataus-linkki
@@ -210,7 +215,7 @@
 
       ;; Grid
       [grid/grid {:tyhja "Valitulle aikavälille ei löytynyt mitään."
-                  :tunniste :id ;; TODO korjaa tämä, ehkä 
+                  :tunniste :id
                   :sivuta grid/vakiosivutus
                   :voi-kumota? false
                   :piilota-toiminnot? true

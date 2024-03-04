@@ -54,6 +54,7 @@
 (defrecord PaivitaAikavali [uudet])
 (defrecord HaeTiedot [])
 (defrecord AvaaMuokkausModal [rivi])
+(defrecord AsetaToteumanPvm [aika])
 (defrecord SuljeMuokkaus [])
 (defrecord SuljeVirheModal [])
 (defrecord HaeTiedotOnnistui [vastaus])
@@ -90,6 +91,10 @@
     (js/console.warn "HaeTiedotEpaonnistui :: vastaus: " (pr-str vastaus))
     (viesti/nayta-toast! (str "HaeTiedotEpaonnistui Vastaus: " (pr-str vastaus)) :varoitus)
     app)
+  
+  AsetaToteumanPvm
+  (process-event [{aika :aika} app]
+    (assoc-in app [:valittu-rivi :alkuaika] aika))
 
   AvaaMuokkausModal
   (process-event [{rivi :rivi} app]
