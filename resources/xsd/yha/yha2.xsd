@@ -427,6 +427,13 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
+            <xs:element name="yhteenlaskettu-litteysluku" type="xs:decimal" nillable="true" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        Runkoaineiden litteyslukujen painotettu keskiarvo
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element name="litteyslukuluokka" nillable="true" minOccurs="0">
                 <xs:simpleType>
                     <xs:restriction base="xs:string">

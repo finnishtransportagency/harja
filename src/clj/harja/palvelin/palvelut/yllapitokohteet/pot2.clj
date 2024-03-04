@@ -59,6 +59,11 @@
           (assoc massa :yhteenlaskettu-kuulamyllyarvo
             (pot2-domain/massan-yhteenlaskettu-kuulamyllyarvo massa))) massat))
 
+(defn liita-massan-yhteenlaskettu-litteysluku [massat]
+  (mapv (fn [massa]
+          (assoc massa :yhteenlaskettu-litteysluku
+            (pot2-domain/massan-yhteenlaskettu-littteysluku massa))) massat))
+
 (defn hae-urakan-massat-ja-murskeet [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (let [massat
@@ -87,7 +92,8 @@
           (liita-sideaineet db)
           (liita-lisaaineet db)
           (liita-materiaalin-kayttotieto db :massa)
-          (liita-massan-yhteenlaskettu-km-arvo))
+          (liita-massan-yhteenlaskettu-km-arvo)
+          (liita-massan-yhteenlaskettu-litteysluku))
         murskeet (->> (fetch db
                              ::pot2-domain/pot2-mk-urakan-murske
                              #{::pot2-domain/murske-id

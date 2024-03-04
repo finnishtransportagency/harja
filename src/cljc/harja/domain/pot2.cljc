@@ -440,4 +440,11 @@
     "Laskee massan runkoaineiden kuulamyllyarvojen painotetun keskiarvon"
     [massa]
     (apply + (map #(with-precision 5 (/ (* (or (:runkoaine/massaprosentti %) 0) (or (:runkoaine/kuulamyllyarvo %) 0)) 100))
-               (::runkoaineet massa)))))
+               (::runkoaineet massa)))) )
+
+#?(:clj
+   (defn massan-yhteenlaskettu-littteysluku
+     "Laskee massan runkoaineiden litteyslukujen painotetun keskiarvon"
+     [massa]
+     (apply + (map #(with-precision 5 (/ (* (or (:runkoaine/massaprosentti %) 0) (or (:runkoaine/litteysluku %) 0)) 100))
+                (::runkoaineet massa)))))
