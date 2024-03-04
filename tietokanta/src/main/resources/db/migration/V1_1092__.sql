@@ -12,6 +12,15 @@ ALTER TABLE     paikkaus
 ADD CONSTRAINT  paikkauskohde_sallitaanko_null
 CHECK           (tyyppi = 'reikapaikkaus' OR paikkauskohde-id IS NOT NULL);
 
+-- Lisätään kustannus sarake reikäpaikkauksille
+ALTER TABLE paikkaus ADD COLUMN kustannus NUMERIC;
+
+-- Vaaditaan että kustannus on läsnä reikäpaikkauksille
+ALTER TABLE    paikkaus 
+ADD CONSTRAINT kustannus_sallitaanko_null 
+CHECK          (tyyppi = 'paikkaus' OR kustannus IS NOT NULL);
+
+
 -- Jos ulkoinen-id ei ole 0, sen pitää olla jokaisella urakalla uniikki
 -- Eli sallitaan esim arvo 123 urakalle 1 sekä 2, mutta urakalla 1 ei voi olla arvoa 123 kahdesti.
 CREATE UNIQUE INDEX unique_ulkoinen_id_urakalla
@@ -29,7 +38,8 @@ DROP FUNCTION IF EXISTS reikapaikkaus_upsert(
   TEXT, NUMERIC, 
   NUMERIC,  NUMERIC, 
   NUMERIC, INT, 
-  TEXT, GEOMETRY
+  TEXT, NUMERIC,
+  GEOMETRY
 );
 
 -- UPSERT funktio, sen takia koska INSERT .. ON CONFLICT ei toimi tässä tapauksessa  
@@ -45,7 +55,8 @@ CREATE OR REPLACE FUNCTION reikapaikkaus_upsert(
   _massatyyppi TEXT, _leveys NUMERIC, 
   _massamenekki NUMERIC, _massamaara NUMERIC, 
   _pintaala NUMERIC, _raekoko INT, 
-  _kuulamylly TEXT, _sijainti GEOMETRY
+  _kuulamylly TEXT, _kustannus NUMERIC,
+  _sijainti GEOMETRY
 ) RETURNS VOID AS $$
 BEGIN
   UPDATE paikkaus SET
@@ -68,6 +79,7 @@ BEGIN
     "pinta-ala" = _pintaala, 
     raekoko = _raekoko,
     kuulamylly = _kuulamylly, 
+    kustannus = _kustannus,
     sijainti = _sijainti
   WHERE "urakka-id" = _urakkaid AND "ulkoinen-id" = _ulkoinenid;
   -- FOUND ilmeisesti jokin vakio postgres muuttuja, kertoo viime PERFORM, INSERT, UPDATE tilan
@@ -95,6 +107,7 @@ BEGIN
       "pinta-ala", 
       raekoko, 
       kuulamylly, 
+      kustannus,
       sijainti 
     )
     VALUES (
@@ -119,6 +132,7 @@ BEGIN
       _pintaala,
       _raekoko, 
       _kuulamylly,
+      _kustannus,
       _sijainti
     );
   END IF;

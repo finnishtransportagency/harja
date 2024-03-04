@@ -35,5 +35,6 @@ SELECT reikapaikkaus_upsert(
     1.2,  -- pintaala
     5,     -- raekoko 
     'AN7'::TEXT,  -- kuulamylly
+    200.00, -- kustannus
     (SELECT tierekisteriosoitteelle_viiva(20, 19, (50 + 3), 19, (51 + 3))) -- last but not least, sijainti geometria
 );
