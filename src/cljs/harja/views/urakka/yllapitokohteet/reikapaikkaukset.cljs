@@ -7,6 +7,7 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.lomake :as lomake]
             [harja.ui.liitteet :as liitteet]
+            [harja.ui.modal :as modal]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.kentat :as kentat]
@@ -25,7 +26,7 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
-(defn reikapaikkaus-listaus [e! {:keys [valinnat rivit muokataan] :as app}]
+(defn reikapaikkaus-listaus [e! {:keys [valinnat rivit muokataan nayta-virhe-modal] :as app}]
   (let [tr-atomi (atom (:tr valinnat))
         sijainti-atomi (atom (:sijainti valinnat))
         ;; Menetelmän valinnat, testiajaksi 
@@ -164,6 +165,29 @@
 
       [:div.reikapaikkaukset-kartta [kartta/kartan-paikka]]
 
+      ;; Virhe modal 
+      [modal/modal
+       {:otsikko "Virheitä reikäpaikkausten tuonnissa Excelillä"
+        :nakyvissa? nayta-virhe-modal
+        :sulje-fn #(e! (tiedot/->SuljeVirheModal))
+        :footer [:div
+                 [napit/sulje #(e! (tiedot/->SuljeVirheModal))]]}
+       [:div
+        [:<>
+         [:p "Tuotua Exceliä ei voitu lukea. Varmista, että käytät HARJAsta ladattua pohjaa jonka sarakkeita A-K ei ole muokattu, ja paikkaukset alkavat riviltä 4."]
+         [:<>
+          [:br]
+          ;;(for* [[rivi virheet] validointivirheet]
+          [:<>
+           [:p "Rivi x"  ":"]
+           [:ul
+            ;;(for* [virhe virheet]
+            [:li "virhe!"]]]]]
+        [:<>
+         [:br]
+         [:p "Tuotu excel ei näytä oikeanlaiselta. Varmista, että käytät HARJAsta ladattua pohjaa jonka sarakkeita A-K eikä otsikkorivejä ei ole muokattu."]]]]
+      
+
       ;; Taulukon ylhäällä olevat tekstit
       [:div.taulukko-header.header-yhteiset
        [:h3 "1 800 riviä, 1000.0 EUR"]
@@ -176,8 +200,9 @@
           {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
           {:nappi-teksti "Tuo tiedot excelistä"
            :url "lue-reikapaikkauskohteet-excelista"
-           :lataus-epaonnistui #(println "Epäonnistui: " %)
-           :tiedosto-ladattu #(println "Onnistui: " %)}]]
+           :lataus-epaonnistui #(e! (tiedot/->TiedostoLadattu %))
+           :tiedosto-ladattu #(e! (tiedot/->TiedostoLadattu %))}]]
+        
         ;; Pohjan lataus
         [:div.lataus-nappi
          [yleiset/tiedoston-lataus-linkki

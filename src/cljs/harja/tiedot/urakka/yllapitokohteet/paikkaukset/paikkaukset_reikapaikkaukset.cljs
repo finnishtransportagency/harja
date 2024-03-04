@@ -14,6 +14,7 @@
 (defonce tila (atom {:rivit nil
                      :valittu-rivi nil
                      :muokataan false
+                     :nayta-virhe-modal false
                      :valinnat {:aikavali (pvm/kuukauden-aikavali (pvm/nyt))
                                 :tr-osoite nil}}))
 
@@ -53,8 +54,11 @@
 (defrecord HaeTiedot [])
 (defrecord AvaaMuokkausModal [rivi])
 (defrecord SuljeMuokkaus [])
+(defrecord SuljeVirheModal [])
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
+(defrecord TiedostoLadattu [vastaus])
+
 
 
 ;; Funktiot
@@ -95,6 +99,27 @@
   SuljeMuokkaus
   (process-event [_ app]
     (assoc app :muokataan false))
+  
+  SuljeVirheModal
+  (process-event [_ app]
+    (assoc app :nayta-virhe-modal false))
+  
+  TiedostoLadattu
+  (process-event [{vastaus :vastaus} app]
+    (do
+      ;; Tarkista virheet
+      (cond
+        (and
+          (not (nil? (:status vastaus)))
+          (not= 200 (:status vastaus)))
+        (do
+          (viesti/nayta-toast! "Ladatun tiedoston käsittelyssä virhe" :varoitus viesti/viestin-nayttoaika-lyhyt)
+          (println "\nVirhe excel tuonnissa")) 
+
+        :else
+        (println "\nOK.")))
+    
+    (assoc app :nayta-virhe-modal true))
 
   PaivitaAikavali
   (process-event [{uudet :uudet} app]

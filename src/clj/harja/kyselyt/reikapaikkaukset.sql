@@ -12,7 +12,7 @@ SELECT
     p.alkuaika
 FROM paikkaus p WHERE p."urakka-id" = :urakka-id LIMIT 20;
 
--- luo-tai-paivita-reikapaikkaus!
+-- name: luo-tai-paivita-reikapaikkaus!
 SELECT reikapaikkaus_upsert(
     'reikapaikkaus'::paikkaustyyppi, -- tyyppi
     3,                         -- luojaid
