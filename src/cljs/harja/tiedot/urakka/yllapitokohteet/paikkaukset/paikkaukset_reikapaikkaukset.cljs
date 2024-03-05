@@ -22,6 +22,7 @@
                                 :tr-osoite nil}}))
 
 (def nakymassa? (atom false))
+(def paivita-kartta? (atom false))
 (def aikavali-atom (atom (pvm/kuukauden-aikavali (pvm/nyt))))
 
 ;; Kartta jutskat
@@ -35,15 +36,16 @@
 ;; Tulokset reaction
 (defonce haetut-reikapaikkaukset
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               nakymassa? @nakymassa?]
+               nakymassa? @nakymassa?
+               paivita-kartta? @paivita-kartta?]
     {:nil-kun-haku-kaynnissa? true}
-    (when nakymassa?
+    (when (or nakymassa? paivita-kartta?)
       (hae-urakan-reikapaikkaukset urakka-id)))) 
 
 ;; Karttataso
 (defonce reikapaikkaukset-kartalla
   (reaction
-    (let [valittu-id 36]
+    (let [valittu-id 36] ;; TODO 
       (when @karttataso-reikapaikkaukset
         (kartalla-esitettavaan-muotoon
           @haetut-reikapaikkaukset
@@ -70,6 +72,13 @@
 
 
 ;; Funktiot
+(defn hae-reikapaikkaukset [app]
+  (tuck-apurit/post! app :hae-reikapaikkaukset
+    {:urakka-id (:id @nav/valittu-urakka)}
+    {:onnistui ->HaeTiedotOnnistui
+     :epaonnistui ->HaeTiedotEpaonnistui}))
+
+
 (defn voi-tallentaa? [{:keys [paikkaus_maara kustannus alkuaika tyomenetelma] :as valittu-reikapaikkaus}
                       {:keys [tyomenetelmat]}]
   ;; Validoi toteuman muokkauslomakkeen
@@ -77,8 +86,7 @@
         tr-validi? (boolean (tr/validi-osoite? (select-keys valittu-reikapaikkaus [:tie :aosa :aet :losa :let]))) ;; Onko syötetty tr-osoite validi? 
         pvm-validi? (pvm/pvm? alkuaika) ;; Päivämäärä 
         kustannus-validi? (some? kustannus) ;; Sallitaan myös 0, muttei nil
-        paikkaus_maara-validi? (some? paikkaus_maara)
-        _ (println "\n tyomenetelma: " tyomenetelma-validi? "\ntr: " tr-validi? "\n pvm: " pvm-validi? "\nkustannus: " kustannus-validi? "\npaikkaus_maara-validi?" paikkaus_maara-validi?)]
+        paikkaus_maara-validi? (some? paikkaus_maara)]
     (and
       tr-validi?
       pvm-validi?
@@ -91,47 +99,39 @@
 
   HaeTiedot
   (process-event [_ app]
-    (println "call hae tiedot ")
-    (tuck-apurit/post! app :hae-reikapaikkaukset
-      {:urakka-id (:id @nav/valittu-urakka)}
-        ;; Callback
-      {:onnistui ->HaeTiedotOnnistui
-       :epaonnistui ->HaeTiedotEpaonnistui})
+    (hae-reikapaikkaukset app)
     app)
 
   HaeTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [app (assoc app :rivit vastaus)]
-      (println "tiedot onnistui")
-      app))
+    (reset! paivita-kartta? false)
+    (assoc app :rivit vastaus))
 
   HaeTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
+    (reset! paivita-kartta? false)
     (js/console.warn "HaeTiedotEpaonnistui :: vastaus: " (pr-str vastaus))
     (viesti/nayta-toast! (str "HaeTiedotEpaonnistui Vastaus: " (pr-str vastaus)) :varoitus)
     app)
-  
+
   HaeTyomenetelmat
   (process-event [_ app]
-    (println "call hae tyomenetelmat ")
     (tuck-apurit/post! app :hae-tyomenetelmat
       {}
       {:onnistui ->HaeTyomenetelmatOnnistui
        :epaonnistui ->HaeTyomenetelmatEpaonnistui})
     app)
-  
+
   HaeTyomenetelmatOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [app (assoc app :tyomenetelmat vastaus)]
-      (println "tyomenetelmat onnistui")
-      app))
-  
+    (assoc app :tyomenetelmat vastaus))
+
   HaeTyomenetelmatEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "HaeTyomenetelmatEpaonnistui :: vastaus: " (pr-str vastaus))
     (viesti/nayta-toast! (str "HaeTyomenetelmatEpaonnistui Vastaus: " (pr-str vastaus)) :varoitus)
     app)
-  
+
   AsetaToteumanPvm
   (process-event [{aika :aika} app]
     (assoc-in app [:valittu-rivi :alkuaika] aika))
@@ -141,19 +141,19 @@
     (-> app
       (assoc :muokataan true)
       (assoc :valittu-rivi rivi)))
-  
+
   MuokkaaRivia
   (process-event [{rivi :rivi} app]
     (update app :valittu-rivi merge rivi))
-  
+
   SuljeMuokkaus
   (process-event [_ app]
     (assoc app :muokataan false))
-  
+
   SuljeVirheModal
   (process-event [_ app]
     (assoc app :nayta-virhe-modal false))
-  
+
   TiedostoLadattu
   (process-event [{vastaus :vastaus} app]
     (let [status (:status vastaus)
@@ -175,14 +175,16 @@
             (assoc :excel-virheet virheet)))
         ;; Ei virheitä
         :else
-        (-> app
-          (assoc :excel-virheet nil)
-          (assoc :nayta-virhe-modal false)))))
+        (do
+          ;; Päivitä uudet reitit kartalle 
+          (reset! paivita-kartta? true)
+          ;; Hae päivtetty lista näkymään
+          (hae-reikapaikkaukset app)
+          (-> app
+            (assoc :excel-virheet nil)
+            (assoc :nayta-virhe-modal false))))))
 
   PaivitaAikavali
   (process-event [{uudet :uudet} app]
-    (let [uudet-valinnat (merge (:valinnat app) uudet)
-          app (assoc app :valinnat uudet-valinnat)]
-      ;; do stuff
-      (println "Päivitettiin valinnat: " uudet)
-      app)))
+    (let [uudet-valinnat (merge (:valinnat app) uudet)]
+      (assoc app :valinnat uudet-valinnat))))

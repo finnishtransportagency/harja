@@ -62,13 +62,12 @@
                   reikapaikkaukset)
         virheita? (false? (empty? virheet))
         status (if virheita? 400 200)
-        body (if virheita? virheet reikapaikkaukset)]
+        body (if virheita? virheet
+               ;; Jos virheitä ei ollut, tallenna kaikki rivit tietokantaan
+               (tallenna-reikapaikkaukset db kayttaja urakka-id reikapaikkaukset))]
 
-    ;; Jos virheitä ei ollut, tallenna kaikki rivit tietokantaan
-    (when-not virheita?
-      (tallenna-reikapaikkaukset db kayttaja urakka-id reikapaikkaukset))
-    
-    ;; Palauta status, TODO, body taitaa olla useless jos 200 
+    ;; Palauta status, body sisältää virheet jos virheitä tuli
+    ;; Yritetty palauttaa päivitetty lista jos virheitä ei tullut, mutta menee enkoodauksen kanssa vääntämiseksi, helpompi kutsua tuckilla päivitetty lista
     {:status status
      :headers {"Content-Type" "application/json; charset=UTF-8"}
      :body (cheshire/encode body)}))

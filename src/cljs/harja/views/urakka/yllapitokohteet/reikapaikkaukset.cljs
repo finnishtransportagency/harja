@@ -293,7 +293,9 @@
          (nav/vaihda-kartan-koko! :M)
          ;; Hae tiedot 
          (e! (tiedot/->HaeTyomenetelmat))
-         (e! (tiedot/->HaeTiedot)))
+         (e! (tiedot/->HaeTiedot))
+         
+         )
       ;; Ulos
       #(do
          ;; do stuff 
