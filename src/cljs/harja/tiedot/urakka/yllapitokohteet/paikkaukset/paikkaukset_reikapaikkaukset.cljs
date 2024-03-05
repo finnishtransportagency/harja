@@ -15,6 +15,7 @@
 (defonce tila (atom {:rivit nil
                      :valittu-rivi nil
                      :muokataan false
+                     :haku-kaynnissa? false
                      :nayta-virhe-modal false
                      :tyomenetelmat nil
                      :excel-virheet nil
@@ -100,12 +101,14 @@
   HaeTiedot
   (process-event [_ app]
     (hae-reikapaikkaukset app)
-    app)
+    (assoc app :haku-kaynnissa? true))
 
   HaeTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
     (reset! paivita-kartta? false)
-    (assoc app :rivit vastaus))
+    (assoc app 
+      :rivit vastaus 
+      :haku-kaynnissa? false))
 
   HaeTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -168,7 +171,7 @@
           (not= 200 status))
         (do
           (println "Status: " status)
-          (viesti/nayta-toast! "Ladatun tiedoston käsittelyssä virhe" :varoitus viesti/viestin-nayttoaika-lyhyt)
+          (viesti/nayta-toast! "Ladatun tiedoston käsittelyssä virhe" :varoitus viesti/viestin-nayttoaika-keskipitka)
           ;; Lisää virheet app stateen jotka näytetään modalissa
           (-> app
             (assoc :nayta-virhe-modal true)
@@ -180,8 +183,10 @@
           (reset! paivita-kartta? true)
           ;; Hae päivtetty lista näkymään
           (hae-reikapaikkaukset app)
+          (viesti/nayta-toast! "Reikäpaikkaukset ladattu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
           (-> app
             (assoc :excel-virheet nil)
+            (assoc :haku-kaynnissa? true)
             (assoc :nayta-virhe-modal false))))))
 
   PaivitaAikavali

@@ -16,7 +16,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.napit :as napit]
             [harja.pvm :as pvm]
             [clojure.string :as str]
@@ -29,7 +29,8 @@
 
 (defn reikapaikkaus-listaus [e! {:keys [valinnat rivit 
                                         muokataan nayta-virhe-modal 
-                                        excel-virheet valittu-rivi tyomenetelmat] :as app}]
+                                        excel-virheet valittu-rivi 
+                                        tyomenetelmat haku-kaynnissa?] :as app}]
   (let [alkuaika (:alkuaika valittu-rivi)
         tr-atomi (atom (:tr valinnat))
         alasveto-valinnat (mapv :id tyomenetelmat)
@@ -225,14 +226,16 @@
            :lataus-epaonnistui #(e! (tiedot/->TiedostoLadattu %))
            :tiedosto-ladattu #(e! (tiedot/->TiedostoLadattu %))}]]
 
-        ;; Pohjan lataus
+        ;; Excel-Pohjan lataus
         [:div.lataus-nappi
          [yleiset/tiedoston-lataus-linkki
           "Lataa Excel-pohja"
           (str (when-not (k/kehitysymparistossa?)  "/harja") "/excel/harja_reikapaikkausten_pohja.xlsx")]]]]
 
       ;; Grid
-      [grid/grid {:tyhja "Valitulle aikavälille ei löytynyt mitään."
+      [grid/grid {:tyhja (if haku-kaynnissa?
+                           [ajax-loader "Haku käynnissä..."]
+                           "Valitulle aikavälille ei löytynyt mitään.")
                   :tunniste :id
                   :sivuta grid/vakiosivutus
                   :voi-kumota? false
