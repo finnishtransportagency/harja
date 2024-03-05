@@ -165,20 +165,22 @@
     (assoc app :muokataan false))
 
   PoistaReikapaikkaus
-  (process-event [_ app]
-    #_ (tuck-apurit/post! app :poista-reikapaikkaus
-      {:luoja-id (:id @istunto/kayttaja)
+  (process-event [{rivi :rivi} app]
+    (tuck-apurit/post! app :poista-reikapaikkaus
+      {:kayttaja-id (:id @istunto/kayttaja)
        :urakka-id (:id @nav/valittu-urakka)
-       :ulkoinen-id nil}
+       :ulkoinen-id (:tunniste rivi)}
       {:onnistui ->PoistaReikapaikkausOnnistui
        :epaonnistui ->PoistaReikapaikkausEpaonnistui})
     app)
 
   PoistaReikapaikkausOnnistui
   (process-event [_ app]
-    (viesti/nayta-toast! "Toteuma tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! "Toteuma poistettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
     (paivita-lista-ja-kartta app)
-    app)
+    (assoc app
+      :valittu-rivi nil
+      :muokataan false))
 
   PoistaReikapaikkausEpaonnistui
   (process-event [{vastaus :vastaus} app]

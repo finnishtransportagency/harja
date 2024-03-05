@@ -19,6 +19,7 @@ SELECT    p.id,
           p.kustannus
 FROM      paikkaus p 
 WHERE     p."urakka-id" = :urakka-id 
+AND       p.poistettu = FALSE
 AND       p.tyyppi = 'reikapaikkaus'
 ORDER BY  id DESC;
 
@@ -58,3 +59,13 @@ SELECT reikapaikkaus_upsert(
 
 -- name: hae-kaikki-tyomenetelmat
 SELECT * FROM paikkauskohde_tyomenetelma;
+
+
+-- name: poista-reikapaikkaustoteuma!
+UPDATE  paikkaus 
+SET     poistettu = TRUE, 
+        "poistaja-id" = :kayttaja-id,
+        muokattu = NOW(),
+        "muokkaaja-id" = :kayttaja-id -- Halutaanko poistossa asettaa muokkaajan tiedot? 
+WHERE   "urakka-id" = :urakka-id 
+AND     "ulkoinen-id" = :ulkoinen-id;

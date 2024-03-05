@@ -33,16 +33,18 @@
 (defn poista-reikapaikkaus
   "Yksittäisen reikäpaikkauksen poisto"
   [db {:keys [id] :as kayttaja}
-   {:keys [ulkoinen-id luoja-id urakka-id tie aosa aet losa let menetelma paikkaus_maara yksikko kustannus] :as tiedot}]
+   {:keys [kayttaja-id urakka-id ulkoinen-id] :as tiedot}]
     ;; TODO lisää oikeustarkastus! 
   (oikeudet/ei-oikeustarkistusta!)
-  (println "\n poista: " tiedot))
+  (q/poista-reikapaikkaustoteuma! db {:kayttaja-id kayttaja-id
+                                      :ulkoinen-id ulkoinen-id
+                                      :urakka-id urakka-id}))
 
 
 (defn tallenna-reikapaikkaus
   "Yksittäisen reikäpaikkauksen muokkauksen tallennus"
   [db {:keys [id] :as kayttaja}
-   {:keys [luotu ulkoinen-id luoja-id urakka-id tie aosa aet 
+   {:keys [luotu ulkoinen-id luoja-id urakka-id tie aosa aet
            losa let menetelma paikkaus_maara yksikko kustannus] :as tiedot}]
   ;; TODO lisää oikeustarkastus! 
   (oikeudet/ei-oikeustarkistusta!)
@@ -68,7 +70,7 @@
   [db {:keys [id] :as kayttaja} urakka-id reikapaikkaukset]
   ;; TODO lisää oikeustarkastus! 
   (oikeudet/ei-oikeustarkistusta!)
-  (doseq [{:keys [tunniste tie aosa aet losa let 
+  (doseq [{:keys [tunniste tie aosa aet losa let
                   menetelma maara yksikko kustannus]} reikapaikkaukset]
     (q/luo-tai-paivita-reikapaikkaus! db {:luoja-id id
                                           :luotu nil ;; Käyttää NOW()
@@ -116,7 +118,7 @@
   (let [urakka-id (Integer/parseInt (get (:params pyynto) "urakka-id"))
         kayttaja (:kayttaja pyynto)]
     ;; Tarkistetaan, että kutsussa on mukana urakka ja kayttaja
-    (if (and 
+    (if (and
           (not (nil? urakka-id))
           (not (nil? kayttaja)))
       (kasittele-excel db urakka-id kayttaja pyynto)
