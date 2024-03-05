@@ -30,6 +30,27 @@
   (q/hae-kaikki-tyomenetelmat db))
 
 
+(defn tallenna-reikapaikkaus
+  "Yksittäisen reikäpaikkauksen muokkauksen tallennus"
+  [db {:keys [id] :as kayttaja}
+   {:keys [ulkoinen_id luoja_id urakka_id tie aosa aet losa let menetelma paikkaus_maara yksikko kustannus] :as tiedot}]
+  ;; TODO lisää oikeustarkastus! 
+  (oikeudet/ei-oikeustarkistusta!)
+  (q/luo-tai-paivita-reikapaikkaus! db {:luoja_id luoja_id
+                                        :urakka_id urakka_id
+                                        :ulkoinen_id ulkoinen_id
+                                        :tie tie
+                                        :aosa aosa
+                                        :aet aet
+                                        :losa losa
+                                        :let let
+                                        :tyomenetelma-id menetelma
+                                        :tyomenetelma nil
+                                        :paikkaus_maara paikkaus_maara
+                                        :kustannus kustannus
+                                        :yksikko yksikko}))
+
+
 (defn tallenna-reikapaikkaukset
   "Tallentaa kaikki Excelin reikäpaikkaukset valitulle urakalle"
   [db {:keys [id] :as kayttaja} urakka-id reikapaikkaukset]
@@ -44,6 +65,7 @@
                                           :aet aet
                                           :losa losa
                                           :let let
+                                          :tyomenetelma-id  nil
                                           :tyomenetelma menetelma
                                           :paikkaus_maara maara
                                           :kustannus kustannus
@@ -92,6 +114,9 @@
     ;; Haku
     (julkaise-palvelu http-palvelin
       :hae-reikapaikkaukset (fn [user tiedot] (hae-reikapaikkaukset db user tiedot)))
+    ;; Rivin tallennus
+    (julkaise-palvelu http-palvelin
+      :tallenna-reikapaikkaus (fn [user tiedot] (tallenna-reikapaikkaus db user tiedot)))
     ;; Työmenetelmät
     (julkaise-palvelu http-palvelin
       :hae-tyomenetelmat (fn [user _tiedot] (hae-tyomenetelmat db user)))
@@ -106,5 +131,6 @@
     (poista-palvelut http-palvelin
       :hae-tyomenetelmat
       :hae-reikapaikkaukset
+      :tallenna-reikapaikkaus
       :lue-reikapaikkauskohteet-excelista)
     this))

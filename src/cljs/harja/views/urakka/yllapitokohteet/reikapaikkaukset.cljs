@@ -59,7 +59,7 @@
                    [:hr]
                    [:div.muokkaus-modal-napit
                     ;; Tallenna
-                    [napit/tallenna "Tallenna muutokset" #(println "tallenna") {:disabled (not voi-tallentaa?)}]
+                    [napit/tallenna "Tallenna muutokset" #(e! (tiedot/->TallennaReikapaikkaus valittu-rivi)) {:disabled (not voi-tallentaa?)}]
                     ;; Poista 
                     [napit/yleinen-toissijainen "Poista" #(println "poista") {:ikoni (ikonit/livicon-trash) :paksu? true :luokka "lomake-poista"}]
                     ;; Sulje 
