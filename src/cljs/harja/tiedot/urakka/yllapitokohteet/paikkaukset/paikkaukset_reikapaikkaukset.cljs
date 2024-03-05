@@ -6,6 +6,7 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
+            [harja.domain.tierekisteri :as tr]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [harja.atom :refer [reaction<!]]
@@ -64,8 +65,26 @@
 (defrecord AsetaToteumanPvm [aika])
 (defrecord SuljeMuokkaus [])
 (defrecord SuljeVirheModal [])
-
 (defrecord TiedostoLadattu [vastaus])
+
+
+
+;; Funktiot
+(defn voi-tallentaa? [{:keys [paikkaus_maara kustannus alkuaika tyomenetelma] :as valittu-reikapaikkaus}
+                      {:keys [tyomenetelmat]}]
+  ;; Validoi toteuman muokkauslomakkeen
+  (let [tyomenetelma-validi? (boolean (some #(= tyomenetelma (:id %)) tyomenetelmat)) ;; Onko valittua työmenetelmä id:tä olemassa tietokannassa? (HaeTyomenetelmat)
+        tr-validi? (boolean (tr/validi-osoite? (select-keys valittu-reikapaikkaus [:tie :aosa :aet :losa :let]))) ;; Onko syötetty tr-osoite validi? 
+        pvm-validi? (pvm/pvm? alkuaika) ;; Päivämäärä 
+        kustannus-validi? (some? kustannus) ;; Sallitaan myös 0, muttei nil
+        paikkaus_maara-validi? (some? paikkaus_maara)
+        _ (println "\n tyomenetelma: " tyomenetelma-validi? "\ntr: " tr-validi? "\n pvm: " pvm-validi? "\nkustannus: " kustannus-validi? "\npaikkaus_maara-validi?" paikkaus_maara-validi?)]
+    (and
+      tr-validi?
+      pvm-validi?
+      kustannus-validi?
+      tyomenetelma-validi?
+      paikkaus_maara-validi?)))
 
 
 (extend-protocol tuck/Event
@@ -125,13 +144,7 @@
   
   MuokkaaRivia
   (process-event [{rivi :rivi} app]
-    (println "\n Muokkaa!: "  (:valittu-rivi app))
-    
-    ;;app
-    (update app :valittu-rivi merge rivi)
-    #_ (-> app
-      (assoc :muokataan true)
-      (assoc :valittu-rivi rivi)))
+    (update app :valittu-rivi merge rivi))
   
   SuljeMuokkaus
   (process-event [_ app]

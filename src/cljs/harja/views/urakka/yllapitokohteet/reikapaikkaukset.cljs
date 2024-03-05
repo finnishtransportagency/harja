@@ -33,7 +33,11 @@
   (let [alkuaika (:alkuaika valittu-rivi)
         tr-atomi (atom (:tr valinnat))
         alasveto-valinnat (mapv :id tyomenetelmat)
-        alasveto-kuvaukset (into {} (map (fn [{:keys [id nimi]}] [id nimi]) tyomenetelmat))]
+        alasveto-kuvaukset (into {} (map (fn [{:keys [id nimi]}] [id nimi]) tyomenetelmat))
+        ;; oikeus? (oikeudet/voi-kirjoittaa? oikeudet/ (get-in valinnat [:urakka :id])) ;; TODO 
+        voi-tallentaa? (and
+                         ;; (not oikeus?) ;; TODO 
+                         (tiedot/voi-tallentaa? valittu-rivi app))]
 
     ;; Wrappaa reikapaikkausluokkaan niin ei yliajeta mitään 
     [:div.reikapaikkaukset
@@ -54,7 +58,7 @@
                    [:hr]
                    [:div.muokkaus-modal-napit
                     ;; Tallenna
-                    [napit/tallenna "Tallenna muutokset" #(println "tallenna") {:disabled false}] ;; TODO halutaan varmaan asettaa jokin disabled arvo
+                    [napit/tallenna "Tallenna muutokset" #(println "tallenna") {:disabled (not voi-tallentaa?)}]
                     ;; Poista 
                     [napit/yleinen-toissijainen "Poista" #(println "poista") {:ikoni (ikonit/livicon-trash) :paksu? true :luokka "lomake-poista"}]
                     ;; Sulje 
@@ -62,6 +66,7 @@
 
          [(lomake/rivi
             {:otsikko "Pvm"
+             :pakollinen? true
              :tyyppi :komponentti
              :komponentti (fn []
                             [kentat/tee-kentta {:tyyppi :pvm
@@ -78,34 +83,44 @@
             (lomake/rivi
               {:nimi :tie
                :otsikko "Tie"
+               :pakollinen? true
                :tyyppi :numero
                :input-luokka "lomake-tr-valinta"
                :rivi-luokka "lomakeryhman-rivi-tausta"
                :desimaalien-maara 0
+               :validoi [[:ei-tyhja "Syötä tienumero"]]
                ::lomake/col-luokka "col-xs-2 tr-input"}
               {:nimi :aosa
                :otsikko "A-osa"
+               :pakollinen? true
                :tyyppi :numero
                :input-luokka "lomake-tr-valinta"
                ::lomake/col-luokka "col-xs-2 tr-input"
+               :validoi [[:ei-tyhja "Syötä alkuosa"]]
                :desimaalien-maara 0}
               {:nimi :aet
                :otsikko "A-et"
+               :pakollinen? true
                :tyyppi :numero
                :input-luokka "lomake-tr-valinta"
                ::lomake/col-luokka "col-xs-2 tr-input"
+               :validoi [[:ei-tyhja "Syötä alkuetäisyys"]]
                :desimaalien-maara 0}
               {:nimi :losa
                :otsikko "L-osa"
+               :pakollinen? true
                :tyyppi :numero
                :input-luokka "lomake-tr-valinta"
                ::lomake/col-luokka "col-xs-2 tr-input"
+               :validoi [[:ei-tyhja "Syötä loppuosa"]]
                :desimaalien-maara 0}
               {:nimi :let
                :otsikko "L-et"
+               :pakollinen? true
                :tyyppi :numero
                :input-luokka "lomake-tr-valinta"
                ::lomake/col-luokka "col-xs-2 tr-input"
+               :validoi [[:ei-tyhja "Syötä loppuetäisyys"]]
                :desimaalien-maara 0}))
 
           ;; Menetelmä
@@ -114,15 +129,16 @@
              :ryhman-luokka "lomakeryhman-otsikko-tausta lomake-ryhma-otsikko"}
             ;; Alasveto
             (lomake/rivi
-              {:otsikko "Kalenterivuosi" ;;TODO 
+              {:otsikko "Menetelmä"
+               :pakollinen? true
                :rivi-luokka "lomakeryhman-rivi-tausta"
-               :validoi [[:ei-tyhja "Valitse menetelmä"]] ;; TODO 
+               :validoi [[:ei-tyhja "Valitse menetelmä"]]
                :nimi :tyomenetelma
                :tyyppi :valinta
                :valinnat (into [nil] alasveto-valinnat)
                :valinta-nayta #(if %
                                  (alasveto-kuvaukset %)
-                                 "- Valitse -") ;; TODO
+                                 "- Valitse -")
                ::lomake/col-luokka "leveys-kokonainen"}))
 
           ;; Määrä 
@@ -131,18 +147,22 @@
              :ryhman-luokka "lomakeryhman-otsikko-tausta lomake-ryhma-otsikko"}
             (lomake/rivi
               {:otsikko "Paikkauksia"
+               :pakollinen? true
                :rivi-luokka "lomakeryhman-rivi-tausta"
-               :nimi :paikkaus-lkm
+               :nimi :paikkaus_maara
                :tyyppi :numero
                :teksti-oikealla "kpl"
                :vayla-tyyli? true
+               :validoi [[:ei-tyhja "Syötä paikkausten määrä"]]
                ::lomake/col-luokka "maara-valinnat"}
               {:otsikko "Kustannus"
+               :pakollinen? true
                :rivi-luokka "lomakeryhman-rivi-tausta"
                :nimi :kustannus
                :tyyppi :euro
                :teksti-oikealla "EUR"
                :vayla-tyyli? true
+               :validoi [[:ei-tyhja "Syötä kustannusarvo"]]
                ::lomake/col-luokka "maara-valinnat"}))]
          valittu-rivi]])
 
