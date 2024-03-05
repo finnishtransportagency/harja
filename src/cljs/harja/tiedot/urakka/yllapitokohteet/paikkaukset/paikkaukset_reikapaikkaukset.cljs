@@ -202,6 +202,7 @@
           let (:let rivi)
           yksikko (:yksikko rivi)
           menetelma (:tyomenetelma rivi)
+          alkuaika (:alkuaika rivi)
           maara (:paikkaus_maara rivi)
           kustannus (:kustannus rivi)]
       ;; Yksikön muokkausta käyttöliittymästä ei ole näköjään speksattu, Excel-tuonti kuitenkin yliajaa ne 
@@ -214,6 +215,7 @@
          :aet aet
          :losa losa
          :luotu luotu
+         :alkuaika alkuaika
          :let let
          :yksikko yksikko
          :menetelma menetelma

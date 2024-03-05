@@ -45,7 +45,7 @@
   "Yksittäisen reikäpaikkauksen muokkauksen tallennus"
   [db {:keys [id] :as kayttaja}
    {:keys [luotu ulkoinen-id luoja-id urakka-id tie aosa aet
-           losa let menetelma paikkaus_maara yksikko kustannus] :as tiedot}]
+           losa let menetelma paikkaus_maara yksikko kustannus alkuaika] :as tiedot}]
   ;; TODO lisää oikeustarkastus! 
   (oikeudet/ei-oikeustarkistusta!)
   (q/luo-tai-paivita-reikapaikkaus! db {:luoja-id luoja-id
@@ -53,6 +53,7 @@
                                         :ulkoinen-id ulkoinen-id
                                         :luotu luotu
                                         :tie tie
+                                        :alkuaika alkuaika
                                         :muokkaaja-id luoja-id
                                         :aosa aosa
                                         :aet aet
@@ -74,6 +75,7 @@
                   menetelma maara yksikko kustannus]} reikapaikkaukset]
     (q/luo-tai-paivita-reikapaikkaus! db {:luoja-id id
                                           :luotu nil ;; Käyttää NOW()
+                                          :alkuaika nil ;; Käyttää NOW()
                                           :urakka-id urakka-id
                                           :ulkoinen-id tunniste
                                           :tie tie

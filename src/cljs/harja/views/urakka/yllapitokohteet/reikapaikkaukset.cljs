@@ -191,7 +191,13 @@
           :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta reikapaikkaus-pvm "}
           :ikoni-sisaan? true
           :vayla-tyyli? true
-          :aikavalin-rajoitus [6 :kuukausi]}]]]
+          :aikavalin-rajoitus [6 :kuukausi]}]]
+
+       ;; Haku
+       ;; Mallia voi ottaa: tr-atom (atom (:tr valinnat))
+       [:div.haku-nappi
+        [napit/yleinen-ensisijainen "Hae" #(println "Hae painettu") {:luokka "nappi-korkeus-36"
+                                                                     :data-attributes {:data-cy "hae-reikapaikkauskohteita"}}]]]
 
       [:div.reikapaikkaukset-kartta [kartta/kartan-paikka]]
 
