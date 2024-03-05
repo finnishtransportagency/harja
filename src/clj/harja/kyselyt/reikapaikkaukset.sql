@@ -7,10 +7,11 @@ SELECT
     (p.tierekisteriosoite).aet     AS aet,
     (p.tierekisteriosoite).losa    AS losa,
     (p.tierekisteriosoite).let     AS let,
-    (SELECT nimi FROM paikkauskohde_tyomenetelma WHERE id = p.tyomenetelma) AS "tyomenetelma", 
+    (SELECT nimi FROM paikkauskohde_tyomenetelma WHERE id = p.tyomenetelma) AS "tyomenetelma-nimi",
+    p.tyomenetelma, 
     p.massatyyppi,
     p.alkuaika,
-    p.massamaara, 
+    p.paikkaus_maara, 
     p.kustannus
 FROM paikkaus p 
 WHERE p."urakka-id" = :urakka-id 
@@ -36,11 +37,16 @@ SELECT reikapaikkaus_upsert(
     'AB, Asfalttibetoni'::TEXT,     -- massatyyppi, ei tietoa miten tämä reikäpaikkauksille, laitettu AB, failaa muuten NOT NULL constraint
     NULL::NUMERIC,  -- leveys
     NULL::NUMERIC,   -- massamenekki 
-    :massamaara::NUMERIC,  -- massamaara 
+    NULL::NUMERIC,  -- massamaara 
     NULL::NUMERIC,  -- pintaala
     NULL::INTEGER,     -- raekoko 
     NULL::TEXT,  -- kuulamylly
     :kustannus::NUMERIC, -- kustannus
     :yksikko::TEXT, -- yksikkö
+    :paikkaus_maara::INT, -- paikkaus_maara
     (SELECT tierekisteriosoitteelle_viiva(:tie, :aosa, :aet, :losa, :let)) -- last but not least, sijainti geometria
 );
+
+
+-- name: hae-kaikki-tyomenetelmat
+SELECT * FROM paikkauskohde_tyomenetelma;

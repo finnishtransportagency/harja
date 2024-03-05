@@ -21,9 +21,13 @@
 (defn hae-reikapaikkaukset [db _user tiedot]
   ;; TODO lisää oikeustarkastus! 
   (oikeudet/ei-oikeustarkistusta!)
-  (let [_ (log/debug "hae-reikapaikkaukset :: tiedot" (pr-str tiedot))
-        vastaus (q/hae-reikapaikkaukset db {:urakka-id (:urakka-id tiedot)})]
-    vastaus))
+  (q/hae-reikapaikkaukset db {:urakka-id (:urakka-id tiedot)}))
+
+
+(defn hae-tyomenetelmat [db _user]
+  ;; TODO lisää oikeustarkastus! 
+  (oikeudet/ei-oikeustarkistusta!)
+  (q/hae-kaikki-tyomenetelmat db))
 
 
 (defn tallenna-reikapaikkaukset
@@ -41,7 +45,7 @@
                                           :losa losa
                                           :let let
                                           :tyomenetelma menetelma
-                                          :massamaara maara
+                                          :paikkaus_maara maara
                                           :kustannus kustannus
                                           :yksikko yksikko})))
 
@@ -64,7 +68,7 @@
     (when-not virheita?
       (tallenna-reikapaikkaukset db kayttaja urakka-id reikapaikkaukset))
     
-    ;; Palauta status
+    ;; Palauta status, TODO, body taitaa olla useless jos 200 
     {:status status
      :headers {"Content-Type" "application/json; charset=UTF-8"}
      :body (cheshire/encode body)}))
@@ -88,8 +92,10 @@
   (start [{:keys [http-palvelin db] :as this}]
     ;; Haku
     (julkaise-palvelu http-palvelin
-      :hae-reikapaikkaukset (fn [user tiedot]
-                              (hae-reikapaikkaukset db user tiedot)))
+      :hae-reikapaikkaukset (fn [user tiedot] (hae-reikapaikkaukset db user tiedot)))
+    ;; Työmenetelmät
+    (julkaise-palvelu http-palvelin
+      :hae-tyomenetelmat (fn [user _tiedot] (hae-tyomenetelmat db user)))
     ;; Excel tuonti
     (julkaise-palvelu http-palvelin
       :lue-reikapaikkauskohteet-excelista (wrap-multipart-params
@@ -99,6 +105,7 @@
 
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
+      :hae-tyomenetelmat
       :hae-reikapaikkaukset
       :lue-reikapaikkauskohteet-excelista)
     this))

@@ -15,6 +15,7 @@
                      :valittu-rivi nil
                      :muokataan false
                      :nayta-virhe-modal false
+                     :tyomenetelmat nil
                      :excel-virheet nil
                      :valinnat {:aikavali (pvm/kuukauden-aikavali (pvm/nyt))
                                 :tr-osoite nil}}))
@@ -23,7 +24,7 @@
 (def aikavali-atom (atom (pvm/kuukauden-aikavali (pvm/nyt))))
 
 ;; Kartta jutskat
-(defonce valittu-reikapaikkaus (atom nil))
+(defonce valittu-reikapaikkaus (atom nil)) ;; TODO en nyt tiedä miten tämän pitäisi toimia 
 (def karttataso-reikapaikkaukset (atom false))
 
 ;; Kartalle hakufunktio
@@ -53,23 +54,18 @@
 ;; Tuck 
 (defrecord PaivitaAikavali [uudet])
 (defrecord HaeTiedot [])
+(defrecord HaeTiedotOnnistui [vastaus])
+(defrecord HaeTiedotEpaonnistui [vastaus])
+(defrecord HaeTyomenetelmat [])
+(defrecord HaeTyomenetelmatOnnistui [vastaus])
+(defrecord HaeTyomenetelmatEpaonnistui [vastaus])
 (defrecord AvaaMuokkausModal [rivi])
+(defrecord MuokkaaRivia [rivi])
 (defrecord AsetaToteumanPvm [aika])
 (defrecord SuljeMuokkaus [])
 (defrecord SuljeVirheModal [])
-(defrecord HaeTiedotOnnistui [vastaus])
-(defrecord HaeTiedotEpaonnistui [vastaus])
+
 (defrecord TiedostoLadattu [vastaus])
-
-
-
-;; Funktiot
-(defn- hae-reikapaikkaukset [app]
-  (tuck-apurit/post! app :hae-reikapaikkaukset
-    {:urakka-id (:id @nav/valittu-urakka)}
-    ;; Callback
-    {:onnistui ->HaeTiedotOnnistui
-     :epaonnistui ->HaeTiedotEpaonnistui}))
 
 
 (extend-protocol tuck/Event
@@ -77,7 +73,11 @@
   HaeTiedot
   (process-event [_ app]
     (println "call hae tiedot ")
-    (hae-reikapaikkaukset app)
+    (tuck-apurit/post! app :hae-reikapaikkaukset
+      {:urakka-id (:id @nav/valittu-urakka)}
+        ;; Callback
+      {:onnistui ->HaeTiedotOnnistui
+       :epaonnistui ->HaeTiedotEpaonnistui})
     app)
 
   HaeTiedotOnnistui
@@ -92,6 +92,27 @@
     (viesti/nayta-toast! (str "HaeTiedotEpaonnistui Vastaus: " (pr-str vastaus)) :varoitus)
     app)
   
+  HaeTyomenetelmat
+  (process-event [_ app]
+    (println "call hae tyomenetelmat ")
+    (tuck-apurit/post! app :hae-tyomenetelmat
+      {}
+      {:onnistui ->HaeTyomenetelmatOnnistui
+       :epaonnistui ->HaeTyomenetelmatEpaonnistui})
+    app)
+  
+  HaeTyomenetelmatOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (let [app (assoc app :tyomenetelmat vastaus)]
+      (println "tyomenetelmat onnistui")
+      app))
+  
+  HaeTyomenetelmatEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "HaeTyomenetelmatEpaonnistui :: vastaus: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "HaeTyomenetelmatEpaonnistui Vastaus: " (pr-str vastaus)) :varoitus)
+    app)
+  
   AsetaToteumanPvm
   (process-event [{aika :aika} app]
     (assoc-in app [:valittu-rivi :alkuaika] aika))
@@ -99,6 +120,16 @@
   AvaaMuokkausModal
   (process-event [{rivi :rivi} app]
     (-> app
+      (assoc :muokataan true)
+      (assoc :valittu-rivi rivi)))
+  
+  MuokkaaRivia
+  (process-event [{rivi :rivi} app]
+    (println "\n Muokkaa!: "  (:valittu-rivi app))
+    
+    ;;app
+    (update app :valittu-rivi merge rivi)
+    #_ (-> app
       (assoc :muokataan true)
       (assoc :valittu-rivi rivi)))
   

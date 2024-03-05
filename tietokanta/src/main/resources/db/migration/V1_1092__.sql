@@ -20,6 +20,14 @@ ALTER TABLE    paikkaus
 ADD CONSTRAINT kustannus_sallitaanko_null 
 CHECK          (tyyppi = 'paikkaus' OR kustannus IS NOT NULL);
 
+-- Lisätään paikkausmäärä sarake reikäpaikkauksille
+ALTER TABLE paikkaus ADD COLUMN paikkaus_maara INTEGER;
+
+-- Vaaditaan että paikkausmäärä on läsnä reikäpaikkauksille
+ALTER TABLE    paikkaus 
+ADD CONSTRAINT paikkaus_maara_sallitaanko_null 
+CHECK          (tyyppi = 'paikkaus' OR paikkaus_maara IS NOT NULL);
+
 -- Lisätään vielä yksikkö sarake reikäpaikkauksille
 ALTER TABLE paikkaus ADD COLUMN yksikko VARCHAR(20);
 
@@ -28,15 +36,15 @@ ALTER TABLE    paikkaus
 ADD CONSTRAINT yksikko_sallitaanko_null 
 CHECK          (tyyppi = 'paikkaus' OR yksikko IS NOT NULL);
 
-
 -- Jos ulkoinen-id ei ole 0, sen pitää olla jokaisella urakalla uniikki
 -- Eli sallitaan esim arvo 123 urakalle 1 sekä 2, mutta urakalla 1 ei voi olla arvoa 123 kahdesti.
 CREATE UNIQUE INDEX unique_ulkoinen_id_urakalla
 ON paikkaus ("urakka-id", "ulkoinen-id")
 WHERE "ulkoinen-id" <> 0;
 
+
 DROP FUNCTION IF EXISTS reikapaikkaus_upsert(
-  paikkaustyyppi,  INT, 
+  paikkaustyyppi, INT, 
   TIMESTAMP, INT, 
   TIMESTAMP, INT, 
   BOOLEAN, INT, 
@@ -44,14 +52,15 @@ DROP FUNCTION IF EXISTS reikapaikkaus_upsert(
   TIMESTAMP, TIMESTAMP, 
   TR_OSOITE, INT, 
   TEXT, NUMERIC, 
-  NUMERIC,  NUMERIC, 
+  NUMERIC, NUMERIC, 
   NUMERIC, INT, 
   TEXT, NUMERIC,
-  TEXT, GEOMETRY
+  TEXT, INT,
+  GEOMETRY
 );
 
--- UPSERT funktio, sen takia koska INSERT .. ON CONFLICT ei toimi tässä tapauksessa  
--- Vaikka kaikkia paikkaus sarakkeita ei reikäpaikkauksessa tarvita, lyöty silti mukaan jos tarvitaankin myöhemmin 
+
+-- UPSERT funktio, vaikka kaikkia paikkaus sarakkeita ei reikäpaikkauksessa tarvita, lyöty silti mukaan jos tarvitaankin myöhemmin 
 CREATE OR REPLACE FUNCTION reikapaikkaus_upsert(
   _tyyppi paikkaustyyppi,  _luojaid INT, 
   _luotu TIMESTAMP, _muokkaajaid INT, 
@@ -64,7 +73,8 @@ CREATE OR REPLACE FUNCTION reikapaikkaus_upsert(
   _massamenekki NUMERIC, _massamaara NUMERIC, 
   _pintaala NUMERIC, _raekoko INT, 
   _kuulamylly TEXT, _kustannus NUMERIC,
-  _yksikko TEXT, _sijainti GEOMETRY
+  _yksikko TEXT, _paikkaus_maara INT,
+  _sijainti GEOMETRY
 ) RETURNS VOID AS $$
 BEGIN
   UPDATE paikkaus SET
@@ -89,6 +99,7 @@ BEGIN
     kuulamylly = _kuulamylly, 
     kustannus = _kustannus,
     yksikko = _yksikko, 
+    paikkaus_maara = _paikkaus_maara,
     sijainti = _sijainti
   WHERE "urakka-id" = _urakkaid AND "ulkoinen-id" = _ulkoinenid;
   -- FOUND ilmeisesti jokin vakio postgres muuttuja, kertoo viime PERFORM, INSERT, UPDATE tilan
@@ -118,6 +129,7 @@ BEGIN
       kuulamylly, 
       kustannus,
       yksikko,
+      paikkaus_maara,
       sijainti 
     )
     VALUES (
@@ -144,6 +156,7 @@ BEGIN
       _kuulamylly,
       _kustannus,
       _yksikko,
+      _paikkaus_maara,
       _sijainti
     );
   END IF;

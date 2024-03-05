@@ -29,14 +29,12 @@
 
 (defn reikapaikkaus-listaus [e! {:keys [valinnat rivit 
                                         muokataan nayta-virhe-modal 
-                                        excel-virheet valittu-rivi] :as app}]
+                                        excel-virheet valittu-rivi tyomenetelmat] :as app}]
   (let [alkuaika (:alkuaika valittu-rivi)
         tr-atomi (atom (:tr valinnat))
-        sijainti-atomi (atom (:sijainti valinnat))
-        ;; Menetelmän valinnat, testiajaksi 
-        valinnat-test [:test-1 :test-2]
-        valinnat-kuvaus {:test-1 "Testi 1" :test-2 "testi 2"}]
-    
+        alasveto-valinnat (mapv :id tyomenetelmat)
+        alasveto-kuvaukset (into {} (map (fn [{:keys [id nimi]}] [id nimi]) tyomenetelmat))]
+
     ;; Wrappaa reikapaikkausluokkaan niin ei yliajeta mitään 
     [:div.reikapaikkaukset
      ;; Muokkauspaneeli
@@ -46,7 +44,7 @@
         [lomake/lomake
          {:ei-borderia? true
           :tarkkaile-ulkopuolisia-muutoksia? true
-          :muokkaa! #(println "Muokkaa " %)
+          :muokkaa! #(e! (tiedot/->MuokkaaRivia %))
           ;; Header
           :header [:div.col-md-12
                    [:h2.header-yhteiset "Muokkaa toteumaa"]
@@ -118,11 +116,13 @@
             (lomake/rivi
               {:otsikko "Kalenterivuosi" ;;TODO 
                :rivi-luokka "lomakeryhman-rivi-tausta"
-               :validoi [[:ei-tyhja "Valitse tila"]] ;; TODO 
-               :nimi :test-nimi
+               :validoi [[:ei-tyhja "Valitse menetelmä"]] ;; TODO 
+               :nimi :tyomenetelma
                :tyyppi :valinta
-               :valinnat (into [nil] valinnat-test)
-               :valinta-nayta #(if % (valinnat-kuvaus %) "- Valitse -") ;; TODO
+               :valinnat (into [nil] alasveto-valinnat)
+               :valinta-nayta #(if %
+                                 (alasveto-kuvaukset %)
+                                 "- Valitse -") ;; TODO
                ::lomake/col-luokka "leveys-kokonainen"}))
 
           ;; Määrä 
@@ -143,7 +143,6 @@
                :tyyppi :euro
                :teksti-oikealla "EUR"
                :vayla-tyyli? true
-               :vaadi-positiivinen-numero? true
                ::lomake/col-luokka "maara-valinnat"}))]
          valittu-rivi]])
 
@@ -155,7 +154,6 @@
         [:div.alasvedon-otsikko-vayla "Tieosoite"]
         [kentat/tee-kentta {:tyyppi :tierekisteriosoite
                             :alaotsikot? true
-                            :sijainti sijainti-atomi
                             :vayla-tyyli? true} tr-atomi]]
        ;; Pvm valinta
        [:div
@@ -238,18 +236,18 @@
 
         {:otsikko "Menetelmä"
          :tyyppi :string
-         :nimi :tyomenetelma
+         :nimi :tyomenetelma-nimi
          :luokka "text-nowrap"
          :leveys 1}
 
         {:otsikko "Määrä"
          :tyyppi :string
-         :nimi :massamaara
+         :nimi :paikkaus_maara
          :luokka "text-nowrap"
          :leveys 0.3}
 
         {:otsikko "Kustannus (EUR)"
-         :tyyppi :string
+         :tyyppi :euro
          :nimi :kustannus
          :luokka "text-nowrap"
          :leveys 0.3}]
@@ -274,6 +272,7 @@
          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
          (nav/vaihda-kartan-koko! :M)
          ;; Hae tiedot 
+         (e! (tiedot/->HaeTyomenetelmat))
          (e! (tiedot/->HaeTiedot)))
       ;; Ulos
       #(do
