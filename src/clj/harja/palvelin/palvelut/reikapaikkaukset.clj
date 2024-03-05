@@ -30,16 +30,28 @@
   (q/hae-kaikki-tyomenetelmat db))
 
 
+(defn poista-reikapaikkaus
+  "Yksittäisen reikäpaikkauksen poisto"
+  [db {:keys [id] :as kayttaja}
+   {:keys [ulkoinen-id luoja-id urakka-id tie aosa aet losa let menetelma paikkaus_maara yksikko kustannus] :as tiedot}]
+    ;; TODO lisää oikeustarkastus! 
+  (oikeudet/ei-oikeustarkistusta!)
+  (println "\n poista: " tiedot))
+
+
 (defn tallenna-reikapaikkaus
   "Yksittäisen reikäpaikkauksen muokkauksen tallennus"
   [db {:keys [id] :as kayttaja}
-   {:keys [ulkoinen_id luoja_id urakka_id tie aosa aet losa let menetelma paikkaus_maara yksikko kustannus] :as tiedot}]
+   {:keys [luotu ulkoinen-id luoja-id urakka-id tie aosa aet 
+           losa let menetelma paikkaus_maara yksikko kustannus] :as tiedot}]
   ;; TODO lisää oikeustarkastus! 
   (oikeudet/ei-oikeustarkistusta!)
-  (q/luo-tai-paivita-reikapaikkaus! db {:luoja_id luoja_id
-                                        :urakka_id urakka_id
-                                        :ulkoinen_id ulkoinen_id
+  (q/luo-tai-paivita-reikapaikkaus! db {:luoja-id luoja-id
+                                        :urakka-id urakka-id
+                                        :ulkoinen-id ulkoinen-id
+                                        :luotu luotu
                                         :tie tie
+                                        :muokkaaja-id luoja-id
                                         :aosa aosa
                                         :aet aet
                                         :losa losa
@@ -56,11 +68,14 @@
   [db {:keys [id] :as kayttaja} urakka-id reikapaikkaukset]
   ;; TODO lisää oikeustarkastus! 
   (oikeudet/ei-oikeustarkistusta!)
-  (doseq [{:keys [tunniste tie aosa aet losa let menetelma maara yksikko kustannus]} reikapaikkaukset]
-    (q/luo-tai-paivita-reikapaikkaus! db {:luoja_id id
-                                          :urakka_id urakka-id
-                                          :ulkoinen_id tunniste
+  (doseq [{:keys [tunniste tie aosa aet losa let 
+                  menetelma maara yksikko kustannus]} reikapaikkaukset]
+    (q/luo-tai-paivita-reikapaikkaus! db {:luoja-id id
+                                          :luotu nil ;; Käyttää NOW()
+                                          :urakka-id urakka-id
+                                          :ulkoinen-id tunniste
                                           :tie tie
+                                          :muokkaaja-id id
                                           :aosa aosa
                                           :aet aet
                                           :losa losa
@@ -114,9 +129,12 @@
     ;; Haku
     (julkaise-palvelu http-palvelin
       :hae-reikapaikkaukset (fn [user tiedot] (hae-reikapaikkaukset db user tiedot)))
-    ;; Rivin tallennus
+    ;; Toteuman tallennus
     (julkaise-palvelu http-palvelin
       :tallenna-reikapaikkaus (fn [user tiedot] (tallenna-reikapaikkaus db user tiedot)))
+    ;; Toteuman poisto
+    (julkaise-palvelu http-palvelin
+      :poista-reikapaikkaus (fn [user tiedot] (poista-reikapaikkaus db user tiedot)))
     ;; Työmenetelmät
     (julkaise-palvelu http-palvelin
       :hae-tyomenetelmat (fn [user _tiedot] (hae-tyomenetelmat db user)))
@@ -131,6 +149,7 @@
     (poista-palvelut http-palvelin
       :hae-tyomenetelmat
       :hae-reikapaikkaukset
+      :poista-reikapaikkaus
       :tallenna-reikapaikkaus
       :lue-reikapaikkauskohteet-excelista)
     this))

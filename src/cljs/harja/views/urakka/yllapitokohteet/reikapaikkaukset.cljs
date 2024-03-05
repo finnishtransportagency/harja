@@ -38,7 +38,9 @@
         ;; oikeus? (oikeudet/voi-kirjoittaa? oikeudet/ (get-in valinnat [:urakka :id])) ;; TODO 
         voi-tallentaa? (and
                          ;; (not oikeus?) ;; TODO 
-                         (tiedot/voi-tallentaa? valittu-rivi app))]
+                         (tiedot/voi-tallentaa? valittu-rivi app))
+        ;; TODO, tarkista oikeus
+        voi-poistaa? true]
 
     ;; Wrappaa reikapaikkausluokkaan niin ei yliajeta mitään 
     [:div.reikapaikkaukset
@@ -61,7 +63,10 @@
                     ;; Tallenna
                     [napit/tallenna "Tallenna muutokset" #(e! (tiedot/->TallennaReikapaikkaus valittu-rivi)) {:disabled (not voi-tallentaa?)}]
                     ;; Poista 
-                    [napit/yleinen-toissijainen "Poista" #(println "poista") {:ikoni (ikonit/livicon-trash) :paksu? true :luokka "lomake-poista"}]
+                    [napit/yleinen-toissijainen "Poista" #(e! (tiedot/->PoistaReikapaikkaus valittu-rivi)) {:ikoni (ikonit/livicon-trash)
+                                                                                                            :paksu? true
+                                                                                                            :luokka "lomake-poista"
+                                                                                                            :disabled (not voi-poistaa?)}]
                     ;; Sulje 
                     [napit/yleinen-toissijainen "Sulje" #(e! (tiedot/->SuljeMuokkaus))]]]}
 
@@ -240,7 +245,6 @@
                   :sivuta grid/vakiosivutus
                   :voi-kumota? false
                   :piilota-toiminnot? true
-                  :jarjesta :pvm
                   :mahdollista-rivin-valinta? true
                   :rivi-klikattu #(e! (tiedot/->AvaaMuokkausModal %))}
 

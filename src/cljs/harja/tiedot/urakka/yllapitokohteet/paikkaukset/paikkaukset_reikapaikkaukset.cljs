@@ -73,7 +73,9 @@
 (defrecord TallennaReikapaikkaus [rivi])
 (defrecord TallennaReikapaikkausOnnistui [vastaus])
 (defrecord TallennaReikapaikkausEpaonnistui [vastaus])
-
+(defrecord PoistaReikapaikkaus [rivi])
+(defrecord PoistaReikapaikkausOnnistui [vastaus])
+(defrecord PoistaReikapaikkausEpaonnistui [vastaus])
 
 ;; Funktiot
 (defn hae-reikapaikkaukset [app]
@@ -81,6 +83,13 @@
     {:urakka-id (:id @nav/valittu-urakka)}
     {:onnistui ->HaeTiedotOnnistui
      :epaonnistui ->HaeTiedotEpaonnistui}))
+
+
+(defn- paivita-lista-ja-kartta [app]
+  ;; Päivitä uudet reitit kartalle 
+  (reset! paivita-kartta? true)
+  ;; Hae päivtetty lista näkymään
+  (hae-reikapaikkaukset app))
 
 
 (defn voi-tallentaa? [{:keys [paikkaus_maara kustannus alkuaika tyomenetelma] :as valittu-reikapaikkaus}
@@ -100,7 +109,6 @@
 
 
 (extend-protocol tuck/Event
-
   HaeTiedot
   (process-event [_ app]
     (hae-reikapaikkaukset app)
@@ -116,8 +124,8 @@
   HaeTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (reset! paivita-kartta? false)
-    (js/console.warn "HaeTiedotEpaonnistui :: vastaus: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "HaeTiedotEpaonnistui Vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
   HaeTyomenetelmat
@@ -134,8 +142,8 @@
 
   HaeTyomenetelmatEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.warn "HaeTyomenetelmatEpaonnistui :: vastaus: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "HaeTyomenetelmatEpaonnistui Vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (js/console.warn "Työmenetelmät haku epäonnistui: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "Työmenetelmät haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
   AsetaToteumanPvm
@@ -156,6 +164,28 @@
   (process-event [_ app]
     (assoc app :muokataan false))
 
+  PoistaReikapaikkaus
+  (process-event [_ app]
+    #_ (tuck-apurit/post! app :poista-reikapaikkaus
+      {:luoja-id (:id @istunto/kayttaja)
+       :urakka-id (:id @nav/valittu-urakka)
+       :ulkoinen-id nil}
+      {:onnistui ->PoistaReikapaikkausOnnistui
+       :epaonnistui ->PoistaReikapaikkausEpaonnistui})
+    app)
+
+  PoistaReikapaikkausOnnistui
+  (process-event [_ app]
+    (viesti/nayta-toast! "Toteuma tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
+    (paivita-lista-ja-kartta app)
+    app)
+
+  PoistaReikapaikkausEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "Poisto epaonnistui, vastaus: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "Poisto epaonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
+
   TallennaReikapaikkaus
   (process-event [{rivi :rivi} app]
     (let [;; Uncaught: nth not supported on this type cljs.core/PersistentHashMap
@@ -164,6 +194,7 @@
           ulkoinen-id (:tunniste rivi)
           tie (:tie rivi)
           aosa (:aosa rivi)
+          luotu (:luotu rivi)
           aet (:aet rivi)
           losa (:losa rivi)
           let (:let rivi)
@@ -173,13 +204,14 @@
           kustannus (:kustannus rivi)]
       ;; Yksikön muokkausta käyttöliittymästä ei ole näköjään speksattu, Excel-tuonti kuitenkin yliajaa ne 
       (tuck-apurit/post! app :tallenna-reikapaikkaus
-        {:luoja_id (:id @istunto/kayttaja)
-         :urakka_id (:id @nav/valittu-urakka)
-         :ulkoinen_id ulkoinen-id
+        {:luoja-id (:id @istunto/kayttaja)
+         :urakka-id (:id @nav/valittu-urakka)
+         :ulkoinen-id ulkoinen-id
          :tie tie
          :aosa aosa
          :aet aet
          :losa losa
+         :luotu luotu
          :let let
          :yksikko yksikko
          :menetelma menetelma
@@ -192,16 +224,13 @@
   TallennaReikapaikkausOnnistui
   (process-event [_ app]
     (viesti/nayta-toast! "Toteuma tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
-    ;; Päivitä uudet reitit kartalle 
-    (reset! paivita-kartta? true)
-    ;; Hae päivtetty lista näkymään
-    (hae-reikapaikkaukset app)
+    (paivita-lista-ja-kartta app)
     app)
 
   TallennaReikapaikkausEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.warn "TallennaReikapaikkausEpaonnistui :: vastaus: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "TallennaReikapaikkausEpaonnistui Vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (js/console.warn "Tallennus epäonnistui, vastaus: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "Tallennus epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
   SuljeVirheModal
@@ -230,10 +259,7 @@
         ;; Ei virheitä
         :else
         (do
-          ;; Päivitä uudet reitit kartalle 
-          (reset! paivita-kartta? true)
-          ;; Hae päivtetty lista näkymään
-          (hae-reikapaikkaukset app)
+          (paivita-lista-ja-kartta app)
           (viesti/nayta-toast! "Reikäpaikkaukset ladattu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
           (-> app
             (assoc :excel-virheet nil)

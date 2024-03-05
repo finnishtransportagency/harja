@@ -136,10 +136,10 @@ BEGIN
       _tyyppi, 
       _luojaid, 
       _luotu, 
-      _muokkaajaid, 
-      _muokattu, 
-      _poistajaid, 
-      _poistettu, 
+      NULL,  -- _muokkaajaid
+      NULL, -- _muokattu 
+      NULL, -- _poistajaid 
+      FALSE, -- _poistettu 
       _urakkaid, 
       _paikkauskohdeid,
       _ulkoinenid, 
