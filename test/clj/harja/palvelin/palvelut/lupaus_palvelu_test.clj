@@ -71,7 +71,6 @@
 
 (deftest urakan-lupaustietojen-haku-toimii
   (let [tiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                :urakan-alkuvuosi 2021
                 :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                      #inst "2022-09-30T20:59:59.000-00:00"]
                 :nykyhetki #inst "2021-09-30T21:00:00.000-00:00"}
@@ -129,6 +128,33 @@
                              +kayttaja-vastuuhlo-muhos+
                              tiedot))
         "Toisen urakan vastuuhenkilö ei saa hakea tietoja.")))
+
+(deftest urakan-lupaustietojen-haku-lupausryhmat-eroavat-kun-urakat-samalla-alkuvuodella
+  (let [kajaani-tiedot {:urakka-id @kajaanin-maanteiden-hoitourakan-2024-2029-id
+                        :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
+                                             #inst "2028-09-30T20:59:59.000-00:00"]
+                        :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
+        suomussalmi-tiedot {:urakka-id @suomussalmen-maanteiden-hoitourakan-2024-2029-id
+                            :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
+                                                 #inst "2028-09-30T20:59:59.000-00:00"]
+                            :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
+        kajaani-vastaus (hae-urakan-lupaustiedot
+                          +kayttaja-jvh+
+                          kajaani-tiedot)
+        suomussalmi-vastaus (hae-urakan-lupaustiedot
+                              +kayttaja-jvh+
+                              suomussalmi-tiedot)
+        kajaani-ryhmat (:lupausryhmat kajaani-vastaus)
+        suomussalmi-ryhmat (:lupausryhmat suomussalmi-vastaus)
+        kajaani-lupaus-1 (etsi-lupaus kajaani-vastaus 1)
+        suomussalmi-lupaus-1 (etsi-lupaus suomussalmi-vastaus 15)
+        kajaani-ryhma-idt (sort (map :id kajaani-ryhmat)) 
+        suomussalmi-ryhma-idt (sort (map :id suomussalmi-ryhmat))]
+    (is (= (list 1 2 3 4 5) kajaani-ryhma-idt) "Kajaanin ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
+    (is (= (list 6 7 8 9 10) suomussalmi-ryhma-idt) "Suomussalmen ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
+    (is (= 1 (:lupaus-id kajaani-lupaus-1)) "Kajaanilla on lupaus 1 ryhmasta 1")
+    (is (= 15 (:lupaus-id suomussalmi-lupaus-1)) "Suomussalmella on lupaus 15 ryhmasta 6")))
+
 
 (deftest odottaa-kannanottoa
   (let [hakutiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id

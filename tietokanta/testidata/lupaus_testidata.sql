@@ -44,19 +44,26 @@ VALUES
     ('Turvallisuus ja osaamisen kehittäminen', 4, 2019, NOW()),
     ('Viestintä ja tienkäyttäjäasiakkaan palvelu', 5, 2019, NOW());
 
--- Lupausryhmien linkitys urakkaan 2024 alkavalla urakalle linkkitaulun kautta - Kajaani MHU
+-- Lupausryhmien linkitys urakkaan 2024 alkavalla urakalle linkkitaulun kautta - Kajaani MHU ja MHU Suomussalmi
 DO $$
     DECLARE
         urakkaid INTEGER;
+        urakkaid2 INTEGER;
     BEGIN
-        urakkaid = (SELECT id FROM urakka where nimi = 'POP MHU Kajaani 2024-2029');  
+        urakkaid = (SELECT id FROM urakka where nimi = 'POP MHU Kajaani 2024-2029'); 
+        urakkaid2 = (SELECT id FROM urakka where nimi = 'POP MHU Suomussalmi 2024-2029'); 
         INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
         VALUES
             (1, urakkaid),
             (2, urakkaid),
             (3, urakkaid),
             (4, urakkaid),
-            (5, urakkaid);
+            (5, urakkaid),
+            (6, urakkaid2),
+            (7, urakkaid2),
+            (8, urakkaid2),
+            (9, urakkaid2),
+            (10, urakkaid2);
     END
 $$ LANGUAGE plpgsql;
 
