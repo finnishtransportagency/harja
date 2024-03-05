@@ -47,7 +47,8 @@ SELECT l.id                     AS "lupaus-id",
        LEFT JOIN lupaus_vastaus vas ON (l.id = vas."lupaus-id" AND vas."urakka-id" = :urakka
                                     AND (concat(vas.vuosi, '-', vas.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE))
        LEFT JOIN lupaus_vaihtoehto lv ON lv.id = vas."lupaus-vaihtoehto-id"
- WHERE r."urakan-alkuvuosi" = :alkuvuosi
+       LEFT JOIN lupausryhma_urakka lu ON r.id = lu."lupausryhma_id"
+ WHERE lu."urakka_id" = :urakka
 GROUP BY l.id, sit.id, r.id;
 
 -- name: hae-lupaus-vaihtoehdot
