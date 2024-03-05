@@ -33,6 +33,7 @@
                                         tyomenetelmat haku-kaynnissa?] :as app}]
   (let [alkuaika (:alkuaika valittu-rivi)
         tr-atomi (atom (:tr valinnat))
+        yksikko (:yksikko valittu-rivi)
         alasveto-valinnat (mapv :id tyomenetelmat)
         alasveto-kuvaukset (into {} (map (fn [{:keys [id nimi]}] [id nimi]) tyomenetelmat))
         ;; oikeus? (oikeudet/voi-kirjoittaa? oikeudet/ (get-in valinnat [:urakka :id])) ;; TODO 
@@ -157,7 +158,7 @@
                :rivi-luokka "lomakeryhman-rivi-tausta"
                :nimi :paikkaus_maara
                :tyyppi :numero
-               :teksti-oikealla "kpl"
+               :teksti-oikealla (str yksikko)
                :vayla-tyyli? true
                :validoi [[:ei-tyhja "Syötä paikkausten määrä"]]
                ::lomake/col-luokka "maara-valinnat"}
@@ -268,8 +269,9 @@
          :leveys 1}
 
         {:otsikko "Määrä"
-         :tyyppi :string
-         :nimi :paikkaus_maara
+         :tyyppi :komponentti
+         :komponentti (fn [{:keys [paikkaus_maara yksikko]} _arvo]
+                        (str paikkaus_maara " " yksikko))
          :luokka "text-nowrap"
          :leveys 0.3}
 
