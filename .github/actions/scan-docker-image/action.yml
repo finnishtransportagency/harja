@@ -61,7 +61,8 @@ runs:
         trivyignores: ${{ inputs.trivyignores }}
 
     # Update the SARIF report artifact locations with the user provided Dockerfile path
-    # https://github.com/aquasecurity/trivy/issues/708
+    # This is a workaround for the issue where the Dockerfile path is not included in the SARIF report, to allow for better vulnerability tracking
+    # The issue is tracked here: https://github.com/aquasecurity/trivy/issues/708
     - name: Update SARIF report vuln locationss
       if: ${{ inputs.upload-sarif == 'true' }}
       env:
@@ -75,20 +76,21 @@ runs:
         mv sarif.tmp trivy-results.sarif
       shell: bash
 
-    - name: Upload the sarif report as an artifact for debugging
-      uses: actions/upload-artifact@v4
+# Enable this, if you want to upload the Sarif report as an artifact for debugging
+#    - name: Upload the sarif report as an artifact for debugging
+#      uses: actions/upload-artifact@v4
+#      if: ${{ inputs.upload-sarif == 'true' }}
+#      with:
+#        name: 'trivy-results.sarif'
+#        path: 'trivy-results.sarif'
+#        if-no-files-found: error
+#        retention-days: 1
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
       if: ${{ inputs.upload-sarif == 'true' }}
       with:
-        name: 'trivy-results.sarif'
-        path: 'trivy-results.sarif'
-        if-no-files-found: error
-        retention-days: 1
-
-    #      - name: Upload Trivy scan results to GitHub Security tab
-    #        uses: github/codeql-action/upload-sarif@v3
-    #        if: ${{ inputs.upload-sarif == 'true' }}
-    #        with:
-    #          sarif_file: 'trivy-results.sarif'
+        sarif_file: 'trivy-results.sarif'
 
     # To fail the job on specific severity, we have to run the scanner again
     - name: Run Trivy vulnerability scanner (Limited scan, fail job if vulns found)

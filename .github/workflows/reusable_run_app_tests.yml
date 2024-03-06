@@ -30,6 +30,11 @@ on:
         default: 'full'
         type: string
         required: false
+      scan-docker-image:
+        description: 'Enabloi scan-docker-image job'
+        default: 'true'
+        type: string
+        required: false
       lint-clj:
         description: 'Enabloi lint-clj job'
         default: 'true'
@@ -165,6 +170,76 @@ jobs:
           path: ./target/harja-0.0.1-SNAPSHOT-standalone.jar
           if-no-files-found: error
           retention-days: 1
+
+  scan-docker-image:
+    if: ${{ inputs.scan-docker-image == 'true' }}
+    name: "Scan Docker image"
+    runs-on: ubuntu-latest
+    needs: build-harja
+    permissions:
+      contents: read
+      packages: read
+      checks: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get the build artifact name
+        id: artifact-name
+        env:
+          REF: ${{ github.ref }}
+          NAME_PREFIX: ${{ inputs.artifact-prefix }}
+          # Branchin nimen "/"-merkit muunnetaan "-"-merkeiksi, ja muodostetaan branchiin pohjautuva nimi
+        run: echo "value=${NAME_PREFIX}${REF////-}-uberjar" >> $GITHUB_OUTPUT
+
+      - name: Download uberjar artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.artifact-name.outputs.value }}
+          # Download to the same directory as the uberjar is built to
+          path: ./target
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.GH_DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and tag Harja app test image
+        id: build-test-image
+        uses: docker/build-push-action@v5
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+          DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
+          BUILD_PLATFORMS: linux/amd64
+        with:
+          context: .
+          file: ${{ env.DOCKERFILE_PATH }}
+          platforms: ${{ env.BUILD_PLATFORMS }}
+          tags: harja_buildtest_pr:${{ env.IMAGE_TAG }}
+          # Disabloi provenance attestations: https://github.com/docker/build-push-action/issues/820
+          provenance: false
+          # Lataa buildattu image paikallisesti 'docker images':iin tämän jobin käyttöön
+          load: true
+
+      - name: Run Trivy vulnerability scanner
+        uses: ./.github/actions/scan-docker-image
+        env:
+          DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
+          TRIVY_IGNORES_PATH: 'aws/fargate/.trivyignore'
+        with:
+          # Hae viittaus buildattuun imageen build-test-image stepin outputeista
+          image-ref: ${{ steps.build-test-image.outputs.imageid }}
+          dockerfile-path-for-sarif: ${{ env.DOCKERFILE_PATH }}
+          trivyignores: ${{ env.TRIVY_IGNORES_PATH }}
+          # Failataan jobi, jos löytyy kriittisiä tai korkeita haavoittuvuuksia
+          fail-job-on-severities: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          # Disabloi upload-sarif, koska sarif uploadataan develop-branchin testien yhteydessä
+          upload-sarif: false
 
   backend-tests:
     if: ${{ inputs.backend-tests == 'true' }}
