@@ -13,8 +13,8 @@ inputs:
     required: true
   trivyignores:
     description: 'A comma-separated list of relative paths in repository to one or more .trivyignore files'
-  fail-job-on-severity:
-    description: 'Fail scanning job when encountering a vuln of specific severity, such as: "CRITICAL,HIGH,MEDIUM"'
+  fail-job-on-severities:
+    description: 'Fail scanning job when encountering a vuln of any specified severity, such as: "CRITICAL,HIGH,MEDIUM"'
     default: 'CRITICAL,HIGH'
   vuln-types:
     description: 'Comma-separated list of vuln types to scan, such as: "os,library"'
@@ -78,9 +78,9 @@ runs:
     # To fail the job on specific severity, we have to run the scanner again
     - name: Run Trivy vulnerability scanner (Limited scan, fail job if vulns found)
       uses: aquasecurity/trivy-action@84384bd6e777ef152729993b8145ea352e9dd3ef # v0.17.0
-      if: ${{ inputs.fail-job-on-severity != 'false' }}
+      if: ${{ inputs.fail-job-on-severities != 'false' }}
       env:
-        SEVERITIES: ${{ inputs.fail-job-on-severity }}
+        SEVERITIES: ${{ inputs.fail-job-on-severities }}
         VULN_TYPES: ${{ inputs.vuln-types }}
         IGNORE_UNFIXED: ${{ inputs.ignore-unfixed }}
         IMAGE_REF: ${{ inputs.image-ref }}

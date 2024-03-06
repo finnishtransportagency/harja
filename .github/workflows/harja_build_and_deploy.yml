@@ -226,9 +226,10 @@ jobs:
           image-ref: ${{ steps.build-test-image.outputs.imageid }}
           dockerfile-path-for-sarif: ${{ env.DOCKERFILE_PATH }}
           trivyignores: ${{ env.TRIVY_IGNORES_PATH }}
+          fail-job-on-severities: 'CRITICAL,HIGH,MEDIUM'
           #ignore-unfixed: true
-          #fail-job-on-severity: 'CRITICAL'
           upload-sarif: true
+
 
   # -- Deployment -- #
 
