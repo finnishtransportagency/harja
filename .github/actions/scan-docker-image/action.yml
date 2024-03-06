@@ -60,6 +60,21 @@ runs:
         severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
         trivyignores: ${{ inputs.trivyignores }}
 
+    # Update the SARIF report artifact locations with the user provided Dockerfile path
+    # https://github.com/aquasecurity/trivy/issues/708
+    - name: Update SARIF report vuln locationss
+      if: ${{ inputs.upload-sarif == 'true' }}
+      env:
+        DOCKERFILE_PATH: ${{ inputs.dockerfile-path-for-sarif }}
+      run: |
+        cat trivy-results.sarif | \
+          jq '.runs[].results[].locations[].physicalLocation.artifactLocation += {"uri": "${{ env.DOCKERFILE_PATH }}","uriBaseId": "ROOTPATH"}' | \
+          jq '.runs[].results[].locations[].physicalLocation.region += {"startLine": 1,"startColumn": 1,"endLine": 1,"endColumn": 1}' \
+        > sarif.tmp
+        mv trivy-results.sarif trivy-results.sarif.orig
+        mv sarif.tmp trivy-results.sarif
+      shell: bash
+
     - name: Upload the sarif report as an artifact for debugging
       uses: actions/upload-artifact@v4
       if: ${{ inputs.upload-sarif == 'true' }}
