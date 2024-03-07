@@ -15,6 +15,7 @@ SELECT    p.id,
           p.tyomenetelma, 
           p.massatyyppi,
           p.alkuaika,
+          p.loppuaika,
           p.paikkaus_maara, 
           p.kustannus
 FROM      paikkaus p 
@@ -47,7 +48,7 @@ SELECT reikapaikkaus_upsert(
     NULL::INT,                                          -- paikkauskohdeid
     :ulkoinen-id::INT,                                  -- ulkoinenid
     COALESCE(:alkuaika::TIMESTAMP, NOW()::TIMESTAMP),   -- alkuaika
-    NOW()::TIMESTAMP,                                   -- loppuaika, laitetaan vaan sama, nämä ei reikäpaikkauksilla ole niin relevantteja(?)
+    COALESCE(:loppuaika::TIMESTAMP, NOW()::TIMESTAMP),  -- loppuaika, joka on sama, tämä ei taida reikäpaikkauksilla olla relevantti(?)
     ROW(:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE,   -- tr osoite
     COALESCE(:tyomenetelma-id, (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = :tyomenetelma))::INT, -- tyomenetelma 
     'AB, Asfalttibetoni'::TEXT,                         -- massatyyppi, ei tietoa miten tämä reikäpaikkauksille, laitettu AB, failaa muuten NOT NULL constraint

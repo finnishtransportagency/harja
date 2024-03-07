@@ -191,7 +191,9 @@
 
   AsetaToteumanPvm
   (process-event [{aika :aika} app]
-    (assoc-in app [:valittu-rivi :alkuaika] aika))
+    (-> app 
+      (assoc-in [:valittu-rivi :alkuaika] aika)
+      (assoc-in [:valittu-rivi :loppuaika] aika)))
 
   AvaaMuokkausModal
   (process-event [{rivi :rivi} app]
@@ -248,6 +250,7 @@
           yksikko (:yksikko rivi)
           menetelma (:tyomenetelma rivi)
           alkuaika (:alkuaika rivi)
+          loppuaika (:loppuaika rivi) ;; Nämä on samoja, ei tietoa tarvitaanko loppuaikaa oikeasti reikäpaikkauksissa. Ks. AsetaToteumanPvm
           maara (:paikkaus_maara rivi)
           kustannus (:kustannus rivi)]
       ;; Yksikön muokkausta käyttöliittymästä ei ole näköjään speksattu, Excel-tuonti kuitenkin yliajaa ne 
@@ -261,6 +264,7 @@
          :losa losa
          :luotu luotu
          :alkuaika alkuaika
+         :loppuaika loppuaika
          :let let
          :yksikko yksikko
          :menetelma menetelma

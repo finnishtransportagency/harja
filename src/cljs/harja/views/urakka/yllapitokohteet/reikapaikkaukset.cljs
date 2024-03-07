@@ -279,14 +279,14 @@
          :tyyppi :pvm
          :nimi :alkuaika
          :luokka "text-nowrap"
-         :leveys 0.4}
+         :leveys 0.2}
 
         {:otsikko "Sijainti"
          :tyyppi :komponentti
          :komponentti (fn [arvo _]
                         (tr-domain/tierekisteriosoite-tekstina arvo))
          :luokka "text-nowrap"
-         :leveys 0.5}
+         :leveys 0.55}
 
         {:otsikko "Menetelmä"
          :tyyppi :string
@@ -295,6 +295,7 @@
          :leveys 1}
 
         {:otsikko "Määrä"
+         :tasaa :oikea
          :tyyppi :komponentti
          :komponentti (fn [{:keys [paikkaus_maara yksikko]} _arvo]
                         (str paikkaus_maara " " yksikko))
@@ -302,6 +303,7 @@
          :leveys 0.3}
 
         {:otsikko "Kustannus (EUR)"
+         :tasaa :oikea
          :tyyppi :euro
          :nimi :kustannus
          :luokka "text-nowrap"

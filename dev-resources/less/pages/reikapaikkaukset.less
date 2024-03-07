@@ -2,7 +2,89 @@
 
 .reikapaikkaukset 
 {
-  .overlay-oikealla {
+  .reikapaikkaus-listaus 
+  {
+    padding: 16px 24px;
+
+    /* Suodattimet */
+    .row.filtterit 
+    {
+      display: flex;
+      padding: @valistys-16;
+      
+      /* Tieosoite valinta */
+      .tierekisteriosoite-flex {
+        padding-right: 120px;
+      }
+
+      /* Tieosoite otsikko */
+      .alasvedon-otsikko-vayla {
+        font-weight: 600;
+        line-height: @valistys-16;
+        margin-bottom: @valistys-4;
+      }
+
+      /* Päivämäärä */
+      .reikapaikkaus-pvm {
+        /* Koska tr valinnan komponentti toimii vähän omalla tavalla (otsikot alhalla), tähän lyöty tällaista ehkä epätavallista tyylittelyä */
+        position: relative;
+        top: -21px;
+      }
+      
+      /* Hae */
+      .haku-nappi {
+        display: flex;
+        align-items: center;
+        padding-bottom: 8px;
+        padding-left: 20px;
+      }
+    }
+
+    /* Karttanäkymä */
+    .reikapaikkaukset-kartta {
+      padding: 12px 0;
+    }
+
+    /* Grid */
+    .taulukko-header {
+      display: flex;
+      margin: auto;
+      justify-content: space-between;
+
+      font-family: "Open Sans", Arial, sans-serif;
+      font-style: normal;
+      font-weight: 600;
+      font-size: 0.75rem;
+
+      .lataus-nappi {
+        color: @blue-dark;
+        margin: auto;
+      }
+
+      .flex-oikealla {
+        display: flex;
+      }
+    }
+
+    @media (max-width: 950px) {
+      .row.filtterit {
+        flex-direction: column;
+
+        .reikapaikkaus-pvm {
+          margin-left: 0px;
+          margin-top: 40px;
+        }
+
+        .haku-nappi {
+          padding-left: 0px;
+        }
+      }
+    }
+  }
+
+  /* Toteuman muokkauspaneeli/lomake */
+  .overlay-oikealla 
+  {
     width: 600px;
     overflow: auto;
     padding: 22px;
@@ -65,70 +147,5 @@
         float: none;
       }
     }
-  }
-
-  .reikapaikkaus-listaus 
-  {
-    padding: 16px 24px;
-
-    .row.filtterit {
-      display: flex;
-      padding: @valistys-16;
-
-      .reikapaikkaus-pvm {
-        /* Koska tr valinnan komponentti toimii vähän omalla tavalla (otsikot alhalla), tähän lyöty tällaista ehkä epätavallista tyylittelyä */
-        position: relative;
-        top: -21px;
-        margin-left: 120px;
-      }
-
-      .alasvedon-otsikko-vayla {
-        font-weight: 600;
-        line-height: @valistys-16;
-        margin-bottom: @valistys-4;
-      }
-    }
-
-    .taulukko-header {
-      display: flex;
-      margin: auto;
-      justify-content: space-between;
-
-      font-family: "Open Sans", Arial, sans-serif;
-      font-style: normal;
-      font-weight: 600;
-      font-size: 0.75rem;
-
-      .lataus-nappi {
-        color: @blue-dark;
-        margin: auto;
-      }
-
-      .flex-oikealla {
-        display: flex;
-      }
-    }
-
-    @media (max-width: 950px) {
-      .row.filtterit {
-        flex-direction: column;
-
-        .reikapaikkaus-pvm {
-          margin-left: 0px;
-          margin-top: 40px;
-        }
-      }
-    }
-  }
-
-  .reikapaikkaukset-kartta {
-    padding: 12px 0;
-  }
-
-  .haku-nappi {
-    display: flex;
-    align-items: center;
-    padding-bottom: 8px;
-    padding-left: 20px;
   }
 }

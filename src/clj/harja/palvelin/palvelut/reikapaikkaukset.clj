@@ -57,18 +57,19 @@
 
 
 (defn tallenna-reikapaikkaus
-  "Yksittäisen reikäpaikkauksen muokkauksen tallennus"
+  "Yksittäisen reikäpaikkauksen muokkauksen tallennus (käyttöliittymän kautta)"
   [db {:keys [id] :as kayttaja}
    {:keys [luotu ulkoinen-id luoja-id urakka-id tie aosa aet
-           losa let menetelma paikkaus_maara yksikko kustannus alkuaika] :as tiedot}]
+           losa let menetelma paikkaus_maara yksikko kustannus alkuaika loppuaika] :as tiedot}]
   ;; TODO lisää oikeustarkastus! 
   (oikeudet/ei-oikeustarkistusta!)
   (q/luo-tai-paivita-reikapaikkaus! db {:luoja-id luoja-id
                                         :urakka-id urakka-id
                                         :ulkoinen-id ulkoinen-id
-                                        :luotu luotu
                                         :tie tie
-                                        :alkuaika alkuaika
+                                        :luotu (konversio/sql-date luotu)
+                                        :alkuaika (konversio/sql-date alkuaika)
+                                        :loppuaika (konversio/sql-date loppuaika)
                                         :muokkaaja-id luoja-id
                                         :aosa aosa
                                         :aet aet
@@ -82,15 +83,16 @@
 
 
 (defn tallenna-reikapaikkaukset
-  "Tallentaa kaikki Excelin reikäpaikkaukset valitulle urakalle"
+  "Tallentaa kaikki Excelin reikäpaikkaukset valitulle urakalle (Excel-tuonti)"
   [db {:keys [id] :as kayttaja} urakka-id reikapaikkaukset]
   ;; TODO lisää oikeustarkastus! 
   (oikeudet/ei-oikeustarkistusta!)
-  (doseq [{:keys [tunniste tie aosa aet losa let
+  (doseq [{:keys [tunniste tie aosa aet losa let pvm
                   menetelma maara yksikko kustannus]} reikapaikkaukset]
     (q/luo-tai-paivita-reikapaikkaus! db {:luoja-id id
                                           :luotu nil ;; Käyttää NOW()
-                                          :alkuaika nil ;; Käyttää NOW()
+                                          :alkuaika (konversio/sql-date (pvm/->pvm pvm))
+                                          :loppuaika (konversio/sql-date (pvm/->pvm pvm))
                                           :urakka-id urakka-id
                                           :ulkoinen-id tunniste
                                           :tie tie
