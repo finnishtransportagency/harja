@@ -154,14 +154,20 @@
             {:otsikko "Määrä"
              :ryhman-luokka "lomakeryhman-otsikko-tausta lomake-ryhma-otsikko"}
             (lomake/rivi
-              {:otsikko "Paikkauksia"
+              {:otsikko "Määrä"
                :pakollinen? true
                :rivi-luokka "lomakeryhman-rivi-tausta"
                :nimi :paikkaus_maara
                :tyyppi :numero
-               :teksti-oikealla (str yksikko)
                :vayla-tyyli? true
-               :validoi [[:ei-tyhja "Syötä paikkausten määrä"]]
+               :validoi [[:ei-tyhja "Syötä määrä"]]
+               ::lomake/col-luokka "maara-valinnat"}
+              {:otsikko "Yksikkö"
+               :tyyppi :valinta
+               :valinnat (vec tiedot/reikapaikkausten-yksikot)
+               :nimi :yksikko
+               :pakollinen? true
+               :vayla-tyyli? true
                ::lomake/col-luokka "maara-valinnat"}
               {:otsikko "Kustannus"
                :pakollinen? true

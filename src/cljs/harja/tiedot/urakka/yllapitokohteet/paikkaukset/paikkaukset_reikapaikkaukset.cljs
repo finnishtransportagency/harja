@@ -28,13 +28,17 @@
 (def nakymassa? (atom false))
 (def paivita-kartta? (atom false))
 (def aikavali-atom (atom (pvm/kuukauden-aikavali (pvm/nyt))))
+;; Tekohetkellä samat kun paikkauskohteiden-yksikot, mutta käytetään reikäpaikkauksille omaa muuttujaa, käytetään mm Excel-validoinnissa
+(def reikapaikkausten-yksikot #{"m2" "t" "kpl" "jm"}) 
 
 ;; Kartta jutskat
 (defonce valittu-reikapaikkaus (atom nil))
 (def karttataso-reikapaikkaukset (atom false))
 
 ;; Kartalle hakufunktio
-(defn hae-urakan-reikapaikkaukset [urakka-id]
+(defn hae-urakan-reikapaikkaukset-kartalle 
+  "Kartalle piirron hakufunktio"
+  [urakka-id]
   (reset! paivita-kartta? false)
   (k/post! :hae-reikapaikkaukset {:urakka-id urakka-id}))
 
@@ -45,7 +49,7 @@
                paivita-kartta? @paivita-kartta?]
     {:nil-kun-haku-kaynnissa? true}
     (when (or nakymassa? paivita-kartta?)
-      (hae-urakan-reikapaikkaukset urakka-id)))) 
+      (hae-urakan-reikapaikkaukset-kartalle urakka-id)))) 
 
 ;; Karttataso
 (defonce reikapaikkaukset-kartalla
@@ -90,34 +94,44 @@
 (defrecord PoistaReikapaikkausEpaonnistui [vastaus])
 
 ;; Funktiot
-(defn hae-reikapaikkaukset [app]
+(defn hae-reikapaikkaukset 
+  "Hakee reikäpaikkaukset näkymään"
+  [app]
   (tuck-apurit/post! app :hae-reikapaikkaukset
     {:urakka-id (:id @nav/valittu-urakka)}
     {:onnistui ->HaeTiedotOnnistui
      :epaonnistui ->HaeTiedotEpaonnistui}))
 
 
-(defn- paivita-lista-ja-kartta [app]
+(defn- paivita-lista-ja-kartta
+  "Hakee päivitetyt tulokset näkymään ja päivittää kartan toteumien piirrokset"
+  [app]
   ;; Päivitä uudet reitit kartalle 
   (reset! paivita-kartta? true)
   ;; Hae päivtetty lista näkymään
   (hae-reikapaikkaukset app))
 
 
-(defn voi-tallentaa? [{:keys [paikkaus_maara kustannus alkuaika tyomenetelma] :as valittu-reikapaikkaus}
-                      {:keys [tyomenetelmat]}]
-  ;; Validoi toteuman muokkauslomakkeen
-  (let [tyomenetelma-validi? (boolean (some #(= tyomenetelma (:id %)) tyomenetelmat)) ;; Onko valittua työmenetelmä id:tä olemassa tietokannassa? (HaeTyomenetelmat)
-        tr-validi? (boolean (tr/validi-osoite? (select-keys valittu-reikapaikkaus [:tie :aosa :aet :losa :let]))) ;; Onko syötetty tr-osoite validi? 
-        pvm-validi? (pvm/pvm? alkuaika) ;; Päivämäärä 
-        kustannus-validi? (some? kustannus) ;; Sallitaan myös 0, muttei nil
-        paikkaus_maara-validi? (some? paikkaus_maara)]
+(defn voi-tallentaa?
+  "Validoi toteuman muokkauslomakkeen"
+  [{:keys [paikkaus_maara kustannus alkuaika tyomenetelma yksikko] :as valittu-reikapaikkaus}
+   {:keys [tyomenetelmat]}]
+  (let [yksikko-validi (some? yksikko)
+        pvm-validi? (pvm/pvm? alkuaika)
+        ;; Sallitaan myös 0, muttei nil
+        kustannus-validi? (some? kustannus)
+        paikkaus-maara-validi? (some? paikkaus_maara)
+        ;; Onko valittua työmenetelmä id:tä olemassa tietokannassa? (HaeTyomenetelmat)
+        tyomenetelma-validi? (boolean (some #(= tyomenetelma (:id %)) tyomenetelmat))
+        ;; Onko syötetty tr-osoite validi? 
+        tr-validi? (boolean (tr/validi-osoite? (select-keys valittu-reikapaikkaus [:tie :aosa :aet :losa :let])))]
     (and
       tr-validi?
       pvm-validi?
+      yksikko-validi
       kustannus-validi?
       tyomenetelma-validi?
-      paikkaus_maara-validi?)))
+      paikkaus-maara-validi?)))
 
 
 (defn- valitse-reikapaikkaus-kartalle
@@ -179,7 +193,7 @@
     (-> app
       (assoc :muokataan true)
       (assoc :valittu-rivi rivi)))
-  
+
   MuokkaaRivia
   (process-event [{rivi :rivi} app]
     (update app :valittu-rivi merge rivi))
@@ -251,10 +265,13 @@
       app))
 
   TallennaReikapaikkausOnnistui
-  (process-event [_ app]
-    (viesti/nayta-toast! "Toteuma tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
-    (paivita-lista-ja-kartta app)
-    app)
+  (process-event [_ {:keys [valittu-rivi rivit] :as app}]
+    (let [valittu-id (:id valittu-rivi)
+          valittu-rivi (some #(when (= (:id %) valittu-id) %) rivit)]
+      (viesti/nayta-toast! "Toteuma tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
+      (paivita-lista-ja-kartta app)
+      ;; Päivitetään vielä valittu rivi, että esim yksikkö näkyy inputissa oikein 
+      (assoc app :valitu-rivi valittu-rivi)))
 
   TallennaReikapaikkausEpaonnistui
   (process-event [{vastaus :vastaus} app]
