@@ -174,7 +174,7 @@
   HaeTyomenetelmat
   (process-event [_ app]
     (tuck-apurit/post! app :hae-tyomenetelmat
-      {}
+      {:urakka-id (:id @nav/valittu-urakka)}
       {:onnistui ->HaeTyomenetelmatOnnistui
        :epaonnistui ->HaeTyomenetelmatEpaonnistui})
     app)

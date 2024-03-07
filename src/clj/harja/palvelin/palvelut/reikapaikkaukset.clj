@@ -18,9 +18,8 @@
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]))
 
 
-(defn hae-reikapaikkaukset [db _user {:keys [urakka-id tr aikavali]}]
-  ;; TODO lisää oikeustarkastus! 
-  (oikeudet/ei-oikeustarkistusta!)
+(defn hae-reikapaikkaukset [db kayttaja {:keys [urakka-id tr aikavali]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
   (q/hae-reikapaikkaukset db {:tie (:numero tr)
                               :aosa (:alkuosa tr)
                               :aet (:alkuetaisyys tr)
@@ -39,18 +38,16 @@
                               :urakka-id urakka-id}))
 
 
-(defn hae-tyomenetelmat [db _user]
-  ;; TODO lisää oikeustarkastus! 
-  (oikeudet/ei-oikeustarkistusta!)
+(defn hae-tyomenetelmat [db kayttaja {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
   (q/hae-kaikki-tyomenetelmat db))
 
 
 (defn poista-reikapaikkaus
   "Yksittäisen reikäpaikkauksen poisto"
-  [db {:keys [id] :as kayttaja}
-   {:keys [kayttaja-id urakka-id ulkoinen-id] :as tiedot}]
-    ;; TODO lisää oikeustarkastus! 
-  (oikeudet/ei-oikeustarkistusta!)
+  [db kayttaja
+   {:keys [kayttaja-id urakka-id ulkoinen-id]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
   (q/poista-reikapaikkaustoteuma! db {:kayttaja-id kayttaja-id
                                       :ulkoinen-id ulkoinen-id
                                       :urakka-id urakka-id}))
@@ -58,11 +55,10 @@
 
 (defn tallenna-reikapaikkaus
   "Yksittäisen reikäpaikkauksen muokkauksen tallennus (käyttöliittymän kautta)"
-  [db {:keys [id] :as kayttaja}
+  [db kayttaja
    {:keys [luotu ulkoinen-id luoja-id urakka-id tie aosa aet
-           losa let menetelma paikkaus_maara yksikko kustannus alkuaika loppuaika] :as tiedot}]
-  ;; TODO lisää oikeustarkastus! 
-  (oikeudet/ei-oikeustarkistusta!)
+           losa let menetelma paikkaus_maara yksikko kustannus alkuaika loppuaika]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
   (q/luo-tai-paivita-reikapaikkaus! db {:luoja-id luoja-id
                                         :urakka-id urakka-id
                                         :ulkoinen-id ulkoinen-id
@@ -84,9 +80,7 @@
 
 (defn tallenna-reikapaikkaukset
   "Tallentaa kaikki Excelin reikäpaikkaukset valitulle urakalle (Excel-tuonti)"
-  [db {:keys [id] :as kayttaja} urakka-id reikapaikkaukset]
-  ;; TODO lisää oikeustarkastus! 
-  (oikeudet/ei-oikeustarkistusta!)
+  [db {:keys [id]} urakka-id reikapaikkaukset]
   (doseq [{:keys [tunniste tie aosa aet losa let pvm
                   menetelma maara yksikko kustannus]} reikapaikkaukset]
     (q/luo-tai-paivita-reikapaikkaus! db {:luoja-id id
@@ -132,15 +126,15 @@
 
 
 (defn vastaanota-excel [db pyynto]
-  ;; TODO lisää oikeustarkastus! 
-  (oikeudet/ei-oikeustarkistusta!)
   (let [urakka-id (Integer/parseInt (get (:params pyynto) "urakka-id"))
         kayttaja (:kayttaja pyynto)]
     ;; Tarkistetaan, että kutsussa on mukana urakka ja kayttaja
     (if (and
           (not (nil? urakka-id))
           (not (nil? kayttaja)))
-      (kasittele-excel db urakka-id kayttaja pyynto)
+      (do
+        (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
+        (kasittele-excel db urakka-id kayttaja pyynto))
       (throw+ {:type "Error" :virheet [{:koodi "ERROR" :viesti "Ladatussa tiedostossa virhe."}]}))))
 
 
@@ -158,7 +152,7 @@
       :poista-reikapaikkaus (fn [user tiedot] (poista-reikapaikkaus db user tiedot)))
     ;; Työmenetelmät
     (julkaise-palvelu http-palvelin
-      :hae-tyomenetelmat (fn [user _tiedot] (hae-tyomenetelmat db user)))
+      :hae-tyomenetelmat (fn [user tiedot] (hae-tyomenetelmat db user tiedot)))
     ;; Excel tuonti
     (julkaise-palvelu http-palvelin
       :lue-reikapaikkauskohteet-excelista (wrap-multipart-params
