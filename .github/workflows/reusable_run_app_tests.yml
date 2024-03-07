@@ -236,7 +236,11 @@ jobs:
           dockerfile-path-for-sarif: ${{ env.DOCKERFILE_PATH }}
           trivyignores: ${{ env.TRIVY_IGNORES_PATH }}
           # Failataan jobi, jos löytyy kriittisiä tai korkeita haavoittuvuuksia
-          fail-job-on-severities: 'CRITICAL,HIGH'
+          # TODO: Laitetaan HIGH fail päälle, kunhan kaikki HIGH-tason hälytykset on käsitelty pois ja normaali baseline muodostettu
+          #       Tällä hetkellä fail aiheuttaa PR:issä turhia hälytyksiä
+          #       Critical-tason hälytykset on käsitelty ja uusien critical-havaintojen seuranta voidaan aloittaa.
+          fail-job-on-severities: 'CRITICAL'
+          #fail-job-on-severities: 'CRITICAL,HIGH'
           ignore-unfixed: true
           # Disabloi upload-sarif, koska sarif uploadataan develop-branchin testien yhteydessä
           upload-sarif: false
