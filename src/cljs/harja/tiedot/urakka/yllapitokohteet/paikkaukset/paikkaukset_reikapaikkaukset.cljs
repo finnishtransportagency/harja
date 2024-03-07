@@ -30,11 +30,12 @@
 (def aikavali-atom (atom (pvm/kuukauden-aikavali (pvm/nyt))))
 
 ;; Kartta jutskat
-(defonce valittu-reikapaikkaus (atom nil)) ;; TODO en nyt tiedä miten tämän pitäisi toimia 
+(defonce valittu-reikapaikkaus (atom nil))
 (def karttataso-reikapaikkaukset (atom false))
 
 ;; Kartalle hakufunktio
 (defn hae-urakan-reikapaikkaukset [urakka-id]
+  (reset! paivita-kartta? false)
   (k/post! :hae-reikapaikkaukset {:urakka-id urakka-id}))
 
 ;; Tulokset reaction
@@ -49,13 +50,22 @@
 ;; Karttataso
 (defonce reikapaikkaukset-kartalla
   (reaction
-    (let [valittu-id 36] ;; TODO 
+    (let [valittu-id @valittu-reikapaikkaus]
       (when @karttataso-reikapaikkaukset
         (kartalla-esitettavaan-muotoon
           @haetut-reikapaikkaukset
+          ;; Korostaa pinni-ikonin (jos olemassa), ikonin määrittely: asia-kartalle :reikapaikkaus -> :img 
           #(= valittu-id (:id %))
+          ;; Piirretään nämä toteumat kartalle
+          ;; Jos valittuna yksittäinen paikkaus, näytetään pelkästään se
           (comp
-            (keep #(and (:sijainti %) %))
+            (keep #(do
+                     (when (and
+                             (:sijainti %)
+                             (or
+                               (= (:id %) @valittu-reikapaikkaus)
+                               (nil? @valittu-reikapaikkaus)))
+                       %)))
             (map #(assoc % :tyyppi-kartalla :reikapaikkaus))))))))
 
 ;; Tuck 
@@ -110,6 +120,15 @@
       paikkaus_maara-validi?)))
 
 
+(defn- valitse-reikapaikkaus-kartalle
+  "Piirtää kartalle valitun paikkauksen sijainnin kunhan sijainti on olemassa
+   Jos passataan nil, näytetän kaikki toteumat"
+  [id paivita?]
+  (reset! valittu-reikapaikkaus id)
+  (when paivita?
+    (reset! paivita-kartta? true)))
+
+
 (extend-protocol tuck/Event
   HaeTiedot
   (process-event [_ app]
@@ -120,7 +139,6 @@
   (process-event [{vastaus :vastaus} app]
     (let [kustannukset (reduce + (map :kustannus vastaus))
           rivi-maara (count vastaus)]
-      (reset! paivita-kartta? false)
       (assoc app
         :rivit vastaus
         :rivi-maara rivi-maara
@@ -129,7 +147,6 @@
 
   HaeTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (reset! paivita-kartta? false)
     (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
@@ -158,16 +175,18 @@
 
   AvaaMuokkausModal
   (process-event [{rivi :rivi} app]
+    (valitse-reikapaikkaus-kartalle (:id rivi) true)
     (-> app
       (assoc :muokataan true)
       (assoc :valittu-rivi rivi)))
-
+  
   MuokkaaRivia
   (process-event [{rivi :rivi} app]
     (update app :valittu-rivi merge rivi))
 
   SuljeMuokkaus
   (process-event [_ app]
+    (valitse-reikapaikkaus-kartalle nil false)
     (assoc app :muokataan false))
 
   PoistaReikapaikkaus
