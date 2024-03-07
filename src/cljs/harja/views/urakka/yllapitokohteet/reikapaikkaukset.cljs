@@ -26,7 +26,7 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
-(defn reikapaikkaus-listaus [e! {:keys [valinnat rivit 
+(defn reikapaikkaus-listaus [e! {:keys [rivit 
                                         muokataan nayta-virhe-modal 
                                         excel-virheet valittu-rivi 
                                         tyomenetelmat haku-kaynnissa? rivi-maara kustannukset] :as app}]
@@ -166,7 +166,7 @@
               {:otsikko "Määrä"
                :pakollinen? true
                :rivi-luokka "lomakeryhman-rivi-tausta"
-               :nimi :paikkaus_maara
+               :nimi :maara
                :tyyppi :numero
                :vayla-tyyli? true
                :validoi [[:ei-tyhja "Syötä määrä"]]
@@ -174,7 +174,7 @@
               {:otsikko "Yksikkö"
                :tyyppi :valinta
                :valinnat (vec tiedot/reikapaikkausten-yksikot)
-               :nimi :yksikko
+               :nimi :reikapaikkaus-yksikko
                :pakollinen? true
                :vayla-tyyli? true
                ::lomake/col-luokka "maara-valinnat"}
@@ -294,8 +294,8 @@
         {:otsikko "Määrä"
          :tasaa :oikea
          :tyyppi :komponentti
-         :komponentti (fn [{:keys [paikkaus_maara yksikko]} _arvo]
-                        (str paikkaus_maara " " yksikko))
+         :komponentti (fn [{:keys [maara reikapaikkaus-yksikko]} _arvo]
+                        (str maara " " reikapaikkaus-yksikko))
          :luokka "text-nowrap"
          :leveys 0.3}
 

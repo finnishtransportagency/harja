@@ -107,7 +107,7 @@
     [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
     [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
-    [harja.palvelin.palvelut.reikapaikkaukset :as reikapaikkaukset]
+    [harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
     [harja.palvelin.palvelut.tyomaapaivakirja :as tyomaapaivakirja]
     [harja.palvelin.palvelut.palauteluokitukset :as palauteluokitukset]
 

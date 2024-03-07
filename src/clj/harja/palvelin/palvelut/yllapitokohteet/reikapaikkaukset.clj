@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.reikapaikkaukset
+(ns harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset
   "Reikäpaikkausnäkymän palvelut"
   (:require [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
@@ -52,7 +52,7 @@
   "Yksittäisen reikäpaikkauksen muokkauksen tallennus (käyttöliittymän kautta)"
   [db kayttaja
    {:keys [luotu ulkoinen-id luoja-id urakka-id tie aosa aet
-           losa let menetelma paikkaus_maara yksikko kustannus alkuaika loppuaika]}]
+           losa let menetelma maara yksikko kustannus alkuaika loppuaika]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
   (q/luo-tai-paivita-reikapaikkaus! db {:luoja-id luoja-id
                                         :urakka-id urakka-id
@@ -68,7 +68,7 @@
                                         :let let
                                         :tyomenetelma-id menetelma
                                         :tyomenetelma nil
-                                        :paikkaus_maara paikkaus_maara
+                                        :maara maara
                                         :kustannus kustannus
                                         :yksikko yksikko}))
 
@@ -92,7 +92,7 @@
                                           :let let
                                           :tyomenetelma-id  nil
                                           :tyomenetelma menetelma
-                                          :paikkaus_maara maara
+                                          :maara maara
                                           :kustannus kustannus
                                           :yksikko yksikko})))
 

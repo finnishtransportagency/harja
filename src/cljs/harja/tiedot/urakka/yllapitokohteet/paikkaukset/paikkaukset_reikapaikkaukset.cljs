@@ -118,13 +118,13 @@
 
 (defn voi-tallentaa?
   "Validoi toteuman muokkauslomakkeen"
-  [{:keys [paikkaus_maara kustannus alkuaika tyomenetelma yksikko] :as valittu-reikapaikkaus}
+  [{:keys [maara kustannus alkuaika tyomenetelma reikapaikkaus-yksikko] :as valittu-reikapaikkaus}
    {:keys [tyomenetelmat]}]
-  (let [yksikko-validi (some? yksikko)
+  (let [yksikko-validi (some? reikapaikkaus-yksikko)
         pvm-validi? (pvm/pvm? alkuaika)
         ;; Sallitaan myös 0, muttei nil
         kustannus-validi? (some? kustannus)
-        paikkaus-maara-validi? (some? paikkaus_maara)
+        paikkaus-maara-validi? (some? maara)
         ;; Onko valittua työmenetelmä id:tä olemassa tietokannassa? (HaeTyomenetelmat)
         tyomenetelma-validi? (boolean (some #(= tyomenetelma (:id %)) tyomenetelmat))
         ;; Onko syötetty tr-osoite validi? 
@@ -248,11 +248,11 @@
           aet (:aet rivi)
           losa (:losa rivi)
           let (:let rivi)
-          yksikko (:yksikko rivi)
+          yksikko (:reikapaikkaus-yksikko rivi)
           menetelma (:tyomenetelma rivi)
           alkuaika (:alkuaika rivi)
           loppuaika (:loppuaika rivi) ;; Nämä on samoja, ei tietoa tarvitaanko loppuaikaa oikeasti reikäpaikkauksissa. Ks. AsetaToteumanPvm
-          maara (:paikkaus_maara rivi)
+          maara (:maara rivi)
           kustannus (:kustannus rivi)]
       ;; Yksikön muokkausta käyttöliittymästä ei ole näköjään speksattu, Excel-tuonti kuitenkin yliajaa ne 
       (tuck-apurit/post! app :tallenna-reikapaikkaus
@@ -269,7 +269,7 @@
          :let let
          :yksikko yksikko
          :menetelma menetelma
-         :paikkaus_maara maara
+         :maara maara
          :kustannus kustannus}
         {:onnistui ->TallennaReikapaikkausOnnistui
          :epaonnistui ->TallennaReikapaikkausEpaonnistui})

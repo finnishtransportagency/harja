@@ -11,12 +11,12 @@ SELECT    p.id,
           p.luotu,
           p."luoja-id",
           p."muokkaaja-id",
-          p.yksikko,
+          p."reikapaikkaus-yksikko",
           p.tyomenetelma, 
           p.massatyyppi,
           p.alkuaika,
           p.loppuaika,
-          p.paikkaus_maara, 
+          p.maara, 
           p.kustannus
 FROM      paikkaus p 
 WHERE     p."urakka-id" = :urakka-id 
@@ -28,7 +28,7 @@ AND       ((:let::TEXT IS NULL AND :losa::TEXT IS NULL) OR (:let::TEXT IS NULL O
 AND       (:alkuaika::DATE IS NULL OR (p.alkuaika >= :alkuaika::DATE))
 AND       (:loppuaika::DATE IS NULL OR (p.loppuaika <= :loppuaika::DATE))
 AND       p.poistettu = FALSE
-AND       p.tyyppi = 'reikapaikkaus'
+AND       p."paikkaus-tyyppi" = 'reikapaikkaus'
 ORDER BY  p.alkuaika DESC;
 
 
@@ -60,7 +60,7 @@ SELECT reikapaikkaus_upsert(
     NULL::TEXT,                                         -- kuulamylly
     :kustannus::NUMERIC,                                -- kustannus
     :yksikko::TEXT,                                     -- yksikkö
-    :paikkaus_maara::INT,                               -- paikkaus_maara
+    :maara::INT,                                        -- määrä
     (SELECT tierekisteriosoitteelle_viiva(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT)) -- last but not least, sijainti geometria
 );
 

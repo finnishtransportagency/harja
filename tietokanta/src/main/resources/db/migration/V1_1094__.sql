@@ -1,7 +1,7 @@
 -- Lisätään reikäpaikkaukset tietokantaan, reikäpaikkaukset tuodaan Excelistä ja nämä insertoidaan paikkaus tauluun
 CREATE TYPE paikkaustyyppi AS ENUM ('paikkaus', 'reikapaikkaus');
 -- Lisätään sarake paikkaustauluun, annetaan kaikille olemassaoleville tyypiksi 'paikkaus', koska tietokannassa ei ole vielä reikäpaikkauksia
-ALTER TABLE paikkaus ADD COLUMN tyyppi paikkaustyyppi DEFAULT 'paikkaus';
+ALTER TABLE paikkaus ADD COLUMN "paikkaus-tyyppi" paikkaustyyppi DEFAULT 'paikkaus';
 
 -- Sallitaan reikäpaikkauksille paikkauskohde NULL
 ALTER TABLE paikkaus ALTER COLUMN "paikkauskohde-id" DROP NOT NULL;
@@ -10,7 +10,7 @@ ALTER TABLE paikkaus ALTER COLUMN "paikkauskohde-id" DROP NOT NULL;
 -- Tehdään uusi constraint, jolla sallitaan NULL jos tyyppi on reikäpaikkaus mutta muuten heitetään virhe
 ALTER TABLE     paikkaus
 ADD CONSTRAINT  paikkauskohde_sallitaanko_null
-CHECK           (tyyppi = 'reikapaikkaus' OR paikkauskohde-id IS NOT NULL);
+CHECK           ("paikkaus-tyyppi" = 'reikapaikkaus' OR "paikkauskohde-id" IS NOT NULL);
 
 -- Lisätään kustannus sarake reikäpaikkauksille
 ALTER TABLE paikkaus ADD COLUMN kustannus NUMERIC;
@@ -18,23 +18,23 @@ ALTER TABLE paikkaus ADD COLUMN kustannus NUMERIC;
 -- Vaaditaan että kustannus on läsnä reikäpaikkauksille
 ALTER TABLE    paikkaus 
 ADD CONSTRAINT kustannus_sallitaanko_null 
-CHECK          (tyyppi = 'paikkaus' OR kustannus IS NOT NULL);
+CHECK          ("paikkaus-tyyppi" = 'paikkaus' OR kustannus IS NOT NULL);
 
 -- Lisätään paikkausmäärä sarake reikäpaikkauksille
-ALTER TABLE paikkaus ADD COLUMN paikkaus_maara INTEGER;
+ALTER TABLE paikkaus ADD COLUMN maara INTEGER;
 
 -- Vaaditaan että paikkausmäärä on läsnä reikäpaikkauksille
 ALTER TABLE    paikkaus 
 ADD CONSTRAINT paikkaus_maara_sallitaanko_null 
-CHECK          (tyyppi = 'paikkaus' OR paikkaus_maara IS NOT NULL);
+CHECK          ("paikkaus-tyyppi" = 'paikkaus' OR maara IS NOT NULL);
 
 -- Lisätään vielä yksikkö sarake reikäpaikkauksille
-ALTER TABLE paikkaus ADD COLUMN yksikko VARCHAR(20);
+ALTER TABLE paikkaus ADD COLUMN "reikapaikkaus-yksikko" VARCHAR(20);
 
 -- Vaaditaan että yksikkö on läsnä reikäpaikkauksille
 ALTER TABLE    paikkaus 
 ADD CONSTRAINT yksikko_sallitaanko_null 
-CHECK          (tyyppi = 'paikkaus' OR yksikko IS NOT NULL);
+CHECK          ("paikkaus-tyyppi" = 'paikkaus' OR "reikapaikkaus-yksikko" IS NOT NULL);
 
 -- Jos ulkoinen-id ei ole 0, sen pitää olla jokaisella urakalla uniikki
 -- Eli sallitaan esim arvo 123 urakalle 1 sekä 2, mutta urakalla 1 ei voi olla arvoa 123 kahdesti.
@@ -78,7 +78,7 @@ CREATE OR REPLACE FUNCTION reikapaikkaus_upsert(
 ) RETURNS VOID AS $$
 BEGIN
   UPDATE paikkaus SET
-    tyyppi = _tyyppi, 
+    "paikkaus-tyyppi" = _tyyppi, 
     "luoja-id" = _luojaid,
     luotu = _luotu, 
     "muokkaaja-id" = _muokkaajaid,
@@ -98,15 +98,15 @@ BEGIN
     raekoko = _raekoko,
     kuulamylly = _kuulamylly, 
     kustannus = _kustannus,
-    yksikko = _yksikko, 
-    paikkaus_maara = _paikkaus_maara,
+    "reikapaikkaus-yksikko" = _yksikko, 
+    maara = _paikkaus_maara,
     sijainti = _sijainti
   WHERE "urakka-id" = _urakkaid AND "ulkoinen-id" = _ulkoinenid;
   -- FOUND ilmeisesti jokin vakio postgres muuttuja, kertoo viime PERFORM, INSERT, UPDATE tilan
   IF NOT FOUND THEN
     -- Eli jos viime UPDATE ei palauttanut mitään, riviä ei ole kannassa -> insert 
     INSERT INTO paikkaus (
-      tyyppi, 
+      "paikkaus-tyyppi", 
       "luoja-id", 
       luotu, 
       "muokkaaja-id", 
@@ -128,8 +128,8 @@ BEGIN
       raekoko, 
       kuulamylly, 
       kustannus,
-      yksikko,
-      paikkaus_maara,
+      "reikapaikkaus-yksikko",
+      maara,
       sijainti 
     )
     VALUES (
