@@ -1,10 +1,9 @@
 (ns harja.views.urakka.yllapitokohteet.reikapaikkaukset
   "Reikäpaikkaukset päänäkymä"
-  ;; TODO.. lisätty valmiiksi requireja, poista myöhemmin turhat 
   (:require [tuck.core :refer [tuck]]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-reikapaikkaukset :as tiedot]
-            [harja.ui.debug :refer [debug]]
-            [reagent.core :refer [atom] :as r]
+            [reagent.core :as r]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.lomake :as lomake]
             [harja.ui.liitteet :as liitteet]
@@ -20,7 +19,6 @@
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.napit :as napit]
             [harja.pvm :as pvm]
-            [clojure.string :as str]
             [harja.views.kartta :as kartta]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.tierekisteri :as tr-domain]
@@ -35,12 +33,10 @@
   (let [alkuaika (:alkuaika valittu-rivi)
         alasveto-valinnat (mapv :id tyomenetelmat)
         alasveto-kuvaukset (into {} (map (fn [{:keys [id nimi]}] [id nimi]) tyomenetelmat))
-        ;; oikeus? (oikeudet/voi-kirjoittaa? oikeudet/ (get-in valinnat [:urakka :id])) ;; TODO 
+        voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet (-> @tila/tila :yleiset :urakka :id) @istunto/kayttaja)
         voi-tallentaa? (and
-                         ;; (not oikeus?) ;; TODO 
-                         (tiedot/voi-tallentaa? valittu-rivi app))
-        ;; TODO, tarkista oikeus
-        voi-poistaa? true]
+                         voi-kirjoittaa?
+                         (tiedot/voi-tallentaa? valittu-rivi app))]
 
     ;; Tr- osoite
     (add-watch tiedot/tr-atom :tierekisteri-haku
@@ -58,6 +54,7 @@
 
     ;; Wrappaa reikapaikkausluokkaan niin ei yliajeta mitään 
     [:div.reikapaikkaukset
+
      ;; Muokkauspaneeli
      (when muokataan
        [:div.overlay-oikealla
@@ -80,7 +77,7 @@
                     [napit/yleinen-toissijainen "Poista" #(e! (tiedot/->PoistaReikapaikkaus valittu-rivi)) {:ikoni (ikonit/livicon-trash)
                                                                                                             :paksu? true
                                                                                                             :luokka "lomake-poista"
-                                                                                                            :disabled (not voi-poistaa?)}]
+                                                                                                            :disabled (not voi-kirjoittaa?)}]
                     ;; Sulje 
                     [napit/yleinen-toissijainen "Sulje" #(e! (tiedot/->SuljeMuokkaus))]]]}
 

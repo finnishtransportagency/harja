@@ -224,6 +224,7 @@
   PoistaReikapaikkausOnnistui
   (process-event [_ app]
     (viesti/nayta-toast! "Toteuma poistettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
+    (valitse-reikapaikkaus-kartalle nil false)
     (paivita-lista-ja-kartta app)
     (assoc app
       :valittu-rivi nil

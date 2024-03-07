@@ -1,14 +1,9 @@
 (ns harja.palvelin.palvelut.reikapaikkaukset
   "Reikäpaikkausnäkymän palvelut"
-  ;; TODO.. lisätty valmiiksi requireja, poista myöhemmin turhat 
   (:require [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
-            [taoensso.timbre :as log]
-            [clj-time.coerce :as c]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [harja.pvm :as pvm]
-            [harja.kyselyt.urakat :as urakka-kyselyt]
-            [harja.domain.roolit :as roolit]
             [slingshot.slingshot :refer [throw+]]
             [dk.ative.docjure.spreadsheet :as xls]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
