@@ -123,7 +123,7 @@
    [{:otsikko "Nimi" :leveys 7 :nimi :nimi :tyyppi :string :pituus-max 128
      :muokattava? (constantly false)}
     {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
-     :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
+     :tyyppi :positiivinen-numero :kokonaisluku? true :leveys 3 :tasaa :oikea
      :muokattava? (constantly false)}
     {:otsikko "Ajo\u00ADrata"
      :nimi :tr-ajorata
@@ -140,19 +140,19 @@
      :fmt #(pot/arvo-koodilla pot/+kaistat+ %)
      :leveys 3}
     {:otsikko "Aosa" :nimi :tr-alkuosa :leveys 3
-     :tyyppi :positiivinen-numero
+     :tyyppi :positiivinen-numero :kokonaisluku? true
      :tasaa :oikea
      :muokattava? (constantly false)}
     {:otsikko "Aet" :nimi :tr-alkuetaisyys :leveys 3
-     :tyyppi :positiivinen-numero
+     :tyyppi :positiivinen-numero :kokonaisluku? true
      :tasaa :oikea
      :muokattava? (constantly false)}
     {:otsikko "Losa" :nimi :tr-loppuosa :leveys 3
-     :tyyppi :positiivinen-numero
+     :tyyppi :positiivinen-numero :kokonaisluku? true
      :tasaa :oikea
      :muokattava? (constantly false)}
     {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 3
-     :tyyppi :positiivinen-numero
+     :tyyppi :positiivinen-numero :kokonaisluku? true
      :tasaa :oikea
      :muokattava? (constantly false)}]
    (yllapitokohde-domain/jarjesta-yllapitokohteet kohdeosat)])
@@ -183,7 +183,7 @@
            {:otsikko "Koh\u00ADteen nimi" :leveys 7 :nimi :nimi :tyyppi :string :pituus-max 128
             :muokattava? (constantly false)}
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
-            :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
+            :tyyppi :positiivinen-numero :kokonaisluku? true :leveys 3 :tasaa :oikea
             :muokattava? (constantly false)}
            {:otsikko "Ajo\u00ADrata"
             :nimi :tr-ajorata
@@ -200,23 +200,23 @@
             :fmt #(pot/arvo-koodilla pot/+kaistat+ %)
             :leveys 3}
            {:otsikko "Aosa" :nimi :tr-alkuosa :leveys 3
-            :tyyppi :positiivinen-numero
+            :tyyppi :positiivinen-numero :kokonaisluku? true
             :tasaa :oikea
             :muokattava? (constantly false)}
            {:otsikko "Aet" :nimi :tr-alkuetaisyys :leveys 3
-            :tyyppi :positiivinen-numero
+            :tyyppi :positiivinen-numero :kokonaisluku? true
             :tasaa :oikea
             :muokattava? (constantly false)}
            {:otsikko "Losa" :nimi :tr-loppuosa :leveys 3
-            :tyyppi :positiivinen-numero
+            :tyyppi :positiivinen-numero :kokonaisluku? true
             :tasaa :oikea
             :muokattava? (constantly false)}
            {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 3
-            :tyyppi :positiivinen-numero
+            :tyyppi :positiivinen-numero :kokonaisluku? true
             :tasaa :oikea
             :muokattava? (constantly false)}
            {:otsikko "Pit. (m)" :nimi :pituus :leveys 3
-            :tyyppi :positiivinen-numero
+            :tyyppi :positiivinen-numero :kokonaisluku? true
             :tasaa :oikea
             :muokattava? (constantly false)}
            {:otsikko "YP-lk"

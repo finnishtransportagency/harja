@@ -1,11 +1,28 @@
 ;; Profiilit mergetään https://github.com/technomancy/leiningen/blob/master/doc/PROFILES.md
 ;; ellei erikseen käytetä with-profile
-{:dev {:dependencies [[prismatic/dommy "1.1.0"]
+;; Tarkemmat ohjeet: https://leiningen.org/profiles.html
+{:dev {:dependencies [
+                      ;; Tarvitaan CLJS käännöksessä (dev, prod)
+                      [com.bhauman/figwheel-main "0.2.18"]
+                      [prismatic/dommy "1.1.0"]
                       [org.clojure/test.check "0.9.0"]
                       [org.apache.pdfbox/pdfbox "2.0.30"]
                       [data-frisk-reagent "0.4.5"]
                       [cider/piggieback "0.5.2"]
-                      [com.bhauman/rebel-readline-cljs "0.1.4"]]
+                      [com.bhauman/rebel-readline-cljs "0.1.4"]
+
+                      ;; -- Testien ajamista varten (replillä ja ilman) --
+                      ;; Fake-HTTP testaukseen
+                      [http-kit.fake "0.2.2"]
+
+                      ;; JMS API (esim. tieliikenneilmoitukset) JMS-jonojen testausta varten
+                      [javax.jms/javax.jms-api "2.0.1"]
+
+                      ;; Gatlingin logback versio ei ole vielä ehtinyt päivittyä, niin haetaan se erikseen
+                      [ch.qos.logback/logback-classic "1.4.14" :exclusions [org.slf4j/slf4j-api]]
+                      [clj-gatling "0.18.0" :exclusions [clj-time org.slf4j/slf4j-api org.clojure/core.memoize
+                                                         org.clojure/tools.analyzer org.clojure/data.priority-map io.pebbletemplates/pebble]]
+                      ]
        :source-paths ["src/clj-dev" "src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
        :resource-paths ["dev-resources/js" "dev-resources/tmp" "resources/public/css" "resources"]
        :plugins [[test2junit "1.4.4"]
@@ -48,6 +65,7 @@
                        :port 4005
                        :timeout 120000
                        :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}}
+ ;; Loput test-dependencyt, joita ei haluta ottaa mukaan dev-profiiliin
  :test {:dependencies [[clj-webdriver "0.7.2"]
                        [org.seleniumhq.selenium/selenium-java "3.8.1"]
                        [org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]
@@ -62,8 +80,16 @@
         :source-paths ["test/cljs" "test/doo" "test/shared-cljs"]}
  :prod-cljs {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]}
 
- :laadunseuranta-dev {:source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]}
- :laadunseuranta-test {:source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"
-                                      "laadunseuranta/test-src/cljs" "test/shared-cljs"]}
- :laadunseuranta-prod {:source-paths ^:replace ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"
-                                                "src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]}}
+ ;; -- Laadunseuranta --
+ ;; Ainoastaan laadunseurantaan liittyvät riippuvuudet
+ :laadunseuranta-common {:dependencies [[devcards "0.2.4" :exclusions [cljsjs/react]]]}
+ :laadunseuranta-dev-paths {:source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]}
+ :laadunseuranta-test-paths {:source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"
+                                            "laadunseuranta/test-src/cljs" "test/shared-cljs"]}
+ :laadunseuranta-prod-paths {:source-paths ^:replace ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"
+                                                      "src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]}
+
+ ;; Laadunseurantaan liittyvät profiilit (komposiittiprofiilit)
+ :laadunseuranta-dev [:laadunseuranta-common :laadunseuranta-dev-paths]
+ :laadunseuranta-test [:laadunseuranta-common :laadunseuranta-test-paths]
+ :laadunseuranta-prod [:laadunseuranta-common :laadunseuranta-prod-paths]}

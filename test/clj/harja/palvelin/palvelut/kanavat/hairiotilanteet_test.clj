@@ -49,7 +49,6 @@
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
-
 (deftest hairiotilanteiden-haku
   (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
         lisasopimus-id (hae-saimaan-kanavaurakan-lisasopimuksen-id)
@@ -105,7 +104,7 @@
                                   :hae-hairiotilanteet
                                   +kayttaja-jvh+
                                   {::hairiotilanne/urakka-id urakka-id
-                                   :haku-odotusaika-h [60 60]}))
+                                   :haku-vesiodotusaika-h [60 60]}))
            saimaan-kaikki-hairiot))
 
     (is (< (count (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -162,7 +161,7 @@
                                       ::hairiotilanne/huviliikenne-lkm 1
                                       ::hairiotilanne/korjausaika-h 1
                                       ::hairiotilanne/syy syy
-                                      ::hairiotilanne/odotusaika-h 4
+                                      ::hairiotilanne/vesiodotusaika-h 4
                                       ::hairiotilanne/ammattiliikenne-lkm 2})
      ::vv-materiaali/materiaalikirjaukset [{::vv-materiaali/maara naulan-kulutus
                                             ::vv-materiaali/nimi "Naulat"
@@ -198,7 +197,7 @@
                                         ::hairiotilanne/huviliikenne-lkm 1
                                         ::hairiotilanne/korjausaika-h 1
                                         ::hairiotilanne/syy "hairiotilanteen-tallennus-testi"
-                                        ::hairiotilanne/odotusaika-h 4
+                                        ::hairiotilanne/vesiodotusaika-h 4
                                         ::hairiotilanne/ammattiliikenne-lkm 2}
          ::hairiotilanne/hae-hairiotilanteet-kysely {::hairiotilanne/urakka-id urakka-id}
          ::vv-materiaali/materiaalikirjaukset [{::vv-materiaali/maara naulan-kulutus

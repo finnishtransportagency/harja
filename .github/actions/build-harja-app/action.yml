@@ -43,16 +43,16 @@ runs:
         npx lessc dev-resources/less/laadunseuranta/application/laadunseuranta.less resources/public/css/laadunseuranta.css
         echo "Done."
         
-        echo "Building cljs..."
-        lein with-profile prod-cljs compile-prod
+        echo "Building cljs (with lein default profiles + prod-cljs)..."
+        lein with-profile +prod-cljs compile-prod
         echo "Done."
       shell: bash
 
     - name: Build laadunseuranta
       if: ${{ inputs.build-laadunseuranta == 'true' }}
       run: |
-        echo "Building laadunseuranta"
-        lein do with-profile laadunseuranta-prod compile-laadunseuranta-prod
+        echo "Building laadunseuranta (with lein default profiles + laadunseuranta-prod)"
+        lein do with-profile +laadunseuranta-prod compile-laadunseuranta-prod
       shell: bash
 
     - name: Build uberjar

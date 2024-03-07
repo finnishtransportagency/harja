@@ -44,6 +44,3 @@
                  :ei-paivitystarvetta))
                ;; Jos GEOMETRIAPAIVITYS.kaytossa = false, päivitystä ei ajeta.
                :ei-kaytossa)))
-
-(defn harjan-verkon-pvm [db]
-  (or (hae-karttapvm db) (pvm/nyt)))
