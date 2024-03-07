@@ -14,6 +14,8 @@
                    [reagent.ratom :refer [reaction]]))
 
 (defonce tila (atom {:rivit nil
+                     :rivi-maara nil
+                     :kustannukset nil
                      :valittu-rivi nil
                      :muokataan false
                      :haku-kaynnissa? false
@@ -116,10 +118,14 @@
 
   HaeTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (reset! paivita-kartta? false)
-    (assoc app
-      :rivit vastaus
-      :haku-kaynnissa? false))
+    (let [kustannukset (reduce + (map :kustannus vastaus))
+          rivi-maara (count vastaus)]
+      (reset! paivita-kartta? false)
+      (assoc app
+        :rivit vastaus
+        :rivi-maara rivi-maara
+        :kustannukset kustannukset
+        :haku-kaynnissa? false)))
 
   HaeTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]

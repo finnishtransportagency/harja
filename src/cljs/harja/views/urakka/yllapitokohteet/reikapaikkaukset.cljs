@@ -8,6 +8,7 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.lomake :as lomake]
             [harja.ui.liitteet :as liitteet]
+            [harja.fmt :as fmt]
             [harja.ui.modal :as modal]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.valinnat :as valinnat]
@@ -30,7 +31,7 @@
 (defn reikapaikkaus-listaus [e! {:keys [valinnat rivit 
                                         muokataan nayta-virhe-modal 
                                         excel-virheet valittu-rivi 
-                                        tyomenetelmat haku-kaynnissa?] :as app}]
+                                        tyomenetelmat haku-kaynnissa? rivi-maara kustannukset] :as app}]
   (let [alkuaika (:alkuaika valittu-rivi)
         tr-atomi (atom (:tr valinnat))
         yksikko (:yksikko valittu-rivi)
@@ -196,8 +197,7 @@
        ;; Haku
        ;; Mallia voi ottaa: tr-atom (atom (:tr valinnat))
        [:div.haku-nappi
-        [napit/yleinen-ensisijainen "Hae" #(println "Hae painettu") {:luokka "nappi-korkeus-36"
-                                                                     :data-attributes {:data-cy "hae-reikapaikkauskohteita"}}]]]
+        [napit/yleinen-ensisijainen "Hae" #(println "Hae painettu") {:data-attributes {:data-cy "hae-reikapaikkauskohteita"}}]]]
 
       [:div.reikapaikkaukset-kartta [kartta/kartan-paikka]]
 
@@ -225,7 +225,10 @@
 
       ;; Taulukon ylhäällä olevat tekstit
       [:div.taulukko-header.header-yhteiset
-       [:h3 "1 800 riviä, 1000.0 EUR"]
+       ;; Formatoi rivimäärä välilyönnillä, esim 1000 = 1 000, fmt/desimaaliluku tekee tämän, eurot myös
+       [:h3 (str (fmt/desimaaliluku (or rivi-maara 0) 0 true)
+              (if (> rivi-maara 1) " riviä, " " rivi, ")
+              (fmt/euro false (or kustannukset 0)) " EUR")]
 
        ;; Oikealla puolella olevat lataus / tuontinapit
        [:div.flex-oikealla
