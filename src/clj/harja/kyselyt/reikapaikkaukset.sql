@@ -19,6 +19,13 @@ SELECT    p.id,
           p.kustannus
 FROM      paikkaus p 
 WHERE     p."urakka-id" = :urakka-id 
+AND       (:tie::TEXT IS NULL OR (p.tierekisteriosoite).tie = :tie)
+AND       (:aosa::TEXT IS NULL OR (p.tierekisteriosoite).aosa >= :aosa)
+AND       ((:aet::TEXT IS NULL AND :aosa::TEXT IS NULL) OR (:aet::TEXT IS NULL OR (p.tierekisteriosoite).aet >= :aet))
+AND       (:losa::TEXT IS NULL OR (p.tierekisteriosoite).losa <= :losa)
+AND       ((:let::TEXT IS NULL AND :losa::TEXT IS NULL) OR (:let::TEXT IS NULL OR  (p.tierekisteriosoite).let <= :let))
+AND       (:alkuaika::DATE IS NULL OR (p.alkuaika >= :alkuaika::DATE))
+AND       (:loppuaika::DATE IS NULL OR (p.loppuaika <= :loppuaika::DATE))
 AND       p.poistettu = FALSE
 AND       p.tyyppi = 'reikapaikkaus'
 ORDER BY  p.alkuaika DESC;

@@ -17,30 +17,32 @@
                      :rivi-maara nil
                      :kustannukset nil
                      :valittu-rivi nil
+                     :tyomenetelmat nil
+                     :excel-virheet nil
                      :muokataan false
                      :haku-kaynnissa? false
                      :nayta-virhe-modal false
-                     :tyomenetelmat nil
-                     :excel-virheet nil
-                     :valinnat {:aikavali (pvm/kuukauden-aikavali (pvm/nyt))
-                                :tr-osoite nil}}))
+                     :valinnat {:tr nil
+                                :aikavali (pvm/kuukauden-aikavali (pvm/nyt))}}))
 
 (def nakymassa? (atom false))
 (def paivita-kartta? (atom false))
+(def tr-atom (atom nil))
 (def aikavali-atom (atom (pvm/kuukauden-aikavali (pvm/nyt))))
-;; Tekohetkellä samat kun paikkauskohteiden-yksikot, mutta käytetään reikäpaikkauksille omaa muuttujaa, käytetään mm Excel-validoinnissa
+;; Tekohetkellä samat kun paikkauskohteiden-yksikot, mutta käytetään reikäpaikkauksille omaa muuttujaa
 (def reikapaikkausten-yksikot #{"m2" "t" "kpl" "jm"}) 
 
 ;; Kartta jutskat
 (defonce valittu-reikapaikkaus (atom nil))
 (def karttataso-reikapaikkaukset (atom false))
 
-;; Kartalle hakufunktio
-(defn hae-urakan-reikapaikkaukset-kartalle 
+(defn hae-urakan-reikapaikkaukset-kartalle
   "Kartalle piirron hakufunktio"
   [urakka-id]
   (reset! paivita-kartta? false)
-  (k/post! :hae-reikapaikkaukset {:urakka-id urakka-id}))
+  (k/post! :hae-reikapaikkaukset {:tr @tr-atom
+                                  :aikavali @aikavali-atom
+                                  :urakka-id urakka-id}))
 
 ;; Tulokset reaction
 (defonce haetut-reikapaikkaukset
@@ -73,8 +75,8 @@
             (map #(assoc % :tyyppi-kartalla :reikapaikkaus))))))))
 
 ;; Tuck 
-(defrecord PaivitaAikavali [uudet])
-(defrecord HaeTiedot [])
+(defrecord PaivitaValinnat [uudet])
+(defrecord HaeTiedot [paivita-kartalle?])
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
 (defrecord HaeTyomenetelmat [])
@@ -93,12 +95,14 @@
 (defrecord PoistaReikapaikkausOnnistui [vastaus])
 (defrecord PoistaReikapaikkausEpaonnistui [vastaus])
 
-;; Funktiot
+
 (defn hae-reikapaikkaukset 
   "Hakee reikäpaikkaukset näkymään"
-  [app]
+  [{:keys [valinnat] :as app}]
   (tuck-apurit/post! app :hae-reikapaikkaukset
-    {:urakka-id (:id @nav/valittu-urakka)}
+    {:tr (:tr valinnat)
+     :aikavali (:aikavali valinnat)
+     :urakka-id (:id @nav/valittu-urakka)}
     {:onnistui ->HaeTiedotOnnistui
      :epaonnistui ->HaeTiedotEpaonnistui}))
 
@@ -106,10 +110,10 @@
 (defn- paivita-lista-ja-kartta
   "Hakee päivitetyt tulokset näkymään ja päivittää kartan toteumien piirrokset"
   [app]
-  ;; Päivitä uudet reitit kartalle 
-  (reset! paivita-kartta? true)
   ;; Hae päivtetty lista näkymään
-  (hae-reikapaikkaukset app))
+  (hae-reikapaikkaukset app)
+  ;; Päivitä uudet reitit kartalle 
+  (reset! paivita-kartta? true))
 
 
 (defn voi-tallentaa?
@@ -145,8 +149,10 @@
 
 (extend-protocol tuck/Event
   HaeTiedot
-  (process-event [_ app]
-    (hae-reikapaikkaukset app)
+  (process-event [{paivita-kartalle? :paivita-kartalle?} app]
+    (if paivita-kartalle?
+      (paivita-lista-ja-kartta app)
+      (hae-reikapaikkaukset app))
     (assoc app :haku-kaynnissa? true))
 
   HaeTiedotOnnistui
@@ -312,7 +318,7 @@
             (assoc :haku-kaynnissa? true)
             (assoc :nayta-virhe-modal false))))))
 
-  PaivitaAikavali
+  PaivitaValinnat
   (process-event [{uudet :uudet} app]
     (let [uudet-valinnat (merge (:valinnat app) uudet)]
       (assoc app :valinnat uudet-valinnat))))

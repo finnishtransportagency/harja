@@ -33,8 +33,6 @@
                                         excel-virheet valittu-rivi 
                                         tyomenetelmat haku-kaynnissa? rivi-maara kustannukset] :as app}]
   (let [alkuaika (:alkuaika valittu-rivi)
-        tr-atomi (atom (:tr valinnat))
-        yksikko (:yksikko valittu-rivi)
         alasveto-valinnat (mapv :id tyomenetelmat)
         alasveto-kuvaukset (into {} (map (fn [{:keys [id nimi]}] [id nimi]) tyomenetelmat))
         ;; oikeus? (oikeudet/voi-kirjoittaa? oikeudet/ (get-in valinnat [:urakka :id])) ;; TODO 
@@ -43,6 +41,20 @@
                          (tiedot/voi-tallentaa? valittu-rivi app))
         ;; TODO, tarkista oikeus
         voi-poistaa? true]
+
+    ;; Tr- osoite
+    (add-watch tiedot/tr-atom :tierekisteri-haku
+      (fn [_ _ _ uusi]
+        (e! (tiedot/->PaivitaValinnat {:tr uusi}))))
+
+    ;; Aikaväli tarkkailu
+    (add-watch tiedot/aikavali-atom :aikavali-haku
+      (fn [_ _ vanha uusi]
+        (when-not
+          (and
+            (pvm/sama-pvm? (first vanha) (first uusi))
+            (pvm/sama-pvm? (second vanha) (second uusi)))
+          (e! (tiedot/->PaivitaValinnat {:aikavali uusi})))))
 
     ;; Wrappaa reikapaikkausluokkaan niin ei yliajeta mitään 
     [:div.reikapaikkaukset
@@ -188,7 +200,7 @@
         [:div.alasvedon-otsikko-vayla "Tieosoite"]
         [kentat/tee-kentta {:tyyppi :tierekisteriosoite
                             :alaotsikot? true
-                            :vayla-tyyli? true} tr-atomi]]
+                            :vayla-tyyli? true} tiedot/tr-atom]]
        ;; Pvm valinta
        [:div
         [valinnat/aikavali
@@ -201,9 +213,8 @@
           :aikavalin-rajoitus [6 :kuukausi]}]]
 
        ;; Haku
-       ;; Mallia voi ottaa: tr-atom (atom (:tr valinnat))
        [:div.haku-nappi
-        [napit/yleinen-ensisijainen "Hae" #(println "Hae painettu") {:data-attributes {:data-cy "hae-reikapaikkauskohteita"}}]]]
+        [napit/yleinen-ensisijainen "Hae" #(e! (tiedot/->HaeTiedot true)) {:data-attributes {:data-cy "hae-reikapaikkauskohteita"}}]]]
 
       [:div.reikapaikkaukset-kartta [kartta/kartan-paikka]]
 
@@ -301,30 +312,19 @@
 (defn reikapaikkaukset* [e! _app]
   (komp/luo
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-reikapaikkaukset)
-    (komp/sisaan-ulos 
+    (komp/sisaan-ulos
       ;; Sisään
       #(do
-         ;; Aikaväli tarkkailu
-         (add-watch tiedot/aikavali-atom :aikavali-haku
-           (fn [_ _ vanha uusi]
-             (when-not
-               (and
-                 (pvm/sama-pvm? (first vanha) (first uusi))
-                 (pvm/sama-pvm? (second vanha) (second uusi)))
-               (e! (tiedot/->PaivitaAikavali {:aikavali uusi})))))
          ;; Kartta
          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
          (nav/vaihda-kartan-koko! :M)
-         ;; Hae tiedot 
+         ;; Tiedot
          (e! (tiedot/->HaeTyomenetelmat))
-         (e! (tiedot/->HaeTiedot))
-         
-         )
+         (e! (tiedot/->HaeTiedot false)))
       ;; Ulos
       #(do
-         ;; do stuff 
-         ;; (remove-watch tiedot/aikavali-atom :aikavali-haku)
-         ))
+         (remove-watch tiedot/tr-atom :tierekisteri-haku)
+         (remove-watch tiedot/aikavali-atom :aikavali-haku)))
 
     ;; Näytä listaus
     (fn [e! app]

@@ -18,10 +18,25 @@
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]))
 
 
-(defn hae-reikapaikkaukset [db _user tiedot]
+(defn hae-reikapaikkaukset [db _user {:keys [urakka-id tr aikavali]}]
   ;; TODO lisää oikeustarkastus! 
   (oikeudet/ei-oikeustarkistusta!)
-  (q/hae-reikapaikkaukset db {:urakka-id (:urakka-id tiedot)}))
+  (q/hae-reikapaikkaukset db {:tie (:numero tr)
+                              :aosa (:alkuosa tr)
+                              :aet (:alkuetaisyys tr)
+                              :losa (:loppuosa tr)
+                              :let (:loppuetaisyys tr)
+                              :alkuaika (when
+                                          (and
+                                            (some? aikavali)
+                                            (first aikavali))
+                                          (konversio/sql-date (first aikavali)))
+                              :loppuaika (when
+                                           (and
+                                             (some? aikavali)
+                                             (second aikavali))
+                                           (konversio/sql-date (second aikavali)))
+                              :urakka-id urakka-id}))
 
 
 (defn hae-tyomenetelmat [db _user]
