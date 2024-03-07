@@ -104,19 +104,32 @@ ORDER BY s.perintapvm DESC;
 -- name: pkluokkien-kustannukset-hallintayksikoittain
 -- Päätellään päällystyskohteen pk-luokka laskemalla alikohteiden (yllapitokohdeosa) pituudet ja ottamalla se
 -- pk-luokka, jonka pituus on suurin
-SELECT DISTINCT ON (u.id) u.nimi                             AS nimi,
-                          o.id                               AS "hallintayksikko_id",
-                          o.nimi                             AS "hallintayksikko_nimi",
-                          ypk.pkluokka,
-                          SUM(ypkk.sopimuksen_mukaiset_tyot) AS "sopimuksen-mukaiset-tyot",
-                          SUM(ypkk.maaramuutokset)           AS "maaramuutokset",
-                          SUM(ypkk.arvonvahennykset)         AS "arvonvahennykset",
-                          SUM(ypkk.toteutunut_hinta)         AS "toteutunut-hinta",
-                          SUM(ypkk.bitumi_indeksi)           AS "bitumi-indeksi",
-                          SUM(ypkk.kaasuindeksi)             AS "kaasuindeksi",
-                          SUM(ypkk.maku_paallysteet)         AS "maku-paallysteet"
+  WITH sakot AS (SELECT SUM(-(s.maara)) AS sakot,
+                        ypk.id          AS yllapitokohdeid
+                   FROM yllapitokohde ypk
+                            JOIN urakka u ON ypk.urakka = u.id
+                            JOIN organisaatio o ON u.hallintayksikko = o.id
+                            LEFT JOIN laatupoikkeama lp ON lp.yllapitokohde = ypk.id AND lp.poistettu IS NOT TRUE
+                            LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
+                  WHERE :vuosi = ANY (ypk.vuodet)
+                    AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
+                  GROUP BY ypk.id)
+SELECT u.nimi                                     AS nimi,
+       o.id                                       AS "hallintayksikko_id",
+       LPAD(CAST(o.elynumero AS VARCHAR), 2, '0') AS elynumero,
+       o.nimi                                     AS "hallintayksikko_nimi",
+       ypk.pkluokka,
+       SUM(ypkk.sopimuksen_mukaiset_tyot)         AS "sopimuksen-mukaiset-tyot",
+       SUM(ypkk.maaramuutokset)                   AS "maaramuutokset",
+       SUM(ypkk.arvonvahennykset)                 AS "arvonvahennykset",
+       SUM(ypkk.toteutunut_hinta)                 AS "toteutunut-hinta",
+       SUM(ypkk.bitumi_indeksi)                   AS "bitumi-indeksi",
+       SUM(ypkk.kaasuindeksi)                     AS "kaasuindeksi",
+       SUM(ypkk.maku_paallysteet)                 AS "maku-paallysteet",
+       SUM(s.sakot)                               AS "sakot-ja-bonukset"
   FROM yllapitokohde ypk
            LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypk.id = ypkk.yllapitokohde
+           LEFT JOIN sakot s ON s.yllapitokohdeid = ypk.id
            JOIN urakka u ON ypk.urakka = u.id
            JOIN organisaatio o ON u.hallintayksikko = o.id
  WHERE :vuosi = ANY (ypk.vuodet)
