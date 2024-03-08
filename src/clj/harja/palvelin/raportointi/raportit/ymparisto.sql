@@ -91,6 +91,7 @@ WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
                        u.tyyppi = :urakkatyyppi::urakkatyyppi
                END)
       AND mk.materiaalityyppi != 'erityisalue'
+      AND u.urakkanro IS NOT NULL
 GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, date_trunc('month', umkh.pvm), talvitieluokka, soratieluokka
 
 
