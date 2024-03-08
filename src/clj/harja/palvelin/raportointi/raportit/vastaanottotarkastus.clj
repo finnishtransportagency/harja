@@ -205,11 +205,12 @@
          [[:arvo {:arvo (:nimi rivi) :korosta-hennosti? korosta?}]]
          [(formatoi-arvo (or (:pk1 rivi) (when (= "PK1" (:pkluokka rivi)) (:kokonaishinta rivi))))]
          [(formatoi-arvo (or (:pk2 rivi) (when (= "PK2" (:pkluokka rivi)) (:kokonaishinta rivi))))]
-         [(formatoi-arvo (or (:pk1 rivi) (or (:pk3 rivi) (when (= "PK3" (:pkluokka rivi)) (:kokonaishinta rivi)))))]
+         [(formatoi-arvo (or (:pk3 rivi) (when (= "PK3" (:pkluokka rivi)) (:kokonaishinta rivi))))]
          [(formatoi-arvo (or (:eitiedossa rivi) (when (or (= "" (:pkluokka rivi))
                                                         (nil? (:pkluokka rivi))
                                                         (= "Ei tiedossa" (:pkluokka rivi)))
-                                                  (:kokonaishinta rivi))))]))}))
+                                                  (:kokonaishinta rivi))))]
+         [(formatoi-arvo (:muut-kustannukset rivi))]))}))
 
 (defn pkluokka-yotyo-rivi [rivi korosta? lihavoi?]
   (let [_ (println "pkluokka-yotyo-rivi :: rivi: " (pr-str rivi))
@@ -510,7 +511,7 @@
         ;; Yhteenvetoraportilla on lisäksi Eurot / PK-luokka osio
         pkluokkien-kustannukset (when-not urakka-id
                                   (sort-by
-                                    :hallintayksikko_id
+                                    :elynumero
                                     (pkluokkien-kustannukset-hallintayksikoittain db {:vuosi vuosi
                                                                                              :hallintayksikko hallintayksikko-id})))
         _ (println "pkluokkien-kustannukset: " (pr-str pkluokkien-kustannukset))
@@ -530,8 +531,10 @@
                                                 hallintayksikon-korjausluokkasummat))
 
         pkluokkien-yotyot (when-not urakka-id
-                            (pkluokkien-yotyot-hallintayksikoittain db {:vuosi vuosi
-                                                                      :hallintayksikko hallintayksikko-id}))
+                            (sort-by
+                              :elynumero
+                              (pkluokkien-yotyot-hallintayksikoittain db {:vuosi vuosi
+                                                                          :hallintayksikko hallintayksikko-id})))
         ]
 
     [:raportti {:orientaatio :landscape

@@ -138,12 +138,12 @@ SELECT u.nimi                                     AS nimi,
    AND ypk.poistettu IS NOT TRUE
  GROUP BY o.id, ypk.pkluokka, u.id, u.nimi;
 
-
 -- name: pkluokkien-yotyot-hallintayksikoittain
 SELECT u.nimi                             AS nimi,
        u.id                               AS urakka_id,
        o.id                               AS "hallintayksikko_id",
        o.nimi                             AS "hallintayksikko_nimi",
+       lpad(cast(o.elynumero AS VARCHAR), 2, '0') AS elynumero,
        ypk.yotyo,
        ypk.pkluokka,
        SUM((SELECT *
