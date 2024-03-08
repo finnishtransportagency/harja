@@ -115,6 +115,7 @@ ORDER BY s.perintapvm DESC;
                     AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
                   GROUP BY ypk.id)
 SELECT u.nimi                                     AS nimi,
+       u.id                                       AS urakka_id,
        o.id                                       AS "hallintayksikko_id",
        LPAD(CAST(o.elynumero AS VARCHAR), 2, '0') AS elynumero,
        o.nimi                                     AS "hallintayksikko_nimi",

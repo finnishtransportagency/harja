@@ -266,20 +266,28 @@
                                                     pk3 (if (= "PK3" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
                                                     ei-tiedossa (if (or (= "" (:pkluokka rivi)) (nil? (:pkluokka rivi)) (= "Ei tiedossa" (:pkluokka rivi)))
                                                                   (:kokonaishinta rivi)
-                                                                  0)]
+                                                                  0)
+                                                    kokonaishinta (+ pk1 pk2 pk3 ei-tiedossa (:kokonaishinta yht-rivi))]
 
                                                 (assoc yht-rivi
+                                                  :kokonaishinta kokonaishinta
+                                                  :nimi (str "Valtakunnallisesti yhteensä: " kokonaishinta)
                                                   :pk1 (+ (:pk1 yht-rivi) pk1)
                                                   :pk2 (+ (:pk2 yht-rivi) pk2)
                                                   :pk3 (+ (:pk3 yht-rivi) pk3)
-                                                  :eitiedossa (+ (:eitiedossa yht-rivi) ei-tiedossa))))
+                                                  :eitiedossa (+ (:eitiedossa yht-rivi) ei-tiedossa)
+                                                  :muut-kustannukset (+ (:muut-kustannukset yht-rivi) (:muut-kustannukset rivi)))))
 
-                                      {:nimi "Valtakunnallisesti yhteensä" :pk1 0 :pk2 0 :pk3 0 :eitiedossa 0}
+                                      {:nimi "Valtakunnallisesti yhteensä" :pk1 0 :pk2 0 :pk3 0 :eitiedossa 0 :muut-kustannukset 0 :kokonaishinta 0}
                                       rivit)
         elyttain-jaoteltu (group-by :hallintayksikko_nimi rivit)
+        aa (mapv (fn [ely]
+                   (let [elyid (:elynumero (first (second ely)))]
+                     (assoc-in ely [0] (str elyid " " (first ely)))))
+             elyttain-jaoteltu)
+        elyttain-jaoteltu (sort-by first aa)
         formatoi-elyt-fn (fn [ely]
-                           (let [elyid (:hallintayksikko_id (first (second ely)))
-                                 elyrivi {:otsikko (str elyid " " (first ely))}
+                           (let [elyrivi {:otsikko (first ely)}
                                  kohteet-lista (mapv (fn [kohde] (pkluokka-rivi kohde false false)) (second ely))
                                  ely-yhteensa (reduce (fn [yht-rivi rivi]
                                                         (let [pk1 (if (= "PK1" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
@@ -293,9 +301,10 @@
                                                             :pk1 (+ (:pk1 yht-rivi) pk1)
                                                             :pk2 (+ (:pk2 yht-rivi) pk2)
                                                             :pk3 (+ (:pk3 yht-rivi) pk3)
-                                                            :eitiedossa (+ (:eitiedossa yht-rivi) ei-tiedossa))))
+                                                            :eitiedossa (+ (:eitiedossa yht-rivi) ei-tiedossa)
+                                                            :muut-kustannukset (+ (:muut-kustannukset yht-rivi) (:muut-kustannukset rivi)))))
 
-                                                {:nimi (str (first ely) " yhteensä") :pk1 0 :pk2 0 :pk3 0 :eitiedossa 0}
+                                                {:nimi (str (first ely) " yhteensä") :pk1 0 :pk2 0 :pk3 0 :eitiedossa 0 :muut-kustannukset 0}
                                                 (second ely))]
 
                              (vec (flatten [elyrivi (into [] kohteet-lista) (pkluokka-rivi ely-yhteensa true true)]))))
@@ -310,7 +319,8 @@
         {:otsikko "PK1" :leveys 2 :fmt :raha}
         {:otsikko "PK2" :leveys 2 :fmt :raha}
         {:otsikko "PK3" :leveys 2 :fmt :raha}
-        {:otsikko "Ei tiedossa" :leveys 2 :fmt :raha}])
+        {:otsikko "Ei tiedossa" :leveys 2 :fmt :raha}
+        {:otsikko "Ei kohdistettu" :leveys 2 :fmt :raha}])
      ;; Data
      (concat (into [] (mapcat formatoi-elyt-fn elyttain-jaoteltu)) [valtukunnallinen-rivi])]))
 
@@ -508,6 +518,16 @@
                                               (map
                                                 #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi))
                                                 pkluokkien-kustannukset))
+        ;; Lisätään muut kustannukset pk-luokkien kustannuksiin
+        hallintayksikon-korjausluokkasummat (when-not urakka-id
+                                              (map
+                                                (fn [rivi]
+                                                  (let [muut-kustannukset (apply + (keep (fn [kustannus]
+                                                                                           (when (= (:id kustannus) (:urakka_id rivi))
+                                                                                             (:hinta kustannus)))
+                                                                                     muut-kustannukset))]
+                                                    (assoc rivi :muut-kustannukset muut-kustannukset)))
+                                                hallintayksikon-korjausluokkasummat))
 
         pkluokkien-yotyot (when-not urakka-id
                             (pkluokkien-yotyot-hallintayksikoittain db {:vuosi vuosi
