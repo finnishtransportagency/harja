@@ -63,7 +63,7 @@ runs:
     # Update the SARIF report artifact locations with the user provided Dockerfile path
     # This is a workaround for the issue where the Dockerfile path is not included in the SARIF report, to allow for better vulnerability tracking
     # The issue is tracked here: https://github.com/aquasecurity/trivy/issues/708
-    - name: Update SARIF report vuln locationss
+    - name: Update SARIF report vuln locations
       if: ${{ inputs.upload-sarif == 'true' }}
       env:
         DOCKERFILE_PATH: ${{ inputs.dockerfile-path-for-sarif }}
