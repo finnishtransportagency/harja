@@ -112,10 +112,10 @@
                   "type": "string",
                   "enum": [
                     "Massanvaihto",
-                    "AB",
+                    "Asfalttibetoni",
                     "Verkko",
-                    "REM-TAS",
-                    "Bitumiemulsiostabilointi",
+                    "REMIX-tasaus",
+                    "Bitumiemusiostabilointi",
                     "Vaahtobitumistabilointi",
                     "Remix-stabilointi",
                     "Sementtistabilointi",
