@@ -14,7 +14,7 @@ inputs:
   trivyignores:
     description: 'A comma-separated list of relative paths in repository to one or more .trivyignore files'
   fail-job-on-severities:
-    description: 'Fail scanning job when encountering a vuln of any specified severity, such as: "CRITICAL,HIGH,MEDIUM"'
+    description: 'Fail scanning job when encountering a vuln of any specified severity, such as: "CRITICAL,HIGH,MEDIUM". Set "false" to prevent failure.'
     default: 'CRITICAL,HIGH'
   vuln-types:
     description: 'Comma-separated list of vuln types to scan, such as: "os,library"'
