@@ -319,6 +319,14 @@
       :selite selite
       :alue (maarittele-feature tarkastus valittu? ikoni viiva))))
 
+(defmethod asia-kartalle :reikapaikkaus [paikkaus valittu?]
+  (when (:sijainti paikkaus)
+    (assoc paikkaus
+      :type :reikapaikkaus
+      :nimi "Reikäpaikkaus"
+      :selite {:teksti "Reikäpaikkaus" :img (ulkoasu/reikapaikkaus-ikoni)}
+      :alue (maarittele-feature paikkaus valittu? (ulkoasu/reikapaikkaus-ikoni) ulkoasu/reikapaikkaukset))))
+
 (defmethod asia-kartalle :tieturvallisuusverkko [tieturvallisuustie _valittu?]
   {:type :tieturvallisuusverkko
    :selite tieturvallisuusverkko-selite

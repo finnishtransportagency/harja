@@ -26,7 +26,6 @@
     "violetti"
     "magenta"
     "pinkki"
-
     "musta"
     "vaaleanharmaa"
     "harmaa"

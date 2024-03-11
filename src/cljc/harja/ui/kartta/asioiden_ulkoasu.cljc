@@ -287,6 +287,9 @@
                     :valmis (:kt-valmis tiepuolen-ikonien-varit))
                   (:turvallisuuspoikkeama tiepuolen-ikonien-varit)))
 
+(defn reikapaikkaus-ikoni []
+  (sijainti-ikoni "vaaleanharmaa" "vihrea"))
+
 (defn turvalaitteen-ikoni-ja-selite [turvalaite]
   [(pinni-ikoni (turvalaitteiden-varit (::tu/tyyppi turvalaite)
                                        (::tu/kiintea turvalaite)))
@@ -626,6 +629,10 @@ tr-ikoni {:img (pinni-ikoni "musta")
 (def tieturvallisuusverkko
   {:color alpha/fig-default
    :width 8})
+
+(def reikapaikkaukset
+  {:color alpha/tummanvihrea
+   :width 12})
 
 (def ei-kayty-tieturvallisuusverkko
   {:ajovayla

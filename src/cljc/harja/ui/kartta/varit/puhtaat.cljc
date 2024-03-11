@@ -7,6 +7,7 @@
 (def keltainen (rgb 252 221 122))
 (def magenta (rgb 246 143 202))
 (def vihrea (rgb 50 203 50))
+(def tummanvihrea (rgb 39 180 39))
 (def turkoosi (rgb 148 237 216))
 (def syaani (rgb 109 201 253))
 (def sininen (rgb 39 132 224))
@@ -35,7 +36,7 @@
   ^{:doc "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan
           käsin, koska .cljs puolelta puuttuu tarvittavat työkalut tämän luomiseen."
     :const true}
-  [punainen oranssi keltainen magenta vihrea turkoosi syaani sininen
+  [punainen oranssi keltainen magenta vihrea tummanvihrea turkoosi syaani sininen
    tummansininen violetti lime pinkki
    fig-default lemon-default eggplant-default pitaya-default pea-default black-light red-default])
 
