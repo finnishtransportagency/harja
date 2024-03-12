@@ -234,7 +234,8 @@
                                                  :puhelin (:puhelin kayttaja)
                                                  :sahkoposti (:sahkoposti kayttaja)
                                                  :kayttajatunnus (:kayttajatunnus kayttaja)
-                                                 :ensisijainen ensisijainen}))]
+                                                 :ensisijainen ensisijainen
+                                                 :toissijainen-varahenkilo (:toissijainen-varahenkilo kayttaja)}))]
     (jdbc/with-db-transaction [c db]
       (q/poista-urakan-vastuuhenkilot-roolille! c {:urakka urakka-id :rooli rooli})
       (when vastuuhenkilo

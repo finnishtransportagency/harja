@@ -259,24 +259,26 @@
                                 {:luokka "nappi-toissijainen pull-right"}]]]))
              {:luokka "nappi-kielteinen btn-xs"}])])])))
 
-(defn- varahenkiloiden-valinta [{:keys [muokkaa-lomaketta data]} mahdolliset-henkilot varalla]
+
+(defn- toissijaisten-varahenkiloiden-valinta [{:keys [muokkaa-lomaketta data]} mahdolliset-henkilot varalla-toissijaiset]
   (let [valinnat (map-indexed (fn [i valinta]
                                 {:id i
                                  :valittu? (some #(= (:kayttajatunnus valinta) (:kayttajatunnus %))
-                                             (if (seq? (:varalla data))
-                                               (:varalla data)
-                                               varalla))
+                                             (if (seq? (:varalla-toissijaiset data))
+                                               (:varalla-toissijaiset data)
+                                               varalla-toissijaiset))
                                  :nimi (str (:etunimi valinta) " " (:sukunimi valinta))
-                                 :arvo valinta}) mahdolliset-henkilot)
+                                 :arvo (assoc valinta :toissijainen-varahenkilo true)})
+                   mahdolliset-henkilot)
         valitut (keep #(when (:valittu? %) (:arvo %)) valinnat)]
     [valinnat/checkbox-pudotusvalikko valinnat
      #(muokkaa-lomaketta (if (:valittu? %)
-                           (assoc data :varalla
+                           (assoc data :varalla-toissijaiset
                              (filter (fn [valittu] (not=
                                                      (:kayttajatunnus (:arvo %))
                                                      (:kayttajatunnus valittu)))
                                valitut))
-                           (assoc data :varalla
+                           (assoc data :varalla-toissijaiset
                              (conj valitut (:arvo %)))))
      [nil " Varahenkilöä valittu"]
      {:vayla-tyyli? true
@@ -286,9 +288,12 @@
                             urakka-id kayttaja kayttajat vastuuhenkilot rooli
                             ensisijainen varalla kayttaja-tyyppi]
   (r/with-let [henkilot (atom {:ensisijainen :ei-muutosta
-                               :varalla :ei-muutosta})]
+                               :varalla :ei-muutosta
+                               :varalla-toissijaiset :ei-muutosta})]
     ;; FIXME: valitse oletushenkilöksi nykyinen käyttäjänimen perusteella
     (let [mahdolliset-henkilot (filter #(some (partial = rooli) (:roolinimet %)) kayttajat)
+          varalla-toissijaiset (filter :toissijainen-varahenkilo varalla)
+          varalla-ensisijainen (first (filter (comp not :toissijainen-varahenkilo) varalla))
           ei-kayttajia? (empty? mahdolliset-henkilot)
           ei-kayttajia-info (if (= kayttaja-tyyppi "vastuuhenkilö")
                               "Ei urakan vastuuhenkilöitä saatavilla. Vastuuhenkilöt tulee ensin asettaa urakalle Käyttövaltuushallinnassa."
@@ -299,32 +304,51 @@
                        :footer-fn (fn [data]
                                     [napit/palvelinkutsu-nappi "Tallenna yhteyshenkilöt"
                                      #(let [{uusi-ensisijainen :ensisijainen
-                                             uudet-varalla :varalla} @henkilot]
+                                             uusi-varalla :varalla
+                                             uudet-varalla-toissijaiset :varalla-toissijaiset} @henkilot
+
+                                            uudet-varalla (concat
+                                                            (if (= :ei-muutosta uusi-varalla)
+                                                              [varalla-ensisijainen]
+                                                              [uusi-varalla])
+                                                            (if (= :ei-muutosta uudet-varalla-toissijaiset)
+                                                              varalla-toissijaiset
+                                                              uudet-varalla-toissijaiset))]
+
                                         (tiedot/tallenna-urakan-vastuuhenkilot-roolille
                                           urakka-id rooli
                                           (if (= :ei-muutosta uusi-ensisijainen)
                                             ensisijainen
                                             uusi-ensisijainen)
-                                          (if (= :ei-muutosta uudet-varalla)
-                                            varalla
-                                            uudet-varalla)))
+                                          uudet-varalla))
                                      {:kun-onnistuu #(do
                                                        (paivita-vastuuhenkilot! %)
                                                        (modal/piilota!))}])}
         [{:otsikko "Ensisijainen"
           :nimi :ensisijainen
           :leveys 2
+          :uusi-rivi? true
           :tyyppi :valinta
           :valinta-nayta #(if (= :ei-muutosta %)
                             (fmt/kayttaja ensisijainen)
                             (fmt/kayttaja %))
           :valinnat mahdolliset-henkilot}
-         {:otsikko "Varalla"
+         {:otsikko "Varahenkilö"
           :nimi :varalla
           :leveys 2
+          :tyyppi :valinta
+          :uusi-rivi? true
+          :valinta-nayta #(if (= :ei-muutosta %)
+                            (fmt/kayttaja (first varalla))
+                            (fmt/kayttaja %))
+          :valinnat mahdolliset-henkilot}
+         {:otsikko "Toissijaiset varahenkilöt"
+          :nimi :varalla-toissijaiset
+          :leveys 2
+          :uusi-rivi? true
           :tyyppi :reagent-komponentti
-          :komponentti varahenkiloiden-valinta
-          :komponentti-args [mahdolliset-henkilot varalla]}]
+          :komponentti toissijaisten-varahenkiloiden-valinta
+          :komponentti-args [mahdolliset-henkilot varalla-toissijaiset]}]
         @henkilot]
 
        ;; Jos mahdollisia käyttäjiä ei löydy, näytä viesti

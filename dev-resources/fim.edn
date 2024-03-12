@@ -140,4 +140,13 @@
                    :puhelin        "0123456789"
                    :roolit         "1242141-OULU3_vastuuhenkilo"
                    :organisaatio   "organisaatio"
+                   :poistettu      false}
+                  {:tunniste       137
+                   :kayttajatunnus "LX987657"
+                   :etunimi        "Louhi"
+                   :sukunimi       "Ely TM"
+                   :sahkoposti     "sinunmailisi@solita.fi"
+                   :puhelin        "0123456789"
+                   :roolit         "1242141-OULU3_vastuuhenkilo"
+                   :organisaatio   "organisaatio"
                    :poistettu      false}]}
