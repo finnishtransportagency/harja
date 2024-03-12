@@ -7,7 +7,7 @@ DECLARE
   asetettu_lukko    CHAR(36);
   lukko_asetettu    TIMESTAMP;
 BEGIN
-  LOCK TABLE lukko IN ACCESS EXCLUSIVE MODE;
+  LOCK TABLE lukko IN EXCLUSIVE MODE;
   SELECT
     tunniste,
     lukko,

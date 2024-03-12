@@ -50,7 +50,7 @@ jobs:
         run: docker build -t harja-app:${{ github.sha }} --file aws/fargate/Dockerfile .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@84384bd6e777ef152729993b8145ea352e9dd3ef # v0.17.0
+        uses: aquasecurity/trivy-action@062f2592684a31eb3aa050cc61e7ca1451cecd3d # v0.18.0
         with:
           image-ref: 'harja-app:${{ github.sha }}'
           format: 'sarif'
