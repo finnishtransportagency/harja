@@ -158,7 +158,6 @@
 
 (deftest odottaa-kannanottoa
   (let [hakutiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                    :urakan-alkuvuosi 2021
                     :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                          #inst "2022-09-30T20:59:59.000-00:00"]
                     ;; 2022-01-01
@@ -194,7 +193,6 @@
 
 (deftest merkitsevat-odottaa-kannanottoa
   (let [hakutiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                    :urakan-alkuvuosi 2021
                     :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                          #inst "2022-09-30T20:59:59.000-00:00"]
                     ;; 2022-01-01
@@ -215,7 +213,6 @@
         vastaus (hae-urakan-lupaustiedot
                   +kayttaja-jvh+
                   {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                   :urakan-alkuvuosi 2021
                    :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                         #inst "2022-09-30T20:59:59.000-00:00"]})
         ryhmat (:lupausryhmat vastaus)
@@ -242,7 +239,6 @@
         lupaustiedot (hae-urakan-lupaustiedot
                        +kayttaja-jvh+
                        {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                        :urakan-alkuvuosi 2021
                         :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                              #inst "2022-09-30T20:59:59.000-00:00"]})
         ryhma-4 (etsi-ryhma (:lupausryhmat lupaustiedot) 4)
@@ -269,7 +265,6 @@
           lupaustiedot (hae-urakan-lupaustiedot
                          +kayttaja-jvh+
                          {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                          :urakan-alkuvuosi 2021
                           :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                #inst "2022-09-30T20:59:59.000-00:00"]})
           ryhma-4 (etsi-ryhma (:lupausryhmat lupaustiedot) 4)
@@ -286,7 +281,6 @@
 
 (deftest joustovara
   (let [hakutiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                    :urakan-alkuvuosi 2021
                     :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                          #inst "2022-09-30T20:59:59.000-00:00"]}
         ;; Ensimmäinen kieltävä vastaus
@@ -324,7 +318,6 @@
              :id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
              :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id})
         lupaustiedot (hae-urakan-lupaustiedot +kayttaja-jvh+ {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                                                              :urakan-alkuvuosi 2021
                                                               :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                                                    #inst "2022-09-30T20:59:59.000-00:00"]})
         sitoutuminen (:lupaus-sitoutuminen lupaustiedot)]
@@ -335,7 +328,6 @@
                                 :tallenna-luvatut-pisteet +kayttaja-jvh+
                                 {:id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
                                  :pisteet 67, :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                                 :urakan-alkuvuosi 2021
                                  :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                       #inst "2022-09-30T20:59:59.000-00:00"]})
         _ (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -350,7 +342,6 @@
                                                 :tallenna-luvatut-pisteet +kayttaja-jvh+
                                                 {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
                                                  :pisteet 67, :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-                                                 :urakan-alkuvuosi 2021
                                                  :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                                       #inst "2022-09-30T20:59:59.000-00:00"]})))))
 
@@ -587,7 +578,6 @@
   (let [vastaus (hae-urakan-lupaustiedot
                   +kayttaja-jvh+
                   {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                   :urakan-alkuvuosi 2019
                    :valittu-hoitokausi [#inst "2019-09-30T21:00:00.000-00:00"
                                         #inst "2020-09-30T20:59:59.000-00:00"]})
         tavoitehinta (get-in vastaus [:yhteenveto :tavoitehinta])]
