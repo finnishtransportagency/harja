@@ -113,7 +113,7 @@
   (lupaus-domain/valikatselmus-tehty?
     (valikatselmus-q/hae-urakan-paatokset db {:harja.domain.urakka/id urakka-id})))
 
-(defn hae-urakan-lupaustiedot-hoitokaudelle [db {:keys [urakka-id urakan-alkuvuosi nykyhetki
+(defn hae-urakan-lupaustiedot-hoitokaudelle [db {:keys [urakka-id nykyhetki
                                                         valittu-hoitokausi] :as tiedot}]
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
         vastaus (into []
@@ -177,7 +177,6 @@
      :lupausryhmat lupausryhmat
      ;; Lähtötiedot tarkistusta varten, ei välttämätöntä
      :lahtotiedot {:urakka-id urakka-id
-                   :urakan-alkuvuosi urakan-alkuvuosi
                    :valittu-hoitokausi valittu-hoitokausi
                    :nykyhetki nykyhetki} ; Minkä hetken mukaan on laskettu
      ;; Yhteenveto
@@ -580,7 +579,6 @@
   (hae-urakan-lupaustiedot-hoitokaudelle
     (:db j)
     {:urakka-id 36,
-     :urakan-alkuvuosi 2021,
      :valittu-hoitokausi [#inst "2023-09-30T21:00:00.000-00:00" #inst "2024-09-30T20:59:59.000-00:00"],
      :nykyhetki #inst "2024-02-28T13:37:14.992-00:00"}))
 
@@ -590,6 +588,5 @@
   (lupaus-kyselyt/hae-urakan-lupaustiedot 
     (:db j)
     {:urakka 36
-     :alkuvuosi 2021
      :alkupvm #inst "2023-09-30T21:00:00.000-00:00"
      :loppupvm #inst "2024-09-30T20:59:59.000-00:00"}))
