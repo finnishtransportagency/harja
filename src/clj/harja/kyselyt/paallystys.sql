@@ -975,7 +975,7 @@ FROM paallystysilmoitus pi
          LEFT JOIN pot2_mk_massan_lisaaine kk_lisaaine ON kk_massa.id = kk_lisaaine.pot2_massa_id
          LEFT JOIN pot2_mk_lisaainetyyppi kk_lisaainetyyppi ON kk_lisaaine.tyyppi = kk_lisaainetyyppi.koodi
 WHERE (pi.luotu BETWEEN :alku AND :loppu
-   OR pi.muokattu BETWEEN :alku AND :loppu) and kk_runkoaine.id is null;
+   OR pi.muokattu BETWEEN :alku AND :loppu);
 
 -- name: hae-paallystysilmoitusten-alustan-toimenpiteet-analytiikalle
 SELECT pi.id                           AS paallystysilmoitus,
