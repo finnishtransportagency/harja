@@ -49,9 +49,11 @@ DO $$
     DECLARE
         urakkaid INTEGER;
         urakkaid2 INTEGER;
+        urakkaid3 INTEGER;
     BEGIN
         urakkaid = (SELECT id FROM urakka where nimi = 'POP MHU Kajaani 2024-2029'); 
-        urakkaid2 = (SELECT id FROM urakka where nimi = 'POP MHU Suomussalmi 2024-2029'); 
+        urakkaid2 = (SELECT id FROM urakka where nimi = 'POP MHU Suomussalmi 2024-2029');
+        urakkaid3 = (SELECT id FROM urakka where nimi = 'Iin MHU 2021-2026'); 
         INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
         VALUES
             (1, urakkaid),
@@ -63,7 +65,12 @@ DO $$
             (7, urakkaid2),
             (8, urakkaid2),
             (9, urakkaid2),
-            (10, urakkaid2);
+            (10, urakkaid2),
+            (1, urakkaid3),
+            (2, urakkaid3),
+            (3, urakkaid3),
+            (4, urakkaid3),
+            (5, urakkaid3);
     END
 $$ LANGUAGE plpgsql;
 
