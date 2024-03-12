@@ -369,6 +369,8 @@
                           ("ELY_Urakanvalvoja" "Tilaajan_Urakanvalvoja") "urakanvalvoja"
                           "vastuuhenkilo" "vastuuhenkilö")
         varalla (filter (comp not :ensisijainen) roolin-henkilot)
+        varalla-ensisijainen (first (filter (comp not :toissijainen-varahenkilo) varalla))
+        varalla-toissijaiset (filter :toissijainen-varahenkilo varalla)
         voi-muokata? (and (not (k/virhe? kayttajat))
                        (not (empty? kayttajat))
                        (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset urakka-id)
@@ -388,7 +390,10 @@
          [vastuuhenkilo-tooltip varalla]])
       (when (> (count varalla) 1)
         [yleiset/tooltip {}
-         [:span.vastuuhenkilo-varalla "(" (count varalla) " sijaista)"]
+         [:span.vastuuhenkilo-varalla "(sijaiset " (fmt/kayttaja varalla-ensisijainen) " ja "
+          (if (= (count varalla-toissijaiset) 1)
+            (str (fmt/kayttaja (first varalla-toissijaiset)) ")")
+            (str (count varalla-toissijaiset) " muuta)"))]
          [vastuuhenkilo-tooltip varalla]])
       (when voi-muokata?
         [:span.klikattava {:on-click #(modal/nayta!
