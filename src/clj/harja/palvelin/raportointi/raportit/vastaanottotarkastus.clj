@@ -150,14 +150,19 @@
         {:otsikko "" :leveys 3}
         {:otsikko "" :leveys 3}
         {:otsikko "" :leveys 3}
-        {:otsikko "" :leveys 3}
-        {:otsikko "Toteu\u00ADtunut hinta (muut kohteet)" :nimi :toteutunut-hinta
-         :fmt :raha :leveys 5}
-        {:otsikko (str "Sakot ja bonukset"
-                    (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
-                      " (muut kuin kohteisiin liittyvät)"))
-         :leveys 5 :fmt :raha}
-        {:otsikko "Muut kustannukset" :leveys 5 :fmt :raha}]
+        {:otsikko "" :leveys 3}]
+       ;; Piilotetaan sakot 2021 vuonna ja sitä aiemmin
+       (if-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
+         [{:otsikko "Toteu\u00ADtunut hinta (muut kohteet)" :nimi :toteutunut-hinta
+           :fmt :raha :leveys 5}]
+         [{:otsikko "Toteu\u00ADtunut hinta (muut kohteet)" :nimi :toteutunut-hinta
+           :fmt :raha :leveys 5}
+          {:otsikko (str "Sakot ja bonukset"
+                      (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
+                        " (muutkin kuin kohteisiin liittyvät)"))
+           :leveys 5 :fmt :raha}])
+       [{:otsikko "Muut kustannukset" :leveys 5 :fmt :raha}]
+       ;; Näytetään 2022 vuonna ja sitä myöhemmin
        (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
          [{:otsikko "Arvonväh." :leveys 5 :fmt :raha}
           {:otsikko "Sakko/bonus" :leveys 5 :fmt :raha}])
@@ -174,10 +179,12 @@
          (korostettu-yhteensa-rivi nil)
          (korostettu-yhteensa-rivi nil)
          (korostettu-yhteensa-rivi nil)
-         (korostettu-yhteensa-rivi nil)
-         (korostettu-yhteensa-rivi (reduce + 0 (keep :toteutunut-hinta yllapitokohteet)))
-         (korostettu-yhteensa-rivi kohdistamattomat-sanktiot-yhteensa)
-         (korostettu-yhteensa-rivi muut-kustannukset-yhteensa)]
+         (korostettu-yhteensa-rivi nil)]
+        (if-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
+          [(korostettu-yhteensa-rivi (reduce + 0 (keep :toteutunut-hinta yllapitokohteet)))]
+          [(korostettu-yhteensa-rivi (reduce + 0 (keep :toteutunut-hinta yllapitokohteet)))
+           (korostettu-yhteensa-rivi kohdistamattomat-sanktiot-yhteensa)])
+        [(korostettu-yhteensa-rivi muut-kustannukset-yhteensa)]
         (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
           [(korostettu-yhteensa-rivi (reduce + 0 (keep :arvonvahennykset yllapitokohteet)))
            (korostettu-yhteensa-rivi (reduce + 0 (keep :sakot-ja-bonukset yllapitokohteet)))])
@@ -186,10 +193,10 @@
          (korostettu-yhteensa-rivi (reduce + 0 (keep :bitumi-indeksi yllapitokohteet)))
          (korostettu-yhteensa-rivi (reduce + 0 (keep :kaasuindeksi yllapitokohteet)))
          (korostettu-yhteensa-rivi (reduce + 0 (keep :maku-paallysteet yllapitokohteet)))
-         (korostettu-yhteensa-rivi 
+         (korostettu-yhteensa-rivi
            (+ (reduce + 0 (keep :kokonaishinta yllapitokohteet))
-           kohdistamattomat-sanktiot-yhteensa
-           muut-kustannukset-yhteensa))])]]))
+             (or (when (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi) kohdistamattomat-sanktiot-yhteensa) 0)
+             muut-kustannukset-yhteensa))])]]))
 
 (defn pkluokka-rivi [rivi korosta? lihavoi?]
   (let [formatoi-arvo (fn [a]
