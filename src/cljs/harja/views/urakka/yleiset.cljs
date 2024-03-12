@@ -382,11 +382,11 @@
          [vastuuhenkilo-tooltip ensisijainen]]
         [:span.vastuuhenkilo-ei-tiedossa "Ei tiedossa"])
       " "
-      (when (= 1 (count varalla))
+      (when (= (count varalla) 1)
         [yleiset/tooltip {}
          [:span.vastuuhenkilo-varalla "(sijainen " (fmt/kayttaja (first varalla)) ")"]
          [vastuuhenkilo-tooltip varalla]])
-      (when (< 1 (count varalla))
+      (when (> (count varalla) 1)
         [yleiset/tooltip {}
          [:span.vastuuhenkilo-varalla "(" (count varalla) " sijaista)"]
          [vastuuhenkilo-tooltip varalla]])
