@@ -165,7 +165,12 @@
 
   :managed-dependencies [[org.apache.poi/poi "5.2.5"]
                          [org.apache.poi/poi-scratchpad "5.2.5"]
-                         [org.apache.poi/poi-ooxml "5.2.5"]]
+                         [org.apache.poi/poi-ooxml "5.2.5"]
+                         ;; CVE-2024-26308 ja CVE-2024-25710
+                         ;;  Päivitetään POI-ooxml mukana tullut transitiivinen kirjasto, joka sisältää korjauksen haavoittuvuuksiin.
+                         ;;  (POI-ooxml ei kuitenkaan käytä haavoittuneen kirjaston version riskialtista osaa)
+                         ;;  TODO: Tämä muutos voidaan poistaa, kunhan poi-ooxml ottaa mukaan uudemman version kirjastosta.
+                         [org.apache.commons/commons-compress "1.26.1"]]
 
   :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 
