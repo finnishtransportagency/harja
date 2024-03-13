@@ -44,33 +44,34 @@ VALUES
     ('Turvallisuus ja osaamisen kehittäminen', 4, 2019, NOW()),
     ('Viestintä ja tienkäyttäjäasiakkaan palvelu', 5, 2019, NOW());
 
--- Lupausryhmien linkitys urakkaan 2024 alkavalla urakalle linkkitaulun kautta - Kajaani MHU ja MHU Suomussalmi
+-- Lupausryhmien linkitys urakkaan 2024 alkaville urakoille linkkitaulun kautta - Kajaani MHU ja MHU Suomussalmi
+-- Linkitys myös Iin urakkaan - Iin MHU 2021-2026
 DO $$
     DECLARE
-        urakkaid INTEGER;
-        urakkaid2 INTEGER;
-        urakkaid3 INTEGER;
+        urakkaid_kajaani INTEGER;
+        urakkaid_suomussalmi INTEGER;
+        urakkaid_ii INTEGER;
     BEGIN
-        urakkaid = (SELECT id FROM urakka where nimi = 'POP MHU Kajaani 2024-2029'); 
-        urakkaid2 = (SELECT id FROM urakka where nimi = 'POP MHU Suomussalmi 2024-2029');
-        urakkaid3 = (SELECT id FROM urakka where nimi = 'Iin MHU 2021-2026'); 
+        urakkaid_kajaani = (SELECT id FROM urakka where nimi = 'POP MHU Kajaani 2024-2029'); 
+        urakkaid_suomussalmi = (SELECT id FROM urakka where nimi = 'POP MHU Suomussalmi 2024-2029');
+        urakkaid_ii = (SELECT id FROM urakka where nimi = 'Iin MHU 2021-2026'); 
         INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
         VALUES
-            (1, urakkaid),
-            (2, urakkaid),
-            (3, urakkaid),
-            (4, urakkaid),
-            (5, urakkaid),
-            (6, urakkaid2),
-            (7, urakkaid2),
-            (8, urakkaid2),
-            (9, urakkaid2),
-            (10, urakkaid2),
-            (1, urakkaid3),
-            (2, urakkaid3),
-            (3, urakkaid3),
-            (4, urakkaid3),
-            (5, urakkaid3);
+            (1, urakkaid_kajaani),
+            (2, urakkaid_kajaani),
+            (3, urakkaid_kajaani),
+            (4, urakkaid_kajaani),
+            (5, urakkaid_kajaani),
+            (6, urakkaid_suomussalmi),
+            (7, urakkaid_suomussalmi),
+            (8, urakkaid_suomussalmi),
+            (9, urakkaid_suomussalmi),
+            (10, urakkaid_suomussalmi),
+            (1, urakkaid_ii),
+            (2, urakkaid_ii),
+            (3, urakkaid_ii),
+            (4, urakkaid_ii),
+            (5, urakkaid_ii);
     END
 $$ LANGUAGE plpgsql;
 
