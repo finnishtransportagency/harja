@@ -5,11 +5,13 @@
             [harja.fmt :as fmt]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.palvelin.raportointi.raportit.yllapidon-aikataulu :as yllapidon-aikataulu]
+            [harja.tyokalut.big :as big]
             [jeesql.core :refer [defqueries]]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as ypk-yleiset]
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+            [harja.tyokalut.big :as big]))
 
 (defqueries "harja/palvelin/raportointi/raportit/vastaanottotarkastus.sql")
 
@@ -127,8 +129,8 @@
            (concat [;; Muodosta hallintayksikön otsikko
                     {:otsikko (str
                                 (format "%02d"
-                                  (-> kohde second  first :hallintayksikko_id)) " "
-                                (-> kohde second  first :hallintayksikko_nimi)) :leveys 10}]
+                                  (-> kohde second first :hallintayksikko_id)) " "
+                                (-> kohde second first :hallintayksikko_nimi)) :leveys 10}]
              (map fn-formatoi-kohdetiedot (second kohde))))
          kohteet))]))
 
@@ -219,23 +221,40 @@
                                                   (:kokonaishinta rivi))))]
          [(formatoi-arvo (:muut-kustannukset rivi))]))}))
 
+(defn muut-kustannukset-rivi [rivi korosta? lihavoi?]
+  (let [formatoi-arvo (fn [a]
+                        [:arvo {:arvo a
+                                :jos-tyhja ""
+                                :korosta-hennosti? korosta?
+                                :desimaalien-maara 2
+                                :ryhmitelty? true}])]
+    {:lihavoi? lihavoi?
+     :rivi
+     (into []
+       (concat
+         [[:arvo {:arvo (:pvm rivi) :fmt :pvm}]]
+         [[:arvo {:arvo (:urakka-nimi rivi)}]]
+         [[:arvo {:arvo (:teksti rivi)}]]
+         [(formatoi-arvo (or (:hinta rivi) (:maara rivi)))]))}))
+
 (defn pkluokka-yotyo-rivi [rivi korosta? lihavoi?]
   (let [_ (println "pkluokka-yotyo-rivi :: rivi: " (pr-str rivi))
         laske-prosentti (fn [yotyo paivatyo]
-                          (let [_ (println "laske-prosentti: yotyo: " (pr-str yotyo) " paivatyo: " (pr-str paivatyo))
+                          (let [yhteensa (bigdec (+ yotyo paivatyo))
+                                yotyo (bigdec yotyo)
+                                paivatyo (bigdec paivatyo)
                                 yotyo (if (nil? yotyo) 0 yotyo)
-                                paivatyo (if (nil? paivatyo) 0 paivatyo)
-                                tot (bigdec yotyo)
-                                bud (bigdec paivatyo)]
-                            (if (or (= (bigdec 0) tot) (= (bigdec 0) bud))
-                              0
-                              (* 100 (with-precision 4 (/ tot bud))))))
+                                paivatyo (if (nil? paivatyo) 0 paivatyo)]
+                            (cond
+                              (= (bigdec 0) yotyo) 0
+                              (= (bigdec 0) paivatyo) 100
+                              :else (* 100 (with-precision 4 (/ yotyo yhteensa))))))
         formatoitu-pituus (fn [a]
-                          [:arvo {:arvo a
-                                  :jos-tyhja ""
-                                  :korosta-hennosti? korosta?
-                                  :desimaalien-maara 2
-                                  :ryhmitelty? true}])
+                            [:arvo {:arvo a
+                                    :jos-tyhja ""
+                                    :korosta-hennosti? korosta?
+                                    :desimaalien-maara 2
+                                    :ryhmitelty? true}])
         formatoitu-prosentti (fn [p]
                                [:arvo-ja-yksikko {:arvo p
                                                   :jos-tyhja ""
@@ -248,34 +267,22 @@
      (into []
        (concat
          [[:arvo {:arvo (:nimi rivi) :korosta-hennosti? korosta?}]]
-         [(formatoitu-pituus (or (:pk1-pituus rivi) (when (= "PK1" (:pkluokka rivi)) (:pk1-pituus-yotyo rivi))))]
-         [(formatoitu-prosentti (or (:pk1-prosentti rivi) (when (= "PK1" (:pkluokka rivi))
-                                                            (laske-prosentti (:pk1-pituus-yotyo rivi) (:pk1-pituus rivi)))))]
-         [(formatoitu-pituus (or (:pk2-pituus rivi) (when (= "PK2" (:pkluokka rivi)) (:pk2-pituus-yotyo rivi))))]
-         [(formatoitu-prosentti (or (:pk1-prosentti rivi) (when (= "PK2" (:pkluokka rivi))
-                                                            (laske-prosentti (:pk2-pituus-yotyo rivi) (:pk2-pituus rivi)))))]
-         [(formatoitu-pituus (or (:pk3-pituus rivi) (when (= "PK3" (:pkluokka rivi)) (:pk3-pituus-yotyo rivi))))]
-         [(formatoitu-prosentti (or (:pk3-prosentti rivi) (when (= "PK3" (:pkluokka rivi))
-                                                            (laske-prosentti (:pk1-pituus-yotyo rivi) (:pk1-pituus rivi)))))]
-         [(formatoitu-pituus (or (:eitiedossa-pituus rivi) (when (or (= "" (:pkluokka rivi))
-                                                                   (nil? (:pkluokka rivi))
-                                                                   (= "Ei tiedossa" (:pkluokka rivi)))
-                                                             (:eitiedossa-pituus-yotyo rivi))))]
-         [(formatoitu-prosentti (or (:eitiedossa-prosentti rivi) (when (or (= "" (:pkluokka rivi))
-                                                                         (nil? (:pkluokka rivi))
-                                                                         (= "Ei tiedossa" (:pkluokka rivi)))
-                                                                   (laske-prosentti (:eitiedossa-pituus-yotyo rivi)
-                                                                     (:eitiedossa-pituus rivi)))))]))}))
+         [(formatoitu-pituus (:pk1-pituus-yotyo rivi))]
+         [(formatoitu-prosentti (laske-prosentti (:pk1-pituus-yotyo rivi) (:pk1-pituus rivi)))]
+         [(formatoitu-pituus (:pk2-pituus-yotyo rivi))]
+         [(formatoitu-prosentti (laske-prosentti (:pk2-pituus-yotyo rivi) (:pk2-pituus rivi)))]
+         [(formatoitu-pituus (:pk3-pituus-yotyo rivi))]
+         [(formatoitu-prosentti (laske-prosentti (:pk3-pituus-yotyo rivi) (:pk3-pituus rivi)))]
+         [(formatoitu-pituus (:eitiedossa-pituus-yotyo rivi))]
+         [(formatoitu-prosentti (laske-prosentti (:eitiedossa-pituus-yotyo rivi) (:eitiedossa-pituus rivi)))]))}))
 
 (defn pkluokka-taulukko [rivit]
   (let [valtakunnallisesti-yhteensa (reduce (fn [yht-rivi rivi]
-                                              (let [pk1 (if (= "PK1" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
-                                                    pk2 (if (= "PK2" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
-                                                    pk3 (if (= "PK3" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
-                                                    ei-tiedossa (if (or (= "" (:pkluokka rivi)) (nil? (:pkluokka rivi)) (= "Ei tiedossa" (:pkluokka rivi)))
-                                                                  (:kokonaishinta rivi)
-                                                                  0)
-                                                    kokonaishinta (+ pk1 pk2 pk3 ei-tiedossa (:kokonaishinta yht-rivi))]
+                                              (let [pk1 (:pk1 rivi)
+                                                    pk2 (:pk2 rivi)
+                                                    pk3 (:pk3 rivi)
+                                                    ei-tiedossa (:eitiedossa rivi)
+                                                    kokonaishinta (+ pk1 pk2 pk3 ei-tiedossa (:muut-kustannukset rivi) (or (:kokonaishinta yht-rivi) 0))]
 
                                                 (assoc yht-rivi
                                                   :kokonaishinta kokonaishinta
@@ -298,12 +305,10 @@
                            (let [elyrivi {:otsikko (first ely)}
                                  kohteet-lista (mapv (fn [kohde] (pkluokka-rivi kohde false false)) (second ely))
                                  ely-yhteensa (reduce (fn [yht-rivi rivi]
-                                                        (let [pk1 (if (= "PK1" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
-                                                              pk2 (if (= "PK2" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
-                                                              pk3 (if (= "PK3" (:pkluokka rivi)) (:kokonaishinta rivi) 0)
-                                                              ei-tiedossa (if (or (= "" (:pkluokka rivi)) (nil? (:pkluokka rivi)) (= "Ei tiedossa" (:pkluokka rivi)))
-                                                                            (:kokonaishinta rivi)
-                                                                            0)]
+                                                        (let [pk1 (:pk1 rivi)
+                                                              pk2 (:pk2 rivi)
+                                                              pk3 (:pk3 rivi)
+                                                              ei-tiedossa (:eitiedossa rivi)]
 
                                                           (assoc yht-rivi
                                                             :pk1 (+ (:pk1 yht-rivi) pk1)
@@ -339,24 +344,21 @@
                          :pk1-pituus-yotyo 0 :pk1-pituus 0
                          :pk2-pituus-yotyo 0 :pk2-pituus 0
                          :pk3-pituus-yotyo 0 :pk3-pituus 0
-                         :eitiedossa-pituus-yotyo 0 :eitiedossa-pituus 0 })
+                         :eitiedossa-pituus-yotyo 0 :eitiedossa-pituus 0})
         fn-laske-yhteen (fn [yht-rivi rivi]
                           (let [_ (println "fn-laske-yhteen :: rivi: " (pr-str rivi))
                                 pk1-pituus-yotyo (if (and (true? (:yotyo rivi)) (= "PK1" (:pkluokka rivi))) (:pituus rivi) 0)
-                                pk1-pituus (if (and (false?  (:yotyo rivi)) (= "PK1" (:pkluokka rivi))) (:pituus rivi) 0)
+                                pk1-pituus (if (and (false? (:yotyo rivi)) (= "PK1" (:pkluokka rivi))) (:pituus rivi) 0)
                                 pk2-pituus-yotyo (if (and (true? (:yotyo rivi)) (= "PK2" (:pkluokka rivi))) (:pituus rivi) 0)
                                 pk2-pituus (if (and (false? (:yotyo rivi)) (= "PK2" (:pkluokka rivi))) (:pituus rivi) 0)
                                 pk3-pituus-yotyo (if (and (true? (:yotyo rivi)) (= "PK3" (:pkluokka rivi))) (:pituus rivi) 0)
                                 pk3-pituus (if (and (false? (:yotyo rivi)) (= "PK3" (:pkluokka rivi))) (:pituus rivi) 0)
                                 ei-tiedossa-pituus-yotyo (if (and (= "true" (:yotyo rivi)) (or (= "" (:pkluokka rivi)) (nil? (:pkluokka rivi)) (= "Ei tiedossa" (:pkluokka rivi))))
                                                            (:pituus rivi)
-                                                     0)
+                                                           0)
                                 ei-tiedossa-pituus (if (and (false? (:yotyo rivi)) (or (= "" (:pkluokka rivi)) (nil? (:pkluokka rivi)) (= "Ei tiedossa" (:pkluokka rivi))))
                                                      (:pituus rivi)
-                                                        0)
-                                _ (println "fn-laske-yhteen :: ei-tiedossa-pituus-yotyo: " (pr-str ei-tiedossa-pituus-yotyo))
-                                _ (println "fn-laske-yhteen :: ei-tiedossa-pituus: " (pr-str ei-tiedossa-pituus))
-                                ]
+                                                     0)]
 
                             (assoc yht-rivi
                               :pk1-pituus-yotyo (+ (:pk1-pituus-yotyo yht-rivi) pk1-pituus-yotyo)
@@ -371,8 +373,10 @@
                                       fn-laske-yhteen
                                       (yhtrivi-pohja "Valtakunnallisesti yhteensä")
                                       rivit)
+        _ (println "valtakunnallisesti-yhteensa:" (pr-str valtakunnallisesti-yhteensa))
         elyttain-jaoteltu (group-by :hallintayksikko_nimi rivit)
         adjustoi-urakkarivi-tulostukseen (fn [rivi]
+                                           (println "adjustoi-urakkarivi-tulostukseen: " (pr-str rivi))
                                            (assoc rivi
                                              :pk1-pituus-yotyo (if (and (true? (:yotyo rivi)) (= "PK1" (:pkluokka rivi))) (:pituus rivi) 0)
                                              :pk1-pituus (if (and (false? (:yotyo rivi)) (= "PK1" (:pkluokka rivi))) (:pituus rivi) 0)
@@ -437,43 +441,103 @@
 
 (defn muut-kustannukset-taulukko [muut-kustannukset urakan-sanktiot urakka-tai-hallintayksikko?]
   (let [nimi "Muut kustannukset"
-        ;; Ryhmitä sanktiot isommassa kontekstissa
-        sanktiot (if urakka-tai-hallintayksikko?
-                   urakan-sanktiot
-                   (group-by #(get-in % [:hallintayksikko :id]) urakan-sanktiot))
+        ;; Yhdistetään muut-kustannukset ja sanktiot yhdeksi listaksi
+        ;; Ja muokataan sanktiot sisältämään hallintayksikön tiedot
+        urakan-sanktiot (map
+                          (fn [sanktio]
+                            (assoc sanktio :hallintayksikko_nimi (get-in sanktio [:hallintayksikko :nimi])
+                              :elynumero (get-in sanktio [:hallintayksikko :id])))
+                          urakan-sanktiot)
+        elyjaottelu-rivit (group-by :hallintayksikko_nimi (concat [] muut-kustannukset urakan-sanktiot))
+        formatoi-elyt-fn (fn [ely]
+                           (let [elyrivi {:otsikko (str (:elynumero (first (second ely))) " " (first ely))}
+                                 rivi-lista (mapv (fn [rivi]
+                                                    (let [kohdetiedot (when-not (:selite rivi)
+                                                                        (yllapitokohteet-domain/fmt-kohteen-nimi-ja-yhaid-opt rivi))]
+                                                      (muut-kustannukset-rivi
+                                                        (assoc rivi
+                                                          :teksti (or (:selite rivi)
+                                                                    (case (:sakkoryhma rivi)
+                                                                      "yllapidon_sakko" (str "Sakko" kohdetiedot)
+                                                                      "yllapidon_bonus" (str "Bonus" kohdetiedot))))
+                                                        false false))) (second ely))]
+
+                             (vec (flatten [elyrivi (into [] rivi-lista)]))))
 
         fn-formatoi-kustannus (fn [kustannus]
                                 (let [kohdetiedot (when-not (:selite kustannus)
                                                     (yllapitokohteet-domain/fmt-kohteen-nimi-ja-yhaid-opt kustannus))]
                                   (-> [(:pvm kustannus)
+                                       (:urakka-nimi kustannus)
                                        (or (:selite kustannus)
                                          (case (:sakkoryhma kustannus)
                                            "yllapidon_sakko" (str "Sakko" kohdetiedot)
                                            "yllapidon_bonus" (str "Bonus" kohdetiedot)))
                                        (or (:hinta kustannus)
-                                         (:maara kustannus))])))]
+                                         (:maara kustannus))])))
+        rivit (vec (if urakka-tai-hallintayksikko?
+                     ;; Älä tee hallintayksikön ryhmitystä ellei kokomaa valittuna
+                     (map fn-formatoi-kustannus (apply conj muut-kustannukset urakan-sanktiot))
+                     ;; Tee yksiköiden ryhmitys
+                     (mapcat formatoi-elyt-fn elyjaottelu-rivit)))]
     [:taulukko {:otsikko nimi
                 :tyhja (when (empty? muut-kustannukset) "Ei muita kustannuksia.")
                 :sheet-nimi nimi
                 :lisaa-excel-valiotsikot true}
-     [{:otsikko "Pvm" :leveys 10 :fmt :pvm}
-      {:otsikko "Selitys" :leveys 10}
-      {:otsikko "Summa" :leveys 10 :fmt :raha}]
+     [{:otsikko "Pvm" :leveys 2 :fmt :pvm}
+      {:otsikko "Urakka" :leveys 4}
+      {:otsikko "Selitys" :leveys 4}
+      {:otsikko "Summa" :leveys 2 :fmt :raha}]
+     rivit]))
 
-     (if urakka-tai-hallintayksikko?
-       ;; Älä tee hallintayksikön ryhmitystä ellei kokomaa valittuna
-       (map fn-formatoi-kustannus (apply conj muut-kustannukset urakan-sanktiot))
-       ;; Tee yksiköiden ryhmitys
-       (mapcat (fn [kustannus]
-                 (concat [;; Muodosta hallintayksikön otsikko  
-                          {:otsikko (str
-                                      (format "%02d"
-                                        (-> kustannus second  first (get-in [:hallintayksikko :id]))) " "
-                                      (-> kustannus second  first (get-in [:hallintayksikko :nimi]))) :leveys 10}]
-                   (map
-                     fn-formatoi-kustannus
-                     (apply conj muut-kustannukset (second kustannus)))))
-         sanktiot))]))
+(defn- formatoi-pkluokkarivit-taulukolle [pkluokkien-kustannukset muut-kustannukset urakan-sanktiot
+                                          yllapitokohteet+kustannukset vuosi]
+  (let [hallintayksikon-korjausluokkasummat (map
+                                              #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi))
+                                              pkluokkien-kustannukset)
+        ;; Yhdistetään saman urakan pkluokkarivit samalle riville
+        ;; Ota uniikki urakka_id, jotta niiden perusteella voidaan koota uusi lista
+        urakkalistaus (into #{} (map :urakka_id yllapitokohteet+kustannukset))
+        urakkalistaus  (mapv (fn [urakka_id]
+                              (let [;; Muodostetaan urakkariville pohja, johon lasketaan pkluokat ja muut kustannukset yhteen
+                                    uusi-urakkarivi {:hallintayksikko_id 0 :nimi "" :hallintayksikko_nimi "" :elynumero "" :urakka_id urakka_id :pk1 0 :pk2 0 :pk3 0 :eitiedossa 0 :muut-kustannukset 0}]
+                                ;; Käy läpi kaikki hallintayksiköittäin jaotellut pkluokkasummat ja muodosta yhtä urakkaa kohti aina yksi uusi-urakkarivi
+                                (reduce (fn [yht-rivi urakkarivi]
+                                          (let [yht-rivi (if (= (:urakka_id urakkarivi) (:urakka_id yht-rivi))
+                                                           (assoc yht-rivi
+                                                             :hallintayksikko_id (:hallintayksikko_id urakkarivi)
+                                                             :nimi (:nimi urakkarivi)
+                                                             :hallintayksikko_nimi (:hallintayksikko_nimi urakkarivi)
+                                                             :elynumero (:elynumero urakkarivi)
+                                                             :pk1 (+ (:pk1 yht-rivi) (if (= "PK1" (:pkluokka urakkarivi))
+                                                                                       (:kokonaishinta urakkarivi)
+                                                                                       0))
+                                                             :pk2 (+ (:pk2 yht-rivi) (if (= "PK2" (:pkluokka urakkarivi))
+                                                                                       (:kokonaishinta urakkarivi)
+                                                                                       0))
+                                                             :pk3 (+ (:pk3 yht-rivi) (if (= "PK3" (:pkluokka urakkarivi))
+                                                                                       (:kokonaishinta urakkarivi)
+                                                                                       0))
+                                                             :eitiedossa (+ (:eitiedossa yht-rivi) (if (or (nil? (:pkluokka urakkarivi)) (= "Ei tiedossa" (:pkluokka urakkarivi)))
+                                                                                                     (:kokonaishinta urakkarivi)
+                                                                                                     0)))
+                                                           yht-rivi)]
+                                            yht-rivi))
+                                  uusi-urakkarivi
+                                  hallintayksikon-korjausluokkasummat)))
+                        urakkalistaus)
+        ;; Poista urakkarivit, joissa elynumero on tyhjä
+        urakkalistaus (remove #(and (= "" (:elynumero %)) (= "" (:hallintayksikko_nimi %)) ) urakkalistaus)
+        ;; Lisätään kohdistamattomat kustannukset pk-luokkien kustannuksiin eli muut kustannukset ja sanktiot
+        hallintayksikon-korjausluokkasummat (map
+                                              (fn [rivi]
+                                                (let [muut-kustannukset (apply + (keep (fn [kustannus]
+                                                                                         (when (= (or (:urakka_id kustannus) (get-in kustannus [:urakka :id])) (:urakka_id rivi))
+                                                                                           (or (:hinta kustannus) (:maara kustannus))))
+                                                                                   (concat [] muut-kustannukset urakan-sanktiot)))]
+                                                  (assoc rivi :muut-kustannukset muut-kustannukset)))
+                                              urakkalistaus)]
+    hallintayksikon-korjausluokkasummat))
 
 (defn suorita [db user {:keys [urakka-id vuosi hallintayksikko-id] :as tiedot}]
   (let [urakka-tai-hallintayksikko? (or
@@ -519,23 +583,14 @@
         pkluokkien-kustannukset (when-not urakka-id
                                   (sort-by
                                     :elynumero
-                                    (pkluokkien-kustannukset-hallintayksikoittain db {:vuosi vuosi
-                                                                                             :hallintayksikko hallintayksikko-id})))
-        _ (println "pkluokkien-kustannukset: " (pr-str pkluokkien-kustannukset))
-        hallintayksikon-korjausluokkasummat (when-not urakka-id
-                                              (map
-                                                #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi))
-                                                pkluokkien-kustannukset))
-        ;; Lisätään muut kustannukset pk-luokkien kustannuksiin
-        hallintayksikon-korjausluokkasummat (when-not urakka-id
-                                              (map
-                                                (fn [rivi]
-                                                  (let [muut-kustannukset (apply + (keep (fn [kustannus]
-                                                                                           (when (= (:id kustannus) (:urakka_id rivi))
-                                                                                             (:hinta kustannus)))
-                                                                                     muut-kustannukset))]
-                                                    (assoc rivi :muut-kustannukset muut-kustannukset)))
-                                                hallintayksikon-korjausluokkasummat))
+                                    (pkluokkien-kustannukset-urakoittain db {:vuosi vuosi
+                                                                             :hallintayksikko hallintayksikko-id})))
+        pkluokkien-kustannukset (when-not urakka-id
+                                  (formatoi-pkluokkarivit-taulukolle pkluokkien-kustannukset muut-kustannukset
+                                    urakan-sanktiot yllapitokohteet+kustannukset vuosi))
+
+
+
 
         pkluokkien-yotyot (when-not urakka-id
                             (sort-by
@@ -563,9 +618,9 @@
 
      ;; Eurot / PK-luokka - Näytetään vain hallintayksiköille ja valtakunnallisesti
      (when-not urakka-id
-       (pkluokka-taulukko hallintayksikon-korjausluokkasummat))
+       (pkluokka-taulukko pkluokkien-kustannukset))
 
      ;; Yötyö / PK-luokka - Näytetään vain hallintayksiköille ja valtakunnallisesti
-     (when-not urakka-id
-       [:teksti (str "Kokonaisarvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta.")]
-       (pkluokka-yotyo-taulukko pkluokkien-yotyot))]))
+     #_(when-not urakka-id
+         [:teksti (str "Kokonaisarvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta.")]
+         (pkluokka-yotyo-taulukko pkluokkien-yotyot))]))

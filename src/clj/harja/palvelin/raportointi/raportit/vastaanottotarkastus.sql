@@ -55,9 +55,11 @@ GROUP BY ypk.id, ypkk.sopimuksen_mukaiset_tyot, ypkk.maaramuutokset, ypkk.arvonv
 
 -- name: hae-muut-kustannukset
 SELECT
-  u.id,
+  u.id     AS urakka_id,
+  u.nimi   AS "urakka-nimi",
   o.id     AS "hallintayksikko_id",
   o.nimi   AS "hallintayksikko_nimi",
+  lpad(cast(o.elynumero AS VARCHAR), 2, '0') AS elynumero,
   yt.id,
   yt.pvm,
   yt.selite,
@@ -78,6 +80,8 @@ ORDER BY yt.pvm DESC;
 SELECT
   o.id     AS "hallintayksikko_id",
   o.nimi   AS "hallintayksikko_nimi",
+  u.id     AS urakka_id,
+  u.nimi   AS "urakka-nimi",
   s.maara,
   s.sakkoryhma,
   lp.aika AS "pvm",
@@ -101,19 +105,19 @@ WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL)
       AND s.poistettu IS NOT TRUE
 ORDER BY s.perintapvm DESC;
 
--- name: pkluokkien-kustannukset-hallintayksikoittain
+-- name: pkluokkien-kustannukset-urakoittain
 -- Päätellään päällystyskohteen pk-luokka laskemalla alikohteiden (yllapitokohdeosa) pituudet ja ottamalla se
 -- pk-luokka, jonka pituus on suurin
   WITH sakot AS (SELECT SUM(-(s.maara)) AS sakot,
-                        ypk.id          AS yllapitokohdeid
-                   FROM yllapitokohde ypk
-                            JOIN urakka u ON ypk.urakka = u.id
+                        u.id          AS urakkaid
+                   FROM urakka u
                             JOIN organisaatio o ON u.hallintayksikko = o.id
-                            LEFT JOIN laatupoikkeama lp ON lp.yllapitokohde = ypk.id AND lp.poistettu IS NOT TRUE
-                            LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
-                  WHERE :vuosi = ANY (ypk.vuodet)
-                    AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
-                  GROUP BY ypk.id)
+                            JOIN laatupoikkeama lp ON lp.urakka = u.id AND lp.poistettu IS NOT TRUE
+                            JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
+                  WHERE (SELECT EXTRACT(YEAR FROM lp.aika)) = :vuosi
+                    AND (1::INTEGER IS NULL OR u.hallintayksikko = 1)
+                    AND u.tyyppi = 'paallystys' AND u.urakkanro IS NOT NULL
+                  GROUP BY u.id)
 SELECT u.nimi                                     AS nimi,
        u.id                                       AS urakka_id,
        o.id                                       AS "hallintayksikko_id",
@@ -129,10 +133,10 @@ SELECT u.nimi                                     AS nimi,
        SUM(ypkk.maku_paallysteet)                 AS "maku-paallysteet",
        SUM(s.sakot)                               AS "sakot-ja-bonukset"
   FROM yllapitokohde ypk
-           LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypk.id = ypkk.yllapitokohde
-           LEFT JOIN sakot s ON s.yllapitokohdeid = ypk.id
+           JOIN yllapitokohteen_kustannukset ypkk ON ypk.id = ypkk.yllapitokohde
            JOIN urakka u ON ypk.urakka = u.id
            JOIN organisaatio o ON u.hallintayksikko = o.id
+           LEFT JOIN sakot s ON u.id = s.urakkaid
  WHERE :vuosi = ANY (ypk.vuodet)
    AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
    AND ypk.poistettu IS NOT TRUE
@@ -152,14 +156,13 @@ SELECT u.nimi                             AS nimi,
                   ypk.tr_alkuosa,
                   ypk.tr_alkuetaisyys,
                   ypk.tr_loppuosa,
-                  ypk.tr_loppuetaisyys))) AS "pituus",
-       10                                 AS prosentti
+                  ypk.tr_loppuetaisyys))) AS "pituus"
   FROM yllapitokohde ypk
-           LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypk.id = ypkk.yllapitokohde
+           JOIN yllapitokohteen_kustannukset ypkk ON ypk.id = ypkk.yllapitokohde
            JOIN urakka u ON ypk.urakka = u.id
            JOIN organisaatio o ON u.hallintayksikko = o.id
  WHERE :vuosi = ANY (ypk.vuodet)
    AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
    AND ypk.poistettu IS NOT TRUE
- GROUP BY o.id, ypk.pkluokka, ypk.yotyo, u.id
+ GROUP BY o.id, u.id, ypk.pkluokka, ypk.yotyo
  ORDER BY o.id ASC;
