@@ -174,6 +174,7 @@
       (-> app
           (merge vastaus)
           (update :vastaus-lomake dissoc :lahetetty-vastaus)
+          (dissoc :lupausta-lahetataan)
           (update :vastaus-lomake merge uusi-lupaus))))
 
   HaeUrakanLupaustiedotEpaonnistui
@@ -332,7 +333,9 @@
                          vastaus
                          {:onnistui ->ValitseVaihtoehtoOnnistui
                           :epaonnistui ->ValitseVaihtoehtoEpaonnistui})
-      (assoc-in app [:vastaus-lomake :lahetetty-vastaus] vastaus)))
+      (-> app 
+        (assoc-in [:vastaus-lomake :lahetetty-vastaus] vastaus)
+        (assoc :lupausta-lahetataan {:kohdekuukausi kohdekuukausi :lupaus-id (:lupaus-id lupaus)}))))
 
   ValitseVaihtoehtoOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -343,7 +346,9 @@
   ValitseVaihtoehtoEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Vastauksen antaminen epäonnistui!" :varoitus)
-    (update app :vastaus-lomake dissoc :lahetetty-vastaus))
+    (-> app
+      (update :vastaus-lomake dissoc :lahetetty-vastaus)
+      (dissoc :lupausta-lahetataan)))
 
   ValitseKE
   (process-event [{vastaus :vastaus lupaus :lupaus kohdekuukausi :kohdekuukausi kohdevuosi :kohdevuosi} app]
@@ -362,7 +367,9 @@
                          vastaus-map
                          {:onnistui ->ValitseKEOnnistui
                           :epaonnistui ->ValitseKEEpaonnistui})
-      (assoc-in app [:vastaus-lomake :lahetetty-vastaus] vastaus-map)))
+      (-> app
+        (assoc-in [:vastaus-lomake :lahetetty-vastaus] vastaus-map)
+        (assoc :lupausta-lahetataan {:kohdekuukausi kohdekuukausi :lupaus-id (:lupaus-id lupaus)}))))
 
   ValitseKEOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -373,7 +380,9 @@
   ValitseKEEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Vastauksen antaminen epäonnistui!" :varoitus)
-    (update app :vastaus-lomake dissoc :lahetetty-vastaus))
+    (-> app
+      (update :vastaus-lomake dissoc :lahetetty-vastaus)
+      (dissoc :lupausta-lahetataan)))
 
   Kuukausipisteitamuokattu
   (process-event [{pisteet :pisteet kuukausi :kuukausi} app]
