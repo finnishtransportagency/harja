@@ -13,6 +13,7 @@ WITH paikkaustehtavat AS (SELECT tpk4.*
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
+  u.urakkanro AS urakka_nro,
   NULL::INTEGER AS talvitieluokka,
   NULL::INTEGER AS soratieluokka,
   mk.id AS materiaali_id,
@@ -37,6 +38,7 @@ UNION
 SELECT
     u.id AS urakka_id,
     u.nimi AS urakka_nimi,
+    u.urakkanro as urakka_nro,
     NULL::INTEGER AS talvitieluokka,
     NULL::INTEGER AS soratieluokka,
     -- Jokin materiaali_id valitettavasti täytyy olla, koska raportin generoinnin puolella filtteröidään pois sellaisia tuloksia, joilla ei ole ID:tä.
@@ -66,6 +68,7 @@ UNION
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
+  u.urakkanro AS urakka_nro,
   (CASE WHEN mk.materiaalityyppi IN ('talvisuola', 'formiaatti') THEN hl.hoitoluokka END) AS talvitieluokka,
   (CASE WHEN mk.materiaalityyppi IN ('kesasuola') THEN umkh.soratiehoitoluokka END) AS soratieluokka,
   mk.id AS materiaali_id,
@@ -102,7 +105,9 @@ UNION
 -- Liitä lopuksi mukaan suunnittelutiedot. Kuukausi on null, josta myöhemmin
 -- rivi tunnistetaan suunnittelutiedoksi.
 SELECT
-  u.id as urakka_id, u.nimi as urakka_nimi,
+  u.id as urakka_id,
+  u.nimi as urakka_nimi,
+  u.urakkanro AS urakka_nro,
   NULL::INTEGER as talvitieluokka,
   NULL::INTEGER AS soratieluokka,
   mk.id as materiaali_id, mk.nimi as materiaali_nimi,
@@ -131,7 +136,9 @@ UNION
 -- toimenpidekoodit on mäpätty materiaaleihin erikseen materiaaliluokan ja materiaalikoodin avulla
 -- Ja jätä suolauksen suunnitellut määrät ulos, koska ne haetaan taas hieman eri logiikalla
 SELECT
-    u.id as urakka_id, u.nimi as urakka_nimi,
+    u.id as urakka_id,
+    u.nimi as urakka_nimi,
+    u.urakkanro AS urakka_nro,
     NULL::INTEGER as talvitieluokka,
     NULL::INTEGER AS soratieluokka,
     mk.id as materiaali_id,
@@ -161,6 +168,7 @@ UNION
 -- eri tavalla.
 SELECT u.id AS urakka_id,
        u.nimi AS urakka_nimi,
+       u.urakkanro AS urakka_nro,
        NULL::INTEGER AS talvitieluokka,
        NULL::INTEGER AS soratieluokka,
        -- Jokin materiaali_id valitettavasti täytyy olla, koska raportin generoinnin puolella filtteröidään pois sellaisia tuloksia, joilla ei ole ID:tä.
