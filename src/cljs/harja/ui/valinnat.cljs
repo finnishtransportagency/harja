@@ -1,7 +1,8 @@
 (ns harja.ui.valinnat
   "Yleisiä valintoihin liittyviä komponentteja.
   Refaktoroitu vanhasta harja.views.urakka.valinnat namespacesta."
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [harja.tiedot.navigaatio :as nav]
+            [reagent.core :refer [atom] :as r]
 
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
@@ -48,27 +49,37 @@
 
 (defn urakan-hoitokausi
   [ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
-  [:div.label-ja-alasveto.hoitokausi
-   [:span.alasvedon-otsikko (cond
-                              (#{:hoito :teiden-hoito} (:tyyppi ur)) "Hoitokausi"
-                              (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur)) "Urakkavuosi"
-                              :default "Sopimuskausi")]
-   [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
-                         :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % @hoitokaudet) "Valitse")
-                         :valitse-fn valitse-fn}
-    @hoitokaudet]])
+  (let [kausi-termi (cond
+                      (#{:hoito :teiden-hoito} (:tyyppi ur)) "Hoitokausi"
+                      (or
+                        (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur))
+                       #{:paallystys (:tyyppi ur)}) "Urakkavuosi"
+                      :else "Sopimuskausi") ]
+    [:div.label-ja-alasveto.hoitokausi
+     [:span.alasvedon-otsikko kausi-termi]
+     [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
+                           :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % @hoitokaudet kausi-termi) "Valitse")
+                           :valitse-fn valitse-fn}
+      @hoitokaudet]]))
 
 (defn urakan-hoitokausi-tuck
   [valittu-hoitokausi hoitokaudet tuck-event optiot]
-  [:div {:class (if (:wrapper-luokka optiot)
-                  (:wrapper-luokka optiot)
-                  "col-xs-6.col-md-3")}
-   [:label.alasvedon-otsikko-vayla "Hoitovuosi"]
-   [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
-                                 :vayla-tyyli? true
-                                 :valitse-fn tuck-event
-                                 :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet) "Valitse")}
-    hoitokaudet]])
+  (let [urakkatyyppi (-> @nav/valittu-urakka :tyyppi)
+        kausi-termi (cond
+                      (#{:hoito :teiden-hoito} urakkatyyppi) "Hoitokausi"
+                      (or
+                        (u-domain/vesivaylaurakkatyyppi? urakkatyyppi)
+                        #{:paallystys urakkatyyppi}) "Urakkavuosi"
+                      :else "Sopimuskausi")]
+    [:div {:class (if (:wrapper-luokka optiot)
+                    (:wrapper-luokka optiot)
+                    "col-xs-6.col-md-3")}
+     [:label.alasvedon-otsikko-vayla kausi-termi]
+     [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
+                                   :vayla-tyyli? true
+                                   :valitse-fn tuck-event
+                                   :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet kausi-termi) "Valitse")}
+      hoitokaudet]]))
 
 (defn hoitokausi
   ([hoitokaudet valittu-hoitokausi-atom]
@@ -686,7 +697,7 @@
    [yleiset/livi-pudotusvalikko {:valinta valittu
                                  :vayla-tyyli? true
                                  :valitse-fn valitse-fn
-                                 :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % urakan-hoitokaudet) "Valitse")}
+                                 :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % urakan-hoitokaudet "Hoitovuosi") "Valitse")}
     hoitovuosien-jarjestysluvut]])
 
 (defn segmentoitu-ohjaus
