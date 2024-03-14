@@ -58,7 +58,7 @@
            [:label.alasvedon-otsikko "Hoitokausi"]
            [yleiset/livi-pudotusvalikko {:valinta hoitokausi
                                          :valitse-fn #(e! (t/->ValitseTaso % :hoitokausi))
-                                         :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet)
+                                         :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet "Hoitovuosi")
                                          :disabled (or
                                                      (not sopimukset-syotetty?)
                                                      (disabloitu-alasveto? hoitokaudet))
