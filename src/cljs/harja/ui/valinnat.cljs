@@ -49,23 +49,23 @@
 
 (defn urakan-hoitokausi
   [ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
-  (let [kausi-termi (cond
+  (let [vuosi-termi (cond
                       (#{:hoito :teiden-hoito} (:tyyppi ur)) "Hoitokausi"
                       (or
                         (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur))
                        #{:paallystys (:tyyppi ur)}) "Urakkavuosi"
                       :else "Sopimuskausi") ]
     [:div.label-ja-alasveto.hoitokausi
-     [:span.alasvedon-otsikko kausi-termi]
+     [:span.alasvedon-otsikko vuosi-termi]
      [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
-                           :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % @hoitokaudet kausi-termi) "Valitse")
+                           :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % @hoitokaudet vuosi-termi) "Valitse")
                            :valitse-fn valitse-fn}
       @hoitokaudet]]))
 
 (defn urakan-hoitokausi-tuck
   [valittu-hoitokausi hoitokaudet tuck-event optiot]
   (let [urakkatyyppi (-> @nav/valittu-urakka :tyyppi)
-        kausi-termi (cond
+        vuosi-termi (cond
                       (#{:hoito :teiden-hoito} urakkatyyppi) "Hoitokausi"
                       (or
                         (u-domain/vesivaylaurakkatyyppi? urakkatyyppi)
@@ -74,11 +74,11 @@
     [:div {:class (if (:wrapper-luokka optiot)
                     (:wrapper-luokka optiot)
                     "col-xs-6.col-md-3")}
-     [:label.alasvedon-otsikko-vayla kausi-termi]
+     [:label.alasvedon-otsikko-vayla vuosi-termi]
      [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                    :vayla-tyyli? true
                                    :valitse-fn tuck-event
-                                   :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet kausi-termi) "Valitse")}
+                                   :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet vuosi-termi) "Valitse")}
       hoitokaudet]]))
 
 (defn hoitokausi
