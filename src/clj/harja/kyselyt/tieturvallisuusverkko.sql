@@ -24,6 +24,6 @@ FROM (SELECT ST_Union(sisempi.geom) u
 SELECT
     ST_INTERSECTION(geometria, u.alue) AS sijainti
 FROM tieturvallisuusverkko
-         LEFT JOIN urakka u ON u.id = :urakka AND u.tyyppi='teiden-hoito'
+         LEFT JOIN urakka u ON u.id = :urakka AND u.tyyppi IN ('teiden-hoito', 'hoito')
 WHERE
     ST_Intersects(geometria, (SELECT alue FROM urakka WHERE id = :urakka));

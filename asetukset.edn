@@ -146,9 +146,9 @@
                         :kanavien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=vesivaylatiedot:sulkukanavat&outputFormat=SHAPE-ZIP"
                         :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/SulkukanavatPolygon.shz"
 
-                        :tieturvallisuustarkastus-tieverkko-shapefile "file://shp/Tieturvallisuus/tieturvallisuustarkastustiesto.shp"
-                        :tieturvallisuustarkastus-tieverkko-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:tieturvallisuustieverkko&outputFormat=SHAPE-ZIP"
-                        :tieturvallisuustarkastus-tieverkko-tuontikohde "./shp/Tieturvallisuus/tieturvallisuustarkastustiesto.shz"
+                        :tieturvallisuustarkastus-tieverkko-shapefile "file://shp/Tieturvallisuus/tieturvallisuustarkastettavat_tietLine.shp"
+                        :tieturvallisuustarkastus-tieverkko-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:tieturvallisuustarkastettavat_tiet&outputFormat=SHAPE-ZIP"
+                        :tieturvallisuustarkastus-tieverkko-tuontikohde "./shp/Tieturvallisuus/tieturvallisuustarkastettavat.shz"
 
                         :paallysteen-korjausluokka-shapefile "file://shp/PaallysteenKorjausluokka/paallysteen_korjausluokkaLine.shp"
                         :paallysteen-korjausluokka-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:paallysteen_korjausluokka&outputFormat=SHAPE-ZIP"
