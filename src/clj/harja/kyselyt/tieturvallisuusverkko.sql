@@ -2,10 +2,10 @@
 DELETE FROM tieturvallisuusverkko;
 
 -- name: lisaa-tieturvallisuusverkko!
-INSERT INTO tieturvallisuusverkko (tasoluokka, aosa, tie, let, losa, aet, tenluokka,
-                                   geometria, ely, pituus, luonne, luotu)
-VALUES (:tasoluokka, :aosa, :tie, :let, :losa, :aet, :tenluokka,
-        ST_GeomFromText(:the_geom) :: GEOMETRY, :ely, :pituus, :luonne, NOW());
+INSERT INTO tieturvallisuusverkko (aosa, tie, let, losa, aet, tenluokka,
+                                   geometria, pituus, luotu, vaylan_luonne, paavaylan_luonne)
+VALUES (:aosa, :tie, :let, :losa, :aet, :tenluokka,
+        ST_GeomFromText(:the_geom) :: GEOMETRY, :pituus, NOW(), :vaylan_luo, :paavaylan_);
 
 -- name: hae-tieturvallisuusgeometriat
 SELECT tie, aosa, losa, aet, let, geometria FROM tieturvallisuusverkko;
