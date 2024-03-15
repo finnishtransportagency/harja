@@ -41,7 +41,8 @@
             [harja.domain.urakka :as u-domain]
             [harja.domain.urakka :as urakka-domain]
             [taoensso.timbre :as log])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [harja.tyokalut.ui :refer [for*]]))
 
 ;; hallintayksikkö myös
 ;; organisaatio = valinta siitä mitä on tietokannassa
@@ -361,6 +362,14 @@
    [:div "Puhelin: " (:puhelin vastuuhenkilo)]
    [:div "Sähköposti: " (:sahkoposti vastuuhenkilo)]])
 
+(defn- varahenkilo-tooltip [varahenkilot]
+  [:div.varahenkilot
+   (for* [henkilo varahenkilot]
+     [:div
+      [:div.semibold (fmt/kayttaja henkilo)]
+      [:div "Puhelin: " (:puhelin henkilo)]
+      [:div "Sähköposti: " (:sahkoposti henkilo)]])])
+
 (defn- nayta-vastuuhenkilo [paivita-vastuuhenkilot!
                             urakka-id kayttaja kayttajat vastuuhenkilot rooli]
   (let [roolin-henkilot (filter #(= rooli (:rooli %)) vastuuhenkilot)
@@ -376,28 +385,17 @@
                        (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset urakka-id)
                        (or (not= rooli "ELY_Urakanvalvoja")
                          (= :tilaaja (roolit/osapuoli kayttaja))))]
-    [:div.vastuuhenkilo.inline-block
-     [:span
+    [:div.vastuuhenkilo
+     [:div
       (if ensisijainen
         [yleiset/tooltip {}
          [:span.vastuuhenkilo-ensisijainen (fmt/kayttaja ensisijainen)]
          [vastuuhenkilo-tooltip ensisijainen]]
         [:span.vastuuhenkilo-ei-tiedossa "Ei tiedossa"])
       " "
-      (when (= (count varalla) 1)
-        [yleiset/tooltip {}
-         [:span.vastuuhenkilo-varalla "(sijainen " (fmt/kayttaja (first varalla)) ")"]
-         [vastuuhenkilo-tooltip varalla]])
-      (when (> (count varalla) 1)
-        [yleiset/tooltip {}
-         [:span.vastuuhenkilo-varalla "(sijaiset " (fmt/kayttaja varalla-ensisijainen) " ja "
-          (if (= (count varalla-toissijaiset) 1)
-            (str (fmt/kayttaja (first varalla-toissijaiset)) ")")
-            (str (count varalla-toissijaiset) " muuta)"))]
-         [vastuuhenkilo-tooltip varalla]])
       (when voi-muokata?
         [:span.klikattava {:on-click #(modal/nayta!
-                                        {:otsikko (str "Urakan ensisijainen " kayttaja-tyyppi)}
+                                        {:otsikko (str/capitalize kayttaja-tyyppi)}
                                         [aseta-vastuuhenkilo
                                          paivita-vastuuhenkilot!
                                          urakka-id kayttaja kayttajat
@@ -405,7 +403,19 @@
                                          ensisijainen varalla kayttaja-tyyppi])}
          " "
          (ikonit/livicon-wrench)
-         " "])]]))
+         " "])]
+     [:div
+      (when (= (count varalla) 1)
+        [yleiset/tooltip {}
+         [:span.vastuuhenkilo-varalla "Sijainen " (fmt/kayttaja (first varalla))]
+         [varahenkilo-tooltip varalla]])
+      (when (> (count varalla) 1)
+        [yleiset/tooltip {}
+         [:span.vastuuhenkilo-varalla "Sijaiset " (fmt/kayttaja varalla-ensisijainen) " ja "
+          (if (= (count varalla-toissijaiset) 1)
+            (str (fmt/kayttaja (first varalla-toissijaiset)) ")")
+            (str (count varalla-toissijaiset) " muuta"))]
+         [varahenkilo-tooltip varalla]])]]))
 
 (defn- urakan-kesa-aika [ur]
   (let [auki? (atom false)]
