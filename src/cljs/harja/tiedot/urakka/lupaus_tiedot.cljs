@@ -180,7 +180,9 @@
   HaeUrakanLupaustiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Lupaustietojen hakeminen epäonnistui!" :varoitus)
-    (update app :vastaus-lomake dissoc :lahetetty-vastaus))
+    (-> app
+      (update :vastaus-lomake dissoc :lahetetty-vastaus)
+      (dissoc :lupausta-lahetataan)))
 
   HaeKommentitOnnistui
   (process-event [{vastaus :vastaus} app]
