@@ -59,13 +59,13 @@
                      urakka)]
             [:li (fmt/hoitokauden-jarjestysluku-ja-vuodet vuosi
                                                           (mapv #(pvm/vuosi (first %))
-                                                                (urakka/hoito-tai-sopimuskaudet urakka)))])]
+                                                                (urakka/hoito-tai-sopimuskaudet urakka)) "Hoitovuosi")])]
      ;; Vain yksi poistettava rajoitus
      [:ul
       [:li
        (fmt/hoitokauden-jarjestysluku-ja-vuodet (:hoitokauden-alkuvuosi lomake-tila)
                                                 (mapv #(pvm/vuosi (:alkupvm %))
-                                                      (urakka/hoito-tai-sopimuskaudet urakka)))]])
+                                                      (urakka/hoito-tai-sopimuskaudet urakka)) "Hoitovuosi")]])
    [:div
     [kentat/tee-kentta
      {:tyyppi :checkbox
@@ -558,7 +558,7 @@
                                           :vayla-tyyli? true
                                           :data-cy "hoitokausi-valinta"
                                           :valitse-fn #(e! (suolarajoitukset-tiedot/->ValitseHoitovuosi %))
-                                          :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitovuodet)
+                                          :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitovuodet "Hoitovuosi")
                                           :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
              hoitovuodet]]]]
 
