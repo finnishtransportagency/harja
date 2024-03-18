@@ -238,8 +238,7 @@
          [(formatoi-arvo (or (:hinta rivi) (:maara rivi)))]))}))
 
 (defn pkluokka-yotyo-rivi [rivi korosta? lihavoi?]
-  (let [_ (println "pkluokka-yotyo-rivi :: rivi: " (pr-str rivi))
-        laske-prosentti (fn [yotyo paivatyo]
+  (let [laske-prosentti (fn [yotyo paivatyo]
                           (let [yhteensa (bigdec (+ yotyo paivatyo))
                                 yotyo (bigdec yotyo)
                                 paivatyo (bigdec paivatyo)
@@ -643,10 +642,10 @@
      (muut-kustannukset-taulukko muut-kustannukset urakan-sanktiot urakka-tai-hallintayksikko?)
      ;; Näytetään aikataulu vain urakan kontekstissa 
      (when urakka-id
-       (mapcat (fn [[_ otsikko raportti-fn]]
-                 (concat [[:otsikko otsikko]]
-                   (yleinen/osat (raportti-fn db user tiedot))))
-         [[:yllapidon-aikataulu "Aikataulu" yllapidon-aikataulu/suorita]]))
+         (mapcat (fn [[_ otsikko raportti-fn]]
+                   (concat [[:otsikko otsikko]]
+                     (yleinen/osat (raportti-fn db user tiedot))))
+           [[:yllapidon-aikataulu "Aikataulu" yllapidon-aikataulu/suorita]]))
      ;; Yhteenveto 
      (yhteensa-taulukko yllapitokohteet+kustannukset muut-kustannukset urakan-sanktiot vuosi)
 
