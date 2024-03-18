@@ -261,6 +261,7 @@
                                                   :yksikko "%"
                                                   :korosta-hennosti? korosta?
                                                   :desimaalien-maara 2
+                                                  :tasaa :vasen
                                                   :ryhmitelty? true}])]
     {:lihavoi? lihavoi?
      :rivi
@@ -278,31 +279,18 @@
 
 (defn pkluokka-taulukko [rivit]
   (let [valtakunnallisesti-yhteensa (reduce (fn [yht-rivi rivi]
-                                              (let [pk1 (:pk1 rivi)
-                                                    pk2 (:pk2 rivi)
-                                                    pk3 (:pk3 rivi)
-                                                    ei-tiedossa (:eitiedossa rivi)
-                                                    kokonaishinta (+ pk1 pk2 pk3 ei-tiedossa (:muut-kustannukset rivi) (or (:kokonaishinta yht-rivi) 0))]
-
-                                                (assoc yht-rivi
-                                                  :kokonaishinta kokonaishinta
-                                                  :nimi (str "Valtakunnallisesti yhteensä: " kokonaishinta)
-                                                  :pk1 (+ (:pk1 yht-rivi) pk1)
-                                                  :pk2 (+ (:pk2 yht-rivi) pk2)
-                                                  :pk3 (+ (:pk3 yht-rivi) pk3)
-                                                  :eitiedossa (+ (:eitiedossa yht-rivi) ei-tiedossa)
-                                                  :muut-kustannukset (+ (:muut-kustannukset yht-rivi) (:muut-kustannukset rivi)))))
+                                              (assoc yht-rivi
+                                                :pk1 (+ (:pk1 yht-rivi) (:pk1 rivi))
+                                                :pk2 (+ (:pk2 yht-rivi) (:pk2 rivi))
+                                                :pk3 (+ (:pk3 yht-rivi) (:pk3 rivi))
+                                                :eitiedossa (+ (:eitiedossa yht-rivi) (:eitiedossa rivi))
+                                                :muut-kustannukset (+ (:muut-kustannukset yht-rivi) (:muut-kustannukset rivi))))
 
                                       {:nimi "Valtakunnallisesti yhteensä" :pk1 0 :pk2 0 :pk3 0 :eitiedossa 0 :muut-kustannukset 0 :kokonaishinta 0}
                                       rivit)
-        elyttain-jaoteltu (group-by :hallintayksikko_nimi rivit)
-        aa (mapv (fn [ely]
-                   (let [elyid (:elynumero (first (second ely)))]
-                     (assoc-in ely [0] (str elyid " " (first ely)))))
-             elyttain-jaoteltu)
-        elyttain-jaoteltu (sort-by first aa)
+        elyttain-jaoteltu (sort-by first (group-by :hallintayksikko_nimi rivit))
         formatoi-elyt-fn (fn [ely]
-                           (let [elyrivi {:otsikko (first ely)}
+                           (let [elyrivi {:otsikko (str (:elynumero (first (second ely))) " " (first ely))}
                                  kohteet-lista (mapv (fn [kohde] (pkluokka-rivi kohde false false)) (second ely))
                                  ely-yhteensa (reduce (fn [yht-rivi rivi]
                                                         (let [pk1 (:pk1 rivi)
@@ -337,72 +325,47 @@
      ;; Data
      (concat (into [] (mapcat formatoi-elyt-fn elyttain-jaoteltu)) [valtukunnallinen-rivi])]))
 
-(defn pkluokka-yotyo-taulukko [rivit]
-  (let [_ (println "pkluokka-yotyo-taulukko :: rivit:" (pr-str rivit))
-        yhtrivi-pohja (fn [otsikko]
+(defn pkluokka-yotyo-taulukko [urakkarivit]
+  (let [yhtrivi-pohja (fn [otsikko]
                         {:nimi otsikko
                          :pk1-pituus-yotyo 0 :pk1-pituus 0
                          :pk2-pituus-yotyo 0 :pk2-pituus 0
                          :pk3-pituus-yotyo 0 :pk3-pituus 0
                          :eitiedossa-pituus-yotyo 0 :eitiedossa-pituus 0})
         fn-laske-yhteen (fn [yht-rivi rivi]
-                          (let [_ (println "fn-laske-yhteen :: rivi: " (pr-str rivi))
-                                pk1-pituus-yotyo (if (and (true? (:yotyo rivi)) (= "PK1" (:pkluokka rivi))) (:pituus rivi) 0)
-                                pk1-pituus (if (and (false? (:yotyo rivi)) (= "PK1" (:pkluokka rivi))) (:pituus rivi) 0)
-                                pk2-pituus-yotyo (if (and (true? (:yotyo rivi)) (= "PK2" (:pkluokka rivi))) (:pituus rivi) 0)
-                                pk2-pituus (if (and (false? (:yotyo rivi)) (= "PK2" (:pkluokka rivi))) (:pituus rivi) 0)
-                                pk3-pituus-yotyo (if (and (true? (:yotyo rivi)) (= "PK3" (:pkluokka rivi))) (:pituus rivi) 0)
-                                pk3-pituus (if (and (false? (:yotyo rivi)) (= "PK3" (:pkluokka rivi))) (:pituus rivi) 0)
-                                ei-tiedossa-pituus-yotyo (if (and (= "true" (:yotyo rivi)) (or (= "" (:pkluokka rivi)) (nil? (:pkluokka rivi)) (= "Ei tiedossa" (:pkluokka rivi))))
-                                                           (:pituus rivi)
-                                                           0)
-                                ei-tiedossa-pituus (if (and (false? (:yotyo rivi)) (or (= "" (:pkluokka rivi)) (nil? (:pkluokka rivi)) (= "Ei tiedossa" (:pkluokka rivi))))
-                                                     (:pituus rivi)
-                                                     0)]
-
-                            (assoc yht-rivi
-                              :pk1-pituus-yotyo (+ (:pk1-pituus-yotyo yht-rivi) pk1-pituus-yotyo)
-                              :pk1-pituus (+ (:pk1-pituus yht-rivi) pk1-pituus)
-                              :pk2-pituus-yotyo (+ (:pk2-pituus-yotyo yht-rivi) pk2-pituus-yotyo)
-                              :pk2-pituus (+ (:pk2-pituus yht-rivi) pk2-pituus)
-                              :pk3-pituus-yotyo (+ (:pk3-pituus-yotyo yht-rivi) pk3-pituus-yotyo)
-                              :pk3-pituus (+ (:pk3-pituus yht-rivi) pk3-pituus)
-                              :eitiedossa-pituus-yotyo (+ (:eitiedossa-pituus-yotyo yht-rivi) ei-tiedossa-pituus-yotyo)
-                              :eitiedossa-pituus (+ (:eitiedossa-pituus yht-rivi) ei-tiedossa-pituus))))
+                          (assoc yht-rivi
+                            :pk1-pituus-yotyo (+ (:pk1-pituus-yotyo yht-rivi) (:pk1-pituus-yotyo rivi))
+                            :pk1-pituus (+ (:pk1-pituus yht-rivi) (:pk1-pituus rivi))
+                            :pk2-pituus-yotyo (+ (:pk2-pituus-yotyo yht-rivi) (:pk2-pituus-yotyo rivi))
+                            :pk2-pituus (+ (:pk2-pituus yht-rivi) (:pk2-pituus rivi))
+                            :pk3-pituus-yotyo (+ (:pk3-pituus-yotyo yht-rivi) (:pk3-pituus-yotyo rivi))
+                            :pk3-pituus (+ (:pk3-pituus yht-rivi) (:pk3-pituus rivi))
+                            :eitiedossa-pituus-yotyo (+ (:eitiedossa-pituus-yotyo yht-rivi) (:eitiedossa-pituus-yotyo rivi))
+                            :eitiedossa-pituus (+ (:eitiedossa-pituus yht-rivi) (:eitiedossa-pituus rivi))))
         valtakunnallisesti-yhteensa (reduce
                                       fn-laske-yhteen
-                                      (yhtrivi-pohja "Valtakunnallisesti yhteensä")
-                                      rivit)
-        _ (println "valtakunnallisesti-yhteensa:" (pr-str valtakunnallisesti-yhteensa))
-        elyttain-jaoteltu (group-by :hallintayksikko_nimi rivit)
-        adjustoi-urakkarivi-tulostukseen (fn [rivi]
-                                           (println "adjustoi-urakkarivi-tulostukseen: " (pr-str rivi))
-                                           (assoc rivi
-                                             :pk1-pituus-yotyo (if (and (true? (:yotyo rivi)) (= "PK1" (:pkluokka rivi))) (:pituus rivi) 0)
-                                             :pk1-pituus (if (and (false? (:yotyo rivi)) (= "PK1" (:pkluokka rivi))) (:pituus rivi) 0)
-                                             :pk2-pituus-yotyo (if (and (true? (:yotyo rivi)) (= "PK2" (:pkluokka rivi))) (:pituus rivi) 0)
-                                             :pk2-pituus (if (and (false? (:yotyo rivi)) (= "PK2" (:pkluokka rivi))) (:pituus rivi) 0)
-                                             :pk3-pituus-yotyo (if (and (true? (:yotyo rivi)) (= "PK3" (:pkluokka rivi))) (:pituus rivi) 0)
-                                             :pk3-pituus (if (and (false? (:yotyo rivi)) (= "PK3" (:pkluokka rivi))) (:pituus rivi) 0)
-                                             :eitiedossa-pituus-yotyo (if (and (true? (:yotyo rivi)) (nil? (:pkluokka rivi))) (:pituus rivi) 0)
-                                             :eitiedossa-pituus (if (and (false? (:yotyo rivi)) (nil? (:pkluokka rivi))) (:pituus rivi) 0)))
+                                      (yhtrivi-pohja "Valtakun. yht. / KA%")
+                                      urakkarivit)
+
+        ;; Groupataan ja järjestellään rivit hallintayksiköittäin, kuten pk-luokka taulukossakin
+        elyttain-jaoteltu (sort-by first (group-by :hallintayksikko_nimi urakkarivit))
+
         formatoi-elyt-fn (fn [ely]
-                           (let [elyid (:hallintayksikko_id (first (second ely)))
-                                 elyrivi {:otsikko (str elyid " " (first ely))}
-                                 kohteet-lista (mapv
-                                                 (fn [kohde]
-                                                   (pkluokka-yotyo-rivi
-                                                     (adjustoi-urakkarivi-tulostukseen kohde) false false))
-                                                 (second ely))
+                           (let [elyrivi {:otsikko (str (:elynumero (first (second ely))) " " (first ely))}
+                                 urakat-lista (mapv
+                                                (fn [rivi]
+                                                  (pkluokka-yotyo-rivi rivi false false))
+                                                (second ely))
                                  ely-yhteensa (reduce fn-laske-yhteen
-                                                (yhtrivi-pohja (str (first ely) " yhteensä"))
+                                                (yhtrivi-pohja (str (first ely) " yht. / KA%"))
                                                 (second ely))]
 
-                             (vec (flatten [elyrivi (into [] kohteet-lista) (pkluokka-yotyo-rivi ely-yhteensa true true)]))))
+                             (vec (flatten [elyrivi (into [] urakat-lista) (pkluokka-yotyo-rivi ely-yhteensa true true)]))))
 
         valtukunnallinen-rivi (pkluokka-yotyo-rivi valtakunnallisesti-yhteensa true true)]
+
     [:taulukko {:otsikko "Yötyö / PK-luokka"
-                :tyhja (when (empty? rivit) "Ei kohteita.")
+                :tyhja (when (empty? urakkarivit) "Ei kohteita.")
                 :sheet-nimi "Yötyö / PK-luokka"
                 :rivi-ennen [{:sarakkeita 1 :leveys 10}
                              {:teksti "PK1 yötyö"
@@ -428,14 +391,14 @@
      ;; Otsikot
      (concat
        [{:otsikko "Urakka" :leveys 10}
-        {:otsikko "Pituus (km)" :leveys 2 :fmt :raha}
-        {:otsikko "Prosenttiosuus" :leveys 2 :fmt :prosentti}
-        {:otsikko "Pituus (km)" :leveys 2 :fmt :raha}
-        {:otsikko "Prosenttiosuus" :leveys 2 :fmt :prosentti}
-        {:otsikko "Pituus (km)" :leveys 2 :fmt :raha}
-        {:otsikko "Prosenttiosuus" :leveys 2 :fmt :prosentti}
-        {:otsikko "Pituus (km)" :leveys 2 :fmt :raha}
-        {:otsikko "Prosenttiosuus" :leveys 2 :fmt :prosentti}])
+        {:otsikko "Pituus (km)" :leveys 2 :fmt :numero :tasaa :oikea}
+        {:otsikko "Prosenttiosuus" :leveys 2 :fmt :prosentti :tasaa :vasen}
+        {:otsikko "Pituus (km)" :leveys 2 :fmt :numero :tasaa :oikea}
+        {:otsikko "Prosenttiosuus" :leveys 2 :fmt :prosentti :tasaa :vasen}
+        {:otsikko "Pituus (km)" :leveys 2 :fmt :numero :tasaa :oikea}
+        {:otsikko "Prosenttiosuus" :leveys 2 :fmt :prosentti :tasaa :vasen}
+        {:otsikko "Pituus (km)" :leveys 2 :fmt :numero :tasaa :oikea}
+        {:otsikko "Prosenttiosuus" :leveys 2 :fmt :prosentti :tasaa :vasen}])
      ;; Data
      (concat (into [] (mapcat formatoi-elyt-fn elyttain-jaoteltu)) [valtukunnallinen-rivi])]))
 
@@ -498,7 +461,7 @@
         ;; Yhdistetään saman urakan pkluokkarivit samalle riville
         ;; Ota uniikki urakka_id, jotta niiden perusteella voidaan koota uusi lista
         urakkalistaus (into #{} (map :urakka_id yllapitokohteet+kustannukset))
-        urakkalistaus  (mapv (fn [urakka_id]
+        urakkalistaus (mapv (fn [urakka_id]
                               (let [;; Muodostetaan urakkariville pohja, johon lasketaan pkluokat ja muut kustannukset yhteen
                                     uusi-urakkarivi {:hallintayksikko_id 0 :nimi "" :hallintayksikko_nimi "" :elynumero "" :urakka_id urakka_id :pk1 0 :pk2 0 :pk3 0 :eitiedossa 0 :muut-kustannukset 0}]
                                 ;; Käy läpi kaikki hallintayksiköittäin jaotellut pkluokkasummat ja muodosta yhtä urakkaa kohti aina yksi uusi-urakkarivi
@@ -527,7 +490,7 @@
                                   hallintayksikon-korjausluokkasummat)))
                         urakkalistaus)
         ;; Poista urakkarivit, joissa elynumero on tyhjä
-        urakkalistaus (remove #(and (= "" (:elynumero %)) (= "" (:hallintayksikko_nimi %)) ) urakkalistaus)
+        urakkalistaus (remove #(and (= "" (:elynumero %)) (= "" (:hallintayksikko_nimi %))) urakkalistaus)
         ;; Lisätään kohdistamattomat kustannukset pk-luokkien kustannuksiin eli muut kustannukset ja sanktiot
         hallintayksikon-korjausluokkasummat (map
                                               (fn [rivi]
@@ -538,6 +501,77 @@
                                                   (assoc rivi :muut-kustannukset muut-kustannukset)))
                                               urakkalistaus)]
     hallintayksikon-korjausluokkasummat))
+
+(defn formatoi-yotyorivit-taulukolle [rivit yllapitokohteet+kustannukset]
+  (let [;; Mäppää yllapitokohtaiset rivit urakkakohtaisiksi
+        urakkalistaus (into #{} (map :urakka_id yllapitokohteet+kustannukset))
+        urakkalistaus (mapv (fn [urakka_id]
+                              (let [;; Muodostetaan urakkariville pohja, johon lasketaan pkluokat ja muut kustannukset yhteen
+                                    uusi-urakkarivi {:nimi ""
+                                                     :hallintayksikko_id ""
+                                                     :hallintayksikko_nimi ""
+                                                     :elynumero ""
+                                                     :urakka_id urakka_id
+                                                     :pk1-pituus-yotyo 0 :pk1-pituus 0
+                                                     :pk2-pituus-yotyo 0 :pk2-pituus 0
+                                                     :pk3-pituus-yotyo 0 :pk3-pituus 0
+                                                     :eitiedossa-pituus-yotyo 0 :eitiedossa-pituus 0}]
+                                ;; Käy läpi kaikki yötyörivit ja muodosta yhtä urakkaa kohti aina yksi uusi-urakkarivi
+                                (reduce (fn [yht-rivi urakkarivi]
+                                          (let [yht-rivi (if (= (:urakka_id urakkarivi) (:urakka_id yht-rivi))
+                                                           (let [pk1-pituus-yotyo (if (and (true? (:yotyo urakkarivi))
+                                                                                        (= "PK1" (:pkluokka urakkarivi)))
+                                                                                    (:pituus urakkarivi) 0)
+                                                                 pk1-pituus (if (and (false? (:yotyo urakkarivi))
+                                                                                  (= "PK1" (:pkluokka urakkarivi)))
+                                                                              (:pituus urakkarivi) 0)
+                                                                 pk2-pituus-yotyo (if (and (true? (:yotyo urakkarivi))
+                                                                                        (= "PK2" (:pkluokka urakkarivi)))
+                                                                                    (:pituus urakkarivi) 0)
+                                                                 pk2-pituus (if (and (false? (:yotyo urakkarivi))
+                                                                                  (= "PK2" (:pkluokka urakkarivi)))
+                                                                              (:pituus urakkarivi) 0)
+                                                                 pk3-pituus-yotyo (if (and (true? (:yotyo urakkarivi))
+                                                                                        (= "PK3" (:pkluokka urakkarivi)))
+                                                                                    (:pituus urakkarivi) 0)
+                                                                 pk3-pituus (if (and (false? (:yotyo urakkarivi))
+                                                                                  (= "PK3" (:pkluokka urakkarivi)))
+                                                                              (:pituus urakkarivi) 0)
+                                                                 ei-tiedossa-pituus-yotyo (if (and (= "true" (:yotyo urakkarivi))
+                                                                                                (or (= "" (:pkluokka urakkarivi))
+                                                                                                  (nil? (:pkluokka urakkarivi))
+                                                                                                  (= "Ei tiedossa" (:pkluokka urakkarivi))))
+                                                                                            (:pituus urakkarivi)
+                                                                                            0)
+                                                                 ei-tiedossa-pituus (if (and (false? (:yotyo urakkarivi))
+                                                                                          (or (= "" (:pkluokka urakkarivi))
+                                                                                            (nil? (:pkluokka urakkarivi))
+                                                                                            (= "Ei tiedossa" (:pkluokka urakkarivi))))
+                                                                                      (:pituus urakkarivi)
+                                                                                      0)]
+
+                                                             (assoc yht-rivi
+                                                               :hallintayksikko_id (:hallintayksikko_id urakkarivi)
+                                                               :nimi (:nimi urakkarivi)
+                                                               :hallintayksikko_nimi (:hallintayksikko_nimi urakkarivi)
+                                                               :elynumero (:elynumero urakkarivi)
+                                                               :pk1-pituus-yotyo (+ (:pk1-pituus-yotyo yht-rivi) pk1-pituus-yotyo)
+                                                               :pk1-pituus (+ (:pk1-pituus yht-rivi) pk1-pituus)
+                                                               :pk2-pituus-yotyo (+ (:pk2-pituus-yotyo yht-rivi) pk2-pituus-yotyo)
+                                                               :pk2-pituus (+ (:pk2-pituus yht-rivi) pk2-pituus)
+                                                               :pk3-pituus-yotyo (+ (:pk3-pituus-yotyo yht-rivi) pk3-pituus-yotyo)
+                                                               :pk3-pituus (+ (:pk3-pituus yht-rivi) pk3-pituus)
+                                                               :eitiedossa-pituus-yotyo (+ (:eitiedossa-pituus-yotyo yht-rivi) ei-tiedossa-pituus-yotyo)
+                                                               :eitiedossa-pituus (+ (:eitiedossa-pituus yht-rivi) ei-tiedossa-pituus)))
+                                                           yht-rivi)]
+                                            yht-rivi))
+                                  uusi-urakkarivi
+                                  rivit)))
+                        urakkalistaus)
+
+        ;; Poista urakkarivit, joissa elynumero on tyhjä
+        urakkalistaus (remove #(and (= "" (:elynumero %)) (= "" (:hallintayksikko_nimi %))) urakkalistaus)]
+    urakkalistaus))
 
 (defn suorita [db user {:keys [urakka-id vuosi hallintayksikko-id] :as tiedot}]
   (let [urakka-tai-hallintayksikko? (or
@@ -597,7 +631,7 @@
                               :elynumero
                               (pkluokkien-yotyot-hallintayksikoittain db {:vuosi vuosi
                                                                           :hallintayksikko hallintayksikko-id})))
-        ]
+        pkluokkien-yotyot-elyittain-jaoteltuna (formatoi-yotyorivit-taulukolle pkluokkien-yotyot yllapitokohteet+kustannukset)]
 
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
@@ -621,6 +655,6 @@
        (pkluokka-taulukko pkluokkien-kustannukset))
 
      ;; Yötyö / PK-luokka - Näytetään vain hallintayksiköille ja valtakunnallisesti
-     #_(when-not urakka-id
-         [:teksti (str "Kokonaisarvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta.")]
-         (pkluokka-yotyo-taulukko pkluokkien-yotyot))]))
+     (when-not urakka-id
+       [:teksti (str "Kokonaisarvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta.")]
+       (pkluokka-yotyo-taulukko pkluokkien-yotyot-elyittain-jaoteltuna))]))

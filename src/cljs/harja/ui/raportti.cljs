@@ -193,7 +193,7 @@
                           raporttielementteja? :komponentti
                           :else :string)
                 :tasaa (if (or (oikealle-tasattavat-kentat i)
-                             (raportti-domain/numero-fmt? (:fmt sarake)))
+                             (and (raportti-domain/numero-fmt? (:fmt sarake)) (not= :vasen (:tasaa sarake))))
                          :oikea
                          (:tasaa sarake))}
                (when raporttielementteja?
