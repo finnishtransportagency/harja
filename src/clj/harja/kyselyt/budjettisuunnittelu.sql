@@ -309,7 +309,7 @@ where muuttuneet.id = urakka_tavoite.id;
 
 -- name: hae-urakoiden-tarjoushinnat
 SELECT u.id                           AS urakka,
-       COALESCE(u.lyhyt_nimi, u.nimi) AS "urakka-nimi",
+       u.nimi                         AS "urakka-nimi",
        ut.id,
        ut.tarjous_tavoitehinta        AS "tarjous-tavoitehinta",
        ut.hoitokausi,
