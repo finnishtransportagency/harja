@@ -116,7 +116,8 @@
             argumentit
             {:onnistui ->ToimenpiteetHaettu
              :epaonnistui ->ToimenpiteidenHakuEpaonnistui})
-          (assoc :haku-kaynnissa? true)))
+          (assoc :haku-kaynnissa? true)
+          (assoc :avattu-toimenpide nil)))
       app))
 
   ToimenpiteetHaettu
