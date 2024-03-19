@@ -338,7 +338,7 @@
             ;; Tallennetaan loki raportin ajon startista
             (let [parametrit (assoc parametrit :kasittelija kasittelija)
                   _ (when-not (= nimi :ilmoitukset-raportti)
-                      (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti " parametreilla " parametrit))
+                      (log/debug "SUORITETAAN RAPORTTI: " nimi " kontekstissa: " konteksti " parametreilla: " parametrit))
                   suoritus-id (luo-suoritustieto-raportille
                                db 
                                kayttaja 
