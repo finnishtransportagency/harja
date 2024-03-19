@@ -355,6 +355,7 @@
         [valinnat/kanavaurakan-kohde+kaikki]))))
 
 (defonce urakoittain? (atom false))
+(defonce urakkanumero? (atom false))
 
 (defmethod raportin-parametri "urakoittain" [p arvo]
   (if @nav/valittu-urakka
@@ -365,6 +366,18 @@
                                          (reset! arvo
                                                  {:urakoittain? @urakoittain?}))}
       urakoittain?]]))
+
+(defmethod raportin-parametri "urakkanumero" [p arvo]
+  (if @nav/valittu-urakka
+    [:span]
+    ;; Täytyy valita urakoittain? että tämä voidaan näyttää.
+    (when @urakoittain?
+      [:div.urakkanumero
+       [kentat/raksiboksi {:teksti (:nimi p)
+                           :toiminto #(do (swap! urakkanumero? not)
+                                        (reset! arvo
+                                          {:urakkanumero? @urakkanumero?}))}
+        urakkanumero?]])))
 
 (defonce valittu-muutostyotyyppi (atom nil))
 
