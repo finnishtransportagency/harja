@@ -58,3 +58,4 @@ jobs:
         if: always()
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
+          service: ${{ vars.ECS_SERVICE_NAME }}
