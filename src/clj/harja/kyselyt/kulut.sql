@@ -126,7 +126,9 @@ where k.urakka = :urakka
 
 -- name: hae-urakan-kulut-kohdistuksineen
 -- Hakee urakan kulut ja niihin liittyvät kohdistukset annetulta aikaväliltä
-SELECT k.id                   as "id",
+SELECT m.numero                AS "maksuera-numero",
+	     m.nimi,
+ 	     k.id                   as "id",
        k.kokonaissumma        as "kokonaissumma",
        k.erapaiva             as "erapaiva",
        k.tyyppi               as "tyyppi",
@@ -144,6 +146,7 @@ SELECT k.id                   as "id",
        kk.maksueratyyppi      as "maksueratyyppi"
 from kulu k
        JOIN kulu_kohdistus kk on k.id = kk.kulu AND kk.poistettu IS NOT TRUE
+       JOIN maksuera m ON kk.toimenpideinstanssi = m.toimenpideinstanssi
 WHERE k.urakka = :urakka
     AND (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= k.erapaiva)
     AND (:loppupvm::DATE IS NULL OR k.erapaiva <= :loppupvm::DATE)
