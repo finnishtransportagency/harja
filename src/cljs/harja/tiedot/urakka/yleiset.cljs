@@ -98,9 +98,9 @@
             :paivystajat paivystajat
             :poistettu poistettavat}))
 
-(defn tallenna-urakan-vastuuhenkilot-roolille [urakka-id rooli vastuuhenkilo varahenkilo]
+(defn tallenna-urakan-vastuuhenkilot-roolille [urakka-id rooli vastuuhenkilo varahenkilot]
   (k/post! :tallenna-urakan-vastuuhenkilot-roolille
            {:urakka-id urakka-id
             :rooli rooli
             :vastuuhenkilo vastuuhenkilo
-            :varahenkilo varahenkilo}))
+            :varahenkilot varahenkilot}))

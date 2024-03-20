@@ -197,7 +197,7 @@
     (hoitoluokat/talvihoitoluokan-nimi luokka)
     (hoitoluokat/soratieluokan-nimi luokka)))
 
-(defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet urakoittain? osamateriaalit yksikot-soluissa? nayta-suunnittelu?] :as taulukon-tiedot}]
+(defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet urakoittain? osamateriaalit yksikot-soluissa? nayta-suunnittelu? urakkanumero?] :as taulukon-tiedot}]
   (let [isantarivi-indeksi (atom -1)
         ;; Avattavien rivien indeksit päätellään loopilla.
         ;; Jos rivillä on lapsia, lisätään sen indeksi listaan ja inkrementoidaan seuraavaa indeksiä lasten määrällä.
@@ -338,7 +338,7 @@
 
                          ;; Urakan nimi, jos urakoittain jaottelu päällä
                          (when urakoittain?
-                           [(:nimi urakka)])
+                           [(str (:nimi urakka) (when urakkanumero? (str " (" (:nro urakka) ")")))])
 
                          ;; Materiaalin nimi
                          [[:arvo-ja-selite (materiaalin-nimi-ja-selite (:nimi materiaali))]]
@@ -484,7 +484,7 @@
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
-                               urakoittain? urakkatyyppi] :as parametrit}]
+                               urakoittain? urakkatyyppi urakkanumero?] :as parametrit}]
   (let [urakoittain? (if urakka-id false urakoittain?)
         konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
@@ -588,6 +588,7 @@
                          :konteksti konteksti
                          :kuukaudet kuukaudet
                          :urakoittain? urakoittain?
+                         :urakkanumero? urakkanumero?
                          :yksikot-soluissa? false
                          :nayta-suunnittelu? (if (pvm/onko-hoitokausi? alkupvm loppupvm)
                                                true

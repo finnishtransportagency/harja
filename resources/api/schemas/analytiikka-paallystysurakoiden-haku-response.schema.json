@@ -20,6 +20,9 @@
           "harjaId": {
             "type": "number"
           },
+          "urakkanro": {
+            "type": "string"
+          },
           "elyt": {
             "type": "array",
             "items": {

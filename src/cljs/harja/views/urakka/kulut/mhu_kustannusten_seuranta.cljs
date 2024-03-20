@@ -477,7 +477,7 @@
                                         :data-cy "hoitokausi-valinta"
                                         :valitse-fn #(do (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
                                                        (e! (t-yhteiset/->NollaaValikatselmuksenPaatokset)))
-                                        :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet)
+                                        :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet "Hoitovuosi")
                                         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
            hoitokaudet]]
          [:div.filtteri.kuukausi

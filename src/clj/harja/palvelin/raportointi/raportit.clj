@@ -157,7 +157,8 @@
 
    {:nimi         :ymparistoraportti
     :parametrit   [{:tyyppi "urakoittain", :konteksti nil, :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
-                   {:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+                   {:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
+                   {:tyyppi "urakkanumero", :konteksti nil, :pakollinen true, :nimi "Näytä urakkanumerot"}]
     :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus       "Ympäristöraportti"
     :suorita      #'harja.palvelin.raportointi.raportit.ymparisto/suorita
