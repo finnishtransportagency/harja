@@ -287,7 +287,8 @@
         valtukunnallinen-rivi (apurit/pkluokka-rivi valtakunnallisesti-yhteensa true true)]
     [:taulukko {:otsikko "Eurot / PK-luokka"
                 :tyhja (when (empty? rivit) "Ei kohteita.")
-                :sheet-nimi "Eurot / PK-luokka"}
+                :sheet-nimi "Eurot / PK-luokka"
+                :lisaa-excel-valiotsikot true}
      ;; Otsikot
      (concat
        [{:otsikko "Urakka" :leveys 10}
@@ -340,7 +341,8 @@
 
     [:taulukko {:tyhja (when (empty? urakkarivit) "Ei kohteita.")
                 :sheet-nimi "Yötyö / PK-luokka"
-                :rivi-ennen [{:sarakkeita 1 :leveys 10}
+                :lisaa-excel-valiotsikot true
+                :rivi-ennen [{:sarakkeita 1 :leveys 8}
                              {:teksti "PK1 yötyö"
                               :sarakkeita 2
                               :luokka "paallystys-tausta-tumma"
