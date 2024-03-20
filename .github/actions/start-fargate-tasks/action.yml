@@ -4,6 +4,8 @@ description: 'Käynnnistää uudelleen Harja servicen käynnissä olevat Fargate
 inputs:
   cluster:
     description: "Harja app Fargate cluster name"
+  service:
+    description: "Harja app Fargate service name"
 
 runs:
   using: "composite"
