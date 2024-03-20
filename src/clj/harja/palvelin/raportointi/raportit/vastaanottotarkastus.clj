@@ -492,8 +492,16 @@
                 :nimi raportin-nimi}
      ;; Yha kohteet
      (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet+kustannukset) :yha vuosi urakka-tai-hallintayksikko?)
+
+     ;; Jakaja
+     [:jakaja true]
+
      ;; Muut kohteet
      (yllapitokohteet-taulukko (filter (comp not :yhaid) yllapitokohteet+kustannukset) :paikkaus vuosi urakka-tai-hallintayksikko?)
+
+     ;; Jakaja
+     [:jakaja true]
+
      ;; Muut kustannukset
      (muut-kustannukset-taulukko muut-kustannukset urakan-sanktiot urakka-tai-hallintayksikko?)
      ;; Näytetään aikataulu vain urakan kontekstissa
@@ -502,12 +510,22 @@
                  (concat [[:otsikko otsikko]]
                    (yleinen/osat (raportti-fn db user tiedot))))
          [[:yllapidon-aikataulu "Aikataulu" yllapidon-aikataulu/suorita]]))
+
+     ;; Jakaja
+     [:jakaja true]
+
      ;; Yhteenveto
      (yhteensa-taulukko yllapitokohteet+kustannukset muut-kustannukset urakan-sanktiot vuosi)
+
+     ;; Jakaja
+     [:jakaja true]
 
      ;; Eurot / PK-luokka - Näytetään vain hallintayksiköille ja valtakunnallisesti
      (when-not urakka-id
        (pkluokka-taulukko pkluokkien-kustannukset))
+
+     ;; Jakaja
+     [:jakaja true]
 
      ;; Yötyö / PK-luokka - Näytetään vain hallintayksiköille ja valtakunnallisesti
      (when-not urakka-id
