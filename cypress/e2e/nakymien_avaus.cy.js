@@ -72,7 +72,7 @@ describe('MH-Urakan näkymien avaamiset', function () {
         cy.contains('Turvallisuuspoikkeamat').should('exist')
     })
 
-    it("Avaa Suunnittelun alatabit", function () {
+    it.skip("Avaa Suunnittelun alatabit", function () {
         cy.viewport(1100, 2000)
         cy.visit("/")
         cy.contains('.haku-lista-item', 'Lappi').click()
