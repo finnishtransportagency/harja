@@ -41,13 +41,26 @@
     ;; Palauta tulokset mäpättynä vectoriin [{}] joihin lisätty :virhe mikäli virheitä on
     (vec
       (map-indexed (fn [rivi-nro rivi]
-                     (let [rivi-nro (+ rivi-nro 4) ;; Paikkaukset alkavat rivistä 4
+                     (let [;; Paikkaukset alkavat rivistä 4
+                           rivi-nro (+ rivi-nro 4)
                            nil-avaimet (vec
                                          ;; Katso onko rivillä tyhjiä sarakkeita
                                          (keep #(when (nil? (% rivi))
                                                   ;; Näytetään tyhjät sarakkeet muodossa ["kenttä"]
                                                   (name %))
                                            (keys rivi)))
+                           ; Validoi kokonaisluvut 
+                           kokonaislukuja? (every? #(integer? (% rivi))
+                                             [:aosa :losa :tie :aet :let :tunniste])
+                           ; Validoi desimaalit
+                           kustannus-maara-validi? (every?
+                                                     ;; Saa olla joko int tai float 
+                                                     #(or
+                                                        (integer? (% rivi))
+                                                        (float? (% rivi)))
+                                                     [:kustannus :maara])
+
+
                            tunniste (:tunniste rivi)
                            ;; Onko tämä tunniste jo nähty?
                            tunniste-olemassa? (and tunniste (contains? @nahdyt-tunnisteet tunniste))]
@@ -56,6 +69,12 @@
                        (cond
                          (not-empty nil-avaimet)
                          (assoc rivi :virhe (str "Rivillä " rivi-nro " on tyhjiä kenttiä: " nil-avaimet))
+
+                         (not kokonaislukuja?)
+                         (assoc rivi :virhe (str "Rivillä " rivi-nro " aosa, losa, tie, aet, let, sekä tunniste pitää olla kokonaislukuja."))
+                         
+                         (not kustannus-maara-validi?)
+                         (assoc rivi :virhe (str "Rivillä " rivi-nro " kustannus ja määrä pitää olla joko kokonaisluku tai desimaaliluku."))
 
                          tunniste-olemassa?
                          (assoc rivi :virhe (str "Rivillä " rivi-nro " syötetty tunniste on jo olemassa: " tunniste))
