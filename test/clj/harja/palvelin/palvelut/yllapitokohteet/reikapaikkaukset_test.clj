@@ -3,7 +3,9 @@
             [harja.testi :refer :all]
             [clojure.set :as set]
             [com.stuartsierra.component :as component]
+            [dk.ative.docjure.spreadsheet :as xls]
             [clojure.data.json :as json]
+            [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [cheshire.core :as cheshire]
             [harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
             [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
@@ -138,3 +140,25 @@
 
         ;; Toteumia pitäisi olla taas 5
         _ (is (= (-> vastaus-poistettu count) toteumien-maara))]))
+
+
+(deftest testaa-reikapaikkaus-excel-validointi
+  (let [workbook (xls/load-workbook-from-file "test/resurssit/excel/reikapaikkaus_tuonti_fail.xlsx")
+        vastaus (p-excel/parsi-syotetyt-reikapaikkaukset workbook)]
+    
+    (is (empty? (-> vastaus first :virhe)))
+    (is (empty? (-> vastaus second :virhe)))
+    (is (empty? (-> vastaus (nth 2) :virhe)))
+    (is (empty? (-> vastaus (nth 3) :virhe)))
+
+    (is (= (-> vastaus (nth 4) :virhe) "Rivillä 8 aosa, losa, tie, aet, let, sekä tunniste pitää olla kokonaislukuja."))
+    (is (= (-> vastaus (nth 5) :virhe) "Rivillä 9 aosa, losa, tie, aet, let, sekä tunniste pitää olla kokonaislukuja."))
+    (is (= (-> vastaus (nth 6) :virhe) "Rivillä 10 aosa, losa, tie, aet, let, sekä tunniste pitää olla kokonaislukuja."))
+    (is (= (-> vastaus (nth 7) :virhe) "Rivillä 11 aosa, losa, tie, aet, let, sekä tunniste pitää olla kokonaislukuja."))
+    (is (= (-> vastaus (nth 8) :virhe) "Rivillä 12 syötetty tunniste on jo olemassa: 1300002"))
+    (is (= (-> vastaus (nth 9) :virhe) "Rivillä 13 aosa, losa, tie, aet, let, sekä tunniste pitää olla kokonaislukuja."))
+    (is (= (-> vastaus (nth 10) :virhe) "Rivillä 14 aosa, losa, tie, aet, let, sekä tunniste pitää olla kokonaislukuja."))
+    (is (= (-> vastaus (nth 11) :virhe) "Rivillä 15 kustannus ja määrä pitää olla joko kokonaisluku tai desimaaliluku."))
+    (is (= (-> vastaus (nth 12) :virhe) "Rivillä 16 kustannus ja määrä pitää olla joko kokonaisluku tai desimaaliluku."))
+    (is (= (-> vastaus (nth 13) :virhe)
+           (str "Rivillä 17 on tyhjiä kenttiä: " "[\"pvm\" \"aosa\" \"tie\" \"let\" \"losa\" \"aet\" \"maara\" \"tunniste\"]")))))
