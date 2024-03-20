@@ -1,19 +1,11 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset-test
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
-            [clojure.set :as set]
             [com.stuartsierra.component :as component]
             [dk.ative.docjure.spreadsheet :as xls]
-            [clojure.data.json :as json]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
-            [cheshire.core :as cheshire]
             [harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
-            [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.pvm :as pvm]
-            [clojure.java.io :as io]
-            [harja.kyselyt.reikapaikkaukset :as q]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]))
 
 
 (defn jarjestelma-fixture [testit]
