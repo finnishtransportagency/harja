@@ -162,3 +162,40 @@
     (is (= (-> vastaus (nth 12) :virhe) "Rivillä 16 kustannus ja määrä pitää olla joko kokonaisluku tai desimaaliluku."))
     (is (= (-> vastaus (nth 13) :virhe)
            (str "Rivillä 17 on tyhjiä kenttiä: " "[\"pvm\" \"aosa\" \"tie\" \"let\" \"losa\" \"aet\" \"maara\" \"tunniste\"]")))))
+
+
+(deftest testaa-reikapaikkaus-excel-tuonti
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        haku-params {:tr nil
+                     :aikavali nil
+                     :urakka-id urakka-id}
+
+        workbook (xls/load-workbook-from-file "test/resurssit/excel/reikapaikkaus_tuonti.xlsx")
+        vastaus (p-excel/parsi-syotetyt-reikapaikkaukset workbook)
+
+        ;; Wipetä kaikki reikäpaikkaukset
+        _ (u (str "DELETE FROM paikkaus WHERE \"paikkaus-tyyppi\" = 'reikapaikkaus'"))
+        vastaus-tyhja (tee-kutsu haku-params :hae-reikapaikkaukset)
+
+        ;; Tallenna Excelistä luetut ja valitoidut rivit 
+        _ (reikapaikkaukset/tallenna-reikapaikkaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id vastaus)
+        ;; Hae uudet paikkaukset 
+        vastaus-tuotu (tee-kutsu haku-params :hae-reikapaikkaukset)]
+
+    ;; Virheitä ei pitäisi olla 
+    (is (every? #(nil? (:virhe %)) vastaus))
+    ;; Taulun pitäisi olla tyhjä reikäpaikkauksilta
+    (is (= (-> vastaus-tyhja count) 0))
+    ;; Taulussa on paikkauksia tuonnin jälkeen
+    (is (= (-> vastaus-tuotu count) 5))
+    
+    ;; Katso vielä että data on oikein, ainakin ensimmäinen rivi
+    (is (= (-> vastaus-tuotu first :aosa) 1))
+    (is (= (-> vastaus-tuotu first :kustannus) 1500M))
+    (is (= (-> vastaus-tuotu first :tie) 20))
+    (is (= (-> vastaus-tuotu first :let) 1020))
+    (is (= (-> vastaus-tuotu first :losa) 1))
+    (is (= (-> vastaus-tuotu first :aet) 860))
+    (is (= (-> vastaus-tuotu first :tyomenetelma) 9))
+    (is (= (-> vastaus-tuotu first :tyomenetelma-nimi) "Jyrsintäkorjaukset (HJYR/TJYR)"))
+    (is (= (-> vastaus-tuotu first :reikapaikkaus-yksikko) "kpl"))))
