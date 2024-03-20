@@ -126,7 +126,7 @@ WHERE k.urakka = :urakka
   AND k.poistettu IS NOT true;
 
 -- name: hae-urakan-kulut-kohdistuksineen
--- Hakee urakan kulut ja niihin liittyvät kohdistukSET annetulta aikaväliltä
+-- Hakee urakan kulut ja niihin liittyvät kohdistukset annetulta aikaväliltä
 SELECT k.id                    AS "id",
        k.kokonaissumma         AS "kokonaissumma",
        k.erapaiva              AS "erapaiva",
