@@ -119,16 +119,6 @@
                                       kohdistukset)))
         (with-meta (tila/kulun-validointi-meta kulu)))))
 
-(defn hae-avaimella-fn [{:keys [verrattava haettava palautettava]}]
-  (fn [kohde]
-    (let [palautuksen-avain (or palautettava
-                                haettava)]
-      (when (= verrattava (if (or (vector? haettava)
-                                  (seq? haettava))
-                            (get-in kohde haettava)
-                            (haettava kohde)))
-        (palautuksen-avain kohde)))))
-
 (defn alusta-lomake [app]
   (let [urakan-alkupvm (:alkupvm @navigaatio/valittu-urakka)
         kuluva-hoitovuoden-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm (pvm/nyt))
