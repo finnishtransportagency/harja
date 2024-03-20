@@ -34,13 +34,28 @@
                         urakkatieto-fixture))
   
 
-(deftest testi12345678
+(deftest hae-reikapaikkaukset-toimii
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         fn-hae-reikapaikkaukset (fn [params]
                                   (kutsu-palvelua (:http-palvelin jarjestelma) :hae-reikapaikkaukset +kayttaja-jvh+ params))
 
         vastaus (fn-hae-reikapaikkaukset {:tr nil
-                                         :aikavali nil
-                                         :urakka-id urakka-id})
-        
-        _ (println "\n vastaus : " vastaus)]))
+                                          :aikavali nil
+                                          :urakka-id urakka-id})]
+    (is (= (-> vastaus count) 5))
+    (is (= (-> vastaus first :aosa) 1))
+    (is (= (-> vastaus first :kustannus) 215000.0M))
+    (is (= (-> vastaus first :tie) 20))
+    (is (= (-> vastaus first :let) 1020))
+    (is (= (-> vastaus first :losa) 1))
+    (is (= (-> vastaus first :aet) 860))
+    (is (= (-> vastaus first :tyomenetelma) 8))
+    (is (= (-> vastaus first :maara) 81))
+    (is (some? (-> vastaus first :sijainti)))
+    (is (some? (-> vastaus first :luotu)))
+    (is (some? (-> vastaus first :loppuaika)))
+    (is (some? (-> vastaus first :alkuaika)))
+    (is (some? (-> vastaus first :reikapaikkaus-yksikko)))
+    (is (some? (-> vastaus first :tyomenetelma-nimi)))
+    (is (some? (-> vastaus first :massatyyppi)))
+    (is (some? (-> vastaus first :luoja-id)))))
