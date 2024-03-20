@@ -115,6 +115,13 @@
      [:span.arvo {:class kustomi-tyyli :style (merge lihavoi {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "rgb(25,25,25)")})}
       (if fmt (fmt arvo) arvo)]]))
 
+(defmethod muodosta-html :osittain-boldattu-teksti
+  ;; Joihinkin teksteihin halutaan osittain boldattu teksti. Tämä elementti mahdollistaa sen.
+  [[_ {:keys [boldattu-teksti teksti] :as tiedot}]]
+  [:span.osittain-boldattu-teksti {:style {:display "block"}}
+   [:span.bold boldattu-teksti]
+   [:span teksti]])
+
 (defmethod muodosta-html :infopallura
   ;; :infopallura elementtiä käytetään näyttämään tooltip tyyppisessä infokentässä lisätietoja kohteesta
   [[_ {:keys [infoteksti]}]]
