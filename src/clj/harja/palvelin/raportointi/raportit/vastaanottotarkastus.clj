@@ -531,6 +531,8 @@
      (when-not urakka-id
        (concat []
          [[:otsikko (str "Yötyö / PK-luokka")]]
-         [[:teksti (str "Pituus (km) on urakassa ko. PK-luokan kohteille yötyönä tehdyt päällystyskilometrit.")]]
-         [[:teksti (str "Prosenttiosuus on urakassa/ELY:ssä ko. PK-luokan yötyönä tehdyt päällystyskilometrit suhteututtuna kaikkiin päällystyskilometreihin.")]]
+         [[:osittain-boldattu-teksti {:boldattu-teksti (str "Pituus (km)")
+                                      :teksti (str " on urakassa ko. PK-luokan kohteille yötyönä tehdyt päällystyskilometrit.")}]]
+         [[:osittain-boldattu-teksti {:boldattu-teksti (str "Prosenttiosuus")
+                                      :teksti (str " on urakassa/ELY:ssä ko. PK-luokan yötyönä tehdyt päällystyskilometrit suhteututtuna kaikkiin päällystyskilometreihin.")}]]
          [(pkluokka-yotyo-taulukko pkluokkien-yotyot-elyittain-jaoteltuna)]))]))
