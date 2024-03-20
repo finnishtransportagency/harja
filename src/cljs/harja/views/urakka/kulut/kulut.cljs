@@ -1107,9 +1107,9 @@
                tiedot))]]]))
 
 (defn- kohdistetut*
-  [e! app]
+  [e! _app]
   (komp/luo
-   (komp/piirretty (fn [this]
+   (komp/piirretty (fn [_this]
                      (e! (tiedot/->HaeUrakanToimenpiteet (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))
                      (e! (tiedot/->HaeUrakanKulut {:id (-> @tila/yleiset :urakka :id)
                                                    :alkupvm (first (pvm/kuukauden-aikavali (pvm/nyt)))
