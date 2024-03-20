@@ -57,3 +57,4 @@ jobs:
         timeout-minutes: 15
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
+          service: ${{ vars.ECS_SERVICE_NAME }}

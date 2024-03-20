@@ -356,9 +356,6 @@ WHERE u.alkupvm <= :pvm
   -- Ota vain annettujen tyyppien kanssa yhtenevät urakat
   AND (TRUE IN (SELECT unnest(ARRAY[:tyypit]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:tyypit]::urakkatyyppi[]));
 
--- name: hae-urakan-vastuuhenkilot
-SELECT * FROM urakanvastuuhenkilo WHERE urakka = :urakka;
-
 -- name: poista-urakan-vastuuhenkilot-roolille!
 DELETE FROM urakanvastuuhenkilo
  WHERE urakka = :urakka AND
@@ -366,8 +363,8 @@ DELETE FROM urakanvastuuhenkilo
 
 -- name: luo-urakan-vastuuhenkilo<!
 INSERT INTO urakanvastuuhenkilo
-       (urakka, rooli, etunimi, sukunimi, puhelin, sahkoposti, kayttajatunnus, ensisijainen)
-VALUES (:urakka, :rooli, :etunimi, :sukunimi, :puhelin, :sahkoposti, :kayttajatunnus, :ensisijainen);
+       (urakka, rooli, etunimi, sukunimi, puhelin, sahkoposti, kayttajatunnus, ensisijainen, "toissijainen-varahenkilo")
+VALUES (:urakka, :rooli, :etunimi, :sukunimi, :puhelin, :sahkoposti, :kayttajatunnus, :ensisijainen, :toissijainen-varahenkilo);
 
 -- name: hae-urakan-vastuuhenkilot
 SELECT
@@ -377,7 +374,8 @@ SELECT
   sahkoposti,
   puhelin,
   rooli,
-  ensisijainen
+  ensisijainen,
+  "toissijainen-varahenkilo"
 FROM urakanvastuuhenkilo
 WHERE urakka = :id;
 

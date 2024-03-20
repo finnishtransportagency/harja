@@ -149,10 +149,7 @@
 (defn paivita-tarkastus-listaan!
   "Päivittää annetun tarkastuksen urakan-tarkastukset listaan, jos se on valitun aikavälin sisällä."
   [{:keys [aika id] :as tarkastus}]
-  (let [[alkupvm loppupvm] (naytettava-aikavali @tiedot-urakka/valittu-urakka-kaynnissa?
-                                                @tiedot-urakka/valittu-hoitokausi
-                                                @tiedot-urakka/valittu-hoitokauden-kuukausi
-                                                @tiedot-urakka/valittu-aikavali)
+  (let [[alkupvm loppupvm] @valittu-aikavali
         sijainti-listassa (first (keep-indexed (fn [i {tarkastus-id :id}]
                                                  (when (= id tarkastus-id) i))
                                                @urakan-tarkastukset))]

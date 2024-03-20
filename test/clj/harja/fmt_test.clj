@@ -98,7 +98,7 @@
                      [(pvm/->pvm "1.10.2022") (pvm/->pvm "30.9.2023")]
                      [(pvm/->pvm "1.10.2023") (pvm/->pvm "30.9.2024")]]
         valittu-hk [(pvm/->pvm "1.10.2021") (pvm/->pvm "30.9.2022")]]
-    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitokaudet)
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitokaudet "Hoitovuosi")
            "2. hoitovuosi (2021—2022)"))))
 
 (deftest hoitokauden-formatointi-huono-input
@@ -108,13 +108,13 @@
                      [(pvm/->pvm "1.10.2023") (pvm/->pvm "30.9.2024")]]
         ;; tähän input joka ei ole hoitokausi -> silti näytettävä hoitokausi oikein vaikka järjestysnumeroa ei saada
         valittu-hk [(pvm/->pvm "5.10.2021") (pvm/->pvm "4.9.2022")]]
-    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitokaudet)
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitokaudet "Hoitovuosi")
            "hoitovuosi (2021—2022)"))))
 
 (deftest hoitovuoden-vuosimuodon-formatointi
   (let [hoitovuodet [2020 2021 2022 2023 2024]
         valittu-hk 2021]
-    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitovuodet)
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitovuodet "Hoitovuosi")
           "2. hoitovuosi (2021—2022)"))))
 
 (deftest hoitovuoden-vuosimuodon-formatointi-huono-input
@@ -122,7 +122,7 @@
         ;; Valittu hoitokausi ei ole annettujen hoitokausien sisällä
         valittu-hk 2019]
     ;; Saadaan hoitovuosi, mutta ei järjestysnumeroa
-    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitovuodet)
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitovuodet "Hoitovuosi")
           "hoitovuosi (2019—2020)"))))
 
 (deftest hoitovuoden-formatointi-jarjestysluvulla
@@ -130,13 +130,13 @@
                      [(pvm/->pvm "1.10.2021") (pvm/->pvm "30.9.2022")]
                      [(pvm/->pvm "1.10.2022") (pvm/->pvm "30.9.2023")]
                      [(pvm/->pvm "1.10.2023") (pvm/->pvm "30.9.2024")]]]
-    (is (thrown? AssertionError  (fmt/hoitokauden-jarjestysluku-ja-vuodet 0 hoitovuodet)))
-    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet 1 hoitovuodet)
+    (is (thrown? AssertionError  (fmt/hoitokauden-jarjestysluku-ja-vuodet 0 hoitovuodet "Hoitovuosi")))
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet 1 hoitovuodet "Hoitovuosi")
            "1. hoitovuosi (2020—2021)"))
-    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet 2 hoitovuodet)
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet 2 hoitovuodet "Hoitovuosi")
            "2. hoitovuosi (2021—2022)"))
-    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet 3 hoitovuodet)
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet 3 hoitovuodet "Hoitovuosi")
            "3. hoitovuosi (2022—2023)"))
-    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet 4 hoitovuodet)
+    (is (= (fmt/hoitokauden-jarjestysluku-ja-vuodet 4 hoitovuodet "Hoitovuosi")
            "4. hoitovuosi (2023—2024)"))
-    (is (thrown? AssertionError (fmt/hoitokauden-jarjestysluku-ja-vuodet 0 hoitovuodet)))))
+    (is (thrown? AssertionError (fmt/hoitokauden-jarjestysluku-ja-vuodet 0 hoitovuodet "Hoitovuosi")))))
