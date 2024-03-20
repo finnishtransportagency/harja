@@ -82,7 +82,6 @@
 (defn- lupausten-hakuparametrit [urakka hoitokausi nykyhetki]
   (merge
     {:urakka-id (:id urakka)
-     :urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
      :valittu-hoitokausi hoitokausi}
     (when nykyhetki
       ;; Palvelin sallii nykyhetken määrittämisen testausta varten, jos ei olla tuotantoympäristössä
