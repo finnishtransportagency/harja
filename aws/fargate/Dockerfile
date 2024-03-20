@@ -27,7 +27,6 @@ RUN apt-get update && apt-get install -y \
     jq \
     nano \
     unzip \
-    vim \
     telnet \
     && rm -rf /var/lib/apt/lists/*
 
