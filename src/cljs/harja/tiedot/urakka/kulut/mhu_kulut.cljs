@@ -265,9 +265,10 @@
                                                  {:tehtavaryhmat []
                                                   :toimenpiteet  []}
                                                  (sort-by :jarjestys kasitelty))]
-      (assoc app
-        :toimenpiteet toimenpiteet
-        :tehtavaryhmat tehtavaryhmat)))
+      (-> app
+        (update-in [:parametrit :haetaan] dec)
+        (assoc :toimenpiteet toimenpiteet)
+        (assoc :tehtavaryhmat tehtavaryhmat))))
 
   KutsuEpaonnistui
   (process-event [{{:keys [ei-async-laskuria viesti]} :parametrit} app]
