@@ -386,6 +386,3 @@ EXECUTE FUNCTION lisaa_urakan_oletus_rahavaraukset();
  FROM rahavaraus
  WHERE rahavaraus.nimi IN ('Rahavaraus A', 'Rahavaraus B - Äkilliset hoitotyöt'...)
  */
-
-
-
