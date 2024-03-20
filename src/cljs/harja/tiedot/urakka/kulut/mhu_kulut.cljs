@@ -35,7 +35,6 @@
 (defrecord KutsuEpaonnistui [tulos parametrit])
 
 (defrecord TarkistusOnnistui [tulos parametrit])
-(defrecord MaksueraHakuOnnistui [tulos])
 (defrecord TallennusOnnistui [tulos parametrit])
 (defrecord ToimenpidehakuOnnistui [tulos])
 (defrecord KuluhakuOnnistui [tulos])
@@ -221,13 +220,6 @@
       (update-in [:parametrit :haetaan] (if ei-async-laskuria identity dec))
       (assoc-in [:lomake :tarkistukset :numerolla-tarkistettu-pvm] tulos)
       (update :lomake paivita-erapaivat-tarvittaessa)))
-
-  MaksueraHakuOnnistui
-  (process-event [{tulos :tulos} app]
-    (->
-      app
-      (update-in [:parametrit :haetaan] dec)
-      (assoc :maksuerat tulos)))
 
   TallennusOnnistui
   (process-event [_ {{:keys [viimeisin-haku]} :parametrit :as app}]
