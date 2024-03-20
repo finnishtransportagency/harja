@@ -365,15 +365,15 @@
                               :tasaa :keskita}]}
      ;; Otsikot
      (concat
-       [{:otsikko "Urakka" :leveys 10}
+       [{:otsikko "Urakka" :leveys 8}
+        {:otsikko "Pituus (km)" :leveys 2 :fmt :numero :tasaa :oikea :otsikkorivi-luokka "paallystys-tausta-tumma"}
+        {:otsikko "Prosenttiosuus" :leveys 3 :fmt :prosentti :tasaa :vasen :otsikkorivi-luokka "paallystys-tausta-tumma"}
         {:otsikko "Pituus (km)" :leveys 2 :fmt :numero :tasaa :oikea}
-        {:otsikko "Prosenttiosuus" :leveys 2 :fmt :prosentti :tasaa :vasen}
+        {:otsikko "Prosenttiosuus" :leveys 3 :fmt :prosentti :tasaa :vasen}
+        {:otsikko "Pituus (km)" :leveys 2 :fmt :numero :tasaa :oikea :otsikkorivi-luokka "paallystys-tausta-tumma"}
+        {:otsikko "Prosenttiosuus" :leveys 3 :fmt :prosentti :tasaa :vasen :otsikkorivi-luokka "paallystys-tausta-tumma"}
         {:otsikko "Pituus (km)" :leveys 2 :fmt :numero :tasaa :oikea}
-        {:otsikko "Prosenttiosuus" :leveys 2 :fmt :prosentti :tasaa :vasen}
-        {:otsikko "Pituus (km)" :leveys 2 :fmt :numero :tasaa :oikea}
-        {:otsikko "Prosenttiosuus" :leveys 2 :fmt :prosentti :tasaa :vasen}
-        {:otsikko "Pituus (km)" :leveys 2 :fmt :numero :tasaa :oikea}
-        {:otsikko "Prosenttiosuus" :leveys 2 :fmt :prosentti :tasaa :vasen}])
+        {:otsikko "Prosenttiosuus" :leveys 3 :fmt :prosentti :tasaa :vasen}])
      ;; Data
      (concat (into [] (mapcat formatoi-elyt-fn elyttain-jaoteltu)) [valtukunnallinen-rivi])]))
 
