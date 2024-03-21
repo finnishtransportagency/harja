@@ -18,8 +18,8 @@ SELECT reikapaikkaus_upsert(
     (SELECT id FROM urakka WHERE nimi LIKE 'Muhoksen päällystysurakka')::INT,                      -- urakkaid 
     NULL::INT,                                                                                     -- paikkauskohdeid
     1234444::INT,                                                                                  -- ulkoinenid (tuodaan excelistä)
-    NOW()::TIMESTAMP,                                                                              -- alkuaika
-    NOW()::TIMESTAMP,                                                                              -- loppuaika, joka on sama, tämä ei taida reikäpaikkauksilla olla relevantti(?)
+    '02.25.2024'::TIMESTAMP,                                                                       -- alkuaika
+    '02.25.2024'::TIMESTAMP,                                                                       -- loppuaika, joka on sama, tämä ei taida reikäpaikkauksilla olla relevantti(?)
     ROW(20, 1, 860, 1, 1020, NULL)::TR_OSOITE,                                                     -- tr osoite
     (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = 'Urapaikkaus (UREM/RREM)')::INT,       -- tyomenetelma 
     'AB, Asfalttibetoni'::TEXT,                         -- massatyyppi, ei tietoa miten tämä reikäpaikkauksille, laitettu AB, failaa muuten NOT NULL constraint
