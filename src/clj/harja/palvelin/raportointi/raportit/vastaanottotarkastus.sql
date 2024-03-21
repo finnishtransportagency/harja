@@ -115,7 +115,7 @@ ORDER BY s.perintapvm DESC;
                             JOIN laatupoikkeama lp ON lp.urakka = u.id AND lp.poistettu IS NOT TRUE
                             JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
                   WHERE (SELECT EXTRACT(YEAR FROM lp.aika)) = :vuosi
-                    AND (1::INTEGER IS NULL OR u.hallintayksikko = 1)
+                    AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
                     AND u.tyyppi = 'paallystys' AND u.urakkanro IS NOT NULL
                   GROUP BY u.id)
 SELECT u.nimi                                     AS nimi,
