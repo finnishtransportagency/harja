@@ -207,7 +207,7 @@ INSERT INTO tehtava (nimi, yksikko, tehtavaryhma, jarjestys, voimassaolo_alkuvuo
                      "mhu-tehtava?", kasin_lisattava_maara, "raportoi-tehtava?", aluetieto, luotu, luoja)
 VALUES ('Pysäkkikatosten ja niiden varusteiden vaurioiden kuntoon saattaminen', 'kpl',
         (SELECT id FROM tehtavaryhma WHERE nimi = 'Puhtaanapito (P)'), 501, 2024, NULL,
-        ARRAY ['kokonaishintainen']::hinnoittelutyyppi[], TRUE, TRUE, TRUE, TRUE, CURRENT_TIMESTAMP,
+        ARRAY ['kokonaishintainen']::hinnoittelutyyppi[], TRUE, FALSE, TRUE, FALSE, CURRENT_TIMESTAMP,
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
 
 INSERT
@@ -225,7 +225,7 @@ INSERT INTO tehtava (nimi, yksikko, tehtavaryhma, jarjestys, voimassaolo_alkuvuo
                      "mhu-tehtava?", kasin_lisattava_maara, "raportoi-tehtava?", aluetieto, luotu, luoja)
 VALUES ('Levähdys- ja P-alueiden varusteiden vaurioiden kuntoon saattaminen', 'kpl',
         (SELECT id FROM tehtavaryhma WHERE nimi = 'Puhtaanapito (P)'), 491, 2024, NULL,
-        ARRAY ['kokonaishintainen']::hinnoittelutyyppi[], TRUE, TRUE, TRUE, TRUE, CURRENT_TIMESTAMP,
+        ARRAY ['kokonaishintainen']::hinnoittelutyyppi[], TRUE, FALSE, TRUE, FALSE, CURRENT_TIMESTAMP,
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
 
 INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
@@ -242,7 +242,7 @@ INSERT INTO tehtava (nimi, yksikko, tehtavaryhma, jarjestys, voimassaolo_alkuvuo
                      "mhu-tehtava?", kasin_lisattava_maara, "raportoi-tehtava?", aluetieto, luotu, luoja)
 VALUES ('Meluesteiden pienten vaurioiden korjaaminen', 'kpl',
         (SELECT id FROM tehtavaryhma WHERE nimi = 'Puhtaanapito (P)'), 511, 2024, NULL,
-        ARRAY ['kokonaishintainen']::hinnoittelutyyppi[], TRUE, TRUE, TRUE, TRUE, CURRENT_TIMESTAMP,
+        ARRAY ['kokonaishintainen']::hinnoittelutyyppi[], TRUE, FALSE, TRUE, FALSE, CURRENT_TIMESTAMP,
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
 
 INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
@@ -260,7 +260,7 @@ INSERT INTO tehtava (nimi, yksikko, tehtavaryhma, jarjestys, voimassaolo_alkuvuo
 VALUES ('Juurakkopuhdistamo, selkeytys- ja hulevesiallas sekä -painanne', 'kpl',
         (SELECT id FROM tehtavaryhma WHERE nimi = 'ELY-rahoitteiset, liikenneympäristön hoito (E)'), 1080, 2024,
         NULL,
-        ARRAY ['kokonaishintainen']::hinnoittelutyyppi[], TRUE, TRUE, TRUE, TRUE, CURRENT_TIMESTAMP,
+        ARRAY ['kokonaishintainen']::hinnoittelutyyppi[], TRUE, FALSE, TRUE, FALSE, CURRENT_TIMESTAMP,
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
 
 INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
@@ -277,7 +277,7 @@ INSERT INTO tehtava (nimi, yksikko, tehtavaryhma, jarjestys, voimassaolo_alkuvuo
                      "mhu-tehtava?", kasin_lisattava_maara, "raportoi-tehtava?", aluetieto, luotu, luoja)
 VALUES ('Aitojen vaurioiden korjaukset', 'kpl',
         (SELECT id FROM tehtavaryhma WHERE nimi = 'Kaiteet, aidat ja kivetykset (U)'), 971, 2024, NULL,
-        ARRAY ['kokonaishintainen']::hinnoittelutyyppi[], TRUE, TRUE, TRUE, TRUE, CURRENT_TIMESTAMP,
+        ARRAY ['kokonaishintainen']::hinnoittelutyyppi[], TRUE, FALSE, TRUE, FALSE, CURRENT_TIMESTAMP,
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
 
 INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
@@ -295,7 +295,7 @@ INSERT INTO tehtava (nimi, yksikko, tehtavaryhma, jarjestys, voimassaolo_alkuvuo
 VALUES ('Siltakeilojen sidekiveysten purkaumien, suojaverkkojen ja kosketussuojaseinien pienet korjaukset',
         'kpl',
         (SELECT id FROM tehtavaryhma WHERE nimi = 'Sillat ja laiturit (I)'), 971, 2024, NULL,
-        ARRAY ['kokonaishintainen']::hinnoittelutyyppi[], TRUE, TRUE, TRUE, TRUE, CURRENT_TIMESTAMP,
+        ARRAY ['kokonaishintainen']::hinnoittelutyyppi[], TRUE, FALSE, TRUE, FALSE, CURRENT_TIMESTAMP,
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
 
 INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
@@ -312,7 +312,7 @@ INSERT INTO tehtava (nimi, yksikko, tehtavaryhma, jarjestys, voimassaolo_alkuvuo
                      "mhu-tehtava?", kasin_lisattava_maara, "raportoi-tehtava?", aluetieto, luotu, luoja)
 VALUES ('Tunnelien pienet korjaustyöt ja niiden liikennejärjestelyt', 'kpl',
         (SELECT id FROM tehtavaryhma WHERE nimi = 'Muut, liikenneympäristön hoito (F)'), 1070, 2024, NULL,
-        ARRAY ['kokonaishintainen']::hinnoittelutyyppi[], TRUE, TRUE, TRUE, TRUE, CURRENT_TIMESTAMP,
+        ARRAY ['kokonaishintainen']::hinnoittelutyyppi[], TRUE, FALSE, TRUE, FALSE, CURRENT_TIMESTAMP,
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
 
 INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
