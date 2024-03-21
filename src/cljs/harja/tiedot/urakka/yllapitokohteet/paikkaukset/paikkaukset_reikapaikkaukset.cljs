@@ -128,7 +128,12 @@
         ;; Onko valittua työmenetelmä id:tä olemassa tietokannassa? (HaeTyomenetelmat)
         tyomenetelma-validi? (boolean (some #(= tyomenetelma (:id %)) tyomenetelmat))
         ;; Onko syötetty tr-osoite validi? 
-        tr-validi? (boolean (tr/validi-osoite? (select-keys valittu-reikapaikkaus [:tie :aosa :aet :losa :let])))]
+        tr-avaimet [:tie :aosa :aet :losa :let]
+        tr-arvot (map #(get valittu-reikapaikkaus %) tr-avaimet)
+        kaikki-numeroja? (when (some? (first tr-arvot)) (every? integer? tr-arvot))
+        tr-validi? (and
+                     kaikki-numeroja?
+                     (tr/validi-osoite? (select-keys valittu-reikapaikkaus tr-avaimet)))]
     (and
       tr-validi?
       pvm-validi?

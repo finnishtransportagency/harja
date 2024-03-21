@@ -65,33 +65,36 @@
           :muokkaa! #(e! (tiedot/->MuokkaaRivia %))
           ;; Header
           :header [:div.col-md-12
-                   [:h2.header-yhteiset "Muokkaa toteumaa"]
+                   [:h2.header-yhteiset {:data-cy "reikapaikkaus-muokkauspaneeli"} "Muokkaa toteumaa"]
                    [:hr]]
           ;; Footer, joka on vakiona col-md-12
           :footer [:<>
                    [:hr]
                    [:div.muokkaus-modal-napit
                     ;; Tallenna
-                    [napit/tallenna "Tallenna muutokset" #(e! (tiedot/->TallennaReikapaikkaus valittu-rivi)) {:disabled (not voi-tallentaa?)}]
+                    [napit/tallenna "Tallenna muutokset" #(e! (tiedot/->TallennaReikapaikkaus valittu-rivi)) {:disabled (not voi-tallentaa?)
+                                                                                                              :data-attributes {:data-cy "tallena-reikapaikkaus"}}]
                     ;; Poista 
                     [napit/yleinen-toissijainen "Poista" #(e! (tiedot/->PoistaReikapaikkaus valittu-rivi)) {:ikoni (ikonit/livicon-trash)
+                                                                                                            :data-attributes {:data-cy "poista-reikapaikkaus"}
                                                                                                             :paksu? true
                                                                                                             :luokka "lomake-poista"
                                                                                                             :disabled (not voi-kirjoittaa?)}]
                     ;; Sulje 
-                    [napit/yleinen-toissijainen "Sulje" #(e! (tiedot/->SuljeMuokkaus))]]]}
+                    [napit/yleinen-toissijainen "Sulje" #(e! (tiedot/->SuljeMuokkaus)) {:data-attributes {:data-cy "sulje-muokkauspaneeli"}}]]]}
 
          [(lomake/rivi
             {:otsikko "Pvm"
              :pakollinen? true
              :tyyppi :komponentti
              :komponentti (fn []
-                            [kentat/tee-kentta {:tyyppi :pvm
-                                                :ikoni-sisaan? true
-                                                :vayla-tyyli? true}
-                             (r/wrap
-                               alkuaika
-                               #(e! (tiedot/->AsetaToteumanPvm %)))])})
+                            [:span {:data-cy "reikapaikkaus-muokkaa-pvm"}
+                             [kentat/tee-kentta {:tyyppi :pvm
+                                                 :ikoni-sisaan? true
+                                                 :vayla-tyyli? true}
+                              (r/wrap
+                                alkuaika
+                                #(e! (tiedot/->AsetaToteumanPvm %)))]])})
           ;; Sijainti
           (lomake/ryhma
             {:otsikko "Sijainti"
@@ -165,7 +168,7 @@
             (lomake/rivi
               {:otsikko "Määrä"
                :pakollinen? true
-               :rivi-luokka "lomakeryhman-rivi-tausta"
+               :rivi-luokka "lomakeryhman-rivi-tausta cy-maara"
                :nimi :maara
                :tyyppi :numero
                :vayla-tyyli? true
@@ -199,7 +202,7 @@
                             :alaotsikot? true
                             :vayla-tyyli? true} tiedot/tr-atom]]
        ;; Pvm valinta
-       [:div
+       [:div {:data-cy "reikapaikkaus-aikavali"}
         [valinnat/aikavali
          tiedot/aikavali-atom
          {:otsikko "Päivämäärä"
