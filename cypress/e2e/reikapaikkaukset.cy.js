@@ -41,7 +41,7 @@ describe('Reikäpaikkausnäkymä toimii', function ()
     // Pitäisi tulla 5 tulosta, (+ otsikot, eli 6) 
     cy.get('table.grid').find('tr').should('have.length', 6, { timeout: 10000 });
     // Tällainen tr osoite pitäsi olla ensimmäisessä toteumassa
-    cy.get('.grid tr').eq(1).find('td').contains('Tie 20 / 1 / 860 / 1 / 1020');
+    cy.get('.grid tr').eq(1).find('td').contains('Tie 20 / 1 / 1 / 1 / 120');
   });
 
 
@@ -50,19 +50,19 @@ describe('Reikäpaikkausnäkymä toimii', function ()
     cy.get('.grid tr').eq(1).click();   // Klikkaa gridin ensimäistä toteumaa  
     cy.get('h2.header-yhteiset[data-cy="reikapaikkaus-muokkauspaneeli"]', {timeout: clickTimeout}).contains('Muokkaa toteumaa'); // Muokkauspaneeli aukesi
 
-    // Tarkistetaan inputtien arvot, odotettu TR osoite on Tie 20 / 1 / 860 / 1 / 1020
+    // Tarkistetaan inputtien arvot, odotettu ensimmäinen TR osoite on Tie 20 / 1 / 1 / 1 / 120
     cy.get('.form-control.lomake-tr-valinta').eq(0).should('have.value', '20');
     cy.get('.form-control.lomake-tr-valinta').eq(1).should('have.value', '1');
-    cy.get('.form-control.lomake-tr-valinta').eq(2).should('have.value', '860');
+    cy.get('.form-control.lomake-tr-valinta').eq(2).should('have.value', '1');
     cy.get('.form-control.lomake-tr-valinta').eq(3).should('have.value', '1');
-    cy.get('.form-control.lomake-tr-valinta').eq(4).should('have.value', '1020');
+    cy.get('.form-control.lomake-tr-valinta').eq(4).should('have.value', '120');
 
     // Muokkaa hieman alku ja loppuetäisyyksiä
     cy.get('.form-control.lomake-tr-valinta').eq(0).clear().type('20');
     cy.get('.form-control.lomake-tr-valinta').eq(1).clear().type('1');
-    cy.get('.form-control.lomake-tr-valinta').eq(2).clear().type('861');
+    cy.get('.form-control.lomake-tr-valinta').eq(2).clear().type('1');
     cy.get('.form-control.lomake-tr-valinta').eq(3).clear().type('1');
-    cy.get('.form-control.lomake-tr-valinta').eq(4).clear().type('1022');
+    cy.get('.form-control.lomake-tr-valinta').eq(4).clear().type('121');
 
     // Tallenna toteuma 
     cy.get('[data-cy="tallena-reikapaikkaus"]').click();
@@ -72,23 +72,23 @@ describe('Reikäpaikkausnäkymä toimii', function ()
     // Muokkauspaneelin inputit pitäisi olla nyt vastaavat 
     cy.get('.form-control.lomake-tr-valinta').eq(0).should('have.value', '20');
     cy.get('.form-control.lomake-tr-valinta').eq(1).should('have.value', '1');
-    cy.get('.form-control.lomake-tr-valinta').eq(2).should('have.value', '861');
+    cy.get('.form-control.lomake-tr-valinta').eq(2).should('have.value', '1');
     cy.get('.form-control.lomake-tr-valinta').eq(3).should('have.value', '1');
-    cy.get('.form-control.lomake-tr-valinta').eq(4).should('have.value', '1022');
+    cy.get('.form-control.lomake-tr-valinta').eq(4).should('have.value', '121');
 
     // Samoin taulukon ensimmäinen sarake pitäisi muuttua 
     cy.get('.form-control.lomake-tr-valinta').eq(0).should('have.value', '20');
     cy.get('.form-control.lomake-tr-valinta').eq(1).should('have.value', '1');
-    cy.get('.form-control.lomake-tr-valinta').eq(2).should('have.value', '861');
+    cy.get('.form-control.lomake-tr-valinta').eq(2).should('have.value', '1');
     cy.get('.form-control.lomake-tr-valinta').eq(3).should('have.value', '1');
-    cy.get('.form-control.lomake-tr-valinta').eq(4).should('have.value', '1022');
+    cy.get('.form-control.lomake-tr-valinta').eq(4).should('have.value', '121');
 
     // Aseta arvot takaisin (tämä helpottaa testaajan elämää)
     cy.get('.form-control.lomake-tr-valinta').eq(0).clear().type('20');
     cy.get('.form-control.lomake-tr-valinta').eq(1).clear().type('1');
-    cy.get('.form-control.lomake-tr-valinta').eq(2).clear().type('860');
+    cy.get('.form-control.lomake-tr-valinta').eq(2).clear().type('1');
     cy.get('.form-control.lomake-tr-valinta').eq(3).clear().type('1');
-    cy.get('.form-control.lomake-tr-valinta').eq(4).clear().type('1020');
+    cy.get('.form-control.lomake-tr-valinta').eq(4).clear().type('120');
 
     // Tallenna toteuma 
     cy.get('[data-cy="tallena-reikapaikkaus"]').click();
@@ -101,9 +101,9 @@ describe('Reikäpaikkausnäkymä toimii', function ()
     const fields = [
       { message: 'Syötä tienumero', value: '20' },
       { message: 'Syötä alkuosa', value: '1' },
-      { message: 'Syötä alkuetäisyys', value: '860' },
+      { message: 'Syötä alkuetäisyys', value: '1' },
       { message: 'Syötä loppuosa', value: '1' },
-      { message: 'Syötä loppuetäisyys', value: '1020' }
+      { message: 'Syötä loppuetäisyys', value: '120' }
     ];
 
     fields.forEach((field, index) => {
@@ -208,7 +208,7 @@ describe('Reikäpaikkausnäkymä toimii', function ()
     // Pitäisi tulla 4 tulosta, (+ otsikot, eli 5) 
     cy.get('table.grid').find('tr').should('have.length', 5, { timeout: 10000 });
     // Odotettu taulukon ensimmäisen toteuman TR osoite poiston jälkeen
-    cy.get('.grid tr').eq(1).find('td').contains('Tie 20 / 1 / 750 / 1 / 800');
+    cy.get('.grid tr').eq(1).find('td').contains('Tie 20 / 1 / 140 / 1 / 360');
 
     cy.get('.grid tr').eq(1).click();   // Klikkaa gridin ensimäistä toteumaa  
     cy.get('h2.header-yhteiset[data-cy="reikapaikkaus-muokkauspaneeli"]', {timeout: clickTimeout}).contains('Muokkaa toteumaa'); // Muokkauspaneeli aukesi
@@ -229,7 +229,7 @@ describe('Reikäpaikkausnäkymä toimii', function ()
     // Paina Hae 
     cy.get('[data-cy="hae-reikapaikkauskohteita"]').click();
 
-    // Pitäisi tulla2 tulosta, (+ otsikot, eli 3) 
-    cy.get('table.grid').find('tr').should('have.length', 3, { timeout: 10000 });
+    // Pitäisi 1 tulos, (+ otsikot, eli 2) 
+    cy.get('table.grid').find('tr').should('have.length', 2, { timeout: 10000 });
   });
 });
