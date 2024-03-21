@@ -3,16 +3,10 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [harja.palvelin.raportointi.raportit.vastaanottotarkastus-apurit :as apurit]
-            [harja.fmt :as fmt]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.palvelin.raportointi.raportit.yllapidon-aikataulu :as yllapidon-aikataulu]
-            [harja.tyokalut.big :as big]
             [jeesql.core :refer [defqueries]]
-            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as ypk-yleiset]
-            [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-            [harja.tyokalut.big :as big]))
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
 
 (defqueries "harja/palvelin/raportointi/raportit/vastaanottotarkastus.sql")
 
@@ -350,7 +344,6 @@
                               :tasaa :keskita}
                              {:teksti "PK2 yötyö"
                               :sarakkeita 2
-                              ;;:luokka "paallystys-tausta-tumma"
                               :tummenna-teksti? true
                               :tasaa :keskita}
                              {:teksti "PK3 yötyö"
@@ -360,7 +353,6 @@
                               :tasaa :keskita}
                              {:teksti "Ei tiedossa yötyö"
                               :sarakkeita 2
-                              ;;:luokka "paallystys-tausta-tumma"
                               :tummenna-teksti? true
                               :tasaa :keskita}]}
      ;; Otsikot
