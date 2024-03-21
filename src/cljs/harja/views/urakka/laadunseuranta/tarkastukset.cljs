@@ -44,11 +44,18 @@
 (def +tarkastustyyppi-hoidolle+ [:tieturvallisuus :tiesto :talvihoito :soratie :laatu])
 (def +tarkastustyyppi-yllapidolle+ [:katselmus :pistokoe :vastaanotto :takuu])
 
+(defn hoito-tarkastustyypit []
+  ;; Ei näytetä tieturvallisuusverkkoa vielä tuotannossa
+  ;; Kun halutaan näyttää, tämän funktiokutsun voi muuttaa vaan -> +tarkastustyyppi-hoidolle+
+  (if-not (k/kehitysymparistossa?)
+    (vec (remove #(= :tieturvallisuus %) +tarkastustyyppi-hoidolle+))
+    +tarkastustyyppi-hoidolle+))
+
 (defn tarkastustyypit-hoidon-tekijalle [tekija]
   (case tekija
     :tilaaja [:laatu]
     :urakoitsija [:tieturvallisuus :tiesto :talvihoito :soratie]
-    +tarkastustyyppi-hoidolle+))
+    (hoito-tarkastustyypit)))
 
 (defn tarkastustyypit-urakkatyypille-ja-tekijalle [urakkatyyppi tekija]
   (if (some #(= urakkatyyppi %) [:paallystys :paikkaus :tiemerkinta])
@@ -60,7 +67,7 @@
 (defn tarkastustyypit-urakkatyypille [urakkatyyppi]
   (if (some #(= urakkatyyppi %) [:paallystys :paikkaus :tiemerkinta])
     +tarkastustyyppi-yllapidolle+
-    +tarkastustyyppi-hoidolle+))
+    (hoito-tarkastustyypit)))
 
 (defn uusi-tarkastus [urakkatyyppi]
   {:uusi? true
