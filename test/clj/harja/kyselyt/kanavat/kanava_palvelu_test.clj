@@ -34,8 +34,9 @@
                   :hae-kayttajan-kanavaurakat +kayttaja-jvh+
                   {:hallintayksikko kanava-hallintayksikko
                    :urakka-id urakka-id-saimaa})
-        vastaus-joensuu (-> vastaus first :urakat first)
-        vastaus-saimaa (-> vastaus first :urakat second)]
+        vastaus-urakat (-> vastaus first :urakat)
+        vastaus-joensuu (first (filter #(= (:nimi %) "Joensuun kanava") vastaus-urakat))
+        vastaus-saimaa (first (filter #(= (:nimi %) "Saimaan kanava") vastaus-urakat))]
 
     (is (= (:id vastaus-joensuu) urakka-id-joensuu))
     (is (= (:nimi vastaus-joensuu) "Joensuun kanava"))

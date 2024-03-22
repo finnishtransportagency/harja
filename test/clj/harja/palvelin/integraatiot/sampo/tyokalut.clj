@@ -198,6 +198,7 @@
      (urakat/kasittele-urakat testi/ds urakat))))
 
 (defn poista-urakka []
+  (u "delete from rahavaraus_urakka where urakka_id = (select id from urakka where sampoid = 'TESTIURAKKA')")
   (u "update sopimus set urakka = null where urakka in (select id from urakka where sampoid = 'TESTIURAKKA')")
   (u "delete from yhteyshenkilo_urakka where urakka = (select id from urakka where sampoid = 'TESTIURAKKA')")
   (u "delete from valitavoite where urakka = (select id from urakka where sampoid = 'TESTIURAKKA')")

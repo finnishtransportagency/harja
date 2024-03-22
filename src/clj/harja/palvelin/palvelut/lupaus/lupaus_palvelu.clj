@@ -113,14 +113,13 @@
   (lupaus-domain/valikatselmus-tehty?
     (valikatselmus-q/hae-urakan-paatokset db {:harja.domain.urakka/id urakka-id})))
 
-(defn hae-urakan-lupaustiedot-hoitokaudelle [db {:keys [urakka-id urakan-alkuvuosi nykyhetki
+(defn hae-urakan-lupaustiedot-hoitokaudelle [db {:keys [urakka-id nykyhetki
                                                         valittu-hoitokausi] :as tiedot}]
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
         vastaus (into []
                       (lupaus-kyselyt/hae-urakan-lupaustiedot db {:urakka urakka-id
-                                                               :alkuvuosi urakan-alkuvuosi
-                                                               :alkupvm hk-alkupvm
-                                                               :loppupvm hk-loppupvm}))
+                                                                   :alkupvm hk-alkupvm
+                                                                   :loppupvm hk-loppupvm}))
         vastaus (->> vastaus
                      (mapv #(update % :vastaukset konversio/jsonb->clojuremap))
                      (mapv #(update % :vastaukset
@@ -178,7 +177,6 @@
      :lupausryhmat lupausryhmat
      ;; Lähtötiedot tarkistusta varten, ei välttämätöntä
      :lahtotiedot {:urakka-id urakka-id
-                   :urakan-alkuvuosi urakan-alkuvuosi
                    :valittu-hoitokausi valittu-hoitokausi
                    :nykyhetki nykyhetki} ; Minkä hetken mukaan on laskettu
      ;; Yhteenveto
@@ -201,8 +199,8 @@
                   :tavoitehinta-puuttuu? tavoitehinta-puuttuu?
                   :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?}}))
 
-(defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id urakan-alkuvuosi valittu-hoitokausi] :as tiedot}]
-  {:pre [(number? urakka-id) (number? urakan-alkuvuosi) valittu-hoitokausi
+(defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id valittu-hoitokausi] :as tiedot}]
+  {:pre [(number? urakka-id) valittu-hoitokausi
          (inst? (first valittu-hoitokausi)) (inst? (second valittu-hoitokausi))]}
   (log/debug "hae-urakan-lupaustiedot " tiedot)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
@@ -577,3 +575,21 @@
                      :poista-kuukausittaiset-pisteet
                      :hae-kuukausittaiset-pisteet)
     this))
+
+
+(comment
+  (def j harja.palvelin.main/harja-jarjestelma)
+  (hae-urakan-lupaustiedot-hoitokaudelle
+    (:db j)
+    {:urakka-id 36,
+     :valittu-hoitokausi [#inst "2023-09-30T21:00:00.000-00:00" #inst "2024-09-30T20:59:59.000-00:00"],
+     :nykyhetki #inst "2024-02-28T13:37:14.992-00:00"}))
+
+
+(comment
+  (def j harja.palvelin.main/harja-jarjestelma)
+  (lupaus-kyselyt/hae-urakan-lupaustiedot 
+    (:db j)
+    {:urakka 36
+     :alkupvm #inst "2023-09-30T21:00:00.000-00:00"
+     :loppupvm #inst "2024-09-30T20:59:59.000-00:00"}))
