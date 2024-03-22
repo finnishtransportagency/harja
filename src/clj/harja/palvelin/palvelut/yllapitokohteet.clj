@@ -522,7 +522,7 @@
                                         :sopimus sopimus-id
                                         :kohdenumero kohdenumero
                                         :nimi nimi
-                                        :yotyo yotyo
+                                        :yotyo (or yotyo false)
                                         :tr_numero tr-numero
                                         :tr_alkuosa tr-alkuosa
                                         :tr_alkuetaisyys tr-alkuetaisyys
@@ -594,31 +594,31 @@
                                  {:kohdenumero                       kohdenumero
                                   :nimi                              nimi
                                   :tunnus                            tunnus
-                                  :yotyo                             yotyo
-                                  :tr_numero                         tr-numero
-                                  :tr_alkuosa                        tr-alkuosa
-                                  :tr_alkuetaisyys                   tr-alkuetaisyys
-                                  :tr_loppuosa                       tr-loppuosa
-                                  :tr_loppuetaisyys                  tr-loppuetaisyys
-                                  :tr_ajorata                        tr-ajorata
-                                  :tr_kaista                         tr-kaista
+                                  :yotyo (or yotyo false)
+                                  :tr_numero tr-numero
+                                  :tr_alkuosa tr-alkuosa
+                                  :tr_alkuetaisyys tr-alkuetaisyys
+                                  :tr_loppuosa tr-loppuosa
+                                  :tr_loppuetaisyys tr-loppuetaisyys
+                                  :tr_ajorata tr-ajorata
+                                  :tr_kaista tr-kaista
                                   :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
-                                  :yllapitoluokka                    (if (map? yllapitoluokka)
-                                                                       (:numero yllapitoluokka)
-                                                                       yllapitoluokka)
+                                  :yllapitoluokka (if (map? yllapitoluokka)
+                                                    (:numero yllapitoluokka)
+                                                    yllapitoluokka)
 
-                                  :id                                id
-                                  :urakka                            urakka-id})
-      (q/tallenna-yllapitokohteen-kustannukset! db {:yllapitokohde            id
-                                                    :urakka                   urakka-id
-                                                    :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
-                                                    :maaramuutokset           maaramuutokset
-                                                    :maku_paallysteet         maku-paallysteet
-                                                    :arvonvahennykset         arvonvahennykset
-                                                    :bitumi_indeksi           bitumi-indeksi
-                                                    :kaasuindeksi             kaasuindeksi
-                                                    :toteutunut_hinta         toteutunut-hinta
-                                                    :muokkaaja                (:id user)})
+                                  :id id
+                                  :urakka urakka-id})
+    (q/tallenna-yllapitokohteen-kustannukset! db {:yllapitokohde id
+                                                  :urakka urakka-id
+                                                  :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
+                                                  :maaramuutokset maaramuutokset
+                                                  :maku_paallysteet maku-paallysteet
+                                                  :arvonvahennykset arvonvahennykset
+                                                  :bitumi_indeksi bitumi-indeksi
+                                                  :kaasuindeksi kaasuindeksi
+                                                  :toteutunut_hinta toteutunut-hinta
+                                                  :muokkaaja (:id user)})
 
       ;; Mikäli pääkohde kutistuu lyhyemmäksi kuin alikohteet, korjataan tilanne:
       (let [kohdeosat (hae-yllapitokohteen-yllapitokohdeosat db user {:urakka-id        urakka-id

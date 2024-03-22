@@ -204,6 +204,12 @@
 (defmethod muodosta-solu :teksti [[_ teksti] solun-tyyli]
   [teksti solun-tyyli])
 
+(defmethod muodosta-solu :osittain-boldattu-teksti
+  ;; Joihinkin teksteihin halutaan osittain boldattu teksti. Se ei ole mahdollista Excelissä, joten tehdään
+  ;; vain tämä elementti, joka toimii kuten teksti -elementit toimii, mutta ei aiheuta erroreita
+  [[_ {:keys [boldattu-teksti teksti] :as tiedot}] solun-tyyli]
+  [(str boldattu-teksti teksti) solun-tyyli])
+
 (defn- font-otsikko
   ([] (font-otsikko 14))
   ([font-koko]
