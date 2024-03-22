@@ -437,7 +437,10 @@
                                                                          :urakka-id urakka-id})
          sitoutumistiedot (first (lupaus-kyselyt/hae-sitoutumistiedot db {:hk-alkuvuosi vuosi
                                                                           :urakka-id urakka-id}))
+         ;; Kuukausittaisten pisteiden muokkaamisessa vaikuttaa tämän hoitokauden välikatselmus
          valikatselmus-tehty-hoitokaudelle? (valikatselmus-tehty-hoitokaudelle? db urakka-id (pvm/vuosi hk-alkupvm))
+         ;; Koko urakkakauden sitoutumispisteisiin vaikuttaa onko urakalle tehty yhtään välitkaselmusta
+         valikatselmus-tehty-urakalle? (valikatselmus-tehty-urakalle? db urakka-id)
          lopulliset-pisteet (lupaus-domain/kokoa-vastauspisteet kayttaja kuukausipisteet urakka-id
                               valittu-hoitokausi valikatselmus-tehty-hoitokaudelle?
                               nykyhetki)
@@ -494,7 +497,7 @@
                    :indeksikorotus indeksikorotus
                    :tavoitehinta tavoitehinta
                    :odottaa-urakoitsijan-kannanottoa? odottaa-urakoitsijan-kannanottoa?
-                   :valikatselmus-tehty-urakalle? valikatselmus-tehty-hoitokaudelle?
+                   :valikatselmus-tehty-urakalle? valikatselmus-tehty-urakalle?
                    :tavoitehinta-puuttuu? tavoitehinta-puuttuu?
                    :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?}})))
 
