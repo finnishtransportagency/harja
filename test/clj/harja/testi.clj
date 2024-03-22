@@ -96,7 +96,7 @@
        :fatal
 
        :default
-       ;:debug -- Aseta Debug level käyttöön, mikäli tarvitsee selvittää jotain tiettyä ongelmaa, joka ei muuten tule esille
+       ;:debug                                               ;-- Aseta Debug level käyttöön, mikäli tarvitsee selvittää jotain tiettyä ongelmaa, joka ei muuten tule esille
        :info
        )}}})
 
