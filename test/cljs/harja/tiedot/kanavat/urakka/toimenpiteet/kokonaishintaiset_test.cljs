@@ -55,7 +55,7 @@
 (deftest HaeToimenpiteet
   (vaadi-async-kutsut
     #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteidenHakuEpaonnistui}
-    (is (= {:haku-kaynnissa? true}
+    (is (= {:haku-kaynnissa? true :avattu-toimenpide nil}
            (e! (tiedot/->HaeToimenpiteet {:urakka {:id 1}
                                           :sopimus-id 666
                                           :toimenpide {:id 666}}))))))

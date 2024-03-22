@@ -14,13 +14,7 @@
 
 (defonce nakymassa? (atom false))
 
-(def +tarkastustyyppi->nimi+
-  ;; Piilotetaan toistaiseksi tieturvallisuus kirjaus tuotannosta
-  ;; Kun kaikki valmista, tämän koodin voi muuttaa vaan: (def +tarkastustyyppi->nimi+ tarkastukset/+tarkastustyyppi->nimi+)
-  (let [tarkastukset tarkastukset/+tarkastustyyppi->nimi+]
-    (if-not (k/kehitysymparistossa?)
-      (dissoc tarkastukset :tieturvallisuus)
-      tarkastukset)))
+(def +tarkastustyyppi->nimi+ tarkastukset/+tarkastustyyppi->nimi+)
 
 (defonce tienumero (atom nil)) ;; tienumero, tai kaikki
 (defonce tarkastustyyppi (atom nil)) ;; nil = kaikki, :tiesto, :talvihoito, :soratie
@@ -149,10 +143,7 @@
 (defn paivita-tarkastus-listaan!
   "Päivittää annetun tarkastuksen urakan-tarkastukset listaan, jos se on valitun aikavälin sisällä."
   [{:keys [aika id] :as tarkastus}]
-  (let [[alkupvm loppupvm] (naytettava-aikavali @tiedot-urakka/valittu-urakka-kaynnissa?
-                                                @tiedot-urakka/valittu-hoitokausi
-                                                @tiedot-urakka/valittu-hoitokauden-kuukausi
-                                                @tiedot-urakka/valittu-aikavali)
+  (let [[alkupvm loppupvm] @valittu-aikavali
         sijainti-listassa (first (keep-indexed (fn [i {tarkastus-id :id}]
                                                  (when (= id tarkastus-id) i))
                                                @urakan-tarkastukset))]

@@ -1,4 +1,4 @@
-name: 'Harja: Scan fargate image (manual)'
+name: 'Harja: Scan AWS ECS Fargate image (manual)'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
@@ -15,7 +15,6 @@ jobs:
       # Contents read lupaa tarvitaan checkout actionissa
       contents: read
       packages: read
-      security-events: write
 
     steps:
       - name: Checkout code
@@ -53,17 +52,10 @@ jobs:
         uses: aquasecurity/trivy-action@062f2592684a31eb3aa050cc61e7ca1451cecd3d # v0.18.0
         with:
           image-ref: 'harja-app:${{ github.sha }}'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          # format: 'table'
-          # exit-code: '1'
+          # Sallitaan ainoastaan table-formaatin tulostus, koska manuaalisen ajon SARIF upload aiheuttaisi ristiriitoja
+          #   develop-branchin SARIF-tulosten kanssa.
+          format: 'table'
           # ignore-unfixed: true
           scanners: vuln,secret,misconfig
           vuln-type: 'os,library'
-          # severity: 'CRITICAL,HIGH'
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM,LOW'

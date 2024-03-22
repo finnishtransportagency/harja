@@ -853,3 +853,26 @@ VALUES
         {:otsikko "12/19"}
         {:otsikko "Yhteensä (t)"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko-oulu tarkistusfunktio))))
+
+(deftest ymparistoraportin-koko-maan-urakoissa-urakkanumero-mukana
+  (let [_ (varmista-tietokannan-tila)
+        vastaus-koko-maa (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :suorita-raportti
+                           +kayttaja-jvh+
+                           {:nimi :ymparistoraportti
+                            :konteksti "koko maa"
+                            :parametrit {:alkupvm (c/to-date (t/local-date 2015 10 1))
+                                         :loppupvm (c/to-date (t/local-date 2016 9 30))
+                                         :urakkatyyppi :hoito
+                                         :urakoittain? true
+                                         :urakkanumero? true ;; Tämä parametri aiheuttaa urakkanumeron lisäämisen
+                                         }})]
+
+    (is (vector? vastaus-koko-maa))
+    (let [otsikko "Talvisuolat"
+          taulukko (apurit/taulukko-otsikolla vastaus-koko-maa otsikko)
+          taulukon-rivit (seq (apurit/taulukon-rivit taulukko))
+          ensimmainen-rivi (first taulukon-rivit)]
+      (is (map? ensimmainen-rivi))
+      ;; Varmista, että oulun urakkanumero on mukana urakan nimessä
+      (is (= (str/includes? (second (:rivi ensimmainen-rivi)) "(1238)"))))))
