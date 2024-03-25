@@ -113,7 +113,7 @@
       [:div
        [:p (str (:nimi urakka) " täytyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan.
       Urakalla ei kuitenkaan ole yhtään sopimusta Harjassa, joten sidontaa ei voi tehdä.
-      Urakan sopimus pitää perustaa Sampoon.")]])))
+      Urakan sopimus pitää perustaa Sopimusten hallintajärjestelmään.")]])))
 
 (defn nayta-tuontidialogi [urakka]
   (modal/nayta!
