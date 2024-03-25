@@ -29,120 +29,148 @@
   [bs/tabs {:style :tabs :classes "tabs-taso1"
             :active (nav/valittu-valilehti-atom :hallinta)}
 
-   "Indeksit"
-   :indeksit
-   (when (oikeudet/hallinta-indeksit)
-     ^{:key "indeksit"}
-     [i/indeksit-elementti])
+   "Urakkatiedot"
+   :hallinta-urakat
+   ^{:key "urakoiden-hallinta"}
+   [bs/tabs {:style :tabs :classes "tabs-taso2"
+             :active (nav/valittu-valilehti-atom :hallinta-urakat)}
 
-   "Tehtävät"
-   :tehtavat
-   (when (oikeudet/hallinta-tehtavat)
-     ^{:key "tehtävät"}
-     [tp/toimenpidekoodit])
+    "Indeksit"
+    :indeksit
+    (when (oikeudet/hallinta-indeksit)
+      ^{:key "indeksit"}
+      [i/indeksit-elementti])
 
-   "Välitavoitteet"
-   :valtakunnalliset-valitavoitteet
-   (when (oikeudet/hallinta-valitavoitteet)
-     ^{:key "valtakunnalliset-valitavoitteet"}
-     [valitavoitteet/valitavoitteet])
 
-   "Lämpötilat"
-   :lampotilat
-   (when (oikeudet/hallinta-lampotilat)
-     ^{:key "lämpötilat"}
-     [lampotilat/lampotilat])
+    "Tehtävät"
+    :tehtavat
+    (when (oikeudet/hallinta-tehtavat)
+      ^{:key "tehtävät"}
+      [tp/toimenpidekoodit])
 
-   "Urakkanimet"
-   :lyhytnimet
-   (when (oikeudet/hallinta-indeksit) ; ei uutta roolia roolit exceliin
-     ^{:key "lyhytnimet"}
-     [lyhytnimet/urakoiden-lyhytnimet])
 
-   "Integraatiotilanne"
-   :integraatiotilanne
-   (when (oikeudet/hallinta-integraatiotilanne)
-     ^{:key "integraatiotilanne"}
-     [integraatiotilanne/integraatiotilanne])
+    "Välitavoitteet"
+    :valtakunnalliset-valitavoitteet
+    (when (oikeudet/hallinta-valitavoitteet)
+      ^{:key "valtakunnalliset-valitavoitteet"}
+      [valitavoitteet/valitavoitteet])
 
-   "Yhteydenpito"
-   :yhteydenpito
-   (when (oikeudet/hallinta-yhteydenpito)
-     ^{:key "yhteydenpito"}
-     [yhteydenpito/yhteydenpito])
+    "Urakkanimet"
+    :lyhytnimet
+    (when (oikeudet/hallinta-indeksit) ; ei uutta roolia roolit exceliin
+      ^{:key "lyhytnimet"}
+      [lyhytnimet/urakoiden-lyhytnimet])
 
-   "Häiriöilmoitukset"
-   :hairioilmoitukset
-   (when (oikeudet/hallinta-hairioilmoitukset)
-     ^{:key "integraatioloki"}
-     [hairiot/hairiot])
+    "Lämpötilat"
+    :lampotilat
+    (when (oikeudet/hallinta-lampotilat)
+      ^{:key "lämpötilat"}
+      [lampotilat/lampotilat])
 
-   "API-järjestelmätunnukset"
-   :api-jarjestelmatunnukset
-   (when (oikeudet/hallinta-api-jarjestelmatunnukset)
-     ^{:key "jarjestelmatunnukset"}
-     [api-jarjestelmatunnukset/api-jarjestelmatunnukset-paakomponentti])
+    "Vesiväyläurakat"
+    :vesivayla-hallinta
+    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+            (oikeudet/hallinta-vesivaylat))
+      ^{:key "vesivaylaurakat"}
+      [vu/vesivayla-hallinta])
 
-   "Vesiväyläurakat"
-   :vesivayla-hallinta
-   (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-           (oikeudet/hallinta-vesivaylat))
-     ^{:key "vesivaylaurakat"}
-     [vu/vesivayla-hallinta])
+    "MHU Tehtäväryhmät ja tehtävät"
+    :tehtavatjatehtavaryhmat
+    (when true
+      ^{:key "tehtavaryhmatjatehtavat"}
+      [tehtava-nakyma/tehtavat])
 
-   "Raporttitiedot"
-   :raporttitiedot
-   (when (oikeudet/hallinta-indeksit)
-     ^{:key "raporttien-suoritustieto"}
-     [raporttien-suoritustieto/raporttien-suoritustieto])
+    "MHU tarjoushinnat"
+    :mhu-tarjoushinnat
+    (when (oikeudet/hallinta-tarjoushinnat)
+      ^{:key "mhu-tarjoushinnat"}
+      [tarjoushinnat/tarjoushinnat])]
 
-   "Järjestelmäasetukset"
-   :jarjestelma-asetukset
-   (when true
-     ^{:key "jarjestelma-asetukset"}
-     [jarjestelma-asetukset/jarjestelma-asetukset])
+   "Seuranta"
+   :hallinta-seuranta
+   ^{:key "seuranta"}
+   [bs/tabs {:style :tabs :classes "tabs-taso2"
+             :active (nav/valittu-valilehti-atom :hallinta-seuranta)}
 
-   "Toteumatyökalu"
-   :toteumatyokalu
-   (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
-           (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
-     ^{:key "toteumatyokalu"}
-     [toteumatyokalu-nakyma/simuloi-toteuma])
+    "Integraatiotilanne"
+    :integraatiotilanne
+    (when (oikeudet/hallinta-integraatiotilanne)
+      ^{:key "integraatiotilanne"}
+      [integraatiotilanne/integraatiotilanne])
 
-   "Työmaapäiväkirjatyökalu"
-   :tyomaapaivakirjatyokalu
-   (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
-           (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
-     ^{:key "tyomaapaivakirjatyokalu"}
-     [paivakirjatyokalu-nakyma/simuloi-tyomaapaivakirja])
 
-   "Koulutusvideot"
-   :koulutusvideot
-   (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-koulutusvideot)
-     ^{:key "koulutusvideot"}
-     [koulutusvideot/nakyma])
+    "Raporttitiedot"
+    :raporttitiedot
+    (when (oikeudet/hallinta-indeksit)
+      ^{:key "raporttien-suoritustieto"}
+      [raporttien-suoritustieto/raporttien-suoritustieto])
+    ]
 
-   "Palauteluokitukset"
-   :palauteluokitukset
-   (when (oikeudet/hallinta-palautevayla)
-     ^{:key "palauteluokitukset"}
-     [pl/palauteluokitukset])
+   "Järjestelmän hallinta"
+   :hallinta-jarjestelma
+   ^{:key "jarjestelma"}
+   [bs/tabs {:style :tabs :classes "tabs-taso2"
+             :active (nav/valittu-valilehti-atom :hallinta-jarjestelma)}
 
-   "Viestitestaus"
-   :viestitestaus
-   (when true
-     ^{:key "viestitestaus"}
-     [viestinakyma/viestitestaus])
+    "API-järjestelmätunnukset"
+    :api-jarjestelmatunnukset
+    (when (oikeudet/hallinta-api-jarjestelmatunnukset)
+      ^{:key "jarjestelmatunnukset"}
+      [api-jarjestelmatunnukset/api-jarjestelmatunnukset-paakomponentti])
 
-   "MHU Tehtäväryhmät ja tehtävät"
-   :tehtavatjatehtavaryhmat
-   (when true
-     ^{:key "tehtavaryhmatjatehtavat"}
-     [tehtava-nakyma/tehtavat])
+    "Järjestelmäasetukset"
+    :jarjestelma-asetukset
+    (when true
+      ^{:key "jarjestelma-asetukset"}
+      [jarjestelma-asetukset/jarjestelma-asetukset])
 
-   "MHU tarjoushinnat"
-   :mhu-tarjoushinnat
-   (when (oikeudet/hallinta-tarjoushinnat)
-     ^{:key "mhu-tarjoushinnat"}
-     [tarjoushinnat/tarjoushinnat])])
+    "Koulutusvideot"
+    :koulutusvideot
+    (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-koulutusvideot)
+      ^{:key "koulutusvideot"}
+      [koulutusvideot/nakyma])
+
+    "Palauteluokitukset"
+    :palauteluokitukset
+    (when (oikeudet/hallinta-palautevayla)
+      ^{:key "palauteluokitukset"}
+      [pl/palauteluokitukset])]
+
+   "Työkalut"
+   :hallinta-tyokalut
+   ^{:key "tyokalut"}
+   [bs/tabs {:style :tabs :classes "tabs-taso2"
+             :active (nav/valittu-valilehti-atom :hallinta-tyokalut)}
+
+    "Yhteydenpito"
+    :yhteydenpito
+    (when (oikeudet/hallinta-yhteydenpito)
+      ^{:key "yhteydenpito"}
+      [yhteydenpito/yhteydenpito])
+
+    "Häiriöilmoitukset"
+    :hairioilmoitukset
+    (when (oikeudet/hallinta-hairioilmoitukset)
+      ^{:key "integraatioloki"}
+      [hairiot/hairiot])
+
+    "Toteumatyökalu"
+    :toteumatyokalu
+    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+            (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+      ^{:key "toteumatyokalu"}
+      [toteumatyokalu-nakyma/simuloi-toteuma])
+
+    "Työmaapäiväkirjatyökalu"
+    :tyomaapaivakirjatyokalu
+    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+            (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+      ^{:key "tyomaapaivakirjatyokalu"}
+      [paivakirjatyokalu-nakyma/simuloi-tyomaapaivakirja])
+
+    "Viestitestaus"
+    :viestitestaus
+    (when true
+      ^{:key "viestitestaus"}
+      [viestinakyma/viestitestaus])]])
 
