@@ -327,7 +327,22 @@
         <xs:sequence>
             <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali-kaistalla-ja-ajoradalla" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="kasittelymenetelma" type="alustamenetelma" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="kasittelypaksuus" type="xs:short" nillable="true" minOccurs="0" maxOccurs="1">
+            <xs:element name="tekninen-toimenpide" type="alustan-tekninen-toimenpide" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                       Todo: Selvitettävä teknisen toimenpiteen käyttötapa. Tätä ei syötetä HARJAssa, mutta voidaan päätellä käsittelymenetelmän perusteella.
+                        Mikäli näin tehdään, varmistettava säännöt. Vaihtoehtoisesti voidaan olla lähettämättä ja päätellä vain YHA:ssa
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="lisatty-paksuus" type="xs:short" nillable="true" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        Yksikkö: senttimetri
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="kasittelysyvyys" type="xs:short" nillable="true" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>
                         Yksikkö: senttimetri
@@ -364,6 +379,20 @@
 
     <xs:complexType name="kulutuskerrokselle-tehty-toimenpide">
         <xs:sequence>
+            <xs:element name="yha-id" type="xs:long" nillable="true" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        YHA:sta saadun vastaavan alikohteen ID. Puuttuu, jos luotu harjassa.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="harja-id" type="xs:long" nillable="false" minOccurs="1" maxOccurs="1">
+               <xs:annotation>
+                    <xs:documentation>
+                        Harjan alikohteen/kohdeosan ID.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali-kaistalla-ja-ajoradalla"/>
             <xs:element name="leveys" type="xs:decimal" minOccurs="0">
                 <xs:annotation>
@@ -1527,6 +1556,36 @@
                     <xs:documentation>
                         (UUSIO) RA, Asfalttirouhe
                     </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="alustan-tekninen-toimenpide">
+        <xs:restriction base="xs:integer">
+            <xs:enumeration value="1">
+                <xs:annotation>
+                    <xs:documentation>rakentaminen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="2">
+                <xs:annotation>
+                    <xs:documentation>suuntauksen parantaminen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="3">
+                <xs:annotation>
+                    <xs:documentation>rakenteen parantaminen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="4">
+                <xs:annotation>
+                    <xs:documentation>kevyt rakenteen parantaminen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="9">
+                <xs:annotation>
+                    <xs:documentation>ei tietoa</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
         </xs:restriction>
