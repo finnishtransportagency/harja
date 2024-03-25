@@ -912,7 +912,8 @@ SELECT paallystyskohde,
        ypk.lahetetty,
        ypk.lahetys_onnistunut AS "lahetys-onnistunut",
        takuupvm               AS takuupaivamaara,
-       k.toteutunut_hinta     AS "toteutunut-hinta"
+       k.toteutunut_hinta     AS "toteutunut-hinta",
+       pi.poistettu
 FROM paallystysilmoitus pi
          LEFT JOIN yllapitokohde ypk ON pi.paallystyskohde = ypk.id
          LEFT JOIN yllapitokohteen_kustannukset k ON ypk.id = k.yllapitokohde
