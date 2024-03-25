@@ -777,6 +777,7 @@ jatkon."
   (when tasaus
     (case tasaus
       :oikea "tasaa-oikealle"
+      :vasen "tasaa-vasemmalle"
       :keskita "tasaa-keskita")))
 
 (defn- tooltip-sisalto [opts auki? sisalto]
