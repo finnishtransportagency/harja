@@ -29,13 +29,12 @@
 
 (defrecord HaeUrakanToimenpiteetJaTehtavaryhmat [urakka])
 (defrecord HaeUrakanKulut [hakuparametrit])
-(defrecord HaeUrakanToimenpiteetJaMaksuerat [hakuparametrit])
+(defrecord HaeUrakanToimenpiteet [hakuparametrit])
 (defrecord OnkoLaskunNumeroKaytossa [laskun-numero])
 
 (defrecord KutsuEpaonnistui [tulos parametrit])
 
 (defrecord TarkistusOnnistui [tulos parametrit])
-(defrecord MaksueraHakuOnnistui [tulos])
 (defrecord TallennusOnnistui [tulos parametrit])
 (defrecord ToimenpidehakuOnnistui [tulos])
 (defrecord KuluhakuOnnistui [tulos])
@@ -119,16 +118,6 @@
                                       kohdistukset)))
         (with-meta (tila/kulun-validointi-meta kulu)))))
 
-(defn hae-avaimella-fn [{:keys [verrattava haettava palautettava]}]
-  (fn [kohde]
-    (let [palautuksen-avain (or palautettava
-                                haettava)]
-      (when (= verrattava (if (or (vector? haettava)
-                                  (seq? haettava))
-                            (get-in kohde haettava)
-                            (haettava kohde)))
-        (palautuksen-avain kohde)))))
-
 (defn alusta-lomake [app]
   (let [urakan-alkupvm (:alkupvm @navigaatio/valittu-urakka)
         kuluva-hoitovuoden-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm (pvm/nyt))
@@ -178,48 +167,51 @@
       talleta-tilapainen-erapaiva)))
 
 (extend-protocol tuck/Event
+
   NakymastaPoistuttiin
-  (process-event [_ app]
+  (process-event [_ _app]
     (resetoi-kulunakyma))
+
   LiitteenPoistoOnnistui
-  (process-event [{tulos :tulos {id :liite-id} :parametrit} app]
+  (process-event [{_tulos :tulos {id :liite-id} :parametrit} app]
     (-> app
-        (update-in
-          [:lomake :liitteet]
-          (fn [liitteet]
-            (filter #(not (= id (:liite-id %))) liitteet)))
-        (update-in [:parametrit :haetaan] dec)))
+      (update-in
+        [:lomake :liitteet]
+        (fn [liitteet]
+          (filter #(not (= id (:liite-id %))) liitteet)))
+      (update-in [:parametrit :haetaan] dec)))
+
   PoistaLiite
   (process-event [{id :id} {:keys [lomake] :as app}]
     (if (nil? (:id lomake))
       (update-in app
-                 [:lomake :liitteet]
-                 (fn [liitteet]
-                   (filter #(not (= id (:liite-id %))) liitteet)))
+        [:lomake :liitteet]
+        (fn [liitteet]
+          (filter #(not (= id (:liite-id %))) liitteet)))
       (do
         (tuck-apurit/post! :poista-kulun-liite
-                           {:urakka-id (-> @tila/tila :yleiset :urakka :id)
-                            :kulu-id  (:id lomake)
-                            :liite-id  id}
-                           {:onnistui            ->LiitteenPoistoOnnistui
-                            :onnistui-parametrit [{:liite-id id}]
-                            :epaonnistui         ->KutsuEpaonnistui
-                            :paasta-virhe-lapi?  true})
+          {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+           :kulu-id  (:id lomake)
+           :liite-id  id}
+          {:onnistui            ->LiitteenPoistoOnnistui
+           :onnistui-parametrit [{:liite-id id}]
+           :epaonnistui         ->KutsuEpaonnistui
+           :paasta-virhe-lapi?  true})
         (update-in app [:parametrit :haetaan] inc))))
-  LataaLiite
-  (process-event [{id :id} app]
-    app)
-  LiiteLisatty
-  (process-event [{{:keys [kuvaus nimi id tyyppi koko]} :liite} app]
-    (update-in app
-               [:lomake :liitteet]
-               conj
-               {:liite-id     id
-                :liite-nimi   nimi
-                :liite-tyyppi tyyppi
-                :liite-koko   koko}))
 
-  ;; SUCCESS
+  LataaLiite
+  (process-event [_ app]
+    app)
+
+  LiiteLisatty
+  (process-event [{{:keys [nimi id tyyppi koko]} :liite} app]
+    (update-in app
+      [:lomake :liitteet]
+      conj
+      {:liite-id     id
+       :liite-nimi   nimi
+       :liite-tyyppi tyyppi
+       :liite-koko   koko}))
 
   TarkistusOnnistui
   (process-event [{tulos :tulos {:keys [ei-async-laskuria]} :parametrit} app]
@@ -228,24 +220,21 @@
       (update-in [:parametrit :haetaan] (if ei-async-laskuria identity dec))
       (assoc-in [:lomake :tarkistukset :numerolla-tarkistettu-pvm] tulos)
       (update :lomake paivita-erapaivat-tarvittaessa)))
-  MaksueraHakuOnnistui
-  (process-event [{tulos :tulos} app]
-    (->
-      app
-      (update-in [:parametrit :haetaan] dec)
-      (assoc :maksuerat tulos)))
+
   TallennusOnnistui
-  (process-event [{tulos :tulos} {{:keys [viimeisin-haku]} :parametrit :as app}]
+  (process-event [_ {{:keys [viimeisin-haku]} :parametrit :as app}]
     ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
     ((tuck/current-send-function) (->HaeUrakanValikatselmukset))
     (-> app
-        (assoc :syottomoodi false)
-        (assoc :lomake (alusta-lomake app))))
+      (assoc :syottomoodi false)
+      (assoc :lomake (alusta-lomake app))))
+
   KuluhakuOnnistui
-  (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet kulut] :as app}]
+  (process-event [{tulos :tulos} app]
     (-> app
-        (assoc :kulut tulos)
-        (update-in [:parametrit :haetaan] dec)))
+      (assoc :kulut tulos)
+      (update-in [:parametrit :haetaan] dec)))
+
   ToimenpidehakuOnnistui
   (process-event [{tulos :tulos} app]
     (let [kasitelty (set
@@ -262,92 +251,84 @@
                                                          toimenpide-rivi-olemassa? (when toimenpide-rivi?
                                                                                      (some #(and (= (:toimenpideinstanssi %)
                                                                                                     (:toimenpideinstanssi asia))
-                                                                                                 (= (:toimenpide-id %)
-                                                                                                    (:toimenpide-id asia)))
-                                                                                           (:toimenpiteet k)))]
+                                                                                              (= (:toimenpide-id %)
+                                                                                                 (:toimenpide-id asia)))
+                                                                                       (:toimenpiteet k)))]
                                                      (apply update k
-                                                            (if toimenpide-rivi?
-                                                              :toimenpiteet
-                                                              :tehtavaryhmat)
-                                                            (if (and toimenpide-rivi-olemassa?
-                                                                     toimenpide-rivi?)
-                                                              [identity]
-                                                              [conj asia]))))
+                                                       (if toimenpide-rivi?
+                                                         :toimenpiteet
+                                                         :tehtavaryhmat)
+                                                       (if (and toimenpide-rivi-olemassa?
+                                                             toimenpide-rivi?)
+                                                         [identity]
+                                                         [conj asia]))))
                                                  {:tehtavaryhmat []
                                                   :toimenpiteet  []}
                                                  (sort-by :jarjestys kasitelty))]
-      (assoc app
-        :toimenpiteet toimenpiteet
-        :tehtavaryhmat tehtavaryhmat)))
-
-  ;; FAIL
+      (-> app
+        (update-in [:parametrit :haetaan] dec)
+        (assoc :toimenpiteet toimenpiteet)
+        (assoc :tehtavaryhmat tehtavaryhmat))))
 
   KutsuEpaonnistui
   (process-event [{{:keys [ei-async-laskuria viesti]} :parametrit} app]
     (when viesti (viesti/nayta! viesti :danger))
     (update-in app [:parametrit :haetaan] (if ei-async-laskuria identity dec)))
 
-  ;; HAUT
-
-  HaeUrakanToimenpiteetJaMaksuerat
+  HaeUrakanToimenpiteet
   (process-event [{:keys [hakuparametrit]} app]
     (varmista-kasittelyjen-jarjestys
       (tuck-apurit/post! :tehtavaryhmat-ja-toimenpiteet
-                         {:urakka-id (:id hakuparametrit)}
-                         {:onnistui           ->ToimenpidehakuOnnistui
-                          :epaonnistui        ->KutsuEpaonnistui
-                          :epaonnistui-parametrit [{:viesti "Urakan tehtäväryhmien ja toimenpiteiden haku epäonnistui"}]
-                          :paasta-virhe-lapi? true})
-      (tuck-apurit/post! :hae-urakan-maksuerat
-                         (:id hakuparametrit)
-                         {:onnistui           ->MaksueraHakuOnnistui
-                          :epaonnistui        ->KutsuEpaonnistui
-                          :epaonnistui-parametrit [{:viesti "Urakan maksuerien haku epäonnistui"}]
-                          :paasta-virhe-lapi? true}))
+        {:urakka-id (:id hakuparametrit)}
+        {:onnistui           ->ToimenpidehakuOnnistui
+         :epaonnistui        ->KutsuEpaonnistui
+         :epaonnistui-parametrit [{:viesti "Urakan tehtäväryhmien ja toimenpiteiden haku epäonnistui"}]
+         :paasta-virhe-lapi? true}))
     (update-in app [:parametrit :haetaan] + 1))
+
   HaeUrakanKulut
-  (process-event [{{:keys [id alkupvm loppupvm kuukausi tallennuksen-jalkeen?] :as viimeisin-haku} :hakuparametrit} app]
+  (process-event [{{:keys [id alkupvm loppupvm kuukausi] :as viimeisin-haku} :hakuparametrit} app]
     (let [alkupvm (or alkupvm (first kuukausi))
           loppupvm (or loppupvm (second kuukausi))]
       (tuck-apurit/post! :kulut-kohdistuksineen
-                         {:urakka-id id
-                          :alkupvm alkupvm
-                          :loppupvm loppupvm}
-                         {:onnistui ->KuluhakuOnnistui
-                          :epaonnistui ->KutsuEpaonnistui
-                          :epaonnistui-parametrit [{:viesti "Urakan kulujen haku epäonnistui"}]
-                          :paasta-virhe-lapi? true}))
+        {:urakka-id id
+         :alkupvm alkupvm
+         :loppupvm loppupvm}
+        {:onnistui ->KuluhakuOnnistui
+         :epaonnistui ->KutsuEpaonnistui
+         :epaonnistui-parametrit [{:viesti "Urakan kulujen haku epäonnistui"}]
+         :paasta-virhe-lapi? true}))
     (-> app
-        (assoc-in [:parametrit :viimeisin-haku] viimeisin-haku)
-        (update-in [:parametrit :haetaan] inc)))
+      (assoc-in [:parametrit :viimeisin-haku] viimeisin-haku)
+      (update-in [:parametrit :haetaan] inc)))
+
   HaeUrakanToimenpiteetJaTehtavaryhmat
   (process-event
     [{:keys [urakka]} app]
     (tuck-apurit/post! :tehtavaryhmat-ja-toimenpiteet
-                       {:urakka-id urakka}
-                       {:onnistui           ->ToimenpidehakuOnnistui
-                        :epaonnistui        ->KutsuEpaonnistui
-                        :epaonnistui-parametrit [{:viesti "Urakan toimenpiteiden ja tehtäväryhmien haku epäonnistui"}]
-                        :paasta-virhe-lapi? true})
+      {:urakka-id urakka}
+      {:onnistui           ->ToimenpidehakuOnnistui
+       :epaonnistui        ->KutsuEpaonnistui
+       :epaonnistui-parametrit [{:viesti "Urakan toimenpiteiden ja tehtäväryhmien haku epäonnistui"}]
+       :paasta-virhe-lapi? true})
     (update-in app [:parametrit :haetaan] inc))
+
   KuluHaettuLomakkeelle
   (process-event [{kulu :kulu} app]
     (-> app
-        (update-in [:parametrit :haetaan] dec)
-        (assoc :syottomoodi true
-                   :lomake (kulu->lomake app kulu))))
+      (update-in [:parametrit :haetaan] dec)
+      (assoc :syottomoodi true
+        :lomake (kulu->lomake app kulu))))
+
   AvaaKulu
   (process-event [{kulu :kulu} app]
     (-> app
-        (tuck-apurit/post! :kulu
-                           {:urakka-id (-> @tila/yleiset :urakka :id)
-                            :id kulu}
-                           {:onnistui ->KuluHaettuLomakkeelle
-                            :epaonnistui ->KutsuEpaonnistui}
-                           )
-        (update-in [:parametrit :haetaan] inc)))
-
-  ;; VIENNIT
+      (tuck-apurit/post! :kulu
+        {:urakka-id (-> @tila/yleiset :urakka :id)
+         :id kulu}
+        {:onnistui ->KuluHaettuLomakkeelle
+         :epaonnistui ->KutsuEpaonnistui})
+      (update-in [:parametrit :haetaan] inc)))
 
   OnkoLaskunNumeroKaytossa
   (process-event [{laskun-numero :laskun-numero} app]
@@ -369,15 +350,15 @@
           validoitu-lomake (validoi-fn lomake)
           {validi? :validi?} (meta validoitu-lomake)
           app (-> app
-                  (assoc-in [:lomake :validi?] validi?)
-                  (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake)))))]
+                (assoc-in [:lomake :validi?] validi?)
+                (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake)))))]
       app))
 
   TallennaKulu
   (process-event
     [_ {{:keys [kohdistukset koontilaskun-kuukausi liitteet
                 laskun-numero lisatieto erapaiva id] :as lomake} :lomake
-        {:keys [viimeisin-haku]} :parametrit :as app}]
+        _ :parametrit :as app}]
     (let [urakka (-> @tila/yleiset :urakka :id)
           kokonaissumma (reduce #(+ %1 (if (true? (:poistettu %2))
                                          0
@@ -411,37 +392,39 @@
 
   PoistoOnnistui
   (process-event
-    [{tulos :tulos} {{:keys [viimeisin-haku]} :parametrit :as app}]
+    [_ {{:keys [viimeisin-haku]} :parametrit :as app}]
     ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
     ((tuck/current-send-function) (->HaeUrakanValikatselmukset))
     (-> app
       (assoc :syottomoodi false)
       (assoc :lomake (alusta-lomake app))))
+
   PoistaKulu
   (process-event
     [{:keys [id]} app]
     (tuck-apurit/post! :poista-kulu
-                       {:urakka-id (-> @tila/yleiset :urakka :id)
-                        :id        id}
-                       {:onnistui    ->PoistoOnnistui
-                        :epaonnistui ->KutsuEpaonnistui
-                        :epaonnistui-parametrit [{:viesti "Poisto epäonistui"}]})
+      {:urakka-id (-> @tila/yleiset :urakka :id)
+       :id        id}
+      {:onnistui    ->PoistoOnnistui
+       :epaonnistui ->KutsuEpaonnistui
+       :epaonnistui-parametrit [{:viesti "Poisto epäonistui"}]})
     (update-in app [:parametrit :haetaan] inc))
+
   AsetaHakukuukausi
   (process-event
     [{:keys [kuukausi]} app]
     (-> app
-        (assoc-in [:parametrit :haun-alkupvm] nil)
-        (assoc-in [:parametrit :haun-loppupvm] nil)
-        (assoc-in [:parametrit :haun-kuukausi] kuukausi)))
+      (assoc-in [:parametrit :haun-alkupvm] nil)
+      (assoc-in [:parametrit :haun-loppupvm] nil)
+      (assoc-in [:parametrit :haun-kuukausi] kuukausi)))
 
   AsetaHakuPaivamaara
   (process-event
     [{:keys [alkupvm loppupvm]} app]
     (-> app
-        (assoc-in [:parametrit :haun-kuukausi] nil)
-        (assoc-in [:parametrit :haun-alkupvm] (or alkupvm (-> @tila/yleiset :urakka :alkupvm)))
-        (assoc-in [:parametrit :haun-loppupvm] (or loppupvm (-> @tila/yleiset :urakka :loppupvm)))))
+      (assoc-in [:parametrit :haun-kuukausi] nil)
+      (assoc-in [:parametrit :haun-alkupvm] (or alkupvm (-> @tila/yleiset :urakka :alkupvm)))
+      (assoc-in [:parametrit :haun-loppupvm] (or loppupvm (-> @tila/yleiset :urakka :loppupvm)))))
 
   HaeUrakanValikatselmukset
   (process-event [_ app]
@@ -458,8 +441,6 @@
   HaeUrakanValikatselmuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (assoc app :vuosittaiset-valikatselmukset nil))
-
-  ;; FORMITOIMINNOT
 
   KulujenSyotto
   (process-event
