@@ -188,7 +188,6 @@
 
   MuokkaaRivia
   (process-event [{rivi :rivi} app]
-    (keskita-paikkaus-kartalle (:id rivi))
     (update app :valittu-rivi merge rivi))
 
   SuljeMuokkaus
@@ -241,7 +240,7 @@
          :kustannus kustannus}
         {:onnistui ->TallennaReikapaikkausOnnistui
          :epaonnistui ->TallennaReikapaikkausEpaonnistui})
-      app))
+      (assoc app :muokataan false)))
 
   TallennaReikapaikkausOnnistui
   (process-event [_ {:keys [valittu-rivi rivit] :as app}]
