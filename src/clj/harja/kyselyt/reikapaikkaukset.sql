@@ -36,7 +36,7 @@ ORDER BY  p.alkuaika DESC;
 SELECT reikapaikkaus_upsert( 
     'reikapaikkaus'::paikkaustyyppi,                    -- tyyppi
     :luoja-id::INT,                                     -- luojaid
-    COALESCE(:luotu::TIMESTAMP, NOW()::TIMESTAMP),      -- luotu, jos ei olemassa, NOW()
+    NOW()::TIMESTAMP,                                   -- luotu
     COALESCE(:muokkaaja-id::INT, NULL::INT),            -- muokkaaja_id, jos ei olemassa, NULL
     CASE -- Jos muokkaaja ID on läsnä, aseta muokkaus pvm, muuten NULL 
         WHEN :muokkaaja-id IS NOT NULL THEN NOW()::TIMESTAMP

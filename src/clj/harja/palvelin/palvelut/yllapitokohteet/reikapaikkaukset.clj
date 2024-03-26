@@ -51,14 +51,13 @@
 (defn tallenna-reikapaikkaus
   "Yksittäisen reikäpaikkauksen muokkauksen tallennus (käyttöliittymän kautta)"
   [db kayttaja
-   {:keys [luotu ulkoinen-id luoja-id urakka-id tie aosa aet
+   {:keys [ulkoinen-id luoja-id urakka-id tie aosa aet
            losa let menetelma maara yksikko kustannus alkuaika loppuaika]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
   (q/luo-tai-paivita-reikapaikkaus! db {:luoja-id luoja-id
                                         :urakka-id urakka-id
                                         :ulkoinen-id ulkoinen-id
                                         :tie tie
-                                        :luotu (konversio/sql-date luotu)
                                         :alkuaika (konversio/sql-date alkuaika)
                                         :loppuaika (konversio/sql-date loppuaika)
                                         :muokkaaja-id luoja-id
@@ -79,7 +78,6 @@
   (doseq [{:keys [tunniste tie aosa aet losa let pvm
                   menetelma maara yksikko kustannus]} reikapaikkaukset]
     (q/luo-tai-paivita-reikapaikkaus! db {:luoja-id id
-                                          :luotu nil ;; Käyttää NOW()
                                           :alkuaika (konversio/sql-date (pvm/->pvm pvm))
                                           :loppuaika (konversio/sql-date (pvm/->pvm pvm))
                                           :urakka-id urakka-id

@@ -65,13 +65,12 @@
           ;; Piirretään nämä toteumat kartalle
           ;; Jos valittuna yksittäinen paikkaus, näytetään pelkästään se
           (comp
-            (keep #(do
-                     (when (and
-                             (:sijainti %)
-                             (or
-                               (= (:id %) @valittu-reikapaikkaus)
-                               (nil? @valittu-reikapaikkaus)))
-                       %)))
+            (keep #(when (and
+                           (:sijainti %)
+                           (or
+                             (= (:id %) @valittu-reikapaikkaus)
+                             (nil? @valittu-reikapaikkaus)))
+                     %))
             (map #(assoc % :tyyppi-kartalla :reikapaikkaus))))))))
 
 ;; Tuck 
@@ -243,37 +242,21 @@
 
   TallennaReikapaikkaus
   (process-event [{rivi :rivi} app]
-    (let [;; Uncaught: nth not supported on this type cljs.core/PersistentHashMap
-          ;; Voiko nämä jotenkin destruktoida?
-          ;; [tunniste tie aosa aet losa] rivi <> ...
-          ulkoinen-id (:tunniste rivi)
-          tie (:tie rivi)
-          aosa (:aosa rivi)
-          luotu (:luotu rivi)
-          aet (:aet rivi)
-          losa (:losa rivi)
-          let (:let rivi)
-          yksikko (:reikapaikkaus-yksikko rivi)
-          menetelma (:tyomenetelma rivi)
-          alkuaika (:alkuaika rivi)
-          loppuaika (:loppuaika rivi) ;; Nämä on samoja, ei tietoa tarvitaanko loppuaikaa oikeasti reikäpaikkauksissa. Ks. AsetaToteumanPvm
-          maara (:maara rivi)
-          kustannus (:kustannus rivi)]
-      ;; Yksikön muokkausta käyttöliittymästä ei ole näköjään speksattu, Excel-tuonti kuitenkin yliajaa ne 
+    (let [{:keys [tunniste tie aosa aet losa let reikapaikkaus-yksikko
+                  tyomenetelma alkuaika loppuaika maara kustannus]} rivi]
       (tuck-apurit/post! app :tallenna-reikapaikkaus
         {:luoja-id (:id @istunto/kayttaja)
          :urakka-id (:id @nav/valittu-urakka)
-         :ulkoinen-id ulkoinen-id
+         :ulkoinen-id tunniste
          :tie tie
          :aosa aosa
          :aet aet
          :losa losa
-         :luotu luotu
          :alkuaika alkuaika
          :loppuaika loppuaika
          :let let
-         :yksikko yksikko
-         :menetelma menetelma
+         :yksikko reikapaikkaus-yksikko
+         :menetelma tyomenetelma
          :maara maara
          :kustannus kustannus}
         {:onnistui ->TallennaReikapaikkausOnnistui
