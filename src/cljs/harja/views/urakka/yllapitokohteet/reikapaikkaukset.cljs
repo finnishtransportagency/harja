@@ -26,35 +26,19 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
-(defn reikapaikkaus-listaus [e! {:keys [rivit 
+(defn reikapaikkaus-listaus [e! {:keys [rivit valinnat
                                         muokataan nayta-virhe-modal 
                                         excel-virheet valittu-rivi 
                                         tyomenetelmat haku-kaynnissa? rivi-maara kustannukset] :as app}]
   (let [alkuaika (:alkuaika valittu-rivi)
         alasveto-valinnat (mapv :id tyomenetelmat)
         alasveto-kuvaukset (into {} (map (fn [{:keys [id nimi]}] [id nimi]) tyomenetelmat))
-        voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet (-> @tila/tila :yleiset :urakka :id) @istunto/kayttaja)
+        voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet @nav/valittu-urakka-id @istunto/kayttaja)
         voi-tallentaa? (and
                          voi-kirjoittaa?
                          (tiedot/voi-tallentaa? valittu-rivi app))]
 
-    ;; Tr- osoite
-    (add-watch tiedot/tr-atom :tierekisteri-haku
-      (fn [_ _ _ uusi]
-        (e! (tiedot/->PaivitaValinnat {:tr uusi}))))
-
-    ;; Aikaväli tarkkailu
-    (add-watch tiedot/aikavali-atom :aikavali-haku
-      (fn [_ _ vanha uusi]
-        (when-not
-          (and
-            (pvm/sama-pvm? (first vanha) (first uusi))
-            (pvm/sama-pvm? (second vanha) (second uusi)))
-          (e! (tiedot/->PaivitaValinnat {:aikavali uusi})))))
-
-    ;; Wrappaa reikapaikkausluokkaan niin ei yliajeta mitään 
     [:div.reikapaikkaukset
-
      ;; Muokkauspaneeli
      (when muokataan
        [:div.overlay-oikealla
@@ -200,11 +184,16 @@
         [:div.alasvedon-otsikko-vayla "Tieosoite"]
         [kentat/tee-kentta {:tyyppi :tierekisteriosoite
                             :alaotsikot? true
-                            :vayla-tyyli? true} tiedot/tr-atom]]
+                            :vayla-tyyli? true} 
+         (r/wrap
+           (:tr valinnat)
+           #(e! (tiedot/->PaivitaValinnat {:tr %})))]]
        ;; Pvm valinta
        [:div {:data-cy "reikapaikkaus-aikavali"}
         [valinnat/aikavali
-         tiedot/aikavali-atom
+         (r/wrap
+           (:aikavali valinnat)
+           #(e! (tiedot/->PaivitaValinnat {:aikavali %})))
          {:otsikko "Päivämäärä"
           :for-teksti "filtteri-aikavali"
           :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta reikapaikkaus-pvm "}
@@ -314,7 +303,7 @@
 (defn reikapaikkaukset* [e! _app]
   (komp/luo
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-reikapaikkaukset)
-    (komp/sisaan-ulos
+    (komp/sisaan
       ;; Sisään
       #(do
          ;; Kartta
@@ -322,11 +311,7 @@
          (nav/vaihda-kartan-koko! :M)
          ;; Tiedot
          (e! (tiedot/->HaeTyomenetelmat))
-         (e! (tiedot/->HaeTiedot false)))
-      ;; Ulos
-      #(do
-         (remove-watch tiedot/tr-atom :tierekisteri-haku)
-         (remove-watch tiedot/aikavali-atom :aikavali-haku)))
+         (e! (tiedot/->HaeTiedot false))))
 
     ;; Näytä listaus
     (fn [e! app]
