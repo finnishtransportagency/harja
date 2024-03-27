@@ -23,6 +23,7 @@
             [harja.views.hallinta.viestitestaus-nakyma :as viestinakyma]
             [harja.views.hallinta.tehtava-nakyma :as tehtava-nakyma]
             [harja.views.hallinta.tarjoushinnat :as tarjoushinnat]
+            [harja.views.hallinta.rahavaraukset :as rahavaraukset]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -84,7 +85,13 @@
     :mhu-tarjoushinnat
     (when (oikeudet/hallinta-tarjoushinnat)
       ^{:key "mhu-tarjoushinnat"}
-      [tarjoushinnat/tarjoushinnat])]
+      [tarjoushinnat/tarjoushinnat])
+
+    "Rahavaraukset"
+    :rahavaraukset
+    (when (oikeudet/hallinta-tarjoushinnat) ;; todo: vaihda hallinta-rahavaraukset
+      ^{:key "rahavaraukset"}
+      [rahavaraukset/rahavaraukset])]
 
    "Seuranta"
    :hallinta-seuranta
