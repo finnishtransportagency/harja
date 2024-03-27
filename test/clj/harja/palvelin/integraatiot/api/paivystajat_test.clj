@@ -5,6 +5,7 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
+            [harja.validointi :as validointi]
             [harja.fmt :as fmt]))
 
 (def kayttaja-yit "yit-rakennus")
@@ -151,7 +152,7 @@
     (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 1))))
 
 (deftest hae-paivystajatiedot-sijainnilla-epaonnistuu
-  (let [liian-suuri-x (inc harja.tyokalut.validaatio_test/max-x-koordinaatti)
+  (let [liian-suuri-x (inc validointi/max-x-koordinaatti)
         urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
         _ (anna-lukuoikeus kayttaja-yit)

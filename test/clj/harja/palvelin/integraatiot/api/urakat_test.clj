@@ -7,6 +7,7 @@
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.kyselyt.konversio :as konversio]
+            [harja.validointi :as validointi]
             [clojure.string :as str]))
 
 (def kayttaja "yit-rakennus")
@@ -86,8 +87,8 @@
 
   (testing "Urakka ei sijaitse suomessa"
     (let [urakkatyyppi "hoito"
-          liian-suuri-x (inc harja.tyokalut.validaatio_test/max-x-koordinaatti)
-          liian-suuri-y (inc harja.tyokalut.validaatio_test/max-y-koordinaatti)
+          liian-suuri-x (inc validointi/max-x-koordinaatti)
+          liian-suuri-y (inc validointi/max-y-koordinaatti)
           _ (anna-lukuoikeus "yit-rakennus")
           vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "yit-rakennus"
                     {"urakkatyyppi" urakkatyyppi
@@ -100,8 +101,8 @@
 
   (testing "Urakka ei sijaitse suomessa"
     (let [urakkatyyppi "hoito"
-          liian-pieni-x (dec harja.tyokalut.validaatio_test/min-x-koordinaatti)
-          liian-pieni-y (dec harja.tyokalut.validaatio_test/min-y-koordinaatti)
+          liian-pieni-x (dec validointi/min-x-koordinaatti)
+          liian-pieni-y (dec validointi/min-y-koordinaatti)
           _ (anna-lukuoikeus "yit-rakennus")
           vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "yit-rakennus"
                     {"urakkatyyppi" urakkatyyppi
