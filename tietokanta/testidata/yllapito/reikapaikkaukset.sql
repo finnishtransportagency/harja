@@ -22,7 +22,7 @@ SELECT reikapaikkaus_upsert(
     '02.25.2024'::TIMESTAMP,                                                                       -- loppuaika, joka on sama, tämä ei taida reikäpaikkauksilla olla relevantti(?)
     ROW(20, 1, 860, 1, 1020, NULL)::TR_OSOITE,                                                     -- tr osoite
     (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = 'Urapaikkaus (UREM/RREM)')::INT,       -- tyomenetelma 
-    'AB, Asfalttibetoni'::TEXT,                         -- massatyyppi, ei tietoa miten tämä reikäpaikkauksille, laitettu AB, failaa muuten NOT NULL constraint
+    'Ei määritelty'::TEXT,                              -- massatyyppi, ei määritelty reikäpaikkauksille
     NULL::NUMERIC,                                      -- leveys
     NULL::NUMERIC,                                      -- massamenekki 
     NULL::NUMERIC,                                      -- massamaara 
@@ -51,7 +51,7 @@ SELECT reikapaikkaus_upsert(
     '03.01.2024'::TIMESTAMP,                                                                       -- loppuaika, joka on sama, tämä ei taida reikäpaikkauksilla olla relevantti(?)
     ROW(20, 1, 750, 1, 800, NULL)::TR_OSOITE,                                                      -- tr osoite
     (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = 'Jyrsintäkorjaukset (HJYR/TJYR)')::INT,-- tyomenetelma 
-    'AB, Asfalttibetoni'::TEXT,                         -- massatyyppi, ei tietoa miten tämä reikäpaikkauksille, laitettu AB, failaa muuten NOT NULL constraint
+    'Ei määritelty'::TEXT,                              -- massatyyppi, ei määritelty reikäpaikkauksille
     NULL::NUMERIC,                                      -- leveys
     NULL::NUMERIC,                                      -- massamenekki 
     NULL::NUMERIC,                                      -- massamaara 
@@ -80,7 +80,7 @@ SELECT reikapaikkaus_upsert(
     '03.02.2024'::TIMESTAMP,                                                                       -- loppuaika, joka on sama, tämä ei taida reikäpaikkauksilla olla relevantti(?)
     ROW(20, 1, 480, 1, 700, NULL)::TR_OSOITE,                                                      -- tr osoite
     (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = 'Jyrsintäkorjaukset (HJYR/TJYR)')::INT,-- tyomenetelma 
-    'AB, Asfalttibetoni'::TEXT,                         -- massatyyppi, ei tietoa miten tämä reikäpaikkauksille, laitettu AB, failaa muuten NOT NULL constraint
+    'Ei määritelty'::TEXT,                              -- massatyyppi, ei määritelty reikäpaikkauksille
     NULL::NUMERIC,                                      -- leveys
     NULL::NUMERIC,                                      -- massamenekki 
     NULL::NUMERIC,                                      -- massamaara 
@@ -109,7 +109,7 @@ SELECT reikapaikkaus_upsert(
     '03.03.2024'::TIMESTAMP,                                                                       -- loppuaika, joka on sama, tämä ei taida reikäpaikkauksilla olla relevantti(?)
     ROW(20, 1, 140, 1, 360, NULL)::TR_OSOITE,                                                      -- tr osoite
     (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = 'Jyrsintäkorjaukset (HJYR/TJYR)')::INT,-- tyomenetelma 
-    'AB, Asfalttibetoni'::TEXT,                         -- massatyyppi, ei tietoa miten tämä reikäpaikkauksille, laitettu AB, failaa muuten NOT NULL constraint
+    'Ei määritelty'::TEXT,                              -- massatyyppi, ei määritelty reikäpaikkauksille
     NULL::NUMERIC,                                      -- leveys
     NULL::NUMERIC,                                      -- massamenekki 
     NULL::NUMERIC,                                      -- massamaara 
@@ -138,7 +138,7 @@ SELECT reikapaikkaus_upsert(
     '03.05.2024'::TIMESTAMP,                                                                       -- loppuaika, joka on sama, tämä ei taida reikäpaikkauksilla olla relevantti(?)
     ROW(20, 1, 1, 1, 120, NULL)::TR_OSOITE,                                                        -- tr osoite
     (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = 'Jyrsintäkorjaukset (HJYR/TJYR)')::INT,-- tyomenetelma 
-    'AB, Asfalttibetoni'::TEXT,                         -- massatyyppi, ei tietoa miten tämä reikäpaikkauksille, laitettu AB, failaa muuten NOT NULL constraint
+    'Ei määritelty'::TEXT,                              -- massatyyppi, ei määritelty reikäpaikkauksille
     NULL::NUMERIC,                                      -- leveys
     NULL::NUMERIC,                                      -- massamenekki 
     NULL::NUMERIC,                                      -- massamaara 

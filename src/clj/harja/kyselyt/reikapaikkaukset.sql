@@ -51,7 +51,7 @@ SELECT reikapaikkaus_upsert(
     COALESCE(:loppuaika::TIMESTAMP, NOW()::TIMESTAMP),  -- loppuaika, joka on sama, tämä ei taida reikäpaikkauksilla olla relevantti(?)
     ROW(:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE,   -- tr osoite
     COALESCE(:tyomenetelma-id, (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = :tyomenetelma))::INT, -- tyomenetelma 
-    'AB, Asfalttibetoni'::TEXT,                         -- massatyyppi, ei tietoa miten tämä reikäpaikkauksille, laitettu AB, failaa muuten NOT NULL constraint
+    'Ei määritelty'::TEXT,                              -- massatyyppi, ei määritelty reikäpaikkauksille
     NULL::NUMERIC,                                      -- leveys
     NULL::NUMERIC,                                      -- massamenekki 
     NULL::NUMERIC,                                      -- massamaara 
