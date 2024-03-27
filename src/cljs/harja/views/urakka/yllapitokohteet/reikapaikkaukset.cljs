@@ -285,9 +285,8 @@
 
         {:otsikko "Määrä"
          :tasaa :oikea
-         :tyyppi :komponentti
-         :komponentti (fn [{:keys [maara reikapaikkaus-yksikko]} _arvo]
-                        (str maara " " reikapaikkaus-yksikko))
+         :tyyppi :string 
+         :hae #(str (:maara %) " " (:reikapaikkaus-yksikko %))
          :luokka "text-nowrap"
          :leveys 0.3}
 
