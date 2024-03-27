@@ -84,6 +84,34 @@
               (some #(clojure.string/includes? nimi %) #{"Oulun MHU" "Aktiivinen Oulu Testi"}))
             (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body))))))
 
+  (testing "Urakka ei sijaitse suomessa"
+    (let [urakkatyyppi "hoito"
+          liian-suuri-x (inc harja.tyokalut.validaatio_test/max-x-koordinaatti)
+          liian-suuri-y (inc harja.tyokalut.validaatio_test/max-y-koordinaatti)
+          _ (anna-lukuoikeus "yit-rakennus")
+          vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "yit-rakennus"
+                    {"urakkatyyppi" urakkatyyppi
+                     ;; Oulun lähiseutu (EPSG:3067)
+                     "x" liian-suuri-x "y" liian-suuri-y} portti)
+          enkoodattu-body (cheshire/decode (:body vastaus) true)
+          _ (println "enkoodattu-body" enkoodattu-body)]
+      (is (= 400 (:status vastaus)))
+      (is (= "Annettu X ja Y koordinaatti ei sijaitse suomessa." (get-in enkoodattu-body [:virheet 0 :virhe :viesti])))))
+
+  (testing "Urakka ei sijaitse suomessa"
+    (let [urakkatyyppi "hoito"
+          liian-pieni-x (dec harja.tyokalut.validaatio_test/min-x-koordinaatti)
+          liian-pieni-y (dec harja.tyokalut.validaatio_test/min-y-koordinaatti)
+          _ (anna-lukuoikeus "yit-rakennus")
+          vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "yit-rakennus"
+                    {"urakkatyyppi" urakkatyyppi
+                     ;; Oulun lähiseutu (EPSG:3067)
+                     "x" liian-pieni-x "y" liian-pieni-y} portti)
+          enkoodattu-body (cheshire/decode (:body vastaus) true)
+          _ (println "enkoodattu-body" enkoodattu-body)]
+      (is (= 400 (:status vastaus)))
+      (is (= "Annettu X ja Y koordinaatti ei sijaitse suomessa." (get-in enkoodattu-body [:virheet 0 :virhe :viesti])))))
+
   (testing "palauta-lahin-hoitourakka"
     (let [urakkatyyppi "hoito"
           fn-vastaus (fn [palauta-lahin-hoitourakka]

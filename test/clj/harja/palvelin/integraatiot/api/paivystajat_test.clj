@@ -150,6 +150,20 @@
     (is (= (count (:paivystajatiedot encoodattu-body)) 1))
     (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 1))))
 
+(deftest hae-paivystajatiedot-sijainnilla-epaonnistuu
+  (let [liian-suuri-x (inc harja.tyokalut.validaatio_test/max-x-koordinaatti)
+        urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
+        _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
+        _ (anna-lukuoikeus kayttaja-yit)
+        vastaus (api-tyokalut/get-kutsu [(str "/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x="
+                                           liian-suuri-x
+                                           "&y=7377324")] kayttaja-yit portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
+    ;; Virhekoodi pitäisi varmaan olla 403 - Forbidden, mutta tällä hetkellä se on 404 - Not Found
+    ;; Tämä tulee meidän kutsukäsittelijästä, jota ei ole päivitetty tämän testin yhteydessä.
+    (is (= 404 (:status vastaus)))
+    (is (= "Annettu sijainti ei sijaitse suomessa." (get-in encoodattu-body [:virheet 0 :virhe :viesti])))))
+
 (deftest hae-paivystajatiedot-sijainnilla-kayttaen-pitkaa-aikavalia
   (let [_ (anna-lukuoikeus kayttaja-yit)
         vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395&alkaen=2029-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z"] kayttaja-yit portti)
