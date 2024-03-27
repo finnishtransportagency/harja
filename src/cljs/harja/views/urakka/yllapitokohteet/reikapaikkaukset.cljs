@@ -3,6 +3,7 @@
   (:require [tuck.core :refer [tuck]]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-reikapaikkaukset :as tiedot]
             [reagent.core :as r]
+            [clojure.string :as str]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.lomake :as lomake]
@@ -18,7 +19,6 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.napit :as napit]
-            [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.tierekisteri :as tr-domain]
@@ -36,7 +36,11 @@
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet @nav/valittu-urakka-id @istunto/kayttaja)
         voi-tallentaa? (and
                          voi-kirjoittaa?
-                         (tiedot/voi-tallentaa? valittu-rivi app))]
+                         (tiedot/voi-tallentaa? valittu-rivi app))
+        fn-formatoi-numero (fn [numero]
+                             ;; Formatoi 1000 -> "1 000"
+                             ;; Tai "100000" -> "100 000" yms. 
+                             (str/replace (str numero) #"(?<=\d)(?=(\d\d\d)+$)" " "))]
 
     [:div.reikapaikkaukset
      ;; Muokkauspaneeli
@@ -184,7 +188,7 @@
         [:div.alasvedon-otsikko-vayla "Tieosoite"]
         [kentat/tee-kentta {:tyyppi :tierekisteriosoite
                             :alaotsikot? true
-                            :vayla-tyyli? true} 
+                            :vayla-tyyli? true}
          (r/wrap
            (:tr valinnat)
            #(e! (tiedot/->PaivitaValinnat {:tr %})))]]
@@ -232,7 +236,8 @@
       ;; Taulukon ylhäällä olevat tekstit
       [:div.taulukko-header.header-yhteiset
        ;; Formatoi rivimäärä välilyönnillä, esim 1000 = 1 000, fmt/desimaaliluku tekee tämän, eurot myös
-       [:h3 (str (fmt/desimaaliluku (or rivi-maara 0) 0 true)
+       [:h3 (str 
+              (fn-formatoi-numero (or rivi-maara 0))
               (if (> rivi-maara 1) " riviä, " " rivi, ")
               (fmt/euro false (or kustannukset 0)) " EUR")]
 
@@ -285,7 +290,7 @@
 
         {:otsikko "Määrä"
          :tasaa :oikea
-         :tyyppi :string 
+         :tyyppi :string
          :hae #(str (:maara %) " " (:reikapaikkaus-yksikko %))
          :luokka "text-nowrap"
          :leveys 0.3}
