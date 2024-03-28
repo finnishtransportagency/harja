@@ -1,9 +1,9 @@
 (ns harja.palvelin.integraatiot.api.analytiikka-test
   (:require [clojure.test :refer [deftest is use-fixtures testing]]
-            [harja.pvm :as pvm]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
             [cheshire.core :as cheshire]
+            [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
             [harja.palvelin.komponentit.liitteet :as liitteet]

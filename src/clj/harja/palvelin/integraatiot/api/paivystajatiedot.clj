@@ -24,7 +24,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [harja.pvm :as pvm]
             [clj-time.core :as t]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [harja.validointi :as c_validointi]))
 
 (defn- parsi-paivamaara [paivamaara]
   (when paivamaara
@@ -176,12 +177,23 @@
   (let [{urakkatyyppi :urakkatyyppi alkaen :alkaen paattyen :paattyen x :x y :y} parametrit
         x (Double/parseDouble x)
         y (Double/parseDouble y)
+        ;; Haetaan vain suomessa sijaitsevia urakoita.
+        suomessa? (c_validointi/onko-koordinaatit-suomen-alueella? x y)
         pvm-vali (parsi-aikaparametrit alkaen paattyen)
-        urakka-idt (urakat/hae-urakka-idt-sijainnilla db urakkatyyppi {:x x :y y})]
-    (if (empty? urakka-idt)
+        urakka-idt (when suomessa?
+                     (urakat/hae-urakka-idt-sijainnilla db urakkatyyppi {:x x :y y}))]
+    (cond
+      (false? suomessa?)
+      (virheet/heita-ei-hakutuloksia-apikutsulle-poikkeus
+        {:koodi virheet/+virheellinen-sijainti+
+         :viesti "Annettu sijainti ei sijaitse suomessa."})
+
+      (empty? urakka-idt)
       (virheet/heita-ei-hakutuloksia-apikutsulle-poikkeus
         {:koodi virheet/+urakkaa-ei-loydy+
          :viesti "Annetulla sijainnilla ei löydy aktiivista urakkaa."})
+
+      :else
       (do
         (log/debug "Sijainnilla löytyi urakka id: " (pr-str urakka-idt))
         (reduce (partial merge-with concat)
