@@ -1,7 +1,6 @@
-(ns harja.validaatio_test
+(ns harja.validaatio-test
   "Validoidaan backendille ja frontille yhteisiä asioita."
   (:require [clojure.test :refer [deftest is]]
-            [harja.testi :refer :all]
             [harja.validointi :as validointi]))
 
 (deftest varmista-koordinaatti-validaatio
