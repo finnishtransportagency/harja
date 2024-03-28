@@ -26,6 +26,12 @@
                              (.setMinimumFractionDigits 2)
                              (.setMaximumFractionDigits 2))))
 
+(defn formatoi-numero-valilyonneilla
+  "Formatoi 1000   -> 1 000
+            100000 -> 100 000 yms."
+  [numero]
+  (s/replace (str numero) #"(?<=\d)(?=(\d\d\d)+$)" " "))
+
 (defn euro
   "Formatoi summan euroina näyttämistä varten. Tuhaterottimien ja valinnaisen euromerkin kanssa."
   ([eur] (euro true eur))

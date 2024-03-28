@@ -36,11 +36,7 @@
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet @nav/valittu-urakka-id @istunto/kayttaja)
         voi-tallentaa? (and
                          voi-kirjoittaa?
-                         (tiedot/voi-tallentaa? valittu-rivi app))
-        fn-formatoi-numero (fn [numero]
-                             ;; Formatoi 1000 -> "1 000"
-                             ;; Tai "100000" -> "100 000" yms. 
-                             (str/replace (str numero) #"(?<=\d)(?=(\d\d\d)+$)" " "))]
+                         (tiedot/voi-tallentaa? valittu-rivi app))]
 
     [:div.reikapaikkaukset
      ;; Muokkauspaneeli
@@ -49,6 +45,7 @@
         ;; Lomake
         [lomake/lomake
          {:ei-borderia? true
+          :voi-muokata? voi-kirjoittaa?
           :tarkkaile-ulkopuolisia-muutoksia? true
           :muokkaa! #(e! (tiedot/->MuokkaaRivia %))
           ;; Header
@@ -207,7 +204,7 @@
 
        ;; Haku
        [:div.haku-nappi
-        [napit/yleinen-ensisijainen "Hae" #(e! (tiedot/->HaeTiedot true)) {:data-attributes {:data-cy "hae-reikapaikkauskohteita"}}]]]
+        [napit/yleinen-ensisijainen "Hae" #(e! (tiedot/->HaeTiedot)) {:data-attributes {:data-cy "hae-reikapaikkauskohteita"}}]]]
 
       [:div.reikapaikkaukset-kartta [kartta/kartan-paikka]]
 
@@ -237,7 +234,7 @@
       [:div.taulukko-header.header-yhteiset
        ;; Formatoi rivimäärä välilyönnillä, esim 1000 = 1 000, fmt/desimaaliluku tekee tämän, eurot myös
        [:h3 (str 
-              (fn-formatoi-numero (or rivi-maara 0))
+              (fmt/formatoi-numero-valilyonneilla (or rivi-maara 0))
               (if (> rivi-maara 1) " riviä, " " rivi, ")
               (fmt/euro false (or kustannukset 0)) " EUR")]
 
@@ -315,7 +312,7 @@
          (nav/vaihda-kartan-koko! :M)
          ;; Tiedot
          (e! (tiedot/->HaeTyomenetelmat))
-         (e! (tiedot/->HaeTiedot false))))
+         (e! (tiedot/->HaeTiedot))))
 
     ;; Näytä listaus
     (fn [e! app]
