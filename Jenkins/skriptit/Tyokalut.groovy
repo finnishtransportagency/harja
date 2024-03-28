@@ -165,11 +165,11 @@ def ajaTestiserverinKanta(stagenNimi) {
                 // Flyway repair komento poistaa historiasta esimerkiksi poistetut (tai uudelleenimetyt) migraatiotiedostot.
                 // Lue lisää: https://flywaydb.org/documentation/usage/commandline/repair
                 if (params.KORJAA_FLYWAY_MIGRAATIOT) {
-                    sh([script: 'mvn -f tietokanta/pom.vanha.xml clean compile flyway:repair -Dflyway.configFiles=$FLYWAY_SETTINGS' +
+                    sh([script: 'mvn -f tietokanta/vanha_onprem_pom.xml clean compile flyway:repair -Dflyway.configFiles=$FLYWAY_SETTINGS' +
                             " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
                 }
 
-                sh([script: 'mvn -f tietokanta/pom.vanha.xml clean compile flyway:migrate -Dflyway.configFiles=$FLYWAY_SETTINGS' +
+                sh([script: 'mvn -f tietokanta/vanha_onprem_pom.xml clean compile flyway:migrate -Dflyway.configFiles=$FLYWAY_SETTINGS' +
                         " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }
@@ -225,11 +225,11 @@ def ajaStagingserverinKanta(stagenNimi) {
                 // Flyway repair komento poistaa historiasta esimerkiksi poistetut (tai uudelleenimetyt) migraatiotiedostot.
                 // Lue lisää: https://flywaydb.org/documentation/usage/commandline/repair
                 if (params.KORJAA_FLYWAY_MIGRAATIOT) {
-                    sh([script: 'mvn -f tietokanta/pom.vanha.xml clean compile flyway:repair -Dflyway.configFiles=$FLYWAY_SETTINGS' +
+                    sh([script: 'mvn -f tietokanta/vanha_onprem_pom.xml clean compile flyway:repair -Dflyway.configFiles=$FLYWAY_SETTINGS' +
                             " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
                 }
 
-                sh([script: 'mvn -f tietokanta/pom.vanha.xml clean compile flyway:migrate -Dflyway.configFiles=$FLYWAY_SETTINGS' +
+                sh([script: 'mvn -f tietokanta/vanha_onprem_pom.xml clean compile flyway:migrate -Dflyway.configFiles=$FLYWAY_SETTINGS' +
                         " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }
@@ -266,11 +266,11 @@ def ajaTuotantoserverinKanta(stagenNimi) {
                 // Flyway repair komento poistaa historiasta esimerkiksi poistetut (tai uudelleenimetyt) migraatiotiedostot.
                 // Lue lisää: https://flywaydb.org/documentation/usage/commandline/repair
                 if (params.KORJAA_FLYWAY_MIGRAATIOT) {
-                    sh([script: 'mvn -f tietokanta/pom.vanha.xml clean compile flyway:repair -Dflyway.configFiles=$FLYWAY_SETTINGS' +
+                    sh([script: 'mvn -f tietokanta/vanha_onprem_pom.xml clean compile flyway:repair -Dflyway.configFiles=$FLYWAY_SETTINGS' +
                             " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
                 }
 
-                sh([script: 'mvn -f tietokanta/pom.vanha.xml clean compile flyway:migrate -Dflyway.configFiles=$FLYWAY_SETTINGS' +
+                sh([script: 'mvn -f tietokanta/vanha_onprem_pom.xml clean compile flyway:migrate -Dflyway.configFiles=$FLYWAY_SETTINGS' +
                         " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }

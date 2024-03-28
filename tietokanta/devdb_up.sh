@@ -27,8 +27,11 @@ if [[ "${devdb_image_lkm}" != *1 ]]; then # wc tulostaa välilyöntejä ennen nu
     echo ""
 fi
 
+# Jotta harjadb kontin tietoliikenne toimii oikein, täytyy IPv6 disabloida asetuksella: --sysctl net.ipv6.conf.all.disable_ipv6=1
+# https://docs.docker.com/engine/release-notes/26.0/#bug-fixes-and-enhancements
 docker run -p "127.0.0.1:${HARJA_TIETOKANTA_PORTTI:-5432}:${HARJA_TIETOKANTA_PORTTI:-5432}" \
     --name "${POSTGRESQL_NAME:-harjadb}" -dit -v "$DIR":/var/lib/postgresql/harja/tietokanta \
+    --sysctl net.ipv6.conf.all.disable_ipv6=1 \
     ${IMAGE} >/dev/null
 
 echo "Käynnistetään Docker-image" $IMAGE

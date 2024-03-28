@@ -695,7 +695,7 @@
     (update :murske (fn [murske] (when-not (nil? (:tyyppi murske)) murske)))
     (set/rename-keys {:pinta-ala :pintaAla
                       :lisatty-paksuus :lisattyPaksuus
-                      :verkon-tyyppi :verkonTyyppi
+                      :verkon-tyyppi :verkkotyyppi
                       :verkon-tarkoitus :verkonTarkoitus
                       :verkon-sijainti :verkonSijainti
                       :massat :massa})))
@@ -772,7 +772,8 @@
                                                              "valmis"
                                                              "tarkistettu"
                                                              "ehdotettu")
-                                                           (str/capitalize tila))))
+                                                           (str/capitalize tila)
+                                                           nil)))
                                 (update :yhalahetyksenTila
                                   (fn [tila]
                                     (case tila

@@ -59,7 +59,7 @@
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
-                 [org.postgresql/postgresql "42.7.2"]
+                 [org.postgresql/postgresql "42.7.3"]
                  [net.postgis/postgis-jdbc "2.5.0"]
                  [org.locationtech.jts/jts-core "1.19.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
@@ -83,7 +83,7 @@
                  ;; -- Sähköposti lähetys
                  [org.apache.httpcomponents/httpcore "4.4.14"]
                  [org.apache.httpcomponents/httpmime "4.5.13" :exclusions [org.clojure/clojure commons-codec commons-logging org.apache.httpcomponents/httpcore]]
-                 [com.draines/postal "2.0.3"]
+                 [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
                  [org.apache.activemq/activemq-client "5.18.3" :exclusions [org.slf4j/slf4j-api]]
@@ -165,7 +165,16 @@
 
   :managed-dependencies [[org.apache.poi/poi "5.2.5"]
                          [org.apache.poi/poi-scratchpad "5.2.5"]
-                         [org.apache.poi/poi-ooxml "5.2.5"]]
+                         [org.apache.poi/poi-ooxml "5.2.5"]
+                         ;; Ratkaise: CVE-2024-26308 ja CVE-2024-25710
+                         ;;  Päivitetään POI-ooxml mukana tullut transitiivinen kirjasto, joka sisältää korjauksen haavoittuvuuksiin.
+                         ;;  (POI-ooxml ei kuitenkaan käytä haavoittuneen kirjaston version riskialtista osaa)
+                         ;;  TODO: Tämä muutos voidaan poistaa, kunhan poi-ooxml ottaa mukaan uudemman version kirjastosta.
+                         [org.apache.commons/commons-compress "1.26.1"]
+
+                         ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
+                         ;;   Pakotetaan commons-codec korkeampaan versioon
+                         [commons-codec "1.16.1"]]
 
   :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 
