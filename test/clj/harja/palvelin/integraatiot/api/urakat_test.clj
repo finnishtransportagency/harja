@@ -94,8 +94,7 @@
                     {"urakkatyyppi" urakkatyyppi
                      ;; Oulun lähiseutu (EPSG:3067)
                      "x" liian-suuri-x "y" liian-suuri-y} portti)
-          enkoodattu-body (cheshire/decode (:body vastaus) true)
-          _ (println "enkoodattu-body" enkoodattu-body)]
+          enkoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 400 (:status vastaus)))
       (is (= "Annettu X ja Y koordinaatti ei sijaitse suomessa." (get-in enkoodattu-body [:virheet 0 :virhe :viesti])))))
 
@@ -108,8 +107,7 @@
                     {"urakkatyyppi" urakkatyyppi
                      ;; Oulun lähiseutu (EPSG:3067)
                      "x" liian-pieni-x "y" liian-pieni-y} portti)
-          enkoodattu-body (cheshire/decode (:body vastaus) true)
-          _ (println "enkoodattu-body" enkoodattu-body)]
+          enkoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 400 (:status vastaus)))
       (is (= "Annettu X ja Y koordinaatti ei sijaitse suomessa." (get-in enkoodattu-body [:virheet 0 :virhe :viesti])))))
 
