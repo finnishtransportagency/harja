@@ -25,7 +25,8 @@
                                     (u/tuhoa-paallystyspalvelusopimusdata! db)
                                     (let [urakat (shapefile/tuo shapefile)]
                                          (doseq [urakka urakat]
-                                                (when (= (:teemat urakka) "Päällysteiden ylläpito") (tuo-urakka db (:the_geom urakka) (str (:urakkakood urakka))))))
+                                                (when (or (= (:teemat urakka) "Päällysteiden ylläpito")
+                                                        (= (:teemat urakka) "Päällystepaikkaukset")) (tuo-urakka db (:the_geom urakka) (str (:urakkakood urakka))))))
                                     (when (= 0 (:lkm (first (u/tarkista-paallystyspalvelusopimusdata db))))
                                           (throw (Exception. "Yhtään päällystyspalvelusopimusta ei viety kantaan. Tarkista aineiston yhteensopivuus sisäänlukevan kooditoteutuksen kanssa.")))))
         (throw (Exception. (format "Päällystyksen palvelusopimusten geometrioiden tiedostopolkua % ei löydy konfiguraatiosta. Tuontia ei suoriteta." shapefile)))))
