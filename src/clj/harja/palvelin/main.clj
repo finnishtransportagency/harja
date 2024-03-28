@@ -74,6 +74,7 @@
     [harja.palvelin.palvelut.hallinta.urakoiden-lyhytnimet :as urakoidenlyhytnimet-hallinta]
     [harja.palvelin.palvelut.hallinta.tehtavat :as tehtavat-hallinta]
     [harja.palvelin.palvelut.hallinta.tarjoushinnat :as tarjoushinnat-hallinta]
+    [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
@@ -799,6 +800,11 @@
       :tarjoushinnat-hallinta
       (component/using
         (tarjoushinnat-hallinta/->TarjoushinnatHallinta)
+        [:http-palvelin :db])
+
+      :rahavaraukset-hallinta
+      (component/using
+        (rahavaraukset-hallinta/->RahavarauksetHallinta)
         [:http-palvelin :db]))))
 
 (defonce harja-jarjestelma nil)

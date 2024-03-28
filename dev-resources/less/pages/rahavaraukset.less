@@ -1,0 +1,21 @@
+@import "../yleiset.less";
+
+.rahavaraukset-hallinta {
+
+  .urakan-rahavaraukset {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    background-color: @white;
+    margin-top: @valistys-16;
+
+    > .rahavaraus-valinta {
+      border: 1px solid @white-darker;
+
+      > label {
+        min-width: 480px;
+        padding: @valistys-8;
+      }
+    }
+  }
+}
