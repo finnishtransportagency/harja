@@ -20,6 +20,9 @@
           "harjaId": {
             "type": "number"
           },
+          "poistettu": {
+            "type": "boolean"
+          },
           "urakkanro": {
             "type": "string"
           },

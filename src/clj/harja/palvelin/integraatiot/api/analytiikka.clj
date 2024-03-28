@@ -7,6 +7,8 @@
             [compojure.core :refer [GET]]
             [compojure.core :refer :all]
             [compojure.route :refer :all]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
@@ -612,9 +614,14 @@
 (defn- muodosta-alikohdesanoma [alikohde osien-pituudet]
   (-> alikohde
     (muodosta-paallystyskohdesanoma osien-pituudet)
+    (assoc-in [:paallystystoimenpide :uusiPaallyste] (paallystys-ja-paikkaus/hae-apin-paallyste-koodilla (:uusi-paallyste alikohde)))
+    (assoc-in [:paallystystoimenpide :paallystetyomenetelma] (paallystysilmoitus/tyomenetelman-nimi-koodilla (:tyomenetelma alikohde)))
+    (assoc-in [:paallystystoimenpide :raekoko] (:raekoko alikohde))
+    (assoc-in [:paallystystoimenpide :massamenekki] (:massamenekki alikohde))
+    (assoc-in [:paallystystoimenpide :kokonaismassamaara] (:massamaara alikohde))
     (assoc-in [:tierekisteriosoitevali :kaista] (:tr-kaista alikohde))
     (assoc-in [:tierekisteriosoitevali :ajorata] (:tr-ajorata alikohde))
-    (dissoc [:tr-kaista :tr-ajorata])))
+    (dissoc :tr-kaista :tr-ajorata :uusi_paallyste :tyomenetelma :raekoko :massamenekki :massamaara :yllapitokohde)))
 
 (defn hae-paallystyskohteet [db {:keys [alkuaika loppuaika] :as parametrit}]
   (log/info "Analytiikka API paallystyskohteet :: parametrit" (pr-str parametrit))
