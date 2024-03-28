@@ -47,6 +47,23 @@ echo "DONE"
 
 tarkasta_riippuvuus asetukset.edn
 
+# Haetaan salaisuudet
+
+## Hae lista salaisuuksista Secrets Managerista ja etsi niistä ne, jotka on tagattu Harja-sovelluksen salaisuuksiksi
+SECRET_NAMES=$(aws secretsmanager list-secrets --query "SecretList[?Tags[?Key=='fargate:harja-app']].Name" --output text)
+
+# Käy läpi salaisuuksien nimet loopissa ja hae niiden arvot
+for SECRET_NAME in $SECRET_NAMES; do
+    SECRET_VALUE=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query SecretString --output text)
+    # Varmistetaan, että salaisuuden nimessä ei ole ylimääräistä. Esim. jos salaisuuden nimi olisi: moni/mutkaisempi/SALAISUUDEN_NIMI
+    #   -> SALAISUUDEN_NIMI
+    ENV_VAR_NAME=$(basename "$SECRET_NAME")
+
+    # Aseta salaisuus ympäristömuuttujaksi
+    export "$ENV_VAR_NAME"="$SECRET_VALUE"
+done
+
+
 # Valmistellaan java-optiot ja käynnistetään Harja app
 
 ## Luodaan java-optioille array, johon otetaan mukaan lisäoptioita mikäli ne on määritelty
