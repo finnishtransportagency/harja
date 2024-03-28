@@ -33,7 +33,7 @@
 ;; Suomen pohjoisin, eteläisin, itäisin ja lähntisin piste käsin kartalta.
 (def max-y-koordinaatti 7777222)
 (def min-y-koordinaatti 6631383)
-(def min-x-koordinaatti 242589)
+(def min-x-koordinaatti 73963)
 (def max-x-koordinaatti 733682)
 
 (defn onko-koordinaatit-suomen-alueella?
