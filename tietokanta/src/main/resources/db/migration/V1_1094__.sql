@@ -60,7 +60,6 @@ DROP FUNCTION IF EXISTS reikapaikkaus_upsert(
 );
 
 
--- UPSERT funktio, vaikka kaikkia paikkaus sarakkeita ei reikäpaikkauksessa tarvita, lyöty silti mukaan jos tarvitaankin myöhemmin 
 CREATE OR REPLACE FUNCTION reikapaikkaus_upsert(
   _tyyppi paikkaustyyppi,  _luojaid INT, 
   _luotu TIMESTAMP, _muokkaajaid INT, 
@@ -77,34 +76,22 @@ CREATE OR REPLACE FUNCTION reikapaikkaus_upsert(
   _sijainti GEOMETRY
 ) RETURNS VOID AS $$
 BEGIN
-  UPDATE paikkaus SET
-    "paikkaus-tyyppi" = _tyyppi, 
-    "luoja-id" = _luojaid,
-    luotu = _luotu, 
-    "muokkaaja-id" = _muokkaajaid,
-    muokattu = _muokattu, 
-    "poistaja-id" = _poistajaid,
-    poistettu = _poistettu, 
-    "paikkauskohde-id" = _paikkauskohdeid,
-    alkuaika = _alkuaika, 
-    loppuaika = _loppuaika,
-    tierekisteriosoite = _tierekisteriosoite, 
-    tyomenetelma = _tyomenetelma,
-    massatyyppi = _massatyyppi, 
-    leveys = _leveys,
-    massamenekki = _massamenekki,
-    massamaara = _massamaara,
-    "pinta-ala" = _pintaala, 
-    raekoko = _raekoko,
-    kuulamylly = _kuulamylly, 
-    kustannus = _kustannus,
-    "reikapaikkaus-yksikko" = _yksikko, 
-    maara = _paikkaus_maara,
-    sijainti = _sijainti
-  WHERE "urakka-id" = _urakkaid AND "ulkoinen-id" = _ulkoinenid;
-  -- FOUND ilmeisesti jokin vakio postgres muuttuja, kertoo viime PERFORM, INSERT, UPDATE tilan
-  IF NOT FOUND THEN
-    -- Eli jos viime UPDATE ei palauttanut mitään, riviä ei ole kannassa -> insert 
+  -- Katsotaan onko paikkaus olemassa 
+  IF EXISTS ( SELECT 1 FROM paikkaus WHERE "urakka-id" = _urakkaid AND "ulkoinen-id" = _ulkoinenid ) THEN
+    -- On olemassa -> Update 
+    UPDATE paikkaus SET
+      "paikkaus-tyyppi"       = _tyyppi, 
+      "muokkaaja-id"          = _muokkaajaid,
+      muokattu                = _muokattu, 
+      tierekisteriosoite      = _tierekisteriosoite, 
+      tyomenetelma            = _tyomenetelma,
+      kustannus               = _kustannus,
+      "reikapaikkaus-yksikko" = _yksikko, 
+      maara                   = _paikkaus_maara,
+      sijainti                = _sijainti
+    WHERE "urakka-id" = _urakkaid AND "ulkoinen-id" = _ulkoinenid;
+  -- Paikkausta ei olemassa -> Insert  
+  Else
     INSERT INTO paikkaus (
       "paikkaus-tyyppi", 
       "luoja-id", 

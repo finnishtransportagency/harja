@@ -32,10 +32,9 @@
 
 (defn- validoi-reikapaikkaus-rivit
   "  Validoidaan reikäpaikkaus excel-rivit
-     - Älä salli nil- arvoja
-     - Tunnisteen pitää olla unique
-     - Palauta virhe ja kerro millä rivillä ja mitä meni pieleen
-  "
+   - Älä salli nil- arvoja
+   - Tunnisteen pitää olla unique
+   - Palauta virhe ja kerro millä rivillä ja mitä meni pieleen"
   [rivit]
   (let [nahdyt-tunnisteet (atom #{})]
     ;; Palauta tulokset mäpättynä vectoriin [{}] joihin lisätty :virhe mikäli virheitä on
@@ -94,7 +93,7 @@
                         rest
                         (remove #(every? nil? %))) ;; Poista kaikki täysin tyhjät rivit myös
         ;; Jostain syystä numerot tulee aina floattina, muunnetaan nämä kokonaisnumeroiksi
-        numeroiksi [:tie :aosa :aet :losa :let :tunniste]
+        kokonaisluvut #{:tie :aosa :aet :losa :let :tunniste}
         ;; Sarakkeet avaimina, eli excelin otsikot
         sarakkeet [:tunniste :pvm :tie :aosa :aet :losa :let :menetelma :maara :yksikko :kustannus]
         ;; Mäppää sekvenssi vectoriin, jonka sisällä on mappeja, eli (() ()) -> [{} {}]
@@ -102,7 +101,7 @@
                               (let [konvertoitu (map-indexed (fn [indeksi arvo]
                                                                (if (and
                                                                      (float? arvo)
-                                                                     (contains? (set numeroiksi) (nth sarakkeet indeksi)))
+                                                                     (contains? kokonaisluvut (nth sarakkeet indeksi)))
                                                                  (int arvo)
                                                                  arvo))
                                                   sisempi-sekvenssi)]

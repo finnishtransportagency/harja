@@ -57,7 +57,7 @@
 
 ;; Tuck 
 (defrecord PaivitaValinnat [uudet])
-(defrecord HaeTiedot [paivita-kartalle?])
+(defrecord HaeTiedot [])
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
 (defrecord HaeTyomenetelmat [])
@@ -133,7 +133,7 @@
 
 (extend-protocol tuck/Event
   HaeTiedot
-  (process-event [{paivita-kartalle? :paivita-kartalle?} app]
+  (process-event [_ app]
     (hae-reikapaikkaukset app)
     (assoc app :haku-kaynnissa? true))
 
