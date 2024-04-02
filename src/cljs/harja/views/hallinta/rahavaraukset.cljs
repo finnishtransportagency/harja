@@ -33,25 +33,24 @@
             (let [id (gensym "rahavaraus")
                   valittu? (some #(= (:id %) (:id rahavaraus)) valitun-urakan-rahavaraukset)]
               [:span.rahavaraus-valinta
-               ;; FIXME: Joskus valinnan poistaminen epäonnistuu
                [:input.vayla-checkbox
                 {:type :checkbox
                  :id id
-                 :checked valittu?
+                 :checked (boolean valittu?)
                  :on-change #(do
                                (.preventDefault %)
                                (.stopPropagation %)
                                (e! (tiedot/->ValitseUrakanRahavaraus
-                                       valittu-urakka
-                                       rahavaraus
-                                       (-> % .-target .-checked))))}]
+                                     valittu-urakka
+                                     rahavaraus
+                                     (-> % .-target .-checked))))}]
                [:label {:for id} (:nimi rahavaraus)]]))
 
           (when-not (empty? tallennukset-kesken)
             [:div.tallennus-tila.margin-top-16
              (if (some true? (vals tallennukset-kesken))
-               [:span "Tallennetaan..."] ;; todo: lisää ajax loader pieni
-               [:span "Muutokset tallennettu " (ikonit/harja-icon-status-completed)])])]]))))
+               [:span "Tallennetaan..." [yleiset/ajax-loader-pieni]] ;; todo: lisää ajax loader pieni
+               [:span "Muutokset tallennettu " [ikonit/harja-icon-status-completed]])])]]))))
 
 (defn rahavaraukset []
   [tuck tiedot/tila rahavaraukset*])
