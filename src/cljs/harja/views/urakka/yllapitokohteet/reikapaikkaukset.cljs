@@ -3,7 +3,7 @@
   (:require [tuck.core :refer [tuck]]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-reikapaikkaukset :as tiedot]
             [reagent.core :as r]
-            [clojure.string :as str]
+            [harja.ui.varmista-kayttajalta :refer [varmista-kayttajalta]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.lomake :as lomake]
@@ -247,7 +247,12 @@
           {:nappi-teksti "Tuo tiedot excelistä"
            :url "lue-reikapaikkauskohteet-excelista"
            :lataus-epaonnistui #(e! (tiedot/->TiedostoLadattu %))
-           :tiedosto-ladattu #(e! (tiedot/->TiedostoLadattu %))}]]
+           :tiedosto-ladattu (fn []
+                               (varmista-kayttajalta
+                                 {:otsikko "Korvaa kaikki olemassa olemat toteumat"
+                                  :sisalto [:div "Oletko varma, että haluat korvata kaikki olemassa olemat toteumat?"]
+                                  :hyvaksy "Kyllä"
+                                  :toiminto-fn #(e! (tiedot/->TiedostoLadattu %))}))}]]
 
         ;; Excel-Pohjan lataus
         [:div.lataus-nappi

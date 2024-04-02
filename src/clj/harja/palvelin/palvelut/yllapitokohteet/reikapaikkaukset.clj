@@ -77,9 +77,11 @@
     ;; Jos paikkausta ei ole olemassa -> lisätään se, muuten kutsutaan UPDATE 
     (if paikkaus-olemassa?
       (do
+        ;; TODO poista println
         (println "Päivitetään " tunniste " olemassa: " paikkaus-olemassa? " u " urakka-id)
         (q/paivita-reikapaikkaus! db parametrit))
       (do
+        ;; TODO poista println
         (println "Lisätään " tunniste " olemassa: " paikkaus-olemassa?)
         (q/lisaa-reikapaikkaus! db parametrit)))))
 
