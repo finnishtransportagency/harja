@@ -65,6 +65,76 @@ SELECT reikapaikkaus_upsert(
 );
 
 
+-- name: lisaa-reikapaikkaus!
+INSERT INTO paikkaus (
+  "paikkaus-tyyppi", 
+  "luoja-id", 
+  luotu, 
+  "muokkaaja-id", 
+  muokattu, 
+  "poistaja-id", 
+  poistettu, 
+  "urakka-id", 
+  "paikkauskohde-id", 
+  "ulkoinen-id", 
+  alkuaika, 
+  loppuaika, 
+  tierekisteriosoite, 
+  tyomenetelma, 
+  massatyyppi, 
+  leveys, 
+  massamenekki, 
+  massamaara, 
+  "pinta-ala", 
+  raekoko, 
+  kuulamylly, 
+  kustannus,
+  "reikapaikkaus-yksikko",
+  maara,
+  sijainti 
+)
+VALUES (
+  'reikapaikkaus',                -- "paikkaus-tyyppi", aina reikäpaikkaus
+  :luoja-id,                      -- luoja
+  NOW(),                          -- luotu
+  COALESCE(:muokkaaja-id, NULL),  -- "muokkaaja-id"
+  NULL                            -- muokattu
+  NULL,                           -- "poistaja-id"
+  FALSE,                          -- poistettu
+  :urakka-id,                     -- "urakka-id"
+  NULL,                           -- "paikkauskohde-id", reikäpaikkauksilla ei ole paikkauskohdetta
+  :ulkoinen-id,                   -- "ulkoinen-id"
+  COALESCE(:alkuaika, NOW()),     -- alkuaika
+  COALESCE(:loppuaika, NOW()),    -- loppuaika
+  ROW(:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE, -- tierekisteriosoite
+  COALESCE(:tyomenetelma-id, (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = :tyomenetelma)), -- tyomenetelma 
+  'Ei määritelty', -- massatyyppi, 'Ei määritelty' reikäpaikkauksille
+  NULL, -- leveys
+  NULL, -- massamenekki
+  NULL, -- massamaara
+  NULL, -- "pinta-ala"
+  NULL, -- raekoko
+  NULL, -- kuulamylly
+  :kustannus, -- kustannus
+  :yksikko, -- "reikapaikkaus-yksikko"
+  :maara, -- maara
+  (SELECT tierekisteriosoitteelle_viiva(:tie, :aosa, :aet, :losa, :let)) -- sijainti geometria
+);
+
+
+-- name: paivita-reikapaikkaus!
+UPDATE paikkaus SET
+  "muokkaaja-id"          = COALESCE(:muokkaaja-id, NULL),
+  muokattu                = NOW(), 
+  tierekisteriosoite      = ROW(:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE, 
+  tyomenetelma            = COALESCE(:tyomenetelma-id, (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = :tyomenetelma)),
+  kustannus               = :kustannus,
+  "reikapaikkaus-yksikko" = :yksikko, 
+  maara                   = :maara,
+  sijainti                = (SELECT tierekisteriosoitteelle_viiva(:tie, :aosa, :aet, :losa, :let))
+WHERE "urakka-id" = :urakka-id AND "ulkoinen-id" = :ulkoinen-id;
+
+
 -- name: hae-kaikki-tyomenetelmat
 SELECT * FROM paikkauskohde_tyomenetelma;
 
