@@ -9,7 +9,8 @@
 
 (def tila (atom {:valittu-urakka nil
                  :rahavaraukset nil
-                 :tehtavat nil}))
+                 :tehtavat nil
+                 :tallennukset {}}))
 
 (defrecord HaeRahavaraukset [])
 (defrecord HaeRahavarauksetOnnistui [vastaus])
@@ -18,7 +19,8 @@
 (defrecord HaeUrakoidenRahavarauksetOnnistui [vastaus])
 (defrecord HaeUrakoidenRahavarauksetEpaonnistui [vastaus])
 (defrecord ValitseUrakanRahavaraus [urakka rahavaraus valittu?])
-
+(defrecord ValitseUrakanRahavarausOnnistui [vastaus tallennus-id])
+(defrecord ValitseUrakanRahavarausEpaonnistui [vastaus tallennus-id])
 
 (defrecord ValitseUrakka [urakka])
 
@@ -51,8 +53,14 @@
     app)
 
   HaeUrakoidenRahavarauksetOnnistui
-  (process-event [{:keys [vastaus]} app]
-    (assoc app :urakoiden-rahavaraukset vastaus))
+  (process-event [{:keys [vastaus]} {:keys [valittu-urakka] :as app}]
+    (let [urakat (sort-by :urakka-nimi
+                   (into #{}
+                     (map #(select-keys % [:urakka-id :urakka-nimi]) vastaus)))]
+      (assoc app
+        :urakoiden-rahavaraukset vastaus
+        :urakat urakat
+        :valittu-urakka (or valittu-urakka (first urakat)))))
 
   HaeUrakoidenRahavarauksetEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -61,9 +69,41 @@
 
   ValitseUrakanRahavaraus
   (process-event [{:keys [urakka rahavaraus valittu?]} app]
-    (let []
-      (println urakka rahavaraus valittu?)
-      app))
+    (let [tallennus-id (gensym)
+          app (assoc-in app [:tallennukset-kesken tallennus-id] true)]
+      (tuck-apurit/post! :paivita-urakan-rahavaraus
+        {:urakka (:urakka-id urakka)
+         :rahavaraus (:id rahavaraus)
+         :valittu? valittu?}
+        {:onnistui ->ValitseUrakanRahavarausOnnistui
+         :epaonnistui ->ValitseUrakanRahavarausEpaonnistui
+         :onnistui-parametrit [tallennus-id]
+         :epaonnistui-parametrit [tallennus-id]
+         :paasta-virhe-lapi? true})
+
+      (if valittu?
+        (update app :urakoiden-rahavaraukset
+          conj {:id (:id rahavaraus)
+                :nimi (:nimi rahavaraus)
+                :urakka-id (:urakka-id urakka)
+                :urakka-nimi (:urakka-nimi urakka)})
+        (update app :urakoiden-rahavaraukset
+          #(filter %2 %1)
+          #(or
+             (not= (:id %) (:id rahavaraus))
+             (not= (:urakka-id %) (:urakka-id urakka)))))))
+
+  ValitseUrakanRahavarausOnnistui
+  (process-event [{:keys [vastaus tallennus-id]} app]
+    (let [app (assoc-in app [:tallennukset-kesken tallennus-id] false)]
+      (if (every? false? (:tallennukset-kesken app))
+        (assoc app :urakoiden-rahavaraukset vastaus)
+        app)))
+
+  ValitseUrakanRahavarausEpaonnistui
+  (process-event [{:keys [tallennus-id]} app]
+    (viesti/nayta-toast! "Rahavarauksen tallennus epäonnistui" :varoitus)
+    (assoc-in app [:tallennukset-kesken tallennus-id] false))
 
   ValitseUrakka
   (process-event [{:keys [urakka]} app]

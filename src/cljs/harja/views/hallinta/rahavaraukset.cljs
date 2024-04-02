@@ -15,11 +15,8 @@
   (komp/luo
     (komp/sisaan #(do (e! (tiedot/->HaeRahavaraukset))
                     (e! (tiedot/->HaeUrakoidenRahavaraukset))))
-    (fn [e! {:keys [valittu-urakka urakoiden-rahavaraukset rahavaraukset] :as app}]
-      (let [urakat (sort-by :urakka-nimi
-                     (into #{}
-                       (map #(select-keys % [:urakka-id :urakka-nimi]) urakoiden-rahavaraukset)))
-            valitun-urakan-rahavaraukset (filter #(= (:urakka-id %) (:urakka-id valittu-urakka))
+    (fn [e! {:keys [valittu-urakka urakat urakoiden-rahavaraukset rahavaraukset tallennukset-kesken] :as app}]
+      (let [valitun-urakan-rahavaraukset (filter #(= (:urakka-id %) (:urakka-id valittu-urakka))
                                            urakoiden-rahavaraukset)]
         [:div.rahavaraukset-hallinta
          [harja.ui.debug/debug app]
@@ -39,13 +36,21 @@
                [:input.vayla-checkbox
                 {:type :checkbox
                  :id id
-                 :default-checked valittu?
-                 :on-change #(e! (tiedot/->ValitseUrakanRahavaraus
-                                   valittu-urakka
-                                   rahavaraus
-                                   (-> % .-target .-checked)))
-                 }]
-               [:label {:for id} (:nimi rahavaraus)]]))]]))))
+                 :checked valittu?
+                 :on-change #(do
+                               (.preventDefault %)
+                               (.stopPropagation %)
+                               (e! (tiedot/->ValitseUrakanRahavaraus
+                                       valittu-urakka
+                                       rahavaraus
+                                       (-> % .-target .-checked))))}]
+               [:label {:for id} (:nimi rahavaraus)]]))
+
+          (when-not (empty? tallennukset-kesken)
+            [:div.tallennus-tila.margin-top-16
+             (if (some true? (vals tallennukset-kesken))
+               [:span "Tallennetaan..."]
+               [:span "Muutokset tallennettu " (ikonit/harja-icon-status-completed)])])]]))))
 
 (defn rahavaraukset []
   [tuck tiedot/tila rahavaraukset*])
