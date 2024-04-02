@@ -103,6 +103,7 @@
   ValitseUrakanRahavarausEpaonnistui
   (process-event [{:keys [tallennus-id]} app]
     (viesti/nayta-toast! "Rahavarauksen tallennus epäonnistui" :varoitus)
+    ;; TODO: Merkitse tallennus tehdyksi
     (assoc-in app [:tallennukset-kesken tallennus-id] false))
 
   ValitseUrakka

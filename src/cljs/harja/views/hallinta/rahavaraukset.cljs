@@ -33,6 +33,7 @@
             (let [id (gensym "rahavaraus")
                   valittu? (some #(= (:id %) (:id rahavaraus)) valitun-urakan-rahavaraukset)]
               [:span.rahavaraus-valinta
+               ;; FIXME: Joskus valinnan poistaminen epäonnistuu
                [:input.vayla-checkbox
                 {:type :checkbox
                  :id id
@@ -49,7 +50,7 @@
           (when-not (empty? tallennukset-kesken)
             [:div.tallennus-tila.margin-top-16
              (if (some true? (vals tallennukset-kesken))
-               [:span "Tallennetaan..."]
+               [:span "Tallennetaan..."] ;; todo: lisää ajax loader pieni
                [:span "Muutokset tallennettu " (ikonit/harja-icon-status-completed)])])]]))))
 
 (defn rahavaraukset []
