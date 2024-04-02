@@ -96,43 +96,48 @@ INSERT INTO paikkaus (
 VALUES (
   'reikapaikkaus',                -- "paikkaus-tyyppi", aina reikäpaikkaus
   :luoja-id,                      -- luoja
-  NOW(),                          -- luotu
-  COALESCE(:muokkaaja-id, NULL),  -- "muokkaaja-id"
-  NULL                            -- muokattu
-  NULL,                           -- "poistaja-id"
+  NOW()::TIMESTAMP,               -- luotu
+  COALESCE(:muokkaaja-id::INT, NULL::INT),  -- "muokkaaja-id"
+  NULL::TIMESTAMP,                -- muokattu
+  NULL::INT,                      -- "poistaja-id"
   FALSE,                          -- poistettu
-  :urakka-id,                     -- "urakka-id"
-  NULL,                           -- "paikkauskohde-id", reikäpaikkauksilla ei ole paikkauskohdetta
+  :urakka-id::INT,                -- "urakka-id"
+  NULL::INT,                      -- "paikkauskohde-id", reikäpaikkauksilla ei ole paikkauskohdetta
   :ulkoinen-id,                   -- "ulkoinen-id"
-  COALESCE(:alkuaika, NOW()),     -- alkuaika
-  COALESCE(:loppuaika, NOW()),    -- loppuaika
+  COALESCE(:alkuaika::TIMESTAMP, NOW()::TIMESTAMP),     -- alkuaika
+  COALESCE(:loppuaika::TIMESTAMP, NOW()::TIMESTAMP),    -- loppuaika
   ROW(:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE, -- tierekisteriosoite
   COALESCE(:tyomenetelma-id, (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = :tyomenetelma)), -- tyomenetelma 
   'Ei määritelty', -- massatyyppi, 'Ei määritelty' reikäpaikkauksille
-  NULL, -- leveys
-  NULL, -- massamenekki
-  NULL, -- massamaara
-  NULL, -- "pinta-ala"
-  NULL, -- raekoko
-  NULL, -- kuulamylly
-  :kustannus, -- kustannus
-  :yksikko, -- "reikapaikkaus-yksikko"
-  :maara, -- maara
-  (SELECT tierekisteriosoitteelle_viiva(:tie, :aosa, :aet, :losa, :let)) -- sijainti geometria
+  NULL::NUMERIC, -- leveys
+  NULL::NUMERIC, -- massamenekki
+  NULL::NUMERIC, -- massamaara
+  NULL::NUMERIC, -- "pinta-ala"
+  NULL::INTEGER, -- raekoko
+  NULL::TEXT, -- kuulamylly
+  :kustannus::NUMERIC, -- kustannus
+  :yksikko::TEXT, -- "reikapaikkaus-yksikko"
+  :maara::INT, -- maara
+  (SELECT tierekisteriosoitteelle_viiva(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT)) -- sijainti geometria
 );
 
 
 -- name: paivita-reikapaikkaus!
 UPDATE paikkaus SET
-  "muokkaaja-id"          = COALESCE(:muokkaaja-id, NULL),
-  muokattu                = NOW(), 
+  "muokkaaja-id"          = COALESCE(:muokkaaja-id::INT, NULL::INT),
+  muokattu                = NOW()::TIMESTAMP, 
   tierekisteriosoite      = ROW(:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE, 
   tyomenetelma            = COALESCE(:tyomenetelma-id, (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = :tyomenetelma)),
-  kustannus               = :kustannus,
-  "reikapaikkaus-yksikko" = :yksikko, 
-  maara                   = :maara,
-  sijainti                = (SELECT tierekisteriosoitteelle_viiva(:tie, :aosa, :aet, :losa, :let))
+  kustannus               = :kustannus::NUMERIC,
+  "reikapaikkaus-yksikko" = :yksikko::TEXT, 
+  maara                   = :maara::INT,
+  sijainti                = (SELECT tierekisteriosoitteelle_viiva(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT)),
+  poistettu               = FALSE -- Jos tuodaan jo poistettu rivi, merkataan se ei-poistetuksi 
 WHERE "urakka-id" = :urakka-id AND "ulkoinen-id" = :ulkoinen-id;
+
+
+-- name: hae-reikapaikkaus
+SELECT * FROM paikkaus WHERE "paikkaus-tyyppi" = 'reikapaikkaus' AND "urakka-id" = :urakka-id AND "ulkoinen-id" = :ulkoinen-id;
 
 
 -- name: hae-kaikki-tyomenetelmat

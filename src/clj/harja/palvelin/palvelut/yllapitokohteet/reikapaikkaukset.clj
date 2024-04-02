@@ -48,51 +48,54 @@
                                       :urakka-id urakka-id}))
 
 
+(defn- luo-tai-paivita-reikapaikkaus 
+  "Lisää tai päivittää olemassa olevan paikkauksen kantaan"
+  [db kayttaja-id urakka-id paikkaus]
+  ;; Destruktoi paikkaus
+  (let [{:keys [tunniste tie aosa aet losa let pvm
+                menetelma menetelma-id maara yksikko kustannus]} paikkaus
+        ;; Koosta parametrit
+        parametrit {:luoja-id kayttaja-id
+                    :alkuaika (konversio/sql-date (pvm/->pvm pvm))
+                    :loppuaika (konversio/sql-date (pvm/->pvm pvm))
+                    :urakka-id urakka-id
+                    :ulkoinen-id tunniste
+                    :tie tie
+                    :muokkaaja-id kayttaja-id
+                    :aosa aosa
+                    :aet aet
+                    :losa losa
+                    :let let
+                    :tyomenetelma-id menetelma-id
+                    :tyomenetelma menetelma
+                    :maara maara
+                    :kustannus kustannus
+                    :yksikko yksikko}
+        ;; Onko paikkaus kannassa, tyhjä tulos palauttaa (), johon seq lyö nilliä, joten boolean -> seq -> tulos 
+        paikkaus-olemassa? (boolean (seq (q/hae-reikapaikkaus db {:ulkoinen-id tunniste
+                                                                  :urakka-id urakka-id})))]
+    ;; Jos paikkausta ei ole olemassa -> lisätään se, muuten kutsutaan UPDATE 
+    (if paikkaus-olemassa?
+      (do
+        (println "Päivitetään " tunniste " olemassa: " paikkaus-olemassa? " u " urakka-id)
+        (q/paivita-reikapaikkaus! db parametrit))
+      (do
+        (println "Lisätään " tunniste " olemassa: " paikkaus-olemassa?)
+        (q/lisaa-reikapaikkaus! db parametrit)))))
+
+
 (defn tallenna-reikapaikkaus
   "Yksittäisen reikäpaikkauksen muokkauksen tallennus (käyttöliittymän kautta)"
-  [db kayttaja
-   {:keys [ulkoinen-id luoja-id urakka-id tie aosa aet
-           losa let menetelma maara yksikko kustannus alkuaika loppuaika]}]
+  [db {:keys [id] :as kayttaja} {:keys [urakka-id] :as paikkaus}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
-  (q/luo-tai-paivita-reikapaikkaus! db {:luoja-id luoja-id
-                                        :urakka-id urakka-id
-                                        :ulkoinen-id ulkoinen-id
-                                        :tie tie
-                                        :alkuaika (konversio/sql-date alkuaika)
-                                        :loppuaika (konversio/sql-date loppuaika)
-                                        :muokkaaja-id luoja-id
-                                        :aosa aosa
-                                        :aet aet
-                                        :losa losa
-                                        :let let
-                                        :tyomenetelma-id menetelma
-                                        :tyomenetelma nil
-                                        :maara maara
-                                        :kustannus kustannus
-                                        :yksikko yksikko}))
+  (luo-tai-paivita-reikapaikkaus db id urakka-id paikkaus))
 
 
 (defn tallenna-reikapaikkaukset
   "Tallentaa kaikki Excelin reikäpaikkaukset valitulle urakalle (Excel-tuonti)"
   [db {:keys [id]} urakka-id reikapaikkaukset]
-  (doseq [{:keys [tunniste tie aosa aet losa let pvm
-                  menetelma maara yksikko kustannus]} reikapaikkaukset]
-    (q/luo-tai-paivita-reikapaikkaus! db {:luoja-id id
-                                          :alkuaika (konversio/sql-date (pvm/->pvm pvm))
-                                          :loppuaika (konversio/sql-date (pvm/->pvm pvm))
-                                          :urakka-id urakka-id
-                                          :ulkoinen-id tunniste
-                                          :tie tie
-                                          :muokkaaja-id id
-                                          :aosa aosa
-                                          :aet aet
-                                          :losa losa
-                                          :let let
-                                          :tyomenetelma-id  nil
-                                          :tyomenetelma menetelma
-                                          :maara maara
-                                          :kustannus kustannus
-                                          :yksikko yksikko})))
+  (doseq [paikkaus reikapaikkaukset]
+    (luo-tai-paivita-reikapaikkaus db id urakka-id paikkaus)))
 
 
 (defn- kasittele-excel [db urakka-id kayttaja pyynto]

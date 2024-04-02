@@ -226,7 +226,7 @@
       (tuck-apurit/post! app :tallenna-reikapaikkaus
         {:luoja-id (:id @istunto/kayttaja)
          :urakka-id  @nav/valittu-urakka-id
-         :ulkoinen-id tunniste
+         :tunniste tunniste
          :tie tie
          :aosa aosa
          :aet aet
@@ -235,7 +235,7 @@
          :loppuaika loppuaika
          :let let
          :yksikko reikapaikkaus-yksikko
-         :menetelma tyomenetelma
+         :menetelma-id tyomenetelma
          :maara maara
          :kustannus kustannus}
         {:onnistui ->TallennaReikapaikkausOnnistui
