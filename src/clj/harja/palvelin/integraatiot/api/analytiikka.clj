@@ -614,7 +614,7 @@
 (defn- muodosta-alikohdesanoma [alikohde osien-pituudet]
   (-> alikohde
     (muodosta-paallystyskohdesanoma osien-pituudet)
-    (assoc-in [:paallystystoimenpide :uusiPaallyste] (paallystys-ja-paikkaus/hae-apin-paallyste-koodilla (:uusi-paallyste alikohde)))
+    (assoc-in [:paallystystoimenpide :uusiPaallyste] (paallystys-ja-paikkaus/hae-apin-paallyste-koodilla (:uusi_paallyste alikohde)))
     (assoc-in [:paallystystoimenpide :paallystetyomenetelma] (paallystysilmoitus/tyomenetelman-nimi-koodilla (:tyomenetelma alikohde)))
     (assoc-in [:paallystystoimenpide :raekoko] (:raekoko alikohde))
     (assoc-in [:paallystystoimenpide :massamenekki] (:massamenekki alikohde))
