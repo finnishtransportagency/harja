@@ -93,6 +93,9 @@ SELECT paivita_pohjavesialueet();
 \i testidata/yllapito/paallystysmassat.sql
 \i testidata/yllapito/pot2.sql
 
+-- Reikäpaikkaukset 
+\i testidata/yllapito/reikapaikkaukset.sql
+
 -- Ylläpidon toteumat
 \i testidata/yllapito/yllapito_toteumat.sql
 
