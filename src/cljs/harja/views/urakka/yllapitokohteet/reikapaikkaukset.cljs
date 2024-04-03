@@ -249,7 +249,7 @@
            :lataus-epaonnistui #(e! (tiedot/->TiedostoLadattu %))
            :tiedosto-ladattu (fn []
                                (varmista-kayttajalta
-                                 {:otsikko "Tietojen tuonti ylikirjoittaa aiemmin tuodut toteumat samalla tunnisteella."
+                                 {:otsikko "Tietojen tuonti ylikirjoittaa aiemmin tuodut toteumat samalla tunnisteella"
                                   :hyvaksy "Tuo tiedot"
                                   :toiminto-fn #(e! (tiedot/->TiedostoLadattu %))}))}]]
 
