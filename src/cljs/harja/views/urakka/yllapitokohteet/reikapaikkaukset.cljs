@@ -249,9 +249,8 @@
            :lataus-epaonnistui #(e! (tiedot/->TiedostoLadattu %))
            :tiedosto-ladattu (fn []
                                (varmista-kayttajalta
-                                 {:otsikko "Korvaa kaikki olemassa olemat toteumat"
-                                  :sisalto [:div "Oletko varma, että haluat korvata kaikki olemassa olemat toteumat?"]
-                                  :hyvaksy "Kyllä"
+                                 {:otsikko "Tietojen tuonti ylikirjoittaa aiemmin tuodut toteumat samalla tunnisteella."
+                                  :hyvaksy "Tuo tiedot"
                                   :toiminto-fn #(e! (tiedot/->TiedostoLadattu %))}))}]]
 
         ;; Excel-Pohjan lataus
