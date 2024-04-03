@@ -17,6 +17,9 @@
                   paallystyssopimusnro)))
     (log/warn "Geometriaa ei voida tuoda ilman päällystyssopimusnumeroa")))
 
+;; Urakoilla on Velhossa teema, joka kuvastaa urakkaa. Tässä setissä kuvattu teemat, jotka kiinnostavat meitä tässä kontekstissa.
+(def haettavat-teemat #{"Päällysteiden ylläpito" "Päällystepaikkaukset"})
+
 (defn vie-urakat-kantaan [db shapefile]
   (if shapefile
     (do
@@ -25,7 +28,7 @@
         (u/tuhoa-paallystyspalvelusopimusdata! db)
         (let [urakat (shapefile/tuo shapefile)]
           (doseq [urakka urakat]
-            (when (#{"Päällysteiden ylläpito" "Päällystepaikkaukset"} (:teemat urakka))
+            (when (haettavat-teemat (:teemat urakka))
               (tuo-urakka db (:the_geom urakka) (str (:urakkakood urakka))))))
         (when (= 0 (:lkm (first (u/tarkista-paallystyspalvelusopimusdata db))))
           (throw (Exception. "Yhtään päällystyspalvelusopimusta ei viety kantaan. Tarkista aineiston yhteensopivuus sisäänlukevan kooditoteutuksen kanssa.")))))
