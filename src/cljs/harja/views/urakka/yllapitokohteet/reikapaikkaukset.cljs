@@ -234,7 +234,7 @@
       [:div.taulukko-header.header-yhteiset
        ;; Formatoi rivimäärä välilyönnillä, esim 1000 = 1 000, fmt/desimaaliluku tekee tämän, eurot myös
        [:h3 (str 
-              (fmt/formatoi-numero-valilyonneilla (or rivi-maara 0))
+              (fmt/formatoi-numero-tuhansittain (or rivi-maara 0))
               (if (> rivi-maara 1) " riviä, " " rivi, ")
               (fmt/euro false (or kustannukset 0)) " EUR")]
 
