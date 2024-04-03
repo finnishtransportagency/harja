@@ -8,10 +8,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.tierekisteri :as tr]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
-            [harja.asiakas.kommunikaatio :as k])
-  (:require-macros [harja.atom :refer [reaction<!]]
-                   [reagent.ratom :refer [reaction]]))
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
+  (:require-macros [reagent.ratom :refer [reaction]]))
 
 (defonce tila (atom {:rivit nil
                      :rivi-maara nil
@@ -235,7 +233,7 @@
          :loppuaika loppuaika
          :let let
          :yksikko reikapaikkaus-yksikko
-         :menetelma-id tyomenetelma
+         :tyomenetelma-id tyomenetelma
          :maara maara
          :kustannus kustannus}
         {:onnistui ->TallennaReikapaikkausOnnistui

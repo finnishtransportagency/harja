@@ -93,6 +93,8 @@ VALUES (
 UPDATE paikkaus SET
   "muokkaaja-id"          = COALESCE(:muokkaaja-id::INT, NULL::INT),
   muokattu                = NOW()::TIMESTAMP, 
+  alkuaika                = COALESCE(:alkuaika::TIMESTAMP, alkuaika),
+  loppuaika               = COALESCE(:loppuaika::TIMESTAMP, loppuaika),
   tierekisteriosoite      = ROW(:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE, 
   tyomenetelma            = COALESCE(:tyomenetelma-id, (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = :tyomenetelma)),
   kustannus               = :kustannus::NUMERIC,

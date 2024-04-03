@@ -69,6 +69,10 @@ describe('Reikäpaikkausnäkymä toimii', function ()
     // Tallennuksen pitäisi onnistua 
     cy.contains('Toteuma tallennettu onnistuneesti', { timeout: clickTimeout }).should('be.visible');
 
+    // Muokkauspaneeli menee tallennuksessa kiinni
+    cy.get('.grid tr').eq(1).click();   // Klikkaa gridin ensimäistä toteumaa  
+    cy.get('h2.header-yhteiset[data-cy="reikapaikkaus-muokkauspaneeli"]', {timeout: clickTimeout}).contains('Muokkaa toteumaa'); // Muokkauspaneeli aukesi
+
     // Muokkauspaneelin inputit pitäisi olla nyt vastaavat 
     cy.get('.form-control.lomake-tr-valinta').eq(0).should('have.value', '20');
     cy.get('.form-control.lomake-tr-valinta').eq(1).should('have.value', '1');
@@ -94,6 +98,10 @@ describe('Reikäpaikkausnäkymä toimii', function ()
     cy.get('[data-cy="tallena-reikapaikkaus"]').click();
     // Tallennuksen pitäisi onnistua 
     cy.contains('Toteuma tallennettu onnistuneesti', { timeout: clickTimeout }).should('be.visible');
+
+    // Muokkauspaneeli menee tallennuksessa kiinni
+    cy.get('.grid tr').eq(1).click();   // Klikkaa gridin ensimäistä toteumaa  
+    cy.get('h2.header-yhteiset[data-cy="reikapaikkaus-muokkauspaneeli"]', {timeout: clickTimeout}).contains('Muokkaa toteumaa'); // Muokkauspaneeli aukesi
   });
 
   
@@ -170,6 +178,9 @@ describe('Reikäpaikkausnäkymä toimii', function ()
     // Pvm muuttui
     cy.get('.grid tr').eq(1).find('td').eq(0).contains('06.03.2024');
 
+    // Muokkauspaneeli menee tallennuksessa kiinni
+    cy.get('.grid tr').eq(1).click();   // Klikkaa gridin ensimäistä toteumaa  
+    cy.get('h2.header-yhteiset[data-cy="reikapaikkaus-muokkauspaneeli"]', {timeout: clickTimeout}).contains('Muokkaa toteumaa'); // Muokkauspaneeli aukesi
 
     // Asetetaan vielä arvot takaisin 
     cy.get('.input-default.komponentin-input').eq(0).clear().type('66').blur(); // Määrä 
@@ -203,6 +214,9 @@ describe('Reikäpaikkausnäkymä toimii', function ()
   
   it('Pitäisi poistaa toteuma onnistuneesti', function () 
   {
+    cy.get('.grid tr').eq(1).click();   // Klikkaa gridin ensimäistä toteumaa  
+    cy.get('h2.header-yhteiset[data-cy="reikapaikkaus-muokkauspaneeli"]', {timeout: clickTimeout}).contains('Muokkaa toteumaa'); // Muokkauspaneeli aukesi
+    
     cy.get('[data-cy="poista-reikapaikkaus"]').click();
     cy.contains('Toteuma poistettu onnistuneesti', { timeout: clickTimeout }).should('be.visible');
     // Pitäisi tulla 4 tulosta, (+ otsikot, eli 5) 

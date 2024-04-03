@@ -48,16 +48,17 @@
                                       :urakka-id urakka-id}))
 
 
-(defn- luo-tai-paivita-reikapaikkaus 
+(defn- luo-tai-paivita-reikapaikkaus
   "Lisää tai päivittää olemassa olevan paikkauksen kantaan"
   [db kayttaja-id urakka-id paikkaus]
   ;; Destruktoi paikkaus
-  (let [{:keys [tunniste tie aosa aet losa let pvm
-                menetelma menetelma-id maara yksikko kustannus]} paikkaus
-        ;; Koosta parametrit
+  (let [{:keys [tunniste tie aosa aet losa let pvm menetelma
+                tyomenetelma-id maara yksikko kustannus alkuaika loppuaika]} paikkaus
+        ;; Koosta parametrit, alku/loppuaika reikäpaikkauksilla tällä hetkellä samoja (loppuaikaa ei ole speksattu)
+        ;; joka on 'pvm' kun data tuodaan Excelistä, frontilta alkuaika/loppuaika
         parametrit {:luoja-id kayttaja-id
-                    :alkuaika (konversio/sql-date (pvm/->pvm pvm))
-                    :loppuaika (konversio/sql-date (pvm/->pvm pvm))
+                    :alkuaika (konversio/sql-date (or alkuaika (pvm/->pvm pvm)))
+                    :loppuaika (konversio/sql-date (or loppuaika (pvm/->pvm pvm)))
                     :urakka-id urakka-id
                     :ulkoinen-id tunniste
                     :tie tie
@@ -66,7 +67,7 @@
                     :aet aet
                     :losa losa
                     :let let
-                    :tyomenetelma-id menetelma-id
+                    :tyomenetelma-id tyomenetelma-id
                     :tyomenetelma menetelma
                     :maara maara
                     :kustannus kustannus
@@ -76,14 +77,8 @@
                                                                   :urakka-id urakka-id})))]
     ;; Jos paikkausta ei ole olemassa -> lisätään se, muuten kutsutaan UPDATE 
     (if paikkaus-olemassa?
-      (do
-        ;; TODO poista println
-        (println "Päivitetään " tunniste " olemassa: " paikkaus-olemassa? " u " urakka-id)
-        (q/paivita-reikapaikkaus! db parametrit))
-      (do
-        ;; TODO poista println
-        (println "Lisätään " tunniste " olemassa: " paikkaus-olemassa?)
-        (q/lisaa-reikapaikkaus! db parametrit)))))
+      (q/paivita-reikapaikkaus! db parametrit)
+      (q/lisaa-reikapaikkaus! db parametrit))))
 
 
 (defn tallenna-reikapaikkaus

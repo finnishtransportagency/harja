@@ -40,13 +40,13 @@
     
     (is (= (-> vastaus count) 5))
     (is (= (-> vastaus first :aosa) 1))
-    (is (= (-> vastaus first :kustannus) 215000.0M))
+    (is (= (-> vastaus first :kustannus) 1500.0M))
     (is (= (-> vastaus first :tie) 20))
-    (is (= (-> vastaus first :let) 1020))
+    (is (= (-> vastaus first :let) 120))
     (is (= (-> vastaus first :losa) 1))
-    (is (= (-> vastaus first :aet) 860))
-    (is (= (-> vastaus first :tyomenetelma) 8))
-    (is (= (-> vastaus first :maara) 81))
+    (is (= (-> vastaus first :aet) 1))
+    (is (= (-> vastaus first :tyomenetelma) 9))
+    (is (= (-> vastaus first :maara) 66))
     (is (some? (-> vastaus first :sijainti)))
     (is (some? (-> vastaus first :luotu)))
     (is (some? (-> vastaus first :loppuaika)))
@@ -78,7 +78,7 @@
         ;; Uuden toteuman parametrit 
         params {:luoja-id 1
                 :urakka-id urakka-id
-                :ulkoinen-id ulkoinen-id
+                :tunniste ulkoinen-id
                 :tie 20
                 :aosa 1
                 :aet 1200
@@ -88,7 +88,7 @@
                 :loppuaika nil
                 :let 1300
                 :yksikko "m2"
-                :menetelma 1
+                :tyomenetelma-id 1
                 :maara 123
                 :kustannus 1234.5}
 
