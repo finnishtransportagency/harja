@@ -2,10 +2,10 @@
 DELETE FROM tieturvallisuusverkko;
 
 -- name: lisaa-tieturvallisuusverkko!
-INSERT INTO tieturvallisuusverkko (tasoluokka, aosa, tie, let, losa, aet, tenluokka,
-                                   geometria, ely, pituus, luonne, luotu)
-VALUES (:tasoluokka, :aosa, :tie, :let, :losa, :aet, :tenluokka,
-        ST_GeomFromText(:the_geom) :: GEOMETRY, :ely, :pituus, :luonne, NOW());
+INSERT INTO tieturvallisuusverkko (aosa, tie, let, losa, aet, tenluokka,
+                                   geometria, pituus, luotu, vaylan_luonne, paavaylan_luonne)
+VALUES (:aosa, :tie, :let, :losa, :aet, :tenluokka,
+        ST_GeomFromText(:the_geom) :: GEOMETRY, :pituus, NOW(), :vaylan_luo, :paavaylan_);
 
 -- name: hae-tieturvallisuusgeometriat
 SELECT tie, aosa, losa, aet, let, geometria FROM tieturvallisuusverkko;
@@ -24,6 +24,6 @@ FROM (SELECT ST_Union(sisempi.geom) u
 SELECT
     ST_INTERSECTION(geometria, u.alue) AS sijainti
 FROM tieturvallisuusverkko
-         LEFT JOIN urakka u ON u.id = :urakka AND u.tyyppi='teiden-hoito'
+         LEFT JOIN urakka u ON u.id = :urakka AND u.tyyppi IN ('teiden-hoito', 'hoito')
 WHERE
     ST_Intersects(geometria, (SELECT alue FROM urakka WHERE id = :urakka));

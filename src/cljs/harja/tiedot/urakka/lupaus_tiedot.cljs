@@ -82,7 +82,6 @@
 (defn- lupausten-hakuparametrit [urakka hoitokausi nykyhetki]
   (merge
     {:urakka-id (:id urakka)
-     :urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
      :valittu-hoitokausi hoitokausi}
     (when nykyhetki
       ;; Palvelin sallii nykyhetken määrittämisen testausta varten, jos ei olla tuotantoympäristössä
@@ -174,12 +173,15 @@
       (-> app
           (merge vastaus)
           (update :vastaus-lomake dissoc :lahetetty-vastaus)
+          (dissoc :lupausta-lahetataan)
           (update :vastaus-lomake merge uusi-lupaus))))
 
   HaeUrakanLupaustiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Lupaustietojen hakeminen epäonnistui!" :varoitus)
-    (update app :vastaus-lomake dissoc :lahetetty-vastaus))
+    (-> app
+      (update :vastaus-lomake dissoc :lahetetty-vastaus)
+      (dissoc :lupausta-lahetataan)))
 
   HaeKommentitOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -332,7 +334,9 @@
                          vastaus
                          {:onnistui ->ValitseVaihtoehtoOnnistui
                           :epaonnistui ->ValitseVaihtoehtoEpaonnistui})
-      (assoc-in app [:vastaus-lomake :lahetetty-vastaus] vastaus)))
+      (-> app 
+        (assoc-in [:vastaus-lomake :lahetetty-vastaus] vastaus)
+        (assoc :lupausta-lahetataan {:kohdekuukausi kohdekuukausi :lupaus-id (:lupaus-id lupaus)}))))
 
   ValitseVaihtoehtoOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -343,7 +347,9 @@
   ValitseVaihtoehtoEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Vastauksen antaminen epäonnistui!" :varoitus)
-    (update app :vastaus-lomake dissoc :lahetetty-vastaus))
+    (-> app
+      (update :vastaus-lomake dissoc :lahetetty-vastaus)
+      (dissoc :lupausta-lahetataan)))
 
   ValitseKE
   (process-event [{vastaus :vastaus lupaus :lupaus kohdekuukausi :kohdekuukausi kohdevuosi :kohdevuosi} app]
@@ -362,7 +368,9 @@
                          vastaus-map
                          {:onnistui ->ValitseKEOnnistui
                           :epaonnistui ->ValitseKEEpaonnistui})
-      (assoc-in app [:vastaus-lomake :lahetetty-vastaus] vastaus-map)))
+      (-> app
+        (assoc-in [:vastaus-lomake :lahetetty-vastaus] vastaus-map)
+        (assoc :lupausta-lahetataan {:kohdekuukausi kohdekuukausi :lupaus-id (:lupaus-id lupaus)}))))
 
   ValitseKEOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -373,7 +381,9 @@
   ValitseKEEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Vastauksen antaminen epäonnistui!" :varoitus)
-    (update app :vastaus-lomake dissoc :lahetetty-vastaus))
+    (-> app
+      (update :vastaus-lomake dissoc :lahetetty-vastaus)
+      (dissoc :lupausta-lahetataan)))
 
   Kuukausipisteitamuokattu
   (process-event [{pisteet :pisteet kuukausi :kuukausi} app]

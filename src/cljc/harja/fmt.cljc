@@ -1,12 +1,13 @@
 (ns harja.fmt
   "Yleisiä apureita erityyppisen datan formatointiin."
-  (:require [harja.pvm :as pvm]
+  (:require [clojure.string :as str]
+            [harja.pvm :as pvm]
             [harja.tyokalut.big :as big]
             [clojure.string :as s]
-    #?(:cljs [goog.i18n.currencyCodeMap])
-    #?(:cljs [goog.i18n.NumberFormatSymbols])
-    #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
-    #?(:cljs [goog.i18n.NumberFormat]))
+            #?(:cljs [goog.i18n.currencyCodeMap])
+            #?(:cljs [goog.i18n.NumberFormatSymbols])
+            #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
+            #?(:cljs [goog.i18n.NumberFormat]))
   #?(:clj
      (:import (java.text NumberFormat)
               (java.util Locale)
@@ -471,7 +472,7 @@
   Olettaa saavansa parametrit joko kaikki päivämäärinä tai kaikki vuosina:
   valittu-hk: [pp.kk.vvvv pp.kk.vvvv] TAI vvvv tai järjestysnumero, esim. 2
   hoitovuodet: [[pp.kk.vvvv pp.kk.vvvv]...] TAI [2012 2013 2014 2015 2016] TAI järjestysnumerot, esim. [1 2 3 4 5)"
-  [valittu-hk hoitovuodet]
+  [valittu-hk hoitovuodet vuosi-termi]
   (assert (or (and (int? valittu-hk) (every? int? hoitovuodet))
               (and (int? valittu-hk) (> valittu-hk 0) (< valittu-hk 10) (every? vector? hoitovuodet))
               (and (vector? valittu-hk) (every? vector? hoitovuodet))) "Kaikkien parametrien on oltava joko numeroita tai pvm:n sisältäviä vektoreita. Myös hoitokauden järjestysluku ja vektori ")
@@ -497,7 +498,7 @@
 
                   :else ;; valittu-hk on pvm
                   (str (pvm/vuosi (first %)) "\u2014" (pvm/vuosi (second %))))]
-    (str (when monesko (str monesko ". ")) "hoitovuosi (" (hk-fmt valittu-hk) ")")))
+    (str (when monesko (str monesko ". ")) (str/lower-case vuosi-termi) " (" (hk-fmt valittu-hk) ")")))
 
 #?(:cljs
    (def desimaali-fmt

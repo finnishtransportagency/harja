@@ -1228,6 +1228,8 @@ SELECT ST_Simplify(v.alue, 20, true) as alue
 -- name: hae-paallystysurakat-analytiikalle
 SELECT yt.yhaid,
        u.id AS harjaid,
+       u.poistettu,
+       u.urakkanro,
        yt.elyt,
        yt.vuodet,
        u.sampoid,
