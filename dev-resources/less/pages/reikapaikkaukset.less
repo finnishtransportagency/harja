@@ -1,0 +1,151 @@
+@import "../yleiset";
+
+.reikapaikkaukset 
+{
+  .reikapaikkaus-listaus 
+  {
+    padding: @valistys-16 @valistys-24;
+
+    /* Suodattimet */
+    .row.filtterit 
+    {
+      display: flex;
+      padding: @valistys-16;
+      
+      /* Tieosoite valinta */
+      .tierekisteriosoite-flex {
+        padding-right: 120px;
+      }
+
+      /* Tieosoite otsikko */
+      .alasvedon-otsikko-vayla {
+        font-weight: 600;
+        line-height: @valistys-16;
+        margin-bottom: @valistys-4;
+      }
+
+      /* Päivämäärä */
+      .reikapaikkaus-pvm {
+        /* Koska tr valinnan komponentti toimii vähän omalla tavalla (otsikot alhalla), tähän lyöty tällaista ehkä epätavallista tyylittelyä */
+        position: relative;
+        top: -21px;
+      }
+      
+      /* Hae */
+      .haku-nappi {
+        display: flex;
+        align-items: center;
+        padding-bottom: 8px;
+        padding-left: 20px;
+      }
+    }
+
+    /* Karttanäkymä */
+    .reikapaikkaukset-kartta {
+      padding: 12px 0;
+    }
+
+    /* Grid */
+    .taulukko-header {
+      display: flex;
+      margin: auto;
+      justify-content: space-between;
+
+      font-family: "Open Sans", Arial, sans-serif;
+      font-style: normal;
+      font-weight: 600;
+      font-size: 0.75rem;
+
+      .lataus-nappi {
+        color: @blue-dark;
+        margin: auto;
+      }
+
+      .flex-oikealla {
+        display: flex;
+      }
+    }
+
+    @media (max-width: 950px) {
+      .row.filtterit {
+        flex-direction: column;
+
+        .reikapaikkaus-pvm {
+          margin-left: 0px;
+          margin-top: 40px;
+        }
+
+        .haku-nappi {
+          padding-left: 0px;
+        }
+      }
+    }
+  }
+
+  /* Toteuman muokkauspaneeli/lomake */
+  .overlay-oikealla 
+  {
+    width: 600px;
+    overflow: auto;
+    padding: 22px;
+
+    .sijainti-sarakkeet {
+      display: flex;
+      flex-direction: column;
+      gap: 20px; 
+
+      :first-child {
+        gap: 0px;
+      }
+    }
+
+    .lomake-tr-valinta {
+      width: 93px;
+    }
+
+    .leveys-kokonainen {
+      margin: auto;
+      width: 95%;
+    }
+
+    .leveys-tiivis {
+      margin: auto;
+      width: 25%;
+    }
+
+    .lomake-ryhma-otsikko {
+      padding-bottom: 0px;
+    }
+
+    .maara-valinnat {
+      width: 30%;
+      float: left;
+
+      margin-right: 13px;
+      margin-left: 0px;
+      padding-left: 12px;
+    }
+
+    .tr-input {
+      margin-right: 13px;
+      margin-left: 0px;
+      padding-left: 12px;
+    }
+
+    .muokkaus-modal-napit 
+    {
+      .nappi-ensisijainen  {
+        margin-right: 25px;
+      }
+
+      .nappi-toissijainen {
+        float: right;
+        margin-right: 0px;
+      }
+
+      .lomake-poista {
+        float: none;
+      }
+    }
+  }
+}

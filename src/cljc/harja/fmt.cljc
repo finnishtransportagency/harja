@@ -27,6 +27,16 @@
                              (.setMinimumFractionDigits 2)
                              (.setMaximumFractionDigits 2))))
 
+
+(defn formatoi-numero-tuhansittain
+  "Palauttaa luvun tekstinä joka ryhmitelty tuhansittain"
+  [numero]
+  #?(:cljs
+     (.toLocaleString (js/Number. numero))
+     :clj
+     (.format (java.text.DecimalFormat. "#,###") numero)))
+
+
 (defn euro
   "Formatoi summan euroina näyttämistä varten. Tuhaterottimien ja valinnaisen euromerkin kanssa."
   ([eur] (euro true eur))

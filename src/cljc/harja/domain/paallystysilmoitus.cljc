@@ -25,10 +25,16 @@
    {:nimi "ART-pintaus" :lyhenne "ART" :koodi 34}
    {:nimi "Novachip-massapintaus" :lyhenne "NC" :koodi 35}
    {:nimi "Karhinta" :lyhenne "KAR" :koodi 41}
+   {:nimi "Sorastus" :lyhenne "Sorastus" :koodi 42}
+   {:nimi "Soratien kevyt korjaus" :lyhenne "Soratien kevyt korjaus" :koodi 43}
+   {:nimi "Soratien kelirikon poistava korjaus" :lyhenne "Soratien kelirikon poistava korjaus" :koodi 44}
+   {:nimi "Soratien raskas rakenteen poistaminen" :lyhenne "Soratien raskas rakenteen poistaminen" :koodi 45}
    {:nimi "Hienojyrsintä" :lyhenne "HJYR" :koodi 51}
    {:nimi "Sirotepintaus" :lyhenne "SIP" :koodi 61}
    {:nimi "Urapaikkaus" :lyhenne "UP" :koodi 71}
-   {:nimi "Uraremix" :lyhenne "UREM" :koodi 72}])
+   {:nimi "Uraremix" :lyhenne "UREM" :koodi 72}
+   {:nimi "Vauriopaikkaus" :lyhenne "Vauriopaikkaus" :koodi 81}])
+
 
 (def +tyomenetelmat-ja-nil+
   (conj +tyomenetelmat+ {:nimi "Ei menetelmää" :lyhenne "Ei menetelmää" :koodi nil}))
@@ -38,6 +44,9 @@
 
 (defn tyomenetelman-koodi-nimella [nimi]
   (:koodi (first (filter #(= nimi (:nimi %)) +tyomenetelmat-ja-nil+))))
+
+(defn tyomenetelman-nimi-koodilla [koodi]
+  (:nimi (first (filter #(= koodi (:koodi %)) +tyomenetelmat-ja-nil+))))
 
 (def +alustamenetelmat+
   "Kaikki alustan käsittelymenetelmät POT-lomake Excelistä ja

@@ -47,7 +47,10 @@
             "type": "string"
           },
           "tunnus": {
-            "type": ["null", "string"],
+            "type": [
+              "null",
+              "string"
+            ],
             "maxLength": 30
           },
           "yotyo": {
@@ -69,6 +72,7 @@
             "type": "array",
             "items": {
               "type": "object",
+              "additionalProperties": false,
               "required": [
                 "harjaId",
                 "tierekisteriosoitevali"
@@ -87,6 +91,11 @@
                 },
                 "tierekisteriosoitevali": {
                   "$ref": "#/definitions/tierekisteriosoitevali-kaista-ja-ajorata"
+                },
+                "pituus": {
+                  "type": "integer",
+                  "multipleOf": 1,
+                  "description": "Pituus metreinä, laskettu tieosoitteista HARJAssa."
                 },
                 "paallystystoimenpide": {
                   "$ref": "#/definitions/paallystystoimenpide"
@@ -233,8 +242,7 @@
         "pehmeä asfalttibetoni (o)",
         "sirotepintaus",
         "soratien pintaus",
-        "sora",
-        "ei päällystetyyppiä"
+        "sora"
       ]
     },
     "kuulamylly": {
@@ -253,26 +261,26 @@
     "paallystetyomenetelma": {
       "type": "string",
       "enum": [
-        "paksuudeltaan vakio laatta",
-        "massapintaus",
-        "kuumennuspintaus",
-        "MP kuumalle tasatulle alustalle",
-        "remix-pintaus",
+        "Paksuudeltaan vakio laatta",
+        "Massapintaus",
+        "Kuumennuspintaus",
+        "MP kuumalle, kuumajyrsitylle tas. pinnalle",
+        "REMIX-pintaus",
         "2-kerroksinen remix-pintaus",
         "PAB-O/V:n remix-pintaus",
         "ART-pintaus",
         "Novachip-massapintaus",
-        "karhinta",
-        "sorastus",
-        "soratien kevyt korjaus",
-        "soratien kelirikon poistava korjaus",
-        "soratien raskas rakenteen parantaminen",
-        "hienojyrsintä",
-        "sirotepintaus",
-        "urapaikkaus",
-        "ura-remix",
-        "vauriopaikkaus",
-        "ei tietoa"
+        "Karhinta",
+        "Sorastus",
+        "Soratien kevyt korjaus",
+        "Soratien kelirikon poistava korjaus",
+        "Soratien raskas rakenteen poistaminen",
+        "Hienojyrsintä",
+        "Sirotepintaus",
+        "Urapaikkaus",
+        "Uraremix",
+        "Vauriopaikkaus",
+        "Ei menetelmää"
       ]
     },
     "paallystystoimenpide": {
