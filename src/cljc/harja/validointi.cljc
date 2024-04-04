@@ -28,3 +28,18 @@
   [email]
   (when email
     (re-matches email-regexp email)))
+
+;; Arvot on saatu https://epsg.io/ palvelusta ETRS89/ TM35FIN -projektiota käyttämällä hakemalla
+;; Suomen pohjoisin, eteläisin, itäisin ja lähntisin piste käsin kartalta.
+(def max-y-koordinaatti 7777222)
+(def min-y-koordinaatti 6631383)
+(def min-x-koordinaatti 73963)
+(def max-x-koordinaatti 733682)
+
+(defn onko-koordinaatit-suomen-alueella?
+  "Validoi koordinaatit ETRS89/ TM35FIN -projektiota käyttäen."
+  [x y]
+  (if (and (<= min-x-koordinaatti x max-x-koordinaatti)
+        (<= min-y-koordinaatti y max-y-koordinaatti))
+    true
+    false))

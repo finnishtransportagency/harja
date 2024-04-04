@@ -7,6 +7,7 @@
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.kyselyt.konversio :as konversio]
+            [harja.validointi :as validointi]
             [clojure.string :as str]))
 
 (def kayttaja "yit-rakennus")
@@ -83,6 +84,32 @@
               ;; jotka voivat vaihtua testidataa päivittäessä.
               (some #(clojure.string/includes? nimi %) #{"Oulun MHU" "Aktiivinen Oulu Testi"}))
             (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body))))))
+
+  (testing "Urakka ei sijaitse suomessa"
+    (let [urakkatyyppi "hoito"
+          liian-suuri-x (inc validointi/max-x-koordinaatti)
+          liian-suuri-y (inc validointi/max-y-koordinaatti)
+          _ (anna-lukuoikeus "yit-rakennus")
+          vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "yit-rakennus"
+                    {"urakkatyyppi" urakkatyyppi
+                     ;; Oulun lähiseutu (EPSG:3067)
+                     "x" liian-suuri-x "y" liian-suuri-y} portti)
+          enkoodattu-body (cheshire/decode (:body vastaus) true)]
+      (is (= 400 (:status vastaus)))
+      (is (= "Annettu X ja Y koordinaatti ei sijaitse suomessa." (get-in enkoodattu-body [:virheet 0 :virhe :viesti])))))
+
+  (testing "Urakka ei sijaitse suomessa"
+    (let [urakkatyyppi "hoito"
+          liian-pieni-x (dec validointi/min-x-koordinaatti)
+          liian-pieni-y (dec validointi/min-y-koordinaatti)
+          _ (anna-lukuoikeus "yit-rakennus")
+          vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "yit-rakennus"
+                    {"urakkatyyppi" urakkatyyppi
+                     ;; Oulun lähiseutu (EPSG:3067)
+                     "x" liian-pieni-x "y" liian-pieni-y} portti)
+          enkoodattu-body (cheshire/decode (:body vastaus) true)]
+      (is (= 400 (:status vastaus)))
+      (is (= "Annettu X ja Y koordinaatti ei sijaitse suomessa." (get-in enkoodattu-body [:virheet 0 :virhe :viesti])))))
 
   (testing "palauta-lahin-hoitourakka"
     (let [urakkatyyppi "hoito"
