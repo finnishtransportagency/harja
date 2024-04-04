@@ -29,9 +29,16 @@
             "description": "Päällystyskohteen ID HARJAn tietokannassa, eli HarjaId",
             "multipleOf": 1
           },
+          "poistettu": {
+            "type": "boolean"
+          },
           "yhaLahetyksenTila": {
             "type": "string",
-            "enum": ["Ei lähetetty", "Lähetetty onnistuneesti", "Epäonnistunut"]
+            "enum": [
+              "Ei lähetetty",
+              "Lähetetty onnistuneesti",
+              "Epäonnistunut"
+            ]
           },
           "takuupaivamaara": {
             "type": "string",
@@ -95,7 +102,11 @@
               "type": "object",
               "description": "POT2-tiedot sisältävä listaus alustalle tehdyistä toimenpiteistä",
               "additionalProperties": false,
-              "required": ["tierekisteriosoitevali", "pituus", "kasittelymenetelma"],
+              "required": [
+                "tierekisteriosoitevali",
+                "pituus",
+                "kasittelymenetelma"
+              ],
               "properties": {
                 "poistettu": {
                   "type": "boolean"

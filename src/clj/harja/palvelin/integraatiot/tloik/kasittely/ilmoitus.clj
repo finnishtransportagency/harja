@@ -45,7 +45,7 @@
 (defn paivita-ilmoitus [db id urakka-id valitetty-urakkaan {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi
                                                 valitetty otsikko paikankuvaus lisatieto
                                                 yhteydenottopyynto ilmoittaja lahettaja selitteet
-                                                sijainti vastaanottaja luokittelu tunniste viesti-id]}]
+                                                sijainti vastaanottaja luokittelu kuvat tunniste viesti-id]}]
   (ilmoitukset/paivita-ilmoitus!
     db
     {:urakka urakka-id
@@ -64,7 +64,8 @@
      :viestiid viesti-id
      :id id
      :aihe (:aihe luokittelu)
-     :tarkenne (:tarkenne luokittelu)})
+     :tarkenne (:tarkenne luokittelu)
+     :kuvat (konv/seq->array (map name kuvat))})
   (paivita-ilmoittaja db id ilmoittaja)
   (paivita-lahettaja db id lahettaja)
   (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)

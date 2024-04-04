@@ -3,6 +3,7 @@
     {
       "takuupaivamaara": "2023-11-01T22:00:00Z",
       "paallystyskohde": 33,
+      "poistettu": false,
       "kulutuskerrokselleTehdytToimetPOT2": [
         {
           "leveys": 4.00,
