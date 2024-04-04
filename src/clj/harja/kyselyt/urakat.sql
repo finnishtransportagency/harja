@@ -805,7 +805,7 @@ FROM (SELECT u.id                                                    as id,
                        AND st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
           OR ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
               (CASE
-                   WHEN u.sopimustyyppi = 'palvelusopimus' THEN
+                   WHEN u.sopimustyyppi IN ('palvelusopimus', 'mpu') THEN
                        EXISTS(SELECT id
                               FROM paallystyspalvelusopimus pps
                               WHERE pps.paallystyspalvelusopimusnro = u.urakkanro
