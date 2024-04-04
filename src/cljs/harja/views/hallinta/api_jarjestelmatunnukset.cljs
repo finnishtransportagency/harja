@@ -100,6 +100,7 @@
 (defn jarjestelmatunnuksen-lisaoikeudet [e! _app kayttaja-id]
   (e! (tiedot/->HaeJarjestelmaTunnuksenLisaoikeudet kayttaja-id))
   (fn [e! {:keys [jarjestelmatunnuksen-lisaoikeudet urakkavalinnat]} kayttaja-id]
+    (let [lisaoikeudet (or (get jarjestelmatunnuksen-lisaoikeudet kayttaja-id) [])]
     [grid/grid
      {:otsikko "Lisäoikeudet urakoihin"
       :tunniste :urakka-id
@@ -119,7 +120,7 @@
        :tyyppi :string
        :muokattava? (constantly false)
        :leveys 2}]
-     (get jarjestelmatunnuksen-lisaoikeudet kayttaja-id)]))
+     lisaoikeudet])))
 
 (defn- jarjestelmatunnuksien-lisaoikeudet [e! {:keys [jarjestelmatunnukset] :as app}]
   [:div
