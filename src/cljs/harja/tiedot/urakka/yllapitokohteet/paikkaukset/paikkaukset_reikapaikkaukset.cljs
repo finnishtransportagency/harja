@@ -24,7 +24,6 @@
                                 :aikavali (pvm/kuukauden-aikavali (pvm/nyt))}}))
 
 (def nakymassa? (atom false))
-(def paivita-kartta? (atom false))
 ;; Tekohetkellä samat kun paikkauskohteiden-yksikot, mutta käytetään reikäpaikkauksille omaa muuttujaa
 (def reikapaikkausten-yksikot #{"m2" "t" "kpl" "jm"}) 
 
@@ -118,15 +117,6 @@
       kustannus-validi?
       tyomenetelma-validi?
       paikkaus-maara-validi?)))
-
-
-(defn- valitse-reikapaikkaus-kartalle
-  "Piirtää kartalle valitun paikkauksen sijainnin kunhan sijainti on olemassa
-   Jos passataan nil, näytetän kaikki toteumat"
-  [id paivita?]
-  (reset! valittu-reikapaikkaus id)
-  (when paivita?
-    (reset! paivita-kartta? true)))
 
 
 (extend-protocol tuck/Event
