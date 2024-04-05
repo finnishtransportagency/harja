@@ -151,7 +151,8 @@
         kuukauden-vastaus (:vastaus lupaus-kuukausi)
         ;; Palvelimelle lähetetty vastaus, joka näytetään siihen asti, että uudet lupaustiedot on haettu
         lahetetty-vastaus (get-in app [:vastaus-lomake :lahetetty-vastaus])
-        ladataan? (boolean lahetetty-vastaus)
+        ladataan? (and (= (get-in app [:lupausta-lahetataan :kohdekuukausi]) kohdekuukausi) 
+                        (= (get-in app [:lupausta-lahetataan :lupaus-id]) (:lupaus-id lupaus)))
         saa-vastata? (and (not ladataan?)
                           (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
                           (lupaus-domain/ennusteen-tila->saa-vastata? (get-in app [:yhteenveto :ennusteen-tila])))

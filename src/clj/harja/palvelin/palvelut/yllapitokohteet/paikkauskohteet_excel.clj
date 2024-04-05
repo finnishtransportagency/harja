@@ -12,27 +12,111 @@
             [harja.domain.paikkaus :as paikkaus]))
 
 
+(defn- lue-excel-raaka-data [sivu pvm-sarakkeet]
+  (->> sivu
+    xls/row-seq
+    (remove nil?)
+    (map xls/cell-seq)
+    (mapv
+      (fn [rivi]
+        (map-indexed (fn [indeksi arvo]
+                       (if (contains? pvm-sarakkeet indeksi)
+                         (try
+                           (.getDateCellValue arvo)
+                           (catch Exception e
+                             ;(println "Saatiin virhe päivämäärän luvusta, ei välitetä" (pr-str e))
+                             (xls/read-cell arvo)))
+                         (xls/read-cell arvo)))
+          rivi)))))
+
+
+(defn- validoi-reikapaikkaus-rivit
+  "  Validoidaan reikäpaikkaus excel-rivit
+   - Älä salli nil- arvoja
+   - Tunnisteen pitää olla unique
+   - Palauta virhe ja kerro millä rivillä ja mitä meni pieleen"
+  [rivit]
+  (let [nahdyt-tunnisteet (atom #{})]
+    ;; Palauta tulokset mäpättynä vectoriin [{}] joihin lisätty :virhe mikäli virheitä on
+    (vec
+      (map-indexed (fn [rivi-nro rivi]
+                     (let [;; Paikkaukset alkavat rivistä 4
+                           rivi-nro (+ rivi-nro 4)
+                           nil-avaimet (vec
+                                         ;; Katso onko rivillä tyhjiä sarakkeita
+                                         (keep #(when (nil? (% rivi))
+                                                  ;; Näytetään tyhjät sarakkeet muodossa ["kenttä"]
+                                                  (name %))
+                                           (keys rivi)))
+                           ; Validoi kokonaisluvut 
+                           kokonaislukuja? (every? #(integer? (% rivi))
+                                             [:aosa :losa :tie :aet :let :tunniste])
+                           ; Validoi desimaalit
+                           kustannus-maara-validi? (every?
+                                                     ;; Saa olla joko int tai float 
+                                                     #(or
+                                                        (integer? (% rivi))
+                                                        (float? (% rivi)))
+                                                     [:kustannus :maara])
+
+
+                           tunniste (:tunniste rivi)
+                           ;; Onko tämä tunniste jo nähty?
+                           tunniste-olemassa? (and tunniste (contains? @nahdyt-tunnisteet tunniste))]
+                        ;; Lisää nähty tunniste atomiin
+                       (when tunniste (swap! nahdyt-tunnisteet conj tunniste))
+                       (cond
+                         (not-empty nil-avaimet)
+                         (assoc rivi :virhe (str "Rivillä " rivi-nro " on tyhjiä kenttiä: " nil-avaimet))
+
+                         (not kokonaislukuja?)
+                         (assoc rivi :virhe (str "Rivillä " rivi-nro " aosa, losa, tie, aet, let, sekä tunniste pitää olla kokonaislukuja."))
+                         
+                         (not kustannus-maara-validi?)
+                         (assoc rivi :virhe (str "Rivillä " rivi-nro " kustannus ja määrä pitää olla joko kokonaisluku tai desimaaliluku."))
+
+                         tunniste-olemassa?
+                         (assoc rivi :virhe (str "Rivillä " rivi-nro " syötetty tunniste on jo olemassa: " tunniste))
+
+                         :else rivi)))
+        rivit))))
+
+
+(defn parsi-syotetyt-reikapaikkaukset [workbook]
+  (let [pvm-sarakkeet #{1} ;; Sarakkeet jotka ovat PVM muodossa
+        sivu (first (xls/sheet-seq workbook))
+        raaka-data (lue-excel-raaka-data sivu pvm-sarakkeet)
+        ;; Syötetty data mistä leikattu kaikki otsikot sun muut 
+        ;; Tämä siis leikkaa kaikki aikaisemmat rivit siihen asti kun "Tunniste*" löytyy, joka on otsikkorivi, sen jälkeen tulee oikea data
+        syotetty-data (->> raaka-data
+                        (drop-while #(not (some (fn [data] (= "Tunniste*" data)) %1)))
+                        rest
+                        (remove #(every? nil? %))) ;; Poista kaikki täysin tyhjät rivit myös
+        ;; Jostain syystä numerot tulee aina floattina, muunnetaan nämä kokonaisnumeroiksi
+        kokonaisluvut #{:tie :aosa :aet :losa :let :tunniste}
+        ;; Sarakkeet avaimina, eli excelin otsikot
+        sarakkeet [:tunniste :pvm :tie :aosa :aet :losa :let :menetelma :maara :yksikko :kustannus]
+        ;; Mäppää sekvenssi vectoriin, jonka sisällä on mappeja, eli (() ()) -> [{} {}]
+        syotetty-data (mapv (fn [sisempi-sekvenssi]
+                              (let [konvertoitu (map-indexed (fn [indeksi arvo]
+                                                               (if (and
+                                                                     (float? arvo)
+                                                                     (contains? kokonaisluvut (nth sarakkeet indeksi)))
+                                                                 (int arvo)
+                                                                 arvo))
+                                                  sisempi-sekvenssi)]
+                                (zipmap sarakkeet konvertoitu)))
+                        syotetty-data)
+        validoitu-data (validoi-reikapaikkaus-rivit syotetty-data)]
+    validoitu-data))
+
+
 (defn erottele-paikkauskohteet [workbook]
-  (let [sivu (first (xls/sheet-seq workbook)) ;; Käsitellään excelin ensimmäinen sivu tai tabi
+  (let [pvm-sarakkeet #{8 9} ;; Sarakkeet jotka ovat PVM muodossa
+        sivu (first (xls/sheet-seq workbook)) ;; Käsitellään excelin ensimmäinen sivu tai tabi
         ;; Esimerkki excelissä paikkauskohteet alkavat vasta kuudennelta riviltä.
         ;; Me emme voi olla tästä kuitenkaan ihan varmoja, niin luetaan varalta kaikki data excelistä ulos
-        raaka-data (->> sivu
-                        xls/row-seq
-                        (remove nil?)
-                        (map xls/cell-seq)
-                        (mapv
-                          (fn [rivi]
-                            (map-indexed (fn [indeksi arvo]
-                                           (if (or
-                                                 (= indeksi 8)
-                                                 (= indeksi 9))
-                                             (try
-                                               (.getDateCellValue arvo)
-                                               (catch Exception e
-                                                 ;(println "Saatiin virhe päivämäärän luvusta, ei välitetä" (pr-str e))
-                                                 (xls/read-cell arvo)))
-                                             (xls/read-cell arvo)))
-                                         rivi))))
+        raaka-data (lue-excel-raaka-data sivu pvm-sarakkeet)
 
         ;; Tämä toimii nykyisellä excel-pohjalla toistaiseksi.
         ;; Katsotaan, millä rivillä otsikkorivi on, oletuksena että sieltä löytyy ainakin "Nro." ja "kohde" otsikot.
