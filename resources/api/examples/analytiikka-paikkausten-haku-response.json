@@ -10,7 +10,7 @@
         "tienumero": 86,
         "aet": 700
       },
-      "loppupvm": "2023-11-01T22:00:00Z",
+      "loppupvm": "2023-11-02",
       "paikkaustyomenetelma": "AB-paikkaus levittäjällä",
       "pintaAla": 140,
       "massamenekki": 45,
@@ -18,7 +18,7 @@
       "raekoko": 16,
       "harjaId": 270,
       "poistettu": false,
-      "alkupvm": "2023-11-01T22:00:00Z",
+      "alkupvm": "2023-11-02",
       "paikkauskohdeId": 14
     }
   ]

@@ -2,14 +2,14 @@
   "aikataulut": [
     {
       "paallystyskohde": 32,
-      "kohdeValmis": "2023-07-31T21:00:00Z",
-      "tiemerkintaAloitettu": "2023-05-31T21:00:00Z",
-      "tiemerkintaTakaraja": "2023-07-31T21:00:00Z",
-      "valmisTiemerkintaan": "2023-07-31T21:00:00Z",
-      "kohdeAloitettu": "2022-12-31T22:00:00Z",
-      "tiemerkintaValmis": "2023-07-31T21:00:00Z",
-      "paallystysValmis": "2023-07-31T21:00:00Z",
-      "paallystysAloitettu": "2023-05-31T21:00:00Z"
+      "kohdeValmis": "2023-08-01",
+      "tiemerkintaAloitettu": "2023-06-01",
+      "tiemerkintaTakaraja": "2023-07-01",
+      "valmisTiemerkintaan": "2023-08-01",
+      "kohdeAloitettu": "2023-01-01",
+      "tiemerkintaValmis": "2023-08-01",
+      "paallystysValmis": "2023-08-01",
+      "paallystysAloitettu": "2023-06-01"
     }
   ]
 }

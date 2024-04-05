@@ -1517,3 +1517,19 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   (and
     (= (vuosi pvm1) (vuosi pvm2))
     (= (pvmn-kvartaali pvm1) (pvmn-kvartaali pvm2))))
+
+#?(:clj
+   (defn sql-aika->pvm-str
+     "Muuttaa annetun SQL-aikaleiman päivämääräksi.
+     Tarkoitettu tietokannassa säilytettävän timestampina tallennetun päivämäärän muuttamiseksi päivämääräksi.
+     Esim. #inst \"2023-04-19T21:00:00-00:00\" -> \"20.04.2023\"
+
+     Muuttaa ajan UTC:stä Suomen aikavyöhykkeeseen ja formatter-local muodostaa tekstin käyttäen suomessa olevaa aikaa,
+     jolloin saadaan oikeasti se päivä mikä halutaan."
+     [sql-aika]
+     {:pre [(instance? Date sql-aika)]
+      :post [(string? %)]}
+     (->> sql-aika
+       joda-timeksi
+       suomen-aikavyohykkeeseen
+       (df/unparse (df/formatter-local "dd.MM.yyyy")))))

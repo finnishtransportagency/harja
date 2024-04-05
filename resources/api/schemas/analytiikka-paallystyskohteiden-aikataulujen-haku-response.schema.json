@@ -16,35 +16,35 @@
           },
           "kohdeAloitettu": {
             "type": ["string", "null"],
-            "format": "date-time"
+            "format": "date"
           },
           "paallystysAloitettu": {
             "type": ["string", "null"],
-            "format": "date-time"
+            "format": "date"
           },
           "paallystysValmis": {
             "type": ["string", "null"],
-            "format": "date-time"
+            "format": "date"
           },
           "valmisTiemerkintaan": {
             "type": ["string", "null"],
-            "format": "date-time"
+            "format": "date"
           },
           "tiemerkintaTakaraja": {
             "type": ["string", "null"],
-            "format": "date-time"
+            "format": "date"
           },
           "tiemerkintaAloitettu": {
             "type": ["string", "null"],
-            "format": "date-time"
+            "format": "date"
           },
           "tiemerkintaValmis": {
             "type": ["string", "null"],
-            "format": "date-time"
+            "format": "date"
           },
           "kohdeValmis": {
             "type": ["string", "null"],
-            "format": "date-time"
+            "format": "date"
           }
         }
       }
