@@ -1522,7 +1522,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn sql-aika->pvm-str
      "Muuttaa annetun SQL-aikaleiman päivämääräksi.
      Tarkoitettu tietokannassa säilytettävän timestampina tallennetun päivämäärän muuttamiseksi päivämääräksi.
-     Esim. #inst \"2023-04-19T21:00:00-00:00\" -> \"20.04.2023\"
+     Esim. #inst \"2023-04-19T21:00:00-00:00\" -> \"2023-04-20\"
 
      Muuttaa ajan UTC:stä Suomen aikavyöhykkeeseen ja formatter-local muodostaa tekstin käyttäen suomessa olevaa aikaa,
      jolloin saadaan oikeasti se päivä mikä halutaan."
@@ -1532,4 +1532,4 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      (->> sql-aika
        joda-timeksi
        suomen-aikavyohykkeeseen
-       (df/unparse (df/formatter-local "dd.MM.yyyy")))))
+       (df/unparse (df/formatter-local "yyyy-MM-dd")))))
