@@ -166,9 +166,7 @@
   "Varmista, että annettu bonus täsmää lupauksista saatavaan bonukseen"
   [db kayttaja tiedot]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id (::urakka/id tiedot)}))
-        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         hakuparametrit {:urakka-id (::urakka/id tiedot)
-                        :urakan-alkuvuosi urakan-alkuvuosi
                         :nykyhetki (pvm/nyt)
                         :valittu-hoitokausi [(pvm/luo-pvm (::valikatselmus/hoitokauden-alkuvuosi tiedot) 9 1)
                                              (pvm/luo-pvm (inc (::valikatselmus/hoitokauden-alkuvuosi tiedot)) 8 30)]}
@@ -206,7 +204,6 @@
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id (::urakka/id tiedot)}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         hakuparametrit {:urakka-id (::urakka/id tiedot)
-                        :urakan-alkuvuosi urakan-alkuvuosi
                         :nykyhetki (pvm/nyt)
                         :valittu-hoitokausi [(pvm/luo-pvm (::valikatselmus/hoitokauden-alkuvuosi tiedot) 9 1)
                                              (pvm/luo-pvm (inc (::valikatselmus/hoitokauden-alkuvuosi tiedot)) 8 30)]}

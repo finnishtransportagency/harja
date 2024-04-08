@@ -355,7 +355,7 @@
                                                                 :sopimus sopimus-id
                                                                 :kohdenumero (:ulkoinen-id uusi-kohde)
                                                                 :nimi (:nimi uusi-kohde)
-                                                                :yotyo (:yotyo uusi-kohde)
+                                                                :yotyo (or (:yotyo uusi-kohde) false)
                                                                 :tr_numero (:tie uusi-kohde)
                                                                 :tr_alkuosa (:aosa uusi-kohde)
                                                                 :tr_alkuetaisyys (:aet uusi-kohde)

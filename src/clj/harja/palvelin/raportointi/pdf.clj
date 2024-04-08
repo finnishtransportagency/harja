@@ -28,6 +28,7 @@
 (def taulukon-fonttikoko 8)
 (def taulukon-fonttikoko-yksikko "pt")
 (def otsikon-fonttikoko "10pt")
+(def tekstin-fonttikoko "9pt")
 
 (def raportin-tehostevari "#f0f0f0")
 (def korostettu-vari "#004D99")
@@ -480,7 +481,7 @@
     (if hoitokausi-arvotaulukko?
       (hoitokausi-kuukausi-arvotaulukko sarakkeet data)
 
-      [:fo:block {:space-before "1em" :font-size (str taulukon-fonttikoko taulukon-fonttikoko-yksikko) :font-weight "bold"} otsikko
+      [:fo:block {:space-before "1em" :font-size otsikon-fonttikoko :font-weight "bold"} otsikko
        [:fo:table
         (for [{:keys [leveys]} sarakkeet]
           [:fo:table-column {:column-width leveys}])
@@ -504,7 +505,9 @@
     [:fo:block tyyli]))
 
 (defmethod muodosta-pdf :otsikko [[_ teksti]]
-  [:fo:block {:padding-top "5mm" :font-size otsikon-fonttikoko} teksti])
+  [:fo:block {:padding-top "5mm"
+              :font-size otsikon-fonttikoko
+              :font-weight 600} teksti])
 
 (defmethod muodosta-pdf :otsikko-heading [[_ teksti]]
   [:fo:block {:padding-top "5mm" :font-size "9pt"} teksti])
@@ -521,6 +524,15 @@
 (defmethod muodosta-pdf :teksti [[_ teksti {:keys [vari]}]]
   [:fo:block {:color (when vari vari)
               :font-size otsikon-fonttikoko} teksti])
+
+(defmethod muodosta-pdf :osittain-boldattu-teksti
+  ;; Joihinkin teksteihin halutaan osittain boldattu teksti. Tämä elementti mahdollistaa sen.
+  [[_ {:keys [boldattu-teksti teksti] :as tiedot}]]
+  [:fo:block
+   [:fo:inline {:font-size tekstin-fonttikoko
+                :font-weight 600} boldattu-teksti]
+   [:fo:inline {:font-size tekstin-fonttikoko
+                :font-weight 100} teksti]])
 
 (defmethod muodosta-pdf :teksti-paksu [[_ teksti {:keys [vari]}]]
   [:fo:block {:color (when vari vari)

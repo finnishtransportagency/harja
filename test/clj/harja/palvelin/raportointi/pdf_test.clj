@@ -19,7 +19,7 @@
 ;; Testataan eri tyyppisten elementtien muodostus perustasolla
 
 (deftest otsikko
-  (is (= [:fo:block {:padding-top "5mm" :font-size "10pt"} "TÄMÄ ON OTSIKKO"]
+  (is (= [:fo:block {:padding-top "5mm" :font-size "10pt" :font-weight 600} "TÄMÄ ON OTSIKKO"]
          (muodosta-pdf [:otsikko "TÄMÄ ON OTSIKKO"]))))
 
 (deftest teksti
@@ -39,7 +39,7 @@
     ;; XSL-FO generointia on hankala testata muuten, koska ei voi lopputulos PDF:n
     ;; visuaalista rakennetta oikein assertoida.
     (is (= fo ` [:fo:block
-                {:space-before "1em", :font-size "8pt", :font-weight "bold"}
+                {:space-before "1em", :font-size "10pt", :font-weight "bold"}
                 "Taulukko"
                 [:fo:table
                  ([:fo:table-column {:column-width "10%"}]

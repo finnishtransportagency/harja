@@ -6,15 +6,15 @@
      "x": {
 	 "id": "urn:harja/sijainti/koordinaatit/x",
 	 "type": "number",
-	 "minimum": 60000,
-	 "maximum": 736400,
+	 "minimum": 73963,
+	 "maximum": 733682,
 	 "required": true
      },
      "y": {
 	 "id": "urn:harja/sijainti/koordinaatit/y",
 	 "type": "number",
-	 "minimum": 6500000,
-	 "maximum": 7800000,
+	 "minimum": 6631383,
+	 "maximum": 7777222,
 	 "required": true
      },
      "z": {

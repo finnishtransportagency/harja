@@ -526,7 +526,8 @@ SET urakka               = :urakka,
     muokattu = NOW(),
     viestiid = :viestiid,
     aihe = :aihe,
-    tarkenne = :tarkenne
+    tarkenne = :tarkenne,
+    kuvat = :kuvat::TEXT[]
 WHERE id = :id;
 
 -- name: paivita-ilmoituksen-urakka!

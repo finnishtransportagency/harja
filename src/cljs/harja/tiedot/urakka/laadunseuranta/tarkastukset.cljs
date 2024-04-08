@@ -14,13 +14,7 @@
 
 (defonce nakymassa? (atom false))
 
-(def +tarkastustyyppi->nimi+
-  ;; Piilotetaan toistaiseksi tieturvallisuus kirjaus tuotannosta
-  ;; Kun kaikki valmista, tämän koodin voi muuttaa vaan: (def +tarkastustyyppi->nimi+ tarkastukset/+tarkastustyyppi->nimi+)
-  (let [tarkastukset tarkastukset/+tarkastustyyppi->nimi+]
-    (if-not (k/kehitysymparistossa?)
-      (dissoc tarkastukset :tieturvallisuus)
-      tarkastukset)))
+(def +tarkastustyyppi->nimi+ tarkastukset/+tarkastustyyppi->nimi+)
 
 (defonce tienumero (atom nil)) ;; tienumero, tai kaikki
 (defonce tarkastustyyppi (atom nil)) ;; nil = kaikki, :tiesto, :talvihoito, :soratie

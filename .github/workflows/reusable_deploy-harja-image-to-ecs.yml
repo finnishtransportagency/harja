@@ -96,6 +96,7 @@ jobs:
         if: ${{ contains(fromJson('["dev", "stg", "prod"]'), inputs.environment)  }}
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
+          service: ${{ vars.ECS_SERVICE_NAME }}
 
       - name: Run migrations to RDS
         uses: ./.github/actions/run-migrations-to-rds
@@ -139,6 +140,7 @@ jobs:
         if: always()
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
+          service: ${{ vars.ECS_SERVICE_NAME }}
 
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack

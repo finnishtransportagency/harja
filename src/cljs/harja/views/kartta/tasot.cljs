@@ -28,6 +28,7 @@
             [harja.tiedot.urakka.toteumat.muut-tyot-kartalla :as muut-tyot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-reikapaikkaukset :as reikapaikkaukset]
             [harja.ui.openlayers.taso :as taso]
             [harja.ui.kartta.varit.puhtaat :as varit]
             [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot]
@@ -58,6 +59,7 @@
     :ei-kayty-tieturvallisuusverkko
     :tieturvallisuus-heatmap
     :tarkastusreitit
+    :reikapaikkaukset
     :laatupoikkeamat
     :turvallisuus
     :ilmoitukset
@@ -241,6 +243,7 @@
    :ilmoitukset ilmoitukset/ilmoitukset-kartalla
    :tietyoilmoitukset tietyoilmoitukset/tietyoilmoitukset-kartalla
    :tarkastusreitit tarkastukset/tarkastusreitit-kartalla
+   :reikapaikkaukset reikapaikkaukset/reikapaikkaukset-kartalla
    :ei-kayty-tieturvallisuusverkko tarkastukset/ei-kayty-tieturvallisuusverkko-kartalla
    :tieturvallisuus-heatmap tarkastukset/tieturvallisuus-heatmap-kartalla
    :tieturvallisuusverkko tarkastukset/tieturvallisuusverkko-kartalla
@@ -319,6 +322,7 @@
        :pohjavesi (taso :pohjavesi :pohjavesialueet)
        :sillat (taso :sillat :sillat)
        :tarkastusreitit (taso :tarkastusreitit)
+       :reikapaikkaukset (taso :reikapaikkaukset)
        :ei-kayty-tieturvallisuusverkko (taso :ei-kayty-tieturvallisuusverkko)
        :tieturvallisuus-heatmap (taso :tieturvallisuus-heatmap)
        :tieturvallisuusverkko (taso :tieturvallisuusverkko)
@@ -371,6 +375,7 @@
    :ei-kayty-tieturvallisuusverkko tarkastukset/karttataso-ei-kayty-tieturvallisuusverkko
    :tieturvallisuus-heatmap tarkastukset/karttataso-tieturvallisuus-heatmap
    :tarkastusreitit tarkastukset/karttataso-tarkastukset
+   :reikapaikkaukset reikapaikkaukset/karttataso-reikapaikkaukset
    :laatupoikkeamat laatupoikkeamat/karttataso-laatupoikkeamat
    :turvallisuus turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
    :ilmoitukset ilmoitukset/karttataso-ilmoitukset

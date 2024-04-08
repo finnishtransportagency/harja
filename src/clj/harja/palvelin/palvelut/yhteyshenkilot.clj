@@ -240,8 +240,8 @@
       (q/poista-urakan-vastuuhenkilot-roolille! c {:urakka urakka-id :rooli rooli})
       (when vastuuhenkilo
         (luo<! c vastuuhenkilo true))
-      (when varahenkilot
-        (doseq [varahenkilo varahenkilot]
+      (doseq [varahenkilo varahenkilot]
+        (when varahenkilo
           (luo<! c varahenkilo false))))
     (hae-urakan-vastuuhenkilot db user urakka-id)))
 

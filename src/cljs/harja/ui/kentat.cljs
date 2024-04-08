@@ -313,7 +313,7 @@
 ;; ks. harja.fmt/desimaali-fmt
 (defmethod tee-kentta :numero [{:keys [elementin-id oletusarvo validoi-kentta-fn koko input-luokka
                                        desimaalien-maara min-desimaalit max-desimaalit on-key-down
-                                       veda-oikealle? luokka]
+                                       veda-oikealle? luokka teksti-oikealla]
                                 :as kentta} data]
   (let [fmt (or (numero-fmt kentta) str)
         teksti (atom nil)
@@ -324,7 +324,8 @@
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
       (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? vaadi-negatiivinen? toiminta-f on-blur on-focus
                    disabled? vayla-tyyli? virhe? yksikko validoi-kentta-fn salli-whitespace? disabloi-autocomplete? muokattu?] :as kentta} data]
-        (let [nykyinen-data @data
+        (let [yksikko (if-not yksikko teksti-oikealla yksikko)
+              nykyinen-data @data
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data) salli-whitespace?)
                                   "")
@@ -405,7 +406,9 @@
                                         (toiminta-f (when-not (js/isNaN numero)
                                                       numero))))))}]
            (when (and yksikko vayla-tyyli?)
-             [:span.sisainen-label.black-lighter {:style {:margin-left (* -1 (+ 25 (* (- (count yksikko) 2) 5)))}} yksikko])])))))
+             [:span.sisainen-label.black-lighter {:style 
+                                                  {:margin-left (* -1 (+ 25 (* (- (count yksikko) 2) 5)))
+                                                   :margin-top "10px"}} yksikko])])))))
 
 (defmethod nayta-arvo :numero [{:keys [jos-tyhja salli-whitespace? yksikko] :as kentta} data]
  (let [fmt (or (numero-fmt kentta) #(fmt/desimaaliluku-opt % +desimaalin-oletus-tarkkuus+))]
@@ -430,12 +433,12 @@
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   [nayta-arvo (assoc kentta :tyyppi :numero) data])
 
-(defmethod tee-kentta :euro [{:keys [fmt] :as kentta} data]
+(defmethod tee-kentta :euro [{:keys [fmt teksti-oikealla] :as kentta} data]
   [tee-kentta (assoc kentta
                 :tyyppi :numero
                 :fmt (or fmt (partial fmt/euro-opt false))
                 :salli-whitespace? true
-                :yksikko "€"
+                :yksikko (or teksti-oikealla "€")
                 :desimaalien-maara 2
                 :veda-oikealle? true)
    data])
@@ -1389,21 +1392,28 @@
                    (when pakollinen? [:span.required-tahti])])])]
     (fn [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
          piste? vaadi-vali?]
-     [:div
-      [:div.tierekisteriosoite-flex
-       [osio alaotsikot? tie "Tie"]
-       [osio alaotsikot? aosa "Aosa"]
-       [osio alaotsikot? aet "Aet"]
-       (when-not piste?
-         [:<>
-          [osio alaotsikot? losa "Losa"]
-          [osio alaotsikot? loppuet "Let"]])
-       (when virhe
-         [:div virhe])
-       (when karttavalinta
-         [:div {:style {:padding-left "16px" :align-self "flex-end"}}
-          [:div.karttavalinta
-           karttavalinta]])]])))
+      ;; Jos alaotsikot valittuna, ryhmitä valitse sijainti oikein 
+      (let [flex (if alaotsikot?
+                   "flex-start"
+                   "flex-end")
+            top (if alaotsikot?
+                  "2px"
+                  "0px")]
+        [:div
+         [:div.tierekisteriosoite-flex
+          [osio alaotsikot? tie "Tie"]
+          [osio alaotsikot? aosa "Aosa"]
+          [osio alaotsikot? aet "Aet"]
+          (when-not piste?
+            [:<>
+             [osio alaotsikot? losa "Losa"]
+             [osio alaotsikot? loppuet "Let"]])
+          (when virhe
+            [:div virhe])
+          (when karttavalinta
+            [:div {:style {:padding-left "16px" :padding-top top :align-self flex}}
+             [:div.karttavalinta
+              karttavalinta]])]]))))
 
 
 (defn- tierekisterikentat-rivitetty
@@ -1551,9 +1561,13 @@
               avaimet
 
               tierekisterikentat (cond
-                                   (and (not vayla-tyyli?) (= tyyli :rivitetty)) tierekisterikentat-rivitetty
-                                   vayla-tyyli? tierekisterikentat-flex
-                                   :default tierekisterikentat-table)
+                                   (and (not vayla-tyyli?) (= tyyli :rivitetty)) 
+                                   tierekisterikentat-rivitetty
+
+                                   vayla-tyyli? 
+                                   tierekisterikentat-flex
+                                   
+                                   :else tierekisterikentat-table)
 
               osoite @data
 

@@ -16,7 +16,7 @@
           },
           "paivamaara": {
             "type": "string",
-            "format": "date"
+            "format": "date-time"
           },
           "poistettu": {
             "type": "boolean"
@@ -57,7 +57,7 @@
           },
           "paivamaara": {
             "type": "string",
-            "format": "date"
+            "format": "date-time"
           },
           "maara": {
             "type": "number"
@@ -147,7 +147,7 @@
       "properties": {
         "karttapaivamaara": {
           "type": "string",
-          "format": "date"
+          "format": "date-time"
         },
         "tienumero": {
           "type": "integer",
