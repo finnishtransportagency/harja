@@ -131,7 +131,7 @@
       "properties": {
         "karttapaivamaara": {
           "type": "string",
-          "format": "date"
+          "format": "date-time"
         },
         "tienumero": {
           "type": "integer",
