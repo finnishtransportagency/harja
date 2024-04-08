@@ -200,7 +200,6 @@
          ^{:key "toimenpiteet"}
          [toimenpiteet/toimenpiteet ur])
 
-       ;; Työmaapäiväkirja sallitaan tällähetkellä vain kehitysympäristössä 
        "Työmaapäiväkirja"
        :tyomaapaivakirja
        (when (valilehti-mahdollinen? :tyomaapaivakirja ur)
