@@ -58,11 +58,9 @@
                     (oikeudet/urakat-vesivaylatoimenpiteet id)
                     (urakka/vesivaylaurakkatyyppi? tyyppi)
                     (istunto/ominaisuus-kaytossa? :vesivayla))
-    ;; TODO 
+
     :tyomaapaivakirja (and
-                        (k/kehitysymparistossa?)
-                        (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava)
-                        (oikeudet/urakat-paikkaukset id)
+                        (oikeudet/urakat-tyomaapaivakirja id)
                         (#{:hoito :teiden-hoito} tyyppi))
 
     :vv-materiaalit (and
