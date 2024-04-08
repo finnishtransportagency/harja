@@ -646,15 +646,34 @@
   (let [aikataulut (paallystys-kyselyt/hae-paallystyskohteiden-aikataulut-analytiikalle db
                      {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
                       :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
-        aikataulut (map #(set/rename-keys % {:yllapitokohde :paallystyskohde
-                                             :kohde_alku :kohdeAloitettu
-                                             :paallystys_alku :paallystysAloitettu
-                                             :paallystys_loppu :paallystysValmis
-                                             :valmis_tiemerkintaan :valmisTiemerkintaan
-                                             :tiemerkinta_takaraja :tiemerkintaTakaraja
-                                             :tiemerkinta_alku :tiemerkintaAloitettu
-                                             :tiemerkinta_loppu :tiemerkintaValmis
-                                             :kohde_valmis :kohdeValmis}) aikataulut)]
+        aikataulut (map #(cond-> (set/rename-keys % {:yllapitokohde :paallystyskohde
+                                                     :kohde_alku :kohdeAloitettu
+                                                     :paallystys_alku :paallystysAloitettu
+                                                     :paallystys_loppu :paallystysValmis
+                                                     :valmis_tiemerkintaan :valmisTiemerkintaan
+                                                     :tiemerkinta_takaraja :tiemerkintaTakaraja
+                                                     :tiemerkinta_alku :tiemerkintaAloitettu
+                                                     :tiemerkinta_loppu :tiemerkintaValmis
+                                                     :kohde_valmis :kohdeValmis})
+
+                           ;; Muuutetaan aikaleimat stringeiksi, jos ne ovat olemassa
+                           (not (nil? (:kohde_alku %)))
+                           (update :kohdeAloitettu pvm/sql-aika->pvm-str)
+                           (not (nil? (:paallystys_alku %)))
+                           (update :paallystysAloitettu pvm/sql-aika->pvm-str)
+                           (not (nil? (:paallystys_loppu %)))
+                           (update :paallystysValmis pvm/sql-aika->pvm-str)
+                           (not (nil? (:valmis_tiemerkintaan %)))
+                           (update :valmisTiemerkintaan pvm/sql-aika->pvm-str)
+                           (not (nil? (:tiemerkinta_takaraja %)))
+                           (update :tiemerkintaTakaraja pvm/sql-aika->pvm-str)
+                           (not (nil? (:tiemerkinta_alku %)))
+                           (update :tiemerkintaAloitettu pvm/sql-aika->pvm-str)
+                           (not (nil? (:tiemerkinta_loppu %)))
+                           (update :tiemerkintaValmis pvm/sql-aika->pvm-str)
+                           (not (nil? (:kohde_valmis %)))
+                           (update :kohdeValmis pvm/sql-aika->pvm-str))
+                     aikataulut)]
     {:aikataulut aikataulut}))
 
 (defn- muodosta-paallystysilmoitus [paallystysilmoitus]
@@ -745,14 +764,14 @@
   (tarkista-haun-parametrit parametrit false)
   (let [kulut (map #(set/rename-keys % {:id :harjaId})
                 (paallystys-kyselyt/hae-hoidon-paallystyksen-kulut-analytiikalle db
-                {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
-                 :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}))
+                  {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                   :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}))
 
         paikkaukset (map (comp #(set/rename-keys % {:id :harjaId})
                            konversio/alaviiva->rakenne)
                       (paallystys-kyselyt/hae-hoidon-paallystyksen-toimenpiteet-analytiikalle db
-                                                               {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
-                                                                :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}))]
+                        {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                         :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}))]
 
     {:kulut kulut
      :paikkaukset paikkaukset}))
@@ -806,7 +825,13 @@
                             (set/rename-keys {:id :harjaId
                                               :ulkoinen-id :ulkoinenId
                                               :paikkauskohde-id :paikkauskohdeId
-                                              :pinta-ala :pintaAla}))
+                                              :pinta-ala :pintaAla})
+                            (update :loppupvm (fn [pvm] (if (nil? pvm)
+                                                        nil
+                                                        (pvm/sql-aika->pvm-str pvm))))
+                            (update :alkupvm (fn [pvm] (if (nil? pvm)
+                                                          nil
+                                                          (pvm/sql-aika->pvm-str pvm)))))
                       (paikkaus-kyselyt/hae-paikkaukset-analytiikalle db
                         {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
                          :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}))]
