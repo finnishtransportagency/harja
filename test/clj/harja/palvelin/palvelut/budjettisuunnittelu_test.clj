@@ -915,7 +915,7 @@
                                            :kattohinta {:uusi (* kerroin uusi-tavoitehinta)
                                                         :paivitys (* kerroin paivitetty-tavoitehinta)}})
                                         (range 1 5))
-        pyorista (fn [x] (with-precision 6 (float x)))]
+        pyorista (fn [x] (with-precision 6 (bigdec x)))]
     (testing "Tallennus epäonnistuu jos kattohinta on pienepmi kuin tavoitehinta"
       (try (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+
              {:urakka-id urakka-id
