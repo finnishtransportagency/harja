@@ -325,16 +325,15 @@
 
     <xs:complexType name="alustalle-tehty-toimenpide">
         <xs:sequence>
-            <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali-kaistalla-ja-ajoradalla" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="kasittelymenetelma" type="alustamenetelma" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="tekninen-toimenpide" type="alustan-tekninen-toimenpide" minOccurs="0" maxOccurs="1">
+            <xs:element name="harja-id" type="xs:long" nillable="false" minOccurs="1" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>
-                       Todo: Selvitettävä teknisen toimenpiteen käyttötapa. Tätä ei syötetä HARJAssa, mutta voidaan päätellä käsittelymenetelmän perusteella.
-                        Mikäli näin tehdään, varmistettava säännöt. Vaihtoehtoisesti voidaan olla lähettämättä ja päätellä vain YHA:ssa
+                        Harjan alustatoimenpiteen ID.
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
+            <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali-kaistalla-ja-ajoradalla" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="kasittelymenetelma" type="alustamenetelma" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="lisatty-paksuus" type="xs:short" nillable="true" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>
@@ -387,12 +386,13 @@
                 </xs:annotation>
             </xs:element>
             <xs:element name="harja-id" type="xs:long" nillable="false" minOccurs="1" maxOccurs="1">
-               <xs:annotation>
+                <xs:annotation>
                     <xs:documentation>
                         Harjan alikohteen/kohdeosan ID.
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
+            <xs:element name="poistettu" type="xs:boolean" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali-kaistalla-ja-ajoradalla"/>
             <xs:element name="leveys" type="xs:decimal" minOccurs="0">
                 <xs:annotation>
