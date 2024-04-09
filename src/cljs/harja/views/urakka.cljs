@@ -126,6 +126,7 @@
     :tiemerkinnan-kustannukset (and
                                  (oikeudet/urakat-kustannukset id)
                                  (= tyyppi :tiemerkinta))
+
     :paikkaukset-mpu (and
                        (oikeudet/urakat-paikkaukset id)
                        (= tyyppi :paallystys)
