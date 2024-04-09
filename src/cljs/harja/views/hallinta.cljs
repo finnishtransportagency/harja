@@ -24,6 +24,7 @@
             [harja.views.hallinta.tehtava-nakyma :as tehtava-nakyma]
             [harja.views.hallinta.tarjoushinnat :as tarjoushinnat]
             [harja.views.hallinta.rahavaraukset :as rahavaraukset]
+            [harja.views.hallinta.rahavarausten-tehtavat :as rahavarausten-tehtavat]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -91,7 +92,13 @@
     :rahavaraukset
     (when (oikeudet/hallinta-tarjoushinnat) ;; todo: vaihda hallinta-rahavaraukset
       ^{:key "rahavaraukset"}
-      [rahavaraukset/rahavaraukset])]
+      [rahavaraukset/rahavaraukset])
+
+    "Rahavarausten tehtävät"
+    :rahavarausten-tehtavat
+    (when (oikeudet/hallinta-tarjoushinnat) ;; todo: vaihda hallinta-rahavaraukset
+      ^{:key "rahavarausten-tehtavat"}
+      [rahavarausten-tehtavat/rahavarausten-tehtavat])]
 
    "Seuranta"
    :hallinta-seuranta

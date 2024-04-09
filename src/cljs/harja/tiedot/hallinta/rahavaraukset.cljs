@@ -15,6 +15,9 @@
 (defrecord HaeRahavaraukset [])
 (defrecord HaeRahavarauksetOnnistui [vastaus])
 (defrecord HaeRahavarauksetEpaonnistui [vastaus])
+(defrecord HaeRahavarauksetTehtavineen [])
+(defrecord HaeRahavarauksetTehtavineenOnnistui [vastaus])
+(defrecord HaeRahavarauksetTehtavineenEpaonnistui [vastaus])
 (defrecord HaeUrakoidenRahavaraukset [])
 (defrecord HaeUrakoidenRahavarauksetOnnistui [vastaus])
 (defrecord HaeUrakoidenRahavarauksetEpaonnistui [vastaus])
@@ -23,6 +26,10 @@
 (defrecord ValitseUrakanRahavarausEpaonnistui [vastaus tallennus-id])
 
 (defrecord ValitseUrakka [urakka])
+
+(defrecord HaeTehtavat [])
+(defrecord HaeTehtavatOnnistui [vastaus])
+(defrecord HaeTehtavatEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
   HaeRahavaraukset
@@ -36,12 +43,32 @@
 
   HaeRahavarauksetOnnistui
   (process-event [{:keys [vastaus]} app]
+    (js/console.log "HaeRahavarauksetOnnistui :: vastaus: " (pr-str vastaus))
     (assoc app :rahavaraukset vastaus))
 
   HaeRahavarauksetEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Rahavarauksien haku epäonnistui" :varoitus)
+    (viesti/nayta-toast! "Rahavarauksten haku epäonnistui" :varoitus)
     app)
+
+  HaeRahavarauksetTehtavineen
+  (process-event [_ app]
+    (tuck-apurit/post! :hae-rahavaraukset-tehtavineen
+      {}
+      {:onnistui ->HaeRahavarauksetTehtavineenOnnistui
+       :epaonnistui ->HaeRahavarauksetTehtavineenEpaonnistui
+       :paasta-virhe-lapi? true})
+    app)
+
+  HaeRahavarauksetTehtavineenOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (js/console.log "HaeRahavarauksetTehtavineenOnnistui :: vastaus: " (pr-str vastaus))
+    (assoc app :rahavaraukset-tehtavineen vastaus))
+
+  HaeRahavarauksetTehtavineenEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Rahavarausten haku epäonnistui" :varoitus)
+    (assoc app :rahavaraukset-tehtavineen nil))
 
   HaeUrakoidenRahavaraukset
   (process-event [_ app]
@@ -108,4 +135,22 @@
 
   ValitseUrakka
   (process-event [{:keys [urakka]} app]
-    (assoc app :valittu-urakka urakka)))
+    (assoc app :valittu-urakka urakka))
+
+  HaeTehtavat
+  (process-event [_ app]
+    (tuck-apurit/post! :hae-rahavaraukselle-mahdolliset-tehtavat
+      {}
+      {:onnistui ->HaeTehtavatOnnistui
+       :epaonnistui ->HaeTehtavatEpaonnistui
+       :paasta-virhe-lapi? true})
+    app)
+
+  HaeTehtavatOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (assoc app :tehtavat vastaus))
+
+  HaeTehtavatEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Tehtävien haku epäonnistui" :varoitus)
+    (assoc app :tehtavat nil)))
