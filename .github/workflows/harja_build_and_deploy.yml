@@ -141,7 +141,9 @@ jobs:
           # https://docs.docker.com/build/attestations/slsa-provenance/
           provenance: true
           # Paketoi buildattu image tarriin, jotta sitä voi hyödyntää muissa jobeissa
-          outputs: type=docker,dest=/tmp/harja-app-image.tar
+          # Käytetään OCI (https://www.opencontainers.org/) formaattia imagessa
+          #outputs: type=docker,dest=/tmp/harja-app-image.tar
+          outputs: type=oci,dest=/tmp/harja-app-image.tar
 
       # Uploadaa build-artifact. Trivy-skanneri ja deploy-workflow lataa sen myöhemmässä vaiheessa.
       - name: Upload Harja docker image as artifact
@@ -153,28 +155,28 @@ jobs:
           retention-days: 3
 
       # Docs: https://github.com/slackapi/slack-github-action
-      - name: Send deploy failure message to Slack
-        id: slack
-        uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001
-        if: failure()
-        with:
-          # Slack Block Kit -tyyppinen rikastettu viesti
-          payload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":alert-slow: Harjan build epäonnistui! Automaattista deploymenttia ei tehdä.\n${{ env.JOB_RUN_URL }}"
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-          JOB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+#      - name: Send deploy failure message to Slack
+#        id: slack
+#        uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001
+#        if: failure()
+#        with:
+#          # Slack Block Kit -tyyppinen rikastettu viesti
+#          payload: |
+#            {
+#              "blocks": [
+#                {
+#                  "type": "section",
+#                  "text": {
+#                    "type": "mrkdwn",
+#                    "text": ":alert-slow: Harjan build epäonnistui! Automaattista deploymenttia ei tehdä.\n${{ env.JOB_RUN_URL }}"
+#                  }
+#                }
+#              ]
+#            }
+#        env:
+#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+#          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+#          JOB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
 
   # -- Scan Harja image -- #
@@ -222,7 +224,8 @@ jobs:
           fail-job-on-severities: false
           #fail-job-on-severities: 'CRITICAL,HIGH'
           #ignore-unfixed: true
-          upload-sarif: true
+          # TODO: Enabloi uudestaan
+          upload-sarif: false
 
 
   # -- Deployment -- #
