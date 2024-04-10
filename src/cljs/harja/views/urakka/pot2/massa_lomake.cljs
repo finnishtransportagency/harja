@@ -263,7 +263,7 @@
                 [sideaineen-lukutila tiedot (::pot2-domain/nimi t) aineet])])))))
 
    (when (= tyyppi :runkoaineet)
-     [:div {:class (str "aineiden-lukutila " (name tyyppi))}
+     [:div.aineiden-lukutila.runkoaineet
       [:div.aineen-pitoisuus-ja-nimi
        [:div.pitoisuus]
        [:div.nimi-ja-yksityiskohdat [:div.massan-yksityiskohdat
