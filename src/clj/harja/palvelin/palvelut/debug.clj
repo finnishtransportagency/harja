@@ -18,6 +18,7 @@
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.labyrintti.sms :as sms]
             [harja.kyselyt.tieturvallisuusverkko :as tieturvallisuusverkko-kyselyt]
+            [harja.kyselyt.paallysteen-korjausluokat :as korjausluokka-kyselyt]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieturvallisuusverkko :as tieturvallisuusverkko-tuonti]
             [harja.geo :as geo]
             [clojure.string :as str]))
@@ -193,6 +194,30 @@
                       geometriat)]
     geometriat))
 
+(defn hae-yllapitokohteen-geometriat
+  "Haetaan annetun ylläpitokohde-id:n perustella ylläpitokohteen kaikkien alikohteiden geometriat"
+  [db tiedot]
+  (let [_ (println "hae-yllapitokohteen-geometriat :: tiedot: " (pr-str tiedot))
+        geometriat (korjausluokka-kyselyt/hae-yllapitokohteen-geometriat db {:id (Integer/parseInt (:id tiedot))})
+        _ (println "hae-yllapitokohteen-geometriat :: geometriat1: " geometriat)
+        geometriat (map (fn [s]
+                         (-> s
+                           (assoc :geometria (geo/pg->clj (:geometria s)))))
+                       geometriat)
+        _ (println "hae-yllapitokohteen-geometriat :: geometriat2: " geometriat)]
+    geometriat))
+
+(defn hae-pkluokkageometriat
+  "Haetaan kaikki päällysteen korjausluokkien geometriat"
+  [db tiedot]
+  (let [geometriat (korjausluokka-kyselyt/hae-paallysteen-korjausluokkageometriat db)
+        _ (println "hae-pkluokkageometriat :: geometriat kpl: " (count geometriat))
+        geometriat (map (fn [s]
+                          (-> s
+                            (assoc :geometria (geo/pg->clj (:geometria s)))))
+                     geometriat)]
+    geometriat))
+
 (defn vaadi-jvh! [palvelu-fn]
   (fn [user payload]
     (if-not (roolit/jvh? user)
@@ -240,7 +265,11 @@
       :debug-laheta-tekstiviesti
       (vaadi-jvh! (partial #'laheta-sms sms))
       :debug-hae-tieturvalliusuus-geometriat
-      (vaadi-jvh! (partial #'hae-tieturvalliusuus-geometriat db)))
+      (vaadi-jvh! (partial #'hae-tieturvalliusuus-geometriat db))
+      :debug-hae-yllapitokohteen-geometriat
+      (vaadi-jvh! (partial #'hae-yllapitokohteen-geometriat db))
+      :debug-hae-pkluokkageometriat
+      (vaadi-jvh! (partial #'hae-pkluokkageometriat db)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -260,5 +289,7 @@
       :debug-laheta-email
       :debug-laheta-emailapi
       :debug-laheta-tekstiviesti
-      :debug-hae-tieturvalliusuus-geometriat)
+      :debug-hae-tieturvalliusuus-geometriat
+      :debug-hae-yllapitokohteen-geometriat
+      :debug-hae-pkluokkageometriat)
     this))

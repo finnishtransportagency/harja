@@ -650,6 +650,73 @@
                                   (hae-ja-nayta-tieturvallisuus-geometriat)))}
           "Piirrä tieturvallisuusverkko kartalle"]]]])))
 
+(defn- hae-ja-nayta-yllapitokohteen-geometriat [yllapitokohde-id]
+  (go
+    (let ;; Hae geometriat
+      [yllapitokohteen-geometriat (<! (k/post! :debug-hae-yllapitokohteen-geometriat {:id yllapitokohde-id}))
+       #_(js/console.log "yllapitokohteen-geometriat:" (pr-str yllapitokohteen-geometriat))]
+
+
+      ;; Piirrä geometriat kartalle
+      (doseq [[idx s] (map-indexed vector yllapitokohteen-geometriat)]
+        (when (:geometria s)
+          (tasot/nayta-geometria! (keyword (str "yllapitokohteen-geometria-" idx))
+            {:type :yllapitokohde-geometriat
+             :nimi (str "Ylläpitokohteen geometriat-"idx)
+             :alue (assoc (:geometria s)
+                     ;:fill "black"
+                     :radius 3
+                     :stroke {:color "red"
+                              :width 1})})))
+      #_ (tiedot-kartta/keskita-kartta-alueeseen! (harja.geo/extent yllapitokohteen-geometriat)))))
+
+(defn- hae-ja-nayta-pkluokkageometriat []
+  (go
+    (let ;; Hae geometriat
+      [geometriat (<! (k/post! :debug-hae-pkluokkageometriat {}))
+       #_ (js/console.log "pkluokkageometriat:" (pr-str geometriat))]
+
+      ;; Piirrä geometriat kartalle
+      (doseq [[idx s] (map-indexed vector geometriat)]
+        (when (:geometria s)
+          (tasot/nayta-geometria! (keyword (str "pk-geometria-" idx))
+            {:type :pk-geometriat
+             :nimi (str "PK geometriat-"idx)
+             :alue (assoc (:geometria s)
+                     ;:fill "black"
+                     :radius 3
+                     :stroke {:color "black"
+                              :width 1})}))
+        #_(tiedot-kartta/keskita-kartta-alueeseen! (harja.geo/extent-monelle yllapitokohteen-geometriat))
+        ))))
+
+
+(defn- paallistyskohteengeometriat []
+  (let [yllapitokohde-id (r/atom nil)]
+    (fn []
+      [:div.lomake
+       [:div.row.lomakerivi
+        [:div.form-group.col-xs-12.col-sm-6.col-md-5.col-lg-4
+         [:label.control-label "Ylläpitokohde-id:"]
+         [:input {:type :text
+                  :class "form-control"
+                  :value @yllapitokohde-id
+                  :on-change #(reset! yllapitokohde-id (-> % .-target .-value))}]]]
+
+
+       [:div.row.lomakerivi
+        [:div.form-group.col-xs-12.col-sm-6.col-md-5.col-lg-4
+         [:button {:on-click #(do
+                                (let []
+                                  (hae-ja-nayta-yllapitokohteen-geometriat @yllapitokohde-id)))}
+          "Piirrä päällystyskohteen kartalle"]]]
+       [:div.row.lomakerivi
+        [:div.form-group.col-xs-12.col-sm-6.col-md-5.col-lg-4
+         [:button {:on-click #(do
+                                (let []
+                                  (hae-ja-nayta-pkluokkageometriat)))}
+          "Piirrä PK-luokkageometriat kartalle"]]]])))
+
 
 (defn tierekisteri []
   (komp/luo
@@ -659,13 +726,13 @@
      [:div.tr-debug
       [kartta/kartan-paikka]
       [:h1 "Tervetuloa salaiseen TR osioon"]
-      [tr-haku]
+     #_  [tr-haku]
       [:hr]
-      [:h3 "Koordinaattihaku"]
-      [koordinaatti-haku]
+    #_  [:h3 "Koordinaattihaku"]
+     #_  [koordinaatti-haku]
       [:hr]
-      [:h3 "Valitse kartalta"]
-      (if @valitse-kartalla?
+     #_ [:h3 "Valitse kartalta"]
+      #_  (if @valitse-kartalla?
         [tr/karttavalitsin {:kun-peruttu #(do
                                             (reset! valittu-osoite nil)
                                             (reset! valitse-kartalla? false))
@@ -678,32 +745,34 @@
                                            (reset! valittu-osoite %))}]
         [:button {:on-click #(reset! valitse-kartalla? true)}
          "Valitse kartalla"])
-      (when-let [valittu @valittu-osoite]
+      #_ (when-let [valittu @valittu-osoite]
         [:div (pr-str valittu)])
-      [tarkastus-payload]
+      #_ [tarkastus-payload]
       [:hr]
-      [:h3 "Reittipisteiden haku - toteumille, tyokonehavainnoille tai tarkastusajoille"]
-      [reittipisteiden-haku]
-      [reittitoteuma-payload]
+     #_  [:h3 "Reittipisteiden haku - toteumille, tyokonehavainnoille tai tarkastusajoille"]
+      #_ [reittipisteiden-haku]
+      #_ [reittitoteuma-payload]
       [:hr]
       [:h3 "Tietokannasta haetun geometrian piirto kartalle"]
       [geometrian-piirto]
       [:hr]
-      [:h3 "Piirrä piste kartalle"]
-      [pisteen-piirto]
-      [:h3 "Piirrä toinen kartalle"]
-      [pisteen-piirto2]
+    #_  [:h3 "Piirrä piste kartalle"]
+      #_  [pisteen-piirto]
+    #_  [:h3 "Piirrä toinen kartalle"]
+      #_ [pisteen-piirto2]
       [:hr]
-      [:h3 "Visualisoi urakan pohjavesien rajoitusalueet kartalle"]
-      [urakan-rajoitusalueet]
+     #_  [:h3 "Visualisoi urakan pohjavesien rajoitusalueet kartalle"]
+      #_  [urakan-rajoitusalueet]
       [:hr]
-      [:h3 "Visualisoi suolatoteumat kartalle"]
-      [urakan-suolat]
-      [:hr]
-      [:h3 "Visualisoi urakan geometria kartalle"]
-      [urakan-geometriat]
+     #_ [:h3 "Visualisoi suolatoteumat kartalle"]
+      #_  [urakan-suolat]
+     #_  [:hr]
+     #_  [:h3 "Visualisoi urakan geometria kartalle (hoito, mhu ja valaistusurakoille)"]
+      #_ [urakan-geometriat]
       [:h3 "Piirrä tieturvallisuusverkon geometria kartalle"]
-      [tieturvallisuus-geometriat]])))
+       [tieturvallisuus-geometriat]
+      [:h3 "Piirrä päällystyskohteen geometria kartalle"]
+      [paallistyskohteengeometriat]])))
 
 ;; eism tie 20
 ;; x: 431418, y: 7213120
