@@ -126,7 +126,7 @@
     :tiemerkinnan-kustannukset (and
                                  (oikeudet/urakat-kustannukset id)
                                  (= tyyppi :tiemerkinta))
-    ;; TODO .. 
+
     :paikkaukset-mpu (and
                        (oikeudet/urakat-paikkaukset id)
                        (= tyyppi :paallystys)
