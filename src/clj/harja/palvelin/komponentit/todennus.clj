@@ -143,8 +143,7 @@ on nil."
          ;; Huom. ei custom:-alkuliitettä
          "email" "oam_user_mail"
          "custom:puhelin" "oam_user_mobile"
-         ;; TODO: Osasto-tieto tulee cognitosta, mutta ei ole varmuutta vastaako se vanhaa oam_departmentnumberia
-         #_#_"custom:osasto" "oam_departmentnumber"
+         "custom:osasto" "oam_departmentnumber"
          "custom:organisaatio" "oam_organization"
          "custom:ytunnus" "oam_user_companyid"}))))
 
@@ -266,6 +265,7 @@ ja palauttaa käyttäjätiedot"
         (q/paivita-kayttaja! db (merge kayttaja
                                   {:id kayttaja-id})))
      (log/info "SÄHKE HEADERIT: " (str kayttajanimi ": " ryhmat)
+       "; ELY-NUMERO: " ely
        "; ORGANISAATION NIMI: " organisaation_nimi
        "; Y-TUNNUS: " y-tunnus
        "; KÄYTTÄJÄ ID: " kayttaja-id
