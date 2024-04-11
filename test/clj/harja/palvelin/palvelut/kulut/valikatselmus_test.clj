@@ -567,7 +567,7 @@
     (is (nil? (::valikatselmus/kulu-id vastaus)))))
 
 
-(#_deftest kattohinnan-ylityksen-maksu-onnistuu-viimeisena-vuotena
+#_(deftest kattohinnan-ylityksen-maksu-onnistuu-viimeisena-vuotena
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2025
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm hoitokauden-alkuvuosi)]
