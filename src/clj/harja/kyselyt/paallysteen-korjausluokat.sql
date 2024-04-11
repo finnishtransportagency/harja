@@ -17,6 +17,9 @@ WHERE yk.id = :id;
 
 -- name: hae-paallysteen-korjausluokkageometriat
 -- hakee paallysteen korjausluokkageometriat
-SELECT st_buffer(geometria,50) as geometria
-FROM paallysteen_korjausluokka
-WHERE tie = 79 OR tie = 21;
+SELECT st_buffer(ST_ReducePrecision(pk.geometria,25),25) as geometria
+FROM paallysteen_korjausluokka pk,
+organisaatio o
+WHERE pk.korjausluokka = :korjausluokka
+  AND o.elynumero = :elynumero
+  AND st_intersects(o.alue, pk.geometria);;

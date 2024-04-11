@@ -210,13 +210,22 @@
 (defn hae-pkluokkageometriat
   "Haetaan kaikki päällysteen korjausluokkien geometriat"
   [db tiedot]
-  (let [geometriat (korjausluokka-kyselyt/hae-paallysteen-korjausluokkageometriat db)
-        _ (println "hae-pkluokkageometriat :: geometriat kpl: " (count geometriat))
-        geometriat (map (fn [s]
-                          (-> s
-                            (assoc :geometria (geo/pg->clj (:geometria s)))))
-                     geometriat)]
-    geometriat))
+  (let [_ (println "hae-pkluokkageometriat :: tiedot: " (pr-str tiedot) "numero: " (:elynumero tiedot))
+        elynumero (if (string? (:elynumero tiedot))
+                    (Integer/parseInt (:elynumero tiedot))
+                    (:elynumero tiedot))
+        geometriat_pk1 (korjausluokka-kyselyt/hae-paallysteen-korjausluokkageometriat db {:elynumero elynumero
+                                                                                      :korjausluokka "PK1"})
+        geometriat_pk2 (korjausluokka-kyselyt/hae-paallysteen-korjausluokkageometriat db {:elynumero elynumero
+                                                                                          :korjausluokka "PK2"})
+        geometriat_pk3 (korjausluokka-kyselyt/hae-paallysteen-korjausluokkageometriat db {:elynumero elynumero
+                                                                                          :korjausluokka "PK3"})
+        geometriat_pk1 (map (fn [s] (-> s (assoc :geometria (geo/pg->clj (:geometria s))))) geometriat_pk1)
+        geometriat_pk2 (map (fn [s] (-> s (assoc :geometria (geo/pg->clj (:geometria s))))) geometriat_pk2)
+        geometriat_pk3 (map (fn [s] (-> s (assoc :geometria (geo/pg->clj (:geometria s))))) geometriat_pk3)]
+    {:pk1 geometriat_pk1
+     :pk2 geometriat_pk2
+     :pk3 geometriat_pk3}))
 
 (defn vaadi-jvh! [palvelu-fn]
   (fn [user payload]
