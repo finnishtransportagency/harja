@@ -235,7 +235,9 @@
        ;; Formatoi rivimäärä välilyönnillä, esim 1000 = 1 000, fmt/desimaaliluku tekee tämän, eurot myös
        [:h3 (str 
               (fmt/formatoi-numero-tuhansittain (or rivi-maara 0))
-              (if (> rivi-maara 1) " riviä, " " rivi, ")
+              (if (= rivi-maara 1)
+                " rivi, "
+                " riviä, ")
               (fmt/euro false (or kustannukset 0)) " EUR")]
 
        ;; Oikealla puolella olevat lataus / tuontinapit
@@ -325,9 +327,4 @@
 
 
 (defn reikapaikkaukset []
-  ;; Ei näytetä tuotannossa vielä
-  (if (and 
-        (k/kehitysymparistossa?)
-        (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava))
-    [tuck tiedot/tila reikapaikkaukset*]
-    [:div {:style {:padding "20px" :font-size "18px"}} "Maanteiden paikkausurakoiden reikäpaikkaukset tulevat tälle välilehdelle myöhemmin."]))
+  [tuck tiedot/tila reikapaikkaukset*])
