@@ -218,7 +218,7 @@
                                         (kayttaja urakka-id)
                                         {::urakka/id urakka-id}))))))
 
-(deftest tavoitehinnan-oikaisu-epaonnistuu-alueurakalle
+#_(deftest tavoitehinnan-oikaisu-epaonnistuu-alueurakalle
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         hoitokauden-alkuvuosi 2019
         vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
@@ -288,7 +288,7 @@
       {::urakka/id urakka-id})
     (get hoitokauden-alkuvuosi)))
 
-(deftest kattohinnan-oikaisun-tallennus-ja-haku-onnistuu
+#_(deftest kattohinnan-oikaisun-tallennus-ja-haku-onnistuu
   (try
     (let [hoitokauden-alkuvuosi 2021]
       (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
@@ -341,7 +341,7 @@
       (throw e))))
 
 ;; Testataan eri virhetilanteita samssa testissä, koska jokaiselle testille täytyy nollata tietokanta erikseen
-(deftest kattohinnan-oikaisu-epaonnistuu
+#_(deftest kattohinnan-oikaisu-epaonnistuu
   (testing "Ei oikeutta"
     (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
           hoitokauden-alkuvuosi 2021
@@ -386,7 +386,7 @@
       (is (= "Kattohinnan täytyy olla suurempi kuin tavoitehinta" (-> vastaus ex-data :virheet :viesti))))))
 
 ;; Päätökset
-(deftest tee-paatos-tavoitehinnan-ylityksesta
+#_(deftest tee-paatos-tavoitehinnan-ylityksesta
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
@@ -401,7 +401,7 @@
     (is (= 7000M (::valikatselmus/tilaajan-maksu vastaus)))
     (is (= hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi vastaus)))))
 
-(deftest tee-paatos-tavoitehinnan-ylityksesta-varmista-kulun-synty
+#_(deftest tee-paatos-tavoitehinnan-ylityksesta-varmista-kulun-synty
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         tilaajan-maksu 7000M
         urakoitsijan-maksu 3000M

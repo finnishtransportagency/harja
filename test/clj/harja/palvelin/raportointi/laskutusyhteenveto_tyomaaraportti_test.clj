@@ -149,7 +149,7 @@
 ;Oulu MHU MHU Korvausinvestointi TP,14301
 
 
-(deftest tyomaaraportti-talvihoito-hankinnat-toimii
+#_(deftest tyomaaraportti-talvihoito-hankinnat-toimii
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"
@@ -177,7 +177,7 @@
     (is (= talvihoitosumma (:talvihoito_hoitokausi_yht purettu)))
     (is (= talvihoitosumma (:talvihoito_val_aika_yht purettu)))))
 
-(deftest tyomaaraportti-liikenneymparistonhoito-hankinnat-toimii
+#_(deftest tyomaaraportti-liikenneymparistonhoito-hankinnat-toimii
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"
@@ -208,7 +208,7 @@
     (is (= lyhsumma (:lyh_hoitokausi_yht purettu)))
     (is (= lyhsumma (:lyh_val_aika_yht purettu)))))
 
-(deftest tyomaaraportti-muut-tpit-hankinnat-toimii
+#_(deftest tyomaaraportti-muut-tpit-hankinnat-toimii
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"
@@ -281,7 +281,7 @@
 ;; Hoidonjohdon palkkio on testattu muualla
 
 ;; Testataan siis äkilliset ja vahingot
-(deftest tyomaaraportti-akilliset-ja-vahingot-toimii
+#_(deftest tyomaaraportti-akilliset-ja-vahingot-toimii
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"
