@@ -143,7 +143,8 @@ on nil."
          ;; Huom. ei custom:-alkuliitettä
          "email" "oam_user_mail"
          "custom:puhelin" "oam_user_mobile"
-         "custom:osasto" "oam_departmentnumber"
+         ;; TODO: Osasto-tieto tulee cognitosta, mutta ei ole varmuutta vastaako se vanhaa oam_departmentnumberia
+         #_#_"custom:osasto" "oam_departmentnumber"
          "custom:organisaatio" "oam_organization"
          "custom:ytunnus" "oam_user_companyid"}))))
 
