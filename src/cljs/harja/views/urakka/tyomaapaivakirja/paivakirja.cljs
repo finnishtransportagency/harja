@@ -2,7 +2,6 @@
   "Työmaapäiväkirja urakka välilehti (listaus)"
   (:require [tuck.core :refer [tuck]]
             [harja.tiedot.tyomaapaivakirja-tiedot :as tiedot]
-            [harja.ui.debug :refer [debug]]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.kentat :as kentat]
             [harja.ui.ikonit :as ikonit]

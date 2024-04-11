@@ -58,11 +58,9 @@
                     (oikeudet/urakat-vesivaylatoimenpiteet id)
                     (urakka/vesivaylaurakkatyyppi? tyyppi)
                     (istunto/ominaisuus-kaytossa? :vesivayla))
-    ;; TODO 
+
     :tyomaapaivakirja (and
-                        (k/kehitysymparistossa?)
-                        (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava)
-                        (oikeudet/urakat-paikkaukset id)
+                        (oikeudet/urakat-tyomaapaivakirja id)
                         (#{:hoito :teiden-hoito} tyyppi))
 
     :vv-materiaalit (and
@@ -128,7 +126,7 @@
     :tiemerkinnan-kustannukset (and
                                  (oikeudet/urakat-kustannukset id)
                                  (= tyyppi :tiemerkinta))
-    ;; TODO .. 
+
     :paikkaukset-mpu (and
                        (oikeudet/urakat-paikkaukset id)
                        (= tyyppi :paallystys)
@@ -202,7 +200,6 @@
          ^{:key "toimenpiteet"}
          [toimenpiteet/toimenpiteet ur])
 
-       ;; Työmaapäiväkirja sallitaan tällähetkellä vain kehitysympäristössä 
        "Työmaapäiväkirja"
        :tyomaapaivakirja
        (when (valilehti-mahdollinen? :tyomaapaivakirja ur)
