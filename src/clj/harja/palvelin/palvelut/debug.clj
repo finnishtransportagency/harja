@@ -199,12 +199,10 @@
   [db tiedot]
   (let [_ (println "hae-yllapitokohteen-geometriat :: tiedot: " (pr-str tiedot))
         geometriat (korjausluokka-kyselyt/hae-yllapitokohteen-geometriat db {:id (Integer/parseInt (:id tiedot))})
-        _ (println "hae-yllapitokohteen-geometriat :: geometriat1: " geometriat)
         geometriat (map (fn [s]
                          (-> s
                            (assoc :geometria (geo/pg->clj (:geometria s)))))
-                       geometriat)
-        _ (println "hae-yllapitokohteen-geometriat :: geometriat2: " geometriat)]
+                       geometriat)]
     geometriat))
 
 (defn hae-pkluokkageometriat
