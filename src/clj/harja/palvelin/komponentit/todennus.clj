@@ -179,10 +179,19 @@ on nil."
   Muutoin, yritetään purkaa AWS Cognitolta saadut headerit, jotka mapataan OAM_-headereiksi ja lisätään
   muiden headereiden joukkoon."
   [headerit]
+  ;; TODO: Poista debug-lokitus
+  (log/info "[prosessoi-kayttaja-headerit] Headerit RAW:" headerit)
+
   (if (empty? (koka-headerit headerit))
-    (->
-      (merge headerit (pura-cognito-headerit headerit))
-      (prosessoi-apikayttaja-header))
+    (let [headerit (->
+                     (merge headerit (pura-cognito-headerit headerit))
+                     (prosessoi-apikayttaja-header))]
+      ;; TODO: Poista debug-lokitus
+      (log/info "[prosessoi-kayttaja-headerit] OAM_-headereitä ei löytynyt, puretaan cognito-headerit.")
+      (log/info "[prosessoi-kayttaja-headerit] Cognitosta puretut arvot:" (dissoc headerit
+                                                                            "oam_user_mobile" "oam_user_mail"
+                                                                            "oam_user_first_name" "oam_user_last_name"))
+      headerit)
     headerit))
 
 (defn- hae-organisaatio-elynumerolla [db ely]
