@@ -17,6 +17,7 @@
             [harja.kyselyt.paikkaus :as paikkaus-q]
             [harja.kyselyt.konversio :as konv]))
 
+
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
