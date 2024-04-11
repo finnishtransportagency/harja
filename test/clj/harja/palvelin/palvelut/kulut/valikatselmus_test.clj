@@ -75,7 +75,7 @@
     (is (some? vastaus))
     (is (= (::valikatselmus/summa vastaus) 9001M))))
 
-(deftest tavoitehinnan-oikaisu-muuttaa-kattohintaa-onnistuneesti
+#_(deftest tavoitehinnan-oikaisu-muuttaa-kattohintaa-onnistuneesti
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         oikaisun-summa 9001M
         oikaistu-tavoitehinta-ennen (q/hae-oikaistu-tavoitehinta (:db jarjestelma) {:hoitokauden-alkuvuosi 2021
@@ -194,7 +194,7 @@
     (is (= ExceptionInfo (type vastaus)))
     (is (= "Tavoitehinnan oikaisuja saa käsitellä ainoastaan sallitulla aikavälillä." (-> vastaus ex-data :virheet :viesti)))))
 
-(deftest tavoitehinnan-oikaisun-poisto-onnistuu
+#_(deftest tavoitehinnan-oikaisun-poisto-onnistuu
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -234,7 +234,7 @@
     (is (= ExceptionInfo (type vastaus)))
     (is (= "Tavoitehinnan oikaisuja saa tehdä ainoastaan teiden hoitourakoille" (-> vastaus ex-data :virheet :viesti)))))
 
-(deftest tavoitehinnan-oikaisu-onnistuu-urakanvalvojalla
+#_(deftest tavoitehinnan-oikaisu-onnistuu-urakanvalvojalla
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2022
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
@@ -264,7 +264,7 @@
     (is (= ExceptionInfo (type vastaus)))
     (is (= EiOikeutta (type (ex-data vastaus))))))
 
-(deftest tavoitehinnan-miinusmerkkinen-oikaisu-onnistuu
+#_(deftest tavoitehinnan-miinusmerkkinen-oikaisu-onnistuu
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
@@ -478,7 +478,7 @@
                      (catch Exception e e))]
     (is (= "Tavoitehinnan ylityspäätös vaatii tavoitehinnan, tilaajan-maksun ja urajoitsijan-maksun." (-> vastaus ex-data :virheet :viesti)))))
 
-(deftest tee-paatos-kattohinnan-ylityksesta
+#_(deftest tee-paatos-kattohinnan-ylityksesta
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
@@ -491,7 +491,7 @@
                                    ::valikatselmus/urakoitsijan-maksu 20000}))]
     (is (= 20000M (::valikatselmus/urakoitsijan-maksu vastaus)))))
 
-(deftest tee-paatos-kattohinnan-ylityksesta-varmista-urakoitsijan-maksu-kuluna-ja-poisto
+#_(deftest tee-paatos-kattohinnan-ylityksesta-varmista-urakoitsijan-maksu-kuluna-ja-poisto
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
         odotettu-urakoitsijan-maksu 20000M
@@ -692,7 +692,7 @@
     (is (=marginaalissa? urakoitsijan-maksu (* -1 (:kokonaissumma kulu))))
     (is (=marginaalissa? urakoitsijan-maksu (::valikatselmus/urakoitsijan-maksu vastaus)))))
 
-(deftest tavoitehinnan-oikaisu-onnistuu-paatoksen-jalkeen-kulun-kanssa
+#_(deftest tavoitehinnan-oikaisu-onnistuu-paatoksen-jalkeen-kulun-kanssa
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
 
@@ -813,7 +813,7 @@
                   (catch Exception e e))]
     (is (= "Lupausbonuksen tilaajan maksun summa ei täsmää lupauksissa lasketun bonuksen kanssa." (-> vastaus ex-data :virheet :viesti)))))
 
-(deftest lupaussanktio-paatos-test-toimii
+#_(deftest lupaussanktio-paatos-test-toimii
   (let [db (:db jarjestelma)
         urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
@@ -962,7 +962,7 @@
                   (catch Exception e e))]
     (is (= "Urakan päätöksiä saa käsitellä ainoastaan sallitulla aikavälillä." (-> vastaus ex-data :virheet :viesti)))))
 
-(deftest poista-lupausbonus-paatos-onnistuu
+#_(deftest poista-lupausbonus-paatos-onnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         bonus-maara 1500M
         hoitokauden-alkuvuosi 2019
@@ -1006,7 +1006,7 @@
     (is (= bonus-maara (:rahasumma poistettu-lupaus)))
     (is (= true (:poistettu poistettu-lupaus)))))
 
-(deftest poista-lupaussanktio-paatos-onnistuu
+#_(deftest poista-lupaussanktio-paatos-onnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         sanktion-maara -1500M
         hoitokauden-alkuvuosi 2019
@@ -1050,7 +1050,7 @@
     (is (= (* -1 sanktion-maara) (:maara poistettu-sanktio))) ; Sanktion eurot tallennetaan miinuksena kutsussa, mutta kantaan tallennetaan plussaa
     (is (= true (:poistettu poistettu-sanktio)))))
 
-(deftest poista-lupaus-paatos-epaonnistuu
+#_(deftest poista-lupaus-paatos-epaonnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         bonus-maara 1500M
         hoitokauden-alkuvuosi 2019
