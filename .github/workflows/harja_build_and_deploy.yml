@@ -204,6 +204,10 @@ jobs:
           name: harja-app-image
           path: /tmp/
 
+      - name: Test if the artifact was downloaded correctly
+        run: | 
+          ls -la /tmp/harja-app-image.tar
+
       - name: Load Harja docker image
         id: load-harja-image
         run: |
