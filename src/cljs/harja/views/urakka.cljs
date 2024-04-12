@@ -7,6 +7,7 @@
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
             [harja.views.urakka.toteutus :as toteutus]
+            [harja.views.urakka.yllapitokohteet.mpu-kustannukset :as mpu-kustannukset]
             [harja.views.urakka.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
             [harja.views.urakka.tyomaapaivakirja.paivakirja :as paivakirja]
             [harja.views.urakka.laskutus :as laskutus]
@@ -131,6 +132,11 @@
                        (oikeudet/urakat-paikkaukset id)
                        (= tyyppi :paallystys)
                        (= :mpu sopimustyyppi))
+    
+    :mpu-kustannukset (and
+                        (oikeudet/urakat-paikkaukset id)
+                        (= tyyppi :paallystys)
+                        (= :mpu sopimustyyppi))
     false))
 
 (defn urakka
@@ -284,6 +290,12 @@
           ur
           tiemerkinnan-kustannukset-tiedot/raportin-parametrit
           tiemerkinnan-kustannukset-tiedot/raportin-tiedot])
+
+       "Kustannukset"
+       :mpu-kustannukset
+       (when (valilehti-mahdollinen? :mpu-kustannukset ur)
+         ^{:key "mpu-kustannukset"}
+         [mpu-kustannukset/mpu-kustannukset])
 
        "Paikkaukset"
        :paikkaukset-hoito
