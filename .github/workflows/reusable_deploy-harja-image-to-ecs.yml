@@ -88,17 +88,17 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      # Sammutetaan Harjan Fargate taskit migraatioiden ajoa varten, jotta ne eivät häiritse migraation onnistumista
+      # !! Vain DEV-ympäristö !!
+      # Sammutetaan Harjan Fargate taskit, jotta ne eivät häiritse DB-cleania ja testidatan ajamista dev-tietokantaan.
       - name: Shutdown Harja Fargate tasks
         uses: ./.github/actions/shutdown-fargate-tasks
         timeout-minutes: 15
-        # FIXME: Sallitaan migraatioiden ajo toistaiseksi vain dev ja stg ympäristöille
-        #        Lisätään prod myöhemmin listalle, kunhan datamigraatio on saatu ojennukseen.
-        if: ${{ contains(fromJson('["dev", "stg"]'), inputs.environment)  }}
+        if: ${{ contains(fromJson('["dev"]'), inputs.environment)  }}
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           service: ${{ vars.ECS_SERVICE_NAME }}
 
+      # Ajetaan tietokantamigraatiot RDS:ään ennen uuden image:n deployausta
       - name: Run migrations to RDS
         uses: ./.github/actions/run-migrations-to-rds
         # FIXME: Sallitaan migraatioiden ajo toistaiseksi vain dev ja stg ympäristöille
@@ -130,16 +130,19 @@ jobs:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ vars.ECS_SERVICE_NAME }}
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
-          wait-for-service-stability: false
+          # Odotetaan service stabilityä vain stg ja prod deploymenteissä
+          # Dev-deploymentissä stabilityä odotellaan start-fargate-tasks actionissa.
+          wait-for-service-stability: ${{ contains(fromJson('["stg", "prod"]'), inputs.environment) }}
 
-      # Pakotetaan lopuksi Harjan Fargate taskit käynnistymään, mikäli ne on aiemmin laitettu alas.
+      # !! Vain DEV-ympäristö !!
+      # Sammutetaan Harjan Fargate taskit, jotta ne eivät häiritse testidatan ajamista dev-tietokantaan.
       - name: Start Harja Fargate tasks
         uses: ./.github/actions/start-fargate-tasks
         timeout-minutes: 10
         # Pakota uudelleenkäynnistyminen vaikka migraatio tai ECS deploy edellä olisi epäonnistunut
         # Fargate taskit sammutetaan ennen migraatioiden ajoa, mutta ne täytyy aina käynnistää uudelleen,
         # jotta palvelu pysyy toiminnassa.
-        if: always()
+        if: ${{ contains(fromJson('["dev"]'), inputs.environment)  }}
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           service: ${{ vars.ECS_SERVICE_NAME }}
