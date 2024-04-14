@@ -40,3 +40,13 @@ DELETE
   FROM rahavaraus_urakka
  WHERE urakka_id = :urakka
    AND rahavaraus_id = :rahavaraus;
+
+-- name: lisaa-rahavaraukselle-tehtava<!
+INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
+VALUES (:rahavaraus-id, :tehtava-id, :kayttaja, CURRENT_TIMESTAMP);
+
+-- name: poista-rahavaraukselta-tehtava!
+DELETE
+  FROM rahavaraus_tehtava
+ WHERE rahavaraus_id = :rahavaraus-id
+   AND tehtava_id = :tehtava-id;
