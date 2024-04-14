@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.hallinta.rahavaraukset
   (:require [com.stuartsierra.component :as component]
+            [taoensso.timbre :as log]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.rahavaraukset :as q]
             [harja.kyselyt.konversio :as konv]
@@ -19,12 +20,12 @@
         rahavaraukset-tehtavineen (mapv (fn [rivi]
                                           (let [_ (println "rivi1: " rivi)
                                                 tehtavat (mapv
-                                                       #(konv/pgobject->map % :id :long :nimi :string)
-                                                       (konv/pgarray->vector (:tehtavat rivi)))
+                                                           #(konv/pgobject->map % :id :long :nimi :string)
+                                                           (konv/pgarray->vector (:tehtavat rivi)))
                                                 rivi (assoc rivi :tehtavat tehtavat)
                                                 _ (println "rivi2: " rivi)]
                                             rivi))
-                                        rahavaraukset-tehtavineen)
+                                    rahavaraukset-tehtavineen)
         _ (println "rahavaraukset-tehtavineen2: " rahavaraukset-tehtavineen)]
     rahavaraukset-tehtavineen))
 
@@ -48,6 +49,38 @@
                                       :rahavaraus rahavaraus}))
   (q/hae-urakoiden-rahavaraukset db))
 
+(defn tallenna-rahavarauksen-tehtava [db kayttaja {:keys [rahavaraus-id vanha-tehtava-id uusi-tehtava]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-rahavaraukset kayttaja)
+  (log/debug "tallenna-rahavarauksen-tehtava :: rahavaraus-id:" rahavaraus-id
+    "Vanha tehtva-id: " vanha-tehtava-id
+    " Uusi tehtava-id: " uusi-tehtava)
+  ;; Jos vanha-tehtava-id on nolla, niin silloin lisätään kokonaan uusi tehtävä rahavaraukselle. Muuten
+  ;; Vanha tehtävä poistetaan ja korvataan uudella
+  (if (= 0 vanha-tehtava-id)
+    ;; Lisätään kokonaan uusi tehtävä rahavaraukselle
+    (q/lisaa-rahavaraukselle-tehtava<! db {:rahavaraus-id rahavaraus-id
+                                           :tehtava-id (:id uusi-tehtava)
+                                           :kayttaja (:id kayttaja)})
+    ;; Poistetaan vanha ja lisätään uusi
+    (do
+      (q/poista-rahavaraukselta-tehtava! db {:rahavaraus-id rahavaraus-id
+                                             :tehtava-id vanha-tehtava-id})
+      (q/lisaa-rahavaraukselle-tehtava<! db {:rahavaraus-id rahavaraus-id
+                                             :tehtava-id (:id uusi-tehtava)
+                                             :kayttaja (:id kayttaja)})))
+
+  ;; Palautetaan rahavaraukset tehtävineen, kun ne on nyt päivittyneet
+  (hae-rahavaraukset-tehtavineen db kayttaja))
+
+(defn poista-rahavarauksen-tehtava [db kayttaja {:keys [rahavaraus-id tehtava-id]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-rahavaraukset kayttaja)
+  (log/debug "poista-rahavarauksen-tehtava :: rahavaraus-id: " rahavaraus-id "Tehtävä-id: " tehtava-id)
+  (q/poista-rahavaraukselta-tehtava! db {:rahavaraus-id rahavaraus-id
+                                         :tehtava-id tehtava-id})
+
+  ;; Palautetaan rahavaraukset tehtävineen, kun ne on nyt päivittyneet
+  (hae-rahavaraukset-tehtavineen db kayttaja))
+
 (defrecord RahavarauksetHallinta []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -66,6 +99,12 @@
     (julkaise-palvelu http-palvelin :paivita-urakan-rahavaraus
       (fn [kayttaja tiedot]
         (paivita-urakan-rahavaraus db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :tallenna-rahavarauksen-tehtava
+      (fn [kayttaja tiedot]
+        (tallenna-rahavarauksen-tehtava db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :poista-rahavarauksen-tehtava
+      (fn [kayttaja tiedot]
+        (poista-rahavarauksen-tehtava db kayttaja tiedot)))
     this)
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
@@ -73,5 +112,7 @@
       :hae-rahavaraukset-tehtavineen
       :hae-urakoiden-rahavaraukset
       :hae-rahavaraukselle-mahdolliset-tehtavat
-      :paivita-urakan-rahavaraus)
+      :paivita-urakan-rahavaraus
+      :tallenna-rahavarauksen-tehtava
+      :poista-rahavarauksen-tehtava)
     this))

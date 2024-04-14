@@ -110,6 +110,7 @@
                              :nakyvissa? true
                              :kesto kesto}))))
 
+;; Luokka vaihtoehtoja on: :onnistunut, :varoitus :neutraali :neutraali-ikoni :neutraali-ikoni-keskella
 (defn nayta-toast!
   ([viesti] (nayta-toast! viesti :onnistunut))
   ([viesti luokka]

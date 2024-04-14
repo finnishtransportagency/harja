@@ -30,6 +30,13 @@
 (defrecord HaeTehtavat [])
 (defrecord HaeTehtavatOnnistui [vastaus])
 (defrecord HaeTehtavatEpaonnistui [vastaus])
+(defrecord LisaaUusiTehtavaRahavaraukselle [rahavaraus-id])
+(defrecord TallennaTehtavaRahavaraukselle [rahavaraus-id valittu-tehtava vanha-tehtava-id])
+(defrecord TallennaRahavarauksenTehtavaOnnistui [vastaus])
+(defrecord TallennaRahavarauksenTehtavaEpaonnistui [vastaus])
+(defrecord PoistaTehtavaRahavaraukselta [rahavaraus-id tehtava-id])
+(defrecord PoistaTehtavaRahavaraukseltaOnnistui [vastaus])
+(defrecord PoistaTehtavaRahavaraukseltaEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
   HaeRahavaraukset
@@ -153,4 +160,63 @@
   HaeTehtavatEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Tehtävien haku epäonnistui" :varoitus)
-    (assoc app :tehtavat nil)))
+    (assoc app :tehtavat nil))
+
+  LisaaUusiTehtavaRahavaraukselle
+  (process-event [{:keys [rahavaraus-id]} app]
+    (let [;; Haetaan annetun rahavaraus-id:n perusteella rahavaraus app-statesta
+          rahavaraukset-tehtavineen (:rahavaraukset-tehtavineen app)
+          rahavaraus (->> rahavaraukset-tehtavineen
+                       (filter #(= (:id %) rahavaraus-id))
+                       first)
+          ;; Lisätään uusi tehtävä rahavaraukselle
+          rahavaraus (update rahavaraus :tehtavat
+                       conj {:id 0
+                             :nimi ""})
+          ;; Poistetaan vanha rahavaraus
+          rahavaraukset-tehtavineen (filter #(not= (:id %) rahavaraus-id) rahavaraukset-tehtavineen)
+          ;;ja lisätään uusi
+          rahavaraukset-tehtavineen (conj rahavaraukset-tehtavineen rahavaraus)]
+      (assoc app :rahavaraukset-tehtavineen rahavaraukset-tehtavineen)))
+
+  TallennaTehtavaRahavaraukselle
+  (process-event [{:keys [rahavaraus-id valittu-tehtava vanha-tehtava-id]} app]
+    (tuck-apurit/post! :tallenna-rahavarauksen-tehtava
+      {:vanha-tehtava-id vanha-tehtava-id
+       :uusi-tehtava valittu-tehtava
+       :rahavaraus-id rahavaraus-id}
+      {:onnistui ->TallennaRahavarauksenTehtavaOnnistui
+       :epaonnistui ->TallennaRahavarauksenTehtavaEpaonnistui
+       :paasta-virhe-lapi? true})
+    app)
+
+  TallennaRahavarauksenTehtavaOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Tehtävä lisättiin" :onnistunut)
+    (assoc app :rahavaraukset-tehtavineen vastaus))
+
+  TallennaRahavarauksenTehtavaEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Tehtävän tallennus epäonnistui" :varoitus)
+    app)
+
+  PoistaTehtavaRahavaraukselta
+  (process-event [{:keys [rahavaraus-id tehtava-id]} app]
+    (tuck-apurit/post! :poista-rahavarauksen-tehtava
+      {:tehtava-id tehtava-id
+       :rahavaraus-id rahavaraus-id}
+      {:onnistui ->PoistaTehtavaRahavaraukseltaOnnistui
+       :epaonnistui ->PoistaTehtavaRahavaraukseltaEpaonnistui
+       :paasta-virhe-lapi? true})
+    app)
+
+  PoistaTehtavaRahavaraukseltaOnnistui
+  (process-event [{:keys [vastaus]} app]
+    ;; Jos poisto on onnistunut, niin vastauksen mukana uusitut rahavaraukset tehtavineen.
+    (viesti/nayta-toast! "Tehtävä poistettiin" :onnistunut)
+    (assoc app :rahavaraukset-tehtavineen vastaus))
+
+  PoistaTehtavaRahavaraukseltaEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Tehtävän poistaminen epäonnistui" :varoitus)
+    app))
