@@ -23,9 +23,13 @@ SELECT rv.id,
  ORDER BY rv.id ASC;
 
 -- name: hae-rahavaraukselle-mahdolliset-tehtavat
-SELECT id, nimi
-  FROM tehtava
-ORDER BY jarjestys ASC;
+SELECT t.id, t.nimi, tro.otsikko
+  FROM tehtava t
+           JOIN tehtavaryhma tr ON t.tehtavaryhma = tr.id
+           JOIN tehtavaryhmaotsikko tro ON tro.id = tr.tehtavaryhmaotsikko_id
+ WHERE t.poistettu IS FALSE
+   AND t.tehtavaryhma IS NOT NULL
+ ORDER BY tr.jarjestys, t.jarjestys ASC;
 
 -- name: lisaa-urakan-rahavaraus<!
 INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luoja, luotu)
