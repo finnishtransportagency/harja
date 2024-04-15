@@ -1,11 +1,13 @@
 var gulp = require('gulp');
-var sass = require('gulp-sass');
+const sass = require('gulp-sass')(require('sass'));
 var connect = require('gulp-connect');
 var config = require('../config.js').sass;
 
-gulp.task('styles', function() {
+async function stylesTask() {
   gulp.src(config.src)
     .pipe(sass(config.settings))
     .pipe(gulp.dest(config.dest))
     .pipe(connect.reload());
-});
+};
+
+module.exports = stylesTask;

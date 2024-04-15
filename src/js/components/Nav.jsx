@@ -16,7 +16,7 @@ export default React.createClass({
       {title: 'TEIDEN YLLÄPITO', data: {action: Events.CATEGORY, category: Category.MAINTENANCE}, buttonStyle: 'large button'},
       {title: 'VESIVÄYLÄT', data: {action: Events.CATEGORY, category: Category.WATERWAYS}, buttonStyle: 'large button'},
       {title: 'KOULUTUSVIDEOT', data: {action: Events.CATEGORY, category: Category.FAQ}, buttonStyle: 'large button'},
-      {title: 'ONGELMANSELVITYSPROSESSI', data: {action: Events.CATEGORY, category: Category.PROBLEMSOLVING}, buttonStyle: 'large button'}
+      {title: 'ONGELMANSELVITYSPROSESSI', data: {action: Events.CATEGORY, category: Category.PROBLEMSOLVING}, buttonStyle: 'large button'},
       {title: 'AIKATAULU', data: {action: Events.CATEGORY, category: Category.ROADMAP}, buttonStyle: 'large button'}
     ];
 
@@ -26,7 +26,7 @@ export default React.createClass({
       {title: 'TEIDEN YLLÄPITO', data: {action: Events.CATEGORY, category: Category.MAINTENANCE}},
       {title: 'VESIVÄYLÄT', data: {action: Events.CATEGORY, category: Category.WATERWAYS}},
       {title: 'KOULUTUSVIDEOT', data: {action: Events.CATEGORY, category: Category.FAQ}},
-      {title: 'ONGELMANSELVITYSPROSESSI', data: {action: Events.CATEGORY, category: Category.PROBLEMSOLVING}}
+      {title: 'ONGELMANSELVITYSPROSESSI', data: {action: Events.CATEGORY, category: Category.PROBLEMSOLVING}},
       {title: 'AIKATAULU', data: {action: Events.CATEGORY, category: Category.ROADMAP}}
     ];
 
@@ -34,8 +34,8 @@ export default React.createClass({
     const feedbackSubject = "";
     const feedbackHref = "mailto:" + feedbackAddress + "?subject=" +feedbackSubject;
 
-    const harjaLink = "https://extranet.vayla.fi/harja/";
-    const testiHarjaLink = "https://testiextranet.vayla.fi/harja/";
+    const harjaLink = "https://harja.vaylapilvi.fi/";
+    const testiHarjaLink = "https://harja.testivaylapilvi.fi";
 
     return (
       <nav>

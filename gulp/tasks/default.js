@@ -1,2 +1,7 @@
 var gulp = require('gulp');
-gulp.task('default', ['build', 'watch', 'server']);
+
+var buildTask = require('./build');
+var watchTask = require('./watch');
+var serverTask = require('./server');
+
+gulp.task('default', gulp.series(buildTask, watchTask, serverTask));

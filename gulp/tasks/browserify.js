@@ -13,7 +13,11 @@ config.settings.transform.forEach(function(t) {
   bundler.transform(t);
 });
 
-gulp.task('browserify', bundle);
+//gulp.task('browserify', bundle);
+async function browserifyTask(){
+  return bundle();
+}
+
 bundler.on('update', bundle);
 
 function bundle() {
@@ -24,3 +28,5 @@ function bundle() {
   .pipe(gulp.dest(config.dest))
   .pipe(connect.reload());
 }
+
+module.exports = browserifyTask;
