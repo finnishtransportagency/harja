@@ -44,7 +44,7 @@
       "Lisää kustannus"
       #(do
          (println "Uusi Kustannus ->"))
-      {:ikoni [ikonit/harja-icon-action-add]}]]]
+      {:ikoni [ikonit/harja-icon-action-add] :vayla-tyyli? true}]]]
 
    ;; Taulukko
    [grid/grid {:tyhja (if haku-kaynnissa?
@@ -54,7 +54,13 @@
                :sivuta grid/vakiosivutus
                :voi-kumota? false
                :piilota-toiminnot? true
-               :piilota-otsikot? true}
+               :piilota-otsikot? true
+               ;; Yhteenveto 
+               :rivi-jalkeen-fn (fn [rivit]
+                                  ^{:luokka "kustannukset-yhteenveto"}
+                                  [{:teksti "Yhteensä" :luokka "lihavoitu"}
+                                   {:teksti "4500,00"
+                                    :tasaa :oikea :luokka "lihavoitu"}])}
 
     ;; Työmenetelmä
     [{:tyyppi :string
@@ -63,14 +69,15 @@
       :leveys 1}
 
      ;; Kustannus
-     {:tyyppi :string
+     {:tyyppi :positiivinen-numero
+      :desimaalien-maara 2
       :nimi :kustannus
       :tasaa :oikea
       :luokka "text-nowrap"
       :leveys 1}]
     ;; Testidata
-    '({:tyomenetelma "Test 1", :kustannus "1500" :id 1}
-      {:tyomenetelma "Test 2", :kustannus "2500" :id 2})]])
+    '({:tyomenetelma "Test 1", :kustannus 1500 :id 1}
+      {:tyomenetelma "Test 2", :kustannus 2500 :id 2})]])
 
 
 (defn mpu-kustannukset* [e! _app]

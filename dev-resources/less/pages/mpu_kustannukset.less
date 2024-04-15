@@ -7,21 +7,31 @@
     display: flex;
     align-self: flex-end;
     justify-content: space-between;
-    width: 100%;
+    width: 99.5%;
 
     /* Kalenterivuosi */
     > :first-child {
       margin-bottom: 0;
       padding-bottom: 0;
+
+      .dropdown {
+        max-width: 197px;
+        width: 197px;
+      }
     }
 
     /* Lisää kustannus */
     > :last-child {
       margin-bottom: @valistys-4;
     }
-    
+
     > span {
       align-self: flex-end;
     }
+  }
+
+  /* Yhteenveto*/
+  .kustannukset-yhteenveto  {
+    background-color: @white-dark;
   }
 }
