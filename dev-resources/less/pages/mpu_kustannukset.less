@@ -2,5 +2,22 @@
 
 .mpu-kustannukset 
 {
+  .header-valinnat 
+  {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-self: flex-end;
 
+    /* Kalenterivuosi */
+    > :first-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    /* Lisää kustannus */
+    > :last-child {
+      margin-bottom: @valistys-4;
+    }
+  }
 }

@@ -22,19 +22,28 @@
 
 
 (defn kustannukset-listaus [e! {:keys [valittu-vuosi]} urakka]
-  
+
   [:div.mpu-kustannukset
-   
-   ;; Vuosi valinta
-   [valinnat/vuosi
-    {:disabled false
-     :otsikko-teksti "Kalenterivuosi"}
-    (t/year (:alkupvm urakka))
-    (t/year (:loppupvm urakka))
-    urakka/valittu-urakan-vuosi
-    #(do
-       (println "valittu vuosi" %)
-       (urakka/valitse-urakan-vuosi! %))]])
+
+   [:div.header-valinnat
+    ;; Vuosi valinta
+    [valinnat/vuosi
+     {:disabled false
+      :kaanteinen-jarjestys? true
+      :otsikko-teksti "Kalenterivuosi"}
+     (t/year (:alkupvm urakka))
+     (t/year (:loppupvm urakka))
+     urakka/valittu-urakan-vuosi
+     #(do
+        (println "valittu vuosi ->" %)
+        (urakka/valitse-urakan-vuosi! %))]
+    
+    ;; Lisää kustannus
+    [napit/yleinen-ensisijainen
+     "Lisää kustannus"
+     #(do
+        (println "Uusi Kustannus ->"))
+     {:ikoni [ikonit/harja-icon-action-add]}]]])
 
 
 (defn mpu-kustannukset* [e! _app]
