@@ -22,21 +22,30 @@
 (defrecord SuljeLomake [])
 
 
+(defn- hae-paikkaus-kustannukset [app]
+  (let [aikavali (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi)
+        alkuaika (when (some? aikavali) (first aikavali))
+        loppuaika (when (some? aikavali) (second aikavali))]
+
+    (tuck-apurit/post! app :hae-paikkaus-kustannukset
+      {:aikavali aikavali
+       :urakka-id @nav/valittu-urakka-id}
+      {:onnistui ->HaeTiedotOnnistui
+       :epaonnistui ->HaeTiedotEpaonnistui})))
+
+
 (extend-protocol tuck/Event
 
   HaeTiedot
   (process-event [_ app]
-    (println "HaeTiedot")
-    (tuck-apurit/post! app :hae-reikapaikkaus-kustannukset
-      {:vuosi @urakka/valittu-urakan-vuosi
-       :urakka-id @nav/valittu-urakka-id}
-      {:onnistui ->HaeTiedotOnnistui
-       :epaonnistui ->HaeTiedotEpaonnistui})
+    (println "HaeTiedot, interval: " (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
+    (hae-paikkaus-kustannukset app)
     (assoc app :haku-kaynnissa? true))
 
   HaeTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
     (let [kustannukset (reduce + (map :kustannus vastaus))]
+      (println "\n V: " vastaus)
       (assoc app
         :rivit vastaus
         :kustannukset kustannukset
