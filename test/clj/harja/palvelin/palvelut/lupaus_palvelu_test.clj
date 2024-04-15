@@ -7,6 +7,7 @@
             [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]))
 
+
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]

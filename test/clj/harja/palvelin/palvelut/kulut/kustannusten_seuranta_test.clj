@@ -6,10 +6,7 @@
             [harja.palvelin.palvelut.kulut.kulut :as kulut]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]
-            [clojure.set :as set]))
+            [com.stuartsierra.component :as component]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma

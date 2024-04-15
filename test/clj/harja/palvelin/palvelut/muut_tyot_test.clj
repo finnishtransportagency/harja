@@ -3,7 +3,6 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.muut-tyot :refer :all]
             [harja.testi :refer :all]
-            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]))
 
