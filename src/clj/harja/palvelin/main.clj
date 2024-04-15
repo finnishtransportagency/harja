@@ -108,6 +108,7 @@
     [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
     [harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
+    [harja.palvelin.palvelut.yllapitokohteet.mpu-kustannukset :as mpu-kustannukset]
     [harja.palvelin.palvelut.tyomaapaivakirja :as tyomaapaivakirja]
     [harja.palvelin.palvelut.palauteluokitukset :as palauteluokitukset]
 
@@ -204,22 +205,22 @@
       :db (tietokanta/luo-tietokanta (assoc tietokanta
                                        :tarkkailun-timeout-arvot
                                        (select-keys (get-in asetukset [:komponenttien-tila :db])
-                                                    #{:paivitystiheys-ms :kyselyn-timeout-ms})
+                                         #{:paivitystiheys-ms :kyselyn-timeout-ms})
                                        :tarkkailun-nimi :db)
-                                     kehitysmoodi)
+            kehitysmoodi)
       :db-replica (tietokanta/luo-tietokanta (assoc tietokanta-replica
                                                :tarkkailun-timeout-arvot
                                                (select-keys (get-in asetukset [:komponenttien-tila :db-replica])
-                                                            #{:paivitystiheys-ms :replikoinnin-max-viive-ms})
+                                                 #{:paivitystiheys-ms :replikoinnin-max-viive-ms})
                                                :tarkkailun-nimi :db-replica)
-                                             kehitysmoodi)
+                    kehitysmoodi)
 
       :todennus (component/using
                   (todennus/http-todennus (:sahke-headerit asetukset))
                   [:db])
       :http-palvelin (component/using
                        (http-palvelin/luo-http-palvelin http-palvelin
-                                                        kehitysmoodi)
+                         kehitysmoodi)
                        [:todennus :metriikka :db])
       :tuck-remoting (component/using
                        (tuck-remoting/luo-tuck-remoting (:sahke-headerit asetukset))
@@ -256,8 +257,8 @@
       :integraatioloki
       (component/using (integraatioloki/->Integraatioloki
                          (:paivittainen-lokin-puhdistusaika
-                           (:integraatiot asetukset)))
-                       [:db])
+                          (:integraatiot asetukset)))
+        [:db])
 
       :itmf (component/using
               (itmf/luo-itmf (merge (:itmf asetukset)
@@ -284,8 +285,8 @@
 
       ;; Sampo
       :api-sampo (component/using
-                        (api-sampo/->ApiSampo (:sampo-api asetukset))
-                        [:http-palvelin :db :integraatioloki])
+                   (api-sampo/->ApiSampo (:sampo-api asetukset))
+                   [:http-palvelin :db :integraatioloki])
 
       ;; T-LOIK
       :tloik (component/using
@@ -318,8 +319,8 @@
                          [:db :integraatioloki])
 
       :yha-paikkauskomponentti (component/using
-                         (yha-paikkauskomponentti/->YhaPaikkaukset (:yha asetukset))
-                         [:db :integraatioloki])
+                                 (yha-paikkauskomponentti/->YhaPaikkaukset (:yha asetukset))
+                                 [:db :integraatioloki])
 
       :velho-integraatio (component/using
                            (velho-integraatio/->Velho (:velho asetukset))
@@ -372,8 +373,8 @@
                              (urakan-toimenpiteet/->Urakan-toimenpiteet)
                              [:http-palvelin :db])
       :budjettisuunnittelu (component/using
-                               (budjettisuunnittelu/->Budjettisuunnittelu)
-                               [:http-palvelin :db])
+                             (budjettisuunnittelu/->Budjettisuunnittelu)
+                             [:http-palvelin :db])
       :yksikkohintaiset-tyot (component/using
                                (yksikkohintaiset-tyot/->Yksikkohintaiset-tyot)
                                [:http-palvelin :db])
@@ -384,11 +385,11 @@
                    (muut-tyot/->Muut-tyot)
                    [:http-palvelin :db])
       :tehtavamaarat (component/using
-                   (tehtavamaarat/->Tehtavamaarat (:kehitysmoodi asetukset))
-                   [:http-palvelin :db])
+                       (tehtavamaarat/->Tehtavamaarat (:kehitysmoodi asetukset))
+                       [:http-palvelin :db])
       :kulut (component/using
-                (kulut/->Kulut)
-                [:http-palvelin :db :pdf-vienti :excel-vienti])
+               (kulut/->Kulut)
+               [:http-palvelin :db :pdf-vienti :excel-vienti])
       :toteumat (component/using
                   (toteumat/->Toteumat)
                   [:http-palvelin :db :db-replica :karttakuvat])
@@ -463,17 +464,17 @@
                          (pohjavesialueet/->Pohjavesialueet)
                          [:http-palvelin :db])
       :suolarajoitukset (component/using
-                         (suolarajoitus-palvelu/->Suolarajoitus)
-                         [:http-palvelin :db])
+                          (suolarajoitus-palvelu/->Suolarajoitus)
+                          [:http-palvelin :db])
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)
                      [:http-palvelin :db])
       :info (component/using
-             (info/->Info)
-             [:http-palvelin :db])
-      :rajoitusalue-pituudet (component/using
-              (rajoitusalue-pituudet/->RajoitusaluePituudet)
+              (info/->Info)
               [:http-palvelin :db])
+      :rajoitusalue-pituudet (component/using
+                               (rajoitusalue-pituudet/->RajoitusaluePituudet)
+                               [:http-palvelin :db])
       :selainvirhe (component/using
                      (selainvirhe/->Selainvirhe kehitysmoodi)
                      [:http-palvelin])
@@ -518,9 +519,13 @@
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
                                 [:http-palvelin :db])
-      
+
       :reikapaikkaukset (component/using
                           (reikapaikkaukset/->Reikapaikkaukset)
+                          [:http-palvelin :db])
+
+      :mpu-kustannukset (component/using
+                          (mpu-kustannukset/->MPUKustannukset)
                           [:http-palvelin :db])
 
       :tyomaapaivakirja (component/using
@@ -547,8 +552,8 @@
                    [:http-palvelin :db  :yha-integraatio :velho-integraatio])
 
       :varustetoteuma-ulkoiset (component/using
-                   (varuste-ulkoiset/->VarusteVelho)
-                   [:http-palvelin :db :velho-integraatio :excel-vienti])
+                                 (varuste-ulkoiset/->VarusteVelho)
+                                 [:http-palvelin :db :velho-integraatio :excel-vienti])
 
       :digiroad (component/using
                   (digiroad/->Digiroad)
@@ -635,8 +640,8 @@
                       [:http-palvelin])
 
       :jarjestelman-tila (component/using
-                   (jarjestelman-tila/->JarjestelmanTila (:kehitysmoodi asetukset))
-                   [:db :http-palvelin])
+                           (jarjestelman-tila/->JarjestelmanTila (:kehitysmoodi asetukset))
+                           [:db :http-palvelin])
 
       ;; Harja API
       :api-urakat (component/using
@@ -709,12 +714,12 @@
                       [:http-palvelin :db :integraatioloki])
 
       :api-analytiikka (component/using
-                  (analytiikka/->Analytiikka (:kehitysmoodi asetukset))
-                  [:http-palvelin :db-replica :integraatioloki])
+                         (analytiikka/->Analytiikka (:kehitysmoodi asetukset))
+                         [:http-palvelin :db-replica :integraatioloki])
 
       :api-tyomaapaivakirja (component/using
-                         (api-tyomaapaivakirja/->Tyomaapaivakirja)
-                         [:http-palvelin :db :integraatioloki])
+                              (api-tyomaapaivakirja/->Tyomaapaivakirja)
+                              [:http-palvelin :db :integraatioloki])
 
       :tieluvat (component/using
                   (tieluvat/->Tieluvat)

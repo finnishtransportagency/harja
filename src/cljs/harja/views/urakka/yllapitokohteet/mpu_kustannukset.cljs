@@ -73,7 +73,7 @@
   (let []
 
     [:div.mpu-kustannukset
-   ;; Lomake
+     ;; Lomake
      (when muokataan
        (kustannuksen-lisays-lomake e! app lomake-data))
 
