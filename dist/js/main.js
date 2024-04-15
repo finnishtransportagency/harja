@@ -54334,7 +54334,7 @@ var _default = exports["default"] = _react["default"].createClass({
     var feedbackSubject = "";
     var feedbackHref = "mailto:" + feedbackAddress + "?subject=" + feedbackSubject;
     var harjaLink = "https://harja.vaylapilvi.fi/";
-    var testiHarjaLink = "https://harja.testivaylapilvi.fi";
+    var testiHarjaLink = "https://harjatest.testivaylapilvi.fi";
     return /*#__PURE__*/_react["default"].createElement("nav", null, /*#__PURE__*/_react["default"].createElement("div", {
       className: "harja-header title-bar show-for-large"
     }, /*#__PURE__*/_react["default"].createElement("div", {

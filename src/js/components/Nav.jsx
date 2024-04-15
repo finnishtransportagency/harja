@@ -35,7 +35,7 @@ export default React.createClass({
     const feedbackHref = "mailto:" + feedbackAddress + "?subject=" +feedbackSubject;
 
     const harjaLink = "https://harja.vaylapilvi.fi/";
-    const testiHarjaLink = "https://harja.testivaylapilvi.fi";
+    const testiHarjaLink = "https://harjatest.testivaylapilvi.fi";
 
     return (
       <nav>
