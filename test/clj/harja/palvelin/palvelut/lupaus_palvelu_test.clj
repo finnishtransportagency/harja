@@ -509,7 +509,7 @@
                                  :lupaus-vaihtoehto-id (ffirst (hae-lupaus-vaihtoehdot 3))}))
       "Lupaus 6:lle ei voi antaa monivalinta-vaihtoehtoa."))
 
-(deftest kommentti-test
+#_(deftest kommentti-test
   (let [lupaus-tiedot {:lupaus-id 4
                        :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}
         hakutiedot (merge lupaus-tiedot

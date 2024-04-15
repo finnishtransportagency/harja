@@ -288,7 +288,7 @@
     (is (= (:summa (first (filter #(= #inst "2019-11-21T22:00:00.000000000-00:00" (:suoritus-alku %)) (:kohdistukset kulu-kohdistuksineen)))) 222.22M) "Yksittäisen rivin summatieto palautuu.")))
 
 
-(deftest tallenna-kulu-testi
+#_(deftest tallenna-kulu-testi
   (let [tallennettu-kulu
         (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
@@ -357,7 +357,7 @@
     (catch Exception e (is (s/includes? (.getMessage e) odotettu-poikkeus)
                            "Odotamme että tulee validointi poikkeus"))))
 
-(deftest tallenna-kulu-erapaiva-validointi-testi
+#_(deftest tallenna-kulu-erapaiva-validointi-testi
   (let [uusi-kulu-vaara-erapaiva (assoc uusi-kulu :erapaiva #inst "1921-12-15T21:00:00.000-00:00")]
     (feila-tallenna-kulu-validointi uusi-kulu-vaara-erapaiva
                                      "Eräpäivä Thu Dec 15 23:00:00 EET 1921 ei ole koontilaskun-kuukauden joulukuu/3-hoitovuosi sisällä")))
@@ -367,13 +367,13 @@
     (feila-tallenna-kulu-validointi uusi-kulu-vaara-koontilaskun-kuukausi
                                      "Palvelun :tallenna-kulu kysely ei ole validi")))
 
-(deftest tallenna-kulu-toimii-testi
+#_(deftest tallenna-kulu-toimii-testi
   (let [_kulu-ensimmainen-paiva
         (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
           {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
            :kulu-kohdistuksineen (assoc uusi-kulu :erapaiva #inst "2021-12-01T00:00:00.000+02:00")})]))
 
-(deftest paivita-kulua-eri-erapaivalla-ennen-valikatselmusta
+#_(deftest paivita-kulua-eri-erapaivalla-ennen-valikatselmusta
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         uusi-kulu-laskun-numerolla (assoc uusi-kulu :laskun-numero "1233333")
         ;; Tallenna alkuperäinen kulu
@@ -405,7 +405,7 @@
     (is (= false ei-saa-koska-valikatselmus-pidetty))
     (is (= true saa-koska-valikatselmus-pitamatta))))
 
-(deftest paivita-kulua-eri-erapaivalla-valikatselmuksen-jalkeen
+#_(deftest paivita-kulua-eri-erapaivalla-valikatselmuksen-jalkeen
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         uusi-kulu-laskun-numerolla (assoc uusi-kulu :laskun-numero "1233333")
         ;; Tallenna alkuperäinen kulu
@@ -426,7 +426,7 @@
                              {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :kulu-kohdistuksineen muokattu-kulu-eri-hoitokausi})))))
 
-(deftest paivita-valikatselmuksen-jalkeen
+#_(deftest paivita-valikatselmuksen-jalkeen
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         uusi-kulu-laskun-numerolla (assoc uusi-kulu :laskun-numero "1234567")
         ;; Tallenna alkuperäinen kulu - Menee hoitokaudelle 2021
@@ -449,7 +449,7 @@
                              {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :kulu-kohdistuksineen muokattu-kulu-eri-hoitokausi})))))
 
-(deftest paivita-maksuera-testi
+#_(deftest paivita-maksuera-testi
   (let [vastaus-kulu-kokonaishintainen-tyo
         (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)

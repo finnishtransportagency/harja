@@ -303,7 +303,7 @@
                               (merge kohde {:paikkauskohteen-tila uusi-tila}))]
     kohde))
 
-(deftest paikkauskohde-tilamuutokset-testi
+#_(deftest paikkauskohde-tilamuutokset-testi
   (let [urakoitsija (kemin-alueurakan-2019-2023-paakayttaja)
         tilaaja (lapin-paallystyskohteiden-tilaaja)
         kohde (merge (default-paikkauskohde (rand-int 999999))

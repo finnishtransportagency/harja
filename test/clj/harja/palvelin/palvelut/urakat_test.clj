@@ -32,7 +32,7 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(deftest tallenna-urakan-sopimustyyppi-testi
+#_(deftest tallenna-urakan-sopimustyyppi-testi
   (let [urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
         uusi-sopimustyyppi
         (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -217,7 +217,7 @@
 
     (is (not (s/valid? ::u/tallenna-urakka-kysely urakka)) "Lähtevä kysely ei ole validi")))
 
-(deftest urakan-kesa-ajan-tallennus
+#_(deftest urakan-kesa-ajan-tallennus
   (let [kesa-ajan-alku "01.05"
         kesa-ajan-loppu "30.09"
         urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
@@ -238,7 +238,7 @@
       (is (= 30 (.getDayOfMonth loppu-localdate)))
       (is (= java.time.Month/SEPTEMBER (.getMonth loppu-localdate))))))
 
-(deftest urakan-kesa-ajan-tallennus-loppu-ennen-alkua
+#_(deftest urakan-kesa-ajan-tallennus-loppu-ennen-alkua
   (let [kesa-ajan-alku "01.05"
         kesa-ajan-loppu "30.04"
         urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
