@@ -5,9 +5,9 @@
   .header-valinnat 
   {
     display: flex;
+    align-self: flex-end;
     justify-content: space-between;
     width: 100%;
-    align-self: flex-end;
 
     /* Kalenterivuosi */
     > :first-child {
@@ -18,6 +18,10 @@
     /* Lisää kustannus */
     > :last-child {
       margin-bottom: @valistys-4;
+    }
+    
+    > span {
+      align-self: flex-end;
     }
   }
 }

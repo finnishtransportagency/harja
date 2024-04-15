@@ -21,7 +21,7 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
-(defn kustannukset-listaus [e! {:keys [valittu-vuosi]} urakka]
+(defn kustannukset-listaus [e! {:keys [haku-kaynnissa?]} urakka]
 
   [:div.mpu-kustannukset
 
@@ -37,13 +37,40 @@
      #(do
         (println "valittu vuosi ->" %)
         (urakka/valitse-urakan-vuosi! %))]
-    
+
     ;; Lisää kustannus
-    [napit/yleinen-ensisijainen
-     "Lisää kustannus"
-     #(do
-        (println "Uusi Kustannus ->"))
-     {:ikoni [ikonit/harja-icon-action-add]}]]])
+    [:span
+     [napit/yleinen-ensisijainen
+      "Lisää kustannus"
+      #(do
+         (println "Uusi Kustannus ->"))
+      {:ikoni [ikonit/harja-icon-action-add]}]]]
+
+   ;; Taulukko
+   [grid/grid {:tyhja (if haku-kaynnissa?
+                        [ajax-loader "Haku käynnissä..."]
+                        "Valitulle aikavälille ei löytynyt mitään.")
+               :tunniste :id
+               :sivuta grid/vakiosivutus
+               :voi-kumota? false
+               :piilota-toiminnot? true
+               :piilota-otsikot? true}
+
+    ;; Työmenetelmä
+    [{:tyyppi :string
+      :nimi :tyomenetelma
+      :luokka "text-nowrap"
+      :leveys 1}
+
+     ;; Kustannus
+     {:tyyppi :string
+      :nimi :kustannus
+      :tasaa :oikea
+      :luokka "text-nowrap"
+      :leveys 1}]
+    ;; Testidata
+    '({:tyomenetelma "Test 1", :kustannus "1500" :id 1}
+      {:tyomenetelma "Test 2", :kustannus "2500" :id 2})]])
 
 
 (defn mpu-kustannukset* [e! _app]
