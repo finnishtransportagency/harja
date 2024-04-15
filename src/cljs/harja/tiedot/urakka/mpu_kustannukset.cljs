@@ -15,6 +15,8 @@
 
 ;; Tuck 
 (defrecord HaeTiedot [])
+(defrecord AvaaLomake [])
+(defrecord SuljeLomake [])
 
 
 (extend-protocol tuck/Event
@@ -22,4 +24,12 @@
   HaeTiedot
   (process-event [_ app]
     (println "HaeTiedot")
-    app))
+    app)
+  
+  AvaaLomake
+  (process-event [_ app]
+    (assoc app :muokataan true))
+  
+  SuljeLomake
+  (process-event [_ app]
+    (assoc app :muokataan false)))

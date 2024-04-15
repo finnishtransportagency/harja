@@ -7,6 +7,7 @@
             [harja.tiedot.urakka :as urakka]
             [harja.ui.liitteet :as liitteet]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.lomake :as lomake]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.kentat :as kentat]
             [cljs-time.core :as t]
@@ -21,63 +22,118 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
-(defn kustannukset-listaus [e! {:keys [haku-kaynnissa?]} urakka]
+(defn kustannuksen-lisays-lomake [e! {:keys [voi-kirjoittaa? voi-tallentaa?]} lomake-data]
+  [:div.overlay-oikealla
+   [lomake/lomake
+    {:ei-borderia? true
+     :voi-muokata? voi-kirjoittaa?
+     :tarkkaile-ulkopuolisia-muutoksia? true
+     :muokkaa! #(println "Muokkaa -½")
+     ;; Header
+     :header [:div.col-md-12
+              [:h2.header-yhteiset {:data-cy "mpu-kustannus-lisays"} "Lisää kustannus"]
+              [:hr]]
+     ;; Footer, joka on vakiona col-md-12
+     :footer [:<>
+              [:div.muokkaus-modal-napit
+               ;; Tallenna
+               [napit/tallenna "Tallenna" #(println "Tallenna -½") {:disabled (not voi-tallentaa?)
+                                                                    :data-attributes {:data-cy "tallena-mpu-kustannus"}}]
+               ;; Peruuta 
+               [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeLomake)) {:data-attributes {:data-cy "mpu-kustannus-peruuta"}}]]]}
 
-  [:div.mpu-kustannukset
+    [;; Tyyppi
+     (lomake/rivi
+       {:otsikko "Kustannuksen tyyppi"
+        :pakollinen? true
+        :rivi-luokka "lomakeryhman-rivi-tausta"
+        :validoi [[:ei-tyhja "Valitse tyyppi"]]
+        :nimi :tyomenetelma
+        :tyyppi :valinta
+        ;; Lisää valinnat
+        :valinnat (into [nil] [])
+        ::lomake/col-luokka "leveys-kokonainen"})
 
-   [:div.header-valinnat
-    ;; Vuosi valinta
-    [valinnat/vuosi
-     {:disabled false
-      :kaanteinen-jarjestys? true
-      :otsikko-teksti "Kalenterivuosi"}
-     (t/year (:alkupvm urakka))
-     (t/year (:loppupvm urakka))
-     urakka/valittu-urakan-vuosi
-     #(do
-        (println "valittu vuosi ->" %)
-        (urakka/valitse-urakan-vuosi! %))]
+     ;; Määrä 
+     (lomake/rivi
+       {:otsikko "Kustannus"
+        :pakollinen? true
+        :rivi-luokka "lomakeryhman-rivi-tausta"
+        :nimi :kustannus
+        :tyyppi :euro
+        :teksti-oikealla "EUR"
+        :vayla-tyyli? true
+        :validoi [[:ei-tyhja "Syötä kustannusarvo"]]
+        ::lomake/col-luokka "maara-valinnat"})]
+    lomake-data]])
 
-    ;; Lisää kustannus
-    [:span
-     [napit/yleinen-ensisijainen
-      "Lisää kustannus"
-      #(do
-         (println "Uusi Kustannus ->"))
-      {:ikoni [ikonit/harja-icon-action-add] :vayla-tyyli? true}]]]
 
-   ;; Taulukko
-   [grid/grid {:tyhja (if haku-kaynnissa?
-                        [ajax-loader "Haku käynnissä..."]
-                        "Valitulle aikavälille ei löytynyt mitään.")
-               :tunniste :id
-               :sivuta grid/vakiosivutus
-               :voi-kumota? false
-               :piilota-toiminnot? true
-               :piilota-otsikot? true
-               ;; Yhteenveto 
-               :rivi-jalkeen-fn (fn [rivit]
-                                  ^{:luokka "kustannukset-yhteenveto"}
-                                  [{:teksti "Yhteensä" :luokka "lihavoitu"}
-                                   {:teksti "4500,00"
-                                    :tasaa :oikea :luokka "lihavoitu"}])}
+(defn kustannukset-listaus [e! {:keys [haku-kaynnissa? lomake-data muokataan] :as app} urakka]
 
-    ;; Työmenetelmä
-    [{:tyyppi :string
-      :nimi :tyomenetelma
-      :luokka "text-nowrap"
-      :leveys 1}
+  (let []
 
-     ;; Kustannus
-     {:tyyppi :positiivinen-numero
-      :desimaalien-maara 2
-      :nimi :kustannus
-      :tasaa :oikea
-      :luokka "text-nowrap"
-      :leveys 1}]
-    ;; Testidata
-    '({:tyomenetelma "Test 1", :kustannus 1500 :id 1}
-      {:tyomenetelma "Test 2", :kustannus 2500 :id 2})]])
+    [:div.mpu-kustannukset
+   ;; Lomake
+     (when muokataan
+       (kustannuksen-lisays-lomake e! app lomake-data))
+
+     [:div.header-valinnat
+     ;; Vuosi valinta
+      [valinnat/vuosi
+       {:disabled false
+        :kaanteinen-jarjestys? true
+        :otsikko-teksti "Kalenterivuosi"}
+       (t/year (:alkupvm urakka))
+       (t/year (:loppupvm urakka))
+       urakka/valittu-urakan-vuosi
+       #(do
+          (println "valittu vuosi ->" %)
+          (urakka/valitse-urakan-vuosi! %))]
+
+      ;; Lisää kustannus
+      [:span
+       [napit/yleinen-ensisijainen
+        "Lisää kustannus"
+        #(do
+           (println "Uusi Kustannus ->")
+           (e! (tiedot/->AvaaLomake)))
+        {:ikoni [ikonit/harja-icon-action-add] :vayla-tyyli? true}]]]
+
+     ;; Taulukko
+     [grid/grid {:tyhja (if haku-kaynnissa?
+                          [ajax-loader "Haku käynnissä..."]
+                          "Valitulle aikavälille ei löytynyt mitään.")
+                 :tunniste :id
+                 :sivuta grid/vakiosivutus
+                 :voi-kumota? false
+                 :piilota-toiminnot? true
+                 :piilota-otsikot? true
+                 ;; Yhteenveto 
+                 :rivi-jalkeen-fn (fn [rivit]
+                                    ^{:luokka "kustannukset-yhteenveto"}
+                                    [{:teksti "Yhteensä" :luokka "lihavoitu"}
+                                     {:teksti "4500,00"
+                                      :tasaa :oikea :luokka "lihavoitu"}])}
+
+      ;; Työmenetelmä
+      [{:tyyppi :string
+        :nimi :tyomenetelma
+        :luokka "text-nowrap"
+        :leveys 1}
+
+       ;; Kustannus
+       {:tyyppi :positiivinen-numero
+        :desimaalien-maara 2
+        :nimi :kustannus
+        :tasaa :oikea
+        :luokka "text-nowrap"
+        :leveys 1}]
+      ;; Testidata
+      '({:tyomenetelma "Työmenetelmä 1", :kustannus 1500 :id 1}
+        {:tyomenetelma "Työmenetelmä 2", :kustannus 2500 :id 2}
+        {:tyomenetelma "Työmenetelmä 3", :kustannus 3500 :id 3}
+        {:tyomenetelma "Työmenetelmä 4", :kustannus 4500 :id 4}
+        {:tyomenetelma "Työmenetelmä 5", :kustannus 5500 :id 5})]]))
 
 
 (defn mpu-kustannukset* [e! _app]
