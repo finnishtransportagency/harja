@@ -177,7 +177,9 @@
       (= (:tyyppi ur) :tekniset-laitteet)
       (or
         (and (= (:tyyppi ur) :paallystys)
-             (= (:sopimustyyppi ur) :palvelusopimus))))))
+          (or
+            (= (:sopimustyyppi ur) :palvelusopimus)
+            (= (:sopimustyyppi ur) :mpu)))))))
 
 (defn paattele-valittu-hoitokausi [hoitokaudet]
   (when-not (empty? hoitokaudet)
