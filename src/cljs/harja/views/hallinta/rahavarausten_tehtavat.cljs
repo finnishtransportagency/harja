@@ -49,8 +49,12 @@
        {:otsikko "" :tyyppi :komponentti
         :komponentti (fn [rivi]
                        (when-not (= 0 (:id rivi))
-                         [napit/poista nil
-                          #(e! (tiedot/->PoistaTehtavaRahavaraukselta rahavaraus-id (:id rivi)))]))}]
+                         [napit/poista "Poista"
+                          #(e! (tiedot/->PoistaTehtavaRahavaraukselta rahavaraus-id (:id rivi)))
+                          {:vayla-tyyli?  true
+                           :teksti-nappi? true
+                           :style         {:font-size   "14px"
+                                           :margin-left "auto"}}]))}]
       rahavarauksen-tehtavat]]))
 
 (defn rahavarausten-tehtavat* [e! _app]
