@@ -10,7 +10,11 @@
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 
-(defonce tila (atom {}))
+(defonce tila (atom {:rivit nil
+                     :kustannukset-yhteensa nil 
+                     :muokataan false
+                     :haku-kaynnissa? false}))
+
 (def nakymassa? (atom false))
 
 
@@ -44,12 +48,15 @@
 
   HaeTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [kustannukset (reduce + (map :kustannus vastaus))]
-      (println "\n V: " vastaus)
+    (let [;; Laske kaikki kustannukset yhteen
+          kustannukset (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) vastaus))
+          ]
+      (println "\n V: " (vec vastaus))
       (assoc app
-        :rivit vastaus
-        :kustannukset kustannukset
-        :haku-kaynnissa? false)))
+        :rivit (vec vastaus)
+        :kustannukset-yhteensa kustannukset
+        :haku-kaynnissa? false))
+)
 
   HaeTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]

@@ -6,6 +6,7 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka :as urakka]
             [harja.ui.liitteet :as liitteet]
+            [harja.fmt :as fmt]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.lomake :as lomake]
             [harja.ui.valinnat :as valinnat]
@@ -68,10 +69,10 @@
     lomake-data]])
 
 
-(defn kustannukset-listaus [e! {:keys [haku-kaynnissa? lomake-data muokataan] :as app} urakka]
+(defn kustannukset-listaus [e! {:keys [haku-kaynnissa? lomake-data 
+                                       muokataan rivit kustannukset-yhteensa] :as app} urakka]
 
   (let []
-
     [:div.mpu-kustannukset
      ;; Lomake
      (when muokataan
@@ -109,11 +110,10 @@
                  :piilota-toiminnot? true
                  :piilota-otsikot? true
                  ;; Yhteenveto 
-                 :rivi-jalkeen-fn (fn [rivit]
+                 :rivi-jalkeen-fn (fn [_rivit]
                                     ^{:luokka "kustannukset-yhteenveto"}
                                     [{:teksti "Yhteensä" :luokka "lihavoitu"}
-                                     {:teksti "4500,00"
-                                      :tasaa :oikea :luokka "lihavoitu"}])}
+                                     {:teksti (str (fmt/euro-opt false kustannukset-yhteensa) " €") :tasaa :oikea :luokka "lihavoitu"}])}
 
       ;; Työmenetelmä
       [{:tyyppi :string
@@ -122,24 +122,20 @@
         :leveys 1}
 
        ;; Kustannus
-       {:tyyppi :positiivinen-numero
+       {:tyyppi :euro
         :desimaalien-maara 2
-        :nimi :kustannus
+        :nimi :kokonaiskustannus
         :tasaa :oikea
         :luokka "text-nowrap"
         :leveys 1}]
-      ;; Testidata
-      '({:tyomenetelma "Työmenetelmä 1", :kustannus 1500 :id 1}
-        {:tyomenetelma "Työmenetelmä 2", :kustannus 2500 :id 2}
-        {:tyomenetelma "Työmenetelmä 3", :kustannus 3500 :id 3}
-        {:tyomenetelma "Työmenetelmä 4", :kustannus 4500 :id 4}
-        {:tyomenetelma "Työmenetelmä 5", :kustannus 5500 :id 5})]]))
+      rivit]]))
 
 
 (defn mpu-kustannukset* [e! _app]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-    (komp/sisaan #(e! (tiedot/->HaeTiedot)))
+    (komp/sisaan #(do 
+                    (e! (tiedot/->HaeTiedot))))
 
     (fn [e! app]
       [:div
