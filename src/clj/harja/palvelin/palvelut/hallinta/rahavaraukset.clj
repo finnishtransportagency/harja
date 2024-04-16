@@ -8,32 +8,24 @@
 
 (defn hae-rahavaraukset [db kayttaja]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-rahavaraukset kayttaja)
-  (let [rahavaraukset (q/hae-rahavaraukset db)
-        _ (println "hae-rahavaraukset: " rahavaraukset)]
-    rahavaraukset))
+  (q/hae-rahavaraukset db))
 
 (defn hae-rahavaraukset-tehtavineen [db kayttaja]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-rahavaraukset kayttaja)
   (let [rahavaraukset-tehtavineen (q/hae-rahavaraukset-tehtavineen db)
-        _ (println "rahavaraukset-tehtavineen1: " rahavaraukset-tehtavineen)
         ;; Muokataan array_agg tehtävät vectoriksi
         rahavaraukset-tehtavineen (mapv (fn [rivi]
-                                          (let [_ (println "rivi1: " rivi)
-                                                tehtavat (mapv
+                                          (let [tehtavat (mapv
                                                            #(konv/pgobject->map % :id :long :nimi :string)
                                                            (konv/pgarray->vector (:tehtavat rivi)))
-                                                rivi (assoc rivi :tehtavat tehtavat)
-                                                _ (println "rivi2: " rivi)]
+                                                rivi (assoc rivi :tehtavat tehtavat)]
                                             rivi))
-                                    rahavaraukset-tehtavineen)
-        _ (println "rahavaraukset-tehtavineen2: " rahavaraukset-tehtavineen)]
+                                    rahavaraukset-tehtavineen)]
     rahavaraukset-tehtavineen))
 
 (defn hae-rahavaraukselle-mahdolliset-tehtavat [db kayttaja]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-rahavaraukset kayttaja)
-  (let [tehtavat (q/hae-rahavaraukselle-mahdolliset-tehtavat db)
-        _ (println "hae-rahavaraukselle-mahdolliset-tehtavat :: tehtavat:" tehtavat)]
-    tehtavat))
+  (q/hae-rahavaraukselle-mahdolliset-tehtavat db))
 
 (defn hae-urakoiden-rahavaraukset [db kayttaja]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-rahavaraukset kayttaja)
