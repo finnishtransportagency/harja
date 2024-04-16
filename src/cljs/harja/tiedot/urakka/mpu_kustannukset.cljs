@@ -20,6 +20,20 @@
 (def kustannusten-tyypit #{"Arvonmuutokset" "Indeksi- ja kustannustason muutokset" "Muut kustannukset"}) 
 
 
+(defn voi-tallentaa?
+  "Validoi kustannuksen tallennuksen"
+  [{:keys [kustannus kustannus-tyyppi]}]
+  (let [kustannus-validi? (and
+                            (some? kustannus)
+                            (integer? kustannus))
+        kustannus-tyyppi-validi? (and
+                                   (some? kustannus-tyyppi)
+                                   (string? kustannus-tyyppi))]
+    (and
+      kustannus-validi?
+      kustannus-tyyppi-validi?)))
+
+
 ;; Tuck 
 (defrecord HaeTiedot [])
 (defrecord HaeTiedotOnnistui [vastaus])
@@ -27,39 +41,34 @@
 (defrecord AvaaLomake [])
 (defrecord SuljeLomake [])
 (defrecord MuokkaaLomaketta [rivi])
+(defrecord TallennaKustannus [rivi])
+(defrecord TallennaKustannusOnnistui [vastaus])
+(defrecord TallennaKustannusEpaonnistui [vastaus])
 
 
 (defn- hae-paikkaus-kustannukset [app]
-  (let [aikavali (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi)
-        alkuaika (when (some? aikavali) (first aikavali))
-        loppuaika (when (some? aikavali) (second aikavali))]
-
-    (tuck-apurit/post! app :hae-paikkaus-kustannukset
-      {:aikavali aikavali
-       :urakka-id @nav/valittu-urakka-id}
-      {:onnistui ->HaeTiedotOnnistui
-       :epaonnistui ->HaeTiedotEpaonnistui})))
+  (tuck-apurit/post! app :hae-paikkaus-kustannukset
+    {:aikavali (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi)
+     :urakka-id @nav/valittu-urakka-id}
+    {:onnistui ->HaeTiedotOnnistui
+     :epaonnistui ->HaeTiedotEpaonnistui}))
 
 
 (extend-protocol tuck/Event
 
   HaeTiedot
   (process-event [_ app]
-    (println "HaeTiedot, interval: " (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
     (hae-paikkaus-kustannukset app)
     (assoc app :haku-kaynnissa? true))
 
   HaeTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
     (let [;; Laske kaikki kustannukset yhteen
-          kustannukset (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) vastaus))
-          ]
-      (println "\n V: " (vec vastaus))
+          kustannukset (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) vastaus))]
       (assoc app
         :rivit (vec vastaus)
         :kustannukset-yhteensa kustannukset
-        :haku-kaynnissa? false))
-)
+        :haku-kaynnissa? false)))
 
   HaeTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -74,7 +83,26 @@
   SuljeLomake
   (process-event [_ app]
     (assoc app :muokataan false))
-  
+
   MuokkaaLomaketta
   (process-event [{rivi :rivi} app]
-    (update app :lomake-valinnat merge rivi)))
+    (update app :lomake-valinnat merge rivi))
+
+  TallennaKustannus
+  (process-event [{rivi :rivi} app]
+    (let [{:keys [kustannus-tyyppi kustannus]} rivi]
+      (println "-> TallennaKustannus " kustannus-tyyppi kustannus)
+      (assoc app :muokataan false)))
+
+  TallennaKustannusOnnistui
+  (process-event [_ app]
+    (let []
+      (viesti/nayta-toast! "Kustannus tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
+      ;; TODO , hae
+      app))
+
+  TallennaKustannusEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "Tallennus epäonnistui, vastaus: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "Tallennus epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app))

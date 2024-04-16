@@ -14,6 +14,7 @@
             [cljs-time.core :as t]
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.navigaatio :as nav]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -23,7 +24,7 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
-(defn kustannuksen-lisays-lomake [e! {:keys [voi-kirjoittaa? voi-tallentaa? lomake-valinnat]}]
+(defn kustannuksen-lisays-lomake [e! {:keys [voi-kirjoittaa? lomake-valinnat]} voi-tallentaa?]
   [:div.overlay-oikealla
    [lomake/lomake
     {:ei-borderia? true
@@ -34,12 +35,12 @@
      :header [:div.col-md-12
               [:h2.header-yhteiset {:data-cy "mpu-kustannus-lisays"} "Lisää kustannus"]
               [:hr]]
-     ;; Footer, joka on vakiona col-md-12
+     ;; Footer
      :footer [:<>
               [:div.muokkaus-modal-napit
                ;; Tallenna
-               [napit/tallenna "Tallenna" #(println "Tallenna -½") {:disabled (not voi-tallentaa?)
-                                                                    :data-attributes {:data-cy "tallena-mpu-kustannus"}}]
+               [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaKustannus lomake-valinnat))  {:disabled (not voi-tallentaa?)
+                                                                                               :data-attributes {:data-cy "tallena-mpu-kustannus"}}]
                ;; Peruuta 
                [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeLomake)) {:data-attributes {:data-cy "mpu-kustannus-peruuta"}}]]]}
 
@@ -68,14 +69,17 @@
     lomake-valinnat]])
 
 
-(defn kustannukset-listaus [e! {:keys [haku-kaynnissa?  
+(defn kustannukset-listaus [e! {:keys [haku-kaynnissa? lomake-valinnat
                                        muokataan rivit kustannukset-yhteensa] :as app} urakka]
 
-  (let []
+  (let [voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet @nav/valittu-urakka-id @istunto/kayttaja)
+        voi-tallentaa? (and
+                         voi-kirjoittaa?
+                         (tiedot/voi-tallentaa? lomake-valinnat))]
     [:div.mpu-kustannukset
      ;; Lomake
      (when muokataan
-       (kustannuksen-lisays-lomake e! app))
+       (kustannuksen-lisays-lomake e! app voi-tallentaa?))
 
      [:div.header-valinnat
      ;; Vuosi valinta
