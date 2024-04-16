@@ -23,13 +23,13 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
-(defn kustannuksen-lisays-lomake [e! {:keys [voi-kirjoittaa? voi-tallentaa?]} lomake-data]
+(defn kustannuksen-lisays-lomake [e! {:keys [voi-kirjoittaa? voi-tallentaa? lomake-valinnat]}]
   [:div.overlay-oikealla
    [lomake/lomake
     {:ei-borderia? true
      :voi-muokata? voi-kirjoittaa?
      :tarkkaile-ulkopuolisia-muutoksia? true
-     :muokkaa! #(println "Muokkaa -½")
+     :muokkaa! #(e! (tiedot/->MuokkaaLomaketta %))
      ;; Header
      :header [:div.col-md-12
               [:h2.header-yhteiset {:data-cy "mpu-kustannus-lisays"} "Lisää kustannus"]
@@ -49,10 +49,9 @@
         :pakollinen? true
         :rivi-luokka "lomakeryhman-rivi-tausta"
         :validoi [[:ei-tyhja "Valitse tyyppi"]]
-        :nimi :tyomenetelma
+        :nimi :kustannus-tyyppi
         :tyyppi :valinta
-        ;; Lisää valinnat
-        :valinnat (into [nil] [])
+        :valinnat (vec tiedot/kustannusten-tyypit)
         ::lomake/col-luokka "leveys-kokonainen"})
 
      ;; Määrä 
@@ -66,17 +65,17 @@
         :vayla-tyyli? true
         :validoi [[:ei-tyhja "Syötä kustannusarvo"]]
         ::lomake/col-luokka "maara-valinnat"})]
-    lomake-data]])
+    lomake-valinnat]])
 
 
-(defn kustannukset-listaus [e! {:keys [haku-kaynnissa? lomake-data 
+(defn kustannukset-listaus [e! {:keys [haku-kaynnissa?  
                                        muokataan rivit kustannukset-yhteensa] :as app} urakka]
 
   (let []
     [:div.mpu-kustannukset
      ;; Lomake
      (when muokataan
-       (kustannuksen-lisays-lomake e! app lomake-data))
+       (kustannuksen-lisays-lomake e! app))
 
      [:div.header-valinnat
      ;; Vuosi valinta

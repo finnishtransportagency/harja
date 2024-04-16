@@ -11,11 +11,13 @@
 
 
 (defonce tila (atom {:rivit nil
+                     :lomake-valinnat nil
                      :kustannukset-yhteensa nil 
                      :muokataan false
                      :haku-kaynnissa? false}))
 
 (def nakymassa? (atom false))
+(def kustannusten-tyypit #{"Arvonmuutokset" "Indeksi- ja kustannustason muutokset" "Muut kustannukset"}) 
 
 
 ;; Tuck 
@@ -24,6 +26,7 @@
 (defrecord HaeTiedotEpaonnistui [vastaus])
 (defrecord AvaaLomake [])
 (defrecord SuljeLomake [])
+(defrecord MuokkaaLomaketta [rivi])
 
 
 (defn- hae-paikkaus-kustannukset [app]
@@ -70,4 +73,8 @@
 
   SuljeLomake
   (process-event [_ app]
-    (assoc app :muokataan false)))
+    (assoc app :muokataan false))
+  
+  MuokkaaLomaketta
+  (process-event [{rivi :rivi} app]
+    (update app :lomake-valinnat merge rivi)))
