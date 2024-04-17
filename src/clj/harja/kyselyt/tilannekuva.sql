@@ -531,7 +531,6 @@ SELECT tt.toimenpidekoodi AS toimenpidekoodi, (SELECT nimi FROM tehtava tpk WHER
            JOIN toteuma_tehtava tt  ON tt.toteuma = t.id
       AND tt.poistettu = FALSE
       AND tt.toimenpidekoodi IN (:toimenpidekoodit)
-      AND tt.poistettu = FALSE
       AND ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
 
 -- name: hae-toteumien-asiat
