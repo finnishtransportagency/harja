@@ -10,4 +10,4 @@ SELECT palvelin, tila, paivitetty
 FROM jarjestelman_tila
 WHERE "osa-alue"=:osa-alue AND
       (:kehitys? IS TRUE OR
-       palvelin ILIKE('%harja%'));
+       palvelin ILIKE('%eu-west-1%'));
