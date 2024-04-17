@@ -26,5 +26,5 @@
                                                 (when (= (:teemat urakka) "Valaistus") (tuo-urakka db (:the_geom urakka) (str (:urakkakood urakka)))))
                                     (when (= 0 (:lkm (first (u/tarkista-valaistusurakkadata db))))
                                           (throw (Exception. "Yhtään valaistusurakkaa ei viety kantaan. Tarkista aineiston yhteensopivuus sisäänlukevan kooditoteutuksen kanssa."))))))
-        (throw (Exception. (format "Valaistusurakoiden geometrioiden tiedostopolkua % ei löydy konfiguraatiosta. Tuontia ei suoriteta." shapefile)))))
+        (throw (Exception. (format "Valaistusurakoiden geometrioiden tiedostopolkua %s ei löydy konfiguraatiosta. Tuontia ei suoriteta." shapefile)))))
 
