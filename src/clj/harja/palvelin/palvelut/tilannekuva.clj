@@ -649,7 +649,8 @@
   ([db user tiedot osiot]
    (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
    (let [haettavat-urakat (rajaa-urakat-hakuoikeudella db user tiedot)]
-     (let [tiedot (assoc tiedot :toleranssi (geo/karkeistustoleranssi (:alue tiedot)))]
+     (let [tiedot (assoc tiedot :toleranssi (geo/karkeistustoleranssi (:alue tiedot)))
+           _ (log/info "Tilannekuvan parametrit: " (pr-str tiedot))]
        (into {}
              (map (juxt identity (partial yrita-hakea-osio db user tiedot haettavat-urakat)))
              osiot)))))
