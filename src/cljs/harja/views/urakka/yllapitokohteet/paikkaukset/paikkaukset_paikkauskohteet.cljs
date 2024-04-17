@@ -191,7 +191,7 @@
                                 :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
                               [yleiset/tiedoston-lataus-linkki
                                "Lataa Excel-pohja"
-                               (str (when-not (komm/kehitysymparistossa?) "/harja") "/excel/harja_paikkauskohteet_pohja.xlsx")]
+                               "/excel/harja_paikkauskohteet_pohja.xlsx"]
                               [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))
                                {:paksu? true
                                 :data-attributes {:data-cy "lisaa-paikkauskohde"}}]])])]

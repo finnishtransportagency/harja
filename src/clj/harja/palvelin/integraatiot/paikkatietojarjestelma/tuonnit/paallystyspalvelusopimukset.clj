@@ -32,4 +32,4 @@
               (tuo-urakka db (:the_geom urakka) (str (:urakkakood urakka))))))
         (when (= 0 (:lkm (first (u/tarkista-paallystyspalvelusopimusdata db))))
           (throw (Exception. "Yhtään päällystyspalvelusopimusta ei viety kantaan. Tarkista aineiston yhteensopivuus sisäänlukevan kooditoteutuksen kanssa.")))))
-    (throw (Exception. (format "Päällystyksen palvelusopimusten geometrioiden tiedostopolkua % ei löydy konfiguraatiosta. Tuontia ei suoriteta." shapefile)))))
+    (throw (Exception. (format "Päällystyksen palvelusopimusten geometrioiden tiedostopolkua %s ei löydy konfiguraatiosta. Tuontia ei suoriteta." shapefile)))))
