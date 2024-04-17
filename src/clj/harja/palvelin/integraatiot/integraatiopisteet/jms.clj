@@ -47,7 +47,7 @@
            ;; Käytetään joko ulkopuolelta annettua ulkoista id:tä tai JMS-yhteyden antamaa id:täs
            (lokittaja :jms-viesti tapahtuma-id (or viesti-id jms-viesti-id) "ulos" viesti jono)
            jms-viesti-id)
-         (let [virheviesti (format "Lähetys JMS-client % :in JMS jonoon: %s epäonnistui. Viesti id:tä ei palautunut" client-nimi jono)
+         (let [virheviesti (format "Lähetys JMS-client %s :in JMS jonoon: %s epäonnistui. Viesti id:tä ei palautunut" client-nimi jono)
                parametrit {:viesti-id viesti-id
                            :jms-client client-nimi}]
            (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id nil virheviesti parametrit)))
