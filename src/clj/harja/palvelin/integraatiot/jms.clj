@@ -14,7 +14,8 @@
             [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
             [harja.kyselyt.jarjestelman-tila :as q]
-            [harja.tyokalut.predikaatti :as predikaatti])
+            [harja.tyokalut.predikaatti :as predikaatti]
+            [harja.tyokalut.versio :as versio])
   (:import (clojure.lang PersistentArrayMap)
            (javax.jms Session ExceptionListener JMSException MessageListener TextMessage)
            (java.util Date Base64)
@@ -246,10 +247,6 @@
          laheta-viesti-kaskytyskanavaan!
          jms-toiminto!)
 
-(def palvelimen-versio (some->
-                         (slurp "harja_image_id.txt")
-                         (string/trim-newline)))
-
 (defn- tallenna-jms-tila-kantaan
   [db jms-tila jarjestelma]
   {:pre [(seqable? jms-tila)
@@ -257,7 +254,7 @@
   (q/tallenna-jarjestelman-tila<! db {:tila (cheshire/encode jms-tila)
                                       :palvelimen-osoite (fmt/leikkaa-merkkijono 512
                                                          (.toString (InetAddress/getLocalHost)))
-                                      :palvelimen-versio palvelimen-versio
+                                      :palvelimen-versio versio/palvelimen-versio
                                       :osa-alue jarjestelma}))
 
 (defn aloita-jms-yhteyden-tarkkailu [this paivitystiheys-ms lopeta-tarkkailu-kanava tapahtuma-julkaisija db]
