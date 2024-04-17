@@ -49,7 +49,7 @@
            (is (= (count muutoshintaiset-tyot) oulun-alueurakan-toiden-lkm) "muutoshintaisten lkm")))
 
 
-#_(deftest tallenna-muutoshintaiset-tyot-testi
+(deftest tallenna-muutoshintaiset-tyot-testi
   (let [muutoshintaiset-tyot (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :muutoshintaiset-tyot (oulun-2005-urakan-tilaajan-urakanvalvoja) @oulun-alueurakan-2005-2010-id)
         muutoshintaisten-toiden-maara-ennen-paivitysta (ffirst (q
