@@ -200,3 +200,41 @@ SELECT * FROM luo_lupauksen_vaihtoehto(5, 2019, '15-20 % / hoitovuosi', 4);
 SELECT * FROM luo_lupauksen_vaihtoehto(5, 2019, '10-15 % / hoitovuosi', 6);
 SELECT * FROM luo_lupauksen_vaihtoehto(5, 2019, '5-10 % / hoitovuosi', 8);
 SELECT * FROM luo_lupauksen_vaihtoehto(5, 2019, '0-5 % / hoitovuosi', 10);
+
+-- Esimerkki dataa kyselyistä joissa askeleita on useita
+-- Insertoidaana ensin askeleiden otsikot
+INSERT INTO lupaus_vaihtoehto_ryhma("ryhma-otsikko")
+VALUES
+    ('Testiotsikko 1'),
+    ('Testiotsikko 2');
+
+DO $$
+    DECLARE
+        ryhma_otsikko_id_1 INTEGER;
+        ryhma_otsikko_id_2 INTEGER;
+    BEGIN
+        ryhma_otsikko_id_1 = (SELECT id FROM lupaus_vaihtoehto_ryhma where "ryhma-otsikko" = 'Testiotsikko 1'); 
+        ryhma_otsikko_id_2 = (SELECT id FROM lupaus_vaihtoehto_ryhma where "ryhma-otsikko" = 'Testiotsikko 2');
+       
+        -- Askel 1. josta päätyy 2 valinnasta askeleeseen 2 ja 3 valinnasta Askeleeseen 3
+        PERFORM luo_lupauksen_vaihtoehto(3, 2021, '0%', 0, 1, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(3, 2021, '0 % ja ≤ 25 %', 0, 1, 2, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(3, 2021, '> 25 %', 0, 1, 3, ryhma_otsikko_id_1);
+
+        -- Askel 2.
+        PERFORM luo_lupauksen_vaihtoehto(3, 2021, '<= 4,1', 0, 2, null, ryhma_otsikko_id_2);
+        PERFORM luo_lupauksen_vaihtoehto(3, 2021, '> 4,1', 2, 2, null, ryhma_otsikko_id_2);
+        PERFORM luo_lupauksen_vaihtoehto(3, 2021, '> 4,4', 2, 2, null, ryhma_otsikko_id_2);
+        PERFORM luo_lupauksen_vaihtoehto(3, 2021, '> 4,7', 2, 2, null, ryhma_otsikko_id_2);
+        PERFORM luo_lupauksen_vaihtoehto(3, 2021, '> 5,0', 2, 2, null, ryhma_otsikko_id_2);
+        PERFORM luo_lupauksen_vaihtoehto(3, 2021, '> 5,3', 2, 2, null, ryhma_otsikko_id_2);
+
+        -- Askel 3.
+        PERFORM luo_lupauksen_vaihtoehto(3, 2021, '<= 4,1', 0, 3, null, ryhma_otsikko_id_2);
+        PERFORM luo_lupauksen_vaihtoehto(3, 2021, '> 4,1', 3, 3, null, ryhma_otsikko_id_2);
+        PERFORM luo_lupauksen_vaihtoehto(3, 2021, '> 4,4', 5, 3, null, ryhma_otsikko_id_2);
+        PERFORM luo_lupauksen_vaihtoehto(3, 2021, '> 4,7', 7, 3, null, ryhma_otsikko_id_2);
+        PERFORM luo_lupauksen_vaihtoehto(3, 2021, '> 5,0', 11, 3, null, ryhma_otsikko_id_2);
+        PERFORM luo_lupauksen_vaihtoehto(3, 2021, '> 5,3', 15, 3, null, ryhma_otsikko_id_2);
+    END
+$$ LANGUAGE plpgsql;
