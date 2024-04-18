@@ -244,7 +244,7 @@ BEGIN
             LOOP
                 viivan_etaisyys_pisteeseen := (SELECT ST_Distance84(osan_geometrian_viiva.geom, piste));
                 IF lyhin_etaisyys_pisteeseen = -1 OR lyhin_etaisyys_pisteeseen > viivan_etaisyys_pisteeseen THEN
-                    lyhin_etaisyys_pisteeseen = viivan_etaisyys_pisteeseen;
+                    lyhin_etaisyys_pisteeseen := viivan_etaisyys_pisteeseen;
                     lahin_viiva := osan_geometrian_viiva.int;
                     lahin_piste := (SELECT ST_ClosestPoint(osan_geometrian_viiva.geom, piste));
                 END IF;
@@ -263,9 +263,14 @@ BEGIN
         LOOP
             laskuri := laskuri + 1;
             IF laskuri = lahin_viiva THEN
-                etaisyys_pisteeseen := etaisyys_pisteeseen + (SELECT ST_Length(ST_GeometryN(ST_Split(
-                                                                                                    ST_Snap(ST_GeometryN(osan_geometria, laskuri), lahin_piste, 0.1),
-                                                                                                    lahin_piste), 1)));
+                -- Jos piste on viivan alussa, etäisyys pisteeseen on 0. Muuten lasketaan etäisyys pisteeseen leikkaamalla
+                -- viiva pisteen kohdalta ja laskemalla leikatun viivan pituus.
+                IF st_startpoint(ST_GeometryN(osan_geometria, laskuri))::point != lahin_piste::point THEN
+                    etaisyys_pisteeseen := etaisyys_pisteeseen +
+                                           (SELECT ST_Length(ST_GeometryN(ST_Split(
+                                                                              ST_Snap(ST_GeometryN(osan_geometria, laskuri), lahin_piste, 0.1),
+                                                                              lahin_piste), 1)));
+                END IF;
             ELSE
                 etaisyys_pisteeseen := etaisyys_pisteeseen + St_Length(ST_GeometryN(osan_geometria, laskuri));
             END IF;
