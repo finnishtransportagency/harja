@@ -1,6 +1,5 @@
 (ns harja.palvelin.oikeudet-test
   (:require [clojure.test :refer :all]
-            [taoensso.timbre :as log]
             [slingshot.slingshot :refer [try+ throw+]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.testi :refer :all]
