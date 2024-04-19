@@ -38,6 +38,9 @@
 (defrecord HaeTiedot [])
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
+(defrecord HaeSanktiot [])
+(defrecord HaeSanktiotOnnistui [vastaus])
+(defrecord HaeSanktiotEpaonnistui [vastaus])
 (defrecord AvaaLomake [])
 (defrecord SuljeLomake [])
 (defrecord MuokkaaLomaketta [rivi])
@@ -52,6 +55,18 @@
      :urakka-id @nav/valittu-urakka-id}
     {:onnistui ->HaeTiedotOnnistui
      :epaonnistui ->HaeTiedotEpaonnistui}))
+
+
+(defn- hae-sanktiot [app]
+  (tuck-apurit/post! app
+    :hae-urakan-sanktiot-ja-bonukset {:urakka-id @nav/valittu-urakka-id
+                                      :alku      (first (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
+                                      :loppu     (second (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
+                                      :vain-yllapitokohteettomat? false
+                                      :hae-sanktiot? true
+                                      :hae-bonukset? false}
+    {:onnistui ->HaeSanktiotOnnistui
+     :epaonnistui ->HaeSanktiotEpaonnistui}))
 
 
 (extend-protocol tuck/Event
@@ -74,6 +89,22 @@
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
+  
+  HaeSanktiot
+  (process-event [_ app]
+    (hae-sanktiot app)
+    (assoc app :haku-kaynnissa? true))
+  
+  HaeSanktiotOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (let [_ (println "\n Vastaus: " vastaus)]
+      app))
+  
+  HaeSanktiotEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "Sanktioiden haku epäonnistui: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "Sanktioiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
   AvaaLomake

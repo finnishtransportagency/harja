@@ -138,7 +138,9 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (komp/sisaan #(do 
-                    (e! (tiedot/->HaeTiedot))))
+                    (e! (tiedot/->HaeTiedot))
+                    (e! (tiedot/->HaeSanktiot)))
+      )
 
     (fn [e! app]
       [:div
