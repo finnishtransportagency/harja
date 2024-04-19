@@ -6,6 +6,7 @@
             [clojure.zip :refer [xml-zip]]
             [clojure.string :as clj-str]
             [cheshire.core :as cheshire]
+            [harja.tyokalut.loki :as loki]
             [slingshot.slingshot :refer [try+ throw+]]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
@@ -46,6 +47,8 @@
 
 (def aktiivinen "ACTIVE")
 (def sammutettu "CLOSED")
+
+(def jms-alert-TAG "JMS-ALERT")
 
 (def JMS-alkutila
   {:yhteys nil :istunnot {}})
@@ -277,7 +280,7 @@
 (defn tee-jms-poikkeuskuuntelija []
   (reify ExceptionListener
     (onException [_ e]
-      (log/error e (str "Tapahtui JMS-poikkeus: " (.getMessage e))))))
+      (log/error e (loki/koristele-lokiviesti (str "Tapahtui JMS-poikkeus: " (.getMessage e)) jms-alert-TAG)))))
 
 (defn luo-istunto [yhteys]
   (try
