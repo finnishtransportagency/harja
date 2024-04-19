@@ -211,7 +211,8 @@ maksimi-linnuntien-etaisyys 200)
           (doseq [sopimus-id urakan-sopimus-idt]
             (doseq [pvm toteumien-eri-pvmt]
               (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                     :alkupvm (pvm/dateksi pvm)})))
+                                                                     :alkupvm (pvm/dateksi pvm)
+                                                                     :urakkaid urakka-id})))
           (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
                                                                              :alkupvm (aika-string->java-sql-timestamp ensimmainen-toteuma-alkanut-str)
                                                                              :loppupvm (aika-string->java-sql-timestamp viimeinen-toteuma-alkanut-str)}))))))
