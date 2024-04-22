@@ -1014,8 +1014,7 @@ ORDER BY CASE WHEN u.tyyppi = 'hoito' THEN 1
               WHEN u.tyyppi = 'vesivayla-kanavien-hoito' THEN 9
              END;
 
--- name: hae-kaynnissa-oleva-tieurakka-urakkanumerolla
--- single? : true
+-- name: hae-tieurakka-urakkanumerolla
 -- Tämä on vastaava, kuin yllä oleva haku, mutta tämä ei palauta mahdollisesti kanavaurakoita, koska urakkanumeorissa
 -- on eri urakkatyyppien välillä ristiriitaisuutta.
 SELECT
@@ -1035,7 +1034,6 @@ FROM urakka u
          JOIN organisaatio e ON e.id = u.hallintayksikko
          JOIN organisaatio o ON o.id = u.urakoitsija
 WHERE u.urakkanro = :urakka
-  AND u.alkupvm <= current_date
   AND u.loppupvm >= current_date
   AND u.tyyppi in ('hoito',
                  'teiden-hoito',
@@ -1053,12 +1051,11 @@ ORDER BY CASE WHEN u.tyyppi = 'hoito' THEN 1
               WHEN u.tyyppi = 'siltakorjaus' THEN 7
              END;
 
--- name: onko-kaynnissa-urakkanro?
+-- name: onko-kaynnissa-tai-tuleva-urakkanro?
 -- single?: true
 SELECT exists(SELECT id
               FROM urakka
               WHERE urakkanro = :urakkanro
-                AND alkupvm <= current_date
                 AND loppupvm >= current_date);
 
 -- name: tuhoa-tekniset-laitteet-urakkadata!
