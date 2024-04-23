@@ -50,3 +50,8 @@ DELETE
   FROM rahavaraus_tehtava
  WHERE rahavaraus_id = :rahavaraus-id
    AND tehtava_id = :tehtava-id;
+
+
+-- name: onko-rahavaraus-olemassa?
+-- single?: true
+SELECT exists(SELECT id FROM rahavaraus WHERE id = :rahavaraus-id :: BIGINT);
