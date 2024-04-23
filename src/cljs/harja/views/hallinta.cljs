@@ -90,13 +90,13 @@
 
     "Rahavaraukset"
     :rahavaraukset
-    (when (oikeudet/hallinta-tarjoushinnat) ;; todo: vaihda hallinta-rahavaraukset
+    (when (oikeudet/hallinta-rahavaraukset)
       ^{:key "rahavaraukset"}
       [rahavaraukset/rahavaraukset])
 
     "Rahavarausten tehtävät"
     :rahavarausten-tehtavat
-    (when (oikeudet/hallinta-tarjoushinnat) ;; todo: vaihda hallinta-rahavaraukset
+    (when (oikeudet/hallinta-rahavaraukset)
       ^{:key "rahavarausten-tehtavat"}
       [rahavarausten-tehtavat/rahavarausten-tehtavat])]
 
