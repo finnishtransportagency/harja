@@ -12,3 +12,7 @@ LEFT JOIN
               AND p.poistettu = FALSE
 GROUP BY 
     pt.id, pt.nimi ORDER BY tyomenetelma;
+
+
+-- name: tallenna-mpu-kustannus!
+INSERT INTO mpu_kustannukset (urakka, selite, summa, vuosi) VALUES (:urakka-id, :selite, :summa, :vuosi);

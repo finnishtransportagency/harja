@@ -91,8 +91,9 @@
        (t/year (:loppupvm urakka))
        urakka/valittu-urakan-vuosi
        #(do
-          (println "valittu vuosi ->" %)
-          (urakka/valitse-urakan-vuosi! %))]
+          (urakka/valitse-urakan-vuosi! %)
+          (e! (tiedot/->HaeTiedot))
+          (e! (tiedot/->HaeSanktiotJaBonukset)))]
 
       ;; Lisää kustannus
       [:span

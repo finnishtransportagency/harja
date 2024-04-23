@@ -29,10 +29,9 @@
 
 
 (defn tallenna-mpu-kustannus
-  [db {:keys [id] :as kayttaja} {:keys [urakka-id] :as tiedot}]
+  [db kayttaja {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
-
-  (println "\n tallenna-mpu-kustannus, tiedot: " tiedot))
+  (q/tallenna-mpu-kustannus! db tiedot))
 
 
 (defrecord MPUKustannukset []
