@@ -81,6 +81,7 @@
   (process-event [{vastaus :vastaus} app]
     (let [;; Laske kaikki kustannukset yhteen
           kustannukset (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) vastaus))]
+      (println "\n\n vecci: " (vec vastaus))
       (assoc app
         :rivit (vec vastaus)
         :kustannukset-yhteensa kustannukset
@@ -91,23 +92,27 @@
     (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
-  
+
   HaeSanktiotJaBonukset
   (process-event [_ app]
     (hae-sanktiot-ja-bonukset app)
     (assoc app :haku-kaynnissa? true))
-  
+
   HaeSanktiotJaBonuksetOnnistui
-  (process-event [{vastaus :vastaus} app]
+  (process-event [{vastaus :vastaus} {:keys [rivit] :as app}]
     (let [fn-laske-arvo (fn [avain]
                           (reduce + (map (fn [rivi]
                                            (when (= (:laji rivi) avain)
                                              (or (:summa rivi) 0))) vastaus)))
-
+          ;; Lisätään sanktiot ja bonukset gridin riveihin, ehkä liian hakkerointia ehkä ei 
           bonukset (fn-laske-arvo :yllapidon_bonus)
-          sanktiot (fn-laske-arvo :yllapidon_sakko)]
-      (assoc app :sanktiot sanktiot :bonukset bonukset)))
-  
+          sanktiot (fn-laske-arvo :yllapidon_sakko)
+          id (inc (apply max (map :id rivit)))]
+      (assoc app
+        :rivit (conj rivit
+                 {:id id, :kokonaiskustannus bonukset :tyomenetelma "Bonukset"}
+                 {:id (inc id), :kokonaiskustannus sanktiot :tyomenetelma "Sanktiot"}))))
+
   HaeSanktiotJaBonuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Sanktioiden haku epäonnistui: " (pr-str vastaus))
