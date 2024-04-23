@@ -8,7 +8,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.materiaalit :as materiaalit]
-            [harja.kyselyt.toteumat :as toteumat]
+            [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.json
              :refer [aika-string->java-sql-date aika-string->java-util-date
@@ -98,7 +98,7 @@ maksimi-linnuntien-etaisyys 200)
   ([db toteuma-id] (paivita-toteuman-reitti db toteuma-id maksimi-linnuntien-etaisyys))
   ([db toteuma-id maksimi-etaisyys]
    (let [reitti (->> toteuma-id
-                     (toteumat/hae-toteuman-reittipisteet db)
+                     (toteumat-q/hae-toteuman-reittipisteet db)
                      (map (fn [{sijainti :sijainti aika :aika}]
                             [(.-x sijainti) (.-y sijainti) aika]))
                      (hae-reitti db maksimi-etaisyys))
@@ -109,8 +109,8 @@ maksimi-linnuntien-etaisyys 200)
      (if geometria
        (do
          (log/debug "Tallennetaan reitti toteumalle " toteuma-id)
-         (toteumat/paivita-toteuman-reitti! db {:reitti geometria
-                                                :id toteuma-id}))
+         (toteumat-q/paivita-toteuman-reitti! db {:reitti geometria
+                                                  :id toteuma-id}))
 
        (log/debug "Reittiä ei saatu kasattua toteumalle " toteuma-id)))))
 
@@ -119,7 +119,7 @@ maksimi-linnuntien-etaisyys 200)
 
 (defn luo-reitti [db reitti toteuma-id]
   (log/debug "Luodaan uusi reittipiste")
-  (toteumat/tallenna-toteuman-reittipisteet!
+  (toteumat-q/tallenna-toteuman-reittipisteet!
    db
     {::rp/toteuma-id toteuma-id
      ::rp/reittipisteet
@@ -127,7 +127,7 @@ maksimi-linnuntien-etaisyys 200)
        (rp/reittipiste
          (aika-string->java-sql-date aika)
          koordinaatit
-         (toteumat/pisteen-hoitoluokat db koordinaatit
+         (toteumat-q/pisteen-hoitoluokat db koordinaatit
            (map (comp :id :tehtava) tehtavat)
            (map :materiaali materiaalit))
          (for [t tehtavat]
@@ -143,7 +143,7 @@ maksimi-linnuntien-etaisyys 200)
 (defn poista-toteuman-reitti [db toteuma-id]
   (log/debug "Poistetaan reittipisteet")
   ;; Poistetaan reittipistedata: pisteet, tehtävät ja materiaalit
-  (toteumat/poista-reittipiste-toteuma-idlla! db toteuma-id))
+  (toteumat-q/poista-reittipiste-toteuma-idlla! db toteuma-id))
 
 (defn tallenna-yksittainen-reittitoteuma [db db-replica urakka-id kirjaaja {:keys [reitti toteuma tyokone]}]
   (let [toteuma (assoc toteuma
