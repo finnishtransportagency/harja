@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.api.reittitoteuman-kirjaus-test
   (:require [clojure.test :refer [deftest is use-fixtures testing]]
+            [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
             [com.stuartsierra.component :as component]
@@ -7,7 +8,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [specql.core :refer [fetch columns]]
             [harja.domain.reittipiste :as rp]
-            [clojure.data.json :as json]))
+            [clojure.data.json :as json]
+            [cheshire.core :as cheshire]))
 
 (def kayttaja "destia")
 (def kayttaja-yit "yit-rakennus")
@@ -98,6 +100,31 @@
               (is (= reitti-hoitoluokka 7)))) ; testidatassa on reittipisteen koordinaateille hoitoluokka
 
           (poista-reittitoteuma toteuma-id ulkoinen-id))))))
+
+(deftest tallenna-yksittainen-reittitoteuma-sama-hash
+  (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        _ (anna-kirjoitusoikeus kayttaja)
+        toteumajson (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+               slurp
+               (.replace "__SOPIMUS_ID__" (str sopimus-id))
+               (.replace "__ID__" (str ulkoinen-id))
+               (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy"))
+        clj-toteuma (cheshire/parse-string toteumajson true)
+        hash (apurit/md5-hash (pr-str (:reittitoteuma clj-toteuma)))
+        ;; Lähetetään reittitoteuma ensimmäisen kerran
+        vastaus1 (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti toteumajson)
+
+        ;; Lähetetään sama reittitoteuma toisen kerran, pitäisi generoida sama hash ja ilmoittaa vain ok tuloksesta
+        vastaus2 (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+                   toteumajson)
+
+        ;; Varmistetaan, että joku hash löytyy tietokannasta
+        toteuma-kannassa (first (q-map (str "SELECT id, json_hash FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
+    (is (= 200 (:status vastaus1)))
+    (is (= 200 (:status vastaus2)))
+    (is (= hash (:json_hash toteuma-kannassa)))))
+
 
 (deftest tallenna-yksittainen-reittitoteuma-vanhalla-talvisuola-materiaalilla
   (let [;; Talvisuola, rakeinen NaCl - materiaalikoodi id
