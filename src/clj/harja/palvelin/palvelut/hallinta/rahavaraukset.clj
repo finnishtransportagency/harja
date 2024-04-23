@@ -53,12 +53,20 @@
 
 (defn paivita-urakan-rahavaraus [db kayttaja {:keys [urakka rahavaraus valittu?]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-rahavaraukset kayttaja urakka)
-  (if valittu?
-    (q/lisaa-urakan-rahavaraus<! db {:urakka urakka
-                                     :rahavaraus rahavaraus
-                                     :kayttaja (:id kayttaja)})
-    (q/poista-urakan-rahavaraus<! db {:urakka urakka
-                                      :rahavaraus rahavaraus}))
+  (let [;validoidaan urakka ja rahavaraus
+        urakka-valid? (and
+                        (s/valid? ::urakka-id urakka)
+                        (onko-urakka-olemassa? db urakka))
+        rahavaraus-valid? (and
+                            (s/valid? ::rahavaraus-id rahavaraus)
+                            (onko-rahavaraus-olemassa? db rahavaraus))]
+    (when (and urakka-valid? rahavaraus-valid?)
+      (if valittu?
+        (q/lisaa-urakan-rahavaraus<! db {:urakka urakka
+                                         :rahavaraus rahavaraus
+                                         :kayttaja (:id kayttaja)})
+        (q/poista-urakan-rahavaraus<! db {:urakka urakka
+                                          :rahavaraus rahavaraus}))))
   (q/hae-urakoiden-rahavaraukset db))
 
 (defn tallenna-rahavarauksen-tehtava [db kayttaja {:keys [rahavaraus-id vanha-tehtava-id uusi-tehtava]}]
@@ -66,20 +74,24 @@
   (log/debug "tallenna-rahavarauksen-tehtava :: rahavaraus-id:" rahavaraus-id
     "Vanha tehtva-id: " vanha-tehtava-id
     " Uusi tehtava-id: " uusi-tehtava)
-  ;; Jos vanha-tehtava-id on nolla, niin silloin lisätään kokonaan uusi tehtävä rahavaraukselle. Muuten
-  ;; Vanha tehtävä poistetaan ja korvataan uudella
-  (if (= 0 vanha-tehtava-id)
-    ;; Lisätään kokonaan uusi tehtävä rahavaraukselle
-    (q/lisaa-rahavaraukselle-tehtava<! db {:rahavaraus-id rahavaraus-id
-                                           :tehtava-id (:id uusi-tehtava)
-                                           :kayttaja (:id kayttaja)})
-    ;; Poistetaan vanha ja lisätään uusi
-    (do
-      (q/poista-rahavaraukselta-tehtava! db {:rahavaraus-id rahavaraus-id
-                                             :tehtava-id vanha-tehtava-id})
-      (q/lisaa-rahavaraukselle-tehtava<! db {:rahavaraus-id rahavaraus-id
-                                             :tehtava-id (:id uusi-tehtava)
-                                             :kayttaja (:id kayttaja)})))
+  (let [rahavaraus-valid? (and
+                            (s/valid? ::rahavaraus-id rahavaraus-id)
+                            (onko-rahavaraus-olemassa? db rahavaraus-id))]
+    (when rahavaraus-valid?
+      ;; Jos vanha-tehtava-id on nolla, niin silloin lisätään kokonaan uusi tehtävä rahavaraukselle. Muuten
+      ;; Vanha tehtävä poistetaan ja korvataan uudella
+      (if (= 0 vanha-tehtava-id)
+        ;; Lisätään kokonaan uusi tehtävä rahavaraukselle
+        (q/lisaa-rahavaraukselle-tehtava<! db {:rahavaraus-id rahavaraus-id
+                                               :tehtava-id (:id uusi-tehtava)
+                                               :kayttaja (:id kayttaja)})
+        ;; Poistetaan vanha ja lisätään uusi
+        (do
+          (q/poista-rahavaraukselta-tehtava! db {:rahavaraus-id rahavaraus-id
+                                                 :tehtava-id vanha-tehtava-id})
+          (q/lisaa-rahavaraukselle-tehtava<! db {:rahavaraus-id rahavaraus-id
+                                                 :tehtava-id (:id uusi-tehtava)
+                                                 :kayttaja (:id kayttaja)})))))
 
   ;; Palautetaan rahavaraukset tehtävineen, kun ne on nyt päivittyneet
   (hae-rahavaraukset-tehtavineen db kayttaja))
@@ -87,8 +99,12 @@
 (defn poista-rahavarauksen-tehtava [db kayttaja {:keys [rahavaraus-id tehtava-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-rahavaraukset kayttaja)
   (log/debug "poista-rahavarauksen-tehtava :: rahavaraus-id: " rahavaraus-id "Tehtävä-id: " tehtava-id)
-  (q/poista-rahavaraukselta-tehtava! db {:rahavaraus-id rahavaraus-id
-                                         :tehtava-id tehtava-id})
+  (let [rahavaraus-valid? (and
+                            (s/valid? ::rahavaraus-id rahavaraus-id)
+                            (onko-rahavaraus-olemassa? db rahavaraus-id))]
+    (when rahavaraus-valid?
+      (q/poista-rahavaraukselta-tehtava! db {:rahavaraus-id rahavaraus-id
+                                             :tehtava-id tehtava-id})))
 
   ;; Palautetaan rahavaraukset tehtävineen, kun ne on nyt päivittyneet
   (hae-rahavaraukset-tehtavineen db kayttaja))
