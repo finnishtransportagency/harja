@@ -68,7 +68,7 @@ jobs:
     steps:
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
         # Lähetetään virheviesti, mikäli tämä tai tests-jobi ei palauta success
         # TODO: Tämä virheviesti lähtee myös jos koko deployment workflow tai testit canceloidaan.
         #       Pitäisikö erillisessä stepissä tarkastaa needs.test.result == 'cancelled' ja kertoa, että deployment peruttiin?
@@ -134,7 +134,7 @@ jobs:
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
         if: failure()
         with:
           # Slack Block Kit -tyyppinen rikastettu viesti

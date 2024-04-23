@@ -519,19 +519,18 @@ WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
 -- alkaneet 3h sitten. Tällaiset toteumat menevät myös BETWEEN vertailusta läpi kasvatetun intervallin
 -- ansiosta. Teoriassa monta päivää kestävät toteumat voisivat tippua tästä "vahingossa", mutta oikeassa
 -- maailmassa sellaisia ei ole.
-WITH tot AS (
-      SELECT t.id, t.envelope
-        FROM toteuma t
-       WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL)
-         AND (t.alkanut BETWEEN :alku::DATE - interval '1 day' AND :loppu)
-         AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
-         AND t.poistettu = FALSE)
-SELECT tt.toimenpidekoodi AS toimenpidekoodi, (SELECT nimi FROM tehtava tpk WHERE id = tt.toimenpidekoodi) AS toimenpide
+  WITH tot AS (SELECT t.id, t.envelope
+                 FROM toteuma t
+                WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL)
+                  AND (t.alkanut BETWEEN :alku::DATE - INTERVAL '1 day' AND :loppu)
+                  AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
+                  AND t.poistettu = FALSE
+                  AND ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax)))
+SELECT tt.toimenpidekoodi AS toimenpidekoodi,
+       teh.nimi           AS toimenpide
   FROM tot t
-           JOIN toteuma_tehtava tt  ON tt.toteuma = t.id
-      AND tt.poistettu = FALSE
-      AND tt.toimenpidekoodi IN (:toimenpidekoodit)
-      AND ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
+       JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu = FALSE AND tt.toimenpidekoodi IN (:toimenpidekoodit)
+       JOIN tehtava teh ON teh.id = tt.toimenpidekoodi;
 
 -- name: hae-toteumien-asiat
 -- Hakee karttaa klikattaessa toteuma-ajat valituille tehtäville
