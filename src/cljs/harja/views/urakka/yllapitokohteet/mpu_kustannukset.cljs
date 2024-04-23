@@ -52,7 +52,7 @@
         :validoi [[:ei-tyhja "Valitse tyyppi"]]
         :nimi :kustannus-tyyppi
         :tyyppi :valinta
-        :valinnat (vec tiedot/kustannusten-tyypit)
+        :valinnat tiedot/kustannusten-tyypit
         ::lomake/col-luokka "leveys-kokonainen"})
 
      ;; Määrä 

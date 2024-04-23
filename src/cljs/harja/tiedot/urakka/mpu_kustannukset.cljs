@@ -12,12 +12,12 @@
 
 (defonce tila (atom {:rivit nil
                      :lomake-valinnat nil
-                     :kustannukset-yhteensa nil 
+                     :kustannukset-yhteensa nil
                      :muokataan false
                      :haku-kaynnissa? false}))
 
 (def nakymassa? (atom false))
-(def kustannusten-tyypit #{"Arvonmuutokset" "Indeksi- ja kustannustason muutokset" "Muut kustannukset"}) 
+(def kustannusten-tyypit ["Arvonmuutokset" "Indeksi- ja kustannustason muutokset" "Muut kustannukset"])
 
 
 (defn voi-tallentaa?
@@ -70,6 +70,16 @@
      :epaonnistui ->HaeSanktiotJaBonuksetEpaonnistui}))
 
 
+(defn- tallenna-mpu-kustannus [app selite summa]
+  (tuck-apurit/post! app :tallenna-mpu-kustannus
+    {:urakka-id @nav/valittu-urakka-id
+     :selite selite
+     :vuosi @urakka/valittu-urakan-vuosi
+     :summa summa}
+    {:onnistui ->TallennaKustannusOnnistui
+     :epaonnistui ->TallennaKustannusEpaonnistui}))
+
+
 (extend-protocol tuck/Event
 
   HaeTiedot
@@ -81,7 +91,6 @@
   (process-event [{vastaus :vastaus} app]
     (let [;; Laske kaikki kustannukset yhteen
           kustannukset (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) vastaus))]
-      (println "\n\n vecci: " (vec vastaus))
       (assoc app
         :rivit (vec vastaus)
         :kustannukset-yhteensa kustannukset
@@ -135,6 +144,7 @@
   (process-event [{rivi :rivi} app]
     (let [{:keys [kustannus-tyyppi kustannus]} rivi]
       (println "-> TallennaKustannus " kustannus-tyyppi kustannus)
+      (tallenna-mpu-kustannus app kustannus-tyyppi kustannus)
       (assoc app :muokataan false)))
 
   TallennaKustannusOnnistui
