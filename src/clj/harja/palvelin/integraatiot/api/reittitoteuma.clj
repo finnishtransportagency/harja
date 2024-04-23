@@ -146,15 +146,6 @@ maksimi-linnuntien-etaisyys 200)
   ;; Poistetaan reittipistedata: pisteet, tehtävät ja materiaalit
   (toteumat-q/poista-reittipiste-toteuma-idlla! db toteuma-id))
 
-(defn- ei-ole-lahetetty-aiemmin? [db-replica jsonhash alkanut]
-  ;; Jos hashia ei löydy, ei ole lähetetty aiemmin
-  (if-not (:exists (first (toteumat-q/hae-toteuman-hash db-replica {:hash jsonhash
-                                                                    :alkanut alkanut})))
-    true
-    (do
-      (log/info "Toteuma on lähetetty aiemmin. Ei tallenneta uudestaan.")
-      false)))
-
 (defn tallenna-yksittainen-reittitoteuma [db db-replica urakka-id kirjaaja {:keys [reitti toteuma tyokone]} jsonhash]
   (let [toteuma (assoc toteuma
                   ;; Reitti liitetään lopuksi
@@ -230,12 +221,12 @@ maksimi-linnuntien-etaisyys 200)
 (defn tallenna-kaikki-pyynnon-reittitoteumat [db db-replica urakka-id kirjaaja data]
   (when (:reittitoteuma data)
     (let [jsonhash (apurit/md5-hash (pr-str (:reittitoteuma data)))]
-      (when (ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in data [:reittitoteuma :toteuma :alkanut]))
+      (when (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in data [:reittitoteuma :toteuma :alkanut]))
         (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma data) jsonhash))))
 
   (doseq [toteuma (:reittitoteumat data)]
     (let [jsonhash (apurit/md5-hash (pr-str toteuma))]
-      (when (ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in toteuma [:reittitoteuma :toteuma :alkanut]))
+      (when (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in toteuma [:reittitoteuma :toteuma :alkanut]))
         (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma toteuma) jsonhash))))
   (paivita-materiaalicachet! db urakka-id data))
 
