@@ -1,10 +1,30 @@
 (ns harja.palvelin.palvelut.hallinta.rahavaraukset
   (:require [com.stuartsierra.component :as component]
+            [clojure.spec.alpha :as s]
+            [harja.kyselyt.konversio :as konversio]
             [taoensso.timbre :as log]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.rahavaraukset :as q]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
+
+(s/def ::urakka-id #(and (string? %) (not (nil? (konversio/konvertoi->int %))) (pos? (konversio/konvertoi->int %))))
+(s/def ::urakka-id #(and (string? %) (not (nil? (konversio/konvertoi->int %))) (pos? (konversio/konvertoi->int %))))
+
+(defn onko-urakka-olemassa?
+  "Tarkistaa, että urakka löytyy Harjan tietokannasta"
+  [db urakka-id]
+  (when urakka-id
+    (when-not (urakat-q/onko-olemassa? db urakka-id)
+      (throw (SecurityException. (str "Urakkaa " urakka-id " ei ole olemassa."))))))
+
+(defn onko-rahavaraus-olemassa?
+  "Tarkistaa, että rahavaraus löytyy Harjan tietokannasta"
+  [db rahavaraus-id]
+  (when rahavaraus-id
+    (when-not (q/onko-rahavaraus-olemassa? db {:rahavaraus-id rahavaraus-id})
+      (throw (SecurityException. (str "Rahavarausta " rahavaraus-id " ei ole olemassa."))))))
 
 (defn hae-rahavaraukset [db kayttaja]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-rahavaraukset kayttaja)
