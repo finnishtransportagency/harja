@@ -1303,3 +1303,8 @@ LIMIT 100000;
 -- name: siirra-toteumat-analytiikalle
 select siirra_toteumat_analytiikalle(:nyt::TIMESTAMP WITH TIME ZONE);
 
+-- name: lisaa-toteumalle-jsonhash!
+UPDATE toteuma SET json_hash = :hash WHERE id = :id;
+
+-- name: hae-toteuman-hash
+SELECT EXISTS(SELECT id FROM toteuma WHERE json_hash = :hash AND alkanut = :alkanut::TIMESTAMP);
