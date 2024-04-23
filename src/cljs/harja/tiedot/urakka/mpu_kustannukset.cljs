@@ -22,16 +22,21 @@
 
 (defn voi-tallentaa?
   "Validoi kustannuksen tallennuksen"
-  [{:keys [kustannus kustannus-tyyppi]}]
+  [{:keys [kustannus kustannus-tyyppi kustannus-selite]}]
   (let [kustannus-validi? (and
                             (some? kustannus)
                             (integer? kustannus))
         kustannus-tyyppi-validi? (and
                                    (some? kustannus-tyyppi)
-                                   (string? kustannus-tyyppi))]
+                                   (string? kustannus-tyyppi))
+        kustannus-selite-validi? (if
+                                   (= kustannus-tyyppi "Muut kustannukset")
+                                   (some? (seq kustannus-selite))
+                                   true)]
     (and
       kustannus-validi?
-      kustannus-tyyppi-validi?)))
+      kustannus-tyyppi-validi?
+      kustannus-selite-validi?)))
 
 
 ;; Tuck 
@@ -142,10 +147,10 @@
 
   TallennaKustannus
   (process-event [{rivi :rivi} app]
-    (let [{:keys [kustannus-tyyppi kustannus]} rivi]
-      (println "-> TallennaKustannus " kustannus-tyyppi kustannus)
-      (tallenna-mpu-kustannus app kustannus-tyyppi kustannus)
-      (assoc app :muokataan false)))
+    (let [{:keys [kustannus-tyyppi kustannus-selite kustannus]} rivi]
+      (let [selite (if (some? (seq kustannus-selite)) kustannus-selite kustannus-tyyppi)]
+        (tallenna-mpu-kustannus app selite kustannus))
+      (assoc app :muokataan false :lomake-valinnat nil)))
 
   TallennaKustannusOnnistui
   (process-event [_ app]

@@ -54,6 +54,20 @@
         :tyyppi :valinta
         :valinnat tiedot/kustannusten-tyypit
         ::lomake/col-luokka "leveys-kokonainen"})
+     
+     
+     ;; Selite 
+     (when (= (:kustannus-tyyppi lomake-valinnat) "Muut kustannukset")
+       (lomake/rivi
+         {:otsikko "Selite"
+          :pakollinen? true
+          :rivi-luokka "lomakeryhman-rivi-tausta"
+          :validoi [[:ei-tyhja "Kirjoita kustannuksen selite"]]
+          :nimi :kustannus-selite
+          :tyyppi :string
+          ::lomake/col-luokka "leveys-kokonainen"})
+       
+       )
 
      ;; Määrä 
      (lomake/rivi
@@ -65,7 +79,9 @@
         :teksti-oikealla "EUR"
         :vayla-tyyli? true
         :validoi [[:ei-tyhja "Syötä kustannusarvo"]]
-        ::lomake/col-luokka "maara-valinnat"})]
+        ::lomake/col-luokka "maara-valinnat"})
+     
+     ]
     lomake-valinnat]])
 
 
