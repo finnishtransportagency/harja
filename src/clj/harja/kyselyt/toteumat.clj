@@ -42,11 +42,11 @@
     (luo-toteuma<! db toteuma)
     (luodun-toteuman-id db)))
 
-(defn ei-ole-lahetetty-aiemmin? [db-replica jsonhash alkanut]
+(defn ei-ole-lahetetty-aiemmin? [db-replica jsonhash ulkoinen-id]
   ;; Jos hashia ei löydy, ei ole lähetetty aiemmin
   (if-not (:exists (first (hae-toteuman-hash db-replica {:hash jsonhash
-                                                         :alkanut alkanut})))
+                                                         :ulkoinen-id ulkoinen-id})))
     true
     (do
-      (log/info "Toteuma on lähetetty aiemmin. Ei tallenneta uudestaan.")
+      (log/info (format "Toteuma ulkoisella id:llä: %s on lähetetty aiemmin. Ei tallenneta uudestaan." ulkoinen-id))
       false)))

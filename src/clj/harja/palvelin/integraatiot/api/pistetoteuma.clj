@@ -36,11 +36,11 @@
   (jdbc/with-db-transaction [db db]
     (when (:pistetoteuma data)
       (let [jsonhash (apurit/md5-hash (pr-str (:pistetoteuma data)))]
-        (when (toteumat-q/ei-ole-lahetetty-aiemmin? db jsonhash (get-in data [:pistetoteuma :toteuma :alkanut]))
+        (when (toteumat-q/ei-ole-lahetetty-aiemmin? db jsonhash (get-in data [:pistetoteuma :toteuma :tunniste :id]))
           (tallenna-yksittainen-pistetoteuma db urakka-id kirjaaja (:pistetoteuma data) jsonhash))))
     (doseq [pistetoteuma (:pistetoteumat data)]
       (let [jsonhash (apurit/md5-hash (pr-str pistetoteuma))]
-        (when (toteumat-q/ei-ole-lahetetty-aiemmin? db jsonhash (get-in pistetoteuma [:pistetoteuma :toteuma :alkanut]))
+        (when (toteumat-q/ei-ole-lahetetty-aiemmin? db jsonhash (get-in pistetoteuma [:pistetoteuma :toteuma :tunniste :id]))
           (tallenna-yksittainen-pistetoteuma db urakka-id kirjaaja (:pistetoteuma pistetoteuma) jsonhash))))))
 
 (defn tarkista-pyynto [db urakka-id kirjaaja data]

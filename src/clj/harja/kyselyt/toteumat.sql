@@ -1307,4 +1307,4 @@ select siirra_toteumat_analytiikalle(:nyt::TIMESTAMP WITH TIME ZONE);
 UPDATE toteuma SET json_hash = :hash WHERE id = :id;
 
 -- name: hae-toteuman-hash
-SELECT EXISTS(SELECT id FROM toteuma WHERE json_hash = :hash AND alkanut = :alkanut::TIMESTAMP);
+SELECT EXISTS(SELECT id FROM toteuma WHERE json_hash = :hash AND ulkoinen_id = :ulkoinen-id);
