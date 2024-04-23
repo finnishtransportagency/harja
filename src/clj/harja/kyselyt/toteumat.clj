@@ -45,7 +45,7 @@
 (defn ei-ole-lahetetty-aiemmin? [db-replica jsonhash alkanut]
   ;; Jos hashia ei löydy, ei ole lähetetty aiemmin
   (if-not (:exists (first (hae-toteuman-hash db-replica {:hash jsonhash
-                                                                    :alkanut alkanut})))
+                                                         :alkanut alkanut})))
     true
     (do
       (log/info "Toteuma on lähetetty aiemmin. Ei tallenneta uudestaan.")
