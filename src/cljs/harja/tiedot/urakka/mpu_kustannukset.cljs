@@ -43,7 +43,6 @@
 (defrecord HaeTiedot [])
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
-(defrecord HaeSanktiotJaBonukset [])
 (defrecord HaeSanktiotJaBonuksetOnnistui [vastaus])
 (defrecord HaeSanktiotJaBonuksetEpaonnistui [vastaus])
 (defrecord AvaaLomake [])
@@ -52,6 +51,8 @@
 (defrecord TallennaKustannus [rivi])
 (defrecord TallennaKustannusOnnistui [vastaus])
 (defrecord TallennaKustannusEpaonnistui [vastaus])
+(defrecord HaeMPUSelitteetOnnistui [vastaus])
+(defrecord HaeMPUSelitteetEpaonnistui [vastaus])
 
 
 (defn- hae-paikkaus-kustannukset [app]
@@ -85,11 +86,22 @@
      :epaonnistui ->TallennaKustannusEpaonnistui}))
 
 
+(defn- hae-mpu-selitteet
+  "Hakee käyttäjien aikaisemmin kirjoittamat omat selitteet muille kustannuksille"
+  [app]
+  (tuck-apurit/post! app :hae-mpu-selitteet
+    {}
+    {:onnistui ->HaeMPUSelitteetOnnistui
+     :epaonnistui ->HaeMPUSelitteetEpaonnistui}))
+
+
 (extend-protocol tuck/Event
 
   HaeTiedot
   (process-event [_ app]
+    (hae-mpu-selitteet app)
     (hae-paikkaus-kustannukset app)
+    (hae-sanktiot-ja-bonukset app)
     (assoc app :haku-kaynnissa? true))
 
   HaeTiedotOnnistui
@@ -106,11 +118,6 @@
     (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
-
-  HaeSanktiotJaBonukset
-  (process-event [_ app]
-    (hae-sanktiot-ja-bonukset app)
-    (assoc app :haku-kaynnissa? true))
 
   HaeSanktiotJaBonuksetOnnistui
   (process-event [{vastaus :vastaus} {:keys [rivit] :as app}]
@@ -163,4 +170,17 @@
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Tallennus epäonnistui, vastaus: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tallennus epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
+
+  HaeMPUSelitteetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (let []
+        ;; TODO 
+      (println "\n Selitteet: " vastaus)
+      app))
+
+  HaeMPUSelitteetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "Selitteiden haku epäonnistui: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "Selitteiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app))

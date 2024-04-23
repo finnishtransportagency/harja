@@ -54,8 +54,7 @@
         :tyyppi :valinta
         :valinnat tiedot/kustannusten-tyypit
         ::lomake/col-luokka "leveys-kokonainen"})
-     
-     
+
      ;; Selite 
      (when (= (:kustannus-tyyppi lomake-valinnat) "Muut kustannukset")
        (lomake/rivi
@@ -65,9 +64,7 @@
           :validoi [[:ei-tyhja "Kirjoita kustannuksen selite"]]
           :nimi :kustannus-selite
           :tyyppi :string
-          ::lomake/col-luokka "leveys-kokonainen"})
-       
-       )
+          ::lomake/col-luokka "leveys-kokonainen"}))
 
      ;; Määrä 
      (lomake/rivi
@@ -79,9 +76,7 @@
         :teksti-oikealla "EUR"
         :vayla-tyyli? true
         :validoi [[:ei-tyhja "Syötä kustannusarvo"]]
-        ::lomake/col-luokka "maara-valinnat"})
-     
-     ]
+        ::lomake/col-luokka "maara-valinnat"})]
     lomake-valinnat]])
 
 
@@ -108,8 +103,7 @@
        urakka/valittu-urakan-vuosi
        #(do
           (urakka/valitse-urakan-vuosi! %)
-          (e! (tiedot/->HaeTiedot))
-          (e! (tiedot/->HaeSanktiotJaBonukset)))]
+          (e! (tiedot/->HaeTiedot)))]
 
       ;; Lisää kustannus
       [:span
@@ -155,8 +149,7 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (komp/sisaan #(do
-                    (e! (tiedot/->HaeTiedot))
-                    (e! (tiedot/->HaeSanktiotJaBonukset))))
+                    (e! (tiedot/->HaeTiedot))))
 
     (fn [e! app]
       [:div

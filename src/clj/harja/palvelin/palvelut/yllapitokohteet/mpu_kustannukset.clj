@@ -34,6 +34,11 @@
   (q/tallenna-mpu-kustannus! db tiedot))
 
 
+(defn hae-mpu-selitteet [db kayttaja {:keys [urakka-id] :as _tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
+  (q/hae-mpu-kustannus-selitteet db))
+
+
 (defrecord MPUKustannukset []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -43,10 +48,14 @@
     ;; Tallennus
     (julkaise-palvelu http-palvelin
       :tallenna-mpu-kustannus (fn [user tiedot] (tallenna-mpu-kustannus db user tiedot)))
+    ;; Selitteet
+    (julkaise-palvelu http-palvelin
+      :hae-mpu-selitteet (fn [user tiedot] (hae-mpu-selitteet db user tiedot)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
       :hae-tyomenetelmat
+      :hae-mpu-selitteet
       :tallenna-mpu-kustannus)
     this))
