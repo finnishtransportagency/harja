@@ -18,5 +18,9 @@ GROUP BY
 INSERT INTO mpu_kustannukset (urakka, selite, summa, vuosi) VALUES (:urakka-id, :selite, :summa, :vuosi);
 
 
+-- name: hae-mpu-kustannukset
+SELECT * FROM mpu_kustannukset WHERE urakka = :urakka-id AND vuosi = :vuosi;
+
+
 -- name: hae-mpu-kustannus-selitteet
 SELECT DISTINCT(selite) FROM mpu_kustannukset;

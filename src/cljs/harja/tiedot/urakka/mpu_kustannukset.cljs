@@ -53,6 +53,8 @@
 (defrecord TallennaKustannusEpaonnistui [vastaus])
 (defrecord HaeMPUSelitteetOnnistui [vastaus])
 (defrecord HaeMPUSelitteetEpaonnistui [vastaus])
+(defrecord HaeMPUKustannuksetOnnistui [vastaus])
+(defrecord HaeMPUKustannuksetEpaonnistui [vastaus])
 
 
 (defn- hae-paikkaus-kustannukset [app]
@@ -95,12 +97,26 @@
      :epaonnistui ->HaeMPUSelitteetEpaonnistui}))
 
 
+(defn- hae-mpu-kustannukset
+  [app]
+  (tuck-apurit/post! app :hae-mpu-kustannukset
+    {:urakka-id @nav/valittu-urakka-id
+     :vuosi @urakka/valittu-urakan-vuosi}
+    {:onnistui ->HaeMPUKustannuksetOnnistui
+     :epaonnistui ->HaeMPUKustannuksetEpaonnistui}))
+
+
+(defn- generoi-numero []
+  (str "uuid-" (.toString (js/Math.random))))
+
+
 (extend-protocol tuck/Event
 
   HaeTiedot
   (process-event [_ app]
     (hae-mpu-selitteet app)
     (hae-paikkaus-kustannukset app)
+    (hae-mpu-kustannukset app)
     (hae-sanktiot-ja-bonukset app)
     (assoc app :haku-kaynnissa? true))
 
@@ -127,12 +143,11 @@
                                              (or (:summa rivi) 0))) vastaus)))
           ;; Lisätään sanktiot ja bonukset gridin riveihin, ehkä liian hakkerointia ehkä ei 
           bonukset (fn-laske-arvo :yllapidon_bonus)
-          sanktiot (fn-laske-arvo :yllapidon_sakko)
-          id (inc (apply max (map :id rivit)))]
+          sanktiot (fn-laske-arvo :yllapidon_sakko)]
       (assoc app
         :rivit (conj rivit
-                 {:id id, :kokonaiskustannus bonukset :tyomenetelma "Bonukset"}
-                 {:id (inc id), :kokonaiskustannus sanktiot :tyomenetelma "Sanktiot"}))))
+                 {:id (generoi-numero), :kokonaiskustannus bonukset :tyomenetelma "Bonukset"}
+                 {:id (generoi-numero), :kokonaiskustannus sanktiot :tyomenetelma "Sanktiot"}))))
 
   HaeSanktiotJaBonuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -169,6 +184,18 @@
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Tallennus epäonnistui, vastaus: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tallennus epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
+  
+  HaeMPUKustannuksetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    ;;TODO
+    (println "\n Vastaus: " vastaus)
+    app)
+  
+  HaeMPUKustannuksetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "Kustannusten haku epäonnistui, vastaus: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "Haku epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
   HaeMPUSelitteetOnnistui
