@@ -24,7 +24,7 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
-(defn kustannuksen-lisays-lomake [e! {:keys [voi-kirjoittaa? lomake-valinnat]} voi-tallentaa?]
+(defn kustannuksen-lisays-lomake [e! {:keys [voi-kirjoittaa? lomake-valinnat kustannusten-tyypit]} voi-tallentaa?]
   [:div.overlay-oikealla
    [lomake/lomake
     {:ei-borderia? true
@@ -52,7 +52,7 @@
         :validoi [[:ei-tyhja "Valitse tyyppi"]]
         :nimi :kustannus-tyyppi
         :tyyppi :valinta
-        :valinnat tiedot/kustannusten-tyypit
+        :valinnat kustannusten-tyypit
         ::lomake/col-luokka "leveys-kokonainen"})
 
      ;; Selite 

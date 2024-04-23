@@ -14,10 +14,10 @@
                      :lomake-valinnat nil
                      :kustannukset-yhteensa nil
                      :muokataan false
-                     :haku-kaynnissa? false}))
+                     :haku-kaynnissa? false
+                     :kustannusten-tyypit ["Arvonmuutokset" "Indeksi- ja kustannustason muutokset" "Muut kustannukset"]}))
 
 (def nakymassa? (atom false))
-(def kustannusten-tyypit ["Arvonmuutokset" "Indeksi- ja kustannustason muutokset" "Muut kustannukset"])
 
 
 (defn voi-tallentaa?
@@ -161,10 +161,9 @@
 
   TallennaKustannusOnnistui
   (process-event [_ app]
-    (let []
-      (viesti/nayta-toast! "Kustannus tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
-      ;; TODO , hae
-      app))
+    (viesti/nayta-toast! "Kustannus tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
+    (tuck/process-event (->HaeTiedot) app)
+    app)
 
   TallennaKustannusEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -174,10 +173,17 @@
 
   HaeMPUSelitteetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let []
-        ;; TODO 
-      (println "\n Selitteet: " vastaus)
-      app))
+    ;; Palautetaan tilaan kaikki mpu_kustannukset taulun selitteet vectorina
+    ;; Siirtää aina "Muut kustannukset" vectorin viimeiseksi
+    ;; Esimerkki vastaus: ({:selite Arvonmuutokset} {:selite Tester} {:selite Indeksi- ja kustannustason muutokset})
+    ;; Esimerkki output: ["Arvonmuutokset" "Indeksi- ja kustannustason muutokset" "Tester" "Muut kustannukset"]
+    (let [fn-kokoa-selitteet (fn [tyypit vastaus]
+                               (let [vastauksen-selitteet (map :selite vastaus)
+                                     kaikki (set (concat tyypit vastauksen-selitteet))]
+                                 ;; Siirrä Muut kustannukset viimeiseksi
+                                 (vec (sort-by #(if (= % "Muut kustannukset") 1 0) kaikki))))]
+      (assoc app
+        :kustannusten-tyypit (fn-kokoa-selitteet (:kustannusten-tyypit app) vastaus))))
 
   HaeMPUSelitteetEpaonnistui
   (process-event [{vastaus :vastaus} app]
