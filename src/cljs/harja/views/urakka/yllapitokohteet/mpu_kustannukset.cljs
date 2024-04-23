@@ -137,10 +137,9 @@
 (defn mpu-kustannukset* [e! _app]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-    (komp/sisaan #(do 
+    (komp/sisaan #(do
                     (e! (tiedot/->HaeTiedot))
-                    (e! (tiedot/->HaeSanktiot)))
-      )
+                    (e! (tiedot/->HaeSanktiotJaBonukset))))
 
     (fn [e! app]
       [:div

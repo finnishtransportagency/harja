@@ -38,9 +38,9 @@
 (defrecord HaeTiedot [])
 (defrecord HaeTiedotOnnistui [vastaus])
 (defrecord HaeTiedotEpaonnistui [vastaus])
-(defrecord HaeSanktiot [])
-(defrecord HaeSanktiotOnnistui [vastaus])
-(defrecord HaeSanktiotEpaonnistui [vastaus])
+(defrecord HaeSanktiotJaBonukset [])
+(defrecord HaeSanktiotJaBonuksetOnnistui [vastaus])
+(defrecord HaeSanktiotJaBonuksetEpaonnistui [vastaus])
 (defrecord AvaaLomake [])
 (defrecord SuljeLomake [])
 (defrecord MuokkaaLomaketta [rivi])
@@ -57,16 +57,17 @@
      :epaonnistui ->HaeTiedotEpaonnistui}))
 
 
-(defn- hae-sanktiot [app]
+(defn- hae-sanktiot-ja-bonukset [app]
   (tuck-apurit/post! app
-    :hae-urakan-sanktiot-ja-bonukset {:urakka-id @nav/valittu-urakka-id
-                                      :alku      (first (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
-                                      :loppu     (second (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
-                                      :vain-yllapitokohteettomat? false
-                                      :hae-sanktiot? true
-                                      :hae-bonukset? false}
-    {:onnistui ->HaeSanktiotOnnistui
-     :epaonnistui ->HaeSanktiotEpaonnistui}))
+    :hae-urakan-sanktiot-ja-bonukset
+    {:urakka-id @nav/valittu-urakka-id
+     :alku      (first (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
+     :loppu     (second (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
+     :vain-yllapitokohteettomat? false
+     :hae-sanktiot? true
+     :hae-bonukset? true}
+    {:onnistui ->HaeSanktiotJaBonuksetOnnistui
+     :epaonnistui ->HaeSanktiotJaBonuksetEpaonnistui}))
 
 
 (extend-protocol tuck/Event
@@ -91,17 +92,23 @@
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
   
-  HaeSanktiot
+  HaeSanktiotJaBonukset
   (process-event [_ app]
-    (hae-sanktiot app)
+    (hae-sanktiot-ja-bonukset app)
     (assoc app :haku-kaynnissa? true))
   
-  HaeSanktiotOnnistui
+  HaeSanktiotJaBonuksetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [_ (println "\n Vastaus: " vastaus)]
-      app))
+    (let [fn-laske-arvo (fn [avain]
+                          (reduce + (map (fn [rivi]
+                                           (when (= (:laji rivi) avain)
+                                             (or (:summa rivi) 0))) vastaus)))
+
+          bonukset (fn-laske-arvo :yllapidon_bonus)
+          sanktiot (fn-laske-arvo :yllapidon_sakko)]
+      (assoc app :sanktiot sanktiot :bonukset bonukset)))
   
-  HaeSanktiotEpaonnistui
+  HaeSanktiotJaBonuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Sanktioiden haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Sanktioiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
