@@ -1,10 +1,12 @@
 (ns harja.palvelin.integraatiot.jms
   (:require [clojure.core.async :as async]
             [clojure.spec.alpha :as s]
+            [clojure.string :as string]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
             [clojure.string :as clj-str]
             [cheshire.core :as cheshire]
+            [harja.tyokalut.loki :as loki]
             [slingshot.slingshot :refer [try+ throw+]]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
@@ -13,7 +15,8 @@
             [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
             [harja.kyselyt.jarjestelman-tila :as q]
-            [harja.tyokalut.predikaatti :as predikaatti])
+            [harja.tyokalut.predikaatti :as predikaatti]
+            [harja.tyokalut.versio :as versio])
   (:import (clojure.lang PersistentArrayMap)
            (javax.jms Session ExceptionListener JMSException MessageListener TextMessage)
            (java.util Date Base64)
@@ -44,6 +47,8 @@
 
 (def aktiivinen "ACTIVE")
 (def sammutettu "CLOSED")
+
+(def jms-alert-TAG "JMS-ALERT")
 
 (def JMS-alkutila
   {:yhteys nil :istunnot {}})
@@ -250,17 +255,18 @@
   {:pre [(seqable? jms-tila)
          (string? jarjestelma)]}
   (q/tallenna-jarjestelman-tila<! db {:tila (cheshire/encode jms-tila)
-                                      :palvelin (fmt/leikkaa-merkkijono 512
-                                                                        (.toString (InetAddress/getLocalHost)))
+                                      :palvelimen-osoite (fmt/leikkaa-merkkijono 512
+                                                         (.toString (InetAddress/getLocalHost)))
+                                      :palvelimen-versio versio/palvelimen-versio
                                       :osa-alue jarjestelma}))
 
 (defn aloita-jms-yhteyden-tarkkailu [this paivitystiheys-ms lopeta-tarkkailu-kanava tapahtuma-julkaisija db]
   (tapahtuma-apurit/loop-f lopeta-tarkkailu-kanava
-                           paivitystiheys-ms
-                           (fn []
-                             (try
-                               (let [jms-tila (::kp/tiedot (kp/status this))]
-                                 (tallenna-jms-tila-kantaan db (get jms-tila (:nimi this)) (:nimi this))
+    paivitystiheys-ms
+    (fn []
+      (try
+        (let [jms-tila (::kp/tiedot (kp/status this))]
+          (tallenna-jms-tila-kantaan db (get jms-tila (:nimi this)) (:nimi this))
                                  (tapahtuma-julkaisija jms-tila))
                                (catch Throwable t
                                  (tapahtuma-julkaisija {(:nimi this) {:virhe :tilan-lukemisvirhe}})
@@ -274,7 +280,7 @@
 (defn tee-jms-poikkeuskuuntelija []
   (reify ExceptionListener
     (onException [_ e]
-      (log/error e (str "Tapahtui JMS-poikkeus: " (.getMessage e))))))
+      (log/error e (loki/koristele-lokiviesti (str "Tapahtui JMS-poikkeus: " (.getMessage e)) jms-alert-TAG)))))
 
 (defn luo-istunto [yhteys]
   (try
@@ -324,9 +330,12 @@
             kasittelija-olio (or (and vanha-istunto kasittelija-olio)
                                  (if (= kasittelija :vastaanottaja)
                                    (let [vastaanottaja (.createReceiver istunto jono)]
+                                     (log/info "Aseta viestien käsittelijä '.setMessageListener' vastaanottajaksi jonoon: " jonon-nimi)
                                      (aseta-viestien-kasittelija! vastaanottaja kuuntelijat tila jarjestelma jonon-nimi)
                                      vastaanottaja)
-                                   (.createProducer istunto jono)))]
+                                   (do
+                                     (log/info "Aseta viestien käsittelijä '.createProducer' tuottajaksi jonoon: " jonon-nimi)
+                                     (.createProducer istunto jono))))]
         (swap! tila (fn [tiedot]
                       (-> tiedot
                           (assoc-in [:istunnot jarjestelma :istunto] istunto)
@@ -745,9 +754,15 @@
 
          yhteys-ok? (= aktiivinen (yhteyden-tila (:yhteys jms-tila)))
          istunto-ok? (= aktiivinen (istunnon-tila istunto))
-         jono-ok? (boolean (cond-> (or tuottaja vastaanottaja)
-                                   tuottaja (and (= aktiivinen (tuottajan-tila tuottaja)))
-                                   vastaanottaja (and (= aktiivinen (vastaanottajan-tila vastaanottaja)))))]
+         tuottaja-ok? (and tuottaja (= aktiivinen (tuottajan-tila tuottaja)))
+         vastaanottaja-ok? (and vastaanottaja (= aktiivinen (vastaanottajan-tila vastaanottaja)))
+         molemmat-roolit? (and tuottaja-ok? vastaanottaja-ok?)
+         _ (when molemmat-roolit?
+             (log/error "JMS-jonolla molemmat roolit: " jonon-nimi " client ID: " (.getClientID (:yhteys jms-tila))))
+         jono-ok? (and
+                    ;; ei haluta olla sekä tuottaja että vastaanottaja yhtaikaa
+                    (or tuottaja-ok? vastaanottaja-ok?)
+                    (not molemmat-roolit?))]
      (and yhteys-ok? istunto-ok? jono-ok?))))
 
 (defn jms-jono-olemassa?

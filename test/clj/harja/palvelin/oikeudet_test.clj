@@ -117,19 +117,19 @@
   (is (oikeudet/voi-kirjoittaa? oikeudet/hallinta-pohjavesialueidensiirto nil jvh))
   (is (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu nil jvh)))
 
-#_(deftest ely-uv-voi-lukea-kaikista-ja-kirjoittaa-omaan
+(deftest ely-uv-voi-lukea-kaikista-ja-kirjoittaa-omaan
   (is (oikeudet/voi-lukea? oikeudet/urakat-suunnittelu-materiaalit 42 ely-uv))
   (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-materiaalit 42 ely-uv)))
   (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-materiaalit 1 ely-uv)))
 
-#_(deftest urakoitsijan-pk-voi-lukea-ja-kirjoittaa-omiaan
+(deftest urakoitsijan-pk-voi-lukea-ja-kirjoittaa-omiaan
   (doseq [u [1 2 3]]
     (is (oikeudet/voi-lukea? oikeudet/urakat-laadunseuranta-tarkastukset u ur-pk))
     (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset u ur-pk)))
   (is (not (oikeudet/voi-lukea? oikeudet/urakat-laadunseuranta-tarkastukset 4 ur-pk)))
   (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset 4 ur-pk))))
 
-#_(deftest urakoitsija-uvh-voi-lukea-ja-kirjoittaa-omaa-urakkaa
+(deftest urakoitsija-uvh-voi-lukea-ja-kirjoittaa-omaa-urakkaa
   (is (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot 1 ur-uvh))
   (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot 1 ur-uvh))
   (is (not (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot 2 ur-uvh)))
@@ -187,10 +187,10 @@
 (deftest urakoitsijan-urakan-lv-nakee-oman-urakkansa
   (is (oikeudet/voi-lukea? oikeudet/urakat 1 ur-urakan-lv)))
 
-#_(deftest urakan-valvoja-eri-elyn-urakassa
+(deftest urakan-valvoja-eri-elyn-urakassa
   (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-yksikkohintaisettyot 4 ely-uv-eri-elyssa)))
 
-#_(deftest urakan-turvallisuusvalvoja-eri-elyn-urakassa
+(deftest urakan-turvallisuusvalvoja-eri-elyn-urakassa
   (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus 4 ely-tv-eri-elyssa)))
 
 (deftest tilaajan-laadunvalvoja-voi-tehda-asiatarkastuksen
@@ -208,7 +208,7 @@
                                     oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                     1 ur-uvh))))
 
-#_(deftest ely-laadunvalvoja-voi-tehda-tarkastuksen-nimettyihin-urakoihin
+(deftest ely-laadunvalvoja-voi-tehda-tarkastuksen-nimettyihin-urakoihin
   ;; koti ELY:ssä
   (is (oikeudet/voi-lukea? oikeudet/urakat-laadunseuranta-tarkastukset
                                 1 ely-lv))

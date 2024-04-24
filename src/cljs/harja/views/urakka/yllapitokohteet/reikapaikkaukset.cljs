@@ -259,7 +259,7 @@
         [:div.lataus-nappi
          [yleiset/tiedoston-lataus-linkki
           "Lataa Excel-pohja"
-          (str (when-not (k/kehitysymparistossa?)  "/harja") "/excel/harja_reikapaikkausten_pohja.xlsx")]]]]
+          "/excel/harja_reikapaikkausten_pohja.xlsx"]]]]
 
       ;; Grid
       [grid/grid {:tyhja (if haku-kaynnissa?

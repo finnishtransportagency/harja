@@ -567,7 +567,7 @@ UNION ALL
                    :tehtava nil}]
    :koontilaskun-kuukausi "elokuu/1-hoitovuosi"})
 
-#_(deftest lisatyot-test
+(deftest lisatyot-test
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         urakkavastaava (oulun-2019-urakan-urakoitsijan-urakkavastaava)
         alkupvm "2020-10-01"

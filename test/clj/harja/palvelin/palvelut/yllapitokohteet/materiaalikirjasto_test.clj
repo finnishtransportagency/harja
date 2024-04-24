@@ -578,7 +578,7 @@
     (is (= oletetut-massat-oulun-paallystysurakassa massat) "Oletetut massat Oulun urakasta")
     (is (= oletetut-murskeet-oulun-paallystysurakassa murskeet) "Oletetut murskeet Oulun urakasta")))
 
-#_(deftest tuo-materiaalit-utajarvi->porvoo
+(deftest tuo-materiaalit-utajarvi->porvoo
   (let [{massat :massat murskeet :murskeet}
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :hae-urakan-massat-ja-murskeet
@@ -665,7 +665,7 @@
                                                       :massa-idt massa-idt
                                                       :murske-idt murske-idt})))))
 
-#_(deftest kaytossa-olevaa-massaa-ei-voi-poistaa
+(deftest kaytossa-olevaa-massaa-ei-voi-poistaa
   (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         massan-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_massa WHERE urakka_id = "
                                   urakka-id
@@ -675,7 +675,7 @@
                                  :poista-urakan-massa
                                  +kayttaja-vastuuhlo-muhos+ {:id massan-id})))))
 
-#_(deftest kaytossa-olevaa-mursketta-ei-voi-poistaa
+(deftest kaytossa-olevaa-mursketta-ei-voi-poistaa
   (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         murskeen-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_murske WHERE urakka_id = "
                                   urakka-id
@@ -685,7 +685,7 @@
                                  :poista-urakan-massa
                                  +kayttaja-vastuuhlo-muhos+ {:id murskeen-id})))))
 
-#_(deftest massan-poisto-toimii
+(deftest massan-poisto-toimii
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         {massat-ennen :massat murskeet-ennen :murskeet}
         (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -708,7 +708,7 @@
                         massat-jalkeen)))
     (is (empty? massat-jalkeen))))
 
-#_(deftest murskeen-poisto-toimii
+(deftest murskeen-poisto-toimii
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         {massat-ennen :massat murskeet-ennen :murskeet}
         (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -730,7 +730,7 @@
     (is (empty? (filter #(= murskeen-id (::pot2-domain/murske-id %))
                  murskeet-jalkeen)))))
 
-#_(deftest massaa-jolle-ei-loydy-urakkaa-heittaa-poikkeuksen
+(deftest massaa-jolle-ei-loydy-urakkaa-heittaa-poikkeuksen
   (is (thrown? AssertionError
                (kutsu-palvelua (:http-palvelin jarjestelma)
                                :poista-urakan-massa
@@ -756,7 +756,7 @@
                                  :poista-urakan-murske
                                  +kayttaja-yit_uuvh+ {:id murskeen-id})))))
 
-#_(deftest nimen-tarkenne-erottelee-jos-tuodaan-sama-massa-tai-murske-useampaan-kertaan
+(deftest nimen-tarkenne-erottelee-jos-tuodaan-sama-massa-tai-murske-useampaan-kertaan
   (let [{massat :massat murskeet :murskeet}
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :hae-urakan-massat-ja-murskeet

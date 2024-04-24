@@ -29,4 +29,4 @@
                                        (vie-hoitoluokka-entry db soratie))
                                 (when (= 0 (:lkm (first (hoitoluokat/tarkista-hoitoluokkadata db "talvihoito"))))
                                       (throw (Exception. "Yhtään talvihoitoluokkageometriaa ei viety kantaan. Tarkista aineiston yhteensopivuus sisäänlukevan kooditoteutuksen kanssa.")))))
-    (throw (Exception. (format "Talvihoitoluokkatietojen geometrioiden tiedostopolkua % ei löydy konfiguraatiosta. Tuontia ei suoriteta." shapefile)))))
+    (throw (Exception. (format "Talvihoitoluokkatietojen geometrioiden tiedostopolkua %s ei löydy konfiguraatiosta. Tuontia ei suoriteta." shapefile)))))
