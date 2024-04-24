@@ -14,5 +14,3 @@ CREATE INDEX idx_toteuma_230701_240101_json_hash ON toteuma_230701_240101 (json_
 CREATE INDEX idx_toteuma_240101_240701_json_hash ON toteuma_240101_240701 (json_hash);
 CREATE INDEX idx_toteuma_240701_250101_json_hash ON toteuma_240701_250101 (json_hash);
 CREATE INDEX idx_toteuma_250101_991231_json_hash ON toteuma_250101_991231 (json_hash);
-
-
