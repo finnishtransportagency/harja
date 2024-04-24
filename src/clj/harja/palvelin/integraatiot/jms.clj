@@ -6,6 +6,7 @@
             [clojure.zip :refer [xml-zip]]
             [clojure.string :as clj-str]
             [cheshire.core :as cheshire]
+            [harja.tyokalut.loki :as loki]
             [slingshot.slingshot :refer [try+ throw+]]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
@@ -46,6 +47,8 @@
 
 (def aktiivinen "ACTIVE")
 (def sammutettu "CLOSED")
+
+(def jms-alert-TAG "JMS-ALERT")
 
 (def JMS-alkutila
   {:yhteys nil :istunnot {}})
@@ -277,7 +280,7 @@
 (defn tee-jms-poikkeuskuuntelija []
   (reify ExceptionListener
     (onException [_ e]
-      (log/error e (str "Tapahtui JMS-poikkeus: " (.getMessage e))))))
+      (log/error e (loki/koristele-lokiviesti (str "Tapahtui JMS-poikkeus: " (.getMessage e)) jms-alert-TAG)))))
 
 (defn luo-istunto [yhteys]
   (try
@@ -327,9 +330,12 @@
             kasittelija-olio (or (and vanha-istunto kasittelija-olio)
                                  (if (= kasittelija :vastaanottaja)
                                    (let [vastaanottaja (.createReceiver istunto jono)]
+                                     (log/info "Aseta viestien käsittelijä '.setMessageListener' vastaanottajaksi jonoon: " jonon-nimi)
                                      (aseta-viestien-kasittelija! vastaanottaja kuuntelijat tila jarjestelma jonon-nimi)
                                      vastaanottaja)
-                                   (.createProducer istunto jono)))]
+                                   (do
+                                     (log/info "Aseta viestien käsittelijä '.createProducer' tuottajaksi jonoon: " jonon-nimi)
+                                     (.createProducer istunto jono))))]
         (swap! tila (fn [tiedot]
                       (-> tiedot
                           (assoc-in [:istunnot jarjestelma :istunto] istunto)
@@ -748,9 +754,15 @@
 
          yhteys-ok? (= aktiivinen (yhteyden-tila (:yhteys jms-tila)))
          istunto-ok? (= aktiivinen (istunnon-tila istunto))
-         jono-ok? (boolean (cond-> (or tuottaja vastaanottaja)
-                                   tuottaja (and (= aktiivinen (tuottajan-tila tuottaja)))
-                                   vastaanottaja (and (= aktiivinen (vastaanottajan-tila vastaanottaja)))))]
+         tuottaja-ok? (and tuottaja (= aktiivinen (tuottajan-tila tuottaja)))
+         vastaanottaja-ok? (and vastaanottaja (= aktiivinen (vastaanottajan-tila vastaanottaja)))
+         molemmat-roolit? (and tuottaja-ok? vastaanottaja-ok?)
+         _ (when molemmat-roolit?
+             (log/error "JMS-jonolla molemmat roolit: " jonon-nimi " client ID: " (.getClientID (:yhteys jms-tila))))
+         jono-ok? (and
+                    ;; ei haluta olla sekä tuottaja että vastaanottaja yhtaikaa
+                    (or tuottaja-ok? vastaanottaja-ok?)
+                    (not molemmat-roolit?))]
      (and yhteys-ok? istunto-ok? jono-ok?))))
 
 (defn jms-jono-olemassa?
