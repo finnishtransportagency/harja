@@ -117,15 +117,12 @@
         ;; Lähetetään reittitoteuma ensimmäisen kerran
         vastaus1 (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti toteumajson)
         toteuma-kannassa1 (first (q-map (str "SELECT id, json_hash, muokattu FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-        ;; Toteumaa ei ole muokattu, joten muokattu aikaleima on null
-        _ (is (nil? (:muokattu toteuma-kannassa1)))
 
         ;; Lähetetään sama reittitoteuma toisen kerran, pitäisi generoida sama hash ja ilmoittaa vain ok tuloksesta
         vastaus2 (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti toteumajson)
         ;; Vaikka sama toteuma lähetettiin uudestaan, niin hash tarkistuksen takia
         ;; toteumaa ei ole muokattu, joten muokattu aikaleima on null
         toteuma-kannassa2 (first (q-map (str "SELECT id, json_hash, muokattu FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-        _ (is (nil? (:muokattu toteuma-kannassa2)))
 
         ;; Varmistetaan, että joku hash löytyy tietokannasta
         toteuma-kannassa (first (q-map (str "SELECT id, json_hash FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
@@ -138,11 +135,16 @@
                       (.replace "__ID__" (str ulkoinen-id))
                       (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy2"))
         vastaus3 (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti toteumajson2)
-        toteuma-kannassa3 (first (q-map (str "SELECT id, json_hash, muokattu FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-        _ (is (not (nil? (:muokattu toteuma-kannassa3))))]
+        toteuma-kannassa3 (first (q-map (str "SELECT id, json_hash, muokattu FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
+    
     (is (= 200 (:status vastaus1)))
     (is (= 200 (:status vastaus2)))
     (is (= 200 (:status vastaus3)))
+
+    ;; Toteumaa ei ole muokattu, joten muokattu aikaleima on null
+    (is (nil? (:muokattu toteuma-kannassa1)))
+    (is (nil? (:muokattu toteuma-kannassa2)))
+    (is (not (nil? (:muokattu toteuma-kannassa3))))
 
     (is (= hash (:json_hash toteuma-kannassa1)))
     (is (= hash (:json_hash toteuma-kannassa2)))
