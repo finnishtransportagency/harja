@@ -2,10 +2,8 @@
   (:require [clojure.java.jdbc :as jdbc]
 
             [clojure.set :as set]
-            [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
             [specql.op :as op]
-            [taoensso.timbre :as log]
 
             [harja.id :refer [id-olemassa?]]
             [harja.pvm :as pvm]
@@ -16,8 +14,7 @@
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-toiminto :as toiminto]
             [harja.domain.kanavat.lt-ketjutus :as ketjutus]
-            [harja.domain.kanavat.kohde :as kohde]
-            [clojure.core :as c]))
+            [harja.domain.kanavat.kohde :as kohde]))
 
 (defn- liita-kohteen-urakkatiedot [kohteiden-haku tapahtumat]
   (let [kohteet (group-by ::kohde/id (kohteiden-haku (map ::lt/kohde tapahtumat)))]
@@ -52,9 +49,9 @@
                 true
                 ;; Pidä tapahtuma, jos sen aluksissa ainakin yksi
                 ;; alkaa annetulla nimellä
-                (not (empty? (lt-alus/suodata-alukset-nimen-alulla
-                               (::lt/alukset tapahtuma)
-                               alus-nimi))))))
+                (seq (lt-alus/suodata-alukset-nimen-alulla
+                          (::lt/alukset tapahtuma)
+                          alus-nimi)))))
           tapahtumat))
 
 (defn- hae-liikennetapahtumat* [tiedot tapahtumat urakkatiedot-fn urakka-idt]
@@ -148,7 +145,7 @@
             {::lt/aika (op/between alku loppu)})
           (when kohde-id
             {::lt/kohde-id kohde-id})
-          (when (or suunta (not (empty? aluslajit)))
+          (when (or suunta (seq aluslajit))
             {::lt/alukset (op/and
                             (when suunta
                               {::lt-alus/suunta suunta})
@@ -400,13 +397,6 @@
                   {::ketjutus/tapahtumaan-id (::lt/id tapahtuma)}
                   {::ketjutus/alus-id (op/in (map ::lt-alus/id (::lt/alukset tapahtuma)))
                    ::ketjutus/kohteelle-id (::lt/kohde-id tapahtuma)}))
-
-(defn ketjutus-olemassa? [db alus]
-  (not-empty
-    (specql/fetch db
-                  ::ketjutus/liikennetapahtuman-ketjutus
-                  #{::ketjutus/alus-id}
-                  {::ketjutus/alus-id (::lt-alus/id alus)})))
 
 (defn- hae-seuraavat-kohteet* [kohteet]
   (mapcat vals kohteet))
