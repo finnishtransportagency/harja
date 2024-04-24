@@ -188,9 +188,15 @@
   
   HaeMPUKustannuksetOnnistui
   (process-event [{vastaus :vastaus} app]
-    ;;TODO
-    (println "\n Vastaus: " vastaus)
-    app)
+    ;; Tykitä mpu_kustannukset taulusta saadut rivit gridiin
+    (assoc app :rivit
+      (reduce (fn [rivit r]
+                (conj rivit
+                  {:id (generoi-numero)
+                   :kokonaiskustannus (:summa r)
+                   :tyomenetelma (:selite r)}))
+        (:rivit app)
+        vastaus)))
   
   HaeMPUKustannuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]

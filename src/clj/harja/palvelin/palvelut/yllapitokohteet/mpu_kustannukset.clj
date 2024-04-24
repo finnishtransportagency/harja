@@ -47,16 +47,12 @@
 (defrecord MPUKustannukset []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
-    ;; Haku
-    (julkaise-palvelu http-palvelin
-      :hae-paikkaus-kustannukset (fn [user tiedot] (hae-paikkaus-kustannukset db user tiedot)))
-    (julkaise-palvelu http-palvelin
-      :hae-mpu-selitteet (fn [user tiedot] (hae-mpu-selitteet db user tiedot)))
-    (julkaise-palvelu http-palvelin
-      :hae-mpu-kustannukset (fn [user tiedot] (hae-mpu-kustannukset db user tiedot)))
+    ;; Haut
+    (julkaise-palvelu http-palvelin :hae-mpu-selitteet (fn [user tiedot] (hae-mpu-selitteet db user tiedot)))
+    (julkaise-palvelu http-palvelin :hae-mpu-kustannukset (fn [user tiedot] (hae-mpu-kustannukset db user tiedot)))
+    (julkaise-palvelu http-palvelin :hae-paikkaus-kustannukset (fn [user tiedot] (hae-paikkaus-kustannukset db user tiedot)))
     ;; Tallennus
-    (julkaise-palvelu http-palvelin
-      :tallenna-mpu-kustannus (fn [user tiedot] (tallenna-mpu-kustannus db user tiedot)))
+    (julkaise-palvelu http-palvelin :tallenna-mpu-kustannus (fn [user tiedot] (tallenna-mpu-kustannus db user tiedot)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
