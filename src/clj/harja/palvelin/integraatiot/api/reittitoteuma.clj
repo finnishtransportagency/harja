@@ -6,7 +6,6 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
-            [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.toteumat :as toteumat-q]
@@ -16,6 +15,7 @@
                      pvm-string->joda-date aika-string->java-sql-timestamp]]
             [harja.kyselyt.tieverkko :as tieverkko]
             [harja.kyselyt.sopimukset :as sopimukset-q]
+            [harja.kyselyt.konversio :as konversio]
             [clojure.java.jdbc :as jdbc]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -220,12 +220,12 @@ maksimi-linnuntien-etaisyys 200)
 
 (defn tallenna-kaikki-pyynnon-reittitoteumat [db db-replica urakka-id kirjaaja data]
   (when (:reittitoteuma data)
-    (let [jsonhash (apurit/md5-hash (pr-str (:reittitoteuma data)))]
+    (let [jsonhash (konversio/string->md5 (pr-str (:reittitoteuma data)))]
       (when (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in data [:reittitoteuma :toteuma :tunniste :id]))
         (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma data) jsonhash))))
 
   (doseq [toteuma (:reittitoteumat data)]
-    (let [jsonhash (apurit/md5-hash (pr-str toteuma))]
+    (let [jsonhash (konversio/string->md5 (pr-str toteuma))]
       (when (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in toteuma [:reittitoteuma :toteuma :tunniste :id]))
         (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma toteuma) jsonhash))))
   (paivita-materiaalicachet! db urakka-id data))

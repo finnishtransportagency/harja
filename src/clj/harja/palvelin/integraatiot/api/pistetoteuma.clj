@@ -8,7 +8,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
+            [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [clojure.java.jdbc :as jdbc]
@@ -35,11 +35,11 @@
 (defn tallenna-kaikki-pyynnon-pistetoteumat [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [db db]
     (when (:pistetoteuma data)
-      (let [jsonhash (apurit/md5-hash (pr-str (:pistetoteuma data)))]
+      (let [jsonhash (konversio/string->md5 (pr-str (:pistetoteuma data)))]
         (when (toteumat-q/ei-ole-lahetetty-aiemmin? db jsonhash (get-in data [:pistetoteuma :toteuma :tunniste :id]))
           (tallenna-yksittainen-pistetoteuma db urakka-id kirjaaja (:pistetoteuma data) jsonhash))))
     (doseq [pistetoteuma (:pistetoteumat data)]
-      (let [jsonhash (apurit/md5-hash (pr-str pistetoteuma))]
+      (let [jsonhash (konversio/string->md5 (pr-str pistetoteuma))]
         (when (toteumat-q/ei-ole-lahetetty-aiemmin? db jsonhash (get-in pistetoteuma [:pistetoteuma :toteuma :tunniste :id]))
           (tallenna-yksittainen-pistetoteuma db urakka-id kirjaaja (:pistetoteuma pistetoteuma) jsonhash))))))
 
