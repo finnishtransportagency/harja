@@ -4,9 +4,11 @@
             [compojure.core :refer [POST GET DELETE]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
+            [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
+            [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [clojure.java.jdbc :as jdbc]
@@ -16,10 +18,11 @@
 (defn tee-onnistunut-vastaus []
   (tee-kirjausvastauksen-body {:ilmoitukset "Pistetoteuma kirjattu onnistuneesti"}))
 
-(defn tallenna-yksittainen-pistetoteuma [db urakka-id kirjaaja {:keys [toteuma sijainti tyokone]}]
+(defn tallenna-yksittainen-pistetoteuma [db urakka-id kirjaaja {:keys [toteuma sijainti tyokone]} jsonhash]
   (log/debug "Käsitellään yksittäinen pistetoteuma tunnisteella " (get-in toteuma [:tunniste :id]))
   (let [toteuma (assoc toteuma :reitti nil)
         toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone)
+        _ (toteumat-q/lisaa-toteumalle-jsonhash! db {:id toteuma-id :hash jsonhash})
         aika (aika-string->java-sql-date (:alkanut toteuma))]
     (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
     (log/debug "Aloitetaan sijainnin tallennus")
@@ -32,9 +35,13 @@
 (defn tallenna-kaikki-pyynnon-pistetoteumat [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [db db]
     (when (:pistetoteuma data)
-      (tallenna-yksittainen-pistetoteuma db urakka-id kirjaaja (:pistetoteuma data)))
+      (let [jsonhash (konversio/string->md5 (pr-str (:pistetoteuma data)))]
+        (when (toteumat-q/ei-ole-lahetetty-aiemmin? db jsonhash (get-in data [:pistetoteuma :toteuma :tunniste :id]))
+          (tallenna-yksittainen-pistetoteuma db urakka-id kirjaaja (:pistetoteuma data) jsonhash))))
     (doseq [pistetoteuma (:pistetoteumat data)]
-      (tallenna-yksittainen-pistetoteuma db urakka-id kirjaaja (:pistetoteuma pistetoteuma)))))
+      (let [jsonhash (konversio/string->md5 (pr-str pistetoteuma))]
+        (when (toteumat-q/ei-ole-lahetetty-aiemmin? db jsonhash (get-in pistetoteuma [:pistetoteuma :toteuma :tunniste :id]))
+          (tallenna-yksittainen-pistetoteuma db urakka-id kirjaaja (:pistetoteuma pistetoteuma) jsonhash))))))
 
 (defn tarkista-pyynto [db urakka-id kirjaaja data]
   (let [sopimus-idt (api-toteuma/hae-toteuman-kaikki-sopimus-idt :pistetoteuma :pistetoteumat data)]
