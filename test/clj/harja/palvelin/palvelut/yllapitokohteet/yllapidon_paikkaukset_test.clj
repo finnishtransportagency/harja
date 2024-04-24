@@ -43,13 +43,14 @@
         kuukausi 1
         paiva 1
         filtterit {::paikkaus/urakka-id urakka-id
-                   :aikavali [
+                   :aikavali-kuluva [
                               (c/to-date (t/local-date vuosi kuukausi paiva))
                               (c/to-date (t/local-date vuosi kuukausi paiva))]}
         paikaukset-paikkauskohteet-filtteri (kutsu-palvelua (:http-palvelin jarjestelma)
                                                             :hae-urakan-paikkaukset
                                                             +kayttaja-jvh+
-                                                            filtterit)]
+                                                            filtterit)
+        _ (println "paikaukset-paikkauskohteet-filtteri: " (pr-str paikaukset-paikkauskohteet-filtteri))]
     ;; Löytyy paikkauskohteita
     (is (> (count paikkaukset) 0))
     ;; Löytyy paikkauksia
@@ -257,7 +258,7 @@
                                         :hae-urakan-paikkaukset
                                         +kayttaja-jvh+
                                         {::paikkaus/urakka-id urakka-id
-                                         :aikavali %})
+                                         :aikavali-kuluva %})
         urakan-kaikki-paikkaukset (:paikkaukset (paikkaus-kutsu nil))
         testaus-template (fn [[alkuaika loppuaika :as aikavali]]
                            (let [haetut-paikkaukset-valilta (:paikkaukset (paikkaus-kutsu aikavali))
