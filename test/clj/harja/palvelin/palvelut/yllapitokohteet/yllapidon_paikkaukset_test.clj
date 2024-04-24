@@ -49,8 +49,7 @@
         paikaukset-paikkauskohteet-filtteri (kutsu-palvelua (:http-palvelin jarjestelma)
                                                             :hae-urakan-paikkaukset
                                                             +kayttaja-jvh+
-                                                            filtterit)
-        _ (println "paikaukset-paikkauskohteet-filtteri: " (pr-str paikaukset-paikkauskohteet-filtteri))]
+                                                            filtterit)]
     ;; Löytyy paikkauskohteita
     (is (> (count paikkaukset) 0))
     ;; Löytyy paikkauksia
