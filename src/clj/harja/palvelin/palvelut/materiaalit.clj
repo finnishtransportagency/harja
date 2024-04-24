@@ -187,7 +187,9 @@
 
         ;; Päivitä toteuman päivän mukainen materiaalin käyttö
         (doseq [sopimus-id sopimus-idt]
-          (q/paivita-sopimuksen-materiaalin-kaytto-toteumapvm c sopimus-id (:toteuma tm) urakka-id))
+          (q/paivita-sopimuksen-materiaalin-kaytto-toteumapvm c {:sopimus sopimus-id
+                                                                 :toteuma (:toteuma tm)
+                                                                 :urakkaid urakka-id}))
         ;; Käsin kirjatut materiaalit (t.lahde = 'harja-ui') lisätään hoitoluokittaisessa erittelyssä hoitoluokalle
         ;; 100, eli 'hoitoluokka ei tiedossa'.
         (q/paivita-urakan-materiaalin-kaytto-hoitoluokittain c {:urakka urakka-id
