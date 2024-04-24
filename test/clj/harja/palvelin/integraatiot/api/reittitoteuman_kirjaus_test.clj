@@ -1,6 +1,8 @@
 (ns harja.palvelin.integraatiot.api.reittitoteuman-kirjaus-test
   (:require [clojure.test :refer [deftest is use-fixtures testing]]
+            [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
+            [harja.kyselyt.konversio :as konversio]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
             [com.stuartsierra.component :as component]
@@ -106,24 +108,45 @@
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja)
         toteumajson (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
-               slurp
-               (.replace "__SOPIMUS_ID__" (str sopimus-id))
-               (.replace "__ID__" (str ulkoinen-id))
-               (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy"))
+                      slurp
+                      (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                      (.replace "__ID__" (str ulkoinen-id))
+                      (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy"))
         clj-toteuma (cheshire/parse-string toteumajson true)
-        hash (apurit/md5-hash (pr-str (:reittitoteuma clj-toteuma)))
+        hash (konversio/string->md5 (pr-str (:reittitoteuma clj-toteuma)))
         ;; Lähetetään reittitoteuma ensimmäisen kerran
         vastaus1 (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti toteumajson)
+        toteuma-kannassa1 (first (q-map (str "SELECT id, json_hash, muokattu FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+        ;; Toteumaa ei ole muokattu, joten muokattu aikaleima on null
+        _ (is (nil? (:muokattu toteuma-kannassa1)))
 
         ;; Lähetetään sama reittitoteuma toisen kerran, pitäisi generoida sama hash ja ilmoittaa vain ok tuloksesta
-        vastaus2 (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
-                   toteumajson)
+        vastaus2 (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti toteumajson)
+        ;; Vaikka sama toteuma lähetettiin uudestaan, niin hash tarkistuksen takia
+        ;; toteumaa ei ole muokattu, joten muokattu aikaleima on null
+        toteuma-kannassa2 (first (q-map (str "SELECT id, json_hash, muokattu FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+        _ (is (nil? (:muokattu toteuma-kannassa2)))
 
         ;; Varmistetaan, että joku hash löytyy tietokannasta
-        toteuma-kannassa (first (q-map (str "SELECT id, json_hash FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
+        toteuma-kannassa (first (q-map (str "SELECT id, json_hash FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+
+        ;; Tehdään pieni muutos jsoniin ja lähetetään se uudestaan
+        ;; Nyt hash pitäisi muuttua ja muokattu -aikaleima päivittyä
+        toteumajson2 (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                      slurp
+                      (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                      (.replace "__ID__" (str ulkoinen-id))
+                      (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy2"))
+        vastaus3 (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti toteumajson2)
+        toteuma-kannassa3 (first (q-map (str "SELECT id, json_hash, muokattu FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+        _ (is (not (nil? (:muokattu toteuma-kannassa3))))]
     (is (= 200 (:status vastaus1)))
     (is (= 200 (:status vastaus2)))
-    (is (= hash (:json_hash toteuma-kannassa)))))
+    (is (= 200 (:status vastaus3)))
+
+    (is (= hash (:json_hash toteuma-kannassa1)))
+    (is (= hash (:json_hash toteuma-kannassa2)))
+    (is (not= hash (:json_hash toteuma-kannassa3)))))
 
 
 (deftest tallenna-yksittainen-reittitoteuma-vanhalla-talvisuola-materiaalilla
@@ -281,7 +304,6 @@
     (is (= 200 (:status vastaus-lisays)))
     (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
           sopimuksen_kaytetty_materiaali-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
-       (println "sop käyt jälkeen " sopimuksen_kaytetty_materiaali-jalkeen)
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
        (is (= 0 sopimuksen_kaytetty_materiaali-maara-ennen))
        (is (= 1 (count sopimuksen_kaytetty_materiaali-jalkeen)))
