@@ -962,7 +962,7 @@
     (reset! atomi valittu?)))
 
 (defn- vetolaatikko-komponentti
-  [tiedot-atomi polku {:keys [tunniste] :as rivi} tallenna-fn_ kuluva-hoitokausi_]
+  [tiedot-atomi _vahvistettu? polku {:keys [tunniste] :as _rivi} _tallenna-fn _kuluva-hoitokausi_]
   (let [suodattimet (r/cursor tila/suunnittelu-kustannussuunnitelma [:suodattimet])
         urakan-alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)
         urakan-loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)
@@ -971,7 +971,7 @@
                    :toimenkuva (r/cursor tiedot-atomi [tunniste])
                    :maksuerat (kursorit-polulle :maksuerat-per-hoitovuosi-per-kuukausi tiedot-atomi polku vuosien-erotus)
                    :erikseen-syotettava? (kursorit-polulle :erikseen-syotettava? tiedot-atomi polku vuosien-erotus))]
-    (fn [_ polku rivi tallenna-fn kuluva-hoitokausi]
+    (fn [_ vahvistettu? polku rivi tallenna-fn kuluva-hoitokausi]
       (let [{kopioi-tuleville? :kopioidaan-tuleville-vuosille?} @suodattimet
             valitun-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi (+ (dec kuluva-hoitokausi)))
             maksuerat (get-in kursorit [:maksuerat kuluva-hoitokausi])]
@@ -979,6 +979,7 @@
         [:div
          [kentat/tee-kentta {:tyyppi :checkbox
                              :teksti "Suunnittele maksuerät kuukausittain"
+                             :disabled? vahvistettu?
                              :valitse! (partial
                                          vetolaatikko-klikattu-fn
                                          (get-in kursorit [:erikseen-syotettava? kuluva-hoitokausi])
@@ -994,24 +995,26 @@
             :muokkauspaneeli? false
             :jarjesta jarjesta-hoitovuoden-jarjestykseen
             :piilota-table-header? true
-            :on-rivi-blur (r/partial tallenna-kuukausipalkka
-                            (get kursorit :toimenkuva)
-                            {:hoitokausi kuluva-hoitokausi
-                             :kopioi-tuleville? kopioi-tuleville?
-                             :alkuvuosi urakan-alkuvuosi
-                             :loppuvuosi urakan-loppuvuosi})
+            :voi-muokata? (not vahvistettu?)
+            :on-rivi-blur (when-not vahvistettu?
+                            (r/partial tallenna-kuukausipalkka
+                              (get kursorit :toimenkuva)
+                              {:hoitokausi kuluva-hoitokausi
+                               :kopioi-tuleville? kopioi-tuleville?
+                               :alkuvuosi urakan-alkuvuosi
+                               :loppuvuosi urakan-loppuvuosi}))
             :voi-kumota? false}
            [{:nimi :kuukausi :tyyppi :string :muokattava? (constantly false) :leveys "85%" :fmt (r/partial formatoi-kuukausi valitun-hoitokauden-alkuvuosi)}
             {:nimi :kuukausipalkka :tyyppi :numero :leveys "15%" :muokattava? #(palkkakentta-muokattava? (get-in kursorit [:erikseen-syotettava? kuluva-hoitokausi]) rivi kuluva-hoitokausi)}]
            maksuerat]]]))))
 
 (defn luo-vetolaatikot
-  [atomi tallenna-fn kuluva-hoitokausi]
+  [atomi vahvistettu? tallenna-fn kuluva-hoitokausi]
   (into {}
     (map
       (juxt first #(let [rivi (second %)
                          polku (:tunniste rivi)]
-                     [vetolaatikko-komponentti atomi polku rivi tallenna-fn kuluva-hoitokausi])))
+                     [vetolaatikko-komponentti atomi vahvistettu? polku rivi tallenna-fn kuluva-hoitokausi])))
     (into {}
       (filter #(let [data (second %)]
                  (not (or (:ennen-urakkaa? data)
@@ -1044,20 +1047,24 @@
     rivin-tiedot))
 
 (defn taulukko-2022-eteenpain
-  [app]
+  [app _]
   (let [kaytetty-hoitokausi (r/atom (-> app :suodattimet :hoitokauden-numero))
+        sulje-vetolaatikot? (atom false)
         data (t/konvertoi-jhk-data-taulukolle (get-in app [:domain :johto-ja-hallintokorvaukset]) @kaytetty-hoitokausi)]
-    (fn [app]
+    (fn [app vahvistettu?]
       (let [kuluva-hoitokausi (-> app :suodattimet :hoitokauden-numero)
             kopioidaan-tuleville-vuosille? (-> app :suodattimet :kopioidaan-tuleville-vuosille?)
-            tallenna-fn (r/partial tallenna-toimenkuvan-tiedot
-                          data
-                          {:hoitokausi kuluva-hoitokausi
-                           :kopioi-tuleville? kopioidaan-tuleville-vuosille?})
-            vetolaatikot (luo-vetolaatikot data tallenna-fn @kaytetty-hoitokausi)]
+            tallenna-fn (if vahvistettu?
+                          (constantly nil)
+                          (r/partial tallenna-toimenkuvan-tiedot
+                                           data
+                                           {:hoitokausi kuluva-hoitokausi
+                                            :kopioi-tuleville? kopioidaan-tuleville-vuosille?}))
+            vetolaatikot (luo-vetolaatikot data vahvistettu? tallenna-fn @kaytetty-hoitokausi)]
         (when-not (= kuluva-hoitokausi @kaytetty-hoitokausi)
           (swap! data paivita-vuosilootat kuluva-hoitokausi)
-          (reset! kaytetty-hoitokausi kuluva-hoitokausi))
+          (reset! kaytetty-hoitokausi kuluva-hoitokausi)
+          (reset! sulje-vetolaatikot? true))
         [:div
          ;; Kaikille yhteiset toimenkuvat
          [vanha-grid/muokkaus-grid
@@ -1067,15 +1074,17 @@
            :voi-lisata? false
            :voi-kumota? false
            :muutos (fn [g]
-                     (when-not (= @kaytetty-hoitokausi kuluva-hoitokausi)
+                     (when @sulje-vetolaatikot?
+                       (reset! sulje-vetolaatikot? false)
                        (vanha-grid/sulje-vetolaatikot! g)))
            :jarjesta :jarjestys
            :piilota-toiminnot? true
+           :voi-muokata? (not vahvistettu?)
            :on-rivi-blur tallenna-fn
            :voi-poistaa? (constantly false)
            :piilota-rivi #(and (not (= kuluva-hoitokausi 1)) (:ennen-urakkaa? %))
            :vetolaatikot vetolaatikot}
-          [{:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :muokattava? :oma-toimenkuva? :leveys "80%" :fmt clj-str/capitalize :placeholder "Kirjoita muu toimenkuva"}
+          [{:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :muokattava? :oma-toimenkuva? :leveys "80%" :fmt #(when % (clj-str/capitalize %)) :placeholder "Kirjoita muu toimenkuva"}
            {:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
            {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :desimaalien-maara 2 :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
           data]]))))
@@ -1106,8 +1115,9 @@
       [grid/piirra johto-ja-hallintokorvaus-grid]]
 
      (and (t/post-2022?) johto-ja-hallintokorvaus-grid kantahaku-valmis?)
-     [:div.johto-ja-hallintokorvaukset {:class (when vahvistettu? "osio-vahvistettu")}
-      [taulukko-2022-eteenpain app]]
+     [:div.johto-ja-hallintokorvaukset
+      ;; Huom. Ei "osio-vahvistettu"-luokkaa, koska käyttää vanhempaa gridiä.
+      [taulukko-2022-eteenpain app vahvistettu?]]
 
      :else
      [yleiset/ajax-loader])
