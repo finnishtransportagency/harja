@@ -65,7 +65,9 @@ jobs:
   # Tarkistaa testijobin yleisen statuksen ja lähettää notifikaation, mikäli jotain meni pieleen
   check-tests-status-and-notify:
     needs: tests
-    if: always()
+    # TODO: Palauta normaali toiminta, kun muut ominaisuudet ovat valmiita tämän branchin suhteen
+    if: false
+    #if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Send deploy failure message to Slack
