@@ -33,7 +33,6 @@
   (delete! db ::rp/toteuman-reittipisteet
            {::rp/toteuma-id toteuma-id}))
 
-
 ;; Partitiointimuutoksen jälkeen toteumataulusta pitää hakea uusin id aina INSERT:n
 ;; jälkeen. Käytetään tätä funktiota sovelluksen puolella, API-puolella on omansa.
 (defn luo-uusi-toteuma
@@ -42,3 +41,12 @@
   (do
     (luo-toteuma<! db toteuma)
     (luodun-toteuman-id db)))
+
+(defn ei-ole-lahetetty-aiemmin? [db-replica jsonhash ulkoinen-id]
+  ;; Jos hashia ei löydy, ei ole lähetetty aiemmin
+  (if-not (:exists (first (hae-toteuman-hash db-replica {:hash jsonhash
+                                                         :ulkoinen-id ulkoinen-id})))
+    true
+    (do
+      (log/info (format "Toteuma ulkoisella id:llä: %s on lähetetty aiemmin. Ei tallenneta uudestaan." ulkoinen-id))
+      false)))

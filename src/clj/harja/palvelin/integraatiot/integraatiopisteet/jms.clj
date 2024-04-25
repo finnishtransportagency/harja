@@ -34,8 +34,6 @@
             {:koodi :jms-lahetys-epaonnistui :viesti virheviesti}))))
     viesti))
 
-(def jms-alert-TAG "JMS-ALERT")
-
 (defn laheta-jonoon
   ([lokittaja jms-client jono viesti] (laheta-jonoon lokittaja jms-client jono viesti nil))
   ([lokittaja jms-client jono viesti viesti-id]
@@ -52,7 +50,7 @@
            jms-viesti-id)
          (let [virheviesti (->
                              (format "Lähetys JMS-client %s :in JMS jonoon: %s epäonnistui. Viesti id:tä ei palautunut" client-nimi jono)
-                             (loki/koristele-lokiviesti jms-alert-TAG))
+                             (loki/koristele-lokiviesti loki/jms-alert-TAG))
                parametrit {:viesti-id viesti-id
                            :jms-client client-nimi}]
            (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id nil virheviesti parametrit)))
@@ -61,7 +59,7 @@
                virheviesti (->
                              (str (format "Lähetys JMS-client %s :in JMS jonoon: %s epäonnistui." client-nimi jono)
                                (-> virheet first :viesti))
-                             (loki/koristele-lokiviesti jms-alert-TAG))
+                             (loki/koristele-lokiviesti loki/jms-alert-TAG))
                parametrit {:viesti-id viesti-id
                            :jms-client client-nimi}]
            (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id poikkeus virheviesti parametrit)))
@@ -70,7 +68,7 @@
                virheviesti (->
                              (str (format "Lähetys JMS-client %s :in JMS jonoon: %s epäonnistui." client-nimi jono)
                                (-> virheet first :viesti))
-                             (loki/koristele-lokiviesti jms-alert-TAG))
+                             (loki/koristele-lokiviesti loki/jms-alert-TAG))
                parametrit {:viesti-id viesti-id
                            :jms-client client-nimi}]
            (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id poikkeus virheviesti parametrit)))
@@ -78,7 +76,7 @@
          (let [poikkeus (:throwable &throw-context)
                virheviesti (->
                              (format "Lähetys JMS-client %s :in JMS jonoon: %s epäonnistui." client-nimi jono)
-                             (loki/koristele-lokiviesti jms-alert-TAG))
+                             (loki/koristele-lokiviesti loki/jms-alert-TAG))
                parametrit {:viesti-id viesti-id
                            :jms-client client-nimi}]
            (kasittele-poikkeus-lahetyksessa lokittaja tapahtuma-id poikkeus virheviesti parametrit)))))))

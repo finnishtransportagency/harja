@@ -48,8 +48,6 @@
 (def aktiivinen "ACTIVE")
 (def sammutettu "CLOSED")
 
-(def jms-alert-TAG "JMS-ALERT")
-
 (def JMS-alkutila
   {:yhteys nil :istunnot {}})
 
@@ -280,7 +278,7 @@
 (defn tee-jms-poikkeuskuuntelija []
   (reify ExceptionListener
     (onException [_ e]
-      (log/error e (loki/koristele-lokiviesti (str "Tapahtui JMS-poikkeus: " (.getMessage e)) jms-alert-TAG)))))
+      (log/error e (loki/koristele-lokiviesti (str "Tapahtui JMS-poikkeus: " (.getMessage e)) loki/jms-alert-TAG)))))
 
 (defn luo-istunto [yhteys]
   (try
