@@ -208,7 +208,8 @@ jobs:
 
       - name: Test if the artifact was downloaded correctly
         run: | 
-          ls -la /tmp/harja-app-image.tar
+          ls -lah /tmp/harja-app-image.tar
+          tar -tvf /tmp/harja-app-image.tar
 
       - name: Load Harja docker image
         id: load-harja-image
