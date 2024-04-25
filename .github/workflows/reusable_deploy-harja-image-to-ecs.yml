@@ -92,18 +92,16 @@ jobs:
       - name: Shutdown Harja Fargate tasks
         uses: ./.github/actions/shutdown-fargate-tasks
         timeout-minutes: 15
-        # FIXME: Sallitaan migraatioiden ajo toistaiseksi vain dev ja stg ympäristöille
-        #        Lisätään prod myöhemmin listalle, kunhan datamigraatio on saatu ojennukseen.
-        if: ${{ contains(fromJson('["dev", "stg"]'), inputs.environment)  }}
+        #if: ${{ contains(fromJson('["dev", "stg"]'), inputs.environment)  }}
+        if: ${{ contains(fromJson('["dev", "stg", "prod"]'), inputs.environment)  }}
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           service: ${{ vars.ECS_SERVICE_NAME }}
 
       - name: Run migrations to RDS
         uses: ./.github/actions/run-migrations-to-rds
-        # FIXME: Sallitaan migraatioiden ajo toistaiseksi vain dev ja stg ympäristöille
-        #        Lisätään prod myöhemmin listalle, kunhan datamigraatio on saatu ojennukseen.
-        if: ${{ contains(fromJson('["dev", "stg"]'), inputs.environment)  }}
+        #if: ${{ contains(fromJson('["dev", "stg"]'), inputs.environment)  }}
+        if: ${{ contains(fromJson('["dev", "stg", "prod"]'), inputs.environment)  }}
         with:
           # Migraatiot ajetaan samalle commit SHA:lle, kuin mistä fargate image on buildattu
           commit-sha: ${{ github.sha }}
@@ -147,7 +145,7 @@ jobs:
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
         if: failure()
         with:
           # Slack Block Kit -tyyppinen rikastettu viesti

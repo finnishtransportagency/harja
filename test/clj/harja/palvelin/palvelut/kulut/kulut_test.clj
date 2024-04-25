@@ -5,7 +5,6 @@
             [harja.testi :refer :all]
             [harja.palvelin.palvelut.kulut.kulut :as kulut]
             [harja.kyselyt.valikatselmus :as valikatselmus-kyselyt]
-            [harja.domain.kulut :as tyokalut]
             [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]

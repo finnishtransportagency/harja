@@ -992,7 +992,7 @@
                  (assoc lomake :valiaika-takuuaika (:takuuaika lomake))
                  :else lomake)]
     [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
-     [debug/debug app]
+     #_ [debug/debug app]
      ;; Näytä tarvittaessa tiemerkintämodal
      (when (:tiemerkintamodal lomake)
        [viesti-tiemerkintaan-modal e! (:tiemerkintalomake app) (:tiemerkintaurakat app) tyomenetelmat])
