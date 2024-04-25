@@ -220,11 +220,15 @@
                                               :alkurivi ensimmainen-rivi-jossa-kustannuksia
                                               :loppurivi (+ (count kohteet)
                                                            (- ensimmainen-rivi-jossa-kustannuksia 1))}]
-                         nil]]]
+                         nil]]
+        ohjerivi [{:lihavoi? true
+                   :rivi [nil "Älä käytä tätä exceliä kohteiden muokkaukseen. Muokkaa kohteet käyttöliittymässä."
+                          nil nil nil nil nil nil nil nil nil nil nil nil nil]}]]
     (concat
       (when (> (count kohteet) 0)
         kohteet)
-      yhteenvetorivi)))
+      yhteenvetorivi
+      ohjerivi)))
 
 (defn vie-paikkauskohteet-exceliin
   [db workbook user tiedot]

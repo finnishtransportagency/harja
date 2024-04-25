@@ -1,0 +1,36 @@
+name: 'Restart Harja Fargate tasks'
+description: 'Restarttaa Harja servicen käynnissä olevat Fargate taskit force-new-deploymentilla (OIDC autentikaatio vaadittu)'
+
+inputs:
+  cluster:
+    description: "Harja app Fargate cluster name"
+  service:
+    description: "Harja app Fargate service name"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Restart Fargate tasks
+      env:
+        CLUSTER_NAME: ${{ inputs.cluster }}
+        SERVICE_NAME: ${{ inputs.service }}
+        DESIRED_COUNT: "1"
+
+      # Komennon 'update-service' stdout ohjataan /dev/nulliin, koska se voi tulostaa sensitiivisiä tietoja
+      run: |
+        echo "Getting available service: ${SERVICE_NAME}"
+        AVAILABLE_SERVICE=$(aws ecs list-services --cluster "${CLUSTER_NAME}" --region eu-west-1 --query "serviceArns[?contains(@, \`${SERVICE_NAME}\`) == \`true\`] | [0]" --output text)
+        
+        echo "Restarting tasks..."
+        aws ecs update-service --force-new-deployment \
+        --cluster "${CLUSTER_NAME}" --service $AVAILABLE_SERVICE \
+        --desired-count "${DESIRED_COUNT}" --region eu-west-1  1> /dev/null
+        
+        echo "Waiting for services to be stable..."
+        aws ecs wait services-stable \
+        --cluster "${CLUSTER_NAME}" --services "${AVAILABLE_SERVICE}" --region eu-west-1
+        
+        echo "Done."
+      shell: bash
+
+

@@ -1,5 +1,4 @@
-(ns harja.palvelin.integraatiot.api.tyokalut.apurit
-  (:require [harja.pvm :as pvm]))
+(ns harja.palvelin.integraatiot.api.tyokalut.apurit)
 
 (defn muuta-mapin-avaimet-keywordeiksi
   "Palauttaa mapin, jossa avaimet ovat keywordeja"
