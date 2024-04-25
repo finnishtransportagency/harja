@@ -2,15 +2,10 @@
   "MPU sopimustyyppisten urakoiden kustannukset"
   (:require [tuck.core :refer [tuck]]
             [harja.tiedot.urakka.mpu-kustannukset :as tiedot]
-            [reagent.core :as r]
-            [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka :as urakka]
-            [harja.ui.liitteet :as liitteet]
             [harja.fmt :as fmt]
-            [harja.asiakas.kommunikaatio :as k]
             [harja.ui.lomake :as lomake]
             [harja.ui.valinnat :as valinnat]
-            [harja.ui.kentat :as kentat]
             [cljs-time.core :as t]
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.navigaatio :as nav]
@@ -19,9 +14,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.napit :as napit]
-            [harja.views.kartta :as kartta]
-            [harja.tiedot.istunto :as istunto])
-  (:require-macros [harja.tyokalut.ui :refer [for*]]))
+            [harja.tiedot.istunto :as istunto]))
 
 
 (defn kustannuksen-lisays-lomake [e! {:keys [voi-kirjoittaa? lomake-valinnat kustannusten-tyypit]} voi-tallentaa?]
@@ -129,7 +122,7 @@
                                     [{:teksti "Yhteensä" :luokka "lihavoitu"}
                                      {:teksti (str (fmt/euro-opt false kustannukset-yhteensa) " €") :tasaa :oikea :luokka "lihavoitu"}])}
 
-      ;; Työmenetelmä
+      ;; Työmenetelmä / kustannus selite
       [{:tyyppi :string
         :nimi :tyomenetelma
         :luokka "text-nowrap"

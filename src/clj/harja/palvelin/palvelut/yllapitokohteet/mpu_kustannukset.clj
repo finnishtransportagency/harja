@@ -1,10 +1,6 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.mpu-kustannukset
   "MPU Kustannukset näkymän palvelut"
   (:require [com.stuartsierra.component :as component]
-            [cheshire.core :as cheshire]
-            [harja.pvm :as pvm]
-            [slingshot.slingshot :refer [throw+]]
-            [dk.ative.docjure.spreadsheet :as xls]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.konversio :as konversio]
             [harja.domain.oikeudet :as oikeudet]

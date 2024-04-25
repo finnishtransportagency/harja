@@ -4,10 +4,9 @@
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.pvm :as pvm]
+            [clojure.string :as str]
             [harja.tiedot.urakka :as urakka]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.istunto :as istunto])
-  (:require-macros [reagent.ratom :refer [reaction]]))
+            [harja.tiedot.navigaatio :as nav]))
 
 (def nakymassa? (atom false))
 (defonce tila (atom {:rivit nil
@@ -137,6 +136,28 @@
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
+  HaeMPUKustannuksetOnnistui
+  (process-event [{vastaus :vastaus} {:keys [kustannukset-yhteensa rivit] :as app}]
+    (let [kustannukset (reduce + (map (fn [rivi] (or (:summa rivi) 0)) vastaus))
+          kustannukset-yhteensa (+ kustannukset-yhteensa kustannukset)
+          rivit-mpu-kustannuksilla (reduce (fn [rivit r]
+                                             (conj rivit
+                                               {:id (generoi-avain)
+                                                :kokonaiskustannus (:summa r)
+                                                :tyomenetelma (:selite r)}))
+                                     rivit
+                                     vastaus)]
+      ;; Tykitä mpu_kustannukset taulusta saadut rivit gridiin
+      (assoc app
+        :rivit rivit-mpu-kustannuksilla
+        :kustannukset-yhteensa kustannukset-yhteensa)))
+
+  HaeMPUKustannuksetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "Kustannusten haku epäonnistui, vastaus: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "Haku epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
+  
   HaeSanktiotJaBonuksetOnnistui
   (process-event [{vastaus :vastaus} {:keys [rivit kustannukset-yhteensa] :as app}]
     (let [fn-laske-arvo (fn [avain]
@@ -148,41 +169,22 @@
           sanktiot (fn-laske-arvo :yllapidon_sakko)
           ;; Vähennä/Lisää vielä sanktiot ja bonukset 
           kustannukset-yhteensa (+ kustannukset-yhteensa bonukset)
-          kustannukset-yhteensa (+ kustannukset-yhteensa sanktiot)]
-
+          kustannukset-yhteensa (+ kustannukset-yhteensa sanktiot)
+          ;; Lisää bonukset ja sanktiot gridiin
+          rivit-lisatty (conj rivit
+                          {:id (generoi-avain), :kokonaiskustannus bonukset :tyomenetelma "Bonukset"}
+                          {:id (generoi-avain), :kokonaiskustannus sanktiot :tyomenetelma "Sanktiot"})
+          ;; Sorttaa rivit aakkosilla
+          rivit-sortattu (sort-by #(str/lower-case (:tyomenetelma %)) rivit-lisatty)]
+  
       (assoc app
-        :rivit (conj rivit
-                 {:id (generoi-avain), :kokonaiskustannus bonukset :tyomenetelma "Bonukset"}
-                 {:id (generoi-avain), :kokonaiskustannus sanktiot :tyomenetelma "Sanktiot"})
-
+        :rivit rivit-sortattu
         :kustannukset-yhteensa kustannukset-yhteensa)))
-
+  
   HaeSanktiotJaBonuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Sanktioiden haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Sanktioiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
-    app)
-
-  HaeMPUKustannuksetOnnistui
-  (process-event [{vastaus :vastaus} {:keys [kustannukset-yhteensa] :as app}]
-    ;; Tykitä mpu_kustannukset taulusta saadut rivit gridiin
-    (let [kustannukset (reduce + (map (fn [rivi] (or (:summa rivi) 0)) vastaus))
-          kustannukset-yhteensa (+ kustannukset-yhteensa kustannukset)]
-      
-      (assoc app
-        :rivit (reduce (fn [rivit r]
-                         (conj rivit
-                           {:id (generoi-avain)
-                            :kokonaiskustannus (:summa r)
-                            :tyomenetelma (:selite r)}))
-                 (:rivit app)
-                 vastaus)
-        :kustannukset-yhteensa kustannukset-yhteensa)))
-
-  HaeMPUKustannuksetEpaonnistui
-  (process-event [{vastaus :vastaus} app]
-    (js/console.warn "Kustannusten haku epäonnistui, vastaus: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Haku epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
   AvaaLomake
