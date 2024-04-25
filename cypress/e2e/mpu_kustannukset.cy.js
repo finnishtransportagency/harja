@@ -16,25 +16,33 @@ describe('MPU Kustannusnäkymä toimii', function ()
     cy.route('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot'); 
     // Avaa päänäkymä
     cy.visit("/");
+
     // Avaa hallintayksikkö
     cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click(); 
+
     // Hyrrää ei pitäisi olla 
     cy.get('.ajax-loader', {timeout: loaderTimeout}).should('not.exist'); 
+
     // Valitaan urakkatyyppi
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'}); 
+
     // Valitse oikea urakka 
     cy.contains('[data-cy=urakat-valitse-urakka] li', 'Muhoksen päällystysurakka', {timeout: clickTimeout}).click(); 
+
     // Avaa kustannukset
     cy.get('[data-cy=tabs-taso1-Kustannukset]').click(); 
+
     // Kutsu pitäisi triggeraa, odota että taulukko lataa ja sorttaa
     cy.wait('@kustannukset', {timeout: clickTimeout});
     cy.wait('@sanktiot', {timeout: clickTimeout});
+
     // Hyrrää ei pitäisi olla
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist'); 
     cy.wait(1000);
 
     // Klikkaa kalenterivuotta
     cy.get('.valittu.overflow-ellipsis').eq(0).click(); 
+    
     // Valitse 2024 vuosi
     cy.contains('2024').click();
   });
