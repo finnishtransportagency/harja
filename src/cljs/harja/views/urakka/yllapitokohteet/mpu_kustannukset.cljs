@@ -96,15 +96,13 @@
        urakka/valittu-urakan-vuosi
        #(do
           (urakka/valitse-urakan-vuosi! %)
-          (e! (tiedot/->HaeTiedot)))]
+          (e! (tiedot/->HaeKustannustiedot)))]
 
       ;; Lisää kustannus
       [:span
        [napit/yleinen-ensisijainen
         "Lisää kustannus"
-        #(do
-           (println "Uusi Kustannus ->")
-           (e! (tiedot/->AvaaLomake)))
+        #(e! (tiedot/->AvaaLomake))
         {:ikoni [ikonit/harja-icon-action-add] :vayla-tyyli? true}]]]
 
      ;; Taulukko
@@ -141,8 +139,7 @@
 (defn mpu-kustannukset* [e! _app]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-    (komp/sisaan #(do
-                    (e! (tiedot/->HaeTiedot))))
+    (komp/sisaan #(e! (tiedot/->HaeKustannustiedot)))
 
     (fn [e! app]
       [:div

@@ -37,9 +37,9 @@
 
 
 ;; Tuck 
-(defrecord HaeTiedot [])
-(defrecord HaeTiedotOnnistui [vastaus])
-(defrecord HaeTiedotEpaonnistui [vastaus])
+(defrecord HaeKustannustiedot [])
+(defrecord HaeKustannustiedotOnnistui [vastaus])
+(defrecord HaeKustannustiedotEpaonnistui [vastaus])
 (defrecord HaeSanktiotJaBonuksetOnnistui [vastaus])
 (defrecord HaeSanktiotJaBonuksetEpaonnistui [vastaus])
 (defrecord AvaaLomake [])
@@ -58,8 +58,17 @@
   (tuck-apurit/post! app :hae-paikkaus-kustannukset
     {:aikavali (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi)
      :urakka-id @nav/valittu-urakka-id}
-    {:onnistui ->HaeTiedotOnnistui
-     :epaonnistui ->HaeTiedotEpaonnistui}))
+    {:onnistui ->HaeKustannustiedotOnnistui
+     :epaonnistui ->HaeKustannustiedotEpaonnistui}))
+
+
+(defn- hae-mpu-kustannukset
+  [app]
+  (tuck-apurit/post! app :hae-mpu-kustannukset
+    {:urakka-id @nav/valittu-urakka-id
+     :vuosi @urakka/valittu-urakan-vuosi}
+    {:onnistui ->HaeMPUKustannuksetOnnistui
+     :epaonnistui ->HaeMPUKustannuksetEpaonnistui}))
 
 
 (defn- hae-sanktiot-ja-bonukset [app]
@@ -95,15 +104,6 @@
      :epaonnistui ->HaeMPUSelitteetEpaonnistui}))
 
 
-(defn- hae-mpu-kustannukset
-  [app]
-  (tuck-apurit/post! app :hae-mpu-kustannukset
-    {:urakka-id @nav/valittu-urakka-id
-     :vuosi @urakka/valittu-urakan-vuosi}
-    {:onnistui ->HaeMPUKustannuksetOnnistui
-     :epaonnistui ->HaeMPUKustannuksetEpaonnistui}))
-
-
 (defn- generoi-avain 
   "Gridi haluaa tr elementeille uniikki id:t (:tunniste), 
    ja kun tässä haetaan muutamasta eri taulusta samaan gridiin rivejä, 
@@ -114,23 +114,26 @@
 
 (extend-protocol tuck/Event
 
-  HaeTiedot
+  HaeKustannustiedot
   (process-event [_ app]
+    ;; -> hae-paikkaus-kustannukset
+    ;; -> hae-mpu-kustannukset
+    ;; -> hae-sanktiot-ja-bonukset
+    ;; 
+    ;; TODO, selitteet haku toistaiseksi pois käytöstä
     ;; (hae-mpu-selitteet app)
     (hae-paikkaus-kustannukset app)
-    (hae-mpu-kustannukset app)
-    (hae-sanktiot-ja-bonukset app)
     (assoc app :haku-kaynnissa? true))
 
-  HaeTiedotOnnistui
+  HaeKustannustiedotOnnistui
   (process-event [{vastaus :vastaus} app]
     (let [kustannukset (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) vastaus))]
+      (hae-mpu-kustannukset app)
       (assoc app
         :rivit (vec vastaus)
-        :haku-kaynnissa? false
         :kustannukset-yhteensa kustannukset)))
 
-  HaeTiedotEpaonnistui
+  HaeKustannustiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
@@ -147,6 +150,7 @@
                                                 :tyomenetelma (:selite r)}))
                                      rivit
                                      vastaus)]
+      (hae-sanktiot-ja-bonukset app)
       ;; Tykitä mpu_kustannukset taulusta saadut rivit gridiin
       (assoc app
         :rivit rivit-mpu-kustannuksilla
@@ -179,6 +183,7 @@
   
       (assoc app
         :rivit rivit-sortattu
+        :haku-kaynnissa? false
         :kustannukset-yhteensa kustannukset-yhteensa)))
   
   HaeSanktiotJaBonuksetEpaonnistui
@@ -209,7 +214,7 @@
   TallennaKustannusOnnistui
   (process-event [_ app]
     (viesti/nayta-toast! "Kustannus tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
-    (tuck/process-event (->HaeTiedot) app)
+    (tuck/process-event (->HaeKustannustiedot) app)
     app)
 
   TallennaKustannusEpaonnistui
