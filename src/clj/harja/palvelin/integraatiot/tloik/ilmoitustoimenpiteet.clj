@@ -85,6 +85,8 @@
           :kasittelija_organisaatio_nimi    nil
           :kasittelija_organisaatio_ytunnus nil})))
 
+(def jms-delay-alert-TAG "JMS-DELAY-ALERT")
+
 (defn varoita-vastaamattomista-kuittauksista
   "Nostetaan varoitus tai virhe lokille, jos löydetään ilmoitustoimenpide-taulusta viestejä, jotka odottaa vastausta
   T-LOIKilta poikkeuksellisen kauan. Mikäli tämä virhe nousee, on oltava yhteydessä T-LOIKiin ja varmistettava, johtuuko
@@ -117,7 +119,7 @@
                 (:maara kymmenen-min-myohastyneet)
                 (str/join ", " (:korrelaatioidt kymmenen-min-myohastyneet)))
               ;; Tee lokiviestistä hälytys
-              (loki/koristele-lokiviesti loki/alert)))
+              (loki/koristele-lokiviesti loki/jms-delay-alert-TAG)))
           (ilmoitukset/merkitse-ilmoitustoimenpide-varoitus-annetuksi! db {:idt (:idt kymmenen-min-myohastyneet)
                                                                           :varoitus "halytys"}))))
     55))

@@ -1,33 +1,20 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.materiaalikirjasto-test
-  (:require [clojure.java.io :as io]
-            [clojure.test :refer :all]
+  (:require [clojure.test :refer :all]
             [namespacefy.core :refer [namespacefy]]
-            [taoensso.timbre :as log]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.kyselyt.konversio :as konv]
-            [cheshire.core :as cheshire]
-            [harja.domain.urakka :as urakka-domain]
-            [harja.domain.sopimus :as sopimus-domain]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
-            [harja.domain.paallystyksen-maksuerat :as paallystyksen-maksuerat-domain]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus-domain]
             [harja.domain.pot2 :as pot2-domain]
-            [harja.pvm :as pvm]
-            [harja.domain.skeema :as skeema]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
             [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys :refer :all]
             [harja.palvelin.palvelut.yllapitokohteet.pot2 :as pot2]
-            [harja.palvelin.palvelut.yllapitokohteet-test :as yllapitokohteet-test]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
-            [harja.tyokalut.xml :as xml])
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -591,7 +578,7 @@
     (is (= oletetut-massat-oulun-paallystysurakassa massat) "Oletetut massat Oulun urakasta")
     (is (= oletetut-murskeet-oulun-paallystysurakassa murskeet) "Oletetut murskeet Oulun urakasta")))
 
-#_(deftest tuo-materiaalit-utajarvi->porvoo
+(deftest tuo-materiaalit-utajarvi->porvoo
   (let [{massat :massat murskeet :murskeet}
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :hae-urakan-massat-ja-murskeet
@@ -678,7 +665,7 @@
                                                       :massa-idt massa-idt
                                                       :murske-idt murske-idt})))))
 
-#_(deftest kaytossa-olevaa-massaa-ei-voi-poistaa
+(deftest kaytossa-olevaa-massaa-ei-voi-poistaa
   (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         massan-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_massa WHERE urakka_id = "
                                   urakka-id
@@ -688,7 +675,7 @@
                                  :poista-urakan-massa
                                  +kayttaja-vastuuhlo-muhos+ {:id massan-id})))))
 
-#_(deftest kaytossa-olevaa-mursketta-ei-voi-poistaa
+(deftest kaytossa-olevaa-mursketta-ei-voi-poistaa
   (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         murskeen-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_murske WHERE urakka_id = "
                                   urakka-id
@@ -698,7 +685,7 @@
                                  :poista-urakan-massa
                                  +kayttaja-vastuuhlo-muhos+ {:id murskeen-id})))))
 
-#_(deftest massan-poisto-toimii
+(deftest massan-poisto-toimii
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         {massat-ennen :massat murskeet-ennen :murskeet}
         (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -721,7 +708,7 @@
                         massat-jalkeen)))
     (is (empty? massat-jalkeen))))
 
-#_(deftest murskeen-poisto-toimii
+(deftest murskeen-poisto-toimii
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         {massat-ennen :massat murskeet-ennen :murskeet}
         (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -743,7 +730,7 @@
     (is (empty? (filter #(= murskeen-id (::pot2-domain/murske-id %))
                  murskeet-jalkeen)))))
 
-#_(deftest massaa-jolle-ei-loydy-urakkaa-heittaa-poikkeuksen
+(deftest massaa-jolle-ei-loydy-urakkaa-heittaa-poikkeuksen
   (is (thrown? AssertionError
                (kutsu-palvelua (:http-palvelin jarjestelma)
                                :poista-urakan-massa
@@ -769,7 +756,7 @@
                                  :poista-urakan-murske
                                  +kayttaja-yit_uuvh+ {:id murskeen-id})))))
 
-#_(deftest nimen-tarkenne-erottelee-jos-tuodaan-sama-massa-tai-murske-useampaan-kertaan
+(deftest nimen-tarkenne-erottelee-jos-tuodaan-sama-massa-tai-murske-useampaan-kertaan
   (let [{massat :massat murskeet :murskeet}
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :hae-urakan-massat-ja-murskeet

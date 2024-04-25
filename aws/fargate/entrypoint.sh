@@ -47,6 +47,11 @@ echo "DONE"
 
 tarkasta_riippuvuus asetukset.edn
 
+## Haetaan Harja-kontin ImageID, jotta voidaan tunnistaa kontin versio
+# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint-v4-fargate-response.html
+curl -s "$ECS_CONTAINER_METADATA_URI_V4" | jq -r ".ImageID" > harja_image_id.txt
+
+
 # Valmistellaan java-optiot ja käynnistetään Harja app
 
 ## Luodaan java-optioille array, johon otetaan mukaan lisäoptioita mikäli ne on määritelty

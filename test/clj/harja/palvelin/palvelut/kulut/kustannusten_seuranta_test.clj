@@ -6,10 +6,7 @@
             [harja.palvelin.palvelut.kulut.kulut :as kulut]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]
-            [clojure.set :as set]))
+            [com.stuartsierra.component :as component]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -570,7 +567,7 @@ UNION ALL
                    :tehtava nil}]
    :koontilaskun-kuukausi "elokuu/1-hoitovuosi"})
 
-#_(deftest lisatyot-test
+(deftest lisatyot-test
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         urakkavastaava (oulun-2019-urakan-urakoitsijan-urakkavastaava)
         alkupvm "2020-10-01"

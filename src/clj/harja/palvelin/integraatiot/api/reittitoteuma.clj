@@ -8,13 +8,14 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.materiaalit :as materiaalit]
-            [harja.kyselyt.toteumat :as toteumat]
+            [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.json
              :refer [aika-string->java-sql-date aika-string->java-util-date
                      pvm-string->joda-date aika-string->java-sql-timestamp]]
             [harja.kyselyt.tieverkko :as tieverkko]
             [harja.kyselyt.sopimukset :as sopimukset-q]
+            [harja.kyselyt.konversio :as konversio]
             [clojure.java.jdbc :as jdbc]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -98,7 +99,7 @@ maksimi-linnuntien-etaisyys 200)
   ([db toteuma-id] (paivita-toteuman-reitti db toteuma-id maksimi-linnuntien-etaisyys))
   ([db toteuma-id maksimi-etaisyys]
    (let [reitti (->> toteuma-id
-                     (toteumat/hae-toteuman-reittipisteet db)
+                     (toteumat-q/hae-toteuman-reittipisteet db)
                      (map (fn [{sijainti :sijainti aika :aika}]
                             [(.-x sijainti) (.-y sijainti) aika]))
                      (hae-reitti db maksimi-etaisyys))
@@ -109,8 +110,8 @@ maksimi-linnuntien-etaisyys 200)
      (if geometria
        (do
          (log/debug "Tallennetaan reitti toteumalle " toteuma-id)
-         (toteumat/paivita-toteuman-reitti! db {:reitti geometria
-                                                :id toteuma-id}))
+         (toteumat-q/paivita-toteuman-reitti! db {:reitti geometria
+                                                  :id toteuma-id}))
 
        (log/debug "Reittiä ei saatu kasattua toteumalle " toteuma-id)))))
 
@@ -119,7 +120,7 @@ maksimi-linnuntien-etaisyys 200)
 
 (defn luo-reitti [db reitti toteuma-id]
   (log/debug "Luodaan uusi reittipiste")
-  (toteumat/tallenna-toteuman-reittipisteet!
+  (toteumat-q/tallenna-toteuman-reittipisteet!
    db
     {::rp/toteuma-id toteuma-id
      ::rp/reittipisteet
@@ -127,7 +128,7 @@ maksimi-linnuntien-etaisyys 200)
        (rp/reittipiste
          (aika-string->java-sql-date aika)
          koordinaatit
-         (toteumat/pisteen-hoitoluokat db koordinaatit
+         (toteumat-q/pisteen-hoitoluokat db koordinaatit
            (map (comp :id :tehtava) tehtavat)
            (map :materiaali materiaalit))
          (for [t tehtavat]
@@ -143,15 +144,16 @@ maksimi-linnuntien-etaisyys 200)
 (defn poista-toteuman-reitti [db toteuma-id]
   (log/debug "Poistetaan reittipisteet")
   ;; Poistetaan reittipistedata: pisteet, tehtävät ja materiaalit
-  (toteumat/poista-reittipiste-toteuma-idlla! db toteuma-id))
+  (toteumat-q/poista-reittipiste-toteuma-idlla! db toteuma-id))
 
-(defn tallenna-yksittainen-reittitoteuma [db db-replica urakka-id kirjaaja {:keys [reitti toteuma tyokone]}]
+(defn tallenna-yksittainen-reittitoteuma [db db-replica urakka-id kirjaaja {:keys [reitti toteuma tyokone]} jsonhash]
   (let [toteuma (assoc toteuma
                   ;; Reitti liitetään lopuksi
                   :reitti nil)
         toteuman-reitti (async/thread (luo-reitti-geometria db-replica reitti))]
     (jdbc/with-db-transaction [db db]
-      (let [toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone)]
+      (let [toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone)
+            _ (toteumat-q/lisaa-toteumalle-jsonhash! db {:id toteuma-id :hash jsonhash})]
         (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
         (log/debug "Aloitetaan toteuman tehtävien tallennus")
         (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id urakka-id)
@@ -211,19 +213,22 @@ maksimi-linnuntien-etaisyys 200)
           (doseq [sopimus-id urakan-sopimus-idt]
             (doseq [pvm toteumien-eri-pvmt]
               (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                     :alkupvm (pvm/dateksi pvm)})))
+                                                                     :alkupvm (pvm/dateksi pvm)
+                                                                     :urakkaid urakka-id})))
           (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
                                                                              :alkupvm (aika-string->java-sql-timestamp ensimmainen-toteuma-alkanut-str)
                                                                              :loppupvm (aika-string->java-sql-timestamp viimeinen-toteuma-alkanut-str)}))))))
 
 (defn tallenna-kaikki-pyynnon-reittitoteumat [db db-replica urakka-id kirjaaja data]
   (when (:reittitoteuma data)
-    (tallenna-yksittainen-reittitoteuma db db-replica
-                                        urakka-id kirjaaja (:reittitoteuma data)))
+    (let [jsonhash (konversio/string->md5 (pr-str (:reittitoteuma data)))]
+      (when (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in data [:reittitoteuma :toteuma :tunniste :id]))
+        (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma data) jsonhash))))
 
   (doseq [toteuma (:reittitoteumat data)]
-    (tallenna-yksittainen-reittitoteuma db db-replica
-                                        urakka-id kirjaaja (:reittitoteuma toteuma)))
+    (let [jsonhash (konversio/string->md5 (pr-str toteuma))]
+      (when (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in toteuma [:reittitoteuma :toteuma :tunniste :id]))
+        (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma toteuma) jsonhash))))
   (paivita-materiaalicachet! db urakka-id data))
 
 (defn tarkista-pyynto [db urakka-id kirjaaja data]

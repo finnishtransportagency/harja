@@ -1,19 +1,14 @@
 (ns harja.palvelin.raportointi.laskutusyhteenveto_tyomaaraportti_test
   (:require [clojure.test :refer :all]
-            [clojure.string :as str]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.testi :refer :all]
-            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.palvelut.kulut.kulut :as kulut]
-            [harja.fmt :as fmt]
             [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]
@@ -149,7 +144,7 @@
 ;Oulu MHU MHU Korvausinvestointi TP,14301
 
 
-#_(deftest tyomaaraportti-talvihoito-hankinnat-toimii
+(deftest tyomaaraportti-talvihoito-hankinnat-toimii
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"
@@ -177,7 +172,7 @@
     (is (= talvihoitosumma (:talvihoito_hoitokausi_yht purettu)))
     (is (= talvihoitosumma (:talvihoito_val_aika_yht purettu)))))
 
-#_(deftest tyomaaraportti-liikenneymparistonhoito-hankinnat-toimii
+(deftest tyomaaraportti-liikenneymparistonhoito-hankinnat-toimii
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"
@@ -208,7 +203,7 @@
     (is (= lyhsumma (:lyh_hoitokausi_yht purettu)))
     (is (= lyhsumma (:lyh_val_aika_yht purettu)))))
 
-#_(deftest tyomaaraportti-muut-tpit-hankinnat-toimii
+(deftest tyomaaraportti-muut-tpit-hankinnat-toimii
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"
@@ -281,7 +276,7 @@
 ;; Hoidonjohdon palkkio on testattu muualla
 
 ;; Testataan siis äkilliset ja vahingot
-#_(deftest tyomaaraportti-akilliset-ja-vahingot-toimii
+(deftest tyomaaraportti-akilliset-ja-vahingot-toimii
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"

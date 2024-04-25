@@ -3,20 +3,14 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
-            [harja.kyselyt.urakat :as urk-q]
             [harja.domain.urakka :as u]
             [harja.domain.sopimus :as sop]
-            [harja.domain.hanke :as h]
             [harja.domain.organisaatio :as o]
             [harja.testi :refer :all]
-            [harja.kyselyt.konversio :as konv]
-            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen])
+            [clojure.spec.alpha :as s])
   (:use [slingshot.slingshot :only [try+ throw+]])
-  (:import (clojure.lang ExceptionInfo))
   (:import (harja.domain.roolit EiOikeutta)))
 
 
@@ -38,7 +32,7 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-#_(deftest tallenna-urakan-sopimustyyppi-testi
+(deftest tallenna-urakan-sopimustyyppi-testi
   (let [urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
         uusi-sopimustyyppi
         (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -223,7 +217,7 @@
 
     (is (not (s/valid? ::u/tallenna-urakka-kysely urakka)) "Lähtevä kysely ei ole validi")))
 
-#_(deftest urakan-kesa-ajan-tallennus
+(deftest urakan-kesa-ajan-tallennus
   (let [kesa-ajan-alku "01.05"
         kesa-ajan-loppu "30.09"
         urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
@@ -244,7 +238,7 @@
       (is (= 30 (.getDayOfMonth loppu-localdate)))
       (is (= java.time.Month/SEPTEMBER (.getMonth loppu-localdate))))))
 
-#_(deftest urakan-kesa-ajan-tallennus-loppu-ennen-alkua
+(deftest urakan-kesa-ajan-tallennus-loppu-ennen-alkua
   (let [kesa-ajan-alku "01.05"
         kesa-ajan-loppu "30.04"
         urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)

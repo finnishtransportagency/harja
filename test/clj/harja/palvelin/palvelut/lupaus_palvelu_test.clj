@@ -7,6 +7,7 @@
             [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]))
 
+
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
@@ -508,7 +509,7 @@
                                  :lupaus-vaihtoehto-id (ffirst (hae-lupaus-vaihtoehdot 3))}))
       "Lupaus 6:lle ei voi antaa monivalinta-vaihtoehtoa."))
 
-#_(deftest kommentti-test
+(deftest kommentti-test
   (let [lupaus-tiedot {:lupaus-id 4
                        :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}
         hakutiedot (merge lupaus-tiedot
