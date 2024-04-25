@@ -271,7 +271,7 @@
         (k/paivita-paloiteltu-tieverkko db)
         (when (= 0 (:lkm (first (k/tarkista-tieosoitedata db))))
               (throw (Exception. "Yhtään tieosoitetta ei viety kantaan. Tarkista aineiston yhteensopivuus sisäänlukevan kooditoteutuksen kanssa.")))))
-    (throw (Exception. (format "Tieosoiteverkon geometrioiden tiedostopolkua % ei löydy konfiguraatiosta. Tuontia ei suoriteta." shapefile)))))
+    (throw (Exception. (format "Tieosoiteverkon geometrioiden tiedostopolkua %s ei löydy konfiguraatiosta. Tuontia ei suoriteta." shapefile)))))
 
 (defn- lue-csv
   "Tämän funktion voi poistaa sitten, kun oikea integraatio on saatu"

@@ -88,21 +88,21 @@
   "Haetaan paikkauskohteet, joita ei ole poistettu ja joiden tila on tilattu/valmis ja joilla ei ole pot raportointitilana.
   Samalla haetaan paikkauskohteille paikkaus taulusta rivit (eli paikkauksen toteumat, huomaa taulujen nimiöinti) sekä
   paikkausten materiaalit ja tienkohdat."
-  [db user {:keys [aikavali tyomenetelmat tr nayta] :as tiedot}]
+  [db user {:keys [aikavali-kuluva tyomenetelmat tr nayta] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (or (::paikkaus/urakka-id tiedot)
-                                                                           (:urakka-id tiedot)))
+                                                                         (:urakka-id tiedot)))
   (let [urakka-id (or (::paikkaus/urakka-id tiedot)
-                      (:urakka-id tiedot))
+                    (:urakka-id tiedot))
         menetelmat (disj tyomenetelmat "Kaikki")
         menetelmat (when (> (count menetelmat) 0)
                      menetelmat)
         vain-kohteet-joilla-toteumia? (= nayta :kohteet-joilla-toteumia)
-        _ (log/debug "hae-urakan-paikkaukset :: tiedot" (pr-str tiedot) (pr-str (konversio/sql-date (first aikavali))) "tr" (pr-str tr) "vain-kohteet-joilla-toteumia?" vain-kohteet-joilla-toteumia?)
+        _ (log/debug "hae-urakan-paikkaukset :: tiedot" (pr-str tiedot) (pr-str (konversio/sql-date (first aikavali-kuluva))) "tr" (pr-str tr) "vain-kohteet-joilla-toteumia?" vain-kohteet-joilla-toteumia?)
         paikkauskohteet (q/hae-urakan-paikkauskohteet-ja-paikkaukset db {:urakka-id urakka-id
-                                                                         :alkuaika (when (and aikavali (first aikavali))
-                                                                                     (konversio/sql-date (first aikavali)))
-                                                                         :loppuaika (when (and aikavali (second aikavali))
-                                                                                      (konversio/sql-date (second aikavali)))
+                                                                         :alkuaika (when (and aikavali-kuluva (first aikavali-kuluva))
+                                                                                     (konversio/sql-date (first aikavali-kuluva)))
+                                                                         :loppuaika (when (and aikavali-kuluva (second aikavali-kuluva))
+                                                                                      (konversio/sql-date (second aikavali-kuluva)))
                                                                          :tyomenetelmat menetelmat
                                                                          :tie (:numero tr)
                                                                          :aosa (:alkuosa tr)
@@ -110,29 +110,29 @@
                                                                          :losa (:loppuosa tr)
                                                                          :let (:loppuetaisyys tr)})
         paikkauskohteet (->> paikkauskohteet
-                             (map #(clojure.set/rename-keys % paikkaus/paikkauskohde->specql-avaimet))
-                             (map #(update % :paikkaukset konversio/jsonb->clojuremap))
-                             (mapv #(update % :paikkaukset
-                                            (fn [rivit]
-                                              (let [tulos (keep
-                                                            (fn [r]
-                                                              ;; Haku käyttää paikkausten hakemisessa left joinia, joten on mahdollista, että paikkaus taulusta
-                                                              ;; löytyy nil id
-                                                              (when (not (nil? (:f1 r)))
-                                                                (let [r (-> r
-                                                                            (update :f2 (fn [aika]
-                                                                                          (when aika
-                                                                                            (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") aika))))
-                                                                            (update :f3 (fn [aika]
-                                                                                          (when aika
-                                                                                            (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") aika))))
-                                                                            (clojure.set/rename-keys
-                                                                              paikkaus/db-paikkaus->speqcl-avaimet))]
-                                                                  r)))
-                                                            rivit)]
-                                                tulos))))
-                             (remove #(and vain-kohteet-joilla-toteumia? (empty? (:paikkaukset %))))
-                             (mapv #(clojure.set/rename-keys % {:paikkaukset ::paikkaus/paikkaukset})))
+                          (map #(clojure.set/rename-keys % paikkaus/paikkauskohde->specql-avaimet))
+                          (map #(update % :paikkaukset konversio/jsonb->clojuremap))
+                          (mapv #(update % :paikkaukset
+                                   (fn [rivit]
+                                     (let [tulos (keep
+                                                   (fn [r]
+                                                     ;; Haku käyttää paikkausten hakemisessa left joinia, joten on mahdollista, että paikkaus taulusta
+                                                     ;; löytyy nil id
+                                                     (when (not (nil? (:f1 r)))
+                                                       (let [r (-> r
+                                                                 (update :f2 (fn [aika]
+                                                                               (when aika
+                                                                                 (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") aika))))
+                                                                 (update :f3 (fn [aika]
+                                                                               (when aika
+                                                                                 (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") aika))))
+                                                                 (clojure.set/rename-keys
+                                                                   paikkaus/db-paikkaus->speqcl-avaimet))]
+                                                         r)))
+                                                   rivit)]
+                                       tulos))))
+                          (remove #(and vain-kohteet-joilla-toteumia? (empty? (:paikkaukset %))))
+                          (mapv #(clojure.set/rename-keys % {:paikkaukset ::paikkaus/paikkaukset})))
         ;; Sijainnin ja tien pituuden käsittely - json objekti kannasta antaa string tyyppistä sijaintidataa. Muokataan se tässä käsityönä
         ;; multiline tyyppiseksi geometriaksi
         paikkauskohteet (kasittele-koko-ja-sijainti db paikkauskohteet)

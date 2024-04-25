@@ -188,7 +188,11 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         {:on-click #(do
                       (.preventDefault %)
                       (.stopPropagation %)
-                      (avaa-tai-sulje-vetolaatikko! ohjaus id))}
+                      (avaa-tai-sulje-vetolaatikko! ohjaus id))
+         :on-blur #(do
+                     ;; Estetään mahdollinen rivin blur-efekti vetolaatikon avaamisen tai sulkemisen jälkeen
+                     (.preventDefault %)
+                     (.stopPropagation %))}
         [:div.inline-block.vetolaatikon-pylvas]
         (if (vetolaatikko-auki? ohjaus id)
           [ikonit/navigation-ympyrassa :down]

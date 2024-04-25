@@ -589,7 +589,7 @@
 (defn- lataa-urem-excel []
   [yleiset/tiedoston-lataus-linkki
    "Lataa urapaikkaustoteumien tuonti-Excel"
-   (str (when-not (komm/kehitysymparistossa-yhteiset? (.-host js/location)) "/harja") "/excel/harja_urapaikkaustoteumien_tuonti_pohja.xlsx")
+   "/excel/harja_urapaikkaustoteumien_tuonti_pohja.xlsx"
    {:luokat ["pull-right" "margin-top-16"]}])
 
 (defn view [e! app]
@@ -601,7 +601,7 @@
       :urakka (-> @tila/yleiset :urakka :id)
       :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]]
 
-   [debug/debug app]
+   #_ [debug/debug app]
    (when (:modalin-paikkauskohde app)
      [ilmoita-virheesta-modal e! app])
    [excel-tuonti-virhe-modal e! app]

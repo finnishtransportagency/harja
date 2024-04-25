@@ -187,7 +187,9 @@
 
         ;; Päivitä toteuman päivän mukainen materiaalin käyttö
         (doseq [sopimus-id sopimus-idt]
-          (q/paivita-sopimuksen-materiaalin-kaytto-toteumapvm c sopimus-id (:toteuma tm)))
+          (q/paivita-sopimuksen-materiaalin-kaytto-toteumapvm c {:sopimus sopimus-id
+                                                                 :toteuma (:toteuma tm)
+                                                                 :urakkaid urakka-id}))
         ;; Käsin kirjatut materiaalit (t.lahde = 'harja-ui') lisätään hoitoluokittaisessa erittelyssä hoitoluokalle
         ;; 100, eli 'hoitoluokka ei tiedossa'.
         (q/paivita-urakan-materiaalin-kaytto-hoitoluokittain c {:urakka urakka-id
@@ -344,7 +346,8 @@
                 (when-not (= (:pvm toteuma) toteuman-alkuperainen-pvm)
                   (doseq [sopimus-id urakan-sopimus-idt]
                     (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                           :alkupvm toteuman-alkuperainen-pvm}))
+                                                                           :alkupvm toteuman-alkuperainen-pvm
+                                                                           :urakkaid urakka-id}))
                   (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
                                                                                      :alkupvm toteuman-alkuperainen-pvm
                                                                                      :loppupvm toteuman-alkuperainen-pvm}))))))
@@ -352,7 +355,8 @@
         ;; Tässä cachejen päivitys uuden pvm:n osalta
             (doseq [sopimus-id urakan-sopimus-idt]
               (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                     :alkupvm (:pvm toteuma)}))
+                                                                     :alkupvm (:pvm toteuma)
+                                                                     :urakkaid urakka-id}))
             (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
                                                                                :alkupvm (:pvm toteuma)
                                                                                :loppupvm (:pvm toteuma)})))
