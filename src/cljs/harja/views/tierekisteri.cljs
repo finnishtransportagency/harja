@@ -701,9 +701,7 @@
              :alue (assoc (:geometria s)
                      :radius 3
                      :stroke {:color "red"
-                              :width 1})})))
-
-      )))
+                              :width 1})}))))))
 
 
 (defn- paallistyskohteengeometriat []
@@ -740,9 +738,7 @@
             i)]]]
        [:div.row.lomakerivi
         [:div.form-group.col-xs-12.col-sm-6.col-md-5.col-lg-4
-         [:button {:on-click #(do
-                                (let []
-                                  (hae-ja-nayta-pkluokkageometriat @elynumero)))}
+         [:button {:on-click #(hae-ja-nayta-pkluokkageometriat @elynumero)}
           "Piirrä PK-luokkageometriat kartalle"]]]])))
 
 
