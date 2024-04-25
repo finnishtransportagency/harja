@@ -96,6 +96,9 @@ SELECT paivita_pohjavesialueet();
 -- Reikäpaikkaukset 
 \i testidata/yllapito/reikapaikkaukset.sql
 
+-- MPU kustannukset 
+\i testidata/yllapito/mpu_kustannukset.sql
+
 -- Ylläpidon toteumat
 \i testidata/yllapito/yllapito_toteumat.sql
 
