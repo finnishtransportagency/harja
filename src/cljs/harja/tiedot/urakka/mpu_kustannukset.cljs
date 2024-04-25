@@ -9,15 +9,13 @@
             [harja.tiedot.istunto :as istunto])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
-
+(def nakymassa? (atom false))
 (defonce tila (atom {:rivit nil
                      :lomake-valinnat nil
                      :kustannukset-yhteensa nil
                      :muokataan false
                      :haku-kaynnissa? false
                      :kustannusten-tyypit ["Arvonmuutokset" "Indeksi- ja kustannustason muutokset" "Muut kustannukset"]}))
-
-(def nakymassa? (atom false))
 
 
 (defn voi-tallentaa?
@@ -91,6 +89,7 @@
 (defn- hae-mpu-selitteet
   "Hakee käyttäjien aikaisemmin kirjoittamat omat selitteet muille kustannuksille"
   [app]
+  ;; TODO, pois käytöstä tällä hetkellä 
   (tuck-apurit/post! app :hae-mpu-selitteet
     {}
     {:onnistui ->HaeMPUSelitteetOnnistui
@@ -106,15 +105,19 @@
      :epaonnistui ->HaeMPUKustannuksetEpaonnistui}))
 
 
-(defn- generoi-numero []
-  (str "uuid-" (.toString (js/Math.random))))
+(defn- generoi-avain 
+  "Gridi haluaa tr elementeille uniikki id:t (:tunniste), 
+   ja kun tässä haetaan muutamasta eri taulusta samaan gridiin rivejä, 
+   tehty tällainen id generointi wrapper. Onkohan tämäkin liian teippimäistä?"
+  []
+  (gensym "mpu-kustannus"))
 
 
 (extend-protocol tuck/Event
 
   HaeTiedot
   (process-event [_ app]
-    (hae-mpu-selitteet app)
+    ;; (hae-mpu-selitteet app)
     (hae-paikkaus-kustannukset app)
     (hae-mpu-kustannukset app)
     (hae-sanktiot-ja-bonukset app)
@@ -122,12 +125,11 @@
 
   HaeTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [;; Laske kaikki kustannukset yhteen
-          kustannukset (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) vastaus))]
+    (let [kustannukset (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) vastaus))]
       (assoc app
         :rivit (vec vastaus)
-        :kustannukset-yhteensa kustannukset
-        :haku-kaynnissa? false)))
+        :haku-kaynnissa? false
+        :kustannukset-yhteensa kustannukset)))
 
   HaeTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -136,23 +138,51 @@
     app)
 
   HaeSanktiotJaBonuksetOnnistui
-  (process-event [{vastaus :vastaus} {:keys [rivit] :as app}]
+  (process-event [{vastaus :vastaus} {:keys [rivit kustannukset-yhteensa] :as app}]
     (let [fn-laske-arvo (fn [avain]
                           (reduce + (map (fn [rivi]
                                            (when (= (:laji rivi) avain)
                                              (or (:summa rivi) 0))) vastaus)))
           ;; Lisätään sanktiot ja bonukset gridin riveihin, ehkä liian hakkerointia ehkä ei 
           bonukset (fn-laske-arvo :yllapidon_bonus)
-          sanktiot (fn-laske-arvo :yllapidon_sakko)]
+          sanktiot (fn-laske-arvo :yllapidon_sakko)
+          ;; Vähennä/Lisää vielä sanktiot ja bonukset 
+          kustannukset-yhteensa (+ kustannukset-yhteensa bonukset)
+          kustannukset-yhteensa (+ kustannukset-yhteensa sanktiot)]
+
       (assoc app
         :rivit (conj rivit
-                 {:id (generoi-numero), :kokonaiskustannus bonukset :tyomenetelma "Bonukset"}
-                 {:id (generoi-numero), :kokonaiskustannus sanktiot :tyomenetelma "Sanktiot"}))))
+                 {:id (generoi-avain), :kokonaiskustannus bonukset :tyomenetelma "Bonukset"}
+                 {:id (generoi-avain), :kokonaiskustannus sanktiot :tyomenetelma "Sanktiot"})
+
+        :kustannukset-yhteensa kustannukset-yhteensa)))
 
   HaeSanktiotJaBonuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Sanktioiden haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Sanktioiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
+
+  HaeMPUKustannuksetOnnistui
+  (process-event [{vastaus :vastaus} {:keys [kustannukset-yhteensa] :as app}]
+    ;; Tykitä mpu_kustannukset taulusta saadut rivit gridiin
+    (let [kustannukset (reduce + (map (fn [rivi] (or (:summa rivi) 0)) vastaus))
+          kustannukset-yhteensa (+ kustannukset-yhteensa kustannukset)]
+      
+      (assoc app
+        :rivit (reduce (fn [rivit r]
+                         (conj rivit
+                           {:id (generoi-avain)
+                            :kokonaiskustannus (:summa r)
+                            :tyomenetelma (:selite r)}))
+                 (:rivit app)
+                 vastaus)
+        :kustannukset-yhteensa kustannukset-yhteensa)))
+
+  HaeMPUKustannuksetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "Kustannusten haku epäonnistui, vastaus: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "Haku epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
   AvaaLomake
@@ -185,27 +215,10 @@
     (js/console.warn "Tallennus epäonnistui, vastaus: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tallennus epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
-  
-  HaeMPUKustannuksetOnnistui
-  (process-event [{vastaus :vastaus} app]
-    ;; Tykitä mpu_kustannukset taulusta saadut rivit gridiin
-    (assoc app :rivit
-      (reduce (fn [rivit r]
-                (conj rivit
-                  {:id (generoi-numero)
-                   :kokonaiskustannus (:summa r)
-                   :tyomenetelma (:selite r)}))
-        (:rivit app)
-        vastaus)))
-  
-  HaeMPUKustannuksetEpaonnistui
-  (process-event [{vastaus :vastaus} app]
-    (js/console.warn "Kustannusten haku epäonnistui, vastaus: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Haku epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
-    app)
 
   HaeMPUSelitteetOnnistui
   (process-event [{vastaus :vastaus} app]
+    ;; TODO, pois päältä tällä hetkellä, speksataan otetaanko käyttöön
     ;; Palautetaan tilaan kaikki mpu_kustannukset taulun selitteet vectorina
     ;; Siirtää aina "Muut kustannukset" vectorin viimeiseksi
     ;; Esimerkki vastaus: ({:selite Arvonmuutokset} {:selite Tester} {:selite Indeksi- ja kustannustason muutokset})
