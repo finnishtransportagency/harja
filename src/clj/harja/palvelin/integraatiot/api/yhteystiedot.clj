@@ -23,7 +23,7 @@
     (throw+ {:type virheet/+kayttajalla-puutteelliset-oikeudet+
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (format "Käyttäjällä ei oikeuksia urakkaan: %s" urakkanro)}]}))
-  (when-not (urakat/onko-kaynnissa-urakkanro? db urakkanro)
+  (when-not (urakat/onko-kaynnissa-tai-tuleva-urakkanro? db urakkanro)
     (log/warn (format "Yritettiin hakea yhteystiedot tuntemattomalle tai päättyneelle urakalle: %s." urakkanro))
     (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+tuntematon-urakka-koodi+
@@ -32,7 +32,7 @@
 (defn hae-urakan-yhteystiedot [db fim {urakkanro :urakkanro} kayttaja]
   (log/debug (format "Haetaan urakan (urakkanro: %s) tiedot käyttäjälle: %s." urakkanro kayttaja))
   (tarkista-kutsu db kayttaja urakkanro)
-  (let [urakan-tiedot (first (urakat/hae-kaynnissa-oleva-tieurakka-urakkanumerolla db urakkanro))
+  (let [urakan-tiedot (first (urakat/hae-tieurakka-urakkanumerolla db urakkanro))
         _ (when (nil? urakan-tiedot)
             (throw+ {:type virheet/+viallinen-kutsu+
                      :virheet [{:koodi virheet/+tuntematon-urakka-koodi+

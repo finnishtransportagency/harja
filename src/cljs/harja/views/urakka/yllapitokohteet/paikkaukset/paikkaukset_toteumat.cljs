@@ -601,7 +601,7 @@
       :urakka (-> @tila/yleiset :urakka :id)
       :palvelukutsu-onnistui-fn #(e! (tiedot/->PaikkauksetHaettu %))}]]
 
-   [debug/debug app]
+   #_ [debug/debug app]
    (when (:modalin-paikkauskohde app)
      [ilmoita-virheesta-modal e! app])
    [excel-tuonti-virhe-modal e! app]
