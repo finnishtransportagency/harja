@@ -74,3 +74,37 @@
 
     (is (= vastaus odotettu-vastaus-hk-2023))
     (is (= (-> vastaus count) 19))))
+
+
+(deftest tallenna-mpu-kustannus-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+
+        vastaus-ennen (tee-kutsu {:vuosi 2024
+                                  :urakka-id urakka-id} :hae-mpu-kustannukset)
+
+        odotettu-vastaus '({:selite "Arvonmuutokset", :summa 1337M}
+                           {:selite "Indeksi- ja kustannustason muutokset", :summa 80085M}
+                           {:selite "Kalustokustannukset", :summa 75000M}
+                           {:selite "Muu kustannus", :summa 1000000M}
+                           {:selite "Työvoimakustannukset", :summa 200000M})
+
+        _ (tee-kutsu {:urakka-id urakka-id
+                      :selite "Päällystettiin Kuusamon luontopolku"
+                      :vuosi 2024
+                      :summa 142000} :tallenna-mpu-kustannus)
+
+        odotettu-tallennus '({:selite "Arvonmuutokset", :summa 1337M}
+                             {:selite "Indeksi- ja kustannustason muutokset", :summa 80085M}
+                             {:selite "Kalustokustannukset", :summa 75000M}
+                             {:selite "Muu kustannus", :summa 1000000M}
+                             {:selite "Päällystettiin Kuusamon luontopolku", :summa 142000M}
+                             {:selite "Työvoimakustannukset", :summa 200000M})
+
+        vastaus-tallennettu (tee-kutsu {:vuosi 2024
+                                        :urakka-id urakka-id} :hae-mpu-kustannukset)]
+
+    (is (= vastaus-ennen odotettu-vastaus))
+    (is (= (count odotettu-vastaus) 5))
+
+    (is (= vastaus-tallennettu odotettu-tallennus))
+    (is (= (count vastaus-tallennettu) 6))))
