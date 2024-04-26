@@ -213,7 +213,7 @@
                     (Integer/parseInt (:elynumero tiedot))
                     (:elynumero tiedot))
         geometriat_pk1 (korjausluokka-kyselyt/hae-paallysteen-korjausluokkageometriat db {:elynumero elynumero
-                                                                                      :korjausluokka "PK1"})
+                                                                                          :korjausluokka "PK1"})
         geometriat_pk2 (korjausluokka-kyselyt/hae-paallysteen-korjausluokkageometriat db {:elynumero elynumero
                                                                                           :korjausluokka "PK2"})
         geometriat_pk3 (korjausluokka-kyselyt/hae-paallysteen-korjausluokkageometriat db {:elynumero elynumero

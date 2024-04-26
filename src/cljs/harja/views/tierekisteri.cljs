@@ -704,7 +704,7 @@
                               :width 1})}))))))
 
 
-(defn- paallistyskohteengeometriat []
+(defn- paallystyskohteen-geometriat []
   (let [yllapitokohde-id (r/atom nil)
         elynumero (r/atom nil)]
     (fn []
@@ -796,7 +796,7 @@
        [:h3 "Piirrä tieturvallisuusverkon geometria kartalle"]
        [tieturvallisuus-geometriat]
        [:h3 "Piirrä päällystyskohteisiin liittyviä geometrioita kartalle"]
-       [paallistyskohteengeometriat]])))
+       [paallystyskohteen-geometriat]])))
 
 ;; eism tie 20
 ;; x: 431418, y: 7213120
