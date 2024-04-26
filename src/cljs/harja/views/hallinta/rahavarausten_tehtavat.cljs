@@ -1,11 +1,9 @@
 (ns harja.views.hallinta.rahavarausten-tehtavat
   (:require [clojure.string :as str]
-            [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.ui.komponentti :as komp]
-            [harja.ui.grid :as grid]
             [harja.ui.grid :as grid]
             [harja.tiedot.hallinta.rahavaraukset :as tiedot]))
 
@@ -70,7 +68,6 @@
                     (e! (tiedot/->HaeTehtavat))))
     (fn [e! {:keys [rahavaraukset-tehtavineen tehtavat] :as app}]
       [:div.rahavaraukset-hallinta
-       [harja.ui.debug/debug app]
        [:h1 "Rahavarauksen tehtävät"]
        [:div.urakan-rahavaraukset
         [grid/grid

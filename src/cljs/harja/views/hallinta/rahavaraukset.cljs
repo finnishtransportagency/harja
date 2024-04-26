@@ -1,13 +1,8 @@
 (ns harja.views.hallinta.rahavaraukset
-  (:require [clojure.string :as str]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :as kentat]
+  (:require [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
-            [reagent.core :as r]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.ui.komponentti :as komp]
-            [harja.ui.grid :as grid]
-            [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.hallinta.rahavaraukset :as tiedot])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
@@ -19,7 +14,6 @@
       (let [valitun-urakan-rahavaraukset (filter #(= (:urakka-id %) (:urakka-id valittu-urakka))
                                            urakoiden-rahavaraukset)]
         [:div.rahavaraukset-hallinta
-         [harja.ui.debug/debug app]
          [:h1 "Rahavaraukset"]
          [yleiset/pudotusvalikko
           "Urakka"
@@ -49,7 +43,7 @@
           (when-not (empty? tallennukset-kesken)
             [:div.tallennus-tila.margin-top-16
              (if (some true? (vals tallennukset-kesken))
-               [:span "Tallennetaan..." [yleiset/ajax-loader-pieni]] ;; todo: lisää ajax loader pieni
+               [:span "Tallennetaan..." [yleiset/ajax-loader-pieni]]
                [:span "Muutokset tallennettu " [ikonit/harja-icon-status-completed]])])]]))))
 
 (defn rahavaraukset []
