@@ -4,14 +4,15 @@
   (:require [harja.pvm :as pvm]
             [cljs-time.coerce :as tc]
             [harja.ui.grid :as grid])
-  (:require-macros [harja.views.about :refer [lue-gitlog]]))
+  (:require-macros [harja.views.about :refer [lue-gitlog]]
+                   [harja.tyokalut.versio :refer [sovelluksen-versio-sha sovelluksen-build-aika-iso8601]]))
 
 (defn harja-info []
   [:p "Tämä on Väylän Harja-palvelu, joka mahdollistaa  mm. teiden hoito- ja ylläpitourakoiden
       kustannusten suunnittelua ja toteutumien seurantaa."])
 
 (defn gitlog []
-  [:span {:style {:overflow "visible"}}
+  [:div {:style {:overflow "visible"}}
    [grid/grid
    {:otsikko "Viimeisimmät muutokset" :voi-muokata? false :tunniste :hash}
 
@@ -27,13 +28,22 @@
    (lue-gitlog)]])
 
 
+(defn versiotiedot []
+  [:div
+   [:h3 "Versiotiedot"]
+   [:div [:b "Versio: "] (or (sovelluksen-versio-sha) "-")]
+   [:div [:b "Version aikaleima: "] (or (sovelluksen-build-aika-iso8601) "-")]])
+
 (defn about []
-  [:span
-   [:div.section
+  [:div
+   [:p
     [:h3 "Yleistä"]
     [harja-info]]
-   [:div.section
-    [gitlog]
+   [:p
+    [versiotiedot]]
+   [:p
+    [gitlog]]
+   [:p
     [:label "Harja käyttää avoimen lähdekoodin ohjelmistokomponentteja"]
     [:ul
      [:li [:a {:href "http://getbootstrap.com/"} "Bootstrap"]]
