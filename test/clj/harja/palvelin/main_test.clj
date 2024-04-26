@@ -165,7 +165,8 @@
     :lyhytnimien-hallinta
     :tehtavat-hallinta
     :tarjoushinnat-hallinta
-    :reikapaikkaukset})
+    :reikapaikkaukset
+    :rahavaraukset-hallinta})
 
 (def ei-statusta
   #{:metriikka
@@ -240,7 +241,8 @@
     :lyhytnimien-hallinta
     :tehtavat-hallinta
     :tarjoushinnat-hallinta
-    :reikapaikkaukset})
+    :reikapaikkaukset
+    :rahavaraukset-hallinta})
 
 (def hidas-ok-status #{:itmf})
 
