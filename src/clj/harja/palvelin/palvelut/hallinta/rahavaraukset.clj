@@ -9,22 +9,42 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
 
-(s/def ::urakka-id #(and (string? %) (not (nil? (konversio/konvertoi->int %))) (pos? (konversio/konvertoi->int %))))
-(s/def ::urakka-id #(and (string? %) (not (nil? (konversio/konvertoi->int %))) (pos? (konversio/konvertoi->int %))))
+(s/def ::urakka-id #(and (not (nil? %)) (pos? %)))
+(s/def ::rahavaraus-id #(and (not (nil? %)) (pos? %)))
+(s/def ::tehtava-id #(and (not (nil? %)) (pos? %)))
 
 (defn onko-urakka-olemassa?
   "Tarkistaa, että urakka löytyy Harjan tietokannasta"
   [db urakka-id]
   (when urakka-id
-    (when-not (urakat-q/onko-olemassa? db urakka-id)
-      (throw (SecurityException. (str "Urakkaa " urakka-id " ei ole olemassa."))))))
+    (if-not (urakat-q/onko-olemassa? db urakka-id)
+      (throw (SecurityException. (str "Urakkaa " urakka-id " ei ole olemassa.")))
+      urakka-id)))
 
 (defn onko-rahavaraus-olemassa?
   "Tarkistaa, että rahavaraus löytyy Harjan tietokannasta"
   [db rahavaraus-id]
   (when rahavaraus-id
-    (when-not (q/onko-rahavaraus-olemassa? db {:rahavaraus-id rahavaraus-id})
-      (throw (SecurityException. (str "Rahavarausta " rahavaraus-id " ei ole olemassa."))))))
+    (if-not (q/onko-rahavaraus-olemassa? db {:rahavaraus-id rahavaraus-id})
+      (throw (SecurityException. (str "Rahavarausta " rahavaraus-id " ei ole olemassa.")))
+      rahavaraus-id)))
+
+(defn onko-tehtava-olemassa?
+  "Tarkistaa, että tehtävä löytyy Harjan tietokannasta"
+  [db tehtava-id]
+  (when tehtava-id
+    (if-not (q/onko-tehtava-olemassa? db {:tehtava-id tehtava-id})
+      (throw (SecurityException. (str "Tehtävää: " tehtava-id " ei löydy! ")))
+      tehtava-id)))
+
+(defn kuuluuko-tehtava-rahavaraukselle?
+  "Tarkistaa, että tehtävä löytyy Harjan tietokannasta"
+  [db rahavaraus-id tehtava-id]
+  (when (and rahavaraus-id tehtava-id)
+    (if-not (q/kuuluuko-tehtava-rahavaraukselle? db {:rahavaraus-id rahavaraus-id
+                                                     :tehtava-id tehtava-id})
+      (throw (SecurityException. (str "Tehtävää: " tehtava-id " ei löydy rahavaraukselta: " rahavaraus-id ".")))
+      tehtava-id)))
 
 (defn hae-rahavaraukset [db kayttaja]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-rahavaraukset kayttaja)
@@ -52,6 +72,7 @@
   (q/hae-urakoiden-rahavaraukset db))
 
 (defn paivita-urakan-rahavaraus [db kayttaja {:keys [urakka rahavaraus valittu?]}]
+  (log/debug "paivita-urakan-rahavaraus :: rahavaraus:" rahavaraus "urakka: " urakka "valittu?: " valittu?)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-rahavaraukset kayttaja urakka)
   (let [;validoidaan urakka ja rahavaraus
         urakka-valid? (and
@@ -73,11 +94,14 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-rahavaraukset kayttaja)
   (log/debug "tallenna-rahavarauksen-tehtava :: rahavaraus-id:" rahavaraus-id
     "Vanha tehtva-id: " vanha-tehtava-id
-    " Uusi tehtava-id: " uusi-tehtava)
+    "Uusi tehtava: " uusi-tehtava)
   (let [rahavaraus-valid? (and
                             (s/valid? ::rahavaraus-id rahavaraus-id)
-                            (onko-rahavaraus-olemassa? db rahavaraus-id))]
-    (when rahavaraus-valid?
+                            (onko-rahavaraus-olemassa? db rahavaraus-id))
+        tehtava-valid? (and
+                         (s/valid? ::tehtava-id (:id uusi-tehtava))
+                         (onko-tehtava-olemassa? db (:id uusi-tehtava)))]
+    (when (and rahavaraus-valid? tehtava-valid?)
       ;; Jos vanha-tehtava-id on nolla, niin silloin lisätään kokonaan uusi tehtävä rahavaraukselle. Muuten
       ;; Vanha tehtävä poistetaan ja korvataan uudella
       (if (= 0 vanha-tehtava-id)
@@ -101,8 +125,11 @@
   (log/debug "poista-rahavarauksen-tehtava :: rahavaraus-id: " rahavaraus-id "Tehtävä-id: " tehtava-id)
   (let [rahavaraus-valid? (and
                             (s/valid? ::rahavaraus-id rahavaraus-id)
-                            (onko-rahavaraus-olemassa? db rahavaraus-id))]
-    (when rahavaraus-valid?
+                            (onko-rahavaraus-olemassa? db rahavaraus-id))
+        tehtava-valid? (and
+                         (s/valid? ::tehtava-id rahavaraus-id)
+                         (kuuluuko-tehtava-rahavaraukselle? db rahavaraus-id tehtava-id))]
+    (when (and rahavaraus-valid? tehtava-valid?)
       (q/poista-rahavaraukselta-tehtava! db {:rahavaraus-id rahavaraus-id
                                              :tehtava-id tehtava-id})))
 

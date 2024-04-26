@@ -55,3 +55,20 @@ DELETE
 -- name: onko-rahavaraus-olemassa?
 -- single?: true
 SELECT exists(SELECT id FROM rahavaraus WHERE id = :rahavaraus-id :: BIGINT);
+
+-- name: kuuluuko-tehtava-rahavaraukselle?
+-- single?: true
+SELECT EXISTS(SELECT id
+                FROM rahavaraus_tehtava
+               WHERE tehtava_id = :tehtava-id :: BIGINT
+                 AND rahavaraus_id = :rahavaraus-id :: BIGINT);
+
+-- name: onko-tehtava-olemassa?
+-- single?: true
+SELECT EXISTS(SELECT t.id
+                FROM tehtava t
+                         JOIN tehtavaryhma tr ON t.tehtavaryhma = tr.id
+                         JOIN tehtavaryhmaotsikko tro ON tro.id = tr.tehtavaryhmaotsikko_id
+               WHERE t.poistettu IS FALSE
+                 AND t.tehtavaryhma IS NOT NULL
+                 AND t.id = :tehtava-id :: BIGINT);

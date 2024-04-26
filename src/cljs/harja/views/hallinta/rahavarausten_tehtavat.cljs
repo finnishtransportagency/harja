@@ -28,11 +28,13 @@
                                (filter #(= (ota-keyword-otsikosta %) k))
                                first))
         ryhmittely-fn (fn [r] (ota-keyword-otsikosta (:otsikko r)))]
-    [:div.rahavaraus-tehtava.col-md-6
+    [:div.rahavaraus-tehtava.col-md-8
      [napit/uusi "Lisää tehtävä" #(e! (tiedot/->LisaaUusiTehtavaRahavaraukselle rahavaraus-id)) {}]
      [grid/grid
       {:piilota-toiminnot? true}
-      [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :komponentti
+      [{:otsikko "Tehtävä" :nimi :nimi
+        :leveys 10
+        :tyyppi :komponentti
         :komponentti (fn [rivi]
                        [yleiset/livi-pudotusvalikko {:class "alasveto-tehtava"
                                                      :valinta rivi
@@ -46,7 +48,9 @@
                         (if (= 0 (:id rivi))
                           kaikki-muut-tehtavat
                           kaikki-tehtavat)])}
-       {:otsikko "" :tyyppi :komponentti
+       {:otsikko ""
+        :leveys 2
+        :tyyppi :komponentti
         :komponentti (fn [rivi]
                        (when-not (= 0 (:id rivi))
                          [napit/poista "Poista"

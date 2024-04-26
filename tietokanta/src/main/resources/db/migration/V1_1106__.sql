@@ -1,9 +1,12 @@
--- Rahavaraustehtäviin on lipsahtanut vääriä tehtäviä.
+-- Rahavaraustehtäviin on lipsahtanut vääriä tehtäviä ja tehtäviä on yritetty lisätä
+-- väärällä rahavarauksen nimellä. Joten korjataan ne tässä ensin poistamalla ja lisäämällä uudestaan.
+
 -- Poistetaan ne kaikki
 DELETE FROM rahavaraus_tehtava;
 
 -- Ja lisätään ne uudestaan
 
+--'Äkilliset hoitotyöt'
 INSERT
   INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
 SELECT rv.id,
@@ -18,6 +21,7 @@ SELECT rv.id,
      )
    AND rv.nimi = 'Äkilliset hoitotyöt';
 
+-- 'Vahinkojen korvaukset'
 INSERT
   INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
 SELECT rv.id,
@@ -93,7 +97,7 @@ SELECT rv.id,
    AND "mhu-tehtava?" = TRUE
    AND tehtava.poistettu = FALSE;
 
--- Tilaajan rahavaraus B
+-- Rahavaraus B - Äkilliset hoitotyöt
 INSERT
   INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
 SELECT rahavaraus.id,
@@ -101,12 +105,10 @@ SELECT rahavaraus.id,
        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
   FROM rahavaraus,
        tehtava
--- Äkilliset hoitotyöt
  WHERE tehtava.yksiloiva_tunniste = '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'
-   AND rahavaraus.nimi = 'Rahavaraus B';
+   AND rahavaraus.nimi = 'Rahavaraus B - Äkilliset hoitotyöt';
 
-
--- Tilaajan rahavaraus C
+-- Rahavaraus C - Vahinkojen korjaukset
 INSERT
   INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
 SELECT rahavaraus.id,
@@ -116,9 +118,9 @@ SELECT rahavaraus.id,
        tehtava
 -- Kolmansien osapuolien vahingot
  WHERE yksiloiva_tunniste = '63a2585b-5597-43ea-945c-1b25b16a06e2'
-   AND rahavaraus.nimi = 'Rahavaraus B';
+   AND rahavaraus.nimi = 'Rahavaraus C - Vahinkojen korjaukset';
 
-
+-- 'Rahavaraus D - Levähdys- ja P-alueet'
 INSERT
   INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
 SELECT rv.id,
@@ -129,7 +131,7 @@ SELECT rv.id,
  WHERE tehtava.nimi = 'Pysäkkikatosten ja niiden varusteiden vaurioiden kuntoon saattaminen'
    AND rv.nimi = 'Rahavaraus D - Levähdys- ja P-alueet';
 
-
+-- 'Rahavaraus E - Pysäkkikatokset'
 INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
 SELECT rv.id,
        tehtava.id,
@@ -139,7 +141,7 @@ SELECT rv.id,
  WHERE tehtava.nimi = 'Levähdys- ja P-alueiden varusteiden vaurioiden kuntoon saattaminen'
    AND rv.nimi = 'Rahavaraus E - Pysäkkikatokset';
 
-
+-- 'Rahavaraus F - Meluesteet'
 INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
 SELECT rv.id,
        tehtava.id,
@@ -149,7 +151,7 @@ SELECT rv.id,
  WHERE tehtava.nimi = 'Meluesteiden pienten vaurioiden korjaaminen'
    AND rv.nimi = 'Rahavaraus F - Meluesteet';
 
-
+-- 'Rahavaraus G - Juurakkopuhdistamo'
 INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
 SELECT rv.id,
        tehtava.id,
@@ -159,7 +161,7 @@ SELECT rv.id,
  WHERE tehtava.nimi = 'Juurakkopuhdistamo, selkeytys- ja hulevesiallas sekä -painanne'
    AND rv.nimi = 'Rahavaraus G - Juurakkopuhdistamo';
 
-
+-- 'Rahavaraus H - Aidat'
 INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
 SELECT rv.id,
        tehtava.id,
@@ -169,7 +171,7 @@ SELECT rv.id,
  WHERE tehtava.nimi = 'Aitojen vaurioiden korjaukset'
    AND rv.nimi = 'Rahavaraus H - Aidat';
 
-
+-- 'Rahavaraus I - Sillat ja laiturit'
 INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
 SELECT rv.id,
        tehtava.id,
@@ -179,7 +181,7 @@ SELECT rv.id,
  WHERE tehtava.nimi = 'Siltakeilojen sidekiveysten purkaumien, suojaverkkojen ja kosketussuojaseinien pienet korjaukset'
    AND rv.nimi = 'Rahavaraus I - Sillat ja laiturit';
 
-
+-- 'Rahavaraus J - Tunnelien pienet korjaukset'
 INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
 SELECT rv.id,
        tehtava.id,
@@ -189,7 +191,7 @@ SELECT rv.id,
  WHERE tehtava.nimi = 'Tunnelien pienet korjaustyöt ja niiden liikennejärjestelyt'
    AND rv.nimi = 'Rahavaraus J - Tunnelien pienet korjaukset';
 
--- Tilaajan rahavaraus K
+-- 'Rahavaraus K - Kannustinjärjestelmä'
 INSERT
   INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja)
 SELECT rahavaraus.id,
@@ -198,4 +200,4 @@ SELECT rahavaraus.id,
   FROM rahavaraus,
        tehtava
  WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'
-   AND rahavaraus.nimi = 'Rahavaraus K';
+   AND rahavaraus.nimi = 'Rahavaraus K - Kannustinjärjestelmä';
