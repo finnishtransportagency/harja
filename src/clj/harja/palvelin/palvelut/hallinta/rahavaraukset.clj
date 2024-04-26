@@ -1,7 +1,6 @@
 (ns harja.palvelin.palvelut.hallinta.rahavaraukset
   (:require [com.stuartsierra.component :as component]
             [clojure.spec.alpha :as s]
-            [harja.kyselyt.konversio :as konversio]
             [taoensso.timbre :as log]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.rahavaraukset :as q]
