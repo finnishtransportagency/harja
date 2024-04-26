@@ -523,7 +523,9 @@
         otsikoidut-aikataulurivit (if (tiedot/aikapohjainen-jarjestys-valittu? (:jarjestys @tiedot/valinnat))
                                     (otsikoi-aikataulurivit
                                       (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))
-                                    aikataulurivit)]
+                                    aikataulurivit)
+        tiemerkinnan-suorittavat-urakat (conj @tiedot/tiemerkinnan-suorittavat-urakat {:nimi "Ei tiemerkintäurakkaa"})]
+
     [grid/grid
      {:otsikko [:span
                 [:div.inline-block
@@ -606,10 +608,10 @@
          :fmt (fn [arvo]
                 (:nimi (some
                          #(when (= (:id %) arvo) %)
-                         @tiedot/tiemerkinnan-suorittavat-urakat)))
+                         tiemerkinnan-suorittavat-urakat)))
          :valinta-arvo :id
          :valinta-nayta #(if % (:nimi %) "- Valitse urakka -")
-         :valinnat @tiedot/tiemerkinnan-suorittavat-urakat
+         :valinnat tiemerkinnan-suorittavat-urakat
          :nayta-ryhmat [:sama-hallintayksikko :eri-hallintayksikko]
          :ryhmittely #(if (= (:hallintayksikko %) (:id (:hallintayksikko urakka)))
                         :sama-hallintayksikko
