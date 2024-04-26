@@ -1,10 +1,8 @@
 (ns harja.palvelin.integraatiot.jms
   (:require [clojure.core.async :as async]
             [clojure.spec.alpha :as s]
-            [clojure.string :as string]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
-            [clojure.string :as clj-str]
             [cheshire.core :as cheshire]
             [harja.tyokalut.loki :as loki]
             [slingshot.slingshot :refer [try+ throw+]]
