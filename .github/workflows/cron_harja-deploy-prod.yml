@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Scriptin käyttämät ympäristömuuttujat
-      WORKFLOW_ID: 'harja_build_and_deploy.yml'
+      WORKFLOW_FILENAME: 'harja_build_and_deploy.yml'
       BRANCH_NAME: 'develop'
     steps:
       - name: Checkout code
@@ -46,7 +46,6 @@ jobs:
           script: |
             const script = require('./.github/scripts/get-latest-successful-run.js')
             const result = await script({github, context, core})
-            console.log(result)
             
             core.setOutput("commit-sha", result.commit_sha);
             core.setOutput("run-id", result.run_id);
