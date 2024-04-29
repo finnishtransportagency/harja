@@ -93,9 +93,7 @@
   (into []
     (mapcat (fn [kohde]
               (let [tr (:tierekisteriosoitevali kohde)
-                    tilannepvm (if (:karttapaivamaara tr)
-                                 (pvm/pvm (:karttapaivamaara tr))
-                                 (pvm/pvm tilannepvm))]
+                    tilannepvm (pvm/pvm (or (:karttapaivamaara tr) tilannepvm))]
                 (concat
                   [{:tunniste (kohteen-tunnus kohde "alku")
                     :tie (:tienumero tr)
