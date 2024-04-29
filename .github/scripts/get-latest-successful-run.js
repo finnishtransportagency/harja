@@ -3,10 +3,11 @@ module.exports = async ({ github, context, core }) => {
     const repo = context.repo.repo;
     const WORKFLOW_FILENAME = process.env.WORKFLOW_FILENAME;
     const BRANCH_NAME = process.env.BRANCH_NAME;
+    const ARTIFACT_NAME = process.env.CHECK_ARTIFACT_WITH_NAME;
 
     const { data: repoWorkflows } = await github.rest.actions.listRepoWorkflows({
         owner,
-        repo
+        repo,
     });
 
     const workflow = repoWorkflows.workflows.find(w => w.path.includes(WORKFLOW_FILENAME));
@@ -24,7 +25,7 @@ module.exports = async ({ github, context, core }) => {
         workflow_id: workflow.id,
         branch: BRANCH_NAME,
         status: 'success',
-        per_page: 1
+        per_page: 1,
     });
 
     if (runs.total_count === 0) {
@@ -33,9 +34,30 @@ module.exports = async ({ github, context, core }) => {
         return;
     }
 
+    const latestRun = runs.workflow_runs[0];
+    const commitSha = latestRun.head_commit.id;
+    const runId = latestRun.id;
+
+    // Tarkasta onko runissa haluttua artifactia ja että se ei ole vanhentunut
+    if (!!ARTIFACT_NAME) {
+        const { data: runArtifacts } = await github.rest.actions.listWorkflowRunArtifacts({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            run_id: runId,
+        });
+
+        const artifact = runArtifacts.artifacts.find(a => a.name === ARTIFACT_NAME);
+
+        if (!artifact || artifact.expired) {
+            core.setFailed(`No valid artifact found with the name: ${ARTIFACT_NAME} in the run: ${runId}`);
+
+            return;
+        }
+    }
+
     // Palautetaan onnistuneeseen runiin liittyvä commit SHA ja run ID
     return {
-        commit_sha: runs.workflow_runs[0].head_commit.id,
-        run_id: runs.workflow_runs[0].id
+        commitSha,
+        runId,
     }
 }

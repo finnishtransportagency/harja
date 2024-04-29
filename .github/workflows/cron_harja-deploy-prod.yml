@@ -17,21 +17,21 @@ on:
   #  - cron: '0 4 * * 1-5'
 
 # TODO:
-#  - Hae viimeisin onnistunut build ja sen tiedot (run_id ja liittyvä commit SHA)
 #  - Muokkaa reusable_deploy-harja-image-to-ecs.yml tiedostoa niin, että se ottaa parametrina viimeisimmän onnistuneen buildin tiedot
 #    - Muokkaa jobia niin, että se hakee viimeisimmän build artifactin run_id:n perusteella
 #    - Muokkaa jobia niin, että se ajaa migraatiot jobille annetun commit SHA:n perusteella
 #    - Lisää reusable_deploy-harja-image-to-ecs.yml omaksi jobin ajoksi tähän workflowhun
-#  - Hae get-last-successful-build jobin outputista viimeisin onnistunut buildin run_id ja commit SHA
 
 jobs:
 
   get-latest-succesful-build:
     runs-on: ubuntu-latest
     env:
-      # Scriptin käyttämät ympäristömuuttujat
+      ## Scriptin käyttämät ympäristömuuttujat ##
       WORKFLOW_FILENAME: 'harja_build_and_deploy.yml'
       BRANCH_NAME: 'develop'
+      # Tarkastaa, että viimeisimmästä buildista löytyy build artifact
+      CHECK_ARTIFACT_WITH_NAME: 'harja-uberjar'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -47,18 +47,18 @@ jobs:
             const script = require('./.github/scripts/get-latest-successful-run.js')
             const result = await script({github, context, core})
             
-            core.setOutput("commit-sha", result.commit_sha);
-            core.setOutput("run-id", result.run_id);
+            core.setOutput("commit-sha", result.commitSha);
+            core.setOutput("run-id", result.runId);
 
       # https://github.com/github/vscode-github-actions/issues/188
       - name: Get results
         run: |
-          echo "${{ steps.latest-successful-build.outputs.latest-commit-sha }}"
+          echo "${{ steps.latest-successful-build.outputs.commit-sha }}"
           echo "${{ steps.latest-successful-build.outputs.run-id }}"
 
       - name: Run deployment
         run: |
-          echo "Latest successful commit SHA: ${{ steps.latest-successful-build.outputs.latest-commit-sha }}"
+          echo "Latest successful commit SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}"
           echo "Latest succesfull run ID: ${{ steps.latest-successful-build.outputs.run-id }}"
           echo "TODO..."
 
