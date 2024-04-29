@@ -67,11 +67,13 @@ jobs:
       id-token: write
       # Contents read lupaa tarvitaan checkout actionissa
       contents: read
+      # Actions read lupaa tarvitaan actions/download-artifact actionissa
+      actions: read
     with:
       # TODO: Käytä prod-ympäristöä testien jälkeen
       environment: 'dev'
       commit-sha: ${{ needs.get-latest-successful-build.outputs.commit-sha }}
-      artifact-run-id: ${{ needs.get-latest-succesful-build.outputs.run-id }}
+      artifact-run-id: ${{ needs.get-latest-successful-build.outputs.run-id }}
     # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattisesti envinronmentista reusable workfloweissa
     #       Tässä määritetään mitkä yksittäiset salaisuudet reusable workflow saa lukea GitHub environmentista.
     #       Vaihtoehtoisesti, voi käyttää secrets: inherit toimintoa, jolloin reusable workflow saa kaikki salaisuudet
