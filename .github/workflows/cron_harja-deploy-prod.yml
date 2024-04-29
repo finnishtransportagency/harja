@@ -1,12 +1,13 @@
 # Security hardening for GitHub Actions
 # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
 
-name: '[Scheduled] Harja: Prod deployment'
-run-name: 'Harja: Deploy to production'
-
+name: '[Scheduled] Harja: Deploy to production'
+run-name: '[Scheduled] Harja: Deploy latest successful build to production'
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
-  cancel-in-progress: true
+  # Anna edellisen deploymentin mennä rauhassa loppuun, koska mahdollisesti käynnissä olevaa AWS migration lambdaa ei pysty canceloimaan
+  # Jos edellinen deployment on ehtinyt migraatioiden ajon vaiheeseen, canceloiminen voi aiheuttaa ongelmia.
+  cancel-in-progress: false
 
 on:
   # Manuaalisen käynnistyksen asetukset
@@ -32,6 +33,36 @@ jobs:
       WORKFLOW_ID: 'harja_build_and_deploy.yml'
       BRANCH_NAME: 'develop'
     steps:
-      - name: TODO
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get latest succesful build
+        uses: actions/github-script@v7
+        id: latest-successful-build
+        # Palauta result jobin outputtiin
+        with:
+          retries: 3
+          result-encoding: json
+          script: |
+            const script = require('./.github/scripts/get-latest-successful-run.js')
+            const result = await script({github, context, core})
+            console.log(result)
+            
+            core.setOutput("commit-sha", result.commit_sha);
+            core.setOutput("run-id", result.run_id);
+
+      # https://github.com/github/vscode-github-actions/issues/188
+      - name: Get results
         run: |
-          echo "TODO"
+          echo "${{ steps.latest-successful-build.outputs.latest-commit-sha }}"
+          echo "${{ steps.latest-successful-build.outputs.run-id }}"
+
+      - name: Run deployment
+        run: |
+          echo "Latest successful commit SHA: ${{ steps.latest-successful-build.outputs.latest-commit-sha }}"
+          echo "Latest succesfull run ID: ${{ steps.latest-successful-build.outputs.run-id }}"
+          echo "TODO..."
+
+            
+
+
