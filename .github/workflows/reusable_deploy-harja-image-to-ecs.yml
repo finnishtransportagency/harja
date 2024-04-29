@@ -10,18 +10,16 @@ on:
         description: 'Deploymentin kohdeympäristö'
         type: string
         required: true
-    commit-sha:
-      description: 'Deploymentin commit SHA. Tämän perusteella haetaan migraatiot ja tagataan deployattava image. 
-                    Yleensä: SHA on peräisin tämän workflown käynnistäneen jobin runista, eli ${{ github.sha }}
-                    Pakotetaan määrittelemään arvo ulkopuolella selkeyden vuoksi.'
-      type: string
-      required: true
-    artifact-run-id:
-      description: 'Tietyn workflowin run ID, josta build artifact haetaan ja joka deployataan kohdeympäristöön.
-                    Yleensä: Haetaan deployattava artifact tämän workflow run ID:n perusteella, eli ${{ github.run_id }}
-                    Pakotetaan määrittelemään arvo ulkopuolella selkeyden vuoksi.'
-      type: string
-      required: true
+      commit-sha:
+        description: 'Deploymentin commit SHA. Tämän perusteella haetaan migraatiot ja tagataan deployattava image.
+                      Inputille pitää antaa arvo ulkopuolelta selkeyden vuoksi, default arvoa ei käytetä.'
+        type: string
+        required: true
+      artifact-run-id:
+        description: 'Tietyn workflowin run ID, josta build artifact haetaan ja joka deployataan kohdeympäristöön.
+                      Inputille pitää antaa arvo ulkopuolelta selkeyden vuoksi, default arvoa ei käytetä.'
+        type: string
+        required: true
     secrets:
       AWS_ACCOUNT_ID:
         required: true
