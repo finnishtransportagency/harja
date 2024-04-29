@@ -23,8 +23,7 @@ on:
 #    - Lisää reusable_deploy-harja-image-to-ecs.yml omaksi jobin ajoksi tähän workflowhun
 
 jobs:
-
-  get-latest-succesful-build:
+  get-latest-successful-build:
     runs-on: ubuntu-latest
     env:
       ## Scriptin käyttämät ympäristömuuttujat ##
@@ -32,11 +31,14 @@ jobs:
       BRANCH_NAME: 'develop'
       # Tarkastaa, että viimeisimmästä buildista löytyy build artifact
       CHECK_ARTIFACT_WITH_NAME: 'harja-uberjar'
+    outputs:
+      commit-sha: ${{ steps.latest-successful-build.outputs.commit-sha }}
+      run-id: ${{ steps.latest-successful-build.outputs.run-id }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Get latest succesful build
+      - name: Get latest successful build
         uses: actions/github-script@v7
         id: latest-successful-build
         # Palauta result jobin outputtiin
@@ -50,17 +52,33 @@ jobs:
             core.setOutput("commit-sha", result.commitSha);
             core.setOutput("run-id", result.runId);
 
-      # https://github.com/github/vscode-github-actions/issues/188
-      - name: Get results
-        run: |
-          echo "${{ steps.latest-successful-build.outputs.commit-sha }}"
-          echo "${{ steps.latest-successful-build.outputs.run-id }}"
-
-      - name: Run deployment
+      - name: Check results
         run: |
           echo "Latest successful commit SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}"
-          echo "Latest succesfull run ID: ${{ steps.latest-successful-build.outputs.run-id }}"
-          echo "TODO..."
+          echo "Latest successful run ID: ${{ steps.latest-successful-build.outputs.run-id }}"
+
+  deploy-to-production:
+    uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
+    needs: [ get-latest-successful-build ]
+    # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
+    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+    permissions:
+      # OIDC tokenia tarvitaan AWS jobeissa roolin omaksumiseen
+      id-token: write
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+    with:
+      # TODO: Käytä prod-ympäristöä testien jälkeen
+      environment: 'dev'
+      commit-sha: ${{ needs.get-latest-successful-build.outputs.commit-sha }}
+      artifact-run-id: ${{ needs.get-latest-succesful-build.outputs.run-id }}
+    # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattisesti envinronmentista reusable workfloweissa
+    #       Tässä määritetään mitkä yksittäiset salaisuudet reusable workflow saa lukea GitHub environmentista.
+    #       Vaihtoehtoisesti, voi käyttää secrets: inherit toimintoa, jolloin reusable workflow saa kaikki salaisuudet
+    #       kuin kutsuva workflowikin.
+    secrets:
+      aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
             
 
