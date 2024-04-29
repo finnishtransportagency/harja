@@ -24,14 +24,6 @@ VALUES (
 INSERT INTO mpu_kustannukset (urakka, selite, summa, vuosi) 
 VALUES (
   (SELECT id FROM urakka WHERE nimi LIKE 'Muhoksen päällystysurakka'), 
-  'Muu kustannus', 
-  1000000, 
-  2024
-);
-
-INSERT INTO mpu_kustannukset (urakka, selite, summa, vuosi) 
-VALUES (
-  (SELECT id FROM urakka WHERE nimi LIKE 'Muhoksen päällystysurakka'), 
   'Työvoimakustannukset', 
   200000, 
   2024

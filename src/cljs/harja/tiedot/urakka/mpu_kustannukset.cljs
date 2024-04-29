@@ -121,7 +121,7 @@
     ;; -> hae-sanktiot-ja-bonukset
     ;; 
     ;; TODO, selitteet haku toistaiseksi pois käytöstä
-    ;; (hae-mpu-selitteet app)
+    (hae-mpu-selitteet app)
     (hae-paikkaus-kustannukset app)
     (assoc app :haku-kaynnissa? true))
 
