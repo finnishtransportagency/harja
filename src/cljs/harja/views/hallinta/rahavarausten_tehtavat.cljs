@@ -9,10 +9,11 @@
 
 (defn tehtavat-vetolaatikko
   "Anna parametrina valittu tehtävä sekä kaikki mahdolliset tehtävät, joista voidaan valita."
-  [e! rahavaraus-id rahavarauksen-tehtavat kaikki-tehtavat]
-  (let [;; Poistetaan kaikista tehtävistä ne, jotka on jo valittuna rahavaraukselle
+  [e! rahavaraus-id rahavarauksen-tehtavat kaikki-tehtavat kaikki-rahavaraukset-tehtavineen]
+  (let [rahavarausten-tehtavat (mapcat :tehtavat kaikki-rahavaraukset-tehtavineen)
+        ;; Poistetaan kaikista tehtävistä ne, jotka on jo valittuna rahavarauksille
         kaikki-muut-tehtavat (remove (fn [tehtava]
-                                       (some #(= (:id %) (:id tehtava)) rahavarauksen-tehtavat))
+                                       (some #(= (:id %) (:id tehtava)) rahavarausten-tehtavat))
                                kaikki-tehtavat)
         ;; Tehtäviä on tyyliin 150.
         ;; Ryhmitellään ne tehtäväryhmän otsikoiden perusteella kuten suunnittelu/tehtävät ja määrät sivulla
@@ -75,7 +76,7 @@
           :tunniste :id
           :piilota-toiminnot? true
           :vetolaatikot (into {}
-                          (map (juxt :id (fn [rivi] [tehtavat-vetolaatikko e! (:id rivi) (:tehtavat rivi) tehtavat]))
+                          (map (juxt :id (fn [rivi] [tehtavat-vetolaatikko e! (:id rivi) (:tehtavat rivi) tehtavat rahavaraukset-tehtavineen]))
                             rahavaraukset-tehtavineen))}
          [{:tyyppi :vetolaatikon-tila :leveys 1}
           {:otsikko "Rahavaraus" :nimi :nimi :tyyppi :string :leveys 12}]
