@@ -1,7 +1,7 @@
 # -- Run-time vaihe --
 # Käytetään Eclipse Temurin 17 LTS (OpenJDK) imagea (https://endoflife.date/java)
 # Pohjalla Ubuntu Jammy (Ubuntu 22.04 LTS)
-FROM eclipse-temurin:17.0.10_7-jre-jammy
+FROM eclipse-temurin:17.0.11_9-jre-jammy
 
 # Lisää labeleita AWS ECR:ää varten
 LABEL description="Harja app"
