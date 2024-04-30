@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.api.ilmoitusten-haku-test
-  (:require [clojure.test :refer [deftest is use-fixtures testing]]
+  (:require [ajax.json :as json]
+            [clojure.test :refer [deftest is use-fixtures testing]]
             [clojure.core.async :refer [<!! timeout]]
             [clj-time
              [core :as t]
@@ -83,14 +84,29 @@
 (deftest hae-ilmoitukset-ytunnuksella-onnistuu
   (let [kuukausi-sitten (nykyhetki-iso8061-formaatissa-menneisyyteen 30)
         huomenna (nykyhetki-iso8061-formaatissa-tulevaisuuteen 1)
-        y-tunnus "1565583-5"
+        yit-y-tunnus "1565583-5"
+        yit-y-tunnuksen-ilmot-kannassa (q-map
+                                     "select o.ytunnus, count(i.*) as ilmoituksien_lukumaara from ilmoitus i
+                                       join urakka u on i.urakka = u.id
+                                       join organisaatio o ON o.id = u.urakoitsija
+                                      WHERE o.ytunnus = '1565583-5' AND
+                                        ((u.loppupvm + interval '36 hour') >= NOW()) OR
+                                        (u.loppupvm IS NULL AND u.alkupvm <= NOW())
+                                GROUP BY o.ytunnus;")
         _ (anna-lukuoikeus kayttaja)
-        vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" kuukausi-sitten "/"huomenna)]
-                  kayttaja portti)]
-    (is (= 200 (:status vastaus)))
-    (is (str/includes? (:body vastaus) "Ilmoittaja"))
-    (is (str/includes? (:body vastaus) "Rovanieminen"))
-    (is (str/includes? (:body vastaus) "Sillalla on lunta. Liikaa."))))
+        yit-vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" yit-y-tunnus "/" kuukausi-sitten "/" huomenna)]
+                  kayttaja portti)
+        yit-ilmot (get-in (cheshire/decode (:body yit-vastaus)) ["ilmoitukset"])
+
+        _ (anna-lukuoikeus skanska-kayttaja)]
+    (is (= 200 (:status yit-vastaus)))
+    (is (str/includes? (:body yit-vastaus) "Ilmoittaja"))
+    (is (str/includes? (:body yit-vastaus) "Rovanieminen"))
+    (is (str/includes? (:body yit-vastaus) "Sillalla on lunta. Liikaa."))
+    (is (= (count yit-ilmot) (:ilmoituksien_lukumaara (first
+                                                        (filter #(= (:ytunnus %) yit-y-tunnus)
+                                                          yit-y-tunnuksen-ilmot-kannassa))))
+      "Oikea määrä ilmoituksia palautuu.")))
 
 (deftest hae-ilmoitukset-ytunnuksella-onnistuu-ilman-loppuaikaa
   (let [alkuaika "2022-01-01T00:00:00+03"
