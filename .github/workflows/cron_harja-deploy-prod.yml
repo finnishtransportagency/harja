@@ -92,26 +92,28 @@ jobs:
               core.setOutput("sha", result.sha);
             }
 
-      - name: Check if already deployed
-        env:
-          LATEST_DEPLOYMENT_SHA: ${{ steps.latest-deployment.outputs.sha }}
-          LATEST_BUILD_SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}
-        run: |
-          echo "Latest prod deployment SHA: $LATEST_DEPLOYMENT_SHA"
-          echo "Latest successful build SHA: $LATEST_BUILD_SHA"
-          
-          if [ "$LATEST_DEPLOYMENT_SHA" != "$LATEST_BUILD_SHA" ]; then
-            echo "status=deploy" >> $GITHUB_OUTPUT
-          else
-            echo "The latest successful build has already been deployed to env: $TARGET_ENVIRONMENT. Skipping deployment..."
-            echo "status=skip" >> $GITHUB_OUTPUT
-          fi
+# TODO: Ota takaisin käyttöön, kun cron automaation toiminta on varmistettu ja deploymentin kohteena on prod-ympäristö
+#      - name: Check if already deployed
+#        env:
+#          LATEST_DEPLOYMENT_SHA: ${{ steps.latest-deployment.outputs.sha }}
+#          LATEST_BUILD_SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}
+#        run: |
+#          echo "Latest prod deployment SHA: $LATEST_DEPLOYMENT_SHA"
+#          echo "Latest successful build SHA: $LATEST_BUILD_SHA"
+#
+#          if [ "$LATEST_DEPLOYMENT_SHA" != "$LATEST_BUILD_SHA" ]; then
+#            echo "status=deploy" >> $GITHUB_OUTPUT
+#          else
+#            echo "The latest successful build has already been deployed to env: $TARGET_ENVIRONMENT. Skipping deployment..."
+#            echo "status=skip" >> $GITHUB_OUTPUT
+#          fi
 
   deploy-to-production:
     uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
     needs: [ get-env-vars, get-latest-successful-build ]
     # Ajetaan deployment, mikäli viimeisin onnistunut build ei ole vielä deployattu kohdeympäristöön
-    if: ${{ needs.get-latest-successful-build.outputs.status == 'deploy' }}
+    # TODO: Ota takaisin käyttöön, kun cron automaation toiminta on varmistettu ja deploymentin kohteena on prod-ympäristö
+    #if: ${{ needs.get-latest-successful-build.outputs.status == 'deploy' }}
 
     # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
     permissions:
