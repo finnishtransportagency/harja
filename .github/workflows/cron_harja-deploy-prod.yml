@@ -17,6 +17,13 @@ on:
 #  schedule:
 #    - cron: '0 4 * * 1-5'
 
+# Aseta least-privilege default permissionit workflowille
+# Jos jokin job tarvitsee enemmän oikeuksia, ne pitää erikseen määritellä job-kohtaisesti
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-secrets
+# https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+permissions:
+  contents: read
+
 env:
   # TODO: Käytä prod-ympäristöä vasta kunnollisen testailun jälkeen
   # Yleiset scriptien käyttämät ympäristömuuttujat
@@ -95,6 +102,9 @@ jobs:
           
           if [ "$LATEST_DEPLOYMENT_SHA" != "$LATEST_BUILD_SHA" ]; then
             echo "status=deploy" >> $GITHUB_OUTPUT
+          else
+            echo "The latest successful build has already been deployed to env: $TARGET_ENVIRONMENT. Skipping deployment..."
+            echo "status=skip" >> $GITHUB_OUTPUT
           fi
 
   deploy-to-production:
@@ -104,7 +114,6 @@ jobs:
     if: ${{ needs.get-latest-successful-build.outputs.status == 'deploy' }}
 
     # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
-    # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
       # OIDC tokenia tarvitaan AWS jobeissa roolin omaksumiseen
       id-token: write
