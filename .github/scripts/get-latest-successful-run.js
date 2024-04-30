@@ -63,7 +63,7 @@ module.exports = async ({ github, context, core }) => {
         const artifact = runArtifacts.artifacts.find(a => a.name === ARTIFACT_NAME);
 
         if (!artifact || artifact.expired) {
-            core.setFailed(`No valid artifact found with the name: ${ARTIFACT_NAME} in the run: ${runId}`);
+            core.setFailed(`No valid artifact found with the name: ${ARTIFACT_NAME} in the run: ${runId}, run URL: ${latestRun.html_url}`);
 
             return;
         }
