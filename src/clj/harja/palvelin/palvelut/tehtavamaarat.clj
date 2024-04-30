@@ -80,8 +80,9 @@
                                                :suunnitellut-maarat suunnitellut-maarat
                                                :muuttuneet-tarjouksesta muuttuneet-tarjouksesta
                                                :taso 4
-                                               :samat-maarat-vuosittain? samat-maarat-vuosittain?}
-                                               (if aluetieto
+                                               :samat-maarat-vuosittain? samat-maarat-vuosittain?
+                                               :rahavaraus? (:onko-rahavaraus? rivi)}
+                                              (if aluetieto
                                                 {:sopimuksen-aluetieto-maara sopimuksen-aluetieto-maara}
                                                 {:samat-maarat-vuosittain? samat-maarat-vuosittain?
                                                  :sopimuksen-tehtavamaarat sopimuksen-tehtavamaarat})))
