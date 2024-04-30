@@ -382,6 +382,11 @@
            [:div "Urakan aluksi syötä tehtäville tarjouksen tehtävä- ja määräluettelosta määrät. Hoitoluokkatiedot syötetään sellaisenaan tarjouksesta. Suunnitellut määrät kerrotaan suunnittelua varten oletuksena hoitovuosien määrän mukaan. Jos haluat suunnitella vuosikohtaisesti niin aukaise rivi ja valitse “Haluan syöttää joka vuoden erikseen”."]
            [:div "Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä ‘0’. Tarjouksien määriä käytetään apuna urakan määrien suunnitteluun ja seurantaan."]]
           :info])
+       [yleiset/keltainen-vihjelaatikko
+        [:<>
+         [:div "Määrät, joita ei voi syöttää, kuuluvat rahavaraukseen."]]
+        :info]
+
        (when (not sopimukset-syotetty?)
          [sopimuksen-tallennus-boksi e!])
        ;; Vain pääkäyttäjille testiympäristössä mahdollisuus luoda nopeasti arvot kaikille tehtäville
