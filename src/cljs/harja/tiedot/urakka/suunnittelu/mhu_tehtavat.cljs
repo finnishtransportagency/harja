@@ -233,14 +233,18 @@
   (not
     (or (nil? yksikko)
       (= "" yksikko)
-      (= "-" yksikko))))
+      (= "-" yksikko)
+      (= "--" yksikko))))
 
 (def valitason-toimenpiteet
   (filter vain-taso-3))
 
 (defn- sopimusmaarat-taulukosta [taulukko tyyppi]
-  (map #(select-keys % [:sopimus-maara :sopimuksen-tehtavamaarat])
-          (flatten (map vals (vals (tyyppi taulukko))))))
+  (let [sopimusmaarat (map #(select-keys % [:sopimus-maara :sopimuksen-tehtavamaarat :rahavaraus? :yksikko])
+                        (flatten (map vals (vals (tyyppi taulukko)))))
+        ;; Poistetaan sellaiset sopimusmäärät, joilla rahavaraus? true tai yksikköä ei ole annettu
+        sopimusmaarat (filter #(and (not (:rahavaraus? %)) (vain-yksikolliset %)) sopimusmaarat)]
+sopimusmaarat))
 
 (defn aluetietoja-puuttuu? []
   (let [keratyt-aluemaarat (sopimusmaarat-taulukosta @taulukko-tila :alueet)
