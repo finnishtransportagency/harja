@@ -182,27 +182,26 @@ jobs:
           service: ${{ vars.ECS_SERVICE_NAME }}
 
       # Docs: https://github.com/slackapi/slack-github-action
-      # TODO: Enabloi testien jälkeen
-#      - name: Send deploy failure message to Slack
-#        id: slack
-#        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
-#        if: failure()
-#        with:
-#          # Slack Block Kit -tyyppinen rikastettu viesti
-#          payload: |
-#            {
-#              "blocks": [
-#                {
-#                  "type": "section",
-#                  "text": {
-#                    "type": "mrkdwn",
-#                    "text": ":alert-slow: ECS deploy -> ${{ inputs.environment }} epäonnistui!\n${{ env.JOB_RUN_URL }}"
-#                  }
-#                }
-#              ]
-#            }
-#        env:
-#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-#          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-#          JOB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      - name: Send deploy failure message to Slack
+        id: slack
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
+        if: failure()
+        with:
+          # Slack Block Kit -tyyppinen rikastettu viesti
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":alert-slow: ECS deploy -> ${{ inputs.environment }} epäonnistui!\n${{ env.JOB_RUN_URL }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+          JOB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
