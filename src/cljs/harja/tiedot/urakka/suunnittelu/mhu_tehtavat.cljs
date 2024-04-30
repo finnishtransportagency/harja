@@ -207,17 +207,18 @@
     (assoc-in taulukkorakenne [:sovittuja-jaljella] sovittuja-jaljella-yht)))
 
 (defn paivita-sovitut-jaljella-sarake
-  [taulukon-tila {:keys [vanhempi id] :as tehtava} samat-tuleville? hoitokauden-alkuvuosi urakan-loppuvuosi]
+  [taulukon-tila {:keys [vanhempi maara-muuttunut-tarjouksesta id] :as tehtava} samat-tuleville? hoitokauden-alkuvuosi urakan-loppuvuosi]
   (let [nykyiset-suunnitellut-maarat (get-in taulukon-tila [:maarat vanhempi id :suunnitellut-maarat])
-        uusi-arvo (get-in taulukon-tila [:maarat vanhempi id :maara-muuttunut-tarjouksesta])
+        uusi-arvo maara-muuttunut-tarjouksesta
         kasiteltavat-vuodet (if samat-tuleville?
                               (range hoitokauden-alkuvuosi urakan-loppuvuosi)
                               [hoitokauden-alkuvuosi])
         uudet-suunnitellut-maarat (reduce (fn [lopputulos vuosi]
                                             (assoc-in lopputulos [vuosi] uusi-arvo))
-                                    nykyiset-suunnitellut-maarat kasiteltavat-vuodet)
-        taulukon-tila (assoc-in taulukon-tila [:maarat vanhempi id :suunnitellut-maarat] uudet-suunnitellut-maarat)]
+                                    nykyiset-suunnitellut-maarat kasiteltavat-vuodet)]
     (-> taulukon-tila
+      (assoc-in [:maarat vanhempi id :suunnitellut-maarat] uudet-suunnitellut-maarat)
+      (assoc-in [:maarat vanhempi id :maara-muuttunut-tarjouksesta] uusi-arvo)
       (update-in [:maarat vanhempi id] paivita-maarat-ja-laske-sovitut))))
 
 (defn vain-taso-3 
@@ -561,7 +562,7 @@ sopimusmaarat))
         assoc 
         :virhe-tallennettaessa false
         :tallennetaan true)))
-  
+
   HakuEpaonnistui
   (process-event
     [_ app]
