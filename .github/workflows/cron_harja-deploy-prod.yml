@@ -53,6 +53,7 @@ jobs:
     outputs:
       commit-sha: ${{ steps.latest-successful-build.outputs.commit-sha }}
       run-id: ${{ steps.latest-successful-build.outputs.run-id }}
+      status: ${{ steps.deployment-check.outputs.status }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -92,8 +93,9 @@ jobs:
               core.setOutput("sha", result.sha);
             }
 
-# TODO: Ota takaisin käyttöön, kun cron automaation toiminta on varmistettu ja deploymentin kohteena on prod-ympäristö
+      # TODO: Ota takaisin käyttöön, kun cron automaation toiminta on varmistettu ja deploymentin kohteena on prod-ympäristö
 #      - name: Check if already deployed
+#        id: deployment-check
 #        env:
 #          LATEST_DEPLOYMENT_SHA: ${{ steps.latest-deployment.outputs.sha }}
 #          LATEST_BUILD_SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}
@@ -107,6 +109,48 @@ jobs:
 #            echo "The latest successful build has already been deployed to env: $TARGET_ENVIRONMENT. Skipping deployment..."
 #            echo "status=skip" >> $GITHUB_OUTPUT
 #          fi
+
+      # Docs: https://github.com/slackapi/slack-github-action
+      - name: Send deploy notification to Slack
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
+        # TODO: Ota takaisin käyttöön, kun cron automaation toiminta on varmistettu ja deploymentin kohteena on prod-ympäristö
+        #if: ${{ steps.deployment-check.outputs.status == 'deploy' }}
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":awake-cat: Aloitetaan ajastettu deployment AWS tuotantoympäristöön..."
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Send deploy notification to Slack
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
+        if: ${{ steps.deployment-check.outputs.status == 'skip' }}
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":warning: Ajastettu deployment ohitetaan. Tuotantoon on jo deployattu viimeisin build."
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
   deploy-to-production:
     uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
