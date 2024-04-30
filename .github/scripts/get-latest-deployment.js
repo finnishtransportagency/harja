@@ -6,6 +6,19 @@ module.exports = async ({ github, context, core }) => {
     const BRANCH_NAME = process.env.BRANCH_NAME;
     const TARGET_ENVIRONMENT = process.env.TARGET_ENVIRONMENT;
 
+    // Tarkasta pakolliset ympäristömuuttujat
+    if (!BRANCH_NAME) {
+        core.setFailed('ENV BRANCH_NAME is required');
+
+        return;
+    }
+
+    if (!TARGET_ENVIRONMENT) {
+        core.setFailed('ENV TARGET_ENVIRONMENT is required');
+
+        return;
+    }
+
     const { data: deployments } = await github.rest.repos.listDeployments({
         owner,
         repo,

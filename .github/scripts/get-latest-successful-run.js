@@ -5,6 +5,20 @@ module.exports = async ({ github, context, core }) => {
     const BRANCH_NAME = process.env.BRANCH_NAME;
     const ARTIFACT_NAME = process.env.CHECK_ARTIFACT_WITH_NAME;
 
+    // Tarkasta pakolliset ympäristömuuttujat
+    if (!WORKFLOW_FILENAME) {
+        core.setFailed('ENV WORKFLOW_FILENAME is required');
+
+        return;
+    }
+
+    if (!BRANCH_NAME) {
+        core.setFailed('ENV BRANCH_NAME is required');
+
+        return;
+    }
+
+
     const { data: repoWorkflows } = await github.rest.actions.listRepoWorkflows({
         owner,
         repo,
