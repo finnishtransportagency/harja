@@ -129,7 +129,10 @@ jobs:
           name: harja-uberjar
           path: ./target/harja-0.0.1-SNAPSHOT-standalone.jar
           if-no-files-found: error
-          retention-days: 1
+          # Poistetaan vanhat artifactit, jotta vanhoja tiedostoja ei säilötä turhaan.
+          # Jos build tehdään esim. perjantai-aamuna ja deployment maanantaina, niin retentio pitää olla kolme vuorokautta.
+          # Jätetään jonkin verran pelivaraa, mikäli deploymentin kanssa tulee ongelmia.
+          retention-days: 7
 
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
