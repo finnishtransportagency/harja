@@ -18,13 +18,6 @@
             [harja.tiedot.istunto :as istunto]
             [harja.fmt :as fmt]))
 
-(defn sarakkeiden-leveys [sarake]
-  (case sarake
-    :tehtava "col-xs-12 col-sm-8 col-md-8 col-lg-8"
-    :maara "leveys-70"
-    :maara-input "leveys-15"
-    :maara-yksikko "leveys-15"))
-
 (defn disabloitu-alasveto?
   [koll]
   (= 0 (count koll)))
@@ -112,6 +105,21 @@
     false
     rivi))
 
+(defn- kun-ei-rahavaraus [rivi]
+  (if (:rahavaraus? rivi)
+    false
+    rivi))
+
+(defn- rahavarausperustainen-muokattava? [rivi]
+  (if (:rahavaraus? rivi)
+    false
+    true))
+
+(defn- yksikkoperustainen-muokattava? [rivi]
+  (if (not= "--" (:yksikko rivi))
+    true
+    false))
+
 (defn tallenna!
   [e! sopimukset-syotetty? alueet-vai-maarat rivi]
   (let [tuck-event (cond
@@ -138,7 +146,7 @@
   [_ _ {:keys [vanhempi id yksikko nimi] :as _rivi}]
   (let [joka-vuosi-erikseen? (r/cursor t/taulukko-tila [:maarat vanhempi id :joka-vuosi-erikseen?])]
     (fn [e! app {:keys [vanhempi id] :as rivi}]
-      [:div.tehtavat-maarat-vetolaatikko 
+      [:div.tehtavat-maarat-vetolaatikko
        [:div.vetolaatikko-ruksi 
         [kentat/tee-kentta {:tyyppi :checkbox 
                             :teksti "Haluan syöttää joka vuoden erikseen"
@@ -158,7 +166,7 @@
              [:label (str "Vuosi " vuosi "-" (inc vuosi))]
              [kentat/tee-kentta {:tyyppi :numero
                                  :elementin-id (str "vetolaatikko-input-" (vali->viiva nimi) "-" vuosi)
-                                 :disabled? (not @joka-vuosi-erikseen?)
+                                 :disabled? (or (not @joka-vuosi-erikseen?) (:rahavaraus? _rivi))
                                  :on-blur #(tallenna! e!
                                              (:sopimukset-syotetty? app)
                                              :maarat
@@ -207,7 +215,12 @@
   (let [{:keys [nimi sisainen-id alue-tehtavia maara-tehtavia]} toimenpiteen-tiedot
         {:keys [nayta-aluetehtavat? nayta-suunniteltavat-tehtavat?]} valinnat
         aluetiedot-tila (r/cursor t/taulukko-tila [:alueet sisainen-id])
+        ;; Merkitse yksiköksi -- jos sitä ei ole
+        aluetiedot @aluetiedot-tila
+        aluetiedot-tila (if (> (count aluetiedot) 0) (paivita-yksikko-ja-nimi aluetiedot) aluetiedot-tila)
         maarat-tila (r/cursor t/taulukko-tila [:maarat sisainen-id])
+        maarat @maarat-tila
+        maarat-tila (if (> (count maarat) 0) (paivita-yksikko-ja-nimi maarat) maarat-tila)
         onko-tehtavia? (cond
                          (and nayta-aluetehtavat? nayta-suunniteltavat-tehtavat?
                            (= 0 alue-tehtavia maara-tehtavia))
@@ -250,17 +263,22 @@
             :virheet t/taulukko-virheet
             :piilota-toiminnot? true
             :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty? :alueet)}
-           [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 
+           [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys
              (if sopimukset-syotetty? 
                "60%"
                "70%")}
-            ;; ennen urakkaa -moodi         
-            {:otsikko "Tarjouksen määrä" :nimi :sopimus-maara :tyyppi :numero :leveys "180px"
-             :validoi [[:ei-tyhja "Anna määrä"]]
-             :muokattava? (constantly (if sopimukset-syotetty? false true)) :tasaa :oikea :veda-oikealle? true}
+            ;; ennen urakkaa -moodi
+            (if sopimukset-syotetty?
+              {:otsikko "Tarjouksen määrä" :nimi :sopimus-maara :tyyppi :numero :leveys "180px"
+               :validoi [[:ei-tyhja "Anna määrä"]]
+               :muokattava? (constantly false) :tasaa :oikea :veda-oikealle? true}
+              {:otsikko "Tarjouksen määrä" :nimi :sopimus-maara :tyyppi :numero :leveys "180px"
+               :validoi [[:ei-tyhja "Anna määrä"]]
+               :muokattava? (or (partial rahavarausperustainen-muokattava?) (partial yksikkoperustainen-muokattava?))
+               :tasaa :oikea :veda-oikealle? true})
             ;; urakan ajan suunnittelu -moodi         
-            (when sopimukset-syotetty? 
-              {:otsikko "Muuttunut määrä" :nimi :maara-muuttunut-tarjouksesta :tyyppi :numero :muokattava? kun-yksikko :leveys "180px" :tasaa :oikea :veda-oikealle? true})
+            (when sopimukset-syotetty?
+              {:otsikko "Muuttunut määrä" :nimi :maara-muuttunut-tarjouksesta :tyyppi :numero :muokattava? (comp kun-yksikko kun-ei-rahavaraus) :leveys "180px" :tasaa :oikea :veda-oikealle? true})
             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
            aluetiedot-tila]])
        (when (and (> maara-tehtavia 0) nayta-suunniteltavat-tehtavat?)
@@ -290,7 +308,7 @@
                 :vetolaatikko-optiot {:ei-paddingia true}}))
            [(when (not sopimukset-syotetty?) 
               {:tyyppi :vetolaatikon-tila :leveys "5%"})
-            {:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 
+            {:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys
              (if sopimukset-syotetty? 
                "60%"
                "70%")}
@@ -298,7 +316,7 @@
             (when (not sopimukset-syotetty?)
               {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimus-maara :tyyppi :numero :leveys "180px"
                :validoi [[:ei-tyhja]]
-               :muokattava? (comp kun-yksikko kun-kaikki-samat) :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo
+               :muokattava? (comp kun-yksikko kun-kaikki-samat kun-ei-rahavaraus) :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo
                :veda-oikealle? true :tasaa :oikea})
             ;; urakan ajan suunnittelu -moodi
             (when sopimukset-syotetty? 
