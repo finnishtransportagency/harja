@@ -14,8 +14,8 @@ on:
   workflow_dispatch:
   # Ajastettu käynnistys
   # Ajetaan deployment joka arkipäivä klo 7 (Huom, GitHub actions on UTC-aikavyöhykkeessä)
-#  schedule:
-#    - cron: '0 4 * * 1-5'
+  schedule:
+    - cron: '0 4 * * 1-5'
 
 # Aseta least-privilege default permissionit workflowille
 # Jos jokin job tarvitsee enemmän oikeuksia, ne pitää erikseen määritellä job-kohtaisesti
