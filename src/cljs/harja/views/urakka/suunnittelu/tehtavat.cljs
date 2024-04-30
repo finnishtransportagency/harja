@@ -93,7 +93,8 @@
       (not (or 
              (nil? yksikko)
              (= "" yksikko)
-             (= "-" yksikko))))
+             (= "-" yksikko)
+             (= "--" yksikko))))
     rivi))
 
 (defn vertaile-onko-samat 
@@ -183,6 +184,23 @@
         (kun-yksikko rivi)) 
     "vaihtelua/vuosi"
     ""))
+
+(defn- muodosta-tehtava-nimi [rivi]
+  (str (:nimi rivi) (when (:rahavaraus? rivi) " (R)")))
+
+(defn- paivita-yksikko-ja-nimi [rivit]
+  (r/atom (apply array-map (flatten (mapv
+                                      ;{<id> {<key> <value> mäppinä}}
+                                      (fn [rivi]
+                                        (let [key (first rivi)
+                                              val (second rivi)
+                                              yksikko (:yksikko val)
+                                              val (-> val
+                                                    (assoc :yksikko (if (or (nil? yksikko) (str/blank? yksikko)) "--" yksikko))
+                                                    (assoc :nimi (muodosta-tehtava-nimi val)))]
+                                          [key val]))
+                                      rivit)))))
+
 
 (defn- tehtava-maarat-taulukko 
   [e! {:keys [sopimukset-syotetty? taso-4-tehtavat valinnat] :as app} toimenpiteen-tiedot]
