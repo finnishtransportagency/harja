@@ -63,6 +63,22 @@ jobs:
 
         shell: bash
 
+      # Failaa jobi, jos Commit SHA tai Artifact run ID ovat tyhjiä
+      - name: Check inputs
+        env:
+          COMMIT_SHA: ${{ inputs.commit-sha }}
+          ARTIFACT_RUN_ID: ${{ inputs.artifact-run-id }}
+        run: |
+          if [ -z "$COMMIT_SHA" ]; then
+            echo "Error: inputs.commit-sha is empty. Exiting..."
+            exit 1
+          fi
+
+          if [ -z "$ARTIFACT_RUN_ID" ]; then
+            echo "Error: inputs.artifact-run-id is empty. Exiting..."
+            exit 1
+          fi
+
       # https://github.com/actions/download-artifact?tab=readme-ov-file#inputs
       - name: Download uberjar artifact
         uses: actions/download-artifact@v4
