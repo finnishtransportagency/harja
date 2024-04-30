@@ -12,15 +12,15 @@ concurrency:
 on:
   # Manuaalisen käynnistyksen asetukset
   workflow_dispatch:
-  # Ajastettu käynnistys (Ajetaan deployment joka arkipäivä klo 7 (Huom, GitHub actions on UTC-aikavyöhykkeessä))
-  #schedule:
-  #  - cron: '0 4 * * 1-5'
+  # Ajastettu käynnistys
+  # Ajetaan deployment joka arkipäivä klo 7 (Huom, GitHub actions on UTC-aikavyöhykkeessä)
+#  schedule:
+#    - cron: '0 4 * * 1-5'
 
-# TODO:
-#  - Muokkaa reusable_deploy-harja-image-to-ecs.yml tiedostoa niin, että se ottaa parametrina viimeisimmän onnistuneen buildin tiedot
-#    - Muokkaa jobia niin, että se hakee viimeisimmän build artifactin run_id:n perusteella
-#    - Muokkaa jobia niin, että se ajaa migraatiot jobille annetun commit SHA:n perusteella
-#    - Lisää reusable_deploy-harja-image-to-ecs.yml omaksi jobin ajoksi tähän workflowhun
+env:
+  # TODO: Käytä prod-ympäristöä vasta kunnollisen testailun jälkeen
+  TARGET_ENVIRONMENT: 'stg'
+  TARGET_BRANCH_NAME: 'develop'
 
 jobs:
   get-latest-successful-build:
@@ -28,7 +28,7 @@ jobs:
     env:
       ## Scriptin käyttämät ympäristömuuttujat ##
       WORKFLOW_FILENAME: 'harja_build_and_deploy.yml'
-      BRANCH_NAME: 'develop'
+      BRANCH_NAME: ${{ env.TARGET_BRANCH_NAME }}
       # Tarkastaa, että viimeisimmästä buildista löytyy build artifact
       CHECK_ARTIFACT_WITH_NAME: 'harja-uberjar'
     outputs:
@@ -57,9 +57,40 @@ jobs:
           echo "Latest successful commit SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}"
           echo "Latest successful run ID: ${{ steps.latest-successful-build.outputs.run-id }}"
 
+      - name: Get latest deployment
+        uses: actions/github-script@v7
+        id: latest-deployment
+        env:
+          ## Scriptin käyttämät ympäristömuuttujat ##
+          BRANCH_NAME: ${{ env.TARGET_BRANCH_NAME }}
+          TARGET_ENVIRONMENT: ${{ env.TARGET_ENVIRONMENT }}
+        with:
+          script: |
+            const script = require('./.github/scripts/get-latest-deployment.js')
+            const result = await script({github, context, core})
+            
+            if (result && result.sha) {
+              core.setOutput("sha", result.sha);
+            }
+
+      - name: Check if already deployed
+        env:
+          LATEST_DEPLOYMENT_SHA: ${{ steps.latest-deployment.outputs.sha }}
+          LATEST_BUILD_SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}
+        run: |
+          echo "Latest prod deployment SHA: $LATEST_DEPLOYMENT_SHA"
+          echo "Latest successful build SHA: $LATEST_BUILD_SHA"
+          
+          if [ "$LATEST_DEPLOYMENT_SHA" != "$LATEST_BUILD_SHA" ]; then
+            echo "status=deploy" >> $GITHUB_OUTPUT
+          fi
+
   deploy-to-production:
     uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
     needs: [ get-latest-successful-build ]
+    # Ajetaan deployment, mikäli viimeisin onnistunut build ei ole vielä deployattu kohdeympäristöön
+    if: ${{ needs.get-latest-successful-build.outputs.status == 'deploy' }}
+
     # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -70,8 +101,7 @@ jobs:
       # Actions read lupaa tarvitaan actions/download-artifact actionissa
       actions: read
     with:
-      # TODO: Käytä prod-ympäristöä testien jälkeen
-      environment: 'dev'
+      environment: ${{ env.TARGET_ENVIRONMENT }}
       commit-sha: ${{ needs.get-latest-successful-build.outputs.commit-sha }}
       artifact-run-id: ${{ needs.get-latest-successful-build.outputs.run-id }}
     # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattisesti envinronmentista reusable workfloweissa
