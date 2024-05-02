@@ -102,7 +102,6 @@
         yit-ilmot (get-in (cheshire/decode (:body yit-vastaus)) ["ilmoitukset"])
 
         _ (anna-lukuoikeus skanska-kayttaja)]
-    (prn "Jarno vastaus " yit-vastaus)
     (is (= 200 (:status yit-vastaus)))
     (is (str/includes? (:body yit-vastaus) "Ilmoittaja"))
     (is (str/includes? (:body yit-vastaus) "Rovanieminen"))
