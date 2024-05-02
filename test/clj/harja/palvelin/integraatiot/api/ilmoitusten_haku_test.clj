@@ -84,6 +84,9 @@
 (deftest hae-ilmoitukset-ytunnuksella-onnistuu
   (let [kuukausi-sitten (nykyhetki-iso8061-formaatissa-menneisyyteen 30)
         huomenna (nykyhetki-iso8061-formaatissa-tulevaisuuteen 1)
+        ;; kovakoodataan odotettu määrä, jos esim ajan myötä muuttuu nollaan, saattaa testi menettää tehoansa
+        ;; jos muutat ilmoitusten testidataa näiden osalta, saattaa kovakoodattu numero muuttua
+        odotettu-ilmoitusten-maara 13
         yit-y-tunnus "1565583-5"
         yit-y-tunnuksen-ilmot-kannassa (q-map
                                      "select o.ytunnus, count(i.*) as ilmoituksien_lukumaara from ilmoitus i
@@ -99,13 +102,14 @@
         yit-ilmot (get-in (cheshire/decode (:body yit-vastaus)) ["ilmoitukset"])
 
         _ (anna-lukuoikeus skanska-kayttaja)]
+    (prn "Jarno vastaus " yit-vastaus)
     (is (= 200 (:status yit-vastaus)))
     (is (str/includes? (:body yit-vastaus) "Ilmoittaja"))
     (is (str/includes? (:body yit-vastaus) "Rovanieminen"))
     (is (str/includes? (:body yit-vastaus) "Sillalla on lunta. Liikaa."))
-    (is (= (count yit-ilmot) (:ilmoituksien_lukumaara (first
-                                                        (filter #(= (:ytunnus %) yit-y-tunnus)
-                                                          yit-y-tunnuksen-ilmot-kannassa))))
+    (is (= odotettu-ilmoitusten-maara (count yit-ilmot) (:ilmoituksien_lukumaara (first
+                                                                                   (filter #(= (:ytunnus %) yit-y-tunnus)
+                                                                                     yit-y-tunnuksen-ilmot-kannassa))))
       "Oikea määrä ilmoituksia palautuu.")))
 
 (deftest hae-ilmoitukset-ytunnuksella-onnistuu-ilman-loppuaikaa
