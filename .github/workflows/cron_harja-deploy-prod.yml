@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
     inputs:
       force-deployment:
-        description: "Pakota deployment, vaikka environmenttiin olisi jo julkaistu aiemmin sama versio"
+        description: "Pakota deployment, vaikka ympäristöön olisi jo julkaistu sama versio"
         type: boolean
         default: false
         required: false
@@ -78,40 +78,46 @@ jobs:
             core.setOutput("commit-sha", result.commitSha);
             core.setOutput("run-id", result.runId);
 
-      - name: Check results
+      - name: Print output results
         run: |
           echo "Latest successful commit SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}"
           echo "Latest successful run ID: ${{ steps.latest-successful-build.outputs.run-id }}"
 
-      - name: Get latest deployment
+      # TODO: Jos tämä ei osoittaudu riittävän luotettavaksi tavaksi tunnistaa viimeisin onnistunut GH deployment,
+      #       niin haetaan AWS ECR:stä viimeisin deployattu image ja verrataan sen tagia viimeisimmän buildin committiin.
+      - name: Get latest GitHub deployment by latest successful build commit SHA
         uses: actions/github-script@v7
         id: latest-deployment
         env:
           ## Scriptin käyttämät ympäristömuuttujat ##
-          TARGET_ENVIRONMENT: ${{ needs.get-env-vars.outputs.TARGET_ENVIRONMENT }}
-          BRANCH_NAME: ${{ needs.get-env-vars.outputs.BRANCH_NAME }}
+          DEPLOYMENT_ENVIRONMENT: ${{ needs.get-env-vars.outputs.TARGET_ENVIRONMENT }}
+          DEPLOYMENT_REF: ${{ needs.get-env-vars.outputs.BRANCH_NAME }}
+          DEPLOYMENT_SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}
         with:
           script: |
             const script = require('./.github/scripts/get-latest-deployment.js')
             const result = await script({github, context, core})
             
-            if (result && result.sha) {
+            if (result) {
               core.setOutput("sha", result.sha);
-            }
+              core.setOutput("status", result.status);
+            } 
 
-      - name: Check if already deployed
+      - name: Check if already deployed succesfully
         id: deployment-check
         env:
           LATEST_DEPLOYMENT_SHA: ${{ steps.latest-deployment.outputs.sha }}
+          LATEST_DEPLOYMENT_STATUS: ${{ steps.latest-deployment.outputs.status }}
           LATEST_BUILD_SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}
           # TODO: Nyt defaulttina pakotetaan deployment aina, jotta voidaan testata automaation toimintaa staging-ympäristössä
           #       Palauta normaali toiminta, kun automaatio on testattu.
           FORCE_DEPLOYMENT: true #${{ inputs.force-deployment }}
         run: |
           echo "Latest prod deployment SHA: $LATEST_DEPLOYMENT_SHA"
+          echo "Latest prod deployment status: $LATEST_DEPLOYMENT_STATUS"
           echo "Latest successful build SHA: $LATEST_BUILD_SHA"
 
-          if [ "$LATEST_DEPLOYMENT_SHA" != "$LATEST_BUILD_SHA" ] || [ "$FORCE_DEPLOYMENT" = "true" ]; then
+          if [ "$LATEST_DEPLOYMENT_STATUS" != "success" ] || [ "$FORCE_DEPLOYMENT" = "true" ]; then
             echo "status=deploy" >> $GITHUB_OUTPUT
           else
             echo "The latest successful build has already been deployed to env: $TARGET_ENVIRONMENT. Skipping deployment..."
@@ -122,6 +128,10 @@ jobs:
       - name: Send deploy notification to Slack
         uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
         if: ${{ steps.deployment-check.outputs.status == 'deploy' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+          LATEST_BUILD_SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}
         with:
           payload: |
             {
@@ -130,14 +140,11 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":awake-cat: Aloitetaan ajastettu deployment AWS tuotantoympäristöön..."
+                    "text": ":awake-cat: Aloitetaan deployment AWS tuotantoympäristöön (SHA: ${{ env.LATEST_BUILD_SHA }})..."
                   }
                 }
               ]
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
       - name: Send deploy notification to Slack
         uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
@@ -150,7 +157,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":warning: Ajastettu deployment ohitetaan. Tuotantoon on jo deployattu viimeisin build."
+                    "text": ":warning: Ajastettu deployment ohitettu. Tuotantoon on jo viety viimeisin onnistunut build."
                   }
                 }
               ]
@@ -184,6 +191,18 @@ jobs:
     secrets:
       aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # Korjaa viimeisimmän deploymentin SHA-tieto, jotta se osoittaa oikeaan committiin
+#  fix-latest-deployment-info:
+#    runs-on: ubuntu
+#    needs: [ deploy-to-production ]
+#    steps:
+#      - name: Replace latest deployment
+#        uses: actions/github-script@v7
+#        with:
+#          script: |
+#            const script = require('./.github/scripts/replace-workflow-deployment.js')
+              
 
             
 
