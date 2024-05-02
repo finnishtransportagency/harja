@@ -12,6 +12,12 @@ concurrency:
 on:
   # Manuaalisen käynnistyksen asetukset
   workflow_dispatch:
+    inputs:
+      force-deployment:
+        description: "Pakota deployment, vaikka environmenttiin olisi jo julkaistu aiemmin sama versio"
+        type: boolean
+        default: false
+        required: false
   # Ajastettu käynnistys
   # Ajetaan deployment joka arkipäivä klo 7 (Huom, GitHub actions on UTC-aikavyöhykkeessä)
   schedule:
@@ -25,8 +31,8 @@ permissions:
   contents: read
 
 env:
-  # TODO: Käytä prod-ympäristöä vasta kunnollisen testailun jälkeen
   # Yleiset scriptien käyttämät ympäristömuuttujat
+  # TODO: Käytä 'prod'-ympäristöä vasta kunnollisen testailun jälkeen
   TARGET_ENVIRONMENT: 'stg'
   BRANCH_NAME: 'develop'
 
@@ -93,28 +99,29 @@ jobs:
               core.setOutput("sha", result.sha);
             }
 
-      # TODO: Ota takaisin käyttöön, kun cron automaation toiminta on varmistettu ja deploymentin kohteena on prod-ympäristö
-#      - name: Check if already deployed
-#        id: deployment-check
-#        env:
-#          LATEST_DEPLOYMENT_SHA: ${{ steps.latest-deployment.outputs.sha }}
-#          LATEST_BUILD_SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}
-#        run: |
-#          echo "Latest prod deployment SHA: $LATEST_DEPLOYMENT_SHA"
-#          echo "Latest successful build SHA: $LATEST_BUILD_SHA"
-#
-#          if [ "$LATEST_DEPLOYMENT_SHA" != "$LATEST_BUILD_SHA" ]; then
-#            echo "status=deploy" >> $GITHUB_OUTPUT
-#          else
-#            echo "The latest successful build has already been deployed to env: $TARGET_ENVIRONMENT. Skipping deployment..."
-#            echo "status=skip" >> $GITHUB_OUTPUT
-#          fi
+      - name: Check if already deployed
+        id: deployment-check
+        env:
+          LATEST_DEPLOYMENT_SHA: ${{ steps.latest-deployment.outputs.sha }}
+          LATEST_BUILD_SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}
+          # TODO: Nyt defaulttina pakotetaan deployment aina, jotta voidaan testata automaation toimintaa staging-ympäristössä
+          #       Palauta normaali toiminta, kun automaatio on testattu.
+          FORCE_DEPLOYMENT: true #${{ inputs.force-deployment }}
+        run: |
+          echo "Latest prod deployment SHA: $LATEST_DEPLOYMENT_SHA"
+          echo "Latest successful build SHA: $LATEST_BUILD_SHA"
+
+          if [ "$LATEST_DEPLOYMENT_SHA" != "$LATEST_BUILD_SHA" ] || [ "$FORCE_DEPLOYMENT" = "true" ]; then
+            echo "status=deploy" >> $GITHUB_OUTPUT
+          else
+            echo "The latest successful build has already been deployed to env: $TARGET_ENVIRONMENT. Skipping deployment..."
+            echo "status=skip" >> $GITHUB_OUTPUT
+          fi
 
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy notification to Slack
         uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
-        # TODO: Ota takaisin käyttöön, kun cron automaation toiminta on varmistettu ja deploymentin kohteena on prod-ympäristö
-        #if: ${{ steps.deployment-check.outputs.status == 'deploy' }}
+        if: ${{ steps.deployment-check.outputs.status == 'deploy' }}
         with:
           payload: |
             {
@@ -155,9 +162,8 @@ jobs:
   deploy-to-production:
     uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
     needs: [ get-env-vars, get-latest-successful-build ]
-    # Ajetaan deployment, mikäli viimeisin onnistunut build ei ole vielä deployattu kohdeympäristöön
-    # TODO: Ota takaisin käyttöön, kun cron automaation toiminta on varmistettu ja deploymentin kohteena on prod-ympäristö
-    #if: ${{ needs.get-latest-successful-build.outputs.status == 'deploy' }}
+    # Ajetaan deployment, mikäli viimeisin onnistunut build ei ole vielä deployattu kohdeympäristöön, tai deployment pakotetaan
+    if: ${{ needs.get-latest-successful-build.outputs.status == 'deploy' }}
 
     # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
     permissions:
