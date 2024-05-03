@@ -157,12 +157,8 @@
 
    (s/optional-key :yha-velho) {}
 
-   ;; TODO: Siirtymävaiheen jälkeen sms-url ja apiavain ei enää ole valinnainen paramteri #yliheitto
-   (s/optional-key :labyrintti) {:url s/Str
-                                 :kayttajatunnus s/Str
-                                 :salasana s/Str
-                                 (s/optional-key :sms-url) s/Str
-                                 (s/optional-key :apiavain) s/Str}
+   (s/optional-key :labyrintti) {:sms-url s/Str
+                                 :apiavain s/Str}
 
    (s/optional-key :virustarkistus) {:url s/Str}
    (s/optional-key :tiedostopesula) {:base-url s/Str}
