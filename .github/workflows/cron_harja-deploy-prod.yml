@@ -128,47 +128,47 @@ jobs:
           fi
 
       # Docs: https://github.com/slackapi/slack-github-action
-  #      - name: Send deploy notification to Slack
-  #        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
-  #        if: ${{ steps.deployment-check.outputs.status == 'deploy' }}
-  #        env:
-  #          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-  #          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-  #          LATEST_BUILD_SHA_LINK: <${{ github.server_url }}/${{ github.repository }}/commit/${{ steps.latest-successful-build.outputs.commit-sha }}|${{ steps.latest-successful-build.outputs.commit-sha }}>
-  #        with:
-  #          payload: |
-  #            {
-  #              "blocks": [
-  #                {
-  #                  "type": "section",
-  #                  "text": {
-  #                    "type": "mrkdwn",
-  #                    "text": ":awake-cat: Aloitetaan deployment AWS tuotantoympäristöön...\n       SHA: ${{ env.LATEST_BUILD_SHA_LINK }}"
-  #                  }
-  #                }
-  #              ]
-  #            }
-  #
-  #      - name: Send deploy notification to Slack
-  #        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
-  #        if: ${{ steps.deployment-check.outputs.status == 'skip' }}
-  #        with:
-  #          payload: |
-  #            {
-  #              "blocks": [
-  #                {
-  #                  "type": "section",
-  #                  "text": {
-  #                    "type": "mrkdwn",
-  #                    "text": ":warning: Ajastettu deployment ohitettu. Tuotantoon on jo viety viimeisin onnistunut build."
-  #                  }
-  #                }
-  #              ]
-  #            }
-  #        env:
-  #          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-  #          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-  #
+      - name: Send deploy notification to Slack
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
+        if: ${{ steps.deployment-check.outputs.status == 'deploy' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+          LATEST_BUILD_SHA_LINK: <${{ github.server_url }}/${{ github.repository }}/commit/${{ steps.latest-successful-build.outputs.commit-sha }}|${{ steps.latest-successful-build.outputs.commit-sha }}>
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":awake-cat: Aloitetaan deployment AWS tuotantoympäristöön...\n       SHA: ${{ env.LATEST_BUILD_SHA_LINK }}"
+                  }
+                }
+              ]
+            }
+
+      - name: Send deploy notification to Slack
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
+        if: ${{ steps.deployment-check.outputs.status == 'skip' }}
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":warning: Ajastettu deployment ohitettu. Tuotantoon on jo viety viimeisin onnistunut build."
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
 
   deploy-to-production:
     uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
