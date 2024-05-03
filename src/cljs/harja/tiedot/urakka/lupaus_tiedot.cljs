@@ -338,9 +338,9 @@
                      :lupaus-vaihtoehto-id (:id vaihtoehto)})
           ei-valintaa-valittu? (nil? (:id vaihtoehto))
           aseta-naytettavat-monivalinnat (fn [app]
-                                       (if ei-valintaa-valittu? 
-                                         (assoc-in app [:vastaus-lomake :naytettavat-valinnat] naytettavat-valinnat-alustus)
-                                         app))]
+                                            (if ei-valintaa-valittu?
+                                              (assoc-in app [:vastaus-lomake :naytettavat-valinnat] naytettavat-valinnat-alustus)
+                                              app))]
       (tuck-apurit/post! :vastaa-lupaukseen
                          vastaus
                          {:onnistui ->ValitseVaihtoehtoOnnistui
