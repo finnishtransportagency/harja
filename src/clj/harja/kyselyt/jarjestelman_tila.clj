@@ -1,6 +1,5 @@
 (ns harja.kyselyt.jarjestelman-tila
-  (:require [clojure.string :as string]
-            [harja.tyokalut.versio :as versio]
+  (:require [harja.tyokalut.versio :as versio]
             [jeesql.core :refer [defqueries]]))
 
 (declare hae-jarjestelman-tila)
