@@ -113,7 +113,7 @@ module.exports = async ({ github, context, core }) => {
         // Käytetään alkuperäisen deploymentin tilaa, tai 'success'
         state: originalDeploymentStatus ?? 'success',
         // https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
-        log_url: `${context.serverUrl}/${owner}/${repo}/runs/${context.runId}`,
+        log_url: `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`,
         // Asetetaan uudelle deploymentille oma kuvaus
         description: DEPLOYMENT_DESCRIPTION,
         auto_inactive: true,
