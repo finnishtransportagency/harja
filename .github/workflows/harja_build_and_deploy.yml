@@ -251,6 +251,8 @@ jobs:
       id-token: write
       # Contents read lupaa tarvitaan checkout actionissa
       contents: read
+      # Actions read lupaa tarvitaan actions/download-artifact actionissa
+      actions: read
     with:
       environment: ${{ github.event.inputs.environment }}
       # Määrittele mistä DB-migraatiot ja build-artifact haetaan. Näiden pitää olla yhteensopivia keskenään.
@@ -282,6 +284,8 @@ jobs:
       id-token: write
       # Contents read lupaa tarvitaan checkout actionissa
       contents: read
+      # Actions read lupaa tarvitaan actions/download-artifact actionissa
+      actions: read
     with:
       environment: ${{ matrix.environment }}
       # Määrittele mistä DB-migraatiot ja build-artifact haetaan. Näiden pitää olla yhteensopivia keskenään.
