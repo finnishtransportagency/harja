@@ -175,14 +175,14 @@
           kustannukset-yhteensa (+ kustannukset-yhteensa bonukset)
           kustannukset-yhteensa (+ kustannukset-yhteensa sanktiot)
           ;; Lisää bonukset ja sanktiot gridiin
-          rivit-lisatty (conj rivit
-                          {:id (generoi-avain), :kokonaiskustannus bonukset :tyomenetelma "Bonukset"}
-                          {:id (generoi-avain), :kokonaiskustannus sanktiot :tyomenetelma "Sanktiot"})
+          sanktiot-ja-bonukset [{:id (generoi-avain), :kokonaiskustannus bonukset :tyomenetelma "Bonukset"}
+                                {:id (generoi-avain), :kokonaiskustannus sanktiot :tyomenetelma "Sanktiot"}]
           ;; Sorttaa rivit aakkosilla
-          rivit-sortattu (sort-by #(str/lower-case (:tyomenetelma %)) rivit-lisatty)]
+          rivit-sortattu (sort-by #(str/lower-case (:tyomenetelma %)) rivit)]
   
       (assoc app
         :rivit rivit-sortattu
+        :sanktiot-ja-bonukset sanktiot-ja-bonukset
         :haku-kaynnissa? false
         :kustannukset-yhteensa kustannukset-yhteensa)))
   

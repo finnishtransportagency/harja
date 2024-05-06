@@ -73,8 +73,37 @@
     lomake-valinnat]])
 
 
-(defn kustannukset-listaus [e! {:keys [haku-kaynnissa? lomake-valinnat
-                                       muokataan rivit kustannukset-yhteensa] :as app} urakka]
+(defn sanktiot-ja-bonukset-grid [{:keys [haku-kaynnissa? sanktiot-ja-bonukset kustannukset-yhteensa]}]
+
+  [grid/grid {:tyhja (if haku-kaynnissa?
+                       [ajax-loader "Haku käynnissä..."]
+                       "Valitulle aikavälille ei löytynyt mitään.")
+              :tunniste :id
+              :sivuta grid/vakiosivutus
+              :voi-kumota? false
+              :piilota-toiminnot? true
+              :piilota-otsikot? true
+              ;; Yhteenveto 
+              :rivi-jalkeen-fn (fn [_rivit]
+                                 ^{:luokka "kustannukset-yhteenveto"}
+                                 [{:teksti "Kustannukset yhteensä" :luokka "lihavoitu"}
+                                  {:teksti (str (fmt/euro-opt false kustannukset-yhteensa) " €") :tasaa :oikea :luokka "lihavoitu"}])}
+
+   [{:tyyppi :string
+     :nimi :tyomenetelma
+     :luokka "text-nowrap"
+     :leveys 1}
+
+    {:tyyppi :euro
+     :desimaalien-maara 2
+     :nimi :kokonaiskustannus
+     :tasaa :oikea
+     :luokka "text-nowrap"
+     :leveys 1}]
+   sanktiot-ja-bonukset])
+
+
+(defn kustannukset-listaus [e! {:keys [haku-kaynnissa? lomake-valinnat muokataan rivit] :as app} urakka]
 
   (let [voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet @nav/valittu-urakka-id @istunto/kayttaja)
         voi-tallentaa? (and
@@ -85,8 +114,8 @@
      (when muokataan
        (kustannuksen-lisays-lomake e! app voi-tallentaa?))
 
-     [:div.header-valinnat
-     ;; Vuosi valinta
+     [:div.otsikkorivi
+      ;; Vuosi valinta
       [valinnat/vuosi
        {:disabled false
         :kaanteinen-jarjestys? true
@@ -96,14 +125,10 @@
        urakka/valittu-urakan-vuosi
        #(do
           (urakka/valitse-urakan-vuosi! %)
-          (e! (tiedot/->HaeKustannustiedot)))]
+          (e! (tiedot/->HaeKustannustiedot)))]]
 
-      ;; Lisää kustannus
-      [:span
-       [napit/yleinen-ensisijainen
-        "Lisää kustannus"
-        #(e! (tiedot/->AvaaLomake))
-        {:ikoni [ikonit/harja-icon-action-add] :vayla-tyyli? true}]]]
+     ;; Väliotsikko
+     [:h1.header-yhteiset "Kustannukset"]
 
      ;; Taulukko
      [grid/grid {:tyhja (if haku-kaynnissa?
@@ -113,12 +138,7 @@
                  :sivuta grid/vakiosivutus
                  :voi-kumota? false
                  :piilota-toiminnot? true
-                 :piilota-otsikot? true
-                 ;; Yhteenveto 
-                 :rivi-jalkeen-fn (fn [_rivit]
-                                    ^{:luokka "kustannukset-yhteenveto"}
-                                    [{:teksti "Yhteensä" :luokka "lihavoitu"}
-                                     {:teksti (str (fmt/euro-opt false kustannukset-yhteensa) " €") :tasaa :oikea :luokka "lihavoitu"}])}
+                 :piilota-otsikot? true}
 
       ;; Työmenetelmä / kustannus selite
       [{:tyyppi :string
@@ -133,7 +153,21 @@
         :tasaa :oikea
         :luokka "text-nowrap"
         :leveys 1}]
-      rivit]]))
+      rivit]
+
+     [:div.otsikkorivi
+      ;; Väliotsikko
+      [:h1.header-yhteiset "Muut kustannukset"]
+
+      ;; Lisää kustannus
+      [:span
+       [napit/yleinen-ensisijainen
+        "Lisää kustannus"
+        #(e! (tiedot/->AvaaLomake))
+        {:ikoni [ikonit/harja-icon-action-add] :vayla-tyyli? true}]]]
+
+     ;; Sanktiot 
+     (sanktiot-ja-bonukset-grid app)]))
 
 
 (defn mpu-kustannukset* [e! _app]
