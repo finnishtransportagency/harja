@@ -129,7 +129,10 @@ jobs:
           name: harja-uberjar
           path: ./target/harja-0.0.1-SNAPSHOT-standalone.jar
           if-no-files-found: error
-          retention-days: 1
+          # Poistetaan vanhat artifactit, jotta vanhoja tiedostoja ei säilötä turhaan.
+          # Jos build tehdään esim. perjantai-aamuna ja deployment maanantaina, niin retentio pitää olla kolme vuorokautta.
+          # Jätetään jonkin verran pelivaraa, mikäli deploymentin kanssa tulee ongelmia.
+          retention-days: 7
 
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
@@ -250,6 +253,9 @@ jobs:
       contents: read
     with:
       environment: ${{ github.event.inputs.environment }}
+      # Määrittele mistä DB-migraatiot ja build-artifact haetaan. Näiden pitää olla yhteensopivia keskenään.
+      commit-sha: ${{ github.sha }}
+      artifact-run-id: ${{ github.run_id }}
     # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattisesti envinronmentista reusable workfloweissa
     #       Tässä määritetään mitkä yksittäiset salaisuudet reusable workflow saa lukea GitHub environmentista.
     #       Vaihtoehtoisesti, voi käyttää secrets: inherit toimintoa, jolloin reusable workflow saa kaikki salaisuudet
@@ -278,6 +284,9 @@ jobs:
       contents: read
     with:
       environment: ${{ matrix.environment }}
+      # Määrittele mistä DB-migraatiot ja build-artifact haetaan. Näiden pitää olla yhteensopivia keskenään.
+      commit-sha: ${{ github.sha }}
+      artifact-run-id: ${{ github.run_id }}
     # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattisesti envinronmentista reusable workfloweissa
     #       Tässä määritetään mitkä yksittäiset salaisuudet reusable workflow saa lukea GitHub environmentista.
     #       Vaihtoehtoisesti, voi käyttää secrets: inherit toimintoa, jolloin reusable workflow saa kaikki salaisuudet
