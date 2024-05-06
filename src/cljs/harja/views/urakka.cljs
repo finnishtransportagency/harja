@@ -255,6 +255,12 @@
        (when (valilehti-mahdollinen? :paikkaukset-mpu ur)
          ^{:key "paikkaukset-mpu"}
          [reikapaikkaukset/reikapaikkaukset ur])
+       
+       "Kustannukset"
+       :mpu-kustannukset
+       (when (valilehti-mahdollinen? :mpu-kustannukset ur)
+         ^{:key "mpu-kustannukset"}
+         [mpu-kustannukset/mpu-kustannukset])
 
        "Laadunseuranta"
        :laadunseuranta
@@ -290,12 +296,6 @@
           ur
           tiemerkinnan-kustannukset-tiedot/raportin-parametrit
           tiemerkinnan-kustannukset-tiedot/raportin-tiedot])
-
-       "Kustannukset"
-       :mpu-kustannukset
-       (when (valilehti-mahdollinen? :mpu-kustannukset ur)
-         ^{:key "mpu-kustannukset"}
-         [mpu-kustannukset/mpu-kustannukset])
 
        "Paikkaukset"
        :paikkaukset-hoito
