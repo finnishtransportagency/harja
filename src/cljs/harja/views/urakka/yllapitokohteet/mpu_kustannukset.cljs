@@ -27,7 +27,10 @@
      (when muokataan
        (apurit/kustannuksen-lisays-lomake e! app voi-tallentaa?))
 
-     [:div.otsikkorivi
+     ;; Pääotsikko
+     [:h2.header-yhteiset "Kustannukset"]
+     
+     [:div.kalenterivalinta
       ;; Vuosi valinta
       [valinnat/vuosi
        {:disabled false
@@ -41,7 +44,7 @@
           (e! (tiedot/->HaeKustannustiedot)))]]
 
      ;; Väliotsikko
-     [:h1.header-yhteiset "Kustannukset"]
+     [:h3.header-yhteiset "Työmenetelmittäin"]
 
      ;; Taulukko
      [grid/grid {:tyhja (if haku-kaynnissa?
@@ -68,9 +71,9 @@
         :leveys 1}]
       rivit]
 
-     [:div.otsikkorivi
+     [:div.valitetty-rivi
       ;; Väliotsikko
-      [:h1.header-yhteiset "Muut kustannukset"]
+      [:h3.header-yhteiset "Muut kustannukset"]
 
       ;; Lisää kustannus
       [:span
