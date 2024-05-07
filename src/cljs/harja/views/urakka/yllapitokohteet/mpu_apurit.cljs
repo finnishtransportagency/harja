@@ -3,12 +3,32 @@
   (:require [harja.tiedot.urakka.mpu-kustannukset :as tiedot]
             [harja.fmt :as fmt]
             [harja.ui.lomake :as lomake]
+            [harja.ui.protokollat :as protokollat]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
-            [harja.ui.napit :as napit]))
+            [harja.ui.napit :as napit])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
-(defn kustannuksen-lisays-lomake [e! {:keys [voi-kirjoittaa? lomake-valinnat kustannusten-tyypit]} voi-tallentaa?]
+(def +kirjatut-selitteet+
+  (into {}
+    (map #(vector (fmt/string-avaimeksi %) %))
+    ["Arvonmuutokset" "Indeksi- ja kustannustason muutokset" "Muut kustannukset"]))
+
+
+(def selitehaku
+  (reify protokollat/Haku
+    (hae [_ teksti]
+      (go (let [selitteet +kirjatut-selitteet+
+                itemit (if (< (count teksti) 1)
+                         (vals selitteet)
+                         (filter #(not= (.indexOf (.toLowerCase (val %))
+                                                  (.toLowerCase teksti)) -1)
+                           selitteet))]
+            (vec (sort itemit)))))))
+
+
+(defn kustannuksen-lisays-lomake [e! {:keys [voi-kirjoittaa? lomake-valinnat kustannusten-selitteet]} voi-tallentaa?]
   [:div.overlay-oikealla
    [lomake/lomake
     {:ei-borderia? true
@@ -36,7 +56,7 @@
         :validoi [[:ei-tyhja "Valitse tyyppi"]]
         :nimi :kustannus-tyyppi
         :tyyppi :valinta
-        :valinnat kustannusten-tyypit
+        :valinnat kustannusten-selitteet
         ::lomake/col-luokka "leveys-kokonainen"})
 
      ;; Selite 
@@ -48,7 +68,20 @@
           :validoi [[:ei-tyhja "Kirjoita kustannuksen selite"]]
           :nimi :kustannus-selite
           :tyyppi :string
-          ::lomake/col-luokka "leveys-kokonainen"}))
+          ::lomake/col-luokka "leveys-kokonainen"}
+         
+         {:nimi :selite
+          :palstoja 2
+          :otsikko "Selite"
+          :tyyppi :haku
+          :hae-kun-yli-n-merkkia 0
+          :nayta second :fmt second
+          :lahde selitehaku
+          :rivi-luokka "lomakeryhman-rivi-tausta"
+          ::lomake/col-luokka "leveys-kokonainen"}
+         
+         
+         ))
 
      ;; Määrä 
      (lomake/rivi

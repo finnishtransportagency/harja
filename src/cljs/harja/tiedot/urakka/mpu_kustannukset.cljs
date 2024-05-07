@@ -14,7 +14,7 @@
                      :kustannukset-yhteensa nil
                      :muokataan false
                      :haku-kaynnissa? false
-                     :kustannusten-tyypit ["Arvonmuutokset" "Indeksi- ja kustannustason muutokset" "Muut kustannukset"]}))
+                     :kustannusten-selitteet ["Arvonmuutokset" "Indeksi- ja kustannustason muutokset" "Muut kustannukset"]}))
 
 
 (defn voi-tallentaa?
@@ -97,7 +97,6 @@
 (defn- hae-mpu-selitteet
   "Hakee käyttäjien aikaisemmin kirjoittamat omat selitteet muille kustannuksille"
   [app]
-  ;; TODO, pois käytöstä tällä hetkellä 
   (tuck-apurit/post! app :hae-mpu-selitteet
     {}
     {:onnistui ->HaeMPUSelitteetOnnistui
@@ -120,8 +119,7 @@
     ;; -> hae-mpu-kustannukset
     ;; -> hae-sanktiot-ja-bonukset
     ;; 
-    ;; TODO, selitteet haku toistaiseksi pois käytöstä
-    ;; (hae-mpu-selitteet app)
+    (hae-mpu-selitteet app)
     (hae-paikkaus-kustannukset app)
     (assoc app :haku-kaynnissa? true))
 
@@ -236,7 +234,7 @@
                                  ;; Siirrä Muut kustannukset viimeiseksi
                                  (vec (sort-by #(if (= % "Muut kustannukset") 1 0) kaikki))))]
       (assoc app
-        :kustannusten-tyypit (fn-kokoa-selitteet (:kustannusten-tyypit app) vastaus))))
+        :kayttajien-selitteet (fn-kokoa-selitteet (:kustannusten-selitteet app) vastaus))))
 
   HaeMPUSelitteetEpaonnistui
   (process-event [{vastaus :vastaus} app]
