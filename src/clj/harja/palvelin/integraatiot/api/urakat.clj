@@ -16,7 +16,8 @@
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
             [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.validointi :as c_validointi])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn hae-tehtavat [db urakka-id]
@@ -125,6 +126,12 @@
 
   (jdbc/with-db-transaction [db db]
     (let [{:keys [x y urakkatyyppi palauta-lahin-hoitourakka]} parametrit
+          ;; Urakoiden on oltava suomessa
+          suomessa? (c_validointi/onko-koordinaatit-suomen-alueella? (muunnos/str->double x) (muunnos/str->double y))
+          _ (when-not suomessa?
+              (throw+ {:type virheet/+viallinen-kutsu+
+                       :virheet [{:koodi virheet/+virheellinen-sijainti+
+                                  :viesti "Annettu X ja Y koordinaatti ei sijaitse suomessa."}]}))
           x-easting (try+
                       (muunnos/str->double x)
                       (catch NumberFormatException _

@@ -1,0 +1,223 @@
+# Security hardening for GitHub Actions
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
+
+name: '[Scheduled] Harja: Deploy to production'
+run-name: '[Scheduled] Harja: Deploy latest successful build to production'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  # Anna edellisen deploymentin mennä rauhassa loppuun, koska mahdollisesti käynnissä olevaa AWS migration lambdaa ei pysty canceloimaan
+  # Jos edellinen deployment on ehtinyt migraatioiden ajon vaiheeseen, canceloiminen voi aiheuttaa ongelmia.
+  cancel-in-progress: false
+
+on:
+  # Manuaalisen käynnistyksen asetukset
+  workflow_dispatch:
+    inputs:
+      force-deployment:
+        description: "Pakota deployment, vaikka ympäristöön olisi jo julkaistu sama versio"
+        type: boolean
+        default: false
+        required: false
+  # Ajastettu käynnistys
+  # Ajetaan deployment joka arkipäivä klo 7 (Huom, GitHub actions on UTC-aikavyöhykkeessä)
+  schedule:
+    - cron: '0 4 * * 1-5'
+
+# Aseta least-privilege default permissionit workflowille
+# Jos jokin job tarvitsee enemmän oikeuksia, ne pitää erikseen määritellä job-kohtaisesti
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-secrets
+# https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+permissions:
+  contents: read
+
+env:
+  # Yleiset scriptien käyttämät ympäristömuuttujat
+  # TODO: Käytä 'prod'-ympäristöä vasta kunnollisen testailun jälkeen
+  TARGET_ENVIRONMENT: 'stg'
+  BRANCH_NAME: 'develop'
+
+jobs:
+  # Nasty hack for: https://github.com/actions/runner/issues/2372
+  get-env-vars:
+    name: Get Common Environment variables
+    runs-on: ubuntu-latest
+    outputs:
+      TARGET_ENVIRONMENT: ${{ env.TARGET_ENVIRONMENT }}
+      BRANCH_NAME: ${{ env.BRANCH_NAME }}
+    steps:
+      - run: echo "null"
+
+  get-latest-successful-build:
+    runs-on: ubuntu-latest
+    needs: [ get-env-vars ]
+    permissions:
+      contents: read
+      deployments: read
+    env:
+      ## Scriptin käyttämät ympäristömuuttujat ##
+      BRANCH_NAME: ${{ needs.get-env-vars.outputs.BRANCH_NAME }}
+      WORKFLOW_FILENAME: 'harja_build_and_deploy.yml'
+      # Tarkastaa, että viimeisimmästä buildista löytyy build artifact
+      CHECK_ARTIFACT_WITH_NAME: 'harja-uberjar'
+    # Build-tietojen haun tulokset ohjataan jobin outputtiin, jota käytetään myöhemmissä vaiheissa
+    outputs:
+      commit-sha: ${{ steps.latest-successful-build.outputs.commit-sha }}
+      run-id: ${{ steps.latest-successful-build.outputs.run-id }}
+      status: ${{ steps.deployment-check.outputs.status }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get latest successful build
+        uses: actions/github-script@v7
+        id: latest-successful-build
+        with:
+          retries: 3
+          result-encoding: json
+          script: |
+            const script = require('./.github/scripts/get-latest-successful-run.js')
+            const result = await script({github, context, core})
+            
+            core.setOutput("commit-sha", result.commitSha);
+            core.setOutput("run-id", result.runId);
+
+      - name: Print output results
+        run: |
+          echo "Latest successful commit SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}"
+          echo "Latest successful run ID: ${{ steps.latest-successful-build.outputs.run-id }}"
+
+      # TODO: Jos tämä ei osoittaudu riittävän luotettavaksi tavaksi tunnistaa viimeisin onnistunut GH deployment,
+      #       niin haetaan AWS ECR:stä viimeisin deployattu image ja verrataan sen tagia viimeisimmän buildin committiin.
+      - name: Get latest GitHub deployment by latest successful build commit SHA
+        uses: actions/github-script@v7
+        id: latest-deployment
+        env:
+          ## Scriptin käyttämät ympäristömuuttujat ##
+          DEPLOYMENT_ENVIRONMENT: ${{ needs.get-env-vars.outputs.TARGET_ENVIRONMENT }}
+          DEPLOYMENT_REF: ${{ needs.get-env-vars.outputs.BRANCH_NAME }}
+          DEPLOYMENT_SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}
+        with:
+          script: |
+            const script = require('./.github/scripts/get-latest-deployment.js')
+            const result = await script({github, context, core})
+            
+            if (result) {
+              core.setOutput("sha", result.sha);
+              core.setOutput("status", result.status);
+            } 
+
+      - name: Check if already deployed succesfully
+        id: deployment-check
+        env:
+          LATEST_DEPLOYMENT_SHA: ${{ steps.latest-deployment.outputs.sha }}
+          LATEST_DEPLOYMENT_STATUS: ${{ steps.latest-deployment.outputs.status }}
+          LATEST_BUILD_SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}
+          # TODO: Nyt defaulttina pakotetaan deployment aina, jotta voidaan testata automaation toimintaa staging-ympäristössä
+          #       Palauta normaali toiminta, kun automaatio on testattu.
+          FORCE_DEPLOYMENT: true #${{ inputs.force-deployment }}
+        run: |
+          echo "Latest prod deployment SHA: $LATEST_DEPLOYMENT_SHA"
+          echo "Latest prod deployment status: $LATEST_DEPLOYMENT_STATUS"
+          echo "Latest successful build SHA: $LATEST_BUILD_SHA"
+
+          if [ "$LATEST_DEPLOYMENT_STATUS" != "success" ] || [ "$FORCE_DEPLOYMENT" = "true" ]; then
+            echo "status=deploy" >> $GITHUB_OUTPUT
+          else
+            echo "The latest successful build has already been deployed to env: $TARGET_ENVIRONMENT. Skipping deployment..."
+            echo "status=skip" >> $GITHUB_OUTPUT
+          fi
+
+      # Docs: https://github.com/slackapi/slack-github-action
+      - name: Send deploy notification to Slack
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
+        if: ${{ steps.deployment-check.outputs.status == 'deploy' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+          LATEST_BUILD_SHA_LINK: <${{ github.server_url }}/${{ github.repository }}/commit/${{ steps.latest-successful-build.outputs.commit-sha }}|${{ steps.latest-successful-build.outputs.commit-sha }}>
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":awake-cat: Aloitetaan deployment AWS tuotantoympäristöön...\n       SHA: ${{ env.LATEST_BUILD_SHA_LINK }}"
+                  }
+                }
+              ]
+            }
+
+      - name: Send deploy notification to Slack
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
+        if: ${{ steps.deployment-check.outputs.status == 'skip' }}
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":warning: Ajastettu deployment ohitettu. Tuotantoon on jo viety viimeisin onnistunut build."
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+
+  deploy-to-production:
+    uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
+    needs: [ get-env-vars, get-latest-successful-build ]
+    # Ajetaan deployment, mikäli viimeisin onnistunut build ei ole vielä deployattu kohdeympäristöön, tai deployment pakotetaan
+    if: ${{ needs.get-latest-successful-build.outputs.status == 'deploy' }}
+
+    # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
+    permissions:
+      # OIDC tokenia tarvitaan AWS jobeissa roolin omaksumiseen
+      id-token: write
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+      # Actions read lupaa tarvitaan actions/download-artifact actionissa
+      actions: read
+    with:
+      environment: ${{ needs.get-env-vars.outputs.TARGET_ENVIRONMENT }}
+      commit-sha: ${{ needs.get-latest-successful-build.outputs.commit-sha }}
+      artifact-run-id: ${{ needs.get-latest-successful-build.outputs.run-id }}
+    # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattisesti envinronmentista reusable workfloweissa
+    #       Tässä määritetään mitkä yksittäiset salaisuudet reusable workflow saa lukea GitHub environmentista.
+    #       Vaihtoehtoisesti, voi käyttää secrets: inherit toimintoa, jolloin reusable workflow saa kaikki salaisuudet
+    #       kuin kutsuva workflowikin.
+    secrets:
+      aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # Korjaa viimeisimmän deploymentin SHA-tieto, jotta se osoittaa oikeaan committiin, joka deploayttiin
+  #   Normaalisti GitHub Actionsin "Deployments" ottaa automaattisesti viimeisimmän commitin branchista, jossa workflow ajetaan,
+  #   eikä sitä voi estää tai hallita mitenkään GitHub Actionsin puolella.
+  #   Asia täytyy korjata GitHub API:n kautta itse tekemällä erillinen deployment oikealla commit SHA:lla.
+  replace-latest-deployment:
+    runs-on: ubuntu-latest
+    needs: [ get-env-vars, get-latest-successful-build, deploy-to-production ]
+
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Replace latest deployment
+        uses: actions/github-script@v7
+        env:
+          DEPLOYMENT_ENVIRONMENT: ${{ needs.get-env-vars.outputs.TARGET_ENVIRONMENT }}
+          DEPLOYMENT_REF: ${{ needs.get-latest-successful-build.outputs.commit-sha }}
+          DEPLOYMENT_DESCRIPTION: 'Deploy ${{ needs.get-latest-successful-build.outputs.commit-sha }} to ${{ needs.get-env-vars.outputs.TARGET_ENVIRONMENT }}'
+        with:
+          script: |
+            const script = require('./.github/scripts/replace-workflow-deployment.js')
+            const result = await script({github, context, core})

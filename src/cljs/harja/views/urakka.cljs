@@ -7,6 +7,7 @@
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
             [harja.views.urakka.toteutus :as toteutus]
+            [harja.views.urakka.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
             [harja.views.urakka.tyomaapaivakirja.paivakirja :as paivakirja]
             [harja.views.urakka.laskutus :as laskutus]
             [harja.views.vesivaylat.urakka.laskutus :as laskutus-vesivaylat]
@@ -39,67 +40,97 @@
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti
     :yleiset true
-    :suunnittelu (and (oikeudet/urakat-suunnittelu id)
-                      (not (urakka/kanavaurakka? urakka))
-                      (not= sopimustyyppi :kokonaisurakka)
-                      (not= sopimustyyppi :mpu)
-                      (not= tyyppi :tiemerkinta))
-    :toteumat (and (oikeudet/urakat-toteumat id)
+    :suunnittelu (and
+                   (oikeudet/urakat-suunnittelu id)
+                   (not (urakka/kanavaurakka? urakka))
                    (not= sopimustyyppi :kokonaisurakka)
-                   (not (urakka/vesivaylaurakkatyyppi? tyyppi))
                    (not= sopimustyyppi :mpu)
                    (not= tyyppi :tiemerkinta))
-    :toimenpiteet (and (oikeudet/urakat-vesivaylatoimenpiteet id)
-                       (urakka/vesivaylaurakkatyyppi? tyyppi)
-                       (istunto/ominaisuus-kaytossa? :vesivayla))
-    ;; TODO 
-    :tyomaapaivakirja (and 
-                         (k/kehitysymparistossa?)
-                         (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava)
-                         (oikeudet/urakat-paikkaukset id)
-                         (#{:hoito :teiden-hoito} tyyppi))
+
+    :toteumat (and
+                (oikeudet/urakat-toteumat id)
+                (not= sopimustyyppi :kokonaisurakka)
+                (not (urakka/vesivaylaurakkatyyppi? tyyppi))
+                (not= sopimustyyppi :mpu)
+                (not= tyyppi :tiemerkinta))
+
+    :toimenpiteet (and
+                    (oikeudet/urakat-vesivaylatoimenpiteet id)
+                    (urakka/vesivaylaurakkatyyppi? tyyppi)
+                    (istunto/ominaisuus-kaytossa? :vesivayla))
+
+    :tyomaapaivakirja (and
+                        (oikeudet/urakat-tyomaapaivakirja id)
+                        (#{:hoito :teiden-hoito} tyyppi))
 
     :vv-materiaalit (and
                       (oikeudet/urakat-vesivayla-materiaalit id)
                       (urakka/vesivaylaurakkatyyppi? tyyppi))
-    :liikenne (and (oikeudet/urakat-kanavat-liikenne id)
-                   (urakka/kanavaurakka? urakka))
-    :toteutus (and (oikeudet/urakat-toteutus id)
-                   (not= sopimustyyppi :kokonaisurakka)
-                   (= tyyppi :tiemerkinta))
-    :paikkaukset-yllapito (and (oikeudet/urakat-paikkaukset id)
-                               (#{:paallystys :tiemerkinta} tyyppi))
-    :paikkaukset-hoito (and (oikeudet/urakat-paikkaukset id)
-                            (#{:hoito :teiden-hoito} tyyppi))
-    :aikataulu (and (oikeudet/urakat-aikataulu id) (or (= tyyppi :paallystys)
-                                                       (= tyyppi :tiemerkinta)))
-    :kohdeluettelo-paallystys (and (or (oikeudet/urakat-kohdeluettelo-paallystyskohteet id)
-                                       (oikeudet/urakat-kohdeluettelo-paallystysilmoitukset id))
-                                   (= tyyppi :paallystys))
+
+    :liikenne (and
+                (oikeudet/urakat-kanavat-liikenne id)
+                (urakka/kanavaurakka? urakka))
+
+    :toteutus (and
+                (oikeudet/urakat-toteutus id)
+                (not= sopimustyyppi :kokonaisurakka)
+                (= tyyppi :tiemerkinta))
+
+    :paikkaukset-yllapito (and
+                            (oikeudet/urakat-paikkaukset id)
+                            (#{:paallystys :tiemerkinta} tyyppi))
+
+    :paikkaukset-hoito (and
+                         (oikeudet/urakat-paikkaukset id)
+                         (#{:hoito :teiden-hoito} tyyppi))
+
+    :aikataulu (and
+                 (oikeudet/urakat-aikataulu id)
+                 (or
+                   (= tyyppi :paallystys)
+                   (= tyyppi :tiemerkinta)))
+
+    :kohdeluettelo-paallystys (and
+                                (= tyyppi :paallystys)
+                                (or
+                                  (oikeudet/urakat-kohdeluettelo-paallystyskohteet id)
+                                  (oikeudet/urakat-kohdeluettelo-paallystysilmoitukset id)))
+
     :laadunseuranta (or
-                      (and (oikeudet/urakat-laadunseuranta id)
-                           (not (urakka/vesivaylaurakkatyyppi? tyyppi)))
-                      (and (oikeudet/urakat-laadunseuranta id)
-                           (urakka/vesivaylaurakkatyyppi? tyyppi)
-                           (istunto/ominaisuus-kaytossa? :vesivayla)))
-    :valitavoitteet (and (oikeudet/urakat-valitavoitteet id)
-                         (not (urakka/kanavaurakka? urakka)))
+                      (and
+                        (oikeudet/urakat-laadunseuranta id)
+                        (not (urakka/vesivaylaurakkatyyppi? tyyppi)))
+                      (and
+                        (oikeudet/urakat-laadunseuranta id)
+                        (urakka/vesivaylaurakkatyyppi? tyyppi)
+                        (istunto/ominaisuus-kaytossa? :vesivayla)))
+
+    :valitavoitteet (and
+                      (oikeudet/urakat-valitavoitteet id)
+                      (not (urakka/kanavaurakka? urakka)))
+
     :turvallisuuspoikkeamat (oikeudet/urakat-turvallisuus id)
-    :laskutus (and (oikeudet/urakat-kulut id)
-                   (not= tyyppi :paallystys)
-                   (not= tyyppi :tiemerkinta)
-                   (not (urakka/vesivaylaurakkatyyppi? tyyppi)))
-    :laskutus-vesivaylat (and (oikeudet/urakat-kulut-vesivaylalaskutusyhteenveto id)
-                              (urakka/vesivaylaurakkatyyppi? tyyppi)
-                              (not (urakka/kanavaurakka? urakka))
-                              (istunto/ominaisuus-kaytossa? :vesivayla))
-    
-    :tiemerkinnan-kustannukset (and (oikeudet/urakat-kustannukset id)
-                                    (= tyyppi :tiemerkinta))
 
-    :paikkaukset-mpu (and (oikeudet/urakat-paikkaukset id)
-                          (= :mpu sopimustyyppi))
+    :laskutus (and
+                (oikeudet/urakat-kulut id)
+                (not= tyyppi :paallystys)
+                (not= tyyppi :tiemerkinta)
+                (not (urakka/vesivaylaurakkatyyppi? tyyppi)))
 
+    :laskutus-vesivaylat (and
+                           (oikeudet/urakat-kulut-vesivaylalaskutusyhteenveto id)
+                           (urakka/vesivaylaurakkatyyppi? tyyppi)
+                           (not (urakka/kanavaurakka? urakka))
+                           (istunto/ominaisuus-kaytossa? :vesivayla))
+
+    :tiemerkinnan-kustannukset (and
+                                 (oikeudet/urakat-kustannukset id)
+                                 (= tyyppi :tiemerkinta))
+
+    :paikkaukset-mpu (and
+                       (oikeudet/urakat-paikkaukset id)
+                       (= tyyppi :paallystys)
+                       (= :mpu sopimustyyppi))
     false))
 
 (defn urakka
@@ -169,7 +200,6 @@
          ^{:key "toimenpiteet"}
          [toimenpiteet/toimenpiteet ur])
 
-       ;; Työmaapäiväkirja sallitaan tällähetkellä vain kehitysympäristössä 
        "Työmaapäiväkirja"
        :tyomaapaivakirja
        (when (valilehti-mahdollinen? :tyomaapaivakirja ur)
@@ -218,7 +248,7 @@
        :paikkaukset-mpu
        (when (valilehti-mahdollinen? :paikkaukset-mpu ur)
          ^{:key "paikkaukset-mpu"}
-         [:div "Maanteiden paikkausurakoiden reikäpaikkaukset tulevat tälle välilehdelle myöhemmin"])
+         [reikapaikkaukset/reikapaikkaukset ur])
 
        "Laadunseuranta"
        :laadunseuranta

@@ -219,7 +219,8 @@
       ;; Päivitetään sopimuksen_kaytetty_materiaali (sisältää saman datan kuin myöhemmin luotu materialized view raportti_toteutuneet_materiaalit, jos aika sallii, voidaan refaktoroida ja hankkiutua toisesta eroon)
       ;; (Ympäristöraporttia varten)
       (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                             :alkupvm (pvm/eilinen)}))
+                                                             :alkupvm (pvm/eilinen)
+                                                             :urakkaid urakka-id}))
     ;; Päivitetään taulu urakan_materiaalin_kaytto_hoitoluokittain (Ympäristöraporttia varten)
     (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
                                                                        :alkupvm (pvm/eilinen)
@@ -338,7 +339,7 @@
             ;; Tallennetaan loki raportin ajon startista
             (let [parametrit (assoc parametrit :kasittelija kasittelija)
                   _ (when-not (= nimi :ilmoitukset-raportti)
-                      (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti " parametreilla " parametrit))
+                      (log/debug "SUORITETAAN RAPORTTI: " nimi " kontekstissa: " konteksti " parametreilla: " parametrit))
                   suoritus-id (luo-suoritustieto-raportille
                                db 
                                kayttaja 

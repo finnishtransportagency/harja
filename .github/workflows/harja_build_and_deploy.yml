@@ -5,7 +5,9 @@ name: 'Harja: Build and deploy to ECS'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
-  cancel-in-progress: true
+  # Anna edellisen deploymentin mennä rauhassa loppuun, koska mahdollisesti käynnissä olevaa AWS migration lambdaa ei pysty canceloimaan
+  # Jos edellinen deployment on ehtinyt migraatioiden ajon vaiheeseen, canceloiminen voi aiheuttaa ongelmia.
+  cancel-in-progress: false
 
 on:
   workflow_dispatch:
@@ -66,7 +68,7 @@ jobs:
     steps:
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
         # Lähetetään virheviesti, mikäli tämä tai tests-jobi ei palauta success
         # TODO: Tämä virheviesti lähtee myös jos koko deployment workflow tai testit canceloidaan.
         #       Pitäisikö erillisessä stepissä tarkastaa needs.test.result == 'cancelled' ja kertoa, että deployment peruttiin?
@@ -127,12 +129,15 @@ jobs:
           name: harja-uberjar
           path: ./target/harja-0.0.1-SNAPSHOT-standalone.jar
           if-no-files-found: error
-          retention-days: 1
+          # Poistetaan vanhat artifactit, jotta vanhoja tiedostoja ei säilötä turhaan.
+          # Jos build tehdään esim. perjantai-aamuna ja deployment maanantaina, niin retentio pitää olla kolme vuorokautta.
+          # Jätetään jonkin verran pelivaraa, mikäli deploymentin kanssa tulee ongelmia.
+          retention-days: 7
 
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
         if: failure()
         with:
           # Slack Block Kit -tyyppinen rikastettu viesti
@@ -162,8 +167,6 @@ jobs:
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # OIDC token is needed for AWS actions assume the role
-      id-token: write
       # Contents is needed for the checkout action
       contents: read
       # Sarif-upload
@@ -219,24 +222,21 @@ jobs:
           load: true
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@84384bd6e777ef152729993b8145ea352e9dd3ef # v0.17.0
+        uses: ./.github/actions/scan-docker-image
+        env:
+          DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
+          TRIVY_IGNORES_PATH: 'aws/fargate/.trivyignore'
         with:
           # Hae viittaus buildattuun imageen build-test-image stepin outputeista
           image-ref: ${{ steps.build-test-image.outputs.imageid }}
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          # format: 'table'
-          # exit-code: '1'
-          # ignore-unfixed: true
-          scanners: vuln,secret,misconfig
-          vuln-type: 'os,library'
-          # severity: 'CRITICAL,HIGH'
+          dockerfile-path-for-sarif: ${{ env.DOCKERFILE_PATH }}
+          trivyignores: ${{ env.TRIVY_IGNORES_PATH }}
+          # TODO: Toistaiseksi ei failata deploymenttia, ainakaan ennen kuin vakaa baseline on saatu muodostettua
+          fail-job-on-severities: false
+          #fail-job-on-severities: 'CRITICAL,HIGH'
+          #ignore-unfixed: true
+          upload-sarif: true
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
 
   # -- Deployment -- #
 
@@ -251,8 +251,13 @@ jobs:
       id-token: write
       # Contents read lupaa tarvitaan checkout actionissa
       contents: read
+      # Actions read lupaa tarvitaan actions/download-artifact actionissa
+      actions: read
     with:
       environment: ${{ github.event.inputs.environment }}
+      # Määrittele mistä DB-migraatiot ja build-artifact haetaan. Näiden pitää olla yhteensopivia keskenään.
+      commit-sha: ${{ github.sha }}
+      artifact-run-id: ${{ github.run_id }}
     # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattisesti envinronmentista reusable workfloweissa
     #       Tässä määritetään mitkä yksittäiset salaisuudet reusable workflow saa lukea GitHub environmentista.
     #       Vaihtoehtoisesti, voi käyttää secrets: inherit toimintoa, jolloin reusable workflow saa kaikki salaisuudet
@@ -279,8 +284,13 @@ jobs:
       id-token: write
       # Contents read lupaa tarvitaan checkout actionissa
       contents: read
+      # Actions read lupaa tarvitaan actions/download-artifact actionissa
+      actions: read
     with:
       environment: ${{ matrix.environment }}
+      # Määrittele mistä DB-migraatiot ja build-artifact haetaan. Näiden pitää olla yhteensopivia keskenään.
+      commit-sha: ${{ github.sha }}
+      artifact-run-id: ${{ github.run_id }}
     # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattisesti envinronmentista reusable workfloweissa
     #       Tässä määritetään mitkä yksittäiset salaisuudet reusable workflow saa lukea GitHub environmentista.
     #       Vaihtoehtoisesti, voi käyttää secrets: inherit toimintoa, jolloin reusable workflow saa kaikki salaisuudet

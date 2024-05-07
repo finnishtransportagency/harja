@@ -92,14 +92,15 @@
   "Hakee tieosoitteet kohteista ja niiden alikohteista."
   (into []
     (mapcat (fn [kohde]
-              (let [tr (:tierekisteriosoitevali kohde)]
+              (let [tr (:tierekisteriosoitevali kohde)
+                    tilannepvm (pvm/pvm (or (:karttapaivamaara tr) tilannepvm))]
                 (concat
                   [{:tunniste (kohteen-tunnus kohde "alku")
                     :tie (:tienumero tr)
                     :osa (:aosa tr)
                     :etaisyys (:aet tr)
                     :ajorata (:ajorata tr)
-                    :tilannepvm (pvm/pvm tilannepvm)
+                    :tilannepvm tilannepvm
                     :kohdepvm (pvm/pvm kohdepvm)
                     :palautusarvot "2"}
                    {:tunniste (kohteen-tunnus kohde "loppu")
@@ -107,7 +108,7 @@
                     :osa (:losa tr)
                     :etaisyys (:let tr)
                     :ajorata (:ajorata tr)
-                    :tilannepvm (pvm/pvm tilannepvm)
+                    :tilannepvm tilannepvm
                     :kohdepvm (pvm/pvm kohdepvm)
                     :palautusarvot "2"}]
                   (mapcat (fn [alikohde]
@@ -117,7 +118,7 @@
                                 :osa (:aosa tr)
                                 :etaisyys (:aet tr)
                                 :ajorata (:ajorata tr)
-                                :tilannepvm (pvm/pvm tilannepvm)
+                                :tilannepvm tilannepvm
                                 :kohdepvm (pvm/pvm kohdepvm)
                                 :palautusarvot "2"}
                                {:tunniste (alikohteen-tunnus kohde alikohde "loppu")
@@ -125,7 +126,7 @@
                                 :osa (:losa tr)
                                 :etaisyys (:let tr)
                                 :ajorata (:ajorata tr)
-                                :tilannepvm (pvm/pvm tilannepvm)
+                                :tilannepvm tilannepvm
                                 :kohdepvm (pvm/pvm kohdepvm)
                                 :palautusarvot "2"}]))
                     (:alikohteet kohde)))))

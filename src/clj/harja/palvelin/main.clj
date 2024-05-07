@@ -74,6 +74,7 @@
     [harja.palvelin.palvelut.hallinta.urakoiden-lyhytnimet :as urakoidenlyhytnimet-hallinta]
     [harja.palvelin.palvelut.hallinta.tehtavat :as tehtavat-hallinta]
     [harja.palvelin.palvelut.hallinta.tarjoushinnat :as tarjoushinnat-hallinta]
+    [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
@@ -107,6 +108,7 @@
     [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
     [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
     [harja.palvelin.palvelut.kulut.valikatselmukset :as valikatselmukset]
+    [harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
     [harja.palvelin.palvelut.tyomaapaivakirja :as tyomaapaivakirja]
     [harja.palvelin.palvelut.palauteluokitukset :as palauteluokitukset]
 
@@ -309,7 +311,7 @@
 
       ;; LinkMobilityn LinkSMS, pilvi-Harjan sms-vastaanotto. Refaktoroi tänne myös lähetys, kun #yliheitto ok.
       :tekstiviesti (component/using
-                      (tekstiviesti/->Tekstiviesti (:labyrintti asetukset))
+                      (tekstiviesti/->Tekstiviesti (select-keys asetukset [:tloik]))
                       [:http-palvelin :db :integraatioloki :itmf])
 
       :yha-integraatio (component/using
@@ -517,6 +519,10 @@
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
                                 [:http-palvelin :db])
+      
+      :reikapaikkaukset (component/using
+                          (reikapaikkaukset/->Reikapaikkaukset)
+                          [:http-palvelin :db])
 
       :tyomaapaivakirja (component/using
                           (tyomaapaivakirja/->Tyomaapaivakirja (:kehitysmoodi asetukset))
@@ -799,6 +805,11 @@
       :tarjoushinnat-hallinta
       (component/using
         (tarjoushinnat-hallinta/->TarjoushinnatHallinta)
+        [:http-palvelin :db])
+
+      :rahavaraukset-hallinta
+      (component/using
+        (rahavaraukset-hallinta/->RahavarauksetHallinta)
         [:http-palvelin :db]))))
 
 (defonce harja-jarjestelma nil)

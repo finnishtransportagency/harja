@@ -16,7 +16,7 @@
           },
           "paivamaara": {
             "type": "string",
-            "format": "date"
+            "format": "date-time"
           },
           "poistettu": {
             "type": "boolean"
@@ -57,7 +57,7 @@
           },
           "paivamaara": {
             "type": "string",
-            "format": "date"
+            "format": "date-time"
           },
           "maara": {
             "type": "number"
@@ -83,28 +83,42 @@
     "tehtava": {
       "type": "string",
       "enum": [
-        "AB-paikkaus levittäjällä",
-        "Kannukaatosaumaus",
-        "KT-reikävaluasfalttipaikkaus",
+        "Kuumapäällyste, ab käsityönä",
+        "Päällysteiden paikkaus (ml. sillat ja siltapaikat) - kuumapäällyste",
+        "Päällysteiden paikkaus - kuumapäällyste",
+        "Päällysteiden paikkaus -kylmäpäällyste ml. SOP",
+        "Päällysteiden paikkaus (ml. sillat ja siltapaikat) -kylmäpäällyste ml. SOP",
+        "Päällysteiden paikkaus (ml. sillat ja siltapaikat) -puhallus SIP",
+        "SIP paikkaus (kesto+kylmä)",
         "KT-valuasfalttipaikkaus K",
         "KT-valuasfalttipaikkaus T",
-        "KT-valuasfalttisaumaus",
+        "Konetiivistetty massasaumaus 10 cm leveä",
+        "Päällysteiden paikkaus - massasaumaus",
+        "Konetiivistetty massasaumaus 20 cm leveä",
+        "Päällysteiden paikkaus (ml. sillat ja siltapaikat) - massasaumaus",
+        "Päällysteiden paikkaus - Konetiivistetty massasaumaus 20 cm leveä",
+        "Kuumapäällyste, valuasfaltti",
+        "Päällysteiden paikkaus - valuasfaltti",
+        "Päällysteiden paikkaus (ml. sillat ja siltapaikat) - valuasvaltti",
         "Kuumapäällyste",
-        "Käsin tehtävät paikkaukset pikapaikkausmassalla",
-        "Massasaumaus",
-        "PAB-paikkaus käsin",
+        "AB-paikkaus levittäjällä",
         "PAB-paikkaus levittäjällä",
-        "Puhallus-SIP",
-        "Päällysteiden paikkaus - kuumapäällyste",
         "Päällysteiden paikkaus, kylmäpäällyste",
-        "Päällysteiden paikkaus (ml. sillat ja siltapaikat) -konetivistetty valuasvaltti",
+        "Puhallus-SIP",
         "Päällysteiden paikkaus -saumojen juottaminen bitumilla",
-        "Reunapalkin ja päällysteen väl. sauman tiivistäminen",
-        "Reunapalkin liikuntasauman tiivistäminen",
-        "Sillan kannen päällysteen päätysauman korjaukset",
-        "Sillan päällysteen halkeaman avarrussaumaus",
+        "PAB-paikkaus käsin",
+        "Massasaumaus",
+        "Päällysteiden paikkaus (ml. sillat ja siltapaikat) -konetivistetty valuasvaltti",
+        "KT-reikävaluasfalttipaikkaus",
+        "Käsin tehtävät paikkaukset pikapaikkausmassalla",
+        "Valuasfaltti",
         "Sirotepuhalluspaikkaus (SIPU)",
-        "Valuasfaltti"
+        "Kannukaatosaumaus",
+        "KT-valuasfalttisaumaus",
+        "Sillan päällysteen halkeaman avarrussaumaus",
+        "Sillan kannen päällysteen päätysauman korjaukset",
+        "Reunapalkin ja päällysteen väl. sauman tiivistäminen",
+        "Reunapalkin liikuntasauman tiivistäminen"
       ]
     },
     "tehtavaryhma": {
@@ -133,7 +147,7 @@
       "properties": {
         "karttapaivamaara": {
           "type": "string",
-          "format": "date"
+          "format": "date-time"
         },
         "tienumero": {
           "type": "integer",

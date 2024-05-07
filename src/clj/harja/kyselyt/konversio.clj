@@ -453,6 +453,9 @@
     (digest/sha-256 x)
     (digest/sha-256 (to-byte-array x))))
 
+(defn string->md5 [x]
+  (digest/md5 x))
+
 (defn prettyprint-xml [xml]
   ; Varmista, että Harja on osannut lukea sisään tulleen XML viestin oikein. Jos ei ole, </sisalto> tagi puuttuu
   (if (and (str/includes? xml "<sisalto>") (not (str/includes? xml "</sisalto>")))

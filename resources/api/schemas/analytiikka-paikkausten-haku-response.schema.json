@@ -79,15 +79,7 @@
             "description": "Paikkauksen leveys metreissä"
           },
           "raekoko": {
-            "type": "integer",
-            "enum": [
-              5,
-              8,
-              11,
-              16,
-              22,
-              31
-            ]
+            "type": "integer"
           },
           "kuulamylly": {
             "type": "string",
@@ -139,7 +131,7 @@
       "properties": {
         "karttapaivamaara": {
           "type": "string",
-          "format": "date"
+          "format": "date-time"
         },
         "tienumero": {
           "type": "integer",

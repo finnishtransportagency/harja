@@ -143,8 +143,7 @@ on nil."
          ;; Huom. ei custom:-alkuliitettä
          "email" "oam_user_mail"
          "custom:puhelin" "oam_user_mobile"
-         ;; TODO: Tuleeko myös departmentnumber eli ELY-numero cognitosta, mikäli käyttäjälle on sellainen määritelty?
-         #_#_"????" "oam_departmentnumber"
+         "custom:osasto" "oam_departmentnumber"
          "custom:organisaatio" "oam_organization"
          "custom:ytunnus" "oam_user_companyid"}))))
 
@@ -227,7 +226,7 @@ ja palauttaa käyttäjätiedot"
   [db {kayttajanimi "oam_remote_user"
        ryhmat "oam_groups"
        ely "oam_departmentnumber"
-       organisaatio "oam_organization"
+       organisaation_nimi "oam_organization"
        etunimi "oam_user_first_name"
        sukunimi "oam_user_last_name"
        sahkoposti "oam_user_mail"
@@ -243,7 +242,7 @@ ja palauttaa käyttäjätiedot"
                                    (partial q/hae-urakoitsijan-id-ytunnuksella db)
                                    oikeudet/roolit
                                    ryhmat)
-          organisaatio (hae-kayttajalle-organisaatio db ely y-tunnus organisaatio roolit)
+          organisaatio (hae-kayttajalle-organisaatio db ely y-tunnus organisaation_nimi roolit)
           kayttaja {:kayttajanimi kayttajanimi
                     :etunimi etunimi
                     :sukunimi sukunimi
@@ -266,8 +265,11 @@ ja palauttaa käyttäjätiedot"
         (q/paivita-kayttaja! db (merge kayttaja
                                   {:id kayttaja-id})))
      (log/info "SÄHKE HEADERIT: " (str kayttajanimi ": " ryhmat)
-               "; KÄYTTÄJÄ ID: " kayttaja-id
-               "; ORGANISAATIO: " organisaatio)
+       "; ELY-NUMERO: " ely
+       "; ORGANISAATION NIMI: " organisaation_nimi
+       "; Y-TUNNUS: " y-tunnus
+       "; KÄYTTÄJÄ ID: " kayttaja-id
+       "; ORGANISAATIO: " organisaatio)
      (merge (assoc kayttaja
               :organisaatio organisaatio
               :organisaation-urakat (into #{}

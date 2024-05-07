@@ -29,9 +29,16 @@
             "description": "Päällystyskohteen ID HARJAn tietokannassa, eli HarjaId",
             "multipleOf": 1
           },
+          "poistettu": {
+            "type": "boolean"
+          },
           "yhaLahetyksenTila": {
             "type": "string",
-            "enum": ["Ei lähetetty", "Lähetetty onnistuneesti", "Epäonnistunut"]
+            "enum": [
+              "Ei lähetetty",
+              "Lähetetty onnistuneesti",
+              "Epäonnistunut"
+            ]
           },
           "takuupaivamaara": {
             "type": "string",
@@ -42,7 +49,7 @@
           },
           "kulutuskerrokselleTehdytToimetPOT2": {
             "type": "array",
-            "minItems": 1,
+            "minItems": 0,
             "description": "POT2-tiedot sisältävä listaus kulutuskerroksen toimenpiteistä, aiemmin nimetty alikohteiden toimenpiteiksi.",
             "items": {
               "type": "object",
@@ -95,7 +102,11 @@
               "type": "object",
               "description": "POT2-tiedot sisältävä listaus alustalle tehdyistä toimenpiteistä",
               "additionalProperties": false,
-              "required": ["tierekisteriosoitevali", "pituus", "kasittelymenetelma"],
+              "required": [
+                "tierekisteriosoitevali",
+                "pituus",
+                "kasittelymenetelma"
+              ],
               "properties": {
                 "poistettu": {
                   "type": "boolean"
@@ -112,10 +123,10 @@
                   "type": "string",
                   "enum": [
                     "Massanvaihto",
-                    "AB",
+                    "Asfalttibetoni",
                     "Verkko",
-                    "REM-TAS",
-                    "Bitumiemulsiostabilointi",
+                    "REMIX-tasaus",
+                    "Bitumiemusiostabilointi",
                     "Vaahtobitumistabilointi",
                     "Remix-stabilointi",
                     "Sementtistabilointi",
@@ -151,7 +162,7 @@
                     "Muoviverkko",
                     "Lujitekangas",
                     "Suodatinkangas",
-                    "Muu materiaali"
+                    "Muu verkko"
                   ]
                 },
                 "verkonTarkoitus": {
@@ -282,7 +293,7 @@
         "AN19",
         "AN30",
         "AN22",
-        "Ei tietoa"
+        "Ei kuulamyllyä"
       ]
     },
     "paallystetyomenetelma": {
@@ -345,7 +356,7 @@
         },
         "runkoaineet": {
           "type": "array",
-          "minItems": 1,
+          "minItems": 0,
           "items": {
             "$ref": "#/definitions/runkoaine"
           }
@@ -393,8 +404,11 @@
           "type": "string",
           "enum": [
             "Kalliomurske",
-            "Sorastusmurske",
-            "(UUSIO) RA, Asfalttirouhe"
+            "Soramurske",
+            "(UUSIO) RA, Asfalttirouhe",
+            "(UUSIO) Betonimurske I,",
+            "(UUSIO) Betonimurske II",
+            "Muu"
           ]
         },
         "rakeisuus": {

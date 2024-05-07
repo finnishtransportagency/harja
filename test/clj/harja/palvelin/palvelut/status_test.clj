@@ -158,8 +158,8 @@
 (deftest uusi-status-toimii
   (testing "Uusi statuskysely toimii"
     (let [;; Lisää itmf tila ok:ksi tietokantaan
-          _ (u (str "INSERT INTO jarjestelman_tila (palvelin, tila, \"osa-alue\", paivitetty) VALUES
-          ('test-palvelin', '{\"istunnot\": [], \"yhteyden-tila\": \"ACTIVE\"}', 'itmf', NOW());"))
+          _ (u (str "INSERT INTO jarjestelman_tila (palvelimen_osoite, palvelimen_versio, tila, \"osa-alue\", paivitetty) VALUES
+          ('ip-127-0-0-1.testi-palvelin.blaa.internal/127.0.0.1', 'ab86994791bde331c0567ab45cbc7b144a91a347', '{\"istunnot\": [], \"yhteyden-tila\": \"ACTIVE\"}', 'itmf', NOW());"))
           _ (harja-status/tarkista-harja-status (:db jarjestelma) true)
           vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)
           body (-> vastaus
@@ -176,8 +176,8 @@
 (deftest uusi-status-vastaa-virhetta
   (testing "Uusi statuskysely palauttaa virhettä"
     (let [ ;; Merkitään itmf tila virheelliseksi
-          _ (u (str "INSERT INTO jarjestelman_tila (palvelin, tila, \"osa-alue\", paivitetty) VALUES
-          ('test-palvelin', '{\"istunnot\": [], \"yhteyden-tila\": \"ERROR\"}', 'itmf', NOW());"))
+          _ (u (str "INSERT INTO jarjestelman_tila (palvelimen_osoite, palvelimen_versio, tila, \"osa-alue\", paivitetty) VALUES
+          ('ip-127-0-0-1.testi-palvelin.blaa.internal/127.0.0.1', 'ab86994791bde331c0567ab45cbc7b144a91a347', '{\"istunnot\": [], \"yhteyden-tila\": \"ERROR\"}', 'itmf', NOW());"))
           ;; Pakota replica pois käytöstä
           _ (swap! a/pois-kytketyt-ominaisuudet conj :replica-db) ;; Pakota replica pois käytöstä
           _ (harja-status/tarkista-harja-status (:db jarjestelma) true)

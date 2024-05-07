@@ -10,7 +10,7 @@ psql -h localhost -U harjatest harjatest_template -c "CREATE EXTENSION IF NOT EX
 
 cd tietokanta
 
-mvn -f pom.vanha.xml clean compile flyway:migrate -Dflyway.url=jdbc:postgresql://localhost/harjatest_template -Dflyway.user=harjatest -Dflyway.password=$(cat ~/.pgpass | sed 's/.*harjatest://')
+mvn -f vanha_onprem_pom.xml clean compile flyway:migrate -Dflyway.url=jdbc:postgresql://localhost/harjatest_template -Dflyway.user=harjatest -Dflyway.password=$(cat ~/.pgpass | sed 's/.*harjatest://')
 
 PGOPTIONS='--client-min-messages=warning' psql -h localhost -U harjatest harjatest_template  -X -q -a -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql
 

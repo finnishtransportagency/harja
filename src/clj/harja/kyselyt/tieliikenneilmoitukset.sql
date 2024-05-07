@@ -442,7 +442,7 @@ SELECT
         coalesce(it.kuittaaja_organisaatio_ytunnus, ''), it.kanava))) AS kuittaukset
 FROM loydetyt_ilmoitukset li
          JOIN ilmoitus i ON i.id = li.id
-         JOIN ilmoitustoimenpide it on it.ilmoitus = li.id
+         LEFT JOIN ilmoitustoimenpide it on it.ilmoitus = li.id
          LEFT JOIN palautevayla_aihe pa on i.aihe = pa.ulkoinen_id
          LEFT JOIN palautevayla_tarkenne pt on i.tarkenne = pt.ulkoinen_id
      GROUP BY i.id, li.urakkanro, i."valitetty-urakkaan", pa.nimi, pt.nimi
@@ -526,7 +526,8 @@ SET urakka               = :urakka,
     muokattu = NOW(),
     viestiid = :viestiid,
     aihe = :aihe,
-    tarkenne = :tarkenne
+    tarkenne = :tarkenne,
+    kuvat = :kuvat::TEXT[]
 WHERE id = :id;
 
 -- name: paivita-ilmoituksen-urakka!

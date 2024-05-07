@@ -7,6 +7,7 @@
             [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]))
 
+
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
@@ -71,7 +72,6 @@
 
 (deftest urakan-lupaustietojen-haku-toimii
   (let [tiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                :urakan-alkuvuosi 2021
                 :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                      #inst "2022-09-30T20:59:59.000-00:00"]
                 :nykyhetki #inst "2021-09-30T21:00:00.000-00:00"}
@@ -130,9 +130,35 @@
                              tiedot))
         "Toisen urakan vastuuhenkilö ei saa hakea tietoja.")))
 
+(deftest urakan-lupaustietojen-haku-lupausryhmat-eroavat-kun-urakat-samalla-alkuvuodella
+  (let [kajaani-tiedot {:urakka-id @kajaanin-maanteiden-hoitourakan-2024-2029-id
+                        :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
+                                             #inst "2028-09-30T20:59:59.000-00:00"]
+                        :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
+        suomussalmi-tiedot {:urakka-id @suomussalmen-maanteiden-hoitourakan-2024-2029-id
+                            :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
+                                                 #inst "2028-09-30T20:59:59.000-00:00"]
+                            :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
+        kajaani-vastaus (hae-urakan-lupaustiedot
+                          +kayttaja-jvh+
+                          kajaani-tiedot)
+        suomussalmi-vastaus (hae-urakan-lupaustiedot
+                              +kayttaja-jvh+
+                              suomussalmi-tiedot)
+        kajaani-ryhmat (:lupausryhmat kajaani-vastaus)
+        suomussalmi-ryhmat (:lupausryhmat suomussalmi-vastaus)
+        kajaani-lupaus-1 (etsi-lupaus kajaani-vastaus 1)
+        suomussalmi-lupaus-1 (etsi-lupaus suomussalmi-vastaus 15)
+        kajaani-ryhma-idt (sort (map :id kajaani-ryhmat)) 
+        suomussalmi-ryhma-idt (sort (map :id suomussalmi-ryhmat))]
+    (is (= (list 1 2 3 4 5) kajaani-ryhma-idt) "Kajaanin ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
+    (is (= (list 6 7 8 9 10) suomussalmi-ryhma-idt) "Suomussalmen ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
+    (is (= 1 (:lupaus-id kajaani-lupaus-1)) "Kajaanilla on lupaus 1 ryhmasta 1")
+    (is (= 15 (:lupaus-id suomussalmi-lupaus-1)) "Suomussalmella on lupaus 15 ryhmasta 6")))
+
+
 (deftest odottaa-kannanottoa
   (let [hakutiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                    :urakan-alkuvuosi 2021
                     :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                          #inst "2022-09-30T20:59:59.000-00:00"]
                     ;; 2022-01-01
@@ -168,7 +194,6 @@
 
 (deftest merkitsevat-odottaa-kannanottoa
   (let [hakutiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                    :urakan-alkuvuosi 2021
                     :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                          #inst "2022-09-30T20:59:59.000-00:00"]
                     ;; 2022-01-01
@@ -189,7 +214,6 @@
         vastaus (hae-urakan-lupaustiedot
                   +kayttaja-jvh+
                   {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                   :urakan-alkuvuosi 2021
                    :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                         #inst "2022-09-30T20:59:59.000-00:00"]})
         ryhmat (:lupausryhmat vastaus)
@@ -216,7 +240,6 @@
         lupaustiedot (hae-urakan-lupaustiedot
                        +kayttaja-jvh+
                        {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                        :urakan-alkuvuosi 2021
                         :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                              #inst "2022-09-30T20:59:59.000-00:00"]})
         ryhma-4 (etsi-ryhma (:lupausryhmat lupaustiedot) 4)
@@ -243,7 +266,6 @@
           lupaustiedot (hae-urakan-lupaustiedot
                          +kayttaja-jvh+
                          {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                          :urakan-alkuvuosi 2021
                           :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                #inst "2022-09-30T20:59:59.000-00:00"]})
           ryhma-4 (etsi-ryhma (:lupausryhmat lupaustiedot) 4)
@@ -260,7 +282,6 @@
 
 (deftest joustovara
   (let [hakutiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                    :urakan-alkuvuosi 2021
                     :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                          #inst "2022-09-30T20:59:59.000-00:00"]}
         ;; Ensimmäinen kieltävä vastaus
@@ -298,7 +319,6 @@
              :id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
              :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id})
         lupaustiedot (hae-urakan-lupaustiedot +kayttaja-jvh+ {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                                                              :urakan-alkuvuosi 2021
                                                               :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                                                    #inst "2022-09-30T20:59:59.000-00:00"]})
         sitoutuminen (:lupaus-sitoutuminen lupaustiedot)]
@@ -309,7 +329,6 @@
                                 :tallenna-luvatut-pisteet +kayttaja-jvh+
                                 {:id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
                                  :pisteet 67, :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                                 :urakan-alkuvuosi 2021
                                  :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                       #inst "2022-09-30T20:59:59.000-00:00"]})
         _ (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -324,7 +343,6 @@
                                                 :tallenna-luvatut-pisteet +kayttaja-jvh+
                                                 {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
                                                  :pisteet 67, :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-                                                 :urakan-alkuvuosi 2021
                                                  :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                                       #inst "2022-09-30T20:59:59.000-00:00"]})))))
 
@@ -561,7 +579,6 @@
   (let [vastaus (hae-urakan-lupaustiedot
                   +kayttaja-jvh+
                   {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                   :urakan-alkuvuosi 2019
                    :valittu-hoitokausi [#inst "2019-09-30T21:00:00.000-00:00"
                                         #inst "2020-09-30T20:59:59.000-00:00"]})
         tavoitehinta (get-in vastaus [:yhteenveto :tavoitehinta])]

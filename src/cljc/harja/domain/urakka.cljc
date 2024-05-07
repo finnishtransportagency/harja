@@ -127,7 +127,7 @@
   [urakka]
   (and
     (paallystysurakka? urakka)
-    (= :palvelusopimus (:sopimustyyppi urakka))))
+    (#{:palvelusopimus :mpu} (:sopimustyyppi urakka))))
 
 (defn paikkausurakka?
   [urakka]
@@ -135,7 +135,7 @@
     ;; kyllä: paikkausurakoiden urakkatyyppi on päällystys
     (paallystysurakka? urakka)
     (:nimi urakka)
-    (str/includes? (:nimi urakka) "paikkaus")))
+    (str/includes? (str/lower-case (:nimi urakka)) "paikkaus")))
 
 (defn mh-urakka?
   "Onko urakka tyyppiä MHU (Maanteiden hoitourakka)"

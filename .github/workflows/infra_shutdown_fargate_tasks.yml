@@ -1,7 +1,7 @@
 # Security hardening for GitHub Actions
 # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
 
-name: "Harja: Start Fargate Tasks"
+name: "Harja-infra: Shutdown Fargate Tasks"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
@@ -16,7 +16,7 @@ on:
         required: true
 
 jobs:
-  start-fargate-tasks:
+  shutdown-fargate-tasks:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
 
@@ -51,10 +51,10 @@ jobs:
           role-duration-seconds: 3600
           role-skip-session-tagging: true
 
-      - name: Start Harja Fargate tasks
-        uses: ./.github/actions/start-fargate-tasks
-        timeout-minutes: 10
-        # Pakota uudelleenkäynnistyminen
-        if: always()
+      # Sammutetaan Harjan Fargate taskit
+      - name: Shutdown Harja Fargate tasks
+        uses: ./.github/actions/shutdown-fargate-tasks
+        timeout-minutes: 15
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
+          service: ${{ vars.ECS_SERVICE_NAME }}
