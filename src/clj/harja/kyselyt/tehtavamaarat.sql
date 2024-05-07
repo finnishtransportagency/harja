@@ -157,7 +157,7 @@ DELETE
       SELECT rt.id, rt.tehtava_id
         FROM rahavaraus_urakka rvu
                  JOIN rahavaraus_tehtava rt ON rvu.rahavaraus_id = rt.rahavaraus_id
-       WHERE rvu.urakka_id = 35
+       WHERE rvu.urakka_id = :urakka
   )
 SELECT ut.urakka                    AS "urakka",
        ut."hoitokauden-alkuvuosi"   AS "hoitokauden-alkuvuosi",
