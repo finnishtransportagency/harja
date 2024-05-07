@@ -49,7 +49,7 @@
         (:pisteet vastaus)
         (str "Pisteet 0 - " (:kyselypisteet vastaus)))]]
     [:div.caption.vastauslomake-lupaus-kuvaus (:kuvaus vastaus)]
-    [:p.sisalto {:dangerouslySetInnerHTML {:__html (:sisalto vastaus)}}]]])
+    [:div.sisalto {:dangerouslySetInnerHTML {:__html (:sisalto vastaus)}}]]])
 
 (defn- kommentti-rivi [e! {:keys [id luotu luoja etunimi sukunimi kommentti poistettu]}]
   [:div.kommentti-rivi
