@@ -209,7 +209,6 @@
                                           [key val]))
                                       rivit)))))
 
-
 (defn- tehtava-maarat-taulukko 
   [e! {:keys [sopimukset-syotetty? taso-4-tehtavat valinnat] :as app} toimenpiteen-tiedot]
   (let [{:keys [nimi sisainen-id alue-tehtavia maara-tehtavia]} toimenpiteen-tiedot
@@ -410,7 +409,8 @@
          [sopimuksen-tallennus-boksi e!])
        ;; Vain pääkäyttäjille testiympäristössä mahdollisuus luoda nopeasti arvot kaikille tehtäville
        (when (and (k/kehitysymparistossa?)
-                  (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava))
+               (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava)
+               (not sopimukset-syotetty?))
          [kaikille-tehtaville-arvon-tallennus e!])
        (when sopimukset-syotetty?
          [valitaso-filtteri e! app])
