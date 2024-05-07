@@ -34,9 +34,11 @@ bufferi 1000)
 
 ;; Vaihdettu 60s etteivät tiedot häviä liian pian tarkastellessa.
 ;; Aiemmin saattoi käydä niin, että edellinen lataus oli vielä kesken, kun tehtiin uusi haku.
+
+;; Vaihdetttu 60s->120s kuormituksen vähentämiseksi.
 (def ^{:doc "Päivitystiheys tilannekuvassa, kun parametrit eivät muutu"
        :const true}
-hakutiheys-nykytilanne 60000)
+hakutiheys-nykytilanne 120000)
 
 (def ^{:doc "Päivitystiheys historiakuvassa on 20 minuuttia."
        :const true}

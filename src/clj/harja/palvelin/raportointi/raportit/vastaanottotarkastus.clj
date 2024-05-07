@@ -256,7 +256,7 @@
 
                                       {:nimi "Valtakunnallisesti yhteensä" :pk1 0 :pk2 0 :pk3 0 :eitiedossa 0 :muut-kustannukset 0 :kokonaishinta 0}
                                       rivit)
-        elyttain-jaoteltu (sort-by first (group-by :hallintayksikko_nimi rivit))
+        elyttain-jaoteltu (group-by :hallintayksikko_nimi rivit)
         formatoi-elyt-fn (fn [ely]
                            (let [elyrivi {:otsikko (str (:elynumero (first (second ely))) " " (first ely))}
                                  kohteet-lista (mapv (fn [kohde] (apurit/pkluokka-rivi kohde false false)) (second ely))
@@ -317,7 +317,7 @@
                                       urakkarivit)
 
         ;; Groupataan ja järjestellään rivit hallintayksiköittäin, kuten pk-luokka taulukossakin
-        elyttain-jaoteltu (sort-by first (group-by :hallintayksikko_nimi urakkarivit))
+        elyttain-jaoteltu (group-by :hallintayksikko_nimi urakkarivit)
 
         formatoi-elyt-fn (fn [ely]
                            (let [elyrivi {:otsikko (str (:elynumero (first (second ely))) " " (first ely))}
@@ -463,7 +463,7 @@
         ;; Yhteenvetoraportilla on lisäksi Eurot / PK-luokka osio
         pkluokkien-kustannukset (when-not urakka-id
                                   (sort-by
-                                    :elynumero
+                                    #(Integer/parseInt (str (:elynumero %)))
                                     (pkluokkien-kustannukset-urakoittain db {:vuosi vuosi
                                                                              :hallintayksikko hallintayksikko-id})))
         pkluokkien-kustannukset (when-not urakka-id
@@ -475,7 +475,7 @@
 
         pkluokkien-yotyot (when-not urakka-id
                             (sort-by
-                              :elynumero
+                              #(Integer/parseInt (str (:elynumero %)))
                               (pkluokkien-yotyot-hallintayksikoittain db {:vuosi vuosi
                                                                           :hallintayksikko hallintayksikko-id})))
         pkluokkien-yotyot-elyittain-jaoteltuna (apurit/formatoi-yotyorivit-taulukolle pkluokkien-yotyot yllapitokohteet+kustannukset)]

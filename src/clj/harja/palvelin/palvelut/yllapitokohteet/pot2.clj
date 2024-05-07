@@ -54,34 +54,46 @@
                     nil))
         materiaalit))
 
+(defn liita-massan-yhteenlaskettu-km-arvo [massat]
+  (mapv (fn [massa]
+          (assoc massa :yhteenlaskettu-kuulamyllyarvo
+            (pot2-domain/massan-yhteenlaskettu-kuulamyllyarvo massa))) massat))
+
+(defn liita-massan-yhteenlaskettu-litteysluku [massat]
+  (mapv (fn [massa]
+          (assoc massa :yhteenlaskettu-litteysluku
+            (pot2-domain/massan-yhteenlaskettu-littteysluku massa))) massat))
+
 (defn hae-urakan-massat-ja-murskeet [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (let [massat
         (->> (fetch db
-                    ::pot2-domain/pot2-mk-urakan-massa
-                    #{::pot2-domain/massa-id
-                      ::pot2-domain/tyyppi
-                      ::pot2-domain/nimen-tarkenne
-                      ::pot2-domain/max-raekoko
-                      ::pot2-domain/kuulamyllyluokka
-                      ::pot2-domain/litteyslukuluokka
-                      ::pot2-domain/dop-nro
-                      [::pot2-domain/runkoaineet
-                       #{:runkoaine/id
-                         ::pot2-domain/massa-id
-                         :runkoaine/tyyppi
-                         :runkoaine/fillerityyppi
-                         :runkoaine/esiintyma
-                         :runkoaine/kuvaus
-                         :runkoaine/kuulamyllyarvo
-                         :runkoaine/litteysluku
-                         :runkoaine/massaprosentti}]}
-                    {::pot2-domain/urakka-id urakka-id
-                     ::pot2-domain/poistettu? false})
-             ;; Specql:ssä ominaisuus, ettei voi tehdä monta joinia samalla kyselyllä, siksi erilliset kyselyt, sorry
-             (liita-sideaineet db)
-             (liita-lisaaineet db)
-             (liita-materiaalin-kayttotieto db :massa))
+               ::pot2-domain/pot2-mk-urakan-massa
+               #{::pot2-domain/massa-id
+                 ::pot2-domain/tyyppi
+                 ::pot2-domain/nimen-tarkenne
+                 ::pot2-domain/max-raekoko
+                 ::pot2-domain/kuulamyllyluokka
+                 ::pot2-domain/litteyslukuluokka
+                 ::pot2-domain/dop-nro
+                 [::pot2-domain/runkoaineet
+                  #{:runkoaine/id
+                    ::pot2-domain/massa-id
+                    :runkoaine/tyyppi
+                    :runkoaine/fillerityyppi
+                    :runkoaine/esiintyma
+                    :runkoaine/kuvaus
+                    :runkoaine/kuulamyllyarvo
+                    :runkoaine/litteysluku
+                    :runkoaine/massaprosentti}]}
+               {::pot2-domain/urakka-id urakka-id
+                ::pot2-domain/poistettu? false})
+          ;; Specql:ssä ominaisuus, ettei voi tehdä monta joinia samalla kyselyllä, siksi erilliset kyselyt, sorry
+          (liita-sideaineet db)
+          (liita-lisaaineet db)
+          (liita-materiaalin-kayttotieto db :massa)
+          (liita-massan-yhteenlaskettu-km-arvo)
+          (liita-massan-yhteenlaskettu-litteysluku))
         murskeet (->> (fetch db
                              ::pot2-domain/pot2-mk-urakan-murske
                              #{::pot2-domain/murske-id

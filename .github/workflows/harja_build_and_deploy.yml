@@ -68,7 +68,7 @@ jobs:
     steps:
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
         # Lähetetään virheviesti, mikäli tämä tai tests-jobi ei palauta success
         # TODO: Tämä virheviesti lähtee myös jos koko deployment workflow tai testit canceloidaan.
         #       Pitäisikö erillisessä stepissä tarkastaa needs.test.result == 'cancelled' ja kertoa, että deployment peruttiin?
@@ -129,12 +129,15 @@ jobs:
           name: harja-uberjar
           path: ./target/harja-0.0.1-SNAPSHOT-standalone.jar
           if-no-files-found: error
-          retention-days: 1
+          # Poistetaan vanhat artifactit, jotta vanhoja tiedostoja ei säilötä turhaan.
+          # Jos build tehdään esim. perjantai-aamuna ja deployment maanantaina, niin retentio pitää olla kolme vuorokautta.
+          # Jätetään jonkin verran pelivaraa, mikäli deploymentin kanssa tulee ongelmia.
+          retention-days: 7
 
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@6c661ce58804a1a20f6dc5fbee7f0381b469e001
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
         if: failure()
         with:
           # Slack Block Kit -tyyppinen rikastettu viesti
@@ -248,8 +251,13 @@ jobs:
       id-token: write
       # Contents read lupaa tarvitaan checkout actionissa
       contents: read
+      # Actions read lupaa tarvitaan actions/download-artifact actionissa
+      actions: read
     with:
       environment: ${{ github.event.inputs.environment }}
+      # Määrittele mistä DB-migraatiot ja build-artifact haetaan. Näiden pitää olla yhteensopivia keskenään.
+      commit-sha: ${{ github.sha }}
+      artifact-run-id: ${{ github.run_id }}
     # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattisesti envinronmentista reusable workfloweissa
     #       Tässä määritetään mitkä yksittäiset salaisuudet reusable workflow saa lukea GitHub environmentista.
     #       Vaihtoehtoisesti, voi käyttää secrets: inherit toimintoa, jolloin reusable workflow saa kaikki salaisuudet
@@ -276,8 +284,13 @@ jobs:
       id-token: write
       # Contents read lupaa tarvitaan checkout actionissa
       contents: read
+      # Actions read lupaa tarvitaan actions/download-artifact actionissa
+      actions: read
     with:
       environment: ${{ matrix.environment }}
+      # Määrittele mistä DB-migraatiot ja build-artifact haetaan. Näiden pitää olla yhteensopivia keskenään.
+      commit-sha: ${{ github.sha }}
+      artifact-run-id: ${{ github.run_id }}
     # Huom. Tietoturvasyistä johtuen, salaisuuksia ei voi hakea automaattisesti envinronmentista reusable workfloweissa
     #       Tässä määritetään mitkä yksittäiset salaisuudet reusable workflow saa lukea GitHub environmentista.
     #       Vaihtoehtoisesti, voi käyttää secrets: inherit toimintoa, jolloin reusable workflow saa kaikki salaisuudet

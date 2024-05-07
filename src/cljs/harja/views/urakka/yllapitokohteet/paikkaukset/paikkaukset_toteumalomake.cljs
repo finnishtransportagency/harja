@@ -511,7 +511,7 @@
 
     ;; Wrapataan lomake vain diviin. Koska tämä aukaistaan eri kokoisiin oikealta avattaviin diveihin eri näkymistä
     [:div {:style {:padding "16px"}}
-     [debug/debug toteumalomake]
+     #_ [debug/debug toteumalomake]
      [lomake/lomake
       {:ei-borderia? true :luokka (str "paikkaustoteumalomake " (when-not muokkaustila? "lukutila"))
        :virhe-optiot {:virheet-ulos? true}

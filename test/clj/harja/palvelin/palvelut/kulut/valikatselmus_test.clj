@@ -16,6 +16,7 @@
   (:import (clojure.lang ExceptionInfo)
            (harja.domain.roolit EiOikeutta)))
 
+
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]

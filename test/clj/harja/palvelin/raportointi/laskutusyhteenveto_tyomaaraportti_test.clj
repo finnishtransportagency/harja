@@ -1,19 +1,14 @@
 (ns harja.palvelin.raportointi.laskutusyhteenveto_tyomaaraportti_test
   (:require [clojure.test :refer :all]
-            [clojure.string :as str]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.testi :refer :all]
-            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.palvelut.kulut.kulut :as kulut]
-            [harja.fmt :as fmt]
             [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]

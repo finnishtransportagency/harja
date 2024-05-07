@@ -79,9 +79,10 @@
           ;; Päivitetään sopimuksiin liittyvät materiaalien käytöt
           (doseq [sopimus-id sopimus-idt]
             (doseq [alkupvm toteumien-alkupvmt]
-              (log/debug "paivita-sopimuksen-materiaalin-kaytto sopimus-id:lle: " sopimus-id " alkupvm: " (pvm/->pvm alkupvm))
+              (log/debug "paivita-sopimuksen-materiaalin-kaytto sopimus-id:lle: " sopimus-id " alkupvm: " (pvm/->pvm alkupvm) " urakkaid:" urakka-id)
               (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                     :alkupvm (pvm/->pvm alkupvm)})))
+                                                                     :alkupvm (pvm/->pvm alkupvm)
+                                                                     :urakkaid urakka-id})))
           ;; Päivitetään urakoihin liittyvät materiaalin käytöt
           (log/debug "paivita_urakan_materiaalin_kaytto_hoitoluokittain urakka-id:lle: " urakka-id
             " alkupvm: " (pvm/->pvm (first toteumien-alkupvmt)) " loppupvm: "(pvm/->pvm (last toteumien-alkupvmt)))

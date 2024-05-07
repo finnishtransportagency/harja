@@ -1,33 +1,20 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.materiaalikirjasto-test
-  (:require [clojure.java.io :as io]
-            [clojure.test :refer :all]
+  (:require [clojure.test :refer :all]
             [namespacefy.core :refer [namespacefy]]
-            [taoensso.timbre :as log]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.kyselyt.konversio :as konv]
-            [cheshire.core :as cheshire]
-            [harja.domain.urakka :as urakka-domain]
-            [harja.domain.sopimus :as sopimus-domain]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
-            [harja.domain.paallystyksen-maksuerat :as paallystyksen-maksuerat-domain]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus-domain]
             [harja.domain.pot2 :as pot2-domain]
-            [harja.pvm :as pvm]
-            [harja.domain.skeema :as skeema]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
             [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys :refer :all]
             [harja.palvelin.palvelut.yllapitokohteet.pot2 :as pot2]
-            [harja.palvelin.palvelut.yllapitokohteet-test :as yllapitokohteet-test]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
-            [harja.tyokalut.xml :as xml])
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -336,7 +323,9 @@
                                                                  :sideaine/pitoisuus 4.8M
                                                                  :sideaine/tyyppi 6})
                                  :harja.domain.pot2/tyyppi 12
-                                 ::pot2-domain/massa-id 1}
+                                 ::pot2-domain/massa-id 1
+                                 :yhteenlaskettu-kuulamyllyarvo 5.20M
+                                 :yhteenlaskettu-litteysluku 4.94M}
                                 {:harja.domain.pot2/dop-nro "987654331-2"
                                  :harja.domain.pot2/kaytossa ({:kohdenumero "L42"
                                                                :kohteiden-lkm 1
@@ -379,7 +368,9 @@
                                                                  :sideaine/pitoisuus 5.5M
                                                                  :sideaine/tyyppi 5})
                                  :harja.domain.pot2/tyyppi 14
-                                 ::pot2-domain/massa-id 2}))
+                                 ::pot2-domain/massa-id 2
+                                 :yhteenlaskettu-kuulamyllyarvo 8.38M
+                                 :yhteenlaskettu-litteysluku 5.750M}))
 
 (def oletetut-murskeet-utajarvi '(#:harja.domain.pot2{:esiintyma "Kankkulan Kaivo", :nimen-tarkenne "LJYR", :iskunkestavyys "LA30", :tyyppi 1, :rakeisuus "0/40", :dop-nro "1234567-dop", :murske-id 1 :kaytossa ({:kohdenumero "L42"
                                                                                                                                                                                                                    :kohteiden-lkm 1
@@ -410,7 +401,9 @@
                                       :sideaine/lopputuote? true
                                       :sideaine/pitoisuus 10.6M
                                       :sideaine/tyyppi 1})
-                        :tyyppi 1}))
+                        :tyyppi 1
+                        :_/yhteenlaskettu-kuulamyllyarvo 4.114M
+                        :_/yhteenlaskettu-litteysluku 1.394M}))
 
 (deftest hae-urakan-pot2-massat
   (let [_ (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -579,7 +572,9 @@
                                       :sideaine/lopputuote? true
                                       :sideaine/pitoisuus 3.8M
                                       :sideaine/tyyppi 6})
-                        :tyyppi 12}))
+                        :tyyppi 12
+                        :_/yhteenlaskettu-kuulamyllyarvo 6.6M
+                        :_/yhteenlaskettu-litteysluku 4.675M}))
 
 (def oletetut-murskeet-oulun-paallystysurakassa (list ))
 
