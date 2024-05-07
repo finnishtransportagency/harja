@@ -115,10 +115,9 @@
 
   HaeKustannustiedot
   (process-event [_ app]
-    ;; -> hae-paikkaus-kustannukset
+    ;; hae-mpu-selitteet, hae-paikkaus-kustannukset
     ;; -> hae-mpu-kustannukset
     ;; -> hae-sanktiot-ja-bonukset
-    ;; 
     (hae-mpu-selitteet app)
     (hae-paikkaus-kustannukset app)
     (assoc app :haku-kaynnissa? true))
@@ -205,8 +204,14 @@
   TallennaKustannus
   (process-event [{rivi :rivi} app]
     (let [{:keys [kustannus-tyyppi kustannus-selite kustannus]} rivi]
-      (let [selite (if (some? (seq kustannus-selite)) 
-                     (second kustannus-selite) 
+      (let [selite (if (some? (seq kustannus-selite))
+                     (cond
+                       ;; Käyttäjä kirjoitti oman selitten
+                       (string? kustannus-selite)
+                       kustannus-selite
+                       ;; Käyttäjä valitsi dropdown autofill itemin
+                       :else
+                       (second kustannus-selite))
                      kustannus-tyyppi)]
         (tallenna-mpu-kustannus app selite kustannus))
       (assoc app :muokataan false :lomake-valinnat nil)))
@@ -225,7 +230,6 @@
 
   HaeMPUSelitteetOnnistui
   (process-event [{vastaus :vastaus} app]
-    ;; TODO, pois päältä tällä hetkellä, speksataan otetaanko käyttöön
     ;; Palautetaan tilaan kaikki mpu_kustannukset taulun selitteet vectorina
     ;; Siirtää aina "Muut kustannukset" vectorin viimeiseksi
     ;; Esimerkki vastaus: ({:selite Arvonmuutokset} {:selite Tester} {:selite Indeksi- ja kustannustason muutokset})

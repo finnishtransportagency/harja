@@ -69,12 +69,12 @@
      (when (= (:kustannus-tyyppi lomake-valinnat) "Muut kustannukset")
        (lomake/rivi
          {:nimi :kustannus-selite
-          :palstoja 2
           :otsikko "Selite"
           :validoi [[:ei-tyhja "Kirjoita kustannuksen selite"]]
           :tyyppi :haku
           :piilota-checkbox? true
           :piilota-dropdown? true
+          :salli-kirjoitus? true
           :hae-kun-yli-n-merkkia 0
           :nayta second :fmt second
           :lahde (selitehaku kayttajien-selitteet)
