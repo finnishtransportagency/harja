@@ -73,6 +73,8 @@
           :otsikko "Selite"
           :validoi [[:ei-tyhja "Kirjoita kustannuksen selite"]]
           :tyyppi :haku
+          :piilota-checkbox? true
+          :piilota-dropdown? true
           :hae-kun-yli-n-merkkia 0
           :nayta second :fmt second
           :lahde (selitehaku kayttajien-selitteet)
