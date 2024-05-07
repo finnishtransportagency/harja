@@ -10,16 +10,21 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
-(def +kirjatut-selitteet+
+(defn koosta-selitteet 
+  "Mäppää app staten vectorin ['Teksti'] muotoon {:teksti 'Teksti'}"
+  [selitteet]
   (into {}
     (map #(vector (fmt/string-avaimeksi %) %))
-    ["Arvonmuutokset" "Indeksi- ja kustannustason muutokset" "Muut kustannukset"]))
+    selitteet))
 
 
-(def selitehaku
+(defn selitehaku 
+  "Kopsattu tieliikenneilmoitukset.cljs, tehty funktioksi johon passataan tuck app staten käyttäjien lisäämät selitteet
+   Käytetään autofillinä jotka tarjotaan alasvetovalintoihin kun käyttäjä kirjoittaa selitettä"
+  [selitteet]
   (reify protokollat/Haku
     (hae [_ teksti]
-      (go (let [selitteet +kirjatut-selitteet+
+      (go (let [selitteet (koosta-selitteet selitteet)
                 itemit (if (< (count teksti) 1)
                          (vals selitteet)
                          (filter #(not= (.indexOf (.toLowerCase (val %))
@@ -28,7 +33,8 @@
             (vec (sort itemit)))))))
 
 
-(defn kustannuksen-lisays-lomake [e! {:keys [voi-kirjoittaa? lomake-valinnat kustannusten-selitteet]} voi-tallentaa?]
+(defn kustannuksen-lisays-lomake [e! {:keys [voi-kirjoittaa? lomake-valinnat
+                                             kustannusten-selitteet kayttajien-selitteet]} voi-tallentaa?]
   [:div.overlay-oikealla
    [lomake/lomake
     {:ei-borderia? true
@@ -62,26 +68,16 @@
      ;; Selite 
      (when (= (:kustannus-tyyppi lomake-valinnat) "Muut kustannukset")
        (lomake/rivi
-         {:otsikko "Selite"
-          :pakollinen? true
-          :rivi-luokka "lomakeryhman-rivi-tausta"
-          :validoi [[:ei-tyhja "Kirjoita kustannuksen selite"]]
-          :nimi :kustannus-selite
-          :tyyppi :string
-          ::lomake/col-luokka "leveys-kokonainen"}
-         
-         {:nimi :selite
+         {:nimi :kustannus-selite
           :palstoja 2
           :otsikko "Selite"
+          :validoi [[:ei-tyhja "Kirjoita kustannuksen selite"]]
           :tyyppi :haku
           :hae-kun-yli-n-merkkia 0
           :nayta second :fmt second
-          :lahde selitehaku
+          :lahde (selitehaku kayttajien-selitteet)
           :rivi-luokka "lomakeryhman-rivi-tausta"
-          ::lomake/col-luokka "leveys-kokonainen"}
-         
-         
-         ))
+          ::lomake/col-luokka "leveys-kokonainen"}))
 
      ;; Määrä 
      (lomake/rivi

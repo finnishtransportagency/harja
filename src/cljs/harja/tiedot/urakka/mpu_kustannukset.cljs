@@ -205,7 +205,9 @@
   TallennaKustannus
   (process-event [{rivi :rivi} app]
     (let [{:keys [kustannus-tyyppi kustannus-selite kustannus]} rivi]
-      (let [selite (if (some? (seq kustannus-selite)) kustannus-selite kustannus-tyyppi)]
+      (let [selite (if (some? (seq kustannus-selite)) 
+                     (second kustannus-selite) 
+                     kustannus-tyyppi)]
         (tallenna-mpu-kustannus app selite kustannus))
       (assoc app :muokataan false :lomake-valinnat nil)))
 
