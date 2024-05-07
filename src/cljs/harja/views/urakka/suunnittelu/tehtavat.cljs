@@ -218,6 +218,7 @@
         ;; Merkitse yksiköksi -- jos sitä ei ole
         aluetiedot @aluetiedot-tila
         aluetiedot-tila (if (> (count aluetiedot) 0) (paivita-yksikko-ja-nimi aluetiedot) aluetiedot-tila)
+        vetolaatikkotehtavat (filter #(and (= (:taso %) 4) (= false (:rahavaraus? %)) (= false (:aluetieto? %))) taso-4-tehtavat)
         maarat-tila (r/cursor t/taulukko-tila [:maarat sisainen-id])
         maarat @maarat-tila
         maarat-tila (if (> (count maarat) 0) (paivita-yksikko-ja-nimi maarat) maarat-tila)
@@ -303,7 +304,7 @@
                {:vetolaatikot
                 (into {}
                   (map (juxt :id (r/partial vetolaatikko-komponentti e! app)))
-                  taso-4-tehtavat)
+                  vetolaatikkotehtavat)
                 :vetolaatikot-auki t/taulukko-avatut-vetolaatikot
                 :vetolaatikko-optiot {:ei-paddingia true}}))
            [(when (not sopimukset-syotetty?) 
