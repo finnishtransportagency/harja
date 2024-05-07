@@ -130,7 +130,7 @@ jobs:
       - name: Shutdown Harja Fargate tasks
         uses: ./.github/actions/shutdown-fargate-tasks
         timeout-minutes: 15
-        if: ${{ contains(fromJson('["dev"]'), inputs.environment)  }}
+        if: ${{ contains(fromJson('["dev"]'), inputs.environment) }}
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           service: ${{ vars.ECS_SERVICE_NAME }}
@@ -138,8 +138,8 @@ jobs:
       # Ajetaan tietokantamigraatiot RDS:ään ennen uuden image:n deployausta
       - name: Run migrations to RDS
         uses: ./.github/actions/run-migrations-to-rds
-        #if: ${{ contains(fromJson('["dev", "stg"]'), inputs.environment)  }}
-        if: ${{ contains(fromJson('["dev", "stg", "prod"]'), inputs.environment)  }}
+        #if: ${{ contains(fromJson('["dev", "stg"]'), inputs.environment) }}
+        if: ${{ contains(fromJson('["dev", "stg", "prod"]'), inputs.environment) }}
         with:
           # Migraatiot halutaan ajaa samalle commit SHA:lle, kuin mistä build artifact on peräisin,
           # jotta migraatiot ja deployattava image ovat yhteensopivia.
@@ -173,7 +173,7 @@ jobs:
           wait-for-service-stability: ${{ contains(fromJson('["stg", "prod"]'), inputs.environment) }}
 
       # !! Vain DEV-ympäristö !!
-      # Sammutetaan Harjan Fargate taskit, jotta ne eivät häiritse testidatan ajamista dev-tietokantaan.
+      # Käynnistetään aiemmin sammutetut dev-ympäristön Fargate taskit uudelleen.
       - name: Start Harja Fargate tasks
         uses: ./.github/actions/start-fargate-tasks
         timeout-minutes: 10
