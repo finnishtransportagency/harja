@@ -193,19 +193,13 @@
     "vaihtelua/vuosi"
     ""))
 
-(defn- muodosta-tehtava-nimi [rivi]
-  (str (:nimi rivi) (when (:rahavaraus? rivi) " (R)")))
-
-(defn- paivita-yksikko-ja-nimi [rivit]
+(defn- paivita-yksikko [rivit]
   (r/atom (apply array-map (flatten (mapv
-                                      ;{<id> {<key> <value> mäppinä}}
+                                      ;rivit on muotoa: {<id> {<key> <value> mäppinä}}
                                       (fn [rivi]
-                                        (let [key (first rivi)
-                                              val (second rivi)
-                                              yksikko (:yksikko val)
-                                              val (-> val
-                                                    (assoc :yksikko (if (or (nil? yksikko) (str/blank? yksikko)) "--" yksikko))
-                                                    (assoc :nimi (muodosta-tehtava-nimi val)))]
+                                        (let [[key val] rivi
+                                              {:keys [yksikko rahavaraus?]} val
+                                              val (assoc val :yksikko (if (or (nil? yksikko) (str/blank? yksikko) rahavaraus?) "--" yksikko))]
                                           [key val]))
                                       rivit)))))
 
@@ -216,11 +210,11 @@
         aluetiedot-tila (r/cursor t/taulukko-tila [:alueet sisainen-id])
         ;; Merkitse yksiköksi -- jos sitä ei ole
         aluetiedot @aluetiedot-tila
-        aluetiedot-tila (if (> (count aluetiedot) 0) (paivita-yksikko-ja-nimi aluetiedot) aluetiedot-tila)
+        aluetiedot-tila (if (> (count aluetiedot) 0) (paivita-yksikko aluetiedot) aluetiedot-tila)
         vetolaatikkotehtavat (filter #(and (= (:taso %) 4) (= false (:rahavaraus? %)) (= false (:aluetieto? %))) taso-4-tehtavat)
         maarat-tila (r/cursor t/taulukko-tila [:maarat sisainen-id])
         maarat @maarat-tila
-        maarat-tila (if (> (count maarat) 0) (paivita-yksikko-ja-nimi maarat) maarat-tila)
+        maarat-tila (if (> (count maarat) 0) (paivita-yksikko maarat) maarat-tila)
         onko-tehtavia? (cond
                          (and nayta-aluetehtavat? nayta-suunniteltavat-tehtavat?
                            (= 0 alue-tehtavia maara-tehtavia))
