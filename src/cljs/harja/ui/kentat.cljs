@@ -121,8 +121,8 @@
                                 ;; IE triggeröi on-change myös ohjelmallisista muutoksista
                                 (let [v (-> % .-target .-value str/triml)]
                                   ;; Kun monivalinta, tai sallitaan kirjoitus, älä resetoi dataa
-                                  (when (and 
-                                          (not monivalinta?) 
+                                  (when (and
+                                          (not monivalinta?)
                                           (not salli-kirjoitus?)) (reset! data nil))
                                   (reset! teksti v)
                                   (when kun-muuttuu (kun-muuttuu v))
@@ -136,7 +136,7 @@
                                                     (empty? tul)
                                                     salli-kirjoitus?)
                                               (reset! data v)))))
-                                    (do 
+                                    (do
                                       (when salli-kirjoitus? (reset! data v))
                                       (reset! tulokset nil)))))
                   :on-key-down (nuolivalinta #(let [t @tulokset]
@@ -167,56 +167,56 @@
                                             (reset! teksti ((or nayta str) (reset! data v)))
                                             (reset! tulokset nil)))
                                         (when kun-muuttuu (kun-muuttuu nil))))))}]
-         (when (and (zero? hae-kun-yli-n-merkkia) (not piilota-dropdown?))
+
+         (when (and
+                 (zero? hae-kun-yli-n-merkkia)
+                 (not piilota-dropdown?))
            [:button.nappi-hakualasveto
-            {:on-click #(go (reset! tulokset (<! (hae lahde "")))
+            {:on-click #(go
+                          (reset! tulokset (<! (hae lahde "")))
                           (reset! valittu-idx nil))
              :disabled disabled?}
             [:span.livicon-chevron-down]])
-(let [nykyiset-tulokset (if (and sort-fn (vector? @tulokset))
-                          (sort-by sort-fn @tulokset)
-                          @tulokset)
 
-      idx @valittu-idx] 
-         [:ul.hakukentan-lista.dropdown-menu {:role "menu"
-                                              :style {:display (if
-                                                                 ;; Piilota tyhjä dropdown, jos 
-                                                                 ;; sallitaan kirjoitus
-                                                                 ;; haetaan tuloksia
-                                                                 ;; tai tuloksia ei ollut 
-                                                                 (and salli-kirjoitus?
-                                                                   (not (= nykyiset-tulokset :haetaan))
-                                                                   (or
-                                                                     (empty? nykyiset-tulokset)
-                                                                     (nil? nykyiset-tulokset))) "none" "block")
-                                                      :max-height valinta-ul-max-korkeus-px}}
+         (let [nykyiset-tulokset (if (and sort-fn (vector? @tulokset))
+                                   (sort-by sort-fn @tulokset)
+                                   @tulokset)
+               haetaan? (= nykyiset-tulokset :haetaan)
+               idx @valittu-idx]
 
-          (if (= :haetaan nykyiset-tulokset)
-            [:li {:role "presentation"} (ajax-loader) " haetaan: " @teksti]
-            (if (or
-                  (empty? nykyiset-tulokset)
-                  (nil? nykyiset-tulokset))
-              ;; Jos sallitaan kirjoitus, älä näytä "Ei tuloksia"
-              [:span.ei-hakutuloksia {:style {:display (if salli-kirjoitus? "none" "block")}} "Ei tuloksia"]
-              (doall (map-indexed (fn [i t]
-                                    ^{:key (hash t)}
-                                    [:li {:class [(when (= i idx) "korostettu") "padding-left-8"
-                                                  "harja-alasvetolistaitemi display-flex items-center klikattava"]
-                                          :role "presentation"}
-                                     [tee-kentta
-                                      {:tyyppi :checkbox
-                                       :teksti ((or nayta str) t)
-                                       :piilota-checkbox? piilota-checkbox?
-                                       :valitse! #(do
-                                                    (.preventDefault %)
-                                                    (if monivalinta?
-                                                      (reset! teksti (monivalinta-teksti (monivalinta-valitse! t)))
-                                                      (do
-                                                        (reset! teksti ((or nayta str) (reset! data t)))
-                                                        (reset! tulokset nil)))
-                                                    (when kun-muuttuu (kun-muuttuu nil)))}
-                                      (or (= t @data) (some #{t} @data))]])
-                       nykyiset-tulokset))))])]))))
+           [:ul.hakukentan-lista.dropdown-menu {:role "menu" :style {:max-height valinta-ul-max-korkeus-px}
+                                                :class (when (and
+                                                               ;; Kun sallitaan oman selitteen asetus, "Ei tuloksia" ei tarvitse näyttää
+                                                               salli-kirjoitus?
+                                                               (not haetaan?)
+                                                               (or
+                                                                 (empty? nykyiset-tulokset)
+                                                                 (nil? nykyiset-tulokset)))
+                                                         "piilotettu-elementti")}
+
+            (if haetaan?
+              [:li {:role "presentation"} (ajax-loader) " haetaan: " @teksti]
+              (if (empty? nykyiset-tulokset)
+                [:span.ei-hakutuloksia "Ei tuloksia"]
+                (doall (map-indexed (fn [i t]
+                                      ^{:key (hash t)}
+                                      [:li {:class [(when (= i idx) "korostettu") "padding-left-8"
+                                                    "harja-alasvetolistaitemi display-flex items-center klikattava"]
+                                            :role "presentation"}
+                                       [tee-kentta
+                                        {:tyyppi :checkbox
+                                         :teksti ((or nayta str) t)
+                                         :piilota-checkbox? piilota-checkbox?
+                                         :valitse! #(do
+                                                      (.preventDefault %)
+                                                      (if monivalinta?
+                                                        (reset! teksti (monivalinta-teksti (monivalinta-valitse! t)))
+                                                        (do
+                                                          (reset! teksti ((or nayta str) (reset! data t)))
+                                                          (reset! tulokset nil)))
+                                                      (when kun-muuttuu (kun-muuttuu nil)))}
+                                        (or (= t @data) (some #{t} @data))]])
+                         nykyiset-tulokset))))])]))))
 
 
 (defn placeholder [{:keys [placeholder placeholder-fn rivi] :as kentta} data]
