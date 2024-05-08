@@ -156,6 +156,19 @@
     (is (= 1 (:lupaus-id kajaani-lupaus-1)) "Kajaanilla on lupaus 1 ryhmasta 1")
     (is (= 15 (:lupaus-id suomussalmi-lupaus-1)) "Suomussalmella on lupaus 15 ryhmasta 6")))
 
+(deftest urakan-lupaustietojen-vaihtoehtojen-haku-toimii
+  (let [tiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                     #inst "2022-09-30T20:59:59.000-00:00"]
+                :nykyhetki #inst "2021-09-30T21:00:00.000-00:00"}
+        vastaus (hae-urakan-lupaustiedot
+                  +kayttaja-jvh+
+                  tiedot)
+        eka-vaihtoehto (first (:vaihtoehdot (etsi-lupaus vastaus 3)))]
+    (is (= "> 25 %" (:vaihtoehto eka-vaihtoehto)) "vaihtoehto oikein")
+    (is (= 1 (:vaihtoehto-askel eka-vaihtoehto)) "askel oikein")
+    (is (= 3 (:vaihtoehto-seuraava-ryhma-id eka-vaihtoehto)) "seuraava ryhmä oikein")
+    (is (= "Testiotsikko 1" (:ryhma-otsikko eka-vaihtoehto)) "ryhma-otsikko oikein")))
 
 (deftest odottaa-kannanottoa
   (let [hakutiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
