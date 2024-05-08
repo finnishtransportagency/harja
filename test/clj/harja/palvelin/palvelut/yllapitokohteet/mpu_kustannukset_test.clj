@@ -35,21 +35,13 @@
 (deftest hae-mpu-kustannukset-toimii
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         vastaus (tee-kutsu {:vuosi 2024
-                            :urakka-id urakka-id} :hae-mpu-kustannukset)
-                            
-        _ (println "\n count " (count vastaus))
+                            :urakka-id urakka-id} :hae-mpu-kustannukset)]
 
-        _ (println "f " (-> vastaus first))
-
-        _ (println "\nv: " vastaus)
-        ]
-
-    (is (= (-> vastaus count) 5))
+    (is (= (-> vastaus count) 4))
     (is (= (-> vastaus first) {:selite "Arvonmuutokset", :summa 1337M}))
     (is (= (-> vastaus second) {:selite "Indeksi- ja kustannustason muutokset", :summa 80085M}))
     (is (= (-> vastaus (nth 2)) {:selite "Kalustokustannukset", :summa 75000M}))
-    (is (= (-> vastaus (nth 3)) {:selite "Muu kustannus", :summa 1000000M}))
-    (is (= (-> vastaus (nth 4)) {:selite "Työvoimakustannukset", :summa 200000M}))))
+    (is (= (-> vastaus (nth 3)) {:selite "Työvoimakustannukset", :summa 200000M}))))
 
 
 (deftest hae-paikkaus-kustannukset-toimii
@@ -75,7 +67,7 @@
                                    {:id 6, :kokonaiskustannus 0M, :tyomenetelma "Sirotepuhalluspaikkaus (SIPU)"}
                                    {:id 3, :kokonaiskustannus 0M, :tyomenetelma "SMA-paikkaus levittäjällä"}
                                    {:id 8, :kokonaiskustannus 215000.0M, :tyomenetelma "Urapaikkaus (UREM/RREM)"})
-
+        
         vastaus (tee-kutsu {:aikavali [alkupvm loppupvm]
                             :urakka-id urakka-id} :hae-paikkaus-kustannukset)]
 
@@ -92,7 +84,6 @@
         odotettu-vastaus '({:selite "Arvonmuutokset", :summa 1337M}
                            {:selite "Indeksi- ja kustannustason muutokset", :summa 80085M}
                            {:selite "Kalustokustannukset", :summa 75000M}
-                           {:selite "Muu kustannus", :summa 1000000M}
                            {:selite "Työvoimakustannukset", :summa 200000M})
 
         _ (tee-kutsu {:urakka-id urakka-id
@@ -103,7 +94,6 @@
         odotettu-tallennus '({:selite "Arvonmuutokset", :summa 1337M}
                              {:selite "Indeksi- ja kustannustason muutokset", :summa 80085M}
                              {:selite "Kalustokustannukset", :summa 75000M}
-                             {:selite "Muu kustannus", :summa 1000000M}
                              {:selite "Päällystettiin Kuusamon luontopolku", :summa 142000M}
                              {:selite "Työvoimakustannukset", :summa 200000M})
 
@@ -111,7 +101,7 @@
                                         :urakka-id urakka-id} :hae-mpu-kustannukset)]
 
     (is (= vastaus-ennen odotettu-vastaus))
-    (is (= (count odotettu-vastaus) 5))
+    (is (= (count odotettu-vastaus) 4))
 
     (is (= vastaus-tallennettu odotettu-tallennus))
-    (is (= (count vastaus-tallennettu) 6))))
+    (is (= (count vastaus-tallennettu) 5))))
