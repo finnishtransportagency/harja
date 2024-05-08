@@ -23,23 +23,62 @@
 (deftest vkm-parametrit
   (let [parametrit (vkm/yllapitokohde->vkm-parametrit
                      [{:yha-id 123456
-                       :tierekisteriosoitevali {:tienumero 4 :aosa 1 :aet 0 :losa 3 :let 1000 :ajorata 1}}]
-                     (pvm/luo-pvm 2017 0 1)
-                     (pvm/luo-pvm 2017 5 25))
+                       :tierekisteriosoitevali {:tienumero 4 :aosa 1 :aet 0 :losa 3 :let 1000 :ajorata 1
+                                                :karttapaivamaara (pvm/luo-pvm-dec-kk 2023 01 01)}}
+                      {:yha-id 123457
+                       :tierekisteriosoitevali {:tienumero 4 :aosa 3 :aet 1000 :losa 4 :let 100 :ajorata 1
+                                                :karttapaivamaara (pvm/luo-pvm-dec-kk 2022 01 01)}}
+                      {:yha-id 123458
+                       :tierekisteriosoitevali {:tienumero 4 :aosa 4 :aet 100 :losa 4 :let 1000 :ajorata 1
+                                                :karttapaivamaara nil}}]
+                     (pvm/luo-pvm-dec-kk 2017 1 1)
+                     (pvm/luo-pvm-dec-kk 2023 6 25))
         odotetut [{:tunniste "kohde-123456-alku"
                    :tie 4
                    :osa 1
                    :etaisyys 0
-                   :tilannepvm "01.01.2017"
-                   :kohdepvm "25.06.2017"
+                   :tilannepvm "01.01.2023"
+                   :kohdepvm "25.06.2023"
                    :ajorata 1
                    :palautusarvot "2"}
                   {:tunniste "kohde-123456-loppu"
                    :tie 4
                    :osa 3
                    :etaisyys 1000
+                   :tilannepvm "01.01.2023"
+                   :kohdepvm "25.06.2023"
+                   :ajorata 1
+                   :palautusarvot "2"}
+                  {:tunniste "kohde-123457-alku"
+                   :tie 4
+                   :osa 3
+                   :etaisyys 1000
+                   :tilannepvm "01.01.2022"
+                   :kohdepvm "25.06.2023"
+                   :ajorata 1
+                   :palautusarvot "2"}
+                  {:tunniste "kohde-123457-loppu"
+                   :tie 4
+                   :osa 4
+                   :etaisyys 100
+                   :tilannepvm "01.01.2022"
+                   :kohdepvm "25.06.2023"
+                   :ajorata 1
+                   :palautusarvot "2"}
+                  {:tunniste "kohde-123458-alku"
+                   :tie 4
+                   :osa 4
+                   :etaisyys 100
                    :tilannepvm "01.01.2017"
-                   :kohdepvm "25.06.2017"
+                   :kohdepvm "25.06.2023"
+                   :ajorata 1
+                   :palautusarvot "2"}
+                  {:tunniste "kohde-123458-loppu"
+                   :tie 4
+                   :osa 4
+                   :etaisyys 1000
+                   :tilannepvm "01.01.2017"
+                   :kohdepvm "25.06.2023"
                    :ajorata 1
                    :palautusarvot "2"}]]
     (is (= odotetut parametrit) "VKM:n Parametrit muodostettu oikein")))
