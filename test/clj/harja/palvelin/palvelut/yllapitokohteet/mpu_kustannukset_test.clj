@@ -35,7 +35,14 @@
 (deftest hae-mpu-kustannukset-toimii
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         vastaus (tee-kutsu {:vuosi 2024
-                            :urakka-id urakka-id} :hae-mpu-kustannukset)]
+                            :urakka-id urakka-id} :hae-mpu-kustannukset)
+                            
+        _ (println "\n count " (count vastaus))
+
+        _ (println "f " (-> vastaus first))
+
+        _ (println "\nv: " vastaus)
+        ]
 
     (is (= (-> vastaus count) 5))
     (is (= (-> vastaus first) {:selite "Arvonmuutokset", :summa 1337M}))

@@ -169,8 +169,7 @@
           bonukset (fn-laske-arvo :yllapidon_bonus)
           sanktiot (fn-laske-arvo :yllapidon_sakko)
           ;; Vähennä/Lisää vielä sanktiot ja bonukset 
-          kustannukset-yhteensa (+ kustannukset-yhteensa bonukset)
-          kustannukset-yhteensa (+ kustannukset-yhteensa sanktiot)
+          kustannukset-yhteensa (+ kustannukset-yhteensa bonukset sanktiot)
           ;; Lisää bonukset ja sanktiot gridiin
           sanktiot-ja-bonukset [{:id (generoi-avain), :kokonaiskustannus bonukset :tyomenetelma "Bonukset"}
                                 {:id (generoi-avain), :kokonaiskustannus sanktiot :tyomenetelma "Sanktiot"}]
