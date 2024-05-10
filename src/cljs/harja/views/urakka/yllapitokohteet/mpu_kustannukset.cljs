@@ -22,7 +22,7 @@
     (komp/sisaan #(e! (tiedot/->HaeKustannustiedot)))
 
     ;; Näkymä
-    (fn [e! {:keys [haku-kaynnissa? lomake-valinnat muokataan rivit] :as app}]
+    (fn [e! {:keys [haku-kaynnissa? lomake-valinnat muokataan tyomenetelmittain] :as app}]
       
       (let [urakka @nav/valittu-urakka
             voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet @nav/valittu-urakka-id @istunto/kayttaja)
@@ -53,7 +53,7 @@
          ;; Väliotsikko
          [:h3.header-yhteiset "Työmenetelmittäin"]
 
-         ;; Taulukko
+         ;; Kustannus taulukko työmenetelmittäin
          [grid/grid {:tyhja (if haku-kaynnissa?
                               [ajax-loader "Haku käynnissä..."]
                               "Valitulle aikavälille ei löytynyt mitään.")
@@ -76,7 +76,7 @@
             :tasaa :oikea
             :luokka "text-nowrap"
             :leveys 1}]
-          rivit]
+          tyomenetelmittain]
 
          [:div.valitetty-rivi
           ;; Väliotsikko
@@ -90,7 +90,7 @@
             {:ikoni [ikonit/harja-icon-action-add] :vayla-tyyli? true}]]]
 
          ;; Sanktiot ja bonukset
-         (apurit/sanktiot-ja-bonukset-grid app)]))))
+         (apurit/muut-kustannukset-grid app)]))))
 
 
 (defn mpu-kustannukset []

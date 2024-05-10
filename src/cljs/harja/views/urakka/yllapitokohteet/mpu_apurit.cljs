@@ -53,9 +53,9 @@
                                                                                                :data-attributes {:data-cy "tallena-mpu-kustannus"}}]
                ;; Peruuta 
                [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeLomake)) {:data-attributes {:data-cy "mpu-kustannus-peruuta"}}]]]}
-
-    [;; Tyyppi
-     (lomake/rivi
+    
+    ;; Tyyppi
+    [(lomake/rivi
        {:otsikko "Kustannuksen tyyppi"
         :pakollinen? true
         :rivi-luokka "lomakeryhman-rivi-tausta"
@@ -95,7 +95,7 @@
     lomake-valinnat]])
 
 
-(defn sanktiot-ja-bonukset-grid [{:keys [haku-kaynnissa? sanktiot-ja-bonukset kustannukset-yhteensa]}]
+(defn muut-kustannukset-grid [{:keys [haku-kaynnissa? muut-kustannukset kustannukset-yhteensa]}]
 
   [grid/grid {:tyhja (if haku-kaynnissa?
                        [ajax-loader "Haku käynnissä..."]
@@ -122,4 +122,4 @@
      :tasaa :oikea
      :luokka "text-nowrap"
      :leveys 1}]
-   sanktiot-ja-bonukset])
+   muut-kustannukset])

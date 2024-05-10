@@ -54,7 +54,9 @@
 (defrecord HaeMPUKustannuksetEpaonnistui [vastaus])
 
 
-(defn- hae-paikkaus-kustannukset [app]
+(defn- hae-paikkaus-kustannukset 
+  "Hakee reikäpaikkausten ja muiden paikkausten kustannukset"
+  [app]
   (tuck-apurit/post! app :hae-paikkaus-kustannukset
     {:aikavali (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi)
      :urakka-id @nav/valittu-urakka-id}
@@ -63,6 +65,7 @@
 
 
 (defn- hae-mpu-kustannukset
+  "Hakee käyttäjien lisäämät kustannukset"
   [app]
   (tuck-apurit/post! app :hae-mpu-kustannukset
     {:urakka-id @nav/valittu-urakka-id
@@ -125,9 +128,11 @@
   HaeKustannustiedotOnnistui
   (process-event [{vastaus :vastaus} app]
     (let [kustannukset (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) vastaus))]
+      ;; Hae käyttäjien lisäämät muut kustannukset 
       (hae-mpu-kustannukset app)
+      ;; Tähän tulee kustannukset pelkästään työmenetelmittäin
       (assoc app
-        :rivit (vec vastaus)
+        :tyomenetelmittain (vec vastaus)
         :kustannukset-yhteensa kustannukset)))
 
   HaeKustannustiedotEpaonnistui
@@ -137,20 +142,20 @@
     app)
 
   HaeMPUKustannuksetOnnistui
-  (process-event [{vastaus :vastaus} {:keys [kustannukset-yhteensa rivit] :as app}]
+  (process-event [{vastaus :vastaus} {:keys [kustannukset-yhteensa] :as app}]
     (let [kustannukset (reduce + (map (fn [rivi] (or (:summa rivi) 0)) vastaus))
           kustannukset-yhteensa (+ kustannukset-yhteensa kustannukset)
-          rivit-mpu-kustannuksilla (reduce (fn [rivit r]
-                                             (conj rivit
-                                               {:id (generoi-avain)
-                                                :kokonaiskustannus (:summa r)
-                                                :tyomenetelma (:selite r)}))
-                                     rivit
-                                     vastaus)]
+          ;; Mäppää vastaus vectoriksi mikä kelpaa gridille
+          mpu-kustannukset (reduce (fn [rivit r]
+                                     (conj rivit
+                                       {:id (generoi-avain)
+                                        :kokonaiskustannus (:summa r)
+                                        :tyomenetelma (:selite r)}))
+                             []
+                             vastaus)]
       (hae-sanktiot-ja-bonukset app)
-      ;; Tykitä mpu_kustannukset taulusta saadut rivit gridiin
       (assoc app
-        :rivit rivit-mpu-kustannuksilla
+        :muut-kustannukset mpu-kustannukset
         :kustannukset-yhteensa kustannukset-yhteensa)))
 
   HaeMPUKustannuksetEpaonnistui
@@ -158,9 +163,9 @@
     (js/console.warn "Kustannusten haku epäonnistui, vastaus: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Haku epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
-  
+
   HaeSanktiotJaBonuksetOnnistui
-  (process-event [{vastaus :vastaus} {:keys [rivit kustannukset-yhteensa] :as app}]
+  (process-event [{vastaus :vastaus} {:keys [kustannukset-yhteensa muut-kustannukset] :as app}]
     (let [fn-laske-arvo (fn [avain]
                           (reduce + (map (fn [rivi]
                                            (when (= (:laji rivi) avain)
@@ -170,18 +175,19 @@
           sanktiot (fn-laske-arvo :yllapidon_sakko)
           ;; Vähennä/Lisää vielä sanktiot ja bonukset 
           kustannukset-yhteensa (+ kustannukset-yhteensa bonukset sanktiot)
-          ;; Lisää bonukset ja sanktiot gridiin
-          sanktiot-ja-bonukset [{:id (generoi-avain), :kokonaiskustannus bonukset :tyomenetelma "Bonukset"}
+          ;; Lisää bonukset ja sanktiot muihin kustannuksiin (alempi grid)
+          bonukset-ja-sanktiot [{:id (generoi-avain), :kokonaiskustannus bonukset :tyomenetelma "Bonukset"}
                                 {:id (generoi-avain), :kokonaiskustannus sanktiot :tyomenetelma "Sanktiot"}]
+          ;; Lyö muut kustannukset ja bonukset yhteen, näytetään nämä alemmassa taulukossa
+          muut-kustannukset (concat bonukset-ja-sanktiot muut-kustannukset)
           ;; Sorttaa rivit aakkosilla
-          rivit-sortattu (sort-by #(str/lower-case (:tyomenetelma %)) rivit)]
-  
+          rivit-sortattu (sort-by #(str/lower-case (:tyomenetelma %)) muut-kustannukset)]
+
       (assoc app
-        :rivit rivit-sortattu
-        :sanktiot-ja-bonukset sanktiot-ja-bonukset
+        :muut-kustannukset rivit-sortattu
         :haku-kaynnissa? false
         :kustannukset-yhteensa kustannukset-yhteensa)))
-  
+
   HaeSanktiotJaBonuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Sanktioiden haku epäonnistui: " (pr-str vastaus))
