@@ -196,7 +196,7 @@
 
   AvaaLomake
   (process-event [_ app]
-    (assoc app :muokataan true))
+    (assoc app :muokataan true :lomake-valinnat nil))
 
   SuljeLomake
   (process-event [_ app]
