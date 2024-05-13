@@ -323,7 +323,9 @@
                                                                  :sideaine/pitoisuus 4.8M
                                                                  :sideaine/tyyppi 6})
                                  :harja.domain.pot2/tyyppi 12
-                                 ::pot2-domain/massa-id 1}
+                                 ::pot2-domain/massa-id 1
+                                 :yhteenlaskettu-kuulamyllyarvo 5.20M
+                                 :yhteenlaskettu-litteysluku 4.94M}
                                 {:harja.domain.pot2/dop-nro "987654331-2"
                                  :harja.domain.pot2/kaytossa ({:kohdenumero "L42"
                                                                :kohteiden-lkm 1
@@ -366,7 +368,9 @@
                                                                  :sideaine/pitoisuus 5.5M
                                                                  :sideaine/tyyppi 5})
                                  :harja.domain.pot2/tyyppi 14
-                                 ::pot2-domain/massa-id 2}))
+                                 ::pot2-domain/massa-id 2
+                                 :yhteenlaskettu-kuulamyllyarvo 8.38M
+                                 :yhteenlaskettu-litteysluku 5.750M}))
 
 (def oletetut-murskeet-utajarvi '(#:harja.domain.pot2{:esiintyma "Kankkulan Kaivo", :nimen-tarkenne "LJYR", :iskunkestavyys "LA30", :tyyppi 1, :rakeisuus "0/40", :dop-nro "1234567-dop", :murske-id 1 :kaytossa ({:kohdenumero "L42"
                                                                                                                                                                                                                    :kohteiden-lkm 1
@@ -397,7 +401,9 @@
                                       :sideaine/lopputuote? true
                                       :sideaine/pitoisuus 10.6M
                                       :sideaine/tyyppi 1})
-                        :tyyppi 1}))
+                        :tyyppi 1
+                        :_/yhteenlaskettu-kuulamyllyarvo 4.114M
+                        :_/yhteenlaskettu-litteysluku 1.394M}))
 
 (deftest hae-urakan-pot2-massat
   (let [_ (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -566,7 +572,9 @@
                                       :sideaine/lopputuote? true
                                       :sideaine/pitoisuus 3.8M
                                       :sideaine/tyyppi 6})
-                        :tyyppi 12}))
+                        :tyyppi 12
+                        :_/yhteenlaskettu-kuulamyllyarvo 6.6M
+                        :_/yhteenlaskettu-litteysluku 4.675M}))
 
 (def oletetut-murskeet-oulun-paallystysurakassa (list ))
 
