@@ -138,7 +138,7 @@
                       :oid-prefix "1.2.246.578.4.3.7"
                       :sijaintityyppi :vali})
 (def viherkuviot
-  "tl524 Viherkuviot" {:kohdeluokka "viherkuviot" :palvelu "tiekohderekisteri" :api-versio "v1"
+  "tl524 Viherkuviot" {:kohdeluokka "viherhoitokuvio" :palvelu "tiekohderekisteri" :api-versio "v1"
                        :nimiavaruus "ymparisto" :kohdeluokka->tyyppi-fn muu-kohdeluokka->tyyppi
                        :tyyppi-polku muu-kohdeluokka-tyyppi-polku
                        :oid-prefix "1.2.246.578.4.4.5"
@@ -478,6 +478,7 @@
                                 :otsikot otsikot
                                 :url (str varuste-api-juuri-url "/hakupalvelu/api/v1/haku/kohdeluokat")}
                 urakka-velho-oid (q-urakat/hae-urakan-velho-oid db {:id urakka-id})
+                _ (assert urakka-velho-oid "Urakalle ei löytynyt vastaavaa Velho-oidia.")
 
                 varustetyypit (group-by :kohdeluokka varustetyypit)
 
