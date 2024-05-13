@@ -30,9 +30,9 @@
   (q/tallenna-mpu-kustannus! db tiedot))
 
 
-(defn hae-mpu-selitteet [db kayttaja {:keys [urakka-id] :as _tiedot}]
+(defn hae-mpu-selitteet [db kayttaja {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
-  (q/hae-mpu-kustannus-selitteet db))
+  (q/hae-mpu-kustannus-selitteet db tiedot))
 
 
 (defn hae-mpu-kustannukset [db kayttaja {:keys [urakka-id] :as tiedot}]

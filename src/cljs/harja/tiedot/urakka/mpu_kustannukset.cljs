@@ -101,7 +101,7 @@
   "Hakee käyttäjien aikaisemmin kirjoittamat omat selitteet muille kustannuksille"
   [app]
   (tuck-apurit/post! app :hae-mpu-selitteet
-    {}
+    {:urakka-id @nav/valittu-urakka-id}
     {:onnistui ->HaeMPUSelitteetOnnistui
      :epaonnistui ->HaeMPUSelitteetEpaonnistui}))
 

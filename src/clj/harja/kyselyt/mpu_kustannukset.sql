@@ -57,4 +57,4 @@ GROUP BY selite;
 
 
 -- name: hae-mpu-kustannus-selitteet
-SELECT DISTINCT(selite) FROM mpu_kustannukset;
+SELECT DISTINCT(selite) FROM mpu_kustannukset WHERE urakka = :urakka-id;
