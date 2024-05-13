@@ -235,15 +235,12 @@
 
   HaeMPUSelitteetOnnistui
   (process-event [{vastaus :vastaus} app]
-    ;; Palautetaan tilaan kaikki mpu_kustannukset taulun selitteet vectorina
-    ;; Siirtää aina "Muut kustannukset" vectorin viimeiseksi
-    ;; Esimerkki vastaus: ({:selite Arvonmuutokset} {:selite Tester} {:selite Indeksi- ja kustannustason muutokset})
-    ;; Esimerkki output: ["Arvonmuutokset" "Indeksi- ja kustannustason muutokset" "Tester" "Muut kustannukset"]
-    (let [fn-kokoa-selitteet (fn [tyypit vastaus]
+    ;; Palautetaan tilaan kaikki mpu_kustannukset taulun selitteet (käyttäjien lisäämät selitteet) vectorina
+    (let [fn-kokoa-selitteet (fn [suodata vastaus]
                                (let [vastauksen-selitteet (map :selite vastaus)
-                                     kaikki (set (concat tyypit vastauksen-selitteet))]
-                                 ;; Siirrä Muut kustannukset viimeiseksi
-                                 (vec (sort-by #(if (= % "Muut kustannukset") 1 0) kaikki))))]
+                                     ;; Suodata vakio selitteet tästä, tätä käytetään vain autofillissä
+                                     suodatettu (remove (set suodata) vastauksen-selitteet)]
+                                 (vec suodatettu)))]
       (assoc app
         :kayttajien-selitteet (fn-kokoa-selitteet (:kustannusten-selitteet app) vastaus))))
 
