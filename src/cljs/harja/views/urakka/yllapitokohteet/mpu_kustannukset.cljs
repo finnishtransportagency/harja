@@ -10,7 +10,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
-            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
+            [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.napit :as napit]
             [harja.views.urakka.yllapitokohteet.mpu-apurit :as apurit]
             [harja.tiedot.istunto :as istunto]))
@@ -51,7 +51,7 @@
               (e! (tiedot/->HaeKustannustiedot)))]]
 
          ;; Väliotsikko
-         [:h3.header-yhteiset "Työmenetelmittäin"]
+         [:h3.header-yhteiset.ei-marginia "Työmenetelmittäin"]
 
          ;; Kustannus taulukko työmenetelmittäin
          [grid/grid {:tyhja (if haku-kaynnissa?
@@ -80,7 +80,7 @@
 
          [:div.valitetty-rivi
           ;; Väliotsikko
-          [:h3.header-yhteiset "Muut kustannukset"]
+          [:h3.header-yhteiset.ei-marginia "Muut kustannukset"]
 
           ;; Lisää kustannus
           [:span

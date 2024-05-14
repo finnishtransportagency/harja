@@ -1,5 +1,5 @@
 (ns harja.tiedot.urakka.mpu-kustannukset
-  (:require [reagent.core :refer [atom] :as reagent]
+  (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -8,13 +8,15 @@
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]))
 
+(def default-arvot {:rivit nil
+                    :lomake-valinnat nil
+                    :kustannukset-yhteensa nil
+                    :muokataan false
+                    :haku-kaynnissa? false
+                    :kustannusten-selitteet ["Arvonmuutokset" "Indeksi- ja kustannustason muutokset" "Muut kustannukset"]})
+
 (def nakymassa? (atom false))
-(defonce tila (atom {:rivit nil
-                     :lomake-valinnat nil
-                     :kustannukset-yhteensa nil
-                     :muokataan false
-                     :haku-kaynnissa? false
-                     :kustannusten-selitteet ["Arvonmuutokset" "Indeksi- ja kustannustason muutokset" "Muut kustannukset"]}))
+(defonce tila (atom default-arvot))
 
 
 (defn voi-tallentaa?
@@ -121,9 +123,11 @@
     ;; hae-mpu-selitteet, hae-paikkaus-kustannukset
     ;; -> hae-mpu-kustannukset
     ;; -> hae-sanktiot-ja-bonukset
-    (hae-mpu-selitteet app)
-    (hae-paikkaus-kustannukset app)
-    (assoc app :haku-kaynnissa? true))
+    ;; Kun tullaan näkymään -> Resetoi aina tila
+    (let [nollaa-arvot (assoc default-arvot :haku-kaynnissa? true)]
+      (hae-mpu-selitteet app)
+      (hae-paikkaus-kustannukset app)
+      nollaa-arvot))
 
   HaeKustannustiedotOnnistui
   (process-event [{vastaus :vastaus} app]

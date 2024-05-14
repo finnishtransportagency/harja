@@ -5,7 +5,7 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.protokollat :as protokollat]
             [harja.ui.grid :as grid]
-            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
+            [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
