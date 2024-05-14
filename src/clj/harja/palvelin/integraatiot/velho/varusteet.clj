@@ -478,7 +478,9 @@
                                 :otsikot otsikot
                                 :url (str varuste-api-juuri-url "/hakupalvelu/api/v1/haku/kohdeluokat")}
                 urakka-velho-oid (q-urakat/hae-urakan-velho-oid db {:id urakka-id})
-                _ (assert urakka-velho-oid "Urakalle ei löytynyt vastaavaa Velho-oidia.")
+                _ (when-not urakka-velho-oid
+                    (swap! virheet conj (str "Urakalle ei löytynyt vastaavaa Velho-oidia. Urakan id: " urakka-id))
+                    (log/error "Urakalle ei löytynyt vastaavaa Velho-oidia. Urakan id: " urakka-id))
 
                 varustetyypit (group-by :kohdeluokka varustetyypit)
 
