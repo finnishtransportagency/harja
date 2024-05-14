@@ -159,26 +159,36 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
     })
 
     it('Määrän voi vaihtaa', () => {
-        cy.intercept('POST', '_/hae-mhu-suunniteltavat-tehtavat').as('tehtavamaarat')
+        cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=13&u=32');
+        cy.intercept('POST', '_/hae-mhu-suunniteltavat-tehtavat').as('HaeTehtavamaarat')
+        cy.intercept('POST', '_/hae-sopimuksen-tila').as('HaeSopimuksenTila')
+        cy.wait('@HaeTehtavamaarat')
+        cy.wait('@HaeSopimuksenTila')
+
+
         cy.get('div.select-default').first().find('button').click()
         cy.get('.harja-alasvetolistaitemi').contains('1.0 TALVIHOITO').click()
         cy.wait(2000)
+
+        cy.intercept('POST', '_/tallenna-tehtavamaarat').as('TallennaTehtavamaarat')
         cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').should('not.have.value', 666)
-        cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').type('777').blur()
+        cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').clear().type('777').blur()
+        cy.wait('@TallennaTehtavamaarat')
         cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').should('have.value', 777)
+
     })
 
     after(() => {
-        cy.intercept('POST', '_/tallenna-tehtavamaarat').as('tallennatehtavamaarat')
+        cy.intercept('POST', '_/tallenna-tehtavamaarat').as('TallennaTehtavamaarat')
         cy.get('div.select-default').first().find('button').click()
         cy.get('.harja-alasvetolistaitemi').contains('0 KAIKKI').click()
         cy.wait(1000)
         cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').clear().blur()
-        cy.wait('@tallennatehtavamaarat')
-        cy.wait(1000)
+        cy.wait('@TallennaTehtavamaarat')
         cy.get('div.select-default').first().find('button').click()
         cy.get('.harja-alasvetolistaitemi').contains('3 SORATEIDEN HOITO').click()
         cy.wait(1000)
         cy.get('table.grid').contains('Sorateiden pölynsidonta (materiaali)').parent().find('td.muokattava').find('input').clear().blur()
+        cy.wait('@TallennaTehtavamaarat')
     })
 })
