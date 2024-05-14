@@ -203,11 +203,7 @@
                         :db-replica {:paivitystiheys-ms s/Int
                                      :replikoinnin-max-viive-ms s/Int}}
    (s/optional-key :palautevayla) {:url s/Str
-                                   ;; TODO: Käyttäjätunnus ja salasana ovat käytössä vanhassa Harja-ympäristössä. Poista kun ei tarvita. #yliheitto
-                                   ;; TODO: Muuta samalla myös :apiavain pakolliseksi.
-                                   (s/optional-key :apiavain) s/Str
-                                   :kayttajatunnus s/Str
-                                   :salasana s/Str
+                                   :apiavain s/Str
                                    :paivitysaika [s/Num]}})
 
 (def oletusasetukset
