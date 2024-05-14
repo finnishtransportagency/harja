@@ -72,8 +72,8 @@
     [komponentti data]))
 
 (defmethod tee-kentta :haku [{:keys [_lahde nayta placeholder pituus lomake? sort-fn disabled?
-                                     kun-muuttuu hae-kun-yli-n-merkkia vayla-tyyli? monivalinta?
-                                     tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti]} data]
+                                     kun-muuttuu hae-kun-yli-n-merkkia vayla-tyyli? monivalinta? salli-kirjoitus?
+                                     tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti piilota-checkbox? piilota-dropdown?]} data]
   (when monivalinta?
     (assert (ifn? monivalinta-teksti) "Monivalintahakukentällä pitää olla funktio monivalinta-teksti!"))
   (let [nyt-valittu @data
@@ -120,15 +120,25 @@
                                 ;; tehdään haku vain jos elementti on fokusoitu
                                 ;; IE triggeröi on-change myös ohjelmallisista muutoksista
                                 (let [v (-> % .-target .-value str/triml)]
-                                  (if-not monivalinta? (reset! data nil))
+                                  ;; Kun monivalinta, tai sallitaan kirjoitus, älä resetoi dataa
+                                  (when (and
+                                          (not monivalinta?)
+                                          (not salli-kirjoitus?)) (reset! data nil))
                                   (reset! teksti v)
                                   (when kun-muuttuu (kun-muuttuu v))
                                   (if (> (count v) hae-kun-yli-n-merkkia)
                                     (do (reset! tulokset :haetaan)
                                       (go (let [tul (<! (hae lahde v))]
                                             (reset! tulokset tul)
-                                            (reset! valittu-idx nil))))
-                                    (reset! tulokset nil))))
+                                            (reset! valittu-idx nil)
+                                            ;; Jos sallitaan kirjoitus, aseta data kentän arvoksi
+                                            (when (and
+                                                    (empty? tul)
+                                                    salli-kirjoitus?)
+                                              (reset! data v)))))
+                                    (do
+                                      (when salli-kirjoitus? (reset! data v))
+                                      (reset! tulokset nil)))))
                   :on-key-down (nuolivalinta #(let [t @tulokset]
                                                 (log "YLÖS " @valittu-idx)
                                                 (when (vector? t)
@@ -157,20 +167,34 @@
                                             (reset! teksti ((or nayta str) (reset! data v)))
                                             (reset! tulokset nil)))
                                         (when kun-muuttuu (kun-muuttuu nil))))))}]
-         (when (zero? hae-kun-yli-n-merkkia)
+
+         (when (and
+                 (zero? hae-kun-yli-n-merkkia)
+                 (not piilota-dropdown?))
            [:button.nappi-hakualasveto
-            {:on-click #(go (reset! tulokset (<! (hae lahde "")))
+            {:on-click #(go
+                          (reset! tulokset (<! (hae lahde "")))
                           (reset! valittu-idx nil))
              :disabled disabled?}
             [:span.livicon-chevron-down]])
 
-         [:ul.hakukentan-lista.dropdown-menu {:role "menu"
-                                              :style {:max-height valinta-ul-max-korkeus-px}}
-          (let [nykyiset-tulokset (if (and sort-fn (vector? @tulokset))
-                                    (sort-by sort-fn @tulokset)
-                                    @tulokset)
-                idx @valittu-idx]
-            (if (= :haetaan nykyiset-tulokset)
+         (let [nykyiset-tulokset (if (and sort-fn (vector? @tulokset))
+                                   (sort-by sort-fn @tulokset)
+                                   @tulokset)
+               haetaan? (= nykyiset-tulokset :haetaan)
+               idx @valittu-idx]
+
+           [:ul.hakukentan-lista.dropdown-menu {:role "menu" :style {:max-height valinta-ul-max-korkeus-px}
+                                                :class (when (and
+                                                               ;; Kun sallitaan oman selitteen asetus, "Ei tuloksia" ei tarvitse näyttää
+                                                               salli-kirjoitus?
+                                                               (not haetaan?)
+                                                               (or
+                                                                 (empty? nykyiset-tulokset)
+                                                                 (nil? nykyiset-tulokset)))
+                                                         "piilotettu-elementti")}
+
+            (if haetaan?
               [:li {:role "presentation"} (ajax-loader) " haetaan: " @teksti]
               (if (empty? nykyiset-tulokset)
                 [:span.ei-hakutuloksia "Ei tuloksia"]
@@ -182,6 +206,7 @@
                                        [tee-kentta
                                         {:tyyppi :checkbox
                                          :teksti ((or nayta str) t)
+                                         :piilota-checkbox? piilota-checkbox?
                                          :valitse! #(do
                                                       (.preventDefault %)
                                                       (if monivalinta?
@@ -191,7 +216,7 @@
                                                           (reset! tulokset nil)))
                                                       (when kun-muuttuu (kun-muuttuu nil)))}
                                         (or (= t @data) (some #{t} @data))]])
-                         nykyiset-tulokset)))))]]))))
+                         nykyiset-tulokset))))])]))))
 
 
 (defn placeholder [{:keys [placeholder placeholder-fn rivi] :as kentta} data]
@@ -547,15 +572,19 @@
       (fn! event))))
 
 (defn vayla-checkbox
-  [{:keys [input-id lukutila? disabled? arvo data teksti valitse! checkbox-style label-luokka label-id indeterminate]}]
+  [{:keys [input-id lukutila? disabled? arvo data piilota-checkbox?
+           teksti valitse! checkbox-style label-luokka label-id indeterminate]}]
   (let [input-id (or input-id
                      (gensym "checkbox-input-id-"))
         label-id (or label-id
                      (gensym "checkbox-label-id-"))]
     [:div
-     [:input.vayla-checkbox
+     [:input
       {:id input-id
-       :class (y/luokat "check" (when lukutila? "lukutila"))
+       :class (y/luokat 
+                (if piilota-checkbox? "piilotettu-checkbox" "vayla-checkbox") 
+                "check" 
+                (when lukutila? "lukutila"))
        :type "checkbox"
        :disabled disabled?
        :checked arvo
@@ -566,9 +595,11 @@
                            (reset! data valittu?))))}]
      [:label.checkbox-label {:on-click #(.stopPropagation %)
                              :id label-id
-                             :class (y/luokat label-luokka
-                                              (when disabled? "disabled")
-                                              (when indeterminate "indeterminate"))
+                             :class (y/luokat
+                                      label-luokka
+                                      (when disabled? "disabled")
+                                      (when indeterminate "indeterminate")
+                                      (when piilota-checkbox? "autofill-teksti"))
                              :on-key-down #()
                              :for input-id
                              :style (or checkbox-style {})}
@@ -680,7 +711,7 @@
 
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
-(defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina? label-luokka
+(defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina? label-luokka piilota-checkbox?
                                          vayla-tyyli? disabled? iso-clickalue? label-id input-id]} data]
   (let [boolean-arvo? (not (or (instance? ratom/RAtom data) (instance? ratom/Wrapper data) (instance? ratom/RCursor data)))
         input-id (or input-id (str "harja-checkbox-" (gensym)))
@@ -705,6 +736,7 @@
                                         (.stopPropagation %)
                                         (swap! data not)))}
            (let [checkbox [vayla-checkbox {:data data
+                                           :piilota-checkbox? piilota-checkbox?
                                            ;; label- ja input-id on tarkoituksella jätetty toistamatta sisemmmässä funktiossa.
                                            :input-id input-id
                                            :label-id label-id
