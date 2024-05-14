@@ -603,7 +603,7 @@
   (process-event [_ {:keys [lataa-aloitustiedot] :as app}]
     (if-not (:liikennetapahtumien-haku-kaynnissa? app)
       (let [params (hakuparametrit app)
-            params (if lataa-aloitustiedot (select-keys params [:urakka-idt]) params)]
+            params (if lataa-aloitustiedot (select-keys params [:urakka-idt :aikavali]) params)]
         (-> app
           (tt/post! :hae-liikennetapahtumat
             params
@@ -840,17 +840,17 @@
                                              #{}
                                              (disj s id))))))
   AsetaAloitusTiedot
-  (process-event [{:keys [aikavali valinnat]} app]
-    (let [kanava-hallintayksikko (some
+  (process-event [{:keys [aloitustiedot]} app]
+    (let [valinnat (:valinnat aloitustiedot)
+          kanava-hallintayksikko (some
                                    #(when (= (:nimi %) "Kanavat ja avattavat sillat") (:id %))
                                    @hallintayksikot/vaylamuodon-hallintayksikot)
           ;; Siivoa suodattimet kun urakkaa vaihdetaan murupolusta tai tullaan näkymään 
-          valinnat (select-keys valinnat [:kayttajan-urakat :urakka-idt])]
+          valinnat (select-keys valinnat [:kayttajan-urakat :urakka-idt :aikavali])]
       (-> app
         (assoc :valinnat valinnat)
         (assoc :lataa-aloitustiedot true)
         (assoc :liikennetapahtumien-haku-kaynnissa? false)
-        (assoc-in [:valinnat :aikavali] aikavali)
         (tt/post! :hae-kayttajan-kanavaurakat {:hallintayksikko kanava-hallintayksikko
                                                :urakka-id @nav/valittu-urakka-id}
           {:onnistui ->KayttajanUrakatHaettu}))))

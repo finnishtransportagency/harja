@@ -506,30 +506,30 @@
             ^{:key idx}
             [:th {:colSpan (or sarakkeita 1)
                   :class (y/luokat luokka
-                                   (y/tasaus-luokka tasaa))}
+                           (y/tasaus-luokka tasaa))}
              [:div teksti]])
           rivi-ennen)])
-     [:tr
-      (map-indexed
-        (fn [i {:keys [otsikko otsikko-komp leveys nimi otsikkorivi-luokka tasaa sarake-sort] :as s-opts}]
-          ^{:key (str i nimi)}
-          [:th {:class (y/luokat otsikkorivi-luokka
-                                 (y/tasaus-luokka tasaa)
-                                 (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))
-                :width (or leveys "5%")
-                :on-click (when otsikkorivi-klikattu #(otsikkorivi-klikattu s-opts))}
-           (if otsikko-komp
-             [otsikko-komp]
-             (if-not sarake-sort
-               [:div otsikko]
-               [:div.ilmoitukset-sort
-               [:span.klikattava {:on-click (:fn sarake-sort)}
-                otsikko " " (sort-ikoni (:suunta sarake-sort)) " "]]
-               ))]) skeema)
-      (when (or nayta-toimintosarake?
+     (when-not (:piilota-otsikot? opts)
+       [:tr
+        (map-indexed
+          (fn [i {:keys [otsikko otsikko-komp leveys nimi otsikkorivi-luokka tasaa sarake-sort] :as s-opts}]
+            ^{:key (str i nimi)}
+            [:th {:class (y/luokat otsikkorivi-luokka
+                           (y/tasaus-luokka tasaa)
+                           (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))
+                  :width (or leveys "5%")
+                  :on-click (when otsikkorivi-klikattu #(otsikkorivi-klikattu s-opts))}
+             (if otsikko-komp
+               [otsikko-komp]
+               (if-not sarake-sort
+                 [:div otsikko]
+                 [:div.ilmoitukset-sort
+                  [:span.klikattava {:on-click (:fn sarake-sort)}
+                   otsikko " " (sort-ikoni (:suunta sarake-sort)) " "]]))]) skeema)
+        (when (or nayta-toimintosarake?
                 (and (not piilota-toiminnot?)
-                     tallenna))
-        [:th.toiminnot {:width "40px"} " "])]]))
+                  tallenna))
+          [:th.toiminnot {:width "40px"} " "])])]))
 
 (defn- aseta-leijuvan-otsikkorivin-sarakkeet! [leijuva-otsikkorivi oikea-taulu leveys-atomi scroll
                                                ensimmainen-sarake-sticky?]
@@ -882,7 +882,8 @@
   :rivi-jalkeen-fn                       viimeisen rivin jälkeinen näytettävä rivi. Funktio,
                                         joka saa muokkaustiedot parametrina ja palauttaa
                                         sekvenssin mäppejä kuten :rivi-ennen
-  :piilota-border?                      piilottaa taulukon sarakkeiden borderit
+  :piilota-border?                      Piilottaa taulukon sarakkeiden borderit
+  :piilota-otsikot?                     Piilottaa koko otsikkorivin  
 
   :id                                   mahdollinen DOM noden id, gridin pääelementille
   :tyhja                                Jos rivejä ei ole, mitä näytetään taulukon paikalla?
@@ -906,7 +907,8 @@
            ei-footer-muokkauspaneelia? ennen-muokkausta voi-muokata-rivia?
            nollaa-muokkaustiedot-tallennuksen-jalkeen? tallennus-ei-mahdollinen-tooltip
            aloitussivu rivi-validointi rivi-varoitus rivi-huomautus
-           taulukko-validointi taulukko-varoitus taulukko-huomautus piilota-border?] :as opts} skeema tiedot]
+           taulukko-validointi taulukko-varoitus taulukko-huomautus 
+           piilota-border?] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
   (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
         taulukon-ref (atom nil)
