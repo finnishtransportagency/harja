@@ -762,3 +762,8 @@
     :tekniset-laitteet "tekniset laitteet"
 
     "Ei vielä formatointia ko. urakkatyypille"))
+
+(defn string-avaimeksi [s]
+  (-> s
+    str/lower-case
+    (str/replace #"[\s]+" "-") keyword))

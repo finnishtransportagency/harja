@@ -52,9 +52,20 @@ SELECT l.id                     AS "lupaus-id",
 GROUP BY l.id, sit.id, r.id;
 
 -- name: hae-lupaus-vaihtoehdot
-SELECT id, "lupaus-id", vaihtoehto, pisteet
-  FROM lupaus_vaihtoehto
- WHERE "lupaus-id" = :lupaus-id;
+ SELECT
+	lv.id, 
+	lv."lupaus-id", 
+	lv.vaihtoehto, 
+	lv.pisteet, 
+	lv."vaihtoehto-askel", 
+	lv."vaihtoehto-seuraava-ryhma-id",
+	lvr."ryhma-otsikko"
+FROM
+	lupaus_vaihtoehto lv
+left JOIN lupaus_vaihtoehto_ryhma lvr on
+	lv."vaihtoehto-ryhma-otsikko-id" = lvr.id
+WHERE
+	lv."lupaus-id" = :lupaus-id;
 
 -- name: hae-lupaus-vaihtoehto
 SELECT id, "lupaus-id", vaihtoehto, pisteet

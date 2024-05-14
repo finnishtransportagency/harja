@@ -32,8 +32,7 @@ permissions:
 
 env:
   # Yleiset scriptien käyttämät ympäristömuuttujat
-  # TODO: Käytä 'prod'-ympäristöä vasta kunnollisen testailun jälkeen
-  TARGET_ENVIRONMENT: 'stg'
+  TARGET_ENVIRONMENT: 'prod'
   BRANCH_NAME: 'develop'
 
 jobs:
@@ -112,9 +111,7 @@ jobs:
           LATEST_DEPLOYMENT_SHA: ${{ steps.latest-deployment.outputs.sha }}
           LATEST_DEPLOYMENT_STATUS: ${{ steps.latest-deployment.outputs.status }}
           LATEST_BUILD_SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}
-          # TODO: Nyt defaulttina pakotetaan deployment aina, jotta voidaan testata automaation toimintaa staging-ympäristössä
-          #       Palauta normaali toiminta, kun automaatio on testattu.
-          FORCE_DEPLOYMENT: true #${{ inputs.force-deployment }}
+          FORCE_DEPLOYMENT: ${{ inputs.force-deployment }}
         run: |
           echo "Latest prod deployment SHA: $LATEST_DEPLOYMENT_SHA"
           echo "Latest prod deployment status: $LATEST_DEPLOYMENT_STATUS"

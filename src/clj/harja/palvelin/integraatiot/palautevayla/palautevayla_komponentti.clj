@@ -26,21 +26,14 @@
 (defn- lue-aiheet [aiheet-xml]
   (z/xml-> aiheet-xml :subject lue-aihe))
 
-(defn hae-aiheet-palautevaylasta [db integraatioloki {:keys [url kayttajatunnus salasana apiavain]}]
+(defn hae-aiheet-palautevaylasta [db integraatioloki {:keys [url apiavain]}]
   (integraatiotapahtuma/suorita-integraatio db integraatioloki
     "palautevayla" "hae-aiheet"
     (fn [konteksti]
-      (let [http-asetukset (if (empty? apiavain)
-                             ;; Vanhan Harjan kutsut kulkevat entiseen tapaan suoraan palauteväylän apiin ilman autentikaatiota. //TODO: poista kun #yliheitto
-                             {:metodi :GET
-                              :url (str url "/api/x_sgtk_open311/v1/publicws/subjects?locale=fi")
-                              :kayttajatunnus kayttajatunnus
-                              :salasana salasana}
-                             ;; Pilvi-Harjan kutsut palauteväylälle kulkevat integraatioväylän kautta ja autentikoidaan api-avaimella.
-                             {:metodi :GET
-                              :url (str url "/api/x_sgtk_open311/v1/publicws/subjects?locale=fi")
-                              :otsikot {"Content-Type" "application/xml"
-                                        "x-api-key" apiavain}})
+      (let [http-asetukset {:metodi :GET
+                            :url (str url "/api/x_sgtk_open311/v1/publicws/subjects?locale=fi")
+                            :otsikot {"Content-Type" "application/xml"
+                                      "x-api-key" apiavain}}
             {body :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
         (if (xml/validi-xml? +xsd-polku+ "aiheet.xsd" body)
           (lue-aiheet (xml/lue body))
@@ -58,21 +51,14 @@
 (defn- lue-tarkenteet [tarkenteet-xml]
   (z/xml-> tarkenteet-xml :subsubject lue-tarkenne))
 
-(defn hae-tarkenteet-palautevaylasta [db integraatioloki {:keys [url kayttajatunnus salasana apiavain]}]
+(defn hae-tarkenteet-palautevaylasta [db integraatioloki {:keys [url apiavain]}]
   (integraatiotapahtuma/suorita-integraatio db integraatioloki
     "palautevayla" "hae-tarkenteet"
     (fn [konteksti]
-      (let [http-asetukset (if (empty? apiavain)
-                             ;; Vanhan Harjan kutsut kulkevat entiseen tapaan suoraan palauteväylän apiin ilman autentikaatiota. //TODO: poista kun #yliheitto
-                             {:metodi :GET
-                              :url (str url "/api/x_sgtk_open311/v1/publicws/subsubjects?locale=fi")
-                              :kayttajatunnus kayttajatunnus
-                              :salasana salasana}
-                             ;; Pilvi-Harjan kutsut palauteväylälle kulkevat integraatioväylän kautta ja autentikoidaan api-avaimella.
-                             {:metodi :GET
-                              :url (str url "/api/x_sgtk_open311/v1/publicws/subsubjects?locale=fi")
-                              :otsikot {"Content-Type" "application/xml"
-                                        "x-api-key" apiavain}})
+      (let [http-asetukset {:metodi :GET
+                            :url (str url "/api/x_sgtk_open311/v1/publicws/subsubjects?locale=fi")
+                            :otsikot {"Content-Type" "application/xml"
+                                      "x-api-key" apiavain}}
             {body :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
         (if (xml/validi-xml? +xsd-polku+ "tarkenteet.xsd" body)
           (lue-tarkenteet (xml/lue body))
@@ -89,8 +75,8 @@
 
     (palautevayla-q/hae-aiheet-ja-tarkenteet db)))
 
-(defn- aiheet-ja-tarkenteet-paivitystehtava [db integraatioloki {:keys [paivitysaika url kayttajatunnus salasana] :as asetukset}]
-  (when (and paivitysaika url kayttajatunnus salasana)
+(defn- aiheet-ja-tarkenteet-paivitystehtava [db integraatioloki {:keys [paivitysaika url apiavain] :as asetukset}]
+  (when (and paivitysaika url apiavain)
     (ajastettu-tehtava/ajasta-paivittain
       paivitysaika
       (fn [_]

@@ -355,11 +355,11 @@
    (vuosi {}
           ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom
           #(reset! valittu-vuosi-atom %)))
-  ([{:keys [disabled kaanteinen-jarjestys? kaikki-valinta? vayla-tyyli?] :as optiot}
+  ([{:keys [disabled kaanteinen-jarjestys? kaikki-valinta? vayla-tyyli? otsikko-teksti] :as optiot}
     ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom valitse-fn]
    [:div.label-ja-alasveto.vuosi
     [:span.label-ja-aikavali-lyhyt
-     [:label {:class (str "alasvedon-otsikko" (when vayla-tyyli? "-vayla"))} "Vuosi"]
+     [:label {:class (str "alasvedon-otsikko" (when vayla-tyyli? "-vayla"))} (or otsikko-teksti "Vuosi")]
      [livi-pudotusvalikko (merge
                            {:valinta @valittu-vuosi-atom
                             :disabled disabled

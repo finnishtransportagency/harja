@@ -244,8 +244,5 @@
 
  :palautevayla {:url "https://fipadev.service-now.com"
                 :apiavain ""
-                ;; TODO: Käyttäjätunnus ja salasana ovat käytössä vanhassa Harja-ympäristössä. Poista kun ei tarvita. #yliheitto
-                :kayttajatunnus "integration.harja"
-                :salasana #=(eval (harja.tyokalut.env/env "HARJA_PALAUTEVAYLA_SALASANA" ""))
                 :paivitysaika [12 45 00]}}
 
