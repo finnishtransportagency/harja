@@ -159,7 +159,7 @@
   "Taulukolla näkyvälle kentälle päivitetään valitun hoitokauden määrät"
   [hoitokausi [id tehtava]]
   (let [muuttunut-tarjouksesta? (if (:aluetieto? tehtava)
-                                  (not= (get-in tehtava [:sopimuksen-aluetieto-maara hoitokausi]) (get-in tehtava [:suunnitellut-maarat hoitokausi]))
+                                  (not= (:sopimus-maara tehtava) (get-in tehtava [:suunnitellut-maarat hoitokausi]))
                                   ;; Suunniteltavat määrät ovat aina "muuttuneet" tarjouksesta
                                   true)]
     [id (assoc tehtava :maara-muuttunut-tarjouksesta (if muuttunut-tarjouksesta?
@@ -497,7 +497,7 @@ sopimusmaarat))
                           (range
                             hoitokausi
                             (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi))
-                          hoitokausi)
+                          [hoitokausi])
           _ (swap! taulukko-tila assoc-in [:alueet vanhempi id :maara-muuttunut-tarjouksesta] maara-muuttunut-tarjouksesta)]
 
       ;; Päivitä myös viewin käyttämä atomi
