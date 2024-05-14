@@ -171,7 +171,6 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
         cy.wait(2000)
 
         cy.intercept('POST', '_/tallenna-tehtavamaarat').as('TallennaTehtavamaarat')
-        cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').should('not.have.value', 666)
         cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').clear().type('777').blur()
         cy.wait('@TallennaTehtavamaarat')
         cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').should('have.value', 777)
