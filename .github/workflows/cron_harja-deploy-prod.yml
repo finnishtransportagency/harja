@@ -87,6 +87,8 @@ jobs:
 
       # TODO: Jos tämä ei osoittaudu riittävän luotettavaksi tavaksi tunnistaa viimeisin onnistunut GH deployment,
       #       niin haetaan AWS ECR:stä viimeisin deployattu image ja verrataan sen tagia viimeisimmän buildin committiin.
+      # Yrittää löytää viimeisimmän onnistuneen deploymentin kohdeympäristöön.
+      # Palauttaa tyhjän ouputin, jos deploymenttia ei löydy, mutta ei merkitse steppiä epäonnistuneeksi.
       - name: Get latest GitHub deployment by latest successful build commit SHA
         uses: actions/github-script@v7
         id: latest-deployment
