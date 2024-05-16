@@ -55,7 +55,7 @@ BEGIN
         SELECT t.id AS toteuma_tunniste_id
           FROM toteuma t
                    LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
-                   LEFT JOIN tehtava t ON t.id = tt.toimenpidekoodi
+                   LEFT JOIN tehtava teh ON teh.id = tt.toimenpidekoodi
                    LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
                    LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
                    JOIN urakka u ON t.urakka = u.id
