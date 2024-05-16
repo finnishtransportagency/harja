@@ -10,13 +10,7 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
-            [ring.util.response :refer [file-response header content-type]]
-            [clojure.java.io :as io]
-            [clojure.data.json :as json]
-            [cheshire.core :as cheshire]
-            [harja.tyokalut.spec-apurit :as spec-apurit]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
@@ -34,7 +28,6 @@
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
-            [harja.kyselyt.kulut :as kulut-kyselyt]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
             [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat])
@@ -70,10 +63,18 @@
                                                          (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muotoZ) %)))))
 
 (defn- tarkista-haun-parametrit [parametrit rajoita]
-  (parametrivalidointi/tarkista-parametrit
-    parametrit
-    {:alkuaika "Alkuaika puuttuu"
-     :loppuaika "Loppuaika puuttuu"})
+  (try
+    (s/valid? ::loppuaika (:loppuaika parametrit))
+    (s/valid? ::alkuaika (:alkuaika parametrit))
+    (parametrivalidointi/tarkista-parametrit
+      parametrit
+      {:alkuaika "Alkuaika puuttuu"
+       :loppuaika "Loppuaika puuttuu"})
+    (catch Exception e
+      (log/error "Virhe Analytiikka-api kutsussa:" e)
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+puutteelliset-parametrit+
+                          :viesti "Poikkeus annetuissa parametreissa. Anna päivämäärät muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03"}]})))
   (when (not (s/valid? ::alkuaika (:alkuaika parametrit)))
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
@@ -100,12 +101,14 @@
   {:f1 :id
    :f2 :maara_maara
    :f3 :maara_yksikko
-   :f4 :selite})
+   :f4 :selite
+   :f5 :tehtavaryhmaid})
 
 (def db-materiaalit->avaimet
-  {:f1 :materiaali
-   :f2 :maara_maara
-   :f3 :maara_yksikko})
+  {:f1 :id
+   :f2 :materiaali
+   :f3 :maara_maara
+   :f4 :maara_yksikko})
 
 ;; Mäpätään json row array tyyppiset elementit (:f<x> muotoiset kolumnien nimet) alaviivarakenteiseksi
 ;; mäpiksi, jotta data saadaan formatoitua skeeman mukaisesti
@@ -177,9 +180,9 @@
     true (assoc :materiaalit (get-in reitti [:reittipiste :materiaalit]))
     true (dissoc :reittipiste)))
 
-;; Meillä ei ole tietoa, että minkä kokoinen (MB) yksi toteuma on json muodossa. Joten otetaan joku hanska-arvio
+;; Meillä ei ole tietoa, että minkä kokoinen (MB) yksi toteuma on json muodossa. Joten joudutaan käyttämään hanska-arviota.
 ;; Aineistot on isoja ja se pitäisi generoida valmiiksi, jos haluaisi tietää tarkan summan. Joten hanska-arvio on
-;; nopea, mutta suuntaa-antava. Tällä hetkellä se antaa n. 20% liian suuria kokoja. Mittausten mukaan n. 0.0044 alkaa olla lälhellä totuutta.
+;; nopea, mutta vain suuntaa antava. Tällä hetkellä se antaa n. 20% liian suuria kokoja. Mittausten mukaan n. 0.0044 alkaa olla lälhellä totuutta.
 (def arvioitu-toteuman-koko 0.006)
 
 (defn palauta-toteumat
