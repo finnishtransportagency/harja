@@ -12,34 +12,44 @@ describe('Reikäpaikkausnäkymä toimii', function ()
   {
     cy.viewport(1100, 2000);
     cy.server();
-    // Intercept post kutsu 
     cy.route('POST', '_/hae-reikapaikkaukset').as('reikapaikkaukset'); 
+
     // Avaa päänäkymä
     cy.visit("/");
+
     // Avaa hallintayksikkö
     cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click(); 
+
     // Hyrrää ei pitäisi olla 
     cy.get('.ajax-loader', {timeout: loaderTimeout}).should('not.exist'); 
+
     // Valitaan urakkatyyppi
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'}); 
+
     // Valitse oikea urakka 
     cy.contains('[data-cy=urakat-valitse-urakka] li', 'Muhoksen päällystysurakka', {timeout: clickTimeout}).click(); 
+
     // Avaa reikäpaikkausnäkymä
     cy.get('[data-cy=tabs-taso1-Reikapaikkaukset]').click(); 
+
     // Kutsu pitäisi triggeraa
     cy.wait('@reikapaikkaukset', {timeout: clickTimeout}) 
+
     // Hyrrää ei pitäisi olla
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist'); 
 
     // Aseta alkupvm suodatin
     cy.get('[data-cy="reikapaikkaus-aikavali"] input', {timeout: 50000}).eq(0).clear().type('25.02.2024').blur(); 
+
     // Aseta loppupvmsuodatin
     cy.get('[data-cy="reikapaikkaus-aikavali"] input', {timeout: 50000}).eq(1).clear().type('31.03.2024').blur();
 
     // Paina Hae 
     cy.get('[data-cy="hae-reikapaikkauskohteita"]').click();
+
     // Pitäisi tulla 5 tulosta, (+ otsikot, eli 6) 
     cy.get('table.grid').find('tr').should('have.length', 6, { timeout: 10000 });
+
     // Tällainen tr osoite pitäsi olla ensimmäisessä toteumassa
     cy.get('.grid tr').eq(1).find('td').contains('Tie 20 / 1 / 1 / 1 / 120');
   });
@@ -155,10 +165,13 @@ describe('Reikäpaikkausnäkymä toimii', function ()
     // Tarkista arvot ennen tallennusta 
     // Ensimmäisen toteuman neljäs sarake (Määrä) on tällä hetkellä 81
     cy.get('.grid tr').eq(1).find('td').eq(3).contains('66 kpl');
+
     // Kustannus on 215 000
     cy.get('.grid tr').eq(1).find('td').eq(4).contains('1 500');
+
     // Menetelmä 
     cy.get('.grid tr').eq(1).find('td').eq(2).contains('Jyrsintäkorjaukset (HJYR/TJYR)');
+    
     // Pvm 
     cy.get('.grid tr').eq(1).find('td').eq(0).contains('05.03.2024');
 
