@@ -265,12 +265,6 @@
                       toteumat)})]
     toteumat))
 
-(defn- wrappaa-toteumat
-  "Funktio jää näin hieman keskeneräiseksi"
-  [db parametrit kayttaja]
-  (let [toteumat (palauta-toteumat db parametrit kayttaja)]
-    {:reittitoteumat toteumat}))
-
 (defn palauta-materiaalit
   "Haetaan materiaalit ja palautetaan ne json muodossa"
   [db _ _]
@@ -489,7 +483,6 @@
                                               kayttaja)}))
                                    urakat)]
     suunnitellut-materiaalit))
-
 
 (defn palauta-urakan-suunnitellut-tehtavamaarat
   "Palautetaan suunnitellut tehtavamaarat yhdelle urakalle."
