@@ -228,10 +228,11 @@
    {:nimi "2.8 LIIKENNEYMPÄRISTÖN HOITO / Siltojen ja laitureiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 2}
    {:nimi "3 SORATEIDEN HOITO", :sopimus-tallennettu nil, :tehtavien-lkm 7}
    {:nimi "4 PÄÄLLYSTEIDEN PAIKKAUS", :sopimus-tallennettu nil, :tehtavien-lkm 4}
+   {:nimi "5 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA" :sopimus-tallennettu nil :tehtavien-lkm 6}
    {:nimi "6.1 YLLÄPITO / Rumpujen uusiminen", :sopimus-tallennettu nil, :tehtavien-lkm 8}
    {:nimi "6.2 YLLÄPITO / Avo-ojien kunnossapito", :sopimus-tallennettu nil, :tehtavien-lkm 8}
    {:nimi "7 KORVAUSINVESTOINTI", :sopimus-tallennettu nil, :tehtavien-lkm 1}
-   {:nimi "8 MUUTA", :sopimus-tallennettu nil, :tehtavien-lkm 4}])
+   {:nimi "8 MUUTA", :sopimus-tallennettu nil, :tehtavien-lkm 6}])
 
 (deftest tehtavahierarkian-haku-maarineen-testi
   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -249,7 +250,7 @@
                                           (mapv #(assoc % :tehtavien-lkm (count (:tehtavat %))))
                                           (mapv #(dissoc % :tehtavat)))]
     (is (= nimet-ja-sopimus-tallennettu odotetut-tehtavamaarien-nimet-ja-tehtavien-lukumaarat) "Oikea olennainen sisältö tehtävämäärissä")
-    (is (= (count tehtavat-ja-maarat) 13) "13 tehtävämääräryhmää")
+    (is (= (count tehtavat-ja-maarat) 14) "14 tehtävämääräryhmää")
     (is (true? (every? #(= 2020 (:hoitokauden-alkuvuosi %)) (filter #(not (nil? (:hoitokauden-alkuvuosi %))) tehtavat-ja-maarat))) "Palauttaa tehtavahiearkian määrineen vuodelle"))
   (let [tehtavat-ja-maarat-urakan-ulkopuolelta (kutsu-palvelua
                                                  (:http-palvelin jarjestelma)
