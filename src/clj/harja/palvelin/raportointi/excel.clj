@@ -671,7 +671,11 @@
                            (excel/row-seq sheet))]
         (dotimes [i sarake-maara]
           (.autoSizeColumn sheet i)
-          (.setColumnWidth sheet i (* 1.25 (.getColumnWidth sheet i))))))
+          (.setColumnWidth sheet i (min
+                                     ;; ColumnWidth on merkin pituus jaettuna 256:lla.
+                                     ;; Rajoitetaan sarakkeen leveys 100:n merkkiin.
+                                     (* 100 256)
+                                     (* 1.25 (.getColumnWidth sheet i)))))))
     tiedoston-nimi))
 
 (defmethod muodosta-excel :default [elementti workbook]
