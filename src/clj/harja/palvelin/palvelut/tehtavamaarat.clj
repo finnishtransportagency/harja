@@ -80,9 +80,13 @@
                                                :suunnitellut-maarat suunnitellut-maarat
                                                :muuttuneet-tarjouksesta muuttuneet-tarjouksesta
                                                :taso 4
-                                               :samat-maarat-vuosittain? samat-maarat-vuosittain?}
-                                               (if aluetieto
-                                                {:sopimuksen-aluetieto-maara sopimuksen-aluetieto-maara}
+                                               :samat-maarat-vuosittain? samat-maarat-vuosittain?
+                                               :rahavaraus? (:onko-rahavaraus? rivi)}
+                                              (if aluetieto
+                                                ;; Pahoittelut tästä monimutkaisuudesta. Mutta: Aluetiedoilla ei pitäisi olla kuin yksi sopimus/tarjous määrä. Jostain syystä niillä voi olla
+                                                ;; kaikille hoitokauden vuosille tietokannassa jokin arvo ja ne arvot tulevat vielä väärässä järjestyksessä. Ojennetaan ne siis oikeaan järjestykseen
+                                                ;; Koska frontti käyttää sitä ensimmäistä.
+                                                {:sopimuksen-aluetieto-maara (into (sorted-map) sopimuksen-aluetieto-maara)}
                                                 {:samat-maarat-vuosittain? samat-maarat-vuosittain?
                                                  :sopimuksen-tehtavamaarat sopimuksen-tehtavamaarat})))
                 taso)) 
