@@ -1,14 +1,13 @@
 (ns harja.ui.liitteet
   "Yleisiä UI-komponentteja liitteiden lataamisen hoitamiseksi."
-  (:require [reagent.core :refer [atom] :as r]
-            [cljs.core.async :refer [<! >! timeout take!]]
+  (:require [reagent.core :refer [atom]]
+            [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.modal :as modal]
-            [harja.loki :refer [log tarkkaile!]]
+            [harja.loki :refer [log]]
             [harja.ui.ikonit :as ikonit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.img-with-exif :refer [img-with-exif]]
-            [harja.fmt :as fmt]
             [harja.ui.komponentti :as komp]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.viesti :as viesti])
@@ -49,15 +48,23 @@
     (zero? (.indexOf (:tyyppi liite) "image/"))
     false))
 
-(defn liitekuva-modalissa [liite]
+(defn liitekuva-modalissa
+  "Optiot:
+  siltatarkastusliite? Boolean, true kun haetaan siltatarkastuksia"
+  [liite {:keys [siltatarkastusliite?] :as _optiot}]
   [img-with-exif {:class "kuva-modalissa"
-                  :src (k/liite-url (:id liite))}])
+                  :src (if siltatarkastusliite?
+                         (k/siltatarkastusliite-url (:id liite))
+                         (k/liite-url (:id liite)))}])
 
 (defn tarkista-liitteen-virustarkistus [liite-id urakka]
   (k/post! :onko-liite-virustarkastettu {:liite-id liite-id
                                          :urakka urakka}))
 
-(defn- nayta-liite-modalissa [liite]
+(defn- nayta-liite-modalissa
+  "Optiot:
+  siltatarkastusliite? Boolean, true kun haetaan siltatarkastuksia"
+  [liite optiot]
   (go (let [res (if (:virustarkastettu? liite)
                   true
                   (<! (tarkista-liitteen-virustarkistus (:id liite) (:urakka liite))))]
@@ -66,7 +73,7 @@
             {:otsikko (str "Liite: " (:nimi liite))
              :leveys "80%"
              :luokka "kuva-modal"}
-            (liitekuva-modalissa liite))
+            (liitekuva-modalissa liite optiot))
           (modal/nayta!
             {:otsikko (str "Liitteen virustarkastus käynnissä")
              :leveys "80%"
@@ -118,7 +125,7 @@
         [:div
          [:div
           [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
-                                      :on-click #(nayta-liite-modalissa tiedosto)}]
+                                      :on-click #(nayta-liite-modalissa tiedosto {})}]
           [:span.liite-nimi (str nimi (when nayta-koko? (str " (" (sievenna-liitteen-koko koko) ") ")))]
           (when salli-poisto?
             [liitteen-poisto tiedosto poista-liite-fn])]
@@ -139,9 +146,10 @@
    nayta-tooltip?                     Näyttää liitteen nimen kun hiirtä pidetään linkin päällä (oletus true)
    rivita?                            Rivittää liitelinkit omille riveille
    salli-poisto?                      Piirtää roskakorin liitteen nimen viereen
-   poista-liite-fn        Funktio, jota kutsutaan roskakorista"
+   poista-liite-fn                    Funktio, jota kutsutaan roskakorista
+   siltatarkastusliite?               Boolean. True kun haetaan siltatarkastusten liitteitä"
   ([liite teksti] (liitelinkki liite teksti {}))
-  ([liite teksti {:keys [nayta-tooltip? rivita? salli-poisto? poista-liite-fn] :as optiot}]
+  ([liite teksti {:keys [nayta-tooltip? rivita? salli-poisto? poista-liite-fn _siltatarkastusliite?] :as optiot}]
    [:span {:style (when rivita? {:display "block"})}
     (if (naytettava-liite? liite)
       [:span
@@ -151,7 +159,7 @@
                                   (when nayta-tooltip? tooltip)))
                        :on-click #(do
                                     (.stopPropagation %)
-                                    (nayta-liite-modalissa liite))}
+                                    (nayta-liite-modalissa liite optiot))}
         teksti]
        (when salli-poisto?
          [liitteen-poisto liite poista-liite-fn])]
@@ -176,21 +184,25 @@
      liitteet)])
 
 (defn liite-ikonina
-  "Näyttää liitteen ikonina."
+  "Näyttää liitteen ikonina.
+  Optiot:
+  siltatarkastusliite? Boolean, true kun haetaan siltatarkastuksen liitteitä"
   ;; PENDING Olisipa kiva jos ikoni heijastelisi tiedoston tyyppiä :-)
-  [liite]
+  [liite optiot]
   [:span
-   [liitelinkki liite (ikonit/file)]
+   [liitelinkki liite (ikonit/file) optiot]
    [:span " "]])
 
 (defn liitteet-ikoneina
-  "Listaa liitteet ikoneita."
-  [liitteet]
+  "Listaa liitteet ikoneita.
+  Optiot:
+  siltatarkastusliite? Boolean, true kun haetaan siltatarkastuksen liitteitä"
+  [liitteet optiot]
   [:span.liitteet-ikoneina
    (map
      (fn [liite]
        ^{:key (:id liite)}
-       [liite-ikonina liite])
+       [liite-ikonina liite optiot])
      liitteet)])
 
 (defn liitteet-listalla
@@ -208,22 +220,24 @@
 
 (defn liitteet-ikonilistana
   "Listaa liitteen ikonina, jota klikkaamalla liitteen voi avata.
-   Jos liitteitä on useita, näyttää silti vain yhden ikonin, josta aukeaa lista liitteistä."
-  [liitteet]
+   Jos liitteitä on useita, näyttää silti vain yhden ikonin, josta aukeaa lista liitteistä.
+   optiot:
+   :siltatarkastusliite? Boolean, jos haetaan siltatarkastuksia. Näissä käytetään hieman eri logiikkaa oikeuksien kanssa."
+  [liitteet opts]
   (let [lista-auki? (atom false)]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! lista-auki? false))
-      (fn [liitteet]
+      (fn [liitteet opts]
         [:span
          (cond (= (count liitteet) 1)
-               [liitelinkki (first liitteet) (ikonit/file)]
+               [liitelinkki (first liitteet) (ikonit/file) opts]
                (> (count liitteet) 1)
                [:a.klikattava
                 {:on-click (fn []
                              (swap! lista-auki? not))}
                 (ikonit/file)])
          (when @lista-auki?
-           [liitteet-listalla liitteet])]))))
+           [liitteet-listalla liitteet opts])]))))
 
 (defn lisaa-liite
   "Liitetiedosto (file input) komponentti yhden tiedoston lataamiselle.

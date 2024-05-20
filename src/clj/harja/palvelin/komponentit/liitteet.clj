@@ -1,5 +1,6 @@
 (ns harja.palvelin.komponentit.liitteet
   (:require [clojure.string :as str]
+            [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.liitteet :as liitteet-q]
             [com.stuartsierra.component :as component]
             [clojure.java.io :as io]
@@ -173,7 +174,7 @@
 
 (defprotocol LiitteidenHallinta
   (luo-liite [this luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma])
-  (lataa-liite [this liitteen-id])
+  (lataa-liite [this liitteen-id optiot])
   (lataa-pikkukuva [this liitteen-id]))
 
 (defn- tallenna-liitteen-data [db alusta s3-url fileyard-client lahde tiedostonimi]
@@ -299,10 +300,16 @@
                  [{:koodi  virheet/+virheellinen-liite-koodi+
                    :viesti (str "Virheellinen liite: " (:viesti liitetarkistus))}]})))))
 
-(defn- hae-liite [db alusta s3-url fileyard-client liitteen-id]
-  (let [{:keys [fileyard-hash s3hash] :as liite}
-        (first (liitteet-q/hae-liite-lataukseen db liitteen-id))]
-
+(defn- hae-liite
+  "Optiot sisältää seuraavat avaimet:
+  siltatarkastusliite? Boolean, joka on true jos halutaan hakea siltatarkastuksia. Näihin vaaditaan erikoiskäsittely oikeuksien takia."
+  [db alusta s3-url fileyard-client liitteen-id {:keys [siltatarkastusliite?] :as _optiot}]
+  (let [{:keys [fileyard-hash s3hash urakat] :as liite}
+        (if siltatarkastusliite?
+          ;; Siltatarkastukset eroaa muista liitteistä oikeuksien suhteen. Niille tarvitaan urakan sijaan lista urakoista, joiden perusteella päätellään, saako käyttäjä ladata liitettä.
+          (first (liitteet-q/hae-siltatarkastusliite-lataukseen db liitteen-id))
+          (first (liitteet-q/hae-liite-lataukseen db liitteen-id)))
+        liite (assoc liite :urakat (konversio/pgarray->vector urakat))]
     (dissoc
       (cond
         ;; Jos fileyard käytössä
@@ -371,7 +378,7 @@
           (when fileyard-url
             (fileyard-client/new-client fileyard-url))
           tiedostopesula virustarkistus liite-perustiedot))))
-  (lataa-liite [{db :db :as this} liitteen-id]
-    (hae-liite db (:alusta this) s3-url (fileyard-client/new-client fileyard-url) liitteen-id))
+  (lataa-liite [{db :db :as this} liitteen-id optiot]
+    (hae-liite db (:alusta this) s3-url (fileyard-client/new-client fileyard-url) liitteen-id optiot))
   (lataa-pikkukuva [{db :db} liitteen-id]
     (hae-pikkukuva db liitteen-id)))
