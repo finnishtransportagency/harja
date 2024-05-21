@@ -12,11 +12,11 @@ SELECT "fileyard-hash", liite_oid, s3hash, tyyppi, koko, urakka, "virustarkastet
 
 -- name: hae-siltatarkastusliite-lataukseen
 -- Siltatarkastuksen liitteet pitää pystyä lataamaan, jos käyttäjällä on oikeus yhteenkään sillan urakoihin.
-SELECT l."fileyard-hash", l.liite_oid, l.s3hash, l.tyyppi, l.koko, l.urakka, l."virustarkastettu?", s.urakat
+SELECT l."fileyard-hash", l.liite_oid, l.s3hash, l.tyyppi, l.koko, l."virustarkastettu?", s.urakat
 FROM liite l
-         LEFT JOIN siltatarkastus_kohde_liite stkl ON l.id = stkl.liite
-         LEFT JOIN siltatarkastus st ON stkl.siltatarkastus = st.id
-         LEFT JOIN silta s ON st.silta = s.id
+         JOIN siltatarkastus_kohde_liite stkl ON l.id = stkl.liite
+         JOIN siltatarkastus st ON stkl.siltatarkastus = st.id
+         JOIN silta s ON st.silta = s.id
 WHERE l.id = :id;
 
 -- name: hae-pikkukuva-lataukseen
