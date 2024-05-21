@@ -307,6 +307,8 @@
   (let [{:keys [fileyard-hash s3hash urakat] :as liite}
         (if siltatarkastusliite?
           ;; Siltatarkastukset eroaa muista liitteistä oikeuksien suhteen. Niille tarvitaan urakan sijaan lista urakoista, joiden perusteella päätellään, saako käyttäjä ladata liitettä.
+          ;; Mikäli tulevaisuudessa on tarve muiden poikkeusten käsittelyyn, siirretään poikkeusten käsittely tämän komponentin ulkopuolelle.
+          ;; Yhden poikkeuksen käsittelyn vuoksi refaktorointi todettiin ylilyönniksi, mutta jos poikkeuksia tulee lisää, koodin selkeys vähenee.
           (first (liitteet-q/hae-siltatarkastusliite-lataukseen db liitteen-id))
           (first (liitteet-q/hae-liite-lataukseen db liitteen-id)))
         liite (assoc liite :urakat (konversio/pgarray->vector urakat))]
