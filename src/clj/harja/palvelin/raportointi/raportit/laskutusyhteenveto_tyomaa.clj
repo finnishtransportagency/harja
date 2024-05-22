@@ -2,8 +2,8 @@
   "Työmaakokous laskutusyhteenveto MHU-urakoissa"
   (:require [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
             [harja.kyselyt.urakat :as urakat-q]
-            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tyomaa-apurit :as apurit]
-            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-apurit :as taulukot]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]
             [taoensso.timbre :as log]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
             [harja.pvm :as pvm]
@@ -17,12 +17,12 @@
    [:varillinen-teksti {:arvo (str valiotsikko) 
                         :lihavoi? lihavoi?}] 
     
-   [:varillinen-teksti {:arvo (or (avain_hoitokausi tp-rivi) (apurit/summa-fmt nil)) 
+   [:varillinen-teksti {:arvo (or (avain_hoitokausi tp-rivi) (yhteiset/summa-fmt nil)) 
                         :fmt :raha 
                         :lihavoi? lihavoi?}]
     
    (when kyseessa-kk-vali?
-     [:varillinen-teksti {:arvo (or (avain_yht tp-rivi) (apurit/summa-fmt nil)) :fmt :raha :lihavoi? lihavoi?}])))
+     [:varillinen-teksti {:arvo (or (avain_yht tp-rivi) (yhteiset/summa-fmt nil)) :fmt :raha :lihavoi? lihavoi?}])))
 
 
 (defn- taulukko [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
@@ -65,13 +65,13 @@
                                (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sanktiot_hoitokausi_yht :sanktiot_val_aika_yht false)
                                
                                ;; Näytetään päätökset vain jos ne on olemassa 
-                               (when (apurit/raha-arvo-olemassa? (:paatos_kattoh_ylitys_hoitokausi_yht data))
+                               (when (yhteiset/raha-arvo-olemassa? (:paatos_kattoh_ylitys_hoitokausi_yht data))
                                  (taulukko-rivi data kyseessa-kk-vali? "Hoitovuoden päätös / Urakoitsija maksaa kattohinnan ylityksestä" :paatos_kattoh_ylitys_hoitokausi_yht :paatos_kattoh_ylitys_val_aika_yht false))
 
-                               (when (apurit/raha-arvo-olemassa? (:paatos_tavoiteh_ylitys_hoitokausi_yht data))
+                               (when (yhteiset/raha-arvo-olemassa? (:paatos_tavoiteh_ylitys_hoitokausi_yht data))
                                  (taulukko-rivi data kyseessa-kk-vali? "Hoitovuoden päätös / Urakoitsija maksaa tavoitehinnan ylityksestä" :paatos_tavoiteh_ylitys_hoitokausi_yht :paatos_tavoiteh_ylitys_hoitokausi_yht false))
                                
-                               (when (apurit/raha-arvo-olemassa? (:paatos_tavoitepalkkio_hoitokausi_yht data))
+                               (when (yhteiset/raha-arvo-olemassa? (:paatos_tavoitepalkkio_hoitokausi_yht data))
                                  (taulukko-rivi data kyseessa-kk-vali? "Tavoitepalkkio" :paatos_tavoitepalkkio_hoitokausi_yht :paatos_tavoitepalkkio_hoitokausi_yht false))])))]
 
     [:taulukko {:oikealle-tasattavat-kentat #{1 2}
@@ -135,7 +135,7 @@
                                                   :urakka-nimi (:urakka-nimi urakan-parametrit)
                                                   :indeksi (:indeksi urakan-parametrit)
                                                   :urakkatyyppi (:urakkatyyppi urakan-parametrit))
-                                          (lyv-yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
+                                          (yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
                                   urakoiden-parametrit)
         
         perusluku (when urakka-id (:perusluku (ffirst laskutusyhteenvedot)))
@@ -179,7 +179,7 @@
                           :laskutetaan-teksti laskutetaan-teksti
                           :kyseessa-kk-vali? kyseessa-kk-vali?})))
 
-     (apurit/hoidonjohto-valitaulukko {:data rivitiedot
+     (taulukot/hoidonjohto-valitaulukko {:data rivitiedot
                                        :kyseessa-kk-vali? kyseessa-kk-vali?})
 
      (taulukko {:data rivitiedot
@@ -189,7 +189,7 @@
                 :kyseessa-kk-vali? kyseessa-kk-vali?
                 :hk-alkupvm hk-alkupvm})
 
-     (apurit/valitaulukko {:data rivitiedot
+     (taulukot/valitaulukko {:data rivitiedot
                            :otsikko "Toteutuneet"
                            :laskutettu-teksti laskutettu-teksti
                            :laskutetaan-teksti laskutetaan-teksti
@@ -210,7 +210,7 @@
                             :laskutetaan-teksti laskutetaan-teksti
                             :kyseessa-kk-vali? kyseessa-kk-vali?}))))
 
-     (apurit/valitaulukko {:data rivitiedot
+     (taulukot/valitaulukko {:data rivitiedot
                            :otsikko "Muut"
                            :laskutettu-teksti laskutettu-teksti
                            :laskutetaan-teksti laskutetaan-teksti
