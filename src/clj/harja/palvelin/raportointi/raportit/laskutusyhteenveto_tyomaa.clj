@@ -180,8 +180,10 @@
                           :kyseessa-kk-vali? kyseessa-kk-vali?})))
 
      (taulukot/hoidonjohto-valitaulukko {:data rivitiedot
-                                       :kyseessa-kk-vali? kyseessa-kk-vali?})
-
+                                         :kyseessa-kk-vali? kyseessa-kk-vali?})
+     
+     [:otsikko-heading "Muut tavoitehintaan vaikuttavat kulut"]
+     
      (taulukko {:data rivitiedot
                 :otsikko "Rahavaraukset"
                 :laskutettu-teksti laskutettu-teksti
@@ -190,10 +192,10 @@
                 :hk-alkupvm hk-alkupvm})
 
      (taulukot/valitaulukko {:data rivitiedot
-                           :otsikko "Toteutuneet"
-                           :laskutettu-teksti laskutettu-teksti
-                           :laskutetaan-teksti laskutetaan-teksti
-                           :kyseessa-kk-vali? kyseessa-kk-vali?})
+                             :otsikko "Toteutuneet"
+                             :laskutettu-teksti laskutettu-teksti
+                             :laskutetaan-teksti laskutetaan-teksti
+                             :kyseessa-kk-vali? kyseessa-kk-vali?})
 
      (if
        (and
@@ -211,10 +213,10 @@
                             :kyseessa-kk-vali? kyseessa-kk-vali?}))))
 
      (taulukot/valitaulukko {:data rivitiedot
-                           :otsikko "Muut"
-                           :laskutettu-teksti laskutettu-teksti
-                           :laskutetaan-teksti laskutetaan-teksti
-                           :kyseessa-kk-vali? kyseessa-kk-vali?})
+                             :otsikko "Muut"
+                             :laskutettu-teksti laskutettu-teksti
+                             :laskutetaan-teksti laskutetaan-teksti
+                             :kyseessa-kk-vali? kyseessa-kk-vali?})
 
      [:tyomaa-laskutusyhteenveto-yhteensa kyseessa-kk-vali? (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
       (fmt/formatoi-arvo-raportille (:yhteensa_kaikki_hoitokausi_yht rivitiedot))

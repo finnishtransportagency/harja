@@ -61,16 +61,16 @@
   [tp-rivi kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi?]
   (rivi
     [:varillinen-teksti {:arvo (str valiotsikko) :lihavoi? lihavoi?}]
-    [:varillinen-teksti {:arvo (or (avain_hoitokausi tp-rivi) (yhteiset/summa-fmt 0.00M)) 
-                         :fmt :raha 
+    [:varillinen-teksti {:arvo (or (avain_hoitokausi tp-rivi) (yhteiset/summa-fmt 0.00M))
+                         :fmt :raha
                          :lihavoi? lihavoi?}]
-    
+
     (when kyseessa-kk-vali?
-      [:varillinen-teksti {:arvo (or (avain_yht tp-rivi) (yhteiset/summa-fmt 0.00M)) 
-                           :fmt :raha 
+      [:varillinen-teksti {:arvo (or (avain_yht tp-rivi) (yhteiset/summa-fmt 0.00M))
+                           :fmt :raha
                            :lihavoi? lihavoi?}])))
 
-(defn- taulukko 
+(defn- taulukko
   [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali? sheet-nimi]}]
   (let [rivit (into []
                 (remove nil?
@@ -227,7 +227,7 @@
 
     [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")
                 :otsikon-koko :keskikoko}
-     
+
      [:otsikko-heading-small (str alueen-nimi)]
 
      (when perusluku
@@ -252,14 +252,14 @@
                             :alkupvm alkupvm}))))
 
      (taulukot/toteutuneet-valitaulukko {:data (first koostettu-yhteenveto)
-                            :otsikko "Toteutuneet"
-                            :laskutettu-teksti laskutettu-teksti
-                            :laskutetaan-teksti laskutetaan-teksti
-                            :kyseessa-kk-vali? kyseessa-kk-vali?})
+                                         :otsikko "Toteutuneet"
+                                         :laskutettu-teksti laskutettu-teksti
+                                         :laskutetaan-teksti laskutetaan-teksti
+                                         :kyseessa-kk-vali? kyseessa-kk-vali?})
      ;; Näytetään nämä vain jos hoitokausi valittuna
      (when hoitokausi?
        (taulukot/toteutuneet-valitaulukko {:data (second koostettu-yhteenveto)
-                              :otsikko ""
-                              :laskutettu-teksti "Tavoitehinta"
-                              :laskutetaan-teksti "Budjettia jäljellä"
-                              :kyseessa-kk-vali? true}))]))
+                                           :otsikko ""
+                                           :laskutettu-teksti "Tavoitehinta"
+                                           :laskutetaan-teksti "Budjettia jäljellä"
+                                           :kyseessa-kk-vali? true}))]))
