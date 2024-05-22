@@ -153,7 +153,7 @@
         sheet-nimi "Työmaakokous"]
 
     [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")
-                :otsikon-koko :iso}
+                :otsikon-koko :keskikoko}
 
      [:otsikko-heading-small (str alueen-nimi)]
 

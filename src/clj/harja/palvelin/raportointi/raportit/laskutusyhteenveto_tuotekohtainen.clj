@@ -269,7 +269,7 @@
 
     [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")
                 :otsikon-koko :iso}
-     [:otsikko-heading-small (str alueen-nimi)]
+     [:otsikko-heading (str alueen-nimi)]
      (when perusluku
        (yleinen/urakan-indlask-perusluku {:perusluku perusluku}))
      (when (or kyseessa-hoitokausi-vali? kyseessa-kk-vali?)
