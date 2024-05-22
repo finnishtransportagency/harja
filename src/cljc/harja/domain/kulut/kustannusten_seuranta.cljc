@@ -17,7 +17,11 @@
     "Päällystepaikkaukset" 4
     "MHU Ylläpito" 5
     "MHU Korvausinvestointi" 6
-    "MHU Hoidonjohto" 7))
+    "MHU Hoidonjohto" 7
+    ;; TODO: Onkohan tämä hyvä. Tämä siis määrää, että missä järjestyksessä toisen portaan asiat on listattu
+    ;; ja rahavarauksien järjestys tulisi niiden id:n perusteella. Mutta haku ei palauta toimenpide_id:tä tai rahavaraus_id:tä
+
+    8))
 
 (defn yhdista-totetuneet-ja-budjetoidut [toteutuneet budjetoidut]
   (map
