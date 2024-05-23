@@ -16,7 +16,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :liitteiden-hallinta (component/using
-                                               (liitteet-komponentti/->Liitteet nil nil nil)
+                                               (liitteet-komponentti/->Liitteet nil nil)
                                                [:db])
                         :liitteet (component/using
                                     (liitteet/->Liitteet)

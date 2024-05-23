@@ -252,7 +252,7 @@
   liite-ladattu             Funktio, jota kutsutaan kun liite on ladattu onnistuneesti.
                             Parametriksi annetaan mäppi, jossa liitteen tiedot:
 
-                            :kuvaus, :fileyard-hash, :urakka, :nimi,
+                            :kuvaus, :urakka, :nimi,
                             :id,:lahde,:tyyppi, :koko 65528
 
   disabled?                 Nappi disabloitu, true tai false.
