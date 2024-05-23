@@ -16,14 +16,14 @@ RETURNS INTEGER AS $$
        SET rahavaraus_id = ra.id
       FROM (SELECT id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%' ORDER BY id ASC LIMIT 1) ra
      WHERE tyyppi = 'akillinen-hoitotyo' 
-      AND ra.id IS NOT NULL;
+       AND ra.id IS NOT NULL;
 
     -- Vahinkojen korvaukset
     UPDATE toteutuneet_kustannukset
        SET rahavaraus_id = ra.id
       FROM (SELECT id FROM rahavaraus WHERE nimi LIKE '%Vahinkojen korvaukset%' ORDER BY id ASC LIMIT 1) ra
      WHERE tyyppi = 'vahinkojen-korjaukset' 
-      AND ra.id IS NOT NULL;
+       AND ra.id IS NOT NULL;
 
     -- ~ ~ kulu_kohdistus ~ ~ --
     -- Äkilliset hoitotyöt 
