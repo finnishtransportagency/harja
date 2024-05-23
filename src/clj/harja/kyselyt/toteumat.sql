@@ -456,12 +456,16 @@ SELECT tk.id                    AS toimenpidekoodi_id,
        sum(ot.maara)            AS maara,
        sum(ot.materiaalimaara)  AS materiaalimaara,
        sum(ut.maara)            AS suunniteltu_maara,
-       tk.kasin_lisattava_maara AS kasin_lisattava_maara,
+       -- Ei voi olla sekä rahavaraus, että käsin lisättävä tehtävä. Rahavarauksille toteumat on euroja ja ne lisätään kuluista.
+       CASE
+           WHEN (tk.kasin_lisattava_maara AND r.nimi is null) THEN true
+           ELSE false END AS kasin_lisattava_maara,
        tk.suunnitteluyksikko    AS yk,
        CASE
            WHEN o.otsikko = '9 LISÄTYÖT'
                THEN 'lisatyo'
-           ELSE 'kokonaishintainen' END AS tyyppi
+           ELSE 'kokonaishintainen' END AS tyyppi,
+       r.nimi                   AS rahavaraus
 FROM tehtava tk
      -- Alataso on linkitetty toimenpidekoodiin
      JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
@@ -469,6 +473,11 @@ FROM tehtava tk
      LEFT JOIN urakka_tehtavamaara ut ON ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
                        AND ut.poistettu IS NOT TRUE AND tk.id = ut.tehtava
      LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi
+     LEFT JOIN rahavaraus_tehtava rt on rt.tehtava_id = tk.id
+     LEFT JOIN rahavaraus_urakka ru
+               ON rt.rahavaraus_id = ru.rahavaraus_id
+                   AND ru.urakka_id = :urakka
+     LEFT JOIN rahavaraus r ON ru.rahavaraus_id = r.id
      JOIN urakka u on u.id = :urakka
 WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
       (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
@@ -484,7 +493,7 @@ WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjat
                                'e32341fc-775a-490a-8eab-c98b8849f968',
                                '0c466f20-620d-407d-87b0-3cbb41e8342e',
                                'c058933e-58d3-414d-99d1-352929aa8cf9'))
-GROUP BY tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
+GROUP BY tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi, r.nimi
 ORDER BY o.otsikko asc, tk.nimi asc;
 
 -- name: listaa-tehtavan-toteumat
