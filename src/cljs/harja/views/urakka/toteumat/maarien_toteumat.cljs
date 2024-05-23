@@ -100,16 +100,19 @@
                                   (let [_ (reset! row-index-atom (inc @row-index-atom))
                                         kasin-lisattava? (:kasin_lisattava_maara (first (second rivi)))
                                         toteutunut-maara (reduce big/plus (big/->big 0)
-                                                                 (keep #(big/->big (or (:materiaalimaara %) (:maara %) 0)) (second rivi)))
+                                                           (keep #(big/->big (or (:materiaalimaara %) (:maara %) 0)) (second rivi)))
                                         suunniteltu-maara (big/->big (or (:suunniteltu_maara (first (second rivi))) 0))
                                         fontin-vari (if (big/gt toteutunut-maara suunniteltu-maara)
                                                       "#DD0000" ;red
                                                       "#191919") ;gray25
                                         ;; Näytetään varoituskolmio käyttäjälle prosentin sijasta, mikäli tehtävällä on toteumia, mutta suunnitelma on nolla
                                         nayta-varoituskolmio (or (and (big/gt toteutunut-maara suunniteltu-maara)
-                                                                      (big/eq (big/->big 0) suunniteltu-maara))
+                                                                   (big/eq (big/->big 0) suunniteltu-maara))
                                                                false)
-                                        {:keys [tyyppi]} (first (second rivi))]
+                                        ;; Tyyppi on joko kokonaishintainen tai lisätyö
+                                        tehtava-tyyppi (first (second rivi))
+                                        ;; Rahavaraukselle ei näytetä suunniteltuja määriä eikä toteumaprosenttia
+                                        rahavaraus? (not (nil? (:rahavaraus (first (second rivi)))))]
                                     (concat
                                       [^{:key (hash rivi)}
                                        [:tr (merge
@@ -127,19 +130,25 @@
                                                                                      [ikonit/livicon-chevron-down]))]
                                         [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt toteutunut-maara 1) " " (maarita-yksikko (first (second rivi))))]
                                         [:td {:style {:width (:suunniteltu leveydet)
-                                                      :color fontin-vari}} (if (big/eq (big/->big -1) suunniteltu-maara)
-                                                                                         (case tyyppi
-                                                                                           "kokonaishintainen" [:span.tila-virhe "---"]
-                                                                                           "---")
-                                                                                         (str (if (big/gt suunniteltu-maara (big/->big -1))
-                                                                                                (big/fmt suunniteltu-maara 1)
-                                                                                                0) " " (:yk (first (second rivi)))))]
+                                                      :color fontin-vari}} (cond
+                                                                              rahavaraus? "-"
+                                                                              (big/eq (big/->big -1) suunniteltu-maara)
+                                                                              (case tehtava-tyyppi
+                                                                                "kokonaishintainen" [:span.tila-virhe "---"]
+                                                                                "---")
+                                                                              :else
+                                                                              (str (if (big/gt suunniteltu-maara (big/->big -1))
+                                                                                       (big/fmt suunniteltu-maara 1)
+                                                                                       0) " " (:yk (first (second rivi)))))]
                                         [:td {:style {:width (:prosentti leveydet)
-                                                      :color fontin-vari}} (if nayta-varoituskolmio
-                                                                                       (case tyyppi
-                                                                                         "kokonaishintainen" [:span.tila-virhe (ikonit/exclamation-sign)]
-                                                                                         "---")
-                                                                                       (str (laske-prosentti toteutunut-maara suunniteltu-maara) " %"))]]]
+                                                      :color fontin-vari}} (cond
+                                                                             rahavaraus? "-"
+                                                                             nayta-varoituskolmio
+                                                                             (case tehtava-tyyppi
+                                                                               "kokonaishintainen" [:span.tila-virhe (ikonit/exclamation-sign)]
+                                                                               "---")
+                                                                             :else
+                                                                             (str (laske-prosentti toteutunut-maara suunniteltu-maara) " %"))]]]
 
                                       ;; "+ Lisää toteuma" rivi - jos rivi on auki ja jos tehtävämäärän/toimenpiteen tehtävälle on tietokantaan sallittu käsin lisäys
                                       (when (and
