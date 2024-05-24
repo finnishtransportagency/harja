@@ -1,0 +1,252 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "suunnitellut-kustannukset": {
+      "type": "object",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "urakka": {
+            "type": "integer",
+            "description": "Harjan urakka-id."
+          },
+          "urakkatunnus": {
+            "type": "string",
+            "description": "Urakasta eri järjestelmissä ja geometria-aineistoissa käytetty tunniste. Uudemmissa urakoissa sama kuin urakan Sampo-id, vanhemmissa urakoissa tunnisteena käytetään alueurakkanumeroa."
+          }
+        },
+        "kiinteat-kustannukset": {
+          "type": "object",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kiintea-kustannus": {
+                "id": "urn:harja/suunnitellut-kustannukset/0/kiinteat-kustannukset/0/kiintea-kustannus",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "kustannus-id": {
+                    "type": "integer",
+                    "description": "Kustannusrivin id Harjassa."
+                  },
+                  "vuosi": {
+                    "type": "integer",
+                    "description": "Kalenterivuosi jota suunniteltu kustannus koskee."
+                  },
+                  "kuukausi": {
+                    "type": "integer",
+                    "description": "Kalenterikuukausi jota suunniteltu kustannus koskee."
+                  },
+                  "summa": {
+                    "type": "number",
+                    "description": "Suunniteltu kustannus. Yksikkö: euro."
+                  },
+                  "indeksikorjattu-summa": {
+                    "type": "number",
+                    "description": "Suunniteltu summa indeksikorjattuna. Yksikkö: euro."
+                  },
+                  "indeksikorjauksen-vahvistusajankohta": {
+                    "type": "string",
+                    "format": "datetime",
+                    "description": "Ajankohta jolloin indeksikorjaus on hyväksytty. Jos tyhjä, ei indeksikorjausta kustannukselle ole vielä hyväksytty."
+                  },
+                  "kohdistus": {
+                    "type": "object",
+                    "properties": {
+                      "toimenpide": {
+                        "type": "integer",
+                        "description": "Harjan toimenpide-id."
+                      },
+                      "rahavaraus": {
+                        "type": "integer",
+                        "description": "Harjan rahavaraus-id."
+                      },
+                      "tehtavaryhma": {
+                        "type": "integer",
+                        "description": "Harjan tehtavaryhma-id."
+                      },
+                      "tehtava": {
+                        "type": "integer",
+                        "description": "Harjan tehtava-id."
+                      },
+                      "required": ["toimenpide"]
+                    }
+                  },
+                  "versio": {
+                    "type": "integer",
+                    "description": "Kustannuksen versio. Käytetään kustannuksen muutoshistorian seuraamiseen."
+                  },
+                  "required": ["id", "vuosi", "kuukausi", "summa", "indeksikorjattu-summa", "kohdistus", "versio"]
+                }
+              }
+            }
+          }
+        },
+        "arvioidut-kustannukset": {
+          "type": "object",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "arvioitu-kustannus": {
+                "id": "urn:harja/suunnitellut-kustannukset/0/arvioidut-kustannukset/0/arvioitu-kustannus",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "kustannus-id": {
+                    "type": "integer",
+                    "description": "Kustannusrivin id Harjassa."
+                  },
+                  "vuosi": {
+                    "type": "integer",
+                    "description": "Kalenterivuosi jota suunniteltu kustannus koskee."
+                  },
+                  "kuukausi": {
+                    "type": "integer",
+                    "description": "Kalenterikuukausi jota suunniteltu kustannus koskee."
+                  },
+                  "summa": {
+                    "type": "number",
+                    "description": "Suunniteltu kustannus. Yksikkö: euro."
+                  },
+                  "indeksikorjattu-summa": {
+                    "type": "number",
+                    "description": "Suunniteltu summa indeksikorjattuna. Yksikkö: euro."
+                  },
+                  "indeksikorjauksen-vahvistusajankohta": {
+                    "type": "string",
+                    "format": "datetime",
+                    "description": "Ajankohta jolloin indeksikorjaus on hyväksytty. Jos tyhjä, indeksikorjausta ei kustannukselle ole vielä hyväksytty."
+                  },
+                  "kohdistus": {
+                    "type": "object",
+                    "properties": {
+                      "toimenpide": {
+                        "type": "integer",
+                        "description": "Harjan toimenpide-id."
+                      },
+                      "rahavaraus": {
+                        "type": "integer",
+                        "description": "Harjan rahavaraus-id."
+                      },
+                      "tehtavaryhma": {
+                        "type": "integer",
+                        "description": "Harjan tehavaryhma-id."
+                      },
+                      "tehtava": {
+                        "type": "integer",
+                        "description": "Harjan tehtava-id."
+                      }
+                    },
+                    "required": ["toimenpide"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "johto-ja-hallintokorvaukset": {
+          "type": "object",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "johto-ja-hallintokorvaus": {
+                "id": "urn:harja/suunnitellut-kustannukset/0/johto-ja-hallintokorvaukset/0/johto-ja-hallintokorvaus",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "kustannus-id": {
+                    "type": "integer",
+                    "description": "Kustannusrivin id Harjassa"
+                  },
+                  "vuosi": {
+                    "type": "integer",
+                    "description": "Kalenterivuosi jota suunniteltu kustannus koskee"
+                  },
+                  "kuukausi": {
+                    "type": "integer",
+                    "description": "Kalenterikuukausi jota suunniteltu kustannus koskee"
+                  },
+                  "ennen-urakkaa": {
+                    "type": "boolean",
+                    "description": "A flag indicating whether it is before the contract."
+                  },
+                  "osa-kuukaudesta": {
+                    "type": "number",
+                    "description": "The part of the month."
+                  },
+                  "summa": {
+                    "type": "number",
+                    "description": "Suunniteltu kustannus. Yksikkö: euro."
+                  },
+                  "indeksikorjattu-summa": {
+                    "type": "number",
+                    "description": "Suunniteltu summa indeksikorjattuna. Yksikkö: euro."
+                  },
+                  "indeksikorjaus_vahvistettu": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The confirmation date and time of the index correction."
+                  },
+                  "kohdistus": {
+                    "type": "object",
+                    "properties": {
+                      "toimenpide": {
+                        "type": "integer",
+                        "description": "Harjan toimenpide-id."
+                      },
+                      "rahavaraus": {
+                        "type": "integer",
+                        "description": "Harjan rahavaraus-id."
+                      },
+                      "tehtavaryhma": {
+                        "type": "integer",
+                        "description": "Harjan tehavaryhma-id."
+                      },
+                      "tehtava": {
+                        "type": "integer",
+                        "description": "Harjan tehtava-id."
+                      }
+                    },
+                    "required": ["toimenpide"]
+                  },
+                  "toimenkuva": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "description": "Harjan toimenkuva-id."
+                      },
+                      "nimi": {
+                        "type": "integer",
+                        "description": "Harjan toimenkuva-nimi."
+                      }
+                    },
+                    "required": ["id"]
+                  },
+                  "tunnit": {
+                    "type": "number",
+                    "description": "The number of hours."
+                  },
+                  "tuntipalkka": {
+                    "type": "number",
+                    "description": "The hourly wage."
+                  },
+                  "versio": {
+                    "type": "integer",
+                    "description": "Kustannuksen versio. Käytetään kustannuksen muutoshistorian seuraamiseen."
+                  }
+                }
+              }
+            }
+          }
+        }
+          }
+        }
+      }
+    }
