@@ -25,7 +25,7 @@
         aikataulut-esimerkki (slurp "resources/api/examples/analytiikka-paallystyskohteiden-aikataulujen-haku-response.json")
         urakat-esimerkki (slurp "resources/api/examples/analytiikka-paallystysurakoiden-haku-response.json")
         paallystysilmoitukset-pot2-esimerkki (slurp "resources/api/examples/analytiikka-paallystysilmoitusten-haku-response.json")
-        hoidon-paikkaukset-esimerkki (slurp "resources/api/examples/analytiikka-hoidon-paikkausten-haku-response.json")]
+        hoidon-paikkaukset-esimerkki (slurp "resources/api/examples/analytiikka-hoidon-paikkauskustannusten-haku-response.json")]
     (is (nil? (json/validoi json-skeemat/+analytiikka-paallystyskohteiden-haku-vastaus+ paallystyskohteet-esimerkki false)))
     (is (nil? (json/validoi json-skeemat/+analytiikka-paallystyskohteiden-aikataulujen-haku-vastaus+ aikataulut-esimerkki false)))
     (is (nil? (json/validoi json-skeemat/+analytiikka-paallystysurakoiden-haku-vastaus+ urakat-esimerkki false)))
@@ -72,11 +72,11 @@
           (cheshire/decode odotettu-vastaus)
           (cheshire/decode (:body vastaus))))))
 
-(deftest hoidon-paikkaukset-haku-toimii
-  (let [odotettu-vastaus (slurp "resources/api/examples/analytiikka-hoidon-paikkausten-haku-response.json")
+(deftest hoidon-paikkauskustannukset-haku-toimii
+  (let [odotettu-vastaus (slurp "resources/api/examples/analytiikka-hoidon-paikkauskustannusten-haku-response.json")
         alkuaika "2023-11-01T00:00:00Z"
         loppuaika "2023-11-01T23:59:59Z"
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/hoidon-paikkaukset/" alkuaika "/" loppuaika)]
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/hoidon-paikkauskustannukset/" alkuaika "/" loppuaika)]
                   "analytiikka-testeri" portti)]
     (is (=
           (cheshire/decode odotettu-vastaus)

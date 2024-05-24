@@ -182,6 +182,15 @@
    (on-oikeus? :kirjoitus oikeus urakka-id kayttaja)))
 
 #?(:clj
+   (defn vaadi-lukuoikeus-jostain-urakasta [oikeus kayttaja urakka-idt]
+     (merkitse-oikeustarkistus-tehdyksi!)
+     (when-not (some true? (map #(boolean (voi-lukea? oikeus % kayttaja)) urakka-idt))
+       (throw+ (roolit/->EiOikeutta
+                 (str "Käyttäjällä '" (pr-str kayttaja) "' ei lukuoikeutta "
+                   (:kuvaus oikeus)
+                   (str " yhdesäkään urakassa " urakka-idt)))))))
+
+#?(:clj
    (defn vaadi-lukuoikeus
      ([oikeus kayttaja]
       (vaadi-lukuoikeus oikeus kayttaja nil))

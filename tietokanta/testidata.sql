@@ -220,8 +220,8 @@ INSERT INTO analytiikka_toteumat (
            t.suorittajan_nimi                                                         as toteuma_suorittaja_nimi,
            t.tyyppi::toteumatyyppi                                                    as toteuma_toteumatyyppi, -- "yksikkohintainen","kokonaishintainen","akillinen-hoitotyo","lisatyo", "muutostyo","vahinkojen-korjaukset"
            t.lisatieto                                                                as toteuma_lisatieto,
-           json_agg(row_to_json(row (tt.id, tt.maara, tkoodi.yksikko, tt.lisatieto))) AS toteumatehtavat,
-           json_agg(row_to_json(row (mk.nimi, tm.maara, mk.yksikko)))                 AS toteumamateriaalit,
+           JSON_AGG(row_to_json(row (tkoodi.id, tt.maara, tkoodi.yksikko, tt.lisatieto, tkoodi.tehtavaryhma))) AS toteumatehtavat,
+           JSON_AGG(ROW_TO_JSON(ROW (mk.id, mk.nimi, tm.maara, mk.yksikko)))          AS toteumamateriaalit,
            t.tr_numero                                                                as toteuma_tiesijainti_numero,
            t.tr_alkuosa                                                               as toteuma_tiesijainti_aosa,
            t.tr_alkuetaisyys                                                          as toteuma_tiesijainti_aet,

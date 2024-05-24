@@ -1,5 +1,6 @@
 (ns harja.palvelin.komponentit.liitteet
   (:require [clojure.string :as str]
+            [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.liitteet :as liitteet-q]
             [com.stuartsierra.component :as component]
             [clojure.java.io :as io]
@@ -9,7 +10,6 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
             [harja.palvelin.komponentit.tiedostopesula :as tiedostopesula]
-            [fileyard.client :as fileyard-client]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.tyokalut.lukot :as lukot]
@@ -46,11 +46,6 @@
                   out (ByteArrayOutputStream.)]
         (io/copy in out)
         (.toByteArray out)))))
-
-(defn- lue-fileyard-tiedosto [client uuid]
-  (with-open [out (ByteArrayOutputStream.)]
-    (io/copy (fileyard-client/fetch client uuid) out)
-    (.toByteArray out)))
 
 (def s3-virustarkistusvastaus (atom nil))
 (def s3-virustarkistus-maara (atom 0))
@@ -158,10 +153,6 @@
         (finally
           (.commit c))))))
 
-(defn- poista-lob [db oid]
-  (with-open [c (.getConnection (:datasource db))]
-    (.unlink (large-object-api c) oid)))
-
 (defn- muodosta-pikkukuva
   "Ottaa ison kuvan input streamin ja palauttaa pikkukuvan byte[] muodossa. Pikkukuva on aina png.
   Jos thumbnalaitor ei pysty tekemään pikkukuvaa palautetaan nil."
@@ -173,42 +164,24 @@
 
 (defprotocol LiitteidenHallinta
   (luo-liite [this luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma])
-  (lataa-liite [this liitteen-id])
+  (lataa-liite [this liitteen-id optiot])
   (lataa-pikkukuva [this liitteen-id]))
 
-(defn- tallenna-liitteen-data [db alusta s3-url fileyard-client lahde tiedostonimi]
+(defn- tallenna-liitteen-data [db alusta s3-url lahde tiedostonimi]
   (cond
-    ;; Jos fileyard tallennus on käytössä, tallennetaan ulkoiseen palveluun
-    (and (ominaisuus-kaytossa? :fileyard) fileyard-client)
-    (let [hash @(fileyard-client/save fileyard-client lahde)]
-      (if (string? hash)
-        {:liite_oid nil
-         :s3hash nil
-         :fileyard-hash hash
-         :virustarkastettu? true}
-        (do
-          (log/error "Uuden liitteen tallennus fileyard epäonnistui, tallennetaan tietokantaan. "
-            {:liite_oid nil
-             :s3hash nil
-             :fileyard-hash hash
-             :virustarkastettu? true})
-          (tallenna-liitteen-data db alusta nil nil lahde tiedostonimi))))
-
     ;; Jos S3 tallennus käytössä
     (and (= :aws alusta) s3-url)
     (let [s3hash (tallenna-s3 s3-url (io/input-stream lahde) tiedostonimi)]
       (if (string? s3hash)
         {:liite_oid nil
          :s3hash s3hash
-         :fileyard-hash nil
          :virustarkastettu? false}
         (do
           (log/error "Uuden liitteen tallennus s3 epäonnistui, tallennetaan vain tietokantaan. ")
-          (tallenna-liitteen-data db alusta s3-url nil lahde tiedostonimi))))
+          (tallenna-liitteen-data db alusta s3-url lahde tiedostonimi))))
 
     ;; Muuten tallennetaan paikalliseen tietokantaan
     :else {:liite_oid (tallenna-lob db (io/input-stream lahde))
-           :fileyard-hash nil
            :s3hash nil
            :virustarkastettu? true}))
 
@@ -219,10 +192,10 @@
       (io/copy alkuperainen temp-file)
       [(io/input-stream temp-file) (io/input-stream temp-file)])))
 
-(defn- tallenna-liite-tietokantaan [db lahdetiedosto alusta s3-url fileyard-client liite-perustiedot]
+(defn- tallenna-liite-tietokantaan [db lahdetiedosto alusta s3-url liite-perustiedot]
   (let [pikkukuva (muodosta-pikkukuva (io/input-stream lahdetiedosto))
-        data (tallenna-liitteen-data db alusta s3-url fileyard-client lahdetiedosto (:tiedostonimi liite-perustiedot))
-        liite (when (or (some? (:liite_oid data)) (some? (:s3hash data)) (some? (:fileyard-hash data)))
+        data (tallenna-liitteen-data db alusta s3-url lahdetiedosto (:tiedostonimi liite-perustiedot))
+        liite (when (or (some? (:liite_oid data)) (some? (:s3hash data)))
                 (liitteet-q/tallenna-liite<!
                   db
                   (merge {:nimi (:tiedostonimi liite-perustiedot)
@@ -257,7 +230,7 @@
 
     (if (:hyvaksytty liitetarkistus)
       (do
-        (let [liite (tallenna-liite-tietokantaan db lahdetiedosto :aws s3-url nil liite-perustiedot)
+        (let [liite (tallenna-liite-tietokantaan db lahdetiedosto :aws s3-url liite-perustiedot)
               ;; S3 tallennuksessa käynnistetään virustarkastus
               _ (when (:s3hash liite) (async/thread (odota-s3-virustarkistus db s3-url (:s3hash liite))))]
           liite))
@@ -267,7 +240,7 @@
                  [{:koodi  virheet/+virheellinen-liite-koodi+
                    :viesti (str "Virheellinen liite: " (:viesti liitetarkistus))}]})))))
 
-(defn- tallenna-liite [db lahdetiedosto fileyard-client tiedostopesula virustarkistus {:keys [tiedostonimi tyyppi koko] :as liite-perustiedot}]
+(defn- tallenna-liite [db lahdetiedosto tiedostopesula virustarkistus {:keys [tiedostonimi tyyppi koko] :as liite-perustiedot}]
   (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan.")
   (log/debug "Tyyppi: " (pr-str tyyppi))
 
@@ -292,66 +265,41 @@
     (if (:hyvaksytty liitetarkistus)
       (do
         (virustarkistus/tarkista virustarkistus tiedostonimi (io/input-stream lahdetiedosto))
-        (tallenna-liite-tietokantaan db lahdetiedosto nil nil fileyard-client liite-perustiedot))
+        (tallenna-liite-tietokantaan db lahdetiedosto nil nil liite-perustiedot))
       (do
         (log/debug "Liite hylätty: " (:viesti liitetarkistus))
         (throw+ {:type virheet/+virheellinen-liite+ :virheet
                  [{:koodi  virheet/+virheellinen-liite-koodi+
                    :viesti (str "Virheellinen liite: " (:viesti liitetarkistus))}]})))))
 
-(defn- hae-liite [db alusta s3-url fileyard-client liitteen-id]
-  (let [{:keys [fileyard-hash s3hash] :as liite}
-        (first (liitteet-q/hae-liite-lataukseen db liitteen-id))]
-
+(defn- hae-liite
+  "Optiot sisältää seuraavat avaimet:
+  siltatarkastusliite? Boolean, joka on true jos halutaan hakea siltatarkastuksia. Näihin vaaditaan erikoiskäsittely oikeuksien takia."
+  [db alusta s3-url liitteen-id {:keys [siltatarkastusliite?] :as _optiot}]
+  (let [{:keys [s3hash urakat] :as liite}
+        (if siltatarkastusliite?
+          ;; Siltatarkastukset eroaa muista liitteistä oikeuksien suhteen. Niille tarvitaan urakan sijaan lista urakoista, joiden perusteella päätellään, saako käyttäjä ladata liitettä.
+          ;; Mikäli tulevaisuudessa on tarve muiden poikkeusten käsittelyyn, siirretään poikkeusten käsittely tämän komponentin ulkopuolelle.
+          ;; Yhden poikkeuksen käsittelyn vuoksi refaktorointi todettiin ylilyönniksi, mutta jos poikkeuksia tulee lisää, koodin selkeys vähenee.
+          (first (liitteet-q/hae-siltatarkastusliite-lataukseen db liitteen-id))
+          (first (liitteet-q/hae-liite-lataukseen db liitteen-id)))
+        liite (assoc liite :urakat (konversio/pgarray->vector urakat))]
     (dissoc
       (cond
-        ;; Jos fileyard käytössä
-        (and (ominaisuus-kaytossa? :fileyard) fileyard-client fileyard-hash) (assoc liite :data (lue-fileyard-tiedosto fileyard-client fileyard-hash))
         ;; Jos S3 tallennus käytössä
         (= :aws alusta)
         (assoc liite :data (lue-s3-tiedosto s3-url (str s3hash) db))
         :else (assoc liite :data (lue-lob db (:liite_oid liite))))
-      :liite_oid :fileyard-hash)))
+      :liite_oid)))
 
 (defn- hae-pikkukuva [db liitteen-id]
   (first (liitteet-q/hae-pikkukuva-lataukseen db liitteen-id)))
 
-(defn- siirra-liite-fileyard [db client {:keys [id nimi liite_oid]}]
-  (try
-    (let [result @(fileyard-client/save client (lue-lob db liite_oid))]
-      (if (not (string? result))
-        (log/error "Virhe siirrettäessä liitettä " nimi "(id: " id ") fileyardiin: " result)
-        (do
-          (jdbc/with-db-transaction [db db]
-            (poista-lob db liite_oid)
-            (liitteet-q/merkitse-liite-siirretyksi! db {:id id :fileyard-hash result}))
-          (log/info "Siirretty liite: " nimi " (id: " id ")"))))
-    (catch Exception e
-      (log/error e "Poikkeus siirrettäessä liitettä fileyardiin " nimi " (id: " id ")"))))
-
-(def liitteiden-ajastusvali-min 5)
-(def lukon-vanhenemisaika-s (* (dec liitteiden-ajastusvali-min) 60))
-
-(defn- siirra-liitteet-fileyard [db fileyard-url]
-  (when (and (ominaisuus-kaytossa? :fileyard)
-             fileyard-url)
-    (lukot/yrita-ajaa-lukon-kanssa
-      db "fileyard-liitesiirto"
-      #(let [client (fileyard-client/new-client fileyard-url)]
-        (doseq [liite (liitteet-q/hae-siirrettavat-liitteet db)]
-          (siirra-liite-fileyard db client liite)))
-      lukon-vanhenemisaika-s)))
-
-(defrecord Liitteet [fileyard-url s3-url alusta]
+(defrecord Liitteet [s3-url alusta]
   component/Lifecycle
-  (start [{db :db :as this}]
-    (assoc this ::lopeta-ajastettu-tehtava
-                (ajastettu-tehtava/ajasta-minuutin-valein
-                  liitteiden-ajastusvali-min 11                                      ;; 5 min välein alkaen 11s käynnistyksestä
-                  (fn [_]
-                    (siirra-liitteet-fileyard db fileyard-url)))))
+  (start [this]
+    this)
   (stop [this]
-    ((get this ::lopeta-ajastettu-tehtava))
     this)
 
   LiitteidenHallinta
@@ -367,11 +315,8 @@
       ; Tallennetaan liitteet s3:een vähemmillä vaiheilla
       (if (and (= :aws alusta) s3-url)
         (tallenna-liite-s3 db lahde s3-url liite-perustiedot)
-        (tallenna-liite db lahde
-          (when fileyard-url
-            (fileyard-client/new-client fileyard-url))
-          tiedostopesula virustarkistus liite-perustiedot))))
-  (lataa-liite [{db :db :as this} liitteen-id]
-    (hae-liite db (:alusta this) s3-url (fileyard-client/new-client fileyard-url) liitteen-id))
+        (tallenna-liite db lahde tiedostopesula virustarkistus liite-perustiedot))))
+  (lataa-liite [{db :db :as this} liitteen-id optiot]
+    (hae-liite db (:alusta this) s3-url liitteen-id optiot))
   (lataa-pikkukuva [{db :db} liitteen-id]
     (hae-pikkukuva db liitteen-id)))
