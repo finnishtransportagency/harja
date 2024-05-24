@@ -69,14 +69,15 @@
        (when pitoisuus [:sideainepitoisuus pitoisuus])
        [:lisa-aineet lisaaineet]]]]))
 
-(defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi verkon-tyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+(defn tee-alustalle-tehty-toimenpide [{:keys [harja-id verkkotyyppi verkon-tyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                                               tr-ajorata tr-kaista verkon-tarkoitus kasittelymenetelma paksuus lisatty-paksuus
-                                              verkon-sijainti toimenpide kasittelysyvyys massamenekki]}
+                                              verkon-sijainti toimenpide kasittelysyvyys massamenekki kokonaismassamaara massa murske]}
                                       kohteen-tienumero karttapvm]
   (let [tekninen-toimenpide (if-not (#{42 41 32 31 4} toimenpide) ;; LJYR TJYR TAS TASK REM-TAS
                               4 ;; "Kevyt rakenteen parantaminen"
                               9)] ;; "ei tiedossa"
     [:alustalle-tehty-toimenpide
+     [:harja-id harja-id]
      [:tierekisteriosoitevali
       [:karttapaivamaara (xml/formatoi-paivamaara (if karttapvm karttapvm (pvm/nyt)))]
       ;; Tienumero on joko alustatoimenpiteelle määritelty tienumero, tai sen puuttuessa alustatoimenpiteen
@@ -91,23 +92,50 @@
       [:ajorata tr-ajorata]
       [:kaista tr-kaista]]
      [:kasittelymenetelma (or kasittelymenetelma toimenpide)]
-     (when-let [kasittelysyvyys (or paksuus kasittelysyvyys lisatty-paksuus)]
-       [:kasittelypaksuus kasittelysyvyys])
+     [:lisatty-paksuus lisatty-paksuus] ;; Käytetäänkö "paksuus" tietoa?
+     [:kasittelysyvyys kasittelysyvyys]
      (when-let [verkkotyyppi (or verkkotyyppi verkon-tyyppi)]
        [:verkkotyyppi verkkotyyppi])
      (when verkon-tarkoitus
        [:verkon-tarkoitus verkon-tarkoitus])
      (when verkon-sijainti
        [:verkon-sijainti verkon-sijainti])
-     [:tekninen-toimenpide tekninen-toimenpide]
-     (when massamenekki [:massamenekki massamenekki])]))
+     [:alustan-tekninen-toimenpide toimenpide] ;; TODO Selvitä vielä tämä? Ei skeemassa
+     (when massamenekki [:massamenekki massamenekki])
+     [:kokonaismassamaara kokonaismassamaara]
+     (into [:massa] massa)
+     (into [:murske] murske)]))
+
+(defn tee-kulutuskerrokselle-tehdyt-toimet [{:keys [yha-id harja-id poistettu tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+                                                    tr-ajorata tr-kaista leveys pinta-ala paallystetyomenetelma massamenekki massa kokonaismassamaara] :as toimet}
+                                            kohteen-tienumero karttapvm]
+  [:kulutuskerrokselle-tehty-toimenpide
+   [:yha-id yha-id]
+   [:harja-id harja-id]
+   [:poistettu poistettu]
+   [:tierekisteriosoitevali
+    [:karttapaivamaara (xml/formatoi-paivamaara (if karttapvm karttapvm (pvm/nyt)))]
+    [:tienumero (or tr-numero kohteen-tienumero)]
+    [:aosa tr-alkuosa]
+    [:aet tr-alkuetaisyys]
+    [:losa tr-loppuosa]
+    [:let tr-loppuetaisyys]
+    [:ajorata tr-ajorata]
+    [:kaista tr-kaista]]
+   [:leveys leveys]
+   [:pinta-ala pinta-ala]
+   [:paallystetyomenetelma paallystetyomenetelma]
+   [:massamenekki massamenekki]
+   [:kokonaismassamaara kokonaismassamaara]
+   (into [:massa] massa)])
 
 ;; YHA ohjaa paikkauskohteiden pot-lomakkeet poikkeuskäsittelyllä yhteisesti sovitun kohde id:n avulla
 (def paikkauskohteiden-yha-id 99)
 
 (defn tee-kohde [{:keys [yhaid yha-kohdenumero id yllapitokohdetyyppi yllapitokohdetyotyyppi tr-numero
                          karttapaivamaara nimi tunnus paikkauskohde-id] :as kohde}
-                 alikohteet
+                 kulutuskerrokselle-tehdyt-toimet
+                 alustalle-tehdyt-toimet
                  {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot paikkauskohde-toteutunut-hinta] :as paallystysilmoitus}]
   [:kohde
    ;; Tämän yhaid:n oltava paikkauskohteen POT:eilla aina 99
@@ -127,14 +155,15 @@
    [:toteutunuthinta (if paikkauskohde-id
                        paikkauskohde-toteutunut-hinta
                        (laske-hinta-kokonaishinta paallystysilmoitus))]
-   (tee-tierekisteriosoitevali (dissoc kohde :tr-ajorata :tr-kaista))
-   (when (:alustatoimet ilmoitustiedot)
+   (tee-tierekisteriosoitevali kohde) ;; TODO: Miksi tässä (dissoc kohde :tr-ajorata :tr-kaista)
+   (when alustalle-tehdyt-toimet
      (reduce conj [:alustalle-tehdyt-toimet]
-             (mapv #(tee-alustalle-tehty-toimenpide % tr-numero karttapaivamaara)
-                   (:alustatoimet ilmoitustiedot))))
-   (when alikohteet
-     (reduce conj [:alikohteet]
-             (mapv tee-alikohde alikohteet)))])
+       (mapv #(tee-alustalle-tehty-toimenpide % tr-numero karttapaivamaara)
+         alustalle-tehdyt-toimet)))
+   (when kulutuskerrokselle-tehdyt-toimet
+     (reduce conj [:kulutuskerrokselle-tehdyt-toimet]
+       (mapv #(tee-kulutuskerrokselle-tehdyt-toimet % tr-numero karttapaivamaara)
+         kulutuskerrokselle-tehdyt-toimet)))])
 
 (defn muodosta-sanoma [{:keys [yhaid harjaid sampoid yhatunnus]} kohteet]
   [:urakan-kohteiden-toteumatietojen-kirjaus
@@ -144,13 +173,13 @@
     [:harja-id harjaid]
     [:sampotunnus sampoid]
     [:tunnus yhatunnus]
-    (reduce conj [:kohteet] (mapv #(tee-kohde (:kohde %) (:alikohteet %) (:paallystysilmoitus %)) kohteet))]])
+    (reduce conj [:kohteet] (mapv #(tee-kohde (:kohde %) (:kulutuskerrokselle-tehdyt-toimet %) (:alustalle-tehdyt-toimet %) (:paallystysilmoitus %)) kohteet))]])
 
 (defn muodosta [urakka kohteet]
-  (let [sisalto (muodosta-sanoma urakka kohteet)
+  (let [sisalto (muodosta-sanoma urakka kohteet) 
         xml (xml/tee-xml-sanoma sisalto)]
     (log/debug "Muodostettu XML sanoma: " (pr-str xml))
-    (if-let [virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" xml)]
+    (if-let [virheet (xml/validoi-xml +xsd-polku+ "yha2.xsd" xml)]
       (let [virheviesti (format "Kohdetta ei voi lähettää YHAan. XML ei ole validia. Validointivirheet: %s" virheet)]
         (log/error virheviesti)
         (throw+ {:type :invalidi-yha-kohde-xml
