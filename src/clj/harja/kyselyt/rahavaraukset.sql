@@ -56,8 +56,8 @@ UPDATE rahavaraus_urakka
 -- name: poista-urakan-rahavaraus<!
 DELETE
   FROM rahavaraus_urakka
- WHERE urakka_id = :urakka
-   AND rahavaraus_id = :rahavaraus;
+ WHERE urakka_id = :urakkaid
+   AND rahavaraus_id = :rahavarausid;
 
 -- name: lisaa-rahavaraukselle-tehtava<!
 INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
@@ -90,3 +90,28 @@ SELECT EXISTS(SELECT t.id
                WHERE t.poistettu IS FALSE
                  AND t.tehtavaryhma IS NOT NULL
                  AND t.id = :tehtava-id :: BIGINT);
+
+-- name: onko-rahavaraus-kaytossa?
+-- single?: true
+SELECT EXISTS(SELECT id
+                FROM kustannusarvioitu_tyo kt
+               WHERE kt.rahavaraus_id = :id :: BIGINT
+               UNION ALL
+              SELECT id
+                FROM kulu_kohdistus kk
+               WHERE kk.rahavaraus_id = :id :: BIGINT);
+
+-- name: poista-rahavaraus-urakoilta!
+DELETE
+  FROM rahavaraus_urakka
+ WHERE rahavaraus_id = :id :: BIGINT;
+
+-- name: poista-rahavarauksen-tehtavat!
+DELETE
+  FROM rahavaraus_tehtava
+ WHERE rahavaraus_id = :id :: BIGINT;
+
+-- name: poista-rahavaraus!
+DELETE
+  FROM rahavaraus
+ WHERE id = :id :: BIGINT;

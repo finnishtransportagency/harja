@@ -33,6 +33,10 @@
 (defrecord PoistaTehtavaRahavaraukselta [rahavaraus-id tehtava-id])
 (defrecord PoistaTehtavaRahavaraukseltaOnnistui [vastaus])
 (defrecord PoistaTehtavaRahavaraukseltaEpaonnistui [vastaus])
+(defrecord PoistaRahavaraus [rahavaraus])
+(defrecord PoistaRahavarausOnnistui [vastaus])
+(defrecord PoistaRahavarausEpaonnistui [vastaus])
+
 (defn- kasittele-rahavaraus-vastaus [vastaus app]
   (let [kaikki-rahavaraukset (:rahavaraukset vastaus)
         ;; Filtteröi vastauksesta urakat
@@ -100,7 +104,29 @@
          :paasta-virhe-lapi? true}))
     app)
 
+  PoistaRahavaraus
+  (process-event [{:keys [valittu-urakka rahavaraus]} app]
+    (let [tallennus-id (gensym)
+          app (assoc-in app [:tallennukset-kesken tallennus-id] true)]
+      (tuck-apurit/post! :poista-rahavaraus
+        {:urakka (:urakka-id valittu-urakka)
+         :id (:id rahavaraus)}
+        {:onnistui ->PoistaRahavarausOnnistui
+         :epaonnistui ->PoistaRahavarausEpaonnistui
+         :onnistui-parametrit [tallennus-id]
+         :epaonnistui-parametrit [tallennus-id]
+         :paasta-virhe-lapi? true}))
     app)
+
+  PoistaRahavarausOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Rahavarauksen poisto onnistui!")
+    (kasittele-rahavaraus-vastaus vastaus app))
+
+  PoistaRahavarausEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Rahavarauksen poisto ei onnistu - Sillä on varmaan jo kuluja tai suunnitelmia, eikä sitä voida enää poistaa" :varoitus)
+    (assoc app :tehtavat nil))
 
   ValitseUrakanRahavaraus
   (process-event [{:keys [urakka rahavaraus valittu?]} app]

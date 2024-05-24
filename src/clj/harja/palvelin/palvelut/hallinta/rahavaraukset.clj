@@ -166,6 +166,28 @@
   ;; Palautetaan rahavaraukset tehtävineen, kun ne on nyt päivittyneet
   (hae-rahavaraukset-tehtavineen db kayttaja))
 
+(defn poista-rahavaraus [db kayttaja {:keys [urakka id]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-rahavaraukset kayttaja)
+  (log/debug "poista-rahavaraus :: rahavaraus-id: " id)
+  (let [rahavaraus-valid? (and
+                            (s/valid? ::rahavaraus-id id)
+                            (onko-rahavaraus-olemassa? db id))
+        ;; Tarkistetaan, onko kustannusarvioituo_tyo tai kulu_kohdistus tauluissa tällä rahavaraus id:llä merkintöjä
+        ;; Jos on, niin poistoa ei voi tehdä
+        onko-kaytossa? (q/onko-rahavaraus-kaytossa? db id)]
+    (if (and rahavaraus-valid? (not onko-kaytossa?))
+      (do ;; Poista rahavaraus kaikilta urakoilta
+        (q/poista-rahavaraus-urakoilta! db id)
+        ;; Poista rahavarauksen tehtävät
+        (q/poista-rahavarauksen-tehtavat! db id)
+        ;; Poista rahavaraus lopullisesti tietokannasta
+        (q/poista-rahavaraus! db id)
+        (log/info "Rahavaraus poistettu onnistuneesti."))
+      (throw (SecurityException. (str "Rahavaraus on käytössä. Eikä sitä voi poistaa"))))
+
+    ;; Välitä ui:lle muuttunut tilanne
+    (hae-rahavaraukset db kayttaja)))
+
 (defrecord RahavarauksetHallinta []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -187,14 +209,17 @@
     (julkaise-palvelu http-palvelin :poista-rahavarauksen-tehtava
       (fn [kayttaja tiedot]
         (poista-rahavarauksen-tehtava db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :poista-rahavaraus
+      (fn [kayttaja tiedot]
+        (poista-rahavaraus db kayttaja tiedot)))
     this)
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
       :hae-rahavaraukset
       :hae-rahavaraukset-tehtavineen
-      :hae-urakoiden-rahavaraukset
       :hae-rahavaraukselle-mahdolliset-tehtavat
       :paivita-urakan-rahavaraus
       :tallenna-rahavarauksen-tehtava
-      :poista-rahavarauksen-tehtava)
+      :poista-rahavarauksen-tehtava
+      :poista-rahavaraus)
     this))
