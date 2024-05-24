@@ -1,20 +1,31 @@
 (ns harja.views.hallinta.rahavaraukset
-  (:require [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :as yleiset]
+  (:require [reagent.core :refer [atom] :as r]
             [tuck.core :refer [tuck send-value! send-async!]]
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.napit :as napit]
+            [harja.ui.grid :as grid]
+            [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.hallinta.rahavaraukset :as tiedot])
-  (:require-macros [harja.tyokalut.ui :refer [for*]]))
+            [harja.tiedot.hallinta.rahavaraukset :as tiedot]))
 
 (defn rahavaraukset* [e! _app]
   (komp/luo
-    (komp/sisaan #(do (e! (tiedot/->HaeRahavaraukset))
-                    (e! (tiedot/->HaeUrakoidenRahavaraukset))))
+    (komp/sisaan #(do (e! (tiedot/->HaeRahavaraukset))))
     (fn [e! {:keys [valittu-urakka urakat urakoiden-rahavaraukset rahavaraukset tallennukset-kesken] :as app}]
       (let [valitun-urakan-rahavaraukset (filter #(= (:urakka-id %) (:urakka-id valittu-urakka))
-                                           urakoiden-rahavaraukset)]
+                                           urakoiden-rahavaraukset)
+            ;; Merkitään, onko valittu
+            muokatut-rahavaraukset (map
+                                     (fn [rahavaraus]
+                                       (-> rahavaraus
+                                         (assoc :valittu? (some #(= (:id %) (:id rahavaraus)) valitun-urakan-rahavaraukset))
+                                         (assoc :urakkakohtainen-nimi (:urakkakohtainen-nimi (first (filter #(= (:id %) (:id rahavaraus)) valitun-urakan-rahavaraukset))))))
+                                     rahavaraukset)
+            rahavaraukset-atom (r/atom (zipmap (range) muokatut-rahavaraukset))]
+
         [:div.rahavaraukset-hallinta
          [:h1 "Rahavaraukset"]
+         [debug/debug app]
          [yleiset/pudotusvalikko
           "Urakka"
           {:valitse-fn #(e! (tiedot/->ValitseUrakka %))
