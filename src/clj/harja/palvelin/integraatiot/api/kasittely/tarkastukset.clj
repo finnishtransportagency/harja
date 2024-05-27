@@ -27,6 +27,7 @@
   ([db liitteiden-hallinta kayttaja tyyppi urakka-id data]
    (luo-tai-paivita-tarkastukset db liitteiden-hallinta kayttaja tyyppi urakka-id data nil))
   ([db liitteiden-hallinta kayttaja tyyppi urakka-id data yllapitokohde]
+   (log/info "TARKASTUS-DEBUG: Aloitetaan transaktio")
    (let [tarkastukset (:tarkastukset data)]
      (remove
        nil?
@@ -34,8 +35,7 @@
          (jdbc/with-db-transaction [db db]
            (mapv
              (fn [rivi]
-               (let [_ (log/info "TARKASTUS-DEBUG: Aloitetaan transaktio")
-                     tarkastus (:tarkastus rivi)
+               (let [tarkastus (:tarkastus rivi)
                      {alkusijainti :alkusijainti loppusijainti :loppusijainti} tarkastus
                      ulkoinen-id (-> tarkastus :tunniste :id)
                      tyyppi (if (nil? tyyppi)
