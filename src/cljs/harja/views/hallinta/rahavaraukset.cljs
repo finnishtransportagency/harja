@@ -51,7 +51,7 @@
                            (assoc rivi :id -1 :valittu? nil :nimi "" :urakkakohtainen-nimi ""))
               ; Roskakorinappula rivin päässä
               :toimintonappi-fn (fn [rivi _muokkaa! id]
-                                  [napit/poista "Poista"
+                                  [napit/poista ""
                                    #(do
                                       (e! (tiedot/->PoistaRahavaraus rivi)))
                                    {:luokka "napiton-nappi"}])}
