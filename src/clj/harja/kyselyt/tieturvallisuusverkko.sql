@@ -11,12 +11,12 @@ VALUES (:aosa, :tie, :let, :losa, :aet, :tenluokka,
 SELECT tie, aosa, losa, aet, let, geometria FROM tieturvallisuusverkko;
 
 -- name: hae-geometriaa-leikkaavat-tieturvallisuusgeometriat-tienumerolla
-SELECT ST_Intersection(:saatugeometria::GEOMETRY, ulompi.u) AS leikkaus
+SELECT ST_Intersection(ST_Buffer(:saatugeometria::GEOMETRY, 1), ulompi.u) AS leikkaus
 FROM (SELECT ST_Union(sisempi.geom) u
       FROM (SELECT geometria::geometry geom
             FROM tieturvallisuusverkko
             WHERE tie = :tie
-              AND ST_Intersects(:saatugeometria::GEOMETRY, geometria::geometry)
+              AND ST_Intersects(ST_Buffer(:saatugeometria::GEOMETRY, 1), geometria::geometry)
            ) AS sisempi
      ) AS ulompi;
 
