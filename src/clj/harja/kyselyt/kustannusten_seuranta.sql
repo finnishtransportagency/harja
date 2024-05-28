@@ -11,17 +11,13 @@ WITH urakan_toimenpideinstanssi_23150 AS
             AND m.toimenpideinstanssi = tpi.id
             AND tpk2.koodi = '23150'
           limit 1)
--- Haetaan budjetoidut hankintakustannukset kustannusarvioitu_tyo taulusta
--- Kaikki budjetoidut kustannukset ovat joko rahavarauksia tai hankintoja
+-- Haetaan budjetoidut hankintakustannukset ja rahavaraukset kustannusarvioitu_tyo taulusta
+-- Kaikki budjetoidut kustannukset ovat joko rahavarauksia tai hankintoja. Erillishankinnat on eriytetty omaksi haukseen
 SELECT coalesce(SUM(kt.summa), 0)                     AS budjetoitu_summa,
        coalesce(SUM(kt.summa_indeksikorjattu), 0)     AS budjetoitu_summa_indeksikorjattu,
        0                                              AS toteutunut_summa,
        kt.tyyppi::TEXT                                AS maksutyyppi,
        CASE
-           -- Roikotetaan näitä vielä tässä siirtymävaiheessa mukana.
-           WHEN kt.tyyppi::TEXT = 'akillinen-hoitotyo' THEN 'rahavaraus'
-           WHEN kt.tyyppi::TEXT = 'vahinkojen-korjaukset' THEN 'rahavaraus'
-           WHEN kt.tyyppi::TEXT = 'muut-rahavaraukset' THEN 'rahavaraus'
            WHEN kt.rahavaraus_id IS NULL THEN 'hankinta'
            WHEN kt.rahavaraus_id IS NOT NULL THEN 'rahavaraus'
            END                                        AS toimenpideryhma,
@@ -40,10 +36,6 @@ SELECT coalesce(SUM(kt.summa), 0)                     AS budjetoitu_summa,
        'budjetointi'                                  AS toteutunut,
        tk_tehtava.jarjestys                           AS jarjestys,
        CASE
-           -- Roikotetaan näitä täällä vielä mukana siirtymävaiheessa - Pitäisikö tyypin perusteella lisätä jälkikäteen rahavaraus_id ?
-           WHEN kt.tyyppi::TEXT = 'akillinen-hoitotyo' THEN 'rahavaraukset'
-           WHEN kt.tyyppi::TEXT = 'vahinkojen-korjaukset' THEN 'rahavaraukset'
-           WHEN kt.tyyppi::TEXT = 'muut-rahavaraukset' THEN 'rahavaraukset'
            WHEN kt.rahavaraus_id IS NULL THEN 'hankintakustannukset'
            WHEN kt.rahavaraus_id IS NOT NULL THEN 'rahavaraukset'
            END                                        AS paaryhma,
@@ -200,8 +192,6 @@ UNION ALL
 -- Budjetoidut - Johto- ja hallintokorvaus haetaan myös kustannusarvioitu_tyo taulusta,
 -- Toimistotarvikkeet saadaan yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388'
 -- ja Johto- ja hallintokorvaus (J) - tehtäväryhmältä
--- HOX HOX HOX - älä mergeä ennenkuin alla oleva todo on selvitetty
--- TODO: SELVITÄ ONKO TÄMÄ OIKEA RAJAUS - Vähä näyttää siltä, että tämä haku ei löydä mitään, koska toimistotarvikkeet ei kuulu toimenpideinstanssille 23150 vaan 23151
 SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        SUM(kt.summa_indeksikorjattu)                  AS budjetoitu_summa_indeksikorjattu,
        0                                              AS toteutunut_summa,
@@ -238,9 +228,6 @@ SELECT 0                          AS budjetoitu_summa,
        CASE
            WHEN (lk.maksueratyyppi::TEXT = 'kokonaishintainen' AND lk.rahavaraus_id IS NULL) THEN 'hankinta'
            WHEN (lk.maksueratyyppi::TEXT = 'yksikkohintainen' AND lk.rahavaraus_id IS NULL) THEN 'hankinta'
-           -- Roikotetaan näitä täällä vielä mukana siirtymävaiheessa - Pitäisikö tyypin perusteella lisätä jälkikäteen rahavaraus_id ?
-           WHEN (lk.maksueratyyppi::TEXT = 'akillinen-hoitotyo' AND lk.rahavaraus_id IS NULL) THEN 'rahavaraus'
-           WHEN (lk.maksueratyyppi::TEXT = 'muu' AND lk.rahavaraus_id IS NULL) THEN 'rahavaraus' -- muu = vahinkojen-korjaukset
            WHEN (lk.maksueratyyppi::TEXT = 'lisatyo' AND lk.rahavaraus_id IS NULL) THEN 'lisatyo'
            WHEN lk.rahavaraus_id IS NOT NULL THEN 'rahavaraus'
            ELSE 'hankinta'
