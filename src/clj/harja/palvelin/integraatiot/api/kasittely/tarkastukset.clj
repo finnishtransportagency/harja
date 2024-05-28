@@ -27,6 +27,7 @@
   ([db liitteiden-hallinta kayttaja tyyppi urakka-id data]
    (luo-tai-paivita-tarkastukset db liitteiden-hallinta kayttaja tyyppi urakka-id data nil))
   ([db liitteiden-hallinta kayttaja tyyppi urakka-id data yllapitokohde]
+   (log/info "TARKASTUS-DEBUG: Aloitetaan transaktio")
    (let [tarkastukset (:tarkastukset data)]
      (remove
        nil?
@@ -44,15 +45,19 @@
                      {tarkastus-id :id}
                      (first
                        (q-tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id tyyppi urakka-id))
+                     _ (log/info "TARKASTUS-DEBUG: Tarkastus id haettu")
                      uusi? (nil? tarkastus-id)
                      aika (json/aika-string->java-sql-date (:aika tarkastus))
                      tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
+                     _ (log/info "TARKASTUS-DEBUG: Tieosoite haettu")
                      tie (:tie tr-osoite)
                      geometria (if tr-osoite
                                  (:geometria tr-osoite)
                                  (sijainnit/tee-geometria (:alkusijainti tarkastus) (:loppusijainti tarkastus)))
+                     _ (log/info "TARKASTUS-DEBUG: Geometria tehty")
                      tieturvallisuus-geometria (when (and tieturvallisuustarkastus? tie)
                                                  (hae-tieturvallisuusgeometria db tie geometria))
+                     _ (log/info "TARKASTUS-DEBUG: Tieturvallisuusgeometriat tehty")
                      tr-osoite
                      (if (and tieturvallisuustarkastus? tieturvallisuus-geometria)
                        (sijainnit/hae-tierekisteriosoite-geometrialle db (geo/pg->clj tieturvallisuus-geometria))
@@ -90,13 +95,19 @@
                              geo/clj->pg
                              geo/geometry)
                            :alkuperainen_sijainti (if tieturvallisuustarkastus? geometria nil)})
+                     _ (log/info "TARKASTUS-DEBUG: tarkastus tehty")
                      liitteet (:liitteet tarkastus)]
+                 (log/info "TARKASTUS-DEBUG: Aloitetaan liitteiden tallennus. Määrä: " (count liitteet))
                  (tyokalut-liitteet/tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
+                 (log/info "TARKASTUS-DEBUG: Liitteet tallennettu")
                  (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? (:mittaus rivi))
+                 (log/info "TARKASTUS-DEBUG: Mittaustulokset tallennettu")
                  (when-not tr-osoite
                    (format "Annetulla sijainnilla ei voitu päätellä sijaintia tieverkolla (alku: %s, loppu %s)."
                            (:alkusijainti tarkastus) (:loppusijainti tarkastus)))))
-             tarkastukset))
+             (do
+               (log/info "TARKASTUS-DEBUG: Kaikki tarkastukset käsitelty")
+               tarkastukset)))
          (catch Throwable t
            (log/warn t "Virhe tarkastuksen lisäämisessä")
            (throw t)))))))
