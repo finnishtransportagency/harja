@@ -394,3 +394,9 @@ SELECT exists(SELECT p.id
 SELECT alku
   FROM paivystys
  WHERE id = :id;
+
+-- name: hae-vastuuhenkilot-hallinta
+SELECT * FROM urakanvastuuhenkilo uvh
+         JOIN urakka u ON uvh.urakka = u.id
+WHERE (:urakka IS NULL or :urakka = urakka) AND
+      (:paattyneet IS TRUE OR u.loppupvm > current_timestamp)
