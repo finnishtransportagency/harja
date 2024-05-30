@@ -142,8 +142,8 @@
      {:otsikko "Käytetty määrä (t)" :nimi :maara :fmt #(fmt/desimaaliluku-opt % 3)
       :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 30 :muokattava? muokattava?
       :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
-     {:otsikko "Toteumia" :nimi :lukumaara :tyyppi :positiivinen-numero :leveys 15 :muokattava? muokattava?
-      :validoi [[:ei-tyhja "Anna lukumäärä"]] :tasaa :oikea}
+     {:otsikko "Toteumia" :nimi :lukumaara :tyyppi :positiivinen-numero :kokonaisluku? true
+      :leveys 15 :muokattava? muokattava? :validoi [[:ei-tyhja "Anna lukumäärä"]] :tasaa :oikea}
      {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 60 :muokattava? muokattava?
       :hae #(if (muokattava? %)
               (:lisatieto %)
