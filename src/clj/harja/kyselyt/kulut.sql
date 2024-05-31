@@ -143,7 +143,8 @@ SELECT m.numero                AS "maksuera-numero",
        kk.suoritus_alku        AS "suoritus-alku",
        kk.suoritus_loppu       AS "suoritus-loppu",
        kk.lisatyon_lisatieto   AS "lisatyon-lisatieto",
-       kk.maksueratyyppi       AS "maksueratyyppi"
+       kk.maksueratyyppi       AS "maksueratyyppi",
+       kk.rahavaraus_id        AS rahavaraus
 FROM   kulu k
        JOIN kulu_kohdistus kk ON k.id = kk.kulu 
        AND kk.poistettu IS NOT TRUE
@@ -191,8 +192,11 @@ SELECT kk.id                  AS "kohdistus-id",
        kk.luotu               AS "luontiaika",
        kk.muokattu            AS "muokkausaika",
        kk.lisatyon_lisatieto  AS "lisatyon-lisatieto",
-       kk.maksueratyyppi      AS "maksueratyyppi"
+       kk.maksueratyyppi      AS "maksueratyyppi",
+       kk.rahavaraus_id       AS rahavaraus_id,
+       rv.nimi                AS rahavaraus_nimi
   FROM kulu_kohdistus kk
+        LEFT JOIN rahavaraus rv ON kk.rahavaraus_id = rv.id
  WHERE kk.kulu = :kulu
    AND kk.poistettu IS NOT TRUE
  ORDER BY kk.id;
@@ -221,9 +225,9 @@ UPDATE
 -- name: luo-kulun-kohdistus<!
 INSERT
 INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, suoritus_alku,
-                      suoritus_loppu, luotu, luoja, lisatyon_lisatieto)
+                      suoritus_loppu, luotu, luoja, lisatyon_lisatieto, rahavaraus_id)
 VALUES (:kulu, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :maksueratyyppi ::MAKSUERATYYPPI, :alkupvm, :loppupvm,
-        current_timestamp, :kayttaja, :lisatyon-lisatieto);
+        current_timestamp, :kayttaja, :lisatyon-lisatieto, :rahavarausid);
 
 -- name: paivita-kulun-kohdistus<!
 UPDATE kulu_kohdistus
@@ -235,7 +239,8 @@ SET summa = :summa,
     suoritus_loppu = :loppupvm,
     muokattu = current_timestamp,
     muokkaaja = :kayttaja,
-    lisatyon_lisatieto = :lisatyon-lisatieto
+    lisatyon_lisatieto = :lisatyon-lisatieto,
+    rahavaraus_id = :rahavarausid
 WHERE id = :id;
 
 -- name: poista-kulu!

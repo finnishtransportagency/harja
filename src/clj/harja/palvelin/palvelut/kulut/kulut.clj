@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.kulut.kulut
   "Nimiavaruutta käytetään vain urakkatyypissä teiden-hoito (MHU)."
   (:require [com.stuartsierra.component :as component]
+            [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [taoensso.timbre :as log]
@@ -8,8 +9,9 @@
              [kulut :as q]
              [kustannusarvioidut-tyot :as kust-q]
              [valikatselmus :as valikatselmus-kyselyt]
-             [urakat :as urakka-kyselyt]]
-            [harja.kyselyt.konversio :as konv]
+             [rahavaraukset :as rahavaraus-kyselyt]
+             [urakat :as urakka-kyselyt]
+             [konversio :as konv]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.kulut :as kulut]
             [harja.domain.oikeudet :as oikeudet]
@@ -20,8 +22,7 @@
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.raportointi.excel :as excel]
             [harja.pvm :as pvm]
-            [harja.kyselyt.konversio :as konversio]
-            [clojure.java.jdbc :as jdbc])
+            )
   (:use [slingshot.slingshot :only [throw+]]))
 
 
@@ -160,6 +161,7 @@
   (let [kulukohdistukset (group-by :id (q/hae-urakan-kulut-kohdistuksineen db {:urakka   (:urakka-id hakuehdot)
                                                                                :alkupvm  (:alkupvm hakuehdot)
                                                                                :loppupvm (:loppupvm hakuehdot)}))
+        _ (println "hae-kulut-kohdistuksineen :: kulukohdistukset: " (pr-str kulukohdistukset))
         kulukohdistukset (kasittele-kohdistukset db kulukohdistukset)
         kulukohdistukset (ryhmittele-urakan-kulut kulukohdistukset)
         kulukohdistukset (muodosta-naytettava-rakenne kulukohdistukset)]
@@ -177,7 +179,21 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (let [kulu (first (q/hae-kulu db {:urakka urakka-id
                                     :id     id}))
+        kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kulu)})
+        _ (println "kohdistukset: " (pr-str kohdistukset))
+        ;; Poista nil rahavaraukset
+        kohdistukset (mapv (fn [kohdistus]
+                             (let [kohdistus (if (:rahavaraus_id kohdistus)
+                                               kohdistus
+                                               (dissoc kohdistus :rahavaraus_id :rahavaraus_nimi))]
+                               kohdistus))
+                       kohdistukset)
         kulun-kohdistukset (into []
+                             (map konv/alaviiva->rakenne)
+                             kohdistukset
+                             )
+        _ (println "kulun-kohdistukset: " (pr-str kulun-kohdistukset))
+        #_#_kulun-kohdistukset (into []
                                  (q/hae-kulun-kohdistukset db {:kulu (:id kulu)}))
         liitteet (into [] (q/hae-liitteet db {:kulu-id id}))]
     (if-not (empty? kulu)
@@ -207,18 +223,19 @@
   "Luo uuden kohdistuksen kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan kulun viitteen ja rivinumeron perusteella."
   [db user urakka-id kulu-id kohdistus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
-  (let [yhteiset {:id                  (:kohdistus-id kohdistus)
-                  :summa               (:summa kohdistus)
+  (let [yhteiset {:id (:kohdistus-id kohdistus)
+                  :summa (:summa kohdistus)
                   :toimenpideinstanssi (:toimenpideinstanssi kohdistus)
-                  :tehtavaryhma        (:tehtavaryhma kohdistus)
-                  :maksueratyyppi      (kohdistuksen-maksueratyyppi db (:tehtavaryhma kohdistus) (:tehtava kohdistus) (:lisatyo? kohdistus))
-                  :alkupvm             (:suoritus-alku kohdistus)
-                  :loppupvm            (:suoritus-loppu kohdistus)
-                  :kayttaja            (:id user)
-                  :lisatyon-lisatieto  (:lisatyon-lisatieto kohdistus)}]
+                  :tehtavaryhma (:tehtavaryhma kohdistus)
+                  :maksueratyyppi (kohdistuksen-maksueratyyppi db (:tehtavaryhma kohdistus) (:tehtava kohdistus) (:lisatyo? kohdistus))
+                  :alkupvm (:suoritus-alku kohdistus)
+                  :loppupvm (:suoritus-loppu kohdistus)
+                  :kayttaja (:id user)
+                  :lisatyon-lisatieto (:lisatyon-lisatieto kohdistus)
+                  :rahavarausid (:id (:rahavaraus kohdistus))}]
     (if (nil? (:kohdistus-id kohdistus))
       (q/luo-kulun-kohdistus<! db (assoc yhteiset :kulu kulu-id
-                                         :rivi (:rivi kohdistus)))
+                                    :rivi (:rivi kohdistus)))
       (q/paivita-kulun-kohdistus<! db yhteiset)))
   (kust-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi
                                              (:toimenpideinstanssi kohdistus)}))
@@ -273,6 +290,7 @@
   Palauttaa tallennetut tiedot."
   [db user urakka-id {:keys [erapaiva kokonaissumma urakka tyyppi laskun-numero
                              lisatieto koontilaskun-kuukausi id kohdistukset liitteet] :as tiedot}]
+  (println "*** luo-tai-paivita-kulukohdistukset :: tiedot: " (pr-str tiedot))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (varmista-erapaiva-on-koontilaskun-kuukauden-sisalla db koontilaskun-kuukausi erapaiva urakka-id)
   (jdbc/with-db-transaction [db db]
@@ -329,11 +347,7 @@
                                                  :urakka-id urakka-id
                                                  :kohdistuksen-id (:kohdistus-id r)
                                                  :kohdistus r})
-                (luo-tai-paivita-kulun-kohdistus db
-                  user
-                  urakka
-                  (:id kulu)
-                  r)))
+                (luo-tai-paivita-kulun-kohdistus db user urakka (:id kulu) r)))
             (throw+ {:type virheet/+viallinen-kutsu+
                      :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
                                 :viesti (str "Tehtäväryhmä ja toimenpideinstanssi ristiriidassa! ")}]}))))
@@ -385,8 +399,8 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (assert (and alkupvm loppupvm) "alkupvm ja loppupvm oltava annettu")
   (let [kulut (q/hae-kulut-kohdistuksineen-tietoineen-vientiin db {:urakka   urakka-id
-                                                            :alkupvm  (konversio/sql-timestamp alkupvm)
-                                                            :loppupvm (konversio/sql-timestamp loppupvm)})
+                                                            :alkupvm  (konv/sql-timestamp alkupvm)
+                                                            :loppupvm (konv/sql-timestamp loppupvm)})
         kulut-kuukausien-mukaan (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %))
                                           (sort-by :erapaiva
                                                    kulut))]
@@ -413,14 +427,24 @@
                                         [] (range (pvm/vuosi alkupvm) (pvm/vuosi loppupvm)))]
     vuosittaiset-valikatselmukset))
 
+(defn hae-urakan-rahavaraukset [db user {:keys [urakka-id] :as hakuehdot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
+  (let [urakan-tiedot (first (urakka-kyselyt/hae-urakka db {:id urakka-id}))
+        _ (when (nil? urakan-tiedot)
+            (throw (IllegalArgumentException.
+                     (str "Virheellinen urakka-id " urakka-id))))
+        urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:id urakka-id})
+        _ (println "urakan-rahavaraukset: " urakan-rahavaraukset)]
+    urakan-rahavaraukset))
+
 (defn- kulu-excel
   [db workbook user {:keys [urakka-id urakka-nimi alkupvm loppupvm] :as loput}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (assert (and alkupvm loppupvm) "alkupvm ja loppupvm oltava annettu")
   (let [kulut (sort-by :erapaiva
                        (q/hae-kulut-kohdistuksineen-tietoineen-vientiin db {:urakka   urakka-id
-                                                                            :alkupvm  (konversio/sql-timestamp alkupvm)
-                                                                            :loppupvm (konversio/sql-timestamp loppupvm)}))
+                                                                            :alkupvm  (konv/sql-timestamp alkupvm)
+                                                                            :loppupvm (konv/sql-timestamp loppupvm)}))
         kulut-kuukausien-mukaan (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %))
                                           (sort-by :erapaiva
                                                    kulut))
@@ -484,7 +508,7 @@
       (julkaise-palvelu http :kulut-kohdistuksineen
                         (fn [user hakuehdot]
                           (hae-urakan-kulut-kohdistuksineen db user hakuehdot)))
-      (julkaise-palvelu http :kulu
+      (julkaise-palvelu http :hae-kulu
                         (fn [user hakuehdot]
                           (hae-kulu-kohdistuksineen db user hakuehdot)))
       (julkaise-palvelu http :tallenna-kulu
@@ -506,6 +530,9 @@
       (julkaise-palvelu http :hae-urakan-valikatselmukset
         (fn [user hakuehdot]
           (hae-urakan-valikatselmukset db user hakuehdot)))
+      (julkaise-palvelu http :hae-urakan-rahavaraukset
+        (fn [user hakuehdot]
+          (hae-urakan-rahavaraukset db user hakuehdot)))
       (when pdf
         (pdf-vienti/rekisteroi-pdf-kasittelija! pdf :kulut (partial #'kulu-pdf db)))
       (when excel
@@ -514,13 +541,15 @@
 
   (stop [this]
     (poista-palvelut (:http-palvelin this) :kulut
-                     :kulu
-                     :kulut-kohdistuksineen
-                     :tallenna-kulu
-                     :poista-kulu
-                     :poista-kohdistus
-                     :poista-kulun-liite
-                     :tarkista-laskun-numeron-paivamaara)
+      :hae-kulu
+      :kulut-kohdistuksineen
+      :tallenna-kulu
+      :poista-kulu
+      :poista-kohdistus
+      :poista-kulun-liite
+      :tarkista-laskun-numeron-paivamaara
+      :hae-urakan-valikatselmukset
+      :hae-urakan-rahavaraukset)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :kulut))
     (when (:excel-vienti this)

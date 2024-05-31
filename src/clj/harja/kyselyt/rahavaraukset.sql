@@ -1,3 +1,9 @@
+-- name: hae-urakan-rahavaraukset
+-- Palautetaan ensisijaisesti urakkakohtainen nimi, mutta jos sitä ei ole, niin defaultataan normaaliin nimeen.
+SELECT rv.id, COALESCE(rvu.urakkakohtainen_nimi, rv.nimi) as nimi
+  FROM rahavaraus rv
+        JOIN rahavaraus_urakka rvu ON rvu.rahavaraus_id = rv.id AND rvu.urakka_id = :id;
+
 -- name: hae-urakoiden-rahavaraukset
 SELECT u.id   AS "urakka-id",
        u.nimi AS "urakka-nimi",

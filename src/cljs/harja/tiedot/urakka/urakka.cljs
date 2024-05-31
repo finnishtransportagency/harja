@@ -94,6 +94,7 @@
                   :kulut/negatiivinen-summa    [ei-nil negatiivinen-numero]
                   :kulut/laskun-numero         [(ei-pakollinen ei-tyhja) (ei-pakollinen ei-nil)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
+                  :kulut/rahavaraus            [ei-nil ei-tyhja]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
                   :kulut/koontilaskun-kuukausi [ei-nil ei-tyhja]
                   :kulut/y-tunnus              [(ei-pakollinen y-tunnus)]
@@ -271,25 +272,49 @@
   ([kulu]
    (kulun-validointi-meta kulu {}))
   ([{:keys [kohdistukset] :as _kulu} opts]
-   (apply luo-validius-tarkistukset
-          (concat kulun-oletus-validoinnit
-                  (mapcat (fn [i]
-                            (if (= "lisatyo"
-                                   (:maksueratyyppi
-                                     (get kohdistukset i)))
-                              [[:kohdistukset i :summa] (:kulut/summa validoinnit)
-                               [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)
-                               [:kohdistukset i :toimenpideinstanssi] (:kulut/toimenpideinstanssi validoinnit)]
-                              [[:kohdistukset i :summa] (:kulut/summa validoinnit)
-                               [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)]))
-                          (range (count kohdistukset)))))))
+   (let [kohdistusvalidoinnit (mapcat (fn [i]
+                                        (let [kohdistus (get kohdistukset i)
+                                              kohdistustyyppi (cond
+                                                                (= "lisatyo" (:maksueratyyppi kohdistus)) :lisatyo
+                                                                ;; Jos rahavaraus on annettu, niin on pakko olla rahavaraus
+                                                                (:rahavaraus kohdistus) :rahavaraus
+                                                                ;; Jos on tehtäväryhmä ja toimenpideinstanssi, niin silloin on hankintakulu
+                                                                (and (:tehtavaryhma kohdistus) (:toimenpideinstanssi kohdistus)) :hankintakulu
+                                                                ;; else
+                                                                :else :muukulu)]
+                                          (cond
+                                            (= :lisatyo kohdistustyyppi)
+                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                                             [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)
+                                             [:kohdistukset i :toimenpideinstanssi] (:kulut/toimenpideinstanssi validoinnit)]
 
-(def kulut-kohdistus-default {:tehtavaryhma        nil
+                                            ;; Hankintakululla on pakko olla tehtäväryhmä
+                                            (= :hankintakulu kohdistustyyppi)
+                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                                             [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)]
+
+                                            ;; Rahavarauksella on pakko olla rahavaraus ja tehtäväryhmä
+                                            (= :rahavaraus kohdistustyyppi)
+                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                                             [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)
+                                             [:kohdistukset i :rahavaraus] (:kulut/rahavaraus validoinnit)]
+
+                                            ;; Muu kulu on joko tavoitehintainen tai ei tavoitehintainen, se ei voi olla nil, joten tarkistetaan vain summa
+                                            (= :muukulu kohdistustyyppi)
+                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)])))
+                                (range (count kohdistukset)))]
+
+     (apply luo-validius-tarkistukset (concat kulun-oletus-validoinnit kohdistusvalidoinnit)))))
+
+(def kulut-kohdistus-default {:tehtavaryhma nil
                               :toimenpideinstanssi nil
-                              :summa               0
-                              :poistettu           false
-                              :lisatyo?            false
-                              :rivi                0})
+                              :summa 0
+                              :poistettu false
+                              :lisatyo? false
+                              :kohdistustyyppi :hankintakulu
+                              :tavoitehinta? :tavoitehintainen
+                              :rivi 0
+                              :lukittu? false})
 
 (def kulut-lomake-default (with-meta {:kohdistukset          [kulut-kohdistus-default]
                                       :aliurakoitsija        nil
@@ -297,7 +322,7 @@
                                       :laskun-numero         nil
                                       :lisatieto             nil
                                       :suorittaja-nimi       nil
-                                      :erapaiva              nil
+                                      :erapaiva              (pvm/nyt)
                                       :liitteet              []
                                       :paivita               0}
                                      (kulun-validointi-meta {:kohdistukset [{}]})))
