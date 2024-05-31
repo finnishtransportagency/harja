@@ -17,7 +17,7 @@
 (defrecord HaeRahavarauksetTehtavineen [])
 (defrecord HaeRahavarauksetTehtavineenOnnistui [vastaus])
 (defrecord HaeRahavarauksetTehtavineenEpaonnistui [vastaus])
-(defrecord MuokkaaRahavaraus [valittu-urakka rahavaraus])
+(defrecord MuokkaaRahavaraus [valittu-urakka rahavaraukset])
 (defrecord MuokkaaRahavarausOnnistui [vastaus])
 (defrecord MuokkaaRahavarausEpaonnistui [vastaus])
 
@@ -90,35 +90,40 @@
     (assoc app :rahavaraukset-tehtavineen nil))
 
   MuokkaaRahavaraus
-  (process-event [{:keys [valittu-urakka rahavaraus]} app]
+  (process-event [{:keys [valittu-urakka rahavaraukset]} app]
     (let [tallennus-id (gensym)
           app (assoc-in app [:tallennukset-kesken tallennus-id] true)]
+      
       ;; Tallenna nappula johtaa aina tänne. Joten muokattiin tai poistettiin, aina ollaan samassa paikassa
-      (if (:poistettu rahavaraus)
-        ;; Jos poistettiin
-        (tuck-apurit/post! :poista-rahavaraus
-          {:id (:id rahavaraus)}
-          {:onnistui ->PoistaRahavarausOnnistui
-           :epaonnistui ->PoistaRahavarausEpaonnistui
-           :onnistui-parametrit [tallennus-id]
-           :epaonnistui-parametrit [tallennus-id]
-           :paasta-virhe-lapi? true})
-        ;; Jos muokataan
-        (tuck-apurit/post! :paivita-urakan-rahavaraus
-          {:urakka (:urakka-id valittu-urakka)
-           :id (:id rahavaraus)
-           :nimi (:nimi rahavaraus)
-           :urakkakohtainen-nimi (:urakkakohtainen-nimi rahavaraus)
-           :valittu? (:valittu? rahavaraus)}
-          {:onnistui ->MuokkaaRahavarausOnnistui
-           :epaonnistui ->MuokkaaRahavarausEpaonnistui
-           :onnistui-parametrit [tallennus-id]
-           :epaonnistui-parametrit [tallennus-id]
-           :paasta-virhe-lapi? true}))
+      (doseq [rahavaraus rahavaraukset]
+        
+        (if (:poistettu rahavaraus)
+          ;; Jos poistettiin
+          (tuck-apurit/post! :poista-rahavaraus
+            {:id (:id rahavaraus)}
+            {:onnistui ->PoistaRahavarausOnnistui
+             :epaonnistui ->PoistaRahavarausEpaonnistui
+             :onnistui-parametrit [tallennus-id]
+             :epaonnistui-parametrit [tallennus-id]
+             :paasta-virhe-lapi? true})
+          
+          ;; Jos muokataan
+          (tuck-apurit/post! :paivita-urakan-rahavaraus
+            {:urakka (:urakka-id valittu-urakka)
+             :id (:id rahavaraus)
+             :nimi (:nimi rahavaraus)
+             :urakkakohtainen-nimi (:urakkakohtainen-nimi rahavaraus)
+             :valittu? (:valittu? rahavaraus)}
+            {:onnistui ->MuokkaaRahavarausOnnistui
+             :epaonnistui ->MuokkaaRahavarausEpaonnistui
+             :onnistui-parametrit [tallennus-id]
+             :epaonnistui-parametrit [tallennus-id]
+             :paasta-virhe-lapi? true})))
       app))
 
   MuokkaaRahavarausOnnistui
   (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Rahavarauksen tallennus onnistui!")
     (kasittele-rahavaraus-vastaus vastaus app))
 
   MuokkaaRahavarausEpaonnistui

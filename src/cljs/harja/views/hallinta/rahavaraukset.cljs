@@ -42,9 +42,8 @@
               :tunniste :id
               :piilota-toiminnot? false
               :tallenna-vain-muokatut true
-              :tallenna (fn [muokatut-rivit arvo]
-                          (doseq [rivi muokatut-rivit]
-                            (tuck-apurit/e-kanavalla! e! tiedot/->MuokkaaRahavaraus valittu-urakka rivi)))
+              :tallenna (fn [muokatut-rivit _arvo]
+                          (tuck-apurit/e-kanavalla! e! tiedot/->MuokkaaRahavaraus valittu-urakka muokatut-rivit))
               :uusi-rivi (fn [rivi]
                            (assoc rivi :id -1 :valittu? nil :nimi "" :urakkakohtainen-nimi ""))}
              [
