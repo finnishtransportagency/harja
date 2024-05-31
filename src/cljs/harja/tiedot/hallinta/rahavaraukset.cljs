@@ -37,13 +37,12 @@
 (defrecord PoistaRahavarausOnnistui [vastaus])
 (defrecord PoistaRahavarausEpaonnistui [vastaus])
 
-(defn- kasittele-rahavaraus-vastaus [vastaus app]
+(defn- kasittele-rahavaraus-vastaus [{:keys [urakoiden-rahavaraukset] :as vastaus} app]
   (let [kaikki-rahavaraukset (:rahavaraukset vastaus)
         ;; Filtteröi vastauksesta urakat
         urakat (sort-by :urakka-nimi
                  (into #{}
-                   (map #(select-keys % [:urakka-id :urakka-nimi]) (:urakoiden-rahavaraukset vastaus))))
-        urakoiden-rahavaraukset (:urakoiden-rahavaraukset vastaus)]
+                   (map #(select-keys % [:urakka-id :urakka-nimi]) urakoiden-rahavaraukset)))]
     (assoc app
       :rahavaraukset kaikki-rahavaraukset
       :urakoiden-rahavaraukset urakoiden-rahavaraukset

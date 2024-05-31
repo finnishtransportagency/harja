@@ -83,9 +83,9 @@
         urakan-rahavaraus (first (q/hae-urakan-rahavaraus db {:urakka-id urakka
                                                               :rahavaraus-id id}))
         ;; Käyttöliittymän yksinkertaistamiseksi logiikkamuutos tänne bäackendiin.
-        ;; Jos käyttäjä lisää urakkakohtaisen-nimen, niin se on myös päätös ottaa rahavaraus käyttöön.
+        ;; Jos käyttäjä lisää urakkakohtainen-nimi arvon, niin se on päätös ottaa rahavaraus käyttöön.
         valittu? (cond
-                   ;; Jos valittu? on nil, mutta urakkokohtainen nimi on annettu, niin se on valittu.
+                   ;; Jos valittu? on nil, mutta urakkakohtainen-nimi on annettu, niin tulkitaan, että se haluttiin valita.
                    (and (nil? valittu?) (not (nil? urakkakohtainen-nimi)))
                    true
                    ;; Jos valittu on false ja urakkokohtainen nimi on annettu, niin sitä ei ole valittu, vaan käyttöliittymästä on poistettu valinta
@@ -166,7 +166,7 @@
   ;; Palautetaan rahavaraukset tehtävineen, kun ne on nyt päivittyneet
   (hae-rahavaraukset-tehtavineen db kayttaja))
 
-(defn poista-rahavaraus [db kayttaja {:keys [urakka id]}]
+(defn poista-rahavaraus [db kayttaja {:keys [id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-rahavaraukset kayttaja)
   (log/debug "poista-rahavaraus :: rahavaraus-id: " id)
   (let [rahavaraus-valid? (and
