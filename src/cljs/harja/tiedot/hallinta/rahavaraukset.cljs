@@ -1,10 +1,8 @@
 (ns harja.tiedot.hallinta.rahavaraukset
   (:require [harja.ui.viesti :as viesti]
             [reagent.core :refer [atom] :as reagent]
-            [cljs.core.async :refer [>! <!]]
             [tuck.core :as tuck]
-            [harja.tyokalut.tuck :as tuck-apurit])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.tyokalut.tuck :as tuck-apurit]))
 
 (def tila (atom {:valittu-urakka nil
                  :rahavaraukset nil
@@ -94,33 +92,36 @@
 
   MuokkaaRahavaraus
   (process-event [{:keys [valittu-urakka rahavaraukset]} app]
-    (let [tallennus-id (gensym)]
-      ;; Tallenna nappula johtaa aina tänne. Joten muokattiin tai poistettiin, aina ollaan samassa paikassa
-      (doseq [rahavaraus rahavaraukset]
+    ;; Tallenna nappula johtaa aina tänne. Joten muokattiin tai poistettiin, aina ollaan samassa paikassa
+    (doseq [rahavaraus rahavaraukset]
 
-        (if (:poistettu rahavaraus)
-          ;; Jos poistettiin
-          (tuck-apurit/post! :poista-rahavaraus
-            {:id (:id rahavaraus)}
-            {:onnistui ->PoistaRahavarausOnnistui
-             :epaonnistui ->PoistaRahavarausEpaonnistui
-             :onnistui-parametrit [tallennus-id]
-             :epaonnistui-parametrit [tallennus-id]
-             :paasta-virhe-lapi? true})
+      (if (:poistettu rahavaraus)
+        ;; Jos poistettiin
+        (tuck-apurit/post! :poista-rahavaraus
+          {:id (:id rahavaraus)}
+          {:onnistui ->PoistaRahavarausOnnistui
+           :epaonnistui ->PoistaRahavarausEpaonnistui
+           :paasta-virhe-lapi? true})
 
-          ;; Jos muokataan
-          (tuck-apurit/post! :paivita-urakan-rahavaraus
-            {:urakka (:urakka-id valittu-urakka)
-             :id (:id rahavaraus)
-             :nimi (:nimi rahavaraus)
-             :urakkakohtainen-nimi (:urakkakohtainen-nimi rahavaraus)
-             :valittu? (:valittu? rahavaraus)}
-            {:onnistui ->MuokkaaRahavarausOnnistui
-             :epaonnistui ->MuokkaaRahavarausEpaonnistui
-             :onnistui-parametrit [tallennus-id]
-             :epaonnistui-parametrit [tallennus-id]
-             :paasta-virhe-lapi? true})))
-      (assoc app :tallennus-kesken? true)))
+        ;; Jos muokataan
+        (tuck-apurit/post! :paivita-urakan-rahavaraus
+          {:urakka (:urakka-id valittu-urakka)
+           :id (:id rahavaraus)
+           :nimi (:nimi rahavaraus)
+           :urakkakohtainen-nimi (:urakkakohtainen-nimi rahavaraus)
+           :valittu? (:valittu? rahavaraus)}
+          {:onnistui ->MuokkaaRahavarausOnnistui
+           :epaonnistui ->MuokkaaRahavarausEpaonnistui
+           :paasta-virhe-lapi? true})))
+    
+    ;; Jos rahavaraukset on nil, käyttäjältä varmistus on käynnissä
+    (if (some? rahavaraukset)
+      (assoc app :tallennus-kesken? true)
+      (tuck-apurit/post! :hae-rahavaraukset
+        {}
+        {:onnistui ->HaeRahavarauksetOnnistui
+         :epaonnistui ->HaeRahavarauksetEpaonnistui
+         :paasta-virhe-lapi? true})))
 
   MuokkaaRahavarausOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -196,7 +197,7 @@
     (assoc app :tehtavat vastaus))
 
   HaeTehtavatEpaonnistui
-  (process-event [{:keys [vastaus]} app]
+  (process-event [{:keys [_vastaus]} app]
     (viesti/nayta-toast! "Tehtävien haku epäonnistui" :varoitus)
     (assoc app :tehtavat nil))
 
@@ -234,7 +235,7 @@
     (assoc app :rahavaraukset-tehtavineen vastaus))
 
   TallennaRahavarauksenTehtavaEpaonnistui
-  (process-event [{:keys [vastaus]} app]
+  (process-event [{:keys [_vastaus]} app]
     (viesti/nayta-toast! "Tehtävän tallennus epäonnistui" :varoitus)
     app)
 
@@ -255,6 +256,6 @@
     (assoc app :rahavaraukset-tehtavineen vastaus))
 
   PoistaTehtavaRahavaraukseltaEpaonnistui
-  (process-event [{:keys [vastaus]} app]
+  (process-event [{:keys [_vastaus]} app]
     (viesti/nayta-toast! "Tehtävän poistaminen epäonnistui" :varoitus)
     app))
