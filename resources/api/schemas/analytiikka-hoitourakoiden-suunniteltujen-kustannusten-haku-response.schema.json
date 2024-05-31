@@ -11,7 +11,7 @@
         "properties": {
           "urakka": {
             "type": "integer",
-            "description": "Harjan urakka-id."
+            "description": "Harjan urakka-id. Tämä skeema on relevantti vain maanteiden hoidon urakoissa."
           },
           "urakkatunnus": {
             "type": "string",
@@ -25,7 +25,6 @@
             "additionalProperties": false,
             "properties": {
               "kiintea-kustannus": {
-                "id": "urn:harja/suunnitellut-kustannukset/0/kiinteat-kustannukset/0/kiintea-kustannus",
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
@@ -33,220 +32,295 @@
                     "type": "integer",
                     "description": "Kustannusrivin id Harjassa."
                   },
-                  "vuosi": {
-                    "type": "integer",
-                    "description": "Kalenterivuosi jota suunniteltu kustannus koskee."
-                  },
-                  "kuukausi": {
-                    "type": "integer",
-                    "description": "Kalenterikuukausi jota suunniteltu kustannus koskee."
-                  },
-                  "summa": {
-                    "type": "number",
-                    "description": "Suunniteltu kustannus. Yksikkö: euro."
-                  },
-                  "indeksikorjattu-summa": {
-                    "type": "number",
-                    "description": "Suunniteltu summa indeksikorjattuna. Yksikkö: euro."
-                  },
-                  "indeksikorjauksen-vahvistusajankohta": {
-                    "type": "string",
-                    "format": "datetime",
-                    "description": "Ajankohta jolloin indeksikorjaus on hyväksytty. Jos tyhjä, ei indeksikorjausta kustannukselle ole vielä hyväksytty."
-                  },
-                  "kohdistus": {
+                  "ajankohta": {
                     "type": "object",
                     "properties": {
-                      "toimenpide": {
+                      "vuosi": {
                         "type": "integer",
-                        "description": "Harjan toimenpide-id."
+                        "description": "Kalenterivuosi jota suunniteltu kustannus koskee."
                       },
-                      "rahavaraus": {
+                      "kuukausi": {
                         "type": "integer",
-                        "description": "Harjan rahavaraus-id."
+                        "description": "Kalenterikuukausi jota suunniteltu kustannus koskee."
                       },
-                      "tehtavaryhma": {
+                      "required": [
+                        "vuosi",
+                        "kuukausi"
+                      ]
+                    },
+                    "kustannus": {
+                      "type": "object",
+                      "properties": {
+                        "summa": {
+                          "type": "number",
+                          "description": "Suunniteltu kustannus. Yksikkö: euro."
+                        },
+                        "indeksikorjattu-summa": {
+                          "type": "number",
+                          "description": "Suunniteltu summa indeksikorjattuna. Yksikkö: euro."
+                        },
+                        "indeksikorjauksen-vahvistusajankohta": {
+                          "type": "string",
+                          "format": "datetime",
+                          "description": "Ajankohta jolloin indeksikorjaus on hyväksytty. Jos tyhjä, ei indeksikorjausta kustannukselle ole vielä hyväksytty."
+                        },
+                        "required": [
+                          "indeksikorjattu-summa",
+                          "kuukausi"
+                        ]
+                      },
+                      "kohdistus": {
+                        "type": "object",
+                        "properties": {
+                          "toimenpide": {
+                            "type": "integer",
+                            "description": "Harjan toimenpide-id."
+                          },
+                          "rahavaraus": {
+                            "type": "integer",
+                            "description": "Harjan rahavaraus-id."
+                          },
+                          "tehtavaryhma": {
+                            "type": "integer",
+                            "description": "Harjan tehtavaryhma-id."
+                          },
+                          "tehtava": {
+                            "type": "integer",
+                            "description": "Harjan tehtava-id."
+                          },
+                          "required": [
+                            "toimenpide"
+                          ]
+                        }
+                      },
+                      "versio": {
                         "type": "integer",
-                        "description": "Harjan tehtavaryhma-id."
+                        "description": "Kustannuksen versio. Käytetään tulevaisuudessa kustannuksen muutoshistorian seuraamiseen."
                       },
-                      "tehtava": {
-                        "type": "integer",
-                        "description": "Harjan tehtava-id."
-                      },
-                      "required": ["toimenpide"]
+                      "required": [
+                        "id",
+                        "ajankohta",
+                        "kustannus",
+                        "kohdistus",
+                        "versio"
+                      ]
                     }
-                  },
-                  "versio": {
-                    "type": "integer",
-                    "description": "Kustannuksen versio. Käytetään kustannuksen muutoshistorian seuraamiseen."
-                  },
-                  "required": ["id", "vuosi", "kuukausi", "summa", "indeksikorjattu-summa", "kohdistus", "versio"]
+                  }
                 }
               }
-            }
-          }
-        },
-        "arvioidut-kustannukset": {
-          "type": "object",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "arvioitu-kustannus": {
-                "id": "urn:harja/suunnitellut-kustannukset/0/arvioidut-kustannukset/0/arvioitu-kustannus",
+            },
+            "arvioidut-kustannukset": {
+              "type": "object",
+              "items": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                  "kustannus-id": {
-                    "type": "integer",
-                    "description": "Kustannusrivin id Harjassa."
-                  },
-                  "vuosi": {
-                    "type": "integer",
-                    "description": "Kalenterivuosi jota suunniteltu kustannus koskee."
-                  },
-                  "kuukausi": {
-                    "type": "integer",
-                    "description": "Kalenterikuukausi jota suunniteltu kustannus koskee."
-                  },
-                  "summa": {
-                    "type": "number",
-                    "description": "Suunniteltu kustannus. Yksikkö: euro."
-                  },
-                  "indeksikorjattu-summa": {
-                    "type": "number",
-                    "description": "Suunniteltu summa indeksikorjattuna. Yksikkö: euro."
-                  },
-                  "indeksikorjauksen-vahvistusajankohta": {
-                    "type": "string",
-                    "format": "datetime",
-                    "description": "Ajankohta jolloin indeksikorjaus on hyväksytty. Jos tyhjä, indeksikorjausta ei kustannukselle ole vielä hyväksytty."
-                  },
-                  "kohdistus": {
+                  "arvioitu-kustannus": {
                     "type": "object",
+                    "additionalProperties": false,
                     "properties": {
-                      "toimenpide": {
+                      "kustannus-id": {
                         "type": "integer",
-                        "description": "Harjan toimenpide-id."
+                        "description": "Kustannusrivin id Harjassa."
                       },
-                      "rahavaraus": {
-                        "type": "integer",
-                        "description": "Harjan rahavaraus-id."
-                      },
-                      "tehtavaryhma": {
-                        "type": "integer",
-                        "description": "Harjan tehavaryhma-id."
-                      },
-                      "tehtava": {
-                        "type": "integer",
-                        "description": "Harjan tehtava-id."
+                      "ajankohta": {
+                        "type": "object",
+                        "properties": {
+                          "vuosi": {
+                            "type": "integer",
+                            "description": "Kalenterivuosi jota suunniteltu kustannus koskee."
+                          },
+                          "kuukausi": {
+                            "type": "integer",
+                            "description": "Kalenterikuukausi jota suunniteltu kustannus koskee."
+                          },
+                          "required": [
+                            "vuosi",
+                            "kuukausi"
+                          ]
+                        },
+                        "kustannus": {
+                          "type": "object",
+                          "properties": {
+                            "summa": {
+                              "type": "number",
+                              "description": "Suunniteltu kustannus. Yksikkö: euro."
+                            },
+                            "indeksikorjattu-summa": {
+                              "type": "number",
+                              "description": "Suunniteltu summa indeksikorjattuna. Yksikkö: euro."
+                            },
+                            "indeksikorjauksen-vahvistusajankohta": {
+                              "type": "string",
+                              "format": "datetime",
+                              "description": "Ajankohta jolloin indeksikorjaus on hyväksytty. Jos tyhjä, ei indeksikorjausta kustannukselle ole vielä hyväksytty."
+                            },
+                            "required": [
+                              "indeksikorjattu-summa",
+                              "kuukausi"
+                            ]
+                          },
+                          "kohdistus": {
+                            "type": "object",
+                            "properties": {
+                              "toimenpide": {
+                                "type": "integer",
+                                "description": "Harjan toimenpide-id."
+                              },
+                              "rahavaraus": {
+                                "type": "integer",
+                                "description": "Harjan rahavaraus-id."
+                              },
+                              "tehtavaryhma": {
+                                "type": "integer",
+                                "description": "Harjan tehavaryhma-id."
+                              },
+                              "tehtava": {
+                                "type": "integer",
+                                "description": "Harjan tehtava-id."
+                              }
+                            },
+                            "required": [
+                              "toimenpide"
+                            ]
+                          },
+                          "versio": {
+                            "type": "integer",
+                            "description": "Kustannuksen versio. Käytetään tulevaisuudessa kustannuksen muutoshistorian seuraamiseen."
+                          },
+                          "required": [
+                            "id",
+                            "ajankohta",
+                            "kustannus",
+                            "kohdistus",
+                            "versio"
+                          ]
+                        }
                       }
-                    },
-                    "required": ["toimenpide"]
+                    }
+                  }
+                },
+                "johto-ja-hallintokorvaukset": {
+                  "type": "object",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "johto-ja-hallintokorvaus": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "kustannus-id": {
+                            "type": "integer",
+                            "description": "Kustannusrivin id Harjassa"
+                          },
+                          "toimenkuva": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "description": "Harjan toimenkuva-id."
+                              },
+                              "nimi": {
+                                "type": "integer",
+                                "description": "Harjan toimenkuva-nimi."
+                              }
+                            },
+                            "required": [
+                              "id"
+                            ]
+                          },
+                          "toimenkuvan-ajankohta": {
+                            "type": "object",
+                            "properties": {
+                              "vuosi": {
+                                "type": "integer",
+                                "description": "Kalenterivuosi jolloin toimenkuva synnyttää kustannuksia."
+                              },
+                              "kuukausi": {
+                                "type": "integer",
+                                "description": "Kalenterikuukausi jolloin toimenkuva synnyttää kustannuksia."
+                              },
+                              "ennen-urakkaa": {
+                                "type": "boolean",
+                                "description": "True = Toimenkuva on relevantti ennen urakan alkua, vaikka kustannus kohdistetaan ensimmäisen hoitovuoden lokakuulle. False = Toimenkuva synnyttää kustannuksia urakan aikana."
+                              },
+                              "required": [
+                                "vuosi",
+                                "kuukausi",
+                                "ennen-urakkaa"
+                              ]
+                            },
+                            "toimenkuvan-kustannus": {
+                              "type": "object",
+                              "properties": {
+                                "tunnit": {
+                                  "type": "number",
+                                  "description": "Toimenkuvaan liittyvien työtuntien määrä ajankohdan kuluessa."
+                                },
+                                "tuntipalkka": {
+                                  "type": "number",
+                                  "description": "Toimdenkuvan tuntipalkka"
+                                },
+                                "osa-kuukaudesta": {
+                                  "type": "number",
+                                  "description": "Kerroin joka ilmaisee lasketaanko palkka koko kuukauden ajalta. Esim. 0.5 = puolet kuukaudesta. Yleensä 1."
+                                },
+                                "summa": {
+                                  "type": "number",
+                                  "description": "Toimenkuvan suunniteltu kustannus. Yksikkö: euro."
+                                },
+                                "indeksikorjattu-summa": {
+                                  "type": "number",
+                                  "description": "Toimenkuvan suunniteltu summa indeksikorjattuna. Yksikkö: euro."
+                                },
+                                "indeksikorjaus_vahvistettu": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "description": "The confirmation date and time of the index correction."
+                                },
+                                "required": [
+                                  "tunnit",
+                                  "tuntipalkka",
+                                  "osa-kuukaudesta",
+                                  "summa",
+                                  "indeksikorjattu-summa"
+                                ]
+                              },
+                              "kohdistus": {
+                                "type": "object",
+                                "properties": {
+                                  "toimenpide": {
+                                    "type": "integer",
+                                    "description": "Harjan toimenpide-id. Johto- ja hallintokorvauksissa toimenpide on aina MHU HOIDONJOHTO (toimenpidekoodi: 23151)."
+                                  },
+                                  "rahavaraus": {
+                                    "type": "integer",
+                                    "description": "Harjan rahavaraus-id."
+                                  },
+                                  "tehtavaryhma": {
+                                    "type": "integer",
+                                    "description": "Harjan tehavaryhma-id."
+                                  },
+                                  "tehtava": {
+                                    "type": "integer",
+                                    "description": "Harjan tehtava-id."
+                                  }
+                                },
+                                "required": [
+                                  "toimenpide"
+                                ]
+                              },
+                              "versio": {
+                                "type": "integer",
+                                "description": "Kustannuksen versio. Käytetään tulevaisuudessa kustannuksen muutoshistorian seuraamiseen."
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
                   }
                 }
               }
             }
-          }
-        },
-        "johto-ja-hallintokorvaukset": {
-          "type": "object",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "johto-ja-hallintokorvaus": {
-                "id": "urn:harja/suunnitellut-kustannukset/0/johto-ja-hallintokorvaukset/0/johto-ja-hallintokorvaus",
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "kustannus-id": {
-                    "type": "integer",
-                    "description": "Kustannusrivin id Harjassa"
-                  },
-                  "vuosi": {
-                    "type": "integer",
-                    "description": "Kalenterivuosi jota suunniteltu kustannus koskee"
-                  },
-                  "kuukausi": {
-                    "type": "integer",
-                    "description": "Kalenterikuukausi jota suunniteltu kustannus koskee"
-                  },
-                  "ennen-urakkaa": {
-                    "type": "boolean",
-                    "description": "A flag indicating whether it is before the contract."
-                  },
-                  "osa-kuukaudesta": {
-                    "type": "number",
-                    "description": "The part of the month."
-                  },
-                  "summa": {
-                    "type": "number",
-                    "description": "Suunniteltu kustannus. Yksikkö: euro."
-                  },
-                  "indeksikorjattu-summa": {
-                    "type": "number",
-                    "description": "Suunniteltu summa indeksikorjattuna. Yksikkö: euro."
-                  },
-                  "indeksikorjaus_vahvistettu": {
-                    "type": "string",
-                    "format": "date-time",
-                    "description": "The confirmation date and time of the index correction."
-                  },
-                  "kohdistus": {
-                    "type": "object",
-                    "properties": {
-                      "toimenpide": {
-                        "type": "integer",
-                        "description": "Harjan toimenpide-id."
-                      },
-                      "rahavaraus": {
-                        "type": "integer",
-                        "description": "Harjan rahavaraus-id."
-                      },
-                      "tehtavaryhma": {
-                        "type": "integer",
-                        "description": "Harjan tehavaryhma-id."
-                      },
-                      "tehtava": {
-                        "type": "integer",
-                        "description": "Harjan tehtava-id."
-                      }
-                    },
-                    "required": ["toimenpide"]
-                  },
-                  "toimenkuva": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "integer",
-                        "description": "Harjan toimenkuva-id."
-                      },
-                      "nimi": {
-                        "type": "integer",
-                        "description": "Harjan toimenkuva-nimi."
-                      }
-                    },
-                    "required": ["id"]
-                  },
-                  "tunnit": {
-                    "type": "number",
-                    "description": "The number of hours."
-                  },
-                  "tuntipalkka": {
-                    "type": "number",
-                    "description": "The hourly wage."
-                  },
-                  "versio": {
-                    "type": "integer",
-                    "description": "Kustannuksen versio. Käytetään kustannuksen muutoshistorian seuraamiseen."
-                  }
-                }
-              }
-            }
-          }
-        }
-          }
-        }
-      }
-    }

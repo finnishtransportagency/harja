@@ -32,28 +32,47 @@
                   "type": "string",
                   "description": "The name of the kulu."
                 },
-                "kulu_kohdistus": {
+                "ajankohta": {
                   "type": "object",
                   "properties": {
-                    "kulu_kohdistus_id": {
+                    "vuosi": {
                       "type": "integer",
-                      "description": "The unique identifier for the kulu_kohdistus."
+                      "description": "Kalenterivuosi jota toteutunut kustannus koskee."
                     },
-                    "kulu_kohdistus_name": {
-                      "type": "string",
-                      "description": "The name of the kulu_kohdistus."
+                    "kuukausi": {
+                      "type": "integer",
+                      "description": "Kalenterikuukausi jota toteutunut kustannus koskee."
+                    },
+                    "required": [
+                      "vuosi",
+                      "kuukausi"
+                    ]
+                  },
+                "kulukohdistus": {
+                  "type": "object",
+                  "properties": {
+                    "toimenpide": {
+                      "type": "integer",
+                      "description": "Harjan toimenpide-id."
+                    },
+                    "tehtavaryhma": {
+                      "type": "integer",
+                      "description": "Harjan tehtavaryhma-id."
+                    },
+                    "rahavaraus": {
+                      "type": "integer",
+                      "description": "Harjan rahavaraus-id."
                     }
                   },
                   "required": [
-                    "kulu_kohdistus_id",
-                    "kulu_kohdistus_name"
+                    "toimenpide"
                   ]
                 }
               },
               "required": [
-                "kulu_id",
+                "id",
                 "kulu_name",
-                "kulu_kohdistus"
+                "kulukohdistus"
               ]
             }
           },
@@ -71,14 +90,6 @@
           "id": {
             "type": "integer",
             "description": "The unique identifier for the toteutuneet_kustannukset."
-          },
-          "vuosi": {
-            "type": "integer",
-            "description": "The year of the toteutuneet_kustannukset."
-          },
-          "kuukausi": {
-            "type": "integer",
-            "description": "The month of the toteutuneet_kustannukset."
           },
           "summa": {
             "type": "number",
@@ -163,7 +174,6 @@
         "additionalProperties": false,
         "properties": {
           "kiintea-kustannus": {
-            "id": "urn:harja/toteutuneet-kustannukset/0/kiinteat-kustannukset/0/kiintea-kustannus",
             "type": "object",
             "additionalProperties": false,
             "properties": {
@@ -241,7 +251,6 @@
         "additionalProperties": false,
         "properties": {
           "arvioitu-kustannus": {
-            "id": "urn:harja/toteutuneet-kustannukset/0/arvioidut-kustannukset/0/arvioitu-kustannus",
             "type": "object",
             "additionalProperties": false,
             "properties": {
@@ -306,7 +315,6 @@
         "additionalProperties": false,
         "properties": {
           "johto-ja-hallintokorvaus": {
-            "id": "urn:harja/toteutuneet-kustannukset/0/johto-ja-hallintokorvaukset/0/johto-ja-hallintokorvaus",
             "type": "object",
             "additionalProperties": false,
             "properties": {
