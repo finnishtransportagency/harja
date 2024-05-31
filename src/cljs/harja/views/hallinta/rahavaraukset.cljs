@@ -1,6 +1,7 @@
 (ns harja.views.hallinta.rahavaraukset
-  (:require [reagent.core :refer [atom] :as r]
-            [tuck.core :refer [tuck send-value! send-async!]]
+  (:require [reagent.core :as r]
+            [tuck.core :refer [tuck]]
+            [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
             [harja.ui.grid :as grid]
@@ -20,8 +21,7 @@
                                        (-> rahavaraus
                                          (assoc :valittu? (some #(= (:id %) (:id rahavaraus)) valitun-urakan-rahavaraukset))
                                          (assoc :urakkakohtainen-nimi (:urakkakohtainen-nimi (first (filter #(= (:id %) (:id rahavaraus)) valitun-urakan-rahavaraukset))))))
-                                     rahavaraukset)
-            rahavaraukset-atom (r/atom (zipmap (range) muokatut-rahavaraukset))]
+                                     rahavaraukset)]
 
         [:div.rahavaraukset-hallinta
          [:h1 "Rahavaraukset"]
@@ -37,24 +37,16 @@
             [yleiset/info-laatikko :vahva-ilmoitus "Rahavarauksen poistaminen poistaa sen kaikki tehtävät sekä se
             poistetaan kaikilta urakoilta. Poisto ei ole mahdollinen, jos rahavaraus on käytössä.
             Älä siis yritäkään poistaa niitä, ellet ole täysin varma, että mitä olet tekemässä."]
-            [grid/muokkaus-grid
+            [grid/grid
              {:tyhja "Ei rahavarauksia."
               :tunniste :id
-              :voi-lisata? true
-              :voi-kumota? false
-              :voi-poistaa? (constantly true)
-              :voi-muokata? true
-              :on-rivi-blur (fn [rivi _]
-                              (e! (tiedot/->MuokkaaRahavaraus valittu-urakka rivi)))
+              :piilota-toiminnot? false
+              :tallenna-vain-muokatut true
+              :tallenna (fn [muokatut-rivit arvo]
+                          (doseq [rivi muokatut-rivit]
+                            (tuck-apurit/e-kanavalla! e! tiedot/->MuokkaaRahavaraus valittu-urakka rivi)))
               :uusi-rivi (fn [rivi]
-                           (js/console.log "uusi rivi :: rivi:" (pr-str rivi))
-                           (assoc rivi :id -1 :valittu? nil :nimi "" :urakkakohtainen-nimi ""))
-              ; Roskakorinappula rivin päässä
-              :toimintonappi-fn (fn [rivi _muokkaa! id]
-                                  [napit/poista ""
-                                   #(do
-                                      (e! (tiedot/->PoistaRahavaraus rivi)))
-                                   {:luokka "napiton-nappi"}])}
+                           (assoc rivi :id -1 :valittu? nil :nimi "" :urakkakohtainen-nimi ""))}
              [
               ;; Muokkausgridi ei toimi default checkboxin kanssa. Se ei saa on-rivi-blur toimintaan checkboxin oikeaan arvoa
               ;; Joten tehdään oma komponentti, jossa ohitetaan on-rivi-blur toiminta ihan erillisellä kutsulla
@@ -71,10 +63,10 @@
                                                  (.stopPropagation %)
                                                  (e! (tiedot/->ValitseUrakanRahavaraus valittu-urakka rivi
                                                        (-> % .-target .-checked))))}]
-                                 [:label {:for id} "" #_(:nimi rivi)]]))}
+                                 [:label {:for id} ""]]))}
               {:otsikko "Rahavaraus" :nimi :nimi :tyyppi :string :leveys 10}
               {:otsikko "Urakkakohtainen nimi" :nimi :urakkakohtainen-nimi :tyyppi :string :leveys 10}]
-             rahavaraukset-atom]])]))))
+             muokatut-rahavaraukset]])]))))
 
 (defn rahavaraukset []
   [tuck tiedot/tila rahavaraukset*])

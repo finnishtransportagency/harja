@@ -1,8 +1,10 @@
 (ns harja.tiedot.hallinta.rahavaraukset
   (:require [harja.ui.viesti :as viesti]
             [reagent.core :refer [atom] :as reagent]
+            [cljs.core.async :refer [>! <!]]
             [tuck.core :as tuck]
-            [harja.tyokalut.tuck :as tuck-apurit]))
+            [harja.tyokalut.tuck :as tuck-apurit])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def tila (atom {:valittu-urakka nil
                  :rahavaraukset nil
@@ -16,6 +18,8 @@
 (defrecord HaeRahavarauksetTehtavineenOnnistui [vastaus])
 (defrecord HaeRahavarauksetTehtavineenEpaonnistui [vastaus])
 (defrecord MuokkaaRahavaraus [valittu-urakka rahavaraus])
+(defrecord MuokkaaRahavarausOnnistui [vastaus])
+(defrecord MuokkaaRahavarausEpaonnistui [vastaus])
 
 (defrecord ValitseUrakanRahavaraus [urakka rahavaraus valittu?])
 (defrecord ValitseUrakanRahavarausOnnistui [vastaus tallennus-id])
@@ -33,7 +37,6 @@
 (defrecord PoistaTehtavaRahavaraukselta [rahavaraus-id tehtava-id])
 (defrecord PoistaTehtavaRahavaraukseltaOnnistui [vastaus])
 (defrecord PoistaTehtavaRahavaraukseltaEpaonnistui [vastaus])
-(defrecord PoistaRahavaraus [rahavaraus])
 (defrecord PoistaRahavarausOnnistui [vastaus])
 (defrecord PoistaRahavarausEpaonnistui [vastaus])
 
@@ -65,7 +68,7 @@
 
   HaeRahavarauksetEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Rahavarauksten haku epäonnistui" :varoitus)
+    (viesti/nayta-toast! "Rahavarausten haku epäonnistui" :varoitus)
     app)
 
   HaeRahavarauksetTehtavineen
@@ -90,31 +93,38 @@
   (process-event [{:keys [valittu-urakka rahavaraus]} app]
     (let [tallennus-id (gensym)
           app (assoc-in app [:tallennukset-kesken tallennus-id] true)]
-      (tuck-apurit/post! :paivita-urakan-rahavaraus
-        {:urakka (:urakka-id valittu-urakka)
-         :id (:id rahavaraus)
-         :nimi (:nimi rahavaraus)
-         :urakkakohtainen-nimi (:urakkakohtainen-nimi rahavaraus)
-         :valittu? (:valittu? rahavaraus)}
-        {:onnistui ->HaeRahavarauksetOnnistui
-         :epaonnistui ->HaeRahavarauksetEpaonnistui
-         :onnistui-parametrit [tallennus-id]
-         :epaonnistui-parametrit [tallennus-id]
-         :paasta-virhe-lapi? true}))
-    app)
+      ;; Tallenna nappula johtaa aina tänne. Joten muokattiin tai poistettiin, aina ollaan samassa paikassa
+      (if (:poistettu rahavaraus)
+        ;; Jos poistettiin
+        (tuck-apurit/post! :poista-rahavaraus
+          {:id (:id rahavaraus)}
+          {:onnistui ->PoistaRahavarausOnnistui
+           :epaonnistui ->PoistaRahavarausEpaonnistui
+           :onnistui-parametrit [tallennus-id]
+           :epaonnistui-parametrit [tallennus-id]
+           :paasta-virhe-lapi? true})
+        ;; Jos muokataan
+        (tuck-apurit/post! :paivita-urakan-rahavaraus
+          {:urakka (:urakka-id valittu-urakka)
+           :id (:id rahavaraus)
+           :nimi (:nimi rahavaraus)
+           :urakkakohtainen-nimi (:urakkakohtainen-nimi rahavaraus)
+           :valittu? (:valittu? rahavaraus)}
+          {:onnistui ->MuokkaaRahavarausOnnistui
+           :epaonnistui ->MuokkaaRahavarausEpaonnistui
+           :onnistui-parametrit [tallennus-id]
+           :epaonnistui-parametrit [tallennus-id]
+           :paasta-virhe-lapi? true}))
+      app))
 
-  PoistaRahavaraus
-  (process-event [{:keys [valittu-urakka rahavaraus]} app]
-    (let [tallennus-id (gensym)
-          app (assoc-in app [:tallennukset-kesken tallennus-id] true)]
-      (tuck-apurit/post! :poista-rahavaraus
-        {:urakka (:urakka-id valittu-urakka)
-         :id (:id rahavaraus)}
-        {:onnistui ->PoistaRahavarausOnnistui
-         :epaonnistui ->PoistaRahavarausEpaonnistui
-         :onnistui-parametrit [tallennus-id]
-         :epaonnistui-parametrit [tallennus-id]
-         :paasta-virhe-lapi? true}))
+  MuokkaaRahavarausOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (kasittele-rahavaraus-vastaus vastaus app))
+
+  MuokkaaRahavarausEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (js/log.error "Virhe: " (pr-str vastaus))
+    (viesti/nayta-toast! "Rahavarausten muokkaus epäonnistui" :varoitus)
     app)
 
   PoistaRahavarausOnnistui
