@@ -50,18 +50,20 @@
               ;; Muokkausgridi ei toimi default checkboxin kanssa. Se ei saa on-rivi-blur toimintaan checkboxin oikeaan arvoa
               ;; Joten tehdään oma komponentti, jossa ohitetaan on-rivi-blur toiminta ihan erillisellä kutsulla
               {:otsikko "" :nimi :valittu? :tyyppi :komponentti :leveys 1
-               :komponentti (fn [rivi]
+               :komponentti (fn [rivi {:keys [muokataan?]}]
                               (let [id (gensym "rahavaraus")]
                                 [:span.rahavaraus-valinta
-                                 [:input.vayla-checkbox
-                                  {:type :checkbox
-                                   :id id
-                                   :checked (boolean (:valittu? rivi))
-                                   :on-change #(do
-                                                 (.preventDefault %)
-                                                 (.stopPropagation %)
-                                                 (e! (tiedot/->ValitseUrakanRahavaraus valittu-urakka rivi
-                                                       (-> % .-target .-checked))))}]
+                                 ;; Halutaan piilottaa tämä checkbox kun muokkaus on päällä
+                                 (when-not muokataan?
+                                   [:input.vayla-checkbox
+                                    {:type :checkbox
+                                     :id id
+                                     :checked (boolean (:valittu? rivi))
+                                     :on-change #(do
+                                                   (.preventDefault %)
+                                                   (.stopPropagation %)
+                                                   (e! (tiedot/->ValitseUrakanRahavaraus valittu-urakka rivi
+                                                         (-> % .-target .-checked))))}])
                                  [:label {:for id} ""]]))}
               {:otsikko "Rahavaraus" :nimi :nimi :tyyppi :string :leveys 10}
               {:otsikko "Urakkakohtainen nimi" :nimi :urakkakohtainen-nimi :tyyppi :string :leveys 10}]
