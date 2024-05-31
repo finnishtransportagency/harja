@@ -9,7 +9,8 @@
 (def tila (atom {:valittu-urakka nil
                  :rahavaraukset nil
                  :tehtavat nil
-                 :tallennukset {}}))
+                 :haku-kaynnissa? false
+                 :tallennus-kesken? false}))
 
 (defrecord HaeRahavaraukset [])
 (defrecord HaeRahavarauksetOnnistui [vastaus])
@@ -22,8 +23,8 @@
 (defrecord MuokkaaRahavarausEpaonnistui [vastaus])
 
 (defrecord ValitseUrakanRahavaraus [urakka rahavaraus valittu?])
-(defrecord ValitseUrakanRahavarausOnnistui [vastaus tallennus-id])
-(defrecord ValitseUrakanRahavarausEpaonnistui [vastaus tallennus-id])
+(defrecord ValitseUrakanRahavarausOnnistui [vastaus])
+(defrecord ValitseUrakanRahavarausEpaonnistui [vastaus])
 
 (defrecord ValitseUrakka [urakka])
 
@@ -50,6 +51,8 @@
       :rahavaraukset kaikki-rahavaraukset
       :urakoiden-rahavaraukset urakoiden-rahavaraukset
       :urakat urakat
+      :haku-kaynnissa? false
+      :tallennus-kesken? false
       :valittu-urakka (or (:valittu-urakka app) (first urakat)))))
 
 (extend-protocol tuck/Event
@@ -60,16 +63,16 @@
       {:onnistui ->HaeRahavarauksetOnnistui
        :epaonnistui ->HaeRahavarauksetEpaonnistui
        :paasta-virhe-lapi? true})
-    app)
+    (assoc app :haku-kaynnissa? true))
 
   HaeRahavarauksetOnnistui
   (process-event [{:keys [vastaus]} app]
     (kasittele-rahavaraus-vastaus vastaus app))
 
   HaeRahavarauksetEpaonnistui
-  (process-event [{:keys [vastaus]} app]
+  (process-event [{:keys [_vastaus]} app]
     (viesti/nayta-toast! "Rahavarausten haku epäonnistui" :varoitus)
-    app)
+    (assoc app :haku-kaynnissa? false))
 
   HaeRahavarauksetTehtavineen
   (process-event [_ app]
@@ -85,18 +88,16 @@
     (assoc app :rahavaraukset-tehtavineen vastaus))
 
   HaeRahavarauksetTehtavineenEpaonnistui
-  (process-event [{:keys [vastaus]} app]
+  (process-event [{:keys [_vastaus]} app]
     (viesti/nayta-toast! "Rahavarausten haku epäonnistui" :varoitus)
     (assoc app :rahavaraukset-tehtavineen nil))
 
   MuokkaaRahavaraus
   (process-event [{:keys [valittu-urakka rahavaraukset]} app]
-    (let [tallennus-id (gensym)
-          app (assoc-in app [:tallennukset-kesken tallennus-id] true)]
-      
+    (let [tallennus-id (gensym)]
       ;; Tallenna nappula johtaa aina tänne. Joten muokattiin tai poistettiin, aina ollaan samassa paikassa
       (doseq [rahavaraus rahavaraukset]
-        
+
         (if (:poistettu rahavaraus)
           ;; Jos poistettiin
           (tuck-apurit/post! :poista-rahavaraus
@@ -106,7 +107,7 @@
              :onnistui-parametrit [tallennus-id]
              :epaonnistui-parametrit [tallennus-id]
              :paasta-virhe-lapi? true})
-          
+
           ;; Jos muokataan
           (tuck-apurit/post! :paivita-urakan-rahavaraus
             {:urakka (:urakka-id valittu-urakka)
@@ -119,7 +120,7 @@
              :onnistui-parametrit [tallennus-id]
              :epaonnistui-parametrit [tallennus-id]
              :paasta-virhe-lapi? true})))
-      app))
+      (assoc app :tallennus-kesken? true)))
 
   MuokkaaRahavarausOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -130,7 +131,7 @@
   (process-event [{:keys [vastaus]} app]
     (js/log.error "Virhe: " (pr-str vastaus))
     (viesti/nayta-toast! "Rahavarausten muokkaus epäonnistui" :varoitus)
-    app)
+    (assoc app :tallennus-kesken? false))
 
   PoistaRahavarausOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -138,47 +139,44 @@
     (kasittele-rahavaraus-vastaus vastaus app))
 
   PoistaRahavarausEpaonnistui
-  (process-event [{:keys [vastaus]} app]
+  (process-event [{:keys [_vastaus]} app]
     (viesti/nayta-toast! "Rahavarauksen poisto ei onnistu - Sillä on varmaan jo kuluja tai suunnitelmia, eikä sitä voida enää poistaa" :varoitus)
     (assoc app :tehtavat nil))
 
   ValitseUrakanRahavaraus
   (process-event [{:keys [urakka rahavaraus valittu?]} app]
-    (let [tallennus-id (gensym)
-          app (assoc-in app [:tallennukset-kesken tallennus-id] true)]
-      (tuck-apurit/post! :paivita-urakan-rahavaraus
-        {:urakka (:urakka-id urakka)
-         :id (:id rahavaraus)
-         :valittu? valittu?}
-        {:onnistui ->ValitseUrakanRahavarausOnnistui
-         :epaonnistui ->ValitseUrakanRahavarausEpaonnistui
-         :onnistui-parametrit [tallennus-id]
-         :epaonnistui-parametrit [tallennus-id]
-         :paasta-virhe-lapi? true})
+    (tuck-apurit/post! :paivita-urakan-rahavaraus
+      {:urakka (:urakka-id urakka)
+       :id (:id rahavaraus)
+       :valittu? valittu?}
+      {:onnistui ->ValitseUrakanRahavarausOnnistui
+       :epaonnistui ->ValitseUrakanRahavarausEpaonnistui
+       :paasta-virhe-lapi? true})
 
-      (if valittu?
-        (update app :urakoiden-rahavaraukset
+    (if valittu?
+      (-> app
+        (update :urakoiden-rahavaraukset
           conj {:id (:id rahavaraus)
                 :nimi (:nimi rahavaraus)
                 :urakka-id (:urakka-id urakka)
                 :urakka-nimi (:urakka-nimi urakka)})
-        (update app :urakoiden-rahavaraukset
+        (assoc :tallennus-kesken? true))
+      (-> app
+        (update :urakoiden-rahavaraukset
           #(filter %2 %1)
           #(or
              (not= (:id %) (:id rahavaraus))
-             (not= (:urakka-id %) (:urakka-id urakka)))))))
+             (not= (:urakka-id %) (:urakka-id urakka))))
+        (assoc :tallennus-kesken? true))))
 
   ValitseUrakanRahavarausOnnistui
-  (process-event [{:keys [vastaus tallennus-id]} app]
-    (let [app (assoc-in app [:tallennukset-kesken tallennus-id] false)]
-      (if (every? false? (:tallennukset-kesken app))
-        (assoc app :urakoiden-rahavaraukset vastaus)
-        app)))
+  (process-event [_ app]
+    (assoc app :tallennus-kesken? false))
 
   ValitseUrakanRahavarausEpaonnistui
-  (process-event [{:keys [tallennus-id]} app]
+  (process-event [_ app]
     (viesti/nayta-toast! "Rahavarauksen tallennus epäonnistui" :varoitus)
-    (assoc-in app [:tallennukset-kesken tallennus-id] false))
+    (assoc app :tallennus-kesken? false))
 
   ValitseUrakka
   (process-event [{:keys [urakka]} app]
