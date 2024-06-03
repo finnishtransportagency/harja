@@ -1,9 +1,15 @@
 (ns harja.palvelin.integraatiot.yha.yha-komponentti
-  (:require [com.stuartsierra.component :as component]
-            [hiccup.core :refer [html]]
-            [taoensso.timbre :as log]
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.string :as clj-str]
+            [com.stuartsierra.component :as component]
             [harja.domain.paallystysilmoitus :as pot-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
+            [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.paallystys-kyselyt :as q-paallystys]
+            [harja.kyselyt.yha :as q-yha-tiedot]
+            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.yha.sanomat
              [urakoiden-hakuvastaussanoma :as urakoiden-hakuvastaus]
@@ -11,16 +17,12 @@
              [kohteen-lahetyssanoma :as kohteen-lahetyssanoma]
              [kohteen-lahetysvastaussanoma :as kohteen-lahetysvastaussanoma]
              [kohteen-poistovastaussanoma :as kohteen-poistovastaussanoma]]
-            [harja.kyselyt.yha :as q-yha-tiedot]
-            [harja.kyselyt.paallystys-kyselyt :as q-paallystys]
-            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
-            [harja.pvm :as pvm]
-            [harja.kyselyt.konversio :as konv]
-            [clojure.string :as clj-str]
-            [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.yha.yha-yhteiset :as yha-yhteiset]
-            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset])
+            [harja.palvelin.integraatiot.paallystys-yhteiset :as paallystys-yhteiset]
+            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
+            [harja.pvm :as pvm]
+            [taoensso.timbre :as log]
+            [harja.domain.kanavat.kanavan-toimenpide :as toimenpide])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
@@ -79,9 +81,9 @@
 (defn muodosta-kohteiden-lahetysvirheet [virheet virheellisen-kohteen-tiedot]
   (mapv (fn [{:keys [kohde-yha-id selite]}]
           (str (when kohde-yha-id
-                 (let [{:keys [nimi tunnus kohdenumero]} (some #(when (= (:yhaid %) kohde-yha-id)
-                                                      %)
-                                                   virheellisen-kohteen-tiedot)]
+                 (let [{:keys [nimi tunnus kohdenumero]} (some #(when (= (:yhaid %) kohde-yha-id)))
+                                                      %
+                                                   virheellisen-kohteen-tiedot]
                    (str "Kohde id: " kohde-yha-id
                         (when kohdenumero
                           (str ", kohdenumero: " kohdenumero))
@@ -193,6 +195,48 @@
           alikohteet (hae-alikohteet db kohde-id paallystysilmoitus)]
       {:kohde kohde
        :alikohteet alikohteet
+       :paallystysilmoitus paallystysilmoitus})
+    (let [virhe (format "Tuntematon kohde (id: %s)." kohde-id)]
+      (log/error virhe)
+      (throw+
+        {:type +virhe-kohteen-lahetyksessa+
+         :virheet {:virhe virhe}}))))
+
+(defn filtteroi-tyhjat-arvot [map-jossa-on-nil]
+    (into {} (filter
+               (fn [[_ arvo]] (some? arvo))
+               map-jossa-on-nil)))
+
+(defn hae-kohteen-tiedot-pot2 [db kohde-id]
+  (if-let [kohde (-> (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id})
+                   first
+                     ;; Uudessa YHA-mallissa pääkohteella ei ole ajorataa taikka kaistaa
+                   (dissoc :tr-ajorata :tr-kaista))]
+    (let [maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
+                                   db {:urakka-id (:urakka kohde) :yllapitokohde-id kohde-id}))
+          paallystysilmoitus (hae-kohteen-paallystysilmoitus db kohde-id)
+          paallystysilmoitus (if (yllapitokohde-domain/eritellyt-maaramuutokset-kaytossa? (:vuodet paallystysilmoitus))
+                               (assoc paallystysilmoitus :maaramuutokset maaramuutokset)
+                               paallystysilmoitus)
+          alustalle-tehdyt-toimet (->> (q-paallystys/hae-pot2-alustarivit db {:pot2_id (:id paallystysilmoitus)}) ;;TODO; (map filtteroi-tyhjat-arvot)?
+                                    (into []))
+          alustatp (as-> (q-paallystys/hae-pot2-alustarivit db
+                          {:pot2_id (:id paallystysilmoitus)}) atp
+                     (konversio/sarakkeet-vektoriin (map konversio/alaviiva->rakenne atp)
+                      {:massa :massat})
+                    (map (fn [toimenpide] 
+                           (paallystys-yhteiset/muodosta-alustatoimenpide toimenpide false)) atp))
+           kulutuskerrostp #p (as-> (q-paallystys/hae-paallystysilmoitusten-kulutuskerroksen-toimenpiteet db
+                                  {:pot2_id (:id paallystysilmoitus)}) kktp
+                            (konversio/sarakkeet-vektoriin (map konversio/alaviiva->rakenne kktp)
+                              {:massa :massat} :alikohde)
+                            (map (fn [toimenpide]
+                                   (paallystys-yhteiset/muodosta-kulutuskerrostoimenpide toimenpide false))
+                              kktp))
+          alikohteet (hae-alikohteet db kohde-id paallystysilmoitus)]
+      {:kohde kohde 
+       :alustalle-tehdyt-toimet alustatp
+       :kulutuskerrokselle-tehdyt-toimet kulutuskerrostp
        :paallystysilmoitus paallystysilmoitus})
     (let [virhe (format "Tuntematon kohde (id: %s)." kohde-id)]
       (log/error virhe)
