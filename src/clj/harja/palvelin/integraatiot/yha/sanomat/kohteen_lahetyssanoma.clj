@@ -2,10 +2,22 @@
   (:require [harja.tyokalut.xml :as xml]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [taoensso.timbre :as log]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [clojure.walk :as walk])
   (:use [slingshot.slingshot :only [throw+]]))
+(use 'debux.core)
 
 (def +xsd-polku+ "xsd/yha/")
+
+
+(defn muunna-collection-mappeja-vektoreiksi [{:keys [mapit kohteen-nimi-key avainten-jarjestys]}]
+  (mapv (fn [kokoelma]
+          (into [kohteen-nimi-key]
+            (concat []
+              (map (fn [k] [k (get kokoelma k)])
+                avainten-jarjestys))))
+    mapit))
+
 
 (defn laske-hinta-kokonaishinta [kohde]
   (let [vuosi (:vuodet kohde)]
@@ -69,7 +81,37 @@
        (when pitoisuus [:sideainepitoisuus pitoisuus])
        [:lisa-aineet lisaaineet]]]]))
 
-(defn tee-alustalle-tehty-toimenpide [{:keys [harja-id verkkotyyppi verkon-tyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+
+(defn lisaa-massa [{:keys [massatyyppi max-raekoko kuulamyllyluokka yhteenlaskettu-kuulamyllyarvo
+                           yhteenlaskettu-litteysluku litteyslukuluokka runkoaineet sideaineet lisaaineet]}]
+  [:massa
+   [:massatyyppi massatyyppi]
+   [:max-raekoko max-raekoko]
+   [:kuulamyllyluokka kuulamyllyluokka]
+   [:yhteenlaskettu-kuulamyllyarvo yhteenlaskettu-kuulamyllyarvo]
+   [:yhteenlaskettu-litteysluku yhteenlaskettu-litteysluku]
+   [:litteyslukuluokka litteyslukuluokka]
+   (into [:runkoaineet] (muunna-collection-mappeja-vektoreiksi
+                          {:mapit runkoaineet
+                           :kohteen-nimi-key :runkoaine
+                           :avainten-jarjestys [:runkoainetyyppi
+                                                :kuulamyllyarvo
+                                                :litteysluku
+                                                :massaprosentti
+                                                :fillerityyppi
+                                                :kuvaus]}))
+   [:sideaineet (muunna-collection-mappeja-vektoreiksi
+                  {:mapit sideaineet
+                   :kohteen-nimi-key :sideaine
+                   :avainten-jarjestys [:tyyppi
+                                        :pitoisuus]})]
+   [:lisaaineet (muunna-collection-mappeja-vektoreiksi
+                  {:mapit lisaaineet
+                   :kohteen-nimi-key :lisaaine
+                   :avainten-jarjestys [:tyyppi
+                                        :pitoisuus]})]])
+
+(defn tee-alustalle-tehty-toimenpide [{:keys [harja-id verkkotyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                                               tr-ajorata tr-kaista verkon-tarkoitus kasittelymenetelma paksuus lisatty-paksuus
                                               verkon-sijainti toimenpide kasittelysyvyys massamenekki kokonaismassamaara massa murske]}
                                       kohteen-tienumero karttapvm]
@@ -94,16 +136,14 @@
      [:kasittelymenetelma (or kasittelymenetelma toimenpide)]
      [:lisatty-paksuus lisatty-paksuus] ;; Käytetäänkö "paksuus" tietoa?
      [:kasittelysyvyys kasittelysyvyys]
-     (when-let [verkkotyyppi (or verkkotyyppi verkon-tyyppi)]
-       [:verkkotyyppi verkkotyyppi])
+     [:verkkotyyppi verkkotyyppi]
      (when verkon-tarkoitus
        [:verkon-tarkoitus verkon-tarkoitus])
      (when verkon-sijainti
        [:verkon-sijainti verkon-sijainti])
-     [:alustan-tekninen-toimenpide toimenpide] ;; TODO Selvitä vielä tämä? Ei skeemassa
      (when massamenekki [:massamenekki massamenekki])
      [:kokonaismassamaara kokonaismassamaara]
-     (into [:massa] massa)
+     (lisaa-massa massa)
      (into [:murske] murske)]))
 
 (defn tee-kulutuskerrokselle-tehdyt-toimet [{:keys [yha-id harja-id poistettu tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
