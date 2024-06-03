@@ -5,6 +5,7 @@
             [harja.testi :refer :all]
             [harja.kyselyt.yha :as yha-kyselyt]
             [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma :as kohteen-lahetyssanoma]
+            [harja.palvelin.integraatiot.yha.kohteen-lahetyssanoma-test :as kohteen-lahetyssanoma-test]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.integraatiot.yha.tyokalut :refer :all]
             [harja.tyokalut.xml :as xml]
@@ -355,6 +356,26 @@
     (is (false? (:lahetys_onnistunut lahetystiedot)) "Lähetys on merkitty epäonnistuneeksi")))
 
 (def +xsd-polku+ "xsd/yha/")
+
+
+(deftest tarkista-kohteen-lahetyksen-sisalto
+  (let [db (luo-testitietokanta)
+        kohde-idt (q "SELECT id FROM yllapitokohde WHERE nimi = 'Kirkonkylä - Toppinen'") 
+        urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        urakka (first (yha-kyselyt/hae-urakan-yhatiedot db {:urakka urakka-id}))
+        kohteet #p (mapv #(yha/hae-kohteen-tiedot-pot2 db %) kohde-idt)
+        lahetys-avaimet-kohde (set (keys (:kohde (first kohteet))))
+        lahetys-avaimet-alustalle-tehdyt-toimet (set (keys (first (:alustalle-tehdyt-toimet (first kohteet))))) 
+        lahetys-avaimet-kulutuskerrokselle-tehdyt-toimet (set (keys (first (:kulutuskerrokselle-tehdyt-toimet (first kohteet)))))
+        testi-avaimet (set (keys kohteen-lahetyssanoma-test/testi-kulutuskerrokselle-tehdyt-toimet))
+        kulutuskerros-testi-avaimet (set (keys kohteen-lahetyssanoma-test/testi-kulutuskerrokselle-tehdyt-toimet))
+        alusta-testi-avaimet (set (keys kohteen-lahetyssanoma-test/testi-alustalle-tehdyt-toimet)) 
+        sisalto (kohteen-lahetyssanoma/muodosta-sanoma urakka kohteet)  
+        #_ (println "Keys in testi-avaimet but not in lahetys-avaimet:" (clojure.set/difference kulutuskerros-testi-avaimet lahetys-avaimet-kohde))
+        ]
+    (is (= #{} (clojure.set/difference alusta-testi-avaimet lahetys-avaimet-alustalle-tehdyt-toimet)) "Alustan kaikki avaimet mukana")
+    (is (= #{} (clojure.set/difference kulutuskerros-testi-avaimet lahetys-avaimet-kulutuskerrokselle-tehdyt-toimet)) "Kulutuskerroksen kaikki avaimet mukana")))
+
 
 (deftest paikkauskohteen-pot-lomakkeella-oikea-yhaid
   (let [db (luo-testitietokanta)
