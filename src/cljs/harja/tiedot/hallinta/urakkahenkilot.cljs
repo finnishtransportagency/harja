@@ -2,29 +2,43 @@
   (:require [harja.ui.viesti :as viesti]
             [reagent.core :refer [atom] :as reagent]
             [tuck.core :as tuck]
-            [harja.tyokalut.tuck :as tuck-apurit])
-  )
+            [harja.tyokalut.tuck :as tuck-apurit]))
+
 (def tila (atom {:urakkahenkilot []
                  :jarjestys {:sarake :urakka
-                             :suunta :alas}}))
+                             :suunta :alas}
+                 :urakkatyyppi {:nimi "Päällystys" :arvo :paallystys}
+                 :paattyneet? false}))
 
-(defrecord HaeUrakkahenkilot [urakkatyyppi paattyneet?])
+(defrecord HaeUrakkahenkilot [])
+(defrecord HaeUrakkahenkilotOnnistui [vastaus])
+(defrecord HaeUrakkahenkilotEpaonnistui [vastaus])
 (defrecord JarjestaTaulukko [sarake])
+(defrecord PaattyneetValittu [uusi-arvo])
+(defrecord ValitseUrakkatyyppi [uusi-arvo])
+
+(defn hae-urakkahenkilot [{:keys [urakkatyyppi paattyneet?] :as app}]
+  (tuck-apurit/post! app :hae-urakkahenkilot
+    {:urakkatyyppi (:arvo urakkatyyppi)
+     :paattyneet? paattyneet?}
+    {:onnistui ->HaeUrakkahenkilotOnnistui
+     :epaonnistui ->HaeUrakkahenkilotEpaonnistui}))
 
 (extend-protocol tuck/Event
   HaeUrakkahenkilot
-  (process-event [{:keys [urakkatyyppi paattyneet?]} app]
-    (assoc app :urakkahenkilot
-      [{:nimi "Gon Freecs"
-        :puhelin "3333333333"
-        :sahkoposti "gon.freecs@hunterassociation.com"
-        :rooli :vastuuhenkilo
-        :urakka "Oulun MHU 2019-2024"}
-       {:nimi "Killua Zoldyc"
-        :puhelin "4444444444"
-        :sahkoposti "killua.zoldyck@hunterassociation.com"
-        :rooli :vastuuhenkilo-varahenkilo
-        :urakka "Oulun MHU 2019-2024"}]))
+  (process-event [_ app]
+    (hae-urakkahenkilot app)
+    app)
+
+  HaeUrakkahenkilotOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (assoc app :urakkahenkilot vastaus))
+
+  HaeUrakkahenkilotEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (js/console.log "Virhe urakkahenkilöiden haussa!" vastaus)
+    (viesti/nayta-toast! "Virhe urakkahenkilöiden haussa!" :varoitus)
+    app)
 
   JarjestaTaulukko
   (process-event [{:keys [sarake]} {:keys [jarjestys] :as app}]
@@ -39,7 +53,18 @@
                            :suunta uusi-jarjestys})
         (update :urakkahenkilot #(sort-by sarake (if (= uusi-jarjestys :alas)
                                                    <
-                                                   >) %))))))
+                                                   >) %)))))
+  PaattyneetValittu
+  (process-event [{:keys [uusi-arvo]} app]
+    (let [app (assoc app :paattyneet? uusi-arvo)]
+      (hae-urakkahenkilot app)
+      app))
+
+  ValitseUrakkatyyppi
+  (process-event [{:keys [uusi-arvo]} app]
+    (let [app (assoc app :urakkatyyppi uusi-arvo)]
+      (hae-urakkahenkilot app)
+      app)))
 
 
 

@@ -1,6 +1,10 @@
 (ns harja.views.hallinta.urakkahenkilot
-  (:require [clojure.string :as str]
+  (:require [harja.asiakas.kommunikaatio :as k]
+            [harja.transit :as transit]
+            [reagent.core :as r]
+            [clojure.string :as str]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.kentat :as kentat]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]
             [tuck.core :refer [tuck]]
@@ -28,18 +32,37 @@
         [ikonit/harja-icon-action-sort-ascending]
         [ikonit/harja-icon-action-sort-descending]))]])
 
-(defn urakkahenkilot* [e! app]
-  (e! (tiedot/->HaeUrakkahenkilot :hoito false))
-  (fn [e! {:keys [urakkahenkilot jarjestys] :as app}]
+(defn urakkahenkilot* [e! _app]
+  (e! (tiedot/->HaeUrakkahenkilot))
+  (fn [e! {:keys [urakkatyyppi urakkahenkilot jarjestys paattyneet?]}]
     [:div.urakkahenkilot-hallinta
-     [harja.ui.debug/debug app]
-     [valinnat/urakkatyyppi
-      yhteiset/valittu-urakkatyyppi
-      nav/+urakkatyypit+
-      #(reset! yhteiset/valittu-urakkatyyppi %)]
-     ;; todo: raksiboksi - päättynyt?
-     ;; todo: Kopioi csv leikepöydälle ehkä???
-     [:h2 "Urakoiden vastuuhenkilöt ja urakanvalvojat"]
+     [:div.valinnat
+      [valinnat/urakkatyyppi
+       (r/wrap urakkatyyppi
+         ;; Tätä vain dereffataan, ei tarvetta tehdä muutosfunktiota
+         (constantly nil))
+       nav/+urakkatyypit+
+       #(e! (tiedot/->ValitseUrakkatyyppi %))]
+      [kentat/tee-otsikollinen-kentta
+       {:otsikko "Näytä päättyneet urakat"
+        :arvo-atom paattyneet?
+        :otsikon-tag :div
+        :kentta-params
+        {:tyyppi :checkbox
+         :vayla-tyyli? true
+         :valitse! #(e! (tiedot/->PaattyneetValittu (not paattyneet?)))}}]]
+     [:div.flex-row.tasaa-alas
+      [:h2 "Urakoiden vastuuhenkilöt ja urakanvalvojat"]
+      [:span.inline-block
+       [:form {:style {:margin-left "auto"}
+               :target "_blank" :method "POST"
+               :action (k/excel-url :hae-urakkahenkilot-exceliin)}
+        [:input {:type "hidden" :name "parametrit"
+                 :value (transit/clj->transit {:urakkatyyppi (:arvo urakkatyyppi)
+                                               :paattyneet? paattyneet?})}]
+        [:button {:type "submit"
+                  :class #{"nappi-toissijainen nappi-reunaton"}}
+         [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Vie exceliin"]]]]]
      [:div.livi-grid
       [:table
        [:thead

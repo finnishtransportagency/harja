@@ -75,6 +75,7 @@
     [harja.palvelin.palvelut.hallinta.tehtavat :as tehtavat-hallinta]
     [harja.palvelin.palvelut.hallinta.tarjoushinnat :as tarjoushinnat-hallinta]
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
+    [harja.palvelin.palvelut.hallinta.urakkahenkilot :as urakkahenkilot-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
@@ -814,7 +815,12 @@
       :rahavaraukset-hallinta
       (component/using
         (rahavaraukset-hallinta/->RahavarauksetHallinta)
-        [:http-palvelin :db]))))
+        [:http-palvelin :db])
+
+      :urakkahenkilot-hallinta
+      (component/using
+        (urakkahenkilot-hallinta/->UrakkaHenkilotHallinta)
+        [:http-palvelin :db :excel-vienti]))))
 
 (defonce harja-jarjestelma nil)
 

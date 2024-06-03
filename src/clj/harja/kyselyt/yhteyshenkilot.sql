@@ -396,7 +396,20 @@ SELECT alku
  WHERE id = :id;
 
 -- name: hae-vastuuhenkilot-hallinta
-SELECT * FROM urakanvastuuhenkilo uvh
+SELECT u.nimi AS urakkanimi,
+       uvh.etunimi,
+       uvh.sukunimi,
+       uvh.puhelin,
+       uvh.sahkoposti,
+       uvh.rooli,
+       uvh.ensisijainen,
+       uvh."toissijainen-varahenkilo"
+FROM urakanvastuuhenkilo uvh
          JOIN urakka u ON uvh.urakka = u.id
-WHERE (:urakka IS NULL or :urakka = urakka) AND
-      (:paattyneet IS TRUE OR u.loppupvm > current_timestamp)
+WHERE (:urakkatyyppi IS NULL OR
+       (CASE
+            WHEN (:urakkatyyppi = 'hoito')
+                THEN u.tyyppi IN ('hoito', 'teiden-hoito')
+            ELSE
+                u.tyyppi = :urakkatyyppi::urakkatyyppi END)
+           AND (:paattyneet IS TRUE OR u.loppupvm > CURRENT_TIMESTAMP));
