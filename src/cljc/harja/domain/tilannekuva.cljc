@@ -95,7 +95,7 @@
 
   [huoltokierros "huoltokierros" "Huoltokierros"]
   [ryhmavaihto "ryhmavaihto" "Ryhmävaihto"]
-  [muut-valaistus-toimenpiteet "muut valaistusurakan toimenpiteet" "Muut toimenpiteet"]
+  [muut-valaistus-toimenpiteet "muut valaistusurakoiden toimenpiteet" "Muut toimenpiteet"]
 
   [varustetoteumat "varustetoteumat" "Varustetoteumat"])
 
