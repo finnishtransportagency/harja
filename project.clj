@@ -89,11 +89,6 @@
                  [org.apache.activemq/activemq-client "5.18.3" :exclusions [org.slf4j/slf4j-api]]
 
 
-                 ;; -- Liitetiedostojen tallennus
-                 ;; Fileyard liitetiedostojen tallennus (on-prem)
-                 ;; TODO: Pilvisiirtymän jälkeen poistetaan tämä riippuvuus
-                 [fileyard "0.2"]
-
                  ;; Ajax-kirjasto frontille
                  [cljs-ajax "0.8.0"]
 

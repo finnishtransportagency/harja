@@ -66,7 +66,6 @@
 
   HaeRahavarauksetTehtavineenOnnistui
   (process-event [{:keys [vastaus]} app]
-    (js/console.log "HaeRahavarauksetTehtavineenOnnistui :: vastaus: " (pr-str vastaus))
     (assoc app :rahavaraukset-tehtavineen vastaus))
 
   HaeRahavarauksetTehtavineenEpaonnistui

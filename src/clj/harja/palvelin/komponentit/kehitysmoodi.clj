@@ -9,8 +9,9 @@
             [clojure.string :as str]
             [taoensso.timbre :as log]))
 
-(def +wmts-mml-url+ "https://harja-test.solitaservices.fi/harja/integraatiotesti/wmts")
-(def +wmts-livi-url+ "https://harja-test.solitaservices.fi/harja/integraatiotesti/wmtslivi")
+;; Kartat haetaan tunnelin kautta, kun käytät harja-infra repon create_map_proxy scriptiä.
+(def +wmts-mml-url+ "http://localhost:9999/wmts")
+(def +wmts-livi-url+ "http://localhost:9999/wmtslivi")
 
 
 (def basic-auth-header (delay (str/trim-newline (slurp "../.harja/mml"))))
