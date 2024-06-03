@@ -1560,34 +1560,4 @@
             </xs:enumeration>
         </xs:restriction>
     </xs:simpleType>
-
-    <xs:simpleType name="alustan-tekninen-toimenpide">
-        <xs:restriction base="xs:integer">
-            <xs:enumeration value="1">
-                <xs:annotation>
-                    <xs:documentation>rakentaminen</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="2">
-                <xs:annotation>
-                    <xs:documentation>suuntauksen parantaminen</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="3">
-                <xs:annotation>
-                    <xs:documentation>rakenteen parantaminen</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="4">
-                <xs:annotation>
-                    <xs:documentation>kevyt rakenteen parantaminen</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="9">
-                <xs:annotation>
-                    <xs:documentation>ei tietoa</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-        </xs:restriction>
-    </xs:simpleType>
 </xs:schema>
