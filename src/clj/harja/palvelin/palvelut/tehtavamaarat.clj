@@ -29,7 +29,18 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (when (not urakka-id)
     (throw (IllegalArgumentException. (str "Urakka-id puuttuu"))))
-  (into [] (tehtavamaarat-kyselyt/tehtavaryhmat-ja-toimenpiteet-urakalle db {:urakka urakka-id})))
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        ;; Varmista, että urakka on olemassa
+        _ (when (nil? urakan-tiedot)
+            (throw (IllegalArgumentException. (format "Urakkaa %s ei ole olemassa." urakka-id))))
+        alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
+        loppuvuosi (-> urakan-tiedot :loppupvm pvm/vuosi)
+        tehtavaryhmat-ja-toimenpiteet (into []
+                                        (tehtavamaarat-kyselyt/tehtavaryhmat-ja-toimenpiteet-urakalle db
+                                          {:urakka urakka-id
+                                           :urakka-voimassaolo-alkuvuosi alkuvuosi
+                                           :urakka-voimassaolo-loppuvuosi loppuvuosi}))]
+    tehtavaryhmat-ja-toimenpiteet))
 
 (defn- paivita-tarvittaessa [idt polku arvo]
   (if (nil? (get idt arvo))
