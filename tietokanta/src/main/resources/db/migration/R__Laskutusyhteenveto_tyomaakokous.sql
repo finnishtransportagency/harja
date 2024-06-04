@@ -157,6 +157,10 @@ DECLARE
     vahingot_hoitokausi_yht               NUMERIC;
     vahingot_val_aika_yht                 NUMERIC;
     vahingot_rivi                         RECORD;
+    -- Rahavaraus taulun ID:t
+    akilliset_id                          INT;
+    vahingot_id                           INT;
+
     -- Tilaajan rahavaraukset
     tilaajan_rahavaraus_hoitokausi_yht    NUMERIC;
     tilaajan_rahavaraus_val_aika_yht      NUMERIC;
@@ -788,69 +792,82 @@ BEGIN
     akilliset_val_aika_yht := 0.0;
     vahingot_hoitokausi_yht := 0.0;
     vahingot_val_aika_yht := 0.0;
-    FOR akilliset_ja_vahingot_rivi IN SELECT summa AS kht_summa, l.erapaiva AS erapaiva, lk.maksueratyyppi
-                                      FROM kulu l
-                                               JOIN kulu_kohdistus lk ON lk.kulu = l.id
-                                               JOIN toimenpideinstanssi tpi
-                                                    ON lk.toimenpideinstanssi = tpi.id AND tpi.id in
-                                                                                           (talvihoito_tpi_id,
-                                                                                            lyh_tpi_id,
-                                                                                            sora_tpi_id,
-                                                                                            paallyste_tpi_id,
-                                                                                            yllapito_tpi_id,
-                                                                                            korvausinv_tpi_id)
-                                           -- Lisätyöt, äkillisethoitotyöt ja vahingonkorvaukset niputetaan erikseen omiin laareihinsa, joten jätetään ne tässä pois
-                                      WHERE lk.maksueratyyppi IN ('akillinen-hoitotyo', 'muu')
-                                        AND lk.poistettu IS NOT TRUE
-                                        AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
 
-        LOOP
-            IF akilliset_ja_vahingot_rivi.maksueratyyppi = 'akillinen-hoitotyo' THEN
-                SELECT akilliset_ja_vahingot_rivi.kht_summa AS summa,
-                       akilliset_ja_vahingot_rivi.kht_summa AS korotettuna,
-                       0::NUMERIC                           AS korotus
-                INTO akilliset_rivi;
+    -- Hae rahavaraus id:t äkillisille hoitotöille ja vahingoille
+    SELECT id INTO akilliset_id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO vahingot_id FROM rahavaraus WHERE nimi LIKE '%Vahinkojen korvaukset%' ORDER BY id ASC LIMIT 1;
 
-                RAISE NOTICE 'akilliset_rivi: % ', akilliset_rivi;
-                RAISE NOTICE 'akilliset_rivi.summa: %', akilliset_rivi.summa;
-            END IF;
+    FOR akilliset_ja_vahingot_rivi IN SELECT 
+      summa             AS kht_summa, 
+      l.erapaiva        AS erapaiva, 
+      lk.rahavaraus_id
+      FROM kulu l
+        JOIN kulu_kohdistus lk ON lk.kulu = l.id
+        JOIN toimenpideinstanssi tpi 
+          ON lk.toimenpideinstanssi = tpi.id 
+         AND tpi.id IN (
+             lyh_tpi_id, 
+             sora_tpi_id, 
+             yllapito_tpi_id, 
+             paallyste_tpi_id, 
+             talvihoito_tpi_id, 
+             korvausinv_tpi_id
+          )
+      -- Uusi rahavaraus tietomalli, täsmätään rivit rahavaraus id:llä 
+      WHERE lk.rahavaraus_id IN (akilliset_id, vahingot_id)
+        AND lk.poistettu IS NOT TRUE
+        AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
 
-            IF akilliset_ja_vahingot_rivi.maksueratyyppi = 'muu' THEN
-                SELECT akilliset_ja_vahingot_rivi.kht_summa AS summa,
-                       akilliset_ja_vahingot_rivi.kht_summa AS korotettuna,
-                       0::NUMERIC                           AS korotus
-                INTO vahingot_rivi;
+    LOOP
+      -- Äkilliset rivi 
+      IF akilliset_ja_vahingot_rivi.rahavaraus_id = akilliset_id THEN
+        SELECT  akilliset_ja_vahingot_rivi.kht_summa AS summa,
+                akilliset_ja_vahingot_rivi.kht_summa AS korotettuna,
+                0::NUMERIC AS korotus
+        INTO akilliset_rivi;
 
-                RAISE NOTICE 'vahingot_rivi: % ', vahingot_rivi;
-                RAISE NOTICE 'vahingot_rivi.summa: %', vahingot_rivi.summa;
-            END IF;
+        RAISE NOTICE 'akilliset_rivi: % ', akilliset_rivi;
+        RAISE NOTICE 'akilliset_rivi.summa: %', akilliset_rivi.summa;
 
-            IF akilliset_ja_vahingot_rivi.erapaiva <= aikavali_loppupvm THEN
-                -- Äkilliset hoitotyöt Hoitokauden alusta
-                IF akilliset_ja_vahingot_rivi.maksueratyyppi = 'akillinen-hoitotyo' THEN
-                    akilliset_hoitokausi_yht := akilliset_hoitokausi_yht + COALESCE(akilliset_rivi.summa, 0.0);
-                    RAISE NOTICE 'akilliset_ja_vahingot_rivi.erapaiva <= aikavali_loppupvm && maksueratyyppi = akillinen-hoitotyo THEN: %', akilliset_hoitokausi_yht;
+      -- Vahingot rivi 
+      ELSIF akilliset_ja_vahingot_rivi.rahavaraus_id = vahingot_id THEN
+        SELECT  akilliset_ja_vahingot_rivi.kht_summa AS summa,
+                akilliset_ja_vahingot_rivi.kht_summa AS korotettuna,
+                0::NUMERIC AS korotus
+        INTO vahingot_rivi;
 
-                    IF akilliset_ja_vahingot_rivi.erapaiva >= aikavali_alkupvm AND
-                       akilliset_ja_vahingot_rivi.erapaiva <= aikavali_loppupvm THEN
-                        -- Laskutetaan nyt
-                        akilliset_val_aika_yht := akilliset_val_aika_yht + COALESCE(akilliset_rivi.summa, 0.0);
-                    END IF;
-                END IF;
+        RAISE NOTICE 'vahingot_rivi: % ', vahingot_rivi;
+        RAISE NOTICE 'vahingot_rivi.summa: %', vahingot_rivi.summa;
+      END IF;
 
-                -- Vahingonkorvaukset Hoitokauden alusta
-                IF akilliset_ja_vahingot_rivi.maksueratyyppi = 'muu' THEN
-                    vahingot_hoitokausi_yht := vahingot_hoitokausi_yht + COALESCE(vahingot_rivi.summa, 0.0);
-                    RAISE NOTICE 'akilliset_ja_vahingot_rivi.erapaiva <= aikavali_loppupvm && maksueratyyppi = muu THEN: %', vahingot_hoitokausi_yht;
 
-                    IF akilliset_ja_vahingot_rivi.erapaiva >= aikavali_alkupvm AND
-                       akilliset_ja_vahingot_rivi.erapaiva <= aikavali_loppupvm THEN
-                        -- Laskutetaan nyt
-                        vahingot_val_aika_yht := vahingot_val_aika_yht + COALESCE(vahingot_rivi.summa, 0.0);
-                    END IF;
-                END IF;
-            END IF;
-        END LOOP;
+      IF akilliset_ja_vahingot_rivi.erapaiva <= aikavali_loppupvm THEN
+        -- Äkilliset hoitotyöt Hoitokauden alusta
+        IF akilliset_ja_vahingot_rivi.rahavaraus_id = akilliset_id THEN
+
+          akilliset_hoitokausi_yht := akilliset_hoitokausi_yht + COALESCE(akilliset_rivi.summa, 0.0);
+          RAISE NOTICE 'akilliset_hoitokausi_yht: %', akilliset_hoitokausi_yht;
+
+          IF  akilliset_ja_vahingot_rivi.erapaiva >= aikavali_alkupvm AND
+              akilliset_ja_vahingot_rivi.erapaiva <= aikavali_loppupvm THEN
+              -- Laskutetaan nyt 
+              akilliset_val_aika_yht := akilliset_val_aika_yht + COALESCE(akilliset_rivi.summa, 0.0);
+          END IF;
+
+        -- Vahingonkorvaukset Hoitokauden alusta
+        ELSIF akilliset_ja_vahingot_rivi.rahavaraus_id = vahingot_id THEN
+
+          vahingot_hoitokausi_yht := vahingot_hoitokausi_yht + COALESCE(vahingot_rivi.summa, 0.0);
+          RAISE NOTICE 'vahingot_hoitokausi_yht: %', vahingot_hoitokausi_yht;
+
+          IF  akilliset_ja_vahingot_rivi.erapaiva >= aikavali_alkupvm AND
+              akilliset_ja_vahingot_rivi.erapaiva <= aikavali_loppupvm THEN
+              -- Laskutetaan nyt 
+              vahingot_val_aika_yht := vahingot_val_aika_yht + COALESCE(vahingot_rivi.summa, 0.0);
+          END IF;
+        END IF;
+      END IF;
+    END LOOP;
 
     -- Laskeskellaan tavoitehintaan kuuluvat yhteen
     -- 2022-10-01 jälkeen alihankitabonus ei ole enää MHU ylläpitoon kuuluvana, vaan omana rivinään, niin iffitellään
