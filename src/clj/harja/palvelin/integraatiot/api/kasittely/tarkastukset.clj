@@ -105,9 +105,8 @@
                  (when-not tr-osoite
                    (format "Annetulla sijainnilla ei voitu päätellä sijaintia tieverkolla (alku: %s, loppu %s)."
                            (:alkusijainti tarkastus) (:loppusijainti tarkastus)))))
-             (do
-               (log/info "TARKASTUS-DEBUG: Kaikki tarkastukset käsitelty")
-               tarkastukset)))
+             tarkastukset)
+           (log/info "TARKASTUS-DEBUG: Kaikki tarkastukset käsitelty"))
          (catch Throwable t
            (log/warn t "Virhe tarkastuksen lisäämisessä")
            (throw t)))))))
