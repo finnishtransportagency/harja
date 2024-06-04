@@ -53,6 +53,21 @@
                             [] mhu-tehtavaryhmaotsikot)]
     otsikot-ja-ryhmat))
 
+(defn tallenna-tehtavaryhmat [db kayttaja tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
+  (log/debug "tallenna-tehtavaryhmat :: tiedot:" (pr-str tiedot))
+  (doseq [tehtavaryhma (:muokatut-tehtavaryhmat tiedot)
+        :let [;; Tarkista, että tehtäväryhmä on olemassa
+              tehtavaryhadb (tehtavaryhmat-kyselyt/hae-tehtavaryhma db (:id (:tehtavaryhma_id tehtavaryhma)))
+              _ (if (nil? tehtavaryhadb)
+                  ;; Varoita käyttäjää tuntemattomasta tehtäväryhmästä
+                  (throw (SecurityException. (str "Tehtäväryhmää " (:tehtavaryhma_id tehtavaryhma) " ei ole olemassa.")))
+                  ;; Tehtäväryhmä löytyy, joten tallennetaan muutokset
+                  (tehtavaryhmat-kyselyt/paivita-tehtavaryhma! db tehtavaryhma))]]
+
+    ;; Palauta kaikki tehtäväryhmäotsikot ja niihin liittyvät tehtävät - uudistukset tulevat samalla
+    (hae-mhu-tehtavaryhmaotsikot db kayttaja tiedot)))
+
 
 (defrecord TehtavatHallinta []
   component/Lifecycle
@@ -60,8 +75,12 @@
     (julkaise-palvelu http-palvelin :hae-mhu-tehtavaryhmaotsikot
       (fn [kayttaja tiedot]
         (hae-mhu-tehtavaryhmaotsikot db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :hallinta-tallenna-tehtavaryhmat
+      (fn [kayttaja tiedot]
+        (tallenna-tehtavaryhmat db kayttaja tiedot)))
     this)
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
-      :hae-mhu-tehtavaryhmaotsikot)
+      :hae-mhu-tehtavaryhmaotsikot
+      :hallinta-tallenna-tehtavaryhmat)
     this))
