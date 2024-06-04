@@ -53,5 +53,5 @@
   MuokkaaTehtavaryhmatEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (js/console.log "MuokkaaTehtavaryhmatEpaonnistui :: error: " (pr-str vastaus))
+      (js/console.error "MuokkaaTehtavaryhmatEpaonnistui :: error: " (pr-str vastaus))
       (assoc app :tehtavaryhmaotsikot nil))))
