@@ -1,6 +1,6 @@
-ALTER TABLE tehtavaryhma
-    ADD column "voimassaolo_alkuvuosi" INTEGER,
-    ADD column "voimassaolo_loppuvuosi" INTEGER;
+ALTER TABLE organisaatio
+    DROP CONSTRAINT organisaatio_ytunnus_key;
 
-COMMENT ON COLUMN tehtavaryhma.voimassaolo_alkuvuosi IS E'Vuosi jolloin tehtäväryhmä on otettu käyttöön uusissa urakoissa. Tehtäväryhmää ei oteta käyttöön aiemmin alkaneissa urakoissa.';
-COMMENT ON COLUMN tehtavaryhma.voimassaolo_loppuvuosi IS E'Viimeinen vuosi jolloin tehtäväryhmä otetaan käyttöön uusissa urakoissa. Tehtäväryhmä on jatkossakin käytössä tähän mennessä alkaneissa urakoissa.';
+CREATE UNIQUE INDEX organisaatio_ytunnus_uniikki_idx
+    ON organisaatio (ytunnus)
+    WHERE harjassa_luotu = false;

@@ -25,6 +25,7 @@
             [harja.views.hallinta.tarjoushinnat :as tarjoushinnat]
             [harja.views.hallinta.rahavaraukset :as rahavaraukset]
             [harja.views.hallinta.rahavarausten-tehtavat :as rahavarausten-tehtavat]
+            [harja.views.hallinta.urakkahenkilot :as urakkahenkilot]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -98,7 +99,13 @@
     :rahavarausten-tehtavat
     (when (oikeudet/hallinta-rahavaraukset)
       ^{:key "rahavarausten-tehtavat"}
-      [rahavarausten-tehtavat/rahavarausten-tehtavat])]
+      [rahavarausten-tehtavat/rahavarausten-tehtavat])
+
+    "Urakoiden henkilöt"
+    :urakkahenkilot
+    (when (oikeudet/hallinta-urakkahenkilot)
+      ^{:key "urakkahenkilot"}
+      [urakkahenkilot/urakkahenkilot])]
 
    "Seuranta"
    :hallinta-seuranta
@@ -117,8 +124,7 @@
     :raporttitiedot
     (when (oikeudet/hallinta-indeksit)
       ^{:key "raporttien-suoritustieto"}
-      [raporttien-suoritustieto/raporttien-suoritustieto])
-    ]
+      [raporttien-suoritustieto/raporttien-suoritustieto])]
 
    "Järjestelmän hallinta"
    :hallinta-jarjestelma
