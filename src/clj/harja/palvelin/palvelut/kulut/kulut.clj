@@ -288,10 +288,12 @@
         _ (mapv
             (fn [kohdistus]
               (let [tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma db {:id (:tehtavaryhma kohdistus)}))
-                    _ (when (not (and
-                                   (>= urakan-alkuvuosi (:voimassaolo_alkuvuosi tehtavaryhma))
-                                   (<= urakan-loppuvuosi (:voimassaolo_loppuvuosi tehtavaryhma))
-                                   ))
+                    _ (when (and
+                              (:voimassaolo_alkuvuosi tehtavaryhma)
+                              (:voimassaolo_loppuvuosi tehtavaryhma)
+                              (not (and
+                                     (>= urakan-alkuvuosi (:voimassaolo_alkuvuosi tehtavaryhma))
+                                     (<= urakan-loppuvuosi (:voimassaolo_loppuvuosi tehtavaryhma)))))
                         (throw (IllegalArgumentException.
                                  (format "Kululle valittu tehtäväryhmä: %s, joka ei ole voimassa. Tehtäväryhmän voimassaolovuodet %s - %s"
                                    (:tehtavaryhma_id tehtavaryhma) (:voimassaolo_alkuvuosi tehtavaryhma) (:voimassaolo_loppuvuosi tehtavaryhma)))))]))
