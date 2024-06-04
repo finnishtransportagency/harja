@@ -1,0 +1,29 @@
+{
+  "toimenpiteet": [
+    {
+      "toimenpide": {
+        "id": 98765,
+        "nimi": "Talvihoito",
+        "toimenpidekoodi": 211120,
+        "luotu": "2024-01-01T12:00:00Z",
+        "muokattu": "2020-01-01T12:00:00Z",
+        "poistettu": false
+      },
+      "toimenpide": {
+        "id": 98766,
+        "nimi": "Liikenneympäristön hoito",
+        "toimenpidekoodi": 123400,
+        "luotu": "2020-01-01T12:00:00Z",
+        "poistettu": false
+      },
+      "toimenpide": {
+        "id": 98767,
+        "nimi": "Muinainen liikenneympäristön hoito",
+        "toimenpidekoodi": 123400,
+        "luotu": "2014-01-01T12:00:00Z",
+        "muokattu": "2020-01-01T12:00:00Z",
+        "poistettu": true
+        }
+    }
+  ]
+}

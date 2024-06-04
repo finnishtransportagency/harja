@@ -12,18 +12,12 @@
             "properties": {
               "id": { "type": "integer" },
               "nimi": { "type": "string" },
-              "koodi": { "type": "string" },
-              "emo": { "type": "integer" },
-              "taso": { "type": "integer" },
+              "toimenpidekoodi": { "type": "string" },
               "luotu": { "type": "string", "format": "date-time" },
               "muokattu": { "type": "string", "format": "date-time" },
-              "luoja": { "type": "integer" },
-              "muokkaaja": { "type": "integer" },
-              "poistettu": { "type": "boolean" },
-              "tuotenumero": { "type": "integer" },
-              "piilota": { "type": "boolean" }
+              "poistettu": { "type": "boolean" }
             },
-            "required": ["id", "nimi", "koodi", "emo", "taso", "luotu", "muokattu", "luoja", "muokkaaja", "poistettu", "tuotenumero", "piilota"]
+            "required": ["id", "nimi", "toimenpidekoodi", "poistettu"]
           }
         },
         "required": ["toimenpide"]

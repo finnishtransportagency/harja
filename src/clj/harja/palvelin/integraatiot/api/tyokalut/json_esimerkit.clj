@@ -87,3 +87,13 @@
 (def +tyomaapaivakirja-kirjaus-request+ "api/examples/tyomaapaivakirja-kirjaus-request.json")
 (def +tyomaapaivakirja-paivitys-request+ "api/examples/tyomaapaivakirja-paivitys-request.json")
 
+(def +analytiikka-tehtavat-haku-response+ "api/examples/analytiikka-tehtavat-haku-response.json")
+(def +analytiikka-tehtavaryhmat-haku-response+ "api/examples/analytiikka-tehtavaryhmat-haku-response.json")
+(def +analytiikka-rahavaraukset-haku-response+ "api/examples/analytiikka-rahavaraukset-haku-response.json")
+(def +analytiikka-rahavaraukset-haku-response+ "api/examples/analytiikka-rahavaraukset-haku-response.json")
+(def +analytiikka-suunnitellut-kustannukset-haku-response+ "api/examples/analytiikka-suunnitellut-kustannukset-haku-response.json")
+(def +analytiikka-toteutuneet-kulut-haku-response+ "api/examples/analytiikka-toteutuneet-kulut-haku-response.json")
+
+
+
+;; TODO: täydennä tähän , tarkista nimeämiset

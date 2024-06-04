@@ -18,9 +18,9 @@
                 "type": "string",
                 "description": "Tehtävän nimi."
               },
-              "toimenpide": {
+              "toimenpidekoodi": {
                 "type": "integer",
-                "description": "Sen toimenpiteen id Harjassa, johon tehtävä kuuluu."
+                "description": "Sen toimenpiteen toimenpidekoodi Harjassa, johon tehtävä kuuluu."
               },
               "tehtavaryhma": {
                 "type": "integer",
@@ -38,22 +38,32 @@
                     "description": "Jos alkuvuosi tai loppuvuosi puuttuu, tehtävän voimassaolon alkua tai loppua ei ole rajoitettu."
                   }
                 }
+              },
+              "luotu": {
+                "type": "string"
+              },
+              "muokattu": {
+                "type": "string"
+              },
+              "poistettu": {
+                "type": "boolean"
               }
             }
           },
           "required": [
             "id",
             "nimi",
-            "toimenpide"
+            "toimenpidekoodi",
+            "poistettu"
           ]
         },
         "required": [
-          "tehtavaryhma"
+          "tehtava"
         ]
       }
     }
   },
   "required": [
-    "tehtavaryhmat"
+    "tehtavat"
   ]
 }

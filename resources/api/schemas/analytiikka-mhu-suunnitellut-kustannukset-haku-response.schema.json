@@ -47,7 +47,8 @@
                         "vuosi",
                         "kuukausi"
                       ]
-                    },
+                    }
+                  },
                     "kustannus": {
                       "type": "object",
                       "properties": {
@@ -65,9 +66,7 @@
                           "description": "Ajankohta jolloin indeksikorjaus on hyväksytty. Jos tyhjä, ei indeksikorjausta kustannukselle ole vielä hyväksytty."
                         },
                         "required": [
-                          "indeksikorjattu-summa",
-                          "kuukausi"
-                        ]
+                          "summa"]
                       },
                       "kohdistus": {
                         "type": "object",
@@ -95,14 +94,13 @@
                       },
                       "versio": {
                         "type": "integer",
-                        "description": "Kustannuksen versio. Käytetään tulevaisuudessa kustannuksen muutoshistorian seuraamiseen."
+                        "description": "Kustannuksen versio. Käytetään ehkä tulevaisuudessa kustannuksen muutoshistorian seuraamiseen. Versio on nolla, kun versiointia ei ole käytössä."
                       },
                       "required": [
                         "id",
                         "ajankohta",
                         "kustannus",
-                        "kohdistus",
-                        "versio"
+                        "kohdistus"
                       ]
                     }
                   }
@@ -156,8 +154,7 @@
                               "description": "Ajankohta jolloin indeksikorjaus on hyväksytty. Jos tyhjä, ei indeksikorjausta kustannukselle ole vielä hyväksytty."
                             },
                             "required": [
-                              "indeksikorjattu-summa",
-                              "kuukausi"
+                              "summa"
                             ]
                           },
                           "kohdistus": {
@@ -186,15 +183,13 @@
                           },
                           "versio": {
                             "type": "integer",
-                            "description": "Kustannuksen versio. Käytetään tulevaisuudessa kustannuksen muutoshistorian seuraamiseen."
+                            "description": "Kustannuksen versio. Käytetään tulevaisuudessa kustannuksen muutoshistorian seuraamiseen. Versio on nolla, kun versiointia ei ole käytössä."
                           },
                           "required": [
                             "id",
                             "ajankohta",
                             "kustannus",
-                            "kohdistus",
-                            "versio"
-                          ]
+                            "kohdistus"]
                         }
                       }
                     }
@@ -260,11 +255,7 @@
                                 },
                                 "tuntipalkka": {
                                   "type": "number",
-                                  "description": "Toimdenkuvan tuntipalkka"
-                                },
-                                "osa-kuukaudesta": {
-                                  "type": "number",
-                                  "description": "Kerroin joka ilmaisee lasketaanko palkka koko kuukauden ajalta. Esim. 0.5 = puolet kuukaudesta. Yleensä 1."
+                                  "description": "Toimenkuvan tuntipalkka"
                                 },
                                 "summa": {
                                   "type": "number",
@@ -277,15 +268,12 @@
                                 "indeksikorjaus_vahvistettu": {
                                   "type": "string",
                                   "format": "date-time",
-                                  "description": "The confirmation date and time of the index correction."
+                                  "description": "Ajankohta jolloin indeksikorjaus on hyväksytty. Jos tyhjä, ei indeksikorjausta kustannukselle ole vielä hyväksytty."
                                 },
                                 "required": [
                                   "tunnit",
                                   "tuntipalkka",
-                                  "osa-kuukaudesta",
-                                  "summa",
-                                  "indeksikorjattu-summa"
-                                ]
+                                  "summa"]
                               },
                               "kohdistus": {
                                 "type": "object",
@@ -314,7 +302,14 @@
                               "versio": {
                                 "type": "integer",
                                 "description": "Kustannuksen versio. Käytetään tulevaisuudessa kustannuksen muutoshistorian seuraamiseen."
-                              }
+                              },
+                              "required": [
+                                "id",
+                                "toimenkuva",
+                                "toimenkuvan-ajankohta",
+                                "toimenkuvan-kustannus",
+                                "kohdistus"
+                              ]
                             }
                           }
                         }

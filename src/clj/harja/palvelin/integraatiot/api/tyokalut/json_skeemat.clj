@@ -146,3 +146,21 @@
 
 (def +tyomaapaivakirja-kirjaus-response+ "api/schemas/tyomaapaivakirja-kirjaus-response.schema.json")
 (def tyomaapaivakirja-kirjaus-response (tee-validaattori +tyomaapaivakirja-kirjaus-response+))
+
+(def +analytiikka-tehtavat-vastaus+ "api/schemas/analytiikka-tehtavat-haku-response.schema.json")
+(def analytiikka-tehtavat-vastaus (tee-validaattori +analytiikka-tehtavat-vastaus+))
+
+(def +analytiikka-tehtavaryhmat-vastaus+ "api/schemas/analytiikka-tehtavaryhmat-haku-response.schema.json")
+(def analytiikka-tehtavaryhmat-vastaus (tee-validaattori +analytiikka-tehtavaryhmat-vastaus+))
+
+(def +analytiikka-rahavaraukset-vastaus+ "api/schemas/analytiikka-rahavaraukset-haku-response.schema.json")
+(def analytiikka-rahavaraukset-vastaus (tee-validaattori +analytiikka-rahavaraukset-vastaus+))
+
+(def +analytiikka-toimenpiteet-vastaus+ "api/schemas/analytiikka-toimenpiteet-haku-response.schema.json")
+(def analytiikka-toimenpiteet-vastaus (tee-validaattori +analytiikka-toimenpiteet-vastaus+))
+
+(def +analytiikka-mhu-suunnitellut-kustannukset-vastaus+ "api/schemas/analytiikka-mhu-suunnitellut-kustannukset-haku-response.schema.json")
+(def analytiikka-mhu-suunnitellut-kustannukset-vastaus (tee-validaattori +analytiikka-mhu-suunnitellut-kustannukset-vastaus+))
+
+(def +analytiikka-mhu-toteutuneet-kulut-vastaus+ "api/schemas/analytiikka-mhu-toteutuneet-kulut-haku-response.schema.json")
+(def analytiikka-mhu-toteutuneet-kulut-vastaus (tee-validaattori +analytiikka-mhu-toteutuneet-kulut-vastaus+))

@@ -1,0 +1,45 @@
+{
+  "tehtavat": [
+    {
+      "tehtava": {
+        "id": 1,
+        "nimi": "Auraustehtävä",
+        "toimenpidekoodi": 211120,
+        "voimassaolo": {
+          "alkuvuosi": 2020,
+          "loppuvuosi": 2023
+        },
+        "luotu": "2012-01-01T12:00:00Z",
+        "muokattu": "2022-01-01T12:00:00Z",
+        "poistettu": false
+      },
+      "tehtava": {
+        "id": 2,
+        "nimi": "Talvisuolaustehtävä",
+        "toimenpidekoodi": 211120,
+        "luotu": "2012-01-01T12:00:00Z",
+        "poistettu": false
+      },
+      "tehtava": {
+        "id": 3,
+        "nimi": "Viheralueidenhoitotehtävä",
+        "toimenpidekoodi": 123400,
+        "voimassaolo": {
+          "alkuvuosi": 2020
+        },
+        "poistettu": false
+      },
+      "tehtava": {
+        "id": 4,
+        "nimi": "Tehtävä (poistettu kokonaan)",
+        "toimenpidekoodi": 123400,
+        "voimassaolo": {
+          "loppuvuosi": 2023
+        },
+        "luotu": "2012-01-01T12:00:00Z",
+        "muokattu": "2022-01-01T12:00:00Z",
+        "poistettu": true
+      }
+    }
+  ]
+}

@@ -12,18 +12,13 @@
             "properties": {
               "id": { "type": "integer", "description": "Harjan rahavaraus-id" },
               "nimi": { "type": "string", "description": "Rahavarauksen nimi" },
-              "urakat": {
-                "type": "array",
-                "items": { "type": "integer" },
-                "description": "Niiden urakoiden id:t Harjassa, joilla rahavaraus on käytössä."
-              },
               "tehtavat": {
                 "type": "array",
                 "items": { "type": "integer" },
                 "description": "Niiden tehtävien id:t Harjassa, joihin rahavaraus liittyy. Tehtävien kautta rahavaraus kytkeytyy myös tehtäväryhmiin ja toimenpiteisiin."
               }
             },
-            "required": ["id", "nimi", "urakat", "tehtavat"]
+            "required": ["id", "nimi", "tehtavat"]
           }
         },
         "required": ["rahavaraus"]
