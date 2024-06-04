@@ -1,6 +1,6 @@
 (ns harja.tiedot.hallinta.urakkahenkilot
   (:require [harja.ui.viesti :as viesti]
-            [reagent.core :refer [atom] :as reagent]
+            [reagent.core :refer [atom]]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]))
 
@@ -36,7 +36,7 @@
 
   HaeUrakkahenkilotEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (js/console.log "Virhe urakkahenkilöiden haussa!" vastaus)
+    (js/console.error "Virhe urakkahenkilöiden haussa!" vastaus)
     (viesti/nayta-toast! "Virhe urakkahenkilöiden haussa!" :varoitus)
     app)
 

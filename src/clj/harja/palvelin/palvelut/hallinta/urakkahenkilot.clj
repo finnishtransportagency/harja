@@ -63,7 +63,8 @@
       (excel-vienti/rekisteroi-excel-kasittelija! excel-vienti :hae-urakkahenkilot-exceliin
         (partial #'vie-urakkahenkilot-exceliin db)))
     this)
-  (stop [{:keys [http-palvelin] :as this}]
+  (stop [{:keys [http-palvelin excel-vienti] :as this}]
     (poista-palvelut http-palvelin
-      :hae-urakkahenkilot)
+      :hae-urakkahenkilot
+      (when excel-vienti :hae-urakkahenkilot-exceliin))
     this))

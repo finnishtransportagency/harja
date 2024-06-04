@@ -2,17 +2,11 @@
   (:require [harja.asiakas.kommunikaatio :as k]
             [harja.transit :as transit]
             [reagent.core :as r]
-            [clojure.string :as str]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
-            [harja.ui.napit :as napit]
-            [harja.ui.yleiset :as yleiset]
             [tuck.core :refer [tuck]]
-            [harja.tiedot.hallinta.yhteiset :as yhteiset]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.valinnat :as valinnat]
-            [harja.ui.komponentti :as komp]
-            [harja.ui.grid :as grid]
             [harja.tiedot.hallinta.urakkahenkilot :as tiedot])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
