@@ -5,6 +5,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.tehtavaryhmat :as tehtavaryhmat-kyselyt]
             [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit-kyselyt]
             [clojure.string :as str]))
 
 (def db-tehtavat->tehtavat
@@ -53,6 +54,11 @@
                             [] mhu-tehtavaryhmaotsikot)]
     otsikot-ja-ryhmat))
 
+(defn hae-suoritettavat-tehtavat [db kayttaja tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
+  (log/debug "hae-suoritettavat-tehtavat :: tiedot:" (pr-str tiedot))
+  (toimenpidekoodit-kyselyt/hae-suoritettavat-tehtavat db))
+
 (defn tallenna-tehtavaryhmat [db kayttaja tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
   (log/debug "tallenna-tehtavaryhmat :: tiedot:" (pr-str tiedot))
@@ -75,6 +81,9 @@
     (julkaise-palvelu http-palvelin :hae-mhu-tehtavaryhmaotsikot
       (fn [kayttaja tiedot]
         (hae-mhu-tehtavaryhmaotsikot db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :hae-suoritettavat-tehtavat
+      (fn [kayttaja tiedot]
+        (hae-suoritettavat-tehtavat db kayttaja tiedot)))
     (julkaise-palvelu http-palvelin :hallinta-tallenna-tehtavaryhmat
       (fn [kayttaja tiedot]
         (tallenna-tehtavaryhmat db kayttaja tiedot)))
@@ -82,5 +91,6 @@
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
       :hae-mhu-tehtavaryhmaotsikot
+      :hae-suoritettavat-tehtavat
       :hallinta-tallenna-tehtavaryhmat)
     this))

@@ -73,9 +73,12 @@
 (defn listaus* [e! app]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-    (komp/sisaan #(e! (tiedot/->HaeTehtavaryhmaotsikot)))
+    (komp/sisaan #(do
+                    (e! (tiedot/->HaeTehtavaryhmaotsikot))
+                    (e! (tiedot/->HaeSuoritettavatTehtavat))))
     (fn [e! app]
-      (let [tehtavaryhmaotsikot (:tehtavaryhmaotsikot app)]
+      (let [tehtavaryhmaotsikot (:tehtavaryhmaotsikot app)
+            suoritettavat-tehtavat (:suoritettavat-tehtavat app)]
         [:div
          ;[debug/debug app]
          [:div "Listataan tehtäväryhmäotsikot ja niille kuuluvat tehtäväryhmät ja niiden (MHU) tehtävät."]
@@ -94,7 +97,25 @@
             :leveys 3
             :otsikko "Otsikko"
             :tyyppi :string}]
-          tehtavaryhmaotsikot]]))))
+          tehtavaryhmaotsikot]
+
+         [:p "Suoritettävat tehtävät ovat tehtäviä, joille urakoitsijat lähettävät rajapintojen kautta ja koska niiden löytäminen ylemmästä listasta on vaikeaa, niin
+         ne on nostettu tähän helpommin nähtävään muotoon."]
+         [grid/grid
+          ;; Opts
+          {:otsikko "Suoritettavat tehtävät"
+           :tunniste :id
+           :jarjesta :id}
+          ;; Skeema
+          [{:nimi :id :leveys 0.5 :otsikko "ID" :kokonaisluku? true :tyyppi :positiivinen-numero :muokattava? (constantly false)}
+           {:nimi :nimi :leveys 2 :otsikko "Nimi" :tyyppi :string :muokattava? (constantly false)}
+           {:nimi :suoritettavatehtava :otsikko "Suoritettava tehtavä" :leveys 2}
+           {:nimi :voimassaolo_alkuvuosi :leveys 1 :otsikko "Voim. alkuvuosi" :kokonaisluku? true :tyyppi :positiivinen-numero}
+           {:nimi :voimassaolo_loppuvuosi :leveys 1 :kokonaisluku? true :otsikko "Voim. loppuvuosi" :tyyppi :positiivinen-numero}
+           {:nimi :yksiloiva_tunniste :leveys 1 :otsikko "Yksilöivä tunniste" :tyyppi :string :muokattava? (constantly false)}
+           {:nimi :poistettu :leveys 1 :otsikko "Poistettu" :tyyppi :string :muokattava? (constantly false)}]
+          ;; Data
+          suoritettavat-tehtavat]]))))
 
 
 (defn tehtavat []
