@@ -42,7 +42,8 @@
                               #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
                               toimenpideinstanssit)
     "Sorateiden hoito ja ylläpito" (filter
-                                     #(str/includes? (str/lower-case (:tpi_nimi %)) "soratie")
+                                     #(or (str/includes? (str/lower-case (:tpi_nimi %)) "soratie")
+                                        (str/includes? (str/lower-case (:tpi_nimi %)) "sorateiden"))
                                      toimenpideinstanssit)
     "Liikenneympäristön hoito" (filter
                                      #(str/includes? (str/lower-case (:tpi_nimi %)) "liikenne")
