@@ -126,7 +126,8 @@
                               kayttaja-paallystys portti
                               (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json")))
             _ (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus aikataulu-paallystys." ehdon-timeout)
-            integraatioviestit (odota-integraatiotapahtumaa ehdon-timeout integraatioviestien-lkm-alussa)]
+            ;; integraatiolokilla pitäisi olla yksi sposti ja yksi apikutsu
+            integraatioviestit (odota-integraatiotapahtumaa ehdon-timeout (+ 1 integraatioviestien-lkm-alussa))]
         (is (= 200 (:status @vastaus)))
 
         ;; Leppäjärvi oli jo merkitty valmiiksi tiemerkintään, mutta sitä päivitettiin -> pitäisi lähteä maili
@@ -158,7 +159,8 @@
                               kayttaja-paallystys portti
                               (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json")))
             _ (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus aikataulu-paallystys." ehdon-timeout)
-            integraatioviestit (odota-integraatiotapahtumaa ehdon-timeout integraatioviestien-lkm-alussa)]
+            ;; integraatiolokilla pitäisi olla yksi sposti ja yksi apikutsu
+            integraatioviestit (odota-integraatiotapahtumaa ehdon-timeout (+ 1 integraatioviestien-lkm-alussa))]
         (is (= 200 (:status @vastaus)))
 
         ;; Integraatioviesteihin tulee merkintä, että aikataulu on päivitetty
@@ -182,7 +184,8 @@
                               kayttaja-tiemerkinta portti
                               (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json")))
             _ (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus aikataulu-tiemerkintään." ehdon-timeout)
-            integraatioviestit (odota-integraatiotapahtumaa ehdon-timeout integraatioviestien-lkm-alussa)]
+            ;; Pitäisi löytyä 3 integraatiotapahtumaa, 2 spostia ja 1 api-kutsu.
+            integraatioviestit (odota-integraatiotapahtumaa ehdon-timeout (+ 2 integraatioviestien-lkm-alussa))]
         (is (= 200 (:status @vastaus)))
 
         ;; Integraatioviesteihin tulee merkintä, että aikataulu on päivitetty

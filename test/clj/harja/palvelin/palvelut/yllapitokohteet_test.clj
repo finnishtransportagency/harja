@@ -1004,7 +1004,6 @@
                       :aikataulu-tiemerkinta-lisatieto "Tiemerkinnän lisätieto"}
                      {:id nakkilan-ramppi-id
                       :aikataulu-tiemerkinta-alku (pvm/->pvm "20.5.2017")}]
-            integraatiotapahtumien-lkm-alussa (count (hae-ulos-lahtevat-integraatiotapahtumat))
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-yllapitokohteiden-aikataulu
                                     +kayttaja-jvh+
@@ -1018,7 +1017,7 @@
                                                      " AND poistettu IS NOT TRUE
                                                      AND vuodet @> ARRAY [" vuosi "] :: INT [];")))
             vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")
-            integraatioviestit (odota-integraatiotapahtumaa ehdon-timeout integraatiotapahtumien-lkm-alussa)]
+            integraatioviestit (hae-ulos-lahtevat-integraatiotapahtumat)]
         ;; Kohteiden määrä ei muuttunut
         (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
         ;; Nimi ja kohdenumero eivät muuttuneet, koska näitä ei saa muokata tiemerkintäurakassa
@@ -1133,7 +1132,6 @@
             mailitietojen-maara-ennen-lisaysta (ffirst (q
                                                          (str "SELECT count(*) FROM yllapitokohteen_sahkopostitiedot
                                          WHERE yllapitokohde_id = " leppajarven-ramppi-id ";")))
-            integraatiotapahtumien-lkm-alussa (count (hae-ulos-lahtevat-integraatiotapahtumat))
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-yllapitokohteiden-aikataulu
                                     +kayttaja-jvh+
@@ -1152,7 +1150,7 @@
                                                   :urakka_id 5}
                                                  {:email "erkki.esimerkki@example.com"
                                                   :urakka_id 12})
-            integraatio-sahkopostit (odota-integraatiotapahtumaa ehdon-timeout integraatiotapahtumien-lkm-alussa)]
+            integraatio-sahkopostit (hae-ulos-lahtevat-integraatiotapahtumat)]
         ;; Muokatut kentät päivittyivät
         (is (= leppajarvi-aikataulu-tiemerkinta-loppu (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))
         (is (= leppajarvi-aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
