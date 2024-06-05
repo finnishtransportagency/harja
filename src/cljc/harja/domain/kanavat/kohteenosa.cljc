@@ -18,6 +18,7 @@
 (define-tables
   ["kohteenosa_tyyppi" ::kohteenosa-tyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["liikennetapahtuma_palvelumuoto" ::osan-palvelumuoto (specql.transform/transform (specql.transform/to-keyword))]
+  ["liikennetapahtuma_toimenpidetyyppi" ::osan-toimenpide (specql.transform/transform (specql.transform/to-keyword))]
   ["kan_kohteenosa" ::kohteenosa
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
@@ -32,6 +33,7 @@
     ::tyyppi
     ::nimi
     ::oletuspalvelumuoto
+    ::oletustoimenpide
     ::sijainti})
 
 (def kohteen-tiedot
@@ -72,4 +74,5 @@
                                                           ::sijainti]
                                                     :opt [::kohde
                                                           ::nimi
-                                                          ::oletuspalvelumuoto])))
+                                                          ::oletuspalvelumuoto
+                                                          ::oletustoimenpide])))
