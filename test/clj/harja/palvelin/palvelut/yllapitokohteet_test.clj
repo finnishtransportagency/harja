@@ -38,6 +38,8 @@
   (:import (java.util UUID))
   (:use org.httpkit.fake))
 
+(def ehdon-timeout 2000)
+
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
@@ -1002,6 +1004,7 @@
                       :aikataulu-tiemerkinta-lisatieto "Tiemerkinnän lisätieto"}
                      {:id nakkilan-ramppi-id
                       :aikataulu-tiemerkinta-alku (pvm/->pvm "20.5.2017")}]
+            integraatiotapahtumien-lkm-alussa (count (hae-ulos-lahtevat-integraatiotapahtumat))
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-yllapitokohteiden-aikataulu
                                     +kayttaja-jvh+
@@ -1015,7 +1018,7 @@
                                                      " AND poistettu IS NOT TRUE
                                                      AND vuodet @> ARRAY [" vuosi "] :: INT [];")))
             vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")
-            integraatioviestit (hae-ulos-lahtevat-integraatiotapahtumat)]
+            integraatioviestit (odota-integraatiotapahtumaa ehdon-timeout integraatiotapahtumien-lkm-alussa)]
         ;; Kohteiden määrä ei muuttunut
         (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
         ;; Nimi ja kohdenumero eivät muuttuneet, koska näitä ei saa muokata tiemerkintäurakassa
@@ -1060,6 +1063,7 @@
                                          :saate saate}
                       :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}]
+            integraatiotapahtumien-lkm-alussa (count (hae-ulos-lahtevat-integraatiotapahtumat))
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-yllapitokohteiden-aikataulu
                                     +kayttaja-jvh+
@@ -1073,7 +1077,7 @@
                                                      " AND poistettu IS NOT TRUE
                                                      AND vuodet @> ARRAY [" vuosi "] :: INT [];")))
             vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")
-            integraatio-sahkopostit (hae-ulos-lahtevat-integraatiotapahtumat)]
+            integraatio-sahkopostit (odota-integraatiotapahtumaa ehdon-timeout integraatiotapahtumien-lkm-alussa)]
         ;; Kohteiden määrä ei muuttunut
         (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
         ;; Muokatut kentät päivittyivät
@@ -1129,6 +1133,7 @@
             mailitietojen-maara-ennen-lisaysta (ffirst (q
                                                          (str "SELECT count(*) FROM yllapitokohteen_sahkopostitiedot
                                          WHERE yllapitokohde_id = " leppajarven-ramppi-id ";")))
+            integraatiotapahtumien-lkm-alussa (count (hae-ulos-lahtevat-integraatiotapahtumat))
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-yllapitokohteiden-aikataulu
                                     +kayttaja-jvh+
@@ -1147,7 +1152,7 @@
                                                   :urakka_id 5}
                                                  {:email "erkki.esimerkki@example.com"
                                                   :urakka_id 12})
-            integraatio-sahkopostit (hae-ulos-lahtevat-integraatiotapahtumat)]
+            integraatio-sahkopostit (odota-integraatiotapahtumaa ehdon-timeout integraatiotapahtumien-lkm-alussa)]
         ;; Muokatut kentät päivittyivät
         (is (= leppajarvi-aikataulu-tiemerkinta-loppu (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))
         (is (= leppajarvi-aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
@@ -1217,6 +1222,7 @@
                                :sopimus-id sopimus-id
                                :vuosi vuosi
                                :kohteet kohteet})
+            _ (Thread/sleep 2000) ;; Odotetaan hetki, jotta voidaan olla varmoja ettei integraatiotapahtumaa löydy.
             integraatioviestit (hae-ulos-lahtevat-integraatiotapahtumat)]
         (is (= (count integraatioviestit) 0) "Maileja ei lähetetä.")))))
 
