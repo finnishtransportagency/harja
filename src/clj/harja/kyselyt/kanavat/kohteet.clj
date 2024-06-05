@@ -260,4 +260,18 @@
       (doseq [osa osat]
         (lisaa-kohteelle-osa! db user osa kohde)))))
 
+(defn hae-kohdeosan-urakka [db kohdeosa-id]
+  (::kohde/urakka-id
+    (specql/fetch db
+      ::kohde/kohde<->urakka
+      #{::kohde/kohde-id
+        ::kohde/urakka-id
+        [::kohde/linkin-kohde #{::kohde/id
+                                [::kohde/kohteenosat #{::osa/id}]}]}
+      {::kohde/linkin-kohde {::kohde/kohteenosat {::osa/id kohdeosa-id}}})))
 
+(defn paivita-kohdeosan-oletustoimenpide! [db {::osa/keys [id oletustoimenpide]}]
+  (specql/update! db
+    ::osa/kohteenosa
+    {::osa/oletustoimenpide oletustoimenpide}
+    {::osa/id id}))

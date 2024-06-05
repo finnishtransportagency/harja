@@ -68,6 +68,11 @@
   (q/paivita-jarjestys! db)
   (hae-kohdekokonaisuudet-ja-kohteet db user))
 
+(defn aseta-kohdeosan-oletustoimenpide! [db user {::kohteenosa/keys [id] :as tiedot}]
+  (let [urakka-id (q/hae-kohdeosan-urakka db (::kohteenosa/id id))]
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kanavat-liikenne user urakka-id)
+    (q/paivita-kohdeosan-oletustoimenpide! db tiedot)))
+
 (defrecord Kohteet []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -122,6 +127,11 @@
       (fn [user]
         (hae-kohteenosat db user))
       {:vastaus-spec ::kohteenosa/hae-kohteenosat-vastaus})
+    (julkaise-palvelu
+      http
+      :aseta-kohdeosan-oletustoimenpide
+      (fn [user tiedot]
+        (aseta-kohdeosan-oletustoimenpide! db user tiedot)))
 
     this)
 
