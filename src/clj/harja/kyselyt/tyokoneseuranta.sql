@@ -4,7 +4,12 @@ INSERT INTO tyokonehavainto
        (jarjestelma, organisaatio, viestitunniste, lahetysaika,
         tyokoneid, tyokonetunnus, tyokonetyyppi, sijainti, urakkaid, tehtavat, suunta)
 VALUES (:jarjestelma,
-        (SELECT id FROM organisaatio WHERE ytunnus=:ytunnus),
+        (SELECT id FROM organisaatio WHERE ytunnus=:ytunnus
+                                     -- Useammalla organiaatiollla voi olla sama y-tunnus, käytetään tällön
+                                     -- ensisijaisesti sitä, joka ei ole harjassa luotu, joita voi olla vain yksi.
+                                     -- Muut on saman organisation eri järjestelmien rajapintojen käyttöä varten.
+                                     ORDER BY harjassa_luotu
+                                     LIMIT 1),
         :viestitunniste, CAST(:lahetysaika AS TIMESTAMP), :tyokoneid, :tyokonetunnus, :tyokonetyyppi,
 	ST_MakePoint(:xkoordinaatti, :ykoordinaatti)::GEOMETRY,
 	:urakkaid, :tehtavat::suoritettavatehtava[], :suunta);
