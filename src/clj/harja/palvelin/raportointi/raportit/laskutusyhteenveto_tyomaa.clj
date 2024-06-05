@@ -48,7 +48,7 @@
                               (= "Rahavaraukset" otsikko)
                               [(taulukko-rivi data kyseessa-kk-vali? "Äkilliset hoitotyöt" :akilliset_hoitokausi_yht :akilliset_val_aika_yht false)
                                (taulukko-rivi data kyseessa-kk-vali? "Vahinkojen korjaukset" :vahingot_hoitokausi_yht :vahingot_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään" :tilaajan_rahavaraus_hoitokausi_yht :tilaajan_rahavaraus_val_aika_yht false)]
+                               (taulukko-rivi data kyseessa-kk-vali? "Rahavaraus lupaus 1 / Kannustinjärjestelmä" :kannustin_hoitokausi_yht :kannustin_val_aika_yht false)]
 
                               (= "Lisätyöt" otsikko)
                               [(taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (talvihoito)" :lisatyo_talvihoito_hoitokausi_yht :lisatyo_talvihoito_val_aika_yht false)
