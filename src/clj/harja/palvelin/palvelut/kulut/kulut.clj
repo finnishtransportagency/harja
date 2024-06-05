@@ -285,19 +285,17 @@
         urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
         urakan-loppuvuosi (-> urakan-tiedot :loppupvm pvm/vuosi)
         kohdistukset-joilla-tehtavaryhma (filter #(not (nil? (:tehtavaryhma %))) kohdistukset)
-        _ (mapv
-            (fn [kohdistus]
-              (let [tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma db {:id (:tehtavaryhma kohdistus)}))
-                    _ (when (and
-                              (:voimassaolo_alkuvuosi tehtavaryhma)
-                              (:voimassaolo_loppuvuosi tehtavaryhma)
-                              (not (and
-                                     (>= urakan-alkuvuosi (:voimassaolo_alkuvuosi tehtavaryhma))
-                                     (<= urakan-loppuvuosi (:voimassaolo_loppuvuosi tehtavaryhma)))))
-                        (throw (IllegalArgumentException.
-                                 (format "Kululle valittu tehtäväryhmä: %s, joka ei ole voimassa. Tehtäväryhmän voimassaolovuodet %s - %s"
-                                   (:tehtavaryhma_id tehtavaryhma) (:voimassaolo_alkuvuosi tehtavaryhma) (:voimassaolo_loppuvuosi tehtavaryhma)))))]))
-            kohdistukset-joilla-tehtavaryhma)]))
+        _ (doseq [kohdistus kohdistukset-joilla-tehtavaryhma]
+            (let [tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma db {:id (:tehtavaryhma kohdistus)}))
+                  _ (when (and
+                            (:voimassaolo_alkuvuosi tehtavaryhma)
+                            (:voimassaolo_loppuvuosi tehtavaryhma)
+                            (not (and
+                                   (>= urakan-alkuvuosi (:voimassaolo_alkuvuosi tehtavaryhma))
+                                   (<= urakan-loppuvuosi (:voimassaolo_loppuvuosi tehtavaryhma)))))
+                      (throw (IllegalArgumentException.
+                               (format "Kululle valittu tehtäväryhmä: %s, joka ei ole voimassa. Tehtäväryhmän voimassaolovuodet %s - %s"
+                                 (:tehtavaryhma_id tehtavaryhma) (:voimassaolo_alkuvuosi tehtavaryhma) (:voimassaolo_loppuvuosi tehtavaryhma)))))]))]))
 
 (defn luo-tai-paivita-kulukohdistukset
   "Tallentaa uuden kulun ja siihen liittyvät kohdistustiedot.
@@ -306,7 +304,7 @@
   [db user urakka-id {:keys [erapaiva kokonaissumma urakka tyyppi laskun-numero
                              lisatieto koontilaskun-kuukausi id kohdistukset liitteet] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
-  (log/info "luo-tai-paivita-kulukohdistukset :: tiedot:" (pr-str tiedot))
+  (log/debug "luo-tai-paivita-kulukohdistukset :: tiedot:" (pr-str tiedot))
   (validoi-kulu db tiedot urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [yhteiset-tiedot {:erapaiva (konv/sql-date erapaiva)
