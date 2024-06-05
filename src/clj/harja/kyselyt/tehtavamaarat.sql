@@ -123,7 +123,7 @@ FROM tehtavaryhma tr
        JOIN toimenpideinstanssi tpi on tpi.toimenpide = tp.id and tpi.urakka = :urakka
  WHERE tr.nimi not like ('%Lisätyöt%')
    AND (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= :urakka-voimassaolo-alkuvuosi::INTEGER)
-   AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= :urakka-voimassaolo-loppuvuosi::INTEGER)
+   AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= :urakka-voimassaolo-alkuvuosi::INTEGER)
  order by tr.jarjestys;
 
 -- name: hae-sopimuksen-tehtavamaarat-urakalle

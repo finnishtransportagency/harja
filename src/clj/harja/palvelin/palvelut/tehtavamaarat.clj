@@ -34,12 +34,10 @@
         _ (when (nil? urakan-tiedot)
             (throw (IllegalArgumentException. (format "Urakkaa %s ei ole olemassa." urakka-id))))
         alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
-        loppuvuosi (-> urakan-tiedot :loppupvm pvm/vuosi)
         tehtavaryhmat-ja-toimenpiteet (into []
                                         (tehtavamaarat-kyselyt/tehtavaryhmat-ja-toimenpiteet-urakalle db
                                           {:urakka urakka-id
-                                           :urakka-voimassaolo-alkuvuosi alkuvuosi
-                                           :urakka-voimassaolo-loppuvuosi loppuvuosi}))]
+                                           :urakka-voimassaolo-alkuvuosi alkuvuosi}))]
     tehtavaryhmat-ja-toimenpiteet))
 
 (defn- paivita-tarvittaessa [idt polku arvo]
