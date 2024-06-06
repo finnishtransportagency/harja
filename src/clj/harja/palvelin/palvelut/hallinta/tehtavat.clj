@@ -5,6 +5,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.tehtavaryhmat :as tehtavaryhmat-kyselyt]
             [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit-kyselyt]
             [clojure.string :as str]))
 
 (def db-tehtavat->tehtavat
@@ -53,6 +54,26 @@
                             [] mhu-tehtavaryhmaotsikot)]
     otsikot-ja-ryhmat))
 
+(defn hae-suoritettavat-tehtavat [db kayttaja tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
+  (log/debug "hae-suoritettavat-tehtavat :: tiedot:" (pr-str tiedot))
+  (toimenpidekoodit-kyselyt/hae-suoritettavat-tehtavat db))
+
+(defn tallenna-tehtavaryhmat [db kayttaja tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
+  (log/debug "tallenna-tehtavaryhmat :: tiedot:" (pr-str tiedot))
+  (doseq [tehtavaryhma (:muokatut-tehtavaryhmat tiedot)
+        :let [;; Tarkista, että tehtäväryhmä on olemassa
+              tehtavaryhadb (tehtavaryhmat-kyselyt/hae-tehtavaryhma db (:id (:tehtavaryhma_id tehtavaryhma)))
+              _ (if (nil? tehtavaryhadb)
+                  ;; Varoita käyttäjää tuntemattomasta tehtäväryhmästä
+                  (throw (SecurityException. (str "Tehtäväryhmää " (:tehtavaryhma_id tehtavaryhma) " ei ole olemassa.")))
+                  ;; Tehtäväryhmä löytyy, joten tallennetaan muutokset
+                  (tehtavaryhmat-kyselyt/paivita-tehtavaryhma! db tehtavaryhma))]]
+
+    ;; Palauta kaikki tehtäväryhmäotsikot ja niihin liittyvät tehtävät - uudistukset tulevat samalla
+    (hae-mhu-tehtavaryhmaotsikot db kayttaja tiedot)))
+
 
 (defrecord TehtavatHallinta []
   component/Lifecycle
@@ -60,8 +81,16 @@
     (julkaise-palvelu http-palvelin :hae-mhu-tehtavaryhmaotsikot
       (fn [kayttaja tiedot]
         (hae-mhu-tehtavaryhmaotsikot db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :hae-suoritettavat-tehtavat
+      (fn [kayttaja tiedot]
+        (hae-suoritettavat-tehtavat db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :hallinta-tallenna-tehtavaryhmat
+      (fn [kayttaja tiedot]
+        (tallenna-tehtavaryhmat db kayttaja tiedot)))
     this)
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
-      :hae-mhu-tehtavaryhmaotsikot)
+      :hae-mhu-tehtavaryhmaotsikot
+      :hae-suoritettavat-tehtavat
+      :hallinta-tallenna-tehtavaryhmat)
     this))

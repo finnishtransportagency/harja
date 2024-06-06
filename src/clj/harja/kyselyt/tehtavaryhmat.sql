@@ -3,11 +3,34 @@ SELECT tro.id, tro.otsikko
   FROM tehtavaryhmaotsikko tro
  ORDER BY tro.otsikko ASC;
 
+-- name: hae-tehtavaryhma
+SELECT tro.id        AS tehtavaryhmaotsikko_id,
+       tro.otsikko,
+       tr.id         AS tehtavaryhma_id,
+       tr.nimi,
+       tr.voimassaolo_alkuvuosi,
+       tr.voimassaolo_loppuvuosi,
+       tr.jarjestys,
+       tr.nakyva,
+       tr.versio,
+       tr.yksiloiva_tunniste,
+       JSONB_AGG(ROW_TO_JSON(ROW (t.id, t.nimi, t.yksikko, t.jarjestys, t.api_seuranta, t.suoritettavatehtava,
+           t.piilota, t.api_tunnus, t."mhu-tehtava?", t.yksiloiva_tunniste,
+           t.voimassaolo_alkuvuosi, t.voimassaolo_loppuvuosi, t.kasin_lisattava_maara,
+           t."raportoi-tehtava?", t.materiaaliluokka_id, t.materiaalikoodi_id, t.aluetieto))) AS tehtavat
+  FROM tehtavaryhmaotsikko tro
+           JOIN tehtavaryhma tr ON tro.id = tr.tehtavaryhmaotsikko_id AND tr.id = :id
+           LEFT JOIN tehtava t ON t.tehtavaryhma = tr.id AND "mhu-tehtava?" = TRUE
+  GROUP BY tro.id, tr.id, tro.otsikko;
+
+
 -- name: hae-mhu-tehtavaryhmaotsikot-tehtavaryhmat-ja-tehtavat
 SELECT tro.id        AS tehtavaryhmaotsikko_id,
        tro.otsikko,
        tr.id         AS tehtavaryhma_id,
        tr.nimi,
+       tr.voimassaolo_alkuvuosi,
+       tr.voimassaolo_loppuvuosi,
        tr.jarjestys,
        tr.nakyva,
        tr.versio,
@@ -21,6 +44,13 @@ SELECT tro.id        AS tehtavaryhmaotsikko_id,
            LEFT JOIN tehtava t ON t.tehtavaryhma = tr.id AND "mhu-tehtava?" = TRUE
  GROUP BY tro.id, tr.id, tro.otsikko
  ORDER BY tro.otsikko ASC;
+
+-- name: paivita-tehtavaryhma!
+-- Tällä hetkellä voi päivittää vain voimassaoloa. Nimen ja muiden muutokset mahdollistetaan, jos niitä joskus tarvitaan.
+UPDATE tehtavaryhma
+   SET voimassaolo_alkuvuosi  = :voimassaolo_alkuvuosi,
+       voimassaolo_loppuvuosi = :voimassaolo_loppuvuosi
+ WHERE id = :tehtavaryhma_id;
 
 -- name: tehtavat-tehtavaryhmaotsikoittain
 -- Listaa kaikki tehtävät ja niille suunnitellut ja toteutuneet määrät tehtäväryhmäotsikon perusteella ryhmiteltynä.
@@ -36,6 +66,9 @@ SELECT tk.id                 AS id,
   FROM tehtava tk
            JOIN urakka u ON :urakka = u.id
            JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
+                                            AND (tr_alataso.voimassaolo_alkuvuosi IS NULL OR tr_alataso.voimassaolo_alkuvuosi <= DATE_PART('year', u.alkupvm)::INTEGER)
+                                            AND (tr_alataso.voimassaolo_loppuvuosi IS NULL OR tr_alataso.voimassaolo_loppuvuosi >= DATE_PART('year', u.alkupvm)::INTEGER)
+
            JOIN tehtavaryhmaotsikko o ON tr_alataso.tehtavaryhmaotsikko_id = o.id
                                          AND (:otsikko::TEXT IS NULL OR o.otsikko = :otsikko)
            LEFT JOIN rahavaraus_tehtava rt on rt.tehtava_id = tk.id

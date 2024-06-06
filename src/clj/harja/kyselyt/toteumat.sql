@@ -466,6 +466,7 @@ SELECT tk.id                    AS toimenpidekoodi_id,
                THEN 'lisatyo'
            ELSE 'kokonaishintainen' END AS tyyppi,
        r.nimi                   AS rahavaraus
+
 FROM tehtava tk
      -- Alataso on linkitetty toimenpidekoodiin
      JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma

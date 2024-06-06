@@ -1,6 +1,7 @@
-(ns harja.views.hallinta.tehtava-nakyma
+(ns harja.views.hallinta.urakkatiedot.tehtava-nakyma
   "Tuodaan tehtävät, tehtäväryhmät ja tehtäväryhmien otsikot näkyväksi."
   (:require [tuck.core :refer [tuck send-value! send-async!]]
+            [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.komponentti :as komp]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
@@ -33,29 +34,35 @@
       :tunniste :tehtavaryhma_id
       :jarjesta :nimi
       :reunaviiva? true
+      :piilota-toiminnot? true
+      :tallenna-vain-muokatut true
+      :voi-poistaa? (constantly false)
+      :voi-lisata? false
+      :tallenna (fn [muokatut-rivit _arvo]
+                  ;; Tallenna funktion pitää aina palauttaa kanava, passaa muokkaa funktiolle nil
+                  (tuck-apurit/e-kanavalla! e! tiedot/->MuokkaaTehtavaryhmat muokatut-rivit))
       ;; Tehtävät listataan tehtäväryhmittäin tässä määriteltävään avautuvaan toiseen taulukkoon
       :vetolaatikot (into {}
                       (map (juxt :tehtavaryhma_id
                              (fn [rivi] [tehtavat-vetolaatikko e! app rivi])))
                       tehtavaryhmat)}
 
-     [{:tyyppi :vetolaatikon-tila :leveys 0.5}
-      {:nimi :nimi
-       :leveys 2
-       :otsikko "Nimi"
-       :tyyppi :string}
-      {:nimi :yksiloiva_tunniste
-       :leveys 1
-       :otsikko "Yksilöivä tunniste"
-       :tyyppi :string}]
+     [{:tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
+      {:nimi :nimi :leveys 2 :otsikko "Nimi" :tyyppi :string :muokattava? (constantly false)}
+      {:nimi :voimassaolo_alkuvuosi :leveys 1 :otsikko "Voimassaolo alkuvuosi" :kokonaisluku? true :tyyppi :positiivinen-numero}
+      {:nimi :voimassaolo_loppuvuosi :leveys 1 :kokonaisluku? true :otsikko "Voimassaolo loppuvuosi" :tyyppi :positiivinen-numero}
+      {:nimi :yksiloiva_tunniste :leveys 1 :otsikko "Yksilöivä tunniste" :tyyppi :string :muokattava? (constantly false)}]
      tehtavaryhmat]))
 
 (defn listaus* [e! app]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-    (komp/sisaan #(e! (tiedot/->HaeTehtavaryhmaotsikot)))
+    (komp/sisaan #(do
+                    (e! (tiedot/->HaeTehtavaryhmaotsikot))
+                    (e! (tiedot/->HaeSuoritettavatTehtavat))))
     (fn [e! app]
-      (let [tehtavaryhmaotsikot (:tehtavaryhmaotsikot app)]
+      (let [tehtavaryhmaotsikot (:tehtavaryhmaotsikot app)
+            suoritettavat-tehtavat (:suoritettavat-tehtavat app)]
         [:div
          ;[debug/debug app]
          [:div "Listataan tehtäväryhmäotsikot ja niille kuuluvat tehtäväryhmät ja niiden (MHU) tehtävät."]
@@ -74,7 +81,26 @@
             :leveys 3
             :otsikko "Otsikko"
             :tyyppi :string}]
-          tehtavaryhmaotsikot]]))))
+          tehtavaryhmaotsikot]
+
+         [:p "Suoritettävat tehtävät ovat tehtäviä, joille urakoitsijat lähettävät rajapintojen kautta ja koska niiden löytäminen ylemmästä listasta on vaikeaa, niin
+         ne on nostettu tähän helpommin nähtävään muotoon."]
+         [grid/grid
+          ;; Opts
+          {:otsikko "Suoritettavat tehtävät"
+           :tunniste :id
+           :jarjesta :id}
+          ;; Skeema
+          [{:nimi :id :leveys 0.5 :otsikko "ID" :kokonaisluku? true :tyyppi :positiivinen-numero :muokattava? (constantly false)}
+           {:nimi :nimi :leveys 2 :otsikko "Nimi" :tyyppi :string :muokattava? (constantly false)}
+           {:nimi :suoritettavatehtava :otsikko "Suoritettava tehtavä" :leveys 2}
+           {:nimi :voimassaolo_alkuvuosi :leveys 1 :otsikko "Voim. alkuvuosi" :kokonaisluku? true :tyyppi :positiivinen-numero}
+           {:nimi :voimassaolo_loppuvuosi :leveys 1 :kokonaisluku? true :otsikko "Voim. loppuvuosi" :tyyppi :positiivinen-numero}
+           {:nimi :yksiloiva_tunniste :leveys 1 :otsikko "Yksilöivä tunniste" :tyyppi :string :muokattava? (constantly false)}
+           {:nimi :poistettu :leveys 1 :otsikko "Poistettu" :tyyppi :string :muokattava? (constantly false)}]
+          ;; Data
+          suoritettavat-tehtavat]]))))
+
 
 (defn tehtavat []
   [tuck tiedot/tila listaus*])
