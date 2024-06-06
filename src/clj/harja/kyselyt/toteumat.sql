@@ -462,14 +462,20 @@ SELECT tk.id                    AS toimenpidekoodi_id,
            WHEN o.otsikko = '9 LISÄTYÖT'
                THEN 'lisatyo'
            ELSE 'kokonaishintainen' END AS tyyppi
-FROM tehtava tk
-     -- Alataso on linkitetty toimenpidekoodiin
-     JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
-     JOIN tehtavaryhmaotsikko o ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
-     LEFT JOIN urakka_tehtavamaara ut ON ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
-                       AND ut.poistettu IS NOT TRUE AND tk.id = ut.tehtava
-     LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi
-     JOIN urakka u on u.id = :urakka
+  FROM tehtava tk
+           JOIN urakka u ON u.id = :urakka
+            -- Alataso on linkitetty toimenpidekoodiin
+           JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
+                -- Otetaan mukaan vain voimassaolevat tehtäväryhmät
+                AND (tr_alataso.voimassaolo_alkuvuosi IS NULL OR tr_alataso.voimassaolo_alkuvuosi <= DATE_PART('year', u.alkupvm)::INTEGER)
+                AND (tr_alataso.voimassaolo_loppuvuosi IS NULL OR tr_alataso.voimassaolo_loppuvuosi >= DATE_PART('year', u.alkupvm)::INTEGER)
+           JOIN tehtavaryhmaotsikko o ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND
+                                         (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
+           LEFT JOIN urakka_tehtavamaara ut
+                     ON ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
+                         AND ut.poistettu IS NOT TRUE AND tk.id = ut.tehtava
+           LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi
+
 WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
       (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
   AND tk."mhu-tehtava?" = true -- Rajataan pois ne, jotka eivät ole mhu tehtäviä.
