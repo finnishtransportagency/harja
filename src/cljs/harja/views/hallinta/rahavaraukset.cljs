@@ -8,6 +8,11 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.hallinta.rahavaraukset :as tiedot]))
 
+(defn onko-dis? [rivi]
+  (if (= -1 (:id rivi))
+    false
+    true))
+
 (defn rahavaraukset* [e! _app]
   (komp/luo
     (komp/sisaan #(e! (tiedot/->HaeRahavaraukset)))
@@ -57,6 +62,7 @@
                            (do
                              (varmista-kayttajalta
                                {:otsikko "Rahavarauksia poistettiin, oletko varma että haluat tallentaa?"
+                                :sisalto (str "Rahavarauksen poistaminen poistaa sen kaikki tehtävät sekä se poistetaan kaikilta urakoilta. Poisto ei ole mahdollinen, jos rahavaraus on käytössä.")
                                 :hyvaksy "Kyllä"
                                 :toiminto-fn #(tuck-apurit/e-kanavalla! e! tiedot/->MuokkaaRahavaraus valittu-urakka muokatut-rivit)})
                              ;; Tallenna funktion pitää aina palauttaa kanava, passaa muokkaa funktiolle nil
@@ -85,7 +91,7 @@
                                                         (-> % .-target .-checked))))}])
                                 [:label {:for id} ""]]))}
              {:otsikko "Rahavaraus" :nimi :nimi :tyyppi :string :leveys 10}
-             {:otsikko "Urakkakohtainen nimi" :nimi :urakkakohtainen-nimi :tyyppi :string :leveys 10}]
+             {:otsikko "Urakkakohtainen nimi" :nimi :urakkakohtainen-nimi :tyyppi :string :leveys 10 :muokattava? #(onko-dis? %)}]
             muokatut-rahavaraukset])]))))
 
 (defn rahavaraukset []
