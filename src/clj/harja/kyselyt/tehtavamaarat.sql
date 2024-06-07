@@ -122,6 +122,8 @@ FROM tehtavaryhma tr
        JOIN toimenpide tp ON t.emo = tp.id
        JOIN toimenpideinstanssi tpi on tpi.toimenpide = tp.id and tpi.urakka = :urakka
  WHERE tr.nimi not like ('%Lisätyöt%')
+   AND (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= :urakka-voimassaolo-alkuvuosi::INTEGER)
+   AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= :urakka-voimassaolo-alkuvuosi::INTEGER)
  order by tr.jarjestys;
 
 -- name: hae-sopimuksen-tehtavamaarat-urakalle
@@ -194,6 +196,8 @@ FROM tehtavaryhma tr
        JOIN tehtavaryhmaotsikko o ON tr.tehtavaryhmaotsikko_id = o.id,
      urakka u
 WHERE u.id = :urakka
+  AND (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+  AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
   AND (t.voimassaolo_alkuvuosi IS NULL OR t.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (t.voimassaolo_loppuvuosi IS NULL OR t.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
   -- Suunnitteluyksikkö ei voi olla null normaali tehtävällä, mutta rahavarauksella se voi olla.

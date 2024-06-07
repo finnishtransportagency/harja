@@ -7,6 +7,7 @@ SELECT rv.id, COALESCE(rvu.urakkakohtainen_nimi, rv.nimi) as nimi
 -- name: hae-urakoiden-rahavaraukset
 SELECT u.id   AS "urakka-id",
        u.nimi AS "urakka-nimi",
+       rvu.urakkakohtainen_nimi AS "urakkakohtainen-nimi",
        rv.id  AS "id",
        rv.nimi
   FROM urakka u
@@ -37,15 +38,32 @@ SELECT t.id, t.nimi, tro.otsikko
    AND t.tehtavaryhma IS NOT NULL
  ORDER BY tr.jarjestys, t.jarjestys ASC;
 
+-- name: hae-urakan-rahavaraus
+SELECT ru.id, ru.urakkakohtainen_nimi, ru.rahavaraus_id
+  FROM rahavaraus_urakka ru
+ WHERE ru.urakka_id = :urakka-id
+AND ru.rahavaraus_id = :rahavaraus-id;
+
+--name: lisaa-uusi-rahavaraus<!
+INSERT INTO rahavaraus (nimi, luoja, luotu) VALUES (:nimi, :kayttajaid, CURRENT_TIMESTAMP);
+
 -- name: lisaa-urakan-rahavaraus<!
-INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luoja, luotu)
-VALUES (:urakka, :rahavaraus, :kayttaja, CURRENT_TIMESTAMP);
+INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, urakkakohtainen_nimi, luoja, luotu)
+VALUES (:urakkaid, :rahavarausid, :urakkakohtainen-nimi, :kayttaja, CURRENT_TIMESTAMP);
+
+-- name: paivita-urakan-rahavaraus<!
+UPDATE rahavaraus_urakka
+   SET urakkakohtainen_nimi = :urakkakohtainen-nimi,
+        muokkaaja = :kayttajaid,
+        muokattu = CURRENT_TIMESTAMP
+ WHERE urakka_id = :urakkaid
+   AND rahavaraus_id = :rahavarausid;
 
 -- name: poista-urakan-rahavaraus<!
 DELETE
   FROM rahavaraus_urakka
- WHERE urakka_id = :urakka
-   AND rahavaraus_id = :rahavaraus;
+ WHERE urakka_id = :urakkaid
+   AND rahavaraus_id = :rahavarausid;
 
 -- name: lisaa-rahavaraukselle-tehtava<!
 INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
@@ -78,3 +96,28 @@ SELECT EXISTS(SELECT t.id
                WHERE t.poistettu IS FALSE
                  AND t.tehtavaryhma IS NOT NULL
                  AND t.id = :tehtava-id :: BIGINT);
+
+-- name: onko-rahavaraus-kaytossa?
+-- single?: true
+SELECT EXISTS(SELECT id
+                FROM kustannusarvioitu_tyo kt
+               WHERE kt.rahavaraus_id = :id :: BIGINT
+               UNION ALL
+              SELECT id
+                FROM kulu_kohdistus kk
+               WHERE kk.rahavaraus_id = :id :: BIGINT);
+
+-- name: poista-rahavaraus-urakoilta!
+DELETE
+  FROM rahavaraus_urakka
+ WHERE rahavaraus_id = :id :: BIGINT;
+
+-- name: poista-rahavarauksen-tehtavat!
+DELETE
+  FROM rahavaraus_tehtava
+ WHERE rahavaraus_id = :id :: BIGINT;
+
+-- name: poista-rahavaraus!
+DELETE
+  FROM rahavaraus
+ WHERE id = :id :: BIGINT;

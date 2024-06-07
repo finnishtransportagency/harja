@@ -67,22 +67,32 @@ ORDER BY rs.jarjestys;
 
 -- name: hae-urakan-kulut-raporttiin-aikavalilla
 -- Annetulla aikavälillä haetaan urakan kaikki kulut tehtäväryhmittäin
-WITH  kohdistukset_ajalla AS (
-SELECT kk.summa, kk.tehtavaryhma
-  FROM kulu_kohdistus kk
-       JOIN kulu k ON kk.kulu = k.id
-                      AND k.urakka = :urakka
-                      AND k.erapaiva BETWEEN :alkupvm::DATE AND :loppupvm::DATE
- WHERE k.id = kk.kulu
-   AND kk.poistettu IS NOT TRUE)
-SELECT tr3.id AS "tehtavaryhma",
-       sum(kohd.summa) AS "summa",
-       tr3.jarjestys AS "jarjestys",
-       tr3.nimi AS "nimi"
-FROM tehtavaryhma tr3
-         LEFT JOIN kohdistukset_ajalla kohd ON tr3.id = kohd.tehtavaryhma
-GROUP BY tr3.nimi, tr3.id, tr3.jarjestys
-ORDER BY tr3.jarjestys;
+  WITH kohdistukset_ajalla AS (SELECT kk.summa, kk.tehtavaryhma
+                                 FROM kulu_kohdistus kk
+                                          JOIN kulu k ON kk.kulu = k.id
+                                     AND k.urakka = :urakka
+                                     AND k.erapaiva BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+                                WHERE k.id = kk.kulu
+                                  AND kk.poistettu IS NOT TRUE)
+SELECT tr.id          AS "tehtavaryhma",
+       SUM(kohd.summa) AS "summa",
+       tr.jarjestys   AS "jarjestys",
+       tr.nimi        AS "nimi"
+  FROM tehtavaryhma tr
+           LEFT JOIN kohdistukset_ajalla kohd ON tr.id = kohd.tehtavaryhma,
+       urakka u
+  -- Ei ole tarkoituksenmukaista listata tehtäväryhmiä, jotka on poistettu tai jotka eivät ole voimassa, jos niihin ei ole raportoitu kuluja
+  -- Mutta ei myöskään filtteröidä niitä ulos, jos sinne on ehditty raportoida kuluja
+ WHERE u.id = :urakka
+   -- Jos ei ole kuluja, niin tehtäväryhmää, joka on poistettu, ei oteta mukaan
+   AND (tr.poistettu = false AND kohd.summa IS NULL OR kohd.summa IS NOT NULL)
+   -- Jos ei ole kuluja, niin tehtävärymän on oltava voimassa
+   AND (kohd.summa IS NULL
+        AND (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= EXTRACT(YEAR from u.alkupvm)::INTEGER)
+        AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= EXTRACT(YEAR from u.alkupvm)::INTEGER)
+     OR kohd.summa IS NOT NULL)
+ GROUP BY tr.nimi, tr.id, tr.jarjestys
+ ORDER BY tr.jarjestys;
 
 -- name: hae-liitteet
 -- Haetaan liitteet kululle
