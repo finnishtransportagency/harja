@@ -38,6 +38,8 @@
   (:import (java.util UUID))
   (:use org.httpkit.fake))
 
+(def ehdon-timeout 2000)
+
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
@@ -1060,6 +1062,7 @@
                                          :saate saate}
                       :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}]
+            integraatiotapahtumien-lkm-alussa (count (hae-ulos-lahtevat-integraatiotapahtumat))
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-yllapitokohteiden-aikataulu
                                     +kayttaja-jvh+
@@ -1073,7 +1076,7 @@
                                                      " AND poistettu IS NOT TRUE
                                                      AND vuodet @> ARRAY [" vuosi "] :: INT [];")))
             vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")
-            integraatio-sahkopostit (hae-ulos-lahtevat-integraatiotapahtumat)]
+            integraatio-sahkopostit (odota-integraatiotapahtumaa ehdon-timeout integraatiotapahtumien-lkm-alussa)]
         ;; Kohteiden määrä ei muuttunut
         (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
         ;; Muokatut kentät päivittyivät
@@ -1217,6 +1220,7 @@
                                :sopimus-id sopimus-id
                                :vuosi vuosi
                                :kohteet kohteet})
+            _ (Thread/sleep 2000) ;; Odotetaan hetki, jotta voidaan olla varmoja ettei integraatiotapahtumaa löydy.
             integraatioviestit (hae-ulos-lahtevat-integraatiotapahtumat)]
         (is (= (count integraatioviestit) 0) "Maileja ei lähetetä.")))))
 

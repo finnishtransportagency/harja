@@ -405,8 +405,8 @@
      :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
     (let [xml? (= (kutsun-formaatti request) "xml")
           body (lue-body request)
-          tapahtuma-id (when integraatioloki
-                         (lokita-kutsu integraatioloki resurssi request body))
+          tapahtuma-id-thread (thread (when integraatioloki
+                                        (lokita-kutsu integraatioloki resurssi request body)))
           parametrit (:params request)
           headerit (:headers request)
           vastaus (aja-virhekasittelyn-kanssa
@@ -432,7 +432,9 @@
                          origin-header
                          xml?)))]
       (when integraatioloki
-        (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
+        (thread
+          (go
+            (lokita-vastaus integraatioloki resurssi vastaus (<! tapahtuma-id-thread)))))
       vastaus)))
 
 (defn kasittele-sahkoposti-kutsu
@@ -451,8 +453,8 @@
      :body "Virhe: Väärä content-type. Käytä application/xml\n"}
     (let [xml? (= (kutsun-formaatti request) "xml")
           body (lue-body request)
-          tapahtuma-id (when integraatioloki
-                         (lokita-kutsu integraatioloki resurssi request body))
+          tapahtuma-id-thread (thread (when integraatioloki
+                                        (lokita-kutsu integraatioloki resurssi request body)))
           parametrit (:params request)
           headerit (:headers request)
           vastaus (aja-virhekasittelyn-kanssa
@@ -473,7 +475,9 @@
                         :headers (lisaa-request-headerit false origin-header)
                         :body vastauksen-xml}))]
       (when integraatioloki
-        (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
+        (thread
+          (go
+            (lokita-vastaus integraatioloki resurssi vastaus (<! tapahtuma-id-thread)))))
       vastaus)))
 
 (defn kasittele-get-kutsu
@@ -491,8 +495,8 @@
      :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
     (let [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
           xml? (= (kutsun-formaatti request) "xml")
-          tapahtuma-id (when integraatioloki
-                         (lokita-kutsu integraatioloki resurssi request nil))
+          tapahtuma-id-thread (thread (when integraatioloki
+                                        (lokita-kutsu integraatioloki resurssi request nil)))
           otsikot (:headers request)
           parametrit (:params request)
           vastaus (aja-virhekasittelyn-kanssa
@@ -506,7 +510,9 @@
                         vastauksen-data (kasittele-kutsu-fn parametrit kayttaja db)]
                        (tee-vastaus 200 vastauksen-skeema vastauksen-data (get (:headers request) "origin") xml?)))]
       (when integraatioloki
-        (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
+        (thread
+          (go
+            (lokita-vastaus integraatioloki resurssi vastaus (<! tapahtuma-id-thread)))))
       vastaus)))
 
 (defn kasittele-kevyesti-get-kutsu
@@ -525,8 +531,8 @@
     (let [kutsun-kesto-alkaa (System/currentTimeMillis)
           request-origin (get (:headers request) "origin")
           kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
-          tapahtuma-id (when integraatioloki
-                         (lokita-kutsu integraatioloki resurssi request nil))
+          tapahtuma-id-thread (thread (when integraatioloki
+                                        (lokita-kutsu integraatioloki resurssi request nil)))
           parametrit (:params request)
           vastaus (aja-virhekasittelyn-kanssa
                     resurssi
@@ -543,8 +549,10 @@
                           :body "Virhe: Liian suuri aineisto palautettavaksi."}
                          (tee-optimoitu-json-vastaus 200 payload request-origin))))]
       (when integraatioloki
-        (lokita-vastaus integraatioloki resurssi {:status (:status vastaus)
-                                                  :body "Liian iso logitettavaksi"} tapahtuma-id))
+        (thread
+          (go
+            (lokita-vastaus integraatioloki resurssi {:status (:status vastaus)
+                                                      :body "Liian iso logitettavaksi"} (<! tapahtuma-id-thread)))))
       (do
         (log/info (str "Optimoitu kutsu: " resurssi " ajoaika: " (- (System/currentTimeMillis) kutsun-kesto-alkaa) " ms"))
         vastaus))))

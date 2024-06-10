@@ -213,7 +213,7 @@
            liikennetapahtumien-haku-kaynnissa?
            liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
        
-       [:div.ajax-loader-liikennetapahtumat
+       [:div.ajax-loader-valistys
         [ajax-loader-pieni (str "Haetaan tietoja...")]]
 
        ;; Tiedot ovat ladanneet 
@@ -641,7 +641,7 @@
          liikennetapahtumien-haku-kaynnissa?
          liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
      
-     [:div.ajax-loader-liikennetapahtumat
+     [:div.ajax-loader-valistys
       [ajax-loader-pieni "Päivitetään listaa.."]]
      
      [grid/grid
