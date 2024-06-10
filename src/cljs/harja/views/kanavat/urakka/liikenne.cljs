@@ -371,6 +371,7 @@
                    (when (not= (::toiminto/toimenpide osa) (::osa/oletustoimenpide osa))
                      {:teksti "Aseta oletustoimenpiteeksi"
                       :piilota-label? true
+                      :rivi-luokka "margin-bottom-32"
                       :nimi (str "oletustoimenpide-" (::kohde/id (::lt/kohde valittu-liikennetapahtuma)))
                       :tyyppi :checkbox
                       :aseta (fn [rivi arvo]
