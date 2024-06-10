@@ -33,7 +33,7 @@ module.exports = async ({ github, context, core }) => {
     });
 
     if (deployments.length === 0) {
-        core.setFailed(`No deployments found for the DEPLOYMENT_REF: ${DEPLOYMENT_REF} and DEPLOYMENT_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT}`);
+        core.warning(`No deployments found for the DEPLOYMENT_REF: ${DEPLOYMENT_REF}, DEPLOYMENT_SHA: ${DEPLOYMENT_SHA} and DEPLOYMENT_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT}`);
 
         return;
     }

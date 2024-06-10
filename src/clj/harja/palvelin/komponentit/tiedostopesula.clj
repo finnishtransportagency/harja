@@ -3,21 +3,7 @@
             [com.stuartsierra.component :as component]
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
-            [fileyard.client :as fileyard-client]
-            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
-            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [harja.palvelin.tyokalut.lukot :as lukot]
-            [clojure.java.jdbc :as jdbc]
-            [org.httpkit.client :as http]
-            [clojure.java.io :refer [file output-stream input-stream]])
-  (:import (java.io InputStream ByteArrayOutputStream)
-           (org.postgresql.largeobject LargeObjectManager)
-           (com.mchange.v2.c3p0 C3P0ProxyConnection)
-           (net.coobird.thumbnailator Thumbnailator)
-           (net.coobird.thumbnailator.tasks UnsupportedFormatException))
-  (:use [slingshot.slingshot :only [try+ throw+]]))
+            [org.httpkit.client :as http]))
 
 (defn- pdfa-muunna-file->inputstream! "java.io/file -> java.io/file | nil" [{base-url :base-url} pdf-file]
   {:pre [(some? pdf-file)]}

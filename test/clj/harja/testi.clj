@@ -145,7 +145,7 @@
   {:datasource (tietokanta/luo-yhteyspool temppitietokanta)})
 
 (defn luo-liitteidenhallinta []
-  (liitteet/->Liitteet nil nil nil))
+  (liitteet/->Liitteet nil nil))
 
 (defonce db (:datasource (luo-testitietokanta)))
 (defonce temppidb (:datasource (luo-temppitietokanta)))
@@ -1588,7 +1588,7 @@
                                               [:db])
 
                            :liitteiden-hallinta (component/using
-                                                  (liitteet/->Liitteet nil nil nil)
+                                                  (liitteet/->Liitteet nil nil)
                                                   [:db])
 
                            ~@omat))))
@@ -1776,6 +1776,18 @@
 (defn hae-kaikki-integraatioviestit []
   (q-map (str "SELECT id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite
                  FROM integraatioviesti ORDER BY integraatiotapahtuma ASC, id asc ;")))
+
+(defn odota-integraatiotapahtumaa
+  "Odottaa kunnes löytyy uusi integraatiotapahtuma. Ottaa vastaan timeoutin millisekunneissa ja
+  integeraatiotapahtumien lukumäärän ja palauttaa integraatiotapahtumat, kun niitä on enemmän kuin annettu määrä."
+  [max-aika-ms integraatiotapahtumia-ennen]
+  (let [max-ts (+ max-aika-ms (System/currentTimeMillis))]
+    (loop [integraatiotapahtumat (hae-ulos-lahtevat-integraatiotapahtumat)]
+      (if (> (System/currentTimeMillis) max-ts)
+        (assert false (str "Uutta integraatiotapahtumaa ei tullut " max-aika-ms "ms kuluessa"))
+        (if (> (count integraatiotapahtumat) integraatiotapahtumia-ennen)
+          integraatiotapahtumat
+          (recur (hae-ulos-lahtevat-integraatiotapahtumat)))))))
 
 (defn nykyhetki-iso8061-formaatissa-menneisyyteen
   "Anna määrä parametriin, että montako päivää siirretään menneisyyteen."

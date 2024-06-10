@@ -225,7 +225,7 @@
   [:div.siltatarkastus-tulos-ja-liite
    [:div.tulos (str tulos " ")]
    [:div.liite
-    [liitteet/liitteet-ikonilistana liitteet]]])
+    [liitteet/liitteet-ikonilistana liitteet {:siltatarkastusliite? true}]]])
 
 (defn muut-tarkastukset-sarakkeet [muut-tarkastukset]
   (mapv (fn [tarkastus]
@@ -252,7 +252,7 @@
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 10}
            {:otsikko     "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 3
             :komponentti (fn [rivi]
-                           [liitteet/liitteet-ikoneina (:liitteet rivi)])}]
+                           [liitteet/liitteet-ikoneina (:liitteet rivi) {:siltatarkastusliite? true}])}]
           (muut-tarkastukset-sarakkeet muut-tarkastukset))))
 
 (defn tallenna-siltatarkastus!
