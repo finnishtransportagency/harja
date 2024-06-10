@@ -368,7 +368,7 @@
                         :hae (constantly (::toiminto/lkm osa))
                         :aseta (fn [rivi arvo]
                                  (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/lkm arvo)))}))
-                   (when true
+                   (when (not= (::toiminto/toimenpide osa) (::osa/oletustoimenpide osa))
                      {:teksti "Aseta oletustoimenpiteeksi"
                       :piilota-label? true
                       :nimi (str "oletustoimenpide-" (::kohde/id (::lt/kohde valittu-liikennetapahtuma)))
