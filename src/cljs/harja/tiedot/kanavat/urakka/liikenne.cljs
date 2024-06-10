@@ -24,7 +24,8 @@
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.lt-toiminto :as toiminto])
+            [harja.domain.kanavat.lt-toiminto :as toiminto]
+            [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -767,6 +768,7 @@
     (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
     (swap! lt/suunnat-atom assoc :ei-suuntaa "Ei määritelty")
     (when (modal/nakyvissa?) (modal/piilota!))
+    (kanavaurakka/paivita-kanavakohteet!)
     (-> app
       (assoc :tallennus-kaynnissa? false)
       (assoc :valittu-liikennetapahtuma nil)
