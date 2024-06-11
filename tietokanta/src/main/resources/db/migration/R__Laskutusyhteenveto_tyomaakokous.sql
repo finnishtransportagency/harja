@@ -484,8 +484,7 @@ BEGIN
             -- Katso että rivi ei myöskään kuulu kannustinjärjestelmään (T3) (yksilöivätunniste='0e78b556-74ee-437f-ac67-7a03381c64f6') 
             -- Eli uudella rahavaraustietomallilla rahavaraus_id = kannustin_id
             IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' AND
-               (rivi.yksiloiva_tunniste IS NULL OR
-               (rivi.yksiloiva_tunniste IS NOT NULL AND rivi.rahavaraus_id != kannustin_id)) THEN
+               (rivi.yksiloiva_tunniste IS NULL OR rivi.rahavaraus_id != kannustin_id) THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -498,8 +497,7 @@ BEGIN
             -- Kohdista MHU ylläpidon liittyvät lisätyö rivit lisatyo_yllapito_rivi:lle
             -- Katso että ei kuulu kannustinjärjestelmään
             IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' AND
-               (rivi.yksiloiva_tunniste IS NULL OR
-               (rivi.yksiloiva_tunniste IS NOT NULL AND rivi.rahavaraus_id != kannustin_id)) THEN
+               (rivi.yksiloiva_tunniste IS NULL OR rivi.rahavaraus_id != kannustin_id) THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -553,8 +551,7 @@ BEGIN
                     talvihoito_hoitokausi_yht := talvihoito_hoitokausi_yht + COALESCE(talvihoito_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && talvihoito_tpi THEN: %', talvihoito_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         talvihoito_val_aika_yht := talvihoito_val_aika_yht + COALESCE(talvihoito_rivi.summa, 0.0);
                     END IF;
@@ -566,8 +563,7 @@ BEGIN
                             lisatyo_talvihoito_hoitokausi_yht + COALESCE(lisatyo_talvihoito_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && talvihoito_tpi && lisatyo THEN: %', lisatyo_talvihoito_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         lisatyo_talvihoito_val_aika_yht :=
                                 lisatyo_talvihoito_val_aika_yht + COALESCE(lisatyo_talvihoito_rivi.summa, 0.0);
@@ -580,8 +576,7 @@ BEGIN
                     lyh_hoitokausi_yht := lyh_hoitokausi_yht + COALESCE(lyh_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && lyh_tpi  THEN: %', lyh_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         lyh_val_aika_yht := lyh_val_aika_yht + COALESCE(lyh_rivi.summa, 0.0);
                     END IF;
@@ -592,8 +587,7 @@ BEGIN
                     lisatyo_lyh_hoitokausi_yht := lisatyo_lyh_hoitokausi_yht + COALESCE(lisatyo_lyh_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && lyh_tpi AND lisätyö THEN: %', lisatyo_lyh_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         lisatyo_lyh_val_aika_yht := lisatyo_lyh_val_aika_yht + COALESCE(lisatyo_lyh_rivi.summa, 0.0);
                     END IF;
@@ -605,8 +599,7 @@ BEGIN
                     sora_hoitokausi_yht := sora_hoitokausi_yht + COALESCE(sora_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && sora_tpi  THEN: %', sora_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         sora_val_aika_yht := sora_val_aika_yht + COALESCE(sora_rivi.summa, 0.0);
                     END IF;
@@ -617,8 +610,7 @@ BEGIN
                     lisatyo_sora_hoitokausi_yht := lisatyo_sora_hoitokausi_yht + COALESCE(lisatyo_sora_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && sora_tpi AND lisätyö THEN: %', lisatyo_sora_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         lisatyo_sora_val_aika_yht := lisatyo_sora_val_aika_yht + COALESCE(lisatyo_sora_rivi.summa, 0.0);
                     END IF;
@@ -630,8 +622,7 @@ BEGIN
                     paallyste_hoitokausi_yht := paallyste_hoitokausi_yht + COALESCE(paallyste_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && paallyste_tpi  THEN: %', paallyste_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         paallyste_val_aika_yht := paallyste_val_aika_yht + COALESCE(paallyste_rivi.summa, 0.0);
                     END IF;
@@ -643,8 +634,7 @@ BEGIN
                       lisatyo_paallyste_hoitokausi_yht + COALESCE(lisatyo_paallyste_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && paallyste_tpi AND lisätyö THEN: %', lisatyo_paallyste_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         lisatyo_paallyste_val_aika_yht :=
                                 lisatyo_paallyste_val_aika_yht + COALESCE(lisatyo_paallyste_rivi.summa, 0.0);
@@ -653,14 +643,12 @@ BEGIN
 
                 -- MHU ylläpidon kulut, jotka eivät ole lisätöitä, eivätkä kannustinjärjestelmä rahavarauksia
                 IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' AND
-                   (rivi.yksiloiva_tunniste IS NULL OR
-                   (rivi.yksiloiva_tunniste IS NOT NULL AND rivi.rahavaraus_id != kannustin_id)) THEN
+                   (rivi.yksiloiva_tunniste IS NULL OR rivi.rahavaraus_id != kannustin_id) THEN
 
                     yllapito_hoitokausi_yht := yllapito_hoitokausi_yht + COALESCE(yllapito_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && yllapito_tpi  THEN: %', yllapito_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         yllapito_val_aika_yht := yllapito_val_aika_yht + COALESCE(yllapito_rivi.summa, 0.0);
                     END IF;
@@ -668,15 +656,13 @@ BEGIN
 
                 -- MHU ylläpidon kulut, joka on lisätyö , mutta ei kohdistettu rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)
                 IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' AND
-                   (rivi.yksiloiva_tunniste IS NULL OR
-                   (rivi.yksiloiva_tunniste IS NOT NULL AND rivi.rahavaraus_id != kannustin_id)) THEN
+                   (rivi.yksiloiva_tunniste IS NULL OR rivi.rahavaraus_id != kannustin_id) THEN
 
                     lisatyo_yllapito_hoitokausi_yht :=
                             lisatyo_yllapito_hoitokausi_yht + COALESCE(lisatyo_yllapito_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && yllapito_tpi AND lisätyö THEN: %', lisatyo_yllapito_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         lisatyo_yllapito_val_aika_yht :=
                                 lisatyo_yllapito_val_aika_yht + COALESCE(lisatyo_yllapito_rivi.summa, 0.0);
@@ -689,8 +675,7 @@ BEGIN
                     korvausinv_hoitokausi_yht := korvausinv_hoitokausi_yht + COALESCE(korvausinv_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && korvausinv_tpi  THEN: %', korvausinv_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         korvausinv_val_aika_yht := korvausinv_val_aika_yht + COALESCE(korvausinv_rivi.summa, 0.0);
                     END IF;
@@ -702,8 +687,7 @@ BEGIN
                             lisatyo_korvausinv_hoitokausi_yht + COALESCE(lisatyo_korvausinv_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && korvausinv_tpi AND lisätyö  THEN: %', lisatyo_korvausinv_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         lisatyo_korvausinv_val_aika_yht :=
                                 lisatyo_korvausinv_val_aika_yht + COALESCE(lisatyo_korvausinv_rivi.summa, 0.0);
@@ -717,8 +701,7 @@ BEGIN
                             lisatyo_hoidonjohto_hoitokausi_yht + COALESCE(lisatyo_hoidonjohto_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && hoidonjohto_tpi AND lisätyö  THEN: %', lisatyo_hoidonjohto_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         lisatyo_hoidonjohto_val_aika_yht :=
                                 lisatyo_hoidonjohto_val_aika_yht + COALESCE(lisatyo_hoidonjohto_rivi.summa, 0.0);
