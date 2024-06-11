@@ -79,3 +79,6 @@ RETURNS INTEGER AS $$
     RETURN rivit_paivitetty;
   END;
 $$ LANGUAGE plpgsql;
+
+-- Ajetaan populointi  
+SELECT populoi_rahavaraus_idt();
