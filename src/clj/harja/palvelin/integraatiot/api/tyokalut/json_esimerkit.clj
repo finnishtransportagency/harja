@@ -93,7 +93,3 @@
 (def +analytiikka-toimenpiteet-haku-response+ "api/examples/analytiikka-toimenpiteet-haku-response.json")
 (def +analytiikka-mhu-suunnitellut-kustannukset-haku-response+ "api/examples/analytiikka-mhu-suunnitellut-kustannukset-haku-response.json")
 (def +analytiikka-mhu-toteutuneet-kustannukset-haku-response+ "api/examples/analytiikka-mhu-toteutuneet-kustannukset-haku-response.json")
-
-
-
-;; TODO: täydennä tähän , tarkista nimeämiset

@@ -19,7 +19,7 @@
           }
         },
         "kiinteat-kustannukset": {
-          "type": "object",
+          "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -110,7 +110,7 @@
           }
         },
         "arvioidut-kustannukset": {
-          "type": "object",
+          "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -164,7 +164,7 @@
                         "properties": {
                           "toimenpide": {
                             "type": "integer",
-                            "description": "Harjan toimenpide-id."
+                            "description": "Harjan toimenpide-id (ei toimenpidekoodi)."
                           },
                           "rahavaraus": {
                             "type": "integer",
@@ -201,7 +201,7 @@
           }
         },
         "johto-ja-hallintokorvaukset": {
-          "type": "object",
+          "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -212,7 +212,7 @@
                 "properties": {
                   "kustannus-id": {
                     "type": "integer",
-                    "description": "Kustannusrivin id Harjassa"
+                    "description": "Kustannusrivin id Harjassa."
                   },
                   "toimenkuva": {
                     "type": "object",
@@ -223,7 +223,7 @@
                       },
                       "nimi": {
                         "type": "integer",
-                        "description": "Harjan toimenkuva-nimi."
+                        "description": "Harjan toimenkuvan nimi."
                       }
                     },
                     "required": [
@@ -323,7 +323,11 @@
             }
           }
         }
-      }
+      },
+      "required": [
+        "urakka",
+        "urakkatunnus"
+      ]
     }
   }
 }

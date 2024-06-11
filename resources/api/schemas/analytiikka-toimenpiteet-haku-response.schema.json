@@ -10,9 +10,9 @@
           "toimenpide": {
             "type": "object",
             "properties": {
-              "id": { "type": "integer" },
-              "nimi": { "type": "string" },
-              "toimenpidekoodi": { "type": "string" },
+              "id": { "type": "integer", "description": "Toimenpiteen id Harjassa."},
+              "nimi": { "type": "string", "description": "Toimenpiteen nimi."},
+              "toimenpidekoodi": { "type": "string", "description": "Toimenpiteen tunniste eri järjestelmien välillä. Peräisin Samposta"},
               "luotu": { "type": "string", "format": "date-time" },
               "muokattu": { "type": "string", "format": "date-time" },
               "poistettu": { "type": "boolean" }
