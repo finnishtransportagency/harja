@@ -72,7 +72,10 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     muut_kustannukset_val_aika_yht        NUMERIC,
     yhteensa_kaikki_hoitokausi_yht        NUMERIC,
     yhteensa_kaikki_val_aika_yht          NUMERIC,
-    perusluku                             NUMERIC
+    perusluku                             NUMERIC,
+    rahavaraus_nimet                      TEXT[],
+    hoitokausi_yht_array                  NUMERIC[],
+    val_aika_yht_array                    NUMERIC[]
 );
 
 -- Tätä kutsummalla saadaan työmaakokouksen laskutusyhteenvetoon kaikki tarvittavat tiedot
@@ -228,7 +231,20 @@ DECLARE
     hk_tavhintsiirto_ed_vuodelta          NUMERIC;
     budjettia_jaljella                    NUMERIC;
     urakan_tiedot                         RECORD;
+
+    -- Rahavaraukset
+    rahavaraus                            RECORD;
+    rahavaraukset                         TEXT[];
+    rahavaraus_nimet                      TEXT[]    := '{}';
+    hoitokausi_yht_array                  NUMERIC[] := '{}';
+    val_aika_yht_array                    NUMERIC[] := '{}';
+    -- Rahavaraus arvot joita käytetään loopissa 
+    rv_val_aika_yht                       NUMERIC := 0;
+    rv_hoitokausi_yht                     NUMERIC := 0;
+
+    -- Tulos 
     tulos                                 LY_RAPORTTI_TYOMAAKOKOUS_TULOS;
+
 
 
 BEGIN
@@ -844,76 +860,52 @@ BEGIN
     vahingot_hoitokausi_yht := 0.0;
     vahingot_val_aika_yht := 0.0;
 
-    FOR akilliset_ja_vahingot_rivi IN SELECT 
-      summa             AS kht_summa, 
-      l.erapaiva        AS erapaiva, 
-      lk.rahavaraus_id
-      FROM kulu l
-        JOIN kulu_kohdistus lk ON lk.kulu = l.id
-        JOIN toimenpideinstanssi tpi 
-          ON lk.toimenpideinstanssi = tpi.id 
-         AND tpi.id IN (
-             lyh_tpi_id, 
-             sora_tpi_id, 
-             yllapito_tpi_id, 
-             paallyste_tpi_id, 
-             talvihoito_tpi_id, 
-             korvausinv_tpi_id
-          )
-      -- Uusi rahavaraus tietomalli, täsmätään rivit rahavaraus id:llä 
-      WHERE lk.rahavaraus_id IN (akilliset_id, vahingot_id)
-        AND lk.poistettu IS NOT TRUE
-        AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-
+    -- Rahavaraukset
+    FOR rahavaraus IN
+        SELECT id, nimi FROM rahavaraus
     LOOP
-      -- Äkilliset rivi 
-      IF akilliset_ja_vahingot_rivi.rahavaraus_id = akilliset_id THEN
-        SELECT  akilliset_ja_vahingot_rivi.kht_summa AS summa,
-                akilliset_ja_vahingot_rivi.kht_summa AS korotettuna,
-                0::NUMERIC AS korotus
-        INTO akilliset_rivi;
+        -- Resetoi hoitokausi / laskutetaan 
+        rv_val_aika_yht := 0;
+        rv_hoitokausi_yht := 0;
 
-        RAISE NOTICE 'akilliset_rivi: % ', akilliset_rivi;
-        RAISE NOTICE 'akilliset_rivi.summa: %', akilliset_rivi.summa;
+        FOR rivi IN
+            SELECT
+                summa AS kht_summa, 
+                l.erapaiva AS erapaiva, 
+                lk.rahavaraus_id
+            FROM kulu l
+            JOIN kulu_kohdistus lk ON lk.kulu = l.id
+            JOIN toimenpideinstanssi tpi 
+                ON lk.toimenpideinstanssi = tpi.id 
+                AND tpi.id IN (
+                    lyh_tpi_id, 
+                    sora_tpi_id, 
+                    yllapito_tpi_id, 
+                    paallyste_tpi_id, 
+                    talvihoito_tpi_id, 
+                    korvausinv_tpi_id
+                )
+            WHERE lk.rahavaraus_id = rahavaraus.id
+                AND lk.poistettu IS NOT TRUE
+                AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+        LOOP
+            IF rivi.erapaiva <= aikavali_loppupvm THEN
 
-      -- Vahingot rivi 
-      ELSIF akilliset_ja_vahingot_rivi.rahavaraus_id = vahingot_id THEN
-        SELECT  akilliset_ja_vahingot_rivi.kht_summa AS summa,
-                akilliset_ja_vahingot_rivi.kht_summa AS korotettuna,
-                0::NUMERIC AS korotus
-        INTO vahingot_rivi;
+                -- Rahavaraus X Hoitokausi yhteensä 
+                rv_hoitokausi_yht := rv_hoitokausi_yht + COALESCE(rivi.kht_summa, 0.0);
 
-        RAISE NOTICE 'vahingot_rivi: % ', vahingot_rivi;
-        RAISE NOTICE 'vahingot_rivi.summa: %', vahingot_rivi.summa;
-      END IF;
+                IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
+                    -- Rahavaraus X valittu kk yhteensä 
+                    rv_val_aika_yht := rv_val_aika_yht + COALESCE(rivi.kht_summa, 0.0);
+                END IF;
+            END IF;
+        END LOOP;
 
+        -- Lisää arrayhyn kaikki rahavarausten tulokset, jotka parsitaan gridiin 
+        rahavaraus_nimet := array_append(rahavaraus_nimet, rahavaraus.nimi);
+        hoitokausi_yht_array := array_append(hoitokausi_yht_array, rv_hoitokausi_yht);
+        val_aika_yht_array := array_append(val_aika_yht_array, rv_val_aika_yht);
 
-      IF akilliset_ja_vahingot_rivi.erapaiva <= aikavali_loppupvm THEN
-        -- Äkilliset hoitotyöt Hoitokauden alusta
-        IF akilliset_ja_vahingot_rivi.rahavaraus_id = akilliset_id THEN
-
-          akilliset_hoitokausi_yht := akilliset_hoitokausi_yht + COALESCE(akilliset_rivi.summa, 0.0);
-          RAISE NOTICE 'akilliset_hoitokausi_yht: %', akilliset_hoitokausi_yht;
-
-          IF  akilliset_ja_vahingot_rivi.erapaiva >= aikavali_alkupvm AND
-              akilliset_ja_vahingot_rivi.erapaiva <= aikavali_loppupvm THEN
-              -- Laskutetaan nyt 
-              akilliset_val_aika_yht := akilliset_val_aika_yht + COALESCE(akilliset_rivi.summa, 0.0);
-          END IF;
-
-        -- Vahingonkorvaukset Hoitokauden alusta
-        ELSIF akilliset_ja_vahingot_rivi.rahavaraus_id = vahingot_id THEN
-
-          vahingot_hoitokausi_yht := vahingot_hoitokausi_yht + COALESCE(vahingot_rivi.summa, 0.0);
-          RAISE NOTICE 'vahingot_hoitokausi_yht: %', vahingot_hoitokausi_yht;
-
-          IF  akilliset_ja_vahingot_rivi.erapaiva >= aikavali_alkupvm AND
-              akilliset_ja_vahingot_rivi.erapaiva <= aikavali_loppupvm THEN
-              -- Laskutetaan nyt 
-              vahingot_val_aika_yht := vahingot_val_aika_yht + COALESCE(vahingot_rivi.summa, 0.0);
-          END IF;
-        END IF;
-      END IF;
     END LOOP;
 
     -- Laskeskellaan tavoitehintaan kuuluvat yhteen
@@ -1137,6 +1129,7 @@ BEGIN
     
     
     tulos := (
+        
         -- Talvihoito
               talvihoito_hoitokausi_yht, talvihoito_val_aika_yht,
         -- Liikenne ymp. hoito
@@ -1203,7 +1196,10 @@ BEGIN
         -- Kaikki yhteensä
               yhteensa_kaikki_hoitokausi_yht, yhteensa_kaikki_val_aika_yht,
         -- Indeksilaskennan perusluku
-              perusluku);
+              perusluku, 
+        -- Urakan rahavaraukset ja arvot
+              rahavaraus_nimet, hoitokausi_yht_array, val_aika_yht_array
+        );
     return next tulos;
 END;
 $$;

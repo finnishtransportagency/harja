@@ -2,6 +2,7 @@
   "Työmaakokous laskutusyhteenveto MHU-urakoissa"
   (:require [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
             [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-apurit :as taulukot]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]
             [taoensso.timbre :as log]
@@ -12,67 +13,93 @@
 
 
 (defn- taulukko-rivi
-  [tp-rivi kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi?]
+  [data kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi?]
   (rivi
    [:varillinen-teksti {:arvo (str valiotsikko) 
                         :lihavoi? lihavoi?}] 
-    
-   [:varillinen-teksti {:arvo (or (avain_hoitokausi tp-rivi) (yhteiset/summa-fmt nil)) 
+   [:varillinen-teksti {:arvo (or (avain_hoitokausi data) (yhteiset/summa-fmt nil)) 
                         :fmt :raha 
                         :lihavoi? lihavoi?}]
-    
    (when kyseessa-kk-vali?
-     [:varillinen-teksti {:arvo (or (avain_yht tp-rivi) (yhteiset/summa-fmt nil)) :fmt :raha :lihavoi? lihavoi?}])))
+     [:varillinen-teksti {:arvo (or (avain_yht data) (yhteiset/summa-fmt nil)) 
+                          :fmt :raha 
+                          :lihavoi? lihavoi?}]))) 
+
+
+(defn- rahavaraus-rivit
+  [kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika]
+  (map (fn [nimi hoitokausi val-aika]
+         (rivi
+           [:varillinen-teksti {:arvo (str nimi)
+                                :lihavoi? false}]
+           [:varillinen-teksti {:arvo (or hoitokausi (yhteiset/summa-fmt nil))
+                                :fmt :raha
+                                :lihavoi? false}]
+           (when kyseessa-kk-vali?
+             [:varillinen-teksti {:arvo (or val-aika (yhteiset/summa-fmt nil))
+                                  :fmt :raha
+                                  :lihavoi? false}])))
+         rahavaraukset-nimet
+         rahavaraukset-hoitokausi
+         rahavaraukset-val-aika))
 
 
 (defn- taulukko [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
-                         kyseessa-kk-vali? sheet-nimi hk-alkupvm]}]
-  (let [rivit (into []
-                    (remove nil?
-                            (cond
-                              (= "Hankinnat" otsikko)
-                              [(taulukko-rivi data kyseessa-kk-vali? "Talvihoito" :talvihoito_hoitokausi_yht :talvihoito_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Liikenneympäristön hoito" :lyh_hoitokausi_yht :lyh_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Sorateiden hoito" :sora_hoitokausi_yht :sora_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Päällystepaikkaukset" :paallyste_hoitokausi_yht :paallyste_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "MHU ylläpito" :yllapito_hoitokausi_yht :yllapito_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "MHU korvausinvestointi" :korvausinv_hoitokausi_yht :korvausinv_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :hankinnat_hoitokausi_yht :hankinnat_val_aika_yht true)]
+                         kyseessa-kk-vali? sheet-nimi]}]
+  
+  (let [rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet data))
+        rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array data))
+        rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array data))
 
-                              (= "Hoidonjohto" otsikko)
-                              [(taulukko-rivi data kyseessa-kk-vali? "Johto- ja hallintokorvaukset" :johtojahallinto_hoitokausi_yht :johtojahallinto_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Erillishankinnat" :erillishankinnat_hoitokausi_yht :erillishankinnat_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Hoidonjohtopalkkio" :hjpalkkio_hoitokausi_yht :hjpalkkio_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :hoidonjohto_hoitokausi_yht :hoidonjohto_val_aika_yht true)]
+        _ (println
+            "\n---- \n rahavaraukset-nimet: \n " rahavaraukset-nimet
+            " \n rahavaraukset-val-aika: " rahavaraukset-val-aika
+            " \n rahavaraukset-hoitokausi:" rahavaraukset-hoitokausi "\n -----")
 
-                              (= "Rahavaraukset" otsikko)
-                              [(taulukko-rivi data kyseessa-kk-vali? "Äkilliset hoitotyöt" :akilliset_hoitokausi_yht :akilliset_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Vahinkojen korjaukset" :vahingot_hoitokausi_yht :vahingot_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Rahavaraus lupaus 1 / Kannustinjärjestelmä" :kannustin_hoitokausi_yht :kannustin_val_aika_yht false)]
+        rivit (into []
+                (remove nil?
+                  (cond
+                    (= "Hankinnat" otsikko)
+                    [(taulukko-rivi data kyseessa-kk-vali? "Talvihoito" :talvihoito_hoitokausi_yht :talvihoito_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Liikenneympäristön hoito" :lyh_hoitokausi_yht :lyh_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Sorateiden hoito" :sora_hoitokausi_yht :sora_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Päällystepaikkaukset" :paallyste_hoitokausi_yht :paallyste_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "MHU ylläpito" :yllapito_hoitokausi_yht :yllapito_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "MHU korvausinvestointi" :korvausinv_hoitokausi_yht :korvausinv_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :hankinnat_hoitokausi_yht :hankinnat_val_aika_yht true)]
 
-                              (= "Lisätyöt" otsikko)
-                              [(taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (talvihoito)" :lisatyo_talvihoito_hoitokausi_yht :lisatyo_talvihoito_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (liikenneympäristön hoito)" :lisatyo_lyh_hoitokausi_yht :lisatyo_lyh_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (sorateiden hoito)" :lisatyo_sora_hoitokausi_yht :lisatyo_sora_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (päällystepaikkaukset)" :lisatyo_paallyste_hoitokausi_yht :lisatyo_paallyste_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (MHU ylläpito)" :lisatyo_yllapito_hoitokausi_yht :lisatyo_yllapito_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (MHU korvausinvestointi)" :lisatyo_korvausinv_hoitokausi_yht :lisatyo_korvausinv_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (MHU hoidonjohto)" :lisatyo_hoidonjohto_hoitokausi_yht :lisatyo_hoidonjohto_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :lisatyot_hoitokausi_yht :lisatyot_val_aika_yht true)]
+                    (= "Hoidonjohto" otsikko)
+                    [(taulukko-rivi data kyseessa-kk-vali? "Johto- ja hallintokorvaukset" :johtojahallinto_hoitokausi_yht :johtojahallinto_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Erillishankinnat" :erillishankinnat_hoitokausi_yht :erillishankinnat_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Hoidonjohtopalkkio" :hjpalkkio_hoitokausi_yht :hjpalkkio_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :hoidonjohto_hoitokausi_yht :hoidonjohto_val_aika_yht true)]
 
-                              (= "Muut" otsikko)
-                              [(taulukko-rivi data kyseessa-kk-vali? "Bonukset" :bonukset_hoitokausi_yht :bonukset_val_aika_yht false)
-                               (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sanktiot_hoitokausi_yht :sanktiot_val_aika_yht false)
-                               
-                               ;; Näytetään päätökset vain jos ne on olemassa 
-                               (when (yhteiset/raha-arvo-olemassa? (:paatos_kattoh_ylitys_hoitokausi_yht data))
-                                 (taulukko-rivi data kyseessa-kk-vali? "Hoitovuoden päätös / Urakoitsija maksaa kattohinnan ylityksestä" :paatos_kattoh_ylitys_hoitokausi_yht :paatos_kattoh_ylitys_val_aika_yht false))
+                    (= "Rahavaraukset" otsikko)
+                    (rahavaraus-rivit kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika)
 
-                               (when (yhteiset/raha-arvo-olemassa? (:paatos_tavoiteh_ylitys_hoitokausi_yht data))
-                                 (taulukko-rivi data kyseessa-kk-vali? "Hoitovuoden päätös / Urakoitsija maksaa tavoitehinnan ylityksestä" :paatos_tavoiteh_ylitys_hoitokausi_yht :paatos_tavoiteh_ylitys_hoitokausi_yht false))
-                               
-                               (when (yhteiset/raha-arvo-olemassa? (:paatos_tavoitepalkkio_hoitokausi_yht data))
-                                 (taulukko-rivi data kyseessa-kk-vali? "Tavoitepalkkio" :paatos_tavoitepalkkio_hoitokausi_yht :paatos_tavoitepalkkio_hoitokausi_yht false))])))]
+                    (= "Lisätyöt" otsikko)
+                    [(taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (talvihoito)" :lisatyo_talvihoito_hoitokausi_yht :lisatyo_talvihoito_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (liikenneympäristön hoito)" :lisatyo_lyh_hoitokausi_yht :lisatyo_lyh_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (sorateiden hoito)" :lisatyo_sora_hoitokausi_yht :lisatyo_sora_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (päällystepaikkaukset)" :lisatyo_paallyste_hoitokausi_yht :lisatyo_paallyste_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (MHU ylläpito)" :lisatyo_yllapito_hoitokausi_yht :lisatyo_yllapito_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (MHU korvausinvestointi)" :lisatyo_korvausinv_hoitokausi_yht :lisatyo_korvausinv_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (MHU hoidonjohto)" :lisatyo_hoidonjohto_hoitokausi_yht :lisatyo_hoidonjohto_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :lisatyot_hoitokausi_yht :lisatyot_val_aika_yht true)]
+
+                    (= "Muut" otsikko)
+                    [(taulukko-rivi data kyseessa-kk-vali? "Bonukset" :bonukset_hoitokausi_yht :bonukset_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sanktiot_hoitokausi_yht :sanktiot_val_aika_yht false)
+
+                     ;; Näytetään päätökset vain jos ne on olemassa 
+                     (when (yhteiset/raha-arvo-olemassa? (:paatos_kattoh_ylitys_hoitokausi_yht data))
+                       (taulukko-rivi data kyseessa-kk-vali? "Hoitovuoden päätös / Urakoitsija maksaa kattohinnan ylityksestä" :paatos_kattoh_ylitys_hoitokausi_yht :paatos_kattoh_ylitys_val_aika_yht false))
+
+                     (when (yhteiset/raha-arvo-olemassa? (:paatos_tavoiteh_ylitys_hoitokausi_yht data))
+                       (taulukko-rivi data kyseessa-kk-vali? "Hoitovuoden päätös / Urakoitsija maksaa tavoitehinnan ylityksestä" :paatos_tavoiteh_ylitys_hoitokausi_yht :paatos_tavoiteh_ylitys_hoitokausi_yht false))
+
+                     (when (yhteiset/raha-arvo-olemassa? (:paatos_tavoitepalkkio_hoitokausi_yht data))
+                       (taulukko-rivi data kyseessa-kk-vali? "Tavoitepalkkio" :paatos_tavoitepalkkio_hoitokausi_yht :paatos_tavoitepalkkio_hoitokausi_yht false))])))]
 
     [:taulukko {:oikealle-tasattavat-kentat #{1 2}
                 :viimeinen-rivi-yhteenveto? false
@@ -90,8 +117,6 @@
         laskutettu-teksti (str "Hoitokauden alusta")
         laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm))
 
-        ;; Hoitokausi valittuna?
-        hoitokausi? (= aikarajaus :hoitokausi)
         ;; Käytetäänkö omaa aikaväliä
         valittu-aikavali? (= aikarajaus :valittu-aikakvali)
         ;; Ei käytetä kk-väliä jos oma aikaväli valittuna
@@ -109,40 +134,44 @@
         laskutettu-teksti (if (= aikarajaus :valittu-aikavali) "Määrä" laskutettu-teksti)
 
         ;; Konteksti ja urakkatiedot
-        konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
-                        :default :urakka)
+        konteksti (cond
+                    urakka-id :urakka
+                    hallintayksikko-id :hallintayksikko
+                    :else :urakka)
 
         {alueen-nimi :nimi} (first (if (= konteksti :hallintayksikko)
                                      (hallintayksikko-q/hae-organisaatio db hallintayksikko-id)
                                      (urakat-q/hae-urakka db urakka-id)))
 
         urakat (urakat-q/hae-urakkatiedot-laskutusyhteenvetoon
-                db {:alkupvm alkupvm
-                    :loppupvm loppupvm
-                    :hallintayksikkoid hallintayksikko-id
-                    :urakkaid urakka-id
-                    :urakkatyyppi (name (:urakkatyyppi parametrit))})
-        
-        urakoiden-parametrit (mapv #(assoc parametrit :urakka-id (:id %)
-                                           :urakka-nimi (:nimi %)
-                                           :indeksi (:indeksi %)
-                                           :urakkatyyppi (:tyyppi %)) urakat)
+                 db {:alkupvm alkupvm
+                     :loppupvm loppupvm
+                     :hallintayksikkoid hallintayksikko-id
+                     :urakkaid urakka-id
+                     :urakkatyyppi (name (:urakkatyyppi parametrit))})
+
+        urakoiden-parametrit (mapv #(assoc parametrit
+                                      :urakka-id (:id %)
+                                      :urakka-nimi (:nimi %)
+                                      :indeksi (:indeksi %)
+                                      :urakkatyyppi (:tyyppi %)) urakat)
 
         ;; Datan nostaminen tietokannasta urakoittain, hyödyntää cachea
         laskutusyhteenvedot (mapv (fn [urakan-parametrit]
-                                    (mapv #(assoc % :urakka-id (:urakka-id urakan-parametrit)
-                                                  :urakka-nimi (:urakka-nimi urakan-parametrit)
-                                                  :indeksi (:indeksi urakan-parametrit)
-                                                  :urakkatyyppi (:urakkatyyppi urakan-parametrit))
-                                          (yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
-                                  urakoiden-parametrit)
-        
+                                    (mapv #(assoc %
+                                             :urakka-id (:urakka-id urakan-parametrit)
+                                             :urakka-nimi (:urakka-nimi urakan-parametrit)
+                                             :indeksi (:indeksi urakan-parametrit)
+                                             :urakkatyyppi (:urakkatyyppi urakan-parametrit))
+                                      (yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
+                              urakoiden-parametrit)
+
         perusluku (when urakka-id (:perusluku (ffirst laskutusyhteenvedot)))
         indeksikertoimet (when urakka-id (bs/hae-urakan-indeksikertoimet db user {:urakka-id urakka-id}))
 
-        [hk-alkupvm hk-loppupvm] (if (or (pvm/kyseessa-kk-vali? alkupvm loppupvm)
-                                         (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm))
+        [hk-alkupvm hk-loppupvm] (if (or
+                                       (pvm/kyseessa-kk-vali? alkupvm loppupvm)
+                                       (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm))
                                    ;; jos kyseessä vapaa aikaväli, lasketaan vain yksi sarake joten
                                    ;; hk-pvm:illä ei ole merkitystä, kunhan eivät konfliktoi alkupvm ja loppupvm kanssa
                                    (pvm/paivamaaran-hoitokausi alkupvm)
@@ -171,10 +200,10 @@
        [:otsikko-heading (str "Tavoitehintaan vaikuttavat toteutuneet kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
        [:otsikko-heading "Tavoitehintaan vaikuttavat toteutuneet kustannukset"])
 
-     (concat (for [x otsikot]
+     (concat (for [otsikko otsikot]
                (taulukko {:data rivitiedot
-                          :otsikko x
-                          :sheet-nimi (when (= (.indexOf otsikot x) 0) sheet-nimi)
+                          :otsikko otsikko
+                          :sheet-nimi (when (= (.indexOf otsikot otsikko) 0) sheet-nimi)
                           :laskutettu-teksti laskutettu-teksti
                           :laskutetaan-teksti laskutetaan-teksti
                           :kyseessa-kk-vali? kyseessa-kk-vali?})))
@@ -188,8 +217,7 @@
                 :otsikko "Rahavaraukset"
                 :laskutettu-teksti laskutettu-teksti
                 :laskutetaan-teksti laskutetaan-teksti
-                :kyseessa-kk-vali? kyseessa-kk-vali?
-                :hk-alkupvm hk-alkupvm})
+                :kyseessa-kk-vali? kyseessa-kk-vali?})
 
      (taulukot/valitaulukko {:data rivitiedot
                              :otsikko "Toteutuneet"
