@@ -40,6 +40,3 @@ UPDATE rahavaraus_urakka
 -- Nyt duplikaatit voi poistaa
 DELETE FROM rahavaraus
       WHERE nimi IN ('Äkilliset hoitotyöt', 'Vahinkojen korvaukset', 'Kannustinjärjestelmä');
-
--- Aja vielä populointi, jos R__ migraatiot ajetaan näiden jälkeen tämä rivi on tarpeeton 
-SELECT populoi_rahavaraus_idt();
