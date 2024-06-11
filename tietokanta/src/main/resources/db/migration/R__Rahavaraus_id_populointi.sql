@@ -11,7 +11,7 @@ RETURNS INTEGER AS $$
   BEGIN
     
     SELECT id INTO akilliset_id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO vahingot_id FROM rahavaraus WHERE nimi LIKE '%Vahinkojen korvaukset%' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO vahingot_id FROM rahavaraus WHERE nimi LIKE '%Vahinkojen korjaukset%' ORDER BY id ASC LIMIT 1;
     SELECT id INTO kannustin_id FROM rahavaraus WHERE nimi LIKE '%Kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
 
     ---------------------------------------------
@@ -28,7 +28,7 @@ RETURNS INTEGER AS $$
      WHERE tyyppi = 'akillinen-hoitotyo' 
        AND akilliset_id IS NOT NULL;
 
-    -- Vahinkojen korvaukset
+    -- Vahinkojen korjaukset
     UPDATE toteutuneet_kustannukset
        SET rahavaraus_id = vahingot_id
      WHERE tyyppi = 'vahinkojen-korjaukset' 
@@ -52,7 +52,7 @@ RETURNS INTEGER AS $$
      WHERE maksueratyyppi = 'akillinen-hoitotyo'
        AND akilliset_id IS NOT NULL;
 
-    -- Maksuerätyyppi 'muu', luetaan laskutusyhteenvedeossa Vahinkojen korvauksena
+    -- Maksuerätyyppi 'muu', luetaan laskutusyhteenvedeossa Vahinkojen korjauksena
     UPDATE kulu_kohdistus
        SET rahavaraus_id = vahingot_id
      WHERE maksueratyyppi = 'muu'
@@ -67,7 +67,7 @@ RETURNS INTEGER AS $$
      WHERE tyyppi = 'akillinen-hoitotyo' 
        AND akilliset_id IS NOT NULL;
 
-    -- Vahinkojen korvaukset
+    -- Vahinkojen korjaukset
     UPDATE kustannusarvioitu_tyo
        SET rahavaraus_id = vahingot_id
      WHERE tyyppi = 'vahinkojen-korjaukset' 
