@@ -82,7 +82,7 @@
     ;; ei heitä virhettä järjestelmänvastuuhenkilölle
     (is (some? (kutsu-palvelua +kayttaja-jvh+)))
     ;; heittää virheen tilaajan urakanvalvojalle ja urakoitsijan vastuuhenkilölle
-    (is (thrown? (kutsu-palvelua +kayttaja-tero+)))
+    (is (thrown? Exception (kutsu-palvelua +kayttaja-tero+)))
     (is (thrown? Exception (kutsu-palvelua +kayttaja-yit_uuvh+)))))
 
 (deftest raportin-suoritustietojen-roolien-parsinta
