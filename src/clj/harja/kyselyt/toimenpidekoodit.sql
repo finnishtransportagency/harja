@@ -243,3 +243,18 @@ SELECT tr.id, tr.nimi, o.otsikko, tr.jarjestys, tr.poistettu, tr.versio, tr.yksi
   FROM tehtavaryhma tr
   JOIN tehtavaryhmaotsikko o ON tr.tehtavaryhmaotsikko_id = o.id
  ORDER BY o.otsikko ASC, tr.nimi ASC;
+
+-- name: hae-suoritettavat-tehtavat
+-- Suoritettavat tehtävät ovat tehtäviä, joille on annettu API:a varten suoritettavatehtävä koluminnimi, jolla
+-- tehtävä yksiköidään. Toteumat kirjataan tehtäville ja ne tunnistetaan suoritettavatehtava kolumnin toimiessa avaimena.
+SELECT t.id,
+       t.nimi,
+       t.voimassaolo_alkuvuosi,
+       t.voimassaolo_loppuvuosi,
+       t.suoritettavatehtava,
+       t.yksiloiva_tunniste,
+       t.poistettu
+  FROM tehtava t
+           LEFT JOIN toimenpide emo ON t.emo = emo.id
+ WHERE t.suoritettavatehtava IS NOT NULL
+ ORDER BY nimi ASC;

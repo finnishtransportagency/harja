@@ -8,7 +8,8 @@
              [kulut :as q]
              [kustannusarvioidut-tyot :as kust-q]
              [valikatselmus :as valikatselmus-kyselyt]
-             [urakat :as urakka-kyselyt]]
+             [urakat :as urakka-kyselyt]
+             [tehtavaryhmat :as tehtavaryhma-kyselyt]]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.kulut :as kulut]
@@ -267,6 +268,35 @@
     ;; Muutetaan negaatioksi, koska kysymyksen asettelu
     (not valikatselmus-pidetty?)))
 
+(defn- validoi-kulu [db {:keys [erapaiva koontilaskun-kuukausi id kohdistukset]} urakka-id]
+  (let [;; Kaikki kutsuttavat validoinnit throwaavat virheen, jos eivät mene läpi
+        _ (varmista-erapaiva-on-koontilaskun-kuukauden-sisalla db koontilaskun-kuukausi erapaiva urakka-id)
+        vanha-erapaiva (when id (:erapaiva (first (q/hae-kulu db {:id id}))))
+        saako-tallentaa (tarkista-saako-kulua-tallentaa db urakka-id erapaiva vanha-erapaiva)
+        _ (when (not saako-tallentaa)
+            (throw (IllegalArgumentException.
+                     (str "Kulu on tai kohdistuu hoitokaudelle, jonka välikatselmus on jo pidetty. Tallentaminen ei enää onnistu!"))))
+
+        ;; Varmistetaan, että kululle ei ole lisätty tehtäväryhmää, joka ei ole voimassa
+        urakan-tiedot (first (urakka-kyselyt/hae-urakka db {:id urakka-id}))
+        _ (when (nil? urakan-tiedot)
+            (throw (IllegalArgumentException.
+                     (str "Kulu yritetään lisätä urakalle, jota ei ole olemassa!"))))
+        urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
+        urakan-loppuvuosi (-> urakan-tiedot :loppupvm pvm/vuosi)
+        kohdistukset-joilla-tehtavaryhma (filter #(not (nil? (:tehtavaryhma %))) kohdistukset)
+        _ (doseq [kohdistus kohdistukset-joilla-tehtavaryhma]
+            (let [tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma db {:id (:tehtavaryhma kohdistus)}))
+                  _ (when (and
+                            (:voimassaolo_alkuvuosi tehtavaryhma)
+                            (:voimassaolo_loppuvuosi tehtavaryhma)
+                            (not (and
+                                   (>= urakan-alkuvuosi (:voimassaolo_alkuvuosi tehtavaryhma))
+                                   (<= urakan-loppuvuosi (:voimassaolo_loppuvuosi tehtavaryhma)))))
+                      (throw (IllegalArgumentException.
+                               (format "Kululle valittu tehtäväryhmä: %s, joka ei ole voimassa. Tehtäväryhmän voimassaolovuodet %s - %s"
+                                 (:tehtavaryhma_id tehtavaryhma) (:voimassaolo_alkuvuosi tehtavaryhma) (:voimassaolo_loppuvuosi tehtavaryhma)))))]))]))
+
 (defn luo-tai-paivita-kulukohdistukset
   "Tallentaa uuden kulun ja siihen liittyvät kohdistustiedot.
   Päivittää kulun tai kohdistuksen tiedot, jos rivi on jo kannassa.
@@ -274,14 +304,10 @@
   [db user urakka-id {:keys [erapaiva kokonaissumma urakka tyyppi laskun-numero
                              lisatieto koontilaskun-kuukausi id kohdistukset liitteet] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
-  (varmista-erapaiva-on-koontilaskun-kuukauden-sisalla db koontilaskun-kuukausi erapaiva urakka-id)
+  (log/debug "luo-tai-paivita-kulukohdistukset :: tiedot:" (pr-str tiedot))
+  (validoi-kulu db tiedot urakka-id)
   (jdbc/with-db-transaction [db db]
-    (let [vanha-erapaiva (when id (:erapaiva (first (q/hae-kulu db {:id id}))))
-          saako-tallentaa (tarkista-saako-kulua-tallentaa db urakka-id erapaiva vanha-erapaiva)
-          _ (when (not saako-tallentaa)
-              (throw (IllegalArgumentException.
-                       (str "Kulu on tai kohdistuu hoitokaudelle, jonka välikatselmus on jo pidetty. Tallentaminen ei enää onnistu!"))))
-          yhteiset-tiedot {:erapaiva (konv/sql-date erapaiva)
+    (let [yhteiset-tiedot {:erapaiva (konv/sql-date erapaiva)
                            :kokonaissumma kokonaissumma
                            :urakka urakka
                            :tyyppi tyyppi
