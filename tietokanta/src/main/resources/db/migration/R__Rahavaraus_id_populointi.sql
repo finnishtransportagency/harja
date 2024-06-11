@@ -7,6 +7,7 @@ RETURNS INTEGER AS $$
   DECLARE
     vahingot_id INT;
     akilliset_id INT;
+    kannustin_id INT;
     rivit_paivitetty INTEGER := 0;
   BEGIN
     
