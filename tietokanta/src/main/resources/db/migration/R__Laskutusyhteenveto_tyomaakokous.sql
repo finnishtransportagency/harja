@@ -146,7 +146,7 @@ DECLARE
 
     --- Äkilliset hoitotyöt ja vahinkojen korjaukset
     akilliset_ja_vahingot_rivi            RECORD;
-    
+
     -- Rahavarausten ID:t
     akilliset_id                          INT;
     vahingot_id                           INT;
@@ -810,11 +810,11 @@ BEGIN
     hoidonjohto_val_aika_yht := hoidonjohto_val_aika_yht + johtojahallinto_val_aika_yht + erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht;
 
 
-    ----------------------------------------------------------------
-    ------------------- Hoidonjohto loppuu -------------------------
-    ----------------------------------------------------------------
+    -----------------------------------------------------------
+    ------------------- Rahavaraukset -------------------------
+    -----------------------------------------------------------
 
-    -- Rahavaraukset (Äkilliset hoitotyöt, vahinkojen korjaukset, kannustinjärjrestelmä ... )
+
     FOR rahavaraus IN
         SELECT id, nimi FROM rahavaraus
     LOOP
@@ -874,10 +874,12 @@ BEGIN
         kaikki_rahavaraukset_val_yht := kaikki_rahavaraukset_val_yht + val_aika_yht_array[i];
     END LOOP;
 
+    ---------------------------------------------
+    --------------- Tavoitehinta  ---------------
+    ---------------------------------------------
 
     -- Laskeskellaan tavoitehintaan kuuluvat yhteen
     -- 2022-10-01 jälkeen alihankitabonus ei ole enää MHU ylläpitoon kuuluvana, vaan omana rivinään, niin iffitellään se tarvittaessa mukaan
-
     -- Tavoitehinta hoitokausi 
     tavhin_hoitokausi_yht := 0.0;
     tavhin_hoitokausi_yht := tavhin_hoitokausi_yht +
