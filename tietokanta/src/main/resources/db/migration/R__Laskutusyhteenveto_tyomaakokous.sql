@@ -31,12 +31,6 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     hjpalkkio_val_aika_yht                NUMERIC,
     hoidonjohto_hoitokausi_yht            NUMERIC,
     hoidonjohto_val_aika_yht              NUMERIC,
-    akilliset_hoitokausi_yht              NUMERIC,
-    akilliset_val_aika_yht                NUMERIC,
-    vahingot_hoitokausi_yht               NUMERIC,
-    vahingot_val_aika_yht                 NUMERIC,
-    kannustin_hoitokausi_yht              NUMERIC,
-    kannustin_val_aika_yht                NUMERIC,
     tavhin_hoitokausi_yht                 NUMERIC,
     tavhin_val_aika_yht                   NUMERIC,
     hoitokauden_tavoitehinta              NUMERIC,
@@ -85,8 +79,8 @@ CREATE OR REPLACE FUNCTION ly_raportti_tyomaakokous(hk_alkupvm DATE, hk_loppupvm
     LANGUAGE plpgsql AS
 $$
 DECLARE
----- Tavoitehintaan vaikuttavat toteutuneet kustannukset
---- Hankinnat
+    ---- Tavoitehintaan vaikuttavat toteutuneet kustannukset
+    --- Hankinnat
     rivi                                  RECORD;
 
     -- Talvihoito
@@ -152,23 +146,11 @@ DECLARE
 
     --- Äkilliset hoitotyöt ja vahinkojen korjaukset
     akilliset_ja_vahingot_rivi            RECORD;
-    -- Äkilliset hoitotyöt
-    akilliset_hoitokausi_yht              NUMERIC;
-    akilliset_val_aika_yht                NUMERIC;
-    akilliset_rivi                        RECORD;
-    -- Vahinkojen korjaukset
-    vahingot_hoitokausi_yht               NUMERIC;
-    vahingot_val_aika_yht                 NUMERIC;
-    vahingot_rivi                         RECORD;
-    -- Rahavaraus taulun ID:t
+    
+    -- Rahavarausten ID:t
     akilliset_id                          INT;
     vahingot_id                           INT;
     kannustin_id                          INT;
-
-    -- Rahavaraus Kannustinjärjestelmä
-    kannustin_hoitokausi_yht               NUMERIC;
-    kannustin_val_aika_yht                 NUMERIC;
-    rahavaraus_kannustin_rivi              RECORD;
 
     -- Tavoitehinnat yhteensä
     tavhin_hoitokausi_yht                 NUMERIC;
@@ -241,6 +223,10 @@ DECLARE
     -- Rahavaraus arvot joita käytetään loopissa 
     rv_val_aika_yht                       NUMERIC := 0;
     rv_hoitokausi_yht                     NUMERIC := 0;
+
+    -- Lasketaan rahavaraukset yhteen ja lisätään ne tavoitehintaan 
+    kaikki_rahavaraukset_val_yht          NUMERIC := 0.0;
+    kaikki_rahavaraukset_hoitokausi_yht   NUMERIC := 0.0;
 
     -- Tulos 
     tulos                                 LY_RAPORTTI_TYOMAAKOKOUS_TULOS;
@@ -347,8 +333,6 @@ BEGIN
     paallyste_val_aika_yht := 0.0;
     yllapito_hoitokausi_yht := 0.0;
     yllapito_val_aika_yht := 0.0;
-    kannustin_val_aika_yht := 0.0;
-    kannustin_hoitokausi_yht := 0.0;
     korvausinv_hoitokausi_yht := 0.0;
     korvausinv_val_aika_yht := 0.0;
 
@@ -375,8 +359,7 @@ BEGIN
     -- 0e78b556-74ee-437f-ac67-7a03381c64f6
     SELECT id INTO kannustin_id FROM rahavaraus WHERE nimi LIKE '%Kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
 
-    -- Hae rahavaraus id:t äkillisille hoitotöille ja vahingoille, uusi tietomalli korvaa vanhaa koodia
-    -- jossa haetaan kulu_kohdistus maksuerätyypillä
+    -- Hae rahavaraus id:t äkillisille hoitotöille ja vahingoille, uusi tietomalli korvaa vanhaa koodia jossa haetaan kulu_kohdistus maksuerätyypillä
     SELECT id INTO akilliset_id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%' ORDER BY id ASC LIMIT 1;
     SELECT id INTO vahingot_id FROM rahavaraus WHERE nimi LIKE '%Vahinkojen korvaukset%' ORDER BY id ASC LIMIT 1;
 
@@ -524,17 +507,6 @@ BEGIN
 
                 RAISE NOTICE 'lisatyo_yllapito_rivi: % ', lisatyo_yllapito_rivi;
                 RAISE NOTICE 'lisatyo_yllapito_rivi.summa: %', lisatyo_yllapito_rivi.summa;
-            END IF;
-
-            -- Kohdista MHU ylläpidon liittyvät kannustinjärjestelmä rahavarukset omalle riville
-            IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.rahavaraus_id = kannustin_id THEN
-                SELECT rivi.kht_summa AS summa,
-                       rivi.kht_summa AS korotettuna,
-                       0::NUMERIC     AS korotus
-                INTO rahavaraus_kannustin_rivi;
-
-                RAISE NOTICE 'Rahavaraus rahavaraus_kannustin_rivi: % ', rahavaraus_kannustin_rivi;
-                RAISE NOTICE 'Rahavaraus rahavaraus_kannustin_rivi.summa: %', rahavaraus_kannustin_rivi.summa;
             END IF;
 
             -- Kohdista MHU korvausinvestointeihin liittyvät rivit korvausinv_rivi:lle
@@ -711,19 +683,6 @@ BEGIN
                     END IF;
                 END IF;
 
-                -- MHU ylläpidon kulut, jotka on kohdistettu tehtäväryhmään rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)
-                IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.rahavaraus_id = kannustin_id THEN
-                    kannustin_hoitokausi_yht :=
-                      kannustin_hoitokausi_yht + COALESCE(rahavaraus_kannustin_rivi.summa, 0.0);
-
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
-                        -- Laskutetaan nyt
-                        kannustin_val_aika_yht :=
-                                kannustin_val_aika_yht + COALESCE(rahavaraus_kannustin_rivi.summa, 0.0);
-                    END IF;
-                END IF;
-
                 -- Korvausinvestointi Hoitokauden alusta
                 IF rivi.toimenpideinstanssi_id = korvausinv_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
 
@@ -855,12 +814,7 @@ BEGIN
     ------------------- Hoidonjohto loppuu -------------------------
     ----------------------------------------------------------------
 
-    akilliset_hoitokausi_yht := 0.0;
-    akilliset_val_aika_yht := 0.0;
-    vahingot_hoitokausi_yht := 0.0;
-    vahingot_val_aika_yht := 0.0;
-
-    -- Rahavaraukset
+    -- Rahavaraukset (Äkilliset hoitotyöt, vahinkojen korjaukset, kannustinjärjrestelmä ... )
     FOR rahavaraus IN
         SELECT id, nimi FROM rahavaraus
     LOOP
@@ -908,21 +862,40 @@ BEGIN
 
     END LOOP;
 
+    -- Laske rahavaraukset yhteen 
+    -- Tällä voi siis korvata äkilliset, vahingot, kannustin muuttujat
+    -- Rahavaraukset hoitokausi
+    FOR i IN 1..array_length(hoitokausi_yht_array, 1) LOOP
+        kaikki_rahavaraukset_hoitokausi_yht := kaikki_rahavaraukset_hoitokausi_yht + hoitokausi_yht_array[i];
+    END LOOP;
+
+    -- Rahavaraukset valittu kk
+    FOR i IN 1..array_length(val_aika_yht_array, 1) LOOP
+        kaikki_rahavaraukset_val_yht := kaikki_rahavaraukset_val_yht + val_aika_yht_array[i];
+    END LOOP;
+
+
     -- Laskeskellaan tavoitehintaan kuuluvat yhteen
-    -- 2022-10-01 jälkeen alihankitabonus ei ole enää MHU ylläpitoon kuuluvana, vaan omana rivinään, niin iffitellään
-    -- se tarvittaessa mukaan
+    -- 2022-10-01 jälkeen alihankitabonus ei ole enää MHU ylläpitoon kuuluvana, vaan omana rivinään, niin iffitellään se tarvittaessa mukaan
+
+    -- Tavoitehinta hoitokausi 
     tavhin_hoitokausi_yht := 0.0;
     tavhin_hoitokausi_yht := tavhin_hoitokausi_yht +
             talvihoito_hoitokausi_yht + lyh_hoitokausi_yht + sora_hoitokausi_yht +
             paallyste_hoitokausi_yht + yllapito_hoitokausi_yht + korvausinv_hoitokausi_yht +
             johtojahallinto_hoitokausi_yht + erillishankinnat_hoitokausi_yht + hjpalkkio_hoitokausi_yht +
-            akilliset_hoitokausi_yht + vahingot_hoitokausi_yht + kannustin_hoitokausi_yht;
+            -- Rahavaraukset 
+            kaikki_rahavaraukset_hoitokausi_yht;
+    
+    -- Tavoitehinta valittu kk 
     tavhin_val_aika_yht := 0.0;
     tavhin_val_aika_yht := tavhin_val_aika_yht +
             talvihoito_val_aika_yht + lyh_val_aika_yht + sora_val_aika_yht +
             paallyste_val_aika_yht + yllapito_val_aika_yht + korvausinv_val_aika_yht +
             johtojahallinto_val_aika_yht +
-            erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht + akilliset_val_aika_yht + vahingot_val_aika_yht + kannustin_val_aika_yht;
+            erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht + 
+            -- Rahavaraukset 
+            kaikki_rahavaraukset_val_yht;
 
     -- Budjettia jäljellä
     budjettia_jaljella := 0.0;
@@ -1152,12 +1125,6 @@ BEGIN
               hjpalkkio_hoitokausi_yht, hjpalkkio_val_aika_yht,
         -- Hoidonjohto yhteensä
               hoidonjohto_hoitokausi_yht, hoidonjohto_val_aika_yht,
-        -- Äkilliset hoitotyöt yhteensä
-              akilliset_hoitokausi_yht, akilliset_val_aika_yht,
-        -- Vahingonkorvaukset yhteensä
-              vahingot_hoitokausi_yht, vahingot_val_aika_yht,
-        -- Kannustinjärjestelmä rahavarauks
-              kannustin_hoitokausi_yht, kannustin_val_aika_yht,
         -- Tavoitehinnat yht.
               tavhin_hoitokausi_yht, tavhin_val_aika_yht,
         -- Tavoitehinnan muodostus
