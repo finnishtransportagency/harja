@@ -167,7 +167,8 @@
     :tarjoushinnat-hallinta
     :reikapaikkaukset
     :mpu-kustannukset
-    :rahavaraukset-hallinta})
+    :rahavaraukset-hallinta
+    :urakkahenkilot-hallinta})
 
 (def ei-statusta
   #{:metriikka
@@ -244,7 +245,8 @@
     :tarjoushinnat-hallinta
     :reikapaikkaukset
     :mpu-kustannukset
-    :rahavaraukset-hallinta})
+    :rahavaraukset-hallinta
+    :urakkahenkilot-hallinta})
 
 (def hidas-ok-status #{:itmf})
 

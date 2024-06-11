@@ -4,8 +4,7 @@
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.komponentit.liitteet :refer [->Liitteet] :as liitteet]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta])
+            [harja.palvelin.komponentit.liitteet :as liitteet])
   (:import (org.apache.commons.io IOUtils)))
 
 (defn poista-liite [liite-id]
@@ -19,7 +18,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :liitteiden-hallinta
                         (component/using
-                          (harja.palvelin.komponentit.liitteet/->Liitteet nil nil nil)
+                          (harja.palvelin.komponentit.liitteet/->Liitteet nil nil)
                           [:db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -33,7 +32,7 @@
         tiedoston-sisalto (IOUtils/toByteArray (io/input-stream tiedosto))
         luotu-liite (liitteet/luo-liite liitteiden-hallinta nil 1 "kustannussuunnitelma_ack.xml" "text/xml" 581 tiedoston-sisalto nil "harja-ui")
         liite-id (:id luotu-liite)
-        luettu-liite (liitteet/lataa-liite liitteiden-hallinta liite-id)
+        luettu-liite (liitteet/lataa-liite liitteiden-hallinta liite-id {})
         liitteen-sisalto-tekstina (slurp (:data luettu-liite))]
 
     ;; (println luotu-liite)
