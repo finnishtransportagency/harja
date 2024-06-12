@@ -7,6 +7,8 @@ version: "3.8"
 networks:
   harja_net:
     driver: bridge
+    # Estetään IPv6 käyttö, jotta testitietokannan migraatioiden ajossa ei tule yhteysongelmia
+    enable_ipv6: false
 
 services:
   # Uusin saatavilla oleva testietiekannan konfiguraatio
