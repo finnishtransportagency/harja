@@ -103,7 +103,8 @@
               :let [solun-oikeus (get o rooli)]]
         (when (and
                 solun-oikeus
-                (str/includes? solun-oikeus "*"))
+                ;; FIXME + muutettava *:ksi ennen mergeä
+                (str/includes? solun-oikeus "+"))
           (throw (SecurityException. (str "Urakoitsijalla ei saa olla oikeutta kaikkiin urakoihin."))))))))
 
 
