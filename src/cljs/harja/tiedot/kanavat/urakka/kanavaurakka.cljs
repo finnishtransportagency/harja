@@ -17,9 +17,12 @@
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
 
+(def paivita-kanavakohteet? (atom false))
+
 (def kanavakohteet
   (reaction<!
-    [urakka @nav/valittu-urakka]
+    [urakka @nav/valittu-urakka
+     _ @paivita-kanavakohteet?]
     (when (and urakka
                (urakka/kanavaurakka? urakka))
       (k/post! :hae-urakan-kohteet {::urakka/id (:id urakka)}))))
@@ -37,3 +40,6 @@
 
 (defn valitse-kohde! [{id :id :as kohde}]
   (reset! valittu-kohde kohde))
+
+(defn paivita-kanavakohteet! []
+  (swap! paivita-kanavakohteet? not))

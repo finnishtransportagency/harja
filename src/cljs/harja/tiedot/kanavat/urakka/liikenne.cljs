@@ -24,7 +24,8 @@
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.lt-toiminto :as toiminto])
+            [harja.domain.kanavat.lt-toiminto :as toiminto]
+            [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -378,10 +379,10 @@
           alukset)
         (empty? (filter :koskematon (::lt/alukset t)))
         ;; Onko aluslaji olemassa tai toimenpide tyhjennys (tyhjennyksellä voidaan tallentaa ilman aluslajia)
-        (every? #(and 
+        (every? #(and
                    ;; Suunta olemassa 
                    (some? (::lt-alus/suunta %))
-                   (or 
+                   (or
                      ;; Ja aluslaji olemassa tai tyhjennys toimenpide olemassa 
                      (some? (::lt-alus/laji %))
                      (some (fn [lt] (= (::toiminto/toimenpide lt) :tyhjennys)) toiminnot)))
@@ -417,7 +418,7 @@
                                            ;; Silloin kun suunnat-atomilla ei ole :ei-suuntaa avainta, 
                                            ;; tarkoittaa että toimenpide ei ole tyhjennys eikä palvelutyyppi ole itsepalvelu => korvataan suunnattomat alukset
                                            ;; Vaihdetaan arvo nilliksi niin käyttäjä huomaa korjata suunnan 
-                                           (if (and (= (::lt-alus/suunta alus) :ei-suuntaa) 
+                                           (if (and (= (::lt-alus/suunta alus) :ei-suuntaa)
                                                     (not (:ei-suuntaa @lt/suunnat-atom)))
                                              (assoc alus ::lt-alus/suunta nil)
                                              alus))
@@ -452,9 +453,11 @@
                                               ::osa/kohde-id ::toiminto/kohde-id})
                             (assoc ::toiminto/lkm 1)
                             (assoc ::toiminto/palvelumuoto (::osa/oletuspalvelumuoto osa))
-                            (assoc ::toiminto/toimenpide (if (osa/silta? osa)
-                                                           :ei-avausta
-                                                           :sulutus)))
+                            (assoc ::toiminto/toimenpide (or
+                                                           (::osa/oletustoimenpide osa)
+                                                           (if (osa/silta? osa)
+                                                             :ei-avausta
+                                                             :sulutus))))
                         (first (vanhat (::osa/id osa)))))
                     (::kohde/kohteenosat kohde)))))))
 
@@ -477,22 +480,22 @@
                                          (= valittu-suunta :ei-suuntaa))
                                   :ylos
                                   valittu-suunta)
-               
+
                tapahtumat (keep (fn [b]
                                     (if (sama-alusrivi? a b)
                                       b nil))
                                   (::lt/alukset tapahtuma))
 
                klikattu-suunta (::lt-alus/suunta (first tapahtumat))
-               
+
                suunta (if (nil? klikattu-suunta)
                         vaihdettu-suunta
                         klikattu-suunta)
 
                ;; Jos toimenpide on sulutus, vaihda suunta automaattisesti sillä käyttäjä ei voi suuntaa vaihtaa
-               suunta (cond 
-                        sulutus-ylos? :ylos 
-                        sulutus-alas? :alas 
+               suunta (cond
+                        sulutus-ylos? :ylos
+                        sulutus-alas? :alas
                         :else suunta)]
 
            (assoc a ::lt-alus/suunta suunta)))
@@ -765,6 +768,7 @@
     (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
     (swap! lt/suunnat-atom assoc :ei-suuntaa "Ei määritelty")
     (when (modal/nakyvissa?) (modal/piilota!))
+    (kanavaurakka/paivita-kanavakohteet!)
     (-> app
       (assoc :tallennus-kaynnissa? false)
       (assoc :valittu-liikennetapahtuma nil)
