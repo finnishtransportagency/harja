@@ -755,12 +755,7 @@
   (let [urakkaroolit (if (set? urakkaroolit)
                        urakkaroolit
                        #{urakkaroolit})
-        urakoitsijaroolit #{"Laatupaallikko"
-                            "Kayttaja"
-                            "vastuuhenkilo"
-                            "Laadunvalvoja"
-                            "Kelikeskus"
-                            "Paivystaja"}]
+        urakoitsijaroolit roolit/urakoitsijaroolit]
     ;; Annetut roolit set voi olla kokonaan tyhjä
     (cond
       ;; Jos urakoitsija, niin urakoitsija

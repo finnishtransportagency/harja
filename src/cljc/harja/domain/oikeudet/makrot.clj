@@ -4,6 +4,7 @@
   (:require [dk.ative.docjure.spreadsheet :as xls]
             [clojure.string :as str]
             [clojure.set :refer [union]]
+            [harja.domain.roolit :as roolit]
             [harja.tyokalut.functor :refer [fmap]]))
 
 (defn- lue-workbook []
@@ -89,10 +90,31 @@
           :roolien-oikeudet roolien-oikeudet}))
      rivit)))
 
+(defn- varmista-ettei-urakoitsijalle-synny-oikeutta-kaikkiin-urakoihin
+  "Käy läpi jokaisen osion oikeudet jokaiselle urakoitsijaroolille, ja heittää
+   poikkeuksen jos jollakin rooleista on oikeus kaikkiin urakoihin eli löytyy *.
+   Varmistaa myös että Excelistä parsitut urakoitsijaroolit ovat samat kuin domain-koodissa."
+  [urakoitsijaroolit oikeudet]
+  (let [luetut-oikeudet (map :roolien-oikeudet oikeudet)]
+    ;; Vaaditaan että Excelistä parsitut urakoitsijaroolit ovat samat kuin domain-koodissa
+    (assert (= urakoitsijaroolit roolit/urakoitsijaroolit) "Excelistä parsitut urakoitsijaroolit pitää olla samat kuin domain-koodissa.")
+    (doseq [rooli urakoitsijaroolit]
+      (doseq [o luetut-oikeudet
+              :let [solun-oikeus (get o rooli)]]
+        (when (and
+                solun-oikeus
+                (str/includes? solun-oikeus "*"))
+          (throw (SecurityException. (str "Urakoitsijalla ei saa olla oikeutta kaikkiin urakoihin."))))))))
+
+
 (defn- lue-oikeudet []
   (let [wb (lue-workbook)
         roolimappaus (-> wb roolit-sheet roolimappaus)
+        urakoitsijaroolit (into #{}
+                                     (keep #(when (= "Urakoitsija" (:osapuoli %))
+                                              (get % :nimi)) roolimappaus))
         oikeudet (->> wb oikeudet-sheet (oikeudet roolimappaus))]
+    (varmista-ettei-urakoitsijalle-synny-oikeutta-kaikkiin-urakoihin urakoitsijaroolit oikeudet)
     {:roolimappaus roolimappaus
      :oikeudet oikeudet}))
 
