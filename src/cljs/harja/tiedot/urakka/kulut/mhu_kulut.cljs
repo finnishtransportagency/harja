@@ -13,7 +13,7 @@
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]))
 
 (defrecord LisaaKohdistus [lomake])
-(defrecord PoistaKohdistus [lomake])
+(defrecord PoistaKohdistus [nro])
 (defrecord KohdistusTyyppi [kohdistustyyppi nro])
 (defrecord ValitseTehtavaryhmaKohdistukselle [tehtavaryhma nro kohdistus])
 (defrecord TavoitehintaanKuuluminen [tavoitehinta nro])
@@ -24,6 +24,8 @@
 (defrecord KoontilaskunKuukausi [arvo])
 (defrecord ValitseErapaiva [erapaiva])
 (defrecord KoontilaskunNumero [koontilaskunnumero])
+(defrecord ValitseHoitokausi [urakka vuosi])
+(defrecord HoitovuodenPaatoksenTyyppi [paatoksen-tyyppi nro])
 
 (defrecord KulujenSyotto [auki?])
 (defrecord TallennaKulu [])
@@ -64,6 +66,19 @@
 (defrecord HaeUrakanRahavaraukset [])
 (defrecord HaeUrakanRahavarauksetOnnistui [vastaus])
 (defrecord HaeUrakanRahavarauksetEpaonnistui [vastaus])
+
+(def vuoden-paatoksen-kulun-tyypit
+  {:tavoitepalkkio "Tavoitepalkkio"
+   :tavoitehinnan-ylitys "Urakoitsija maksaa tavoitehinnan ylityksestä"
+   :kattohinnan-ylitys "Urakoitsija maksaa tavoite- ja kattohinnan ylityksestä"})
+
+(def vuoden-paatoksen-tehtavaryhmien-nimet
+  {:tavoitepalkkio "Hoitovuoden päättäminen / Tavoitepalkkio"
+   :tavoitehinnan-ylitys "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä"
+   :kattohinnan-ylitys "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"})
+
+(defn avain->tehtavaryhma [tehtavaryhmat avain]
+  (first (filter #(= (:tehtavaryhma %) (get vuoden-paatoksen-tehtavaryhmien-nimet avain)) tehtavaryhmat)))
 
 (defn parsi-summa [summa]
   (cond
@@ -122,28 +137,49 @@
       boolean)))
 
 (defn kulu->lomake [app kulu]
-  (let [{suorittaja :suorittaja} kulu
-        _ (js/console.log "kulu->lomake :: kulu:" (pr-str kulu))]
+  (let [{suorittaja :suorittaja} kulu]
     (-> kulu
       (dissoc :suorittaja)
       (assoc :aliurakoitsija suorittaja)
       (assoc :vuoden-paatos-valittu? (vuoden-paatoksen-kulu? app kulu))
       (update :kohdistukset (fn [kohdistukset]
                               (mapv (fn [kohdistus]
-                                      (let [tehtavaryhma (some #(when (= (:tehtavaryhma kohdistus) (:id %))
+                                      (let [toimenpide (some #(when (= (:toimenpideinstanssi kohdistus) (:toimenpideinstanssi %))
+                                                                %) (:toimenpiteet app))
+                                            #_ (js/console.log "kulu->lomake :: (:toimenpiteet app):" (pr-str (:toimenpiteet app)))
+                                            #_ (js/console.log "kulu->lomake :: toimenpide:" (pr-str toimenpide))
+                                            #_ (js/console.log "kulu->lomake :: (:toimenpideinstanssi kohdistus):" (pr-str (:toimenpideinstanssi kohdistus)))
+                                            tehtavaryhma (some #(when (= (:tehtavaryhma kohdistus) (:id %))
                                                                   %) (:tehtavaryhmat app))
+
+                                            ;; Hoitovuoden päätöksen tyyppi pitää päätellä kohdistukselle
+                                            ;; Ja tässä vaiheessa se tehdään päättelemällä tehtäväryhmästä, että onko se hoitovuoden päätös.
+                                            ;; Jos joskus energiaa jää, niin tämä pitää ehdottomasti muuttaa niin, että kohdistuksella on oikeasti tyyppi, joka on hoitovuoden päätös, ja sille voi valita
+                                            ;; ne tehtäväryhmät, jotka ovat sille tyypille mahdollisia.
+                                            hoitovuoden-paatostyyppi (when tehtavaryhma
+                                                                       (first (keep #(when (= (val %) (:tehtavaryhma tehtavaryhma))
+                                                                                       (key %)) vuoden-paatoksen-tehtavaryhmien-nimet)))
+                                            _ (js/console.log "kulu->lomake :: hoitovuoden-paatostyyppi:" (pr-str hoitovuoden-paatostyyppi))
+                                            _ (js/console.log "kulu->lomake :: tehtavaryhma:" (pr-str tehtavaryhma))
+
+
                                             kohdistustyyppi (cond
                                                               (= "lisatyo" (:maksueratyyppi kohdistus)) :lisatyo
                                                               ;; Jos rahavaraus on annettu, niin on pakko olla rahavaraus
                                                               (:rahavaraus kohdistus) :rahavaraus
+                                                              ;; Hoitovuoden päätöstyyppi päätellään myös
+                                                              (not (nil? hoitovuoden-paatostyyppi)) :hoitovuoden-paatos
                                                               ;; Jos on tehtäväryhmä ja toimenpideinstanssi, niin silloin on hankintakulu
                                                               (and (:tehtavaryhma kohdistus) (:toimenpideinstanssi kohdistus)) :hankintakulu
                                                               ;; else
-                                                              :else :muukulu)]
+                                                              :else :muukulu)
+                                            ]
                                         (-> kohdistus
                                           (assoc :lisatyo? (if (= "lisatyo" (:maksueratyyppi kohdistus)) true false))
                                           (assoc :kohdistustyyppi kohdistustyyppi)
-                                          (assoc :tehtavaryhma tehtavaryhma))))
+                                          (assoc :toimenpide toimenpide)
+                                          (assoc :tehtavaryhma tehtavaryhma)
+                                          (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi))))
                                 kohdistukset)))
       (with-meta (tila/kulun-validointi-meta kulu)))))
 
@@ -152,9 +188,9 @@
         kuluva-hoitovuoden-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm (pvm/nyt))
         kuluva-kuukausi (pvm/kuukauden-nimi (pvm/kuukausi (pvm/nyt)))
         nyky-hoitokausi-lukittu? (some #(and
-                                     (= (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)) (:vuosi %))
-                                     (:paatos-tehty? %))
-                              (:vuosittaiset-valikatselmukset app))
+                                          (= (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)) (:vuosi %))
+                                          (:paatos-tehty? %))
+                                   (:vuosittaiset-valikatselmukset app))
         perus-koontilaskun-kuukausi (when (and
                                             (not nyky-hoitokausi-lukittu?)
                                             kuluva-hoitovuoden-nro
@@ -163,8 +199,7 @@
         lomake tila/kulut-lomake-default
         lomake (-> lomake
                  (assoc :koontilaskun-kuukausi perus-koontilaskun-kuukausi)
-                 (with-meta (tila/kulun-validointi-meta lomake)))
-        ]
+                 (with-meta (tila/kulun-validointi-meta lomake)))]
     lomake))
 
 (defn- resetoi-kulunakyma []
@@ -200,75 +235,79 @@
       konflikti-laskun-numerossa?
       talleta-tilapainen-erapaiva)))
 
+(defn drop-nth
+  "Droppaa collektionista indexillä n olevan alkio."
+  [coll n]
+  (keep-indexed #(if (not= %1 n) %2) coll))
+
 (extend-protocol tuck/Event
 
   LisaaKohdistus
   (process-event [{lomake :lomake} app]
-    (let [kohdistukset (:kohdistukset lomake)
-          _ (js/console.log "Lisää kohdistus :: lomake" (pr-str lomake))
-          _ (js/console.log "Lisää kohdistus :: kohdistukset" (pr-str kohdistukset))
-          _ (js/console.log "Lisää kohdistus :: tila" (pr-str tila/kulut-kohdistus-default))
+    (let [kohdistukset (into [] (:kohdistukset lomake))
           default tila/kulut-kohdistus-default
           default (assoc default :rivi (count kohdistukset))
-          app (assoc-in app [:lomake :kohdistukset (count kohdistukset)] default)
+          _ (js/console.log " Lisää kohdistus :: default" (pr-str default))
+          kohdistukset (into [] (conj (get-in app [:lomake :kohdistukset]) default))
+          _ (js/console.log " Lisää kohdistus :: kohdistukset" (pr-str kohdistukset))
+          app (assoc-in app [:lomake :kohdistukset] kohdistukset)
           ]
       ;; Lisätään lomakkeen kohdistuksiin uusi rivi -- kulut-kohdistus-default
 
       app))
 
   PoistaKohdistus
-  (process-event [{lomake :lomake} app]
-    (js/console.log "Poista kohdistus :: lomake" (pr-str lomake))
-    app)
+  (process-event [{nro :nro} app]
+    (let [_ (js/console.log "Poista kohdistus :: nro" (pr-str nro))
+          _ (js/console.log "Poista kohdistus :: Kohdistus poistettu app statesta - Kulu pitää tallentaa, jotat se vaikuttaa tietokantaan")
+          kohdistukset (into [] (get-in app [:lomake :kohdistukset]))
+          _ (js/console.log "Poista kohdistus :: kohdistukset" (pr-str kohdistukset))
+          poistettava (nth kohdistukset nro)
+          _ (js/console.log "Poista kohdistus :: poistettava" (pr-str poistettava))
+          muokatut-kohdistukset (drop-nth kohdistukset nro)
+          _ (js/console.log "Poista kohdistus :: muokatut-kohdistukset" (pr-str muokatut-kohdistukset))
+          app (-> app
+                (assoc-in [:lomake :kohdistukset] muokatut-kohdistukset)
+                (update-in [:lomake :poistetut-kohdistukset] conj poistettava))
+          _ (js/console.log "Poista kohdistus :: app" (pr-str (get-in app [:lomake :kohdistukset])))]
+      app))
 
   KohdistusTyyppi
   (process-event [{kohdistustyyppi :kohdistustyyppi nro :nro} app]
-    (let [_ (js/console.log "KohdistusTyyppi :: kohdistustyyppi" (pr-str kohdistustyyppi))
-          _ (js/console.log "KohdistusTyyppi :: nro" (pr-str nro))
-          ;; Vaihdetaan kohdistuksen tyyppi ja nollataan kaikki mahdolliset aiemmat valinnat
+    (let [;; Vaihdetaan kohdistuksen tyyppi ja nollataan kaikki mahdolliset aiemmat valinnat
+          lisatyo? (cond
+                     (= :lisatyo kohdistustyyppi) true
+                     :else false)
           app (-> app
                 (assoc-in [:lomake :kohdistukset nro :kohdistustyyppi] kohdistustyyppi)
+                (assoc-in [:lomake :kohdistukset nro :lisatyo?] lisatyo?)
+                (assoc-in [:lomake :kohdistukset nro :lisatyon-lisatieto] nil)
                 (assoc-in [:lomake :kohdistukset nro :tehtavaryhma] nil)
                 (assoc-in [:lomake :kohdistukset nro :rahavaraus] nil)
                 (assoc-in [:lomake :kohdistukset nro :toimenpide] nil)
-                (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] nil)
-                )]
-
+                (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] nil))]
       app))
 
   ValitseTehtavaryhmaKohdistukselle
   (process-event [{kohdistus :kohdistus nro :nro tehtavaryhma :tehtavaryhma} app]
-    (let [_ (js/console.log "ValitseTehtavaryhmaKohdistukselle :: kohdistus" (pr-str kohdistus))
-          _ (js/console.log "ValitseTehtavaryhmaKohdistukselle :: nro" (pr-str nro))
+    (let [;; Toimenpideinstanssi on saatavilla tehtäväryhmän tiedoista, joten asetetaan se samalla
           _ (js/console.log "ValitseTehtavaryhmaKohdistukselle :: tehtavaryhma" (pr-str tehtavaryhma))
-          ;; Toimenpideinstanssi on saatavilla tehtäväryhmän tiedoista, joten asetetaan se samalla
           app (-> app
                 (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] (:toimenpideinstanssi tehtavaryhma))
-                (assoc-in [:lomake :kohdistukset nro :tehtavaryhma] tehtavaryhma))
-          ]
+                (assoc-in [:lomake :kohdistukset nro :tehtavaryhma] tehtavaryhma))]
       app))
 
   TavoitehintaanKuuluminen
   (process-event [{tavoitehinta :tavoitehinta nro :nro} app]
-    (let [_ (js/console.log "TavoitehintaanKuuluminen :: tavoitehinta" (pr-str tavoitehinta))
-          _ (js/console.log "ValitseTehtavaryhmaKohdistukselle :: nro" (pr-str nro))
-          app (assoc-in app [:lomake :kohdistukset nro :tavoitehinta?] tavoitehinta)
-          ]
-      app))
+    (assoc-in app [:lomake :kohdistukset nro :tavoitehinta?] tavoitehinta))
 
   ValitseRahavarausKohdistukselle
   (process-event [{rahavaraus :rahavaraus nro :nro} app]
-    (let [_ (js/console.log "ValitseRahavarausKohdistukselle :: rahavaraus" (pr-str rahavaraus))
-          _ (js/console.log "ValitseTehtavaryhmaKohdistukselle :: nro" (pr-str nro))
-          app (assoc-in app [:lomake :kohdistukset nro :rahavaraus] rahavaraus)
-          ]
-      app))
+    (assoc-in app [:lomake :kohdistukset nro :rahavaraus] rahavaraus))
 
   ValitseToimenpideKohdistukselle
   (process-event [{toimenpide :toimenpide nro :nro} app]
-    (let [_ (js/console.log "ValitseToimenpideKohdistukselle :: toimenpide " (pr-str toimenpide))
-          _ (js/console.log "ValitseToimenpideKohdistukselle :: nro" (pr-str nro))
-          ;; Toimenpideinstanssi on pakko antaa ja se on saatavilla toimenpiteen tiedoista, joten asetetaan se samalla
+    (let [;; Toimenpideinstanssi on pakko antaa ja se on saatavilla toimenpiteen tiedoista, joten asetetaan se samalla
           app (-> app
                 (assoc-in [:lomake :kohdistukset nro :toimenpide] toimenpide)
                 (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] (:toimenpideinstanssi toimenpide)))
@@ -277,28 +316,18 @@
 
   LisatyonLisatieto
   (process-event [{lisatieto :lisatieto nro :nro} app]
-    (let [_ (js/console.log "LisatyonLisatieto :: lisatieto" (pr-str lisatieto))
-          _ (js/console.log "LisatyonLisatieto :: nro" (pr-str nro))
-          app (assoc-in app [:lomake :kohdistukset nro :lisatyon-lisatieto] lisatieto)
-          ]
-      app))
+    (assoc-in app [:lomake :kohdistukset nro :lisatyon-lisatieto] lisatieto))
 
   KohdistuksenSumma
   (process-event [{summa :summa nro :nro} app]
-    (let [_ (js/console.log "KohdistuksenSumma :: summa" (pr-str summa))
-          _ (js/console.log "KohdistuksenSumma :: nro" (pr-str nro))
-          app (assoc-in app [:lomake :kohdistukset nro :summa] summa)
-          ]
-      app))
+    (assoc-in app [:lomake :kohdistukset nro :summa] summa))
 
   KoontilaskunKuukausi
   (process-event [{arvo :arvo} app]
-    (let [_ (js/console.log "KoontilaskunKuukausi :: arvo" (pr-str arvo))
-          erapaiva (kulut/koontilaskun-kuukausi->pvm
+    (let [erapaiva (kulut/koontilaskun-kuukausi->pvm
                      arvo
                      (-> @tila/yleiset :urakka :alkupvm)
                      (-> @tila/yleiset :urakka :loppupvm))
-          _ (js/console.log "KoontilaskunKuukausi :: uusi erapaiva" (pr-str erapaiva))
           app (-> app
                 (assoc-in [:lomake :koontilaskun-kuukausi] arvo)
                 ;; Eräpäivän pitää olla aina saman koontilaskun kuukauden sisällä.
@@ -307,15 +336,38 @@
 
   ValitseErapaiva
   (process-event [{erapaiva :erapaiva} app]
-    (let [_ (js/console.log "ValitseErapaiva :: erapaiva" (pr-str erapaiva))
-          app (assoc-in app [:lomake :erapaiva] erapaiva)
-          ]
-      app))
+    (assoc-in app [:lomake :erapaiva] erapaiva))
 
   KoontilaskunNumero
   (process-event [{koontilaskunnumero :koontilaskunnumero} app]
-    (let [_ (js/console.log "KoontilaskunNumero :: koontilaskunnumero" (pr-str koontilaskunnumero))
-          app (assoc-in app [:lomake :laskun-numero] koontilaskunnumero)
+    (let [app (assoc-in app [:lomake :laskun-numero] koontilaskunnumero)
+          ]
+      app))
+
+  ValitseHoitokausi
+  (process-event [{urakka :urakka vuosi :vuosi} app]
+    (do
+      ;; Päivitetään koko sivu kaiken varalta
+      (tuck/action!
+        (fn [e!]
+          (e! (->HaeUrakanKulut {:id urakka :alkupvm (pvm/hoitokauden-alkupvm vuosi)
+                                  :loppupvm (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))}))))
+
+      (-> app
+        (assoc :valittu-kuukausi nil)
+        ;; Lupaukset on kiinteässä linkissä kustannusten seurannan kanssa joten tarvitaan hoitokaudellekin sama avain
+        (assoc :valittu-hoitokausi [(pvm/hoitokauden-alkupvm vuosi)
+                                    (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+        (assoc :hoitokauden-alkuvuosi vuosi))))
+
+  HoitovuodenPaatoksenTyyppi
+  (process-event [{paatoksen-tyyppi :paatoksen-tyyppi nro :nro} app]
+    (let [_ (js/console.log "HoitovuodenPaatoksenTyyppi :: paatoksen-tyyppi" (pr-str paatoksen-tyyppi))
+          _ (js/console.log "HoitovuodenPaatoksenTyyppi :: Tää funkkari ei tee muuta" (pr-str paatoksen-tyyppi))
+          ;; Urakoitsija maksaa
+          ;; Tilaaja maksaa?
+          ;; Määrittele mitä tehtäväryhmiä eri tilanteissa voi valita
+          ;app (assoc-in app [:lomake :laskun-numero] koontilaskunnumero)
           ]
       app))
 
@@ -518,10 +570,7 @@
                           kohdistukset)
           {validoi-fn :validoi} (meta lomake)
           validoitu-lomake (validoi-fn lomake)
-          _ (js/console.log "TallennaKulu :: validoitu-lomake :" (pr-str validoitu-lomake))
-          _ (js/console.log "TallennaKulu :: (meta lomake) :" (pr-str (meta lomake)))
           {validi? :validi?} (meta validoitu-lomake)
-          _ (js/console.log "TallennaKulu :: (meta validoitu-lomake) :" (pr-str (meta validoitu-lomake)))
           tyyppi (or "laskutettava" "kiinteasti-hinnoiteltu")
 
           ;; Muuta tehtäväryhmä mäpit id:ksi
@@ -659,19 +708,6 @@
                           tehtavaryhmat))]
     tehtavaryhmat))
 
-(def vuoden-paatoksen-kulun-tyypit
-  {:tavoitepalkkio "Tavoitepalkkio"
-   :tavoitehinnan-ylitys "Urakoitsija maksaa tavoitehinnan ylityksestä"
-   :kattohinnan-ylitys "Urakoitsija maksaa tavoite- ja kattohinnan ylityksestä"})
-
-(def vuoden-paatoksen-tehtavaryhmien-nimet
-  {:tavoitepalkkio "Hoitovuoden päättäminen / Tavoitepalkkio"
-   :tavoitehinnan-ylitys "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä"
-   :kattohinnan-ylitys "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"})
-
-(defn avain->tehtavaryhma [tehtavaryhmat avain]
-  (first (filter #(= (:tehtavaryhma %) (get vuoden-paatoksen-tehtavaryhmien-nimet avain)) tehtavaryhmat)))
-
 (defn koontilaskun-kk-formatter
   [a]
   (if (nil? a)
@@ -687,3 +723,11 @@
         validoitu-lomake (validoi-fn lomake)
         {validi? :validi?} (meta validoitu-lomake)]
     validi?))
+
+(defn kuluva-hoitovuosi [paivamaara]
+  (let [vuosi (pvm/vuosi paivamaara)
+        kuukausi (pvm/kuukausi paivamaara)
+        kuluva-hoitokausivuosi (if (< kuukausi 10)
+                                 (dec vuosi)
+                                 vuosi)]
+    kuluva-hoitokausivuosi))
