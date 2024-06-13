@@ -158,7 +158,8 @@
                          :alkupvm laskutuspvm
                          :loppupvm laskutuspvm
                          :kayttaja (:id kayttaja)
-                         :lisatyon-lisatieto lisatiedot}
+                         :lisatyon-lisatieto lisatiedot
+                         :rahavarausid nil}
           _ (kulut-q/luo-kulun-kohdistus<! db kulukohdistus)]
       uusi-kulu-id)))
 

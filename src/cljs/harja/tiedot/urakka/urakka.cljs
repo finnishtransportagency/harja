@@ -299,10 +299,20 @@
                                              [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)
                                              [:kohdistukset i :rahavaraus] (:kulut/rahavaraus validoinnit)]
 
-                                            ;; Muu kulu on joko tavoitehintainen tai ei tavoitehintainen, se ei voi olla nil, joten tarkistetaan vain summa
-                                            (= :muukulu kohdistustyyppi)
-                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)])))
-                                (range (count kohdistukset)))]
+                                            ;; Kun Muu kulu on tavoitehintainen tarkistetaan summa, lisätieto ja tehtäväryhmä
+                                            (and (= :muukulu kohdistustyyppi) (:tavoitehintainen (:tavoitehinta? kohdistus)))
+                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                                             [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)
+                                             [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)]
+
+                                            ;; Kun Muu kulu on ei-tavoitehintainen tarkistetaan summa, lisätieto ja toimenpideinstanssi
+                                            (and (= :muukulu kohdistustyyppi) (:eitavoitehintainen (:tavoitehinta? kohdistus)))
+                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                                             [:kohdistukset i :toimenpideinstanssi] (:kulut/toimenpideinstanssi validoinnit)
+                                             [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)]
+                                            )))
+                                (range (count kohdistukset)))
+         _ (js/console.log "kohdistusvalidoinnit: " (pr-str kohdistusvalidoinnit))]
 
      (apply luo-validius-tarkistukset (concat kulun-oletus-validoinnit kohdistusvalidoinnit)))))
 
