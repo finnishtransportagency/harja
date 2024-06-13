@@ -128,3 +128,15 @@ DELETE
 DELETE
   FROM rahavaraus
  WHERE id = :id :: BIGINT;
+
+-- name: hae-rahavarauksen-tehtavaryhmat
+SELECT tr.id,
+       tr.nimi AS tehtavaryhma,
+       tp.id   AS toimenpide,
+       tpi.id  AS "toimenpideinstanssi"
+  FROM rahavaraus_tehtava rt
+           JOIN tehtava t ON t.id = rt.tehtava_id
+           JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
+           JOIN toimenpide tp ON t.emo = tp.id
+           JOIN toimenpideinstanssi tpi ON tpi.toimenpide = tp.id AND tpi.urakka = :urakkaid
+ WHERE rt.rahavaraus_id = :rahavarausid :: BIGINT;
