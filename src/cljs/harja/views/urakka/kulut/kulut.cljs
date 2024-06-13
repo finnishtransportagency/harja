@@ -1102,14 +1102,20 @@
      (let [[hk-alkupvm hk-loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))
            kuukaudet (pvm/aikavalin-kuukausivalit
                       [hk-alkupvm
-                       hk-loppupvm])]
+                       hk-loppupvm])
+           urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+           valittu-hoitokausi (if (nil? (:hoitokauden-alkuvuosi app))
+                                (tiedot/kuluva-hoitovuosi (pvm/nyt))
+                                (:hoitokauden-alkuvuosi app))
+           hoitovuodet (into [] (range urakan-alkuvuosi (+ 5 urakan-alkuvuosi)))]
        [:div#vayla.kulujen-kohdistus.margin-top-16
         (if syottomoodi
           [:div
            #_ [kulujen-syottolomake e! app]
-           [kululomake/kululomake e! app]]
+             [kululomake/kululomake e! app]]
           [:div
            [:div.flex-row
+            [debug/debug app]
             [:h1 "Kulujen kohdistus"]
             ^{:key "raporttixls"}
             [:form {:style {:margin-left "auto"}
@@ -1143,6 +1149,15 @@
              {:ikoni [ikonit/harja-icon-action-add]}]]
 
            [:div.flex-row {:style {:justify-content "flex-start"}}
+            [:div.filtteri
+             [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
+             [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
+                                           :vayla-tyyli? true
+                                           :data-cy "hoitokausi-valinta"
+                                           :valitse-fn #(e! (tiedot/->ValitseHoitokausi (-> @tila/yleiset :urakka :id) %))
+                                           :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitovuodet "Hoitovuosi")
+                                           :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+              hoitovuodet]]
             [valinnat/kuukausi {:nil-valinta yleiset/valitse-text
                                 :vayla-tyyli? true
                                 :valitse-fn #(do
