@@ -3,6 +3,7 @@
   (:require [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
+            [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [taoensso.timbre :as log]
             [harja.kyselyt
@@ -162,7 +163,6 @@
   (let [kulukohdistukset (group-by :id (q/hae-urakan-kulut-kohdistuksineen db {:urakka   (:urakka-id hakuehdot)
                                                                                :alkupvm  (:alkupvm hakuehdot)
                                                                                :loppupvm (:loppupvm hakuehdot)}))
-        _ (println "hae-kulut-kohdistuksineen :: kulukohdistukset: " (pr-str kulukohdistukset))
         kulukohdistukset (kasittele-kohdistukset db kulukohdistukset)
         kulukohdistukset (ryhmittele-urakan-kulut kulukohdistukset)
         kulukohdistukset (muodosta-naytettava-rakenne kulukohdistukset)]
@@ -179,9 +179,8 @@
   [db user {:keys [urakka-id id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (let [kulu (first (q/hae-kulu db {:urakka urakka-id
-                                    :id     id}))
+                                    :id id}))
         kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kulu)})
-        _ (println "kohdistukset: " (pr-str kohdistukset))
         ;; Poista nil rahavaraukset
         kohdistukset (mapv (fn [kohdistus]
                              (let [kohdistus (if (:rahavaraus_id kohdistus)
@@ -189,13 +188,17 @@
                                                (dissoc kohdistus :rahavaraus_id :rahavaraus_nimi))]
                                kohdistus))
                        kohdistukset)
+        ;; Frontilla kulun muokkauksessa on olennaista, että kulun kohdistuksen rahavaraus sisältää kaikki mahdolliset tehtäväryhmät
+        kohdistukset (mapv (fn [kohdistus]
+                             (if (:rahavaraus_id kohdistus)
+                               (let [tehtavaryhmat (rahavaraus-kyselyt/hae-rahavarauksen-tehtavaryhmat db {:rahavarausid (:rahavaraus_id kohdistus)
+                                                                                                           :urakkaid urakka-id})]
+                                 (assoc-in kohdistus [:rahavaraus :tehtavaryhmat] tehtavaryhmat))
+                               kohdistus))
+                       kohdistukset)
         kulun-kohdistukset (into []
                              (map konv/alaviiva->rakenne)
-                             kohdistukset
-                             )
-        _ (println "kulun-kohdistukset: " (pr-str kulun-kohdistukset))
-        #_#_kulun-kohdistukset (into []
-                                 (q/hae-kulun-kohdistukset db {:kulu (:id kulu)}))
+                             kohdistukset)
         liitteet (into [] (q/hae-liitteet db {:kulu-id id}))]
     (if-not (empty? kulu)
       (assoc kulu :kohdistukset kulun-kohdistukset :liitteet liitteet)
@@ -453,14 +456,25 @@
                                         [] (range (pvm/vuosi alkupvm) (pvm/vuosi loppupvm)))]
     vuosittaiset-valikatselmukset))
 
+(def db-vastaus->speqcl-avaimet
+  {:f1 :id
+   :f2 :tehtavaryhma
+   :f3 :toimenpide
+   :f4 :toimenpideinstanssi})
+
 (defn hae-urakan-rahavaraukset [db user {:keys [urakka-id] :as hakuehdot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (let [urakan-tiedot (first (urakka-kyselyt/hae-urakka db {:id urakka-id}))
         _ (when (nil? urakan-tiedot)
             (throw (IllegalArgumentException.
                      (str "Virheellinen urakka-id " urakka-id))))
-        urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:id urakka-id})
-        _ (println "urakan-rahavaraukset: " urakan-rahavaraukset)]
+        urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset-ja-tehtavaryhmat db {:id urakka-id})
+        urakan-rahavaraukset (->> urakan-rahavaraukset
+                               (mapv #(update % :tehtavaryhmat konversio/jsonb->clojuremap))
+                               (mapv #(update % :tehtavaryhmat
+                                                                (fn [rivit]
+                                                                  (let [tulos (keep (fn [r] (clojure.set/rename-keys r db-vastaus->speqcl-avaimet)) rivit)]
+                                                                    tulos)))))]
     urakan-rahavaraukset))
 
 (defn- kulu-excel
