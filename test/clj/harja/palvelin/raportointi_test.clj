@@ -79,11 +79,11 @@
                                           :konteksti  "koko maa"
                                           :parametrit {:alkupvm  (c/to-date (time/local-date 2005 10 10))
                                                        :loppupvm (c/to-date (time/local-date 2010 10 10))}}))]
-    (is (thrown? Exception (kutsu-palvelua +kayttaja-yit_uuvh+)))
     ;; ei heitä virhettä järjestelmänvastuuhenkilölle
     (is (some? (kutsu-palvelua +kayttaja-jvh+)))
-    ;; ei heitä virhettä tilaajan urakanvalvojalle
-    (is (some? (kutsu-palvelua +kayttaja-tero+)))))
+    ;; heittää virheen tilaajan urakanvalvojalle ja urakoitsijan vastuuhenkilölle
+    (is (thrown? Exception (kutsu-palvelua +kayttaja-tero+)))
+    (is (thrown? Exception (kutsu-palvelua +kayttaja-yit_uuvh+)))))
 
 (deftest raportin-suoritustietojen-roolien-parsinta
   (let [roolit-jvh #{"Jarjestelmavastaava"}

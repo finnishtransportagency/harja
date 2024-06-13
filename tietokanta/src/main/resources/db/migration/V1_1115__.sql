@@ -1,23 +1,6 @@
--- Poistetaan turhaksi jääneitä kolumneita kulu ja kulu_kohdistus tauluista
-ALTER TABLE kulu
-    DROP COLUMN IF EXISTS tyyppi;
--- Tyypin voi poistaa, koska kaikki on tyyppiä 'laskutettava'
-
--- Poistetaan turhaksi jäänyt laskutustyyppi
-DROP TYPE IF EXISTS laskutyyppi;
-
--- Kululla voi olla monta kohdistusta ja niiden tyyppi on helpointa hallita kohdistuksessa itsessään
-CREATE TYPE kohdistustyyppi AS ENUM ('rahavaraus', 'hankintakulu','muukulu', 'lisatyo', 'paatos');
-
--- Asetetaan defaultiksi useimmin käytössäoleva hankintakulu.
--- Lopulliset tyypit tulee, kun rahavarausten korjaava systeemi ajetaan kantaan
-ALTER TABLE harja.public.kulu_kohdistus
-    ADD COLUMN IF NOT EXISTS tyyppi kohdistustyyppi DEFAULT 'hankintakulu' NOT NULL;
-
-UPDATE kulu_kohdistus
-   SET tyyppi = 'rahavaraus'
- WHERE rahavaraus_id IS NOT NULL;
-
-ALTER TABLE kulu_kohdistus
-    DROP COLUMN IF EXISTS suoritus_alku,
-    DROP COLUMN IF EXISTS suoritus_loppu; -- Suoritusajat voi poistaa, koska ne ovat aina samat kuin kulu.erapaiva
+-- Indeksit ajetaan tuotantoon manuaalisesti niiden keston takia. Migraatio olemassa dokumentaatiota
+-- ja muiden ympäristöjen yhtenäisenä pitämistä varten.
+DROP INDEX CONCURRENTLY IF EXISTS index_integraatioviesti_on_sisalto_trigram;
+-- Indeksöidään vain ensimmäiset 2000 merkkiä integraatioviesti-taulun sisällöstä
+-- Tällä tavoitellaan integraatioviestien insertoinnin nopeutusta ja samalla indeksin koon pienentämistä.
+CREATE INDEX CONCURRENTLY IF NOT EXISTS index_integraatioviesti_on_sisalto_substring_trigram ON integraatioviesti USING gin (substring(sisalto, 0, 2000) gin_trgm_ops);

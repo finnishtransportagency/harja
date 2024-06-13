@@ -1,0 +1,153 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "toteutuneet-kustannukset": {
+      "type": "object",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "urakka": {
+            "type": "integer",
+            "description": "Harjan urakka-id."
+          },
+          "urakkatunnus": {
+            "type": "string",
+            "description": "Urakasta eri järjestelmissä ja geometria-aineistoissa käytetty tunniste. Uudemmissa urakoissa sama kuin urakan Sampo-id, vanhemmissa urakoissa tunnisteena käytetään alueurakkanumeroa."
+          }
+        },
+        "kulut": {
+          "type": "array",
+          "properties": {
+            "kulu": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "description": "Kustannusrivin id Harjassa."
+                },
+                "laskun-tunniste": {
+                  "type": "string",
+                  "description": "Laskun tunniste urakoitsijan kirjanpidossa."
+                },
+                "kulun-kuvaus": {
+                  "type": "string",
+                  "description": "Kuluun kirjattu lisätieto."
+                },
+                "poistettu": {
+                  "type": "boolean",
+                  "description": "True kun koko kulu kaikkine kohdistuksineen on merkitty Harjassa poistetuksi. Oletus: false."
+                },
+                "kulun-ajankohta": {
+                  "type": "object",
+                  "properties": {
+                    "koontilaskun-vuosi": {
+                      "type": "integer",
+                      "description": "Koontilaskun vuosi. Kalenterivuosi jota toteutunut kustannus koskee."
+                    },
+                    "koontilaskun-kuukausi": {
+                      "type": "integer",
+                      "description": "Koontilaskun vuosi. Kalenterikuukausi jota toteutunut kustannus koskee."
+                    },
+                    "laskun-paivamaara": {
+                      "type": "string",
+                      "format": "date",
+                      "description": "Laskun päivämäärä."
+                    },
+                    "required": [
+                      "koontilaskun-vuosi",
+                      "koontilaskun-kuukausi",
+                      "laskun-paivamaara"
+                    ]
+                  }
+                },
+                "kulun-kokonaissumma": {
+                  "type": "number",
+                  "description": "Koontilaskun kustannusten kokonaismäärä. Yksikkö: euro."
+                },
+                "kulukohdistukset": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "kulukohdistus": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "description": "Yksittäisen kulurivin (kulukohdistuksen) id Harjassa."
+                          },
+                          "rivinumero": {
+                            "type": "integer",
+                            "description": "Yksittäisen kulurivin (kulukohdistuksen) järjestys kulukokonaisuudessa."
+                          },
+                          "tyyppi": {
+                            "type": "string",
+                            "description": "Kulukohdstukseen tyyppi. Tyypitys on uudistuksen kohteena 2024, sen takia string, ei enumia."
+                          },
+                          "lisatieto": {
+                            "type": "string",
+                            "description": "Kulukohdstukseen kirjattu lisätieto."
+                          },
+                          "poistettu": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "True kun koko kulu kaikkine kohdistuksineen on merkitty Harjassa poistetuksi. Oletus: false."
+                          },
+                          "summa": {
+                            "type": "number",
+                            "description": "Yksittäisen kulurivin (kulukohdistuksen) summa. Yksikkö: euro."
+                          },
+                          "kohdistus": {
+                            "type": "object",
+                            "properties": {
+                              "toimenpide": {
+                                "type": "integer",
+                                "description": "Harjan toimenpide-id."
+                              },
+                              "tehtavaryhma": {
+                                "type": "integer",
+                                "description": "Harjan tehtavaryhma-id."
+                              },
+                              "rahavaraus": {
+                                "type": "integer",
+                                "description": "Harjan rahavaraus-id."
+                              },
+                              "tehtava": {
+                                "type": "integer",
+                                "description": "Harjan tehtava-id."
+                              }
+                            },
+                            "required": [
+                              "toimenpide"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "rivinumero",
+                          "tyyppi",
+                          "summa",
+                          "kohdistus"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "kulun-ajankohta",
+                "kulun-kokonaissumma",
+                "kulukohdistukset"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
