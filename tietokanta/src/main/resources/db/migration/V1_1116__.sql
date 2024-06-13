@@ -11,7 +11,7 @@ CREATE TYPE kohdistustyyppi AS ENUM ('rahavaraus', 'hankintakulu','muukulu', 'li
 
 -- Asetetaan defaultiksi useimmin käytössäoleva hankintakulu.
 -- Lopulliset tyypit tulee, kun rahavarausten korjaava systeemi ajetaan kantaan
-ALTER TABLE harja.public.kulu_kohdistus
+ALTER TABLE kulu_kohdistus
     ADD COLUMN IF NOT EXISTS tyyppi kohdistustyyppi DEFAULT 'hankintakulu' NOT NULL;
 
 UPDATE kulu_kohdistus
@@ -21,3 +21,20 @@ UPDATE kulu_kohdistus
 ALTER TABLE kulu_kohdistus
     DROP COLUMN IF EXISTS suoritus_alku,
     DROP COLUMN IF EXISTS suoritus_loppu; -- Suoritusajat voi poistaa, koska ne ovat aina samat kuin kulu.erapaiva
+
+-- Jotta tulevat rahavarausten automaattiset tausta-ajot korjaisivat kulu_kohdistus ja kustannusarvioitu_työ taulujen
+-- rivit oikein. Meidän on lisättävä vielä yksi rahavaraus
+INSERT INTO rahavaraus (nimi, luoja, luotu) VALUES ('Rahavararaus M - Muut rahavaraukset', (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), now());
+
+-- Lisätään muutama pakollinen tehtävä rahavarukselle
+INSERT
+  INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
+SELECT rv.id,
+       t.id,
+       (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+       now()
+  FROM rahavaraus rv,
+       tehtava t
+ WHERE t.nimi IN ('Muut tavoitehintaan vaikuttavat rahavaraukset','Pohjavesisuojaukset')
+   AND rv.nimi = 'Rahavararaus M - Muut rahavaraukset';
+
