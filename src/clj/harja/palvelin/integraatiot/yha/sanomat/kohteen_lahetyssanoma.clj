@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma
   (:require [harja.tyokalut.xml :as xml]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
             [clojure.walk :as walk])
@@ -82,12 +83,12 @@
        [:lisa-aineet lisaaineet]]]]))
 
 
-(defn lisaa-massa [{:keys [massatyyppi max-raekoko kuulamyllyluokka yhteenlaskettu-kuulamyllyarvo
+(defn lisaa-massa [{:keys [massatyyppi maxraekoko kuulamyllyluokka yhteenlaskettu-kuulamyllyarvo
                            yhteenlaskettu-litteysluku litteyslukuluokka runkoaineet sideaineet lisaaineet]}]
   [:massa
    [:massatyyppi massatyyppi]
-   [:max-raekoko max-raekoko]
-   [:kuulamyllyluokka kuulamyllyluokka]
+   [:max-raekoko maxraekoko]
+   [:kuulamyllyluokka (paallystysilmoitus-domain/kuulamylly-koodi-nimella kuulamyllyluokka)]
    [:yhteenlaskettu-kuulamyllyarvo yhteenlaskettu-kuulamyllyarvo]
    [:yhteenlaskettu-litteysluku yhteenlaskettu-litteysluku]
    [:litteyslukuluokka litteyslukuluokka]
@@ -100,18 +101,18 @@
                                                 :massaprosentti
                                                 :fillerityyppi
                                                 :kuvaus]}))
-   [:sideaineet (muunna-collection-mappeja-vektoreiksi
+   (into [:sideaineet] (muunna-collection-mappeja-vektoreiksi
                   {:mapit sideaineet
                    :kohteen-nimi-key :sideaine
                    :avainten-jarjestys [:tyyppi
-                                        :pitoisuus]})]
-   [:lisaaineet (muunna-collection-mappeja-vektoreiksi
+                                        :pitoisuus]}))
+   (into [:lisaaineet] (muunna-collection-mappeja-vektoreiksi
                   {:mapit lisaaineet
                    :kohteen-nimi-key :lisaaine
                    :avainten-jarjestys [:tyyppi
-                                        :pitoisuus]})]])
+                                        :pitoisuus]}))])
 
-(defn tee-alustalle-tehty-toimenpide [{:keys [harja-id verkkotyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+(defn tee-alustalle-tehty-toimenpide [{:keys [id verkkotyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                                               tr-ajorata tr-kaista verkon-tarkoitus kasittelymenetelma paksuus lisatty-paksuus
                                               verkon-sijainti toimenpide kasittelysyvyys massamenekki kokonaismassamaara massa murske]}
                                       kohteen-tienumero karttapvm]
@@ -119,7 +120,7 @@
                               4 ;; "Kevyt rakenteen parantaminen"
                               9)] ;; "ei tiedossa"
     [:alustalle-tehty-toimenpide
-     [:harja-id harja-id]
+     [:harja-id id]
      [:tierekisteriosoitevali
       [:karttapaivamaara (xml/formatoi-paivamaara (if karttapvm karttapvm (pvm/nyt)))]
       ;; Tienumero on joko alustatoimenpiteelle määritelty tienumero, tai sen puuttuessa alustatoimenpiteen
@@ -143,15 +144,18 @@
        [:verkon-sijainti verkon-sijainti])
      (when massamenekki [:massamenekki massamenekki])
      [:kokonaismassamaara kokonaismassamaara]
-     (lisaa-massa massa)
-     (into [:murske] murske)]))
+      (lisaa-massa massa)
+     [:murske 
+      [:mursketyyppi (:tyyppi murske)]
+      [:rakeisuus (:rakeisuus murske)]
+      [:iskunkestavyys (:iskunkestavyys murske)]]]))
 
-(defn tee-kulutuskerrokselle-tehdyt-toimet [{:keys [yha-id harja-id poistettu tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+(defn tee-kulutuskerrokselle-tehdyt-toimet [{:keys [yha-id alikohde poistettu tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                                                     tr-ajorata tr-kaista leveys pinta-ala paallystetyomenetelma massamenekki massa kokonaismassamaara] :as toimet}
                                             kohteen-tienumero karttapvm]
   [:kulutuskerrokselle-tehty-toimenpide
    [:yha-id yha-id]
-   [:harja-id harja-id]
+   [:harja-id alikohde]
    [:poistettu poistettu]
    [:tierekisteriosoitevali
     [:karttapaivamaara (xml/formatoi-paivamaara (if karttapvm karttapvm (pvm/nyt)))]
@@ -167,43 +171,53 @@
    [:paallystetyomenetelma paallystetyomenetelma]
    [:massamenekki massamenekki]
    [:kokonaismassamaara kokonaismassamaara]
-   (into [:massa] massa)])
+   (lisaa-massa massa)])
+
 
 ;; YHA ohjaa paikkauskohteiden pot-lomakkeet poikkeuskäsittelyllä yhteisesti sovitun kohde id:n avulla
 (def paikkauskohteiden-yha-id 99)
+
+
+(defn poista-nil-arvot-vektoreista [data]
+  (walk/postwalk
+    (fn [x]
+      (cond
+        (and (vector? x) (keyword? (first x)) (nil? (second x))) nil
+        :else x))
+    data))
 
 (defn tee-kohde [{:keys [yhaid yha-kohdenumero id yllapitokohdetyyppi yllapitokohdetyotyyppi tr-numero
                          karttapaivamaara nimi tunnus paikkauskohde-id] :as kohde}
                  kulutuskerrokselle-tehdyt-toimet
                  alustalle-tehdyt-toimet
                  {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot paikkauskohde-toteutunut-hinta] :as paallystysilmoitus}]
-  [:kohde
+  (poista-nil-arvot-vektoreista [:kohde
    ;; Tämän yhaid:n oltava paikkauskohteen POT:eilla aina 99
-   [:yha-id (if paikkauskohde-id
-              paikkauskohteiden-yha-id
-              yhaid)]
-   [:harja-id id]
-   (when yha-kohdenumero [:kohdenumero yha-kohdenumero])
-   [:kohdetyyppi (kasittele-kohteen-tyyppi yllapitokohdetyyppi)]
-   [:kohdetyotyyppi yllapitokohdetyotyyppi]
-   (when nimi [:nimi nimi])
-   (when tunnus [:tunnus tunnus])
-   (when aloituspvm [:toiden-aloituspaivamaara (xml/formatoi-paivamaara aloituspvm)])
-   (when valmispvm-paallystys [:paallystyksen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-paallystys)])
-   (when valmispvm-kohde [:kohteen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-kohde)])
-   (when takuupvm [:takuupaivamaara (xml/formatoi-paivamaara takuupvm)])
-   [:toteutunuthinta (if paikkauskohde-id
-                       paikkauskohde-toteutunut-hinta
-                       (laske-hinta-kokonaishinta paallystysilmoitus))]
-   (tee-tierekisteriosoitevali kohde) ;; TODO: Miksi tässä (dissoc kohde :tr-ajorata :tr-kaista)
-   (when alustalle-tehdyt-toimet
-     (reduce conj [:alustalle-tehdyt-toimet]
-       (mapv #(tee-alustalle-tehty-toimenpide % tr-numero karttapaivamaara)
-         alustalle-tehdyt-toimet)))
-   (when kulutuskerrokselle-tehdyt-toimet
-     (reduce conj [:kulutuskerrokselle-tehdyt-toimet]
-       (mapv #(tee-kulutuskerrokselle-tehdyt-toimet % tr-numero karttapaivamaara)
-         kulutuskerrokselle-tehdyt-toimet)))])
+                    [:yha-id (if paikkauskohde-id
+                               paikkauskohteiden-yha-id
+                               yhaid)]
+                    [:harja-id id]
+                    (when yha-kohdenumero [:kohdenumero yha-kohdenumero])
+                    [:kohdetyyppi (kasittele-kohteen-tyyppi yllapitokohdetyyppi)]
+                    [:kohdetyotyyppi yllapitokohdetyotyyppi]
+                    (when nimi [:nimi nimi])
+                    (when tunnus [:tunnus tunnus])
+                    (when aloituspvm [:toiden-aloituspaivamaara (xml/formatoi-paivamaara aloituspvm)])
+                    (when valmispvm-paallystys [:paallystyksen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-paallystys)])
+                    (when valmispvm-kohde [:kohteen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-kohde)])
+                    (when takuupvm [:takuupaivamaara (xml/formatoi-paivamaara takuupvm)])
+                    [:toteutunuthinta (if paikkauskohde-id
+                                        paikkauskohde-toteutunut-hinta
+                                        (laske-hinta-kokonaishinta paallystysilmoitus))]
+                    (tee-tierekisteriosoitevali kohde) ;; TODO: Miksi tässä (dissoc kohde :tr-ajorata :tr-kaista)
+                    (when alustalle-tehdyt-toimet
+                      (reduce conj [:alustalle-tehdyt-toimet]
+                        (mapv #(tee-alustalle-tehty-toimenpide % tr-numero karttapaivamaara)
+                          alustalle-tehdyt-toimet)))
+                    (when kulutuskerrokselle-tehdyt-toimet
+                      (reduce conj [:kulutuskerrokselle-tehdyt-toimet]
+                        (mapv #(tee-kulutuskerrokselle-tehdyt-toimet % tr-numero karttapaivamaara)
+                          kulutuskerrokselle-tehdyt-toimet)))]))
 
 (defn muodosta-sanoma [{:keys [yhaid harjaid sampoid yhatunnus]} kohteet]
   [:urakan-kohteiden-toteumatietojen-kirjaus
