@@ -357,24 +357,240 @@
 
 (def +xsd-polku+ "xsd/yha/")
 
+(def sisalto-tulos
+   [:urakan-kohteiden-toteumatietojen-kirjaus
+   {:xmlns "http://www.vayla.fi/xsd/yha"}
+   [:urakka
+    [:yha-id 5731290]
+    [:harja-id 53]
+    [:sampotunnus "5731290-TES2"]
+    [:tunnus "YHA5731290"]
+    [:kohteet
+     [:kohde
+      [:yha-id 123456]
+      [:harja-id 32]
+      [:kohdenumero 1]
+      [:kohdetyyppi 1]
+      [:kohdetyotyyppi "paallystys"]
+      [:nimi "Kirkonkylä - Toppinen 2"]
+      [:tunnus "testitunnus"]
+      [:toiden-aloituspaivamaara "2023-01-01"]
+      [:paallystyksen-valmistumispaivamaara "2023-08-01"]
+      [:kohteen-valmistumispaivamaara "2023-08-01"]
+      [:takuupaivamaara "2023-08-01"]
+      [:toteutunuthinta 98900M]
+      [:tierekisteriosoitevali
+       [:karttapaivamaara "2022-07-15"]
+       [:tienumero 86]
+       [:aosa 20]
+       [:aet 0]
+       [:losa 20]
+       [:let 1300]
+       nil
+       nil]
+      [:alustalle-tehdyt-toimet
+       [:alustalle-tehty-toimenpide
+        [:harja-id 10]
+        [:tierekisteriosoitevali
+         [:karttapaivamaara "2022-07-15"]
+         [:tienumero 86]
+         [:aosa 20]
+         [:aet 650]
+         [:losa 20]
+         [:let 1300]
+         [:ajorata 1]
+         [:kaista 11]]
+        [:kasittelymenetelma 32]
+        [:lisatty-paksuus 12]
+        [:kasittelysyvyys 300]
+        [:verkkotyyppi 5]
+        nil
+        nil
+        [:massamenekki 0.10M]
+        [:kokonaismassamaara 10.2M]
+        [:massa
+         [:massatyyppi 12]
+         [:max-raekoko 16]
+         [:kuulamyllyluokka 3]
+         [:yhteenlaskettu-kuulamyllyarvo 10.0M]
+         [:yhteenlaskettu-litteysluku 20.0M]
+         [:litteyslukuluokka "FI15"]
+         [:runkoaineet
+          [:runkoaine
+           [:runkoainetyyppi 1]
+           [:kuulamyllyarvo 10.0M]
+           [:litteysluku 20.0M]
+           [:massaprosentti 100.0M]
+           nil
+           nil]
+          [:runkoaine
+           [:runkoainetyyppi 3]
+           nil
+           nil
+           [:massaprosentti 1.0M]
+           [:fillerityyppi "Kalkkifilleri (KF)"]
+           nil]]
+         [:sideaineet [:sideaine [:tyyppi 1] [:pitoisuus 5.5M]]]
+         [:lisaaineet [:lisaaine [:tyyppi 1] [:pitoisuus 0.5M]]]]
+        [:murske
+         [:mursketyyppi 1]
+         [:rakeisuus "0/40"]
+         [:iskunkestavyys "LA30"]]]
+       [:alustalle-tehty-toimenpide
+        [:harja-id 9]
+        [:tierekisteriosoitevali
+         [:karttapaivamaara "2022-07-15"]
+         [:tienumero 86]
+         [:aosa 20]
+         [:aet 0]
+         [:losa 20]
+         [:let 650]
+         [:ajorata 1]
+         [:kaista 11]]
+        [:kasittelymenetelma 32]
+        [:lisatty-paksuus 12]
+        [:kasittelysyvyys 300]
+        [:verkkotyyppi 5]
+        nil
+        nil
+        [:massamenekki 0.10M]
+        [:kokonaismassamaara 10.2M]
+        [:massa
+         [:massatyyppi 12]
+         [:max-raekoko 16]
+         [:kuulamyllyluokka 3]
+         [:yhteenlaskettu-kuulamyllyarvo 10.0M]
+         [:yhteenlaskettu-litteysluku 20.0M]
+         [:litteyslukuluokka "FI15"]
+         [:runkoaineet
+          [:runkoaine
+           [:runkoainetyyppi 1]
+           [:kuulamyllyarvo 10.0M]
+           [:litteysluku 20.0M]
+           [:massaprosentti 100.0M]
+           nil
+           nil]
+          [:runkoaine
+           [:runkoainetyyppi 3]
+           nil
+           nil
+           [:massaprosentti 1.0M]
+           [:fillerityyppi "Kalkkifilleri (KF)"]
+           nil]]
+         [:sideaineet [:sideaine [:tyyppi 1] [:pitoisuus 5.5M]]]
+         [:lisaaineet [:lisaaine [:tyyppi 1] [:pitoisuus 0.5M]]]]
+        [:murske
+         [:mursketyyppi 1]
+         [:rakeisuus "0/40"]
+         [:iskunkestavyys "LA30"]]]]
+      [:kulutuskerrokselle-tehdyt-toimet
+       [:kulutuskerrokselle-tehty-toimenpide
+        [:yha-id 123457]
+        [:harja-id 45]
+        [:poistettu false]
+        [:tierekisteriosoitevali
+         [:karttapaivamaara "2022-07-15"]
+         [:tienumero 86]
+         [:aosa 20]
+         [:aet 0]
+         [:losa 20]
+         [:let 650]
+         [:ajorata 1]
+         [:kaista 11]]
+        [:leveys 4.00M]
+        [:pinta-ala 2600M]
+        [:paallystetyomenetelma 21]
+        [:massamenekki 100.0M]
+        [:kokonaismassamaara 260M]
+        [:massa
+         [:massatyyppi 12]
+         [:max-raekoko 16]
+         [:kuulamyllyluokka 3]
+         nil
+         nil
+         [:litteyslukuluokka "FI15"]
+         [:runkoaineet
+          [:runkoaine
+           [:runkoainetyyppi 1]
+           [:kuulamyllyarvo 10.0M]
+           [:litteysluku 20.0M]
+           [:massaprosentti 100.0M]
+           nil
+           nil]
+          [:runkoaine
+           [:runkoainetyyppi 3]
+           nil
+           nil
+           [:massaprosentti 1.0M]
+           [:fillerityyppi "Kalkkifilleri (KF)"]
+           nil]]
+         [:sideaineet [:sideaine [:tyyppi 1] [:pitoisuus 5.5M]]]
+         [:lisaaineet [:lisaaine [:tyyppi 1] [:pitoisuus 0.5M]]]]]
+       [:kulutuskerrokselle-tehty-toimenpide
+        [:yha-id 123458]
+        [:harja-id 46]
+        [:poistettu false]
+        [:tierekisteriosoitevali
+         [:karttapaivamaara "2022-07-15"]
+         [:tienumero 86]
+         [:aosa 20]
+         [:aet 650]
+         [:losa 20]
+         [:let 1300]
+         [:ajorata 1]
+         [:kaista 11]]
+        [:leveys 4.00M]
+        [:pinta-ala 2600M]
+        [:paallystetyomenetelma 21]
+        [:massamenekki 100.0M]
+        [:kokonaismassamaara 260M]
+        [:massa
+         [:massatyyppi 12]
+         [:max-raekoko 16]
+         [:kuulamyllyluokka 3]
+         nil
+         nil
+         [:litteyslukuluokka "FI15"]
+         [:runkoaineet
+          [:runkoaine
+           [:runkoainetyyppi 1]
+           [:kuulamyllyarvo 10.0M]
+           [:litteysluku 20.0M]
+           [:massaprosentti 100.0M]
+           nil
+           nil]
+          [:runkoaine
+           [:runkoainetyyppi 3]
+           nil
+           nil
+           [:massaprosentti 1.0M]
+           [:fillerityyppi "Kalkkifilleri (KF)"]
+           nil]]
+         [:sideaineet [:sideaine [:tyyppi 1] [:pitoisuus 5.5M]]]
+         [:lisaaineet [:lisaaine [:tyyppi 1] [:pitoisuus 0.5M]]]]]]]]]])
 
 (deftest tarkista-kohteen-lahetyksen-sisalto
-  (let [db (luo-testitietokanta)
-        kohde-idt (q "SELECT id FROM yllapitokohde WHERE nimi = 'Kirkonkylä - Toppinen'") 
-        urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+  (let [db (luo-testitietokanta) 
+        odotettu-sanoma-xml (slurp "resources/xsd/yha/esimerkit/paikkauspot2-toteumatietojen-kirjaus.xml") 
+        odotettu-xml-parsittu (xml/lue odotettu-sanoma-xml)
+        kohde-idt (q "SELECT id FROM yllapitokohde WHERE nimi = 'Kirkonkylä - Toppinen 2'") 
+        urakka-id (hae-urakan-id-nimella "POT2 testipäällystysurakka")
         urakka (first (yha-kyselyt/hae-urakan-yhatiedot db {:urakka urakka-id}))
-        kohteet #p (mapv #(yha/hae-kohteen-tiedot-pot2 db %) kohde-idt)
-        lahetys-avaimet-kohde (set (keys (:kohde (first kohteet))))
+        urakka (assoc urakka :harjaid urakka-id
+                 :sampoid (yha/yhaan-lahetettava-sampoid urakka))
+        kohteet (mapv #(yha/hae-kohteen-tiedot-pot2 db %) kohde-idt)
         lahetys-avaimet-alustalle-tehdyt-toimet (set (keys (first (:alustalle-tehdyt-toimet (first kohteet))))) 
         lahetys-avaimet-kulutuskerrokselle-tehdyt-toimet (set (keys (first (:kulutuskerrokselle-tehdyt-toimet (first kohteet)))))
-        testi-avaimet (set (keys kohteen-lahetyssanoma-test/testi-kulutuskerrokselle-tehdyt-toimet))
         kulutuskerros-testi-avaimet (set (keys kohteen-lahetyssanoma-test/testi-kulutuskerrokselle-tehdyt-toimet))
         alusta-testi-avaimet (set (keys kohteen-lahetyssanoma-test/testi-alustalle-tehdyt-toimet)) 
-        sisalto (kohteen-lahetyssanoma/muodosta-sanoma urakka kohteet)  
-        #_ (println "Keys in testi-avaimet but not in lahetys-avaimet:" (clojure.set/difference kulutuskerros-testi-avaimet lahetys-avaimet-kohde))
-        ]
+        sisalto (kohteen-lahetyssanoma/muodosta-sanoma urakka kohteet)
+        xml (kohteen-lahetyssanoma/muodosta urakka kohteet)
+        luotu-xml-parsittu (xml/lue xml)]
     (is (= #{} (clojure.set/difference alusta-testi-avaimet lahetys-avaimet-alustalle-tehdyt-toimet)) "Alustan kaikki avaimet mukana")
-    (is (= #{} (clojure.set/difference kulutuskerros-testi-avaimet lahetys-avaimet-kulutuskerrokselle-tehdyt-toimet)) "Kulutuskerroksen kaikki avaimet mukana")))
+    (is (= #{} (clojure.set/difference kulutuskerros-testi-avaimet lahetys-avaimet-kulutuskerrokselle-tehdyt-toimet)) "Kulutuskerroksen kaikki avaimet mukana")
+    (is (= sisalto-tulos sisalto) "Sisältö ei ole muuttunut")
+    (is (xml/validi-xml? "xsd/yha/" "yha2.xsd" xml) "Muodostettu XML on validia")
+    (is (= odotettu-xml-parsittu luotu-xml-parsittu) "Paikkaus-POT:in XML oikein muodostettu")))
 
 
 (deftest paikkauskohteen-pot-lomakkeella-oikea-yhaid
