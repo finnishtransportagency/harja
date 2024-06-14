@@ -192,8 +192,8 @@ WHERE pot2p.pot2_id = :pot2_id;
 
 -- name: hae-pot2-alustarivit
 SELECT
-    alusta.id as "harja-id",
-    alusta.pot2_id as "pot-id",
+    alusta.id,
+    alusta.pot2_id AS "pot-id",
     alusta.tr_numero AS "tr-numero",
     alusta.tr_alkuosa AS "tr-alkuosa",
     alusta.tr_alkuetaisyys AS "tr-alkuetaisyys",
@@ -203,7 +203,7 @@ SELECT
     alusta.tr_kaista AS "tr-kaista",
     alusta.toimenpide,
     -- toimenpidespesifiset kentät
-    a_toimenpide.nimi  AS kasittelymenetelma,
+    a_toimenpide.koodi  AS kasittelymenetelma,
     alusta.verkon_tyyppi AS "verkkotyyppi",
     alusta.verkon_tarkoitus AS "verkon-tarkoitus",
     alusta.verkon_sijainti AS "verkon-sijainti",
@@ -220,24 +220,25 @@ SELECT
     pot.paallystyskohde,
     -- 
     alusta_massa.id                 AS massa_id,
-    alusta_massatyyppi.nimi         AS massa_massatyyppi,
+    alusta_massatyyppi.koodi        AS massa_massatyyppi,
+    alusta_massa.max_raekoko        AS massa_maxraekoko,
     alusta_massa.kuulamyllyluokka   AS massa_kuulamyllyluokka,
     alusta_massa.litteyslukuluokka  AS massa_litteyslukuluokka,
     alusta_runkoaine.id             AS massa_runkoaine_id,
-    alusta_runkoainetyyppi.nimi     AS massa_runkoaine_runkoainetyyppi,
+    alusta_runkoainetyyppi.koodi    AS massa_runkoaine_runkoainetyyppi,
     alusta_runkoaine.kuulamyllyarvo AS massa_runkoaine_kuulamyllyarvo,
     alusta_runkoaine.litteysluku    AS massa_runkoaine_litteysluku,
     alusta_runkoaine.massaprosentti AS massa_runkoaine_massaprosentti,
     alusta_runkoaine.fillerityyppi  AS massa_runkoaine_fillerityyppi,
     alusta_runkoaine.kuvaus         AS massa_runkoaine_kuvaus,
     alusta_sideaine.id              AS massa_sideaine_id,
-    alusta_sideainetyyppi.nimi      AS massa_sideaine_tyyppi,
+    alusta_sideainetyyppi.koodi     AS massa_sideaine_tyyppi,
     alusta_sideaine.pitoisuus       AS massa_sideaine_pitoisuus,
     alusta_lisaaine.id              AS massa_lisaaine_id,
-    alusta_lisaainetyyppi.nimi      AS massa_lisaaine_tyyppi,
+    alusta_lisaainetyyppi.koodi     AS massa_lisaaine_tyyppi,
     alusta_lisaaine.pitoisuus       AS massa_lisaaine_pitoisuus,
 
-    mursketyyppi.nimi               AS murske_tyyppi,
+    murske.tyyppi                   AS murske_tyyppi,
     murske.rakeisuus                AS murske_rakeisuus,
     murske.iskunkestavyys           AS murske_iskunkestavyys
 
@@ -254,13 +255,12 @@ SELECT
   LEFT JOIN pot2_mk_massan_lisaaine alusta_lisaaine ON alusta_massa.id = alusta_lisaaine.pot2_massa_id
   LEFT JOIN pot2_mk_lisaainetyyppi alusta_lisaainetyyppi ON alusta_lisaaine.tyyppi = alusta_lisaainetyyppi.koodi
   LEFT JOIN pot2_mk_urakan_murske murske ON alusta.murske = murske.id
-  LEFT JOIN pot2_mk_mursketyyppi mursketyyppi ON murske.tyyppi = mursketyyppi.koodi
  WHERE alusta.pot2_id = :pot2_id
    AND alusta.poistettu IS FALSE;
 
--- name: hae-paallystysilmoitusten-kulutuskerroksen-toimenpiteet
+-- name: hae-pot2-kulutuskerrokset
 SELECT pi.id                       AS paallystysilmoitus,
-       pk_osa.id                   AS "harja-id",
+       pk_osa.id                   AS alikohde,
        pk_osa.yhaid                AS "yha-id",
        pk_osa.poistettu            AS poistettu,
        pk_osa.tr_numero            AS "tr-numero",
@@ -272,26 +272,27 @@ SELECT pi.id                       AS paallystysilmoitus,
        pk_osa.tr_kaista            AS "tr-kaista",
        pot2pk.leveys               AS leveys,
        pot2pk.pinta_ala            AS "pinta-ala",
-       kktp.nimi                   AS paallystetyomenetelma,
+       kktp.koodi                   AS paallystetyomenetelma,
 
        pot2pk.massamenekki         AS massamenekki,
        pot2pk.kokonaismassamaara   AS kokonaismassamaara,
        kk_massa.id                 AS massa_id,
-       kk_massatyyppi.nimi         AS massa_massatyyppi,
+       kk_massatyyppi.koodi         AS massa_massatyyppi,
+       kk_massa.max_raekoko        AS massa_maxraekoko,
        kk_massa.kuulamyllyluokka   AS massa_kuulamyllyluokka,
        kk_massa.litteyslukuluokka  AS massa_litteyslukuluokka,
        kk_runkoaine.id             AS massa_runkoaine_id,
-       kk_runkoainetyyppi.nimi     AS massa_runkoaine_runkoainetyyppi,
+       kk_runkoainetyyppi.koodi    AS massa_runkoaine_runkoainetyyppi,
        kk_runkoaine.kuulamyllyarvo AS massa_runkoaine_kuulamyllyarvo,
        kk_runkoaine.litteysluku    AS massa_runkoaine_litteysluku,
        kk_runkoaine.massaprosentti AS massa_runkoaine_massaprosentti,
        kk_runkoaine.fillerityyppi  AS massa_runkoaine_fillerityyppi,
        kk_runkoaine.kuvaus         AS massa_runkoaine_kuvaus,
        kk_sideaine.id              AS massa_sideaine_id,
-       kk_sideainetyyppi.nimi      AS massa_sideaine_tyyppi,
+       kk_sideainetyyppi.koodi     AS massa_sideaine_tyyppi,
        kk_sideaine.pitoisuus       AS massa_sideaine_pitoisuus,
        kk_lisaaine.id              AS massa_lisaaine_id,
-       kk_lisaainetyyppi.nimi      AS massa_lisaaine_tyyppi,
+       kk_lisaainetyyppi.koodi     AS massa_lisaaine_tyyppi,
        kk_lisaaine.pitoisuus       AS massa_lisaaine_pitoisuus
 FROM paallystysilmoitus pi
          LEFT JOIN yllapitokohde ypk ON pi.paallystyskohde = ypk.id
