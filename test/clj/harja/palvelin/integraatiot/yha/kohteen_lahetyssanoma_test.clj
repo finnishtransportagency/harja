@@ -28,9 +28,7 @@
    :kohteen-valmistumispaivamaara (tee-pvm)
    :takuupaivamaara (tee-pvm) 
    :tr-alkuetaisyys 3
-   :tr-ajorata 1
    :tr-alkuosa 101
-   :tr-kaista 11
    :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
    :tr-loppuetaisyys 30
    :tr-loppuosa 101
@@ -56,12 +54,12 @@
     [:aet 3]
     [:losa 101]
     [:let 30]
-    [:ajorata 1]
-    [:kaista 11]]])
+    nil
+    nil]])
 
 (def testi-kulutuskerrokselle-tehdyt-toimet
   {:yha-id 123456
-   :harja-id 654321
+   :alikohde 654321
    :poistettu false
    :tr-alkuetaisyys 3
    :tr-ajorata 1
@@ -75,37 +73,33 @@
    :paallystetyomenetelma 12
    :massamenekki 150.0M
    :kokonaismassamaara 20.0M
-   :massa [[:massatyyppi 1]
-           [:max-raekoko 11]
-           [:kuulamyllyluokka 2] ;; AN7
-           [:yhteenlaskettu-kuulamyllyarvo 15.5M]
-           [:yhteenlaskettu-litteysluku 10.2M]
-           [:litteyslukuluokka "F15"]
-           [:runkoaineet
-            [:runkoaine
-             [:runkoainetyyppi 1]
-             [:kuulamyllyarvo 5.5M]
-             [:litteysluku 5.2M]
-             [:massaprosentti 14.5M]
-             [:fillerityyppi "Kalkkifilleri (KF)"]
-             [:kuvaus "testikuvaus"]]
-            [:runkoaine  [:runkoainetyyppi 2]
-             [:kuulamyllyarvo 5.0M]
-             [:litteysluku 5.0M]
-             [:massaprosentti 15.5M]
-             [:fillerityyppi "Kalkkifilleri (KF)"]
-             [:kuvaus "testikuvaus"]]]
-           [:sideaineet
-            [:sideaine
-             [:tyyppi 3]
-             [:pitoisuus 4.5M]]
-            [:sideaine
-             [:tyyppi 4]
-             [:pitoisuus 2.5M]]]
-           [:lisaaineet
-            [:lisaaine
-             [:tyyppi 2]
-             [:pitoisuus 25.5M]]]]})
+   :massa {:massatyyppi 1
+           :maxraekoko 11
+           :kuulamyllyluokka "AN7"
+           :yhteenlaskettu-kuulamyllyarvo 15.5M
+           :yhteenlaskettu-litteysluku 10.2M
+           :litteyslukuluokka "FI15"
+           :runkoaineet
+           '({:runkoainetyyppi 1
+              :kuulamyllyarvo 5.5M
+              :litteysluku 5.2M
+              :massaprosentti 14.5M
+              :fillerityyppi "Kalkkifilleri (KF)"
+              :kuvaus "testikuvaus"}
+             {:runkoainetyyppi 2
+              :kuulamyllyarvo 5.0M
+              :litteysluku 5.0M
+              :massaprosentti 15.5M
+              :fillerityyppi "Kalkkifilleri (KF)"
+              :kuvaus "testikuvaus"})
+           :sideaineet
+           '({:tyyppi 3
+              :pitoisuus 4.5M}
+             {:tyyppi 4
+              :pitoisuus 2.5M})
+           :lisaaineet
+           '({:tyyppi 2
+              :pitoisuus 25.5M})}})
 
 (def kulutuskerrokselle-tehdyt-toimet-tulos
   [:kulutuskerrokselle-tehty-toimenpide
@@ -132,7 +126,7 @@
     [:kuulamyllyluokka 2] ;; AN7
     [:yhteenlaskettu-kuulamyllyarvo 15.5M]
     [:yhteenlaskettu-litteysluku 10.2M]
-    [:litteyslukuluokka "F15"]
+    [:litteyslukuluokka "FI15"]
     [:runkoaineet
      [:runkoaine
       [:runkoainetyyppi 1]
@@ -161,7 +155,7 @@
 
 
 (def testi-alustalle-tehdyt-toimet
-  {:harja-id 1234567890
+  {:id 1234567890
    :tr-alkuetaisyys 3
    :tr-ajorata 1
    :tr-alkuosa 101
@@ -179,11 +173,11 @@
    :massamenekki 150.5M
    :kokonaismassamaara 25.5M
    :massa {:massatyyppi 1
-           :max-raekoko 11
-           :kuulamyllyluokka 2 ;; AN7
+           :maxraekoko 11
+           :kuulamyllyluokka "AN7"
            :yhteenlaskettu-kuulamyllyarvo 15.5M
            :yhteenlaskettu-litteysluku 10.2M
-           :litteyslukuluokka "F15"
+           :litteyslukuluokka "FI15"
            :runkoaineet
             '({:runkoainetyyppi 1
              :kuulamyllyarvo 5.5M
@@ -205,9 +199,10 @@
            :lisaaineet
             '({:tyyppi 2
              :pitoisuus 25.5M})} 
-      :murske {:mursketyyppi 2
+      :murske {:tyyppi 2
                :rakeisuus "string"
                :iskunkestavyys "LA30"}})
+
 
 (def alustalle-tehdyt-toimet-tulos
   [:alustalle-tehty-toimenpide
@@ -235,7 +230,7 @@
     [:kuulamyllyluokka 2] ;; AN7
     [:yhteenlaskettu-kuulamyllyarvo 15.5M]
     [:yhteenlaskettu-litteysluku 10.2M]
-    [:litteyslukuluokka "F15"]
+    [:litteyslukuluokka "FI15"]
     [:runkoaineet
      [:runkoaine
       [:runkoainetyyppi 1]
@@ -264,7 +259,7 @@
       [:pitoisuus 25.5M]]]]
    [:murske
     [:mursketyyppi 2]
-    [:rakeisuus "string"]
+    [:rakeisuus "string"] 
     [:iskunkestavyys "LA30"]]])
 
 
@@ -390,13 +385,6 @@
      :massaprosentti 1.0M,
      :runkoainetyyppi 2}))
 
-(def avainten-jarjestys 
-  [:runkoainetyyppi 
-   :kuulamyllyarvo
-   :litteysluku
-   :massaprosentti
-   :fillerityyppi
-   :kuvaus])
 
 (def runkoaineet-tulos
   [[:runkoaine
@@ -416,7 +404,14 @@
 
 (deftest muunna-collection-mappeja-vektoreiksi
   (testing "muunna-collection-mappeja-vektoreiksi"
-     (let [tulos (kohteen-lahetyssanoma/muunna-collection-mappeja-vektoreiksi testi-runkoaineet :runkoaine avainten-jarjestys)]
+     (let [tulos (kohteen-lahetyssanoma/muunna-collection-mappeja-vektoreiksi {:mapit testi-runkoaineet
+                                                                               :kohteen-nimi-key :runkoaine
+                                                                               :avainten-jarjestys [:runkoainetyyppi
+                                                                                                    :kuulamyllyarvo
+                                                                                                    :litteysluku
+                                                                                                    :massaprosentti
+                                                                                                    :fillerityyppi
+                                                                                                    :kuvaus]})]
        (is (= runkoaineet-tulos tulos)))))
 
 (deftest kulutuskerrokselle-tehdyt-toimet
