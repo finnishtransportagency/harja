@@ -161,9 +161,10 @@
                                                       (pvm/nyt)
                                                       loppupvm))
         ;; Konteksti ja urakkatiedot
-        konteksti (cond urakka-id :urakka
+        konteksti (cond 
+                    urakka-id :urakka
                     hallintayksikko-id :hallintayksikko
-                    :default :urakka)
+                    :else :urakka)
 
         {alueen-nimi :nimi} (first (if (= konteksti :hallintayksikko)
                                      (hallintayksikko-q/hae-organisaatio db hallintayksikko-id)
@@ -190,10 +191,12 @@
                                              :urakkatyyppi (:urakkatyyppi urakan-parametrit))
                                       (yhteiset/hae-laskutusyhteenvedon-tiedot db user urakan-parametrit koko-vuosi? vuoden-kk? valittu-aikavali?)))
                               urakoiden-parametrit)
+        
         perusluku (when urakka-id (:perusluku (ffirst laskutusyhteenvedot)))
         indeksikertoimet (when urakka-id (bs/hae-urakan-indeksikertoimet db user {:urakka-id urakka-id}))
         tiedot-tuotteittain (fmap #(group-by :nimi %) laskutusyhteenvedot)
         kaikki-tuotteittain (apply merge-with concat tiedot-tuotteittain)
+
         kaikki-tuotteittain-summattuna (when kaikki-tuotteittain
                                          (fmap #(apply merge-with (fnil + 0 0)
                                                   (map (fn [rivi]
@@ -236,16 +239,16 @@
        (yleinen/urakan-hoitokauden-indeksikerroin {:indeksikertoimet indeksikertoimet
                                                    :hoitokausi (pvm/paivamaaran-hoitokausi alkupvm)}))
      ;; Data on vectorina järjestyksessä, käytetään 'otsikot' indeksiä oikean datan näyttämiseen  
-     (concat (for [x otsikot]
-               (let [tiedot-indeksi (etsi-indeksi (second x) (first laskutusyhteenvedot))
+     (concat (for [otsikko otsikot]
+               (let [tiedot-indeksi (etsi-indeksi (second otsikko) (first laskutusyhteenvedot))
                      data (try
                             (nth (first laskutusyhteenvedot) tiedot-indeksi)
                             (catch Throwable t
                               (log/error "Tuotekohtaisen laskutusyhteenvedon tietoja ei löytynyt.")
                               nil))]
                  (taulukko {:data data
-                            :otsikko (first x)
-                            :sheet-nimi (when (= (.indexOf otsikot x) 0) sheet-nimi)
+                            :otsikko (first otsikko)
+                            :sheet-nimi (when (= (.indexOf otsikot otsikko) 0) sheet-nimi)
                             :laskutettu-teksti laskutettu-teksti
                             :laskutetaan-teksti laskutetaan-teksti
                             :kyseessa-kk-vali? kyseessa-kk-vali?

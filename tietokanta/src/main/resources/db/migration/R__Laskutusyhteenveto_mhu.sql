@@ -644,111 +644,132 @@ BEGIN
     IF indeksin_arvo > 0 THEN indeksi_puuttuu := FALSE; ELSE indeksi_puuttuu := TRUE; END IF;
     -- Aina syyskuu MHU urakoissa. Indeksi otetaan siis aina edellisen vuoden syyskuusta.
 
-    johto_ja_hallintakorvaus_toimenpideinstanssi_id := (SELECT tpi.id AS id
-                                                     FROM toimenpideinstanssi tpi
-                                                              JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
-                                                              JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
-                                                          maksuera m
-                                                     WHERE tpi.urakka = ur
-                                                       AND m.toimenpideinstanssi = tpi.id
-                                                       AND tpk2.koodi = '23150'
-                                                     limit 1);
+    johto_ja_hallintakorvaus_toimenpideinstanssi_id := (
+      SELECT tpi.id AS id
+        FROM toimenpideinstanssi tpi
+             JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+             JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
+                  maksuera m
+            WHERE tpi.urakka = ur
+              AND m.toimenpideinstanssi = tpi.id
+              AND tpk2.koodi = '23150'
+            limit 1
+    );
 
     -- Loopataan urakan toimenpideinstanssien läpi
-    FOR t IN SELECT tpk2.nimi AS nimi, tpk2.koodi AS tuotekoodi, tpi.id AS tpi, tpk3.id AS tpk3_id, m.numero AS maksuera_numero
-                 FROM toimenpideinstanssi tpi
-                          JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
-                          JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
-                      maksuera m
-                 WHERE tpi.urakka = ur AND m.toimenpideinstanssi = tpi.id
-                 ORDER BY m.numero asc
+    FOR t IN 
+        SELECT 
+          tpk2.nimi AS nimi, 
+          tpk2.koodi AS tuotekoodi, 
+          tpi.id AS tpi, 
+          tpk3.id AS tpk3_id, 
+          m.numero AS maksuera_numero
+          FROM toimenpideinstanssi tpi
+              JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
+              JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
+              maksuera m
+          WHERE tpi.urakka = ur AND m.toimenpideinstanssi = tpi.id
+          ORDER BY m.numero ASC
+    LOOP
+        RAISE NOTICE '*************************************** Laskutusyhteenvedon laskenta alkaa toimenpiteelle: % , ID % *****************************************', t.nimi, t.tpi;
+
+        -- Hoitokaudella ennen aikaväliä ja aikavälillä laskutetut lisätyöt
+        lisatyot_laskutettu := 0.0;
+        lisatyot_laskutetaan := 0.0;
+
+        FOR lisatyot_rivi IN 
+            SELECT 
+                summa AS lisatyot_summa, 
+                l.erapaiva AS erapaiva
+            FROM kulu l
+            JOIN kulu_kohdistus lk ON lk.kulu = l.id
+            JOIN toimenpideinstanssi tpi ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
+            -- -- TODO: Placeholder. Tällaista maksuerätyyppiä ei ole. Kiinteähintaiset lähetetään kokonaishintaisessa maksueraässä.
+            WHERE lk.maksueratyyppi = 'lisatyo' 
+              AND lk.poistettu IS NOT TRUE
+              AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
         LOOP
-            RAISE NOTICE '*************************************** Laskutusyhteenvedon laskenta alkaa toimenpiteelle: % , ID % *****************************************', t.nimi, t.tpi;
+            SELECT lisatyot_rivi.lisatyot_summa AS summa, 0::NUMERIC AS korotus INTO lisatyo;
 
-            -- Hoitokaudella ennen aikaväliä ja aikavälillä laskutetut lisätyöt
-            lisatyot_laskutettu := 0.0;
-            lisatyot_laskutetaan := 0.0;
+            RAISE NOTICE 'lisatyot_rivi: %', lisatyo;
+            IF lisatyot_rivi.erapaiva <= aikavali_loppupvm THEN
+                -- Hoitokauden alusta
+                lisatyot_laskutettu := lisatyot_laskutettu + COALESCE(lisatyo.summa, 0.0);
 
-            FOR lisatyot_rivi IN SELECT summa AS lisatyot_summa, l.erapaiva AS erapaiva
-                                     FROM kulu l
-                                              JOIN kulu_kohdistus lk ON lk.kulu = l.id
-                                              JOIN toimenpideinstanssi tpi
-                                                   ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
-                                     WHERE lk.maksueratyyppi = 'lisatyo' -- TODO: Placeholder. Tällaista maksuerätyyppiä ei ole. Kiinteähintaiset lähetetään kokonaishintaisessa maksueraässä.
-                                       AND lk.poistettu IS NOT TRUE
-                                       AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-                LOOP
-                    SELECT lisatyot_rivi.lisatyot_summa AS summa, 0::NUMERIC AS korotus INTO lisatyo;
+                IF lisatyot_rivi.erapaiva >= aikavali_alkupvm AND
+                    lisatyot_rivi.erapaiva <= aikavali_loppupvm THEN
+                    -- Laskutetaan nyt
+                    lisatyot_laskutetaan := lisatyot_laskutetaan + COALESCE(lisatyo.summa, 0.0);
+                END IF;
+            END IF;
+            RAISE NOTICE 'lisatyo: %', lisatyo;
 
-                    RAISE NOTICE 'lisatyot_rivi: %', lisatyo;
-                    IF lisatyot_rivi.erapaiva <= aikavali_loppupvm THEN
-                        -- Hoitokauden alusta
-                        lisatyot_laskutettu := lisatyot_laskutettu + COALESCE(lisatyo.summa, 0.0);
+        -- lisatyot_rivi
+        END LOOP;
+        
+        -----------------------------------------------------------
+        ------------------- Rahavaraukset -------------------------
+        -----------------------------------------------------------
+        
+        -- Äkilliset hoitotyöt ja Vahinkojen korjaukset
+        akilliset_laskutettu := 0.0;
+        akilliset_laskutetaan := 0.0;
+        vahingot_laskutettu := 0.0;
+        vahingot_laskutetaan := 0.0;
 
-                        IF lisatyot_rivi.erapaiva >= aikavali_alkupvm AND
-                           lisatyot_rivi.erapaiva <= aikavali_loppupvm THEN
-                            -- Laskutetaan nyt
-                            lisatyot_laskutetaan := lisatyot_laskutetaan + COALESCE(lisatyo.summa, 0.0);
-                        END IF;
+        FOR akilliset_rivi IN 
+            SELECT 
+              summa AS akilliset_summa, 
+              l.erapaiva AS erapaiva, 
+              lk.maksueratyyppi
+            FROM kulu l
+            JOIN kulu_kohdistus lk ON lk.kulu = l.id
+            JOIN toimenpideinstanssi tpi
+                  ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
+            WHERE lk.maksueratyyppi IN ('akillinen-hoitotyo', 'muu')
+              AND lk.poistettu IS NOT TRUE
+              AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+        LOOP
+            -- Äkilliset hoitotyöt
+            IF akilliset_rivi.maksueratyyppi = 'akillinen-hoitotyo' THEN
+            
+                SELECT akilliset_rivi.akilliset_summa AS summa, 0::NUMERIC AS korotus INTO akilliset;
+                RAISE NOTICE 'akilliset_rivi - hoitotyöt: %', akilliset;
+                
+                IF akilliset_rivi.erapaiva <= aikavali_loppupvm THEN
+                    -- Hoitokauden alusta
+                    akilliset_laskutettu := akilliset_laskutettu + COALESCE(akilliset.summa, 0.0);
+
+                    IF akilliset_rivi.erapaiva >= aikavali_alkupvm AND
+                        akilliset_rivi.erapaiva <= aikavali_loppupvm THEN
+                        -- Laskutetaan nyt
+                        akilliset_laskutetaan := akilliset_laskutetaan + COALESCE(akilliset.summa, 0.0);
                     END IF;
-                    RAISE NOTICE 'lisatyo: %', lisatyo;
-                END LOOP;
-            
-            
-            -- Äkilliset hoitotyöt ja Vahinkojen korjaukset
-            akilliset_laskutettu := 0.0;
-            akilliset_laskutetaan := 0.0;
-            vahingot_laskutettu := 0.0;
-            vahingot_laskutetaan := 0.0;
+                END IF;
+                RAISE NOTICE 'Äkilliset: %', akilliset;
+            END if;
+              
+              -- Vahingot
+            IF akilliset_rivi.maksueratyyppi = 'muu' THEN
+              
+                SELECT akilliset_rivi.akilliset_summa AS summa, 0::NUMERIC AS korotus INTO akilliset;
+                RAISE NOTICE 'akilliset_rivi - vahingot: %', akilliset;
+                
+                IF akilliset_rivi.erapaiva <= aikavali_loppupvm THEN
+                    -- Hoitokauden alusta
+                    vahingot_laskutettu := vahingot_laskutettu + COALESCE(akilliset.summa, 0.0);
 
-            FOR akilliset_rivi IN SELECT summa AS akilliset_summa, l.erapaiva AS erapaiva, lk.maksueratyyppi
-                                     FROM kulu l
-                                              JOIN kulu_kohdistus lk ON lk.kulu = l.id
-                                              JOIN toimenpideinstanssi tpi
-                                                   ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
-                                     WHERE lk.maksueratyyppi IN ('akillinen-hoitotyo', 'muu')
-                                       AND lk.poistettu IS NOT TRUE
-                                       AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-                LOOP
-	                
-	                -- Äkilliset hoitotyöt
-	                IF akilliset_rivi.maksueratyyppi = 'akillinen-hoitotyo' THEN
-	                
-	                    SELECT akilliset_rivi.akilliset_summa AS summa, 0::NUMERIC AS korotus INTO akilliset;
-	                    RAISE NOTICE 'akilliset_rivi - hoitotyöt: %', akilliset;
-	                   
-	                    IF akilliset_rivi.erapaiva <= aikavali_loppupvm THEN
-	                        -- Hoitokauden alusta
-	                        akilliset_laskutettu := akilliset_laskutettu + COALESCE(akilliset.summa, 0.0);
-	
-	                        IF akilliset_rivi.erapaiva >= aikavali_alkupvm AND
-	                           akilliset_rivi.erapaiva <= aikavali_loppupvm THEN
-	                            -- Laskutetaan nyt
-	                            akilliset_laskutetaan := akilliset_laskutetaan + COALESCE(akilliset.summa, 0.0);
-	                        END IF;
-	                    END IF;
-	                    RAISE NOTICE 'Äkilliset: %', akilliset;
-                   END if;
-                   
-                   -- Vahingot
-                   IF akilliset_rivi.maksueratyyppi = 'muu' THEN
-                   
-	                    SELECT akilliset_rivi.akilliset_summa AS summa, 0::NUMERIC AS korotus INTO akilliset;
-	                    RAISE NOTICE 'akilliset_rivi - vahingot: %', akilliset;
-	                   
-	                    IF akilliset_rivi.erapaiva <= aikavali_loppupvm THEN
-	                        -- Hoitokauden alusta
-	                        vahingot_laskutettu := vahingot_laskutettu + COALESCE(akilliset.summa, 0.0);
-	
-	                        IF akilliset_rivi.erapaiva >= aikavali_alkupvm AND
-	                           akilliset_rivi.erapaiva <= aikavali_loppupvm THEN
-	                            -- Laskutetaan nyt
-	                            vahingot_laskutetaan := vahingot_laskutetaan + COALESCE(akilliset.summa, 0.0);
-	                        END IF;
-	                    END IF;
-	                    RAISE NOTICE 'Vahingot: %', akilliset;
-                   END IF;
-                END LOOP;
+                    IF akilliset_rivi.erapaiva >= aikavali_alkupvm AND
+                        akilliset_rivi.erapaiva <= aikavali_loppupvm THEN
+                        -- Laskutetaan nyt
+                        vahingot_laskutetaan := vahingot_laskutetaan + COALESCE(akilliset.summa, 0.0);
+                    END IF;
+                END IF;
+                RAISE NOTICE 'Vahingot: %', akilliset;
+            END IF;
+
+        -- akilliset_rivi
+        END LOOP;
 
             tilaajan_rahavaraukset_laskutettu := 0.0;
             tilaajan_rahavaraukset_laskutetaan := 0.0;
@@ -759,78 +780,89 @@ BEGIN
             hankinnat_laskutetaan := 0.0;
 
             IF (t.tuotekoodi != '23150') THEN
-                FOR hankinnat_i IN SELECT summa AS kht_summa, l.erapaiva AS erapaiva
-                                       FROM kulu l
-                                                JOIN kulu_kohdistus lk ON lk.kulu = l.id
-                                                JOIN toimenpideinstanssi tpi
-                                                     ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
-                                                LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
-                                       WHERE lk.maksueratyyppi NOT IN ('akillinen-hoitotyo', 'muu', 'lisatyo')
-                                         AND lk.poistettu IS NOT TRUE
-                                         AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-                                         -- Poistetaan Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3) hankinnoista, ja lisätään se omalle rivilleen
-                                         AND (tr.yksiloiva_tunniste IS NULL or
-                                                (tr.yksiloiva_tunniste IS NOT NULL AND tr.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'))
-                    LOOP
-                        SELECT hankinnat_i.kht_summa AS summa,
-                               hankinnat_i.kht_summa AS korotettuna,
-                               0::NUMERIC            AS korotus INTO hankinnat_rivi;
+                FOR hankinnat_i IN 
+                    SELECT 
+                      summa AS kht_summa, 
+                      l.erapaiva AS erapaiva
+                    FROM kulu l
+                    JOIN kulu_kohdistus lk ON lk.kulu = l.id
+                    JOIN toimenpideinstanssi tpi
+                          ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
+                    LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
+                    WHERE lk.maksueratyyppi NOT IN ('akillinen-hoitotyo', 'muu', 'lisatyo')
+                      AND lk.poistettu IS NOT TRUE
+                      AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+                      -- Poistetaan Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3) hankinnoista, ja lisätään se omalle rivilleen
+                      AND (tr.yksiloiva_tunniste IS NULL or
+                            (tr.yksiloiva_tunniste IS NOT NULL AND tr.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'))
+                LOOP
+                    SELECT  hankinnat_i.kht_summa AS summa,
+                            hankinnat_i.kht_summa AS korotettuna,
+                            0::NUMERIC            AS korotus INTO hankinnat_rivi;
 
-                        RAISE NOTICE 'hankinnat_rivi: % TPI %', hankinnat_rivi, t.tpi;
-                        RAISE NOTICE 'hankinnat_rivi.summa: % TPI %', hankinnat_rivi.summa, t.tpi;
+                    RAISE NOTICE 'hankinnat_rivi: % TPI %', hankinnat_rivi, t.tpi;
+                    RAISE NOTICE 'hankinnat_rivi.summa: % TPI %', hankinnat_rivi.summa, t.tpi;
 
-                        IF hankinnat_i.erapaiva <= aikavali_loppupvm THEN
-                            -- Hoitokauden alusta
-                            hankinnat_laskutettu := hankinnat_laskutettu + COALESCE(hankinnat_rivi.summa, 0.0);
+                    IF hankinnat_i.erapaiva <= aikavali_loppupvm THEN
+                        -- Hoitokauden alusta
+                        hankinnat_laskutettu := hankinnat_laskutettu + COALESCE(hankinnat_rivi.summa, 0.0);
 
-                            IF hankinnat_i.erapaiva >= aikavali_alkupvm AND
-                               hankinnat_i.erapaiva <= aikavali_loppupvm THEN
-                                -- Laskutetaan nyt
-                                hankinnat_laskutetaan := hankinnat_laskutetaan + COALESCE(hankinnat_rivi.summa, 0.0);
-                            END IF;
+                        IF hankinnat_i.erapaiva >= aikavali_alkupvm AND
+                            hankinnat_i.erapaiva <= aikavali_loppupvm THEN
+                            -- Laskutetaan nyt
+                            hankinnat_laskutetaan := hankinnat_laskutetaan + COALESCE(hankinnat_rivi.summa, 0.0);
                         END IF;
-                    END LOOP;
+                    END IF;
+                -- hankinnat_i
+                END LOOP;
             END IF;
 
             -- Haetaan Tilaajan rahavarauksiin toteutuneet kulut
             RAISE NOTICE 'Haetaan tilaajan rahavaraukset tpi: %s toimenpideinstannssi: %s', t.tpi, t.nimi;
-            FOR tilaajan_rahavaraukset_rivi IN SELECT summa, l.erapaiva AS erapaiva
-                                               FROM kulu l
-                                                        JOIN kulu_kohdistus lk ON lk.kulu = l.id
-                                                        JOIN toimenpideinstanssi tpi
-                                                             ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
-                                                   -- Otetaan vain Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3) mukaan
-                                                        JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id AND tr.yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6'
-                                               WHERE lk.maksueratyyppi = 'kokonaishintainen'
-                                                 AND lk.poistettu IS NOT TRUE
-                                                 AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-                LOOP
-                    IF tilaajan_rahavaraukset_rivi.erapaiva <= aikavali_loppupvm THEN
-                        -- Hoitokauden alusta
-                        tilaajan_rahavaraukset_laskutettu := tilaajan_rahavaraukset_laskutettu + COALESCE(tilaajan_rahavaraukset_rivi.summa, 0.0);
+            FOR tilaajan_rahavaraukset_rivi IN 
+                SELECT 
+                  summa, 
+                  l.erapaiva AS erapaiva
+                FROM kulu l
+                JOIN kulu_kohdistus lk ON lk.kulu = l.id
+                JOIN toimenpideinstanssi tpi
+                      ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
+                -- Otetaan vain Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3) mukaan
+                JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id AND tr.yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6'
+                WHERE lk.maksueratyyppi = 'kokonaishintainen'
+                  AND lk.poistettu IS NOT TRUE
+                  AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+            LOOP
+                IF tilaajan_rahavaraukset_rivi.erapaiva <= aikavali_loppupvm THEN
+                    -- Hoitokauden alusta
+                    tilaajan_rahavaraukset_laskutettu := tilaajan_rahavaraukset_laskutettu + COALESCE(tilaajan_rahavaraukset_rivi.summa, 0.0);
 
-                        IF tilaajan_rahavaraukset_rivi.erapaiva >= aikavali_alkupvm AND
-                           tilaajan_rahavaraukset_rivi.erapaiva <= aikavali_loppupvm THEN
-                            -- Laskutetaan nyt
-                            tilaajan_rahavaraukset_laskutetaan := tilaajan_rahavaraukset_laskutetaan + COALESCE(tilaajan_rahavaraukset_rivi.summa, 0.0);
-                        END IF;
+                    IF tilaajan_rahavaraukset_rivi.erapaiva >= aikavali_alkupvm AND
+                        tilaajan_rahavaraukset_rivi.erapaiva <= aikavali_loppupvm THEN
+                        -- Laskutetaan nyt
+                        tilaajan_rahavaraukset_laskutetaan := tilaajan_rahavaraukset_laskutetaan + COALESCE(tilaajan_rahavaraukset_rivi.summa, 0.0);
                     END IF;
+                END IF;
 
-                    RAISE NOTICE 'tilaajan_rahavaraukset_laskutettu: %', tilaajan_rahavaraukset_laskutettu;
-                    RAISE NOTICE 'tilaajan_rahavaraukset_laskutetaan: %', tilaajan_rahavaraukset_laskutetaan;
-                END LOOP;
+                RAISE NOTICE 'tilaajan_rahavaraukset_laskutettu: %', tilaajan_rahavaraukset_laskutettu;
+                RAISE NOTICE 'tilaajan_rahavaraukset_laskutetaan: %', tilaajan_rahavaraukset_laskutetaan;
+
+            -- tilaajan_rahavaraukset_rivi
+            END LOOP;
 
             RAISE NOTICE 'hankinnat_laskutettu: %', hankinnat_laskutettu;
             RAISE NOTICE 'hankinnat_laskutetaan: %', hankinnat_laskutetaan;
 
 
-            -- SANKTIOT
+            ------------------------------------------------------
+            ------------------- Sanktiot -------------------------
+            ------------------------------------------------------
             -- Hoitokaudella ennen aikaväliä ja aikavaälillä laskutetut sanktiot
             -- Sanktioihin lasketaan indeksikorotukset matkaan hoitokautta edeltävän kuukauden indeksiarvolla - paitsi hoidonjohdon sanktioissa arvonvähennyksiin ei huomioida indeksiä
             sakot_laskutettu := 0.0;
             sakot_laskutetaan := 0.0;
 
-            FOR sanktiorivi IN SELECT -maara                                                                    AS maara,
+            FOR sanktiorivi IN SELECT -maara AS maara,
                                       perintapvm,
                                       indeksi,
                                       perintapvm,
@@ -840,7 +872,7 @@ BEGIN
                                                                         indeksi,
                                                                         -maara,
                                                                         ur,
-                                                                        sakkoryhma))                      AS indeksikorotettuna
+                                                                        sakkoryhma)) AS indeksikorotettuna
                                    FROM sanktio s
                                    WHERE s.toimenpideinstanssi = t.tpi
                                      AND s.maara IS NOT NULL
@@ -1187,6 +1219,8 @@ LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
                 );
 
             RETURN NEXT rivi;
-        END LOOP;
+
+    -- Toimenpideinstanssi
+    END LOOP;
 END;
 $$;

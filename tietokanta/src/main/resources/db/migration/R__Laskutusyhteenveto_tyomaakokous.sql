@@ -355,8 +355,7 @@ BEGIN
     lisatyo_hoidonjohto_val_aika_yht := 0.0;
 
     -- Rahavaraus kannustinjärjestelmä id, rahavaraus taulusta 
-    -- Korvaa yksilöivän tunnisteen 
-    -- 0e78b556-74ee-437f-ac67-7a03381c64f6
+    -- Korvaa yksilöivän tunnisteen 0e78b556-74ee-437f-ac67-7a03381c64f6
     SELECT id INTO kannustin_id FROM rahavaraus WHERE nimi LIKE '%Kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
 
     -- Hae rahavaraus id:t äkillisille hoitotöille ja vahingoille, uusi tietomalli korvaa vanhaa koodia jossa haetaan kulu_kohdistus maksuerätyypillä
