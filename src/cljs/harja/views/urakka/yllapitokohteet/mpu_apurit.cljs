@@ -112,7 +112,7 @@
                                   {:teksti (str (fmt/euro-opt false kustannukset-yhteensa) " €") :tasaa :oikea :luokka "lihavoitu"}])}
 
    [{:tyyppi :string
-     :nimi :tyomenetelma
+     :nimi :selite
      :luokka "text-nowrap"
      :leveys 1}
 

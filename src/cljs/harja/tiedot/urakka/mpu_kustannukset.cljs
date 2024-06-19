@@ -154,7 +154,7 @@
                                      (conj rivit
                                        {:id (generoi-avain)
                                         :kokonaiskustannus (:summa r)
-                                        :tyomenetelma (:selite r)}))
+                                        :selite (:selite r)}))
                              []
                              vastaus)]
       (hae-sanktiot-ja-bonukset app)
@@ -180,12 +180,12 @@
           ;; Vähennä/Lisää vielä sanktiot ja bonukset 
           kustannukset-yhteensa (+ kustannukset-yhteensa bonukset sanktiot)
           ;; Lisää bonukset ja sanktiot muihin kustannuksiin (alempi grid)
-          bonukset-ja-sanktiot [{:id (generoi-avain), :kokonaiskustannus bonukset :tyomenetelma "Bonukset"}
-                                {:id (generoi-avain), :kokonaiskustannus sanktiot :tyomenetelma "Sanktiot"}]
+          bonukset-ja-sanktiot [{:id (generoi-avain), :kokonaiskustannus bonukset :selite "Bonukset"}
+                                {:id (generoi-avain), :kokonaiskustannus sanktiot :selite "Sanktiot"}]
           ;; Lyö muut kustannukset ja bonukset yhteen, näytetään nämä alemmassa taulukossa
           muut-kustannukset (concat bonukset-ja-sanktiot muut-kustannukset)
           ;; Sorttaa rivit aakkosilla
-          rivit-sortattu (sort-by #(str/lower-case (:tyomenetelma %)) muut-kustannukset)]
+          rivit-sortattu (sort-by #(str/lower-case (:selite %)) muut-kustannukset)]
 
       (assoc app
         :muut-kustannukset rivit-sortattu

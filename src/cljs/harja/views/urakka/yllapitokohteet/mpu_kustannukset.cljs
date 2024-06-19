@@ -89,7 +89,7 @@
             #(e! (tiedot/->AvaaLomake))
             {:ikoni [ikonit/harja-icon-action-add] :vayla-tyyli? true}]]]
 
-         ;; Sanktiot ja bonukset
+         ;; Muut kustannukset & Sanktiot ja bonukset
          (apurit/muut-kustannukset-grid app)]))))
 
 

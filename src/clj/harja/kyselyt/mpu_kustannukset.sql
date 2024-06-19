@@ -48,12 +48,12 @@ INSERT INTO mpu_kustannukset (urakka, selite, summa, vuosi) VALUES (:urakka-id, 
 
 
 -- name: hae-mpu-kustannukset
-SELECT  selite, 
-        SUM(summa) AS summa
-  FROM  mpu_kustannukset
- WHERE  urakka = :urakka-id 
-   AND  vuosi = :vuosi
-GROUP BY selite;
+SELECT kustannustyyppi,
+       selite, 
+       SUM(summa) AS summa
+ FROM mpu_kustannukset
+WHERE urakka = :urakka-id 
+  AND vuosi = :vuosi GROUP BY selite, kustannustyyppi;
 
 
 -- name: hae-mpu-kustannus-selitteet
