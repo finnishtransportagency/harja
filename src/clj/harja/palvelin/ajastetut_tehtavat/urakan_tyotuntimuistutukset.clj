@@ -24,7 +24,7 @@
                          (= 2 kolmannes) "toukokuu - elokuu"
                          (= 3 kolmannes) "syyskuu - joulukuu"
                          :else "")
-          url (format "https://extranet.vayla.fi/harja/#urakat/yleiset?&hy=%s&u=%s"
+          url (format "https://harja.vaylapilvi.fi/#urakat/yleiset?&hy=%s&u=%s"
                       hallintayksikko
                       id)
           otsikko (format "Urakan '%s' työtunnit välille %s kirjaamatta"

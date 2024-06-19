@@ -237,7 +237,7 @@
                  :tilattu->ehdotettu [:p "Tarkemmat tiedot peruuttamiseen johtaneista syistä saat urakanvalvojalta"]
                  nil)
                [:p (str "Paikkauskohde sijaitsee " tie " - " aet "/" aosa " " let "/" losa)]
-               [:p (str "Voit tarkastella paikkauskohdetta tarkemmin https://extranet.vayla.fi/harja/#urakat/paikkaukset?&hy=" ely-id "&u=" urakka-id)]
+               [:p (str "Voit tarkastella paikkauskohdetta tarkemmin https://harja.vaylapilvi.fi/#urakat/paikkaukset-yllapito?&hy=" ely-id "&u=" urakka-id)]
                [:p "Tämä on automaattinen viesti HARJA -järjestelmästä, älä vastaa tähän viestiin."]])))
 
 (defn tarkista-tilamuutoksen-vaikutukset
