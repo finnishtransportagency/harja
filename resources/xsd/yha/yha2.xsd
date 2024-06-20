@@ -234,7 +234,7 @@
             <xs:element name="nimi" minOccurs="0" maxOccurs="1">
                 <xs:simpleType>
                     <xs:restriction base="xs:string">
-                        <xs:maxLength value="30"/>
+                        <xs:maxLength value="50"/>
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
@@ -466,10 +466,10 @@
             <xs:element name="litteyslukuluokka" nillable="true" minOccurs="0">
                 <xs:simpleType>
                     <xs:restriction base="xs:string">
-                        <xs:enumeration value="F10"/>
-                        <xs:enumeration value="F15"/>
-                        <xs:enumeration value="F20"/>
-                        <xs:enumeration value="F35"/>
+                        <xs:enumeration value="FI10"/>
+                        <xs:enumeration value="FI15"/>
+                        <xs:enumeration value="FI20"/>
+                        <xs:enumeration value="FI35"/>
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
