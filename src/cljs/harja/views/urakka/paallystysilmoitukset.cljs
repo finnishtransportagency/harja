@@ -187,8 +187,8 @@
         :piilota-toiminnot? true
         :data-cy "paallystysilmoitukset-grid"}
        [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :string :leveys 14}
-        {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
-        {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
+        {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14 :pituus-max 2}
+        {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50 :pituus-max 50}
         ;; Paikkauskohteta ei haeta YHA:sta eikä niillä ole YHA-id:tä, joten näytetään Harja-ID
         (if paikkauskohteet?
           {:otsikko "Harja-id" :nimi :paallystyskohde-id :muokattava? (constantly false) :tyyppi :numero :kokonaisluku? true :leveys 15}
