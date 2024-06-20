@@ -209,8 +209,8 @@
                        (first)))
     (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa))
                                   (-> massa
-                                    (assoc :yhteenlaskettu-kuulamyllyarvo (pot2-domain/massan-yhteenlaskettu-kuulamyllyarvo-lahetys massa))
-                                    (assoc :yhteenlaskettu-litteysluku (pot2-domain/massan-yhteenlaskettu-litteysluku-lahetys massa))))))
+                                    (assoc :yhteenlaskettu-kuulamyllyarvo (pot2-domain/laske-painotettu-keskiarvo (:runkoaineet massa) :massaprosentti :kuulamyllyarvo))
+                                    (assoc :yhteenlaskettu-litteysluku (pot2-domain/laske-painotettu-keskiarvo (:runkoaineet massa) :massaprosentti :litteysluku))))))
     (update :murske (fn [murske] (when-not (nil? (:tyyppi murske)) murske)))
     (set/rename-keys {:massat :massa})))
 
@@ -387,3 +387,17 @@
     (laheta-kohteet-yhaan (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt))
   (poista-kohde [this yha-kohde-id]
     (poista-kohde-yhasta (:integraatioloki this) (:db this) asetukset yha-kohde-id)))
+
+
+(comment
+  (defn testi [urakka-id] (let [db (:db harja.palvelin.main/harja-jarjestelma)
+                                urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))
+                                urakka (assoc urakka :harjaid urakka-id
+                                         :sampoid (yhaan-lahetettava-sampoid urakka))
+                                kohde-idt  (repl-tyokalut/q (str "SELECT id FROM yllapitokohde WHERE urakka =" urakka-id " and vuodet @> ARRAY [2023]"))
+                                _ (prn "kohde-idt" kohde-idt)
+                                kohteet (mapv #(hae-kohteen-tiedot-pot2 db %) kohde-idt)
+                                sanomat  (kohteen-lahetyssanoma/muodosta urakka kohteet)
+                                _ (dev-tyokalut/kirjoita-tiedostoon sanomat (str "urakka-" urakka-id "-2023-kaikki"))
+                                _ (prn "tulostettu!")]))
+  (testi 559))
