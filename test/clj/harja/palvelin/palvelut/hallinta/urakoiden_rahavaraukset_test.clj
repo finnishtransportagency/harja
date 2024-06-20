@@ -26,8 +26,9 @@
 (deftest hae-kaikki-rahavaraukset
   (let [tietokantaan-lisatty-maara 14
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
-                :hae-rahavaraukset +kayttaja-jvh+ {})]
-    (is (= tietokantaan-lisatty-maara (count tulos)))))
+                :hae-rahavaraukset +kayttaja-jvh+ {})
+        rahavaraukset (:rahavaraukset tulos)]
+    (is (= tietokantaan-lisatty-maara (count rahavaraukset)))))
 
 (deftest hae-urakan-rahavaraukset
   (let [;; Rahavaraukset kuuluu teiden-hoito tyyppisille urakoille
@@ -36,10 +37,10 @@
         ;; Tällä hetkellä on määritelty, että kaikilla urakoilla on 3 rahavarausta
         tietokantaan-lisatty-maara (* tietokanta-urakoiden-maara 3)
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
-                :hae-urakoiden-rahavaraukset +kayttaja-jvh+ {})]
+                :hae-rahavaraukset +kayttaja-jvh+ {})]
     ;; Jos default rahavarauksia muutetaan, niin tämä tulee failaamaan.
     ;; 2024 alkavilla urakoilla voi olla eri määrä rahavarauksia ja ne pitää silloin ottaa tässä huomioon
-    (is (= tietokantaan-lisatty-maara (count tulos)))))
+    (is (= tietokantaan-lisatty-maara (count (:urakoiden-rahavaraukset tulos))))))
 
 (deftest lisaa-rahavaukselle-tehtava
   (let [;; Käytetään testaamisessa rahavarausta: Äkilliset hoitotyöt

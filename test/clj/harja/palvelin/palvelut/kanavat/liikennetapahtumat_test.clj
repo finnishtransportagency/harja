@@ -20,7 +20,8 @@
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.lt-toiminto :as toiminto]))
+            [harja.domain.kanavat.lt-toiminto :as toiminto]
+            [harja.domain.kanavat.kohteenosa :as osa]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -463,4 +464,48 @@
     (let [tapahtuma-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma WHERE lisatieto = 'Sitten mennään';")))
           ketjutus (q (str "SELECT \"tapahtumaan-id\" FROM kan_liikennetapahtuma_ketjutus WHERE \"tapahtumasta-id\"=" tapahtuma-id))]
       (is (= 1 (count ketjutus)))
-      (is (every? nil? (first ketjutus)) "Pällistä tulevia ketjutuksia ei vapautettu, kun Kansolan tapahtuma poistettiin"))))
+      (is (every? nil? (first ketjutus)) "Pällistä tulevia ketjutuksia ei vapautettu, kun Kansolan tapahtuma poistettiin")))
+
+  (testing "Kohdeosan oletustoimenpiteen muokkaus tapahtuman tallennuksen yhteydessä"
+    (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
+          sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+          kohde-id (hae-kohde-palli)
+          [kohteenosa-id tyyppi] (hae-kohteenosat-palli)
+          _ (is (= tyyppi "silta") "Pällin kohteenosan tyyppiä on vaihdettu, päivitä testi tai testidata.")
+          hakuparametrit {:urakka-idt #{urakka-id}}
+          vanhat (kutsu-palvelua (:http-palvelin jarjestelma)
+                   :hae-liikennetapahtumat
+                   +kayttaja-jvh+
+                   hakuparametrit)
+          _ (is (not-empty vanhat))
+          params {::lt/urakka-id urakka-id
+                  ::lt/sopimus-id sopimus-id
+                  ::lt/kohde-id kohde-id
+                  ::lt/aika (pvm/nyt)
+                  ::lt/id -1
+                  ::lt/toiminnot [{::toiminto/kohteenosa-id kohteenosa-id
+                                   ::toiminto/kohde-id kohde-id
+                                   ::toiminto/toimenpide :avaus
+                                   ::toiminto/korvaa-oletustoimenpide? true}]
+                  ::lt/alukset [{::lt-alus/laji :HUV
+                                 ::lt-alus/lkm 1
+                                 ::lt-alus/suunta :ylos
+                                 ::lt-alus/nimi "HUPILAIVA"}]
+                  ::lt/vesipinta-alaraja 500
+                  ::lt/vesipinta-ylaraja 1000.9
+                  ::lt/kuittaaja-id (:id +kayttaja-jvh+)
+                  ::lt/lisatieto "Sitten mennään"
+                  :hakuparametrit hakuparametrit}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-liikennetapahtuma
+                    +kayttaja-jvh+
+                    params)
+          kohdeosa-vastauksesta (get-in (first (filter #(= kohde-id (::kohde/id (::lt/kohde %))) vastaus))
+                                  [::lt/kohde ::kohde/kohteenosat 0])]
+
+      (is (s/valid? ::lt/tallenna-liikennetapahtuma-kysely params))
+      (is (s/valid? ::lt/tallenna-liikennetapahtuma-vastaus vastaus))
+
+      (is (= (::osa/oletustoimenpide kohdeosa-vastauksesta) :avaus))
+
+      (is (= (count vastaus) (inc (count vanhat)))))))
