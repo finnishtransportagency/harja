@@ -448,3 +448,11 @@
      [massa]
      (apply + (map #(with-precision 5 (/ (* (or (:runkoaine/massaprosentti %) 0) (or (:runkoaine/litteysluku %) 0)) 100))
                 (::runkoaineet massa)))))
+
+#?(:clj
+   (defn laske-painotettu-keskiarvo
+     "Laskee painotetun keskiarvon esim. runkoaineiden kuulamyllyarvoille tai litteysluvuille"
+     [arvot avain1 avain2]
+     (when arvot
+       (apply + (map #(with-precision 5 (/ (* (or (avain1 %) 0) (or (avain2 %) 0)) 100))
+                  arvot)))))
