@@ -44,7 +44,19 @@ ORDER BY tyomenetelma;
 
 
 -- name: tallenna-mpu-kustannus!
-INSERT INTO mpu_kustannukset (urakka, selite, summa, vuosi) VALUES (:urakka-id, :selite, :summa, :vuosi);
+INSERT INTO mpu_kustannukset (
+  urakka, 
+  selite, 
+  kustannustyyppi, 
+  summa, 
+  vuosi
+) VALUES (
+  :urakka-id, 
+  :selite, 
+  :kustannustyyppi::mpu_kustannustyyppi_enum, 
+  :summa, 
+  :vuosi
+);
 
 
 -- name: hae-mpu-kustannukset
@@ -54,3 +66,7 @@ SELECT kustannustyyppi,
  FROM mpu_kustannukset
 WHERE urakka = :urakka-id 
   AND vuosi = :vuosi GROUP BY selite, kustannustyyppi;
+
+
+-- name: hae-mpu-selitteet
+SELECT DISTINCT(selite) FROM mpu_kustannukset WHERE urakka = :urakka-id;

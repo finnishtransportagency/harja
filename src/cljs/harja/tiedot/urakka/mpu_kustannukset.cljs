@@ -52,6 +52,17 @@
 (defrecord TallennaKustannusEpaonnistui [vastaus])
 (defrecord HaeMPUKustannuksetOnnistui [vastaus])
 (defrecord HaeMPUKustannuksetEpaonnistui [vastaus])
+(defrecord HaeMPUSelitteetOnnistui [vastaus])
+(defrecord HaeMPUSelitteetEpaonnistui [vastaus])
+
+
+(defn- hae-mpu-selitteet
+  "Hakee käyttäjien aikaisemmin kirjoittamat omat selitteet muille kustannuksille"
+  [app]
+  (tuck-apurit/post! app :hae-mpu-selitteet
+    {:urakka-id @nav/valittu-urakka-id}
+    {:onnistui ->HaeMPUSelitteetOnnistui
+     :epaonnistui ->HaeMPUSelitteetEpaonnistui}))
 
 
 (defn- hae-paikkaus-kustannukset 
@@ -87,10 +98,11 @@
      :epaonnistui ->HaeSanktiotJaBonuksetEpaonnistui}))
 
 
-(defn- tallenna-mpu-kustannus [app selite summa]
+(defn- tallenna-mpu-kustannus [app kustannus-tyyppi selite summa]
   (tuck-apurit/post! app :tallenna-mpu-kustannus
     {:urakka-id @nav/valittu-urakka-id
      :selite selite
+     :kustannustyyppi kustannus-tyyppi
      :vuosi @urakka/valittu-urakan-vuosi
      :summa summa}
     {:onnistui ->TallennaKustannusOnnistui
@@ -108,10 +120,12 @@
   HaeKustannustiedot
   (process-event [_ app]
     ;; hae-paikkaus-kustannukset
+    ;; hae-mpu-selitteet (autofill)
     ;; -> hae-mpu-kustannukset
     ;; -> hae-sanktiot-ja-bonukset
     ;; Kun tullaan näkymään -> Resetoi aina tila
     (let [nollaa-arvot (assoc default-arvot :haku-kaynnissa? true)]
+      (hae-mpu-selitteet app)
       (hae-paikkaus-kustannukset app)
       nollaa-arvot))
 
@@ -208,8 +222,9 @@
                        ;; Käyttäjä valitsi dropdown autofill itemin
                        :else
                        (second kustannus-selite))
-                     kustannus-tyyppi)]
-        (tallenna-mpu-kustannus app selite kustannus))
+                     ;; Käyttäjä ei kirjoittanut mitään 
+                     "")]
+        (tallenna-mpu-kustannus app kustannus-tyyppi selite kustannus))
       (assoc app :muokataan false :lomake-valinnat nil)))
 
   TallennaKustannusOnnistui
@@ -222,4 +237,21 @@
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Tallennus epäonnistui, vastaus: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tallennus epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
+
+  HaeMPUSelitteetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    ;; Palautetaan tilaan kaikki mpu_kustannukset taulun selitteet (käyttäjien lisäämät selitteet) vectorina
+    (let [fn-kokoa-selitteet (fn [suodata vastaus]
+                               (let [vastauksen-selitteet (map :selite vastaus)
+                                     ;; Suodata vakio selitteet tästä, tätä käytetään vain autofillissä
+                                     suodatettu (remove (set suodata) vastauksen-selitteet)]
+                                 (vec suodatettu)))]
+      (assoc app
+        :kayttajien-selitteet (fn-kokoa-selitteet (:kustannusten-selitteet app) vastaus))))
+
+  HaeMPUSelitteetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "Selitteiden haku epäonnistui: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "Selitteiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app))

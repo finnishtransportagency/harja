@@ -66,7 +66,7 @@
         ::lomake/col-luokka "leveys-kokonainen"})
 
      ;; Selite 
-     (when (= (:kustannus-tyyppi lomake-valinnat) "Muut kustannukset")
+     (when (some? (:kustannus-tyyppi lomake-valinnat))
        (lomake/rivi
          {:nimi :kustannus-selite
           :otsikko "Selite"
