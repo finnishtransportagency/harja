@@ -25,9 +25,14 @@
 
 
 (defn tallenna-mpu-kustannus
-  [db kayttaja {:keys [urakka-id] :as tiedot}]
+  [db kayttaja {:keys [urakka-id selite kustannustyyppi summa vuosi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
-  (q/tallenna-mpu-kustannus! db tiedot))
+  (q/tallenna-mpu-kustannus! db {:urakka-id urakka-id
+                                 :selite selite
+                                 :kustannustyyppi kustannustyyppi
+                                 :summa summa
+                                 :vuosi vuosi
+                                 :luoja (:id kayttaja)}))
 
 
 (defn hae-mpu-selitteet [db kayttaja {:keys [urakka-id] :as tiedot}]

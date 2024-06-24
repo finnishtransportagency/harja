@@ -49,13 +49,17 @@ INSERT INTO mpu_kustannukset (
   selite, 
   kustannustyyppi, 
   summa, 
-  vuosi
+  vuosi,
+  luotu,
+  luoja
 ) VALUES (
   :urakka-id, 
   :selite, 
   :kustannustyyppi::mpu_kustannustyyppi_enum, 
   :summa, 
-  :vuosi
+  :vuosi,
+  NOW(),
+  COALESCE(:luoja, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))
 );
 
 
