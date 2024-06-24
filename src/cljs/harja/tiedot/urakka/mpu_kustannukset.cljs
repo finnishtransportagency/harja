@@ -152,7 +152,7 @@
           ;; Mäppää vastaus vectoriksi mikä kelpaa gridille
           mpu-kustannukset (reduce (fn [rivit r]
                                      (conj rivit
-                                       {:id (generoi-avain)
+                                       {:id (:id r)
                                         :kokonaiskustannus (:summa r)
                                         :kustannustyyppi (:kustannustyyppi r)
                                         :selite (:selite r)}))
