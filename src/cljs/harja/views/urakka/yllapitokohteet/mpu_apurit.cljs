@@ -10,12 +10,12 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
-(defn koosta-selitteet 
+(defn koosta-selitteet
   "Mäppää app staten vectorin ['Teksti'] muotoon {:teksti 'Teksti'}"
   [selitteet]
   (into {}
     (map #(vector (fmt/string-avaimeksi %) %))
-    selitteet))
+    (filter some? selitteet)))
 
 
 (defn selitehaku 
@@ -70,7 +70,10 @@
        (lomake/rivi
          {:nimi :kustannus-selite
           :otsikko "Selite"
-          :validoi [[:ei-tyhja "Kirjoita kustannuksen selite"]]
+          :validoi (if
+                     (= (:kustannus-tyyppi lomake-valinnat) "Muut kustannukset")
+                     [[:ei-tyhja "Kirjoita kustannuksen selite"]]
+                     nil)
           :tyyppi :haku
           :piilota-checkbox? true
           :piilota-dropdown? true
