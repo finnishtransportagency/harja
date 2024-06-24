@@ -54,7 +54,3 @@ SELECT kustannustyyppi,
  FROM mpu_kustannukset
 WHERE urakka = :urakka-id 
   AND vuosi = :vuosi GROUP BY selite, kustannustyyppi;
-
-
--- name: hae-mpu-kustannus-selitteet
-SELECT DISTINCT(selite) FROM mpu_kustannukset WHERE urakka = :urakka-id;

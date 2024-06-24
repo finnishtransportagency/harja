@@ -109,9 +109,15 @@
               :rivi-jalkeen-fn (fn [_rivit]
                                  ^{:luokka "kustannukset-yhteenveto"}
                                  [{:teksti "Kustannukset yhteensä" :luokka "lihavoitu"}
+                                  {}
                                   {:teksti (str (fmt/euro-opt false kustannukset-yhteensa) " €") :tasaa :oikea :luokka "lihavoitu"}])}
 
    [{:tyyppi :string
+     :nimi :kustannustyyppi
+     :luokka "text-nowrap"
+     :leveys 1}
+    
+    {:tyyppi :string
      :nimi :selite
      :luokka "text-nowrap"
      :leveys 1}

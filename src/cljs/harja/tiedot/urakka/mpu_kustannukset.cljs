@@ -50,8 +50,6 @@
 (defrecord TallennaKustannus [rivi])
 (defrecord TallennaKustannusOnnistui [vastaus])
 (defrecord TallennaKustannusEpaonnistui [vastaus])
-(defrecord HaeMPUSelitteetOnnistui [vastaus])
-(defrecord HaeMPUSelitteetEpaonnistui [vastaus])
 (defrecord HaeMPUKustannuksetOnnistui [vastaus])
 (defrecord HaeMPUKustannuksetEpaonnistui [vastaus])
 
@@ -99,19 +97,8 @@
      :epaonnistui ->TallennaKustannusEpaonnistui}))
 
 
-(defn- hae-mpu-selitteet
-  "Hakee käyttäjien aikaisemmin kirjoittamat omat selitteet muille kustannuksille"
-  [app]
-  (tuck-apurit/post! app :hae-mpu-selitteet
-    {:urakka-id @nav/valittu-urakka-id}
-    {:onnistui ->HaeMPUSelitteetOnnistui
-     :epaonnistui ->HaeMPUSelitteetEpaonnistui}))
-
-
 (defn- generoi-avain 
-  "Gridi haluaa tr elementeille uniikki id:t (:tunniste), 
-   ja kun tässä haetaan muutamasta eri taulusta samaan gridiin rivejä, 
-   tehty tällainen id generointi wrapper. Onkohan tämäkin liian teippimäistä?"
+  "Gridi haluaa tr elementeille uniikki id:t (:tunniste)"
   []
   (gensym "mpu-kustannus"))
 
@@ -120,12 +107,11 @@
 
   HaeKustannustiedot
   (process-event [_ app]
-    ;; hae-mpu-selitteet, hae-paikkaus-kustannukset
+    ;; hae-paikkaus-kustannukset
     ;; -> hae-mpu-kustannukset
     ;; -> hae-sanktiot-ja-bonukset
     ;; Kun tullaan näkymään -> Resetoi aina tila
     (let [nollaa-arvot (assoc default-arvot :haku-kaynnissa? true)]
-      (hae-mpu-selitteet app)
       (hae-paikkaus-kustannukset app)
       nollaa-arvot))
 
@@ -154,6 +140,7 @@
                                      (conj rivit
                                        {:id (generoi-avain)
                                         :kokonaiskustannus (:summa r)
+                                        :kustannustyyppi (:kustannustyyppi r)
                                         :selite (:selite r)}))
                              []
                              vastaus)]
@@ -180,12 +167,12 @@
           ;; Vähennä/Lisää vielä sanktiot ja bonukset 
           kustannukset-yhteensa (+ kustannukset-yhteensa bonukset sanktiot)
           ;; Lisää bonukset ja sanktiot muihin kustannuksiin (alempi grid)
-          bonukset-ja-sanktiot [{:id (generoi-avain), :kokonaiskustannus bonukset :selite "Bonukset"}
-                                {:id (generoi-avain), :kokonaiskustannus sanktiot :selite "Sanktiot"}]
+          bonukset-ja-sanktiot [{:id (generoi-avain), :kokonaiskustannus bonukset :kustannustyyppi "Bonukset"}
+                                {:id (generoi-avain), :kokonaiskustannus sanktiot :kustannustyyppi "Sanktiot"}]
           ;; Lyö muut kustannukset ja bonukset yhteen, näytetään nämä alemmassa taulukossa
           muut-kustannukset (concat bonukset-ja-sanktiot muut-kustannukset)
           ;; Sorttaa rivit aakkosilla
-          rivit-sortattu (sort-by #(str/lower-case (:selite %)) muut-kustannukset)]
+          rivit-sortattu (sort-by #(str/lower-case (:kustannustyyppi %)) muut-kustannukset)]
 
       (assoc app
         :muut-kustannukset rivit-sortattu
@@ -235,21 +222,4 @@
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Tallennus epäonnistui, vastaus: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tallennus epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
-    app)
-
-  HaeMPUSelitteetOnnistui
-  (process-event [{vastaus :vastaus} app]
-    ;; Palautetaan tilaan kaikki mpu_kustannukset taulun selitteet (käyttäjien lisäämät selitteet) vectorina
-    (let [fn-kokoa-selitteet (fn [suodata vastaus]
-                               (let [vastauksen-selitteet (map :selite vastaus)
-                                     ;; Suodata vakio selitteet tästä, tätä käytetään vain autofillissä
-                                     suodatettu (remove (set suodata) vastauksen-selitteet)]
-                                 (vec suodatettu)))]
-      (assoc app
-        :kayttajien-selitteet (fn-kokoa-selitteet (:kustannusten-selitteet app) vastaus))))
-
-  HaeMPUSelitteetEpaonnistui
-  (process-event [{vastaus :vastaus} app]
-    (js/console.warn "Selitteiden haku epäonnistui: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Selitteiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app))

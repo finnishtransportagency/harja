@@ -30,11 +30,6 @@
   (q/tallenna-mpu-kustannus! db tiedot))
 
 
-(defn hae-mpu-selitteet [db kayttaja {:keys [urakka-id] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
-  (q/hae-mpu-kustannus-selitteet db tiedot))
-
-
 (defn hae-mpu-kustannukset [db kayttaja {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
   (q/hae-mpu-kustannukset db tiedot))
@@ -44,7 +39,6 @@
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
     ;; Haut
-    (julkaise-palvelu http-palvelin :hae-mpu-selitteet (fn [user tiedot] (hae-mpu-selitteet db user tiedot)))
     (julkaise-palvelu http-palvelin :hae-mpu-kustannukset (fn [user tiedot] (hae-mpu-kustannukset db user tiedot)))
     (julkaise-palvelu http-palvelin :hae-paikkaus-kustannukset (fn [user tiedot] (hae-paikkaus-kustannukset db user tiedot)))
     ;; Tallennus
@@ -54,7 +48,6 @@
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
       :hae-tyomenetelmat
-      :hae-mpu-selitteet
       :hae-mpu-kustannukset
       :tallenna-mpu-kustannus)
     this))
