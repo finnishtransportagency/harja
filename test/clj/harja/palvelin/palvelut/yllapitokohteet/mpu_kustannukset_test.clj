@@ -32,76 +32,82 @@
   (kutsu-palvelua (:http-palvelin jarjestelma) kutsu +kayttaja-jvh+ params))
 
 
-(deftest hae-mpu-kustannukset-toimii
+(deftest hae-mpu-selitteet-toimii
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
-        vastaus (tee-kutsu {:vuosi 2024
-                            :urakka-id urakka-id} :hae-mpu-kustannukset)]
+        odotettu-vastaus '({:selite "Arvoa muutettiin"} 
+                           {:selite "Indeksimuutos 2017 elokuu"} 
+                           {:selite "Indeksimuutos syyskuu"} 
+                           {:selite "Kalustokustannukset"} 
+                           {:selite "Työvoimakustannukset"} 
+                           {:selite "Vanha kustannus"})
 
-    (is (= (-> vastaus count) 4))
-    (is (= (-> vastaus first) {:selite "Arvonmuutokset", :summa 1337M}))
-    (is (= (-> vastaus second) {:selite "Indeksi- ja kustannustason muutokset", :summa 80085M}))
-    (is (= (-> vastaus (nth 2)) {:selite "Kalustokustannukset", :summa 75000M}))
-    (is (= (-> vastaus (nth 3)) {:selite "Työvoimakustannukset", :summa 200000M}))))
+        vastaus (tee-kutsu {:urakka-id urakka-id} :hae-mpu-selitteet)]
+
+    (is (= vastaus odotettu-vastaus))
+    (is (= (-> vastaus count) 6))))
 
 
 (deftest hae-paikkaus-kustannukset-toimii
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         alkupvm (c/to-date (t/local-date 2023 10 1))
         loppupvm (c/to-date (t/local-date 2024 9 30))
-        odotettu-vastaus-hk-2023 '({:id 16, :kokonaiskustannus 0M, :tyomenetelma "AB-paikkaus käsin"}
-                                   {:id 1, :kokonaiskustannus 0M, :tyomenetelma "AB-paikkaus levittäjällä"}
-                                   {:id 11, :kokonaiskustannus 0M, :tyomenetelma "Avarrussaumaus"}
-                                   {:id 9, :kokonaiskustannus 34520.0M, :tyomenetelma "Jyrsintäkorjaukset (HJYR/TJYR)"}
-                                   {:id 10, :kokonaiskustannus 0M, :tyomenetelma "Kannukaatosaumaus"}
-                                   {:id 15, :kokonaiskustannus 0M, :tyomenetelma "Käsin tehtävät paikkaukset pikapaikkausmassalla"}
-                                   {:id 5, :kokonaiskustannus 0M, :tyomenetelma "Konetiivistetty reikävaluasfalttipaikkaus (REPA)"}
-                                   {:id 4, :kokonaiskustannus 0M, :tyomenetelma "KT-valuasfalttipaikkaus (KTVA)"}
-                                   {:id 19, :kokonaiskustannus 0M, :tyomenetelma "Massapintaus"}
-                                   {:id 18, :kokonaiskustannus 0M, :tyomenetelma "Muu päällysteiden paikkaustyö"}
-                                   {:id 17, :kokonaiskustannus 0M, :tyomenetelma "PAB-paikkaus käsin"}
-                                   {:id 2, :kokonaiskustannus 0M, :tyomenetelma "PAB-paikkaus levittäjällä"}
-                                   {:id 13, :kokonaiskustannus 0M, :tyomenetelma "Reunapalkin ja päällysteen välisen sauman tiivistäminen"}
-                                   {:id 14, :kokonaiskustannus 0M, :tyomenetelma "Reunapalkin liikuntasauman tiivistäminen"}
-                                   {:id 12, :kokonaiskustannus 0M, :tyomenetelma "Sillan kannen päällysteen päätysauman korjaukset"}
-                                   {:id 7, :kokonaiskustannus 0M, :tyomenetelma "Sirotepintauksena tehty lappupaikkaus (SIPA)"}
-                                   {:id 6, :kokonaiskustannus 0M, :tyomenetelma "Sirotepuhalluspaikkaus (SIPU)"}
-                                   {:id 3, :kokonaiskustannus 0M, :tyomenetelma "SMA-paikkaus levittäjällä"}
-                                   {:id 8, :kokonaiskustannus 215000.0M, :tyomenetelma "Urapaikkaus (UREM/RREM)"})
+        odotettu-vastaus-hk-2023 '({:id 3, :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 200000M, :selite "Työvoimakustannukset"} 
+                                   {:id 4, :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 75000M, :selite "Kalustokustannukset"} 
+                                   {:id 2, :tyomenetelma "", :kustannustyyppi "Indeksi- ja kustannustason muutokset", :kokonaiskustannus 80500M, :selite "Indeksimuutos syyskuu"} 
+                                   {:id 5, :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 75000M, :selite "Vanha kustannus"} 
+                                   {:id 6, :tyomenetelma "", :kustannustyyppi "Indeksi- ja kustannustason muutokset", :kokonaiskustannus 75000M, :selite "Indeksimuutos 2017 elokuu"} 
+                                   {:id 1, :tyomenetelma "", :kustannustyyppi "Arvonmuutokset", :kokonaiskustannus 1337M, :selite "Arvoa muutettiin"} 
+                                   {:id 16, :tyomenetelma "AB-paikkaus käsin", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
+                                   {:id 1, :tyomenetelma "AB-paikkaus levittäjällä", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
+                                   {:id 11, :tyomenetelma "Avarrussaumaus", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
+                                   {:id 9, :tyomenetelma "Jyrsintäkorjaukset (HJYR/TJYR)", :kustannustyyppi nil, :kokonaiskustannus 34520.0M, :selite ""} 
+                                   {:id 10, :tyomenetelma "Kannukaatosaumaus", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
+                                   {:id 15, :tyomenetelma "Käsin tehtävät paikkaukset pikapaikkausmassalla", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
+                                   {:id 5, :tyomenetelma "Konetiivistetty reikävaluasfalttipaikkaus (REPA)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
+                                   {:id 4, :tyomenetelma "KT-valuasfalttipaikkaus (KTVA)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
+                                   {:id 19, :tyomenetelma "Massapintaus", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
+                                   {:id 18, :tyomenetelma "Muu päällysteiden paikkaustyö", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
+                                   {:id 17, :tyomenetelma "PAB-paikkaus käsin", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
+                                   {:id 2, :tyomenetelma "PAB-paikkaus levittäjällä", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
+                                   {:id 13, :tyomenetelma "Reunapalkin ja päällysteen välisen sauman tiivistäminen", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
+                                   {:id 14, :tyomenetelma "Reunapalkin liikuntasauman tiivistäminen", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
+                                   {:id 12, :tyomenetelma "Sillan kannen päällysteen päätysauman korjaukset", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
+                                   {:id 7, :tyomenetelma "Sirotepintauksena tehty lappupaikkaus (SIPA)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
+                                   {:id 6, :tyomenetelma "Sirotepuhalluspaikkaus (SIPU)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
+                                   {:id 3, :tyomenetelma "SMA-paikkaus levittäjällä", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
+                                   {:id 8, :tyomenetelma "Urapaikkaus (UREM/RREM)", :kustannustyyppi nil, :kokonaiskustannus 215000.0M, :selite ""})
         
         vastaus (tee-kutsu {:aikavali [alkupvm loppupvm]
                             :urakka-id urakka-id} :hae-paikkaus-kustannukset)]
 
     (is (= vastaus odotettu-vastaus-hk-2023))
-    (is (= (-> vastaus count) 19))))
+    (is (= (-> vastaus count) 25))))
 
 
 (deftest tallenna-mpu-kustannus-toimii
-  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+  (let [vuosi 2024
+        vastaus-maara-ennen 23
+        urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
 
-        vastaus-ennen (tee-kutsu {:vuosi 2024
-                                  :urakka-id urakka-id} :hae-mpu-kustannukset)
+        vastaus-ennen (tee-kutsu {:vuosi vuosi
+                                  :urakka-id urakka-id} :hae-paikkaus-kustannukset)
 
-        odotettu-vastaus '({:selite "Arvonmuutokset", :summa 1337M}
-                           {:selite "Indeksi- ja kustannustason muutokset", :summa 80085M}
-                           {:selite "Kalustokustannukset", :summa 75000M}
-                           {:selite "Työvoimakustannukset", :summa 200000M})
+        odotettu-vastaus {:id 16, :tyomenetelma "AB-paikkaus käsin", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
 
         _ (tee-kutsu {:urakka-id urakka-id
                       :selite "Päällystettiin Kuusamon luontopolku"
-                      :vuosi 2024
+                      :luoja nil
+                      :kustannustyyppi "Muut kustannukset"
+                      :vuosi vuosi
                       :summa 142000} :tallenna-mpu-kustannus)
 
-        odotettu-tallennus '({:selite "Arvonmuutokset", :summa 1337M}
-                             {:selite "Indeksi- ja kustannustason muutokset", :summa 80085M}
-                             {:selite "Kalustokustannukset", :summa 75000M}
-                             {:selite "Päällystettiin Kuusamon luontopolku", :summa 142000M}
-                             {:selite "Työvoimakustannukset", :summa 200000M})
+        odotettu-tallennus {:id 7, :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 142000M, :selite "Päällystettiin Kuusamon luontopolku"}
 
-        vastaus-tallennettu (tee-kutsu {:vuosi 2024
-                                        :urakka-id urakka-id} :hae-mpu-kustannukset)]
+        vastaus-tallennettu (tee-kutsu {:vuosi vuosi
+                                        :urakka-id urakka-id} :hae-paikkaus-kustannukset)]
 
-    (is (= vastaus-ennen odotettu-vastaus))
-    (is (= (count odotettu-vastaus) 4))
+    (is (= (nth vastaus-ennen 4) odotettu-vastaus))
+    (is (= (count vastaus-ennen) vastaus-maara-ennen))
 
-    (is (= vastaus-tallennettu odotettu-tallennus))
-    (is (= (count vastaus-tallennettu) 5))))
+    (is (= (nth vastaus-tallennettu 4) odotettu-tallennus))
+    (is (= (count vastaus-tallennettu) (+ vastaus-maara-ennen 1)))))
