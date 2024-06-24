@@ -90,7 +90,7 @@
             {:ikoni [ikonit/harja-icon-action-add] :vayla-tyyli? true}]]]
 
          ;; Muut kustannukset & Sanktiot ja bonukset
-         (apurit/muut-kustannukset-grid app)]))))
+         (apurit/muut-kustannukset-grid app @urakka/valittu-urakan-vuosi)]))))
 
 
 (defn mpu-kustannukset []
