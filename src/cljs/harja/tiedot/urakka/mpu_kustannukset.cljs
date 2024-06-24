@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.mpu-kustannukset
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
+            [cljs-time.core :as t]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.pvm :as pvm]
@@ -42,6 +43,8 @@
 (defrecord HaeKustannustiedot [])
 (defrecord HaeKustannustiedotOnnistui [vastaus])
 (defrecord HaeKustannustiedotEpaonnistui [vastaus])
+(defrecord HaeKustannuksetYhteensaOnnistui [vastaus])
+(defrecord HaeKustannuksetYhteensaEpaonnistui [vastaus])
 (defrecord HaeSanktiotJaBonuksetOnnistui [vastaus])
 (defrecord HaeSanktiotJaBonuksetEpaonnistui [vastaus])
 (defrecord AvaaLomake [])
@@ -50,8 +53,6 @@
 (defrecord TallennaKustannus [rivi])
 (defrecord TallennaKustannusOnnistui [vastaus])
 (defrecord TallennaKustannusEpaonnistui [vastaus])
-(defrecord HaeMPUKustannuksetOnnistui [vastaus])
-(defrecord HaeMPUKustannuksetEpaonnistui [vastaus])
 (defrecord HaeMPUSelitteetOnnistui [vastaus])
 (defrecord HaeMPUSelitteetEpaonnistui [vastaus])
 
@@ -67,22 +68,12 @@
 
 (defn- hae-paikkaus-kustannukset 
   "Hakee reikäpaikkausten ja muiden paikkausten kustannukset"
-  [app]
+  [app aikavali vuosi callback]
   (tuck-apurit/post! app :hae-paikkaus-kustannukset
-    {:aikavali (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi)
+    {:aikavali aikavali 
+     :vuosi vuosi
      :urakka-id @nav/valittu-urakka-id}
-    {:onnistui ->HaeKustannustiedotOnnistui
-     :epaonnistui ->HaeKustannustiedotEpaonnistui}))
-
-
-(defn- hae-mpu-kustannukset
-  "Hakee käyttäjien lisäämät kustannukset"
-  [app]
-  (tuck-apurit/post! app :hae-mpu-kustannukset
-    {:urakka-id @nav/valittu-urakka-id
-     :vuosi @urakka/valittu-urakan-vuosi}
-    {:onnistui ->HaeMPUKustannuksetOnnistui
-     :epaonnistui ->HaeMPUKustannuksetEpaonnistui}))
+    callback))
 
 
 (defn- hae-sanktiot-ja-bonukset [app]
@@ -119,54 +110,79 @@
 
   HaeKustannustiedot
   (process-event [_ app]
-    ;; hae-paikkaus-kustannukset
     ;; hae-mpu-selitteet (autofill)
-    ;; -> hae-mpu-kustannukset
+    ;; -> hae-paikkaus-kustannukset
     ;; -> hae-sanktiot-ja-bonukset
     ;; Kun tullaan näkymään -> Resetoi aina tila
-    (let [nollaa-arvot (assoc default-arvot :haku-kaynnissa? true)]
+    (let [nollaa-arvot (assoc default-arvot :haku-kaynnissa? true)
+          aikavali (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi)
+          vuosi @urakka/valittu-urakan-vuosi
+          urakka @nav/valittu-urakka
+          aikavali-koko-urakka [(:alkupvm urakka) (:loppupvm urakka)]
+
+          ;; Nouda valitun vuoden tiedot
+          callback-valittu {:onnistui ->HaeKustannustiedotOnnistui
+                            :epaonnistui ->HaeKustannustiedotEpaonnistui}
+
+          ;; Nouda koko urakka-ajan kustannukset yhteensä (pelkästään summa näytetään)
+          callback-koko-urakka {:onnistui ->HaeKustannuksetYhteensaOnnistui
+                                :epaonnistui ->HaeKustannuksetYhteensaEpaonnistui}]
       (hae-mpu-selitteet app)
-      (hae-paikkaus-kustannukset app)
+      (hae-paikkaus-kustannukset app aikavali vuosi callback-valittu)
+      (hae-paikkaus-kustannukset app aikavali-koko-urakka nil callback-koko-urakka)
       nollaa-arvot))
+
+  HaeKustannuksetYhteensaOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (let [kustannukset-yhteensa (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) vastaus))]
+      (assoc app
+        :urakka-ajan-kustannukset-yhteensa kustannukset-yhteensa)))
+  
+  HaeKustannuksetYhteensaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "Tietojen haku epäonnistui (koko urakka): " (pr-str vastaus))
+    (viesti/nayta-toast! (str "Tietojen haku epäonnistui (koko urakka): " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
 
   HaeKustannustiedotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [kustannukset (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) vastaus))]
-      ;; Hae käyttäjien lisäämät muut kustannukset 
-      (hae-mpu-kustannukset app)
-      ;; Tähän tulee kustannukset pelkästään työmenetelmittäin
+    (let [kustannukset-yhteensa (reduce + (map (fn [rivi] (or (:kokonaiskustannus rivi) 0)) vastaus))
+
+          ;; Mäppää vastaus vectoreihin mikä kelpaa gridille
+          muut-kustannukset (reduce (fn [rivit r]
+                                      ;; Käyttäjien lisäämät muut kustannukset
+                                      (conj rivit
+                                        {:id (generoi-avain)
+                                         :kokonaiskustannus (:kokonaiskustannus r)
+                                         :kustannustyyppi (:kustannustyyppi r)
+                                         :selite (:selite r)}))
+                              []
+                              ;; Muut kustannukset eivät sisällä työmenetelmää
+                              (filter (fn [r] (empty? (:tyomenetelma r))) vastaus))
+
+          tyomenetelmittain (reduce (fn [rivit r]
+                                      ;; Työmenetelmittäiset kustannukset tulee omalle gridille
+                                      ;; Tässä muut paikkaukset sekä reikäpaikkaukset
+                                      (conj rivit
+                                        {:id (generoi-avain)
+                                         :tyomenetelma (:tyomenetelma r)
+                                         :kokonaiskustannus (:kokonaiskustannus r)
+                                         :kustannustyyppi (:kustannustyyppi r)
+                                         :selite (:selite r)}))
+                              []
+                              ;; Kaikilla muilla kustannuksilla olemassa työmenetelmä 
+                              (filter (fn [r] (and (:tyomenetelma r) (seq (:tyomenetelma r)))) vastaus))]
+
+      (hae-sanktiot-ja-bonukset app)
       (assoc app
-        :tyomenetelmittain (vec vastaus)
-        :kustannukset-yhteensa kustannukset)))
+        :muut-kustannukset muut-kustannukset
+        :tyomenetelmittain tyomenetelmittain
+        :kustannukset-yhteensa kustannukset-yhteensa)))
 
   HaeKustannustiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
-    app)
-
-  HaeMPUKustannuksetOnnistui
-  (process-event [{vastaus :vastaus} {:keys [kustannukset-yhteensa] :as app}]
-    (let [kustannukset (reduce + (map (fn [rivi] (or (:summa rivi) 0)) vastaus))
-          kustannukset-yhteensa (+ kustannukset-yhteensa kustannukset)
-          ;; Mäppää vastaus vectoriksi mikä kelpaa gridille
-          mpu-kustannukset (reduce (fn [rivit r]
-                                     (conj rivit
-                                       {:id (:id r)
-                                        :kokonaiskustannus (:summa r)
-                                        :kustannustyyppi (:kustannustyyppi r)
-                                        :selite (:selite r)}))
-                             []
-                             vastaus)]
-      (hae-sanktiot-ja-bonukset app)
-      (assoc app
-        :muut-kustannukset mpu-kustannukset
-        :kustannukset-yhteensa kustannukset-yhteensa)))
-
-  HaeMPUKustannuksetEpaonnistui
-  (process-event [{vastaus :vastaus} app]
-    (js/console.warn "Kustannusten haku epäonnistui, vastaus: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Haku epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
   HaeSanktiotJaBonuksetOnnistui

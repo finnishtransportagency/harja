@@ -95,7 +95,8 @@
     lomake-valinnat]])
 
 
-(defn muut-kustannukset-grid [{:keys [haku-kaynnissa? muut-kustannukset kustannukset-yhteensa]} valittu-vuosi]
+(defn muut-kustannukset-grid [{:keys [haku-kaynnissa? muut-kustannukset 
+                                      kustannukset-yhteensa urakka-ajan-kustannukset-yhteensa] :as _app} valittu-vuosi]
 
   [grid/grid {:tyhja (if haku-kaynnissa?
                        [ajax-loader "Haku käynnissä..."]
@@ -117,7 +118,7 @@
                                   ^{:luokka "kustannukset-yhteenveto"}
                                   [{:teksti "Urakka-ajan kustannukset yhteensä" :luokka "lihavoitu"}
                                    {}
-                                   {:teksti (str (fmt/euro-opt false kustannukset-yhteensa) " €") :tasaa :oikea :luokka "lihavoitu"}]])}
+                                   {:teksti (str (fmt/euro-opt false urakka-ajan-kustannukset-yhteensa) " €") :tasaa :oikea :luokka "lihavoitu"}]])}
 
    [{:tyyppi :string
      :nimi :kustannustyyppi
