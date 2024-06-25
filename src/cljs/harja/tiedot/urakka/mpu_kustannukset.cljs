@@ -77,8 +77,7 @@
 
 
 (defn- hae-sanktiot-ja-bonukset [app]
-  (tuck-apurit/post! app
-    :hae-urakan-sanktiot-ja-bonukset
+  (tuck-apurit/post! app :hae-urakan-sanktiot-ja-bonukset
     {:urakka-id @nav/valittu-urakka-id
      :alku      (first (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
      :loppu     (second (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
@@ -191,7 +190,6 @@
                           (reduce + (map (fn [rivi]
                                            (when (= (:laji rivi) avain)
                                              (or (:summa rivi) 0))) vastaus)))
-          ;; Lisätään sanktiot ja bonukset gridin riveihin, ehkä liian hakkerointia ehkä ei 
           bonukset (fn-laske-arvo :yllapidon_bonus)
           sanktiot (fn-laske-arvo :yllapidon_sakko)
           ;; Vähennä/Lisää vielä sanktiot ja bonukset 

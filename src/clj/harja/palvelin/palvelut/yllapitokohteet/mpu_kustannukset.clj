@@ -53,7 +53,7 @@
 
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
-      :hae-tyomenetelmat
       :hae-mpu-selitteet
-      :tallenna-mpu-kustannus)
+      :tallenna-mpu-kustannus
+      :hae-paikkaus-kustannukset)
     this))

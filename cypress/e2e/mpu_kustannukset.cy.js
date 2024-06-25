@@ -12,7 +12,7 @@ describe('MPU Kustannusnäkymä toimii', function ()
   {
     cy.viewport(1100, 2000);
     cy.server();
-    cy.route('POST', '_/hae-mpu-kustannukset').as('kustannukset'); 
+    cy.route('POST', '_/hae-paikkaus-kustannukset').as('kustannukset'); 
     cy.route('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot'); 
     // Avaa päänäkymä
     cy.visit("/");
@@ -50,23 +50,23 @@ describe('MPU Kustannusnäkymä toimii', function ()
 
   it('Pitäisi löytää oikeat testidata arvot taulukosta', function () 
   {
-    // Kolmas rivi pitäisi olla "Arvomuutokset", kun taulukko on aakkosissa
-    // Alempi gridi, toinen rivi
+    // Toisen gridin ensimmäinen rivin ensimmäinen sarake pitäisi olla "Arvomuutokset", kun taulukko on aakkosissa
     cy.get('.grid').eq(1).find('tr').eq(0).find('td').eq(0).contains('Arvonmuutokset');
 
-    // Arvomuutoksien toinen sarake eli kustannus pitäisi olla 1337e
-    cy.get('.grid').eq(1).find('tr').eq(0).find('td').eq(1).contains('1 337,00 €');
+    // Arvomuutoksen toinen sarake on selite 
+    cy.get('.grid').eq(1).find('tr').eq(0).find('td').eq(1).contains('Arvoa muutettiin');
 
-    // Indeksi
+    // Arvomuutoksen kolmannes sarake eli kustannus pitäisi olla 1337e
+    cy.get('.grid').eq(1).find('tr').eq(0).find('td').eq(2).contains('1 337,00 €');
+
     cy.get('.grid').eq(1).find('tr').eq(2).find('td').eq(0).contains('Indeksi- ja kustannustason muutokset');
-    cy.get('.grid').eq(1).find('tr').eq(2).find('td').eq(1).contains('80 085,00 €');
+    cy.get('.grid').eq(1).find('tr').eq(2).find('td').eq(2).contains('80 500,00 €');
 
-    // Testidata 
-    cy.get('.grid').eq(1).find('tr').eq(3).find('td').eq(0).contains('Kalustokustannukset');
-    cy.get('.grid').eq(1).find('tr').eq(3).find('td').eq(1).contains('75 000,00 €');
+    cy.get('.grid').eq(1).find('tr').eq(3).find('td').eq(0).contains('Muut kustannukset');
+    cy.get('.grid').eq(1).find('tr').eq(3).find('td').eq(2).contains('200 000,00 €');
 
     // Yhteensä 
-    cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').contains('605 942,00 €');
+    cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(0).contains('606 357,00 €');
   });
 
 
@@ -98,7 +98,7 @@ describe('MPU Kustannusnäkymä toimii', function ()
       .should('not.be.disabled')
 
     cy.server();
-    cy.route('POST', '_/hae-mpu-kustannukset').as('kustannukset'); 
+    cy.route('POST', '_/hae-paikkaus-kustannukset').as('kustannukset'); 
     cy.route('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot'); 
 
     // Tallenna 
@@ -116,24 +116,25 @@ describe('MPU Kustannusnäkymä toimii', function ()
     cy.wait(1000);
   });
 
+  
+
 
   it('Pitäisi löytää tallennettu arvo taulukosta', function () 
   {
-    // Kolmas rivi pitäisi olla "Arvomuutokset", kun taulukko on aakkosissa
-    cy.get('.grid').eq(1).find('tr').eq(0).find('td').eq(0).contains('Arvonmuutokset');
-    // Arvomuutoksien toinen sarake eli kustannus pitäisi olla 89 397,00 €
-    cy.get('.grid').eq(1).find('tr').eq(0).find('td').eq(1).contains('89 397,00 €');
+    // Toisen gridin toinen rivi pitäisi olla (juuri lisätty) "Arvomuutokset", kun taulukko on aakkosissa
+    cy.get('.grid').eq(1).find('tr').eq(1).find('td').eq(0).contains('Arvonmuutokset');
+    // Arvomuutoksen kolmas sarake eli kustannus pitäisi olla 88 060,00 €
+    cy.get('.grid').eq(1).find('tr').eq(1).find('td').eq(2).contains('88 060,00 €');
 
     // Indeksi
-    cy.get('.grid').eq(1).find('tr').eq(2).find('td').eq(0).contains('Indeksi- ja kustannustason muutokset');
-    cy.get('.grid').eq(1).find('tr').eq(2).find('td').eq(1).contains('80 085,00 €');
-
-    // Testidata 
-    cy.get('.grid').eq(1).find('tr').eq(3).find('td').eq(0).contains('Kalustokustannukset');
-    cy.get('.grid').eq(1).find('tr').eq(3).find('td').eq(1).contains('75 000,00 €');
+    cy.get('.grid').eq(1).find('tr').eq(3).find('td').eq(0).contains('Indeksi- ja kustannustason muutokset');
+    cy.get('.grid').eq(1).find('tr').eq(3).find('td').eq(2).contains('80 500,00 €');
+ 
+    cy.get('.grid').eq(1).find('tr').eq(5).find('td').eq(1).contains('Kalustokustannukset');
+    cy.get('.grid').eq(1).find('tr').eq(5).find('td').eq(2).contains('75 000,00 €');
 
     // Yhteensä 
-    cy.get('.grid .kustannukset-yhteenveto').contains('694 002,00 €');
+    cy.get('.grid .kustannukset-yhteenveto').contains('694 417,00 €');
   });
 
 
@@ -169,7 +170,7 @@ describe('MPU Kustannusnäkymä toimii', function ()
       .should('not.be.disabled');
 
     cy.server();
-    cy.route('POST', '_/hae-mpu-kustannukset').as('kustannukset'); 
+    cy.route('POST', '_/hae-paikkaus-kustannukset').as('kustannukset'); 
     cy.route('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot'); 
 
     // Tallenna 
@@ -191,10 +192,13 @@ describe('MPU Kustannusnäkymä toimii', function ()
   it('Pitäisi löytää tallennettu arvo taulukosta', function () 
   {
     // Lisäämä oma selite pitäisi näkyä, ja yhteensä arvon muuttua
-    cy.get('.grid').eq(1).find('tr').eq(4).find('td').eq(0).contains('Oma cypress selite');
-    cy.get('.grid').eq(1).find('tr').eq(4).find('td').eq(1).contains('123 456,00 €');
+    cy.get('.grid').eq(1).find('tr').eq(6).find('td').eq(0).contains('Muut kustannukset');
+    cy.get('.grid').eq(1).find('tr').eq(6).find('td').eq(1).contains('Oma cypress selite');
+    cy.get('.grid').eq(1).find('tr').eq(6).find('td').eq(2).contains('123 456,00 €');
 
     // Yhteensä 
-    cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').contains('817 458,00 €');
+    cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(0).contains('817 873,00 €');
+    // Urakka-ajan kustannukset yhteensä 
+    cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(1).contains('972 873,00 €');
   });
 }); 
