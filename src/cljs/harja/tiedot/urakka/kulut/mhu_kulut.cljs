@@ -1,6 +1,5 @@
 (ns harja.tiedot.urakka.kulut.mhu-kulut
   (:require
-    [clojure.string :as string]
     [tuck.core :as tuck]
     [harja.ui.viesti :as viesti]
     [harja.tyokalut.tuck :as tuck-apurit]
@@ -15,7 +14,7 @@
 (defrecord LisaaKohdistus [lomake])
 (defrecord PoistaKohdistus [nro])
 (defrecord KohdistusTyyppi [kohdistustyyppi nro])
-(defrecord ValitseTehtavaryhmaKohdistukselle [tehtavaryhma nro kohdistus])
+(defrecord ValitseTehtavaryhmaKohdistukselle [tehtavaryhma nro])
 (defrecord TavoitehintaanKuuluminen [tavoitehinta nro])
 (defrecord ValitseRahavarausKohdistukselle [rahavaraus nro])
 (defrecord ValitseToimenpideKohdistukselle [toimenpide nro])
@@ -86,9 +85,9 @@
     (re-matches #"-?\d+(?:\.?,?\d+)?" (str summa))
     (-> summa
         str
-        (string/replace "," ".")
+        (str/replace "," ".")
         js/parseFloat)
-    (not (or (string/blank? summa)
+    (not (or (str/blank? summa)
              (nil? summa))) summa
     :else 0))
 
@@ -125,7 +124,7 @@
               lomake
               (partition 2 polut-ja-arvot)))))
 
-(defn- vuoden-paatoksen-kulu? [{:keys [tehtavaryhmat] :as app} kulu]
+(defn- vuoden-paatoksen-kulu? [{:keys [tehtavaryhmat]} kulu]
   (let [vuoden-paatoksen-tehtavaryhmat-set
         (into #{}
           (map :id (filter #(str/includes? (:tehtavaryhma %) "Hoitovuoden päättäminen") tehtavaryhmat)))]
@@ -221,7 +220,7 @@
 (defn drop-nth
   "Droppaa collektionista indexillä n olevan alkio."
   [coll n]
-  (keep-indexed #(if (not= %1 n) %2) coll))
+  (keep-indexed #(when (not= %1 n) %2) coll))
 
 (extend-protocol tuck/Event
 
@@ -266,7 +265,7 @@
       app))
 
   ValitseTehtavaryhmaKohdistukselle
-  (process-event [{kohdistus :kohdistus nro :nro tehtavaryhma :tehtavaryhma} app]
+  (process-event [{nro :nro tehtavaryhma :tehtavaryhma} app]
     (let [;; Toimenpideinstanssi on saatavilla tehtäväryhmän tiedoista, joten asetetaan se samalla
           app (-> app
                 (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] (:toimenpideinstanssi tehtavaryhma))
@@ -334,20 +333,20 @@
   (process-event [{vuosi :vuosi} app]
     (let [alkupvm (pvm/hoitokauden-alkupvm vuosi)
           loppupvm (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))]
-      (do
-        ;; Haetaan koko hoitovuoden kulut
-        (tuck/action!
-          (fn [e!]
-            (e! (->HaeUrakanKulut {:id (-> @tila/tila :yleiset :urakka :id)
-                                   :alkupvm alkupvm
-                                   :loppupvm loppupvm}))))
 
-        (-> app
-          (assoc :valittu-hoitokausi [alkupvm loppupvm])
-          (assoc :hoitokauden-alkuvuosi vuosi)
-          (assoc-in [:parametrit :haun-kuukausi] nil)
-          (assoc-in [:parametrit :haun-alkupvm] alkupvm)
-          (assoc-in [:parametrit :haun-loppupvm] loppupvm)))))
+      ;; Haetaan koko hoitovuoden kulut
+      (tuck/action!
+        (fn [e!]
+          (e! (->HaeUrakanKulut {:id (-> @tila/tila :yleiset :urakka :id)
+                                 :alkupvm alkupvm
+                                 :loppupvm loppupvm}))))
+
+      (-> app
+        (assoc :valittu-hoitokausi [alkupvm loppupvm])
+        (assoc :hoitokauden-alkuvuosi vuosi)
+        (assoc-in [:parametrit :haun-kuukausi] nil)
+        (assoc-in [:parametrit :haun-alkupvm] alkupvm)
+        (assoc-in [:parametrit :haun-loppupvm] loppupvm))))
 
   ;; TODO: Koska hoitovuoden päätöksiä ei voi muokata, niin onko tämä tarpeellinen?
   HoitovuodenPaatoksenTyyppi
