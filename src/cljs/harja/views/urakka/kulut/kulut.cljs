@@ -1099,7 +1099,9 @@
             :parametrit 
             tehtavaryhmat :tehtavaryhmat 
             toimenpiteet :toimenpiteet :as app}]
-     (let [[hk-alkupvm hk-loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))
+     (let [[hk-alkupvm hk-loppupvm] (pvm/paivamaaran-hoitokausi (if (:valittu-hoitokausi app)
+                                                                  (first (:valittu-hoitokausi app))
+                                                                  (pvm/nyt)))
            kuukaudet (pvm/aikavalin-kuukausivalit
                       [hk-alkupvm
                        hk-loppupvm])
@@ -1149,12 +1151,12 @@
              {:ikoni [ikonit/harja-icon-action-add]}]]
 
            [:div.flex-row {:style {:justify-content "flex-start"}}
-            [:div.filtteri
-             [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
+            [:div.filtteri.label-ja-alasveto
+             [:span.alasvedon-otsikko "Hoitovuosi"]
              [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                            :vayla-tyyli? true
                                            :data-cy "hoitokausi-valinta"
-                                           :valitse-fn #(e! (tiedot/->ValitseHoitokausi (-> @tila/yleiset :urakka :id) %))
+                                           :valitse-fn #(e! (tiedot/->ValitseHoitokausi %))
                                            :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitovuodet "Hoitovuosi")
                                            :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
               hoitovuodet]]
