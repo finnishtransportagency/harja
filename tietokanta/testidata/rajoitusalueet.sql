@@ -31,6 +31,29 @@ $$
         INSERT INTO rajoitusalue_rajoitus(rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu,
                                           luoja)
         VALUES (1, 7.0, FALSE, 2024, _luotu, _kayttaja);
+
+
+        -- Pohjavesialue: Jääli
+        INSERT INTO rajoitusalue (id, tierekisteriosoite, pituus, ajoratojen_pituus, sijainti, urakka_id, luotu, luoja)
+        VALUES (2, (20, 4, 2440, 4, 3583, NULL)::tr_osoite, 1143, 1143,
+                (SELECT * FROM tierekisteriosoitteelle_viiva(20, 4, 2440, 4, 3583) AS sijainti),
+                _urakka, _luotu, _kayttaja);
+
+        INSERT INTO rajoitusalue_rajoitus(rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu,
+                                          luoja)
+        VALUES (2, 10, FALSE, 2019, _luotu, _kayttaja);
+        INSERT INTO rajoitusalue_rajoitus(rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu,
+                                          luoja)
+        VALUES (2, 10, FALSE, 2020, _luotu, _kayttaja);
+        INSERT INTO rajoitusalue_rajoitus(rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu,
+                                          luoja)
+        VALUES (2, 10, FALSE, 2021, _luotu, _kayttaja);
+        INSERT INTO rajoitusalue_rajoitus(rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu,
+                                          luoja)
+        VALUES (2, 10, FALSE, 2022, _luotu, _kayttaja);
+        INSERT INTO rajoitusalue_rajoitus(rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu,
+                                          luoja)
+        VALUES (2, 10, FALSE, 2023, _luotu, _kayttaja);
         ---
 
 
