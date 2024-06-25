@@ -52,6 +52,7 @@ FROM (
 	     selite
 	  FROM mpu_kustannukset 
     WHERE urakka = :urakka-id
+    AND poistettu IS FALSE 
 	  AND (:vuosi::INTEGER IS NULL OR vuosi = :vuosi)
     GROUP BY id, selite, kustannustyyppi
 ) AS kustannukset
