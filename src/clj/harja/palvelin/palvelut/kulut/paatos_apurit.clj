@@ -137,7 +137,7 @@
           kulu {:tyyppi "laskutettava"
                 :numero nil
                 :koontilaskun-kuukausi (kulut-domain/pvm->koontilaskun-kuukausi laskutuspvm (:alkupvm urakka))
-                ;; Summa tulee päätöksistä aina ristiriitaisena kululle. Kun urakoitsija on maksumiehenä, niin summan tätyy olla negatiivinen
+                ;; Summa tulee päätöksistä aina ristiriitaisena kululle. Kun urakoitsija on maksumiehenä, niin summan täytyy olla negatiivinen
                 ;; Ja tavoitehinnan alituksessa, kun summan täytyy olla positiivinen (bonusta urakoitsijalle ja uusi laskut tilaajalle) niin summan täytyy olla positiivinen
                 :kokonaissumma (* -1 kokonaissumma)
                 :erapaiva laskutuspvm
@@ -159,7 +159,9 @@
                          :loppupvm laskutuspvm
                          :kayttaja (:id kayttaja)
                          :lisatyon-lisatieto lisatiedot
-                         :rahavarausid nil}
+                         :rahavarausid nil
+                         :tavoitehintainen false
+                         :tyyppi "paatos"}
           _ (kulut-q/luo-kulun-kohdistus<! db kulukohdistus)]
       uusi-kulu-id)))
 
