@@ -51,7 +51,7 @@
      :pakollinen? true
      :sijainti (r/wrap (:sijainti valinnat)
                        #(e! (tiedot/->PaivitaSijainti %)))
-     :otsikko "Tierekisteriosoite"
+     :otsikko "Tieosoite"
      :palstoja 3
      :validoi [(fn [osoite {sijainti :sijainti}]
                  (when (and (tr-osoite-taytetty? osoite)

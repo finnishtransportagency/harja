@@ -567,7 +567,7 @@
        :komponentti yllapitokohteet-view/rivin-kohdenumero-ja-kello}
       {:otsikko "Koh\u00ADteen nimi" :leveys 8 :nimi :nimi :tyyppi :string :pituus-max 128
        :muokattava? voi-muokata-paallystys?}
-      {:otsikko "TR-osoite" :nimi :tr-numero
+      {:otsikko "Tieosoite" :nimi :tr-numero
        :tyyppi :tierekisteriosoite :leveys 6 :tasaa :oikea
        :hae #(select-keys % [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])
        :fmt #(tr-domain/tierekisteriosoite-tekstina % {:teksti-tie? false})
