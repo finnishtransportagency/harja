@@ -198,7 +198,8 @@ SELECT kk.id                  AS "kohdistus-id",
        kk.maksueratyyppi      AS "maksueratyyppi",
        kk.rahavaraus_id       AS rahavaraus_id,
        rv.nimi                AS rahavaraus_nimi,
-       kk.tyyppi              AS tyyppi
+       kk.tyyppi              AS tyyppi,
+       kk.tavoitehintainen    AS tavoitehintainen
   FROM kulu_kohdistus kk
         LEFT JOIN rahavaraus rv ON kk.rahavaraus_id = rv.id
  WHERE kk.kulu = :kulu
@@ -226,10 +227,10 @@ UPDATE
 -- name: luo-kulun-kohdistus<!
 INSERT
 INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, luotu, luoja,
-                     lisatyon_lisatieto, rahavaraus_id)
+                     lisatyon_lisatieto, rahavaraus_id, tavoitehintainen)
 VALUES (:kulu, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :maksueratyyppi ::MAKSUERATYYPPI,
         :tyyppi::KOHDISTUSTYYPPI, current_timestamp, :kayttaja, :lisatyon-lisatieto,
-        :rahavarausid);
+        :rahavarausid, :tavoitehintainen::BOOLEAN);
 
 -- name: paivita-kulun-kohdistus<!
 UPDATE kulu_kohdistus
@@ -238,12 +239,11 @@ SET summa = :summa,
     tehtavaryhma = :tehtavaryhma,
     maksueratyyppi = :maksueratyyppi ::MAKSUERATYYPPI,
     tyyppi = :tyyppi ::KOHDISTUSTYYPPI,
-    suoritus_alku = :alkupvm,
-    suoritus_loppu = :loppupvm,
     muokattu = current_timestamp,
     muokkaaja = :kayttaja,
     lisatyon_lisatieto = :lisatyon-lisatieto,
-    rahavaraus_id = :rahavarausid
+    rahavaraus_id = :rahavarausid,
+    tavoitehintainen = :tavoitehintainen::BOOLEAN
 WHERE id = :id;
 
 -- name: poista-kulu!
