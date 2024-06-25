@@ -62,8 +62,8 @@ describe('MPU Kustannusnäkymä toimii', function ()
     cy.get('.grid').eq(1).find('tr').eq(2).find('td').eq(0).contains('Indeksi- ja kustannustason muutokset');
     cy.get('.grid').eq(1).find('tr').eq(2).find('td').eq(2).contains('80 500,00 €');
 
-    cy.get('.grid').eq(1).find('tr').eq(3).find('td').eq(0).contains('Muut kustannukset');
-    cy.get('.grid').eq(1).find('tr').eq(3).find('td').eq(2).contains('200 000,00 €');
+    cy.get('.grid').eq(1).find('tr').eq(4).find('td').eq(0).contains('Muut kustannukset');
+    cy.get('.grid').eq(1).find('tr').eq(4).find('td').eq(2).contains('200 000,00 €');
 
     // Yhteensä 
     cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(0).contains('606 357,00 €');
@@ -130,8 +130,8 @@ describe('MPU Kustannusnäkymä toimii', function ()
     cy.get('.grid').eq(1).find('tr').eq(3).find('td').eq(0).contains('Indeksi- ja kustannustason muutokset');
     cy.get('.grid').eq(1).find('tr').eq(3).find('td').eq(2).contains('80 500,00 €');
  
-    cy.get('.grid').eq(1).find('tr').eq(5).find('td').eq(1).contains('Kalustokustannukset');
-    cy.get('.grid').eq(1).find('tr').eq(5).find('td').eq(2).contains('75 000,00 €');
+    cy.get('.grid').eq(1).find('tr').eq(4).find('td').eq(1).contains('Kalustokustannukset');
+    cy.get('.grid').eq(1).find('tr').eq(4).find('td').eq(2).contains('75 000,00 €');
 
     // Yhteensä 
     cy.get('.grid .kustannukset-yhteenveto').contains('694 417,00 €');
@@ -161,8 +161,8 @@ describe('MPU Kustannusnäkymä toimii', function ()
     // Tallenna napin ei pitäisi olla vielä näkyvissä
     cy.get('[data-cy="tallena-mpu-kustannus"]').should('be.disabled');
 
-    // Kustannus -> 123456,00 e
-    cy.get('label[for="kustannus"]').parent().find('input').type('123456').blur();
+    // Kustannus -> 123456,12 e
+    cy.get('label[for="kustannus"]').parent().find('input').type('123456.12').blur();
 
     // Kaikki syötetty, tallenna napin pitäisi näkyä
     cy.get('[data-cy="tallena-mpu-kustannus"]', { timeout: clickTimeout })
@@ -194,11 +194,11 @@ describe('MPU Kustannusnäkymä toimii', function ()
     // Lisäämä oma selite pitäisi näkyä, ja yhteensä arvon muuttua
     cy.get('.grid').eq(1).find('tr').eq(6).find('td').eq(0).contains('Muut kustannukset');
     cy.get('.grid').eq(1).find('tr').eq(6).find('td').eq(1).contains('Oma cypress selite');
-    cy.get('.grid').eq(1).find('tr').eq(6).find('td').eq(2).contains('123 456,00 €');
+    cy.get('.grid').eq(1).find('tr').eq(6).find('td').eq(2).contains('123 456,12 €');
 
     // Yhteensä 
-    cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(0).contains('817 873,00 €');
+    cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(0).contains('817 873,12 €');
     // Urakka-ajan kustannukset yhteensä 
-    cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(1).contains('972 873,00 €');
+    cy.get('.grid').eq(1).find('.kustannukset-yhteenveto').eq(1).contains('972 873,12 €');
   });
 }); 
