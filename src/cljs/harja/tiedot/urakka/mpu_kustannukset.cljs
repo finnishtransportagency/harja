@@ -25,7 +25,7 @@
   [{:keys [kustannus kustannus-tyyppi kustannus-selite]}]
   (let [kustannus-validi? (and
                             (some? kustannus)
-                            (integer? kustannus))
+                            (number? kustannus))
         kustannus-tyyppi-validi? (and
                                    (some? kustannus-tyyppi)
                                    (string? kustannus-tyyppi))
