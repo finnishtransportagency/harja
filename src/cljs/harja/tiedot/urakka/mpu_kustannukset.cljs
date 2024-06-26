@@ -58,7 +58,7 @@
 
 
 (defn- hae-mpu-selitteet
-  "Hakee käyttäjien aikaisemmin kirjoittamat omat selitteet muille kustannuksille"
+  "Hakee käyttäjien aikaisemmin kirjoittamat omat selitteet muille kustannuksille. Käytetään autofill ominaisuudessa."
   [app]
   (tuck-apurit/post! app :hae-mpu-selitteet
     {:urakka-id @nav/valittu-urakka-id}
@@ -169,7 +169,7 @@
                                          :kustannustyyppi (:kustannustyyppi r)
                                          :selite (:selite r)}))
                               []
-                              ;; Kaikilla muilla kustannuksilla olemassa työmenetelmä 
+                              ;; Vaadi että kaikilla työmenetelmittäisillä kustannuksilla on olemassa työmenetelmä 
                               (filter (fn [r] (and (:tyomenetelma r) (seq (:tyomenetelma r)))) vastaus))]
 
       (hae-sanktiot-ja-bonukset app)

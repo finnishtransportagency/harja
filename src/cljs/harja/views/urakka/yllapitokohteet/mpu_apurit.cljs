@@ -70,10 +70,9 @@
        (lomake/rivi
          {:nimi :kustannus-selite
           :otsikko "Selite"
-          :validoi (if
+          :validoi (when
                      (= (:kustannus-tyyppi lomake-valinnat) "Muut kustannukset")
-                     [[:ei-tyhja "Kirjoita kustannuksen selite"]]
-                     nil)
+                     [[:ei-tyhja "Kirjoita kustannuksen selite"]])
           :tyyppi :haku
           :piilota-checkbox? true
           :piilota-dropdown? true

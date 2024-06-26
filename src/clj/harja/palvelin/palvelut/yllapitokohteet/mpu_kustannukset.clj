@@ -4,6 +4,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.konversio :as konversio]
             [harja.domain.oikeudet :as oikeudet]
+            [clojure.string :as str]
             [harja.kyselyt.mpu-kustannukset :as q]))
 
 
@@ -29,7 +30,9 @@
   [db kayttaja {:keys [urakka-id selite kustannustyyppi summa vuosi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
   (q/tallenna-mpu-kustannus! db {:urakka-id urakka-id
-                                 :selite (if (empty? selite) nil selite)
+                                 ;; Jos selitettä ei kirjaa, tämä menee kantaan tyhjänä stringinä ""
+                                 ;; Siksi tämä iffittely, tämä asettaa kolumnin NULLiksi jos selite on tyhjä.
+                                 :selite (if (str/blank? selite) nil selite)
                                  :kustannustyyppi kustannustyyppi
                                  :summa summa
                                  :vuosi vuosi

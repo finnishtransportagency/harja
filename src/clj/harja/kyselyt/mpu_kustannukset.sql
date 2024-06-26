@@ -50,11 +50,14 @@ FROM (
 		   SUM(summa)       AS kokonaiskustannus,
 		   ''               AS tyomenetelma,
 	     selite
-	  FROM mpu_kustannukset 
-    WHERE urakka = :urakka-id
-    AND poistettu IS FALSE 
-	  AND (:vuosi::INTEGER IS NULL OR vuosi = :vuosi)
-    GROUP BY id, selite, kustannustyyppi
+	  FROM 
+        mpu_kustannukset 
+    WHERE 
+        urakka = :urakka-id
+        AND poistettu IS FALSE 
+        AND (:vuosi::INTEGER IS NULL OR vuosi = :vuosi)
+    GROUP BY 
+        id, selite, kustannustyyppi
 ) AS kustannukset
 GROUP BY tyomenetelma, id, kustannustyyppi, selite
 ORDER BY tyomenetelma, id;
