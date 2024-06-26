@@ -41,6 +41,25 @@
 (def yhteenveto-tumma-vari "#fafafa")
 (def varoitus-punainen-vari "#dd0000")
 
+(defn- lisaa-non-breaking-spacet [val]
+  (if (string? val)
+    ;; Korvaa normaalit spacet non-breaking spaceilla
+    (str/replace val #" " "\u00A0")
+    val))
+
+(defn- formatoija-fmt-mukaan [fmt]
+  (case fmt
+    ;; Jos halutaan tukea erityyppisiä sarakkeita,
+    ;; pitää tänne lisätä formatter.
+    :kokonaisluku #(raportti-domain/yrita (comp lisaa-non-breaking-spacet fmt/kokonaisluku-opt) %)
+    :numero #(raportti-domain/yrita (comp lisaa-non-breaking-spacet fmt/desimaaliluku-opt) % 1 true)
+    :numero-3desim #(raportti-domain/yrita (comp lisaa-non-breaking-spacet fmt/pyorista-ehka-kolmeen) %)
+    :prosentti-0desim #(raportti-domain/yrita fmt/prosentti-opt % 0)
+    :prosentti #(raportti-domain/yrita fmt/prosentti-opt %)
+    :raha #(raportti-domain/yrita fmt/euro-opt %)
+    :pvm #(raportti-domain/yrita fmt/pvm-opt %)
+    str))
+
 (defmulti muodosta-pdf
           "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
           Dispatch tyypin mukaan (vektorin 1. elementti)."
@@ -141,7 +160,8 @@
     [:fo:inline
      [:fo:inline (str etuliite
                    (cond
-                     desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara  ryhmitelty?)
+                     desimaalien-maara (-> (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
+                                         (lisaa-non-breaking-spacet))
                      :else arvo))]
      [:fo:inline (str "\n" "(" etuliite (fmt/prosentti-opt prosentti) ")")]]))
 
@@ -181,19 +201,6 @@
                     :number-columns-spanned (count sarakkeet)}
     [:fo:block {:space-after "0.5em"}]
     [:fo:block (cdata otsikko)]]])
-
-(defn- formatoija-fmt-mukaan [fmt]
-  (case fmt
-    ;; Jos halutaan tukea erityyppisiä sarakkeita,
-    ;; pitää tänne lisätä formatter.
-    :kokonaisluku #(raportti-domain/yrita fmt/kokonaisluku-opt %)
-    :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 1 true)
-    :numero-3desim #(fmt/pyorista-ehka-kolmeen %)
-    :prosentti-0desim #(raportti-domain/yrita fmt/prosentti-opt % 0)
-    :prosentti #(raportti-domain/yrita fmt/prosentti-opt %)
-    :raha #(raportti-domain/yrita fmt/euro-opt %)
-    :pvm #(raportti-domain/yrita fmt/pvm-opt %)
-    str))
 
 (defn- korosta-kolumni-arvosta
   "Yleisesti PDF:n solun formatointi asetetaan rivitasolla. Tällä funktiolla voidaan määrittää
