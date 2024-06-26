@@ -1339,21 +1339,25 @@
                                          :avattavat-rivit-auki avattavat-rivit-auki
                                          :esta-tiivis-grid? esta-tiivis-grid?
                                          :piilota-border? piilota-border?}))
-                (when-let [rivi-jalkeen (and (:rivi-jalkeen-fn opts)
-                                             ((:rivi-jalkeen-fn opts)
-                                               (if muokataan
-                                                 (vals @muokatut)
-                                                 alkup-tiedot)))]
-                  [:tr {:class (:luokka (meta rivi-jalkeen))}
-                   (for* [{:keys [teksti sarakkeita luokka tasaa]} rivi-jalkeen]
-                     [:td {:colSpan (or sarakkeita 1) :class luokka}
-                      (case tasaa
-                        :oikea [:span.pull-right teksti]
-                        teksti)])])]])
+                ;; Lisätty tuki lisätä useammpi rivi vectorin sisään.
+                ;; Toimii myös vanhalla tavalla, mallia useamman rivin yhteenvetoon voi katsoa "MPU kustannukset yhteenveto"
+                (when-let [rivit-jalkeen (and 
+                                           (:rivi-jalkeen-fn opts)
+                                           ((:rivi-jalkeen-fn opts)
+                                            (if muokataan
+                                              (vals @muokatut)
+                                              alkup-tiedot)))]
+                  (for* [rivi-jalkeen (if (vector? (first rivit-jalkeen)) rivit-jalkeen [rivit-jalkeen])]
+                    [:tr {:class (:luokka (meta rivi-jalkeen))}
+                     (for* [{:keys [teksti sarakkeita luokka tasaa]} rivi-jalkeen]
+                       [:td {:colSpan (or sarakkeita 1) :class luokka}
+                        (case tasaa
+                          :oikea [:span.pull-right teksti]
+                          teksti)])]))]])
 
             (when (and max-rivimaara (> (count alkup-tiedot) max-rivimaara))
               [:div.alert-warning (or max-rivimaaran-ylitys-viesti
-                                      "Liikaa hakutuloksia, rajaa hakua")])
+                                    "Liikaa hakutuloksia, rajaa hakua")])
             (when (and muokataan muokkaa-footer)
               [muokkaa-footer ohjaus])]
            ;; Taulukon allekin muokkaustoiminnot jos rivejä
