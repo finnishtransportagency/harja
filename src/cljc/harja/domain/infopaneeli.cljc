@@ -8,7 +8,7 @@
 
 (defmethod infopaneeli-skeema :tyokone [_]
   (s/keys :req-un [::ensimmainen-havainto ::viimeisin-havainto ::tyokonetyyppi
-                   ::organisaationimi ::urakkanimi ::tehtavat]))
+                   ::organisaationimi ::urakkanimi ::tehtavat ::tyokonetunnus]))
 
 (s/def ::ilmoitus
   (s/keys :req-un [::ilmoitusid ::ilmoitettu ::otsikko ::paikankuvaus ::lisatieto ::kuittaukset]))

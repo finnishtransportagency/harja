@@ -22,8 +22,8 @@ BEGIN
                 t.suorittajan_nimi                                                                         AS toteuma_suorittaja_nimi,
                 t.tyyppi::toteumatyyppi                                                                    AS toteuma_toteumatyyppi, -- "yksikkohintainen","kokonaishintainen","akillinen-hoitotyo","lisatyo", "muutostyo","vahinkojen-korjaukset"
                 t.lisatieto                                                                                AS toteuma_lisatieto,
-                JSON_AGG(ROW_TO_JSON(ROW (teh.id, tt.maara, teh.yksikko, tt.lisatieto, teh.tehtavaryhma))) AS toteumatehtavat,
-                JSON_AGG(ROW_TO_JSON(ROW (mk.id, mk.nimi, tm.maara, mk.yksikko)))                          AS toteumamateriaalit,
+                to_json(array_agg(DISTINCT (teh.id, tt.maara, teh.yksikko, tt.lisatieto, teh.tehtavaryhma))) AS toteumatehtavat,
+                to_json(array_agg(DISTINCT (mk.id, mk.nimi, tm.maara, mk.yksikko)))                          AS toteumamateriaalit,
                 t.tr_numero                                                                                AS toteuma_tiesijainti_numero,
                 t.tr_alkuosa                                                                               AS toteuma_tiesijainti_aosa,
                 t.tr_alkuetaisyys                                                                          AS toteuma_tiesijainti_aet,
@@ -79,8 +79,8 @@ BEGIN
                         t.suorittajan_nimi                                                                         AS toteuma_suorittaja_nimi,
                         t.tyyppi::toteumatyyppi                                                                    AS toteuma_toteumatyyppi, -- "yksikkohintainen","kokonaishintainen","akillinen-hoitotyo","lisatyo", "muutostyo","vahinkojen-korjaukset"
                         t.lisatieto                                                                                AS toteuma_lisatieto,
-                        JSON_AGG(ROW_TO_JSON(ROW (teh.id, tt.maara, teh.yksikko, tt.lisatieto, teh.tehtavaryhma))) AS toteumatehtavat,
-                        JSON_AGG(ROW_TO_JSON(ROW (mk.id, mk.nimi, tm.maara, mk.yksikko)))                          AS toteumamateriaalit,
+                        to_json(array_agg(DISTINCT (teh.id, tt.maara, teh.yksikko, tt.lisatieto, teh.tehtavaryhma))) AS toteumatehtavat,
+                        to_json(array_agg(DISTINCT (mk.id, mk.nimi, tm.maara, mk.yksikko)))                          AS toteumamateriaalit,
                         t.tr_numero                                                                                AS toteuma_tiesijainti_numero,
                         t.tr_alkuosa                                                                               AS toteuma_tiesijainti_aosa,
                         t.tr_alkuetaisyys                                                                          AS toteuma_tiesijainti_aet,
@@ -125,8 +125,8 @@ BEGIN
                 t.suorittajan_nimi                                                                         AS toteuma_suorittaja_nimi,
                 t.tyyppi::toteumatyyppi                                                                    AS toteuma_toteumatyyppi, -- "yksikkohintainen","kokonaishintainen","akillinen-hoitotyo","lisatyo", "muutostyo","vahinkojen-korjaukset"
                 t.lisatieto                                                                                AS toteuma_lisatieto,
-                JSON_AGG(ROW_TO_JSON(ROW (teh.id, tt.maara, teh.yksikko, tt.lisatieto, teh.tehtavaryhma))) AS toteumatehtavat,
-                JSON_AGG(ROW_TO_JSON(ROW (mk.id, mk.nimi, tm.maara, mk.yksikko)))                          AS toteumamateriaalit,
+                to_json(array_agg(DISTINCT (teh.id, tt.maara, teh.yksikko, tt.lisatieto, teh.tehtavaryhma))) AS toteumatehtavat,
+                to_json(array_agg(DISTINCT (mk.id, mk.nimi, tm.maara, mk.yksikko)))                          AS toteumamateriaalit,
                 t.tr_numero                                                                                AS toteuma_tiesijainti_numero,
                 t.tr_alkuosa                                                                               AS toteuma_tiesijainti_aosa,
                 t.tr_alkuetaisyys                                                                          AS toteuma_tiesijainti_aet,
