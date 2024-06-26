@@ -166,7 +166,7 @@
                                         :valinta (:tehtavaryhma kohdistus)
                                         :virhe? (nayta-kohdistuksen-virhe? lomake nro :tehtavaryhma)
                                         :format-fn :tehtavaryhma
-                                        :valitse-fn #(e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro kohdistus))}
+                                        :valitse-fn #(e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro))}
            tehtavaryhmat]]]
         ;; Ei tavoitehintaisella muulla kululla on toimenpide
         [:div.col-xs-12.col-md-4
@@ -212,7 +212,7 @@
                                    :vayla-tyyli? true
                                    :muokattu? true
                                    :virhe? (nayta-kohdistuksen-virhe? lomake nro :tehtavaryhma)
-                                   :valitse-fn #(e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro kohdistus))}
+                                   :valitse-fn #(e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro))}
       (get-in kohdistus [:rahavaraus :tehtavaryhmat])]]]])
 
 (defn- lisatyo-kohdistus [e! lomake kohdistus toimenpiteet nro]
@@ -267,7 +267,7 @@
 
 
 (defn- nayta-kohdistus [e! lomake nro kohdistus tehtavaryhmat rahavaraukset toimenpiteet urakoitsija-maksaa?]
-  (let [kohdistustyyppi (:kohdistustyyppi kohdistus)
+  (let [kohdistustyyppi (:tyyppi kohdistus)
         ;; Varmistetaan, että tehtäväryhmissä ei ole vääriä juttuja tälle kohdistukselle
         tehtavaryhmat (tiedot/kasittele-tehtavaryhmat tehtavaryhmat (:tehtavaryhma kohdistus))
         ;; Kohdistustyypit vaihtelee sen mukaan, onko hoitovuoden päätöstä valittu. Jos on, niin kulun tyyppiä ei voi vaihtaa
@@ -421,7 +421,7 @@
      ;; Onko kulu lukittu
      (when kulu-lukittu? [:div.palstat [:div.palsta.punainen-teksti kulu-lukittu-teksti]])
 
-     #_ [debug/debug lomake]
+     [debug/debug lomake]
      (map-indexed
        (fn [index kohdistus]
          ^{:key (str "kohdistus-" index)}

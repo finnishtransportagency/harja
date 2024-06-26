@@ -13,7 +13,7 @@
 
 (defrecord LisaaKohdistus [lomake])
 (defrecord PoistaKohdistus [nro])
-(defrecord KohdistusTyyppi [kohdistustyyppi nro])
+(defrecord KohdistusTyyppi [tyyppi nro])
 (defrecord ValitseTehtavaryhmaKohdistukselle [tehtavaryhma nro])
 (defrecord TavoitehintaanKuuluminen [tavoitehinta nro])
 (defrecord ValitseRahavarausKohdistukselle [rahavaraus nro])
@@ -158,7 +158,7 @@
                                             kohdistustyyppi (keyword (:tyyppi kohdistus))]
                                         (-> kohdistus
                                           (assoc :lisatyo? (if (= "lisatyo" (:maksueratyyppi kohdistus)) true false))
-                                          (assoc :kohdistustyyppi kohdistustyyppi)
+                                          (assoc :tyyppi kohdistustyyppi)
                                           (assoc :toimenpide toimenpide)
                                           (assoc :tehtavaryhma tehtavaryhma)
                                           (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi))))
@@ -244,13 +244,13 @@
       app))
 
   KohdistusTyyppi
-  (process-event [{kohdistustyyppi :kohdistustyyppi nro :nro} app]
+  (process-event [{tyyppi :tyyppi nro :nro} app]
     (let [;; Vaihdetaan kohdistuksen tyyppi ja nollataan kaikki mahdolliset aiemmat valinnat
           lisatyo? (cond
-                     (= :lisatyo kohdistustyyppi) true
+                     (= :lisatyo tyyppi) true
                      :else false)
           app (-> app
-                (assoc-in [:lomake :kohdistukset nro :kohdistustyyppi] kohdistustyyppi)
+                (assoc-in [:lomake :kohdistukset nro :tyyppi] tyyppi)
                 (assoc-in [:lomake :kohdistukset nro :lisatyo?] lisatyo?)
                 (assoc-in [:lomake :kohdistukset nro :lisatyon-lisatieto] nil)
                 (assoc-in [:lomake :kohdistukset nro :tehtavaryhma] nil)

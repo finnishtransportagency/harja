@@ -276,31 +276,31 @@
    (let [kohdistusvalidoinnit (mapcat (fn [i]
                                         (let [kohdistus (get kohdistukset i)]
                                           (cond
-                                            (= :lisatyo (:kohdistustyyppi kohdistus))
+                                            (= :lisatyo (:tyyppi kohdistus))
                                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
                                              [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)
                                              [:kohdistukset i :toimenpideinstanssi] (:kulut/toimenpideinstanssi validoinnit)
                                              [:kohdistukset i :toimenpide] (:kulut/:toimenpide validoinnit)]
 
                                             ;; Hankintakululla on pakko olla tehtäväryhmä
-                                            (= :hankintakulu (:kohdistustyyppi kohdistus))
+                                            (= :hankintakulu (:tyyppi kohdistus))
                                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
                                              [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)]
 
                                             ;; Rahavarauksella on pakko olla rahavaraus ja tehtäväryhmä
-                                            (= :rahavaraus (:kohdistustyyppi kohdistus))
+                                            (= :rahavaraus (:tyyppi kohdistus))
                                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
                                              [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)
                                              [:kohdistukset i :rahavaraus] (:kulut/rahavaraus validoinnit)]
 
                                             ;; Kun Muu kulu on tavoitehintainen tarkistetaan summa, lisätieto ja tehtäväryhmä
-                                            (and (= :muukulu (:kohdistustyyppi kohdistus)) (= :true (:tavoitehintainen kohdistus)))
+                                            (and (= :muukulu (:tyyppi kohdistus)) (= :true (:tavoitehintainen kohdistus)))
                                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
                                              [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)
                                              [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)]
 
                                             ;; Kun Muu kulu on ei-tavoitehintainen tarkistetaan summa, lisätieto ja toimenpideinstanssi
-                                            (and (= :muukulu (:kohdistustyyppi kohdistus)) (= :false (:tavoitehintainen kohdistus)))
+                                            (and (= :muukulu (:tyyppi kohdistus)) (= :false (:tavoitehintainen kohdistus)))
                                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
                                              [:kohdistukset i :toimenpide] (:kulut/:toimenpide validoinnit)
                                              [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)]
@@ -315,7 +315,7 @@
                               :summa 0
                               :poistettu false
                               :lisatyo? false
-                              :kohdistustyyppi :hankintakulu
+                              :tyyppi :hankintakulu
                               :tavoitehintainen :true
                               :rivi 0
                               :lukittu? false})
