@@ -234,8 +234,8 @@
                         :maksueratyyppi (kohdistuksen-maksueratyyppi db (:tehtavaryhma kohdistus) (:tehtava kohdistus) (:lisatyo? kohdistus))
                         :kayttaja (:id user)
                         :lisatyon-lisatieto (:lisatyon-lisatieto kohdistus)
-                        :rahavarausid (:id (:rahavaraus kohdistus))
-                        :tyyppi (name (:kohdistustyyppi kohdistus))
+                        :rahavarausid (when (:rahavaraus kohdistus) (:id (:rahavaraus kohdistus)))
+                        :tyyppi (name (:tyyppi kohdistus))
                         :tavoitehintainen (name (:tavoitehintainen kohdistus))}]
     (if (nil? (:kohdistus-id kohdistus))
       (q/luo-kulun-kohdistus<! db (assoc kulu_kohdistus :kulu kulu-id
