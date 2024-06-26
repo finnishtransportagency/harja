@@ -133,6 +133,11 @@
                                                             db urakka-id ilmoitus)
           uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-idlla? db ilmoitus-id)
           ilmoitus-on-lahetetty-urakalle? (ilmoitukset-q/ilmoitus-on-lahetetty-urakalle? db ilmoitus-id urakka-id)
+          ilmoituksen-tyyppi-kannassa (:ilmoitustyyppi (first (ilmoitukset-q/hae-ilmoitus-ilmoitus-idlla db {:ilmoitusid ilmoitus-id})))
+          ;; Jos ilmoitus muuttuu päivityksellä toimenpidepyynnöksi, lähetetään viestit uudelleen, että SMS:t saadaan lähtemään (HARJA-631)
+          ilmoitus-muuttui-toimenpidepyynnoksi? (and ilmoituksen-tyyppi-kannassa
+                                                  (not= "toimenpidepyynto" ilmoituksen-tyyppi-kannassa)
+                                                  (= "toimenpidepyynto" (:ilmoitustyyppi ilmoitus)))
           ;; Jos kyseessä on harvinainen tilanne, että ilmoitus on lähetetty väärälle urakalle ensin, niin korjataan
           ;; ilmoitustauluun urakka-id oikeaksi tällä toisella kerralla
           _ (when (and uudelleen-lahetys? (not ilmoitus-on-lahetetty-urakalle?))
@@ -161,7 +166,9 @@
         (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)
         ;; Tee tähän joku logiikka, että lähetetään uusiksi, mikäli päivystäjä on eri, kuin edellisellä kerralla
         ;; Voisko olla niin, että päivystäjille lähetetään, jos päivystäjä on eri kuin edellisellä kerralla
-        (if (or (not uudelleen-lahetys?) (and uudelleen-lahetys? (not ilmoitus-on-lahetetty-urakalle?)))
+        ;; HARJA-631: Jos päivitetty ilmoitus on tyyppiä TPP, lähetetään aina viestit uudelleen
+        (if (or (not uudelleen-lahetys?) (and uudelleen-lahetys? (not ilmoitus-on-lahetetty-urakalle?))
+              ilmoitus-muuttui-toimenpidepyynnoksi?)
           (laheta-ilmoitus-paivystajille db
             (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
             paivystajat urakka-id ilmoitusasetukset)
