@@ -1,7 +1,7 @@
 -- name: hae-urakan-rahavaraukset-ja-tehtavaryhmat
 -- Palautetaan ensisijaisesti urakkakohtainen nimi, mutta jos sitä ei ole, niin defaultataan normaaliin nimeen.
 SELECT rv.id, COALESCE(rvu.urakkakohtainen_nimi, rv.nimi) as nimi,
-       jsonb_agg(row_to_json(row(tr.id, tr.nimi, tp.id, tpi.id))) AS tehtavaryhmat
+       to_json(array_agg(DISTINCT(row(tr.id, tr.nimi, tp.id, tpi.id)))) AS tehtavaryhmat
   FROM rahavaraus rv
         JOIN rahavaraus_urakka rvu ON rvu.rahavaraus_id = rv.id AND rvu.urakka_id = :id
         JOIN rahavaraus_tehtava rvt ON rvt.rahavaraus_id = rv.id
