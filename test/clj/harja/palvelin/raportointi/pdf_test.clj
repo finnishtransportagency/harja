@@ -106,6 +106,84 @@
                   nil]]
                 [:fo:block {:space-after "1em"}]]))))
 
+(deftest taulukko-ja-tekstin-skaalaus
+  (let [fo (muodosta-pdf [:taulukko {:otsikko "Taulukko"
+                                     :pdf-optiot {:skaalaa-teksti? true}}
+                          [{:otsikko "Eka" :leveys "10%"}
+                           {:otsikko "Toka" :leveys "60%"}
+                           {:otsikko "Kolmas" :leveys "30%"}]
+                          [["eka" "toka" "kolmas"]]])]
+    ;; PENDING: tämä testaa *TODELLA* tarkkaan, että rakenne on tismalleen oikein
+    ;; XSL-FO generointia on hankala testata muuten, koska ei voi lopputulos PDF:n
+    ;; visuaalista rakennetta oikein assertoida.
+    (is (= fo ` [:fo:block
+                 {:space-before "1em", :font-size "10pt", :font-weight "bold"}
+                 "Taulukko"
+                 [:fo:table
+                  {:font-size "0.925em"}
+                  ([:fo:table-column {:column-width "10%"}]
+                   [:fo:table-column {:column-width "60%"}]
+                   [:fo:table-column {:column-width "30%"}])
+                  [:fo:table-header
+                   nil
+                   [:fo:table-row
+                    ([:fo:table-cell
+                      {:border "solid 0.1mm black",
+                       :background-color "#f0f0f0",
+                       :color "black",
+                       :font-weight "normal",
+                       :padding "1mm"
+                       :text-align "left"}
+                      [:fo:block "<![CDATA[Eka]]>"]]
+                     [:fo:table-cell
+                      {:border "solid 0.1mm black",
+                       :background-color "#f0f0f0",
+                       :color "black",
+                       :font-weight "normal",
+                       :padding "1mm"
+                       :text-align "left"}
+                      [:fo:block "<![CDATA[Toka]]>"]]
+                     [:fo:table-cell
+                      {:border "solid 0.1mm black",
+                       :background-color "#f0f0f0",
+                       :color "black",
+                       :font-weight "normal",
+                       :padding "1mm"
+                       :text-align "left"}
+                      [:fo:block "<![CDATA[Kolmas]]>"]])]]
+                  [:fo:table-body
+                   nil
+                   ([:fo:table-row
+                     ([:fo:table-cell
+                       {:border-bottom "solid 0.1mm #f0f0f0",
+                        :border-right "solid 0.1mm #f0f0f0",
+                        :border-left "solid 0.1mm #f0f0f0",
+                        :padding "1mm",
+                        :font-weight "normal",
+                        :text-align "left"}
+                       nil
+                       [:fo:block "<![CDATA[eka]]>"]]
+                      [:fo:table-cell
+                       {:border-bottom "solid 0.1mm #f0f0f0",
+                        :border-right "solid 0.1mm #f0f0f0",
+                        :border-left "solid 0.1mm #f0f0f0",
+                        :padding "1mm",
+                        :font-weight "normal",
+                        :text-align "left"}
+                       nil
+                       [:fo:block "<![CDATA[toka]]>"]]
+                      [:fo:table-cell
+                       {:border-bottom "solid 0.1mm #f0f0f0",
+                        :border-right "solid 0.1mm #f0f0f0",
+                        :border-left "solid 0.1mm #f0f0f0",
+                        :padding "1mm",
+                        :font-weight "normal",
+                        :text-align "left"}
+                       nil
+                       [:fo:block "<![CDATA[kolmas]]>"]])])
+                   nil]]
+                 [:fo:block {:space-after "1em"}]]))))
+
 (deftest pylvaat
   (let [fo (muodosta-pdf [:pylvaat {:otsikko "Mun pylväät"}
                           [["Q1" 1560
