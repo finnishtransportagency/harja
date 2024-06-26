@@ -493,6 +493,8 @@
       (hoitokausi-kuukausi-arvotaulukko sarakkeet data)
 
       [:fo:block {:space-before "1em" :font-size otsikon-fonttikoko :font-weight "bold"} otsikko
+       ;; Taulukon fonttikoko skaalataan parent block-elementin font-size arvon mukaan
+       ;; Mitä enemmän sarakkeita, sitä pienempi fonttikoko. Lähtöarvona on parent block-elementin font-size.
        [:fo:table (when skaalaa-teksti?
                     {:font-size (skaalattu-fontin-koko sarakkeet)})
         (for [{:keys [leveys]} sarakkeet]
