@@ -42,6 +42,7 @@
                 {:space-before "1em", :font-size "10pt", :font-weight "bold"}
                 "Taulukko"
                 [:fo:table
+                 nil
                  ([:fo:table-column {:column-width "10%"}]
                   [:fo:table-column {:column-width "60%"}]
                   [:fo:table-column {:column-width "30%"}])
