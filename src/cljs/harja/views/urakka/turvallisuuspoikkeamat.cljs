@@ -312,7 +312,7 @@
                 ;;                                                            (aget latlon 0)]}))
                 ;;:paikannus-epaonnistui-fn #(viesti/nayta! "Paikannus epäonnistui!" :danger)
                 :karttavalinta-tehty-fn #(swap! turvallisuuspoikkeama assoc :sijainti %)}
-               {:otsikko "Tierekisteriosoite"
+               {:otsikko "Tieosoite"
                 :nimi :tr
                 :ala-nayta-virhetta-komponentissa? false
                 :pakollinen? true

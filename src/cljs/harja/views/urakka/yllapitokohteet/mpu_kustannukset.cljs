@@ -89,8 +89,8 @@
             #(e! (tiedot/->AvaaLomake))
             {:ikoni [ikonit/harja-icon-action-add] :vayla-tyyli? true}]]]
 
-         ;; Sanktiot ja bonukset
-         (apurit/muut-kustannukset-grid app)]))))
+         ;; Muut kustannukset & Sanktiot ja bonukset
+         (apurit/muut-kustannukset-grid app @urakka/valittu-urakan-vuosi)]))))
 
 
 (defn mpu-kustannukset []
