@@ -476,13 +476,18 @@
              (str elem ":")
              (str (fmt/euro hoitokauden-arvo)))))))))
 
-(defn taulukko [otsikko hoitokausi-arvotaulukko? sarakkeet data optiot]
+(defn- skaalattu-fontin-koko [sarakkeet]
+  (let [sarakkeet-lkm (count sarakkeet)]
+    (str (float (- 1 (min 0.5 (* sarakkeet-lkm 0.025)))) "em")))
+
+(defn taulukko [otsikko hoitokausi-arvotaulukko? sarakkeet data {{:keys [skaalaa-teksti?]} :pdf-optiot :as optiot}]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
     (if hoitokausi-arvotaulukko?
       (hoitokausi-kuukausi-arvotaulukko sarakkeet data)
 
       [:fo:block {:space-before "1em" :font-size otsikon-fonttikoko :font-weight "bold"} otsikko
-       [:fo:table
+       [:fo:table (when skaalaa-teksti?
+                    {:font-size (skaalattu-fontin-koko sarakkeet)})
         (for [{:keys [leveys]} sarakkeet]
           [:fo:table-column {:column-width leveys}])
         (taulukko-header optiot sarakkeet)

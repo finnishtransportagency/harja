@@ -253,7 +253,8 @@
                :samalle-sheetille? true
                :sheet-nimi "Ympäristöraportti"
                ;; Tässä muutetaan vektori setiksi, koska se on kätevä gridissä. Ehkä voi muuttaa?
-               :avattavat-rivit (into #{} avattavat-rivit)}
+               :avattavat-rivit (into #{} avattavat-rivit)
+               :pdf-optiot {:skaalaa-teksti? true}}
     (into []
       ;; Muodostetaan skeema taulukolle
       (concat
