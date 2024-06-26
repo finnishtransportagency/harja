@@ -57,7 +57,7 @@ FROM (
     GROUP BY id, selite, kustannustyyppi
 ) AS kustannukset
 GROUP BY tyomenetelma, id, kustannustyyppi, selite
-ORDER BY tyomenetelma;
+ORDER BY tyomenetelma, id;
 
 
 -- name: tallenna-mpu-kustannus!

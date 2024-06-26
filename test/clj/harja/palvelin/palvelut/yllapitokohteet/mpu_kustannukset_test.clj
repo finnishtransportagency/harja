@@ -51,12 +51,12 @@
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         alkupvm (c/to-date (t/local-date 2023 10 1))
         loppupvm (c/to-date (t/local-date 2024 9 30))
-        odotettu-vastaus-hk-2023 '({:id 6, :tyomenetelma "", :kustannustyyppi "Indeksi- ja kustannustason muutokset", :kokonaiskustannus 75000M, :selite "Indeksimuutos 2017 elokuu"} 
+        odotettu-vastaus-hk-2023 '({:id 1, :tyomenetelma "", :kustannustyyppi "Arvonmuutokset", :kokonaiskustannus 1337M, :selite "Arvoa muutettiin"} 
+                                   {:id 2, :tyomenetelma "", :kustannustyyppi "Indeksi- ja kustannustason muutokset", :kokonaiskustannus 80500M, :selite "Indeksimuutos syyskuu"} 
                                    {:id 3, :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 200000M, :selite "Työvoimakustannukset"} 
                                    {:id 4, :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 75000M, :selite "Kalustokustannukset"} 
-                                   {:id 2, :tyomenetelma "", :kustannustyyppi "Indeksi- ja kustannustason muutokset", :kokonaiskustannus 80500M, :selite "Indeksimuutos syyskuu"} 
-                                   {:id 1, :tyomenetelma "", :kustannustyyppi "Arvonmuutokset", :kokonaiskustannus 1337M, :selite "Arvoa muutettiin"} 
                                    {:id 5, :tyomenetelma "", :kustannustyyppi "Muut kustannukset", :kokonaiskustannus 75000M, :selite "Vanha kustannus"} 
+                                   {:id 6, :tyomenetelma "", :kustannustyyppi "Indeksi- ja kustannustason muutokset", :kokonaiskustannus 75000M, :selite "Indeksimuutos 2017 elokuu"} 
                                    {:id 16, :tyomenetelma "AB-paikkaus käsin", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
                                    {:id 1, :tyomenetelma "AB-paikkaus levittäjällä", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
                                    {:id 11, :tyomenetelma "Avarrussaumaus", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
@@ -75,7 +75,7 @@
                                    {:id 7, :tyomenetelma "Sirotepintauksena tehty lappupaikkaus (SIPA)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
                                    {:id 6, :tyomenetelma "Sirotepuhalluspaikkaus (SIPU)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
                                    {:id 3, :tyomenetelma "SMA-paikkaus levittäjällä", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""} 
-                                   {:id 8, :tyomenetelma "Urapaikkaus (UREM/RREM)", :kustannustyyppi nil, :kokonaiskustannus 215000.0M, :selite ""})
+                                   {:id 8, :tyomenetelma "Urapaikkaus (UREM/RREM)", :kustannustyyppi nil, :kokonaiskustannus 215000.0M, :selite ""}) 
         
         vastaus (tee-kutsu {:aikavali [alkupvm loppupvm]
                             :urakka-id urakka-id} :hae-paikkaus-kustannukset)]
