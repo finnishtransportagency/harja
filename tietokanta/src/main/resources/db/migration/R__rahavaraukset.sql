@@ -15,6 +15,10 @@ DECLARE
     t_lupaukseen1_id INT;
     t_muut_tavoitehintaan_id INT;
 
+    -- tehtäväryhmäidt
+    tr_lupaus1_id INT;
+    tr_muut_yllapito_id INT;
+
     rivit_paivitetty INTEGER := 0;
 BEGIN
     -- Haetaan rahavarausten id:t
@@ -28,6 +32,10 @@ BEGIN
     SELECT id INTO t_tunneli_id FROM tehtava WHERE nimi LIKE '%Tunneleiden hoito%' ORDER BY id ASC LIMIT 1;
     SELECT id INTO t_lupaukseen1_id FROM tehtava WHERE nimi LIKE '%Tilaajan rahavaraus lupaukseen 1%' ORDER BY id ASC LIMIT 1;
     SELECT id INTO t_muut_tavoitehintaan_id FROM tehtava WHERE nimi LIKE '%Muut tavoitehintaan%' ORDER BY id ASC LIMIT 1;
+
+    -- Haetaan Tehtäväryhmien idt
+    SELECT id INTO tr_lupaus1_id FROM tehtavaryhma WHERE nimi LIKE '%Tilaajan rahavaraus lupaukseen 1%' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO tr_muut_yllapito_id FROM tehtavaryhma WHERE nimi LIKE '%Muut, MHU ylläpito (F)%' ORDER BY id ASC LIMIT 1;
 
     -- ~ ~ toteutuneet_kustannukset ~ ~ --
     -- Lisää rahavaraus_id sarakkeet, on olemassa jo parissa taulussa, mutta ei haittaa
@@ -62,6 +70,16 @@ BEGIN
      WHERE maksueratyyppi = 'muu'
        AND rv_vahingot_id IS NOT NULL;
 
+    --  Muut, MHU ylläpito (F) - Kulut rahavarauksiin -- Näitä ei ole. Kaikki 'muu' tyyppiset on vahingonkorvauksia
+
+    -- Kun tehtäväryhmä on Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3) - siitä tehdään kannustinjärjestelmä rahavaraus
+    UPDATE kulu_kohdistus
+       SET rahavaraus_id = rv_lupaukseen1_id,
+           tyyppi = 'rahavaraus'
+     WHERE tehtavaryhma = tr_lupaus1_id
+       AND rv_lupaukseen1_id IS NOT NULL;
+
+
     -- ~ ~ kustannusarvioitu_tyo ~ ~ --
     -- Äkilliset hoitotyöt
     UPDATE kustannusarvioitu_tyo
@@ -78,20 +96,20 @@ BEGIN
     -- muut-rahavaraukset -- tunnelien hoito
     UPDATE kustannusarvioitu_tyo
        SET rahavaraus_id = rv_tunneli_id
-     WHERE tyyppi = 'muut-rahavaraukset' AND tehtava = rv_tunneli_id
+     WHERE tyyppi = 'muut-rahavaraukset' AND tehtava = t_tunneli_id
        AND rv_tunneli_id IS NOT NULL;
 
-    -- muut-rahavaraukset -- Tilaajan rahavaraus
+    -- muut-rahavaraukset -- tehtävä: Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään
     UPDATE kustannusarvioitu_tyo
        SET rahavaraus_id = rv_lupaukseen1_id
      WHERE tyyppi = 'muut-rahavaraukset' AND tehtava = t_lupaukseen1_id
        AND rv_lupaukseen1_id IS NOT NULL;
 
-    -- TODO: Muut, MHU ylläpito (F) - Kulut rahavarauksiin
-    -- TODO: Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)
-
-
-    -- TODO: tänne vielä ne muut tavoitehintaan vaikuttavat rahavaraukset
+    -- muut-rahavaraukset -- tehtävä: Muut tavoitehintaan vaikuttavat rahavaraukset
+    UPDATE kustannusarvioitu_tyo
+       SET rahavaraus_id = rv_muut_tavoitehintaan_id
+     WHERE tyyppi = 'muut-rahavaraukset' AND tehtava = t_muut_tavoitehintaan_id
+       AND rv_muut_tavoitehintaan_id IS NOT NULL;
 
     -- Palauta pävittyneet rivit, debuggausta varten
     GET DIAGNOSTICS rivit_paivitetty = ROW_COUNT;
