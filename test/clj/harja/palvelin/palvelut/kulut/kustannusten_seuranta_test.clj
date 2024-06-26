@@ -570,7 +570,7 @@ UNION ALL
                    :tehtavaryhma nil
                    :lisatyo? true
                    :tehtava nil
-                   :kohdistustyyppi "lisatyo"
+                   :tyyppi "lisatyo"
                    :tavoitehintainen :false}]
    :koontilaskun-kuukausi "elokuu/1-hoitovuosi"})
 
