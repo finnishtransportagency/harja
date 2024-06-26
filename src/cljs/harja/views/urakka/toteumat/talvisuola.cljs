@@ -102,7 +102,7 @@
                       (reset! tiedot/ui-lomakkeen-tila nil))]])
      :ei-borderia? true}
     [{:nimi :tierekisteriosoite
-      :otsikko "Tierekisteriosoite"
+      :otsikko "Tieosoite"
       :tyyppi :tierekisteriosoite
       :tyyli :rivitetty
       :sijainti (atom nil)

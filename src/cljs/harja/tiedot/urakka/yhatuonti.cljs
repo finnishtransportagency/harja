@@ -60,7 +60,7 @@
                                 [:li
                                  "Nimi: " (:nimi kohde) ", "
                                  "YHA-id: " (:yha-id kohde) ", "
-                                 "tierekisteriosoiteväli: "
+                                 "tieosoite: "
                                  (:tienumero tr) " / " (:aosa tr) " / " (:aet tr) " / " (:losa tr) " / " (:let tr)
                                  " ajorata " (:ajorata tr) " kaista " (:kaista tr) ", "
                                  (when-let [virheet (or (:virheet kohde) (:kohde-epavalidi-syy kohde))]
@@ -75,7 +75,7 @@
      (when-not (empty? epaonnistuneet-vkm-muunnokset)
        [:div
         [:p
-         "Seuraavien YHA-kohteiden tierekisteriosoitteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut.
+         "Seuraavien YHA-kohteiden tieosoitteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut.
          Kohteet on kuitenkin tallennettu Harjaan."]
         [:ul
          (for [kohde epaonnistuneet-vkm-muunnokset]
