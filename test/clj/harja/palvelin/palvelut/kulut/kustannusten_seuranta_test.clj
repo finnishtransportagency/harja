@@ -273,10 +273,7 @@ UNION ALL
 (defn- hankintakustannukset-toteutuneet-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (let [haku-str (str "SELECT lk.summa AS toteutunut_summa,
        0 AS budjetoitu_summa,
-       CASE
-           WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' THEN 'hankinta'
-           ELSE 'rahavaraus'
-           END                 AS toimenpideryhma,
+       'hankinta'                    AS toimenpideryhma,
        CASE
             WHEN (tk.koodi = '23104' AND lk.rahavaraus_id IS NULL) THEN 'Talvihoito'
             WHEN (tk.koodi = '23116' AND lk.rahavaraus_id IS NULL) THEN 'Liikenneympäristön hoito'
@@ -301,13 +298,14 @@ UNION ALL
          AND lk.toimenpideinstanssi = tpi.id
          AND lk.poistettu IS NOT TRUE
          AND tpi.toimenpide = tk.id
-         AND lk.maksueratyyppi::TEXT = 'kokonaishintainen'
-         AND lk.rahavaraus_id IS NULL
-         AND tr.nimi != 'Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)'
-  -- Näillä toimenpidekoodi.koodi rajauksilla rajataan johto- ja hallintakorvaus, hoidonjohdonpalkkio ja erilliskorvaus ulos
-  AND (tk.koodi = '23104' OR tk.koodi = '23116'
-    OR tk.koodi = '23124' OR tk.koodi = '20107' OR tk.koodi = '20191' OR
-       tk.koodi = '14301')")]
+         AND lk.tyyppi::TEXT = 'hankintakulu'
+         AND (tk.koodi = '23104'
+             OR tk.koodi = '23116'
+             OR tk.koodi = '23124'
+             OR tk.koodi = '20107'
+             OR tk.koodi = '20191'
+             OR tk.koodi = '14301')
+         ")]
     haku-str))
 
 (defn- rahavaraukset-budjetoitu-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
@@ -559,7 +557,7 @@ UNION ALL
 ;; Testataan/vertaillaan toteutuneita lisätöitä
 ;; Lisätöitä ei voi suunnitella etukäteen, joten niille ei ole budjetoituja kustannuksia olemassa.
 ;; Tallennetaan kulu lisätyö Johto ja halllintokrvaukselle, koska se on monimutkaisin lisätyötyyppi
-(defn- uusi-kulu [urakka-id summa]
+(defn- lisatyo-kulu [urakka-id summa]
   {:id nil
    :urakka urakka-id
    :erapaiva #inst "2020-08-15T21:00:00.000-00:00"
@@ -568,12 +566,12 @@ UNION ALL
    :kohdistukset [{:kohdistus-id nil
                    :rivi 1
                    :summa summa
-                   :suoritus-alku #inst "2020-08-14T22:00:00.000000000-00:00"
-                   :suoritus-loppu #inst "2020-08-17T22:00:00.000000000-00:00"
                    :toimenpideinstanssi 48
                    :tehtavaryhma nil
                    :lisatyo? true
-                   :tehtava nil}]
+                   :tehtava nil
+                   :kohdistustyyppi "lisatyo"
+                   :tavoitehintainen :false}]
    :koontilaskun-kuukausi "elokuu/1-hoitovuosi"})
 
 (deftest lisatyot-test
@@ -588,15 +586,13 @@ UNION ALL
                     :loppupvm loppupvm}
         kulun-summa 105.01
         ;; Päivitellään kulun tiedot sellaiselle hoitokaudelle, jolle ei ole tehty välikatselmusta
-        kulu (uusi-kulu (:urakka oulumhu-parametrit) kulun-summa)
+        kulu (lisatyo-kulu (:urakka oulumhu-parametrit) kulun-summa)
         kulu (-> kulu
                (assoc :erapaiva (pvm/->pvm "15.08.2021")
-                 :koontilaskun-kuukausi "elokuu/2-hoitovuosi")
-               (assoc-in [:kohdistukset 0 :suoritus-alku] (pvm/->pvm "14.08.2021"))
-               (assoc-in [:kohdistukset 0 :suoritus-loppu] (pvm/->pvm "17.08.2021")))
+                 :koontilaskun-kuukausi "elokuu/2-hoitovuosi"))
 
         ;; Lisää uusi kulu listyöstä johto-ja hallintakorvaukselle
-        uusi-kulu (kutsu-http-palvelua :tallenna-kulu urakkavastaava
+        lisatyo-kulu (kutsu-http-palvelua :tallenna-kulu urakkavastaava
                     {:urakka-id urakka-id
                      :kulu-kohdistuksineen kulu})
 
@@ -618,7 +614,7 @@ UNION ALL
         ;; Poistetaan luotu kulu
         _ (kutsu-http-palvelua :poista-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
             {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-             :id (:id uusi-kulu)})
+             :id (:id lisatyo-kulu)})
         ]
     ;; Vertaillaan summaa
     (is (= lisatyot-summa sql-summa))
