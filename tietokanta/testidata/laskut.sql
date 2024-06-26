@@ -101,9 +101,9 @@ VALUES ('2019-10-16', 700.77, urakka_id, current_timestamp, kayttaja_id, 'lokaku
 INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa, luotu, luoja) VALUES
 ((select id from kulu where kokonaissumma = 3000.77 AND erapaiva = '2019-10-16'), 1, tinst_talvihoito,
  tehtava_talvihoito, 'kokonaishintainen'::MAKSUERATYYPPI, 'hankintakulu', 3000.77, current_timestamp, kayttaja_id);
-INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa, luotu, luoja) VALUES
+INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, tavoitehintainen, summa, luotu, luoja) VALUES
 ((select id from kulu where kokonaissumma = 300.77 AND erapaiva = '2019-10-16'), 1, tinst_talvihoito,
- tehtava_talvihoito, 'lisatyo'::MAKSUERATYYPPI, 'hankintakulu', 300.77, current_timestamp, kayttaja_id);
+ tehtava_talvihoito, 'lisatyo'::MAKSUERATYYPPI, 'lisatyo', false, 300.77, current_timestamp, kayttaja_id);
 -- Soratiet Oulu MHU Soratien hoito TP
 INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, summa, luotu, luoja) VALUES
 ((select id from kulu where kokonaissumma = 4000.77 AND erapaiva = '2019-10-16'), 1, tinst_soratie,
