@@ -65,21 +65,21 @@ ORDER BY tyomenetelma, id;
 
 -- name: tallenna-mpu-kustannus!
 INSERT INTO mpu_kustannukset (
-  urakka, 
-  selite, 
-  kustannustyyppi, 
-  summa, 
-  vuosi,
-  luotu,
-  luoja
+    urakka, 
+    selite, 
+    kustannustyyppi, 
+    summa, 
+    vuosi,
+    luotu,
+    luoja
 ) VALUES (
-  :urakka-id, 
-  :selite, 
-  :kustannustyyppi::mpu_kustannustyyppi_enum, 
-  :summa, 
-  :vuosi,
-  NOW(),
-  COALESCE(:luoja, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))
+    :urakka-id, 
+    :selite, 
+    :kustannustyyppi::mpu_kustannustyyppi_enum, 
+    :summa, 
+    :vuosi,
+    NOW(),
+    COALESCE(:luoja, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))
 );
 
 
