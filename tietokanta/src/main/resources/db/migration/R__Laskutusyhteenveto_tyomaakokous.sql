@@ -31,12 +31,6 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     hjpalkkio_val_aika_yht                NUMERIC,
     hoidonjohto_hoitokausi_yht            NUMERIC,
     hoidonjohto_val_aika_yht              NUMERIC,
-    akilliset_hoitokausi_yht              NUMERIC,
-    akilliset_val_aika_yht                NUMERIC,
-    vahingot_hoitokausi_yht               NUMERIC,
-    vahingot_val_aika_yht                 NUMERIC,
-    tilaajan_rahavaraus_hoitokausi_yht    NUMERIC,
-    tilaajan_rahavaraus_val_aika_yht      NUMERIC,
     tavhin_hoitokausi_yht                 NUMERIC,
     tavhin_val_aika_yht                   NUMERIC,
     hoitokauden_tavoitehinta              NUMERIC,
@@ -72,7 +66,10 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     muut_kustannukset_val_aika_yht        NUMERIC,
     yhteensa_kaikki_hoitokausi_yht        NUMERIC,
     yhteensa_kaikki_val_aika_yht          NUMERIC,
-    perusluku                             NUMERIC
+    perusluku                             NUMERIC,
+    rahavaraus_nimet                      TEXT[],
+    hoitokausi_yht_array                  NUMERIC[],
+    val_aika_yht_array                    NUMERIC[]
 );
 
 -- Tätä kutsummalla saadaan työmaakokouksen laskutusyhteenvetoon kaikki tarvittavat tiedot
@@ -82,8 +79,8 @@ CREATE OR REPLACE FUNCTION ly_raportti_tyomaakokous(hk_alkupvm DATE, hk_loppupvm
     LANGUAGE plpgsql AS
 $$
 DECLARE
----- Tavoitehintaan vaikuttavat toteutuneet kustannukset
---- Hankinnat
+    ---- Tavoitehintaan vaikuttavat toteutuneet kustannukset
+    --- Hankinnat
     rivi                                  RECORD;
 
     -- Talvihoito
@@ -149,18 +146,11 @@ DECLARE
 
     --- Äkilliset hoitotyöt ja vahinkojen korjaukset
     akilliset_ja_vahingot_rivi            RECORD;
-    -- Äkilliset hoitotyöt
-    akilliset_hoitokausi_yht              NUMERIC;
-    akilliset_val_aika_yht                NUMERIC;
-    akilliset_rivi                        RECORD;
-    -- Vahinkojen korjaukset
-    vahingot_hoitokausi_yht               NUMERIC;
-    vahingot_val_aika_yht                 NUMERIC;
-    vahingot_rivi                         RECORD;
-    -- Tilaajan rahavaraukset
-    tilaajan_rahavaraus_hoitokausi_yht    NUMERIC;
-    tilaajan_rahavaraus_val_aika_yht      NUMERIC;
-    tilaajan_rahavaraus_rivi              RECORD;
+
+    -- Rahavarausten ID:t
+    akilliset_id                          INT;
+    vahingot_id                           INT;
+    kannustin_id                          INT;
 
     -- Tavoitehinnat yhteensä
     tavhin_hoitokausi_yht                 NUMERIC;
@@ -223,7 +213,24 @@ DECLARE
     hk_tavhintsiirto_ed_vuodelta          NUMERIC;
     budjettia_jaljella                    NUMERIC;
     urakan_tiedot                         RECORD;
+
+    -- Rahavaraukset
+    rahavaraus                            RECORD;
+    rahavaraukset                         TEXT[];
+    rahavaraus_nimet                      TEXT[]    := '{}';
+    hoitokausi_yht_array                  NUMERIC[] := '{}';
+    val_aika_yht_array                    NUMERIC[] := '{}';
+    -- Rahavaraus arvot joita käytetään loopissa 
+    rv_val_aika_yht                       NUMERIC := 0;
+    rv_hoitokausi_yht                     NUMERIC := 0;
+
+    -- Lasketaan rahavaraukset yhteen ja lisätään ne tavoitehintaan 
+    kaikki_rahavaraukset_val_yht          NUMERIC := 0.0;
+    kaikki_rahavaraukset_hoitokausi_yht   NUMERIC := 0.0;
+
+    -- Tulos 
     tulos                                 LY_RAPORTTI_TYOMAAKOKOUS_TULOS;
+
 
 
 BEGIN
@@ -326,8 +333,6 @@ BEGIN
     paallyste_val_aika_yht := 0.0;
     yllapito_hoitokausi_yht := 0.0;
     yllapito_val_aika_yht := 0.0;
-    tilaajan_rahavaraus_val_aika_yht := 0.0;
-    tilaajan_rahavaraus_hoitokausi_yht := 0.0;
     korvausinv_hoitokausi_yht := 0.0;
     korvausinv_val_aika_yht := 0.0;
 
@@ -349,20 +354,39 @@ BEGIN
     lisatyo_hoidonjohto_hoitokausi_yht := 0.0;
     lisatyo_hoidonjohto_val_aika_yht := 0.0;
 
-    FOR rivi IN SELECT summa AS kht_summa, l.erapaiva AS erapaiva, tpi.id as toimenpideinstanssi_id, lk.maksueratyyppi, tr.yksiloiva_tunniste
-                FROM kulu l
-                         JOIN kulu_kohdistus lk ON lk.kulu = l.id
-                         JOIN toimenpideinstanssi tpi
-                              ON lk.toimenpideinstanssi = tpi.id AND tpi.id in
-                                                                     (talvihoito_tpi_id, lyh_tpi_id, sora_tpi_id,
-                                                                      paallyste_tpi_id, yllapito_tpi_id,
-                                                                      korvausinv_tpi_id, hoidonjohto_tpi_id)
-                        LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
-                     -- Äkillisethoitotyöt ja vahingonkorvaukset niputetaan erikseen omiin laareihinsa, joten jätetään ne tässä pois
-                WHERE lk.maksueratyyppi != 'akillinen-hoitotyo'
-                  AND lk.maksueratyyppi != 'muu'
-                  AND lk.poistettu IS NOT TRUE
-                  AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+    -- Rahavaraus kannustinjärjestelmä id, rahavaraus taulusta 
+    -- Korvaa yksilöivän tunnisteen 0e78b556-74ee-437f-ac67-7a03381c64f6
+    SELECT id INTO kannustin_id FROM rahavaraus WHERE nimi LIKE '%Kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
+
+    -- Hae rahavaraus id:t äkillisille hoitotöille ja vahingoille, uusi tietomalli korvaa vanhaa koodia jossa haetaan kulu_kohdistus maksuerätyypillä
+    SELECT id INTO akilliset_id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO vahingot_id FROM rahavaraus WHERE nimi LIKE '%Vahinkojen korjaukset%' ORDER BY id ASC LIMIT 1;
+
+    FOR rivi IN SELECT 
+      summa         AS kht_summa, 
+      l.erapaiva    AS erapaiva, 
+      tpi.id        AS toimenpideinstanssi_id, 
+      lk.maksueratyyppi, 
+      lk.rahavaraus_id,
+      tr.yksiloiva_tunniste
+      FROM kulu l
+        JOIN kulu_kohdistus lk ON lk.kulu = l.id
+        JOIN toimenpideinstanssi tpi
+            ON lk.toimenpideinstanssi = tpi.id 
+           AND tpi.id IN (
+               talvihoito_tpi_id, 
+               lyh_tpi_id, 
+               sora_tpi_id,
+               paallyste_tpi_id, 
+               yllapito_tpi_id,
+               korvausinv_tpi_id, 
+               hoidonjohto_tpi_id
+            )
+        LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
+            -- Äkillisethoitotyöt ja vahingonkorvaukset niputetaan erikseen omiin laareihinsa, joten jätetään ne tässä pois
+            WHERE ( lk.rahavaraus_id NOT IN (akilliset_id, vahingot_id) OR lk.rahavaraus_id IS NULL )
+              AND lk.poistettu IS NOT TRUE
+              AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
 
         LOOP
 
@@ -456,9 +480,10 @@ BEGIN
             END IF;
 
             -- Kohdista MHU ylläpidon liittyvät rivit yllapito_rivi:lle
+            -- Katso että rivi ei myöskään kuulu kannustinjärjestelmään (T3) (yksilöivätunniste='0e78b556-74ee-437f-ac67-7a03381c64f6') 
+            -- Eli uudella rahavaraustietomallilla rahavaraus_id = kannustin_id
             IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' AND
-               (rivi.yksiloiva_tunniste IS NULL or
-                (rivi.yksiloiva_tunniste IS NOT NULL AND rivi.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6')) THEN
+               (rivi.yksiloiva_tunniste IS NULL OR rivi.rahavaraus_id != kannustin_id) THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -469,9 +494,9 @@ BEGIN
             END IF;
 
             -- Kohdista MHU ylläpidon liittyvät lisätyö rivit lisatyo_yllapito_rivi:lle
+            -- Katso että ei kuulu kannustinjärjestelmään
             IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' AND
-               (rivi.yksiloiva_tunniste IS NULL or
-                (rivi.yksiloiva_tunniste IS NOT NULL AND rivi.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6')) THEN
+               (rivi.yksiloiva_tunniste IS NULL OR rivi.rahavaraus_id != kannustin_id) THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -479,17 +504,6 @@ BEGIN
 
                 RAISE NOTICE 'lisatyo_yllapito_rivi: % ', lisatyo_yllapito_rivi;
                 RAISE NOTICE 'lisatyo_yllapito_rivi.summa: %', lisatyo_yllapito_rivi.summa;
-            END IF;
-
-            -- Kohdista MHU ylläpidon liittyvät Tilaajan rahavarukset omalle riville
-            IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6' THEN
-                SELECT rivi.kht_summa AS summa,
-                       rivi.kht_summa AS korotettuna,
-                       0::NUMERIC     AS korotus
-                INTO tilaajan_rahavaraus_rivi;
-
-                RAISE NOTICE 'tilaajan_rahavaraus_rivi: % ', tilaajan_rahavaraus_rivi;
-                RAISE NOTICE 'tilaajan_rahavaraus_rivi.summa: %', tilaajan_rahavaraus_rivi.summa;
             END IF;
 
             -- Kohdista MHU korvausinvestointeihin liittyvät rivit korvausinv_rivi:lle
@@ -525,170 +539,168 @@ BEGIN
                 RAISE NOTICE 'lisatyo_hoidonjohto_rivi.summa: %', lisatyo_hoidonjohto_rivi.summa;
             END IF;
 
-
             RAISE NOTICE 'rivi.erapaiva: %', rivi.erapaiva;
             RAISE NOTICE 'aikavali_loppupvm: %', aikavali_loppupvm;
 
             IF rivi.erapaiva <= aikavali_loppupvm THEN
+
                 -- Talvihoito Hoitokauden alusta
                 IF rivi.toimenpideinstanssi_id = talvihoito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+
                     talvihoito_hoitokausi_yht := talvihoito_hoitokausi_yht + COALESCE(talvihoito_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && talvihoito_tpi THEN: %', talvihoito_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         talvihoito_val_aika_yht := talvihoito_val_aika_yht + COALESCE(talvihoito_rivi.summa, 0.0);
                     END IF;
                 END IF;
+
                 IF rivi.toimenpideinstanssi_id = talvihoito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+
                     lisatyo_talvihoito_hoitokausi_yht :=
                             lisatyo_talvihoito_hoitokausi_yht + COALESCE(lisatyo_talvihoito_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && talvihoito_tpi && lisatyo THEN: %', lisatyo_talvihoito_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         lisatyo_talvihoito_val_aika_yht :=
                                 lisatyo_talvihoito_val_aika_yht + COALESCE(lisatyo_talvihoito_rivi.summa, 0.0);
                     END IF;
                 END IF;
+
                 -- Liikenneympäristön hoito Hoitokauden alusta
                 IF rivi.toimenpideinstanssi_id = lyh_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+
                     lyh_hoitokausi_yht := lyh_hoitokausi_yht + COALESCE(lyh_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && lyh_tpi  THEN: %', lyh_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         lyh_val_aika_yht := lyh_val_aika_yht + COALESCE(lyh_rivi.summa, 0.0);
                     END IF;
                 END IF;
+
                 IF rivi.toimenpideinstanssi_id = lyh_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+
                     lisatyo_lyh_hoitokausi_yht := lisatyo_lyh_hoitokausi_yht + COALESCE(lisatyo_lyh_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && lyh_tpi AND lisätyö THEN: %', lisatyo_lyh_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         lisatyo_lyh_val_aika_yht := lisatyo_lyh_val_aika_yht + COALESCE(lisatyo_lyh_rivi.summa, 0.0);
                     END IF;
                 END IF;
+
                 -- Soratien hoito Hoitokauden alusta
                 IF rivi.toimenpideinstanssi_id = sora_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+
                     sora_hoitokausi_yht := sora_hoitokausi_yht + COALESCE(sora_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && sora_tpi  THEN: %', sora_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         sora_val_aika_yht := sora_val_aika_yht + COALESCE(sora_rivi.summa, 0.0);
                     END IF;
                 END IF;
+
                 IF rivi.toimenpideinstanssi_id = sora_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+
                     lisatyo_sora_hoitokausi_yht := lisatyo_sora_hoitokausi_yht + COALESCE(lisatyo_sora_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && sora_tpi AND lisätyö THEN: %', lisatyo_sora_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         lisatyo_sora_val_aika_yht := lisatyo_sora_val_aika_yht + COALESCE(lisatyo_sora_rivi.summa, 0.0);
                     END IF;
                 END IF;
+
                 -- Päällysteiden paikkaukset Hoitokauden alusta
                 IF rivi.toimenpideinstanssi_id = paallyste_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+
                     paallyste_hoitokausi_yht := paallyste_hoitokausi_yht + COALESCE(paallyste_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && paallyste_tpi  THEN: %', paallyste_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         paallyste_val_aika_yht := paallyste_val_aika_yht + COALESCE(paallyste_rivi.summa, 0.0);
                     END IF;
                 END IF;
+
                 IF rivi.toimenpideinstanssi_id = paallyste_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+
                     lisatyo_paallyste_hoitokausi_yht :=
-                            lisatyo_paallyste_hoitokausi_yht + COALESCE(lisatyo_paallyste_rivi.summa, 0.0);
+                      lisatyo_paallyste_hoitokausi_yht + COALESCE(lisatyo_paallyste_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && paallyste_tpi AND lisätyö THEN: %', lisatyo_paallyste_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         lisatyo_paallyste_val_aika_yht :=
                                 lisatyo_paallyste_val_aika_yht + COALESCE(lisatyo_paallyste_rivi.summa, 0.0);
                     END IF;
                 END IF;
-                -- MHU ylläpidon kulut, jotka eivät ole lisätöitä, eivätkä Tilaajan rahavarauksia (yksilöivätunniste='0e78b556-74ee-437f-ac67-7a03381c64f6')
+
+                -- MHU ylläpidon kulut, jotka eivät ole lisätöitä, eivätkä kannustinjärjestelmä rahavarauksia
                 IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' AND
-                   (rivi.yksiloiva_tunniste IS NULL or
-                    (rivi.yksiloiva_tunniste IS NOT NULL AND rivi.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6')) THEN
+                   (rivi.yksiloiva_tunniste IS NULL OR rivi.rahavaraus_id != kannustin_id) THEN
+
                     yllapito_hoitokausi_yht := yllapito_hoitokausi_yht + COALESCE(yllapito_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && yllapito_tpi  THEN: %', yllapito_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         yllapito_val_aika_yht := yllapito_val_aika_yht + COALESCE(yllapito_rivi.summa, 0.0);
                     END IF;
                 END IF;
-                -- MHU ylläpidon kulut, joka on lisätyö , mutta ei kohdistettu tehtäväryhmään Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3) (yksilöivätunniste='0e78b556-74ee-437f-ac67-7a03381c64f6')
+
+                -- MHU ylläpidon kulut, joka on lisätyö , mutta ei kohdistettu rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)
                 IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' AND
-                   (rivi.yksiloiva_tunniste IS NULL or
-                    (rivi.yksiloiva_tunniste IS NOT NULL AND rivi.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6')) THEN
+                   (rivi.yksiloiva_tunniste IS NULL OR rivi.rahavaraus_id != kannustin_id) THEN
+
                     lisatyo_yllapito_hoitokausi_yht :=
                             lisatyo_yllapito_hoitokausi_yht + COALESCE(lisatyo_yllapito_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && yllapito_tpi AND lisätyö THEN: %', lisatyo_yllapito_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         lisatyo_yllapito_val_aika_yht :=
                                 lisatyo_yllapito_val_aika_yht + COALESCE(lisatyo_yllapito_rivi.summa, 0.0);
                     END IF;
                 END IF;
-                -- MHU ylläpidon kulut, jotka on kohdistettu tehtäväryhmään Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3) (yksilöivätunniste='0e78b556-74ee-437f-ac67-7a03381c64f6')
-                IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6' THEN
-                    tilaajan_rahavaraus_hoitokausi_yht :=
-                            tilaajan_rahavaraus_hoitokausi_yht + COALESCE(tilaajan_rahavaraus_rivi.summa, 0.0);
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
-                        -- Laskutetaan nyt
-                        tilaajan_rahavaraus_val_aika_yht :=
-                                tilaajan_rahavaraus_val_aika_yht + COALESCE(tilaajan_rahavaraus_rivi.summa, 0.0);
-                    END IF;
-                END IF;
                 -- Korvausinvestointi Hoitokauden alusta
                 IF rivi.toimenpideinstanssi_id = korvausinv_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+
                     korvausinv_hoitokausi_yht := korvausinv_hoitokausi_yht + COALESCE(korvausinv_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && korvausinv_tpi  THEN: %', korvausinv_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         korvausinv_val_aika_yht := korvausinv_val_aika_yht + COALESCE(korvausinv_rivi.summa, 0.0);
                     END IF;
                 END IF;
+
                 IF rivi.toimenpideinstanssi_id = korvausinv_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+
                     lisatyo_korvausinv_hoitokausi_yht :=
                             lisatyo_korvausinv_hoitokausi_yht + COALESCE(lisatyo_korvausinv_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && korvausinv_tpi AND lisätyö  THEN: %', lisatyo_korvausinv_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         lisatyo_korvausinv_val_aika_yht :=
                                 lisatyo_korvausinv_val_aika_yht + COALESCE(lisatyo_korvausinv_rivi.summa, 0.0);
                     END IF;
                 END IF;
+
                 -- Hoidonjohdon lisätyöt. Hoidon johdon muut kulut haetaan alempana
                 IF rivi.toimenpideinstanssi_id = hoidonjohto_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+                
                     lisatyo_hoidonjohto_hoitokausi_yht :=
                             lisatyo_hoidonjohto_hoitokausi_yht + COALESCE(lisatyo_hoidonjohto_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && hoidonjohto_tpi AND lisätyö  THEN: %', lisatyo_hoidonjohto_hoitokausi_yht;
 
-                    IF rivi.erapaiva >= aikavali_alkupvm AND
-                       rivi.erapaiva <= aikavali_loppupvm THEN
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
                         -- Laskutetaan nyt
                         lisatyo_hoidonjohto_val_aika_yht :=
                                 lisatyo_hoidonjohto_val_aika_yht + COALESCE(lisatyo_hoidonjohto_rivi.summa, 0.0);
@@ -780,93 +792,94 @@ BEGIN
     hoidonjohto_val_aika_yht := hoidonjohto_val_aika_yht + johtojahallinto_val_aika_yht + erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht;
 
 
-    ----------------------------------------------------------------
-    ------------------- Hoidonjohto loppuu -------------------------
-    ----------------------------------------------------------------
+    -----------------------------------------------------------
+    ------------------- Rahavaraukset -------------------------
+    -----------------------------------------------------------
 
-    akilliset_hoitokausi_yht := 0.0;
-    akilliset_val_aika_yht := 0.0;
-    vahingot_hoitokausi_yht := 0.0;
-    vahingot_val_aika_yht := 0.0;
-    FOR akilliset_ja_vahingot_rivi IN SELECT summa AS kht_summa, l.erapaiva AS erapaiva, lk.maksueratyyppi
-                                      FROM kulu l
-                                               JOIN kulu_kohdistus lk ON lk.kulu = l.id
-                                               JOIN toimenpideinstanssi tpi
-                                                    ON lk.toimenpideinstanssi = tpi.id AND tpi.id in
-                                                                                           (talvihoito_tpi_id,
-                                                                                            lyh_tpi_id,
-                                                                                            sora_tpi_id,
-                                                                                            paallyste_tpi_id,
-                                                                                            yllapito_tpi_id,
-                                                                                            korvausinv_tpi_id)
-                                           -- Lisätyöt, äkillisethoitotyöt ja vahingonkorvaukset niputetaan erikseen omiin laareihinsa, joten jätetään ne tässä pois
-                                      WHERE lk.maksueratyyppi IN ('akillinen-hoitotyo', 'muu')
-                                        AND lk.poistettu IS NOT TRUE
-                                        AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
 
+    FOR rahavaraus IN
+        SELECT id, nimi FROM rahavaraus
+    LOOP
+        -- Resetoi hoitokausi / laskutetaan 
+        rv_val_aika_yht := 0;
+        rv_hoitokausi_yht := 0;
+
+        FOR rivi IN
+            SELECT
+                summa AS kht_summa, 
+                l.erapaiva AS erapaiva, 
+                lk.rahavaraus_id
+            FROM kulu l
+            JOIN kulu_kohdistus lk ON lk.kulu = l.id
+            JOIN toimenpideinstanssi tpi 
+                ON lk.toimenpideinstanssi = tpi.id 
+                AND tpi.id IN (
+                    lyh_tpi_id, 
+                    sora_tpi_id, 
+                    yllapito_tpi_id, 
+                    paallyste_tpi_id, 
+                    talvihoito_tpi_id, 
+                    korvausinv_tpi_id
+                )
+            WHERE lk.rahavaraus_id = rahavaraus.id
+                AND lk.poistettu IS NOT TRUE
+                AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
         LOOP
-            IF akilliset_ja_vahingot_rivi.maksueratyyppi = 'akillinen-hoitotyo' THEN
-                SELECT akilliset_ja_vahingot_rivi.kht_summa AS summa,
-                       akilliset_ja_vahingot_rivi.kht_summa AS korotettuna,
-                       0::NUMERIC                           AS korotus
-                INTO akilliset_rivi;
+            IF rivi.erapaiva <= aikavali_loppupvm THEN
 
-                RAISE NOTICE 'akilliset_rivi: % ', akilliset_rivi;
-                RAISE NOTICE 'akilliset_rivi.summa: %', akilliset_rivi.summa;
-            END IF;
+                -- Rahavaraus X Hoitokausi yhteensä 
+                rv_hoitokausi_yht := rv_hoitokausi_yht + COALESCE(rivi.kht_summa, 0.0);
 
-            IF akilliset_ja_vahingot_rivi.maksueratyyppi = 'muu' THEN
-                SELECT akilliset_ja_vahingot_rivi.kht_summa AS summa,
-                       akilliset_ja_vahingot_rivi.kht_summa AS korotettuna,
-                       0::NUMERIC                           AS korotus
-                INTO vahingot_rivi;
-
-                RAISE NOTICE 'vahingot_rivi: % ', vahingot_rivi;
-                RAISE NOTICE 'vahingot_rivi.summa: %', vahingot_rivi.summa;
-            END IF;
-
-            IF akilliset_ja_vahingot_rivi.erapaiva <= aikavali_loppupvm THEN
-                -- Äkilliset hoitotyöt Hoitokauden alusta
-                IF akilliset_ja_vahingot_rivi.maksueratyyppi = 'akillinen-hoitotyo' THEN
-                    akilliset_hoitokausi_yht := akilliset_hoitokausi_yht + COALESCE(akilliset_rivi.summa, 0.0);
-                    RAISE NOTICE 'akilliset_ja_vahingot_rivi.erapaiva <= aikavali_loppupvm && maksueratyyppi = akillinen-hoitotyo THEN: %', akilliset_hoitokausi_yht;
-
-                    IF akilliset_ja_vahingot_rivi.erapaiva >= aikavali_alkupvm AND
-                       akilliset_ja_vahingot_rivi.erapaiva <= aikavali_loppupvm THEN
-                        -- Laskutetaan nyt
-                        akilliset_val_aika_yht := akilliset_val_aika_yht + COALESCE(akilliset_rivi.summa, 0.0);
-                    END IF;
-                END IF;
-
-                -- Vahingonkorvaukset Hoitokauden alusta
-                IF akilliset_ja_vahingot_rivi.maksueratyyppi = 'muu' THEN
-                    vahingot_hoitokausi_yht := vahingot_hoitokausi_yht + COALESCE(vahingot_rivi.summa, 0.0);
-                    RAISE NOTICE 'akilliset_ja_vahingot_rivi.erapaiva <= aikavali_loppupvm && maksueratyyppi = muu THEN: %', vahingot_hoitokausi_yht;
-
-                    IF akilliset_ja_vahingot_rivi.erapaiva >= aikavali_alkupvm AND
-                       akilliset_ja_vahingot_rivi.erapaiva <= aikavali_loppupvm THEN
-                        -- Laskutetaan nyt
-                        vahingot_val_aika_yht := vahingot_val_aika_yht + COALESCE(vahingot_rivi.summa, 0.0);
-                    END IF;
+                IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
+                    -- Rahavaraus X valittu kk yhteensä 
+                    rv_val_aika_yht := rv_val_aika_yht + COALESCE(rivi.kht_summa, 0.0);
                 END IF;
             END IF;
         END LOOP;
 
+        -- Lisää arrayhyn kaikki rahavarausten tulokset, jotka parsitaan gridiin 
+        rahavaraus_nimet := array_append(rahavaraus_nimet, rahavaraus.nimi);
+        hoitokausi_yht_array := array_append(hoitokausi_yht_array, rv_hoitokausi_yht);
+        val_aika_yht_array := array_append(val_aika_yht_array, rv_val_aika_yht);
+
+    END LOOP;
+
+    -- Laske rahavaraukset yhteen 
+    -- Tällä voi siis korvata äkilliset, vahingot, kannustin muuttujat
+    -- Rahavaraukset hoitokausi
+    FOR i IN 1..array_length(hoitokausi_yht_array, 1) LOOP
+        kaikki_rahavaraukset_hoitokausi_yht := kaikki_rahavaraukset_hoitokausi_yht + hoitokausi_yht_array[i];
+    END LOOP;
+
+    -- Rahavaraukset valittu kk
+    FOR i IN 1..array_length(val_aika_yht_array, 1) LOOP
+        kaikki_rahavaraukset_val_yht := kaikki_rahavaraukset_val_yht + val_aika_yht_array[i];
+    END LOOP;
+
+    ---------------------------------------------
+    --------------- Tavoitehinta  ---------------
+    ---------------------------------------------
+
     -- Laskeskellaan tavoitehintaan kuuluvat yhteen
-    -- 2022-10-01 jälkeen alihankitabonus ei ole enää MHU ylläpitoon kuuluvana, vaan omana rivinään, niin iffitellään
-    -- se tarvittaessa mukaan
+    -- 2022-10-01 jälkeen alihankitabonus ei ole enää MHU ylläpitoon kuuluvana, vaan omana rivinään, niin iffitellään se tarvittaessa mukaan
+    -- Tavoitehinta hoitokausi 
     tavhin_hoitokausi_yht := 0.0;
     tavhin_hoitokausi_yht := tavhin_hoitokausi_yht +
             talvihoito_hoitokausi_yht + lyh_hoitokausi_yht + sora_hoitokausi_yht +
             paallyste_hoitokausi_yht + yllapito_hoitokausi_yht + korvausinv_hoitokausi_yht +
             johtojahallinto_hoitokausi_yht + erillishankinnat_hoitokausi_yht + hjpalkkio_hoitokausi_yht +
-            akilliset_hoitokausi_yht + vahingot_hoitokausi_yht + tilaajan_rahavaraus_hoitokausi_yht;
+            -- Rahavaraukset 
+            kaikki_rahavaraukset_hoitokausi_yht;
+    
+    -- Tavoitehinta valittu kk 
     tavhin_val_aika_yht := 0.0;
     tavhin_val_aika_yht := tavhin_val_aika_yht +
             talvihoito_val_aika_yht + lyh_val_aika_yht + sora_val_aika_yht +
             paallyste_val_aika_yht + yllapito_val_aika_yht + korvausinv_val_aika_yht +
             johtojahallinto_val_aika_yht +
-            erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht + akilliset_val_aika_yht + vahingot_val_aika_yht + tilaajan_rahavaraus_val_aika_yht;
+            erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht + 
+            -- Rahavaraukset 
+            kaikki_rahavaraukset_val_yht;
 
     -- Budjettia jäljellä
     budjettia_jaljella := 0.0;
@@ -1073,6 +1086,7 @@ BEGIN
     
     
     tulos := (
+        
         -- Talvihoito
               talvihoito_hoitokausi_yht, talvihoito_val_aika_yht,
         -- Liikenne ymp. hoito
@@ -1095,12 +1109,6 @@ BEGIN
               hjpalkkio_hoitokausi_yht, hjpalkkio_val_aika_yht,
         -- Hoidonjohto yhteensä
               hoidonjohto_hoitokausi_yht, hoidonjohto_val_aika_yht,
-        -- Äkilliset hoitotyöt yhteensä
-              akilliset_hoitokausi_yht, akilliset_val_aika_yht,
-        -- Vahingonkorvaukset yhteensä
-              vahingot_hoitokausi_yht, vahingot_val_aika_yht,
-        -- Tilaajan rahavaraukset
-              tilaajan_rahavaraus_hoitokausi_yht, tilaajan_rahavaraus_val_aika_yht,
         -- Tavoitehinnat yht.
               tavhin_hoitokausi_yht, tavhin_val_aika_yht,
         -- Tavoitehinnan muodostus
@@ -1139,7 +1147,10 @@ BEGIN
         -- Kaikki yhteensä
               yhteensa_kaikki_hoitokausi_yht, yhteensa_kaikki_val_aika_yht,
         -- Indeksilaskennan perusluku
-              perusluku);
+              perusluku, 
+        -- Urakan rahavaraukset ja arvot
+              rahavaraus_nimet, hoitokausi_yht_array, val_aika_yht_array
+        );
     return next tulos;
 END;
 $$;

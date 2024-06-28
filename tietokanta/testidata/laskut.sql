@@ -192,3 +192,6 @@ INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksu
 
         END
 $$ LANGUAGE plpgsql;
+
+-- Populoi rahavaraus ID:t 
+SELECT populoi_rahavaraus_idt();
