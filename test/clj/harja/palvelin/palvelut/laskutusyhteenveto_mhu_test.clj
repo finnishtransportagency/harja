@@ -209,24 +209,29 @@
               (reset! oulun-mhu-urakka-2020-04 (hae-2020-04-tiedot)))
           hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-04))
 
-          poikkeukset (ffirst (q (str "SELECT SUM(kk.summa)
-          FROM kulu_kohdistus kk
-          WHERE kk.kulu IN (select id from kulu where tyyppi = 'laskutettava' AND erapaiva >= '2020-04-01' AND erapaiva <= '2020-04-30')
-          AND kk.toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id)))
+          poikkeukset (ffirst (q (format "SELECT SUM(kk.summa)
+           FROM kulu k
+                JOIN kulu_kohdistus kk ON k.id = kk.kulu
+          WHERE k.erapaiva BETWEEN '2020-04-01' AND '2020-04-30'
+            AND kk.toimenpideinstanssi = %s"
+                                   hallinnolliset-toimenpiteet-tpi-id)))
 
-          db_hallinto (ffirst (q (str "SELECT SUM(kk.summa)
-          FROM kulu k, kulu_kohdistus kk
-          WHERE kk.kulu = (select id from kulu where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-21')
-          AND kk.toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
-          AND kk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaus (J)')
-          AND k.erapaiva = '2020-04-21'::DATE")))
+          db_hallinto (ffirst (q (format "SELECT SUM(kk.summa)
+          FROM kulu k
+               JOIN kulu_kohdistus kk ON k.id = kk.kulu
+          WHERE k.kokonaissumma = 10.20
+            AND k.erapaiva = '2020-04-21'::DATE
+            AND kk.toimenpideinstanssi = %s
+            AND kk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaus (J)')"
+                                   hallinnolliset-toimenpiteet-tpi-id)))
 
           db_erillis (ffirst (q (str "SELECT SUM(kk.summa)
-          FROM kulu k, kulu_kohdistus kk
-          WHERE kk.kulu = (select id from kulu where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-22')
+          FROM kulu k
+               JOIN kulu_kohdistus kk ON k.id = kk.kulu
+          WHERE k.kokonaissumma = 10.20
+            AND k.erapaiva = '2020-04-22'::DATE
           AND kk.toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
-          AND kk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)')
-          AND k.erapaiva = '2020-04-22'::DATE")))]
+          AND kk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)')")))]
 
       (is (= (+ (:hj_palkkio_laskutetaan hoidonjohto) (:johto_ja_hallinto_laskutetaan hoidonjohto) (:hj_erillishankinnat_laskutetaan hoidonjohto))
              poikkeukset))
@@ -245,11 +250,11 @@
           sopimuksen-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
           tehtava-id (ffirst (q (str "select id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8';")))
           poikkeuslaskutukset (ffirst (q (str "SELECT coalesce(SUM(kk.summa),0)
-                                                 FROM kulu k, kulu_kohdistus kk
+                                                 FROM kulu k
+                                                      join kulu_kohdistus kk ON k.id = kk.kulu
                                                 WHERE k.urakka = "urakka-id"
                                                   AND k.id = kk.kulu
-                                                  AND kk.kulu IN (select id from kulu where tyyppi = 'laskutettava'
-                                                  AND erapaiva >= '2020-03-01'::DATE AND erapaiva <= '2020-03-31'::DATE)
+                                                  AND k.erapaiva BETWEEN '2020-03-01'::DATE AND '2020-03-31'::DATE
                                                   AND kk.toimenpideinstanssi = "hallinnolliset-toimenpiteet-tpi-id "
                                                   AND tehtavaryhma NOT IN (SELECT id FROM tehtavaryhma WHERE nimi ILIKE 'Hoitovuoden päättäminen%');")))
           kustannusarvioidut-tyot (ffirst (q (str "SELECT COALESCE(SUM(kat.summa_indeksikorjattu), 0) AS summa

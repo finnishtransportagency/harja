@@ -3,7 +3,6 @@
 SELECT k.id            AS "id",
        k.kokonaissumma AS "kokonaissumma",
        k.erapaiva      AS "erapaiva",
-       k.tyyppi        AS "tyyppi",
        k.luotu         AS "luontipvm",
        k.muokattu      AS "muokkauspvm",
        k.koontilaskun_kuukausi AS "koontilaskun-kuukausi"
@@ -63,7 +62,6 @@ FROM (SELECT tr.nimi      AS "nimi",
       WHERE format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE) rs
 GROUP BY rs.nimi, rs.tehtavaryhma, rs.jarjestys
 ORDER BY rs.jarjestys;
-
 
 -- name: hae-urakan-kulut-raporttiin-aikavalilla
 -- Annetulla aikavälillä haetaan urakan kaikki kulut tehtäväryhmittäin
@@ -138,10 +136,9 @@ WHERE k.urakka = :urakka
 -- name: hae-urakan-kulut-kohdistuksineen
 -- Hakee urakan kulut ja niihin liittyvät kohdistukset annetulta aikaväliltä
 SELECT m.numero                AS "maksuera-numero",
- 	     k.id                    AS "id",
+ 	   k.id                    AS "id",
        k.kokonaissumma         AS "kokonaissumma",
        k.erapaiva              AS "erapaiva",
-       k.tyyppi                AS "tyyppi",
        k.laskun_numero         AS "laskun-numero",
        k.koontilaskun_kuukausi AS "koontilaskun-kuukausi",
        k.lisatieto             AS "lisatieto",
@@ -150,10 +147,10 @@ SELECT m.numero                AS "maksuera-numero",
        kk.summa                AS "summa",
        kk.toimenpideinstanssi  AS "toimenpideinstanssi",
        kk.tehtavaryhma         AS "tehtavaryhma",
-       kk.suoritus_alku        AS "suoritus-alku",
-       kk.suoritus_loppu       AS "suoritus-loppu",
        kk.lisatyon_lisatieto   AS "lisatyon-lisatieto",
-       kk.maksueratyyppi       AS "maksueratyyppi"
+       kk.maksueratyyppi       AS "maksueratyyppi",
+       kk.rahavaraus_id        AS rahavaraus,
+       kk.tyyppi               AS tyyppi
 FROM   kulu k
        JOIN kulu_kohdistus kk ON k.id = kk.kulu 
        AND kk.poistettu IS NOT TRUE
@@ -183,7 +180,6 @@ SELECT k.id            AS "id",
        k.kokonaissumma AS "kokonaissumma",
        k.erapaiva      AS "erapaiva",
        k.laskun_numero AS "laskun-numero",
-       k.tyyppi        AS "tyyppi",
        k.koontilaskun_kuukausi AS "koontilaskun-kuukausi",
        k.lisatieto     AS "lisatieto"
 FROM kulu k
@@ -196,13 +192,16 @@ SELECT kk.id                  AS "kohdistus-id",
        kk.summa               AS "summa",
        kk.tehtavaryhma        AS "tehtavaryhma",
        kk.toimenpideinstanssi AS "toimenpideinstanssi",
-       kk.suoritus_alku       AS "suoritus-alku",
-       kk.suoritus_loppu      AS "suoritus-loppu",
        kk.luotu               AS "luontiaika",
        kk.muokattu            AS "muokkausaika",
        kk.lisatyon_lisatieto  AS "lisatyon-lisatieto",
-       kk.maksueratyyppi      AS "maksueratyyppi"
+       kk.maksueratyyppi      AS "maksueratyyppi",
+       kk.rahavaraus_id       AS rahavaraus_id,
+       rv.nimi                AS rahavaraus_nimi,
+       kk.tyyppi              AS tyyppi,
+       kk.tavoitehintainen    AS tavoitehintainen
   FROM kulu_kohdistus kk
+        LEFT JOIN rahavaraus rv ON kk.rahavaraus_id = rv.id
  WHERE kk.kulu = :kulu
    AND kk.poistettu IS NOT TRUE
  ORDER BY kk.id;
@@ -210,10 +209,8 @@ SELECT kk.id                  AS "kohdistus-id",
 -- name: luo-kulu<!
 INSERT
   INTO kulu
-       (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, lisatieto,
-        laskun_numero, koontilaskun_kuukausi)
-VALUES (:erapaiva, :kokonaissumma, :urakka, :tyyppi ::LASKUTYYPPI,
-        current_timestamp, :kayttaja, :lisatieto, :numero, :koontilaskun-kuukausi);
+       (erapaiva, kokonaissumma, urakka, luotu, luoja, lisatieto, laskun_numero, koontilaskun_kuukausi)
+VALUES (:erapaiva, :kokonaissumma, :urakka, current_timestamp, :kayttaja, :lisatieto, :numero, :koontilaskun-kuukausi);
 
 -- name: paivita-kulu<!
 UPDATE
@@ -222,7 +219,6 @@ UPDATE
            lisatieto = :lisatieto,
            laskun_numero = :numero,
            kokonaissumma = :kokonaissumma,
-           tyyppi = :tyyppi ::LASKUTYYPPI,
            muokattu = current_timestamp,
            muokkaaja = :kayttaja,
            koontilaskun_kuukausi = :koontilaskun-kuukausi
@@ -230,10 +226,11 @@ UPDATE
 
 -- name: luo-kulun-kohdistus<!
 INSERT
-INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, suoritus_alku,
-                      suoritus_loppu, luotu, luoja, lisatyon_lisatieto)
-VALUES (:kulu, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :maksueratyyppi ::MAKSUERATYYPPI, :alkupvm, :loppupvm,
-        current_timestamp, :kayttaja, :lisatyon-lisatieto);
+INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, luotu, luoja,
+                     lisatyon_lisatieto, rahavaraus_id, tavoitehintainen)
+VALUES (:kulu, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :maksueratyyppi ::MAKSUERATYYPPI,
+        :tyyppi::KOHDISTUSTYYPPI, current_timestamp, :kayttaja, :lisatyon-lisatieto,
+        :rahavarausid, :tavoitehintainen::BOOLEAN);
 
 -- name: paivita-kulun-kohdistus<!
 UPDATE kulu_kohdistus
@@ -241,11 +238,12 @@ SET summa = :summa,
     toimenpideinstanssi = :toimenpideinstanssi,
     tehtavaryhma = :tehtavaryhma,
     maksueratyyppi = :maksueratyyppi ::MAKSUERATYYPPI,
-    suoritus_alku = :alkupvm,
-    suoritus_loppu = :loppupvm,
+    tyyppi = :tyyppi ::KOHDISTUSTYYPPI,
     muokattu = current_timestamp,
     muokkaaja = :kayttaja,
-    lisatyon_lisatieto = :lisatyon-lisatieto
+    lisatyon_lisatieto = :lisatyon-lisatieto,
+    rahavaraus_id = :rahavarausid,
+    tavoitehintainen = :tavoitehintainen::BOOLEAN
 WHERE id = :id;
 
 -- name: poista-kulu!

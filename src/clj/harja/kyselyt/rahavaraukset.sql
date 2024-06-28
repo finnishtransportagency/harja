@@ -1,3 +1,16 @@
+-- name: hae-urakan-rahavaraukset-ja-tehtavaryhmat
+-- Palautetaan ensisijaisesti urakkakohtainen nimi, mutta jos sitä ei ole, niin defaultataan normaaliin nimeen.
+SELECT rv.id, COALESCE(rvu.urakkakohtainen_nimi, rv.nimi) as nimi,
+       to_json(array_agg(DISTINCT(row(tr.id, tr.nimi, tp.id, tpi.id)))) AS tehtavaryhmat
+  FROM rahavaraus rv
+        JOIN rahavaraus_urakka rvu ON rvu.rahavaraus_id = rv.id AND rvu.urakka_id = :id
+        JOIN rahavaraus_tehtava rvt ON rvt.rahavaraus_id = rv.id
+        JOIN tehtava t ON t.id = rvt.tehtava_id
+        JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
+        JOIN toimenpide tp ON t.emo = tp.id
+        JOIN toimenpideinstanssi tpi ON tpi.toimenpide = tp.id AND tpi.urakka = :id
+GROUP BY rv.id, rvu.urakkakohtainen_nimi, rv.nimi;
+
 -- name: hae-urakoiden-rahavaraukset
 SELECT u.id   AS "urakka-id",
        u.nimi AS "urakka-nimi",
@@ -115,3 +128,15 @@ DELETE
 DELETE
   FROM rahavaraus
  WHERE id = :id :: BIGINT;
+
+-- name: hae-rahavarauksen-tehtavaryhmat
+SELECT tr.id,
+       tr.nimi AS tehtavaryhma,
+       tp.id   AS toimenpide,
+       tpi.id  AS "toimenpideinstanssi"
+  FROM rahavaraus_tehtava rt
+           JOIN tehtava t ON t.id = rt.tehtava_id
+           JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
+           JOIN toimenpide tp ON t.emo = tp.id
+           JOIN toimenpideinstanssi tpi ON tpi.toimenpide = tp.id AND tpi.urakka = :urakkaid
+ WHERE rt.rahavaraus_id = :rahavarausid :: BIGINT;

@@ -37,19 +37,19 @@
    :kohdistukset    [{:kohdistus-id        nil
                       :rivi                1
                       :summa               666
-                      :suoritus-alku       #inst "2021-11-14T22:00:00.000000000-00:00"
-                      :suoritus-loppu      #inst "2021-11-17T22:00:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
                       :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
-                      :tehtava             nil}
+                      :tehtava             nil
+                      :tavoitehintainen :true
+                      :tyyppi "hankintakulu"}
                      {:kohdistus-id        nil
                       :rivi                2
                       :summa               666
-                      :suoritus-alku       #inst "2021-11-14T22:00:00.000000000-00:00"
-                      :suoritus-loppu      #inst "2021-11-17T22:00:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
                       :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
-                      :tehtava             nil}]
+                      :tehtava             nil
+                      :tavoitehintainen :true
+                      :tyyppi "hankintakulu"}]
    :liitteet        [{:liite-id     1
                       :liite-tyyppi "image/png"
                       :liite-nimi   "pensas-2021-01.jpg"
@@ -65,11 +65,11 @@
 (def uusi-kohdistus
   {:rivi                3
    :summa               987
-   :suoritus-alku       #inst "2021-11-23T22:00:00.000000000-00:00"
-   :suoritus-loppu      #inst "2021-11-24T22:00:00.000000000-00:00"
    :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
    :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
-   :tehtava             nil})
+   :tehtava             nil
+   :tavoitehintainen :true
+   :tyyppi "hankintakulu"})
 
 
 (def kulun-paivitys
@@ -82,19 +82,19 @@
    :kohdistukset    [{:kohdistus-id        nil
                        :rivi                1
                        :summa               666
-                       :suoritus-alku       #inst "2021-11-14T22:00:00.000000000-00:00"
-                       :suoritus-loppu      #inst "2021-11-17T22:00:00.000000000-00:00"
                        :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
                        :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
-                       :tehtava             nil}
+                       :tehtava             nil
+                      :tavoitehintainen :true
+                      :tyyppi "hankintakulu"}
                      {:kohdistus-id        nil
                       :rivi                2
                       :summa               3333.33
-                      :suoritus-alku       #inst "2021-03-14T22:00:00.000000000-00:00"
-                      :suoritus-loppu      #inst "2021-03-17T22:00:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
                       :tehtavaryhma        (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)")
-                      :tehtava             nil}]
+                      :tehtava             nil
+                      :tavoitehintainen :true
+                      :tyyppi "hankintakulu"}]
    :koontilaskun-kuukausi "joulukuu/3-hoitovuosi"})
 
 (def kulu-akillinen-hoitotyo
@@ -107,15 +107,16 @@
    :kohdistukset    [{:kohdistus-id        nil
                       :rivi                1
                       :summa               666.66
-                      :suoritus-alku       #inst "2021-10-02T12:00:00.000000000-00:00"
-                      :suoritus-loppu      #inst "2021-10-02T12:54:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
                       :tehtavaryhma        (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)")
-                      :tehtava             nil}]
+                      :tehtava             nil
+                      :tavoitehintainen :true
+                      :tyyppi "hankintakulu"
+                      :rahavaraus (hae-rahavaraus-nimella "Rahavaraus B - Äkilliset hoitotyöt")}]
    :liitteet        []
    :koontilaskun-kuukausi "lokakuu/3-hoitovuosi"})
 
-(def kulu-muu
+(def kulu-rahavaraus
   {:id              nil
    :urakka          (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
    :viite           "666017"
@@ -125,11 +126,12 @@
    :kohdistukset    [{:kohdistus-id        nil
                       :rivi                1
                       :summa               666.66
-                      :suoritus-alku       #inst "2021-10-02T12:00:00.000000000-00:00"
-                      :suoritus-loppu      #inst "2021-10-02T12:54:00.000000000-00:00"
                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
                       :tehtavaryhma        (hae-tehtavaryhman-id "Vahinkojen korjaukset, Liikenneympäristön hoito (T2)")
-                      :tehtava             nil}]
+                      :tehtava             nil
+                      :tavoitehintainen :true
+                      :tyyppi "hankintakulu"
+                      :rahavaraus (hae-rahavaraus-nimella "Rahavaraus C - Vahinkojen korjaukset")}]
    :liitteet        []
    :koontilaskun-kuukausi "lokakuu/3-hoitovuosi"})
 
@@ -270,14 +272,14 @@
         kulut (kutsu-http-palvelua :kulut +kayttaja-jvh+ {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                                             :alkupvm   "2019-10-01"
                                                             :loppupvm  "2020-09-30"})
-        kulu-kohdistuksineen (kutsu-http-palvelua :kulu +kayttaja-jvh+
+        kulu-kohdistuksineen (kutsu-http-palvelua :hae-kulu +kayttaja-jvh+
                                            {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                             :id 3})
         kulut-urakan-vastaavalle (kutsu-http-palvelua :kulut (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                                                        {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                                         :alkupvm   "2019-10-01"
                                                         :loppupvm  "2020-09-30"})
-        kulu-kohdistuksineen-urakan-vastaavalle (kutsu-http-palvelua :kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+        kulu-kohdistuksineen-urakan-vastaavalle (kutsu-http-palvelua :hae-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                                                               {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                                                :id 3})]
 
@@ -287,7 +289,7 @@
     (is (apply = (map :id kulu-kohdistuksineen)) "Kulukohdistuksissa on vain yhden kulun tietoja.")
     (is (count (map :kohdistus-id kulu-kohdistuksineen)) "Kulu sisältää kolme kohdistusta.")
     (is (= (:kokonaissumma kulu-kohdistuksineen) 666.66M) "Kokonaissumma palautuu.")
-    (is (= (:summa (first (filter #(= #inst "2019-11-21T22:00:00.000000000-00:00" (:suoritus-alku %)) (:kohdistukset kulu-kohdistuksineen)))) 222.22M) "Yksittäisen rivin summatieto palautuu.")))
+    (is (= (:summa (first (filter #(= 2 (:rivi %)) (:kohdistukset kulu-kohdistuksineen)))) 222.22M) "Yksittäisen rivin summatieto palautuu.")))
 
 
 (deftest tallenna-kulu-testi
@@ -295,6 +297,7 @@
         (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :kulu-kohdistuksineen uusi-kulu})
+        _ (println "tallennettu-kulu: " (pr-str tallennettu-kulu))
         tallennettu-id (:id tallennettu-kulu)
         paivitetty-kulu
         (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
@@ -327,7 +330,7 @@
                              {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :id tallennettu-id})
         poistetun-kulun-haku
-        (kutsu-http-palvelua :kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+        (kutsu-http-palvelua :hae-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :id tallennettu-id})]
 
@@ -463,7 +466,7 @@
         vastaus-kulu-muu
         (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :kulu-kohdistuksineen kulu-muu})]
+                              :kulu-kohdistuksineen kulu-rahavaraus})]
 
     (is (= (:maksueratyyppi (first (:kohdistukset vastaus-kulu-kokonaishintainen-tyo))) "kokonaishintainen"))
     (is (= (:maksueratyyppi (first (:kohdistukset vastaus-kulu-akillinen-hoitotyo))) "akillinen-hoitotyo"))
@@ -476,8 +479,15 @@
     (let [[_ _ _ rivit] rivi] 
       (apply conj kaikki rivit))))
 
-(def odotettu-kulu-id-9
-  {:maksuera-numero 94 :id 9, :tyyppi "laskutettava", :kokonaissumma 400.77M, :erapaiva #inst "2019-10-15T21:00:00.000-00:00", :laskun-numero nil, :koontilaskun-kuukausi "lokakuu/1-hoitovuosi", :liitteet [], :suoritus-alku #inst "2019-09-30T21:00:00.000000000-00:00", :lisatyon-lisatieto nil, :maksueratyyppi "lisatyo", :suoritus-loppu #inst "2019-10-30T22:00:00.000000000-00:00", :summa 400.77M, :kohdistus-id 12, :toimenpideinstanssi (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Soratien hoito TP'")), :tehtavaryhma 15, :lisatieto nil, :rivi 1})
+(def odotettu-kulu_kohdistus-id-9
+  {:maksuera-numero 94 :id 9, :tyyppi "lisatyo",
+   :kokonaissumma 400.77M, :erapaiva #inst "2019-10-15T21:00:00.000-00:00",
+   :laskun-numero nil, :koontilaskun-kuukausi "lokakuu/1-hoitovuosi",
+   :liitteet [], :lisatyon-lisatieto nil, :maksueratyyppi "lisatyo",
+   :summa 400.77M, :kohdistus-id 12,
+   :rahavaraus nil
+   :toimenpideinstanssi (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Soratien hoito TP'")),
+   :tehtavaryhma 15, :lisatieto nil, :rivi 1})
 
 (deftest hae-aikavalilla-kaikki-kulu-kohdistuksineent
   (testing "hae-aikavalilla-kaikki-kulu-kohdistuksineent"
@@ -495,7 +505,7 @@
           kulu-id-9 (first (filter #(= 9 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
-      (is (= odotettu-kulu-id-9 kulu-id-9)))))
+      (is (= odotettu-kulu_kohdistus-id-9 kulu-id-9)))))
 
 (deftest hae-kaikki-kulu-kohdistuksineent-pvmt-nil
   (testing "hae-kaikki-kulu-kohdistuksineent-pvmt-nil"
@@ -511,7 +521,7 @@
           kulu-id-9 (first (filter #(= 9 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
-      (is (= odotettu-kulu-id-9 kulu-id-9)))))
+      (is (= odotettu-kulu_kohdistus-id-9 kulu-id-9)))))
 
 (deftest hae-hoitokauden-kulu-kohdistuksineent
   (testing "hae-hoitokauden-kulu-kohdistuksineent"
@@ -529,7 +539,7 @@
           kulu-id-9 (first (filter #(= 9 (:id %))
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
-      (is (= odotettu-kulu-id-9 kulu-id-9)))))
+      (is (= odotettu-kulu_kohdistus-id-9 kulu-id-9)))))
 
 (deftest tallenna-kulu-vaaralla-tehtavaryhmalla
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)

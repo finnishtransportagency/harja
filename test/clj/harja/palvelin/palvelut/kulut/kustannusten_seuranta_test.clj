@@ -1,7 +1,6 @@
 (ns harja.palvelin.palvelut.kulut.kustannusten-seuranta-test
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.palvelin.palvelut.kulut.kulut :as kulut]
             [harja.pvm :as pvm]
@@ -10,52 +9,47 @@
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
-                        :db-replica (tietokanta/luo-tietokanta testitietokanta)
-                        :http-palvelin (testi-http-palvelin)
-                        ;:excel-vienti
-                        #_(component/using
-                            (excel-vienti/luo-excel-vienti)
-                            [:http-palvelin])
-                        :kustannusten-seuranta (component/using
-                                                 (kustannusten-seuranta/->KustannustenSeuranta)
-                                                 [:http-palvelin :db :db-replica #_:excel-vienti])
-                        :kulut (component/using
-                                  (kulut/->Kulut)
-                                  [:http-palvelin :db])))))
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db (tietokanta/luo-tietokanta testitietokanta)
+          :db-replica (tietokanta/luo-tietokanta testitietokanta)
+          :http-palvelin (testi-http-palvelin)
+          :kustannusten-seuranta (component/using
+                                   (kustannusten-seuranta/->KustannustenSeuranta)
+                                   [:http-palvelin :db :db-replica #_:excel-vienti])
+          :kulut (component/using
+                   (kulut/->Kulut)
+                   [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
-
 
 (use-fixtures :once (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(defn- hae-kustannukset [urakka-id hoitokauden-alkuvuosi alkupvm loppupvm]
+(defn- hae-kustannukset [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (kutsu-palvelua
     (:http-palvelin jarjestelma)
     :urakan-kustannusten-seuranta-paaryhmittain
     +kayttaja-tero+
-    {:urakka-id urakka-id
+    {:urakka-id urakka
      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
      :alkupvm alkupvm
      :loppupvm loppupvm}))
 
-(defn- lataa-excel [urakka-id hoitokauden-alkuvuosi alkupvm loppupvm]
+(defn- lataa-excel [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (kutsu-palvelua
     (:http-palvelin jarjestelma)
     :kustannukset
     +kayttaja-tero+
-    {:urakka-id urakka-id
+    {:urakka-id urakka
      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
      :alkupvm alkupvm
      :loppupvm loppupvm}))
 
-(defn- erilliskustannukset-budjetoitu-sql-haku [urakka alkupvm loppupvm]
+(defn- erilliskustannukset-budjetoitu-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (str "WITH urakan_toimenpideinstanssi_23150 AS
          (SELECT tpi.id AS id
           FROM toimenpideinstanssi tpi
@@ -67,13 +61,13 @@
             AND tpk2.koodi = '23150')
         SELECT kt.summa as summa
         FROM kustannusarvioitu_tyo kt, sopimus s
-        WHERE s.urakka = "urakka"
+        WHERE s.urakka = " urakka "
           AND kt.sopimus = s.id
           AND kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
           AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE)
           AND kt.tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Erillishankinnat (W)');"))
 
-(defn erilliskustannusten-toteumat-sql-haku [urakka alkupvm loppupvm hoitokauden-alkuvuosi]
+(defn erilliskustannusten-toteumat-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (let [haku-str (str "SELECT
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
@@ -105,7 +99,7 @@
           AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')")]
     haku-str))
 
-(defn- hoidonjohdonpalkkio-budjetoidut-sql-haku [urakka alkupvm loppupvm]
+(defn- hoidonjohdonpalkkio-budjetoidut-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (str "WITH urakan_toimenpideinstanssi_23150 AS
          (SELECT tpi.id AS id
           FROM toimenpideinstanssi tpi
@@ -123,7 +117,7 @@
                )
           AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE);"))
 
-(defn- hoidonjohdonpalkkio-toteumat-sql-haku [urakka alkupvm loppupvm hoitokauden-alkuvuosi]
+(defn- hoidonjohdonpalkkio-toteumat-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (let [haku-str (str "SELECT
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
@@ -156,7 +150,7 @@
           AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');")]
     haku-str))
 
-(defn- johto-ja-hallintokorvaukset-budjetoidut-sql-haku [urakka alkupvm loppupvm]
+(defn- johto-ja-hallintokorvaukset-budjetoidut-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (str "WITH urakan_toimenpideinstanssi_23150 AS
                (SELECT tpi.id AS id
                 FROM toimenpideinstanssi tpi
@@ -181,7 +175,7 @@
             AND kt.tehtava = (SELECT id FROM tehtava WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
           AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE);"))
 
-(defn- johto-ja-hallintokorvaukset-toteutuneet-sql-haku [urakka alkupvm loppupvm hoitokauden-alkuvuosi]
+(defn- johto-ja-hallintokorvaukset-toteutuneet-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (str "SELECT
           lk.summa AS toteutunut_summa,
           0 AS budjetoitu_summa
@@ -213,21 +207,25 @@
           AND (tr.nimi = 'Johto- ja hallintokorvaus (J)' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
           AND (tk.koodi = '23151' OR tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');"))
 
-(defn- hankintakustannukset-budjetoitu-sql-haku [urakka alkupvm loppupvm]
+(defn- hankintakustannukset-budjetoitu-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (str "
   SELECT
      kt.summa,
      0 AS toteutunut_summa,
      CASE
-      WHEN tk.koodi = '23104' THEN 'Talvihoito'
-      WHEN tk.koodi = '23116' THEN 'Liikenneympäristön hoito'
-      WHEN tk.koodi = '23124' THEN 'Sorateiden hoito'
-      WHEN tk.koodi = '20107' THEN 'Päällystepaikkaukset'
-      WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
-      WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
+     WHEN (tk.koodi = '23104' AND kt.rahavaraus_id IS NULL) THEN 'Talvihoito'
+     WHEN (tk.koodi = '23116' AND kt.rahavaraus_id IS NULL) THEN 'Liikenneympäristön hoito'
+     WHEN (tk.koodi = '23124' AND kt.rahavaraus_id IS NULL) THEN 'Sorateiden hoito'
+     WHEN (tk.koodi = '20107' AND kt.rahavaraus_id IS NULL) THEN 'Päällystepaikkaukset'
+     WHEN (tk.koodi = '20191' AND kt.rahavaraus_id IS NULL) THEN 'MHU Ylläpito'
+     WHEN (tk.koodi = '14301' AND kt.rahavaraus_id IS NULL) THEN 'MHU Korvausinvestointi'
+     WHEN kt.rahavaraus_id IS NOT NULL THEN r.nimi
      END AS toimenpide
   FROM toimenpide tk,
-       kustannusarvioitu_tyo kt,
+       kustannusarvioitu_tyo kt
+       LEFT JOIN rahavaraus_urakka ru ON kt.rahavaraus_id = ru.rahavaraus_id
+          AND ru.urakka_id = " urakka "
+       LEFT JOIN rahavaraus r ON kt.rahavaraus_id = r.id,
        toimenpideinstanssi tpi,
        sopimus s
   WHERE s.urakka = " urakka "
@@ -237,6 +235,7 @@
    AND tpi.toimenpide = tk.id
    AND kt.tyyppi::TEXT != 'akillinen-hoitotyo'
    AND kt.tyyppi::TEXT != 'vahinkojen-korjaukset'
+   AND kt.rahavaraus_id IS NULL
    AND (tk.koodi = '23104' -- talvihoito
      OR tk.koodi = '23116' -- liikenneympariston-hoito
      OR tk.koodi = '23124' -- sorateiden-hoito
@@ -271,23 +270,24 @@ UNION ALL
          OR tk.koodi = '14301' -- mhu-korvausinvestointi
       )"))
 
-(defn- hankintakustannukset-toteutuneet-sql-haku [urakka alkupvm loppupvm]
+(defn- hankintakustannukset-toteutuneet-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (let [haku-str (str "SELECT lk.summa AS toteutunut_summa,
        0 AS budjetoitu_summa,
+       'hankinta'                    AS toimenpideryhma,
        CASE
-           WHEN lk.maksueratyyppi::TEXT = 'kokonaishintainen' THEN 'hankinta'
-           ELSE 'rahavaraus'
-           END                 AS toimenpideryhma,
-       CASE
-           WHEN tk.koodi = '23104' THEN 'Talvihoito'
-           WHEN tk.koodi = '23116' THEN 'Liikenneympäristön hoito'
-           WHEN tk.koodi = '23124' THEN 'Sorateiden hoito'
-           WHEN tk.koodi = '20107' THEN 'Päällystepaikkaukset'
-           WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
-           WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
+            WHEN (tk.koodi = '23104' AND lk.rahavaraus_id IS NULL) THEN 'Talvihoito'
+            WHEN (tk.koodi = '23116' AND lk.rahavaraus_id IS NULL) THEN 'Liikenneympäristön hoito'
+            WHEN (tk.koodi = '23124' AND lk.rahavaraus_id IS NULL) THEN 'Sorateiden hoito'
+            WHEN (tk.koodi = '20107' AND lk.rahavaraus_id IS NULL) THEN 'Päällystepaikkaukset'
+            WHEN (tk.koodi = '20191' AND lk.rahavaraus_id IS NULL) THEN 'MHU Ylläpito'
+            WHEN (tk.koodi = '14301' AND lk.rahavaraus_id IS NULL) THEN 'MHU Korvausinvestointi'
+            WHEN lk.rahavaraus_id IS NOT NULL THEN r.nimi
        END                 AS toimenpide
        FROM kulu_kohdistus lk
-            JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
+            JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma
+            LEFT JOIN rahavaraus_urakka ru ON lk.rahavaraus_id = ru.rahavaraus_id
+                  AND ru.urakka_id = " urakka "
+            LEFT JOIN rahavaraus r ON lk.rahavaraus_id = r.id,
             toimenpideinstanssi tpi,
            toimenpide tk,
            kulu l
@@ -298,15 +298,29 @@ UNION ALL
          AND lk.toimenpideinstanssi = tpi.id
          AND lk.poistettu IS NOT TRUE
          AND tpi.toimenpide = tk.id
-         AND lk.maksueratyyppi::TEXT = 'kokonaishintainen'
-         AND tr.nimi != 'Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)'
-  -- Näillä toimenpidekoodi.koodi rajauksilla rajataan johto- ja hallintakorvaus, hoidonjohdonpalkkio ja erilliskorvaus ulos
-  AND (tk.koodi = '23104' OR tk.koodi = '23116'
-    OR tk.koodi = '23124' OR tk.koodi = '20107' OR tk.koodi = '20191' OR
-       tk.koodi = '14301')")]
+         AND lk.tyyppi::TEXT = 'hankintakulu'
+         AND (tk.koodi = '23104'
+             OR tk.koodi = '23116'
+             OR tk.koodi = '23124'
+             OR tk.koodi = '20107'
+             OR tk.koodi = '20191'
+             OR tk.koodi = '14301')
+         ")]
     haku-str))
 
-(defn- lisatyot-sql-haku [urakka alkupvm loppupvm]
+(defn- rahavaraukset-budjetoitu-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
+  (format " SELECT kt.summa
+              FROM kustannusarvioitu_tyo kt
+                   LEFT JOIN rahavaraus_urakka ru ON kt.rahavaraus_id = ru.rahavaraus_id AND ru.urakka_id = %s
+                   LEFT JOIN rahavaraus r ON kt.rahavaraus_id = r.id,
+                   sopimus s
+             WHERE s.urakka = %s
+               AND kt.sopimus = s.id
+               AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '%s'::DATE AND '%s'::DATE)
+               AND (kt.tyyppi::TEXT = 'akillinen-hoitotyo' OR kt.tyyppi::TEXT = 'vahinkojen-korjaukset' OR kt.rahavaraus_id IS NOT NULL)"
+    urakka urakka alkupvm loppupvm))
+
+(defn- toteutuneet-lisatyot-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (let [haku-str (str "SELECT lk.summa AS toteutunut_summa,
              0 AS budjetoitu_summa,
              CASE
@@ -331,15 +345,14 @@ UNION ALL
           AND lk.poistettu IS NOT TRUE
           AND lk.toimenpideinstanssi = tpi.id
           AND tpi.toimenpide = tk.id")]
-    haku-str)
-  )
+    haku-str))
 
-(defn- bonukset-toteutuneet-sql-haku [urakka alkupvm loppupvm hoitokauden-alkuvuosi]
+(defn- bonukset-toteutuneet-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (str " SELECT CASE WHEN ek.indeksin_nimi IS NOT NULL
                      THEN SUM((SELECT korotettuna FROM laske_kuukauden_indeksikorotus(" hoitokauden-alkuvuosi "::INTEGER, 9::INTEGER,
-                                (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = "urakka")::VARCHAR,
+                                (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = " urakka ")::VARCHAR,
                                 coalesce(ek.rahasumma, 0)::NUMERIC,
-                                (SELECT indeksilaskennan_perusluku("urakka"::INTEGER))::NUMERIC,
+                                (SELECT indeksilaskennan_perusluku(" urakka "::INTEGER))::NUMERIC,
                                 TRUE)))
                      ELSE SUM(ek.rahasumma)
                      END AS toteutunut_summa,
@@ -348,21 +361,21 @@ UNION ALL
                 'bonukset' AS paaryhma
            FROM erilliskustannus ek,
                   sopimus s
-          WHERE s.urakka = "urakka"
+          WHERE s.urakka = " urakka "
             AND ek.sopimus = s.id
             AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
                                             FROM toimenpideinstanssi tpi
                                                  JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
                                                  JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
                                                  maksuera m
-                                           WHERE tpi.urakka = "urakka"
+                                           WHERE tpi.urakka = " urakka "
                                              AND m.toimenpideinstanssi = tpi.id
                                              AND tpk2.koodi = '23150')
-            AND ek.laskutuskuukausi BETWEEN '"alkupvm"'::DATE AND '"loppupvm"'::DATE
+            AND ek.laskutuskuukausi BETWEEN '" alkupvm "'::DATE AND '" loppupvm "'::DATE
             AND ek.poistettu IS NOT TRUE
           GROUP BY ek.tyyppi, ek.indeksin_nimi"))
 
-(defn- ulk-rvar-suunniteltu-sql-haku [urakka alkupvm loppupvm]
+(defn- ulk-rvar-suunniteltu-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (format
     "WITH urakan_toimenpideinstanssi_23150 AS
              (SELECT tpi.id AS id
@@ -384,7 +397,7 @@ UNION ALL
       AND kt.sopimus = s.id
       AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '%s'::DATE AND '%s'::DATE);" urakka urakka alkupvm loppupvm))
 
-(defn- sanktiot-toteutuneet-sql-haku [urakka alkupvm loppupvm]
+(defn- sanktiot-toteutuneet-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (format
     "SELECT
       CASE WHEN s.indeksi IS NULL THEN SUM(s.maara) * -1
@@ -399,9 +412,13 @@ UNION ALL
      GROUP BY s.tyyppi, s.indeksi" urakka urakka alkupvm loppupvm))
 
 (deftest hae-olemattomia-kustannuksia
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)]
-    (is (thrown? Exception (hae-kustannukset urakka-id nil nil nil)))))
+  (let [urakka (hae-oulun-maanteiden-hoitourakan-2019-2024-id)]
+    (is (thrown? Exception (hae-kustannukset {:urakka urakka :alkupvm nil :loppupvm nil :hoitokauden-alkuvuosi nil})))))
 
+(def oulumhu-parametrit {:urakka (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                         :alkupvm "2019-10-01"
+                         :loppupvm "2020-09-30"
+                         :hoitokauden-alkuvuosi 2019})
 
 ;; Kustannusten seuranta koostuu budjetoiduista kustannuksista ja niihin liitetyistä toteutuneista (laskutetuista) kustannuksista.
 ;; Seuranta jaetaan monella eri kriteerillä osiin, jotta seuranta helpottuu
@@ -409,110 +426,81 @@ UNION ALL
 
 ;; Testataan/vertaillaan ensimmäisenä erillishankintojen budjetoituja summia
 (deftest budjetoidut-erillishankinnat-test
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
-        hoitokauden-alkuvuosi 2019
-        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+  (let [vastaus (hae-kustannukset oulumhu-parametrit)
         erillishankinnat (filter
                            #(when (= "erillishankinnat" (:paaryhma %))
                               true)
                            vastaus)
         ehankinnat-summa (apply + (map #(:budjetoitu_summa %) erillishankinnat))
-        ehankinnat-sql (q (erilliskustannukset-budjetoitu-sql-haku urakka-id alkupvm loppupvm))
+        ehankinnat-sql (q (erilliskustannukset-budjetoitu-sql-haku oulumhu-parametrit))
         ehankinnat-sql-summa (apply + (map #(first %) ehankinnat-sql))]
     (is (= ehankinnat-summa ehankinnat-sql-summa))))
 
 ;; Testataan/vertaillaan erillishankintojen toteutumia
 (deftest toteutuneet-erillishankinnat-test
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
-        hoitokauden-alkuvuosi 2019
-        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+  (let [vastaus (hae-kustannukset oulumhu-parametrit)
         erillishankinnat (filter
                            #(when (= "erillishankinnat" (:paaryhma %))
                               true)
                            vastaus)
         eh-summa (apply + (map #(:toteutunut_summa %) erillishankinnat))
-        erillishankinnat-sql (q (erilliskustannusten-toteumat-sql-haku urakka-id alkupvm loppupvm hoitokauden-alkuvuosi))
+        erillishankinnat-sql (q (erilliskustannusten-toteumat-sql-haku oulumhu-parametrit))
         sql-summa (apply + (map #(first %) erillishankinnat-sql))]
     (is (= eh-summa sql-summa))))
 
 ;; Testataan/vertaillaan Hoidonjohdonpalkkioiden budjetoituja summia
 (deftest budjetoidut-hoidonjohdonpalkkiot-test
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
-        hoitokauden-alkuvuosi 2019
-        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+  (let [vastaus (hae-kustannukset oulumhu-parametrit)
         hj_palkkiot (filter
                       #(when (= "hoidonjohdonpalkkio" (:paaryhma %))
                          true)
                       vastaus)
         hj-summa (apply + (map #(:budjetoitu_summa %) hj_palkkiot))
-        hj-sql (q (hoidonjohdonpalkkio-budjetoidut-sql-haku urakka-id alkupvm loppupvm))
+        hj-sql (q (hoidonjohdonpalkkio-budjetoidut-sql-haku oulumhu-parametrit))
         sql-summa (apply + (map #(first %) hj-sql))]
     (is (= hj-summa sql-summa))))
 
 ;; Testataan/vertaillaan Hoidonjohdonpalkkioiden toteutuneita summia
 (deftest toteutuneet-hoidonjohdonpalkkiot-test
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
-        hoitokauden-alkuvuosi 2019
-        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+  (let [vastaus (hae-kustannukset oulumhu-parametrit)
         hj_palkkiot (filter
                       #(when (= "hoidonjohdonpalkkio" (:paaryhma %))
                          true)
                       vastaus)
         hj-summa (apply + (map #(:toteutunut_summa %) hj_palkkiot))
-        hj-sql (q (hoidonjohdonpalkkio-toteumat-sql-haku urakka-id alkupvm loppupvm hoitokauden-alkuvuosi))
+        hj-sql (q (hoidonjohdonpalkkio-toteumat-sql-haku oulumhu-parametrit))
         sql-summa (apply + (map #(first %) hj-sql))]
     (is (= hj-summa sql-summa))))
 
 ;; Testataan/vertaillaan Johto- ja hallintokorvauksen budjetoituja summia
 ;; Johto- ja hallintokorvaukset kuuluu palkat ja muut kulut, kuten toimistokulut yms.
 (deftest budjetoidut-johtoja-hallintokorvaukset-test
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
-        hoitokauden-alkuvuosi 2019
-        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+  (let [vastaus (hae-kustannukset oulumhu-parametrit)
         johto_ja_h_korvaukset (filter
                                 #(when (= "johto-ja-hallintakorvaus" (:paaryhma %))
                                    true)
                                 vastaus)
         jjh-summa (double (apply + (map #(:budjetoitu_summa %) johto_ja_h_korvaukset)))
-        jjh-sql (q (johto-ja-hallintokorvaukset-budjetoidut-sql-haku urakka-id alkupvm loppupvm))
+        jjh-sql (q (johto-ja-hallintokorvaukset-budjetoidut-sql-haku oulumhu-parametrit))
         sql-summa (double (apply + (map #(first %) jjh-sql)))]
     (is (= jjh-summa sql-summa))))
 
 ;; Testataan/vertaillaan Johto- ja hallintokorvauksen toteutuneita summia
 (deftest toteutuneet-johto-ja-hallintokorvaukset-test
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
-        hoitokauden-alkuvuosi 2019
-        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+  (let [vastaus (hae-kustannukset oulumhu-parametrit)
         johto_ja_h_korvaukset (filter
                                 #(when (= "johto-ja-hallintakorvaus" (:paaryhma %))
                                    true)
                                 vastaus)
         jjh-summa (apply + (map #(:toteutunut_summa %) johto_ja_h_korvaukset))
-        jjh-sql (q (johto-ja-hallintokorvaukset-toteutuneet-sql-haku urakka-id alkupvm loppupvm hoitokauden-alkuvuosi))
+        jjh-sql (q (johto-ja-hallintokorvaukset-toteutuneet-sql-haku oulumhu-parametrit))
         sql-summa (apply + (map #(first %) jjh-sql))]
     (is (= jjh-summa sql-summa))))
 
 ;; Testataan/vertaillaan Hankintakustannusten budjetoituja summia
 ;; Hankintakustannusten alle tulee toimenpideryhmät kuten talvihoito, liikenneympäristöhoito, yms.
 (deftest budjetoidut-hankintakustannukset-test
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
-        hoitokauden-alkuvuosi 2019
-        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
-
+  (let [vastaus (hae-kustannukset oulumhu-parametrit)
         hankintakustannukset (filter
                                #(when (and
                                         (= "hankintakustannukset" (:paaryhma %))
@@ -520,51 +508,70 @@ UNION ALL
                                   true)
                                vastaus)
         hankintakustannukset-budjetoitu (apply + (map #(:budjetoitu_summa %) hankintakustannukset))
-        h-sql (q (hankintakustannukset-budjetoitu-sql-haku urakka-id alkupvm loppupvm))
+        h-sql (q (hankintakustannukset-budjetoitu-sql-haku oulumhu-parametrit))
         sql-summa (apply + (map #(first %) h-sql))]
     (is (= hankintakustannukset-budjetoitu sql-summa))))
+
+(deftest budjetoidut-rahavaraukset-test
+  (let [vastaus (hae-kustannukset oulumhu-parametrit)
+        budjetoidut-rahavaraukset (filter #(when (= "rahavaraus" (:toimenpideryhma %)) true) vastaus)
+        budjetoidut-rahavaraukset-yht (apply + (map #(:budjetoitu_summa %) budjetoidut-rahavaraukset))
+        h-sql (q (rahavaraukset-budjetoitu-sql-haku oulumhu-parametrit))
+        sql-summa (apply + (map #(first %) h-sql))]
+    (is (= budjetoidut-rahavaraukset-yht sql-summa))))
 
 ;; Testataan/vertaillaan Hankintakustannusten toteutuneita summia
 ;; Hankintakustannusten alle tulee toimenpideryhmät kuten talvihoito, liikenneympäristöhoito, yms.
 (deftest toteutuneet-hankintakustannukset-test
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
-        hoitokauden-alkuvuosi 2019
-        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+  (let [vastaus (hae-kustannukset oulumhu-parametrit)
         hankintakustannukset (filter
                                #(when (= "hankintakustannukset" (:paaryhma %))
                                   true)
                                vastaus)
         ;; Filtteröidään vielä lisätyöt pois
         h-summa (apply + (map (fn [rivi]
-                                (if (not= "lisatyo" (:toimenpideryhma rivi))
+                                (if (= "hankinta" (:toimenpideryhma rivi))
                                   (:toteutunut_summa rivi)
                                   0))
                            hankintakustannukset))
-        h-sql (q (hankintakustannukset-toteutuneet-sql-haku urakka-id alkupvm loppupvm))
+        h-sql (q (hankintakustannukset-toteutuneet-sql-haku oulumhu-parametrit))
+        sql-summa (apply + (map #(first %) h-sql))]
+    (is (= h-summa sql-summa))))
+
+(deftest toteutuneet-rahavaraukset-test
+  (let [vastaus (hae-kustannukset oulumhu-parametrit)
+        hankintakustannukset (filter
+                               #(when (= "hankintakustannukset" (:paaryhma %))
+                                  true)
+                               vastaus)
+        ;; Filtteröidään vielä lisätyöt pois
+        h-summa (apply + (map (fn [rivi]
+                                (if (= "hankinta" (:toimenpideryhma rivi))
+                                  (:toteutunut_summa rivi)
+                                  0))
+                           hankintakustannukset))
+        h-sql (q (hankintakustannukset-toteutuneet-sql-haku oulumhu-parametrit))
         sql-summa (apply + (map #(first %) h-sql))]
     (is (= h-summa sql-summa))))
 
 ;; Testataan/vertaillaan toteutuneita lisätöitä
 ;; Lisätöitä ei voi suunnitella etukäteen, joten niille ei ole budjetoituja kustannuksia olemassa.
 ;; Tallennetaan kulu lisätyö Johto ja halllintokrvaukselle, koska se on monimutkaisin lisätyötyyppi
-(defn- uusi-kulu [urakka-id summa]
+(defn- lisatyo-kulu [urakka-id summa]
   {:id nil
    :urakka urakka-id
-   :viite "6666668"
    :erapaiva #inst "2020-08-15T21:00:00.000-00:00"
-   :kokonaissumma 1332
+   :kokonaissumma summa
    :tyyppi "laskutettava"
    :kohdistukset [{:kohdistus-id nil
                    :rivi 1
                    :summa summa
-                   :suoritus-alku #inst "2020-08-14T22:00:00.000000000-00:00"
-                   :suoritus-loppu #inst "2020-08-17T22:00:00.000000000-00:00"
                    :toimenpideinstanssi 48
                    :tehtavaryhma nil
                    :lisatyo? true
-                   :tehtava nil}]
+                   :tehtava nil
+                   :tyyppi "lisatyo"
+                   :tavoitehintainen :false}]
    :koontilaskun-kuukausi "elokuu/1-hoitovuosi"})
 
 (deftest lisatyot-test
@@ -573,43 +580,49 @@ UNION ALL
         alkupvm "2020-10-01"
         loppupvm "2021-09-30"
         hoitokauden-alkuvuosi 2020
+        parametrit {:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                    :urakka urakka-id
+                    :alkupvm alkupvm
+                    :loppupvm loppupvm}
         kulun-summa 105.01
         ;; Päivitellään kulun tiedot sellaiselle hoitokaudelle, jolle ei ole tehty välikatselmusta
-        kulu (uusi-kulu urakka-id kulun-summa)
+        kulu (lisatyo-kulu (:urakka oulumhu-parametrit) kulun-summa)
         kulu (-> kulu
                (assoc :erapaiva (pvm/->pvm "15.08.2021")
-                      :koontilaskun-kuukausi "elokuu/2-hoitovuosi")
-               (assoc-in [:kohdistukset 0 :suoritus-alku] (pvm/->pvm "14.08.2021"))
-               (assoc-in [:kohdistukset 0 :suoritus-loppu] (pvm/->pvm "17.08.2021")))
+                 :koontilaskun-kuukausi "elokuu/2-hoitovuosi"))
 
         ;; Lisää uusi kulu listyöstä johto-ja hallintakorvaukselle
-        _ (kutsu-http-palvelua :tallenna-kulu urakkavastaava
-                                   {:urakka-id urakka-id
-                                    :kulu-kohdistuksineen kulu})
+        lisatyo-kulu (kutsu-http-palvelua :tallenna-kulu urakkavastaava
+                    {:urakka-id urakka-id
+                     :kulu-kohdistuksineen kulu})
 
-        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+        vastaus (hae-kustannukset parametrit)
+
+        kulutdb (q-map (format "SELECT * FROM kulu k join kulu_kohdistus kk on kk.kulu = k.id WHERE k.urakka = %s and erapaiva = '%s'"
+                         urakka-id (pvm/->pvm "15.08.2021")))
         lisatyot (filter
                    #(when (= "lisatyo" (:maksutyyppi %))
                       true)
                    vastaus)
         luotu-lisatyo (filter
-                           #(when (= (bigdec kulun-summa) (:toteutunut_summa %))
-                              true)
-                           lisatyot)
+                        #(when (= (bigdec kulun-summa) (:toteutunut_summa %))
+                           true)
+                        lisatyot)
         lisatyot-summa (apply + (map #(:toteutunut_summa %) lisatyot))
-        lisatyot-sql (q (lisatyot-sql-haku urakka-id alkupvm loppupvm))
-        sql-summa (apply + (map #(first %) lisatyot-sql))]
+        lisatyot-sql (q (toteutuneet-lisatyot-sql-haku parametrit))
+        sql-summa (apply + (map #(first %) lisatyot-sql))
+        ;; Poistetaan luotu kulu
+        _ (kutsu-http-palvelua :poista-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+            {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+             :id (:id lisatyo-kulu)})
+        ]
     ;; Vertaillaan summaa
     (is (= lisatyot-summa sql-summa))
     (is (= (count luotu-lisatyo) 1))))
 
 ;; Bonukset
 (deftest bonukset-test
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
-        hoitokauden-alkuvuosi 2019
-        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+  (let [vastaus (hae-kustannukset oulumhu-parametrit)
         bonukset (filter
                    #(when (and
                             (= "bonukset" (:paaryhma %))
@@ -619,21 +632,17 @@ UNION ALL
                    vastaus)
 
         bonus-toteutuneet (apply + (map (fn [rivi] (:toteutunut_summa rivi)) bonukset))
-        bonukset-toteutuneet-sql (q (bonukset-toteutuneet-sql-haku urakka-id alkupvm loppupvm hoitokauden-alkuvuosi))
-        bonukset-sql-toteutunut-summa (reduce  (fn [summa b]
-                                                 (if b
-                                                   (+ summa b)
-                                                   summa))
-                                              0M (map #(first %) bonukset-toteutuneet-sql))]
+        bonukset-toteutuneet-sql (q (bonukset-toteutuneet-sql-haku oulumhu-parametrit))
+        bonukset-sql-toteutunut-summa (reduce (fn [summa b]
+                                                (if b
+                                                  (+ summa b)
+                                                  summa))
+                                        0M (map #(first %) bonukset-toteutuneet-sql))]
     (is (= (bigdec bonus-toteutuneet) bonukset-sql-toteutunut-summa))))
 
 
 (deftest alihankintabonus-rahavarauksiin-test
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        alkupvm "2022-10-01"
-        loppupvm "2023-09-30"
-        hoitokauden-alkuvuosi 2022
-        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+  (let [vastaus (hae-kustannukset oulumhu-parametrit)
         bonukset (filter
                    #(when (and
                             (= "bonukset" (:paaryhma %))
@@ -643,21 +652,17 @@ UNION ALL
                    vastaus)
 
         bonus-toteutuneet (apply + (map (fn [rivi] (:toteutunut_summa rivi)) bonukset))
-        bonukset-toteutuneet-sql (q (bonukset-toteutuneet-sql-haku urakka-id alkupvm loppupvm hoitokauden-alkuvuosi))
-        bonukset-sql-toteutunut-summa (reduce  (fn [summa b]
-                                                 (if b
-                                                   (+ summa b)
-                                                   summa))
+        bonukset-toteutuneet-sql (q (bonukset-toteutuneet-sql-haku oulumhu-parametrit))
+        bonukset-sql-toteutunut-summa (reduce (fn [summa b]
+                                                (if b
+                                                  (+ summa b)
+                                                  summa))
                                         0M (map #(first %) bonukset-toteutuneet-sql))]
     (is (= (bigdec bonus-toteutuneet) bonukset-sql-toteutunut-summa))))
 
 ;; Ulkopuoliset rahavaraukset
 (deftest ulkopuoliset-rahavaraukset-test
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
-        hoitokauden-alkuvuosi 2019
-        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+  (let [vastaus (hae-kustannukset oulumhu-parametrit)
         ulk-rvar (filter
                    #(when (and
                             (= "ulkopuoliset-rahavaraukset" (:paaryhma %))
@@ -666,7 +671,7 @@ UNION ALL
                       true)
                    vastaus)
         ulk-rvar-suunniteltu (apply + (map (fn [rivi] (:budjetoitu_summa_indeksikorjattu rivi)) ulk-rvar))
-        ulk-rvar-suunniteltu-sql (q (ulk-rvar-suunniteltu-sql-haku urakka-id alkupvm loppupvm))
+        ulk-rvar-suunniteltu-sql (q (ulk-rvar-suunniteltu-sql-haku oulumhu-parametrit))
         ulk-rvar-sql-suunniteltu-summa (reduce (fn [summa b]
                                                  (if b
                                                    (+ summa b)
@@ -676,11 +681,7 @@ UNION ALL
 
 ;; Sanktiot
 (deftest sanktiot-test
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
-        hoitokauden-alkuvuosi 2019
-        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+  (let [vastaus (hae-kustannukset oulumhu-parametrit)
         bonukset (filter
                    #(when (and
                             (= "sanktiot" (:paaryhma %))
@@ -690,26 +691,23 @@ UNION ALL
                    vastaus)
 
         sanktiot-toteutuneet (apply + (map (fn [rivi] (:toteutunut_summa rivi)) bonukset))
-        sanktiot-toteutuneet-sql (q (sanktiot-toteutuneet-sql-haku urakka-id alkupvm loppupvm))
-        sanktiot-sql-toteutunut-summa (reduce  (fn [summa b]
-                                                 (if b
-                                                   (+ summa b)
-                                                   summa))
+        sanktiot-toteutuneet-sql (q (sanktiot-toteutuneet-sql-haku oulumhu-parametrit))
+        sanktiot-sql-toteutunut-summa (reduce (fn [summa b]
+                                                (if b
+                                                  (+ summa b)
+                                                  summa))
                                         0M (map #(first %) sanktiot-toteutuneet-sql))]
     (is (= sanktiot-toteutuneet sanktiot-sql-toteutunut-summa))))
 
 ;; Tavoitehinnan oikaisut
 (deftest tavoitehinnanoikaisu-test-toimii
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        hoitokauden-alkuvuosi 2019
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
-        oikaisun-summa 1000M
+  (let [oikaisun-summa 1000M
         ;; Lisätään suoraan tietokantaa tavoitehinnan oikaisu
-        _ (u (str "INSERT INTO tavoitehinnan_oikaisu
+        _ (u (format "INSERT INTO tavoitehinnan_oikaisu
                   (\"urakka-id\", luotu, \"luoja-id\", \"muokkaaja-id\", otsikko, selite,summa,\"hoitokauden-alkuvuosi\" ) VALUES
-                  (" urakka-id ", NOW(), " (:id +kayttaja-jvh+) ", " (:id +kayttaja-jvh+) ",  'otsikko', 'selite', " oikaisun-summa ", 2019 )"))
-        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+                  (%s, NOW(), %s, %s, 'otsikko', 'selite', %s, 2019 )"
+               (:urakka oulumhu-parametrit) (:id +kayttaja-jvh+) (:id +kayttaja-jvh+) oikaisun-summa))
+        vastaus (hae-kustannukset oulumhu-parametrit)
         oikaisut (filter
                    #(when (= "tavoitehinnanoikaisu" (:paaryhma %))
                       true)
@@ -719,21 +717,18 @@ UNION ALL
 
 ;; Bonusten siirto seuraavalle vuodelle
 (deftest tavoitehinnan-alituksen-siirto-test-toimii
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        ;; Voit huomata, että kustannukset haetaan vuodelle 20 ja siirto laitetaan vuodelle 19. Siirto vaikuttaa siis
+  (let [;; Voit huomata, että kustannukset haetaan vuodelle 20 ja siirto laitetaan vuodelle 19. Siirto vaikuttaa siis
         ;; tulevaisuuteen ja näin tulee toimia.
         hoitokauden-alkuvuosi 2020
-        alkupvm "2020-10-01"
-        loppupvm "2021-09-30"
         siirto-summa 1000M
         urakoitsijan-maksu -1000M
         ;; Lisätään suoraan tietokantaa tavoitehinnan alituksen siirto, eli päätös
-        _ (u (str "INSERT INTO urakka_paatos
+        _ (u (format "INSERT INTO urakka_paatos
                   (\"urakka-id\", luotu, \"luoja-id\", \"muokkaaja-id\", tyyppi, siirto, \"tilaajan-maksu\",
                   \"urakoitsijan-maksu\", \"hoitokauden-alkuvuosi\" ) VALUES
-                  (" urakka-id ", NOW(), " (:id +kayttaja-jvh+) ", " (:id +kayttaja-jvh+) ", 'tavoitehinnan-alitus'::paatoksen_tyyppi,
-        "siirto-summa", 0, " urakoitsijan-maksu ", 2019 );"))
-        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+                  (%s, NOW(), %s, %s, 'tavoitehinnan-alitus'::paatoksen_tyyppi, '%s', 0, '%s', 2019 );"
+               (:urakka oulumhu-parametrit) (:id +kayttaja-jvh+) (:id +kayttaja-jvh+) siirto-summa urakoitsijan-maksu))
+        vastaus (hae-kustannukset (merge oulumhu-parametrit {:hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
         siirrot (filter #(when (= "siirto" (:paaryhma %)) true) vastaus)
         siirtojen-summa (apply + (map :toteutunut_summa siirrot))]
     (is (= siirtojen-summa siirto-summa))))

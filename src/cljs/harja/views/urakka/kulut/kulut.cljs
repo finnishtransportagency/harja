@@ -15,6 +15,7 @@
             [harja.ui.modal :as modal]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.kentat :as kentat]
+            [harja.views.urakka.kulut.kululomake :as kululomake]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
             [harja.transit :as t]
@@ -29,8 +30,6 @@
 
 (defonce hallinnollinen-vihje-viesti
          "Hallinnolliset toimenpiteet lasketaan automaattisesti mukaan maksueriin. Näitä kuluja ei saa syöttää manuaalisesti muulloin kuin poikkeustilanteissa.")
-
-(defonce kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu])
 
 (defn- validi-ei-tarkistettu-tai-ei-koskettu? [{:keys [koskettu? validi? tarkistettu?]}]
   (cond
@@ -151,15 +150,6 @@
                      koontilaskun-kuukausi
                      (-> @tila/yleiset :urakka :alkupvm)
                      (-> @tila/yleiset :urakka :loppupvm))}]) ;pvm/jalkeen? % (pvm/nyt) --- otetaan käyttöön "joskus"
-
-
-(defn- koontilaskun-kk-formatter
-  [a]
-  (if (nil? a)
-    "Ei valittu"
-    (let [[kk hv] (str/split a #"/")]
-      (str (pvm/kuukauden-nimi (pvm/kuukauden-numero kk) true) " - "
-        (get kulut/hoitovuodet-strs (keyword hv))))))
 
 (defn- valitse-tr-helper-fn
   "Koska lambdat aiheuttaa uudelleenrendauksia"
@@ -539,31 +529,18 @@
      :on-change       muutos-fn}]
    [:label {:for id} teksti]])
 
-(def vuoden-paatoksen-kulun-tyypit
-  {:tavoitepalkkio "Tavoitepalkkio"
-   :tavoitehinnan-ylitys "Urakoitsija maksaa tavoitehinnan ylityksestä"
-   :kattohinnan-ylitys "Urakoitsija maksaa tavoite- ja kattohinnan ylityksestä"})
-
-(def vuoden-paatoksen-tehtavaryhmien-nimet
-  {:tavoitepalkkio "Hoitovuoden päättäminen / Tavoitepalkkio"
-   :tavoitehinnan-ylitys "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä"
-   :kattohinnan-ylitys "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"})
-
-(defn- avain->tehtavaryhma [tehtavaryhmat avain]
-  (first (filter #(= (:tehtavaryhma %) (get vuoden-paatoksen-tehtavaryhmien-nimet avain)) tehtavaryhmat)))
-
 (defn- vuoden-paatos-checkboxit [{:keys [paivitys-fn haetaan]}
                                  {{:keys [kohdistukset] :as lomake} :lomake
                                   tehtavaryhmat :tehtavaryhmat}]
   (let [aseta-kohdistus (fn [tehtavaryhma-avain]
                           (if-not (= tehtavaryhma-avain :kattohinnan-ylitys)
-                            (let [tehtavaryhma (avain->tehtavaryhma tehtavaryhmat tehtavaryhma-avain)]
+                            (let [tehtavaryhma (tiedot/avain->tehtavaryhma tehtavaryhmat tehtavaryhma-avain)]
                               [(-> tila/kulut-kohdistus-default
                                  (assoc :tehtavaryhma (:id tehtavaryhma)
                                         :toimenpideinstanssi (:toimenpideinstanssi tehtavaryhma)))])
                             ;; Kattohinnan ylityksessä kirjataan myös tavoitehinnan ylitys.
-                            (let [tehtavaryhma-kh (avain->tehtavaryhma tehtavaryhmat tehtavaryhma-avain)
-                                  tehtavaryhma-th (avain->tehtavaryhma tehtavaryhmat :tavoitehinnan-ylitys)]
+                            (let [tehtavaryhma-kh (tiedot/avain->tehtavaryhma tehtavaryhmat tehtavaryhma-avain)
+                                  tehtavaryhma-th (tiedot/avain->tehtavaryhma tehtavaryhmat :tavoitehinnan-ylitys)]
                               [(-> tila/kulut-kohdistus-default
                                  (assoc
                                    :tehtavaryhma (:id tehtavaryhma-th)
@@ -584,12 +561,12 @@
                                   :name "vuoden-paatos-group"
                                   :default-checked (if (nil? (:id lomake))
                                                      ;; Jos ei muokata vanhaa, ensimmäinen listassa on valittu.
-                                                      (= (first (keys vuoden-paatoksen-kulun-tyypit)) avain)
+                                                      (= (first (keys tiedot/vuoden-paatoksen-kulun-tyypit)) avain)
 
                                                      ;; Muuten päätellään muokattavan tyypin valinta
                                                      ;; viimeisestä kohdistuksesta.
                                                       (= (:tehtavaryhma (last kohdistukset))
-                                                        (:id (avain->tehtavaryhma tehtavaryhmat avain))))
+                                                        (:id (tiedot/avain->tehtavaryhma tehtavaryhmat avain))))
                                   :disabled true
                                   :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
                                                                                (fn [_]
@@ -620,7 +597,7 @@
                                                                                lomake)))]
                                                 (paivitys-fn {:jalkiprosessointi-fn jalkiprosessointi-fn} :kohdistukset kohdistusten-paivitys-fn))}]
                                 [:label {:for (name avain)} kulun-tyyppi]])
-                         vuoden-paatoksen-kulun-tyypit))]]))
+                         tiedot/vuoden-paatoksen-kulun-tyypit))]]))
 
 (def vuoden-paatos-kohdistus-otsikot
   ["Tavoitehinnan ylitys"
@@ -725,7 +702,7 @@
             :disabled true
             :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
                                                          (fn [_]
-                                                           (let [tavoitepalkkio-tr (avain->tehtavaryhma tehtavaryhmat :tavoitepalkkio)]
+                                                           (let [tavoitepalkkio-tr (tiedot/avain->tehtavaryhma tehtavaryhmat :tavoitepalkkio)]
                                                              [(-> tila/kulut-kohdistus-default
                                                                 (assoc :tehtavaryhma (:id tavoitepalkkio-tr)
                                                                   :toimenpideinstanssi (:toimenpideinstanssi tavoitepalkkio-tr)))])))
@@ -800,7 +777,7 @@
                                                    (hoitokauden-nro-vuodesta (:vuosi %) alkuvuosi loppuvuosi))
                                             vuosittaiset-valikatselmukset)
         koontilaskun-kuukaudet (for [hv hoitokaudet-ilman-valikatselmusta
-                                     kk kuukaudet]
+                                     kk tiedot/kuukaudet]
                                  (str (name kk) "/" hv "-hoitovuosi"))
         kk-droppari-disabled (or
                                (not= 0 haetaan)
@@ -821,7 +798,7 @@
        :valitse-fn (r/partial paivita-lomakkeen-arvo {:paivitys-fn paivitys-fn
                                                       :polku :koontilaskun-kuukausi
                                                       :optiot {:validoitava? true}})
-       :format-fn koontilaskun-kk-formatter}
+       :format-fn tiedot/koontilaskun-kk-formatter}
       koontilaskun-kuukaudet]
      [:label "Laskun pvm *"]
      [paivamaaran-valinta {:disabled              (or 
@@ -878,7 +855,7 @@
             validi? (:validi? (meta lomake))
             urakoitsija-maksaa? (and vuoden-paatos-valittu?
                                   (=
-                                    (:id (avain->tehtavaryhma tehtavaryhmat :tavoitehinnan-ylitys))
+                                    (:id (tiedot/avain->tehtavaryhma tehtavaryhmat :tavoitehinnan-ylitys))
                                     (:tehtavaryhma (first (:kohdistukset lomake)))))
             ;; Jos kulun eräpäivä osuu vuodelle, josta on välikatselmus pidetty, kulu lukitaan
             erapaivan-hoitovuosi (when erapaiva
@@ -1114,23 +1091,33 @@
                      (e! (tiedot/->HaeUrakanKulut {:id (-> @tila/yleiset :urakka :id)
                                                    :alkupvm (first (pvm/kuukauden-aikavali (pvm/nyt)))
                                                    :loppupvm (second (pvm/kuukauden-aikavali (pvm/nyt)))}))
-                     (e! (tiedot/->HaeUrakanValikatselmukset))))
+                     (e! (tiedot/->HaeUrakanValikatselmukset))
+                     (e! (tiedot/->HaeUrakanRahavaraukset))))
    (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
    (fn [e! {kulut :kulut syottomoodi :syottomoodi 
             {:keys [haetaan haun-kuukausi haun-alkupvm haun-loppupvm]}
             :parametrit 
             tehtavaryhmat :tehtavaryhmat 
             toimenpiteet :toimenpiteet :as app}]
-     (let [[hk-alkupvm hk-loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))
+     (let [[hk-alkupvm hk-loppupvm] (pvm/paivamaaran-hoitokausi (if (:valittu-hoitokausi app)
+                                                                  (first (:valittu-hoitokausi app))
+                                                                  (pvm/nyt)))
            kuukaudet (pvm/aikavalin-kuukausivalit
                       [hk-alkupvm
-                       hk-loppupvm])]
+                       hk-loppupvm])
+           urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+           valittu-hoitokausi (if (nil? (:hoitokauden-alkuvuosi app))
+                                (tiedot/kuluva-hoitovuosi (pvm/nyt))
+                                (:hoitokauden-alkuvuosi app))
+           hoitovuodet (into [] (range urakan-alkuvuosi (+ 5 urakan-alkuvuosi)))]
        [:div#vayla.kulujen-kohdistus.margin-top-16
         (if syottomoodi
           [:div
-           [kulujen-syottolomake e! app]]
+           #_ [kulujen-syottolomake e! app]
+             [kululomake/kululomake e! app]]
           [:div
            [:div.flex-row
+            [debug/debug app]
             [:h1 "Kulujen kohdistus"]
             ^{:key "raporttixls"}
             [:form {:style {:margin-left "auto"}
@@ -1164,6 +1151,15 @@
              {:ikoni [ikonit/harja-icon-action-add]}]]
 
            [:div.flex-row {:style {:justify-content "flex-start"}}
+            [:div.filtteri.label-ja-alasveto
+             [:span.alasvedon-otsikko "Hoitovuosi"]
+             [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
+                                           :vayla-tyyli? true
+                                           :data-cy "hoitokausi-valinta"
+                                           :valitse-fn #(e! (tiedot/->ValitseHoitokausi %))
+                                           :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitovuodet "Hoitovuosi")
+                                           :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+              hoitovuodet]]
             [valinnat/kuukausi {:nil-valinta yleiset/valitse-text
                                 :vayla-tyyli? true
                                 :valitse-fn #(do
