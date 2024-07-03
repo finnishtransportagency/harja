@@ -8,12 +8,11 @@
 
 -- B. Tehtävälle suunnitellaan materiaalimääriä, toteutuneet määrät kirjataan materiaalitoteumina, tehtävätoteumina syntyy työkoneen reittikirjauksia
 -- -- Suolaus
--- -- Liikenteen varmistaminen kelirikkokohteessa
+-- -- Liikenteen varmistaminen kelirikkokohteessa (materiaali)
 -- -- Sorateiden pölynsidonta (materiaali)
 
 -- C. Tehtävälle suunnitellaan matkaa, tehtävällä ei ole toteumakirjauksia MH-urakoissa, mutta hoitourakoissa on muutama. Yksikkö epäselvä.
 -- -- Katupölynsidonta
-
 
 -- Liukkaudentorjunta hiekoituksella
 -- Tehtävälle ei kirjata toteumia, ainoastaan suunnitellaan materiaaleja => yksikön voi synkata suunnitteluyksikön kanssa, ei tarvitse apikirjausmahdollisuutta.
@@ -43,5 +42,13 @@ SET yksikko      = 'jm',
     muokkaaja    = (select id from kayttaja where kayttajanimi = 'Integraatio')
 WHERE nimi = 'Meluesteiden siisteydestä huolehtiminen';
 
+-- Liikenteen varmistaminen kelirikkokohteessa
+-- Tehtävätoteumat ovat matkaa työkoneelta, suunnitellaan materiaaleja => Ilmaistaan materiaali suunnittelunäyttöä varten samaan tapaan kuin tehtävässä Sorateiden pölynsidonta (materiaali)
+UPDATE tehtava
+SET nimi         = 'Liikenteen varmistaminen kelirikkokohteessa (materiaali)',
+    api_seuranta = false,
+    muokattu     = current_timestamp,
+    muokkaaja    = (select id from kayttaja where kayttajanimi = 'Integraatio')
+WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa';
 
 
