@@ -24,7 +24,7 @@
             "kulu": {
               "type": "object",
               "properties": {
-                "id": {
+                "kulu-id": {
                   "type": "integer",
                   "description": "Kustannusrivin id Harjassa."
                 },
@@ -76,7 +76,7 @@
                       "kulukohdistus": {
                         "type": "object",
                         "properties": {
-                          "id": {
+                          "kulukohdistus-id": {
                             "type": "integer",
                             "description": "Yksittäisen kulurivin (kulukohdistuksen) id Harjassa."
                           },
@@ -127,7 +127,7 @@
                           }
                         },
                         "required": [
-                          "id",
+                          "kulukohdistus-id",
                           "rivinumero",
                           "tyyppi",
                           "summa",
@@ -139,7 +139,7 @@
                 }
               },
               "required": [
-                "id",
+                "kulu-id",
                 "kulun-ajankohta",
                 "kulun-kokonaissumma",
                 "kulukohdistukset"
