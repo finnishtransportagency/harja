@@ -394,3 +394,22 @@ SELECT exists(SELECT p.id
 SELECT alku
   FROM paivystys
  WHERE id = :id;
+
+-- name: hae-vastuuhenkilot-hallinta
+SELECT u.nimi AS urakkanimi,
+       uvh.etunimi,
+       uvh.sukunimi,
+       uvh.puhelin,
+       uvh.sahkoposti,
+       uvh.rooli,
+       uvh.ensisijainen,
+       uvh."toissijainen-varahenkilo"
+FROM urakanvastuuhenkilo uvh
+         JOIN urakka u ON uvh.urakka = u.id
+WHERE (:urakkatyyppi IS NULL OR
+       (CASE
+            WHEN (:urakkatyyppi = 'hoito')
+                THEN u.tyyppi IN ('hoito', 'teiden-hoito')
+            ELSE
+                u.tyyppi = :urakkatyyppi::urakkatyyppi END)
+           AND (:paattyneet IS TRUE OR u.loppupvm > CURRENT_TIMESTAMP));

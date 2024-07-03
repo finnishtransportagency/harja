@@ -14,6 +14,7 @@
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-toiminto :as toiminto]
             [harja.domain.kanavat.lt-ketjutus :as ketjutus]
+            [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kohde :as kohde]))
 
 (defn- liita-kohteen-urakkatiedot [kohteiden-haku tapahtumat]
@@ -518,7 +519,12 @@
                                                        ::lt/alukset
                                                        ::lt/toiminnot))))]
         (doseq [osa (::lt/toiminnot tapahtuma)]
-          (tallenna-osa-tapahtumaan! db user osa uusi-tapahtuma))
+          (when (::toiminto/korvaa-oletustoimenpide? osa)
+            (kohteet-q/paivita-kohdeosan-oletustoimenpide!
+              db {::osa/id (::toiminto/kohteenosa-id osa)
+                  ::osa/oletustoimenpide (::toiminto/toimenpide osa)}))
+
+          (tallenna-osa-tapahtumaan! db user (dissoc osa ::toiminto/korvaa-oletustoimenpide?) uusi-tapahtuma))
 
         (kuittaa-vanhat-ketjutukset! db (assoc tapahtuma ::lt/id (::lt/id uusi-tapahtuma)))
 

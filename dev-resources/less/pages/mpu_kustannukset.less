@@ -1,0 +1,58 @@
+@import "../yleiset";
+
+.mpu-kustannukset 
+{
+  /* Lisää kustannus lomake */
+  .overlay-oikealla {
+    width: 464px;
+
+    .lomakeryhman-rivi-tausta {
+      background-color: white;
+    }
+    button {
+      height: 36px;
+    }
+  }
+
+  /* Kalenterivuosi */
+  .kalenterivalinta 
+  {
+    padding-bottom: @valistys-32;
+
+    .dropdown, .harja-alasvetolistaitemi {
+      max-width: 197px;
+      width: 197px;
+    }
+    .label-ja-alasveto, .label-ja-aikavali-lyhyt {
+      margin: 0;
+    }
+  }
+
+  /* Muut kustannukset --> Lisää kustannus */
+  .valitetty-rivi
+  {
+    display: flex;
+    align-self: flex-end;
+    justify-content: space-between;
+    width: 99.5%;
+
+    > :first-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    /* Lisää kustannus */
+    > :last-child {
+      margin-bottom: @valistys-4;
+    }
+
+    > span {
+      align-self: flex-end;
+    }
+  }
+
+  /* Yhteenveto*/
+  .kustannukset-yhteenveto  {
+    background-color: @white-dark;
+  }
+}

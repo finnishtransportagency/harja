@@ -201,6 +201,10 @@
   [e! {lomake :lomake toimenpiteet :toimenpiteet tehtavat :tehtavat :as app}]
   (let [;; Poista toimenpiteistä id, jotta toimenpiteen valinta voi toimia
         toimenpiteet (mapv #(dissoc % :id) toimenpiteet)
+        ;; Poista tehtävistä rahavaraukset sekä käsin lisättävät määrät
+        tehtavat (filter #(and (nil? (:rahavaraus %))
+                             (:kasin_lisattava_maara %))
+                         tehtavat)
         lomake (update lomake ::t/toimenpide #(dissoc % :id))
         {tyyppi       ::t/tyyppi
          toteumat     ::t/toteumat

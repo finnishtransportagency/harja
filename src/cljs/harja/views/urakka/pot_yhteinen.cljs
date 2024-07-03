@@ -327,11 +327,11 @@
                ::lomake/col-luokka "col-xs-12"}
               (if muokattava?
                 {:tyyppi :reagent-komponentti
-                 :otsikko "Tierekisteriosoite"
+                 :otsikko "Tieosoite"
                  :komponentti tr-kentta
                  :komponentti-args [e! (merge paallystysilmoituksen-osa {:optiot {:vayla-tyyli? true}})]
                  :validoi (get-in validoinnit [:perustiedot :tr-osoite])}
-                {:otsikko "Tierekisteriosoite"
+                {:otsikko "Tieosoite"
                  :hae identity
                  :fmt tr/tierekisteriosoite-tekstina
                  :muokattava? false-fn}))
