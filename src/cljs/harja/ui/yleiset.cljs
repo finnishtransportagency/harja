@@ -998,7 +998,7 @@ jatkon."
   (let [osio (fn [komponentti otsikko] komponentti)]
     (fn [{:keys [wrap-luokka]} {:keys [tie aosa aeta losa leta]}]
       [:div {:class (or wrap-luokka "col-md-3 filtteri tr-osoite")}
-       [:label.alasvedon-otsikko-vayla "Tierekisteriosoite"]
+       [:label.alasvedon-otsikko-vayla "Tieosoite"]
       [:div
        [:div.varusteet.tr-osoite-flex
         [osio tie "Tie"]

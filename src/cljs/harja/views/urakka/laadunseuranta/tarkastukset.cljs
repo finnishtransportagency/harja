@@ -171,7 +171,7 @@
                       (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
                                                                     :nimi (get-in rivi [:yllapitokohde :nimi])}))})
             (when-not (u-domain/vesivaylaurakka? urakka)
-              {:otsikko "TR-osoite"
+              {:otsikko "Tieosoite"
                :nimi :tr
                :leveys 2
                :fmt tierekisteri/tierekisteriosoite-tekstina})

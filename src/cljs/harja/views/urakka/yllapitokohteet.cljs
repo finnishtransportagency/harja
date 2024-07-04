@@ -795,7 +795,7 @@
           [:div
            (when-not piilota-kohdeosat?
              [yllapitokohdeosat
-             {:otsikko "Kohteen tierekisteriosoitteet"
+             {:otsikko "Kohteen tieosoitteet"
               :rivi-validointi kohteen-rivi-validointi
               :taulukko-validointi kohteen-taulukko-validointi
               :urakka urakka
@@ -822,7 +822,7 @@
               :aikataulu? aikataulu?}])
            (when-not piilota-kohdeosat?
              [yllapitokohdeosat
-             {:otsikko "Muut tierekisteriosoitteet"
+             {:otsikko "Muut tieosoitteet"
               :rivi-validointi muut-kohteen-rivi-validointi
               :taulukko-validointi muut-kohteen-taulukko-validointi
               :urakka urakka
