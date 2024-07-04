@@ -5,6 +5,7 @@ WHERE emo IN (select id
               from toimenpide
               where taso = 3
                 and id not in (select toimenpide from toimenpideinstanssi))
+  AND id NOT IN (select tehtava_id FROM rahavaraus_tehtava)
   AND id NOT IN (select toimenpidekoodi FROM toteuma_tehtava);
 
 -- Poista kokonaan turhat rautateihin ja vesiväyliin liittyvät toimenpiteet =>
