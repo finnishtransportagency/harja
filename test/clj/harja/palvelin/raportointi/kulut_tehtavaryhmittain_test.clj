@@ -7,8 +7,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [clj-time.coerce :as c]
-            [clj-time.core :as t]
-            [clojure.string :as cstr]))
+            [clj-time.core :as t]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -142,3 +141,22 @@
                 (-> vastaus-ulkopuolella
                     (nth 2)
                     (nth 3))) "Raportille ei tule väärää tavaraa")))
+
+(deftest kulut-tehtavaryhmittain-varmista-tehtavaryhman-voimassaolo-testi
+  (let [;; Muokataan Siltapäällysteet (H) -tehtäväryhmän voimassaoloaikaa aiemmaksi kuin käytetyn urakan alkuvuosi, eli l-> 2018
+        _ (u (str "UPDATE tehtavaryhma SET voimassaolo_loppuvuosi = '2018' WHERE nimi = 'Siltapäällysteet (H)';"))
+        taulukko (nth odotettu-raportti 2)
+        raportin-tehtavaryhmat (nth taulukko 3)
+        ;; Poista siltapäällysteet odotetusta raportista, koska sitä ei anneta, kun se ei ole voimassa
+        tehtavaryhmat-ilman-siltapaallysteita (vec (remove #(= "Siltapäällysteet (H)" (first %)) raportin-tehtavaryhmat))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi       :kulut-tehtavaryhmittain
+                   :konteksti  "urakka"
+                   :urakka-id  @oulun-maanteiden-hoitourakan-2019-2024-id
+                   :parametrit {:alkupvm  (c/to-date (t/local-date 2019 12 1))
+                                :loppupvm (c/to-date (t/local-date 2020 8 30))}})
+        vastaus-tehtavaryhmat (nth (nth vastaus 2) 3)]
+    (is (vector? vastaus) "Raportille palautuu tavaraa")
+    (is (= vastaus-tehtavaryhmat tehtavaryhmat-ilman-siltapaallysteita))))

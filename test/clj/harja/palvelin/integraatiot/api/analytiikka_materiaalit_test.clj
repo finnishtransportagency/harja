@@ -203,7 +203,7 @@
 
         ;; Luo materiaalin suunnittelua
         ;; Lisää tehtävälle suunniteltu määrä
-        tehtava-nimi "Liukkaudentorjunta hiekoituksella"
+        tehtava-nimi "Liukkaudentorjunta hiekoituksella (materiaali)"
         tehtava-id (:id (first (q-map (format "SELECT id FROM tehtava WHERE nimi = '%s'" tehtava-nimi))))
         _ (u (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
         (%s, %s, %s, %s)" urakka-id (pvm/vuosi alkupvm) tehtava-id maara))

@@ -10,17 +10,25 @@
 (defrecord HaeTehtavaryhmaotsikot [])
 (defrecord HaeTehtavaryhmaotsikotOnnistui [vastaus])
 (defrecord HaeTehtavaryhmaotsikotEpaonnistui [vastaus])
+(defrecord HaeSuoritettavatTehtavat [])
+(defrecord HaeSuoritettavatTehtavatOnnistui [vastaus])
+(defrecord HaeSuoritettavatTehtavatEpaonnistui [vastaus])
+(defrecord MuokkaaTehtavaryhmat [rivit])
+(defrecord MuokkaaTehtavaryhmatOnnistui [vastaus])
+(defrecord MuokkaaTehtavaryhmatEpaonnistui [vastaus])
+
+
 
 (extend-protocol tuck/Event
 
   HaeTehtavaryhmaotsikot
-  (process-event [{emailapi :emailapi} app]
+  (process-event [_ app]
     (tuck-apurit/post! :hae-mhu-tehtavaryhmaotsikot
       {}
       {:onnistui ->HaeTehtavaryhmaotsikotOnnistui
        :epaonnistui ->HaeTehtavaryhmaotsikotEpaonnistui
        :paasta-virhe-lapi? true})
-    (assoc app :emailapi emailapi))
+    app)
 
   HaeTehtavaryhmaotsikotOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -29,5 +37,43 @@
   HaeTehtavaryhmaotsikotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (js/console.log "Error: " (pr-str vastaus))
+      (js/console.log "HaeTehtavaryhmaotsikotEpaonnistui :: error:" (pr-str vastaus))
+      (assoc app :tehtavaryhmaotsikot nil)))
+
+  HaeSuoritettavatTehtavat
+  (process-event [_ app]
+    (tuck-apurit/post! :hae-suoritettavat-tehtavat
+      {}
+      {:onnistui ->HaeSuoritettavatTehtavatOnnistui
+       :epaonnistui ->HaeSuoritettavatTehtavatEpaonnistui
+       :paasta-virhe-lapi? true})
+    app)
+
+  HaeSuoritettavatTehtavatOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :suoritettavat-tehtavat vastaus))
+
+  HaeSuoritettavatTehtavatEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (js/console.error "HaeSuoritettavatTehtavatEpaonnistui :: error:" (pr-str vastaus))
+      (assoc app :suoritettavat-tehtavat nil)))
+
+  MuokkaaTehtavaryhmat
+  (process-event [{rivit :rivit} app]
+    (tuck-apurit/post! :hallinta-tallenna-tehtavaryhmat
+      {:muokatut-tehtavaryhmat rivit}
+      {:onnistui ->MuokkaaTehtavaryhmatOnnistui
+       :epaonnistui ->MuokkaaTehtavaryhmatEpaonnistui
+       :paasta-virhe-lapi? true})
+    app)
+
+  MuokkaaTehtavaryhmatOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :tehtavaryhmaotsikot vastaus))
+
+  MuokkaaTehtavaryhmatEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (js/console.error "MuokkaaTehtavaryhmatEpaonnistui :: error: " (pr-str vastaus))
       (assoc app :tehtavaryhmaotsikot nil))))

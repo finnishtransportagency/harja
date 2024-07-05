@@ -47,11 +47,8 @@
 
 (defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
   (let [urakka-id (Long/parseLong id)]
-    ;(log/debug (format "Kirjataan tarkastus tyyppiä: %s käyttäjän: %s toimesta. Data: %s" tyyppi (:kayttajanimi kayttaja) data))
-    (log/info "TARKASTUS-DEBUG: Kutsu saapunut")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (varmista-etta-ulkoinen-id-on-uniikki db tyyppi urakka-id data)
-    (log/info "TARKASTUS-DEBUG: Varmistettu uniikki ulkoinen id")
     (let [varoitukset (tarkastukset/luo-tai-paivita-tarkastukset db liitteiden-hallinta kayttaja tyyppi urakka-id data)]
       (tee-onnistunut-vastaus (join ", " varoitukset)))))
 

@@ -1,6 +1,8 @@
 (ns harja.palvelin.palvelut.kulut.kulut-test
   (:require [clojure.test :refer :all]
             [clojure.string :as s]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as tyokalut-virheet]
+            [slingshot.slingshot :refer [try+]]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
             [harja.palvelin.palvelut.kulut.kulut :as kulut]
@@ -348,7 +350,7 @@
     (is (= (:id poistettu-kulu) tallennettu-id) "kulun poistaminen palauttaa poistetun kulun (poistettu-kulu)")
     (is (empty? poistetun-kulun-haku) "Poistettua kulua ei palaudu (poistetun-kulun-haku).")))
 
-(defn- feila-tallenna-kulu-validointi [vaara-kulu odotettu-poikkeus]
+(defn- feilaa-tallenna-kulu-validointi [vaara-kulu odotettu-poikkeus]
   (try
     (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                          {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
@@ -359,12 +361,12 @@
 
 (deftest tallenna-kulu-erapaiva-validointi-testi
   (let [uusi-kulu-vaara-erapaiva (assoc uusi-kulu :erapaiva #inst "1921-12-15T21:00:00.000-00:00")]
-    (feila-tallenna-kulu-validointi uusi-kulu-vaara-erapaiva
+    (feilaa-tallenna-kulu-validointi uusi-kulu-vaara-erapaiva
                                      "Eräpäivä Thu Dec 15 23:00:00 EET 1921 ei ole koontilaskun-kuukauden joulukuu/3-hoitovuosi sisällä")))
 
 (deftest tallenna-kulu-koontilaskun-kuukausi-validointi-testi
   (let [uusi-kulu-vaara-koontilaskun-kuukausi (assoc uusi-kulu :koontilaskun-kuukausi "vaara-muoto")]
-    (feila-tallenna-kulu-validointi uusi-kulu-vaara-koontilaskun-kuukausi
+    (feilaa-tallenna-kulu-validointi uusi-kulu-vaara-koontilaskun-kuukausi
                                      "Palvelun :tallenna-kulu kysely ei ole validi")))
 
 (deftest tallenna-kulu-toimii-testi
@@ -528,3 +530,25 @@
                                    vastaus))]
       (is (= odotettu-count (count vastaus)))
       (is (= odotettu-kulu-id-9 kulu-id-9)))))
+
+(deftest tallenna-kulu-vaaralla-tehtavaryhmalla
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        ;; Päivitetään testiä varten ykden tehtäväryhmän voimassaolo niin, että se ei ole voimassa
+        ;; Käytetään tehtäväryhmää: Talvihoito (A)
+        tehtavaryhmaid (:id (first (q-map "SELECT id FROM tehtavaryhma WHERE nimi = 'Talvihoito (A)'")))
+        talvihoito-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23104")
+        _ (u (format "UPDATE tehtavaryhma SET voimassaolo_alkuvuosi = '2000', voimassaolo_loppuvuosi = '2001' WHERE id = %s;" tehtavaryhmaid))
+        virhe  (try+ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                         {:urakka-id urakka-id
+                          :kulu-kohdistuksineen (-> uusi-kulu
+                                                  (assoc :erapaiva #inst "2021-12-01T00:00:00.000+02:00")
+                                                  (assoc-in [:kohdistukset 0 :tehtavaryhma] tehtavaryhmaid)
+                                                  (assoc-in [:kohdistukset 0 :toimenpideinstanssi] talvihoito-toimenpideinstanssi-id)
+                                                  (assoc-in [:kohdistukset 1 :tehtavaryhma] tehtavaryhmaid)
+                                                  (assoc-in [:kohdistukset 1 :toimenpideinstanssi] talvihoito-toimenpideinstanssi-id))})
+                   (catch [:type tyokalut-virheet/+viallinen-kutsu+] {:keys [virheet]}
+                     (:virhe (first virheet)))
+                   (catch Exception e
+                     (.getMessage e)))]
+
+    (is (= "Kululle valittu tehtäväryhmä: 1, joka ei ole voimassa. Tehtäväryhmän voimassaolovuodet 2000 - 2001" virhe))))

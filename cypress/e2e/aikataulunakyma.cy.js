@@ -10,8 +10,8 @@
 //         cy.get('a').contains('2018').click()
 //         cy.get('.navigation-right', {timeout: 40000}).first().click()
 //         // Pitää näkyä alikohteet omassa taulukossaan
-//         cy.contains('.panel-title', 'Kohteen tierekisteriosoitteet')
-//         cy.contains('.panel-title', 'Muut tierekisteriosoitteet')
+//         cy.contains('.panel-title', 'Kohteen tieosoitteet')
+//         cy.contains('.panel-title', 'Muut tieosoitteet')
 //         cy.contains('.panel-title', 'Kohteen päällystysurakan tarkka aikataulu')
 //     })
 // })
@@ -26,8 +26,8 @@ describe('Aikataulunäkymien avaaminen päällystysurakassa', function () {
         cy.contains('.klikattava', 'Aikataulu', {timeout: 40000}).click()
         cy.get('.navigation-right', {timeout: 40000}).first().click()
         // Ei saa näkyä alikohteet omassa taulukossaan
-        cy.contains('.panel-title', 'Kohteen tierekisteriosoitteet').should('not.exist')
-        cy.contains('.panel-title', 'Muut tierekisteriosoitteet').should('not.exist')
+        cy.contains('.panel-title', 'Kohteen tieosoitteet').should('not.exist')
+        cy.contains('.panel-title', 'Muut tieosoitteet').should('not.exist')
         cy.contains('.panel-title', 'Kohteen päällystysurakan tarkka aikataulu')
     })
 })

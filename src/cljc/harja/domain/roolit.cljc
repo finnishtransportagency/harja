@@ -39,42 +39,14 @@
 (def ely-urakanvalvoja "ELY_Urakanvalvoja")
 (def ely-paakayttaja "ELY_Paakayttaja")
 
-
-(def toteumien-kirjaus
-  "Roolit, joilla on oikeus kirjoittaa urakkaan toteumatietoja."
-  #{urakanvalvoja
-    urakoitsijan-paakayttaja
-    urakoitsijan-urakan-vastuuhenkilo
-    urakoitsijan-laatuvastaava})
-
-(def laadunseuranta-kirjaus
-  "Roolit, joilla on oikeus kirjata laadunseurantaa urakkaan."
-  #{urakanvalvoja
-    urakoitsijan-paakayttaja
-    urakoitsijan-urakan-vastuuhenkilo
-    urakoitsijan-laatuvastaava
-    tilaajan-laadunvalvontakonsultti})
-
-;; Tietokannan rooli enumin selvempi kuvaus
-(def +rooli->kuvaus+
-  {"jarjestelmavastuuhenkilo" "Järjestelmävastuuhenkilö"
-   "tilaajan kayttaja" " Tilaajan käyttäjä"
-   "urakanvalvoja" "Urakanvalvoja"
-   ;;"vaylamuodon vastuuhenkilo" "Väylämuodon vastuuhenkilö"
-   "hallintayksikon vastuuhenkilo" "Hallintayksikön vastuuhenkilö"
-   "liikennepäivystäjä" "Liikennepäivystäjä"
-   "tilaajan asiantuntija" "Tilaajan asiantuntija"
-   "tilaajan laadunvalvontakonsultti" "Tilaajan laadunvalvontakonsultti"
-   "urakoitsijan paakayttaja" "Urakoitsijan pääkäyttäjä"
-   "urakoitsijan urakan vastuuhenkilo" "Urakoitsijan urakan vastuuhenkilö"
-   "urakoitsijan kayttaja" "Urakoitsijan käyttäjä"
-   "urakoitsijan laatuvastaava" "Urakoitsijan laatuvastaava"})
-
-(defn rooli->kuvaus
-  "Antaa roolin ihmisen luettavan kuvauksen käyttöliittymää varten."
-  [rooli]
-  (get +rooli->kuvaus+ rooli))
-
+(def urakoitsijaroolit
+  #{"Paakayttaja"
+    "Laatupaallikko"
+    "Kayttaja"
+    "vastuuhenkilo"
+    "Laadunvalvoja"
+    "Kelikeskus"
+    "Paivystaja"})
 
 (defn urakkaroolit
   "Palauttaa setin rooleja, joita käyttäjällä on annetussa urakassa."
@@ -147,24 +119,6 @@ rooleista."
        (let [viesti (format "Käyttäjällä '%1$s' ei vaadittua roolia '%2$s'", (:kayttajanimi kayttaja) rooli)]
          (log/warn viesti)
          (throw+ (->EiOikeutta viesti))))))
-
-#?(:clj
-   (defn vaadi-rooli-urakassa
-     [kayttaja rooli urakka-id]
-     (when-not (rooli-urakassa? kayttaja rooli urakka-id)
-       (let [viesti (format "Käyttäjällä '%1$s' ei vaadittua roolia '%2$s' urakassa jonka id on %3$s",
-                            (:kayttajanimi kayttaja) rooli urakka-id)]
-         (log/warn viesti)
-         (throw+ (->EiOikeutta viesti))))))
-
-(defn voi-kirjata-toteumia?
-  "Käyttäjä voi kirjata toteumia, jos hänellä on toteumien kirjauksen rooli
-  tai jos hän on urakan urakoitsijaorganisaation pääkäyttäjä"
-  #?(:cljs ([urakka-id] (voi-kirjata-toteumia? @istunto/kayttaja urakka-id)))
-  ([kayttaja urakka-id]
-   (or (rooli-urakassa? kayttaja toteumien-kirjaus urakka-id)
-       (and (organisaation-urakka? kayttaja urakka-id)
-            (roolissa? kayttaja urakoitsijan-paakayttaja)))))
 
 (defn lukuoikeus-kaikkiin-urakoihin?
   "Käyttäjä voi nähdä kaikki urakat, jos hän on tilaajaorganisaation edustaja (ELY tai LIVI)"

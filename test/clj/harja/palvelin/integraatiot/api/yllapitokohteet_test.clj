@@ -121,23 +121,25 @@
        {:url sahkoposti-lahetys-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
             kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+            integraatioviestien-lkm-alussa (count (hae-ulos-lahtevat-integraatiotapahtumat))
             vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
                               kayttaja-paallystys portti
                               (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json")))
             _ (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus aikataulu-paallystys." ehdon-timeout)
-            integraatioviestit (hae-ulos-lahtevat-integraatiotapahtumat)]
+            ;; integraatiolokilla pitäisi olla yksi sposti ja yksi apikutsu
+            integraatioviestit (odota-integraatiotapahtumaa ehdon-timeout (+ 1 integraatioviestien-lkm-alussa))]
         (is (= 200 (:status @vastaus)))
 
         ;; Leppäjärvi oli jo merkitty valmiiksi tiemerkintään, mutta sitä päivitettiin -> pitäisi lähteä maili
         (is (= sahkoposti-lahetys-url (:osoite (second integraatioviestit))) "Sähköposti lähetettiin")
 
         ;; Laitetaan sama pyyntö uudelleen, maili ei lähde koska valmis tiemerkintään -pvm sama kuin aiempi
-        (let [vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
+        (let [integraatioviestien-lkm-alussa (count (hae-ulos-lahtevat-integraatiotapahtumat))
+              vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
                                 kayttaja-paallystys portti
                                 (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json")))
               _ (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus aikataulu-paallystys." ehdon-timeout)
-              _ (odota-ehdon-tayttymista #(hae-ulos-lahtevat-integraatiotapahtumat) "Ulos lähtevät integraatiotapahtumat." ehdon-timeout)
-              integraatioviestit (hae-ulos-lahtevat-integraatiotapahtumat)]
+              integraatioviestit (odota-integraatiotapahtumaa ehdon-timeout integraatioviestien-lkm-alussa)]
           (is (= 200 (:status @vastaus)))
           (is (= 1 (count (filter #(= (str (:otsikko %)) (str {"Content-Type" "application/xml"})) integraatioviestit))) "Sähköposti ei lähtenyt, eikä pitänytkään"))))))
 
@@ -152,11 +154,13 @@
       (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
             kohde-id (hae-yllapitokohteen-id-nimella "Nakkilan ramppi")
             _ (anna-kirjoitusoikeus kayttaja-paallystys)
+            integraatioviestien-lkm-alussa (count (hae-ulos-lahtevat-integraatiotapahtumat))
             vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
                               kayttaja-paallystys portti
                               (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json")))
             _ (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus aikataulu-paallystys." ehdon-timeout)
-            integraatioviestit (hae-ulos-lahtevat-integraatiotapahtumat)]
+            ;; integraatiolokilla pitäisi olla yksi sposti ja yksi apikutsu
+            integraatioviestit (odota-integraatiotapahtumaa ehdon-timeout (+ 1 integraatioviestien-lkm-alussa))]
         (is (= 200 (:status @vastaus)))
 
         ;; Integraatioviesteihin tulee merkintä, että aikataulu on päivitetty
@@ -172,14 +176,16 @@
       [+testi-fim+ fim-vastaus
        #".*api\/urakat.*" :allow
        {:url sahkoposti-lahetys-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
-      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
+      (let [integraatioviestien-lkm-alussa (count (hae-ulos-lahtevat-integraatiotapahtumat))
+            urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
             kohde-id (hae-yllapitokohteen-id-nimella "Nakkilan ramppi")
             _ (anna-kirjoitusoikeus kayttaja-tiemerkinta)
             vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-tiemerkinta")]
                               kayttaja-tiemerkinta portti
                               (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json")))
             _ (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus aikataulu-tiemerkintään." ehdon-timeout)
-            integraatioviestit (hae-ulos-lahtevat-integraatiotapahtumat)]
+            ;; Pitäisi löytyä 3 integraatiotapahtumaa, 2 spostia ja 1 api-kutsu.
+            integraatioviestit (odota-integraatiotapahtumaa ehdon-timeout (+ 2 integraatioviestien-lkm-alussa))]
         (is (= 200 (:status @vastaus)))
 
         ;; Integraatioviesteihin tulee merkintä, että aikataulu on päivitetty
