@@ -158,7 +158,7 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                         20,
                         1300,
                         'paallystys',
-                        'testitunnus',
+                        'a',
                         123456,
                         '1',
                         1000,
