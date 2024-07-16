@@ -256,7 +256,8 @@ SELECT
   LEFT JOIN pot2_mk_lisaainetyyppi alusta_lisaainetyyppi ON alusta_lisaaine.tyyppi = alusta_lisaainetyyppi.koodi
   LEFT JOIN pot2_mk_urakan_murske murske ON alusta.murske = murske.id
  WHERE alusta.pot2_id = :pot2_id
-   AND alusta.poistettu IS FALSE;
+   AND alusta.poistettu IS FALSE
+ ORDER BY alusta.id;
 
 -- name: hae-pot2-kulutuskerrokset
 SELECT pi.id                       AS paallystysilmoitus,
@@ -272,12 +273,12 @@ SELECT pi.id                       AS paallystysilmoitus,
        pk_osa.tr_kaista            AS "tr-kaista",
        pot2pk.leveys               AS leveys,
        pot2pk.pinta_ala            AS "pinta-ala",
-       kktp.koodi                   AS paallystetyomenetelma,
+       kktp.koodi                  AS paallystetyomenetelma,
 
        pot2pk.massamenekki         AS massamenekki,
        pot2pk.kokonaismassamaara   AS kokonaismassamaara,
        kk_massa.id                 AS massa_id,
-       kk_massatyyppi.koodi         AS massa_massatyyppi,
+       kk_massatyyppi.koodi        AS massa_massatyyppi,
        kk_massa.max_raekoko        AS massa_maxraekoko,
        kk_massa.kuulamyllyluokka   AS massa_kuulamyllyluokka,
        kk_massa.litteyslukuluokka  AS massa_litteyslukuluokka,
@@ -309,7 +310,8 @@ FROM paallystysilmoitus pi
          LEFT JOIN pot2_mk_sideainetyyppi kk_sideainetyyppi ON kk_sideaine.tyyppi = kk_sideainetyyppi.koodi
          LEFT JOIN pot2_mk_massan_lisaaine kk_lisaaine ON kk_massa.id = kk_lisaaine.pot2_massa_id
          LEFT JOIN pot2_mk_lisaainetyyppi kk_lisaainetyyppi ON kk_lisaaine.tyyppi = kk_lisaainetyyppi.koodi
- WHERE pot2pk.pot2_id = :pot2_id;
+ WHERE pot2pk.pot2_id = :pot2_id
+ ORDER BY pk_osa.id;
 
 -- name: hae-paallystysilmoitus-paallystyskohteella
 SELECT
