@@ -80,9 +80,9 @@
 (defn muodosta-kohteiden-lahetysvirheet [virheet virheellisen-kohteen-tiedot]
   (mapv (fn [{:keys [kohde-yha-id selite]}]
           (str (when kohde-yha-id
-                 (let [{:keys [nimi tunnus kohdenumero]} (some #(when (= (:yhaid %) kohde-yha-id)))
-                                                      %
-                                                   virheellisen-kohteen-tiedot]
+                 (let [{:keys [nimi tunnus kohdenumero]} (some #(when (= (:yhaid %) kohde-yha-id)
+                                                                  %)
+                                                           virheellisen-kohteen-tiedot)]
                    (str "Kohde id: " kohde-yha-id
                         (when kohdenumero
                           (str ", kohdenumero: " kohdenumero))
@@ -333,7 +333,7 @@
         (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
           (let [urakka (assoc urakka :harjaid urakka-id
                                      :sampoid (yhaan-lahetettava-sampoid urakka))
-                kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
+                kohteet (mapv #(hae-kohteen-tiedot-pot2 db %) kohde-idt)
                 url (str url "toteumatiedot")
                 kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
                 otsikot (yha-yhteiset/yha-otsikot api-key false)
