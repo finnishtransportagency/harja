@@ -101,8 +101,8 @@
   (is (= (xml/luetun-xmln-tagien-sisalto alikohteen-xml :let)
          [(:let odotettu-tr-osoite)])))
 
-(defn- alikohteen-tr-osoite [alikohteet positio]
-  (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio positio} :tierekisteriosoitevali))
+(defn- kulutuskerroksen-tr-osoite [kulutuskerrokselle-tehdyt-toimet positio]
+  (xml/luetun-xmln-tagien-sisalto kulutuskerrokselle-tehdyt-toimet {:tagi :kulutuskerrokselle-tehty-toimenpide :positio positio} :tierekisteriosoitevali))
 
 (defn- alustan-tr-osoite [alustarivit positio]
   (xml/luetun-xmln-tagien-sisalto alustarivit {:tagi :alustalle-tehty-toimenpide :positio positio} :tierekisteriosoitevali))
@@ -128,7 +128,7 @@
                        urakka
                        :kohteet :kohde)
                alustatoimeet (xml/luetun-xmln-tagien-sisalto kohde :alustalle-tehdyt-toimet)
-               alikohteet (xml/luetun-xmln-tagien-sisalto kohde :alikohteet)
+               kulutuskerrokselle-tehdyt-toimet (xml/luetun-xmln-tagien-sisalto kohde :kulutuskerrokselle-tehdyt-toimet)
                tr-osoite (xml/luetun-xmln-tagin-sisalto kohde :tierekisteriosoitevali)]
 
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :yha-id) [(str urakka-yhaid)]))
@@ -196,9 +196,6 @@
                                                   {:tagi :alustalle-tehty-toimenpide :positio 0} :kasittelymenetelma)
                   ["23"]))
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
-                                                  {:tagi :alustalle-tehty-toimenpide :positio 0} :kasittelypaksuus)
-                  ["10"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 0} :massamenekki)
                   nil))
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
@@ -233,104 +230,39 @@
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
                                                   {:tagi :alustalle-tehty-toimenpide :positio 5} :massamenekki)
                   nil))
-           ;; Verkon tapauksessa tekninen toimenpide lisätään automaattisesti, ei näytetä UI:lla, arvo oltava kevyt rakenteen parantaminen
            (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
-                                                  {:tagi :alustalle-tehty-toimenpide :positio 0} :tekninen-toimenpide)
-                  ["4"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
-                                                  {:tagi :alustalle-tehty-toimenpide :positio 2} :tekninen-toimenpide)
-                  ["4"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
-                                                  {:tagi :alustalle-tehty-toimenpide :positio 3} :tekninen-toimenpide)
-                  ["9"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
-                                                  {:tagi :alustalle-tehty-toimenpide :positio 4} :tekninen-toimenpide)
-                  ["9"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
-                                                  {:tagi :alustalle-tehty-toimenpide :positio 5} :tekninen-toimenpide)
-                  ["9"]))
-
-           (assertoi-tr-osoite (alikohteen-tr-osoite alikohteet 0)
-                               {:ajorata "1"
-                                :kaista "12"
-                                :tienumero "20"
-                                :aosa "1"
-                                :aet "1066"
-                                :losa "1"
-                                :let "3827"})
-           (assertoi-tr-osoite (alikohteen-tr-osoite alikohteet 1)
-                               {:ajorata "1"
-                                :kaista "11"
-                                :tienumero "20"
-                                :aosa "1"
-                                :aet "1066"
-                                :losa "1"
-                                :let "3827"})
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
-                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :uusi-paallyste)
-                  ["14"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
-                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :uusi-paallyste)
-                  ["12"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
-                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :paallystetyomenetelma)
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 0} :kasittelymenetelma)
                   ["23"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
-                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :paallystetyomenetelma)
-                  ["22"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
-                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :raekoko)
-                  ["16"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
-                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :raekoko)
-                  ["16"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
-                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :kuulamylly)
-                  ["2"])) ;; AN14
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
-                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :kuulamylly)
-                  ["4"])) ;; AN7
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
-                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :pinta-ala)
-                  ["8283"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
-                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :pinta-ala)
-                  ["8283"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
-                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :massamenekki)
-                  ["100.0"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
-                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :massamenekki)
-                  ["100.2"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
-                                                  {:tagi :alikohde :positio 0} :paallystystoimenpide :rc-prosentti)
-                  ["5"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet
-                                                  {:tagi :alikohde :positio 1} :paallystystoimenpide :rc-prosentti)
-                  nil))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :tierekisteriosoitevali :kaista)
-                  ["12"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
-                                                  {:tagi :materiaali :positio 0} :sideainetyyppi)
-                  ["5"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
-                                                  {:tagi :materiaali :positio 0} :kiviainesesiintyman-nimi)
-                  ["Sammalkallio"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
-                                                  {:tagi :materiaali :positio 0} :kiviaineksen-km-arvo)
-                  ["9.2"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
-                                                  {:tagi :materiaali :positio 0} :kiviaineksen-muotoarvo)
-                  ["FI20"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 1} :materiaalit
-                                                  {:tagi :materiaali :positio 0} :kiviaineksen-muotoarvo)
-                  ["FI15"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
-                                                  {:tagi :materiaali :positio 0} :sideainepitoisuus)
-                  ["5.5"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto alikohteet {:tagi :alikohde :positio 0} :materiaalit
-                                                  {:tagi :materiaali :positio 0} :lisa-aineet)
-                  ["Kuitu: 0.5%"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 2} :kasittelymenetelma)
+                  ["2"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 3} :kasittelymenetelma)
+                  ["32"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 4} :kasittelymenetelma)
+                  ["31"]))
+           (is (= (xml/luetun-xmln-tagien-sisalto alustatoimeet
+                                                  {:tagi :alustalle-tehty-toimenpide :positio 5} :kasittelymenetelma)
+                  ["41"]))
+           (assertoi-tr-osoite (kulutuskerroksen-tr-osoite kulutuskerrokselle-tehdyt-toimet 0)
+             {:ajorata "1"
+              :kaista "11"
+              :tienumero "20"
+              :aosa "1"
+              :aet "1066"
+              :losa "1"
+              :let "3827"})
+           
+           (assertoi-tr-osoite (kulutuskerroksen-tr-osoite kulutuskerrokselle-tehdyt-toimet 1)
+             {:ajorata "1"
+              :kaista "12"
+              :tienumero "20"
+              :aosa "1"
+              :aet "1066"
+              :losa "1"
+              :let "3827"}) 
+           
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :tienumero) ["20"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aosa) ["1"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aet) ["1066"]))
@@ -347,9 +279,9 @@
       (tyhjenna-kohteen-lahetystiedot kohde-id))))
 
 
-(deftest tarkista-yllapitokohteen-lahetys-ilman-yha-yhteytta
-  (let [kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
-        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+(deftest tarkista-yllapitokohteen-lahetys-ilman-http
+  (let [kohde-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Kirkonkylä - Toppinen 2'"))
+        urakka-id (hae-urakan-id-nimella "POT2 testipäällystysurakka")
         onnistui? (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id])
         lahetystiedot (hae-kohteen-lahetystiedot kohde-id)]
     (is (false? onnistui?))
@@ -373,7 +305,7 @@
       [:kohdetyyppi 1]
       [:kohdetyotyyppi "paallystys"]
       [:nimi "Kirkonkylä - Toppinen 2"]
-      [:tunnus "testitunnus"]
+      [:tunnus "a"]
       [:toiden-aloituspaivamaara "2023-01-01"]
       [:paallystyksen-valmistumispaivamaara "2023-08-01"]
       [:kohteen-valmistumispaivamaara "2023-08-01"]
@@ -390,14 +322,14 @@
        nil]
       [:alustalle-tehdyt-toimet
        [:alustalle-tehty-toimenpide
-        [:harja-id 10]
+        [:harja-id 9]
         [:tierekisteriosoitevali
          [:karttapaivamaara "2022-07-15"]
          [:tienumero 86]
          [:aosa 20]
-         [:aet 650]
+         [:aet 0]
          [:losa 20]
-         [:let 1300]
+         [:let 650]
          [:ajorata 1]
          [:kaista 11]]
         [:kasittelymenetelma 32]
@@ -437,14 +369,14 @@
          [:rakeisuus "0/40"]
          [:iskunkestavyys "LA30"]]]
        [:alustalle-tehty-toimenpide
-        [:harja-id 9]
+        [:harja-id 10]
         [:tierekisteriosoitevali
          [:karttapaivamaara "2022-07-15"]
          [:tienumero 86]
          [:aosa 20]
-         [:aet 0]
+         [:aet 650]
          [:losa 20]
-         [:let 650]
+         [:let 1300]
          [:ajorata 1]
          [:kaista 11]]
         [:kasittelymenetelma 32]
@@ -570,7 +502,7 @@
          [:lisaaineet [:lisaaine [:tyyppi 1] [:pitoisuus 0.5M]]]]]]]]]])
 
 (deftest tarkista-kohteen-lahetyksen-sisalto
-  (let [db (luo-testitietokanta) 
+  (let [db (luo-testitietokanta)
         odotettu-sanoma-xml (slurp "resources/xsd/yha/esimerkit/paikkauspot2-toteumatietojen-kirjaus.xml") 
         odotettu-xml-parsittu (xml/lue odotettu-sanoma-xml)
         kohde-idt (q "SELECT id FROM yllapitokohde WHERE nimi = 'Kirkonkylä - Toppinen 2'") 
@@ -602,49 +534,34 @@
         urakka (assoc urakka :harjaid urakka-id
                              :sampoid (yha/yhaan-lahetettava-sampoid urakka))
         kohde-idt (q "SELECT id FROM yllapitokohde WHERE nimi = 'Pottilan AB-levityskohde'")
-        kohteet (mapv #(yha/hae-kohteen-tiedot db %) kohde-idt)
+        kohteet (mapv #(yha/hae-kohteen-tiedot-pot2 db %) kohde-idt)
         sisalto (kohteen-lahetyssanoma/muodosta urakka kohteet)
         luotu-xml-parsittu (xml/lue sisalto)
         urakka (xml/luetun-xmln-tagien-sisalto
                  luotu-xml-parsittu :urakan-kohteiden-toteumatietojen-kirjaus :urakka)
         kohde (xml/luetun-xmln-tagien-sisalto urakka :kohteet :kohde)
         tr-osoite (xml/luetun-xmln-tagin-sisalto kohde :tierekisteriosoitevali)
-        virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" sisalto)
-        odotettu-alustarivi [{:attrs nil
-                              :content [{:attrs nil
-                                         :content ["2022-12-13"]
-                                         :tag :karttapaivamaara}
-                                        {:attrs nil
-                                         :content ["4"]
-                                         :tag :tienumero}
-                                        {:attrs nil
-                                         :content ["101"]
-                                         :tag :aosa}
-                                        {:attrs nil
-                                         :content ["1"]
-                                         :tag :aet}
-                                        {:attrs nil
-                                         :content ["101"]
-                                         :tag :losa}
-                                        {:attrs nil
-                                         :content ["200"]
-                                         :tag :let}
-                                        {:attrs nil
-                                         :content ["1"]
-                                         :tag :ajorata}
-                                        {:attrs nil
-                                         :content ["11"]
-                                         :tag :kaista}]
-                              :tag :tierekisteriosoitevali}
-                             {:attrs nil
-                              :content ["23"]
-                              :tag :kasittelymenetelma}
-                             {:attrs nil
-                              :content ["5"]
-                              :tag :kasittelypaksuus}
-                             {:attrs nil
-                              :content ["4"]
-                              :tag :tekninen-toimenpide}]]
+        virheet (xml/validoi-xml +xsd-polku+ "yha2.xsd" sisalto)
+        odotettu-alustarivi [{:tag :harja-id, :attrs nil, :content ["7"]}
+                             {:tag :tierekisteriosoitevali,
+                              :attrs nil,
+                              :content
+                              [{:tag :karttapaivamaara, :attrs nil, :content ["2022-12-13"]}
+                               {:tag :tienumero, :attrs nil, :content ["4"]}
+                               {:tag :aosa, :attrs nil, :content ["101"]}
+                               {:tag :aet, :attrs nil, :content ["1"]}
+                               {:tag :losa, :attrs nil, :content ["101"]}
+                               {:tag :let, :attrs nil, :content ["200"]}
+                               {:tag :ajorata, :attrs nil, :content ["1"]}
+                               {:tag :kaista, :attrs nil, :content ["11"]}]}
+                             {:tag :kasittelymenetelma, :attrs nil, :content ["23"]}
+                             {:tag :lisatty-paksuus, :attrs nil, :content ["5"]}
+                             {:tag :murske,
+                              :attrs nil,
+                              :content
+                              [{:tag :mursketyyppi, :attrs nil, :content ["1"]}
+                               {:tag :rakeisuus, :attrs nil, :content ["0/40"]}
+                               {:tag :iskunkestavyys, :attrs nil, :content ["LA30"]}]}]]
     (is (= (xml/luetun-xmln-tagin-sisalto urakka :yha-id) ["868309152"]))
     (is (= (xml/luetun-xmln-tagin-sisalto urakka :harja-id) [(str urakka-id)]))
 
