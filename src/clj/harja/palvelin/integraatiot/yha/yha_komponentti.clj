@@ -155,51 +155,6 @@
                                             (apply max (konv/pgarray->vector vuodet))))]
     (konv/jsonb->clojuremap ilmoitus :ilmoitustiedot)))
 
-(defn hae-alikohteet [db kohde-id paallystysilmoitus]
-  (let [alikohteet (q-yha-tiedot/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
-        osoitteet (if (= (:versio paallystysilmoitus) 2)
-                    (map
-                      (fn [rivi]
-                        (assoc rivi :kuulamylly (pot-domain/kuulamylly-koodi-nimella (:kuulamyllyluokka rivi))
-                                    :raekoko (:max-raekoko rivi)))
-                      (q-paallystys/hae-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)}))
-                    (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))]
-    (mapv (fn [alikohde]
-            (let [id (:id alikohde)
-                  ilmoitustiedot (first (filter #(= id (:kohdeosa-id %)) osoitteet))]
-              (apply merge ilmoitustiedot alikohde)))
-          alikohteet)))
-
-(defn hae-kohteen-tiedot [db kohde-id]
-  (if-let [kohde (-> (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id})
-                     first
-                     ;; Uudessa YHA-mallissa pääkohteella ei ole ajorataa taikka kaistaa
-                     (dissoc :tr-ajorata :tr-kaista))]
-    (let [maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
-                                   db {:urakka-id (:urakka kohde) :yllapitokohde-id kohde-id}))
-          paallystysilmoitus (hae-kohteen-paallystysilmoitus db kohde-id)
-          paallystysilmoitus (if (yllapitokohde-domain/eritellyt-maaramuutokset-kaytossa? (:vuodet paallystysilmoitus))
-                               (assoc paallystysilmoitus :maaramuutokset maaramuutokset)
-                               paallystysilmoitus)
-          paallystysilmoitus (if (= (:versio paallystysilmoitus) 2)
-                               (let [keep-some (fn [map-jossa-on-nil]
-                                                 (into {} (filter
-                                                            (fn [[_ arvo]] (some? arvo))
-                                                            map-jossa-on-nil)))
-                                     alustatoimet (->> (q-paallystys/hae-pot2-alustarivit db {:pot2_id (:id paallystysilmoitus)})
-                                                       (map keep-some)
-                                                       (into []))]
-                                 (assoc-in paallystysilmoitus [:ilmoitustiedot :alustatoimet] alustatoimet))
-                               paallystysilmoitus)
-          alikohteet (hae-alikohteet db kohde-id paallystysilmoitus)]
-      {:kohde kohde
-       :alikohteet alikohteet
-       :paallystysilmoitus paallystysilmoitus})
-    (let [virhe (format "Tuntematon kohde (id: %s)." kohde-id)]
-      (log/error virhe)
-      (throw+
-        {:type +virhe-kohteen-lahetyksessa+
-         :virheet {:virhe virhe}}))))
 
 (defn muodosta-alustatoimenpide [alustatoimenpide]
   (-> alustatoimenpide
