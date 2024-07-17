@@ -129,8 +129,8 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     5731290,
                     ARRAY ['POP'],
                     ARRAY [2023],
-                    '2022-07-15T12:00:00.000',
-                    '2022-07-15T12:00:00.000'
+                    '2023-07-15T12:00:00.000',
+                    '2023-07-15T12:00:00.000'
              FROM urakka),
      sopimus AS (
          INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka, muokattu)
@@ -139,7 +139,7 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     '2023-12-31',
                     '5731290-TES2',
                     urakka.id,
-                    '2022-07-15T12:00:00.000'
+                    '2023-12-16T12:00:00.000'
              FROM urakka
              RETURNING id, urakka),
      yllapitokohde AS (
@@ -162,15 +162,15 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                         123456,
                         '1',
                         1000,
-                        '2022-07-15T12:00:00.000',
+                        '2023-12-16T12:00:00.000',
                         TRUE,
                         'paallyste',
                         ARRAY [2023],
                         '1',
                         (86, 20, 0, 20, 1300, NULL)::tr_osoite,
-                        '2022-07-15T12:00:00.000',
+                        '2023-12-16T12:00:00.000',
                         FALSE,
-                        '2022-07-15T12:00:00.000'
+                        '2023-12-16T12:00:00.000'
                  FROM urakka,
                       sopimus RETURNING id),
      alikohde AS (INSERT
@@ -187,8 +187,8 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     alikohde.id,
                     1,
                     11,
-                    '2022-07-15T12:00:00.000',
-                    '2022-07-15T12:00:00.000'
+                    '2023-12-16T12:00:00.000',
+                    '2023-12-16T12:00:00.000'
              FROM yllapitokohde,
                   (SELECT 86   AS tr_numero,
                           20   AS tr_alkuosa,
@@ -216,8 +216,8 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     '2023-06-01',
                     '2023-08-01',
                     '2023-08-01',
-                    '2022-07-15T12:00:00.000',
-                    '2022-07-15T12:00:00.000'
+                    '2021-07-15T12:00:00.000',
+                    '2021-07-15T12:00:00.000'
              FROM yllapitokohde RETURNING id),
      kustannukset AS (
          INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset,
@@ -229,7 +229,7 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     -100,
                     -100,
                     0,
-                    '2022-07-15T12:00:00.000',
+                    '2023-12-16T12:00:00.000',
                     -1000,
                     100
              FROM yllapitokohde),
@@ -237,8 +237,8 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
          INSERT INTO paallystysilmoitus (paallystyskohde, luotu, muokattu, poistettu, takuupvm, paatos_tekninen_osa,
                                          kasittelyaika_tekninen_osa, tila, versio)
              SELECT yllapitokohde.id,
-                    '2023-12-15T12:00:00.000',
-                    '2023-12-15T12:00:00.000',
+                    '2023-12-16T12:00:00.000',
+                    '2023-12-16T12:00:00.000',
                     FALSE,
                     '2023-08-01',
                     'hyvaksytty',
@@ -255,7 +255,7 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     16,
                     'AN10',
                     '7-23-1',
-                    '2022-07-15T12:00:00.000'
+                    '2023-12-16T12:00:00.000'
              FROM urakka RETURNING id),
      murske AS (
          INSERT INTO pot2_mk_urakan_murske (id, urakka_id, nimen_tarkenne, tyyppi, esiintyma, rakeisuus, "iskunkestavyys", dop_nro, poistettu, muokkaaja, muokattu, luoja, luotu)
@@ -271,7 +271,7 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
 					NULL, 
 					NULL, 
 					13, 
-					'2023-11-02T12:00:00.000' 
+					'2023-12-02T12:00:00.000' 
              FROM urakka, massa RETURNING id),        
      runkoaine AS (
          INSERT INTO pot2_mk_massan_runkoaine (pot2_massa_id, tyyppi, esiintyma, fillerityyppi, kuvaus, kuulamyllyarvo,
@@ -362,12 +362,12 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     20,
                     100,
                     'paallystys',
-                    '2023-11-02T12:00:00.000',
+                    '2023-12-02T12:00:00.000',
                     TRUE,
                     'paallyste',
                     ARRAY [2023],
-                    '2023-11-01T12:00:00.000',
-                    '2023-11-02T12:00:00.000'
+                    '2023-12-01T12:00:00.000',
+                    '2023-12-02T12:00:00.000'
              FROM urakka,
                   sopimus RETURNING id),
      aikataulu2 AS (
@@ -375,7 +375,7 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                                                 valmis_tiemerkintaan, tiemerkinta_takaraja, tiemerkinta_alku,
                                                 tiemerkinta_loppu, kohde_valmis, muokattu, luotu)
              SELECT yllapitokohde2.id,
-                    '2023-11-01',
+                    '2023-12-01',
                     '2023-12-01',
                     '2024-01-01',
                     '2024-01-01',
@@ -396,14 +396,14 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
              SELECT 1,
                     'MT 86 Paavolantie',
                     FALSE,
-                    '2023-11-01T12:00:00.000'::TIMESTAMP,
-                    '2023-11-02T12:00:00.000'::TIMESTAMP,
+                    '2023-12-01T12:00:00.000'::TIMESTAMP,
+                    '2023-12-02T12:00:00.000'::TIMESTAMP,
                     urakka.id,
                     'lahetetty'::lahetyksen_tila,
-                    '2023-11-02T12:00:00.000'::TIMESTAMP,
-                    '2023-11-01'::DATE,
-                    '2023-11-02'::DATE,
-                    '2023-11-01'::DATE,
+                    '2023-12-02T12:00:00.000'::TIMESTAMP,
+                    '2023-12-01'::DATE,
+                    '2023-12-02'::DATE,
+                    '2023-12-01'::DATE,
                     (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = 'AB-paikkaus levittäjällä'),
                     (86, 20, 700, 20, 800, 1, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,
                     'valmis'::paikkauskohteen_tila,
@@ -411,26 +411,26 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     1000,
                     'm2',
                     FALSE,
-                    '2023-11-02'::DATE,
-                    '2023-11-02'::DATE,
+                    '2023-12-02'::DATE,
+                    '2023-12-02'::DATE,
                     1001.10,
                     FALSE,
                     1,
                     NULL,
-                    '2023-11-02T12:00:00.000'::TIMESTAMP
+                    '2023-12-02T12:00:00.000'::TIMESTAMP
              FROM urakka
              UNION ALL
              SELECT 2,
                     'MT 86 Paavolantie 2',
                     FALSE,
-                    '2023-11-01T12:00:00.000'::TIMESTAMP,
-                    '2023-11-02T12:00:00.000'::TIMESTAMP,
+                    '2023-12-01T12:00:00.000'::TIMESTAMP,
+                    '2023-12-02T12:00:00.000'::TIMESTAMP,
                     urakka.id,
                     'lahetetty'::lahetyksen_tila,
-                    '2023-11-02T12:00:00.000'::TIMESTAMP,
-                    '2023-11-01'::DATE,
-                    '2023-11-02'::DATE,
-                    '2023-11-01'::DATE,
+                    '2023-12-02T12:00:00.000'::TIMESTAMP,
+                    '2023-12-01'::DATE,
+                    '2023-12-02'::DATE,
+                    '2023-12-01'::DATE,
                     (SELECT id FROM paikkauskohde_tyomenetelma WHERE nimi = 'SMA-paikkaus levittäjällä'),
                     (86, 20, 0, 20, 100, NULL, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,
                     'valmis'::paikkauskohteen_tila,
@@ -438,25 +438,25 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     200,
                     'm2',
                     TRUE,
-                    '2023-11-02'::DATE,
-                    '2023-11-02'::DATE,
+                    '2023-12-02'::DATE,
+                    '2023-12-02'::DATE,
                     201.10,
                     FALSE,
                     1,
                     yllapitokohde2.id,
-                    '2023-11-02T12:00:00.000'::TIMESTAMP
+                    '2023-12-02T12:00:00.000'::TIMESTAMP
              FROM urakka,
                   yllapitokohde2 RETURNING *),
      paallystysilmoitus2 AS (
          INSERT INTO paallystysilmoitus (paallystyskohde, luotu, muokattu, poistettu, takuupvm, paatos_tekninen_osa,
                                          kasittelyaika_tekninen_osa, tila, versio)
              SELECT yllapitokohde2.id,
-                    '2023-11-02T12:00:00.000',
-                    '2023-11-02T12:00:00.000',
+                    '2023-12-02T12:00:00.000',
+                    '2023-12-02T12:00:00.000',
                     FALSE,
-                    '2023-11-02',
+                    '2023-12-02',
                     'hyvaksytty',
-                    '2023-11-02',
+                    '2023-12-02',
                     'lukittu',
                     2
              FROM yllapitokohde2 RETURNING id),
@@ -492,8 +492,8 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     NULL,
                     1,
                     11,
-                    '2023-11-02T12:00:00.000',
-                    '2023-11-01T12:00:00.000'
+                    '2023-12-02T12:00:00.000',
+                    '2023-12-01T12:00:00.000'
              FROM yllapitokohde2 RETURNING *),
      kulutuskerros2 AS (
          INSERT
@@ -516,13 +516,13 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                                tierekisteriosoite, tyomenetelma,
                                massatyyppi, leveys, raekoko, kuulamylly, sijainti, massamaara, "pinta-ala", lahde,
                                massamenekki)
-             SELECT '2023-11-01T12:00:00'::DATE,
-                    '2023-11-02T13:00:00'::TIMESTAMP,
+             SELECT '2023-12-01T12:00:00'::DATE,
+                    '2023-12-02T13:00:00'::TIMESTAMP,
                     urakka.id,
                     paikkauskohteet.id,
                     0,
-                    '2023-11-02T12:00:00'::TIMESTAMP,
-                    '2023-11-02T13:00:00'::TIMESTAMP,
+                    '2023-12-02T12:00:00'::TIMESTAMP,
+                    '2023-12-02T13:00:00'::TIMESTAMP,
                     (86, 20, 700, 20, 800, NULL)::tr_osoite,
                     paikkauskohteet.tyomenetelma,
                     'AB, Asfalttibetoni',
