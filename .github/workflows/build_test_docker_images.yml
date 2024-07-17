@@ -205,7 +205,7 @@ jobs:
         if: ${{ inputs.dockerfile == 'harja_activemq_artemis' }}
         env:
           TAGS: ${{ steps.activemq-artemis-tags.outputs.tags }}
-          BUILD_PLATFORMS: linux/amd64
+          BUILD_PLATFORMS: linux/arm64,linux/amd64
         with:
           context: .github/docker/activemq-artemis
           platforms: ${{ env.BUILD_PLATFORMS }}
@@ -224,11 +224,12 @@ jobs:
           # HUOM: Poistettu käytöstä Single-platform buildin takia. Annotaatioita voi käyttää vain multi-arch buildeissa.
           # Adding a description to multi-arch images
           # https://github.com/github/docs/blob/main/content/packages/working-with-a-github-packages-registry/working-with-the-container-registry.md#adding-a-description-to-multi-arch-images
-      #          outputs: >-
-      #            type=image,
-      #            name=${{ env.GH_DOCKER_REGISTRY }}/finnishtransportagency/harja_activemq_artemis,
-      #            annotation-index.org.opencontainers.image.revision=${{ github.sha }},
-      #            annotation-index.org.opencontainers.image.source=https://github.com/finnishtransportagency/harja
+          outputs: >-
+            type=image,
+            name=${{ env.GH_DOCKER_REGISTRY }}/finnishtransportagency/harja_activemq_artemis,
+            annotation-index.org.opencontainers.image.description=Apache ActiveMQ Artemis broker,
+            annotation-index.org.opencontainers.image.revision=${{ github.sha }},
+            annotation-index.org.opencontainers.image.source=https://github.com/finnishtransportagency/harja
 
 
       # -- Build & Push harja_activemq-image --
