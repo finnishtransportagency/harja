@@ -62,7 +62,7 @@
                                                                            :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                                           [:http-palvelin :db :integraatioloki :itmf])
                         :labyrintti (component/using (labyrintti/->Labyrintti +testi-sms-url+
-                                                                              "testi" "testi" "" "" (atom #{}))
+                                                                              "testiapiavain" (atom #{}))
                                                      [:db :integraatioloki :http-palvelin])
                         :laadunseuranta (component/using
                                           (ls/->Laadunseuranta)
@@ -574,8 +574,8 @@
                                                       :alkupvm alkupvm
                                                       :loppupvm loppupvm}})
         sanktiotaulukko (nth sanktioraportti 4)
-        sanktioraportti-sakot-ilman-indeksia-yhteensa (last (:rivi (nth (last sanktiotaulukko) 42)))
-        sanktioraportti-indeksit-yhteensa (last (:rivi (nth (last sanktiotaulukko) 43)))
+        sanktioraportti-sakot-ilman-indeksia-yhteensa (last (:rivi (nth (last sanktiotaulukko) 36)))
+        sanktioraportti-indeksit-yhteensa (last (:rivi (nth (last sanktiotaulukko) 37)))
         laskutusyhteenvedosta-samat-sanktiot (map
                                                #(select-keys % [:sakot_laskutetaan
                                                                 :sakot_laskutetaan_ind_korotus
@@ -642,9 +642,9 @@
                                                       :alkupvm alkupvm
                                                       :loppupvm loppupvm}})
         sanktiotaulukko (nth sanktioraportti 4)
-        sanktioraportti-sakot-ilman-indeksia-yhteensa (last (:rivi (nth (last sanktiotaulukko) 41)))
-        sanktioraportti-indeksit-yhteensa (last (:rivi (nth (last sanktiotaulukko) 42)))
-        sanktioraportti-sakot-yhteensa (last (:rivi (nth (last sanktiotaulukko) 43)))
+        sanktioraportti-sakot-ilman-indeksia-yhteensa (last (:rivi (nth (last sanktiotaulukko) 35)))
+        sanktioraportti-indeksit-yhteensa (last (:rivi (nth (last sanktiotaulukko) 36)))
+        sanktioraportti-sakot-yhteensa (last (:rivi (nth (last sanktiotaulukko) 37)))
         laskutusyhteenvedosta-samat-sanktiot (map
                                                :sakot_laskutetaan
                                                (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
@@ -695,8 +695,8 @@
                                                       :alkupvm alkupvm
                                                       :loppupvm loppupvm}})
         sanktiotaulukko (nth sanktioraportti 4)
-        sanktioraportti-indeksit-yhteensa (last (:rivi (nth (last sanktiotaulukko) 42)))
-        sanktioraportti-sakot-yhteensa (last (:rivi (nth (last sanktiotaulukko) 43)))
+        sanktioraportti-indeksit-yhteensa (last (:rivi (nth (last sanktiotaulukko) 36)))
+        sanktioraportti-sakot-yhteensa (last (:rivi (nth (last sanktiotaulukko) 37)))
         laskutusyhteenvedosta-samat-sanktiot (map
                                                :sakot_laskutetaan
                                                (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot

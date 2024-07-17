@@ -190,7 +190,7 @@
                                      ^{:key (hash alue)}
                                      [:div (str (:nimi alue) " (" (:tunnus alue) ")")])
                                pohjavesialueet))
-                           [:div.grid-solu-varoitus "Tierekisteriosoite ei ole pohjavesialueella, tarkista osoite"]))
+                           [:div.grid-solu-varoitus "Tieosoite ei ole pohjavesialueella, tarkista osoite"]))
 
 
           ;:tarkkaile-ulkopuolisia-muutoksia? true
@@ -246,7 +246,7 @@
                      (when (:onko-suolatoteumia? app)
                        [:div.flex-row {:style {:padding-bottom "1rem"}}
                         (if muokkaustila?
-                          [yleiset/info-laatikko :neutraali "Rajoitusalueen tierekisteriosoitteen muokkaaminen vaikuttaa siihen, miten suolamäärät kohdistuvat
+                          [yleiset/info-laatikko :neutraali "Rajoitusalueen tieosoitteen muokkaaminen vaikuttaa siihen, miten suolamäärät kohdistuvat
                         rajoitusalueille toteuma- ja raporttisivuilla. Muutokset tehdään yöllisinä ajoina ja ovat nähtävillä seuraavana päivänä."]
                           [yleiset/info-laatikko :neutraali "Rajoitusalueen lisääminen vaikuttaa siihen, miten suolamäärät kohdistuvat
                         rajoitusalueille toteuma- ja raporttisivuilla. Muutokset tehdään yöllisinä ajoina ja ovat nähtävillä seuraavana päivänä."])])
@@ -511,7 +511,7 @@
                         (mapv (fn [alue]
                                 [:div (str (:nimi alue) " (" (:tunnus alue) ")")])
                           pohjavesialueet))
-                      [:div.grid-solu-varoitus "Tierekisteriosoite ei ole pohjavesialueella, tarkista osoite"]))
+                      [:div.grid-solu-varoitus "Tieosoite ei ole pohjavesialueella, tarkista osoite"]))
      :leveys 2}
     {:otsikko "Suolankäyttöraja (t/ajoratakm)" :nimi :suolarajoitus :tasaa :oikea
      :fmt #(if % (fmt/desimaaliluku % 1) "–") :leveys 0.8}

@@ -4,7 +4,6 @@
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [ring.middleware.params :refer [wrap-params]]
             [harja.pvm :as pvm]
-            [harja.kyselyt.toteumat :as tot-q]
             [harja.kyselyt.liitteet :as liitteet-q]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.liitteet :as liitteet]
@@ -18,11 +17,9 @@
             [harja.domain.laadunseuranta.tarkastus :as tarkastus]
             [harja.domain.toteuma :as toteuma]
             [harja.domain.erilliskustannus :as erilliskustannus]
-            [harja.domain.kommentti :as kommentti]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
             [harja.tyokalut.tietoturva :as tietoturva])
-  (:import (java.io ByteArrayOutputStream ByteArrayInputStream)))
+  (:import (java.io ByteArrayInputStream)))
 
 (defn tallenna-liite
   "Tallentaa liitteen kantaan, mutta ei linkitä sitä mihinkään domain-asiaan."
@@ -44,12 +41,21 @@
 
 (defn lataa-liite [liitteet req]
   (let [id (Integer/parseInt (get (:params req) "id"))
-        {:keys [tyyppi koko urakka data]} (liitteet/lataa-liite liitteet id)]
+        {:keys [tyyppi koko urakka data]} (liitteet/lataa-liite liitteet id {})]
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-liitteet (:kayttaja req) urakka)
     {:status 200
      :headers {"Content-Type" tyyppi
                "Content-Length" koko}
      :body (ByteArrayInputStream. data)}))
+
+(defn lataa-siltatarkastusliite [liitteet req]
+  (let [id (Integer/parseInt (get (:params req) "id"))
+        {:keys [tyyppi koko urakat data]} (liitteet/lataa-liite liitteet id {:siltatarkastusliite? true})]
+    (oikeudet/vaadi-lukuoikeus-jostain-urakasta oikeudet/urakat-liitteet (:kayttaja req) urakat)
+    {:status 200
+      :headers {"Content-Type" tyyppi
+                "Content-Length" koko}
+      :body (ByteArrayInputStream. data)}))
 
 (defn lataa-pikkukuva [liitteet req]
   (let [id (Integer/parseInt (get (:params req) "id"))
@@ -173,6 +179,10 @@
                       (wrap-params (fn [req]
                                      (lataa-liite (:liitteiden-hallinta this) req)))
                       {:ring-kasittelija? true})
+    (julkaise-palvelu http-palvelin :lataa-siltatarkastusliite
+      (wrap-params (fn [req]
+                     (lataa-siltatarkastusliite (:liitteiden-hallinta this) req)))
+      {:ring-kasittelija? true})
     (julkaise-palvelu http-palvelin :lataa-pikkukuva
                       (wrap-params (fn [req]
                                      (lataa-pikkukuva (:liitteiden-hallinta this) req)))

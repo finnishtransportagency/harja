@@ -47,7 +47,8 @@
 
 (defn hae-rahavaraukset [db kayttaja]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-rahavaraukset kayttaja)
-  (q/hae-rahavaraukset db))
+  {:rahavaraukset (q/hae-rahavaraukset db)
+   :urakoiden-rahavaraukset (q/hae-urakoiden-rahavaraukset db)})
 
 (defn hae-rahavaraukset-tehtavineen [db kayttaja]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-rahavaraukset kayttaja)
@@ -66,28 +67,58 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-rahavaraukset kayttaja)
   (q/hae-rahavaraukselle-mahdolliset-tehtavat db))
 
-(defn hae-urakoiden-rahavaraukset [db kayttaja]
-  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-rahavaraukset kayttaja)
-  (q/hae-urakoiden-rahavaraukset db))
-
-(defn paivita-urakan-rahavaraus [db kayttaja {:keys [urakka rahavaraus valittu?]}]
-  (log/debug "paivita-urakan-rahavaraus :: rahavaraus:" rahavaraus "urakka: " urakka "valittu?: " valittu?)
+(defn paivita-urakan-rahavaraus [db kayttaja {:keys [id nimi urakkakohtainen-nimi urakka valittu?] :as tiedot}]
+  (log/info "paivita-urakan-rahavaraus :: tiedot:" tiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-rahavaraukset kayttaja urakka)
   (let [;validoidaan urakka ja rahavaraus
         urakka-valid? (and
                         (s/valid? ::urakka-id urakka)
                         (onko-urakka-olemassa? db urakka))
         rahavaraus-valid? (and
-                            (s/valid? ::rahavaraus-id rahavaraus)
-                            (onko-rahavaraus-olemassa? db rahavaraus))]
-    (when (and urakka-valid? rahavaraus-valid?)
-      (if valittu?
-        (q/lisaa-urakan-rahavaraus<! db {:urakka urakka
-                                         :rahavaraus rahavaraus
+                            (s/valid? ::rahavaraus-id id)
+                            (onko-rahavaraus-olemassa? db id))
+        ;; Uuden rivin syötössä id on -1
+        uusi-rivi (and (not (nil? id)) (= -1 id))
+        ;; Haetaan urakan rahavaraus
+        urakan-rahavaraus (first (q/hae-urakan-rahavaraus db {:urakka-id urakka
+                                                              :rahavaraus-id id}))
+        ;; Käyttöliittymän yksinkertaistamiseksi logiikkamuutos tänne bäackendiin.
+        ;; Jos käyttäjä lisää urakkakohtainen-nimi arvon, niin se on päätös ottaa rahavaraus käyttöön.
+        valittu? (cond
+                   ;; Jos valittu? on nil, mutta urakkakohtainen-nimi on annettu, niin tulkitaan, että se haluttiin valita.
+                   (and (nil? valittu?) (not (nil? urakkakohtainen-nimi)))
+                   true
+                   ;; Jos valittu on false ja urakkokohtainen nimi on annettu, niin sitä ei ole valittu, vaan käyttöliittymästä on poistettu valinta
+                   (false? valittu?)
+                   false
+                   :else
+                   valittu?)]
+    ;; Muokataan rahavarausta tai lisätään se urakalle
+    (if (and urakka-valid? rahavaraus-valid? (not uusi-rivi))
+
+      (cond
+        ;; Jos rahavaraus löytyy id:llä ja edelleen käyttäjä on valinnut sen, niin päivitetään.
+        (and urakan-rahavaraus valittu?)
+        (q/paivita-urakan-rahavaraus<! db {:urakkaid urakka
+                                           :rahavarausid id
+                                           :urakkakohtainen-nimi urakkakohtainen-nimi
+                                           :kayttajaid (:id kayttaja)})
+        ;; Jos rahavaraussta ei ole kannassa, mutta käyttäjä on valinnut sen, niin lisätään.
+        (and (not urakan-rahavaraus) valittu?)
+        (q/lisaa-urakan-rahavaraus<! db {:urakkaid urakka
+                                         :rahavarausid id
+                                         :urakkakohtainen-nimi urakkakohtainen-nimi
                                          :kayttaja (:id kayttaja)})
-        (q/poista-urakan-rahavaraus<! db {:urakka urakka
-                                          :rahavaraus rahavaraus}))))
-  (q/hae-urakoiden-rahavaraukset db))
+        ;; Muussa tapauksessa se poistetaan
+        :else
+        (q/poista-urakan-rahavaraus<! db {:urakkaid urakka
+                                          :rahavarausid id}))
+      ;; Lisätään kokonaan uusi rahavaraus, mutta ei merkitä sitä vielä käyttöön urakalle. Jos urakkakohtainen-nimi on syötetty, niin sitä ei hyödynnetä
+      (q/lisaa-uusi-rahavaraus<! db {:nimi nimi
+                                     :kayttajaid (:id kayttaja)}))
+
+    ;; Palauta sen jälkeen tietokannasta tuoreet urakan rahavaraukset
+    (hae-rahavaraukset db kayttaja)))
 
 (defn tallenna-rahavarauksen-tehtava [db kayttaja {:keys [rahavaraus-id vanha-tehtava-id uusi-tehtava]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-rahavaraukset kayttaja)
@@ -135,6 +166,28 @@
   ;; Palautetaan rahavaraukset tehtävineen, kun ne on nyt päivittyneet
   (hae-rahavaraukset-tehtavineen db kayttaja))
 
+(defn poista-rahavaraus [db kayttaja {:keys [id]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-rahavaraukset kayttaja)
+  (log/debug "poista-rahavaraus :: rahavaraus-id: " id)
+  (let [rahavaraus-valid? (and
+                            (s/valid? ::rahavaraus-id id)
+                            (onko-rahavaraus-olemassa? db id))
+        ;; Tarkistetaan, onko kustannusarvioituo_tyo tai kulu_kohdistus tauluissa tällä rahavaraus id:llä merkintöjä
+        ;; Jos on, niin poistoa ei voi tehdä
+        onko-kaytossa? (q/onko-rahavaraus-kaytossa? db id)]
+    (if (and rahavaraus-valid? (not onko-kaytossa?))
+      (do ;; Poista rahavaraus kaikilta urakoilta
+        (q/poista-rahavaraus-urakoilta! db id)
+        ;; Poista rahavarauksen tehtävät
+        (q/poista-rahavarauksen-tehtavat! db id)
+        ;; Poista rahavaraus lopullisesti tietokannasta
+        (q/poista-rahavaraus! db id)
+        (log/info "Rahavaraus poistettu onnistuneesti."))
+      (throw (SecurityException. (str "Rahavaraus on käytössä. Eikä sitä voi poistaa"))))
+
+    ;; Välitä ui:lle muuttunut tilanne
+    (hae-rahavaraukset db kayttaja)))
+
 (defrecord RahavarauksetHallinta []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -144,9 +197,6 @@
     (julkaise-palvelu http-palvelin :hae-rahavaraukset-tehtavineen
       (fn [kayttaja _]
         (hae-rahavaraukset-tehtavineen db kayttaja)))
-    (julkaise-palvelu http-palvelin :hae-urakoiden-rahavaraukset
-      (fn [kayttaja _]
-        (hae-urakoiden-rahavaraukset db kayttaja)))
     (julkaise-palvelu http-palvelin :hae-rahavaraukselle-mahdolliset-tehtavat
       (fn [kayttaja _]
         (hae-rahavaraukselle-mahdolliset-tehtavat db kayttaja)))
@@ -159,14 +209,17 @@
     (julkaise-palvelu http-palvelin :poista-rahavarauksen-tehtava
       (fn [kayttaja tiedot]
         (poista-rahavarauksen-tehtava db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :poista-rahavaraus
+      (fn [kayttaja tiedot]
+        (poista-rahavaraus db kayttaja tiedot)))
     this)
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
       :hae-rahavaraukset
       :hae-rahavaraukset-tehtavineen
-      :hae-urakoiden-rahavaraukset
       :hae-rahavaraukselle-mahdolliset-tehtavat
       :paivita-urakan-rahavaraus
       :tallenna-rahavarauksen-tehtava
-      :poista-rahavarauksen-tehtava)
+      :poista-rahavarauksen-tehtava
+      :poista-rahavaraus)
     this))

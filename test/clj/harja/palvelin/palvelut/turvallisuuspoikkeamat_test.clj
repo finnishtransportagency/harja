@@ -146,7 +146,7 @@
   (let [urakka-id @oulun-alueurakan-2005-2010-id
         _ (u "INSERT INTO liite (tyyppi, nimi, liite_oid, lahde) VALUES ('image/jpeg', 'IMG_0339.jpg', '123', 'harja-ui')")
         liitteen-id (ffirst (q "SELECT id FROM liite WHERE nimi = 'IMG_0339.jpg';"))
-        liite {:kuvaus nil, :fileyard-hash nil, :urakka 567, :nimi "IMG_0339.jpg",
+        liite {:kuvaus nil, :urakka 567, :nimi "IMG_0339.jpg",
                :id liitteen-id
                :lahde "harja-ui", :tyyppi "image/jpeg", :koko 2093367}
         tp {:urakka urakka-id

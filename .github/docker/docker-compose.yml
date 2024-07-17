@@ -7,6 +7,8 @@ version: "3.8"
 networks:
   harja_net:
     driver: bridge
+    # Estetään IPv6 käyttö, jotta testitietokannan migraatioiden ajossa ei tule yhteysongelmia
+    enable_ipv6: false
 
 services:
   # Uusin saatavilla oleva testietiekannan konfiguraatio
@@ -27,6 +29,9 @@ services:
       HARJA_TIETOKANTA_PORTTI: 5432
     ports:
       - "127.0.0.1:5432:5432"
+    # Estetään IPv6 käyttö, jotta testitietokannan migraatioiden ajossa ei tule yhteysongelmia
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     # Huom: Mountissa viitataan Harja-repon juuressa olevaan tietokanta-hakemistoon, jossa migraatiotiedostot ovat.
     volumes:
       - ../../tietokanta:/var/lib/postgresql/harja/tietokanta
@@ -50,6 +55,9 @@ services:
       HARJA_TIETOKANTA_PORTTI: 5432
     ports:
       - "127.0.0.1:5432:5432"
+    # Estetään IPv6 käyttö, jotta testitietokannan migraatioiden ajossa ei tule yhteysongelmia
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     # Huom: Mountissa viitataan Harja-repon juuressa olevaan tietokanta-hakemistoon, jossa migraatiotiedostot ovat.
     volumes:
       - ../../tietokanta:/var/lib/postgresql/harja/tietokanta
@@ -71,6 +79,9 @@ services:
       HARJA_TIETOKANTA_PORTTI: 5432
     ports:
       - "127.0.0.1:5432:5432"
+    # Estetään IPv6 käyttö, jotta testitietokannan migraatioiden ajossa ei tule yhteysongelmia
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     # Huom: Mountissa viitataan Harja-repon juuressa olevaan tietokanta-hakemistoon, jossa migraatiotiedostot ovat.
     volumes:
       - ../../tietokanta:/var/lib/postgresql/harja/tietokanta
@@ -95,6 +106,9 @@ services:
     ports:
         - "127.0.0.1:61616:61616" # broker (admin:adminactivemq)(amq:amq)
         - "127.0.0.1:8161:8161"   # web    localhost:8161/admin/queues.jsp (admin:admin)
+    # Estetään IPv6 käyttö, jotta testitietokannan migraatioiden ajossa ei tule yhteysongelmia
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     healthcheck:
      # https://stackoverflow.com/questions/52500782/how-to-check-if-activemq-is-working-properly
       test: /opt/activemq/bin/activemq query --objname type=Broker,brokerName=*,service=Health | grep Good

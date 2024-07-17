@@ -1145,26 +1145,3 @@ FROM kulu k
 WHERE tro.otsikko = '4 PÄÄLLYSTEIDEN PAIKKAUS'
   AND (k.luotu BETWEEN :alku AND :loppu OR
        k.muokattu BETWEEN :alku AND :loppu);
-
--- name: hae-hoidon-paallystyksen-toimenpiteet-analytiikalle
-SELECT t.id,
-       t.urakka,
-       t.poistettu,
-       t.alkanut          AS paivamaara,
-       tt.maara,
-       yksikko,
-       tr.nimi            AS tehtavaryhma,
-       te.nimi            AS tehtava,
-       t.tr_numero        AS tierekisteriosoitevali_tienumero,
-       t.tr_alkuosa       AS tierekisteriosoitevali_aosa,
-       t.tr_alkuetaisyys  AS tierekisteriosoitevali_aet,
-       t.tr_loppuosa      AS tierekisteriosoitevali_losa,
-       t.tr_loppuetaisyys AS tierekisteriosoitevali_let
-FROM toteuma t
-         JOIN toteuma_tehtava tt ON t.id = tt.toteuma
-         JOIN tehtava te ON tt.toimenpidekoodi = te.id
-         JOIN tehtavaryhma tr ON te.tehtavaryhma = tr.id
-         JOIN tehtavaryhmaotsikko tro ON tr.tehtavaryhmaotsikko_id = tro.id
-WHERE tro.otsikko = '4 PÄÄLLYSTEIDEN PAIKKAUS'
-  AND (t.luotu BETWEEN :alku AND :loppu OR
-       t.muokattu BETWEEN :alku AND :loppu);

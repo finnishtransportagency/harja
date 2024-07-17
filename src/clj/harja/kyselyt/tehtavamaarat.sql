@@ -122,6 +122,8 @@ FROM tehtavaryhma tr
        JOIN toimenpide tp ON t.emo = tp.id
        JOIN toimenpideinstanssi tpi on tpi.toimenpide = tp.id and tpi.urakka = :urakka
  WHERE tr.nimi not like ('%Lisätyöt%')
+   AND (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= :urakka-voimassaolo-alkuvuosi::INTEGER)
+   AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= :urakka-voimassaolo-alkuvuosi::INTEGER)
  order by tr.jarjestys;
 
 -- name: hae-sopimuksen-tehtavamaarat-urakalle
@@ -153,53 +155,54 @@ DELETE
 -- name: mhu-suunniteltavat-tehtavat
 -- Palauttaa tehtävähierarkian käyttöliittymän Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten.
 -- Äkillistä hoitotyötä ja Kolmansien osapuolten aiheuttaminen vahinkojen korjausta ei suunnitella tehtävälistalla.
+  WITH rahavaraustehtava AS (
+      SELECT rt.id, rt.tehtava_id
+        FROM rahavaraus_urakka rvu
+                 JOIN rahavaraus_tehtava rt ON rvu.rahavaraus_id = rt.rahavaraus_id
+       WHERE rvu.urakka_id = :urakka
+  )
 SELECT ut.urakka                    AS "urakka",
        ut."hoitokauden-alkuvuosi"   AS "hoitokauden-alkuvuosi",
-       tpk4.jarjestys               AS "jarjestys",
-       tpk4.id                      AS "tehtava-id",
+       t.jarjestys               AS "jarjestys",
+       t.id                      AS "tehtava-id",
        ut.maara                     AS "suunniteltu-maara",
        ut."muuttunut-tarjouksesta?" AS "muuttunut-tarjouksesta?",
        o.otsikko                    AS "otsikko",
-       tpk3.nimi                    AS "Toimenpide",
-       tpk3.koodi                   AS "Toimenpidekoodi",
-       tr3.nimi                     AS "alataso",
-       tpk4.nimi                    AS "tehtava",
-       tpk4.suunnitteluyksikko      AS "yksikko",
-       tpk4.api_seuranta            AS "API-seuranta",
-       tpk4.api_tunnus              AS "API-tunnus",
-       tpk4.poistettu               AS "Poistettu",
-       tpk4.piilota                 AS "Piilota", -- älä näytä riviä käyttäjälle
-       tpk4."mhu-tehtava?"          AS "Ensisijainen",
-       tpk4.voimassaolo_alkuvuosi   AS "voimassaolo_alkuvuosi",
-       tpk4.voimassaolo_loppuvuosi  AS "voimassaolo_loppuvuosi",
-       tpk4.aluetieto               AS "aluetieto",
-       sp.tallennettu               AS "sopimus-tallennettu"
-FROM tehtavaryhma tr3
-       LEFT JOIN tehtava tpk4
-                 ON tr3.id = tpk4.tehtavaryhma AND tpk4."mhu-tehtava?" is true AND
-                    tpk4.poistettu is not true AND tpk4.piilota is not true AND (tpk4.yksiloiva_tunniste NOT IN
-                                                                                 (
-                                                                                  'd373c08b-32eb-4ac2-b817-04106b862fb1', --'Äkillinen hoitotyö (talvihoito)',
-                                                                                  '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974', --'Äkillinen hoitotyö (l.ymp.hoito)',
-                                                                                  '1f12fe16-375e-49bf-9a95-4560326ce6cf', --'Äkillinen hoitotyö (soratiet)',
-                                                                                  'b3a7a210-4ba6-4555-905c-fef7308dc5ec', --'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (talvihoito)',
-                                                                                  '63a2585b-5597-43ea-945c-1b25b16a06e2', --'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (l.ymp.hoito)',
-                                                                                  '49b7388b-419c-47fa-9b1b-3797f1fab21d' --'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (soratiet)'
-                                                                                   -- ei ehkä samassa järjestyksessä, mutta nuo tehtävät
-                                                                                   ) or tpk4.yksiloiva_tunniste is null)
-                                                                                   AND tpk4.suunnitteluyksikko IS NOT NULL
-       JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
-       LEFT OUTER JOIN urakka_tehtavamaara ut
-                       ON tpk4.id = ut.tehtava AND ut.urakka = :urakka AND (ut."hoitokauden-alkuvuosi" in (:hoitokausi) OR tpk4.aluetieto IS TRUE)
-       LEFT JOIN sopimuksen_tehtavamaarat_tallennettu sp on sp.urakka = :urakka
-       JOIN tehtavaryhmaotsikko o ON tr3.tehtavaryhmaotsikko_id = o.id,
+       tp.nimi                    AS "Toimenpide",
+       tp.koodi                   AS "Toimenpidekoodi",
+       tr.nimi                     AS "alataso",
+       t.nimi                    AS "tehtava",
+       t.suunnitteluyksikko      AS "yksikko",
+       t.api_seuranta            AS "API-seuranta",
+       t.api_tunnus              AS "API-tunnus",
+       t.poistettu               AS "Poistettu",
+       t.piilota                 AS "Piilota", -- älä näytä riviä käyttäjälle
+       t."mhu-tehtava?"          AS "Ensisijainen",
+       t.voimassaolo_alkuvuosi   AS "voimassaolo_alkuvuosi",
+       t.voimassaolo_loppuvuosi  AS "voimassaolo_loppuvuosi",
+       t.aluetieto               AS "aluetieto",
+       sp.tallennettu               AS "sopimus-tallennettu",
+       (select count(*) from rahavaraustehtava where tehtava_id = t.id) > 0 as "onko-rahavaraus?"
+FROM tehtavaryhma tr
+       LEFT JOIN tehtava t ON tr.id = t.tehtavaryhma 
+                                AND t."mhu-tehtava?" is true 
+                                AND t.poistettu is not true 
+                                AND t.piilota is not true 
+       JOIN toimenpide tp ON t.emo = tp.id
+       LEFT OUTER JOIN urakka_tehtavamaara ut ON t.id = ut.tehtava
+                                                     AND ut.urakka = :urakka
+                                                     AND (ut."hoitokauden-alkuvuosi" in (:hoitokausi) OR t.aluetieto IS TRUE)
+       LEFT JOIN sopimuksen_tehtavamaarat_tallennettu sp ON sp.urakka = :urakka
+       JOIN tehtavaryhmaotsikko o ON tr.tehtavaryhmaotsikko_id = o.id,
      urakka u
 WHERE u.id = :urakka
-  AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
-  AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
-  AND tpk4.suunnitteluyksikko IS not null
-  AND tpk4.suunnitteluyksikko != 'euroa' -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
-ORDER BY tpk4.jarjestys, tpk4."mhu-tehtava?" desc;
+  AND (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+  AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+  AND (t.voimassaolo_alkuvuosi IS NULL OR t.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+  AND (t.voimassaolo_loppuvuosi IS NULL OR t.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+  -- Suunnitteluyksikkö ei voi olla null normaali tehtävällä, mutta rahavarauksella se voi olla.
+  AND (t.suunnitteluyksikko IS not null OR (select count(*) from rahavaraustehtava where tehtava_id = t.id) > 0)
+ORDER BY t.jarjestys, t."mhu-tehtava?" desc;
 
 
 -- name: hae-validit-tehtava-idt

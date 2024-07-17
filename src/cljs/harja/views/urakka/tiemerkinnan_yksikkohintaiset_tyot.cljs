@@ -118,7 +118,7 @@
 
 (defn- paallystysurakan-kohteet-vetolaatikko [kohdeosat]
   [grid/grid
-   {:otsikko "Tierekisterikohteet"
+   {:otsikko "Kohteet"
     :tyhja "Ei kohteita"}
    [{:otsikko "Nimi" :leveys 7 :nimi :nimi :tyyppi :string :pituus-max 128
      :muokattava? (constantly false)}
