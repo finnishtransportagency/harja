@@ -194,8 +194,8 @@ jobs:
       # -- NOTE: This is the new ActiveMQ Artemis broker --
       # TODO: Tämän imagen build-automaatiota ei vielä testattu
       - name: Generate harja_activemq_artemis image tags
-        id: activemq-tags
-        if: ${{ inputs.dockerfile == 'harja_activemq' }}
+        id: activemq-artemis-tags
+        if: ${{ inputs.dockerfile == 'harja_activemq_artemis' }}
         env:
           TAGS: ${{ steps.parsed-inputs.outputs.tags }}
         run: echo "tags=${TAGS//<image>/finnishtransportagency\/harja_activemq_artemis}" >> $GITHUB_OUTPUT
@@ -204,7 +204,7 @@ jobs:
         uses: docker/build-push-action@v6
         if: ${{ inputs.dockerfile == 'harja_activemq_artemis' }}
         env:
-          TAGS: ${{ steps.activemq-tags.outputs.tags }}
+          TAGS: ${{ steps.activemq-artemis-tags.outputs.tags }}
           BUILD_PLATFORMS: linux/amd64
         with:
           context: .github/docker/activemq-artemis
