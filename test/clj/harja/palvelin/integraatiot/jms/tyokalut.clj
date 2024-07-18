@@ -118,12 +118,10 @@
                      :operation (case operation
                                   :start "start"
                                   :stop "stop")})
-        ;; TODO: Tarkista miten muodostetaan mbean sanoma, jonka Artemis ymmärtää ja toteuttaa saman toiminnallisuuden kuin
-        ;;       jms-jolokia-connection. Tämä on vielä keskeneräinen testi, joka ei toimi.
         sanoma (merge {:mbean (str "org.apache.activemq.artemis:"
                                 "broker=\"0.0.0.0\""
-                                ",connector=clientConnectors"
-                                ",connectorName=openwire")}
+                                ",component=acceptors"
+                                ",name=\"artemis\"")}
                  attribute
                  operation)]
 
@@ -150,6 +148,7 @@
     (jms-jolokia jms-client sanoma)))
 
 ;; TODO: Tätä ei taideta kutsua missään testissä.
+;;       Jos tarve käyttää, niin pitää muodostaa sopiva mbean sanoma Artemikselle
 (defn jms-jolokia-broker-artemis [jms-client attribute operation]
   (let [attribute (when attribute
                     {:type "read"
@@ -208,7 +207,7 @@
                                   ;;  * Expired Count - the number of messages that were not delivered because they were expired
 
                                   ;; -- Vastaavat Apache Artemis attribuutit (kaivettu Apache Artmemis kälin kautta:
-                                  ;; TODO: Tälle en löytänyt ihan heti vastaavaa attribuuttia Artemiksesta, pitää penkoa lisää.
+                                  ;; TODO: dispatch-countille en löytänyt ihan heti vastaavaa attribuuttia Artemiksesta, pitää penkoa lisää.
                                   :dispatch-count "DispatchCount"
                                   ;; Artemis: number of messages that this queue is currently delivering to its consumers
                                   :in-flight-count "DeliveringCount"
@@ -216,24 +215,12 @@
                                   :dequeue-count "MessagesAcknowledged"
                                   ;; Artemis: Number of messages added to this queue since it was created
                                   :enqueue-count "MessagesAdded")})
-        ;; TODO: Mikä on purge-operaation vastine Artemiksessa?
         operation (when operation
                     {:type "EXEC"
                      :operation (case operation
                                   ;; Vastaava operaatio Artemiksessa on "removeAllMessages"
                                   ;; Remove all the messages from the Queue (and returns the number of removed messages)
                                   :purge "removeAllMessages")})
-        ;; TODO: Tarkista miten muodostetaan mbean sanoma, jonka Artemis ymmärtää ja toteuttaa saman toiminnallisuuden kuin
-        ;;       jms-jolokia-jono funktio. Tämä on vielä keskeneräinen kokeilu, joka ei toimi täysin.
-        ;;
-        ;; TODO: HUOM! Tämä funktio toimii näemmä kun käsin käy luomassa testissä käytetyn jonon Artemikseen (web-kälissä) ja varmistaa, että routing-type on oikea
-        ;;     Jos luot jonon vaikka kälin kautta, niin routing-typeksi voi tulla esim. multicast
-        ;;     Jos mikä tahansa mbean sanoman osa on väärin, niin tulee "javax.management.InstanceNotFoundException" virhettä.
-        ;;     Pitää selvittää, miten ja missä aiemman Apache Classic toteutuksen jonot ovat aiemmin luotu testejä varten, koska Artemiksessa
-        ;;     jonot eivät selvästikään ole samalla tavalla luotavissa. En täysin ymmärrä vielä miten testeissä on meillä testijonot luotu.
-        ;;     Artemiksessa voi luoda jonon kälissä luomalla ensin osoitteen (address, annan nimeksi jonon nimi) ja sitten jonon
-        ;;     (queue, käytä samaa jonon nimeä kuin address) tähän address-osoitteeseen.
-        ;;     Valitse jonon routing typeksi sama mitä mbean sanomassa käytetään.
         sanoma (merge {:mbean (str "org.apache.activemq.artemis:"
                                 "broker=\"0.0.0.0\""
                                 ",component=addresses"
