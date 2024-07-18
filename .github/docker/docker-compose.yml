@@ -126,23 +126,15 @@ services:
     environment:
       TZ: "EET"
       EXTRA_ARGS: "--http-host 0.0.0.0 --relax-jolokia --default-port 61616 --http-port 8161"
-      # Käytä näitä asetuksia paikallisessa testauksessa
-      # Ohje: Käynnistä paikallisesti ajamalla docker compose up -d --wait activemq-artemis-itmf
-      #EXTRA_ARGS: "--http-host 0.0.0.0 --relax-jolokia --default-port 61626 --http-port 8171"
     ports:
       - "127.0.0.1:61616:61616" # broker
       - "127.0.0.1:8161:8161"   # web
-      # Paikallinen testaus
-      #- "127.0.0.1:61626:61626" # broker
-      #- "127.0.0.1:8171:8171"   # web
 
     # Estetään IPv6 käyttö, jotta testitietokannan migraatioiden ajossa ei tule yhteysongelmia
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     healthcheck:
       test: /var/lib/artemis-instance/bin/artemis check node --up --user admin --password admin --url "tcp://127.0.0.1:61616" | grep "success"
-      # Paikallinen testaus
-      #test: /var/lib/artemis-instance/bin/artemis check node --up --user admin --password admin --url "tcp://127.0.0.1:61626" | grep "success"
       interval: 10s
       retries: 5
       start_period: 20s

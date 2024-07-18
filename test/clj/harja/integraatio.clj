@@ -3,13 +3,19 @@
             [harja.palvelin.integraatiot.tloik.tyokalut :as tloik-tk]
             [harja.tyokalut.env :as env]))
 
-;; Jos haluat ajaa lokaalikoneella itmf testejä,
-;; käynnistä ativemq jonot (ohjeet readme.md:Ssä) ja aseta HARJA_ITMF_BROKER_PORT porttiin 61616
-;; tai muuta portti 61626 -> 61616. Näin pystyt olemassa olevilla jonoilla simuloimaan sekä sonja jonoja, että itmf jonoja.
-;; Varmista myös että :itmf ei ole :pois-kytketyt-ominaisuudet listalla
+;; Jos haluat ajaa paikallisesti ITMF-testejä, tee seuraava:
+;; 1. Käynnistä Apache Artemis broker, joka on määritelty .github/docker/docker-compose.yml tiedostoon
+;;   $ cd .github/docker && docker-compose up -d --wait activemq-artemis-itmf
+;; 2. Odottele, että broker-container on käynnistynyt ja healthy
+;; 3. Varmista, että Harjan asetukset.edn:ssä :itmf ei ole :pois-kytketyt-ominaisuudet listalla
+;; 3. Aseta REPL:lle seuraavat ympäristömuuttujat:
+;;   * HARJA_ITMF_BROKER_PORT=61616
+;;   * HARJA_ITMF_BROKER_AI_PORT=8161
+;; 4. Käynnistä Harja REPL ja aja JMS-testit
+;; Huomioi, että Apache Artemis vaatii aina käyttäjätunnuksen ja salasanan, testeissä ja lokaalikehityksessä käytetään admin/admin.
 (def itmf-asetukset {:url (str "tcp://" (env/env "HARJA_ITMF_BROKER_HOST" "localhost") ":" (env/env "HARJA_ITMF_BROKER_PORT" 61626))
-                     :kayttaja ""
-                     :salasana ""
+                     :kayttaja "admin"
+                     :salasana "admin"
                      :tyyppi :activemq
                      :paivitystiheys-ms 3000})
 

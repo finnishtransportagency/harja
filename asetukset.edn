@@ -50,8 +50,8 @@
                    (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
                    ":"
                    (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61626)))
-  :kayttaja ""
-  :salasana ""
+  :kayttaja "admin"
+  :salasana "admin"
   :tyyppi :activemq
   :julkaise-tila? true}
 
@@ -199,7 +199,6 @@
  ;; :reittitarkistukset
  ;; :toteumatyokalu - sallittu vain gc ja local ympäristöissä, muualla estetty
  :pois-kytketyt-ominaisuudet #{; :tietyoilmoitusten-lahetys
-                               :itmf
                                :sonja-uudelleen-kaynnistys
                                :itmf-uudelleen-kaynnistys
                                :sonja-sahkoposti
