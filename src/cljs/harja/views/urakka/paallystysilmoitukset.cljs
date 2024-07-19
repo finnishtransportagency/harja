@@ -76,7 +76,7 @@
     :else
     [:span "Ei aloitettu"]))
 
-(defn- lahetys-yha-velho-nappi [e! {:keys [oikeus urakka-id sopimus-id vuosi paallystysilmoitus kohteet-yha-velho-lahetyksessa]}]
+(defn- lahetys-yha-nappi [e! {:keys [oikeus urakka-id sopimus-id vuosi paallystysilmoitus kohteet-yha-velho-lahetyksessa]}]
   (let [lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-velho-lahetyksessa]
                                                           (if (not-empty kohteet-yha-velho-lahetyksessa)
                                                             (conj kohteet-yha-velho-lahetyksessa %)
@@ -88,11 +88,10 @@
         kohde-id (:paallystyskohde-id paallystysilmoitus)]
     [napit/palvelinkutsu-nappi
      (ikonit/ikoni-ja-teksti (ikonit/envelope) "Lähetä")
-     #(do
-        (log "[YHA/VELHO] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id
-             ") kohde (id:" (pr-str kohde-id) ") YHA:n ja Velhoon (VELHO DISABLED)") ;; TODO enable VELHO
+     #(do 
+        (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohde (id" (pr-str kohde-id) ") YHA:n")
         (lahetys-kaynnissa-fn kohde-id)
-        (k/post! :laheta-pot-yhaan-ja-velhoon {:urakka-id urakka-id
+        (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id
                                                :sopimus-id sopimus-id
                                                :kohde-id kohde-id
                                                :vuosi vuosi}
@@ -114,8 +113,8 @@
                    (kun-virhe-fn vastaus))
       :nayta-virheviesti? false}]))
 
-(defn- laheta-pot-yhaan-velhoon-komponentti [rivi _ e! urakka valittu-sopimusnumero
-                                             valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]
+(defn- laheta-pot-yhaan-komponentti [rivi _ e! urakka valittu-sopimusnumero
+                                     valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]
   (let [kohde-id (:paallystyskohde-id rivi)
         {:keys [muokattu lahetetty]} rivi
         muokattu-yhaan-lahettamisen-jalkeen? (when (and muokattu lahetetty)
@@ -147,7 +146,7 @@
       [yleiset/ajax-loader-pieni "Lähetys käynnissä"]
 
       nayta-nappi?
-      [lahetys-yha-velho-nappi e! {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet
+      [lahetys-yha-nappi e! {:oikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet
                                    :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
                                    :vuosi valittu-urakan-vuosi :paallystysilmoitus rivi
                                    :kohteet-yha-velho-lahetyksessa kohteet-yha-velho-lahetyksessa}]
@@ -206,7 +205,7 @@
           ; TODO enable VELHO {:otsikko "Lähetys YHA / Velho:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
           {:otsikko "Lähetys YHA:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
            :leveys 25
-           :komponentti laheta-pot-yhaan-velhoon-komponentti
+           :komponentti laheta-pot-yhaan-komponentti
            :komponentti-args [e! urakka valittu-sopimusnumero valittu-urakan-vuosi kohteet-yha-velho-lahetyksessa]})
         {:otsikko "" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
          :tyyppi :komponentti
