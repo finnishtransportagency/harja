@@ -95,7 +95,7 @@
 
   [huoltokierros "huoltokierros" "Huoltokierros"]
   [ryhmavaihto "ryhmavaihto" "Ryhmävaihto"]
-  [muut-valaistus-toimenpiteet "muut valaistusurakoiden toimenpiteet" "Muut toimenpiteet"]
+  [muut-valaistusurakoiden-toimenpiteet "muut valaistusurakoiden toimenpiteet" "Muut toimenpiteet"]
 
   [varustetoteumat "varustetoteumat" "Varustetoteumat"])
 
@@ -155,7 +155,7 @@
           muu]
    :valaistus [ryhmavaihto
                huoltokierros
-               muut-valaistus-toimenpiteet]})
+               muut-valaistusurakoiden-toimenpiteet]})
 
 (def yllapidon-reaaliaikaseurattavat
   #{(:id paaasfalttilevitin)
@@ -164,6 +164,11 @@
     (:id kuumennuslaite)
     (:id sekoitus-ja-stabilointijyrsin)
     (:id tma-laite)})
+
+(def valaistuksen-reaaliaikaseurattavat
+  #{(:id ryhmavaihto)
+    (:id huoltokierros)
+    (:id muut-valaistusurakoiden-toimenpiteet)})
 
 (defn valitut-suodattimet
   "Ottaa nested map rakenteen, jossa viimeisellä tasolla avaimet ovat

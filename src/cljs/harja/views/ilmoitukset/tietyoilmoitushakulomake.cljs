@@ -79,7 +79,7 @@
        :pakollinen? false
        :sijainti (r/wrap (:sijainti valinnat-nyt)
                          #(e! (tiedot/->PaivitaSijainti %)))
-       :otsikko "Tierekisteriosoite"
+       :otsikko "Tieosoite"
        :palstoja 1
        :tyhjennys-sallittu? true
        :validoi [(fn [osoite]
