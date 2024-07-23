@@ -287,6 +287,8 @@
                  (:kokonaismassamaara rivi)
                  (:pinta_ala rivi)))
         :tayta-alas? pot2-tiedot/tayta-alas?-fn :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)}
+       {:otsikko "RC%" :nimi :rc-prosentti :tyyppi :positiivinen-numero :kokonaisluku? true :tasaa :oikea
+        :muokattava? (constantly false)}
        {:otsikko "" :nimi :kulutuspaallyste-toiminnot :tyyppi :reagent-komponentti :leveys (:toiminnot pot2-yhteiset/gridin-leveydet)
         :tasaa :keskita :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros voi-muokata? ohjauskahva]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]

@@ -152,7 +152,8 @@ SELECT
   pot2p.jarjestysnro,
   pot2p.velho_lahetyksen_aika as "velho-lahetyksen-aika",
   pot2p.velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus",
-  pot2p.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila"
+  pot2p.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila",
+  pot2_rc_prosentti(pot2p.id) as "rc-prosentti"
 FROM pot2_paallystekerros pot2p
 WHERE pot2_id = :pot2_id AND kohdeosa_id = :kohdeosa_id;
 
@@ -182,6 +183,7 @@ SELECT
     ypko.tr_loppuosa as "tr-loppuosa",
     ypko.tr_loppuetaisyys as "tr-loppuetaisyys",
     ypko.yllapitokohde as "kohde-id",
+    pot2_rc_prosentti(pot2p.id) as "rc-prosentti",
     mt.*
 FROM pot2_paallystekerros pot2p
          LEFT JOIN pot2_massan_tiedot mt ON pot2p.materiaali = mt.id
