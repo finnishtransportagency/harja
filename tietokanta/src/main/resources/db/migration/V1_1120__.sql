@@ -21,6 +21,10 @@ BEGIN
             -- Tämän pitäisi aina olla viite siitä, että kirjauksessa on tapahtunut virhe.
             RETURN NULL;
         END IF;
+    ELSE
+        IF toimenpide IN ('KAR') THEN
+            RETURN 100;
+        END IF;
     END IF;
 
     SELECT koodi FROM pot2_mk_runkoainetyyppi WHERE nimi = 'Asfalttirouhe' INTO asfalttirouhe_koodi;
