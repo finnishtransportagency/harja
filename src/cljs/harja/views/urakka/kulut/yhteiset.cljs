@@ -14,6 +14,13 @@
             [harja.pvm :as pvm]
             [harja.ui.grid :as grid]))
 
+;; Tavoitehinta ei voi olla yhteenvetolaatikossa esitettynä negatiivinen, mutta laskennoissa voi.
+;; Joten muokataan luku esitystä varten
+(defn- ei-negatiivinen-numero [arvo]
+  (if (neg? arvo)
+    (- arvo)
+    arvo))
+
 (defn fmt->big
   ([arvo] (fmt->big arvo false))
   ([arvo on-big?]
@@ -112,7 +119,7 @@
         [:div.rivi
          [:span "Tavoitehinnan ylitys"]
          [:span.negatiivinen-numero
-          (str "+ " (fmt/euro-opt tavoitehinnan-ylitys))]]
+          (str "+ " (fmt/euro-opt (ei-negatiivinen-numero tavoitehinnan-ylitys)))]]
         (when tavoitehinnan-ylitys-paatos
           [:<>
            (when (pos? (::valikatselmus/urakoitsijan-maksu tavoitehinnan-ylitys-paatos))
