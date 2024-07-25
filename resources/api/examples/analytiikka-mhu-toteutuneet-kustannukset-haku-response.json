@@ -5,7 +5,7 @@
     "kulut": [
       {
         "kulu": {
-          "id": 1234,
+          "kulu-id": 1234,
           "laskun-tunniste": "2024A0001",
           "kulun-kuvaus": "Ylimääräinen suolausreitti: Keskikylän risteys.",
           "poistettu": false,
@@ -18,7 +18,7 @@
           "kulukohdistukset": [
             {
               "kulukohdistus": {
-                "id": 9327,
+                "kulukohdistus-id": 9327,
                 "rivinumero": 1,
                 "tyyppi": "lisatyo",
                 "lisatieto": "Keskikylän risteys, työ",
@@ -30,7 +30,7 @@
                 }
               },
               "kulukohdistus": {
-                "id": 9328,
+                "kulukohdistus-id": 9328,
                 "rivinumero": 2,
                 "tyyppi": "lisatyo",
                 "lisatieto": "Keskikylän risteys, suola",

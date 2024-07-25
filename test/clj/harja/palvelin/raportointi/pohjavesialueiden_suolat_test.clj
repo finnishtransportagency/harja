@@ -91,4 +91,4 @@
                nil]
               [[18637 1 0 1 8953 9324.379134279012 5M 0.5362287320148329 nil]
                [28409 56 0 56 605 573.3889406769638 3M 5.2320506852784625 nil]
-               ["Yhteensä" nil nil nil nil nil 8M nil nil]]]])))))
+               [[:arvo {:arvo "Yhteensä"}] nil nil nil nil nil 8M nil nil]]]])))))
