@@ -53,91 +53,103 @@ $$ LANGUAGE plpgsql;
 
 
 -- Tatun uusi yritys tieosista
+-- Otetaan tällä huomioon myös se, että tien 2d-projektiosta katoaa tieto korkeuseroista.
+-- Käytännössä siis tie on pitempi, kuin sen kaksiuloinen projektio, joka tarkoittaa sitä että 2d-projektion metri on
+-- alle metri oikeassa elämässä.
 CREATE OR REPLACE FUNCTION tr_osoitteelle_viiva3(
-  tie_ INTEGER,
-  aosa_ INTEGER, aet_ INTEGER,
-  losa_ INTEGER, let_ INTEGER) RETURNS geometry AS $$
+    tie_ INTEGER,
+    aosa_ INTEGER, aet_ INTEGER,
+    losa_ INTEGER, let_ INTEGER) RETURNS geometry AS $$
 DECLARE
-  osan_pituus FLOAT;
-  ajorata_ INTEGER; -- 1 on oikea ajorata tien kasvusuuntaan, 2 on vasen
-  aosa INTEGER;
-  aet INTEGER;
-  losa INTEGER;
-  let INTEGER;
-  -- Osan looppauksen jutut
-  osa_ INTEGER;
-  e1 INTEGER;
-  e2 INTEGER;
-  osan_geometria GEOMETRY;
-  osan_patka GEOMETRY;
-  -- Tuloksena syntyvä geometria
-  tulos GEOMETRY[];
-  viiva GEOMETRY;
+    osan_projektoitu_pituus FLOAT;
+    ajorata_ INTEGER; -- 1 on oikea ajorata tien kasvusuuntaan, 2 on vasen
+    aosa INTEGER;
+    aet INTEGER;
+    losa INTEGER;
+    let INTEGER;
+    -- Osan looppauksen jutut
+    osa_ INTEGER;
+    e1 INTEGER;
+    e2 INTEGER;
+    osan_geometria GEOMETRY;
+    osan_patka GEOMETRY;
+    -- Tuloksena syntyvä geometria
+    tulos GEOMETRY[];
+    viiva GEOMETRY;
+    -- 2d-projektoidun metrin suhde oikeaan metriin
+    keskiarvo_metri FLOAT;
+    osan_oikea_pituus INTEGER;
 BEGIN
-  tulos := ARRAY[]::GEOMETRY[];
-  -- Päätellään kumpaa ajorataa ollaan menossa
-  -- Jos TR-osoite on kasvava, mennään oikeaa ajorataa (1) muuten mennään vasenta (2).
-  -- Yksiajorataisten teiden kohdalla päätellään samaan tapaan ajosuunta.
-  ajorata_ := 1;
-  IF (aosa_ > losa_ OR (aosa_ = losa_ AND aet_ > let_)) THEN
-    ajorata_ := 2;
-    aosa := losa_;
-    aet := let_;
-    losa := aosa_;
-    let := aet_;
-  ELSE
-    aosa := aosa_;
-    aet := aet_;
-    let := let_;
-    losa := losa_;
-  END IF;
-  --RAISE NOTICE 'Haetaan geometria tie %, ajorata %', tie_, ajorata_;
-  tulos := NULL;
-  FOR osa_ IN aosa..losa LOOP
-    -- Otetaan osan geometriaviivasta e1 -- e2 pätkä
-    SELECT geom FROM tr_osan_ajorata toa
-    WHERE toa.tie=tie_ AND toa.osa=osa_ AND toa.ajorata=ajorata_
-    INTO osan_geometria;
-    IF osan_geometria IS NULL THEN
-      CONTINUE;
-    END IF;
-    osan_pituus := st_length(osan_geometria);
-    -- Päätellään alkuetäisyys tälle osalle
-    IF osa_ = aosa THEN
-      e1 := aet;
+    tulos := ARRAY[]::GEOMETRY[];
+    -- Päätellään kumpaa ajorataa ollaan menossa
+    -- Jos TR-osoite on kasvava, mennään oikeaa ajorataa (1) muuten mennään vasenta (2).
+    -- Yksiajorataisten teiden kohdalla päätellään samaan tapaan ajosuunta.
+    ajorata_ := 1;
+    IF (aosa_ > losa_ OR (aosa_ = losa_ AND aet_ > let_)) THEN
+        ajorata_ := 2;
+        aosa := losa_;
+        aet := let_;
+        losa := aosa_;
+        let := aet_;
     ELSE
-      e1 := 0;
+        aosa := aosa_;
+        aet := aet_;
+        let := let_;
+        losa := losa_;
     END IF;
-    -- Päätellään loppuetäisyys tälle osalle
-    IF osa_ = losa THEN
-      e2 := let;
-    ELSE
-      e1 := LEAST(e1, osan_pituus);
-      e2 := osan_pituus;
-    END IF;
-   -- RAISE NOTICE 'Haetaan geometriaa tien % osan % valille % - %', tie_, osa_, e1, e2;
-    -- Lisätään jos geometria löytyi (osa on olemassa)
-    IF e1 != e2 THEN
-      osan_patka := ST_LineSubstring(osan_geometria, LEAST(1,e1/osan_pituus), LEAST(1,e2/osan_pituus));
-      IF ajorata_ = 1 THEN
-        tulos := tulos || osan_patka;
-      ELSIF ajorata_ = 2 THEN
-        IF ST_GeometryType(osan_patka)='ST_MultiLineString' THEN
-          osan_patka = kaanna_multilinestring(osan_patka);
+    --RAISE NOTICE 'Haetaan geometria tie %, ajorata %', tie_, ajorata_;
+    tulos := NULL;
+    FOR osa_ IN aosa..losa LOOP
+            -- Otetaan osan geometriaviivasta e1 -- e2 pätkä
+            SELECT geom FROM tr_osan_ajorata toa
+            WHERE toa.tie=tie_ AND toa.osa=osa_ AND toa.ajorata=ajorata_
+            INTO osan_geometria;
+            IF osan_geometria IS NULL THEN
+                CONTINUE;
+            END IF;
+
+            osan_projektoitu_pituus := st_length(osan_geometria);
+
+            -- Kuinka pitkä matka keskiarvollisesti 2d-projektoitu metri on oikeassa elämässä, ts. kuinka paljon pitempi tie on kuin sen geometrian pituus.
+            SELECT pituus FROM tr_ajoratojen_pituudet WHERE tie=tie_ AND osa=osa_ AND ajorata = ajorata_ INTO osan_oikea_pituus;
+            keskiarvo_metri := osan_projektoitu_pituus / osan_oikea_pituus;
+
+            -- Päätellään alkuetäisyys tälle osalle
+            IF osa_ = aosa THEN
+                e1 := aet * keskiarvo_metri;
+            ELSE
+                e1 := 0;
+            END IF;
+            -- Päätellään loppuetäisyys tälle osalle
+            IF osa_ = losa THEN
+                e2 := let * keskiarvo_metri;
+            ELSE
+                e1 := LEAST(e1, osan_projektoitu_pituus);
+                e2 := osan_projektoitu_pituus;
+            END IF;
+            -- RAISE NOTICE 'Haetaan geometriaa tien % osan % valille % - %', tie_, osa_, e1, e2;
+            -- Lisätään jos geometria löytyi (osa on olemassa)
+            IF e1 != e2 THEN
+                osan_patka := ST_LineSubstring(osan_geometria, LEAST(1,e1/osan_projektoitu_pituus), LEAST(1,e2/osan_projektoitu_pituus));
+                IF ajorata_ = 1 THEN
+                    tulos := tulos || osan_patka;
+                ELSIF ajorata_ = 2 THEN
+                    IF ST_GeometryType(osan_patka)='ST_MultiLineString' THEN
+                        osan_patka = kaanna_multilinestring(osan_patka);
+                    END IF;
+                    tulos := ST_Reverse(osan_patka) || tulos;
+                END IF;
+            END IF;
+        END LOOP;
+    viiva := ST_Collect(tulos);
+    IF ST_GeometryType(viiva)='ST_GeometryCollection' THEN
+        IF ST_NumGeometries(viiva)=1 THEN
+            viiva := ST_GeometryN(viiva, 1);
+        ELSE
+            viiva := yhdista_multilinestring(viiva);
         END IF;
-        tulos := ST_Reverse(osan_patka) || tulos;
-      END IF;
     END IF;
-  END LOOP;
-  viiva := ST_Collect(tulos);
-  IF ST_GeometryType(viiva)='ST_GeometryCollection' THEN
-    IF ST_NumGeometries(viiva)=1 THEN
-      viiva := ST_GeometryN(viiva, 1);
-    ELSE
-      viiva := yhdista_multilinestring(viiva);
-    END IF;
-  END IF;
-  RETURN viiva;
+    RETURN viiva;
 END;
 $$ LANGUAGE plpgsql;
 
