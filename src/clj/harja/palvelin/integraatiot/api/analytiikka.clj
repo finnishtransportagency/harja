@@ -844,7 +844,7 @@
     (julkaise-reitti
       http :analytiikka-toteumat
       (GET "/api/analytiikka/toteumat/:alkuaika/:loppuaika" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-toteumat request
           (fn [parametrit kayttaja db]
             (palauta-toteumat db parametrit kayttaja))
@@ -854,7 +854,7 @@
     (julkaise-reitti
       http :analytiikka-toteumat-koko
       (GET "/api/analytiikka/toteumat/:alkuaika/:loppuaika/:koordinaattimuutos/:koko" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-toteumat request
           (fn [parametrit kayttaja db]
             (palauta-toteumat db parametrit kayttaja))
@@ -864,7 +864,7 @@
     (julkaise-reitti
       http :analytiikka-suunnitellut-materiaalit-hoitovuosi
       (GET "/api/analytiikka/suunnitellut-materiaalit/:alkuvuosi/:loppuvuosi" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-suunnitellut-materiaalimaarat request
           (fn [parametrit kayttaja db]
             (palauta-suunnitellut-materiaalimaarat db parametrit kayttaja))
@@ -874,7 +874,7 @@
     (julkaise-reitti
       http :analytiikka-suunnitellut-materiaalit-urakka
       (GET "/api/analytiikka/suunnitellut-materiaalit/:urakka-id" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-suunnitellut-materiaalimaarat request
           (fn [parametrit kayttaja db]
             (palauta-urakan-suunnitellut-materiaalimaarat db parametrit kayttaja))
@@ -884,7 +884,7 @@
     (julkaise-reitti
       http :analytiikka-suunnitellut-tehtavamaarat-hoitovuosi
       (GET "/api/analytiikka/suunnitellut-tehtavat/:alkuvuosi/:loppuvuosi" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-suunnitellut-tehtavamaarat request
           (fn [parametrit kayttaja db]
             (palauta-suunnitellut-tehtavamaarat db parametrit kayttaja))
@@ -894,7 +894,7 @@
     (julkaise-reitti
       http :analytiikka-suunnitellut-tehtavamaarat-urakka
       (GET "/api/analytiikka/suunnitellut-tehtavat/:urakka-id" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-suunnitellut-tehtavamaarat request
           (fn [parametrit kayttaja db]
             (palauta-urakan-suunnitellut-tehtavamaarat db parametrit kayttaja))
@@ -904,7 +904,7 @@
     (julkaise-reitti
       http :analytiikka-materiaalit
       (GET "/api/analytiikka/materiaalit" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-materiaalikoodit request
           (fn [parametrit kayttaja db]
             (palauta-materiaalit db parametrit kayttaja))
@@ -914,7 +914,7 @@
     (julkaise-reitti
       http :analytiikka-tehtavat
       (GET "/api/analytiikka/tehtavat" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-tehtavat request
           (fn [parametrit kayttaja db]
             (palauta-tehtavat db parametrit kayttaja))
@@ -922,9 +922,19 @@
           :analytiikka)))
 
     (julkaise-reitti
+      http :analytiikka-toimenpiteet
+      (GET "/api/analytiikka/toimenpiteet" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
+          :analytiikka-hae-toimenpiteet request
+          (fn [parametrit kayttaja db]
+            (palauta-toimenpiteet db parametrit kayttaja))
+          ;; Vaaditaan analytiikka-oikeudet
+          :analytiikka)))
+
+    (julkaise-reitti
       http :analytiikka-urakat
       (GET "/api/analytiikka/urakat" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-urakat request
           (fn [parametrit kayttaja db]
             (palauta-urakat db parametrit kayttaja))
@@ -934,12 +944,13 @@
     (julkaise-reitti
       http :analytiikka-organisaatiot
       (GET "/api/analytiikka/organisaatiot" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-organisaatiot request
           (fn [parametrit kayttaja db]
             (palauta-organisaatiot db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
           :analytiikka)))
+
     (julkaise-reitti
       http :analytiikka-turvallisuuspoikkeamat
       (GET "/api/analytiikka/turvallisuuspoikkeamat/:alkuaika/:loppuaika" request
@@ -1021,6 +1032,7 @@
       :analytiikka-toteumat-koko
       :analytiikka-materiaalit
       :analytiikka-tehtavat
+      :analytiikka-toimenpiteet
       :analytiikka-urakat
       :analytiikka-organisaatiot
       :analytiikka-suunnitellut-materiaalit-hoitovuosi
