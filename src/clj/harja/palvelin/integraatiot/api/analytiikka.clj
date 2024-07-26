@@ -291,6 +291,18 @@
                  :tehtavaryhmat tehtavaryhmat}]
     vastaus))
 
+(defn palauta-toimenpiteet
+  "Haetaan toimenpiteet (taso 3) ja palautetaan ne json muodossa"
+  [db _ _]
+  (log/info "Analytiikka API, tehtävien haku")
+  (let [toimenpiteet (toimenpidekoodi-kyselyt/listaa-toimenpiteet-analytiikalle db)
+        ;; Wrapatään jokainen rivi "toimenpide" -nimiseen avaimen alle
+        toimenpiteet (map (fn [t]
+                            {:toimenpide t})
+                          toimenpiteet)]
+    ;; Palautetaan kaikki toimenpiteet toimenpiteet avaimen alla
+    {:toimenpiteet toimenpiteet}))
+
 (defn palauta-urakat
   "Haetaan urakat ja palautetaan ne json muodossa"
   [db _ _]

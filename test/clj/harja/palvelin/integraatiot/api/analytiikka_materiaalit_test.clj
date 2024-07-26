@@ -52,6 +52,15 @@
     (is (= (count tehtavat-kannasta) (count (:tehtavat encoodattu-body))))
     (is (= (count tehtavaryhmat-kannasta) (count (:tehtavaryhmat encoodattu-body))))))
 
+(deftest hae-toimenpiteet-onnistuu-test
+  (let [;; Löydetään n. 1080 toimenpidettä
+        toimenpiteet-kannasta (q-map
+                            (str "SELECT id, nimi, koodi as toimenpidekoodi, luotu, muokattu, poistettu\n  FROM toimenpide\n WHERE taso = 3"))
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toimenpiteet")] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
+    (is (= 200 (:status vastaus)))
+    (is (= (count toimenpiteet-kannasta) (count (:toimenpiteet encoodattu-body))))))
+
 (deftest hae-urakat-yksinkertainen-onnistuu-test
   (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/urakat")] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))))
