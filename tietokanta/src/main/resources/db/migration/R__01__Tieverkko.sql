@@ -69,8 +69,8 @@ DECLARE
     let INTEGER;
     -- Osan looppauksen jutut
     osa_ INTEGER;
-    e1 INTEGER;
-    e2 INTEGER;
+    e1 FLOAT;
+    e2 FLOAT;
     osan_geometria GEOMETRY;
     osan_patka GEOMETRY;
     -- Tuloksena syntyvä geometria
@@ -111,7 +111,15 @@ BEGIN
             osan_projektoitu_pituus := st_length(osan_geometria);
 
             -- Kuinka pitkä matka keskiarvollisesti 2d-projektoitu metri on oikeassa elämässä, ts. kuinka paljon pitempi tie on kuin sen geometrian pituus.
-            SELECT pituus FROM tr_ajoratojen_pituudet WHERE tie=tie_ AND osa=osa_ AND ajorata = ajorata_ INTO osan_oikea_pituus;
+            SELECT pituus
+            FROM tr_ajoratojen_pituudet
+            WHERE tie = tie_ AND osa = osa_ AND (ajorata = ajorata_
+               OR ajorata = 0)
+            ORDER BY ajorata DESC
+            LIMIT 1
+            INTO osan_oikea_pituus;
+
+            -- Tällä suhdeluvulla saadaan oikea pituus käännettyä projektoiduksi pituudeksi, jota tarvitaan geometrian luontiin.
             keskiarvo_metri := osan_projektoitu_pituus / osan_oikea_pituus;
 
             -- Päätellään alkuetäisyys tälle osalle
@@ -230,12 +238,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GEOMETRY, tie INTEGER, osa INTEGER)
+CREATE OR REPLACE FUNCTION laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GEOMETRY, tie_ INTEGER, osa_ INTEGER)
     RETURNS tr_osan_kohta AS $$
 DECLARE
     lahin_piste                GEOMETRY;
     aet                        INTEGER;
-    tieosan_kokonaispituus     INTEGER;
+    osan_projektoitu_pituus    FLOAT;
     etaisyys_pisteeseen        NUMERIC;
     tieosan_alku               GEOMETRY;
     tieosan_loppu              GEOMETRY;
@@ -246,6 +254,8 @@ DECLARE
     viivan_etaisyys_pisteeseen NUMERIC;
     lyhin_etaisyys_pisteeseen  NUMERIC;
     laskuri                    INTEGER;
+    osan_oikea_pituus          INTEGER;
+    keskiarvo_metri            FLOAT;
 BEGIN
 
     laskuri := 0;
@@ -253,6 +263,11 @@ BEGIN
     viivan_etaisyys_pisteeseen := 0;
     lyhin_etaisyys_pisteeseen := -1;
     etaisyys_pisteeseen := 0;
+
+    osan_projektoitu_pituus := St_Length(osan_geometria);
+    SELECT pituus FROM tr_osien_pituudet tap WHERE tap.tie=tie_ AND tap.osa= osa_ INTO osan_oikea_pituus;
+    -- Osan oikea pituus jaettuna projektoidulla pituudella antaa suhdeluvun, jolla saadaan käännettyä projektoitu etäisyys oikeaksi.
+    keskiarvo_metri :=  osan_oikea_pituus / osan_projektoitu_pituus;
 
     RAISE NOTICE 'TYYPPI: % ', St_GeometryType(osan_geometria);
 
@@ -289,12 +304,12 @@ BEGIN
                 -- viiva pisteen kohdalta ja laskemalla leikatun viivan pituus.
                 IF st_startpoint(ST_GeometryN(osan_geometria, laskuri))::point != lahin_piste::point THEN
                     etaisyys_pisteeseen := etaisyys_pisteeseen +
-                                           (SELECT ST_Length(ST_GeometryN(ST_Split(
+                                           ((SELECT ST_Length(ST_GeometryN(ST_Split(
                                                                               ST_Snap(ST_GeometryN(osan_geometria, laskuri), lahin_piste, 0.1),
-                                                                              lahin_piste), 1)));
+                                                                              lahin_piste), 1))) * keskiarvo_metri);
                 END IF;
             ELSE
-                etaisyys_pisteeseen := etaisyys_pisteeseen + St_Length(ST_GeometryN(osan_geometria, laskuri));
+                etaisyys_pisteeseen := etaisyys_pisteeseen + (St_Length(ST_GeometryN(osan_geometria, laskuri)) * keskiarvo_metri);
             END IF;
             RAISE NOTICE 'Laskuri: %', laskuri;
             RAISE NOTICE 'Etaisyys pisteeseen: %', etaisyys_pisteeseen;
@@ -303,12 +318,11 @@ BEGIN
     -- Jos tarkasteltava piste on aivan tienosan päässä, etäisyydeksi palautuu koko osan pituus
     -- riippumatta siitä onko piste tienosan alku- vai loppupäässä. Alkupässä aet pitäisi olla 0, eikä sama kuin osan pituus.
     -- Tarkistetaan siksi pisteen suhde myös tienosan alkuun ja loppuun, jos edellä saatiin aet-arvoksi tienosan pituus.
-    tieosan_kokonaispituus := St_Length(osan_geometria);
     aet := etaisyys_pisteeseen;
 
-    IF aet = tieosan_kokonaispituus THEN
-        tieosan_alku := tierekisteriosoitteelle_piste(tie, osa, 0);
-        tieosan_loppu := tierekisteriosoitteelle_piste(tie, osa, aet);
+    IF aet = osan_oikea_pituus THEN
+        tieosan_alku := tierekisteriosoitteelle_piste(tie_, osa_, 0);
+        tieosan_loppu := tierekisteriosoitteelle_piste(tie_, osa_, aet);
         alun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_alku);
         lopun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_loppu);
 
