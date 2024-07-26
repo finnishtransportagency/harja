@@ -204,6 +204,9 @@ DECLARE
   osan_geometria GEOMETRY;
   osan_kohta FLOAT;
   tulos GEOMETRY;
+  osan_projektoitu_pituus FLOAT;
+  osan_oikea_pituus INTEGER;
+  keskiarvo_metri FLOAT;
 BEGIN
   SELECT geom
   FROM tr_osan_ajorata
@@ -211,7 +214,14 @@ BEGIN
   ORDER BY ajorata
   LIMIT 1
   INTO osan_geometria;
-  osan_kohta := LEAST(1, aet_/ST_Length(osan_geometria));
+
+  osan_projektoitu_pituus := st_length(osan_geometria);
+
+  SELECT pituus FROM tr_osien_pituudet WHERE tie=tie_ AND osa=aosa_ INTO osan_oikea_pituus;
+
+  keskiarvo_metri := osan_projektoitu_pituus / osan_oikea_pituus;
+
+  osan_kohta := LEAST(1, aet_/osan_projektoitu_pituus*keskiarvo_metri);
   tulos := ST_LineSubstring(osan_geometria, osan_kohta, osan_kohta);
   IF ST_GeometryType(tulos)='ST_GeometryCollection' AND ST_NumGeometries(tulos)=1 THEN
     tulos := ST_GeometryN(tulos, 1);
