@@ -28,6 +28,7 @@
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
+            [harja.kyselyt.rahavaraukset :as rahavaravaus-kyselyt]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
             [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat])
@@ -294,7 +295,7 @@
 (defn palauta-toimenpiteet
   "Haetaan toimenpiteet (taso 3) ja palautetaan ne json muodossa"
   [db _ _]
-  (log/info "Analytiikka API, tehtävien haku")
+  (log/info "Analytiikka API, toimenpiteet haku")
   (let [toimenpiteet (toimenpidekoodi-kyselyt/listaa-toimenpiteet-analytiikalle db)
         ;; Wrapatään jokainen rivi "toimenpide" -nimiseen avaimen alle
         toimenpiteet (map (fn [t]
@@ -302,6 +303,19 @@
                           toimenpiteet)]
     ;; Palautetaan kaikki toimenpiteet toimenpiteet avaimen alla
     {:toimenpiteet toimenpiteet}))
+
+(defn palauta-rahavaraukset
+  "Haetaan rahavaraukset ja niiden tehtävät ja palautetaan ne json muodossa kysyjälle. Tosin kutsukäsittelijä muokkaa
+  tämän aineiston jsoniksi."
+  [db _ _]
+  (log/info "Analytiikka API, rahavaraukset haku")
+  (let [rahavaraukset (rahavaravaus-kyselyt/listaa-rahavaraukset-analytiikalle db)
+        ;; Wrapatään jokainen rivi "rahavaraus" -nimiseen avaimen alle
+        rahavaraukset (map (fn [r]
+                            {:rahavaraus (assoc r :tehtavat (konversio/pgarray->vector (:tehtavat r)))})
+                        rahavaraukset)]
+    ;; Palautetaan kaikki rahavaraukset rahavaraukset avaimen alla
+    {:rahavaraukset rahavaraukset}))
 
 (defn palauta-urakat
   "Haetaan urakat ja palautetaan ne json muodossa"
@@ -928,6 +942,16 @@
           :analytiikka-hae-toimenpiteet request
           (fn [parametrit kayttaja db]
             (palauta-toimenpiteet db parametrit kayttaja))
+          ;; Vaaditaan analytiikka-oikeudet
+          :analytiikka)))
+
+    (julkaise-reitti
+      http :analytiikka-toimenpiteet
+      (GET "/api/analytiikka/rahavaraukset" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
+          :analytiikka-hae-rahavaraukset request
+          (fn [parametrit kayttaja db]
+            (palauta-rahavaraukset db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
           :analytiikka)))
 

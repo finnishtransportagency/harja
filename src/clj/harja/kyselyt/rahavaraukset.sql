@@ -115,3 +115,12 @@ DELETE
 DELETE
   FROM rahavaraus
  WHERE id = :id :: BIGINT;
+
+-- name: listaa-rahavaraukset-analytiikalle
+SELECT r.id as id,
+       r.nimi as nimi,
+       array_agg(rt.tehtava_id) as tehtavat,
+       r.luotu, r.muokattu
+  FROM rahavaraus r
+       JOIN rahavaraus_tehtava rt on r.id = rt.rahavaraus_id
+ GROUP BY r.id, r.nimi;
