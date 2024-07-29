@@ -112,11 +112,8 @@ BEGIN
 
             -- Kuinka pitkä matka keskiarvollisesti 2d-projektoitu metri on oikeassa elämässä, ts. kuinka paljon pitempi tie on kuin sen geometrian pituus.
             SELECT pituus
-            FROM tr_ajoratojen_pituudet
-            WHERE tie = tie_ AND osa = osa_ AND (ajorata = ajorata_
-               OR ajorata = 0)
-            ORDER BY ajorata DESC
-            LIMIT 1
+            FROM tr_osien_pituudet
+            WHERE tie = tie_ AND osa = osa_
             INTO osan_oikea_pituus;
 
             -- Tällä suhdeluvulla saadaan oikea pituus käännettyä projektoiduksi pituudeksi, jota tarvitaan geometrian luontiin.
@@ -226,7 +223,6 @@ BEGIN
   osan_projektoitu_pituus := st_length(osan_geometria);
 
   SELECT pituus FROM tr_osien_pituudet WHERE tie=tie_ AND osa=aosa_ INTO osan_oikea_pituus;
-
   keskiarvo_metri := osan_projektoitu_pituus / osan_oikea_pituus;
 
   osan_kohta := LEAST(1, aet_/osan_projektoitu_pituus*keskiarvo_metri);
@@ -266,8 +262,7 @@ BEGIN
 
     osan_projektoitu_pituus := St_Length(osan_geometria);
     SELECT pituus FROM tr_osien_pituudet tap WHERE tap.tie=tie_ AND tap.osa= osa_ INTO osan_oikea_pituus;
-    -- Osan oikea pituus jaettuna projektoidulla pituudella antaa suhdeluvun, jolla saadaan käännettyä projektoitu etäisyys oikeaksi.
-    keskiarvo_metri :=  osan_oikea_pituus / osan_projektoitu_pituus;
+    keskiarvo_metri :=  1 / (osan_projektoitu_pituus / osan_oikea_pituus);
 
     RAISE NOTICE 'TYYPPI: % ', St_GeometryType(osan_geometria);
 
@@ -348,8 +343,9 @@ BEGIN
   FROM tr_osan_ajorata
   WHERE geom IS NOT NULL AND
         ST_Intersects(piste, envelope)
-  ORDER BY d ASC LIMIT 1
+  ORDER BY d, ajorata ASC LIMIT 1
   INTO osa_;
+
   -- Jos osa löytyy, ota etäisyys
   IF osa_ IS NULL THEN
     RETURN NULL;
@@ -430,7 +426,7 @@ BEGIN
       AND b.geom IS NOT NULL
       AND ST_Intersects(apiste, a.envelope)
       AND ST_Intersects(bpiste, b.envelope)
-    ORDER BY d ASC
+    ORDER BY d, ajorata ASC
     LIMIT 1
     INTO r;
     IF r IS NULL THEN
