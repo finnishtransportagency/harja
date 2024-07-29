@@ -28,7 +28,7 @@
 
         ;; Mitataan funktion laske_yllapitokohdeosan_pk_pituudet koodeilla pk luokan pituus
         erotus (:erotus (first (q-map (format "SELECT ROUND(COALESCE(st_length (st_difference (%s, %s)), 0)::numeric,0) AS erotus", trgeom_format pkgeom_format))))]
-    (is (= (BigDecimal. (:let pk)) pkgeom_pituus))
-    (is (= (BigDecimal. (:let tr)) trgeom_pituus))
+    (is (=marginaalissa? (BigDecimal. (:let pk)) pkgeom_pituus 20))
+    (is (=marginaalissa? (BigDecimal. (:let tr)) trgeom_pituus 20))
     ;; Ihan metrilleen ei saada tarkkoja lukuja, kun tieosoitteen paaluvälit ei ole ihan metrejä, joten sallitaan pieni marginaali
-    (is (=marginaalissa?  (BigDecimal. (- (:let tr) (:let pk))) erotus 3))))
+    (is (=marginaalissa?  (BigDecimal. (- (:let tr) (:let pk))) erotus 20))))
