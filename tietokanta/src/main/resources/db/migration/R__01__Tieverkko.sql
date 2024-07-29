@@ -234,7 +234,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GEOMETRY, tie_ INTEGER, osa_ INTEGER)
+CREATE OR REPLACE FUNCTION laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GEOMETRY, tie INTEGER, osa INTEGER)
     RETURNS tr_osan_kohta AS $$
 DECLARE
     lahin_piste                GEOMETRY;
@@ -261,7 +261,7 @@ BEGIN
     etaisyys_pisteeseen := 0;
 
     osan_projektoitu_pituus := St_Length(osan_geometria);
-    SELECT pituus FROM tr_osien_pituudet tap WHERE tap.tie=tie_ AND tap.osa= osa_ INTO osan_oikea_pituus;
+    SELECT pituus FROM tr_osien_pituudet tap WHERE tap.tie=laske_tr_osan_kohta.tie AND tap.osa=laske_tr_osan_kohta.osa INTO osan_oikea_pituus;
     keskiarvo_metri :=  1 / (osan_projektoitu_pituus / osan_oikea_pituus);
 
     RAISE NOTICE 'TYYPPI: % ', St_GeometryType(osan_geometria);
@@ -316,8 +316,8 @@ BEGIN
     aet := etaisyys_pisteeseen;
 
     IF aet = osan_oikea_pituus THEN
-        tieosan_alku := tierekisteriosoitteelle_piste(tie_, osa_, 0);
-        tieosan_loppu := tierekisteriosoitteelle_piste(tie_, osa_, aet);
+        tieosan_alku := tierekisteriosoitteelle_piste(tie, osa, 0);
+        tieosan_loppu := tierekisteriosoitteelle_piste(tie, osa, aet);
         alun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_alku);
         lopun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_loppu);
 
