@@ -44,6 +44,16 @@
   (let [{kk :kk vuosi :vuosi} (koontilaskun-kuukausi->kk-vuosi koontilaskun-kuukausi urakka-alkupvm urakka-loppupvm)] 
     (pvm/->pvm-date-timeksi (str "1." kk "." vuosi))))
 
+(defn koontilaskun-kuukausi->kuukausi
+  "Palautetaan tekstimuotoisesta koontilaskun-kuukausi-muuttujasta kuukauden numero. Esim lokakuu/1-hoitovuosi -> 10"
+  [koontilaskun-kuukausi urakka-alkupvm urakka-loppupvm]
+  (pvm/kuukausi (koontilaskun-kuukausi->pvm koontilaskun-kuukausi urakka-alkupvm urakka-loppupvm)))
+
+(defn koontilaskun-kuukausi->vuosi
+  "Palautetaan tekstimuotoisesta koontilaskun-kuukausi-muuttujasta vuosi. Esim lokakuu/1-hoitovuosi -> 2024"
+  [koontilaskun-kuukausi urakka-alkupvm urakka-loppupvm]
+  (pvm/vuosi (koontilaskun-kuukausi->pvm koontilaskun-kuukausi urakka-alkupvm urakka-loppupvm)))
+
 (defn koontilaskun-kuukauden-sisalla?-fn [koontilaskun-kuukausi urakka-alkupvm urakka-loppupvm]
   (let [{kk :kk vuosi :vuosi} (koontilaskun-kuukausi->kk-vuosi koontilaskun-kuukausi urakka-alkupvm urakka-loppupvm)]
     #(if-not (nil? koontilaskun-kuukausi)
