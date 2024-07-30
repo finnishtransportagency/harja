@@ -857,18 +857,18 @@
         urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         kulut (kulu-kyselyt/hae-toteutuneet-kustannukset-analytiikalle db {:urakka-id urakka-id})
         kulut (map (fn [k]
-                     (let [k (-> k
-                               (update :kulukohdistukset konversio/jsonb->clojuremap)
-                               (update k :kulukohdistukset
-                                 (fn [rivit]
-                                   (let [muokatut (keep
-                                                 (fn [r]
-                                                   ;; Haku käyttää hakemisessa left joinia, joten on mahdollista, että taulusta
-                                                   ;; löytyy nil rivi
-                                                   (when (not (nil? (:f1 r)))
-                                                     (clojure.set/rename-keys r db-kustannukset->speqcl-avaimet)))
-                                                 rivit)]
-                                     (map #(konversio/alaviiva->rakenne %) muokatut)))))]
+                     (let [k (update k :kulukohdistukset konversio/jsonb->clojuremap)
+                           k (update k :kulukohdistukset
+                                  (fn [rivit]
+                                    (let [tulos (keep
+                                                  (fn [r]
+                                                    ;; Haku käyttää hakemisessa left joinia, joten on mahdollista, että taulusta
+                                                    ;; löytyy nil rivi
+                                                    (when (not (nil? (:f1 r)))
+                                                      (clojure.set/rename-keys r db-kustannukset->speqcl-avaimet)))
+                                                  rivit)
+                                          tulos (map #(konversio/alaviiva->rakenne %) tulos)]
+                                      tulos)))]
                        {:kulu (-> k
                                 (assoc :kulun-ajankohta_koontilaskun-kuukausi
                                   (harja.domain.kulut/koontilaskun-kuukausi->kuukausi (:kulun-ajankohta_koontilaskun-kuukausi k)
@@ -878,7 +878,8 @@
                                   (harja.domain.kulut/koontilaskun-kuukausi->vuosi (:kulun-ajankohta_koontilaskun-kuukausi k)
                                     (:alkupvm urakan-tiedot)
                                     (:loppupvm urakan-tiedot)))
-                                (konversio/alaviiva->rakenne))}))
+                                (konversio/alaviiva->rakenne)
+                                )}))
                 kulut)]
 
     {:toteutuneet-kustannukset {:urakka urakka-id
