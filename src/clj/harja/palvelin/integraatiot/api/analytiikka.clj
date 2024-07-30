@@ -28,6 +28,7 @@
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
+            [harja.kyselyt.kulut :as kulu-kyselyt]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
             [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat])
@@ -838,6 +839,52 @@
                          :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}))]
     {:paikkaukset paikkaukset}))
 
+(def db-kustannukset->speqcl-avaimet
+  {:f1 :kulukohdistus_kulukohdistus-id
+   :f2 :kulukohdistus_rivinumero
+   :f3 :kulukohdistus_tyyppi
+   :f4 :kulukohdistus_lisatieto
+   :f5 :kulukohdistus_poistettu
+   :f6 :kulukohdistus_summa
+   :f7 :kulukohdistus_kohdistus_toimenpide
+   :f8 :kulukohdistus_kohdistus_tehtavaryhma
+   :f9 :kulukohdistus_kohdistus_rahavaraus
+   :f10 :kulukohdistus_kohdistus_tehtava})
+
+(defn palauta-toteutuneet-kustannukset [db {:keys [urakka-id] :as parametrit}]
+  (log/info "Analytiikka API palauta toteutuneet kustannukset urakalle :: parametrit" (pr-str parametrit))
+  (let [urakka-id (if (integer? urakka-id) urakka-id (konversio/konvertoi->int urakka-id))
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        kulut (kulu-kyselyt/hae-toteutuneet-kustannukset-analytiikalle db {:urakka-id urakka-id})
+        kulut (map (fn [k]
+                     (let [k (-> k
+                               (update :kulukohdistukset konversio/jsonb->clojuremap)
+                               (update k :kulukohdistukset
+                                 (fn [rivit]
+                                   (let [muokatut (keep
+                                                 (fn [r]
+                                                   ;; Haku käyttää hakemisessa left joinia, joten on mahdollista, että taulusta
+                                                   ;; löytyy nil rivi
+                                                   (when (not (nil? (:f1 r)))
+                                                     (clojure.set/rename-keys r db-kustannukset->speqcl-avaimet)))
+                                                 rivit)]
+                                     (map #(konversio/alaviiva->rakenne %) muokatut)))))]
+                       {:kulu (-> k
+                                (assoc :kulun-ajankohta_koontilaskun-kuukausi
+                                  (harja.domain.kulut/koontilaskun-kuukausi->kuukausi (:kulun-ajankohta_koontilaskun-kuukausi k)
+                                    (:alkupvm urakan-tiedot)
+                                    (:loppupvm urakan-tiedot)))
+                                (assoc :kulun-ajankohta_koontilaskun-vuosi
+                                  (harja.domain.kulut/koontilaskun-kuukausi->vuosi (:kulun-ajankohta_koontilaskun-kuukausi k)
+                                    (:alkupvm urakan-tiedot)
+                                    (:loppupvm urakan-tiedot)))
+                                (konversio/alaviiva->rakenne))}))
+                kulut)]
+
+    {:toteutuneet-kustannukset {:urakka urakka-id
+                                :urakkatunnus (:alueurakkanumero urakan-tiedot)
+                                :kulut kulut}}))
+
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
   (start [{http :http-palvelin db :db-replica integraatioloki :integraatioloki :as this}]
@@ -1024,6 +1071,16 @@
             (hae-paikkaukset db parametrit))
           :analytiikka)))
 
+    (julkaise-reitti
+      http :analytiikka-toteutuneet-kustannukset
+      (GET "/api/analytiikka/toteutuneet-kustannukset/:urakka-id" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
+          :analytiikka-hae-toteutuneet-kustannukset request
+          (fn [parametrit kayttaja db]
+            (palauta-toteutuneet-kustannukset db parametrit))
+          ;; Vaaditaan analytiikka-oikeudet
+          :analytiikka)))
+
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -1046,5 +1103,6 @@
       :analytiikka-hae-paallystysilmoitukset
       :analytiikka-hae-hoidon-paikkauskustannukset
       :analytiikka-hae-paikkauskohteet
-      :analytiikka-hae-paikkaukset)
+      :analytiikka-hae-paikkaukset
+      :analytiikka-toteutuneet-kustannukset)
     this))
