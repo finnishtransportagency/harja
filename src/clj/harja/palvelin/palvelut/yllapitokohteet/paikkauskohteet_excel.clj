@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel
   "Luetaan paikkauskohteet excelistä tiedot ulos"
-  (:require [dk.ative.docjure.spreadsheet :as xls]
+  (:require [clojure.string :as str]
+            [dk.ative.docjure.spreadsheet :as xls]
             [slingshot.slingshot :refer [throw+]]
             [clojure.string :refer [trim]]
             [harja.domain.oikeudet :as oikeudet]
@@ -63,7 +64,7 @@
                            tunniste (:tunniste rivi)
                            ;; Onko tämä tunniste jo nähty?
                            tunniste-olemassa? (and tunniste (contains? @nahdyt-tunnisteet tunniste))]
-                        ;; Lisää nähty tunniste atomiin
+                       ;; Lisää nähty tunniste atomiin
                        (when tunniste (swap! nahdyt-tunnisteet conj tunniste))
                        (cond
                          (not-empty nil-avaimet)
@@ -71,7 +72,7 @@
 
                          (not kokonaislukuja?)
                          (assoc rivi :virhe (str "Rivillä " rivi-nro " aosa, losa, tie, aet, let, sekä tunniste pitää olla kokonaislukuja."))
-                         
+
                          (not kustannus-maara-validi?)
                          (assoc rivi :virhe (str "Rivillä " rivi-nro " kustannus ja määrä pitää olla joko kokonaisluku tai desimaaliluku."))
 
@@ -133,7 +134,7 @@
                                      (= "Nro *" (first rivi))
                                      (= "Nro. *" (first rivi)))
                                    (or (= "Kohde" (second rivi))
-                                       (= "Kohteen nimi *" (second rivi))))
+                                     (= "Kohteen nimi *" (second rivi))))
                                  idx))
                              raaka-data))
         kohteet (keep
@@ -282,45 +283,45 @@
                      [[:taulukko optiot nil [["Ei paikkauskohteita"]]]]
                      taulukot))]
     (excel/muodosta-excel (vec taulukko)
-                          workbook)))
+      workbook)))
 
 (defn- lue-urem-excelin-otsikot [sivu]
   (try
     (first
-     (->> sivu
-          xls/row-seq
-          (drop 6)
-          (take 7) ;; millä rivillä otsikot ovat
-          (map xls/cell-seq)
-          (map #(take 16 %)) ;; 16 saraketta
-          (map (partial map xls/read-cell))))
+      (->> sivu
+        xls/row-seq
+        (drop 6)
+        (take 7) ;; millä rivillä otsikot ovat
+        (map xls/cell-seq)
+        (map #(take 16 %)) ;; 16 saraketta
+        (map (partial map xls/read-cell))))
     (catch Exception e
       (log/error e "Vääränlainen Excel-pohja UREM-tuonnissa: "))))
 
 (defn- lue-urem-kokonaismassamaara [sivu]
   (try
     (ffirst
-     (->> sivu
-          xls/row-seq
-          ;; hypätään riville, missä kokonaismassamäärä syötetään
-          (drop 3)
-          (map xls/cell-seq)
-          (map #(take 1 %)) ;; luetaan vain eka sarake
-          (map (partial map xls/read-cell))))
+      (->> sivu
+        xls/row-seq
+        ;; hypätään riville, missä kokonaismassamäärä syötetään
+        (drop 3)
+        (map xls/cell-seq)
+        (map #(take 1 %)) ;; luetaan vain eka sarake
+        (map (partial map xls/read-cell))))
     (catch Exception e
       (log/error e "Ei löytynyt kokonaismassamäärää Excel-pohjasta"))))
 
 (def urem-excel-pohjan-otsikot
   (-> "public/excel/harja_urapaikkaustoteumien_tuonti_pohja.xlsx"
-      xls/load-workbook-from-resource
-      xls/sheet-seq
-      first
-      lue-urem-excelin-otsikot))
+    xls/load-workbook-from-resource
+    xls/sheet-seq
+    first
+    lue-urem-excelin-otsikot))
 
 (defn erottele-uremit [workbook]
   (let [sivu (first (xls/sheet-seq workbook))
         excelin-otsikot-tasmaavat-pohjaan? (= (lue-urem-excelin-otsikot sivu)
-                                              urem-excel-pohjan-otsikot)
+                                             urem-excel-pohjan-otsikot)
         urem-kok-massamaara (lue-urem-kokonaismassamaara sivu)
         paikkaukset (when excelin-otsikot-tasmaavat-pohjaan?
                       (->> sivu
@@ -351,3 +352,32 @@
     {:paikkaukset paikkaukset
      :urem-kok-massamaara urem-kok-massamaara
      :virhe (when-not excelin-otsikot-tasmaavat-pohjaan? "Excelin otsikot eivät täsmää pohjaan")}))
+
+(defn vie-reikapaikkaukset-exceliin
+  [db hae-reikapaikkaukset workbook user {:keys [urakka-id] :as tiedot}]
+  (let [reikapaikkaukset (hae-reikapaikkaukset db user tiedot)
+        urakka (:nimi (first (q-urakat/hae-urakan-nimi db urakka-id)))
+        yhteensa-rivi [[nil nil nil nil nil nil nil nil nil nil (apply + (map :kustannus reikapaikkaukset))]]
+        reikapaikkaukset (mapv
+                           (fn [{:keys [tunniste alkuaika tie aosa aet losa let tyomenetelma-nimi maara reikapaikkaus-yksikko kustannus]}]
+                             [tunniste
+                              alkuaika
+                              tie
+                              aosa
+                              aet
+                              losa
+                              let
+                              tyomenetelma-nimi
+                              maara
+                              reikapaikkaus-yksikko
+                              kustannus])
+                           reikapaikkaukset)
+        tyhja-rivi [[]]
+        excel-nimi (str urakka " reikäpaikkaukset")
+        taulukko (vec (concat
+                        [:pohjan-taytto {:nimi excel-nimi
+                                         :ensimmainen-rivi 1
+                                         :sheet-nro 0}]
+                        [(vec (concat yhteensa-rivi tyhja-rivi reikapaikkaukset))]))]
+    (excel/muodosta-excel taulukko
+      workbook)))
