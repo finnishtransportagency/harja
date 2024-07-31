@@ -91,7 +91,8 @@
   (is (nil? (validoi json-skeemat/tyomaapaivakirja-paivitys-request json-esimerkit/+tyomaapaivakirja-paivitys-request+)))
 
   (is (nil? (validoi json-skeemat/analytiikka-tehtavat-vastaus json-esimerkit/+analytiikka-tehtavat-haku-response+)))
-  (is (nil? (validoi json-skeemat/analytiikka-tehtavaryhmat-vastaus json-esimerkit/+analytiikka-tehtavaryhmat-haku-response+)))
+  (is (nil? (validoi json-skeemat/analytiikka-tehtavat-vastaus json-esimerkit/+analytiikka-tehtavaryhmat-haku-response+)))
+  (is (nil? (validoi json-skeemat/analytiikka-tehtavaryhmat-vastaus json-esimerkit/+analytiikka-tehtavaryhmat-haku-response+)) "Tehtävryhmät ei vastaa tehtäväryhmä responsea")
   (is (nil? (validoi json-skeemat/analytiikka-rahavaraukset-vastaus json-esimerkit/+analytiikka-rahavaraukset-haku-response+)))
   (is (nil? (validoi json-skeemat/analytiikka-toimenpiteet-vastaus json-esimerkit/+analytiikka-toimenpiteet-haku-response+)))
   (is (nil? (validoi json-skeemat/analytiikka-mhu-suunnitellut-kustannukset-vastaus json-esimerkit/+analytiikka-mhu-suunnitellut-kustannukset-haku-response+)))
