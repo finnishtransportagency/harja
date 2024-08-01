@@ -170,7 +170,7 @@ SELECT SUM((hjh.tunnit * hjh.tuntipalkka * hjh."osa-kuukaudesta")) AS budjetoitu
             hjh."osa-kuukaudesta"))                                AS budjetoitu_summa_indeksikorjattu,
        0                                                           AS toteutunut_summa,
        'kiinteahintainen'                                          AS maksutyyppi,
-       'palkat'                                                    AS toimenpideryhma,
+       'hankinta'                                                  AS toimenpideryhma,
        jjht.toimenkuva                                             AS tehtava_nimi,
        'MHU Hoidonjohto'                                           AS toimenpide,
        MIN(concat(hjh.vuosi, '-', hjh.kuukausi, '-01'))            AS ajankohta,
@@ -191,7 +191,7 @@ SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        SUM(kt.summa_indeksikorjattu)                  AS budjetoitu_summa_indeksikorjattu,
        0                                              AS toteutunut_summa,
        'kiinteahintainen'                             AS maksutyyppi,
-       'toimistokulut'                                AS toimenpideryhma,
+       'hankinta'                                     AS toimenpideryhma,
        tk_tehtava.nimi                                AS tehtava_nimi,
        'MHU Hoidonjohto'                              AS toimenpide,
        MIN(concat(kt.vuosi, '-', kt.kuukausi, '-01')) AS ajankohta,
@@ -278,7 +278,7 @@ SELECT 0                          AS budjetoitu_summa,
        lk.maksueratyyppi::TEXT    AS maksutyyppi,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
-           WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'toimistokulut'
+           WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'hankinta'
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
            WHEN lk.tyyppi::TEXT = 'lisatyo' THEN 'lisatyo'
            WHEN tr.yksiloiva_tunniste IN ('55c920e7-5656-4bb0-8437-1999add714a3',

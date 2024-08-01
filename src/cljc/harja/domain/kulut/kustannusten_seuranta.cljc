@@ -147,85 +147,6 @@
            (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) tehtavat))}]
     tehtava-map))
 
-(defn- summaa-hoito-ja-hallinta-tehtavat [tehtavat paaryhmaotsikko]
-  (let [;; Toimenpiteet mäpissä on budjetoidut ja toteutuneet toimenpiteet
-        ;; UI:lla budjetointi lasketaan yhteen  ja toteutuneet kustannukset näytetään
-        ;; rivikohtaisesti.
-        ;; Poistetaan siis budjetointiin liittyvät tehtävät :toteutunut = budjetoitu tai hth
-        ;; Jaotellaan tehtävät joko palkkoihin tai toimistokuluihin
-        palkkatehtavat (filter (fn [tehtava]
-                                 (when (= "palkat" (:toimenpideryhma tehtava))
-                                   tehtava))
-                               tehtavat)
-        toimistotehtavat (filter (fn [tehtava]
-                                   (when (and
-                                           (= "toimistokulut" (:toimenpideryhma tehtava))
-                                           #_ (not= "lisatyo" (:maksutyyppi tehtava)))
-                                     tehtava))
-                                 tehtavat)
-        toteutuneet-palkat (filter
-                             (fn [tehtava]
-                               (when (and
-                                       (not= "hjh" (:toteutunut tehtava))
-                                       (not= "budjetointi" (:toteutunut tehtava))
-                                       #_ (not= "lisatyo" (:maksutyyppi tehtava)))
-                                 tehtava))
-                             palkkatehtavat)
-        toteutuneet-toimistotehtavat (filter
-                                       (fn [tehtava]
-                                         (when (and
-                                                 (not= "hjh" (:toteutunut tehtava))
-                                                 (not= "budjetointi" (:toteutunut tehtava))
-                                                 #_ (not= "lisatyo" (:maksutyyppi tehtava)))
-                                           tehtava))
-                                       toimistotehtavat)
-        palkat-vahvistettu (when (and palkkatehtavat (not (empty? palkkatehtavat)))
-                             (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) palkkatehtavat))
-        toimistokulut-vahvistettu (when (and toimistotehtavat (not (empty? toimistotehtavat)))
-                                    (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) toimistotehtavat))]
-    (vec [
-          {:paaryhma paaryhmaotsikko
-           :toimenpide "Palkat"
-           :jarjestys (some #(:jarjestys %) palkkatehtavat)
-           :toimenpide-toteutunut-summa (apply + (map (fn [rivi]
-                                                        (or (:toteutunut_summa rivi) 0))
-                                                   palkkatehtavat))
-           :toimenpide-budjetoitu-summa (apply + (map (fn [rivi]
-                                                        (or (:budjetoitu_summa rivi) 0))
-                                                   palkkatehtavat))
-           :toimenpide-budjetoitu-summa-indeksikorjattu (apply + (map (fn [rivi]
-                                                                        (or (:budjetoitu_summa_indeksikorjattu rivi) 0))
-                                                                   palkkatehtavat))
-           :tehtavat toteutuneet-palkat
-           ;; Asetetaan vahvistus-status nulliksi, jos yhtään toteumaa tai budjettia ei ole annettu.
-           ;; Päätellään myöhemmin, että näytetäänkö nämä vahvistettuina tai vahvistamattomina
-           :johto-ja-hallintakorvaus-indeksikorjaus-vahvistettu palkat-vahvistettu}
-          {:paaryhma paaryhmaotsikko
-           :toimenpide "Toimistokulut"
-           :jarjestys (some #(:jarjestys %) toimistotehtavat)
-           :toimenpide-toteutunut-summa (apply + (map (fn [rivi]
-                                                        (or (:toteutunut_summa rivi) 0))
-                                                   toimistotehtavat))
-           :toimenpide-budjetoitu-summa (apply + (map (fn [rivi]
-                                                        (or (:budjetoitu_summa rivi) 0))
-                                                   toimistotehtavat))
-           :toimenpide-budjetoitu-summa-indeksikorjattu (apply + (map (fn [rivi]
-                                                                        (or (:budjetoitu_summa_indeksikorjattu rivi) 0))
-                                                                   toimistotehtavat))
-           #_#_:lisatyot-summa (reduce (fn [summa tehtava]
-                                     (if (= "lisatyo" (:maksutyyppi tehtava))
-                                       (+ summa (or (:toteutunut_summa tehtava) 0))
-                                       summa))
-                             0 tehtavat)
-           #_#_:lisatyot (filter (fn [tehtava]
-                               (when (= "lisatyo" (:maksutyyppi tehtava))
-                                 true))
-                       tehtavat)
-           :tehtavat toteutuneet-toimistotehtavat
-           ;; Asetetaan vahvistus-status nulliksi, jos yhtään toteumaa tai budjettia ei ole annettu.
-           ;; Päätellään myöhemmin, että näytetäänkö nämä vahvistettuina tai vahvistamattomina
-           :johto-ja-hallintakorvaus-indeksikorjaus-vahvistettu toimistokulut-vahvistettu}])))
-
 (defn- summaa-hoitokauden-paattamisen-kulut [tehtavat paaryhmaotsikko]
   (let [toteutuneet-tehtavat
         (filter
@@ -330,8 +251,7 @@
         ;; Ryhmittele hankintakustannusten alla olevat tiedot toimenpiteen perusteella
         hankintakustannusten-toimenpiteet (sort-by toimenpide-jarjestys (group-by :toimenpide hankintakustannukset))
         hankintakustannusten-toimenpiteet (summaa-toimenpidetaso hankintakustannusten-toimenpiteet (nth raportin-paaryhmat 0))
-        jjhallinnan-toimenpiteet (summaa-hoito-ja-hallinta-tehtavat jjhallinta-kustannukset (nth raportin-paaryhmat 1))
-        jjhallinnan-toimenpiteet (sort-by :jarjestys jjhallinnan-toimenpiteet)
+        jjhallinnan-tehtavat (summaa-paaryhman-tehtavat jjhallinta-kustannukset (nth raportin-paaryhmat 1))
         rahavaraukset (sort-by toimenpide-jarjestys (group-by :toimenpide rahavaraukset))
         rahavaraus-toimenpiteet (summaa-toimenpidetaso rahavaraukset (nth raportin-paaryhmat 4))
         hoidonjohdonpalkkiot (summaa-paaryhman-tehtavat hoidonjohdonpalkkiot (nth raportin-paaryhmat 2))
@@ -354,8 +274,8 @@
                          ;; Aseta pääryhmän avaimaille budjetoitu summa ja toteutunut summa
                          (summaa-paaryhman-toimenpiteet 0 hankintakustannusten-toimenpiteet)
 
-                         (assoc (keyword (nth raportin-paaryhmat 1)) jjhallinnan-toimenpiteet)
-                         (summaa-paaryhman-toimenpiteet 1 jjhallinnan-toimenpiteet)
+                         (assoc (keyword (nth raportin-paaryhmat 1))  jjhallinnan-tehtavat)
+                         (summaa-tehtavat jjhallinnan-tehtavat 1)
 
                          (assoc (keyword (nth raportin-paaryhmat 2)) hoidonjohdonpalkkiot)
                          (summaa-tehtavat hoidonjohdonpalkkiot 2)
