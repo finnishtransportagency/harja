@@ -10,6 +10,7 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus]
             [harja.domain.tierekisteri :as tr-domain]
+            [harja.domain.kulut :as kulut-domain]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
@@ -871,15 +872,15 @@
                                       tulos)))]
                        {:kulu (-> k
                                 (assoc :kulun-ajankohta_koontilaskun-kuukausi
-                                  (harja.domain.kulut/koontilaskun-kuukausi->kuukausi (:kulun-ajankohta_koontilaskun-kuukausi k)
+                                  (kulut-domain/koontilaskun-kuukausi->kuukausi (:koontilaskun-kuukausi k)
                                     (:alkupvm urakan-tiedot)
                                     (:loppupvm urakan-tiedot)))
                                 (assoc :kulun-ajankohta_koontilaskun-vuosi
-                                  (harja.domain.kulut/koontilaskun-kuukausi->vuosi (:kulun-ajankohta_koontilaskun-kuukausi k)
+                                  (kulut-domain/koontilaskun-kuukausi->vuosi (:koontilaskun-kuukausi k)
                                     (:alkupvm urakan-tiedot)
                                     (:loppupvm urakan-tiedot)))
-                                (konversio/alaviiva->rakenne)
-                                )}))
+                                (dissoc :koontilaskun-kuukausi)
+                                (konversio/alaviiva->rakenne))}))
                 kulut)]
 
     {:toteutuneet-kustannukset {:urakka urakka-id

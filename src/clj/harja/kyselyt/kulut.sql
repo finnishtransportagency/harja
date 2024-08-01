@@ -301,8 +301,7 @@ SELECT k.id                        AS "kulu-id",
        k.laskun_numero             AS "laskun-tunniste",
        k.lisatieto                 AS "kulun-kuvaus",
        k.poistettu                 AS "poistettu",
-       k.koontilaskun_kuukausi     AS "kulun-ajankohta_koontilaskun-vuosi",-- Huom.
-       k.koontilaskun_kuukausi     AS "kulun-ajankohta_koontilaskun-kuukausi",-- Huom.
+       k.koontilaskun_kuukausi     AS "koontilaskun-kuukausi",
        k.erapaiva                  AS "kulun-ajankohta_laskun-paivamaara",
        k.kokonaissumma             AS "kulun-kokonaissumma",
        jsonb_agg(row_to_json(row (
