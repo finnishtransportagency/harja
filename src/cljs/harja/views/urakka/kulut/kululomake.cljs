@@ -82,8 +82,8 @@
 (defn- kulun-tyyppi->tekstiksi [tyyppi]
   (case tyyppi
     :muukulu "Muu kulu"
-    :hankintakulu "Hankintakulu"
-    :rahavaraus "Rahavaraus"
+    :hankintakulu "Hankintakulu (kiinteä tai määrämitattava)"
+    :rahavaraus "Rahavaraukselle kohdistettava kulu"
     :lisatyo "Lisätyö"
     :paatos "Hoitovuoden päätös"
     "Tuntematon"))
@@ -111,7 +111,7 @@
                         tehtavaryhmat)]
     [:div.row
      [:div.col-xs-12.col-md-6
-      [:div.label-ja-alasveto
+      [:div.label-ja-alasveto {:style {:width "320px"}}
        [:span.alasvedon-otsikko "Tehtäväryhmä*"]
        [yleiset/livi-pudotusvalikko {:vayla-tyyli? true
                                      :muokattu? true
@@ -137,7 +137,7 @@
                                        (str/includes? (str/lower-case (:tehtavaryhma t)) "vahinkojen")
                                        (str/includes? (str/lower-case (:tehtavaryhma t)) "äkilliset")
                                        (str/includes? (str/lower-case (:tehtavaryhma t)) "hoidonjohtopalkkio")
-                                       (str/includes? (str/lower-case (:tehtavaryhma t)) "hallintokorvaus")))]
+                                       #_ (str/includes? (str/lower-case (:tehtavaryhma t)) "hallintokorvaus")))]
                             sisaltaako?))
                         tehtavaryhmat)]
     [:div
@@ -146,7 +146,7 @@
        [:div.label-ja-alasveto
         [:span.alasvedon-otsikko "Tavoitehintaan kuuluminen*"]
         [kentat/tee-kentta {:tyyppi :radio-group
-                            :vaihtoehdot [:false :true]
+                            :vaihtoehdot [:true :false]
                             :vayla-tyyli? true
                             :nayta-rivina? true
                             :vaihtoehto-nayta {:true "Kuuluu tavoitehintaan"
@@ -278,7 +278,7 @@
                         ;; Jos kohdistus on hoitovuoden päätös, sitä ei voi muokata
                         (= :paatos kohdistustyyppi) false
                         :else true)]
-    [:div {:style {:background-color "#C8C8C8FF"
+    [:div {:style {:background-color "#D6D6D6"
                    :padding-bottom "20px"}}
      ;; Otsikko ja poista nappi
      [:div.row
