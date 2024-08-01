@@ -115,8 +115,7 @@
                                                 k.laskun_numero             AS \"laskun-tunniste\",
                                                 k.lisatieto                 AS \"kulun-kuvaus\",
                                                 k.poistettu                 AS \"poistettu\",
-                                                k.koontilaskun_kuukausi     AS \"kulun-ajankohta_koontilaskun-vuosi\",-- Huom.
-                                                k.koontilaskun_kuukausi     AS \"kulun-ajankohta_koontilaskun-kuukausi\",-- Huom.
+                                                k.koontilaskun_kuukausi     AS \"koontilaskun-kuukausi\",
                                                 k.erapaiva                  AS \"kulun-ajankohta_laskun-paivamaara\",
                                                 k.kokonaissumma             AS \"kulun-kokonaissumma\"
                                            FROM kulu k
@@ -136,6 +135,9 @@
     (is (= 200 (:status vastaus)))
     (is (= (:kulun-kokonaissumma juuri-luotu-kulu-kannasta)
           (bigdec (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-kokonaissumma]))) "Tietokannan ja rajapinnan kulu ei täsmää.")
+    (is (= 2024 (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :koontilaskun-vuosi])))
+    (is (= 8 (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :koontilaskun-kuukausi])))
+    (is (= "2024-08-01T21:00:00Z" (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :laskun-paivamaara])))
     (is (= (count kulut-kannasta) (count (get-in encoodattu-body [:toteutuneet-kustannukset :kulut]))))))
 
 (deftest hae-urakat-yksinkertainen-onnistuu-test
