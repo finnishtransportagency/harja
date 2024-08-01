@@ -888,6 +888,35 @@
                                 :urakkatunnus (:alueurakkanumero urakan-tiedot)
                                 :kulut kulut}}))
 
+(defn hae-kustannussuunnitelmat [db {:keys [urakka-id] :as parametrit}]
+  (log/info "Analytiikka API hae kustannussuunnitelmat  :: parametrit" (pr-str parametrit))
+  (let [urakka-id (if (integer? urakka-id) urakka-id (konversio/konvertoi->int urakka-id))
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+
+        kiinteat-kustannukset (budjettisuunnittelu-kyselyt/kiinteat-kustannukset-analytiikan-kustannustensuunnitteluun db {:urakka-id urakka-id})
+        ;; Järjestä tulokset jsonia varten omiin objekteihinsa
+        kiinteat-kustannukset (map #(konversio/alaviiva->rakenne %) kiinteat-kustannukset)
+        arvioidut-kustannukset (budjettisuunnittelu-kyselyt/arvioidut-kustannukset-analytiikan-kustannustensuunnitteluun db {:urakka-id urakka-id})
+        ;; Järjestä tulokset jsonia varten omiin objekteihinsa
+        arvioidut-kustannukset (map #(konversio/alaviiva->rakenne %) arvioidut-kustannukset)
+
+        ;; Johto- ja hallintokorvaukset kohdistuvat aina samalle toimenpiteelle ja samalle tehtäväryhmälle
+        tehtavaryhma-id (:id (first (budjettisuunnittelu-kyselyt/hae-johto-ja-hallintokorvauksen-tehtavaryhma db)))
+        toimenpide-id (:id (first (budjettisuunnittelu-kyselyt/hae-johto-ja-hallintokorvauksen-toimenpide db)))
+
+        johto-ja-hallintokorvaukset (budjettisuunnittelu-kyselyt/johto-ja-hallintokorvaukset-analytiikan-kustannustensuunnitteluun db {:urakka-id urakka-id})
+        ;; Järjestä tulokset jsonia varten omiin objekteihinsa
+        johto-ja-hallintokorvaukset (map #(-> %
+                                            (konversio/alaviiva->rakenne)
+                                            (assoc-in [:kohdistus :tehtavaryhma] tehtavaryhma-id)
+                                            (assoc-in [:kohdistus :toimenpide] toimenpide-id))
+                                      johto-ja-hallintokorvaukset)]
+    {:suunnitellut-kustannukset {:urakka urakka-id
+                                 :urakkatunnus (:alueurakkanumero urakan-tiedot)
+                                 :kiinteat-kustannukset kiinteat-kustannukset
+                                 :arvioidut-kustannukset arvioidut-kustannukset
+                                 :johto-ja-hallintokorvaukset johto-ja-hallintokorvaukset}}))
+
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
   (start [{http :http-palvelin db :db-replica integraatioloki :integraatioloki :as this}]
@@ -1086,11 +1115,12 @@
 
     (julkaise-reitti
       http :analytiikka-hae-kustannussuunnitelmat
-      (GET "/api/analytiikka/paikkaukset/:alkuaika/:loppuaika" parametrit
-        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-kustannussuunnitelmat parametrit
-          json-skeemat/+analytiikka-paikkausten-haku-vastaus+
-          (fn [parametrit _kayttaja db]
+      (GET "/api/analytiikka/suunnitellut-kustannukset/:urakka-id" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
+          :analytiikka-hae-kustannussuunnitelmat request
+          (fn [parametrit kayttaja db]
             (hae-kustannussuunnitelmat db parametrit))
+          ;; Vaaditaan analytiikka-oikeudet
           :analytiikka)))
 
     this)

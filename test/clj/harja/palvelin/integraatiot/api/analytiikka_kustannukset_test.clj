@@ -100,3 +100,40 @@
     (is (= 8 (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :koontilaskun-kuukausi])))
     (is (= "2024-08-01T21:00:00Z" (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :laskun-paivamaara])))
     (is (= (count kulut-kannasta) (count (get-in encoodattu-body [:toteutuneet-kustannukset :kulut]))))))
+
+
+(deftest hae-kustannussuunnitelma-onnistuu-test
+  (let [;; Pakotetaan urakaksi Oulu MHU
+        urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+
+        ;; Kiinteät kustannukset kannasta
+        kiinteat-kulut-kannasta (:summa (first (q-map
+                                                 (format "SELECT SUM(kit.summa) as summa
+                                             FROM kiinteahintainen_tyo kit
+                                            WHERE kit.sopimus =  (SELECT id FROM sopimus WHERE urakka =  %s);" urakka-id))))
+
+        ;; Arvioidut kustannukset kannasta
+        arvioidut-kulut-kannasta (:summa (first (q-map
+                                                  (format "SELECT SUM(kt.summa) as summa
+                                              FROM kustannusarvioitu_tyo kt
+                                             WHERE kt.sopimus = (SELECT id FROM sopimus WHERE urakka =  %s);" urakka-id))))
+
+        ;; Johto-ja-hallintokorvaukset kannasta
+        johto-ja-hallintokulut-kannasta (:summa (first (q-map
+                                                         (format "SELECT SUM(jjh.tuntipalkka * jjh.tunnit) as summa
+                                                     FROM johto_ja_hallintokorvaus jjh
+                                                    WHERE jjh.\"urakka-id\" = %s;" urakka-id))))
+
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        kiinteat-kulut-rajapinnasta (apply + (map #(get-in % [:kustannus :summa])
+                                               (get-in encoodattu-body [:suunnitellut-kustannukset :kiinteat-kustannukset])))
+        arvioidut-kulut-rajapinnasta (apply + (map #(get-in % [:kustannus :summa])
+                                                (get-in encoodattu-body [:suunnitellut-kustannukset :arvioidut-kustannukset])))
+        johto-ja-hallintokorvaukset-rajapinnasta (apply + (map #(get-in % [:toimenkuvan-kustannus :summa])
+                                                            (get-in encoodattu-body [:suunnitellut-kustannukset :johto-ja-hallintokorvaukset ])))]
+
+    (is (= 200 (:status vastaus)))
+    (is (= kiinteat-kulut-kannasta (bigdec kiinteat-kulut-rajapinnasta)))
+    (is (= arvioidut-kulut-kannasta (bigdec arvioidut-kulut-rajapinnasta)))
+    (is (= johto-ja-hallintokulut-kannasta (bigdec johto-ja-hallintokorvaukset-rajapinnasta)))))
