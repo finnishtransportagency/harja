@@ -130,7 +130,7 @@ WHERE nimi = 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (mater
 -- Materiaaleihin mäpättävät tehtavat
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Hiekoitushiekka'),
                            materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Hiekoitushiekka')
-WHERE nimi = 'Liukkaudentorjunta hiekoituksella';
+WHERE nimi = 'Liukkaudentorjunta hiekoituksella (materiaali)';
 
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Kesäsuola'),
                            materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Kesäsuola sorateiden kevätkunnostus')

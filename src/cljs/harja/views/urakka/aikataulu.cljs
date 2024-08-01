@@ -486,7 +486,7 @@
         [:span.aikataulu-toiminnot
          [:div
           [napit/nappi-hover-vihjeella
-           {:tyyppi :lisaa
+           {:ikoni (ikonit/action-add)
             :hover-txt "Voit lisätä tiemerkintään liittyvää lisätietoa."
             :toiminto #(reset! nayta-lisatieto-modal? true)}]]]
 
