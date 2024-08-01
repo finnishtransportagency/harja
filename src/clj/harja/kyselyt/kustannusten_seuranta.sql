@@ -288,6 +288,7 @@ SELECT 0                          AS budjetoitu_summa,
            END                   AS toimenpideryhma,
        CASE
            WHEN lk.tehtavaryhma IS NULL AND lk.tyyppi::TEXT = 'lisatyo' THEN tk.nimi
+           WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'Johto- ja hallintokorvaus (käsin kirjattu)'
            ELSE tr.nimi
            END                   AS tehtava_nimi,
        CASE
@@ -304,7 +305,7 @@ SELECT 0                          AS budjetoitu_summa,
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
            WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'johto-ja-hallintakorvaus'
            WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
-           WHEN lk.tehtavaryhma IS NULL AND lk.tyyppi::TEXT = 'lisatyo' THEN 'johto-ja-hallintakorvaus'
+           WHEN lk.tehtavaryhma IS NULL AND lk.tyyppi::TEXT = 'lisatyo' THEN 'lisatyo'
            WHEN tr.yksiloiva_tunniste = '55c920e7-5656-4bb0-8437-1999add714a3' THEN 'tavoitepalkkio'
            WHEN tr.yksiloiva_tunniste = '19907c24-dd26-460f-9cb4-2ed974b891aa' THEN 'tavoitehinnan-ylitys'
            WHEN tr.yksiloiva_tunniste = 'be34116b-2264-43e0-8ac8-3762b27a9557' THEN 'kattohinnan-ylitys'
@@ -335,8 +336,8 @@ SELECT 0                                            AS budjetoitu_summa,
        'kokonaishintainen'                          AS maksutyyppi,
        CASE
            WHEN tr.nimi = 'Erillishankinnat (W)' THEN 'erillishankinnat'
-           WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'toimistokulut'
-           WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'palkat'
+           WHEN tk_tehtava.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' THEN 'hankinta'
+           WHEN tr.nimi = 'Johto- ja hallintokorvaus (J)' THEN 'hankinta'
            WHEN tk_tehtava.yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8' then 'hoidonjohdonpalkkio'
 --           WHEN tr.nimi = 'Hoidonjohtopalkkio (G)' THEN 'hoidonjohdonpalkkio'
            END                                      AS toimenpideryhma,
