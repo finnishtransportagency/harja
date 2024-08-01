@@ -329,3 +329,76 @@ ORDER BY u.alkupvm DESC, ut.hoitokausi;
 UPDATE urakka_tavoite
 SET tarjous_tavoitehinta = :tarjous-tavoitehinta
 WHERE id = :id;
+
+-- name: kiinteat-kustannukset-analytiikan-kustannustensuunnitteluun
+-- Kiinteät kustannukset analytiikan api hakuun
+SELECT kit.id as "kustannus-id",
+       kit.vuosi as ajankohta_vuosi,
+       kit.kuukausi as ajankohta_kuukausi,
+       kit.summa as kustannus_summa,
+       kit.summa_indeksikorjattu as "kustannus_indeksikorjattu-summa",
+       kit.indeksikorjaus_vahvistettu as "kustannus_indeksikorjauksen-vahvistusajankohta",
+       tp.id as kohdistus_toimenpide,
+       tr.id as kohdistus_tehtavaryhma,
+       null as kohdistus_rahavaraus,
+       te.id as kohdistus_tehtava,
+       kit.versio as versio
+  from kiinteahintainen_tyo kit
+           JOIN toimenpideinstanssi tpi on kit.toimenpideinstanssi = tpi.id
+           JOIN urakka u on tpi.urakka = u.id
+           JOIN toimenpide tp on tpi.toimenpide = tp.id
+           LEFT JOIN tehtavaryhma tr on kit.tehtavaryhma = tr.id
+           LEFT JOIN tehtava te on kit.tehtava = te.id
+ WHERE u.id = :urakka-id
+ ORDER BY ajankohta_vuosi, ajankohta_kuukausi, kohdistus_toimenpide, kohdistus_tehtavaryhma, kohdistus_rahavaraus, kohdistus_tehtava;
+
+-- name: arvioidut-kustannukset-analytiikan-kustannustensuunnitteluun
+-- Arvioidut kustannukset
+SELECT kat.id as "kustannus-id",
+       kat.vuosi as ajankohta_vuosi,
+       kat.kuukausi as ajankohta_kuukausi,
+       kat.summa as kustannus_summa,
+       kat.summa_indeksikorjattu as "kustannus_indeksikorjattu-summa",
+       kat.indeksikorjaus_vahvistettu as "kustannus_indeksikorjauksen-vahvistusajankohta",
+       tp.id as kohdistus_toimenpide,
+       tr.id as kohdistus_tehtavaryhma,
+       rv.id as kohdistus_rahavaraus,
+       te.id as kohdistus_tehtava,
+       kat.versio as versio
+  from kustannusarvioitu_tyo kat
+           JOIN toimenpideinstanssi tpi on kat.toimenpideinstanssi = tpi.id
+           JOIN urakka u on tpi.urakka = u.id
+           JOIN toimenpide tp on tpi.toimenpide = tp.id
+           LEFT JOIN tehtavaryhma tr on kat.tehtavaryhma = tr.id
+           LEFT JOIN rahavaraus rv on kat.rahavaraus_id = rv.id
+           LEFT JOIN tehtava te on kat.tehtava = te.id
+ WHERE u.id = :urakka-id
+ ORDER BY ajankohta_vuosi, ajankohta_kuukausi, kohdistus_toimenpide, kohdistus_tehtavaryhma, kohdistus_rahavaraus, kohdistus_tehtava;
+
+-- name: johto-ja-hallintokorvaukset-analytiikan-kustannustensuunnitteluun
+-- Johto- ja hallintokorvaukset
+SELECT jhk.id as "kustannus-id",
+       tk.id as "toimenkuva_id",
+       tk.toimenkuva as "toimenkuva_nimi",
+       jhk.vuosi as "toimenkuvan-ajankohta_vuosi",
+       jhk.kuukausi as "toimenkuvan-ajankohta_kuukausi",
+       jhk."ennen-urakkaa" as "toimenkuvan-ajankohta_ennen-urakkaa",
+       jhk.tunnit as "toimenkuvan-kustannus_tunnit",
+       jhk.tuntipalkka as "toimenkuvan-kustannus_tuntipalkka",
+       (jhk.tuntipalkka * jhk.tunnit) as "toimenkuvan-kustannus_summa",
+       (jhk.tuntipalkka_indeksikorjattu * jhk.tunnit) as "toimenkuvan-kustannus_indeksikorjattu-summa",
+       jhk.indeksikorjaus_vahvistettu as "toimenkuvan-kustannus_indeksikorjauksen-vahvistusajankohta"
+  FROM johto_ja_hallintokorvaus jhk
+       JOIN johto_ja_hallintokorvaus_toimenkuva tk ON jhk."toimenkuva-id" = tk.id
+ WHERE jhk."urakka-id" = :urakka-id
+ ORDER BY "toimenkuvan-ajankohta_vuosi", "toimenkuvan-ajankohta_kuukausi";
+
+-- name: hae-johto-ja-hallintokorvauksen-tehtavaryhma
+SELECT id
+  FROM tehtavaryhma
+ WHERE yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54';
+
+-- name: hae-johto-ja-hallintokorvauksen-toimenpide
+SELECT id
+  FROM toimenpide
+ WHERE koodi = '23151';
