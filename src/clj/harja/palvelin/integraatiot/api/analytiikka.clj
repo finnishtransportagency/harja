@@ -29,6 +29,7 @@
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
+            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-kyselyt]
             [harja.kyselyt.kulut :as kulu-kyselyt]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
             [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
@@ -301,7 +302,7 @@
         ;; Wrapatään jokainen rivi "toimenpide" -nimiseen avaimen alle
         toimenpiteet (map (fn [t]
                             {:toimenpide t})
-                          toimenpiteet)]
+                       toimenpiteet)]
     ;; Palautetaan kaikki toimenpiteet toimenpiteet avaimen alla
     {:toimenpiteet toimenpiteet}))
 
@@ -830,11 +831,11 @@
                                               :paikkauskohde-id :paikkauskohdeId
                                               :pinta-ala :pintaAla})
                             (update :loppupvm (fn [pvm] (if (nil? pvm)
-                                                        nil
-                                                        (pvm/sql-aika->pvm-str pvm))))
-                            (update :alkupvm (fn [pvm] (if (nil? pvm)
                                                           nil
-                                                          (pvm/sql-aika->pvm-str pvm)))))
+                                                          (pvm/sql-aika->pvm-str pvm))))
+                            (update :alkupvm (fn [pvm] (if (nil? pvm)
+                                                         nil
+                                                         (pvm/sql-aika->pvm-str pvm)))))
                       (paikkaus-kyselyt/hae-paikkaukset-analytiikalle db
                         {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
                          :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}))]
@@ -860,16 +861,16 @@
         kulut (map (fn [k]
                      (let [k (update k :kulukohdistukset konversio/jsonb->clojuremap)
                            k (update k :kulukohdistukset
-                                  (fn [rivit]
-                                    (let [tulos (keep
-                                                  (fn [r]
-                                                    ;; Haku käyttää hakemisessa left joinia, joten on mahdollista, että taulusta
-                                                    ;; löytyy nil rivi
-                                                    (when (not (nil? (:f1 r)))
-                                                      (clojure.set/rename-keys r db-kustannukset->speqcl-avaimet)))
-                                                  rivit)
-                                          tulos (map #(konversio/alaviiva->rakenne %) tulos)]
-                                      tulos)))]
+                               (fn [rivit]
+                                 (let [tulos (keep
+                                               (fn [r]
+                                                 ;; Haku käyttää hakemisessa left joinia, joten on mahdollista, että taulusta
+                                                 ;; löytyy nil rivi
+                                                 (when (not (nil? (:f1 r)))
+                                                   (clojure.set/rename-keys r db-kustannukset->speqcl-avaimet)))
+                                               rivit)
+                                       tulos (map #(konversio/alaviiva->rakenne %) tulos)]
+                                   tulos)))]
                        {:kulu (-> k
                                 (assoc :kulun-ajankohta_koontilaskun-kuukausi
                                   (kulut-domain/koontilaskun-kuukausi->kuukausi (:koontilaskun-kuukausi k)
@@ -1083,6 +1084,15 @@
           ;; Vaaditaan analytiikka-oikeudet
           :analytiikka)))
 
+    (julkaise-reitti
+      http :analytiikka-hae-kustannussuunnitelmat
+      (GET "/api/analytiikka/paikkaukset/:alkuaika/:loppuaika" parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-kustannussuunnitelmat parametrit
+          json-skeemat/+analytiikka-paikkausten-haku-vastaus+
+          (fn [parametrit _kayttaja db]
+            (hae-kustannussuunnitelmat db parametrit))
+          :analytiikka)))
+
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -1106,5 +1116,6 @@
       :analytiikka-hae-hoidon-paikkauskustannukset
       :analytiikka-hae-paikkauskohteet
       :analytiikka-hae-paikkaukset
-      :analytiikka-toteutuneet-kustannukset)
+      :analytiikka-toteutuneet-kustannukset
+      :analytiikka-hae-kustannussuunnitelmat)
     this))
