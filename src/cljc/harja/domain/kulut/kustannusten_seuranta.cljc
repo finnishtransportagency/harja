@@ -89,15 +89,6 @@
          :toimenpide-budjetoitu-summa-indeksikorjattu (reduce (fn [summa tehtava]
                                                                 (+ summa (or (:budjetoitu_summa_indeksikorjattu tehtava) 0)))
                                                         0 toimenpiteen-tehtavat)
-         #_#_:lisatyot-summa (reduce (fn [summa tehtava]
-                                   (if (= "lisatyo" (:maksutyyppi tehtava))
-                                     (+ summa (or (:toteutunut_summa tehtava) 0))
-                                     summa))
-                           0 toimenpiteen-tehtavat)
-         #_#_:lisatyot (filter (fn [tehtava]
-                             (when (= "lisatyo" (:maksutyyppi tehtava))
-                               true))
-                     toimenpiteen-tehtavat)
          :tehtavat (sort-by :jarjestys yhdistetyt-tehtavat)
          ;; Asetetaan vahvistus-status nulliksi, jos yhtään toteumaa tai budjettia ei ole annettu.
          ;; Päätellään myöhemmin, että näytetäänkö nämä vahvistettuina tai vahvistamattomina
@@ -113,8 +104,7 @@
                                (fn [tehtava]
                                  (when (and
                                          (not= "hjh" (:toteutunut tehtava))
-                                         (not= "budjetointi" (:toteutunut tehtava))
-                                         #_ (not= "lisatyo" (:maksutyyppi tehtava)))
+                                         (not= "budjetointi" (:toteutunut tehtava)))
                                    tehtava))
                                tehtavat)
         tehtava-map
@@ -130,15 +120,6 @@
          (keyword (str paaryhmaotsikko "-budjetoitu-indeksikorjattu")) (reduce (fn [summa tehtava]
                                                                                  (+ summa (or (:budjetoitu_summa_indeksikorjattu tehtava) 0)))
                                                                          0 tehtavat)
-         #_ :lisatyot-summa (reduce (fn [summa tehtava]
-                                   (if (= "lisatyo" (:maksutyyppi tehtava))
-                                     (+ summa (or (:toteutunut_summa tehtava) 0))
-                                     summa))
-                           0 tehtavat)
-         #_ :lisatyot (filter (fn [tehtava]
-                             (when (= "lisatyo" (:maksutyyppi tehtava))
-                               true))
-                     tehtavat)
          :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)
          ;; Asetetaan vahvistus-status nulliksi, jos yhtään toteumaa tai budjettia ei ole annettu.
          ;; Päätellään myöhemmin, että näytetäänkö nämä vahvistettuina tai vahvistamattomina
