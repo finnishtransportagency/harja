@@ -7,23 +7,31 @@
       "items": {
         "type": "object",
         "properties": {
-          "rahavaraus": {
-            "type": "object",
-            "properties": {
-              "id": { "type": "integer", "description": "Harjan rahavaraus-id" },
-              "nimi": { "type": "string", "description": "Rahavarauksen nimi" },
-              "tehtavat": {
-                "type": "array",
-                "items": { "type": "integer" },
-                "description": "Niiden tehtävien id:t Harjassa, joihin rahavaraus liittyy. Tehtävien kautta rahavaraus kytkeytyy myös tehtäväryhmiin ja toimenpiteisiin."
-              }
+          "id": {
+            "type": "integer",
+            "description": "Harjan rahavaraus-id"
+          },
+          "nimi": {
+            "type": "string",
+            "description": "Rahavarauksen nimi"
+          },
+          "tehtavat": {
+            "type": "array",
+            "items": {
+              "type": "integer"
             },
-            "required": ["id", "nimi", "tehtavat"]
+            "description": "Niiden tehtävien id:t Harjassa, joihin rahavaraus liittyy. Tehtävien kautta rahavaraus kytkeytyy myös tehtäväryhmiin ja toimenpiteisiin."
           }
-        },
-        "required": ["rahavaraus"]
-      }
+        }
+      },
+      "required": [
+        "id",
+        "nimi",
+        "tehtavat"
+      ]
     }
   },
-  "required": ["rahavaraukset"]
+  "required": [
+    "rahavaraukset"
+  ]
 }
