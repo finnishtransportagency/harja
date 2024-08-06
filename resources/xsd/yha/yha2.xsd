@@ -202,7 +202,7 @@
             <xs:element name="nimi" minOccurs="0" maxOccurs="1">
                 <xs:simpleType>
                     <xs:restriction base="xs:string">
-                        <xs:maxLength value="30"/>
+                        <xs:maxLength value="50"/>
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
