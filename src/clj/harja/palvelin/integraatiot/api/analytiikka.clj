@@ -299,11 +299,7 @@
   "Haetaan toimenpiteet (taso 3) ja palautetaan ne json muodossa"
   [db _ _]
   (log/info "Analytiikka API, toimenpiteet haku")
-  (let [toimenpiteet (toimenpidekoodi-kyselyt/listaa-toimenpiteet-analytiikalle db)
-        ;; Wrapatään jokainen rivi "toimenpide" -nimiseen avaimen alle
-        toimenpiteet (map (fn [t]
-                            {:toimenpide t})
-                       toimenpiteet)]
+  (let [toimenpiteet (toimenpidekoodi-kyselyt/listaa-toimenpiteet-analytiikalle db)]
     ;; Palautetaan kaikki toimenpiteet toimenpiteet avaimen alla
     {:toimenpiteet toimenpiteet}))
 
