@@ -151,3 +151,15 @@
     ;; Käyttäjällä ei ole analytiikkaoikeuksia
     (is (= 403 (:status vastaus)) "Käyttäjältä ei löydy analytiikka api oikeuksia")
     (is (str/includes? (:body vastaus) "Käyttäjätunnuksella puutteelliset oikeudet") "Virheviesti löytyy")))
+
+(deftest hae-rahavaraukset-onnistuu-test
+  (let [;; Löydetään n. 14 rahavarausta ja niiden tehtävät
+        rahavaraukset-kannasta (q-map
+                                 (str "SELECT r.id as id, r.nimi as nimi, array_agg(rt.tehtava_id) as tehtavat
+                                        FROM rahavaraus r
+                                             JOIN rahavaraus_tehtava rt on r.id = rt.rahavaraus_id
+                                       GROUP BY r.id, r.nimi;"))
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/rahavaraukset")] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
+    (is (= 200 (:status vastaus)))
+    (is (= (count rahavaraukset-kannasta) (count (:rahavaraukset encoodattu-body))))))
