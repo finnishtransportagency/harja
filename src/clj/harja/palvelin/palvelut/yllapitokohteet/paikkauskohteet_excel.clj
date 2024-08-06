@@ -361,7 +361,7 @@
         reikapaikkaukset (mapv
                            (fn [{:keys [tunniste alkuaika tie aosa aet losa let tyomenetelma-nimi maara reikapaikkaus-yksikko kustannus]}]
                              [tunniste
-                              alkuaika
+                              (pvm/pvm-opt alkuaika)
                               tie
                               aosa
                               aet
