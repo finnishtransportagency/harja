@@ -244,6 +244,11 @@ SELECT tr.id, tr.nimi, o.otsikko, tr.jarjestys, tr.poistettu, tr.versio, tr.yksi
   JOIN tehtavaryhmaotsikko o ON tr.tehtavaryhmaotsikko_id = o.id
  ORDER BY o.otsikko ASC, tr.nimi ASC;
 
+-- name: listaa-toimenpiteet-analytiikalle
+SELECT id, nimi, koodi as toimenpidekoodi, luotu, muokattu, poistettu
+  FROM toimenpide
+ WHERE taso = 3;
+
 -- name: hae-suoritettavat-tehtavat
 -- Suoritettavat tehtävät ovat tehtäviä, joille on annettu API:a varten suoritettavatehtävä koluminnimi, jolla
 -- tehtävä yksiköidään. Toteumat kirjataan tehtäville ja ne tunnistetaan suoritettavatehtava kolumnin toimiessa avaimena.

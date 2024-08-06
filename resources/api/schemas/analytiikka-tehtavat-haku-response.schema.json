@@ -7,9 +7,6 @@
       "items": {
         "type": "object",
         "properties": {
-          "tehtava": {
-            "type": "object",
-            "properties": {
               "id": {
                 "type": "integer",
                 "description": "Tehtävän id Harjassa."
@@ -48,19 +45,14 @@
               "poistettu": {
                 "type": "boolean"
               }
-            }
-          },
+            },
           "required": [
             "id",
             "nimi",
             "toimenpidekoodi",
             "poistettu"
           ]
-        },
-        "required": [
-          "tehtava"
-        ]
-      }
+        }
     }
   },
   "required": [

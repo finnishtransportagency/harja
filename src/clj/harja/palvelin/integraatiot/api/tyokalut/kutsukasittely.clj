@@ -523,7 +523,7 @@
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
   käsittelyvirhe."
-  [db integraatioloki resurssi request kasittele-kutsu-fn vaadittu-api-oikeus]
+  [db integraatioloki integraatio resurssi request kasittele-kutsu-fn vaadittu-api-oikeus]
   (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
     {:status 415
      :headers {"Content-Type" "text/plain"}
@@ -532,7 +532,7 @@
           request-origin (get (:headers request) "origin")
           kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
           tapahtuma-id-thread (thread (when integraatioloki
-                                        (lokita-kutsu integraatioloki resurssi request nil)))
+                                        (lokita-kutsu integraatioloki resurssi request nil integraatio)))
           parametrit (:params request)
           vastaus (aja-virhekasittelyn-kanssa
                     resurssi

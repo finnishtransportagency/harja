@@ -10,6 +10,7 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus]
             [harja.domain.tierekisteri :as tr-domain]
+            [harja.domain.kulut :as kulut-domain]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
@@ -28,6 +29,8 @@
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
+            [harja.kyselyt.rahavaraukset :as rahavaravaus-kyselyt]
+            [harja.kyselyt.kulut :as kulu-kyselyt]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
             [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat])
@@ -290,6 +293,31 @@
         vastaus {:tehtavat tehtavat
                  :tehtavaryhmat tehtavaryhmat}]
     vastaus))
+
+(defn palauta-toimenpiteet
+  "Haetaan toimenpiteet (taso 3) ja palautetaan ne json muodossa"
+  [db _ _]
+  (log/info "Analytiikka API, toimenpiteet haku")
+  (let [toimenpiteet (toimenpidekoodi-kyselyt/listaa-toimenpiteet-analytiikalle db)
+        ;; Wrapatään jokainen rivi "toimenpide" -nimiseen avaimen alle
+        toimenpiteet (map (fn [t]
+                            {:toimenpide t})
+                          toimenpiteet)]
+    ;; Palautetaan kaikki toimenpiteet toimenpiteet avaimen alla
+    {:toimenpiteet toimenpiteet}))
+
+(defn palauta-rahavaraukset
+  "Haetaan rahavaraukset ja niiden tehtävät ja palautetaan ne json muodossa kysyjälle. Tosin kutsukäsittelijä muokkaa
+  tämän aineiston jsoniksi."
+  [db _ _]
+  (log/info "Analytiikka API, rahavaraukset haku")
+  (let [rahavaraukset (rahavaravaus-kyselyt/listaa-rahavaraukset-analytiikalle db)
+        ;; Käsitellään pgarray vector muotoon, joka voidaan kääntää myöhemmin jsoniksi
+        rahavaraukset (map (fn [r]
+                            (assoc r :tehtavat (konversio/pgarray->vector (:tehtavat r))))
+                        rahavaraukset)]
+    ;; Palautetaan kaikki rahavaraukset rahavaraukset avaimen alla
+    {:rahavaraukset rahavaraukset}))
 
 (defn palauta-urakat
   "Haetaan urakat ja palautetaan ne json muodossa"
@@ -826,13 +854,60 @@
                          :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}))]
     {:paikkaukset paikkaukset}))
 
+(def db-kustannukset->speqcl-avaimet
+  {:f1 :kulukohdistus_kulukohdistus-id
+   :f2 :kulukohdistus_rivinumero
+   :f3 :kulukohdistus_tyyppi
+   :f4 :kulukohdistus_lisatieto
+   :f5 :kulukohdistus_poistettu
+   :f6 :kulukohdistus_summa
+   :f7 :kulukohdistus_kohdistus_toimenpide
+   :f8 :kulukohdistus_kohdistus_tehtavaryhma
+   :f9 :kulukohdistus_kohdistus_rahavaraus
+   :f10 :kulukohdistus_kohdistus_tehtava})
+
+(defn palauta-toteutuneet-kustannukset [db {:keys [urakka-id] :as parametrit}]
+  (log/info "Analytiikka API palauta toteutuneet kustannukset urakalle :: parametrit" (pr-str parametrit))
+  (let [urakka-id (if (integer? urakka-id) urakka-id (konversio/konvertoi->int urakka-id))
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        kulut (kulu-kyselyt/hae-toteutuneet-kustannukset-analytiikalle db {:urakka-id urakka-id})
+        kulut (map (fn [k]
+                     (let [k (update k :kulukohdistukset konversio/jsonb->clojuremap)
+                           k (update k :kulukohdistukset
+                                  (fn [rivit]
+                                    (let [tulos (keep
+                                                  (fn [r]
+                                                    ;; Haku käyttää hakemisessa left joinia, joten on mahdollista, että taulusta
+                                                    ;; löytyy nil rivi
+                                                    (when (not (nil? (:f1 r)))
+                                                      (clojure.set/rename-keys r db-kustannukset->speqcl-avaimet)))
+                                                  rivit)
+                                          tulos (map #(konversio/alaviiva->rakenne %) tulos)]
+                                      tulos)))]
+                       {:kulu (-> k
+                                (assoc :kulun-ajankohta_koontilaskun-kuukausi
+                                  (kulut-domain/koontilaskun-kuukausi->kuukausi (:koontilaskun-kuukausi k)
+                                    (:alkupvm urakan-tiedot)
+                                    (:loppupvm urakan-tiedot)))
+                                (assoc :kulun-ajankohta_koontilaskun-vuosi
+                                  (kulut-domain/koontilaskun-kuukausi->vuosi (:koontilaskun-kuukausi k)
+                                    (:alkupvm urakan-tiedot)
+                                    (:loppupvm urakan-tiedot)))
+                                (dissoc :koontilaskun-kuukausi)
+                                (konversio/alaviiva->rakenne))}))
+                kulut)]
+
+    {:toteutuneet-kustannukset {:urakka urakka-id
+                                :urakkatunnus (:alueurakkanumero urakan-tiedot)
+                                :kulut kulut}}))
+
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
   (start [{http :http-palvelin db :db-replica integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
       http :analytiikka-toteumat
       (GET "/api/analytiikka/toteumat/:alkuaika/:loppuaika" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-toteumat request
           (fn [parametrit kayttaja db]
             (palauta-toteumat db parametrit kayttaja))
@@ -842,7 +917,7 @@
     (julkaise-reitti
       http :analytiikka-toteumat-koko
       (GET "/api/analytiikka/toteumat/:alkuaika/:loppuaika/:koordinaattimuutos/:koko" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-toteumat request
           (fn [parametrit kayttaja db]
             (palauta-toteumat db parametrit kayttaja))
@@ -852,7 +927,7 @@
     (julkaise-reitti
       http :analytiikka-suunnitellut-materiaalit-hoitovuosi
       (GET "/api/analytiikka/suunnitellut-materiaalit/:alkuvuosi/:loppuvuosi" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-suunnitellut-materiaalimaarat request
           (fn [parametrit kayttaja db]
             (palauta-suunnitellut-materiaalimaarat db parametrit kayttaja))
@@ -862,7 +937,7 @@
     (julkaise-reitti
       http :analytiikka-suunnitellut-materiaalit-urakka
       (GET "/api/analytiikka/suunnitellut-materiaalit/:urakka-id" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-suunnitellut-materiaalimaarat request
           (fn [parametrit kayttaja db]
             (palauta-urakan-suunnitellut-materiaalimaarat db parametrit kayttaja))
@@ -872,7 +947,7 @@
     (julkaise-reitti
       http :analytiikka-suunnitellut-tehtavamaarat-hoitovuosi
       (GET "/api/analytiikka/suunnitellut-tehtavat/:alkuvuosi/:loppuvuosi" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-suunnitellut-tehtavamaarat request
           (fn [parametrit kayttaja db]
             (palauta-suunnitellut-tehtavamaarat db parametrit kayttaja))
@@ -882,7 +957,7 @@
     (julkaise-reitti
       http :analytiikka-suunnitellut-tehtavamaarat-urakka
       (GET "/api/analytiikka/suunnitellut-tehtavat/:urakka-id" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-suunnitellut-tehtavamaarat request
           (fn [parametrit kayttaja db]
             (palauta-urakan-suunnitellut-tehtavamaarat db parametrit kayttaja))
@@ -892,7 +967,7 @@
     (julkaise-reitti
       http :analytiikka-materiaalit
       (GET "/api/analytiikka/materiaalit" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-materiaalikoodit request
           (fn [parametrit kayttaja db]
             (palauta-materiaalit db parametrit kayttaja))
@@ -902,7 +977,7 @@
     (julkaise-reitti
       http :analytiikka-tehtavat
       (GET "/api/analytiikka/tehtavat" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-tehtavat request
           (fn [parametrit kayttaja db]
             (palauta-tehtavat db parametrit kayttaja))
@@ -910,9 +985,29 @@
           :analytiikka)))
 
     (julkaise-reitti
+      http :analytiikka-toimenpiteet
+      (GET "/api/analytiikka/toimenpiteet" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
+          :analytiikka-hae-toimenpiteet request
+          (fn [parametrit kayttaja db]
+            (palauta-toimenpiteet db parametrit kayttaja))
+          ;; Vaaditaan analytiikka-oikeudet
+          :analytiikka)))
+
+    (julkaise-reitti
+      http :analytiikka-rahavaraukset
+      (GET "/api/analytiikka/rahavaraukset" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
+          :analytiikka-hae-rahavaraukset request
+          (fn [parametrit kayttaja db]
+            (palauta-rahavaraukset db parametrit kayttaja))
+          ;; Vaaditaan analytiikka-oikeudet
+          :analytiikka)))
+
+    (julkaise-reitti
       http :analytiikka-urakat
       (GET "/api/analytiikka/urakat" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-urakat request
           (fn [parametrit kayttaja db]
             (palauta-urakat db parametrit kayttaja))
@@ -922,12 +1017,13 @@
     (julkaise-reitti
       http :analytiikka-organisaatiot
       (GET "/api/analytiikka/organisaatiot" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-organisaatiot request
           (fn [parametrit kayttaja db]
             (palauta-organisaatiot db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
           :analytiikka)))
+
     (julkaise-reitti
       http :analytiikka-turvallisuuspoikkeamat
       (GET "/api/analytiikka/turvallisuuspoikkeamat/:alkuaika/:loppuaika" request
@@ -1001,6 +1097,16 @@
             (hae-paikkaukset db parametrit))
           :analytiikka)))
 
+    (julkaise-reitti
+      http :analytiikka-toteutuneet-kustannukset
+      (GET "/api/analytiikka/toteutuneet-kustannukset/:urakka-id" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
+          :analytiikka-hae-toteutuneet-kustannukset request
+          (fn [parametrit kayttaja db]
+            (palauta-toteutuneet-kustannukset db parametrit))
+          ;; Vaaditaan analytiikka-oikeudet
+          :analytiikka)))
+
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -1009,6 +1115,8 @@
       :analytiikka-toteumat-koko
       :analytiikka-materiaalit
       :analytiikka-tehtavat
+      :analytiikka-toimenpiteet
+      :analytiikka-rahavaraukset               
       :analytiikka-urakat
       :analytiikka-organisaatiot
       :analytiikka-suunnitellut-materiaalit-hoitovuosi
@@ -1022,5 +1130,6 @@
       :analytiikka-hae-paallystysilmoitukset
       :analytiikka-hae-hoidon-paikkauskustannukset
       :analytiikka-hae-paikkauskohteet
-      :analytiikka-hae-paikkaukset)
+      :analytiikka-hae-paikkaukset
+      :analytiikka-toteutuneet-kustannukset)
     this))
