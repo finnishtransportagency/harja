@@ -1,6 +1,8 @@
 (ns harja.views.haku
   "Harjan haku"
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [harja.ui.ikonit :as ikonit]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [reagent.core :refer [atom] :as r]
             [clojure.string :as str]
 
             [harja.asiakas.kommunikaatio :as k]
@@ -101,9 +103,18 @@
   [k]
   (modal/nayta! {:otsikko (str (:etunimi k) " " (:sukunimi k))
                  :luokka "yhteystieto"
-                 :footer [napit/sulje #(modal/piilota!)]}
+                 :footer [:div.display-flex.justify-between
+                          [napit/yleinen-toissijainen "Kirjaudu ulos Väyläviraston palveluista"
+                           #(varmista-kayttajalta/varmista-kayttajalta
+                              {:otsikko "Kirjaudu ulos?"
+                               :sisalto "Uloskirjautuminen kirjaa sinut ulos kaikista Väyläviraston palveluista."
+                               :hyvaksy "Kirjaudu ulos"
+                               :toiminto-fn (fn []
+                                              (set! (.-location js/window) (k/logout-url)))})
 
-                (kayttajan-tiedot k)))
+                           {:ikoni (ikonit/harja-icon-action-log-out)}]
+                          [napit/sulje #(modal/piilota!)]]}
+    (kayttajan-tiedot k)))
 
 (defn valitse-hakutulos
   [tulos]
