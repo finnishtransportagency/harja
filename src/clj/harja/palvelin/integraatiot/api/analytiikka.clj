@@ -946,7 +946,7 @@
           :analytiikka)))
 
     (julkaise-reitti
-      http :analytiikka-toimenpiteet
+      http :analytiikka-rahavaraukset
       (GET "/api/analytiikka/rahavaraukset" request
         (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-rahavaraukset request
@@ -1057,6 +1057,7 @@
       :analytiikka-materiaalit
       :analytiikka-tehtavat
       :analytiikka-toimenpiteet
+      :analytiikka-rahavaraukset               
       :analytiikka-urakat
       :analytiikka-organisaatiot
       :analytiikka-suunnitellut-materiaalit-hoitovuosi
