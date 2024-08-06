@@ -330,7 +330,7 @@ UPDATE urakka_tavoite
 SET tarjous_tavoitehinta = :tarjous-tavoitehinta
 WHERE id = :id;
 
--- name: kiinteat-kustannukset-analytiikan-kustannustensuunnitteluun
+-- name: hae-kiinteat-kustannukset
 -- Kiinteät kustannukset analytiikan api hakuun
 SELECT kit.id as "kustannus-id",
        kit.vuosi as ajankohta_vuosi,
@@ -352,8 +352,8 @@ SELECT kit.id as "kustannus-id",
  WHERE u.id = :urakka-id
  ORDER BY ajankohta_vuosi, ajankohta_kuukausi, kohdistus_toimenpide, kohdistus_tehtavaryhma, kohdistus_rahavaraus, kohdistus_tehtava;
 
--- name: arvioidut-kustannukset-analytiikan-kustannustensuunnitteluun
--- Arvioidut kustannukset
+-- name: hae-arvioidut-kustannukset
+-- Arvioidut kustannukset analytiikan kustannustensuunnitteluun
 SELECT kat.id as "kustannus-id",
        kat.vuosi as ajankohta_vuosi,
        kat.kuukausi as ajankohta_kuukausi,

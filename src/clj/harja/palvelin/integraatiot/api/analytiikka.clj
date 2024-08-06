@@ -866,7 +866,7 @@
                                                (fn [r]
                                                  ;; Haku käyttää hakemisessa left joinia, joten on mahdollista, että taulusta
                                                  ;; löytyy nil rivi
-                                                 (when (not (nil? (:f1 r)))
+                                                 (when (:f1 r)
                                                    (clojure.set/rename-keys r db-kustannukset->speqcl-avaimet)))
                                                rivit)
                                        tulos (map #(konversio/alaviiva->rakenne %) tulos)]
@@ -893,10 +893,10 @@
   (let [urakka-id (if (integer? urakka-id) urakka-id (konversio/konvertoi->int urakka-id))
         urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
 
-        kiinteat-kustannukset (budjettisuunnittelu-kyselyt/kiinteat-kustannukset-analytiikan-kustannustensuunnitteluun db {:urakka-id urakka-id})
+        kiinteat-kustannukset (budjettisuunnittelu-kyselyt/hae-kiinteat-kustannukset db {:urakka-id urakka-id})
         ;; Järjestä tulokset jsonia varten omiin objekteihinsa
         kiinteat-kustannukset (map #(konversio/alaviiva->rakenne %) kiinteat-kustannukset)
-        arvioidut-kustannukset (budjettisuunnittelu-kyselyt/arvioidut-kustannukset-analytiikan-kustannustensuunnitteluun db {:urakka-id urakka-id})
+        arvioidut-kustannukset (budjettisuunnittelu-kyselyt/hae-arvioidut-kustannukset db {:urakka-id urakka-id})
         ;; Järjestä tulokset jsonia varten omiin objekteihinsa
         arvioidut-kustannukset (map #(konversio/alaviiva->rakenne %) arvioidut-kustannukset)
 

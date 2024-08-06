@@ -131,9 +131,23 @@
         arvioidut-kulut-rajapinnasta (apply + (map #(get-in % [:kustannus :summa])
                                                 (get-in encoodattu-body [:suunnitellut-kustannukset :arvioidut-kustannukset])))
         johto-ja-hallintokorvaukset-rajapinnasta (apply + (map #(get-in % [:toimenkuvan-kustannus :summa])
-                                                            (get-in encoodattu-body [:suunnitellut-kustannukset :johto-ja-hallintokorvaukset ])))]
+                                                            (get-in encoodattu-body [:suunnitellut-kustannukset :johto-ja-hallintokorvaukset])))]
 
     (is (= 200 (:status vastaus)))
     (is (= kiinteat-kulut-kannasta (bigdec kiinteat-kulut-rajapinnasta)))
     (is (= arvioidut-kulut-kannasta (bigdec arvioidut-kulut-rajapinnasta)))
     (is (= johto-ja-hallintokulut-kannasta (bigdec johto-ja-hallintokorvaukset-rajapinnasta)))))
+
+(deftest hae-kustannussuunnitelma-puutteellisilla-tunnuksilla
+  (let [;; Pakotetaan urakaksi Oulu MHU
+        urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+
+        ;; Poistetaan oikeudet
+        _ (poista-kayttajan-api-oikeudet kayttaja-analytiikka)
+        ;; Näillä oikeuksilla ei pitäisi pystyä kutsumaan analytiikan rajapintoja
+        _ (anna-kirjoitusoikeus kayttaja-analytiikka)
+
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-kustannukset/" urakka-id)] kayttaja-analytiikka portti)]
+    ;; Käyttäjällä ei ole analytiikkaoikeuksia
+    (is (= 403 (:status vastaus)) "Käyttäjältä ei löydy analytiikka api oikeuksia")
+    (is (str/includes? (:body vastaus) "Käyttäjätunnuksella puutteelliset oikeudet") "Virheviesti löytyy")))
