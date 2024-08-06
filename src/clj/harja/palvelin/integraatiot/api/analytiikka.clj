@@ -312,9 +312,9 @@
   [db _ _]
   (log/info "Analytiikka API, rahavaraukset haku")
   (let [rahavaraukset (rahavaravaus-kyselyt/listaa-rahavaraukset-analytiikalle db)
-        ;; Wrapatään jokainen rivi "rahavaraus" -nimiseen avaimen alle
+        ;; Käsitellään pgarray vector muotoon, joka voidaan kääntää myöhemmin jsoniksi
         rahavaraukset (map (fn [r]
-                            {:rahavaraus (assoc r :tehtavat (konversio/pgarray->vector (:tehtavat r)))})
+                            (assoc r :tehtavat (konversio/pgarray->vector (:tehtavat r))))
                         rahavaraukset)]
     ;; Palautetaan kaikki rahavaraukset rahavaraukset avaimen alla
     {:rahavaraukset rahavaraukset}))
@@ -995,7 +995,7 @@
           :analytiikka)))
 
     (julkaise-reitti
-      http :analytiikka-toimenpiteet
+      http :analytiikka-rahavaraukset
       (GET "/api/analytiikka/rahavaraukset" request
         (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-rahavaraukset request
@@ -1116,6 +1116,7 @@
       :analytiikka-materiaalit
       :analytiikka-tehtavat
       :analytiikka-toimenpiteet
+      :analytiikka-rahavaraukset               
       :analytiikka-urakat
       :analytiikka-organisaatiot
       :analytiikka-suunnitellut-materiaalit-hoitovuosi
