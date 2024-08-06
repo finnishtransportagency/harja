@@ -310,9 +310,9 @@
   [db _ _]
   (log/info "Analytiikka API, rahavaraukset haku")
   (let [rahavaraukset (rahavaravaus-kyselyt/listaa-rahavaraukset-analytiikalle db)
-        ;; Wrapatään jokainen rivi "rahavaraus" -nimiseen avaimen alle
+        ;; Käsitellään pgarray vector muotoon, joka voidaan kääntää myöhemmin jsoniksi
         rahavaraukset (map (fn [r]
-                            {:rahavaraus (assoc r :tehtavat (konversio/pgarray->vector (:tehtavat r)))})
+                            (assoc r :tehtavat (konversio/pgarray->vector (:tehtavat r))))
                         rahavaraukset)]
     ;; Palautetaan kaikki rahavaraukset rahavaraukset avaimen alla
     {:rahavaraukset rahavaraukset}))
