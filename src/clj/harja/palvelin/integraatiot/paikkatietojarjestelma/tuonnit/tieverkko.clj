@@ -132,6 +132,8 @@
 
              ;; Sallitaan maksimissaan 100 metrin hyppy pätkiä yhdistellessä.
              ;; Tällaiset voi aiheutua esimerkiksi liikenneympyröistä tai risteyksistä.
+             ;; Ilman tätä saatetaan mennä fallbackia käyttämällä liian pitkälle, ja joudutaan myöhemmin
+             ;; lisäämään pätkä, joka on jäänyt taakse, mikä sekoittaa ajoradan geometrian täysin.
              (or
                (and seuraava-ls0 loppupiste (< (etaisyys-viivan-alkuun loppupiste seuraava-ls0) 100))
                (and seuraava-ls1 loppupiste (< (etaisyys-viivan-alkuun loppupiste seuraava-ls1) 100)))
