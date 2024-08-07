@@ -163,6 +163,7 @@
 (def suuunnitelman-osiot
   #{:johto-ja-hallintokorvaus
     :erillishankinnat
+    :tavoitehintaiset-rahavaraukset
     :hoidonjohtopalkkio
     :hankintakustannukset
 
