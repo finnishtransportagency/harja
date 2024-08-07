@@ -378,16 +378,33 @@
                (dissoc :toimenpideinstanssi :toimenpiteen-koodi)))
          kiinteahintaiset-tyot)))
 
+;; Kustannussuunnittelun tietomallissa sekä yhteenveto että tarkemmat tietorivit on samalla tasolla.
+;; Yritetään pitää tämä sama rakenne myös tässä, kun kovakoodataan tavoitehintaisia rahavarauksia malliksi.
+(def tavoitehintaiset-rahavaraukset
+  '(
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus A", :indeksikorjaus-vahvistettu nil, :summa 10, :vuosi 2020, :id 1, :summa-indeksikorjattu 112.30 :hoitokauden-numero 5 :poistettu false}
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus B", :indeksikorjaus-vahvistettu nil, :summa 20, :vuosi 2020, :id 2, :summa-indeksikorjattu 112.30 :hoitokauden-numero 5 :poistettu false}
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus C", :indeksikorjaus-vahvistettu nil, :summa 30, :vuosi 2020, :id 3, :summa-indeksikorjattu 112.30 :hoitokauden-numero 5 :poistettu false}
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus A", :indeksikorjaus-vahvistettu nil, :summa 310, :vuosi 2023, :id 1, :summa-indeksikorjattu 112.30 :hoitokauden-numero 5 :poistettu false}
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus B", :indeksikorjaus-vahvistettu nil, :summa 320, :vuosi 2023, :id 2, :summa-indeksikorjattu 112.30 :hoitokauden-numero 5 :poistettu false}
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus C", :indeksikorjaus-vahvistettu nil, :summa 330, :vuosi 2023, :id 3, :summa-indeksikorjattu 112.30 :hoitokauden-numero 5 :poistettu false}
+
+    ))
+
+
 (defn hae-urakan-kustannusarvoidut-tyot
   [db user urakka-id]
-  (let [kustannusarvoidut-tyot (kustarv-tyot/hae-urakan-kustannusarvoidut-tyot-nimineen db user urakka-id)]
-    (map (fn [tyo]
-           (-> tyo
-               (assoc :toimenpide-avain (mhu/toimenpide->toimenpide-avain (:toimenpiteen-koodi tyo)))
-               (assoc :haettu-asia (or (mhu/tehtava->tallennettava-asia (:tehtavan-tunniste tyo))
+  (let [kustannusarvoidut-tyot (kustarv-tyot/hae-urakan-kustannusarvoidut-tyot-nimineen db user urakka-id)
+        kustannusarvoidut-tyot
+        (map (fn [tyo]
+               (-> tyo
+                 (assoc :toimenpide-avain (mhu/toimenpide->toimenpide-avain (:toimenpiteen-koodi tyo)))
+                 (assoc :haettu-asia (or (mhu/tehtava->tallennettava-asia (:tehtavan-tunniste tyo))
                                        (mhu/tehtavaryhma->tallennettava-asia (:tehtavaryhman-tunniste tyo))))
-               (dissoc :toimenpiteen-koodi :tehtavan-tunniste :tehtavaryhman-tunniste)))
-         kustannusarvoidut-tyot)))
+                 (dissoc :toimenpiteen-koodi :tehtavan-tunniste :tehtavaryhman-tunniste)))
+          kustannusarvoidut-tyot)
+        kustannusarvoidut-tyot (concat kustannusarvoidut-tyot tavoitehintaiset-rahavaraukset)]
+    kustannusarvoidut-tyot))
 
 (defn urakan-johto-ja-hallintokorvausten-datan-rikastaminen [data urakan-alkuvuosi]
   (let [to-float #(when % (float %))
@@ -939,6 +956,18 @@
       {:virhe "Yhtään riviä ei päivitetty"}
       {:onnistui? true})))
 
+(defn tallenna-tavoitehintainen-rahavaraus [db user {:keys [urakka-id rahavaraus-id summa loppuvuodet? hoitovuosi-numero :vuosi] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (let [tavoitehintaiset-rahavaraukset (map (fn [r]
+                                              (if (and
+                                                      (= (:id r) rahavaraus-id)
+                                                      (= (:vuosi r) vuosi))
+                                                (assoc r :summa summa)
+                                                r))
+                                         tavoitehintaiset-rahavaraukset)]
+    ;; Palautetaan tässä vaiheessa vain tiedetyt rahavaraukset muutettuna summalla, joka annettiin
+    tavoitehintaiset-rahavaraukset))
+
 (defrecord Budjettisuunnittelu []
   component/Lifecycle
   (start [this]
@@ -1006,22 +1035,27 @@
             (fn [user tiedot]
               (tallenna-toimenkuva db user tiedot))
             {:kysely-spec ::bs-p/tallenna-toimenkuva-kysely
-             :vastaus-spec ::bs-p/tallenna-toimenkuva-vastaus}))))
+             :vastaus-spec ::bs-p/tallenna-toimenkuva-vastaus})
+          (julkaise-palvelu
+            :tallenna-tavoitehintainen-rahavaraus
+            (fn [user tiedot]
+              (tallenna-tavoitehintainen-rahavaraus db user tiedot))))))
     this)
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
-                     :budjetoidut-tyot
-                     :budjettitavoite
-                     :budjettisuunnittelun-indeksit
-                     :hae-suunnitelman-tilat
-                     :vahvista-kustannussuunnitelman-osa-vuodella
-                     :kumoa-suunnitelman-osan-vahvistus-hoitovuodelle
-                     :tallenna-suunnitelman-osalle-tila
-                     :tallenna-suunnitelman-muutos
-                     :tallenna-budjettitavoite
-                     :tallenna-kiinteahintaiset-tyot
-                     :tallenna-johto-ja-hallintokorvaukset
-                     :tallenna-kustannusarvioitu-tyo
-                     :tallenna-toimenkuva)
+      :budjetoidut-tyot
+      :budjettitavoite
+      :budjettisuunnittelun-indeksit
+      :hae-suunnitelman-tilat
+      :vahvista-kustannussuunnitelman-osa-vuodella
+      :kumoa-suunnitelman-osan-vahvistus-hoitovuodelle
+      :tallenna-suunnitelman-osalle-tila
+      :tallenna-suunnitelman-muutos
+      :tallenna-budjettitavoite
+      :tallenna-kiinteahintaiset-tyot
+      :tallenna-johto-ja-hallintokorvaukset
+      :tallenna-kustannusarvioitu-tyo
+      :tallenna-toimenkuva
+      :tallenna-tavoitehintainen-rahavaraus)
     this))
