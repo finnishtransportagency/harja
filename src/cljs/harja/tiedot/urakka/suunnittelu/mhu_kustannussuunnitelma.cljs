@@ -392,6 +392,7 @@
     (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
     (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :toimistokulut])
     (get-in yhteenvedot [:johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
+    (get-in yhteenvedot [:tavoitehintaiset-rahavaraukset :summat :tavoitehintaiset-rahavaraukset])
     (summaa-lehtivektorit (get-in yhteenvedot [:hankintakustannukset :summat :rahavaraukset]))
     (summaa-lehtivektorit (get-in yhteenvedot [:hankintakustannukset :summat :suunnitellut-hankinnat]))
     (summaa-lehtivektorit (get-in yhteenvedot [:hankintakustannukset :summat :laskutukseen-perustuvat-hankinnat]))))
@@ -1767,8 +1768,6 @@
         tarkastettavat (if (number? hoitovuosilta)
                          (get osion-tilat hoitovuosilta)
                          (mapv #(get osion-tilat %) hoitovuosilta))]
-    (println "hae-osion-tila tarkastettavat:" tarkastettavat)
-
     (if (vector? tarkastettavat)
       (every? some? tarkastettavat)
       (some? tarkastettavat))))
@@ -1883,6 +1882,11 @@
 
 ;; Kattohinnan gridin käsittelijät
 (defrecord PaivitaKattohintaGrid [])
+
+;; Tallenna Tavoitehintainen rahavaraus kantaan
+(defrecord TallennaTavoitehintainenRahavaraus [id summa vuosi loppuvuodet?])
+(defrecord TallennaTavoitehintainenRahavarausOnnistui [vastaus])
+(defrecord TallennaTavoitehintainenRahavarausEpaonnistui [vastaus])
 
 ;; TODO: Muutoksia ei implementoitu vielä loppuun
 (defrecord TallennaSeliteMuutokselle [])
@@ -2403,6 +2407,18 @@
             paivitetyt-vuosisummat-toimenkuvalla
             (assoc toimenkuvan-yhteenveto maksukausi paivitetyt-vuosisummat-toimenkuvalla)))))))
 
+(defn- tavoitehintaiset-rahavaraukset-hoitokausittain
+  "Odottaa saavansa listan mäppejä, jossa on anettun 'avaimen' kohdalla luku sekä :hoitokauden-numero avain, jossa on hoitokauden numero.
+  Haetaan ensin kaikki hoitokauden numerot (niitä voi olla esim 5, tai voi olla vaikka 7) ja lasketaan niille annetun avaimen summat yhteen.
+  Muodostetaan array, jossa on hoitovuoden määrän verran avaimesta saatuja summia."
+  [avain data]
+  (let [hoitokauden-numerot [1 2 3 4 5] #_ (into #{} (map :hoitokauden-numero data))
+        tulos (reduce (fn [lopputulos hoitovuosi]
+                        (let [hoitovuoden-summa (apply + (map avain (filter #(= (:hoitokauden-numero %) hoitovuosi) data)))]
+                          (conj lopputulos hoitovuoden-summa)))
+                [] hoitokauden-numerot)]
+    tulos))
+
 (extend-protocol tuck/Event
   TaulukoidenVakioarvot
   (process-event [_ app]
@@ -2433,6 +2449,9 @@
            :yhteensa {:nimi "Yhteensä"}
            :kuukausitasolla? false})
         (assoc-in [:gridit :rahavaraukset]
+          {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
+           :yhteensa {:nimi "Yhteensä"}})
+        (assoc-in [:gridit :tavoitehintaiset-rahavaraukset]
           {:otsikot {:nimi "" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
            :yhteensa {:nimi "Yhteensä"}})
         (assoc-in [:gridit :erillishankinnat]
@@ -2540,7 +2559,7 @@
           pohjadata (urakan-ajat)]
       (when pohjadata
         (let [;; Kiinteähintaiset hankinnat
-              hankinnat (:kiinteahintaiset-tyot vastaus)
+              kiinteahintaiset-hankinnat (:kiinteahintaiset-tyot vastaus)
               ;; Kustannusarvioidut hankinnat
               hankinnat-laskutukseen-perustuen (filter #(and (= (:tyyppi %) "laskutettava-tyo")
                                                           (nil? (:haettu-asia %)))
@@ -2550,7 +2569,7 @@
                                                                                                (remove #(= 0 (:summa %)))
                                                                                                (map :toimenpide-avain))
                                                                                      hankinnat-laskutukseen-perustuen)))
-              hankinnat-hoitokausittain (hankinnat-hoitokausille hankinnat pohjadata)
+              hankinnat-hoitokausittain (hankinnat-hoitokausille kiinteahintaiset-hankinnat pohjadata)
               maaramitattavat-hoitokausittain (maaramitattavat-hoitokausille
                                                 hankinnat-laskutukseen-perustuen
                                                 pohjadata)
@@ -2559,6 +2578,8 @@
               ;; -- Määrätaulukoiden datan alustaminen --
               hoidon-johto-kustannukset (filter #(= (:toimenpide-avain %) :mhu-johto)
                                           (:kustannusarvioidut-tyot vastaus))
+
+              tavoitehintaiset-rahavaraukset (filter #(= (:toimenpide-avain %) :tavoitehintaiset-rahavaraukset) (:kustannusarvioidut-tyot vastaus))
               erillishankinnat-hoitokausittain (hoidonjohto-jarjestys-fn
                                                  (maarataulukon-kk-data-alustus-fn
                                                    pohjadata hoidon-johto-kustannukset :erillishankinnat))
@@ -2609,6 +2630,8 @@
             (assoc-in [:domain :laskutukseen-perustuvat-hankinnat] maaramitattavat-hoitokausittain)
             (assoc-in [:domain :rahavaraukset] rahavaraukset-hoitokausittain)
             (assoc-in [:domain :erillishankinnat] erillishankinnat-hoitokausittain)
+            ;; Poiketen muista tiedoista. Tavoitehintaiset rahavaraukset parsitaan valmiiksi bäkkärissä
+            (assoc-in [:domain :tavoitehintaiset-rahavaraukset] tavoitehintaiset-rahavaraukset)
             (assoc-in [:domain :johto-ja-hallintokorvaukset] jh-korvaukset)
             (assoc-in [:domain :toimistokulut] toimistokulut-hoitokausittain)
             (assoc-in [:domain :hoidonjohtopalkkio] hoidonjohtopalkkio-hoitokausittain)
@@ -2652,6 +2675,11 @@
 
             (assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :rahavaraukset]
               (summaa-rahavaraukset rahavaraukset-hoitokausittain :indeksikorjattu))
+
+            (assoc-in [:yhteenvedot :tavoitehintaiset-rahavaraukset :summat :tavoitehintaiset-rahavaraukset]
+              (tavoitehintaiset-rahavaraukset-hoitokausittain :summa tavoitehintaiset-rahavaraukset))
+            (assoc-in [:yhteenvedot :tavoitehintaiset-rahavaraukset :indeksikorjatut-summat :tavoitehintaiset-rahavaraukset]
+              (tavoitehintaiset-rahavaraukset-hoitokausittain :summa-indeksikorjattu tavoitehintaiset-rahavaraukset))
 
             (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :erillishankinnat]
               (mapv #(summaa-mapin-arvot % :maara) erillishankinnat-hoitokausittain))
@@ -3467,6 +3495,34 @@
   PaivitaKattohintaGrid
   (process-event [_ app]
     (assoc-in app [:kattohinta :grid :kattohinta :koskettu?] true))
+
+  TallennaTavoitehintainenRahavaraus
+  (process-event [{:keys [id summa vuosi loppuvuodet?]} app]
+    (let [urakka (-> @tiedot/tila :yleiset :urakka :id)]
+      (tallenna-ja-odota-vastaus app
+        {:palvelu :tallenna-tavoitehintainen-rahavaraus
+         :payload {:urakka-id urakka
+                   :rahavaraus-id id
+                   :vuosi vuosi
+                   :loppuvuodet? loppuvuodet?
+                   :summa summa}
+         :onnistui ->TallennaTavoitehintainenRahavarausOnnistui
+         :epaonnistui ->TallennaTavoitehintainenRahavarausEpaonnistui})))
+
+  TallennaTavoitehintainenRahavarausOnnistui
+  (process-event [{:keys [vastaus]} app]
+    ;; Vastauksessa tulee mukana kaikki uudistuneet rahavaraukset
+    (-> app
+      (assoc-in [:domain :tavoitehintaiset-rahavaraukset] vastaus)
+      (assoc-in [:yhteenvedot :tavoitehintaiset-rahavaraukset :summat :tavoitehintaiset-rahavaraukset]
+        (tavoitehintaiset-rahavaraukset-hoitokausittain :summa vastaus))
+      (assoc-in [:yhteenvedot :tavoitehintaiset-rahavaraukset :indeksikorjatut-summat :tavoitehintaiset-rahavaraukset]
+        (tavoitehintaiset-rahavaraukset-hoitokausittain :summa-indeksikorjattu vastaus))))
+
+  TallennaTavoitehintainenRahavarausEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Rahavarauksen tallennus epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
+    app)
 
   TallennaSeliteMuutokselle
   (process-event [_ app]
