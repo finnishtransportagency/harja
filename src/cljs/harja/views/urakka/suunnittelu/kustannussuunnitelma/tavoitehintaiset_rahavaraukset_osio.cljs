@@ -63,7 +63,7 @@
 
       [{:otsikko "Rahavaraus" :nimi :nimi :leveys "70%" :muokattava? (constantly false)
         :tyyppi :positiivinen-numero :tasaa :vasen}
-       {:otsikko "Yhteensä, €/vuosi" :nimi :summa :leveys "15%" :tyyppi :numero :muokattava? (constantly true) :tasaa :oikea}
+       {:otsikko "Yhteensä, €/vuosi" :nimi :summa :leveys "15%" :tyyppi :positiivinen-numero :muokattava? (constantly true) :tasaa :oikea :fmt fmt/euro-opt}
        {:otsikko "Indeksikorjattu" :nimi :summa-indeksikorjattu :leveys "15%" :tyyppi :numero :muokattava? (constantly false) :tasaa :oikea}]
       rahavaraus-atom]]))
 
