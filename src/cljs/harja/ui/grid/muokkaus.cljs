@@ -16,7 +16,8 @@
               vetolaatikko-rivi vetolaatikon-tila validoi-grid]]
             [harja.ui.grid.yleiset :as grid-yleiset]
             [harja.ui.napit :as napit]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn- muokkauspaneeli [{:keys [otsikko voi-muokata? voi-kumota? muokatut virheet varoitukset huomautukset
                                 skeema peru! voi-lisata? ohjaus uusi-id opts paneelikomponentit historia
@@ -379,7 +380,7 @@
                    vetolaatikot-auki virheet-ylos? toimintonappi-fn tyhja-komponentti? tyhja-args gridin-id
                    rivi-klikattu sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus nayta-virheikoni?
                    sarake-disabloitu-arvo-fn disabloi-autocomplete?
-                   vetolaatikko-optiot piilota-rivi]}]
+                   vetolaatikko-optiot piilota-rivi rivi-jalkeen]}]
         (let [muokatut-atom muokatut
               muokatut @muokatut
               colspan (if piilota-toiminnot?
@@ -457,7 +458,15 @@
                         (recur (inc i)
                                loput-rivit
                                (map second (rest loput-rivit))
-                               (concat muokkausrivit (piilota-rivi-fn muokkausrivi))))))))))]))})))
+                               (concat muokkausrivit (piilota-rivi-fn muokkausrivi))))))))))
+           ;; Lisätään rivi-jalkeen eli yhteenvetorivi
+           (when rivi-jalkeen
+             [:tr {:class (:luokka (meta rivi-jalkeen))}
+              (for* [{:keys [teksti sarakkeita luokka tasaa]} rivi-jalkeen]
+                [:td {:colSpan (or sarakkeita 1) :class luokka}
+                 (case tasaa
+                   :oikea [:span.pull-right teksti]
+                   teksti)])])]))})))
 
 (defn- gridin-otsikot
   [skeema rivinumerot? piilota-toiminnot?]
@@ -469,14 +478,14 @@
         ^{:key (str i nimi)}
         [:th {:width (or leveys "5%")
               :class (y/luokat (y/tasaus-luokka tasaa)
-                               (grid-yleiset/tiivis-tyyli skeema))}
+                       (grid-yleiset/tiivis-tyyli skeema))}
          otsikko
          (when yksikko
            [:span.kentan-yksikko yksikko])
          (when sarake-sort
            [napit/nappi "" (:fn sarake-sort)
             {:luokka (y/luokat "muokkaus-grid-sort-nappi"
-                               (:luokka sarake-sort))
+                       (:luokka sarake-sort))
              :ikoninappi? true
              :ikoni [ikonit/action-sort-descending]}])])
       skeema)
@@ -548,14 +557,15 @@
   :validoi-uusi-rivi?             False, jos ei haluta validoida uutta riviä, kun se luodaan.
   :piilota-table-header?          True, niin ei piirretä thead -elementtiä.
   :piilota-rivi                   Funktio, jolle passataan rivin tiedot. Piilottaa rivin palautusarvon ollessa truthy
-  :korostusrajaus?                Tekee borderin ylä- ja alareunaan korostusborderit"
+  :korostusrajaus?                Tekee borderin ylä- ja alareunaan korostusborderit
+  :rivi-jalkeen                Vektori, joka on esim yhteensä rivi. Tulee muiden rivien jälkeen. Anna metana esim luokka, joka riville passataan."
 
   [{:keys [otsikko yksikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos? validoi-alussa?
            virhe-viesti toimintonappi-fn disabloi-rivi? luomisen-jalkeen muokkauspaneeli? rivi-validointi taulukko-validointi
            rivi-varoitus taulukko-varoitus rivi-huomautus taulukko-huomautus custom-toiminto
-           sisalto-kun-rivi-disabloitu nayta-virheikoni? validoi-uusi-rivi?] :as opts}
+           sisalto-kun-rivi-disabloitu nayta-virheikoni? validoi-uusi-rivi? rivi-jalkeen] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
         gridin-id (keyword (gensym "grid"))
@@ -703,7 +713,7 @@
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto
                     sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus vetolaatikko-optiot disabloi-autocomplete?
-                    piilota-table-header? piilota-rivi korostusrajaus? custom-yla-panel] :as opts} skeema muokatut]
+                    piilota-table-header? piilota-rivi korostusrajaus? custom-yla-panel rivi-jalkeen] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                skeema (skeema/laske-sarakkeiden-leveys
                         (filterv some? skeema))
@@ -753,7 +763,8 @@
                              :disabloi-autocomplete? disabloi-autocomplete?
                              :piilota-rivi piilota-rivi
                              :on-rivi-blur on-rivi-blur
-                             :on-rivi-focus on-rivi-focus}]]
+                             :on-rivi-focus on-rivi-focus
+                             :rivi-jalkeen rivi-jalkeen}]]
              (when (and (not= false voi-muokata?) muokkaa-footer)
                [muokkaa-footer ohjaus])]]))
        :UNSAFE_component-will-receive-props (fn [this new-argv]
