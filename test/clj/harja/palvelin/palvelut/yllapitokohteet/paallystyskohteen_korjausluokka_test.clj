@@ -9,10 +9,10 @@
         ;; Tämä tr osoite on sitä varten, että mitataan, kuinka pitkästti pk luokkaa tällä tieosalla on. Pitäisi olla tuo 400m
         tr {:tie 18747 :aosa 1 :losa 1 :aet 0 :let 7590}
 
-        pkgeom_format (format "(SELECT tr_osoitteelle_viiva3(%s::INTEGER,  %s::INTEGER, %s::INTEGER, %s::INTEGER, %s::INTEGER)::geometry)",
+        pkgeom_format (format "(SELECT tieosoitteelle_viiva(%s::INTEGER,  %s::INTEGER, %s::INTEGER, %s::INTEGER, %s::INTEGER)::geometry)",
                         (:tie pk) (:aosa pk) (:aet pk) (:losa pk) (:let pk))
 
-        trgeom_format (format "(SELECT tr_osoitteelle_viiva3(%s::INTEGER,  %s::INTEGER, %s::INTEGER, %s::INTEGER, %s::INTEGER)::geometry)",
+        trgeom_format (format "(SELECT tieosoitteelle_viiva(%s::INTEGER,  %s::INTEGER, %s::INTEGER, %s::INTEGER, %s::INTEGER)::geometry)",
                         (:tie tr) (:aosa tr) (:aet tr) (:losa tr) (:let tr))
 
         ;; Lisätään itse keksitty päällysteen_korjausluokka

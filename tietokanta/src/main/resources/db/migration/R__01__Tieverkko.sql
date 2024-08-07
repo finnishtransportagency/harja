@@ -52,11 +52,11 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- Tatun uusi yritys tieosista
 -- Otetaan tällä huomioon myös se, että tien 2d-projektiosta katoaa tieto korkeuseroista.
 -- Käytännössä siis tie on pitempi, kuin sen kaksiuloinen projektio, joka tarkoittaa sitä että 2d-projektion metri on
 -- alle metri oikeassa elämässä.
-CREATE OR REPLACE FUNCTION tr_osoitteelle_viiva3(
+DROP FUNCTION IF EXISTS tr_osoitteelle_viiva3(tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER);
+CREATE OR REPLACE FUNCTION tieosoitteelle_viiva (
     tie_ INTEGER,
     aosa_ INTEGER, aet_ INTEGER,
     losa_ INTEGER, let_ INTEGER) RETURNS geometry AS $$
@@ -167,7 +167,7 @@ BEGIN
   IF aosa_=losa_ AND aet_=let_ THEN
     RETURN NEXT tierekisteriosoitteelle_piste(tie_, aosa_, aet_);
   ELSE
-    RETURN NEXT tr_osoitteelle_viiva3(tie_, aosa_, aet_, losa_, let_);
+    RETURN NEXT tieosoitteelle_viiva(tie_, aosa_, aet_, losa_, let_);
   END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -440,7 +440,7 @@ BEGIN
         loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste, r.tie, r.loppuosa);
         let := loppukohta.etaisyys;
 
-        geomertria := tr_osoitteelle_viiva3(r.tie, aosa, aet, losa, let);
+        geomertria := tieosoitteelle_viiva(r.tie, aosa, aet, losa, let);
         RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', r.tie, aosa, aet, losa, let, geomertria;
         RETURN ROW (r.tie, aosa, aet, losa, let, geomertria);
 
@@ -496,7 +496,7 @@ BEGIN
       aet := let;
       let := tmp_et;
     END IF;
-    geom := tr_osoitteelle_viiva3(r.tie, aosa, aet, losa, let);
+    geom := tieosoitteelle_viiva(r.tie, aosa, aet, losa, let);
     pituus := ST_Length(geom);
     IF(pituus >= min_pituus AND pituus <= max_pituus) THEN
       RETURN ROW(r.tie, aosa, aet, losa, let, geom);
