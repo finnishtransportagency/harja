@@ -382,12 +382,12 @@
 ;; Yritetään pitää tämä sama rakenne myös tässä, kun kovakoodataan tavoitehintaisia rahavarauksia malliksi.
 (def tavoitehintaiset-rahavaraukset
   '(
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus A", :indeksikorjaus-vahvistettu nil, :summa 10, :vuosi 2020, :id 1, :summa-indeksikorjattu 112.30 :hoitokauden-numero 5 :poistettu false}
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus B", :indeksikorjaus-vahvistettu nil, :summa 20, :vuosi 2020, :id 2, :summa-indeksikorjattu 112.30 :hoitokauden-numero 5 :poistettu false}
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus C", :indeksikorjaus-vahvistettu nil, :summa 30, :vuosi 2020, :id 3, :summa-indeksikorjattu 112.30 :hoitokauden-numero 5 :poistettu false}
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus A", :indeksikorjaus-vahvistettu nil, :summa 310, :vuosi 2023, :id 1, :summa-indeksikorjattu 112.30 :hoitokauden-numero 5 :poistettu false}
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus B", :indeksikorjaus-vahvistettu nil, :summa 320, :vuosi 2023, :id 2, :summa-indeksikorjattu 112.30 :hoitokauden-numero 5 :poistettu false}
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus C", :indeksikorjaus-vahvistettu nil, :summa 330, :vuosi 2023, :id 3, :summa-indeksikorjattu 112.30 :hoitokauden-numero 5 :poistettu false}
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus A", :indeksikorjaus-vahvistettu nil, :summa 10, :vuosi 2020, :id 1, :summa-indeksikorjattu 10.1 :hoitokauden-numero 2 :poistettu false}
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus B", :indeksikorjaus-vahvistettu nil, :summa 20, :vuosi 2020, :id 2, :summa-indeksikorjattu 20.20 :hoitokauden-numero 2 :poistettu false}
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus C", :indeksikorjaus-vahvistettu nil, :summa 30, :vuosi 2020, :id 3, :summa-indeksikorjattu 30.30 :hoitokauden-numero 2 :poistettu false}
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus A", :indeksikorjaus-vahvistettu nil, :summa 310, :vuosi 2023, :id 1, :summa-indeksikorjattu 100 :hoitokauden-numero 5 :poistettu false}
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus B", :indeksikorjaus-vahvistettu nil, :summa 320, :vuosi 2023, :id 2, :summa-indeksikorjattu 100 :hoitokauden-numero 5 :poistettu false}
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus C", :indeksikorjaus-vahvistettu nil, :summa 330, :vuosi 2023, :id 3, :summa-indeksikorjattu 100 :hoitokauden-numero 5 :poistettu false}
 
     ))
 
@@ -956,13 +956,15 @@
       {:virhe "Yhtään riviä ei päivitetty"}
       {:onnistui? true})))
 
-(defn tallenna-tavoitehintainen-rahavaraus [db user {:keys [urakka-id rahavaraus-id summa loppuvuodet? hoitovuosi-numero :vuosi] :as tiedot}]
+(defn tallenna-tavoitehintainen-rahavaraus [db user {:keys [urakka-id rahavaraus-id summa indeksisumma loppuvuodet? vuosi] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (let [tavoitehintaiset-rahavaraukset (map (fn [r]
                                               (if (and
                                                       (= (:id r) rahavaraus-id)
                                                       (= (:vuosi r) vuosi))
-                                                (assoc r :summa summa)
+                                                (-> r
+                                                  (assoc :summa summa)
+                                                  (assoc :summa-indeksikorjattu indeksisumma))
                                                 r))
                                          tavoitehintaiset-rahavaraukset)]
     ;; Palautetaan tässä vaiheessa vain tiedetyt rahavaraukset muutettuna summalla, joka annettiin

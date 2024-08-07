@@ -24,14 +24,15 @@
       {:data-cy "erillishankinnat-indeksilaskuri"}]]
     [yleiset/ajax-loader]))
 
-(defn tallenna! [vuosi loppuvuodet? rivi rivi-id ]
-  (e! (t/->TallennaTavoitehintainenRahavaraus rivi-id (:summa rivi) vuosi loppuvuodet?)))
+(defn tallenna! [vuosi loppuvuodet? indeksit rivi rivi-id]
+  (let [indeksikerroin-vuodelle (:indeksikerroin (first (filter #(= (:vuosi %) vuosi) indeksit)))]
+    (e! (t/->TallennaTavoitehintainenRahavaraus rivi-id (:summa rivi) (* indeksikerroin-vuodelle (:summa rivi)) vuosi loppuvuodet?))))
 
 ;; TODO: Hox. virheiden käsittelyä ei ole vielä tehty
 (defonce taulukko-virheet (r/atom {}))
 
 ;; Tehdään tavanomainen taulukko rahavarausten näyttämiselle
-(defn tavoitehintaiset-rahavaraukset-taulukko [rivit vuosi loppuvuodet? vahvistettu?]
+(defn tavoitehintaiset-rahavaraukset-taulukko [rivit vuosi loppuvuodet? vahvistettu? indeksit]
   (let [;; Tehdään datasta atomi, jotta muokkausgridi voi muokata sitä - Muokataan datasta muokkausgridille valmis setti
         muokkaus-rahavaraukset (into {} (mapv (fn [rahavaraus]
                                                 {(:id rahavaraus) {:nimi (:haettu-asia rahavaraus)
@@ -54,7 +55,7 @@
        :tyhja "Ei rahavauksia."
        :virheet taulukko-virheet
        :disabloi-autocomplete? true
-       :on-rivi-blur (r/partial tallenna! vuosi loppuvuodet?)
+       :on-rivi-blur (r/partial tallenna! vuosi loppuvuodet? indeksit)
        :rivi-jalkeen ^{:luokka "table-default-sum"}
                      [{:teksti "Yhteensä" :luokka "lihavoitu"}
                       {:teksti (str (fmt/euro-opt false yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}
@@ -94,5 +95,6 @@
         hoitokauden-rahavaraukset
         (pvm/vuosi (first (:pvmt kuluva-hoitokausi)))
         (:kopioidaan-tuleville-vuosille? suodattimet)
-        vahvistettu?]
+        vahvistettu?
+        indeksit]
        [yleiset/ajax-loader])]))

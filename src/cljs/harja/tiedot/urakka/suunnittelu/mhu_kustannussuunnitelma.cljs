@@ -1884,7 +1884,7 @@
 (defrecord PaivitaKattohintaGrid [])
 
 ;; Tallenna Tavoitehintainen rahavaraus kantaan
-(defrecord TallennaTavoitehintainenRahavaraus [id summa vuosi loppuvuodet?])
+(defrecord TallennaTavoitehintainenRahavaraus [id summa indeksisumma vuosi loppuvuodet?])
 (defrecord TallennaTavoitehintainenRahavarausOnnistui [vastaus])
 (defrecord TallennaTavoitehintainenRahavarausEpaonnistui [vastaus])
 
@@ -3497,7 +3497,7 @@
     (assoc-in app [:kattohinta :grid :kattohinta :koskettu?] true))
 
   TallennaTavoitehintainenRahavaraus
-  (process-event [{:keys [id summa vuosi loppuvuodet?]} app]
+  (process-event [{:keys [id summa indeksisumma vuosi loppuvuodet?]} app]
     (let [urakka (-> @tiedot/tila :yleiset :urakka :id)]
       (tallenna-ja-odota-vastaus app
         {:palvelu :tallenna-tavoitehintainen-rahavaraus
@@ -3505,7 +3505,8 @@
                    :rahavaraus-id id
                    :vuosi vuosi
                    :loppuvuodet? loppuvuodet?
-                   :summa summa}
+                   :summa summa
+                   :indeksisumma indeksisumma}
          :onnistui ->TallennaTavoitehintainenRahavarausOnnistui
          :epaonnistui ->TallennaTavoitehintainenRahavarausEpaonnistui})))
 
