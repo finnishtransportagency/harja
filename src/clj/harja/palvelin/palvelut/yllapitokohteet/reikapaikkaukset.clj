@@ -156,7 +156,7 @@
     (when excel-vienti
       (excel-vienti/rekisteroi-excel-kasittelija! excel-vienti :reikapaikkaukset-urakalle-excel
         {:funktio (partial #'p-excel/vie-reikapaikkaukset-exceliin db hae-reikapaikkaukset)
-         :optiot {:pohja (io/input-stream (io/resource "excel/harja_reikapaikkausten_pohja.xlsx"))}}))
+         :optiot {:pohja (io/input-stream (io/resource "public/excel/harja_reikapaikkausten_pohja.xlsx"))}}))
 
     this)
 
