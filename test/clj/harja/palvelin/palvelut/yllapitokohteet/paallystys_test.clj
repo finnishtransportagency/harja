@@ -1140,7 +1140,7 @@
                                                                                   urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
         alustarivit-ennen (:alusta paallystysilmoitus-kannassa-ennen)
         alustarivit-jalkeen (:alusta paallystysilmoitus-kannassa-jalkeen)
-        alustarivi-14 (alustarivi-idlla alustarivit-jalkeen 14)]
+        alustarivi-15 (alustarivi-idlla alustarivit-jalkeen 15)]
     (is (not (nil? paallystysilmoitus-kannassa-ennen)))
     (is (= (:versio paallystysilmoitus-kannassa-ennen) 2))
     (is (= 6 (count alustarivit-ennen)))
@@ -1152,12 +1152,12 @@
     (is (alustarivi-idlla-loytyy? alustarivit-ennen 5) "alusta id:llä 5 löytyy")
     (is (alustarivi-idlla-loytyy? alustarivit-ennen 6) "alusta id:llä 6 löytyy")
     (is (not (alustarivi-idlla-loytyy? alustarivit-jalkeen 7)) "alusta id:llä 7 löytyy")
-    (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 11) "alusta id:llä 11 löytyy")
     (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 12) "alusta id:llä 12 löytyy")
     (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 13) "alusta id:llä 13 löytyy")
-    (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 14) "alusta id:llä 13 löytyy")
+    (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 14) "alusta id:llä 14 löytyy")
+    (is (alustarivi-idlla-loytyy? alustarivit-jalkeen 15) "alusta id:llä 15 löytyy")
     (is (= {:verkon-tyyppi 1 :verkon-tarkoitus 2 :verkon-sijainti 3}
-           (select-keys alustarivi-14 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
+           (select-keys alustarivi-15 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest tallenna-pot2-lisaa-alustarivi-ja-vain-pakolliset-verkko-tiedot
@@ -1170,9 +1170,9 @@
         [_ paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
                                                                                   urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
         alustarivit-jalkeen (:alusta paallystysilmoitus-kannassa-jalkeen)
-        alustarivi-14 (alustarivi-idlla alustarivit-jalkeen 14)]
+        alustarivi-15 (alustarivi-idlla alustarivit-jalkeen 15)]
     (is (= {:verkon-tyyppi 1 :verkon-tarkoitus nil :verkon-sijainti 3}
-           (select-keys alustarivi-14 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
+           (select-keys alustarivi-15 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest tallenna-pot2-lisaa-alustarivi-ja-vain-pakolliset-tas-tiedot
@@ -1185,7 +1185,7 @@
         [_ paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
                                                   urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
         alustarivit-jalkeen (:alusta paallystysilmoitus-kannassa-jalkeen)
-        alustarivi-9 (alustarivi-idlla alustarivit-jalkeen 13)]
+        alustarivi-9 (alustarivi-idlla alustarivit-jalkeen 14)]
     (is (= {:kasittelysyvyys 55, :sideaine 1, :sideainepitoisuus 10.0M, :murske nil, :massamenekki nil}
            (select-keys alustarivi-9 [:kasittelysyvyys :sideaine :sideainepitoisuus :murske :massamenekki])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
@@ -1213,15 +1213,15 @@
                                                                                   urakka-id sopimus-id paallystyskohde-id paallystysilmoitus)
         alustarivit-jalkeen (:alusta paallystysilmoitus-kannassa-jalkeen)]
     (is (= 5 (count alustarivit-jalkeen)))
-    (is (= #{{:pot2a_id 13
-              :tr-numero 20}
-             {:pot2a_id 14
+    (is (= #{{:pot2a_id 14
               :tr-numero 20}
              {:pot2a_id 15
-              :tr-numero 7777}
-             {:pot2a_id 11
               :tr-numero 20}
+             {:pot2a_id 16
+              :tr-numero 7777}
              {:pot2a_id 12
+              :tr-numero 20}
+             {:pot2a_id 13
               :tr-numero 20}}
            (clojure.set/project alustarivit-jalkeen [:pot2a_id :tr-numero])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
@@ -1289,9 +1289,9 @@
         [_ paallystysilmoitus-kannassa-paivitetty] (tallenna-pot2-testi-paallystysilmoitus
                                                   urakka-id sopimus-id paallystyskohde-id paivitetty-paallystysilmoitus)
         alustarivit-paivitetyt (:alusta paallystysilmoitus-kannassa-paivitetty)
-        paivitetty-alustarivi-14 (alustarivi-idlla alustarivit-paivitetyt 14)]
-    (is (some? paivitetty-alustarivi-14) "alusta id:llä 14 löytyy")
-    (is (= paivitetyt-verkon-tiedot (select-keys paivitetty-alustarivi-14 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
+        paivitetty-alustarivi-15 (alustarivi-idlla alustarivit-paivitetyt 15)]
+    (is (some? paivitetty-alustarivi-15) "alusta id:llä 15 löytyy")
+    (is (= paivitetyt-verkon-tiedot (select-keys paivitetty-alustarivi-15 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-ei-ole-kaikki-pakolliset-verkontiedot
