@@ -3499,16 +3499,19 @@
   TallennaTavoitehintainenRahavaraus
   (process-event [{:keys [id summa indeksisumma vuosi loppuvuodet?]} app]
     (let [urakka (-> @tiedot/tila :yleiset :urakka :id)]
-      (tallenna-ja-odota-vastaus app
-        {:palvelu :tallenna-tavoitehintainen-rahavaraus
-         :payload {:urakka-id urakka
-                   :rahavaraus-id id
-                   :vuosi vuosi
-                   :loppuvuodet? loppuvuodet?
-                   :summa summa
-                   :indeksisumma indeksisumma}
-         :onnistui ->TallennaTavoitehintainenRahavarausOnnistui
-         :epaonnistui ->TallennaTavoitehintainenRahavarausEpaonnistui})))
+      ;; Ei yritetä tallentaa, jos mitään ei ole annettu
+      (if (and summa indeksisumma)
+        (tallenna-ja-odota-vastaus app
+          {:palvelu :tallenna-tavoitehintainen-rahavaraus
+           :payload {:urakka-id urakka
+                     :rahavaraus-id id
+                     :vuosi vuosi
+                     :loppuvuodet? loppuvuodet?
+                     :summa summa
+                     :indeksisumma indeksisumma}
+           :onnistui ->TallennaTavoitehintainenRahavarausOnnistui
+           :epaonnistui ->TallennaTavoitehintainenRahavarausEpaonnistui})
+        app)))
 
   TallennaTavoitehintainenRahavarausOnnistui
   (process-event [{:keys [vastaus]} app]
