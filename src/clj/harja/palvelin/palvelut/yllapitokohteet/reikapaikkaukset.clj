@@ -1,7 +1,6 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset
   "Reikäpaikkausnäkymän palvelut"
-  (:require [clojure.java.io :as io]
-            [com.stuartsierra.component :as component]
+  (:require [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
@@ -157,7 +156,6 @@
       (excel-vienti/rekisteroi-excel-kasittelija! excel-vienti :reikapaikkaukset-urakalle-excel
         {:funktio (partial #'p-excel/vie-reikapaikkaukset-exceliin db hae-reikapaikkaukset)
          :optiot {:pohja "public/excel/harja_reikapaikkausten_pohja.xlsx"}}))
-
     this)
 
   (stop [{:keys [http-palvelin excel-vienti] :as this}]
