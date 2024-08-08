@@ -37,3 +37,11 @@ WHERE toimenpideinstanssi IN (SELECT id
                               FROM toimenpideinstanssi
                               WHERE id = :toimenpideinstanssi
                                 AND loppupvm > current_timestamp - INTERVAL '3 months');
+
+-- name: hae-rahavarauskustannus
+-- Haetaan yksittäinen urakan rahavaraus
+SELECT kt.id, kt.vuosi, kt.kuukausi, kt.summa, kt.summa_indeksikorjattu
+  FROM kustannusarvioitu_tyo kt
+ WHERE kt.rahavaraus_id = :rahavaraus_id
+   AND kt.vuosi = :vuosi
+   AND kt.sopimus = :sopimus_id;

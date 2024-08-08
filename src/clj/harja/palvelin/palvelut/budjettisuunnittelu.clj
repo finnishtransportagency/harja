@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.budjettisuunnittelu
   (:require [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
+            [harja.fmt :as fmt]
             [specql.core :refer [fetch update! insert!]]
             [specql.op :as op]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
@@ -14,6 +15,7 @@
              [kiinteahintaiset-tyot :as kiin-q]
              [kustannusarvioidut-tyot :as ka-q]
              [toimenpideinstanssit :as tpi-q]
+             [rahavaraukset :as rahavaraus-kyselyt]
              [indeksit :as i-q]
              [konversio :as konv]]
             [harja.palvelin.palvelut
@@ -378,23 +380,25 @@
                (dissoc :toimenpideinstanssi :toimenpiteen-koodi)))
          kiinteahintaiset-tyot)))
 
-;; Kustannussuunnittelun tietomallissa sekä yhteenveto että tarkemmat tietorivit on samalla tasolla.
-;; Yritetään pitää tämä sama rakenne myös tässä, kun kovakoodataan tavoitehintaisia rahavarauksia malliksi.
-(def tavoitehintaiset-rahavaraukset
-  '(
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus A", :indeksikorjaus-vahvistettu nil, :summa 10, :vuosi 2020, :id 1, :summa-indeksikorjattu 10.1 :hoitokauden-numero 2 :poistettu false}
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus B", :indeksikorjaus-vahvistettu nil, :summa 20, :vuosi 2020, :id 2, :summa-indeksikorjattu 20.20 :hoitokauden-numero 2 :poistettu false}
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus C", :indeksikorjaus-vahvistettu nil, :summa 30, :vuosi 2020, :id 3, :summa-indeksikorjattu 30.30 :hoitokauden-numero 2 :poistettu false}
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus A", :indeksikorjaus-vahvistettu nil, :summa 310, :vuosi 2023, :id 1, :summa-indeksikorjattu 100 :hoitokauden-numero 5 :poistettu false}
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus B", :indeksikorjaus-vahvistettu nil, :summa 320, :vuosi 2023, :id 2, :summa-indeksikorjattu 100 :hoitokauden-numero 5 :poistettu false}
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus C", :indeksikorjaus-vahvistettu nil, :summa 330, :vuosi 2023, :id 3, :summa-indeksikorjattu 100 :hoitokauden-numero 5 :poistettu false}
-
-    ))
-
+(defn mallinna-rahavaraukset-kustannusten-suunnitteluun [rahavaraukset urakan-aloitusvuosi]
+  (map (fn [rahavaraus]
+         (let [
+               hoitokauden-numero (inc (- (:vuosi rahavaraus) urakan-aloitusvuosi))]
+           (-> rahavaraus
+             (assoc :toimenpide-avain :tavoitehintaiset-rahavaraukset)
+             (assoc :haettu-asia (:nimi rahavaraus))
+             (assoc :hoitokauden-numero hoitokauden-numero)
+             (assoc :poistettu false))))
+       rahavaraukset))
 
 (defn hae-urakan-kustannusarvoidut-tyot
   [db user urakka-id]
-  (let [kustannusarvoidut-tyot (kustarv-tyot/hae-urakan-kustannusarvoidut-tyot-nimineen db user urakka-id)
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        kustannusarvoidut-tyot (kustarv-tyot/hae-urakan-kustannusarvoidut-tyot-nimineen db user urakka-id)
+        tavoitehintaiset-rahavaraukset (mallinna-rahavaraukset-kustannusten-suunnitteluun
+                                         (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db {:urakka_id urakka-id})
+                                         urakan-aloitusvuosi)
         kustannusarvoidut-tyot
         (map (fn [tyo]
                (-> tyo
@@ -958,15 +962,54 @@
 
 (defn tallenna-tavoitehintainen-rahavaraus [db user {:keys [urakka-id rahavaraus-id summa indeksisumma loppuvuodet? vuosi] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (let [tavoitehintaiset-rahavaraukset (map (fn [r]
-                                              (if (and
-                                                      (= (:id r) rahavaraus-id)
-                                                      (= (:vuosi r) vuosi))
-                                                (-> r
-                                                  (assoc :summa summa)
-                                                  (assoc :summa-indeksikorjattu indeksisumma))
-                                                r))
-                                         tavoitehintaiset-rahavaraukset)]
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        sopimus-id (urakat-q/urakan-paasopimus-id db {:urakka urakka-id})
+        ;; Päivitetään rahavarauksen summa ja indeksikorjattu summa kustannusarvioitu_työ tauluun
+        kt-rahavaraus-kuukaudet (ka-q/hae-rahavarauskustannus db {:rahavaraus_id rahavaraus-id
+                                                                  :vuosi vuosi
+                                                                  :sopimus_id sopimus-id})
+        ;; Jokaisella kustannusarvoitu_tyo -rivillä pitää olla toimenpideinstanssi.
+        ;; Tällä hetkelä ei tiedetä, että saako rahavaraukset oman toimenpideinstanssin, vai otetaanko joku vain.
+        ;; Joten tässä vähän keskeneräinen toteutus, jossa toimenpideinstansseista otetaan vain ensimmäinen.
+        ensimmainen-toimenpideinstanssi-id (:id (first (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi db {:urakka_id urakka-id})))
+
+        ;; Päivitetään tai insertoidaan rahavaraus sen mukaan, löytyikö sitä tietokanansta
+        _ (if (not (empty? kt-rahavaraus-kuukaudet))
+            (let [kk (atom 0)] ;; Lokaalisti voi olla vaikka vain kolmena kuukautena summa, vaikka pitäisi olla 12
+              (doseq [r kt-rahavaraus-kuukaudet
+                      :let [_ (swap! kk inc)
+                            kuukausimaara (count kt-rahavaraus-kuukaudet)
+                            kuukausisumma (round2 2 (/ summa kuukausimaara))
+                            viimeinen-kuukausisumma (round2 2 (- summa (* (dec kuukausimaara) kuukausisumma)))
+                            kuukausi-indeksisumma (round2 2 (/ indeksisumma kuukausimaara))
+                            viimeinen-indeksisumma (round2 2 (- indeksisumma (* (dec kuukausimaara) kuukausi-indeksisumma)))]]
+                (update! db ::bs/kustannusarvioitu-tyo
+                  {::bs/summa (if (< @kk kuukausimaara) kuukausisumma viimeinen-kuukausisumma)
+                   ::bs/summa-indeksikorjattu (if (< @kk kuukausimaara) kuukausi-indeksisumma viimeinen-indeksisumma)
+                   ::bs/muokattu (pvm/nyt)
+                   ::bs/muokkaaja (:id user)}
+                  {::bs/id (:id r)})))
+            (doseq [kk (range 1 13)
+                    :let [kuukausisumma (round2 2 (/ summa 12))
+                          viimeinen-kuukausisumma (round2 2 (- summa (* 11 kuukausisumma)))
+                          kuukausi-indeksisumma (round2 2 (/ indeksisumma 12))
+                          viimeinen-indeksisumma (round2 2 (- indeksisumma (* 11 kuukausi-indeksisumma)))]]
+              (insert! db ::bs/kustannusarvioitu-tyo
+                {::bs/summa (if (< kk 12) kuukausisumma viimeinen-kuukausisumma)
+                 ::bs/summa-indeksikorjattu (if (< kk 12) kuukausi-indeksisumma viimeinen-indeksisumma)
+                 ::bs/rahavaraus_id rahavaraus-id
+                 ::bs/smallint-v vuosi
+                 ::bs/smallint-kk kk
+                 ::bs/sopimus sopimus-id
+                 ::bs/tyyppi :laskutettava-tyo
+                 ::bs/toimenpideinstanssi ensimmainen-toimenpideinstanssi-id
+                 ::bs/osio "tavoitehintaiset-rahavaraukset"
+                 ::bs/luotu (pvm/nyt)
+                 ::bs/luoja (:id user)})))
+        urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        tavoitehintaiset-rahavaraukset (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db {:urakka_id urakka-id})
+        tavoitehintaiset-rahavaraukset (mallinna-rahavaraukset-kustannusten-suunnitteluun
+                                         tavoitehintaiset-rahavaraukset urakan-aloitusvuosi)]
     ;; Palautetaan tässä vaiheessa vain tiedetyt rahavaraukset muutettuna summalla, joka annettiin
     tavoitehintaiset-rahavaraukset))
 

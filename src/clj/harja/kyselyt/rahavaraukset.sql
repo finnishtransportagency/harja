@@ -149,3 +149,32 @@ SELECT tr.id,
            JOIN toimenpide tp ON t.emo = tp.id
            JOIN toimenpideinstanssi tpi ON tpi.toimenpide = tp.id AND tpi.urakka = :urakkaid
  WHERE rt.rahavaraus_id = :rahavarausid :: BIGINT;
+
+-- name: hae-urakan-suunnitellut-rahavarausten-kustannukset
+-- Haetaan rahavaraukset ja tarkistetaan onko kustannusarvioitu_tyo taulussa niille suunniteltu kustannuksia.
+-- Haussa ei ole vuosikohtaisuutta parametrisoitu, mutta tulokset summaroidaan vuosikohtaisesti.
+  WITH years as (
+      select generate_series(2019::INT, 2024::INT) as year
+  )
+SELECT rv.id,
+       COALESCE(rvu.urakkakohtainen_nimi, rv.nimi) as nimi,
+       SUM(kt.summa) as summa,
+       SUM(kt.summa_indeksikorjattu) as "summa-indeksikorjattu",
+       kt.indeksikorjaus_vahvistettu as "indeksikorjaus-vahvistettu",
+       y.year as vuosi
+  FROM years y
+           CROSS JOIN rahavaraus rv
+           JOIN rahavaraus_urakka rvu ON rvu.rahavaraus_id = rv.id AND rvu.urakka_id = :urakka_id
+           JOIN sopimus s ON s.urakka = rvu.urakka_id
+           LEFT JOIN kustannusarvioitu_tyo kt ON kt.rahavaraus_id = rv.id AND kt.sopimus = s.id and kt.vuosi = y.year
+ GROUP BY rv.id, rvu.urakkakohtainen_nimi, rv.nimi, kt.vuosi, kt.indeksikorjaus_vahvistettu, y.year
+ ORDER BY vuosi, rv.id, nimi;
+
+
+-- name: hae-rahavarauksen-toimenpideinstanssi
+-- Kustannusarvoitu_tyo vaatii jonkun toimenpideinstanssin. Se ei ole vielä tiedossa. Niin haetaan urakkakohtaisesti vain ensimmäinen
+SELECT id
+  FROM toimenpideinstanssi
+ WHERE urakka = :urakka_id
+ ORDER BY id ASC
+ LIMIT 1;
