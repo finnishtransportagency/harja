@@ -1,14 +1,12 @@
 CREATE TYPE pohjavesialueen_osuus AS
 (
     tunnus VARCHAR(16),
-    pituus FLOAT,
     osuus  FLOAT
 );
 
 CREATE TYPE rajoitusalueen_osuus AS
 (
     rajoitusalue INTEGER,
-    pituus       FLOAT,
     osuus        FLOAT
 );
 
@@ -34,21 +32,13 @@ BEGIN
           AND st_dwithin(tieosoitevali.geometria, pohjavesialue.alue, 1)
 
         LOOP
-
-            RAISE NOTICE 'pohjavesialueen leikattu geom %', st_asgeojson(st_intersection(
-                st_buffer(pa.alue, 1, 'endcap=flat'), tieosoitevali.geometria));
-            RAISE NOTICE '%', (st_length(st_intersection(st_buffer(pa.alue, 1, 'endcap=flat'),
-                                                         tieosoitevali.geometria)));
-            RAISE NOTICE '%', (st_length(tieosoitevali.geometria));
             SELECT st_length(pa.alue) INTO pituus;
-            /*
-             Halutaan tietää, kuinka iso osuus tieosoitevälistä osuu pohjavesialueelle.
-             */
+            -- Halutaan tietää, kuinka iso osuus tieosoitevälistä osuu pohjavesialueelle.
             SELECT st_length(st_intersection(st_buffer(pa.alue, 1, 'endcap=flat'), tieosoitevali.geometria)) /
                    st_length(tieosoitevali.geometria)
 
             INTO osuus;
-            RETURN NEXT (pa.tunnus, pituus, osuus)::pohjavesialueen_osuus;
+            RETURN NEXT (pa.tunnus, osuus)::pohjavesialueen_osuus;
         END LOOP;
     RETURN;
 END;
@@ -69,7 +59,6 @@ BEGIN
 
     SELECT * FROM tierekisteriosoite_pisteille(piste1::geometry, piste2::geometry, 1) INTO tieosoitevali;
 
-    RAISE NOTICE '101';
     FOR ra IN
         SELECT *
         FROM rajoitusalue
@@ -78,19 +67,10 @@ BEGIN
           AND rajoitusalue.urakka_id = urakka_id_
 
         LOOP
-            RAISE NOTICE '110';
-            SELECT st_length(ra.sijainti) INTO pituus;
-
-            RAISE NOTICE 'rajoitusalueen leikattu geom %', st_asgeojson(st_intersection(
-                st_buffer(ra.sijainti, 1, 'endcap=flat'), tieosoitevali.geometria));
-            RAISE NOTICE '%', (st_length(st_intersection(st_buffer(ra.sijainti, 1, 'endcap=flat'),
-                                                         tieosoitevali.geometria)));
-            RAISE NOTICE '%', (st_length(tieosoitevali.geometria));
-
             SELECT st_length(st_intersection(st_buffer(ra.sijainti, 1, 'endcap=flat'), tieosoitevali.geometria)) /
                    st_length(tieosoitevali.geometria)
             INTO osuus;
-            RETURN NEXT (ra.id, pituus, osuus)::rajoitusalueen_osuus;
+            RETURN NEXT (ra.id, osuus)::rajoitusalueen_osuus;
         END LOOP;
     RETURN;
 END;
@@ -106,8 +86,6 @@ DECLARE
     m                     reittipiste_materiaali;
     rp                    reittipistedata;
     suolamateriaalikoodit INTEGER[];
-    pohjavesialue_tunnus  VARCHAR;
-    rajoitusalue_id       INTEGER;
     edellinen_rp          reittipistedata;
     pvo                   pohjavesialueen_osuus;
     ra                    rajoitusalueen_osuus;
@@ -133,11 +111,8 @@ BEGIN
                             -- Muutos edelliseen versioon: suolatoteuma_reittipiste tauluun laitetaan kahden reittipisteen välinen toteuma,
                             -- josta lasketaan osuudet jotka osuvat pohjavesi- tai rajoitusalueille.
 
-                            raise notice 'test %', edellinen_rp;
-
                             IF edellinen_rp IS distinct from NULL THEN
-                                raise notice 'test2';
-                                FOR pvo IN (SELECT tunnus, SUM(pituus), SUM(osuus)
+                                FOR pvo IN (SELECT tunnus, SUM(osuus)
                                             FROM pistevalin_pohjavesialueet(edellinen_rp.sijainti, rp.sijainti)
                                             GROUP BY tunnus)
                                     LOOP
@@ -149,7 +124,7 @@ BEGIN
                                                 NULL);
                                     END LOOP;
 
-                                FOR ra IN (SELECT rajoitusalue, SUM(pituus), SUM(osuus)
+                                FOR ra IN (SELECT rajoitusalue, SUM(osuus)
                                            FROM pistevalin_rajoitusalueet(edellinen_rp.sijainti, rp.sijainti,
                                                                           (SELECT urakka FROM toteuma WHERE id = new.toteuma))
                                            GROUP BY rajoitusalue)
