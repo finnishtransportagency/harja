@@ -55,7 +55,7 @@ workbookin, käyttäjän sekä HTTP request parametrit mäppeinä ja palauttaa t
 
 (defn- luo-workbook [pohja]
   (if pohja
-    (XSSFWorkbook. pohja)
+    (excel/load-workbook-from-resource pohja)
     (XSSFWorkbook.)))
 
 (defn- kirjoita-workbook [wb out]
