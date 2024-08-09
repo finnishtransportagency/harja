@@ -3,6 +3,7 @@
   (:refer-clojure :exclude [atom])
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [warn]]
+            [harja.ui.dom :as ui.dom]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.taulukko.protokollat.grid-osa :as gop]
@@ -461,16 +462,20 @@
                                         ikonit/oi-caret-top)
                            ikoni-kiinni (if (= ikoni "chevron")
                                           ikonit/livicon-chevron-down
-                                          ikonit/oi-caret-bottom)]
+                                          ikonit/oi-caret-bottom)
+                           avaa-tai-sulje-haitari (fn [event]
+                                            (.preventDefault event)
+                                            (swap! auki? not)
+                                            (aukaise-fn this @auki?))]
                        [:span.solu.klikattava.solu-laajenna
                         {:class (when class
                                   (apply str (interpose " " class)))
                          :id id
                          :data-cy (:id this)
-                         :on-click
-                         #(do (.preventDefault %)
-                              (swap! auki? not)
-                              (aukaise-fn this @auki?))}
+                         :tabIndex "0"
+                         :on-click #(avaa-tai-sulje-haitari %)
+                         :on-key-down #(when (ui.dom/enter-nappain? %)
+                                         (avaa-tai-sulje-haitari %))}
                         [:span.laajenna-teksti ((::fmt this) arvo)]
                         (if @auki?
                           ^{:key "laajenna-auki"}

@@ -532,15 +532,18 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
                  (partition 2 otsikot-ja-arvot))])
 
 (defn- luo-haitarin-rivi [piiloita? rivi]
-  ^{:key (:otsikko @rivi)}
-  [:div.haitari-rivi
-   [:div.haitari-heading.klikattava
-    {:on-click #(do
-                  (swap! rivi assoc :auki (not (:auki @rivi)))
-                  (.preventDefault %))}
-    [:span.haitarin-tila (if (:auki @rivi) (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
-    [:div.haitari-title (when piiloita? {:class "haitari-piilossa"}) (or (:otsikko @rivi) "")]]
-   [:div.haitari-sisalto (if (:auki @rivi) {:class "haitari-auki"} {:class "haitari-kiinni"}) (:sisalto @rivi)]])
+  (let [avaa-tai-sulje-haitari (fn [event]
+                         (.preventDefault event)
+                         (swap! rivi assoc :auki (not (:auki @rivi))))]
+    ^{:key (:otsikko @rivi)}
+    [:div.haitari-rivi
+     [:div.haitari-heading.klikattava
+      {:on-click #(avaa-tai-sulje-haitari %)
+       :on-key-down #(when (dom/enter-nappain? %)
+                       (avaa-tai-sulje-haitari %))}
+      [:span.haitarin-tila {:tabIndex "0"} (if (:auki @rivi) (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
+      [:div.haitari-title (when piiloita? {:class "haitari-piilossa"}) (or (:otsikko @rivi) "")]]
+     [:div.haitari-sisalto (if (:auki @rivi) {:class "haitari-auki"} {:class "haitari-kiinni"}) (:sisalto @rivi)]]))
 
 (defn- pakota-haitarin-rivi-auki
   ([rivit] (pakota-haitarin-rivi-auki rivit (first (keys @rivit))))
