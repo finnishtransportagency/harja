@@ -69,19 +69,6 @@ WHERE
   ypk.urakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
 
--- name: hae-yha-velho-lahetyksen-tila
-SELECT id as "kohde-id",
-       lahetys_onnistunut as "lahetys-onnistunut",
-       lahetysaika,
-       lahetetty,
-       lahetysvirhe,
-       velho_lahetyksen_aika as "velho-lahetyksen-aika",
-       velho_lahetyksen_tila as "velho-lahetyksen-tila",
-       velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus"
-FROM yllapitokohde
-WHERE id = :kohde-id;
-
-
 -- name: hae-urakkaan-liittyvat-tiemerkintakohteet
 -- Hakee ylläpitokohteet, joihin on merkitty suorittajaksi kyseinen urakka
 SELECT ypk.id
@@ -1074,12 +1061,6 @@ UPDATE yllapitokohde
 SET lahetetty = :lahetetty, lahetys_onnistunut = :onnistunut, lahetysvirhe = :lahetysvirhe
 WHERE id = :kohdeid;
 
--- name: merkitse-kohteen-lahetystiedot-velhoon!
-UPDATE yllapitokohde
-SET velho_lahetyksen_aika = :aikaleima,
-    velho_lahetyksen_tila = :tila :: velho_lahetyksen_tila_tyyppi,
-    velho_lahetyksen_vastaus = :lahetysvastaus
-WHERE id = :kohdeid;
 
 -- name: onko-olemassa-urakalla?
 -- single?: true
