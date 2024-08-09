@@ -1,122 +1,45 @@
--- Poistetaan turhaksi jääneitä kolumneita kulu ja kulu_kohdistus tauluista
-ALTER TABLE kulu
-    DROP COLUMN IF EXISTS tyyppi;
--- Tyypin voi poistaa, koska kaikki on tyyppiä 'laskutettava'
-
--- Poistetaan turhaksi jäänyt laskutustyyppi
-DROP TYPE IF EXISTS laskutyyppi;
-
--- Kululla voi olla monta kohdistusta ja niiden tyyppi on helpointa hallita kohdistuksessa itsessään
-CREATE TYPE kohdistustyyppi AS ENUM ('rahavaraus', 'hankintakulu','muukulu', 'lisatyo', 'paatos');
-
--- Asetetaan defaultiksi useimmin käytössäoleva hankintakulu.
--- Lopulliset tyypit tulee, kun rahavarausten korjaava systeemi ajetaan kantaan
-ALTER TABLE kulu_kohdistus
-    ADD COLUMN IF NOT EXISTS tyyppi           kohdistustyyppi DEFAULT 'hankintakulu' NOT NULL,
-    ADD COLUMN IF NOT EXISTS tavoitehintainen BOOLEAN         DEFAULT TRUE           NOT NULL,
-    DROP COLUMN IF EXISTS suoritus_alku,
-    DROP COLUMN IF EXISTS suoritus_loppu;
--- Suoritusajat voi poistaa, koska ne ovat aina samat kuin kulu.erapaiva
-
--- Päivitetään kulu_kohdistus taulun tyyppi rahavaraukseksi, jos rahavaraus_id on asetettu
-UPDATE kulu_kohdistus
-   SET tyyppi = 'rahavaraus'
- WHERE rahavaraus_id IS NOT NULL;
-
--- Päivitetään kulu_kohdistus taulun tyyppi lisatyoksi, jos maksueratyyppi on lisatyo
--- Kaikki lisätyöt, mitä tietokannassa on alunperin on myös ei tavoitehintaisia
-UPDATE kulu_kohdistus
-   SET tyyppi           = 'lisatyo',
-       tavoitehintainen = FALSE
- WHERE kulu_kohdistus.maksueratyyppi = 'lisatyo';
-
--- Lisätään puuttuva tehtäväryhmä "Pysäkkikatosten korjaaminen (E)"
-INSERT INTO tehtavaryhma (nimi, tehtavaryhmaotsikko_id, luoja, luotu)
-VALUES ('Pysäkkikatosten korjaaminen (E)',
-        (SELECT id FROM tehtavaryhmaotsikko WHERE otsikko LIKE '%MUUTA%'),
-        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), NOW());
-
--- Lokaalisti puuttuu tehtävä 'Pysäkkikatoksen korjaaminen' , joten varmistetaan, ettei sitä ole ja jos ei , niin sitten lisätään
-INSERT INTO tehtava (nimi, tehtavaryhma, yksikko, luoja, luotu)
-VALUES ('Pysäkkikatoksen korjaaminen',
-        (SELECT id FROM tehtavaryhma WHERE nimi = 'Pysäkkikatosten korjaaminen (E)'),
-        'euroa',
-        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), NOW())
-    ON CONFLICT DO NOTHING;
-
-
--- Lisää tehtävälle "Pysäkkikatoksen korjaaminen" tehtäväryhmä "Pysäkkikatosten korjaaminen (E)"
-UPDATE tehtava
-   SET tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Pysäkkikatosten korjaaminen (E)')
- WHERE nimi = 'Pysäkkikatoksen korjaaminen';
-
--- Jotta tulevat rahavarausten automaattiset tausta-ajot korjaisivat kulu_kohdistus ja kustannusarvioitu_työ taulujen
--- rivit oikein. Meidän on lisättävä vielä yksi rahavaraus
-INSERT INTO rahavaraus (nimi, luoja, luotu)
-VALUES ('Muut tavoitehintaan vaikuttavat rahavaraukset', (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
-        NOW());
-
--- Lisätään muutama pakollinen tehtävä rahavarukselle
-INSERT
-  INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
-SELECT rv.id,
-       t.id,
-       (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
-       NOW()
-  FROM rahavaraus rv,
-       tehtava t
- WHERE t.tehtavaryhma IS NOT NULL
-   AND t.nimi IN ('Muut tavoitehintaan vaikuttavat rahavaraukset',
-                  'Pohjavesisuojaukset',
-                  'Pysäkkikatoksen uusiminen',
-                  'Pysäkkikatoksen poistaminen',
-                  'Pysäkkikatoksen korjaaminen',
-                  'Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään',
-                  'Digitalisaation edistäminen ja innovaatioiden kehittäminen')
-   AND rv.nimi = 'Muut tavoitehintaan vaikuttavat rahavaraukset';
-
-INSERT INTO rahavaraus (nimi, luoja, luotu)
-VALUES ('Rahavaraus G - Juurakkopuhdistamo ym.', (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), NOW());
-
--- Lisätään muutama pakollinen tehtävä rahavarukselle
-INSERT
-  INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
-SELECT rv.id,
-       t.id,
-       (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
-       NOW()
-  FROM rahavaraus rv,
-       tehtava t
- WHERE t.nimi IN ('Juurakkopuhdistamo, selkeytys- ja hulevesiallas sekä -painanne')
-   AND rv.nimi = 'Rahavaraus G - Juurakkopuhdistamo ym.';
-
--- Päivitetään vuoden päätöstyyppiset kulu_kohdistukset vuoden päätös tyypille
-DO
+CREATE OR REPLACE FUNCTION pot2_rc_prosentti(paallystekerros_id INT)
+    RETURNS NUMERIC AS
 $$
-    DECLARE
-        tavoitepalkkioid      INT;
-        tavoitehinnanylitysid INT;
-        kattohinnanylitysid   INT;
-    BEGIN
+DECLARE
+    paallystekerros         pot2_paallystekerros;
+    toimenpide              TEXT;
+    asfalttirouhe_koodi     INTEGER;
+    asfalttirouhe_runkoaine pot2_mk_massan_runkoaine;
+BEGIN
+    SELECT * FROM pot2_paallystekerros WHERE id = paallystekerros_id LIMIT 1 INTO paallystekerros;
+    SELECT lyhenne FROM pot2_mk_paallystekerros_toimenpide WHERE koodi = paallystekerros.toimenpide INTO toimenpide;
 
-        tavoitepalkkioid := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen / Tavoitepalkkio');
-        tavoitehinnanylitysid := (SELECT id
-                                    FROM tehtavaryhma
-                                   WHERE
-                                       nimi = 'Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä');
-        kattohinnanylitysid := (SELECT id
-                                  FROM tehtavaryhma
-                                 WHERE nimi = 'Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä');
+    -- REM- ja REMO- toimenpiteissä massamenekki on aina 100 - massamenekki.
+    -- REM-toimenpiteissä sekoitetaan nykyistä massaa uuteen kiviainekseen, ja lähtökohtaisesti niiden
+    -- yhteenlaskettu summa on aina 100kg/m2. Tällöin vanhan murskatun asfaltin osuus on RC-prosentti.
+    IF toimenpide IN ('REM', 'REMO') THEN
+        IF paallystekerros.massamenekki < 100 THEN
+            RETURN 100 - paallystekerros.massamenekki;
+        ELSE
+            -- Jos REM/REMO-toimenpiteen massamenekki on yli 100, ei voida laskea RC-prosenttia oikein.
+            -- Tämän pitäisi aina olla viite siitä, että kirjauksessa on tapahtunut virhe.
+            RETURN NULL;
+        END IF;
+    ELSE
+        IF toimenpide IN ('KAR') THEN
+            RETURN 100;
+        END IF;
+    END IF;
 
-        -- Kaikki vuoden päättämisen kulut on ei tavoitehintaisia
-        UPDATE kulu_kohdistus
-           SET tyyppi           = 'paatos',
-               tavoitehintainen = FALSE
-         WHERE tehtavaryhma IN (tavoitepalkkioid, tavoitehinnanylitysid, kattohinnanylitysid);
+    SELECT koodi FROM pot2_mk_runkoainetyyppi WHERE nimi = 'Asfalttirouhe' INTO asfalttirouhe_koodi;
 
-    END
-$$;
+    SELECT *
+    FROM pot2_mk_massan_runkoaine
+    WHERE pot2_massa_id = paallystekerros.materiaali
+      AND tyyppi = asfalttirouhe_koodi
+    INTO asfalttirouhe_runkoaine;
 
+    IF asfalttirouhe_runkoaine IS DISTINCT FROM NULL
+    THEN
+        RETURN asfalttirouhe_runkoaine.massaprosentti;
+    END IF;
 
--- Lisätään uusi suunnittelu_osio kustannusten suunnitteluun
-ALTER TYPE SUUNNITTELU_OSIO ADD VALUE 'tavoitehintaiset-rahavaraukset';
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;

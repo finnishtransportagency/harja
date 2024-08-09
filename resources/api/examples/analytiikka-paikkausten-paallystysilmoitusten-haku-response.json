@@ -2,7 +2,7 @@
   "paallystysilmoitukset": [
     {
       "takuupaivamaara": "2023-11-01T22:00:00Z",
-      "paallystyskohde": 33,
+      "paallystyskohde": 32,
       "poistettu": false,
       "kulutuskerrokselleTehdytToimetPOT2": [
         {
@@ -14,15 +14,15 @@
             "massatyyppi": "AB, Asfalttibetoni",
             "runkoaineet": [
               {
+                "fillerityyppi": "Kalkkifilleri (KF)",
+                "runkoainetyyppi": "Erikseen lisättävä fillerikiviaines",
+                "massaprosentti": 1.0
+              },
+              {
                 "litteysluku": 20.0,
                 "kuulamyllyarvo": 10.0,
                 "runkoainetyyppi": "Kiviaines",
                 "massaprosentti": 100.0
-              },
-              {
-                "fillerityyppi": "Kalkkifilleri (KF)",
-                "runkoainetyyppi": "Erikseen lisättävä fillerikiviaines",
-                "massaprosentti": 1.0
               }
             ],
             "lisaaineet": [
@@ -52,7 +52,7 @@
           "massamenekki": 115.0,
           "poistettu": false,
           "pituus": 100,
-          "alikohde": 47
+          "alikohde": 45
         }
       ],
       "alustalleTehdytToimetPOT2": [
