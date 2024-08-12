@@ -228,7 +228,13 @@
           :let [saa (:saatieto s)
                 saa (-> saa
                       (assoc :havaintoaika (tyokalut-json/aika-string->java-sql-date (:havaintoaika saa)))
-                      (assoc :aseman-tietojen-paivityshetki (tyokalut-json/aika-string->java-sql-date (:aseman-tietojen-paivityshetki saa))))]]
+                      (assoc :aseman-tietojen-paivityshetki (tyokalut-json/aika-string->java-sql-date (:aseman-tietojen-paivityshetki saa)))
+                      ;; Varmista että valinnaiset ja puuttuvat attribuutit saavat null-arvon, jos tietoa ei ole välitetty
+                      (assoc :tien-lampotila (:tien-lampotila saa))
+                      (assoc :keskituuli (:keskituuli saa))
+                      (assoc :sateen-olomuoto (:sateen-olomuoto saa))
+                      (assoc :sadesumma (:sadesumma saa))
+                      )]]
     (tyomaapaivakirja-kyselyt/lisaa-saatiedot<! db (merge
                                                      saa
                                                      {:versio versio
