@@ -252,13 +252,18 @@
               :default
               :kohteet-tallennettu)}))
 
+(defn- muunna-arvo-vectoriksi [arvo]
+  (if (sequential? arvo)
+    arvo
+    (vector arvo)))
+
 (defn laheta-kohteet-yhaan
   "Lähettää annetut kohteet teknisine tietoineen YHAan."
   [db yha user {:keys [urakka-id sopimus-id kohde-idt vuosi]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (yha-apurit/tarkista-lahetettavat-kohteet db kohde-idt)
+  (yha-apurit/tarkista-lahetettavat-kohteet db  (muunna-arvo-vectoriksi kohde-idt))
   (log/debug (format "Lähetetään kohteet: %s YHAan" kohde-idt))
-  (let [lahetys (try+ (yha/laheta-kohteet yha urakka-id kohde-idt)
+  (let [lahetys (try+ (yha/laheta-kohteet yha urakka-id (muunna-arvo-vectoriksi kohde-idt))
                       (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
                         virheet))
         lahetys-onnistui? (not (contains? lahetys :virhe))
