@@ -10,15 +10,36 @@ CREATE TYPE rajoitusalueen_osuus AS
     osuus        FLOAT
 );
 
+CREATE FUNCTION lahin_piste_suolattavalla_tiella(piste point)
+    RETURNS POINT AS
+$$
+BEGIN
+    -- Talvihoitoluokkia 9, 10 ja 11 ei pitäisi suolata. Täten hoitoluokka-taulua käytten voidaan hakea lähin piste
+    -- tieltä, jolle suolausta tehdään.
+    RETURN (SELECT st_closestpoint(geometria, piste::geometry)::POINT
+            FROM hoitoluokka
+            WHERE hoitoluokka NOT IN (9, 10, 11)
+              AND tietolajitunniste = 'talvihoito'
+              AND st_dwithin(geometria, piste::geometry, 25)
+            ORDER BY st_distance84(geometria, piste::geometry)
+            LIMIT 1);
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION pistevalin_pohjavesialueet(piste1 point, piste2 point)
     RETURNS SETOF pohjavesialueen_osuus AS
 $$
 DECLARE
     pa            pohjavesialue;
     tieosoitevali tr_osoite;
-    pituus        FLOAT;
     osuus         FLOAT;
 BEGIN
+    -- Varmistetaan että haetaan piste tielä, jota suolataan. Tällä varmistetaan, ettei saada sellaisen tien geometriaa,
+    -- jota ei suolata. Tällä varmistetaan, ettei virheellisesti jätetä suolattua pohjavesialuetta merkitsemättä
+    -- vaikka gps-pisteet osuisivat pyörätielle.
+    SELECT lahin_piste_suolattavalla_tiella(piste1) INTO piste1;
+    SELECT lahin_piste_suolattavalla_tiella(piste2) INTO piste2;
+
     IF (piste1 IS NULL OR piste2 IS NULL) THEN
         RETURN;
     END IF;
@@ -32,7 +53,6 @@ BEGIN
           AND st_dwithin(tieosoitevali.geometria, pohjavesialue.alue, 1)
 
         LOOP
-            SELECT st_length(pa.alue) INTO pituus;
             -- Halutaan tietää, kuinka iso osuus tieosoitevälistä osuu pohjavesialueelle.
             SELECT st_length(st_intersection(st_buffer(pa.alue, 1, 'endcap=flat'), tieosoitevali.geometria)) /
                    st_length(tieosoitevali.geometria)
@@ -50,9 +70,14 @@ $$
 DECLARE
     ra            rajoitusalue;
     tieosoitevali tr_osoite;
-    pituus        FLOAT;
     osuus         FLOAT;
 BEGIN
+    -- Varmistetaan että haetaan piste tielä, jota suolataan. Tällä varmistetaan, ettei saada rajoitusaluetta tien geometriaa,
+    -- jota ei suolata. Tällä varmistetaan, ettei virheellisesti jätetä suolattua rajoitusaluetta merkitsemättä
+    -- vaikka gps-pisteet osuisivat pyörätielle.
+    SELECT lahin_piste_suolattavalla_tiella(piste1) INTO piste1;
+    SELECT lahin_piste_suolattavalla_tiella(piste2) INTO piste2;
+
     IF (piste1 IS NULL OR piste2 IS NULL) THEN
         RETURN;
     END IF;
@@ -65,7 +90,6 @@ BEGIN
         WHERE (rajoitusalue.tierekisteriosoite).tie = tieosoitevali.tie
           AND st_dwithin(tieosoitevali.geometria, rajoitusalue.sijainti, 1)
           AND rajoitusalue.urakka_id = urakka_id_
-
         LOOP
             SELECT st_length(st_intersection(st_buffer(ra.sijainti, 1, 'endcap=flat'), tieosoitevali.geometria)) /
                    st_length(tieosoitevali.geometria)
@@ -107,11 +131,10 @@ BEGIN
                 FOREACH m IN ARRAY rp.materiaalit
                     LOOP
                         IF suolamateriaalikoodit @> ARRAY [m.materiaalikoodi] THEN
-
                             -- Muutos edelliseen versioon: suolatoteuma_reittipiste tauluun laitetaan kahden reittipisteen välinen toteuma,
                             -- josta lasketaan osuudet jotka osuvat pohjavesi- tai rajoitusalueille.
 
-                            IF edellinen_rp IS distinct from NULL THEN
+                            IF edellinen_rp IS DISTINCT FROM NULL THEN
                                 FOR pvo IN (SELECT tunnus, SUM(osuus)
                                             FROM pistevalin_pohjavesialueet(edellinen_rp.sijainti, rp.sijainti)
                                             GROUP BY tunnus)
