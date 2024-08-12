@@ -1,6 +1,7 @@
 (ns harja.views.urakka.yllapitokohteet.reikapaikkaukset
   "Reikäpaikkaukset päänäkymä"
   (:require [tuck.core :refer [tuck]]
+            [harja.asiakas.kommunikaatio :as komm]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-reikapaikkaukset :as tiedot]
             [harja.views.urakka.yllapitokohteet.paikkaukset.reikapaikkaukset-apurit :as apurit]
             [harja.ui.varmista-kayttajalta :refer [varmista-kayttajalta]]
@@ -10,7 +11,9 @@
             [harja.fmt :as fmt]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
+            [harja.transit :as transit]
             [harja.ui.grid :as grid]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.views.kartta :as kartta]
@@ -57,6 +60,17 @@
 
        ;; Oikealla puolella olevat lataus / tuontinapit
        [:div.flex-oikealla
+        [:div.lataus-nappi
+         [:form {:style {:margin-left "auto"}
+                 :target "_blank" :method "POST"
+                 :action (komm/excel-url :reikapaikkaukset-urakalle-excel)}
+          [:input {:type "hidden" :name "parametrit"
+                   :value (transit/clj->transit {:tr (:tr valinnat)
+                                                 :aikavali (:aikavali valinnat)
+                                                 :urakka-id @nav/valittu-urakka-id})}]
+          [:button {:type "submit"
+                    :class #{"nappi-reunaton"}}
+           [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]]
         ;; Excel tuonti
         [:div.lataus-nappi
          [liitteet/lataa-tiedosto

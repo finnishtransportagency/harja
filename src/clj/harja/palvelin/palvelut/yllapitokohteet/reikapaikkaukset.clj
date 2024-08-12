@@ -2,6 +2,7 @@
   "Reikäpaikkausnäkymän palvelut"
   (:require [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [harja.pvm :as pvm]
             [slingshot.slingshot :refer [throw+]]
@@ -133,7 +134,7 @@
 
 (defrecord Reikapaikkaukset []
   component/Lifecycle
-  (start [{:keys [http-palvelin db] :as this}]
+  (start [{:keys [http-palvelin db excel-vienti] :as this}]
     ;; Haku
     (julkaise-palvelu http-palvelin
       :hae-reikapaikkaukset (fn [user tiedot] (hae-reikapaikkaukset db user tiedot)))
@@ -151,13 +152,19 @@
       :lue-reikapaikkauskohteet-excelista (wrap-multipart-params
                                             (fn [pyynto] (vastaanota-excel db pyynto)))
       {:ring-kasittelija? true})
+    (when excel-vienti
+      (excel-vienti/rekisteroi-excel-kasittelija! excel-vienti :reikapaikkaukset-urakalle-excel
+        {:funktio (partial #'p-excel/vie-reikapaikkaukset-exceliin db hae-reikapaikkaukset)
+         :optiot {:pohja "resources/public/excel/harja_reikapaikkausten_pohja.xlsx"}}))
     this)
 
-  (stop [{:keys [http-palvelin] :as this}]
+  (stop [{:keys [http-palvelin excel-vienti] :as this}]
     (poista-palvelut http-palvelin
       :hae-tyomenetelmat
       :hae-reikapaikkaukset
       :poista-reikapaikkaus
       :tallenna-reikapaikkaus
       :lue-reikapaikkauskohteet-excelista)
+    (when excel-vienti
+      (excel-vienti/poista-excel-kasittelija! excel-vienti :reikapaikkaukset-urakalle-excel))
     this))
