@@ -231,8 +231,6 @@ DECLARE
     -- Tulos 
     tulos                                 LY_RAPORTTI_TYOMAAKOKOUS_TULOS;
 
-
-
 BEGIN
 
     perusluku := indeksilaskennan_perusluku(ur);
