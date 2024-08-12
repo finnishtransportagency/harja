@@ -963,49 +963,55 @@
 (defn tallenna-tavoitehintainen-rahavaraus [db user {:keys [urakka-id rahavaraus-id summa indeksisumma loppuvuodet? vuosi] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (max vuosi (pvm/vuosi (:alkupvm urakan-tiedot)))
+        urakan-loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
+        urakan-vuodet (if loppuvuodet? (range urakan-alkuvuosi urakan-loppuvuosi) (list vuosi))
         sopimus-id (urakat-q/urakan-paasopimus-id db {:urakka urakka-id})
-        ;; Päivitetään rahavarauksen summa ja indeksikorjattu summa kustannusarvioitu_työ tauluun
-        kt-rahavaraus-kuukaudet (ka-q/hae-rahavarauskustannus db {:rahavaraus_id rahavaraus-id
-                                                                  :vuosi vuosi
-                                                                  :sopimus_id sopimus-id})
-        ;; Jokaisella kustannusarvoitu_tyo -rivillä pitää olla toimenpideinstanssi.
-        ;; Tällä hetkelä ei tiedetä, että saako rahavaraukset oman toimenpideinstanssin, vai otetaanko joku vain.
-        ;; Joten tässä vähän keskeneräinen toteutus, jossa toimenpideinstansseista otetaan vain ensimmäinen.
-        ensimmainen-toimenpideinstanssi-id (:id (first (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi db {:urakka_id urakka-id})))
+        ;; Päivitetään tai insertoidaan jokaiselle tulevalle tai pelkästään annetulle vuodelle tiedot
+        _ (doseq [vuosi urakan-vuodet]
+            (let [;; Päivitetään rahavarauksen summa ja indeksikorjattu summa kustannusarvioitu_työ tauluun
+                  kt-rahavaraus-kuukaudet (ka-q/hae-rahavarauskustannus db {:rahavaraus_id rahavaraus-id
+                                                                            :vuosi vuosi
+                                                                            :sopimus_id sopimus-id})
+                  ;; Jokaisella kustannusarvoitu_tyo -rivillä pitää olla toimenpideinstanssi.
+                  ;; Tällä hetkelä ei tiedetä, että saako rahavaraukset oman toimenpideinstanssin, vai otetaanko joku vain.
+                  ;; Joten tässä vähän keskeneräinen toteutus, jossa toimenpideinstansseista otetaan vain ensimmäinen.
+                  ensimmainen-toimenpideinstanssi-id (:id (first (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi db {:urakka_id urakka-id})))
 
-        ;; Päivitetään tai insertoidaan rahavaraus sen mukaan, löytyikö sitä tietokanansta
-        _ (if (not (empty? kt-rahavaraus-kuukaudet))
-            (let [kk (atom 0)] ;; Lokaalisti voi olla vaikka vain kolmena kuukautena summa, vaikka pitäisi olla 12
-              (doseq [r kt-rahavaraus-kuukaudet
-                      :let [_ (swap! kk inc)
-                            kuukausimaara (count kt-rahavaraus-kuukaudet)
-                            kuukausisumma (round2 2 (/ summa kuukausimaara))
-                            viimeinen-kuukausisumma (round2 2 (- summa (* (dec kuukausimaara) kuukausisumma)))
-                            kuukausi-indeksisumma (round2 2 (/ indeksisumma kuukausimaara))
-                            viimeinen-indeksisumma (round2 2 (- indeksisumma (* (dec kuukausimaara) kuukausi-indeksisumma)))]]
-                (update! db ::bs/kustannusarvioitu-tyo
-                  {::bs/summa (if (< @kk kuukausimaara) kuukausisumma viimeinen-kuukausisumma)
-                   ::bs/summa-indeksikorjattu (if (< @kk kuukausimaara) kuukausi-indeksisumma viimeinen-indeksisumma)
-                   ::bs/muokattu (pvm/nyt)
-                   ::bs/muokkaaja (:id user)}
-                  {::bs/id (:id r)})))
-            (doseq [kk (range 1 13)
-                    :let [kuukausisumma (round2 2 (/ summa 12))
-                          viimeinen-kuukausisumma (round2 2 (- summa (* 11 kuukausisumma)))
-                          kuukausi-indeksisumma (round2 2 (/ indeksisumma 12))
-                          viimeinen-indeksisumma (round2 2 (- indeksisumma (* 11 kuukausi-indeksisumma)))]]
-              (insert! db ::bs/kustannusarvioitu-tyo
-                {::bs/summa (if (< kk 12) kuukausisumma viimeinen-kuukausisumma)
-                 ::bs/summa-indeksikorjattu (if (< kk 12) kuukausi-indeksisumma viimeinen-indeksisumma)
-                 ::bs/rahavaraus_id rahavaraus-id
-                 ::bs/smallint-v vuosi
-                 ::bs/smallint-kk kk
-                 ::bs/sopimus sopimus-id
-                 ::bs/tyyppi :laskutettava-tyo
-                 ::bs/toimenpideinstanssi ensimmainen-toimenpideinstanssi-id
-                 ::bs/osio "tavoitehintaiset-rahavaraukset"
-                 ::bs/luotu (pvm/nyt)
-                 ::bs/luoja (:id user)})))
+                  ;; Päivitetään tai insertoidaan rahavaraus sen mukaan, löytyikö sitä tietokanansta
+                  _ (if (not (empty? kt-rahavaraus-kuukaudet))
+                      (let [kk (atom 0)] ;; Lokaalisti voi olla vaikka vain kolmena kuukautena summa, vaikka pitäisi olla 12
+                        (doseq [r kt-rahavaraus-kuukaudet
+                                :let [_ (swap! kk inc)
+                                      kuukausimaara (count kt-rahavaraus-kuukaudet)
+                                      kuukausisumma (round2 2 (/ summa kuukausimaara))
+                                      viimeinen-kuukausisumma (round2 2 (- summa (* (dec kuukausimaara) kuukausisumma)))
+                                      kuukausi-indeksisumma (round2 2 (/ indeksisumma kuukausimaara))
+                                      viimeinen-indeksisumma (round2 2 (- indeksisumma (* (dec kuukausimaara) kuukausi-indeksisumma)))]]
+                          (update! db ::bs/kustannusarvioitu-tyo
+                            {::bs/summa (if (< @kk kuukausimaara) kuukausisumma viimeinen-kuukausisumma)
+                             ::bs/summa-indeksikorjattu (if (< @kk kuukausimaara) kuukausi-indeksisumma viimeinen-indeksisumma)
+                             ::bs/muokattu (pvm/nyt)
+                             ::bs/muokkaaja (:id user)}
+                            {::bs/id (:id r)})))
+                      (doseq [kk (range 1 13)
+                              :let [kuukausisumma (round2 2 (/ summa 12))
+                                    viimeinen-kuukausisumma (round2 2 (- summa (* 11 kuukausisumma)))
+                                    kuukausi-indeksisumma (round2 2 (/ indeksisumma 12))
+                                    viimeinen-indeksisumma (round2 2 (- indeksisumma (* 11 kuukausi-indeksisumma)))]]
+                        (insert! db ::bs/kustannusarvioitu-tyo
+                          {::bs/summa (if (< kk 12) kuukausisumma viimeinen-kuukausisumma)
+                           ::bs/summa-indeksikorjattu (if (< kk 12) kuukausi-indeksisumma viimeinen-indeksisumma)
+                           ::bs/rahavaraus_id rahavaraus-id
+                           ::bs/smallint-v vuosi
+                           ::bs/smallint-kk kk
+                           ::bs/sopimus sopimus-id
+                           ::bs/tyyppi :laskutettava-tyo
+                           ::bs/toimenpideinstanssi ensimmainen-toimenpideinstanssi-id
+                           ::bs/osio "tavoitehintaiset-rahavaraukset"
+                           ::bs/luotu (pvm/nyt)
+                           ::bs/luoja (:id user)})))]))
+
         urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         tavoitehintaiset-rahavaraukset (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db {:urakka_id urakka-id})
         tavoitehintaiset-rahavaraukset (mallinna-rahavaraukset-kustannusten-suunnitteluun

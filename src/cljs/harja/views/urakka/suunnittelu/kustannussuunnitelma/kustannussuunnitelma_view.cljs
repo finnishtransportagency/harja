@@ -505,7 +505,9 @@
                   (get-in app [:domain :indeksit])
                   (get-in app [:domain :kuluva-hoitokausi])
                   (dissoc suodattimet :hankinnat)
-                  (:kantahaku-valmis? app)]
+                  (:kantahaku-valmis? app)
+                  (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
+                  (-> @tila/yleiset :urakka :loppupvm pvm/vuosi)]
                  [osion-vahvistus/vahvista-osio-komponentti :tavoitehintaiset-rahavaraukset
                   {:osioiden-tilat osioiden-tilat
                    :hoitovuosi-nro hoitovuosi-nro

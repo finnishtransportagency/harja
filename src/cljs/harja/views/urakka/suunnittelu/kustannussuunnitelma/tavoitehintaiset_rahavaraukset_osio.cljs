@@ -16,12 +16,12 @@
                                 :hinnat (mapv (fn [summa]
                                                 {:summa summa})
                                           yhteensa-summat)
-                                :data-cy "erillishankinnat-hintalaskuri"}
+                                :data-cy "tavoitehintaiset-rahavaraukset-hintalaskuri"}
       kuluva-hoitokausi]
      [ks-yhteiset/indeksilaskuri-ei-indeksikorjausta
       (mapv (fn [summa] {:summa summa}) indeksikorjatut-yhteensa-summat)
       indeksit
-      {:data-cy "erillishankinnat-indeksilaskuri"}]]
+      {:data-cy "tavoitehintaiset-rahavaraukset-indeksilaskuri"}]]
     [yleiset/ajax-loader]))
 
 (defn tallenna! [vuosi loppuvuodet? indeksit rivi rivi-id]
@@ -76,9 +76,12 @@
    indeksit
    kuluva-hoitokausi
    suodattimet
-   kantahaku-valmis?]
+   kantahaku-valmis?
+   urakan-alkuvuosi
+   urakan-loppuvuosi]
 
-  (let [nayta-tavoitehintaiset-rahavaraukset-grid? (and kantahaku-valmis? tavoitehintaiset-rahavaraukset-data)
+  (let [valittu-vuosi (nth (range urakan-alkuvuosi urakan-loppuvuosi) (dec (:hoitokauden-numero suodattimet)))
+        nayta-tavoitehintaiset-rahavaraukset-grid? (and kantahaku-valmis? tavoitehintaiset-rahavaraukset-data)
         hoitokauden-rahavaraukset (filter #(= (:hoitokauden-numero %) (:hoitokauden-numero suodattimet)) tavoitehintaiset-rahavaraukset-data)]
     [:<>
      [:h2 {:id (str (get t/hallinnollisten-idt :tavoitehintaiset-rahavaraukset) "-osio")} "Rahavaraukset"]
@@ -93,7 +96,7 @@
      (if nayta-tavoitehintaiset-rahavaraukset-grid?
        [tavoitehintaiset-rahavaraukset-taulukko
         hoitokauden-rahavaraukset
-        (pvm/vuosi (first (:pvmt kuluva-hoitokausi)))
+        valittu-vuosi
         (:kopioidaan-tuleville-vuosille? suodattimet)
         vahvistettu?
         indeksit]
