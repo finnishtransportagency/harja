@@ -1274,6 +1274,12 @@
       (is (= (try+ (bs/kumoa-suunnitelman-osan-vahvistus-hoitovuodelle (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
                (catch harja.domain.roolit.EiOikeutta eo#
                  :ei-oikeutta-virhe))
+            :ei-oikeutta-virhe)))
+
+    (testing "tallenna-tavoitehintaiset-rahavaraukset"
+      (is (= (try+ (bs/tallenna-tavoitehintainen-rahavaraus (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
+               (catch harja.domain.roolit.EiOikeutta eo#
+                 :ei-oikeutta-virhe))
             :ei-oikeutta-virhe)))))
 
 (deftest palvelun-validointi-ja-palvelu-sama
