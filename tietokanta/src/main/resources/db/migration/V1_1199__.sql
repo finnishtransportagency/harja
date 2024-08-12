@@ -306,16 +306,3 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql;
-
-
-/* ### Populoidaan rahavaraus_urakka-taulu. Uudet urakat joudutaan populoimaan kun ne alkavat. ### */
-INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luoja)
-SELECT u.id,
-       rv.id,
-       (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
-  FROM urakka u,
-       rahavaraus rv
- WHERE u.tyyppi = 'teiden-hoito'
-   AND rv.nimi IN ('Rahavaraus A',
-                   'Rahavaraus B - Äkilliset hoitotyöt',
-                   'Rahavaraus C - Vahinkojen korjaukset');

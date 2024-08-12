@@ -22,11 +22,11 @@ DECLARE
     rivit_paivitetty INTEGER := 0;
 BEGIN
     -- Haetaan rahavarausten id:t
-    SELECT id INTO rv_akilliset_id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO rv_vahingot_id FROM rahavaraus WHERE nimi LIKE '%Vahinkojen korvaukset%' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO rv_akilliset_id FROM rahavaraus WHERE nimi LIKE '%Rahavaraus B%' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO rv_vahingot_id FROM rahavaraus WHERE nimi LIKE '%Rahavaraus C%' ORDER BY id ASC LIMIT 1;
     SELECT id INTO rv_tunneli_id FROM rahavaraus WHERE nimi LIKE '%Tunnelien pienet korjaukset%' ORDER BY id ASC LIMIT 1;
     SELECT id INTO rv_lupaukseen1_id FROM rahavaraus WHERE nimi LIKE '%Rahavaraus K - Kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO rv_muut_tavoitehintaan_id FROM rahavaraus WHERE nimi LIKE '%%' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO rv_muut_tavoitehintaan_id FROM rahavaraus WHERE nimi LIKE '%Muut tavoitehintaan vaikuttavat rahavaraukset%' ORDER BY id ASC LIMIT 1;
 
     -- Haetaan tehtävien id:t
     SELECT id INTO t_tunneli_id FROM tehtava WHERE nimi LIKE '%Tunneleiden hoito%' ORDER BY id ASC LIMIT 1;
@@ -116,3 +116,4 @@ BEGIN
     RETURN rivit_paivitetty;
 END;
 $$ LANGUAGE plpgsql;
+

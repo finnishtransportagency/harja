@@ -40,3 +40,20 @@ UPDATE rahavaraus_urakka
 -- Nyt duplikaatit voi poistaa
 DELETE FROM rahavaraus
       WHERE nimi IN ('Äkilliset hoitotyöt', 'Vahinkojen korvaukset', 'Kannustinjärjestelmä');
+
+
+CREATE OR REPLACE FUNCTION lisaa_urakan_oletus_rahavaraukset() RETURNS TRIGGER AS
+$$
+BEGIN
+    INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luoja)
+    SELECT NEW.id,
+           rv.id,
+           (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
+      FROM rahavaraus rv
+     WHERE rv.nimi IN ('Rahavaraus B - Äkilliset hoitotyöt',
+                       'Rahavaraus C - Vahinkojen korjaukset',
+                       'Rahavaraus K - Kannustinjärjestelmä');
+
+    RETURN NEW;
+END
+$$ LANGUAGE plpgsql;
