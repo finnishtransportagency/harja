@@ -382,22 +382,26 @@
 
 (defn mallinna-rahavaraukset-kustannusten-suunnitteluun [rahavaraukset urakan-aloitusvuosi]
   (map (fn [rahavaraus]
-         (let [
-               hoitokauden-numero (inc (- (:vuosi rahavaraus) urakan-aloitusvuosi))]
+         (let [hoitokauden-numero (inc (- (:hoitokauden_alkuvuosi rahavaraus) urakan-aloitusvuosi))]
            (-> rahavaraus
              (assoc :toimenpide-avain :tavoitehintaiset-rahavaraukset)
              (assoc :haettu-asia (:nimi rahavaraus))
              (assoc :hoitokauden-numero hoitokauden-numero)
-             (assoc :poistettu false))))
+             (assoc :vuosi (:hoitokauden_alkuvuosi rahavaraus))
+             (assoc :poistettu false)
+             (dissoc :hoitokauden_alkuvuosi))))
        rahavaraukset))
 
 (defn hae-urakan-kustannusarvoidut-tyot
   [db user urakka-id]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        urakan-lopetusvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
         kustannusarvoidut-tyot (kustarv-tyot/hae-urakan-kustannusarvoidut-tyot-nimineen db user urakka-id)
         tavoitehintaiset-rahavaraukset (mallinna-rahavaraukset-kustannusten-suunnitteluun
-                                         (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db {:urakka_id urakka-id})
+                                         (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db {:urakka_id urakka-id
+                                                                                                                    :alkuvuosi urakan-aloitusvuosi
+                                                                                                                    :loppuvuosi urakan-lopetusvuosi})
                                          urakan-aloitusvuosi)
         kustannusarvoidut-tyot
         (map (fn [tyo]
@@ -1000,10 +1004,10 @@
                                     kuukausi-indeksisumma (round2 2 (/ indeksisumma 12))
                                     viimeinen-indeksisumma (round2 2 (- indeksisumma (* 11 kuukausi-indeksisumma)))]]
                         (insert! db ::bs/kustannusarvioitu-tyo
-                          {::bs/summa (if (< kk 12) kuukausisumma viimeinen-kuukausisumma)
+                          {::bs/summa (if (= kk 9) viimeinen-kuukausisumma kuukausisumma)
                            ::bs/summa-indeksikorjattu (if (< kk 12) kuukausi-indeksisumma viimeinen-indeksisumma)
                            ::bs/rahavaraus_id rahavaraus-id
-                           ::bs/smallint-v vuosi
+                           ::bs/smallint-v (if (>= kk 10) vuosi (inc vuosi))
                            ::bs/smallint-kk kk
                            ::bs/sopimus sopimus-id
                            ::bs/tyyppi :laskutettava-tyo
@@ -1013,7 +1017,11 @@
                            ::bs/luoja (:id user)})))]))
 
         urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
-        tavoitehintaiset-rahavaraukset (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db {:urakka_id urakka-id})
+        urakan-lopetusvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
+        tavoitehintaiset-rahavaraukset (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db
+                                         {:urakka_id urakka-id
+                                          :alkuvuosi urakan-aloitusvuosi
+                                          :loppuvuosi urakan-lopetusvuosi})
         tavoitehintaiset-rahavaraukset (mallinna-rahavaraukset-kustannusten-suunnitteluun
                                          tavoitehintaiset-rahavaraukset urakan-aloitusvuosi)]
     ;; Palautetaan tässä vaiheessa vain tiedetyt rahavaraukset muutettuna summalla, joka annettiin

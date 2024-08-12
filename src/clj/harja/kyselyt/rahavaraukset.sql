@@ -153,22 +153,28 @@ SELECT tr.id,
 -- name: hae-urakan-suunnitellut-rahavarausten-kustannukset
 -- Haetaan rahavaraukset ja tarkistetaan onko kustannusarvioitu_tyo taulussa niille suunniteltu kustannuksia.
 -- Haussa ei ole vuosikohtaisuutta parametrisoitu, mutta tulokset summaroidaan vuosikohtaisesti.
-  WITH years as (
-      select generate_series(2019::INT, 2024::INT) as year
+  WITH urakan_alkuvuodet as (
+      select generate_series(:alkuvuosi::INT, :loppuvuosi::INT - 1) as year
   )
 SELECT rv.id,
        COALESCE(rvu.urakkakohtainen_nimi, rv.nimi) as nimi,
        SUM(kt.summa) as summa,
        SUM(kt.summa_indeksikorjattu) as "summa-indeksikorjattu",
        kt.indeksikorjaus_vahvistettu as "indeksikorjaus-vahvistettu",
-       y.year as vuosi
-  FROM years y
+       CASE
+           WHEN kt.vuosi = y.year AND kt.kuukausi >= 10 THEN kt.vuosi
+           WHEN kt.vuosi-1 = y.year AND kt.kuukausi <= 9 THEN kt.vuosi-1
+           ELSE y.year
+        END as hoitokauden_alkuvuosi
+  FROM urakan_alkuvuodet y
            CROSS JOIN rahavaraus rv
            JOIN rahavaraus_urakka rvu ON rvu.rahavaraus_id = rv.id AND rvu.urakka_id = :urakka_id
            JOIN sopimus s ON s.urakka = rvu.urakka_id
-           LEFT JOIN kustannusarvioitu_tyo kt ON kt.rahavaraus_id = rv.id AND kt.sopimus = s.id and kt.vuosi = y.year
- GROUP BY rv.id, rvu.urakkakohtainen_nimi, rv.nimi, kt.vuosi, kt.indeksikorjaus_vahvistettu, y.year
- ORDER BY vuosi, rv.id, nimi;
+           LEFT JOIN kustannusarvioitu_tyo kt ON kt.rahavaraus_id = rv.id AND kt.sopimus = s.id
+                                                     and ((kt.vuosi = y.year AND kt.kuukausi >= 10) OR
+                                                          (kt.vuosi = y.year+1 AND kt.kuukausi <= 9))
+ GROUP BY rv.id, rvu.urakkakohtainen_nimi, rv.nimi, kt.indeksikorjaus_vahvistettu, hoitokauden_alkuvuosi
+ ORDER BY hoitokauden_alkuvuosi, rv.id, nimi;
 
 
 -- name: hae-rahavarauksen-toimenpideinstanssi

@@ -43,5 +43,5 @@ WHERE toimenpideinstanssi IN (SELECT id
 SELECT kt.id, kt.vuosi, kt.kuukausi, kt.summa, kt.summa_indeksikorjattu
   FROM kustannusarvioitu_tyo kt
  WHERE kt.rahavaraus_id = :rahavaraus_id
-   AND kt.vuosi = :vuosi
+   AND ((kt.vuosi = :vuosi AND kt.kuukausi >= 10) OR (kt.vuosi = :vuosi + 1 AND kt.kuukausi <= 9))
    AND kt.sopimus = :sopimus_id;

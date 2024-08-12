@@ -3,7 +3,8 @@
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.tyokalut.yleiset :refer :all]))
+            [harja.tyokalut.yleiset :refer :all]
+            [taoensso.timbre :as log]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -23,29 +24,29 @@
 
 ;; Tehdään esimerkki Oulu MHU:lle, mikä täytyy löytyä
 (def odotetut-kustannus-rahavaraukset
-  '({:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus B - Äkilliset hoitotyöt", :indeksikorjaus-vahvistettu nil, :summa 500M, :nimi "Rahavaraus B - Äkilliset hoitotyöt", :vuosi 2020, :id 5, :poistettu false, :hoitokauden-numero 2, :summa-indeksikorjattu 540.500000M}
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus C - Vahinkojen korjaukset", :indeksikorjaus-vahvistettu nil, :summa nil, :nimi "Rahavaraus C - Vahinkojen korjaukset", :vuosi 2020, :id 6, :poistettu false, :hoitokauden-numero 2, :summa-indeksikorjattu nil}
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus K - Kannustinjärjestelmä", :indeksikorjaus-vahvistettu nil, :summa nil, :nimi "Rahavaraus K - Kannustinjärjestelmä", :vuosi 2020, :id 14, :poistettu false, :hoitokauden-numero 2, :summa-indeksikorjattu nil}))
+  '({:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus B - Äkilliset hoitotyöt", :indeksikorjaus-vahvistettu nil, :summa 500M, :nimi "Rahavaraus B - Äkilliset hoitotyöt", :vuosi 2019, :id 5, :poistettu false, :hoitokauden-numero 1, :summa-indeksikorjattu 540.500000M}
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus C - Vahinkojen korjaukset", :indeksikorjaus-vahvistettu nil, :summa nil, :nimi "Rahavaraus C - Vahinkojen korjaukset", :vuosi 2019, :id 6, :poistettu false, :hoitokauden-numero 1, :summa-indeksikorjattu nil}
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus K - Kannustinjärjestelmä", :indeksikorjaus-vahvistettu nil, :summa nil, :nimi "Rahavaraus K - Kannustinjärjestelmä", :vuosi 2019, :id 14, :poistettu false, :hoitokauden-numero 1, :summa-indeksikorjattu nil}))
 
 ;; Hae Oulu MHU:n rahavaraukset
 (deftest hae-rahavaraukset-onnistuu-test
   (let [oulu-mhu (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         suunnitellut-kustannukset (bs/hae-urakan-kustannusarvoidut-tyot (:db jarjestelma) +kayttaja-jvh+ oulu-mhu)
-        tavoitehintaiset-rahavaraukset-2020 (filter #(and
+        tavoitehintaiset-rahavaraukset-2019 (filter #(and
                                                        (= (:toimenpide-avain %) :tavoitehintaiset-rahavaraukset)
-                                                       (= (:vuosi %) 2020))
+                                                       (= (:vuosi %) 2019))
                                               suunnitellut-kustannukset)]
-    (is (= odotetut-kustannus-rahavaraukset tavoitehintaiset-rahavaraukset-2020))))
+    (is (= odotetut-kustannus-rahavaraukset tavoitehintaiset-rahavaraukset-2019))))
 
 (deftest hae-endpointista-rahavaraukset-onnistuu-test
   (let [oulu-mhu (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :budjetoidut-tyot +kayttaja-jvh+ {:urakka-id oulu-mhu})
         suunnitellut-kustannukset (:kustannusarvioidut-tyot vastaus)
-        tavoitehintaiset-rahavaraukset-2020 (filter #(and
+        tavoitehintaiset-rahavaraukset-2019 (filter #(and
                                                        (= (:toimenpide-avain %) :tavoitehintaiset-rahavaraukset)
-                                                       (= (:vuosi %) 2020))
+                                                       (= (:vuosi %) 2019))
                                               suunnitellut-kustannukset)]
-    (is (= odotetut-kustannus-rahavaraukset tavoitehintaiset-rahavaraukset-2020))))
+    (is (= odotetut-kustannus-rahavaraukset tavoitehintaiset-rahavaraukset-2019))))
 
 
 ;; Lisää vuodelle 2020 uusi summa rahavaraukselle
@@ -55,8 +56,8 @@
         indeksivastaus (kutsu-palvelua (:http-palvelin jarjestelma) :budjettisuunnittelun-indeksit +kayttaja-jvh+ {:urakka-id oulu-mhu})
         vuosi 2020
         vuoden-indeksikerroin (:indeksikerroin (first (filter #(= vuosi (:vuosi %)) indeksivastaus)))
-        ;; Haetaan rahavarauksen id
 
+        ;; Haetaan rahavarauksen id
         rahavaraus-id (:id (first (q-map (format "SELECT id FROM rahavaraus WHERE nimi = '%s'"
                                            "Rahavaraus K - Kannustinjärjestelmä"))))
         summa 100
