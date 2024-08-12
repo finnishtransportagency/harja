@@ -678,6 +678,27 @@
                                      (* 1.25 (.getColumnWidth sheet i)))))))
     tiedoston-nimi))
 
+(defmethod muodosta-excel :pohjan-taytto [[_ {:keys [nimi ensimmainen-rivi sheet-nro] :as optiot} data] workbook]
+  (let [sheet (nth (excel/sheet-seq workbook) sheet-nro)]
+    (dorun
+      (map-indexed
+        (fn [rivi-nro rivi]
+          (let [rivi-nro (+ rivi-nro ensimmainen-rivi)
+                ;; Ei haluta ylikirjoittaa pohjassa olevaa riviä
+                row (or
+                      (nth (excel/row-seq sheet) rivi-nro nil)
+                      (.createRow sheet rivi-nro))]
+            (dorun
+              (map-indexed
+                (fn [sarake-nro sarake]
+                  (let [cell (or
+                               (nth (excel/cell-seq row) sarake-nro nil)
+                               (.createCell row sarake-nro))]
+                    (when sarake
+                      (excel/set-cell! cell sarake))))
+                rivi)))) data))
+    nimi))
+
 (defmethod muodosta-excel :default [elementti workbook]
   (log/debug "Excel ei tue elementtiä: " elementti)
   nil)

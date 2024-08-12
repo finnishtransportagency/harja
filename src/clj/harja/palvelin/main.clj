@@ -523,7 +523,7 @@
 
       :reikapaikkaukset (component/using
                           (reikapaikkaukset/->Reikapaikkaukset)
-                          [:http-palvelin :db])
+                          [:http-palvelin :db :excel-vienti])
 
       :mpu-kustannukset (component/using
                           (mpu-kustannukset/->MPUKustannukset)

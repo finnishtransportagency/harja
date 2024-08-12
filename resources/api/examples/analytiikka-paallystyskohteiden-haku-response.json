@@ -3,22 +3,40 @@
     {
       "alikohteet": [
         {
-          "geometria": "MULTILINESTRING((404340.853 7152734.231,404363.924 7152792.263,404405.774 7152883.486,404440.966 7152952.267,404473.6 7153009.904,404509.82 7153070.445,404562.38 7153149.582,404597.509 7153198.329,404670.47793504497 7153291.048912377))",
+          "geometria": "MULTILINESTRING((404340.853 7152734.231,404363.924 7152792.263,404390.285 7152851.241,404434.251 7152939.712,404470.403343585 7153004.415068381))",
           "tierekisteriosoitevali": {
             "tienumero": 86,
             "aosa": 20,
             "aet": 0,
             "losa": 20,
-            "let": 650,
+            "let": 300,
             "kaista": 1,
             "ajorata": 1
           },
-          "harjaId": 48,
+          "harjaId": 49,
           "paallystystoimenpide": {
             "paallystetyomenetelma": "Ei menetelmää"
           },
           "yhaId": 1235,
-          "pituus": 650
+          "pituus": 300
+        },
+        {
+          "geometria": "MULTILINESTRING((404470.403343585 7153004.415068381,404509.82 7153070.445,404562.38 7153149.582,404597.509 7153198.329,404670.47793504497 7153291.048912377))",
+          "tierekisteriosoitevali": {
+            "tienumero": 86,
+            "aosa": 20,
+            "aet": 300,
+            "losa": 20,
+            "let": 650,
+            "kaista": 1,
+            "ajorata": 1
+          },
+          "harjaId": 50,
+          "paallystystoimenpide": {
+            "paallystetyomenetelma": "Ei menetelmää"
+          },
+          "yhaId": 1236,
+          "pituus": 350
         },
         {
           "geometria": "MULTILINESTRING((404670.47793504497 7153291.048912377,404729.438 7153358.259,404785.274 7153415.888,404827.675 7153455.344,404920.263 7153531.503,404962.361 7153561.851,405017.426 7153597.401,405073.513 7153630.544,405179.2810128755 7153687.045217191))",
@@ -31,11 +49,11 @@
             "kaista": 1,
             "ajorata": 1
           },
-          "harjaId": 49,
+          "harjaId": 51,
           "paallystystoimenpide": {
             "paallystetyomenetelma": "Ei menetelmää"
           },
-          "yhaId": 1236,
+          "yhaId": 1237,
           "pituus": 650
         }
       ],
@@ -52,7 +70,7 @@
       "tunnus": "ANALYTIIKKA1",
       "urakka": 54,
       "nimi": "Kirkonkylä - Toppinen",
-      "harjaId": 34,
+      "harjaId": 35,
       "poistettu": false,
       "yhaId": 1234,
       "pituus": 1300,

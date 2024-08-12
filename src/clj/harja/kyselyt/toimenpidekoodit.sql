@@ -227,11 +227,29 @@ ORDER BY jarjestys;
 
 -- name: listaa-tehtavat
 -- Listataan tehtävät APIa varten toimenpidekoodin alatasot eli tehtävät
-SELECT t.id, t.nimi, t.voimassaolo_alkuvuosi, t.voimassaolo_loppuvuosi, t.jarjestys, t.jarjestys, t.emo,
-       t.yksikko, t.suunnitteluyksikko,  t.hinnoittelu,
-       t.suoritettavatehtava, t.tehtavaryhma, t."mhu-tehtava?" as ensisijainen, t.yksiloiva_tunniste,
-       t.kasin_lisattava_maara, t."raportoi-tehtava?", t.materiaaliluokka_id,
-       t.materiaalikoodi_id, t.aluetieto, t.piilota, t.poistettu, t.luotu, t.muokattu
+SELECT t.id,
+       t.nimi,
+       emo.koodi as toimenpidekoodi,
+       t.voimassaolo_alkuvuosi,
+       t.voimassaolo_loppuvuosi,
+       t.jarjestys,
+       t.emo,
+       t.yksikko,
+       t.suunnitteluyksikko,
+       t.hinnoittelu,
+       t.suoritettavatehtava,
+       t.tehtavaryhma,
+       t."mhu-tehtava?" as ensisijainen,
+       t.yksiloiva_tunniste,
+       t.kasin_lisattava_maara,
+       t."raportoi-tehtava?",
+       t.materiaaliluokka_id,
+       t.materiaalikoodi_id,
+       t.aluetieto,
+       t.piilota,
+       t.poistettu,
+       t.luotu,
+       t.muokattu
   FROM tehtava t
        LEFT JOIN toimenpide emo ON t.emo = emo.id
  WHERE (t.poistettu IS FALSE OR emo.poistettu IS FALSE OR (emo.poistettu IS TRUE AND t.poistettu IS FALSE))
@@ -239,10 +257,30 @@ SELECT t.id, t.nimi, t.voimassaolo_alkuvuosi, t.voimassaolo_loppuvuosi, t.jarjes
 
 -- name: listaa-tehtavaryhmat
 -- Listataan tehtäväryhmät APIa varten
-SELECT tr.id, tr.nimi, o.otsikko, tr.jarjestys, tr.poistettu, tr.versio, tr.yksiloiva_tunniste, tr.luotu, tr.muokattu
-  FROM tehtavaryhma tr
-  JOIN tehtavaryhmaotsikko o ON tr.tehtavaryhmaotsikko_id = o.id
- ORDER BY o.otsikko ASC, tr.nimi ASC;
+SELECT *
+  FROM (SELECT DISTINCT ON (tr.id) tr.id                     AS id,
+                                   tr.nimi,
+                                   o.otsikko,
+                                   tp.koodi                  AS toimenpidekoodi,
+                                   tr.voimassaolo_alkuvuosi  AS voimassaolo_alkuvuosi,
+                                   tr.voimassaolo_loppuvuosi AS voimassaolo_loppuvuosi,
+                                   tr.jarjestys,
+                                   tr.poistettu,
+                                   tr.versio,
+                                   tr.yksiloiva_tunniste,
+                                   tr.luotu,
+                                   tr.muokattu
+          FROM tehtavaryhma tr
+                   JOIN tehtavaryhmaotsikko o ON tr.tehtavaryhmaotsikko_id = o.id
+                   JOIN tehtava te ON tr.id = te.tehtavaryhma
+                   JOIN toimenpide tp ON te.emo = tp.id
+         ORDER BY tr.id ASC) AS kysely
+ ORDER BY kysely.otsikko ASC, kysely.nimi ASC;
+
+-- name: listaa-toimenpiteet-analytiikalle
+SELECT id, nimi, koodi as toimenpidekoodi, luotu, muokattu, poistettu
+  FROM toimenpide
+ WHERE taso = 3;
 
 -- name: hae-suoritettavat-tehtavat
 -- Suoritettavat tehtävät ovat tehtäviä, joille on annettu API:a varten suoritettavatehtävä koluminnimi, jolla
