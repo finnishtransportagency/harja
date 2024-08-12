@@ -80,7 +80,10 @@
    urakan-alkuvuosi
    urakan-loppuvuosi]
 
-  (let [valittu-vuosi (nth (range urakan-alkuvuosi urakan-loppuvuosi) (dec (:hoitokauden-numero suodattimet)))
+  (let [;; Suodattimet saadaan monissa tapauksissa app-statesta liian myöhään
+        valittu-vuosi (if (:hoitokauden-numero suodattimet)
+                        (nth (range urakan-alkuvuosi urakan-loppuvuosi) (dec (:hoitokauden-numero suodattimet)))
+                        1)
         nayta-tavoitehintaiset-rahavaraukset-grid? (and kantahaku-valmis? tavoitehintaiset-rahavaraukset-data)
         hoitokauden-rahavaraukset (filter #(= (:hoitokauden-numero %) (:hoitokauden-numero suodattimet)) tavoitehintaiset-rahavaraukset-data)]
     [:<>

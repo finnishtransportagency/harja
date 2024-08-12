@@ -81,7 +81,7 @@
     (is (= (:summa muuttunut-rahavaraus) (bigdec summa)))
     (is (= (round2 2 (:summa-indeksikorjattu muuttunut-rahavaraus)) (round2 2 (bigdec indeksisumma))))))
 
-;; Helpperi helpottamaan lukemista
+;; Helpperit helpottamaan lukemista
 (defn third [coll]
   (nth coll 2))
 (defn fourth [coll]
@@ -162,6 +162,4 @@
     (is (= (round2 2 (:summa-indeksikorjattu (third muuttuneet-rahavaraukset))) (round2 2 (bigdec indeksisumma))))
     ;; Vuosi 2023
     (is (= (:summa (fourth muuttuneet-rahavaraukset)) (bigdec summa)))
-    (is (= (round2 2 (:summa-indeksikorjattu (fourth muuttuneet-rahavaraukset))) (round2 2 (bigdec indeksisumma))))
-
-    ))
+    (is (= (round2 2 (:summa-indeksikorjattu (fourth muuttuneet-rahavaraukset))) (round2 2 (bigdec indeksisumma))))))
