@@ -29,22 +29,18 @@
 (defn- rahavaraus-rivit
   [kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika]
   (map (fn [nimi hoitokausi val-aika]
-         ;; Näytä rahavarausrivi vain jos arvoja on olemassa
+         ;; Näytä rahavarausrivi aina, vaikka arvo on 0
          ;; Jos mitään arvoja ei ole olemassa, Rahavarausten alla tulee lukemaan "Ei tietoja."
-         (when (not
-                 (and
-                   (= val-aika 0M)
-                   (= hoitokausi 0M)))
-           (rivi
-             [:varillinen-teksti {:arvo (str nimi)
-                                  :lihavoi? false}]
-             [:varillinen-teksti {:arvo (or hoitokausi (yhteiset/summa-fmt nil))
+         (rivi
+           [:varillinen-teksti {:arvo (str nimi)
+                                :lihavoi? false}]
+           [:varillinen-teksti {:arvo (or hoitokausi (yhteiset/summa-fmt nil))
+                                :fmt :raha
+                                :lihavoi? false}]
+           (when kyseessa-kk-vali?
+             [:varillinen-teksti {:arvo (or val-aika (yhteiset/summa-fmt nil))
                                   :fmt :raha
-                                  :lihavoi? false}]
-             (when kyseessa-kk-vali?
-               [:varillinen-teksti {:arvo (or val-aika (yhteiset/summa-fmt nil))
-                                    :fmt :raha
-                                    :lihavoi? false}]))))
+                                  :lihavoi? false}])))
     rahavaraukset-nimet
     rahavaraukset-hoitokausi
     rahavaraukset-val-aika))
