@@ -86,8 +86,7 @@
     :paikkauskohde-id :paallystys-alku :paallystys-loppu :takuuaika})
 
 (def lahetyksen-tila-avaimet
-  #{:velho-lahetyksen-aika :velho-lahetyksen-vastaus :velho-lahetyksen-tila
-    :lahetysaika :lahetetty :lahetys-onnistunut :lahetysvirhe})
+  #{:lahetysaika :lahetetty :lahetys-onnistunut :lahetysvirhe})
 
 (def tr-osoite-avaimet
   #{:tr-numero :tr-alkuosa :tr-alkuetaisyys
@@ -363,8 +362,7 @@
          {} luettu-json)])))
 
 (defn paivita-paallystysilmoituksen-lahetys-tila [paallystysilmoitukset {:keys [kohde-id] :as uusi-tila}]
-  (let [avaimet [:lahetys-onnistunut :lahetysaika :lahetetty :lahetysvirhe
-                 :velho-lahetyksen-aika :velho-lahetyksen-tila :velho-lahetyksen-vastaus]
+  (let [avaimet [:lahetys-onnistunut :lahetysaika :lahetetty :lahetysvirhe]
         uusi-tila (select-keys uusi-tila avaimet)]
     (map #(if (= kohde-id (:paallystyskohde-id %))
             (merge % uusi-tila)

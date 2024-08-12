@@ -88,7 +88,6 @@
     [harja.palvelin.palvelut.laadunseuranta.tarkastukset :as tarkastukset]
     [harja.palvelin.palvelut.varuste-ulkoiset :as varuste-ulkoiset]
     [harja.palvelin.palvelut.yha :as yha]
-    [harja.palvelin.palvelut.yha-velho :as yha-velho]
     [harja.palvelin.palvelut.digiroad :as digiroad]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
     [harja.palvelin.palvelut.tietyoilmoitukset :as tietyoilmoitukset]
@@ -547,10 +546,6 @@
       :yha (component/using
              (yha/->Yha)
              [:http-palvelin :db :yha-integraatio :vkm])
-
-      :yha-velho (component/using
-                   (yha-velho/->YhaVelho (select-keys asetukset [:kehitysmoodi]))
-                   [:http-palvelin :db  :yha-integraatio :velho-integraatio])
 
       :varustetoteuma-ulkoiset (component/using
                                  (varuste-ulkoiset/->VarusteVelho)

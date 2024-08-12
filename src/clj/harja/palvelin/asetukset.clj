@@ -145,17 +145,12 @@
    (s/optional-key :yha) {:url s/Str
                           :api-key s/Str}
 
-   (s/optional-key :velho) {:paallystetoteuma-url s/Str
-                            :token-url s/Str
-                            :kayttajatunnus s/Str
-                            :salasana s/Str
+   (s/optional-key :velho) {:token-url s/Str
                             :varuste-api-juuri-url s/Str
                             :varuste-kayttajatunnus s/Str
                             :varuste-salasana s/Str
                             (s/optional-key :varuste-tuonti-suoritusaika) [s/Num]
                             (s/optional-key :oid-tuonti-suoritusaika) [s/Num]}
-
-   (s/optional-key :yha-velho) {}
 
    (s/optional-key :labyrintti) {:sms-url s/Str
                                  :apiavain s/Str}

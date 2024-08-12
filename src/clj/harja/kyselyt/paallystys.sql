@@ -20,9 +20,6 @@ SELECT
   ypk.lahetetty                 AS lahetetty,
   lahetys_onnistunut            AS "lahetys-onnistunut",
   lahetysvirhe,
-  ypk.velho_lahetyksen_aika     AS "velho-lahetyksen-aika",
-  ypk.velho_lahetyksen_tila     AS "velho-lahetyksen-tila",
-  ypk.velho_lahetyksen_vastaus  AS "velho-lahetyksen-vastaus",
   pi.takuupvm                   AS takuupvm,
   pi.muokattu,
   ypk.yha_tr_osoite             AS "yha-tr-osoite",
@@ -112,9 +109,6 @@ SELECT
   ypka.paallystys_alku          AS "paallystys-alku",
   p.id                          AS "paikkauskohde-id",
   p.nimi                        AS "paikkauskohde-nimi",
-  ypk.velho_lahetyksen_aika     AS "velho-lahetyksen-aika",
-  ypk.velho_lahetyksen_vastaus  AS "velho-lahetyksen-vastaus",
-  ypk.velho_lahetyksen_tila     AS "velho-lahetyksen-tila",
   ypk.lahetysaika,
   ypk.lahetetty,
   ypk.lahetys_onnistunut        AS "lahetys-onnistunut",
@@ -150,9 +144,6 @@ SELECT
   pot2p.piennar,
   pot2p.lisatieto,
   pot2p.jarjestysnro,
-  pot2p.velho_lahetyksen_aika as "velho-lahetyksen-aika",
-  pot2p.velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus",
-  pot2p.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila",
   pot2_rc_prosentti(pot2p.id) as "rc-prosentti"
 FROM pot2_paallystekerros pot2p
 WHERE pot2_id = :pot2_id AND kohdeosa_id = :kohdeosa_id;
@@ -170,10 +161,7 @@ SELECT
     pot2p.piennar,
     pot2p.lisatieto,
     pot2p.jarjestysnro,
-    pot2p.velho_lahetyksen_aika as "velho-lahetyksen-aika",
-    pot2p.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila",
-    pot2p.velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus",
-    pot.luotu as "alkaen", -- velhon "alkaen"
+    pot.luotu as "alkaen",
     ypko.tr_ajorata as "tr-ajorata",
     ypko.tr_kaista as "tr-kaista",
     NULL as "karttapaivamaara",
@@ -204,10 +192,6 @@ SELECT
     pot2a.tr_ajorata AS "tr-ajorata",
     pot2a.tr_kaista AS "tr-kaista",
     pot2a.toimenpide,
-    pot2a.velho_lahetyksen_aika as "velho-lahetyksen-aika",
-    pot2a.velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus",
-    pot2a.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila",
-
     -- toimenpidespesifiset kentät
     pot2a.massa,
     pot2a.murske,
@@ -553,12 +537,6 @@ INSERT INTO pot2_paallystekerros
      VALUES (:kohdeosa_id, :toimenpide, :materiaali, :leveys, :massamenekki,
              :pinta_ala, :kokonaismassamaara, :piennar, :lisatieto, :pot2_id);
 
--- name: merkitse-paallystekerros-lahetystiedot-velhoon!
-UPDATE pot2_paallystekerros
-SET velho_lahetyksen_aika = :aikaleima,
-    velho_rivi_lahetyksen_tila = :tila :: velho_rivi_lahetyksen_tila_tyyppi,
-    velho_lahetyksen_vastaus = :lahetysvastaus
-WHERE jarjestysnro = 1 and kohdeosa_id = :id;
 
 -- name: paivita-pot2-alusta<!
 UPDATE pot2_alusta
@@ -586,13 +564,6 @@ UPDATE pot2_alusta
        verkon_tarkoitus = :verkon-tarkoitus,
        pot2_id = :pot2_id
  WHERE id = :pot2a_id;
-
--- name: merkitse-alusta-lahetystiedot-velhoon!
-UPDATE pot2_alusta
-SET velho_lahetyksen_aika = :aikaleima,
-    velho_rivi_lahetyksen_tila = :tila :: velho_rivi_lahetyksen_tila_tyyppi,
-    velho_lahetyksen_vastaus = :lahetysvastaus
-WHERE id = :id;
 
 -- name: luo-pot2-alusta<!
 INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys,
