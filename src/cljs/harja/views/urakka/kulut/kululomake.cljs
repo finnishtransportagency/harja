@@ -106,6 +106,7 @@
                                        (str/includes? (str/lower-case (:tehtavaryhma t)) "vahinkojen")
                                        (str/includes? (str/lower-case (:tehtavaryhma t)) "äkilliset")
                                        (str/includes? (str/lower-case (:tehtavaryhma t)) "hoidonjohtopalkkio")
+                                       (str/includes? (str/lower-case (:tehtavaryhma t)) "erillishankinnat")
                                        (str/includes? (str/lower-case (:tehtavaryhma t)) "hallintokorvaus")))]
                             sisaltaako?))
                         tehtavaryhmat)]
