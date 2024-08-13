@@ -246,9 +246,6 @@
         rahavarausten-toimenpiteet (rivita-toimenpiteet
                                      (get-in kustannusdata [:taulukon-rivit :rahavaraukset])
                                      "Rahavaraukset")
-        hallintakorvausten-toimenpiteet (rivita-toimenpiteet
-                                          (get-in kustannusdata [:taulukon-rivit :johto-ja-hallintakorvaus])
-                                          "Johto- ja Hallintokorvaukset")
         lisatyot (rivita-lisatyot (get-in kustannusdata [:taulukon-rivit :lisatyot]) (get-in kustannusdata [:taulukon-rivit :lisatyot-summa]))
         sarakkeet [{:otsikko "Ryhmä"} {:otsikko "Toimenpide"} {:otsikko "Tehtavä"}
                    {:otsikko "Suunniteltu (€)" :fmt :raha} {:otsikko "Indeksikorjattu (€)" :fmt :raha}
@@ -265,15 +262,15 @@
                      (mapv #(luo-excel-rivi-toimenpiteelle % (if (= % (first rahavarausten-toimenpiteet))
                                                                true
                                                                false)) rahavarausten-toimenpiteet)
-                     (mapv #(luo-excel-rivi-toimenpiteelle % (if (= % (first hallintakorvausten-toimenpiteet))
-                                                               true
-                                                               false)) hallintakorvausten-toimenpiteet)
+                     (luo-excel-rivit kustannusdata "johto-ja-hallintakorvaus" "Johto- ja Hallintokorvaukset")
                      (luo-excel-rivit kustannusdata "hoidonjohdonpalkkio" "Hoidonjohdonpalkkio")
                      (luo-excel-rivit kustannusdata "erillishankinnat" "Erillishankinnat")
+                     (luo-excel-rivit kustannusdata "muukulu-tavoitehintainen" "Muut kulut")
                      (luo-excel-rivit kustannusdata "tavoitehinnanoikaisu" "Tavoitehinnan oikaisut")
                      (luo-excel-rivit kustannusdata "siirto" "Siirto edelliseltä vuodelta")
                      (luo-excel-rivi-yhteensa kustannusdata)
                      (luo-excel-rivit kustannusdata "ulkopuoliset-rahavaraukset" "Tavoitehinnan ulkopuoliset rahavaraukset")
+                     (luo-excel-rivit kustannusdata "muukulu-eitavoitehintainen" "Muut kulut")
                      (luo-excel-rivit kustannusdata "bonukset" "Bonukset")
                      (luo-excel-rivit kustannusdata "sanktiot" "Sanktiot")
                      (luo-excel-rivi-vuoden-paatos kustannusdata)
