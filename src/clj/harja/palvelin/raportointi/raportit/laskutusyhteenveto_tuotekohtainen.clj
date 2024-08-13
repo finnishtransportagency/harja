@@ -1,6 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen
   "Tuotekohtainen laskutusyhteenveto MHU-urakoissa"
   (:require [clojure.string :as str]
+            [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
@@ -30,6 +31,7 @@
                                              (when (= :urakka konteksti) [:tpi :maksuera_numero])]))]
     kustannusten-kentat))
 
+
 (defn- koosta-yhteenveto [tiedot]
   (let [kaikki-yhteensa-laskutettu (apply + (map #(:kaikki_laskutettu %) tiedot))
         kaikki-yhteensa-laskutetaan (apply + (map #(:kaikki_laskutetaan %) tiedot))
@@ -45,6 +47,7 @@
      :kaikki-yhteensa-laskutetaan kaikki-yhteensa-laskutetaan
      :nimi "Kaikki toteutuneet kustannukset"}))
 
+
 (defn- koosta-tavoite [tiedot urakka-tavoite]
   (let [kaikki-tavoitehintaiset-laskutettu (apply + (map #(if (not (nil? (:tavoitehintaiset_laskutettu %)))
                                                             (:tavoitehintaiset_laskutettu %)
@@ -56,6 +59,7 @@
       {:tavoite-hinta 0
        :jaljella 0
        :nimi "Tavoite"})))
+
 
 (defn- taulukko-rivi
   [tp-rivi kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi?]
@@ -70,9 +74,49 @@
                            :fmt :raha
                            :lihavoi? lihavoi?}])))
 
+
+(defn- rahavaraus-rivit
+  [data otsikko kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika]
+  (let [;; Taulukon rivit mitkä näytetään kaikkiin taulukoihin
+        taulukko-rivit [(taulukko-rivi data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
+                        (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
+                        (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)]
+        ;; Rahavaraukset näytetään pelkästään näille taulukoille
+        rahavaraus-rivit (when (or
+                                 (= "Talvihoito" otsikko)
+                                 (= "Liikenneympäristön hoito" otsikko)
+                                 (= "Soratien hoito" otsikko))
+                           (map (fn [nimi hoitokausi val-aika]
+                                  (rivi
+                                    [:varillinen-teksti {:arvo (str nimi)
+                                                         :lihavoi? false}]
+                                    [:varillinen-teksti {:arvo (or hoitokausi (yhteiset/summa-fmt nil))
+                                                         :fmt :raha
+                                                         :lihavoi? false}]
+                                    (when kyseessa-kk-vali?
+                                      [:varillinen-teksti {:arvo (or val-aika (yhteiset/summa-fmt nil))
+                                                           :fmt :raha
+                                                           :lihavoi? false}])))
+                             rahavaraukset-nimet
+                             rahavaraukset-hoitokausi
+                             rahavaraukset-val-aika))
+        
+        ;; Yhteensä rivi näytetään myös kaikille taulukoille
+        yhteensa-rivi [(taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]]
+    
+    ;; Mergetä ja palauta rivit
+    (vec (concat taulukko-rivit rahavaraus-rivit yhteensa-rivi))))
+
+
 (defn- taulukko
   [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali? sheet-nimi]}]
-  (let [rivit (into []
+  (let [rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet data))
+        rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array data))
+        rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array data))
+        
+      
+        
+        rivit (into []
                 (remove nil?
                   (cond
                     (= "MHU ja HJU hoidon johto" otsikko)
@@ -103,20 +147,9 @@
                      (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
                      (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
-
+                    
                     :else
-                    [(taulukko-rivi data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
-                     (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
-                     (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
-
-                     ;; Jos ideoita miten molemmat rivit saadaan yhden whenin alle niin saa toimia
-                     (when (or (= "Talvihoito" otsikko) (= "Liikenneympäristön hoito" otsikko) (= "Soratien hoito" otsikko))
-                       (taulukko-rivi data kyseessa-kk-vali? "Äkilliset hoitotyöt" :akilliset_laskutettu :akilliset_laskutetaan false))
-
-                     (when (or (= "Talvihoito" otsikko) (= "Liikenneympäristön hoito" otsikko) (= "Soratien hoito" otsikko))
-                       (taulukko-rivi data kyseessa-kk-vali? "Vahinkojen korjaukset" :vahingot_laskutettu :vahingot_laskutetaan false))
-
-                     (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)])))]
+                    (rahavaraus-rivit data otsikko kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika))))]
 
     [:taulukko {:oikealle-tasattavat-kentat #{1 2}
                 :viimeinen-rivi-yhteenveto? false

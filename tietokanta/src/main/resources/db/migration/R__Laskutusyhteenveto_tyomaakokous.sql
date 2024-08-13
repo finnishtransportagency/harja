@@ -231,8 +231,6 @@ DECLARE
     -- Tulos 
     tulos                                 LY_RAPORTTI_TYOMAAKOKOUS_TULOS;
 
-
-
 BEGIN
 
     perusluku := indeksilaskennan_perusluku(ur);
@@ -796,9 +794,9 @@ BEGIN
     ------------------- Rahavaraukset -------------------------
     -----------------------------------------------------------
 
-
+    -- Sorttaa aakkosilla, nämä tulee tässä järjestyksessä käyttöliittymään asti
     FOR rahavaraus IN
-        SELECT id, nimi FROM rahavaraus
+        SELECT id, nimi FROM rahavaraus ORDER BY nimi
     LOOP
         -- Resetoi hoitokausi / laskutetaan 
         rv_val_aika_yht := 0;
