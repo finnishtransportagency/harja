@@ -479,7 +479,7 @@
                                         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
            hoitokauden-kuukaudet]]
          
-         [:div.filtteri {:style {:padding-top "21px"}}
+         [:div.filtteri {:style {:padding-top "25px"}}
           ^{:key "raporttixls"}
           [:form {:style {:margin-left "auto"}
                   :target "_blank" :method "POST"
@@ -491,15 +491,16 @@
                                                   :alkupvm haun-alkupvm
                                                   :loppupvm haun-loppupvm})}]
            [:button {:type "submit"
-                     :class "nappi-toissijainen"}
+                     :class "nappi-toissijainen nappi-korkeus-36"}
             [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]
          
-         [:div.filtteri {:style {:padding-top "21px"}}
+         [:div.filtteri {:style {:padding-top "25px"}}
           (if valikatselmus-tekematta?
             [napit/yleinen-ensisijainen
              "Tee välikatselmus"
-             #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))]
-            [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}])]]]
+             #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))
+             {:luokka "nappi-korkeus-36"}]
+            [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma nappi-korkeus-36" :ikoni (ikonit/harja-icon-action-show)}])]]]
 
        (if (:haku-kaynnissa? app)
          [:div {:style {:padding-left "20px"}} [yleiset/ajax-loader "Haetaan käynnissä"]]
