@@ -164,4 +164,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 DROP FUNCTION pisteen_rajoitusalue(piste POINT, threshold INTEGER, toteuma_id INTEGER);
-drop FUNCTION pisteen_pohjavesialue(piste POINT, threshold INTEGER);
+DROP FUNCTION pisteen_pohjavesialue(piste POINT, threshold INTEGER);
+
+-- TODO: Benchmarkkaa suorituskyky verrattuna vanhaan
