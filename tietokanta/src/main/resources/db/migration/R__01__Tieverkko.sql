@@ -55,7 +55,6 @@ $$ LANGUAGE plpgsql;
 -- Otetaan tällä huomioon myös se, että tien 2d-projektiosta katoaa tieto korkeuseroista.
 -- Käytännössä siis tie on pitempi, kuin sen kaksiuloinen projektio, joka tarkoittaa sitä että 2d-projektion metri on
 -- alle metri oikeassa elämässä.
-DROP FUNCTION IF EXISTS tr_osoitteelle_viiva3(tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER);
 CREATE OR REPLACE FUNCTION tieosoitteelle_viiva (
     tie_ INTEGER,
     aosa_ INTEGER, aet_ INTEGER,
