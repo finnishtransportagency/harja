@@ -421,7 +421,7 @@
      ;; Onko kulu lukittu
      (when kulu-lukittu? [:div.palstat [:div.palsta.punainen-teksti kulu-lukittu-teksti]])
 
-     [debug/debug lomake]
+     #_ [debug/debug lomake]
      (map-indexed
        (fn [index kohdistus]
          ^{:key (str "kohdistus-" index)}
