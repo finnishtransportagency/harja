@@ -46,7 +46,7 @@
                       (SELECT array_agg(row(t.tyyppi, t.kuvaus)) FROM tyomaapaivakirja_tapahtuma t WHERE t.tyomaapaivakirja_id = %s AND t.versio = %s) as tapahtumat,
                       (SELECT array_agg(row(tt.tyyppi, tt.aloitus, tt.lopetus)) FROM tyomaapaivakirja_tieston_toimenpide tt WHERE tt.tyomaapaivakirja_id = %s AND tt.versio = %s) as tieston_toimenpiteet,
                       (SELECT array_agg(row(t.aloitus, t.lopetus, t.nimi)) FROM tyomaapaivakirja_tyonjohtaja t WHERE t.tyomaapaivakirja_id = %s AND t.versio = %s) as tyonjohtajat,
-                      (SELECT array_agg(row(t.kuvaus, t.aika)) FROM tyomaapaivakirja_toimeksianto t WHERE t.tyomaapaivakirja_id = %s AND t.versio = %s) as toimeksiannot
+                      (SELECT array_agg(row(t.kuvaus, t.tuntimaara)) FROM tyomaapaivakirja_toimeksianto t WHERE t.tyomaapaivakirja_id = %s AND t.versio = %s) as toimeksiannot
                  FROM tyomaapaivakirja t WHERE t.id = %s" tid versio tid versio tid versio tid versio tid versio tid versio tid versio tid versio tid)))
         typa-db (-> typa-db
                   (update :kalustot
