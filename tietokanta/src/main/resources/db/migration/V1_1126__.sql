@@ -10,7 +10,7 @@ CREATE TYPE rajoitusalueen_osuus AS
     osuus        FLOAT
 );
 
-CREATE OR REPLACE FUNCTION lahin_piste_suolattavalla_tiella(piste point)
+CREATE FUNCTION lahin_piste_suolattavalla_tiella(piste point)
     RETURNS POINT AS
 $$
 BEGIN
@@ -26,7 +26,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION pistevalin_pohjavesialueet(piste1 point, piste2 point)
+CREATE FUNCTION pistevalin_pohjavesialueet(piste1 point, piste2 point)
     RETURNS SETOF pohjavesialueen_osuus AS
 $$
 DECLARE
@@ -64,7 +64,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION pistevalin_rajoitusalueet(piste1 point, piste2 point, urakka_id_ INTEGER)
+CREATE FUNCTION pistevalin_rajoitusalueet(piste1 point, piste2 point, urakka_id_ INTEGER)
     RETURNS SETOF rajoitusalueen_osuus AS
 $$
 DECLARE
@@ -102,9 +102,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- Otetaan triggerissä huomioon myös poistettava reittipiste.
--- Käytännössä toteuman_reittipisteet ei koskaan päivitetä, toteuman päivittyessä vanhat reittipisteet poistetaan
--- ja uudet luodaan tilalle.
 CREATE OR REPLACE FUNCTION toteuman_reittipisteet_trigger_fn() RETURNS TRIGGER AS
 $$
 DECLARE
@@ -120,12 +117,10 @@ BEGIN
     WHERE materiaalityyppi IN ('talvisuola', 'erityisalue', 'formiaatti')
     INTO suolamateriaalikoodit;
 
-    -- Muutos edelliseen versioon: Lisätty DELETE-operaation tarkistus
     IF (TG_OP = 'UPDATE' OR TG_OP = 'DELETE') THEN
         DELETE FROM suolatoteuma_reittipiste WHERE toteuma = OLD.toteuma;
     END IF;
 
-    -- Muutos edelliseen versioon: Lisätty DELETE-operaation tarkistus
     IF (TG_OP != 'DELETE') THEN
         FOREACH rp IN ARRAY NEW.reittipisteet
             LOOP
@@ -134,15 +129,13 @@ BEGIN
                         IF suolamateriaalikoodit @> ARRAY [m.materiaalikoodi] THEN
                             -- Muutos edelliseen versioon: suolatoteuma_reittipiste tauluun laitetaan kahden reittipisteen välinen toteuma,
                             -- josta lasketaan osuudet jotka osuvat pohjavesi- tai rajoitusalueille.
-
                             IF edellinen_rp IS DISTINCT FROM NULL THEN
                                 FOR pvo IN (SELECT tunnus, SUM(osuus)
                                             FROM pistevalin_pohjavesialueet(edellinen_rp.sijainti, rp.sijainti)
                                             GROUP BY tunnus)
                                     LOOP
                                         INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi,
-                                                                              maara,
-                                                                              pohjavesialue, rajoitusalue_id)
+                                                                              maara, pohjavesialue, rajoitusalue_id)
                                         VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,
                                                 m.maara * pvo.osuus, pvo.tunnus,
                                                 NULL);
@@ -154,8 +147,7 @@ BEGIN
                                            GROUP BY rajoitusalue)
                                     LOOP
                                         INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi,
-                                                                              maara,
-                                                                              pohjavesialue, rajoitusalue_id)
+                                                                              maara, pohjavesialue, rajoitusalue_id)
                                         VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,
                                                 m.maara * ra.osuus, NULL,
                                                 ra.rajoitusalue);
@@ -171,11 +163,5 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS toteuman_reittipisteet_trigger ON toteuman_reittipisteet;
-
--- Muutos aiempaan: Trigger laukeaa myös deletestä, ennen vain insertistä ja updatesta.
-CREATE TRIGGER toteuman_reittipisteet_trigger
-    AFTER INSERT OR UPDATE OR DELETE
-    ON toteuman_reittipisteet
-    FOR EACH ROW
-EXECUTE PROCEDURE toteuman_reittipisteet_trigger_fn();
+DROP FUNCTION pisteen_rajoitusalue(piste POINT, threshold INTEGER, toteuma_id INTEGER);
+drop FUNCTION pisteen_pohjavesialue(piste POINT, threshold INTEGER);
