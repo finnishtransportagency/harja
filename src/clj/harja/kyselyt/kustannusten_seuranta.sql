@@ -20,8 +20,11 @@ SELECT coalesce(SUM(kt.summa), 0)                     AS budjetoitu_summa,
        CASE
            WHEN kt.rahavaraus_id IS NULL THEN 'hankinta'
            WHEN kt.rahavaraus_id IS NOT NULL THEN 'rahavaraus'
-           END                                        AS toimenpideryhma,
-       COALESCE(tr.nimi, tk_tehtava.nimi )            AS tehtava_nimi,
+       END                                              AS toimenpideryhma,
+        CASE
+            WHEN kt.rahavaraus_id IS NOT NULL THEN r.nimi
+            ELSE COALESCE(tr.nimi, tk_tehtava.nimi )
+        END                                             AS tehtava_nimi,
        CASE
            WHEN (tk.koodi = '23104' AND kt.rahavaraus_id IS NULL) THEN 'Talvihoito'
            WHEN (tk.koodi = '23116' AND kt.rahavaraus_id IS NULL) THEN 'Liikenneympäristön hoito'
@@ -61,7 +64,7 @@ WHERE s.urakka = :urakka
     OR tk.koodi = '20191' -- mhu-yllapito
     OR tk.koodi = '14301' -- mhu-korvausinvestointi
     )
-GROUP BY paaryhma, toimenpide, toimenpideryhma, maksutyyppi, tk_tehtava.nimi, tk.koodi,
+GROUP BY paaryhma, toimenpide, toimenpideryhma, maksutyyppi, tehtava_nimi, tk.koodi,
          tk_tehtava.jarjestys, tr.nimi, kt.indeksikorjaus_vahvistettu, kt.rahavaraus_id, r.nimi
 UNION ALL
 -- Haetaan budjetoidut hankintakustannukset myös kiintehintainen_tyo taulusta

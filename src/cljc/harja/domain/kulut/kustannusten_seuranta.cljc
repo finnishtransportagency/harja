@@ -19,9 +19,6 @@
     "MHU Ylläpito" 5
     "MHU Korvausinvestointi" 6
     "MHU Hoidonjohto" 7
-    ;; TODO: Onkohan tämä hyvä. Tämä siis määrää, että missä järjestyksessä toisen portaan asiat on listattu
-    ;; ja rahavarauksien järjestys tulisi niiden id:n perusteella. Mutta haku ei palauta toimenpide_id:tä tai rahavaraus_id:tä
-
     8))
 
 (defn yhdista-totetuneet-ja-budjetoidut [toteutuneet budjetoidut]
@@ -33,8 +30,7 @@
        :budjetoitu_summa_indeksikorjattu (reduce + (map :budjetoitu_summa_indeksikorjattu arvot))
        :toteutunut (:toteutunut (first arvot))
        :tehtava_nimi (:tehtava_nimi (first arvot))
-       :toimenpideryhma "rahavaraus" #_ (:toimenpideryhma (first arvot))
-
+       :toimenpideryhma (:toimenpideryhma (first arvot))
        :maksutyyppi (:maksutyyppi (first arvot))
        :jarjestys (:jarjestys (first arvot))
        :paaryhma (:paaryhma (first arvot))})
@@ -65,17 +61,6 @@
                                              (not= "lisatyo" (:maksutyyppi tehtava)))
                                        tehtava))
                                    toimenpiteen-tehtavat)
-            budjetoidut-tehtavat (filter
-                                   (fn [tehtava]
-                                     (when (and
-                                             (not= "hjh" (:toteutunut tehtava))
-                                             (not= "toteutunut" (:toteutunut tehtava))
-                                             (not= "lisatyo" (:maksutyyppi tehtava)))
-                                       tehtava))
-                                   toimenpiteen-tehtavat)
-            yhdistetyt-tehtavat (if (= paaryhmaotsikko "rahavaraukset")
-                                  (yhdista-totetuneet-ja-budjetoidut toteutuneet-tehtavat budjetoidut-tehtavat)
-                                  toteutuneet-tehtavat)
             jarjestys (some #(:jarjestys %) toimenpiteen-tehtavat)]
         {:paaryhma paaryhmaotsikko
          :toimenpide (first toimenpide)
@@ -89,7 +74,7 @@
          :toimenpide-budjetoitu-summa-indeksikorjattu (reduce (fn [summa tehtava]
                                                                 (+ summa (or (:budjetoitu_summa_indeksikorjattu tehtava) 0)))
                                                         0 toimenpiteen-tehtavat)
-         :tehtavat (sort-by :jarjestys yhdistetyt-tehtavat)
+         :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)
          ;; Asetetaan vahvistus-status nulliksi, jos yhtään toteumaa tai budjettia ei ole annettu.
          ;; Päätellään myöhemmin, että näytetäänkö nämä vahvistettuina tai vahvistamattomina
          (keyword (str paaryhmaotsikko "-indeksikorjaus-vahvistettu"))
