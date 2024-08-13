@@ -739,9 +739,10 @@
        :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
                   "Tiemerkintää ei ole merkitty aloitetuksi."]
                  [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-alku
-                  "Valmistuminen ei voi olla ennen aloitusta."]
-                 [:ei-tyhja-jos-toinen-arvo-annettu :aikataulu-tiemerkinta-alku
-                  "Anna tiemerkinnän valmistumisen aika tai aika-arvio."]]}
+                  "Valmistuminen ei voi olla ennen aloitusta."]]
+                 ;; Tiemerkinnän lopetus-pvm pakollisuus poistettu 2024. Merkintä on tehtävä, kun työ on valmis, mutta ei tarvitse ennustaa etukäteen.
+                 ;; Jos pakollisuus halutaan takaisin, käytä: :ei-tyhja-jos-toinen-arvo-annettu
+       }
       (when (= (:nakyma optiot) :paallystys)
         {:otsikko "Koh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
          :otsikkorivi-luokka "paallystys-tausta-tumma"
@@ -776,10 +777,10 @@
                     saa-merkita-valmiiksi?]} (oikeudet urakka-id)
 
             voi-muokata-paallystys? #(boolean (and (= (:nakyma optiot) :paallystys)
-                                                   saa-muokata?))
+                                                saa-muokata?))
             voi-muokata-tiemerkinta? (fn [rivi] (boolean (and (= (:nakyma optiot) :tiemerkinta)
-                                                              saa-merkita-valmiiksi?
-                                                              (:valmis-tiemerkintaan rivi))))
+                                                           saa-merkita-valmiiksi?
+                                                           (:valmis-tiemerkintaan rivi))))
             aikajana? (:nayta-aikajana? @tiedot/valinnat)
             paallystys? (= (:nakyma optiot) :paallystys)]
         [:div.aikataulu
