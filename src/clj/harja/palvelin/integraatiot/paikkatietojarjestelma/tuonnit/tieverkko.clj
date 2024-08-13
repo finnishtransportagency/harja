@@ -212,9 +212,8 @@
             (apply max acc)
             0)
           (let [seuraava (first loput)
-                patkan-loppu (.getEndPoint patka)
-                seuraavan-alku (.getStartPoint seuraava)]
-            (recur (first loput) (rest loput) (conj acc (.distance patkan-loppu seuraavan-alku)))))))))
+                patkan-loppu (viimeinen-piste patka)]
+            (recur (first loput) (rest loput) (conj acc (etaisyys-viivan-alkuun patkan-loppu seuraava)))))))))
 
 (defn- keraa-geometriat
   "Yhdistää 1-ajorataisen (ajr0) ja 2-ajorataisen halutun suunnan mukaisen osan
