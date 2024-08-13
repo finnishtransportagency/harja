@@ -350,7 +350,7 @@
                                                          :tyomaapaivakirja_id tyomaapaivakirja-id
                                                          :urakka_id urakka-id
                                                          :kuvaus (:kuvaus (:viranomaisen-avustus v))
-                                                         :aika (:tunnit (:viranomaisen-avustus v))}))))
+                                                         :tuntimaara (:tunnit (:viranomaisen-avustus v))}))))
 
 (defn tallenna-tyomaapaivakirja [db urakka-id data kayttaja tyomaapaivakirja-id]
   (let [_ (log/debug "tallenna-tyomaapaivakirja :: data" (pr-str data))
