@@ -130,6 +130,32 @@
                     ls0
                     (rest ls1))
 
+             ;; Sallitaan maksimissaan 100 metrin hyppy pätkiä yhdistellessä.
+             ;; Tällaiset voi aiheutua esimerkiksi liikenneympyröistä tai risteyksistä.
+             ;; Ilman tätä saatetaan mennä fallbackia käyttämällä liian pitkälle, ja joudutaan myöhemmin
+             ;; lisäämään pätkä, joka on jäänyt taakse, mikä sekoittaa ajoradan geometrian täysin.
+             (or
+               (and seuraava-ls0 loppupiste (< (etaisyys-viivan-alkuun loppupiste seuraava-ls0) 100))
+               (and seuraava-ls1 loppupiste (< (etaisyys-viivan-alkuun loppupiste seuraava-ls1) 100)))
+
+             (let [et0 (etaisyys-viivan-alkuun loppupiste seuraava-ls0)
+                   et1 (etaisyys-viivan-alkuun loppupiste seuraava-ls1)]
+               (cond
+                 (or (and et0 et1 (< et0 et1))
+                       (and et0 (nil? et1)))
+                 (recur (conj result seuraava-ls0)
+                   (viimeinen-piste seuraava-ls0)
+                   (rest ls0)
+                   ls1)
+
+                 (or (and et0 et1 (< et1 et0))
+                   (and et1 (nil? et0)))
+                 (recur (conj result seuraava-ls1)
+                   (viimeinen-piste seuraava-ls1)
+                   ls0
+                   (rest ls1))
+                 :else nil))
+
              ;; Last ditch effort: kutsutaan fallbackia etsimään
              ;; jatkopala joko seuraavaan ls0 tai ls1 pätkään.
              ;; fallback on funktio joka ottaa nykyisen loppupisteen
@@ -175,6 +201,20 @@
 
                  :default nil)))))))))
 
+(defn- multilinestring-pisin-hyppy [geom]
+  (when geom
+    (let [patkat (line-string-seq geom)]
+      (loop [patka (first patkat)
+             loput (rest patkat)
+             acc []]
+        (if (empty? loput)
+          (if (seq acc)
+            (apply max acc)
+            0)
+          (let [seuraava (first loput)
+                patkan-loppu (viimeinen-piste patka)]
+            (recur (first loput) (rest loput) (conj acc (etaisyys-viivan-alkuun patkan-loppu seuraava)))))))))
+
 (defn- keraa-geometriat
   "Yhdistää 1-ajorataisen (ajr0) ja 2-ajorataisen halutun suunnan mukaisen osan
   viivat yhdeksi viivaksi. Osasta ei tiedetä kummalla ajoradalle se alkaa, mutta
@@ -193,8 +233,17 @@
 
     ;; Muuten yhdistetään viivat molemmin päin
     :default
-    (or (yhdista-viivat g0 g1 fallback ota-lahin?)
-        (yhdista-viivat g1 g0 fallback ota-lahin?))))
+    (let [eka (yhdista-viivat g0 g1 fallback ota-lahin?)
+          toka (yhdista-viivat g1 g0 fallback ota-lahin?)]
+      (if (and eka toka)
+        ;; Jos molempiin suuntiin saadaan tehtyä viiva, katsotaan kumman viivoihin tulee suurempi hyppy
+        ;; Suuri hyppy viittaa siihen, että viiva on saatu luotua, mutta ne on väärässä järjestyksessä.
+        (let [eka-pisin-hyppy (multilinestring-pisin-hyppy eka)
+              toka-pisin-hyppy (multilinestring-pisin-hyppy toka)]
+          (if (< eka-pisin-hyppy toka-pisin-hyppy)
+            eka
+            toka))
+        (or eka toka)))))
 
 (defn- alkaen-pisteesta
   "Palauttaa LineString, joka alkaa annetusta [x y] pisteestä. Jos input
