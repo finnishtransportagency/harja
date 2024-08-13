@@ -993,8 +993,10 @@
                                       kuukausi-indeksisumma (round2 2 (/ indeksisumma kuukausimaara))
                                       viimeinen-indeksisumma (round2 2 (- indeksisumma (* (dec kuukausimaara) kuukausi-indeksisumma)))]]
                           (update! db ::bs/kustannusarvioitu-tyo
-                            {::bs/summa (if (< @kk kuukausimaara) kuukausisumma viimeinen-kuukausisumma)
-                             ::bs/summa-indeksikorjattu (if (< @kk kuukausimaara) kuukausi-indeksisumma viimeinen-indeksisumma)
+                            ;; Jos muokattavia kuukausia on 9 tai enemmän, niin laitetaan viimeinen mahdollisesti suurempi
+                            ;; summa syyskuulle, eli hoitokauden viimeiselle kuukaudelle
+                            {::bs/summa (if (and (>= kuukausimaara 9) (= @kk 9)) viimeinen-kuukausisumma kuukausisumma)
+                             ::bs/summa-indeksikorjattu (if (and (>= kuukausimaara 9) (= @kk 9)) viimeinen-indeksisumma kuukausi-indeksisumma)
                              ::bs/muokattu (pvm/nyt)
                              ::bs/muokkaaja (:id user)}
                             {::bs/id (:id r)})))
@@ -1004,10 +1006,10 @@
                                     kuukausi-indeksisumma (round2 2 (/ indeksisumma 12))
                                     viimeinen-indeksisumma (round2 2 (- indeksisumma (* 11 kuukausi-indeksisumma)))]]
                         (insert! db ::bs/kustannusarvioitu-tyo
-                          {::bs/summa (if (= kk 9) viimeinen-kuukausisumma kuukausisumma)
-                           ::bs/summa-indeksikorjattu (if (< kk 12) kuukausi-indeksisumma viimeinen-indeksisumma)
+                          {::bs/summa (if (= kk 9) viimeinen-kuukausisumma kuukausisumma) ;; Mahdollinen suurin summa hoitokauden viimeiselle kuukaudelle
+                           ::bs/summa-indeksikorjattu (if (= kk 9) viimeinen-indeksisumma kuukausi-indeksisumma)
                            ::bs/rahavaraus_id rahavaraus-id
-                           ::bs/smallint-v (if (>= kk 10) vuosi (inc vuosi))
+                           ::bs/smallint-v (if (>= 10 kk) vuosi (inc vuosi))
                            ::bs/smallint-kk kk
                            ::bs/sopimus sopimus-id
                            ::bs/tyyppi :laskutettava-tyo
