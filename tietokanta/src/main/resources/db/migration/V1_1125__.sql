@@ -10,7 +10,7 @@ CREATE TYPE rajoitusalueen_osuus AS
     osuus        FLOAT
 );
 
-CREATE FUNCTION lahin_piste_suolattavalla_tiella(piste point)
+CREATE OR REPLACE FUNCTION lahin_piste_suolattavalla_tiella(piste point)
     RETURNS POINT AS
 $$
 BEGIN
@@ -90,6 +90,7 @@ BEGIN
         WHERE (rajoitusalue.tierekisteriosoite).tie = tieosoitevali.tie
           AND st_dwithin(tieosoitevali.geometria, rajoitusalue.sijainti, 1)
           AND rajoitusalue.urakka_id = urakka_id_
+          AND rajoitusalue.poistettu = FALSE
         LOOP
             SELECT st_length(st_intersection(st_buffer(ra.sijainti, 1, 'endcap=flat'), tieosoitevali.geometria)) /
                    st_length(tieosoitevali.geometria)
