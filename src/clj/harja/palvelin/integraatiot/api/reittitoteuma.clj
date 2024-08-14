@@ -16,7 +16,7 @@
             [harja.kyselyt.tieverkko :as tieverkko]
             [harja.kyselyt.sopimukset :as sopimukset-q]
             [harja.kyselyt.konversio :as konversio]
-            [harja.kyselyt.urakan-toimenpiteet :as urakan-toimenpiteet-q]
+            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit-q]
             [clojure.java.jdbc :as jdbc]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -33,6 +33,10 @@
        :doc "Etäisyys, jota lähempänä toisiaan olevat reittipisteet yhdistetään linnuntietä,
 jos niille ei löydy yhteistä tietä tieverkolta."}
 maksimi-linnuntien-etaisyys 200)
+
+(def ^{:const true
+       :doc "Toteuman oletusnopeusrajoitus, jos tehtäviä ei ole. Tehtäville määritellään kannassa nopeusrajoitus. Perustuu aiemmin kovakoodattuun arvoon."}
+  toteuma-oletusnopeusrajoitus 108)
 
 (defn yhdista-viivat [viivat]
   (if-not (empty? viivat)
@@ -74,7 +78,7 @@ maksimi-linnuntien-etaisyys 200)
 
 (defn hae-reitti
   ([db pisteet] (hae-reitti db maksimi-linnuntien-etaisyys pisteet))
-  ([db maksimi-etaisyys pisteet] (hae-reitti db maksimi-etaisyys 108 pisteet))
+  ([db maksimi-etaisyys pisteet] (hae-reitti db maksimi-etaisyys toteuma-oletusnopeusrajoitus pisteet))
   ([db maksimi-etaisyys nopeusrajoitus pisteet]
    (as-> pisteet p
          (map (fn [[x y aika]]
@@ -153,9 +157,12 @@ maksimi-linnuntien-etaisyys 200)
                   ;; Reitti liitetään lopuksi
                   :reitti nil)
         ;; Käytetään tehtävien nopeusrajoituksista pienintä geometrian muodostukseen
-        nopeusrajoitus (apply min
-                         (map #(urakan-toimenpiteet-q/hae-tehtavan-nopeusrajoitus db (get-in % [:tehtava :id]))
-                           (:tehtavat toteuma)))
+        tehtavat (:tehtavat toteuma)
+        nopeusrajoitus (if (empty? tehtavat)
+                         toteuma-oletusnopeusrajoitus
+                         (apply min
+                           (map #(toimenpidekoodit-q/hae-tehtavan-nopeusrajoitus db (get-in % [:tehtava :id]))
+                             (:tehtavat toteuma))))
         toteuman-reitti (async/thread (luo-reitti-geometria db-replica reitti nopeusrajoitus))]
     (jdbc/with-db-transaction [db db]
       (let [toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone)
