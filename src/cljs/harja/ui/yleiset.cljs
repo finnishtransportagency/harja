@@ -309,7 +309,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                          (valitse-fn (nth vaihtoehdot (inc nykyinen-valittu-idx))))
 
                                        13                   ;; enter
-                                       (reset! auki? false)))))
+                                       (reset! auki? (not @auki?))))))
 
                                (do                          ;; Valitaan inputtia vastaava vaihtoehto
                                  (reset! term (char kc))
