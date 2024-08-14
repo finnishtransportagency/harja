@@ -1004,12 +1004,13 @@
                               :let [kuukausisumma (round2 2 (/ summa 12))
                                     viimeinen-kuukausisumma (round2 2 (- summa (* 11 kuukausisumma)))
                                     kuukausi-indeksisumma (round2 2 (/ indeksisumma 12))
-                                    viimeinen-indeksisumma (round2 2 (- indeksisumma (* 11 kuukausi-indeksisumma)))]]
+                                    viimeinen-indeksisumma (round2 2 (- indeksisumma (* 11 kuukausi-indeksisumma)))
+                                    db-vuosi (if (>= kk 10 ) vuosi (inc vuosi))]]
                         (insert! db ::bs/kustannusarvioitu-tyo
                           {::bs/summa (if (= kk 9) viimeinen-kuukausisumma kuukausisumma) ;; Mahdollinen suurin summa hoitokauden viimeiselle kuukaudelle
                            ::bs/summa-indeksikorjattu (if (= kk 9) viimeinen-indeksisumma kuukausi-indeksisumma)
                            ::bs/rahavaraus_id rahavaraus-id
-                           ::bs/smallint-v (if (>= 10 kk) vuosi (inc vuosi))
+                           ::bs/smallint-v db-vuosi
                            ::bs/smallint-kk kk
                            ::bs/sopimus sopimus-id
                            ::bs/tyyppi :laskutettava-tyo
