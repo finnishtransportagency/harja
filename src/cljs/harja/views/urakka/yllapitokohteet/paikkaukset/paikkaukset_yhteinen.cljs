@@ -53,7 +53,7 @@
          :arvo-atom nayta-atom
          :tyylit {:width "fit-content"}}]
        [kentat/tee-otsikollinen-kentta
-        {:otsikko "Toteuman tierekisteriosoite"
+        {:otsikko "Toteuman tieosoite"
          :luokka ""
          :otsikon-luokka "alasvedon-otsikko-vayla"
          :kentta-params {:tyyppi :tierekisteriosoite

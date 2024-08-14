@@ -255,14 +255,14 @@
     (julkaise-reitti
       http :hae-ilmoitukset-ytunnuksella
       (GET "/api/ilmoitukset/:ytunnus/:alkuaika/:loppuaika" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
+        (kasittele-kevyesti-get-kutsu db integraatioloki "api" :hae-ilmoitukset-ytunnuksella request
           (fn [parametrit kayttaja db]
             (hae-ilmoitukset-ytunnuksella db parametrit kayttaja))
           :luku)))
     (julkaise-reitti
       http :hae-ilmoitukset-ytunnuksella
       (GET "/api/ilmoitukset/:ytunnus/:alkuaika" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
+        (kasittele-kevyesti-get-kutsu db integraatioloki "api" :hae-ilmoitukset-ytunnuksella request
           (fn [parametrit kayttaja db]
             (hae-ilmoitukset-ytunnuksella db parametrit kayttaja))
           :luku)))

@@ -1,67 +1,3 @@
-DELETE
-FROM pot2_paallystekerros
-WHERE pot2_id IN (SELECT id
-                  FROM paallystysilmoitus
-                  WHERE paallystyskohde IN (SELECT id
-                                            FROM yllapitokohde
-                                            WHERE urakka = (SELECT id FROM urakka WHERE sampoid = '5731289-TES2')));
-DELETE
-FROM yllapitokohdeosa
-WHERE yllapitokohde IN
-      (SELECT id FROM yllapitokohde WHERE urakka = (SELECT id FROM urakka WHERE sampoid = '5731289-TES2'));
-DELETE
-FROM yllapitokohteen_aikataulu
-WHERE yllapitokohde IN
-      (SELECT id FROM yllapitokohde WHERE urakka = (SELECT id FROM urakka WHERE sampoid = '5731289-TES2'));
-DELETE
-FROM pot2_alusta
-WHERE pot2_id IN (SELECT id
-                  FROM paallystysilmoitus
-                  WHERE paallystyskohde IN (SELECT id
-                                            FROM yllapitokohde
-                                            WHERE urakka = (SELECT id FROM urakka WHERE sampoid = '5731289-TES2')));
-DELETE
-FROM paallystysilmoitus
-WHERE paallystyskohde IN
-      (SELECT id FROM yllapitokohde WHERE urakka = (SELECT id FROM urakka WHERE sampoid = '5731289-TES2'));
-DELETE
-FROM pot2_mk_massan_runkoaine
-WHERE pot2_massa_id =
-      (SELECT id FROM pot2_mk_urakan_massa WHERE urakka_id = (SELECT id FROM urakka WHERE sampoid = '5731289-TES2'));
-DELETE
-FROM pot2_mk_massan_sideaine
-WHERE pot2_massa_id =
-      (SELECT id FROM pot2_mk_urakan_massa WHERE urakka_id = (SELECT id FROM urakka WHERE sampoid = '5731289-TES2'));
-DELETE
-FROM pot2_mk_massan_lisaaine
-WHERE pot2_massa_id =
-      (SELECT id FROM pot2_mk_urakan_massa WHERE urakka_id = (SELECT id FROM urakka WHERE sampoid = '5731289-TES2'));
-DELETE
-FROM pot2_mk_urakan_massa
-WHERE urakka_id = (SELECT id FROM urakka WHERE sampoid = '5731289-TES2');
-DELETE
-FROM paikkaus
-WHERE "urakka-id" = (SELECT id FROM urakka WHERE sampoid = '5731289-TES2');
-DELETE
-FROM paikkauskohde
-WHERE "urakka-id" = (SELECT id FROM urakka WHERE sampoid = '5731289-TES2');
-DELETE
-FROM yllapitokohteen_kustannukset
-WHERE yllapitokohde IN
-      (SELECT id FROM yllapitokohde WHERE urakka = (SELECT id FROM urakka WHERE sampoid = '5731289-TES2'));
-DELETE
-FROM yllapitokohde
-WHERE urakka = (SELECT id FROM urakka WHERE sampoid = '5731289-TES2');
-DELETE
-FROM sopimus
-WHERE sampoid = '5731289-TES2';
-DELETE
-FROM yhatiedot
-WHERE urakka IN (SELECT id FROM urakka WHERE sampoid = '5731289-TES2');
-DELETE
-FROM urakka
-WHERE sampoid = '5731289-TES2';
-
 WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, loppupvm,
                                     tyyppi, urakkanro, urakoitsija)
     VALUES ('5731289-TES2', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
@@ -143,15 +79,22 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                           20   AS tr_alkuosa,
                           0    AS tr_alkuetaisyys,
                           20   AS tr_loppuosa,
-                          650  AS tr_loppuetaisyys,
+                          300  AS tr_loppuetaisyys,
                           1235 AS id
+                   UNION ALL
+                   SELECT 86   AS tr_numero,
+                          20   AS tr_alkuosa,
+                          300  AS tr_alkuetaisyys,
+                          20   AS tr_loppuosa,
+                          650  AS tr_loppuetaisyys,
+                          1236 AS id
                    UNION ALL
                    SELECT 86   AS tr_numero,
                           20   AS tr_alkuosa,
                           650  AS tr_alkuetaisyys,
                           20   AS tr_loppuosa,
                           1300 AS tr_loppuetaisyys,
-                          1236 AS id) AS alikohde RETURNING *),
+                          1237 AS id) AS alikohde RETURNING *),
      aikataulu AS (
          INSERT INTO yllapitokohteen_aikataulu (yllapitokohde, kohde_alku, paallystys_alku, paallystys_loppu,
                                                 valmis_tiemerkintaan, tiemerkinta_takaraja, tiemerkinta_alku,
@@ -206,6 +149,17 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     '7-23-1',
                     '2022-07-15T12:00:00.000'
              FROM urakka RETURNING id),
+     massa2 AS (
+         INSERT INTO pot2_mk_urakan_massa (urakka_id, tyyppi, nimen_tarkenne, max_raekoko, kuulamyllyluokka, dop_nro,
+                                           muokattu)
+             SELECT urakka.id,
+                    (SELECT koodi FROM pot2_mk_massatyyppi WHERE nimi = 'SMA, Kivimastiksiasfaltti'),
+                    'RAAHE',
+                    16,
+                    'AN7',
+                    '1234563-1',
+                    '2022-07-15T12:00:00.000'
+             FROM urakka RETURNING id),
      runkoaine AS (
          INSERT INTO pot2_mk_massan_runkoaine (pot2_massa_id, tyyppi, esiintyma, fillerityyppi, kuvaus, kuulamyllyarvo,
                                                litteysluku, massaprosentti)
@@ -228,19 +182,64 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     NULL,
                     1
              FROM massa),
+     runkoaine2 AS (
+         INSERT INTO pot2_mk_massan_runkoaine (pot2_massa_id, tyyppi, esiintyma, fillerityyppi, kuvaus, kuulamyllyarvo,
+                                               litteysluku, massaprosentti)
+             SELECT massa2.id,
+                    (SELECT koodi FROM pot2_mk_runkoainetyyppi WHERE nimi = 'Kiviaines'),
+                    'Alpua',
+                    NULL::fillerityyppi,
+                    NULL,
+                    10,
+                    20,
+                    85
+             FROM massa2
+             UNION ALL
+             SELECT massa2.id,
+                    (SELECT koodi FROM pot2_mk_runkoainetyyppi WHERE nimi = 'Asfalttirouhe'),
+                    'Alpua',
+                    NULL::fillerityyppi,
+                    NULL,
+                    10,
+                    20,
+                    10
+             FROM massa2
+             UNION ALL
+             SELECT massa2.id,
+                    (SELECT koodi FROM pot2_mk_runkoainetyyppi WHERE lyhenne = 'Filleri'),
+                    NULL,
+                    'Kalkkifilleri (KF)'::fillerityyppi,
+                    NULL,
+                    NULL,
+                    NULL,
+                    5
+             FROM massa2
+     ),
      sideaine AS (
          INSERT INTO pot2_mk_massan_sideaine (pot2_massa_id, "lopputuote?", tyyppi, pitoisuus)
              SELECT massa.id,
                     TRUE,
                     (SELECT koodi FROM pot2_mk_sideainetyyppi WHERE nimi = 'Bitumi, 20/30'),
                     5.5
-             FROM massa),
+             FROM massa
+            union all
+             SELECT massa2.id,
+                    TRUE,
+                    (SELECT koodi FROM pot2_mk_sideainetyyppi WHERE nimi = 'Bitumi, 20/30'),
+                    5.5
+             FROM massa2),
      lisaaine AS (
          INSERT INTO pot2_mk_massan_lisaaine (pot2_massa_id, tyyppi, pitoisuus)
              SELECT massa.id,
                     (SELECT koodi FROM pot2_mk_lisaainetyyppi WHERE nimi = 'Kuitu'),
                     0.5
-             FROM massa),
+             FROM massa
+                union all
+             SELECT massa2.id,
+                    (SELECT koodi FROM pot2_mk_lisaainetyyppi WHERE nimi = 'Kuitu'),
+                    0.5
+             FROM massa2
+                ),
      alusta AS (
          INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys, tr_loppuosa, tr_ajorata,
                                   tr_kaista, toimenpide, pot2_id, massamenekki, massa)
@@ -259,12 +258,12 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                   paallystysilmoitus,
                   massa
              RETURNING *),
-     kulutuskerros AS (
+     kulutuskerros_mp AS (
          INSERT INTO pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, pinta_ala, kokonaismassamaara,
                                            piennar, pot2_id, massamenekki)
              SELECT alikohde.id,
                     (SELECT koodi FROM pot2_mk_paallystekerros_toimenpide WHERE lyhenne = 'MP'),
-                    massa.id,
+                    massa2.id,
                     4,
                     2600,
                     260,
@@ -272,8 +271,43 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     paallystysilmoitus.id,
                     100
              FROM alikohde,
-                  massa,
-                  paallystysilmoitus RETURNING *),
+                  massa2,
+                  paallystysilmoitus
+             WHERE tr_alkuetaisyys = 0
+             RETURNING *),
+     kulutuskerros_rem AS (
+         INSERT INTO pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, pinta_ala, kokonaismassamaara,
+                                           piennar, pot2_id, massamenekki)
+             SELECT alikohde.id,
+                    (SELECT koodi FROM pot2_mk_paallystekerros_toimenpide WHERE lyhenne = 'REM'),
+                    massa.id,
+                    4,
+                    1400,
+                    28,
+                    FALSE,
+                    paallystysilmoitus.id,
+                    20
+             FROM alikohde,
+                  paallystysilmoitus,
+                  massa
+             WHERE tr_alkuetaisyys = 300
+             RETURNING *),
+     kulutuskerros_kar AS (
+         INSERT INTO pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, pinta_ala, kokonaismassamaara,
+                                           piennar, pot2_id, massamenekki)
+             SELECT alikohde.id,
+                    (SELECT koodi FROM pot2_mk_paallystekerros_toimenpide WHERE lyhenne = 'KAR'),
+                    NULL,
+                    4,
+                    1200,
+                    120,
+                    FALSE,
+                    paallystysilmoitus.id,
+                    100
+             FROM alikohde,
+                  paallystysilmoitus
+             WHERE tr_alkuetaisyys = 650
+             RETURNING *),
      yllapitokohde2 AS (
          INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
                                     tr_loppuosa, tr_loppuetaisyys, yllapitokohdetyotyyppi,
@@ -437,35 +471,33 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                         115
                  FROM alikohde2,
                       massa,
-                      paallystysilmoitus2 RETURNING *),
-     paikkaus AS (
-         INSERT INTO paikkaus (luotu, muokattu, "urakka-id", "paikkauskohde-id", "ulkoinen-id", alkuaika, loppuaika,
-                               tierekisteriosoite, tyomenetelma,
-                               massatyyppi, leveys, raekoko, kuulamylly, sijainti, massamaara, "pinta-ala", lahde,
-                               massamenekki)
-             SELECT '2023-11-01T12:00:00'::DATE,
-                    '2023-11-02T13:00:00'::TIMESTAMP,
-                    urakka.id,
-                    paikkauskohteet.id,
-                    0,
-                    '2023-11-02T12:00:00'::TIMESTAMP,
-                    '2023-11-02T13:00:00'::TIMESTAMP,
-                    (86, 20, 700, 20, 800, NULL)::tr_osoite,
-                    paikkauskohteet.tyomenetelma,
-                    'AB, Asfalttibetoni',
-                    1.4,
-                    16,
-                    'AN14',
-                    (SELECT tierekisteriosoitteelle_viiva(86, 20, 700, 20, 800)),
-                    6.3,
-                    140,
-                    'harja-ui',
-                    45
-             FROM urakka,
-                  paikkauskohteet
-             WHERE paikkauskohteet."pot?" = FALSE)
-SELECT *
-FROM kulutuskerros;
+                      paallystysilmoitus2 RETURNING *)
+INSERT
+INTO paikkaus (luotu, muokattu, "urakka-id", "paikkauskohde-id", "ulkoinen-id", alkuaika, loppuaika,
+               tierekisteriosoite, tyomenetelma,
+               massatyyppi, leveys, raekoko, kuulamylly, sijainti, massamaara, "pinta-ala", lahde,
+               massamenekki)
+SELECT '2023-11-01T12:00:00'::DATE,
+       '2023-11-02T13:00:00'::TIMESTAMP,
+       urakka.id,
+       paikkauskohteet.id,
+       0,
+       '2023-11-02T12:00:00'::TIMESTAMP,
+       '2023-11-02T13:00:00'::TIMESTAMP,
+       (86, 20, 700, 20, 800, NULL)::tr_osoite,
+       paikkauskohteet.tyomenetelma,
+       'AB, Asfalttibetoni',
+       1.4,
+       16,
+       'AN14',
+       (SELECT tierekisteriosoitteelle_viiva(86, 20, 700, 20, 800)),
+       6.3,
+       140,
+       'harja-ui',
+       45
+FROM urakka,
+     paikkauskohteet
+WHERE paikkauskohteet."pot?" = FALSE;
 
 -- Hoitourakan tekemiä paikkauksia
 WITH urakka AS (SELECT id
@@ -481,23 +513,21 @@ WITH urakka AS (SELECT id
                     '2023-11-01T12:00:00.000',
                     FALSE,
                     'lokakuu/1-hoitovuosi'
-             FROM urakka RETURNING id),
-     kulu_kohdistus AS (
-         INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi,
-                                     suoritus_alku, suoritus_loppu, luotu, muokattu)
-             SELECT 0,
-                    kulu.id,
-                    1000,
-                    (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Raahen MHU 2023-2028 Päällystepaikkaukset TP'),
-                    (SELECT id FROM tehtavaryhma WHERE nimi = 'Kuumapäällyste (Y1)'),
-                    'kokonaishintainen'::maksueratyyppi,
-                    '2023-11-01T12:00:00.000',
-                    '2023-11-01T13:00:00.000',
-                    '2023-11-01T14:00:00.000',
-                    '2023-11-01T14:00:00.000'
-             FROM kulu
-             RETURNING *)
-    SELECT * FROM kulu_kohdistus;
+             FROM urakka RETURNING id)
+INSERT
+INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi,
+                     suoritus_alku, suoritus_loppu, luotu, muokattu)
+SELECT 0,
+       kulu.id,
+       1000,
+       (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Raahen MHU 2023-2028 Päällystepaikkaukset TP'),
+       (SELECT id FROM tehtavaryhma WHERE nimi = 'Kuumapäällyste (Y1)'),
+       'kokonaishintainen'::maksueratyyppi,
+       '2023-11-01T12:00:00.000',
+       '2023-11-01T13:00:00.000',
+       '2023-11-01T14:00:00.000',
+       '2023-11-01T14:00:00.000'
+FROM kulu;
 
 WITH urakka AS (SELECT id
                 FROM urakka
@@ -534,5 +564,3 @@ SELECT (SELECT id FROM toteuma WHERE urakka = 42 AND luotu = '2023-11-01T13:00:0
        TRUE,
        urakka.id
 FROM urakka;
-
-SELECT * FROM yllapitokohde

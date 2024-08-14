@@ -1,43 +1,41 @@
 {
   "tehtavaryhmat": [
     {
-      "tehtavaryhma": {
-        "id": 123,
-        "nimi": "Tehtavaryhmä (A)",
-        "toimenpidekoodi": 211120,
-        "voimassaolo": {
-          "alkuvuosi": 2020,
-          "loppuvuosi": 2023
-        },
-        "luotu": "2012-01-01T12:00:00Z",
-        "poistettu": false
+      "id": 123,
+      "nimi": "Tehtavaryhmä (A)",
+      "toimenpidekoodi": 211120,
+      "voimassaolo": {
+        "alkuvuosi": 2020,
+        "loppuvuosi": 2023
       },
-      "tehtavaryhma": {
-        "id": 124,
-        "nimi": "Tehtavaryhmä (B)",
-        "toimenpidekoodi": 211120,
-        "luotu": "2012-01-01T12:00:00Z",
-        "muokattu": "2022-01-01T12:00:00Z",
-        "poistettu": false
+      "luotu": "2012-01-01T12:00:00Z",
+      "poistettu": false
+    },
+    {
+      "id": 124,
+      "nimi": "Tehtavaryhmä (B)",
+      "toimenpidekoodi": 211120,
+      "luotu": "2012-01-01T12:00:00Z",
+      "muokattu": "2022-01-01T12:00:00Z",
+      "poistettu": false
+    },
+    {
+      "id": 125,
+      "nimi": "Tehtavaryhmä (C)",
+      "toimenpidekoodi": 211120,
+      "voimassaolo": {
+        "alkuvuosi": 2020
       },
-      "tehtavaryhma": {
-        "id": 125,
-        "nimi": "Tehtavaryhmä (C)",
-        "toimenpidekoodi": 211120,
-        "voimassaolo": {
-          "alkuvuosi": 2020
-        },
-        "poistettu": false
+      "poistettu": false
+    },
+    {
+      "id": 126,
+      "nimi": "Tehtavaryhmä (D)",
+      "toimenpidekoodi": 123400,
+      "voimassaolo": {
+        "loppuvuosi": 2023
       },
-      "tehtavaryhma": {
-        "id": 126,
-        "nimi": "Tehtavaryhmä (D)",
-        "toimenpidekoodi": 123400,
-        "voimassaolo": {
-          "loppuvuosi": 2023
-        },
-        "poistettu": false
-      }
+      "poistettu": false
     }
   ]
 }
