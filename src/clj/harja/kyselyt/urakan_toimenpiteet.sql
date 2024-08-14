@@ -195,7 +195,3 @@ SELECT tpk2.id, tpk2.nimi
 FROM toimenpide tpk3
   JOIN toimenpide tpk2 ON tpk2.id = tpk3.emo
 WHERE tpk3.id = :id;
-
--- name: hae-tehtavan-nopeusrajoitus
--- single?: true
-SELECT nopeusrajoitus FROM tehtava WHERE id=:tehtava;
