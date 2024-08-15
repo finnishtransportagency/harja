@@ -575,14 +575,18 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    [:div.haitari
     (doall
       (for [[otsikko avain komponentti] (partition 3 otsikko-avain-ja-komponentti)
-            :let [auki? (auki avain)]]
+            :let [auki? (auki avain)
+                  avaa-tai-sulje-haitari (fn [event]
+                                 (do
+                                   (.preventDefault event)
+                                   (toggle-osio! avain)))]]
         ^{:key (str avain)}
         [:div.haitari-rivi
          [:div.haitari-heading.klikattava
-          {:on-click #(do
-                        (toggle-osio! avain)
-                        (.preventDefault %))}
-          [:span.haitarin-tila
+          {:on-click #(avaa-tai-sulje-haitari %)
+           :on-key-down #(when (dom/enter-nappain? %)
+                           (avaa-tai-sulje-haitari %))}
+          [:span.haitarin-tila {:tabIndex "0"}
            (if auki?
              (ikonit/livicon-chevron-down)
              (ikonit/livicon-chevron-right))]
