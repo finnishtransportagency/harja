@@ -20,6 +20,9 @@ DECLARE
     tr_muut_yllapito_id INT;
 
     rivit_paivitetty INTEGER := 0;
+
+    puuttuva_rivi RECORD;
+
 BEGIN
     -- Haetaan rahavarausten id:t
     SELECT id INTO rv_akilliset_id FROM rahavaraus WHERE nimi LIKE '%Rahavaraus B%' ORDER BY id ASC LIMIT 1;
@@ -110,6 +113,19 @@ BEGIN
        SET rahavaraus_id = rv_muut_tavoitehintaan_id
      WHERE tyyppi = 'muut-rahavaraukset' AND tehtava = t_muut_tavoitehintaan_id
        AND rv_muut_tavoitehintaan_id IS NOT NULL;
+
+    -- Tehdään ja ajetaan funktio, joka päivittää tarvittavat rahavaraukset kustannusarvioitu_tyo taulun tehtävien perusteella
+    FOR puuttuva_rivi IN select distinct on (s.urakka) s.urakka as urakka_id, kt.rahavaraus_id, ru.rahavaraus_id
+                  from kustannusarvioitu_tyo kt
+                           join sopimus s on s.id = kt.sopimus
+                           left join rahavaraus_urakka ru on ru.urakka_id = s.urakka AND ru.rahavaraus_id = kt.rahavaraus_id
+                 where ru.rahavaraus_id is null
+                   AND kt.rahavaraus_id is not null
+        LOOP
+            INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luoja)
+            VALUES (puuttuva_rivi.urakka_id, puuttuva_rivi.rahavaraus_id, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
+        END LOOP;
+
 
     -- Palauta pävittyneet rivit, debuggausta varten
     GET DIAGNOSTICS rivit_paivitetty = ROW_COUNT;
