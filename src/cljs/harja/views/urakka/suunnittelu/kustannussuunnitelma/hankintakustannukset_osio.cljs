@@ -896,7 +896,7 @@
        [:div {:class (when vahvistettu? "osio-vahvistettu")}
         [laskutukseen-perustuen-wrapper laskutukseen-perustuvat-hankinnat-grid nayta-laskutukseen-perustuva-taulukko?]]
        [yleiset/ajax-loader])
-     (when (contains? t/toimenpiteen-rahavaraukset-gridissa toimenpide)
+     #_ (when (contains? t/toimenpiteen-rahavaraukset-gridissa toimenpide)
        ^{:key "rahavaraukset-otsikko"}
        [:<>
         [:h3 "Toimenpiteen rahavaraukset (lasketaan tavoitehintaan)"]

@@ -355,7 +355,7 @@
                                    ;; Hankintakustannukset osio
                                    [[hankintakustannukset-osio/suunnitellut-hankinnat-grid true nil]
                                     [hankintakustannukset-osio/hankinnat-laskutukseen-perustuen-grid true nil]
-                                    [hankintakustannukset-osio/rahavarausten-grid false nil]
+                                    #_ [hankintakustannukset-osio/rahavarausten-grid false nil]
 
                                     ;; Erillishankinnat osio
                                     [erillishankinnat-osio/erillishankinnat-grid true #{:erillishankinnat-disablerivit}]
