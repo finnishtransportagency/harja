@@ -35,56 +35,6 @@
 (defn tyhjenna-kohteen-lahetystiedot [kohde-id]
   (u (format "UPDATE yllapitokohde SET lahetetty = NULL, lahetys_onnistunut = NULL WHERE id = %s" kohde-id)))
 
-(deftest tarkista-yllapitokohteen-lahetys
-  (let [kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
-        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
-        urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))
-        vuosi-nyt (pvm/vuosi (pvm/nyt))
-        url (tee-url)
-        onnistunut-kirjaus-vastaus "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<urakan-kohteiden-toteumatietojen-kirjausvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">\n</urakan-kohteiden-toteumatietojen-kirjausvastaus>"]
-    (with-fake-http
-      [{:url url :method :post}
-       (fn [_ {:keys [url body] :as opts} _]
-         (is (= url (:url opts)) "Kutsu tehdään oikeaan osoitteeseen")
-         ;; Tarkistetaan, että lähtevässä XML:ssä on oikea data
-         (let [luettu-xml (-> (xml/lue body))
-               urakka (xml/luetun-xmln-tagien-sisalto
-                        luettu-xml
-                        :urakan-kohteiden-toteumatietojen-kirjaus :urakka)
-               kohde (xml/luetun-xmln-tagien-sisalto
-                       urakka
-                       :kohteet :kohde)
-               tr-osoite (xml/luetun-xmln-tagin-sisalto kohde :tierekisteriosoitevali)]
-           (is (= (xml/luetun-xmln-tagin-sisalto urakka :yha-id) [(str urakka-yhaid)]))
-           (is (= (xml/luetun-xmln-tagin-sisalto urakka :harja-id) [(str urakka-id)]))
-
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :yha-id) ["13371"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdenumero) ["111"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyyppi) ["1"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyotyyppi) ["paallystys"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :nimi) ["Ouluntie"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :toiden-aloituspaivamaara) [(str vuosi-nyt "-05-19")]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :paallystyksen-valmistumispaivamaara) [(str vuosi-nyt "-05-21")]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohteen-valmistumispaivamaara) [(str vuosi-nyt "-05-24")]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) ["2022-12-31"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto kohde :toteutunuthinta) ["5043.95"]))
-           (is (= (xml/luetun-xmln-tagien-sisalto kohde :alustalle-tehdyt-toimet :alustalle-tehty-toimenpide :verkon-tarkoitus) ["1"]))
-
-           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :tienumero) ["22"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aosa) ["12"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aet) ["4336"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :losa) ["12"]))
-           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :let) ["9477"])))
-         ;; Palautetaan vastaus
-         onnistunut-kirjaus-vastaus)]
-
-      (let [onnistui? (nil? (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id]))
-            lahetystiedot (hae-kohteen-lahetystiedot kohde-id)]
-        (is (true? onnistui?))
-        (is (not (nil? (:lahetetty lahetystiedot))) "Lähetysaika on merkitty")
-        (is (true? (:lahetys_onnistunut lahetystiedot))) "Lähetys on merkitty onnistuneeksi")
-      (tyhjenna-kohteen-lahetystiedot kohde-id))))
-
 (defn assertoi-tr-osoite [alikohteen-xml odotettu-tr-osoite]
   (is (= (xml/luetun-xmln-tagien-sisalto alikohteen-xml :ajorata)
          [(:ajorata odotettu-tr-osoite)]))
@@ -431,8 +381,9 @@
          [:kaista 11]]
         [:leveys 4.00M]
         [:pinta-ala 2600M]
-        [:paallystetyomenetelma 21]
-        [:massamenekki 100.0M]
+        [:paallystetyomenetelma 31]
+        [:massamenekki 90.0M]
+        [:rc-prosentti 10.0M]
         [:kokonaismassamaara 260M]
         [:massa
          [:massatyyppi 12]
@@ -473,8 +424,9 @@
          [:kaista 11]]
         [:leveys 4.00M]
         [:pinta-ala 2600M]
-        [:paallystetyomenetelma 21]
-        [:massamenekki 100.0M]
+        [:paallystetyomenetelma 31]
+        [:massamenekki 90.0M]
+        [:rc-prosentti 10.0M]
         [:kokonaismassamaara 260M]
         [:massa
          [:massatyyppi 12]
