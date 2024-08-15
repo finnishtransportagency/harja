@@ -151,7 +151,7 @@
       [:iskunkestavyys (:iskunkestavyys murske)]]]))
 
 (defn tee-kulutuskerrokselle-tehdyt-toimet [{:keys [yha-id alikohde poistettu tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                                                    tr-ajorata tr-kaista leveys pinta-ala paallystetyomenetelma massamenekki massa kokonaismassamaara] :as toimet}
+                                                    tr-ajorata tr-kaista leveys pinta-ala paallystetyomenetelma massamenekki rc-prosentti massa kokonaismassamaara] :as toimet}
                                             kohteen-tienumero karttapvm]
   [:kulutuskerrokselle-tehty-toimenpide
    [:yha-id yha-id]
@@ -170,6 +170,7 @@
    [:pinta-ala pinta-ala]
    [:paallystetyomenetelma paallystetyomenetelma]
    [:massamenekki massamenekki]
+   [:rc-prosentti rc-prosentti]
    [:kokonaismassamaara kokonaismassamaara]
    (lisaa-massa massa)])
 
@@ -230,7 +231,7 @@
     (reduce conj [:kohteet] (mapv #(tee-kohde (:kohde %) (:kulutuskerrokselle-tehdyt-toimet %) (:alustalle-tehdyt-toimet %) (:paallystysilmoitus %)) kohteet))]])
 
 (defn muodosta [urakka kohteet]
-  (let [sisalto (muodosta-sanoma urakka kohteet) 
+  (let [sisalto (muodosta-sanoma urakka kohteet)
         xml (xml/tee-xml-sanoma sisalto)]
     (log/debug "Muodostettu XML sanoma: " (pr-str xml))
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "yha2.xsd" xml)]
