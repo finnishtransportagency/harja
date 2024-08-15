@@ -160,8 +160,9 @@
                         </tierekisteriosoitevali>
                         <leveys>4.00</leveys>
                         <pinta-ala>2600</pinta-ala>
-                        <paallystetyomenetelma>21</paallystetyomenetelma>
-                        <massamenekki>100.0</massamenekki>
+                        <paallystetyomenetelma>31</paallystetyomenetelma>
+                        <massamenekki>90.0</massamenekki>
+                        <rc-prosentti>10.0</rc-prosentti>
                         <kokonaismassamaara>260</kokonaismassamaara>
                         <massa>
                             <massatyyppi>12</massatyyppi>
@@ -211,8 +212,9 @@
                         </tierekisteriosoitevali>
                         <leveys>4.00</leveys>
                         <pinta-ala>2600</pinta-ala>
-                        <paallystetyomenetelma>21</paallystetyomenetelma>
-                        <massamenekki>100.0</massamenekki>
+                        <paallystetyomenetelma>31</paallystetyomenetelma>
+                        <massamenekki>90.0</massamenekki>
+                        <rc-prosentti>10.0</rc-prosentti>
                         <kokonaismassamaara>260</kokonaismassamaara>
                         <massa>
                             <massatyyppi>12</massatyyppi>

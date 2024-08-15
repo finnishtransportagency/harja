@@ -336,14 +336,14 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
          INSERT INTO pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, pinta_ala, kokonaismassamaara,
                                            piennar, pot2_id, massamenekki)
              SELECT alikohde.id,
-                    (SELECT koodi FROM pot2_mk_paallystekerros_toimenpide WHERE lyhenne = 'MP'),
+                    (SELECT koodi FROM pot2_mk_paallystekerros_toimenpide WHERE lyhenne = 'REM'),
                     massa.id,
                     4,
                     2600,
                     260,
                     FALSE,
                     paallystysilmoitus.id,
-                    100
+                    90
              FROM alikohde,
                   massa,
                   paallystysilmoitus RETURNING *),

@@ -72,6 +72,7 @@
    :pinta-ala 50.0M
    :paallystetyomenetelma 12
    :massamenekki 150.0M
+   :rc-prosentti 75
    :kokonaismassamaara 20.0M
    :massa {:massatyyppi 1
            :maxraekoko 11
@@ -119,6 +120,7 @@
    [:pinta-ala 50.0M] 
    [:paallystetyomenetelma 12]
    [:massamenekki 150.0M]
+   [:rc-prosentti 75]
    [:kokonaismassamaara 20.0M] 
    [:massa
     [:massatyyppi 1]
