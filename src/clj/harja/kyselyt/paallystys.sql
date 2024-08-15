@@ -296,7 +296,8 @@ SELECT pi.id                       AS paallystysilmoitus,
        kk_sideaine.pitoisuus       AS massa_sideaine_pitoisuus,
        kk_lisaaine.id              AS massa_lisaaine_id,
        kk_lisaainetyyppi.koodi     AS massa_lisaaine_tyyppi,
-       kk_lisaaine.pitoisuus       AS massa_lisaaine_pitoisuus
+       kk_lisaaine.pitoisuus       AS massa_lisaaine_pitoisuus,
+       pot2_rc_prosentti(pot2pk.id) AS "rc-prosentti"
 FROM paallystysilmoitus pi
          LEFT JOIN yllapitokohde ypk ON pi.paallystyskohde = ypk.id
          LEFT JOIN yllapitokohteen_kustannukset k ON ypk.id = k.yllapitokohde
