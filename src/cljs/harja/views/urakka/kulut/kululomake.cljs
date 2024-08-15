@@ -1,13 +1,10 @@
 (ns harja.views.urakka.kulut.kululomake
-  (:require [tuck.core :as tuck]
-            [reagent.core :as r]
-            [goog.string :as gstring]
+  (:require [reagent.core :as r]
             [goog.string.format]
             [harja.domain.kulut :as kulut]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.kulut.mhu-kulut :as tiedot]
             [harja.ui.debug :as debug]
-            [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.pvm :as pvm-valinta]
             [harja.ui.ikonit :as ikonit]
@@ -16,11 +13,7 @@
             [harja.ui.liitteet :as liitteet]
             [harja.ui.kentat :as kentat]
             [clojure.string :as str]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.transit :as t]
-            [harja.pvm :as pvm]
-            [harja.ui.valinnat :as valinnat]
-            [harja.fmt :as fmt]))
+            [harja.pvm :as pvm]))
 
 (def kulu-lukittu-teksti "Hoitokauden välikatselmus on pidetty ja kuluja ei voi enää lisätä tai muokata.")
 
@@ -279,8 +272,9 @@
                         ;; Jos kohdistus on hoitovuoden päätös, sitä ei voi muokata
                         (= :paatos kohdistustyyppi) false
                         :else true)]
-    [:div {:style {:background-color "#D6D6D6"
-                   :padding-bottom "20px"}}
+    [:div {:style {:background-color "#F5F5F5"
+                   :padding-bottom "20px"
+                   :margin-bottom "10px"}}
      ;; Otsikko ja poista nappi
      [:div.row
       [:div.col-xs-12.col-md-6 [:h3 (str "Kohdistus " (inc nro))]]
@@ -331,8 +325,7 @@
      ]))
 
 (defn kululomake [e! app]
-  (let [_ (js/console.log "kululomake 1")
-        syottomoodi (:syottomoodi app)
+  (let [syottomoodi (:syottomoodi app)
         tehtavaryhmat (:tehtavaryhmat app)
         rahavaraukset (:rahavaraukset app)
         toimenpiteet (:toimenpiteet app)

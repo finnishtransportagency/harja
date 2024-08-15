@@ -1106,10 +1106,11 @@
                       [hk-alkupvm
                        hk-loppupvm])
            urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+           urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
            valittu-hoitokausi (if (nil? (:hoitokauden-alkuvuosi app))
                                 (tiedot/kuluva-hoitovuosi (pvm/nyt))
                                 (:hoitokauden-alkuvuosi app))
-           hoitovuodet (into [] (range urakan-alkuvuosi (+ 5 urakan-alkuvuosi)))]
+           hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))]
        [:div#vayla.kulujen-kohdistus.margin-top-16
         (if syottomoodi
           [:div
