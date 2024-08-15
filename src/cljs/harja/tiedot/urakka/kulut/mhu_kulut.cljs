@@ -136,34 +136,36 @@
       boolean)))
 
 (defn kulu->lomake [app kulu]
-  (let [{suorittaja :suorittaja} kulu]
-    (-> kulu
-      (dissoc :suorittaja)
-      (assoc :aliurakoitsija suorittaja)
-      (assoc :vuoden-paatos-valittu? (vuoden-paatoksen-kulu? app kulu))
-      (update :kohdistukset (fn [kohdistukset]
-                              (mapv (fn [kohdistus]
-                                      (let [toimenpide (some #(when (= (:toimenpideinstanssi kohdistus) (:toimenpideinstanssi %))
-                                                                %) (:toimenpiteet app))
-                                            tehtavaryhma (some #(when (= (:tehtavaryhma kohdistus) (:id %))
-                                                                  %) (:tehtavaryhmat app))
+  (let [{suorittaja :suorittaja} kulu
+        kl
+        (-> kulu
+          (dissoc :suorittaja)
+          (assoc :aliurakoitsija suorittaja)
+          (assoc :vuoden-paatos-valittu? (vuoden-paatoksen-kulu? app kulu))
+          (update :kohdistukset (fn [kohdistukset]
+                                  (mapv (fn [kohdistus]
+                                          (let [toimenpide (some #(when (= (:toimenpideinstanssi kohdistus) (:toimenpideinstanssi %))
+                                                                    %) (:toimenpiteet app))
+                                                tehtavaryhma (some #(when (= (:tehtavaryhma kohdistus) (:id %))
+                                                                      %) (:tehtavaryhmat app))
 
-                                            ;; Hoitovuoden päätöksen tyyppi pitää päätellä kohdistukselle
-                                            ;; Ja tässä vaiheessa se tehdään päättelemällä tehtäväryhmästä, että onko se hoitovuoden päätös.
-                                            ;; Jos joskus energiaa jää, niin tämä pitää ehdottomasti muuttaa niin, että kohdistuksella on oikeasti tyyppi, joka on hoitovuoden päätös, ja sille voi valita
-                                            ;; ne tehtäväryhmät, jotka ovat sille tyypille mahdollisia.
-                                            hoitovuoden-paatostyyppi (when tehtavaryhma
-                                                                       (first (keep #(when (= (val %) (:tehtavaryhma tehtavaryhma))
-                                                                                       (key %)) vuoden-paatoksen-tehtavaryhmien-nimet)))
-                                            kohdistustyyppi (keyword (:tyyppi kohdistus))]
-                                        (-> kohdistus
-                                          (assoc :lisatyo? (if (= "lisatyo" (:maksueratyyppi kohdistus)) true false))
-                                          (assoc :tyyppi kohdistustyyppi)
-                                          (assoc :toimenpide toimenpide)
-                                          (assoc :tehtavaryhma tehtavaryhma)
-                                          (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi))))
-                                kohdistukset)))
-      (with-meta (tila/kulun-validointi-meta kulu)))))
+                                                ;; Hoitovuoden päätöksen tyyppi pitää päätellä kohdistukselle
+                                                ;; Ja tässä vaiheessa se tehdään päättelemällä tehtäväryhmästä, että onko se hoitovuoden päätös.
+                                                ;; Jos joskus energiaa jää, niin tämä pitää ehdottomasti muuttaa niin, että kohdistuksella on oikeasti tyyppi, joka on hoitovuoden päätös, ja sille voi valita
+                                                ;; ne tehtäväryhmät, jotka ovat sille tyypille mahdollisia.
+                                                hoitovuoden-paatostyyppi (when tehtavaryhma
+                                                                           (first (keep #(when (= (val %) (:tehtavaryhma tehtavaryhma))
+                                                                                           (key %)) vuoden-paatoksen-tehtavaryhmien-nimet)))
+                                                kohdistustyyppi (keyword (:tyyppi kohdistus))]
+                                            (-> kohdistus
+                                              (assoc :lisatyo? (if (= "lisatyo" (:maksueratyyppi kohdistus)) true false))
+                                              (assoc :tyyppi kohdistustyyppi)
+                                              (assoc :toimenpide toimenpide)
+                                              (assoc :tehtavaryhma tehtavaryhma)
+                                              (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi))))
+                                    kohdistukset))))
+        kl (with-meta kl (tila/kulun-validointi-meta kl))]
+    kl))
 
 (defn alusta-lomake [app]
   (let [urakan-alkupvm (:alkupvm @navigaatio/valittu-urakka)
