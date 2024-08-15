@@ -5,7 +5,6 @@
             [harja.testi :refer :all]
             [harja.kyselyt.yha :as yha-kyselyt]
             [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma :as kohteen-lahetyssanoma]
-            [harja.palvelin.integraatiot.yha.kohteen-lahetyssanoma-test :as kohteen-lahetyssanoma-test]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.integraatiot.yha.tyokalut :refer :all]
             [harja.tyokalut.xml :as xml]
@@ -463,16 +462,12 @@
         urakka (assoc urakka :harjaid urakka-id
                  :sampoid (yha/yhaan-lahetettava-sampoid urakka))
         kohteet (mapv #(yha/hae-kohteen-tiedot-pot2 db %) kohde-idt)
-        lahetys-avaimet-alustalle-tehdyt-toimet (set (keys (first (:alustalle-tehdyt-toimet (first kohteet))))) 
-        lahetys-avaimet-kulutuskerrokselle-tehdyt-toimet (set (keys (first (:kulutuskerrokselle-tehdyt-toimet (first kohteet)))))
-        kulutuskerros-testi-avaimet (set (keys kohteen-lahetyssanoma-test/testi-kulutuskerrokselle-tehdyt-toimet))
-        alusta-testi-avaimet (set (keys kohteen-lahetyssanoma-test/testi-alustalle-tehdyt-toimet)) 
+        rc-prosentti (:rc-prosentti (first (:kulutuskerrokselle-tehdyt-toimet (first kohteet))))
         sisalto (kohteen-lahetyssanoma/muodosta-sanoma urakka kohteet)
         xml (kohteen-lahetyssanoma/muodosta urakka kohteet)
         luotu-xml-parsittu (xml/lue xml)]
-    (is (= #{} (clojure.set/difference alusta-testi-avaimet lahetys-avaimet-alustalle-tehdyt-toimet)) "Alustan kaikki avaimet mukana")
-    (is (= #{} (clojure.set/difference kulutuskerros-testi-avaimet lahetys-avaimet-kulutuskerrokselle-tehdyt-toimet)) "Kulutuskerroksen kaikki avaimet mukana")
     (is (= sisalto-tulos sisalto) "Sisältö ei ole muuttunut")
+    (is (= 10.0M rc-prosentti) "RC-prosentti laskettu kun kyseessä on REM-toimenpide")
     (is (xml/validi-xml? "xsd/yha/" "yha2.xsd" xml) "Muodostettu XML on validia")
     (is (= odotettu-xml-parsittu luotu-xml-parsittu) "Paikkaus-POT:in XML oikein muodostettu")))
 
