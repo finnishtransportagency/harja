@@ -433,7 +433,7 @@
 
 (deftest tarkista-xmln-validius
   (let [xml (kohteen-lahetyssanoma/muodosta testiurakka testikohteet)]
-    (is (xml/validi-xml? "xsd/yha/" "yha2.xsd" xml) "Muodostettu XML on validia")))
+    (is (xml/validi-xml? "xsd/yha/" "yha.xsd" xml) "Muodostettu XML on validia")))
 
 (deftest tarkista-kokonaishinnan-laskenta
   (is (== 0 (kohteen-lahetyssanoma/laske-hinta-kokonaishinta testipaallystysilmoitus))

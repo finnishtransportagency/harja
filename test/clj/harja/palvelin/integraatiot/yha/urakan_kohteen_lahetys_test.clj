@@ -468,7 +468,7 @@
         luotu-xml-parsittu (xml/lue xml)]
     (is (= sisalto-tulos sisalto) "Sisältö ei ole muuttunut")
     (is (= 10.0M rc-prosentti) "RC-prosentti laskettu kun kyseessä on REM-toimenpide")
-    (is (xml/validi-xml? "xsd/yha/" "yha2.xsd" xml) "Muodostettu XML on validia")
+    (is (xml/validi-xml? "xsd/yha/" "yha.xsd" xml) "Muodostettu XML on validia")
     (is (= odotettu-xml-parsittu luotu-xml-parsittu) "Paikkaus-POT:in XML oikein muodostettu")))
 
 
@@ -489,7 +489,7 @@
                  luotu-xml-parsittu :urakan-kohteiden-toteumatietojen-kirjaus :urakka)
         kohde (xml/luetun-xmln-tagien-sisalto urakka :kohteet :kohde)
         tr-osoite (xml/luetun-xmln-tagin-sisalto kohde :tierekisteriosoitevali)
-        virheet (xml/validoi-xml +xsd-polku+ "yha2.xsd" sisalto)
+        virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" sisalto)
         odotettu-alustarivi [{:tag :harja-id, :attrs nil, :content ["7"]}
                              {:tag :tierekisteriosoitevali,
                               :attrs nil,
