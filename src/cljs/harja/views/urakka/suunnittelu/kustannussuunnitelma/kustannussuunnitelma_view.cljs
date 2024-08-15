@@ -257,11 +257,7 @@
                                   :suunnitelma-vahvistettu? hoidonjohtopalkkio-vahvistettu?}
           ::t/tavoite-ja-kattohinta {:nimi "Tavoite- ja kattohinta"
                                      :suunnitelma-vahvistettu? tavoite-ja-kattohinta-vahvistettu?
-                                     :summat summa-tavoite-ja-kattohinta}
-          ::t/tilaajan-rahavaraukset {:nimi "Tavoitehinnan ulkopuoliset rahavaraukset"
-                                      :summat summa-tilaajan-rahavaraukset
-                                      ;; Tilaajan rahavarauksia ei tarvitse vahvistaa, koska sille ei lasketa indeksikorjauksia.
-                                      :nayta-osion-status? false}}])
+                                     :summat summa-tavoite-ja-kattohinta}}])
       [yleiset/ajax-loader "Haetaan tietoja"])))
 
 (defn- osionavigointi
@@ -513,6 +509,14 @@
                    :hoitovuosi-nro hoitovuosi-nro
                    :indeksit-saatavilla? indeksit-saatavilla?}]
 
+                 ::t/tilaajan-rahavaraukset
+                 [tilaajan-rahavaraukset-osio/osio
+                  ;; HOX, gridin nimi on edelleen "tilaajan-varaukset" vaikka osio on "tilaajan rahavaraukset"!
+                  (get-in app [:gridit :tilaajan-varaukset :grid])
+                  (dissoc suodattimet :hankinnat)
+                  (:kantahaku-valmis? app)]
+                 ;; Tälle osiolle ei tehdä vahvistusta, koska tilaajan rahavarauksille ei lasketa indeksikorjauksia.
+
                  ::t/johto-ja-hallintokorvaukset                 
                  [johto-ja-hallintokorvaus-osio/osio
                   app
@@ -565,14 +569,6 @@
                    :hoitovuosi-nro hoitovuosi-nro
                    :indeksit-saatavilla? indeksit-saatavilla?
                    :osiossa-virheita? (some? (get-in app [:kattohinta :virheet 0 (keyword (str "kattohinta-vuosi-" hoitovuosi-nro))]))}]
-
-                 ::t/tilaajan-rahavaraukset
-                 [tilaajan-rahavaraukset-osio/osio
-                  ;; HOX, gridin nimi on edelleen "tilaajan-varaukset" vaikka osio on "tilaajan rahavaraukset"!
-                  (get-in app [:gridit :tilaajan-varaukset :grid])
-                  (dissoc suodattimet :hankinnat)
-                  (:kantahaku-valmis? app)]
-                 ;; Tälle osiolle ei tehdä vahvistusta, koska tilaajan rahavarauksille ei lasketa indeksikorjauksia.
                  ))
 
              ;; Näytä vahvistusdialogi, jos vaaditaan muutosten vahvistus.
