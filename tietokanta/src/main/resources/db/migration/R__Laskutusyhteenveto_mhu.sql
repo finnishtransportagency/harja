@@ -769,6 +769,7 @@ BEGIN
                 JOIN toimenpideinstanssi tpi 
                     ON lk.toimenpideinstanssi = tpi.id 
                 WHERE lk.rahavaraus_id = rahavaraus.id
+                    AND tpi.id = t.tpi
                     AND lk.poistettu IS NOT TRUE
                     AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                     AND lk.maksueratyyppi IN ('akillinen-hoitotyo', 'muu')

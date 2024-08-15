@@ -794,7 +794,6 @@ BEGIN
     ------------------- Rahavaraukset -------------------------
     -----------------------------------------------------------
 
-    -- Sorttaa aakkosilla, nämä tulee tässä järjestyksessä käyttöliittymään asti
     FOR rahavaraus IN
         SELECT 
           rv.id, 
