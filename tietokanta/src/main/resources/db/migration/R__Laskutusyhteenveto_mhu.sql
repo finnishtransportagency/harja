@@ -744,9 +744,16 @@ BEGIN
         hoitokausi_yht_array   := '{}';
         val_aika_yht_array     := '{}';
 
-        -- Sorttaa aakkosilla, nämä tulee tässä järjestyksessä käyttöliittymään asti
         FOR rahavaraus IN
-            SELECT id, nimi FROM rahavaraus ORDER BY nimi
+            SELECT 
+              rv.id, 
+              rv.nimi 
+            FROM rahavaraus rv 
+            -- Näytetään vaan rahavaraukset mitkä urakalle asetettu (hallinta)
+            JOIN rahavaraus_urakka rvu ON rv.id = rvu.rahavaraus_id  
+            WHERE rvu.urakka_id = ur
+            -- Sorttaa aakkosilla, nämä tulee tässä järjestyksessä käyttöliittymään asti
+            ORDER BY rv.nimi
         LOOP
             -- Resetoi hoitokausi / laskutetaan 
             rv_val_aika_yht := 0;
