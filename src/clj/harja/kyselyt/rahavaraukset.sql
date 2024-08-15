@@ -139,7 +139,7 @@ SELECT r.id as id,
  GROUP BY r.id, r.nimi;
 
 -- name: hae-rahavarauksen-tehtavaryhmat
-SELECT tr.id,
+SELECT DISTINCT ON (tr.id) tr.id,
        tr.nimi AS tehtavaryhma,
        tp.id   AS toimenpide,
        tpi.id  AS "toimenpideinstanssi"
