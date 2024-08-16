@@ -814,6 +814,7 @@ BEGIN
                   AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                   -- Poistetaan rahavaraus kannustinjärjestelmään (T3) hankinnoista, ja lisätään se omalle rivilleen
                   AND (tr.yksiloiva_tunniste IS NULL OR lk.rahavaraus_id != kannustin_id)
+                  AND lk.tavoitehintainen = TRUE
             LOOP
                 SELECT  hankinnat_i.kht_summa AS summa,
                         hankinnat_i.kht_summa AS korotettuna,
