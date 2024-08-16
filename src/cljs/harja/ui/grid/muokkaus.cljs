@@ -19,11 +19,11 @@
             [harja.fmt :as fmt])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
-(defn- muokkauspaneeli [{:keys [otsikko voi-muokata? voi-kumota? muokatut virheet varoitukset huomautukset
+(defn- muokkauspaneeli [{:keys [otsikko otsikko-tyyli voi-muokata? voi-kumota? muokatut virheet varoitukset huomautukset
                                 skeema peru! voi-lisata? ohjaus uusi-id opts paneelikomponentit historia
                                 virhe-viesti custom-toiminto custom-yla-panel]}]
   [:div.panel-heading
-   (when otsikko [:h2.panel-title otsikko])
+   (when otsikko [:h2.panel-title (when otsikko-tyyli {:style otsikko-tyyli}) otsikko])
    (when custom-yla-panel custom-yla-panel)
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])
    (when (not= false voi-muokata?)
@@ -498,6 +498,8 @@
 
   Optiot on mappi optioita:
   :id                             grid pääelementin DOM id
+  :otsikko                        h2 teksti taulukon yläpuolelle
+  :otsikko-tyyli                    vapaaehtoinen tyyli otsikolle anna muodossa {:font-size \"1.2rem\"}
   :muokkaa-footer                 optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
   :muutos                         jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
                                   Parametrina Grid ohjauskahva
@@ -560,7 +562,7 @@
   :korostusrajaus?                Tekee borderin ylä- ja alareunaan korostusborderit
   :rivi-jalkeen                Vektori, joka on esim yhteensä rivi. Tulee muiden rivien jälkeen. Anna metana esim luokka, joka riville passataan."
 
-  [{:keys [otsikko yksikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
+  [{:keys [otsikko otsikko-tyyli yksikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos? validoi-alussa?
            virhe-viesti toimintonappi-fn disabloi-rivi? luomisen-jalkeen muokkauspaneeli? rivi-validointi taulukko-validointi
@@ -708,7 +710,7 @@
 
       {:display-name "Muokkausgrid"
        :reagent-render
-       (fn [{:keys [otsikko yksikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
+       (fn [{:keys [otsikko otsikko-tyyli yksikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja tyhja-komponentti? tyhja-args
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto
@@ -734,7 +736,7 @@
               (when data-cy
                 {:data-cy data-cy}))
             (when muokkauspaneeli?
-              [muokkauspaneeli {:otsikko otsikko :voi-muokata? voi-muokata? :historia historia
+              [muokkauspaneeli {:otsikko otsikko :otsikko-tyyli otsikko-tyyli :voi-muokata? voi-muokata? :historia historia
                                 :voi-kumota? voi-kumota? :muokatut muokatut :virheet virheet
                                 :varoituket varoitukset :huomautukset huomautukset
                                 :skeema skeema :voi-lisata? voi-lisata? :ohjaus ohjaus :uusi-id uusi-id
