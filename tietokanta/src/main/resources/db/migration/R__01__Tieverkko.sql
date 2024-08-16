@@ -465,8 +465,8 @@ DECLARE
   pituus NUMERIC;
 BEGIN
   -- Minimipituus on linnuntie (teleportaatiota ei sallittu)
-  -- miinus 10 metriä (varotoimi jos GPS pisteitä raportoitu ja niissä epätarkkuutta)
-  min_pituus := ST_Distance84(apiste, bpiste) - 10.0;
+  -- miinus 15 metriä (varotoimi jos GPS pisteitä raportoitu ja niissä epätarkkuutta)
+  min_pituus := ST_Distance84(apiste, bpiste) - 15.0;
   FOR r IN SELECT a.tie,a.osa as alkuosa, a.ajorata, b.osa as loppuosa,
                         a.geom as alkuosa_geom, b.geom as loppuosa_geom,
                         (ST_Distance84(apiste, a.geom) + ST_Distance84(bpiste, b.geom)) as d
@@ -609,8 +609,9 @@ $$ LANGUAGE plpgsql;
 
 -- Hakee annetuille pisteille viivan jokaiselle pistevälille, huomioiden
 -- pisteiden välisen ajan. Maksimi hyväksyttävä geometrisoitu pituus on
--- pisteiden välinen aika sekunteina kertaa 30 m/s (108 km/h).
-CREATE OR REPLACE FUNCTION tieviivat_pisteille_aika(pisteet piste_aika[]) RETURNS SETOF RECORD AS $$
+-- pisteiden välinen aika sekunteina kertaa max nopeus metreissä sekuntia.
+-- Maksiminopeus annetaan kilometrinä tunnissa, se jaetaan 3.6:lla jotta saadaan m/s.
+CREATE OR REPLACE FUNCTION tieviivat_pisteille_aika(pisteet piste_aika[], max_nopeus INTEGER) RETURNS SETOF RECORD AS $$
 DECLARE
   alku piste_aika;
   loppu piste_aika;
@@ -630,7 +631,7 @@ BEGIN
     loppupiste := ST_MakePoint(loppu.x, loppu.y);
     RETURN NEXT (alkupiste, loppupiste,
                  (SELECT ytp.geometria
-                  FROM yrita_tierekisteriosoite_pisteille_max(alkupiste, loppupiste, 30.0 * aika) ytp));
+                  FROM yrita_tierekisteriosoite_pisteille_max(alkupiste, loppupiste, (max_nopeus / 3.6) * aika) ytp));
     i := i + 1;
   END LOOP;
 END;
