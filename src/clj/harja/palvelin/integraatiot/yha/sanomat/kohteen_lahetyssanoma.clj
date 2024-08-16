@@ -6,7 +6,6 @@
             [harja.pvm :as pvm]
             [clojure.walk :as walk])
   (:use [slingshot.slingshot :only [throw+]]))
-(use 'debux.core)
 
 (def +xsd-polku+ "xsd/yha/")
 
