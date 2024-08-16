@@ -920,7 +920,7 @@ BEGIN
 
     -- Yhteensä-  arvot,  nämä on tekohetkellä aivan samat,
     -- mutta tehty kuitenkin, jos jatkossa tämän taulukon alle tulee lisää rivejä, niitä voi tähän niputtaa
-    muut_kulut_hoitokausi_yht := tavhin_hoitokausi_yht;
+    muut_kulut_hoitokausi_yht := muut_kulut_hoitokausi;
     muut_kulut_val_aika_yht := muut_kulut_val_aika;
 
     ---------------------------------------------

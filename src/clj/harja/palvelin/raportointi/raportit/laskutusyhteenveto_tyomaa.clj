@@ -68,7 +68,7 @@
 
 
 (defn- taulukko [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
-                         kyseessa-kk-vali? sheet-nimi]}]
+                         kyseessa-kk-vali? sheet-nimi tavoitehintainen?]}]
 
   (let [rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet data))
         rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array data))
@@ -110,7 +110,17 @@
                      (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (MHU hoidonjohto)" :lisatyo_hoidonjohto_hoitokausi_yht :lisatyo_hoidonjohto_val_aika_yht false)
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :lisatyot_hoitokausi_yht :lisatyot_val_aika_yht true)]
 
-                    (= "Muut kulut" otsikko)
+                    ;; Tavoitehintaan vaikuttavat
+                    (and
+                      tavoitehintainen?
+                      (= "Muut kulut" otsikko))
+                    [(taulukko-rivi data kyseessa-kk-vali? "Muut tavoitehintaan vaikuttavat kulut" :muut_kulut_hoitokausi :muut_kulut_val_aika false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :muut_kulut_hoitokausi_yht :muut_kulut_val_aika_yht true)]
+                    
+                    ;; Ei- tavoitehintaiset 
+                    (and
+                      (not tavoitehintainen?)
+                      (= "Muut kulut" otsikko))
                     [(taulukko-rivi data kyseessa-kk-vali? "Bonukset" :bonukset_hoitokausi_yht :bonukset_val_aika_yht false)
                      (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sanktiot_hoitokausi_yht :sanktiot_val_aika_yht false)
 
@@ -242,8 +252,16 @@
                 :laskutetaan-teksti laskutetaan-teksti
                 :kyseessa-kk-vali? kyseessa-kk-vali?})
 
+     ;; Muut kulut, tavoitehintaan vaikuttavat 
+     (taulukko {:data rivitiedot
+                :otsikko "Muut kulut"
+                :laskutettu-teksti laskutettu-teksti
+                :laskutetaan-teksti laskutetaan-teksti
+                :kyseessa-kk-vali? kyseessa-kk-vali?
+                :tavoitehintainen? true})
+
+     ;; Tyylityön välitaulukko (Toteutuneet tavoitehintaan vaikuttaneet kustannukset)
      (taulukot/valitaulukko {:data rivitiedot
-                             :otsikko "Toteutuneet"
                              :laskutettu-teksti laskutettu-teksti
                              :laskutetaan-teksti laskutetaan-teksti
                              :kyseessa-kk-vali? kyseessa-kk-vali?})
@@ -261,10 +279,11 @@
                             :otsikko x
                             :laskutettu-teksti laskutettu-teksti
                             :laskutetaan-teksti laskutetaan-teksti
-                            :kyseessa-kk-vali? kyseessa-kk-vali?}))))
-
+                            :kyseessa-kk-vali? kyseessa-kk-vali?
+                            :tavoitehintainen? false}))))
+     
+     ;; Tyylitön välitaulukko (Muut kustannukset yhteensä)
      (taulukot/valitaulukko {:data rivitiedot
-                             :otsikko "Muut kulut"
                              :laskutettu-teksti laskutettu-teksti
                              :laskutetaan-teksti laskutetaan-teksti
                              :kyseessa-kk-vali? kyseessa-kk-vali?})
