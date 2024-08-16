@@ -93,3 +93,8 @@ SELECT tk.id                 AS id,
                                   '0c466f20-620d-407d-87b0-3cbb41e8342e',
                                   'c058933e-58d3-414d-99d1-352929aa8cf9'))
  ORDER BY tk.jarjestys;
+
+-- name: hae-tehtavaryhma-tunnisteella
+SELECT tr.id, tr.nimi
+  FROM tehtavaryhma tr
+ WHERE tr.yksiloiva_tunniste = :yksiloiva_tunniste::UUID;

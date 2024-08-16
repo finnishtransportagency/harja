@@ -1888,6 +1888,11 @@
 (defrecord TallennaTavoitehintainenRahavarausOnnistui [vastaus])
 (defrecord TallennaTavoitehintainenRahavarausEpaonnistui [vastaus])
 
+;; Tallenna Tavoitehinnan ulkopuolinen rahavaraus kantaan
+(defrecord TallennaTavoitehinnanUlkopuolinenRahavaraus [id summa vuosi loppuvuodet?])
+(defrecord TallennaTavoitehinnanUlkopuolinenRahavarausOnnistui [vastaus])
+(defrecord TallennaTavoitehinnanUlkopuolinenRahavarausEpaonnistui [vastaus])
+
 ;; TODO: Muutoksia ei implementoitu vielä loppuun
 (defrecord TallennaSeliteMuutokselle [])
 (defrecord TallennaSeliteMuutokselleOnnistui [])
@@ -2573,7 +2578,8 @@
               maaramitattavat-hoitokausittain (maaramitattavat-hoitokausille
                                                 hankinnat-laskutukseen-perustuen
                                                 pohjadata)
-              rahavaraukset-hoitokausittain (rahavaraukset-hoitokausille (:kustannusarvioidut-tyot vastaus) pohjadata)
+              ;; Hankintakustannusten alaisia rahavarauksia ei enää ole
+              #_#_rahavaraukset-hoitokausittain (rahavaraukset-hoitokausille (:kustannusarvioidut-tyot vastaus) pohjadata)
 
               ;; -- Määrätaulukoiden datan alustaminen --
               hoidon-johto-kustannukset (filter #(= (:toimenpide-avain %) :mhu-johto)
@@ -2590,10 +2596,8 @@
                                                    (maarataulukon-kk-data-alustus-fn
                                                      pohjadata hoidon-johto-kustannukset :hoidonjohtopalkkio))
               ;; Tilaajan varauksia ei tarvitse erikseen hakea tietokannasta myöhemmin, koska sille ei lasketa indeksikorjauksia.
-              tilaajan-varaukset-hoitokausittain (hoidonjohto-jarjestys-fn
-                                                   (maarataulukon-kk-data-alustus-fn
-                                                     pohjadata hoidon-johto-kustannukset :tilaajan-varaukset))
-
+              tavoitehinnan-ulkopuoliset-rahavaraukset (filter #(= (:toimenpide-avain %) :tavoitehinnan-ulkopuoliset-rahavaraukset)
+                                   (:kustannusarvioidut-tyot vastaus))
 
               ;; -- Johto- ja hallintokorvausten datan alustaminen --
               omat-jh-korvaukset (vec (reverse (sort-by #(get-in % [1 0 :toimenkuva])
@@ -2628,14 +2632,14 @@
             ;; Koosta domain tilat
             (assoc-in [:domain :suunnitellut-hankinnat] hankinnat-hoitokausittain)
             (assoc-in [:domain :laskutukseen-perustuvat-hankinnat] maaramitattavat-hoitokausittain)
-            (assoc-in [:domain :rahavaraukset] rahavaraukset-hoitokausittain)
             (assoc-in [:domain :erillishankinnat] erillishankinnat-hoitokausittain)
             ;; Poiketen muista tiedoista. Tavoitehintaiset rahavaraukset parsitaan valmiiksi bäkkärissä
             (assoc-in [:domain :tavoitehintaiset-rahavaraukset] tavoitehintaiset-rahavaraukset)
             (assoc-in [:domain :johto-ja-hallintokorvaukset] jh-korvaukset)
             (assoc-in [:domain :toimistokulut] toimistokulut-hoitokausittain)
             (assoc-in [:domain :hoidonjohtopalkkio] hoidonjohtopalkkio-hoitokausittain)
-            (assoc-in [:domain :tilaajan-varaukset] tilaajan-varaukset-hoitokausittain)
+            ;; Poiketen muista tiedoista. Tavoitehinnan ulkopuoliset rahavaraukset parsitaan valmiiksi bäkkärissä
+            (assoc-in [:domain :tavoitehinnan-ulkopuoliset-rahavaraukset] tavoitehinnan-ulkopuoliset-rahavaraukset)
 
             ;; Koosta yhteenvedot
             (assoc-in [:yhteenvedot :hankintakustannukset :summat :suunnitellut-hankinnat]
@@ -2670,12 +2674,6 @@
                 {}
                 maaramitattavat-hoitokausittain))
 
-            (assoc-in [:yhteenvedot :hankintakustannukset :summat :rahavaraukset]
-              (summaa-rahavaraukset rahavaraukset-hoitokausittain :maara))
-
-            (assoc-in [:yhteenvedot :hankintakustannukset :indeksikorjatut-summat :rahavaraukset]
-              (summaa-rahavaraukset rahavaraukset-hoitokausittain :indeksikorjattu))
-
             (assoc-in [:yhteenvedot :tavoitehintaiset-rahavaraukset :summat :tavoitehintaiset-rahavaraukset]
               (tavoitehintaiset-rahavaraukset-hoitokausittain :summa tavoitehintaiset-rahavaraukset))
             (assoc-in [:yhteenvedot :tavoitehintaiset-rahavaraukset :indeksikorjatut-summat :tavoitehintaiset-rahavaraukset]
@@ -2695,9 +2693,6 @@
               (mapv #(summaa-mapin-arvot % :maara) hoidonjohtopalkkio-hoitokausittain))
             (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :hoidonjohtopalkkio]
               (mapv #(summaa-mapin-arvot % :indeksikorjattu) hoidonjohtopalkkio-hoitokausittain))
-
-            (assoc-in [:yhteenvedot :tilaajan-varaukset :summat :tilaajan-varaukset]
-              (mapv #(summaa-mapin-arvot % :maara) tilaajan-varaukset-hoitokausittain))
 
             ;; Suodattimet
             (assoc-in [:suodattimet :hankinnat :laskutukseen-perustuen-valinta]
@@ -3524,6 +3519,30 @@
         (tavoitehintaiset-rahavaraukset-hoitokausittain :summa-indeksikorjattu vastaus))))
 
   TallennaTavoitehintainenRahavarausEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Rahavarauksen tallennus epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
+    app)
+
+  TallennaTavoitehinnanUlkopuolinenRahavaraus
+  (process-event [{:keys [id summa vuosi loppuvuodet?]} app]
+    (let [urakka (-> @tiedot/tila :yleiset :urakka :id)]
+      ;; Ei yritetä tallentaa, jos mitään ei ole annettu
+      (if summa
+        (tallenna-ja-odota-vastaus app
+          {:palvelu :tallenna-tavoitehinnan-ulkopuolinen-rahavaraus
+           :payload {:urakka-id urakka
+                     :vuosi vuosi
+                     :loppuvuodet? loppuvuodet?
+                     :summa summa}
+           :onnistui ->TallennaTavoitehinnanUlkopuolinenRahavarausOnnistui
+           :epaonnistui ->TallennaTavoitehinnanUlkopuolinenRahavarausEpaonnistui})
+        app)))
+
+  TallennaTavoitehinnanUlkopuolinenRahavarausOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (assoc-in app [:domain :tavoitehinnan-ulkopuoliset-rahavaraukset] vastaus))
+
+  TallennaTavoitehinnanUlkopuolinenRahavarausEpaonnistui
   (process-event [_ app]
     (viesti/nayta! "Rahavarauksen tallennus epäonnistui!" :warning viesti/viestin-nayttoaika-pitka)
     app)

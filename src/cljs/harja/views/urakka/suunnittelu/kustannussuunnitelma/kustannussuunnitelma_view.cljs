@@ -498,6 +498,7 @@
                   (get-in app [:domain :tavoitehintaiset-rahavaraukset])
                   (get-in app [:yhteenvedot :tavoitehintaiset-rahavaraukset :summat :tavoitehintaiset-rahavaraukset])
                   (get-in app [:yhteenvedot :tavoitehintaiset-rahavaraukset :indeksikorjatut-summat :tavoitehintaiset-rahavaraukset])
+                  (get-in app [:domain :tavoitehinnan-ulkopuoliset-rahavaraukset])
                   (get-in app [:domain :indeksit])
                   (get-in app [:domain :kuluva-hoitokausi])
                   (dissoc suodattimet :hankinnat)
@@ -508,14 +509,6 @@
                   {:osioiden-tilat osioiden-tilat
                    :hoitovuosi-nro hoitovuosi-nro
                    :indeksit-saatavilla? indeksit-saatavilla?}]
-
-                 ::t/tilaajan-rahavaraukset
-                 [tilaajan-rahavaraukset-osio/osio
-                  ;; HOX, gridin nimi on edelleen "tilaajan-varaukset" vaikka osio on "tilaajan rahavaraukset"!
-                  (get-in app [:gridit :tilaajan-varaukset :grid])
-                  (dissoc suodattimet :hankinnat)
-                  (:kantahaku-valmis? app)]
-                 ;; Tälle osiolle ei tehdä vahvistusta, koska tilaajan rahavarauksille ei lasketa indeksikorjauksia.
 
                  ::t/johto-ja-hallintokorvaukset                 
                  [johto-ja-hallintokorvaus-osio/osio
