@@ -67,11 +67,26 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     yhteensa_kaikki_hoitokausi_yht        NUMERIC,
     yhteensa_kaikki_val_aika_yht          NUMERIC,
     perusluku                             NUMERIC,
+
+    -- Rahavaraukset 
     rahavaraus_nimet                      TEXT[],
     hoitokausi_yht_array                  NUMERIC[],
     val_aika_yht_array                    NUMERIC[],
     kaikki_rahavaraukset_hoitokausi_yht   NUMERIC,
-    kaikki_rahavaraukset_val_yht          NUMERIC
+    kaikki_rahavaraukset_val_yht          NUMERIC,
+
+    -- Muut kulut, tavoitehintaan vaikuttavat
+    muut_kulut_hoitokausi                 NUMERIC,
+    muut_kulut_val_aika                   NUMERIC,
+    muut_kulut_hoitokausi_yht             NUMERIC,
+    muut_kulut_val_aika_yht               NUMERIC,
+
+    -- Ei tavoitehintaan vaikuttavat muut kulut 
+    muut_kulut_ei_tavoite_hoitokausi      NUMERIC,
+    muut_kulut_ei_tavoite_val_aika        NUMERIC,
+    muut_kulut_ei_tavoite_hoitokausi_yht  NUMERIC,
+    muut_kulut_ei_tavoite_val_aika_yht    NUMERIC
+
 );
 
 -- Tätä kutsummalla saadaan työmaakokouksen laskutusyhteenvetoon kaikki tarvittavat tiedot
@@ -222,13 +237,24 @@ DECLARE
     rahavaraus_nimet                      TEXT[]    := '{}';
     hoitokausi_yht_array                  NUMERIC[] := '{}';
     val_aika_yht_array                    NUMERIC[] := '{}';
-    -- Rahavaraus arvot joita käytetään loopissa 
     rv_val_aika_yht                       NUMERIC := 0;
     rv_hoitokausi_yht                     NUMERIC := 0;
 
     -- Lasketaan rahavaraukset yhteen ja lisätään ne tavoitehintaan 
     kaikki_rahavaraukset_val_yht          NUMERIC := 0.0;
     kaikki_rahavaraukset_hoitokausi_yht   NUMERIC := 0.0;
+
+    -- Muut kulut, tavoitehintaan vaikuttavat
+    muut_kulut_hoitokausi                 NUMERIC := 0.0;
+    muut_kulut_val_aika                   NUMERIC := 0.0;
+    muut_kulut_hoitokausi_yht             NUMERIC := 0.0;
+    muut_kulut_val_aika_yht               NUMERIC := 0.0;
+
+    -- Ei tavoitehintaan vaikuttavat muut kulut 
+    muut_kulut_ei_tavoite_hoitokausi      NUMERIC := 0.0;
+    muut_kulut_ei_tavoite_val_aika        NUMERIC := 0.0;
+    muut_kulut_ei_tavoite_hoitokausi_yht  NUMERIC := 0.0;
+    muut_kulut_ei_tavoite_val_aika_yht    NUMERIC := 0.0;
 
     -- Tulos 
     tulos                                 LY_RAPORTTI_TYOMAAKOKOUS_TULOS;
@@ -864,6 +890,40 @@ BEGIN
     END LOOP;
 
     ---------------------------------------------
+    ---------------  Muut kulut   ---------------
+    ---------------------------------------------
+
+    -- Tavoitehintaan kuuluvat 
+    FOR rivi IN
+        SELECT
+            summa, 
+            l.erapaiva AS erapaiva
+        FROM kulu l
+        JOIN kulu_kohdistus lk ON lk.kulu = l.id
+        -- Etsi pelkästään muukulu tyyppiset  kirjaukset
+        WHERE lk.tyyppi = 'muukulu'
+            -- Tavoitehintainen
+            AND lk.tavoitehintainen = TRUE
+            AND lk.poistettu IS NOT TRUE
+            AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+    LOOP
+        IF rivi.erapaiva <= aikavali_loppupvm THEN
+            -- Muut kulut X Hoitokausi yhteensä 
+            muut_kulut_hoitokausi := muut_kulut_hoitokausi + COALESCE(rivi.summa, 0.0);
+
+            IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
+                -- Muut kulut X valittu kk yhteensä 
+                muut_kulut_val_aika := muut_kulut_val_aika + COALESCE(rivi.summa, 0.0);
+            END IF;
+        END IF;
+    END LOOP;
+
+    -- Yhteensä-  arvot,  nämä on tekohetkellä aivan samat,
+    -- mutta tehty kuitenkin, jos jatkossa tämän taulukon alle tulee lisää rivejä, niitä voi tähän niputtaa
+    muut_kulut_hoitokausi_yht := tavhin_hoitokausi_yht;
+    muut_kulut_val_aika_yht := muut_kulut_val_aika;
+
+    ---------------------------------------------
     --------------- Tavoitehinta  ---------------
     ---------------------------------------------
 
@@ -1156,7 +1216,11 @@ BEGIN
               perusluku, 
         -- Urakan rahavaraukset ja arvot
               rahavaraus_nimet, hoitokausi_yht_array, val_aika_yht_array,
-              kaikki_rahavaraukset_hoitokausi_yht, kaikki_rahavaraukset_val_yht          
+              kaikki_rahavaraukset_hoitokausi_yht, kaikki_rahavaraukset_val_yht,
+        -- Muut kulut 
+              -- Tavoitehintaan vaikuttavat 
+              muut_kulut_hoitokausi, muut_kulut_val_aika, 
+              muut_kulut_hoitokausi_yht, muut_kulut_val_aika_yht
         );
     return next tulos;
 END;
