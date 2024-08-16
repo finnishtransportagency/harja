@@ -892,37 +892,52 @@ BEGIN
     ---------------------------------------------
     ---------------  Muut kulut   ---------------
     ---------------------------------------------
-
-    -- Tavoitehintaan kuuluvat 
     FOR rivi IN
         SELECT
             summa, 
-            l.erapaiva AS erapaiva
+            l.erapaiva AS erapaiva,
+            lk.tavoitehintainen AS tavoitehintainen 
         FROM kulu l
         JOIN kulu_kohdistus lk ON lk.kulu = l.id
-        -- Etsi pelkästään muukulu tyyppiset  kirjaukset
+        -- Etsi pelkästään muukulu tyyppiset  kirjaukset, toimenpideinstansseilla ei ole näissä väliä 
         WHERE lk.tyyppi = 'muukulu'
-            -- Tavoitehintainen
-            AND lk.tavoitehintainen = TRUE
-            AND lk.poistettu IS NOT TRUE
-            AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+          AND lk.poistettu IS NOT TRUE
+          AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
     LOOP
         IF rivi.erapaiva <= aikavali_loppupvm THEN
-            -- Muut kulut X Hoitokausi yhteensä 
-            muut_kulut_hoitokausi := muut_kulut_hoitokausi + COALESCE(rivi.summa, 0.0);
+            --
+            -- ~ Hoitokausi ~
+            -- 
+            IF rivi.tavoitehintainen THEN
+                -- Tavoitehintainen Muut kulut Hoitokausi yhteensä
+                muut_kulut_hoitokausi := muut_kulut_hoitokausi + COALESCE(rivi.summa, 0.0);
+            ELSE
+                -- Ei tavoitehintainen Muut kulut Hoitokausi yhteensä
+                muut_kulut_ei_tavoite_hoitokausi := muut_kulut_ei_tavoite_hoitokausi + COALESCE(rivi.summa, 0.0);
+            END IF;
 
+            --
+            -- ~ Valittu kk ~
+            -- 
             IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
-                -- Muut kulut X valittu kk yhteensä 
-                muut_kulut_val_aika := muut_kulut_val_aika + COALESCE(rivi.summa, 0.0);
+                IF rivi.tavoitehintainen THEN
+                    -- Tavoitehintainen Muut kulut valittu kk yhteensä
+                    muut_kulut_val_aika := muut_kulut_val_aika + COALESCE(rivi.summa, 0.0);
+                ELSE
+                    -- Ei tavoitehintainen Muut kulut valittu kk yhteensä
+                    muut_kulut_ei_tavoite_val_aika := muut_kulut_ei_tavoite_val_aika + COALESCE(rivi.summa, 0.0);
+                END IF;
             END IF;
         END IF;
     END LOOP;
 
-    -- Yhteensä-  arvot,  nämä on tekohetkellä aivan samat,
+    -- Tavoitehintaiset Yhteensä-  arvot,  nämä on tekohetkellä aivan samat,
     -- mutta tehty kuitenkin, jos jatkossa tämän taulukon alle tulee lisää rivejä, niitä voi tähän niputtaa
     muut_kulut_hoitokausi_yht := muut_kulut_hoitokausi;
     muut_kulut_val_aika_yht := muut_kulut_val_aika;
 
+    -- Ei tavoitehintaiset yhteensä-  arvot lasketaan bonusten ja sanktioiden jälkeen alempana
+    
     ---------------------------------------------
     --------------- Tavoitehinta  ---------------
     ---------------------------------------------
@@ -1133,6 +1148,10 @@ BEGIN
             RAISE NOTICE 'paatos_rivi.summa: %', paatos_rivi.summa;
         end loop;
 
+    -- Muut kulut yhteensä, ei tavoitehintaise 
+    muut_kulut_ei_tavoite_hoitokausi_yht := bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht + muut_kulut_ei_tavoite_hoitokausi;
+    muut_kulut_ei_tavoite_val_aika_yht := bonukset_val_aika_yht + sanktiot_val_aika_yht  + muut_kulut_ei_tavoite_val_aika;
+
     -- Muut kustannukset yhteensä
     muut_kustannukset_hoitokausi_yht := 0.0;
     muut_kustannukset_val_aika_yht := 0.0;
@@ -1220,7 +1239,10 @@ BEGIN
         -- Muut kulut 
               -- Tavoitehintaan vaikuttavat 
               muut_kulut_hoitokausi, muut_kulut_val_aika, 
-              muut_kulut_hoitokausi_yht, muut_kulut_val_aika_yht
+              muut_kulut_hoitokausi_yht, muut_kulut_val_aika_yht,
+              -- Ei tavoitehintaiset 
+              muut_kulut_ei_tavoite_hoitokausi, muut_kulut_ei_tavoite_val_aika,
+              muut_kulut_ei_tavoite_hoitokausi_yht, muut_kulut_ei_tavoite_val_aika_yht
         );
     return next tulos;
 END;
