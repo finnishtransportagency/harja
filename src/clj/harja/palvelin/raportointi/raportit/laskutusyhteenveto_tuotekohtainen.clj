@@ -114,8 +114,6 @@
         rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array data))
         rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array data))
         
-      
-        
         rivit (into []
                 (remove nil?
                   (cond
@@ -146,6 +144,11 @@
                      (taulukko-rivi data kyseessa-kk-vali? "Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään" :tilaajan_rahavaraukset_laskutettu :tilaajan_rahavaraukset_laskutetaan false)
                      (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
                      (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
+                    
+                    (= "Muut kulut" otsikko)
+                    [(taulukko-rivi data kyseessa-kk-vali? "Muut tavoitehintaan vaikuttavat kulut" :hankinnat_laskutettu :hankinnat_laskutetaan false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Muut tavoitehinnan ulkopuoliset kulut" :tilaajan_rahavaraukset_laskutettu :tilaajan_rahavaraukset_laskutetaan false)
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
                     
                     :else
@@ -249,7 +252,8 @@
                  ["Päällyste" "pääl"]
                  ["MHU Ylläpito" "yllä"]
                  ["MHU ja HJU hoidon johto" "johto"]
-                 ["MHU Korvausinvestointi" "korv"]]
+                 ["MHU Korvausinvestointi" "korv"]
+                 ["Muut kulut" "muut"]]
 
         ;; Etsitään otsikon indeksi Toimenpideinstanssin nimen osan peruteella
         etsi-indeksi (fn [otsikon-osa rivit]

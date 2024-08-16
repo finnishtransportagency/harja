@@ -74,11 +74,6 @@
         rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array data))
         rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array data))
 
-        _ (println
-            "\n---- \n rahavaraukset-nimet: \n " rahavaraukset-nimet
-            " \n rahavaraukset-val-aika: " rahavaraukset-val-aika
-            " \n rahavaraukset-hoitokausi:" rahavaraukset-hoitokausi "\n -----")
-
         rivit (into []
                 (remove nil?
                   (cond
