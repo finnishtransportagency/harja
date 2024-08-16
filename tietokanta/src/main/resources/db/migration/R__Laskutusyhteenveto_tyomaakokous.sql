@@ -1150,7 +1150,7 @@ BEGIN
             RAISE NOTICE 'paatos_rivi.summa: %', paatos_rivi.summa;
         end loop;
 
-    -- Muut kulut yhteensä, ei tavoitehintaise 
+    -- Muut kulut yhteensä, ei tavoitehintaiset
     muut_kulut_ei_tavoite_hoitokausi_yht := bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht + muut_kulut_ei_tavoite_hoitokausi;
     muut_kulut_ei_tavoite_val_aika_yht := bonukset_val_aika_yht + sanktiot_val_aika_yht  + muut_kulut_ei_tavoite_val_aika;
 

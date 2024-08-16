@@ -146,8 +146,8 @@
                      (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
                     
-                    (= "Muut kulut" otsikko)
-                    [(taulukko-rivi data kyseessa-kk-vali? "Muut tavoitehintaan vaikuttavat kulut" :hankinnat_laskutettu :hankinnat_laskutetaan false)
+                    #_ (= "Muut kulut" otsikko)
+                    #_ [(taulukko-rivi data kyseessa-kk-vali? "Muut tavoitehintaan vaikuttavat kulut" :hankinnat_laskutettu :hankinnat_laskutetaan false)
                      (taulukko-rivi data kyseessa-kk-vali? "Muut tavoitehinnan ulkopuoliset kulut" :tilaajan_rahavaraukset_laskutettu :tilaajan_rahavaraukset_laskutetaan false)
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
                     
