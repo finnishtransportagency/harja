@@ -495,11 +495,6 @@ CREATE TYPE LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI AS
     sakot_laskutetaan                                           NUMERIC,
     tilaajan_rahavaraukset_laskutettu                           NUMERIC,
     tilaajan_rahavaraukset_laskutetaan                          NUMERIC,
-    -- Äkilliset hoitotyöt ja Vahinkojen korjaukset ja maksuehtobonukset
-    akilliset_laskutettu                                        NUMERIC,
-    akilliset_laskutetaan                                       NUMERIC,
-    vahingot_laskutettu                                         NUMERIC,
-    vahingot_laskutetaan                                        NUMERIC,
     alihank_bon_laskutettu                                      NUMERIC,
     alihank_bon_laskutetaan                                     NUMERIC,
     -- MHU ja HJU Hoidon johto
@@ -551,14 +546,6 @@ DECLARE
     sakot_laskutettu                      NUMERIC;
     sakot_laskutetaan                     NUMERIC;
     sanktiorivi                           RECORD;
-   
-    -- Äkilliset hoitotyöt ja Vahinkojen korjaukset
-    akilliset_laskutettu                   NUMERIC;
-    akilliset_laskutetaan                  NUMERIC;
-    akilliset_rivi                         RECORD;
-    akilliset                              RECORD;
-    vahingot_laskutettu                    NUMERIC;
-    vahingot_laskutetaan                   NUMERIC;
 
     -- Hoidon johto
     h_rivi                                RECORD;
@@ -732,14 +719,6 @@ BEGIN
 
         -- Tämä on toimenpideinstanssi loopin sisällä
         -- Eli etsitään kaikki rahavaraukset jokaiselle eri taulukolle 
-        
-        -- Äkilliset hoitotyöt ja Vahinkojen korjaukset
-        -- TODO nämä voi ja pitää poistaa, sekä termit pitää muuttaa 
-        akilliset_laskutettu := 0.0;
-        akilliset_laskutetaan := 0.0;
-        vahingot_laskutettu := 0.0;
-        vahingot_laskutetaan := 0.0;
-
         rahavaraus_nimet       := '{}';
         hoitokausi_yht_array   := '{}';
         val_aika_yht_array     := '{}';
@@ -1181,12 +1160,12 @@ BEGIN
         kaikki_laskutettu := 0.0;
         kaikki_laskutetaan := 0.0;
         kaikki_laskutettu := sakot_laskutettu + bonukset_laskutettu + tilaajan_rahavaraukset_laskutettu +
-                              hankinnat_laskutettu + lisatyot_laskutettu + johto_ja_hallinto_laskutettu + akilliset_laskutettu + vahingot_laskutettu +
+                              hankinnat_laskutettu + lisatyot_laskutettu + johto_ja_hallinto_laskutettu + 
                               hj_palkkio_laskutettu + hj_erillishankinnat_laskutettu + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu +
                               hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu + kaikki_rahavaraukset_hoitokausi_yht;
 
         kaikki_laskutetaan := sakot_laskutetaan + bonukset_laskutetaan + tilaajan_rahavaraukset_laskutetaan +
-                              hankinnat_laskutetaan + lisatyot_laskutetaan + johto_ja_hallinto_laskutetaan + akilliset_laskutetaan + vahingot_laskutetaan +
+                              hankinnat_laskutetaan + lisatyot_laskutetaan + johto_ja_hallinto_laskutetaan + 
                               hj_palkkio_laskutetaan + hj_erillishankinnat_laskutetaan + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan +
                               hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan + kaikki_rahavaraukset_val_yht;
 
@@ -1195,14 +1174,14 @@ BEGIN
         --- Laskutettu == Hoitokauden alusta
         tavoitehintaiset_laskutettu :=
                     hankinnat_laskutettu + tilaajan_rahavaraukset_laskutettu + johto_ja_hallinto_laskutettu + hj_erillishankinnat_laskutettu +
-                    hj_palkkio_laskutettu + akilliset_laskutettu +
+                    hj_palkkio_laskutettu + 
                     -- Rahavaraukset 
                     kaikki_rahavaraukset_hoitokausi_yht;
 
         --- Laskutetaan == Valittu kk
         tavoitehintaiset_laskutetaan :=
                     hankinnat_laskutetaan + tilaajan_rahavaraukset_laskutetaan + johto_ja_hallinto_laskutetaan + hj_erillishankinnat_laskutetaan +
-                    hj_palkkio_laskutetaan + akilliset_laskutetaan + 
+                    hj_palkkio_laskutetaan + 
                     -- Rahavaraukset 
                     kaikki_rahavaraukset_val_yht;
 
@@ -1252,8 +1231,6 @@ LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
                   hankinnat_laskutettu, hankinnat_laskutetaan,
                   sakot_laskutettu, sakot_laskutetaan,
                   tilaajan_rahavaraukset_laskutettu, tilaajan_rahavaraukset_laskutetaan,
-                  akilliset_laskutettu, akilliset_laskutetaan,
-                  vahingot_laskutettu, vahingot_laskutetaan,
                   alihank_bon_laskutettu, alihank_bon_laskutetaan,
                   johto_ja_hallinto_laskutettu, johto_ja_hallinto_laskutetaan,
                   bonukset_laskutettu, bonukset_laskutetaan,
