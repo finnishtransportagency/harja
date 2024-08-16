@@ -613,7 +613,9 @@ DECLARE
     rahavaraus_nimet                      TEXT[]    := '{}';
     hoitokausi_yht_array                  NUMERIC[] := '{}';
     val_aika_yht_array                    NUMERIC[] := '{}';
-    -- Rahavaraus arvot joita käytetään loopissa 
+    kannustin_id                          INT;
+
+    -- Rahavaraus yhteensä arvot
     rv_val_aika_yht                       NUMERIC := 0;
     rv_hoitokausi_yht                     NUMERIC := 0;
 
@@ -787,6 +789,10 @@ BEGIN
             kaikki_rahavaraukset_val_yht := kaikki_rahavaraukset_val_yht + val_aika_yht_array[i];
         END LOOP;
 
+        -- Rahavaraus kannustinjärjestelmä id, rahavaraus taulusta 
+        -- Korvaa yksilöivän tunnisteen 0e78b556-74ee-437f-ac67-7a03381c64f6
+        SELECT id INTO kannustin_id FROM rahavaraus WHERE nimi LIKE '%Kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
+
         -- Hoitokaudella ennen aikaväliä ja aikavälillä laskutetut hankinnat työt
         -- Paitsi hoidon johdon hankinnat, jotka on erillishankintoja ja ne on otettu huomioon eri kohdassa
         hankinnat_laskutettu := 0.0;
@@ -796,7 +802,8 @@ BEGIN
             FOR hankinnat_i IN 
                 SELECT 
                   summa AS kht_summa, 
-                  l.erapaiva AS erapaiva
+                  l.erapaiva AS erapaiva,
+                  lk.rahavaraus_id
                 FROM kulu l
                 JOIN kulu_kohdistus lk ON lk.kulu = l.id
                 JOIN toimenpideinstanssi tpi
@@ -805,9 +812,8 @@ BEGIN
                 WHERE lk.maksueratyyppi NOT IN ('akillinen-hoitotyo', 'muu', 'lisatyo')
                   AND lk.poistettu IS NOT TRUE
                   AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-                  -- Poistetaan Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3) hankinnoista, ja lisätään se omalle rivilleen
-                  AND (tr.yksiloiva_tunniste IS NULL or
-                        (tr.yksiloiva_tunniste IS NOT NULL AND tr.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'))
+                  -- Poistetaan rahavaraus kannustinjärjestelmään (T3) hankinnoista, ja lisätään se omalle rivilleen
+                  AND (tr.yksiloiva_tunniste IS NULL OR lk.rahavaraus_id != kannustin_id)
             LOOP
                 SELECT  hankinnat_i.kht_summa AS summa,
                         hankinnat_i.kht_summa AS korotettuna,
