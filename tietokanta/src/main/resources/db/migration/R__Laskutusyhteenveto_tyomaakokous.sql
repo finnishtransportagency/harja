@@ -69,7 +69,9 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     perusluku                             NUMERIC,
     rahavaraus_nimet                      TEXT[],
     hoitokausi_yht_array                  NUMERIC[],
-    val_aika_yht_array                    NUMERIC[]
+    val_aika_yht_array                    NUMERIC[],
+    kaikki_rahavaraukset_hoitokausi_yht   NUMERIC,
+    kaikki_rahavaraukset_val_yht          NUMERIC
 );
 
 -- Tätä kutsummalla saadaan työmaakokouksen laskutusyhteenvetoon kaikki tarvittavat tiedot
@@ -1091,7 +1093,6 @@ BEGIN
     
     
     tulos := (
-        
         -- Talvihoito
               talvihoito_hoitokausi_yht, talvihoito_val_aika_yht,
         -- Liikenne ymp. hoito
@@ -1154,7 +1155,8 @@ BEGIN
         -- Indeksilaskennan perusluku
               perusluku, 
         -- Urakan rahavaraukset ja arvot
-              rahavaraus_nimet, hoitokausi_yht_array, val_aika_yht_array
+              rahavaraus_nimet, hoitokausi_yht_array, val_aika_yht_array,
+              kaikki_rahavaraukset_hoitokausi_yht, kaikki_rahavaraukset_val_yht          
         );
     return next tulos;
 END;

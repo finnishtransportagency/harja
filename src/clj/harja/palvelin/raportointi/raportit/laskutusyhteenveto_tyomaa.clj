@@ -15,40 +15,61 @@
 (defn- taulukko-rivi
   [data kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi?]
   (rivi
-   [:varillinen-teksti {:arvo (str valiotsikko) 
-                        :lihavoi? lihavoi?}] 
-   [:varillinen-teksti {:arvo (or (avain_hoitokausi data) (yhteiset/summa-fmt nil)) 
-                        :fmt :raha 
-                        :lihavoi? lihavoi?}]
-   (when kyseessa-kk-vali?
-     [:varillinen-teksti {:arvo (or (avain_yht data) (yhteiset/summa-fmt nil)) 
-                          :fmt :raha 
-                          :lihavoi? lihavoi?}]))) 
+    [:varillinen-teksti {:arvo (str valiotsikko)
+                         :lihavoi? lihavoi?}]
+    [:varillinen-teksti {:arvo (or (avain_hoitokausi data) (yhteiset/summa-fmt nil))
+                         :fmt :raha
+                         :lihavoi? lihavoi?}]
+    (when kyseessa-kk-vali?
+      [:varillinen-teksti {:arvo (or (avain_yht data) (yhteiset/summa-fmt nil))
+                           :fmt :raha
+                           :lihavoi? lihavoi?}])))
 
 
 (defn- rahavaraus-rivit
-  [kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika]
-  (map (fn [nimi hoitokausi val-aika]
-         ;; Näytä rahavarausrivi aina, vaikka arvo on 0
-         ;; Jos mitään arvoja ei ole olemassa, Rahavarausten alla tulee lukemaan "Ei tietoja."
-         (rivi
-           [:varillinen-teksti {:arvo (str nimi)
-                                :lihavoi? false}]
-           [:varillinen-teksti {:arvo (or hoitokausi (yhteiset/summa-fmt nil))
+  "Generoi urakan rahavaraukset taulukon
+   val-aika = valittu kk arvo 
+   hoitokausi =  hoitokauden alusta arvo
+   nimi = Rahavaraus"
+  [data avain-yhteensa-hoitokausi avain-yhteensa-valittu kyseessa-kk-vali?
+   rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika]
+  (let [yhteensa-hoitokausi (avain-yhteensa-hoitokausi data) ;; Migraatiosta palautetut arvot
+        yhteensa-valittu (avain-yhteensa-valittu data)
+        ;; Kaikki taulukon rivit tässä
+        rivit (map (fn [nimi hoitokausi val-aika]
+                     ;; Näytä rahavarausrivi aina, vaikka arvo on 0
+                     ;; Jos mitään arvoja ei ole olemassa, Rahavarausten alla tulee lukemaan "Ei tietoja."
+                     (rivi
+                       [:varillinen-teksti {:arvo (str nimi)
+                                            :lihavoi? false}]
+                       [:varillinen-teksti {:arvo (or hoitokausi (yhteiset/summa-fmt nil))
+                                            :fmt :raha
+                                            :lihavoi? false}]
+                       (when kyseessa-kk-vali?
+                         [:varillinen-teksti {:arvo (or val-aika (yhteiset/summa-fmt nil))
+                                              :fmt :raha
+                                              :lihavoi? false}])))
+                rahavaraukset-nimet
+                rahavaraukset-hoitokausi
+                rahavaraukset-val-aika)]
+
+    ;; Lisää yhteensä-arvot rivien päätteeksi
+    (concat rivit
+      [(rivi
+         [:varillinen-teksti {:arvo "Yhteensä"
+                              :lihavoi? true}]
+         [:varillinen-teksti {:arvo yhteensa-hoitokausi
+                              :fmt :raha
+                              :lihavoi? true}]
+         (when kyseessa-kk-vali?
+           [:varillinen-teksti {:arvo yhteensa-valittu
                                 :fmt :raha
-                                :lihavoi? false}]
-           (when kyseessa-kk-vali?
-             [:varillinen-teksti {:arvo (or val-aika (yhteiset/summa-fmt nil))
-                                  :fmt :raha
-                                  :lihavoi? false}])))
-    rahavaraukset-nimet
-    rahavaraukset-hoitokausi
-    rahavaraukset-val-aika))
+                                :lihavoi? true}]))])))
 
 
 (defn- taulukko [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
                          kyseessa-kk-vali? sheet-nimi]}]
-  
+
   (let [rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet data))
         rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array data))
         rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array data))
@@ -77,7 +98,7 @@
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :hoidonjohto_hoitokausi_yht :hoidonjohto_val_aika_yht true)]
 
                     (= "Rahavaraukset" otsikko)
-                    (rahavaraus-rivit kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika)
+                    (rahavaraus-rivit data :kaikki_rahavaraukset_hoitokausi_yht :kaikki_rahavaraukset_val_yht kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika)
 
                     (= "Lisätyöt" otsikko)
                     [(taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (talvihoito)" :lisatyo_talvihoito_hoitokausi_yht :lisatyo_talvihoito_val_aika_yht false)
@@ -107,9 +128,9 @@
                 :viimeinen-rivi-yhteenveto? false
                 :sheet-nimi sheet-nimi}
      (rivi
-      {:otsikko otsikko :leveys 36}
-      {:otsikko laskutettu-teksti :leveys 29 :tyyppi :varillinen-teksti}
-      (when kyseessa-kk-vali? {:otsikko laskutetaan-teksti :leveys 29 :tyyppi :varillinen-teksti}))
+       {:otsikko otsikko :leveys 36}
+       {:otsikko laskutettu-teksti :leveys 29 :tyyppi :varillinen-teksti}
+       (when kyseessa-kk-vali? {:otsikko laskutetaan-teksti :leveys 29 :tyyppi :varillinen-teksti}))
      rivit]))
 
 
@@ -212,9 +233,9 @@
 
      (taulukot/hoidonjohto-valitaulukko {:data rivitiedot
                                          :kyseessa-kk-vali? kyseessa-kk-vali?})
-     
+
      [:otsikko-heading "Muut tavoitehintaan vaikuttavat kulut"]
-     
+
      (taulukko {:data rivitiedot
                 :otsikko "Rahavaraukset"
                 :laskutettu-teksti laskutettu-teksti
