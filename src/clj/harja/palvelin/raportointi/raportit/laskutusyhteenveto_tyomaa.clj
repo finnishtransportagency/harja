@@ -110,7 +110,7 @@
                      (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt (MHU hoidonjohto)" :lisatyo_hoidonjohto_hoitokausi_yht :lisatyo_hoidonjohto_val_aika_yht false)
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :lisatyot_hoitokausi_yht :lisatyot_val_aika_yht true)]
 
-                    (= "Muut" otsikko)
+                    (= "Muut kulut" otsikko)
                     [(taulukko-rivi data kyseessa-kk-vali? "Bonukset" :bonukset_hoitokausi_yht :bonukset_val_aika_yht false)
                      (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sanktiot_hoitokausi_yht :sanktiot_val_aika_yht false)
 
@@ -255,7 +255,7 @@
        [:otsikko-heading (str "Muut toteutuneet kustannukset (ei lasketa tavoitehintaan) aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
        [:otsikko-heading "Muut toteutuneet kustannukset (ei lasketa tavoitehintaan)"])
 
-     (let [otsikot ["Lisätyöt" "Muut"]]
+     (let [otsikot ["Lisätyöt" "Muut kulut"]]
        (concat (for [x otsikot]
                  (taulukko {:data rivitiedot
                             :otsikko x
@@ -264,7 +264,7 @@
                             :kyseessa-kk-vali? kyseessa-kk-vali?}))))
 
      (taulukot/valitaulukko {:data rivitiedot
-                             :otsikko "Muut"
+                             :otsikko "Muut kulut"
                              :laskutettu-teksti laskutettu-teksti
                              :laskutetaan-teksti laskutetaan-teksti
                              :kyseessa-kk-vali? kyseessa-kk-vali?})
