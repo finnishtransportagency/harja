@@ -44,7 +44,7 @@ BEGIN
         RETURN;
     END IF;
 
-    SELECT * FROM tierekisteriosoite_pisteille(piste1::geometry, piste2::geometry, 20) INTO tieosoitevali;
+    SELECT * FROM tierekisteriosoite_pisteille(piste1::geometry, piste2::geometry, 1) INTO tieosoitevali;
 
     FOR pa IN
         SELECT *
