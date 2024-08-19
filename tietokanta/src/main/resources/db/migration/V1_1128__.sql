@@ -44,14 +44,13 @@ BEGIN
         RETURN;
     END IF;
 
-    SELECT * FROM tierekisteriosoite_pisteille(piste1::geometry, piste2::geometry, 1) INTO tieosoitevali;
+    SELECT * FROM tierekisteriosoite_pisteille(piste1::geometry, piste2::geometry, 20) INTO tieosoitevali;
 
     FOR pa IN
         SELECT *
         FROM pohjavesialue
         WHERE pohjavesialue.tr_numero = tieosoitevali.tie
-          AND st_dwithin(tieosoitevali.geometria, pohjavesialue.alue, 1)
-
+          AND st_dwithin(tieosoitevali.geometria, pohjavesialue.alue, 20)
         LOOP
             -- Halutaan tietää, kuinka iso osuus tieosoitevälistä osuu pohjavesialueelle.
             SELECT st_length(st_intersection(st_buffer(pa.alue, 1, 'endcap=flat'), tieosoitevali.geometria)) /
@@ -88,11 +87,11 @@ BEGIN
         SELECT *
         FROM rajoitusalue
         WHERE (rajoitusalue.tierekisteriosoite).tie = tieosoitevali.tie
-          AND st_dwithin(tieosoitevali.geometria, rajoitusalue.sijainti, 1)
+          AND st_dwithin(tieosoitevali.geometria, rajoitusalue.sijainti, 20)
           AND rajoitusalue.urakka_id = urakka_id_
           AND rajoitusalue.poistettu = FALSE
         LOOP
-            SELECT st_length(st_intersection(st_buffer(ra.sijainti, 1, 'endcap=flat'), tieosoitevali.geometria)) /
+            SELECT st_length(st_intersection(st_buffer(ra.sijainti, 20, 'endcap=flat'), tieosoitevali.geometria)) /
                    st_length(tieosoitevali.geometria)
             INTO osuus;
             RETURN NEXT (ra.id, osuus)::rajoitusalueen_osuus;
@@ -153,9 +152,9 @@ BEGIN
                                                 ra.rajoitusalue);
                                     END LOOP;
                             END IF;
-                            edellinen_rp := rp;
                         END IF;
                     END LOOP;
+                edellinen_rp := rp;
             END LOOP;
     END IF;
 
@@ -165,5 +164,3 @@ $$ LANGUAGE plpgsql;
 
 DROP FUNCTION pisteen_rajoitusalue(piste POINT, threshold INTEGER, toteuma_id INTEGER);
 DROP FUNCTION pisteen_pohjavesialue(piste POINT, threshold INTEGER);
-
--- TODO: Benchmarkkaa suorituskyky verrattuna vanhaan
