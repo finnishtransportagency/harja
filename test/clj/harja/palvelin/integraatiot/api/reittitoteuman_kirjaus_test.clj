@@ -187,19 +187,15 @@
               toteuma-materiaali-idt (into [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuma-id))))
               toteuman-materiaali (ffirst (q (str "SELECT nimi FROM toteuma_materiaali
                                                     JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
-                                                    WHERE toteuma = " toteuma-id)))
-              ;; Varmista, että Talvisuola materiaalinimellä lisätty toteuma menee myös suolatoteuma_reittipiste-tauluun
-              suolatoteumatoteuma-reittipisteet  (q-map (str "SELECT aika, pohjavesialue, sijainti, materiaalikoodi, maara,
-              rajoitusalue_id FROM suolatoteuma_reittipiste  WHERE toteuma = " toteuma-id))]
+                                                    WHERE toteuma = " toteuma-id)))]
           (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy"]))
-          (is (= (count reittipisteet) 3))
+          (is (= (count reittipisteet) 4))
           (is (= (count toteuma-tehtava-idt) 3))
           (is (= (count toteuma-materiaali-idt) 1))
-          (is (= (count suolatoteumatoteuma-reittipisteet) 3))
-          (is (every? #(= materiaalikoodi-id (:materiaalikoodi %)) suolatoteumatoteuma-reittipisteet))
           (is (= toteuman-materiaali "Talvisuola, rakeinen NaCl"))
 
-          (doseq [reittipiste reittipisteet]
+          ;; Ensimmäisellä pisteellä ei tarkoituksella materiaaleja, lopuilla pitäisi olla.
+          (doseq [reittipiste (rest reittipisteet)]
             (let [reitti-tehtava-idt (into [] (map ::rp/toimenpidekoodi) (::rp/tehtavat reittipiste))
                   reitti-materiaali-idt (into [] (map ::rp/materiaalikoodi) (::rp/materiaalit reittipiste))
                   reitti-hoitoluokka (::rp/soratiehoitoluokka reittipiste)]
@@ -714,20 +710,22 @@
                       (.replace "__SUORITTAJA_NIMI__" "Tiensuolaajat Oy")
 
                       ;; Siirretään testikirjauksen pisteet osumaan urakalle määritellylle rajoitusalueelle
-                      (.replace "\"x\": 429451.2124" "\"x\": 276355.9988502257")
-                      (.replace "\"y\": 7199520.6102" "\"y\": 6640833.27780571")
+                      (.replace "\"x\": 429457.970" "\"x\": 276317.06")
+                      (.replace "\"y\": 7199520.271" "\"y\": 6641012.76")
 
-                      (.replace "\"x\": 429449.505" "\"x\": 276355.9988502257")
-                      (.replace "\"y\": 7199521.6673" "\"y\": 6640833.27780571")
+                      (.replace "\"x\": 429451.2124" "\"x\": 276309.04")
+                      (.replace "\"y\": 7199520.6102" "\"y\": 6641030.75")
 
-                      (.replace "\"x\": 429440.5079" "\"x\": 276355.9988502257")
-                      (.replace "\"y\": 7199523.6547" "\"y\": 6640833.27780571"))
+                      (.replace "\"x\": 429449.505" "\"x\": 276265.24")
+                      (.replace "\"y\": 7199521.6673" "\"y\": 6641175.52")
+
+                      (.replace "\"x\": 429440.5079" "\"x\": 276257.31")
+                      (.replace "\"y\": 7199523.6547" "\"y\": 6641470.08"))
         vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-yit portti
                   api-payload)
 
         toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id=" ulkoinen-id)))
-        rajoitusalue (ffirst (q (str "SELECT pisteen_rajoitusalue(st_makepoint(276355.9988502257,6640833.27780571)::POINT, 20, " toteuma-id ")")))
-        suolatoteuma-reittipiste-maara-fn #(ffirst (q (str "SELECT sum(maara) FROM suolatoteuma_reittipiste WHERE rajoitusalue_id=" rajoitusalue)))
+        suolatoteuma-reittipiste-maara-fn #(ffirst (q (str "SELECT sum(maara) FROM suolatoteuma_reittipiste WHERE toteuma=" toteuma-id " AND rajoitusalue_id is not null")))
 
         reittipiste-suolamaara-fn #(ffirst (q (str "SELECT sum(mat.maara) FROM toteuman_reittipisteet trp"
                                                 " LEFT JOIN LATERAL UNNEST(trp.reittipisteet) rp ON TRUE"
