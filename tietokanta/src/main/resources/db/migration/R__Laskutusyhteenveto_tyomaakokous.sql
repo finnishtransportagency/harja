@@ -951,9 +951,7 @@ BEGIN
     tavhin_hoitokausi_yht := tavhin_hoitokausi_yht +
             talvihoito_hoitokausi_yht + lyh_hoitokausi_yht + sora_hoitokausi_yht +
             paallyste_hoitokausi_yht + yllapito_hoitokausi_yht + korvausinv_hoitokausi_yht +
-            johtojahallinto_hoitokausi_yht + erillishankinnat_hoitokausi_yht + hjpalkkio_hoitokausi_yht +
-            -- Rahavaraukset 
-            kaikki_rahavaraukset_hoitokausi_yht;
+            johtojahallinto_hoitokausi_yht + erillishankinnat_hoitokausi_yht + hjpalkkio_hoitokausi_yht;
     
     -- Tavoitehinta valittu kk 
     tavhin_val_aika_yht := 0.0;
@@ -961,9 +959,7 @@ BEGIN
             talvihoito_val_aika_yht + lyh_val_aika_yht + sora_val_aika_yht +
             paallyste_val_aika_yht + yllapito_val_aika_yht + korvausinv_val_aika_yht +
             johtojahallinto_val_aika_yht +
-            erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht + 
-            -- Rahavaraukset 
-            kaikki_rahavaraukset_val_yht;
+            erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht;
 
     -- Budjettia jäljellä
     budjettia_jaljella := 0.0;
@@ -1157,6 +1153,7 @@ BEGIN
     -- Muut kustannukset yhteensä
     muut_kustannukset_hoitokausi_yht := 0.0;
     muut_kustannukset_val_aika_yht := 0.0;
+
     muut_kustannukset_hoitokausi_yht :=
             muut_kustannukset_hoitokausi_yht + lisatyot_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht +
             paatos_tavoitepalkkio_hoitokausi_yht + paatos_tavoiteh_ylitys_hoitokausi_yht +
@@ -1164,7 +1161,9 @@ BEGIN
             -- Ei tavoitehintaiset
             muut_kulut_ei_tavoite_hoitokausi + 
             -- Tavoitehintaiset
-            muut_kulut_hoitokausi_yht;
+            muut_kulut_hoitokausi_yht + 
+            -- Rahavaraukset
+            kaikki_rahavaraukset_hoitokausi_yht;
             
     muut_kustannukset_val_aika_yht :=
             muut_kustannukset_val_aika_yht + lisatyot_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht +
@@ -1173,7 +1172,9 @@ BEGIN
             -- Ei tavoitehintaiset
             muut_kulut_ei_tavoite_val_aika + 
             -- Tavoitehintaiset
-            muut_kulut_val_aika_yht;
+            muut_kulut_val_aika_yht  + 
+            -- Rahavaraukset
+            kaikki_rahavaraukset_val_yht;
 
     -- Kaikki yhteensä
     yhteensa_kaikki_hoitokausi_yht := 0.0;
