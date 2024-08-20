@@ -85,7 +85,11 @@
         rahavaraus-rivit (when (or
                                  (= "Talvihoito" otsikko)
                                  (= "Liikenneympäristön hoito" otsikko)
-                                 (= "Soratien hoito" otsikko))
+                                 (= "Soratien hoito" otsikko)
+                                 (= "Päällyste" otsikko)
+                                 (= "MHU Ylläpito" otsikko)
+                                 (= "MHU ja HJU hoidon johto" otsikko)
+                                 (= "MHU Korvausinvestointi" otsikko))
                            (map (fn [nimi hoitokausi val-aika]
                                   (rivi
                                     [:varillinen-teksti {:arvo (str nimi)
@@ -143,11 +147,6 @@
                     [(taulukko-rivi data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
                      (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
                      (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
-                     (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
-                    
-                    #_ (= "Muut kulut" otsikko)
-                    #_ [(taulukko-rivi data kyseessa-kk-vali? "Muut tavoitehintaan vaikuttavat kulut" :hankinnat_laskutettu :hankinnat_laskutetaan false)
-                     (taulukko-rivi data kyseessa-kk-vali? "Muut tavoitehinnan ulkopuoliset kulut" :tilaajan_rahavaraukset_laskutettu :tilaajan_rahavaraukset_laskutetaan false)
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
                     
                     :else
