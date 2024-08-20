@@ -192,6 +192,50 @@ FROM pot2_paallystekerros pot2p
 WHERE pot2p.pot2_id = :pot2_id;
 
 
+-- name: hae-pot2-alustarivit-ilmoitukseen
+SELECT
+    pot2a.id as "pot2a_id",
+    pot2a.pot2_id as "pot-id",
+    pot2a.tr_numero AS "tr-numero",
+    pot2a.tr_alkuosa AS "tr-alkuosa",
+    pot2a.tr_alkuetaisyys AS "tr-alkuetaisyys",
+    pot2a.tr_loppuosa AS "tr-loppuosa",
+    pot2a.tr_loppuetaisyys AS "tr-loppuetaisyys",
+    pot2a.tr_ajorata AS "tr-ajorata",
+    pot2a.tr_kaista AS "tr-kaista",
+    pot2a.toimenpide,
+    pot2a.velho_lahetyksen_aika as "velho-lahetyksen-aika",
+    pot2a.velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus",
+    pot2a.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila",
+
+    -- toimenpidespesifiset kentät
+    pot2a.massa,
+    pot2a.murske,
+    pot2a.verkon_tyyppi AS "verkon-tyyppi",
+    pot2a.verkon_tarkoitus AS "verkon-tarkoitus",
+    pot2a.verkon_sijainti AS "verkon-sijainti",
+    pot2a.kasittelysyvyys,
+    pot2a.lisatty_paksuus AS "lisatty-paksuus",
+    pot2a.massamenekki,
+    pot2a.leveys,
+    pot2a.pinta_ala AS "pinta-ala",
+    pot2a.kokonaismassamaara,
+    pot2a.sideaine,
+    pot2a.sideainepitoisuus,
+    pot2a.sideaine2,
+    pot.luotu as "alkaen",
+    pot.paallystyskohde,
+    um.tyyppi as "murske-tyyppi",
+    um.rakeisuus,
+    um.iskunkestavyys,
+    p2mt.*
+  FROM pot2_alusta pot2a
+  JOIN paallystysilmoitus pot ON pot.id = pot2a.pot2_id AND pot.poistettu IS FALSE
+  LEFT JOIN pot2_mk_urakan_murske um ON um.id = pot2a.murske
+  LEFT JOIN pot2_massan_tiedot p2mt on p2mt.id = pot2a.massa
+ WHERE pot2a.pot2_id = :pot2_id
+   AND pot2a.poistettu IS FALSE;
+
 -- name: hae-pot2-alustarivit
 SELECT
     alusta.id,

@@ -383,7 +383,7 @@
   "Kasaa POT2-ilmoituksen tarvitsemaan muotoon alustakerroksen rivit"
   [db paallystysilmoitus]
   (into []
-        (q/hae-pot2-alustarivit db {:pot2_id (:id paallystysilmoitus)})))
+        (q/hae-pot2-alustarivit-ilmoitukseen db {:pot2_id (:id paallystysilmoitus)})))
 
 (defn- pot2-paallystekerros-ja-alusta
   "Hakee pot2-spesifiset tiedot lomakkeelle, kuten päällystekerros ja alusta"
