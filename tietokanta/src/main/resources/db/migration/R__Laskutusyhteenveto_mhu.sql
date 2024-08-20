@@ -829,17 +829,13 @@ BEGIN
         END LOOP;
 
         -- Lisää muut kulut rahavarausten alle
-        IF muu_kulu_tavoitehintainen_hoitokausi > 0 THEN
-            rahavaraus_nimet := array_append(rahavaraus_nimet, 'Muut tavoitehintaan vaikuttavat kulut');
-            hoitokausi_yht_array := array_append(hoitokausi_yht_array, muu_kulu_tavoitehintainen_hoitokausi);
-            val_aika_yht_array := array_append(val_aika_yht_array, muu_kulu_tavoitehintainen_val_aika);
-        END IF;
+        rahavaraus_nimet := array_append(rahavaraus_nimet, 'Muut tavoitehintaan vaikuttavat kulut');
+        hoitokausi_yht_array := array_append(hoitokausi_yht_array, COALESCE(muu_kulu_tavoitehintainen_hoitokausi, 0.0));
+        val_aika_yht_array := array_append(val_aika_yht_array, COALESCE(muu_kulu_tavoitehintainen_val_aika, 0.0));
 
-        IF muu_kulu_ei_tavoitehintainen_hoitokausi > 0 THEN
-            rahavaraus_nimet := array_append(rahavaraus_nimet, 'Muut tavoitehinnan ulkopuoliset kulut');
-            hoitokausi_yht_array := array_append(hoitokausi_yht_array, muu_kulu_ei_tavoitehintainen_hoitokausi);
-            val_aika_yht_array := array_append(val_aika_yht_array, muu_kulu_ei_tavoitehintainen_val_aika);
-        END IF;
+        rahavaraus_nimet := array_append(rahavaraus_nimet, 'Muut tavoitehinnan ulkopuoliset kulut');
+        hoitokausi_yht_array := array_append(hoitokausi_yht_array, COALESCE(muu_kulu_ei_tavoitehintainen_hoitokausi, 0.0));
+        val_aika_yht_array := array_append(val_aika_yht_array, COALESCE(muu_kulu_ei_tavoitehintainen_val_aika, 0.0));
 
 
         -- Laske rahavaraukset yhteen 
