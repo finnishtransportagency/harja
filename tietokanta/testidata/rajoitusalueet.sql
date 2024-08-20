@@ -12,7 +12,8 @@ $$
         -- Pohjavesialue: Hanko
         INSERT INTO rajoitusalue(id, tierekisteriosoite, sijainti, pituus, ajoratojen_pituus, urakka_id, luotu, luoja)
         VALUES (1, ROW (25, 2, 200, 3, 2837, NULL)::TR_OSOITE,
-                (select * from tierekisteriosoitteelle_viiva(25, 2, 200, 3, 2837) as sijainti),
+                st_union((SELECT * FROM tierekisteriosoitteelle_viiva_ajr(25, 2, 200, 3, 2837, 1) AS sijainti),
+                         (SELECT * FROM tierekisteriosoitteelle_viiva_ajr(25, 2, 200, 3, 2837, 2) AS sijainti)),
                 NULL, NULL, _urakka, _luotu, _kayttaja);
 
 
@@ -36,7 +37,9 @@ $$
         -- Pohjavesialue: Jääli
         INSERT INTO rajoitusalue (id, tierekisteriosoite, pituus, ajoratojen_pituus, sijainti, urakka_id, luotu, luoja)
         VALUES (2, (20, 4, 2440, 4, 3583, NULL)::tr_osoite, 1143, 1143,
-                (SELECT * FROM tierekisteriosoitteelle_viiva(20, 4, 2440, 4, 3583) AS sijainti),
+                st_union(
+                    (SELECT * FROM tierekisteriosoitteelle_viiva_ajr(20, 4, 2440, 4, 3583, 1) AS sijainti),
+                    (SELECT * FROM tierekisteriosoitteelle_viiva_ajr(20, 4, 2440, 4, 3583, 2) AS sijainti)),
                 _urakka, _luotu, _kayttaja);
 
         INSERT INTO rajoitusalue_rajoitus(rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu,
@@ -71,5 +74,5 @@ $$
 $$;
 
 -- Jostain syystä rajoitusalueen id:n serial sequenssi menee sekaisin, niin päivitetään se kuntoon samalla
-SELECT SETVAL('public.rajoitusalue_id_seq', (SELECT nextval('public.rajoitusalue_id_seq') + 1));
+SELECT SETVAL('public.rajoitusalue_id_seq', (SELECT NEXTVAL('public.rajoitusalue_id_seq') + 1));
 

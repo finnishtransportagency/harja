@@ -50,7 +50,7 @@ BEGIN
         SELECT *
         FROM pohjavesialue
         WHERE pohjavesialue.tr_numero = tieosoitevali.tie
-          AND st_dwithin(tieosoitevali.geometria, pohjavesialue.alue, 20)
+          AND st_dwithin(tieosoitevali.geometria, pohjavesialue.alue, 1)
         LOOP
             -- Halutaan tietää, kuinka iso osuus tieosoitevälistä osuu pohjavesialueelle.
             SELECT st_length(st_intersection(st_buffer(pa.alue, 1, 'endcap=flat'), tieosoitevali.geometria)) /
@@ -87,11 +87,11 @@ BEGIN
         SELECT *
         FROM rajoitusalue
         WHERE (rajoitusalue.tierekisteriosoite).tie = tieosoitevali.tie
-          AND st_dwithin(tieosoitevali.geometria, rajoitusalue.sijainti, 20)
+          AND st_dwithin(tieosoitevali.geometria, rajoitusalue.sijainti, 1)
           AND rajoitusalue.urakka_id = urakka_id_
           AND rajoitusalue.poistettu = FALSE
         LOOP
-            SELECT st_length(st_intersection(st_buffer(ra.sijainti, 20, 'endcap=flat'), tieosoitevali.geometria)) /
+            SELECT st_length(st_intersection(st_buffer(ra.sijainti, 1, 'endcap=flat'), tieosoitevali.geometria)) /
                    st_length(tieosoitevali.geometria)
             INTO osuus;
             RETURN NEXT (ra.id, osuus)::rajoitusalueen_osuus;
@@ -164,3 +164,27 @@ $$ LANGUAGE plpgsql;
 
 DROP FUNCTION pisteen_rajoitusalue(piste POINT, threshold INTEGER, toteuma_id INTEGER);
 DROP FUNCTION pisteen_pohjavesialue(piste POINT, threshold INTEGER);
+
+
+-- Päivitetään olemassa olevien rajoitusalueiden geometria sisältämään molemmat "ajoradat" eli suunnat
+UPDATE rajoitusalue
+SET sijainti = st_union(
+    (SELECT *
+     FROM
+         tierekisteriosoitteelle_viiva_ajr(
+             (tierekisteriosoite).tie,
+             (tierekisteriosoite).aosa,
+             (tierekisteriosoite).aet,
+             (tierekisteriosoite).losa,
+             (tierekisteriosoite).let,
+             1)),
+    (SELECT *
+     FROM
+         tierekisteriosoitteelle_viiva_ajr(
+             (tierekisteriosoite).tie,
+             (tierekisteriosoite).aosa,
+             (tierekisteriosoite).aet,
+             (tierekisteriosoite).losa,
+             (tierekisteriosoite).let,
+             2)));
+
