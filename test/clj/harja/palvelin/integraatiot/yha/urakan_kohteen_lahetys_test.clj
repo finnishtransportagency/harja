@@ -255,13 +255,13 @@
       [:kohdetyotyyppi "paallystys"]
       [:nimi "Kirkonkylä - Toppinen 2"]
       [:tunnus "a"]
-      [:toiden-aloituspaivamaara "2023-01-01"]
-      [:paallystyksen-valmistumispaivamaara "2023-08-01"]
-      [:kohteen-valmistumispaivamaara "2023-08-01"]
-      [:takuupaivamaara "2023-08-01"]
-      [:toteutunuthinta 98900M]
+      [:toiden-aloituspaivamaara "2022-01-01"]
+      [:paallystyksen-valmistumispaivamaara "2022-08-01"]
+      [:kohteen-valmistumispaivamaara "2022-08-01"]
+      [:takuupaivamaara "2022-08-01"]
+      [:toteutunuthinta 99900M]
       [:tierekisteriosoitevali
-       [:karttapaivamaara "2023-12-16"]
+       [:karttapaivamaara "2022-12-16"]
        [:tienumero 86]
        [:aosa 20]
        [:aet 0]
@@ -273,7 +273,7 @@
        [:alustalle-tehty-toimenpide
         [:harja-id 9]
         [:tierekisteriosoitevali
-         [:karttapaivamaara "2023-12-16"]
+         [:karttapaivamaara "2022-12-16"]
          [:tienumero 86]
          [:aosa 20]
          [:aet 0]
@@ -320,7 +320,7 @@
        [:alustalle-tehty-toimenpide
         [:harja-id 10]
         [:tierekisteriosoitevali
-         [:karttapaivamaara "2023-12-16"]
+         [:karttapaivamaara "2022-12-16"]
          [:tienumero 86]
          [:aosa 20]
          [:aet 650]
@@ -370,7 +370,7 @@
         [:harja-id 45]
         [:poistettu false]
         [:tierekisteriosoitevali
-         [:karttapaivamaara "2023-12-16"]
+         [:karttapaivamaara "2022-12-16"]
          [:tienumero 86]
          [:aosa 20]
          [:aet 0]
@@ -413,7 +413,7 @@
         [:harja-id 46]
         [:poistettu false]
         [:tierekisteriosoitevali
-         [:karttapaivamaara "2023-12-16"]
+         [:karttapaivamaara "2022-12-16"]
          [:tienumero 86]
          [:aosa 20]
          [:aet 650]
@@ -470,6 +470,7 @@
     (is (= 10.0M rc-prosentti) "RC-prosentti laskettu kun kyseessä on REM-toimenpide")
     (is (xml/validi-xml? "xsd/yha/" "yha.xsd" xml) "Muodostettu XML on validia")
     (is (= odotettu-xml-parsittu luotu-xml-parsittu) "Paikkaus-POT:in XML oikein muodostettu")))
+
 
 
 
