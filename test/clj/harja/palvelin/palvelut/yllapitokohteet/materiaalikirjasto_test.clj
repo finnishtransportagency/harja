@@ -479,6 +479,8 @@
         oletetut (list
                    {:id (hae-urakan-id-nimella "Analytiikan testipäällystysurakka")
                     :nimi "Analytiikan testipäällystysurakka"}
+                   {:id (hae-urakan-id-nimella "POT2 testipäällystysurakka"), 
+                    :nimi "POT2 testipäällystysurakka"}
                    {:id (hae-urakan-id-nimella "Utajärven päällystysurakka")
                     :nimi "Utajärven päällystysurakka"})
         muut-urakat-paikkausurakasta (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -489,6 +491,8 @@
                                      :nimi "Analytiikan testipäällystysurakka"}
                                     {:id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
                                      :nimi "Muhoksen päällystysurakka"}
+                                    {:id (hae-urakan-id-nimella "POT2 testipäällystysurakka"),
+                                     :nimi "POT2 testipäällystysurakka"}
                                     {:id (hae-urakan-id-nimella "Utajärven päällystysurakka")
                                      :nimi "Utajärven päällystysurakka"}
                                     )]
@@ -515,9 +519,11 @@
                         +kayttaja-jvh+ {:urakka-id (hae-oulun-alueurakan-2014-2019-id)})
         oletetut-kemin-urakoitsija (list) ;; Tällä urakoitsijalla ei materiaaleja
         oletetut-skanska (list {:id (hae-urakan-id-nimella "Analytiikan testipäällystysurakka")
-                                :nimi "Analytiikan testipäällystysurakka"}
+                                :nimi "Analytiikan testipäällystysurakka"} 
                            {:id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
-                            :nimi "Muhoksen päällystysurakka"})
+                            :nimi "Muhoksen päällystysurakka"}
+                           {:id (hae-urakan-id-nimella "POT2 testipäällystysurakka")
+                            :nimi "POT2 testipäällystysurakka"})
         oletetut-yit (list {:id (hae-urakan-id-nimella "Aktiivinen Oulu Päällystys Testi")
                             :nimi "Aktiivinen Oulu Päällystys Testi"})]
     (is (= muut-urakat-kemi oletetut-kemin-urakoitsija) "Muut urakat oikein")
