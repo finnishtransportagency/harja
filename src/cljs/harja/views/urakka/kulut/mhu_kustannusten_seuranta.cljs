@@ -9,6 +9,7 @@
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
+            [harja.ui.dom :as dom]
             [harja.ui.debug :as debug]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+ ajax-loader-pieni]]
@@ -184,7 +185,10 @@
                     (big/->big (or ((keyword (str (name paaryhma-avain) "-toteutunut")) rivit-paaryhmittain) 0))
                     (big/->big (or ((keyword (str (name paaryhma-avain) "-budjetoitu-indeksikorjattu")) rivit-paaryhmittain) 0))
                     neg?)
-        vahvistettu (get rivit-paaryhmittain (keyword (str (name paaryhma-avain) "-indeksikorjaus-vahvistettu")))]
+        vahvistettu (get rivit-paaryhmittain (keyword (str (name paaryhma-avain) "-indeksikorjaus-vahvistettu")))
+        avaa-tai-sulje-haitari (fn [event]
+                    (when (dom/enter-nappain? event)
+                      (e! (kustannusten-seuranta-tiedot/->AvaaRivi paaryhma-avain))))]
     (doall (concat
              [^{:key (str paaryhma "-" (hash toimenpiteet))}
               [:tr.bottom-border.selectable {:on-click #(e! (kustannusten-seuranta-tiedot/->AvaaRivi paaryhma-avain))
@@ -192,9 +196,15 @@
                [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}
                 (if (and (> (count toimenpiteet) 0)
                       (contains? (:avatut-rivit app) paaryhma-avain))
-                  [:img {:alt "Expander" :src "images/expander-down.svg"}]
+                  [:img {:alt "Expander"
+                         :src "images/expander-down.svg"
+                         :tabIndex "0"
+                         :on-key-down #(avaa-tai-sulje-haitari %)}]
                   (when (> (count toimenpiteet) 0)
-                    [:img {:alt "Expander" :src "images/expander.svg"}]))]
+                    [:img {:alt "Expander"
+                           :src "images/expander.svg"
+                           :tabIndex "0"
+                           :on-key-down #(avaa-tai-sulje-haitari %)}]))]
                [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
                [:td {:style {:width (:tehtava leveydet)
                              :font-weight "700"}} paaryhma]
