@@ -1191,18 +1191,13 @@ BEGIN
                               hankinnat_laskutettu + lisatyot_laskutettu + johto_ja_hallinto_laskutettu + 
                               hj_palkkio_laskutettu + hj_erillishankinnat_laskutettu + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu +
                               hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu + 
-                              kaikki_rahavaraukset_hoitokausi_yht  
-                              -- Miinusta vielä muut kulut mitkä ei kuuluneet tavoitehintaan
-                              - muu_kulu_ei_tavoitehintainen_hoitokausi;
+                              kaikki_rahavaraukset_hoitokausi_yht;
 
         kaikki_laskutetaan := sakot_laskutetaan + bonukset_laskutetaan + kaikki_rahavaraukset_val_yht +
                               hankinnat_laskutetaan + lisatyot_laskutetaan + johto_ja_hallinto_laskutetaan + 
                               hj_palkkio_laskutetaan + hj_erillishankinnat_laskutetaan + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan +
                               hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan + 
-                              kaikki_rahavaraukset_val_yht 
-                              -- Miinusta vielä muut kulut mitkä ei kuuluneet tavoitehintaan
-                              -- Miinustetaan tässä rakenteen takia, toteutettu rahavaraus array rakenteeseen
-                              - muu_kulu_ei_tavoitehintainen_val_aika;
+                              kaikki_rahavaraukset_val_yht;
 
         -- Tavoitehintaan sisältyy: Hankinnat, Johto- ja Hallintokorvaukset, (hoidonjohto tässä), Erillishankinnat, HJ-Palkkio, Äkilliset hoitotyöt.
         -- Tavoitehintaan ei sisälly: Lisätyöt, Sanktiot, Suolasanktiot, Bonukset, Hoitovuoden päättämiseen liittyvät kulut.
@@ -1210,19 +1205,15 @@ BEGIN
         tavoitehintaiset_laskutettu :=
                     hankinnat_laskutettu + johto_ja_hallinto_laskutettu + hj_erillishankinnat_laskutettu +
                     hj_palkkio_laskutettu + 
-                    -- Rahavaraukset 
-                    kaikki_rahavaraukset_hoitokausi_yht 
-                    -- Miinusta vielä mitkä ei kuuluneet tavoitehintaan
-                    - muu_kulu_ei_tavoitehintainen_hoitokausi;
+                    -- Rahavaraukset, muut kulut
+                    kaikki_rahavaraukset_hoitokausi_yht;
 
         --- Laskutetaan == Valittu kk
         tavoitehintaiset_laskutetaan :=
                     hankinnat_laskutetaan + kaikki_rahavaraukset_val_yht + johto_ja_hallinto_laskutetaan + hj_erillishankinnat_laskutetaan +
                     hj_palkkio_laskutetaan + 
-                    -- Rahavaraukset 
-                    kaikki_rahavaraukset_val_yht 
-                    -- Miinusta vielä mitkä ei kuuluneet tavoitehintaan
-                    - muu_kulu_ei_tavoitehintainen_val_aika;
+                    -- Rahavaraukset, muut kulut
+                    kaikki_rahavaraukset_val_yht;
 
         RAISE NOTICE '
 Yhteenveto:';
