@@ -257,12 +257,6 @@
                 :kyseessa-kk-vali? kyseessa-kk-vali?
                 :tavoitehintainen? true})
 
-     ;; Tyylityön välitaulukko (Toteutuneet tavoitehintaan vaikuttaneet kustannukset)
-     (taulukot/valitaulukko {:data rivitiedot
-                             :laskutettu-teksti laskutettu-teksti
-                             :laskutetaan-teksti laskutetaan-teksti
-                             :kyseessa-kk-vali? kyseessa-kk-vali?})
-
      (if
        (and
          (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)

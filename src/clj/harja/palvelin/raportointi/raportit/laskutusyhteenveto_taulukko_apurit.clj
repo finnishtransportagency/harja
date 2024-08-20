@@ -74,7 +74,7 @@
                        nil
                        "vahvistamaton")
 
-                               ;; Nätetään arvot vain jos on olemassa
+                     ;; Nätetään arvot vain jos on olemassa
                      (when (yhteiset/raha-arvo-olemassa? (:hoitokauden_tavoitehinta data))
                        (valitaulukko-rivi data false "Tavoitehinta (indeksikorjattu)" :hoitokauden_tavoitehinta :hoitokauden_tavoitehinta true nil nil))
 

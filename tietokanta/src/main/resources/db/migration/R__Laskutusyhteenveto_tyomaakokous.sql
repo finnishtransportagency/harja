@@ -1160,11 +1160,20 @@ BEGIN
     muut_kustannukset_hoitokausi_yht :=
             muut_kustannukset_hoitokausi_yht + lisatyot_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht +
             paatos_tavoitepalkkio_hoitokausi_yht + paatos_tavoiteh_ylitys_hoitokausi_yht +
-            paatos_kattoh_ylitys_hoitokausi_yht + muut_kulut_ei_tavoite_hoitokausi;
+            paatos_kattoh_ylitys_hoitokausi_yht + 
+            -- Ei tavoitehintaiset
+            muut_kulut_ei_tavoite_hoitokausi + 
+            -- Tavoitehintaiset
+            muut_kulut_hoitokausi_yht;
+            
     muut_kustannukset_val_aika_yht :=
             muut_kustannukset_val_aika_yht + lisatyot_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht +
             paatos_tavoitepalkkio_val_aika_yht + paatos_tavoiteh_ylitys_val_aika_yht +
-            paatos_kattoh_ylitys_val_aika_yht + muut_kulut_ei_tavoite_val_aika;
+            paatos_kattoh_ylitys_val_aika_yht + 
+            -- Ei tavoitehintaiset
+            muut_kulut_ei_tavoite_val_aika + 
+            -- Tavoitehintaiset
+            muut_kulut_val_aika_yht;
 
     -- Kaikki yhteensä
     yhteensa_kaikki_hoitokausi_yht := 0.0;
