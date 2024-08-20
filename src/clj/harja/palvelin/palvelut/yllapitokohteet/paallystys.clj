@@ -790,7 +790,7 @@
 (defn- tallenna-pot2-alustarivit
   [db paallystysilmoitus pot2-id]
   (let [alustarivit (:alusta paallystysilmoitus)
-        idt-ennen-tallennusta (into #{} (map :pot2a_id (q/hae-pot2-alustarivit db {:pot2_id pot2-id})))
+        idt-ennen-tallennusta (into #{} (map :pot2a_id (q/hae-pot2-alustarivit-ilmoitukseen db {:pot2_id pot2-id})))
         hyotykuorman-idt (into #{} (map :pot2a_id alustarivit))
         poistuneet-idt (set/difference idt-ennen-tallennusta hyotykuorman-idt)]
 
