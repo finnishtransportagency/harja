@@ -75,41 +75,61 @@
                            :lihavoi? lihavoi?}])))
 
 
-(defn- rahavaraus-rivit
+(defn- mhu-hju-rivit 
+  "MHU ja HJU hoidon johto- taulukko, jossa näytetään hieman muista instansseista poikkeavia lukuja"
+  [data kyseessa-kk-vali?]
+  [(taulukko-rivi data kyseessa-kk-vali? "Johto- ja hallintokorvaukset" :johto_ja_hallinto_laskutettu :johto_ja_hallinto_laskutetaan false)
+   (taulukko-rivi data kyseessa-kk-vali? "Erillishankinnat" :hj_erillishankinnat_laskutettu :hj_erillishankinnat_laskutetaan false)
+   (taulukko-rivi data kyseessa-kk-vali? "HJ-palkkio" :hj_palkkio_laskutettu :hj_palkkio_laskutetaan false)
+   (taulukko-rivi data kyseessa-kk-vali? "Bonukset" :bonukset_laskutettu :bonukset_laskutetaan false)
+   (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
+
+   ;; Hoitovuoden päättäminen, näytetään vain jos arvot olemassa
+   (when (yhteiset/raha-arvo-olemassa? (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu data))
+     (taulukko-rivi data kyseessa-kk-vali?
+       "Hoitovuoden päättäminen / Tavoitepalkkio"
+       :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan false))
+
+   (when (yhteiset/raha-arvo-olemassa? (:hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu data))
+     (taulukko-rivi data kyseessa-kk-vali?
+       "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä"
+       :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan false))
+
+   (when (yhteiset/raha-arvo-olemassa? (:hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu data))
+     (taulukko-rivi data kyseessa-kk-vali?
+       "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"
+       :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan false))])
+
+
+(defn- koosta-tuotekohtainen-taulukko
   [data otsikko kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika]
-  (let [;; Taulukon rivit mitkä näytetään kaikkiin taulukoihin
+  (let [;; Taulukon rivit mitkä näytetään kaikkiin paitsi "MHU ja HJU hoidon johto"
         taulukko-rivit [(taulukko-rivi data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
                         (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
                         (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)]
-        ;; Rahavaraukset näytetään pelkästään näille taulukoille
-        rahavaraus-rivit (when (or
-                                 (= "Talvihoito" otsikko)
-                                 (= "Liikenneympäristön hoito" otsikko)
-                                 (= "Soratien hoito" otsikko)
-                                 (= "Päällyste" otsikko)
-                                 (= "MHU Ylläpito" otsikko)
-                                 (= "MHU ja HJU hoidon johto" otsikko)
-                                 (= "MHU Korvausinvestointi" otsikko))
-                           (map (fn [nimi hoitokausi val-aika]
-                                  (rivi
-                                    [:varillinen-teksti {:arvo (str nimi)
-                                                         :lihavoi? false}]
-                                    [:varillinen-teksti {:arvo (or hoitokausi (yhteiset/summa-fmt nil))
+
+        rahavaraus-rivit (map (fn [nimi hoitokausi val-aika]
+                                (rivi
+                                  [:varillinen-teksti {:arvo (str nimi)
+                                                       :lihavoi? false}]
+                                  [:varillinen-teksti {:arvo (or hoitokausi (yhteiset/summa-fmt nil))
+                                                       :fmt :raha
+                                                       :lihavoi? false}]
+                                  (when kyseessa-kk-vali?
+                                    [:varillinen-teksti {:arvo (or val-aika (yhteiset/summa-fmt nil))
                                                          :fmt :raha
-                                                         :lihavoi? false}]
-                                    (when kyseessa-kk-vali?
-                                      [:varillinen-teksti {:arvo (or val-aika (yhteiset/summa-fmt nil))
-                                                           :fmt :raha
-                                                           :lihavoi? false}])))
-                             rahavaraukset-nimet
-                             rahavaraukset-hoitokausi
-                             rahavaraukset-val-aika))
-        
+                                                         :lihavoi? false}])))
+                           rahavaraukset-nimet
+                           rahavaraukset-hoitokausi
+                           rahavaraukset-val-aika)
+
         ;; Yhteensä rivi näytetään myös kaikille taulukoille
         yhteensa-rivi [(taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]]
-    
+
     ;; Mergetä ja palauta rivit
-    (vec (concat taulukko-rivit rahavaraus-rivit yhteensa-rivi))))
+    (if (= "MHU ja HJU hoidon johto" otsikko)
+      (vec (concat (mhu-hju-rivit data kyseessa-kk-vali?) rahavaraus-rivit yhteensa-rivi))
+      (vec (concat taulukko-rivit rahavaraus-rivit yhteensa-rivi)))))
 
 
 (defn- taulukko
@@ -120,37 +140,7 @@
         
         rivit (into []
                 (remove nil?
-                  (cond
-                    (= "MHU ja HJU hoidon johto" otsikko)
-                    [(taulukko-rivi data kyseessa-kk-vali? "Johto- ja hallintokorvaukset" :johto_ja_hallinto_laskutettu :johto_ja_hallinto_laskutetaan false)
-                     (taulukko-rivi data kyseessa-kk-vali? "Erillishankinnat" :hj_erillishankinnat_laskutettu :hj_erillishankinnat_laskutetaan false)
-                     (taulukko-rivi data kyseessa-kk-vali? "HJ-palkkio" :hj_palkkio_laskutettu :hj_palkkio_laskutetaan false)
-                     (taulukko-rivi data kyseessa-kk-vali? "Bonukset" :bonukset_laskutettu :bonukset_laskutetaan false)
-                     (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
-
-                     ;; Hoitovuoden päättäminen, näytetään vain jos arvot olemassa
-                     (when (yhteiset/raha-arvo-olemassa? (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu data))
-                       (taulukko-rivi data kyseessa-kk-vali? "Hoitovuoden päättäminen / Tavoitepalkkio"
-                         :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan false))
-
-                     (when (yhteiset/raha-arvo-olemassa? (:hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu data))
-                       (taulukko-rivi data kyseessa-kk-vali? "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä"
-                         :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan false))
-
-                     (when (yhteiset/raha-arvo-olemassa? (:hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu data))
-                       (taulukko-rivi data kyseessa-kk-vali? "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"
-                         :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan false))
-
-                     (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
-
-                    (= "MHU Ylläpito" otsikko)
-                    [(taulukko-rivi data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
-                     (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
-                     (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
-                     (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
-                    
-                    :else
-                    (rahavaraus-rivit data otsikko kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika))))]
+                  (koosta-tuotekohtainen-taulukko data otsikko kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika)))]
 
     [:taulukko {:oikealle-tasattavat-kentat #{1 2}
                 :viimeinen-rivi-yhteenveto? false
@@ -250,8 +240,7 @@
                  ["Päällyste" "pääl"]
                  ["MHU Ylläpito" "yllä"]
                  ["MHU ja HJU hoidon johto" "johto"]
-                 ["MHU Korvausinvestointi" "korv"]
-                 ["Muut kulut" "muut"]]
+                 ["MHU Korvausinvestointi" "korv"]]
 
         ;; Etsitään otsikon indeksi Toimenpideinstanssin nimen osan peruteella
         etsi-indeksi (fn [otsikon-osa rivit]

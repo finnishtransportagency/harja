@@ -1207,6 +1207,7 @@ BEGIN
                     hj_palkkio_laskutettu + 
                     -- Rahavaraukset, muut kulut
                     kaikki_rahavaraukset_hoitokausi_yht - 
+                    -- Älä laske näitä tavoitehintaan  (tulevat muuttujasta kaikki_rahavaraukset_val_yht)
                     muu_kulu_ei_tavoitehintainen_hoitokausi;
 
         --- Laskutetaan == Valittu kk
@@ -1215,6 +1216,7 @@ BEGIN
                     hj_palkkio_laskutetaan + 
                     -- Rahavaraukset, muut kulut
                     kaikki_rahavaraukset_val_yht - 
+                    -- Älä laske näitä tavoitehintaan  (tulevat muuttujasta kaikki_rahavaraukset_val_yht)
                     muu_kulu_ei_tavoitehintainen_val_aika;
 
         RAISE NOTICE '
