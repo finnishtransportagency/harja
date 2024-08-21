@@ -223,6 +223,8 @@
        :virheet virheet-atom
        :varoitukset varoitukset-atom
        :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
+       :jarjesta-avaimen-mukaan identity
+       :virheet-ylos? false
        ;; TODO: Digiroad-kaistojen haku disabloitu, kunnes Digiroad-rajapinnan käyttö ja kaista-aineiston hyödyntäminen
        ;;       on suunniteltu kuntoon validointia ajatellen
        #_#_:on-rivi-blur on-rivi-blur
