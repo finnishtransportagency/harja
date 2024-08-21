@@ -176,6 +176,8 @@
        :virheet virheet-atom
        :varoitukset varoitukset-atom
        :piilota-toiminnot? true
+       :jarjesta-avaimen-mukaan identity
+       :virheet-ylos? false
        ;; Varoitetaan validointivirheistä, mutta ei estetä tallentamista.
        ;; Backendin puolella suoritetaan validointi, kun lomake merkitetään tarkastettavaksi ja tallennetaan.
        :rivi-varoitus (:rivi validointi)

@@ -106,23 +106,27 @@
                               (and kokoelma-atom
                                    (= otsikko @kokoelma-atom))))
              valittujen-lkm (count (filter true? (vals (get-in @suodattimet-atom ryhma-polku))))
-             kokonais-lkm (count (vals (get-in @suodattimet-atom ryhma-polku)))]
+             kokonais-lkm (count (vals (get-in @suodattimet-atom ryhma-polku)))
+             avaa-tai-sulje-ryhma (fn []
+                               (if kokoelma-atom
+                                 ;; Osa kokoelmaa, vain yksi kokoelman jäsen voi olla kerrallaan auki
+                                 (if (= otsikko @kokoelma-atom)
+                                   (reset! kokoelma-atom nil)
+                                   (reset! kokoelma-atom otsikko))
+                                 ;; Ylläpitää itse omaa auki/kiinni-tilaansa
+                                 (swap! auki-tila not))
+                               (aseta-hallintapaneelin-max-korkeus (dom/elementti-idlla "tk-suodattimet")))]
          (when-not (empty? ryhman-elementtien-avaimet)
            [:div {:class (str "tk-checkbox-ryhma" (when luokka (str " " luokka)))}
             [:div
              {:class (str "tk-checkbox-ryhma-otsikko klikattava " (when (auki?) "alaraja"))
-              :on-click (fn [_]
-                          (if kokoelma-atom
-                            ;; Osa kokoelmaa, vain yksi kokoelman jäsen voi olla kerrallaan auki
-                            (if (= otsikko @kokoelma-atom)
-                              (reset! kokoelma-atom nil)
-                              (reset! kokoelma-atom otsikko))
-                            ;; Ylläpitää itse omaa auki/kiinni-tilaansa
-                            (swap! auki-tila not))
-                          (aseta-hallintapaneelin-max-korkeus (dom/elementti-idlla "tk-suodattimet")))}
+              :on-click #(avaa-tai-sulje-ryhma)
+              :on-key-down #(when (dom/enter-nappain? %)
+                              (avaa-tai-sulje-ryhma))}
              [:span {:class (str
                               "tk-chevron-ryhma-tila chevron-rotate "
-                              (when-not (auki?) "chevron-rotate-down"))}
+                              (when-not (auki?) "chevron-rotate-down"))
+                     :tabIndex "0"}
               (if (auki?)
                 (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
              [:div.tk-checkbox-ryhma-checkbox {:on-click #(.stopPropagation %)}
@@ -158,7 +162,10 @@
            [:div {:class (str
                            "tk-chevron-ryhma-tila chevron-rotate chevron-tk-asetuskokoelma "
                            (when-not @auki? "chevron-rotate-down"))
-                  :on-click #(swap! auki? not)}
+                  :tabIndex "0"
+                  :on-click #(swap! auki? not)
+                  :on-key-down #(when (dom/enter-nappain? %)
+                                  (swap! auki? not))}
             (if @auki?
               (ikonit/livicon-chevron-down)
               (ikonit/livicon-chevron-right))])

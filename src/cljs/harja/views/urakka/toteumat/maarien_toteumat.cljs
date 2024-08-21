@@ -1,6 +1,7 @@
 (ns harja.views.urakka.toteumat.maarien-toteumat
   "Urakan 'Toteumat' välilehden Määrien toteumat osio"
   (:require [reagent.core :refer [atom] :as r]
+            [harja.ui.dom :as dom]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+]]
             [harja.ui.napit :as napit]
@@ -112,12 +113,15 @@
                                         ;; Tyyppi on joko kokonaishintainen tai lisätyö
                                         tehtava-tyyppi (first (second rivi))
                                         ;; Rahavaraukselle ei näytetä suunniteltuja määriä eikä toteumaprosenttia
-                                        rahavaraus? (not (nil? (:rahavaraus (first (second rivi)))))]
+                                        rahavaraus? (not (nil? (:rahavaraus (first (second rivi)))))
+                                        avaa-tai-sulje-rivi (fn [rivi] (e! (maarien-toteumat/->HaeTehtavanToteumat (first (second rivi)))))]
                                     (concat
                                       [^{:key (hash rivi)}
                                        [:tr (merge
                                               (when kasin-lisattava?
-                                                {:on-click #(e! (maarien-toteumat/->HaeTehtavanToteumat (first (second rivi))))})
+                                                {:on-click #(avaa-tai-sulje-rivi rivi)
+                                                 :on-key-down #(when (dom/enter-nappain? %)
+                                                                 (avaa-tai-sulje-rivi rivi))})
                                               {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd") " " (when kasin-lisattava? "klikattava"))})
                                         [:td.strong {:style {:width (:tehtava leveydet)}} (first rivi) (when (and (:haetut-toteumat-lataa app)
                                                                                                                   (= (:avattu-tehtava app) (first rivi)))
@@ -125,9 +129,9 @@
                                         [:td {:style {:width (:caret leveydet)}} (if
                                                                                    (= (:avattu-tehtava app) (first rivi))
                                                                                    (when kasin-lisattava?
-                                                                                     [ikonit/livicon-chevron-up])
+                                                                                     [:span.livicon-chevron-up {:tabIndex "0"}])
                                                                                    (when kasin-lisattava?
-                                                                                     [ikonit/livicon-chevron-down]))]
+                                                                                     [:span.livicon-chevron-down {:tabIndex "0"}]))]
                                         [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt toteutunut-maara 1) " " (maarita-yksikko (first (second rivi))))]
                                         [:td {:style {:width (:suunniteltu leveydet)
                                                       :color fontin-vari}} (cond
