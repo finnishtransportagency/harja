@@ -5,7 +5,7 @@
             [clojure.spec.alpha :as s]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer
-             [tee-kirjausvastauksen-body kasittele-kutsu kasittele-get-kutsu]]
+             [tee-kirjausvastauksen-body kasittele-kutsu]]
             [harja.pvm :as pvm]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]

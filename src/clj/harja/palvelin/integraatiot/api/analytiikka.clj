@@ -1053,7 +1053,7 @@
     (julkaise-reitti
       http :analytiikka-turvallisuuspoikkeamat
       (GET "/api/analytiikka/turvallisuuspoikkeamat/:alkuaika/:loppuaika" request
-        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-turvallisuuspoikkeamat request
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-turvallisuuspoikkeamat "analytiikka" request
           json-skeemat/+turvallisuuspoikkeamien-vastaus+
           (fn [parametrit kayttaja db]
             (hae-turvallisuuspoikkeamat db parametrit kayttaja))
@@ -1063,7 +1063,7 @@
     (julkaise-reitti
       http :analytiikka-paallystysurakat
       (GET "/api/analytiikka/paallystysurakat/:alkuaika/:loppuaika" parametrit
-        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paallystysurakat parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paallystysurakat "analytiikka" parametrit
           json-skeemat/+analytiikka-paallystysurakoiden-haku-vastaus+
           (fn [parametrit _kayttaja db]
             (hae-paallystysurakat db parametrit))
@@ -1072,7 +1072,7 @@
     (julkaise-reitti
       http :analytiikka-paallystyskohteet
       (GET "/api/analytiikka/paallystyskohteet/:alkuaika/:loppuaika" parametrit
-        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paallystyskohteet parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paallystyskohteet "analytiikka" parametrit
           json-skeemat/+analytiikka-paallystyskohteiden-haku-vastaus+
           (fn [parametrit _kayttaja db]
             (hae-paallystyskohteet db parametrit))
@@ -1081,7 +1081,7 @@
     (julkaise-reitti
       http :analytiikka-hae-paallystyskohteiden-aikataulut
       (GET "/api/analytiikka/paallystyskohteiden-aikataulut/:alkuaika/:loppuaika" parametrit
-        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paallystyskohteiden-aikataulut parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paallystyskohteiden-aikataulut "analytiikka" parametrit
           json-skeemat/+analytiikka-paallystyskohteiden-aikataulujen-haku-vastaus+
           (fn [parametrit _kayttaja db]
             (hae-paallystyskohteiden-aikataulut db parametrit))
@@ -1090,7 +1090,7 @@
     (julkaise-reitti
       http :analytiikka-hae-paallystysilmoitukset
       (GET "/api/analytiikka/paallystysilmoitukset/:alkuaika/:loppuaika" parametrit
-        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paallystysilmoitukset parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paallystysilmoitukset "analytiikka" parametrit
           json-skeemat/+analytiikka-paallystysilmoitusten-haku-vastaus+
           (fn [parametrit _kayttaja db]
             (hae-paallystysilmoitukset db parametrit))
@@ -1099,7 +1099,7 @@
     (julkaise-reitti
       http :analytiikka-hae-hoidon-paikkauskustannukset
       (GET "/api/analytiikka/hoidon-paikkauskustannukset/:alkuaika/:loppuaika" parametrit
-        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-hoidon-paikkaukset parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-hoidon-paikkaukset "analytiikka" parametrit
           json-skeemat/+analytiikka-hoidon-paikkaukset-haku-vastaus+
           (fn [parametrit _kayttaja db]
             (hae-hoidon-paikkauskustannukset db parametrit))
@@ -1108,7 +1108,7 @@
     (julkaise-reitti
       http :analytiikka-hae-paikkauskohteet
       (GET "/api/analytiikka/paikkauskohteet/:alkuaika/:loppuaika" parametrit
-        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paikkauskohteet parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paikkauskohteet "analytiikka" parametrit
           json-skeemat/+analytiikka-paikkauskohteiden-haku-vastaus+
           (fn [parametrit _kayttaja db]
             (hae-paikkauskohteet db parametrit))
@@ -1117,7 +1117,7 @@
     (julkaise-reitti
       http :analytiikka-hae-paikkaukset
       (GET "/api/analytiikka/paikkaukset/:alkuaika/:loppuaika" parametrit
-        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paikkaukset parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paikkaukset "analytiikka" parametrit
           json-skeemat/+analytiikka-paikkausten-haku-vastaus+
           (fn [parametrit _kayttaja db]
             (hae-paikkaukset db parametrit))
