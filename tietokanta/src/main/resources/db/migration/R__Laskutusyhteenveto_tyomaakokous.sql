@@ -67,9 +67,26 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     yhteensa_kaikki_hoitokausi_yht        NUMERIC,
     yhteensa_kaikki_val_aika_yht          NUMERIC,
     perusluku                             NUMERIC,
+
+    -- Rahavaraukset 
     rahavaraus_nimet                      TEXT[],
     hoitokausi_yht_array                  NUMERIC[],
-    val_aika_yht_array                    NUMERIC[]
+    val_aika_yht_array                    NUMERIC[],
+    kaikki_rahavaraukset_hoitokausi_yht   NUMERIC,
+    kaikki_rahavaraukset_val_yht          NUMERIC,
+
+    -- Muut kulut, tavoitehintaan vaikuttavat
+    muut_kulut_hoitokausi                 NUMERIC,
+    muut_kulut_val_aika                   NUMERIC,
+    muut_kulut_hoitokausi_yht             NUMERIC,
+    muut_kulut_val_aika_yht               NUMERIC,
+
+    -- Ei tavoitehintaan vaikuttavat muut kulut 
+    muut_kulut_ei_tavoite_hoitokausi      NUMERIC,
+    muut_kulut_ei_tavoite_val_aika        NUMERIC,
+    muut_kulut_ei_tavoite_hoitokausi_yht  NUMERIC,
+    muut_kulut_ei_tavoite_val_aika_yht    NUMERIC
+
 );
 
 -- Tätä kutsummalla saadaan työmaakokouksen laskutusyhteenvetoon kaikki tarvittavat tiedot
@@ -220,13 +237,24 @@ DECLARE
     rahavaraus_nimet                      TEXT[]    := '{}';
     hoitokausi_yht_array                  NUMERIC[] := '{}';
     val_aika_yht_array                    NUMERIC[] := '{}';
-    -- Rahavaraus arvot joita käytetään loopissa 
     rv_val_aika_yht                       NUMERIC := 0;
     rv_hoitokausi_yht                     NUMERIC := 0;
 
     -- Lasketaan rahavaraukset yhteen ja lisätään ne tavoitehintaan 
     kaikki_rahavaraukset_val_yht          NUMERIC := 0.0;
     kaikki_rahavaraukset_hoitokausi_yht   NUMERIC := 0.0;
+
+    -- Muut kulut, tavoitehintaan vaikuttavat
+    muut_kulut_hoitokausi                 NUMERIC := 0.0;
+    muut_kulut_val_aika                   NUMERIC := 0.0;
+    muut_kulut_hoitokausi_yht             NUMERIC := 0.0;
+    muut_kulut_val_aika_yht               NUMERIC := 0.0;
+
+    -- Ei tavoitehintaan vaikuttavat muut kulut 
+    muut_kulut_ei_tavoite_hoitokausi      NUMERIC := 0.0;
+    muut_kulut_ei_tavoite_val_aika        NUMERIC := 0.0;
+    muut_kulut_ei_tavoite_hoitokausi_yht  NUMERIC := 0.0;
+    muut_kulut_ei_tavoite_val_aika_yht    NUMERIC := 0.0;
 
     -- Tulos 
     tulos                                 LY_RAPORTTI_TYOMAAKOKOUS_TULOS;
@@ -385,6 +413,8 @@ BEGIN
             WHERE ( lk.rahavaraus_id NOT IN (akilliset_id, vahingot_id) OR lk.rahavaraus_id IS NULL )
               AND lk.poistettu IS NOT TRUE
               AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+              -- Varmista että nämä ovat vain tavoitehintaisia kuluja
+              AND lk.tavoitehintainen = TRUE
 
         LOOP
 
@@ -794,9 +824,16 @@ BEGIN
     ------------------- Rahavaraukset -------------------------
     -----------------------------------------------------------
 
-    -- Sorttaa aakkosilla, nämä tulee tässä järjestyksessä käyttöliittymään asti
     FOR rahavaraus IN
-        SELECT id, nimi FROM rahavaraus ORDER BY nimi
+        SELECT 
+          rv.id, 
+          rv.nimi 
+        FROM rahavaraus rv 
+        -- Näytetään vaan rahavaraukset mitkä urakalle asetettu (hallinta)
+        JOIN rahavaraus_urakka rvu ON rv.id = rvu.rahavaraus_id  
+        WHERE rvu.urakka_id = ur
+        -- Sorttaa aakkosilla, nämä tulee tässä järjestyksessä käyttöliittymään asti
+        ORDER BY rv.nimi
     LOOP
         -- Resetoi hoitokausi / laskutetaan 
         rv_val_aika_yht := 0;
@@ -855,6 +892,55 @@ BEGIN
     END LOOP;
 
     ---------------------------------------------
+    ---------------  Muut kulut   ---------------
+    ---------------------------------------------
+    FOR rivi IN
+        SELECT
+            summa, 
+            l.erapaiva AS erapaiva,
+            lk.tavoitehintainen AS tavoitehintainen 
+        FROM kulu l
+        JOIN kulu_kohdistus lk ON lk.kulu = l.id
+        -- Etsi pelkästään muukulu tyyppiset  kirjaukset, toimenpideinstansseilla ei ole näissä väliä 
+        WHERE lk.tyyppi = 'muukulu'
+          AND lk.poistettu IS NOT TRUE
+          AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+    LOOP
+        IF rivi.erapaiva <= aikavali_loppupvm THEN
+            --
+            -- ~ Hoitokausi ~
+            -- 
+            IF rivi.tavoitehintainen THEN
+                -- Tavoitehintainen Muut kulut Hoitokausi yhteensä
+                muut_kulut_hoitokausi := muut_kulut_hoitokausi + COALESCE(rivi.summa, 0.0);
+            ELSE
+                -- Ei tavoitehintainen Muut kulut Hoitokausi yhteensä
+                muut_kulut_ei_tavoite_hoitokausi := muut_kulut_ei_tavoite_hoitokausi + COALESCE(rivi.summa, 0.0);
+            END IF;
+
+            --
+            -- ~ Valittu kk ~
+            -- 
+            IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
+                IF rivi.tavoitehintainen THEN
+                    -- Tavoitehintainen Muut kulut valittu kk yhteensä
+                    muut_kulut_val_aika := muut_kulut_val_aika + COALESCE(rivi.summa, 0.0);
+                ELSE
+                    -- Ei tavoitehintainen Muut kulut valittu kk yhteensä
+                    muut_kulut_ei_tavoite_val_aika := muut_kulut_ei_tavoite_val_aika + COALESCE(rivi.summa, 0.0);
+                END IF;
+            END IF;
+        END IF;
+    END LOOP;
+
+    -- Tavoitehintaiset Yhteensä-  arvot,  nämä on tekohetkellä aivan samat,
+    -- mutta tehty kuitenkin, jos jatkossa tämän taulukon alle tulee lisää rivejä, niitä voi tähän niputtaa
+    muut_kulut_hoitokausi_yht := muut_kulut_hoitokausi;
+    muut_kulut_val_aika_yht := muut_kulut_val_aika;
+
+    -- Ei tavoitehintaiset yhteensä-  arvot lasketaan bonusten ja sanktioiden jälkeen alempana
+    
+    ---------------------------------------------
     --------------- Tavoitehinta  ---------------
     ---------------------------------------------
 
@@ -865,9 +951,7 @@ BEGIN
     tavhin_hoitokausi_yht := tavhin_hoitokausi_yht +
             talvihoito_hoitokausi_yht + lyh_hoitokausi_yht + sora_hoitokausi_yht +
             paallyste_hoitokausi_yht + yllapito_hoitokausi_yht + korvausinv_hoitokausi_yht +
-            johtojahallinto_hoitokausi_yht + erillishankinnat_hoitokausi_yht + hjpalkkio_hoitokausi_yht +
-            -- Rahavaraukset 
-            kaikki_rahavaraukset_hoitokausi_yht;
+            johtojahallinto_hoitokausi_yht + erillishankinnat_hoitokausi_yht + hjpalkkio_hoitokausi_yht;
     
     -- Tavoitehinta valittu kk 
     tavhin_val_aika_yht := 0.0;
@@ -875,9 +959,7 @@ BEGIN
             talvihoito_val_aika_yht + lyh_val_aika_yht + sora_val_aika_yht +
             paallyste_val_aika_yht + yllapito_val_aika_yht + korvausinv_val_aika_yht +
             johtojahallinto_val_aika_yht +
-            erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht + 
-            -- Rahavaraukset 
-            kaikki_rahavaraukset_val_yht;
+            erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht;
 
     -- Budjettia jäljellä
     budjettia_jaljella := 0.0;
@@ -1064,17 +1146,35 @@ BEGIN
             RAISE NOTICE 'paatos_rivi.summa: %', paatos_rivi.summa;
         end loop;
 
+    -- Muut kulut yhteensä, ei tavoitehintaiset
+    muut_kulut_ei_tavoite_hoitokausi_yht := bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht + muut_kulut_ei_tavoite_hoitokausi;
+    muut_kulut_ei_tavoite_val_aika_yht := bonukset_val_aika_yht + sanktiot_val_aika_yht  + muut_kulut_ei_tavoite_val_aika;
+
     -- Muut kustannukset yhteensä
     muut_kustannukset_hoitokausi_yht := 0.0;
     muut_kustannukset_val_aika_yht := 0.0;
+
     muut_kustannukset_hoitokausi_yht :=
             muut_kustannukset_hoitokausi_yht + lisatyot_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht +
             paatos_tavoitepalkkio_hoitokausi_yht + paatos_tavoiteh_ylitys_hoitokausi_yht +
-            paatos_kattoh_ylitys_hoitokausi_yht;
+            paatos_kattoh_ylitys_hoitokausi_yht + 
+            -- Ei tavoitehintaiset
+            muut_kulut_ei_tavoite_hoitokausi + 
+            -- Tavoitehintaiset
+            muut_kulut_hoitokausi_yht + 
+            -- Rahavaraukset
+            kaikki_rahavaraukset_hoitokausi_yht;
+            
     muut_kustannukset_val_aika_yht :=
             muut_kustannukset_val_aika_yht + lisatyot_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht +
             paatos_tavoitepalkkio_val_aika_yht + paatos_tavoiteh_ylitys_val_aika_yht +
-            paatos_kattoh_ylitys_val_aika_yht;
+            paatos_kattoh_ylitys_val_aika_yht + 
+            -- Ei tavoitehintaiset
+            muut_kulut_ei_tavoite_val_aika + 
+            -- Tavoitehintaiset
+            muut_kulut_val_aika_yht  + 
+            -- Rahavaraukset
+            kaikki_rahavaraukset_val_yht;
 
     -- Kaikki yhteensä
     yhteensa_kaikki_hoitokausi_yht := 0.0;
@@ -1084,7 +1184,6 @@ BEGIN
     
     
     tulos := (
-        
         -- Talvihoito
               talvihoito_hoitokausi_yht, talvihoito_val_aika_yht,
         -- Liikenne ymp. hoito
@@ -1147,7 +1246,15 @@ BEGIN
         -- Indeksilaskennan perusluku
               perusluku, 
         -- Urakan rahavaraukset ja arvot
-              rahavaraus_nimet, hoitokausi_yht_array, val_aika_yht_array
+              rahavaraus_nimet, hoitokausi_yht_array, val_aika_yht_array,
+              kaikki_rahavaraukset_hoitokausi_yht, kaikki_rahavaraukset_val_yht,
+        -- Muut kulut 
+              -- Tavoitehintaan vaikuttavat 
+              muut_kulut_hoitokausi, muut_kulut_val_aika, 
+              muut_kulut_hoitokausi_yht, muut_kulut_val_aika_yht,
+              -- Ei tavoitehintaiset 
+              muut_kulut_ei_tavoite_hoitokausi, muut_kulut_ei_tavoite_val_aika,
+              muut_kulut_ei_tavoite_hoitokausi_yht, muut_kulut_ei_tavoite_val_aika_yht
         );
     return next tulos;
 END;
