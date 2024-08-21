@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset-test
   (:require [clojure.test :refer :all]
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [dk.ative.docjure.spreadsheet :as xls]
@@ -15,9 +16,11 @@
         (component/system-map
           :db (tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
+          :excel-vienti (component/using (excel-vienti/luo-excel-vienti)
+                          [:http-palvelin])
           :paikkauskohteet (component/using
                              (reikapaikkaukset/->Reikapaikkaukset)
-                             [:http-palvelin :db])))))
+                             [:http-palvelin :db :excel-vienti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -191,3 +194,16 @@
     (is (= (-> vastaus-tuotu first :tyomenetelma) 9))
     (is (= (-> vastaus-tuotu first :tyomenetelma-nimi) "Jyrsintäkorjaukset (HJYR/TJYR)"))
     (is (= (-> vastaus-tuotu first :reikapaikkaus-yksikko) "kpl"))))
+
+(deftest testaa-reikapaikkaus-excel-vienti
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        vastaus (:raportti (kutsu-excel-palvelua (:http-palvelin jarjestelma)
+                             :reikapaikkaukset-urakalle-excel
+                             +kayttaja-jvh+
+                             {:tr nil
+                              :aikavali nil
+                              :urakka-id urakka-id}))]
+    (is (= (first vastaus) :pohjan-taytto) "Excel-viennin tyypin pitäisi olla :pohjan-taytto")
+    (is (= (count vastaus) 3) "Halutaan kolme elementtiä, tyyppi, parametrit ja data")
+    (is (= (last (first (last vastaus))) 249520.0M) "Datan ensimmäisen rivin viimeinen tieto pitäisi olla reikäpaikkausten kulujen summa")
+    (is (= (count (last vastaus)) 7))) "Datarivejä pitäisi olla 7, yhteenvetorivi, tyhjä rivi välissä ja 5 reikäpaikkausta")

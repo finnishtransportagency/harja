@@ -595,7 +595,7 @@
         (is (= 400 (:status tr-tiedot-alku-keskella3)) "Alku keskellä, eikä saa tallentaa")))
 
     (testing "Varmisetaan, että tallennus onnistuu, kun annettu tierekisteri ei ole lähelläkään olemassaolevia rajoituksia"
-      (let [tr-ei-lahellakaan {:tie 25 :aosa 11 :aet 1 :losa 11 :let 3001}
+      (let [tr-ei-lahellakaan {:tie 25 :aosa 11 :aet 1 :losa 11 :let 3011}
             suolarajoitus-ei-lahella (merge perusrajoitus tr-ei-lahellakaan)
             tr-tiedot-ei-lahella (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
                                    :tierekisterin-tiedot
@@ -606,7 +606,7 @@
             tr-tiedot-ei-lahella2 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
                                     :tierekisterin-tiedot
                                     t/+kayttaja-jvh+ suolarajoitus-ei-lahella2)]
-        (is (= {:pituus 3000, :ajoratojen_pituus 3000,
+        (is (= {:pituus 3010, :ajoratojen_pituus 3010,
                 :pohjavesialueet '({:nimi "Björknäs", :tunnus "183551"}
                                    {:nimi "Ekerö", :tunnus "160651"})} tr-tiedot-ei-lahella) "Ei lähelläkään muita rajoituksia.")
         (is (= 5969 (:pituus tr-tiedot-ei-lahella2)) "Ei lähelläkään muita rajoituksia.")))

@@ -10,6 +10,7 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus]
             [harja.domain.tierekisteri :as tr-domain]
+            [harja.domain.kulut :as kulut-domain]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
@@ -28,6 +29,9 @@
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
+            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-kyselyt]
+            [harja.kyselyt.rahavaraukset :as rahavaravaus-kyselyt]
+            [harja.kyselyt.kulut :as kulu-kyselyt]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
             [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat])
@@ -294,14 +298,23 @@
 (defn palauta-toimenpiteet
   "Haetaan toimenpiteet (taso 3) ja palautetaan ne json muodossa"
   [db _ _]
-  (log/info "Analytiikka API, tehtävien haku")
-  (let [toimenpiteet (toimenpidekoodi-kyselyt/listaa-toimenpiteet-analytiikalle db)
-        ;; Wrapatään jokainen rivi "toimenpide" -nimiseen avaimen alle
-        toimenpiteet (map (fn [t]
-                            {:toimenpide t})
-                          toimenpiteet)]
+  (log/info "Analytiikka API, toimenpiteet haku")
+  (let [toimenpiteet (toimenpidekoodi-kyselyt/listaa-toimenpiteet-analytiikalle db)]
     ;; Palautetaan kaikki toimenpiteet toimenpiteet avaimen alla
     {:toimenpiteet toimenpiteet}))
+
+(defn palauta-rahavaraukset
+  "Haetaan rahavaraukset ja niiden tehtävät ja palautetaan ne json muodossa kysyjälle. Tosin kutsukäsittelijä muokkaa
+  tämän aineiston jsoniksi."
+  [db _ _]
+  (log/info "Analytiikka API, rahavaraukset haku")
+  (let [rahavaraukset (rahavaravaus-kyselyt/listaa-rahavaraukset-analytiikalle db)
+        ;; Käsitellään pgarray vector muotoon, joka voidaan kääntää myöhemmin jsoniksi
+        rahavaraukset (map (fn [r]
+                            (assoc r :tehtavat (konversio/pgarray->vector (:tehtavat r))))
+                        rahavaraukset)]
+    ;; Palautetaan kaikki rahavaraukset rahavaraukset avaimen alla
+    {:rahavaraukset rahavaraukset}))
 
 (defn palauta-urakat
   "Haetaan urakat ja palautetaan ne json muodossa"
@@ -828,15 +841,91 @@
                                               :paikkauskohde-id :paikkauskohdeId
                                               :pinta-ala :pintaAla})
                             (update :loppupvm (fn [pvm] (if (nil? pvm)
-                                                        nil
-                                                        (pvm/sql-aika->pvm-str pvm))))
-                            (update :alkupvm (fn [pvm] (if (nil? pvm)
                                                           nil
-                                                          (pvm/sql-aika->pvm-str pvm)))))
+                                                          (pvm/sql-aika->pvm-str pvm))))
+                            (update :alkupvm (fn [pvm] (if (nil? pvm)
+                                                         nil
+                                                         (pvm/sql-aika->pvm-str pvm)))))
                       (paikkaus-kyselyt/hae-paikkaukset-analytiikalle db
                         {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
                          :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}))]
     {:paikkaukset paikkaukset}))
+
+(def db-kustannukset->speqcl-avaimet
+  {:f1 :kulukohdistus_kulukohdistus-id
+   :f2 :kulukohdistus_rivinumero
+   :f3 :kulukohdistus_tyyppi
+   :f4 :kulukohdistus_lisatieto
+   :f5 :kulukohdistus_poistettu
+   :f6 :kulukohdistus_summa
+   :f7 :kulukohdistus_kohdistus_toimenpide
+   :f8 :kulukohdistus_kohdistus_tehtavaryhma
+   :f9 :kulukohdistus_kohdistus_rahavaraus
+   :f10 :kulukohdistus_kohdistus_tehtava})
+
+(defn palauta-toteutuneet-kustannukset [db {:keys [urakka-id] :as parametrit}]
+  (log/info "Analytiikka API palauta toteutuneet kustannukset urakalle :: parametrit" (pr-str parametrit))
+  (let [urakka-id (if (integer? urakka-id) urakka-id (konversio/konvertoi->int urakka-id))
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        kulut (kulu-kyselyt/hae-toteutuneet-kustannukset-analytiikalle db {:urakka-id urakka-id})
+        kulut (map (fn [k]
+                     (let [k (update k :kulukohdistukset konversio/jsonb->clojuremap)
+                           k (update k :kulukohdistukset
+                               (fn [rivit]
+                                 (let [tulos (keep
+                                               (fn [r]
+                                                 ;; Haku käyttää hakemisessa left joinia, joten on mahdollista, että taulusta
+                                                 ;; löytyy nil rivi
+                                                 (when (:f1 r)
+                                                   (clojure.set/rename-keys r db-kustannukset->speqcl-avaimet)))
+                                               rivit)
+                                       tulos (map #(konversio/alaviiva->rakenne %) tulos)]
+                                   tulos)))]
+                       {:kulu (-> k
+                                (assoc :kulun-ajankohta_koontilaskun-kuukausi
+                                  (kulut-domain/koontilaskun-kuukausi->kuukausi (:koontilaskun-kuukausi k)
+                                    (:alkupvm urakan-tiedot)
+                                    (:loppupvm urakan-tiedot)))
+                                (assoc :kulun-ajankohta_koontilaskun-vuosi
+                                  (kulut-domain/koontilaskun-kuukausi->vuosi (:koontilaskun-kuukausi k)
+                                    (:alkupvm urakan-tiedot)
+                                    (:loppupvm urakan-tiedot)))
+                                (dissoc :koontilaskun-kuukausi)
+                                (konversio/alaviiva->rakenne))}))
+                kulut)]
+
+    {:toteutuneet-kustannukset {:urakka urakka-id
+                                :urakkatunnus (:alueurakkanumero urakan-tiedot)
+                                :kulut kulut}}))
+
+(defn hae-kustannussuunnitelmat [db {:keys [urakka-id] :as parametrit}]
+  (log/info "Analytiikka API hae kustannussuunnitelmat  :: parametrit" (pr-str parametrit))
+  (let [urakka-id (if (integer? urakka-id) urakka-id (konversio/konvertoi->int urakka-id))
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+
+        kiinteat-kustannukset (budjettisuunnittelu-kyselyt/hae-kiinteat-kustannukset db {:urakka-id urakka-id})
+        ;; Järjestä tulokset jsonia varten omiin objekteihinsa
+        kiinteat-kustannukset (map #(konversio/alaviiva->rakenne %) kiinteat-kustannukset)
+        arvioidut-kustannukset (budjettisuunnittelu-kyselyt/hae-arvioidut-kustannukset db {:urakka-id urakka-id})
+        ;; Järjestä tulokset jsonia varten omiin objekteihinsa
+        arvioidut-kustannukset (map #(konversio/alaviiva->rakenne %) arvioidut-kustannukset)
+
+        ;; Johto- ja hallintokorvaukset kohdistuvat aina samalle toimenpiteelle ja samalle tehtäväryhmälle
+        tehtavaryhma-id (:id (first (budjettisuunnittelu-kyselyt/hae-johto-ja-hallintokorvauksen-tehtavaryhma db)))
+        toimenpide-id (:id (first (budjettisuunnittelu-kyselyt/hae-johto-ja-hallintokorvauksen-toimenpide db)))
+
+        johto-ja-hallintokorvaukset (budjettisuunnittelu-kyselyt/johto-ja-hallintokorvaukset-analytiikan-kustannustensuunnitteluun db {:urakka-id urakka-id})
+        ;; Järjestä tulokset jsonia varten omiin objekteihinsa
+        johto-ja-hallintokorvaukset (map #(-> %
+                                            (konversio/alaviiva->rakenne)
+                                            (assoc-in [:kohdistus :tehtavaryhma] tehtavaryhma-id)
+                                            (assoc-in [:kohdistus :toimenpide] toimenpide-id))
+                                      johto-ja-hallintokorvaukset)]
+    {:suunnitellut-kustannukset {:urakka urakka-id
+                                 :urakkatunnus (:alueurakkanumero urakan-tiedot)
+                                 :kiinteat-kustannukset kiinteat-kustannukset
+                                 :arvioidut-kustannukset arvioidut-kustannukset
+                                 :johto-ja-hallintokorvaukset johto-ja-hallintokorvaukset}}))
 
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
@@ -928,6 +1017,16 @@
           :analytiikka-hae-toimenpiteet request
           (fn [parametrit kayttaja db]
             (palauta-toimenpiteet db parametrit kayttaja))
+          ;; Vaaditaan analytiikka-oikeudet
+          :analytiikka)))
+
+    (julkaise-reitti
+      http :analytiikka-rahavaraukset
+      (GET "/api/analytiikka/rahavaraukset" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
+          :analytiikka-hae-rahavaraukset request
+          (fn [parametrit kayttaja db]
+            (palauta-rahavaraukset db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
           :analytiikka)))
 
@@ -1024,6 +1123,26 @@
             (hae-paikkaukset db parametrit))
           :analytiikka)))
 
+    (julkaise-reitti
+      http :analytiikka-toteutuneet-kustannukset
+      (GET "/api/analytiikka/toteutuneet-kustannukset/:urakka-id" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
+          :analytiikka-hae-toteutuneet-kustannukset request
+          (fn [parametrit kayttaja db]
+            (palauta-toteutuneet-kustannukset db parametrit))
+          ;; Vaaditaan analytiikka-oikeudet
+          :analytiikka)))
+
+    (julkaise-reitti
+      http :analytiikka-hae-kustannussuunnitelmat
+      (GET "/api/analytiikka/suunnitellut-kustannukset/:urakka-id" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
+          :analytiikka-hae-kustannussuunnitelmat request
+          (fn [parametrit kayttaja db]
+            (hae-kustannussuunnitelmat db parametrit))
+          ;; Vaaditaan analytiikka-oikeudet
+          :analytiikka)))
+
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -1033,6 +1152,7 @@
       :analytiikka-materiaalit
       :analytiikka-tehtavat
       :analytiikka-toimenpiteet
+      :analytiikka-rahavaraukset
       :analytiikka-urakat
       :analytiikka-organisaatiot
       :analytiikka-suunnitellut-materiaalit-hoitovuosi
@@ -1046,5 +1166,7 @@
       :analytiikka-hae-paallystysilmoitukset
       :analytiikka-hae-hoidon-paikkauskustannukset
       :analytiikka-hae-paikkauskohteet
-      :analytiikka-hae-paikkaukset)
+      :analytiikka-hae-paikkaukset
+      :analytiikka-toteutuneet-kustannukset
+      :analytiikka-hae-kustannussuunnitelmat)
     this))
