@@ -35,6 +35,8 @@
 (defrecord PoistoOnnistui [tulos])
 (defrecord AsetaHakukuukausi [kuukausi])
 (defrecord AsetaHakuPaivamaara [alkupvm loppupvm])
+(defrecord AsetaHakuAlkuPvm [pvm ])
+(defrecord AsetaHakuLoppuPvm [pvm])
 
 (defrecord KuluHaettuLomakkeelle [kulu])
 
@@ -170,7 +172,17 @@
 (defn alusta-lomake [app]
   (let [urakan-alkupvm (:alkupvm @navigaatio/valittu-urakka)
         kuluva-hoitovuoden-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm (pvm/nyt))
-        kuluva-kuukausi (pvm/kuukauden-nimi (pvm/kuukausi (pvm/nyt)))
+        ;; Kuluva kuukausi ei voi olla pienempi, kuin urakan alkupvm:n kuukausi
+        pienin-nyt-hetki (if (pvm/sama-tai-jalkeen? (pvm/nyt) urakan-alkupvm)
+                           (pvm/nyt)
+                           urakan-alkupvm)
+        ;; Jos eräpäpivä on ennen urakan alkua, niin siirretään eräpäivä urakan ensimmäiselle päivälle
+        erapaiva (if (and
+                       (= (get-in app [:lomake :erapaiva]) (pvm/nyt))
+                       (pvm/sama-tai-jalkeen? (pvm/nyt) urakan-alkupvm))
+                   (get-in app [:lomake :erapaiva])
+                   urakan-alkupvm)
+        kuluva-kuukausi (pvm/kuukauden-nimi (pvm/kuukausi pienin-nyt-hetki))
         nyky-hoitokausi-lukittu? (some #(and
                                           (= (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)) (:vuosi %))
                                           (:paatos-tehty? %))
@@ -182,6 +194,7 @@
                                       (str kuluva-kuukausi "/" kuluva-hoitovuoden-nro "-hoitovuosi"))
         lomake tila/kulut-lomake-default
         lomake (-> lomake
+                 (assoc :erapaiva erapaiva)
                  (assoc :koontilaskun-kuukausi perus-koontilaskun-kuukausi)
                  (with-meta (tila/kulun-validointi-meta lomake)))]
     lomake))
@@ -290,7 +303,11 @@
 
   ValitseRahavarausKohdistukselle
   (process-event [{rahavaraus :rahavaraus nro :nro} app]
-    (assoc-in app [:lomake :kohdistukset nro :rahavaraus] rahavaraus))
+    (-> app
+      ;; Poista mahdollinen tehtäväryhmä
+      (assoc-in [:lomake :kohdistukset nro :tehtavaryhma] nil)
+      ;; Aseta rahavaraus
+      (assoc-in [:lomake :kohdistukset nro :rahavaraus] rahavaraus)))
 
   ValitseToimenpideKohdistukselle
   (process-event [{toimenpide :toimenpide nro :nro} app]
@@ -347,8 +364,8 @@
         (assoc :valittu-hoitokausi [alkupvm loppupvm])
         (assoc :hoitokauden-alkuvuosi vuosi)
         (assoc-in [:parametrit :haun-kuukausi] nil)
-        (assoc-in [:parametrit :haun-alkupvm] alkupvm)
-        (assoc-in [:parametrit :haun-loppupvm] loppupvm))))
+        (assoc-in [:parametrit :haun-alkupvm] nil)
+        (assoc-in [:parametrit :haun-loppupvm] nil))))
 
   ;; TODO: Koska hoitovuoden päätöksiä ei voi muokata, niin onko tämä tarpeellinen?
   HoitovuodenPaatoksenTyyppi
@@ -480,7 +497,7 @@
 
   HaeUrakanKulut
   (process-event [{{:keys [id alkupvm loppupvm kuukausi] :as viimeisin-haku} :hakuparametrit} app]
-    (let [_ (js/console.log "HaeUrakanKulut :: alkupvm:" (pr-str alkupvm) (pr-str loppupvm))
+    (let [_ (js/console.log "HaeUrakanKulut :: " alkupvm loppupvm kuukausi)
           alkupvm (or alkupvm (first kuukausi))
           loppupvm (or loppupvm (second kuukausi))]
       (tuck-apurit/post! :kulut-kohdistuksineen
@@ -612,8 +629,8 @@
     (update-in app [:parametrit :haetaan] inc))
 
   AsetaHakukuukausi
-  (process-event
-    [{:keys [kuukausi]} app]
+  (process-event [{:keys [kuukausi]} app]
+    (js/console.log "AsetaHakukuukausi :: kuukausi" (pr-str kuukausi))
     (-> app
       (assoc-in [:parametrit :haun-alkupvm] nil)
       (assoc-in [:parametrit :haun-loppupvm] nil)
@@ -622,10 +639,27 @@
   AsetaHakuPaivamaara
   (process-event
     [{:keys [alkupvm loppupvm]} app]
+    (js/console.log "AsetaHakuPaivamaara :: alkupvm" (pr-str alkupvm) "loppupvm" (pr-str loppupvm))
     (-> app
       (assoc-in [:parametrit :haun-kuukausi] nil)
       (assoc-in [:parametrit :haun-alkupvm] (or alkupvm (-> @tila/yleiset :urakka :alkupvm)))
       (assoc-in [:parametrit :haun-loppupvm] (or loppupvm (-> @tila/yleiset :urakka :loppupvm)))))
+
+  AsetaHakuAlkuPvm
+  (process-event
+    [{:keys [pvm]} app]
+    (js/console.log "AsetaHakuAlkuPvm :: alkupvm" (pr-str pvm))
+    (-> app
+      (assoc-in [:parametrit :haun-kuukausi] nil)
+      (assoc-in [:parametrit :haun-alkupvm] pvm)))
+
+  AsetaHakuLoppuPvm
+  (process-event
+    [{:keys [pvm]} app]
+    (js/console.log "AsetaHakuLoppuPvm :: loppupvm" (pr-str pvm))
+    (-> app
+      (assoc-in [:parametrit :haun-kuukausi] nil)
+      (assoc-in [:parametrit :haun-loppupvm] pvm)))
 
   HaeUrakanValikatselmukset
   (process-event [_ app]
@@ -708,7 +742,8 @@
 (defonce kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu])
 
 (defn validoi-lomake [lomake]
-  (let [{validoi-fn :validoi} (meta lomake)
+  (let [lomake (with-meta lomake (tila/kulun-validointi-meta lomake))
+        {validoi-fn :validoi} (meta lomake)
         validoitu-lomake (validoi-fn lomake)
         {validi? :validi?} (meta validoitu-lomake)]
     validi?))
