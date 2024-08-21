@@ -459,7 +459,8 @@
   {:f1 :id
    :f2 :tehtavaryhma
    :f3 :toimenpide
-   :f4 :toimenpideinstanssi})
+   :f4 :toimenpideinstanssi
+   :f5 :jarjestys})
 
 (defn hae-urakan-rahavaraukset [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
