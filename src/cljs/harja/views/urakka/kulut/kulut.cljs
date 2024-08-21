@@ -209,7 +209,7 @@
              [kululomake/kululomake e! app]]
           [:div
            [:div.flex-row
-            [debug/debug app]
+           #_ [debug/debug app]
             [:h1 "Kulujen kohdistus"]
             ^{:key "raporttixls"}
             [:form {:style {:margin-left "auto"}
