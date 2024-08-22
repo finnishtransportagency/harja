@@ -52,92 +52,108 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- Tatun uusi yritys tieosista
-CREATE OR REPLACE FUNCTION tr_osoitteelle_viiva3(
-  tie_ INTEGER,
-  aosa_ INTEGER, aet_ INTEGER,
-  losa_ INTEGER, let_ INTEGER) RETURNS geometry AS $$
+-- Otetaan tällä huomioon myös se, että tien 2d-projektiosta katoaa tieto korkeuseroista.
+-- Käytännössä siis tie on pitempi, kuin sen kaksiuloinen projektio, joka tarkoittaa sitä että 2d-projektion metri on
+-- alle metri oikeassa elämässä.
+CREATE OR REPLACE FUNCTION tieosoitteelle_viiva (
+    tie_ INTEGER,
+    aosa_ INTEGER, aet_ INTEGER,
+    losa_ INTEGER, let_ INTEGER) RETURNS geometry AS $$
 DECLARE
-  osan_pituus FLOAT;
-  ajorata_ INTEGER; -- 1 on oikea ajorata tien kasvusuuntaan, 2 on vasen
-  aosa INTEGER;
-  aet INTEGER;
-  losa INTEGER;
-  let INTEGER;
-  -- Osan looppauksen jutut
-  osa_ INTEGER;
-  e1 INTEGER;
-  e2 INTEGER;
-  osan_geometria GEOMETRY;
-  osan_patka GEOMETRY;
-  -- Tuloksena syntyvä geometria
-  tulos GEOMETRY[];
-  viiva GEOMETRY;
+    osan_projektoitu_pituus FLOAT;
+    ajorata_ INTEGER; -- 1 on oikea ajorata tien kasvusuuntaan, 2 on vasen
+    aosa INTEGER;
+    aet INTEGER;
+    losa INTEGER;
+    let INTEGER;
+    -- Osan looppauksen jutut
+    osa_ INTEGER;
+    e1 FLOAT;
+    e2 FLOAT;
+    osan_geometria GEOMETRY;
+    osan_patka GEOMETRY;
+    -- Tuloksena syntyvä geometria
+    tulos GEOMETRY[];
+    viiva GEOMETRY;
+    -- 2d-projektoidun metrin suhde oikeaan metriin
+    keskiarvo_metri FLOAT;
+    osan_oikea_pituus INTEGER;
 BEGIN
-  tulos := ARRAY[]::GEOMETRY[];
-  -- Päätellään kumpaa ajorataa ollaan menossa
-  -- Jos TR-osoite on kasvava, mennään oikeaa ajorataa (1) muuten mennään vasenta (2).
-  -- Yksiajorataisten teiden kohdalla päätellään samaan tapaan ajosuunta.
-  ajorata_ := 1;
-  IF (aosa_ > losa_ OR (aosa_ = losa_ AND aet_ > let_)) THEN
-    ajorata_ := 2;
-    aosa := losa_;
-    aet := let_;
-    losa := aosa_;
-    let := aet_;
-  ELSE
-    aosa := aosa_;
-    aet := aet_;
-    let := let_;
-    losa := losa_;
-  END IF;
-  --RAISE NOTICE 'Haetaan geometria tie %, ajorata %', tie_, ajorata_;
-  tulos := NULL;
-  FOR osa_ IN aosa..losa LOOP
-    -- Otetaan osan geometriaviivasta e1 -- e2 pätkä
-    SELECT geom FROM tr_osan_ajorata toa
-    WHERE toa.tie=tie_ AND toa.osa=osa_ AND toa.ajorata=ajorata_
-    INTO osan_geometria;
-    IF osan_geometria IS NULL THEN
-      CONTINUE;
-    END IF;
-    osan_pituus := st_length(osan_geometria);
-    -- Päätellään alkuetäisyys tälle osalle
-    IF osa_ = aosa THEN
-      e1 := aet;
+    tulos := ARRAY[]::GEOMETRY[];
+    -- Päätellään kumpaa ajorataa ollaan menossa
+    -- Jos TR-osoite on kasvava, mennään oikeaa ajorataa (1) muuten mennään vasenta (2).
+    -- Yksiajorataisten teiden kohdalla päätellään samaan tapaan ajosuunta.
+    ajorata_ := 1;
+    IF (aosa_ > losa_ OR (aosa_ = losa_ AND aet_ > let_)) THEN
+        ajorata_ := 2;
+        aosa := losa_;
+        aet := let_;
+        losa := aosa_;
+        let := aet_;
     ELSE
-      e1 := 0;
+        aosa := aosa_;
+        aet := aet_;
+        let := let_;
+        losa := losa_;
     END IF;
-    -- Päätellään loppuetäisyys tälle osalle
-    IF osa_ = losa THEN
-      e2 := let;
-    ELSE
-      e1 := LEAST(e1, osan_pituus);
-      e2 := osan_pituus;
-    END IF;
-   -- RAISE NOTICE 'Haetaan geometriaa tien % osan % valille % - %', tie_, osa_, e1, e2;
-    -- Lisätään jos geometria löytyi (osa on olemassa)
-    IF e1 != e2 THEN
-      osan_patka := ST_LineSubstring(osan_geometria, LEAST(1,e1/osan_pituus), LEAST(1,e2/osan_pituus));
-      IF ajorata_ = 1 THEN
-        tulos := tulos || osan_patka;
-      ELSIF ajorata_ = 2 THEN
-        IF ST_GeometryType(osan_patka)='ST_MultiLineString' THEN
-          osan_patka = kaanna_multilinestring(osan_patka);
+    --RAISE NOTICE 'Haetaan geometria tie %, ajorata %', tie_, ajorata_;
+    tulos := NULL;
+    FOR osa_ IN aosa..losa LOOP
+            -- Otetaan osan geometriaviivasta e1 -- e2 pätkä
+            SELECT geom FROM tr_osan_ajorata toa
+            WHERE toa.tie=tie_ AND toa.osa=osa_ AND toa.ajorata=ajorata_
+            INTO osan_geometria;
+            IF osan_geometria IS NULL THEN
+                CONTINUE;
+            END IF;
+
+            osan_projektoitu_pituus := st_length(osan_geometria);
+
+            -- Kuinka pitkä matka keskiarvollisesti 2d-projektoitu metri on oikeassa elämässä, ts. kuinka paljon pitempi tie on kuin sen geometrian pituus.
+            SELECT pituus
+            FROM tr_osien_pituudet
+            WHERE tie = tie_ AND osa = osa_
+            INTO osan_oikea_pituus;
+
+            -- Tällä suhdeluvulla saadaan oikea pituus käännettyä projektoiduksi pituudeksi, jota tarvitaan geometrian luontiin.
+            keskiarvo_metri := osan_projektoitu_pituus / osan_oikea_pituus;
+
+            -- Päätellään alkuetäisyys tälle osalle
+            IF osa_ = aosa THEN
+                e1 := aet * keskiarvo_metri;
+            ELSE
+                e1 := 0;
+            END IF;
+            -- Päätellään loppuetäisyys tälle osalle
+            IF osa_ = losa THEN
+                e2 := let * keskiarvo_metri;
+            ELSE
+                e1 := LEAST(e1, osan_projektoitu_pituus);
+                e2 := osan_projektoitu_pituus;
+            END IF;
+            -- RAISE NOTICE 'Haetaan geometriaa tien % osan % valille % - %', tie_, osa_, e1, e2;
+            -- Lisätään jos geometria löytyi (osa on olemassa)
+            IF e1 != e2 THEN
+                osan_patka := ST_LineSubstring(osan_geometria, LEAST(1,e1/osan_projektoitu_pituus), LEAST(1,e2/osan_projektoitu_pituus));
+                IF ajorata_ = 1 THEN
+                    tulos := tulos || osan_patka;
+                ELSIF ajorata_ = 2 THEN
+                    IF ST_GeometryType(osan_patka)='ST_MultiLineString' THEN
+                        osan_patka = kaanna_multilinestring(osan_patka);
+                    END IF;
+                    tulos := ST_Reverse(osan_patka) || tulos;
+                END IF;
+            END IF;
+        END LOOP;
+    viiva := ST_Collect(tulos);
+    IF ST_GeometryType(viiva)='ST_GeometryCollection' THEN
+        IF ST_NumGeometries(viiva)=1 THEN
+            viiva := ST_GeometryN(viiva, 1);
+        ELSE
+            viiva := yhdista_multilinestring(viiva);
         END IF;
-        tulos := ST_Reverse(osan_patka) || tulos;
-      END IF;
     END IF;
-  END LOOP;
-  viiva := ST_Collect(tulos);
-  IF ST_GeometryType(viiva)='ST_GeometryCollection' THEN
-    IF ST_NumGeometries(viiva)=1 THEN
-      viiva := ST_GeometryN(viiva, 1);
-    ELSE
-      viiva := yhdista_multilinestring(viiva);
-    END IF;
-  END IF;
-  RETURN viiva;
+    RETURN viiva;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -150,7 +166,7 @@ BEGIN
   IF aosa_=losa_ AND aet_=let_ THEN
     RETURN NEXT tierekisteriosoitteelle_piste(tie_, aosa_, aet_);
   ELSE
-    RETURN NEXT tr_osoitteelle_viiva3(tie_, aosa_, aet_, losa_, let_);
+    RETURN NEXT tieosoitteelle_viiva(tie_, aosa_, aet_, losa_, let_);
   END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -192,6 +208,9 @@ DECLARE
   osan_geometria GEOMETRY;
   osan_kohta FLOAT;
   tulos GEOMETRY;
+  osan_projektoitu_pituus FLOAT;
+  osan_oikea_pituus INTEGER;
+  keskiarvo_metri FLOAT;
 BEGIN
   SELECT geom
   FROM tr_osan_ajorata
@@ -199,7 +218,13 @@ BEGIN
   ORDER BY ajorata
   LIMIT 1
   INTO osan_geometria;
-  osan_kohta := LEAST(1, aet_/ST_Length(osan_geometria));
+
+  osan_projektoitu_pituus := st_length(osan_geometria);
+
+  SELECT pituus FROM tr_osien_pituudet WHERE tie=tie_ AND osa=aosa_ INTO osan_oikea_pituus;
+  keskiarvo_metri := osan_projektoitu_pituus / osan_oikea_pituus;
+
+  osan_kohta := LEAST(1, aet_/osan_projektoitu_pituus*keskiarvo_metri);
   tulos := ST_LineSubstring(osan_geometria, osan_kohta, osan_kohta);
   IF ST_GeometryType(tulos)='ST_GeometryCollection' AND ST_NumGeometries(tulos)=1 THEN
     tulos := ST_GeometryN(tulos, 1);
@@ -213,7 +238,7 @@ CREATE OR REPLACE FUNCTION laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GE
 DECLARE
     lahin_piste                GEOMETRY;
     aet                        INTEGER;
-    tieosan_kokonaispituus     INTEGER;
+    osan_projektoitu_pituus    FLOAT;
     etaisyys_pisteeseen        NUMERIC;
     tieosan_alku               GEOMETRY;
     tieosan_loppu              GEOMETRY;
@@ -224,6 +249,8 @@ DECLARE
     viivan_etaisyys_pisteeseen NUMERIC;
     lyhin_etaisyys_pisteeseen  NUMERIC;
     laskuri                    INTEGER;
+    osan_oikea_pituus          INTEGER;
+    keskiarvo_metri            FLOAT;
 BEGIN
 
     laskuri := 0;
@@ -231,6 +258,10 @@ BEGIN
     viivan_etaisyys_pisteeseen := 0;
     lyhin_etaisyys_pisteeseen := -1;
     etaisyys_pisteeseen := 0;
+
+    osan_projektoitu_pituus := St_Length(osan_geometria);
+    SELECT pituus FROM tr_osien_pituudet tap WHERE tap.tie=laske_tr_osan_kohta.tie AND tap.osa=laske_tr_osan_kohta.osa INTO osan_oikea_pituus;
+    keskiarvo_metri :=  1 / (osan_projektoitu_pituus / osan_oikea_pituus);
 
     RAISE NOTICE 'TYYPPI: % ', St_GeometryType(osan_geometria);
 
@@ -267,12 +298,12 @@ BEGIN
                 -- viiva pisteen kohdalta ja laskemalla leikatun viivan pituus.
                 IF st_startpoint(ST_GeometryN(osan_geometria, laskuri))::point != lahin_piste::point THEN
                     etaisyys_pisteeseen := etaisyys_pisteeseen +
-                                           (SELECT ST_Length(ST_GeometryN(ST_Split(
+                                           ((SELECT ST_Length(ST_GeometryN(ST_Split(
                                                                               ST_Snap(ST_GeometryN(osan_geometria, laskuri), lahin_piste, 0.1),
-                                                                              lahin_piste), 1)));
+                                                                              lahin_piste), 1))) * keskiarvo_metri);
                 END IF;
             ELSE
-                etaisyys_pisteeseen := etaisyys_pisteeseen + St_Length(ST_GeometryN(osan_geometria, laskuri));
+                etaisyys_pisteeseen := etaisyys_pisteeseen + (St_Length(ST_GeometryN(osan_geometria, laskuri)) * keskiarvo_metri);
             END IF;
             RAISE NOTICE 'Laskuri: %', laskuri;
             RAISE NOTICE 'Etaisyys pisteeseen: %', etaisyys_pisteeseen;
@@ -281,10 +312,9 @@ BEGIN
     -- Jos tarkasteltava piste on aivan tienosan päässä, etäisyydeksi palautuu koko osan pituus
     -- riippumatta siitä onko piste tienosan alku- vai loppupäässä. Alkupässä aet pitäisi olla 0, eikä sama kuin osan pituus.
     -- Tarkistetaan siksi pisteen suhde myös tienosan alkuun ja loppuun, jos edellä saatiin aet-arvoksi tienosan pituus.
-    tieosan_kokonaispituus := St_Length(osan_geometria);
     aet := etaisyys_pisteeseen;
 
-    IF aet = tieosan_kokonaispituus THEN
+    IF aet = osan_oikea_pituus THEN
         tieosan_alku := tierekisteriosoitteelle_piste(tie, osa, 0);
         tieosan_loppu := tierekisteriosoitteelle_piste(tie, osa, aet);
         alun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_alku);
@@ -312,8 +342,9 @@ BEGIN
   FROM tr_osan_ajorata
   WHERE geom IS NOT NULL AND
         ST_Intersects(piste, envelope)
-  ORDER BY d ASC LIMIT 1
+  ORDER BY d, ajorata ASC LIMIT 1
   INTO osa_;
+
   -- Jos osa löytyy, ota etäisyys
   IF osa_ IS NULL THEN
     RETURN NULL;
@@ -394,7 +425,7 @@ BEGIN
       AND b.geom IS NOT NULL
       AND ST_Intersects(apiste, a.envelope)
       AND ST_Intersects(bpiste, b.envelope)
-    ORDER BY d ASC
+    ORDER BY d, ajorata ASC
     LIMIT 1
     INTO r;
     IF r IS NULL THEN
@@ -408,7 +439,7 @@ BEGIN
         loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste, r.tie, r.loppuosa);
         let := loppukohta.etaisyys;
 
-        geomertria := tr_osoitteelle_viiva3(r.tie, aosa, aet, losa, let);
+        geomertria := tieosoitteelle_viiva(r.tie, aosa, aet, losa, let);
         RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', r.tie, aosa, aet, losa, let, geomertria;
         RETURN ROW (r.tie, aosa, aet, losa, let, geomertria);
 
@@ -434,8 +465,8 @@ DECLARE
   pituus NUMERIC;
 BEGIN
   -- Minimipituus on linnuntie (teleportaatiota ei sallittu)
-  -- miinus 10 metriä (varotoimi jos GPS pisteitä raportoitu ja niissä epätarkkuutta)
-  min_pituus := ST_Distance84(apiste, bpiste) - 10.0;
+  -- miinus 15 metriä (varotoimi jos GPS pisteitä raportoitu ja niissä epätarkkuutta)
+  min_pituus := ST_Distance84(apiste, bpiste) - 15.0;
   FOR r IN SELECT a.tie,a.osa as alkuosa, a.ajorata, b.osa as loppuosa,
                         a.geom as alkuosa_geom, b.geom as loppuosa_geom,
                         (ST_Distance84(apiste, a.geom) + ST_Distance84(bpiste, b.geom)) as d
@@ -464,7 +495,7 @@ BEGIN
       aet := let;
       let := tmp_et;
     END IF;
-    geom := tr_osoitteelle_viiva3(r.tie, aosa, aet, losa, let);
+    geom := tieosoitteelle_viiva(r.tie, aosa, aet, losa, let);
     pituus := ST_Length(geom);
     IF(pituus >= min_pituus AND pituus <= max_pituus) THEN
       RETURN ROW(r.tie, aosa, aet, losa, let, geom);
@@ -578,8 +609,9 @@ $$ LANGUAGE plpgsql;
 
 -- Hakee annetuille pisteille viivan jokaiselle pistevälille, huomioiden
 -- pisteiden välisen ajan. Maksimi hyväksyttävä geometrisoitu pituus on
--- pisteiden välinen aika sekunteina kertaa 30 m/s (108 km/h).
-CREATE OR REPLACE FUNCTION tieviivat_pisteille_aika(pisteet piste_aika[]) RETURNS SETOF RECORD AS $$
+-- pisteiden välinen aika sekunteina kertaa max nopeus metreissä sekuntia.
+-- Maksiminopeus annetaan kilometrinä tunnissa, se jaetaan 3.6:lla jotta saadaan m/s.
+CREATE OR REPLACE FUNCTION tieviivat_pisteille_aika(pisteet piste_aika[], max_nopeus INTEGER) RETURNS SETOF RECORD AS $$
 DECLARE
   alku piste_aika;
   loppu piste_aika;
@@ -599,7 +631,7 @@ BEGIN
     loppupiste := ST_MakePoint(loppu.x, loppu.y);
     RETURN NEXT (alkupiste, loppupiste,
                  (SELECT ytp.geometria
-                  FROM yrita_tierekisteriosoite_pisteille_max(alkupiste, loppupiste, 30.0 * aika) ytp));
+                  FROM yrita_tierekisteriosoite_pisteille_max(alkupiste, loppupiste, (max_nopeus / 3.6) * aika) ytp));
     i := i + 1;
   END LOOP;
 END;

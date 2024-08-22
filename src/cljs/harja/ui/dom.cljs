@@ -78,6 +78,8 @@
         ie-versio (maarita-ie-versio-user-agentista ua)]
     (and (integer? ie-versio) (<= 10 ie-versio))))
 
+(defn enter-nappain? [event] (= 13 (.-keyCode event)))
+
 (defonce korkeus (r/atom (-> js/window .-innerHeight)))
 (defonce leveys (r/atom (-> js/window .-innerWidth)))
 

@@ -2,7 +2,7 @@
   "paikkauskohteet": [
     {
       "tila": "Valmis",
-      "geometria": "MULTILINESTRING((404702.9476343218 7153329.068177836,404771.4405341906 7153401.904072549))",
+      "geometria": "MULTILINESTRING((404703.05043862475 7153329.183913855,404771.5649543482 7153402.029845981))",
       "suunniteltuHinta": 1000,
       "tierekisteriosoitevali": {
         "ajorata": 1,
@@ -33,7 +33,7 @@
     },
     {
       "tila": "Valmis",
-      "geometria": "MULTILINESTRING((404340.853 7152734.231,404351.19 7152762.029,404379.00227326556 7152826.636592349))",
+      "geometria": "MULTILINESTRING((404340.853 7152734.231,404351.19 7152762.029,404379.0114912378 7152826.656694116))",
       "suunniteltuHinta": 200,
       "tierekisteriosoitevali": {
         "aosa": 20,
@@ -64,4 +64,3 @@
     }
   ]
 }
-

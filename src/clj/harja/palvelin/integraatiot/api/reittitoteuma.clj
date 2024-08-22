@@ -16,6 +16,7 @@
             [harja.kyselyt.tieverkko :as tieverkko]
             [harja.kyselyt.sopimukset :as sopimukset-q]
             [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit-q]
             [clojure.java.jdbc :as jdbc]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -32,6 +33,10 @@
        :doc "Etäisyys, jota lähempänä toisiaan olevat reittipisteet yhdistetään linnuntietä,
 jos niille ei löydy yhteistä tietä tieverkolta."}
 maksimi-linnuntien-etaisyys 200)
+
+(def ^{:const true
+       :doc "Toteuman oletusnopeusrajoitus, jos tehtäviä ei ole. Tehtäville määritellään kannassa nopeusrajoitus. Perustuu aiemmin kovakoodattuun arvoon."}
+  toteuma-oletusnopeusrajoitus 108)
 
 (defn yhdista-viivat [viivat]
   (if-not (empty? viivat)
@@ -73,21 +78,22 @@ maksimi-linnuntien-etaisyys 200)
 
 (defn hae-reitti
   ([db pisteet] (hae-reitti db maksimi-linnuntien-etaisyys pisteet))
-  ([db maksimi-etaisyys pisteet]
+  ([db maksimi-etaisyys pisteet] (hae-reitti db maksimi-etaisyys toteuma-oletusnopeusrajoitus pisteet))
+  ([db maksimi-etaisyys nopeusrajoitus pisteet]
    (as-> pisteet p
          (map (fn [[x y aika]]
                 (str "\"(" x "," y "," aika ")\"")) p)
          (str/join "," p)
          (str "{" p "}")
-         (tieverkko/hae-tieviivat-pisteille-aika db p)
+         (tieverkko/hae-tieviivat-pisteille-aika db p nopeusrajoitus)
          (keep #(valin-geometria % maksimi-etaisyys) p)
          (yhdista-viivat p))))
 
-(defn luo-reitti-geometria [db reitti]
+(defn luo-reitti-geometria [db reitti nopeusrajoitus]
   (let [reitti (->> reitti
                     (sort-by (comp :aika :reittipiste))
                     (map piste)
-                    (hae-reitti db))]
+                    (hae-reitti db maksimi-linnuntien-etaisyys nopeusrajoitus))]
     (if (= reitti +yhdistamis-virhe+)
       +yhdistamis-virhe+
       (-> reitti
@@ -150,7 +156,14 @@ maksimi-linnuntien-etaisyys 200)
   (let [toteuma (assoc toteuma
                   ;; Reitti liitetään lopuksi
                   :reitti nil)
-        toteuman-reitti (async/thread (luo-reitti-geometria db-replica reitti))]
+        ;; Käytetään tehtävien nopeusrajoituksista pienintä geometrian muodostukseen
+        tehtavat (:tehtavat toteuma)
+        nopeusrajoitus (if (empty? tehtavat)
+                         toteuma-oletusnopeusrajoitus
+                         (apply min
+                           (map #(toimenpidekoodit-q/hae-tehtavan-nopeusrajoitus db (get-in % [:tehtava :id]))
+                             (:tehtavat toteuma))))
+        toteuman-reitti (async/thread (luo-reitti-geometria db-replica reitti nopeusrajoitus))]
     (jdbc/with-db-transaction [db db]
       (let [toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone)
             _ (toteumat-q/lisaa-toteumalle-jsonhash! db {:id toteuma-id :hash jsonhash})]
