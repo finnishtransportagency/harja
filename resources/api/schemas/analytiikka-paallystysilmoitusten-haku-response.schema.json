@@ -92,6 +92,10 @@
                 },
                 "massa": {
                   "$ref": "#/definitions/massa"
+                },
+                "rc-prosentti": {
+                  "type": "number",
+                  "description": "Asfalttirouheen osuus massasta"
                 }
               }
             }

@@ -260,6 +260,7 @@ t.yllapitokohde IS NOT NULL AND
 SELECT
   t.jarjestelma,
   t.tyokonetyyppi,
+  t.tyokonetunnus,
   t.urakkaid,
   t.tehtavat,
   o.nimi AS organisaationimi,
@@ -277,7 +278,7 @@ WHERE sijainti IS NOT NULL AND
         (:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
       (t.lahetysaika BETWEEN :alku AND :loppu) AND
       ST_Distance84(t.sijainti :: GEOMETRY, ST_MakePoint(:x, :y)::geometry) < :toleranssi
-GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi, t.urakkaid, o.nimi, u.nimi;
+GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi, t.tyokonetunnus, t.urakkaid, o.nimi, u.nimi;
 
 -- name: hae-turvallisuuspoikkeamat
 SELECT

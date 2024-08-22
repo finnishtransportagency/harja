@@ -152,7 +152,8 @@ SELECT
   pot2p.jarjestysnro,
   pot2p.velho_lahetyksen_aika as "velho-lahetyksen-aika",
   pot2p.velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus",
-  pot2p.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila"
+  pot2p.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila",
+  pot2_rc_prosentti(pot2p.id) as "rc-prosentti"
 FROM pot2_paallystekerros pot2p
 WHERE pot2_id = :pot2_id AND kohdeosa_id = :kohdeosa_id;
 
@@ -182,6 +183,7 @@ SELECT
     ypko.tr_loppuosa as "tr-loppuosa",
     ypko.tr_loppuetaisyys as "tr-loppuetaisyys",
     ypko.yllapitokohde as "kohde-id",
+    pot2_rc_prosentti(pot2p.id) as "rc-prosentti",
     mt.*
 FROM pot2_paallystekerros pot2p
          LEFT JOIN pot2_massan_tiedot mt ON pot2p.materiaali = mt.id
@@ -925,45 +927,46 @@ WHERE pi.luotu BETWEEN :alku AND :loppu
    OR pi.muokattu BETWEEN :alku AND :loppu;
 
 -- name: hae-paallystysilmoitusten-kulutuskerroksen-toimenpiteet-analytiikalle
-SELECT pi.id                       AS paallystysilmoitus,
-       pk_osa.id                   AS alikohde,
-       pk_osa.poistettu            AS poistettu,
-       pk_osa.tr_numero            AS "tierekisteriosoitevali_tienumero",
-       pk_osa.tr_alkuosa           AS "tierekisteriosoitevali_aosa",
-       pk_osa.tr_alkuetaisyys      AS "tierekisteriosoitevali_aet",
-       pk_osa.tr_loppuosa          AS "tierekisteriosoitevali_losa",
-       pk_osa.tr_loppuetaisyys     AS "tierekisteriosoitevali_let",
-       pk_osa.tr_kaista            AS "tierekisteriosoitevali_kaista",
-       pk_osa.tr_ajorata           AS "tierekisteriosoitevali_ajorata",
+SELECT pi.id                                 AS paallystysilmoitus,
+       pk_osa.id                             AS alikohde,
+       pk_osa.poistettu                      AS poistettu,
+       pk_osa.tr_numero                      AS "tierekisteriosoitevali_tienumero",
+       pk_osa.tr_alkuosa                     AS "tierekisteriosoitevali_aosa",
+       pk_osa.tr_alkuetaisyys                AS "tierekisteriosoitevali_aet",
+       pk_osa.tr_loppuosa                    AS "tierekisteriosoitevali_losa",
+       pk_osa.tr_loppuetaisyys               AS "tierekisteriosoitevali_let",
+       pk_osa.tr_kaista                      AS "tierekisteriosoitevali_kaista",
+       pk_osa.tr_ajorata                     AS "tierekisteriosoitevali_ajorata",
        (SELECT laske_tr_osoitteen_pituus(pk_osa.tr_numero,
                                          pk_osa.tr_alkuosa,
                                          pk_osa.tr_alkuetaisyys,
                                          pk_osa.tr_loppuosa,
                                          pk_osa.tr_loppuetaisyys))
-                                   AS pituus,
-       pot2pk.leveys               AS leveys,
-       pot2pk.pinta_ala            AS "pinta-ala",
-       kktp.nimi                   AS paallystetyomenetelma,
+                                             AS pituus,
+       pot2pk.leveys                         AS leveys,
+       pot2pk.pinta_ala                      AS "pinta-ala",
+       kktp.nimi                             AS paallystetyomenetelma,
 
-       pot2pk.massamenekki         AS massamenekki,
-       pot2pk.kokonaismassamaara   AS kokonaismassamaara,
-       kk_massa.id                 AS massa_id,
-       kk_massatyyppi.nimi         AS massa_massatyyppi,
-       kk_massa.kuulamyllyluokka   AS massa_kuulamyllyluokka,
-       kk_massa.litteyslukuluokka  AS massa_litteyslukuluokka,
-       kk_runkoaine.id             AS massa_runkoaine_id,
-       kk_runkoainetyyppi.nimi     AS massa_runkoaine_runkoainetyyppi,
-       kk_runkoaine.kuulamyllyarvo AS massa_runkoaine_kuulamyllyarvo,
-       kk_runkoaine.litteysluku    AS massa_runkoaine_litteysluku,
-       kk_runkoaine.massaprosentti AS massa_runkoaine_massaprosentti,
-       kk_runkoaine.fillerityyppi  AS massa_runkoaine_fillerityyppi,
-       kk_runkoaine.kuvaus         AS massa_runkoaine_kuvaus,
-       kk_sideaine.id              AS massa_sideaine_id,
-       kk_sideainetyyppi.nimi      AS massa_sideaine_tyyppi,
-       kk_sideaine.pitoisuus       AS massa_sideaine_pitoisuus,
-       kk_lisaaine.id              AS massa_lisaaine_id,
-       kk_lisaainetyyppi.nimi      AS massa_lisaaine_tyyppi,
-       kk_lisaaine.pitoisuus       AS massa_lisaaine_pitoisuus
+       pot2pk.massamenekki                   AS massamenekki,
+       pot2pk.kokonaismassamaara             AS kokonaismassamaara,
+       kk_massa.id                           AS massa_id,
+       kk_massatyyppi.nimi                   AS massa_massatyyppi,
+       kk_massa.kuulamyllyluokka             AS massa_kuulamyllyluokka,
+       kk_massa.litteyslukuluokka            AS massa_litteyslukuluokka,
+       kk_runkoaine.id                       AS massa_runkoaine_id,
+       kk_runkoainetyyppi.nimi               AS massa_runkoaine_runkoainetyyppi,
+       kk_runkoaine.kuulamyllyarvo           AS massa_runkoaine_kuulamyllyarvo,
+       kk_runkoaine.litteysluku              AS massa_runkoaine_litteysluku,
+       kk_runkoaine.massaprosentti           AS massa_runkoaine_massaprosentti,
+       kk_runkoaine.fillerityyppi            AS massa_runkoaine_fillerityyppi,
+       kk_runkoaine.kuvaus                   AS massa_runkoaine_kuvaus,
+       kk_sideaine.id                        AS massa_sideaine_id,
+       kk_sideainetyyppi.nimi                AS massa_sideaine_tyyppi,
+       kk_sideaine.pitoisuus                 AS massa_sideaine_pitoisuus,
+       kk_lisaaine.id                        AS massa_lisaaine_id,
+       kk_lisaainetyyppi.nimi                AS massa_lisaaine_tyyppi,
+       kk_lisaaine.pitoisuus                 AS massa_lisaaine_pitoisuus,
+       (SELECT pot2_rc_prosentti(pot2pk.id)) AS "rc-prosentti"
 FROM paallystysilmoitus pi
          LEFT JOIN yllapitokohde ypk ON pi.paallystyskohde = ypk.id
          LEFT JOIN yllapitokohteen_kustannukset k ON ypk.id = k.yllapitokohde

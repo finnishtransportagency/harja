@@ -1621,7 +1621,7 @@
                             loppuetaisyys-avain loppuetaisyys})
               luokat (if vayla-tyyli? "input-default" "")]
           ;(loki/log "sijainti >" @sijainti avaimet numero alkuosa numero-avain alkuosa-avain)
-          [:span {:class (str "tierekisteriosoite-kentta "
+          [:span {:class (str "tieosoite-kentta "
                               (when @virheet " sisaltaa-virheen")
                               (when vayla-tyyli? " vayla"))}
            (when (and @virheet (false? ala-nayta-virhetta-komponentissa?))

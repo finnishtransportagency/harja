@@ -3,6 +3,7 @@
             [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
             [harja.ui.yleiset :as yleiset]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]
+            [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
             [harja.ui.debug :as debug]
             [harja.domain.roolit :as roolit]
@@ -72,7 +73,7 @@
         kumoa-osion-vahvistus-fn (fn [tyyppi hoitovuosi]
                                    (e! (t/->KumoaOsionVahvistusVuodelta {:tyyppi tyyppi
                                                                          :hoitovuosi hoitovuosi})))
-        avaa-tai-sulje #(swap! auki? not)]
+        avaa-tai-sulje-haitari #(swap! auki? not)]
     (fn [osio-kw {:keys [osioiden-tilat vahvistus-vaadittu-osiot hoitovuosi-nro indeksit-saatavilla? osiossa-virheita?] :as opts}]
       (let [vahvistettu? (osio-vahvistettu? osioiden-tilat osio-kw hoitovuosi-nro)
             vaaditut-vahvistettu? (vaaditut-osiot-vahvistettu? osioiden-tilat vahvistus-vaadittu-osiot hoitovuosi-nro)
@@ -89,7 +90,7 @@
                                       vahvistettu?
                                       "vahvistettu")
                              :data-cy (str "vahvista-osio-" (name osio-kw))
-                             :on-click avaa-tai-sulje}
+                             :on-click avaa-tai-sulje-haitari}
 
          ;; Laatikon otsikko
          [:div.otsikko
@@ -122,7 +123,10 @@
           ;; Laatikon voi laajentaa vain jos indeksit ovat saatavilla ja vaaditut osiot on vahvistettu.
           (when (and indeksit-saatavilla? vaaditut-vahvistettu?)
             [:div.laajenna-btn
-             {:class (when vahvistettu? "vahvistettu")}
+             {:class (when vahvistettu? "vahvistettu")
+              :tabIndex "0"
+              :on-key-down #(when (dom/enter-nappain? %)
+                              (avaa-tai-sulje-haitari))}
              (if @auki?
                [:<> [ikonit/livicon-chevron-up] "Pienennä"]
                [:<> [ikonit/livicon-chevron-down] "Lisätiedot"])])]

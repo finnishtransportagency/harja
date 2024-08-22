@@ -368,8 +368,8 @@
         odotettu-pistemaisten-maara 0
         odotettu-reitillisten-maara 2
         odotetut-tarkastetut-tieosat
-        [{:tie 20, :aosa 41, :aet 4493, :losa 41, :let 4952}
-         {:tie 20, :aosa 41, :aet 5031, :losa 41, :let 4493}]]
+        [{:tie 20, :aosa 41, :aet 4493, :losa 41, :let 4951}
+         {:tie 20, :aosa 41, :aet 5030, :losa 41, :let 4493}]]
 
     ;; Muunnettu määrällisesti oikein
     (is (= (count pistemaiset) odotettu-pistemaisten-maara))
@@ -389,7 +389,7 @@
         odotettu-pistemaisten-maara 0
         odotettu-reitillisten-maara 2
         odotetut-tarkastetut-tieosat
-        [{:tie 20, :aosa 41, :aet 4493, :losa 41, :let 5039}
+        [{:tie 20, :aosa 41, :aet 4493, :losa 41, :let 5038}
          {:tie 20, :aosa 41, :aet 5040, :losa 41, :let 4493}]]
 
     ;; Muunnettu määrällisesti oikein
@@ -538,8 +538,8 @@
         odotetut-tarkastetut-tieosat
         [{:tie 18637 :aosa 1 :aet 207 :losa 1 :let 187}
          {:tie 18637 :aosa 1 :aet 187 :losa 1 :let 11}
-         {:tie 28409 :aosa 23 :aet 20 :losa 23 :let 401}
-         {:tie 4 :aosa 364 :aet 3605 :losa 367 :let 339}]]
+         {:tie 28409 :aosa 23 :aet 20 :losa 23 :let 402}
+         {:tie 4 :aosa 364 :aet 3609 :losa 367 :let 339}]]
 
     ;; Muunnettu määrällisesti oikein
     (is (= (count pistemaiset) odotettu-pistemaisten-maara))
@@ -651,9 +651,9 @@
     (is (empty? (:vakiohavainnot osa1)))
     (is (= (:lopullinen-tr-osoite osa2) {:tie nil, :aosa nil, :aet nil, :losa nil, :let nil}))
     (is (not (empty? (:vakiohavainnot osa2))))
-    (is (= (:lopullinen-tr-osoite osa3) {:tie 18637, :aosa 1, :aet 1237, :losa 1, :let 1190}))
+    (is (= (:lopullinen-tr-osoite osa3) {:tie 18637, :aosa 1, :aet 1236, :losa 1, :let 1189}))
     (is (not (empty? (:vakiohavainnot osa2))))
-    (is (= (:lopullinen-tr-osoite osa4) {:tie 18637, :aosa 1, :aet 1190, :losa 1, :let 1139}))
+    (is (= (:lopullinen-tr-osoite osa4) {:tie 18637, :aosa 1, :aet 1189, :losa 1, :let 1138}))
     (is (empty? (:vakiohavainnot osa4)))))
 
 ;; -------- Apufunktioita REPL-tunkkaukseen --------

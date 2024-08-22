@@ -330,7 +330,7 @@
           :muokattava? (constantly false)
           :tyyppi :string
           :leveys 20}
-         {:otsikko "TR-osoite"
+         {:otsikko "Tieosoite"
           :nimi :tr
           :leveys 20
           :fmt tierekisteri/tierekisteriosoite-tekstina
