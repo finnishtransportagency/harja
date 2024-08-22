@@ -222,17 +222,17 @@
         ;; Lisätään uusi toimeksianto
         _ (i (format
                "INSERT INTO tyomaapaivakirja_toimeksianto
-                (urakka_id, tyomaapaivakirja_id, versio, kuvaus, aika, muokattu) 
+                (urakka_id, tyomaapaivakirja_id, versio, kuvaus, tuntimaara, muokattu)
                 VALUES (%s, %s, %s, 'Tehtiin jokin toimeksianto', 17, now());"
                urakka-id typa-id versio))
 
         muutoshistoria (fn-hae-muutoshistoria urakka-id versio typa-id)
         toiminto (-> muutoshistoria first (nth 8 nil) :toiminto)
         kuvaus (-> muutoshistoria first (nth 8 nil) :uudet :kuvaus)
-        aika (-> muutoshistoria first (nth 8 nil) :uudet :aika)
+        tuntimaara (-> muutoshistoria first (nth 8 nil) :uudet :tuntimaara)
         _ (is (= toiminto "lisatty") "Lisätty toimeksianto")
         _ (is (= kuvaus "Tehtiin jokin toimeksianto") "Lisätty kuvaus täsmää")
-        _ (is (= aika 17) "Lisätty aika täsmää")
+        _ (is (= tuntimaara 17) "Lisätty tuntimaara täsmää")
 
         ;; Työnjohtaja
         ;; ___________________
