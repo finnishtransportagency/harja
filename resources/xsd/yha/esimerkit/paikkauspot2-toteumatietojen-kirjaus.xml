@@ -14,13 +14,13 @@
                 <kohdetyotyyppi>paallystys</kohdetyotyyppi>
                 <nimi>Kirkonkylä - Toppinen 2</nimi>
                 <tunnus>a</tunnus>
-                <toiden-aloituspaivamaara>2022-01-01</toiden-aloituspaivamaara>
-                <paallystyksen-valmistumispaivamaara>2022-08-01</paallystyksen-valmistumispaivamaara>
-                <kohteen-valmistumispaivamaara>2022-08-01</kohteen-valmistumispaivamaara>
-                <takuupaivamaara>2022-08-01</takuupaivamaara>
-                <toteutunuthinta>99900</toteutunuthinta>
+                <toiden-aloituspaivamaara>2024-01-01</toiden-aloituspaivamaara>
+                <paallystyksen-valmistumispaivamaara>2024-08-01</paallystyksen-valmistumispaivamaara>
+                <kohteen-valmistumispaivamaara>2024-08-01</kohteen-valmistumispaivamaara>
+                <takuupaivamaara>2024-08-01</takuupaivamaara>
+                <toteutunuthinta>98900</toteutunuthinta>
                 <tierekisteriosoitevali>
-                    <karttapaivamaara>2022-12-16</karttapaivamaara>
+                    <karttapaivamaara>2024-12-16</karttapaivamaara>
                     <tienumero>86</tienumero>
                     <aosa>20</aosa>
                     <aet>0</aet>
@@ -31,7 +31,7 @@
                     <alustalle-tehty-toimenpide>
                         <harja-id>9</harja-id>
                         <tierekisteriosoitevali>
-                            <karttapaivamaara>2022-12-16</karttapaivamaara>
+                            <karttapaivamaara>2024-12-16</karttapaivamaara>
                             <tienumero>86</tienumero>
                             <aosa>20</aosa>
                             <aet>0</aet>
@@ -88,7 +88,7 @@
                     <alustalle-tehty-toimenpide>
                         <harja-id>10</harja-id>
                         <tierekisteriosoitevali>
-                            <karttapaivamaara>2022-12-16</karttapaivamaara>
+                            <karttapaivamaara>2024-12-16</karttapaivamaara>
                             <tienumero>86</tienumero>
                             <aosa>20</aosa>
                             <aet>650</aet>
@@ -149,7 +149,7 @@
                         <harja-id>45</harja-id>
                         <poistettu>false</poistettu>
                         <tierekisteriosoitevali>
-                            <karttapaivamaara>2022-12-16</karttapaivamaara>
+                            <karttapaivamaara>2024-12-16</karttapaivamaara>
                             <tienumero>86</tienumero>
                             <aosa>20</aosa>
                             <aet>0</aet>
@@ -201,7 +201,7 @@
                         <harja-id>46</harja-id>
                         <poistettu>false</poistettu>
                         <tierekisteriosoitevali>
-                            <karttapaivamaara>2022-12-16</karttapaivamaara>
+                            <karttapaivamaara>2024-12-16</karttapaivamaara>
                             <tienumero>86</tienumero>
                             <aosa>20</aosa>
                             <aet>650</aet>
