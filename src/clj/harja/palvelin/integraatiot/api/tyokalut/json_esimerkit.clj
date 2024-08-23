@@ -87,8 +87,7 @@
 (def +tyomaapaivakirja-kirjaus-request+ "api/examples/tyomaapaivakirja-kirjaus-request.json")
 (def +tyomaapaivakirja-paivitys-request+ "api/examples/tyomaapaivakirja-paivitys-request.json")
 
-(def +analytiikka-tehtavat-haku-response+ "api/examples/analytiikka-tehtavat-haku-response.json")
-(def +analytiikka-tehtavaryhmat-haku-response+ "api/examples/analytiikka-tehtavaryhmat-haku-response.json")
+(def +analytiikka-tehtavat-ja-tehtavaryhmat-haku-response+ "api/examples/analytiikka-tehtavat-ja-tehtavaryhmat-haku-response.json")
 (def +analytiikka-rahavaraukset-haku-response+ "api/examples/analytiikka-rahavaraukset-haku-response.json")
 (def +analytiikka-toimenpiteet-haku-response+ "api/examples/analytiikka-toimenpiteet-haku-response.json")
 (def +analytiikka-mhu-suunnitellut-kustannukset-haku-response+ "api/examples/analytiikka-mhu-suunnitellut-kustannukset-haku-response.json")
