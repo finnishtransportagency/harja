@@ -1,4 +1,4 @@
--- Rahavaraus id:n lisäys ja populointi -- SELECT populoi_rahavaraus_idt();
+-- Rahavaraus id:n lisäys ja populointi --
 -- Palauttaa päivitetyt rivit yhteenlaskettuna
 CREATE OR REPLACE FUNCTION populoi_rahavaraus_idt()
     RETURNS INTEGER AS $$
@@ -25,10 +25,10 @@ DECLARE
 
 BEGIN
     -- Haetaan rahavarausten id:t
-    SELECT id INTO rv_akilliset_id FROM rahavaraus WHERE nimi LIKE '%Rahavaraus B%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO rv_vahingot_id FROM rahavaraus WHERE nimi LIKE '%Rahavaraus C%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO rv_tunneli_id FROM rahavaraus WHERE nimi LIKE '%Tunnelien pienet korjaukset%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO rv_lupaukseen1_id FROM rahavaraus WHERE nimi LIKE '%Rahavaraus K - Kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO rv_akilliset_id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO rv_vahingot_id FROM rahavaraus WHERE nimi LIKE 'Vahinkojen korjaukset' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO rv_tunneli_id FROM rahavaraus WHERE nimi LIKE '%Tunnelit%' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO rv_lupaukseen1_id FROM rahavaraus WHERE nimi LIKE 'Tilaajan rahavaraus kannustinjärjestelmään' ORDER BY id ASC LIMIT 1;
     SELECT id INTO rv_muut_tavoitehintaan_id FROM rahavaraus WHERE nimi LIKE '%Muut tavoitehintaan vaikuttavat rahavaraukset%' ORDER BY id ASC LIMIT 1;
 
     -- Haetaan tehtävien id:t
@@ -41,10 +41,6 @@ BEGIN
     SELECT id INTO tr_muut_yllapito_id FROM tehtavaryhma WHERE nimi LIKE '%Muut, MHU ylläpito (F)%' ORDER BY id ASC LIMIT 1;
 
     -- ~ ~ toteutuneet_kustannukset ~ ~ --
-    -- Lisää rahavaraus_id sarakkeet, on olemassa jo parissa taulussa, mutta ei haittaa
-    ALTER TABLE kulu_kohdistus ADD COLUMN IF NOT EXISTS rahavaraus_id INT REFERENCES rahavaraus (id);
-    ALTER TABLE kustannusarvioitu_tyo ADD COLUMN IF NOT EXISTS rahavaraus_id INT REFERENCES rahavaraus (id);
-    ALTER TABLE toteutuneet_kustannukset ADD COLUMN IF NOT EXISTS rahavaraus_id INT REFERENCES rahavaraus (id);
 
     -- Äkilliset hoitotyöt
     UPDATE toteutuneet_kustannukset
@@ -120,15 +116,18 @@ BEGIN
        AND rv_muut_tavoitehintaan_id IS NOT NULL;
 
     -- Tehdään ja ajetaan funktio, joka päivittää tarvittavat rahavaraukset kustannusarvioitu_tyo taulun tehtävien perusteella
-    FOR puuttuva_rivi IN select distinct on (s.urakka) s.urakka as urakka_id, kt.rahavaraus_id, ru.rahavaraus_id
-                  from kustannusarvioitu_tyo kt
-                           join sopimus s on s.id = kt.sopimus
-                           left join rahavaraus_urakka ru on ru.urakka_id = s.urakka AND ru.rahavaraus_id = kt.rahavaraus_id
-                 where ru.rahavaraus_id is null
-                   AND kt.rahavaraus_id is not null
+    FOR puuttuva_rivi IN SELECT DISTINCT ON (concat(s.urakka, kt.rahavaraus_id)) concat(s.urakka, kt.rahavaraus_id),  s.urakka AS urakka_id, kt.rahavaraus_id, ru.rahavaraus_id
+                           FROM kustannusarvioitu_tyo kt
+                                    JOIN sopimus s ON s.id = kt.sopimus
+                                    LEFT JOIN rahavaraus_urakka ru
+                                              ON ru.urakka_id = s.urakka AND ru.rahavaraus_id = kt.rahavaraus_id
+                          WHERE ru.rahavaraus_id IS NULL
+                            AND kt.rahavaraus_id IS NOT NULL
         LOOP
             INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luoja)
-            VALUES (puuttuva_rivi.urakka_id, puuttuva_rivi.rahavaraus_id, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
+            VALUES (puuttuva_rivi.urakka_id, puuttuva_rivi.rahavaraus_id,
+                    (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
+            RAISE NOTICE 'Lisätty rahavaraus % urakalle %', puuttuva_rivi.rahavaraus_id, puuttuva_rivi.urakka_id;
         END LOOP;
 
 
@@ -137,4 +136,3 @@ BEGIN
     RETURN rivit_paivitetty;
 END;
 $$ LANGUAGE plpgsql;
-

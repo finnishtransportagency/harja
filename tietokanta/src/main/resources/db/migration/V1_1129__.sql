@@ -7,6 +7,7 @@ UPDATE rahavaraus SET nimi = 'Aidat' WHERE nimi like '%Aidat%';
 UPDATE rahavaraus SET nimi = 'Sillat ja laiturit' WHERE nimi like '%Rahavaraus I - Sillat ja laiturit%';
 UPDATE rahavaraus SET nimi = 'Tunnelit' WHERE nimi like '%Rahavaraus J - Tunnelien pienet korjaukset%';
 UPDATE rahavaraus SET nimi = 'Tilaajan rahavaraus kannustinjärjestelmään' WHERE nimi like '%Rahavaraus K%';
+UPDATE rahavaraus SET nimi = 'Vahinkojen korjaukset' WHERE nimi = 'Vahinkojen korvaukset';
 
 -- Poistetaan turhat rahavaraukset - Ja jos niitä on jollakulla käytössä, niin päivitetään ID:t
 DO $$
@@ -20,7 +21,7 @@ BEGIN
     SELECT into rv_akilliset_id_poistettava id FROM rahavaraus WHERE nimi = 'Rahavaraus B - Äkilliset hoitotyöt';
     SELECT into rv_akilliset_id id FROM rahavaraus WHERE nimi = 'Äkilliset hoitotyöt';
     SELECT into rv_vahingot_id_poistettava id FROM rahavaraus WHERE nimi = 'Rahavaraus C - Vahinkojen korjaukset';
-    SELECT into rv_vahingot_id id FROM rahavaraus WHERE nimi = 'Vahinkojen korvaukset';
+    SELECT into rv_vahingot_id id FROM rahavaraus WHERE nimi = 'Vahinkojen korjaukset';
 
     -- Äkilliset
     UPDATE rahavaraus_urakka set rahavaraus_id = rv_akilliset_id WHERE rahavaraus_id = rv_akilliset_id_poistettava;

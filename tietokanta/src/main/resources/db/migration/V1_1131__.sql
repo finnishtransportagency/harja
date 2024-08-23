@@ -25,10 +25,10 @@ DECLARE
 
 BEGIN
     -- Haetaan rahavarausten id:t
-    SELECT id INTO rv_akilliset_id FROM rahavaraus WHERE nimi LIKE '%Rahavaraus B%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO rv_vahingot_id FROM rahavaraus WHERE nimi LIKE '%Rahavaraus C%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO rv_tunneli_id FROM rahavaraus WHERE nimi LIKE '%Tunnelien pienet korjaukset%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO rv_lupaukseen1_id FROM rahavaraus WHERE nimi LIKE '%Rahavaraus K - Kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO rv_akilliset_id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO rv_vahingot_id FROM rahavaraus WHERE nimi LIKE 'Vahinkojen korjaukset' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO rv_tunneli_id FROM rahavaraus WHERE nimi LIKE '%Tunnelit%' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO rv_lupaukseen1_id FROM rahavaraus WHERE nimi LIKE 'Tilaajan rahavaraus kannustinjärjestelmään' ORDER BY id ASC LIMIT 1;
     SELECT id INTO rv_muut_tavoitehintaan_id FROM rahavaraus WHERE nimi LIKE '%Muut tavoitehintaan vaikuttavat rahavaraukset%' ORDER BY id ASC LIMIT 1;
 
     -- Haetaan tehtävien id:t
@@ -41,10 +41,6 @@ BEGIN
     SELECT id INTO tr_muut_yllapito_id FROM tehtavaryhma WHERE nimi LIKE '%Muut, MHU ylläpito (F)%' ORDER BY id ASC LIMIT 1;
 
     -- ~ ~ toteutuneet_kustannukset ~ ~ --
-    -- Lisää rahavaraus_id sarakkeet, on olemassa jo parissa taulussa, mutta ei haittaa
-    ALTER TABLE kulu_kohdistus ADD COLUMN IF NOT EXISTS rahavaraus_id INT REFERENCES rahavaraus (id);
-    ALTER TABLE kustannusarvioitu_tyo ADD COLUMN IF NOT EXISTS rahavaraus_id INT REFERENCES rahavaraus (id);
-    ALTER TABLE toteutuneet_kustannukset ADD COLUMN IF NOT EXISTS rahavaraus_id INT REFERENCES rahavaraus (id);
 
     -- Äkilliset hoitotyöt
     UPDATE toteutuneet_kustannukset
