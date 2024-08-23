@@ -1,4 +1,4 @@
--- Rahavaraus id:n lisäys ja populointi -- SELECT populoi_rahavaraus_idt();
+-- Rahavaraus id:n lisäys ja populointi --
 -- Palauttaa päivitetyt rivit yhteenlaskettuna
 CREATE OR REPLACE FUNCTION populoi_rahavaraus_idt()
     RETURNS INTEGER AS $$
@@ -86,44 +86,52 @@ BEGIN
     -- ~ ~ kustannusarvioitu_tyo ~ ~ --
     -- Äkilliset hoitotyöt
     UPDATE kustannusarvioitu_tyo
-       SET rahavaraus_id = rv_akilliset_id
+       SET rahavaraus_id = rv_akilliset_id,
+           osio = 'tavoitehintaiset-rahavaraukset'
      WHERE tyyppi = 'akillinen-hoitotyo'
        AND rv_akilliset_id IS NOT NULL;
 
     -- Vahinkojen korvaukset
     UPDATE kustannusarvioitu_tyo
-       SET rahavaraus_id = rv_vahingot_id
+       SET rahavaraus_id = rv_vahingot_id,
+           osio = 'tavoitehintaiset-rahavaraukset'
      WHERE tyyppi = 'vahinkojen-korjaukset'
        AND rv_vahingot_id IS NOT NULL;
 
     -- muut-rahavaraukset -- tunnelien hoito
     UPDATE kustannusarvioitu_tyo
-       SET rahavaraus_id = rv_tunneli_id
+       SET rahavaraus_id = rv_tunneli_id,
+           osio = 'tavoitehintaiset-rahavaraukset'
      WHERE tyyppi = 'muut-rahavaraukset' AND tehtava = t_tunneli_id
        AND rv_tunneli_id IS NOT NULL;
 
     -- muut-rahavaraukset -- tehtävä: Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään
     UPDATE kustannusarvioitu_tyo
-       SET rahavaraus_id = rv_lupaukseen1_id
+       SET rahavaraus_id = rv_lupaukseen1_id,
+           osio = 'tavoitehintaiset-rahavaraukset'
      WHERE tyyppi = 'muut-rahavaraukset' AND tehtava = t_lupaukseen1_id
        AND rv_lupaukseen1_id IS NOT NULL;
 
     -- muut-rahavaraukset -- tehtävä: Muut tavoitehintaan vaikuttavat rahavaraukset
     UPDATE kustannusarvioitu_tyo
-       SET rahavaraus_id = rv_muut_tavoitehintaan_id
+       SET rahavaraus_id = rv_muut_tavoitehintaan_id,
+           osio = 'tavoitehintaiset-rahavaraukset'
      WHERE tyyppi = 'muut-rahavaraukset' AND tehtava = t_muut_tavoitehintaan_id
        AND rv_muut_tavoitehintaan_id IS NOT NULL;
 
     -- Tehdään ja ajetaan funktio, joka päivittää tarvittavat rahavaraukset kustannusarvioitu_tyo taulun tehtävien perusteella
-    FOR puuttuva_rivi IN select distinct on (s.urakka) s.urakka as urakka_id, kt.rahavaraus_id, ru.rahavaraus_id
-                           from kustannusarvioitu_tyo kt
-                                    join sopimus s on s.id = kt.sopimus
-                                    left join rahavaraus_urakka ru on ru.urakka_id = s.urakka AND ru.rahavaraus_id = kt.rahavaraus_id
-                          where ru.rahavaraus_id is null
-                            AND kt.rahavaraus_id is not null
+    FOR puuttuva_rivi IN SELECT DISTINCT ON (concat(s.urakka, kt.rahavaraus_id)) concat(s.urakka, kt.rahavaraus_id),  s.urakka AS urakka_id, kt.rahavaraus_id, ru.rahavaraus_id
+                           FROM kustannusarvioitu_tyo kt
+                                    JOIN sopimus s ON s.id = kt.sopimus
+                                    LEFT JOIN rahavaraus_urakka ru
+                                              ON ru.urakka_id = s.urakka AND ru.rahavaraus_id = kt.rahavaraus_id
+                          WHERE ru.rahavaraus_id IS NULL
+                            AND kt.rahavaraus_id IS NOT NULL
         LOOP
             INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luoja)
-            VALUES (puuttuva_rivi.urakka_id, puuttuva_rivi.rahavaraus_id, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
+            VALUES (puuttuva_rivi.urakka_id, puuttuva_rivi.rahavaraus_id,
+                    (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
+            RAISE NOTICE 'Lisätty rahavaraus % urakalle %', puuttuva_rivi.rahavaraus_id, puuttuva_rivi.urakka_id;
         END LOOP;
 
 

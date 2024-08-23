@@ -86,31 +86,36 @@ BEGIN
     -- ~ ~ kustannusarvioitu_tyo ~ ~ --
     -- Äkilliset hoitotyöt
     UPDATE kustannusarvioitu_tyo
-       SET rahavaraus_id = rv_akilliset_id
+       SET rahavaraus_id = rv_akilliset_id,
+           osio = 'tavoitehintaiset-rahavaraukset'
      WHERE tyyppi = 'akillinen-hoitotyo'
        AND rv_akilliset_id IS NOT NULL;
 
     -- Vahinkojen korvaukset
     UPDATE kustannusarvioitu_tyo
-       SET rahavaraus_id = rv_vahingot_id
+       SET rahavaraus_id = rv_vahingot_id,
+           osio = 'tavoitehintaiset-rahavaraukset'
      WHERE tyyppi = 'vahinkojen-korjaukset'
        AND rv_vahingot_id IS NOT NULL;
 
     -- muut-rahavaraukset -- tunnelien hoito
     UPDATE kustannusarvioitu_tyo
-       SET rahavaraus_id = rv_tunneli_id
+       SET rahavaraus_id = rv_tunneli_id,
+           osio = 'tavoitehintaiset-rahavaraukset'
      WHERE tyyppi = 'muut-rahavaraukset' AND tehtava = t_tunneli_id
        AND rv_tunneli_id IS NOT NULL;
 
     -- muut-rahavaraukset -- tehtävä: Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään
     UPDATE kustannusarvioitu_tyo
-       SET rahavaraus_id = rv_lupaukseen1_id
+       SET rahavaraus_id = rv_lupaukseen1_id,
+           osio = 'tavoitehintaiset-rahavaraukset'
      WHERE tyyppi = 'muut-rahavaraukset' AND tehtava = t_lupaukseen1_id
        AND rv_lupaukseen1_id IS NOT NULL;
 
     -- muut-rahavaraukset -- tehtävä: Muut tavoitehintaan vaikuttavat rahavaraukset
     UPDATE kustannusarvioitu_tyo
-       SET rahavaraus_id = rv_muut_tavoitehintaan_id
+       SET rahavaraus_id = rv_muut_tavoitehintaan_id,
+           osio = 'tavoitehintaiset-rahavaraukset'
      WHERE tyyppi = 'muut-rahavaraukset' AND tehtava = t_muut_tavoitehintaan_id
        AND rv_muut_tavoitehintaan_id IS NOT NULL;
 
