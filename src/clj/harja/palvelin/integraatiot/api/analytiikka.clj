@@ -1004,7 +1004,7 @@
       http :analytiikka-tehtavat
       (GET "/api/analytiikka/tehtavat" request
         (kasittele-get-kutsu db integraatioloki :analytiikka-hae-tehtavat request
-          json-skeemat/+analytiikka-tehtavat-vastaus+
+          json-skeemat/+analytiikka-tehtavat-ja-tehtavaryhmat-vastaus+
           (fn [parametrit kayttaja db]
             (palauta-tehtavat db parametrit kayttaja))
           :analytiikka "analytiikka")))
