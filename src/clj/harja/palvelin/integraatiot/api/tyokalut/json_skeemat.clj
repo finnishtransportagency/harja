@@ -164,3 +164,6 @@
 
 (def +analytiikka-mhu-toteutuneet-kustannukset-vastaus+ "api/schemas/analytiikka-mhu-toteutuneet-kustannukset-haku-response.schema.json")
 (def analytiikka-mhu-toteutuneet-kustannukset-vastaus (tee-validaattori +analytiikka-mhu-toteutuneet-kustannukset-vastaus+))
+
+(def +analytiikka-tehtavat-vastaus+ "api/schemas/analytiikka-tehtavat-ja-tehtavaryhmat-haku-response.schema.json")
+(def analytiikka-tehtavat-vastaus (tee-validaattori +analytiikka-tehtavat-vastaus+))
