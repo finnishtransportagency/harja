@@ -136,8 +136,8 @@ UPDATE rahavaraus SET nimi = 'Juurakkopuhdistamo ym.' WHERE nimi like '%Juurakko
 UPDATE rahavaraus SET nimi = 'Aidat' WHERE nimi like '%Aidat%';
 UPDATE rahavaraus SET nimi = 'Sillat ja laiturit' WHERE nimi like '%Rahavaraus I - Sillat ja laiturit%';
 UPDATE rahavaraus SET nimi = 'Tunnelit' WHERE nimi like '%Rahavaraus J - Tunnelien pienet korjaukset%';
-UPDATE rahavaraus SET nimi = 'Tilaajan rahavaraus kannustinjärjestelmään' WHERE nimi like '%Rahavaraus K%';
 UPDATE rahavaraus SET nimi = 'Vahinkojen korjaukset' WHERE nimi = 'Vahinkojen korvaukset';
+UPDATE rahavaraus SET nimi = 'Tilaajan rahavaraus kannustinjärjestelmään' WHERE nimi = 'Kannustinjärjestelmä';
 
 -- Poistetaan turhat rahavaraukset - Ja jos niitä on jollakulla käytössä, niin päivitetään ID:t
 DO $$
@@ -146,12 +146,16 @@ DECLARE
     rv_akilliset_id INT;
     rv_vahingot_id_poistettava INT;
     rv_vahingot_id INT;
+    rv_kannustin_id_poistettava INT;
+    rv_kannustin_id INT;
 
 BEGIN
-    SELECT into rv_akilliset_id_poistettava id FROM rahavaraus WHERE nimi = 'Rahavaraus B - Äkilliset hoitotyöt';
-    SELECT into rv_akilliset_id id FROM rahavaraus WHERE nimi = 'Äkilliset hoitotyöt';
-    SELECT into rv_vahingot_id_poistettava id FROM rahavaraus WHERE nimi = 'Rahavaraus C - Vahinkojen korjaukset';
-    SELECT into rv_vahingot_id id FROM rahavaraus WHERE nimi = 'Vahinkojen korjaukset';
+    SELECT id into rv_akilliset_id_poistettava FROM rahavaraus WHERE nimi = 'Rahavaraus B - Äkilliset hoitotyöt';
+    SELECT id into rv_akilliset_id FROM rahavaraus WHERE nimi = 'Äkilliset hoitotyöt';
+    SELECT id into rv_vahingot_id_poistettava FROM rahavaraus WHERE nimi = 'Rahavaraus C - Vahinkojen korjaukset';
+    SELECT id into rv_vahingot_id FROM rahavaraus WHERE nimi = 'Vahinkojen korjaukset';
+    SELECT id into rv_kannustin_id_poistettava FROM rahavaraus WHERE nimi = 'Rahavaraus K - Kannustinjärjestelmä';
+    SELECT id into rv_kannustin_id FROM rahavaraus WHERE nimi = 'Tilaajan rahavaraus kannustinjärjestelmään';
 
     -- Äkilliset
     UPDATE rahavaraus_urakka set rahavaraus_id = rv_akilliset_id WHERE rahavaraus_id = rv_akilliset_id_poistettava;
@@ -159,19 +163,29 @@ BEGIN
     UPDATE kustannusarvioitu_tyo set rahavaraus_id = rv_akilliset_id WHERE rahavaraus_id = rv_akilliset_id_poistettava;
     UPDATE toteutuneet_kustannukset set rahavaraus_id = rv_akilliset_id WHERE rahavaraus_id = rv_akilliset_id_poistettava;
 
+    DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = rv_akilliset_id_poistettava;
+    DELETE FROM rahavaraus_urakka WHERE rahavaraus_id = rv_akilliset_id_poistettava;
+    DELETE FROM rahavaraus WHERE id = rv_akilliset_id_poistettava;
+
+    -- Vahingot
     UPDATE rahavaraus_urakka set rahavaraus_id = rv_vahingot_id WHERE rahavaraus_id = rv_vahingot_id_poistettava;
     UPDATE kulu_kohdistus set rahavaraus_id = rv_vahingot_id WHERE rahavaraus_id = rv_vahingot_id_poistettava;
     UPDATE kustannusarvioitu_tyo set rahavaraus_id = rv_vahingot_id WHERE rahavaraus_id = rv_vahingot_id_poistettava;
     UPDATE toteutuneet_kustannukset set rahavaraus_id = rv_vahingot_id WHERE rahavaraus_id = rv_vahingot_id_poistettava;
 
-
-    DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = rv_akilliset_id_poistettava;
-    DELETE FROM rahavaraus_urakka WHERE rahavaraus_id = rv_akilliset_id_poistettava;
-    DELETE FROM rahavaraus WHERE id = rv_akilliset_id_poistettava;
-
     DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = rv_vahingot_id_poistettava;
     DELETE FROM rahavaraus_urakka WHERE rahavaraus_id = rv_vahingot_id_poistettava;
     DELETE FROM rahavaraus WHERE id = rv_vahingot_id_poistettava;
+
+    -- Kannustin
+    UPDATE rahavaraus_urakka set rahavaraus_id = rv_kannustin_id WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+    UPDATE kulu_kohdistus set rahavaraus_id = rv_kannustin_id WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+    UPDATE kustannusarvioitu_tyo set rahavaraus_id = rv_kannustin_id WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+    UPDATE toteutuneet_kustannukset set rahavaraus_id = rv_kannustin_id WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+
+    DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+    DELETE FROM rahavaraus_urakka WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+    DELETE FROM rahavaraus WHERE id = rv_kannustin_id_poistettava;
 
 END
 $$ LANGUAGE plpgsql;

@@ -123,6 +123,7 @@ BEGIN
                                               ON ru.urakka_id = s.urakka AND ru.rahavaraus_id = kt.rahavaraus_id
                           WHERE ru.rahavaraus_id IS NULL
                             AND kt.rahavaraus_id IS NOT NULL
+                            AND kt.summa IS NOT NULL
         LOOP
             INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luoja)
             VALUES (puuttuva_rivi.urakka_id, puuttuva_rivi.rahavaraus_id,
@@ -139,3 +140,39 @@ $$ LANGUAGE plpgsql;
 
 -- Ja tehdään päivitys samalla
 SELECT populoi_rahavaraus_idt();
+
+-- Kaikki urakat, joilla on "Muut tavoitehintaan vaikuttavat rahavaraukset" -rahavaraus kustannusarvioitu_tyo taulussa
+-- ei saa enää tulevaisuudessa käyttää tuota rahavarausta. Näissä urakoissa on otettava käyttöön rahavaraukset
+-- "Varalaskupaikat" ja "Pysäkkikatosten korjaaminen". Rahoja ei näiden välillä siirretä. Se on urakanvalvojan homma
+-- Mutta alustetaan nuo tarvittavat rahavaraukset kuitenkin
+DO $$
+    DECLARE
+        urakat RECORD;
+        muut_rahavaraus_id INTEGER;
+        pysakki_rahavaraus_id INTEGER;
+        varalasku_rahavaraus_id INTEGER;
+
+    BEGIN
+
+        -- Haetaan 'Tilaajan rahavaraus kannustinjärjestelmään' rahavarauksen id
+        SELECT id INTO muut_rahavaraus_id FROM rahavaraus WHERE nimi = 'Muut tavoitehintaan vaikuttavat rahavaraukset';
+        SELECT id INTO varalasku_rahavaraus_id FROM rahavaraus WHERE nimi = 'Varalaskupaikat';
+        SELECT id INTO pysakki_rahavaraus_id FROM rahavaraus WHERE nimi = 'Pysäkkikatosten korjaaminen';
+
+        FOR urakat IN SELECT DISTINCT s.urakka AS urakka_id, kt.rahavaraus_id
+                        FROM kustannusarvioitu_tyo kt
+                                 JOIN sopimus s ON s.id = kt.sopimus
+                       WHERE kt.rahavaraus_id = muut_rahavaraus_id
+            LOOP
+                INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luoja)
+                VALUES (urakat.urakka_id, pysakki_rahavaraus_id,
+                        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
+
+                INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luoja)
+                VALUES (urakat.urakka_id, varalasku_rahavaraus_id,
+                        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
+
+            END LOOP;
+
+    END
+$$ LANGUAGE plpgsql;
