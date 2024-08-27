@@ -414,7 +414,6 @@ BEGIN
               AND lk.poistettu IS NOT TRUE
               AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
               -- Varmista että nämä ovat vain tavoitehintaisia kuluja
-              AND lk.tavoitehintainen = TRUE
 
         LOOP
 
