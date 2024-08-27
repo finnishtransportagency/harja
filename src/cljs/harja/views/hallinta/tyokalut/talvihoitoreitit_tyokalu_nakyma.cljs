@@ -1,5 +1,5 @@
-(ns harja.views.hallinta.tyomaapaivakirjatyokalu-nakyma
-  "Työkalu työmaapäiväkirjojen lisäämiseksi testiurakoille."
+(ns harja.views.hallinta.tyokalut.talvihoitoreitit-tyokalu-nakyma
+  "Työkalu talvihoitoreittien lisäämiseksi testiurakoille."
   (:require [tuck.core :refer [tuck send-value! send-async!]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
@@ -11,25 +11,24 @@
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
-            [harja.tiedot.hallinta.tyomaapaivakirjatyokalu-tiedot :as tiedot])
+            [harja.tiedot.hallinta.tyokalut.talvihoitoreitti-tyokalu :as tiedot])
 
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn paivakirjalomake [e! {:keys [paivakirja] :as app}]
-  (let [disable-tallenna? (if (or (nil? (:lahetysaika paivakirja))
-                                (nil? (:valittu-urakka paivakirja)))
+(defn talvihoitoreittilomake [e! {:keys [talvihoitoreitti] :as app}]
+  (let [disable-tallenna? (if (nil? (:valittu-urakka talvihoitoreitti))
                             true
                             false)]
     [:div.yhteydenpito
-     [:h3 "Työmaapäiväkirjan simulointi valitulle urakalle"]
+     [:h2 "Talvihoitoreitin lähetys valitulle urakalle"]
      [:p "Aloita valitsemalla hallintayksikkö ja sitten urakka."]
      [lomake/lomake
       {:ei-borderia? true
        :tarkkaile-ulkopuolisia-muutoksia? true
-       :footer-fn (fn [paivakirja]
+       :footer-fn (fn [talvihoitoreitti]
                     [:div
                      [napit/tallenna "Lähetä"
-                      #(e! (tiedot/->Laheta paivakirja))
+                      #(e! (tiedot/->Laheta talvihoitoreitti))
                       {:disabled disable-tallenna? :paksu? true}]])
        :muokkaa! #(e! (tiedot/->Muokkaa %))}
       [{:nimi :valittu-hallintayksikko
@@ -60,63 +59,46 @@
         :tyyppi :string
         :pituus-max 40
         :pakollinen? true}
-       {:nimi :paivamaara
-        :otsikko "Työpäivä"
+       {:nimi :reittinimi
+        :otsikko "Reitin nimi"
         :tyyppi :string
-        :pituus-max 10
         :pakollinen? true}
+       {:nimi :kalusto-lkm
+        :otsikko "Kaluston määrä"
+        :tyyppi :numero
+        :pakollinen? true}
+       {:nimi :kalustotyyppi
+        :otsikko "Kaluston tyyppi"
+        :tyyppi :string
+        :pakollinen? true}
+       {:nimi :tierekisteriosoite
+        :tyyppi :tierekisteriosoite
+        :vayla-tyyli? true
+        :lataa-piirrettaessa-koordinaatit? true}
+      ]
+      talvihoitoreitti]]))
 
-       {:nimi :tyokoneiden-lkm
-        :otsikko "Työkoneiden lukumaara"
-        :tyyppi :numero
-        :pakollinen? true}
-       {:nimi :lisakaluston-lkm
-        :otsikko "Lisäkaluston lukumaara"
-        :tyyppi :numero
-        :pakollinen? true}
-       {:nimi :saa-asematietojen-lkm
-        :otsikko "Sääasematietojen lukumaara"
-        :tyyppi :numero
-        :pakollinen? true}
-       {:nimi :paivystaja
-        :otsikko "Päivystäjä"
-        :tyyppi :string
-        :pakollinen? true}
-       {:nimi :tyonjohtaja
-        :otsikko "Työnjohtaja"
-        :tyyppi :string
-        :pakollinen? true}
-       {:nimi :onnettomuus1
-        :otsikko "Onnettomuus1"
-        :tyyppi :string
-        :pakollinen? true}
-       {:nimi :liikenneohjaus1
-        :otsikko "Liikenneohjaus1"
-        :tyyppi :string
-        :pakollinen? true}]
-      paivakirja]]))
-
-(defn simuloi-tyomaapaivakirja* [e! app]
+(defn simuloi-talvihoitoreitti* [e! app]
   (if (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu)
     [:div
      [debug/debug app]
      (when (not (empty? (:oikeudet-urakoihin app)))
        [:div
-        [:p [:b "Käyttäjällä on oikeus lisätä työmaapäiväkirjoja seuraaviin urakoihin:"]]
+        [:p [:b "Käyttäjällä on oikeus lisätä talvihoitoreitti seuraaviin urakoihin:"]]
         (for [urakka (:oikeudet-urakoihin app)]
           ^{:key (str urakka)}
           [:div [:span (str (:urakka-id urakka) " ")] [:span (:urakka-nimi urakka)]])])
      [:div
       ;; Näytetään mahdollisuus lisätä oikeudet urakkaan vain, jos siihen ei vielä ole oikeuksia
-      (if (and (get-in app [:paivakirja :valittu-urakka])
-            (not (some (fn [u] (when (= (get-in app [:paivakirja :valittu-urakka :id]) (:urakka-id u)) true)) (:oikeudet-urakoihin app))))
+      (if (and (get-in app [:talvihoitoreitti :valittu-urakka])
+            (not (some (fn [u] (when (= (get-in app [:talvihoitoreitti :valittu-urakka :id]) (:urakka-id u)) true)) (:oikeudet-urakoihin app))))
         [:div
          [:p [:b "Lisää oikeudet puuttuvaan urakkaan"]]
-         [napit/tallenna (str "Lisää oikeudet urakkaan: " (get-in app [:paivakirja :valittu-urakka :nimi]))
-          #(e! (tiedot/->LisaaOikeudetUrakkaan (get-in app [:paivakirja :valittu-urakka :id])))
+         [napit/tallenna (str "Lisää oikeudet urakkaan: " (get-in app [:talvihoitoreitti :valittu-urakka :nimi]))
+          #(e! (tiedot/->LisaaOikeudetUrakkaan (get-in app [:talvihoitoreitti :valittu-urakka :id])))
           {:paksu? true}]]
-        (paivakirjalomake e! app))]]
+        (talvihoitoreittilomake e! app))]]
     "Puutteelliset käyttöoikeudet"))
 
-(defn simuloi-tyomaapaivakirja []
-  [tuck tiedot/data simuloi-tyomaapaivakirja*])
+(defn simuloi-talvihoitoreitti []
+  [tuck tiedot/data simuloi-talvihoitoreitti*])

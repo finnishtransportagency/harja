@@ -45,7 +45,8 @@
             [harja.tiedot.tieluvat.tieluvat-kartalla :as tieluvat]
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla]
             [harja.tiedot.urakka.toteumat.materiaalitoteumat-kartalla :as materiaalitoteumat-kartalla]
-            [harja.tiedot.urakka.tienumerot-kartalla :as tienumerot-kartalla])
+            [harja.tiedot.urakka.tienumerot-kartalla :as tienumerot-kartalla]
+            [harja.tiedot.urakka.laadunseuranta.talvihoitoreitit :as talvihoitoreitit])
   
   (:require-macros [reagent.ratom :refer [reaction run!] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
@@ -275,7 +276,8 @@
    :tieluvat tieluvat/tieluvat-kartalla
    :maarien-toteumat maarien-toteumat-kartalla/toteumat-kartalla
    :materiaalitoteumat materiaalitoteumat-kartalla/materiaalitoteumat-kartalla
-   :tienumerot tienumerot-kartalla/tienumerot-kartalla})
+   :tienumerot tienumerot-kartalla/tienumerot-kartalla
+   :talvihoitoreitit talvihoitoreitit/talvihoitoreitit-kartalla})
 
 (defn nayta-geometria!
   ([avain geometria] (nayta-geometria! avain geometria :nakyman-geometriat))
@@ -407,7 +409,8 @@
    :tieluvat tieluvat/karttataso-tieluvat
    :nakyman-geometriat (atom true)
    :infopaneelin-merkki (atom true)
-   :tienumerot tienumerot-kartalla/karttataso-nakyvissa?})
+   :tienumerot tienumerot-kartalla/karttataso-nakyvissa?
+   :talvihoitoreitit talvihoitoreitit/karttataso-nakyvissa?})
 
 (defn- nykyiset-karttatasot* [atomit nimet-set]
   (->> atomit

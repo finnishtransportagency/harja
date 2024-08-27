@@ -142,6 +142,7 @@
     [harja.palvelin.integraatiot.api.raportit :as api-raportit]
     [harja.palvelin.integraatiot.api.analytiikka :as analytiikka]
     [harja.palvelin.integraatiot.api.tyomaapaivakirja :as api-tyomaapaivakirja]
+    [harja.palvelin.integraatiot.api.talvihoitoreitit :as api-talvihoitoreitit]
     [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as api-sahkoposti]
     [harja.palvelin.integraatiot.vayla-rest.sampo-api :as api-sampo]
 
@@ -720,6 +721,9 @@
 
       :api-tyomaapaivakirja (component/using
                               (api-tyomaapaivakirja/->Tyomaapaivakirja)
+                              [:http-palvelin :db :integraatioloki])
+      :api-talvihoitoreitit (component/using
+                              (api-talvihoitoreitit/->Talvihoitoreitit)
                               [:http-palvelin :db :integraatioloki])
 
       :tieluvat (component/using

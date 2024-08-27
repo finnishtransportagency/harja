@@ -147,6 +147,9 @@
 (def +tyomaapaivakirja-kirjaus-response+ "api/schemas/tyomaapaivakirja-kirjaus-response.schema.json")
 (def tyomaapaivakirja-kirjaus-response (tee-validaattori +tyomaapaivakirja-kirjaus-response+))
 
+(def +talvihoitoreitti-kirjaus-request+ "api/schemas/talvihoitoreitti-kirjaus-request.schema.json")
+(def talvihoitoreitti-kirjaus-request (tee-validaattori +talvihoitoreitti-kirjaus-request+))
+
 (def +analytiikka-tehtavat-vastaus+ "api/schemas/analytiikka-tehtavat-haku-response.schema.json")
 (def analytiikka-tehtavat-vastaus (tee-validaattori +analytiikka-tehtavat-vastaus+))
 

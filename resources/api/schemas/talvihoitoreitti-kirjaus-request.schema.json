@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "reittinimi": {
+      "type": "string",
+      "required": true,
+      "description": "Reitin nimi."
+    },
+    "kalusto": {
+      "type": "array",
+      "description": "Minkälaista kalustoa käytetään tämän reitin hoidossa.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kalustotyyppi": {
+            "type": "string",
+            "description": "Kalustotyyppi, jota käytetään tällä reitillä."
+          },
+          "kalusto-lkm": {
+            "type": "integer",
+            "description": "Kaluston lukumäärä, jota kalustotyypistä käytetään.",
+            "minimum": 1
+          }
+        },
+        "required": ["kalustotyyppi", "kalusto-lkm"],
+        "additionalProperties": false
+      }
+    },
+    "reitti": {
+      "type": "array",
+      "description": "Reitti, joka koostuu useista reittipisteistä.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tie": {
+            "type": "integer",
+            "description": "Tien numero, jolla reittipiste sijaitsee."
+          },
+          "aosa": {
+            "type": "integer",
+            "description": "Tien alkuosa."
+          },
+          "aet": {
+            "type": "integer",
+            "description": "Alkuetäisyys osalla."
+          },
+          "losa": {
+            "type": "integer",
+            "description": "Loppuosa."
+          },
+          "let": {
+            "type": "integer",
+            "description": "Loppuetäisyys osalla."
+          },
+          "pituus": {
+            "type": "number",
+            "description": "Reitin pituus metreinä.",
+            "minimum": 0
+          },
+          "hoitoluokka": {
+            "type": "integer",
+            "description": "Reitin hoitoluokka. Hoitoluokat on väliltä 1-11. IsE = 1, Is = 2 I = 3, Ib = 4, Ic = 5, II = 6, III = 7, L = 8, K1 = 9, K2 = 10, K (ei talvihoitoa) = 11",
+            "minimum": 0
+          }
+        },
+        "required": ["tie", "aosa", "aet", "losa", "let", "pituus"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["otsikko","kalustotyyppi", "kalustomaara"],
+  "additionalProperties": false
+}
