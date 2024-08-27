@@ -13,18 +13,18 @@ WITH urakan_toimenpideinstanssi_23150 AS
           limit 1)
 -- Haetaan budjetoidut hankintakustannukset ja rahavaraukset kustannusarvioitu_tyo taulusta
 -- Kaikki budjetoidut kustannukset ovat joko rahavarauksia tai hankintoja. Erillishankinnat on eriytetty omaksi haukseen
-SELECT coalesce(SUM(kt.summa), 0)                     AS budjetoitu_summa,
-       coalesce(SUM(kt.summa_indeksikorjattu), 0)     AS budjetoitu_summa_indeksikorjattu,
+SELECT COALESCE(SUM(kt.summa), 0)                     AS budjetoitu_summa,
+       COALESCE(SUM(kt.summa_indeksikorjattu), 0)     AS budjetoitu_summa_indeksikorjattu,
        0                                              AS toteutunut_summa,
        kt.tyyppi::TEXT                                AS maksutyyppi,
        CASE
            WHEN kt.rahavaraus_id IS NULL THEN 'hankinta'
            WHEN kt.rahavaraus_id IS NOT NULL THEN 'rahavaraus'
-       END                                              AS toimenpideryhma,
-        CASE
-            WHEN kt.rahavaraus_id IS NOT NULL THEN r.nimi
-            ELSE COALESCE(tr.nimi, tk_tehtava.nimi )
-        END                                             AS tehtava_nimi,
+           END                                        AS toimenpideryhma,
+       CASE
+           WHEN kt.rahavaraus_id IS NOT NULL THEN COALESCE(ru.urakkakohtainen_nimi, r.nimi)
+           ELSE COALESCE(tr.nimi, tk_tehtava.nimi)
+           END                                        AS tehtava_nimi,
        CASE
            WHEN (tk.koodi = '23104' AND kt.rahavaraus_id IS NULL) THEN 'Talvihoito'
            WHEN (tk.koodi = '23116' AND kt.rahavaraus_id IS NULL) THEN 'Liikenneympäristön hoito'
@@ -32,9 +32,9 @@ SELECT coalesce(SUM(kt.summa), 0)                     AS budjetoitu_summa,
            WHEN (tk.koodi = '20107' AND kt.rahavaraus_id IS NULL) THEN 'Päällystepaikkaukset'
            WHEN (tk.koodi = '20191' AND kt.rahavaraus_id IS NULL) THEN 'MHU Ylläpito'
            WHEN (tk.koodi = '14301' AND kt.rahavaraus_id IS NULL) THEN 'MHU Korvausinvestointi'
-           WHEN kt.rahavaraus_id IS NOT NULL THEN r.nimi
+           WHEN kt.rahavaraus_id IS NOT NULL THEN COALESCE(ru.urakkakohtainen_nimi, r.nimi)
            END                                        AS toimenpide,
-       MIN(concat(kt.vuosi, '-', kt.kuukausi, '-01')) AS ajankohta,
+       MIN(CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')) AS ajankohta,
        'budjetointi'                                  AS toteutunut,
        tk_tehtava.jarjestys                           AS jarjestys,
        CASE
@@ -65,7 +65,7 @@ WHERE s.urakka = :urakka
     OR tk.koodi = '14301' -- mhu-korvausinvestointi
     )
 GROUP BY paaryhma, toimenpide, toimenpideryhma, maksutyyppi, tehtava_nimi, tk.koodi,
-         tk_tehtava.jarjestys, tr.nimi, kt.indeksikorjaus_vahvistettu, kt.rahavaraus_id, r.nimi
+         tk_tehtava.jarjestys, tr.nimi, kt.indeksikorjaus_vahvistettu, kt.rahavaraus_id, COALESCE(ru.urakkakohtainen_nimi, r.nimi)
 UNION ALL
 -- Haetaan budjetoidut hankintakustannukset myös kiintehintainen_tyo taulusta
 -- kiinteahintainen_tyo taulusta haetaan (suurin?) osa suunnitelluista kustannuksista.
@@ -237,7 +237,7 @@ SELECT 0                          AS budjetoitu_summa,
            WHEN (tk.koodi = '20107' AND lk.rahavaraus_id IS NULL) THEN 'Päällystepaikkaukset'
            WHEN (tk.koodi = '20191' AND lk.rahavaraus_id IS NULL) THEN 'MHU Ylläpito'
            WHEN (tk.koodi = '14301' AND lk.rahavaraus_id IS NULL) THEN 'MHU Korvausinvestointi'
-           WHEN lk.rahavaraus_id IS NOT NULL THEN r.nimi
+           WHEN lk.rahavaraus_id IS NOT NULL THEN COALESCE(ru.urakkakohtainen_nimi, r.nimi)
            END                    AS toimenpide,
        MIN(l.erapaiva)::TEXT      AS ajankohta,
        'toteutunut'               AS toteutunut,
@@ -270,7 +270,8 @@ WHERE l.urakka = :urakka
   AND (tk.koodi = '23104' OR tk.koodi = '23116'
     OR tk.koodi = '23124' OR tk.koodi = '20107' OR tk.koodi = '20191' OR
        tk.koodi = '14301')
-GROUP BY tr.nimi, tk.nimi, lk.tyyppi, lk.maksueratyyppi, tk.koodi, tr.jarjestys, tr.yksiloiva_tunniste, lk.rahavaraus_id, r.nimi, lk.tavoitehintainen
+GROUP BY tr.nimi, tk.nimi, lk.tyyppi, lk.maksueratyyppi, tk.koodi, tr.jarjestys, tr.yksiloiva_tunniste,
+         lk.rahavaraus_id, COALESCE(ru.urakkakohtainen_nimi, r.nimi), lk.tavoitehintainen
 UNION ALL
 -- Toteutuneet erillishankinnat, hoidonjohdonpalkkio, johto- ja hallintokorvaukset
 -- ja vuoden päättämiseen liittyvät kulut kulu_kohdistus taulusta.
