@@ -115,13 +115,10 @@
                                               tr-ajorata tr-kaista verkon-tarkoitus kasittelymenetelma paksuus lisatty-paksuus
                                               verkon-sijainti toimenpide kasittelysyvyys massamenekki kokonaismassamaara massa murske]}
                                       kohteen-tienumero karttapvm]
-  (let [tekninen-toimenpide (if-not (#{42 41 32 31 4} toimenpide) ;; LJYR TJYR TAS TASK REM-TAS
-                              4 ;; "Kevyt rakenteen parantaminen"
-                              9)] ;; "ei tiedossa"
     [:alustalle-tehty-toimenpide
      [:harja-id id]
      [:tierekisteriosoitevali
-      [:karttapaivamaara (xml/formatoi-paivamaara (if karttapvm karttapvm (pvm/nyt)))]
+      [:karttapaivamaara (xml/formatoi-paivamaara (or karttapvm (pvm/nyt)))]
       ;; Tienumero on joko alustatoimenpiteelle määritelty tienumero, tai sen puuttuessa alustatoimenpiteen
       ;; oletetaan kohdistuvan pääkohteen kanssa samalle tielle eli käytetään pääkohteen tienumeroa.
       ;; Kaudella 2017 alustatoimenpiteelle ei kirjattu tienumeroa, mutta kaudella 2018 se kirjataan, koska
@@ -134,7 +131,7 @@
       [:ajorata tr-ajorata]
       [:kaista tr-kaista]]
      [:kasittelymenetelma (or kasittelymenetelma toimenpide)]
-     [:lisatty-paksuus lisatty-paksuus] ;; Käytetäänkö "paksuus" tietoa?
+     [:lisatty-paksuus lisatty-paksuus]
      [:kasittelysyvyys kasittelysyvyys]
      [:verkkotyyppi verkkotyyppi]
      (when verkon-tarkoitus
@@ -147,7 +144,7 @@
      [:murske 
       [:mursketyyppi (:tyyppi murske)]
       [:rakeisuus (:rakeisuus murske)]
-      [:iskunkestavyys (:iskunkestavyys murske)]]]))
+      [:iskunkestavyys (:iskunkestavyys murske)]]])
 
 (defn tee-kulutuskerrokselle-tehdyt-toimet [{:keys [yha-id alikohde poistettu tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                                                     tr-ajorata tr-kaista leveys pinta-ala paallystetyomenetelma massamenekki rc-prosentti massa kokonaismassamaara] :as toimet}
@@ -157,7 +154,7 @@
    [:harja-id alikohde]
    [:poistettu poistettu]
    [:tierekisteriosoitevali
-    [:karttapaivamaara (xml/formatoi-paivamaara (if karttapvm karttapvm (pvm/nyt)))]
+    [:karttapaivamaara (xml/formatoi-paivamaara (or karttapvm (pvm/nyt)))]
     [:tienumero (or tr-numero kohteen-tienumero)]
     [:aosa tr-alkuosa]
     [:aet tr-alkuetaisyys]
