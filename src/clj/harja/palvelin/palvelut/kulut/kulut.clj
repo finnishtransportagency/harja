@@ -178,7 +178,8 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (let [kulu (first (q/hae-kulu db {:urakka urakka-id
                                     :id id}))
-        kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kulu)})
+        kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kulu)
+                                                   :urakka_id urakka-id})
         ;; Poista nil rahavaraukset
         kohdistukset (mapv (fn [kohdistus]
                              (let [kohdistus (if (:rahavaraus_id kohdistus)
