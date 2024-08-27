@@ -80,15 +80,15 @@
 (def +paikkausten-kirjaus-massamaara-request+ "api/examples/paikkausten-kirjaus-request.json")
 (def +paikkauskustannusten-kirjaus-request+ "api/examples/paikkauskustannusten-kirjaus-request.json")
 
-(def +analytiikka-reittitoteumat-response+ "api/examples/analytiikka-reittitoteumat-response.json")
-
 (def +raportti-materiaaliraportti-response+ "api/examples/raportti-materiaaliraportti-response.json")
 
 (def +tyomaapaivakirja-kirjaus-request+ "api/examples/tyomaapaivakirja-kirjaus-request.json")
 (def +tyomaapaivakirja-paivitys-request+ "api/examples/tyomaapaivakirja-paivitys-request.json")
 
-(def +analytiikka-tehtavat-haku-response+ "api/examples/analytiikka-tehtavat-haku-response.json")
-(def +analytiikka-tehtavaryhmat-haku-response+ "api/examples/analytiikka-tehtavaryhmat-haku-response.json")
+;; Analytiikka
+(def +analytiikka-reittitoteumat-response+ "api/examples/analytiikka-reittitoteumat-response.json")
+(def +analytiikka-paallystyskohteiden-haku-vastaus+ "api/examples/analytiikka-paallystyskohteiden-haku-response.json")
+(def +analytiikka-tehtavat-ja-tehtavaryhmat-haku-response+ "api/examples/analytiikka-tehtavat-ja-tehtavaryhmat-haku-response.json")
 (def +analytiikka-rahavaraukset-haku-response+ "api/examples/analytiikka-rahavaraukset-haku-response.json")
 (def +analytiikka-toimenpiteet-haku-response+ "api/examples/analytiikka-toimenpiteet-haku-response.json")
 (def +analytiikka-mhu-suunnitellut-kustannukset-haku-response+ "api/examples/analytiikka-mhu-suunnitellut-kustannukset-haku-response.json")
