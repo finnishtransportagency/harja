@@ -178,7 +178,7 @@
                            urakan-alkupvm)
         ;; Jos eräpäpivä on ennen urakan alkua, niin siirretään eräpäivä urakan ensimmäiselle päivälle
         erapaiva (if (and
-                       (= (get-in app [:lomake :erapaiva]) (pvm/nyt))
+                       (= (pvm/iso8601 (get-in app [:lomake :erapaiva])) (pvm/iso8601 (pvm/nyt)))
                        (pvm/sama-tai-jalkeen? (pvm/nyt) urakan-alkupvm))
                    (get-in app [:lomake :erapaiva])
                    urakan-alkupvm)
