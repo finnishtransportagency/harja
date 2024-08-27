@@ -185,13 +185,14 @@
     (laheta-kuittaus itmf lokittaja kuittausjono kuittaus
                      korrelaatio-id tapahtuma-id false virhe)))
 
-(defn vastaanota-ilmoitus [itmf lokittaja ilmoitusasetukset db kuittausjono jms-lahettaja kehitysmoodi? viesti]
+(defn vastaanota-ilmoitus [itmf lokittaja ilmoitusasetukset db
+                           ilmoitusviestijono kuittausjono jms-lahettaja kehitysmoodi? viesti]
   (log/debug "Vastaanotettiin T-LOIK:n ilmoitusjonosta viesti: " viesti)
   (let [vastaanotettu (pvm/nyt)
         jms-viesti-id (.getJMSMessageID viesti)
         viestin-sisalto (.getText viesti)
         korrelaatio-id (.getJMSCorrelationID viesti)
-        tapahtuma-id (lokittaja :saapunut-jms-viesti jms-viesti-id viestin-sisalto kuittausjono)]
+        tapahtuma-id (lokittaja :saapunut-jms-viesti jms-viesti-id viestin-sisalto ilmoitusviestijono)]
 
     (if (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" viestin-sisalto)
       (let [{:keys [viesti-id ilmoitus-id] :as ilmoitus} (ilmoitus-sanoma/lue-viesti viestin-sisalto)]
