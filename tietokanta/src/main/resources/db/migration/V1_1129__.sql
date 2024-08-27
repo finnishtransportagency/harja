@@ -1,3 +1,8 @@
+-- Varmistetaan, että rahavaraus_urakka tauluun ei tule duplikaatteja
+ALTER TABLE rahavaraus_urakka
+    ADD CONSTRAINT rahavaraus_urakka_pk
+        UNIQUE (urakka_id, rahavaraus_id);
+
 -- Poistetaan turhaksi jääneitä kolumneita kulu ja kulu_kohdistus tauluista
 ALTER TABLE kulu
     DROP COLUMN IF EXISTS tyyppi;
