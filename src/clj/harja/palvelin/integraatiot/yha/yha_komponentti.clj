@@ -356,6 +356,6 @@
                       _ (prn "kohde-idt" kohde-idt)
                       kohteet (mapv #(hae-kohteen-tiedot-pot2 db %) kohde-idt)
                       sanomat  (kohteen-lahetyssanoma/muodosta urakka kohteet)
-                      _ (dev-tyokalut/kirjoita-tiedostoon-xml sanomat (str "urakka-" urakka-id "-2022-kaikki"))
+                      _ (dev-tyokalut/kirjoita-tiedostoon sanomat (str "urakka-" urakka-id "-2023-kaikki") true ".xml")
                       _ (prn "kirjoitettu tiedostoon!")]))
-  (kirjoita-urakan-pot2-kohteet-tiedostoon 508))
+  (kirjoita-urakan-pot2-kohteet-tiedostoon 575))
