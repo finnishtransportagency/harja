@@ -1,9 +1,8 @@
 (ns harja.palvelin.integraatiot.yha.yha-komponentti
   (:require [clojure.java.jdbc :as jdbc]
-            [clojure.string :as clj-str]
             [clojure.set :as set]
+            [clojure.string :as clj-str]
             [com.stuartsierra.component :as component]
-            [harja.domain.paallystysilmoitus :as pot-domain]
             [harja.domain.pot2 :as pot2-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.kyselyt.konversio :as konv]
@@ -21,6 +20,8 @@
             [harja.palvelin.integraatiot.yha.yha-yhteiset :as yha-yhteiset]
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
             [harja.pvm :as pvm]
+            [harja.repl-tyokalut :as repl-tyokalut]
+            [harja.tyokalut.dev-tyokalut :as dev-tyokalut]
             [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
@@ -200,7 +201,7 @@
 (defn hae-kohteen-tiedot-pot2 [db kohde-id]
   (if-let [kohde (-> (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id})
                    first
-                     ;; Tuoreimmassa YHA-mallissa pääkohteella ei ole ajorataa taikka kaistaa
+                     ;; YHA-skeemassa pääkohteella ei ole ajorataa taikka kaistaa
                    (dissoc :tr-ajorata :tr-kaista))]
     (let [maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
                                    db {:urakka-id (:urakka kohde) :yllapitokohde-id kohde-id}))
@@ -345,14 +346,16 @@
 
 
 (comment
-  (defn testi [urakka-id] (let [db (:db harja.palvelin.main/harja-jarjestelma)
-                                urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))
-                                urakka (assoc urakka :harjaid urakka-id
-                                         :sampoid (yhaan-lahetettava-sampoid urakka))
-                                kohde-idt  (repl-tyokalut/q (str "SELECT id FROM yllapitokohde WHERE urakka =" urakka-id " and vuodet @> ARRAY [2023]"))
-                                _ (prn "kohde-idt" kohde-idt)
-                                kohteet (mapv #(hae-kohteen-tiedot-pot2 db %) kohde-idt)
-                                sanomat  (kohteen-lahetyssanoma/muodosta urakka kohteet)
-                                _ (dev-tyokalut/kirjoita-tiedostoon sanomat (str "urakka-" urakka-id "-2023-kaikki"))
-                                _ (prn "tulostettu!")]))
-  (testi 559))
+  (defn kirjoita-urakan-pot2-kohteet-tiedostoon
+    "Funktiolla on generoitu testi xml-tiedostoja YHA:lle"
+    [urakka-id] (let [db (:db harja.palvelin.main/harja-jarjestelma)
+                      urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))
+                      urakka (assoc urakka :harjaid urakka-id
+                               :sampoid (yhaan-lahetettava-sampoid urakka))
+                      kohde-idt  (repl-tyokalut/q (str "SELECT id FROM yllapitokohde WHERE urakka =" urakka-id " and vuodet @> ARRAY [2023]"))
+                      _ (prn "kohde-idt" kohde-idt)
+                      kohteet (mapv #(hae-kohteen-tiedot-pot2 db %) kohde-idt)
+                      sanomat  (kohteen-lahetyssanoma/muodosta urakka kohteet)
+                      _ (dev-tyokalut/kirjoita-tiedostoon-xml sanomat (str "urakka-" urakka-id "-2022-kaikki"))
+                      _ (prn "kirjoitettu tiedostoon!")]))
+  (kirjoita-urakan-pot2-kohteet-tiedostoon 508))
