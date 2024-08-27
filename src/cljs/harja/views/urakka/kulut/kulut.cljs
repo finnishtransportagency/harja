@@ -200,12 +200,10 @@
                                 (:hoitokauden-alkuvuosi app))
            hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))
            haun-alkupvm-atom (r/atom (get-in app [:parametrit :haun-alkupvm]))
-           haun-loppupvm-atom (r/atom (get-in app [:parametrit :haun-loppupvm]))
-           _ (js/console.log "Aikavaäli atomin jälkeinen rivi :: parametrit" (pr-str (:parametrit app)))]
+           haun-loppupvm-atom (r/atom (get-in app [:parametrit :haun-loppupvm]))]
        [:div#vayla.kulujen-kohdistus.margin-top-16
         (if syottomoodi
           [:div
-           #_ [kulujen-syottolomake e! app]
              [kululomake/kululomake e! app]]
           [:div
            [:div.flex-row
@@ -292,9 +290,12 @@
                                                                       :loppupvm loppupvm})))))}
                 haun-loppupvm-atom]]]]]
            (when kulut
-             [kulutaulukko {:e! e! :haetaan? (> haetaan 0)
-                            :tiedot kulut :tehtavaryhmat tehtavaryhmat
-                            :toimenpiteet toimenpiteet}])])]))))
+             [:div
+              (if (get-in app [:parametrit :haku-menossa])
+                [yleiset/ajax-loader "Ladataan..."]
+                [kulutaulukko {:e! e! :haetaan? (> haetaan 0)
+                               :tiedot kulut :tehtavaryhmat tehtavaryhmat
+                               :toimenpiteet toimenpiteet}])])])]))))
 
 (defn kohdistetut-kulut
   []

@@ -363,6 +363,7 @@
       (-> app
         (assoc :valittu-hoitokausi [alkupvm loppupvm])
         (assoc :hoitokauden-alkuvuosi vuosi)
+        (assoc-in [:parametrit :haku-menossa] true)
         (assoc-in [:parametrit :haun-kuukausi] nil)
         (assoc-in [:parametrit :haun-alkupvm] nil)
         (assoc-in [:parametrit :haun-loppupvm] nil))))
@@ -442,6 +443,7 @@
   (process-event [{tulos :tulos} app]
     (-> app
       (assoc :kulut tulos)
+      (assoc-in [:parametrit :haku-menossa] false)
       (update-in [:parametrit :haetaan] dec)))
 
   ToimenpidehakuOnnistui
@@ -482,7 +484,9 @@
   KutsuEpaonnistui
   (process-event [{{:keys [ei-async-laskuria viesti]} :parametrit} app]
     (when viesti (viesti/nayta! viesti :danger))
-    (update-in app [:parametrit :haetaan] (if ei-async-laskuria identity dec)))
+    (-> app
+      (assoc-in [:parametrit :haku-menossa] false)
+      (update-in [:parametrit :haetaan] (if ei-async-laskuria identity dec))))
 
   HaeUrakanToimenpiteet
   (process-event [{:keys [hakuparametrit]} app]
@@ -510,6 +514,7 @@
          :paasta-virhe-lapi? true}))
     (-> app
       (assoc-in [:parametrit :viimeisin-haku] viimeisin-haku)
+      (assoc-in [:parametrit :haku-menossa] true)
       (update-in [:parametrit :haetaan] inc)))
 
   HaeUrakanToimenpiteetJaTehtavaryhmat
