@@ -343,7 +343,7 @@ SELECT pi.id                       AS paallystysilmoitus,
        kk_lisaaine.pitoisuus       AS massa_lisaaine_pitoisuus,
        pot2_rc_prosentti(pot2pk.id) AS "rc-prosentti"
 FROM paallystysilmoitus pi
-         LEFT JOIN yllapitokohde ypk ON pi.paallystyskohde = ypk.id
+         JOIN yllapitokohde ypk ON pi.paallystyskohde = ypk.id
          LEFT JOIN yllapitokohteen_kustannukset k ON ypk.id = k.yllapitokohde
          LEFT JOIN pot2_paallystekerros pot2pk ON pi.id = pot2pk.pot2_id
 
