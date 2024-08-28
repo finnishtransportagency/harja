@@ -67,6 +67,8 @@ SELECT paivita_pohjavesialueet();
 
 \i testidata/rajoitusalueet.sql
 
+\i testidata/hoitoluokat.sql
+
 -- Materiaalin käytöt
 \i testidata/materiaalin_kaytto.sql
 
