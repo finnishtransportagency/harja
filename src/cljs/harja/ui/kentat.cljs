@@ -73,7 +73,8 @@
 
 (defmethod tee-kentta :haku [{:keys [_lahde nayta placeholder pituus lomake? sort-fn disabled?
                                      kun-muuttuu hae-kun-yli-n-merkkia vayla-tyyli? monivalinta? salli-kirjoitus?
-                                     tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti piilota-checkbox? piilota-dropdown?]} data]
+                                     tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti piilota-checkbox? piilota-dropdown?
+                                     hakuikoni?]} data]
   (when monivalinta?
     (assert (ifn? monivalinta-teksti) "Monivalintahakukentällä pitää olla funktio monivalinta-teksti!"))
   (let [nyt-valittu @data
@@ -176,7 +177,9 @@
                           (reset! tulokset (<! (hae lahde "")))
                           (reset! valittu-idx nil))
              :disabled disabled?}
-            [:span.livicon-chevron-down]])
+            (if hakuikoni?
+              [:span.livicon-search]
+              [:span.livicon-chevron-down])])
 
          (let [nykyiset-tulokset (if (and sort-fn (vector? @tulokset))
                                    (sort-by sort-fn @tulokset)

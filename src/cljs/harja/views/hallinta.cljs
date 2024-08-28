@@ -19,6 +19,7 @@
             [harja.views.hallinta.toteumatyokalu-nakyma :as toteumatyokalu-nakyma]
             [harja.views.hallinta.tyomaapaivakirjatyokalu-nakyma :as paivakirjatyokalu-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
+            [harja.views.hallinta.kojelauta :as kojelauta]
             [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.views.hallinta.viestitestaus-nakyma :as viestinakyma]
             [harja.views.hallinta.urakkatiedot.tehtava-nakyma :as tehtava-nakyma]
@@ -124,7 +125,13 @@
     :raporttitiedot
     (when (oikeudet/hallinta-indeksit)
       ^{:key "raporttien-suoritustieto"}
-      [raporttien-suoritustieto/raporttien-suoritustieto])]
+      [raporttien-suoritustieto/raporttien-suoritustieto])
+
+    "Kojelauta"
+    :kojelauta
+    (when (oikeudet/hallinta)
+      ^{:key "kojelauta"}
+      [kojelauta/kojelauta])]
 
    "Järjestelmän hallinta"
    :hallinta-jarjestelma
