@@ -23,14 +23,16 @@ FROM rajoitusalue WHERE id = :id;
 INSERT INTO rajoitusalue
 (tierekisteriosoite, sijainti, pituus, ajoratojen_pituus, urakka_id, luotu, luoja, tierekisteri_muokattu) VALUES
     (ROW (:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE,
-     (select * from tierekisteriosoitteelle_viiva(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT) as sijainti),
+     st_union((select * from tierekisteriosoitteelle_viiva_ajr(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT, 1) as sijainti),
+     (select * from tierekisteriosoitteelle_viiva_ajr(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT, 2) as sijainti)),
      :pituus, :ajoratojen_pituus, :urakka_id, NOW(), :kayttaja_id, true)
 RETURNING id;
 
 -- name: paivita-rajoitusalue!
 UPDATE rajoitusalue
 SET tierekisteriosoite = ROW (:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE,
-    sijainti = (select * from tierekisteriosoitteelle_viiva(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT) as sijainti),
+    sijainti = st_union((select * from tierekisteriosoitteelle_viiva_ajr(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT, 1) as sijainti),
+                        (select * from tierekisteriosoitteelle_viiva_ajr(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT, 2) as sijainti)),
     pituus = :pituus,
     ajoratojen_pituus = :ajoratojen_pituus,
     urakka_id = :urakka_id,
