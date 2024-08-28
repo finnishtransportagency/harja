@@ -20,7 +20,6 @@
             [harja.palvelin.integraatiot.yha.yha-yhteiset :as yha-yhteiset]
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
             [harja.pvm :as pvm]
-            [harja.repl-tyokalut :as repl-tyokalut]
             [harja.tyokalut.dev-tyokalut :as dev-tyokalut]
             [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [throw+ try+]]))
