@@ -16,7 +16,8 @@
   (#{:valitys} (:kuittaustyyppi kuittaus)))
 
 (def tilan-selite
-  {:kuittaamaton "Kuittaamaton"
+  {:ei-valitetty "Ei välitetty T-Loikiin"
+   :kuittaamaton "Kuittaamaton"
    :vastaanotettu "Vastaanotettu"
    :aloitettu "Aloitettu"
    :lopetettu "Lopetettu"})
