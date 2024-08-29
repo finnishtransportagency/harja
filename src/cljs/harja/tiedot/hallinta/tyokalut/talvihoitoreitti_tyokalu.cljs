@@ -181,7 +181,7 @@
                                        :poistettu false})
                    :kayttaja-id (:id @istunto/kayttaja)}
           ;; Käyttäjä tarvitsee myös kirjoitusoikeudet, joten lisätty tällainen koodipalikka
-          _ (tuck-apurit/post! :lisaa-kayttajalle-oikeus
+          _ (tuck-apurit/post! :lisaa-kayttajalle-kirjoitusoikeus
               {:oikeus "kirjoitus"
                :kayttajanimi (:kayttajanimi @istunto/kayttaja)}
               {:onnistui ->LisaaKirjoitusOikeusOnnistui
