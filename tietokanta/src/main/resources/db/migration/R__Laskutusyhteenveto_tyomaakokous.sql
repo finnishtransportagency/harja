@@ -413,7 +413,8 @@ BEGIN
             WHERE ( lk.rahavaraus_id NOT IN (akilliset_id, vahingot_id) OR lk.rahavaraus_id IS NULL )
               AND lk.poistettu IS NOT TRUE
               AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-              -- Varmista että nämä ovat vain tavoitehintaisia kuluja
+              -- Taulukkoon halutaan vain ei tavoitehintaiset  
+              AND lk.tavoitehintainen IS FALSE
 
         LOOP
 
@@ -858,6 +859,7 @@ BEGIN
             WHERE lk.rahavaraus_id = rahavaraus.id
                 AND lk.poistettu IS NOT TRUE
                 AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+                AND lk.tavoitehintainen IS TRUE
         LOOP
             IF rivi.erapaiva <= aikavali_loppupvm THEN
 

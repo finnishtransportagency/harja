@@ -196,7 +196,10 @@
                                    :vayla-tyyli? true
                                    :muokattu? true
                                    :virhe? (nayta-kohdistuksen-virhe? lomake nro :rahavaraus)
-                                   :valitse-fn #(e! (tiedot/->ValitseRahavarausKohdistukselle % nro))}
+                                   :valitse-fn #(do
+                                                  ;; Rahavaraukset on tavoitehintaisia 
+                                                  (e! (tiedot/->TavoitehintaanKuuluminen :true nro))
+                                                  (e! (tiedot/->ValitseRahavarausKohdistukselle % nro)))}
       rahavaraukset]]]
    [:div.col-xs-12.col-md-6
     [:div.label-ja-alasveto
