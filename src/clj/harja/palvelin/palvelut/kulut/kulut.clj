@@ -340,7 +340,7 @@
           kuludb (if (nil? id)
                  (q/luo-kulu<! db kulu)
                  (q/paivita-kulu<! db (assoc kulu :id id)))
-          vanhat-kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kuludb)})
+          vanhat-kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kuludb) :urakka_id urakka-id})
           sisaan-tulevat-kohdistus-idt (into #{} (map :kohdistus-id kohdistukset))
           puuttuvat-kohdistukset (remove
                                    #(sisaan-tulevat-kohdistus-idt (:kohdistus-id %))
