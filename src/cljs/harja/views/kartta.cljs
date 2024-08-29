@@ -56,7 +56,7 @@
             [harja.ui.openlayers.edistymispalkki :as edistymispalkki]
             [harja.tiedot.kartta :as tiedot]
             [harja.ui.kartta.ikonit :as kartta-ikonit]
-            [harja.ui.kartta-debug :refer [aseta-kartta-debug-sijainti]])
+            [harja.ui.kartta-debug :refer [aseta-kartta-debug-sijainti asiat-pisteessa]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -394,15 +394,6 @@
 (def paivitetaan-karttaa-tila (atom false))
 (defonce kuvatason-lataus (atom nil))
 (defonce geometriatason-lataus (atom nil))
-
-;; Määrittelee asiat, jotka ovat nykyisessä pisteessä.
-;; Avaimet:
-;; :koordinaatti  klikatun pisteen koordinatti (tai nil, jos ei valintaa)
-;; :asiat         sekvenssi asioita, joita pisteestä löytyy
-;; :haetaan?      true kun haku vielä kesken
-(defonce asiat-pisteessa (atom {:koordinaatti nil
-                                :haetaan? true
-                                :asiat nil}))
 
 (defn paivitetaan-karttaa
   []
