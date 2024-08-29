@@ -22,12 +22,13 @@
 (def tila (atom {:urakkavuodet (range 2016 2025)
                  :kriteerit [{:nimi "Jotain"}
                              {:nimi "Jotain muuta"}]
-                 :urakat [{:nimi "POP MHU Kajaani 2024-2029"}
-                          {:nimi "POP MHU Oulu 2019-2024"}]
+                 :urakat []
                  :valinnat {}}))
 
 (defrecord Valitse [avain valinta])
 (defrecord HaeUrakat [])
+(defrecord HaeUrakatOnnistui [vastaus])
+(defrecord HaeUrakatEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
   Valitse
@@ -36,8 +37,19 @@
 
   HaeUrakat
   (process-event [_ app]
-    (let [urakat [{:nimi "POP MHU Kajaani 2024-2029"}
-                  {:nimi "POP MHU Oulu 2019-2024"}]]
-      (assoc app
-        :urakat urakat
-        :urakkahaku (tee-urakkahaku urakat)))))
+    (tuck-apurit/post! :hae-urakat-kojelautaan
+      {}
+      {:onnistui ->HaeUrakatOnnistui
+       :epaonnistui ->HaeUrakatEpaonnistui}))
+
+  HaeUrakatOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (assoc app
+      :urakat vastaus
+      :urakkahaku (tee-urakkahaku vastaus)))
+
+  HaeUrakatEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (js/console.error "Virhe urakoiden haussa!" vastaus)
+    (viesti/nayta-toast! "Virhe urakoiden haussa" :varoitus)
+    (assoc app :urakat [])))

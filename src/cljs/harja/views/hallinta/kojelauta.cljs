@@ -6,7 +6,8 @@
             [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.hallintayksikot :as hy]
-            [harja.tiedot.hallinta.kojelauta :as tiedot]))
+            [harja.tiedot.hallinta.kojelauta :as tiedot])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn suodattimet [e! {:keys [valinnat kriteerit urakkavuodet urakkahaku] :as app}]
   [:<>
@@ -33,9 +34,10 @@
     (into [nil] urakkavuodet)]
 
    [:div.label-ja-alasveto
-    [:label.alasvedon-otsikko-vayla "Hae urakkaa"]
+    [:label.alasvedon-otsikko-vayla {:for "urakkahaku"} "Hae urakkaa"]
     [kentat/tee-kentta
      {:tyyppi :haku
+      :input-id "urakkahaku"
       :nayta :nimi :fmt :nimi
       :hae-kun-yli-n-merkkia 0
       :vayla-tyyli? true
@@ -49,6 +51,39 @@
                              (str (count %) " urakkaa valittu"))}
      (r/wrap (:urakat valinnat) #(e! (tiedot/->Valitse :urakat %)))]]])
 
+(defn urakkarivi [urakan-tiedot]
+  (let [nimi (:nimi urakan-tiedot)]
+    [:tr
+     [:td nimi]
+     [:td (if (every? true? (map :kustannussuunnitelma-ok? (:hoitovuodet urakan-tiedot)))
+            "Kyllä"
+            "Ei")]
+     [:td (if (every? true? (map :tehtavamaarat-ok? (:hoitovuodet urakan-tiedot)))
+            "Kyllä"
+            "Ei")]
+     [:td (if (every? true? (map :rajoitusalueet-ok? (:hoitovuodet urakan-tiedot)))
+            "Kyllä"
+            "Ei")]]))
+
+(defn listaus [e! {:keys [valinnat urakat urakoiden-tilat] :as app}]
+  (let [valitut-urakat (:urakat valinnat)
+        urakat (if (empty? valitut-urakat)
+                 urakat
+                 (filter #((into #{} (map :id valitut-urakat)) (:id %)) urakat))
+        ]
+    [:div
+     [debug/debug urakat]
+     [:table
+      [:thead
+       [:tr
+        [:th "Urakka"]
+        [:th "Kustannussuunnitelma vahvistettu"]
+        [:th "Tehtävät ja määrät kirjattu"]
+        [:th "Rajoitusalueet lisätty"]]]
+      [:tbody
+       (for* [urakka urakat]
+         [urakkarivi urakka])]]]))
+
 
 (defn kojelauta* [e! app]
   (komp/luo
@@ -57,7 +92,8 @@
       [:div.kojelauta-hallinta
        [:h1 "Etusivu"]
        [suodattimet e! app]
-       [debug/debug app]])))
+       [debug/debug app]
+       [listaus e! app]])))
 
 (defn kojelauta []
   [tuck tiedot/tila kojelauta*])

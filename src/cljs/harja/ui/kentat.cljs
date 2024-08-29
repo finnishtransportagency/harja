@@ -74,7 +74,7 @@
 (defmethod tee-kentta :haku [{:keys [_lahde nayta placeholder pituus lomake? sort-fn disabled?
                                      kun-muuttuu hae-kun-yli-n-merkkia vayla-tyyli? monivalinta? salli-kirjoitus?
                                      tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti piilota-checkbox? piilota-dropdown?
-                                     hakuikoni?]} data]
+                                     hakuikoni? input-id]} data]
   (when monivalinta?
     (assert (ifn? monivalinta-teksti) "Monivalintahakukentällä pitää olla funktio monivalinta-teksti!"))
   (let [nyt-valittu @data
@@ -114,6 +114,7 @@
                            vayla-tyyli? (str "input-default komponentin-input ")
                            disabled? (str "disabled"))
                   :value @teksti
+                  :id input-id
                   :placeholder placeholder
                   :disabled disabled?
                   :size pituus
