@@ -5,13 +5,15 @@
             [clojure.core.async :as a :refer [<!! <! >!! >! go go-loop thread timeout put! alts!! chan poll!]]
             [clojure.string :as clj-str]
             [cheshire.core :as cheshire]
-            [org.httpkit.client :as http]))
+            [org.httpkit.client :as http]
+            [taoensso.timbre :as log]))
 
 ;; Jolokia-operaatiot listattuna
 ;;  Artemis: http://localhost:8161/console/artemis/operations?tab=artemis&nid=root-org.apache.activemq.artemis-0.0.0.0
 ;;  Jolokia POST-protokolla: https://jolokia.org/reference/html/manual/jolokia_protocol.html#post-requests
 
-(defn jms-laheta [jms-client jonon-nimi sanoma]
+;; FIXME: Poista tämä funktio, sillä se tukee vain ActiveMQ Classicia.
+#_(defn jms-laheta [jms-client jonon-nimi sanoma]
   (let [options {:timeout 5000
                  :basic-auth ["admin" "admin"]
                  :headers {"Content-Type" "application/xml"}
@@ -27,7 +29,8 @@
                      "?type=queue")
                 options)))
 
-(defn jms-jolokia [jms-client sanoma]
+;; FIXME: Poista tämä funktio, sillä se tukee vain ActiveMQ Classicia.
+#_(defn jms-jolokia [jms-client sanoma]
   (let [options {:timeout 200
                  :basic-auth ["admin" "admin"]
                  :body (cheshire/encode sanoma)}]
@@ -40,11 +43,12 @@
                      "/api/jolokia/")
                 options)))
 
-(defn jms-jolokia--artemis
-  "ActiveMQ artemis jolokia API: https://activemq.apache.org/components/artemis/documentation/latest/management#exposing-jmx-using-jolokia"
-  ([jms-client sanoma] (jms-jolokia--artemis jms-client sanoma nil))
+(defn jms-jolokia-api-kutsu--artemis
+  "ActiveMQ Artemis Jolokia API-kutsu
+  https://activemq.apache.org/components/artemis/documentation/latest/management#exposing-jmx-using-jolokia"
+  ([jms-client sanoma] (jms-jolokia-api-kutsu--artemis jms-client sanoma nil))
   ([jms-client sanoma options]
-  (println "#### [jms-jolokia--artemis] Lähetettävä sanoma: " (cheshire/encode sanoma))
+  (println "#### [jms-jolokia-api-kutsu--artemis] Lähetettävä sanoma: ")
   (clojure.pprint/pprint sanoma)
 
   (let [options (merge
@@ -61,7 +65,7 @@
                               "/console/jolokia/")
                    options)]
 
-    (println "#### -> Vastaus Artemikselta: ")
+    (println "##### --> Vastaus Artemikselta: ")
     (clojure.pprint/pprint vastaus)
 
     vastaus)))
@@ -94,9 +98,10 @@
                                   false
                                   ]}
         options {:timeout 5000}]
-    (jms-jolokia--artemis jms-client sanoma-mbean options)))
+    (jms-jolokia-api-kutsu--artemis jms-client sanoma-mbean options)))
 
-(defn jms-jolokia-connection [jms-client attribute operation]
+;; FIXME: Poista tämä funktio, sillä se tukee vain ActiveMQ Classicia.
+#_(defn jms-jolokia-connection [jms-client attribute operation]
   (let [attribute (when attribute
                     {:type "read"
                      :attribute (case attribute
@@ -137,9 +142,10 @@
 
     (println "#### [jms-jolokia-connection--artemis] Lähetetään Jolokia-viesti Artemikselle...")
 
-    (jms-jolokia--artemis jms-client sanoma)))
+    (jms-jolokia-api-kutsu--artemis jms-client sanoma)))
 
-(defn jms-jolokia-broker [jms-client attribute operation]
+;; FIXME: Poista tämä funktio, sillä se tukee vain ActiveMQ Classicia.
+#_(defn jms-jolokia-broker [jms-client attribute operation]
   (let [attribute (when attribute
                     {:type "read"
                      :attribute (case attribute
@@ -157,28 +163,31 @@
                       operation)]
     (jms-jolokia jms-client sanoma)))
 
-;; TODO: Tätä ei taideta kutsua missään testissä.
-;;       Jos tarve käyttää, niin pitää muodostaa sopiva mbean sanoma Artemikselle
+;; TODO: Tätä ei kutsuta tällä hetkellä missään testissä.
+;;       Jos tulee tarve hallita itse JMS brokeria, niin pitää muodostaa sopiva mbean sanoma, jonka ActiveMQ Artemis ymmärtää.
+;;       Tämä sisältää vielä vanhaa ActiveMQ Classic -koodia.
 (defn jms-jolokia-broker--artemis [jms-client attribute operation]
   (let [attribute (when attribute
                     {:type "read"
                      :attribute (case attribute
                                   :status "health")})
+        ;; TODO: Käytä operaatioita, jotka ActiveMQ Artemis ymmärtää.
         operation (when operation
                     {:type "EXEC"
                      :operation (case operation
                                   :start "start"
                                   :restart "restart"
                                   :stop "stop")})
-        ;; TODO: Tarkista miten muodostetaan mbean sanoma, jonka Artemis ymmärtää ja toteuttaa saman toiminnallisuuden kuin
-        ;;       jms-jolokia-broker. Tämä on vielä keskeneräinen testi, joka ei toimi.
         sanoma (merge {:mbean (str "org.apache.activemq.artemis:"
                                 "broker=\"0.0.0.0\"")}
                  attribute
                  operation)]
-    (jms-jolokia jms-client sanoma)))
+    (log/warn "Tätä funktiota ei ole vielä toteutettu Artemis Jolokia API:lle.")
 
-(defn jms-jolokia-jono [jms-client jonon-nimi attribute operation]
+    (jms-jolokia-api-kutsu--artemis jms-client sanoma)))
+
+;; FIXME: Poista tämä funktio, sillä se tukee vain ActiveMQ Classicia.
+#_(defn jms-jolokia-jono [jms-client jonon-nimi attribute operation]
   (let [attribute (when attribute
                     {:type "read"
                      :attribute (case attribute
@@ -243,13 +252,13 @@
 
     (println "#### [jms-jolokia-jono--artemis] Lähetetään Jolokia-viesti Artemikselle...")
 
-    (jms-jolokia--artemis jms-client sanoma)))
+    (jms-jolokia-api-kutsu--artemis jms-client sanoma)))
 
 (defn itmf-laheta [jonon-nimi sanoma]
   (jms-laheta-jonoon--artemis "itmf" jonon-nimi sanoma))
 
 (defn itmf-jolokia [sanoma]
-  (jms-jolokia--artemis "itmf" sanoma))
+  (jms-jolokia-api-kutsu--artemis "itmf" sanoma))
 
 (defn itmf-jolokia-jono [jonon-nimi attribute operation]
   (jms-jolokia-jono--artemis "itmf" jonon-nimi attribute operation))
