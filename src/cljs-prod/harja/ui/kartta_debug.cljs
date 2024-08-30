@@ -7,5 +7,3 @@
   [& args])
 
 (defn nayta-kartan-debug [])
-
-(defonce asiat-pisteessa (atom nil))

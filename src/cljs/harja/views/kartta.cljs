@@ -56,7 +56,7 @@
             [harja.ui.openlayers.edistymispalkki :as edistymispalkki]
             [harja.tiedot.kartta :as tiedot]
             [harja.ui.kartta.ikonit :as kartta-ikonit]
-            [harja.ui.kartta-debug :refer [aseta-kartta-debug-sijainti asiat-pisteessa]])
+            [harja.ui.kartta-debug :refer [aseta-kartta-debug-sijainti]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -458,7 +458,7 @@
   (openlayers/extent-sisaltaa-extent? +koko-suomi-extent+ (geo/extent alue)))
 
 (defn- nayta-infopaneelissa! [& items]
-  (apply swap! asiat-pisteessa update :asiat conj items))
+  (apply swap! tiedot/asiat-pisteessa update :asiat conj items))
 
 (defn- hae-asiat-pisteessa! [tasot event atomi]
   (let [koordinaatti (js->clj (.-coordinate event))
@@ -679,7 +679,7 @@
 
      (when avaa-paneeli? (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
                                                                   event
-                                                                  asiat-pisteessa))
+                                                                  tiedot/asiat-pisteessa))
 
      (when-not (empty? nayta-nama-paneelissa)
        (apply nayta-infopaneelissa! nayta-nama-paneelissa))
@@ -757,7 +757,7 @@
                        :default
                        (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
                          event
-                         asiat-pisteessa))
+                         tiedot/asiat-pisteessa))
                      (.stopPropagation event)
                      (.preventDefault event))
          :on-select kasittele-select!
@@ -814,7 +814,7 @@
    [kartan-ohjelaatikko]
    (when @tiedot/infopaneeli-nakyvissa?
      [:div.kartan-infopaneeli
-      [infopaneeli/infopaneeli @asiat-pisteessa tiedot/piilota-infopaneeli!
+      [infopaneeli/infopaneeli @tiedot/asiat-pisteessa tiedot/piilota-infopaneeli!
        tiedot/infopaneelin-linkkifunktiot]])
    (when-not @tiedot/infopaneeli-nakyvissa? ;; Peittää selitelaatikon, otetaan pois
      [kartan-ikonien-selitykset])

@@ -9,22 +9,11 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.kartta :as kartta]
             [harja.fmt :as fmt]
-            [harja.ui.kentat :as kentat]
             [harja.ui.kartta.infopaneelin-sisalto :as info]
-            [clojure.string :as clj-str]
             [clojure.set :as set])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (declare aseta-kartta-debug-sijainti pakota-paivitys)
-
-;; Määrittelee asiat, jotka ovat nykyisessä pisteessä.
-;; Avaimet:
-;; :koordinaatti  klikatun pisteen koordinatti (tai nil, jos ei valintaa)
-;; :asiat         sekvenssi asioita, joita pisteestä löytyy
-;; :haetaan?      true kun haku vielä kesken
-(defonce asiat-pisteessa (atom {:koordinaatti nil
-                                :haetaan? true
-                                :asiat nil}))
 
 
 (defonce tila (atom {:nayta-kartan-debug? false
@@ -32,6 +21,7 @@
                      :nayta-kartan-ylaosassa? true
                      :nayta-infopaneelin-tiedot? true
                      :kartan-paikka []}))
+
 (defonce layers (reaction (into {} (map (fn [[kerros kerroksen-tila-atom]]
                                           [kerros @kerroksen-tila-atom])
                                         tasot/tasojen-nakyvyys-atomit))))
@@ -161,11 +151,11 @@
                                                                         (with-meta arvo {:ylin-taso? true}))])
                                                           @kartta/infopaneelin-linkkifunktiot))
 
-          metan-asettaminen-asioille-raaka #(update @asiat-pisteessa :asiat (fn [asiat]
+          metan-asettaminen-asioille-raaka #(update @kartta/asiat-pisteessa :asiat (fn [asiat]
                                                                               (mapv (fn [asia]
                                                                                       (with-meta asia {:ylin-taso? true}))
                                                                                 asiat)))
-          metan-asettaminen-asioille-kasitelty #(->> @asiat-pisteessa
+          metan-asettaminen-asioille-kasitelty #(->> @kartta/asiat-pisteessa
                                                   :asiat
                                                   info/skeemamuodossa
                                                   (mapv (fn [asia]
