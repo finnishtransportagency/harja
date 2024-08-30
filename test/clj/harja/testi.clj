@@ -3,7 +3,9 @@
   (:require
     [clojure.test :refer :all]
     [clojure.core.async :as async :refer [alts! >! <! go timeout chan <!!]]
+    [specql.core :refer [fetch columns]]
     [taoensso.timbre :as log]
+    [harja.domain.reittipiste :as reittipiste]
     [harja.palvelin.asetukset :as a]
     [harja.palvelin.komponentit.todennus :as todennus]
     [harja.palvelin.komponentit.http-palvelin :as http]
@@ -456,8 +458,7 @@
 (defn- post-kutsu? [f]
   (= 2 (arg-count f)))
 
-(defn- heita-jos-ei-ole-validi [spec palvelun-nimi payload]
-  (when-not (s/valid? spec payload)
+(defn- heita-jos-ei-ole-validi [spec palvelun-nimi payload] (when-not (s/valid? spec payload)
     (throw (Exception. (str "Palvelun " palvelun-nimi " ei ole validi.
     Riippuen testista, tämä voi olla sekä odotettu tila että virhe!
     Payload: " payload "
@@ -1916,3 +1917,25 @@
                           s1)))
         ero (/ matka (float (count s1)))]
     (< ero threshold)))
+
+(defn odota-reittipisteet [toteuma-id]
+  (odota-ehdon-tayttymista
+    (fn []
+      (let [{reittipisteet ::reittipiste/reittipisteet} (first (fetch ds ::reittipiste/toteuman-reittipisteet
+                                                                 (columns ::reittipiste/toteuman-reittipisteet)
+                                                                 {::reittipiste/toteuma-id toteuma-id}))]
+        (not (nil? reittipisteet))))
+    "Reittipisteet löytyvät"
+    1000))
+
+(defn edellinen-materiaalin-kayton-paivitys [sopimus]
+  (ffirst (q (format "SELECT muokattu FROM sopimuksen_kaytetty_materiaali WHERE sopimus=%s order by muokattu desc limit 1" sopimus))))
+
+(defn odota-materiaalin-kaytto-paivittynyt [sopimus aika-ennen]
+  (odota-ehdon-tayttymista
+    (fn []
+      (if (nil? aika-ennen)
+        (not (empty? (q (format "SELECT * FROM sopimuksen_kaytetty_materiaali WHERE sopimus = %s" sopimus))))
+        (not (empty? (q (format "SELECT * FROM sopimuksen_kaytetty_materiaali WHERE sopimus = %s and muokattu > '%s'" sopimus aika-ennen))))))
+    "Materiaalin käyttö päivittynyt"
+    5000))

@@ -115,12 +115,12 @@
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-jvh portti
                                (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
-                                 slurp
-                                 (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                                 slurp (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                  (.replace "__ID__" (str ulkoinen-id))
                                  (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))]
         (is (= 200 (:status vastaus-paivitys)))
         (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+              _ (odota-reittipisteet toteuma-id)
               {reittipisteet ::rp/reittipisteet} (first (fetch ds ::rp/toteuman-reittipisteet
                                                           (columns ::rp/toteuman-reittipisteet)
                                                           {::rp/toteuma-id toteuma-id}))

@@ -1,253 +1,190 @@
--- Varmistetaan, että rahavaraus_urakka tauluun ei tule duplikaatteja
-ALTER TABLE rahavaraus_urakka
-    ADD CONSTRAINT rahavaraus_urakka_pk
-        UNIQUE (urakka_id, rahavaraus_id);
+CREATE TYPE pohjavesialueen_osuus AS
+(
+    tunnus VARCHAR(16),
+    osuus  FLOAT
+);
 
--- Poistetaan turhaksi jääneitä kolumneita kulu ja kulu_kohdistus tauluista
-ALTER TABLE kulu
-    DROP COLUMN IF EXISTS tyyppi;
--- Tyypin voi poistaa, koska kaikki on tyyppiä 'laskutettava'
+CREATE TYPE rajoitusalueen_osuus AS
+(
+    rajoitusalue INTEGER,
+    osuus        FLOAT
+);
 
--- Poistetaan turhaksi jäänyt laskutustyyppi
-DROP TYPE IF EXISTS laskutyyppi;
-
--- Kululla voi olla monta kohdistusta ja niiden tyyppi on helpointa hallita kohdistuksessa itsessään
-CREATE TYPE kohdistustyyppi AS ENUM ('rahavaraus', 'hankintakulu','muukulu', 'lisatyo', 'paatos');
-
--- Asetetaan defaultiksi useimmin käytössäoleva hankintakulu.
--- Lopulliset tyypit tulee, kun rahavarausten korjaava systeemi ajetaan kantaan
-ALTER TABLE kulu_kohdistus
-    ADD COLUMN IF NOT EXISTS tyyppi           kohdistustyyppi DEFAULT 'hankintakulu' NOT NULL,
-    ADD COLUMN IF NOT EXISTS tavoitehintainen BOOLEAN         DEFAULT TRUE           NOT NULL,
-    DROP COLUMN IF EXISTS suoritus_alku,
-    DROP COLUMN IF EXISTS suoritus_loppu;
--- Suoritusajat voi poistaa, koska ne ovat aina samat kuin kulu.erapaiva
-
--- Päivitetään kulu_kohdistus taulun tyyppi rahavaraukseksi, jos rahavaraus_id on asetettu
-UPDATE kulu_kohdistus
-   SET tyyppi = 'rahavaraus'
- WHERE rahavaraus_id IS NOT NULL;
-
--- Päivitetään kulu_kohdistus taulun tyyppi lisatyoksi, jos maksueratyyppi on lisatyo
--- Kaikki lisätyöt, mitä tietokannassa on alunperin on myös ei tavoitehintaisia
-UPDATE kulu_kohdistus
-   SET tyyppi           = 'lisatyo',
-       tavoitehintainen = FALSE
- WHERE kulu_kohdistus.maksueratyyppi = 'lisatyo';
-
--- Jotta tulevat rahavarausten automaattiset tausta-ajot korjaisivat kulu_kohdistus ja kustannusarvioitu_työ taulujen
--- rivit oikein. Meidän on lisättävä vielä yksi rahavaraus
-INSERT INTO rahavaraus (nimi, luoja, luotu)
-VALUES ('Muut tavoitehintaan vaikuttavat rahavaraukset', (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
-        NOW());
-
--- Lisätään muutama pakollinen tehtävä rahavarukselle
-INSERT
-  INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
-SELECT rv.id,
-       t.id,
-       (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
-       NOW()
-  FROM rahavaraus rv,
-       tehtava t
- WHERE t.tehtavaryhma IS NOT NULL
-   AND t.nimi IN ('Muut tavoitehintaan vaikuttavat rahavaraukset',
-                  'Pohjavesisuojaukset',
-                  'Pysäkkikatoksen uusiminen',
-                  'Pysäkkikatoksen poistaminen',
-                  'Pysäkkikatoksen korjaaminen',
-                  'Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään',
-                  'Digitalisaation edistäminen ja innovaatioiden kehittäminen')
-   AND rv.nimi = 'Muut tavoitehintaan vaikuttavat rahavaraukset';
-
---===  Lisätään rahavaraukselle Levähdys ja P-alueet oikea tehtävä ja poistetaan väärät ===--
--- Poistetaan ensin kaikki mahdollinen
-DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = (SELECT id FROM rahavaraus WHERE nimi = 'Rahavaraus D - Levähdys- ja P-alueet');
--- Lisätään oikea tehtävä
-INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu) VALUES
-((SELECT id FROM rahavaraus WHERE nimi = 'Rahavaraus D - Levähdys- ja P-alueet'),
- (SELECT id FROM tehtava WHERE nimi = 'Levähdys- ja P-alueiden varusteiden vaurioiden kuntoon saattaminen'),
- (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), NOW());
-
---=== Sama jumppa Rahavaraus E - Pysäkkikatoksille - Poistetaan väärä tehtävä ja lisään oikea ===--
--- Poistetaan ensin kaikki mahdollinen
-DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = (SELECT id FROM rahavaraus WHERE nimi = 'Rahavaraus E - Pysäkkikatokset');
--- Ja lisätään oikea
-INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu) VALUES
-    ((SELECT id FROM rahavaraus WHERE nimi = 'Rahavaraus E - Pysäkkikatokset'),
-     (SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatosten ja niiden varusteiden vaurioiden kuntoon saattaminen'),
-     (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), NOW());
-
--- Päivitetään samalla noiden tehtävien tehtäväryhmä kuntoon
-UPDATE tehtava SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset, liikenneympäristön hoito (E)')
- WHERE nimi = 'Levähdys- ja P-alueiden varusteiden vaurioiden kuntoon saattaminen' OR
-     nimi = 'Pysäkkikatosten ja niiden varusteiden vaurioiden kuntoon saattaminen';
-
---== Lisätään puuttuvia tehtäviä rahavaraukselle ==--
--- Lisätään rahavaraukselle tehtäväryhmälle 'ELY-rahoitteiset, ylläpito (E)' kuuluvia tehtäviä
-DO
+CREATE FUNCTION lahin_piste_suolattavalla_tiella(piste point)
+    RETURNS POINT AS
 $$
-    DECLARE
-        rahavaraus_id      INT;
-        tehtavaryhma_id      INT;
-        tehtava RECORD;
-    BEGIN
+BEGIN
+    -- Talvihoitoluokkia 9, 10 ja 11 ei pitäisi suolata. Täten hoitoluokka-taulua käytten voidaan hakea lähin piste
+    -- tieltä, jolle suolausta tehdään.
+    RETURN (SELECT st_closestpoint(geometria, piste::geometry)::POINT
+            FROM hoitoluokka
+            WHERE hoitoluokka NOT IN (9, 10, 11)
+              AND tietolajitunniste = 'talvihoito'
+              AND st_dwithin(geometria, piste::geometry, 25)
+            ORDER BY st_distance84(geometria, piste::geometry)
+            LIMIT 1);
+END;
+$$ LANGUAGE plpgsql;
 
-        rahavaraus_id := (SELECT id FROM rahavaraus WHERE nimi = 'Rahavaraus E - Pysäkkikatokset');
-        tehtavaryhma_id := (SELECT id FROM harja.public.tehtavaryhma WHERE nimi = 'ELY-rahoitteiset, ylläpito (E)');
-
-        FOR tehtava IN SELECT id, nimi FROM tehtava WHERE tehtavaryhma = tehtavaryhma_id
-
-        LOOP
-            INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
-            VALUES (rahavaraus_id, tehtava.id, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), NOW());
-        END LOOP;
-    END
-$$;
-
-
--- Lisätään muutama pakollinen tehtävä rahavarukselle
-INSERT
-  INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
-SELECT rv.id,
-       t.id,
-       (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
-       NOW()
-  FROM rahavaraus rv,
-       tehtava t
- WHERE t.nimi IN ('Juurakkopuhdistamo, selkeytys- ja hulevesiallas sekä -painanne')
-   AND rv.nimi = 'Rahavaraus G - Juurakkopuhdistamo ym.';
-
-
-
-DO
+CREATE FUNCTION pistevalin_pohjavesialueet(piste1 point, piste2 point)
+    RETURNS SETOF pohjavesialueen_osuus AS
 $$
-    DECLARE
-        tavoitepalkkioid      INT;
-        tavoitehinnanylitysid INT;
-        kattohinnanylitysid   INT;
-    BEGIN
-
-        tavoitepalkkioid := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen / Tavoitepalkkio');
-        tavoitehinnanylitysid := (SELECT id
-                                    FROM tehtavaryhma
-                                   WHERE
-                                       nimi = 'Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä');
-        kattohinnanylitysid := (SELECT id
-                                  FROM tehtavaryhma
-                                 WHERE nimi = 'Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä');
-
-        -- Kaikki vuoden päättämisen kulut on ei tavoitehintaisia
-        UPDATE kulu_kohdistus
-           SET tyyppi           = 'paatos',
-               tavoitehintainen = FALSE
-         WHERE tehtavaryhma IN (tavoitepalkkioid, tavoitehinnanylitysid, kattohinnanylitysid);
-
-    END
-$$;
-
-
--- Lisätään uusi suunnittelu_osio kustannusten suunnitteluun
-ALTER TYPE SUUNNITTELU_OSIO ADD VALUE 'tavoitehintaiset-rahavaraukset';
-
--- Lisää rahavaraus_id sarakkeet, on olemassa jo parissa taulussa, mutta ei haittaa
-ALTER TABLE kulu_kohdistus ADD COLUMN IF NOT EXISTS rahavaraus_id INT REFERENCES rahavaraus (id);
-ALTER TABLE kustannusarvioitu_tyo ADD COLUMN IF NOT EXISTS rahavaraus_id INT REFERENCES rahavaraus (id);
-ALTER TABLE toteutuneet_kustannukset ADD COLUMN IF NOT EXISTS rahavaraus_id INT REFERENCES rahavaraus (id);
-
--- Nimetään taas vähän uusiksi rahavarauksia
-UPDATE rahavaraus SET nimi = 'Levähdys- ja P-alueet' WHERE nimi like '%Levähdys- ja P-alueet%';
-UPDATE rahavaraus SET nimi = 'Pysäkkikatosten korjaaminen' WHERE nimi like '%Rahavaraus E - Pysäkkikatokset%';
-UPDATE rahavaraus SET nimi = 'Meluesteet' WHERE nimi like '%Meluesteet%';
-UPDATE rahavaraus SET nimi = 'Juurakkopuhdistamo ym.' WHERE nimi like '%Juurakkopuhdistamo%';
-UPDATE rahavaraus SET nimi = 'Aidat' WHERE nimi like '%Aidat%';
-UPDATE rahavaraus SET nimi = 'Sillat ja laiturit' WHERE nimi like '%Rahavaraus I - Sillat ja laiturit%';
-UPDATE rahavaraus SET nimi = 'Tunnelit' WHERE nimi like '%Rahavaraus J - Tunnelien pienet korjaukset%';
-UPDATE rahavaraus SET nimi = 'Vahinkojen korjaukset' WHERE nimi = 'Vahinkojen korvaukset';
-UPDATE rahavaraus SET nimi = 'Tilaajan rahavaraus kannustinjärjestelmään' WHERE nimi = 'Kannustinjärjestelmä';
-
--- Poistetaan turhat rahavaraukset - Ja jos niitä on jollakulla käytössä, niin päivitetään ID:t
-DO $$
 DECLARE
-    rv_akilliset_id_poistettava INT;
-    rv_akilliset_id INT;
-    rv_vahingot_id_poistettava INT;
-    rv_vahingot_id INT;
-    rv_kannustin_id_poistettava INT;
-    rv_kannustin_id INT;
-
+    pa            pohjavesialue;
+    tieosoitevali tr_osoite;
+    osuus         FLOAT;
 BEGIN
-    SELECT id into rv_akilliset_id_poistettava FROM rahavaraus WHERE nimi = 'Rahavaraus B - Äkilliset hoitotyöt';
-    SELECT id into rv_akilliset_id FROM rahavaraus WHERE nimi = 'Äkilliset hoitotyöt';
-    SELECT id into rv_vahingot_id_poistettava FROM rahavaraus WHERE nimi = 'Rahavaraus C - Vahinkojen korjaukset';
-    SELECT id into rv_vahingot_id FROM rahavaraus WHERE nimi = 'Vahinkojen korjaukset';
-    SELECT id into rv_kannustin_id_poistettava FROM rahavaraus WHERE nimi = 'Rahavaraus K - Kannustinjärjestelmä';
-    SELECT id into rv_kannustin_id FROM rahavaraus WHERE nimi = 'Tilaajan rahavaraus kannustinjärjestelmään';
+    -- Varmistetaan että haetaan piste tielä, jota suolataan. Tällä varmistetaan, ettei saada sellaisen tien geometriaa,
+    -- jota ei suolata. Tällä varmistetaan, ettei virheellisesti jätetä suolattua pohjavesialuetta merkitsemättä
+    -- vaikka gps-pisteet osuisivat pyörätielle.
+    SELECT lahin_piste_suolattavalla_tiella(piste1) INTO piste1;
+    SELECT lahin_piste_suolattavalla_tiella(piste2) INTO piste2;
 
-    -- Äkilliset
-    UPDATE rahavaraus_urakka set rahavaraus_id = rv_akilliset_id WHERE rahavaraus_id = rv_akilliset_id_poistettava;
-    UPDATE kulu_kohdistus set rahavaraus_id = rv_akilliset_id WHERE rahavaraus_id = rv_akilliset_id_poistettava;
-    UPDATE kustannusarvioitu_tyo set rahavaraus_id = rv_akilliset_id WHERE rahavaraus_id = rv_akilliset_id_poistettava;
-    UPDATE toteutuneet_kustannukset set rahavaraus_id = rv_akilliset_id WHERE rahavaraus_id = rv_akilliset_id_poistettava;
+    IF (piste1 IS NULL OR piste2 IS NULL) THEN
+        RETURN;
+    END IF;
 
-    DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = rv_akilliset_id_poistettava;
-    DELETE FROM rahavaraus_urakka WHERE rahavaraus_id = rv_akilliset_id_poistettava;
-    DELETE FROM rahavaraus WHERE id = rv_akilliset_id_poistettava;
+    SELECT * FROM tierekisteriosoite_pisteille(piste1::geometry, piste2::geometry, 1) INTO tieosoitevali;
 
-    -- Vahingot
-    UPDATE rahavaraus_urakka set rahavaraus_id = rv_vahingot_id WHERE rahavaraus_id = rv_vahingot_id_poistettava;
-    UPDATE kulu_kohdistus set rahavaraus_id = rv_vahingot_id WHERE rahavaraus_id = rv_vahingot_id_poistettava;
-    UPDATE kustannusarvioitu_tyo set rahavaraus_id = rv_vahingot_id WHERE rahavaraus_id = rv_vahingot_id_poistettava;
-    UPDATE toteutuneet_kustannukset set rahavaraus_id = rv_vahingot_id WHERE rahavaraus_id = rv_vahingot_id_poistettava;
+    FOR pa IN
+        SELECT *
+        FROM pohjavesialue
+        WHERE pohjavesialue.tr_numero = tieosoitevali.tie
+          AND st_dwithin(tieosoitevali.geometria, pohjavesialue.alue, 1)
+        LOOP
+            -- Halutaan tietää, kuinka iso osuus tieosoitevälistä osuu pohjavesialueelle.
+            SELECT st_length(st_intersection(st_buffer(pa.alue, 1, 'endcap=flat'), tieosoitevali.geometria)) /
+                   st_length(tieosoitevali.geometria)
 
-    DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = rv_vahingot_id_poistettava;
-    DELETE FROM rahavaraus_urakka WHERE rahavaraus_id = rv_vahingot_id_poistettava;
-    DELETE FROM rahavaraus WHERE id = rv_vahingot_id_poistettava;
-
-    -- Kannustin
-    UPDATE rahavaraus_urakka set rahavaraus_id = rv_kannustin_id WHERE rahavaraus_id = rv_kannustin_id_poistettava;
-    UPDATE kulu_kohdistus set rahavaraus_id = rv_kannustin_id WHERE rahavaraus_id = rv_kannustin_id_poistettava;
-    UPDATE kustannusarvioitu_tyo set rahavaraus_id = rv_kannustin_id WHERE rahavaraus_id = rv_kannustin_id_poistettava;
-    UPDATE toteutuneet_kustannukset set rahavaraus_id = rv_kannustin_id WHERE rahavaraus_id = rv_kannustin_id_poistettava;
-
-    DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = rv_kannustin_id_poistettava;
-    DELETE FROM rahavaraus_urakka WHERE rahavaraus_id = rv_kannustin_id_poistettava;
-    DELETE FROM rahavaraus WHERE id = rv_kannustin_id_poistettava;
-
-END
+            INTO osuus;
+            RETURN NEXT (pa.tunnus, osuus)::pohjavesialueen_osuus;
+        END LOOP;
+    RETURN;
+END;
 $$ LANGUAGE plpgsql;
 
--- Lisätään puuttuva varalaskupaikka rahavaraus
-INSERT INTO rahavaraus (nimi, luoja, luotu) VALUES ('Varalaskupaikat', (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), CURRENT_TIMESTAMP);
-
--- Lisätään tehtävä varalaskupaikalle
--- Ensin se uusi tehtävä
-INSERT INTO tehtava (nimi, emo, yksikko, suunnitteluyksikko, tehtavaryhma, jarjestys, hinnoittelu, api_seuranta,
-                     api_tunnus, suoritettavatehtava, luotu, luoja)
-VALUES ('Varalaskupaikkojen hoito', (select id from toimenpide where koodi = '20191'), 'kpl', 'kpl',
-        (select id from tehtavaryhma where yksiloiva_tunniste = '4e3cf237-fdf5-4f58-b2ec-319787127b3e'),  -- Tällä hetkellä: Muut, MHU ylläpito (F)
-        null, null, FALSE, NULL,
-        null, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
-
--- Lisää varalauskaupaikka tehtävä varalaskupaikka rahavaraukselle
-INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
-VALUES ((select id from rahavaraus where nimi = 'Varalaskupaikat'),
-        (select id from tehtava where nimi = 'Varalaskupaikkojen hoito'),
-        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), CURRENT_TIMESTAMP);
-
-
-CREATE OR REPLACE FUNCTION lisaa_urakan_oletus_rahavaraukset() RETURNS TRIGGER AS
+CREATE FUNCTION pistevalin_rajoitusalueet(piste1 point, piste2 point, urakka_id_ INTEGER)
+    RETURNS SETOF rajoitusalueen_osuus AS
 $$
+DECLARE
+    ra            rajoitusalue;
+    tieosoitevali tr_osoite;
+    osuus         FLOAT;
 BEGIN
-    INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luoja)
-    SELECT NEW.id,
-           rv.id,
-           (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
-      FROM rahavaraus rv
-     WHERE rv.nimi IN ('Äkilliset hoitotyöt',
-                       'Vahinkojen korjaukset',
-                       'Kannustinjärjestelmä');
+    -- Varmistetaan että haetaan piste tielä, jota suolataan. Tällä varmistetaan, ettei saada rajoitusaluetta tien geometriaa,
+    -- jota ei suolata. Tällä varmistetaan, ettei virheellisesti jätetä suolattua rajoitusaluetta merkitsemättä
+    -- vaikka gps-pisteet osuisivat pyörätielle.
+    SELECT lahin_piste_suolattavalla_tiella(piste1) INTO piste1;
+    SELECT lahin_piste_suolattavalla_tiella(piste2) INTO piste2;
 
-    RETURN NEW;
-END
+    IF (piste1 IS NULL OR piste2 IS NULL) THEN
+        RETURN;
+    END IF;
+
+    SELECT * FROM tierekisteriosoite_pisteille(piste1::geometry, piste2::geometry, 1) INTO tieosoitevali;
+
+    FOR ra IN
+        SELECT *
+        FROM rajoitusalue
+        WHERE (rajoitusalue.tierekisteriosoite).tie = tieosoitevali.tie
+          AND st_dwithin(tieosoitevali.geometria, rajoitusalue.sijainti, 1)
+          AND rajoitusalue.urakka_id = urakka_id_
+          AND rajoitusalue.poistettu = FALSE
+        LOOP
+            SELECT st_length(st_intersection(st_buffer(ra.sijainti, 1, 'endcap=flat'), tieosoitevali.geometria)) /
+                   st_length(tieosoitevali.geometria)
+            INTO osuus;
+            RETURN NEXT (ra.id, osuus)::rajoitusalueen_osuus;
+        END LOOP;
+    RETURN;
+END;
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION toteuman_reittipisteet_trigger_fn() RETURNS TRIGGER AS
+$$
+DECLARE
+    m                     reittipiste_materiaali;
+    rp                    reittipistedata;
+    suolamateriaalikoodit INTEGER[];
+    edellinen_rp          reittipistedata;
+    pvo                   pohjavesialueen_osuus;
+    ra                    rajoitusalueen_osuus;
+BEGIN
+    SELECT ARRAY_AGG(id)
+    FROM materiaalikoodi
+    WHERE materiaalityyppi IN ('talvisuola', 'erityisalue', 'formiaatti')
+    INTO suolamateriaalikoodit;
+
+    IF (TG_OP = 'UPDATE' OR TG_OP = 'DELETE') THEN
+        DELETE FROM suolatoteuma_reittipiste WHERE toteuma = OLD.toteuma;
+    END IF;
+
+    IF (TG_OP != 'DELETE') THEN
+        FOREACH rp IN ARRAY NEW.reittipisteet
+            LOOP
+                FOREACH m IN ARRAY rp.materiaalit
+                    LOOP
+                        IF suolamateriaalikoodit @> ARRAY [m.materiaalikoodi] THEN
+                            -- Muutos edelliseen versioon: suolatoteuma_reittipiste tauluun laitetaan kahden reittipisteen välinen toteuma,
+                            -- josta lasketaan osuudet jotka osuvat pohjavesi- tai rajoitusalueille.
+                            IF edellinen_rp IS DISTINCT FROM NULL THEN
+                                FOR pvo IN (SELECT tunnus, SUM(osuus)
+                                            FROM pistevalin_pohjavesialueet(edellinen_rp.sijainti, rp.sijainti)
+                                            GROUP BY tunnus)
+                                    LOOP
+                                        INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi,
+                                                                              maara, pohjavesialue, rajoitusalue_id)
+                                        VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,
+                                                m.maara * pvo.osuus, pvo.tunnus,
+                                                NULL);
+                                    END LOOP;
+
+                                FOR ra IN (SELECT rajoitusalue, SUM(osuus)
+                                           FROM pistevalin_rajoitusalueet(edellinen_rp.sijainti, rp.sijainti,
+                                                                          (SELECT urakka FROM toteuma WHERE id = new.toteuma))
+                                           GROUP BY rajoitusalue)
+                                    LOOP
+                                        INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi,
+                                                                              maara, pohjavesialue, rajoitusalue_id)
+                                        VALUES (NEW.toteuma, rp.aika, rp.sijainti, m.materiaalikoodi,
+                                                m.maara * ra.osuus, NULL,
+                                                ra.rajoitusalue);
+                                    END LOOP;
+                            END IF;
+                        END IF;
+                    END LOOP;
+                edellinen_rp := rp;
+            END LOOP;
+    END IF;
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP FUNCTION pisteen_rajoitusalue(piste POINT, threshold INTEGER, toteuma_id INTEGER);
+DROP FUNCTION pisteen_pohjavesialue(piste POINT, threshold INTEGER);
+
+
+-- Päivitetään olemassa olevien rajoitusalueiden geometria sisältämään molemmat "ajoradat" eli suunnat
+UPDATE rajoitusalue
+SET sijainti = st_union(
+    (SELECT *
+     FROM
+         tierekisteriosoitteelle_viiva_ajr(
+             (tierekisteriosoite).tie,
+             (tierekisteriosoite).aosa,
+             (tierekisteriosoite).aet,
+             (tierekisteriosoite).losa,
+             (tierekisteriosoite).let,
+             1)),
+    (SELECT *
+     FROM
+         tierekisteriosoitteelle_viiva_ajr(
+             (tierekisteriosoite).tie,
+             (tierekisteriosoite).aosa,
+             (tierekisteriosoite).aet,
+             (tierekisteriosoite).losa,
+             (tierekisteriosoite).let,
+             2)));
+

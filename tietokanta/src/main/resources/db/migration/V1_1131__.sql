@@ -1,178 +1,253 @@
--- Rahavaraus id:n lisäys ja populointi --
--- Palauttaa päivitetyt rivit yhteenlaskettuna
-CREATE OR REPLACE FUNCTION populoi_rahavaraus_idt()
-    RETURNS INTEGER AS $$
-DECLARE
-    -- Rahavarausidt
-    rv_vahingot_id INT;
-    rv_akilliset_id INT;
-    rv_tunneli_id INT;
-    rv_lupaukseen1_id INT;
-    rv_muut_tavoitehintaan_id INT;
+-- Varmistetaan, että rahavaraus_urakka tauluun ei tule duplikaatteja
+ALTER TABLE rahavaraus_urakka
+    ADD CONSTRAINT rahavaraus_urakka_pk
+        UNIQUE (urakka_id, rahavaraus_id);
 
-    -- tehtavaidt
-    t_tunneli_id INT;
-    t_lupaukseen1_id INT;
-    t_muut_tavoitehintaan_id INT;
+-- Poistetaan turhaksi jääneitä kolumneita kulu ja kulu_kohdistus tauluista
+ALTER TABLE kulu
+    DROP COLUMN IF EXISTS tyyppi;
+-- Tyypin voi poistaa, koska kaikki on tyyppiä 'laskutettava'
 
-    -- tehtäväryhmäidt
-    tr_lupaus1_id INT;
-    tr_muut_yllapito_id INT;
+-- Poistetaan turhaksi jäänyt laskutustyyppi
+DROP TYPE IF EXISTS laskutyyppi;
 
-    rivit_paivitetty INTEGER := 0;
+-- Kululla voi olla monta kohdistusta ja niiden tyyppi on helpointa hallita kohdistuksessa itsessään
+CREATE TYPE kohdistustyyppi AS ENUM ('rahavaraus', 'hankintakulu','muukulu', 'lisatyo', 'paatos');
 
-    puuttuva_rivi RECORD;
+-- Asetetaan defaultiksi useimmin käytössäoleva hankintakulu.
+-- Lopulliset tyypit tulee, kun rahavarausten korjaava systeemi ajetaan kantaan
+ALTER TABLE kulu_kohdistus
+    ADD COLUMN IF NOT EXISTS tyyppi           kohdistustyyppi DEFAULT 'hankintakulu' NOT NULL,
+    ADD COLUMN IF NOT EXISTS tavoitehintainen BOOLEAN         DEFAULT TRUE           NOT NULL,
+    DROP COLUMN IF EXISTS suoritus_alku,
+    DROP COLUMN IF EXISTS suoritus_loppu;
+-- Suoritusajat voi poistaa, koska ne ovat aina samat kuin kulu.erapaiva
 
-BEGIN
-    -- Haetaan rahavarausten id:t
-    SELECT id INTO rv_akilliset_id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO rv_vahingot_id FROM rahavaraus WHERE nimi LIKE 'Vahinkojen korjaukset' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO rv_tunneli_id FROM rahavaraus WHERE nimi LIKE '%Tunnelit%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO rv_lupaukseen1_id FROM rahavaraus WHERE nimi LIKE 'Tilaajan rahavaraus kannustinjärjestelmään' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO rv_muut_tavoitehintaan_id FROM rahavaraus WHERE nimi LIKE '%Muut tavoitehintaan vaikuttavat rahavaraukset%' ORDER BY id ASC LIMIT 1;
+-- Päivitetään kulu_kohdistus taulun tyyppi rahavaraukseksi, jos rahavaraus_id on asetettu
+UPDATE kulu_kohdistus
+   SET tyyppi = 'rahavaraus'
+ WHERE rahavaraus_id IS NOT NULL;
 
-    -- Haetaan tehtävien id:t
-    SELECT id INTO t_tunneli_id FROM tehtava WHERE nimi LIKE '%Tunneleiden hoito%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO t_lupaukseen1_id FROM tehtava WHERE nimi LIKE '%Tilaajan rahavaraus lupaukseen 1%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO t_muut_tavoitehintaan_id FROM tehtava WHERE nimi LIKE '%Muut tavoitehintaan%' ORDER BY id ASC LIMIT 1;
+-- Päivitetään kulu_kohdistus taulun tyyppi lisatyoksi, jos maksueratyyppi on lisatyo
+-- Kaikki lisätyöt, mitä tietokannassa on alunperin on myös ei tavoitehintaisia
+UPDATE kulu_kohdistus
+   SET tyyppi           = 'lisatyo',
+       tavoitehintainen = FALSE
+ WHERE kulu_kohdistus.maksueratyyppi = 'lisatyo';
 
-    -- Haetaan Tehtäväryhmien idt
-    SELECT id INTO tr_lupaus1_id FROM tehtavaryhma WHERE nimi LIKE '%Tilaajan rahavaraus lupaukseen 1%' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO tr_muut_yllapito_id FROM tehtavaryhma WHERE nimi LIKE '%Muut, MHU ylläpito (F)%' ORDER BY id ASC LIMIT 1;
+-- Jotta tulevat rahavarausten automaattiset tausta-ajot korjaisivat kulu_kohdistus ja kustannusarvioitu_työ taulujen
+-- rivit oikein. Meidän on lisättävä vielä yksi rahavaraus
+INSERT INTO rahavaraus (nimi, luoja, luotu)
+VALUES ('Muut tavoitehintaan vaikuttavat rahavaraukset', (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+        NOW());
 
-    -- ~ ~ toteutuneet_kustannukset ~ ~ --
+-- Lisätään muutama pakollinen tehtävä rahavarukselle
+INSERT
+  INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
+SELECT rv.id,
+       t.id,
+       (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+       NOW()
+  FROM rahavaraus rv,
+       tehtava t
+ WHERE t.tehtavaryhma IS NOT NULL
+   AND t.nimi IN ('Muut tavoitehintaan vaikuttavat rahavaraukset',
+                  'Pohjavesisuojaukset',
+                  'Pysäkkikatoksen uusiminen',
+                  'Pysäkkikatoksen poistaminen',
+                  'Pysäkkikatoksen korjaaminen',
+                  'Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään',
+                  'Digitalisaation edistäminen ja innovaatioiden kehittäminen')
+   AND rv.nimi = 'Muut tavoitehintaan vaikuttavat rahavaraukset';
 
-    -- Äkilliset hoitotyöt
-    UPDATE toteutuneet_kustannukset
-       SET rahavaraus_id = rv_akilliset_id
-     WHERE tyyppi = 'akillinen-hoitotyo'
-       AND rv_akilliset_id IS NOT NULL;
+--===  Lisätään rahavaraukselle Levähdys ja P-alueet oikea tehtävä ja poistetaan väärät ===--
+-- Poistetaan ensin kaikki mahdollinen
+DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = (SELECT id FROM rahavaraus WHERE nimi = 'Rahavaraus D - Levähdys- ja P-alueet');
+-- Lisätään oikea tehtävä
+INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu) VALUES
+    ((SELECT id FROM rahavaraus WHERE nimi = 'Rahavaraus D - Levähdys- ja P-alueet'),
+     (SELECT id FROM tehtava WHERE nimi = 'Levähdys- ja P-alueiden varusteiden vaurioiden kuntoon saattaminen'),
+     (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), NOW());
 
-    -- Vahinkojen korvaukset
-    UPDATE toteutuneet_kustannukset
-       SET rahavaraus_id = rv_vahingot_id
-     WHERE tyyppi = 'vahinkojen-korjaukset'
-       AND rv_vahingot_id IS NOT NULL;
+--=== Sama jumppa Rahavaraus E - Pysäkkikatoksille - Poistetaan väärä tehtävä ja lisään oikea ===--
+-- Poistetaan ensin kaikki mahdollinen
+DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = (SELECT id FROM rahavaraus WHERE nimi = 'Rahavaraus E - Pysäkkikatokset');
+-- Ja lisätään oikea
+INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu) VALUES
+    ((SELECT id FROM rahavaraus WHERE nimi = 'Rahavaraus E - Pysäkkikatokset'),
+     (SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatosten ja niiden varusteiden vaurioiden kuntoon saattaminen'),
+     (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), NOW());
 
-    -- ~ ~ kulu_kohdistus ~ ~ --
-    -- Äkilliset hoitotyöt
-    UPDATE kulu_kohdistus
-       SET rahavaraus_id = rv_akilliset_id,
-           tyyppi = 'rahavaraus'
-     WHERE maksueratyyppi = 'akillinen-hoitotyo'
-       AND rv_akilliset_id IS NOT NULL;
+-- Päivitetään samalla noiden tehtävien tehtäväryhmä kuntoon
+UPDATE tehtava SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset, liikenneympäristön hoito (E)')
+ WHERE nimi = 'Levähdys- ja P-alueiden varusteiden vaurioiden kuntoon saattaminen' OR
+     nimi = 'Pysäkkikatosten ja niiden varusteiden vaurioiden kuntoon saattaminen';
 
-    -- Maksuerätyyppi 'muu', luetaan laskutusyhteenvedeossa Vahinkojen korvauksena
-    UPDATE kulu_kohdistus
-       SET rahavaraus_id = rv_vahingot_id,
-           tyyppi = 'rahavaraus'
-     WHERE maksueratyyppi = 'muu'
-       AND rv_vahingot_id IS NOT NULL;
-
-    --  Muut, MHU ylläpito (F) - Kulut rahavarauksiin -- Näitä ei ole. Kaikki 'muu' tyyppiset on vahingonkorvauksia
-
-    -- Kun tehtäväryhmä on Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3) - siitä tehdään kannustinjärjestelmä rahavaraus
-    UPDATE kulu_kohdistus
-       SET rahavaraus_id = rv_lupaukseen1_id,
-           tyyppi = 'rahavaraus'
-     WHERE tehtavaryhma = tr_lupaus1_id
-       AND rv_lupaukseen1_id IS NOT NULL;
-
-
-    -- ~ ~ kustannusarvioitu_tyo ~ ~ --
-    -- Äkilliset hoitotyöt
-    UPDATE kustannusarvioitu_tyo
-       SET rahavaraus_id = rv_akilliset_id,
-           osio = 'tavoitehintaiset-rahavaraukset'
-     WHERE tyyppi = 'akillinen-hoitotyo'
-       AND rv_akilliset_id IS NOT NULL;
-
-    -- Vahinkojen korvaukset
-    UPDATE kustannusarvioitu_tyo
-       SET rahavaraus_id = rv_vahingot_id,
-           osio = 'tavoitehintaiset-rahavaraukset'
-     WHERE tyyppi = 'vahinkojen-korjaukset'
-       AND rv_vahingot_id IS NOT NULL;
-
-    -- muut-rahavaraukset -- tunnelien hoito
-    UPDATE kustannusarvioitu_tyo
-       SET rahavaraus_id = rv_tunneli_id,
-           osio = 'tavoitehintaiset-rahavaraukset'
-     WHERE tyyppi = 'muut-rahavaraukset' AND tehtava = t_tunneli_id
-       AND rv_tunneli_id IS NOT NULL;
-
-    -- muut-rahavaraukset -- tehtävä: Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään
-    UPDATE kustannusarvioitu_tyo
-       SET rahavaraus_id = rv_lupaukseen1_id,
-           osio = 'tavoitehintaiset-rahavaraukset'
-     WHERE tyyppi = 'muut-rahavaraukset' AND tehtava = t_lupaukseen1_id
-       AND rv_lupaukseen1_id IS NOT NULL;
-
-    -- muut-rahavaraukset -- tehtävä: Muut tavoitehintaan vaikuttavat rahavaraukset
-    UPDATE kustannusarvioitu_tyo
-       SET rahavaraus_id = rv_muut_tavoitehintaan_id,
-           osio = 'tavoitehintaiset-rahavaraukset'
-     WHERE tyyppi = 'muut-rahavaraukset' AND tehtava = t_muut_tavoitehintaan_id
-       AND rv_muut_tavoitehintaan_id IS NOT NULL;
-
-    -- Tehdään ja ajetaan funktio, joka päivittää tarvittavat rahavaraukset kustannusarvioitu_tyo taulun tehtävien perusteella
-    FOR puuttuva_rivi IN SELECT DISTINCT ON (concat(s.urakka, kt.rahavaraus_id)) concat(s.urakka, kt.rahavaraus_id),  s.urakka AS urakka_id, kt.rahavaraus_id, ru.rahavaraus_id
-                           FROM kustannusarvioitu_tyo kt
-                                    JOIN sopimus s ON s.id = kt.sopimus
-                                    LEFT JOIN rahavaraus_urakka ru
-                                              ON ru.urakka_id = s.urakka AND ru.rahavaraus_id = kt.rahavaraus_id
-                          WHERE ru.rahavaraus_id IS NULL
-                            AND kt.rahavaraus_id IS NOT NULL
-                            AND kt.summa IS NOT NULL
-        LOOP
-            INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luoja)
-            VALUES (puuttuva_rivi.urakka_id, puuttuva_rivi.rahavaraus_id,
-                    (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
-            RAISE NOTICE 'Lisätty rahavaraus % urakalle %', puuttuva_rivi.rahavaraus_id, puuttuva_rivi.urakka_id;
-        END LOOP;
-
-
-    -- Palauta pävittyneet rivit, debuggausta varten
-    GET DIAGNOSTICS rivit_paivitetty = ROW_COUNT;
-    RETURN rivit_paivitetty;
-END;
-$$ LANGUAGE plpgsql;
-
--- Ja tehdään päivitys samalla
-SELECT populoi_rahavaraus_idt();
-
--- Kaikki urakat, joilla on "Muut tavoitehintaan vaikuttavat rahavaraukset" -rahavaraus kustannusarvioitu_tyo taulussa
--- ei saa enää tulevaisuudessa käyttää tuota rahavarausta. Näissä urakoissa on otettava käyttöön rahavaraukset
--- "Varalaskupaikat" ja "Pysäkkikatosten korjaaminen". Rahoja ei näiden välillä siirretä. Se on urakanvalvojan homma
--- Mutta alustetaan nuo tarvittavat rahavaraukset kuitenkin
-DO $$
+--== Lisätään puuttuvia tehtäviä rahavaraukselle ==--
+-- Lisätään rahavaraukselle tehtäväryhmälle 'ELY-rahoitteiset, ylläpito (E)' kuuluvia tehtäviä
+DO
+$$
     DECLARE
-        urakat RECORD;
-        muut_rahavaraus_id INTEGER;
-        pysakki_rahavaraus_id INTEGER;
-        varalasku_rahavaraus_id INTEGER;
-
+        rahavaraus_id      INT;
+        tehtavaryhma_id      INT;
+        tehtava RECORD;
     BEGIN
 
-        -- Haetaan 'Tilaajan rahavaraus kannustinjärjestelmään' rahavarauksen id
-        SELECT id INTO muut_rahavaraus_id FROM rahavaraus WHERE nimi = 'Muut tavoitehintaan vaikuttavat rahavaraukset';
-        SELECT id INTO varalasku_rahavaraus_id FROM rahavaraus WHERE nimi = 'Varalaskupaikat';
-        SELECT id INTO pysakki_rahavaraus_id FROM rahavaraus WHERE nimi = 'Pysäkkikatosten korjaaminen';
+        rahavaraus_id := (SELECT id FROM rahavaraus WHERE nimi = 'Rahavaraus E - Pysäkkikatokset');
+        tehtavaryhma_id := (SELECT id FROM harja.public.tehtavaryhma WHERE nimi = 'ELY-rahoitteiset, ylläpito (E)');
 
-        FOR urakat IN SELECT DISTINCT s.urakka AS urakka_id, kt.rahavaraus_id
-                        FROM kustannusarvioitu_tyo kt
-                                 JOIN sopimus s ON s.id = kt.sopimus
-                       WHERE kt.rahavaraus_id = muut_rahavaraus_id
+        FOR tehtava IN SELECT id, nimi FROM tehtava WHERE tehtavaryhma = tehtavaryhma_id
+
             LOOP
-                INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luoja)
-                VALUES (urakat.urakka_id, pysakki_rahavaraus_id,
-                        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
-
-                INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luoja)
-                VALUES (urakat.urakka_id, varalasku_rahavaraus_id,
-                        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
-
+                INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
+                VALUES (rahavaraus_id, tehtava.id, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), NOW());
             END LOOP;
+    END
+$$;
+
+
+-- Lisätään muutama pakollinen tehtävä rahavarukselle
+INSERT
+  INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
+SELECT rv.id,
+       t.id,
+       (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+       NOW()
+  FROM rahavaraus rv,
+       tehtava t
+ WHERE t.nimi IN ('Juurakkopuhdistamo, selkeytys- ja hulevesiallas sekä -painanne')
+   AND rv.nimi = 'Rahavaraus G - Juurakkopuhdistamo ym.';
+
+
+
+DO
+$$
+    DECLARE
+        tavoitepalkkioid      INT;
+        tavoitehinnanylitysid INT;
+        kattohinnanylitysid   INT;
+    BEGIN
+
+        tavoitepalkkioid := (SELECT id FROM tehtavaryhma WHERE nimi = 'Hoitovuoden päättäminen / Tavoitepalkkio');
+        tavoitehinnanylitysid := (SELECT id
+                                    FROM tehtavaryhma
+                                   WHERE
+                                       nimi = 'Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä');
+        kattohinnanylitysid := (SELECT id
+                                  FROM tehtavaryhma
+                                 WHERE nimi = 'Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä');
+
+        -- Kaikki vuoden päättämisen kulut on ei tavoitehintaisia
+        UPDATE kulu_kohdistus
+           SET tyyppi           = 'paatos',
+               tavoitehintainen = FALSE
+         WHERE tehtavaryhma IN (tavoitepalkkioid, tavoitehinnanylitysid, kattohinnanylitysid);
 
     END
+$$;
+
+
+-- Lisätään uusi suunnittelu_osio kustannusten suunnitteluun
+ALTER TYPE SUUNNITTELU_OSIO ADD VALUE 'tavoitehintaiset-rahavaraukset';
+
+-- Lisää rahavaraus_id sarakkeet, on olemassa jo parissa taulussa, mutta ei haittaa
+ALTER TABLE kulu_kohdistus ADD COLUMN IF NOT EXISTS rahavaraus_id INT REFERENCES rahavaraus (id);
+ALTER TABLE kustannusarvioitu_tyo ADD COLUMN IF NOT EXISTS rahavaraus_id INT REFERENCES rahavaraus (id);
+ALTER TABLE toteutuneet_kustannukset ADD COLUMN IF NOT EXISTS rahavaraus_id INT REFERENCES rahavaraus (id);
+
+-- Nimetään taas vähän uusiksi rahavarauksia
+UPDATE rahavaraus SET nimi = 'Levähdys- ja P-alueet' WHERE nimi like '%Levähdys- ja P-alueet%';
+UPDATE rahavaraus SET nimi = 'Pysäkkikatosten korjaaminen' WHERE nimi like '%Rahavaraus E - Pysäkkikatokset%';
+UPDATE rahavaraus SET nimi = 'Meluesteet' WHERE nimi like '%Meluesteet%';
+UPDATE rahavaraus SET nimi = 'Juurakkopuhdistamo ym.' WHERE nimi like '%Juurakkopuhdistamo%';
+UPDATE rahavaraus SET nimi = 'Aidat' WHERE nimi like '%Aidat%';
+UPDATE rahavaraus SET nimi = 'Sillat ja laiturit' WHERE nimi like '%Rahavaraus I - Sillat ja laiturit%';
+UPDATE rahavaraus SET nimi = 'Tunnelit' WHERE nimi like '%Rahavaraus J - Tunnelien pienet korjaukset%';
+UPDATE rahavaraus SET nimi = 'Vahinkojen korjaukset' WHERE nimi = 'Vahinkojen korvaukset';
+UPDATE rahavaraus SET nimi = 'Tilaajan rahavaraus kannustinjärjestelmään' WHERE nimi = 'Kannustinjärjestelmä';
+
+-- Poistetaan turhat rahavaraukset - Ja jos niitä on jollakulla käytössä, niin päivitetään ID:t
+DO $$
+    DECLARE
+        rv_akilliset_id_poistettava INT;
+        rv_akilliset_id INT;
+        rv_vahingot_id_poistettava INT;
+        rv_vahingot_id INT;
+        rv_kannustin_id_poistettava INT;
+        rv_kannustin_id INT;
+
+    BEGIN
+        SELECT id into rv_akilliset_id_poistettava FROM rahavaraus WHERE nimi = 'Rahavaraus B - Äkilliset hoitotyöt';
+        SELECT id into rv_akilliset_id FROM rahavaraus WHERE nimi = 'Äkilliset hoitotyöt';
+        SELECT id into rv_vahingot_id_poistettava FROM rahavaraus WHERE nimi = 'Rahavaraus C - Vahinkojen korjaukset';
+        SELECT id into rv_vahingot_id FROM rahavaraus WHERE nimi = 'Vahinkojen korjaukset';
+        SELECT id into rv_kannustin_id_poistettava FROM rahavaraus WHERE nimi = 'Rahavaraus K - Kannustinjärjestelmä';
+        SELECT id into rv_kannustin_id FROM rahavaraus WHERE nimi = 'Tilaajan rahavaraus kannustinjärjestelmään';
+
+        -- Äkilliset
+        UPDATE rahavaraus_urakka set rahavaraus_id = rv_akilliset_id WHERE rahavaraus_id = rv_akilliset_id_poistettava;
+        UPDATE kulu_kohdistus set rahavaraus_id = rv_akilliset_id WHERE rahavaraus_id = rv_akilliset_id_poistettava;
+        UPDATE kustannusarvioitu_tyo set rahavaraus_id = rv_akilliset_id WHERE rahavaraus_id = rv_akilliset_id_poistettava;
+        UPDATE toteutuneet_kustannukset set rahavaraus_id = rv_akilliset_id WHERE rahavaraus_id = rv_akilliset_id_poistettava;
+
+        DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = rv_akilliset_id_poistettava;
+        DELETE FROM rahavaraus_urakka WHERE rahavaraus_id = rv_akilliset_id_poistettava;
+        DELETE FROM rahavaraus WHERE id = rv_akilliset_id_poistettava;
+
+        -- Vahingot
+        UPDATE rahavaraus_urakka set rahavaraus_id = rv_vahingot_id WHERE rahavaraus_id = rv_vahingot_id_poistettava;
+        UPDATE kulu_kohdistus set rahavaraus_id = rv_vahingot_id WHERE rahavaraus_id = rv_vahingot_id_poistettava;
+        UPDATE kustannusarvioitu_tyo set rahavaraus_id = rv_vahingot_id WHERE rahavaraus_id = rv_vahingot_id_poistettava;
+        UPDATE toteutuneet_kustannukset set rahavaraus_id = rv_vahingot_id WHERE rahavaraus_id = rv_vahingot_id_poistettava;
+
+        DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = rv_vahingot_id_poistettava;
+        DELETE FROM rahavaraus_urakka WHERE rahavaraus_id = rv_vahingot_id_poistettava;
+        DELETE FROM rahavaraus WHERE id = rv_vahingot_id_poistettava;
+
+        -- Kannustin
+        UPDATE rahavaraus_urakka set rahavaraus_id = rv_kannustin_id WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+        UPDATE kulu_kohdistus set rahavaraus_id = rv_kannustin_id WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+        UPDATE kustannusarvioitu_tyo set rahavaraus_id = rv_kannustin_id WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+        UPDATE toteutuneet_kustannukset set rahavaraus_id = rv_kannustin_id WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+
+        DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+        DELETE FROM rahavaraus_urakka WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+        DELETE FROM rahavaraus WHERE id = rv_kannustin_id_poistettava;
+
+    END
+$$ LANGUAGE plpgsql;
+
+-- Lisätään puuttuva varalaskupaikka rahavaraus
+INSERT INTO rahavaraus (nimi, luoja, luotu) VALUES ('Varalaskupaikat', (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), CURRENT_TIMESTAMP);
+
+-- Lisätään tehtävä varalaskupaikalle
+-- Ensin se uusi tehtävä
+INSERT INTO tehtava (nimi, emo, yksikko, suunnitteluyksikko, tehtavaryhma, jarjestys, hinnoittelu, api_seuranta,
+                     api_tunnus, suoritettavatehtava, luotu, luoja)
+VALUES ('Varalaskupaikkojen hoito', (select id from toimenpide where koodi = '20191'), 'kpl', 'kpl',
+        (select id from tehtavaryhma where yksiloiva_tunniste = '4e3cf237-fdf5-4f58-b2ec-319787127b3e'),  -- Tällä hetkellä: Muut, MHU ylläpito (F)
+        null, null, FALSE, NULL,
+        null, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'));
+
+-- Lisää varalauskaupaikka tehtävä varalaskupaikka rahavaraukselle
+INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
+VALUES ((select id from rahavaraus where nimi = 'Varalaskupaikat'),
+        (select id from tehtava where nimi = 'Varalaskupaikkojen hoito'),
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), CURRENT_TIMESTAMP);
+
+
+CREATE OR REPLACE FUNCTION lisaa_urakan_oletus_rahavaraukset() RETURNS TRIGGER AS
+$$
+BEGIN
+    INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luoja)
+    SELECT NEW.id,
+           rv.id,
+           (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
+      FROM rahavaraus rv
+     WHERE rv.nimi IN ('Äkilliset hoitotyöt',
+                       'Vahinkojen korjaukset',
+                       'Kannustinjärjestelmä');
+
+    RETURN NEW;
+END
 $$ LANGUAGE plpgsql;
