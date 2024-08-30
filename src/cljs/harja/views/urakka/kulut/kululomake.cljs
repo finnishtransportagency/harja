@@ -113,7 +113,10 @@
                                      :valinta (:tehtavaryhma kohdistus)
                                      :virhe? (nayta-kohdistuksen-virhe? lomake nro :tehtavaryhma)
                                      :format-fn :tehtavaryhma
-                                     :valitse-fn #(e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro))}
+                                     :valitse-fn #(do
+                                                    ;; Hankintakulut on tavoitehintaisia 
+                                                    (e! (tiedot/->TavoitehintaanKuuluminen :true nro))
+                                                    (e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro)))}
         tehtavaryhmat]]]]))
 
 (defn- muukulu-kohdistus [e! lomake kohdistus tehtavaryhmat toimenpiteet nro]

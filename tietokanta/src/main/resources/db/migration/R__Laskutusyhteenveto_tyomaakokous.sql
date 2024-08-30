@@ -394,7 +394,8 @@ BEGIN
       tpi.id        AS toimenpideinstanssi_id, 
       lk.maksueratyyppi, 
       lk.rahavaraus_id,
-      tr.yksiloiva_tunniste
+      tr.yksiloiva_tunniste,
+      lk.tavoitehintainen
       FROM kulu l
         JOIN kulu_kohdistus lk ON lk.kulu = l.id
         JOIN toimenpideinstanssi tpi
@@ -409,18 +410,17 @@ BEGIN
                hoidonjohto_tpi_id
             )
         LEFT JOIN tehtavaryhma tr ON lk.tehtavaryhma = tr.id
-            -- Äkillisethoitotyöt ja vahingonkorvaukset niputetaan erikseen omiin laareihinsa, joten jätetään ne tässä pois
+            -- Äkillisethoitotyöt ja vahingonkorjaukset niputetaan erikseen omiin laareihinsa, joten jätetään ne tässä pois
             WHERE ( lk.rahavaraus_id NOT IN (akilliset_id, vahingot_id) OR lk.rahavaraus_id IS NULL )
               AND lk.poistettu IS NOT TRUE
               AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
-              -- Taulukkoon halutaan vain ei tavoitehintaiset  
-              AND lk.tavoitehintainen IS FALSE
 
         LOOP
 
             RAISE NOTICE 'rivi: %', rivi;
             -- Kohdista talvihoitoon liittyvät rivit talvihoito_rivi:lle
-            IF rivi.toimenpideinstanssi_id = talvihoito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+            IF rivi.tavoitehintainen IS TRUE -- Talvihoito hankinnat ovat tavoitehintaisia
+            AND rivi.toimenpideinstanssi_id = talvihoito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -431,7 +431,8 @@ BEGIN
             END IF;
 
             -- Kohdista talvihoitoon liittyvät lisätyö rivit lisatyo_talvihoito:lle
-            IF rivi.toimenpideinstanssi_id = talvihoito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+            IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
+            AND rivi.toimenpideinstanssi_id = talvihoito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -442,7 +443,8 @@ BEGIN
             END IF;
 
             -- Kohdista Liikenneympäristön hoitoon liittyvät rivit lyh_rivi:lle
-            IF rivi.toimenpideinstanssi_id = lyh_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+            IF rivi.tavoitehintainen IS TRUE -- Liikenneympäristön hoitoon liittyvät rivit ovat tavoitehintaisia
+            AND rivi.toimenpideinstanssi_id = lyh_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -453,7 +455,8 @@ BEGIN
             END IF;
 
             -- Kohdista Liikenneympäristön hoitoon liittyvät lisätyörivit lisatyo_lyh_rivi:lle
-            IF rivi.toimenpideinstanssi_id = lyh_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+            IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
+            AND rivi.toimenpideinstanssi_id = lyh_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -464,7 +467,8 @@ BEGIN
             END IF;
 
             -- Kohdista Soratien hoitoon liittyvät rivit sora_rivi:lle
-            IF rivi.toimenpideinstanssi_id = sora_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+            IF rivi.tavoitehintainen IS TRUE -- Soratien hoitoon liittyvät rivit ovat tavoitehintaisia
+            AND rivi.toimenpideinstanssi_id = sora_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -475,7 +479,8 @@ BEGIN
             END IF;
 
             -- Kohdista Soratien hoitoon liittyvät lisätyö rivit sora_rivi:lle
-            IF rivi.toimenpideinstanssi_id = sora_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+            IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
+            AND rivi.toimenpideinstanssi_id = sora_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -486,7 +491,8 @@ BEGIN
             END IF;
 
             -- Kohdista Päällysteiden paikkaukseen liittyvät rivit paallyste_rivi:lle
-            IF rivi.toimenpideinstanssi_id = paallyste_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+            IF rivi.tavoitehintainen IS TRUE -- Päällysteiden paikkaukseen liittyvät rivit ovat tavoitehintaisia
+            AND rivi.toimenpideinstanssi_id = paallyste_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -497,7 +503,8 @@ BEGIN
             END IF;
 
             -- Kohdista Päällysteiden paikkaukseen liittyvät lisätyö rivit paallyste_rivi:lle
-            IF rivi.toimenpideinstanssi_id = paallyste_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+            IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
+            AND rivi.toimenpideinstanssi_id = paallyste_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -510,7 +517,8 @@ BEGIN
             -- Kohdista MHU ylläpidon liittyvät rivit yllapito_rivi:lle
             -- Katso että rivi ei myöskään kuulu kannustinjärjestelmään (T3) (yksilöivätunniste='0e78b556-74ee-437f-ac67-7a03381c64f6') 
             -- Eli uudella rahavaraustietomallilla rahavaraus_id = kannustin_id
-            IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' AND
+            IF rivi.tavoitehintainen IS TRUE
+            AND rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' AND
                (rivi.yksiloiva_tunniste IS NULL OR rivi.rahavaraus_id != kannustin_id) THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
@@ -523,7 +531,8 @@ BEGIN
 
             -- Kohdista MHU ylläpidon liittyvät lisätyö rivit lisatyo_yllapito_rivi:lle
             -- Katso että ei kuulu kannustinjärjestelmään
-            IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' AND
+            IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
+            AND rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' AND
                (rivi.yksiloiva_tunniste IS NULL OR rivi.rahavaraus_id != kannustin_id) THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
@@ -535,7 +544,8 @@ BEGIN
             END IF;
 
             -- Kohdista MHU korvausinvestointeihin liittyvät rivit korvausinv_rivi:lle
-            IF rivi.toimenpideinstanssi_id = korvausinv_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+            IF rivi.tavoitehintainen IS TRUE
+            AND rivi.toimenpideinstanssi_id = korvausinv_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -546,7 +556,8 @@ BEGIN
             END IF;
 
             -- Kohdista MHU korvausinvestointeihin liittyvät lisätyö rivit lisatyo_korvausinv_rivi:lle
-            IF rivi.toimenpideinstanssi_id = korvausinv_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+            IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
+            AND rivi.toimenpideinstanssi_id = korvausinv_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -557,7 +568,8 @@ BEGIN
             END IF;
 
             -- Kohdista MHU Hoindojohto liittyvät lisätyö rivit lisatyo_hoidonjohto_rivi:lle
-            IF rivi.toimenpideinstanssi_id = hoidonjohto_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+            IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
+            AND rivi.toimenpideinstanssi_id = hoidonjohto_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
