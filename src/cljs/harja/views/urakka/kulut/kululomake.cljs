@@ -1,5 +1,6 @@
 (ns harja.views.urakka.kulut.kululomake
-  (:require [reagent.core :as r]
+  (:require [harja.fmt :as fmt]
+            [reagent.core :as r]
             [goog.string.format]
             [harja.domain.kulut :as kulut]
             [harja.tiedot.urakka.urakka :as tila]
@@ -154,7 +155,7 @@
      [:div.row
       (if (= :true @tavoitehinta)
         ;; Tavoitehintaisella muulla kululla on tehtäväryhmä
-        [:div.col-xs-12.col-md-4
+        [:div.col-xs-12.col-md-3
          [:div.label-ja-alasveto
           [:span.alasvedon-otsikko "Tehtäväryhmä*"]
           [yleiset/livi-pudotusvalikko {:vayla-tyyli? true
@@ -190,35 +191,38 @@
                          :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]]]]))
 
 (defn- rahavaraus-kohdistus [e! lomake kohdistus rahavaraukset nro]
-  [:div.row
-   [:div.col-xs-12.col-md-4
-    [:div.label-ja-alasveto
-     [:span.alasvedon-otsikko "Rahavaraus*"]
-     [yleiset/livi-pudotusvalikko {:valinta (:rahavaraus kohdistus)
-                                   :format-fn :nimi
-                                   :vayla-tyyli? true
-                                   :muokattu? true
-                                   :virhe? (nayta-kohdistuksen-virhe? lomake nro :rahavaraus)
-                                   :valitse-fn #(do
+  (let [tehtavaryhmat (sort-by :jarjestys (get-in kohdistus [:rahavaraus :tehtavaryhmat]))
+        _ (when (= 1 (count tehtavaryhmat))
+            (e! (tiedot/->ValitseTehtavaryhmaKohdistukselle (first tehtavaryhmat) nro)))]
+   [:div.row
+    [:div.col-xs-12.col-md-3
+     [:div.label-ja-alasveto
+      [:span.alasvedon-otsikko "Rahavaraus*"]
+      [yleiset/livi-pudotusvalikko {:valinta (:rahavaraus kohdistus)
+                                    :format-fn :nimi
+                                    :vayla-tyyli? true
+                                    :muokattu? true
+                                    :virhe? (nayta-kohdistuksen-virhe? lomake nro :rahavaraus)
+                                    :valitse-fn #(do
                                                   ;; Rahavaraukset on tavoitehintaisia 
                                                   (e! (tiedot/->TavoitehintaanKuuluminen :true nro))
                                                   (e! (tiedot/->ValitseRahavarausKohdistukselle % nro)))}
-      rahavaraukset]]]
-   [:div.col-xs-12.col-md-6
-    [:div.label-ja-alasveto
-     [:span.alasvedon-otsikko "Tehtäväryhmä*"]
-     [yleiset/livi-pudotusvalikko {:valinta (:tehtavaryhma kohdistus)
-                                   :format-fn :tehtavaryhma
-                                   :vayla-tyyli? true
-                                   :muokattu? true
-                                   :virhe? (nayta-kohdistuksen-virhe? lomake nro :tehtavaryhma)
-                                   :valitse-fn #(e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro))}
-      (get-in kohdistus [:rahavaraus :tehtavaryhmat])]]]])
+       rahavaraukset]]]
+    [:div.col-xs-12.col-md-6
+     [:div.label-ja-alasveto
+      [:span.alasvedon-otsikko "Tehtäväryhmä*"]
+      [yleiset/livi-pudotusvalikko {:valinta (:tehtavaryhma kohdistus)
+                                    :format-fn :tehtavaryhma
+                                    :vayla-tyyli? true
+                                    :muokattu? true
+                                    :virhe? (nayta-kohdistuksen-virhe? lomake nro :tehtavaryhma)
+                                    :valitse-fn #(e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro))}
+       tehtavaryhmat]]]]))
 
 (defn- lisatyo-kohdistus [e! lomake kohdistus toimenpiteet nro]
   (let [lisatyon-lisatieto (:lisatyon-lisatieto kohdistus)]
     [:div.row
-     [:div.col-xs-12.col-md-4
+     [:div.col-xs-12.col-md-3
       [:div.label-ja-alasveto
        [:span.alasvedon-otsikko "Toimenpide*"]
        [yleiset/livi-pudotusvalikko {:valinta (:toimenpide kohdistus)
@@ -264,8 +268,6 @@
                         :muokattu? true
                         :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]]]))
 
-
-
 (defn- nayta-kohdistus [e! lomake nro kohdistus tehtavaryhmat rahavaraukset toimenpiteet urakoitsija-maksaa?]
   (let [kohdistustyyppi (:tyyppi kohdistus)
         ;; Varmistetaan, että tehtäväryhmissä ei ole vääriä juttuja tälle kohdistukselle
@@ -310,7 +312,7 @@
        :hankintakulu [hankintakulu-kohdistus e! lomake kohdistus tehtavaryhmat nro]
        :rahavaraus [rahavaraus-kohdistus e! lomake kohdistus rahavaraukset nro]
        :lisatyo [lisatyo-kohdistus e! lomake kohdistus toimenpiteet nro]
-       :paatos [hoitovuodenpaatos-kohdistus e! kohdistus nro])
+       :paatos [hoitovuodenpaatos-kohdistus e! lomake kohdistus nro])
 
      ;; Kohdistuksen summa
      [:div.row
@@ -326,9 +328,7 @@
                           :vaadi-positiivinen-numero? (not urakoitsija-maksaa?)
                           ;; TODO: Kehitä validointi tähän :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta))
                           :input-luokka "maara-input"
-                          :vayla-tyyli? true}}]]]]
-
-     ]))
+                          :vayla-tyyli? true}}]]]]]))
 
 (defn kululomake [e! app]
   (let [syottomoodi (:syottomoodi app)
@@ -381,11 +381,8 @@
                             true
                             false)
 
-        kk-droppari-disabled (or
-                               (not= 0 (get-in app [:parametrit :haetaan]))
-                               laskun-nro-virhe?
+        kk-droppari-disabled (or laskun-nro-virhe?
                                laskun-nro-lukittu?)
-
         ;; Validoidaan koko lomake
         lomake-validi? (tiedot/validoi-lomake lomake)]
     [:div
@@ -421,7 +418,7 @@
      ;; Onko kulu lukittu
      (when kulu-lukittu? [:div.palstat [:div.palsta.punainen-teksti kulu-lukittu-teksti]])
 
-     #_ [debug/debug lomake]
+      #_ [debug/debug lomake]
      (map-indexed
        (fn [index kohdistus]
          ^{:key (str "kohdistus-" index)}
@@ -444,11 +441,7 @@
       [:div.col-xs-12.col-md-6
        [:div.label-ja-alasveto
         [:span.alasvedon-otsikko "Koontilaskun kuukausi*"]
-        [yleiset/livi-pudotusvalikko {;; TODO: tee validointi tähän
-                                      #_#_:virhe? (and
-                                                    (not kk-droppari-disabled)
-                                                    (not (validi-ei-tarkistettu-tai-ei-koskettu? koontilaskun-kuukausi-meta)))
-                                      :data-cy "koontilaskun-kk-dropdown"
+        [yleiset/livi-pudotusvalikko {:data-cy "koontilaskun-kk-dropdown"
                                       :disabled (or kk-droppari-disabled kulu-lukittu?)
                                       :vayla-tyyli? true
                                       :skrollattava? true
@@ -462,13 +455,7 @@
        [:div {:style {:padding-left "5px"}}
         [:label "Laskun pvm*"]
         [pvm-valinta/pvm-valintakalenteri-inputilla
-         {:valitse #(e! (tiedot/->ValitseErapaiva %)) #_(r/partial paivita-lomakkeen-arvo {:paivitys-fn paivitys-fn
-                                                                                           :polku :erapaiva
-                                                                                           :optiot {:validoitava? true}})
-          #_#_:luokat #{(str "input" (if (or
-                                           (validi-ei-tarkistettu-tai-ei-koskettu? erapaiva-meta)
-                                           disabled) "" "-error") "-default")
-                        "komponentin-input"}
+         {:valitse #(e! (tiedot/->ValitseErapaiva %))
           :paivamaara (or
                         erapaiva
                         (kulut/koontilaskun-kuukausi->pvm
@@ -490,17 +477,12 @@
         {:kentta-params {:tyyppi :string
                          :vayla-tyyli? true
                          :on-blur #(e! (tiedot/->OnkoLaskunNumeroKaytossa (.. % -target -value)))
-                         ;:virhe? laskun-nro-virhe?
                          :disabled? kulu-lukittu?}
          :otsikko "Koontilaskun numero"
          :luokka #{}
          :arvo-atom (r/wrap
                       (:laskun-numero lomake)
-                      #(e! (tiedot/->KoontilaskunNumero %))
-                      #_(r/partial paivita-lomakkeen-arvo
-                          {:paivitys-fn paivitys-fn
-                           :optiot {:validoitava? true}
-                           :polku :laskun-numero}))}]]]
+                      #(e! (tiedot/->KoontilaskunNumero %)))}]]]
      [:div.row
       [:div.col-xs-12.col-md-6
        (when (or laskun-nro-lukittu? laskun-nro-virhe?)
@@ -514,7 +496,7 @@
      [:div.row
       [:div.col-xs-12.col-md-4
        [:h5 "Määrä € *"]
-       [:h2 (str (reduce + (map :summa kohdistukset)) " €")]]
+       [:h2 (fmt/euro (reduce + (map :summa kohdistukset)))]]
       [:div.col-xs-12.col-md-6
        [liitteet e! kulu-lukittu? lomake]]]
 

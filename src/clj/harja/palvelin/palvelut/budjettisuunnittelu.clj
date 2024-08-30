@@ -17,7 +17,8 @@
              [toimenpideinstanssit :as tpi-q]
              [rahavaraukset :as rahavaraus-kyselyt]
              [indeksit :as i-q]
-             [konversio :as konv]]
+             [konversio :as konv]
+             [tehtavaryhmat :as tr-q]]
             [harja.palvelin.palvelut
              [kiinteahintaiset-tyot :as kiinthint-tyot]
              [kustannusarvioidut-tyot :as kustarv-tyot]]
@@ -392,6 +393,18 @@
              (dissoc :hoitokauden_alkuvuosi))))
        rahavaraukset))
 
+(defn mallinna-tavoitehinnan-ulkopuoliset-rahavaraukset-kustannusten-suunnitteluun [rahavaraukset urakan-aloitusvuosi]
+  (map (fn [rahavaraus]
+         (let [hoitokauden-numero (inc (- (:hoitokauden_alkuvuosi rahavaraus) urakan-aloitusvuosi))]
+           (-> rahavaraus
+             (assoc :toimenpide-avain :tavoitehinnan-ulkopuoliset-rahavaraukset)
+             (assoc :haettu-asia (:nimi rahavaraus))
+             (assoc :hoitokauden-numero hoitokauden-numero)
+             (assoc :vuosi (:hoitokauden_alkuvuosi rahavaraus))
+             (assoc :poistettu false)
+             (dissoc :hoitokauden_alkuvuosi))))
+    rahavaraukset))
+
 (defn hae-urakan-kustannusarvoidut-tyot
   [db user urakka-id]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
@@ -403,6 +416,14 @@
                                                                                                                     :alkuvuosi urakan-aloitusvuosi
                                                                                                                     :loppuvuosi urakan-lopetusvuosi})
                                          urakan-aloitusvuosi)
+        hallintokorvaus-tr-id (:id (first (tr-q/hae-tehtavaryhma-tunnisteella db {:yksiloiva_tunniste "a6614475-1950-4a61-82c6-fda0fd19bb54"})))
+        tavoitehinnan-ulkopuoliset-rahavaraukset (mallinna-tavoitehinnan-ulkopuoliset-rahavaraukset-kustannusten-suunnitteluun
+                                                   (ka-q/hae-urakan-suunnitellut-tavoitehinnan-ulkopuoliset-rahavaraukset db
+                                                     {:urakka_id urakka-id
+                                                      :alkuvuosi urakan-aloitusvuosi
+                                                      :loppuvuosi urakan-lopetusvuosi
+                                                      :tehtavaryhma_id hallintokorvaus-tr-id})
+                                                   urakan-aloitusvuosi)
         kustannusarvoidut-tyot
         (map (fn [tyo]
                (-> tyo
@@ -411,7 +432,7 @@
                                        (mhu/tehtavaryhma->tallennettava-asia (:tehtavaryhman-tunniste tyo))))
                  (dissoc :toimenpiteen-koodi :tehtavan-tunniste :tehtavaryhman-tunniste)))
           kustannusarvoidut-tyot)
-        kustannusarvoidut-tyot (concat kustannusarvoidut-tyot tavoitehintaiset-rahavaraukset)]
+        kustannusarvoidut-tyot (concat kustannusarvoidut-tyot tavoitehintaiset-rahavaraukset tavoitehinnan-ulkopuoliset-rahavaraukset)]
     kustannusarvoidut-tyot))
 
 (defn urakan-johto-ja-hallintokorvausten-datan-rikastaminen [data urakan-alkuvuosi]
@@ -1030,6 +1051,74 @@
     ;; Palautetaan tässä vaiheessa vain tiedetyt rahavaraukset muutettuna summalla, joka annettiin
     tavoitehintaiset-rahavaraukset))
 
+(defn tallenna-tavoitehinnan-ulkopuolinen-rahavaraus [db user {:keys [urakka-id rahavaraus-id summa loppuvuodet? vuosi] :as tiedot}]
+  (println "tallenna-tavoitehinnan-ulkopuolinen-rahavaraus :: tiedot" (pr-str tiedot))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (max vuosi (pvm/vuosi (:alkupvm urakan-tiedot)))
+        urakan-loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
+        urakan-vuodet (if loppuvuodet? (range urakan-alkuvuosi urakan-loppuvuosi) (list vuosi))
+        _ (println "tallenna-tavoitehinnan-ulkopuolinen-rahavaraus :: urakan-vuodet" urakan-vuodet)
+        sopimus-id (urakat-q/urakan-paasopimus-id db {:urakka urakka-id})
+        toimenpideinstanssi-id (:id (first (ka-q/hae-tavoitehinnan-ulkopuolisen-rahavarauksen-toimenpideinstanssi db {:urakka_id urakka-id})))
+        ;; Haetaan Johto- ja hallintkorvaus tehtäväryhmän id
+        tr-id (:id (first (tr-q/hae-tehtavaryhma-tunnisteella db {:yksiloiva_tunniste "a6614475-1950-4a61-82c6-fda0fd19bb54"})))
+        ;; Päivitetään tai insertoidaan jokaiselle tulevalle tai pelkästään annetulle vuodelle tiedot
+        _ (doseq [vuosi urakan-vuodet]
+            (let [;; Päivitetään rahavarauksen summa ja indeksikorjattu summa kustannusarvioitu_työ tauluun
+                  kt-rahavaraus-kuukaudet (ka-q/hae-tavoitehinnan-ulkopuolinen-rahavarauskustannus db
+                                            {:vuosi vuosi
+                                             :sopimus_id sopimus-id
+                                             :tehtavaryhma-id tr-id})
+                  _ (println "kt-rahavaraus-kuukaudet:" vuosi (pr-str kt-rahavaraus-kuukaudet))
+
+                  ;; Päivitetään tai insertoidaan rahavaraus sen mukaan, löytyikö sitä tietokanansta
+                  _ (if (not (empty? kt-rahavaraus-kuukaudet))
+                      (let [kk (atom 0)] ;; Lokaalisti voi olla vaikka vain kolmena kuukautena summa, vaikka pitäisi olla 12
+                        (doseq [r kt-rahavaraus-kuukaudet
+                                :let [_ (println "doseq :: r:" (pr-str r))
+                                      _ (swap! kk inc)
+                                      kuukausimaara (count kt-rahavaraus-kuukaudet)
+                                      kuukausisumma (round2 2 (/ summa kuukausimaara))
+                                      viimeinen-kuukausisumma (round2 2 (- summa (* (dec kuukausimaara) kuukausisumma)))
+                                      _ (println "doseq :: kuukausimaara:" kuukausimaara "kuukausisumma:" kuukausisumma "viimeinen-kuukausisumma:" viimeinen-kuukausisumma)]]
+                          (update! db ::bs/kustannusarvioitu-tyo
+                            ;; Jos muokattavia kuukausia on 9 tai enemmän, niin laitetaan viimeinen mahdollisesti suurempi
+                            ;; summa syyskuulle, eli hoitokauden viimeiselle kuukaudelle
+                            {::bs/summa (if (and (>= kuukausimaara 9) (= @kk 9)) viimeinen-kuukausisumma kuukausisumma)
+                             ::bs/summa-indeksikorjattu nil ;; Tavoitehinnan ulkopuolisella rahavarauksella ei ole indeksiä
+                             ::bs/muokattu (pvm/nyt)
+                             ::bs/osio "tilaajan-rahavaraukset" ;; Asetetaan sille osio, vaikka sitä ei voi vahvistaa
+                             ::bs/muokkaaja (:id user)}
+                            {::bs/id (:id r)})))
+                      (doseq [kk (range 1 13)
+                              :let [kuukausisumma (round2 2 (/ summa 12))
+                                    viimeinen-kuukausisumma (round2 2 (- summa (* 11 kuukausisumma)))
+                                    db-vuosi (if (>= kk 10) vuosi (inc vuosi))]]
+                        (insert! db ::bs/kustannusarvioitu-tyo
+                          {::bs/summa (if (= kk 9) viimeinen-kuukausisumma kuukausisumma) ;; Mahdollinen suurin summa hoitokauden viimeiselle kuukaudelle
+                           ::bs/tehtavaryhma tr-id
+                           ::bs/smallint-v db-vuosi
+                           ::bs/smallint-kk kk
+                           ::bs/sopimus sopimus-id
+                           ::bs/tyyppi :laskutettava-tyo
+                           ::bs/toimenpideinstanssi toimenpideinstanssi-id
+                           ::bs/osio "tilaajan-rahavaraukset" ;; Asetetaan sille osio, vaikka sitä ei voi vahvistaa
+                           ::bs/luotu (pvm/nyt)
+                           ::bs/luoja (:id user)})))]))
+
+        urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        urakan-lopetusvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
+        tavoitehinnan-ulkopuoliset-rahavaraukset (ka-q/hae-urakan-suunnitellut-tavoitehinnan-ulkopuoliset-rahavaraukset db
+                                                   {:urakka_id urakka-id
+                                                    :alkuvuosi urakan-aloitusvuosi
+                                                    :loppuvuosi urakan-lopetusvuosi
+                                                    :tehtavaryhma_id tr-id})
+        tavoitehinnan-ulkopuoliset-rahavaraukset (mallinna-tavoitehinnan-ulkopuoliset-rahavaraukset-kustannusten-suunnitteluun
+                                                   tavoitehinnan-ulkopuoliset-rahavaraukset urakan-aloitusvuosi)]
+    ;; Palautetaan tässä vaiheessa vain tiedetyt rahavaraukset muutettuna summalla, joka annettiin
+    tavoitehinnan-ulkopuoliset-rahavaraukset))
+
 (defrecord Budjettisuunnittelu []
   component/Lifecycle
   (start [this]
@@ -1101,7 +1190,11 @@
           (julkaise-palvelu
             :tallenna-tavoitehintainen-rahavaraus
             (fn [user tiedot]
-              (tallenna-tavoitehintainen-rahavaraus db user tiedot))))))
+              (tallenna-tavoitehintainen-rahavaraus db user tiedot)))
+          (julkaise-palvelu
+            :tallenna-tavoitehinnan-ulkopuolinen-rahavaraus
+            (fn [user tiedot]
+              (tallenna-tavoitehinnan-ulkopuolinen-rahavaraus db user tiedot))))))
     this)
 
   (stop [this]
@@ -1119,5 +1212,6 @@
       :tallenna-johto-ja-hallintokorvaukset
       :tallenna-kustannusarvioitu-tyo
       :tallenna-toimenkuva
-      :tallenna-tavoitehintainen-rahavaraus)
+      :tallenna-tavoitehintainen-rahavaraus
+      :tallenna-tavoitehinnan-ulkopuolinen-rahavaraus)
     this))

@@ -178,7 +178,8 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (let [kulu (first (q/hae-kulu db {:urakka urakka-id
                                     :id id}))
-        kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kulu)})
+        kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kulu)
+                                                   :urakka_id urakka-id})
         ;; Poista nil rahavaraukset
         kohdistukset (mapv (fn [kohdistus]
                              (let [kohdistus (if (:rahavaraus_id kohdistus)
@@ -339,7 +340,7 @@
           kuludb (if (nil? id)
                  (q/luo-kulu<! db kulu)
                  (q/paivita-kulu<! db (assoc kulu :id id)))
-          vanhat-kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kuludb)})
+          vanhat-kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kuludb) :urakka_id urakka-id})
           sisaan-tulevat-kohdistus-idt (into #{} (map :kohdistus-id kohdistukset))
           puuttuvat-kohdistukset (remove
                                    #(sisaan-tulevat-kohdistus-idt (:kohdistus-id %))
@@ -459,7 +460,8 @@
   {:f1 :id
    :f2 :tehtavaryhma
    :f3 :toimenpide
-   :f4 :toimenpideinstanssi})
+   :f4 :toimenpideinstanssi
+   :f5 :jarjestys})
 
 (defn hae-urakan-rahavaraukset [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)

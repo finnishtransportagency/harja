@@ -168,7 +168,16 @@
                                   [:toimistokulut "laskutettava-tyo"]
                                   [:hoidonjohtopalkkio "laskutettava-tyo"]}))
                          (doseq [[_ tehtavat] ryhmiteltyna]
-                           (testaa-ajat tehtavat toimenpide-avain)))))))
+                           (testaa-ajat tehtavat toimenpide-avain)))
+            :tavoitehintaiset-rahavaraukset (do
+                                              (is (= (into #{} (keys ryhmiteltyna))
+                                                    #{["Rahavaraus B - Äkilliset hoitotyöt" nil]
+                                                      ["Rahavaraus C - Vahinkojen korjaukset" nil]
+                                                      ["Rahavaraus J - Tunnelien pienet korjaukset" nil]
+                                                      ["Rahavaraus K - Kannustinjärjestelmä" nil]})))
+            :tavoitehinnan-ulkopuoliset-rahavaraukset (do
+                                                        (is (= (into #{} (keys ryhmiteltyna))
+                                                              #{["Tavoitehinnan ulkopuoliset rahavaraukset" nil]})))))))
     (testing "Johto ja hallintokorvaukset ovat oikein"
       (let [jh-korvaukset (:johto-ja-hallintokorvaukset budjetoidut-tyot)
             vakio-johto-ja-hallintokorvaukset (group-by :toimenkuva (:vakiot jh-korvaukset))

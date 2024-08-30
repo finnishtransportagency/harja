@@ -45,3 +45,40 @@ SELECT kt.id, kt.vuosi, kt.kuukausi, kt.summa, kt.summa_indeksikorjattu
  WHERE kt.rahavaraus_id = :rahavaraus_id
    AND ((kt.vuosi = :vuosi AND kt.kuukausi >= 10) OR (kt.vuosi = :vuosi + 1 AND kt.kuukausi <= 9))
    AND kt.sopimus = :sopimus_id;
+
+-- name: hae-tavoitehinnan-ulkopuolinen-rahavarauskustannus
+-- Haetaan tavoitehinnan ulkopuolinen rahavarauskustannus, joka on pohjimmiltaan sovittu, että se on
+-- Johto- ja hallintokorvaukseen kohdistuva laskutettava-työ tyyppinen kulu
+SELECT kt.id, kt.vuosi, kt.kuukausi, kt.summa
+  FROM kustannusarvioitu_tyo kt
+ WHERE ((kt.vuosi = :vuosi AND kt.kuukausi >= 10) OR (kt.vuosi = :vuosi + 1 AND kt.kuukausi <= 9))
+   AND kt.sopimus = :sopimus_id
+   AND kt.tyyppi = 'laskutettava-tyo'
+   AND kt.tehtavaryhma = :tehtavaryhma-id;
+
+-- name: hae-tavoitehinnan-ulkopuolisen-rahavarauksen-toimenpideinstanssi
+SELECT tpi.id
+  FROM toimenpideinstanssi tpi
+       JOIN toimenpide tp ON tpi.toimenpide = tp.id AND tp.koodi = '23151' -- Koodi: 23151 viittaa Hoidon johdon toimenpiteeseen.
+ WHERE tpi.urakka = :urakka_id;
+
+-- name: hae-urakan-suunnitellut-tavoitehinnan-ulkopuoliset-rahavaraukset
+-- Haetaan tavoitehinnan ulkopuoliset rahavaraukset kustannusarvioitu_tyo taulusta.
+-- Käytännössä nämä ovat johto ja hallintkorvaukseen kohdistuvia laskutettava-tyo tyyppisiä suunniteltuja kustannuksia.
+  WITH urakan_alkuvuodet AS (SELECT GENERATE_SERIES(:alkuvuosi::INT, :loppuvuosi::INT - 1) AS year)
+SELECT 'Tavoitehinnan ulkopuoliset rahavaraukset' AS nimi, -- Tämä on johto ja hallintokorvaus, mutta se nimetään UIlla näin
+       SUM(kt.summa)                              AS summa,
+       kt.indeksikorjaus_vahvistettu              AS "indeksikorjaus-vahvistettu",
+       CASE
+           WHEN kt.vuosi = y.year AND kt.kuukausi >= 10 THEN kt.vuosi
+           WHEN kt.vuosi - 1 = y.year AND kt.kuukausi <= 9 THEN kt.vuosi - 1
+           ELSE y.year
+           END                                    AS hoitokauden_alkuvuosi
+  FROM urakan_alkuvuodet y
+           JOIN sopimus s ON s.urakka = :urakka_id
+           LEFT JOIN kustannusarvioitu_tyo kt
+                     ON kt.sopimus = s.id AND kt.tyyppi = 'laskutettava-tyo' AND kt.tehtavaryhma = :tehtavaryhma_id
+                         AND ((kt.vuosi = y.year AND kt.kuukausi >= 10) OR
+                              (kt.vuosi = y.year + 1 AND kt.kuukausi <= 9))
+ GROUP BY kt.indeksikorjaus_vahvistettu, hoitokauden_alkuvuosi
+ ORDER BY hoitokauden_alkuvuosi;

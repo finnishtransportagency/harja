@@ -36,7 +36,7 @@ FROM
 -- Hakee tieverkolle projisoidut viivat annetuille pisteille.
 -- Huomio pisteiden välisen ajan järkevän geometrisoinnin päättelyssä.
 SELECT *
-  FROM tieviivat_pisteille_aika(:pisteet::piste_aika[])
+  FROM tieviivat_pisteille_aika(:pisteet::piste_aika[], :maxnopeus::INTEGER)
        AS vali(alku GEOMETRY, loppu GEOMETRY, geometria GEOMETRY);
 
 -- name: hae-tr-osoite

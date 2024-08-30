@@ -55,14 +55,14 @@ UPDATE tehtavaryhma
 -- name: tehtavat-tehtavaryhmaotsikoittain
 -- Listaa kaikki tehtävät ja niille suunnitellut ja toteutuneet määrät tehtäväryhmäotsikon perusteella ryhmiteltynä.
 -- Äkillisille hoitotöille on ihan oma tehtäväryhmä ja tätä ei voida käyttää siihen
-SELECT tk.id                 AS id,
-       tk.nimi               AS tehtava,
-       tk.suunnitteluyksikko AS yksikko,
-       r.nimi                AS rahavaraus,
+SELECT tk.id                                     AS id,
+       tk.nimi                                   AS tehtava,
+       tk.suunnitteluyksikko                     AS yksikko,
+       COALESCE(ru.urakkakohtainen_nimi, r.nimi) AS rahavaraus,
        -- Ei voi olla sekä rahavaraus, että käsin lisättävä tehtävä. Rahavarauksille toteumat on euroja ja ne lisätään kuluista.
        CASE
-           WHEN (tk.kasin_lisattava_maara AND r.nimi is null) THEN true
-           ELSE false END AS kasin_lisattava_maara
+           WHEN (tk.kasin_lisattava_maara AND r.nimi IS NULL) THEN TRUE
+           ELSE FALSE END                        AS kasin_lisattava_maara
   FROM tehtava tk
            JOIN urakka u ON :urakka = u.id
            JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
@@ -93,3 +93,8 @@ SELECT tk.id                 AS id,
                                   '0c466f20-620d-407d-87b0-3cbb41e8342e',
                                   'c058933e-58d3-414d-99d1-352929aa8cf9'))
  ORDER BY tk.jarjestys;
+
+-- name: hae-tehtavaryhma-tunnisteella
+SELECT tr.id, tr.nimi
+  FROM tehtavaryhma tr
+ WHERE tr.yksiloiva_tunniste = :yksiloiva_tunniste::UUID;

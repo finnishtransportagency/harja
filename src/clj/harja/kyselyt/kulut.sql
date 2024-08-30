@@ -187,21 +187,22 @@ WHERE k.id = :id
   AND k.poistettu IS NOT TRUE;
 
 -- name: hae-kulun-kohdistukset
-SELECT kk.id                  AS "kohdistus-id",
-       kk.rivi                AS "rivi",
-       kk.summa               AS "summa",
-       kk.tehtavaryhma        AS "tehtavaryhma",
-       kk.toimenpideinstanssi AS "toimenpideinstanssi",
-       kk.luotu               AS "luontiaika",
-       kk.muokattu            AS "muokkausaika",
-       kk.lisatyon_lisatieto  AS "lisatyon-lisatieto",
-       kk.maksueratyyppi      AS "maksueratyyppi",
-       kk.rahavaraus_id       AS rahavaraus_id,
-       rv.nimi                AS rahavaraus_nimi,
-       kk.tyyppi              AS tyyppi,
-       kk.tavoitehintainen    AS tavoitehintainen
+SELECT kk.id                                      AS "kohdistus-id",
+       kk.rivi                                    AS "rivi",
+       kk.summa                                   AS "summa",
+       kk.tehtavaryhma                            AS "tehtavaryhma",
+       kk.toimenpideinstanssi                     AS "toimenpideinstanssi",
+       kk.luotu                                   AS "luontiaika",
+       kk.muokattu                                AS "muokkausaika",
+       kk.lisatyon_lisatieto                      AS "lisatyon-lisatieto",
+       kk.maksueratyyppi                          AS "maksueratyyppi",
+       kk.rahavaraus_id                           AS rahavaraus_id,
+       COALESCE(ru.urakkakohtainen_nimi, rv.nimi) AS rahavaraus_nimi,
+       kk.tyyppi                                  AS tyyppi,
+       kk.tavoitehintainen                        AS tavoitehintainen
   FROM kulu_kohdistus kk
-        LEFT JOIN rahavaraus rv ON kk.rahavaraus_id = rv.id
+           LEFT JOIN rahavaraus rv ON kk.rahavaraus_id = rv.id
+           LEFT JOIN rahavaraus_urakka ru ON rv.id = ru.rahavaraus_id AND ru.urakka_id = :urakka_id
  WHERE kk.kulu = :kulu
    AND kk.poistettu IS NOT TRUE
  ORDER BY kk.id;

@@ -1,7 +1,7 @@
 -- name: hae-urakan-rahavaraukset-ja-tehtavaryhmat
 -- Palautetaan ensisijaisesti urakkakohtainen nimi, mutta jos sitä ei ole, niin defaultataan normaaliin nimeen.
 SELECT rv.id, COALESCE(rvu.urakkakohtainen_nimi, rv.nimi) as nimi,
-       to_json(array_agg(DISTINCT(row(tr.id, tr.nimi, tp.id, tpi.id)))) AS tehtavaryhmat
+       to_json(array_agg(DISTINCT(row(tr.id, tr.nimi, tp.id, tpi.id, tr.jarjestys)))) AS tehtavaryhmat
   FROM rahavaraus rv
         JOIN rahavaraus_urakka rvu ON rvu.rahavaraus_id = rv.id AND rvu.urakka_id = :id
         JOIN rahavaraus_tehtava rvt ON rvt.rahavaraus_id = rv.id
@@ -24,7 +24,8 @@ SELECT u.id   AS "urakka-id",
 
 -- name: hae-rahavaraukset
 SELECT id, nimi
-  FROM rahavaraus;
+  FROM rahavaraus
+ ORDER BY ID ASC;
 
 -- name: hae-rahavaraukset-tehtavineen
 -- Haetaan kaikki rahavaraukset ja niihin liittyvät tehtävät
@@ -81,7 +82,6 @@ DELETE
   FROM rahavaraus_tehtava
  WHERE rahavaraus_id = :rahavaraus-id
    AND tehtava_id = :tehtava-id;
-
 
 -- name: onko-rahavaraus-olemassa?
 -- single?: true
@@ -175,7 +175,6 @@ SELECT rv.id,
                                                           (kt.vuosi = y.year+1 AND kt.kuukausi <= 9))
  GROUP BY rv.id, rvu.urakkakohtainen_nimi, rv.nimi, kt.indeksikorjaus_vahvistettu, hoitokauden_alkuvuosi
  ORDER BY hoitokauden_alkuvuosi, rv.id, nimi;
-
 
 -- name: hae-rahavarauksen-toimenpideinstanssi
 -- Kustannusarvoitu_tyo vaatii jonkun toimenpideinstanssin. Se ei ole vielä tiedossa. Niin haetaan urakkakohtaisesti vain ensimmäinen
