@@ -93,7 +93,8 @@
     :paikkaukset-paallystysilmoitukset
     :tieluvat
     :maarien-toteumat
-    :materiaalitoteumat})
+    :materiaalitoteumat
+    :talvihoitoreitit})
 
 (def
   ^{:doc
@@ -361,7 +362,8 @@
        (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
                       (inc oletus-zindex))
        :infopaneelin-merkki (aseta-z-index (vec (vals @(geometrioiden-atomit :infopaneelin-merkki)))
-                                           (+ oletus-zindex 2))}
+                                           (+ oletus-zindex 2))
+       :talvihoitoreitit (taso :talvihoitoreitit)}
       ;; Tilannekuvan geometriat muodostetaan hieman eri tavalla
      (when (true? @(tasojen-nakyvyys-atomit :tilannekuva))
         (into {}

@@ -383,7 +383,8 @@
                          :pot2-massa-lomake nil
                          :pot2-lomake nil})
 
-(def talvihoitoreitit-default {:avaine nil})
+(def talvihoitoreitit-default {:haku-kaynnissa? false?
+                               :talvihoitoreitit nil})
 
 (defonce tila (atom {:yleiset     {:urakka {}}
                      :laatupoikkeamat laatupoikkeamat-default

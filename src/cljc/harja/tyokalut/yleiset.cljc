@@ -87,3 +87,8 @@
              {asetettava-avain (vec (->> kokoelma2
                                       (filter #(= yhteinen-arvo (get-in % yhteinen-key2)))
                                       (map #(get-in % etsittava-avain))))}))) kokoelma1))
+
+(defn random-luku-valilta
+  "Antaa random luvun valilta alku-loppu. Esim väliltä 1 ja 8 luvuksi voi tulla 6."
+  [alku loppu]
+  (+ alku (rand-int (inc (- loppu alku)))))
