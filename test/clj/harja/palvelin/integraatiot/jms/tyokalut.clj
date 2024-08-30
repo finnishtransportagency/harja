@@ -40,11 +40,11 @@
                      "/api/jolokia/")
                 options)))
 
-(defn jms-jolokia-artemis
+(defn jms-jolokia--artemis
   "ActiveMQ artemis jolokia API: https://activemq.apache.org/components/artemis/documentation/latest/management#exposing-jmx-using-jolokia"
-  ([jms-client sanoma] (jms-jolokia-artemis jms-client sanoma nil))
+  ([jms-client sanoma] (jms-jolokia--artemis jms-client sanoma nil))
   ([jms-client sanoma options]
-  (println "#### [jms-jolokia-artemis] Lähetettävä sanoma: " (cheshire/encode sanoma))
+  (println "#### [jms-jolokia--artemis] Lähetettävä sanoma: " (cheshire/encode sanoma))
   (clojure.pprint/pprint sanoma)
 
   (let [options (merge
@@ -66,7 +66,7 @@
 
     vastaus)))
 
-(defn jms-laheta-jonoon-artemis [jms-client jonon-nimi sanoma]
+(defn jms-laheta-jonoon--artemis [jms-client jonon-nimi sanoma]
   "Erillinen työkalu viestin lähettämiseen ActiveMQ Artemis jonoon testeissä.
   Viesti lähetetään mbean-tyyppisenä sanomana ActiveMQ Artemiksen management API:n kautta (Jolokia)."
 
@@ -94,7 +94,7 @@
                                   false
                                   ]}
         options {:timeout 5000}]
-    (jms-jolokia-artemis jms-client sanoma-mbean options)))
+    (jms-jolokia--artemis jms-client sanoma-mbean options)))
 
 (defn jms-jolokia-connection [jms-client attribute operation]
   (let [attribute (when attribute
@@ -115,7 +115,7 @@
                       operation)]
     (jms-jolokia jms-client sanoma)))
 
-(defn jms-jolokia-connection-artemis
+(defn jms-jolokia-connection--artemis
   "Työkalu yhteyden hallintaan ActiveMQ Artemis -palvelimella.
   Käyttää Artemiksen Jolokia API:a: https://activemq.apache.org/components/artemis/documentation/latest/management#exposing-jmx-using-jolokia"
   [jms-client attribute operation]
@@ -135,9 +135,9 @@
                  attribute
                  operation)]
 
-    (println "#### [jms-jolokia-connection-artemis] Lähetetään Jolokia-viesti Artemikselle...")
+    (println "#### [jms-jolokia-connection--artemis] Lähetetään Jolokia-viesti Artemikselle...")
 
-    (jms-jolokia-artemis jms-client sanoma)))
+    (jms-jolokia--artemis jms-client sanoma)))
 
 (defn jms-jolokia-broker [jms-client attribute operation]
   (let [attribute (when attribute
@@ -159,7 +159,7 @@
 
 ;; TODO: Tätä ei taideta kutsua missään testissä.
 ;;       Jos tarve käyttää, niin pitää muodostaa sopiva mbean sanoma Artemikselle
-(defn jms-jolokia-broker-artemis [jms-client attribute operation]
+(defn jms-jolokia-broker--artemis [jms-client attribute operation]
   (let [attribute (when attribute
                     {:type "read"
                      :attribute (case attribute
@@ -201,7 +201,7 @@
                  operation)]
     (jms-jolokia jms-client sanoma)))
 
-(defn jms-jolokia-jono-artemis
+(defn jms-jolokia-jono--artemis
   "Työkalu jonojen hallintaan testeissä.
   Käyttää Artemiksen Jolokia API:a: https://activemq.apache.org/components/artemis/documentation/latest/management#exposing-jmx-using-jolokia"
   [jms-client jonon-nimi attribute operation]
@@ -241,24 +241,24 @@
                  attribute
                  operation)]
 
-    (println "#### [jms-jolokia-jono-artemis] Lähetetään Jolokia-viesti Artemikselle...")
+    (println "#### [jms-jolokia-jono--artemis] Lähetetään Jolokia-viesti Artemikselle...")
 
-    (jms-jolokia-artemis jms-client sanoma)))
+    (jms-jolokia--artemis jms-client sanoma)))
 
 (defn itmf-laheta [jonon-nimi sanoma]
-  (jms-laheta-jonoon-artemis "itmf" jonon-nimi sanoma))
+  (jms-laheta-jonoon--artemis "itmf" jonon-nimi sanoma))
 
 (defn itmf-jolokia [sanoma]
-  (jms-jolokia-artemis "itmf" sanoma))
+  (jms-jolokia--artemis "itmf" sanoma))
 
 (defn itmf-jolokia-jono [jonon-nimi attribute operation]
-  (jms-jolokia-jono-artemis "itmf" jonon-nimi attribute operation))
+  (jms-jolokia-jono--artemis "itmf" jonon-nimi attribute operation))
 
 (defn itmf-jolokia-connection [attribute operation]
-  (jms-jolokia-connection-artemis "itmf" attribute operation))
+  (jms-jolokia-connection--artemis "itmf" attribute operation))
 
 (defn itmf-jolokia-broker [attribute operation]
-  (jms-jolokia-broker-artemis "itmf" attribute operation))
+  (jms-jolokia-broker--artemis "itmf" attribute operation))
 
 (defn jms-laheta-odota [jms-client jonon-nimi sanoma]
   (let [kasitellyn-tapahtuman-id (fn []
