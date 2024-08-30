@@ -199,6 +199,7 @@
  ;; :reittitarkistukset
  ;; :toteumatyokalu - sallittu vain gc ja local ympäristöissä, muualla estetty
  :pois-kytketyt-ominaisuudet #{; :tietyoilmoitusten-lahetys
+                               :itmf
                                :sonja-uudelleen-kaynnistys
                                :itmf-uudelleen-kaynnistys
                                :sonja-sahkoposti

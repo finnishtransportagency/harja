@@ -27,29 +27,6 @@
                      "?type=queue")
                 options)))
 
-;; TODO: Artemiksessa ei ole defaulttina Rest API:a käytössä, vaan se pitäisi ottaa käyttöön erikseen
-;;       Tässä on vielä Apache Classic brokerin käyttämä /api/message endpoint esimerkkinä, joka ei Artemisen suhteen toimi.
-;;       Ideana on ollut testeissä ilmeisesti se, että olisi jokin helppo tapa lähettää Rest API:n kautta viestejä jonoille.
-;;       ---
-;;       Apache Classic myös ilmeisesti on toiminut siten, että se on luonut jonon automaattisesti brokerin puolella,
-;;       mikäli siihen on yritetty lähettää viestiä ja jonoa ei ole olemassa.
-;;       Ei ole varmuutta toimiiko Artemis samalla tavalla ennen kuin pääsemme kokeilemaan viestin lähetystä jonoon.
-(defn jms-laheta-artemis [jms-client jonon-nimi sanoma]
-  (let [options {:timeout 5000
-                 :basic-auth ["admin" "admin"]
-                 :headers {"Content-Type" "application/xml"}
-                 :body sanoma}]
-    @(http/post (str "http://"
-                  (case jms-client
-                    "itmf" (env/env "HARJA_ITMF_BROKER_HOST" "localhost"))
-                  ":"
-                  (case jms-client
-                    "itmf" (env/env "HARJA_ITMF_BROKER_AI_PORT" 8171))
-                  "/api/message/"
-                  jonon-nimi
-                  "?type=queue")
-       options)))
-
 (defn jms-jolokia [jms-client sanoma]
   (let [options {:timeout 200
                  :basic-auth ["admin" "admin"]
@@ -65,13 +42,16 @@
 
 (defn jms-jolokia-artemis
   "ActiveMQ artemis jolokia API: https://activemq.apache.org/components/artemis/documentation/latest/management#exposing-jmx-using-jolokia"
-  [jms-client sanoma]
+  ([jms-client sanoma] (jms-jolokia-artemis jms-client sanoma nil))
+  ([jms-client sanoma options]
   (println "#### [jms-jolokia-artemis] Lähetettävä sanoma: " (cheshire/encode sanoma))
   (clojure.pprint/pprint sanoma)
 
-  (let [options {:timeout 200
-                 :basic-auth ["admin" "admin"]
-                 :body (cheshire/encode sanoma)}
+  (let [options (merge
+                  {:timeout 200
+                   :basic-auth ["admin" "admin"]
+                   :body (cheshire/encode sanoma)}
+                  options)
         vastaus @(http/post (str "http://"
                               (case jms-client
                                 "itmf" (env/env "HARJA_ITMF_BROKER_HOST" "localhost"))
@@ -84,7 +64,37 @@
     (println "#### -> Vastaus Artemikselta: ")
     (clojure.pprint/pprint vastaus)
 
-    vastaus))
+    vastaus)))
+
+(defn jms-laheta-jonoon-artemis [jms-client jonon-nimi sanoma]
+  "Erillinen työkalu viestin lähettämiseen ActiveMQ Artemis jonoon testeissä.
+  Viesti lähetetään mbean-tyyppisenä sanomana ActiveMQ Artemiksen management API:n kautta (Jolokia)."
+
+  (let [sanoma-mbean {:mbean (str "org.apache.activemq.artemis:"
+                               "broker=\"0.0.0.0\""
+                               ",component=addresses"
+                               ",address=\"" jonon-nimi "\"")
+                      :type "EXEC"
+                      :operation "sendMessage(java.util.Map, int, java.lang.String, boolean, java.lang.String, java.lang.String, boolean)"
+                      ;; Operaatiofuntion argumentit
+                      :arguments [;; Headers
+                                  {}
+                                  ;; Type (3 = TEXT)
+                                  3
+                                  ;; Body
+                                  sanoma
+                                  ;; Durable = true/false
+                                  ;; Durable messages are persisted to disk and survive broker restarts or crashes.
+                                  true
+                                  ;; User
+                                  nil
+                                  ;; Password
+                                  nil
+                                  ;; Create Message ID
+                                  false
+                                  ]}
+        options {:timeout 5000}]
+    (jms-jolokia-artemis jms-client sanoma-mbean options)))
 
 (defn jms-jolokia-connection [jms-client attribute operation]
   (let [attribute (when attribute
@@ -236,7 +246,7 @@
     (jms-jolokia-artemis jms-client sanoma)))
 
 (defn itmf-laheta [jonon-nimi sanoma]
-  (jms-laheta-artemis "itmf" jonon-nimi sanoma))
+  (jms-laheta-jonoon-artemis "itmf" jonon-nimi sanoma))
 
 (defn itmf-jolokia [sanoma]
   (jms-jolokia-artemis "itmf" sanoma))
@@ -254,8 +264,8 @@
   (let [kasitellyn-tapahtuman-id (fn []
                                    (not-empty
                                      (first (q (str "SELECT it.id "
-                                                    "FROM integraatiotapahtuma it"
-                                                    "  JOIN integraatioviesti iv ON iv.integraatiotapahtuma=it.id "
+                                                 "FROM integraatiotapahtuma it"
+                                                 "  JOIN integraatioviesti iv ON iv.integraatiotapahtuma=it.id "
                                                     "WHERE iv.sisalto ILIKE('" (clj-str/replace sanoma #"ä" "Ã¤") "') AND "
                                                     "it.paattynyt IS NOT NULL")))))]
     (case jms-client
