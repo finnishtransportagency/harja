@@ -27,7 +27,7 @@ BEGIN
     -- Haetaan rahavarausten id:t
     SELECT id INTO rv_akilliset_id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%' ORDER BY id ASC LIMIT 1;
     SELECT id INTO rv_vahingot_id FROM rahavaraus WHERE nimi LIKE 'Vahinkojen korjaukset' ORDER BY id ASC LIMIT 1;
-    SELECT id INTO rv_tunneli_id FROM rahavaraus WHERE nimi LIKE '%Tunnelit%' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO rv_tunneli_id FROM rahavaraus WHERE nimi = 'Tunneleiden hoito' ORDER BY id ASC LIMIT 1;
     SELECT id INTO rv_lupaukseen1_id FROM rahavaraus WHERE nimi LIKE 'Tilaajan rahavaraus kannustinjärjestelmään' ORDER BY id ASC LIMIT 1;
     SELECT id INTO rv_muut_tavoitehintaan_id FROM rahavaraus WHERE nimi LIKE '%Muut tavoitehintaan vaikuttavat rahavaraukset%' ORDER BY id ASC LIMIT 1;
 

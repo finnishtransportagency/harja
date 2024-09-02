@@ -82,10 +82,25 @@ INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu) VALUES
      (SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatosten ja niiden varusteiden vaurioiden kuntoon saattaminen'),
      (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), NOW());
 
--- Päivitetään samalla noiden tehtävien tehtäväryhmä kuntoon
+-- Lisätään rahavaraus A:lle puuttuva tehtävä
+INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu) VALUES
+    ((SELECT id FROM rahavaraus WHERE nimi = 'Rahavaraus A'),
+     (SELECT id FROM tehtava WHERE nimi = 'Muut päällysteiden paikkaukseen liittyvät työt'),
+     (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), NOW());
+
+-- Päivitetään  tehtävien tehtäväryhmät kuntoon
 UPDATE tehtava SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'ELY-rahoitteiset, liikenneympäristön hoito (E)')
  WHERE nimi = 'Levähdys- ja P-alueiden varusteiden vaurioiden kuntoon saattaminen' OR
-     nimi = 'Pysäkkikatosten ja niiden varusteiden vaurioiden kuntoon saattaminen';
+     nimi = 'Pysäkkikatosten ja niiden varusteiden vaurioiden kuntoon saattaminen' OR
+     nimi = 'Meluesteiden pienten vaurioiden korjaaminen' OR
+     nimi = 'Aitojen vaurioiden korjaukset';
+
+UPDATE tehtava SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Muut, MHU ylläpito (F)')
+ WHERE nimi = 'Tunnelien pienet korjaustyöt ja niiden liikennejärjestelyt';
+
+-- Korjataan myös yhden tehtäväryhmän nimi
+update tehtavaryhma set nimi = 'Tilaajan rahavaraus (T3)' where nimi = 'Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)';
+update tehtavaryhma set nimi = 'Päällysteiden paikkaus, muut työt (Y)' where nimi = 'Päällysteiden paikkaus (Y)';
 
 --== Lisätään puuttuvia tehtäviä rahavaraukselle ==--
 -- Lisätään rahavaraukselle tehtäväryhmälle 'ELY-rahoitteiset, ylläpito (E)' kuuluvia tehtäviä
@@ -98,7 +113,7 @@ $$
     BEGIN
 
         rahavaraus_id := (SELECT id FROM rahavaraus WHERE nimi = 'Rahavaraus E - Pysäkkikatokset');
-        tehtavaryhma_id := (SELECT id FROM harja.public.tehtavaryhma WHERE nimi = 'ELY-rahoitteiset, ylläpito (E)');
+        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'ELY-rahoitteiset, ylläpito (E)');
 
         FOR tehtava IN SELECT id, nimi FROM tehtava WHERE tehtavaryhma = tehtavaryhma_id
 
@@ -160,13 +175,8 @@ ALTER TABLE kustannusarvioitu_tyo ADD COLUMN IF NOT EXISTS rahavaraus_id INT REF
 ALTER TABLE toteutuneet_kustannukset ADD COLUMN IF NOT EXISTS rahavaraus_id INT REFERENCES rahavaraus (id);
 
 -- Nimetään taas vähän uusiksi rahavarauksia
-UPDATE rahavaraus SET nimi = 'Levähdys- ja P-alueet' WHERE nimi like '%Levähdys- ja P-alueet%';
 UPDATE rahavaraus SET nimi = 'Pysäkkikatosten korjaaminen' WHERE nimi like '%Rahavaraus E - Pysäkkikatokset%';
-UPDATE rahavaraus SET nimi = 'Meluesteet' WHERE nimi like '%Meluesteet%';
-UPDATE rahavaraus SET nimi = 'Juurakkopuhdistamo ym.' WHERE nimi like '%Juurakkopuhdistamo%';
-UPDATE rahavaraus SET nimi = 'Aidat' WHERE nimi like '%Aidat%';
-UPDATE rahavaraus SET nimi = 'Sillat ja laiturit' WHERE nimi like '%Rahavaraus I - Sillat ja laiturit%';
-UPDATE rahavaraus SET nimi = 'Tunnelit' WHERE nimi like '%Rahavaraus J - Tunnelien pienet korjaukset%';
+UPDATE rahavaraus SET nimi = 'Tunneleiden hoito' WHERE nimi like '%Rahavaraus J - Tunnelien pienet korjaukset%';
 UPDATE rahavaraus SET nimi = 'Vahinkojen korjaukset' WHERE nimi = 'Vahinkojen korvaukset';
 UPDATE rahavaraus SET nimi = 'Tilaajan rahavaraus kannustinjärjestelmään' WHERE nimi = 'Kannustinjärjestelmä';
 
@@ -237,6 +247,12 @@ VALUES ('Varalaskupaikkojen hoito', (select id from toimenpide where koodi = '20
 INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
 VALUES ((select id from rahavaraus where nimi = 'Varalaskupaikat'),
         (select id from tehtava where nimi = 'Varalaskupaikkojen hoito'),
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), CURRENT_TIMESTAMP),
+    ((select id from rahavaraus where nimi = 'Varalaskupaikat'),
+     (select id from tehtava where yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'), -- Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään
+     (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), CURRENT_TIMESTAMP),
+       ((select id from rahavaraus where nimi = 'Varalaskupaikat'),
+        (select id from tehtava where nimi = 'Digitalisaation edistäminen ja innovaatioiden kehittäminen'),
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), CURRENT_TIMESTAMP);
 
 
