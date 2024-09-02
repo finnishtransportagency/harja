@@ -140,8 +140,6 @@
                  attribute
                  operation)]
 
-    (println "#### [jms-jolokia-connection--artemis] Lähetetään Jolokia-viesti Artemikselle...")
-
     (jms-jolokia-api-kutsu--artemis jms-client sanoma)))
 
 ;; FIXME: Poista tämä funktio, sillä se tukee vain ActiveMQ Classicia.
@@ -251,8 +249,6 @@
                  attribute
                  operation)]
 
-    (println "#### [jms-jolokia-jono--artemis] Lähetetään Jolokia-viesti Artemikselle...")
-
     (jms-jolokia-api-kutsu--artemis jms-client sanoma)))
 
 (defn itmf-laheta [jonon-nimi sanoma]
@@ -276,7 +272,7 @@
                                      (first (q (str "SELECT it.id "
                                                  "FROM integraatiotapahtuma it"
                                                  "  JOIN integraatioviesti iv ON iv.integraatiotapahtuma=it.id "
-                                                    "WHERE iv.sisalto ILIKE('" (clj-str/replace sanoma #"ä" "Ã¤") "') AND "
+                                                    "WHERE iv.sisalto ILIKE('" sanoma "') AND "
                                                     "it.paattynyt IS NOT NULL")))))]
     (case jms-client
       "itmf" (itmf-laheta jonon-nimi sanoma))
