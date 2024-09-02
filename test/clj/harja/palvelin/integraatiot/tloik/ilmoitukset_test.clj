@@ -71,7 +71,7 @@
                        (tc/from-date (:valitetty ilmoitus)))
            valitetty))
     (is (= (:yhteydenottopyynto ilmoitus) false))
-    (is (= (:tila ilmoitus) "kuittaamaton"))
+    (is (= (:tila ilmoitus) "ei-valitetty"))
     (is (= (:tunniste ilmoitus) "UV-1509-1a"))
     (is (= (:ilmoittaja_tyyppi ilmoitus) "tienkayttaja"))
     (is (instance? PGgeometry (:sijainti ilmoitus)))
