@@ -320,9 +320,10 @@ SELECT u.id                           AS urakka,
                 AND up."urakka-id" = ut.urakka
                 AND up."hoitokauden-alkuvuosi" = EXTRACT(YEAR FROM u.alkupvm) + ut.hoitokausi - 1
                 AND up.poistettu = FALSE) AS "on-paatos"
-FROM urakka_tavoite ut
-         LEFT JOIN urakka u ON ut.urakka = u.id
-ORDER BY u.alkupvm DESC, ut.hoitokausi;
+FROM urakka u
+     LEFT JOIN urakka_tavoite ut ON ut.urakka = u.id
+WHERE u.tyyppi = 'teiden-hoito'
+ORDER BY u.alkupvm DESC, ut.hoitokausi, u.nimi ;
 
 
 -- name: paivita-tarjoushinta<!
