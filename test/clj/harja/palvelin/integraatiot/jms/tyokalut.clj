@@ -217,7 +217,8 @@
   (let [attribute (when attribute
                     {:type "read"
                      :attribute (case attribute
-                                  ;; Aiemmin käytettyjen Apache Classic attribuuttien (DispatchCount, InFlightCount, DequeueCount, EnqueueCount) dokumentaatio:
+                                  ;; Aiemmin käytettyjen Apache Classic attribuuttien dokumentaatio
+                                  ;; Testeissä käytettiin attribuutteja: DispatchCount, InFlightCount, DequeueCount, EnqueueCount
                                   ;;  https://activemq.apache.org/components/classic/documentation/how-do-i-find-the-size-of-a-queue
                                   ;;  * Enqueue Count - the total number of messages sent to the queue since the last restart
                                   ;;  * Dequeue Count - the total number of messages removed from the queue (ack’d by consumer) since last restart
@@ -225,21 +226,21 @@
                                   ;;  * Dispatch Count - the total number of messages sent to consumer sessions (Dequeue + Inflight)
                                   ;;  * Expired Count - the number of messages that were not delivered because they were expired
 
-                                  ;; -- Vastaavat Apache Artemis attribuutit (kaivettu Apache Artmemis kälin kautta:
-                                  ;; TODO: dispatch-countille en löytänyt ihan heti vastaavaa attribuuttia Artemiksesta, pitää penkoa lisää.
-                                  :dispatch-count "DispatchCount"
+                                  ;; Uudet ActiveMQ Artemis attribuutit:
+                                  ;; Artemis: Number of messages acknowledged from this queue since it was created (HOX! Siitä lähtien kun jono luotu)
+                                  :messages-acknowledged "MessagesAcknowledged"
+                                  ;; Artemis: Number of messages added to this queue since it was created (HOX! Siitä lähtien kun jono luotu)
+                                  :messages-added "MessagesAdded"
                                   ;; Artemis: number of messages that this queue is currently delivering to its consumers
-                                  :in-flight-count "DeliveringCount"
-                                  ;; Artemis: Number of messages acknowledged from this queue since it was created
-                                  :dequeue-count "MessagesAcknowledged"
-                                  ;; Artemis: Number of messages added to this queue since it was created
-                                  :enqueue-count "MessagesAdded")})
+                                  :delivering-count "DeliveringCount"
+                                  ;; Artemis: Number of messages currently in this queue (includes scheduled, paged, and in-delivery messages)
+                                  :message-count "MessageCount")})
         operation (when operation
                     {:type "EXEC"
                      :operation (case operation
-                                  ;; Vastaava operaatio Artemiksessa on "removeAllMessages"
-                                  ;; Remove all the messages from the Queue (and returns the number of removed messages)
-                                  :purge "removeAllMessages")})
+                                  ;; Vastaava operaatio Artemiksessa on "removeAllMessages()"
+                                  ;; Artemis: Remove all the messages from the Queue (and returns the number of removed messages)
+                                  :purge "removeAllMessages()")})
         sanoma (merge {:mbean (str "org.apache.activemq.artemis:"
                                 "broker=\"0.0.0.0\""
                                 ",component=addresses"
