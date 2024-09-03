@@ -66,7 +66,9 @@ WHERE ulompi_i.id IN
        (sisempi_i."toimenpiteet-aloitettu" BETWEEN :toimenpiteet_alku::TIMESTAMP AND :toimenpiteet_loppu::TIMESTAMP)) AND
 
       -- Tarkista ilmoituksen tilat
-      ((:kuittaamattomat IS TRUE AND sisempi_i.tila = 'kuittaamaton' :: ilmoituksen_tila) OR
+      -- jos tila sisältää kuittaamattomat, huomioidaan myös harvinainen erikoistapaus eli ne, jotka ovat kuittaamattomia mutta joiden
+      -- vastaanottoa ei ole vielä välitetty T-Loikiin, joiden tila = 'ei-valitetty'
+      ((:kuittaamattomat IS TRUE AND sisempi_i.tila IN ('kuittaamaton', 'ei-valitetty')) OR
        (:vastaanotetut IS TRUE AND sisempi_i.tila = 'vastaanotettu' :: ilmoituksen_tila) OR
        (:aloitetut IS TRUE AND sisempi_i.tila = 'aloitettu' :: ilmoituksen_tila) OR
        (:lopetetut IS TRUE AND sisempi_i.tila = 'lopetettu' :: ilmoituksen_tila)) AND
@@ -483,7 +485,8 @@ INSERT INTO ilmoitus
  aihe,
  tarkenne,
  kuvat,
- "emon-ilmoitusid")
+ "emon-ilmoitusid",
+ tila)
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -504,8 +507,8 @@ VALUES
    :aihe,
    :tarkenne,
    :kuvat :: TEXT [],
-   :emon-ilmoitusid
-   );
+   :emon-ilmoitusid,
+   'ei-valitetty'::ilmoituksen_tila);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
@@ -529,6 +532,15 @@ SET urakka               = :urakka,
     tarkenne = :tarkenne,
     kuvat = :kuvat::TEXT[]
 WHERE id = :id;
+
+-- name: paivita-ilmoitus-valitetty!
+-- Päivittää ilmoitukseen Harja id:n perusteella tiedon siitä, että ilmoitus on välitetty T-Loikiin
+-- Asettaa ilmoituksen tilan "normaaliksi" eli 'kuittaamaton'. Jos ilmoitukseen on jo ehditty tehdä ilmoitus-
+-- toimenpiteitä eli kuittauksia kuten 'aloitettu', tällöin ei muuteta tilaa enää takaisinpäin.
+UPDATE ilmoitus
+   SET tila = 'kuittaamaton'::ilmoituksen_tila
+ WHERE id = :id AND tila = 'ei-valitetty';
+
 
 -- name: paivita-ilmoituksen-urakka!
 -- Päivittää ilmoitusid:n perusteella urakan. Käytetään, kun on lähetetty ilmoitus ensin väärälle urakalle
