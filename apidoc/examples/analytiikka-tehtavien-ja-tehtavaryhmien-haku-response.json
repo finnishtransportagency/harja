@@ -1,0 +1,130 @@
+{
+  "tehtavat": [
+    {
+      "emo": 618,
+      "hinnoittelu": [
+        "yksikkohintainen"
+      ],
+      "suunnitteluyksikko": "tonni",
+      "jarjestys": 400,
+      "materiaaliluokka_id": null,
+      "yksikko": "tonni",
+      "luotu": "2020-06-11T11:58:21Z",
+      "materiaalikoodi_id": null,
+      "yksiloiva_tunniste": null,
+      "nimi": "Päällystyksen paikkaus",
+      "voimassaolo_loppuvuosi": 2020,
+      "piilota": null,
+      "id": 33333,
+      "tehtavaryhma": 385,
+      "poistettu": false,
+      "suoritettavatehtava": null,
+      "toimenpidekoodi": "20107",
+      "kasin_lisattava_maara": false,
+      "aluetieto": false,
+      "raportoi-tehtava?": true,
+      "ensisijainen": null,
+      "muokattu": "2020-06-11T11:58:21Z",
+      "voimassaolo_alkuvuosi": null
+    },
+    {
+      "emo": 618,
+      "hinnoittelu": [
+        "kokonaishintainen"
+      ],
+      "suunnitteluyksikko": "kuivatonnia",
+      "jarjestys": 250,
+      "materiaaliluokka_id": 1,
+      "yksikko": "jkm",
+      "luotu": null,
+      "materiaalikoodi_id": null,
+      "yksiloiva_tunniste": null,
+      "nimi": "Suolaus",
+      "voimassaolo_loppuvuosi": null,
+      "piilota": null,
+      "id": 1369,
+      "tehtavaryhma": 320,
+      "poistettu": false,
+      "suoritettavatehtava": "suolaus",
+      "toimenpidekoodi": "23104",
+      "kasin_lisattava_maara": false,
+      "aluetieto": true,
+      "raportoi-tehtava?": false,
+      "ensisijainen": true,
+      "muokattu": "2023-05-04T04:00:18Z",
+      "voimassaolo_alkuvuosi": null
+    },
+    {
+      "emo": 612,
+      "hinnoittelu": [
+        "kokonaishintainen",
+        "yksikkohintainen"
+      ],
+      "suunnitteluyksikko": null,
+      "jarjestys": 500,
+      "materiaaliluokka_id": null,
+      "yksikko": "",
+      "luotu": "2019-07-11T04:00:26Z",
+      "materiaalikoodi_id": null,
+      "yksiloiva_tunniste": null,
+      "nimi": "Liikennemerkkien ja opasteiden kunnossapito",
+      "voimassaolo_loppuvuosi": null,
+      "piilota": null,
+      "id": 232323,
+      "tehtavaryhma": 323,
+      "poistettu": false,
+      "suoritettavatehtava": null,
+      "toimenpidekoodi": "23116",
+      "kasin_lisattava_maara": false,
+      "aluetieto": false,
+      "raportoi-tehtava?": false,
+      "ensisijainen": true,
+      "muokattu": null,
+      "voimassaolo_alkuvuosi": 2019
+    }
+  ],
+  "tehtavaryhmat": [
+    {
+      "jarjestys": 25,
+      "luotu": "2019-10-23T02:47:17Z",
+      "yksiloiva_tunniste": null,
+      "nimi": "Talvisuola (B1)",
+      "voimassaolo_loppuvuosi": null,
+      "otsikko": "1.0 TALVIHOITO",
+      "id": 320,
+      "versio": null,
+      "poistettu": false,
+      "toimenpidekoodi": "23104",
+      "muokattu": null,
+      "voimassaolo_alkuvuosi": null
+    },
+    {
+      "jarjestys": 35,
+      "luotu": "2019-10-23T02:47:17Z",
+      "yksiloiva_tunniste": null,
+      "nimi": "Liikennemerkit ja liikenteenohjauslaitteet (L)",
+      "voimassaolo_loppuvuosi": null,
+      "otsikko": "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen",
+      "id": 323,
+      "versio": null,
+      "poistettu": false,
+      "toimenpidekoodi": "23116",
+      "muokattu": null,
+      "voimassaolo_alkuvuosi": null
+    },
+    {
+      "jarjestys": 107,
+      "luotu": "2019-10-23T02:47:24Z",
+      "yksiloiva_tunniste": null,
+      "nimi": "Saumojen juottaminen bitumilla (Y6)",
+      "voimassaolo_loppuvuosi": null,
+      "otsikko": "4 PÄÄLLYSTEIDEN PAIKKAUS",
+      "id": 385,
+      "versio": null,
+      "poistettu": false,
+      "toimenpidekoodi": "20107",
+      "muokattu": null,
+      "voimassaolo_alkuvuosi": null
+    }
+  ]
+}

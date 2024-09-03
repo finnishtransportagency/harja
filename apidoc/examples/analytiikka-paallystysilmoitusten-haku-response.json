@@ -1,0 +1,276 @@
+{
+  "paallystysilmoitukset": [
+    {
+      "takuupaivamaara": "2023-07-31T21:00:00Z",
+      "paallystyskohde": 33,
+      "kulutuskerrokselleTehdytToimetPOT2": [
+        {
+          "leveys": 4.00,
+          "kokonaismassamaara": 120,
+          "tierekisteriosoitevali": {
+            "ajorata": 1,
+            "kaista": 1,
+            "aosa": 20,
+            "let": 1300,
+            "losa": 20,
+            "tienumero": 86,
+            "aet": 650
+          },
+          "pintaAla": 1200,
+          "paallystetyomenetelma": "Karhinta",
+          "massamenekki": 100.0,
+          "rc-prosentti": 100,
+          "poistettu": false,
+          "pituus": 650,
+          "alikohde": 48
+        },
+        {
+          "leveys": 4.00,
+          "kokonaismassamaara": 28,
+          "massa": {
+            "litteyslukuluokka": "FI15",
+            "kuulamyllyluokka": "AN10",
+            "massatyyppi": "AB, Asfalttibetoni",
+            "runkoaineet": [
+              {
+                "fillerityyppi": "Kalkkifilleri (KF)",
+                "runkoainetyyppi": "Erikseen lisättävä fillerikiviaines",
+                "massaprosentti": 1.0
+              },
+              {
+                "litteysluku": 20.0,
+                "kuulamyllyarvo": 10.0,
+                "runkoainetyyppi": "Kiviaines",
+                "massaprosentti": 100.0
+              }
+            ],
+            "lisaaineet": [
+              {
+                "tyyppi": "Kuitu",
+                "pitoisuus": 0.5
+              }
+            ],
+            "sideaineet": [
+              {
+                "tyyppi": "Bitumi, 20/30",
+                "pitoisuus": 5.5
+              }
+            ]
+          },
+          "tierekisteriosoitevali": {
+            "ajorata": 1,
+            "kaista": 1,
+            "aosa": 20,
+            "let": 650,
+            "losa": 20,
+            "tienumero": 86,
+            "aet": 300
+          },
+          "pintaAla": 1400,
+          "paallystetyomenetelma": "REMIX-pintaus",
+          "massamenekki": 20.0,
+          "rc-prosentti": 80.0,
+          "poistettu": false,
+          "pituus": 350,
+          "alikohde": 47
+        },
+        {
+          "leveys": 4.00,
+          "kokonaismassamaara": 260,
+          "massa": {
+            "litteyslukuluokka": "FI15",
+            "kuulamyllyluokka": "AN7",
+            "massatyyppi": "SMA, Kivimastiksiasfaltti",
+            "runkoaineet": [
+              {
+                "litteysluku": 20.0,
+                "kuulamyllyarvo": 10.0,
+                "runkoainetyyppi": "Asfalttirouhe",
+                "massaprosentti": 10.0
+              },
+              {
+                "fillerityyppi": "Kalkkifilleri (KF)",
+                "runkoainetyyppi": "Erikseen lisättävä fillerikiviaines",
+                "massaprosentti": 5.0
+              },
+              {
+                "litteysluku": 20.0,
+                "kuulamyllyarvo": 10.0,
+                "runkoainetyyppi": "Kiviaines",
+                "massaprosentti": 85.0
+              }
+            ],
+            "lisaaineet": [
+              {
+                "tyyppi": "Kuitu",
+                "pitoisuus": 0.5
+              }
+            ],
+            "sideaineet": [
+              {
+                "tyyppi": "Bitumi, 20/30",
+                "pitoisuus": 5.5
+              }
+            ]
+          },
+          "tierekisteriosoitevali": {
+            "ajorata": 1,
+            "kaista": 1,
+            "aosa": 20,
+            "let": 300,
+            "losa": 20,
+            "tienumero": 86,
+            "aet": 0
+          },
+          "pintaAla": 2600,
+          "paallystetyomenetelma": "Massapintaus",
+          "massamenekki": 100.0,
+          "rc-prosentti": 10.0,
+          "poistettu": false,
+          "pituus": 300,
+          "alikohde": 46
+        }
+      ],
+      "alustalleTehdytToimetPOT2": [
+        {
+          "massa": {
+            "litteyslukuluokka": "FI15",
+            "kuulamyllyluokka": "AN10",
+            "massatyyppi": "AB, Asfalttibetoni",
+            "runkoaineet": [
+              {
+                "fillerityyppi": "Kalkkifilleri (KF)",
+                "runkoainetyyppi": "Erikseen lisättävä fillerikiviaines",
+                "massaprosentti": 1.0
+              },
+              {
+                "litteysluku": 20.0,
+                "kuulamyllyarvo": 10.0,
+                "runkoainetyyppi": "Kiviaines",
+                "massaprosentti": 100.0
+              }
+            ],
+            "lisaaineet": [
+              {
+                "tyyppi": "Kuitu",
+                "pitoisuus": 0.5
+              }
+            ],
+            "sideaineet": [
+              {
+                "tyyppi": "Bitumi, 20/30",
+                "pitoisuus": 5.5
+              }
+            ]
+          },
+          "tierekisteriosoitevali": {
+            "ajorata": 1,
+            "kaista": 1,
+            "aosa": 20,
+            "let": 300,
+            "losa": 20,
+            "tienumero": 86,
+            "aet": 0
+          },
+          "kasittelymenetelma": "Massatasaus",
+          "massamenekki": 0.10,
+          "poistettu": false,
+          "pituus": 300
+        },
+        {
+          "massa": {
+            "litteyslukuluokka": "FI15",
+            "kuulamyllyluokka": "AN10",
+            "massatyyppi": "AB, Asfalttibetoni",
+            "runkoaineet": [
+              {
+                "fillerityyppi": "Kalkkifilleri (KF)",
+                "runkoainetyyppi": "Erikseen lisättävä fillerikiviaines",
+                "massaprosentti": 1.0
+              },
+              {
+                "litteysluku": 20.0,
+                "kuulamyllyarvo": 10.0,
+                "runkoainetyyppi": "Kiviaines",
+                "massaprosentti": 100.0
+              }
+            ],
+            "lisaaineet": [
+              {
+                "tyyppi": "Kuitu",
+                "pitoisuus": 0.5
+              }
+            ],
+            "sideaineet": [
+              {
+                "tyyppi": "Bitumi, 20/30",
+                "pitoisuus": 5.5
+              }
+            ]
+          },
+          "tierekisteriosoitevali": {
+            "ajorata": 1,
+            "kaista": 1,
+            "aosa": 20,
+            "let": 650,
+            "losa": 20,
+            "tienumero": 86,
+            "aet": 300
+          },
+          "kasittelymenetelma": "Massatasaus",
+          "massamenekki": 0.10,
+          "poistettu": false,
+          "pituus": 350
+        },
+        {
+          "massa": {
+            "litteyslukuluokka": "FI15",
+            "kuulamyllyluokka": "AN10",
+            "massatyyppi": "AB, Asfalttibetoni",
+            "runkoaineet": [
+              {
+                "fillerityyppi": "Kalkkifilleri (KF)",
+                "runkoainetyyppi": "Erikseen lisättävä fillerikiviaines",
+                "massaprosentti": 1.0
+              },
+              {
+                "litteysluku": 20.0,
+                "kuulamyllyarvo": 10.0,
+                "runkoainetyyppi": "Kiviaines",
+                "massaprosentti": 100.0
+              }
+            ],
+            "lisaaineet": [
+              {
+                "tyyppi": "Kuitu",
+                "pitoisuus": 0.5
+              }
+            ],
+            "sideaineet": [
+              {
+                "tyyppi": "Bitumi, 20/30",
+                "pitoisuus": 5.5
+              }
+            ]
+          },
+          "tierekisteriosoitevali": {
+            "ajorata": 1,
+            "kaista": 1,
+            "aosa": 20,
+            "let": 1300,
+            "losa": 20,
+            "tienumero": 86,
+            "aet": 650
+          },
+          "kasittelymenetelma": "Massatasaus",
+          "massamenekki": 0.10,
+          "poistettu": false,
+          "pituus": 650
+        }
+      ],
+      "toteutunutHinta": 98900,
+      "poistettu": false,
+      "yhaLahetyksenTila": "Lähetetty onnistuneesti"
+    }
+  ]
+}

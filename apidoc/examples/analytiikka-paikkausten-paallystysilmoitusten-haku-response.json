@@ -1,0 +1,80 @@
+{
+  "paallystysilmoitukset": [
+    {
+      "takuupaivamaara": "2023-11-01T22:00:00Z",
+      "paallystyskohde": 32,
+      "poistettu": false,
+      "kulutuskerrokselleTehdytToimetPOT2": [
+        {
+          "leveys": 4.00,
+          "kokonaismassamaara": 46,
+          "massa": {
+            "litteyslukuluokka": "FI15",
+            "kuulamyllyluokka": "AN10",
+            "massatyyppi": "AB, Asfalttibetoni",
+            "runkoaineet": [
+              {
+                "fillerityyppi": "Kalkkifilleri (KF)",
+                "runkoainetyyppi": "Erikseen lisättävä fillerikiviaines",
+                "massaprosentti": 1.0
+              },
+              {
+                "litteysluku": 20.0,
+                "kuulamyllyarvo": 10.0,
+                "runkoainetyyppi": "Kiviaines",
+                "massaprosentti": 100.0
+              }
+            ],
+            "lisaaineet": [
+              {
+                "tyyppi": "Kuitu",
+                "pitoisuus": 0.5
+              }
+            ],
+            "sideaineet": [
+              {
+                "tyyppi": "Bitumi, 20/30",
+                "pitoisuus": 5.5
+              }
+            ]
+          },
+          "tierekisteriosoitevali": {
+            "ajorata": 1,
+            "kaista": 11,
+            "aosa": 20,
+            "let": 100,
+            "losa": 20,
+            "tienumero": 86,
+            "aet": 0
+          },
+          "pintaAla": 400,
+          "paallystetyomenetelma": "Paksuudeltaan vakio laatta",
+          "massamenekki": 115.0,
+          "poistettu": false,
+          "pituus": 100,
+          "alikohde": 45
+        }
+      ],
+      "alustalleTehdytToimetPOT2": [
+        {
+          "tierekisteriosoitevali": {
+            "ajorata": 1,
+            "kaista": 11,
+            "aosa": 20,
+            "let": 100,
+            "losa": 20,
+            "tienumero": 86,
+            "aet": 0
+          },
+          "kasittelymenetelma": "Laatikkojyrsintä",
+          "kasittelysyvyys": 4,
+          "poistettu": false,
+          "pituus": 100
+        }
+      ],
+      "yhaLahetyksenTila": "Lähetetty onnistuneesti"
+    }
+  ]
+}
+
+
