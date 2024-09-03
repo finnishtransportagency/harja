@@ -1,7 +1,10 @@
-<b>Nykyinen versio: 1.0.63</b>
-<b>Julkaistu: 22.08.2023</b>
+<b>Nykyinen versio: 1.0.64</b>
+<b>Julkaistu: 05.09.2024</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.64 Julkaistu 05.09.2024
+    - Suoritettavat tehtävät-enumeraatioon lisätty tehtäviä kuluneen vuoden aikana
+    - Varusterajapinta poistettu 2023
 - Versionumero 1.0.63 Julkaistu 22.08.2023
     - Lisätty tieturvallisuustarkastus rajapinta.
 - Versionumero 1.0.62 Julkaistu 14.08.2023
