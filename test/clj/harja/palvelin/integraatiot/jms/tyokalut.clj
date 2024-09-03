@@ -22,7 +22,8 @@
 
   (let [options (merge
                   {:timeout 200
-                   :basic-auth ["admin" "admin"]
+                   :basic-auth [(env/env "HARJA_ITMF_BROKER_KAYTTAJA" "admin")
+                                (env/env "HARJA_ITMF_BROKER_SALASANA" "admin")]
                    :body (cheshire/encode sanoma)}
                   options)
         vastaus @(http/post (str "http://"

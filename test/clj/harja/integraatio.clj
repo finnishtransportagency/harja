@@ -14,8 +14,8 @@
 ;; 4. Käynnistä Harja REPL ja aja JMS-testit
 ;; Huomioi, että Apache Artemis vaatii aina käyttäjätunnuksen ja salasanan, testeissä ja lokaalikehityksessä käytetään admin/admin.
 (def itmf-asetukset {:url (str "tcp://" (env/env "HARJA_ITMF_BROKER_HOST" "localhost") ":" (env/env "HARJA_ITMF_BROKER_PORT" 61626))
-                     :kayttaja "admin"
-                     :salasana "admin"
+                     :kayttaja (env/env "HARJA_ITMF_BROKER_KAYTTAJA" "admin")
+                     :salasana (env/env "HARJA_ITMF_BROKER_SALASANA" "admin")
                      :tyyppi :activemq
                      :paivitystiheys-ms 3000})
 
