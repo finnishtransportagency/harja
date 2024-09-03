@@ -13,7 +13,16 @@
            (clojure.core.async.impl.channels ManyToManyChannel)
            (org.apache.activemq ActiveMQConnection ActiveMQConnectionFactory)))
 
-(defn konfiguroi-activemq-jms-connection-factory [connection-factory url]
+;;  Huomioi, että sovelluksessa käytetää Apache ActiveMQ Classic clienttiä, ja yhteys otetaan ActiveMQ Artemis brokeriin.
+;;  Artemis broker tukee JMS protokollaa, kuten myös Classic client.
+;;  Mutta, client-versiota päivittäessä (project.clj tiedostossa) on hyvä tarkistaa, että client ja broker versiot ovat yhteensopivia
+;;  JMS protokollan osalta.
+;;  ActiveMQ Classic Client: https://activemq.apache.org/components/classic/documentation/jms2
+;;  ActiveMQ Artemis Broker: https://activemq.apache.org/components/artemis/documentation/latest/protocols-interoperability.html#openwire
+
+(defn konfiguroi-activemq-jms-connection-factory
+  "Konfiguroidaan ActiveMQ JMS-yhteyden asetukset."
+  [connection-factory url]
   (doto connection-factory
     ;; https://activemq.apache.org/components/classic/documentation/failover-transport-reference
     ;; initialReconnectDelay: Aika millisekunteina, jonka jälkeen ensimmäinen reconnect tehdään.
