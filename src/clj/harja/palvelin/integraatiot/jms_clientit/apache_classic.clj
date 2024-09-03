@@ -73,7 +73,7 @@
       (yhdista asetukset qcf (min (* 2 aika) 600000) jms-connection-tila))))
 
 (defn yhdista! [{:keys [nimi asetukset]} jms-connection-tila]
-  (log/info "Yhdistetään ActiveMQ Classic JMS-brokeriin URL:lla:" (:url asetukset))
+  (log/info "Yhdistetään ActiveMQ Artemis JMS-brokeriin URL:lla:" (:url asetukset))
   (future
     (loop []
       (let [qcf (luo-connection-factory (:url asetukset))
