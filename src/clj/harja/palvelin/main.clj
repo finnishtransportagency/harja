@@ -86,6 +86,7 @@
     [harja.palvelin.palvelut.muokkauslukko :as muokkauslukko]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
     [harja.palvelin.palvelut.laadunseuranta.tarkastukset :as tarkastukset]
+    [harja.palvelin.palvelut.laadunseuranta.talvihoitoreitit :as talvihoitoreitit]
     [harja.palvelin.palvelut.varuste-ulkoiset :as varuste-ulkoiset]
     [harja.palvelin.palvelut.yha :as yha]
     [harja.palvelin.palvelut.yha-velho :as yha-velho]
@@ -508,7 +509,11 @@
 
       :tarkastukset (component/using
                       (tarkastukset/->Tarkastukset)
-                      [:http-palvelin :db  :karttakuvat])
+                      [:http-palvelin :db :karttakuvat])
+
+      :talvihoitoreitit (component/using
+                      (talvihoitoreitit/->Talvihoitoreitit)
+                      [:http-palvelin :db])
 
       :ilmoitukset (component/using
                      (ilmoitukset/->Ilmoitukset)
@@ -723,7 +728,7 @@
                               (api-tyomaapaivakirja/->Tyomaapaivakirja)
                               [:http-palvelin :db :integraatioloki])
       :api-talvihoitoreitit (component/using
-                              (api-talvihoitoreitit/->Talvihoitoreitit)
+                              (api-talvihoitoreitit/->TalvihoitoreittiAPI)
                               [:http-palvelin :db :integraatioloki])
 
       :tieluvat (component/using
