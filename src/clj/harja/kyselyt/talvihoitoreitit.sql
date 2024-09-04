@@ -1,6 +1,6 @@
 -- name: lisaa-talvihoitoreitti<!
-INSERT INTO talvihoitoreitti (nimi, urakka_id, luotu, luoja)
-VALUES (:nimi, :urakka_id, NOW(), :kayttaja_id);
+INSERT INTO talvihoitoreitti (nimi, urakka_id, ulkoinen_id, luotu, luoja)
+VALUES (:nimi, :urakka_id, :ulkoinen_id, NOW(), :kayttaja_id);
 
 -- name: lisaa-kalusto-talvihoitoreitille<!
 INSERT INTO talvihoitoreitti_kalusto (talvihoitoreitti_id, kalustotyyppi, maara)

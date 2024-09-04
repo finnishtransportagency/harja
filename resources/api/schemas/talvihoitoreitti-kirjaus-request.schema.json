@@ -3,6 +3,11 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "ulkoinen-id": {
+      "type": "string",
+      "required": true,
+      "description": "Lähettävän järjestelmän sisäinen tunniste. Käytetään reitin päivityksessä ja poistossa."
+    },
     "reittinimi": {
       "type": "string",
       "required": true,
@@ -11,6 +16,7 @@
     "kalusto": {
       "type": "array",
       "description": "Minkälaista kalustoa käytetään tämän reitin hoidossa.",
+      "additionalProperties": false,
       "items": {
         "type": "object",
         "properties": {
@@ -24,8 +30,7 @@
             "minimum": 1
           }
         },
-        "required": ["kalustotyyppi", "kalusto-lkm"],
-        "additionalProperties": false
+        "required": ["kalustotyyppi", "kalusto-lkm"]
       }
     },
     "reitti": {
@@ -33,6 +38,7 @@
       "description": "Reitti voi koostua useista tieosoitteista. Katko tien vaihtuessa reitti useampaan osaan tai jos samalla tiellä on katkoja.",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
           "tie": {
             "type": "integer",
@@ -65,11 +71,9 @@
             "minimum": 0
           }
         },
-        "required": ["tie", "aosa", "aet", "losa", "let", "pituus"],
-        "additionalProperties": false
+        "required": ["tie", "aosa", "aet", "losa", "let", "pituus"]
       }
     }
   },
-  "required": ["otsikko","kalustotyyppi", "kalustomaara"],
-  "additionalProperties": false
+  "required": ["ulkoinen-id", "reittinimi", "kalusto", "reitti"]
 }
