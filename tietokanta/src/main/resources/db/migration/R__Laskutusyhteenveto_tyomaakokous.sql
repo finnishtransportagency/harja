@@ -261,21 +261,6 @@ DECLARE
 
 BEGIN
 
-    -- Alusta hankitojen muuttujat, on tehtävä tässä muuten tulee virhettä
-    SELECT NULL::numeric AS summa INTO talvihoito_rivi;
-	  SELECT NULL::numeric AS summa INTO lisatyo_talvihoito_rivi;
-    SELECT NULL::numeric AS summa INTO lyh_rivi;
-    SELECT NULL::numeric AS summa INTO lisatyo_lyh_rivi;
-    SELECT NULL::numeric AS summa INTO sora_rivi;
-    SELECT NULL::numeric AS summa INTO lisatyo_sora_rivi;
-    SELECT NULL::numeric AS summa INTO paallyste_rivi;
-    SELECT NULL::numeric AS summa INTO lisatyo_paallyste_rivi;
-    SELECT NULL::numeric AS summa INTO yllapito_rivi;
-    SELECT NULL::numeric AS summa INTO lisatyo_yllapito_rivi;
-    SELECT NULL::numeric AS summa INTO korvausinv_rivi;
-    SELECT NULL::numeric AS summa INTO lisatyo_korvausinv_rivi;
-    SELECT NULL::numeric AS summa INTO lisatyo_hoidonjohto_rivi;
-
     perusluku := indeksilaskennan_perusluku(ur);
     hk_alkuvuosi := (SELECT EXTRACT(YEAR FROM hk_alkupvm) :: INTEGER);
     hk_alkukuukausi := (SELECT EXTRACT(MONTH FROM hk_alkupvm) :: INTEGER);
@@ -431,6 +416,21 @@ BEGIN
               AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
 
         LOOP
+
+        -- Alusta hankitojen muuttujat, on tehtävä tässä muuten tulee virhettä
+		    SELECT NULL::numeric AS summa INTO talvihoito_rivi;
+			  SELECT NULL::numeric AS summa INTO lisatyo_talvihoito_rivi;
+		    SELECT NULL::numeric AS summa INTO lyh_rivi;
+		    SELECT NULL::numeric AS summa INTO lisatyo_lyh_rivi;
+		    SELECT NULL::numeric AS summa INTO sora_rivi;
+		    SELECT NULL::numeric AS summa INTO lisatyo_sora_rivi;
+		    SELECT NULL::numeric AS summa INTO paallyste_rivi;
+		    SELECT NULL::numeric AS summa INTO lisatyo_paallyste_rivi;
+		    SELECT NULL::numeric AS summa INTO yllapito_rivi;
+		    SELECT NULL::numeric AS summa INTO lisatyo_yllapito_rivi;
+		    SELECT NULL::numeric AS summa INTO korvausinv_rivi;
+		    SELECT NULL::numeric AS summa INTO lisatyo_korvausinv_rivi;
+		    SELECT NULL::numeric AS summa INTO lisatyo_hoidonjohto_rivi;
 
             RAISE NOTICE 'rivi: %', rivi;
             -- Kohdista talvihoitoon liittyvät rivit talvihoito_rivi:lle
