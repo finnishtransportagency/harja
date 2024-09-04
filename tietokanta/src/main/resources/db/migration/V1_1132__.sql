@@ -81,3 +81,8 @@ BEGIN
         END IF;
     END LOOP;
 END $$;
+
+
+-- TL;DR
+-- Korjataan 'Muut päällysteiden paikkaukseen liittyvät työt' tehtävän emo,
+-- ja korjataan samalla instanssit kulu_kohdistus tauluun kirjatut kulut tälle tehtävälle  

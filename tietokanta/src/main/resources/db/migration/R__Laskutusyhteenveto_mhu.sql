@@ -850,9 +850,15 @@ BEGIN
             kaikki_rahavaraukset_val_yht := kaikki_rahavaraukset_val_yht + val_aika_yht_array[i];
         END LOOP;
 
+
+        -----------------------------------------------------------
+        -------------------  Hankinnat    -------------------------
+        -----------------------------------------------------------
+
+
         -- Rahavaraus kannustinjärjestelmä id, rahavaraus taulusta 
         -- Korvaa yksilöivän tunnisteen 0e78b556-74ee-437f-ac67-7a03381c64f6
-        SELECT id INTO kannustin_id FROM rahavaraus WHERE nimi LIKE '%Kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
+        SELECT id INTO kannustin_id FROM rahavaraus WHERE nimi LIKE '%kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
 
         -- Hoitokaudella ennen aikaväliä ja aikavälillä laskutetut hankinnat työt
         -- Paitsi hoidon johdon hankinnat, jotka on erillishankintoja ja ne on otettu huomioon eri kohdassa
@@ -874,7 +880,7 @@ BEGIN
                   AND lk.poistettu IS NOT TRUE
                   AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                   -- Poistetaan rahavaraus kannustinjärjestelmään (T3) hankinnoista, ja lisätään se omalle rivilleen
-                  AND (tr.yksiloiva_tunniste IS NULL OR lk.rahavaraus_id != kannustin_id)
+                  AND (tr.yksiloiva_tunniste IS NULL OR(lk.rahavaraus_id IS NULL OR lk.rahavaraus_id != kannustin_id))
                   AND lk.tavoitehintainen = TRUE
             LOOP
                 SELECT  hankinnat_i.kht_summa AS summa,

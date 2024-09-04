@@ -397,7 +397,7 @@ BEGIN
 
     -- Rahavaraus kannustinjärjestelmä id, rahavaraus taulusta 
     -- Korvaa yksilöivän tunnisteen 0e78b556-74ee-437f-ac67-7a03381c64f6
-    SELECT id INTO kannustin_id FROM rahavaraus WHERE nimi LIKE '%Kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
+    SELECT id INTO kannustin_id FROM rahavaraus WHERE nimi LIKE '%kannustinjärjestelmä%' ORDER BY id ASC LIMIT 1;
 
     -- Hae rahavaraus id:t äkillisille hoitotöille ja vahingoille, uusi tietomalli korvaa vanhaa koodia jossa haetaan kulu_kohdistus maksuerätyypillä
     SELECT id INTO akilliset_id FROM rahavaraus WHERE nimi LIKE '%Äkilliset hoitotyöt%' ORDER BY id ASC LIMIT 1;
@@ -534,7 +534,7 @@ BEGIN
             -- Eli uudella rahavaraustietomallilla rahavaraus_id = kannustin_id
             IF rivi.tavoitehintainen IS TRUE
             AND rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' AND
-               (rivi.yksiloiva_tunniste IS NULL OR rivi.rahavaraus_id != kannustin_id) THEN
+               (rivi.yksiloiva_tunniste IS NULL OR (rivi.rahavaraus_id IS NULL OR rivi.rahavaraus_id != kannustin_id)) THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -548,7 +548,7 @@ BEGIN
             -- Katso että ei kuulu kannustinjärjestelmään
             IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
             AND rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' AND
-               (rivi.yksiloiva_tunniste IS NULL OR rivi.rahavaraus_id != kannustin_id) THEN
+               (rivi.yksiloiva_tunniste IS NULL OR (rivi.rahavaraus_id IS NULL OR rivi.rahavaraus_id != kannustin_id)) THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -697,7 +697,7 @@ BEGIN
 
                 -- MHU ylläpidon kulut, jotka eivät ole lisätöitä, eivätkä kannustinjärjestelmä rahavarauksia
                 IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' AND
-                   (rivi.yksiloiva_tunniste IS NULL OR rivi.rahavaraus_id != kannustin_id) THEN
+                   (rivi.yksiloiva_tunniste IS NULL OR (rivi.rahavaraus_id IS NULL OR rivi.rahavaraus_id != kannustin_id)) THEN
 
                     yllapito_hoitokausi_yht := yllapito_hoitokausi_yht + COALESCE(yllapito_rivi.summa, 0.0);
                     RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && yllapito_tpi  THEN: %', yllapito_hoitokausi_yht;
@@ -710,7 +710,7 @@ BEGIN
 
                 -- MHU ylläpidon kulut, joka on lisätyö , mutta ei kohdistettu rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)
                 IF rivi.toimenpideinstanssi_id = yllapito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' AND
-                   (rivi.yksiloiva_tunniste IS NULL OR rivi.rahavaraus_id != kannustin_id) THEN
+                   (rivi.yksiloiva_tunniste IS NULL OR (rivi.rahavaraus_id IS NULL OR rivi.rahavaraus_id != kannustin_id)) THEN
 
                     lisatyo_yllapito_hoitokausi_yht :=
                             lisatyo_yllapito_hoitokausi_yht + COALESCE(lisatyo_yllapito_rivi.summa, 0.0);
