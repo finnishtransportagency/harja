@@ -395,15 +395,6 @@
 (defonce kuvatason-lataus (atom nil))
 (defonce geometriatason-lataus (atom nil))
 
-;; Määrittelee asiat, jotka ovat nykyisessä pisteessä.
-;; Avaimet:
-;; :koordinaatti  klikatun pisteen koordinatti (tai nil, jos ei valintaa)
-;; :asiat         sekvenssi asioita, joita pisteestä löytyy
-;; :haetaan?      true kun haku vielä kesken
-(defonce asiat-pisteessa (atom {:koordinaatti nil
-                                :haetaan? true
-                                :asiat nil}))
-
 (defn paivitetaan-karttaa
   []
   (when @paivitetaan-karttaa-tila
@@ -467,7 +458,7 @@
   (openlayers/extent-sisaltaa-extent? +koko-suomi-extent+ (geo/extent alue)))
 
 (defn- nayta-infopaneelissa! [& items]
-  (apply swap! asiat-pisteessa update :asiat conj items))
+  (apply swap! tiedot/asiat-pisteessa update :asiat conj items))
 
 (defn- hae-asiat-pisteessa! [tasot event atomi]
   (let [koordinaatti (js->clj (.-coordinate event))
@@ -688,7 +679,7 @@
 
      (when avaa-paneeli? (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
                                                                   event
-                                                                  asiat-pisteessa))
+                                                                  tiedot/asiat-pisteessa))
 
      (when-not (empty? nayta-nama-paneelissa)
        (apply nayta-infopaneelissa! nayta-nama-paneelissa))
@@ -766,7 +757,7 @@
                        :default
                        (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
                          event
-                         asiat-pisteessa))
+                         tiedot/asiat-pisteessa))
                      (.stopPropagation event)
                      (.preventDefault event))
          :on-select kasittele-select!
@@ -823,7 +814,7 @@
    [kartan-ohjelaatikko]
    (when @tiedot/infopaneeli-nakyvissa?
      [:div.kartan-infopaneeli
-      [infopaneeli/infopaneeli @asiat-pisteessa tiedot/piilota-infopaneeli!
+      [infopaneeli/infopaneeli @tiedot/asiat-pisteessa tiedot/piilota-infopaneeli!
        tiedot/infopaneelin-linkkifunktiot]])
    (when-not @tiedot/infopaneeli-nakyvissa? ;; Peittää selitelaatikon, otetaan pois
      [kartan-ikonien-selitykset])
