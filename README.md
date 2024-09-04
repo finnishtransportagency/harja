@@ -454,19 +454,24 @@ Oikean FIM:n testikäyttö:
 2. Avaa SSH-yhteys ssh -L6666:testioag.vayla.fi:443 harja-app1-stg
 
 ## ActiveMQ Artemis
-Käynnistys docker imagesta:
-`docker run -p 127.0.0.1:61616:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9`
-Jos container on jo käytössä/tehty, niin käynnistä se:
-`docker start harja_activemq`
-Jos container ei suostu käynnistymään, poista se ja koita uudestaan - aja:
-`docker rm harja_activemq`
 
-Harjassa pyörii tällä hetkellä kaksi JMS-brokeria. Jos haluat käynnistää molemmat eri porttiin, esim ITMF:n eri portissa, saat ActiveMQ konsolin porttiin 8171 ja TCP-portin 61626 kuunteluun näin:
-`docker run -p 127.0.0.1:61626:61626 -p 127.0.0.1:8171:8171 --env UI_PORT=8171 --env TCP_PORT=61626 --name harja_activemq_itmf -dit solita/harja-activemq:5.15.9`
+Harja käyttää tieliikenneilmoituksiin ja toimenpidekuittausten välitykseen JMS-jonoja.
+Brokerina käytetään ActiveMQ Artemista.  
+CI-putken integraatiotesteissä käytetään dockeroitua ActiveMQ Artemis -palvelinta, jonka voi käynnistää myös paikallisesti yksikkötestien ajamista varten.
 
-URL konsoliin:
-localhost:8162/admin/queues.jsp (admin/admin)
+1. Navigoi ```.github/docker/``` kansioon
+2. Aja ```$ docker compose up --wait activemq-artemis-itmf```
+3. ActiveMQ Artemis on nyt käytettävissä osoitteessa ```tcp://localhost:61616```
+   * Web-konsoli on osoitteessa ```http://localhost:8161```
+   * Käyttäjätunnus: admin ja salasana: admin
+4. Ajaaksesi integraatiotestit paikallisesti, anna testejä varten oikeat ympäristömuuttujat:  
+   ```$ HARJA_ITMF_BROKER_PORT=61616 HARJA_ITMF_BROKER_AI_PORT=8161 lein test :integraatio```
+5. Sammuta ActiveMQ Artemis:  
+   ```$ cd .github/docker/ && docker compose down activemq-artemis-itmf```
 
+**Lisätietoja:** 
+* [.github/docker/activemq-artemis/README.md](.github/docker/activemq-artemis/README.md)
+* [.github/docker/README.md](.github/docker/README.md)
 
 # Harvoin tarvittavaa (jos koskaan)
 
