@@ -476,7 +476,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
     ;; Remove any layers that are no longer present
     (doseq [[key [layer _]] geometry-layers
             :when (nil? (get geometries key))]
-      (log "POISTETAAN KARTTATASO " (name key) " => " layer)
+      (log "POISTETAAN KARTTATASO " (pr-str (name key)) " => " (pr-str layer))
       (.removeLayer ol3 layer))
 
     ;; For each current layer, update layer geometries
