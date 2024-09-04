@@ -1,17 +1,4 @@
 {
-  "otsikko": {
-    "lahettaja": {
-      "jarjestelma": "Autoyksikkö Esimerkki",
-      "organisaatio": {
-        "nimi": "Rakennus Esimerkki Oy",
-        "ytunnus": "1234567-8"
-      }
-    },
-    "viestintunniste": {
-      "id": 1234567
-    },
-    "lahetysaika": "2024-08-27T14:42:28Z"
-  },
   "reittinimi": "Nelostien pikkumutka",
   "kalusto": [
     {
@@ -22,12 +9,27 @@
   "reitti": [
     {
       "tie": 4,
-      "aosa": 101,
+      "aosa": 403,
       "aet": 0,
-      "losa": 101,
-      "let": 3000,
-      "pituus": 3000,
+      "losa": 405,
+      "let": 5000,
       "hoitoluokka": 8
+    },
+    {
+      "tie": 20,
+      "aosa": 1,
+      "aet": 0,
+      "losa": 3,
+      "let": 1000,
+      "hoitoluokka": 1
+    },
+    {
+      "tie": 20,
+      "aosa": 4,
+      "aet": 0,
+      "losa": 10,
+      "let": 14000,
+      "hoitoluokka": 1
     }
   ]
 }

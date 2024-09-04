@@ -1,14 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
-    "otsikko": {
-      "id": "urn:harja/otsikko",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-      "required": true
-    },
     "reittinimi": {
       "type": "string",
       "required": true,
@@ -36,13 +30,13 @@
     },
     "reitti": {
       "type": "array",
-      "description": "Reitti, joka koostuu useista reittipisteistä.",
+      "description": "Reitti voi koostua useista tieosoitteista. Katko tien vaihtuessa reitti useampaan osaan tai jos samalla tiellä on katkoja.",
       "items": {
         "type": "object",
         "properties": {
           "tie": {
             "type": "integer",
-            "description": "Tien numero, jolla reittipiste sijaitsee."
+            "description": "Tienumero"
           },
           "aosa": {
             "type": "integer",
