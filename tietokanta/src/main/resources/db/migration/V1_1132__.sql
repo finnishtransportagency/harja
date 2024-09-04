@@ -26,49 +26,58 @@ DO $$
 DECLARE
     urakka_id INTEGER;
     tehtavaryhma_id INTEGER;
-    toimenpideinstanssi_id INTEGER;
+    tpi_paallystepaikkaus INTEGER;
+    tpi_liikenneymparisto INTEGER;
 BEGIN
+    RAISE NOTICE '***********************************************';
+    RAISE NOTICE 'Ajetaan migraatio 1132 aika: %', current_timestamp;
+
+    -- Hae tehtäväryhmä missä virhe
+    SELECT id INTO tehtavaryhma_id 
+      FROM tehtavaryhma t 
+     WHERE t.nimi = 'Päällysteiden paikkaus (Y)';
+      
     -- Looppaa kaikki teiden-hoito urakat 
     FOR urakka_id IN
         SELECT id FROM urakka WHERE tyyppi = 'teiden-hoito'
     LOOP
-        -- Hae tehtäväryhmä missä virhe
-        SELECT id INTO tehtavaryhma_id 
-          FROM tehtavaryhma t 
-         WHERE t.nimi LIKE '%Päällysteiden paikkaus%';
-
         -- Etsi urakan toimenpideinstanssi päällystepaikkaukselle
-        SELECT tpi.id INTO toimenpideinstanssi_id
+        SELECT tpi.id INTO tpi_paallystepaikkaus
           FROM toimenpideinstanssi tpi
           JOIN toimenpide tp ON tpi.toimenpide = tp.id
-          WHERE tp.koodi = '20107'  -- '20107' 'Päällystepaikkaukset'
-            AND tpi.urakka = urakka_id;
+         WHERE tp.koodi = '20107'  -- '20107' 'Päällystepaikkaukset'
+           AND tpi.urakka = urakka_id;
 
-        -- Katsotaan ensin että instanssi urakalle löytyy
-        IF toimenpideinstanssi_id IS NOT NULL THEN
-            -- Instanssi on löytynyt, päivitä se kulu_kohdistukseen mikäli kirjauksia tälle on
-            -- RAISE NOTICE 'Päivitetään uusi instanssi urakalle: % instanssi id: % tehtavaryhma: %', urakka_id, toimenpideinstanssi_id, tehtavaryhma_id;
+        -- Etsi urakan toimenpideinstanssi liikenneympäristön hoidolle
+        SELECT tpi.id INTO tpi_liikenneymparisto
+          FROM toimenpideinstanssi tpi
+          JOIN toimenpide tp ON tpi.toimenpide = tp.id
+         WHERE tp.koodi = '23116'  -- '23116' 'Liikenneympäristön hoito'
+           AND tpi.urakka = urakka_id;
+
+        -- Katsotaan ensin että urakalla on molemmat instanssit, sekä tehtäväryhmä olemassa 
+        IF tpi_paallystepaikkaus IS NOT NULL 
+        AND tpi_liikenneymparisto IS NOT NULL 
+        AND tehtavaryhma_id IS NOT NULL THEN
+            -- Instanssit on löytynyt, päivitä se kulu_kohdistukseen mikäli kirjauksia tälle on
+            RAISE NOTICE 'Päivitetään uusi instanssi urakalle: % pp id: % ly id: % tehtäväryhmä_id: %', 
+            urakka_id, tpi_paallystepaikkaus, tpi_liikenneymparisto, tehtavaryhma_id;
 
             -- Päivitetään rivejä mikäli niitä on
             UPDATE kulu_kohdistus
             -- Aseta uusi toimenpideinstanssi 'Päällystepaikkaukset'
-            SET toimenpideinstanssi = toimenpideinstanssi_id,
+            SET toimenpideinstanssi = tpi_paallystepaikkaus,
                 muokattu = current_timestamp,
                 muokkaaja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
             -- Missä tehtäväryhmä on päällysteiden paikkaus 
             WHERE tehtavaryhma = tehtavaryhma_id
               -- Missä urakan toimenpideinstanssi on vanha '23116' 'Liikenneympäristön hoito'
               AND toimenpideinstanssi = (
-                        SELECT id FROM toimenpideinstanssi 
-                          WHERE toimenpide = (
-                              SELECT id FROM toimenpide 
-                                WHERE koodi = '23116') 
-                                  AND urakka = urakka_id
+                        tpi_liikenneymparisto
               );
         ELSE
-            -- RAISE NOTICE 'Ei löytynyt pp toimenpideinstanssia urakalle: % tehtavaryhma: %', urakka_id, tehtavaryhma_id;
+            RAISE NOTICE 'Ei löytynyt tietoja urakalle: % tehtavaryhma: % - pp id: % ly id: %', 
+            urakka_id, tehtavaryhma_id, tpi_paallystepaikkaus, tpi_liikenneymparisto;
         END IF;
     END LOOP;
 END $$;
-
-
