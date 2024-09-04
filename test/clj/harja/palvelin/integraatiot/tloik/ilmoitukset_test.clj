@@ -25,7 +25,7 @@
            (java.util UUID)))
 
 (def kayttaja "yit-rakennus")
-(def timeout 2000)
+(def timeout 3000)
 (def kuittaus-timeout 20000)
 
 (defonce asetukset {:itmf integraatio/itmf-asetukset})
