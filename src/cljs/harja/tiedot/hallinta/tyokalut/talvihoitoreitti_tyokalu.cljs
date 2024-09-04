@@ -5,6 +5,7 @@
             [harja.pvm :as pvm]
             [cljs-time.format :as df]
             [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.tyokalut.yleiset :as yleiset]
             [cljs.core.async :refer [<! >! chan close!]]
             [cljs-http.client :as http]
             [harja.asiakas.kommunikaatio :as k]
@@ -39,17 +40,17 @@
 
 
 (defn koostettu-data [app]
-  {:otsikko {:lahettaja {:jarjestelma (get-in app [:talvihoitoreitti :valittu-jarjestelma]),
-                         :organisaatio {:nimi "YIT Rakennus Oy",
-                                        :ytunnus "1565583-5"}},
-             :viestintunniste {:id 8139298},
-             :lahetysaika (get-in app [:talvihoitoreitti :lahetysaika])}
-   :reittinimi (get-in app [:talvihoitoreitti :reittinimi])
+  {:reittinimi (get-in app [:talvihoitoreitti :reittinimi])
    ;; Käyttöliittymä mahdollistaa tällä hetkellä vain yhden kalustotyypin ja -lkm:n, vaikka jsonissa on array
    :kalusto [{:kalusto-lkm (get-in app [:talvihoitoreitti :kalusto-lkm])
               :kalustotyyppi (get-in app [:talvihoitoreitti :kalustotyyppi])}]
    ;; Reitti koostuu oikeasti valtavasta määrästä tieosoitteita, mutta käyttölittymässä vain yksi
-   :reitti [{:tie 4 :aosa 101 :aet 0 :losa 101 :let 3000 :pituus 3000 :hoitoluokka 8}]
+   :reitti [{:tie (get-in app [:talvihoitoreitti :tierekisteriosoite :numero])
+             :aosa (get-in app [:talvihoitoreitti :tierekisteriosoite :alkuosa])
+             :aet (get-in app [:talvihoitoreitti :tierekisteriosoite :alkuetaisyys])
+             :losa (get-in app [:talvihoitoreitti :tierekisteriosoite :loppuosa])
+             :let (get-in app [:talvihoitoreitti :tierekisteriosoite :loppuetaisyys])
+             :hoitoluokka (yleiset/random-luku-valilta 1 9)}]
    })
 
 
@@ -115,8 +116,7 @@
 
   Laheta
   (process-event [{talvihoitoreitti :talvihoitoreitti} app]
-    (let [_ (js/console.log "Laheta :: talvihoitoreitti" (pr-str talvihoitoreitti))
-          tulos! (tuck/send-async! ->LahetysOnnistui)
+    (let [tulos! (tuck/send-async! ->LahetysOnnistui)
           virhe! (tuck/send-async! ->LahetysEpaonnistui)
           urakkaid (:id (get-in app [:talvihoitoreitti :valittu-urakka]))]
 
@@ -217,5 +217,4 @@
   LisaaKirjoitusOikeusEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.log "LisaaKirjoitusOikeusEpaonnistui :: vastaus" (pr-str vastaus))
-    app)
-  )
+    app))
