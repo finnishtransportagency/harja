@@ -88,6 +88,11 @@
   (is (nil? (validoi json-skeemat/tyomaapaivakirja-kirjaus-request json-esimerkit/+tyomaapaivakirja-kirjaus-request+)))
   (is (nil? (validoi json-skeemat/tyomaapaivakirja-paivitys-request json-esimerkit/+tyomaapaivakirja-paivitys-request+)))
 
+  ;; Talvihoitoreitit
+  (is (nil? (validoi json-skeemat/talvihoitoreitti-kirjaus-request json-esimerkit/+talvihoitoreitti-kirjaus-request+)))
+  (is (nil? (validoi json-skeemat/talvihoitoreitti-paivitys-request json-esimerkit/+talvihoitoreitti-paivitys-request+)))
+  (is (nil? (validoi json-skeemat/talvihoitoreitti-poisto-request json-esimerkit/+talvihoitoreitti-poisto-request+)))
+
   ;; Analytiikka
   (is (nil? (validoi json-skeemat/analytiikkaportaali-toteuma-vastaus json-esimerkit/+analytiikka-reittitoteumat-response+)))
   (is (nil? (validoi json-skeemat/analytiikka-paallystyskohteiden-haku-vastaus json-esimerkit/+analytiikka-paallystyskohteiden-haku-vastaus+)))
