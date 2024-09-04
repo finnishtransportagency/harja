@@ -7,7 +7,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.kyselyt.talvihoitoreitit :as talvihoitoreitit-q]))
+            [harja.kyselyt.talvihoitoreitit :as talvihoitoreitit-q]
+            [harja.kyselyt.tieverkko :as tieverkko-q]))
 
 (defn lisaa-talvihoitoreitti [db data kayttaja parametrit]
   (validointi/tarkista-urakka-ja-kayttaja db (konv/konvertoi->int (:id parametrit)) kayttaja)
@@ -19,22 +20,21 @@
                                                                                   :kayttaja_id kayttaja_id}))
         ;; Lisää kalustot
         _ (doseq [kalusto (:kalusto data)]
-          (talvihoitoreitit-q/lisaa-kalusto-talvihoitoreitille<! db
-            {:talvihoitoreitti_id talvihoitoreitti-id
-             :maara (:kalusto-lkm kalusto)
-             :kalustotyyppi (:kalustotyyppi kalusto)}))
+            (talvihoitoreitit-q/lisaa-kalusto-talvihoitoreitille<! db
+              {:talvihoitoreitti_id talvihoitoreitti-id
+               :maara (:kalusto-lkm kalusto)
+               :kalustotyyppi (:kalustotyyppi kalusto)}))
         ;; Lisää reitit
         _ (doseq [reitti (:reitti data)]
-          (talvihoitoreitit-q/lisaa-reitti-talvihoitoreitille<! db
-            {:talvihoitoreitti_id talvihoitoreitti-id
-             :tie (:tie reitti)
-             :alkuosa (:aosa reitti)
-             :alkuetaisyys (:aet reitti)
-             :loppuosa (:losa reitti)
-             :loppuetaisyys (:let reitti)
-             :pituus (:pituus reitti)
-             :hoitoluokka (:hoitoluokka reitti)}))
-
+            (talvihoitoreitit-q/lisaa-reitti-talvihoitoreitille<! db
+              {:talvihoitoreitti_id talvihoitoreitti-id
+               :tie (:tie reitti)
+               :alkuosa (:aosa reitti)
+               :alkuetaisyys (:aet reitti)
+               :loppuosa (:losa reitti)
+               :loppuetaisyys (:let reitti)
+               :pituus (:pituus reitti)
+               :hoitoluokka (:hoitoluokka reitti)}))
         vastaus (tee-kirjausvastauksen-body {:muut-tiedot {:huomiot [{:tunniste {:id talvihoitoreitti-id}}]}})]
     vastaus))
 
