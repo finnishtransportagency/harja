@@ -45,18 +45,20 @@
 
              [:div.basis256.grow2.shrink3.rajaus
               [:div.body-text.strong.musta "Hoitoluokkien osuudet reitillä (km)"]
-              (map (fn [reitti]
-                     ^{:key (:id reitti)}
-                     [:div.body-text.musta (str (:hoitoluokka-str reitti) " " (:pituus reitti))])
-                (:reitit rivi))]
+              [:div {:style {:display "flex"}}
+               (doall (for [reitti (:reitit rivi)]
+                        ^{:key (:id reitti)}
+                        [:div.body-text.musta {:style {:padding-right "10px"}}
+                         (str (:hoitoluokka-str reitti) " " (:pituus reitti))]))]]
 
              [:div.basis256.grow2.shrink3.rajaus
               [:div.body-text.strong.musta "Kalusto (kpl)"]
-              (map (fn [kalusto]
-                     ^{:key (:id kalusto)}
-                     [:div.body-text.musta (str (:kalustotyyppi kalusto) " " (:maara kalusto))])
-                (:kalustot rivi))]
-             
+              [:div {:style {:display "flex"}}
+               (doall (for [kalusto (:kalustot rivi)]
+                        ^{:key (:id kalusto)}
+                        [:div.body-text.musta {:style {:padding-right "10px"}}
+                         (str (:kalustotyyppi kalusto) " " (:maara kalusto))]))]]
+
              [:div.basis256.grow2.shrink3
               [:div.body-text.strong.musta ""]
               ;; Näytä valittu rivi kartalla tai piilota se

@@ -1,8 +1,6 @@
 (ns harja.palvelin.integraatiot.api.reittitoteuman-kirjaus-test
   (:require [clojure.test :refer [deftest is use-fixtures testing]]
             [harja.kyselyt.konversio :as konversio]
-            [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
-            [harja.kyselyt.konversio :as konversio]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
             [com.stuartsierra.component :as component]

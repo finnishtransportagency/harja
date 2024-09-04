@@ -18,6 +18,7 @@ VALUES (:talvihoitoreitti_id, :tie, :alkuosa, :loppuosa, :alkuetaisyys, :loppuet
 SELECT tr.id,
        tr.nimi,
        tr.urakka_id,
+       tr.ulkoinen_id,
        tr.muokattu,
        tr.muokkaaja,
        tr.luotu,
@@ -25,7 +26,6 @@ SELECT tr.id,
        ARRAY_AGG(ROW (tk.id, tk.kalustotyyppi, tk.maara)) AS kalusto
   FROM talvihoitoreitti tr
            LEFT JOIN talvihoitoreitti_kalusto tk ON tr.id = tk.talvihoitoreitti_id
-          -- LEFT JOIN talvihoitoreitti_reitti trr ON tr.id = trr.talvihoitoreitti_id
  WHERE tr.urakka_id = :urakka_id
  GROUP BY tr.id;
 
@@ -37,10 +37,47 @@ SELECT trr.id,
        trr.loppuosa,
        trr.alkuetaisyys,
        trr.loppuetaisyys,
-       (trr.pituus::float / 1000) AS pituus, -- Muutetaan metrit kilometreiksi
+       (trr.pituus::FLOAT / 1000) AS pituus,         -- Muutetaan metrit kilometreiksi
        trr.hoitoluokka,
        trr.reitti::geometry,
-       ((SELECT laske_tr_osoitteen_pituus(trr.tie, trr.alkuosa, trr.alkuetaisyys, trr.loppuosa, trr.loppuetaisyys))::float / 1000)
-           AS laskettu_pituus -- Lasketaan pituus geometriasta, eikä luoteta sokeasti urakoitsijan raportoimaan pituuteen
+       ((SELECT laske_tr_osoitteen_pituus(trr.tie, trr.alkuosa, trr.alkuetaisyys, trr.loppuosa,
+                                          trr.loppuetaisyys))::FLOAT / 1000)
+                                  AS laskettu_pituus -- Lasketaan pituus geometriasta, eikä luoteta sokeasti urakoitsijan raportoimaan pituuteen
   FROM talvihoitoreitti_reitti trr
  WHERE trr.talvihoitoreitti_id = :talvihoitoreitti_id
+
+-- name: hae-talvihoitoreitti-ulkoisella-idlla
+SELECT tr.id,
+       tr.nimi,
+       tr.urakka_id,
+       tr.ulkoinen_id,
+       tr.muokattu,
+       tr.muokkaaja,
+       tr.luotu,
+       tr.luoja
+  FROM talvihoitoreitti tr
+ WHERE tr.ulkoinen_id = :ulkoinen_id
+   AND tr.urakka_id = :urakka_id;
+
+-- name: poista-talvihoitoreitin-kalusto!
+DELETE
+  FROM talvihoitoreitti_kalusto
+ WHERE talvihoitoreitti_id = :talvihoitoreitti_id;
+
+-- name: poista-talvihoitoreitin-reitit!
+DELETE
+  FROM talvihoitoreitti_reitti
+ WHERE talvihoitoreitti_id = :talvihoitoreitti_id;
+
+-- name: paivita-talvihoitoreitti<!
+UPDATE talvihoitoreitti
+   SET nimi      = :nimi,
+       muokattu  = NOW(),
+       muokkaaja = :kayttaja_id
+ WHERE id = :talvihoitoreitti_id;
+
+-- name: poista-talvihoitoreitti!
+DELETE
+  FROM talvihoitoreitti
+ WHERE ulkoinen_id = :ulkoinen_id
+   AND urakka_id = :urakka_id;

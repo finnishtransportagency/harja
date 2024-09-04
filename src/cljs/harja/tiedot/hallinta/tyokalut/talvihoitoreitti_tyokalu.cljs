@@ -40,18 +40,34 @@
 
 
 (defn koostettu-data [app]
-  {:reittinimi (get-in app [:talvihoitoreitti :reittinimi])
+  {:ulkoinen-id (get-in app [:talvihoitoreitti :ulkoinen-id])
+   :reittinimi (get-in app [:talvihoitoreitti :reittinimi])
    ;; Käyttöliittymä mahdollistaa tällä hetkellä vain yhden kalustotyypin ja -lkm:n, vaikka jsonissa on array
-   :kalusto [{:kalusto-lkm (get-in app [:talvihoitoreitti :kalusto-lkm])
-              :kalustotyyppi (get-in app [:talvihoitoreitti :kalustotyyppi])}]
+   :kalusto (conj [
+                   {:kalusto-lkm (get-in app [:talvihoitoreitti :kalusto-lkm])
+                    :kalustotyyppi (get-in app [:talvihoitoreitti :kalustotyyppi])}
+                   ]
+              (when (and (get-in app [:talvihoitoreitti :kalusto-lkm2])
+                      (get-in app [:talvihoitoreitti :kalustotyyppi2]))
+                {:kalusto-lkm (get-in app [:talvihoitoreitti :kalusto-lkm2])
+                 :kalustotyyppi (get-in app [:talvihoitoreitti :kalustotyyppi2])}))
    ;; Reitti koostuu oikeasti valtavasta määrästä tieosoitteita, mutta käyttölittymässä vain yksi
-   :reitti [{:tie (get-in app [:talvihoitoreitti :tierekisteriosoite :numero])
-             :aosa (get-in app [:talvihoitoreitti :tierekisteriosoite :alkuosa])
-             :aet (get-in app [:talvihoitoreitti :tierekisteriosoite :alkuetaisyys])
-             :losa (get-in app [:talvihoitoreitti :tierekisteriosoite :loppuosa])
-             :let (get-in app [:talvihoitoreitti :tierekisteriosoite :loppuetaisyys])
-             :hoitoluokka (yleiset/random-luku-valilta 1 9)}]
-   })
+   :reitti (conj [
+                  {:tie (get-in app [:talvihoitoreitti :tierekisteriosoite :numero])
+                   :aosa (get-in app [:talvihoitoreitti :tierekisteriosoite :alkuosa])
+                   :aet (get-in app [:talvihoitoreitti :tierekisteriosoite :alkuetaisyys])
+                   :losa (get-in app [:talvihoitoreitti :tierekisteriosoite :loppuosa])
+                   :let (get-in app [:talvihoitoreitti :tierekisteriosoite :loppuetaisyys])
+                   :hoitoluokka (yleiset/random-luku-valilta 1 9)}
+                  ]
+             ;; Koska ollaan kiireessä, niin varmistetaan, että pelkkä tien numero on lisätty ja oletetaan että muutkin on
+             (when (get-in app [:talvihoitoreitti :tierekisteriosoite2 :numero])
+               {:tie (get-in app [:talvihoitoreitti :tierekisteriosoite2 :numero])
+                :aosa (get-in app [:talvihoitoreitti :tierekisteriosoite2 :alkuosa])
+                :aet (get-in app [:talvihoitoreitti :tierekisteriosoite2 :alkuetaisyys])
+                :losa (get-in app [:talvihoitoreitti :tierekisteriosoite2 :loppuosa])
+                :let (get-in app [:talvihoitoreitti :tierekisteriosoite2 :loppuetaisyys])
+                :hoitoluokka (yleiset/random-luku-valilta 1 9)}))})
 
 
 
@@ -66,7 +82,6 @@
 (defrecord HaeHallintayksikonUrakatEpaonnistui [vastaus])
 (defrecord HaeKayttajanOikeuksiaOnnistui [vastaus])
 (defrecord HaeKayttajanOikeuksiaEpaonnistui [vastaus])
-
 
 ;; Lisätään oikeudet urakkaan
 (defrecord LisaaOikeudetUrakkaan [urakka-id])
@@ -128,7 +143,7 @@
                              :content-type :json
                              :accept :json}
                      ;; Lähetä talvihoitoreitti rajapintaan
-                     vastaus (<! (http/post (str "api/urakat/" urakkaid "/talvihoitoreitti") params))
+                     vastaus (<! (http/put (str "api/urakat/" urakkaid "/talvihoitoreitti") params))
                      _ (println "Laheta :: vastaus" (pr-str vastaus))]
                  (if (or (k/virhe? vastaus) (= 400 (:status vastaus)))
                    (virhe!)
@@ -153,8 +168,10 @@
 
   HaeHallintayksikonUrakatOnnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "HaeTROsoitteelleKoordinaatitOnnistui" :onnistui)
-    (assoc app :mahdolliset-urakat vastaus))
+    ;; Filtteröidään muut, kuin teiden-hoito tyyppiset urakat pois. Koska talvihoitoreittejä ei voi muille lisätä
+    (let [vastaus (filter #(= :teiden-hoito (:tyyppi %)) vastaus)]
+      (viesti/nayta-toast! "HaeHallintayksikonUrakatOnnistui" :onnistui)
+      (assoc app :mahdolliset-urakat vastaus)))
 
   HaeHallintayksikonUrakatEpaonnistui
   (process-event [{vastaus :vastaus} app]

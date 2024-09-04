@@ -2,14 +2,9 @@
   "Työkalu talvihoitoreittien lisäämiseksi testiurakoille."
   (:require [tuck.core :refer [tuck send-value! send-async!]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.komponentti :as komp]
             [harja.ui.debug :as debug]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
-            [harja.ui.grid :as grid]
-            [harja.views.kartta :as kartta]
-            [harja.views.kartta.tasot :as kartta-tasot]
-            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.hallinta.tyokalut.talvihoitoreitti-tyokalu :as tiedot])
 
@@ -59,19 +54,55 @@
         :tyyppi :string
         :pituus-max 40
         :pakollinen? true}
+       {:nimi :tyhja1
+        :tyyppi :komponentti
+        :komponentti (fn [n]
+                       [:div ""])}
+       {:nimi :ulkoinen-id
+        :otsikko "Uniikki ulkoinen id"
+        :tyyppi :string
+        :pakollinen? true}
        {:nimi :reittinimi
         :otsikko "Reitin nimi"
         :tyyppi :string
         :pakollinen? true}
-       {:nimi :kalusto-lkm
-        :otsikko "Kaluston määrä"
-        :tyyppi :numero
-        :pakollinen? true}
+       {:nimi :kalusto-otsikko
+        :tyyppi :komponentti
+        :komponentti (fn [n]
+                       [:div "Voit syöttää kahdet kalustot:"])}
+       {:nimi :kalusto-otsikko2
+        :tyyppi :komponentti
+        :komponentti (fn [n]
+                       [:div ""])}
        {:nimi :kalustotyyppi
-        :otsikko "Kaluston tyyppi"
+        :otsikko "Kaluston tyyppi (1)"
         :tyyppi :string
         :pakollinen? true}
+       {:nimi :kalusto-lkm
+        :otsikko "Kaluston määrä (1)"
+        :tyyppi :numero
+        :pakollinen? true}
+       {:nimi :kalustotyyppi2
+        :otsikko "Kaluston tyyppi (2)"
+        :tyyppi :string
+        :pakollinen? true}
+       {:nimi :kalusto-lkm2
+        :otsikko "Kaluston määrä (2)"
+        :tyyppi :numero
+        :pakollinen? true}
+       {:nimi :tierekisteri-otsikko
+        :tyyppi :komponentti
+        :komponentti (fn [n]
+                       [:div "Voit syöttää kaksi eri tierekisteriosoitetta:"])}
+       {:nimi :tierekisteri-otsikko2
+        :tyyppi :komponentti
+        :komponentti (fn [n]
+                       [:div ""])}
        {:nimi :tierekisteriosoite
+        :tyyppi :tierekisteriosoite
+        :vayla-tyyli? true
+        :lataa-piirrettaessa-koordinaatit? true}
+       {:nimi :tierekisteriosoite2
         :tyyppi :tierekisteriosoite
         :vayla-tyyli? true
         :lataa-piirrettaessa-koordinaatit? true}

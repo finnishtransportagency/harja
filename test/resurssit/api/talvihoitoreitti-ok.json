@@ -1,0 +1,36 @@
+{
+  "ulkoinen-id": "__ULKOINENID__",
+  "reittinimi": "__NIMI__",
+  "kalusto": [
+    {
+      "kalusto-lkm": 3,
+      "kalustotyyppi": "Kuorma-auto"
+    }
+  ],
+  "reitti": [
+    {
+      "tie": 4,
+      "aosa": 403,
+      "aet": 0,
+      "losa": 405,
+      "let": 5000,
+      "hoitoluokka": 8
+    },
+    {
+      "tie": 20,
+      "aosa": 1,
+      "aet": 0,
+      "losa": 3,
+      "let": 1000,
+      "hoitoluokka": 1
+    },
+    {
+      "tie": 20,
+      "aosa": 4,
+      "aet": 0,
+      "losa": 10,
+      "let": 14000,
+      "hoitoluokka": 1
+    }
+  ]
+}

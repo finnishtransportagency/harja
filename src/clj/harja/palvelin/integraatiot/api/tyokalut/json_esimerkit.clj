@@ -87,6 +87,8 @@
 
 ;; Talvihoito
 (def +talvihoitoreitti-kirjaus-request+ "api/examples/talvihoitoreitti-kirjaus-request.json")
+(def +talvihoitoreitti-paivitys-request+ "api/examples/talvihoitoreitti-paivitys-request.json")
+(def +talvihoitoreitti-poisto-request+ "api/examples/talvihoitoreitti-poisto-request.json")
 
 ;; Analytiikka
 (def +analytiikka-reittitoteumat-response+ "api/examples/analytiikka-reittitoteumat-response.json")
