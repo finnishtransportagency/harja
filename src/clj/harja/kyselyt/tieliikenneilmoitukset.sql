@@ -614,12 +614,12 @@ WHERE lahetysid = :lahetysid;
 
 -- name: merkitse-ilmoitustoimenpidelle-lahetysvirhe-idlla!
 UPDATE ilmoitustoimenpide
-SET tila = 'virhe'
+SET tila = 'virhe', ed_lahetysvirhe = NOW(), virhe_lkm = virhe_lkm + 1
 WHERE id = :id;
 
 -- name: merkitse-ilmoitustoimenpidelle-lahetysvirhe-lahetysidlla!
 UPDATE ilmoitustoimenpide
-SET tila = 'virhe'
+SET tila = 'virhe', ed_lahetysvirhe = NOW(), virhe_lkm = virhe_lkm + 1
 WHERE lahetysid = :lahetysid;
 
 -- name: onko-ilmoitukselle-vastaanottokuittausta
@@ -752,7 +752,14 @@ SELECT id
 FROM ilmoitustoimenpide
 WHERE
   (tila IS NULL OR tila = 'virhe') AND
-  kuittaustyyppi != 'valitys';
+  kuittaustyyppi != 'valitys' and
+  (ed_lahetysvirhe IS NULL OR
+      -- mitä useampi lähetysvirhe jo takana, sitä harvemmin uudelleen lähetys
+      -- Jos edellisestä lähetysvirheestä on kulunut virheiden lukumäärä * 10min, niin lähetetään uudelleen
+      -- esim jo 4 yritystä epäonnistunut, vaaditaan 40min viive. Näin vältetään T-Loikin pään tukahduttamista viesteihin ongelmatilanteessa
+      -- max 10 uudelleenyritystä, jonka jälkeen luovutetaan ja tarvittaessa säädetään käsipelillä
+      -- 1 virhe: 10min viive, 2 virhettä: 20min, 3 virhettä: 30min... 10 virhettä: 100min, 10+ virhettä: luovuta
+   (((NOW() - ed_lahetysvirhe) > (virhe_lkm * interval '10 minutes')) AND virhe_lkm < 11));
 
 -- name: hae-myohastyneet-ilmoitustoimenpiteet
 SELECT count(*) AS maara,
