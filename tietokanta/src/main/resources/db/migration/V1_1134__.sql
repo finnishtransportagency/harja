@@ -30,7 +30,7 @@ DECLARE
     tpi_liikenneymparisto INTEGER;
 BEGIN
     RAISE NOTICE '***********************************************';
-    RAISE NOTICE 'Ajetaan migraatio 1132 aika: %', current_timestamp;
+    RAISE NOTICE 'Ajetaan migraatio päällystyskytkös aika: %', current_timestamp;
 
     -- Hae tehtäväryhmä missä virhe
     SELECT id INTO tehtavaryhma_id 
