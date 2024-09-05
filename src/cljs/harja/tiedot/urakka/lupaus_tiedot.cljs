@@ -297,7 +297,7 @@
         (assoc :vastaus-lomake vastaus)
         (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
         (assoc-in [:vastaus-lomake :vastausvuosi] vuosi)
-        (assoc-in [:vastaus-lomake :naytettavat-valinnat] (conj naytettavat-valinnat-alustus nykyinen-askel) )
+        (assoc-in [:vastaus-lomake :naytettavat-valinnat] (conj naytettavat-valinnat-alustus nykyinen-askel))
         (valitse-vastauskuukausi kuukausi vuosi))))
   
   SuljeLupausvastaus

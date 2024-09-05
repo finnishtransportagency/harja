@@ -191,14 +191,6 @@
      kuukauden-vastaus-atom]]])
 
 
-(defn- paattele-edeltavat-valitut-arvot [valittu-arvo vaihtoehdot]
-  (let [arvo (first (filter #(= (:id %) valittu-arvo) vaihtoehdot))
-        askel (:vaihtoehto-askel arvo)
-        edellinen-valinta (when askel 
-                            (first (filter #(= (:vaihtoehto-seuraava-ryhma-id %) askel) vaihtoehdot)))]
-    (if edellinen-valinta
-      (cons edellinen-valinta (paattele-edeltavat-valitut-arvot (:id edellinen-valinta) vaihtoehdot))
-      [])))
 
 
 (defn- vastaukset [e! app luokka]
@@ -264,7 +256,7 @@
                                :disabled? disabled?
                                :ladataan? ladataan?}]
               ;; Useita ketjutettuja monivalintoja
-              (let [edeltavat-arvot (paattele-edeltavat-valitut-arvot valittu-arvo vaihtoehdot)
+              (let [edeltavat-arvot (lupaus-domain/etsi-edeltavat-monivalinnan-valitut-arvot valittu-arvo vaihtoehdot)
                     lahetetty-askel (:vaihtoehto-askel lahetetty-vastaus)]
                  (map (fn [[valinta-askel vaihtoehdot]]
                         (let [otsikko (:ryhma-otsikko (first vaihtoehdot))
