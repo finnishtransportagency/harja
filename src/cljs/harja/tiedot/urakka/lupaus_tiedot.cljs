@@ -288,13 +288,18 @@
   AvaaLupausvastaus
   (process-event [{vastaus :vastaus kuukausi :kuukausi vuosi :kohdevuosi} app]
     ;; Avataan sivupaneeli, lisätään vastauksen tiedot :vastaus-lomake avaimeen
+    (let [vaihtoehdot (:vaihtoehdot vastaus)
+          lupaus-kuukausi (lupaus-domain/etsi-lupaus-kuukausi (:lupaus-kuukaudet vastaus) kuukausi)
+          kuukauden-vastaus (:vastaus lupaus-kuukausi) 
+          valittu-arvo (:lupaus-vaihtoehto-id kuukauden-vastaus)
+          nykyinen-askel (when valittu-arvo (lupaus-domain/etsi-nykyinen-valinta-askel valittu-arvo vaihtoehdot))]
     (-> app
         (assoc :vastaus-lomake vastaus)
         (assoc-in [:vastaus-lomake :vastauskuukausi] kuukausi)
         (assoc-in [:vastaus-lomake :vastausvuosi] vuosi)
-        (assoc-in [:vastaus-lomake :naytettavat-valinnat] naytettavat-valinnat-alustus)
-        (valitse-vastauskuukausi kuukausi vuosi)))
-
+        (assoc-in [:vastaus-lomake :naytettavat-valinnat] (conj naytettavat-valinnat-alustus nykyinen-askel) )
+        (valitse-vastauskuukausi kuukausi vuosi))))
+  
   SuljeLupausvastaus
   (process-event [_ app]
     ;; Suljetaan sivupaneeli
@@ -367,9 +372,11 @@
   (process-event [{vaihtoehto :vaihtoehto} app]
     (let [sailytettavat-valinnat [(:vaihtoehto-askel vaihtoehto) (:vaihtoehto-seuraava-ryhma-id vaihtoehto)]]
       (-> app
-        (assoc-in [:vastaus-lomake :lahetetty-vastaus] {:lupaus-vaihtoehto-id (:id vaihtoehto)})
+        (assoc-in [:vastaus-lomake :lahetetty-vastaus] {:lupaus-vaihtoehto-id (:id vaihtoehto)
+                                                        :vaihtoehto-askel (:vaihtoehto-askel vaihtoehto)})
         (assoc-in [:vastaus-lomake :naytettavat-valinnat] sailytettavat-valinnat))))
 
+  
   ValitseKE
   (process-event [{vastaus :vastaus lupaus :lupaus kohdekuukausi :kohdekuukausi kohdevuosi :kohdevuosi} app]
     (let [vastaus-map (merge (when (:kuukauden-vastaus-id vastaus)
