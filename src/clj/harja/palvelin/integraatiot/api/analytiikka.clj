@@ -1003,12 +1003,11 @@
     (julkaise-reitti
       http :analytiikka-tehtavat
       (GET "/api/analytiikka/tehtavat" request
-        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
-          :analytiikka-hae-tehtavat request
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-tehtavat request
+          json-skeemat/+analytiikka-tehtavat-ja-tehtavaryhmat-vastaus+
           (fn [parametrit kayttaja db]
             (palauta-tehtavat db parametrit kayttaja))
-          ;; Vaaditaan analytiikka-oikeudet
-          :analytiikka)))
+          :analytiikka "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-toimenpiteet
@@ -1058,7 +1057,7 @@
           (fn [parametrit kayttaja db]
             (hae-turvallisuuspoikkeamat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
-          :analytiikka)))
+          :analytiikka "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-paallystysurakat
@@ -1067,7 +1066,7 @@
           json-skeemat/+analytiikka-paallystysurakoiden-haku-vastaus+
           (fn [parametrit _kayttaja db]
             (hae-paallystysurakat db parametrit))
-          :analytiikka)))
+          :analytiikka "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-paallystyskohteet
@@ -1076,7 +1075,7 @@
           json-skeemat/+analytiikka-paallystyskohteiden-haku-vastaus+
           (fn [parametrit _kayttaja db]
             (hae-paallystyskohteet db parametrit))
-          :analytiikka)))
+          :analytiikka "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-hae-paallystyskohteiden-aikataulut
@@ -1085,7 +1084,7 @@
           json-skeemat/+analytiikka-paallystyskohteiden-aikataulujen-haku-vastaus+
           (fn [parametrit _kayttaja db]
             (hae-paallystyskohteiden-aikataulut db parametrit))
-          :analytiikka)))
+          :analytiikka "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-hae-paallystysilmoitukset
@@ -1094,7 +1093,7 @@
           json-skeemat/+analytiikka-paallystysilmoitusten-haku-vastaus+
           (fn [parametrit _kayttaja db]
             (hae-paallystysilmoitukset db parametrit))
-          :analytiikka)))
+          :analytiikka "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-hae-hoidon-paikkauskustannukset
@@ -1103,7 +1102,7 @@
           json-skeemat/+analytiikka-hoidon-paikkaukset-haku-vastaus+
           (fn [parametrit _kayttaja db]
             (hae-hoidon-paikkauskustannukset db parametrit))
-          :analytiikka)))
+          :analytiikka "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-hae-paikkauskohteet
@@ -1112,7 +1111,7 @@
           json-skeemat/+analytiikka-paikkauskohteiden-haku-vastaus+
           (fn [parametrit _kayttaja db]
             (hae-paikkauskohteet db parametrit))
-          :analytiikka)))
+          :analytiikka "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-hae-paikkaukset
@@ -1121,7 +1120,7 @@
           json-skeemat/+analytiikka-paikkausten-haku-vastaus+
           (fn [parametrit _kayttaja db]
             (hae-paikkaukset db parametrit))
-          :analytiikka)))
+          :analytiikka "analytiikka")))
 
     (julkaise-reitti
       http :analytiikka-toteutuneet-kustannukset

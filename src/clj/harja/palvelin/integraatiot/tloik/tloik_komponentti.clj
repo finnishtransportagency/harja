@@ -42,7 +42,7 @@
       itmf ilmoitusviestijono
       (with-meta (partial ilmoitukset/vastaanota-ilmoitus
                           itmf (tee-lokittaja this "ilmoituksen-kirjaus")
-                          ilmoitusasetukset db ilmoituskuittausjono
+                          ilmoitusasetukset db ilmoitusviestijono ilmoituskuittausjono
                           jms-lahettaja kehitysmoodi?)
                  {:jms-kuuntelija :tloik-ilmoitusviesti}))))
 
