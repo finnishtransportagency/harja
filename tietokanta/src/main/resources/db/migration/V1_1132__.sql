@@ -4,9 +4,9 @@
 -- sekä laskutusyhteenvedossa 'Päällysteiden paikkaukset' laariin
 
 UPDATE tehtava
-SET emo       = (SELECT id FROM toimenpide WHERE koodi = '20107'),
-    muokattu  = current_timestamp,
-    muokkaaja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
+   SET emo       = (SELECT id FROM toimenpide WHERE koodi = '20107'),
+       muokattu  = current_timestamp,
+       muokkaaja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
 WHERE nimi = 'Muut päällysteiden paikkaukseen liittyvät työt'
   AND emo  = (SELECT id FROM toimenpide WHERE koodi = '23116'); 
 
