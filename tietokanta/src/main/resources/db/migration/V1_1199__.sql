@@ -38,5 +38,5 @@ CREATE TABLE IF NOT EXISTS talvihoitoreitti_reitti
 );
 
 -- Uusi apiavain
-INSERT INTO integraatio (jarjestelma, nimi)
-VALUES ('api', 'lisaa-talvihoitoreitti', 'poista-talvihoitoreitti');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'lisaa-talvihoitoreitti');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'poista-talvihoitoreitti');
