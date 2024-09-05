@@ -273,19 +273,6 @@ $$
     END
 $$;
 
-
--- Lisätään muutama pakollinen tehtävä rahavarukselle
-INSERT
-  INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
-SELECT rv.id,
-       t.id,
-       (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
-       NOW()
-  FROM rahavaraus rv,
-       tehtava t
- WHERE t.nimi IN ('Juurakkopuhdistamo, selkeytys- ja hulevesiallas sekä -painanne')
-   AND rv.nimi = 'Rahavaraus G - Juurakkopuhdistamo';
-
 --== Ajetaan uutta urakkaa lisättäessä ==--
 -- Lisätään oletusrahavaraukset kaikille uusille urakoille
 CREATE OR REPLACE FUNCTION lisaa_urakan_oletus_rahavaraukset() RETURNS TRIGGER AS
