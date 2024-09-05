@@ -423,6 +423,7 @@
 (defn kyselyn-ikoni [tila]
   (sijainti-ikoni
     (case tila
+      :ei-valitetty (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
       :kuittaamaton (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
       :vastaanotettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
       :aloitettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
@@ -432,6 +433,7 @@
 (defn toimenpidepyynnon-ikoni [tila]
   (sijainti-ikoni
     (case tila
+      :ei-valitetty (:ilmoitus-auki tiepuolen-ikonien-varit)
       :kuittaamaton (:ilmoitus-auki tiepuolen-ikonien-varit)
       :vastaanotettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
       :aloitettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
@@ -442,6 +444,7 @@
 (defn tiedotuksen-ikoni [tila]
   (sijainti-ikoni
     (case tila
+      :ei-valitetty (:ilmoitus-auki tiepuolen-ikonien-varit)
       :kuittaamaton (:ilmoitus-auki tiepuolen-ikonien-varit)
       :vastaanotettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
       :aloitettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)

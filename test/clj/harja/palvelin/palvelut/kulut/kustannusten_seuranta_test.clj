@@ -213,19 +213,15 @@
      kt.summa,
      0 AS toteutunut_summa,
      CASE
-     WHEN (tk.koodi = '23104' AND kt.rahavaraus_id IS NULL) THEN 'Talvihoito'
-     WHEN (tk.koodi = '23116' AND kt.rahavaraus_id IS NULL) THEN 'Liikenneympäristön hoito'
-     WHEN (tk.koodi = '23124' AND kt.rahavaraus_id IS NULL) THEN 'Sorateiden hoito'
-     WHEN (tk.koodi = '20107' AND kt.rahavaraus_id IS NULL) THEN 'Päällystepaikkaukset'
-     WHEN (tk.koodi = '20191' AND kt.rahavaraus_id IS NULL) THEN 'MHU Ylläpito'
-     WHEN (tk.koodi = '14301' AND kt.rahavaraus_id IS NULL) THEN 'MHU Korvausinvestointi'
-     WHEN kt.rahavaraus_id IS NOT NULL THEN r.nimi
+     WHEN tk.koodi = '23104' THEN 'Talvihoito'
+     WHEN tk.koodi = '23116' THEN 'Liikenneympäristön hoito'
+     WHEN tk.koodi = '23124' THEN 'Sorateiden hoito'
+     WHEN tk.koodi = '20107' THEN 'Päällystepaikkaukset'
+     WHEN tk.koodi = '20191' THEN 'MHU Ylläpito'
+     WHEN tk.koodi = '14301' THEN 'MHU Korvausinvestointi'
      END AS toimenpide
   FROM toimenpide tk,
-       kustannusarvioitu_tyo kt
-       LEFT JOIN rahavaraus_urakka ru ON kt.rahavaraus_id = ru.rahavaraus_id
-          AND ru.urakka_id = " urakka "
-       LEFT JOIN rahavaraus r ON kt.rahavaraus_id = r.id,
+       kustannusarvioitu_tyo kt,
        toimenpideinstanssi tpi,
        sopimus s
   WHERE s.urakka = " urakka "
@@ -317,7 +313,7 @@ UNION ALL
              WHERE s.urakka = %s
                AND kt.sopimus = s.id
                AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '%s'::DATE AND '%s'::DATE)
-               AND (kt.tyyppi::TEXT = 'akillinen-hoitotyo' OR kt.tyyppi::TEXT = 'vahinkojen-korjaukset' OR kt.rahavaraus_id IS NOT NULL)"
+               AND kt.rahavaraus_id IS NOT NULL"
     urakka urakka alkupvm loppupvm))
 
 (defn- toteutuneet-lisatyot-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
