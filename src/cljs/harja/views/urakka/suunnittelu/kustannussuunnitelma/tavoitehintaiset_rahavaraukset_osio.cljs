@@ -1,5 +1,6 @@
 (ns harja.views.urakka.suunnittelu.kustannussuunnitelma.tavoitehintaiset-rahavaraukset-osio
-  (:require [reagent.core :as r]
+  (:require [clojure.string :as clj-str]
+            [reagent.core :as r]
             [harja.tiedot.urakka.suunnittelu.mhu-kustannussuunnitelma :as t]
             [harja.ui.grid :as grid]
             [harja.fmt :as fmt]
@@ -62,8 +63,12 @@
 
       [{:otsikko "Rahavaraus" :nimi :nimi :leveys "70%" :muokattava? (constantly false)
         :tyyppi :positiivinen-numero :tasaa :vasen}
-       {:otsikko "Yhteensä, €/vuosi" :nimi :summa :leveys "15%" :tyyppi :positiivinen-numero :muokattava? (constantly true) :tasaa :oikea :fmt fmt/euro-opt}
-       {:otsikko "Indeksikorjattu" :nimi :summa-indeksikorjattu :leveys "15%" :tyyppi :numero :muokattava? (constantly false) :tasaa :oikea}]
+       {:otsikko "Yhteensä, €/vuosi" :nimi :summa :leveys "15%"
+        :tyyppi :euro
+        :fmt #(fmt/euro-opt false %)
+        :muokattava? (constantly true)
+        :tasaa :oikea}
+       {:otsikko "Indeksikorjattu" :nimi :summa-indeksikorjattu :leveys "15%" :tyyppi :numero :muokattava? (constantly false) :tasaa :oikea :fmt #(fmt/euro-opt false %)}]
       rahavaraus-atom]]))
 
 (defn tallenna-tavoitehinnan-ulkopuolinen-rahavaraus! [vuosi loppuvuodet? rivi rivi-id]
@@ -93,7 +98,10 @@
 
       [{:otsikko "Rahavaraus" :nimi :nimi :leveys "70%" :muokattava? (constantly false)
         :tyyppi :positiivinen-numero :tasaa :vasen}
-       {:otsikko "Yhteensä, €/vuosi" :nimi :summa :leveys "15%" :tyyppi :positiivinen-numero :muokattava? (constantly true) :tasaa :oikea :fmt fmt/euro-opt}]
+       {:otsikko "Yhteensä, €/vuosi" :nimi :summa :leveys "15%"
+        :tyyppi :euro
+        :fmt #(fmt/euro-opt false %)
+        :muokattava? (constantly true) :tasaa :oikea}]
       rahavaraus-atom]]))
 
 (defn osio
