@@ -24,7 +24,7 @@
                       urakkatieto-fixture))
 
 (deftest hae-kaikki-rahavaraukset
-  (let [tietokantaan-lisatty-maara 14
+  (let [tietokantaan-lisatty-maara 13
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                 :hae-rahavaraukset +kayttaja-jvh+ {})
         rahavaraukset (:rahavaraukset tulos)]
