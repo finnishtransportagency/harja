@@ -16,6 +16,7 @@
             [harja.palvelin.integraatiot.jms.tyokalut :as jms-tk]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.tloik.aineistot.toimenpidepyynnot :as aineisto-toimenpidepyynnot]
+            [harja.kyselyt.tieliikenneilmoitukset :as q-ilmoitukset]
             [clj-time
              [coerce :as tc]
              [format :as df]]
@@ -492,3 +493,51 @@
     (is (= (sort (map name (keep identity (keys ti/+ilmoitusten-selitteet+))))
           (sort selitteet-skeemasta))
       "harja.domain.tieliikenneilmoitukset/+ilmoitusten-selitteet+ pitää vastata tloik-skeemaa!")))
+
+;; varmistetaan että kuittausten uudelleenlähetysten progressive backoff toimii, simppelillä testillä
+;; simuloidaan siis T-Loik lähetysvirheitä lisäämällä virhe_lkm counteria
+(deftest ilmoitustoimenpiteen-asteittaisesti-harveneva-uudelleenlahetys
+  (let [db (:db jarjestelma)
+        kaikki-uudelleenlahetettavat-alussa (ffirst (q "SELECT count(*) FROM ilmoitustoimenpide where (tila IS NULL or tila = 'virhe') AND kuittaustyyppi != 'valitys';"))
+        uudelleen-lahetettavat-kaikissa-urakoissa-ennen (count (q-ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db))
+
+        _ (u "UPDATE ilmoitustoimenpide SET virhe_lkm = virhe_lkm + 1, ed_lahetysvirhe = NOW() - interval '5 minutes';")
+        uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-5min-virheita-1 (count (q-ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db))
+
+        _ (u "UPDATE ilmoitustoimenpide SET virhe_lkm = virhe_lkm + 1, ed_lahetysvirhe = NOW() - interval '25 minutes';")
+        uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-25min-virheita-2 (count (q-ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db))
+
+        _ (u "UPDATE ilmoitustoimenpide SET virhe_lkm = virhe_lkm + 1, ed_lahetysvirhe = NOW() - interval '25 minutes';")
+        uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-25min-virheita-3 (count (q-ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db))
+
+        _ (u "UPDATE ilmoitustoimenpide SET virhe_lkm = virhe_lkm + 1, ed_lahetysvirhe = NOW() - interval '55 minutes';")
+        uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-55min-virheita-4 (count (q-ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db))
+
+        _ (u "UPDATE ilmoitustoimenpide SET virhe_lkm = virhe_lkm + 1, ed_lahetysvirhe = NOW() - interval '55 minutes';")
+        uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-55min-virheita-5 (count (q-ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db))
+
+        _ (u "UPDATE ilmoitustoimenpide SET virhe_lkm = virhe_lkm + 1, ed_lahetysvirhe = NOW() - interval '55 minutes';")
+        uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-55min-virheita-6 (count (q-ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db))
+
+        ;; yli 10 virhettä, ei enää nosteta
+        _ (u "UPDATE ilmoitustoimenpide SET virhe_lkm = 10, ed_lahetysvirhe = NOW() - interval '755 minutes';")
+        uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-tasan-10-virhetta (count (q-ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db))
+
+
+        _ (u "UPDATE ilmoitustoimenpide SET virhe_lkm = 11, ed_lahetysvirhe = NOW() - interval '755 minutes';")
+        uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-yli-10-virhetta (count (q-ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db))
+
+
+        ;; palautellaan varalta asiat alkutilaan...
+        _ (u "UPDATE ilmoitustoimenpide SET virhe_lkm = 0, ed_lahetysvirhe = NULL;")]
+    (is (> kaikki-uudelleenlahetettavat-alussa 50) "Varmistetaan että ehdot täyttäviä kuittauksia on enemmän kuin nolla.")
+
+    (is (= uudelleen-lahetettavat-kaikissa-urakoissa-ennen kaikki-uudelleenlahetettavat-alussa) "Kaikki lähetettävät nostetaan...")
+    (is (= uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-5min-virheita-1 0) "1 virhe, alle 10min mennyt, ei nosteta...")
+    (is (= uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-25min-virheita-2 kaikki-uudelleenlahetettavat-alussa) "Kaikki lähetettävät nostetaan...")
+    (is (= uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-25min-virheita-3 0) "3 virhettä, odotellaan pitempään kuin kahdella virheellä...")
+    (is (= uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-55min-virheita-4 kaikki-uudelleenlahetettavat-alussa) "Kaikki lähetettävät nostetaan...")
+    (is (= uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-55min-virheita-5 kaikki-uudelleenlahetettavat-alussa) "Kaikki lähetettävät nostetaan...")
+    (is (= uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-55min-virheita-6 0) "6 virhettä, odotellaan pitempään kuin 4 tai 5 virheellä...")
+    (is (= uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-tasan-10-virhetta kaikki-uudelleenlahetettavat-alussa) "Tasan 10 virhettä ja pitkä aika kulunut, kaikki nousee...")
+    (is (= uudelleen-lahetettavat-kaikissa-urakoissa-jalkeen-yli-10-virhetta 0) "Yli 10 virhettä, ei enää nosteta...")))

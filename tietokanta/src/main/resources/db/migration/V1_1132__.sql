@@ -1,308 +1,283 @@
+-- Tehdään vain sellaisia rahavarauksiin liittyviä muutoksia, jotka eivät aiheuta muutostarpeita muualla koodissa
+-- Aluksi kaikki rahavaraus -tauluihin liittyvät muutokset
+-- Lisätään Rahavarauksille järjestys
+ALTER TABLE rahavaraus
+    ADD COLUMN jarjestys INTEGER NOT NULL DEFAULT 0;
 
--- Haluttiin lisätä luoja toteutuneet_kustannukset tauluun, johon lisätään tavaraa pelkästään järjestelmän kautta
--- Pelkästään järjestelmä kutsuu tätä ajastetulla kyselyllä: siirra-budjetoidut-tyot-toteutumiin
--- Jotenka tässä korvattu funktiot tuolla luoja ID:llä, onko tämä tarpeellista ja antaako mitään arvoa, en tiedä, tässä tämä on kuitenkin
+-- Varmistetaan, että rahavaraus_urakka tauluun ei tule duplikaatteja
+ALTER TABLE rahavaraus_urakka
+    ADD CONSTRAINT rahavaraus_urakka_pk
+        UNIQUE (urakka_id, rahavaraus_id);
 
+-- Varmista, että rahavaraus_tehtava tauluun ei tule duplikaatteja
+CREATE UNIQUE INDEX rahavaraus_tehtava_tehtava_id_rahavaraus_id_uindex
+    ON rahavaraus_tehtava (tehtava_id, rahavaraus_id);
 
--- Lisää luoja kolumni toteutuneisiin kustannuksiin
-ALTER TABLE toteutuneet_kustannukset ADD COLUMN luoja INTEGER REFERENCES kayttaja (id);
--- Aseta luoja integraatioksi
-UPDATE toteutuneet_kustannukset SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio');
+-- Lisää rahavaraus_id sarakkeet, on olemassa jo parissa taulussa, mutta ei haittaa
+ALTER TABLE kulu_kohdistus
+    ADD COLUMN IF NOT EXISTS rahavaraus_id INT REFERENCES rahavaraus (id);
+ALTER TABLE kustannusarvioitu_tyo
+    ADD COLUMN IF NOT EXISTS rahavaraus_id INT REFERENCES rahavaraus (id);
+ALTER TABLE toteutuneet_kustannukset
+    ADD COLUMN IF NOT EXISTS rahavaraus_id INT REFERENCES rahavaraus (id);
 
--- Korvaa olemassa olevat funktiot joissa luoja id läsnä
--- Ref ( 1018.sql )
-CREATE OR REPLACE FUNCTION siirra_budjetoidut_tyot_toteumiin(pvm DATE) RETURNS VOID AS
+-- Nimetään uusiksi rahavarauksia
+UPDATE rahavaraus
+   SET nimi = 'Pysäkkikatosten korjaaminen'
+ WHERE nimi LIKE '%Rahavaraus E - Pysäkkikatokset%';
+UPDATE rahavaraus
+   SET nimi = 'Tunneleiden hoito'
+ WHERE nimi LIKE '%Rahavaraus J - Tunnelien pienet korjaukset%';
+UPDATE rahavaraus
+   SET nimi = 'Vahinkojen korjaukset'
+ WHERE nimi = 'Vahinkojen korvaukset';
+UPDATE rahavaraus
+   SET nimi = 'Tilaajan rahavaraus kannustinjärjestelmään'
+ WHERE nimi = 'Kannustinjärjestelmä';
+
+-- Poistetaan turhat rahavaraukset - Ja jos niitä on jollakulla käytössä, niin päivitetään ID:t
+DO
 $$
-BEGIN
-    -- Automaattisesti toteumaksi lasketaan tehtäväryhmä: Erillishankinnat (W)
-    -- Ja tehtävät: Toimistotarvike- ja ICT-kulut, Hoitourakan työnjohto sekä Hoidonjohtopalkkio
-    INSERT INTO toteutuneet_kustannukset (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
-                                          sopimus_id, urakka_id, luoja, luotu, rivin_tunnistin)
-    SELECT k.vuosi,
-           k.kuukausi,
-           k.summa,
-           k.summa_indeksikorjattu,
-           k.indeksikorjaus_vahvistettu,
-           k.tyyppi,
-           k.tehtava,
-           k.tehtavaryhma,
-           k.toimenpideinstanssi,
-           k.sopimus,
-           (SELECT s.urakka FROM sopimus s WHERE s.id = k.sopimus) as "urakka-id",
-           (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
-           NOW(),
-           MD5(concat(k.id, k.vuosi, k.kuukausi, k.summa, k.tyyppi, k.tehtava, k.tehtavaryhma,
-                      k.toimenpideinstanssi, k.sopimus, k.luotu, k.luoja, k.muokattu, k.muokkaaja)::TEXT)
-      FROM kustannusarvioitu_tyo k
--- Siirretään vain edellisen kuukauden jutut. Ei siis kuluvan kuukauden hommia
-     WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) < date_trunc('month', pvm)
-       -- Siirretään vain ne, joita ei ole vielä siirretty
-       AND k."siirretty?" = false
-       -- Siirretään vain tietyn tehtäväryhmän tehtäviä tai yksilöityjä tehtäviä
-       AND (k.tehtavaryhma = (SELECT id FROM tehtavaryhma
-                               WHERE yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c') -- Erillishankinnat (W)
-         OR k.tehtava in (SELECT id FROM tehtava t WHERE t.yksiloiva_tunniste IN
-                                                         ('8376d9c4-3daf-4815-973d-cd95ca3bb388', -- "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne."
-                                                          'c9712637-fbec-4fbd-ac13-620b5619c744', -- Hoitourakan työnjohto
-                                                          '53647ad8-0632-4dd3-8302-8dfae09908c8'))) -- Hoidonjohtopalkkio
-        ON CONFLICT DO NOTHING;
+    DECLARE
+        rv_akilliset_id_poistettava INT;
+        rv_akilliset_id             INT;
+        rv_vahingot_id_poistettava  INT;
+        rv_vahingot_id              INT;
+        rv_kannustin_id_poistettava INT;
+        rv_kannustin_id             INT;
 
-    -- Tästä taulusta (johto_ja_hallintokorvaus) siirretään kaikki rivit
-    INSERT INTO toteutuneet_kustannukset (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
-                                          sopimus_id, urakka_id, luoja, luotu, rivin_tunnistin)
-    SELECT j.vuosi,
-           j.kuukausi,
-           (j.tunnit * j.tuntipalkka * j."osa-kuukaudesta") AS summa,
-           (j.tunnit * j.tuntipalkka_indeksikorjattu * j."osa-kuukaudesta") AS summa_indeksikorjattu,
-           j.indeksikorjaus_vahvistettu                     AS indeksikorjaus_vahvistettu,
-           'laskutettava-tyo'                               AS tyyppi,
-           null                                             as tehtava,
-           (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)'),
-           (SELECT tpi.id AS id
-              FROM toimenpideinstanssi tpi
-                       JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
-                       JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
-                   maksuera m
-             WHERE tpi.urakka = j."urakka-id"
-               AND m.toimenpideinstanssi = tpi.id
-               AND tpk2.koodi = '23150'),
-           (SELECT id
-              FROM sopimus s
-             WHERE s.urakka = j."urakka-id"
-               AND s.poistettu IS NOT TRUE
-             ORDER BY s.loppupvm DESC
-             limit 1),
-           j."urakka-id",
-           (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
-           NOW(),
-           MD5(concat(j.id, j."urakka-id", j."toimenkuva-id", j.tunnit, j.tuntipalkka,
-                      j.luotu, j.luoja, j.muokattu, j.muokkaaja, j.vuosi, j.kuukausi,
-                      j."ennen-urakkaa", j."osa-kuukaudesta")::TEXT)
-      FROM johto_ja_hallintokorvaus j
--- Siirretään vain edellisen kuukauden jutut
-     WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) < date_trunc('month', pvm)
-       -- Ja ne, joita ei ole vielä siirretty
-       AND j."siirretty?" = false
-        ON CONFLICT DO NOTHING;
+    BEGIN
+        SELECT id INTO rv_akilliset_id_poistettava FROM rahavaraus WHERE nimi = 'Rahavaraus B - Äkilliset hoitotyöt';
+        SELECT id INTO rv_akilliset_id FROM rahavaraus WHERE nimi = 'Äkilliset hoitotyöt';
+        SELECT id INTO rv_vahingot_id_poistettava FROM rahavaraus WHERE nimi = 'Rahavaraus C - Vahinkojen korjaukset';
+        SELECT id INTO rv_vahingot_id FROM rahavaraus WHERE nimi = 'Vahinkojen korjaukset';
+        SELECT id INTO rv_kannustin_id_poistettava FROM rahavaraus WHERE nimi = 'Rahavaraus K - Kannustinjärjestelmä';
+        SELECT id INTO rv_kannustin_id FROM rahavaraus WHERE nimi = 'Tilaajan rahavaraus kannustinjärjestelmään';
 
-    -- Päivitetään kaikkiin juuri siirrettyihin riveihin tieto, että ne on käsitelty ja siirretty
-    UPDATE kustannusarvioitu_tyo k SET "siirretty?" = true
--- Päivitetään vain edellisen kuukauden jutut
-     WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) < date_trunc('month', pvm)
-       -- Ja vain ne, joita ei ole aiemin päivitetty siirretyksi
-       AND k."siirretty?" = false
-       -- Päivitetään vain tietyn tehtäväryhmän tehtäviä tai yksilöityjä tehtäviä
-       AND (k.tehtavaryhma =
-            (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c')
-         OR
-            k.tehtava in (SELECT id FROM tehtava t WHERE t.yksiloiva_tunniste IN
-                                                         ('8376d9c4-3daf-4815-973d-cd95ca3bb388', -- "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne."
-                                                          'c9712637-fbec-4fbd-ac13-620b5619c744', -- Hoitourakan työnjohto
-                                                          '53647ad8-0632-4dd3-8302-8dfae09908c8'))); -- Hoidonjohtopalkkio
+        -- Äkilliset
+        UPDATE rahavaraus_urakka SET rahavaraus_id = rv_akilliset_id WHERE rahavaraus_id = rv_akilliset_id_poistettava;
+        UPDATE kulu_kohdistus SET rahavaraus_id = rv_akilliset_id WHERE rahavaraus_id = rv_akilliset_id_poistettava;
+        UPDATE kustannusarvioitu_tyo
+           SET rahavaraus_id = rv_akilliset_id
+         WHERE rahavaraus_id = rv_akilliset_id_poistettava;
+        UPDATE toteutuneet_kustannukset
+           SET rahavaraus_id = rv_akilliset_id
+         WHERE rahavaraus_id = rv_akilliset_id_poistettava;
 
-    -- Päivitetään kaikkiin juuri siirrettyihin riveihin tieto, että ne on käsitelty ja siirrety
-    UPDATE johto_ja_hallintokorvaus j
-       SET "siirretty?" = true
--- Päivitetään vain edellisen kuukauden jutut
-     WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) < date_trunc('month', pvm)
-       -- Ja vain ne, joita ei ole aiemmin päivitetty siirrettäväksi
-       AND j."siirretty?" = false;
+        DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = rv_akilliset_id_poistettava;
+        DELETE FROM rahavaraus_urakka WHERE rahavaraus_id = rv_akilliset_id_poistettava;
+        DELETE FROM rahavaraus WHERE id = rv_akilliset_id_poistettava;
 
-    -- Merkitään hoidon johdon maksuerä likaiseksi kaikissa voimassaolevissa MH-urakoissa
-    UPDATE maksuera
-       SET likainen = TRUE,
-           muokattu = current_timestamp
-     WHERE toimenpideinstanssi IN
-           (select tpi.id
-              from toimenpideinstanssi tpi
-                       join toimenpide tpk on tpi.toimenpide = tpk.id and tpk.koodi = '23151' -- 'MHU ja HJU Hoidon johto'
-                       join urakka u on tpi.urakka = u.id and u.tyyppi = 'teiden-hoito'
-                  -- Maksueriä voi lähettää Sampoon vielä 3 kk urakan päättymisen jälkeen.
-                  and (u.loppupvm + interval '1 month' * 3) > pvm);
-END;
+        -- Vahingot
+        UPDATE rahavaraus_urakka SET rahavaraus_id = rv_vahingot_id WHERE rahavaraus_id = rv_vahingot_id_poistettava;
+        UPDATE kulu_kohdistus SET rahavaraus_id = rv_vahingot_id WHERE rahavaraus_id = rv_vahingot_id_poistettava;
+        UPDATE kustannusarvioitu_tyo
+           SET rahavaraus_id = rv_vahingot_id
+         WHERE rahavaraus_id = rv_vahingot_id_poistettava;
+        UPDATE toteutuneet_kustannukset
+           SET rahavaraus_id = rv_vahingot_id
+         WHERE rahavaraus_id = rv_vahingot_id_poistettava;
+
+        DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = rv_vahingot_id_poistettava;
+        DELETE FROM rahavaraus_urakka WHERE rahavaraus_id = rv_vahingot_id_poistettava;
+        DELETE FROM rahavaraus WHERE id = rv_vahingot_id_poistettava;
+
+        -- Kannustin
+        UPDATE rahavaraus_urakka SET rahavaraus_id = rv_kannustin_id WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+        UPDATE kulu_kohdistus SET rahavaraus_id = rv_kannustin_id WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+        UPDATE kustannusarvioitu_tyo
+           SET rahavaraus_id = rv_kannustin_id
+         WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+        UPDATE toteutuneet_kustannukset
+           SET rahavaraus_id = rv_kannustin_id
+         WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+
+        DELETE FROM rahavaraus_tehtava WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+        DELETE FROM rahavaraus_urakka WHERE rahavaraus_id = rv_kannustin_id_poistettava;
+        DELETE FROM rahavaraus WHERE id = rv_kannustin_id_poistettava;
+
+    END
 $$ LANGUAGE plpgsql;
 
+-- Lisätään puuttuva varalaskupaikka rahavaraus
+INSERT INTO rahavaraus (nimi, luoja, luotu)
+VALUES ('Varalaskupaikat', (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), CURRENT_TIMESTAMP);
 
-CREATE OR REPLACE FUNCTION siirra_budjetoidut_tyot_toteumiin_uudestaan(pvm DATE) RETURNS VOID AS
+-- Jotta tulevat rahavarausten automaattiset tausta-ajot korjaisivat kulu_kohdistus ja kustannusarvioitu_työ taulujen
+-- rivit oikein. Meidän on lisättävä vielä yksi rahavaraus
+INSERT INTO rahavaraus (nimi, luoja, luotu)
+VALUES ('Muut tavoitehintaan vaikuttavat rahavaraukset', (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+        NOW());
+
+-- Aseta järjestysnumero jokaiselle rahavaraukselle
+UPDATE rahavaraus
+   SET jarjestys = 1
+ WHERE nimi = 'Rahavaraus A';
+UPDATE rahavaraus
+   SET jarjestys = 2
+ WHERE nimi = 'Äkilliset hoitotyöt';
+UPDATE rahavaraus
+   SET jarjestys = 3
+ WHERE nimi = 'Vahinkojen korjaukset';
+UPDATE rahavaraus
+   SET jarjestys = 4
+ WHERE nimi = 'Rahavaraus D - Levähdys- ja P-alueet';
+UPDATE rahavaraus
+   SET jarjestys = 5
+ WHERE nimi = 'Pysäkkikatosten korjaaminen';
+UPDATE rahavaraus
+   SET jarjestys = 6
+ WHERE nimi = 'Rahavaraus F - Meluesteet';
+UPDATE rahavaraus
+   SET jarjestys = 7
+ WHERE nimi = 'Rahavaraus G - Juurakkopuhdistamo';
+UPDATE rahavaraus
+   SET jarjestys = 8
+ WHERE nimi = 'Rahavaraus H - Aidat';
+UPDATE rahavaraus
+   SET jarjestys = 9
+ WHERE nimi = 'Rahavaraus I - Sillat ja laiturit';
+UPDATE rahavaraus
+   SET jarjestys = 10
+ WHERE nimi = 'Tilaajan rahavaraus kannustinjärjestelmään';
+UPDATE rahavaraus
+   SET jarjestys = 11
+ WHERE nimi = 'Tunneleiden hoito';
+UPDATE rahavaraus
+   SET jarjestys = 12
+ WHERE nimi = 'Muut tavoitehintaan vaikuttavat rahavaraukset';
+UPDATE rahavaraus
+   SET jarjestys = 13
+ WHERE nimi = 'Varalaskupaikat';
+
+-- Lisätään tehtävä varalaskupaikalle
+-- Ensin se uusi tehtävä
+INSERT INTO tehtava (nimi, emo, yksikko, suunnitteluyksikko, tehtavaryhma, jarjestys, hinnoittelu, api_seuranta,
+                     api_tunnus, suoritettavatehtava, luotu, luoja)
+VALUES ('Varalaskupaikkojen hoito', (SELECT id FROM toimenpide WHERE koodi = '20191'), 'kpl', 'kpl',
+        (SELECT id
+           FROM tehtavaryhma
+          WHERE yksiloiva_tunniste = '4e3cf237-fdf5-4f58-b2ec-319787127b3e'), -- Tällä hetkellä: Muut, MHU ylläpito (F)
+        NULL, NULL, FALSE, NULL,
+        NULL, CURRENT_TIMESTAMP, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
+
+-- Lisää varalauskaupaikka tehtävä varalaskupaikka rahavaraukselle
+INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
+VALUES ((SELECT id FROM rahavaraus WHERE nimi = 'Varalaskupaikat'),
+        (SELECT id FROM tehtava WHERE nimi = 'Varalaskupaikkojen hoito'),
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), CURRENT_TIMESTAMP),
+       ((SELECT id FROM rahavaraus WHERE nimi = 'Varalaskupaikat'),
+        (SELECT id
+           FROM tehtava
+          WHERE yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'), -- Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), CURRENT_TIMESTAMP),
+       ((SELECT id FROM rahavaraus WHERE nimi = 'Varalaskupaikat'),
+        (SELECT id FROM tehtava WHERE nimi = 'Digitalisaation edistäminen ja innovaatioiden kehittäminen'),
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), CURRENT_TIMESTAMP);
+
+-- Lisätään muutama pakollinen tehtävä rahavarukselle
+INSERT
+  INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
+SELECT rv.id,
+       t.id,
+       (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+       NOW()
+  FROM rahavaraus rv,
+       tehtava t
+ WHERE t.tehtavaryhma IS NOT NULL
+   AND t.nimi IN ('Muut tavoitehintaan vaikuttavat rahavaraukset',
+                  'Pohjavesisuojaukset',
+                  'Pysäkkikatoksen uusiminen',
+                  'Pysäkkikatoksen poistaminen',
+                  'Pysäkkikatoksen korjaaminen',
+                  'Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään',
+                  'Digitalisaation edistäminen ja innovaatioiden kehittäminen')
+   AND rv.nimi = 'Muut tavoitehintaan vaikuttavat rahavaraukset';
+
+--===  Lisätään rahavaraukselle Levähdys ja P-alueet oikea tehtävä ja poistetaan väärät ===--
+-- Poistetaan ensin kaikki mahdollinen
+DELETE
+  FROM rahavaraus_tehtava
+ WHERE rahavaraus_id = (SELECT id FROM rahavaraus WHERE nimi = 'Rahavaraus D - Levähdys- ja P-alueet');
+-- Lisätään oikea tehtävä
+INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
+VALUES ((SELECT id FROM rahavaraus WHERE nimi = 'Rahavaraus D - Levähdys- ja P-alueet'),
+        (SELECT id FROM tehtava WHERE nimi = 'Levähdys- ja P-alueiden varusteiden vaurioiden kuntoon saattaminen'),
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), NOW());
+
+--=== Sama jumppa Rahavaraus E - Pysäkkikatoksille - Poistetaan väärä tehtävä ja lisään oikea ===--
+-- Poistetaan ensin kaikki mahdollinen
+DELETE
+  FROM rahavaraus_tehtava
+ WHERE rahavaraus_id = (SELECT id FROM rahavaraus WHERE nimi = 'Pysäkkikatosten korjaaminen');
+-- Ja lisätään oikea
+INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
+VALUES ((SELECT id FROM rahavaraus WHERE nimi = 'Pysäkkikatosten korjaaminen'),
+        (SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatosten ja niiden varusteiden vaurioiden kuntoon saattaminen'),
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), NOW());
+
+-- Lisätään rahavaraus A:lle puuttuva tehtävä
+INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
+VALUES ((SELECT id FROM rahavaraus WHERE nimi = 'Rahavaraus A'),
+        (SELECT id FROM tehtava WHERE nimi = 'Muut päällysteiden paikkaukseen liittyvät työt'),
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), NOW());
+
+-- Päivitetään  tehtävien tehtäväryhmät kuntoon
+UPDATE tehtava
+   SET tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'ELY-rahoitteiset, liikenneympäristön hoito (E)')
+ WHERE nimi = 'Levähdys- ja P-alueiden varusteiden vaurioiden kuntoon saattaminen'
+    OR nimi = 'Pysäkkikatosten ja niiden varusteiden vaurioiden kuntoon saattaminen'
+    OR nimi = 'Meluesteiden pienten vaurioiden korjaaminen'
+    OR nimi = 'Aitojen vaurioiden korjaukset';
+
+UPDATE tehtava
+   SET tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'Muut, MHU ylläpito (F)')
+ WHERE nimi = 'Tunnelien pienet korjaustyöt ja niiden liikennejärjestelyt';
+
+-- Korjataan myös yhden tehtäväryhmän nimi
+UPDATE tehtavaryhma
+   SET nimi = 'Tilaajan rahavaraus (T3)'
+ WHERE nimi = 'Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään (T3)';
+UPDATE tehtavaryhma
+   SET nimi = 'Päällysteiden paikkaus, muut työt (Y)'
+ WHERE nimi = 'Päällysteiden paikkaus (Y)';
+
+--== Lisätään puuttuvia tehtäviä rahavaraukselle ==--
+-- Lisätään rahavaraukselle tehtäväryhmälle 'ELY-rahoitteiset, ylläpito (E)' kuuluvia tehtäviä
+DO
+$$
+    DECLARE
+        rahavaraus_id   INT;
+        tehtavaryhma_id INT;
+        tehtava         RECORD;
+    BEGIN
+
+        rahavaraus_id := (SELECT id FROM rahavaraus WHERE nimi = 'Pysäkkikatosten korjaaminen');
+        tehtavaryhma_id := (SELECT id FROM tehtavaryhma WHERE nimi = 'ELY-rahoitteiset, ylläpito (E)');
+
+        FOR tehtava IN SELECT id, nimi FROM tehtava WHERE tehtavaryhma = tehtavaryhma_id
+
+            LOOP
+                INSERT INTO rahavaraus_tehtava (rahavaraus_id, tehtava_id, luoja, luotu)
+                VALUES (rahavaraus_id, tehtava.id, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), NOW());
+            END LOOP;
+    END
+$$;
+
+--== Ajetaan uutta urakkaa lisättäessä ==--
+-- Lisätään oletusrahavaraukset kaikille uusille urakoille
+CREATE OR REPLACE FUNCTION lisaa_urakan_oletus_rahavaraukset() RETURNS TRIGGER AS
 $$
 BEGIN
-    raise notice 'Ennen ekaa inserttiä';
-    INSERT INTO toteutuneet_kustannukset (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu,
-                                          tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
-                                          sopimus_id, urakka_id, luoja, luotu, rivin_tunnistin)
-    SELECT k.vuosi,
-           k.kuukausi,
-           k.summa,
-           k.summa_indeksikorjattu as si,
-           k.indeksikorjaus_vahvistettu,
-           k.tyyppi,
-           k.tehtava,
-           k.tehtavaryhma,
-           k.toimenpideinstanssi,
-           k.sopimus,
-           (select s.urakka FROM sopimus s where s.id = k.sopimus) as "urakka-id",
-           (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
-           NOW(),
-           MD5(concat(k.id, k.vuosi, k.kuukausi, k.summa, k.tyyppi, k.tehtava, k.tehtavaryhma,
-                      k.toimenpideinstanssi, k.sopimus, k.luotu, k.luoja, k.muokattu, k.muokkaaja)::TEXT)
-      FROM kustannusarvioitu_tyo k
--- Siirretään edelleen vain kaikki menneet (alkaen edellisestä kuukaudesta)
-     WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) < date_trunc('month', pvm)
-       -- Nyt ei kiinnitetä huomiota siihen, onko rivi jo siirretty
-       -- AND k."siirretty?" = false
-       -- Siirretään vain tietyn tehtäväryhmän tehtäviä tai yksilöityjä tehtäviä
-       -- Automaattisesti toteumaksi lasketaan tehtäväryhmä: Erillishankinnat (W)
-       -- Ja tehtävät: Toimistotarvike- ja ICT-kulut, Hoitourakan työnjohto sekä Hoidonjohtopalkkio
-       AND (k.tehtavaryhma = (SELECT id FROM tehtavaryhma
-                               WHERE yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c') -- Erillishankinnat (W)
-         OR k.tehtava in (SELECT id FROM tehtava t WHERE t.yksiloiva_tunniste IN
-                                                         ('8376d9c4-3daf-4815-973d-cd95ca3bb388', -- "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne."
-                                                          'c9712637-fbec-4fbd-ac13-620b5619c744', -- Hoitourakan työnjohto
-                                                          '53647ad8-0632-4dd3-8302-8dfae09908c8'))) -- Hoidonjohtopalkkio
-        ON CONFLICT (rivin_tunnistin)
-            DO UPDATE SET summa_indeksikorjattu = EXCLUDED.summa_indeksikorjattu,
-                          indeksikorjaus_vahvistettu = EXCLUDED.indeksikorjaus_vahvistettu, muokattu = NOW();
+    INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luoja)
+    SELECT NEW.id,
+           rv.id,
+           (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
+      FROM rahavaraus rv
+     WHERE rv.nimi IN ('Äkilliset hoitotyöt',
+                       'Vahinkojen korjaukset',
+                       'Tilaajan rahavaraus kannustinjärjestelmään');
 
-    raise notice 'Ennen tokaa inserttiä';
-
-    -- Tästä taulusta (johto_ja_hallintokorvaus) siirretään kaikki rivit
-    INSERT INTO toteutuneet_kustannukset (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi,
-                                          sopimus_id, urakka_id, luoja, luotu, rivin_tunnistin)
-    SELECT j.vuosi,
-           j.kuukausi,
-           (j.tunnit * j.tuntipalkka * j."osa-kuukaudesta") AS summa,
-           (j.tunnit * j.tuntipalkka_indeksikorjattu * j."osa-kuukaudesta") AS summa_indeksikorjattu,
-           j.indeksikorjaus_vahvistettu                     AS indeksikorjaus_vahvistettu,
-           'laskutettava-tyo'                               AS tyyppi,
-           null                                             as tehtava,
-           (SELECT id FROM tehtavaryhma WHERE nimi = 'Johto- ja hallintokorvaus (J)'),
-           (SELECT tpi.id AS id
-              FROM toimenpideinstanssi tpi
-                       JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
-                       JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
-                   maksuera m
-             WHERE tpi.urakka = j."urakka-id"
-               AND m.toimenpideinstanssi = tpi.id
-               AND tpk2.koodi = '23150'),
-           (SELECT id
-              FROM sopimus s
-             WHERE s.urakka = j."urakka-id"
-               AND s.poistettu IS NOT TRUE
-             ORDER BY s.loppupvm DESC
-             limit 1),
-           j."urakka-id",
-           (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
-           NOW(),
-           MD5(concat(j.id, j."urakka-id", j."toimenkuva-id", j.tunnit, j.tuntipalkka,
-                      j.luotu, j.luoja, j.muokattu, j.muokkaaja, j.vuosi, j.kuukausi,
-                      j."ennen-urakkaa", j."osa-kuukaudesta")::TEXT)
-      FROM johto_ja_hallintokorvaus j
--- Siirretään menneet
-     WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) < date_trunc('month', pvm)
--- Eikä kiinnitetä huomiota siihen, onko ne jo siirretty vai ei
---AND j."siirretty?" = false
-        ON CONFLICT (rivin_tunnistin)
-            DO UPDATE SET summa_indeksikorjattu = EXCLUDED.summa_indeksikorjattu,
-                          indeksikorjaus_vahvistettu = EXCLUDED.indeksikorjaus_vahvistettu, muokattu = NOW();
-
-    -- Päivitetään kaikkiin juuri siirrettyihin riveihin tieto, että ne on käsitelty ja siirretty
-    UPDATE kustannusarvioitu_tyo k SET "siirretty?" = true
--- Päivitetään vain edellisen kuukauden jutut
-     WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', k.vuosi, k.kuukausi, 1)::DATE))) < date_trunc('month', pvm)
-       -- Ja vain ne, joita ei ole aiemin päivitetty siirretyksi
-       AND k."siirretty?" = false
-       -- Päivitetään vain tietyn tehtäväryhmän tehtäviä tai yksilöityjä tehtäviä
-       AND (k.tehtavaryhma =
-            (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c')
-         OR
-            k.tehtava in (SELECT id FROM tehtava t WHERE t.yksiloiva_tunniste IN
-                                                         ('8376d9c4-3daf-4815-973d-cd95ca3bb388', -- "Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne."
-                                                          'c9712637-fbec-4fbd-ac13-620b5619c744', -- Hoitourakan työnjohto
-                                                          '53647ad8-0632-4dd3-8302-8dfae09908c8'))); -- Hoidonjohtopalkkio
-
-    -- Päivitetään kaikkiin juuri siirrettyihin riveihin tieto, että ne on käsitelty ja siirrety
-    UPDATE johto_ja_hallintokorvaus j SET "siirretty?" = true
--- Päivitetään vain edellisen kuukauden jutut
-     WHERE (SELECT (date_trunc('MONTH', format('%s-%s-%s', j.vuosi, j.kuukausi, 1)::DATE))) < date_trunc('month', pvm)
-       -- Ja vain ne, joita ei ole aiemmin päivitetty siirrettäväksi
-       AND j."siirretty?" = false;
-
-    -- Merkitään hoidon johdon maksuerä likaiseksi kaikissa voimassaolevissa MH-urakoissa
-    UPDATE maksuera
-       SET likainen = TRUE,
-           muokattu = current_timestamp
-     WHERE toimenpideinstanssi IN
-           (select tpi.id
-              from toimenpideinstanssi tpi
-                       join toimenpide tpk on tpi.toimenpide = tpk.id and tpk.koodi = '23151' -- 'MHU ja HJU Hoidon johto'
-                       join urakka u on tpi.urakka = u.id and u.tyyppi = 'teiden-hoito'
-                  -- Maksueriä voi lähettää Sampoon vielä 3 kk urakan päättymisen jälkeen.
-                  and (u.loppupvm + interval '1 month' * 3) > pvm);
-END;
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION paivita_toteutuneet_kustannukset_jjh() RETURNS trigger AS
-$$
-DECLARE
-    md5hash       TEXT;
-    toteutunut_id INTEGER;
-    uusihash      TEXT;
-BEGIN
-    -- Jos toteutuneet_kustannukset taulussa on hash, joka vastaa vanhaa riviä,
-    -- niin poista se ja luo uusi
-    md5hash := MD5(concat(OLD.id, OLD."urakka-id", OLD."toimenkuva-id", OLD.tunnit, OLD.tuntipalkka,
-                          OLD.luotu, OLD.luoja, OLD.muokattu, OLD.muokkaaja, OLD.vuosi, OLD.kuukausi,
-                          OLD."ennen-urakkaa", OLD."osa-kuukaudesta")::TEXT);
-    SELECT id FROM toteutuneet_kustannukset WHERE rivin_tunnistin = md5hash INTO toteutunut_id;
-
-    IF (toteutunut_id IS NOT NULL) THEN
-        -- Poista vanha
-        DELETE FROM toteutuneet_kustannukset WHERE rivin_tunnistin = md5hash;
-        IF (TG_OP = 'UPDATE') THEN
-            -- Luo uusi
-            uusihash := MD5(concat(NEW.id, NEW."urakka-id", NEW."toimenkuva-id", NEW.tunnit, NEW.tuntipalkka,
-                                   NEW.luotu, NEW.luoja, NEW.muokattu, NEW.muokkaaja, NEW.vuosi, NEW.kuukausi,
-                                   NEW."ennen-urakkaa", NEW."osa-kuukaudesta")::TEXT);
-
-            INSERT INTO toteutuneet_kustannukset (vuosi, kuukausi, summa, summa_indeksikorjattu, indeksikorjaus_vahvistettu, tyyppi, tehtava, tehtavaryhma,
-                                                  toimenpideinstanssi, sopimus_id,
-                                                  urakka_id, luoja, luotu, rivin_tunnistin)
-            VALUES (NEW.vuosi,
-                    NEW.kuukausi,
-                    (NEW.tunnit * NEW.tuntipalkka * NEW."osa-kuukaudesta"),
-                    (NEW.tunnit * NEW.tuntipalkka_indeksikorjattu * NEW."osa-kuukaudesta"),
-                    NEW.indeksikorjaus_vahvistettu,
-                    'laskutettava-tyo',
-                    null,
-                    (SELECT id
-                       FROM tehtavaryhma
-                      WHERE nimi = 'Johto- ja hallintokorvaus (J)'),
-                    (SELECT tpi.id AS id
-                       FROM toimenpideinstanssi tpi
-                                JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
-                                JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
-                            maksuera m
-                      WHERE tpi.urakka = NEW."urakka-id"
-                        AND m.toimenpideinstanssi = tpi.id
-                        AND tpk2.koodi = '23150'),
-                    (SELECT id
-                       FROM sopimus s
-                      WHERE s.urakka = NEW."urakka-id"
-                        AND s.poistettu IS NOT TRUE
-                      ORDER BY s.loppupvm DESC
-                      LIMIT 1),
-                    NEW."urakka-id",
-                    (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
-                    NOW(),
-                    uusihash);
-        END IF;
-    END IF;
-    --
-    IF (TG_OP = 'UPDATE') THEN
-        RETURN NEW;
-    ELSE
-        RETURN OLD;
-    END IF;
-END;
+    RETURN NEW;
+END
 $$ LANGUAGE plpgsql;
