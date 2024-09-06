@@ -465,7 +465,7 @@ SELECT tk.id                                     AS toimenpidekoodi_id,
            WHEN o.otsikko = '9 LISÄTYÖT'
                THEN 'lisatyo'
            ELSE 'kokonaishintainen' END          AS tyyppi,
-       COALESCE(ru.urakkakohtainen_nimi, r.nimi) AS rahavaraus
+       COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), r.nimi) AS rahavaraus
 
 FROM tehtava tk
      -- Alataso on linkitetty toimenpidekoodiin

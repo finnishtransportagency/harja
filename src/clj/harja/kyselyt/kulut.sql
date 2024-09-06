@@ -197,7 +197,7 @@ SELECT kk.id                                      AS "kohdistus-id",
        kk.lisatyon_lisatieto                      AS "lisatyon-lisatieto",
        kk.maksueratyyppi                          AS "maksueratyyppi",
        kk.rahavaraus_id                           AS rahavaraus_id,
-       COALESCE(ru.urakkakohtainen_nimi, rv.nimi) AS rahavaraus_nimi,
+       COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), rv.nimi) AS rahavaraus_nimi,
        kk.tyyppi                                  AS tyyppi,
        kk.tavoitehintainen                        AS tavoitehintainen
   FROM kulu_kohdistus kk

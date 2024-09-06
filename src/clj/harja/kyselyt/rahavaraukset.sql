@@ -1,6 +1,6 @@
 -- name: hae-urakan-rahavaraukset-ja-tehtavaryhmat
 -- Palautetaan ensisijaisesti urakkakohtainen nimi, mutta jos sitä ei ole, niin defaultataan normaaliin nimeen.
-SELECT rv.id, COALESCE(rvu.urakkakohtainen_nimi, rv.nimi) as nimi,
+SELECT rv.id, COALESCE(NULLIF(rvu.urakkakohtainen_nimi,''), rv.nimi) as nimi,
        to_json(array_agg(DISTINCT(row(tr.id, tr.nimi, tp.id, tpi.id, tr.jarjestys)))) AS tehtavaryhmat
   FROM rahavaraus rv
         JOIN rahavaraus_urakka rvu ON rvu.rahavaraus_id = rv.id AND rvu.urakka_id = :id
@@ -157,7 +157,7 @@ SELECT DISTINCT ON (tr.id) tr.id,
       select generate_series(:alkuvuosi::INT, :loppuvuosi::INT - 1) as year
   )
 SELECT rv.id,
-       COALESCE(rvu.urakkakohtainen_nimi, rv.nimi) as nimi,
+       COALESCE(NULLIF(rvu.urakkakohtainen_nimi,''), rv.nimi) as nimi,
        SUM(kt.summa) as summa,
        SUM(kt.summa_indeksikorjattu) as "summa-indeksikorjattu",
        kt.indeksikorjaus_vahvistettu as "indeksikorjaus-vahvistettu",

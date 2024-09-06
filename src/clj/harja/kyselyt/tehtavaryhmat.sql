@@ -58,7 +58,7 @@ UPDATE tehtavaryhma
 SELECT tk.id                                     AS id,
        tk.nimi                                   AS tehtava,
        tk.suunnitteluyksikko                     AS yksikko,
-       COALESCE(ru.urakkakohtainen_nimi, r.nimi) AS rahavaraus,
+       COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), r.nimi) AS rahavaraus,
        -- Ei voi olla sekä rahavaraus, että käsin lisättävä tehtävä. Rahavarauksille toteumat on euroja ja ne lisätään kuluista.
        CASE
            WHEN (tk.kasin_lisattava_maara AND r.nimi IS NULL) THEN TRUE
