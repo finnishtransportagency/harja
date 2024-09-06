@@ -694,14 +694,24 @@ $$
                          tpi_liikenneymparisto
                          );
                 ELSE
-                    RAISE NOTICE 'Ei löytynyt tietoja urakalle: % tehtavaryhma: % - pp id: % ly id: %',
-                        urakka_id, tehtavaryhma_id, tpi_paallystepaikkaus, tpi_liikenneymparisto;
+                    -- RAISE NOTICE 'Ei löytynyt tietoja urakalle: % tehtavaryhma: % - pp id: % ly id: %',
+                    --    urakka_id, tehtavaryhma_id, tpi_paallystepaikkaus, tpi_liikenneymparisto;
                 END IF;
             END LOOP;
     END
 $$;
 
-
 -- TL;DR
 -- Korjataan 'Muut päällysteiden paikkaukseen liittyvät työt' tehtävän emo,
 -- ja korjataan samalla instanssit kulu_kohdistus tauluun kirjatut kulut tälle tehtävälle
+
+-- Päivitetään vielä maksuera taulu näille instansseille jotta lähtevät uudelleen sampoon
+-- '23116' 'Liikenneympäristön hoito'
+-- '20107' 'Päällystepaikkaukset'
+UPDATE maksuera m
+   SET likainen = true
+  FROM toimenpideinstanssi tpi
+  JOIN toimenpide tp ON tpi.toimenpide = tp.id
+  JOIN urakka u ON tpi.urakka = u.id
+ WHERE m.toimenpideinstanssi = tpi.id
+   AND tp.koodi IN('23116', '20107');
