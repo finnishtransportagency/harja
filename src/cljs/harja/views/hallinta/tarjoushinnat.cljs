@@ -10,26 +10,25 @@
             [harja.tiedot.hallinta.tarjoushinnat :as tiedot]))
 
 (defn urakan-tarjoushinnat [e! tarjoushinnat]
-  (let [_ (js/console.log "urakan-tarjoushinnat" (pr-str tarjoushinnat))]
-    [grid/grid
-           {:tunniste :hoitokausi
-            :luokat "urakan-tarjoushinnat-taulukko"
-            :reunaviiva? true
-            :voi-poistaa? (constantly false)
-            :piilota-toiminnot? true
-            :tallenna #(tuck-apurit/e-kanavalla! e! tiedot/->PaivitaTarjoushinnat %)}
-           [{:otsikko "Hoitokausi"
-             :nimi :hoitokausi
-             :tyyppi :numero
-             :muokattava? (constantly false)
-             :desimaalien-maara 0
-             :leveys "100px"}
-            {:otsikko "Tarjoushinta"
-             :nimi :tarjous-tavoitehinta
-             :muokattava? (comp not :on-paatos)
-             :tyyppi :euro
-             :leveys ""}]
-           tarjoushinnat]))
+  [grid/grid
+   {:tunniste :hoitokausi
+    :luokat "urakan-tarjoushinnat-taulukko"
+    :reunaviiva? true
+    :voi-poistaa? (constantly false)
+    :piilota-toiminnot? true
+    :tallenna #(tuck-apurit/e-kanavalla! e! tiedot/->PaivitaTarjoushinnat %)}
+   [{:otsikko "Hoitokausi"
+     :nimi :hoitokausi
+     :tyyppi :numero
+     :muokattava? (constantly false)
+     :desimaalien-maara 0
+     :leveys "100px"}
+    {:otsikko "Tarjoushinta"
+     :nimi :tarjous-tavoitehinta
+     :muokattava? (comp not :on-paatos)
+     :tyyppi :euro
+     :leveys ""}]
+   tarjoushinnat])
 
 (defn tarjoushinnat* [e! app]
   (komp/luo
