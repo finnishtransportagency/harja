@@ -370,17 +370,18 @@
 
 (defn- tyokoneiden-toimenpiteet
   "Palauttaa haettavat tehtävä työkonekyselyille"
-  [talvi kesa yllapito tarkastukset user]
+  [talvi kesa yllapito valaistus tarkastukset user]
   (let [yllapito (filter tk/yllapidon-reaaliaikaseurattava? yllapito)
+        valaistus (filter tk/valaistuksen-reaaliaikaseurattavat valaistus)
         tarkastukset (when (roolit/tilaajan-kayttaja? user)
                        (filter tk/tarkastuksen-reaaliaikaseurattava? tarkastukset))
-        haettavat-toimenpiteet (haettavat (union talvi kesa yllapito tarkastukset))]
+        haettavat-toimenpiteet (haettavat (union talvi kesa yllapito valaistus tarkastukset))]
     (konv/seq->array haettavat-toimenpiteet)))
 
 (defn- hae-tyokoneiden-selitteet
   [db user
    {:keys [alue alku loppu talvi kesa urakka-id hallintayksikko nykytilanne?
-           yllapito tilaajan-laadunvalvonta toleranssi tarkastukset] :as optiot}
+           yllapito valaistus tilaajan-laadunvalvonta toleranssi tarkastukset] :as optiot}
    urakat]
   (when nykytilanne?
     (let [rivit (q/hae-tyokoneselitteet
@@ -390,7 +391,7 @@
                     {:nayta-kaikki (roolit/tilaajan-kayttaja? user)
                      :organisaatio (:id (:organisaatio user))
                      :urakat urakat
-                     :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito tarkastukset user)
+                     :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito valaistus tarkastukset user)
                      :alku alku
                      :loppu loppu}))
           tehtavat (into #{}
@@ -442,14 +443,14 @@
                          :kayttaja_on_urakoitsija (roolit/urakoitsija? user)})))
 
 (defn- hae-tyokoneiden-reitit
-  [db ch user {:keys [toleranssi alue alku loppu toimenpiteet talvi kesa yllapito tarkastukset] :as tiedot} urakat]
+  [db ch user {:keys [toleranssi alue alku loppu toimenpiteet talvi kesa yllapito valaistus tarkastukset] :as tiedot} urakat]
   (q/hae-tyokonereitit-kartalle
     db ch
     (merge
       (laajenna-tyokone-extent alue)
       {:urakat urakat
        :nayta-kaikki (roolit/tilaajan-kayttaja? user)
-       :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito tarkastukset user)
+       :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito valaistus tarkastukset user)
        :alku alku
        :loppu loppu
        :organisaatio (get-in user [:organisaatio :id])})))

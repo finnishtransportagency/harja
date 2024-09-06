@@ -56,7 +56,10 @@
               },
               "suunta": {
                 "id": "urn:harja/havainnot/0/suunta",
-                "type": "number"
+                "anyOf": [
+                  {"type": "number"},
+                  {"type": "null"}
+                ]
               },
               "urakkaid": {
                 "id": "urn:harja/havainnot/0/urakkaid",

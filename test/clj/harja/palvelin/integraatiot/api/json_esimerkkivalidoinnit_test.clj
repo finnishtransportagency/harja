@@ -86,7 +86,15 @@
   (is (nil? (validoi json-skeemat/analytiikkaportaali-toteuma-vastaus json-esimerkit/+analytiikka-reittitoteumat-response+)))
 
   (is (nil? (validoi json-skeemat/raportti-materiaaliraportti-response json-esimerkit/+raportti-materiaaliraportti-response+)))
-  
+
   (is (nil? (validoi json-skeemat/tyomaapaivakirja-kirjaus-request json-esimerkit/+tyomaapaivakirja-kirjaus-request+)))
-  (is (nil? (validoi json-skeemat/tyomaapaivakirja-paivitys-request json-esimerkit/+tyomaapaivakirja-paivitys-request+))))
+  (is (nil? (validoi json-skeemat/tyomaapaivakirja-paivitys-request json-esimerkit/+tyomaapaivakirja-paivitys-request+)))
+
+  (is (nil? (validoi json-skeemat/analytiikka-tehtavat-vastaus json-esimerkit/+analytiikka-tehtavat-haku-response+)))
+  (is (nil? (validoi json-skeemat/analytiikka-tehtavaryhmat-vastaus json-esimerkit/+analytiikka-tehtavaryhmat-haku-response+)))
+  (is (nil? (validoi json-skeemat/analytiikka-rahavaraukset-vastaus json-esimerkit/+analytiikka-rahavaraukset-haku-response+)))
+  (is (nil? (validoi json-skeemat/analytiikka-toimenpiteet-vastaus json-esimerkit/+analytiikka-toimenpiteet-haku-response+)))
+  (is (nil? (validoi json-skeemat/analytiikka-mhu-suunnitellut-kustannukset-vastaus json-esimerkit/+analytiikka-mhu-suunnitellut-kustannukset-haku-response+)))
+  (is (nil? (validoi json-skeemat/analytiikka-mhu-toteutuneet-kustannukset-vastaus json-esimerkit/+analytiikka-mhu-toteutuneet-kustannukset-haku-response+))))
+
 
