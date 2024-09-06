@@ -259,7 +259,7 @@ SELECT 0                          AS budjetoitu_summa,
            WHEN (tk.koodi = '20107' AND lk.rahavaraus_id IS NULL) THEN 'Päällystepaikkaukset'
            WHEN (tk.koodi = '20191' AND lk.rahavaraus_id IS NULL) THEN 'MHU Ylläpito'
            WHEN (tk.koodi = '14301' AND lk.rahavaraus_id IS NULL) THEN 'MHU Korvausinvestointi'
-           WHEN lk.rahavaraus_id IS NOT NULL THEN COALESCE(ru.urakkakohtainen_nimi, r.nimi)
+           WHEN lk.rahavaraus_id IS NOT NULL THEN COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), r.nimi)
            END                    AS toimenpide,
        MIN(l.erapaiva)::TEXT      AS ajankohta,
        'toteutunut'               AS toteutunut,
@@ -293,7 +293,7 @@ WHERE l.urakka = :urakka
     OR tk.koodi = '23124' OR tk.koodi = '20107' OR tk.koodi = '20191' OR
        tk.koodi = '14301')
 GROUP BY tr.nimi, tk.nimi, lk.tyyppi, lk.maksueratyyppi, tk.koodi, tr.jarjestys, tr.yksiloiva_tunniste,
-         lk.rahavaraus_id, COALESCE(ru.urakkakohtainen_nimi, r.nimi), lk.tavoitehintainen
+         lk.rahavaraus_id, COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), r.nimi), lk.tavoitehintainen
 UNION ALL
 -- Toteutuneet erillishankinnat, hoidonjohdonpalkkio, johto- ja hallintokorvaukset
 -- ja vuoden päättämiseen liittyvät kulut kulu_kohdistus taulusta.
