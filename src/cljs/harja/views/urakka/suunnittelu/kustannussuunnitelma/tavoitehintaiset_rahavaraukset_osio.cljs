@@ -31,7 +31,8 @@
 (defn tavoitehintaiset-rahavaraukset-taulukko [rivit vuosi loppuvuodet? vahvistettu? indeksit]
   (let [;; Tehdään datasta atomi, jotta muokkausgridi voi muokata sitä - Muokataan datasta muokkausgridille valmis setti
         muokkaus-rahavaraukset (into {} (mapv (fn [rahavaraus]
-                                                {(:id rahavaraus) {:nimi (:haettu-asia rahavaraus)
+                                                {(:id rahavaraus) {:jarjestys (:jarjestys rahavaraus)
+                                                                   :nimi (:haettu-asia rahavaraus)
                                                                    :summa (:summa rahavaraus)
                                                                    :summa-indeksikorjattu (:summa-indeksikorjattu rahavaraus)}})
                                           rivit))
@@ -49,6 +50,7 @@
        :voi-lisata? false
        :voi-kumota? false
        :piilota-toiminnot? true
+       :jarjesta :jarjestys
        :tyhja "Ei rahavauksia."
        :disabloi-autocomplete? true
        :on-rivi-blur (r/partial tallenna-tavoitehintainen-rahavaraus! vuosi loppuvuodet? indeksit)
