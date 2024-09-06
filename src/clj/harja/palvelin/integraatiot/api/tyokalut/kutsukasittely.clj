@@ -488,7 +488,7 @@
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
   käsittelyvirhe."
-  [db integraatioloki resurssi request vastauksen-skeema kasittele-kutsu-fn vaadittu-api-oikeus]
+  [db integraatioloki resurssi request vastauksen-skeema kasittele-kutsu-fn vaadittu-api-oikeus integraatio-jarjestelma]
   (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
     {:status 415
      :headers {"Content-Type" "text/plain"}
@@ -496,7 +496,7 @@
     (let [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
           xml? (= (kutsun-formaatti request) "xml")
           tapahtuma-id-thread (thread (when integraatioloki
-                                        (lokita-kutsu integraatioloki resurssi request nil)))
+                                        (lokita-kutsu integraatioloki resurssi request nil integraatio-jarjestelma)))
           otsikot (:headers request)
           parametrit (:params request)
           vastaus (aja-virhekasittelyn-kanssa
@@ -523,7 +523,7 @@
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
   käsittelyvirhe."
-  [db integraatioloki resurssi request kasittele-kutsu-fn vaadittu-api-oikeus]
+  [db integraatioloki integraatio resurssi request kasittele-kutsu-fn vaadittu-api-oikeus]
   (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
     {:status 415
      :headers {"Content-Type" "text/plain"}
@@ -532,7 +532,7 @@
           request-origin (get (:headers request) "origin")
           kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
           tapahtuma-id-thread (thread (when integraatioloki
-                                        (lokita-kutsu integraatioloki resurssi request nil)))
+                                        (lokita-kutsu integraatioloki resurssi request nil integraatio)))
           parametrit (:params request)
           vastaus (aja-virhekasittelyn-kanssa
                     resurssi

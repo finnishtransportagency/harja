@@ -9,9 +9,48 @@ Tietokantana PostgreSQL PostGIS laajennoksella. Hostaus Solitan infrassa.
 
 Autentikointiin käytetään KOKAa.
 
-@startuml
-A->B
-@enduml
+
+## Sisältö
+<!-- TOC -->
+* [Väylän Harja-järjestelmä](#väylän-harja-järjestelmä-)
+  * [Sisältö](#sisältö)
+  * [Hakemistorakenne](#hakemistorakenne-)
+  * [Kehitysympäristön pystyttäminen](#kehitysympäristön-pystyttäminen)
+      * [Paikallisesti](#paikallisesti)
+* [Docker](#docker)
+  * [GitHub Container Registry](#github-container-registry)
+    * [Kehittäjän kirjautuminen Container Registryyn](#kehittäjän-kirjautuminen-container-registryyn)
+  * [GitHub Actions & Docker](#github-actions--docker)
+* [Docker compose](#docker-compose)
+  * [Kirjautuminen ja ModHeader](#kirjautuminen-ja-modheader)
+  * [Docker - paikallinen kehitysympäristö](#docker---paikallinen-kehitysympäristö)
+  * [Docker compose - paikallinen kehitysympäristö](#docker-compose---paikallinen-kehitysympäristö)
+      * [Ongelmia](#ongelmia)
+  * [Dokumentaatio](#dokumentaatio)
+    * [Uuden kehittäjän ohjeet](#uuden-kehittäjän-ohjeet)
+    * [Tietokanta](#tietokanta)
+      * [Tietokantataulujen nimeäminen](#tietokantataulujen-nimeäminen)
+    * [Namespacet](#namespacet)
+    * [Tiedostojen nimeäminen](#tiedostojen-nimeäminen)
+      * [Miksi?](#miksi)
+  * [Testaus](#testaus)
+    * [Fronttitestit](#fronttitestit)
+    * [Backend-testit](#backend-testit)
+    * [End-to-end testit](#end-to-end-testit)
+  * [Debug lokituksen näyttäminen](#debug-lokituksen-näyttäminen)
+  * [Tietokanta](#tietokanta-1)
+  * [Staging tietokannan sisällön muokkaus](#staging-tietokannan-sisällön-muokkaus)
+  * [Tieverkon tuonti kantaan](#tieverkon-tuonti-kantaan)
+  * [Labyrintin SMS-gateway](#labyrintin-sms-gateway)
+  * [Väylän Harja-järjestelmän laadunseurantatyökalu](#väylän-harja-järjestelmän-laadunseurantatyökalu-)
+  * [FIM](#fim)
+  * [ActiveMQ Artemis](#activemq-artemis)
+* [Harvoin tarvittavaa (jos koskaan)](#harvoin-tarvittavaa-jos-koskaan)
+  * [Autogeneroi nuolikuvat SVG:nä](#autogeneroi-nuolikuvat-svgnä)
+  * [Konvertoi SVG kuvia PNG:ksi](#konvertoi-svg-kuvia-pngksi)
+  * [Lisääminen `.harja` hakemistoon](#lisääminen-harja-hakemistoon-)
+  * [Lisenssi](#lisenssi)
+<!-- TOC -->
 
 ## Hakemistorakenne ##
 
@@ -406,9 +445,6 @@ Avaa selain http://localhost:3000/laadunseuranta/
 
 Palvelin käynnistyy kun Harja käynnistetään.
 
-## Lisenssi
-https://github.com/finnishtransportagency/harja/blob/develop/LICENSE.txt
-
 ## FIM
 
 Harja käyttää FIM:iä käyttäjätietojen hakemiseen. FIM-komponentista on kaksi eri versiota: FIM ja FIMDEV. FIMDEV on käytössä vain lokaalissa kehitysympäristössä ja se palauttaa aina fim.edn-tiedoston sisällön.
@@ -417,21 +453,25 @@ Oikean FIM:n testikäyttö:
 1. Määrittele asetukset.edn:n FIM:n URL:ksi https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity sekä poista :tiedosto avain.
 2. Avaa SSH-yhteys ssh -L6666:testioag.vayla.fi:443 harja-app1-stg
 
-## Active MQ
-Käynnistys docker imagesta:
-`docker run -p 127.0.0.1:61616:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9`
-Jos container on jo käytössä/tehty, niin käynnistä se:
-`docker start harja_activemq`
-Jos container ei suostu käynnistymään, poista se ja koita uudestaan - aja:
-`docker rm harja_activemq`
+## ActiveMQ Artemis
 
-Harjassa pyörii tällä hetkellä kaksi JMS-brokeria. Jos haluat käynnistää molemmat eri porttiin, esim ITMF:n eri portissa, saat ActiveMQ konsolin porttiin 8171 ja TCP-portin 61626 kuunteluun näin:
-`docker run -p 127.0.0.1:61626:61626 -p 127.0.0.1:8171:8171 --env UI_PORT=8171 --env TCP_PORT=61626 --name harja_activemq_itmf -dit solita/harja-activemq:5.15.9`
+Harja käyttää tieliikenneilmoituksiin ja toimenpidekuittausten välitykseen JMS-jonoja.
+Brokerina käytetään ActiveMQ Artemista.  
+CI-putken integraatiotesteissä käytetään dockeroitua ActiveMQ Artemis -palvelinta, jonka voi käynnistää myös paikallisesti yksikkötestien ajamista varten.
 
-URL konsoliin:
-localhost:8162/admin/queues.jsp (admin/admin)
+1. Navigoi ```.github/docker/``` kansioon
+2. Aja ```$ docker compose up --wait activemq-artemis-itmf```
+3. ActiveMQ Artemis on nyt käytettävissä osoitteessa ```tcp://localhost:61616```
+   * Web-konsoli on osoitteessa ```http://localhost:8161```
+   * Käyttäjätunnus: admin ja salasana: admin
+4. Ajaaksesi integraatiotestit paikallisesti, anna testejä varten oikeat ympäristömuuttujat:  
+   ```$ HARJA_ITMF_BROKER_PORT=61616 HARJA_ITMF_BROKER_AI_PORT=8161 lein test :integraatio```
+5. Sammuta ActiveMQ Artemis:  
+   ```$ cd .github/docker/ && docker compose down activemq-artemis-itmf```
 
-
+**Lisätietoja:** 
+* [.github/docker/activemq-artemis/README.md](.github/docker/activemq-artemis/README.md)
+* [.github/docker/README.md](.github/docker/README.md)
 
 # Harvoin tarvittavaa (jos koskaan)
 
@@ -483,3 +523,6 @@ salasanat. Jos tarvitse lisätä palvelua, ehkä täytyy lisätä myös salasana
   ehkä tarvitse lisätä ne tiedostot mitä haluamme. 
 
 <a name="*1">*1</a> Solita-intenal/OnPrem repo - etsi projektin sisäisestä [wikistä](https://knowledge.solita.fi/pages/viewpage.action?pageId=136218429)
+
+## Lisenssi
+https://github.com/finnishtransportagency/harja/blob/develop/LICENSE.txt

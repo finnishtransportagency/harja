@@ -47,39 +47,29 @@
     {:leveys 3 :fmt :numero :otsikko "Pituus"}
     {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola yhteensä (t)"}
     {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola (t/km)"}
-    {}))
+    {:leveys 5 :fmt :numero :otsikko "Käyttö­raja (t/km)"}))
 
-(deftest raportin-suoritus-urakalle-toimii-aktiivinen-urakka
-  (let [nyt (java.util.Date.)
-        v (+ (.getYear nyt) 1900)
-        kk (inc (.getMonth nyt))
-        p (.getDate nyt)
-        str-p (if (= 1 (count (str p)))
-            (str "0" p)
-            p)
-        str-kk (if (= 1 (count (str kk)))
-            (str "0" kk)
-            kk)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+(deftest raportin-suoritus-urakalle-toimii
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :pohjavesialueiden-suolatoteumat
                                  :konteksti "urakka"
-                                 :urakka-id (ffirst (q (str "SELECT id FROM urakka WHERE nimi = 'Aktiivinen Oulu Testi';")))
-                                 :parametrit {:alkupvm (c/to-date (t/local-date (dec v) kk p))
-                                              :loppupvm (c/to-date (t/local-date (inc v) kk p))}})]
+                                 :urakka-id (ffirst (q (str "SELECT id FROM urakka WHERE nimi = 'Pudasjärven alueurakka 2007-2012';")))
+                                 :parametrit {:alkupvm (c/to-date (t/local-date 2007 10 1))
+                                              :loppupvm (c/to-date (t/local-date 2008 9 30))}})]
     (is (vector? vastaus))
     (let [taulukko (apurit/taulukko-otsikolla
                      vastaus
-                     "11244001-Kempeleenharju")]
+                     "11615174-")]
 
       (tarkista-sarakkeet taulukko)
 
       (is (= vastaus
             [:raportti {:orientaatio :landscape
-                        :nimi (str "Aktiivinen Oulu Testi, Suolatoteumat (kaikki pohjavesialueet) ajalta " str-p "." str-kk "." (dec v) " - " str-p "." str-kk "." (inc v))}
-             [:infolaatikko "Huom: tämä raportti on vanhentunut rajoitusaluetietojen osalta. Tarkista voimassaolevat rajoitusalueet raportilta 'Suolatoteumat - urakan rajoitusalueet'." {:tyyppi :vahva-ilmoitus}]
-             [:taulukko {:otsikko "11244001-Kempeleenharju", :viimeinen-rivi-yhteenveto? true, :tyhja nil}
+                        :nimi "Pudasjärven alueurakka 2007-2012, Suolatoteumat (kaikki pohjavesialueet) ajalta 01.10.2007 - 30.09.2008"}
+             nil
+             [:taulukko {:otsikko "11615174-", :viimeinen-rivi-yhteenveto? true, :tyhja nil}
               [{:leveys 3 :fmt :kokonaisluku :otsikko "Tie"}
                {:leveys 2 :fmt :kokonaisluku :otsikko "Alku­osa"}
                {:leveys 2 :fmt :kokonaisluku :otsikko "Alku­etäisyys"}
@@ -88,7 +78,6 @@
                {:leveys 3 :fmt :numero :otsikko "Pituus"}
                {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola yhteensä (t)"}
                {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola (t/km)"}
-               nil]
-              [[18637 1 0 1 8953 9324.379134279012 5M 0.5362287320148329 nil]
-               [28409 56 0 56 605 573.3889406769638 3M 5.2320506852784625 nil]
-               [[:arvo {:arvo "Yhteensä"}] nil nil nil nil nil 8M nil nil]]]])))))
+               {:leveys 5 :fmt :numero :otsikko "Käyttö­raja (t/km)"}]
+              [[20 14 8098 14 11028 2931.4154579352903 12.64234230994867M 4.3127091643479165 nil]
+               [[:arvo {:arvo "Yhteensä"}] nil nil nil nil nil 12.64234230994867M nil nil]]]])))))

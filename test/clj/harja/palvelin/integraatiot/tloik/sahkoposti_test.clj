@@ -243,7 +243,7 @@
         ;; 1. Varmistetaan, että jonoista saatiin ilmoitus toimenpiteestä, joka on valaistusurakalle tarkoitettu ja kuuluu väärään urakkaan
         (is (= "sisään" (:suunta (first integraatioviestit))))
         (is (= "JMS" (:siirtotyyppi (first integraatioviestit))))
-        (is (= "tloik-ilmoituskuittausjono" (:osoite (first integraatioviestit))))
+        (is (= "tloik-ilmoitusviestijono" (:osoite (first integraatioviestit))))
         (is (clojure.string/includes? (:sisalto (first integraatioviestit)) viesti-id))
         (is (clojure.string/includes? (:sisalto (first integraatioviestit)) "valaistus"))
         (is (clojure.string/includes? (:sisalto (first integraatioviestit)) "Hailuodossa"))
@@ -291,7 +291,7 @@
         (is (clojure.string/includes? (:sisalto (nth integraatioviestit 7)) "harja:ilmoitus"))
         (is (= "sisään" (:suunta (nth integraatioviestit 7))))
         (is (= "JMS" (:siirtotyyppi (nth integraatioviestit 7))))
-        (is (= "tloik-ilmoituskuittausjono" (:osoite (nth integraatioviestit 7))))
+        (is (= "tloik-ilmoitusviestijono" (:osoite (nth integraatioviestit 7))))
         (is (clojure.string/includes? (:sisalto (nth integraatioviestit 7)) viesti-id))
 
         ;; 9. Harja ilmoittaa T-LOIKIlle, että toimenpideviesti tullaan välittämään oikealle urakalle sähköpostilla

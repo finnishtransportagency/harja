@@ -2,8 +2,6 @@
 # Samalla varmistetaan, että tarvittavat ympäristömuuttujat on asetettu ja oikeat volumet on mountattu.
 # Tämä tiedosto on tarkoitettu käytettäväksi vain Github Actionseissa
 
-version: "3.8"
-
 networks:
   harja_net:
     driver: bridge
@@ -92,26 +90,48 @@ services:
       start_period: 20s
       timeout: 10s
 
-  activemq-itmf:
-    image: ghcr.io/finnishtransportagency/harja_activemq:latest
-    # FIXME: Versio 5.15.16 rikkoo integraatiotestit, selvitettävä mistä johtuu
-    #image: ghcr.io/finnishtransportagency/harja_activemq:5.15.16
-    container_name: activemq-itmf
+# Deprekoitu ActiveMQ Classic broker
+#  activemq-itmf:
+#    image: ghcr.io/finnishtransportagency/harja_activemq:latest
+#    container_name: activemq-itmf
+#    networks:
+#      - harja_net
+#    environment:
+#      TZ: "EET"
+#      TCP_PORT: 61616
+#      UI_PORT: 8161
+#    ports:
+#        - "127.0.0.1:61616:61616" # broker (admin:adminactivemq)(amq:amq)
+#        - "127.0.0.1:8161:8161"   # web    localhost:8161/admin/queues.jsp (admin:admin)
+#    # Estetään IPv6 käyttö, jotta testitietokannan migraatioiden ajossa ei tule yhteysongelmia
+#    sysctls:
+#      - net.ipv6.conf.all.disable_ipv6=1
+#    healthcheck:
+#     # https://stackoverflow.com/questions/52500782/how-to-check-if-activemq-is-working-properly
+#      test: /opt/activemq/bin/activemq query --objname type=Broker,brokerName=*,service=Health | grep Good
+#      interval: 10s
+#      retries: 5
+#      start_period: 20s
+#      timeout: 10s
+
+  # Uusi ActiveMQ Artemis broker
+  activemq-artemis-itmf:
+    image: ghcr.io/finnishtransportagency/harja_activemq_artemis:latest
+    container_name: activemq-artemis-itmf
     networks:
       - harja_net
     environment:
       TZ: "EET"
-      TCP_PORT: 61616
-      UI_PORT: 8161
+      EXTRA_ARGS: "--http-host 0.0.0.0 --relax-jolokia --default-port 61616 --http-port 8161"
     ports:
-        - "127.0.0.1:61616:61616" # broker (admin:adminactivemq)(amq:amq)
-        - "127.0.0.1:8161:8161"   # web    localhost:8161/admin/queues.jsp (admin:admin)
+      - "127.0.0.1:61616:61616" # broker
+      - "127.0.0.1:8161:8161"   # web
+
     # Estetään IPv6 käyttö, jotta testitietokannan migraatioiden ajossa ei tule yhteysongelmia
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     healthcheck:
-     # https://stackoverflow.com/questions/52500782/how-to-check-if-activemq-is-working-properly
-      test: /opt/activemq/bin/activemq query --objname type=Broker,brokerName=*,service=Health | grep Good
+      test: /var/lib/artemis-instance/bin/artemis check node --up --user admin --password admin --url "tcp://127.0.0.1:61616" | grep "success"
       interval: 10s
       retries: 5
       start_period: 20s

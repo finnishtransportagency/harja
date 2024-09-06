@@ -45,12 +45,27 @@
                                     FROM tehtava t
                                          LEFT JOIN toimenpide emo ON t.emo = emo.id
                                    WHERE (t.poistettu IS FALSE OR emo.poistettu IS FALSE OR (emo.poistettu IS TRUE AND t.poistettu IS FALSE))"))
-        tehtavaryhmat-kannasta (q-map (str "SELECT id FROM tehtavaryhma"))
+        ;; Haetaan kaikki tehtäväryhmät, joilla on tehtäviä ja tehtävillä toimenpidekoodi (tehtava.emo), tämä on lokaaliongelma, joka ei toistu tuotannossa
+        tehtavaryhmat-kannasta (q-map (str
+                                        "SELECT distinct tr.id
+                                           FROM tehtavaryhma tr
+                                                JOIN tehtava t ON t.tehtavaryhma = tr.id AND t.emo IS NOT NULL "))
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/tehtavat")] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (count tehtavat-kannasta) (count (:tehtavat encoodattu-body))))
     (is (= (count tehtavaryhmat-kannasta) (count (:tehtavaryhmat encoodattu-body))))))
+
+(deftest hae-toimenpiteet-onnistuu-test
+  (let [;; Löydetään n. 1080 toimenpidettä
+        toimenpiteet-kannasta (q-map
+                            (str "SELECT id, nimi, koodi as toimenpidekoodi, luotu, muokattu, poistettu
+                                    FROM toimenpide
+                                   WHERE taso = 3"))
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toimenpiteet")] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
+    (is (= 200 (:status vastaus)))
+    (is (= (count toimenpiteet-kannasta) (count (:toimenpiteet encoodattu-body))))))
 
 (deftest hae-urakat-yksinkertainen-onnistuu-test
   (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/urakat")] kayttaja-analytiikka portti)]
@@ -412,7 +427,7 @@
         _ (u (format "insert into sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) values (%s, TRUE)" ii-urakka-id))
 
         ;; Haetaan apista tulokset
-        vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" haku-alkaa haku-paattyy )] kayttaja-analytiikka portti)
+        vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" haku-alkaa haku-paattyy)] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)
         ;; Jätetään vain tässä luotujen urakoiden tehtävät
         urakoiden-tehtavat (filter

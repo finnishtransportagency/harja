@@ -335,16 +335,16 @@ INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, urakka_id) VALUES 
 INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
  (SELECT id FROM toteuma WHERE lisatieto = 'Tämä on käsin tekaistu juttu'),
  ARRAY[
-  ROW('2008-09-09 10:00.00', st_makepoint(498919, 7247099)::POINT, 2, NULL,
+  ROW('2008-09-09 10:00.00', st_makepoint(490295.6,7239883.7)::POINT, 2, NULL,
       ARRAY[]::reittipiste_tehtava[],
       ARRAY[]::reittipiste_materiaali[])::reittipistedata,
-  ROW('2008-09-09 10:03.00', st_makepoint(499271, 7248395) ::POINT, 2, NULL,
+  ROW('2008-09-09 10:03.00', st_makepoint(491233.4,7239780.7) ::POINT, 2, NULL,
       ARRAY[]::reittipiste_tehtava[],
       ARRAY[(1, 2), (7,4)]::reittipiste_materiaali[])::reittipistedata,
-  ROW('2008-09-09 10:06.00', st_makepoint(499399, 7249019) ::POINT, 2, NULL,
+  ROW('2008-09-09 10:06.00', st_makepoint(492031.9,7239573.7) ::POINT, 2, NULL,
       ARRAY[]::reittipiste_tehtava[],
       ARRAY[(1, 8)]::reittipiste_materiaali[])::reittipistedata,
-  ROW('2008-09-09 10:09.00', st_makepoint(440919, 7207099) ::POINT, 2, NULL,
+  ROW('2008-09-09 10:09.00', st_makepoint(493371.8,7239093.7) ::POINT, 2, NULL,
       ARRAY[]::reittipiste_tehtava[],
       ARRAY[]::reittipiste_materiaali[])::reittipistedata
  ]::reittipistedata[]);
