@@ -634,7 +634,7 @@ UPDATE tehtava
 -- Tässä tehdään nuo toimenpideinstanssi kytkökset oikein, jonka jälkeen kulut näytetään oikein sekä niitä pystytään muokata
 --
 -- Päivittää siis 'Liikenneympäristön hoito -> Päällysteiden paikkaukset'
--- -> Päällysteiden paikkaus (hoidon ylläpito)	Päällysteiden paikkaus (Y)
+-- -> Päällysteiden paikkaus (hoidon ylläpito)	Päällysteiden paikkaus, muut työt (Y)
 
 DO
 $$
@@ -651,7 +651,7 @@ $$
         SELECT id
           INTO tehtavaryhma_id
           FROM tehtavaryhma t
-         WHERE t.nimi = 'Päällysteiden paikkaus (Y)';
+         WHERE t.nimi = 'Päällysteiden paikkaus, muut työt (Y)';
 
         -- Looppaa kaikki teiden-hoito urakat
         FOR urakka_id IN
@@ -683,11 +683,11 @@ $$
 
                     -- Päivitetään rivejä mikäli niitä on
                     UPDATE kulu_kohdistus
--- Aseta uusi toimenpideinstanssi 'Päällystepaikkaukset'
+                       -- Aseta uusi toimenpideinstanssi 'Päällystepaikkaukset'
                        SET toimenpideinstanssi = tpi_paallystepaikkaus,
                            muokattu            = CURRENT_TIMESTAMP,
                            muokkaaja           = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
--- Missä tehtäväryhmä on päällysteiden paikkaus
+                     -- Missä tehtäväryhmä on päällysteiden paikkaus
                      WHERE tehtavaryhma = tehtavaryhma_id
                        -- Missä urakan toimenpideinstanssi on vanha '23116' 'Liikenneympäristön hoito'
                        AND toimenpideinstanssi = (
