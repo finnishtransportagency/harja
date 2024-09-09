@@ -141,7 +141,7 @@
     [:div
      [:div.row
       [:div.col-xs-12.col-md-6
-       [:div.label-ja-alasveto
+       [:div.label-ja-alasveto {:style {:width "320px"}}
         [:span.alasvedon-otsikko "Tavoitehintaan kuuluminen*"]
         [kentat/tee-kentta {:tyyppi :radio-group
                             :vaihtoehdot [:true :false]
@@ -155,8 +155,8 @@
      [:div.row
       (if (= :true @tavoitehinta)
         ;; Tavoitehintaisella muulla kululla on tehtäväryhmä
-        [:div.col-xs-12.col-md-3
-         [:div.label-ja-alasveto
+        [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
+         [:div.label-ja-alasveto {:style {:width "320px"}}
           [:span.alasvedon-otsikko "Tehtäväryhmä*"]
           [yleiset/livi-pudotusvalikko {:vayla-tyyli? true
                                         :muokattu? true
@@ -167,8 +167,8 @@
                                         :valitse-fn #(e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro))}
            tehtavaryhmat]]]
         ;; Ei tavoitehintaisella muulla kululla on toimenpide
-        [:div.col-xs-12.col-md-4
-         [:div.label-ja-alasveto
+        [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
+         [:div.label-ja-alasveto {:style {:width "320px"}}
           [:span.alasvedon-otsikko "Toimenpide*"]
           [yleiset/livi-pudotusvalikko {:valinta (:toimenpide kohdistus)
                                         :vayla-tyyli? true
@@ -177,11 +177,12 @@
                                         :format-fn :toimenpide
                                         :valitse-fn #(e! (tiedot/->ValitseToimenpideKohdistukselle % nro))}
            toimenpiteet]]])
-      [:div.col-xs-12.col-md-6
+      [:div.col-xs-12.col-md-6 {:style {:max-width "350px"}}
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Lisätieto *"
          :luokka "poista-label-top-margin"
          :vayla-tyyli? true
+         :tyylit {:width "150px"}
          :otsikon-luokka ""
          :arvo-atom (r/wrap lisatyon-lisatieto
                       #(e! (tiedot/->LisatyonLisatieto % nro)))
@@ -195,8 +196,8 @@
         _ (when (= 1 (count tehtavaryhmat))
             (e! (tiedot/->ValitseTehtavaryhmaKohdistukselle (first tehtavaryhmat) nro)))]
    [:div.row
-    [:div.col-xs-12.col-md-3
-     [:div.label-ja-alasveto
+    [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
+     [:div.label-ja-alasveto {:style {:width "320px"}}
       [:span.alasvedon-otsikko "Rahavaraus*"]
       [yleiset/livi-pudotusvalikko {:valinta (:rahavaraus kohdistus)
                                     :format-fn :nimi
@@ -209,7 +210,7 @@
                                                   (e! (tiedot/->ValitseRahavarausKohdistukselle % nro)))}
        rahavaraukset]]]
     [:div.col-xs-12.col-md-6
-     [:div.label-ja-alasveto
+     [:div.label-ja-alasveto {:style {:width "320px"}}
       [:span.alasvedon-otsikko "Tehtäväryhmä*"]
       [yleiset/livi-pudotusvalikko {:valinta (:tehtavaryhma kohdistus)
                                     :format-fn :tehtavaryhma
@@ -222,8 +223,8 @@
 (defn- lisatyo-kohdistus [e! lomake kohdistus toimenpiteet nro]
   (let [lisatyon-lisatieto (:lisatyon-lisatieto kohdistus)]
     [:div.row
-     [:div.col-xs-12.col-md-3
-      [:div.label-ja-alasveto
+     [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
+      [:div.label-ja-alasveto {:style {:width "320px"}}
        [:span.alasvedon-otsikko "Toimenpide*"]
        [yleiset/livi-pudotusvalikko {:valinta (:toimenpide kohdistus)
                                      :vayla-tyyli? true
@@ -232,7 +233,7 @@
                                      :virhe? (nayta-kohdistuksen-virhe? lomake nro :toimenpide)
                                      :valitse-fn #(e! (tiedot/->ValitseToimenpideKohdistukselle % nro))}
         toimenpiteet]]]
-     [:div.col-xs-12.col-md-6
+     [:div.col-xs-12.col-md-6 {:style {:width "350px"}}
       [kentat/tee-otsikollinen-kentta
        {:otsikko "Lisätieto *"
         :luokka "poista-label-top-margin"
@@ -250,11 +251,11 @@
         hoitovuoden-paatostyyppi (r/atom (:hoitovuoden-paatostyyppi kohdistus))
         _ (js/console.log "hoitovuodenpaatos-kohdistus :: hoitovuoden-paatostyyppi" (pr-str hoitovuoden-paatostyyppi) )]
     [:div.row
-     [:div.col-xs-12.col-md-4
-      [:div.label-ja-alasveto
+     [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
+      [:div.label-ja-alasveto {:style {:width "320px"}}
        [:span.alasvedon-otsikko "Hoitovuoden päätöksen tyyppi*"]
        [:p (@hoitovuoden-paatostyyppi tiedot/vuoden-paatoksen-kulun-tyypit)]]]
-     [:div.col-xs-12.col-md-6
+     [:div.col-xs-12.col-md-6 {:style {:width "350px"}}
       [kentat/tee-otsikollinen-kentta
        {:otsikko "Lisätieto *"
         :luokka "poista-label-top-margin"
@@ -297,9 +298,10 @@
      [:div.row
       [:div.col-xs-12.col-md-6
        ;; Kulun tyyppi
-       [:div.label-ja-alasveto
+       [:div.label-ja-alasveto {:style {:width "320px"}}
         [:span.alasvedon-otsikko "Kulun tyyppi*"]
-        [yleiset/livi-pudotusvalikko {:valinta kohdistustyyppi
+        [yleiset/livi-pudotusvalikko {:vayla-tyyli? true
+                                      :valinta kohdistustyyppi
                                       :disabled (not voiko-muokata?)
                                       :format-fn #(kulun-tyyppi->tekstiksi %)
                                       :valitse-fn #(e! (tiedot/->KohdistusTyyppi % nro))}
@@ -316,7 +318,7 @@
 
      ;; Kohdistuksen summa
      [:div.row
-      [:div.col-xs-12.col-md-2
+      [:div.col-xs-12.col-md-2 {:style {:width "142px"}}
        [:div {:style {:padding-left "5px"}}
         [kentat/tee-otsikollinen-kentta
          {:otsikko "Määrä € *"
@@ -393,7 +395,7 @@
       [:div.col-xs-12.col-md-6
        [napit/takaisin "Takaisin"
         #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
-        {:vayla-tyyli? true :teksti-nappi? true :style {:font-size "14px"}}]
+        {:vayla-tyyli? true :teksti-nappi? true :style {:font-size "14px" :padding-right "16px"}}]
        [:h2 (str (if-not (nil? (:id lomake)) "Muokkaa kulua" "Uusi kulu"))]]
 
       ;; Poista-nappi
@@ -452,7 +454,7 @@
 
      [:div.row
       [:div.col-xs-12.col-md-2
-       [:div {:style {:padding-left "5px"}}
+       [:div {:style {:padding-left "5px" :max-width "250px"}}
         [:label "Laskun pvm*"]
         [pvm-valinta/pvm-valintakalenteri-inputilla
          {:valitse #(e! (tiedot/->ValitseErapaiva %))
@@ -472,7 +474,7 @@
                            (-> @tila/yleiset :urakka :loppupvm))}]]]]
 
      [:div.row
-      [:div.col-xs-12.col-md-2 {:style {:padding-left "20px"}}
+      [:div.col-xs-12.col-md-2 {:style {:padding-left "20px" :max-width "280px"}}
        [kentat/tee-otsikollinen-kentta
         {:kentta-params {:tyyppi :string
                          :vayla-tyyli? true
@@ -503,14 +505,17 @@
      [:div.row
       [:div.col-xs-12.col-md-6
        [:div.kulu-napit
+        [:span {:style {:padding-right "16px"}}
         [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaKulu))
          {:vayla-tyyli? true
           :luokka "suuri"
-          :disabled (or (not lomake-validi?) kulu-lukittu?)}]
+          :tyylit {:padding-right "16px"}
+          :disabled (or (not lomake-validi?) kulu-lukittu?)}]]
+        [:span
         [napit/peruuta "Peruuta" #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
          {:ikoni [ikonit/remove]
           :luokka "suuri"
-          :vayla-tyyli? true}]]]]
+          :vayla-tyyli? true}]]]]]
      [:div.row
       [:div.col-xs-12.col-md-6
        (when urakoitsija-maksaa? [:div.caption.margin-top-4 "Kulu kirjataan miinusmerkkisenä"])]]]))
