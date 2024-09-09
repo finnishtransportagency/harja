@@ -175,16 +175,7 @@
                  (apply + (map (fn [rivi]
                                  (or (:toimenpide-toteutunut-summa rivi) 0))
                             toimenpiteet)))
-          (assoc indeksikorjaus-vahvistettu-avain indeksikorjaus-vahvistettu-arvo)
-          #_(assoc :lisatyot-summa (reduce (fn [summa rivi]
-                                           (+ (or summa 0) (or (:lisatyot-summa rivi) 0)))
-                                   (:lisatyot-summa taulukko-rivit)
-                                   toimenpiteet))
-          #_(assoc :lisatyot (reduce (fn [kaikki toimenpide]
-                                     (concat kaikki
-                                       (:lisatyot toimenpide)))
-                             (:lisatyot taulukko-rivit)
-                             toimenpiteet)))]
+          (assoc indeksikorjaus-vahvistettu-avain indeksikorjaus-vahvistettu-arvo))]
 
     taulukko))
 
