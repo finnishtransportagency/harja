@@ -39,48 +39,49 @@
 (defn- summaa-toimenpidetaso
   "Käytetään seuraaville pääryhmille: hankintakustannukset ja rahavaraukset."
   [toimenpiteet paaryhmaotsikko]
-  (mapv
-    (fn [toimenpide]
-      (let [toimenpiteen-tehtavat (second toimenpide)
-            ;; Toimenpiteet listassa on budjetoidut ja toteutuneet tehtävät
-            ;; UI:lla budjetointi lasketaan yhteen toimenpideryhmän perusteella (esim. hankinnat) ja toimenpiteen perusteella (esim. talvihoito)
-            ;; Toteutuneet kustannukset näytetään tehtävittäin ryhmiteltynä.
-            ;; Poistetaan siis budjetointiin liittyvät tehtävät :toteutunut = budjetoitu tai hth ja lasketaan lisätyöt yhteen.
-            indeksoitavat-tehtavat (filter
+  (sort-by :jarjestys
+    (mapv
+      (fn [toimenpide]
+        (let [toimenpiteen-tehtavat (second toimenpide)
+              ;; Toimenpiteet listassa on budjetoidut ja toteutuneet tehtävät
+              ;; UI:lla budjetointi lasketaan yhteen toimenpideryhmän perusteella (esim. hankinnat) ja toimenpiteen perusteella (esim. talvihoito)
+              ;; Toteutuneet kustannukset näytetään tehtävittäin ryhmiteltynä.
+              ;; Poistetaan siis budjetointiin liittyvät tehtävät :toteutunut = budjetoitu tai hth ja lasketaan lisätyöt yhteen.
+              indeksoitavat-tehtavat (filter
+                                       (fn [tehtava]
+                                         (when (and
+                                                 (not= "hjh" (:toteutunut tehtava))
+                                                 (not= "lisatyo" (:maksutyyppi tehtava)))
+                                           tehtava))
+                                       toimenpiteen-tehtavat)
+              toteutuneet-tehtavat (filter
                                      (fn [tehtava]
                                        (when (and
                                                (not= "hjh" (:toteutunut tehtava))
+                                               (not= "budjetointi" (:toteutunut tehtava))
                                                (not= "lisatyo" (:maksutyyppi tehtava)))
                                          tehtava))
                                      toimenpiteen-tehtavat)
-            toteutuneet-tehtavat (filter
-                                   (fn [tehtava]
-                                     (when (and
-                                             (not= "hjh" (:toteutunut tehtava))
-                                             (not= "budjetointi" (:toteutunut tehtava))
-                                             (not= "lisatyo" (:maksutyyppi tehtava)))
-                                       tehtava))
-                                   toimenpiteen-tehtavat)
-            jarjestys (some #(:jarjestys %) toimenpiteen-tehtavat)]
-        {:paaryhma paaryhmaotsikko
-         :toimenpide (first toimenpide)
-         :jarjestys jarjestys
-         :toimenpide-toteutunut-summa (reduce (fn [summa tehtava]
-                                                (+ summa (or (:toteutunut_summa tehtava) 0))) ;; vain toteutuneet tehtävät ilman lisätöitä
-                                        0 toteutuneet-tehtavat)
-         :toimenpide-budjetoitu-summa (reduce (fn [summa tehtava]
-                                                (+ summa (or (:budjetoitu_summa tehtava) 0)))
-                                        0 toimenpiteen-tehtavat)
-         :toimenpide-budjetoitu-summa-indeksikorjattu (reduce (fn [summa tehtava]
-                                                                (+ summa (or (:budjetoitu_summa_indeksikorjattu tehtava) 0)))
-                                                        0 toimenpiteen-tehtavat)
-         :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)
-         ;; Asetetaan vahvistus-status nulliksi, jos yhtään toteumaa tai budjettia ei ole annettu.
-         ;; Päätellään myöhemmin, että näytetäänkö nämä vahvistettuina tai vahvistamattomina
-         (keyword (str paaryhmaotsikko "-indeksikorjaus-vahvistettu"))
-         (when indeksoitavat-tehtavat
-           (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) indeksoitavat-tehtavat))}))
-    toimenpiteet))
+              jarjestys (some #(:jarjestys %) toimenpiteen-tehtavat)]
+          {:paaryhma paaryhmaotsikko
+           :toimenpide (first toimenpide)
+           :jarjestys jarjestys
+           :toimenpide-toteutunut-summa (reduce (fn [summa tehtava]
+                                                  (+ summa (or (:toteutunut_summa tehtava) 0))) ;; vain toteutuneet tehtävät ilman lisätöitä
+                                          0 toteutuneet-tehtavat)
+           :toimenpide-budjetoitu-summa (reduce (fn [summa tehtava]
+                                                  (+ summa (or (:budjetoitu_summa tehtava) 0)))
+                                          0 toimenpiteen-tehtavat)
+           :toimenpide-budjetoitu-summa-indeksikorjattu (reduce (fn [summa tehtava]
+                                                                  (+ summa (or (:budjetoitu_summa_indeksikorjattu tehtava) 0)))
+                                                          0 toimenpiteen-tehtavat)
+           :tehtavat (sort-by :jarjestys toteutuneet-tehtavat)
+           ;; Asetetaan vahvistus-status nulliksi, jos yhtään toteumaa tai budjettia ei ole annettu.
+           ;; Päätellään myöhemmin, että näytetäänkö nämä vahvistettuina tai vahvistamattomina
+           (keyword (str paaryhmaotsikko "-indeksikorjaus-vahvistettu"))
+           (when indeksoitavat-tehtavat
+             (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) indeksoitavat-tehtavat))}))
+      toimenpiteet)))
 
 (defn- summaa-paaryhman-tehtavat
   "Käytetään pääryhmille: Hoidonjohdonpalkkiot, bonus, erillishankinta, siirrot ja tavoitehinnan oikaisut"
