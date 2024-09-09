@@ -11,7 +11,7 @@
 
 (defn urakan-tarjoushinnat [e! tarjoushinnat]
   [grid/grid
-   {:tunniste :id
+   {:tunniste :hoitokausi
     :luokat "urakan-tarjoushinnat-taulukko"
     :reunaviiva? true
     :voi-poistaa? (constantly false)

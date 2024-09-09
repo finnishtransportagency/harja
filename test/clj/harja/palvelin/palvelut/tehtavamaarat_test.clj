@@ -96,7 +96,10 @@
                                      :tehtavaryhmat-ja-toimenpiteet
                                      +kayttaja-jvh+
                                      {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})]
-    (is (= (count tehtavaryhmat-toimenpiteet) tr-tp-lkm) "Palauttaa tehtäväryhmä ja toimenpidelistan")))
+    ;; Lista ei ole ihan identtinen, koska tehtäväryhmälle: Muut, MHU ylläpito (F) on lisätty tehtäviä
+    ;; jotka kuuluu sekä liikenneympäristön hoitoon, että MHU Ylläpitoon, joten distinct tehtäväryhmävertailusta
+    ;; jää väkisinkin tällaiset duplikaatit pois. Niinpä lisätään käsin distinct vertailuun +1
+    (is (= (count tehtavaryhmat-toimenpiteet) (+ tr-tp-lkm 1)) "Palauttaa tehtäväryhmä ja toimenpidelistan")))
 
 (deftest tehtavaryhmat-ja-toimenpiteet-vaaralla-datalla-testi
   (is (thrown? IllegalArgumentException (kutsu-palvelua (:http-palvelin jarjestelma)
