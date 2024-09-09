@@ -70,7 +70,7 @@ SELECT COALESCE(SUM(kt.summa), 0)                     AS budjetoitu_summa,
        COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), r.nimi)      AS toimenpide,
        MIN(CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')) AS ajankohta,
        'budjetointi'                                  AS toteutunut,
-       tk_tehtava.jarjestys                           AS jarjestys,
+       r.jarjestys                                    AS jarjestys,
        'rahavaraukset'                                AS paaryhma,
        kt.indeksikorjaus_vahvistettu                  AS indeksikorjaus_vahvistettu
   FROM kustannusarvioitu_tyo kt
@@ -86,7 +86,7 @@ SELECT COALESCE(SUM(kt.summa), 0)                     AS budjetoitu_summa,
    AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
    AND kt.rahavaraus_id IS NOT NULL
  GROUP BY paaryhma, toimenpide, toimenpideryhma, maksutyyppi, tehtava_nimi,
-          tk_tehtava.jarjestys, tr.nimi, kt.indeksikorjaus_vahvistettu
+          tk_tehtava.jarjestys, tr.nimi, kt.indeksikorjaus_vahvistettu, r.jarjestys
 
 UNION ALL
 -- Haetaan budjetoidut hankintakustannukset myös kiintehintainen_tyo taulusta

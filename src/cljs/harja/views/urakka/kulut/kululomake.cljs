@@ -286,8 +286,8 @@
                    :margin-bottom "10px"}}
      ;; Otsikko ja poista nappi
      [:div.row
-      [:div.col-xs-12.col-md-6 [:h3 (str "Kohdistus " (inc nro))]]
-      [:div.col-xs-12.col-md-6 {:style {:float "right"}}
+      [:div.col-xs-6.col-sm-6.col-md-6 [:h3 (str "Kohdistus " (inc nro))]]
+      [:div.col-xs-6.col-sm-6.col-md-6 {:style {:float "right"}}
        (when voiko-muokata?
          [napit/poista "Poista kohdistus"
           #(e! (tiedot/->PoistaKohdistus nro))
@@ -319,13 +319,14 @@
      ;; Kohdistuksen summa
      [:div.row
       [:div.col-xs-12.col-md-2 {:style {:width "142px"}}
-       [:div {:style {:padding-left "5px"}}
+       [:div
         [kentat/tee-otsikollinen-kentta
          {:otsikko "Määrä € *"
-          :luokka #{}
+          :otsikon-tag "span"
           :arvo-atom (r/wrap (:summa kohdistus) #(e! (tiedot/->KohdistuksenSumma % nro)))
           :kentta-params {:disabled? (or (not voiko-muokata?) (:lukittu? kohdistus))
                           :tyyppi :euro
+                          :tyylit {:width "110px" :height "34px"}
                           :vaadi-negatiivinen? urakoitsija-maksaa?
                           :vaadi-positiivinen-numero? (not urakoitsija-maksaa?)
                           ;; TODO: Kehitä validointi tähän :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta))
@@ -445,6 +446,7 @@
         [:span.alasvedon-otsikko "Koontilaskun kuukausi*"]
         [yleiset/livi-pudotusvalikko {:data-cy "koontilaskun-kk-dropdown"
                                       :disabled (or kk-droppari-disabled kulu-lukittu?)
+                                      :tyylit {:margin-left "0px"}
                                       :vayla-tyyli? true
                                       :skrollattava? true
                                       :valinta koontilaskun-kuukausi
@@ -454,7 +456,7 @@
 
      [:div.row
       [:div.col-xs-12.col-md-2
-       [:div {:style {:padding-left "5px" :max-width "250px"}}
+       [:div {:style {:max-width "250px"}}
         [:label "Laskun pvm*"]
         [pvm-valinta/pvm-valintakalenteri-inputilla
          {:valitse #(e! (tiedot/->ValitseErapaiva %))
@@ -474,7 +476,7 @@
                            (-> @tila/yleiset :urakka :loppupvm))}]]]]
 
      [:div.row
-      [:div.col-xs-12.col-md-2 {:style {:padding-left "20px" :max-width "280px"}}
+      [:div.col-xs-12.col-md-2 {:style {:max-width "280px"}}
        [kentat/tee-otsikollinen-kentta
         {:kentta-params {:tyyppi :string
                          :vayla-tyyli? true
@@ -486,7 +488,7 @@
                       (:laskun-numero lomake)
                       #(e! (tiedot/->KoontilaskunNumero %)))}]]]
      [:div.row
-      [:div.col-xs-12.col-md-6
+      [:div.col-xs-12.col-md-6 {:style {:padding-left "0px"}}
        (when (or laskun-nro-lukittu? laskun-nro-virhe?)
          [:label (str "Annetulla numerolla on jo olemassa kirjaus, jonka päivämäärä on "
                    (-> tarkistukset
@@ -496,13 +498,13 @@
                    ". Yhdellä laskun numerolla voi olla yksi päivämäärä, joten kulu kirjataan samalle päivämäärälle. Jos haluat kirjata laskun eri päivämäärälle, vaihda laskun numero.")])]]
 
      [:div.row
-      [:div.col-xs-12.col-md-4
+      [:div.col-xs-12.col-md-4 {:style {:padding-left "20px" }}
        [:h5 "Määrä € *"]
        [:h2 (fmt/euro (reduce + (map :summa kohdistukset)))]]
       [:div.col-xs-12.col-md-6
        [liitteet e! kulu-lukittu? lomake]]]
 
-     [:div.row
+     [:div.row {:style {:padding-top "16px"}}
       [:div.col-xs-12.col-md-6
        [:div.kulu-napit
         [:span {:style {:padding-right "16px"}}

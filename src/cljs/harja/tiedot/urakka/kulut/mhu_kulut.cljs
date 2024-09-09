@@ -12,7 +12,7 @@
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]))
 
 (defrecord LisaaKohdistus [lomake])
-(defrecord PoistaKohdistus [nro])
+(defrecord PoistaKohdistus [indeksi])
 (defrecord KohdistusTyyppi [tyyppi nro])
 (defrecord ValitseTehtavaryhmaKohdistukselle [tehtavaryhma nro])
 (defrecord TavoitehintaanKuuluminen [tavoitehinta nro])
@@ -245,14 +245,19 @@
           default tila/kulut-kohdistus-default
           default (assoc default :rivi (count kohdistukset))
           kohdistukset (into [] (conj (get-in app [:lomake :kohdistukset]) default))
+          kohdistukset (into [] (sort-by :rivi < kohdistukset))
           app (assoc-in app [:lomake :kohdistukset] kohdistukset)]
       app))
 
   PoistaKohdistus
-  (process-event [{nro :nro} app]
+  (process-event [{indeksi :indeksi} app]
     (let [kohdistukset (into [] (get-in app [:lomake :kohdistukset]))
-          poistettava (nth kohdistukset nro)
-          muokatut-kohdistukset (drop-nth kohdistukset nro)
+          poistettava (nth kohdistukset indeksi)
+          muokatut-kohdistukset (into [] (sort-by :rivi < (drop-nth kohdistukset indeksi)))
+          ;; Määritellään jäljelle jääneiden kohdistusten :rivi avaimen numerot uusiksi
+          muokatut-kohdistukset (into [] (map-indexed (fn [i kohdistus]
+                                                        (assoc kohdistus :rivi i))
+                                           muokatut-kohdistukset))
           app (-> app
                 (assoc-in [:lomake :kohdistukset] muokatut-kohdistukset)
                 (update-in [:lomake :poistetut-kohdistukset] conj poistettava))]
@@ -501,8 +506,7 @@
 
   HaeUrakanKulut
   (process-event [{{:keys [id alkupvm loppupvm kuukausi] :as viimeisin-haku} :hakuparametrit} app]
-    (let [_ (js/console.log "HaeUrakanKulut :: " alkupvm loppupvm kuukausi)
-          alkupvm (or alkupvm (first kuukausi))
+    (let [alkupvm (or alkupvm (first kuukausi))
           loppupvm (or loppupvm (second kuukausi))]
       (tuck-apurit/post! :kulut-kohdistuksineen
         {:urakka-id id
@@ -608,7 +612,7 @@
           {:onnistui ->TallennusOnnistui
            :epaonnistui ->KutsuEpaonnistui
            :epaonnistui-parametrit [{:viesti "Kulun tallentaminen epäonnistui"}]})
-        (js/console.log "TallennaKulu: Ei tallennettu, koska lomake ei ole validi :: validi?" (pr-str validi?)))
+        (js/console.error "Lomaketta ei tallennettu, koska lomake ei ole validi." (pr-str validi?)))
       (cond-> app
         true (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake))))
         (true? validi?) (update-in [:parametrit :haetaan] inc))))
@@ -635,7 +639,6 @@
 
   AsetaHakukuukausi
   (process-event [{:keys [kuukausi]} app]
-    (js/console.log "AsetaHakukuukausi :: kuukausi" (pr-str kuukausi))
     (-> app
       (assoc-in [:parametrit :haun-alkupvm] nil)
       (assoc-in [:parametrit :haun-loppupvm] nil)
@@ -644,7 +647,6 @@
   AsetaHakuPaivamaara
   (process-event
     [{:keys [alkupvm loppupvm]} app]
-    (js/console.log "AsetaHakuPaivamaara :: alkupvm" (pr-str alkupvm) "loppupvm" (pr-str loppupvm))
     (-> app
       (assoc-in [:parametrit :haun-kuukausi] nil)
       (assoc-in [:parametrit :haun-alkupvm] (or alkupvm (-> @tila/yleiset :urakka :alkupvm)))
@@ -653,7 +655,6 @@
   AsetaHakuAlkuPvm
   (process-event
     [{:keys [pvm]} app]
-    (js/console.log "AsetaHakuAlkuPvm :: alkupvm" (pr-str pvm))
     (-> app
       (assoc-in [:parametrit :haun-kuukausi] nil)
       (assoc-in [:parametrit :haun-alkupvm] pvm)))
@@ -661,7 +662,6 @@
   AsetaHakuLoppuPvm
   (process-event
     [{:keys [pvm]} app]
-    (js/console.log "AsetaHakuLoppuPvm :: loppupvm" (pr-str pvm))
     (-> app
       (assoc-in [:parametrit :haun-kuukausi] nil)
       (assoc-in [:parametrit :haun-loppupvm] pvm)))

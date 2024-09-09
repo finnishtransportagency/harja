@@ -201,11 +201,11 @@
            hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))
            haun-alkupvm-atom (r/atom (get-in app [:parametrit :haun-alkupvm]))
            haun-loppupvm-atom (r/atom (get-in app [:parametrit :haun-loppupvm]))]
-       [:div#vayla.kulujen-kohdistus.margin-top-16
+       [:div
         (if syottomoodi
-          [:div
+          [:div.kulujen-kirjaus
              [kululomake/kululomake e! app]]
-          [:div
+          [:div#vayla.kulujen-listaus.margin-top-16
            [:div.flex-row
            #_ [debug/debug app]
             [:h1 "Kulujen kohdistus"]
