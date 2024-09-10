@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.laadunseuranta.talvihoitoreitit
+(ns harja.tiedot.urakka.laadunseuranta.talvihoitoreitit-tiedot
   (:require [tuck.core :as tuck]
             [reagent.core :as r]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -36,6 +36,8 @@
                             #{}
                             @valitut-kohteet-atom)
           talvihoitoreitit (keep (fn [reitti] (when (contains? valitut-kohteet (:id reitti)) reitti)) @karttataso-talvihoitoreitit)
+          sijainnit (map (fn [rivi] (map :sijainti (:reitit rivi))) talvihoitoreitit)
+          extentit (harja.geo/extent-monelle (flatten sijainnit))
           map-reitit (into [] (flatten (mapv (fn [reitti]
                                                (mapv (fn [r]
                                                        (when (:sijainti r)
@@ -43,6 +45,7 @@
                                                                         :stroke {:width 8
                                                                                  :color (:vari reitti)}}
                                                                   (:sijainti r))
+                                                          :extent (harja.geo/extent (:sijainti r))
                                                           :tyyppi-kartalla :talvihoitoreitit
                                                           :selite {:teksti "Talvihoitoreitti"
                                                                    :img (pinni-ikoni "sininen")}
@@ -57,7 +60,9 @@
       (when (and (not-empty talvihoitoreitit) (not (nil? talvihoitoreitit)) @karttataso-nakyvissa?)
         (with-meta map-reitit
           {:selitteet [{:vari (map :color asioiden-ulkoasu/talvihoitoreitit)
-                        :teksti "Talvihoitoreitit"}]})))))
+                        :teksti "Talvihoitoreitit"
+                        :extent extentit}]
+           :extent extentit})))))
 
 
 (defrecord HaeTalvihoitoreitit [])
@@ -89,15 +94,12 @@
     (let [;; Lisätään jokaiselle talvihoitoreitille joku random väri, jolla se esitellään näkymässä
           vastaus (mapv (fn [rivi]
                           (assoc rivi :vari (anna-random-vari nil)))
-                    vastaus)
-          alue (harja.geo/extent-monelle (flatten (map (fn [rivi]
-                                                         (map :sijainti rivi)) vastaus)))]
+                    vastaus)]
 
       ;; Jos talvihoitoreittejä löytyy, resetoi kartta
       (do
         (reset! karttataso-talvihoitoreitit vastaus)
         (reset! valitut-kohteet-atom (set (mapv :id vastaus)))
-        (reset! nav/kartan-extent alue)
         (-> app
           (assoc :talvihoitoreitit vastaus)
           (assoc :haku-kaynnissa? false)))))
