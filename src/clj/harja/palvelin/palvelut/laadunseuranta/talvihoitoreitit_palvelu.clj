@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.laadunseuranta.talvihoitoreitit
+(ns harja.palvelin.palvelut.laadunseuranta.talvihoitoreitit-palvelu
   "Talvihoitoreittien UI:n endpointit."
   (:require [com.stuartsierra.component :as component]
             [harja.domain.hoitoluokat :as hoitoluokat]
@@ -13,8 +13,9 @@
 (defn hae-urakan-talvihoitoreitit [db user {:keys [urakka-id]}]
   ;; TODO: HOX muuta roolit excel
   #_(oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-talvihoitoreitit user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
   (let [urakan-talvihoitoreitit (talvihoitoreitit-q/hae-urakan-talvihoitoreitit db {:urakka_id urakka-id})
-        _ (log/info "hae-urakan-talvihoitoreitit :: urakan-talvihoitoreitit" urakan-talvihoitoreitit)
+        _ (log/debug "hae-urakan-talvihoitoreitit :: urakan-talvihoitoreitit" urakan-talvihoitoreitit)
         talvihoitoreiti (mapv (fn [rivi]
                                 (let [kalustot (mapv
                                                  #(konv/pgobject->map % :id :long :kalustotyyppi :string :maara :long)
@@ -32,7 +33,19 @@
                                                                               (:loppuosa r) (:loppuetaisyys r)))
                                                       (assoc :hoitoluokka-str (hoitoluokat/talvihoitoluokan-nimi (:hoitoluokka r)))
                                                       (dissoc :reitti))) reitit)
-                                      rivi (assoc rivi :reitit reitit)]
+                                      ;; Jaotellaan reitti hoitoluokittan
+                                      hoitoluokkat (vec (vals (group-by :hoitoluokka-str (map (fn [r]
+                                                                                                (dissoc r :sijainti :tie :alkuosa
+                                                                                                  :alkuetaisyys :loppuosa :loppuetaisyys
+                                                                                                  :hoitoluokka :id :formatoitu-tr)) reitit))))
+                                      ;; Lasketaan jokaiselle hoitoluokalle pituus
+                                      hoitoluokkat (map (fn [hoitoluokka-vec]
+                                                          {:hoitoluokka-str (:hoitoluokka-str (first hoitoluokka-vec))
+                                                           :pituus (reduce + (map :laskettu_pituus hoitoluokka-vec))})
+                                                     hoitoluokkat)
+                                      rivi (-> rivi
+                                             (assoc :reitit reitit)
+                                             (assoc :hoitoluokat hoitoluokkat))]
                                   rivi))
                           urakan-talvihoitoreitit)]
     talvihoitoreiti))
