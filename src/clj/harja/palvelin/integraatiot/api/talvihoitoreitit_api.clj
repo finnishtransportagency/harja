@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.api.talvihoitoreitit
+(ns harja.palvelin.integraatiot.api.talvihoitoreitit-api
   "Talvihoitoreittien lisäys API:n kautta"
   (:require [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
@@ -12,12 +12,6 @@
             [harja.kyselyt.tieverkko :as tieverkko-q]))
 
 (defn lisaa-kalustot-ja-reitit [db talvihoitoreitti-id data]
-  ;; Lisää kalustot
-  (doseq [kalusto (:kalusto data)]
-      (talvihoitoreitit-q/lisaa-kalusto-talvihoitoreitille<! db
-        {:talvihoitoreitti_id talvihoitoreitti-id
-         :maara (:kalusto-lkm kalusto)
-         :kalustotyyppi (:kalustotyyppi kalusto)}))
   ;; Lisää reitit
   (doseq [reitti (:reitti data)]
       (talvihoitoreitit-q/lisaa-reitti-talvihoitoreitille<! db
@@ -28,7 +22,9 @@
          :loppuosa (:losa reitti)
          :loppuetaisyys (:let reitti)
          :pituus (:pituus reitti)
-         :hoitoluokka (:hoitoluokka reitti)})))
+         :hoitoluokka (:hoitoluokka reitti)
+         :kalustomaara (:kalusto-lkm reitti)
+         :kalustotyyppi (:kalustotyyppi reitti)})))
 
 (defn paivita-talvihoitoreitti [db data kayttaja_id urakka_id]
   (let [_ (println "paivita-talvihoitoreitti :: data" data)
@@ -38,7 +34,6 @@
 
         ;; Jos talvihoitoreitti löytyy, niin deletoidaan kaikki kalusto ja reitit, ja tallennetaan ne uudestaan.
         _ (when talvihoitoreitti
-            (talvihoitoreitit-q/poista-talvihoitoreitin-kalusto! db {:talvihoitoreitti_id (:id talvihoitoreitti)})
             (talvihoitoreitit-q/poista-talvihoitoreitin-reitit! db {:talvihoitoreitti_id (:id talvihoitoreitti)})
             ;; Päivitä talvihoitoreitin perustiedot
             (talvihoitoreitit-q/paivita-talvihoitoreitti<! db {:talvihoitoreitti_id (:id talvihoitoreitti)
