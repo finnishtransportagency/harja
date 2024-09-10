@@ -24,9 +24,9 @@
 
 ;; Tehdään esimerkki Oulu MHU:lle, mikä täytyy löytyä
 (def odotetut-kustannus-rahavaraukset
-  '({:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus B - Äkilliset hoitotyöt", :indeksikorjaus-vahvistettu nil, :summa 500M, :nimi "Rahavaraus B - Äkilliset hoitotyöt", :vuosi 2019, :id 5, :poistettu false, :hoitokauden-numero 1, :summa-indeksikorjattu 540.500000M}
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus C - Vahinkojen korjaukset", :indeksikorjaus-vahvistettu nil, :summa nil, :nimi "Rahavaraus C - Vahinkojen korjaukset", :vuosi 2019, :id 6, :poistettu false, :hoitokauden-numero 1, :summa-indeksikorjattu nil}
-    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Rahavaraus K - Kannustinjärjestelmä", :indeksikorjaus-vahvistettu nil, :summa nil, :nimi "Rahavaraus K - Kannustinjärjestelmä", :vuosi 2019, :id 14, :poistettu false, :hoitokauden-numero 1, :summa-indeksikorjattu nil}))
+  '({:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Äkilliset hoitotyöt", :indeksikorjaus-vahvistettu nil, :summa 500M, :nimi "Äkilliset hoitotyöt", :vuosi 2019, :id 1, :poistettu false, :hoitokauden-numero 1, :summa-indeksikorjattu 540.500000M :jarjestys 2}
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Vahinkojen korjaukset", :indeksikorjaus-vahvistettu nil, :summa nil, :nimi "Vahinkojen korjaukset", :vuosi 2019, :id 2, :poistettu false, :hoitokauden-numero 1, :summa-indeksikorjattu nil :jarjestys 3}
+    {:toimenpide-avain :tavoitehintaiset-rahavaraukset, :haettu-asia "Tilaajan rahavaraus kannustinjärjestelmään", :indeksikorjaus-vahvistettu nil, :summa nil, :nimi "Tilaajan rahavaraus kannustinjärjestelmään", :vuosi 2019, :id 3, :poistettu false, :hoitokauden-numero 1, :summa-indeksikorjattu nil :jarjestys 11}))
 
 ;; Hae Oulu MHU:n rahavaraukset
 (deftest hae-rahavaraukset-onnistuu-test
@@ -59,7 +59,7 @@
 
         ;; Haetaan rahavarauksen id
         rahavaraus-id (:id (first (q-map (format "SELECT id FROM rahavaraus WHERE nimi = '%s'"
-                                           "Rahavaraus K - Kannustinjärjestelmä"))))
+                                           "Tilaajan rahavaraus kannustinjärjestelmään"))))
         summa 100
         indeksisumma (* summa vuoden-indeksikerroin)
         payload {:urakka-id oulu-mhu
@@ -99,7 +99,7 @@
 
         ;; Haetaan muokattavan rahavarauksen id
         rahavaraus-id (:id (first (q-map (format "SELECT id FROM rahavaraus WHERE nimi = '%s'"
-                                           "Rahavaraus B - Äkilliset hoitotyöt"))))
+                                           "Äkilliset hoitotyöt"))))
         summa 100
         indeksisumma (* summa vuoden-indeksikerroin)
         payload {:urakka-id oulu-mhu
@@ -132,7 +132,7 @@
 
         ;; Haetaan muokattavan rahavarauksen id
         rahavaraus-id (:id (first (q-map (format "SELECT id FROM rahavaraus WHERE nimi = '%s'"
-                                           "Rahavaraus B - Äkilliset hoitotyöt"))))
+                                           "Äkilliset hoitotyöt"))))
         summa 100
         indeksisumma (* summa vuoden-indeksikerroin)
         payload {:urakka-id oulu-mhu

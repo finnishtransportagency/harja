@@ -171,10 +171,10 @@
                            (testaa-ajat tehtavat toimenpide-avain)))
             :tavoitehintaiset-rahavaraukset (do
                                               (is (= (into #{} (keys ryhmiteltyna))
-                                                    #{["Rahavaraus B - Äkilliset hoitotyöt" nil]
-                                                      ["Rahavaraus C - Vahinkojen korjaukset" nil]
-                                                      ["Rahavaraus J - Tunnelien pienet korjaukset" nil]
-                                                      ["Rahavaraus K - Kannustinjärjestelmä" nil]})))
+                                                    #{["Äkilliset hoitotyöt" nil]
+                                                      ["Vahinkojen korjaukset" nil]
+                                                      ["Muut tavoitehintaan vaikuttavat rahavaraukset" nil]
+                                                      ["Tilaajan rahavaraus kannustinjärjestelmään" nil]})))
             :tavoitehinnan-ulkopuoliset-rahavaraukset (do
                                                         (is (= (into #{} (keys ryhmiteltyna))
                                                               #{["Tavoitehinnan ulkopuoliset rahavaraukset" nil]})))))))

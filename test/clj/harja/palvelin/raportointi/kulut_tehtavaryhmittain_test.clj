@@ -37,8 +37,7 @@
   [:raportti {:nimi "Kulut tehtäväryhmittäin"}
    [:taulukko {:viimeinen-rivi-yhteenveto? true, :otsikko "Kulut tehtäväryhmittäin ajalla 01.12.2019 - 30.08.2020"}
     [{:leveys 1, :otsikko "Tehtäväryhmä"} {:leveys 1, :fmt :raha, :otsikko "Hoitokauden alusta 01.10.2019-30.09.2020"} {:leveys 1, :fmt :raha, :otsikko "Jaksolla 01.12.2019-30.08.2020"}]
-    [(list "Pysäkkikatosten korjaaminen (E)" 0 0)
-     (list "Talvihoito (A)" 6601.94M 3300.40M)
+    [(list "Talvihoito (A)" 6601.94M 3300.40M)
      (list "Talvisuola (B1)" 0 0)
      (list "KFo, NaFo (B2)" 0 0)
      (list "Hiekoitus (B3)" 0 0)

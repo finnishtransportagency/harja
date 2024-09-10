@@ -24,7 +24,7 @@
                       urakkatieto-fixture))
 
 (deftest hae-kaikki-rahavaraukset
-  (let [tietokantaan-lisatty-maara 16
+  (let [tietokantaan-lisatty-maara 13
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                 :hae-rahavaraukset +kayttaja-jvh+ {})
         rahavaraukset (:rahavaraukset tulos)]
@@ -34,8 +34,9 @@
   (let [;; Rahavaraukset kuuluu teiden-hoito tyyppisille urakoille
         mhurakat (q-map "SELECT id FROM urakka WHERE tyyppi = 'teiden-hoito';")
         tietokanta-urakoiden-maara (count mhurakat)
-        ;; Tällä hetkellä on määritelty, että kaikilla urakoilla on 3 rahavarausta
-        tietokantaan-lisatty-maara (* tietokanta-urakoiden-maara 3)
+        ;; Tällä hetkellä on määritelty, että kaikilla urakoilla on 3 rahavarausta ja muutamalla on pari enemmän.
+        ;; Tämä on kovakoodattu määrä ja jos se muuttuu, niin tämä testi failaa.
+        tietokantaan-lisatty-maara 38
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                 :hae-rahavaraukset +kayttaja-jvh+ {})]
     ;; Jos default rahavarauksia muutetaan, niin tämä tulee failaamaan.
