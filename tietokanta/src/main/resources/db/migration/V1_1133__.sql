@@ -15,14 +15,6 @@ CREATE TABLE IF NOT EXISTS talvihoitoreitti
 CREATE UNIQUE INDEX talvihoitoreitti_ulkoinen_id_urakka_id_uindex
     ON public.talvihoitoreitti (ulkoinen_id, urakka_id);
 
-CREATE TABLE IF NOT EXISTS talvihoitoreitti_kalusto
-(
-    id                  SERIAL PRIMARY KEY,
-    talvihoitoreitti_id INTEGER      NOT NULL REFERENCES talvihoitoreitti (id) ON DELETE CASCADE,
-    kalustotyyppi       VARCHAR(255) NOT NULL,
-    maara               INTEGER      NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS talvihoitoreitti_reitti
 (
     id                  SERIAL PRIMARY KEY,
@@ -34,7 +26,9 @@ CREATE TABLE IF NOT EXISTS talvihoitoreitti_reitti
     loppuetaisyys       INTEGER,
     hoitoluokka         INTEGER NOT NULL,
     pituus              INTEGER, -- metreinä
-    reitti              geometry
+    reitti              geometry,
+    kalustotyyppi       VARCHAR(255) NOT NULL,
+    kalustomaara        INTEGER      NOT NULL
 );
 
 -- Uusi apiavain
