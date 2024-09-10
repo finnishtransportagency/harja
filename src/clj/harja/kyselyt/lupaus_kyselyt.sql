@@ -49,7 +49,8 @@ SELECT l.id                     AS "lupaus-id",
        LEFT JOIN lupaus_vaihtoehto lv ON lv.id = vas."lupaus-vaihtoehto-id"
        JOIN lupausryhma_urakka lu ON r.id = lu."lupausryhma_id"
  WHERE lu."urakka_id" = :urakka
-GROUP BY l.id, sit.id, r.id;
+GROUP BY l.id, sit.id, r.id
+ORDER BY l.jarjestys, r.jarjestys;
 
 -- name: hae-lupaus-vaihtoehdot
  SELECT
@@ -65,7 +66,8 @@ FROM
 left JOIN lupaus_vaihtoehto_ryhma lvr on
 	lv."vaihtoehto-ryhma-otsikko-id" = lvr.id
 WHERE
-	lv."lupaus-id" = :lupaus-id;
+	lv."lupaus-id" = :lupaus-id
+  ORDER BY lv.id;
 
 -- name: hae-lupaus-vaihtoehto
 SELECT id, "lupaus-id", vaihtoehto, pisteet
