@@ -469,6 +469,7 @@
           :pakota-suunta false
           :disabled (or (nil? koontilaskun-kuukausi)
                       kulu-lukittu?)
+          :luokat #{"input-default"}
           :placeholder (when (nil? koontilaskun-kuukausi) "Valitse koontilaskun kuukausi ensin")
           :valittava?-fn (kulut/koontilaskun-kuukauden-sisalla?-fn
                            koontilaskun-kuukausi
