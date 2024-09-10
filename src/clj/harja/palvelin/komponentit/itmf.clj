@@ -4,6 +4,7 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.jms-clientit.sonic :as sonic]
             [harja.palvelin.integraatiot.jms-clientit.apache-classic :as activemq]
+            [harja.palvelin.integraatiot.jms-clientit.activemq-artemis :as artemis]
             [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.integraatiot.jms :as jms]))
@@ -46,7 +47,8 @@
   (cond
     (not (ominaisuus-kaytossa? :itmf)) (->FeikkiITMF)
     (= (:tyyppi asetukset) :sonicmq) (sonic/->Sonic "itmf" asetukset)
-    (= (:tyyppi asetukset) :activemq) (activemq/->ApacheClassic "itmf" asetukset)))
+    (= (:tyyppi asetukset) :activemq) (activemq/->ApacheClassic "itmf" asetukset)
+    (= (:tyyppi asetukset) :artemis) (artemis/->ActiveMQArtemis "itmf" asetukset)))
 
 (defn luo-itmf [asetukset]
   (if (and asetukset (not (clj-str/blank? (:url asetukset))))

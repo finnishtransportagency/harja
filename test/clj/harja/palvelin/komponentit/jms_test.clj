@@ -178,7 +178,7 @@
   ;; Odotetaan, että oletusjärjestelmä on pystyssä. Tässä testissä siitä ei olla kiinostuneita.
   (<!! *itmf-yhteys*)
   (let [sulje-jms? (atom false)]
-    (with-redefs [harja.palvelin.integraatiot.jms-clientit.apache-classic/yhdista!
+    (with-redefs [harja.palvelin.integraatiot.jms-clientit.activemq-artemis/yhdista!
                   (fn [& args]
                     (future
                       (loop []
