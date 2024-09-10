@@ -48,6 +48,7 @@
                    :losa (get-in app [:talvihoitoreitti :tierekisteriosoite :loppuosa])
                    :let (get-in app [:talvihoitoreitti :tierekisteriosoite :loppuetaisyys])
                    :hoitoluokka (yleiset/random-luku-valilta 1 9)
+                   :pituus (yleiset/random-luku-valilta 1 30000)
                    :kalusto-lkm (get-in app [:talvihoitoreitti :kalusto-lkm])
                    :kalustotyyppi (get-in app [:talvihoitoreitti :kalustotyyppi])}
                   ]
@@ -59,6 +60,7 @@
                 :losa (get-in app [:talvihoitoreitti :tierekisteriosoite2 :loppuosa])
                 :let (get-in app [:talvihoitoreitti :tierekisteriosoite2 :loppuetaisyys])
                 :hoitoluokka (yleiset/random-luku-valilta 1 9)
+                :pituus (yleiset/random-luku-valilta 1 30000)
                 :kalusto-lkm (get-in app [:talvihoitoreitti :kalusto-lkm2])
                 :kalustotyyppi (get-in app [:talvihoitoreitti :kalustotyyppi2])}))})
 

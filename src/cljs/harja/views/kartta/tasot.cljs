@@ -46,7 +46,7 @@
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla]
             [harja.tiedot.urakka.toteumat.materiaalitoteumat-kartalla :as materiaalitoteumat-kartalla]
             [harja.tiedot.urakka.tienumerot-kartalla :as tienumerot-kartalla]
-            [harja.tiedot.urakka.laadunseuranta.talvihoitoreitit :as talvihoitoreitit])
+            [harja.tiedot.urakka.laadunseuranta.talvihoitoreitit-tiedot :as talvihoitoreitit])
   
   (:require-macros [reagent.ratom :refer [reaction run!] :as ratom]
                    [cljs.core.async.macros :refer [go]]))

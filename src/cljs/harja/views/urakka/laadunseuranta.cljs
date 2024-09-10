@@ -11,7 +11,7 @@
             [harja.views.urakka.laadunseuranta.sanktiot-ja-bonukset-nakyma :as sanktiot-ja-bonukset-nakyma]
             [harja.views.urakka.laadunseuranta.mobiilityokalu :as mobiilityokalu]
             [harja.views.kanavat.urakka.laadunseuranta.hairiotilanteet :as hairiotilanteet]
-            [harja.views.urakka.laadunseuranta.talvihoitoreitit :as talvihoitoreitit]
+            [harja.views.urakka.laadunseuranta.talvihoitoreitit-nakyma :as talvihoitoreitit]
             [harja.domain.roolit :as roolit]
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]

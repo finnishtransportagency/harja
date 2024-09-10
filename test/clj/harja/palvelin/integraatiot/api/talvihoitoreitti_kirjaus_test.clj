@@ -3,7 +3,7 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.api.talvihoitoreitit :as api-talvihoitoreitit]
+            [harja.palvelin.integraatiot.api.talvihoitoreitit-api :as api-talvihoitoreitit]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.tyokalut :as tyokalut]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
