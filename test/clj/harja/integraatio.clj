@@ -16,7 +16,7 @@
 (def itmf-asetukset {:url (str "tcp://" (env/env "HARJA_ITMF_BROKER_HOST" "localhost") ":" (env/env "HARJA_ITMF_BROKER_PORT" 61626))
                      :kayttaja (env/env "HARJA_ITMF_BROKER_KAYTTAJA" "admin")
                      :salasana (env/env "HARJA_ITMF_BROKER_SALASANA" "admin")
-                     :tyyppi :activemq
+                     :tyyppi :artemis
                      :paivitystiheys-ms 3000})
 
 (def integraatio-sampo-asetukset {:lahetysjono-sisaan sampo-tk/+lahetysjono-sisaan+

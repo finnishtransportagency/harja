@@ -52,7 +52,7 @@
                    (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61626)))
   :kayttaja (harja.tyokalut.env/env "HARJA_ITMF_BROKER_KAYTTAJA" "admin")
   :salasana (harja.tyokalut.env/env "HARJA_ITMF_BROKER_SALASANA" "admin")
-  :tyyppi :activemq
+  :tyyppi :artemis
   :julkaise-tila? true}
 
 
