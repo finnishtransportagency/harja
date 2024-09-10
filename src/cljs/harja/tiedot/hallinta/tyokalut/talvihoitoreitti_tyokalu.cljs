@@ -3,7 +3,6 @@
   (:require [reagent.core :refer [atom] :as reagent]
             [tuck.core :as tuck]
             [harja.pvm :as pvm]
-            [cljs-time.format :as df]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tyokalut.yleiset :as yleiset]
             [cljs.core.async :refer [<! >! chan close!]]
@@ -11,8 +10,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.viesti :as viesti]
-            [harja.tiedot.istunto :as istunto]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -31,9 +29,9 @@
                                   :valittu-hallintayksikko nil
                                   :suorittaja-nimi "Urakoitsija Oy"
                                   :reittinimi "Nelostien kaaos"
-                                  :kalusto [{ :kalusto-lkm 7
-                                              :kalustotyyppi "rekka"}]
-                                  :reitti [{:tie 4 :aosa 101 :aet 0 :losa 101 :let 3000 :pituus 3000 :hoitoluokka 2}]}
+                                  :reitti [{:tie 4 :aosa 101 :aet 0 :losa 101 :let 3000 :pituus 3000
+                                            :hoitoluokka 2, :kalusto-lkm 7
+                                            :kalustotyyppi "KA"}]}
                :lahetys-kaynnissa? false
                :mahdolliset-urakat +mahdolliset-urakat+})
 (def data (atom alkutila))
@@ -42,23 +40,16 @@
 (defn koostettu-data [app]
   {:ulkoinen-id (get-in app [:talvihoitoreitti :ulkoinen-id])
    :reittinimi (get-in app [:talvihoitoreitti :reittinimi])
-   ;; Käyttöliittymä mahdollistaa tällä hetkellä vain yhden kalustotyypin ja -lkm:n, vaikka jsonissa on array
-   :kalusto (conj [
-                   {:kalusto-lkm (get-in app [:talvihoitoreitti :kalusto-lkm])
-                    :kalustotyyppi (get-in app [:talvihoitoreitti :kalustotyyppi])}
-                   ]
-              (when (and (get-in app [:talvihoitoreitti :kalusto-lkm2])
-                      (get-in app [:talvihoitoreitti :kalustotyyppi2]))
-                {:kalusto-lkm (get-in app [:talvihoitoreitti :kalusto-lkm2])
-                 :kalustotyyppi (get-in app [:talvihoitoreitti :kalustotyyppi2])}))
-   ;; Reitti koostuu oikeasti valtavasta määrästä tieosoitteita, mutta käyttölittymässä vain yksi
+   ;; Reitti koostuu oikeasti useammasta tieosoitteesta
    :reitti (conj [
                   {:tie (get-in app [:talvihoitoreitti :tierekisteriosoite :numero])
                    :aosa (get-in app [:talvihoitoreitti :tierekisteriosoite :alkuosa])
                    :aet (get-in app [:talvihoitoreitti :tierekisteriosoite :alkuetaisyys])
                    :losa (get-in app [:talvihoitoreitti :tierekisteriosoite :loppuosa])
                    :let (get-in app [:talvihoitoreitti :tierekisteriosoite :loppuetaisyys])
-                   :hoitoluokka (yleiset/random-luku-valilta 1 9)}
+                   :hoitoluokka (yleiset/random-luku-valilta 1 9)
+                   :kalusto-lkm (get-in app [:talvihoitoreitti :kalusto-lkm])
+                   :kalustotyyppi (get-in app [:talvihoitoreitti :kalustotyyppi])}
                   ]
              ;; Koska ollaan kiireessä, niin varmistetaan, että pelkkä tien numero on lisätty ja oletetaan että muutkin on
              (when (get-in app [:talvihoitoreitti :tierekisteriosoite2 :numero])
@@ -67,7 +58,9 @@
                 :aet (get-in app [:talvihoitoreitti :tierekisteriosoite2 :alkuetaisyys])
                 :losa (get-in app [:talvihoitoreitti :tierekisteriosoite2 :loppuosa])
                 :let (get-in app [:talvihoitoreitti :tierekisteriosoite2 :loppuetaisyys])
-                :hoitoluokka (yleiset/random-luku-valilta 1 9)}))})
+                :hoitoluokka (yleiset/random-luku-valilta 1 9)
+                :kalusto-lkm (get-in app [:talvihoitoreitti :kalusto-lkm2])
+                :kalustotyyppi (get-in app [:talvihoitoreitti :kalustotyyppi2])}))})
 
 
 

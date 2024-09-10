@@ -14,7 +14,9 @@
       "aet": 0,
       "losa": 405,
       "let": 5000,
-      "hoitoluokka": 8
+      "hoitoluokka": 8,
+      "kalusto-lkm": 1,
+      "kalustotyyppi": "TR"
     },
     {
       "tie": 20,
@@ -22,7 +24,9 @@
       "aet": 0,
       "losa": 3,
       "let": 1000,
-      "hoitoluokka": 1
+      "hoitoluokka": 1,
+      "kalusto-lkm": 7,
+      "kalustotyyppi": "KA"
     },
     {
       "tie": 20,
@@ -30,7 +34,9 @@
       "aet": 0,
       "losa": 10,
       "let": 14000,
-      "hoitoluokka": 1
+      "hoitoluokka": 1,
+      "kalusto-lkm": 5,
+      "kalustotyyppi": "KA"
     }
   ]
 }

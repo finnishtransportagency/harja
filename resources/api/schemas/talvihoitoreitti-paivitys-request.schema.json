@@ -13,26 +13,6 @@
       "required": true,
       "description": "Päivitetty reitin nimi."
     },
-    "kalusto": {
-      "type": "array",
-      "description": "Päivitetyt kalustot",
-      "additionalProperties": false,
-      "items": {
-        "type": "object",
-        "properties": {
-          "kalustotyyppi": {
-            "type": "string",
-            "description": "Kalustotyyppi, jota käytetään tällä reitillä."
-          },
-          "kalusto-lkm": {
-            "type": "integer",
-            "description": "Kaluston lukumäärä, jota kalustotyypistä käytetään.",
-            "minimum": 1
-          }
-        },
-        "required": ["kalustotyyppi", "kalusto-lkm"]
-      }
-    },
     "reitti": {
       "type": "array",
       "description": "Päivitetyt reitit",
@@ -42,38 +22,60 @@
         "properties": {
           "tie": {
             "type": "integer",
+            "required": true,
+            "minimum": 0,
             "description": "Tienumero"
           },
           "aosa": {
             "type": "integer",
+            "required": true,
+            "minimum": 0,
             "description": "Tien alkuosa."
           },
           "aet": {
             "type": "integer",
+            "required": true,
+            "minimum": 0,
             "description": "Alkuetäisyys osalla."
           },
           "losa": {
             "type": "integer",
+            "required": true,
+            "minimum": 0,
             "description": "Loppuosa."
           },
           "let": {
             "type": "integer",
+            "required": true,
+            "minimum": 0,
             "description": "Loppuetäisyys osalla."
           },
           "pituus": {
             "type": "number",
+            "required": true,
             "description": "Reitin pituus metreinä.",
             "minimum": 0
           },
           "hoitoluokka": {
             "type": "integer",
-            "description": "Reitin hoitoluokka. Hoitoluokat on väliltä 1-11. IsE = 1, Is = 2 I = 3, Ib = 4, Ic = 5, II = 6, III = 7, L = 8, K1 = 9, K2 = 10, K (ei talvihoitoa) = 11",
-            "minimum": 0
+            "required": true,
+            "description": "Reitin hoitoluokka. Hoitoluokat on väliltä 1-11. IsE = 1, Is = 2 I = 3, Ib = 4, Ic = 5, II = 6, III = 7, L = 8, K1 = 9, K2 = 10, K (ei talvihoitoa) = 11"
+          },
+          "kalustotyyppi": {
+            "type": "string",
+            "required": true,
+            "description": "Kalustotyyppi, jota käytetään tällä reitillä. Esim. TR tai KA."
+          },
+          "kalusto-lkm": {
+            "type": "integer",
+            "required": true,
+            "description": "Kaluston lukumäärä, jota kalustotyypistä käytetään. Esim. 4",
+            "minimum": 1
           }
         },
-        "required": ["tie", "aosa", "aet", "losa", "let", "pituus"]
+        "required": ["tie", "aosa", "aet", "losa", "let", "pituus", "kalustotyyppi", "kalusto-lkm"]
       }
     }
   },
-  "required": ["ulkoinen-id", "reittinimi", "kalusto", "reitti"]
+  "required": ["ulkoinen-id", "reittinimi", "reitti"]
 }
