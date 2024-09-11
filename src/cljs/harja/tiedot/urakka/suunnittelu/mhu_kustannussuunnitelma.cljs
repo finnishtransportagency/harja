@@ -33,6 +33,12 @@
       (bs/vuosikohtaiset-toimenkuvat? (pvm/vuosi alkupvm))
       false)))
 
+(defn post-2024? []
+  (let [alkupvm (-> @tiedot/yleiset :urakka :alkupvm)]
+    (if (>= (pvm/vuosi alkupvm) 2024)
+      true
+      false)))
+
 ;; Tuck e!
 (def ^{:dynamic true
        :doc "Käytännössä modaalin nappeja varten. Eli, jos tuckin process-event:issä käsitellään
@@ -331,7 +337,27 @@
    {:toimenkuva "hankintavastaava" :kk-v 12
     :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 6 :versio 2}
    {:toimenkuva "harjoittelija" :kk-v 12
-    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 7 :versio 2}])
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 7 :versio 2}
+   ;; 2024 eteenpäin alkavien versio datasta
+   {:toimenkuva "valmistelukausi ennen urakka-ajan alkua" :kk-v 1
+    :maksukausi nil :hoitokaudet #{0} :jarjestys 1 :versio 3}
+   {:toimenkuva "vastuunalainen työnjohtaja" :kk-v 12
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 2 :versio 3}
+   {:toimenkuva "2. työnjohtaja" :kk-v 12
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 3 :versio 3}
+   {:toimenkuva "3. työnjohtaja" :kk-v 12
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 4 :versio 3}
+   {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 12
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 5 :versio 3}
+   ;; Hankintavastaava poistetaan 2024 urakoilta. Se on ollut käytössä virallisesti vain 19-20 urakoissa, mutta
+   ;; sinne on merkattu paljon suunniteltuja kustannuksia, joten se on jätetty mukaan.
+   ;; Poistetaan se kuitenkin nyt -24 ja myöhemmin alkavilta urakoilta
+   #_ {:toimenkuva "hankintavastaava" :kk-v 12
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 6 :versio 3}
+   {:toimenkuva "harjoittelija" :kk-v 12
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 7 :versio 3}
+
+   ])
 
 (defn pohjadatan-versio
   []
@@ -343,12 +369,19 @@
                                  (not (post-2022?))
                                  (= 1 (:versio %))
 
+                                 ;; Järjestys täytyy olla näin, koska post2022 palauttaa kanssa true
+                                 (post-2024?)
+                                 (= 3 (:versio %))
+
                                  (post-2022?)
                                  (= 2 (:versio %))
 
+
                                  :else
-                                 true))]
-    (into [] vuosifiltteri johto-ja-hallintokorvaukset-pohjadata)))
+                                 true))
+        data (into [] vuosifiltteri johto-ja-hallintokorvaukset-pohjadata)
+        _ (js/console.log "pohjadatan-versio" (pr-str data))]
+    data))
 
 (defn aakkosta [sana]
   (get {"kesakausi" "kesäkausi"
@@ -2590,6 +2623,7 @@
                                ^{:key toimenkuva}
                                [:li (str toimenkuva)]))]]))
               jh-korvaukset (jh-korvaukset-vastauksesta vastaus pohjadata)
+              _ (js/console.log "jh-korvaukset vastaukset: " (pr-str jh-korvaukset))
               ;; -- App-tila --
               app (reduce (fn [app jarjestysnumero]
                             (let [nimi (jh-omienrivien-nimi jarjestysnumero)
