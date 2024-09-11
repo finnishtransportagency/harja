@@ -1,22 +1,16 @@
 (ns harja.views.urakka.kulut.kulut
   (:require [tuck.core :as tuck]
             [reagent.core :as r]
-            [goog.string :as gstring]
             [goog.string.format]
-            [harja.domain.kulut :as kulut]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.kulut.mhu-kulut :as tiedot]
             [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.pvm :as pvm-valinta]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
-            [harja.ui.modal :as modal]
-            [harja.ui.liitteet :as liitteet]
             [harja.ui.kentat :as kentat]
             [harja.views.urakka.kulut.kululomake :as kululomake]
-            [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
             [harja.transit :as t]
             [harja.pvm :as pvm]
@@ -157,8 +151,6 @@
                                                             :e! e!}))
                            (keep identity))
                tiedot))]]]))
-
-(defonce aikavali-atom (r/atom [nil nil]))
 
 (defn- kohdistetut*
   [e! _app]
