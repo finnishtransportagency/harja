@@ -33,9 +33,6 @@
 (defn kehitysymparistossa-localhost?* [host]
   (#{"localhost" "localhost:3000" "localhost:8000"} host))
 
-(defn kehitysymparistossa-gc?* [host]
-  (#{"googleusercontent" "harja-gc"} host))
-
 (defn kehitysymparistossa-yhteiset?
   [host]
   (or (gstr/startsWith host "10.")
@@ -66,7 +63,8 @@
   "Tarkistaa ollaanko gc-kehitysympäristössä"
   []
   (let [host (.-host js/location)]
-    (kehitysymparistossa-gc?* host)))
+    (or (gstr/contains host "googleusercontent")
+      (gstr/contains host "harja-gc"))))
 
 (defn vaylapilvi-ymparistossa?
   [host]
