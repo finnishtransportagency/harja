@@ -379,8 +379,7 @@
 
                                  :else
                                  true))
-        data (into [] vuosifiltteri johto-ja-hallintokorvaukset-pohjadata)
-        _ (js/console.log "pohjadatan-versio" (pr-str data))]
+        data (into [] vuosifiltteri johto-ja-hallintokorvaukset-pohjadata)]
     data))
 
 (defn aakkosta [sana]
