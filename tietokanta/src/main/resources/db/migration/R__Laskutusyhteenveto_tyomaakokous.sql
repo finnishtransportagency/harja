@@ -1175,8 +1175,19 @@ BEGIN
         end loop;
 
     -- Muut kulut yhteensä, ei tavoitehintaiset
-    muut_kulut_ei_tavoite_hoitokausi_yht := bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht + muut_kulut_ei_tavoite_hoitokausi;
-    muut_kulut_ei_tavoite_val_aika_yht := bonukset_val_aika_yht + sanktiot_val_aika_yht  + muut_kulut_ei_tavoite_val_aika;
+    muut_kulut_ei_tavoite_hoitokausi_yht := bonukset_hoitokausi_yht + 
+                                            sanktiot_hoitokausi_yht + 
+                                            muut_kulut_ei_tavoite_hoitokausi + 
+                                            paatos_tavoitepalkkio_hoitokausi_yht + 
+                                            paatos_tavoiteh_ylitys_hoitokausi_yht + 
+                                            paatos_kattoh_ylitys_hoitokausi_yht;
+
+    muut_kulut_ei_tavoite_val_aika_yht := bonukset_val_aika_yht + 
+                                          sanktiot_val_aika_yht + 
+                                          muut_kulut_ei_tavoite_val_aika +
+                                          paatos_tavoitepalkkio_val_aika_yht + 
+                                          paatos_tavoiteh_ylitys_val_aika_yht +
+                                          paatos_kattoh_ylitys_val_aika_yht;
 
     -- Muut kustannukset yhteensä
     muut_kustannukset_hoitokausi_yht := 0.0;
