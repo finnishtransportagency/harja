@@ -1,3 +1,12 @@
+-- Ennenkuin tehdään muutoksia kulu, kulu_kohdistus, kustannusarvioitu_tyo,
+-- johto_ja_hallintokorvaus tai toteutuneet_kustannukset -tauluihin, niin otetaan niistä varmuuskopio lähes samalla nimellä
+CREATE TABLE kulu_kopio AS TABLE kulu; -- n. 2 sekuntia
+CREATE TABLE kulu_kohdistus_kopio AS TABLE kulu_kohdistus; -- n. 0.5 sekuntia
+CREATE TABLE kustannusarvioitu_tyo_kopio AS TABLE kustannusarvioitu_tyo; -- n. 0.2 sekuntia
+CREATE TABLE johto_ja_hallintokorvaus_kopio AS TABLE johto_ja_hallintokorvaus; -- n. 0.3 sekuntia
+CREATE TABLE toteutuneet_kustannukset_kopio AS TABLE toteutuneet_kustannukset; -- n. 0.2 sekuntia
+
+
 -- Poistetaan turhaksi jääneitä kolumneita kulu ja kulu_kohdistus tauluista
 ALTER TABLE kulu
     DROP COLUMN IF EXISTS tyyppi;
@@ -394,7 +403,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- Rahavaraus id:n lisäys ja populointi --
--- Palauttaa päivitetyt rivit yhteenlaskettuna
 CREATE OR REPLACE FUNCTION populoi_rahavaraus_idt()
     RETURNS INTEGER AS
 $$
