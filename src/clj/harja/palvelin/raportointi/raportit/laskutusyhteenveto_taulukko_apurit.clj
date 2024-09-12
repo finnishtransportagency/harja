@@ -4,17 +4,6 @@
              [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]))
 
 
-(defn- hoidonjohto-valitaulukko-rivi
-  [tp-rivi valiotsikko summa1 summa2 lihavoi?]
-  (let [arvo (if (summa1 tp-rivi)
-               (+ (summa1 tp-rivi) (summa2 tp-rivi))
-               (yhteiset/summa-fmt nil))]
-    (rivi
-      [:varillinen-teksti {:arvo ""}]
-      [:varillinen-teksti {:arvo (str valiotsikko) :lihavoi? lihavoi?}]
-      [:varillinen-teksti {:arvo arvo :fmt :raha :lihavoi? lihavoi?}])))
-
-
 (defn- valitaulukko-rivi
   [tp-rivi kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi? vari tyyli]
   (rivi
@@ -40,9 +29,7 @@
                 (remove nil?
                   (cond
                     (= "Toteutuneet" otsikko)
-
-                    ;; Rahavarausten alla oleva välitaulukko
-                    [(hoidonjohto-valitaulukko-rivi data "Hankinnat ja hoidonjohto yhteensä" :hankinnat_hoitokausi_yht :hoidonjohto_hoitokausi_yht true)
+                    [(valitaulukko-rivi data false "Hankinnat ja hoidonjohto yhteensä" :hankinnat_hoitokausi_yht :hoidonjohto_hoitokausi_yht true nil "vahvistamaton")
                      (valitaulukko-rivi data kyseessa-kk-vali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true nil "vahvistamaton")
 
                      ;; Nätetään arvot vain jos on olemassa
@@ -65,7 +52,6 @@
                      (valitaulukko-rivi data false "" :nil :nil false nil nil)])))]
 
     [:taulukko {:piilota-border? true
-                :hoitokausi-arvotaulukko? true
                 :raportin-tunniste :tyomaa-yhteenveto
                 :oikealle-tasattavat-kentat #{1 2 3}
                 :viimeinen-rivi-yhteenveto? false}
@@ -111,7 +97,6 @@
                      (toteutuneet-rivi data false "" :nil :nil false nil nil)])))]
 
     [:taulukko {:piilota-border? true
-                :hoitokausi-arvotaulukko? true
                 :raportin-tunniste :tyomaa-yhteenveto
                 :oikealle-tasattavat-kentat #{1 2 3}
                 :viimeinen-rivi-yhteenveto? false}

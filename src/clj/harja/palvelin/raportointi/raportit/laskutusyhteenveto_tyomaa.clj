@@ -224,6 +224,7 @@
        (yleinen/urakan-hoitokauden-indeksikerroin {:indeksikertoimet indeksikertoimet
                                                    :hoitokausi (pvm/paivamaaran-hoitokausi alkupvm)}))
 
+     ;; Pääotsikko
      (if
        (and
          (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
@@ -231,6 +232,9 @@
        [:otsikko-heading (str "Tavoitehintaan vaikuttavat kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
        [:otsikko-heading "Tavoitehintaan vaikuttavat kustannukset"])
 
+     ;; ------------------------------- ;;
+     ;;    Hankinnat ja hoidonjohto     ;;
+     ;; ------------------------------- ;;
      (concat (for [otsikko otsikot]
                (taulukko {:data rivitiedot
                           :otsikko otsikko
@@ -239,35 +243,46 @@
                           :laskutetaan-teksti laskutetaan-teksti
                           :kyseessa-kk-vali? kyseessa-kk-vali?})))
 
+     ;; ------------------------ ;;
+     ;;   Rahavaraukset, muut    ;;
+     ;; ------------------------ ;;
      (taulukko {:data rivitiedot
                 :otsikko "Rahavaraukset"
                 :laskutettu-teksti laskutettu-teksti
                 :laskutetaan-teksti laskutetaan-teksti
                 :kyseessa-kk-vali? kyseessa-kk-vali?})
 
-     ;; Muut kulut, tavoitehintaan vaikuttavat 
      (taulukko {:data rivitiedot
                 :otsikko ""
                 :laskutettu-teksti laskutettu-teksti
                 :laskutetaan-teksti laskutetaan-teksti
                 :kyseessa-kk-vali? kyseessa-kk-vali?
                 :tavoitehintainen? true})
-     
-     ;; Tyylittyömät
-     ;; Tyylitön välitaulukko - Toteutuneet
+
+     ;; ----------------------------------------------------- ;;
+     ;;    Hankinnat ja hoidonjohto yhteensä                  ;;
+     ;;    Tavoitehintaan vaikuttavat kustannukset yhteensä   ;;
+     ;;    Tavoitehinta (indeksikorjattu)                     ;;
+     ;;    Siirto edelliseltä vuodelta                        ;;
+     ;;    Budjettia jäljellä                                 ;;
+     ;; ----------------------------------------------------- ;;
      (taulukot/valitaulukko {:data rivitiedot
                              :otsikko "Toteutuneet"
                              :laskutettu-teksti laskutettu-teksti
                              :laskutetaan-teksti laskutetaan-teksti
                              :kyseessa-kk-vali? kyseessa-kk-vali?})
 
+     ;; Ei tavoitehintaiset
      (if
        (and
          (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
          (pvm/ennen? (pvm/nyt) loppupvm))
        [:otsikko-heading (str "Tavoitehinnan ulkopuoliset kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
        [:otsikko-heading "Tavoitehinnan ulkopuoliset kustannukset"])
-
+     
+     ;; ----------------------------------------------------- ;;
+     ;;    Lisätyöt, bonukset, sanktiot, muut                 ;;
+     ;; ----------------------------------------------------- ;;
      (let [otsikot ["Lisätyöt" ""]]
        (concat (for [x otsikot]
                  (taulukko {:data rivitiedot
@@ -276,13 +291,16 @@
                             :laskutetaan-teksti laskutetaan-teksti
                             :kyseessa-kk-vali? kyseessa-kk-vali?
                             :tavoitehintainen? false}))))
-     
-     ;; Tyylitön välitaulukko (Tavoitehinnan ulkopuoliset kustannukset yhteensä)
+
+     ;; Tavoitehinnan ulkopuoliset kustannukset yhteensä
      (taulukot/valitaulukko {:data rivitiedot
                              :laskutettu-teksti laskutettu-teksti
                              :laskutetaan-teksti laskutetaan-teksti
                              :kyseessa-kk-vali? kyseessa-kk-vali?})
 
+     ;; --------------------------------- ;;
+     ;;    Footer (Laskutus yhteensä)     ;;
+     ;; --------------------------------- ;;
      [:tyomaa-laskutusyhteenveto-yhteensa kyseessa-kk-vali? (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
       (fmt/formatoi-arvo-raportille (:yhteensa_kaikki_hoitokausi_yht rivitiedot))
       (fmt/formatoi-arvo-raportille (:yhteensa_kaikki_val_aika_yht rivitiedot))
