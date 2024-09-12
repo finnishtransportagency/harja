@@ -31,6 +31,8 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     hjpalkkio_val_aika_yht                NUMERIC,
     hoidonjohto_hoitokausi_yht            NUMERIC,
     hoidonjohto_val_aika_yht              NUMERIC,
+    hankinnat_ja_hoidon_hk_yht            NUMERIC,
+    hankinnat_ja_hoidon_val_yht           NUMERIC,
     tavhin_hoitokausi_yht                 NUMERIC,
     tavhin_val_aika_yht                   NUMERIC,
     hoitokauden_tavoitehinta              NUMERIC,
@@ -160,6 +162,10 @@ DECLARE
     -- Hoidonjohto yhteensä
     hoidonjohto_hoitokausi_yht            NUMERIC;
     hoidonjohto_val_aika_yht              NUMERIC;
+
+    -- Hankinnat ja hoidonjohto yhteensä
+    hankinnat_ja_hoidon_hk_yht            NUMERIC;
+    hankinnat_ja_hoidon_val_yht           NUMERIC;
 
     --- Äkilliset hoitotyöt ja vahinkojen korjaukset
     akilliset_ja_vahingot_rivi            RECORD;
@@ -846,6 +852,13 @@ BEGIN
             johtojahallinto_hoitokausi_yht + erillishankinnat_hoitokausi_yht + hjpalkkio_hoitokausi_yht;
     hoidonjohto_val_aika_yht := hoidonjohto_val_aika_yht + johtojahallinto_val_aika_yht + erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht;
 
+    -- Hankinnat ja Hoidonjohto yhteensä 
+    hankinnat_ja_hoidon_hk_yht := 0.0;
+    hankinnat_ja_hoidon_val_yht := 0.0;
+
+    hankinnat_ja_hoidon_val_yht := hankinnat_val_aika_yht + hoidonjohto_val_aika_yht;
+    hankinnat_ja_hoidon_hk_yht := hankinnat_hoitokausi_yht + hoidonjohto_hoitokausi_yht;
+
 
     -----------------------------------------------------------
     ------------------- Rahavaraukset -------------------------
@@ -979,7 +992,7 @@ BEGIN
     tavhin_hoitokausi_yht := tavhin_hoitokausi_yht +
             talvihoito_hoitokausi_yht + lyh_hoitokausi_yht + sora_hoitokausi_yht +
             paallyste_hoitokausi_yht + yllapito_hoitokausi_yht + korvausinv_hoitokausi_yht +
-            johtojahallinto_hoitokausi_yht + erillishankinnat_hoitokausi_yht + hjpalkkio_hoitokausi_yht;
+            johtojahallinto_hoitokausi_yht + erillishankinnat_hoitokausi_yht + hjpalkkio_hoitokausi_yht + kaikki_rahavaraukset_hoitokausi_yht;
     
     -- Tavoitehinta valittu kk 
     tavhin_val_aika_yht := 0.0;
@@ -987,7 +1000,7 @@ BEGIN
             talvihoito_val_aika_yht + lyh_val_aika_yht + sora_val_aika_yht +
             paallyste_val_aika_yht + yllapito_val_aika_yht + korvausinv_val_aika_yht +
             johtojahallinto_val_aika_yht +
-            erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht;
+            erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht + kaikki_rahavaraukset_val_yht;
 
     -- Budjettia jäljellä
     budjettia_jaljella := 0.0;
@@ -1200,9 +1213,7 @@ BEGIN
             -- Ei tavoitehintaiset
             muut_kulut_ei_tavoite_hoitokausi + 
             -- Tavoitehintaiset
-            muut_kulut_hoitokausi_yht + 
-            -- Rahavaraukset
-            kaikki_rahavaraukset_hoitokausi_yht;
+            muut_kulut_hoitokausi_yht;
             
     muut_kustannukset_val_aika_yht :=
             muut_kustannukset_val_aika_yht + lisatyot_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht +
@@ -1211,9 +1222,7 @@ BEGIN
             -- Ei tavoitehintaiset
             muut_kulut_ei_tavoite_val_aika + 
             -- Tavoitehintaiset
-            muut_kulut_val_aika_yht  + 
-            -- Rahavaraukset
-            kaikki_rahavaraukset_val_yht;
+            muut_kulut_val_aika_yht;
 
     -- Kaikki yhteensä
     yhteensa_kaikki_hoitokausi_yht := 0.0;
@@ -1245,6 +1254,8 @@ BEGIN
               hjpalkkio_hoitokausi_yht, hjpalkkio_val_aika_yht,
         -- Hoidonjohto yhteensä
               hoidonjohto_hoitokausi_yht, hoidonjohto_val_aika_yht,
+        -- Hankinnat ja Hoidonjohto yhteensä
+              hankinnat_ja_hoidon_hk_yht, hankinnat_ja_hoidon_val_yht,
         -- Tavoitehinnat yht.
               tavhin_hoitokausi_yht, tavhin_val_aika_yht,
         -- Tavoitehinnan muodostus

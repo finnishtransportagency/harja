@@ -29,7 +29,7 @@
                 (remove nil?
                   (cond
                     (= "Toteutuneet" otsikko)
-                    [(valitaulukko-rivi data false "Hankinnat ja hoidonjohto yhteensä" :hankinnat_hoitokausi_yht :hoidonjohto_hoitokausi_yht true nil "vahvistamaton")
+                    [(valitaulukko-rivi data false "Hankinnat ja hoidonjohto yhteensä" :hankinnat_ja_hoidon_hk_yht :hankinnat_ja_hoidon_val_yht true nil "vahvistamaton")
                      (valitaulukko-rivi data kyseessa-kk-vali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true nil "vahvistamaton")
 
                      ;; Nätetään arvot vain jos on olemassa
