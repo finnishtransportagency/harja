@@ -15,30 +15,6 @@
       [:varillinen-teksti {:arvo arvo :fmt :raha :lihavoi? lihavoi?}])))
 
 
-(defn hoidonjohto-valitaulukko
-  "Hankinnat ja hoidonjohto yhteensä"
-  [{:keys [data kyseessa-kk-vali?]}]
-  (let [rivit (into []
-                (remove nil?
-                  [(hoidonjohto-valitaulukko-rivi data "Hankinnat ja hoidonjohto yhteensä" :hankinnat_hoitokausi_yht :hoidonjohto_hoitokausi_yht true)
-                   (hoidonjohto-valitaulukko-rivi data "" :nil :nil false)
-                   (hoidonjohto-valitaulukko-rivi data "" :nil :nil false)]))]
-
-    [:taulukko {:piilota-border? true
-                :hoitokausi-arvotaulukko? true
-                :raportin-tunniste :tyomaa-yhteenveto
-                :oikealle-tasattavat-kentat #{1 2 3}
-                :viimeinen-rivi-yhteenveto? false}
-
-     (rivi
-       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 12 :tyyppi :varillinen-teksti}
-       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 48 :tyyppi :varillinen-teksti}
-       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}
-       (when kyseessa-kk-vali?
-         {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :tyyppi :varillinen-teksti}))
-     rivit]))
-
-
 (defn- valitaulukko-rivi
   [tp-rivi kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi? vari tyyli]
   (rivi
