@@ -864,7 +864,8 @@
                        (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:summat :suunnitellut-hankinnat]))
                        (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:summat :laskutukseen-perustuvat-hankinnat]))))]
     [:<>
-     [:h2#hankintakustannukset-osio "Hankintakustannukset"]
+     ;[:h2#hankintakustannukset-osio "Hankintakustannukset"]
+     [:h2#hankintakustannukset-osio "Suunnitellut hankinnat"]
      (if yhteenveto
        ^{:key "hankintakustannusten-yhteenveto"}
        [:div.summa-ja-indeksilaskuri
@@ -893,16 +894,4 @@
        ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
        [:div {:class (when vahvistettu? "osio-vahvistettu")}
         [laskutukseen-perustuen-wrapper laskutukseen-perustuvat-hankinnat-grid nayta-laskutukseen-perustuva-taulukko?]]
-       [yleiset/ajax-loader])
-     #_ (when (contains? t/toimenpiteen-rahavaraukset-gridissa toimenpide)
-       ^{:key "rahavaraukset-otsikko"}
-       [:<>
-        [:h3 "Toimenpiteen rahavaraukset (lasketaan tavoitehintaan)"]
-        [:div {:data-cy "hankintakustannukset-rahavaraukset-suodattimet"}
-         [ks-yhteiset/yleis-suodatin (dissoc suodattimet :hankinnat)]]
-
-        (if rahavaraukset-taulukko-valmis?
-          ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
-          [:div {:class (when vahvistettu? "osio-vahvistettu")}
-           [grid/piirra rahavaraukset-grid]]
-          [yleiset/ajax-loader])])]))
+       [yleiset/ajax-loader])]))
