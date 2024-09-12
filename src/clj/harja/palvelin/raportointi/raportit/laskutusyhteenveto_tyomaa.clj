@@ -108,14 +108,14 @@
                     ;; Tavoitehintaan vaikuttavat
                     (and
                       tavoitehintainen?
-                      (= "Muut kulut" otsikko))
+                      (= "" otsikko))
                     [(taulukko-rivi data kyseessa-kk-vali? "Muut tavoitehintaan vaikuttavat kulut" :muut_kulut_hoitokausi :muut_kulut_val_aika false)
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :muut_kulut_hoitokausi_yht :muut_kulut_val_aika_yht true)]
                     
                     ;; Ei- tavoitehintaiset 
                     (and
                       (not tavoitehintainen?)
-                      (= "Muut kulut" otsikko))
+                      (= "" otsikko))
                     [(taulukko-rivi data kyseessa-kk-vali? "Bonukset" :bonukset_hoitokausi_yht :bonukset_val_aika_yht false)
                      (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sanktiot_hoitokausi_yht :sanktiot_val_aika_yht false)
                      (taulukko-rivi data kyseessa-kk-vali? "Muut tavoitehinnan ulkopuoliset kulut" :muut_kulut_ei_tavoite_hoitokausi :muut_kulut_ei_tavoite_val_aika false)
@@ -228,8 +228,8 @@
        (and
          (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
          (pvm/ennen? (pvm/nyt) loppupvm))
-       [:otsikko-heading (str "Tavoitehintaan vaikuttavat toteutuneet kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
-       [:otsikko-heading "Tavoitehintaan vaikuttavat toteutuneet kustannukset"])
+       [:otsikko-heading (str "Tavoitehintaan vaikuttavat kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
+       [:otsikko-heading "Tavoitehintaan vaikuttavat kustannukset"])
 
      (concat (for [otsikko otsikot]
                (taulukko {:data rivitiedot
@@ -239,11 +239,6 @@
                           :laskutetaan-teksti laskutetaan-teksti
                           :kyseessa-kk-vali? kyseessa-kk-vali?})))
 
-     (taulukot/hoidonjohto-valitaulukko {:data rivitiedot
-                                         :kyseessa-kk-vali? kyseessa-kk-vali?})
-
-     [:otsikko-heading "Muut tavoitehintaan vaikuttavat kulut"]
-
      (taulukko {:data rivitiedot
                 :otsikko "Rahavaraukset"
                 :laskutettu-teksti laskutettu-teksti
@@ -252,20 +247,28 @@
 
      ;; Muut kulut, tavoitehintaan vaikuttavat 
      (taulukko {:data rivitiedot
-                :otsikko "Muut kulut"
+                :otsikko ""
                 :laskutettu-teksti laskutettu-teksti
                 :laskutetaan-teksti laskutetaan-teksti
                 :kyseessa-kk-vali? kyseessa-kk-vali?
                 :tavoitehintainen? true})
+     
+     ;; Tyylittyömät
+     ;; Tyylitön välitaulukko - Toteutuneet
+     (taulukot/valitaulukko {:data rivitiedot
+                             :otsikko "Toteutuneet"
+                             :laskutettu-teksti laskutettu-teksti
+                             :laskutetaan-teksti laskutetaan-teksti
+                             :kyseessa-kk-vali? kyseessa-kk-vali?})
 
      (if
        (and
          (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
          (pvm/ennen? (pvm/nyt) loppupvm))
-       [:otsikko-heading (str "Muut toteutuneet kustannukset (ei lasketa tavoitehintaan) aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
-       [:otsikko-heading "Muut toteutuneet kustannukset (ei lasketa tavoitehintaan)"])
+       [:otsikko-heading (str "Tavoitehinnan ulkopuoliset kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
+       [:otsikko-heading "Tavoitehinnan ulkopuoliset kustannukset"])
 
-     (let [otsikot ["Lisätyöt" "Muut kulut"]]
+     (let [otsikot ["Lisätyöt" ""]]
        (concat (for [x otsikot]
                  (taulukko {:data rivitiedot
                             :otsikko x
@@ -274,7 +277,7 @@
                             :kyseessa-kk-vali? kyseessa-kk-vali?
                             :tavoitehintainen? false}))))
      
-     ;; Tyylitön välitaulukko (Muut kustannukset yhteensä)
+     ;; Tyylitön välitaulukko (Tavoitehinnan ulkopuoliset kustannukset yhteensä)
      (taulukot/valitaulukko {:data rivitiedot
                              :laskutettu-teksti laskutettu-teksti
                              :laskutetaan-teksti laskutetaan-teksti

@@ -66,13 +66,8 @@
                     (= "Toteutuneet" otsikko)
 
                     ;; Rahavarausten alla oleva välitaulukko
-                    [(valitaulukko-rivi data kyseessa-kk-vali?
-                       "Toteutuneet tavoitehintaan vaikuttaneet kustannukset yhteensä"
-                       :tavhin_hoitokausi_yht
-                       :tavhin_val_aika_yht
-                       true
-                       nil
-                       "vahvistamaton")
+                    [(hoidonjohto-valitaulukko-rivi data "Hankinnat ja hoidonjohto yhteensä" :hankinnat_hoitokausi_yht :hoidonjohto_hoitokausi_yht true)
+                     (valitaulukko-rivi data kyseessa-kk-vali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true nil "vahvistamaton")
 
                      ;; Nätetään arvot vain jos on olemassa
                      (when (yhteiset/raha-arvo-olemassa? (:hoitokauden_tavoitehinta data))
@@ -89,7 +84,7 @@
 
                     :else
                     ;; Alin välitaulukko
-                    [(valitaulukko-rivi data kyseessa-kk-vali? "Muut kustannukset yhteensä" :muut_kustannukset_hoitokausi_yht :muut_kustannukset_val_aika_yht true nil "vahvistamaton")
+                    [(valitaulukko-rivi data kyseessa-kk-vali? "Tavoitehinnan ulkopuoliset kustannukset yhteensä" :muut_kustannukset_hoitokausi_yht :muut_kustannukset_val_aika_yht true nil "vahvistamaton")
                      (valitaulukko-rivi data false "" :nil :nil false nil nil)
                      (valitaulukko-rivi data false "" :nil :nil false nil nil)])))]
 
