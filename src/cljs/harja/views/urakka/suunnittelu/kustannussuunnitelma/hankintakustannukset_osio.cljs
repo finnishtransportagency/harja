@@ -856,13 +856,11 @@
         yhteenveto-indeksikorjattu (mapv (fn [summa-indeksikorjattu]
                                           {:summa summa-indeksikorjattu})
                                      (mapv +
-                                       (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:indeksikorjatut-summat :rahavaraukset]))
                                        (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:indeksikorjatut-summat :suunnitellut-hankinnat]))
                                        (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:indeksikorjatut-summat :laskutukseen-perustuvat-hankinnat]))))
         yhteenveto (mapv (fn [summa]
                            {:summa summa})
                      (mapv +
-                       (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:summat :rahavaraukset]))
                        (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:summat :suunnitellut-hankinnat]))
                        (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:summat :laskutukseen-perustuvat-hankinnat]))))]
     [:<>
