@@ -12,9 +12,6 @@ ALTER TABLE kulu
     DROP COLUMN IF EXISTS tyyppi;
 -- Tyypin voi poistaa, koska kaikki on tyyppiä 'laskutettava'
 
--- Poistetaan turhaksi jäänyt laskutustyyppi
-DROP TYPE IF EXISTS laskutyyppi;
-
 -- Kululla voi olla monta kohdistusta ja niiden tyyppi on helpointa hallita kohdistuksessa itsessään
 CREATE TYPE kohdistustyyppi AS ENUM ('rahavaraus', 'hankintakulu','muukulu', 'lisatyo', 'paatos');
 
