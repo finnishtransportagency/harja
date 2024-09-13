@@ -87,7 +87,8 @@
       ],
       "matchPackageNames": [
         "com.cognitect:transit-*"
-      ]
+      ],
+      "groupName": "com.cognitect:transit"
     }
   ]
 }
