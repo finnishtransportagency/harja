@@ -6,8 +6,8 @@
 
   ;; Mitä tehdään versio-konfliktien tapahtuessa riippuvuuspuussa?
   ;; https://github.com/technomancy/leiningen/blob/24fb93936133bd7fc30c393c127e9e69bb5f2392/sample.project.clj#L82
-  ;; Tulostetaan varoitus, jos riippuvuuksista löytyy rangeja tai konflikteja
-  :pedantic? :warn
+  ;; Muuta asetusta, jos haluat nähdä varoitukset riippuvuuksien konflikteista
+  :pedantic? false
   :dependencies [
                  ;; Clojure ja ClojureScript
                  [org.clojure/clojure "1.10.0"]

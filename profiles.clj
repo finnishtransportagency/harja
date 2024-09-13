@@ -1,7 +1,12 @@
 ;; Profiilit mergetään https://github.com/technomancy/leiningen/blob/master/doc/PROFILES.md
 ;; ellei erikseen käytetä with-profile
 ;; Tarkemmat ohjeet: https://leiningen.org/profiles.html
-{:dev {:dependencies [
+{
+ ;; Lopeta suoritus, jos overrideja tai versio rangeja löytyy riippuvuuspuusta
+ ;;   Katso: https://github.com/technomancy/leiningen/blob/24fb93936133bd7fc30c393c127e9e69bb5f2392/sample.project.clj#L82
+ :pedantic-abort {:pedantic? :abort}
+
+ :dev {:dependencies [
                       ;; Tarvitaan CLJS käännöksessä (dev, prod)
                       [com.bhauman/figwheel-main "0.2.18"]
                       [prismatic/dommy "1.1.0"]

@@ -90,7 +90,7 @@ jobs:
       # https://github.com/clj-kondo/clj-kondo/blob/master/doc/ci-integration.md
       - name: Lein deps :tree
         continue-on-error: true
-        run: lein deps :tree
+        run: lein with-profile +pedantic-abort deps :tree
 
   # Linter job
   lint-clj:
