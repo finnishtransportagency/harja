@@ -98,7 +98,7 @@
         (let [[vuosi kk] @nayta
               naytettava-kk (t/date-time vuosi (inc kk) 1)
               naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)
-              fokus-paiva (if pvm (t/day pvm) 1)
+              fokus-paiva (if (and pvm (naytettava-kk-paiva? pvm)) (t/day pvm) 1)
               nayta-edellinen-kk #(swap! nayta
                                     (fn [[vuosi kk]]
                                       (if (= kk 0)
@@ -184,9 +184,9 @@
                                       (when valittava?
                                         (valitse paiva))
                                       nil)
-                       :tabIndex (if (naytettava-kk-paiva? paiva)
+                       :tabIndex (if (and valittava? (naytettava-kk-paiva? paiva))
                                    "0")
-                       :id (when (naytettava-kk-paiva? paiva) (str "paiva_" (t/day paiva)))
+                       :id (when (and valittava? (naytettava-kk-paiva? paiva)) (str "paiva_" (t/day paiva)))
                        :on-key-down #(do
                                        (.preventDefault %)
 
@@ -247,42 +247,44 @@
   [_]
   (let [auki? (r/atom false)
         suora-syotto-sisalto (r/atom "")]
-    (fn [{:keys [paivamaara valitse luokat valittava?-fn disabled sumeutus-fn placeholder]}]
-      (let [kiinni #(reset! % false)
-            elementin-id (str (gensym "pvm-pakollinen-input"))]
-        [:div.kalenteri-kontti
-         [:input {:disabled disabled
-                  :type :text
-                  :class (apply conj #{} (filter #(not (nil? %)) (conj luokat (when @auki? "auki"))))
-                  :value (cond
-                           (seq @suora-syotto-sisalto) @suora-syotto-sisalto
-                           (not (nil? paivamaara)) (pvm/pvm paivamaara)
-                           :else "")
-                  :placeholder placeholder
-                  :on-change #(reset! suora-syotto-sisalto (-> % .-target .-value))
-                  :on-click #(reset! auki? true)
-                  :on-focus    #(reset! auki? true)
-                  :on-key-down #(do
-                                  (when (or (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
-                                    (kiinni auki?))
-                                  (when (dom/enter-nappain? %)
-                                    (reset! auki? (not @auki?))))
-                  :on-blur     (fn []
-                                 (when (not paivamaara) (kiinni auki?)) ; jos ei ole päivämäärää määritelty, niin valintoja ei voi tehdä. droppari jää auki, kunnes koontilaskun kuukausi klikataan. tällä estetään se tilanne.
-                                 (when sumeutus-fn (sumeutus-fn))
-                                 (when (seq @suora-syotto-sisalto)
-                                   (let [pvm-sisalto (pvm/->pvm @suora-syotto-sisalto)]
-                                     (when (valittava?-fn pvm-sisalto)
-                                       (valitse (pvm/->pvm @suora-syotto-sisalto))))
-                                   (reset! suora-syotto-sisalto "")))
-                  :id elementin-id}]
-         (when @auki?
-           [pvm-valintakalenteri {:valitse       #(do
-                                                    (kiinni auki?)
-                                                    (valitse %))
-                                  :valittava?-fn valittava?-fn
-                                  :pvm           paivamaara
-                                  :sulje-kalenteri #(do
-                                                      (some-> js/document (.getElementById elementin-id) .focus)
-                                                      (reset! auki? false))
-                                  :input-id elementin-id}])]))))
+    (komp/luo
+      (komp/klikattu-ulkopuolelle #(reset! auki? false))
+      (fn [{:keys [paivamaara valitse luokat valittava?-fn disabled sumeutus-fn placeholder]}]
+        (let [kiinni #(reset! % false)
+              elementin-id (str (gensym "pvm-pakollinen-input"))]
+          [:div.kalenteri-kontti
+           [:input {:disabled disabled
+                    :type :text
+                    :class (apply conj #{} (filter #(not (nil? %)) (conj luokat (when @auki? "auki"))))
+                    :value (cond
+                             (seq @suora-syotto-sisalto) @suora-syotto-sisalto
+                             (not (nil? paivamaara)) (pvm/pvm paivamaara)
+                             :else "")
+                    :placeholder placeholder
+                    :on-change #(reset! suora-syotto-sisalto (-> % .-target .-value))
+                    :on-click #(reset! auki? true)
+                    :on-focus    #(reset! auki? true)
+                    :on-key-down #(do
+                                    (when (or (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
+                                      (kiinni auki?))
+                                    (when (dom/enter-nappain? %)
+                                      (reset! auki? (not @auki?))))
+                    :on-blur     (fn []
+                                   (when (not paivamaara) (kiinni auki?)) ; jos ei ole päivämäärää määritelty, niin valintoja ei voi tehdä. droppari jää auki, kunnes koontilaskun kuukausi klikataan. tällä estetään se tilanne.
+                                   (when sumeutus-fn (sumeutus-fn))
+                                   (when (seq @suora-syotto-sisalto)
+                                     (let [pvm-sisalto (pvm/->pvm @suora-syotto-sisalto)]
+                                       (when (valittava?-fn pvm-sisalto)
+                                         (valitse (pvm/->pvm @suora-syotto-sisalto))))
+                                     (reset! suora-syotto-sisalto "")))
+                    :id elementin-id}]
+           (when @auki?
+             [pvm-valintakalenteri {:valitse       #(do
+                                                      (kiinni auki?)
+                                                      (valitse %))
+                                    :valittava?-fn valittava?-fn
+                                    :pvm           paivamaara
+                                    :sulje-kalenteri #(do
+                                                        (some-> js/document (.getElementById elementin-id) .focus)
+                                                        (reset! auki? false))
+                                    :input-id elementin-id}])])))))
