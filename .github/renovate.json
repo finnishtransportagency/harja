@@ -14,6 +14,14 @@
   "schedule": [
     "before 8am on Tuesday"
   ],
+  "vulnerabilityAlerts": {
+    "description": "Tekee PR:n välittömästi, mikäli Renovate havaitsee haavoittuvan kirjaston GitHubin Dependabot alerteista.",
+    "enabled": false,
+    "labels": [
+      "security"
+    ],
+    "automerge": false
+  },
   "enabledManagers": [
     "leiningen"
   ],
