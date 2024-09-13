@@ -194,7 +194,7 @@
             [lein-less "1.7.5"]
             [lein-ancient "0.6.15"]
             [lein-codox "0.10.8" :exclusions [org.clojure/clojure]]
-            [lein-auto "0.1.2"]
+            [lein-auto "0.1.3"]
             [lein-doo "0.1.10" :exclusions [org.clojure/clojure]]]
 
   ;; Näitä cljsbuild tarvitsee testaamista varten doo:n kanssa.
