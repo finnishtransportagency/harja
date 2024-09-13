@@ -25,7 +25,7 @@
                       ]
        :source-paths ["src/clj-dev" "src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
        :resource-paths ["dev-resources/js" "dev-resources/tmp" "resources/public/css" "resources"]
-       :plugins [[test2junit "1.4.4"]
+       :plugins [[test2junit "1.4.4" :exclusions [org.clojure/clojure]]
                  [lein-eftest "0.5.0"]
                  ;; Pprint-pluginin avulla voit nähdä miten profiilit vaikuttavat konfiguraatioon
                  ;; Esim. lein with-profile +test pprint
