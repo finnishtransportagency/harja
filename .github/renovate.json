@@ -60,6 +60,15 @@
         "org.apache.httpcomponents:*"
       ],
       "groupName": "org.apache.httpcomponents"
+    },
+    {
+      "description": "Ryhmittele com.cognitect:transit-* päivitykset",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "com.cognitect:transit-*"
+      ]
     }
   ]
 }
