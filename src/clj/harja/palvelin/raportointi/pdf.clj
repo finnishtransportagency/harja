@@ -68,7 +68,7 @@
               (first elementti)
               :vain-arvo)))
 
-(def ^:const +max-rivimaara+ 100000)
+(def ^:const +max-rivimaara+ 50000)
 
 (defn cdata
   "Käsittele arvo puhtaana tekstinä."
