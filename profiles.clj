@@ -5,6 +5,8 @@
  ;; Lopeta suoritus, jos overrideja tai versio rangeja löytyy riippuvuuspuusta
  ;;   Katso: https://github.com/technomancy/leiningen/blob/24fb93936133bd7fc30c393c127e9e69bb5f2392/sample.project.clj#L82
  :pedantic-abort {:pedantic? :abort}
+ ;; Näytä varoitukset, jos overrideja tai rangeja löytyy riippuvuuspuusta
+ :pedantic-warn {:pedantic? :warn}
 
  :dev {:dependencies [
                       ;; Tarvitaan CLJS käännöksessä (dev, prod)
