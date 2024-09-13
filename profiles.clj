@@ -1,7 +1,12 @@
 ;; Profiilit mergetään https://github.com/technomancy/leiningen/blob/master/doc/PROFILES.md
 ;; ellei erikseen käytetä with-profile
 ;; Tarkemmat ohjeet: https://leiningen.org/profiles.html
-{:dev {:dependencies [
+{
+ ;; Lopeta suoritus, jos overrideja tai versio rangeja löytyy riippuvuuspuusta
+ ;;   Katso: https://github.com/technomancy/leiningen/blob/24fb93936133bd7fc30c393c127e9e69bb5f2392/sample.project.clj#L82
+ :pedantic-abort {:pedantic? :abort}
+
+ :dev {:dependencies [
                       ;; Tarvitaan CLJS käännöksessä (dev, prod)
                       [com.bhauman/figwheel-main "0.2.18"]
                       [prismatic/dommy "1.1.0"]
@@ -25,7 +30,7 @@
                       ]
        :source-paths ["src/clj-dev" "src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
        :resource-paths ["dev-resources/js" "dev-resources/tmp" "resources/public/css" "resources"]
-       :plugins [[test2junit "1.4.4"]
+       :plugins [[test2junit "1.4.4" :exclusions [org.clojure/clojure]]
                  [lein-eftest "0.5.0"]
                  ;; Pprint-pluginin avulla voit nähdä miten profiilit vaikuttavat konfiguraatioon
                  ;; Esim. lein with-profile +test pprint

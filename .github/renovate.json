@@ -14,6 +14,14 @@
   "schedule": [
     "before 8am on Tuesday"
   ],
+  "vulnerabilityAlerts": {
+    "description": "Tekee PR:n välittömästi, mikäli Renovate havaitsee haavoittuvan kirjaston GitHubin Dependabot alerteista.",
+    "enabled": false,
+    "labels": [
+      "security"
+    ],
+    "automerge": false
+  },
   "enabledManagers": [
     "leiningen"
   ],
@@ -30,6 +38,17 @@
         "https://repo.osgeo.org/repository/release/",
         "https://maven.atlassian.com/content/repositories/atlassian-public/"
       ]
+    },
+    {
+      "description": "Erottele patch ja minor päivitykset Clojure ja ClojureScript kirjastoille",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "org.clojure:clojure",
+        "org.clojure:clojurescript"
+      ],
+      "separateMinorPatch": true
     },
     {
       "description": "Ryhmittele org.geotools:gt-* päivitykset",
@@ -60,6 +79,15 @@
         "org.apache.httpcomponents:*"
       ],
       "groupName": "org.apache.httpcomponents"
+    },
+    {
+      "description": "Ryhmittele com.cognitect:transit-* päivitykset",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "com.cognitect:transit-*"
+      ]
     }
   ]
 }

@@ -4,6 +4,10 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Väylän Harja"
 
+  ;; Mitä tehdään versio-konfliktien tapahtuessa riippuvuuspuussa?
+  ;; https://github.com/technomancy/leiningen/blob/24fb93936133bd7fc30c393c127e9e69bb5f2392/sample.project.clj#L82
+  ;; Muuta asetusta, jos haluat nähdä varoitukset riippuvuuksien konflikteista
+  :pedantic? false
   :dependencies [
                  ;; Clojure ja ClojureScript
                  [org.clojure/clojure "1.10.0"]
@@ -189,9 +193,9 @@
             ;; ollaan luovuttu on-premistä ja jenkinsin käytöstä.
             [lein-less "1.7.5"]
             [lein-ancient "0.6.15"]
-            [lein-codox "0.10.8"]
+            [lein-codox "0.10.8" :exclusions [org.clojure/clojure]]
             [lein-auto "0.1.3"]
-            [lein-doo "0.1.10"]]
+            [lein-doo "0.1.10" :exclusions [org.clojure/clojure]]]
 
   ;; Näitä cljsbuild tarvitsee testaamista varten doo:n kanssa.
   :cljsbuild {:builds [{:id "test"
