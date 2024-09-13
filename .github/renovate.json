@@ -1,0 +1,24 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "enabledManagers": [
+    "leiningen"
+  ],
+  "packageRules": [
+    {
+      "matchDatasources": [
+        "clojure"
+      ],
+      "description": "Lisätään default clojuren pakettilähteet ja project.clj:ssä olevat muut pakettilähteet",
+      "registryUrls": [
+        "https://repo1.maven.org/maven2/",
+        "https://repo.clojars.org/",
+        "https://repo.osgeo.org/repository/geotools-releases/",
+        "https://repo.osgeo.org/repository/release/",
+        "https://maven.atlassian.com/content/repositories/atlassian-public/"
+      ]
+    }
+  ]
+}
