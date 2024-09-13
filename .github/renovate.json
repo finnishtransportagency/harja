@@ -40,6 +40,17 @@
       ]
     },
     {
+      "description": "Erottele patch ja minor päivitykset Clojure ja ClojureScript kirjastoille",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "org.clojure:clojure",
+        "org.clojure:clojurescript"
+      ],
+      "separateMinorPatch": true
+    },
+    {
       "description": "Ryhmittele org.geotools:gt-* päivitykset",
       "matchDatasources": [
         "clojure"
