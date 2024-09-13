@@ -9,6 +9,7 @@
     "replacements:all",
     "workarounds:all"
   ],
+  "prConcurrentLimit": 5,
   "timezone": "Europe/Helsinki",
   "schedule": [
     "before 8am on Tuesday"
