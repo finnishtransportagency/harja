@@ -376,6 +376,7 @@
 
    {:nimi         :kanavien-liikennetapahtumat
     :konteksti    #{}
+    :rajoita-pdf-rivimaara  1200
     :kuvaus       "Liikennetapahtumat"
     :suorita      #'harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat/suorita
     :urakkatyyppi urakka-domain/kanava-urakkatyypit}
