@@ -5,6 +5,7 @@
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain :as raportti]
             [com.stuartsierra.component :as component]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
