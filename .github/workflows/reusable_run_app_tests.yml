@@ -35,6 +35,11 @@ on:
         default: 'true'
         type: string
         required: false
+      deps-tree:
+        description: 'Enabloi deps-tree job'
+        default: 'true'
+        type: string
+        required: false
       lint-clj:
         description: 'Enabloi lint-clj job'
         default: 'true'
@@ -66,6 +71,27 @@ env:
   GH_DOCKER_REGISTRY: ghcr.io
 
 jobs:
+  # Tulosta Clojure deps tree, jotta voidaan nähdä riippuuvuuksien hierarkia PR:ssä
+  deps-tree:
+    if: ${{ inputs.deps-tree == 'true' }}
+    name: "Print Clojure deps tree"
+    runs-on: ubuntu-latest
+    permissions:
+      # Contents read lupaa tarvitaan checkout actionissa
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup clojure environment
+        uses: ./.github/actions/setup-build-env-and-tools
+
+      # https://github.com/clj-kondo/clj-kondo/blob/master/doc/ci-integration.md
+      - name: Lein deps :tree
+        continue-on-error: true
+        run: lein deps :tree
+
   # Linter job
   lint-clj:
     if: ${{ inputs.lint-clj == 'true' }}
