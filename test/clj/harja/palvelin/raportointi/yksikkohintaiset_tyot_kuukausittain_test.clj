@@ -3,13 +3,9 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
-            [harja.kyselyt.urakat :as urk-q]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.raportointi :refer :all]
-            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain :as raportti]
-            [harja.pvm :as pvm]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [harja.palvelin.raportointi :as raportointi]
@@ -52,6 +48,7 @@
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:orientaatio :landscape
+                     :rajoita-pdf-rivimaara nil
                      :nimi        "Yksikköhintaiset työt kuukausittain"}
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{10
@@ -173,7 +170,8 @@
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi        "Yksikköhintaiset työt kuukausittain"
-                     :orientaatio :landscape}
+                     :orientaatio :landscape
+                     :rajoita-pdf-rivimaara nil}
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{10
                                                     11
@@ -293,7 +291,8 @@
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi        "Yksikköhintaiset työt kuukausittain"
-                     :orientaatio :landscape}
+                     :orientaatio :landscape
+                     :rajoita-pdf-rivimaara nil}
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{10
                                                     11
