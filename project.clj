@@ -157,7 +157,7 @@
                  [cljsjs/big "3.1.3-1"]
 
                  ;; Digest-algoritmeja (md5, sha-256, ...)
-                 [digest "1.4.10"]
+                 [org.clj-commons/digest "1.4.100"]
 
                  ;; data.xml tarvitaan mm. XML-tiedostojen parsimiseen ja pretty-printtaukseen
                  [org.clojure/data.xml "0.0.8"]]
