@@ -1,5 +1,5 @@
 {
-  "ulkoinen-id": "Valtavan uniikki 1234",
+  "tunniste": "Valtavan uniikki 1234",
   "reittinimi": "Nelostien pikkumutka",
   "kalusto": [
     {
@@ -7,16 +7,20 @@
       "kalustotyyppi": "Kuorma-auto"
     }
   ],
-  "reitti": [
+  "sijannit": [
     {
       "tie": 4,
       "aosa": 403,
       "aet": 0,
       "losa": 405,
       "let": 5000,
-      "hoitoluokka": 8,
-      "kalusto-lkm": 1,
-      "kalustotyyppi": "TR"
+      "hoitoluokka": "I",
+      "kalustot": [
+        {
+          "kalusto-lkm": 3,
+          "kalustotyyppi": "TR"
+        }
+      ]
     },
     {
       "tie": 20,
@@ -25,8 +29,12 @@
       "losa": 3,
       "let": 1000,
       "hoitoluokka": 1,
-      "kalusto-lkm": 7,
-      "kalustotyyppi": "KA"
+      "kalustot": [
+        {
+          "kalusto-lkm": 7,
+          "kalustotyyppi": "KA"
+        }
+      ]
     },
     {
       "tie": 20,
@@ -34,9 +42,13 @@
       "aet": 0,
       "losa": 10,
       "let": 14000,
-      "hoitoluokka": 1,
-      "kalusto-lkm": 5,
-      "kalustotyyppi": "KA"
+      "hoitoluokka": "IsE",
+      "kalustot": [
+        {
+          "kalusto-lkm": 5,
+          "kalustotyyppi": "TR"
+        }
+      ]
     }
   ]
 }

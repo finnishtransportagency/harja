@@ -3,7 +3,7 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "ulkoinen-id": {
+    "tunniste": {
       "type": "string",
       "required": true,
       "description": "Päivittää annetun ulkoinen-id arvon perusteella Harjassa olevat tiedot tässä annetuilla tiedoilla."
@@ -13,7 +13,7 @@
       "required": true,
       "description": "Päivitetty reitin nimi."
     },
-    "reitti": {
+    "sijainnit": {
       "type": "array",
       "description": "Päivitetyt reitit",
       "items": {
@@ -57,25 +57,52 @@
             "minimum": 0
           },
           "hoitoluokka": {
-            "type": "integer",
+            "enum": ["IsE", "Is", "I", "Ib", "Ic", "II", "III", "L", "K1", "K2", "K"],
             "required": true,
-            "description": "Reitin hoitoluokka. Hoitoluokat on väliltä 1-11. IsE = 1, Is = 2 I = 3, Ib = 4, Ic = 5, II = 6, III = 7, L = 8, K1 = 9, K2 = 10, K (ei talvihoitoa) = 11"
+            "description": "Reitin hoitoluokka. Hoitoluokkavaihtoehdot: IsE, Is, I, Ib, Ic, II, III, L, K1, K2, K"
           },
-          "kalustotyyppi": {
-            "type": "string",
-            "required": true,
-            "description": "Kalustotyyppi, jota käytetään tällä reitillä. Esim. TR tai KA."
+          "kalustot": {
+            "type": "array",
+            "description": "Yhdellä tieosuudella voi olla useita ei kalustoja.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kalustotyyppi": {
+                  "type": "string",
+                  "required": true,
+                  "description": "Kalustotyyppi, jota käytetään tällä reitillä. Esim. TR tai KA."
+                },
+                "kalusto-lkm": {
+                  "type": "integer",
+                  "required": true,
+                  "description": "Kaluston lukumäärä, jota kalustotyypistä käytetään. Esim. 4",
+                  "minimum": 1
+                },
+                "required": [
+                  "kalustotyyppi",
+                  "kalusto-lkm"
+                ]
+              }
+            }
           },
-          "kalusto-lkm": {
-            "type": "integer",
-            "required": true,
-            "description": "Kaluston lukumäärä, jota kalustotyypistä käytetään. Esim. 4",
-            "minimum": 1
-          }
-        },
-        "required": ["tie", "aosa", "aet", "losa", "let", "pituus", "kalustotyyppi", "kalusto-lkm"]
+          "required": [
+            "tie",
+            "aosa",
+            "aet",
+            "losa",
+            "let",
+            "pituus",
+            "kalustot"
+          ]
+        }
       }
-    }
-  },
-  "required": ["ulkoinen-id", "reittinimi", "reitti"]
+    },
+    "required": [
+      "ulkoinen-id",
+      "reittinimi",
+      "sijainnit"
+    ]
+  }
 }
+

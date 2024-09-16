@@ -37,9 +37,11 @@
         ulkoinen-id 123456
         lahetysdata (-> "test/resurssit/api/talvihoitoreitti-ok.json"
                       slurp
-                      (.replace "__ULKOINENID__" (str ulkoinen-id)))
+                      (.replace "__ULKOINENID__" (str ulkoinen-id))
+                      (.replace "__NIMI__" "testinimi"))
         vastaus-lisays (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
-                         lahetysdata)]
+                         lahetysdata)
+        _ (println "vastaus-lisays" vastaus-lisays)]
     (is (= 200 (:status vastaus-lisays)))
     (let [talvihoitoreitti-kannassa (q-map (format "SELECT nimi, luoja, luotu FROM talvihoitoreitti WHERE urakka_id = %s " urakka-id))]
       (is (= 1 (count talvihoitoreitti-kannassa))))))
