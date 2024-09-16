@@ -2622,7 +2622,7 @@
                                ^{:key toimenkuva}
                                [:li (str toimenkuva)]))]]))
               jh-korvaukset (jh-korvaukset-vastauksesta vastaus pohjadata)
-              _ (js/console.log "jh-korvaukset vastaukset: " (pr-str jh-korvaukset))
+
               ;; -- App-tila --
               app (reduce (fn [app jarjestysnumero]
                             (let [nimi (jh-omienrivien-nimi jarjestysnumero)
