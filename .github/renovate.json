@@ -1,8 +1,27 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    ":dependencyDashboard",
+    ":semanticPrefixFixDepsChoreOthers",
+    ":ignoreModulesAndTests",
+    "group:monorepos",
+    "group:recommended",
+    "replacements:all",
+    "workarounds:all"
   ],
+  "prConcurrentLimit": 5,
+  "timezone": "Europe/Helsinki",
+  "schedule": [
+    "before 8am on Tuesday"
+  ],
+  "vulnerabilityAlerts": {
+    "description": "Tekee PR:n välittömästi, mikäli Renovate havaitsee haavoittuvan kirjaston GitHubin Dependabot alerteista.",
+    "enabled": false,
+    "labels": [
+      "security"
+    ],
+    "automerge": false
+  },
   "enabledManagers": [
     "leiningen"
   ],
@@ -19,6 +38,57 @@
         "https://repo.osgeo.org/repository/release/",
         "https://maven.atlassian.com/content/repositories/atlassian-public/"
       ]
+    },
+    {
+      "description": "Erottele patch ja minor päivitykset Clojure ja ClojureScript kirjastoille",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "org.clojure:clojure",
+        "org.clojure:clojurescript"
+      ],
+      "separateMinorPatch": true
+    },
+    {
+      "description": "Ryhmittele org.geotools:gt-* päivitykset",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "org.geotools:gt-*"
+      ],
+      "groupName": "org.geotools"
+    },
+    {
+      "description": "Ryhmittele org.apache.poi:* päivitykset",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "org.apache.poi:*"
+      ],
+      "groupName": "org.apache.poi"
+    },
+    {
+      "description": "Ryhmittele org.apache.httpcomponents:* päivitykset",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "org.apache.httpcomponents:*"
+      ],
+      "groupName": "org.apache.httpcomponents"
+    },
+    {
+      "description": "Ryhmittele com.cognitect:transit-* päivitykset",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "com.cognitect:transit-*"
+      ],
+      "groupName": "com.cognitect:transit"
     }
   ]
 }
