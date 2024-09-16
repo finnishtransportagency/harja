@@ -186,7 +186,7 @@
                  ;; ["sonatype-snapshots" "https://oss.sonatype.org/content/repositories/snapshots/"]
                  ]
 
-  :plugins [[lein-cljsbuild "1.1.7"]
+  :plugins [[lein-cljsbuild "1.1.8"]
             ;; TODO: Pilvisiirtymän jälkeen poistetaan lein-less riippuvuus
             ;; Harjan pilviversiossa on luovuttu lein-lessistä, mutta on-prem harjassa
             ;; käytetään sitä vielä. Riippuvuus ja käyttö aliaksissa voidaan poistaa, kun
