@@ -90,6 +90,7 @@
                        maara        ::t/maara
                        lisatieto    ::t/lisatieto
                        ei-sijaintia ::t/ei-sijaintia
+                       pakota-sijainti? ::t/pakota-sijainti?
                        toteuma-id   ::t/toteuma-id
                        poistettu    ::t/poistettu
                        :as          _toteuma}]
@@ -172,10 +173,10 @@
                    [kentat/tee-kentta
                     {:nimi                  [indeksi :tierekisteriosoite]
                      ::ui-lomake/col-luokka ""
-                     :teksti                "Kyseiseen tehtävään ei ole sijaintia"
                      :pakollinen?           (not ei-sijaintia)
                      :disabled?             ei-sijaintia
                      :tyyppi                :tierekisteriosoite
+                     :vaadi-vali? false
                      :vayla-tyyli?          true
                      :sijainti              (r/wrap sijainti (constantly true))}
                     (r/wrap sijainti
@@ -184,6 +185,7 @@
                    [kentat/tee-kentta
                     {:label-luokka          "ei-sijaintia-checkbox-monta"
                      :vayla-tyyli?          true
+                     :disabled? pakota-sijainti?
                      :teksti                "Kyseiseen tehtävään ei ole sijaintia"
                      :tyyppi                :checkbox}
                     (r/wrap ei-sijaintia
@@ -211,6 +213,7 @@
          validius     ::tila/validius
          koko-validi? ::tila/validi?} lomake
         {ei-sijaintia ::t/ei-sijaintia
+         pakota-sijainti? ::t/pakota-sijainti?
          toteuma-id   ::t/toteuma-id
          sijainti     ::t/sijainti} (-> toteumat first)
         validi? (fn [polku]
@@ -360,14 +363,15 @@
          (when (= (count toteumat) 1)
            [{:nimi [0 :tierekisteriosoite]
              ::ui-lomake/col-luokka ""
-             :teksti "Kyseiseen tehtävään ei ole sijaintia"
              :pakollinen? (not ei-sijaintia)
              :disabled? ei-sijaintia
              :tyyppi :tierekisteriosoite
+             :vaadi-vali? false
              :vayla-tyyli? true
              :sijainti (r/wrap sijainti (constantly true))
              :lataa-piirrettaessa-koordinaatit? true}
             {:nimi [::t/toteumat 0 ::t/ei-sijaintia]
+             :disabled? pakota-sijainti?
              ::ui-lomake/col-luokka "ei-sijaintia-checkbox"
              :teksti "Kyseiseen tehtävään ei ole sijaintia"
              :tyyppi :checkbox}]))]

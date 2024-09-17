@@ -1411,17 +1411,26 @@
 (defn- tierekisterikentat-flex [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
                                 piste? vaadi-vali?]
   (let [osio (fn [alaotsikko? komponentti otsikko]
-               [:div
-                (when-not alaotsikko?
-                  [:label.control-label
-                   [:span
-                    [:span.kentan-label otsikko]
-                    (when pakollinen? [:span.required-tahti])]])
-                komponentti
-                (when alaotsikko?
-                  [:span
-                   [:span.kentan-label otsikko]
-                   (when pakollinen? [:span.required-tahti])])])]
+               (let [kentta-pakollinen? (cond
+                                          (and pakollinen? (or vaadi-vali? (#{"Tie" "Aosa" "Aet"} otsikko)))
+                                          true
+
+                                          (and pakollinen?
+                                            ;; defaulttina vaaditaan väli, siksi false-tarkistus. On eksplisiittisesti asetettava
+                                            ;; vaadi-vali? falseksi, jotta väliä ei vaadita
+                                           (false? vaadi-vali?) (#{"Losa" "Let"} otsikko))
+                                          false
+
+                                          :else false)]
+                 [:div
+                  (when-not alaotsikko?
+                    [:label.control-label {:class (when-not kentta-pakollinen? "cancel-required-tahti")}
+                     [:span.kentan-label otsikko]])
+                  komponentti
+                  (when alaotsikko?
+                    [:span
+                     [:span.ala-control-label.kentan-label {:class (when-not kentta-pakollinen? "cancel-required-tahti")}
+                      otsikko]])]))]
     (fn [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
          piste? vaadi-vali?]
       ;; Jos alaotsikot valittuna, ryhmitä valitse sijainti oikein 
@@ -1543,7 +1552,7 @@
       (nayta-kartalla @sijainti)
       (go-loop []
                (when-let [arvo (<! tr-osoite-ch)]
-                 (log "VKM/TR: " (pr-str arvo))
+                 ;; (log "VKM/TR: " (pr-str arvo))
                  (reset! @sijainti-atom
                          (if-not (= arvo :virhe)
                            (do (nappaa-virhe (nayta-kartalla (piste-tai-eka arvo)))

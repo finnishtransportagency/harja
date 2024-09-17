@@ -67,6 +67,15 @@
                    ::t/lisatieto nil
                    ::t/maara nil})
 
+
+(def tehtavat-joille-sijainti-pakollinen
+  #{"AB-paikkaus levittäjällä"
+    "PAB-paikkaus levittäjällä"
+    "KT-valuasfalttipaikkaus K"
+    "KT-valuasfalttipaikkaus T"
+    "KT-reikävaluasfalttipaikkaus"
+    "KT-valuasfalttisaumaus"})
+
 (defn validoinnit
   ([avain lomake indeksi]
    (avain {::t/maara [(tila/silloin-kun #(= :maaramitattava (::t/tyyppi lomake)) tila/ei-nil)
@@ -317,14 +326,10 @@
     (let [osoite (get-in lomake [indeksi :tierekisteriosoite])
           ; Kun sijaintia muokataan, pitää vanha sijainti poistaa kartalta
           _ (reset! maarien-toteumat-kartalla/karttataso-toteumat nil)]
-      (if (and
-            (not (empty? osoite))
-            (not (nil? (get osoite :alkuetaisyys))))
-        (-> app
-            ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
-            ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
-            (assoc-in [:sijainti indeksi] osoite))
-        app)))
+      (-> app
+        ; Jos lomakkeen sisällä olevaa sijaintidataa päivittää, sijainnin valinta ei enää toimi
+        ; Joten tallennetaan sijaintidata app-stateen lomakkeen ulkopuolelle.
+        (assoc-in [:sijainti indeksi] osoite))))
   
   PaivitaLomake
   (process-event [{{useampi? ::t/useampi-toteuma
@@ -358,6 +363,13 @@
                 app)
           app (if toimenpide
                 (assoc-in app [:lomake ::t/toimenpide] toimenpide)
+                app)
+          ;; Jos valitaan tehtävä, jolle pakotetaan sijainti, asetetaan ei-sijaintia falseksi
+          asetetun-tehtavan-nimi (get-in app [:lomake ::t/toteumat indeksi ::t/tehtava :tehtava])
+          pakota-sijainti? (boolean (tehtavat-joille-sijainti-pakollinen asetetun-tehtavan-nimi))
+          app (assoc-in app [:lomake ::t/toteumat indeksi ::t/pakota-sijainti?] pakota-sijainti?)
+          app (if pakota-sijainti?
+                (-> app (assoc-in [:lomake ::t/toteumat indeksi ::t/ei-sijaintia] false))
                 app)
           ;; Jos yksittäisen toteuman sijainti muutetaan ei sijainnittomaksi
           app (if (= polku [::t/toteumat indeksi ::t/ei-sijaintia])
