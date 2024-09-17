@@ -241,7 +241,8 @@
     :reikapaikkaukset
     :mpu-kustannukset
     :rahavaraukset-hallinta
-    :urakkahenkilot-hallinta})
+    :urakkahenkilot-hallinta
+    :lupaukset-hallinta})
 
 (def hidas-ok-status #{:itmf})
 
