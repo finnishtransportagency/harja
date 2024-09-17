@@ -1,6 +1,5 @@
 import {avaaKustannussuunnittelu} from "../support/kustannussuunnitelmaFns.js";
 import * as ks from "../support/kustannussuunnitelmaFns.js";
-import {kuluvaHoitokausiAlkuvuosi} from "../support/apurit";
 
 const indeksit = [];
 
