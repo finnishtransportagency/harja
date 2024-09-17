@@ -162,7 +162,8 @@
     :reikapaikkaukset
     :mpu-kustannukset
     :rahavaraukset-hallinta
-    :urakkahenkilot-hallinta})
+    :urakkahenkilot-hallinta
+    :lupaukset-hallinta})
 
 (def ei-statusta
   #{:metriikka
