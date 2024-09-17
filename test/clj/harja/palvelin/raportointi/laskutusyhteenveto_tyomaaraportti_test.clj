@@ -1,4 +1,4 @@
-(ns harja.palvelin.raportointi.laskutusyhteenveto_tyomaaraportti_test
+(ns harja.palvelin.raportointi.laskutusyhteenveto-tyomaaraportti-test
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
