@@ -122,7 +122,7 @@
                  [jarohen/chime "0.2.2"]
 
                  ;; Pikkukuvien (thumbnail) muodostamiseen
-                 [net.coobird/thumbnailator "0.4.8"]
+                 [net.coobird/thumbnailator "0.4.20"]
 
                  ;; JSON -validointikirjastot
                  [webjure/json-schema "0.7.4"]
