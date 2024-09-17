@@ -24,7 +24,7 @@
             [harja.views.hallinta.urakkatiedot.tehtava-nakyma :as tehtava-nakyma]
             [harja.views.hallinta.tarjoushinnat :as tarjoushinnat]
             [harja.views.hallinta.rahavaraukset :as rahavaraukset]
-            [harja.views.hallinta.urakkatiedot.lupaukset :as lupaukset]
+            [harja.views.hallinta.urakkatiedot.lupaukset-nakyma :as lupaukset]
             [harja.views.hallinta.rahavarausten-tehtavat :as rahavarausten-tehtavat]
             [harja.views.hallinta.urakkahenkilot :as urakkahenkilot]
             [harja.tiedot.istunto :as istunto]))

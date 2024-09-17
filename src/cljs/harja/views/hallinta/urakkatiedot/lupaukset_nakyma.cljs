@@ -1,11 +1,11 @@
-(ns harja.views.hallinta.urakkatiedot.lupaukset
+(ns harja.views.hallinta.urakkatiedot.lupaukset-nakyma
   "Lupauksiin liittyvää hallinnointia esim. linkityksiä urakkaan"
   (:require [tuck.core :refer [tuck send-value! send-async!]]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
-            [harja.tiedot.hallinta.lupaukset :as tiedot]
+            [harja.tiedot.hallinta.lupaukset-tiedot :as tiedot]
             [harja.ui.debug :as debug]))
 
 
