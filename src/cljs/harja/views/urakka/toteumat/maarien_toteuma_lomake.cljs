@@ -375,7 +375,9 @@
             {:nimi [::t/toteumat 0 ::t/ei-sijaintia]
              :disabled? pakota-sijainti?
              ::ui-lomake/col-luokka "ei-sijaintia-checkbox"
-             :teksti "Kyseiseen tehtävään ei ole sijaintia"
+             :teksti (if pakota-sijainti?
+                       "Tähän tehtävään sijainti on pakollinen"
+                       "Kyseiseen tehtävään ei ole sijaintia")
              :tyyppi :checkbox}]))]
       lomake]]))
 
