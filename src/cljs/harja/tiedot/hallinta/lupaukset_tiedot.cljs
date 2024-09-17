@@ -1,4 +1,4 @@
-(ns harja.tiedot.hallinta.lupaukset
+(ns harja.tiedot.hallinta.lupaukset-tiedot
   (:require [cljs.core.async :refer [>! <!]]
             [harja.loki :as log]
             [harja.ui.viesti :as viesti]
