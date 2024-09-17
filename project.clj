@@ -19,8 +19,8 @@
                  [prismatic/schema "1.1.10"]
                  [org.clojure/core.async "0.3.443"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
-                 [com.cognitect/transit-cljs "0.8.256"]
-                 [com.cognitect/transit-clj "0.8.313"]
+                 [com.cognitect/transit-cljs "0.8.280"]
+                 [com.cognitect/transit-clj "0.8.319"]
                  ;; Pätevä yksinkertainen työkalu esimerkiksi config-tiedostojen mergeämiseen
                  [meta-merge "1.0.0"]
 
@@ -122,7 +122,7 @@
                  [jarohen/chime "0.2.2"]
 
                  ;; Pikkukuvien (thumbnail) muodostamiseen
-                 [net.coobird/thumbnailator "0.4.8"]
+                 [net.coobird/thumbnailator "0.4.20"]
 
                  ;; JSON -validointikirjastot
                  [webjure/json-schema "0.7.4"]
@@ -195,7 +195,7 @@
             [lein-ancient "0.6.15"]
             [lein-codox "0.10.8" :exclusions [org.clojure/clojure]]
             [lein-auto "0.1.3"]
-            [lein-doo "0.1.10" :exclusions [org.clojure/clojure]]]
+            [lein-doo "0.1.11" :exclusions [org.clojure/clojure]]]
 
   ;; Näitä cljsbuild tarvitsee testaamista varten doo:n kanssa.
   :cljsbuild {:builds [{:id "test"
