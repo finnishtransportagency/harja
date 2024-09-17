@@ -59,7 +59,7 @@
         :komponentti (fn [n]
                        [:div ""])}
        {:nimi :ulkoinen-id
-        :otsikko "Uniikki ulkoinen id"
+        :otsikko "Uniikki tunniste"
         :tyyppi :string
         :pakollinen? true}
        {:nimi :reittinimi
