@@ -64,17 +64,17 @@
                (doall (for [h (:hoitoluokat rivi)]
                         ^{:key (hash (str "hoitoluokka-" h))}
                         [:div
-                         [:div.body-text.musta {:style {:padding-right "10px"}} (:hoitoluokka-str h)]
+                         [:div.body-text.musta {:style {:padding-right "10px"}} (:hoitoluokka h)]
                          [:div.small-text.musta {:style {:padding-right "10px"}} (fmt/desimaaliluku-opt (:pituus h) 2) ]]))]]
 
              [:div.basis256.grow2.shrink3.rajaus
               [:div.body-text.semibold.musta "Kalusto (kpl)"]
               [:div {:style {:display "flex"}}
-               (doall (for [reitti (:reitit rivi)]
-                        ^{:key (:id reitti)}
+               (doall (for [kalusto (:kalustot rivi)]
+                        ^{:key (hash kalusto)}
                         [:div
-                         [:div.body-text.musta {:style {:padding-right "10px"}} (:kalustotyyppi reitti)]
-                         [:div.small-text.musta {:style {:padding-right "10px"}} (:kalustomaara reitti) ]]))]]
+                         [:div.body-text.musta {:style {:padding-right "10px"}} (:kalustotyyppi kalusto)]
+                         [:div.small-text.musta {:style {:padding-right "10px"}} (:kalustomaara kalusto) ]]))]]
 
              [:div.basis256.grow2.shrink3
               [:div.body-text.strong.musta ""]
@@ -94,7 +94,7 @@
                   :reunaviiva? true}
                  [{:otsikko "Tie" :nimi :tie :tyyppi :numero :tasaa :vasen}
                   {:otsikko "Tieosoite" :nimi :formatoitu-tr :tyyppi :string :tasaa :vasen}
-                  {:otsikko "Hoitoluokka" :nimi :hoitoluokka-str :tyyppi :string :tasaa :vasen}
+                  {:otsikko "Hoitoluokka" :nimi :hoitoluokka :tyyppi :string :tasaa :vasen}
                   {:otsikko "Suunniteltu pituus (km)" :nimi :pituus :tyyppi :numero :fmt #(fmt/desimaaliluku-opt % 2) :tasaa :oikea}
                   {:otsikko "Laskettu pituus (km)" :nimi :laskettu_pituus :tyyppi :numero :fmt #(fmt/desimaaliluku-opt % 2) :tasaa :oikea}]
                  (:reitit rivi)]))])))]))
@@ -108,11 +108,13 @@
          (reset! tiedot/valitut-kohteet-atom #{})
          (e! (tiedot/->HaeTalvihoitoreitit))
          (kartta-tasot/taso-paalle! :talvihoitoreitit)
+         (kartta-tasot/taso-paalle! :organisaatio)
          (reset! tiedot/karttataso-nakyvissa? true)
          (js/console.log "sisään"))
 
       #(do
          (kartta-tasot/taso-pois! :talvihoitoreitit)
+         (kartta-tasot/taso-pois! :organisaatio)
          (reset! tiedot/karttataso-nakyvissa? false)))
     (fn [e! app]
       [:div.row
