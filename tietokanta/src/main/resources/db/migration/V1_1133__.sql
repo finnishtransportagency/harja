@@ -49,3 +49,7 @@ $$
             END LOOP;
     END
 $$;
+
+-- Varmistetaan, että tehtäväryhmä on oikean niminen kaikissa ympäristöissä
+UPDATE tehtavaryhma set nimi = 'Päällysteiden paikkaus, muut työt (Y8)'
+where nimi = 'Päällysteiden paikkaus, muut työt (Y)';
