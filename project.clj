@@ -94,7 +94,7 @@
 
 
                  ;; Ajax-kirjasto frontille
-                 [cljs-ajax "0.8.0"]
+                 [cljs-ajax "0.8.4"]
 
                  ;; React-wrapper frontille
                  [reagent "0.9.1"]
