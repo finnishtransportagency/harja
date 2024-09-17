@@ -8,50 +8,31 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.kyselyt.talvihoitoreitit :as talvihoitoreitit-q]
-            [harja.kyselyt.tieverkko :as tieverkko-q]))
-
-(defn lisaa-kalustot-ja-reitit [db talvihoitoreitti-id data]
-  ;; Lisää reitit
-  (doseq [reitti (:reitti data)]
-      (talvihoitoreitit-q/lisaa-reitti-talvihoitoreitille<! db
-        {:talvihoitoreitti_id talvihoitoreitti-id
-         :tie (:tie reitti)
-         :alkuosa (:aosa reitti)
-         :alkuetaisyys (:aet reitti)
-         :loppuosa (:losa reitti)
-         :loppuetaisyys (:let reitti)
-         :pituus (:pituus reitti)
-         :hoitoluokka (:hoitoluokka reitti)
-         :kalustomaara (:kalusto-lkm reitti)
-         :kalustotyyppi (:kalustotyyppi reitti)})))
+            [harja.kyselyt.talvihoitoreitit :as talvihoitoreitit-q]))
 
 (defn paivita-talvihoitoreitti [db data kayttaja_id urakka_id]
   (let [_ (println "paivita-talvihoitoreitti :: data" data)
         ;; Haetaan talvihoitoreitin perustiedot ulkoisen id:n perusteella
         talvihoitoreitti (first (talvihoitoreitit-q/hae-talvihoitoreitti-ulkoisella-idlla db {:urakka_id urakka_id
-                                                                                              :ulkoinen_id (:ulkoinen-id data)}))
+                                                                                              :ulkoinen_id (:tunniste data)}))
 
         ;; Jos talvihoitoreitti löytyy, niin deletoidaan kaikki kalusto ja reitit, ja tallennetaan ne uudestaan.
         _ (when talvihoitoreitti
-            (talvihoitoreitit-q/poista-talvihoitoreitin-reitit! db {:talvihoitoreitti_id (:id talvihoitoreitti)})
+            (talvihoitoreitit-q/poista-talvihoitoreitin-sijainnit! db {:talvihoitoreitti_id (:id talvihoitoreitti)})
             ;; Päivitä talvihoitoreitin perustiedot
             (talvihoitoreitit-q/paivita-talvihoitoreitti<! db {:talvihoitoreitti_id (:id talvihoitoreitti)
                                                                :nimi (:reittinimi data)
                                                                :kayttaja_id kayttaja_id})
             ;; Lisää kalustot ja reitit
-            (lisaa-kalustot-ja-reitit db (:id talvihoitoreitti) data))
+            (talvihoitoreitit-q/lisaa-kalustot-ja-reitit db (:id talvihoitoreitti) data))
         vastaus (tee-kirjausvastauksen-body {:ilmoitukset "Talvihoitoreitit päivitetty onnistuneesti."})]
     vastaus))
 
-(defn lisaa-talvihoitoreitti-tietokantaan [db data kayttaja_id urakka_id]
+(defn tallenna-talvihoitoreitti [db data kayttaja_id urakka_id]
   (let [;; Tallenna talvihoitoreitin perustiedot
-        talvihoitoreitti-id (:id (talvihoitoreitit-q/lisaa-talvihoitoreitti<! db {:nimi (:reittinimi data)
-                                                                                  :ulkoinen_id (:ulkoinen-id data)
-                                                                                  :urakka_id urakka_id
-                                                                                  :kayttaja_id kayttaja_id}))
+        talvihoitoreitti-id (:id (talvihoitoreitit-q/lisaa-talvihoitoreitti-tietokantaan db data urakka_id kayttaja_id))
         ;; Lisää kalustot ja reitit
-        _ (lisaa-kalustot-ja-reitit db talvihoitoreitti-id data)
+        _ (talvihoitoreitit-q/lisaa-kalustot-ja-reitit db talvihoitoreitti-id data)
         _ (println "lisaa-talvihoitoreitti :: lisätty onnistuneesti" data)
         vastaus (tee-kirjausvastauksen-body {:muut-tiedot {:huomiot [{:tunniste {:id talvihoitoreitti-id}}]}})]
     vastaus))
@@ -69,12 +50,12 @@
 
           ;; Varmista, että talvihoitoreittiä ei ole jo olemassa
           talvihoitoreitti (talvihoitoreitit-q/hae-talvihoitoreitti-ulkoisella-idlla db {:urakka_id urakka_id
-                                                                                         :ulkoinen_id (:ulkoinen-id data)})]
+                                                                                         :ulkoinen_id (:tunniste data)})]
       (if (and
             (not (nil? talvihoitoreitti))
             (not (empty? talvihoitoreitti)))
         (paivita-talvihoitoreitti db data kayttaja_id urakka_id)
-        (lisaa-talvihoitoreitti-tietokantaan db data kayttaja_id urakka_id)))))
+        (tallenna-talvihoitoreitti db data kayttaja_id urakka_id)))))
 
 (defn poista-talvihoitoreitit [db data kayttaja parametrit]
   (validointi/tarkista-urakka-ja-kayttaja db (konv/konvertoi->int (:id parametrit)) kayttaja)

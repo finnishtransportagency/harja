@@ -15,22 +15,30 @@ CREATE TABLE IF NOT EXISTS talvihoitoreitti
 CREATE UNIQUE INDEX talvihoitoreitti_ulkoinen_id_urakka_id_uindex
     ON public.talvihoitoreitti (ulkoinen_id, urakka_id);
 
-CREATE TABLE IF NOT EXISTS talvihoitoreitti_reitti
+CREATE TABLE IF NOT EXISTS talvihoitoreitti_sijainti
 (
     id                  SERIAL PRIMARY KEY,
-    talvihoitoreitti_id INTEGER NOT NULL REFERENCES talvihoitoreitti (id) ON DELETE CASCADE,
-    tie                 INTEGER NOT NULL,
-    alkuosa             INTEGER NOT NULL,
-    alkuetaisyys        INTEGER NOT NULL,
+    talvihoitoreitti_id INTEGER      NOT NULL REFERENCES talvihoitoreitti (id) ON DELETE CASCADE,
+    tie                 INTEGER      NOT NULL,
+    alkuosa             INTEGER      NOT NULL,
+    alkuetaisyys        INTEGER      NOT NULL,
     loppuosa            INTEGER,
     loppuetaisyys       INTEGER,
-    hoitoluokka         INTEGER NOT NULL,
-    pituus              INTEGER, -- metreinä
-    reitti              geometry,
-    kalustotyyppi       VARCHAR(255) NOT NULL,
-    kalustomaara        INTEGER      NOT NULL
+    hoitoluokka         VARCHAR(255) NOT NULL,
+    pituus_m            DECIMAL(10, 2), -- metreinä
+    reitti              geometry
+);
+
+CREATE TABLE IF NOT EXISTS talvihoitoreitti_sijainti_kalusto
+(
+    id                           SERIAL PRIMARY KEY,
+    talvihoitoreitti_sijainti_id INTEGER      NOT NULL REFERENCES talvihoitoreitti_sijainti (id) ON DELETE CASCADE,
+    kalustotyyppi                VARCHAR(255) NOT NULL,
+    maara                        INTEGER      NOT NULL
 );
 
 -- Uusi apiavain
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'lisaa-talvihoitoreitti');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'poista-talvihoitoreitti');
+INSERT INTO integraatio (jarjestelma, nimi)
+VALUES ('api', 'lisaa-talvihoitoreitti');
+INSERT INTO integraatio (jarjestelma, nimi)
+VALUES ('api', 'poista-talvihoitoreitti');
