@@ -216,6 +216,7 @@
          pakota-sijainti? ::t/pakota-sijainti?
          toteuma-id   ::t/toteuma-id
          sijainti     ::t/sijainti} (-> toteumat first)
+        useampi? (> (count toteumat) 1)
         validi? (fn [polku]
                   (if validius
                     (not (get-in validius [polku :validi?]))
@@ -224,7 +225,7 @@
         tyhjenna-lomake! (r/partial tyhjenna! e!)
         maaramitattava-skeema [{:otsikko "Työ valmis"
                                 :nimi ::t/pvm
-                                ::ui-lomake/col-luokka ""
+                                ::ui-lomake/col-luokka (if useampi? "max-puolikas" "")
                                 :pakollinen? true
                                 :tyyppi :pvm}
                                {:nimi ::t/toteumat
@@ -278,6 +279,7 @@
                      (e! (tiedot/->PaivitaSijainti data 0))
                      (e! (tiedot/->PaivitaLomake data nil 0))))
        :voi-muokata? true
+       :luokka "toteumamaarat-lomake"
        :tarkkaile-ulkopuolisia-muutoksia? true
        :palstoja 2
        :header-fn (fn [data]

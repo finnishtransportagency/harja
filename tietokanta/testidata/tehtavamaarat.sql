@@ -155,3 +155,13 @@ WHERE nimi = 'Sorastus';
 -- Korjataan sorastuksen yksikkö
 UPDATE tehtava SET yksikko = 'tonni', suunnitteluyksikko = 'tonni'
 WHERE nimi = 'Sorastus';
+
+INSERT INTO tehtava (nimi, emo, luotu, poistettu, yksikko, jarjestys, hinnoittelu, api_seuranta, suoritettavatehtava, piilota, api_tunnus, tehtavaryhma, "mhu-tehtava?", yksiloiva_tunniste, suunnitteluyksikko, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi, kasin_lisattava_maara, "raportoi-tehtava?", materiaaliluokka_id, materiaalikoodi_id, aluetieto, nopeusrajoitus)
+VALUES
+    ('AB-paikkaus levittäjällä', (SELECT id FROM toimenpide WHERE taso = 3 and nimi ilike 'Päällysteiden paikkaus%'), NOW(), false, 'tonni', 1341, '{kokonaishintainen}', true, null, null, 24628, (SELECT id from tehtavaryhma WHERE nimi = 'Kuumapäällyste (Y1)'), true, null, 'tonni', 2020, null, true, false, null, null, false, 108),
+    ('PAB-paikkaus levittäjällä', (SELECT id FROM toimenpide WHERE taso = 3 and nimi ilike 'Päällysteiden paikkaus%'), NOW(), false, 'tonni', 1341, '{kokonaishintainen}', true, null, null, 24629, (SELECT id from tehtavaryhma WHERE nimi = 'Kylmäpäällyste (Y2)'), true, null, 'tonni', 2020, null, true, false, null, null, false, 108),
+    ('KT-reikävaluasfalttipaikkaus', (SELECT id FROM toimenpide WHERE taso = 3 and nimi ilike 'Päällysteiden paikkaus%'), NOW(), false, 'kpl', 1344, '{kokonaishintainen}', false, null, null, null, (SELECT id from tehtavaryhma WHERE nimi = 'KT-Valu (Y3)'), true, null, 'kpl', 2020, null, true, false, null, null, false, 108),
+    ('KT-valuasfalttipaikkaus K', (SELECT id FROM toimenpide WHERE taso = 3 and nimi ilike 'Päällysteiden paikkaus%'), NOW(), false, 'tonni', 1040, '{kokonaishintainen}', false, null, null, null, (SELECT id from tehtavaryhma WHERE nimi = 'KT-Valu (Y3)'), true, null, 'tonni', 2020, null, true, false, null, null, false, 108),
+    ('KT-valuasfalttipaikkaus T', (SELECT id FROM toimenpide WHERE taso = 3 and nimi ilike 'Päällysteiden paikkaus%'), NOW(), false, 'tonni', 1041, '{kokonaishintainen}', false, null, null, null, (SELECT id from tehtavaryhma WHERE nimi = 'KT-Valu (Y3)'), true, null, 'tonni', 2020, null, true, false, null, null, false, 108),
+    ('KT-valuasfalttisaumaus', (SELECT id FROM toimenpide WHERE taso = 3 and nimi ilike 'Päällysteiden paikkaus%'), NOW(), false, 'jm', 1345, '{kokonaishintainen}', false, null, null, null, (SELECT id from tehtavaryhma WHERE nimi = 'KT-Valu (Y3)'), true, null, 'jm', 2020, null, true, true, null, null, false, 108)
+    ON CONFLICT DO NOTHING;
