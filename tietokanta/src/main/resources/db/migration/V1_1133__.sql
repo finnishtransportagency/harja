@@ -1,44 +1,55 @@
--- Talvihoitoreitityksille tietokantataulut
-CREATE TABLE IF NOT EXISTS talvihoitoreitti
-(
-    id          SERIAL PRIMARY KEY,
-    nimi        VARCHAR(255) NOT NULL,
-    urakka_id   INTEGER      NOT NULL,
-    ulkoinen_id TEXT         NOT NULL, -- Lähettävän järjestelmän oma tunniste
-    muokattu    TIMESTAMP,
-    muokkaaja   INTEGER,
-    luotu       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    luoja       INTEGER
-);
+-- Kustannussuunnitelman johto ja hallintokorvaukset vaativat toimenkuvat '2. työnjohtaja' ja '3. työnjohtaja'.
+-- jotta niitä voidaan tallentaa kantaan.
+INSERT INTO johto_ja_hallintokorvaus_toimenkuva (toimenkuva)
+VALUES ('2. työnjohtaja');
+INSERT INTO johto_ja_hallintokorvaus_toimenkuva (toimenkuva)
+VALUES ('3. työnjohtaja');
 
--- Vain uniikit ulkoiset id:t urakoittain
-CREATE UNIQUE INDEX talvihoitoreitti_ulkoinen_id_urakka_id_uindex
-    ON public.talvihoitoreitti (ulkoinen_id, urakka_id);
+-- Koska on mahdollista, että osa urakoista on jo laittanut suunniteltuja arvoja
+-- "päätoiminen apulainen" ja "apulainen/työnjohtaja" toimenkuville, niin siirretään ne.
+DO
+$$
+    DECLARE
+        toimenkuva_paatoiminen_id  INTEGER;
+        toimenkuva_apulainen_id    INTEGER;
+        toimenkuva_tyonjohtaja2_id INTEGER;
+        toimenkuva_tyonjohtaja3_id INTEGER;
+        ur                         RECORD;
 
-CREATE TABLE IF NOT EXISTS talvihoitoreitti_sijainti
-(
-    id                  SERIAL PRIMARY KEY,
-    talvihoitoreitti_id INTEGER      NOT NULL REFERENCES talvihoitoreitti (id) ON DELETE CASCADE,
-    tie                 INTEGER      NOT NULL,
-    alkuosa             INTEGER      NOT NULL,
-    alkuetaisyys        INTEGER      NOT NULL,
-    loppuosa            INTEGER,
-    loppuetaisyys       INTEGER,
-    hoitoluokka         VARCHAR(255) NOT NULL,
-    pituus_m            DECIMAL(10, 2), -- metreinä
-    reitti              geometry
-);
+    BEGIN
+        SELECT id
+          INTO toimenkuva_paatoiminen_id
+          FROM johto_ja_hallintokorvaus_toimenkuva
+         WHERE toimenkuva = 'päätoiminen apulainen';
+        SELECT id
+          INTO toimenkuva_apulainen_id
+          FROM johto_ja_hallintokorvaus_toimenkuva
+         WHERE toimenkuva = 'apulainen/työnjohtaja';
+        SELECT id
+          INTO toimenkuva_tyonjohtaja2_id
+          FROM johto_ja_hallintokorvaus_toimenkuva
+         WHERE toimenkuva = '2. työnjohtaja';
+        SELECT id
+          INTO toimenkuva_tyonjohtaja3_id
+          FROM johto_ja_hallintokorvaus_toimenkuva
+         WHERE toimenkuva = '3. työnjohtaja';
 
-CREATE TABLE IF NOT EXISTS talvihoitoreitti_sijainti_kalusto
-(
-    id                           SERIAL PRIMARY KEY,
-    talvihoitoreitti_sijainti_id INTEGER      NOT NULL REFERENCES talvihoitoreitti_sijainti (id) ON DELETE CASCADE,
-    kalustotyyppi                VARCHAR(255) NOT NULL,
-    maara                        INTEGER      NOT NULL
-);
+        -- Haetaan 2024 alkavat MH-urakat ja tehdään muutos vain heille
+        FOR ur IN SELECT id FROM urakka WHERE EXTRACT(YEAR FROM alkupvm) = 2024 AND tyyppi = 'teiden-hoito'
+            LOOP
+                UPDATE johto_ja_hallintokorvaus
+                   SET "toimenkuva-id" = toimenkuva_tyonjohtaja2_id
+                 WHERE "toimenkuva-id" = toimenkuva_paatoiminen_id
+                   AND "urakka-id" = ur.id;
+                UPDATE johto_ja_hallintokorvaus
+                   SET "toimenkuva-id" = toimenkuva_tyonjohtaja3_id
+                 WHERE "toimenkuva-id" = toimenkuva_apulainen_id
+                   AND "urakka-id" = ur.id;
 
--- Uusi apiavain
-INSERT INTO integraatio (jarjestelma, nimi)
-VALUES ('api', 'lisaa-talvihoitoreitti');
-INSERT INTO integraatio (jarjestelma, nimi)
-VALUES ('api', 'poista-talvihoitoreitti');
+            END LOOP;
+    END
+$$;
+
+-- Varmistetaan, että tehtäväryhmä on oikean niminen kaikissa ympäristöissä
+UPDATE tehtavaryhma set nimi = 'Päällysteiden paikkaus, muut työt (Y8)'
+where nimi = 'Päällysteiden paikkaus, muut työt (Y)';

@@ -153,9 +153,10 @@
               [:div.col-sm-6.murupolku-vasen
                [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]
               [:div.col-sm-6.murupolku-oikea
-               (when-not urakoitsija?
-                 [urakoitsija])
-               [urakkatyyppi]]]
+               [:div
+                [urakkatyyppi]
+                (when-not urakoitsija?
+                  [urakoitsija])]]]
              [:ol.murupolku
               [:div.col-sm-12.murupolku-vasen
                [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]])])))))

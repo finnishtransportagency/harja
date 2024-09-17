@@ -1,6 +1,7 @@
 (ns harja.ui.checkbox
   (:require [reagent.core :refer [atom]]
             [harja.loki :refer [log tarkkaile!]]
+            [harja.ui.dom :as dom]
 
             [cljs.core.async :refer [<!]])
   (:require-macros
@@ -46,7 +47,7 @@ checkbox-tila->luokka {:valittu "harja-checkbox-valittu"
        [:div.harja-checkbox-column
         [:div.harja-checkbox-laatikko {:class (checkbox-tila->luokka tila)
                                        :tabIndex "0"
-                                       :on-key-down #(when (= 32 (-> % .-keyCode))
+                                       :on-key-down #(when (dom/valilyonti? %)
                                                        (vaihda-tila %))}
          [:div.harja-checkbox-laatikko-sisalto
           (when (= :valittu @tila-atom)
