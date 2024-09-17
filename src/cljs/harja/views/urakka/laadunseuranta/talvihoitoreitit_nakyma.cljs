@@ -1,6 +1,7 @@
 (ns harja.views.urakka.laadunseuranta.talvihoitoreitit-nakyma
   "Sanktioiden ja bonusten välilehti"
   (:require [harja.fmt :as fmt]
+            [harja.ui.liitteet :as liitteet]
             [reagent.core :as r]
             [tuck.core :as tuck]
             [harja.tiedot.urakka.urakka :as tila]
@@ -12,7 +13,8 @@
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.debug :as debug]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.komponentti :as komp]))
+            [harja.ui.komponentti :as komp]
+            [harja.asiakas.kommunikaatio :as k]))
 
 (defn talvihoitoreitit-sivu [e! app]
   (let [talvihoitoreitit (:talvihoitoreitit app)
@@ -22,7 +24,16 @@
      [kartta/kartan-paikka]
      [:div.flex-row
       [:h2 "Talvihoitoreititys"]
-      [:div "nappi"]]
+      [:div
+       [liitteet/lataa-tiedosto
+        {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
+        {:nappi-teksti "Tuo kohteet excelistä"
+         :url "lue-talvihoitoreitit-excelista"
+         :lataus-epaonnistui #(e! (tiedot/->TiedostoLadattu %))
+         :tiedosto-ladattu #(e! (tiedot/->TiedostoLadattu %))}]
+       [yleiset/tiedoston-lataus-linkki
+        "Lataa Excel-pohja"
+        "/excel/harja_talvihoitoreitit_pohja.xlsx"]]]
      (if (empty? talvihoitoreitit)
        [:div "Ei talvihoitoreittejä. Aloita tuomalla reitit käyttäen excel-tiedostoa."]
        (doall
