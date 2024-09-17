@@ -45,13 +45,18 @@
                  ;; -- HTTP palvelin, reititys ja kyselyiden cahetus
                  [cljs-http "0.1.48"]
                  [http-kit "2.5.3"]
+                 ;; TODO: Compojure 1.7.1 mukana tulee uusi fileupload ja commons-io
+                 ;;       Katso täytyykö overridettaa tässä. Poista todo ja alla olevat rivit, jos ei tarvetta.
                  ;; Compojuren mukana tulee liian vanha commons-fileupload
                  ;; Ja fileuploadin mukana liian vanha commons-io
-                 [commons-io/commons-io "2.15.1"]
-                 [commons-fileupload/commons-fileupload "1.5"]
+                 #_[commons-io/commons-io "2.15.1"]
+                 #_[commons-fileupload/commons-fileupload "1.5"]
                  [compojure "1.7.1"]
                  ;; Ring tarvitsee
-                 [javax.servlet/javax.servlet-api "3.1.0"]
+                 ;; TODO: Ring 1.11.0 versiolla ei ole enää tarvetta servlet-apille:
+                 ;;       https://github.com/ring-clojure/ring/pull/483
+                 ;;       Tarkasta toiminta. Poista TODO ja alla olevat rivit, jos ei tarvetta.
+                 #_[javax.servlet/javax.servlet-api "3.1.0"]
                  [hiccup "1.0.5"]
 
                  [org.clojure/core.cache "0.7.2"]
