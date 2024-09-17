@@ -45,6 +45,7 @@ jobs:
       e2e-tests: 'true'
       build-harja: 'light'
       # Disabloidaan kaikki muut testit
+      deps-tree: 'false'
       lint-clj: 'false'
       backend-tests: 'false'
       basic-tests: 'false'
