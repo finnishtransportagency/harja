@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.hallinta.lupaukset
+(ns harja.palvelin.palvelut.hallinta.lupaukset-palvelu
   (:require [com.stuartsierra.component :as component]
             [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]
             [harja.domain.oikeudet :as oikeudet]
