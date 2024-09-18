@@ -24,6 +24,7 @@
             [harja.views.hallinta.urakkatiedot.tehtava-nakyma :as tehtava-nakyma]
             [harja.views.hallinta.tarjoushinnat :as tarjoushinnat]
             [harja.views.hallinta.rahavaraukset :as rahavaraukset]
+            [harja.views.hallinta.urakkatiedot.lupaukset-nakyma :as lupaukset]
             [harja.views.hallinta.rahavarausten-tehtavat :as rahavarausten-tehtavat]
             [harja.views.hallinta.urakkahenkilot :as urakkahenkilot]
             [harja.tiedot.istunto :as istunto]))
@@ -87,8 +88,14 @@
     :mhu-tarjoushinnat
     (when (oikeudet/hallinta-tarjoushinnat)
       ^{:key "mhu-tarjoushinnat"}
-      [tarjoushinnat/tarjoushinnat])
-
+      [tarjoushinnat/tarjoushinnat]) 
+    
+    "Lupaukset"
+    :lupaukset
+    (when (oikeudet/hallinta-lupaukset)
+      ^{:key "lupaukset"}
+      [lupaukset/lupaukset])
+    
     "Rahavaraukset"
     :rahavaraukset
     (when (oikeudet/hallinta-rahavaraukset)

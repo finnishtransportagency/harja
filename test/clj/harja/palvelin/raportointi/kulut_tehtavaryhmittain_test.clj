@@ -47,7 +47,7 @@
      (list "Nurmetukset ja muut vihertyöt (N)" 222.22M 0)
      (list "Kuivatusjärjestelmät (K)" 2222.22M 0)
      (list "Kaiteet, aidat ja kivetykset (U)" 0 0)
-     (list "Päällysteiden paikkaus, muut työt (Y)" 0 0)
+     (list "Päällysteiden paikkaus, muut työt (Y8)" 0 0)
      (list "Kuumapäällyste (Y1)" 11001.94M 5500.40M)
      (list "KT-Valu (Y3)" 0 0)
      (list "Kylmäpäällyste (Y2)" 0 0)
