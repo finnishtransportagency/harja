@@ -50,7 +50,7 @@
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
-                    {:nimi "Erilliskustannusten raportti"}
+                    {:nimi "Erilliskustannusten raportti", :rajoita-pdf-rivimaara nil}
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{4
                                                     5}
@@ -127,7 +127,7 @@
                                               :loppupvm (c/to-date (t/local-date 2022 10 1))}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
-                    {:nimi "Erilliskustannusten raportti"}
+                    {:nimi "Erilliskustannusten raportti", :rajoita-pdf-rivimaara nil}
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{4
                                                     5}
@@ -205,7 +205,7 @@
     (is (vector? vastaus))
     (is (= vastaus
            [:raportti
-            {:nimi "Erilliskustannusten raportti"}
+            {:nimi "Erilliskustannusten raportti", :rajoita-pdf-rivimaara nil}
             [:taulukko
              {:oikealle-tasattavat-kentat #{5
                                             6}
@@ -333,7 +333,7 @@
     (is (vector? vastaus))
     (is (= vastaus
            [:raportti
-            {:nimi "Erilliskustannusten raportti"}
+            {:nimi "Erilliskustannusten raportti", :rajoita-pdf-rivimaara nil}
             [:taulukko
              {:oikealle-tasattavat-kentat #{5
                                             6}
