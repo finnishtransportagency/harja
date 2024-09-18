@@ -190,6 +190,9 @@
       :kaari-flex-row? false}
      kuukauden-vastaus-atom]]])
 
+
+
+
 (defn- vastaukset [e! app luokka]
   (let [kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
         lupaus-kuukausi (lupaus-domain/etsi-lupaus-kuukausi (get-in app [:vastaus-lomake :lupaus-kuukaudet]) kohdekuukausi)
@@ -201,12 +204,11 @@
         ;; Palvelimelle lähetetty vastaus, joka näytetään siihen asti, että uudet lupaustiedot on haettu
         lahetetty-vastaus (get-in app [:vastaus-lomake :lahetetty-vastaus])
         ladataan? (and (= (get-in app [:lupausta-lahetataan :kohdekuukausi]) kohdekuukausi) 
-                        (= (get-in app [:lupausta-lahetataan :lupaus-id]) (:lupaus-id lupaus)))
+                        (= (get-in app [:lupausta-lahetataan :lupaus-id]) (:lupaus-id lupaus))) 
         saa-vastata? (and (not ladataan?)
                           (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
                           (lupaus-domain/ennusteen-tila->saa-vastata? (get-in app [:yhteenveto :ennusteen-tila])))
         disabled? (not saa-vastata?)
-
         ;; Lisätään vaihtoehtoinin myös "nil" vaihtoehto, jotta vahinkovalinnan voi poistaa
         tyhja-vaihtoehto-templaatti (first vaihtoehdot)
         vaihtoehdot (merge vaihtoehdot
@@ -215,10 +217,12 @@
                                (assoc :vaihtoehto "ei valintaa")
                                (assoc :pisteet nil)))
         vaihdoehdot-vaiheet (sort (group-by :vaihtoehto-askel vaihtoehdot))
-        naytettavat-vaiheet (:naytettavat-valinnat lupaus)
+        naytettavat-vaiheet (:naytettavat-valinnat lupaus) 
+        lahetetty-vastaus-id (:lupaus-vaihtoehto-id lahetetty-vastaus)
+        valittu-arvo (:lupaus-vaihtoehto-id kuukauden-vastaus)
         kuukauden-vastaus-atom (atom (if lahetetty-vastaus
-                                       (:lupaus-vaihtoehto-id lahetetty-vastaus)
-                                       (:lupaus-vaihtoehto-id kuukauden-vastaus)))
+                                       lahetetty-vastaus-id
+                                       valittu-arvo))
         ;; Kyllä/Ei valinnassa vaihtoehdot on true/false
         vastaus-ke (if lahetetty-vastaus
                      (:vastaus lahetetty-vastaus)
@@ -252,21 +256,31 @@
                                :disabled? disabled?
                                :ladataan? ladataan?}]
               ;; Useita ketjutettuja monivalintoja
-              (map (fn [[valinta-askel vaihtoehdot]]
-                     (when (some #{valinta-askel} naytettavat-vaiheet)
-                       (let [otsikko (:ryhma-otsikko (first vaihtoehdot))]
-                         ^{:key (str "monivalinta-" (hash valinta-askel))}
-                         [monivalinta e! {:vaihtoehdot vaihtoehdot
-                                          :valinta-askel valinta-askel
-                                          :lupaus lupaus
-                                          :kohdekuukausi kohdekuukausi
-                                          :kohdevuosi kohdevuosi
-                                          :kuukauden-vastaus kuukauden-vastaus
-                                          :kuukauden-vastaus-atom kuukauden-vastaus-atom
-                                          :otsikko otsikko
-                                          :disabled? disabled?
-                                          :ladataan? ladataan?}])))
-                vaihdoehdot-vaiheet))
+              (let [edeltavat-arvot (lupaus-domain/etsi-edeltavat-monivalinnan-valitut-arvot valittu-arvo vaihtoehdot)
+                    lahetetty-askel (:vaihtoehto-askel lahetetty-vastaus)]
+                 (map (fn [[valinta-askel vaihtoehdot]]
+                        (let [otsikko (:ryhma-otsikko (first vaihtoehdot))
+                              edellinen-arvo (some #(when (= (:vaihtoehto-askel %) valinta-askel) %) edeltavat-arvot)
+                              edellinen-askel (:vaihtoehto-askel edellinen-arvo)
+                              edellinen-valittu-id (:id edellinen-arvo)
+                              monivalinta-ketju-atom (atom
+                                                       (cond
+                                                         (and lahetetty-vastaus-id (= valinta-askel lahetetty-askel)) lahetetty-vastaus-id
+                                                         (= valinta-askel edellinen-askel) edellinen-valittu-id
+                                                         :else (:lupaus-vaihtoehto-id kuukauden-vastaus)))]
+                          (when (some #{valinta-askel} naytettavat-vaiheet)
+                            ^{:key (str "monivalinta-" (hash valinta-askel))}
+                            [monivalinta e! {:vaihtoehdot vaihtoehdot
+                                             :valinta-askel valinta-askel
+                                             :lupaus lupaus
+                                             :kohdekuukausi kohdekuukausi
+                                             :kohdevuosi kohdevuosi
+                                             :kuukauden-vastaus kuukauden-vastaus
+                                             :kuukauden-vastaus-atom monivalinta-ketju-atom
+                                             :otsikko otsikko
+                                             :disabled? disabled?
+                                             :ladataan? ladataan?}])))
+                   vaihdoehdot-vaiheet)))
             [sulje-nappi e! {:luokka "pull-right"}]])]))
 
 
