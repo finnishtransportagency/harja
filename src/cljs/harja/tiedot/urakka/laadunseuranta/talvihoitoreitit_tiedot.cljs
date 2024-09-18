@@ -67,12 +67,7 @@
 
 ;; Talvihoitoreittien excel-tiedoston lataamisessa käyttäjän informointiin tarkoitettu modal
 (defn tulos-modal [leikkaavat-virheet muut-virheet paivitetyt onnistuneet otsikko]
-  (js/console.log "virhe-modal :: leikkaavat-virheet:" (pr-str leikkaavat-virheet))
-  (js/console.log "virhe-modal :: muut-virheet:" (pr-str muut-virheet))
-  (js/console.log "virhe-modal :: onnistuneet:" (pr-str onnistuneet))
-  (js/console.log "virhe-modal :: paivitetyt:" (pr-str paivitetyt))
-  (let [otsikkotyyli (if (or (not (empty? onnistuneet)) (not (empty? paivitetyt))) :onnistunut :virhe)
-        _ (js/console.log "virhe-modal :: otsikkotyyli:" (pr-str otsikkotyyli))]
+  (let [otsikkotyyli (if (or (not (empty? onnistuneet)) (not (empty? paivitetyt))) :onnistunut :virhe)]
     (modal/nayta!
       {:otsikko otsikko
        :otsikko-tyyli otsikkotyyli}
