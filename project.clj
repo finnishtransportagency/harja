@@ -45,13 +45,7 @@
                  ;; -- HTTP palvelin, reititys ja kyselyiden cahetus
                  [cljs-http "0.1.48"]
                  [http-kit "2.5.3"]
-                 ;; Compojuren mukana tulee liian vanha commons-fileupload
-                 ;; Ja fileuploadin mukana liian vanha commons-io
-                 [commons-io/commons-io "2.15.1"]
-                 [commons-fileupload/commons-fileupload "1.5"]
-                 [compojure "1.7.0"]
-                 ;; Ring tarvitsee
-                 [javax.servlet/javax.servlet-api "3.1.0"]
+                 [compojure "1.7.1"]
                  [hiccup "1.0.5"]
 
                  [org.clojure/core.cache "0.7.2"]
