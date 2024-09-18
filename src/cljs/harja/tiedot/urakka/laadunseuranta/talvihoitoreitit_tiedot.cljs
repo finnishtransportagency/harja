@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.laadunseuranta.talvihoitoreitit-tiedot
-  (:require [tuck.core :as tuck]
+  (:require [harja.ui.modal :as modal]
+            [tuck.core :as tuck]
             [reagent.core :as r]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tyokalut.yleiset :as yleiset-tyokalut]
@@ -64,6 +65,52 @@
                         :extent extentit}]
            :extent extentit})))))
 
+;; Talvihoitoreittien excel-tiedoston lataamisessa käyttäjän informointiin tarkoitettu modal
+(defn tulos-modal [leikkaavat-virheet muut-virheet paivitetyt onnistuneet otsikko]
+  (js/console.log "virhe-modal :: leikkaavat-virheet:" (pr-str leikkaavat-virheet))
+  (js/console.log "virhe-modal :: muut-virheet:" (pr-str muut-virheet))
+  (js/console.log "virhe-modal :: onnistuneet:" (pr-str onnistuneet))
+  (js/console.log "virhe-modal :: paivitetyt:" (pr-str paivitetyt))
+  (let [otsikkotyyli (if (or (not (empty? onnistuneet)) (not (empty? paivitetyt))) :onnistunut :virhe)
+        _ (js/console.log "virhe-modal :: otsikkotyyli:" (pr-str otsikkotyyli))]
+    (modal/nayta!
+      {:otsikko otsikko
+       :otsikko-tyyli otsikkotyyli}
+      (when (or (not (empty? leikkaavat-virheet)) (not (empty? muut-virheet)) (not (empty? paivitetyt)) (not (empty? onnistuneet)))
+        [:div
+         (when (not (empty? leikkaavat-virheet))
+           (doall
+             [:div [:h2 "Tieosoitevirheet"]
+              [:div [:b "Seuraavat talvihoitoreitit eivät tallentuneet:"]]
+              [:ul
+               (for [rivi leikkaavat-virheet]
+                 ^{:key (gensym)}
+                 [:li rivi])]]))
+         (when (not (empty? muut-virheet))
+           (doall
+             [:div [:h2 "Muut virheet"]
+              [:ul
+               (for [rivi muut-virheet]
+                 ^{:key (gensym)}
+                 [:li rivi])]]))
+         (when (not (empty? paivitetyt))
+           (do
+             [:div [:h2 "Päivittyneet"]
+              [:div [:b "Seuraavat talvihoitoreitit päivitettiin onnistuneesti:"]]
+              (doall
+                [:ul
+                 (for [rivi paivitetyt]
+                   ^{:key (gensym)}
+                   [:li rivi])])]))
+         (when (not (empty? onnistuneet))
+           (do
+             [:div [:h2 "Onnistuneet"]
+              [:div [:b "Seuraavat talvihoitoreitit tallennettiin onnistuneesti:"]]
+              (doall
+                [:ul
+                 (for [rivi onnistuneet]
+                   ^{:key (gensym)}
+                   [:li rivi])])]))]))))
 
 (defrecord HaeTalvihoitoreitit [])
 (defrecord HaeTalvihoitoreititOnnistui [vastaus])
@@ -76,17 +123,24 @@
 ;; Listan käsittely
 (defrecord AvaaTalvihoitoreitti [avain])
 
+;; Tiedostojen käsittely
+(defrecord TiedostoLadattu [vastaus])
+
+;; Hae talvihoitoreitit urakalle
+(defn hae-talvihoitoreitit [app]
+  (let []
+    (tuck-apurit/post! :hae-urakan-talvihoitoreitit
+      {:urakka-id (:id @nav/valittu-urakka)}
+      {:onnistui ->HaeTalvihoitoreititOnnistui
+       :epaonnistui ->HaeTalvihoitoreititEpaonnistui})
+    (assoc app :haku-kaynnissa? true)))
+
 (extend-protocol tuck/Event
 
   HaeTalvihoitoreitit
   (process-event
     [_ app]
-    (tuck-apurit/post! :hae-urakan-talvihoitoreitit
-      {:urakka-id (:id @nav/valittu-urakka)}
-      {:onnistui ->HaeTalvihoitoreititOnnistui
-       :epaonnistui ->HaeTalvihoitoreititEpaonnistui})
-
-    (assoc app :haku-kaynnissa? true))
+    (hae-talvihoitoreitit app))
 
   HaeTalvihoitoreititOnnistui
   (process-event
@@ -143,4 +197,39 @@
           valitut-talvihoitoreitit (keep (fn [reitti] (when (contains? valitut-kohteet (:id reitti)) reitti)) @karttataso-talvihoitoreitit)
           alue (harja.geo/extent-monelle (map :sijainti valitut-talvihoitoreitit))]
       (reset! nav/kartan-extent alue)
-      app)))
+      app))
+
+  TiedostoLadattu
+  (process-event [{:keys [vastaus]} app]
+    (let [_ (js/console.log "TiedostoLadattu :: vastaus:" (pr-str vastaus))
+          leikkaavat-virheet (keep #(:leikkaavat % ) (filter #(= (:virheet %)) (:virheet vastaus)))
+          muut-virheet (keep #(get % :virheet) (filter #(= (get-in % [:virheet])) (:virheet vastaus)))
+          onnistuneet (:onnistuneet vastaus )
+          paivitetyt (:paivitetyt vastaus)]
+
+      ;; Excel-tiedoston käsittelyssä voi aiheuttaa virheitä joko itse reiteissä tai itse excelin lukemisessa.
+      ;; Jos tiedoston lukemisessa on virheitä, niin viestin status on 500
+
+
+      (cond
+        ;; Excelvirheet
+        (and (not (nil? (:status vastaus))) (not= 200 (:status vastaus)))
+        (do
+          (viesti/nayta-toast! "Ladatun tiedoston käsittelyssä virhe" :varoitus viesti/viestin-nayttoaika-lyhyt)
+          (tulos-modal nil nil nil nil "Virhe ladattaessa talvihoitoreittejä tiedostosta")
+          (hae-talvihoitoreitit app))
+
+        ;; Tieosoitevirheet
+        (or (not (empty? leikkaavat-virheet)) (not (empty? muut-virheet)))
+        (do
+          (viesti/nayta-toast! "Ladatun tiedoston käsittelyssä virhe" :varoitus viesti/viestin-nayttoaika-lyhyt)
+          (tulos-modal leikkaavat-virheet muut-virheet paivitetyt onnistuneet "Virhe ladattaessa talvihoitoreittejä tiedostosta")
+          (hae-talvihoitoreitit app))
+
+        ;; kaikki ok
+        :else
+        (do
+          ;; Ladataan talvihoitoreitit uudestaan tietokannasta
+          (tulos-modal leikkaavat-virheet muut-virheet paivitetyt onnistuneet "Kaikki reitit ladattiin onnistuneesti")
+          (viesti/nayta-toast! "Talvihoitoreitit ladattu onnistuneesti!" :onnistui viesti/viestin-nayttoaika-lyhyt)
+          (hae-talvihoitoreitit app))))))

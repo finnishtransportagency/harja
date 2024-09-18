@@ -414,7 +414,7 @@
   url                       Backend osoite, johon tiedosto lähetetään
   grid?                     Jos true, optimoidaan näytettäväksi gridissä.
   nappi-teksti              Teksti, joka napissa näytetään (vakiona 'Lataa tiedosto')
-  lataus-onnistui           Funktio, jota kutsutaan, kun tiedosto on ladattu onnistuneesti.
+  tiedosto-ladattu          Funktio, jota kutsutaan, kun tiedosto on ladattu onnistuneesti.
   lataus-epaonnistui        Funktio, jota kutsutaan, kun tiedoston lataus ei onnistunut.
   disabled?                 Nappi disabloitu, true tai false.
   nappi-luokka              Voidaan tällä hetkellä tehdä napiton-nappi"
