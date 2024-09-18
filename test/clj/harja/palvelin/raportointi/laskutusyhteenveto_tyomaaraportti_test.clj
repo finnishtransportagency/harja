@@ -269,55 +269,6 @@
     (is (= (* 4 summa) (:hankinnat_hoitokausi_yht purettu)))
     (is (= (* 4 summa) (:hankinnat_val_aika_yht purettu)))))
 
-;; Johto ja hallinto on testattu muualla
-;; Erillishankinnat on testattu muualla
-;; Hoidonjohdon palkkio on testattu muualla
-
-;; Testataan siis äkilliset ja vahingot
-;; TODO , kirjoita testi uudelleen 
-#_ (deftest tyomaaraportti-akilliset-ja-vahingot-toimii
-  (let [hk_alkupvm "2019-10-01"
-        hk_loppupvm "2020-09-30"
-        aikavali_alkupvm "2019-10-01"
-        aikavali_loppupvm "2020-09-30"
-        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-
-        ;; Poistetaan kaikki kulut urakalta
-        _ (poista-kulut-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
-
-        ;; Luodaan kulut
-        erapaiva (pvm/->pvm "15.10.2019") ;#inst "2019-19-15T21:00:00.000-00:00"
-        koontilaskun-kuukausi "lokakuu/1-hoitovuosi"
-        summa 1234M
-
-        ;; Äkillinen hoitotyö
-        akillinen-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23124")
-        akillinen-tehtavaryhma-id (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Soratiet (T1)")
-        rahavaraus (hae-rahavaraus-nimella "Rahavaraus B - Äkilliset hoitotyöt")
-        akillinenkulu (luo-kulu urakka-id "laskutettava" erapaiva "rahavaraus" koontilaskun-kuukausi summa akillinen-toimenpideinstanssi-id akillinen-tehtavaryhma-id rahavaraus)
-        _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
-            {:urakka-id urakka-id
-             :kulu-kohdistuksineen akillinenkulu})
-
-        ;; Vahingot
-        vahingot-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23124")
-        vahingot-tehtavaryhma-id (hae-tehtavaryhman-id "Vahinkojen korjaukset, Soratiet (T2)")
-        rahavaraus (hae-rahavaraus-nimella "Rahavaraus C - Vahinkojen korjaukset")
-        vahingotkulu (luo-kulu urakka-id "laskutettava" erapaiva "rahavaraus" koontilaskun-kuukausi summa vahingot-toimenpideinstanssi-id vahingot-tehtavaryhma-id rahavaraus)
-        _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
-            {:urakka-id urakka-id
-             :kulu-kohdistuksineen vahingotkulu})
-
-        raportti (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
-                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
-
-        purettu (pura-tyomaaraportti-mapiksi (first raportti))]
-
-    (is (= summa (:akilliset_hoitokausi_yht purettu)))
-    (is (= summa (:akilliset_val_aika_yht purettu)))
-
-    (is (= summa (:vahingot_hoitokausi_yht purettu)))
-    (is (= summa (:vahingot_val_aika_yht purettu)))))
 
 (deftest tavoitehinta-toimii
   (let [hk_alkupvm "2019-10-01"
