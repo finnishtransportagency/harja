@@ -70,6 +70,9 @@
 (defn- etsi-ryhma [ryhmat jarjestys-numero]
   (first (filter #(= jarjestys-numero (:jarjestys %)) ryhmat)))
 
+(defn etsi-vaihtoehto [vaihtoehdot vaihtoehto-seuraava-ryhma-id]
+  (first (filter #(= vaihtoehto-seuraava-ryhma-id (:vaihtoehto-seuraava-ryhma-id %)) vaihtoehdot)))
+
 (deftest urakan-lupaustietojen-haku-toimii
   (let [tiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                 :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
@@ -164,11 +167,12 @@
         vastaus (hae-urakan-lupaustiedot
                   +kayttaja-jvh+
                   tiedot)
-        eka-vaihtoehto (first (:vaihtoehdot (etsi-lupaus vastaus 3)))]
-    (is (= "> 25 %" (:vaihtoehto eka-vaihtoehto)) "vaihtoehto oikein")
-    (is (= 1 (:vaihtoehto-askel eka-vaihtoehto)) "askel oikein")
-    (is (= 3 (:vaihtoehto-seuraava-ryhma-id eka-vaihtoehto)) "seuraava ryhmä oikein")
-    (is (= "Testiotsikko 1" (:ryhma-otsikko eka-vaihtoehto)) "ryhma-otsikko oikein")))
+        vaihtoehdot (:vaihtoehdot (etsi-lupaus vastaus 3))
+        vaihtoehto (etsi-vaihtoehto vaihtoehdot 3)]
+    (is (= "> 25 %" (:vaihtoehto vaihtoehto)) "vaihtoehto oikein")
+    (is (= 1 (:vaihtoehto-askel vaihtoehto)) "askel oikein")
+    (is (= 3 (:vaihtoehto-seuraava-ryhma-id vaihtoehto)) "seuraava ryhmä oikein")
+    (is (= "Testiotsikko 1" (:ryhma-otsikko vaihtoehto)) "ryhma-otsikko oikein")))
 
 (deftest odottaa-kannanottoa
   (let [hakutiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
