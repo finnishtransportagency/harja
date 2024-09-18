@@ -4,7 +4,7 @@ VALUES (:nimi, :urakka_id, :ulkoinen_id, NOW(), :kayttaja_id);
 
 -- name: lisaa-sijainti-talvihoitoreitille<!
 INSERT INTO talvihoitoreitti_sijainti (talvihoitoreitti_id, tie, alkuosa,
-                                     loppuosa, alkuetaisyys, loppuetaisyys, pituus_m, hoitoluokka, reitti)
+                                       loppuosa, alkuetaisyys, loppuetaisyys, pituus_m, hoitoluokka, reitti)
 VALUES (:talvihoitoreitti_id, :tie, :alkuosa, :loppuosa, :alkuetaisyys, :loppuetaisyys, :pituus, :hoitoluokka,
         (SELECT *
            FROM tierekisteriosoitteelle_viiva(:tie::INT, :alkuosa::INT, :alkuetaisyys::INT, :loppuosa::INT,
@@ -36,17 +36,17 @@ SELECT trr.id,
        trr.loppuosa,
        trr.alkuetaisyys,
        trr.loppuetaisyys,
-       (trr.pituus_m::FLOAT / 1000) AS pituus,         -- Muutetaan metrit kilometreiksi
+       (trr.pituus_m::FLOAT / 1000)                    AS pituus,         -- Muutetaan metrit kilometreiksi
        trr.hoitoluokka,
-       array_agg(row(trsk.kalustotyyppi, trsk.maara)) as kalustot,
+       ARRAY_AGG(ROW (trsk.kalustotyyppi, trsk.maara)) AS kalustot,
        trr.reitti::geometry,
        ((SELECT laske_tr_osoitteen_pituus(trr.tie, trr.alkuosa, trr.alkuetaisyys, trr.loppuosa,
                                           trr.loppuetaisyys))::FLOAT / 1000)
-                                  AS laskettu_pituus -- Lasketaan pituus geometriasta, eikä luoteta sokeasti urakoitsijan raportoimaan pituuteen
+                                                       AS laskettu_pituus -- Lasketaan pituus geometriasta, eikä luoteta sokeasti urakoitsijan raportoimaan pituuteen
   FROM talvihoitoreitti_sijainti trr
-       LEFT JOIN talvihoitoreitti_sijainti_kalusto trsk ON trr.id = trsk.talvihoitoreitti_sijainti_id
+           LEFT JOIN talvihoitoreitti_sijainti_kalusto trsk ON trr.id = trsk.talvihoitoreitti_sijainti_id
  WHERE trr.talvihoitoreitti_id = :talvihoitoreitti_id
-GROUP BY trr.id;
+ GROUP BY trr.id;
 
 -- name: hae-talvihoitoreitti-ulkoisella-idlla
 SELECT tr.id,
@@ -78,3 +78,13 @@ DELETE
   FROM talvihoitoreitti
  WHERE ulkoinen_id = :ulkoinen_id
    AND urakka_id = :urakka_id;
+
+-- name: hae-leikkaavat-geometriat
+-- Tarkista onko urakalla jo samalle tielle osuvia geometrioita
+SELECT trs.id
+  FROM talvihoitoreitti_sijainti trs
+           JOIN talvihoitoreitti tr ON trs.talvihoitoreitti_id = tr.id
+           JOIN urakka u ON tr.urakka_id = u.id AND u.id = :urakka_id
+ WHERE ST_Intersects(trs.reitti, (SELECT *
+                                    FROM tierekisteriosoitteelle_viiva(:tie::INT, :aosa::INT, :aet::INT, :losa::INT,
+                                                                       :let::INT)));
