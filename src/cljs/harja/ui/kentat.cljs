@@ -1435,11 +1435,11 @@
                                           (and pakollinen?
                                             ;; defaulttina vaaditaan väli, siksi false-tarkistus. On eksplisiittisesti asetettava
                                             ;; vaadi-vali? falseksi, jotta väliä ei vaadita
-                                           (false? vaadi-vali?) (#{"Losa" "Let"} otsikko))
+                                            (false? vaadi-vali?) (#{"Losa" "Let"} otsikko))
                                           false
 
                                           :else false)]
-                 [:div
+                 [:div {:class (when pakollinen? "required")}
                   (when-not alaotsikko?
                     [:label.control-label {:class (when-not kentta-pakollinen? "cancel-required-tahti")}
                      [:span.kentan-label otsikko]])
@@ -1447,31 +1447,28 @@
                   (when alaotsikko?
                     [:span
                      [:span.ala-control-label.kentan-label {:class (when-not kentta-pakollinen? "cancel-required-tahti")}
-                      otsikko]])]))]
-    (fn [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys karttavalinta virhe
-         piste? vaadi-vali?]
-      ;; Jos alaotsikot valittuna, ryhmitä valitse sijainti oikein 
-      (let [flex (if alaotsikot?
-                   "flex-start"
-                   "flex-end")
-            top (if alaotsikot?
-                  "2px"
-                  "0px")]
-        [:div
-         [:div.tierekisteriosoite-flex
-          [osio alaotsikot? tie "Tie"]
-          [osio alaotsikot? aosa "Aosa"]
-          [osio alaotsikot? aet "Aet"]
-          (when-not piste?
-            [:<>
-             [osio alaotsikot? losa "Losa"]
-             [osio alaotsikot? loppuet "Let"]])
-          (when virhe
-            [:div virhe])
-          (when karttavalinta
-            [:div {:style {:padding-left "16px" :padding-top top :align-self flex}}
-             [:div.karttavalinta
-              karttavalinta]])]]))))
+                      otsikko]])]))
+        flex (if alaotsikot?
+               "flex-start"
+               "flex-end")
+        top (if alaotsikot?
+              "2px"
+              "0px")]
+    [:div
+     [:div.tierekisteriosoite-flex
+      [osio alaotsikot? tie "Tie"]
+      [osio alaotsikot? aosa "Aosa"]
+      [osio alaotsikot? aet "Aet"]
+      (when-not piste?
+        [:<>
+         [osio alaotsikot? losa "Losa"]
+         [osio alaotsikot? loppuet "Let"]])
+      (when virhe
+        [:div virhe])
+      (when karttavalinta
+        [:div {:style {:padding-left "16px" :padding-top top :align-self flex}}
+         [:div.karttavalinta
+          karttavalinta]])]]))
 
 
 (defn- tierekisterikentat-rivitetty
@@ -1607,7 +1604,8 @@
                       (tasot/poista-geometria! :tr-valittu-osoite)
                       (kartta/zoomaa-geometrioihin))))
 
-      (fn [{:keys [tyyli lomake? sijainti piste? vaadi-vali? tr-otsikot? vayla-tyyli? disabled? alaotsikot? piilota-nappi?]} data]
+      (fn [{:keys [tyyli lomake? sijainti piste? vaadi-vali? tr-otsikot? vayla-tyyli?
+                   pakollinen? disabled? alaotsikot? piilota-nappi?]} data]
         (let [avaimet (or avaimet tr-osoite-raaka-avaimet)
               _ (assert (= 5 (count avaimet))
                         (str "TR-osoitekenttä tarvii 5 avainta (tie,aosa,aet,losa,let), saatiin: "
