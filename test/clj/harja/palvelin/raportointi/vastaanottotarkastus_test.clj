@@ -331,7 +331,7 @@
         aikataulu (-> vastaus (nth 7) second)
         kohdeluettelo (-> vastaus (nth 7) last)]
     (is (vector? vastaus))
-    (is (= otsikko {:orientaatio :landscape, :nimi "Muhoksen päällystysurakka, Vastaanottotarkastus 2017"}))
+    (is (= otsikko {:orientaatio :landscape, :nimi "Muhoksen päällystysurakka, Vastaanottotarkastus 2017", :rajoita-pdf-rivimaara nil}))
     (is (= yha-kohteet odotettu-yha-kohteet-2017))
     (is (= muut-kustannukset odotettu-muut-kustannukset-2017))
     (is (= muut-kohteet odotettu-paikkauskohteet-2017))
@@ -355,7 +355,7 @@
         kohdeluettelo (-> vastaus (nth 7) last)
         yhteenveto (-> vastaus (nth 9))]
     (is (vector? vastaus))
-    (is (= otsikko {:orientaatio :landscape, :nimi "Utajärven päällystysurakka, Vastaanottotarkastus 2023"}))
+    (is (= otsikko {:orientaatio :landscape, :nimi "Utajärven päällystysurakka, Vastaanottotarkastus 2023", :rajoita-pdf-rivimaara nil}))
     (is (= yha-kohteet odotettu-yha-kohteet-2023))
     ;; muut kustannukset ja paikkauskohteet -osalta ei ole loogisia sarakemuutoksia vs. 2017, eikä testidatassa mitään sisältöä, joten ei assertoida
     ;; muita kustannuksia ja paikkauskohteita koska se on tehty 2017-testissä
@@ -378,7 +378,7 @@
         yhteenveto (-> vastaus (nth 9))
         pkluokat (-> vastaus (nth 11))]
     (is (vector? vastaus))
-    (is (= otsikko {:orientaatio :landscape, :nimi "Päällystysurakoiden yhteenveto, KOKO MAA 2023"}))
+    (is (= otsikko {:orientaatio :landscape, :nimi "Päällystysurakoiden yhteenveto, KOKO MAA 2023", :rajoita-pdf-rivimaara nil}))
     (is (= muut-kohteet odotettu-muut-kohteet-kokomaa-2023))
     (is (= muut-kustannukset odotettu-muut-kustannukset-kokomaa-2023))
     (is (= yha-kohteet odotettu-yha-kohteet-kokomaa-2023))
