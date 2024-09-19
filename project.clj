@@ -40,7 +40,7 @@
                  [org.clojure/java.jmx "0.3.4"]
 
                  ;; -- JSON encode/decode
-                 [cheshire "5.11.0"]
+                 [cheshire "5.13.0"]
 
                  ;; -- HTTP palvelin, reititys ja kyselyiden cahetus
                  [cljs-http "0.1.48"]
