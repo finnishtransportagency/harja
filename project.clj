@@ -30,7 +30,7 @@
                  ;;;;;;; Palvelin ;;;;;;;
 
                  ;; Komponenttituki palvelimen komponenttien hallintaan
-                 [com.stuartsierra/component "1.0.0"]
+                 [com.stuartsierra/component "1.1.0"]
 
                  ;; -- Lokitus
                  [com.taoensso/timbre "5.2.1"]
