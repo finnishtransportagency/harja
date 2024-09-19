@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.api.talvihoitoreitit-api
   "Talvihoitoreittien lisäys API:n kautta"
   (:require [clojure.java.jdbc :as jdbc]
+            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [compojure.core :refer [PUT DELETE]]
             [harja.kyselyt.konversio :as konv]
