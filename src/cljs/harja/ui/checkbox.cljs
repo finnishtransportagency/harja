@@ -1,6 +1,7 @@
 (ns harja.ui.checkbox
   (:require [reagent.core :refer [atom]]
             [harja.loki :refer [log tarkkaile!]]
+            [harja.ui.dom :as dom]
 
             [cljs.core.async :refer [<!]])
   (:require-macros
@@ -31,21 +32,23 @@ checkbox-tila->luokka {:valittu "harja-checkbox-valittu"
   ([tila-atom nimi] (checkbox tila-atom nimi {}))
   ([tila-atom nimi {:keys [on-change width otsikon-luokka] :as optiot}]
    (let [tila @tila-atom
-         vaihda-tila (fn []
+         vaihda-tila (fn [event]
                        (let [uusi-tila (case tila
                                          :valittu :ei-valittu
                                          :ei-valittu :valittu
                                          :osittain-valittu :ei-valittu)]
                          (reset! tila-atom uusi-tila)
                          (when on-change
-                           (on-change uusi-tila))))]
+                           (on-change uusi-tila))
+                         (.stopPropagation event)))]
      [:div.harja-checkbox
       [:div.harja-checkbox-sisalto {:style {:width (or width "100%")}
-                                    :on-click (fn [event]
-                                                (vaihda-tila)
-                                                (.stopPropagation event))}
+                                    :on-click #(vaihda-tila %)}
        [:div.harja-checkbox-column
-        [:div.harja-checkbox-laatikko {:class (checkbox-tila->luokka tila)}
+        [:div.harja-checkbox-laatikko {:class (checkbox-tila->luokka tila)
+                                       :tabIndex "0"
+                                       :on-key-down #(when (dom/valilyonti? %)
+                                                       (vaihda-tila %))}
          [:div.harja-checkbox-laatikko-sisalto
           (when (= :valittu @tila-atom)
             [:img.harja-checkbox-rasti {:src "images/rasti.svg"}])]]]

@@ -53,8 +53,10 @@ workbookin, käyttäjän sekä HTTP request parametrit mäppeinä ja palauttaa t
 (defn luo-excel-vienti []
   (->ExcelVienti (atom {})))
 
-(defn- luo-workbook []
-  (XSSFWorkbook.))
+(defn- luo-workbook [pohja]
+  (if pohja
+    (excel/load-workbook-from-resource pohja)
+    (XSSFWorkbook.)))
 
 (defn- kirjoita-workbook [wb out]
   (excel/save-workbook! out wb)
@@ -68,14 +70,17 @@ workbookin, käyttäjän sekä HTTP request parametrit mäppeinä ja palauttaa t
   (let [tyyppi (keyword (get query-params "_"))
         params (or (vienti/lue-get-parametrit req)
                    (vienti/lue-body-parametrit body))
-        kasittelija (get kasittelijat tyyppi)]
+        kasittelija (get kasittelijat tyyppi)
+        [optiot kasittelija] (if (map? kasittelija)
+                               [(:optiot kasittelija) (:funktio kasittelija)]
+                               [nil kasittelija])]
     (if-not kasittelija
       {:status 404
        :body (str "Tuntematon Excel: " tyyppi)}
       (try
         (log/debug "Luodaan " tyyppi " Excel käyttäjälle " (:kayttajanimi kayttaja)
                    " parametreilla " params)
-        (let [wb (luo-workbook)
+        (let [wb (luo-workbook (:pohja optiot))
               vastaus (kasittelija wb kayttaja params)]
           (if (map? vastaus)
             ;; Excel käsittelijä palautti Ring vastauksen, palauta se sellaisenaan

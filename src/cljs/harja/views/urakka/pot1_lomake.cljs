@@ -512,7 +512,7 @@
              :kohdeosat-virheet yllapitokohdeosat-virhe
              :ohjauskahvan-asetus ohjauskahvan-asetus-fn
              :muokattava-ajorata-ja-kaista? muokattava-ajorata-ja-kaista?-fn
-             :otsikko "Tierekisteriosoitteet"
+             :otsikko "Tieosoitteet"
              :jarjesta-kun-kasketaan first}]
            [yleiset/valitys-vertical]
            [paallystystoimenpiteen-tiedot yllapitokohdeosat-tila paallystystoimenpiteen-tiedot-ohjauskahva false-fn muokkaus-mahdollista?

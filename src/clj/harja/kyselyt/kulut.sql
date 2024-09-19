@@ -295,3 +295,35 @@ LIMIT 1;
 
 -- name: tarkista-kohdistuksen-yhteensopivuus
 SELECT * FROM tarkista_t_tr_ti_yhteensopivuus(:tehtava-id::INTEGER, :tehtavaryhma-id::INTEGER, :toimenpideinstanssi-id::INTEGER);
+
+-- name: hae-toteutuneet-kustannukset-analytiikalle
+SELECT k.id                        AS "kulu-id",
+       k.laskun_numero             AS "laskun-tunniste",
+       k.lisatieto                 AS "kulun-kuvaus",
+       k.poistettu                 AS "poistettu",
+       k.koontilaskun_kuukausi     AS "koontilaskun-kuukausi",
+       k.erapaiva                  AS "kulun-ajankohta_laskun-paivamaara",
+       k.kokonaissumma             AS "kulun-kokonaissumma",
+       jsonb_agg(row_to_json(row (
+                                 kk.id, -- AS "kulukohdistus_kulukohdistus-id",
+                                 kk.rivi, -- AS "kulukohdistus_rivinumero",
+                                 kk.maksueratyyppi, -- AS "kulukohdistus_tyyppi",
+                                 kk.lisatyon_lisatieto, -- AS "kulukohdistus_lisatieto",
+                                 kk.poistettu, -- AS "kulukohdistus_poistettu",
+                                 kk.summa, -- AS "kulukohdistus_summa",
+                                 tp.id, -- AS kohdistus_toimenpide,
+                                 tr.id, -- AS kohdistus_tehtavaryhma,
+                                 rv.id, -- AS kohdistus_rahavaraus,
+                                 te.id -- AS kohdistus_tehtava
+                                 ))) as kulukohdistukset
+  FROM kulu k
+           JOIN kulu_kohdistus kk ON k.id = kk.kulu
+           JOIN urakka u ON k.urakka = u.id
+           JOIN toimenpideinstanssi tpi ON kk.toimenpideinstanssi = tpi.id
+           JOIN toimenpide tp ON tpi.toimenpide = tp.id
+           LEFT JOIN tehtavaryhma tr ON kk.tehtavaryhma = tr.id
+           LEFT JOIN rahavaraus rv ON kk.rahavaraus_id = rv.id
+           LEFT JOIN tehtava te ON tr.id = te.id
+ WHERE u.id = :urakka-id
+ GROUP BY k.id, k.laskun_numero, k.lisatieto, k.poistettu, k.koontilaskun_kuukausi, k.erapaiva, k.kokonaissumma
+ ORDER BY k.erapaiva;

@@ -209,7 +209,7 @@
   (case avain
     :aloituspvm "Työ aloitettu"
     :valmispvm-kohde "Kohde valmistunut"
-    :tr-osoite "Tierekisteriosoite"
+    :tr-osoite "Tieosoite"
 
     ;; jos ei jostain syystä tunnisteta tai tulevaisuudessa tulee uusia kenttiä:
     (name avain)))

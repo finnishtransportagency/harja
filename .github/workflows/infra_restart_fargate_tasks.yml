@@ -47,7 +47,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: "eu-west-1"
-          role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-infra-admin"
+          role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-app-admin"
           role-duration-seconds: 3600
           role-skip-session-tagging: true
 

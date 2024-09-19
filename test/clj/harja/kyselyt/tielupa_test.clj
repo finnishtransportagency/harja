@@ -191,6 +191,14 @@
                                                             {::tielupa/tie 4
                                                              ::tielupa/aosa 1
                                                              ::tielupa/losa 1000}})]
+      (is (= (count tieluvat) 1))))
+  (testing "Hae tie-numerolla ja alkuosasta ja loppuosasta tehdään väli etäisyyksien kanssa"
+    (let [tieluvat (tielupa-q/hae-tieluvat-hakunakymaan ds {:harja.domain.tielupa/haettava-tr-osoite
+                                                            {::tielupa/tie 4
+                                                             ::tielupa/aosa 1
+                                                             ::tielupa/aet 1851
+                                                             ::tielupa/losa 553
+                                                             ::tielupa/let 100000}})]
       (is (= (count tieluvat) 1)))))
 
 (deftest hae-yksi-tielupa-onnistuu

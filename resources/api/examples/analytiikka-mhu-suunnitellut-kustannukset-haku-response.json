@@ -4,126 +4,120 @@
     "urakkatunnus": "PR0001234",
     "kiinteat-kustannukset": [
       {
-        "kiintea-kustannus": {
-          "kustannus-id": 10221,
-          "ajankohta": {
-            "vuosi": 2022,
-            "kuukausi": 10
-          },
-          "kustannus": {
-            "summa": 100.10,
-            "indeksikorjattu-summa": 101.11,
-            "indeksikorjauksen-vahvistusajankohta": "2022-10-23T09:11:43.0Z"
-          },
-          "kohdistus": {
-            "toimenpide": 98766,
-            "rahavaraus": 1132,
-            "tehtavaryhma": 126,
-            "tehtava": 3
-          },
-          "versio": 0
+        "kustannus-id": 10221,
+        "ajankohta": {
+          "vuosi": 2022,
+          "kuukausi": 10
         },
-        "kiintea-kustannus": {
-          "kustannus-id": 10271,
-          "ajankohta": {
-            "vuosi": 2027,
-            "kuukausi": 10
-          },
-          "kustannus": {
-            "summa": 100.10
-          },
-          "kohdistus": {
-            "toimenpide": 98766,
-            "rahavaraus": 1132
-          },
-          "versio": 0
-        }
+        "kustannus": {
+          "summa": 100.10,
+          "indeksikorjattu-summa": 101.11,
+          "indeksikorjauksen-vahvistusajankohta": "2022-10-23T09:11:43.0Z"
+        },
+        "kohdistus": {
+          "toimenpide": 98766,
+          "rahavaraus": 1132,
+          "tehtavaryhma": 126,
+          "tehtava": 3
+        },
+        "versio": 0
+      },
+      {
+        "kustannus-id": 10271,
+        "ajankohta": {
+          "vuosi": 2027,
+          "kuukausi": 10
+        },
+        "kustannus": {
+          "summa": 100.10
+        },
+        "kohdistus": {
+          "toimenpide": 98766,
+          "rahavaraus": 1132
+        },
+        "versio": 0
       }
     ],
     "arvioidut-kustannukset": [
       {
-        "arvioitu-kustannus": {
-          "kustannus-id": 20221,
-          "ajankohta": {
-            "vuosi": 2022,
-            "kuukausi": 10
-          },
-          "kustannus": {
-            "summa": 100.10,
-            "indeksikorjattu-summa": 101.11,
-            "indeksikorjauksen-vahvistusajankohta": "2022-10-23T09:11:43.0Z"
-          },
-          "kohdistus": {
-            "toimenpide": 98766,
-            "rahavaraus": 1132,
-            "tehtavaryhma": 126,
-            "tehtava": 3
-          },
-          "versio": 0
+        "kustannus-id": 20221,
+        "ajankohta": {
+          "vuosi": 2022,
+          "kuukausi": 10
         },
-        "arvioitu-kustannus": {
-          "kustannus-id": 10261,
-          "ajankohta": {
-            "vuosi": 2026,
-            "kuukausi": 7
-          },
-          "kustannus": {
-            "summa": 997.10
-          },
-          "kohdistus": {
-            "toimenpide": 98766,
-            "rahavaraus": 1132
-          },
-          "versio": 0
-        }
+        "kustannus": {
+          "summa": 100.10,
+          "indeksikorjattu-summa": 101.11,
+          "indeksikorjauksen-vahvistusajankohta": "2022-10-23T09:11:43.0Z"
+        },
+        "kohdistus": {
+          "toimenpide": 98766,
+          "rahavaraus": 1132,
+          "tehtavaryhma": 126,
+          "tehtava": 3
+        },
+        "versio": 0
+      },
+      {
+        "kustannus-id": 10261,
+        "ajankohta": {
+          "vuosi": 2026,
+          "kuukausi": 7
+        },
+        "kustannus": {
+          "summa": 997.10
+        },
+        "kohdistus": {
+          "toimenpide": 98766,
+          "rahavaraus": 1132
+        },
+        "versio": 0
       }
     ],
     "johto-ja-hallintokorvaukset": [
       {
-        "johto-ja-hallintokrvaus": {
-          "kustannus-id": 13221,
-          "toimenkuva": {
-            "id": 1,
-            "nimi": "Harjoittelija"
-          },
-          "toimenkuvan-ajankohta": {
-            "vuosi": 2022,
-            "kuukausi": 10,
-            "ennen-urakkaa": true
-          },
-          "toimenkuvan-kustannus": {
-            "tunnit": 24,
-            "tuntipalkka": 12.7,
-            "summa": 304.8,
-            "indeksikorjattu-summa": 310.896,
-            "indeksikorjaus_vahvistettu": "2022-10-23T09:11:43.0Z"
-          },
-          "kohdistus": {
-            "toimenpide": 12643,
-            "tehtavaryhma": 21
-          },
-          "versio": 0
+        "kustannus-id": 13221,
+        "toimenkuva": {
+          "id": 1,
+          "nimi": "Harjoittelija"
         },
-        "johto-ja-hallintokrvaus": {
-          "kustannus-id": 13261,
-          "toimenkuva": {
-            "id": 1,
-            "nimi": "Työnjohto"
-          },
-          "toimenkuvan-ajankohta": {
-            "vuosi": 2026,
-            "kuukausi": 7,
-            "ennen-urakkaa": true
-          },
-          "toimenkuvan-kustannus": {
-            "tunnit": 10,
-            "tuntipalkka": 23.1,
-            "summa": 231.0
-          },
-          "kohdistus": {
-            "toimenpide": 12643,
-            "tehtavaryhma": 21
-          }
+        "toimenkuvan-ajankohta": {
+          "vuosi": 2022,
+          "kuukausi": 10,
+          "ennen-urakkaa": true
+        },
+        "toimenkuvan-kustannus": {
+          "tunnit": 24,
+          "tuntipalkka": 12.7,
+          "summa": 304.8,
+          "indeksikorjattu-summa": 310.896,
+          "indeksikorjauksen-vahvistusajankohta": "2022-10-23T09:11:43.0Z"
+        },
+        "kohdistus": {
+          "toimenpide": 12643,
+          "tehtavaryhma": 21
+        },
+        "versio": 0
+      },
+      {
+        "kustannus-id": 13261,
+        "toimenkuva": {
+          "id": 1,
+          "nimi": "Työnjohto"
+        },
+        "toimenkuvan-ajankohta": {
+          "vuosi": 2026,
+          "kuukausi": 7,
+          "ennen-urakkaa": true
+        },
+        "toimenkuvan-kustannus": {
+          "tunnit": 10,
+          "tuntipalkka": 23.1,
+          "summa": 231.0
+        },
+        "kohdistus": {
+          "toimenpide": 12643,
+          "tehtavaryhma": 21
         }
       }
     ]

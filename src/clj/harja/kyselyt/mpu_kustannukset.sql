@@ -1,14 +1,18 @@
 -- name: hae-paikkaus-kustannukset
+-- Hakee könttänä muiden paikkausten, reikäpaikkausten sekä mpu kustannusten tiedot 
 SELECT id, 
        tyomenetelma, 
-       SUM(kokonaiskustannus) AS kokonaiskustannus
+       kustannustyyppi,
+       SUM(kokonaiskustannus) AS kokonaiskustannus,
+       selite
 FROM (
     -- Muut paikkaukset
     SELECT   
-        pt.id AS id,
-        -- 0 jos toteutunutta hintaa ei ole olemassa
+        pt.id                                   AS id,
+        NULL::mpu_kustannustyyppi_enum          AS kustannustyyppi,
         COALESCE(SUM(pk."toteutunut-hinta"), 0) AS kokonaiskustannus,
-        pt.nimi AS tyomenetelma
+        pt.nimi                                 AS tyomenetelma,
+        ''                                      AS selite
     FROM     
         paikkauskohde pk
     LEFT JOIN 
@@ -20,15 +24,15 @@ FROM (
         AND pk."urakka-id" = :urakka-id
     GROUP BY 
         pt.nimi, pt.id
-
     UNION ALL
 
     -- Reikäpaikkaukset
     SELECT   
-        pt.id AS id,
-        -- 0 jos hintaa ei ole olemassa
-        COALESCE(SUM(p.kustannus), 0) AS kokonaiskustannus,
-        pt.nimi AS tyomenetelma
+        pt.id                           AS id,
+        NULL::mpu_kustannustyyppi_enum  AS kustannustyyppi,
+        COALESCE(SUM(p.kustannus), 0)   AS kokonaiskustannus,
+        pt.nimi                         AS tyomenetelma,
+        ''                              AS selite
     FROM     
         paikkauskohde_tyomenetelma pt
     LEFT JOIN 
@@ -38,23 +42,46 @@ FROM (
                   AND p.poistettu = FALSE
     GROUP BY 
         pt.nimi, pt.id
+    UNION ALL
+    
+    -- MPU kustannukset 
+    SELECT id, 
+		   kustannustyyppi,
+		   SUM(summa)       AS kokonaiskustannus,
+		   ''               AS tyomenetelma,
+	     selite
+	  FROM 
+        mpu_kustannukset 
+    WHERE 
+        urakka = :urakka-id
+        AND poistettu IS FALSE 
+        AND (:vuosi::INTEGER IS NULL OR vuosi = :vuosi)
+    GROUP BY 
+        id, selite, kustannustyyppi
 ) AS kustannukset
-GROUP BY tyomenetelma, id
-ORDER BY tyomenetelma;
+GROUP BY tyomenetelma, id, kustannustyyppi, selite
+ORDER BY tyomenetelma, id;
 
 
 -- name: tallenna-mpu-kustannus!
-INSERT INTO mpu_kustannukset (urakka, selite, summa, vuosi) VALUES (:urakka-id, :selite, :summa, :vuosi);
+INSERT INTO mpu_kustannukset (
+    urakka, 
+    selite, 
+    kustannustyyppi, 
+    summa, 
+    vuosi,
+    luotu,
+    luoja
+) VALUES (
+    :urakka-id, 
+    :selite, 
+    :kustannustyyppi::mpu_kustannustyyppi_enum, 
+    :summa, 
+    :vuosi,
+    NOW(),
+    COALESCE(:luoja, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))
+);
 
 
--- name: hae-mpu-kustannukset
-SELECT  selite, 
-        SUM(summa) AS summa
-  FROM  mpu_kustannukset
- WHERE  urakka = :urakka-id 
-   AND  vuosi = :vuosi
-GROUP BY selite;
-
-
--- name: hae-mpu-kustannus-selitteet
+-- name: hae-mpu-selitteet
 SELECT DISTINCT(selite) FROM mpu_kustannukset WHERE urakka = :urakka-id;

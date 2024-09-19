@@ -49,7 +49,8 @@ SELECT l.id                     AS "lupaus-id",
        LEFT JOIN lupaus_vaihtoehto lv ON lv.id = vas."lupaus-vaihtoehto-id"
        JOIN lupausryhma_urakka lu ON r.id = lu."lupausryhma_id"
  WHERE lu."urakka_id" = :urakka
-GROUP BY l.id, sit.id, r.id;
+GROUP BY l.id, sit.id, r.id
+ORDER BY l.jarjestys, r.jarjestys;
 
 -- name: hae-lupaus-vaihtoehdot
  SELECT
@@ -65,7 +66,8 @@ FROM
 left JOIN lupaus_vaihtoehto_ryhma lvr on
 	lv."vaihtoehto-ryhma-otsikko-id" = lvr.id
 WHERE
-	lv."lupaus-id" = :lupaus-id;
+	lv."lupaus-id" = :lupaus-id
+  ORDER BY lv.id;
 
 -- name: hae-lupaus-vaihtoehto
 SELECT id, "lupaus-id", vaihtoehto, pisteet
@@ -220,3 +222,64 @@ SELECT lp.id, lp.pisteet, lp.kuukausi, lp.vuosi, lp."urakka-id", lp.luoja, lp.lu
 
 -- name: hae-indeksikorotus-summalle
 SELECT korotus FROM sanktion_indeksikorotus(:pvm::DATE, :indeksi,:maara::NUMERIC, :urakka-id::INTEGER, :sanktiolaji::sanktiolaji);
+
+
+-- name: hae-puuttuvat-urakka-linkitykset
+SELECT u.id,
+  u.nimi
+FROM urakka u
+WHERE u.tyyppi = 'teiden-hoito'
+  AND EXTRACT(
+    YEAR
+    FROM u.alkupvm
+  ) >= 2021
+EXCEPT
+SELECT DISTINCT 
+  urakka_id,
+  u.nimi
+FROM lupausryhma_urakka lu
+  JOIN urakka u ON lu.urakka_id = u.id
+WHERE u.tyyppi = 'teiden-hoito';
+
+-- name: hae-rivin-tunnistin-selitteet
+SELECT DISTINCT 
+  lr."rivin-tunnistin-selite",
+  lr."urakan-alkuvuosi"
+FROM lupausryhma lr
+ORDER BY lr."urakan-alkuvuosi";
+
+-- name: hae-kategorian-urakat
+SELECT
+	DISTINCT
+	lu.urakka_id,
+	u.nimi
+FROM
+	lupausryhma lr
+LEFT JOIN lupausryhma_urakka lu ON
+	lr.id = lu.lupausryhma_id
+LEFT JOIN urakka u ON
+	lu.urakka_id = u.id
+WHERE (lr."rivin-tunnistin-selite" = :rivin-tunnistin-selite OR :rivin-tunnistin-selite::VARCHAR IS NULL)
+  AND lr."urakan-alkuvuosi" = :urakan-alkuvuosi;
+
+-- name: hae-urakan-lupaukset
+-- row-fn: muunna-lupaus
+SELECT
+  r.otsikko,
+  r.jarjestys  AS "lupausryhma-jarjestys",
+  l.id  AS "lupaus-id",
+	l.kuvaus,
+  l.pisteet,
+  l.sisalto,
+  l.lupaustyyppi,
+  l."kirjaus-kkt",
+  l."joustovara-kkta",
+  l."paatos-kk"
+FROM
+	lupausryhma r
+JOIN lupaus l ON
+	r.id = l."lupausryhma-id"
+JOIN lupausryhma_urakka lu ON
+	r.id = lu."lupausryhma_id"
+WHERE
+	lu."urakka_id" = :urakka-id

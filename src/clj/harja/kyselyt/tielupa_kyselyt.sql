@@ -81,11 +81,19 @@ WHERE (:hakija-nimi::TEXT IS NULL OR upper(tl."hakija-nimi") ilike upper(:hakija
   AND (:aet::INT IS NULL
        OR (:aosa::INT IS NOT NULL AND :aosa::INT = s.aosa AND s.aet >= :aet::INT)
        OR (:aosa::INT IS NOT NULL AND s.aosa > :aosa::INT)) -- Alukuetäisyydellä ei merkitystä
-  AND (:losa::INT IS NULL OR :losa::INT >= s.losa) -- Jos loppuosa annettu, ota ne joissa sama tai pienempi loppuosa
+
+  -- Jos loppuosa annettu, niin hyödynnetään sitä, mikäli tieluvalla on loppuosa. Hyödyntäessä otetaan ne joissa sama tai pienempi loppuosa.
+  -- Samalla varmistetaan, että alkuosa ei ole suurempi, kuin haussa annettu loppuosa
+  -- Tämä tarkoittaa sitä, että jos tieluvassa tieosoite on annettu "laskevassa" järjestyksessä, eli että loppuosa on pienempi, kuin alkuosa
+  -- niin tämä haku ei löydä sellaista ellei tieluvan loppuosa täsmää täsmälleen annettuun loppuosaan.
+  AND (:losa::INT IS NULL
+           OR (:losa::INT IS NOT NULL AND s.losa IS NULL AND s.aosa <= :losa::INT )
+           OR (:losa::INT IS NOT NULL AND (s.aosa <= :losa::INT OR s.aosa > s.losa) AND s.losa IS NOT NULL AND :losa::INT >= s.losa))
+
   -- Loppuetäisyys vaikuttaa, mikäli loppuosa on sama. Jos loppuosa on pienempi, ei loppuetäisyydellä ole merkitystä
-  AND (:let::INT IS NULL
-       OR (:losa::INT IS NOT NULL AND :losa::INT = s.losa AND s.let <= :let::INT)
-       OR (:losa::INT IS NULL OR s.losa < :losa::INT))
+  AND (:let::INT IS NULL OR s.losa IS NULL
+       OR (:let::INT IS NOT NULL AND :losa::INT IS NOT NULL AND s.losa IS NOT NULL AND :losa::INT = s.losa AND s.let <= :let::INT)
+       OR (:losa::INT IS NULL OR (s.losa IS NOT NULL AND s.losa < :losa::INT)))
  GROUP BY tl.id, tl.myontamispvm, tl."paatoksen-diaarinumero"
  ORDER BY tl.myontamispvm DESC, tl."paatoksen-diaarinumero" DESC
  LIMIT 1000;

@@ -112,7 +112,7 @@
         [:div.rivi
          [:span "Tavoitehinnan ylitys"]
          [:span.negatiivinen-numero
-          (str "+ " (fmt/euro-opt tavoitehinnan-ylitys))]]
+          (str "+ " (fmt/euro-opt (Math/abs tavoitehinnan-ylitys)))]]
         (when tavoitehinnan-ylitys-paatos
           [:<>
            (when (pos? (::valikatselmus/urakoitsijan-maksu tavoitehinnan-ylitys-paatos))

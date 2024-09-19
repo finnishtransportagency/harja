@@ -309,7 +309,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                          (valitse-fn (nth vaihtoehdot (inc nykyinen-valittu-idx))))
 
                                        13                   ;; enter
-                                       (reset! auki? false)))))
+                                       (reset! auki? (not @auki?))))))
 
                                (do                          ;; Valitaan inputtia vastaava vaihtoehto
                                  (reset! term (char kc))
@@ -532,15 +532,18 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
                  (partition 2 otsikot-ja-arvot))])
 
 (defn- luo-haitarin-rivi [piiloita? rivi]
-  ^{:key (:otsikko @rivi)}
-  [:div.haitari-rivi
-   [:div.haitari-heading.klikattava
-    {:on-click #(do
-                  (swap! rivi assoc :auki (not (:auki @rivi)))
-                  (.preventDefault %))}
-    [:span.haitarin-tila (if (:auki @rivi) (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
-    [:div.haitari-title (when piiloita? {:class "haitari-piilossa"}) (or (:otsikko @rivi) "")]]
-   [:div.haitari-sisalto (if (:auki @rivi) {:class "haitari-auki"} {:class "haitari-kiinni"}) (:sisalto @rivi)]])
+  (let [avaa-tai-sulje-haitari (fn [event]
+                         (.preventDefault event)
+                         (swap! rivi assoc :auki (not (:auki @rivi))))]
+    ^{:key (:otsikko @rivi)}
+    [:div.haitari-rivi
+     [:div.haitari-heading.klikattava
+      {:on-click #(avaa-tai-sulje-haitari %)
+       :on-key-down #(when (dom/enter-nappain? %)
+                       (avaa-tai-sulje-haitari %))}
+      [:span.haitarin-tila {:tabIndex "0"} (if (:auki @rivi) (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
+      [:div.haitari-title (when piiloita? {:class "haitari-piilossa"}) (or (:otsikko @rivi) "")]]
+     [:div.haitari-sisalto (if (:auki @rivi) {:class "haitari-auki"} {:class "haitari-kiinni"}) (:sisalto @rivi)]]))
 
 (defn- pakota-haitarin-rivi-auki
   ([rivit] (pakota-haitarin-rivi-auki rivit (first (keys @rivit))))
@@ -572,14 +575,18 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    [:div.haitari
     (doall
       (for [[otsikko avain komponentti] (partition 3 otsikko-avain-ja-komponentti)
-            :let [auki? (auki avain)]]
+            :let [auki? (auki avain)
+                  avaa-tai-sulje-haitari (fn [event]
+                                 (do
+                                   (.preventDefault event)
+                                   (toggle-osio! avain)))]]
         ^{:key (str avain)}
         [:div.haitari-rivi
          [:div.haitari-heading.klikattava
-          {:on-click #(do
-                        (toggle-osio! avain)
-                        (.preventDefault %))}
-          [:span.haitarin-tila
+          {:on-click #(avaa-tai-sulje-haitari %)
+           :on-key-down #(when (dom/enter-nappain? %)
+                           (avaa-tai-sulje-haitari %))}
+          [:span.haitarin-tila {:tabIndex "0"}
            (if auki?
              (ikonit/livicon-chevron-down)
              (ikonit/livicon-chevron-right))]
@@ -998,7 +1005,7 @@ jatkon."
   (let [osio (fn [komponentti otsikko] komponentti)]
     (fn [{:keys [wrap-luokka]} {:keys [tie aosa aeta losa leta]}]
       [:div {:class (or wrap-luokka "col-md-3 filtteri tr-osoite")}
-       [:label.alasvedon-otsikko-vayla "Tierekisteriosoite"]
+       [:label.alasvedon-otsikko-vayla "Tieosoite"]
       [:div
        [:div.varusteet.tr-osoite-flex
         [osio tie "Tie"]
