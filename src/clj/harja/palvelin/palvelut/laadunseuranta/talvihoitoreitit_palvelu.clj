@@ -51,8 +51,7 @@
                                                                                                :id :formatoitu-tr)) reitit))))
 
                                        ;; Hae kaikki kalustot
-                                       reitin-kalustot (conj (flatten (map (fn [r] (:kalustot r)) reitit))
-                                                         {:kalustotyyppi "KA" :kalustomaara 77})
+                                       reitin-kalustot (conj (flatten (map (fn [r] (:kalustot r)) reitit)))
                                        ;; Groupataan reitin kalustot kalustotyypin mukaan
                                        groupatut-kalustot (group-by :kalustotyyppi reitin-kalustot)
 
@@ -62,7 +61,6 @@
                                                           {:kalustotyyppi kalustotyyppi
                                                            :kalustomaara kalustomaara}))
                                                   (keys groupatut-kalustot))
-
                                        ;; Lasketaan jokaiselle hoitoluokalle pituus
                                        hoitoluokkat (mapv (fn [hoitoluokka-vec]
                                                             {:hoitoluokka (:hoitoluokka (first hoitoluokka-vec))
@@ -87,9 +85,8 @@
         talvihoitoreitit (try+
                            (t-excel/lue-talvihoitoreitit-excelista workbook)
                            (catch [:type :validaatiovirhe] {:keys [virheet]}
-                             (let [_ (println "try catch virheet" (pr-str virheet))]
-                               (swap! virheet-atom conj virheet)
-                               nil)))
+                             (swap! virheet-atom conj virheet)
+                             nil))
         _ (log/debug "kasittele-excel :: talvihoitoreitit:" talvihoitoreitit)
 
         ;; Käsittele jokainen talvihoitoreitti itsenäisessä loopissa
@@ -97,7 +94,6 @@
                   :let [;; Varmista, että talvihoitoreittiä ei ole jo olemassa
                         talvihoitoreitti-db (first (talvihoitoreitit-q/hae-talvihoitoreitti-ulkoisella-idlla db {:urakka_id urakka-id
                                                                                                                  :ulkoinen_id (:tunniste t)}))
-                        _ (when talvihoitoreitti-db (println "talvihoitoreitti löytyy jo tietokannasta:" talvihoitoreitti-db))
 
                         ;; Talvihoitoreitillä voi olla virheellisiä tieosoitteita
                         tieosoite-virheet (reduce (fn [virheet r]
@@ -119,8 +115,7 @@
                                                                               :aosa (:aosa r)
                                                                               :losa (:losa r)
                                                                               :aet (:aet r)
-                                                                              :let (:let r)})
-                                                                _ (println "leikkaavat" leikkaavat)]
+                                                                              :let (:let r)})]
                                                             (if-not (empty? leikkaavat)
                                                               (conj leikkaavat-geometriat
                                                                 {:leikkaavat (format "Tieosoite: %s leikkaa jo olemassa olevan talvihoitoreitin kanssa."
@@ -159,7 +154,7 @@
     (transit-vastaus vastaus)))
 
 (defn vastaanota-excel [db request]
-  (println "vastaanota-excel :: request" request)
+  (log/debug "vastaanota-excel :: request" request)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
     (:kayttaja request)
     (Integer/parseInt (get (:params request) "urakka-id")))

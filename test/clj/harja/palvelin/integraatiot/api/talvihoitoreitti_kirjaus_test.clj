@@ -1,7 +1,9 @@
 (ns harja.palvelin.integraatiot.api.talvihoitoreitti-kirjaus-test
   (:require [clojure.test :refer [deftest is use-fixtures testing]]
             [harja.testi :refer :all]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.api.talvihoitoreitit-api :as api-talvihoitoreitit]
+            [harja.palvelin.palvelut.laadunseuranta.talvihoitoreitit-palvelu :as talvihoitoreitit-palvelu]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.tyokalut :as tyokalut]
             [cheshire.core :as cheshire]))
@@ -17,7 +19,20 @@
                             (api-talvihoitoreitit/->TalvihoitoreittiAPI)
                             [:http-palvelin :db :integraatioloki])))
 
-(use-fixtures :each jarjestelma-fixture)
+(defn http-fixture [testit]
+  (alter-var-root #'jarjestelma
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db (tietokanta/luo-tietokanta testitietokanta)
+          :http-palvelin (testi-http-palvelin)
+          :talvihoitoreitit (component/using
+                              (talvihoitoreitit-palvelu/->Talvihoitoreitit)
+                              [:http-palvelin :db])))))
+  (testit)
+  (alter-var-root #'jarjestelma component/stop))
+
+(use-fixtures :each jarjestelma-fixture http-fixture)
 
 (defn poista-talvihoitoreitit-urakalta [urakka_id]
   (u (str "DELETE FROM talvihoitoreitti WHERE urakka_id = " urakka_id)))
@@ -28,15 +43,20 @@
         _ (poista-talvihoitoreitit-urakalta urakka-id)
         ;; Anna oikeudet käyttäjälle
         _ (anna-kirjoitusoikeus kayttaja-yit)
-        ulkoinen-id 123456
+        ulkoinen-id (str 123456)
         lahetysdata (-> "test/resurssit/api/talvihoitoreitti-ok.json"
                       slurp
                       (.replace "__ULKOINENID__" (str ulkoinen-id))
                       (.replace "__NIMI__" "testinimi"))
         vastaus-lisays (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                          lahetysdata)
-        _ (println "vastaus-lisays" vastaus-lisays)]
+        dekoodattu-body (cheshire/decode (:body vastaus-lisays) true)]
+    
+    ;; Status on oikein
     (is (= 200 (:status vastaus-lisays)))
+    ;; Palautetaan kutsujalle ulkoinen id
+    (is (= ulkoinen-id (:id dekoodattu-body)))
+
     (let [talvihoitoreitti-kannassa (q-map (format "SELECT nimi, luoja, luotu FROM talvihoitoreitti WHERE urakka_id = %s " urakka-id))]
       (is (= 1 (count talvihoitoreitti-kannassa))))))
 
@@ -59,17 +79,17 @@
       (is (= 1 (count talvihoitoreitti-kannassa))))
 
     ;; Päivitetään talvihoitoreitti
-    (let [nimi "uusinimi"
+    (let [uusinimi "uusinimi"
           lahetysdata (-> "test/resurssit/api/talvihoitoreitti-ok.json"
                         slurp
                         (.replace "__ULKOINENID__" (str ulkoinen-id))
-                        (.replace "__NIMI__" (str nimi)))
+                        (.replace "__NIMI__" (str uusinimi)))
           vastaus-paivitys (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                              lahetysdata)
           ;; Tarkistetaan kannasta, onko nimi muuttunut
           talvihoitoreitti-kannassa (q-map (format "SELECT nimi FROM talvihoitoreitti
           WHERE urakka_id = %s AND ulkoinen_id = '%s' " urakka-id ulkoinen-id))]
-      (is (= nimi (:nimi (first talvihoitoreitti-kannassa)))))))
+      (is (= uusinimi (:nimi (first talvihoitoreitti-kannassa)))))))
 
 
 (deftest poista-talvihoitoreitti-onnistuu
@@ -103,10 +123,8 @@
 
         ;; Poistetaan toinen talvihoitoreitti
         delete-json (cheshire/encode {:talvihoitoreittien-tunnisteet [(str ulkoinen-id1) (str ulkoinen-id2)]})
-        _ (println "delete-json" delete-json)
         vastaus-poisto (tyokalut/delete-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti" ] kayttaja-yit portti
                          delete-json)
-        _ (println "vastaus-poisto" vastaus-poisto)
         ;; Tarkistetaan, että toinen talvihoitoreitti on poistettu
         talvihoitoreitti-kannassa (q-map (format "SELECT nimi FROM talvihoitoreitti
           WHERE urakka_id = %s" urakka-id))
@@ -125,8 +143,8 @@
                       (.replace "__NIMI__" "testinimi"))
         vastaus (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
                          lahetysdata)
-        encoodattu-body (cheshire/decode (:body vastaus) true)
-        virhe (first (:virheet encoodattu-body))]
+        dekoodattu-body (cheshire/decode (:body vastaus) true)
+        virhe (first (:virheet dekoodattu-body))]
 
     (is (= 400 (:status vastaus)))
     (is (= "invalidi-json" (get-in virhe [:virhe :koodi])))
@@ -135,6 +153,54 @@
     (is (.contains (get-in virhe [:virhe :viesti]) "tie: Väärä tyyppi"))))
 
 
+;; Käyttöliittymästä tehtävät haut eivät välttämättä kuulu tänne, mutta niitä on mahdoton tehdä ilman dataa
+;; Joten käytetään API-kutsuja datan luomiseksi ja varmistetaan, että käyttöliittymän käyttävät endpointit
+;; hakevat tiedot oikein
+;; Luodaan testi, joka lisää APIn kautta talvihoitoreitin ja se haetaan käyttöliittymälle
+(deftest tallenna-talvihoitoreitti-ja-hae-kayttoliittymalle
+  (let [urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        ;; Siivotaan kanta varulta
+        _ (poista-talvihoitoreitit-urakalta urakka-id)
+        ;; Anna oikeudet käyttäjälle
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        ulkoinen-id (str 123456)
+        reittinimi "testinimi"
+        lahetysdata (-> "test/resurssit/api/talvihoitoreitti-ok.json"
+                      slurp
+                      (.replace "__ULKOINENID__" (str ulkoinen-id))
+                      (.replace "__NIMI__" reittinimi))
+        vastaus-lisays (tyokalut/put-kutsu ["/api/urakat/" urakka-id "/talvihoitoreitti"] kayttaja-yit portti
+                         lahetysdata)
+        ;; Tarkistetaan, että lisäys on onnistunut
+        talvihoitoreitti-kannassa (first (q-map (format "SELECT nimi FROM talvihoitoreitti
+          WHERE urakka_id = %s" urakka-id)))
+        _ (is (= reittinimi (:nimi talvihoitoreitti-kannassa)))
 
+        ;; Haetaan talvihoitoreitti käyttöliittymälle
+        vastaus-haku (kutsu-palvelua (:http-palvelin jarjestelma) :hae-urakan-talvihoitoreitit +kayttaja-jvh+ {:urakka-id urakka-id})
+        reittien-laskettu-pituus (reduce + (map :laskettu_pituus (mapcat :reitit vastaus-haku)))
+        hoitoluokkien-laskettu-pituus (reduce + (map :pituus (mapcat :hoitoluokat vastaus-haku)))
+        reittien-annettu-pituus (reduce + (map :pituus (mapcat :reitit vastaus-haku)))]
+
+    (is (= 30.5 reittien-annettu-pituus))
+    (is (not= reittien-laskettu-pituus reittien-annettu-pituus))
+    (is (= reittien-laskettu-pituus hoitoluokkien-laskettu-pituus))
+    (is (= reittinimi (:nimi (first vastaus-haku))))
+    (is (nil? (:muokkaaja (first vastaus-haku))))
+    (is (nil? (:muokattu (first vastaus-haku))))
+    (is (= urakka-id (:urakka_id (first vastaus-haku))))
+    (is (= ulkoinen-id (:ulkoinen_id (first vastaus-haku))))
+    (is (= 2 (count (:kalustot (first vastaus-haku)))))
+
+    ;; Kuorma-autot
+    (is (= 7 (get-in (first vastaus-haku) [:kalustot 0 :kalustomaara])))
+    ;; Traktorit
+    (is (= 3 (get-in (first vastaus-haku) [:kalustot 1 :kalustomaara])))
+    ;; Hoitoluokat
+    (is (= 2 (count (:hoitoluokat (first vastaus-haku)))))
+    (is (= "IsE" (get-in (first vastaus-haku) [:hoitoluokat 0 :hoitoluokka])))
+    (is (= 17.672 (get-in (first vastaus-haku) [:hoitoluokat 0 :pituus]))) ;; Tämä on eri kuin annettu pituus. Pituus lasketaan geometriasta
+    (is (= "Ib" (get-in (first vastaus-haku) [:hoitoluokat 1 :hoitoluokka])))
+    (is (= 43.416 (get-in (first vastaus-haku) [:hoitoluokat 1 :pituus])))))
 
 

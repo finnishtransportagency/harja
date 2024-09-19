@@ -11,7 +11,7 @@
             [harja.kyselyt.talvihoitoreitit :as talvihoitoreitit-q]))
 
 (defn paivita-talvihoitoreitti [db data kayttaja_id urakka_id]
-  (let [_ (println "paivita-talvihoitoreitti :: data" data)
+  (let [_ (log/debug "paivita-talvihoitoreitti :: data" data)
         id (talvihoitoreitit-q/paivita-talvihoitoreitti-tietokantaan db data urakka_id kayttaja_id)
         vastaus (if id
                   (tee-kirjausvastauksen-body {:id (:tunniste data) :ilmoitukset "Talvihoitoreitti päivitetty onnistuneesti."})
@@ -23,9 +23,8 @@
         talvihoitoreitti-id (:id (talvihoitoreitit-q/lisaa-talvihoitoreitti-tietokantaan db data urakka_id kayttaja_id))
         ;; Lisää kalustot ja reitit
         _ (talvihoitoreitit-q/lisaa-kalustot-ja-reitit db talvihoitoreitti-id data)
-        _ (println "lisaa-talvihoitoreitti :: lisätty onnistuneesti" data)
         ;; Koosta vastaus apikutsun tekijälle
-        vastaus (tee-kirjausvastauksen-body {:muut-tiedot {:huomiot [{:tunniste {:id talvihoitoreitti-id}}]}})]
+        vastaus (tee-kirjausvastauksen-body {:id (:tunniste data) :ilmoitukset "Talvihoitoreitti lisätty onnistuneesti."})]
     vastaus))
 
 (defn lisaa-talvihoitoreitti
