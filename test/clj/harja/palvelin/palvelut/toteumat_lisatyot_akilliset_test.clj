@@ -266,3 +266,24 @@
           ;; Tarkistetaan, että kaikki 2019 alkavan hoitokauden suunnitellut tehtävät löytyy vastauksesta
           ]
       (is (= 1 (count toteumat-vastaus)) "Yksi lisätty toteuma pitäisi löytyä")))
+
+(deftest jos-sijainti-pakollinen-maaratoteumassa-saadaan-poikkeus
+  (let [sijainti-virheella-1 {:numero nil :alkuosa 2 :alkuetaisyys 3}
+        sijainti-virheella-2 {:numero 1 :alkuosa nil :alkuetaisyys 3}
+        sijainti-virheella-3 {:numero 1 :alkuosa 2}
+        sijainti-virheella-4 {:numero 1 :alkuosa 2 :alkuetaisyys "kissa"}
+        sijainti-ok-1 {:numero 1 :alkuosa 2 :alkuetaisyys 3}
+        sijainti-ok-2 {:numero 1 :alkuosa 2 :alkuetaisyys 3 :loppuosa 4 :loppuetaisyys 5}
+        toteuma (fn [sijainti]
+                  {:tyyppi :maaramitattava
+                   :urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+                   :loppupvm (pvm/->pvm "19.9.2024")
+                   :toteumat [{:maara 123 :tehtava {:id 3118 :tehtava "KT-valuasfalttipaikkaus K" :yksikko "tonni", :rahavaraus nil}
+                               :sijainti sijainti}]})]
+    (is (thrown? Exception (lisaa-toteuma (toteuma sijainti-virheella-1))) "Arvo puuttuu")
+    (is (thrown? Exception (lisaa-toteuma (toteuma sijainti-virheella-2))) "Arvo puuttuu")
+    (is (thrown? Exception (lisaa-toteuma (toteuma sijainti-virheella-3))) "Arvo puuttuu")
+    (is (thrown? Exception (lisaa-toteuma (toteuma sijainti-virheella-4))) "Osoitearvojen oltava numeerit")
+
+    (is (not (thrown? Exception (lisaa-toteuma (toteuma sijainti-ok-1)))))
+    (is (not (thrown? Exception (lisaa-toteuma (toteuma sijainti-ok-2)))))))

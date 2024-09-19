@@ -1,5 +1,6 @@
 (ns harja.views.urakka.toteumat.maarien-toteuma-lomake
-  (:require [tuck.core :as tuck]
+  (:require [harja.domain.tierekisteri :as tr-domain]
+            [tuck.core :as tuck]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.toteumat.maarien-toteumat :as tiedot]
             [harja.ui.lomake :as ui-lomake]
@@ -10,8 +11,7 @@
             [reagent.core :as r]
             [harja.ui.kentat :as kentat]
             [harja.ui.modal :as modal]
-            [harja.pvm :as pvm]
-            [harja.views.kartta.tasot :as tasot]))
+            [harja.pvm :as pvm]))
 
 
 (defn- laheta! [e! data]
@@ -265,7 +265,7 @@
                             :lomake     lomake
                             :paivita!   (fn [polku indeksi arvo]
                                           (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku indeksi)))})
-        sijainnit-valideja? (every? true?
+        sijainnit-valideja? true #_(every? true?
                               (map-indexed (fn [indeksi toteuma]
                                              ;; vaaditaan kaikilta toteumilta joko ei sijaintia, tai validi vähintään pistemäinen tieosoite
                                              (boolean (or

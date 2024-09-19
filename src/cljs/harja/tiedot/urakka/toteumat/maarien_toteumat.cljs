@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.toteumat.maarien-toteumat
   "UI controlleri määrien toteutumille"
-  (:require [reagent.core :as r]
+  (:require [harja.domain.tierekisteri :as tr-domain]
+            [reagent.core :as r]
             [tuck.core :refer [process-event] :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.toteuma :as t]
@@ -68,13 +69,6 @@
                    ::t/maara nil})
 
 
-(def tehtavat-joille-sijainti-pakollinen
-  #{"AB-paikkaus levittäjällä"
-    "PAB-paikkaus levittäjällä"
-    "KT-valuasfalttipaikkaus K"
-    "KT-valuasfalttipaikkaus T"
-    "KT-reikävaluasfalttipaikkaus"
-    "KT-valuasfalttisaumaus"})
 
 (defn validoinnit
   ([avain lomake indeksi]
@@ -301,7 +295,8 @@
                             :loppupvm loppupvm
                             :toteumat toteumat}
                            {:onnistui ->TallennaToteumaOnnistui
-                            :epaonnistui ->TallennaToteumaEpaonnistui})
+                            :epaonnistui ->TallennaToteumaEpaonnistui
+                            :paasta-virhe-lapi? true})
         (viesti/nayta! "Puuttuvia tai virheellisiä kenttiä, tarkista kentät!" :danger))
       (-> app
           (dissoc :avattu-tehtava)
@@ -366,7 +361,7 @@
                 app)
           ;; Jos valitaan tehtävä, jolle pakotetaan sijainti, asetetaan ei-sijaintia falseksi
           asetetun-tehtavan-nimi (get-in app [:lomake ::t/toteumat indeksi ::t/tehtava :tehtava])
-          pakota-sijainti? (boolean (tehtavat-joille-sijainti-pakollinen asetetun-tehtavan-nimi))
+          pakota-sijainti? (boolean (tr-domain/tehtavat-joille-sijainti-pakollinen asetetun-tehtavan-nimi))
           app (assoc-in app [:lomake ::t/toteumat indeksi ::t/pakota-sijainti?] pakota-sijainti?)
           app (if pakota-sijainti?
                 (-> app (assoc-in [:lomake ::t/toteumat indeksi ::t/ei-sijaintia] false))
@@ -635,7 +630,7 @@
 
   TallennaToteumaEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta! "Toteuman tallennus epäonnistui!" :danger)
+    (viesti/nayta! (str "Toteuman tallennus epäonnistui! " (get-in vastaus [:response :virhe])) :danger)
     app))
 
 (defn hae-toteutuneet-maarat [urakka-id toimenpide hoitokauden-alkuvuosi]
