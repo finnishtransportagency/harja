@@ -76,7 +76,7 @@
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
 
                  ;; -- Kirjasto mappien avainten nimiavaruuksien käsittelyyn
-                 [namespacefy "0.4"]
+                 [namespacefy "0.5.0"]
 
                  ;; -- Sähköposti lähetys
                  [org.apache.httpcomponents/httpcore "4.4.14"]
