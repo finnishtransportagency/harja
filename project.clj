@@ -131,7 +131,7 @@
                  [java-http-clj "0.4.3"]
 
                  ;; Apache ANT core (arkistoiden purku yms. org.apache.tools.tar)
-                 [org.apache.ant/ant "1.10.5"]
+                 [org.apache.ant/ant "1.10.15"]
 
                  ;; Clojure(Script) assertointi
                  [com.taoensso/truss "1.5.0"]
