@@ -34,7 +34,7 @@
                       jarjestelma-fixture))
 
 (def odotettu-raportti
-  [:raportti {:nimi "Kulut tehtäväryhmittäin"}
+  [:raportti {:nimi "Kulut tehtäväryhmittäin", :rajoita-pdf-rivimaara nil}
    [:taulukko {:viimeinen-rivi-yhteenveto? true, :otsikko "Kulut tehtäväryhmittäin ajalla 01.12.2019 - 30.08.2020"}
     [{:leveys 1, :otsikko "Tehtäväryhmä"} {:leveys 1, :fmt :raha, :otsikko "Hoitokauden alusta 01.10.2019-30.09.2020"} {:leveys 1, :fmt :raha, :otsikko "Jaksolla 01.12.2019-30.08.2020"}]
     [(list "Talvihoito (A)" 6601.94M 3300.40M)
@@ -47,7 +47,7 @@
      (list "Nurmetukset ja muut vihertyöt (N)" 222.22M 0)
      (list "Kuivatusjärjestelmät (K)" 2222.22M 0)
      (list "Kaiteet, aidat ja kivetykset (U)" 0 0)
-     (list "Päällysteiden paikkaus, muut työt (Y)" 0 0)
+     (list "Päällysteiden paikkaus, muut työt (Y8)" 0 0)
      (list "Kuumapäällyste (Y1)" 11001.94M 5500.40M)
      (list "KT-Valu (Y3)" 0 0)
      (list "Kylmäpäällyste (Y2)" 0 0)

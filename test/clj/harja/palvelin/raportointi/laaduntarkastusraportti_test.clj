@@ -49,7 +49,8 @@
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Laaduntarkastusraportti"
-                     :orientaatio :landscape}
+                     :orientaatio :landscape
+                     :rajoita-pdf-rivimaara nil}
                     [:taulukko
                      {:otsikko "Oulun alueurakka 2005-2012, Laaduntarkastusraportti ajalta 01.10.2005 - 01.10.2006"
                       :sheet-nimi "Laaduntarkastusraportti"
@@ -112,7 +113,8 @@
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Laaduntarkastusraportti"
-                     :orientaatio :landscape}
+                     :orientaatio :landscape
+                     :rajoita-pdf-rivimaara nil}
                     [:taulukko
                      {:otsikko "Uusimaa, Laaduntarkastusraportti ajalta 01.10.2005 - 01.10.2006"
                       :sheet-nimi "Laaduntarkastusraportti"
@@ -161,7 +163,8 @@
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Laaduntarkastusraportti"
-                     :orientaatio :landscape}
+                     :orientaatio :landscape
+                     :rajoita-pdf-rivimaara nil}
                     [:taulukko
                      {:otsikko "KOKO MAA, Laaduntarkastusraportti ajalta 01.10.2005 - 01.10.2006"
                       :sheet-nimi "Laaduntarkastusraportti"
