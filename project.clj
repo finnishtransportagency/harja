@@ -30,7 +30,7 @@
                  ;;;;;;; Palvelin ;;;;;;;
 
                  ;; Komponenttituki palvelimen komponenttien hallintaan
-                 [com.stuartsierra/component "1.0.0"]
+                 [com.stuartsierra/component "1.1.0"]
 
                  ;; -- Lokitus
                  [com.taoensso/timbre "5.2.1"]
@@ -40,7 +40,7 @@
                  [org.clojure/java.jmx "0.3.4"]
 
                  ;; -- JSON encode/decode
-                 [cheshire "5.11.0"]
+                 [cheshire "5.13.0"]
 
                  ;; -- HTTP palvelin, reititys ja kyselyiden cahetus
                  [cljs-http "0.1.48"]
@@ -76,7 +76,7 @@
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
 
                  ;; -- Kirjasto mappien avainten nimiavaruuksien käsittelyyn
-                 [namespacefy "0.4"]
+                 [namespacefy "0.5.0"]
 
                  ;; -- Sähköposti lähetys
                  [org.apache.httpcomponents/httpcore "4.4.14"]
@@ -186,7 +186,7 @@
             ;; käytetään sitä vielä. Riippuvuus ja käyttö aliaksissa voidaan poistaa, kun
             ;; ollaan luovuttu on-premistä ja jenkinsin käytöstä.
             [lein-less "1.7.5"]
-            [lein-ancient "0.6.15"]
+            [lein-ancient "0.7.0"]
             [lein-codox "0.10.8" :exclusions [org.clojure/clojure]]
             [lein-auto "0.1.3"]
             [lein-doo "0.1.11" :exclusions [org.clojure/clojure]]]
