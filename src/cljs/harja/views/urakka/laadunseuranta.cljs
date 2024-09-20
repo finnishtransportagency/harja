@@ -52,9 +52,7 @@
     :mobiilityokalu (not (urakka/vesivaylaurakka? urakka))
     :talvihoitoreititys (and (= :teiden-hoito tyyppi)
                           (roolit/jvh? @istunto/kayttaja)
-                          ;; Roolit exceliin ei ole vielä lisätty oikeaa oikeutta
-                             #_ (oikeudet/urakat-laadunseuranta-talvihoitoreititys id)
-                          )))
+                             (oikeudet/urakat-laadunseuranta-talvihoitoreititys id))))
 
 (defn laadunseuranta [_ur]
   (komp/luo
