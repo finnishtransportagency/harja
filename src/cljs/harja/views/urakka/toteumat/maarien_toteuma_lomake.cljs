@@ -265,15 +265,13 @@
                             :lomake     lomake
                             :paivita!   (fn [polku indeksi arvo]
                                           (e! (tiedot/->PaivitaLomake (assoc-in lomake [::t/toteumat indeksi polku] arvo) polku indeksi)))})
-        sijainnit-valideja? true #_(every? true?
+        sijainnit-valideja? (every? true?
                               (map-indexed (fn [indeksi toteuma]
                                              ;; vaaditaan kaikilta toteumilta joko ei sijaintia, tai validi vähintään pistemäinen tieosoite
                                              (boolean (or
                                                         (::t/ei-sijaintia toteuma)
                                                         (tr-domain/validi-osoite? (get-in app [:sijainti indeksi])))))
                                 toteumat))]
-
-
     [:div#vayla
      #_#_#_[debug/debug app]
      [debug/debug lomake]

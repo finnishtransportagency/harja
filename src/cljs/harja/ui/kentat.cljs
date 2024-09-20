@@ -1447,28 +1447,31 @@
                   (when alaotsikko?
                     [:span
                      [:span.ala-control-label.kentan-label {:class (when-not kentta-pakollinen? "cancel-required-tahti")}
-                      otsikko]])]))
-        flex (if alaotsikot?
-               "flex-start"
-               "flex-end")
-        top (if alaotsikot?
-              "2px"
-              "0px")]
-    [:div
-     [:div.tierekisteriosoite-flex
-      [osio alaotsikot? tie "Tie"]
-      [osio alaotsikot? aosa "Aosa"]
-      [osio alaotsikot? aet "Aet"]
-      (when-not piste?
-        [:<>
-         [osio alaotsikot? losa "Losa"]
-         [osio alaotsikot? loppuet "Let"]])
-      (when virhe
-        [:div virhe])
-      (when karttavalinta
-        [:div {:style {:padding-left "16px" :padding-top top :align-self flex}}
-         [:div.karttavalinta
-          karttavalinta]])]]))
+                      otsikko]])]))]
+    (fn [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys
+         karttavalinta virhe piste? vaadi-vali?]
+
+      (let [flex (if alaotsikot?
+                   "flex-start"
+                   "flex-end")
+            top (if alaotsikot?
+                  "2px"
+                  "0px")]
+        [:div
+         [:div.tierekisteriosoite-flex
+          [osio alaotsikot? tie "Tie"]
+          [osio alaotsikot? aosa "Aosa"]
+          [osio alaotsikot? aet "Aet"]
+          (when-not piste?
+            [:<>
+             [osio alaotsikot? losa "Losa"]
+             [osio alaotsikot? loppuet "Let"]])
+          (when virhe
+            [:div virhe])
+          (when karttavalinta
+            [:div {:style {:padding-left "16px" :padding-top top :align-self flex}}
+             [:div.karttavalinta
+              karttavalinta]])]]))))
 
 
 (defn- tierekisterikentat-rivitetty
