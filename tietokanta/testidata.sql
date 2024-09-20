@@ -29,9 +29,6 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 -- Liitä käyttäjät urakoihin
 \i testidata/kayttajaroolit.sql
 
--- Luodaan sanktiotyypit
-\i testidata/sanktiotyypit.sql
-
 -- Luodaan yhteyshenkilöpooliin henkilöitä
 \i testidata/yhteyshenkilot.sql
 
@@ -115,12 +112,15 @@ SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 -- Turvallisuuspoikkeamat
 \i testidata/turvallisuuspoikkeamat.sql
 
+--== Laadunseuranta ==--
 -- Laatupoikkeamat
-
-\i testidata/laatupoikkeamat.sql
-
+\i testidata/laadunseuranta/laatupoikkeamat.sql
+-- Talvihoitoreitit
+\i testidata/laadunseuranta/talvihoitoreitit_testidata.sql
 -- Sanktiot
-\i testidata/sanktiot.sql
+\i testidata/laadunseuranta/sanktiot.sql
+-- Sanktiotyypit
+\i testidata/laadunseuranta/sanktiotyypit.sql
 
 -- Tarkastukset
 \i testidata/tarkastukset.sql

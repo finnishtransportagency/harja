@@ -43,7 +43,8 @@
            ^{:key (:id rivi)}
            [:<>
             [:div.flex-row.venyta.otsikkokomponentti {:class (str "" (when (> reittien-maara 0) " klikattava"))
-                                                      :on-click #(when (> reittien-maara 0) (e! (tiedot/->AvaaTalvihoitoreitti (:id rivi))) #_(avaa-rivi-rn (:id rivi) e! rivi))}
+                                                      :on-click #(when (> reittien-maara 0) (e! (tiedot/->AvaaTalvihoitoreitti (:id rivi))))
+                                                      :data-cy (str "avaa-reitti-" (:nimi rivi))}
              ;; Nuoli
              [:div.basis48.nogrow
               (when (> reittien-maara 0)
