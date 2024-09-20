@@ -24,11 +24,9 @@
 (defrecord ValitseErapaiva [erapaiva])
 (defrecord KoontilaskunNumero [koontilaskunnumero])
 (defrecord ValitseHoitokausi [vuosi])
-(defrecord HoitovuodenPaatoksenTyyppi [paatoksen-tyyppi nro])
 
 (defrecord KulujenSyotto [auki?])
 (defrecord TallennaKulu [])
-(defrecord PaivitaLomake [polut-ja-arvot optiot])
 (defrecord AvaaKulu [kulu])
 (defrecord NakymastaPoistuttiin [])
 (defrecord PoistaKulu [id])
@@ -260,7 +258,11 @@
                                            muokatut-kohdistukset))
           app (-> app
                 (assoc-in [:lomake :kohdistukset] muokatut-kohdistukset)
-                (update-in [:lomake :poistetut-kohdistukset] conj poistettava))]
+                (update-in [:lomake :poistetut-kohdistukset] conj poistettava))
+          lomake (:lomake app)
+          lomake (-> lomake
+                   (with-meta (tila/kulun-validointi-meta lomake)))
+          app (assoc app :lomake lomake)]
       app))
 
   KohdistusTyyppi
@@ -298,8 +300,7 @@
                 (assoc-in [:lomake :kohdistukset nro :tavoitehintainen] tavoitehinta)
                 (assoc-in [:lomake :kohdistukset nro :tehtavaryhma] nil)
                 (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] nil)
-                (assoc-in [:lomake :kohdistukset nro :toimenpide] nil)
-                )
+                (assoc-in [:lomake :kohdistukset nro :toimenpide] nil))
           lomake (:lomake app)
           lomake (-> lomake
                    (with-meta (tila/kulun-validointi-meta lomake)))
@@ -372,16 +373,6 @@
         (assoc-in [:parametrit :haun-kuukausi] nil)
         (assoc-in [:parametrit :haun-alkupvm] nil)
         (assoc-in [:parametrit :haun-loppupvm] nil))))
-
-  ;; TODO: Koska hoitovuoden päätöksiä ei voi muokata, niin onko tämä tarpeellinen?
-  HoitovuodenPaatoksenTyyppi
-  (process-event [{paatoksen-tyyppi :paatoksen-tyyppi nro :nro} app]
-    (let [;; Urakoitsija maksaa
-          ;; Tilaaja maksaa?
-          ;; Määrittele mitä tehtäväryhmiä eri tilanteissa voi valita
-          ;app (assoc-in app [:lomake :laskun-numero] koontilaskunnumero)
-          ]
-      app))
 
   NakymastaPoistuttiin
   (process-event [_ _app]
@@ -560,18 +551,6 @@
        :epaonnistui-parametrit [{:ei-async-laskuria true}]
        :paasta-virhe-lapi? true})
     app)
-
-  PaivitaLomake
-  (process-event [{polut-ja-arvot :polut-ja-arvot optiot :optiot} app]
-    (let [app (update app :lomake lomakkeen-paivitys polut-ja-arvot optiot)
-          lomake (:lomake app)
-          {validoi-fn :validoi} (meta lomake)
-          validoitu-lomake (validoi-fn lomake)
-          {validi? :validi?} (meta validoitu-lomake)
-          app (-> app
-                (assoc-in [:lomake :validi?] validi?)
-                (assoc :lomake (assoc validoitu-lomake :paivita (inc (:paivita validoitu-lomake)))))]
-      app))
 
   TallennaKulu
   (process-event
