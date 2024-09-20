@@ -75,7 +75,7 @@
         [:div
          (when (not (empty? leikkaavat-virheet))
            (doall
-             [:div [:h2 "Tieosoitevirheet"]
+             [:div [:h2 "Päällekkäiset reitit"]
               [:div [:b "Seuraavat talvihoitoreitit eivät tallentuneet:"]]
               [:ul
                (for [rivi leikkaavat-virheet]

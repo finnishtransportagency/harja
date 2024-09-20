@@ -24,12 +24,7 @@
   (first (keep-indexed
            (fn [idx rivi]
              (when
-               (and
-                 ;; Annetaan hieman vapauksia kenttien nimille
-                 (or
-                   (= "Reitin nimi*" (first rivi))
-                   (= "Reitin nimi" (first rivi))
-                   (= "Reitti" (first rivi))))
+               (boolean (#{"Reitin nimi*" "Reitin nimi" "Reitti"} (first rivi)))
                idx))
            data)))
 
@@ -42,13 +37,8 @@
              (when
                (and
                  ;; Annetaan hieman vapauksia kenttien nimille
-                 (or
-                   (= "Reitin nimi*" (first rivi))
-                   (= "Reitin nimi" (first rivi))
-                   (= "Reitti" (first rivi)))
-                 (or (= "Tienro*" (second rivi))
-                   (= "Tie" (second rivi))
-                   (= "Tienro" (second rivi))))
+                 (boolean (#{"Reitin nimi*" "Reitin nimi" "Reitti"} (first rivi)))
+                 (boolean (#{"Tienro*" "Tie" "Tienro"} (second rivi))))
                idx))
            data)))
 
@@ -57,8 +47,7 @@
     ;; Poistetaan rivi kokonaan, mikäli nimikenttä on nil. Eli oletetaan että rivillä ei ole
     ;; annettu muutenkaan mitään asiaan liittyvää tietoa vaan rivi liittyy otsikointiin tms.
     (fn [rivi]
-      (if (nil? (second rivi))
-        nil
+      (when-not (nil? (second rivi))
         {:nimi (nth rivi 0)
          :tie (konversio/konvertoi->int (nth rivi 1))
          :aosa (konversio/konvertoi->int (nth rivi 2))
